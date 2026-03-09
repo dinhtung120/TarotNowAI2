@@ -1,0 +1,11 @@
+{
+    "Index": {
+        "title": "TarotNow Home",
+        "description": "Online Tarot Readings with AI"
+    },
+    "Navigation": {
+        "home": "Home",
+        "readings": "Readings",
+        "login": "Login"
+    }
+}

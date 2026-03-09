@@ -1,0 +1,54 @@
+# =============================================================================
+# TarotNow – EditorConfig
+# Mục đích: Chuẩn hóa coding style (indent, charset, line ending) giữa các IDE
+# Tham khảo: https://editorconfig.org
+# =============================================================================
+
+# Đây là file editorconfig gốc (root) – IDE sẽ dừng tìm kiếm tại đây
+root = true
+
+# ---------- Quy tắc mặc định cho TẤT CẢ file ----------
+# Sử dụng UTF-8 và line ending LF (Linux/macOS) để đảm bảo tính nhất quán
+# giữa các hệ điều hành. Windows developers sẽ tự động convert nhờ git config.
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# ---------- C# (.NET) ----------
+# .NET convention: indent 4 spaces, mỗi file kết thúc bằng newline
+[*.cs]
+indent_size = 4
+
+# ---------- TypeScript / JavaScript / JSX / TSX ----------
+# Frontend convention (Next.js, React): indent 2 spaces cho dễ đọc
+[*.{ts,tsx,js,jsx}]
+indent_size = 2
+
+# ---------- JSON / YAML / Config files ----------
+# Các file cấu hình thường dùng indent 2 spaces
+[*.{json,yaml,yml}]
+indent_size = 2
+
+# ---------- Markdown ----------
+# Markdown cho phép trailing whitespace (2 spaces = line break)
+# nên không trim trailing whitespace
+[*.md]
+trim_trailing_whitespace = false
+
+# ---------- SQL ----------
+# SQL files dùng indent 4 spaces theo convention DBA
+[*.sql]
+indent_size = 4
+
+# ---------- Solution / Project files ----------
+# .NET solution files (.sln) yêu cầu tab indent
+[*.sln]
+indent_style = tab
+
+# XML-based project files (.csproj, .props) dùng 2 spaces
+[*.{csproj,props,targets}]
+indent_size = 2

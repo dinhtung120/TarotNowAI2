@@ -1,0 +1,11 @@
+{
+    "Index": {
+        "title": "TarotNow 主页",
+        "description": "与 智能 AI 一起在线塔罗占卜"
+    },
+    "Navigation": {
+        "home": "主页",
+        "readings": "占卜",
+        "login": "登录"
+    }
+}

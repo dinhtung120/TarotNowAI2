@@ -1,0 +1,67 @@
+using TarotNow.Api.Middlewares;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// =========================================================================
+// 1. SERVICES CONFIGURATION
+// =========================================================================
+
+// Thêm Controllers
+builder.Services.AddControllers();
+
+// Cấu hình OpenAPI (chuẩn .NET 9)
+builder.Services.AddOpenApi();
+
+// Cấu hình Global Exception Handler (ProblemDetails)
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails(); // RFC 7807 support
+
+// TODO: Thêm dependency injection cho Application và Infrastructure
+// builder.Services.AddApplicationServices();
+// builder.Services.AddInfrastructureServices(builder.Configuration);
+
+// Cấu hình CORS
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(allowedOrigins)
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials(); // Hỗ trợ Authentication Cookies
+    });
+});
+
+// =========================================================================
+// 2. HTTP REQUEST PIPELINE
+// =========================================================================
+
+var app = builder.Build();
+
+// Sử dụng Global Exception Handler middleware
+app.UseExceptionHandler();
+
+// Chỉ mở OpenAPI ở môi trường Development
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
+
+// Redirect HTTP sang HTTPS (có thể tắt ở local dev nếu cần)
+// app.UseHttpsRedirection(); 
+
+// Phục vụ statics files (nếu có)
+// app.UseStaticFiles();
+
+// Bật CORS
+app.UseCors();
+
+// Authentication & Authorization (Sẽ thêm cấu hình JwtBearer sau trong Phase 0.3)
+// app.UseAuthentication();
+// app.UseAuthorization();
+
+// Map routes cho Controllers
+app.MapControllers();
+
+app.Run();

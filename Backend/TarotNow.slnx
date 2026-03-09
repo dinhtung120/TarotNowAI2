@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TarotNow.Api/TarotNow.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TarotNow.Api.IntegrationTests/TarotNow.Api.IntegrationTests.csproj" />
+    <Project Path="tests/TarotNow.Application.UnitTests/TarotNow.Application.UnitTests.csproj" />
+    <Project Path="tests/TarotNow.Domain.UnitTests/TarotNow.Domain.UnitTests.csproj" />
+    <Project Path="tests/TarotNow.Infrastructure.IntegrationTests/TarotNow.Infrastructure.IntegrationTests.csproj" />
+  </Folder>
+</Solution>
