@@ -1,3 +1,6 @@
+using System.Reflection;
+using FluentValidation;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace TarotNow.Application;
@@ -10,14 +13,15 @@ public static class DependencyInjection
     /// </summary>
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        // TODO: Đăng ký MediatR cho CQRS pattern
-        // services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+        // Đăng ký MediatR cho CQRS pattern
+        services.AddMediatR(cfg => {
+            cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+            // Thêm Pipeline Behavior
+            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(Behaviors.ValidationBehavior<,>));
+        });
         
-        // TODO: Đăng ký FluentValidation
-        // services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
-
-        // TODO: Đăng ký AutoMapper
-        // services.AddAutoMapper(Assembly.GetExecutingAssembly());
+        // Đăng ký FluentValidation
+        services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
         return services;
     }

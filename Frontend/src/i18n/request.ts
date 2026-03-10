@@ -3,9 +3,11 @@ import { routing } from './routing';
 
 export default getRequestConfig(async ({ requestLocale }) => {
     // Đợi requestLocale (Next.js 15 recommendation)
-    let locale = await requestLocale;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let locale = await (requestLocale as any);
 
     // Validate xem locale nhận được có hợp lệ không
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!locale || !routing.locales.includes(locale as any)) {
         locale = routing.defaultLocale;
     }

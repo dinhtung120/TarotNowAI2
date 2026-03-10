@@ -1,0 +1,42 @@
+using TarotNow.Application.Features.Admin.Queries;
+using TarotNow.Application.Features.Admin.Queries.GetLedgerMismatch;
+using TarotNow.Domain.Interfaces;
+using TarotNow.Domain.Entities;
+using Moq;
+using FluentAssertions;
+
+namespace TarotNow.Application.UnitTests.Admin;
+
+public class GetLedgerMismatchQueryHandlerTests
+{
+    private readonly Mock<IAdminRepository> _mockAdminRepository;
+    private readonly GetLedgerMismatchQueryHandler _handler;
+
+    public GetLedgerMismatchQueryHandlerTests()
+    {
+        _mockAdminRepository = new Mock<IAdminRepository>();
+        _handler = new GetLedgerMismatchQueryHandler(_mockAdminRepository.Object);
+    }
+
+    [Fact]
+    public async Task Handle_WhenMismatchesExist_ReturnsMismatchList()
+    {
+        // Arrange
+        var query = new GetLedgerMismatchQuery();
+        var mismatches = new List<MismatchRecord>
+        {
+            new MismatchRecord { UserId = Guid.NewGuid(), UserGoldBalance = 100, LedgerGoldBalance = 90 }
+        };
+
+        _mockAdminRepository.Setup(r => r.GetLedgerMismatchesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mismatches);
+
+        // Act
+        var result = await _handler.Handle(query, CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Should().HaveCount(1);
+        result.First().UserGoldBalance.Should().Be(100);
+        result.First().LedgerGoldBalance.Should().Be(90);
+    }
+}

@@ -1,0 +1,504 @@
+Using launch settings from src/TarotNow.Api/Properties/launchSettings.json...
+Building...
+info: Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager[62]
+      User profile is available. Using '/Users/lucifer/.aspnet/DataProtection-Keys' as key repository; keys will not be encrypted at rest.
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5037
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Api
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://localhost:5037/api/v1/auth/login - application/json 66
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'TarotNow.Api.Controllers.AuthController.Login (TarotNow.Api)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Login(TarotNow.Application.Features.Auth.Commands.Login.LoginCommand) on controller TarotNow.Api.Controllers.AuthController (TarotNow.Api).
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (26ms) [Parameters=[@__email_0='?'], CommandType='Text', CommandTimeout='30']
+      SELECT u.id, u.created_at, u.date_of_birth, u.diamond_balance, u.display_name, u.email, u.exp, u.frozen_diamond_balance, u.gold_balance, u.level, u.password_hash, u.reader_status, u.role, u.status, u.total_diamonds_purchased, u.updated_at, u.username
+      FROM users AS u
+      WHERE u.email = @__email_0
+      LIMIT 1
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action TarotNow.Api.Controllers.AuthController.Login (TarotNow.Api) in 710.478ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'TarotNow.Api.Controllers.AuthController.Login (TarotNow.Api)'
+fail: Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware[1]
+      An unhandled exception has occurred while executing the request.
+      TarotNow.Domain.Exceptions.DomainException: Invalid email/username or password.
+         at TarotNow.Application.Features.Auth.Commands.Login.LoginCommandHandler.Handle(LoginCommand request, CancellationToken cancellationToken) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Application/Features/Auth/Commands/Login/LoginCommandHandler.cs:line 58
+         at TarotNow.Application.Behaviors.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Application/Behaviors/ValidationBehavior.cs:line 48
+         at TarotNow.Api.Controllers.AuthController.Login(LoginCommand command) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Api/Controllers/AuthController.cs:line 55
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|7_0(Endpoint endpoint, Task requestTask, ILogger logger)
+         at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+fail: TarotNow.Api.Middlewares.GlobalExceptionHandler[0]
+      An unhandled exception occurred: Invalid email/username or password.
+      TarotNow.Domain.Exceptions.DomainException: Invalid email/username or password.
+         at TarotNow.Application.Features.Auth.Commands.Login.LoginCommandHandler.Handle(LoginCommand request, CancellationToken cancellationToken) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Application/Features/Auth/Commands/Login/LoginCommandHandler.cs:line 58
+         at TarotNow.Application.Behaviors.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Application/Behaviors/ValidationBehavior.cs:line 48
+         at TarotNow.Api.Controllers.AuthController.Login(LoginCommand command) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Api/Controllers/AuthController.cs:line 55
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|7_0(Endpoint endpoint, Task requestTask, ILogger logger)
+         at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://localhost:5037/api/v1/auth/login - 422 - application/json;+charset=utf-8 786.2171ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://localhost:5037/api/v1/auth/register - application/json 179
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'TarotNow.Api.Controllers.AuthController.Register (TarotNow.Api)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "Register", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Register(TarotNow.Application.Features.Auth.Commands.Register.RegisterCommand) on controller TarotNow.Api.Controllers.AuthController (TarotNow.Api).
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (7ms) [Parameters=[@__email_0='?'], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM users AS u
+          WHERE u.email = @__email_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@__username_0='?'], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM users AS u
+          WHERE u.username = @__username_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (19ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTime), @p2='?' (DbType = DateTime), @p3='?' (DbType = Int64), @p4='?', @p5='?', @p6='?' (DbType = Int64), @p7='?' (DbType = Int64), @p8='?' (DbType = Int32), @p9='?', @p10='?', @p11='?', @p12='?', @p13='?' (DbType = Int64), @p14='?' (DbType = DateTime), @p15='?'], CommandType='Text', CommandTimeout='30']
+      INSERT INTO users (id, created_at, date_of_birth, diamond_balance, display_name, email, frozen_diamond_balance, gold_balance, level, password_hash, reader_status, role, status, total_diamonds_purchased, updated_at, username)
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15)
+      RETURNING exp;
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing CreatedResult, writing value of type 'TarotNow.Application.Features.Auth.Commands.Register.RegisterResponse'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action TarotNow.Api.Controllers.AuthController.Register (TarotNow.Api) in 936.1585ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'TarotNow.Api.Controllers.AuthController.Register (TarotNow.Api)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://localhost:5037/api/v1/auth/register - 201 - application/json;+charset=utf-8 941.1512ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://localhost:5037/api/v1/auth/login - application/json 69
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'TarotNow.Api.Controllers.AuthController.Login (TarotNow.Api)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Login(TarotNow.Application.Features.Auth.Commands.Login.LoginCommand) on controller TarotNow.Api.Controllers.AuthController (TarotNow.Api).
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (13ms) [Parameters=[@__email_0='?'], CommandType='Text', CommandTimeout='30']
+      SELECT u.id, u.created_at, u.date_of_birth, u.diamond_balance, u.display_name, u.email, u.exp, u.frozen_diamond_balance, u.gold_balance, u.level, u.password_hash, u.reader_status, u.role, u.status, u.total_diamonds_purchased, u.updated_at, u.username
+      FROM users AS u
+      WHERE u.email = @__email_0
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (12ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTime), @p2='?', @p3='?' (DbType = DateTime), @p4='?' (DbType = DateTime), @p5='?', @p6='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO refresh_tokens (id, created_at, created_by_ip, expires_at, revoked_at, token, user_id)
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6);
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type 'TarotNow.Application.Features.Auth.Commands.Login.AuthResponse'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action TarotNow.Api.Controllers.AuthController.Login (TarotNow.Api) in 495.8631ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'TarotNow.Api.Controllers.AuthController.Login (TarotNow.Api)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://localhost:5037/api/v1/auth/login - 200 - application/json;+charset=utf-8 503.2589ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://localhost:5037/api/v1/Wallet/balance - application/json -
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://localhost:5037/api/v1/Wallet/balance - application/json -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'TarotNow.Api.Controllers.WalletController.GetBalance (TarotNow.Api)'
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'TarotNow.Api.Controllers.WalletController.GetBalance (TarotNow.Api)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "GetBalance", controller = "Wallet"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetBalance() on controller TarotNow.Api.Controllers.WalletController (TarotNow.Api).
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "GetBalance", controller = "Wallet"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetBalance() on controller TarotNow.Api.Controllers.WalletController (TarotNow.Api).
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@__id_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT u.id, u.created_at, u.date_of_birth, u.diamond_balance, u.display_name, u.email, u.exp, u.frozen_diamond_balance, u.gold_balance, u.level, u.password_hash, u.reader_status, u.role, u.status, u.total_diamonds_purchased, u.updated_at, u.username
+      FROM users AS u
+      WHERE u.id = @__id_0
+      LIMIT 1
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type 'TarotNow.Application.Features.Wallet.Queries.WalletBalanceDto'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action TarotNow.Api.Controllers.WalletController.GetBalance (TarotNow.Api) in 20.495ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'TarotNow.Api.Controllers.WalletController.GetBalance (TarotNow.Api)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://localhost:5037/api/v1/Wallet/balance - 200 - application/json;+charset=utf-8 87.8289ms
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@__id_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT u.id, u.created_at, u.date_of_birth, u.diamond_balance, u.display_name, u.email, u.exp, u.frozen_diamond_balance, u.gold_balance, u.level, u.password_hash, u.reader_status, u.role, u.status, u.total_diamonds_purchased, u.updated_at, u.username
+      FROM users AS u
+      WHERE u.id = @__id_0
+      LIMIT 1
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type 'TarotNow.Application.Features.Wallet.Queries.WalletBalanceDto'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action TarotNow.Api.Controllers.WalletController.GetBalance (TarotNow.Api) in 42.4232ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'TarotNow.Api.Controllers.WalletController.GetBalance (TarotNow.Api)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://localhost:5037/api/v1/Wallet/balance - 200 - application/json;+charset=utf-8 71.0410ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://localhost:5037/api/v1/reading/init - application/json 64
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'TarotNow.Api.Controllers.TarotController.InitSession (TarotNow.Api)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "InitSession", controller = "Tarot"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] InitSession(TarotNow.Application.Features.Reading.Commands.InitSession.InitReadingSessionCommand) on controller TarotNow.Api.Controllers.TarotController (TarotNow.Api).
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (12ms) [Parameters=[@__id_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT u.id, u.created_at, u.date_of_birth, u.diamond_balance, u.display_name, u.email, u.exp, u.frozen_diamond_balance, u.gold_balance, u.level, u.password_hash, u.reader_status, u.role, u.status, u.total_diamonds_purchased, u.updated_at, u.username
+      FROM users AS u
+      WHERE u.id = @__id_0
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (14ms) [Parameters=[@__idempotencyKey_0='?'], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM wallet_transactions AS w
+          WHERE w.idempotency_key = @__idempotencyKey_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[p0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT * FROM users WHERE id = @p0 FOR UPDATE
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action TarotNow.Api.Controllers.TarotController.InitSession (TarotNow.Api) in 112.7584ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'TarotNow.Api.Controllers.TarotController.InitSession (TarotNow.Api)'
+fail: Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware[1]
+      An unhandled exception has occurred while executing the request.
+      TarotNow.Application.Exceptions.BadRequestException: Failed to start session: Số dư Gold không đủ.
+         at TarotNow.Application.Features.Reading.Commands.InitSession.InitReadingSessionCommandHandler.Handle(InitReadingSessionCommand request, CancellationToken cancellationToken) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Application/Features/Reading/Commands/InitSession/InitReadingSessionCommandHandler.cs:line 88
+         at TarotNow.Application.Behaviors.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Application/Behaviors/ValidationBehavior.cs:line 48
+         at TarotNow.Api.Controllers.TarotController.InitSession(InitReadingSessionCommand command) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Api/Controllers/TarotController.cs:line 31
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|7_0(Endpoint endpoint, Task requestTask, ILogger logger)
+         at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+fail: TarotNow.Api.Middlewares.GlobalExceptionHandler[0]
+      An unhandled exception occurred: Failed to start session: Số dư Gold không đủ.
+      TarotNow.Application.Exceptions.BadRequestException: Failed to start session: Số dư Gold không đủ.
+         at TarotNow.Application.Features.Reading.Commands.InitSession.InitReadingSessionCommandHandler.Handle(InitReadingSessionCommand request, CancellationToken cancellationToken) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Application/Features/Reading/Commands/InitSession/InitReadingSessionCommandHandler.cs:line 88
+         at TarotNow.Application.Behaviors.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Application/Behaviors/ValidationBehavior.cs:line 48
+         at TarotNow.Api.Controllers.TarotController.InitSession(InitReadingSessionCommand command) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Api/Controllers/TarotController.cs:line 31
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|7_0(Endpoint endpoint, Task requestTask, ILogger logger)
+         at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://localhost:5037/api/v1/reading/init - 500 - application/json;+charset=utf-8 124.0780ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://localhost:5037/api/v1/reading/init - application/json 64
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'TarotNow.Api.Controllers.TarotController.InitSession (TarotNow.Api)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "InitSession", controller = "Tarot"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] InitSession(TarotNow.Application.Features.Reading.Commands.InitSession.InitReadingSessionCommand) on controller TarotNow.Api.Controllers.TarotController (TarotNow.Api).
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@__id_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT u.id, u.created_at, u.date_of_birth, u.diamond_balance, u.display_name, u.email, u.exp, u.frozen_diamond_balance, u.gold_balance, u.level, u.password_hash, u.reader_status, u.role, u.status, u.total_diamonds_purchased, u.updated_at, u.username
+      FROM users AS u
+      WHERE u.id = @__id_0
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (4ms) [Parameters=[@__userId_0='?' (DbType = Guid), @__startOfDayUtc_1='?' (DbType = DateTime), @__endOfDayUtc_2='?' (DbType = DateTime)], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM reading_sessions AS r
+          WHERE r.user_id = @__userId_0 AND r.spread_type = 'Daily1Card' AND r.created_at >= @__startOfDayUtc_1 AND r.created_at < @__endOfDayUtc_2)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (5ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = Object), @p2='?', @p3='?' (DbType = DateTime), @p4='?' (DbType = DateTime), @p5='?' (DbType = Int32), @p6='?', @p7='?', @p8='?', @p9='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO reading_sessions (id, cards_drawn, client_seed, completed_at, created_at, nonce, server_seed, server_seed_hash, spread_type, user_id)
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9)
+      RETURNING is_completed;
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type 'TarotNow.Application.Features.Reading.Commands.InitSession.InitReadingSessionResult'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action TarotNow.Api.Controllers.TarotController.InitSession (TarotNow.Api) in 98.6718ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'TarotNow.Api.Controllers.TarotController.InitSession (TarotNow.Api)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://localhost:5037/api/v1/reading/init - 200 - application/json;+charset=utf-8 105.5265ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://localhost:5037/api/v1/Wallet/balance - application/json -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'TarotNow.Api.Controllers.WalletController.GetBalance (TarotNow.Api)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "GetBalance", controller = "Wallet"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetBalance() on controller TarotNow.Api.Controllers.WalletController (TarotNow.Api).
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__id_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT u.id, u.created_at, u.date_of_birth, u.diamond_balance, u.display_name, u.email, u.exp, u.frozen_diamond_balance, u.gold_balance, u.level, u.password_hash, u.reader_status, u.role, u.status, u.total_diamonds_purchased, u.updated_at, u.username
+      FROM users AS u
+      WHERE u.id = @__id_0
+      LIMIT 1
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type 'TarotNow.Application.Features.Wallet.Queries.WalletBalanceDto'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action TarotNow.Api.Controllers.WalletController.GetBalance (TarotNow.Api) in 3.271ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'TarotNow.Api.Controllers.WalletController.GetBalance (TarotNow.Api)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://localhost:5037/api/v1/Wallet/balance - 200 - application/json;+charset=utf-8 3.6657ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://localhost:5037/api/v1/reading/reveal - application/json 52
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'TarotNow.Api.Controllers.TarotController.RevealCards (TarotNow.Api)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "RevealCards", controller = "Tarot"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] RevealCards(TarotNow.Application.Features.Reading.Commands.RevealSession.RevealReadingSessionCommand) on controller TarotNow.Api.Controllers.TarotController (TarotNow.Api).
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (7ms) [Parameters=[@__id_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT r.id, r.cards_drawn, r.client_seed, r.completed_at, r.created_at, r.is_completed, r.nonce, r.server_seed, r.server_seed_hash, r.spread_type, r.user_id
+      FROM reading_sessions AS r
+      WHERE r.id = @__id_0
+      LIMIT 1
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action TarotNow.Api.Controllers.TarotController.RevealCards (TarotNow.Api) in 37.3876ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'TarotNow.Api.Controllers.TarotController.RevealCards (TarotNow.Api)'
+fail: Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware[1]
+      An unhandled exception has occurred while executing the request.
+      System.InvalidOperationException: The current provider doesn't have a store type mapping for properties of type 'CancellationToken'.
+         at Microsoft.EntityFrameworkCore.Storage.RelationalTypeMappingSourceExtensions.GetMapping(IRelationalTypeMappingSource typeMappingSource, Type clrType, IModel model)
+         at Microsoft.EntityFrameworkCore.Storage.Internal.RawSqlCommandBuilder.Build(String sql, IEnumerable`1 parameters, IModel model)
+         at Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.ExecuteSqlRawAsync(DatabaseFacade databaseFacade, String sql, IEnumerable`1 parameters, CancellationToken cancellationToken)
+         at TarotNow.Infrastructure.Persistence.Repositories.UserCollectionRepository.UpsertCardAsync(Guid userId, Int32 cardId, Int64 expToGain, CancellationToken cancellationToken) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Infrastructure/Persistence/Repositories/UserCollectionRepository.cs:line 32
+         at TarotNow.Application.Features.Reading.Commands.RevealSession.RevealReadingSessionCommandHandler.Handle(RevealReadingSessionCommand request, CancellationToken cancellationToken) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Application/Features/Reading/Commands/RevealSession/RevealReadingSessionCommandHandler.cs:line 57
+         at TarotNow.Application.Behaviors.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Application/Behaviors/ValidationBehavior.cs:line 48
+         at TarotNow.Api.Controllers.TarotController.RevealCards(RevealReadingSessionCommand command) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Api/Controllers/TarotController.cs:line 43
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|7_0(Endpoint endpoint, Task requestTask, ILogger logger)
+         at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+fail: TarotNow.Api.Middlewares.GlobalExceptionHandler[0]
+      An unhandled exception occurred: The current provider doesn't have a store type mapping for properties of type 'CancellationToken'.
+      System.InvalidOperationException: The current provider doesn't have a store type mapping for properties of type 'CancellationToken'.
+         at Microsoft.EntityFrameworkCore.Storage.RelationalTypeMappingSourceExtensions.GetMapping(IRelationalTypeMappingSource typeMappingSource, Type clrType, IModel model)
+         at Microsoft.EntityFrameworkCore.Storage.Internal.RawSqlCommandBuilder.Build(String sql, IEnumerable`1 parameters, IModel model)
+         at Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.ExecuteSqlRawAsync(DatabaseFacade databaseFacade, String sql, IEnumerable`1 parameters, CancellationToken cancellationToken)
+         at TarotNow.Infrastructure.Persistence.Repositories.UserCollectionRepository.UpsertCardAsync(Guid userId, Int32 cardId, Int64 expToGain, CancellationToken cancellationToken) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Infrastructure/Persistence/Repositories/UserCollectionRepository.cs:line 32
+         at TarotNow.Application.Features.Reading.Commands.RevealSession.RevealReadingSessionCommandHandler.Handle(RevealReadingSessionCommand request, CancellationToken cancellationToken) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Application/Features/Reading/Commands/RevealSession/RevealReadingSessionCommandHandler.cs:line 57
+         at TarotNow.Application.Behaviors.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Application/Behaviors/ValidationBehavior.cs:line 48
+         at TarotNow.Api.Controllers.TarotController.RevealCards(RevealReadingSessionCommand command) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Api/Controllers/TarotController.cs:line 43
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|7_0(Endpoint endpoint, Task requestTask, ILogger logger)
+         at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://localhost:5037/api/v1/reading/reveal - 500 - application/json;+charset=utf-8 50.1902ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://localhost:5037/api/v1/auth/register - application/json 142
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'TarotNow.Api.Controllers.AuthController.Register (TarotNow.Api)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "Register", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Register(TarotNow.Application.Features.Auth.Commands.Register.RegisterCommand) on controller TarotNow.Api.Controllers.AuthController (TarotNow.Api).
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (4ms) [Parameters=[@__email_0='?'], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM users AS u
+          WHERE u.email = @__email_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (1ms) [Parameters=[@__username_0='?'], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM users AS u
+          WHERE u.username = @__username_0)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (5ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTime), @p2='?' (DbType = DateTime), @p3='?' (DbType = Int64), @p4='?', @p5='?', @p6='?' (DbType = Int64), @p7='?' (DbType = Int64), @p8='?' (DbType = Int32), @p9='?', @p10='?', @p11='?', @p12='?', @p13='?' (DbType = Int64), @p14='?' (DbType = DateTime), @p15='?'], CommandType='Text', CommandTimeout='30']
+      INSERT INTO users (id, created_at, date_of_birth, diamond_balance, display_name, email, frozen_diamond_balance, gold_balance, level, password_hash, reader_status, role, status, total_diamonds_purchased, updated_at, username)
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15)
+      RETURNING exp;
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing CreatedResult, writing value of type 'TarotNow.Application.Features.Auth.Commands.Register.RegisterResponse'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action TarotNow.Api.Controllers.AuthController.Register (TarotNow.Api) in 343.8517ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'TarotNow.Api.Controllers.AuthController.Register (TarotNow.Api)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://localhost:5037/api/v1/auth/register - 201 - application/json;+charset=utf-8 346.0090ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://localhost:5037/api/v1/reading/collection - - -
+info: Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerHandler[1]
+      Failed to validate the token.
+      Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '3/10/2026 8:57:24 AM', Current time (UTC): '3/10/2026 9:15:18 AM'.
+         at Microsoft.IdentityModel.Tokens.ValidatorUtilities.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+         at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+         at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+         at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+info: Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerHandler[7]
+      Bearer was not authenticated. Failure message: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '3/10/2026 8:57:24 AM', Current time (UTC): '3/10/2026 9:15:18 AM'.
+info: Microsoft.AspNetCore.Authorization.DefaultAuthorizationService[2]
+      Authorization failed. These requirements were not met:
+      DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+info: Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerHandler[12]
+      AuthenticationScheme: Bearer was challenged.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://localhost:5037/api/v1/reading/collection - 401 0 - 61.9833ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://localhost:5037/api/v1/reading/collection - - -
+info: Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerHandler[1]
+      Failed to validate the token.
+      Microsoft.IdentityModel.Tokens.SecurityTokenExpiredException: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '3/10/2026 8:57:24 AM', Current time (UTC): '3/10/2026 9:15:18 AM'.
+         at Microsoft.IdentityModel.Tokens.ValidatorUtilities.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+         at Microsoft.IdentityModel.Tokens.Validators.ValidateLifetime(Nullable`1 notBefore, Nullable`1 expires, SecurityToken securityToken, TokenValidationParameters validationParameters)
+         at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateTokenPayloadAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+         at Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.ValidateJWSAsync(JsonWebToken jsonWebToken, TokenValidationParameters validationParameters, BaseConfiguration configuration)
+info: Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerHandler[7]
+      Bearer was not authenticated. Failure message: IDX10223: Lifetime validation failed. The token is expired. ValidTo (UTC): '3/10/2026 8:57:24 AM', Current time (UTC): '3/10/2026 9:15:18 AM'.
+info: Microsoft.AspNetCore.Authorization.DefaultAuthorizationService[2]
+      Authorization failed. These requirements were not met:
+      DenyAnonymousAuthorizationRequirement: Requires an authenticated user.
+info: Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerHandler[12]
+      AuthenticationScheme: Bearer was challenged.
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://localhost:5037/api/v1/reading/collection - 401 0 - 0.6932ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://localhost:5037/api/v1/auth/login - application/json 49
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'TarotNow.Api.Controllers.AuthController.Login (TarotNow.Api)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Login(TarotNow.Application.Features.Auth.Commands.Login.LoginCommand) on controller TarotNow.Api.Controllers.AuthController (TarotNow.Api).
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action TarotNow.Api.Controllers.AuthController.Login (TarotNow.Api) in 22.9669ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'TarotNow.Api.Controllers.AuthController.Login (TarotNow.Api)'
+fail: Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddleware[1]
+      An unhandled exception has occurred while executing the request.
+      TarotNow.Application.Exceptions.ValidationException: One or more validation failures have occurred.
+         at TarotNow.Application.Behaviors.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Application/Behaviors/ValidationBehavior.cs:line 44
+         at TarotNow.Api.Controllers.AuthController.Login(LoginCommand command) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Api/Controllers/AuthController.cs:line 55
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
+      --- End of stack trace from previous location ---
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|7_0(Endpoint endpoint, Task requestTask, ILogger logger)
+         at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+fail: TarotNow.Api.Middlewares.GlobalExceptionHandler[0]
+      An unhandled exception occurred: One or more validation failures have occurred.
+      TarotNow.Application.Exceptions.ValidationException: One or more validation failures have occurred.
+         at TarotNow.Application.Behaviors.ValidationBehavior`2.Handle(TRequest request, RequestHandlerDelegate`1 next, CancellationToken cancellationToken) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Application/Behaviors/ValidationBehavior.cs:line 44
+         at TarotNow.Api.Controllers.AuthController.Login(LoginCommand command) in /Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Api/Controllers/AuthController.cs:line 55
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.InvokeInnerFilterAsync()
+      --- End of stack trace from previous location ---
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+         at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|7_0(Endpoint endpoint, Task requestTask, ILogger logger)
+         at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Diagnostics.ExceptionHandlerMiddlewareImpl.<Invoke>g__Awaited|10_0(ExceptionHandlerMiddlewareImpl middleware, HttpContext context, Task task)
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://localhost:5037/api/v1/auth/login - 400 - application/json;+charset=utf-8 43.7303ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 POST http://localhost:5037/api/v1/auth/login - application/json 59
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'TarotNow.Api.Controllers.AuthController.Login (TarotNow.Api)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "Login", controller = "Auth"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Login(TarotNow.Application.Features.Auth.Commands.Login.LoginCommand) on controller TarotNow.Api.Controllers.AuthController (TarotNow.Api).
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (9ms) [Parameters=[@__email_0='?'], CommandType='Text', CommandTimeout='30']
+      SELECT u.id, u.created_at, u.date_of_birth, u.diamond_balance, u.display_name, u.email, u.exp, u.frozen_diamond_balance, u.gold_balance, u.level, u.password_hash, u.reader_status, u.role, u.status, u.total_diamonds_purchased, u.updated_at, u.username
+      FROM users AS u
+      WHERE u.email = @__email_0
+      LIMIT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (9ms) [Parameters=[@p0='?' (DbType = Guid), @p1='?' (DbType = DateTime), @p2='?', @p3='?' (DbType = DateTime), @p4='?' (DbType = DateTime), @p5='?', @p6='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      INSERT INTO refresh_tokens (id, created_at, created_by_ip, expires_at, revoked_at, token, user_id)
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6);
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type 'TarotNow.Application.Features.Auth.Commands.Login.AuthResponse'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action TarotNow.Api.Controllers.AuthController.Login (TarotNow.Api) in 342.8651ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'TarotNow.Api.Controllers.AuthController.Login (TarotNow.Api)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 POST http://localhost:5037/api/v1/auth/login - 200 - application/json;+charset=utf-8 347.6071ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/1.1 GET http://localhost:5037/api/v1/reading/collection - - -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'TarotNow.Api.Controllers.TarotController.GetCollection (TarotNow.Api)'
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[102]
+      Route matched with {action = "GetCollection", controller = "Tarot"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetCollection() on controller TarotNow.Api.Controllers.TarotController (TarotNow.Api).
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (3ms) [Parameters=[@__userId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT u.user_id, u.card_id, u.copies, u.exp_gained, u.last_drawn_at, u.level
+      FROM user_collections AS u
+      WHERE u.user_id = @__userId_0
+      ORDER BY u.level DESC, u.copies DESC
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ObjectResultExecutor[1]
+      Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[TarotNow.Application.Features.Reading.Queries.GetCollection.UserCollectionDto, TarotNow.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+info: Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker[105]
+      Executed action TarotNow.Api.Controllers.TarotController.GetCollection (TarotNow.Api) in 13.9753ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'TarotNow.Api.Controllers.TarotController.GetCollection (TarotNow.Api)'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/1.1 GET http://localhost:5037/api/v1/reading/collection - 200 - application/json;+charset=utf-8 17.8827ms

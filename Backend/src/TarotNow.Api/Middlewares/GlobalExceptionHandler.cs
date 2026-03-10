@@ -47,6 +47,22 @@ public class GlobalExceptionHandler : IExceptionHandler
                 problemDetails.Extensions["errors"] = validationException.Errors;
                 break;
 
+            case BadRequestException badRequestException:
+                // Lỗi yêu cầu không hợp lệ (HTTP 400)
+                problemDetails.Status = StatusCodes.Status400BadRequest;
+                problemDetails.Title = "Bad Request";
+                problemDetails.Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1";
+                problemDetails.Detail = badRequestException.Message;
+                break;
+
+            case NotFoundException notFoundException:
+                // Lỗi không tìm thấy tài nguyên (HTTP 404)
+                problemDetails.Status = StatusCodes.Status404NotFound;
+                problemDetails.Title = "Not Found";
+                problemDetails.Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4";
+                problemDetails.Detail = notFoundException.Message;
+                break;
+
             case DomainException domainException:
                 // Lỗi vi phạm business logic (HTTP 422 hoặc 400 tuy business rule)
                 problemDetails.Status = StatusCodes.Status422UnprocessableEntity;

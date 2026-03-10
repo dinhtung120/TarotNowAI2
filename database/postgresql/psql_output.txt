@@ -1,0 +1,425 @@
+CREATE EXTENSION
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+CREATE TABLE
+CREATE INDEX
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+CREATE TABLE
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+CREATE TABLE
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+ERROR:  column "status" specified more than once
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "deposit_orders" does not exist
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+ALTER TABLE
+ALTER TABLE
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+CREATE TABLE
+CREATE INDEX
+ALTER TABLE
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+CREATE TABLE
+CREATE INDEX
+ALTER TABLE
+ALTER TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+CREATE TABLE
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+CREATE TABLE
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+ERROR:  relation "deposit_orders" does not exist
+ERROR:  relation "user_subscriptions" does not exist
+ERROR:  relation "user_subscriptions" does not exist
+ERROR:  relation "user_subscriptions" does not exist
+ERROR:  relation "user_subscriptions" does not exist
+ERROR:  relation "user_subscriptions" does not exist
+ERROR:  relation "user_subscriptions" does not exist
+ERROR:  relation "user_subscriptions" does not exist
+ERROR:  relation "user_subscriptions" does not exist
+ERROR:  relation "user_subscriptions" does not exist
+ERROR:  relation "user_subscriptions" does not exist
+ERROR:  relation "user_subscriptions" does not exist
+ERROR:  relation "user_subscriptions" does not exist
+ERROR:  relation "user_subscriptions" does not exist
+ERROR:  relation "user_subscriptions" does not exist
+ERROR:  relation "subscription_entitlement_buckets" does not exist
+ERROR:  relation "subscription_entitlement_buckets" does not exist
+ERROR:  relation "subscription_entitlement_buckets" does not exist
+ERROR:  relation "subscription_entitlement_buckets" does not exist
+ERROR:  relation "subscription_entitlement_buckets" does not exist
+ERROR:  relation "subscription_entitlement_buckets" does not exist
+ERROR:  relation "subscription_entitlement_buckets" does not exist
+ERROR:  relation "subscription_entitlement_buckets" does not exist
+ERROR:  relation "subscription_entitlement_buckets" does not exist
+ERROR:  relation "subscription_entitlement_buckets" does not exist
+ERROR:  relation "subscription_entitlement_buckets" does not exist
+ERROR:  relation "subscription_entitlement_buckets" does not exist
+ERROR:  relation "user_subscriptions" does not exist
+ERROR:  relation "entitlement_consumes" does not exist
+ERROR:  relation "entitlement_consumes" does not exist
+ERROR:  relation "entitlement_consumes" does not exist
+ERROR:  relation "entitlement_consumes" does not exist
+ERROR:  relation "entitlement_consumes" does not exist
+ERROR:  relation "entitlement_consumes" does not exist
+ERROR:  relation "entitlement_consumes" does not exist
+ERROR:  relation "entitlement_consumes" does not exist
+ERROR:  relation "entitlement_consumes" does not exist
+ERROR:  relation "entitlement_consumes" does not exist
+ERROR:  relation "entitlement_consumes" does not exist
+ERROR:  relation "entitlement_consumes" does not exist
+ERROR:  relation "entitlement_consumes" does not exist
+ERROR:  relation "entitlement_consumes" does not exist
+CREATE TABLE
+CREATE INDEX
+ALTER TABLE
+CREATE INDEX
+CREATE INDEX
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+CREATE TABLE
+ALTER TABLE
+CREATE INDEX
+CREATE INDEX
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+CREATE TABLE
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+ALTER TABLE
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+CREATE TABLE
+CREATE TABLE
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+CREATE TABLE
+CREATE INDEX
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+CREATE TABLE
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+CREATE TABLE
+CREATE INDEX
+ERROR:  relation "entitlement_consumes" does not exist
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+COMMENT
+CREATE VIEW
+COMMENT
+CREATE VIEW
+COMMENT
+CREATE FUNCTION
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE TRIGGER
+ERROR:  relation "deposit_orders" does not exist
+CREATE TRIGGER
+ERROR:  relation "user_subscriptions" does not exist
+ERROR:  relation "subscription_entitlement_buckets" does not exist
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE TRIGGER
+CREATE TRIGGER
+INSERT 0 17
+INSERT 0 2
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX

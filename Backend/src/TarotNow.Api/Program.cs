@@ -1,3 +1,5 @@
+using TarotNow.Application;
+using TarotNow.Infrastructure;
 using TarotNow.Api.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,9 +18,9 @@ builder.Services.AddOpenApi();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails(); // RFC 7807 support
 
-// TODO: Thêm dependency injection cho Application và Infrastructure
-// builder.Services.AddApplicationServices();
-// builder.Services.AddInfrastructureServices(builder.Configuration);
+// Thêm dependency injection cho Application và Infrastructure
+builder.Services.AddApplicationServices();
+builder.Services.AddInfrastructureServices(builder.Configuration);
 
 // Cấu hình CORS
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
@@ -57,9 +59,9 @@ if (app.Environment.IsDevelopment())
 // Bật CORS
 app.UseCors();
 
-// Authentication & Authorization (Sẽ thêm cấu hình JwtBearer sau trong Phase 0.3)
-// app.UseAuthentication();
-// app.UseAuthorization();
+// Authentication & Authorization
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Map routes cho Controllers
 app.MapControllers();

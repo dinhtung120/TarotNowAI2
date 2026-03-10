@@ -23,62 +23,52 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- Vai trò: user (thường), tarot_reader (reader chợ), admin (quản trị)
 -- M10 fix: thêm 'system' cho tài khoản hệ thống (platform, escrow)
-CREATE TYPE user_role AS ENUM ('user', 'tarot_reader', 'admin', 'system');
+
 
 -- Ngôn ngữ UI: vi, en, zh_hans (map tương ứng zh-Hans trong tài liệu)
-CREATE TYPE lang_code AS ENUM ('vi', 'en', 'zh_hans');
+
 
 -- Cung hoàng đạo 12 cung
-CREATE TYPE zodiac AS ENUM ('aries','taurus','gemini','cancer','leo','virgo','libra','scorpio','sagittarius','capricorn','aquarius','pisces');
+
 
 -- Loại tiền tệ: gold (miễn phí), diamond (trả phí, 1 Diamond = 1000 VND)
-CREATE TYPE currency_type AS ENUM ('gold', 'diamond');
+
 
 -- Trạng thái đơn nạp: pending→success/failed/refunded/disputed
-CREATE TYPE deposit_status AS ENUM ('pending', 'success', 'failed', 'refunded', 'disputed');
+
 
 -- Phương thức thanh toán: bank_transfer, vietqr, paypal
-CREATE TYPE payment_method AS ENUM ('bank_transfer', 'vietqr', 'paypal');
+
 
 -- Trạng thái rút tiền Reader: pending→approved/rejected→paid
-CREATE TYPE withdrawal_status AS ENUM ('pending', 'approved', 'rejected', 'paid');
+
 
 -- Trạng thái duyệt (reader, v.v.): pending→approved/rejected
-CREATE TYPE approval_status AS ENUM ('pending', 'approved', 'rejected');
+
 
 -- Loại gói thuê bao: monthly, yearly
-CREATE TYPE plan_type AS ENUM ('monthly', 'yearly');
+
 
 -- Loại OTP: register (xác minh email), reset_password
-CREATE TYPE otp_type AS ENUM ('register', 'reset_password');
+
 
 -- Trạng thái escrow câu hỏi: pending→accepted→released/refunded/disputed
 -- C6 fix: thêm 'accepted' để phân biệt "chưa accept" vs "đã accept chờ reply"
-CREATE TYPE escrow_status AS ENUM ('pending', 'accepted', 'released', 'refunded', 'disputed');
+
 
 -- Loại câu hỏi: main_question (câu đầu), add_question (câu thêm)
-CREATE TYPE chat_question_type AS ENUM ('main_question', 'add_question');
+
 
 -- Trạng thái phiên tài chính chat: pending→active→completed/refunded/disputed/cancelled
-CREATE TYPE finance_session_status AS ENUM ('pending', 'active', 'completed', 'refunded', 'disputed', 'cancelled');
+
 
 -- Trạng thái yêu cầu AI: requested→first_token_received→completed/failed_*
-CREATE TYPE ai_request_status AS ENUM ('requested', 'first_token_received', 'completed', 'failed_before_first_token', 'failed_after_first_token');
+
 
 -- Nguồn reference_id: postgres (UUID), mongo (ObjectId), system
-CREATE TYPE reference_source AS ENUM ('postgres', 'mongo', 'system');
+-- Removed reference_source enum used for EF Core
 
--- Loại giao dịch ví (dùng cho wallet_transactions).
--- Mở rộng: ALTER TYPE transaction_type ADD VALUE 'new_type' (PG 10+ không cần rewrite).
--- Nếu thêm type mới thường xuyên, cân nhắc bảng transaction_types.
-CREATE TYPE transaction_type AS ENUM (
-    'daily_checkin', 'register_bonus', 'referral_invited', 'referral_success',
-    'achievement_reward', 'quest_reward', 'share_reward', 'friend_chain_reward', 'reading_refund',
-    'reading_cost_gold', 'deposit', 'deposit_bonus', 'referral_reward',
-    'subscription_refund', 'admin_topup', 'escrow_release', 'reading_cost_diamond',
-    'chat_cost_escrow', 'withdrawal', 'subscription', 'followup_cost', 'gacha_cost',
-    'escrow_freeze', 'escrow_refund', 'streak_freeze_cost'
-);
+-- Removed VARCHAR(20) and transaction_type custom enums to support EF Core string mapping
 
 -- =============================================================================
 -- TABLES
@@ -100,12 +90,12 @@ CREATE TABLE users (
     display_name             VARCHAR(100)  NOT NULL,                  -- Tên hiển thị
     date_of_birth            DATE          NOT NULL,                  -- Ngày sinh (cổng tuổi 18+)
     avatar_url               TEXT,                                    -- URL ảnh đại diện
-    zodiac_sign              zodiac,                                  -- Auto-tính từ DOB
+    zodiac_sign              VARCHAR(20),                                  -- Auto-tính từ DOB
     numerology_number        SMALLINT      CHECK ((numerology_number BETWEEN 1 AND 9) OR numerology_number IN (11, 22, 33)),  -- Thần số học từ DOB
     active_title_ref         TEXT,                                    -- ObjectId string tham chiếu titles._id (MongoDB)
     -- Vai trò & phê duyệt
-    role                     user_role     NOT NULL DEFAULT 'user',   -- user | tarot_reader | admin
-    reader_status            approval_status DEFAULT 'pending',       -- Duyệt đăng ký Reader
+    role                     VARCHAR(50)     NOT NULL DEFAULT 'user',   -- user | tarot_reader | admin
+    reader_status            VARCHAR(20) DEFAULT 'pending',       -- Duyệt đăng ký Reader
     -- Ví Gold/Diamond (BIGINT, 1 Diamond = 1000 VND)
     gold_balance             BIGINT        NOT NULL DEFAULT 0 CHECK (gold_balance >= 0),      -- Số dư Gold (tiền miễn phí)
     diamond_balance          BIGINT        NOT NULL DEFAULT 0 CHECK (diamond_balance >= 0),   -- Số dư Diamond khả dụng (chưa freeze)
@@ -115,17 +105,16 @@ CREATE TABLE users (
     chargeback_hold          BOOLEAN       NOT NULL DEFAULT false,    -- Chặn rút khi chargeback
     dispute_hold             BOOLEAN       NOT NULL DEFAULT false,    -- Chặn rút khi đang tranh chấp
     -- Trò chơi hóa
-    user_exp                 INT           NOT NULL DEFAULT 0,        -- EXP người dùng (→ user_level)
-    user_level               SMALLINT      NOT NULL DEFAULT 1,        -- Cấp người dùng
+    exp                      BIGINT        NOT NULL DEFAULT 0,        -- EXP người dùng (→ level)
+    level                    INT           NOT NULL DEFAULT 1,        -- Cấp người dùng
     achievement_points       INT           NOT NULL DEFAULT 0,        -- Điểm thành tựu (leaderboard)
     -- Chuỗi rút bài hàng ngày (Daily streak)
     current_streak           INT           NOT NULL DEFAULT 0,        -- Số ngày streak liên tiếp hiện tại
     last_streak_date         DATE,                                    -- Ngày UTC gần nhất có rút bài hợp lệ
     pre_break_streak         INT           NOT NULL DEFAULT 0,        -- Streak trước khi gãy (dùng tính giá Streak Freeze)
     -- Cài đặt
-    preferred_language       lang_code     NOT NULL DEFAULT 'vi',     -- vi | en | zh_hans
-    is_email_verified        BOOLEAN       NOT NULL DEFAULT false,    -- Đã xác minh email (cần để +5 Gold)
-    is_active                BOOLEAN       NOT NULL DEFAULT true,     -- Tài khoản còn hoạt động
+    preferred_language       VARCHAR(20)     NOT NULL DEFAULT 'vi',     -- vi | en | zh_hans
+    status                   VARCHAR(20)   NOT NULL DEFAULT 'pending', -- pending | active | suspended | banned
     -- MFA (bắt buộc cho Reader/Admin trước payout/admin)
     mfa_enabled              BOOLEAN       NOT NULL DEFAULT false,    -- Đã bật MFA
     mfa_secret_encrypted     TEXT,                                    -- Secret TOTP đã mã hóa (không lưu plain)
@@ -143,7 +132,7 @@ CREATE TABLE users (
 );
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_username ON users(username);
-CREATE INDEX idx_users_role_active ON users(role, is_active) WHERE is_deleted = false;
+CREATE INDEX idx_users_role_status ON users(role, status) WHERE is_deleted = false;
 CREATE INDEX idx_users_referred_by ON users(referred_by_id) WHERE referred_by_id IS NOT NULL;
 CREATE INDEX idx_users_created_at ON users(created_at);
 
@@ -166,15 +155,14 @@ COMMENT ON COLUMN users.frozen_diamond_balance IS 'Diamond đang escrow trong ch
 COMMENT ON COLUMN users.total_diamonds_purchased IS 'Tổng Diamond đã nạp, lịch sử.';
 COMMENT ON COLUMN users.chargeback_hold IS 'Chặn payout khi có chargeback chưa xử lý xong.';
 COMMENT ON COLUMN users.dispute_hold IS 'Chặn payout khi đang tranh chấp.';
-COMMENT ON COLUMN users.user_exp IS 'EXP người dùng, quy đổi sang user_level.';
-COMMENT ON COLUMN users.user_level IS 'Cấp người dùng.';
+COMMENT ON COLUMN users.exp IS 'EXP người dùng, quy đổi sang level.';
+COMMENT ON COLUMN users.level IS 'Cấp người dùng.';
 COMMENT ON COLUMN users.achievement_points IS 'Điểm thành tựu (leaderboard).';
 COMMENT ON COLUMN users.current_streak IS 'Số ngày streak liên tiếp hiện tại.';
 COMMENT ON COLUMN users.last_streak_date IS 'Ngày UTC gần nhất có rút bài hợp lệ.';
 COMMENT ON COLUMN users.pre_break_streak IS 'Streak trước khi gãy; dùng cho công thức Streak Freeze: ceil(pre_break_streak/10) Diamond.';
 COMMENT ON COLUMN users.preferred_language IS 'vi | en | zh_hans.';
-COMMENT ON COLUMN users.is_email_verified IS 'Đã xác minh email (cần để +5 Gold).';
-COMMENT ON COLUMN users.is_active IS 'Tài khoản còn hoạt động.';
+COMMENT ON COLUMN users.status IS 'pending | active | suspended | banned.';
 COMMENT ON COLUMN users.mfa_enabled IS 'Đã bật MFA (bắt buộc Reader/Admin trước payout).';
 COMMENT ON COLUMN users.mfa_secret_encrypted IS 'Secret TOTP đã mã hóa, không lưu plain.';
 COMMENT ON COLUMN users.mfa_verified_at IS 'Thời điểm xác minh MFA gần nhất.';
@@ -218,9 +206,8 @@ COMMENT ON COLUMN user_consents.user_agent IS 'User agent (audit).';
 CREATE TABLE email_otps (
     id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id    UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    email      VARCHAR(255) NOT NULL,     -- Email gửi OTP tới
     otp_code   VARCHAR(6)  NOT NULL,      -- Mã 6 ký tự
-    type       otp_type    NOT NULL,      -- register | reset_password
+    type       VARCHAR(20)    NOT NULL,      -- register | reset_password
     is_used    BOOLEAN     NOT NULL DEFAULT false,
     expires_at TIMESTAMPTZ NOT NULL,      -- Hết hạn (vd: 30 phút)
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -231,7 +218,6 @@ CREATE INDEX idx_email_otps_expires ON email_otps(expires_at) WHERE is_used = fa
 COMMENT ON TABLE email_otps IS 'OTP xác minh email / reset mật khẩu. Hết hạn sau 30 phút, dùng một lần.';
 COMMENT ON COLUMN email_otps.id IS 'UUID primary key.';
 COMMENT ON COLUMN email_otps.user_id IS 'FK users.';
-COMMENT ON COLUMN email_otps.email IS 'Email gửi OTP tới.';
 COMMENT ON COLUMN email_otps.otp_code IS 'Mã 6 ký tự.';
 COMMENT ON COLUMN email_otps.type IS 'register | reset_password.';
 COMMENT ON COLUMN email_otps.is_used IS 'Đã sử dụng.';
@@ -267,27 +253,23 @@ COMMENT ON COLUMN password_reset_tokens.created_at IS 'Thời điểm tạo.';
 CREATE TABLE refresh_tokens (
     id              UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id         UUID         NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    token_hash      VARCHAR(255) NOT NULL,          -- Hash of refresh token (không lưu plain text)
-    family_id       UUID         NOT NULL,           -- Token family – cùng chain chia sẻ family_id
-    is_revoked      BOOLEAN      NOT NULL DEFAULT false,
-    device_info     TEXT,                            -- User-Agent hoặc device fingerprint (audit)
+    token           VARCHAR(500) NOT NULL UNIQUE,
     expires_at      TIMESTAMPTZ  NOT NULL,
-    created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+    created_by_ip   VARCHAR(45),
+    revoked_at      TIMESTAMPTZ
 );
 CREATE INDEX idx_refresh_tokens_user ON refresh_tokens(user_id, created_at DESC);
-CREATE INDEX idx_refresh_tokens_family ON refresh_tokens(family_id) WHERE is_revoked = false;
-CREATE INDEX idx_refresh_tokens_hash ON refresh_tokens(token_hash);
-CREATE INDEX idx_refresh_tokens_expires ON refresh_tokens(expires_at) WHERE is_revoked = false;
+CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);
 
-COMMENT ON TABLE refresh_tokens IS 'Refresh token chains cho JWT rotation. Detect reuse → revoke toàn family (ARCH-4.1.5).';
+COMMENT ON TABLE refresh_tokens IS 'Refresh token cho Session. Đã đơn giản hóa matching với Backend.';
 COMMENT ON COLUMN refresh_tokens.id IS 'UUID primary key.';
 COMMENT ON COLUMN refresh_tokens.user_id IS 'FK users.';
-COMMENT ON COLUMN refresh_tokens.token_hash IS 'Hash of refresh token, không lưu plain text.';
-COMMENT ON COLUMN refresh_tokens.family_id IS 'Token family – cùng chain chia sẻ family_id. Reuse detected → revoke all in family.';
-COMMENT ON COLUMN refresh_tokens.is_revoked IS 'Đã thu hồi.';
-COMMENT ON COLUMN refresh_tokens.device_info IS 'User-Agent hoặc device fingerprint (audit).';
+COMMENT ON COLUMN refresh_tokens.token IS 'JWT Refresh Token.';
 COMMENT ON COLUMN refresh_tokens.expires_at IS 'Thời điểm hết hạn.';
 COMMENT ON COLUMN refresh_tokens.created_at IS 'Thời điểm tạo.';
+COMMENT ON COLUMN refresh_tokens.created_by_ip IS 'IP tạo Token.';
+COMMENT ON COLUMN refresh_tokens.revoked_at IS 'Thời gian Revoke.';
 
 -- -----------------------------------------------------------------------------
 -- 5) deposit_promotions
@@ -341,7 +323,7 @@ CREATE TABLE deposit_orders (
     amount_vnd             BIGINT         NOT NULL CHECK (amount_vnd > 0),      -- Tổng VND (đã quy đổi nếu cần)
     diamond_amount         BIGINT         NOT NULL CHECK (diamond_amount >= 1), -- L6 fix: Số Diamond credit >= 1 (deposit 0 vô nghĩa)
     bonus_diamond          BIGINT         NOT NULL DEFAULT 0,                   -- Bonus từ promotion
-    payment_method         payment_method NOT NULL,
+    payment_method         VARCHAR(20)    NOT NULL,
     -- M9 fix: Refund tracking fields (hỗ trợ partial refund theo BR-4.3.2)
     refunded_diamond       BIGINT         NOT NULL DEFAULT 0 CHECK (refunded_diamond >= 0),  -- Diamond đã refund
     refunded_amount_vnd    BIGINT         NOT NULL DEFAULT 0 CHECK (refunded_amount_vnd >= 0),  -- VND đã refund
@@ -357,7 +339,7 @@ CREATE TABLE deposit_orders (
     gateway_order_id       VARCHAR(100),               -- ID đơn từ gateway (partial unique index bên dưới)
     gateway_transaction_id VARCHAR(100),               -- ID giao dịch từ gateway
     idempotency_key        VARCHAR(100),                -- Chống double-credit (partial unique index bên dưới)
-    status                 deposit_status NOT NULL DEFAULT 'pending',
+    status                 VARCHAR(20) NOT NULL DEFAULT 'pending',
     promotion_id           UUID          REFERENCES deposit_promotions(id),
     paid_at                TIMESTAMPTZ,                -- Thời điểm hoàn tất thanh toán (legacy/simple flow)
     -- Thuế (compliance: pre_tax, tax, total)
@@ -410,12 +392,12 @@ COMMENT ON COLUMN deposit_orders.updated_at IS 'Thời điểm cập nhật.';
 CREATE TABLE wallet_transactions (
     id              UUID             PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id         UUID             NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
-    currency        currency_type    NOT NULL,         -- gold | diamond
-    type            transaction_type NOT NULL,         -- Loại giao dịch
+    currency        VARCHAR(20)      NOT NULL,         -- gold | diamond
+    type            VARCHAR(50)      NOT NULL,         -- Loại giao dịch
     amount          BIGINT           NOT NULL,         -- Số tiền (+ credit, - debit)
     balance_before  BIGINT           NOT NULL CHECK (balance_before >= 0),
     balance_after   BIGINT           NOT NULL CHECK (balance_after >= 0),
-    reference_source reference_source,                 -- postgres | mongo | system
+    reference_source VARCHAR(50),                 -- postgres | mongo | system
     reference_id    TEXT,                             -- UUID hoặc ObjectId string
     description     TEXT,
     metadata_json   JSONB,
@@ -458,7 +440,7 @@ CREATE TABLE chat_finance_sessions (
     conversation_ref    TEXT                    NOT NULL UNIQUE,  -- conversations._id (MongoDB ObjectId 24 hex)
     user_id             UUID                    NOT NULL REFERENCES users(id) ON DELETE RESTRICT,   -- Payer (user)
     reader_id           UUID                    NOT NULL REFERENCES users(id) ON DELETE RESTRICT,   -- Receiver (reader)
-    status              finance_session_status  NOT NULL DEFAULT 'pending',
+    status              VARCHAR(50)        NOT NULL DEFAULT 'pending',
     total_frozen        BIGINT                  NOT NULL DEFAULT 0 CHECK (total_frozen >= 0),  -- Tổng Diamond đang freeze
     created_at          TIMESTAMPTZ             NOT NULL DEFAULT NOW(),
     updated_at          TIMESTAMPTZ
@@ -489,9 +471,9 @@ CREATE TABLE chat_question_items (
     conversation_ref      TEXT            NOT NULL,                -- conversations._id
     payer_id              UUID            NOT NULL REFERENCES users(id),
     receiver_id           UUID            NOT NULL REFERENCES users(id),
-    type                  chat_question_type NOT NULL,             -- main_question | add_question
+    type                  VARCHAR(50)       NOT NULL,             -- main_question | add_question
     amount_diamond        BIGINT          NOT NULL CHECK (amount_diamond > 0),
-    status                escrow_status   NOT NULL DEFAULT 'pending',
+    status                VARCHAR(20)   NOT NULL DEFAULT 'pending',
     proposal_message_ref  TEXT,                                    -- chat_messages._id (proposal)
     offer_expires_at      TIMESTAMPTZ,                             -- Hết hạn nếu reader không accept
     accepted_at           TIMESTAMPTZ,                             -- accepted_at + 24h → auto_refund_at
@@ -559,7 +541,7 @@ CREATE TABLE withdrawal_requests (
     bank_name           VARCHAR(100)      NOT NULL,
     bank_account_name   VARCHAR(200)      NOT NULL,
     bank_account_number VARCHAR(50)       NOT NULL,
-    status              withdrawal_status NOT NULL DEFAULT 'pending',
+    status              VARCHAR(50)       NOT NULL DEFAULT 'pending',
     admin_id            UUID             REFERENCES users(id),      -- Admin xử lý
     admin_note          TEXT,
     processed_at        TIMESTAMPTZ,
@@ -629,7 +611,7 @@ CREATE TABLE subscription_plans (
     id                  UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     code                VARCHAR(50) UNIQUE NOT NULL,
     name                VARCHAR(100) NOT NULL,
-    type                plan_type   NOT NULL,                   -- monthly | yearly
+    type                VARCHAR(20)   NOT NULL,                   -- monthly | yearly
     price_vnd           BIGINT      NOT NULL CHECK (price_vnd > 0),
     daily_free_draws    SMALLINT    NOT NULL DEFAULT 0,         -- Legacy
     equivalent_diamond  BIGINT      NOT NULL DEFAULT 0,
@@ -732,7 +714,7 @@ CREATE TABLE entitlement_consumes (
     mapping_rule_id     UUID,       -- FK → entitlement_mapping_rules(id), thêm bằng ALTER TABLE bên dưới
     quantity_consumed   INT         NOT NULL CHECK (quantity_consumed > 0),
     business_date       DATE        NOT NULL,    -- Ngày nghiệp vụ (đối soát)
-    reference_source    reference_source,
+    reference_source    VARCHAR(50),
     reference_id        TEXT,
     idempotency_key     VARCHAR(100),                -- Partial unique index bên dưới
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -764,7 +746,7 @@ CREATE TABLE ai_requests (
     reading_session_ref  TEXT              NOT NULL,   -- reading_sessions._id (MongoDB ObjectId 24 hex)
     -- C2 fix: chi phí follow-up phụ thuộc highest_card_level + sequence, KHÔNG phải map cứng sequence→giá
     followup_sequence    SMALLINT          CHECK (followup_sequence IS NULL OR (followup_sequence >= 1 AND followup_sequence <= 5)),  -- NULL=initial reading, 1-5=follow-up #1 đến #5. Chi phí tính dynamic theo card level (xem UX-4.4.5)
-    status               ai_request_status NOT NULL DEFAULT 'requested',
+    status               VARCHAR(50)       NOT NULL DEFAULT 'requested',
     first_token_at       TIMESTAMPTZ,                  -- Nhận token đầu
     completion_marker_at TIMESTAMPTZ,                  -- Hoàn tất
     finish_reason        VARCHAR(50),                  -- Lý do fail (nếu có)
@@ -1101,294 +1083,12 @@ LEFT JOIN (
 COMMENT ON VIEW v_user_frozen_ledger_balance IS 'Frozen balance từ ledger+escrow items: SUM(freeze) - SUM(refund) - SUM(released items). So với users.frozen_diamond_balance. Alert nếu mismatch.';
 
 -- =============================================================================
--- STORED PROCEDURES – Atomic finance (bắt buộc gọi từ API, không app code rời rạc)
--- Mọi thao tác ví PHẢI qua procedure. Pattern: SELECT FOR UPDATE → validate → UPDATE users → INSERT ledger.
+-- Chú thích: Các STORED PROCEDURES (proc_wallet_credit, proc_wallet_debit, 
+-- proc_wallet_freeze, proc_wallet_release, proc_wallet_refund)
+-- ĐÃ ĐƯỢC CHUYỂN LOGIC SANG BACKEND (.NET Core Entity Framework).
+-- Không còn sử dụng các procedure ở mức Database nữa để dễ cài đặt và maintain code theo chuẩn C# Clean Architecture.
+-- Các logic này giờ sẽ dùng `SELECT * FROM users WHERE id = {id} FOR UPDATE` transaction.
 -- =============================================================================
-
--- proc_wallet_credit: Credit Gold/Diamond (deposit, bonus, refund, ...)
--- Gọi với idempotency_key để chống double.
-CREATE OR REPLACE FUNCTION proc_wallet_credit(
-    p_user_id UUID,
-    p_currency currency_type,
-    p_amount BIGINT,
-    p_type transaction_type,
-    p_reference_source reference_source DEFAULT NULL,
-    p_reference_id TEXT DEFAULT NULL,
-    p_idempotency_key VARCHAR(100) DEFAULT NULL,
-    p_description TEXT DEFAULT NULL
-) RETURNS UUID
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    v_balance_before BIGINT;
-    v_balance_after BIGINT;
-    v_tx_id UUID;
-BEGIN
-    IF p_amount <= 0 THEN
-        RAISE EXCEPTION 'proc_wallet_credit: amount must be positive';
-    END IF;
-
-    -- C3 fix: chặn dùng proc_wallet_credit cho escrow operations – phải dùng proc_wallet_freeze/release/refund
-    IF p_type IN ('escrow_freeze', 'escrow_release', 'escrow_refund') THEN
-        RAISE EXCEPTION 'proc_wallet_credit: type % must use proc_wallet_freeze, proc_wallet_release, or proc_wallet_refund, not proc_wallet_credit', p_type;
-    END IF;
-
-    -- Idempotency: nếu đã có tx với key này, return existing
-    IF p_idempotency_key IS NOT NULL THEN
-        SELECT id INTO v_tx_id FROM wallet_transactions
-        WHERE idempotency_key = p_idempotency_key;
-        IF FOUND THEN
-            RETURN v_tx_id;
-        END IF;
-    END IF;
-
-    -- Lock user row
-    IF p_currency = 'gold' THEN
-        SELECT gold_balance INTO v_balance_before FROM users WHERE id = p_user_id FOR UPDATE;
-    ELSE
-        SELECT diamond_balance INTO v_balance_before FROM users WHERE id = p_user_id FOR UPDATE;
-    END IF;
-
-    IF NOT FOUND THEN
-        RAISE EXCEPTION 'proc_wallet_credit: user not found';
-    END IF;
-
-    v_balance_after := v_balance_before + p_amount;
-
-    -- Update users
-    IF p_currency = 'gold' THEN
-        UPDATE users SET gold_balance = v_balance_after, updated_at = NOW() WHERE id = p_user_id;
-    ELSE
-        UPDATE users SET diamond_balance = v_balance_after, updated_at = NOW() WHERE id = p_user_id;
-        -- Nếu là deposit, cập nhật total_diamonds_purchased (C4 fix)
-        IF p_type = 'deposit' THEN
-            UPDATE users SET total_diamonds_purchased = total_diamonds_purchased + p_amount WHERE id = p_user_id;
-        END IF;
-    END IF;
-
-    -- Insert ledger
-    INSERT INTO wallet_transactions (user_id, currency, type, amount, balance_before, balance_after,
-        reference_source, reference_id, idempotency_key, description)
-    VALUES (p_user_id, p_currency, p_type, p_amount, v_balance_before, v_balance_after,
-        p_reference_source, p_reference_id, p_idempotency_key, p_description)
-    RETURNING id INTO v_tx_id;
-
-    RETURN v_tx_id;
-END;
-$$;
-
-COMMENT ON FUNCTION proc_wallet_credit IS 'Credit Gold/Diamond. Bắt buộc gọi từ API. Idempotent khi có idempotency_key.';
-
--- proc_wallet_debit: Debit Gold/Diamond (cost, withdrawal, freeze, ...)
-CREATE OR REPLACE FUNCTION proc_wallet_debit(
-    p_user_id UUID,
-    p_currency currency_type,
-    p_amount BIGINT,
-    p_type transaction_type,
-    p_reference_source reference_source DEFAULT NULL,
-    p_reference_id TEXT DEFAULT NULL,
-    p_idempotency_key VARCHAR(100) DEFAULT NULL,
-    p_description TEXT DEFAULT NULL
-) RETURNS UUID
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    v_balance_before BIGINT;
-    v_balance_after BIGINT;
-    v_tx_id UUID;
-BEGIN
-    IF p_amount <= 0 THEN
-        RAISE EXCEPTION 'proc_wallet_debit: amount must be positive (pass positive, we subtract)';
-    END IF;
-
-    -- C7 fix + C8 fix: chặn dùng proc_wallet_debit cho escrow operations – phải dùng proc_wallet_freeze/release/refund
-    IF p_type IN ('escrow_freeze', 'escrow_release', 'escrow_refund') THEN
-        RAISE EXCEPTION 'proc_wallet_debit: type % must use proc_wallet_freeze, proc_wallet_release, or proc_wallet_refund, not proc_wallet_debit', p_type;
-    END IF;
-
-    IF p_idempotency_key IS NOT NULL THEN
-        SELECT id INTO v_tx_id FROM wallet_transactions
-        WHERE idempotency_key = p_idempotency_key;
-        IF FOUND THEN
-            RETURN v_tx_id;
-        END IF;
-    END IF;
-
-    IF p_currency = 'gold' THEN
-        SELECT gold_balance INTO v_balance_before FROM users WHERE id = p_user_id FOR UPDATE;
-    ELSE
-        SELECT diamond_balance INTO v_balance_before FROM users WHERE id = p_user_id FOR UPDATE;
-    END IF;
-
-    IF NOT FOUND THEN
-        RAISE EXCEPTION 'proc_wallet_debit: user not found';
-    END IF;
-
-    v_balance_after := v_balance_before - p_amount;
-    IF v_balance_after < 0 THEN
-        RAISE EXCEPTION 'proc_wallet_debit: insufficient balance';
-    END IF;
-
-    IF p_currency = 'gold' THEN
-        UPDATE users SET gold_balance = v_balance_after, updated_at = NOW() WHERE id = p_user_id;
-    ELSE
-        UPDATE users SET diamond_balance = v_balance_after, updated_at = NOW() WHERE id = p_user_id;
-    END IF;
-
-    INSERT INTO wallet_transactions (user_id, currency, type, amount, balance_before, balance_after,
-        reference_source, reference_id, idempotency_key, description)
-    VALUES (p_user_id, p_currency, p_type, -p_amount, v_balance_before, v_balance_after,
-        p_reference_source, p_reference_id, p_idempotency_key, p_description)
-    RETURNING id INTO v_tx_id;
-
-    RETURN v_tx_id;
-END;
-$$;
-
-COMMENT ON FUNCTION proc_wallet_debit IS 'Debit Gold/Diamond. Validate sufficient balance. Idempotent khi có idempotency_key.';
-
--- proc_wallet_freeze: Chuyển Diamond từ available → frozen (escrow)
-CREATE OR REPLACE FUNCTION proc_wallet_freeze(
-    p_user_id UUID,
-    p_amount BIGINT,
-    p_reference_source reference_source DEFAULT NULL,
-    p_reference_id TEXT DEFAULT NULL,
-    p_idempotency_key VARCHAR(100) DEFAULT NULL,
-    p_description TEXT DEFAULT NULL
-) RETURNS UUID
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    v_diamond_before BIGINT;
-    v_diamond_after BIGINT;
-    v_tx_id UUID;
-BEGIN
-    IF p_amount <= 0 THEN
-        RAISE EXCEPTION 'proc_wallet_freeze: amount must be positive';
-    END IF;
-    IF p_idempotency_key IS NOT NULL THEN
-        SELECT id INTO v_tx_id FROM wallet_transactions WHERE idempotency_key = p_idempotency_key;
-        IF FOUND THEN RETURN v_tx_id; END IF;
-    END IF;
-
-    SELECT diamond_balance INTO v_diamond_before
-    FROM users WHERE id = p_user_id FOR UPDATE;
-    IF NOT FOUND THEN RAISE EXCEPTION 'proc_wallet_freeze: user not found'; END IF;
-
-    v_diamond_after := v_diamond_before - p_amount;
-    IF v_diamond_after < 0 THEN
-        RAISE EXCEPTION 'proc_wallet_freeze: insufficient balance';
-    END IF;
-
-    UPDATE users SET
-        diamond_balance = v_diamond_after,
-        frozen_diamond_balance = frozen_diamond_balance + p_amount,
-        updated_at = NOW()
-    WHERE id = p_user_id;
-
-    INSERT INTO wallet_transactions (user_id, currency, type, amount, balance_before, balance_after,
-        reference_source, reference_id, idempotency_key, description)
-    VALUES (p_user_id, 'diamond', 'escrow_freeze', -p_amount, v_diamond_before, v_diamond_after,
-        p_reference_source, p_reference_id, p_idempotency_key, p_description)
-    RETURNING id INTO v_tx_id;
-    RETURN v_tx_id;
-END;
-$$;
-
-COMMENT ON FUNCTION proc_wallet_freeze IS 'Freeze Diamond (available → frozen). Escrow. Idempotent khi có idempotency_key.';
-
--- proc_wallet_release: Giảm frozen của payer, credit receiver
-CREATE OR REPLACE FUNCTION proc_wallet_release(
-    p_payer_id UUID,
-    p_receiver_id UUID,
-    p_amount BIGINT,
-    p_reference_source reference_source DEFAULT NULL,
-    p_reference_id TEXT DEFAULT NULL,
-    p_idempotency_key VARCHAR(100) DEFAULT NULL,
-    p_description TEXT DEFAULT NULL
-) RETURNS UUID
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    v_frozen BIGINT;
-    v_receiver_balance BIGINT;
-    v_tx_id UUID;
-BEGIN
-    IF p_amount <= 0 THEN RAISE EXCEPTION 'proc_wallet_release: amount must be positive'; END IF;
-    IF p_idempotency_key IS NOT NULL THEN
-        SELECT id INTO v_tx_id FROM wallet_transactions WHERE idempotency_key = p_idempotency_key;
-        IF FOUND THEN RETURN v_tx_id; END IF;
-    END IF;
-
-    SELECT frozen_diamond_balance INTO v_frozen FROM users WHERE id = p_payer_id FOR UPDATE;
-    IF NOT FOUND OR v_frozen < p_amount THEN
-        RAISE EXCEPTION 'proc_wallet_release: payer frozen insufficient';
-    END IF;
-
-    SELECT diamond_balance INTO v_receiver_balance FROM users WHERE id = p_receiver_id FOR UPDATE;
-    IF NOT FOUND THEN RAISE EXCEPTION 'proc_wallet_release: receiver not found'; END IF;
-
-    UPDATE users SET frozen_diamond_balance = frozen_diamond_balance - p_amount, updated_at = NOW() WHERE id = p_payer_id;
-    UPDATE users SET diamond_balance = diamond_balance + p_amount, updated_at = NOW() WHERE id = p_receiver_id;
-
-    -- Ledger: credit receiver (payer frozen giảm không ghi ledger row vì diamond_balance payer không đổi,
-    -- việc ghi row payer sẽ vi phạm chk_wallet_balance_consistency).
-    -- Frozen balance được audit qua v_user_frozen_ledger_balance (dùng chat_question_items.status='released').
-    INSERT INTO wallet_transactions (user_id, currency, type, amount, balance_before, balance_after,
-        reference_source, reference_id, idempotency_key, description)
-    VALUES (p_receiver_id, 'diamond', 'escrow_release', p_amount, v_receiver_balance, v_receiver_balance + p_amount,
-        p_reference_source, p_reference_id, p_idempotency_key, p_description)
-    RETURNING id INTO v_tx_id;
-    RETURN v_tx_id;
-END;
-$$;
-
-COMMENT ON FUNCTION proc_wallet_release IS 'Release escrow: giảm frozen payer, credit receiver. Idempotent khi có idempotency_key.';
-
--- proc_wallet_refund: Giảm frozen, credit lại payer
-CREATE OR REPLACE FUNCTION proc_wallet_refund(
-    p_user_id UUID,
-    p_amount BIGINT,
-    p_reference_source reference_source DEFAULT NULL,
-    p_reference_id TEXT DEFAULT NULL,
-    p_idempotency_key VARCHAR(100) DEFAULT NULL,
-    p_description TEXT DEFAULT NULL
-) RETURNS UUID
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    v_frozen BIGINT;
-    v_diamond BIGINT;
-    v_tx_id UUID;
-BEGIN
-    IF p_amount <= 0 THEN RAISE EXCEPTION 'proc_wallet_refund: amount must be positive'; END IF;
-    IF p_idempotency_key IS NOT NULL THEN
-        SELECT id INTO v_tx_id FROM wallet_transactions WHERE idempotency_key = p_idempotency_key;
-        IF FOUND THEN RETURN v_tx_id; END IF;
-    END IF;
-
-    SELECT diamond_balance, frozen_diamond_balance INTO v_diamond, v_frozen FROM users WHERE id = p_user_id FOR UPDATE;
-    IF NOT FOUND OR v_frozen < p_amount THEN
-        RAISE EXCEPTION 'proc_wallet_refund: frozen insufficient';
-    END IF;
-
-    UPDATE users SET
-        frozen_diamond_balance = frozen_diamond_balance - p_amount,
-        diamond_balance = diamond_balance + p_amount,
-        updated_at = NOW()
-    WHERE id = p_user_id;
-
-    -- Ledger row: escrow_refund credit (frozen → available)
-    INSERT INTO wallet_transactions (user_id, currency, type, amount, balance_before, balance_after,
-        reference_source, reference_id, idempotency_key, description)
-    VALUES (p_user_id, 'diamond', 'escrow_refund', p_amount, v_diamond, v_diamond + p_amount,
-        p_reference_source, p_reference_id, p_idempotency_key, p_description)
-    RETURNING id INTO v_tx_id;
-    RETURN v_tx_id;
-END;
-$$;
-
-COMMENT ON FUNCTION proc_wallet_refund IS 'Refund escrow: giảm frozen, credit lại user. Idempotent khi có idempotency_key.';
 
 -- =============================================================================
 -- TRIGGERS (updated_at)
@@ -1453,3 +1153,30 @@ VALUES
     ('00000000-0000-0000-0000-000000000001', 'platform@system.local', 'system_platform', '', 'System Platform', '2000-01-01', 'system'),
     ('00000000-0000-0000-0000-000000000002', 'escrow@system.local', 'system_escrow', '', 'System Escrow', '2000-01-01', 'system')
 ON CONFLICT (id) DO NOTHING;
+
+-- =============================================================================
+-- TABLES MOVED FROM MONGO TO POSTGRES DUE TO EF CORE IMPLEMENTATION
+-- =============================================================================
+
+CREATE TABLE reading_sessions (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id),
+    spread_type VARCHAR(50) NOT NULL,
+    cards_drawn JSONB,
+    is_completed BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMPTZ
+);
+CREATE INDEX idx_reading_sessions_user_id ON reading_sessions(user_id);
+CREATE INDEX idx_reading_sessions_user_created ON reading_sessions(user_id, created_at);
+
+CREATE TABLE user_collections (
+    user_id UUID NOT NULL REFERENCES users(id),
+    card_id INT NOT NULL,
+    level INT NOT NULL DEFAULT 1,
+    copies INT NOT NULL DEFAULT 1,
+    exp_gained BIGINT NOT NULL DEFAULT 0,
+    last_drawn_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, card_id)
+);
+CREATE INDEX idx_user_collections_user_id ON user_collections(user_id);
