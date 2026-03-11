@@ -13,4 +13,10 @@ public interface IReadingSessionRepository
 
     // Xử lý nguyên tử (Atomic Transaction): Trừ tiền & Cấp Session
     Task<(bool Success, string ErrorMessage)> StartPaidSessionAtomicAsync(Guid userId, string spreadType, ReadingSession session, long costGold, long costDiamond, CancellationToken cancellationToken = default);
+
+    // Phase 1.5 - History Paging
+    Task<(IEnumerable<ReadingSession> Items, int TotalCount)> GetSessionsByUserIdAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken = default);
+
+    // Phase 1.5 - History Detail
+    Task<(ReadingSession ReadingSession, IEnumerable<TarotNow.Domain.Entities.AiRequest> AiRequests)?> GetSessionWithAiRequestsAsync(Guid sessionId, CancellationToken cancellationToken = default);
 }

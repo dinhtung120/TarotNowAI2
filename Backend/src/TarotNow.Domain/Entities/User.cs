@@ -13,6 +13,7 @@ public class User
     public string Username { get; private set; }
     public string PasswordHash { get; private set; }
     public string DisplayName { get; private set; }
+    public string? AvatarUrl { get; private set; }
     public DateTime DateOfBirth { get; private set; }
 
     /// <summary>
@@ -38,6 +39,8 @@ public class User
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
 
+    public ICollection<UserConsent> Consents { get; private set; } = new List<UserConsent>();
+
     // Dành cho EF Core
     protected User() { }
 
@@ -56,8 +59,15 @@ public class User
         CreatedAt = DateTime.UtcNow;
     }
 
+    public void MarkAsConsented()
+    {
+        HasConsented = true;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     /// <summary>
     /// Cập nhật mật khẩu sau khi hash thành công.
+    /// </summary>
     /// </summary>
     public void UpdatePassword(string newHash)
     {
@@ -66,9 +76,38 @@ public class User
     }
 
     /// <summary>
+    /// Cập nhật thông tin Profile của User.
+    /// </summary>
+    public void UpdateProfile(string displayName, string? avatarUrl, DateTime dateOfBirth)
+    {
+        DisplayName = displayName;
+        AvatarUrl = avatarUrl;
+        DateOfBirth = dateOfBirth;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
     /// Kích hoạt tài khoản khi OTP hợp lệ.
     /// </summary>
     public void Activate()
+    {
+        Status = UserStatus.Active;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Khóa tài khoản (Admin gọi).
+    /// </summary>
+    public void Lock()
+    {
+        Status = "Locked"; // Use string directly or constant if UserStatus.Locked exists.
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Mở khóa tài khoản (Admin gọi).
+    /// </summary>
+    public void Unlock()
     {
         Status = UserStatus.Active;
         UpdatedAt = DateTime.UtcNow;

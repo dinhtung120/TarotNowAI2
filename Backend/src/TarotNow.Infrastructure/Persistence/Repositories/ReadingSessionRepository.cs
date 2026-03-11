@@ -84,7 +84,37 @@ public class ReadingSessionRepository : IReadingSessionRepository
         {
             await transaction.RollbackAsync(cancellationToken);
             // Có thể do lỗi số dư không đủ từ Exception của proc_wallet_debit
-            return (false, ex.InnerException?.Message ?? ex.Message);
+            return (false, ex.Message);
         }
+    }
+
+    public async Task<(IEnumerable<ReadingSession> Items, int TotalCount)> GetSessionsByUserIdAsync(Guid userId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var query = _context.ReadingSessions
+            .Where(s => s.UserId == userId)
+            .OrderByDescending(s => s.CreatedAt);
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return (items, totalCount);
+    }
+
+    public async Task<(ReadingSession ReadingSession, IEnumerable<TarotNow.Domain.Entities.AiRequest> AiRequests)?> GetSessionWithAiRequestsAsync(Guid sessionId, CancellationToken cancellationToken = default)
+    {
+        var session = await _context.ReadingSessions.FirstOrDefaultAsync(s => s.Id == sessionId, cancellationToken);
+        if (session == null) return null;
+
+        var sessionIdStr = session.Id.ToString();
+        var aiRequests = await _context.AiRequests
+            .Where(a => a.ReadingSessionRef == sessionIdStr)
+            .OrderBy(a => a.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return (session, aiRequests);
     }
 }

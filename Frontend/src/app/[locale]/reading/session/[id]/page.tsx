@@ -6,6 +6,7 @@ import { useRouter } from "@/i18n/routing";
 import { revealReadingSession } from "@/actions/readingActions";
 import { TAROT_DECK } from "@/lib/tarotData";
 import { Sparkles, ArrowLeft, RefreshCw } from "lucide-react";
+import AiInterpretationStream from "@/components/AiInterpretationStream";
 
 // Generate positions for an elegant fanning and splitting shuffle effect
 const generateShufflePaths = () => {
@@ -76,6 +77,9 @@ export default function ReadingSessionPage() {
         }
         setIsRevealing(false);
     };
+
+    // Calculate when all cards have finished flipping
+    const allCardsFlipped = cards.length > 0 && flippedIndex >= cards.length - 1;
 
     return (
         <div className="min-h-screen bg-black text-white p-6 pt-24 overflow-hidden relative">
@@ -309,6 +313,15 @@ export default function ReadingSessionPage() {
                                 );
                             })}
                         </div>
+
+                        {/* AI Streaming Section (Chỉ hiện khi tất cả lá bài đã lật xong) */}
+                        {allCardsFlipped && (
+                            <AiInterpretationStream
+                                sessionId={sessionId}
+                                cards={cards}
+                                onComplete={() => console.log("AI Stream Finished")}
+                            />
+                        )}
                     </div>
                 )}
             </div>

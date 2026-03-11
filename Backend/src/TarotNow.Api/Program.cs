@@ -64,6 +64,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // Map routes cho Controllers
+// Map routes cho Controllers
 app.MapControllers();
 
 app.Run();
+
+// Hỗ trợ Integration Test bằng WebApplicationFactory
+public partial class Program { }

@@ -7,6 +7,7 @@ using TarotNow.Infrastructure.Persistence;
 using TarotNow.Infrastructure.Persistence.Repositories;
 using TarotNow.Infrastructure.Security;
 using TarotNow.Infrastructure.Services;
+using TarotNow.Infrastructure.Services.Ai; // Added for IAiProvider and OpenAiProvider
 
 namespace TarotNow.Infrastructure;
 
@@ -28,10 +29,14 @@ public static class DependencyInjection
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IEmailOtpRepository, EmailOtpRepository>();
         services.AddScoped<IWalletRepository, WalletRepository>();
+        services.AddScoped<IAiRequestRepository, AiRequestRepository>();
         services.AddScoped<ILedgerRepository, LedgerRepository>();
         services.AddScoped<IAdminRepository, AdminRepository>();
         services.AddScoped<IReadingSessionRepository, ReadingSessionRepository>();
         services.AddScoped<IUserCollectionRepository, UserCollectionRepository>();
+        services.AddScoped<IUserConsentRepository, UserConsentRepository>();
+        services.AddScoped<IDepositOrderRepository, DepositOrderRepository>();
+        services.AddScoped<IDepositPromotionRepository, DepositPromotionRepository>();
 
         // Đăng ký Auth Services
         services.AddSingleton<IPasswordHasher, Argon2idPasswordHasher>();
@@ -40,6 +45,10 @@ public static class DependencyInjection
         // Đăng ký Services Khác
         services.AddScoped<IEmailSender, MockEmailSender>();
         services.AddSingleton<IRngService, RngService>();
+        services.AddSingleton<IPaymentGatewayService, MockPaymentGatewayService>();
+
+        // Phase 1.4: Tích hợp Streaming Provider (OpenAI)
+        services.AddHttpClient<IAiProvider, OpenAiProvider>();
 
         // TODO: Đăng ký MongoDB MongoClient
         // var mongoConnectionString = configuration.GetConnectionString("MongoDB");
@@ -77,7 +86,8 @@ public static class DependencyInjection
                 {
                     var accessToken = context.Request.Query["access_token"];
                     var path = context.HttpContext.Request.Path;
-                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/api/v1/chat"))
+                    if (!string.IsNullOrEmpty(accessToken) && 
+                        (path.StartsWithSegments("/api/v1/chat") || path.StartsWithSegments("/api/v1/sessions")))
                     {
                         context.Token = accessToken;
                     }

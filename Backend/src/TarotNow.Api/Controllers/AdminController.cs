@@ -24,4 +24,25 @@ public class AdminController : ControllerBase
         var result = await _mediator.Send(query);
         return Ok(result);
     }
+
+    [HttpGet("users")]
+    public async Task<IActionResult> ListUsers([FromQuery] TarotNow.Application.Features.Admin.Queries.ListUsers.ListUsersQuery query)
+    {
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    [HttpPatch("users/lock")]
+    public async Task<IActionResult> ToggleUserLock([FromBody] TarotNow.Application.Features.Admin.Commands.ToggleUserLock.ToggleUserLockCommand command)
+    {
+        var success = await _mediator.Send(command);
+        return success ? Ok() : BadRequest();
+    }
+
+    [HttpGet("deposits")]
+    public async Task<IActionResult> ListDeposits([FromQuery] TarotNow.Application.Features.Admin.Queries.ListDeposits.ListDepositsQuery query)
+    {
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
 }
