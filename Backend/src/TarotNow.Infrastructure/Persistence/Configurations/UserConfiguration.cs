@@ -62,11 +62,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
          * "level" và "exp" (lowercase) → gây lỗi "column level does not exist".
          */
         builder.Property(u => u.Level)
-            .HasColumnName("level")
+            .HasColumnName("user_level")
             .HasDefaultValue(1);
 
         builder.Property(u => u.Exp)
-            .HasColumnName("exp")
+            .HasColumnName("user_exp")
             .HasDefaultValue(0);
 
         builder.Property(u => u.Status)
@@ -92,7 +92,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
          */
         builder.OwnsOne(u => u.Wallet, wallet =>
         {
-            wallet.ToTable("users"); // FORCE same table for table splitting
             wallet.Property(w => w.GoldBalance)
                 .HasColumnName("gold_balance")
                 .HasDefaultValue(0L);

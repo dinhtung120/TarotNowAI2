@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { Sparkles, Bot, AlertTriangle, RefreshCw, Send, User as UserIcon } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
+import { useTranslations } from "next-intl";
 
 interface AiInterpretationStreamProps {
     sessionId: string;
@@ -20,6 +21,8 @@ interface Message {
 
 export default function AiInterpretationStream({ sessionId, cards, onComplete }: AiInterpretationStreamProps) {
     const accessToken = useAuthStore((state) => state.accessToken);
+    const t = useTranslations("AiInterpretation");
+    const tCommon = useTranslations("Common");
     const [messages, setMessages] = useState<Message[]>([]);
 
     // Initial reading states
@@ -101,7 +104,8 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
 
         // Khởi tạo Server-Sent Events Connection
         // Thêm tham số `access_token` và `followupQuestion` (nếu có)
-        const baseUrl = `http://localhost:5000/api/v1/sessions/${sessionId}/stream?access_token=${accessToken}`;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5221/api/v1";
+        const baseUrl = `${apiUrl}/sessions/${sessionId}/stream?access_token=${accessToken}`;
         const finalUrl = customPrompt ? `${baseUrl}&followupQuestion=${encodeURIComponent(customPrompt)}` : baseUrl;
 
         eventSourceRef.current = new EventSource(finalUrl, {
@@ -149,7 +153,7 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
         eventSourceRef.current.onerror = (err) => {
             console.error("SSE Connection Error:", err);
             stopStream();
-            setError("Tâm trí năng lượng vạn vật đang nhiễu loạn. Không thể kết nối.");
+            setError(t("error_stream"));
             setIsStreaming(false);
             setIsSendingFollowup(false);
         };
@@ -188,7 +192,7 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
                     </div>
                     <div>
                         <h3 className="text-xl font-serif font-bold text-white flex items-center">
-                            Thông Điệp Từ Vũ Trụ
+                            {t("title")}
                             {isStreaming && (
                                 <span className="ml-3 flex space-x-1">
                                     <span className="w-2 h-2 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
@@ -197,13 +201,13 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
                                 </span>
                             )}
                         </h3>
-                        <p className="text-sm text-zinc-400">Trí tuệ Nhân tạo huyền bí biên dịch các lá bài của bạn.</p>
+                        <p className="text-sm text-zinc-400">{t("subtitle")}</p>
                     </div>
                 </div>
 
                 {isComplete && (
                     <div className="flex items-center text-amber-400 text-sm font-medium bg-amber-400/10 px-4 py-2 rounded-full border border-amber-400/20">
-                        <Sparkles className="w-4 h-4 mr-2" /> Hoàn Tất Giải Mã
+                        <Sparkles className="w-4 h-4 mr-2" /> {t("status_complete")}
                     </div>
                 )}
             </div>
@@ -298,7 +302,7 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
                                 value={followupText}
                                 onChange={(e) => setFollowupText(e.target.value)}
                                 disabled={isStreaming || isSendingFollowup}
-                                placeholder="Hỏi thêm các Vì Sao về trải bài này..."
+                                placeholder={t("follow_up_placeholder")}
                                 className="w-full bg-zinc-900 border border-purple-500/30 text-white rounded-2xl px-6 py-4 pr-16 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 disabled:opacity-50 transition-all font-serif"
                             />
                             <button

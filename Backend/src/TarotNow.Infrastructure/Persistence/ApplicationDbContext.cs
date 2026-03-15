@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using TarotNow.Domain.Entities;
 using TarotNow.Infrastructure.Persistence.Configurations;
 
@@ -16,6 +17,12 @@ public class ApplicationDbContext : DbContext
     {
     }
 
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        // Đồng bộ bảng history về snake_case để tránh conflict case-sensitivity
+        optionsBuilder.UseNpgsql(o => o.MigrationsHistoryTable("__ef_migrations_history"));
+    }
+
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
     public DbSet<EmailOtp> EmailOtps { get; set; }
@@ -29,9 +36,14 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         
+        // 1. Áp dụng các cấu hình tường minh từ Assembly (VD: UserConfiguration)
+        // Cần làm điều này TRƯỚC khi chạy loop đặt tên snake_case để các HasColumnName được ưu tiên.
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+
+        // 2. Tự động chuyển đổi tên bảng và cột sang snake_case cho PostgreSQL
         foreach (var entity in modelBuilder.Model.GetEntityTypes())
         {
-            // Tên bảng -> snake_case
+            // Tên bảng -> snake_case (Chỉ dành cho các bảng thực, không phải Owned Types)
             if (!entity.IsOwned())
             {
                 var tableName = entity.GetTableName();
@@ -43,14 +55,16 @@ public class ApplicationDbContext : DbContext
                 // Quy tắc cho Owned Types: Giữ PK trùng với Owner 
                 if (entity.IsOwned() && property.IsPrimaryKey())
                 {
-                    // Thường là shadow property "Id" hoặc "UserId"
-                    // Ta map nó về "id" (hoặc tên PK của owner)
                     property.SetColumnName("id");
                     continue;
                 }
 
-                var colName = property.GetColumnName();
-                if (colName != null) property.SetColumnName(ToSnakeCase(colName));
+                // Chỉ đặt tên snake_case nếu property đó chưa có Column Name tường minh hoặc Column Name đang trùng với Property Name
+                var colName = property.GetColumnName(StoreObjectIdentifier.Table(entity.GetTableName()!, entity.GetSchema()));
+                if (string.IsNullOrEmpty(colName) || colName == property.Name)
+                {
+                    property.SetColumnName(ToSnakeCase(property.Name));
+                }
             }
 
             foreach (var key in entity.GetKeys())
@@ -71,9 +85,6 @@ public class ApplicationDbContext : DbContext
                 if (idxName != null) index.SetDatabaseName(ToSnakeCase(idxName));
             }
         }
-
-        // Scan tất cả EntityTypeConfiguration trong asembly hiện tại chứa DbContext này
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
 
     private string ToSnakeCase(string input)

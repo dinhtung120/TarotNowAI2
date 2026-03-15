@@ -1,0 +1,31 @@
+{
+  "Common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "retry": "Retry",
+    "submit": "Submit",
+    "cancel": "Cancel"
+  },
+  "AiInterpretation": {
+    "title": "Messages from the Universe",
+    "card_count": "{count} cards",
+    "follow_up_placeholder": "Ask more about this reading...",
+    "tokens_used": "Consumed: {count} energy",
+    "reading_started": "Reading started...",
+    "reading_complete": "Reading complete",
+    "error_stream": "Connection to the universe lost, please try again.",
+    "no_cards": "No cards selected.",
+    "subtitle": "Mystical AI interprets your cards.",
+    "status_streaming": "The Stars Are Aligning...",
+    "status_complete": "Interpretation Complete",
+    "error_title": "Spiritual Energy Disruption",
+    "error_desc": "The energy of all things is in turmoil. Cannot connect.",
+    "error_retry": "Try Another Channel (Auto Refund)",
+    "followup_free": "Free Follow-up ({count}/{total})",
+    "followup_paid": "Fee: {cost} Diamond",
+    "followup_placeholder": "Ask the Stars more about this reading...",
+    "limit_reached": "Cosmic Limit Reached",
+    "limit_desc": "The energy of the galaxy in this session has been exhausted (5/5 questions). Too many distractions will disturb the original message. Please accept and contemplate the essence above.",
+    "quota_disclaimer": "Limit 5 follow-up questions. Consumes AI Quota but free Diamonds if card level is high enough."
+  }
+}

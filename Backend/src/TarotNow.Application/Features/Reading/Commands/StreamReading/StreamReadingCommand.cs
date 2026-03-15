@@ -21,6 +21,7 @@ public class StreamReadingResult
 {
     public required IAsyncEnumerable<string> Stream { get; set; }
     public required Guid AiRequestId { get; set; }
+    public required IAiProvider Provider { get; set; }
 }
 
 public class StreamReadingCommandHandler : IRequestHandler<StreamReadingCommand, StreamReadingResult>
@@ -155,7 +156,8 @@ public class StreamReadingCommandHandler : IRequestHandler<StreamReadingCommand,
         return new StreamReadingResult
         {
             Stream = asyncStream,
-            AiRequestId = aiRequest.Id
+            AiRequestId = aiRequest.Id,
+            Provider = _aiProvider
         };
     }
 }

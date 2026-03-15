@@ -182,6 +182,31 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
         }
         catch (Exception ex)
         {
+            // COMPENSATING TRANSACTION:
+            // Nếu Postgres đã debit thành công nhưng MongoDB insert fail -> Cần Refund ngay lập tức
+            // để đảm bảo tính nguyên tử (Atomicity) liên database.
+            try
+            {
+                if (costGold > 0)
+                {
+                    await _walletRepository.CreditAsync(userId, CurrencyType.Gold, TransactionType.ReadingRefund, costGold,
+                        "System_Rollback", session.Id.ToString(), $"Hoàn trả Gold do lỗi hệ thống lưu Session",
+                        null, $"refund_rollback_{session.Id}", CancellationToken.None);
+                }
+                if (costDiamond > 0)
+                {
+                    await _walletRepository.CreditAsync(userId, CurrencyType.Diamond, TransactionType.ReadingRefund, costDiamond,
+                        "System_Rollback", session.Id.ToString(), $"Hoàn trả Diamond do lỗi hệ thống lưu Session",
+                        null, $"refund_rollback_{session.Id}", CancellationToken.None);
+                }
+            }
+            catch (Exception refundEx)
+            {
+                // CRITICAL: Nếu cả refund cũng fail, cần log lỗi cực kỳ nghiêm trọng để admin can thiệp thủ công.
+                // Ở đây ta re-throw exception gốc nhưng đính kèm thông tin lỗi refund.
+                throw new InvalidOperationException($"Lỗi nghiêm trọng: Trừ tiền thành công nhưng lưu Session thất bại và không thể Refund. Error: {ex.Message}. RefundError: {refundEx.Message}", ex);
+            }
+
             return (false, ex.Message);
         }
     }

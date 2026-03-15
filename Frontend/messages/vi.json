@@ -46,5 +46,19 @@
         "unknown_error": "Đã xảy ra lỗi không xác định từ hệ thống.",
         "unauthorized": "Phiên đăng nhập không hợp lệ, vui lòng đăng nhập lại.",
         "network_error": "Lỗi kết nối mạng, vui lòng kiểm tra lại."
+    },
+    "AiInterpretation": {
+        "title": "Lời Diễn Giải Từ Vũ Trụ",
+        "subtitle": "AI đang phân tích các lá bài và kết nối với năng lượng của bạn",
+        "status_complete": "Đã Hoàn Tất Giải Mã",
+        "error_stream": "Kênh truyền tin bị nhiễu đoạn. Vui lòng thử lại sau.",
+        "follow_up_placeholder": "Bạn muốn hỏi thêm gì về trải bài này?..."
+    },
+    "Common": {
+        "loading": "Đang tải...",
+        "error": "Có lỗi xảy ra",
+        "back": "Quay lại",
+        "confirm": "Xác nhận",
+        "status_complete": "Hoàn tất"
     }
 }

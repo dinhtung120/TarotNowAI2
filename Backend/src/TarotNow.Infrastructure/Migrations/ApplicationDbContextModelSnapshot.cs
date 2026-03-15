@@ -460,6 +460,14 @@ namespace TarotNow.Infrastructure.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("role");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasDefaultValue("pending")
+                        .HasColumnName("status");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -694,7 +702,7 @@ namespace TarotNow.Infrastructure.Migrations
                         {
                             b1.Property<Guid>("UserId")
                                 .HasColumnType("uuid")
-                                .HasColumnName("user_id");
+                                .HasColumnName("id");
 
                             b1.Property<long>("DiamondBalance")
                                 .ValueGeneratedOnAdd()
@@ -721,13 +729,13 @@ namespace TarotNow.Infrastructure.Migrations
                                 .HasColumnName("total_diamonds_purchased");
 
                             b1.HasKey("UserId")
-                                .HasName("pk_user_wallet");
+                                .HasName("pk_users");
 
-                            b1.ToTable("user_wallet");
+                            b1.ToTable("users");
 
                             b1.WithOwner()
                                 .HasForeignKey("UserId")
-                                .HasConstraintName("fk_user_wallet_users_user_id");
+                                .HasConstraintName("fk_users_users_id");
                         });
 
                     b.Navigation("Wallet")

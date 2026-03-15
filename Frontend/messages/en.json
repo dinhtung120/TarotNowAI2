@@ -20,6 +20,26 @@
     "Navigation": {
         "home": "Home",
         "readings": "Readings",
-        "login": "Login"
+        "login": "Login",
+        "register": "Register",
+        "logout": "Logout",
+        "profile": "Profile",
+        "wallet": "Wallet",
+        "history": "History",
+        "collection": "Collection"
+    },
+    "AiInterpretation": {
+        "title": "Universal Interpretation",
+        "subtitle": "AI is analyzing the cards and connecting with your energy",
+        "status_complete": "Decoding Complete",
+        "error_stream": "The communication channel is disrupted. Please try again later.",
+        "follow_up_placeholder": "What else would you like to ask about this reading?..."
+    },
+    "Common": {
+        "loading": "Loading...",
+        "error": "An error occurred",
+        "back": "Back",
+        "confirm": "Confirm",
+        "status_complete": "Complete"
     }
 }

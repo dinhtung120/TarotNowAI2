@@ -16,17 +16,14 @@ public class WalletTransactionConfiguration : IEntityTypeConfiguration<WalletTra
 
         builder.Property(e => e.UserId).HasColumnName("user_id").IsRequired();
 
-        // Enum Currency (Lưu thành string in lowercase 'gold', 'diamond' in DB constraint)
+        // Enum Currency (Ánh xạ sang kiểu string trong PostgreSQL)
         builder.Property(e => e.Currency)
             .HasColumnName("currency")
-
             .IsRequired();
 
-        // Enum Type (Lưu thành string snake_case) - Do EF Core query builder cần match chính xác type PostgreSQL ENUM.
-        // Npgsql supports Enum mapping natively if mapped in DbContext, but string conversion is simpler for reading.
+        // Enum Type (Ánh xạ sang kiểu string trong PostgreSQL)
         builder.Property(e => e.Type)
             .HasColumnName("type")
-
             .IsRequired();
 
         builder.Property(e => e.Amount).HasColumnName("amount").IsRequired();

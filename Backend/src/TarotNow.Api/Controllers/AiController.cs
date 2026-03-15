@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
 using TarotNow.Application.Features.Reading.Commands.StreamReading;
 using TarotNow.Domain.Enums;
+using TarotNow.Infrastructure.Services.Ai;
 
 namespace TarotNow.Api.Controllers;
 
@@ -109,6 +110,14 @@ public class AiController : ControllerBase
                 IsClientDisconnect = false,
                 FirstTokenAt = firstTokenAt
             }, CancellationToken.None); // Dùng None vì client đã nhận xong, không nên cancel
+
+            // Bước 5: Ghi log AI Telemetry vào MongoDB
+            if (result.Provider is OpenAiProvider openAi)
+            {
+                var latency = firstTokenAt.HasValue ? (int)(DateTimeOffset.UtcNow - firstTokenAt.Value).TotalMilliseconds : 0;
+                await openAi.LogRequestAsync(userId, sessionId, result.AiRequestId.ToString(), 
+                    0, tokenCounter, latency, "completed"); 
+            }
         }
         catch (OperationCanceledException)
         {
@@ -126,6 +135,12 @@ public class AiController : ControllerBase
                 IsClientDisconnect = true,
                 FirstTokenAt = firstTokenAt
             }, CancellationToken.None);
+
+            if (result.Provider is OpenAiProvider openAi)
+            {
+                await openAi.LogRequestAsync(userId, sessionId, result.AiRequestId.ToString(), 
+                    0, tokenCounter, 0, "failed", "Client disconnected");
+            }
         }
         catch (Exception ex) when (ex is TaskCanceledException || ex.InnerException is TaskCanceledException)
         {
@@ -143,6 +158,12 @@ public class AiController : ControllerBase
                 IsClientDisconnect = true,
                 FirstTokenAt = firstTokenAt
             }, CancellationToken.None);
+
+            if (result.Provider is OpenAiProvider openAi)
+            {
+                await openAi.LogRequestAsync(userId, sessionId, result.AiRequestId.ToString(), 
+                    0, tokenCounter, 0, "failed", "TaskCanceled");
+            }
         }
         catch (Exception ex)
         {
@@ -160,6 +181,12 @@ public class AiController : ControllerBase
                 IsClientDisconnect = false,
                 FirstTokenAt = firstTokenAt
             }, CancellationToken.None);
+
+            if (result.Provider is OpenAiProvider openAi)
+            {
+                await openAi.LogRequestAsync(userId, sessionId, result.AiRequestId.ToString(), 
+                    0, tokenCounter, 0, "failed", ex.Message);
+            }
 
             if (!Response.HasStarted)
             {

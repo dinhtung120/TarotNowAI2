@@ -12,8 +12,8 @@ using TarotNow.Infrastructure.Persistence;
 namespace TarotNow.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260310144003_AddAiRequestsTable")]
-    partial class AddAiRequestsTable
+    [Migration("20260315124405_ResetSchema")]
+    partial class ResetSchema
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -90,8 +90,8 @@ namespace TarotNow.Infrastructure.Migrations
 
                     b.Property<string>("ReadingSessionRef")
                         .IsRequired()
-                        .HasMaxLength(24)
-                        .HasColumnType("character varying(24)")
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)")
                         .HasColumnName("reading_session_ref");
 
                     b.Property<string>("RequestedLocale")
@@ -149,6 +149,97 @@ namespace TarotNow.Infrastructure.Migrations
                     b.ToTable("ai_requests", (string)null);
                 });
 
+            modelBuilder.Entity("TarotNow.Domain.Entities.DepositOrder", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<long>("AmountVnd")
+                        .HasColumnType("bigint")
+                        .HasColumnName("amount_vnd");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<long>("DiamondAmount")
+                        .HasColumnType("bigint")
+                        .HasColumnName("diamond_amount");
+
+                    b.Property<string>("FxSnapshot")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("fx_snapshot");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("TransactionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("transaction_id");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_deposit_orders");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("ix_deposit_orders_status");
+
+                    b.HasIndex("TransactionId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_deposit_orders_transaction_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_deposit_orders_user_id");
+
+                    b.ToTable("deposit_orders", (string)null);
+                });
+
+            modelBuilder.Entity("TarotNow.Domain.Entities.DepositPromotion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<long>("BonusDiamond")
+                        .HasColumnType("bigint")
+                        .HasColumnName("bonus_diamond");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<long>("MinAmountVnd")
+                        .HasColumnType("bigint")
+                        .HasColumnName("min_amount_vnd");
+
+                    b.HasKey("Id")
+                        .HasName("pk_deposit_promotions");
+
+                    b.HasIndex("MinAmountVnd")
+                        .HasDatabaseName("ix_deposit_promotions_min_amount_vnd");
+
+                    b.ToTable("deposit_promotions", (string)null);
+                });
+
             modelBuilder.Entity("TarotNow.Domain.Entities.EmailOtp", b =>
                 {
                     b.Property<Guid>("Id")
@@ -202,6 +293,12 @@ namespace TarotNow.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<long>("AmountCharged")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("amount_charged");
+
                     b.Property<string>("CardsDrawn")
                         .HasColumnType("jsonb")
                         .HasColumnName("cards_drawn");
@@ -216,11 +313,21 @@ namespace TarotNow.Infrastructure.Migrations
                         .HasColumnName("created_at")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<string>("CurrencyUsed")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("currency_used");
+
                     b.Property<bool>("IsCompleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(false)
                         .HasColumnName("is_completed");
+
+                    b.Property<string>("Question")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("question");
 
                     b.Property<string>("SpreadType")
                         .IsRequired()
@@ -300,6 +407,10 @@ namespace TarotNow.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("avatar_url");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -309,10 +420,6 @@ namespace TarotNow.Infrastructure.Migrations
                     b.Property<DateTime>("DateOfBirth")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("date_of_birth");
-
-                    b.Property<long>("DiamondBalance")
-                        .HasColumnType("bigint")
-                        .HasColumnName("diamond_balance");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
@@ -330,21 +437,13 @@ namespace TarotNow.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
                         .HasDefaultValue(0L)
-                        .HasColumnName("exp");
-
-                    b.Property<long>("FrozenDiamondBalance")
-                        .HasColumnType("bigint")
-                        .HasColumnName("frozen_diamond_balance");
-
-                    b.Property<long>("GoldBalance")
-                        .HasColumnType("bigint")
-                        .HasColumnName("gold_balance");
+                        .HasColumnName("user_exp");
 
                     b.Property<int>("Level")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValue(1)
-                        .HasColumnName("level");
+                        .HasColumnName("user_level");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -366,13 +465,11 @@ namespace TarotNow.Infrastructure.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
+                        .HasDefaultValue("pending")
                         .HasColumnName("status");
-
-                    b.Property<long>("TotalDiamondsPurchased")
-                        .HasColumnType("bigint")
-                        .HasColumnName("total_diamonds_purchased");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -439,6 +536,55 @@ namespace TarotNow.Infrastructure.Migrations
                         .HasDatabaseName("ix_user_collections_user_id");
 
                     b.ToTable("user_collections", (string)null);
+                });
+
+            modelBuilder.Entity("TarotNow.Domain.Entities.UserConsent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("ConsentedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("consented_at");
+
+                    b.Property<string>("DocumentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("document_type");
+
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .HasMaxLength(45)
+                        .HasColumnType("character varying(45)")
+                        .HasColumnName("ip_address");
+
+                    b.Property<string>("UserAgent")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("user_agent");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_user_consents");
+
+                    b.HasIndex("UserId", "DocumentType", "Version")
+                        .IsUnique()
+                        .HasDatabaseName("ix_user_consents_user_id_document_type_version");
+
+                    b.ToTable("user_consents", (string)null);
                 });
 
             modelBuilder.Entity("TarotNow.Domain.Entities.WalletTransaction", b =>
@@ -510,9 +656,21 @@ namespace TarotNow.Infrastructure.Migrations
                     b.HasOne("TarotNow.Domain.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_ai_requests_users_user_id");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TarotNow.Domain.Entities.DepositOrder", b =>
+                {
+                    b.HasOne("TarotNow.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_deposit_orders_users_user_id");
 
                     b.Navigation("User");
                 });
@@ -539,6 +697,69 @@ namespace TarotNow.Infrastructure.Migrations
                         .HasConstraintName("fk_refresh_tokens_users_user_id");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TarotNow.Domain.Entities.User", b =>
+                {
+                    b.OwnsOne("TarotNow.Domain.Entities.UserWallet", "Wallet", b1 =>
+                        {
+                            b1.Property<Guid>("UserId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("id");
+
+                            b1.Property<long>("DiamondBalance")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("bigint")
+                                .HasDefaultValue(0L)
+                                .HasColumnName("diamond_balance");
+
+                            b1.Property<long>("FrozenDiamondBalance")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("bigint")
+                                .HasDefaultValue(0L)
+                                .HasColumnName("frozen_diamond_balance");
+
+                            b1.Property<long>("GoldBalance")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("bigint")
+                                .HasDefaultValue(0L)
+                                .HasColumnName("gold_balance");
+
+                            b1.Property<long>("TotalDiamondsPurchased")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("bigint")
+                                .HasDefaultValue(0L)
+                                .HasColumnName("total_diamonds_purchased");
+
+                            b1.HasKey("UserId")
+                                .HasName("pk_users");
+
+                            b1.ToTable("users");
+
+                            b1.WithOwner()
+                                .HasForeignKey("UserId")
+                                .HasConstraintName("fk_users_users_id");
+                        });
+
+                    b.Navigation("Wallet")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("TarotNow.Domain.Entities.UserConsent", b =>
+                {
+                    b.HasOne("TarotNow.Domain.Entities.User", "User")
+                        .WithMany("Consents")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_consents_users_user_id");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TarotNow.Domain.Entities.User", b =>
+                {
+                    b.Navigation("Consents");
                 });
 #pragma warning restore 612, 618
         }

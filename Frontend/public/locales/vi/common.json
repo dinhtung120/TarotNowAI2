@@ -1,0 +1,31 @@
+{
+  "Common": {
+    "loading": "Đang tải...",
+    "error": "Đã xảy ra lỗi",
+    "retry": "Thử lại",
+    "submit": "Gửi",
+    "cancel": "Hủy"
+  },
+  "AiInterpretation": {
+    "title": "Thông Điệp Từ Vũ Trụ",
+    "card_count": "{count} lá bài",
+    "follow_up_placeholder": "Hỏi thêm về trải bài này...",
+    "tokens_used": "Tiêu thụ: {count} linh lực",
+    "reading_started": "Bắt đầu trải bài...",
+    "reading_complete": "Trải bài hoàn tất",
+    "error_stream": "Lỗi kết nối vũ trụ, vui lòng thử lại.",
+    "no_cards": "Chưa có lá bài nào được chọn.",
+    "subtitle": "Trí tuệ Nhân tạo huyền bí biên dịch các lá bài của bạn.",
+    "status_streaming": "Các Tinh Tú Đang Thẳng Hàng...",
+    "status_complete": "Hoàn Tất Giải Mã",
+    "error_title": "Lỗi Năng Lượng Thần Giao",
+    "error_desc": "Tâm trí năng lượng vạn vật đang nhiễu loạn. Không thể kết nối.",
+    "error_retry": "Thử Kênh Khác (Refund Tự Động)",
+    "followup_free": "Miễn Phí Follow-up ({count}/{total})",
+    "followup_paid": "Phí: {cost} Diamond",
+    "followup_placeholder": "Hỏi thêm các Vì Sao về trải bài này...",
+    "limit_reached": "Giới hạn Vũ Trụ đã đạt",
+    "limit_desc": "Năng lượng của dải ngân hà trong phiên này đã vơi cạn (5/5 câu). Quá nhiều sự phân tâm sẽ làm nhiễu loạn thông điệp ban đầu. Xin hãy đón nhận và chiêm nghiệm tinh hoa trên.",
+    "quota_disclaimer": "Giới hạn 5 câu hỏi phụ. Tốn AI Quota nhưng miễn phí Diamond nếu bài đủ cấp."
+  }
+}

@@ -14,14 +14,14 @@ namespace TarotNow.Infrastructure.Services.Ai;
 /// </summary>
 public class OpenAiProvider : IAiProvider
 {
-    private readonly HttpClient _httpClient;
-    private readonly string _apiKey;
+    private readonly IAiProviderLogRepository _logRepo;
     public string ProviderName => "OpenAI";
     public string ModelName => "gpt-4o-mini"; // Mặc định như đã trao đổi
 
-    public OpenAiProvider(HttpClient httpClient, IConfiguration configuration)
+    public OpenAiProvider(HttpClient httpClient, IConfiguration configuration, IAiProviderLogRepository logRepo)
     {
         _httpClient = httpClient;
+        _logRepo = logRepo;
         _apiKey = configuration["AiProvider:ApiKey"] 
                   ?? throw new ArgumentNullException("AiProvider:ApiKey is missing in AppSettings.json");
 
@@ -84,4 +84,36 @@ public class OpenAiProvider : IAiProvider
             }
         }
     }
+
+    /// <summary>
+    /// Extension (internal use): Ghi log vào MongoDB telemetry.
+    /// Tại sao không ghi log trực tiếp trong StreamChatAsync? 
+    /// -> Để tách biệt logic streaming và logic audit.
+    /// </summary>
+    public async Task LogRequestAsync(Guid userId, string? sessionId, string? requestId, int inputTokens, int outputTokens, int latencyMs, string status, string? errorCode = null)
+    {
+        try
+        {
+            await _logRepo.CreateAsync(new AiProviderLogCreateDto
+            {
+                UserId = userId,
+                ReadingRef = sessionId,
+                AiRequestRef = requestId,
+                Model = ModelName,
+                InputTokens = inputTokens,
+                OutputTokens = outputTokens,
+                LatencyMs = latencyMs,
+                Status = status,
+                ErrorCode = errorCode,
+                PromptVersion = "v1.0" // Cố định phiên bản prompt cho giai đoạn này
+            });
+        }
+        catch
+        {
+            // Fail-safe: Log telemetry thất bại không được làm sập luồng chính của ứng dụng
+        }
+    }
+
+    private readonly HttpClient _httpClient;
+    private readonly string _apiKey;
 }
