@@ -4,7 +4,7 @@ using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Reading.Commands.InitSession;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
-using TarotNow.Domain.Interfaces;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.UnitTests.Reading;
 

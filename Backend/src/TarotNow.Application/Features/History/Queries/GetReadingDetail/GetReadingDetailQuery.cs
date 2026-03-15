@@ -1,6 +1,6 @@
 using MediatR;
 using TarotNow.Application.Exceptions;
-using TarotNow.Domain.Interfaces;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.History.Queries.GetReadingDetail;
 

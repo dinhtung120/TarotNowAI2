@@ -1,6 +1,6 @@
 using TarotNow.Domain.Entities;
 
-namespace TarotNow.Domain.Interfaces;
+namespace TarotNow.Application.Interfaces;
 
 public interface IReadingSessionRepository
 {

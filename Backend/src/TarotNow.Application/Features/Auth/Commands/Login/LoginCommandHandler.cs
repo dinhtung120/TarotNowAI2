@@ -4,7 +4,7 @@ using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 using TarotNow.Domain.Exceptions;
-using TarotNow.Domain.Interfaces;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Auth.Commands.Login;
 

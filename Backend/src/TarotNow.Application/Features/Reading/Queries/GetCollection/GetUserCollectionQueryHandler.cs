@@ -1,5 +1,5 @@
 using MediatR;
-using TarotNow.Domain.Interfaces;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Reading.Queries.GetCollection;
 

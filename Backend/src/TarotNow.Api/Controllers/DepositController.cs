@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using TarotNow.Api.Contracts;
 using TarotNow.Application.Features.Deposit.Commands.CreateDepositOrder;
 using TarotNow.Application.Features.Deposit.Commands.ProcessDepositWebhook;
 
@@ -86,9 +87,4 @@ public class DepositController : ControllerBase
             return StatusCode(500, new { msg = ex.Message, stack = ex.ToString() });
         }
     }
-}
-
-public class CreateDepositOrderRequest
-{
-    public long AmountVnd { get; set; }
 }

@@ -1,6 +1,6 @@
 using TarotNow.Application.Features.Wallet.Queries;
 using TarotNow.Application.Features.Wallet.Queries.GetLedgerList;
-using TarotNow.Domain.Interfaces;
+using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using Moq;
 using FluentAssertions;

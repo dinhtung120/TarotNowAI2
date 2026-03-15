@@ -4,7 +4,13 @@ namespace TarotNow.Domain.Entities;
 
 /// <summary>
 /// Domain Entity đại diện cho người dùng hệ thống.
-/// Mọi thao tác cập nhật (đổi pass, lên level) nên định nghĩa rõ thành method.
+/// 
+/// Refactored theo SRP (Single Responsibility Principle):
+/// - User: quản lý thông tin cá nhân, trạng thái tài khoản, level/EXP.
+/// - UserWallet (Owned Entity): quản lý tài chính (Gold, Diamond, Escrow).
+/// 
+/// Trước đây User chứa 232 dòng với 7 methods tài chính — vi phạm SRP.
+/// Nay tách ra, User chỉ giữ ~120 dòng với trách nhiệm rõ ràng.
 /// </summary>
 public class User
 {
@@ -26,11 +32,22 @@ public class User
     public int Level { get; private set; } = 1;
     public long Exp { get; private set; } = 0;
 
-    // Dành cho Wallet
-    public long GoldBalance { get; private set; } = 0;
-    public long DiamondBalance { get; private set; } = 0;
-    public long FrozenDiamondBalance { get; private set; } = 0;
-    public long TotalDiamondsPurchased { get; private set; } = 0;
+    /// <summary>
+    /// Owned Entity quản lý toàn bộ tài chính.
+    /// EF Core sẽ map các property của Wallet vào cùng bảng "users".
+    /// Truy cập: user.Wallet.GoldBalance, user.Wallet.Credit(...), v.v.
+    /// </summary>
+    public UserWallet Wallet { get; private set; }
+
+    // ======================================================================
+    // BACKWARD COMPATIBILITY: Các property delegate sang Wallet
+    // Giữ lại để không phải sửa tất cả query/projection cùng lúc.
+    // Có thể loại bỏ dần trong các sprint tiếp theo.
+    // ======================================================================
+    public long GoldBalance => Wallet.GoldBalance;
+    public long DiamondBalance => Wallet.DiamondBalance;
+    public long FrozenDiamondBalance => Wallet.FrozenDiamondBalance;
+    public long TotalDiamondsPurchased => Wallet.TotalDiamondsPurchased;
 
     public string Status { get; private set; }
     public string Role { get; private set; }
@@ -42,7 +59,10 @@ public class User
     public ICollection<UserConsent> Consents { get; private set; } = new List<UserConsent>();
 
     // Dành cho EF Core
-    protected User() { }
+    protected User() 
+    {
+        Wallet = UserWallet.CreateDefault();
+    }
 
     public User(string email, string username, string passwordHash, string displayName, DateTime dateOfBirth, bool hasConsented)
     {
@@ -53,9 +73,10 @@ public class User
         DisplayName = displayName;
         DateOfBirth = dateOfBirth;
         HasConsented = hasConsented;
-        Status = UserStatus.Pending; // Cần verify email mới đổi sang Active
+        Status = UserStatus.Pending;
         Role = UserRole.User;
         ReaderStatus = ReaderApprovalStatus.Pending;
+        Wallet = UserWallet.CreateDefault();
         CreatedAt = DateTime.UtcNow;
     }
 
@@ -67,7 +88,6 @@ public class User
 
     /// <summary>
     /// Cập nhật mật khẩu sau khi hash thành công.
-    /// </summary>
     /// </summary>
     public void UpdatePassword(string newHash)
     {
@@ -100,7 +120,7 @@ public class User
     /// </summary>
     public void Lock()
     {
-        Status = "Locked"; // Use string directly or constant if UserStatus.Locked exists.
+        Status = UserStatus.Locked;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -113,101 +133,53 @@ public class User
         UpdatedAt = DateTime.UtcNow;
     }
 
-    /// <summary>
-    /// Cộng tiền vào ví (Gold hoặc Diamond). Nếu là nạp thẻ (Deposit), tính thêm vào số tổng Diamond đã mua.
-    /// Giải thích: Logic trước đây nằm ở Postgres proc_wallet_credit, nay chuyển về Entity để dễ quản lý.
-    /// </summary>
+    // ======================================================================
+    // BACKWARD COMPATIBILITY: Delegate methods sang Wallet
+    // Giữ lại để WalletRepository không bị breaking change.
+    // Các handler/repo gọi user.Credit() → thực tế gọi user.Wallet.Credit()
+    // Sẽ loại bỏ dần khi migrate xong toàn bộ callers sang user.Wallet.*
+    // ======================================================================
+
+    /// <summary>Delegate → Wallet.Credit</summary>
     public void Credit(string currency, long amount, string type)
     {
-        if (amount <= 0) 
-            throw new ArgumentException("Số tiền cộng vào phải lớn hơn 0.", nameof(amount));
-
-        if (currency == CurrencyType.Gold)
-        {
-            GoldBalance += amount;
-        }
-        else if (currency == CurrencyType.Diamond)
-        {
-            DiamondBalance += amount;
-            if (type == TransactionType.Deposit)
-            {
-                TotalDiamondsPurchased += amount;
-            }
-        }
-
+        Wallet.Credit(currency, amount, type);
         UpdatedAt = DateTime.UtcNow;
     }
 
-    /// <summary>
-    /// Trừ tiền từ ví. Sẽ throw exception nếu số dư không đủ.
-    /// Giải thích: Đảm bảo biến động số dư luôn hợp lệ trước khi persist DB.
-    /// </summary>
+    /// <summary>Delegate → Wallet.Debit</summary>
     public void Debit(string currency, long amount)
     {
-        if (amount <= 0) 
-            throw new ArgumentException("Số tiền trừ đi phải lớn hơn 0.", nameof(amount));
-
-        if (currency == CurrencyType.Gold)
-        {
-            if (GoldBalance < amount)
-                throw new InvalidOperationException("Số dư Gold không đủ.");
-            GoldBalance -= amount;
-        }
-        else if (currency == CurrencyType.Diamond)
-        {
-            if (DiamondBalance < amount)
-                throw new InvalidOperationException("Số dư Diamond không đủ.");
-            DiamondBalance -= amount;
-        }
-
+        Wallet.Debit(currency, amount);
         UpdatedAt = DateTime.UtcNow;
     }
 
-    /// <summary>
-    /// Đóng băng (Freeze) Diamond - chuyển từ khả dụng sang đang bị giữ (Escrow).
-    /// </summary>
+    /// <summary>Delegate → Wallet.FreezeDiamond</summary>
     public void FreezeDiamond(long amount)
     {
-        if (amount <= 0) 
-            throw new ArgumentException("Số tiền đóng băng phải lớn hơn 0.", nameof(amount));
-
-        if (DiamondBalance < amount)
-            throw new InvalidOperationException("Số dư Diamond không đủ để đóng băng.");
-
-        DiamondBalance -= amount;
-        FrozenDiamondBalance += amount;
+        Wallet.FreezeDiamond(amount);
         UpdatedAt = DateTime.UtcNow;
     }
 
-    /// <summary>
-    /// Giải phóng (Release) Diamond - trừ Diamond đã đóng băng của người trả tiền (Payer).
-    /// Không cộng vào đây, vì Diamond sẽ được cộng (Credit) sang người nhận ở transaction khác.
-    /// </summary>
+    /// <summary>Delegate → Wallet.ReleaseFrozenDiamond</summary>
     public void ReleaseFrozenDiamond(long amount)
     {
-        if (amount <= 0) 
-            throw new ArgumentException("Số tiền giải phóng phải lớn hơn 0.", nameof(amount));
-
-        if (FrozenDiamondBalance < amount)
-            throw new InvalidOperationException("Số dư Diamond đóng băng không đủ để giải phóng.");
-
-        FrozenDiamondBalance -= amount;
+        Wallet.ReleaseFrozenDiamond(amount);
         UpdatedAt = DateTime.UtcNow;
     }
 
-    /// <summary>
-    /// Hoàn trả (Refund) Diamond - chuyển từ đóng băng về lại khả dụng.
-    /// </summary>
+    /// <summary>Delegate → Wallet.RefundFrozenDiamond</summary>
     public void RefundFrozenDiamond(long amount)
     {
-        if (amount <= 0) 
-            throw new ArgumentException("Số tiền hoàn trả phải lớn hơn 0.", nameof(amount));
+        Wallet.RefundFrozenDiamond(amount);
+        UpdatedAt = DateTime.UtcNow;
+    }
 
-        if (FrozenDiamondBalance < amount)
-            throw new InvalidOperationException("Số dư Diamond đóng băng không đủ để hoàn trả.");
-
-        FrozenDiamondBalance -= amount;
-        DiamondBalance += amount;
+    /// <summary>Delegate → Wallet.ConsumeFrozenDiamond</summary>
+    public void ConsumeFrozenDiamond(long amount)
+    {
+        Wallet.ConsumeFrozenDiamond(amount);
         UpdatedAt = DateTime.UtcNow;
     }
 }
+

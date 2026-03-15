@@ -2,7 +2,7 @@ using MediatR;
 using System.Threading;
 using System.Threading.Tasks;
 using TarotNow.Domain.Entities;
-using TarotNow.Domain.Interfaces;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Deposit.Commands.CreateDepositOrder;
 

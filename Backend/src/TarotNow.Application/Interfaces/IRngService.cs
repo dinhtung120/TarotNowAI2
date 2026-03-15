@@ -1,4 +1,4 @@
-namespace TarotNow.Domain.Interfaces;
+namespace TarotNow.Application.Interfaces;
 
 public interface IRngService
 {

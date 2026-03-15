@@ -6,6 +6,9 @@ namespace TarotNow.Infrastructure.Persistence;
 
 /// <summary>
 /// DbContext chính của ứng dụng kết nối với PostgreSQL.
+/// 
+/// Lưu ý: ReadingSession và UserCollection đã được chuyển sang MongoDB
+/// (xem MongoDbContext). Chỉ còn các entity thuần PostgreSQL ở đây.
 /// </summary>
 public class ApplicationDbContext : DbContext
 {
@@ -17,8 +20,6 @@ public class ApplicationDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
     public DbSet<EmailOtp> EmailOtps { get; set; }
     public DbSet<WalletTransaction> WalletTransactions { get; set; }
-    public DbSet<ReadingSession> ReadingSessions { get; set; } = null!;
-    public DbSet<UserCollection> UserCollections { get; set; } = null!;
     public DbSet<AiRequest> AiRequests { get; set; } = null!;
     public DbSet<UserConsent> UserConsents { get; set; } = null!;
     public DbSet<DepositOrder> DepositOrders { get; set; } = null!;
@@ -28,34 +29,46 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         
-        // Cấu hình quy ước chuẩn Snake Case (tương thích PostgreSQL schema.sql)
-        // Để mapping các field tự nhiên như "PasswordHash" -> "password_hash"
         foreach (var entity in modelBuilder.Model.GetEntityTypes())
         {
-            var tableName = entity.GetTableName();
-            if (tableName != null)
-                entity.SetTableName(ToSnakeCase(tableName));
+            // Tên bảng -> snake_case
+            if (!entity.IsOwned())
+            {
+                var tableName = entity.GetTableName();
+                if (tableName != null) entity.SetTableName(ToSnakeCase(tableName));
+            }
 
             foreach (var property in entity.GetProperties())
             {
-                // Chỉ translate column name nếu config kia chưa explicit set HasColumnName()
-                var mappedColumn = property.GetColumnName();
-                property.SetColumnName(ToSnakeCase(mappedColumn));
+                // Quy tắc cho Owned Types: Giữ PK trùng với Owner 
+                if (entity.IsOwned() && property.IsPrimaryKey())
+                {
+                    // Thường là shadow property "Id" hoặc "UserId"
+                    // Ta map nó về "id" (hoặc tên PK của owner)
+                    property.SetColumnName("id");
+                    continue;
+                }
+
+                var colName = property.GetColumnName();
+                if (colName != null) property.SetColumnName(ToSnakeCase(colName));
             }
 
             foreach (var key in entity.GetKeys())
             {
-                key.SetName(ToSnakeCase(key.GetName()));
+                var keyName = key.GetName();
+                if (keyName != null) key.SetName(ToSnakeCase(keyName));
             }
 
-            foreach (var key in entity.GetForeignKeys())
+            foreach (var fk in entity.GetForeignKeys())
             {
-                key.SetConstraintName(ToSnakeCase(key.GetConstraintName()));
+                var fkName = fk.GetConstraintName();
+                if (fkName != null) fk.SetConstraintName(ToSnakeCase(fkName));
             }
 
             foreach (var index in entity.GetIndexes())
             {
-                index.SetDatabaseName(ToSnakeCase(index.GetDatabaseName()));
+                var idxName = index.GetDatabaseName();
+                if (idxName != null) index.SetDatabaseName(ToSnakeCase(idxName));
             }
         }
 

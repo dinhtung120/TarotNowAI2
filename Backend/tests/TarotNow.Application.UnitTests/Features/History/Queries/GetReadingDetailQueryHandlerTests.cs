@@ -2,7 +2,7 @@ using FluentAssertions;
 using Moq;
 using TarotNow.Application.Features.History.Queries.GetReadingDetail;
 using TarotNow.Domain.Entities;
-using TarotNow.Domain.Interfaces;
+using TarotNow.Application.Interfaces;
 using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.History.Queries;

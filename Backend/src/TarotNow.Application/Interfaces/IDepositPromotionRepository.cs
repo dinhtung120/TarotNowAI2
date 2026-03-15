@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TarotNow.Domain.Entities;
 
-namespace TarotNow.Domain.Interfaces;
+namespace TarotNow.Application.Interfaces;
 
 public interface IDepositPromotionRepository
 {

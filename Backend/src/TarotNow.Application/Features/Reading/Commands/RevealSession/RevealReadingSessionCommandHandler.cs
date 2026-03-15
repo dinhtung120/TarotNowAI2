@@ -2,7 +2,7 @@ using System.Text.Json;
 using MediatR;
 using TarotNow.Application.Exceptions;
 using TarotNow.Domain.Enums;
-using TarotNow.Domain.Interfaces;
+using TarotNow.Application.Interfaces;
 using System;
 using System.Linq;
 using System.Threading;

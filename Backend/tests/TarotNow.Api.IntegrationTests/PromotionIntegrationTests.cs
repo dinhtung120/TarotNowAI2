@@ -5,6 +5,7 @@ using System.Net.Http.Json;
 using TarotNow.Domain.Entities;
 using TarotNow.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using TarotNow.Domain.Enums;
 using Xunit;
 
 namespace TarotNow.Api.IntegrationTests;
@@ -29,16 +30,21 @@ public class PromotionIntegrationTests : IClassFixture<CustomWebApplicationFacto
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         if (!await db.Users.AnyAsync(u => u.Id == userId))
         {
-            var user = (User)System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(User));
+            var user = new User(
+                email: "test@example.com",
+                username: "testadmin",
+                passwordHash: "hashed",
+                displayName: "Test Admin",
+                dateOfBirth: new DateTime(1990, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                hasConsented: true);
+            
+            // Set Id via reflection since it's private set
             typeof(User).GetProperty("Id")?.SetValue(user, userId);
-            typeof(User).GetProperty("Email")?.SetValue(user, "test@example.com");
-            typeof(User).GetProperty("Username")?.SetValue(user, "testadmin");
-            typeof(User).GetProperty("DisplayName")?.SetValue(user, "Test Admin");
-            typeof(User).GetProperty("Role")?.SetValue(user, "admin");
-            typeof(User).GetProperty("Status")?.SetValue(user, "active");
-            typeof(User).GetProperty("ReaderStatus")?.SetValue(user, "none");
+            typeof(User).GetProperty("Role")?.SetValue(user, UserRole.Admin);
+            user.Activate(); // active
+            typeof(User).GetProperty("ReaderStatus")?.SetValue(user, ReaderApprovalStatus.Pending);
             typeof(User).GetProperty("PasswordHash")?.SetValue(user, "hashed");
-
+            
             db.Users.Add(user);
             await db.SaveChangesAsync();
         }

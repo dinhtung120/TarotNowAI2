@@ -22,13 +22,26 @@ public class ReadingSessionConfiguration : IEntityTypeConfiguration<ReadingSessi
         // Enum -> String conversion
         builder.Property(e => e.SpreadType)
             .HasColumnName("spread_type")
-
             .IsRequired();
 
+        // Câu hỏi tùy chọn từ người dùng (nullable)
+        builder.Property(e => e.Question)
+            .HasColumnName("question")
+            .HasMaxLength(500);
 
         builder.Property(e => e.CardsDrawn)
             .HasColumnName("cards_drawn")
             .HasColumnType("jsonb");
+
+        // Loại tiền sử dụng (Gold/Diamond), nullable vì daily_1 có thể miễn phí
+        builder.Property(e => e.CurrencyUsed)
+            .HasColumnName("currency_used")
+            .HasMaxLength(20);
+
+        // Số tiền đã trừ, mặc định 0 cho các phiên miễn phí
+        builder.Property(e => e.AmountCharged)
+            .HasColumnName("amount_charged")
+            .HasDefaultValue(0L);
 
         builder.Property(e => e.IsCompleted)
             .HasColumnName("is_completed")

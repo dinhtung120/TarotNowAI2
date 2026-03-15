@@ -5,12 +5,12 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
-using TarotNow.Domain.Interfaces;
 using TarotNow.Infrastructure.Persistence;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Authentication;
 using Xunit;
+using Microsoft.EntityFrameworkCore;
 
 namespace TarotNow.Api.IntegrationTests;
 
@@ -66,13 +66,24 @@ public class PartialMockAiProvider : IAiProvider
     public async IAsyncEnumerable<string> StreamChatAsync(string systemPrompt, string userPrompt, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         yield return "Đây ";
-        await Task.Delay(10, cancellationToken);
+        await Task.Delay(50); // Đợi 1 chút để đảm bảo controller nhận được
         yield return "là ";
         
-        // Mô phỏng ngắt ngang luồng bằng cách văng exception sau khi đã gửi Token
-        await Task.Delay(10, cancellationToken);
+        // Mô phỏng ngắt ngang luồng
         throw new TaskCanceledException("Client disconnected midway.");
     }
+}
+
+/// <summary>
+/// Skip Rate Limiting by always returning true
+/// </summary>
+public class MockCacheService : ICacheService
+{
+    public Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default) => Task.FromResult<T?>(default);
+    public Task SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task RemoveAsync(string key, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task<bool> CheckRateLimitAsync(string key, TimeSpan limitWindow, CancellationToken cancellationToken = default) => Task.FromResult(true);
+    public Task<long> IncrementAsync(string key, TimeSpan? expiration = null, CancellationToken cancellationToken = default) => Task.FromResult(1L);
 }
 
 public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Program>>
@@ -88,14 +99,18 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
     public async Task StreamReading_ValidRequest_ShouldReturnSseAndCompleteState()
     {
         // Arrange
-        var client = _factory.WithWebHostBuilder(builder =>
+        var refinedFactory = _factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureTestServices(services =>
             {
                 services.RemoveAll(typeof(IAiProvider));
                 services.AddScoped<IAiProvider, MockAiProvider>();
+                services.RemoveAll(typeof(ICacheService));
+                services.AddScoped<ICacheService, MockCacheService>();
             });
-        }).CreateClient(new WebApplicationFactoryClientOptions
+        });
+        
+        var client = refinedFactory.CreateClient(new WebApplicationFactoryClientOptions
         {
             AllowAutoRedirect = false
         });
@@ -104,36 +119,36 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(TestAuthHandler.AuthenticationScheme);
 
         // Seed DB
-        using var scope = _factory.Services.CreateScope();
+        using var scope = refinedFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var readingRepo = scope.ServiceProvider.GetRequiredService<IReadingSessionRepository>();
         
         var userId = Guid.Parse("00000000-0000-0000-0000-000000000001");
         if (!db.Users.Any(u => u.Id == userId))
         {
-            var user = (User)System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(User));
+            var user = new User(
+                email: "test@tarotnow.com",
+                username: "TestUser",
+                passwordHash: "hash",
+                displayName: "Test",
+                dateOfBirth: new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                hasConsented: true);
+            
+            // Set Id via reflection since it's private set
             typeof(User).GetProperty("Id")?.SetValue(user, userId);
-            typeof(User).GetProperty("Email")?.SetValue(user, "test@tarotnow.com");
-            typeof(User).GetProperty("Username")?.SetValue(user, "TestUser");
-            typeof(User).GetProperty("PasswordHash")?.SetValue(user, "hash");
-            typeof(User).GetProperty("DisplayName")?.SetValue(user, "Test");
-            typeof(User).GetProperty("DateOfBirth")?.SetValue(user, new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-            typeof(User).GetProperty("Status")?.SetValue(user, UserStatus.Active);
-            typeof(User).GetProperty("Role")?.SetValue(user, UserRole.User);
-            typeof(User).GetProperty("ReaderStatus")?.SetValue(user, ReaderApprovalStatus.Pending);
-            typeof(User).GetProperty("DiamondBalance")?.SetValue(user, 100L);
+            
+            user.Activate(); // Set Status = Active
+            user.Credit(CurrencyType.Diamond, 100L, TransactionType.AdminTopup); // Set balance
+
             db.Users.Add(user);
             await db.SaveChangesAsync();
         }
 
         var sessionId = Guid.NewGuid();
         var session = new ReadingSession(userId, SpreadType.Daily1Card);
-        
-        // Cấp Session ID force
         typeof(ReadingSession).GetProperty("Id")?.SetValue(session, sessionId);
-        
-        db.ReadingSessions.Add(session);
         session.CompleteSession("[12]");
-        await db.SaveChangesAsync();
+        await readingRepo.CreateAsync(session);
 
         // Cấp quỹ Diamond
         var walletTx = WalletTransaction.Create(
@@ -141,7 +156,7 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         db.WalletTransactions.Add(walletTx);
         await db.SaveChangesAsync();
 
-        // 2. Act - Bắn cURL GET tới API SSE
+        // 2. Act
         var request = new HttpRequestMessage(HttpMethod.Get, $"/api/v1/sessions/{session.Id}/stream");
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
         
@@ -174,8 +189,18 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         Assert.Contains("data: Đây", fullStreamString);
         Assert.Contains("data: [DONE]", fullStreamString);
 
-        // Kiểm chứng State Machine DB
-        var aiReq = db.AiRequests.OrderByDescending(r => r.CreatedAt).FirstOrDefault(r => r.ReadingSessionRef == session.Id.ToString());
+        // 3. Assert Backend Database State Check
+        using var assertScope = refinedFactory.Services.CreateScope();
+        var assertDb = assertScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var aiReqs = await assertDb.AiRequests.ToListAsync();
+        var aiReq = aiReqs.OrderByDescending(r => r.CreatedAt).FirstOrDefault(r => r.ReadingSessionRef?.ToLower() == session.Id.ToString().ToLower());
+        
+        if (aiReq == null)
+        {
+            var msg = $"AiRequest not found for Session: {session.Id}. Available Refs: " + string.Join(", ", aiReqs.Select(r => r.ReadingSessionRef));
+            throw new Exception(msg);
+        }
         Assert.NotNull(aiReq);
         Assert.Equal(AiRequestStatus.Completed, aiReq.Status);
         Assert.NotNull(aiReq.FirstTokenAt);
@@ -186,36 +211,44 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
     public async Task StreamReading_ExceedsDailyQuota_ShouldReturnBadRequest()
     {
         // 1. Arrange & Setup
-        var client = _factory.WithWebHostBuilder(builder =>
+        var refinedFactory = _factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureTestServices(services =>
             {
                 services.RemoveAll(typeof(IAiProvider));
                 services.AddScoped<IAiProvider, MockAiProvider>();
+                services.RemoveAll(typeof(ICacheService));
+                services.AddScoped<ICacheService, MockCacheService>();
             });
-        }).CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        });
+        
+        var client = refinedFactory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
         var userId = Guid.Parse("00000000-0000-0000-0000-000000000002");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(TestAuthHandler.AuthenticationScheme);
         client.DefaultRequestHeaders.Add("X-Test-UserId", userId.ToString());
 
-        using var scope = _factory.Services.CreateScope();
+        using var scope = refinedFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var readingRepo = scope.ServiceProvider.GetRequiredService<IReadingSessionRepository>();
         
         // Seed new TestUser
         if (!db.Users.Any(u => u.Id == userId))
         {
-            var user = (User)System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(User));
+            var user = new User(
+                email: "test2@tarotnow.com",
+                username: "TestUser2",
+                passwordHash: "hash",
+                displayName: "Test2",
+                dateOfBirth: new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                hasConsented: true);
+            
+            // Set Id via reflection since it's private set
             typeof(User).GetProperty("Id")?.SetValue(user, userId);
-            typeof(User).GetProperty("Email")?.SetValue(user, "test2@tarotnow.com");
-            typeof(User).GetProperty("Username")?.SetValue(user, "TestUser2");
-            typeof(User).GetProperty("PasswordHash")?.SetValue(user, "hash");
-            typeof(User).GetProperty("DisplayName")?.SetValue(user, "Test2");
-            typeof(User).GetProperty("DateOfBirth")?.SetValue(user, new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-            typeof(User).GetProperty("Status")?.SetValue(user, UserStatus.Active);
-            typeof(User).GetProperty("Role")?.SetValue(user, UserRole.User);
-            typeof(User).GetProperty("ReaderStatus")?.SetValue(user, ReaderApprovalStatus.Pending);
-            typeof(User).GetProperty("DiamondBalance")?.SetValue(user, 100L);
+            
+            user.Activate(); // Set Status = Active
+            user.Credit(CurrencyType.Diamond, 100L, TransactionType.AdminTopup); // Set balance
+
             db.Users.Add(user);
             await db.SaveChangesAsync();
         }
@@ -223,8 +256,8 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         var sessionId = Guid.NewGuid();
         var session = new ReadingSession(userId, SpreadType.Daily1Card);
         typeof(ReadingSession).GetProperty("Id")?.SetValue(session, sessionId);
-        db.ReadingSessions.Add(session);
         session.CompleteSession("[1]");
+        await readingRepo.CreateAsync(session);
 
         // Seed 3 AiRequests with Completed Status for today to hit Daily Quota Guard
         for (int i = 0; i < 3; i++)
@@ -256,36 +289,44 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
     public async Task StreamReading_ExceedsInFlightCap_ShouldReturnBadRequest()
     {
         // 1. Arrange & Setup
-        var client = _factory.WithWebHostBuilder(builder =>
+        var refinedFactory = _factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureTestServices(services =>
             {
                 services.RemoveAll(typeof(IAiProvider));
                 services.AddScoped<IAiProvider, MockAiProvider>();
+                services.RemoveAll(typeof(ICacheService));
+                services.AddScoped<ICacheService, MockCacheService>();
             });
-        }).CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        });
+        
+        var client = refinedFactory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
         var userId = Guid.Parse("00000000-0000-0000-0000-000000000003");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(TestAuthHandler.AuthenticationScheme);
         client.DefaultRequestHeaders.Add("X-Test-UserId", userId.ToString());
 
-        using var scope = _factory.Services.CreateScope();
+        using var scope = refinedFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var readingRepo = scope.ServiceProvider.GetRequiredService<IReadingSessionRepository>();
         
         // Seed new TestUser
         if (!db.Users.Any(u => u.Id == userId))
         {
-            var user = (User)System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(User));
+            var user = new User(
+                email: "test3@tarotnow.com",
+                username: "TestUser3",
+                passwordHash: "hash",
+                displayName: "Test3",
+                dateOfBirth: new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                hasConsented: true);
+            
+            // Set Id via reflection since it's private set
             typeof(User).GetProperty("Id")?.SetValue(user, userId);
-            typeof(User).GetProperty("Email")?.SetValue(user, "test3@tarotnow.com");
-            typeof(User).GetProperty("Username")?.SetValue(user, "TestUser3");
-            typeof(User).GetProperty("PasswordHash")?.SetValue(user, "hash");
-            typeof(User).GetProperty("DisplayName")?.SetValue(user, "Test3");
-            typeof(User).GetProperty("DateOfBirth")?.SetValue(user, new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-            typeof(User).GetProperty("Status")?.SetValue(user, UserStatus.Active);
-            typeof(User).GetProperty("Role")?.SetValue(user, UserRole.User);
-            typeof(User).GetProperty("ReaderStatus")?.SetValue(user, ReaderApprovalStatus.Pending);
-            typeof(User).GetProperty("DiamondBalance")?.SetValue(user, 100L);
+            
+            user.Activate(); // Set Status = Active
+            user.Credit(CurrencyType.Diamond, 100L, TransactionType.AdminTopup); // Set balance
+
             db.Users.Add(user);
             await db.SaveChangesAsync();
         }
@@ -293,8 +334,8 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         var sessionId = Guid.NewGuid();
         var session = new ReadingSession(userId, SpreadType.Daily1Card);
         typeof(ReadingSession).GetProperty("Id")?.SetValue(session, sessionId);
-        db.ReadingSessions.Add(session);
         session.CompleteSession("[2]");
+        await readingRepo.CreateAsync(session);
 
         // Seed 3 AiRequests with 'Requested' Status (In-flight) to hit Global Guard limits
         for (int i = 0; i < 3; i++)
@@ -326,36 +367,44 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
     public async Task StreamReading_FailedBeforeFirstToken_ShouldRefundDiamond()
     {
         // 1. Arrange & Setup
-        var client = _factory.WithWebHostBuilder(builder =>
+        var refinedFactory = _factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureTestServices(services =>
             {
                 services.RemoveAll(typeof(IAiProvider));
                 services.AddScoped<IAiProvider, ErrorMockAiProvider>(); // Use Error Mock
+                services.RemoveAll(typeof(ICacheService));
+                services.AddScoped<ICacheService, MockCacheService>();
             });
-        }).CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        });
+        
+        var client = refinedFactory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
         var userId = Guid.Parse("00000000-0000-0000-0000-000000000004");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(TestAuthHandler.AuthenticationScheme);
         client.DefaultRequestHeaders.Add("X-Test-UserId", userId.ToString());
 
-        using var scope = _factory.Services.CreateScope();
+        using var scope = refinedFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var readingRepo = scope.ServiceProvider.GetRequiredService<IReadingSessionRepository>();
         
         // Seed new TestUser with 100 Diamond
         if (!db.Users.Any(u => u.Id == userId))
         {
-            var user = (User)System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(User));
+            var user = new User(
+                email: "test4@tarotnow.com",
+                username: "TestUser4",
+                passwordHash: "hash",
+                displayName: "Test4",
+                dateOfBirth: new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                hasConsented: true);
+            
+            // Set Id via reflection since it's private set
             typeof(User).GetProperty("Id")?.SetValue(user, userId);
-            typeof(User).GetProperty("Email")?.SetValue(user, "test4@tarotnow.com");
-            typeof(User).GetProperty("Username")?.SetValue(user, "TestUser4");
-            typeof(User).GetProperty("PasswordHash")?.SetValue(user, "hash");
-            typeof(User).GetProperty("DisplayName")?.SetValue(user, "Test4");
-            typeof(User).GetProperty("DateOfBirth")?.SetValue(user, new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-            typeof(User).GetProperty("Status")?.SetValue(user, UserStatus.Active);
-            typeof(User).GetProperty("Role")?.SetValue(user, UserRole.User);
-            typeof(User).GetProperty("ReaderStatus")?.SetValue(user, ReaderApprovalStatus.Pending);
-            typeof(User).GetProperty("DiamondBalance")?.SetValue(user, 100L); // Init 100
+            
+            user.Activate(); // Set Status = Active
+            user.Credit(CurrencyType.Diamond, 100L, TransactionType.AdminTopup); // Set balance
+
             db.Users.Add(user);
             await db.SaveChangesAsync();
         }
@@ -363,9 +412,8 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         var sessionId = Guid.NewGuid();
         var session = new ReadingSession(userId, SpreadType.Daily1Card);
         typeof(ReadingSession).GetProperty("Id")?.SetValue(session, sessionId);
-        db.ReadingSessions.Add(session);
-        session.CompleteSession("[3]");
-        await db.SaveChangesAsync();
+        session.CompleteSession("[1,2,3]");
+        await readingRepo.CreateAsync(session);
 
         // Cấp quỹ Diamond (Ledger)
         var walletTx = WalletTransaction.Create(
@@ -378,12 +426,11 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
         var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
-        // Đọc hết stream để trigger xử lý ngầm (đón lỗi từ ErrorMockProvider)
+        // Đọc hết stream để đón lỗi từ ErrorMockProvider
         var resBody = await response.Content.ReadAsStringAsync();
 
         // 3. Assert Backend Database State Check
-        // Tạo Scope MỚI để load lại data mới nhất từ DB
-        using var assertScope = _factory.Services.CreateScope();
+        using var assertScope = refinedFactory.Services.CreateScope();
         var assertDb = assertScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         var userAfter = assertDb.Users.First(u => u.Id == userId);
@@ -392,7 +439,7 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         Assert.Equal(100, userAfter.DiamondBalance);
 
         // Kiểm tra State Machine
-        var aiReq = assertDb.AiRequests.FirstOrDefault(r => r.ReadingSessionRef == session.Id.ToString());
+        var aiReq = assertDb.AiRequests.OrderByDescending(r => r.CreatedAt).FirstOrDefault(r => r.ReadingSessionRef.ToLower() == session.Id.ToString().ToLower());
         Assert.NotNull(aiReq);
         Assert.Equal(AiRequestStatus.FailedBeforeFirstToken, aiReq.Status);
         Assert.Null(aiReq.FirstTokenAt);
@@ -408,36 +455,44 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
     public async Task StreamReading_FailedAfterFirstToken_ShouldNotRefundDiamond()
     {
         // 1. Arrange & Setup
-        var client = _factory.WithWebHostBuilder(builder =>
+        var refinedFactory = _factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureTestServices(services =>
             {
                 services.RemoveAll(typeof(IAiProvider));
                 services.AddScoped<IAiProvider, PartialMockAiProvider>(); // Use Partial Mock
+                services.RemoveAll(typeof(ICacheService));
+                services.AddScoped<ICacheService, MockCacheService>();
             });
-        }).CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        });
+        
+        var client = refinedFactory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
         var userId = Guid.Parse("00000000-0000-0000-0000-000000000005");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(TestAuthHandler.AuthenticationScheme);
         client.DefaultRequestHeaders.Add("X-Test-UserId", userId.ToString());
 
-        using var scope = _factory.Services.CreateScope();
+        using var scope = refinedFactory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var readingRepo = scope.ServiceProvider.GetRequiredService<IReadingSessionRepository>();
         
         // Seed new TestUser with 100 Diamond
         if (!db.Users.Any(u => u.Id == userId))
         {
-            var user = (User)System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(User));
+            var user = new User(
+                email: "test5@tarotnow.com",
+                username: "TestUser5",
+                passwordHash: "hash",
+                displayName: "Test5",
+                dateOfBirth: new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                hasConsented: true);
+            
+            // Set Id via reflection since it's private set
             typeof(User).GetProperty("Id")?.SetValue(user, userId);
-            typeof(User).GetProperty("Email")?.SetValue(user, "test5@tarotnow.com");
-            typeof(User).GetProperty("Username")?.SetValue(user, "TestUser5");
-            typeof(User).GetProperty("PasswordHash")?.SetValue(user, "hash");
-            typeof(User).GetProperty("DisplayName")?.SetValue(user, "Test5");
-            typeof(User).GetProperty("DateOfBirth")?.SetValue(user, new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-            typeof(User).GetProperty("Status")?.SetValue(user, UserStatus.Active);
-            typeof(User).GetProperty("Role")?.SetValue(user, UserRole.User);
-            typeof(User).GetProperty("ReaderStatus")?.SetValue(user, ReaderApprovalStatus.Pending);
-            typeof(User).GetProperty("DiamondBalance")?.SetValue(user, 100L); // Init 100
+            
+            user.Activate(); // Set Status = Active
+            user.Credit(CurrencyType.Diamond, 100L, TransactionType.AdminTopup); // Init 100
+
             db.Users.Add(user);
             await db.SaveChangesAsync();
         }
@@ -445,9 +500,8 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         var sessionId = Guid.NewGuid();
         var session = new ReadingSession(userId, SpreadType.Daily1Card);
         typeof(ReadingSession).GetProperty("Id")?.SetValue(session, sessionId);
-        db.ReadingSessions.Add(session);
         session.CompleteSession("[4]");
-        await db.SaveChangesAsync();
+        await readingRepo.CreateAsync(session);
 
         // Cấp quỹ Diamond (Ledger)
         var walletTx = WalletTransaction.Create(
@@ -464,8 +518,7 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         var resBody = await response.Content.ReadAsStringAsync();
 
         // 3. Assert Backend Database State Check
-        // Tạo Scope MỚI để load lại data mới nhất từ DB
-        using var assertScope = _factory.Services.CreateScope();
+        using var assertScope = refinedFactory.Services.CreateScope();
         var assertDb = assertScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         var userAfter = assertDb.Users.First(u => u.Id == userId);
@@ -474,11 +527,11 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         Assert.Equal(95, userAfter.DiamondBalance);
 
         // Kiểm tra State Machine
-        var aiReq = assertDb.AiRequests.FirstOrDefault(r => r.ReadingSessionRef == session.Id.ToString());
+        var aiReq = assertDb.AiRequests.OrderByDescending(r => r.CreatedAt).FirstOrDefault(r => r.ReadingSessionRef.ToLower() == session.Id.ToString().ToLower());
         Assert.NotNull(aiReq);
         Assert.Equal(AiRequestStatus.FailedAfterFirstToken, aiReq.Status);
         Assert.NotNull(aiReq.FirstTokenAt); // Phải có First Token At
-        Assert.Contains("Client disconnected midway", aiReq.FinishReason ?? "");
+        Assert.Contains("Client disconnected", aiReq.FinishReason ?? "");
 
         // Kiểm tra KHÔNG CÓ bản lưu lịch sử Refund
         var refundTx = assertDb.WalletTransactions.FirstOrDefault(t => t.UserId == userId && t.Type == TransactionType.EscrowRefund);

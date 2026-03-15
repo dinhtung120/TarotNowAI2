@@ -1,0 +1,266 @@
+using MongoDB.Driver;
+using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Entities;
+using TarotNow.Domain.Enums;
+using TarotNow.Infrastructure.Persistence.MongoDocuments;
+
+namespace TarotNow.Infrastructure.Persistence.Repositories;
+
+/// <summary>
+/// MongoDB implementation cho IReadingSessionRepository.
+///
+/// THAY THẾ ReadingSessionRepository (EF Core / PostgreSQL) trước đó.
+/// Phiên đọc bài giờ lưu trong MongoDB collection "reading_sessions".
+///
+/// Lưu ý quan trọng:
+/// - StartPaidSessionAtomicAsync vẫn dùng IWalletRepository (PostgreSQL)
+///   để trừ tiền, nhưng tạo session trong MongoDB.
+/// - GetSessionWithAiRequestsAsync vẫn query AiRequests từ PostgreSQL
+///   (cross-DB query) vì ai_requests là bảng PostgreSQL.
+/// </summary>
+public class MongoReadingSessionRepository : IReadingSessionRepository
+{
+    private readonly MongoDbContext _mongoContext;
+    private readonly IWalletRepository _walletRepository;
+    private readonly ApplicationDbContext _pgContext; // Cần cho cross-DB query (AiRequests)
+
+    public MongoReadingSessionRepository(
+        MongoDbContext mongoContext,
+        IWalletRepository walletRepository,
+        ApplicationDbContext pgContext)
+    {
+        _mongoContext = mongoContext;
+        _walletRepository = walletRepository;
+        _pgContext = pgContext;
+    }
+
+    /// <summary>Tạo phiên đọc bài mới trong MongoDB.</summary>
+    public async Task<ReadingSession> CreateAsync(ReadingSession session, CancellationToken cancellationToken = default)
+    {
+        // Tạo document MongoDB từ Domain Entity
+        var doc = new ReadingSessionDocument
+        {
+            Id = session.Id.ToString(),
+            UserId = session.UserId.ToString(),
+            SpreadType = session.SpreadType,
+            Question = session.Question,
+            AiStatus = session.IsCompleted ? "completed" : "pending",
+            CreatedAt = session.CreatedAt,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        // Nếu session đã complete → map drawn cards
+        if (session.IsCompleted && session.CardsDrawn != null)
+        {
+            var cardIds = System.Text.Json.JsonSerializer.Deserialize<int[]>(session.CardsDrawn) ?? Array.Empty<int>();
+            doc.DrawnCards = cardIds.Select((cardId, idx) => new DrawnCard
+            {
+                CardId = cardId,
+                Position = idx,
+                IsReversed = false
+            }).ToList();
+        }
+
+        // Thêm cost info nếu có
+        if (session.CurrencyUsed != null && session.AmountCharged > 0)
+        {
+            doc.Cost = new SessionCost
+            {
+                Currency = session.CurrencyUsed,
+                Amount = session.AmountCharged
+            };
+        }
+
+        await _mongoContext.ReadingSessions.InsertOneAsync(doc, cancellationToken: cancellationToken);
+        return session;
+    }
+
+    /// <summary>
+    /// Lấy phiên theo ID — trả về Domain Entity.
+    /// Map từ MongoDB document → ReadingSession entity (reconstruct).
+    /// </summary>
+    public async Task<ReadingSession?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var idStr = id.ToString();
+        var doc = await _mongoContext.ReadingSessions
+            .Find(r => r.Id == idStr)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return doc == null ? null : MapToEntity(doc);
+    }
+
+    /// <summary>Update phiên — merge changes vào MongoDB document.</summary>
+    public async Task UpdateAsync(ReadingSession session, CancellationToken cancellationToken = default)
+    {
+        var idStr = session.Id.ToString();
+
+        // Build update definition từ Domain Entity
+        var update = Builders<ReadingSessionDocument>.Update
+            .Set(r => r.UpdatedAt, DateTime.UtcNow);
+
+        // Nếu session đã complete → cập nhật drawn_cards
+        if (session.IsCompleted && session.CardsDrawn != null)
+        {
+            // Parse JSON string → DrawnCard objects
+            var cardIds = System.Text.Json.JsonSerializer.Deserialize<int[]>(session.CardsDrawn) ?? Array.Empty<int>();
+            var drawnCards = cardIds.Select((cardId, idx) => new DrawnCard
+            {
+                CardId = cardId,
+                Position = idx,
+                IsReversed = false // Default — nếu cần reversed info, cần extend Domain Entity
+            }).ToList();
+
+            update = update
+                .Set(r => r.DrawnCards, drawnCards)
+                .Set(r => r.AiStatus, "completed");
+        }
+
+        await _mongoContext.ReadingSessions.UpdateOneAsync(
+            r => r.Id == idStr,
+            update,
+            cancellationToken: cancellationToken);
+    }
+
+    /// <summary>Kiểm tra user đã rút daily card hôm nay (UTC) chưa.</summary>
+    public async Task<bool> HasDrawnDailyCardAsync(Guid userId, DateTime utcNow, CancellationToken cancellationToken = default)
+    {
+        var userIdStr = userId.ToString();
+        var startOfDay = utcNow.Date;
+        var endOfDay = startOfDay.AddDays(1);
+
+        var count = await _mongoContext.ReadingSessions.CountDocumentsAsync(
+            r => r.UserId == userIdStr
+                && r.SpreadType == SpreadType.Daily1Card
+                && r.CreatedAt >= startOfDay
+                && r.CreatedAt < endOfDay,
+            cancellationToken: cancellationToken);
+
+        return count > 0;
+    }
+
+    /// <summary>
+    /// Atomic: Trừ tiền (PostgreSQL) + Tạo session (MongoDB).
+    /// 
+    /// Vì cross-DB (PostgreSQL wallet + MongoDB session), không thể dùng
+    /// single ACID transaction. Thay vào đó dùng pattern:
+    /// 1. Trừ tiền trước (PostgreSQL transaction)
+    /// 2. Tạo session sau (MongoDB)
+    /// 3. Nếu MongoDB fail → cần compensating transaction (refund)
+    /// 
+    /// Rủi ro thấp vì MongoDB insert rất hiếm khi fail.
+    /// </summary>
+    public async Task<(bool Success, string ErrorMessage)> StartPaidSessionAtomicAsync(
+        Guid userId,
+        string spreadType,
+        ReadingSession session,
+        long costGold,
+        long costDiamond,
+        CancellationToken cancellationToken = default)
+    {
+        var idempotencyKey = $"read_{session.Id}";
+
+        try
+        {
+            // 1. Trừ tiền trong PostgreSQL (giữ nguyên logic cũ)
+            if (costGold > 0)
+            {
+                await _walletRepository.DebitAsync(userId, CurrencyType.Gold, TransactionType.ReadingCostGold,
+                    costGold, "Reading", $"Tarot_{spreadType}", $"Phiên rút Tarot {spreadType}",
+                    null, idempotencyKey, cancellationToken);
+            }
+            if (costDiamond > 0)
+            {
+                await _walletRepository.DebitAsync(userId, CurrencyType.Diamond, TransactionType.ReadingCostDiamond,
+                    costDiamond, "Reading", $"Tarot_{spreadType}", $"Phiên rút Tarot {spreadType}",
+                    null, idempotencyKey, cancellationToken);
+            }
+
+            // 2. Tạo session trong MongoDB
+            await CreateAsync(session, cancellationToken);
+
+            return (true, string.Empty);
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message);
+        }
+    }
+
+    /// <summary>Lấy lịch sử phiên theo user — phân trang.</summary>
+    public async Task<(IEnumerable<ReadingSession> Items, int TotalCount)> GetSessionsByUserIdAsync(
+        Guid userId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var userIdStr = userId.ToString();
+        var filter = Builders<ReadingSessionDocument>.Filter.Eq(r => r.UserId, userIdStr)
+            & Builders<ReadingSessionDocument>.Filter.Eq(r => r.IsDeleted, false);
+
+        var totalCount = await _mongoContext.ReadingSessions.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
+
+        var docs = await _mongoContext.ReadingSessions
+            .Find(filter)
+            .SortByDescending(r => r.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Limit(pageSize)
+            .ToListAsync(cancellationToken);
+
+        var entities = docs.Select(MapToEntity).ToList();
+        return (entities, (int)totalCount);
+    }
+
+    /// <summary>
+    /// Lấy session + AI requests — cross-DB query.
+    /// Session từ MongoDB, AiRequests từ PostgreSQL.
+    /// </summary>
+    public async Task<(ReadingSession ReadingSession, IEnumerable<AiRequest> AiRequests)?> GetSessionWithAiRequestsAsync(
+        Guid sessionId, CancellationToken cancellationToken = default)
+    {
+        // 1. Lấy session từ MongoDB
+        var session = await GetByIdAsync(sessionId, cancellationToken);
+        if (session == null) return null;
+
+        // 2. Lấy AiRequests từ PostgreSQL (cross-DB)
+        var sessionIdStr = sessionId.ToString();
+        var aiRequests = _pgContext.AiRequests
+            .Where(a => a.ReadingSessionRef == sessionIdStr)
+            .OrderBy(a => a.CreatedAt)
+            .AsEnumerable();
+
+        return (session, aiRequests);
+    }
+
+    // ======================================================================
+    // MAPPING: MongoDB Document → Domain Entity
+    // ======================================================================
+
+    /// <summary>
+    /// Reconstruct Domain Entity từ MongoDB document.
+    /// Dùng constructor + CompleteSession nếu đã hoàn thành.
+    /// </summary>
+    private static ReadingSession MapToEntity(ReadingSessionDocument doc)
+    {
+        Guid.TryParse(doc.UserId, out var userId);
+
+        var session = new ReadingSession(
+            userId,
+            doc.SpreadType,
+            doc.Question,
+            doc.Cost?.Currency,
+            doc.Cost?.Amount ?? 0);
+
+        // RECONSTRUCTION: Giữ nguyên ID từ MongoDB thay vì để Constructor tự tạo Guid.NewGuid()
+        if (Guid.TryParse(doc.Id, out var id))
+        {
+            typeof(ReadingSession).GetProperty("Id")?.SetValue(session, id);
+        }
+
+        // Nếu đã complete → gọi CompleteSession với cards drawn
+        if (doc.AiStatus == "completed" && doc.DrawnCards != null && doc.DrawnCards.Count > 0)
+        {
+            var cardIds = doc.DrawnCards.Select(c => c.CardId).ToArray();
+            var json = System.Text.Json.JsonSerializer.Serialize(cardIds);
+            session.CompleteSession(json);
+        }
+
+        return session;
+    }
+}

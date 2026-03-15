@@ -2,19 +2,43 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Domain.Entities;
 
+/// <summary>
+/// Domain Entity đại diện cho một phiên đọc bài Tarot.
+/// Mỗi phiên lưu trữ: loại trải bài, câu hỏi tùy chọn, các lá bài đã rút,
+/// loại tiền tệ sử dụng, và số tiền đã trừ.
+/// Thiết kế bổ sung các trường mà spec Phase 1.3 yêu cầu nhưng entity ban đầu thiếu.
+/// </summary>
 public class ReadingSession
 {
     public Guid Id { get; private set; }
     public Guid UserId { get; private set; }
     public string SpreadType { get; private set; }
-    
+
+    /// <summary>
+    /// Câu hỏi tùy chọn mà người dùng nhập khi trải bài (nullable vì optional).
+    /// Spec Phase 1.3: "Câu hỏi tùy chọn (optional question)"
+    /// </summary>
+    public string? Question { get; private set; }
 
     // JSON array chứa index các lá bài đã rút. Ex: "[12, 45, 71]"
-    public string? CardsDrawn { get; private set; } 
-    
+    public string? CardsDrawn { get; private set; }
+
+    /// <summary>
+    /// Loại tiền đã sử dụng thanh toán cho phiên này (Gold hoặc Diamond).
+    /// Dùng để tính EXP: Gold ít hơn Diamond theo spec Phase 1.3.
+    /// Nullable vì daily_1 có thể miễn phí.
+    /// </summary>
+    public string? CurrencyUsed { get; private set; }
+
+    /// <summary>
+    /// Số tiền thực tế đã trừ cho phiên đọc bài này.
+    /// Cần thiết cho audit trail và reconciliation.
+    /// </summary>
+    public long AmountCharged { get; private set; }
+
     // Status
     public bool IsCompleted { get; private set; }
-    
+
     // Timestamp
     public DateTime CreatedAt { get; private set; }
     public DateTime? CompletedAt { get; private set; }
@@ -22,11 +46,19 @@ public class ReadingSession
     // Dành cho EF Core
     protected ReadingSession() { }
 
-    public ReadingSession(Guid userId, string spreadType)
+    /// <summary>
+    /// Constructor chính khi khởi tạo phiên mới.
+    /// Mở rộng thêm tham số question, currencyUsed, amountCharged 
+    /// để đảm bảo entity chứa đầy đủ thông tin ngay từ đầu.
+    /// </summary>
+    public ReadingSession(Guid userId, string spreadType, string? question = null, string? currencyUsed = null, long amountCharged = 0)
     {
         Id = Guid.NewGuid();
         UserId = userId;
         SpreadType = spreadType;
+        Question = question;
+        CurrencyUsed = currencyUsed;
+        AmountCharged = amountCharged;
         IsCompleted = false;
         CreatedAt = DateTime.UtcNow;
     }

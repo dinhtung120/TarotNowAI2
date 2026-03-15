@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using Microsoft.Extensions.DependencyInjection;
+using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 using TarotNow.Infrastructure.Persistence;
@@ -29,21 +30,25 @@ public class FollowupCapIntegrationTests : IClassFixture<CustomWebApplicationFac
 
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var readingRepo = scope.ServiceProvider.GetRequiredService<IReadingSessionRepository>();
 
         var userId = Guid.Parse("00000000-0000-0000-0000-000000000002");
         if (!db.Users.Any(u => u.Id == userId))
         {
-            var user = (User)System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(User));
+            var user = new User(
+                email: "limit_test@tarotnow.com",
+                username: "LimitUser",
+                passwordHash: "hash",
+                displayName: "Test",
+                dateOfBirth: new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                hasConsented: true);
+            
+            // Set Id via reflection since it's private set and we need a consistent Id for the test
             typeof(User).GetProperty("Id")?.SetValue(user, userId);
-            typeof(User).GetProperty("Email")?.SetValue(user, "limit_test@tarotnow.com");
-            typeof(User).GetProperty("Username")?.SetValue(user, "LimitUser");
-            typeof(User).GetProperty("PasswordHash")?.SetValue(user, "hash");
-            typeof(User).GetProperty("DisplayName")?.SetValue(user, "Test");
-            typeof(User).GetProperty("DateOfBirth")?.SetValue(user, new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-            typeof(User).GetProperty("Status")?.SetValue(user, UserStatus.Active);
-            typeof(User).GetProperty("Role")?.SetValue(user, UserRole.User);
-            typeof(User).GetProperty("ReaderStatus")?.SetValue(user, ReaderApprovalStatus.Pending);
-            typeof(User).GetProperty("DiamondBalance")?.SetValue(user, 100L);
+            
+            user.Activate(); // Set Status = Active
+            user.Credit(CurrencyType.Diamond, 100L, TransactionType.AdminTopup); // Set balance
+            
             db.Users.Add(user);
             await db.SaveChangesAsync();
         }
@@ -52,8 +57,7 @@ public class FollowupCapIntegrationTests : IClassFixture<CustomWebApplicationFac
         var session = new ReadingSession(userId, SpreadType.Daily1Card.ToString());
         typeof(ReadingSession).GetProperty("Id")?.SetValue(session, sessionId);
         session.CompleteSession("[12]");
-        db.ReadingSessions.Add(session);
-        await db.SaveChangesAsync();
+        await readingRepo.CreateAsync(session);
 
         // Seed Initial Reading + 5 Follow-ups (total 6 requests logic)
         for (int i = 0; i <= 5; i++)

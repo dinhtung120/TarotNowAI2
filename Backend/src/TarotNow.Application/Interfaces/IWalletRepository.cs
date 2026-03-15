@@ -1,6 +1,6 @@
 using TarotNow.Domain.Enums;
 
-namespace TarotNow.Domain.Interfaces;
+namespace TarotNow.Application.Interfaces;
 
 /// <summary>
 /// Domain Interface cho thao tác ví bảo mật cao.
@@ -26,6 +26,14 @@ public interface IWalletRepository
         string? metadataJson = null, string? idempotencyKey = null, CancellationToken cancellationToken = default);
 
     Task RefundAsync(Guid userId, long amount, 
+        string? referenceSource = null, string? referenceId = null, string? description = null,
+        string? metadataJson = null, string? idempotencyKey = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Tiêu thụ Diamond đã đóng băng — trừ khỏi frozen balance mà không cần tài khoản nhận.
+    /// Dùng khi dịch vụ hoàn tất (VD: AI stream completed). Thay thế Release cần System Account.
+    /// </summary>
+    Task ConsumeAsync(Guid userId, long amount,
         string? referenceSource = null, string? referenceId = null, string? description = null,
         string? metadataJson = null, string? idempotencyKey = null, CancellationToken cancellationToken = default);
 }

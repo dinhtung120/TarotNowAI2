@@ -20,7 +20,27 @@
     "Navigation": {
         "home": "Trang Chủ",
         "readings": "Trải Bài",
-        "login": "Đăng Nhập"
+        "login": "Đăng Nhập",
+        "register": "Đăng Ký",
+        "logout": "Đăng Xuất",
+        "profile": "Hồ Sơ",
+        "wallet": "Ví",
+        "history": "Lịch Sử",
+        "collection": "Bộ Sưu Tập"
+    },
+    "Profile": {
+        "title": "Hồ Sơ Cá Nhân",
+        "displayName": "Tên hiển thị",
+        "avatarUrl": "Đường dẫn ảnh đại diện (Avatar URL)",
+        "dateOfBirth": "Ngày sinh",
+        "save": "Lưu thay đổi",
+        "saving": "Đang xử lý...",
+        "successMsg": "Cập nhật thông tin thành công!",
+        "errorLoad": "Không thể tải thông tin cá nhân",
+        "errorSave": "Cập nhật thất bại",
+        "level": "Cấp độ",
+        "zodiac": "Cung hoàng đạo",
+        "numerology": "Thần số học"
     },
     "ApiErrors": {
         "unknown_error": "Đã xảy ra lỗi không xác định từ hệ thống.",

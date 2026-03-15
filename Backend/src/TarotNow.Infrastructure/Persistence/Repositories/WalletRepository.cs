@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
-using TarotNow.Domain.Interfaces;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
@@ -228,6 +228,53 @@ public class WalletRepository : IWalletRepository
                 currency: CurrencyType.Diamond,
                 type: TransactionType.EscrowRefund,
                 amount: amount, // Cộng lại vào Available
+                balanceBefore: balanceBefore,
+                balanceAfter: balanceAfter,
+                referenceSource: referenceSource,
+                referenceId: referenceId,
+                description: description,
+                metadataJson: metadataJson,
+                idempotencyKey: idempotencyKey
+            );
+
+            _dbContext.Set<WalletTransaction>().Add(ledgerEntry);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }, cancellationToken);
+    }
+
+    /// <summary>
+    /// Tiêu thụ Diamond đã đóng băng — trừ khỏi frozen balance.
+    /// Dùng khi dịch vụ hoàn tất thành công (VD: AI stream completed).
+    /// Thay thế ReleaseAsync (cần receiver account) vì hệ thống chưa có System Master Account.
+    /// Transaction đảm bảo atomicity: SELECT FOR UPDATE → consume → ghi ledger.
+    /// </summary>
+    public Task ConsumeAsync(Guid userId, long amount, string? referenceSource = null, string? referenceId = null, string? description = null, string? metadataJson = null, string? idempotencyKey = null, CancellationToken cancellationToken = default)
+    {
+        return ExecuteWithTransactionAsync(async () =>
+        {
+            // Kiểm tra idempotency: nếu đã consume 1 lần rồi thì bỏ qua
+            if (!string.IsNullOrEmpty(idempotencyKey))
+            {
+                bool exists = await _dbContext.Set<WalletTransaction>().AnyAsync(t => t.IdempotencyKey == idempotencyKey, cancellationToken);
+                if (exists) return;
+            }
+
+            // Row-level lock tránh race condition khi nhiều request đồng thời
+            var users = await _dbContext.Set<User>().FromSqlRaw("SELECT * FROM users WHERE id = {0} FOR UPDATE", userId).ToListAsync(cancellationToken);
+            var user = users.FirstOrDefault() ?? throw new InvalidOperationException($"Không tìm thấy user {userId}");
+
+            long balanceBefore = user.DiamondBalance;
+
+            // Trừ Diamond khỏi frozen balance (consume = "đốt" → không cộng cho ai)
+            user.ConsumeFrozenDiamond(amount);
+
+            long balanceAfter = user.DiamondBalance;
+
+            var ledgerEntry = WalletTransaction.Create(
+                userId: userId,
+                currency: CurrencyType.Diamond,
+                type: TransactionType.EscrowRelease, // Vẫn dùng type EscrowRelease cho audit trail
+                amount: -amount,
                 balanceBefore: balanceBefore,
                 balanceAfter: balanceAfter,
                 referenceSource: referenceSource,

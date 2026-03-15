@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TarotNow.Application.Exceptions;
 using TarotNow.Domain.Helpers;
-using TarotNow.Domain.Interfaces;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Profile.Queries.GetProfile;
 

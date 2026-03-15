@@ -1,6 +1,6 @@
 using MediatR;
 using TarotNow.Domain.Entities;
-using TarotNow.Domain.Interfaces;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.History.Queries.GetReadingHistory;
 

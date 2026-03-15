@@ -36,8 +36,8 @@ public class AuthController : ControllerBase
             Message = "Registration successful. Please verify your email to activate your account."
         };
 
-        // TODO: Chỉnh thành CreatedAtAction khi có endpoint GetProfile
-        return Created($"/api/v1/users/{userId}", response);
+        // Đã có ProfileController.GetProfile, dùng CreatedAtAction
+        return CreatedAtAction("GetProfile", "Profile", null, response);
     }
 
     /// <summary>

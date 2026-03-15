@@ -1,6 +1,6 @@
 using MediatR;
 using TarotNow.Application.Common.Models;
-using TarotNow.Domain.Interfaces;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Wallet.Queries.GetLedgerList;
 

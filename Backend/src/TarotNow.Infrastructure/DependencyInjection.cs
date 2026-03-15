@@ -1,13 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Driver;
 using TarotNow.Application.Interfaces;
-using TarotNow.Domain.Interfaces;
 using TarotNow.Infrastructure.Persistence;
 using TarotNow.Infrastructure.Persistence.Repositories;
 using TarotNow.Infrastructure.Security;
 using TarotNow.Infrastructure.Services;
-using TarotNow.Infrastructure.Services.Ai; // Added for IAiProvider and OpenAiProvider
+using TarotNow.Infrastructure.Services.Ai;
 
 namespace TarotNow.Infrastructure;
 
@@ -19,12 +19,39 @@ public static class DependencyInjection
     /// </summary>
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Đăng ký Entity Framework Core (PostgreSQL)
+        // ======================================================================
+        // POSTGRESQL (EF Core) — Write model, wallet, auth, deposits
+        // ======================================================================
         services.AddDbContext<ApplicationDbContext>(options => 
-            options.UseNpgsql(configuration.GetConnectionString("PostgreSQL"))
-                   .UseSnakeCaseNamingConvention());
+            options.UseNpgsql(configuration.GetConnectionString("PostgreSQL")));
 
-        // Đăng ký Repositories
+        // ======================================================================
+        // MONGODB — Document store cho collections Phase 1
+        // Lifecycle: MongoClient thread-safe → Singleton.
+        // MongoDbContext tạo indexes tại khởi tạo → Singleton.
+        // ======================================================================
+        var mongoConnectionString = configuration.GetConnectionString("MongoDB")
+            ?? "mongodb://localhost:27017/tarotweb"; // Fallback cho local dev
+        
+        // Đăng ký MongoClient — connection pool tự quản lý bởi driver
+        services.AddSingleton<IMongoClient>(sp => new MongoClient(mongoConnectionString));
+        
+        // Đăng ký IMongoDatabase — parse database name từ connection string
+        services.AddSingleton<IMongoDatabase>(sp =>
+        {
+            var client = sp.GetRequiredService<IMongoClient>();
+            var mongoUrl = new MongoUrl(mongoConnectionString);
+            // Dùng database name từ connection string, fallback "tarotweb"
+            var databaseName = mongoUrl.DatabaseName ?? "tarotweb";
+            return client.GetDatabase(databaseName);
+        });
+        
+        // Đăng ký MongoDbContext — tạo indexes + expose collection properties
+        services.AddSingleton<MongoDbContext>();
+
+        // ======================================================================
+        // REPOSITORIES — PostgreSQL-only repos
+        // ======================================================================
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IEmailOtpRepository, EmailOtpRepository>();
@@ -32,11 +59,18 @@ public static class DependencyInjection
         services.AddScoped<IAiRequestRepository, AiRequestRepository>();
         services.AddScoped<ILedgerRepository, LedgerRepository>();
         services.AddScoped<IAdminRepository, AdminRepository>();
-        services.AddScoped<IReadingSessionRepository, ReadingSessionRepository>();
-        services.AddScoped<IUserCollectionRepository, UserCollectionRepository>();
         services.AddScoped<IUserConsentRepository, UserConsentRepository>();
         services.AddScoped<IDepositOrderRepository, DepositOrderRepository>();
         services.AddScoped<IDepositPromotionRepository, DepositPromotionRepository>();
+
+        // ======================================================================
+        // REPOSITORIES — MongoDB repos (thay thế EF Core cho 5 collections)
+        // ======================================================================
+        services.AddScoped<IReadingSessionRepository, MongoReadingSessionRepository>();
+        services.AddScoped<IUserCollectionRepository, MongoUserCollectionRepository>();
+        services.AddScoped<ICardsCatalogRepository, MongoCardsCatalogRepository>();
+        services.AddScoped<IAiProviderLogRepository, MongoAiProviderLogRepository>();
+        services.AddScoped<INotificationRepository, MongoNotificationRepository>();
 
         // Đăng ký Auth Services
         services.AddSingleton<IPasswordHasher, Argon2idPasswordHasher>();
@@ -50,15 +84,27 @@ public static class DependencyInjection
         // Phase 1.4: Tích hợp Streaming Provider (OpenAI)
         services.AddHttpClient<IAiProvider, OpenAiProvider>();
 
-        // TODO: Đăng ký MongoDB MongoClient
-        // var mongoConnectionString = configuration.GetConnectionString("MongoDB");
+        // ======================================================================
+        // REDIS CACHE — Rate limiting, Daily Quota, In-flight Cap
+        // ======================================================================
+        var redisConnectionString = configuration.GetConnectionString("Redis") 
+            ?? "localhost:6379"; // Fallback cho local dev
 
-        // TODO: Đăng ký Redis Cache
-        // services.AddStackExchangeRedisCache(options => ...);
+        services.AddStackExchangeRedisCache(options =>
+        {
+            options.Configuration = redisConnectionString;
+            options.InstanceName = "TarotNow:"; // Prefix cho các key trong Redis
+        });
+
+        // Đăng ký CacheService để Application layer sử dụng
+        services.AddScoped<ICacheService, RedisCacheService>();
 
         // Đăng ký Authentication/JWT Services
         var jwtSettings = configuration.GetSection("Jwt");
-        var secretKey = jwtSettings["SecretKey"] ?? "TarotNow_SuperSecretKey_For_Development_Only!";
+        // Bắt buộc cấu hình SecretKey trong appsettings.json / biến môi trường.
+        // Không dùng fallback hardcoded vì rủi ro bảo mật cao — nếu config thiếu, app phải dừng ngay.
+        var secretKey = jwtSettings["SecretKey"] 
+            ?? throw new InvalidOperationException("JWT SecretKey chưa được cấu hình. Vui lòng thiết lập 'Jwt:SecretKey' trong appsettings.json hoặc biến môi trường.");
         
         services.AddAuthentication(options =>
         {

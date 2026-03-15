@@ -2,31 +2,45 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
 using TarotNow.Application.Features.Reading.Commands.StreamReading;
 using TarotNow.Domain.Enums;
-using TarotNow.Domain.Interfaces;
 
 namespace TarotNow.Api.Controllers;
 
+/// <summary>
+/// Controller xử lý AI Streaming qua Server-Sent Events (SSE).
+/// Thiết kế "thin controller": chỉ xử lý HTTP concerns (headers, response stream),
+/// toàn bộ logic nghiệp vụ (state machine, escrow, refund, quota) 
+/// được ủy thác cho Application layer qua MediatR.
+/// 
+/// Refactored từ phiên bản cũ (CA-03): loại bỏ inject trực tiếp Repository,
+/// xóa các private methods ProcessRefund/ProcessSuccessfulRelease/UpdateAiRequestState,
+/// thay bằng CompleteAiStreamCommand duy nhất.
+/// </summary>
 [ApiController]
 [Route("api/v1/sessions")]
 [Authorize] // Bắt buộc đăng nhập
 public class AiController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly IAiRequestRepository _aiRequestRepo;
-    private readonly IWalletRepository _walletRepo;
 
-    public AiController(IMediator mediator, IAiRequestRepository aiRequestRepo, IWalletRepository walletRepo)
+    /// <summary>
+    /// Constructor chỉ nhận IMediator — đúng nguyên tắc Thin Controller.
+    /// Trước đây inject thêm IAiRequestRepository + IWalletRepository (vi phạm CA).
+    /// </summary>
+    public AiController(IMediator mediator)
     {
         _mediator = mediator;
-        _aiRequestRepo = aiRequestRepo;
-        _walletRepo = walletRepo;
     }
 
     /// <summary>
     /// Bật kết nối Server-Sent Events (SSE) để stream kết quả AI Chat.
-    /// Format trả về Chunk-by-Chunk cho Frontend render Typwriter Effect.
+    /// Format trả về Chunk-by-Chunk cho Frontend render Typewriter Effect.
+    /// 
+    /// Flow: Controller nhận IAsyncEnumerable từ StreamReadingCommand,
+    /// rồi iterate từng chunk gửi qua Response stream.
+    /// Mọi xử lý state/escrow/refund gửi qua CompleteAiStreamCommand.
     /// </summary>
     [HttpGet("{sessionId}/stream")]
     public async Task StreamReading(string sessionId, [FromQuery] string? followUpQuestion, CancellationToken cancellationToken)
@@ -36,6 +50,7 @@ public class AiController : ControllerBase
         StreamReadingResult result;
         try
         {
+            // Bước 1: Khởi tạo AI stream qua Application layer (guards, quota, freeze đều ở đây)
             result = await _mediator.Send(new StreamReadingCommand
             {
                 UserId = userId,
@@ -45,8 +60,8 @@ public class AiController : ControllerBase
         }
         catch (Exception ex)
         {
-            // Trả lỗi Text nếu xảy ra Exception (hết tiền, phiên bị khóa, v.v) chưa kịp Stream
-            Response.StatusCode = 400; // BadRequest
+            // Guard rejection (hết tiền, quota, v.v) → trả lỗi text trước khi stream bắt đầu
+            Response.StatusCode = 400;
             var errorMsg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
             await Response.WriteAsync($"data: {errorMsg}\n\n", cancellationToken);
             return;
@@ -59,143 +74,97 @@ public class AiController : ControllerBase
 
         var requestToken = cancellationToken;
         int tokenCounter = 0;
-        
+        DateTimeOffset? firstTokenAt = null;
+
         try
         {
-            // Fetch Data từ IAsyncEnumerable và dội ngược về Response Stream
+            // Bước 2: Iterate stream từ AI Provider, gửi từng chunk xuống client
             await foreach (var chunk in result.Stream.WithCancellation(requestToken))
             {
                 if (tokenCounter == 0)
                 {
-                    // Update State: First Token Received (Chỉ ghi khi thực sự lấy được chữ đầu tiên)
-                    await UpdateAiRequestState(result.AiRequestId, AiRequestStatus.FirstTokenReceived, null, requestToken);
+                    firstTokenAt = DateTimeOffset.UtcNow;
                 }
 
-                // Thay thế \n thành \\n (hoặc encoded Json) để chuỗi JSON SSE không bị đứt đoạn sai format do xuống dòng
+                // Thay thế \n thành \\n để chuỗi SSE không bị đứt đoạn format
                 var sanitizedChunk = chunk.Replace("\n", "\\n");
 
                 await Response.WriteAsync($"data: {sanitizedChunk}\n\n", requestToken);
                 await Response.Body.FlushAsync(requestToken);
-                
+
                 tokenCounter++;
             }
 
-            // Gửi Dấu Hiệu Hoàn Tất 
+            // Bước 3: Gửi dấu hiệu hoàn tất cho client
             await Response.WriteAsync("data: [DONE]\n\n", requestToken);
             await Response.Body.FlushAsync(requestToken);
 
-            // Xử lý Giải trí Quỹ Escrow (Chuyển tiền từ Freeze sang ví Admin vì dịch vụ đã hoàn tất)
-            await ProcessSuccessfulRelease(result.AiRequestId, userId, CancellationToken.None);
-
-            // Update State: Completed
-            await UpdateAiRequestState(result.AiRequestId, AiRequestStatus.Completed, null, CancellationToken.None);
+            // Bước 4: Xử lý nghiệp vụ SAU khi stream thành công — ủy thác cho Application layer
+            // CompleteAiStreamCommand xử lý: consume escrow, update state → completed
+            await _mediator.Send(new CompleteAiStreamCommand
+            {
+                AiRequestId = result.AiRequestId,
+                UserId = userId,
+                FinalStatus = AiRequestStatus.Completed,
+                IsClientDisconnect = false,
+                FirstTokenAt = firstTokenAt
+            }, CancellationToken.None); // Dùng None vì client đã nhận xong, không nên cancel
         }
         catch (OperationCanceledException)
         {
-            // Rất quan trọng: Client đột ngột ngắt kết nối trình duyệt hoặc Request Timeout
-            var status = tokenCounter > 0 ? AiRequestStatus.FailedAfterFirstToken : AiRequestStatus.FailedBeforeFirstToken;
-            
-            if (tokenCounter > 0)
+            // Client disconnect or Timeout
+            var status = tokenCounter > 0 
+                ? AiRequestStatus.FailedAfterFirstToken 
+                : AiRequestStatus.FailedBeforeFirstToken;
+
+            await _mediator.Send(new CompleteAiStreamCommand
             {
-                // TEST.md: Client disconnect sau token đầu -> backend vẫn track, KHÔNG auto-refund
-                await UpdateAiRequestState(result.AiRequestId, status, "Client disconnected midway", CancellationToken.None);
-            }
-            else
+                AiRequestId = result.AiRequestId,
+                UserId = userId,
+                FinalStatus = status,
+                ErrorMessage = "Client disconnected",
+                IsClientDisconnect = true,
+                FirstTokenAt = firstTokenAt
+            }, CancellationToken.None);
+        }
+        catch (Exception ex) when (ex is TaskCanceledException || ex.InnerException is TaskCanceledException)
+        {
+            // Explicitly catch TaskCanceledException if not caught by OperationCanceledException
+            var status = tokenCounter > 0 
+                ? AiRequestStatus.FailedAfterFirstToken 
+                : AiRequestStatus.FailedBeforeFirstToken;
+
+            await _mediator.Send(new CompleteAiStreamCommand
             {
-                // TEST.md: Timeout (hoặc ngắt) trước token đầu -> Refund
-                await ProcessRefund(result.AiRequestId, userId, status, "Client disconnected midway", CancellationToken.None);
-            }
+                AiRequestId = result.AiRequestId,
+                UserId = userId,
+                FinalStatus = status,
+                ErrorMessage = "Client disconnected (TaskCanceled)",
+                IsClientDisconnect = true,
+                FirstTokenAt = firstTokenAt
+            }, CancellationToken.None);
         }
         catch (Exception ex)
         {
-            // Lỗi từ phía Provider API sập
-            var status = tokenCounter > 0 ? AiRequestStatus.FailedAfterFirstToken : AiRequestStatus.FailedBeforeFirstToken;
-            
-            await ProcessRefund(result.AiRequestId, userId, status, ex.Message, CancellationToken.None);
-            
-            // Gửi báo lỗi cuối cho UI nếu Browser vẫn sống
+            // Server-side error
+            var status = tokenCounter > 0 
+                ? AiRequestStatus.FailedAfterFirstToken 
+                : AiRequestStatus.FailedBeforeFirstToken;
+
+            await _mediator.Send(new CompleteAiStreamCommand
+            {
+                AiRequestId = result.AiRequestId,
+                UserId = userId,
+                FinalStatus = status,
+                ErrorMessage = ex.Message,
+                IsClientDisconnect = false,
+                FirstTokenAt = firstTokenAt
+            }, CancellationToken.None);
+
             if (!Response.HasStarted)
             {
-                 Response.StatusCode = 500;
-                 await Response.WriteAsync($"data: Stream Error: {ex.Message}\n\n");
-            }
-        }
-    }
-
-    /// <summary>
-    /// Helper cập nhật state lưu vô Postgres bảng ai_requests
-    /// </summary>
-    private async Task UpdateAiRequestState(Guid aiReqId, string status, string? reason, CancellationToken ct)
-    {
-        var record = await _aiRequestRepo.GetByIdAsync(aiReqId, ct);
-        if (record != null)
-        {
-            record.Status = status;
-            record.FinishReason = reason;
-
-            if (status == AiRequestStatus.FirstTokenReceived && !record.FirstTokenAt.HasValue)
-                 record.FirstTokenAt = DateTimeOffset.UtcNow;
-            
-            if (status == AiRequestStatus.Completed)
-                 record.CompletionMarkerAt = DateTimeOffset.UtcNow;
-                 
-            await _aiRequestRepo.UpdateAsync(record, ct);
-        }
-    }
-
-    /// <summary>
-    /// Helper xử lý Auto Refund cho Client khi bị đứt mạng hoặc Provider sập.
-    /// Tính Idempotency đảm bảo chỉ gọi Stored Procedure refund 1 lần.
-    /// </summary>
-    private async Task ProcessRefund(Guid aiReqId, Guid userId, string finalStatus, string errorMessage, CancellationToken backupCt)
-    {
-        var record = await _aiRequestRepo.GetByIdAsync(aiReqId, backupCt);
-        if (record != null)
-        {
-            await UpdateAiRequestState(aiReqId, finalStatus, errorMessage, backupCt);
-
-            // Refund qua procedure (Idempotent: refund_ai_reqID)
-            await _walletRepo.RefundAsync(
-                userId: userId,
-                amount: record.ChargeDiamond,
-                referenceSource: "AiRequestAutoRefund",
-                referenceId: record.Id.ToString(),
-                description: $"Auto Refund for aborting AI Streaming ({finalStatus})",
-                idempotencyKey: $"refund_{record.Id}",
-                cancellationToken: backupCt
-            );
-        }
-    }
-
-    /// <summary>
-    /// Helper xử lý Release Quỹ (Chuyển từ tài khoản bị đóng băng sang tài khoản Thực thi/Admin)
-    /// </summary>
-    private async Task ProcessSuccessfulRelease(Guid aiReqId, Guid userId, CancellationToken backupCt)
-    {
-        var record = await _aiRequestRepo.GetByIdAsync(aiReqId, backupCt);
-        if (record != null)
-        {
-            // Payer: userId
-            // Receiver: Admin giả lập / App Wallet (thường sẽ có ví Master, ở đây mô phỏng dùng chính user hoặc hạch toán riêng lẻ)
-            // Thiết kế gốc: Giữ ID Master trong config. Tạm thời dùng ID giả lập 000 để đại diện System 
-            var systemAdminId = Guid.Empty; // System Master Account
-
-            try 
-            {
-                await _walletRepo.ReleaseAsync(
-                    payerId: userId,
-                    receiverId: systemAdminId, // Demo Master Wallet
-                    amount: record.ChargeDiamond,
-                    referenceSource: "AiRequestCompletedRelease",
-                    referenceId: record.Id.ToString(),
-                    description: "Escrow Release for fully completed AI Stream",
-                    idempotencyKey: $"release_{record.Id}",
-                    cancellationToken: backupCt
-                );
-            }
-            catch(Exception ex) 
-            {
-                // Warning log: Escrow Failed. Admin có thể reconcile sau
+                Response.StatusCode = 500;
+                await Response.WriteAsync($"data: Stream Error: {ex.Message}\n\n");
             }
         }
     }

@@ -1,6 +1,6 @@
 using TarotNow.Application.Features.Admin.Queries;
 using TarotNow.Application.Features.Admin.Queries.GetLedgerMismatch;
-using TarotNow.Domain.Interfaces;
+using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using Moq;
 using FluentAssertions;

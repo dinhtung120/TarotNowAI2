@@ -5,6 +5,7 @@ import { getLedger } from '@/actions/walletActions';
 import { PaginatedList, WalletTransaction } from '@/types/wallet';
 import { useWalletStore } from '@/store/walletStore';
 import { Coins, Gem, ArrowUpRight, ArrowDownLeft, Clock, Search, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
+import Link from 'next/link';
 
 /**
  * Trang Wallet (Ví) & Lịch Sử Giao Dịch
@@ -72,9 +73,12 @@ export default function WalletPage() {
                                     </div>
                                 </div>
                             </div>
-                            <button className="bg-indigo-500 hover:bg-indigo-400 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg transition-colors ring-1 ring-white/20 text-sm">
+                            <Link 
+                                href="/wallet/deposit"
+                                className="bg-indigo-500 hover:bg-indigo-400 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg transition-colors ring-1 ring-white/20 text-sm"
+                            >
                                 Nạp Diamond
-                            </button>
+                            </Link>
                         </div>
                     </div>
 

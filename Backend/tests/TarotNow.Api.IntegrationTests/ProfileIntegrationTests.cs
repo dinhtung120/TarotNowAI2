@@ -2,8 +2,8 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Json;
-using TarotNow.Api.Controllers;
-using TarotNow.Domain.Interfaces;
+using TarotNow.Api.Contracts;
+using TarotNow.Application.Interfaces;
 using TarotNow.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
@@ -33,16 +33,19 @@ public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory
         var userId = Guid.Parse("00000000-0000-0000-0000-000000000001");
         if (!db.Users.Any(u => u.Id == userId))
         {
-            var user = (TarotNow.Domain.Entities.User)System.Runtime.Serialization.FormatterServices.GetUninitializedObject(typeof(TarotNow.Domain.Entities.User));
+            var user = new TarotNow.Domain.Entities.User(
+                email: "profile@tarotnow.com",
+                username: "profileuser",
+                passwordHash: "hash",
+                displayName: "Old Name",
+                dateOfBirth: new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                hasConsented: true);
+            
+            // Set Id via reflection since it's private set
             typeof(TarotNow.Domain.Entities.User).GetProperty("Id")?.SetValue(user, userId);
-            typeof(TarotNow.Domain.Entities.User).GetProperty("Email")?.SetValue(user, "profile@tarotnow.com");
-            typeof(TarotNow.Domain.Entities.User).GetProperty("Username")?.SetValue(user, "profileuser");
-            typeof(TarotNow.Domain.Entities.User).GetProperty("PasswordHash")?.SetValue(user, "hash");
-            typeof(TarotNow.Domain.Entities.User).GetProperty("DisplayName")?.SetValue(user, "Old Name");
-            typeof(TarotNow.Domain.Entities.User).GetProperty("DateOfBirth")?.SetValue(user, new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-            typeof(TarotNow.Domain.Entities.User).GetProperty("Status")?.SetValue(user, "Active");
-            typeof(TarotNow.Domain.Entities.User).GetProperty("Role")?.SetValue(user, "User");
-            typeof(TarotNow.Domain.Entities.User).GetProperty("ReaderStatus")?.SetValue(user, "Pending");
+            
+            user.Activate(); // Set status Active
+
             db.Users.Add(user);
             await db.SaveChangesAsync();
         }

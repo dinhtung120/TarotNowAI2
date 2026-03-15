@@ -1,10 +1,26 @@
 "use client";
 
+/**
+ * Trang Lịch Sử Đọc Bài (Reading History)
+ *
+ * Phiên bản sửa lỗi:
+ * - [TRƯỚC] Gọi fetch() trực tiếp với URL hardcode `localhost:5000` (sai port)
+ * - [SAU] Gọi qua Server Action `getHistorySessionsAction()` → URL đúng (localhost:5037)
+ *
+ * - [TRƯỚC] Auth guard redirect sai `/auth/login` (route không tồn tại)
+ * - [SAU] Redirect đúng `/login`
+ */
+
 import { useState, useEffect } from "react";
 import { useRouter } from "@/i18n/routing";
 import { useAuthStore } from "@/store/authStore";
+import { getHistorySessionsAction } from "@/actions/historyActions";
 import { Sparkles, Calendar, ArrowRight, BookOpen, Clock, Bot } from "lucide-react";
 
+/**
+ * Interface mô tả một phiên đọc bài trong danh sách lịch sử.
+ * Dữ liệu này được Backend trả về dạng DTO của ReadingSession.
+ */
 interface ReadingSessionDto {
     id: string;
     spreadType: string;
@@ -12,6 +28,10 @@ interface ReadingSessionDto {
     createdAt: string;
 }
 
+/**
+ * Interface mô tả response phân trang từ API.
+ * Backend sử dụng pattern PaginatedList<T> chuẩn.
+ */
 interface HistoryResponse {
     page: number;
     pageSize: number;
@@ -22,53 +42,64 @@ interface HistoryResponse {
 
 export default function HistoryPage() {
     const router = useRouter();
-    const accessToken = useAuthStore(state => state.accessToken);
+    const { isAuthenticated } = useAuthStore();
     const [historyData, setHistoryData] = useState<HistoryResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 10;
 
+    /**
+     * Auth Guard — Redirect về /login nếu chưa đăng nhập.
+     * Phiên bản cũ redirect sai `/auth/login` → 404.
+     */
     useEffect(() => {
-        if (!accessToken) {
-            router.push("/auth/login");
-            return;
+        if (!isAuthenticated) {
+            router.push("/login");
         }
+    }, [isAuthenticated, router]);
+
+    /**
+     * Fetch dữ liệu lịch sử qua Server Action.
+     * Chạy lại mỗi khi currentPage thay đổi (khi người dùng phân trang).
+     *
+     * Flow: HistoryPage → getHistorySessionsAction() → fetch(Backend) → response
+     */
+    useEffect(() => {
+        if (!isAuthenticated) return;
 
         const fetchHistory = async () => {
             setIsLoading(true);
             setError(null);
             try {
-                const res = await fetch(`http://localhost:5000/api/v1/history/sessions?page=${currentPage}&pageSize=${pageSize}`, {
-                    headers: {
-                        "Authorization": `Bearer ${accessToken}`
-                    }
-                });
+                const result = await getHistorySessionsAction(currentPage, pageSize);
 
-                if (!res.ok) {
-                    if (res.status === 401) {
-                        router.push("/auth/login");
+                if (result.error) {
+                    if (result.error === 'unauthorized') {
+                        router.push("/login");
                         return;
                     }
-                    throw new Error("Không thể tải lịch sử đọc bài");
+                    setError(result.error);
+                    return;
                 }
 
-                const data: HistoryResponse = await res.json();
-                setHistoryData(data);
-            } catch (err: unknown) {
-                if (err instanceof Error) {
-                    setError(err.message || "Đã xảy ra lỗi khi kết nối với máy chủ.");
-                } else {
-                    setError("Đã xảy ra lỗi không xác định.");
+                if (result.success && result.data) {
+                    setHistoryData(result.data as HistoryResponse);
                 }
+            } catch {
+                setError("Đã xảy ra lỗi khi kết nối với máy chủ.");
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchHistory();
-    }, [accessToken, currentPage, router]);
+    }, [isAuthenticated, currentPage, router]);
 
+    /**
+     * Handlers phân trang — Đơn giản tăng/giảm currentPage.
+     * useEffect ở trên sẽ tự động fetch lại khi page thay đổi.
+     */
     const handlePrevPage = () => {
         if (currentPage > 1) setCurrentPage(prev => prev - 1);
     };
@@ -79,11 +110,12 @@ export default function HistoryPage() {
 
     return (
         <div className="min-h-screen bg-black text-white p-6 pt-32 relative overflow-hidden">
-            {/* Background elements */}
+            {/* Hiệu ứng nền gradient mờ (Decorative Background) */}
             <div className="absolute top-1/4 -left-20 w-96 h-96 bg-purple-900/20 rounded-full blur-[100px] pointer-events-none"></div>
             <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-amber-900/10 rounded-full blur-[100px] pointer-events-none"></div>
 
             <div className="max-w-4xl mx-auto relative z-10">
+                {/* Header với icon và tiêu đề */}
                 <div className="flex items-center gap-4 mb-8">
                     <div className="w-14 h-14 bg-purple-900/40 border border-purple-500/30 rounded-2xl flex items-center justify-center">
                         <BookOpen className="w-7 h-7 text-purple-400" />
@@ -99,12 +131,14 @@ export default function HistoryPage() {
                     </div>
                 </div>
 
+                {/* Hiển thị lỗi nếu có */}
                 {error && (
                     <div className="bg-red-900/20 border border-red-500/30 p-4 rounded-xl text-red-400 mb-8">
                         {error}
                     </div>
                 )}
 
+                {/* Trạng thái Loading — Skeleton UI */}
                 {isLoading ? (
                     <div className="space-y-4 animate-pulse">
                         {[1, 2, 3].map(i => (
@@ -112,6 +146,7 @@ export default function HistoryPage() {
                         ))}
                     </div>
                 ) : historyData?.items.length === 0 ? (
+                    /* Empty State — Khi chưa có phiên đọc bài nào */
                     <div className="text-center py-20 bg-zinc-900/30 border border-zinc-800 rounded-3xl">
                         <Bot className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
                         <h3 className="text-xl font-serif text-white mb-2">Chưa có dấu ấn nào</h3>
@@ -124,6 +159,7 @@ export default function HistoryPage() {
                         </button>
                     </div>
                 ) : (
+                    /* Danh sách phiên đọc bài */
                     <div className="space-y-4">
                         {historyData?.items.map((session) => (
                             <div

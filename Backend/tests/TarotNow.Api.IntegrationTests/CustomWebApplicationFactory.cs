@@ -3,8 +3,11 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
 using Testcontainers.MongoDb;
+using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
 using Xunit;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using TarotNow.Infrastructure.Persistence;
 
 namespace TarotNow.Api.IntegrationTests;
@@ -30,6 +33,16 @@ public class CustomWebApplicationFactory<TProgram>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         var postgresConnectionString = _dbContainer.GetConnectionString();
+        var mongoConnectionString = _mongoContainer.GetConnectionString();
+        
+        builder.ConfigureAppConfiguration((context, config) =>
+        {
+            config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:PostgreSQL"] = postgresConnectionString,
+                ["ConnectionStrings:MongoDB"] = mongoConnectionString
+            });
+        });
         
         builder.ConfigureServices(services =>
         {
@@ -51,6 +64,21 @@ public class CustomWebApplicationFactory<TProgram>
             })
             .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, TestAuthHandler>(
                 TestAuthHandler.AuthenticationScheme, options => { });
+
+            // Override Redis with In-Memory for Tests
+            services.AddDistributedMemoryCache();
+
+            // Ensure MongoDB uses the Container
+            services.RemoveAll<MongoDB.Driver.IMongoClient>();
+            services.AddSingleton<MongoDB.Driver.IMongoClient>(new MongoDB.Driver.MongoClient(mongoConnectionString));
+            
+            services.RemoveAll<MongoDB.Driver.IMongoDatabase>();
+            services.AddSingleton<MongoDB.Driver.IMongoDatabase>(sp => 
+            {
+                var client = sp.GetRequiredService<MongoDB.Driver.IMongoClient>();
+                var url = new MongoDB.Driver.MongoUrl(mongoConnectionString);
+                return client.GetDatabase(url.DatabaseName ?? "tarotweb_test");
+            });
         });
 
         // Đặt environment để load appsettings phù hợp nếu cần
@@ -83,7 +111,7 @@ public class CustomWebApplicationFactory<TProgram>
         // Run Init Stored procedures required for Wallet & Refund system
         var initSql = @"
         CREATE OR REPLACE PROCEDURE debit_currency(
-            p_user_id UUID, p_currency_type VARCHAR, p_transaction_type VARCHAR, p_amount BIGINT, 
+            p_user_id UUID, p_currency VARCHAR, p_type VARCHAR, p_amount BIGINT, 
             p_reference_source VARCHAR, p_reference_id VARCHAR, p_description TEXT, p_idempotency_key VARCHAR
         ) LANGUAGE plpgsql AS $$
         DECLARE
@@ -94,28 +122,33 @@ public class CustomWebApplicationFactory<TProgram>
             END IF;
 
             SELECT COALESCE(SUM(amount), 0) INTO v_current_balance FROM wallet_transactions 
-            WHERE user_id = p_user_id AND currency_type = p_currency_type;
+            WHERE user_id = p_user_id AND currency = p_currency;
 
             IF v_current_balance < p_amount THEN
                 RAISE EXCEPTION 'Insufficient balance';
             END IF;
 
-            INSERT INTO wallet_transactions(id, user_id, currency_type, transaction_type, amount, reference_source, reference_id, description, idempotency_key, created_at)
-            VALUES (gen_random_uuid(), p_user_id, p_currency_type, p_transaction_type, -p_amount, p_reference_source, p_reference_id, p_description, p_idempotency_key, CURRENT_TIMESTAMP);
+            INSERT INTO wallet_transactions(id, user_id, currency, type, amount, balance_before, balance_after, reference_source, reference_id, description, idempotency_key, created_at)
+            VALUES (gen_random_uuid(), p_user_id, p_currency, p_type, -p_amount, v_current_balance, v_current_balance - p_amount, p_reference_source, p_reference_id, p_description, p_idempotency_key, CURRENT_TIMESTAMP);
         END;
         $$;
         
         CREATE OR REPLACE PROCEDURE refund_currency(
-            p_user_id UUID, p_currency_type VARCHAR, p_amount BIGINT, 
+            p_user_id UUID, p_currency VARCHAR, p_amount BIGINT, 
             p_reference_source VARCHAR, p_reference_id VARCHAR, p_description TEXT, p_idempotency_key VARCHAR
         ) LANGUAGE plpgsql AS $$
+        DECLARE
+            v_current_balance BIGINT;
         BEGIN
             IF EXISTS (SELECT 1 FROM wallet_transactions WHERE idempotency_key = p_idempotency_key) THEN
                 RETURN;
             END IF;
 
-            INSERT INTO wallet_transactions(id, user_id, currency_type, transaction_type, amount, reference_source, reference_id, description, idempotency_key, created_at)
-            VALUES (gen_random_uuid(), p_user_id, p_currency_type, 'AiRefund', p_amount, p_reference_source, p_reference_id, p_description, p_idempotency_key, CURRENT_TIMESTAMP);
+            SELECT COALESCE(SUM(amount), 0) INTO v_current_balance FROM wallet_transactions 
+            WHERE user_id = p_user_id AND currency = p_currency;
+
+            INSERT INTO wallet_transactions(id, user_id, currency, type, amount, balance_before, balance_after, reference_source, reference_id, description, idempotency_key, created_at)
+            VALUES (gen_random_uuid(), p_user_id, p_currency, 'AiRefund', p_amount, v_current_balance, v_current_balance + p_amount, p_reference_source, p_reference_id, p_description, p_idempotency_key, CURRENT_TIMESTAMP);
         END;
         $$;";
         

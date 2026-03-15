@@ -1,7 +1,7 @@
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 
-namespace TarotNow.Domain.Interfaces;
+namespace TarotNow.Application.Interfaces;
 
 public interface IEmailOtpRepository
 {

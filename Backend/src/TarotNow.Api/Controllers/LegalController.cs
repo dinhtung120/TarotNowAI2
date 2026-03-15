@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using TarotNow.Api.Contracts;
 using TarotNow.Application.Features.Legal.Commands.RecordConsent;
 using TarotNow.Application.Features.Legal.Queries.CheckConsent;
 
@@ -60,10 +61,4 @@ public class LegalController : ControllerBase
         await Mediator.Send(command);
         return Ok(new { success = true });
     }
-}
-
-public class RecordConsentRequest
-{
-    public string DocumentType { get; set; } = string.Empty;
-    public string Version { get; set; } = string.Empty;
 }

@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 using TarotNow.Application.Features.Auth.Commands.Login;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Exceptions;
-using TarotNow.Domain.Interfaces;
+using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities; // Needed for refresh token entity 
 
 namespace TarotNow.Application.Features.Auth.Commands.RefreshToken;

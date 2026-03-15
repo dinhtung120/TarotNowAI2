@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using TarotNow.Api.Contracts;
 using TarotNow.Application.Features.Profile.Commands.UpdateProfile;
 using TarotNow.Application.Features.Profile.Queries.GetProfile;
 
@@ -53,9 +54,3 @@ public class ProfileController : ControllerBase
     }
 }
 
-public class UpdateProfileRequest
-{
-    public string DisplayName { get; set; } = string.Empty;
-    public string? AvatarUrl { get; set; }
-    public DateTime DateOfBirth { get; set; }
-}

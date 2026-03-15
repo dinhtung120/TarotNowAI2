@@ -7,6 +7,7 @@ public class InitReadingSessionCommand : IRequest<InitReadingSessionResult>
 {
     public Guid UserId { get; set; }
     public string SpreadType { get; set; }
+    public string? Question { get; set; }
 }
 
 public class InitReadingSessionResult

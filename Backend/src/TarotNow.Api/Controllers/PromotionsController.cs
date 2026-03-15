@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
+using TarotNow.Api.Contracts;
 using TarotNow.Application.Features.Promotions.Commands.CreatePromotion;
 using TarotNow.Application.Features.Promotions.Commands.DeletePromotion;
 using TarotNow.Application.Features.Promotions.Commands.UpdatePromotion;
@@ -59,11 +60,4 @@ public class PromotionsController : ControllerBase
         var success = await Mediator.Send(new DeletePromotionCommand { Id = id });
         return success ? Ok() : BadRequest();
     }
-}
-
-public class UpdatePromotionRequest
-{
-    public long MinAmountVnd { get; set; }
-    public long BonusDiamond { get; set; }
-    public bool IsActive { get; set; }
 }

@@ -1,9 +1,20 @@
 "use client";
 
+/**
+ * Trang Chi Tiết Phiên Đọc Bài (History Detail)
+ *
+ * Phiên bản sửa lỗi:
+ * - [TRƯỚC] Gọi fetch() trực tiếp với URL hardcode `localhost:5000` (sai port)
+ * - [SAU] Gọi qua Server Action `getHistoryDetailAction()` → URL đúng (localhost:5037)
+ * - [TRƯỚC] Auth guard redirect sai `/auth/login`
+ * - [SAU] Redirect đúng `/login`
+ */
+
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/routing";
 import { useAuthStore } from "@/store/authStore";
+import { getHistoryDetailAction } from "@/actions/historyActions";
 import { Sparkles, ArrowLeft, Bot } from "lucide-react";
 import { TAROT_DECK } from "@/lib/tarotData";
 
@@ -30,54 +41,58 @@ export default function HistoryDetailPage() {
     const params = useParams();
     const router = useRouter();
     const sessionId = params.id as string;
-    const accessToken = useAuthStore(state => state.accessToken);
+    const { isAuthenticated } = useAuthStore();
 
     const [detail, setDetail] = useState<ReadingDetailResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    /**
+     * Auth Guard — Kiểm tra đăng nhập.
+     * Phiên bản cũ redirect sai `/auth/login` → 404.
+     * Đã sửa thành `/login` (route đúng trong route group `(auth)`).
+     */
     useEffect(() => {
-        if (!accessToken) {
-            router.push("/auth/login");
-            return;
+        if (!isAuthenticated) {
+            router.push("/login");
         }
+    }, [isAuthenticated, router]);
+
+    /**
+     * Fetch chi tiết phiên đọc bài qua Server Action.
+     * Phiên bản cũ hardcode port 5000, đã sửa qua Server Action
+     * sử dụng biến môi trường NEXT_PUBLIC_API_URL.
+     */
+    useEffect(() => {
+        if (!isAuthenticated) return;
 
         const fetchDetail = async () => {
             setIsLoading(true);
             setError(null);
             try {
-                const res = await fetch(`http://localhost:5000/api/v1/history/sessions/${sessionId}`, {
-                    headers: {
-                        "Authorization": `Bearer ${accessToken}`
-                    }
-                });
+                const result = await getHistoryDetailAction(sessionId);
 
-                if (!res.ok) {
-                    if (res.status === 401) {
-                        router.push("/auth/login");
+                if (result.error) {
+                    if (result.error === 'unauthorized') {
+                        router.push("/login");
                         return;
                     }
-                    if (res.status === 404) {
-                        throw new Error("Không tìm thấy phiên đọc bài này");
-                    }
-                    throw new Error("Không thể tải chi tiết phiên đọc bài");
+                    setError(result.error);
+                    return;
                 }
 
-                const data: ReadingDetailResponse = await res.json();
-                setDetail(data);
-            } catch (err: unknown) {
-                if (err instanceof Error) {
-                    setError(err.message || "Đã xảy ra lỗi khi kết nối với máy chủ.");
-                } else {
-                    setError("Đã xảy ra lỗi không xác định.");
+                if (result.success && result.data) {
+                    setDetail(result.data as ReadingDetailResponse);
                 }
+            } catch {
+                setError("Đã xảy ra lỗi khi kết nối với máy chủ.");
             } finally {
                 setIsLoading(false);
             }
         };
 
         fetchDetail();
-    }, [sessionId, accessToken, router]);
+    }, [sessionId, isAuthenticated, router]);
 
     // Parse cards
     const parsedCards: number[] = detail?.cardsDrawn ? JSON.parse(detail.cardsDrawn) : [];

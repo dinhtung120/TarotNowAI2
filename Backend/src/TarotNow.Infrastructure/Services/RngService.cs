@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
-using TarotNow.Domain.Interfaces;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Infrastructure.Services;
 

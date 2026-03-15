@@ -2,7 +2,7 @@ using MediatR;
 using TarotNow.Application.Exceptions;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
-using TarotNow.Domain.Interfaces;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Reading.Commands.InitSession;
 
@@ -59,10 +59,27 @@ public class InitReadingSessionCommandHandler : IRequestHandler<InitReadingSessi
             costDiamond = SPREAD_10_COST;
         }
 
-        // 3. Tạo Object Session
+        // 3. Xác định loại tiền và số tiền (cho auditing/stats)
+        string? currencyUsed = null;
+        long amountCharged = 0;
+        if (costGold > 0)
+        {
+            currencyUsed = CurrencyType.Gold;
+            amountCharged = costGold;
+        }
+        else if (costDiamond > 0)
+        {
+            currencyUsed = CurrencyType.Diamond;
+            amountCharged = costDiamond;
+        }
+
+        // 4. Tạo Object Session với thông đẩy đủ (Phase 1.3 spec)
         var session = new ReadingSession(
             request.UserId,
-            request.SpreadType
+            request.SpreadType,
+            request.Question,
+            currencyUsed,
+            amountCharged
         );
 
         // 5. Lưu Database Transaction (Trừ tiền + Lưu session đồng thời)

@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace TarotNow.Domain.Interfaces;
+namespace TarotNow.Application.Interfaces;
 
 public interface IPaymentGatewayService
 {

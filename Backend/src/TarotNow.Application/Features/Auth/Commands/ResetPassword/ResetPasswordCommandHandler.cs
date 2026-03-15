@@ -2,7 +2,7 @@ using MediatR;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Enums;
 using TarotNow.Domain.Exceptions;
-using TarotNow.Domain.Interfaces;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Auth.Commands.ResetPassword;
 

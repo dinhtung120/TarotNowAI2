@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
-using TarotNow.Domain.Interfaces;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 

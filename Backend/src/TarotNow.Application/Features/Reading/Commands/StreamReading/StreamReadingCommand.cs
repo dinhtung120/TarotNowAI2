@@ -3,7 +3,6 @@ using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
-using TarotNow.Domain.Interfaces;
 using TarotNow.Domain.Services;
 
 namespace TarotNow.Application.Features.Reading.Commands.StreamReading;
@@ -30,18 +29,21 @@ public class StreamReadingCommandHandler : IRequestHandler<StreamReadingCommand,
     private readonly IAiRequestRepository _aiRequestRepo;
     private readonly IWalletRepository _walletRepo;
     private readonly IAiProvider _aiProvider;
+    private readonly ICacheService _cacheService;
     private readonly FollowupPricingService _pricingService;
 
     public StreamReadingCommandHandler(
         IReadingSessionRepository readingRepo,
         IAiRequestRepository aiRequestRepo,
         IWalletRepository walletRepo,
-        IAiProvider aiProvider)
+        IAiProvider aiProvider,
+        ICacheService cacheService)
     {
         _readingRepo = readingRepo;
         _aiRequestRepo = aiRequestRepo;
         _walletRepo = walletRepo;
         _aiProvider = aiProvider;
+        _cacheService = cacheService;
         _pricingService = new FollowupPricingService(); // Domain service is stateless, can instantiate directly or inject.
     }
 
@@ -63,6 +65,18 @@ public class StreamReadingCommandHandler : IRequestHandler<StreamReadingCommand,
         // Guard 1.5: In-flight Cap (Max 3 concurrent)
         var activeCount = await _aiRequestRepo.GetActiveAiRequestCountAsync(request.UserId, cancellationToken);
         if (activeCount >= 3) throw new BadRequestException("Too many in-flight AI requests");
+
+        // Guard 3: Rate Limiting (Phase 1.5 spec) - Chống spam request AI
+        // Giới hạn: tối đa 1 request interpretation/follow-up mỗi 30 giây cho mỗi user.
+        // Tại sao cần Guard này? 
+        // -> Vì AI Interpretation là tốn phí thật (token OpenAI). User click spam nút bói bài
+        //    có thể gây tốn quota hoặc freeze ví liên tục, làm crash bộ đếm.
+        var rateLimitKey = $"ratelimit:{request.UserId}:ai_interpret";
+        var isAllowed = await _cacheService.CheckRateLimitAsync(rateLimitKey, TimeSpan.FromSeconds(30), cancellationToken);
+        if (!isAllowed) 
+        {
+            throw new BadRequestException("Vui lòng đợi 30 giây giữa các lần yêu cầu AI giải bài.");
+        }
 
         // Guard 1.7: Follow-up Pricing & Hard Cap (Phase 1.5)
         long calculatedCost = 5; // Default reading cost

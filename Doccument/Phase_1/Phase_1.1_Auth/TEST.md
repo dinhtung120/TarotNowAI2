@@ -46,8 +46,8 @@ SELECT * FROM email_otps WHERE email = 'test@test.com' ORDER BY created_at DESC 
 SELECT gold_balance FROM users WHERE email = 'test@test.com';
 SELECT * FROM wallet_transactions WHERE type = 'credit' AND reference_type = 'register_bonus';
 ```
-- [ ] `gold_balance = 5` *(Lưu ý: Tính năng cộng ví Gold đang được Delay sang Phase 1.2 Wallet)*
-- [ ] Có ledger entry +5 Gold *(Delay)*
+- [x] `gold_balance = 5`
+- [x] Có ledger entry +5 Gold (`register_bonus`)
 
 ### Test 2.3 – OTP dùng lại / hết hạn
 - [x] OTP đã dùng → reject (DomainException "INVALID_OTP")
@@ -103,4 +103,4 @@ curl -s -X POST http://localhost:5000/api/v1/auth/login \
   - Automated Tests: Đã code Backend Unit Test (xUnit, Moq, FluentAssertions). Tổng cộng 26/26 Unit Tests cho Core Logic Handlers (Login, Register, Rotate, Revoke, OTP) **PASSED 100%**.
   - Frontend: Hoàn thiện Client E2E qua Playwright. `npm run lint` **Zero Errors**.
   - Backend API: `dotnet build` & `dotnet test` Pipeline **PASSED**.
-- **Pending:** Logic tích hợp Wallet (2.2) chờ gộp vào Phase 1.2.
+- **Pending:** Đã hoàn thành 100% Phase 1.1.

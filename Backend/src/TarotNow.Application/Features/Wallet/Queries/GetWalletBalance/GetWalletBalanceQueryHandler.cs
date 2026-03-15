@@ -1,6 +1,6 @@
 using MediatR;
 using TarotNow.Domain.Exceptions;
-using TarotNow.Domain.Interfaces;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Wallet.Queries.GetWalletBalance;
 
