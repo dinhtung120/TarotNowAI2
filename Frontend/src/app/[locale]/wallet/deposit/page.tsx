@@ -61,11 +61,13 @@ export default function DepositPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderResult, setOrderResult] = useState<CreateDepositOrderResponse | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [isMounted, setIsMounted] = useState(false);
 
     // ======================================================================
     // EFFECTS: Kéo dữ liệu ban đầu
     // ======================================================================
     useEffect(() => {
+        setIsMounted(true);
         fetchBalance();
 
         /**
@@ -213,7 +215,7 @@ export default function DepositPage() {
                             <div>
                                 <p className="text-sm text-indigo-300 font-medium">Số dư Diamond hiện tại</p>
                                 <p className="text-3xl font-black text-white tracking-tight">
-                                    {balance?.diamondBalance.toLocaleString() ?? '...'}
+                                    {isMounted ? (balance?.diamondBalance.toLocaleString() ?? '...') : '...'}
                                 </p>
                             </div>
                         </div>
@@ -265,10 +267,10 @@ export default function DepositPage() {
                                         <span className="text-2xl font-black text-white">{preset.label}</span>
                                     </div>
                                     <p className="text-sm text-slate-400">
-                                        {preset.vnd.toLocaleString()} VND
+                                        {isMounted ? preset.vnd.toLocaleString() : preset.vnd} VND
                                     </p>
                                     <p className="text-sm font-semibold text-indigo-300 mt-1">
-                                        = {diamondForThis.toLocaleString()} 💎
+                                        = {isMounted ? diamondForThis.toLocaleString() : diamondForThis} 💎
                                     </p>
                                 </button>
                             );
@@ -306,9 +308,9 @@ export default function DepositPage() {
                         />
                         {isCustom && actualAmount > 0 && (
                             <p className="text-sm font-medium text-indigo-300 mt-2">
-                                = {baseDiamond.toLocaleString()} 💎
+                                = {isMounted ? baseDiamond.toLocaleString() : baseDiamond} 💎
                                 {bonusDiamond > 0 && (
-                                    <span className="text-emerald-400 ml-2">+ {bonusDiamond} bonus 🎁</span>
+                                    <span className="text-emerald-400 ml-2">+ {isMounted ? bonusDiamond.toLocaleString() : bonusDiamond} bonus 🎁</span>
                                 )}
                             </p>
                         )}
@@ -337,10 +339,10 @@ export default function DepositPage() {
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <p className="text-sm text-slate-400">
-                                                Nạp từ <strong className="text-white">{promo.minAmountVnd.toLocaleString()} VND</strong>
+                                                Nạp từ <strong className="text-white">{isMounted ? promo.minAmountVnd.toLocaleString() : promo.minAmountVnd} VND</strong>
                                             </p>
                                             <p className="text-lg font-bold text-emerald-400 mt-1">
-                                                +{promo.bonusDiamond} Diamond 🎁
+                                                +{isMounted ? promo.bonusDiamond.toLocaleString() : promo.bonusDiamond} Diamond 🎁
                                             </p>
                                         </div>
                                         {bestPromotion?.id === promo.id && isValid && (
@@ -361,14 +363,14 @@ export default function DepositPage() {
                         <div className="flex justify-between items-center py-2 border-b border-slate-700/50">
                             <span className="text-slate-400">Số tiền nạp</span>
                             <span className="font-bold text-white text-lg">
-                                {actualAmount.toLocaleString()} VND
+                                {isMounted ? actualAmount.toLocaleString() : actualAmount} VND
                             </span>
                         </div>
 
                         <div className="flex justify-between items-center py-2 border-b border-slate-700/50">
                             <span className="text-slate-400">Diamond nhận được</span>
                             <span className="font-bold text-indigo-300 text-lg">
-                                {baseDiamond.toLocaleString()} 💎
+                                {isMounted ? baseDiamond.toLocaleString() : baseDiamond} 💎
                             </span>
                         </div>
 
@@ -379,7 +381,7 @@ export default function DepositPage() {
                                     Bonus khuyến mãi
                                 </span>
                                 <span className="font-bold text-emerald-400 text-lg">
-                                    +{bonusDiamond.toLocaleString()} 💎
+                                    +{isMounted ? bonusDiamond.toLocaleString() : bonusDiamond} 💎
                                 </span>
                             </div>
                         )}
@@ -387,7 +389,7 @@ export default function DepositPage() {
                         <div className="flex justify-between items-center py-3">
                             <span className="text-white font-semibold text-lg">TỔNG CỘNG NHẬN</span>
                             <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 text-3xl">
-                                {totalDiamond.toLocaleString()} 💎
+                                {isMounted ? totalDiamond.toLocaleString() : totalDiamond} 💎
                             </span>
                         </div>
                     </div>
@@ -444,7 +446,7 @@ export default function DepositPage() {
                         ) : (
                             <>
                                 <Gem className="w-5 h-5" />
-                                Nạp {totalDiamond.toLocaleString()} Diamond ngay
+                                Nạp {isMounted ? totalDiamond.toLocaleString() : totalDiamond} Diamond ngay
                             </>
                         )}
                     </button>

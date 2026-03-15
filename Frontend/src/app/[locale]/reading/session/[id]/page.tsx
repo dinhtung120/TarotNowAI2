@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/routing";
 import { revealReadingSession } from "@/actions/readingActions";
 import { TAROT_DECK } from "@/lib/tarotData";
-import { Sparkles, ArrowLeft, RefreshCw } from "lucide-react";
+import { Sparkles, ArrowLeft, RefreshCw, Dices } from "lucide-react";
 import AiInterpretationStream from "@/components/AiInterpretationStream";
 
 // Generate positions for an elegant fanning and splitting shuffle effect
@@ -76,6 +76,40 @@ export default function ReadingSessionPage() {
             setError(response.error || "Failed to reveal cards.");
         }
         setIsRevealing(false);
+    };
+
+    /**
+     * Tự động chọn ngẫu nhiên các lá bài còn thiếu.
+     * Logic: Lấy bộ index 0-77, loại trừ các lá đã chọn, 
+     * xáo trộn và lấy đủ số lượng còn thiếu.
+     */
+    const handleRandomSelect = () => {
+        if (isRevealing || pickedCards.length >= cardsToDraw) return;
+
+        const remainingCount = cardsToDraw - pickedCards.length;
+        const availableIdxs = Array.from({ length: 78 })
+            .map((_, i) => i)
+            .filter(idx => !pickedCards.includes(idx));
+
+        // Xáo trộn mảng availableIdxs bằng thuật toán Fisher-Yates đơn giản
+        const shuffled = [...availableIdxs];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+
+        const newPicks = shuffled.slice(0, remainingCount);
+        console.log(`[TarotNow] Picking ${newPicks.length} cards randomly:`, newPicks);
+
+        // Hiệu ứng bốc từng lá một để tăng tính trải nghiệm "magic"
+        newPicks.forEach((idx, i) => {
+            setTimeout(() => {
+                setPickedCards(prev => {
+                    if (prev.includes(idx)) return prev; // Avoid duplicates just in case
+                    return [...prev, idx];
+                });
+            }, i * 200);
+        });
     };
 
     // Calculate when all cards have finished flipping
@@ -179,8 +213,18 @@ export default function ReadingSessionPage() {
                                             : "Các lá bài đã an bài"}
                                     </h2>
                                     <p className="text-sm text-zinc-400">
-                                        {pickedCards.length}/${cardsToDraw} lá bài
+                                        {pickedCards.length}/{cardsToDraw} lá bài
                                     </p>
+                                    
+                                    {pickedCards.length < cardsToDraw && (
+                                        <button
+                                            onClick={handleRandomSelect}
+                                            className="mt-4 relative z-50 flex items-center gap-2 px-6 py-2.5 rounded-full bg-zinc-800/90 border border-purple-500/50 text-xs font-bold text-purple-200 hover:bg-purple-900/60 hover:border-purple-400 hover:text-white transition-all shadow-[0_0_20px_rgba(168,85,247,0.2)] backdrop-blur-md group active:scale-95"
+                                        >
+                                            <Dices className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                                            Chọn ngẫu nhiên
+                                        </button>
+                                    )}
                                 </div>
 
                                 {/* Card Arc Layout 78 lá (chồng rải vừa phải & đè lên nhau thêm chút) */}
