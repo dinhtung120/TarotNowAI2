@@ -52,18 +52,18 @@ export default function Navbar() {
                     </Link>
 
                     {/* Navigation Links */}
-                    <div className="hidden md:flex items-center gap-6">
+                    <div className="flex items-center gap-3 sm:gap-4 md:gap-6">
                         <Link href="/" className="text-sm font-medium text-purple-200/70 hover:text-white flex items-center gap-2 transition-colors">
-                            <Home className="w-4 h-4" /> Trang Chủ
+                            <Home className="w-4 h-4" /> <span className="hidden lg:inline">Trang Chủ</span>
                         </Link>
                         <Link href="/reading" className="text-sm font-medium text-purple-200/70 hover:text-white flex items-center gap-2 transition-colors">
-                            <Sparkles className="w-4 h-4 text-amber-500" /> Rút Bài Tarot
+                            <Sparkles className="w-4 h-4 text-amber-500" /> <span className="hidden lg:inline">Rút Bài Tarot</span>
                         </Link>
                         <Link href="/collection" className="text-sm font-medium text-purple-200/70 hover:text-white flex items-center gap-2 transition-colors">
-                            <LayoutGrid className="w-4 h-4 text-purple-400" /> Miếu Bài
+                            <LayoutGrid className="w-4 h-4 text-purple-400" /> <span className="hidden lg:inline">Miếu Bài</span>
                         </Link>
                         <Link href="/reading/history" className="text-sm font-medium text-purple-200/70 hover:text-white flex items-center gap-2 transition-colors">
-                            <History className="w-4 h-4 text-cyan-400" /> Lịch Sử
+                            <History className="w-4 h-4 text-cyan-400" /> <span className="hidden lg:inline">Lịch Sử</span>
                         </Link>
                     </div>
                 </div>
@@ -76,16 +76,16 @@ export default function Navbar() {
                     {/* Nút Profile */}
                     <Link
                         href="/profile"
-                        className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-sm font-medium text-purple-200/80 hover:text-white"
+                        className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-sm font-medium text-purple-200/80 hover:text-white"
                     >
                         <User className="w-4 h-4" />
-                        {user?.displayName || "Hồ Sơ"}
+                        <span className="hidden lg:inline">{user?.displayName || "Hồ Sơ"}</span>
                     </Link>
 
                     {/* Nút Ví */}
                     <Link
                         href="/wallet"
-                        className="hidden md:flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-sm font-medium text-purple-200/80 hover:text-white"
+                        className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-sm font-medium text-purple-200/80 hover:text-white"
                     >
                         <Wallet className="w-4 h-4" />
                     </Link>
@@ -93,9 +93,9 @@ export default function Navbar() {
                     {/* Nút Đăng xuất */}
                     <button
                         onClick={handleLogout}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors text-sm font-medium"
+                        className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors text-sm font-medium"
                     >
-                        <LogOut className="w-4 h-4" /> Đăng Xuất
+                        <LogOut className="w-4 h-4" /> <span className="hidden lg:inline">Đăng Xuất</span>
                     </button>
                 </div>
             </div>
