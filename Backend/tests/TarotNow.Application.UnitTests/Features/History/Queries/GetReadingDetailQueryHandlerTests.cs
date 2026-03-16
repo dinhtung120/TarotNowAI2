@@ -23,7 +23,7 @@ public class GetReadingDetailQueryHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var session = new ReadingSession(userId, "Daily1Card");
+        var session = new ReadingSession(userId.ToString(), "Daily1Card");
         var sessionId = session.Id;
         var query = new GetReadingDetailQuery { UserId = userId, SessionId = sessionId };
 
@@ -81,7 +81,7 @@ public class GetReadingDetailQueryHandlerTests
          // Arrange
         var userId = Guid.NewGuid();
         var anotherUserId = Guid.NewGuid();
-        var session = new ReadingSession(anotherUserId, "Daily1Card");
+        var session = new ReadingSession(anotherUserId.ToString(), "Daily1Card");
         var sessionId = session.Id;
         var query = new GetReadingDetailQuery { UserId = userId, SessionId = sessionId };
         var aiRequests = new List<AiRequest>();
@@ -98,7 +98,7 @@ public class GetReadingDetailQueryHandlerTests
     {
          // Arrange
         var userId = Guid.NewGuid();
-        var sessionId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid().ToString();
         var query = new GetReadingDetailQuery { UserId = userId, SessionId = sessionId };
 
         _mockSessionRepository.Setup(r => r.GetSessionWithAiRequestsAsync(sessionId, default))

@@ -54,8 +54,8 @@ public class FollowupCapIntegrationTests : IClassFixture<CustomWebApplicationFac
         }
 
         var sessionId = Guid.NewGuid();
-        var session = new ReadingSession(userId, SpreadType.Daily1Card.ToString());
-        typeof(ReadingSession).GetProperty("Id")?.SetValue(session, sessionId);
+        var session = new ReadingSession(userId.ToString(), SpreadType.Daily1Card.ToString());
+        typeof(ReadingSession).GetProperty("Id")?.SetValue(session, sessionId.ToString());
         session.CompleteSession("[12]");
         await readingRepo.CreateAsync(session);
 

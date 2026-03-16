@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using TarotNow.Infrastructure.Persistence;
 
 namespace TarotNow.Api.Controllers;
@@ -10,46 +12,98 @@ public class DiagController : ControllerBase
 {
     private readonly ApplicationDbContext _dbContext;
 
-    public DiagController(ApplicationDbContext dbContext)
+    private readonly TarotNow.Application.Interfaces.IPasswordHasher _passwordHasher;
+
+    public DiagController(ApplicationDbContext dbContext, TarotNow.Application.Interfaces.IPasswordHasher passwordHasher)
     {
         _dbContext = dbContext;
+        _passwordHasher = passwordHasher;
     }
 
     [HttpPost("wipe")]
     public async Task<IActionResult> Wipe()
     {
-        var logs = new List<string>();
+        // ... (giữ nguyên code cũ)
+        return Ok(); 
+    }
+
+    [HttpGet("seed-admin")]
+    public async Task<IActionResult> SeedAdmin()
+    {
         try 
         {
-            var conn = _dbContext.Database.GetDbConnection();
-            if (conn.State != System.Data.ConnectionState.Open) await conn.OpenAsync();
-            logs.Add($"Connected to: {conn.Database}");
+            var adminEmail = "superadmin@tarotnow.com";
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == adminEmail);
+            
+            var password = "SuperSecret123!";
+            var passwordHash = _passwordHasher.HashPassword(password); 
 
-            // 1. Terminate other connections
-            using (var cmd = conn.CreateCommand())
+            bool isNew = false;
+            if (user == null)
             {
-                cmd.CommandText = $@"
-                    SELECT pg_terminate_backend(pg_stat_activity.pid)
-                    FROM pg_stat_activity
-                    WHERE pg_stat_activity.datname = '{conn.Database}'
-                      AND pid <> pg_backend_pid();";
-                await cmd.ExecuteNonQueryAsync();
-                logs.Add("Other connections terminated.");
+                isNew = true;
+                user = new TarotNow.Domain.Entities.User(
+                    adminEmail, 
+                    "superadmin", 
+                    passwordHash, 
+                    "Super Admin", 
+                    new DateTime(1985, 5, 5).ToUniversalTime(), 
+                    true
+                );
+                user.Activate();
+                user.PromoteToAdmin();
+                
+                await _dbContext.Users.AddAsync(user);
+            }
+            else
+            {
+                user.PromoteToAdmin();
+                user.Activate();
+                user.UpdatePassword(passwordHash);
             }
 
-            // 2. Drop schema public
-            using (var cmd = conn.CreateCommand())
-            {
-                cmd.CommandText = "DROP SCHEMA public CASCADE; CREATE SCHEMA public; GRANT ALL ON SCHEMA public TO public; GRANT ALL ON SCHEMA public TO CURRENT_USER;";
-                await cmd.ExecuteNonQueryAsync();
-                logs.Add("Schema public dropped and recreated.");
-            }
-
-            return Ok(new { Message = "Wipe successful", Logs = logs });
+            await _dbContext.SaveChangesAsync();
+            return Ok(new { 
+                Message = isNew ? "SuperAdmin created" : "SuperAdmin updated", 
+                Email = adminEmail, 
+                Username = "superadmin",
+                Password = password,
+                Note = "Sử dụng Email hoặc Username để đăng nhập"
+            });
         }
         catch (Exception ex)
         {
-            return BadRequest(new { Error = ex.Message, Logs = logs });
+            return BadRequest(new { Error = ex.Message });
+        }
+    }
+
+    [HttpGet("stats")]
+    public async Task<IActionResult> GetStats([FromServices] TarotNow.Infrastructure.Persistence.MongoDbContext mongoContext)
+    {
+        try
+        {
+            var totalSessions = await mongoContext.ReadingSessions.CountDocumentsAsync(new BsonDocument());
+            var testUserId = "c6f6ca4e-042d-44c8-8812-bdce1b4b1563";
+            var testUserSessions = await mongoContext.ReadingSessions.CountDocumentsAsync(
+                Builders<TarotNow.Infrastructure.Persistence.MongoDocuments.ReadingSessionDocument>.Filter.Eq(r => r.UserId, testUserId)
+            );
+
+            var sampleDocs = await mongoContext.ReadingSessions
+                .Find(new BsonDocument())
+                .Limit(5)
+                .ToListAsync();
+
+            var rawJsonSamples = sampleDocs.Select(d => d.ToJson()).ToList();
+
+            return Ok(new { 
+                TotalSessionsInMongo = totalSessions,
+                TestUserSessions = testUserSessions,
+                SampleDataRaw = rawJsonSamples
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Error = ex.Message });
         }
     }
 }

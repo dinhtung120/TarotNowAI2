@@ -101,6 +101,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, (AuthResponse R
                 Email = user.Email,
                 DisplayName = user.DisplayName,
                 Level = user.Level,
+                Role = user.Role,
                 Status = user.Status.ToString()
             }
         };

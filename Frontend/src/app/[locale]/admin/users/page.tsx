@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getAccessToken } from "@/lib/auth-client";
 
 interface User {
     id: string;
@@ -20,20 +21,19 @@ export default function AdminUsersPage() {
     const [page, setPage] = useState(1);
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(true);
-    const [errorStatus, setErrorStatus] = useState<number | null>(null);
 
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/v1/admin/users?page=${page}&pageSize=10&searchTerm=${encodeURIComponent(searchTerm)}`, {
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5037/api/v1";
+            const token = getAccessToken();
+            const res = await fetch(`${baseUrl}/admin/users?page=${page}&pageSize=10&searchTerm=${encodeURIComponent(searchTerm)}`, {
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
                 }
             });
             if (!res.ok) {
-                if (res.status === 403 || res.status === 401) {
-                    setErrorStatus(res.status);
-                }
                 throw new Error("Failed to fetch");
             }
             const data = await res.json();
@@ -55,10 +55,13 @@ export default function AdminUsersPage() {
 
         try {
             const action = isCurrentlyLocked ? "unlock" : "lock";
-            const res = await fetch("/api/v1/admin/users/toggle-lock", {
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5037/api/v1";
+            const token = getAccessToken();
+            const res = await fetch(`${baseUrl}/admin/users/toggle-lock`, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
                 },
                 body: JSON.stringify({ userId, action })
             });
@@ -72,14 +75,6 @@ export default function AdminUsersPage() {
         }
     };
 
-    if (errorStatus === 401 || errorStatus === 403) {
-        return (
-            <div className="flex flex-col items-center justify-center h-full text-red-400 space-y-4">
-                <h1 className="text-4xl font-bold">403 Forbidden</h1>
-                <p>Bạn không có quyền Admin để truy cập trang này.</p>
-            </div>
-        );
-    }
 
     return (
         <div className="space-y-6">

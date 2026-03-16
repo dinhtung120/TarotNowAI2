@@ -1,17 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
-interface DepositOrder {
-    id: string;
-    userId: string;
-    amountVnd: number;
-    diamondAmount: number;
-    status: string;
-    transactionId: string | null;
-    fxSnapshot: string | null;
-    createdAt: string;
-}
+import { listDepositsAdminAction, type DepositOrder } from "@/actions/depositActions";
 
 export default function AdminDepositsPage() {
     const [orders, setOrders] = useState<DepositOrder[]>([]);
@@ -19,30 +9,21 @@ export default function AdminDepositsPage() {
     const [page, setPage] = useState(1);
     const [statusFilter, setStatusFilter] = useState("");
     const [loading, setLoading] = useState(true);
-    const [errorStatus, setErrorStatus] = useState<number | null>(null);
 
     const fetchOrders = async () => {
         setLoading(true);
-        setErrorStatus(null);
         try {
-            const query = new URLSearchParams({
-                page: page.toString(),
-                pageSize: "10",
-            });
-            if (statusFilter) query.append("status", statusFilter);
-
-            const res = await fetch(`/api/v1/admin/deposits?${query.toString()}`, {
-                headers: { "Content-Type": "application/json" }
-            });
-
-            if (!res.ok) {
-                if (res.status === 401 || res.status === 403) setErrorStatus(res.status);
-                throw new Error("Failed to fetch");
+            const data = await listDepositsAdminAction(page, 10, statusFilter);
+            console.log("Admin Deposits Data Full:", data); 
+            if (data && data.deposits && data.deposits.length > 0) {
+                console.log("First Order Keys:", Object.keys(data.deposits[0]));
+                console.log("First Order values:", data.deposits[0]);
             }
-
-            const data = await res.json();
-            setOrders(data.deposits);
-            setTotalCount(data.totalCount);
+            if (data) {
+                const items = data.deposits || (data as any).Deposits || [];
+                setOrders(items);
+                setTotalCount(data.totalCount ?? (data as any).TotalCount ?? 0);
+            }
         } catch (err) {
             console.error(err);
         } finally {
@@ -54,14 +35,6 @@ export default function AdminDepositsPage() {
         fetchOrders();
     }, [page, statusFilter]);
 
-    if (errorStatus === 401 || errorStatus === 403) {
-        return (
-            <div className="flex flex-col items-center justify-center h-full text-red-400 space-y-4">
-                <h1 className="text-4xl font-bold">403 Forbidden</h1>
-                <p>Bạn không có quyền Admin để xem danh sách giao dịch.</p>
-            </div>
-        );
-    }
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -99,7 +72,7 @@ export default function AdminDepositsPage() {
                         <thead className="text-xs uppercase bg-[#0F1219] text-[#DFF2CB] border-b border-[#2D3748]">
                             <tr>
                                 <th className="px-6 py-4">Mã Đơn / TXN ID</th>
-                                <th className="px-6 py-4">Người Dùng ID</th>
+                                <th className="px-6 py-4">Người Dùng</th>
                                 <th className="px-6 py-4">Số Tiền (VND)</th>
                                 <th className="px-6 py-4">Diamond Nhận</th>
                                 <th className="px-6 py-4">Tạo Lúc</th>
@@ -122,7 +95,10 @@ export default function AdminDepositsPage() {
                                             <div className="font-mono text-xs text-gray-400">{o.id}</div>
                                             {o.transactionId && <div className="text-sm font-semibold text-[#DFF2CB]">TXN: {o.transactionId}</div>}
                                         </td>
-                                        <td className="px-6 py-4 font-mono text-xs text-gray-400">{o.userId}</td>
+                                        <td className="px-6 py-4">
+                                            <div className="text-sm font-bold text-white mb-0.5">{o.username || "System User"}</div>
+                                            <div className="font-mono text-[10px] text-gray-500">{o.userId}</div>
+                                        </td>
                                         <td className="px-6 py-4 font-semibold text-white">
                                             {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(o.amountVnd)}
                                         </td>

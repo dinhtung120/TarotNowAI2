@@ -7,12 +7,12 @@ namespace TarotNow.Application.Features.History.Queries.GetReadingDetail;
 public class GetReadingDetailQuery : IRequest<GetReadingDetailResponse>
 {
     public Guid UserId { get; set; }
-    public Guid SessionId { get; set; }
+    public string SessionId { get; set; } = string.Empty;
 }
 
 public class GetReadingDetailResponse
 {
-    public Guid Id { get; set; }
+    public string Id { get; set; } = string.Empty;
     public string SpreadType { get; set; } = string.Empty;
     public string? CardsDrawn { get; set; }
     public bool IsCompleted { get; set; }
@@ -53,7 +53,7 @@ public class GetReadingDetailQueryHandler : IRequestHandler<GetReadingDetailQuer
         if (!session.HasValue)
             return null; // Return null as expected by the test: Handle_ShouldReturnNull_WhenSessionDoesNotExist
 
-        if (session.Value.ReadingSession.UserId != request.UserId)
+        if (session.Value.ReadingSession.UserId != request.UserId.ToString())
             throw new UnauthorizedAccessException("Reading session not found or access denied");
 
         return new GetReadingDetailResponse

@@ -5,6 +5,7 @@ export interface UserProfile {
     displayName: string;
     level: number;
     exp: number;
+    role: string;
     status: 'Pending' | 'Active' | 'Suspended' | 'Banned';
 }
 

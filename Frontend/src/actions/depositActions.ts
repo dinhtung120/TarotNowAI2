@@ -22,11 +22,53 @@ export interface CreateDepositOrderResponse {
 export interface DepositOrder {
   id: string;
   userId: string;
+  username: string; // Thêm username từ backend
   amountVnd: number;
   diamondAmount: number;
   status: string;
+  transactionId?: string;
   createdAt: string;
   completedAt?: string;
+}
+
+export interface ListDepositsResponse {
+  deposits: DepositOrder[];
+  totalCount: number;
+}
+
+/**
+ * Lấy danh sách đơn nạp tiền (dành cho Admin).
+ */
+export async function listDepositsAdminAction(page: number, pageSize: number, status?: string): Promise<ListDepositsResponse | null> {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('accessToken')?.value;
+
+  try {
+    const query = new URLSearchParams({
+      page: page.toString(),
+      pageSize: pageSize.toString(),
+    });
+    if (status) query.append('status', status);
+
+    const response = await fetch(`${API_URL}/admin/deposits?${query.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      console.error('listDepositsAdminAction error', response.status);
+      return null;
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to list deposits:', error);
+    return null;
+  }
 }
 
 // ======================================================================

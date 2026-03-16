@@ -14,7 +14,7 @@ namespace TarotNow.Infrastructure.Persistence.MongoDocuments;
 public class ReadingSessionDocument
 {
     [BsonId]
-    public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
+    public object Id { get; set; } = ObjectId.GenerateNewId();
 
     /// <summary>UUID user từ PostgreSQL.</summary>
     [BsonElement("user_id")]

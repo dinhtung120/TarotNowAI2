@@ -145,8 +145,8 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         }
 
         var sessionId = Guid.NewGuid();
-        var session = new ReadingSession(userId, SpreadType.Daily1Card);
-        typeof(ReadingSession).GetProperty("Id")?.SetValue(session, sessionId);
+        var session = new ReadingSession(userId.ToString(), SpreadType.Daily1Card);
+        typeof(ReadingSession).GetProperty("Id")?.SetValue(session, sessionId.ToString());
         session.CompleteSession("[12]");
         await readingRepo.CreateAsync(session);
 
@@ -254,8 +254,8 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         }
 
         var sessionId = Guid.NewGuid();
-        var session = new ReadingSession(userId, SpreadType.Daily1Card);
-        typeof(ReadingSession).GetProperty("Id")?.SetValue(session, sessionId);
+        var session = new ReadingSession(userId.ToString(), SpreadType.Daily1Card);
+        typeof(ReadingSession).GetProperty("Id")?.SetValue(session, sessionId.ToString());
         session.CompleteSession("[1]");
         await readingRepo.CreateAsync(session);
 
@@ -332,8 +332,8 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         }
 
         var sessionId = Guid.NewGuid();
-        var session = new ReadingSession(userId, SpreadType.Daily1Card);
-        typeof(ReadingSession).GetProperty("Id")?.SetValue(session, sessionId);
+        var session = new ReadingSession(userId.ToString(), SpreadType.Daily1Card);
+        typeof(ReadingSession).GetProperty("Id")?.SetValue(session, sessionId.ToString());
         session.CompleteSession("[2]");
         await readingRepo.CreateAsync(session);
 
@@ -410,8 +410,8 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         }
 
         var sessionId = Guid.NewGuid();
-        var session = new ReadingSession(userId, SpreadType.Daily1Card);
-        typeof(ReadingSession).GetProperty("Id")?.SetValue(session, sessionId);
+        var session = new ReadingSession(userId.ToString(), SpreadType.Daily1Card);
+        typeof(ReadingSession).GetProperty("Id")?.SetValue(session, sessionId.ToString());
         session.CompleteSession("[1,2,3]");
         await readingRepo.CreateAsync(session);
 
@@ -498,8 +498,8 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         }
 
         var sessionId = Guid.NewGuid();
-        var session = new ReadingSession(userId, SpreadType.Daily1Card);
-        typeof(ReadingSession).GetProperty("Id")?.SetValue(session, sessionId);
+        var session = new ReadingSession(userId.ToString(), SpreadType.Daily1Card);
+        typeof(ReadingSession).GetProperty("Id")?.SetValue(session, sessionId.ToString());
         session.CompleteSession("[4]");
         await readingRepo.CreateAsync(session);
 

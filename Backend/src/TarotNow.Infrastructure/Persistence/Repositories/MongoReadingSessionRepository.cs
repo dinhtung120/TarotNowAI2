@@ -1,4 +1,5 @@
 using MongoDB.Driver;
+using MongoDB.Bson;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
@@ -40,8 +41,9 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
         // Tạo document MongoDB từ Domain Entity
         var doc = new ReadingSessionDocument
         {
-            Id = session.Id.ToString(),
-            UserId = session.UserId.ToString(),
+            // Thử convert sang ObjectId nếu Id là 24 ký tự hex hợp lệ
+            Id = ObjectId.TryParse(session.Id, out var oid) ? (object)oid : session.Id,
+            UserId = session.UserId,
             SpreadType = session.SpreadType,
             Question = session.Question,
             AiStatus = session.IsCompleted ? "completed" : "pending",
@@ -79,11 +81,21 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
     /// Lấy phiên theo ID — trả về Domain Entity.
     /// Map từ MongoDB document → ReadingSession entity (reconstruct).
     /// </summary>
-    public async Task<ReadingSession?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<ReadingSession?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
     {
-        var idStr = id.ToString();
+        // Logic lọc linh hoạt: Thử tìm theo ObjectId trước, sau đó là String
+        FilterDefinition<ReadingSessionDocument> filter;
+        if (ObjectId.TryParse(id, out var oid))
+        {
+            filter = Builders<ReadingSessionDocument>.Filter.Eq("_id", oid);
+        }
+        else 
+        {
+            filter = Builders<ReadingSessionDocument>.Filter.Eq("_id", id);
+        }
+
         var doc = await _mongoContext.ReadingSessions
-            .Find(r => r.Id == idStr)
+            .Find(filter)
             .FirstOrDefaultAsync(cancellationToken);
 
         return doc == null ? null : MapToEntity(doc);
@@ -92,7 +104,16 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
     /// <summary>Update phiên — merge changes vào MongoDB document.</summary>
     public async Task UpdateAsync(ReadingSession session, CancellationToken cancellationToken = default)
     {
-        var idStr = session.Id.ToString();
+        // Logic lọc linh hoạt cho ID
+        FilterDefinition<ReadingSessionDocument> filter;
+        if (ObjectId.TryParse(session.Id, out var oid))
+        {
+            filter = Builders<ReadingSessionDocument>.Filter.Eq("_id", oid);
+        }
+        else 
+        {
+            filter = Builders<ReadingSessionDocument>.Filter.Eq("_id", session.Id);
+        }
 
         // Build update definition từ Domain Entity
         var update = Builders<ReadingSessionDocument>.Update
@@ -107,7 +128,7 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
             {
                 CardId = cardId,
                 Position = idx,
-                IsReversed = false // Default — nếu cần reversed info, cần extend Domain Entity
+                IsReversed = false // Default
             }).ToList();
 
             update = update
@@ -116,7 +137,7 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
         }
 
         await _mongoContext.ReadingSessions.UpdateOneAsync(
-            r => r.Id == idStr,
+            filter,
             update,
             cancellationToken: cancellationToken);
     }
@@ -237,20 +258,65 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
     /// Session từ MongoDB, AiRequests từ PostgreSQL.
     /// </summary>
     public async Task<(ReadingSession ReadingSession, IEnumerable<AiRequest> AiRequests)?> GetSessionWithAiRequestsAsync(
-        Guid sessionId, CancellationToken cancellationToken = default)
+        string sessionId, CancellationToken cancellationToken = default)
     {
         // 1. Lấy session từ MongoDB
         var session = await GetByIdAsync(sessionId, cancellationToken);
         if (session == null) return null;
 
         // 2. Lấy AiRequests từ PostgreSQL (cross-DB)
-        var sessionIdStr = sessionId.ToString();
         var aiRequests = _pgContext.AiRequests
-            .Where(a => a.ReadingSessionRef == sessionIdStr)
+            .Where(a => a.ReadingSessionRef == sessionId)
             .OrderBy(a => a.CreatedAt)
             .AsEnumerable();
 
         return (session, aiRequests);
+    }
+
+    /// <summary>Admin: Lấy toàn bộ lịch sử phiên từ MongoDB — có hỗ trợ bộ lọc và phân trang.</summary>
+    public async Task<(IEnumerable<ReadingSession> Items, int TotalCount)> GetAllSessionsAsync(
+        int page, 
+        int pageSize, 
+        List<string>? userIds = null,
+        string? spreadType = null,
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        CancellationToken cancellationToken = default)
+    {
+        var builder = Builders<ReadingSessionDocument>.Filter;
+        var filter = builder.Eq(r => r.IsDeleted, false);
+
+        if (userIds != null && userIds.Any())
+        {
+            filter &= builder.In(r => r.UserId, userIds);
+        }
+
+        if (!string.IsNullOrWhiteSpace(spreadType))
+        {
+            filter &= builder.Eq(r => r.SpreadType, spreadType);
+        }
+
+        if (startDate.HasValue)
+        {
+            filter &= builder.Gte(r => r.CreatedAt, startDate.Value);
+        }
+
+        if (endDate.HasValue)
+        {
+            filter &= builder.Lte(r => r.CreatedAt, endDate.Value);
+        }
+
+        var totalCount = await _mongoContext.ReadingSessions.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
+
+        var docs = await _mongoContext.ReadingSessions
+            .Find(filter)
+            .SortByDescending(r => r.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Limit(pageSize)
+            .ToListAsync(cancellationToken);
+
+        var (items, totalCountResult) = (docs.Select(MapToEntity).ToList(), (int)totalCount);
+        return (items, totalCountResult);
     }
 
     // ======================================================================
@@ -263,20 +329,17 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
     /// </summary>
     private static ReadingSession MapToEntity(ReadingSessionDocument doc)
     {
-        Guid.TryParse(doc.UserId, out var userId);
-
         var session = new ReadingSession(
-            userId,
+            doc.UserId,
             doc.SpreadType,
             doc.Question,
             doc.Cost?.Currency,
-            doc.Cost?.Amount ?? 0);
+            doc.Cost?.Amount ?? 0
+        );
 
-        // RECONSTRUCTION: Giữ nguyên ID từ MongoDB thay vì để Constructor tự tạo Guid.NewGuid()
-        if (Guid.TryParse(doc.Id, out var id))
-        {
-            typeof(ReadingSession).GetProperty("Id")?.SetValue(session, id);
-        }
+        // RECONSTRUCTION: Giữ nguyên ID từ MongoDB (string hoặc ObjectId)
+        var idStr = doc.Id?.ToString() ?? string.Empty;
+        typeof(ReadingSession).GetProperty("Id")?.SetValue(session, idStr);
 
         // Nếu đã complete → gọi CompleteSession với cards drawn
         if (doc.AiStatus == "completed" && doc.DrawnCards != null && doc.DrawnCards.Count > 0)

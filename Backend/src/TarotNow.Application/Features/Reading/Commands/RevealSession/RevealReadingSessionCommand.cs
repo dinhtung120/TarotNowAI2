@@ -5,7 +5,7 @@ namespace TarotNow.Application.Features.Reading.Commands.RevealSession;
 public class RevealReadingSessionCommand : IRequest<RevealReadingSessionResult>
 {
     public Guid UserId { get; set; }
-    public Guid SessionId { get; set; }
+    public string SessionId { get; set; } = string.Empty;
 }
 
 public class RevealReadingSessionResult

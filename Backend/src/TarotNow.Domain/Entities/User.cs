@@ -133,6 +133,15 @@ public class User
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// Nâng cấp người dùng lên quyền Admin (Dùng cho Seed/Setup ban đầu).
+    /// </summary>
+    public void PromoteToAdmin()
+    {
+        Role = "admin";
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     // ======================================================================
     // BACKWARD COMPATIBILITY: Delegate methods sang Wallet
     // Giữ lại để WalletRepository không bị breaking change.

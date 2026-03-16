@@ -12,7 +12,7 @@ public class InitReadingSessionCommand : IRequest<InitReadingSessionResult>
 
 public class InitReadingSessionResult
 {
-    public Guid SessionId { get; set; }
+    public string SessionId { get; set; } = string.Empty;
     public long CostGold { get; set; }
     public long CostDiamond { get; set; }
 }

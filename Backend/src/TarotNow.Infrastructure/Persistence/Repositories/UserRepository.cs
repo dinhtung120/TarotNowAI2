@@ -72,4 +72,21 @@ public class UserRepository : IUserRepository
 
         return (users, totalCount);
     }
+
+    public async Task<IEnumerable<User>> SearchUsersByUsernameAsync(string usernamePart, CancellationToken cancellationToken = default)
+    {
+        var part = usernamePart.Trim().ToLower();
+        return await _dbContext.Users
+            .Where(u => u.Username.ToLower().Contains(part))
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<Dictionary<Guid, string>> GetUsernameMapAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default)
+    {
+        var idList = userIds.ToList();
+        return await _dbContext.Users
+            .Where(u => idList.Contains(u.Id))
+            .Select(u => new { u.Id, u.Username })
+            .ToDictionaryAsync(x => x.Id, x => x.Username, cancellationToken);
+    }
 }

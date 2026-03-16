@@ -28,9 +28,9 @@ public class RevealReadingSessionCommandHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var request = new RevealReadingSessionCommand { UserId = userId, SessionId = Guid.NewGuid() };
+        var request = new RevealReadingSessionCommand { UserId = userId, SessionId = Guid.NewGuid().ToString() };
         
-        var mockSession = new ReadingSession(userId, SpreadType.Spread3Cards);
+        var mockSession = new ReadingSession(userId.ToString(), SpreadType.Spread3Cards);
         typeof(ReadingSession).GetProperty("Id")?.SetValue(mockSession, request.SessionId);
 
         _readingRepoMock.Setup(r => r.GetByIdAsync(request.SessionId, CancellationToken.None))
@@ -65,9 +65,9 @@ public class RevealReadingSessionCommandHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var request = new RevealReadingSessionCommand { UserId = userId, SessionId = Guid.NewGuid() };
+        var request = new RevealReadingSessionCommand { UserId = userId, SessionId = Guid.NewGuid().ToString() };
         
-        var mockSession = new ReadingSession(userId, SpreadType.Daily1Card);
+        var mockSession = new ReadingSession(userId.ToString(), SpreadType.Daily1Card);
         mockSession.CompleteSession("[10]"); // Giả lập đã gọi trước đó
 
         _readingRepoMock.Setup(r => r.GetByIdAsync(request.SessionId, CancellationToken.None))

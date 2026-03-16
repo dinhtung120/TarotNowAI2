@@ -51,12 +51,10 @@ public class StreamReadingCommandHandler : IRequestHandler<StreamReadingCommand,
     public async Task<StreamReadingResult> Handle(StreamReadingCommand request, CancellationToken cancellationToken)
     {
         // 1. Kiểm tra phiên trải bài
-        if (!Guid.TryParse(request.ReadingSessionId, out var sessionGuid))
-            throw new BadRequestException("Invalid Reading Session ID format");
-            
-        var session = await _readingRepo.GetByIdAsync(sessionGuid, cancellationToken);
+        var session = await _readingRepo.GetByIdAsync(request.ReadingSessionId, cancellationToken);
         if (session == null) throw new NotFoundException("Reading session not found");
-        if (session.UserId != request.UserId) throw new BadRequestException("Unauthorized access");
+        if (session.UserId != request.UserId.ToString())
+            throw new UnauthorizedAccessException("Session not found or access denied");
         if (!session.IsCompleted) throw new BadRequestException("Cannot stream AI interpretation before revealing cards");
 
         // Guard 1: Daily Quota Cap (Max 3)
@@ -104,7 +102,7 @@ public class StreamReadingCommandHandler : IRequestHandler<StreamReadingCommand,
         var aiRequest = new AiRequest
         {
             UserId = request.UserId,
-            ReadingSessionRef = session.Id.ToString(),
+            ReadingSessionRef = session.Id,
             Status = AiRequestStatus.Requested,
             IdempotencyKey = idempotencyKey,
             PromptVersion = "v1.5",

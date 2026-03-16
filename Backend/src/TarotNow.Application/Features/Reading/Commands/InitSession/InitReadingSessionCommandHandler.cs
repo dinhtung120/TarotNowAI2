@@ -75,7 +75,7 @@ public class InitReadingSessionCommandHandler : IRequestHandler<InitReadingSessi
 
         // 4. Tạo Object Session với thông đẩy đủ (Phase 1.3 spec)
         var session = new ReadingSession(
-            request.UserId,
+            request.UserId.ToString(),
             request.SpreadType,
             request.Question,
             currencyUsed,

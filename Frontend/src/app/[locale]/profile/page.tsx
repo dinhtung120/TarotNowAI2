@@ -61,7 +61,7 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 export default function ProfilePage() {
     const t = useTranslations("Profile");
     const router = useRouter();
-    const { isAuthenticated } = useAuthStore();
+    const { isAuthenticated, user } = useAuthStore();
 
     const [profileData, setProfileData] = useState<ProfileResponse | null>(null);
     const [loading, setLoading] = useState(true);
@@ -204,6 +204,19 @@ export default function ProfilePage() {
                                     {t("numerology")}: {profileData.numerology}
                                 </div>
                             </div>
+                            
+                            {/* Nút dành cho Admin */}
+                            {user?.role === "admin" && (
+                                <div className="mt-6 pt-4 border-t border-[#2D3748]/50 flex justify-center sm:justify-start">
+                                    <button
+                                        onClick={() => router.push("/admin/users")}
+                                        className="flex items-center gap-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 px-4 py-2 rounded-xl text-sm font-bold transition-all hover:scale-105 active:scale-95"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                        Vào Trang Quản Trị
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

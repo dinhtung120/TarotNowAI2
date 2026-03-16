@@ -104,3 +104,50 @@ export async function getHistoryDetailAction(sessionId: string) {
         return { error: 'Lỗi kết nối mạng' };
     }
 }
+/**
+ * Admin: Lấy toàn bộ lịch sử đọc bài của tất cả người dùng với bộ lọc.
+ */
+export async function getAllHistorySessionsAdminAction(params: {
+    page: number;
+    pageSize: number;
+    username?: string;
+    spreadType?: string;
+    startDate?: string;
+    endDate?: string;
+}) {
+    try {
+        const token = await getAccessToken();
+        if (!token) {
+            return { error: 'Chưa đăng nhập' };
+        }
+
+        let query = `page=${params.page}&pageSize=${params.pageSize}`;
+        if (params.username) query += `&username=${encodeURIComponent(params.username)}`;
+        if (params.spreadType) query += `&spreadType=${encodeURIComponent(params.spreadType)}`;
+        if (params.startDate) query += `&startDate=${encodeURIComponent(params.startDate)}`;
+        if (params.endDate) query += `&endDate=${encodeURIComponent(params.endDate)}`;
+
+        const response = await fetch(
+            `${API_BASE_URL}/History/admin/all-sessions?${query}`,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+            }
+        );
+
+        if (!response.ok) {
+            if (response.status === 401) return { error: 'unauthorized' };
+            if (response.status === 403) return { error: 'forbidden' };
+            const result = await response.json().catch(() => ({}));
+            return { error: result.message || 'Không thể tải lịch sử Admin' };
+        }
+
+        const data = await response.json();
+        return { success: true, data };
+    } catch (err) {
+        console.error("Admin History Action Error:", err);
+        return { error: 'Lỗi kết nối mạng' };
+    }
+}

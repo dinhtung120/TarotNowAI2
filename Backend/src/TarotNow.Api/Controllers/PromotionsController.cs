@@ -55,9 +55,10 @@ public class PromotionsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeletePromotion(Guid id)
+    public async Task<IActionResult> DeletePromotion([FromRoute] Guid id)
     {
         var success = await Mediator.Send(new DeletePromotionCommand { Id = id });
-        return success ? Ok() : BadRequest();
+        if (!success) return BadRequest(new { message = "Xóa khuyến mãi thất bại." });
+        return Ok();
     }
 }

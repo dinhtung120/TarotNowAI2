@@ -16,7 +16,7 @@ export default async function AdminLayout({ children, params }: { children: Reac
     const { locale } = await params;
 
     return (
-        <div className="flex h-screen bg-[#0F1219] text-gray-300">
+        <div className="flex h-screen bg-[#0F1219] text-gray-300 pt-20">
             {/* Sidebar — Thanh điều hướng bên trái cho Admin Portal */}
             <aside className="w-64 bg-[#1A1F2B] border-r border-[#2D3748] flex flex-col">
                 <div className="p-6 border-b border-[#2D3748]">
@@ -31,6 +31,9 @@ export default async function AdminLayout({ children, params }: { children: Reac
                     </Link>
                     <Link href={`/${locale}/admin/promotions`} className="block px-4 py-3 rounded-lg hover:bg-[#2D3748] transition-colors font-medium">
                         Khuyến Mãi Nạp
+                    </Link>
+                    <Link href={`/${locale}/admin/readings`} className="block px-4 py-3 rounded-lg hover:bg-[#2D3748] transition-colors font-medium">
+                        Lịch Sử Xem Bài
                     </Link>
                 </nav>
             </aside>

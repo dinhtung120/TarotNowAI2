@@ -35,7 +35,8 @@ public class RevealReadingSessionCommandHandler : IRequestHandler<RevealReadingS
         var session = await _readingRepo.GetByIdAsync(request.SessionId, cancellationToken);
         
         if (session == null) throw new NotFoundException("Session not found");
-        if (session.UserId != request.UserId) throw new BadRequestException("Unauthorized access to this session");
+        if (session.UserId != request.UserId.ToString())
+            throw new UnauthorizedAccessException("Reading session not found or access denied");
         if (session.IsCompleted) throw new BadRequestException("This session has already been revealed");
 
             // 2. Kích hoạt thuật toán gieo quẻ Deterministic Shuffle (Xào bài RNG)

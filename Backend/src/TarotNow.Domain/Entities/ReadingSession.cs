@@ -10,8 +10,8 @@ namespace TarotNow.Domain.Entities;
 /// </summary>
 public class ReadingSession
 {
-    public Guid Id { get; private set; }
-    public Guid UserId { get; private set; }
+    public string Id { get; private set; }
+    public string UserId { get; private set; }
     public string SpreadType { get; private set; }
 
     /// <summary>
@@ -26,13 +26,11 @@ public class ReadingSession
     /// <summary>
     /// Loại tiền đã sử dụng thanh toán cho phiên này (Gold hoặc Diamond).
     /// Dùng để tính EXP: Gold ít hơn Diamond theo spec Phase 1.3.
-    /// Nullable vì daily_1 có thể miễn phí.
     /// </summary>
     public string? CurrencyUsed { get; private set; }
 
     /// <summary>
     /// Số tiền thực tế đã trừ cho phiên đọc bài này.
-    /// Cần thiết cho audit trail và reconciliation.
     /// </summary>
     public long AmountCharged { get; private set; }
 
@@ -48,12 +46,10 @@ public class ReadingSession
 
     /// <summary>
     /// Constructor chính khi khởi tạo phiên mới.
-    /// Mở rộng thêm tham số question, currencyUsed, amountCharged 
-    /// để đảm bảo entity chứa đầy đủ thông tin ngay từ đầu.
     /// </summary>
-    public ReadingSession(Guid userId, string spreadType, string? question = null, string? currencyUsed = null, long amountCharged = 0)
+    public ReadingSession(string userId, string spreadType, string? question = null, string? currencyUsed = null, long amountCharged = 0)
     {
-        Id = Guid.NewGuid();
+        Id = Guid.NewGuid().ToString();
         UserId = userId;
         SpreadType = spreadType;
         Question = question;

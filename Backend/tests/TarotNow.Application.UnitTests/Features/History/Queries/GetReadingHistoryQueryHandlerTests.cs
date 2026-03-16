@@ -25,11 +25,11 @@ public class GetReadingHistoryQueryHandlerTests
         var userId = Guid.NewGuid();
         var query = new GetReadingHistoryQuery { UserId = userId, Page = 1, PageSize = 10 };
 
-        var session1 = new ReadingSession(userId, "Daily1Card");
+        var session1 = new ReadingSession(userId.ToString(), "Daily1Card");
         session1.CompleteSession("[1]");
         typeof(ReadingSession).GetProperty("CreatedAt")?.SetValue(session1, DateTime.UtcNow.AddMinutes(-10));
 
-        var session2 = new ReadingSession(userId, "Daily1Card");
+        var session2 = new ReadingSession(userId.ToString(), "Daily1Card");
 
         var sessions = new List<ReadingSession> { session1, session2 };
 

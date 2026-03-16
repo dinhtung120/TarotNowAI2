@@ -38,6 +38,7 @@ public class JwtTokenService : ITokenService
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
             new Claim("username", user.Username),
             new Claim("status", user.Status.ToString()),
+            new Claim(ClaimTypes.Role, user.Role), // Bổ sung Role claim cho phân quyền
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
