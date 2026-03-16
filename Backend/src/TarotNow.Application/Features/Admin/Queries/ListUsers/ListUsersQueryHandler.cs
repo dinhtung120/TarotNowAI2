@@ -32,6 +32,10 @@ public class ListUsersQueryHandler : IRequestHandler<ListUsersQuery, ListUsersRe
                 DisplayName = u.DisplayName,
                 Status = u.Status,
                 Role = u.Role,
+                Level = u.Level,
+                Exp = u.Exp,
+                GoldBalance = u.GoldBalance,
+                DiamondBalance = u.DiamondBalance,
                 CreatedAt = u.CreatedAt
             }),
             TotalCount = totalCount

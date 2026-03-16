@@ -23,5 +23,18 @@ public class UserDto
     public string DisplayName { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
+    
+    [System.Text.Json.Serialization.JsonPropertyName("level")]
+    public int Level { get; set; }
+    
+    [System.Text.Json.Serialization.JsonPropertyName("exp")]
+    public long Exp { get; set; }
+    
+    [System.Text.Json.Serialization.JsonPropertyName("goldBalance")]
+    public long GoldBalance { get; set; }
+    
+    [System.Text.Json.Serialization.JsonPropertyName("diamondBalance")]
+    public long DiamondBalance { get; set; }
+    
     public System.DateTime CreatedAt { get; set; }
 }

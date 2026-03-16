@@ -87,6 +87,27 @@ public class User
     }
 
     /// <summary>
+    /// Cộng điểm kinh nghiệm (EXP) và xử lý thăng cấp (Level Up).
+    /// Quy tắc: 100 EXP = 1 Level.
+    /// </summary>
+    public void AddExp(long amount)
+    {
+        if (amount <= 0) return;
+
+        Exp += amount;
+        
+        // Logic thăng cấp: Mỗi 100 EXP lên 1 cấp
+        // Ví dụ: 105 EXP -> Level 2 (nếu bắt đầu từ Level 1)
+        int newLevel = 1 + (int)(Exp / 100);
+        if (newLevel > Level)
+        {
+            Level = newLevel;
+        }
+
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
     /// Cập nhật mật khẩu sau khi hash thành công.
     /// </summary>
     public void UpdatePassword(string newHash)

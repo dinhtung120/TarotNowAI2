@@ -45,4 +45,11 @@ public class AdminController : ControllerBase
         var result = await _mediator.Send(query);
         return Ok(result);
     }
+
+    [HttpPost("users/add-balance")]
+    public async Task<IActionResult> AddUserBalance([FromBody] TarotNow.Application.Features.Admin.Commands.AddUserBalance.AddUserBalanceCommand command)
+    {
+        var result = await _mediator.Send(command);
+        return result ? Ok(new { success = true }) : BadRequest(new { msg = "Không thể cộng tiền cho người dùng này." });
+    }
 }

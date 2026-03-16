@@ -172,3 +172,28 @@ export async function getWalletMismatches(): Promise<MismatchRecord[] | null> {
     return null;
   }
 }
+
+/**
+ * Cộng tiền (Gold/Diamond) cho người dùng (Admin only).
+ * Backend API: POST /api/v1/admin/users/add-balance
+ */
+export async function addUserBalance(userId: string, currency: string, amount: number, reason?: string): Promise<boolean> {
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('accessToken')?.value;
+
+  try {
+    const response = await fetch(`${API_URL}/admin/users/add-balance`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId, currency, amount, reason }),
+    });
+
+    return response.ok;
+  } catch (error) {
+    console.error('Failed to add user balance:', error);
+    return false;
+  }
+}

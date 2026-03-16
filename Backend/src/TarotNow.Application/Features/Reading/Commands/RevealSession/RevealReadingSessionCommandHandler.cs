@@ -14,18 +14,21 @@ public class RevealReadingSessionCommandHandler : IRequestHandler<RevealReadingS
 {
     private readonly IReadingSessionRepository _readingRepo;
     private readonly IUserCollectionRepository _collectionRepo;
+    private readonly IUserRepository _userRepository; // Thêm UserRepository
     private readonly IRngService _rngService;
 
-    // TODO: Dynamic Exp từ config. Đang hardcode EXP cho MVP.
-    private const long EXP_PER_CARD = 10; 
+    // Quy định: 1 lá bài = 1 EXP cho User và 1 EXP cho Card Collection
+    private const long EXP_PER_CARD = 1; 
 
     public RevealReadingSessionCommandHandler(
         IReadingSessionRepository readingRepo,
         IUserCollectionRepository collectionRepo,
+        IUserRepository userRepository, // Tiêm UserRepository
         IRngService rngService)
     {
         _readingRepo = readingRepo;
         _collectionRepo = collectionRepo;
+        _userRepository = userRepository;
         _rngService = rngService;
     }
 
@@ -39,38 +42,45 @@ public class RevealReadingSessionCommandHandler : IRequestHandler<RevealReadingS
             throw new UnauthorizedAccessException("Reading session not found or access denied");
         if (session.IsCompleted) throw new BadRequestException("This session has already been revealed");
 
-            // 2. Kích hoạt thuật toán gieo quẻ Deterministic Shuffle (Xào bài RNG)
-            // Dùng 78 lá Tarot cơ bản
-            var shuffledDeck = _rngService.ShuffleDeck(78);
+        // 2. Kích hoạt thuật toán gieo quẻ Deterministic Shuffle (Xào bài RNG)
+        var shuffledDeck = _rngService.ShuffleDeck(78);
 
-            // 3. Trích xuất số lượng bài tùy theo loại Spsread 
-            int cardsToDraw = session.SpreadType switch
-            {
-                SpreadType.Daily1Card => 1,
-                SpreadType.Spread3Cards => 3,
-                SpreadType.Spread5Cards => 5,
-                SpreadType.Spread10Cards => 10,
-                _ => throw new BadRequestException($"Invalid spread type: {session.SpreadType}")
-            };
+        // 3. Trích xuất số lượng bài tùy theo loại Spsread 
+        int cardsToDraw = session.SpreadType switch
+        {
+            SpreadType.Daily1Card => 1,
+            SpreadType.Spread3Cards => 3,
+            SpreadType.Spread5Cards => 5,
+            SpreadType.Spread10Cards => 10,
+            _ => throw new BadRequestException($"Invalid spread type: {session.SpreadType}")
+        };
 
-            // Lấy N lá trên cùng mặt mảng bài (Bộ Deck đã bị Shuffle)
-            var drawnCards = shuffledDeck.Take(cardsToDraw).ToArray();
+        // Lấy N lá trên cùng của bộ xào
+        var drawnCards = shuffledDeck.Take(cardsToDraw).ToArray();
 
-            // 4. Update Collection (Kho Đồ) & Tích luỹ thẻ trùng (Exp/Level Up)
-            foreach (var cardId in drawnCards)
-            {
-                await _collectionRepo.UpsertCardAsync(request.UserId, cardId, EXP_PER_CARD, cancellationToken);
-            }
+        // 4. Update Collection (Kho Đồ) & Tích luỹ thẻ trùng (Exp/Level Up cho thẻ)
+        foreach (var cardId in drawnCards)
+        {
+            await _collectionRepo.UpsertCardAsync(request.UserId, cardId, EXP_PER_CARD, cancellationToken);
+        }
 
-            // 5. Cập nhật Session hoàn tất
-            var cardsJson = JsonSerializer.Serialize(drawnCards);
-            session.CompleteSession(cardsJson);
-            await _readingRepo.UpdateAsync(session, cancellationToken);
+        // 5. Cộng EXP cho User (Yêu cầu: 1 lá = 1 EXP)
+        var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
+        if (user != null)
+        {
+            user.AddExp(drawnCards.Length);
+            await _userRepository.UpdateAsync(user, cancellationToken);
+        }
 
-            // 6. Trả về kết quả ngửa bài
-            return new RevealReadingSessionResult
-            {
-                Cards = drawnCards
-            };
+        // 6. Cập nhật Session hoàn tất
+        var cardsJson = JsonSerializer.Serialize(drawnCards);
+        session.CompleteSession(cardsJson);
+        await _readingRepo.UpdateAsync(session, cancellationToken);
+
+        // 7. Trả về kết quả ngửa bài
+        return new RevealReadingSessionResult
+        {
+            Cards = drawnCards
+        };
     }
 }
