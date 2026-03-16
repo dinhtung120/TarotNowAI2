@@ -28,30 +28,28 @@ export default function WalletWidget() {
     // Nếu không có dữ liệu (có thể chưa đăng nhập hoặc lỗi API), không render gì cả.
     if (!balance) return null;
 
-    // Trả về UI hiển thị số Gold và Diamond. Dùng `toLocaleString()` để format số (ví dụ: 1,000,000).
+    // Trả về UI hiển thị số Gold và Diamond: 13px, căn lề trái, padding và gap siêu nhỏ.
     return (
-        <div className="flex items-center gap-4 bg-slate-800/80 backdrop-blur-md px-4 py-1.5 rounded-full border border-slate-700/50 shadow-lg transition-transform hover:scale-105 cursor-pointer">
-            {/* Cụm hiển thị Gold (tiền miễn phí) */}
-            <div className="flex items-center gap-1.5" title="Gold - Free currency">
-                <Coins className="w-5 h-5 text-yellow-400" />
-                <span className="text-yellow-400 font-bold text-sm">{balance.goldBalance.toLocaleString()}</span>
-            </div>
-
-            {/* Thanh dọc mờ ngăn cách giữa Gold và Diamond cho đẹp mắt */}
-            <div className="w-[1px] h-4 bg-slate-600/50"></div>
-
-            {/* Cụm hiển thị Diamond (tiền trả phí) */}
-            <div className="flex items-center gap-1.5" title="Diamond - Premium currency">
-                <Gem className="w-4 h-4 text-cyan-400" />
-                <span className="text-cyan-400 font-bold text-sm">
+        <div className="flex flex-col justify-center items-start gap-0 px-2 py-0.5 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-all cursor-pointer group" title="Ví của bạn">
+            {/* Hàng DIAMOND (Trên) */}
+            <div className="flex items-center gap-1 leading-none py-0.5" title="Diamond - Premium">
+                <Gem className="w-3 h-3 text-cyan-400 group-hover:animate-pulse" />
+                <span className="text-cyan-400 font-bold text-[13px] tracking-tighter">
                     {balance.diamondBalance.toLocaleString()}
                 </span>
-                {/* Chỉ hiển thị số bị giam (Frozen) nếu nó lớn hơn 0 */}
                 {balance.frozenDiamondBalance > 0 && (
-                    <span className="text-slate-400 text-xs ml-1" title="Frozen in Escrow">
+                    <span className="text-slate-500 text-[10px] font-medium ml-0.5">
                         (+{balance.frozenDiamondBalance.toLocaleString()})
                     </span>
                 )}
+            </div>
+
+            {/* Hàng GOLD (Dưới) */}
+            <div className="flex items-center gap-1 leading-none py-0.5 border-t border-white/5 w-full justify-start" title="Gold - Free">
+                <Coins className="w-3 h-3 text-yellow-500 group-hover:animate-spin" style={{ animationDuration: '3s' }} />
+                <span className="text-yellow-500/90 font-bold text-[13px] tracking-tighter">
+                    {balance.goldBalance.toLocaleString()}
+                </span>
             </div>
         </div>
     );
