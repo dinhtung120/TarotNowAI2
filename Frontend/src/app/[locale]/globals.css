@@ -1,26 +1,10 @@
-@import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
+/*
+ * [locale]/globals.css
+ *
+ * Tại sao file này chỉ import globals.css root?
+ * → Trước đây có 2 file globals.css với nội dung KHÁC NHAU (xung đột).
+ * → Bây giờ tất cả design tokens, base styles, animations đều nằm
+ *   ở `app/globals.css` (Single Source of Truth).
+ * → File này chỉ re-export để Next.js routing hoạt động đúng.
+ */
+@import "../globals.css";

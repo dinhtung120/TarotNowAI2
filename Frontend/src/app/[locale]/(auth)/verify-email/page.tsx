@@ -1,12 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useEffect, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Mail, CheckCircle2, Loader2, KeyRound } from 'lucide-react';
-import { verifyEmailAction } from '@/actions/authActions';
+import { Mail, CheckCircle2, KeyRound, RefreshCcw } from 'lucide-react';
+import { verifyEmailAction, resendVerificationEmailAction } from '@/actions/authActions';
 import { Link } from '@/i18n/routing';
+import toast from 'react-hot-toast';
+
+import AuthLayout from '@/components/layout/AuthLayout';
+import { Input, Button, GlassCard } from '@/components/ui';
 
 const verifySchema = z.object({
     email: z.string().email('Invalid email address'),
@@ -18,14 +22,51 @@ type VerifyFormValues = z.infer<typeof verifySchema>;
 export default function VerifyEmailPage() {
     const [errorMsg, setErrorMsg] = useState('');
     const [success, setSuccess] = useState(false);
+    const [resendTimer, setResendTimer] = useState(0);
+    const [isResending, setIsResending] = useState(false);
 
     const {
         register,
         handleSubmit,
+        control,
         formState: { errors, isSubmitting },
     } = useForm<VerifyFormValues>({
         resolver: zodResolver(verifySchema),
     });
+
+    const emailWatch = useWatch({ control, name: 'email' });
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (resendTimer > 0) {
+            interval = setInterval(() => {
+                setResendTimer((prev) => prev - 1);
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [resendTimer]);
+
+    const handleResendOtp = async () => {
+        if (!emailWatch || !emailWatch.includes('@')) {
+            toast.error('Vui lòng nhập email hợp lệ để gửi lại mã.');
+            return;
+        }
+
+        setIsResending(true);
+        try {
+            const result = await resendVerificationEmailAction(emailWatch);
+            if (result.success) {
+                toast.success('Mã OTP mới đã được gửi vào email của bạn.');
+                setResendTimer(60); // Đếm ngược 60 giây
+            } else {
+                toast.error(result.error || 'Gửi lại mã thất bại.');
+            }
+        } catch {
+            toast.error('Lỗi kết nối mạng.');
+        } finally {
+            setIsResending(false);
+        }
+    };
 
     const onSubmit = async (data: VerifyFormValues) => {
         setErrorMsg('');
@@ -46,83 +87,85 @@ export default function VerifyEmailPage() {
 
     if (success) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 relative overflow-hidden font-sans">
-                <div className="relative z-10 w-full max-w-md p-8 bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl rounded-3xl text-center">
-                    <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <CheckCircle2 className="w-10 h-10 text-green-300" />
+            <div className="min-h-screen flex items-center justify-center bg-[var(--bg-void)] relative overflow-hidden font-sans">
+                {/* Decorative */}
+                <div className="absolute top-[20%] right-[30%] w-96 h-96 bg-[var(--success-bg)] rounded-full mix-blend-screen filter blur-[120px] opacity-40 animate-pulse" />
+                
+                <GlassCard className="relative z-10 w-full max-w-md p-10 text-center animate-in zoom-in-95 duration-700">
+                    <div className="w-20 h-20 bg-[var(--success-bg)] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_var(--success)] animate-pulse">
+                        <CheckCircle2 className="w-10 h-10 text-[var(--success)]" />
                     </div>
-                    <h2 className="text-3xl font-bold text-white mb-4">Email Verified</h2>
-                    <p className="text-purple-200/80 mb-8">
+                    <h2 className="text-3xl font-black italic tracking-tighter text-white mb-4 uppercase">Email Verified</h2>
+                    <p className="text-zinc-400 font-medium mb-8 leading-relaxed">
                         Your account is now active. You may proceed to login to the mystical realm.
                     </p>
-                    <Link href="/login" className="inline-flex w-full py-3.5 px-4 bg-gradient-to-r from-purple-500 to-fuchsia-500 hover:from-purple-400 hover:to-fuchsia-400 text-white rounded-2xl font-semibold justify-center items-center transition-all">
-                        Return to Login
+                    <Link href="/login" tabIndex={-1}>
+                        <Button variant="brand" size="lg" fullWidth>
+                            Return to Login
+                        </Button>
                     </Link>
-                </div>
+                </GlassCard>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 relative overflow-hidden font-sans">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500 rounded-full mix-blend-screen filter blur-[100px] opacity-30 animate-pulse" />
-            <div className="absolute bottom-0 left-0 w-96 h-96 bg-fuchsia-500 rounded-full mix-blend-screen filter blur-[100px] opacity-30 animate-pulse delay-1000" />
-
-            <div className="relative z-10 w-full max-w-md p-8 bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl rounded-3xl">
-                <div className="text-center mb-10">
-                    <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-fuchsia-200 tracking-tight mb-2">
-                        Verify Email
-                    </h1>
-                    <p className="text-purple-200/80 text-sm">Enter the OTP sent to your email</p>
+        <AuthLayout 
+            title="Verify Email" 
+            subtitle="Enter the OTP sent to your email"
+        >
+            {errorMsg && (
+                <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm animate-in fade-in slide-in-from-top-2 flex items-center gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                    {errorMsg}
                 </div>
+            )}
 
-                {errorMsg && (
-                    <div className="mb-6 p-4 rounded-xl bg-red-500/20 border border-red-500/50 text-red-200 text-sm">
-                        {errorMsg}
-                    </div>
-                )}
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                <Input
+                    label="Email"
+                    type="email"
+                    leftIcon={<Mail className="w-5 h-5" />}
+                    placeholder="seeker@tarotnow.com"
+                    error={errors.email?.message}
+                    {...register('email')}
+                />
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                    <div className="space-y-1">
-                        <label className="text-sm font-medium text-purple-200/90 ml-1">Email</label>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <Mail className="h-5 w-5 text-purple-300/50" />
-                            </div>
-                            <input
-                                {...register('email')}
-                                className="w-full pl-11 pr-4 py-3 bg-black/20 border border-white/10 rounded-2xl focus:ring-2 focus:ring-purple-400 focus:border-transparent text-white placeholder-purple-300/30 transition-all outline-none"
-                                placeholder="seeker@tarotnow.com"
-                            />
-                        </div>
-                        {errors.email && <p className="text-red-300 text-xs mt-1 ml-1">{errors.email.message}</p>}
-                    </div>
+                <Input
+                    label="Mã OTP (6 số)"
+                    type="text"
+                    leftIcon={<KeyRound className="w-5 h-5" />}
+                    placeholder="123456"
+                    maxLength={6}
+                    error={errors.otpCode?.message}
+                    {...register('otpCode')}
+                    className="text-center font-bold tracking-widest text-xl"
+                />
 
-                    <div className="space-y-1">
-                        <label className="text-sm font-medium text-purple-200/90 ml-1">Mã OTP (6 số)</label>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <KeyRound className="h-5 w-5 text-purple-300/50" />
-                            </div>
-                            <input
-                                {...register('otpCode')}
-                                maxLength={6}
-                                className="w-full pl-11 pr-4 py-3 bg-black/20 border border-white/10 rounded-2xl focus:ring-2 focus:ring-purple-400 focus:border-transparent text-white placeholder-purple-300/30 transition-all outline-none text-center tracking-widest text-xl font-bold"
-                                placeholder="123456"
-                            />
-                        </div>
-                        {errors.otpCode && <p className="text-red-300 text-xs mt-1 ml-1">{errors.otpCode.message}</p>}
-                    </div>
-
-                    <button
+                <div className="pt-2">
+                    <Button
                         type="submit"
-                        disabled={isSubmitting}
-                        className="w-full py-3.5 px-4 bg-gradient-to-r from-purple-500 to-fuchsia-500 hover:from-purple-400 hover:to-fuchsia-400 active:scale-[0.98] text-white rounded-2xl font-semibold shadow-lg shadow-purple-500/30 transition-all flex justify-center items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                        variant="brand"
+                        size="lg"
+                        fullWidth
+                        isLoading={isSubmitting}
+                        rightIcon={!isSubmitting && <CheckCircle2 className="w-5 h-5 ml-2" />}
                     >
-                        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirm Verification'}
-                    </button>
-                </form>
+                        Confirm Verification
+                    </Button>
+                </div>
+            </form>
+
+            <div className="text-center mt-6">
+                <button
+                    onClick={handleResendOtp}
+                    disabled={resendTimer > 0 || isResending}
+                    className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-white transition-all flex items-center justify-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed group"
+                >
+                    <RefreshCcw className={`w-3.5 h-3.5 ${isResending ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
+                    {resendTimer > 0 ? `Gửi lại mã (${resendTimer}s)` : 'Gửi lại mã OTP'}
+                </button>
             </div>
-        </div>
+        </AuthLayout>
     );
 }

@@ -4,10 +4,13 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Mail, Lock, Loader2 } from 'lucide-react';
+import { Mail, Lock } from 'lucide-react';
 import { loginAction } from '@/actions/authActions';
 import { useAuthStore } from '@/store/authStore';
 import { Link } from '@/i18n/routing';
+
+import AuthLayout from '@/components/layout/AuthLayout';
+import { Input, Button } from '@/components/ui';
 
 const loginSchema = z.object({
     emailOrUsername: z.string().min(1, 'Email or Username is required'),
@@ -69,90 +72,78 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 relative overflow-hidden font-sans">
-            {/* Decorative Orbs */}
-            <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-purple-500 rounded-full mix-blend-screen filter blur-[100px] opacity-40 animate-pulse" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-fuchsia-500 rounded-full mix-blend-screen filter blur-[100px] opacity-40 animate-pulse delay-1000" />
+        <AuthLayout 
+            title="Welcome Back" 
+            subtitle="Enter your credentials to access your psychic realm"
+        >
+            {errorMsg && (
+                <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm animate-in fade-in slide-in-from-top-2 flex items-center gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                    {errorMsg}
+                </div>
+            )}
 
-            <div className="relative z-10 w-full max-w-md p-8 bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl rounded-3xl">
-                <div className="text-center mb-10">
-                    <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-fuchsia-200 tracking-tight mb-2">
-                        Welcome Back
-                    </h1>
-                    <p className="text-purple-200/80 text-sm">Enter your credentials to access your psychic realm</p>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                <Input
+                    label="Email or Username"
+                    leftIcon={<Mail className="w-5 h-5" />}
+                    placeholder="seeker@tarotnow.com"
+                    error={errors.emailOrUsername?.message}
+                    {...register('emailOrUsername')}
+                />
+
+                <div className="space-y-1">
+                    <Input
+                        label="Password"
+                        type="password"
+                        leftIcon={<Lock className="w-5 h-5" />}
+                        placeholder="••••••••"
+                        error={errors.password?.message}
+                        {...register('password')}
+                    />
+                    <div className="flex justify-end pt-1">
+                        <Link href="/forgot-password" className="text-[11px] font-bold text-[var(--purple-accent)] hover:text-white transition-colors uppercase tracking-widest">
+                            Forgot password?
+                        </Link>
+                    </div>
                 </div>
 
-                {errorMsg && (
-                    <div className="mb-6 p-4 rounded-xl bg-red-500/20 border border-red-500/50 text-red-200 text-sm animate-in fade-in slide-in-from-top-2">
-                        {errorMsg}
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                    <div className="space-y-1">
-                        <label className="text-sm font-medium text-purple-200/90 ml-1">Email or Username</label>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <Mail className="h-5 w-5 text-purple-300/50" />
-                            </div>
+                <div className="flex items-center ml-1 py-1">
+                    <label className="flex items-start gap-3 cursor-pointer group">
+                        <div className="relative flex items-center justify-center mt-0.5">
                             <input
-                                {...register('emailOrUsername')}
-                                className="w-full pl-11 pr-4 py-3 bg-black/20 border border-white/10 rounded-2xl focus:ring-2 focus:ring-purple-400 focus:border-transparent text-white placeholder-purple-300/30 transition-all outline-none"
-                                placeholder="seeker@tarotnow.com"
+                                type="checkbox"
+                                {...register('rememberMe')}
+                                className="peer appearance-none w-4 h-4 border border-[var(--purple-accent)]/50 rounded bg-black/30 checked:bg-[var(--purple-accent)] transition-all cursor-pointer"
                             />
+                            <svg className="absolute w-2.5 h-2.5 text-black pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 14 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
                         </div>
-                        {errors.emailOrUsername && <p className="text-red-300 text-xs mt-1 ml-1">{errors.emailOrUsername.message}</p>}
-                    </div>
-
-                    <div className="space-y-1">
-                        <div className="flex justify-between items-center ml-1">
-                            <label className="text-sm font-medium text-purple-200/90">Password</label>
-                            <Link href="/forgot-password" className="text-xs text-purple-300 hover:text-white transition-colors">
-                                Forgot password?
-                            </Link>
-                        </div>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <Lock className="h-5 w-5 text-purple-300/50" />
-                            </div>
-                            <input
-                                type="password"
-                                {...register('password')}
-                                className="w-full pl-11 pr-4 py-3 bg-black/20 border border-white/10 rounded-2xl focus:ring-2 focus:ring-purple-400 focus:border-transparent text-white placeholder-purple-300/30 transition-all outline-none"
-                                placeholder="••••••••"
-                            />
-                        </div>
-                        {errors.password && <p className="text-red-300 text-xs mt-1 ml-1">{errors.password.message}</p>}
-                    </div>
-
-                    <div className="flex items-center ml-1">
-                        <input
-                            type="checkbox"
-                            id="rememberMe"
-                            {...register('rememberMe')}
-                            className="w-4 h-4 rounded border-white/20 bg-black/20 text-purple-500 focus:ring-purple-400 focus:ring-offset-0 transition-colors accent-purple-500 cursor-pointer"
-                        />
-                        <label htmlFor="rememberMe" className="ml-2 text-sm text-purple-200/80 cursor-pointer select-none">
+                        <span className="text-sm font-medium text-zinc-400 group-hover:text-zinc-200 transition-colors select-none">
                             Remember me
-                        </label>
-                    </div>
+                        </span>
+                    </label>
+                </div>
 
-                    <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="w-full py-3.5 px-4 bg-gradient-to-r from-purple-500 to-fuchsia-500 hover:from-purple-400 hover:to-fuchsia-400 active:scale-[0.98] text-white rounded-2xl font-semibold shadow-lg shadow-purple-500/30 transition-all flex justify-center items-center gap-2 group disabled:opacity-70 disabled:cursor-not-allowed"
-                    >
-                        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Reveal Your Destiny'}
-                    </button>
-                </form>
+                <Button
+                    type="submit"
+                    variant="brand"
+                    size="lg"
+                    fullWidth
+                    isLoading={isSubmitting}
+                    className="mt-2"
+                >
+                    Reveal Your Destiny
+                </Button>
+            </form>
 
-                <p className="mt-8 text-center text-sm text-purple-200/60">
-                    New to the realm?{' '}
-                    <Link href="/register" className="text-purple-300 font-semibold hover:text-white transition-colors">
-                        Create an account
-                    </Link>
-                </p>
-            </div>
-        </div>
+            <p className="mt-8 text-center text-sm text-zinc-500 font-medium">
+                New to the realm?{' '}
+                <Link href="/register" className="text-[var(--purple-accent)] font-bold hover:text-white transition-colors">
+                    Create an account
+                </Link>
+            </p>
+        </AuthLayout>
     );
 }

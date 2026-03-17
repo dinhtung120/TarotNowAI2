@@ -6,6 +6,8 @@ import {
   MessageCircle, Loader2, Sparkles, ChevronRight, Inbox
 } from 'lucide-react';
 import { useRouter } from '@/i18n/routing';
+import UserLayout from '@/components/layout/UserLayout';
+import { SectionHeader, GlassCard } from '@/components/ui';
 
 /**
  * Trang Inbox — danh sách conversations.
@@ -56,112 +58,122 @@ export default function InboxPage() {
   /** Status badge */
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'active': return { text: 'Đang chat', color: 'emerald' };
-      case 'pending': return { text: 'Chờ phản hồi', color: 'amber' };
-      case 'completed': return { text: 'Hoàn thành', color: 'zinc' };
-      default: return { text: status, color: 'zinc' };
+      case 'active': return { text: 'Đang chat', color: 'var(--success)', bg: 'var(--success-bg)' };
+      case 'pending': return { text: 'Chờ phản hồi', color: 'var(--warning)', bg: 'var(--warning-bg)' };
+      case 'completed': return { text: 'Hoàn thành', color: 'var(--text-secondary)', bg: 'rgba(255,255,255,0.05)' };
+      default: return { text: status, color: 'var(--text-secondary)', bg: 'rgba(255,255,255,0.05)' };
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-16 space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-      {/* Header */}
-      <div className="space-y-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/5 border border-purple-500/10 text-[9px] uppercase tracking-[0.2em] font-black text-purple-400 shadow-xl backdrop-blur-md">
-          <Sparkles className="w-3 h-3" />
-          Tin nhắn
-        </div>
-        <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white uppercase italic">
-          Hộp Thư
-        </h1>
-        <p className="text-zinc-500 font-medium text-sm">
-          Quản lý các cuộc trò chuyện với Reader và khách hàng.
-        </p>
-      </div>
+    <UserLayout>
+        <div className="max-w-4xl mx-auto px-6 pt-8 pb-32 space-y-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000">
+            {/* Header */}
+            <SectionHeader
+                tag="Tin nhắn"
+                tagIcon={<Sparkles className="w-3 h-3 text-[var(--purple-accent)]" />}
+                title="Hộp Thư"
+                subtitle="Quản lý các cuộc trò chuyện với Reader và khách hàng."
+            />
 
-      {/* Role Tabs */}
-      <div className="flex gap-2">
-        {(['user', 'reader'] as const).map((r) => (
-          <button
-            key={r}
-            onClick={() => setRole(r)}
-            className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
-              role === r
-                ? 'bg-purple-500/10 border-purple-500/30 text-purple-400'
-                : 'bg-white/[0.02] border-white/5 text-zinc-600 hover:border-white/10'
-            }`}
-          >
-            {r === 'user' ? '🔮 Người hỏi' : '📖 Reader'}
-          </button>
-        ))}
-      </div>
+            {/* Main Content Area */}
+            <div className="grid grid-cols-1 gap-6">
+                
+                {/* Role Tabs */}
+                <div className="flex gap-2 mb-2">
+                    {(['user', 'reader'] as const).map((r) => (
+                    <button
+                        key={r}
+                        onClick={() => setRole(r)}
+                        className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                        role === r
+                            ? 'bg-[var(--purple-accent)]/10 border-[var(--purple-accent)]/30 text-[var(--purple-accent)]'
+                            : 'bg-white/[0.02] border-white/5 text-[var(--text-secondary)] hover:border-white/10 hover:bg-white/[0.04]'
+                        }`}
+                    >
+                        {r === 'user' ? '🔮 Người hỏi' : '📖 Reader'}
+                    </button>
+                    ))}
+                </div>
 
-      {/* Loading */}
-      {loading && (
-        <div className="h-[30vh] flex flex-col items-center justify-center space-y-4">
-          <Loader2 className="w-10 h-10 text-purple-500 animate-spin" />
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-600">Đang tải...</span>
-        </div>
-      )}
+                {/* Loading State */}
+                {loading && (
+                    <GlassCard className="h-[40vh] flex flex-col items-center justify-center space-y-4">
+                        <Loader2 className="w-10 h-10 text-[var(--purple-accent)] animate-spin" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-secondary)]">Đang tải...</span>
+                    </GlassCard>
+                )}
 
-      {/* Empty */}
-      {!loading && conversations.length === 0 && (
-        <div className="h-[30vh] flex flex-col items-center justify-center space-y-4">
-          <Inbox className="w-16 h-16 text-zinc-800" />
-          <p className="text-zinc-600 text-sm font-medium">Chưa có cuộc trò chuyện nào.</p>
-        </div>
-      )}
+                {/* Empty State */}
+                {!loading && conversations.length === 0 && (
+                    <GlassCard className="h-[40vh] flex flex-col items-center justify-center space-y-4 border-dashed border-white/10">
+                        <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-2">
+                            <Inbox className="w-8 h-8 text-[var(--text-tertiary)]" />
+                        </div>
+                        <p className="text-[var(--text-secondary)] text-sm font-medium">Chưa có cuộc trò chuyện nào.</p>
+                        <p className="text-[10px] text-[var(--text-tertiary)] uppercase tracking-widest">Hãy bắt đầu một kết nối mới</p>
+                    </GlassCard>
+                )}
 
-      {/* Conversation List */}
-      {!loading && conversations.length > 0 && (
-        <div className="space-y-3">
-          {conversations.map((conv) => {
-            const unread = role === 'user' ? conv.unreadCountUser : conv.unreadCountReader;
-            const statusInfo = getStatusLabel(conv.status);
-            const otherUserId = role === 'user' ? conv.readerId : conv.userId;
+                {/* Conversation List */}
+                {!loading && conversations.length > 0 && (
+                    <div className="space-y-4">
+                        {conversations.map((conv) => {
+                            const unread = role === 'user' ? conv.unreadCountUser : conv.unreadCountReader;
+                            const statusInfo = getStatusLabel(conv.status);
+                            const otherUserId = role === 'user' ? conv.readerId : conv.userId;
 
-            return (
-              <button
-                key={conv.id}
-                onClick={() => router.push(`/chat/${conv.id}` as any)}
-                className="w-full group flex items-center gap-4 p-5 bg-white/[0.02] hover:bg-white/[0.04] backdrop-blur-3xl rounded-2xl border border-white/5 hover:border-purple-500/20 transition-all duration-300 text-left"
-              >
-                {/* Avatar */}
-                <div className="relative flex-shrink-0">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-600/10 border border-purple-500/20 flex items-center justify-center text-base font-black text-purple-400">
-                    {otherUserId.charAt(0).toUpperCase()}
-                  </div>
-                  {/* Unread Badge */}
-                  {unread > 0 && (
-                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-[9px] font-bold text-white">
-                      {unread > 9 ? '9+' : unread}
+                            return (
+                            <button
+                                key={conv.id}
+                                onClick={() => router.push(`/chat/${conv.id}` as any)}
+                                className="w-full group"
+                            >
+                                <GlassCard className="flex items-center gap-5 !p-5 hover:border-[var(--purple-accent)]/30 hover:bg-white/[0.03] transition-all duration-300 text-left">
+                                    {/* Avatar */}
+                                    <div className="relative flex-shrink-0">
+                                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[var(--purple-accent)]/20 to-[var(--purple-accent)]/5 border border-[var(--purple-accent)]/20 flex items-center justify-center text-lg font-black text-[var(--purple-accent)] shadow-[0_0_15px_rgba(168,85,247,0.1)] group-hover:scale-105 transition-transform duration-300">
+                                            {otherUserId.charAt(0).toUpperCase()}
+                                        </div>
+                                        {/* Unread Badge */}
+                                        {unread > 0 && (
+                                            <div className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-[var(--danger)] rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-lg border-2 border-[#020108] animate-bounce-subtle">
+                                                {unread > 9 ? '9+' : unread}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="flex-1 min-w-0 space-y-1.5">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-base font-black text-white truncate group-hover:text-[var(--purple-accent)] transition-colors">
+                                                {role === 'user' ? 'Reader ' : 'User '}{otherUserId.substring(0, 8)}...
+                                            </span>
+                                            <span className="text-[10px] font-bold text-[var(--text-tertiary)] flex-shrink-0 uppercase tracking-widest">
+                                                {timeAgo(conv.lastMessageAt)}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span 
+                                                className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border border-white/5"
+                                                style={{ color: statusInfo.color, backgroundColor: statusInfo.bg, borderColor: `${statusInfo.color}30` }}
+                                            >
+                                                {statusInfo.text}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[var(--purple-accent)]/10 transition-colors shrink-0">
+                                        <ChevronRight className="w-5 h-5 text-[var(--text-tertiary)] group-hover:text-[var(--purple-accent)] transition-colors" />
+                                    </div>
+                                </GlassCard>
+                            </button>
+                            );
+                        })}
                     </div>
-                  )}
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-black text-white truncate">
-                      {role === 'user' ? 'Reader ' : 'User '}{otherUserId.substring(0, 8)}...
-                    </span>
-                    <span className="text-[9px] text-zinc-700 flex-shrink-0">
-                      {timeAgo(conv.lastMessageAt)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2 py-0.5 rounded-full bg-${statusInfo.color}-500/10 text-${statusInfo.color}-400 text-[9px] font-bold uppercase border border-${statusInfo.color}-500/20`}>
-                      {statusInfo.text}
-                    </span>
-                  </div>
-                </div>
-
-                <ChevronRight className="w-4 h-4 text-zinc-800 group-hover:text-purple-400 transition-colors" />
-              </button>
-            );
-          })}
+                )}
+            </div>
         </div>
-      )}
-    </div>
+    </UserLayout>
   );
 }

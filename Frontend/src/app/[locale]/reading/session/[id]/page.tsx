@@ -7,6 +7,7 @@ import { revealReadingSession } from "@/actions/readingActions";
 import { TAROT_DECK } from "@/lib/tarotData";
 import { Sparkles, ArrowLeft, RefreshCw, Dices } from "lucide-react";
 import AiInterpretationStream from "@/components/AiInterpretationStream";
+import AstralBackground from "@/components/layout/AstralBackground";
 
 // Generate positions for an elegant fanning and splitting shuffle effect
 const generateShufflePaths = () => {
@@ -116,7 +117,8 @@ export default function ReadingSessionPage() {
     const allCardsFlipped = cards.length > 0 && flippedIndex >= cards.length - 1;
 
     return (
-        <div className="min-h-screen bg-black text-white p-4 md:p-6 pt-24 overflow-x-hidden relative">
+        <div className="min-h-screen text-white p-4 md:p-6 pt-24 overflow-x-hidden relative font-sans">
+            <AstralBackground />
             <div className="max-w-[1600px] mx-auto relative z-10 h-full">
                 
                 {/* Header - Fixed at top of the layout */}
@@ -404,9 +406,7 @@ export default function ReadingSessionPage() {
                 </div>
             </div>
 
-            {/* Decorative Background Elements */}
-            <div className="fixed top-1/4 left-10 w-96 h-96 bg-purple-900/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
-            <div className="fixed bottom-1/4 right-10 w-96 h-96 bg-amber-900/5 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+            {/* Background elements are handled by AstralBackground */}
             
             {/* Custom Scrollbar Styles */}
             <style jsx global>{`

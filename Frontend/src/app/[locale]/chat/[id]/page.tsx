@@ -10,6 +10,8 @@ import { useRouter } from '@/i18n/routing';
 import * as signalR from '@microsoft/signalr';
 import ReportModal from '@/components/chat/ReportModal';
 import EscrowPanel from '@/components/chat/EscrowPanel';
+import UserLayout from '@/components/layout/UserLayout';
+import { GlassCard } from '@/components/ui';
 
 /**
  * Chat Screen — tin nhắn realtime qua SignalR.
@@ -21,9 +23,6 @@ import EscrowPanel from '@/components/chat/EscrowPanel';
  * → Auto-scroll khi có tin mới
  * → Mark read khi mở conversation
  * → Report modal
- *
- * Trạng thái kết nối: Connected → nhận tin qua "ReceiveMessage"
- * Nếu mất kết nối: reconnect tự động (SignalR built-in).
  */
 export default function ChatPage() {
   const params = useParams();
@@ -44,7 +43,6 @@ export default function ChatPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Lấy currentUserId từ cookie hoặc token
-  // Đơn giản hóa: parse từ token payload tại client
   const [currentUserId, setCurrentUserId] = useState<string>('');
 
   /** Auto-scroll xuống cuối khi có tin mới */
@@ -110,7 +108,6 @@ export default function ChatPage() {
 
       hubConnection.onreconnected(() => {
         setConnected(true);
-        // Re-join group sau reconnect
         hubConnection?.invoke('JoinConversation', conversationId);
         console.log('[Chat] Reconnected');
       });
@@ -126,10 +123,7 @@ export default function ChatPage() {
         setConnected(true);
         connectionRef.current = hubConnection;
 
-        // Join conversation group
         await hubConnection.invoke('JoinConversation', conversationId);
-
-        // Mark messages as read
         await hubConnection.invoke('MarkRead', conversationId);
       } catch (error) {
         console.error('[Chat] Connection failed:', error);
@@ -138,16 +132,14 @@ export default function ChatPage() {
       // 5. Load lịch sử chat (REST)
       const history = await listMessages(conversationId);
       if (history) {
-        // Reverse vì server trả DESC, UI cần ASC
         setMessages([...history.messages].reverse());
       }
       setLoading(false);
-      setTimeout(scrollToBottom, 100);
+      setTimeout(scrollToBottom, 500);
     };
 
     initConnection();
 
-    // Cleanup khi unmount
     return () => {
       if (hubConnection) {
         hubConnection.invoke('LeaveConversation', conversationId).catch(() => {});
@@ -187,45 +179,45 @@ export default function ChatPage() {
     const isMe = msg.senderId === currentUserId;
     const isSystem = msg.type === 'system' || msg.type.startsWith('system_');
 
-    // System messages — centered, no bubble
     if (isSystem) {
       return (
-        <div key={msg.id} className="flex justify-center py-2">
-          <span className="px-3 py-1 rounded-full bg-white/[0.03] text-[10px] text-zinc-600 font-medium">
+        <div key={msg.id} className="flex justify-center py-3">
+          <span className="px-4 py-1.5 rounded-full bg-white/[0.03] text-[10px] text-zinc-500 font-medium tracking-widest uppercase border border-white/5">
             {msg.content}
           </span>
         </div>
       );
     }
 
-    // Payment messages — special styling
     if (msg.type.startsWith('payment_')) {
       return (
-        <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} py-1`}>
-          <div className="max-w-[80%] p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-1">
-            <div className="text-[9px] font-black uppercase tracking-widest text-amber-400">
+        <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} py-2`}>
+          <div className="max-w-[85%] p-4 rounded-2xl bg-[var(--warning-bg)] border border-[var(--warning)]/30 space-y-1.5 shadow-[0_4px_20px_rgba(245,158,11,0.1)]">
+            <div className={`text-[9px] font-black uppercase tracking-widest ${
+                msg.type === 'payment_offer' ? 'text-[var(--warning)]' :
+                msg.type === 'payment_accept' ? 'text-[var(--success)]' : 'text-[var(--danger)]'
+            }`}>
               {msg.type === 'payment_offer' ? '💎 Đề xuất thanh toán' :
                msg.type === 'payment_accept' ? '✅ Đã chấp nhận' : '❌ Đã từ chối'}
             </div>
-            <p className="text-xs text-zinc-400">{msg.content}</p>
+            <p className="text-xs text-[var(--text-secondary)]">{msg.content}</p>
             {msg.paymentPayload && (
-              <div className="text-sm font-bold text-amber-400">{msg.paymentPayload.amountDiamond} 💎</div>
+              <div className="text-sm font-bold text-[var(--warning)]">{msg.paymentPayload.amountDiamond} 💎</div>
             )}
           </div>
         </div>
       );
     }
 
-    // Regular text messages — chat bubbles
     return (
-      <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} py-1`}>
-        <div className={`max-w-[80%] px-4 py-3 rounded-2xl ${
+      <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} py-2 group`}>
+        <div className={`max-w-[85%] px-5 py-3.5 rounded-[1.5rem] relative ${
           isMe
-            ? 'bg-purple-600/30 border border-purple-500/20 text-white'
-            : 'bg-white/[0.04] border border-white/5 text-zinc-300'
+            ? 'bg-gradient-to-br from-[var(--purple-accent)]/80 to-[var(--purple-accent)] border border-[var(--purple-accent)]/40 text-white rounded-tr-sm shadow-[0_4px_20px_rgba(168,85,247,0.2)]'
+            : 'bg-white/[0.04] border border-white/5 text-zinc-200 rounded-tl-sm hover:bg-white/[0.06] transition-colors'
         }`}>
-          <p className="text-sm leading-relaxed break-words">{msg.content}</p>
-          <div className={`text-[9px] mt-1 ${isMe ? 'text-purple-400/60' : 'text-zinc-700'}`}>
+          <p className="text-sm leading-relaxed break-words font-sans">{msg.content}</p>
+          <div className={`text-[9px] mt-1.5 font-bold tracking-widest uppercase ${isMe ? 'text-white/60' : 'text-zinc-600'}`}>
             {new Date(msg.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
           </div>
         </div>
@@ -237,92 +229,101 @@ export default function ChatPage() {
   // Main Render
   // ======================================================================
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] max-w-3xl mx-auto animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.push('/chat' as any)}
-            className="p-2 rounded-lg hover:bg-white/[0.04] transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 text-zinc-400" />
-          </button>
-          <div>
-            <div className="text-sm font-black text-white">Cuộc trò chuyện</div>
-            <div className="flex items-center gap-1.5 text-[10px]">
-              <div className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-600'}`} />
-              <span className={connected ? 'text-emerald-400' : 'text-zinc-600'}>
-                {connected ? 'Đã kết nối' : 'Đang kết nối...'}
-              </span>
-            </div>
-          </div>
+    <UserLayout>
+        <div className="max-w-4xl mx-auto px-4 md:px-6 pt-6 pb-24 h-[calc(100vh-80px)] md:h-[calc(100vh)] flex flex-col w-full animate-in fade-in ease-out duration-700">
+            <GlassCard className="flex flex-col flex-1 overflow-hidden !p-0 border-white/10 shadow-2xl relative">
+                
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-black/40 backdrop-blur-md z-10 shrink-0">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => router.push('/chat' as any)}
+                            className="p-2.5 rounded-xl hover:bg-white/10 transition-colors bg-white/5 group"
+                        >
+                            <ArrowLeft className="w-4 h-4 text-[var(--text-secondary)] group-hover:text-white transition-colors" />
+                        </button>
+                        <div>
+                            <div className="text-base font-black text-white italic tracking-tighter">Phòng Kết Nối Tâm Linh</div>
+                            <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest mt-0.5">
+                                <div className={`w-2 h-2 rounded-full ${connected ? 'bg-[var(--success)] animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-zinc-600'}`} />
+                                <span className={connected ? 'text-[var(--success)]' : 'text-zinc-600'}>
+                                    {connected ? 'Tín hiệu ổn định' : 'Đang đồng bộ...'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => setShowReport(true)}
+                        className="p-2.5 rounded-xl hover:bg-[var(--danger-bg)] transition-colors text-[var(--text-tertiary)] hover:text-[var(--danger)] group border border-transparent hover:border-[var(--danger)]/30"
+                        title="Báo cáo vi phạm"
+                    >
+                        <Flag className="w-4 h-4" />
+                    </button>
+                </div>
+
+                {/* Escrow Panel — Phase 2.3 */}
+                <div className="shrink-0 bg-black/20 z-10">
+                    <EscrowPanel conversationId={conversationId} currentUserId={currentUserId} />
+                </div>
+
+                {/* Messages Area */}
+                <div className="flex-1 overflow-y-auto px-6 py-6 space-y-2 relative scroll-smooth scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                    {loading && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center space-y-4 bg-black/40 backdrop-blur-sm z-20">
+                            <Loader2 className="w-10 h-10 text-[var(--purple-accent)] animate-spin" />
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-secondary)]">Đồng bộ tần số...</span>
+                        </div>
+                    )}
+
+                    {!loading && messages.length === 0 && (
+                        <div className="h-full flex flex-col items-center justify-center space-y-4 opacity-60">
+                            <div className="w-20 h-20 rounded-full border border-dashed border-white/20 flex items-center justify-center">
+                                <MessageCircle className="w-8 h-8 text-[var(--purple-accent)]/60" />
+                            </div>
+                            <p className="text-[var(--text-secondary)] text-sm font-medium">Kết nối đã mở. Hãy gửi thông điệp đầu tiên.</p>
+                        </div>
+                    )}
+
+                    {messages.map(renderMessage)}
+                    <div ref={messagesEndRef} className="h-4" />
+                </div>
+
+                {/* Input Area */}
+                <div className="p-4 md:p-5 border-t border-white/10 bg-black/60 backdrop-blur-xl shrink-0">
+                    <div className="flex items-center gap-3">
+                        <input
+                            ref={inputRef}
+                            id="chat-input"
+                            type="text"
+                            value={newMessage}
+                            onChange={(e) => setNewMessage(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder="Truyền tải thông điệp của bạn..."
+                            disabled={!connected}
+                            className="flex-1 bg-white/[0.03] border border-white/10 hover:border-white/20 rounded-[1.5rem] px-5 py-4 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--purple-accent)]/50 focus:bg-white/[0.05] transition-all disabled:opacity-50"
+                        />
+                        <button
+                            id="chat-send-btn"
+                            onClick={handleSend}
+                            disabled={!newMessage.trim() || sending || !connected}
+                            className="p-4 bg-[var(--purple-accent)] hover:bg-[#9333ea] disabled:bg-white/5 rounded-[1.5rem] transition-all disabled:opacity-50 text-white disabled:text-zinc-600 active:scale-95 shadow-[0_0_20px_rgba(168,85,247,0.3)] disabled:shadow-none"
+                        >
+                            {sending
+                            ? <Loader2 className="w-5 h-5 animate-spin" />
+                            : <Send className="w-5 h-5 ml-0.5" />}
+                        </button>
+                    </div>
+                </div>
+            </GlassCard>
+
+            {/* Report Modal */}
+            {showReport && (
+                <ReportModal
+                conversationId={conversationId}
+                onClose={() => setShowReport(false)}
+                />
+            )}
         </div>
-        <button
-          onClick={() => setShowReport(true)}
-          className="p-2 rounded-lg hover:bg-white/[0.04] transition-colors text-zinc-600 hover:text-red-400"
-          title="Báo cáo vi phạm"
-        >
-          <Flag className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Escrow Panel — Phase 2.3 */}
-      <EscrowPanel conversationId={conversationId} currentUserId={currentUserId} />
-
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-1">
-        {loading && (
-          <div className="h-full flex flex-col items-center justify-center space-y-3">
-            <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600">Tải tin nhắn...</span>
-          </div>
-        )}
-
-        {!loading && messages.length === 0 && (
-          <div className="h-full flex flex-col items-center justify-center space-y-3">
-            <MessageCircle className="w-12 h-12 text-zinc-800" />
-            <p className="text-zinc-600 text-xs">Bắt đầu cuộc trò chuyện...</p>
-          </div>
-        )}
-
-        {messages.map(renderMessage)}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input Area */}
-      <div className="px-6 py-4 border-t border-white/5">
-        <div className="flex items-center gap-3">
-          <input
-            ref={inputRef}
-            id="chat-input"
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Nhập tin nhắn..."
-            disabled={!connected}
-            className="flex-1 bg-white/[0.02] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-zinc-700 focus:outline-none focus:border-purple-500/30 transition-all disabled:opacity-50"
-          />
-          <button
-            id="chat-send-btn"
-            onClick={handleSend}
-            disabled={!newMessage.trim() || sending || !connected}
-            className="p-3 bg-purple-600 hover:bg-purple-500 disabled:bg-zinc-800 rounded-xl transition-all disabled:opacity-50"
-          >
-            {sending
-              ? <Loader2 className="w-4 h-4 text-white animate-spin" />
-              : <Send className="w-4 h-4 text-white" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Report Modal */}
-      {showReport && (
-        <ReportModal
-          conversationId={conversationId}
-          onClose={() => setShowReport(false)}
-        />
-      )}
-    </div>
+    </UserLayout>
   );
 }

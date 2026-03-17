@@ -1,20 +1,377 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/*
+ * ============================================================================
+ * GLOBALS.CSS — TarotNowAI2 Design System
+ * ============================================================================
+ *
+ * Tại sao tập trung toàn bộ design tokens ở đây?
+ * → Thay vì copy-paste màu sắc, font-size, animation ở mỗi component/page,
+ *   ta khai báo TẤT CẢ ở một nơi duy nhất (Single Source of Truth).
+ *   Khi muốn đổi theme, chỉ cần sửa file này — toàn bộ app tự cập nhật.
+ *
+ * Cấu trúc:
+ * 1. Tailwind v4 import
+ * 2. CSS Custom Properties (Design Tokens)
+ * 3. @theme inline — đăng ký tokens với Tailwind v4
+ * 4. Base styles (body, scrollbar)
+ * 5. Utility classes (perspective-3D, glassmorphism shortcuts)
+ * 6. Keyframe animations (float, drift, pulse — dùng chung toàn app)
+ */
 
-@layer utilities {
-  .perspective-1000 {
-    perspective: 1000px;
+/* ==========================================================================
+   1. TAILWIND v4 IMPORT
+   Tailwind v4 dùng `@import` thay vì `@tailwind base/components/utilities`.
+   PostCSS plugin `@tailwindcss/postcss` sẽ xử lý.
+   ========================================================================== */
+@import "tailwindcss";
+
+/* ==========================================================================
+   2. CSS CUSTOM PROPERTIES — DESIGN TOKENS
+   Tại sao dùng CSS Variables thay vì hardcode giá trị?
+   → Cho phép thay đổi theme runtime (dark/light), dễ maintain,
+     và Tailwind v4 có thể đọc trực tiếp qua @theme inline.
+   ========================================================================== */
+:root {
+  /* --- NỀN & BỀ MẶT (Backgrounds & Surfaces) --- */
+  --bg-void: #020108;
+  /* Nền chính — đen vũ trụ sâu thẳm */
+  --bg-surface: #0a0a14;
+  /* Bề mặt card nổi — hơi sáng hơn void */
+  --bg-glass: rgba(255, 255, 255, 0.02);
+  /* Glassmorphism transparent */
+  --bg-glass-hover: rgba(255, 255, 255, 0.05);
+  /* Hover state cho glass */
+  --bg-glass-active: rgba(255, 255, 255, 0.08);
+  /* Active/pressed state */
+
+  /* --- VIỀN (Borders) --- */
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  /* Viền mờ nhất */
+  --border-default: rgba(255, 255, 255, 0.10);
+  /* Viền mặc định */
+  --border-hover: rgba(255, 255, 255, 0.20);
+  /* Viền khi hover */
+  --border-focus: rgba(168, 85, 247, 0.50);
+  /* Viền khi focus (purple) */
+
+  /* --- MÀU BRAND: Purple (Chủ đạo) --- */
+  --purple-50: rgba(168, 85, 247, 0.05);
+  --purple-100: rgba(168, 85, 247, 0.10);
+  --purple-200: rgba(168, 85, 247, 0.20);
+  --purple-glow: rgba(168, 85, 247, 0.15);
+  /* Glow effect */
+  --purple-accent: #a855f7;
+  /* Text accent, icon chính */
+  --purple-muted: rgba(168, 85, 247, 0.40);
+  /* Text phụ */
+  --purple-gradient-from: #a855f7;
+  --purple-gradient-to: #d946ef;
+  /* Fuchsia cho gradient */
+
+  /* --- MÀU PHỤ: Amber (Diamond, Gold, điểm nhấn) --- */
+  --amber-50: rgba(245, 158, 11, 0.05);
+  --amber-100: rgba(245, 158, 11, 0.10);
+  --amber-200: rgba(245, 158, 11, 0.20);
+  --amber-accent: #f59e0b;
+  --amber-glow: rgba(245, 158, 11, 0.15);
+
+  /* --- MÀU TRẠNG THÁI (Status Colors) --- */
+  --success: #34d399;
+  /* Emerald-400 — thành công, online */
+  --success-bg: rgba(52, 211, 153, 0.10);
+  --error: #f87171;
+  /* Rose-400 — lỗi, offline */
+  --error-bg: rgba(248, 113, 113, 0.10);
+  --warning: #fbbf24;
+  /* Amber-400 — cảnh báo */
+  --warning-bg: rgba(251, 191, 36, 0.10);
+  --info: #22d3ee;
+  /* Cyan-400 — thông tin */
+  --info-bg: rgba(34, 211, 238, 0.10);
+
+  /* --- TEXT --- */
+  --text-primary: #f4f4f5;
+  /* Zinc-100 — text chính */
+  --text-secondary: #71717a;
+  /* Zinc-500 — text phụ */
+  --text-muted: #3f3f46;
+  /* Zinc-700 — text rất mờ */
+  --text-disabled: #27272a;
+  /* Zinc-800 — disabled */
+
+  /* --- SHADOWS & GLOWS --- */
+  --shadow-card: 0 20px 40px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 30px 60px rgba(0, 0, 0, 0.5);
+  --glow-purple-sm: 0 0 20px rgba(168, 85, 247, 0.1);
+  --glow-purple-md: 0 0 40px rgba(168, 85, 247, 0.15);
+  --glow-purple-lg: 0 0 60px rgba(168, 85, 247, 0.2);
+  --glow-white: 0 20px 40px rgba(255, 255, 255, 0.1);
+
+  /* --- BORDER RADIUS --- */
+  --radius-sm: 12px;
+  /* Inputs, badges */
+  --radius-md: 16px;
+  /* Buttons, small cards */
+  --radius-lg: 24px;
+  /* Cards, panels */
+  --radius-xl: 40px;
+  /* Hero cards, big sections */
+
+  /* --- TRANSITIONS --- */
+  --transition-fast: 150ms ease;
+  --transition-base: 300ms ease;
+  --transition-slow: 500ms ease;
+  --transition-glacial: 700ms ease;
+}
+
+/* ==========================================================================
+   3. @THEME INLINE — Đăng ký tokens với Tailwind v4
+   Cho phép dùng class như `bg-void`, `text-accent-purple`, `shadow-glow-sm`
+   trực tiếp trong JSX/TSX.
+   ========================================================================== */
+@theme inline {
+  /* Fonts — khớp với biến CSS từ next/font/google */
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+  --font-serif: var(--font-playfair), Georgia, serif;
+
+  /* Colors — ánh xạ design tokens vào Tailwind */
+  --color-void: var(--bg-void);
+  --color-surface: var(--bg-surface);
+  --color-glass: var(--bg-glass);
+  --color-glass-hover: var(--bg-glass-hover);
+
+  --color-accent-purple: var(--purple-accent);
+  --color-accent-amber: var(--amber-accent);
+
+  --color-success: var(--success);
+  --color-error: var(--error);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+}
+
+/* ==========================================================================
+   4. BASE STYLES
+   Styles áp dụng cho toàn bộ app — nền, font, scrollbar.
+   ========================================================================== */
+body {
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- Custom Scrollbar ---
+   Tại sao custom scrollbar?
+   → Scrollbar mặc định của trình duyệt có màu sáng, phá vỡ dark theme.
+   → Custom scrollbar nhỏ gọn, tím nhạt, phù hợp Astral aesthetic. */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.15);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 85, 247, 0.3);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(168, 85, 247, 0.15) transparent;
+}
+
+/* --- Selection Color ---
+   Highlight khi chọn text cũng theo theme tím. */
+::selection {
+  background: rgba(168, 85, 247, 0.4);
+  color: white;
+}
+
+/* ==========================================================================
+   5. UTILITY CLASSES
+   Các class tiện ích dùng chung mà Tailwind không có sẵn.
+   ========================================================================== */
+
+/* --- 3D Perspective ---
+   Dùng cho animation lật bài Tarot và card hover effects.
+   Tailwind v4 không có sẵn perspective utilities. */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+/* --- Glassmorphism Shorthand ---
+   Thay vì viết `bg-white/[0.02] backdrop-blur-xl border border-white/10`
+   ở mọi nơi, dùng class `.glass` cho ngắn gọn. */
+.glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-default);
+}
+
+.glass-hover:hover {
+  background: var(--bg-glass-hover);
+  border-color: var(--border-hover);
+}
+
+.glass-active {
+  background: var(--bg-glass-active);
+  border-color: var(--border-hover);
+}
+
+/* --- Hide Scrollbar nhưng vẫn scroll được ---
+   Dùng cho horizontal scroll containers. */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* --- Gradient Text Shorthand --- */
+.gradient-text {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ==========================================================================
+   6. KEYFRAME ANIMATIONS
+   Tập trung TẤT CẢ animation ở đây thay vì <style dangerouslySetInnerHTML>
+   ở mỗi page component.
+
+   Tại sao điều này quan trọng?
+   → Trước đây mỗi page copy ~20 dòng CSS animation riêng.
+   → Nếu sửa timing/easing, phải sửa ~15 files.
+   → Giờ chỉ sửa 1 lần ở đây.
+   ========================================================================== */
+
+/* --- Floating Particles ---
+   Các hạt nhỏ bay lên dần từ dưới lên trên, xoay nhẹ.
+   Dùng cho Spiritual Particles trong AstralBackground. */
+@keyframes float {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+    opacity: 0;
   }
-  .preserve-3d {
-    transform-style: preserve-3d;
+
+  15% {
+    opacity: 0.15;
   }
-  .backface-hidden {
-    backface-visibility: hidden;
+
+  85% {
+    opacity: 0.15;
+  }
+
+  100% {
+    transform: translateY(-100vh) translateX(30px) rotate(360deg);
+    opacity: 0;
   }
 }
 
-:root {
-  --background: #000000;
-  --foreground: #ffffff;
+.animate-float {
+  animation-name: float;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* --- Nebula Drift ---
+   Hiệu ứng di chuyển chậm của các blob nebula trong background.
+   Tạo cảm giác "sống" cho nền vũ trụ. */
+@keyframes drift {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(5vw, 3vh) scale(1.08);
+  }
+}
+
+.animate-drift {
+  animation: drift 25s ease-in-out infinite;
+}
+
+.animate-drift-reverse {
+  animation: drift 30s ease-in-out infinite reverse;
+}
+
+/* --- Slow Pulse ---
+   Nebula thở — pulsate nhẹ nhàng, tạo chiều sâu cho background. */
+@keyframes slow-pulse {
+
+  0%,
+  100% {
+    opacity: 0.05;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.12;
+    transform: scale(1.1);
+  }
+}
+
+.animate-slow-pulse {
+  animation: slow-pulse 15s ease-in-out infinite;
+}
+
+/* --- Glow Pulse ---
+   Cho các icon/button có hiệu ứng phát sáng nhấp nháy nhẹ. */
+@keyframes glow-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 15px rgba(168, 85, 247, 0.1);
+  }
+
+  50% {
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.25);
+  }
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+/* --- Shimmer ---
+   Loading skeleton shimmer effect — dải sáng chạy ngang qua. */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0.02) 25%,
+      rgba(255, 255, 255, 0.06) 50%,
+      rgba(255, 255, 255, 0.02) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
 }

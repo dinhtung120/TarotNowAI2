@@ -1,13 +1,8 @@
 'use client';
 
 /**
- * Trang Ví (Wallet Page) - Astral Premium Redesign
- * 
- * Các cải tiến:
- * 1. Hệ thống Nền Astral: Nebula + Spiritual Particles.
- * 2. 3D Balance Cards: Thẻ Diamond và Gold với hiệu ứng Glow và Glassmorphism.
- * 3. Compact Ledger: Bảng lịch sử giao dịch tinh gọn, dễ theo dõi.
- * 4. Navbar Fix: Sử dụng pt-28 để tránh bị che bởi Navbar cố định.
+ * Trang Ví (Wallet Page)
+ * Đã Refactor với UserLayout, SectionHeader và GlassCard.
  */
 
 import React, { useEffect, useState } from 'react';
@@ -24,13 +19,15 @@ import {
     ChevronLeft, 
     ChevronRight, 
     Activity,
-    CreditCard,
     Plus,
     Sparkles,
-    Stars,
-    Loader2
+    Loader2,
+    Wallet
 } from 'lucide-react';
 import { useRouter } from '@/i18n/routing';
+
+import UserLayout from '@/components/layout/UserLayout';
+import { SectionHeader, Button, GlassCard } from '@/components/ui';
 
 export default function WalletPage() {
     const router = useRouter();
@@ -55,194 +52,165 @@ export default function WalletPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#020108] text-zinc-100 selection:bg-purple-500/40 overflow-x-hidden font-sans pb-20">
-            {/* ##### PREMIUM BACKGROUND SYSTEM ##### */}
-            <div className="fixed inset-0 z-0 pointer-events-none">
-                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
-                {/* Nebula Glows */}
-                <div className="absolute top-0 -left-1/4 w-[70vw] h-[70vw] bg-purple-900/[0.1] blur-[120px] rounded-full animate-slow-pulse" />
-                <div className="absolute bottom-0 -right-1/4 w-[60vw] h-[60vw] bg-amber-900/[0.05] blur-[130px] rounded-full animate-slow-pulse delay-700" />
+        <UserLayout>
+            <div className="max-w-5xl mx-auto px-6 pt-8 pb-32 font-sans relative">
                 
-                {/* Spiritual Particles */}
-                <div className="absolute inset-0">
-                    {Array.from({ length: 20 }).map((_, i) => (
-                        <div
-                            key={i}
-                            className="absolute w-[1px] h-[1px] bg-white rounded-full animate-float opacity-[0.1]"
-                            style={{
-                                top: `${Math.random() * 100}%`,
-                                left: `${Math.random() * 100}%`,
-                                animationDuration: `${25 + Math.random() * 35}s`,
-                                animationDelay: `${-Math.random() * 20}s`,
-                            }}
-                        />
-                    ))}
-                </div>
-            </div>
-
-            <main className="relative z-10 max-w-5xl mx-auto px-6 pt-28">
                 {/* Header Section */}
-                <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                    <div className="space-y-4">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/5 border border-purple-500/10 text-[9px] uppercase tracking-[0.2em] font-black text-purple-400 shadow-xl backdrop-blur-md">
-                            <Sparkles className="w-3 h-3 text-amber-500" />
-                            Financial Protocol
-                        </div>
-                        <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white uppercase italic">
-                            Kho Báu Tâm Linh
-                        </h1>
-                        <p className="text-zinc-500 font-medium max-w-lg text-sm leading-relaxed">
-                            Quản lý vận mệnh tài chính và dòng chảy Diamond/Gold của bạn trong hệ sinh thái TarotNow AI.
-                        </p>
-                    </div>
-                    
-                    <button 
-                        onClick={() => router.push('/wallet/deposit')}
-                        className="group flex items-center gap-3 bg-white text-black px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all hover:scale-[1.03] active:scale-95 shadow-2xl"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Nạp Diamond
-                    </button>
-                </div>
+                <SectionHeader
+                    tag="Financial Protocol"
+                    tagIcon={<Sparkles className="w-3 h-3" />}
+                    title="Kho Báu Tâm Linh"
+                    subtitle="Quản lý vận mệnh tài chính và dòng chảy Diamond/Gold của bạn trong hệ sinh thái TarotNow AI."
+                    action={
+                        <Button 
+                            variant="primary" 
+                            onClick={() => router.push('/wallet/deposit')}
+                            className="shadow-2xl md:ml-4"
+                        >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Nạp Diamond
+                        </Button>
+                    }
+                    className="mb-12 animate-in fade-in slide-in-from-bottom-4 duration-1000"
+                />
 
-                {/* Balance Cards - 3D Glassmorphism */}
+                {/* Balance Cards - Glassmorphism */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
+                    
                     {/* Diamond Card */}
-                    <div className="relative group perspective-1000">
-                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-indigo-500/10 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                        <div className="relative z-10 h-64 bg-zinc-900/40 backdrop-blur-3xl rounded-[3rem] border border-white/10 p-10 flex flex-col justify-between overflow-hidden group-hover:border-purple-500/40 transition-all duration-700 shadow-2xl">
-                            <div className="absolute top-0 right-0 p-8 opacity-10 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12">
-                                <Gem className="w-32 h-32 text-purple-400" />
+                    <GlassCard className="relative group overflow-hidden !p-10 flex flex-col justify-between min-h-[16rem]">
+                        <div className="absolute inset-0 bg-gradient-to-br from-[var(--purple-accent)]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                        
+                        <div className="absolute top-0 right-0 p-8 opacity-5 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12 pointer-events-none">
+                            <Gem className="w-40 h-40 text-[var(--purple-accent)]" />
+                        </div>
+                        
+                        <div className="flex items-center gap-4 relative z-10">
+                            <div className="w-14 h-14 rounded-2xl bg-[var(--purple-accent)]/10 flex items-center justify-center border border-[var(--purple-accent)]/20 shadow-xl">
+                                <Gem className="w-7 h-7 text-[var(--purple-accent)]" />
                             </div>
-                            
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 shadow-xl">
-                                    <Gem className="w-6 h-6 text-purple-400" />
-                                </div>
-                                <div>
-                                    <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Diamond (Premium)</div>
-                                    <div className="text-xs font-bold text-zinc-300">Tiền nạp chính thức</div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-1">
-                                <div className="text-5xl md:text-6xl font-black text-white italic tracking-tighter transition-transform duration-700 group-hover:scale-105 group-hover:translate-x-2 original-origin-left">
-                                    {balance?.diamondBalance.toLocaleString() ?? '...'}
-                                </div>
-                                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-600">
-                                    <Activity className="w-3 h-3" />
-                                    Đang đóng băng: {balance?.frozenDiamondBalance.toLocaleString() ?? 0}
-                                </div>
+                            <div>
+                                <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Diamond (Premium)</div>
+                                <div className="text-xs font-bold text-white">Tiền nạp chính thức</div>
                             </div>
                         </div>
-                    </div>
+
+                        <div className="space-y-1 relative z-10 mt-8">
+                            <div className="text-5xl md:text-6xl font-black text-white italic tracking-tighter transition-transform duration-700 group-hover:translate-x-2">
+                                {balance?.diamondBalance.toLocaleString() ?? '...'}
+                            </div>
+                            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] group-hover:text-[var(--text-secondary)] transition-colors">
+                                <Activity className="w-3.5 h-3.5" />
+                                Đang đóng băng: {balance?.frozenDiamondBalance.toLocaleString() ?? 0}
+                            </div>
+                        </div>
+                    </GlassCard>
 
                     {/* Gold Card */}
-                    <div className="relative group perspective-1000">
-                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                        <div className="relative z-10 h-64 bg-zinc-900/40 backdrop-blur-3xl rounded-[3rem] border border-white/10 p-10 flex flex-col justify-between overflow-hidden group-hover:border-amber-500/40 transition-all duration-700 shadow-2xl">
-                            <div className="absolute top-0 right-0 p-8 opacity-10 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12">
-                                <Coins className="w-32 h-32 text-amber-500" />
-                            </div>
+                    <GlassCard className="relative group overflow-hidden !p-10 flex flex-col justify-between min-h-[16rem]">
+                        <div className="absolute inset-0 bg-gradient-to-br from-[var(--warning)]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                        
+                        <div className="absolute top-0 right-0 p-8 opacity-5 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12 pointer-events-none">
+                            <Coins className="w-40 h-40 text-[var(--warning)]" />
+                        </div>
 
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shadow-xl">
-                                    <Coins className="w-6 h-6 text-amber-500" />
-                                </div>
-                                <div>
-                                    <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Gold (Reward)</div>
-                                    <div className="text-xs font-bold text-zinc-300">Điểm thưởng vận may</div>
-                                </div>
+                        <div className="flex items-center gap-4 relative z-10">
+                            <div className="w-14 h-14 rounded-2xl bg-[var(--warning)]/10 flex items-center justify-center border border-[var(--warning)]/20 shadow-xl">
+                                <Coins className="w-7 h-7 text-[var(--warning)]" />
                             </div>
-
-                            <div className="space-y-1">
-                                <div className="text-5xl md:text-6xl font-black text-white italic tracking-tighter transition-transform duration-700 group-hover:scale-105 group-hover:translate-x-2 original-origin-left">
-                                    {balance?.goldBalance.toLocaleString() ?? '...'}
-                                </div>
-                                <div className="text-[10px] font-black uppercase tracking-widest text-zinc-600">
-                                    Nhận từ điểm danh & hoạt động
-                                </div>
+                            <div>
+                                <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Gold (Reward)</div>
+                                <div className="text-xs font-bold text-white">Điểm thưởng vận may</div>
                             </div>
                         </div>
-                    </div>
+
+                        <div className="space-y-1 relative z-10 mt-8">
+                            <div className="text-5xl md:text-6xl font-black text-white italic tracking-tighter transition-transform duration-700 group-hover:translate-x-2">
+                                {balance?.goldBalance.toLocaleString() ?? '...'}
+                            </div>
+                            <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] group-hover:text-[var(--text-secondary)] transition-colors">
+                                Nhận từ điểm danh & hoạt động
+                            </div>
+                        </div>
+                    </GlassCard>
                 </div>
 
-                {/* Ledger Section - Compact Glass */}
+                {/* Ledger Section */}
                 <div className="animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500">
-                    <div className="mb-8 flex items-center justify-between">
-                        <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter flex items-center gap-3">
-                            <Clock className="w-5 h-5 text-purple-400" />
+                    <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <h2 className="text-xl md:text-2xl font-black text-white uppercase italic tracking-tighter flex items-center gap-3">
+                            <Clock className="w-5 h-5 text-[var(--purple-accent)]" />
                             Hành Trình Giao Dịch
                         </h2>
-                        <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/[0.03] border border-white/10 focus-within:border-purple-500/50 transition-all duration-300">
-                            <Search className="w-3.5 h-3.5 text-zinc-600" />
+                        <div className="flex items-center gap-2 px-4 py-2 border border-white/10 focus-within:border-[var(--purple-accent)]/50 transition-all duration-300 rounded-xl bg-black/40 backdrop-blur-md">
+                            <Search className="w-4 h-4 text-zinc-500" />
                             <input 
                                 type="text" 
-                                placeholder="Tìm giao thức..." 
-                                className="bg-transparent border-none text-[10px] font-black uppercase tracking-widest text-white focus:outline-none w-48 placeholder:text-zinc-700" 
+                                placeholder="TÌM GIAO THỨC..." 
+                                className="bg-transparent border-none text-[10px] font-black uppercase tracking-widest text-white focus:outline-none w-full sm:w-48 placeholder:text-zinc-700" 
                             />
                         </div>
                     </div>
 
-                    <div className="relative">
-                        <div className="absolute inset-0 bg-white/[0.01] backdrop-blur-3xl rounded-[2.5rem] border border-white/5 shadow-2xl" />
-                        <div className="relative z-10 overflow-hidden">
-                            <table className="w-full text-left">
+                    <GlassCard className="!p-0 overflow-hidden">
+                        <div className="overflow-x-auto custom-scrollbar">
+                            <table className="w-full text-left min-w-[600px]">
                                 <thead>
-                                    <tr className="border-b border-white/5">
-                                        <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">Thời gian</th>
-                                        <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">Tài sản</th>
-                                        <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">Hoạt động</th>
-                                        <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600 text-right">Lượng</th>
+                                    <tr className="border-b border-white/5 bg-black/20">
+                                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Thời gian</th>
+                                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Tài sản</th>
+                                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Hoạt động</th>
+                                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-right">Lượng</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
                                     {isLoadingLedger ? (
                                         <tr>
-                                            <td colSpan={4} className="py-20 text-center">
-                                                <Loader2 className="w-6 h-6 animate-spin text-purple-500 mx-auto mb-4" />
-                                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Đang truy vấn lịch sử...</span>
+                                            <td colSpan={4} className="py-24 text-center">
+                                                <Loader2 className="w-8 h-8 animate-spin text-[var(--purple-accent)] mx-auto mb-4" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Đang truy vấn lịch sử...</span>
                                             </td>
                                         </tr>
                                     ) : ledger?.items.length === 0 ? (
                                         <tr>
-                                            <td colSpan={4} className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-zinc-600">
-                                                Dòng chảy tài chính chưa có biến động.
+                                            <td colSpan={4} className="py-24 text-center">
+                                                <Wallet className="w-12 h-12 text-zinc-800 mx-auto mb-4" />
+                                                <span className="text-xs font-bold text-[var(--text-secondary)]">Dòng chảy tài chính chưa có biến động.</span>
                                             </td>
                                         </tr>
                                     ) : (
                                         ledger?.items.map((tx) => {
                                             const isPositive = tx.amount > 0;
                                             return (
-                                                <tr key={tx.id} className="hover:bg-white/[0.02] transition-colors group">
-                                                    <td className="px-8 py-5">
-                                                        <div className="text-[10px] font-bold text-zinc-400">
+                                                <tr key={tx.id} className="hover:bg-white/[0.03] transition-colors group">
+                                                    <td className="px-6 py-5">
+                                                        <div className="text-[11px] font-bold text-[var(--text-primary)]">
                                                             {new Date(tx.createdAt).toLocaleDateString()}
                                                         </div>
-                                                        <div className="text-[9px] font-medium text-zinc-600">
+                                                        <div className="text-[10px] font-medium text-[var(--text-secondary)] mt-0.5">
                                                             {new Date(tx.createdAt).toLocaleTimeString()}
                                                         </div>
                                                     </td>
-                                                    <td className="px-8 py-5">
+                                                    <td className="px-6 py-5">
                                                         <div className="flex items-center gap-2">
                                                             {tx.currency.toLowerCase() === 'diamond' ? (
-                                                                <Gem className="w-3.5 h-3.5 text-purple-400" />
+                                                                <Gem className="w-4 h-4 text-[var(--purple-accent)]" />
                                                             ) : (
-                                                                <Coins className="w-3.5 h-3.5 text-amber-500" />
+                                                                <Coins className="w-4 h-4 text-[var(--warning)]" />
                                                             )}
-                                                            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-200">{tx.currency}</span>
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-white">{tx.currency}</span>
                                                         </div>
                                                     </td>
-                                                    <td className="px-8 py-5">
-                                                        <div className="text-[10px] font-black text-zinc-200 uppercase tracking-tighter">{formatType(tx.type)}</div>
-                                                        {tx.description && <div className="text-[9px] text-zinc-600 font-medium truncate max-w-[150px]">{tx.description}</div>}
+                                                    <td className="px-6 py-5 max-w-[200px]">
+                                                        <div className="text-[11px] font-black text-white uppercase tracking-tighter truncate">{formatType(tx.type)}</div>
+                                                        {tx.description && <div className="text-[10px] text-[var(--text-tertiary)] font-medium truncate mt-0.5" title={tx.description}>{tx.description}</div>}
                                                     </td>
-                                                    <td className="px-8 py-5 text-right">
-                                                        <div className={`flex items-center justify-end gap-1 font-black text-sm italic ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                                    <td className="px-6 py-5 text-right">
+                                                        <div className={`flex items-center justify-end gap-1 font-black text-sm md:text-base italic ${isPositive ? 'text-[var(--success)]' : 'text-zinc-300'}`}>
                                                             {isPositive ? '+' : ''}{tx.amount.toLocaleString()}
-                                                            {isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownLeft className="w-3.5 h-3.5" />}
+                                                            {isPositive ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownLeft className="w-4 h-4 opacity-50 text-zinc-500" />}
                                                         </div>
-                                                        <div className="text-[8px] font-black uppercase tracking-widest text-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <div className="text-[9px] font-black uppercase tracking-widest text-[var(--text-secondary)] mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                             Dư: {tx.balanceAfter.toLocaleString()}
                                                         </div>
                                                     </td>
@@ -256,56 +224,48 @@ export default function WalletPage() {
 
                         {/* Pagination - Compact */}
                         {ledger && ledger.totalPages > 1 && (
-                            <div className="relative z-10 px-8 py-6 border-t border-white/5 flex items-center justify-between">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">
-                                    Vũ trụ <strong className="text-zinc-300">{ledger.pageIndex}</strong> / {ledger.totalPages}
+                            <div className="px-6 py-5 border-t border-white/5 flex items-center justify-between bg-black/20">
+                                <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
+                                    Trang <strong className="text-white mx-1">{ledger.pageIndex}</strong> / {ledger.totalPages}
                                 </span>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => setPage(p => Math.max(1, p - 1))}
                                         disabled={!ledger.hasPreviousPage}
                                         className="p-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-white/5"
                                     >
-                                        <ChevronLeft className="w-4 h-4 text-zinc-300" />
+                                        <ChevronLeft className="w-4 h-4 text-white" />
                                     </button>
                                     <button
                                         onClick={() => setPage(p => Math.min(ledger.totalPages, p + 1))}
                                         disabled={!ledger.hasNextPage}
                                         className="p-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-white/5"
                                     >
-                                        <ChevronRight className="w-4 h-4 text-zinc-300" />
+                                        <ChevronRight className="w-4 h-4 text-white" />
                                     </button>
                                 </div>
                             </div>
                         )}
-                    </div>
+                    </GlassCard>
                 </div>
-            </main>
+            </div>
 
             <style dangerouslySetInnerHTML={{
                 __html: `
-                @keyframes float {
-                    0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-                    15% { opacity: 0.15; }
-                    85% { opacity: 0.15; }
-                    100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+                .custom-scrollbar::-webkit-scrollbar {
+                    height: 4px;
                 }
-                .animate-float {
-                    animation-name: float;
-                    animation-timing-function: linear;
-                    animation-iteration-count: infinite;
+                .custom-scrollbar::-webkit-scrollbar-track {
+                    background: transparent;
                 }
-                @keyframes slow-pulse {
-                    0%, 100% { opacity: 0.05; transform: scale(1); }
-                    50% { opacity: 0.12; transform: scale(1.1); }
+                .custom-scrollbar::-webkit-scrollbar-thumb {
+                    background: #27272a;
+                    border-radius: 10px;
                 }
-                .animate-slow-pulse {
-                    animation: slow-pulse 15s ease-in-out infinite;
-                }
-                .perspective-1000 {
-                    perspective: 1000px;
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                    background: #3f3f46;
                 }
             `}} />
-        </div>
+        </UserLayout>
     );
 }

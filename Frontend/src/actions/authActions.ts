@@ -168,3 +168,90 @@ export async function resetPasswordAction(data: Record<string, unknown>) {
         return { error: 'Network error occurred' };
     }
 }
+
+/**
+ * [Phase 4] Tự động làm mới Access Token bằng Refresh Token (HttpOnly Cookie).
+ * Hàm này thường được gọi bởi Middleware hoặc Client khi nhận được 401.
+ */
+export async function refreshAccessTokenAction() {
+    try {
+        const cookieStore = await cookies();
+        const refreshToken = cookieStore.get('refreshToken')?.value;
+
+        if (!refreshToken) {
+            return { error: 'No refresh token available' };
+        }
+
+        const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Cookie': `refreshToken=${refreshToken}` 
+            },
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            // Nếu refresh thất bại (hết hạn, revoke), ta nên xóa cookies và yêu cầu login lại
+            cookieStore.delete('accessToken');
+            cookieStore.delete('refreshToken');
+            return { error: result.message || 'Refresh token failed' };
+        }
+
+        // Cập nhật Access Token mới vào Cookie
+        if (result.accessToken) {
+            cookieStore.set({
+                name: 'accessToken',
+                value: result.accessToken,
+                httpOnly: false,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                path: '/'
+            });
+        }
+
+        // Cập nhật Refresh Token mới (nếu BE có cơ chế rotation)
+        const setCookieHeader = response.headers.get('set-cookie');
+        if (setCookieHeader) {
+            const parts = setCookieHeader.split(';')[0].split('=');
+            if (parts.length === 2 && parts[0] === 'refreshToken') {
+                cookieStore.set({
+                    name: 'refreshToken',
+                    value: parts[1],
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: 'strict',
+                    path: '/'
+                });
+            }
+        }
+
+        return { success: true, accessToken: result.accessToken };
+    } catch {
+        return { error: 'Network error occurred' };
+    }
+}
+
+/**
+ * [Phase 4] Gửi lại mã OTP xác thực email.
+ */
+export async function resendVerificationEmailAction(email: string) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/send-verification-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            return { error: result.message || 'Failed to resend email' };
+        }
+
+        return { success: true, message: result.message || 'OTP sent successfully' };
+    } catch {
+        return { error: 'Network error occurred' };
+    }
+}

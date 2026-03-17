@@ -4,8 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { listReaderRequests, processReaderRequest, type AdminReaderRequest } from '@/actions/adminActions';
 import {
   Users, CheckCircle2, XCircle, Clock, Loader2, Sparkles,
-  FileText, ChevronLeft, ChevronRight, Filter, Eye
+  FileText, ChevronLeft, ChevronRight, Filter, Eye, ShieldCheck
 } from 'lucide-react';
+import { SectionHeader, GlassCard, Button, Input } from '@/components/ui';
+import toast from 'react-hot-toast';
 
 /**
  * Trang Admin quản lý đơn xin Reader (Approval Queue).
@@ -53,9 +55,12 @@ export default function AdminReaderRequestsPage() {
     setProcessing(requestId);
     const success = await processReaderRequest(requestId, action, adminNote);
     if (success) {
+      toast.success(action === 'approve' ? 'Đã phê duyệt Reader thành công' : 'Đã từ chối đơn đăng ký');
       setAdminNote('');
       setSelectedRequest(null);
       await fetchRequests();
+    } else {
+      toast.error('Xử lý đơn thất bại. Vui lòng thử lại.');
     }
     setProcessing(null);
   };
@@ -64,55 +69,57 @@ export default function AdminReaderRequestsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'pending':
-        return <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[9px] font-bold uppercase border border-amber-500/20">Chờ duyệt</span>;
+        return <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--warning)]/10 text-[var(--warning)] text-[9px] font-black uppercase tracking-widest border border-[var(--warning)]/20 shadow-inner"><Clock className="w-3 h-3"/> Chờ duyệt</span>;
       case 'approved':
-        return <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[9px] font-bold uppercase border border-emerald-500/20">Đã duyệt</span>;
+        return <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--success)]/10 text-[var(--success)] text-[9px] font-black uppercase tracking-widest border border-[var(--success)]/20 shadow-inner"><CheckCircle2 className="w-3 h-3"/> Đã duyệt</span>;
       case 'rejected':
-        return <span className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 text-[9px] font-bold uppercase border border-red-500/20">Đã từ chối</span>;
+        return <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--danger)]/10 text-[var(--danger)] text-[9px] font-black uppercase tracking-widest border border-[var(--danger)]/20 shadow-inner"><XCircle className="w-3 h-3"/> Đã từ chối</span>;
       default:
         return null;
     }
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-6 py-16 space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+    <div className="max-w-5xl mx-auto px-6 py-16 space-y-8 animate-in fade-in duration-700">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/5 border border-purple-500/10 text-[9px] uppercase tracking-[0.2em] font-black text-purple-400 shadow-xl backdrop-blur-md text-left">
-            <Sparkles className="w-3 h-3" />
-            Admin — Reader Approval
-          </div>
-          <h1 className="text-4xl font-black tracking-tighter text-white uppercase italic text-left">
-            Duyệt Đơn Reader
-          </h1>
-          <p className="text-zinc-500 font-medium text-sm text-left">
-            Xem xét và phê duyệt các đơn đăng ký trở thành Reader.
-          </p>
-        </div>
-        <div className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-600">
-          {totalCount} đơn
+        <SectionHeader
+            tag="Review"
+            tagIcon={<ShieldCheck className="w-3 h-3 text-[var(--purple-accent)]" />}
+            title="Duyệt Đơn Reader"
+            subtitle="Xem xét và phê duyệt các đơn đăng ký trở thành Reader."
+            className="mb-0 text-left items-start"
+        />
+        
+        <div className="flex items-center gap-4 bg-white/[0.02] border border-white/10 rounded-[2rem] p-2 pr-4 shadow-inner min-w-max">
+            <div className="w-10 h-10 rounded-xl bg-[var(--purple-accent)]/10 flex items-center justify-center border border-[var(--purple-accent)]/20 shadow-inner">
+                <Users className="w-4 h-4 text-[var(--purple-accent)]" />
+            </div>
+            <div className="space-y-0.5">
+                <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Tổng số đơn</div>
+                <div className="text-sm font-black text-white italic tracking-tighter drop-shadow-sm">{totalCount}</div>
+            </div>
         </div>
       </div>
 
       {/* Status Filter Tabs */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {[
-          { value: 'pending', label: 'Chờ duyệt', icon: Clock, color: 'amber' },
-          { value: 'approved', label: 'Đã duyệt', icon: CheckCircle2, color: 'emerald' },
-          { value: 'rejected', label: 'Đã từ chối', icon: XCircle, color: 'red' },
-          { value: '', label: 'Tất cả', icon: Filter, color: 'zinc' },
+          { value: 'pending', label: 'Chờ duyệt', icon: Clock, color: 'warning' },
+          { value: 'approved', label: 'Đã duyệt', icon: CheckCircle2, color: 'success' },
+          { value: 'rejected', label: 'Từ chối', icon: XCircle, color: 'danger' },
+          { value: '', label: 'Tất cả', icon: Filter, color: 'purple-accent' },
         ].map((tab) => (
           <button
             key={tab.value}
             onClick={() => { setStatusFilter(tab.value); setPage(1); }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+            className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-inner ${
               statusFilter === tab.value
-                ? `bg-${tab.color}-500/10 border-${tab.color}-500/30 text-${tab.color}-400`
-                : 'bg-white/[0.02] border-white/5 text-zinc-600 hover:border-white/10'
+                ? `bg-[var(--${tab.color})]/10 border border-[var(--${tab.color})]/30 text-[var(--${tab.color})] shadow-md`
+                : 'bg-white/[0.02] border border-white/5 text-[var(--text-secondary)] hover:text-white hover:bg-white/5'
             }`}
           >
-            <tab.icon className="w-3 h-3" />
+            <tab.icon className="w-4 h-4" />
             {tab.label}
           </button>
         ))}
@@ -120,42 +127,61 @@ export default function AdminReaderRequestsPage() {
 
       {/* Loading */}
       {loading && (
-        <div className="h-[30vh] flex flex-col items-center justify-center space-y-4">
-          <Loader2 className="w-10 h-10 text-purple-500 animate-spin" />
+        <div className="py-20 flex flex-col items-center justify-center space-y-4">
+          <Loader2 className="w-8 h-8 text-[var(--purple-accent)] animate-spin" />
         </div>
       )}
 
       {/* Empty */}
       {!loading && requests.length === 0 && (
-        <div className="h-[30vh] flex flex-col items-center justify-center space-y-4">
-          <FileText className="w-16 h-16 text-zinc-800" />
-          <p className="text-zinc-600 text-sm">Không có đơn nào.</p>
-        </div>
+        <GlassCard className="py-20 flex flex-col items-center justify-center space-y-4 text-center">
+            <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-2 shadow-inner">
+                <FileText className="w-8 h-8 text-[var(--text-tertiary)]" />
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">Không có đơn nào trong danh sách.</p>
+        </GlassCard>
       )}
 
       {/* Requests List */}
       {!loading && requests.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {requests.map((req) => (
-            <div
+            <GlassCard
               key={req.id}
-              className="relative bg-white/[0.02] backdrop-blur-3xl rounded-2xl border border-white/5 hover:border-white/10 p-6 transition-all space-y-4"
+              className="space-y-6 group hover:border-[var(--purple-accent)]/30 transition-all !p-8"
             >
               {/* Row: Status + User + Date */}
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
                 <div className="flex items-center gap-4">
                   {getStatusBadge(req.status)}
-                  <span className="text-xs font-bold text-zinc-400">User: {req.userId.substring(0, 8)}...</span>
+                  <span className="text-xs font-bold text-[var(--text-secondary)] flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    ID: {req.userId.substring(0, 8)}...
+                  </span>
                 </div>
-                <span className="text-[10px] text-zinc-700">
+                <div className="flex items-center gap-2 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-tighter bg-white/5 px-3 py-1.5 rounded-lg shadow-inner">
+                  <Clock className="w-3.5 h-3.5" />
                   {new Date(req.createdAt).toLocaleString('vi-VN')}
-                </span>
+                </div>
               </div>
 
               {/* Intro Text */}
-              <div className="p-4 rounded-xl bg-black/30 border border-white/5">
-                <div className="text-[9px] font-black uppercase tracking-widest text-zinc-600 mb-2">Lời giới thiệu</div>
-                <p className="text-xs text-zinc-400 leading-relaxed">
+              <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/5 shadow-inner">
+                <div className="flex items-center justify-between mb-3">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] flex items-center gap-2">
+                        <FileText className="w-3.5 h-3.5" />
+                        Lời giới thiệu
+                    </div>
+                    {req.introText.length > 150 && selectedRequest?.id !== req.id && (
+                        <button
+                            onClick={() => setSelectedRequest(req)}
+                            className="text-[10px] font-black uppercase tracking-widest text-[var(--purple-accent)] hover:text-white flex items-center gap-1.5 transition-colors"
+                        >
+                            <Eye className="w-3.5 h-3.5" /> Mở rộng
+                        </button>
+                    )}
+                </div>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed italic border-l-2 border-[var(--purple-accent)]/30 pl-4 py-1">
                   {selectedRequest?.id === req.id
                     ? req.introText
                     : req.introText.length > 150
@@ -163,84 +189,80 @@ export default function AdminReaderRequestsPage() {
                       : req.introText
                   }
                 </p>
-                {req.introText.length > 150 && selectedRequest?.id !== req.id && (
-                  <button
-                    onClick={() => setSelectedRequest(req)}
-                    className="mt-2 text-[10px] text-purple-400 hover:text-purple-300 flex items-center gap-1"
-                  >
-                    <Eye className="w-3 h-3" /> Xem đầy đủ
-                  </button>
-                )}
               </div>
 
               {/* Admin Note (if reviewed) */}
               {req.adminNote && (
-                <div className="p-3 rounded-lg bg-purple-500/5 border border-purple-500/10">
-                  <div className="text-[9px] font-black uppercase tracking-widest text-purple-400 mb-1">Ghi chú Admin</div>
-                  <p className="text-xs text-zinc-400">{req.adminNote}</p>
+                <div className="p-4 rounded-2xl bg-[var(--purple-accent)]/5 border border-[var(--purple-accent)]/20 shadow-inner">
+                  <div className="text-[10px] font-black uppercase tracking-widest text-[var(--purple-accent)] mb-2 flex items-center gap-2">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    Ghi chú Admin
+                  </div>
+                  <p className="text-xs font-medium text-[var(--text-secondary)]">{req.adminNote}</p>
                 </div>
               )}
 
               {/* Actions — chỉ hiện cho đơn pending */}
               {req.status === 'pending' && (
-                <div className="space-y-3 pt-2 border-t border-white/5">
+                <div className="space-y-4 pt-2">
                   {/* Admin Note Input */}
-                  <input
-                    type="text"
-                    placeholder="Ghi chú admin (tùy chọn)..."
+                  <Input
+                    placeholder="GHI CHÚ ADMIN TRƯỚC KHI DUYỆT (TÙY CHỌN)..."
                     value={selectedRequest?.id === req.id ? adminNote : ''}
                     onFocus={() => setSelectedRequest(req)}
                     onChange={(e) => { setSelectedRequest(req); setAdminNote(e.target.value); }}
-                    className="w-full bg-white/[0.02] border border-white/10 rounded-lg px-4 py-2 text-xs text-white placeholder:text-zinc-700 focus:outline-none focus:border-purple-500/30"
+                    className="w-full text-xs font-black tracking-widest text-white shadow-inner bg-white/[0.02]"
                   />
 
                   {/* Approve/Reject Buttons */}
-                  <div className="flex gap-3">
-                    <button
+                  <div className="flex gap-4">
+                    <Button
+                      variant="secondary"
                       id={`approve-${req.id}`}
                       onClick={() => handleProcess(req.id, 'approve')}
                       disabled={processing === req.id}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
+                      className="flex-1 py-4 bg-[var(--success)] text-white hover:bg-[var(--success)] hover:brightness-110 shadow-md"
                     >
-                      {processing === req.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
-                      Phê duyệt
-                    </button>
-                    <button
+                      {processing === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                      Phê duyệt Reader
+                    </Button>
+                    <Button
+                      variant="danger"
                       id={`reject-${req.id}`}
                       onClick={() => handleProcess(req.id, 'reject')}
                       disabled={processing === req.id}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-600/20 hover:bg-red-600/30 border border-red-500/20 text-red-400 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50"
+                      className="flex-1 py-4 shadow-md bg-[var(--danger)]/20 border border-[var(--danger)]/30 text-[var(--danger)] hover:bg-[var(--danger)] hover:text-white"
                     >
-                      {processing === req.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
-                      Từ chối
-                    </button>
+                      {processing === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                      Từ chối Đơn
+                    </Button>
                   </div>
                 </div>
               )}
-            </div>
+            </GlassCard>
           ))}
         </div>
       )}
 
       {/* Pagination */}
       {!loading && totalPages > 1 && (
-        <div className="flex items-center justify-center gap-4">
+        <div className="flex items-center justify-center gap-4 pt-6">
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="p-3 rounded-xl bg-white/[0.02] border border-white/10 hover:border-purple-500/30 disabled:opacity-30 transition-all"
+            className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/10 hover:bg-white/10 disabled:opacity-30 transition-all shadow-inner"
           >
-            <ChevronLeft className="w-4 h-4 text-zinc-400" />
+            <ChevronLeft className="w-4 h-4 text-[var(--text-secondary)]" />
           </button>
-          <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-            Trang {page} / {totalPages}
+          <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
+            Trang {page} <span className="mx-2 opacity-50">/</span> {totalPages}
           </span>
           <button
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page === totalPages}
-            className="p-3 rounded-xl bg-white/[0.02] border border-white/10 hover:border-purple-500/30 disabled:opacity-30 transition-all"
+            className="p-3.5 rounded-2xl bg-white/[0.02] border border-white/10 hover:bg-white/10 disabled:opacity-30 transition-all shadow-inner"
           >
-            <ChevronRight className="w-4 h-4 text-zinc-400" />
+            <ChevronRight className="w-4 h-4 text-[var(--text-secondary)]" />
           </button>
         </div>
       )}
