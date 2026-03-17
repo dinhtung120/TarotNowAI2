@@ -20,6 +20,20 @@ import * as z from "zod";
 import { useRouter } from "@/i18n/routing";
 import { useAuthStore } from "@/store/authStore";
 import { getProfileAction, updateProfileAction } from "@/actions/profileActions";
+import { 
+    Sparkles, 
+    User, 
+    Mail, 
+    Calendar, 
+    AtSign, 
+    ShieldCheck, 
+    Save, 
+    Loader2, 
+    ChevronRight,
+    Trophy,
+    Stars,
+    Hash
+} from "lucide-react";
 
 /**
  * DTO (Data Transfer Object) — Mô tả cấu trúc dữ liệu trả về từ API Profile.
@@ -168,115 +182,254 @@ export default function ProfilePage() {
     // Loading spinner khi đang fetch dữ liệu
     if (loading) {
         return (
-            <div className="flex justify-center items-center min-h-screen text-[#DFF2CB]">
-                <div className="animate-spin h-8 w-8 border-4 border-current border-t-transparent rounded-full" />
+            <div className="min-h-screen bg-[#020108] flex items-center justify-center">
+                <div className="relative group">
+                    <div className="absolute inset-x-0 top-0 h-40 w-40 bg-purple-600/20 blur-[60px] rounded-full animate-pulse" />
+                    <Loader2 className="w-12 h-12 animate-spin text-purple-400 relative z-10" />
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="container mx-auto px-4 py-12 pt-24 max-w-3xl">
-            <h1 className="text-4xl font-extrabold text-[#DFF2CB] mb-8 drop-shadow-lg text-center">
-                {t("title")}
-            </h1>
-
-            <div className="bg-[#1A1F2B]/80 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-[#2D3748]">
-                {/* Hiển thị avatar tròn và thông tin readonly (level, zodiac, numerology) */}
-                {profileData && (
-                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8 pb-8 border-b border-[#2D3748]">
-                        <img
-                            src={profileData.avatarUrl || "https://ui-avatars.com/api/?background=2D3748&color=DFF2CB&name=" + encodeURIComponent(profileData.displayName)}
-                            alt="Avatar"
-                            className="w-24 h-24 rounded-full border-2 border-[#DFF2CB] shadow-lg object-cover"
+        <div className="min-h-screen bg-[#020108] text-zinc-100 selection:bg-purple-500/40 overflow-x-hidden font-sans">
+            {/* ##### PREMIUM BACKGROUND SYSTEM ##### */}
+            <div className="fixed inset-0 z-0 pointer-events-none">
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
+                <div className="absolute top-1/4 -left-1/4 w-[60vw] h-[60vw] bg-purple-900/[0.08] blur-[120px] rounded-full animate-slow-pulse" />
+                <div className="absolute bottom-1/4 -right-1/4 w-[50vw] h-[50vw] bg-indigo-900/[0.06] blur-[130px] rounded-full animate-slow-pulse delay-700" />
+                
+                {/* Spiritual Particles */}
+                <div className="absolute inset-0">
+                    {Array.from({ length: 25 }).map((_, i) => (
+                        <div
+                            key={i}
+                            className="absolute w-[1.5px] h-[1.5px] bg-white rounded-full animate-float opacity-[0.15]"
+                            style={{
+                                top: `${Math.random() * 100}%`,
+                                left: `${Math.random() * 100}%`,
+                                animationDuration: `${20 + Math.random() * 30}s`,
+                                animationDelay: `${-Math.random() * 30}s`,
+                            }}
                         />
-                        <div className="text-center sm:text-left text-gray-300 space-y-2">
-                            <h2 className="text-2xl font-bold text-white">{profileData.displayName}</h2>
-                            <p className="text-sm">@{profileData.username}</p>
+                    ))}
+                </div>
+            </div>
 
-                            <div className="flex flex-wrap gap-3 mt-4 justify-center sm:justify-start">
-                                <div className="bg-[#2D3748] px-3 py-1 rounded-full text-xs font-semibold text-purple-300">
-                                    {t("level")}: {profileData.level}
+            <main className="relative z-10 max-w-3xl mx-auto px-6 pt-28 pb-24">
+                {/* Header Section - Compact */}
+                <div className="flex flex-col items-center mb-10 text-center animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-500/5 border border-purple-500/10 text-[8px] uppercase tracking-[0.2em] font-black text-purple-400 shadow-xl backdrop-blur-md mb-4">
+                        <Stars className="w-2.5 h-2.5" />
+                        Astral Connection
+                    </div>
+                    <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-white uppercase italic">
+                        {t("title")}
+                    </h1>
+                    <div className="h-0.5 w-16 bg-gradient-to-r from-transparent via-purple-500/30 to-transparent mt-3" />
+                </div>
+
+                <div className="grid grid-cols-1 gap-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
+                    {/* Profile Summary Card - Compact */}
+                    {profileData && (
+                        <div className="relative group overflow-hidden">
+                            <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-3xl rounded-[2.5rem] border border-white/10 group-hover:border-purple-500/30 transition-all duration-700 shadow-2xl" />
+                            
+                            <div className="relative z-10 p-6 md:p-8 flex flex-col md:flex-row items-center md:items-start gap-8">
+                                {/* Avatar with Astral Glow - Smaller */}
+                                <div className="relative w-24 h-24 md:w-28 md:h-28 shrink-0">
+                                    <div className="absolute inset-[-6px] rounded-full bg-gradient-to-tr from-purple-500/20 via-transparent to-amber-500/10 blur-lg group-hover:inset-[-10px] transition-all duration-700" />
+                                    <div className="w-full h-full rounded-full border-2 border-white/10 overflow-hidden relative z-10 shadow-2xl bg-zinc-950">
+                                        <img
+                                            src={profileData.avatarUrl || `https://ui-avatars.com/api/?background=111&color=fff&name=${encodeURIComponent(profileData.displayName)}`}
+                                            alt="Avatar"
+                                            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                                        />
+                                    </div>
+                                    <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-zinc-900 border border-white/10 rounded-xl flex items-center justify-center text-amber-500 shadow-xl z-20">
+                                        <Trophy className="w-4 h-4" />
+                                    </div>
                                 </div>
-                                <div className="bg-[#2D3748] px-3 py-1 rounded-full text-xs font-semibold text-blue-300">
-                                    {t("zodiac")}: {profileData.zodiac}
-                                </div>
-                                <div className="bg-[#2D3748] px-3 py-1 rounded-full text-xs font-semibold text-orange-300">
-                                    {t("numerology")}: {profileData.numerology}
+
+                                <div className="flex-1 text-center md:text-left space-y-4">
+                                    <div>
+                                        <h2 className="text-2xl md:text-3xl font-black text-white italic tracking-tighter mb-0.5">
+                                            {profileData.displayName}
+                                        </h2>
+                                        <div className="flex items-center justify-center md:justify-start gap-1.5 text-zinc-500 font-medium">
+                                            <AtSign className="w-3 h-3" />
+                                            <span className="text-xs">@{profileData.username}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Aura Chips - Compact Badges */}
+                                    <div className="flex flex-wrap gap-2.5 justify-center md:justify-start">
+                                        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/[0.08] transition-all duration-300">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-purple-500 shadow-[0_0_6px_rgba(168,85,247,0.5)]" />
+                                            <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400">{t("level")}</span>
+                                            <span className="text-xs font-black text-white ml-1">{profileData.level}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/[0.08] transition-all duration-300">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.5)]" />
+                                            <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400">{t("zodiac")}</span>
+                                            <span className="text-xs font-black text-white ml-1">{profileData.zodiac}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 hover:bg-white/[0.08] transition-all duration-300">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.5)]" />
+                                            <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400">{t("numerology")}</span>
+                                            <span className="text-xs font-black text-white ml-1">{profileData.numerology}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Admin Action - Compact */}
+                                    {user?.role === "admin" && (
+                                        <button
+                                            onClick={() => router.push("/admin/users")}
+                                            className="group flex items-center gap-2.5 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-300 px-5 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all hover:scale-[1.03] active:scale-95 shadow-xl"
+                                        >
+                                            <ShieldCheck className="w-3.5 h-3.5 transition-transform group-hover:rotate-12" />
+                                            Vào Trang Quản Trị
+                                        </button>
+                                    )}
                                 </div>
                             </div>
-                            
-                            {/* Nút dành cho Admin */}
-                            {user?.role === "admin" && (
-                                <div className="mt-6 pt-4 border-t border-[#2D3748]/50 flex justify-center sm:justify-start">
-                                    <button
-                                        onClick={() => router.push("/admin/users")}
-                                        className="flex items-center gap-2 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 text-purple-300 px-4 py-2 rounded-xl text-sm font-bold transition-all hover:scale-105 active:scale-95"
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                                        Vào Trang Quản Trị
-                                    </button>
+                        </div>
+                    )}
+
+                    {/* Settings Form Section - Compact */}
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-white/[0.01] backdrop-blur-2xl rounded-[2.5rem] border border-white/5 shadow-2xl" />
+                        
+                        <div className="relative z-10 p-6 md:p-8">
+                            <h3 className="text-lg font-black text-white italic tracking-tight mb-8 flex items-center gap-2.5">
+                                <Sparkles className="w-4 h-4 text-amber-500" />
+                                Hiệu Chỉnh Giao Thức
+                            </h3>
+
+                            {/* Status Messages - Compact */}
+                            <div className="space-y-3 mb-8">
+                                {successMsg && (
+                                    <div className="animate-in slide-in-from-top-2 duration-500 bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl flex items-center gap-3 text-emerald-400 text-[11px] font-semibold">
+                                        <div className="w-7 h-7 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
+                                            <ShieldCheck className="w-3.5 h-3.5" />
+                                        </div>
+                                        {successMsg}
+                                    </div>
+                                )}
+                                {errorMsg && (
+                                    <div className="animate-in slide-in-from-top-2 duration-500 bg-red-500/10 border border-red-500/20 p-4 rounded-2xl flex items-center gap-3 text-red-400 text-[11px] font-semibold">
+                                        <div className="w-7 h-7 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
+                                            <ShieldCheck className="w-3.5 h-3.5" />
+                                        </div>
+                                        {errorMsg}
+                                    </div>
+                                )}
+                            </div>
+
+                            <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-5">
+                                    <div className="space-y-2">
+                                        <label className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-2">
+                                            <User className="w-3 h-3" />
+                                            {t("displayName")}
+                                        </label>
+                                        <input
+                                            type="text"
+                                            {...register("displayName")}
+                                            className="w-full bg-white/[0.03] border border-white/5 rounded-xl px-4 py-3 text-sm text-white font-medium focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.05] transition-all duration-300 shadow-inner"
+                                            placeholder="Tên hiển thị của bạn"
+                                        />
+                                        {errors.displayName && <p className="text-red-400 text-[9px] font-bold ml-2 italic">{errors.displayName.message}</p>}
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-2">
+                                            <Calendar className="w-3 h-3" />
+                                            {t("dateOfBirth")}
+                                        </label>
+                                        <input
+                                            type="date"
+                                            {...register("dateOfBirth")}
+                                            className="w-full bg-white/[0.03] border border-white/5 rounded-xl px-4 py-3 text-sm text-white font-medium focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.05] transition-all duration-300 shadow-inner [color-scheme:dark]"
+                                        />
+                                        {errors.dateOfBirth && <p className="text-red-400 text-[9px] font-bold ml-2 italic">{errors.dateOfBirth.message}</p>}
+                                    </div>
                                 </div>
-                            )}
+
+                                <div className="space-y-5">
+                                    <div className="space-y-2">
+                                        <label className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-zinc-500 ml-2">
+                                            <AtSign className="w-3 h-3" />
+                                            {t("avatarUrl")}
+                                        </label>
+                                        <input
+                                            type="text"
+                                            {...register("avatarUrl")}
+                                            className="w-full bg-white/[0.03] border border-white/5 rounded-xl px-4 py-3 text-sm text-white font-medium focus:outline-none focus:border-purple-500/50 focus:bg-white/[0.05] transition-all duration-300 shadow-inner"
+                                            placeholder="https://example.com/avatar.jpg"
+                                        />
+                                        {errors.avatarUrl && <p className="text-red-400 text-[9px] font-bold ml-2 italic">{errors.avatarUrl.message}</p>}
+                                    </div>
+
+                                    <div className="pt-4">
+                                        <button
+                                            type="submit"
+                                            disabled={isSubmitting}
+                                            className="group relative w-full h-12 bg-white text-black rounded-xl overflow-hidden font-black text-[10px] uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-2xl"
+                                        >
+                                            <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-500 opacity-0 group-hover:opacity-10 transition-opacity duration-700" />
+                                            <div className="relative z-10 flex items-center justify-center gap-2">
+                                                {isSubmitting ? (
+                                                    <>
+                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                        {t("saving")}
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Save className="w-3.5 h-3.5" />
+                                                        {t("save")}
+                                                    </>
+                                                )}
+                                            </div>
+                                        </button>
+                                        
+                                        <div className="mt-3 flex justify-center">
+                                            <div className="flex items-center gap-1.5 text-[7px] text-zinc-600 font-black uppercase tracking-[0.2em]">
+                                                <div className="w-1 h-1 bg-zinc-700 rounded-full" />
+                                                Powered by TarotNow AI
+                                                <div className="w-1 h-1 bg-zinc-700 rounded-full" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                     </div>
-                )}
+                </div>
+            </main>
 
-                {/* Thông báo cập nhật */}
-                {successMsg && (
-                    <div className="bg-green-500/10 border border-green-500 text-green-400 p-4 rounded mb-6 text-sm">
-                        {successMsg}
-                    </div>
-                )}
-                {errorMsg && (
-                    <div className="bg-red-500/10 border border-red-500 text-red-400 p-4 rounded mb-6 text-sm">
-                        {errorMsg}
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">{t("displayName")}</label>
-                        <input
-                            type="text"
-                            {...register("displayName")}
-                            className="w-full bg-[#0F1219] border border-[#2D3748] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#DFF2CB] transition-colors"
-                            placeholder="VD: Cố Mạn"
-                        />
-                        {errors.displayName && <p className="text-red-400 text-xs mt-1">{errors.displayName.message}</p>}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">{t("avatarUrl")}</label>
-                        <input
-                            type="text"
-                            {...register("avatarUrl")}
-                            className="w-full bg-[#0F1219] border border-[#2D3748] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#DFF2CB] transition-colors"
-                            placeholder="https://example.com/avatar.jpg"
-                        />
-                        {errors.avatarUrl && <p className="text-red-400 text-xs mt-1">{errors.avatarUrl.message}</p>}
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">{t("dateOfBirth")}</label>
-                        <input
-                            type="date"
-                            {...register("dateOfBirth")}
-                            className="w-full bg-[#0F1219] border border-[#2D3748] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#DFF2CB] transition-colors [color-scheme:dark]"
-                        />
-                        {errors.dateOfBirth && <p className="text-red-400 text-xs mt-1">{errors.dateOfBirth.message}</p>}
-                    </div>
-
-                    <div className="pt-4">
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="w-full bg-gradient-to-r from-[#DFF2CB] to-[#B6D996] text-[#1A1F2B] font-bold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl hover:scale-[1.02] transform transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isSubmitting ? t("saving") : t("save")}
-                        </button>
-                    </div>
-                </form>
-            </div>
+            {/* Custom Animations */}
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                @keyframes float {
+                    0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+                    15% { opacity: 0.2; }
+                    85% { opacity: 0.2; }
+                    100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+                }
+                .animate-float {
+                    animation-name: float;
+                    animation-timing-function: linear;
+                    animation-iteration-count: infinite;
+                }
+                @keyframes slow-pulse {
+                    0%, 100% { opacity: 0.05; transform: scale(1); }
+                    50% { opacity: 0.12; transform: scale(1.15); }
+                }
+                .animate-slow-pulse {
+                    animation: slow-pulse 15s ease-in-out infinite;
+                }
+            `}} />
         </div>
     );
 }

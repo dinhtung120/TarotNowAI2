@@ -26,21 +26,31 @@ async function getAccessToken(): Promise<string | undefined> {
 }
 
 /**
- * Lấy danh sách phiên đọc bài (Reading Sessions) — có phân trang.
+ * Lấy danh sách phiên đọc bài (Reading Sessions) — có phân trang và bộ lọc.
  *
  * @param page - Số trang hiện tại (1-indexed)
- * @param pageSize - Số lượng item mỗi trang (mặc định 10)
- * @returns Đối tượng chứa items[], totalPages, totalCount, hoặc error
+ * @param pageSize - Số lượng item mỗi trang
+ * @param spreadType - Bộ lọc loại trải bài (optional)
+ * @param date - Bộ lọc ngày (optional)
  */
-export async function getHistorySessionsAction(page: number = 1, pageSize: number = 10) {
+export async function getHistorySessionsAction(
+    page: number = 1, 
+    pageSize: number = 10,
+    spreadType?: string,
+    date?: string
+) {
     try {
         const token = await getAccessToken();
         if (!token) {
             return { error: 'Chưa đăng nhập' };
         }
 
+        let query = `page=${page}&pageSize=${pageSize}`;
+        if (spreadType && spreadType !== 'all') query += `&spreadType=${encodeURIComponent(spreadType)}`;
+        if (date) query += `&date=${encodeURIComponent(date)}`;
+
         const response = await fetch(
-            `${API_BASE_URL}/history/sessions?page=${page}&pageSize=${pageSize}`,
+            `${API_BASE_URL}/history/sessions?${query}`,
             {
                 headers: {
                     'Content-Type': 'application/json',
@@ -145,7 +155,14 @@ export async function getAllHistorySessionsAdminAction(params: {
         }
 
         const data = await response.json();
-        return { success: true, data };
+        // Safe Mapping for Admin History
+        const safeData = {
+            ...data,
+            items: data.items || data.Items || [],
+            totalCount: data.totalCount ?? data.TotalCount ?? 0,
+            totalPages: data.totalPages ?? data.TotalPages ?? 0
+        };
+        return { success: true, data: safeData };
     } catch (err) {
         console.error("Admin History Action Error:", err);
         return { error: 'Lỗi kết nối mạng' };

@@ -7,8 +7,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { initReadingSession } from "@/actions/readingActions";
-import { Loader2, Sparkles, AlertCircle } from "lucide-react";
+import { Loader2, Sparkles, AlertCircle, Compass, Zap, Star, Flame, ShieldCheck, Moon } from "lucide-react";
 import { useWalletStore } from "@/store/walletStore";
+import { useTranslations } from "next-intl";
 
 /**
  * Zod Schema validated form (Optional message)
@@ -21,6 +22,7 @@ type FormData = z.infer<typeof formSchema>;
 
 export default function ReadingSetupPage() {
     const router = useRouter();
+    const t = useTranslations("ReadingSetup");
     const { fetchBalance } = useWalletStore(); // Reload wallet after init
     const [selectedSpread, setSelectedSpread] = useState<string>("daily_1");
     const [initError, setInitError] = useState("");
@@ -32,10 +34,10 @@ export default function ReadingSetupPage() {
     });
 
     const SPREADS = [
-        { id: "daily_1", name: "Daily 1 Card", desc: "1 lá bài chỉ dẫn mỗi ngày (Miễn phí)", cost: "Free", icon: "☀️" },
-        { id: "spread_3", name: "Past, Present, Future", desc: "Trải bài 3 lá kinh điển", cost: "50 Gold", icon: "⏳" },
-        { id: "spread_5", name: "Cross Spread", desc: "Trải bài 5 lá phân tích tình huống", cost: "100 Gold", icon: "✖️" },
-        { id: "spread_10", name: "Celtic Cross", desc: "Trải bài 10 lá chuyên sâu", cost: "50 Diamond", icon: "🔮" },
+        { id: "daily_1", name: t("daily_1_name"), desc: t("daily_1_desc"), cost: "Free", icon: <Star className="w-5 h-5" /> },
+        { id: "spread_3", name: t("spread_3_name"), desc: t("spread_3_desc"), cost: "50 Gold", icon: <Flame className="w-5 h-5" /> },
+        { id: "spread_5", name: t("spread_5_name"), desc: t("spread_5_desc"), cost: "100 Gold", icon: <ShieldCheck className="w-5 h-5" /> },
+        { id: "spread_10", name: t("spread_10_name"), desc: t("spread_10_desc"), cost: "50 Diamond", icon: <Moon className="w-5 h-5" /> },
     ];
 
     const onSubmit = async (data: FormData) => {
@@ -73,90 +75,155 @@ export default function ReadingSetupPage() {
     };
 
     return (
-        <div className="min-h-screen bg-black text-white p-6 pt-24">
-            <div className="max-w-4xl mx-auto">
-                <div className="text-center mb-12">
-                    <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-amber-400 text-transparent bg-clip-text mb-4">
-                        Select Your Spread
+        <div className="min-h-screen bg-[#020108] text-zinc-100 selection:bg-purple-500/40 overflow-hidden font-sans text-xs sm:text-sm">
+            {/* ===== HỆ THỐNG NỀN CAO CẤP (PREMIUM BACKGROUND) ===== */}
+            <div className="fixed inset-0 z-0 pointer-events-none">
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
+                <div className="absolute top-[-10%] right-[-5%] w-[60vw] h-[60vw] bg-purple-900/10 blur-[120px] rounded-full animate-pulse" />
+                <div className="absolute bottom-[-10%] left-[-5%] w-[50vw] h-[50vw] bg-indigo-900/10 blur-[130px] rounded-full animate-pulse delay-700" />
+                
+                {/* Particles */}
+                <div className="absolute inset-0">
+                    {Array.from({ length: 15 }).map((_, i) => (
+                        <div
+                            key={i}
+                            className="absolute w-0.5 h-0.5 bg-white rounded-full animate-float pointer-events-none opacity-[0.1]"
+                            style={{
+                                top: `${Math.random() * 100}%`,
+                                left: `${Math.random() * 100}%`,
+                                animationDuration: `${15 + Math.random() * 20}s`,
+                                animationDelay: `${-Math.random() * 20}s`,
+                            }}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            <main className="relative z-10 max-w-5xl mx-auto px-6 pt-24 pb-20">
+                {/* Header Section - Compact */}
+                <div className="text-center mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] uppercase tracking-[0.2em] font-bold text-purple-400 mb-4 shadow-xl backdrop-blur-md">
+                        <Compass className="w-3 h-3" />
+                        Ritual Setup
+                    </div>
+                    <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-white mb-3">
+                        {t('title')}
                     </h1>
-                    <p className="text-gray-400 text-lg">
-                        Chọn một kiểu trải bài và đặt câu hỏi để nhận thông điệp từ vũ trụ
+                    <p className="text-zinc-500 max-w-lg mx-auto text-sm font-medium leading-relaxed">
+                        {t('subtitle')}
                     </p>
                 </div>
 
                 {initError && (
-                    <div className="mb-8 p-4 bg-red-900/50 border border-red-500/50 rounded-xl flex items-start gap-3 text-red-200">
-                        <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                        <p className="text-sm">{initError}</p>
+                    <div className="mb-8 p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400 text-xs animate-in zoom-in-95">
+                        <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                        <p>{initError}</p>
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-
-                    {/* Spread Selection Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
+                    {/* Spread Selection Grid - 2x2 Compact */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
                         {SPREADS.map((spread) => (
                             <div
                                 key={spread.id}
                                 onClick={() => setSelectedSpread(spread.id)}
-                                className={`relative p-6 rounded-2xl cursor-pointer transition-all duration-300 border ${selectedSpread === spread.id
-                                    ? "bg-purple-900/30 border-purple-500 shadow-[0_0_30px_rgba(168,85,247,0.2)]"
-                                    : "bg-zinc-900/50 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-800/50"
-                                    }`}
+                                className={`group relative p-5 rounded-3xl cursor-pointer transition-all duration-500 border backdrop-blur-sm overflow-hidden ${
+                                    selectedSpread === spread.id
+                                        ? "bg-white/5 border-purple-500/50 shadow-[0_0_40px_rgba(168,85,247,0.15)]"
+                                        : "bg-white/[0.02] border-white/5 hover:border-white/10 hover:bg-white/[0.04]"
+                                }`}
                             >
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="text-3xl">{spread.icon}</div>
-                                    <span className={`px-3 py-1 rounded-full text-xs font-medium tracking-wide ${spread.cost === 'Free' ? 'bg-green-500/20 text-green-300 border border-green-500/30' :
-                                        spread.cost.includes('Diamond') ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30' :
-                                            'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                                        }`}>
+                                <div className="flex justify-between items-start mb-4 relative z-10">
+                                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center border border-white/5 transition-transform duration-500 group-hover:scale-110 ${
+                                        selectedSpread === spread.id ? "bg-purple-500 text-black" : "bg-white/5 text-zinc-400"
+                                    }`}>
+                                        {spread.icon}
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${
+                                        spread.cost === 'Free' 
+                                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                                            : spread.id === 'spread_10'
+                                                ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20'
+                                                : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                                    }`}>
                                         {spread.cost}
                                     </span>
                                 </div>
-                                <h3 className="text-xl font-semibold mb-2 text-zinc-100">{spread.name}</h3>
-                                <p className="text-zinc-400 text-sm">{spread.desc}</p>
+                                
+                                <div className="relative z-10">
+                                    <h3 className="text-base font-bold text-white mb-1 tracking-tight group-hover:text-purple-300 transition-colors">
+                                        {spread.name}
+                                    </h3>
+                                    <p className="text-zinc-500 text-xs leading-relaxed font-medium">
+                                        {spread.desc}
+                                    </p>
+                                </div>
 
+                                {/* Active Glow Effect */}
                                 {selectedSpread === spread.id && (
-                                    <div className="absolute inset-0 border-2 border-purple-500 rounded-2xl animate-pulse"></div>
+                                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent pointer-events-none"></div>
                                 )}
                             </div>
                         ))}
                     </div>
 
-                    {/* Question Input */}
-                    <div className="bg-zinc-900/30 p-6 rounded-2xl border border-zinc-800 backdrop-blur-sm">
-                        <label htmlFor="question" className="block text-sm font-medium text-zinc-300 mb-2">
-                            Deepen Your Reading (Optional)
+                    {/* Question Input Area - Glassmorphism Compact */}
+                    <div className="bg-white/[0.02] p-6 rounded-[2.5rem] border border-white/5 backdrop-blur-md animate-in fade-in slide-in-from-bottom-12 duration-700 delay-400">
+                        <label htmlFor="question" className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-4 ml-1">
+                            <Sparkles className="w-3 h-3 text-purple-400" />
+                            {t('question_label')}
                         </label>
                         <textarea
                             id="question"
                             rows={3}
                             {...register("question")}
-                            placeholder="Concentrate on your situation and type your question here..."
-                            className="w-full bg-black/50 border border-zinc-800 rounded-xl px-4 py-3 text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-purple-500/50 resize-none transition-all"
+                            placeholder={t('question_placeholder')}
+                            className="w-full bg-black/40 border border-white/5 rounded-2xl px-5 py-4 text-sm text-white placeholder-zinc-700 focus:outline-none focus:ring-1 focus:ring-purple-500/30 resize-none transition-all shadow-inner"
                         />
                         {errors.question && (
-                            <p className="mt-2 text-sm text-red-400">{errors.question.message}</p>
+                            <p className="mt-2 text-[11px] text-red-400 ml-1">{errors.question.message}</p>
                         )}
                     </div>
 
-                    {/* Submit Button */}
-                    <div className="flex justify-center pt-4">
+                    {/* Action Button - Premium Glow */}
+                    <div className="flex justify-center pt-2 animate-in fade-in zoom-in-95 duration-700 delay-500">
                         <button
                             type="submit"
                             disabled={isInitializing}
-                            className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-gradient-to-r from-purple-600 to-pink-600 font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 disabled:opacity-50 disabled:cursor-not-allowed hover:from-purple-500 hover:to-pink-500 shadow-[0_0_40px_rgba(168,85,247,0.4)] hover:shadow-[0_0_60px_rgba(168,85,247,0.6)] overflow-hidden"
+                            className="group relative flex items-center gap-3 bg-white text-black px-12 py-4 rounded-full font-black text-xs uppercase tracking-[0.2em] hover:scale-105 active:scale-[0.98] transition-all shadow-[0_20px_40px_rgba(255,255,255,0.1)] hover:shadow-[0_25px_50px_rgba(255,255,255,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isInitializing ? (
-                                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    {t('preparing')}
+                                </>
                             ) : (
-                                <Sparkles className="w-5 h-5 mr-2 group-hover:animate-ping" />
+                                <>
+                                    {t('cta_draw')}
+                                    <Zap className="w-4 h-4 fill-black" />
+                                </>
                             )}
-                            {isInitializing ? "Preparing the cards..." : "Draw Cards"}
                         </button>
                     </div>
                 </form>
-            </div>
+            </main>
+
+            {/* Custom Background Animations */}
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                @keyframes float {
+                    0% { transform: translateY(0) translateX(0) scale(1); opacity: 0; }
+                    20% { opacity: 0.2; }
+                    80% { opacity: 0.2; }
+                    100% { transform: translateY(-100vh) translateX(30px) scale(0.5); opacity: 0; }
+                }
+                .animate-float {
+                    animation-name: float;
+                    animation-timing-function: linear;
+                    animation-iteration-count: infinite;
+                }
+            `}} />
         </div>
     );
 }

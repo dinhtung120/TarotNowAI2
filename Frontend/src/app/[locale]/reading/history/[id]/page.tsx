@@ -17,6 +17,7 @@ import { useAuthStore } from "@/store/authStore";
 import { getHistoryDetailAction } from "@/actions/historyActions";
 import { Sparkles, ArrowLeft, Bot } from "lucide-react";
 import { TAROT_DECK } from "@/lib/tarotData";
+import { useTranslations } from "next-intl";
 
 interface AiRequestDto {
     id: string;
@@ -42,27 +43,18 @@ export default function HistoryDetailPage() {
     const router = useRouter();
     const sessionId = params.id as string;
     const { isAuthenticated } = useAuthStore();
+    const t = useTranslations("History");
 
     const [detail, setDetail] = useState<ReadingDetailResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    /**
-     * Auth Guard — Kiểm tra đăng nhập.
-     * Phiên bản cũ redirect sai `/auth/login` → 404.
-     * Đã sửa thành `/login` (route đúng trong route group `(auth)`).
-     */
     useEffect(() => {
         if (!isAuthenticated) {
             router.push("/login");
         }
     }, [isAuthenticated, router]);
 
-    /**
-     * Fetch chi tiết phiên đọc bài qua Server Action.
-     * Phiên bản cũ hardcode port 5000, đã sửa qua Server Action
-     * sử dụng biến môi trường NEXT_PUBLIC_API_URL.
-     */
     useEffect(() => {
         if (!isAuthenticated) return;
 
@@ -97,122 +89,229 @@ export default function HistoryDetailPage() {
     // Parse cards
     const parsedCards: number[] = detail?.cardsDrawn ? JSON.parse(detail.cardsDrawn) : [];
 
-    return (
-        <div className="min-h-screen bg-black text-white p-6 pt-24 overflow-hidden relative">
-            <div className="max-w-6xl mx-auto relative z-10">
+    const getSpreadName = (type: string) => {
+        const mapping: Record<string, string> = {
+            'Daily1Card': t('spread_daily'),
+            'daily_1': t('spread_daily'),
+            'PastPresentFuture': t('spread_3'),
+            'spread_3': t('spread_3'),
+            'spread_5': t('spread_5'),
+            'spread_10': t('spread_10'),
+        };
+        return mapping[type] || type;
+    };
 
-                {/* Header */}
-                <div className="flex items-center justify-between mb-8 pb-4 border-b border-zinc-800">
-                    <button
-                        onClick={() => router.push("/reading/history")}
-                        className="flex items-center text-zinc-400 hover:text-white transition"
-                    >
-                        <ArrowLeft className="w-5 h-5 mr-2" />
-                        Trở lại Giao Thức
-                    </button>
-                    <div className="text-right">
-                        <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-amber-400 text-transparent bg-clip-text">
-                            Hồ Sơ Tinh Tú
-                        </h1>
-                        <p className="text-xs text-zinc-500 font-mono mt-1">ID: {sessionId.split('-')[0]}...</p>
+    return (
+        <div className="min-h-screen bg-[#020108] text-zinc-100 selection:bg-purple-500/40 overflow-x-hidden font-sans">
+            {/* ##### PREMIUM BACKGROUND ##### */}
+            <div className="fixed inset-0 z-0 pointer-events-none">
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
+                <div className="absolute top-1/4 -left-1/4 w-[60vw] h-[60vw] bg-purple-900/[0.08] blur-[120px] rounded-full animate-slow-pulse" />
+                <div className="absolute bottom-1/4 -right-1/4 w-[50vw] h-[50vw] bg-indigo-900/[0.06] blur-[130px] rounded-full animate-slow-pulse delay-700" />
+                
+                {/* Spiritual Particles */}
+                <div className="absolute inset-0">
+                    {Array.from({ length: 25 }).map((_, i) => (
+                        <div
+                            key={i}
+                            className="absolute w-[1.5px] h-[1.5px] bg-white rounded-full animate-float opacity-[0.15]"
+                            style={{
+                                top: `${Math.random() * 100}%`,
+                                left: `${Math.random() * 100}%`,
+                                animationDuration: `${20 + Math.random() * 30}s`,
+                                animationDelay: `${-Math.random() * 30}s`,
+                            }}
+                        />
+                    ))}
+                </div>
+            </div>
+
+            <main className="relative z-10 max-w-[100rem] mx-auto px-6 pt-28 pb-32">
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="flex flex-col gap-6">
+                        <button
+                            onClick={() => router.push("/reading/history")}
+                            className="group flex items-center gap-2 text-zinc-500 hover:text-white transition-all w-fit"
+                        >
+                            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-purple-500 group-hover:text-white transition-all">
+                                <ArrowLeft className="w-4 h-4" />
+                            </div>
+                            <span className="text-[10px] uppercase font-black tracking-widest">{t('prev_page')}</span>
+                        </button>
+                        
+                        <div className="flex items-center gap-6">
+                            <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-3xl flex items-center justify-center shadow-2xl backdrop-blur-md">
+                                <Sparkles className="w-8 h-8 text-amber-400" />
+                            </div>
+                            <div>
+                                <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white uppercase italic">
+                                    {detail ? getSpreadName(detail.spreadType) : "..."}
+                                </h1>
+                                <div className="flex items-center gap-4 mt-2 text-zinc-500 font-medium text-xs">
+                                    <span className="flex items-center gap-1.5 p-1 px-2.5 bg-white/5 rounded-full">
+                                        <Calendar className="w-3.5 h-3.5" />
+                                        {detail ? new Date(detail.createdAt).toLocaleDateString() : "..."}
+                                    </span>
+                                    <span className="flex items-center gap-1.5 p-1 px-2.5 bg-white/5 rounded-full">
+                                        <Clock className="w-3.5 h-3.5" />
+                                        {detail ? new Date(detail.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "..."}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col items-end gap-2 text-right">
+                        <span className={`text-[10px] px-4 py-1.5 rounded-full font-black uppercase tracking-[0.2em] border ${detail?.isCompleted ? 'bg-amber-500/10 text-amber-500 border-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.1)]' : 'bg-red-500/10 text-red-500 border-red-500/20'}`}>
+                            {detail?.isCompleted ? t('status_completed') : t('status_interrupted')}
+                        </span>
+                        <p className="text-[10px] text-zinc-600 font-black tracking-widest uppercase mt-1">Fragment Code: {sessionId.split('-')[0]}...</p>
                     </div>
                 </div>
 
                 {isLoading ? (
-                    <div className="flex flex-col items-center justify-center py-20 animate-pulse text-purple-400/50">
-                        <div className="w-16 h-16 bg-purple-900/40 rounded-full mb-4"></div>
-                        <div className="h-6 w-48 bg-zinc-900/60 rounded"></div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 animate-pulse">
+                        {[1, 2, 3, 4, 5].map(i => (
+                            <div key={i} className="aspect-[3/4] bg-white/[0.02] rounded-[2.5rem] border border-white/[0.05]"></div>
+                        ))}
                     </div>
                 ) : error ? (
-                    <div className="bg-red-900/20 border border-red-500/30 p-8 rounded-2xl text-center">
-                        <p className="text-red-400 mb-4">{error}</p>
+                    <div className="bg-red-500/5 border border-red-500/10 p-12 rounded-[3rem] text-center max-w-2xl mx-auto">
+                        <p className="text-red-400 font-bold mb-6 italic">{error}</p>
                         <button
                             onClick={() => router.push("/reading/history")}
-                            className="bg-zinc-800 hover:bg-zinc-700 px-6 py-2 rounded-lg transition"
+                            className="bg-white text-black px-10 py-3 rounded-full font-black text-xs uppercase tracking-widest transition-all hover:scale-105"
                         >
                             Quay Lại
                         </button>
                     </div>
                 ) : (
                     detail && (
-                        <div className="space-y-16 animate-in fade-in duration-1000">
-                            {/* Session Meta */}
-                            <div className="text-center mb-8">
-                                <span className={`text-xs px-3 py-1 rounded-full font-medium ${detail.isCompleted ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
-                                    {detail.isCompleted ? 'Trải Bài Hoàn Tất' : 'Trải Bài Gián Đoạn'}
-                                </span>
-                                <p className="text-zinc-400 mt-4">
-                                    Mở vào ngày {new Date(detail.createdAt).toLocaleDateString('vi-VN')} lúc {new Date(detail.createdAt).toLocaleTimeString('vi-VN')}
-                                </p>
+                        <div className="space-y-24 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+                            {/* Cards Grid - 5 Columns */}
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8 lg:gap-10">
+                                {parsedCards.map((cardId, index) => {
+                                    const cardData = TAROT_DECK.find(c => c.id === cardId) || TAROT_DECK[0];
+
+                                    return (
+                                        <div key={index} className="group flex flex-col items-center gap-6">
+                                            {/* Tarot Card - Compact Vertical */}
+                                            <div className="relative aspect-[2/3.2] w-full bg-gradient-to-br from-amber-50/10 to-transparent backdrop-blur-3xl rounded-[2.5rem] border border-white/10 p-5 cursor-default transition-all duration-700 hover:border-amber-500/40 hover:shadow-[0_20px_80px_rgba(251,191,36,0.15)] hover:-translate-y-2">
+                                                {/* Card Background Pattern */}
+                                                <div className="absolute inset-4 border border-amber-500/10 rounded-[1.8rem] pointer-events-none" />
+                                                
+                                                <div className="h-full flex flex-col">
+                                                    {/* Card Art Area */}
+                                                    <div className="flex-1 rounded-2xl bg-zinc-950 overflow-hidden relative shadow-inner group/art transition-all duration-700 mb-4 border border-white/5">
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10" />
+                                                        <div className="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-40 transition-opacity">
+                                                            <Sparkles className="w-16 h-16 text-amber-500" />
+                                                        </div>
+                                                        
+                                                        {/* Card Name Overlay */}
+                                                        <div className="absolute bottom-4 left-0 right-0 z-20 px-3 text-center">
+                                                            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500/60 block mb-1">
+                                                                {cardData.suit}
+                                                            </span>
+                                                            <h3 className="text-sm font-black text-white italic tracking-tighter leading-tight drop-shadow-lg">
+                                                                {cardData.name}
+                                                            </h3>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Index Ribbon */}
+                                                    <div className="absolute top-0 right-8 w-6 h-10 bg-amber-500/20 backdrop-blur-md rounded-b-lg flex items-center justify-center border border-t-0 border-amber-500/30">
+                                                        <span className="text-[10px] font-black italic text-amber-400">{index + 1}</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Hover Shine */}
+                                                <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.05] to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-[2.5rem] pointer-events-none" />
+                                            </div>
+
+                                            {/* Micro-Meaning - Simple & Elegant */}
+                                            <div className="text-center px-4 transition-all duration-500 group-hover:scale-105">
+                                                <p className="text-[9px] font-black uppercase tracking-[0.25em] text-purple-400 mb-2">Essence</p>
+                                                <p className="text-[11px] font-medium text-zinc-400 leading-relaxed italic line-clamp-2 hover:line-clamp-none transition-all">
+                                                    {cardData.meaning}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
 
-                            {/* Cards Display Area */}
-                            {parsedCards.length > 0 ? (
-                                <div className="flex flex-wrap justify-center gap-8 perspective-1000">
-                                    {parsedCards.map((cardId, index) => {
-                                        const cardData = TAROT_DECK.find(c => c.id === cardId) || TAROT_DECK[0];
+                            {/* AI Reflection Section */}
+                            {detail.isCompleted && (
+                                <div className="mt-32 max-w-4xl mx-auto">
+                                    <div className="flex flex-col items-center gap-8 text-center bg-white/[0.01] backdrop-blur-3xl border border-white/5 p-16 rounded-[4rem] relative overflow-hidden group">
+                                        <div className="absolute -top-24 -left-24 w-64 h-64 bg-purple-500/[0.03] blur-[100px] rounded-full group-hover:bg-purple-500/[0.06] transition-all" />
+                                        <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-amber-500/[0.02] blur-[100px] rounded-full group-hover:bg-amber-500/[0.04] transition-all" />
+                                        
+                                        <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-full flex items-center justify-center animate-bounce-slow">
+                                            <Bot className="w-8 h-8 text-purple-400" />
+                                        </div>
+                                        
+                                        <div>
+                                            <h3 className="text-2xl font-black italic tracking-tight text-white mb-4 uppercase">
+                                                Lời Sấm Bản Nguyên
+                                            </h3>
+                                            <p className="text-zinc-500 font-medium leading-[1.8] max-w-2xl">
+                                                Vũ trụ đã lưu trữ {detail.aiInteractions.length} dấu ấn trí tuệ trong phiên này. Nội dung hội thoại đang được hội tụ từ thực tại ảo và sẽ hiện diện đầy đủ trong các lần cập nhật Giao Thức tiếp theo.
+                                            </p>
+                                        </div>
 
-                                        return (
-                                            <div key={index} className="flex flex-col items-center gap-6">
-                                                {/* Card Front */}
-                                                <div className="relative w-56 h-80 bg-gradient-to-b from-amber-100 to-amber-50 rounded-2xl border-2 border-amber-300/50 shadow-[0_0_30px_rgba(251,191,36,0.2)] flex flex-col items-center p-4">
-                                                    <div className="w-full text-center border-b border-amber-300 pb-2 mb-4">
-                                                        <span className="text-xs font-bold text-amber-600 uppercase tracking-widest">{cardData.suit}</span>
-                                                    </div>
-                                                    {/* Card Art Placeholder */}
-                                                    <div className="flex-1 w-full bg-zinc-800 rounded-lg mb-4 flex items-center justify-center shadow-inner overflow-hidden relative">
-                                                        <div className="absolute inset-0 bg-gradient-to-tr from-purple-900/50 to-transparent"></div>
-                                                        <span className="text-6xl font-serif text-amber-500/80 drop-shadow-lg">{index + 1}</span>
-                                                    </div>
-                                                    <h3 className="text-lg font-bold text-zinc-900 font-serif leading-tight text-center">{cardData.name}</h3>
-                                                </div>
-
-                                                {/* Interpretation Text */}
-                                                <div className="w-56 text-center">
-                                                    <p className="text-sm font-medium text-purple-300 mb-1">Ý Nghĩa Cốt Lõi</p>
-                                                    <p className="text-xs text-zinc-400 leading-relaxed">{cardData.meaning}</p>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            ) : (
-                                <div className="text-center text-zinc-500">
-                                    Chưa mở lá bài nào trong phiên này.
-                                </div>
-                            )}
-
-                            {/* AI Chat History */}
-                            {detail.isCompleted && parsedCards.length > 0 && (
-                                <div className="mt-16">
-                                    <h3 className="text-xl font-serif text-center mb-8 flex items-center justify-center gap-2">
-                                        <Bot className="w-6 h-6 text-purple-400" />
-                                        <span>Ghi Chép Lời Sấm Truyền</span>
-                                    </h3>
-
-                                    {/* 
-                                        Since we use SSE Stream for chat, History should theoretically load past chat from DB.
-                                        However, in this MVP, AiInterpretationStream only works via SSE.
-                                        For true history, we need a DB field storing the full Chat Array or use AiInteractions to render static text.
-                                        To simplify the MVP, we re-mount AiInterpretationStream (which will fail if the session is old and AI doesn't re-stream)
-                                        OR better: display a placeholder saying history chat is archived.
-                                    */}
-                                    <div className="bg-zinc-900/50 border border-purple-500/20 p-8 rounded-3xl max-w-4xl mx-auto text-center">
-                                        <Sparkles className="w-10 h-10 text-amber-500/50 mx-auto mb-4" />
-                                        <p className="text-amber-100 font-medium mb-2">Tính Năng Đang Phát Triển</p>
-                                        <p className="text-sm text-zinc-400">
-                                            Vũ trụ đã lưu trữ {detail.aiInteractions.length} tương tác của bạn trong phiên này. Nội dung hội thoại chi tiết sẽ sớm được hiển thị trong vòng xoáy thời gian tiếp theo.
-                                        </p>
+                                        <div className="h-px w-32 bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" />
+                                        
+                                        <div className="flex items-center gap-2 opacity-40">
+                                            <div className="w-1 h-1 bg-white rounded-full animate-pulse" />
+                                            <div className="w-1 h-1 bg-white rounded-full animate-pulse delay-75" />
+                                            <div className="w-1 h-1 bg-white rounded-full animate-pulse delay-150" />
+                                        </div>
                                     </div>
                                 </div>
                             )}
                         </div>
                     )
                 )}
-            </div>
+            </main>
 
-            <div className="fixed top-1/4 left-10 w-96 h-96 bg-purple-900/20 rounded-full blur-[100px] pointer-events-none"></div>
-            <div className="fixed bottom-1/4 right-10 w-96 h-96 bg-amber-900/10 rounded-full blur-[100px] pointer-events-none"></div>
+            {/* Custom Animations */}
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                @keyframes float {
+                    0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+                    15% { opacity: 0.2; }
+                    85% { opacity: 0.2; }
+                    100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+                }
+                .animate-float {
+                    animation-name: float;
+                    animation-timing-function: linear;
+                    animation-iteration-count: infinite;
+                }
+                @keyframes slow-pulse {
+                    0%, 100% { opacity: 0.05; transform: scale(1); }
+                    50% { opacity: 0.12; transform: scale(1.15); }
+                }
+                .animate-slow-pulse {
+                    animation: slow-pulse 15s ease-in-out infinite;
+                }
+                @keyframes bounce-slow {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-10px); }
+                }
+                .animate-bounce-slow {
+                    animation: bounce-slow 4s ease-in-out infinite;
+                }
+            `}} />
         </div>
     );
+}
+
+// Thêm icons (AlertCircle, Calendar, Clock)
+import { AlertCircle as AlertCircleIcon, Calendar, Clock } from "lucide-react";
+function AlertCircle({ className }: { className?: string }) {
+    return <AlertCircleIcon className={className} />;
 }

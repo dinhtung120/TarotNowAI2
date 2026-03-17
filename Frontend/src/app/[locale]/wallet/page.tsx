@@ -1,211 +1,311 @@
 'use client';
 
+/**
+ * Trang Ví (Wallet Page) - Astral Premium Redesign
+ * 
+ * Các cải tiến:
+ * 1. Hệ thống Nền Astral: Nebula + Spiritual Particles.
+ * 2. 3D Balance Cards: Thẻ Diamond và Gold với hiệu ứng Glow và Glassmorphism.
+ * 3. Compact Ledger: Bảng lịch sử giao dịch tinh gọn, dễ theo dõi.
+ * 4. Navbar Fix: Sử dụng pt-28 để tránh bị che bởi Navbar cố định.
+ */
+
 import React, { useEffect, useState } from 'react';
 import { getLedger } from '@/actions/walletActions';
 import { PaginatedList, WalletTransaction } from '@/types/wallet';
 import { useWalletStore } from '@/store/walletStore';
-import { Coins, Gem, ArrowUpRight, ArrowDownLeft, Clock, Search, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
-import Link from 'next/link';
+import { 
+    Coins, 
+    Gem, 
+    ArrowUpRight, 
+    ArrowDownLeft, 
+    Clock, 
+    Search, 
+    ChevronLeft, 
+    ChevronRight, 
+    Activity,
+    CreditCard,
+    Plus,
+    Sparkles,
+    Stars,
+    Loader2
+} from 'lucide-react';
+import { useRouter } from '@/i18n/routing';
 
-/**
- * Trang Wallet (Ví) & Lịch Sử Giao Dịch
- * Tại sao cần thiết kế đặc biệt?
- * - Trải nghiệm Premium App: Giao diện nền tối mượt mà (glassmorphism), highlight số dư như các app Fintech hiện đại.
- * - Component bao gồm 3 phần chính: Thẻ Tổng số dư (Balance Cards), Điều hướng Tabs, và Bảng Lịch sử Ledger.
- * - Dùng Server Actions gọi API lấy dữ liệu phân trang. Trạng thái `page` chuyển đổi qua lại được xử lý bằng state nội bộ ở Client Component.
- */
 export default function WalletPage() {
+    const router = useRouter();
     const { balance, fetchBalance } = useWalletStore();
     const [ledger, setLedger] = useState<PaginatedList<WalletTransaction> | null>(null);
     const [isLoadingLedger, setIsLoadingLedger] = useState(true);
     const [page, setPage] = useState(1);
 
-    // Kéo dữ liệu qua API mỗi khi page thay đổi hoặc lần đầu render.
     useEffect(() => {
-        fetchBalance(); // Kéo số dư mới nhất
-
+        fetchBalance();
         const fetchLedger = async () => {
             setIsLoadingLedger(true);
-            const data = await getLedger(page, 10); // Lấy 10 giao dịch / trang
+            const data = await getLedger(page, 10);
             setLedger(data);
             setIsLoadingLedger(false);
         };
         fetchLedger();
     }, [page, fetchBalance]);
 
-    // Hàm chuyển đổi Type (Enums từ Backend) sang tiếng Anh hiển thị
     const formatType = (typeStr: string) => {
-        return typeStr.replace(/([A-Z])/g, ' $1').trim(); // Ví dụ: DepositBonus -> Deposit Bonus
+        return typeStr.replace(/([A-Z])/g, ' $1').trim();
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 p-6 md:p-12 font-sans selection:bg-cyan-500/30">
-            <div className="max-w-6xl mx-auto space-y-8">
-
-                {/* Header Tiêu đề */}
-                <div className="space-y-2">
-                    <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-400 text-transparent bg-clip-text">
-                        Tài Sản & Ví
-                    </h1>
-                    <p className="text-slate-400 text-lg">Quản lý số dư, nạp thẻ và lịch sử giao dịch trong Hệ Sinh Thái TarotNow.</p>
+        <div className="min-h-screen bg-[#020108] text-zinc-100 selection:bg-purple-500/40 overflow-x-hidden font-sans pb-20">
+            {/* ##### PREMIUM BACKGROUND SYSTEM ##### */}
+            <div className="fixed inset-0 z-0 pointer-events-none">
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay"></div>
+                {/* Nebula Glows */}
+                <div className="absolute top-0 -left-1/4 w-[70vw] h-[70vw] bg-purple-900/[0.1] blur-[120px] rounded-full animate-slow-pulse" />
+                <div className="absolute bottom-0 -right-1/4 w-[60vw] h-[60vw] bg-amber-900/[0.05] blur-[130px] rounded-full animate-slow-pulse delay-700" />
+                
+                {/* Spiritual Particles */}
+                <div className="absolute inset-0">
+                    {Array.from({ length: 20 }).map((_, i) => (
+                        <div
+                            key={i}
+                            className="absolute w-[1px] h-[1px] bg-white rounded-full animate-float opacity-[0.1]"
+                            style={{
+                                top: `${Math.random() * 100}%`,
+                                left: `${Math.random() * 100}%`,
+                                animationDuration: `${25 + Math.random() * 35}s`,
+                                animationDelay: `${-Math.random() * 20}s`,
+                            }}
+                        />
+                    ))}
                 </div>
-
-                {/* Các Thẻ Số Dư (Balance Cards) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Thẻ Diamond (Tiền nạp) */}
-                    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-900/60 to-purple-900/40 border border-indigo-500/20 p-8 shadow-2xl backdrop-blur-md group">
-                        <div className="absolute top-0 right-0 -mr-8 -mt-8 w-40 h-40 bg-indigo-500/20 rounded-full blur-3xl group-hover:bg-indigo-400/30 transition-all duration-700"></div>
-                        <div className="relative z-10 flex items-start justify-between">
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-3 bg-indigo-500/20 rounded-2xl ring-1 ring-indigo-500/30">
-                                        <Gem className="w-8 h-8 text-cyan-300" />
-                                    </div>
-                                    <h2 className="text-xl font-semibold text-slate-200">Diamond</h2>
-                                </div>
-                                <div>
-                                    <p className="text-5xl font-black text-white tracking-tight">
-                                        {balance?.diamondBalance.toLocaleString() ?? '...'}
-                                    </p>
-                                    <div className="flex items-center gap-2 mt-2 text-indigo-300 text-sm font-medium">
-                                        <Activity className="w-4 h-4" />
-                                        <span>Đang đóng băng (Escrow): {balance?.frozenDiamondBalance.toLocaleString() ?? 0}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <Link 
-                                href="/wallet/deposit"
-                                className="bg-indigo-500 hover:bg-indigo-400 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg transition-colors ring-1 ring-white/20 text-sm"
-                            >
-                                Nạp Diamond
-                            </Link>
-                        </div>
-                    </div>
-
-                    {/* Thẻ Gold (Tiền miễn phí) */}
-                    <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-slate-700/50 p-8 shadow-2xl backdrop-blur-md group">
-                        <div className="absolute bottom-0 right-0 -mr-8 -mb-8 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl group-hover:bg-yellow-500/20 transition-all duration-700"></div>
-                        <div className="relative z-10 flex items-start justify-between h-full flex-col">
-                            <div className="space-y-4 w-full">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-3 bg-yellow-500/10 rounded-2xl ring-1 ring-yellow-500/20">
-                                        <Coins className="w-8 h-8 text-yellow-400" />
-                                    </div>
-                                    <h2 className="text-xl font-semibold text-slate-200">Gold</h2>
-                                </div>
-                                <div>
-                                    <p className="text-5xl font-black text-white tracking-tight">
-                                        {balance?.goldBalance.toLocaleString() ?? '...'}
-                                    </p>
-                                    <p className="mt-2 text-slate-400 text-sm font-medium">Nhận qua điểm danh & hoạt động.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Bảng Ledger (Lịch Sử Giao Dịch) */}
-                <div className="bg-slate-900/50 border border-slate-800 rounded-3xl overflow-hidden backdrop-blur-sm shadow-xl">
-                    <div className="p-6 border-b border-slate-800/80 flex items-center justify-between">
-                        <h3 className="text-2xl font-bold flex items-center gap-3">
-                            <Clock className="w-6 h-6 text-cyan-400" /> Lịch sử Biến động Số dư
-                        </h3>
-                        {/* Fake Filter input để trông giống App xịn */}
-                        <div className="relative hidden md:block">
-                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-                            <input type="text" placeholder="Tìm kiếm giao dịch..." className="bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/50 text-slate-200 w-64 transition-all" />
-                        </div>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="bg-slate-950/50 text-slate-400 text-sm font-semibold tracking-wide border-b border-slate-800/80">
-                                    <th className="p-4 pl-6 font-medium">THỜI GIAN</th>
-                                    <th className="p-4 font-medium">LOẠI TIỀN</th>
-                                    <th className="p-4 font-medium">GIAO DỊCH</th>
-                                    <th className="p-4 font-medium text-right pr-6">SỐ LƯỢNG</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-800/50">
-                                {isLoadingLedger ? (
-                                    <tr>
-                                        <td colSpan={4} className="p-12 text-center text-slate-500">
-                                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-cyan-500 mx-auto mb-4"></div>
-                                            Đang tải dữ liệu lịch sử...
-                                        </td>
-                                    </tr>
-                                ) : ledger?.items.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={4} className="p-12 text-center text-slate-400">Không có giao dịch nào.</td>
-                                    </tr>
-                                ) : (
-                                    ledger?.items.map((tx) => {
-                                        // Phân tích logic tăng giảm: số amount truyền từ DB dương là Credit (cộng tiền), âm là Debit (trừ tiền)
-                                        const isPositive = tx.amount > 0;
-                                        return (
-                                            <tr key={tx.id} className="hover:bg-slate-800/30 transition-colors group">
-                                                <td className="p-4 pl-6 text-sm text-slate-400">
-                                                    {new Date(tx.createdAt).toLocaleString()}
-                                                </td>
-                                                <td className="p-4">
-                                                    <div className="flex items-center gap-2">
-                                                        {tx.currency === 'diamond' || tx.currency === 'Diamond' ? (
-                                                            <Gem className="w-4 h-4 text-cyan-400" />
-                                                        ) : (
-                                                            <Coins className="w-4 h-4 text-yellow-400" />
-                                                        )}
-                                                        <span className="capitalize font-medium text-slate-300">{tx.currency}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="p-4">
-                                                    <div className="font-semibold text-slate-200 capitalize">{formatType(tx.type)}</div>
-                                                    {tx.description && <div className="text-xs text-slate-500 mt-1 max-w-xs truncate" title={tx.description}>{tx.description}</div>}
-                                                </td>
-                                                <td className="p-4 pr-6 text-right">
-                                                    <div className={`inline-flex items-center gap-1 font-bold text-lg ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                                        {isPositive ? <ArrowUpRight className="w-5 h-5" /> : <ArrowDownLeft className="w-5 h-5" />}
-                                                        {isPositive ? '+' : ''}{tx.amount.toLocaleString()}
-                                                    </div>
-                                                    <div className="text-xs text-slate-500 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                        Balance: {tx.balanceAfter.toLocaleString()}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Phân trang (Pagination footer) */}
-                    {ledger && ledger.totalPages > 1 && (
-                        <div className="p-6 border-t border-slate-800/80 flex items-center justify-between bg-slate-950/30">
-                            <span className="text-sm text-slate-400">
-                                Trang <strong className="text-slate-200">{ledger.pageIndex}</strong> / {ledger.totalPages} (Tổng: {ledger.totalCount})
-                            </span>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                                    disabled={!ledger.hasPreviousPage}
-                                    className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-slate-700/50"
-                                >
-                                    <ChevronLeft className="w-5 h-5 text-slate-300" />
-                                </button>
-                                <button
-                                    onClick={() => setPage(p => Math.min(ledger.totalPages, p + 1))}
-                                    disabled={!ledger.hasNextPage}
-                                    className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-slate-700/50"
-                                >
-                                    <ChevronRight className="w-5 h-5 text-slate-300" />
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
             </div>
+
+            <main className="relative z-10 max-w-5xl mx-auto px-6 pt-28">
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                    <div className="space-y-4">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/5 border border-purple-500/10 text-[9px] uppercase tracking-[0.2em] font-black text-purple-400 shadow-xl backdrop-blur-md">
+                            <Sparkles className="w-3 h-3 text-amber-500" />
+                            Financial Protocol
+                        </div>
+                        <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white uppercase italic">
+                            Kho Báu Tâm Linh
+                        </h1>
+                        <p className="text-zinc-500 font-medium max-w-lg text-sm leading-relaxed">
+                            Quản lý vận mệnh tài chính và dòng chảy Diamond/Gold của bạn trong hệ sinh thái TarotNow AI.
+                        </p>
+                    </div>
+                    
+                    <button 
+                        onClick={() => router.push('/wallet/deposit')}
+                        className="group flex items-center gap-3 bg-white text-black px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all hover:scale-[1.03] active:scale-95 shadow-2xl"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Nạp Diamond
+                    </button>
+                </div>
+
+                {/* Balance Cards - 3D Glassmorphism */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
+                    {/* Diamond Card */}
+                    <div className="relative group perspective-1000">
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-indigo-500/10 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                        <div className="relative z-10 h-64 bg-zinc-900/40 backdrop-blur-3xl rounded-[3rem] border border-white/10 p-10 flex flex-col justify-between overflow-hidden group-hover:border-purple-500/40 transition-all duration-700 shadow-2xl">
+                            <div className="absolute top-0 right-0 p-8 opacity-10 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12">
+                                <Gem className="w-32 h-32 text-purple-400" />
+                            </div>
+                            
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 shadow-xl">
+                                    <Gem className="w-6 h-6 text-purple-400" />
+                                </div>
+                                <div>
+                                    <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Diamond (Premium)</div>
+                                    <div className="text-xs font-bold text-zinc-300">Tiền nạp chính thức</div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <div className="text-5xl md:text-6xl font-black text-white italic tracking-tighter transition-transform duration-700 group-hover:scale-105 group-hover:translate-x-2 original-origin-left">
+                                    {balance?.diamondBalance.toLocaleString() ?? '...'}
+                                </div>
+                                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-zinc-600">
+                                    <Activity className="w-3 h-3" />
+                                    Đang đóng băng: {balance?.frozenDiamondBalance.toLocaleString() ?? 0}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Gold Card */}
+                    <div className="relative group perspective-1000">
+                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                        <div className="relative z-10 h-64 bg-zinc-900/40 backdrop-blur-3xl rounded-[3rem] border border-white/10 p-10 flex flex-col justify-between overflow-hidden group-hover:border-amber-500/40 transition-all duration-700 shadow-2xl">
+                            <div className="absolute top-0 right-0 p-8 opacity-10 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12">
+                                <Coins className="w-32 h-32 text-amber-500" />
+                            </div>
+
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shadow-xl">
+                                    <Coins className="w-6 h-6 text-amber-500" />
+                                </div>
+                                <div>
+                                    <div className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Gold (Reward)</div>
+                                    <div className="text-xs font-bold text-zinc-300">Điểm thưởng vận may</div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-1">
+                                <div className="text-5xl md:text-6xl font-black text-white italic tracking-tighter transition-transform duration-700 group-hover:scale-105 group-hover:translate-x-2 original-origin-left">
+                                    {balance?.goldBalance.toLocaleString() ?? '...'}
+                                </div>
+                                <div className="text-[10px] font-black uppercase tracking-widest text-zinc-600">
+                                    Nhận từ điểm danh & hoạt động
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Ledger Section - Compact Glass */}
+                <div className="animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500">
+                    <div className="mb-8 flex items-center justify-between">
+                        <h2 className="text-2xl font-black text-white uppercase italic tracking-tighter flex items-center gap-3">
+                            <Clock className="w-5 h-5 text-purple-400" />
+                            Hành Trình Giao Dịch
+                        </h2>
+                        <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/[0.03] border border-white/10 focus-within:border-purple-500/50 transition-all duration-300">
+                            <Search className="w-3.5 h-3.5 text-zinc-600" />
+                            <input 
+                                type="text" 
+                                placeholder="Tìm giao thức..." 
+                                className="bg-transparent border-none text-[10px] font-black uppercase tracking-widest text-white focus:outline-none w-48 placeholder:text-zinc-700" 
+                            />
+                        </div>
+                    </div>
+
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-white/[0.01] backdrop-blur-3xl rounded-[2.5rem] border border-white/5 shadow-2xl" />
+                        <div className="relative z-10 overflow-hidden">
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="border-b border-white/5">
+                                        <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">Thời gian</th>
+                                        <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">Tài sản</th>
+                                        <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">Hoạt động</th>
+                                        <th className="px-8 py-5 text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600 text-right">Lượng</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/5">
+                                    {isLoadingLedger ? (
+                                        <tr>
+                                            <td colSpan={4} className="py-20 text-center">
+                                                <Loader2 className="w-6 h-6 animate-spin text-purple-500 mx-auto mb-4" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Đang truy vấn lịch sử...</span>
+                                            </td>
+                                        </tr>
+                                    ) : ledger?.items.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={4} className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-zinc-600">
+                                                Dòng chảy tài chính chưa có biến động.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        ledger?.items.map((tx) => {
+                                            const isPositive = tx.amount > 0;
+                                            return (
+                                                <tr key={tx.id} className="hover:bg-white/[0.02] transition-colors group">
+                                                    <td className="px-8 py-5">
+                                                        <div className="text-[10px] font-bold text-zinc-400">
+                                                            {new Date(tx.createdAt).toLocaleDateString()}
+                                                        </div>
+                                                        <div className="text-[9px] font-medium text-zinc-600">
+                                                            {new Date(tx.createdAt).toLocaleTimeString()}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-5">
+                                                        <div className="flex items-center gap-2">
+                                                            {tx.currency.toLowerCase() === 'diamond' ? (
+                                                                <Gem className="w-3.5 h-3.5 text-purple-400" />
+                                                            ) : (
+                                                                <Coins className="w-3.5 h-3.5 text-amber-500" />
+                                                            )}
+                                                            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-200">{tx.currency}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-5">
+                                                        <div className="text-[10px] font-black text-zinc-200 uppercase tracking-tighter">{formatType(tx.type)}</div>
+                                                        {tx.description && <div className="text-[9px] text-zinc-600 font-medium truncate max-w-[150px]">{tx.description}</div>}
+                                                    </td>
+                                                    <td className="px-8 py-5 text-right">
+                                                        <div className={`flex items-center justify-end gap-1 font-black text-sm italic ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                                            {isPositive ? '+' : ''}{tx.amount.toLocaleString()}
+                                                            {isPositive ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownLeft className="w-3.5 h-3.5" />}
+                                                        </div>
+                                                        <div className="text-[8px] font-black uppercase tracking-widest text-zinc-700 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            Dư: {tx.balanceAfter.toLocaleString()}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Pagination - Compact */}
+                        {ledger && ledger.totalPages > 1 && (
+                            <div className="relative z-10 px-8 py-6 border-t border-white/5 flex items-center justify-between">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">
+                                    Vũ trụ <strong className="text-zinc-300">{ledger.pageIndex}</strong> / {ledger.totalPages}
+                                </span>
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                                        disabled={!ledger.hasPreviousPage}
+                                        className="p-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-white/5"
+                                    >
+                                        <ChevronLeft className="w-4 h-4 text-zinc-300" />
+                                    </button>
+                                    <button
+                                        onClick={() => setPage(p => Math.min(ledger.totalPages, p + 1))}
+                                        disabled={!ledger.hasNextPage}
+                                        className="p-2 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-white/5"
+                                    >
+                                        <ChevronRight className="w-4 h-4 text-zinc-300" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </main>
+
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                @keyframes float {
+                    0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+                    15% { opacity: 0.15; }
+                    85% { opacity: 0.15; }
+                    100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+                }
+                .animate-float {
+                    animation-name: float;
+                    animation-timing-function: linear;
+                    animation-iteration-count: infinite;
+                }
+                @keyframes slow-pulse {
+                    0%, 100% { opacity: 0.05; transform: scale(1); }
+                    50% { opacity: 0.12; transform: scale(1.1); }
+                }
+                .animate-slow-pulse {
+                    animation: slow-pulse 15s ease-in-out infinite;
+                }
+                .perspective-1000 {
+                    perspective: 1000px;
+                }
+            `}} />
         </div>
     );
 }

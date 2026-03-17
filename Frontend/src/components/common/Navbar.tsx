@@ -28,7 +28,8 @@ export default function Navbar() {
                        pathname.includes('/register') || 
                        pathname.includes('/forgot-password') || 
                        pathname.includes('/reset-password') ||
-                       pathname.includes('/verify-email');
+                       pathname.includes('/verify-email') ||
+                       pathname.includes('/admin');
 
     /**
      * useEffect để đảm bảo Navbar chỉ render sau khi hydration hoàn tất trên client.

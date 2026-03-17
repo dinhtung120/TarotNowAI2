@@ -52,4 +52,11 @@ public class AdminController : ControllerBase
         var result = await _mediator.Send(command);
         return result ? Ok(new { success = true }) : BadRequest(new { msg = "Không thể cộng tiền cho người dùng này." });
     }
+
+    [HttpPatch("deposits/process")]
+    public async Task<IActionResult> ProcessDeposit([FromBody] TarotNow.Application.Features.Admin.Commands.ProcessDeposit.ProcessDepositCommand command)
+    {
+        var result = await _mediator.Send(command);
+        return result ? Ok(new { success = true }) : BadRequest(new { msg = "Không thể xử lý đơn nạp tiền này." });
+    }
 }
