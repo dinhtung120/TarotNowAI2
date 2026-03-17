@@ -123,14 +123,14 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-[var(--bg-void)]/80 backdrop-blur-2xl border-b border-[var(--border-subtle)] px-6 py-3 animate-in fade-in slide-in-from-top duration-500">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[var(--bg-surface)] border-b border-[var(--border-subtle)] px-6 py-3 animate-in fade-in slide-in-from-top duration-500">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* ===== BÊN TRÁI: Logo + Navigation Links ===== */}
         <div className="flex items-center gap-6">
           {/* Logo */}
           <Link
             href="/"
-            className="text-xl font-black italic tracking-tighter bg-gradient-to-r from-purple-400 to-fuchsia-400 gradient-text"
+            className="text-xl font-black italic tracking-tighter bg-gradient-to-r from-[var(--purple-accent)] to-[var(--amber-accent)] gradient-text"
           >
             TarotNow AI
           </Link>
@@ -151,8 +151,8 @@ export default function Navbar() {
                   className={[
                     "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300",
                     active
-                      ? "text-white bg-white/5"
-                      : "text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.03]",
+                      ? "text-[var(--text-primary)] bg-[var(--bg-elevated)] border border-[var(--border-default)]"
+                      : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--purple-50)]",
                   ].join(" ")}
                 >
                   <Icon className="w-4 h-4" />
@@ -176,7 +176,7 @@ export default function Navbar() {
 
               {/* Notification Bell — placeholder cho Phase 4 */}
               <button
-                className="relative p-2 rounded-xl hover:bg-white/5 transition-colors text-zinc-500 hover:text-white cursor-pointer"
+                className="relative p-2 rounded-xl hover:bg-[var(--purple-50)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
                 aria-label="Thông báo"
               >
                 <Bell className="w-4 h-4" />
@@ -190,8 +190,8 @@ export default function Navbar() {
                   className={[
                     "flex items-center gap-2 px-3 py-2 rounded-xl transition-all cursor-pointer",
                     avatarMenuOpen
-                      ? "bg-white/10 text-white"
-                      : "bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white",
+                      ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border-default)]"
+                      : "bg-[var(--bg-surface-hover)] hover:bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-subtle)]",
                   ].join(" ")}
                 >
                   {/* Avatar circle — chữ cái đầu tên */}
@@ -214,7 +214,7 @@ export default function Navbar() {
                   <div className="absolute right-0 top-full mt-2 w-56 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-2xl shadow-[var(--shadow-elevated)] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50">
                     {/* User Info Header */}
                     <div className="px-4 py-3 border-b border-[var(--border-subtle)]">
-                      <p className="text-xs font-bold text-white truncate">
+                      <p className="text-xs font-bold text-[var(--text-primary)] truncate">
                         {user?.displayName || "User"}
                       </p>
                       <p className="text-[10px] text-zinc-600 truncate">
@@ -231,7 +231,7 @@ export default function Navbar() {
                             key={item.href}
                             href={item.href}
                             onClick={() => setAvatarMenuOpen(false)}
-                            className="flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
+                            className="flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--purple-50)] transition-colors"
                           >
                             <Icon className="w-4 h-4" />
                             {item.name}
@@ -257,7 +257,7 @@ export default function Navbar() {
               {/* Mobile Hamburger */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 rounded-xl hover:bg-white/5 transition-colors text-zinc-400 cursor-pointer"
+                className="md:hidden p-2 rounded-xl hover:bg-[var(--purple-50)] transition-colors text-[var(--text-secondary)] cursor-pointer"
                 aria-label="Menu"
               >
                 {mobileMenuOpen ? (
@@ -272,13 +272,13 @@ export default function Navbar() {
             <>
               <Link
                 href="/login"
-                className="text-sm font-medium text-zinc-400 hover:text-white transition-colors"
+                className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
               >
                 Đăng nhập
               </Link>
               <Link
                 href="/register"
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[var(--purple-gradient-from)] to-[var(--purple-gradient-to)] text-white text-sm font-bold hover:from-purple-400 hover:to-fuchsia-400 transition-all shadow-[var(--glow-purple-sm)]"
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-[var(--purple-gradient-from)] to-[var(--purple-gradient-to)] text-[var(--text-primary)] text-sm font-bold hover:brightness-110 transition-all shadow-[var(--glow-purple-sm)]"
               >
                 Đăng ký
               </Link>
@@ -291,7 +291,7 @@ export default function Navbar() {
           Slide-down menu cho mobile khi hamburger được bấm.
           Hiển thị navigation links + WalletWidget. */}
       {mobileMenuOpen && (
-        <div className="md:hidden absolute left-0 right-0 top-full bg-[var(--bg-void)]/95 backdrop-blur-2xl border-b border-[var(--border-subtle)] animate-in slide-in-from-top duration-300">
+        <div className="md:hidden absolute left-0 right-0 top-full bg-[var(--bg-surface)] border-b border-[var(--border-subtle)] animate-in slide-in-from-top duration-300">
           <div className="px-6 py-4 space-y-1">
             {navLinks.map((link) => {
               const Icon = link.icon;
@@ -299,7 +299,7 @@ export default function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-zinc-400 hover:text-white hover:bg-white/5 transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--purple-50)] transition-colors"
                 >
                   <Icon className="w-4 h-4" />
                   {link.name}

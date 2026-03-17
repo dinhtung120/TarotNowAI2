@@ -17,7 +17,7 @@
  * Trên Mobile (< md): Sidebar ẨN → thay bằng BottomTabBar.
  *
  * === STYLING ===
- * Glassmorphism sidebar, phù hợp với Admin sidebar đã có.
+ * Sidebar surface tối, phù hợp theme huyền bí mới.
  * Active item: Purple highlight + left indicator bar + glow.
  */
 
@@ -108,7 +108,7 @@ export default function UserSidebar() {
   };
 
   return (
-    <aside className="hidden md:flex relative z-20 w-64 h-full bg-[var(--bg-glass)] backdrop-blur-2xl border-r border-[var(--border-subtle)] flex-col">
+    <aside className="hidden md:flex relative z-20 w-64 h-full bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] flex-col">
       {/* Navigation Groups */}
       <nav className="flex-1 px-3 py-6 space-y-6 overflow-y-auto">
         {menuGroups.map((group) => (
@@ -131,8 +131,8 @@ export default function UserSidebar() {
                     className={[
                       "group flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 relative overflow-hidden",
                       active
-                        ? "bg-purple-500/10 text-white border border-purple-500/20 shadow-[var(--glow-purple-sm)]"
-                        : "text-zinc-500 hover:bg-[var(--bg-glass-hover)] hover:text-zinc-200 border border-transparent",
+                        ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border-hover)] shadow-[var(--glow-purple-sm)]"
+                        : "text-[var(--text-secondary)] hover:bg-[var(--bg-surface-hover)] hover:text-[var(--text-primary)] border border-transparent",
                     ].join(" ")}
                   >
                     <div className="flex items-center gap-3 relative z-10">

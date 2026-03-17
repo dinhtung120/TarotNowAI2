@@ -22,7 +22,7 @@ export default function WalletWidget() {
 
     // Trạng thái Loading: Trả về một Skeleton mờ với hiệu ứng chớp sáng (pulse) để UI không bị giật khi chờ API.
     if (isLoading) {
-        return <div className="animate-pulse flex items-center gap-4 bg-slate-800/50 p-2 rounded-full px-4"><div className="h-4 w-16 bg-slate-700 rounded"></div></div>;
+        return <div className="animate-pulse flex items-center gap-4 bg-[var(--bg-elevated)] p-2 rounded-full px-4 border border-[var(--border-subtle)]"><div className="h-4 w-16 bg-[var(--bg-surface-hover)] rounded"></div></div>;
     }
 
     // Nếu không có dữ liệu (có thể chưa đăng nhập hoặc lỗi API), không render gì cả.
@@ -30,7 +30,7 @@ export default function WalletWidget() {
 
     // Trả về UI hiển thị số Gold và Diamond: 13px, căn lề trái, padding và gap siêu nhỏ.
     return (
-        <div className="flex flex-col justify-center items-start gap-0 px-2 py-0.5 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-all cursor-pointer group" title="Ví của bạn">
+        <div className="flex flex-col justify-center items-start gap-0 px-2 py-0.5 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-subtle)] hover:bg-[var(--bg-surface-hover)] transition-all cursor-pointer group" title="Ví của bạn">
             {/* Hàng DIAMOND (Trên) */}
             <div className="flex items-center gap-1 leading-none py-0.5" title="Diamond - Premium">
                 <Gem className="w-3 h-3 text-cyan-400 group-hover:animate-pulse" />
@@ -45,7 +45,7 @@ export default function WalletWidget() {
             </div>
 
             {/* Hàng GOLD (Dưới) */}
-            <div className="flex items-center gap-1 leading-none py-0.5 border-t border-white/5 w-full justify-start" title="Gold - Free">
+            <div className="flex items-center gap-1 leading-none py-0.5 border-t border-[var(--border-subtle)] w-full justify-start" title="Gold - Free">
                 <Coins className="w-3 h-3 text-yellow-500 group-hover:animate-spin" style={{ animationDuration: '3s' }} />
                 <span className="text-yellow-500/90 font-bold text-[13px] tracking-tighter">
                     {balance.goldBalance.toLocaleString()}

@@ -17,7 +17,7 @@
  *
  * === GIẢI PHÁP ===
  * Component này tập trung TẤT CẢ hiệu ứng nền vào 1 nơi:
- * 1. Nebula Blobs — gradient blurred circles tạo hiệu ứng thiên hà
+ * 1. Nebula Blobs — gradient tối tạo hiệu ứng huyền bí
  * 2. Noise Overlay — texture hạt mịn cho chiều sâu
  * 3. Grid Overlay — lưới mờ nhẹ (chỉ ở variant intense)
  * 4. Spiritual Particles — hạt sáng bay lên (client-only, tránh hydration error)
@@ -73,20 +73,17 @@ export default function AstralBackground({
    * Dùng opacity fraction (0.05 → 0.12) thay vì full opacity
    * để nebula KHÔNG che nội dung, chỉ tạo ambient light.
    */
-  const nebulaOpacity =
-    variant === "subtle" ? "[0.04]" : variant === "intense" ? "[0.12]" : "[0.08]";
+  const nebulaAlpha =
+    variant === "subtle" ? 0.08 : variant === "intense" ? 0.16 : 0.12;
 
   return (
     <div
       className="fixed inset-0 z-0 pointer-events-none"
       aria-hidden="true" /* Ẩn khỏi screen reader — purely decorative */
     >
-      {/* --- NOISE TEXTURE OVERLAY ---
-          Tại sao dùng noise?
-          → Background gradient thuần túy trông "phẳng" và digital.
-          → Noise overlay thêm texture tự nhiên, giống ảnh film grain.
-          → opacity rất thấp (0.03) để không gây rối mắt. */}
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay" />
+      {/* --- BACKGROUND OVERLAY ---
+          Không dùng external noise + mix-blend để tránh lỗi phủ trắng trên Chrome. */}
+      <div className="absolute inset-0 opacity-100 bg-[radial-gradient(120%_90%_at_15%_0%,rgba(122,86,177,0.12)_0%,transparent_52%),radial-gradient(90%_75%_at_85%_10%,rgba(61,78,140,0.11)_0%,transparent_55%),linear-gradient(180deg,rgba(5,3,13,0)_0%,rgba(5,3,13,0.45)_100%)]" />
 
       {/* --- NEBULA GLOW BLOBS ---
           3 blob gradient lớn, blur mạnh, tạo hiệu ứng thiên hà.
@@ -95,16 +92,19 @@ export default function AstralBackground({
           - Màu khác nhau (purple, indigo, fuchsia)
           - Animation drift/pulse khác nhau → chuyển động không đều = tự nhiên */}
       <div
-        className={`absolute top-[-20%] -left-1/4 w-[80vw] h-[80vw] bg-purple-900/${nebulaOpacity} blur-[150px] rounded-full animate-drift`}
+        className="absolute top-[-20%] -left-1/4 w-[80vw] h-[80vw] blur-[150px] rounded-full animate-drift"
+        style={{ backgroundColor: `rgba(56, 28, 98, ${nebulaAlpha})` }}
       />
       <div
-        className={`absolute top-1/4 -right-1/4 w-[70vw] h-[70vw] bg-indigo-900/${nebulaOpacity} blur-[140px] rounded-full animate-drift-reverse`}
+        className="absolute top-1/4 -right-1/4 w-[70vw] h-[70vw] blur-[140px] rounded-full animate-drift-reverse"
+        style={{ backgroundColor: `rgba(37, 44, 102, ${nebulaAlpha})` }}
       />
 
       {/* Blob thứ 3 chỉ hiện ở variant default và intense */}
       {variant !== "subtle" && (
         <div
-          className={`absolute -bottom-1/4 left-1/3 w-[60vw] h-[60vw] bg-fuchsia-900/${nebulaOpacity} blur-[130px] rounded-full animate-slow-pulse`}
+          className="absolute -bottom-1/4 left-1/3 w-[60vw] h-[60vw] blur-[130px] rounded-full animate-slow-pulse"
+          style={{ backgroundColor: `rgba(70, 31, 108, ${nebulaAlpha})` }}
         />
       )}
 
@@ -112,7 +112,7 @@ export default function AstralBackground({
           Lưới mờ nhẹ — chỉ dùng ở variant intense (Home page).
           Tạo cảm giác "digital" / "holographic" kết hợp với Astral theme. */}
       {variant === "intense" && (
-        <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#ffffff10_1px,transparent_1px),linear-gradient(to_bottom,#ffffff10_1px,transparent_1px)] bg-[size:60px_60px]" />
+        <div className="absolute inset-0 opacity-[0.06] bg-[linear-gradient(to_right,#8f5bc320_1px,transparent_1px),linear-gradient(to_bottom,#8f5bc320_1px,transparent_1px)] bg-[size:60px_60px]" />
       )}
 
       {/* --- SPIRITUAL PARTICLES ---
@@ -133,7 +133,7 @@ export default function AstralBackground({
           {Array.from({ length: resolvedParticleCount }).map((_, i) => (
             <div
               key={i}
-              className="absolute w-[1px] h-[1px] bg-white rounded-full animate-float opacity-[0.12]"
+              className="absolute w-[1px] h-[1px] bg-[var(--purple-accent)] rounded-full animate-float opacity-[0.24]"
               style={{
                 top: `${Math.random() * 100}%`,
                 left: `${Math.random() * 100}%`,

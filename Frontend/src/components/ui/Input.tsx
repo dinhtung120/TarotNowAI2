@@ -77,16 +77,16 @@ type CombinedProps = (InputProps & { isTextarea?: false }) | TextareaProps;
  */
 const baseInputStyles = [
   "w-full",
-  "bg-black/30",
+  "bg-[var(--bg-surface)]",
   "border border-[var(--border-default)]",
   "rounded-2xl",
   "px-4 py-3",
-  "text-sm text-white",
-  "placeholder:text-zinc-600",
+  "text-sm text-[var(--text-primary)]",
+  "placeholder:text-[var(--text-muted)]",
   "outline-none",
   "transition-all duration-300",
   "focus:border-[var(--border-focus)]",
-  "focus:ring-1 focus:ring-purple-500/30",
+  "focus:ring-1 focus:ring-[var(--purple-accent)]/30",
   "disabled:opacity-50 disabled:cursor-not-allowed",
 ].join(" ");
 
@@ -113,7 +113,7 @@ const Input = forwardRef<HTMLInputElement, CombinedProps>(
       <div className={`space-y-1.5 ${fullWidth ? "w-full" : ""}`}>
         {/* Label — text-[10px] uppercase tracking theo design system */}
         {label && (
-          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 ml-1">
+          <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] ml-1">
             {label}
           </label>
         )}
@@ -122,7 +122,7 @@ const Input = forwardRef<HTMLInputElement, CombinedProps>(
         <div className="relative">
           {/* Left icon — absolute positioned bên trái input */}
           {leftIcon && (
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-zinc-500">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-[var(--text-secondary)]">
               {leftIcon}
             </div>
           )}
@@ -158,7 +158,7 @@ const Input = forwardRef<HTMLInputElement, CombinedProps>(
         {error ? (
           <p className="text-[11px] text-red-400 font-medium ml-1">{error}</p>
         ) : hint ? (
-          <p className="text-[11px] text-zinc-600 font-medium ml-1">{hint}</p>
+          <p className="text-[11px] text-[var(--text-muted)] font-medium ml-1">{hint}</p>
         ) : null}
       </div>
     );

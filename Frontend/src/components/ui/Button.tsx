@@ -11,9 +11,9 @@
  *
  * === GIẢI PHÁP ===
  * 1 component duy nhất với 5 variants:
- * - `primary` : Nút trắng nổi bật (CTA chính — rút bài, nạp tiền)
- * - `brand`   : Gradient tím (CTA phụ — đăng ký, xác nhận)
- * - `secondary`: Glass transparent (hành động phụ)
+ * - `primary` : CTA chính tông tối, đậm chất huyền bí
+ * - `brand`   : Gradient tím huyền ảo (CTA phụ — đăng ký, xác nhận)
+ * - `secondary`: Surface card không blur (hành động phụ)
  * - `ghost`   : Không nền, chỉ text (link-style button)
  * - `danger`  : Đỏ nhẹ (đăng xuất, xóa, hủy)
  *
@@ -63,24 +63,26 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  */
 const variantStyles: Record<ButtonVariant, string> = {
   primary: [
-    "bg-white text-black",
-    "hover:bg-zinc-100",
+    "bg-[var(--bg-elevated)] text-[var(--text-primary)]",
+    "border border-[var(--border-hover)]",
+    "hover:bg-[var(--bg-surface-hover)] hover:border-[var(--border-focus)]",
     "active:scale-[0.97]",
-    "shadow-[var(--glow-white)]",
-    "hover:shadow-[0_25px_50px_rgba(255,255,255,0.15)]",
+    "shadow-[var(--shadow-card)]",
+    "hover:shadow-[var(--glow-purple-sm)]",
   ].join(" "),
 
   brand: [
     "bg-gradient-to-r from-[var(--purple-gradient-from)] to-[var(--purple-gradient-to)]",
-    "text-white",
-    "hover:from-purple-400 hover:to-fuchsia-400",
+    "text-[var(--text-primary)]",
+    "border border-[var(--border-hover)]",
+    "hover:brightness-110",
     "active:scale-[0.97]",
-    "shadow-lg shadow-purple-500/30",
+    "shadow-[var(--glow-purple-sm)]",
   ].join(" "),
 
   secondary: [
-    "bg-[var(--bg-glass)] backdrop-blur-xl",
-    "text-white",
+    "bg-[var(--bg-surface)]",
+    "text-[var(--text-primary)]",
     "border border-[var(--border-default)]",
     "hover:bg-[var(--bg-glass-hover)] hover:border-[var(--border-hover)]",
     "active:scale-[0.97]",
@@ -88,8 +90,8 @@ const variantStyles: Record<ButtonVariant, string> = {
 
   ghost: [
     "bg-transparent",
-    "text-zinc-400",
-    "hover:text-white hover:bg-white/5",
+    "text-[var(--text-secondary)]",
+    "hover:text-[var(--text-primary)] hover:bg-[var(--purple-50)]",
   ].join(" "),
 
   danger: [

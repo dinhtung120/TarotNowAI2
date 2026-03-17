@@ -10,8 +10,8 @@
  * - Confirm actions (xác nhận xóa, approve, reject)
  *
  * === DESIGN ===
- * - Overlay tối mờ (black/60) với backdrop-blur
- * - Content card: Glassmorphism (bg-surface, border subtle)
+ * - Overlay tối mờ (black/70) không blur
+ * - Content card: dark surface (bg-surface, border subtle)
  * - Animation: fade-in overlay + scale-in content
  * - ESC key + click outside → đóng modal
  * - Focus trap? Chưa implement (sẽ thêm sau nếu cần accessibility)
@@ -110,9 +110,9 @@ export default function Modal({
     >
       {/* === OVERLAY ===
           Click vào overlay (vùng tối) → đóng modal.
-          backdrop-blur tạo hiệu ứng mờ nền phía sau. */}
+          không dùng blur để giữ phong cách non-glass. */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+        className="absolute inset-0 bg-black/70 animate-in fade-in duration-200"
         onClick={onClose}
       />
 
@@ -135,12 +135,12 @@ export default function Modal({
           <div className="flex items-start justify-between p-6 pb-0">
             <div className="space-y-1">
               {title && (
-                <h2 className="text-lg font-black text-white tracking-tight">
+                <h2 className="text-lg font-black text-[var(--text-primary)] tracking-tight">
                   {title}
                 </h2>
               )}
               {description && (
-                <p className="text-sm text-zinc-500 font-medium">
+                <p className="text-sm text-[var(--text-secondary)] font-medium">
                   {description}
                 </p>
               )}
@@ -150,7 +150,7 @@ export default function Modal({
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="p-2 rounded-xl hover:bg-white/5 transition-colors text-zinc-500 hover:text-white cursor-pointer"
+                className="p-2 rounded-xl hover:bg-[var(--purple-50)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
                 aria-label="Đóng modal"
               >
                 <X className="w-5 h-5" />

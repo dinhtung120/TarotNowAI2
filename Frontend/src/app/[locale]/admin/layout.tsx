@@ -51,11 +51,11 @@ export default function AdminLayout({ children, params }: AdminLayoutProps) {
             {/* Sử dụng component AstralBackground chung thay vì copy-paste */}
             <AstralBackground variant="subtle" />
 
-            {/* Sidebar — Glassmorphism Side Navigation */}
-            <aside className="relative z-20 w-72 h-full bg-[var(--bg-glass)] backdrop-blur-2xl border-r border-[var(--border-subtle)] flex flex-col shadow-2xl">
+            {/* Sidebar — Dark Surface Navigation */}
+            <aside className="relative z-20 w-72 h-full bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] flex flex-col shadow-2xl">
                 {/* Header Logo Admin */}
                 <div className="p-8 mb-4">
-                    <div className="flex items-center gap-3 group px-4 py-3 rounded-2xl bg-white/[0.03] border border-white/10 shadow-xl overflow-hidden relative">
+                    <div className="flex items-center gap-3 group px-4 py-3 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-default)] shadow-xl overflow-hidden relative">
                         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                         <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:scale-110 transition-transform duration-500">
                             <ShieldCheck className="w-6 h-6 text-[var(--purple-accent)]" />
@@ -84,8 +84,8 @@ export default function AdminLayout({ children, params }: AdminLayoutProps) {
                                 className={[
                                     "group flex items-center justify-between px-6 py-4 rounded-2xl transition-all duration-300 relative overflow-hidden",
                                     active
-                                        ? "bg-purple-500/10 text-white shadow-[var(--glow-purple-sm)] border border-purple-500/20"
-                                        : "hover:bg-[var(--bg-glass-hover)] hover:text-white text-zinc-400 border border-transparent"
+                                        ? "bg-[var(--bg-elevated)] text-[var(--text-primary)] shadow-[var(--glow-purple-sm)] border border-[var(--border-hover)]"
+                                        : "hover:bg-[var(--bg-surface-hover)] hover:text-[var(--text-primary)] text-[var(--text-secondary)] border border-transparent"
                                 ].join(" ")}
                             >
                                 <div className="flex items-center gap-4 relative z-10 font-bold">
@@ -124,7 +124,7 @@ export default function AdminLayout({ children, params }: AdminLayoutProps) {
                 <div className="p-8 border-t border-[var(--border-subtle)]">
                     <Link
                         href={`/${locale}/`}
-                        className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-white/[0.02] border border-[var(--border-subtle)] hover:bg-rose-500/10 hover:border-rose-500/20 hover:text-rose-400 transition-all group"
+                        className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] hover:bg-rose-500/10 hover:border-rose-500/20 hover:text-rose-400 transition-all group"
                     >
                         <LogOut className="w-5 h-5 text-zinc-600 group-hover:text-rose-400 transition-colors" />
                         <span className="text-[10px] font-black uppercase tracking-widest">Thoát Portal</span>
@@ -141,4 +141,3 @@ export default function AdminLayout({ children, params }: AdminLayoutProps) {
         </div>
     );
 }
-

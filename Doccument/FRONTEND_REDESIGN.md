@@ -1,6 +1,6 @@
 # 🎨 Kế Hoạch Thiết Kế Lại Frontend — TarotNowAI2
 
-> **Phiên bản:** 1.0 — Ngày tạo: 2026-03-17  
+> **Phiên bản:** 1.1 — Cập nhật: 2026-03-17  
 > **Mục tiêu:** Thiết kế lại toàn bộ Frontend theo phong cách **nhất quán**, **chuyên nghiệp**, và **dễ bảo trì**.
 
 ---
@@ -25,7 +25,7 @@
 
 | Điểm mạnh | Chi tiết |
 |------------|----------|
-| Phong cách Ultra Premium | Trang chủ có Nebula background, Glassmorphism, micro-animations rất đẹp |
+| Nền tảng visual mạnh | Trang chủ có Nebula background và micro-animations tốt để phát triển phong cách huyền bí |
 | Dark Theme nhất quán | Tất cả trang đều dùng dark mode (`bg-[#020108]`) |
 | Tailwind CSS | Framework CSS mạnh mẽ, utilities sẵn dùng |
 | i18n sẵn có | Hỗ trợ đa ngôn ngữ qua `next-intl` |
@@ -99,16 +99,16 @@ Hiện tại Admin sidebar chỉ có: Tổng Quan, Người Dùng, Giao Dịch, 
 
 ## 2. Triết Lý Thiết Kế
 
-### 2.1 Phong Cách: **"Astral Premium"**
+### 2.1 Phong Cách: **"Occult Nocturne"**
 
 Giữ nguyên DNA hiện tại nhưng **nâng cấp tính nhất quán**:
 
 | Yếu tố | Mô tả |
 |---------|--------|
-| **Tone màu** | Dark mode (#020108) + Purple/Indigo gradient + Amber accent |
-| **Chất liệu** | Glassmorphism (backdrop-blur + border white/10) |
+| **Tone màu** | Dark mode sâu (#05030d) + Indigo/Violet + Gold trầm |
+| **Chất liệu** | Layered Obsidian Surfaces (không dùng glass, không backdrop-blur) |
 | **Typography** | Playfair Display (tiêu đề serif) + Geist Sans (body) |
-| **Hiệu ứng** | Nebula glow, Spiritual particles, Smooth transitions |
+| **Hiệu ứng** | Nebula tối, spiritual particles mờ, glow tím thấp |
 | **Bo góc** | Lớn (2xl → 3xl cho cards, full cho buttons) |
 | **Text style** | Uppercase tracking-widest cho labels, Italic bold cho headings |
 
@@ -126,33 +126,33 @@ Giữ nguyên DNA hiện tại nhưng **nâng cấp tính nhất quán**:
 
 ```
 🎨 NỀN & BỀ MẶT
---bg-void:          #020108       (nền chính — đen vũ trụ)
---bg-surface:       #0a0a14       (surface card nổi)
---bg-glass:         rgba(255,255,255, 0.02)   (glassmorphism)
---bg-glass-hover:   rgba(255,255,255, 0.05)
---border-subtle:    rgba(255,255,255, 0.05)
---border-default:   rgba(255,255,255, 0.10)
---border-focus:     rgba(168,85,247, 0.50)
+--bg-void:          #05030d       (nền chính — đêm sâu)
+--bg-surface:       #110b1f       (surface card chuẩn)
+--bg-elevated:      #1a1230       (surface nổi)
+--bg-surface-hover: #231742       (hover state)
+--border-subtle:    rgba(107,82,145,0.24)
+--border-default:   rgba(129,98,179,0.38)
+--border-focus:     rgba(173,130,236,0.70)
 
-🟣 BRAND — Purple (Chủ đạo)
---purple-glow:      rgba(168,85,247, 0.15)    (glow effect)
---purple-accent:    #a855f7                    (text accent, icon)
---purple-muted:     rgba(168,85,247, 0.40)    (secondary text)
+🟣 BRAND — Violet/Indigo
+--purple-glow:      rgba(122,86,177,0.30)
+--purple-accent:    #9a74cf
+--purple-muted:     rgba(154,116,207,0.65)
 
-🟡 ACCENT — Amber (Kim cương, Gold, nổi bật)
---amber-accent:     #f59e0b
---amber-glow:       rgba(245,158,11, 0.15)
+🟡 ACCENT — Gold Trầm
+--amber-accent:     #9d7a36
+--amber-glow:       rgba(156,120,44,0.28)
 
 🟢 STATUS
---success:          #34d399       (emerald-400)
---error:            #f87171       (rose-400)
---warning:          #fbbf24       (amber-400)
---info:             #22d3ee       (cyan-400)
+--success:          #3ea58a
+--error:            #cf6979
+--warning:          #b48b3f
+--info:             #4d90a7
 
 📝 TEXT
---text-primary:     #f4f4f5       (zinc-100)
---text-secondary:   #71717a       (zinc-500)
---text-muted:       #3f3f46       (zinc-700)
+--text-primary:     #e2d8f6
+--text-secondary:   #aa99c9
+--text-muted:       #71648e
 ```
 
 ### 3.2 Typography Scale
@@ -205,11 +205,11 @@ SECTION PADDING
 ### 3.5 Shadow & Glow
 
 ```
---shadow-card:      0 20px 40px rgba(0,0,0,0.3)
---shadow-glow-sm:   0 0 20px rgba(168,85,247,0.1)
---shadow-glow-md:   0 0 40px rgba(168,85,247,0.15)
---shadow-glow-lg:   0 0 60px rgba(168,85,247,0.2)
---shadow-button:    0 20px 40px rgba(255,255,255,0.1)
+--shadow-card:      0 18px 38px rgba(3,2,9,0.62)
+--shadow-glow-sm:   0 0 24px rgba(122,86,177,0.24)
+--shadow-glow-md:   0 0 44px rgba(122,86,177,0.34)
+--shadow-glow-lg:   0 0 62px rgba(122,86,177,0.44)
+--shadow-button:    0 18px 34px rgba(16,10,32,0.5)
 ```
 
 ---
@@ -352,7 +352,7 @@ Hiện tại user pages chỉ dùng Navbar top → rời rạc. **Đề xuất t
 
 **Thiết kế:**
 - Background: Gradient tím `from-indigo-950 via-purple-950 to-slate-950` + Nebula glow nhẹ
-- Form card: Glassmorphism (`bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl`)
+- Form card: Obsidian surface (`bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-3xl`)
 - Logo lớn ở trên form
 - Tất cả dùng chung `AuthLayout` component
 
@@ -414,7 +414,7 @@ Hiện tại user pages chỉ dùng Navbar top → rời rạc. **Đề xuất t
 | `/wallet/withdraw` | Form rút tiền: Nhập số Diamond + thông tin ngân hàng + MFA |
 
 **Thiết kế:**
-- **Balance Cards:** 2 thẻ lớn (Diamond tím, Gold vàng) — Glassmorphism, icon nền mờ
+- **Balance Cards:** 2 thẻ lớn (Diamond tím, Gold vàng trầm) — surface tối, icon glow nhẹ
 - **Ledger Table:** Compact, sortable, filterable by currency/type
 - **Deposit:** Hiển thị promotions đang active, form nhập số tiền, consent checkbox
 - **Withdraw:** Guard checks (min 50D, KYC), form ngân hàng, MFA modal
@@ -447,7 +447,7 @@ Hiện tại user pages chỉ dùng Navbar top → rời rạc. **Đề xuất t
 **Thiết kế:**
 - **Directory:** Grid cards (tương tự Reader Showcase trên Home nhưng full page), filter by specialty/status
 - **Reader Profile:** Hero section với bio, specialties, rating, giá, nút Chat
-- **Apply Form:** Glassmorphism card, textarea intro, upload proof
+- **Apply Form:** Surface card không blur, textarea intro, upload proof
 
 ### 6.8 Module Profile (Hồ Sơ)
 
@@ -465,7 +465,7 @@ Hiện tại user pages chỉ dùng Navbar top → rời rạc. **Đề xuất t
 
 ### 6.9 Module Admin
 
-**Layout:** Admin Sidebar (glassmorphism) + Main Content, **KHÔNG dùng Navbar chính**
+**Layout:** Admin Sidebar (dark surface) + Main Content, **KHÔNG dùng Navbar chính**
 
 **Các trang:**
 
@@ -489,7 +489,7 @@ Hiện tại user pages chỉ dùng Navbar top → rời rạc. **Đề xuất t
 **Thiết kế:**
 - Prose typography: Max width ~prose, line height rộng
 - Table of Contents sidebar cố định bên trái (Desktop)
-- Glassmorphism card chứa nội dung văn bản
+- Surface card tối chứa nội dung văn bản
 
 ---
 
@@ -513,10 +513,10 @@ Hiện tại user pages chỉ dùng Navbar top → rời rạc. **Đề xuất t
 |-----------|--------|----------|
 | `Button` | Nút bấm thống nhất | `primary, secondary, ghost, danger, glow` |
 | `Input` | Input field + label + error | `text, email, password, textarea` |
-| `GlassCard` | Card glassmorphism | `default, interactive (hover effect)` |
+| `GlassCard` | Card surface tối (legacy name) | `default, interactive (hover effect)` |
 | `Badge` | Status/Label badge | `success, error, warning, info, purple, amber` |
 | `Modal` | Dialog overlay | `size: sm, md, lg` |
-| `Table` | Bảng dữ liệu glassmorphism | `columns, data, pagination` |
+| `Table` | Bảng dữ liệu dark surface | `columns, data, pagination` |
 | `Pagination` | Phân trang nhất quán | `page, totalPages, onChange` |
 | `EmptyState` | Trạng thái rỗng (icon + text + CTA) | `icon, message, actionLabel, onAction` |
 | `LoadingSpinner` | Spinner thống nhất | `size: sm, md, lg` |

@@ -52,7 +52,7 @@ export default function BottomTabBar() {
      * z-50 → Nổi trên mọi content.
      * safe-area-inset → Hỗ trợ notch/home indicator trên iPhone.
      */
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--bg-void)]/95 backdrop-blur-xl border-t border-[var(--border-subtle)] pb-[env(safe-area-inset-bottom)]">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--bg-surface)] border-t border-[var(--border-subtle)] pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-center justify-around px-2 py-2">
         {tabs.map((tab) => {
           const active = isActive(tab.href);
@@ -66,7 +66,7 @@ export default function BottomTabBar() {
                 "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-300 min-w-[56px]",
                 active
                   ? "text-[var(--purple-accent)]"
-                  : "text-zinc-600 active:text-zinc-400",
+                  : "text-[var(--text-muted)] active:text-[var(--text-secondary)]",
               ].join(" ")}
             >
               <Icon

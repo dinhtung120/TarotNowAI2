@@ -88,7 +88,7 @@ export default function SectionHeader({
         <h2
           className={[
             sizeMap[size],
-            "font-black text-white tracking-tighter uppercase italic leading-tight",
+            "font-black text-[var(--text-primary)] tracking-tighter uppercase italic leading-tight",
           ].join(" ")}
         >
           {title}
