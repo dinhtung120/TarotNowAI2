@@ -36,7 +36,7 @@ interface EmptyStateProps {
 
 export default function EmptyState({
  icon,
- title = "Không có dữ liệu",
+ title = "",
  message,
  action,
  className = "",
@@ -54,9 +54,11 @@ export default function EmptyState({
  </div>
 
  {/* Title — text lớn hơn message */}
+ {title && (
  <h3 className="text-sm font-black uppercase tracking-widest tn-text-muted mb-2">
  {title}
  </h3>
+ )}
 
  {/* Message — mô tả chi tiết hơn */}
  {message && (

@@ -17,7 +17,6 @@
  */
 
 import { type ReactNode } from "react";
-import Navbar from "../common/Navbar";
 import UserSidebar from "./UserSidebar";
 import BottomTabBar from "./BottomTabBar";
 import AstralBackground from "./AstralBackground";
@@ -30,13 +29,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
  return (
  <div className="flex flex-col h-screen bg-[var(--bg-void)] text-[var(--text-primary)] overflow-hidden relative">
  <AstralBackground />
- {/* Navbar là fixed absolute (z-50) ở trên cùng.
- Nó cao ~64px (h-16).
- Chúng ta giữ nguyên vị trí fixed của Navbar để nó overlays trên mọi thứ.
- */}
- <Navbar />
-
- {/* Phần lưới bên dưới Navbar.
+ {/* Phần lưới bên dưới Navbar (Navbar render ở app/[locale]/layout.tsx).
  Cách top bằng `pt-16` (thay đổi tùy breakpoint) để không bị Navbar đè lên content.
  h-screen - pt-16 = flex-1 (chiều cao còn lại).
  */}

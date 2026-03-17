@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { listDeposits, processDeposit, AdminDepositOrder } from "@/actions/adminActions";
 import toast from 'react-hot-toast';
+import { useLocale, useTranslations } from "next-intl";
 import { CreditCard, Filter, CheckCircle2, XCircle, Clock, ChevronLeft, ChevronRight,
  ArrowUpRight,
  Gem,
@@ -15,6 +16,8 @@ import { CreditCard, Filter, CheckCircle2, XCircle, Clock, ChevronLeft, ChevronR
 import { SectionHeader, GlassCard, Button } from "@/components/ui";
 
 export default function AdminDepositsPage() {
+ const t = useTranslations("Admin");
+ const locale = useLocale();
  const [orders, setOrders] = useState<AdminDepositOrder[]>([]);
  const [totalCount, setTotalCount] = useState(0);
  const [page, setPage] = useState(1);
@@ -62,13 +65,13 @@ export default function AdminDepositsPage() {
  try {
  const success = await processDeposit(id, action);
  if (success) {
- toast.success(action === 'approve' ? "Phê duyệt thành công!" : "Đã từ chối đơn hàng.");
+ toast.success(action === 'approve' ? t("deposits.toast.approve_success") : t("deposits.toast.reject_success"));
  await fetchOrders();
  } else {
- toast.error("Thất bại. Vui lòng thử lại.");
+ toast.error(t("deposits.toast.action_failed"));
  }
  } catch {
- toast.error("Lỗi kết nối máy chủ.");
+ toast.error(t("deposits.toast.network_error"));
  } finally {
  setProcessingId(null);
  }
@@ -104,23 +107,23 @@ export default function AdminDepositsPage() {
  {confirmModal.type === 'approve' ? <ThumbsUp className="w-8 h-8" /> : <ThumbsDown className="w-8 h-8" />}
  </div>
  <h3 className="text-xl font-black tn-text-primary uppercase italic tracking-tighter text-center mb-2">
- {confirmModal.type === 'approve' ? "Phê duyệt Giao dịch?" : "Từ chối Giao dịch?"}
+ {confirmModal.type === 'approve' ? t("deposits.modal.title_approve") : t("deposits.modal.title_reject")}
  </h3>
  <p className="text-xs text-[var(--text-secondary)] font-medium text-center leading-relaxed mb-8">
- Hành động này sẽ thay đổi trạng thái dòng tiền và {confirmModal.type === 'approve' ? 'cộng tài sản cho linh hồn này' : 'hủy bỏ yêu cầu'}.
+ {confirmModal.type === 'approve' ? t("deposits.modal.desc_approve") : t("deposits.modal.desc_reject")}
  </p>
  <div className="flex gap-4">
  <Button variant="secondary"
  onClick={() => setConfirmModal(prev => ({...prev, isOpen: false}))}
  className="flex-1"
  >
- Quay lại
+ {t("deposits.modal.back")}
  </Button>
  <Button variant={confirmModal.type === 'approve' ? 'primary' : 'danger'}
  onClick={handleAction}
  className="flex-1"
  >
- Xác nhận
+ {t("deposits.modal.confirm")}
  </Button>
  </div>
  </div>
@@ -130,33 +133,38 @@ export default function AdminDepositsPage() {
  {/* Header Area */}
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
  <SectionHeader
- tag="Finance"
+ tag={t("deposits.header.tag")}
  tagIcon={<CreditCard className="w-3 h-3 text-[var(--purple-accent)]" />}
- title="Dòng tiền Hệ thống"
- subtitle={`Theo dõi ${totalCount} giao dịch nạp Diamond từ nhân gian`}
+ title={t("deposits.header.title")}
+ subtitle={t("deposits.header.subtitle", { count: totalCount })}
  className="mb-0 text-left items-start"
  />
 
  <div className="flex items-center gap-4 tn-panel rounded-[2rem] p-3 px-6 shadow-inner shrink-0">
  <div className="flex items-center gap-2">
  <Filter className="w-4 h-4 text-[var(--text-secondary)]" />
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Lọc:</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("deposits.filters.label")}:</span>
  </div>
  <div className="flex gap-2">
- {["", "Pending", "Success", "Failed"].map((s) => (
+ {[
+ { value: "", label: t("deposits.filters.all") },
+ { value: "Pending", label: t("deposits.filters.pending") },
+ { value: "Success", label: t("deposits.filters.success") },
+ { value: "Failed", label: t("deposits.filters.failed") },
+ ].map(({ value, label }) => (
  <button
- key={s}
+ key={value}
  onClick={() => {
- setStatusFilter(s);
+ setStatusFilter(value);
  setPage(1);
  }}
  className={`
  px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
- ${statusFilter === s ? "bg-[var(--purple-accent)] tn-text-ink shadow-md" : "tn-surface text-[var(--text-tertiary)] hover:tn-surface-strong hover:tn-text-primary"
+ ${statusFilter === value ? "bg-[var(--purple-accent)] tn-text-ink shadow-md" : "tn-surface text-[var(--text-tertiary)] hover:tn-surface-strong hover:tn-text-primary"
  }
  `}
  >
- {s === "" ? "Tất cả" : s}
+ {label}
  </button>
  ))}
  </div>
@@ -169,13 +177,13 @@ export default function AdminDepositsPage() {
  <table className="w-full text-left">
  <thead>
  <tr className="border-b tn-border-soft tn-surface">
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Mã Đơn / TXN ID</th>
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Linh hồn Phù hợp</th>
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Giá trị (VND)</th>
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Tài sản Thực nhận</th>
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Thời điểm</th>
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-center">Hiện trạng</th>
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-center">Thao tác</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">{t("deposits.table.heading_order")}</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">{t("deposits.table.heading_user")}</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">{t("deposits.table.heading_amount")}</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">{t("deposits.table.heading_assets")}</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">{t("deposits.table.heading_time")}</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-center">{t("deposits.table.heading_status")}</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-center">{t("deposits.table.heading_actions")}</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-white/5">
@@ -184,7 +192,7 @@ export default function AdminDepositsPage() {
  <td colSpan={7} className="px-8 py-20 text-center">
  <div className="flex flex-col items-center justify-center space-y-4">
  <Loader2 className="w-8 h-8 animate-spin text-[var(--purple-accent)]" />
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Đang truy vấn sổ cái...</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("deposits.states.loading")}</span>
  </div>
  </td>
  </tr>
@@ -195,7 +203,7 @@ export default function AdminDepositsPage() {
  <div className="w-16 h-16 rounded-full tn-panel-soft flex items-center justify-center">
  <CreditCard className="w-8 h-8 text-[var(--text-tertiary)] opacity-50" />
  </div>
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">Không có giao dịch nào xuất hiện trong tầm nhìn này.</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">{t("deposits.states.empty")}</span>
  </div>
  </td>
  </tr>
@@ -213,7 +221,7 @@ export default function AdminDepositsPage() {
  {o.transactionId}
  </div>
  ) : (
- <div className="text-[10px] font-bold tn-text-muted uppercase italic">Chưa có mã TXN</div>
+ <div className="text-[10px] font-bold tn-text-muted uppercase italic">{t("deposits.row.txn_missing")}</div>
  )}
  </div>
  </td>
@@ -223,31 +231,31 @@ export default function AdminDepositsPage() {
  <User className="w-4 h-4 text-[var(--text-secondary)]" />
  </div>
  <div>
- <div className="text-[11px] font-black tn-text-primary uppercase tracking-tighter drop-shadow-sm">{o.username || "System User"}</div>
+ <div className="text-[11px] font-black tn-text-primary uppercase tracking-tighter drop-shadow-sm">{o.username || t("deposits.row.system_user")}</div>
  <div className="text-[9px] font-bold text-[var(--text-tertiary)] italic tracking-tighter">
- ID: {o.userId.split('-')[0]}...
+ {t("deposits.row.user_id_prefix", { id: o.userId.split('-')[0] })}
  </div>
  </div>
  </div>
  </td>
  <td className="px-8 py-5">
  <div className="text-[11px] font-black tn-text-primary uppercase tracking-tighter">
- {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(o.amountVnd)}
+ {new Intl.NumberFormat(locale, { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(o.amountVnd)}
  </div>
  </td>
  <td className="px-8 py-5">
  <div className="flex items-center gap-2 text-[11px] font-black text-[var(--purple-accent)] italic">
  <Gem className="w-3.5 h-3.5" />
- +{o.diamondAmount.toLocaleString()}
+ +{o.diamondAmount.toLocaleString(locale)}
  </div>
  </td>
  <td className="px-8 py-5">
  <div className="flex flex-col text-left">
  <div className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-tighter">
- {new Date(o.createdAt).toLocaleDateString("vi-VN")}
+ {new Date(o.createdAt).toLocaleDateString(locale)}
  </div>
  <div className="text-[10px] font-bold text-[var(--text-tertiary)] italic">
- {new Date(o.createdAt).toLocaleTimeString("vi-VN")}
+ {new Date(o.createdAt).toLocaleTimeString(locale)}
  </div>
  </div>
  </td>
@@ -257,7 +265,7 @@ export default function AdminDepositsPage() {
  ${getStatusStyles(o.status)}
  `}>
  {getStatusIcon(o.status)}
- {o.status === "Success" ? "Thành công" : o.status === "Failed" ? "Thất bại" : "Đang xử lý"}
+ {o.status === "Success" ? t("deposits.status.success") : o.status === "Failed" ? t("deposits.status.failed") : t("deposits.status.pending")}
  </div>
  </td>
  <td className="px-8 py-5 text-center">
@@ -269,7 +277,7 @@ export default function AdminDepositsPage() {
  }}
  disabled={processingId === o.id}
  className="p-2 rounded-xl bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/20 hover:bg-[var(--success)] hover:tn-text-ink transition-all disabled:opacity-50 shadow-md group"
- title="Phê duyệt"
+ title={t("deposits.actions.approve_title")}
  >
  {processingId === o.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ThumbsUp className="w-4 h-4 group-hover:scale-110 transition-transform" />}
  </button>
@@ -279,13 +287,13 @@ export default function AdminDepositsPage() {
  }}
  disabled={processingId === o.id}
  className="p-2 rounded-xl bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/20 hover:bg-[var(--danger)] hover:tn-text-primary transition-all disabled:opacity-50 shadow-md group"
- title="Từ chối"
+ title={t("deposits.actions.reject_title")}
  >
  {processingId === o.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ThumbsDown className="w-4 h-4 group-hover:scale-110 transition-transform" />}
  </button>
  </div>
  ) : (
- <span className="text-[10px] font-bold text-[var(--text-tertiary)] italic">N/A</span>
+ <span className="text-[10px] font-bold text-[var(--text-tertiary)] italic">{t("deposits.actions.na")}</span>
  )}
  </td>
  </tr>
@@ -298,7 +306,7 @@ export default function AdminDepositsPage() {
  {/* Pagination */}
  <div className="px-8 py-6 tn-surface-soft flex flex-col md:flex-row md:items-center justify-between gap-4 border-t tn-border-soft">
  <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] text-left">
- Trang {page} <span className="mx-2 opacity-30">|</span> Tổng {totalCount} giao dịch
+ {t("deposits.pagination.summary", { page, total: totalCount })}
  </div>
  <div className="flex items-center gap-3">
  <button
@@ -327,8 +335,8 @@ export default function AdminDepositsPage() {
  <ArrowUpRight size={150} />
  </div>
  <div className="relative z-10 space-y-4">
- <div className="text-[10px] font-black uppercase tracking-widest text-[var(--purple-accent)] drop-shadow-sm">Xác nhận Đơn hàng</div>
- <p className="text-xs text-[var(--text-secondary)] leading-relaxed font-medium">Hệ thống tự động đồng bộ từ cổng thanh toán. Hãy kiểm tra kỹ mã TXN trước khi can thiệp thủ công.</p>
+ <div className="text-[10px] font-black uppercase tracking-widest text-[var(--purple-accent)] drop-shadow-sm">{t("deposits.summary.confirm_title")}</div>
+ <p className="text-xs text-[var(--text-secondary)] leading-relaxed font-medium">{t("deposits.summary.confirm_desc")}</p>
  </div>
  </GlassCard>
  <GlassCard className="!p-8 flex items-center gap-6 group hover:tn-border transition-all text-left">
@@ -336,8 +344,8 @@ export default function AdminDepositsPage() {
  <Gem className="w-7 h-7 text-[var(--purple-accent)]" />
  </div>
  <div>
- <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Thông tin Sổ cái</div>
- <div className="text-sm font-black tn-text-primary uppercase italic tracking-tighter drop-shadow-md">Bản ghi Tài chính v2.4</div>
+ <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("deposits.summary.ledger_title")}</div>
+ <div className="text-sm font-black tn-text-primary uppercase italic tracking-tighter drop-shadow-md">{t("deposits.summary.ledger_subtitle")}</div>
  </div>
  </GlassCard>
  </div>

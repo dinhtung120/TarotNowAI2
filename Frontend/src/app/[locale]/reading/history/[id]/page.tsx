@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/routing";
 import { useAuthStore } from "@/store/authStore";
 import { getHistoryDetailAction } from "@/actions/historyActions";
 import { Sparkles, ArrowLeft, Bot, Calendar, Clock, AlertCircle } from "lucide-react";
 import { TAROT_DECK } from "@/lib/tarotData";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import UserLayout from "@/components/layout/UserLayout";
 import { Button } from "@/components/ui";
@@ -37,6 +37,9 @@ export default function HistoryDetailPage() {
  const sessionId = params.id as string;
  const { isAuthenticated } = useAuthStore();
  const t = useTranslations("History");
+ const tApi = useTranslations("ApiErrors");
+ const tTarot = useTranslations("Tarot");
+ const locale = useLocale();
 
  const [detail, setDetail] = useState<ReadingDetailResponse | null>(null);
  const [isLoading, setIsLoading] = useState(true);
@@ -70,17 +73,25 @@ export default function HistoryDetailPage() {
  setDetail(result.data as ReadingDetailResponse);
  }
  } catch {
- setError("Đã xảy ra lỗi khi kết nối với máy chủ.");
+ setError(tApi("network_error"));
  } finally {
  setIsLoading(false);
  }
  };
 
  fetchDetail();
- }, [sessionId, isAuthenticated, router]);
+ }, [sessionId, isAuthenticated, router, tApi]);
 
- // Parse cards
- const parsedCards: number[] = detail?.cardsDrawn ? JSON.parse(detail.cardsDrawn) : [];
+ const parsedCards = useMemo<number[]>(() => {
+  if (!detail?.cardsDrawn) return [];
+  try {
+   const parsed = JSON.parse(detail.cardsDrawn) as unknown;
+   if (!Array.isArray(parsed)) return [];
+   return parsed.filter((item): item is number => typeof item === "number");
+  } catch {
+   return [];
+  }
+ }, [detail?.cardsDrawn]);
 
  const getSpreadName = (type: string) => {
  const mapping: Record<string, string> = {
@@ -120,11 +131,11 @@ export default function HistoryDetailPage() {
  <div className="flex items-center gap-4 mt-3 text-[var(--text-secondary)] font-medium text-xs">
  <span className="flex items-center gap-1.5 px-3 py-1.5 tn-surface rounded-full">
  <Calendar className="w-3.5 h-3.5" />
- {detail ? new Date(detail.createdAt).toLocaleDateString() : "..."}
+ {detail ? new Date(detail.createdAt).toLocaleDateString(locale) : "..."}
  </span>
  <span className="flex items-center gap-1.5 px-3 py-1.5 tn-surface rounded-full">
  <Clock className="w-3.5 h-3.5" />
- {detail ? new Date(detail.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "..."}
+ {detail ? new Date(detail.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }) : "..."}
  </span>
  </div>
  </div>
@@ -135,7 +146,9 @@ export default function HistoryDetailPage() {
  <span className={`text-[10px] px-4 py-1.5 rounded-full font-black uppercase tracking-[0.2em] border ${detail?.isCompleted ? 'bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)]' : 'bg-[var(--danger-bg)] text-[var(--danger)] border-[var(--danger)]'}`}>
  {detail?.isCompleted ? t('status_completed') : t('status_interrupted')}
  </span>
- <p className="text-[10px] text-[var(--text-tertiary)] font-black tracking-widest uppercase mt-1">Fragment: {sessionId.split('-')[0]}...</p>
+ <p className="text-[10px] text-[var(--text-tertiary)] font-black tracking-widest uppercase mt-1">
+ {t("detail_fragment", { id: sessionId.split("-")[0] })}
+ </p>
  </div>
  </div>
 
@@ -162,7 +175,7 @@ export default function HistoryDetailPage() {
  {/* Cards Grid */}
  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8 lg:gap-10">
  {parsedCards.map((cardId, index) => {
- const cardData = TAROT_DECK.find(c => c.id === cardId) || TAROT_DECK[0];
+ const cardMeta = TAROT_DECK.find(c => c.id === cardId) || TAROT_DECK[0];
 
  return (
  <div key={index} className="group flex flex-col items-center gap-6">
@@ -180,10 +193,10 @@ export default function HistoryDetailPage() {
  {/* Card Name Overlay */}
  <div className="absolute bottom-4 left-0 right-0 z-20 px-3 text-center">
  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--warning)]/60 block mb-1">
- {cardData.suit}
+ {tTarot(`suits.${cardMeta.suit}.full`)}
  </span>
  <h3 className="text-xs sm:text-sm font-black tn-text-primary italic tracking-tighter leading-tight drop-shadow-lg">
- {cardData.name}
+ {tTarot(`cards.c${cardId}.name`)}
  </h3>
  </div>
  </div>
@@ -200,9 +213,9 @@ export default function HistoryDetailPage() {
 
  {/* Micro-Meaning - Simple & Elegant */}
  <div className="text-center px-2 transition-all duration-500 group-hover:scale-105">
- <p className="text-[9px] font-black uppercase tracking-[0.25em] text-[var(--purple-accent)] mb-2">Essence</p>
+ <p className="text-[9px] font-black uppercase tracking-[0.25em] text-[var(--purple-accent)] mb-2">{t("essence_label")}</p>
  <p className="text-[11px] font-medium text-[var(--text-secondary)] leading-relaxed italic line-clamp-2 hover:line-clamp-none transition-all">
- {cardData.meaning}
+ {tTarot(`cards.c${cardId}.meaning`)}
  </p>
  </div>
  </div>
@@ -221,10 +234,10 @@ export default function HistoryDetailPage() {
  </div>
  <div className="relative z-10">
  <h3 className="text-2xl font-black italic tracking-tight tn-text-primary mb-4 uppercase">
- Lời Sấm Bản Nguyên
+ {t("ai_title")}
  </h3>
  <p className="text-[var(--text-secondary)] font-medium leading-[1.8] max-w-2xl mx-auto">
- Vũ trụ đã lưu trữ {detail.aiInteractions.length} dấu ấn trí tuệ trong phiên này. Nội dung hội thoại đang được hội tụ từ thực tại ảo và sẽ hiện diện đầy đủ trong các lần cập nhật Giao Thức tiếp theo.
+ {t("ai_desc", { count: detail.aiInteractions.length })}
  </p>
  </div>
 

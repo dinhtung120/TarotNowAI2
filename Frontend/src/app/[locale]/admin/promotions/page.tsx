@@ -9,7 +9,7 @@
  * 4. Micro-interactions: Hiệu ứng hover cho bảng và các nút hành động.
  */
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getAccessToken } from "@/lib/auth-client";
 import { Ticket, X, Trash2, CheckCircle2, Power, AlertTriangle,
  Coins,
@@ -19,6 +19,8 @@ import { Ticket, X, Trash2, CheckCircle2, Power, AlertTriangle,
 } from "lucide-react";
 import { SectionHeader, GlassCard, Button } from "@/components/ui";
 import toast from 'react-hot-toast';
+import { API_BASE_URL } from "@/lib/api";
+import { useLocale, useTranslations } from "next-intl";
 
 interface Promotion {
  id: string;
@@ -29,6 +31,8 @@ interface Promotion {
 }
 
 export default function AdminPromotionsPage() {
+ const t = useTranslations("Admin");
+ const locale = useLocale();
  const [promotions, setPromotions] = useState<Promotion[]>([]);
  const [loading, setLoading] = useState(true);
 
@@ -39,11 +43,12 @@ export default function AdminPromotionsPage() {
  const [deleteId, setDeleteId] = useState<string | null>(null);
  const [submitting, setSubmitting] = useState(false);
 
- const fetchPromotions = async () => {
+ const baseUrl = API_BASE_URL;
+
+ const fetchPromotions = useCallback(async () => {
  setLoading(true);
  try {
  const token = getAccessToken();
- const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5037/api/v1";
  const res = await fetch(`${baseUrl}/admin/promotions`, {
  headers: { "Content-Type": "application/json",
  "Authorization": `Bearer ${token}`
@@ -61,18 +66,17 @@ export default function AdminPromotionsPage() {
  } finally {
  setLoading(false);
  }
- };
+ }, [baseUrl]);
 
  useEffect(() => {
  fetchPromotions();
- }, []);
+ }, [fetchPromotions]);
 
  const handleCreate = async (e: React.FormEvent) => {
  e.preventDefault();
  setSubmitting(true);
  try {
  const token = getAccessToken();
- const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5037/api/v1";
  const res = await fetch(`${baseUrl}/admin/promotions`, {
  method: "POST",
  headers: { "Content-Type": "application/json",
@@ -85,13 +89,13 @@ export default function AdminPromotionsPage() {
  setIsCreating(false);
  setMinAmount(0);
  setBonusGold(0);
- toast.success("Đã thêm ưu đãi thành công!");
+ toast.success(t("promotions.toast.create_success"));
  await fetchPromotions();
  } else {
- toast.error("Lỗi khi thêm khuyến mãi.");
+ toast.error(t("promotions.toast.create_failed"));
  }
  } catch {
- toast.error("Lỗi kết nối.");
+ toast.error(t("promotions.toast.network_error"));
  } finally {
  setSubmitting(false);
  }
@@ -100,7 +104,6 @@ export default function AdminPromotionsPage() {
  const handleToggle = async (promotion: Promotion) => {
  try {
  const token = getAccessToken();
- const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5037/api/v1";
  const res = await fetch(`${baseUrl}/admin/promotions/${promotion.id}`, {
  method: "PUT",
  headers: {
@@ -114,13 +117,13 @@ export default function AdminPromotionsPage() {
  })
  });
  if (res.ok) {
- toast.success("Đã cập nhật trạng thái.");
+ toast.success(t("promotions.toast.toggle_success"));
  await fetchPromotions();
  } else {
- toast.error("Lỗi khi thay đổi trạng thái.");
+ toast.error(t("promotions.toast.toggle_failed"));
  }
  } catch {
- toast.error("Lỗi kết nối.");
+ toast.error(t("promotions.toast.network_error"));
  }
  };
 
@@ -128,7 +131,6 @@ export default function AdminPromotionsPage() {
  if (!deleteId) return;
  try {
  const token = getAccessToken();
- const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5037/api/v1";
  const res = await fetch(`${baseUrl}/admin/promotions/${deleteId}`, {
  method: "DELETE",
  headers: {
@@ -137,14 +139,14 @@ export default function AdminPromotionsPage() {
  });
  if (res.ok) {
  setDeleteId(null);
- toast.success("Đã xóa ưu đãi vĩnh viễn.");
+ toast.success(t("promotions.toast.delete_success"));
  await fetchPromotions();
  } else {
  const errorData = await res.json().catch(() => ({}));
- toast.error(errorData.message || "Lỗi khi xóa.");
+ toast.error(errorData.message || t("promotions.toast.delete_failed"));
  }
  } catch {
- toast.error("Lỗi kết nối.");
+ toast.error(t("promotions.toast.network_error"));
  }
  };
 
@@ -153,10 +155,10 @@ export default function AdminPromotionsPage() {
  {/* Header Area */}
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
  <SectionHeader
- tag="Marketing"
+ tag={t("promotions.header.tag")}
  tagIcon={<Ticket className="w-3 h-3 text-[var(--warning)]" />}
- title="Chương trình Ưu đãi"
- subtitle="Thiết lập các mốc nạp tệ để ban thưởng Vàng cho linh hồn"
+ title={t("promotions.header.title")}
+ subtitle={t("promotions.header.subtitle")}
  className="mb-0 text-left items-start"
  />
 
@@ -166,7 +168,7 @@ export default function AdminPromotionsPage() {
  className={`shrink-0 ${!isCreating && 'bg-[var(--warning)] tn-text-ink hover:bg-[var(--warning)] hover:brightness-110 shadow-[0_0_20px_var(--c-245-158-11-20)]'}`}
  >
  {isCreating ? <X className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
- {isCreating ? "Hủy bỏ" : "Thêm Ưu đãi mới"}
+ {isCreating ? t("promotions.actions.toggle_create_cancel") : t("promotions.actions.toggle_create_add")}
  </Button>
  </div>
 
@@ -178,12 +180,12 @@ export default function AdminPromotionsPage() {
  <form onSubmit={handleCreate} className="relative z-10 space-y-8">
  <div className="flex items-center gap-3 border-b tn-border-soft pb-4">
  <Sparkles className="w-5 h-5 text-[var(--warning)]" />
- <h2 className="text-sm font-black tn-text-primary uppercase tracking-widest drop-shadow-sm">Khởi tạo Mốc thưởng mới</h2>
+ <h2 className="text-sm font-black tn-text-primary uppercase tracking-widest drop-shadow-sm">{t("promotions.create.title")}</h2>
  </div>
 
  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
  <div className="space-y-3 text-left">
- <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Mức nạp tối thiểu (VND)</label>
+ <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("promotions.create.min_amount_label")}</label>
  <div className="relative">
  <input
  type="number"
@@ -191,7 +193,7 @@ export default function AdminPromotionsPage() {
  required
  value={minAmount}
  onChange={(e) => setMinAmount(Number(e.target.value))}
- placeholder="200,000"
+ placeholder={t("promotions.create.min_amount_placeholder")}
  className="w-full tn-field rounded-2xl pl-12 pr-4 py-4 text-xs font-black tn-text-primary tn-field-warning transition-all placeholder:text-[var(--text-tertiary)] shadow-inner"
  />
  <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
@@ -201,7 +203,7 @@ export default function AdminPromotionsPage() {
  </div>
 
  <div className="space-y-3 text-left">
- <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Lượng Vàng thưởng thêm</label>
+ <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("promotions.create.bonus_label")}</label>
  <div className="relative">
  <input
  type="number"
@@ -209,7 +211,7 @@ export default function AdminPromotionsPage() {
  required
  value={bonusGold}
  onChange={(e) => setBonusGold(Number(e.target.value))}
- placeholder="500"
+ placeholder={t("promotions.create.bonus_placeholder")}
  className="w-full tn-field rounded-2xl pl-12 pr-4 py-4 text-xs font-black tn-text-primary tn-field-warning transition-all placeholder:text-[var(--text-tertiary)] shadow-inner"
  />
  <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
@@ -221,13 +223,13 @@ export default function AdminPromotionsPage() {
 
  <div className="flex flex-col sm:flex-row justify-end items-center gap-4 pt-2 border-t tn-border-soft">
  <p className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-tighter text-center sm:text-right leading-relaxed flex-1">
- Mốc ưu đãi sẽ được kích hoạt ngay sau khi lưu vào Sổ cái.
+ {t("promotions.create.note")}
  </p>
  <Button type="submit" disabled={submitting}
  className="w-full sm:w-auto px-8 py-4 bg-[var(--warning)] tn-text-ink hover:bg-[var(--warning)] hover:brightness-110 shadow-[0_0_20px_var(--c-245-158-11-20)]"
  >
  {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
- {submitting ? "Đang ghi sổ..." : "Lưu vào Hệ thống"}
+ {submitting ? t("promotions.create.submitting") : t("promotions.create.submit")}
  </Button>
  </div>
  </form>
@@ -241,10 +243,10 @@ export default function AdminPromotionsPage() {
  <table className="w-full text-left">
  <thead>
  <tr className="border-b tn-border-soft tn-surface">
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Điều kiện Kích hoạt</th>
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Phần thưởng (Gold)</th>
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-center">Tình trạng</th>
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-right">Pháp lệnh</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">{t("promotions.table.heading_condition")}</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">{t("promotions.table.heading_reward")}</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-center">{t("promotions.table.heading_status")}</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-right">{t("promotions.table.heading_commands")}</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-white/5">
@@ -253,7 +255,7 @@ export default function AdminPromotionsPage() {
  <td colSpan={4} className="px-8 py-20 text-center">
  <div className="flex flex-col items-center justify-center space-y-4">
  <Loader2 className="w-8 h-8 animate-spin text-[var(--warning)]" />
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Đang đọc Sổ lệnh...</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("promotions.states.loading")}</span>
  </div>
  </td>
  </tr>
@@ -264,7 +266,7 @@ export default function AdminPromotionsPage() {
  <div className="w-16 h-16 rounded-full tn-panel-soft flex items-center justify-center">
  <Ticket className="w-8 h-8 text-[var(--text-tertiary)] opacity-50" />
  </div>
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">Vùng không gian ưu đãi đang trống vắng.</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">{t("promotions.states.empty")}</span>
  </div>
  </td>
  </tr>
@@ -277,14 +279,14 @@ export default function AdminPromotionsPage() {
  <span className="text-[12px] font-black text-[var(--text-secondary)]">₫</span>
  </div>
  <div className="text-[11px] font-black tn-text-primary uppercase tracking-tighter drop-shadow-sm">
- Từ {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(p.minAmountVnd)}
+ {t("promotions.row.condition_from", { amount: new Intl.NumberFormat(locale, { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(p.minAmountVnd) })}
  </div>
  </div>
  </td>
  <td className="px-8 py-6">
  <div className="flex items-center gap-2 text-sm font-black text-[var(--warning)] italic drop-shadow-sm">
  <Coins className="w-4 h-4" />
- +{p.bonusDiamond.toLocaleString()}
+ +{p.bonusDiamond.toLocaleString(locale)}
  </div>
  </td>
  <td className="px-8 py-6 text-center">
@@ -297,7 +299,7 @@ export default function AdminPromotionsPage() {
  `}
  >
  <Power className="w-3 h-3" />
- {p.isActive ? "Đang áp dụng" : "Vô hiệu hóa"}
+ {p.isActive ? t("promotions.status.active") : t("promotions.status.inactive")}
  </button>
  </td>
  <td className="px-8 py-6 text-right">
@@ -328,9 +330,9 @@ export default function AdminPromotionsPage() {
  <AlertTriangle className="h-8 w-8" />
  </div>
  <div className="space-y-4 text-left">
- <h3 className="text-xl font-black tn-text-primary uppercase italic tracking-tighter text-center mb-2">Xóa Khuyến mãi?</h3>
+ <h3 className="text-xl font-black tn-text-primary uppercase italic tracking-tighter text-center mb-2">{t("promotions.delete_modal.title")}</h3>
  <p className="text-[11px] font-bold text-[var(--text-secondary)] uppercase leading-relaxed tracking-wide text-center">
- Hành động này sẽ xóa vĩnh viễn mức ưu đãi này khỏi Sổ cái Hệ thống. Các giao dịch hiện tại sẽ không bị ảnh hưởng.
+ {t("promotions.delete_modal.desc")}
  </p>
  </div>
  </div>
@@ -340,14 +342,14 @@ export default function AdminPromotionsPage() {
  onClick={() => setDeleteId(null)}
  className="flex-1"
  >
- Giữ lại
+ {t("promotions.delete_modal.keep")}
  </Button>
  <Button
  variant="danger"
  onClick={handleDelete}
  className="flex-1 shadow-[0_0_20px_var(--c-244-63-94-30)] hover:shadow-[0_0_30px_var(--c-244-63-94-50)]"
  >
- Xóa bỏ
+ {t("promotions.delete_modal.delete")}
  </Button>
  </div>
  </div>

@@ -4,6 +4,7 @@ import { routing } from './i18n/routing';
 
 // Khởi tạo middleware của next-intl
 const intlMiddleware = createMiddleware(routing);
+const localeSet = new Set(routing.locales);
 
 const decodeJwtPayload = (token: string): Record<string, unknown> => {
  const payload = token.split('.')[1];
@@ -15,6 +16,15 @@ const decodeJwtPayload = (token: string): Record<string, unknown> => {
  const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
  const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
  return JSON.parse(atob(padded)) as Record<string, unknown>;
+};
+
+const resolveLocale = (pathname: string) => {
+ const maybeLocale = pathname.split('/')[1];
+ if (maybeLocale && localeSet.has(maybeLocale as (typeof routing.locales)[number])) {
+ return maybeLocale;
+ }
+
+ return routing.defaultLocale;
 };
 
 /**
@@ -30,12 +40,13 @@ export default async function proxy(request: NextRequest) {
  const isAdminRoute = /^\/([a-z]{2}\/)?admin(\/.*)?$/.test(pathname);
 
  if (isAdminRoute) {
+ const locale = resolveLocale(pathname);
+
  // Lấy accessToken từ cookie
  const token = request.cookies.get('accessToken')?.value;
 
  if (!token) {
  // Nếu không có token, redirect về trang login
- const locale = pathname.split('/')[1] || 'vi';
  // Đảm bảo không redirect lặp nếu đã ở trang login (mặc dù matcher đã loại trừ nhưng vẫn check cho chắc)
  const loginUrl = new URL(`/${locale}/login`, request.url);
  return NextResponse.redirect(loginUrl);
@@ -48,13 +59,11 @@ export default async function proxy(request: NextRequest) {
 
  if (role !== 'admin') {
  // Nếu không phải admin, chặn ngay lập tức và đẩy về trang chủ
- const locale = pathname.split('/')[1] || 'vi';
  const homeUrl = new URL(`/${locale}`, request.url);
  return NextResponse.redirect(homeUrl);
  }
  } catch (error) {
  console.error("Middleware Auth Error:", error);
- const locale = pathname.split('/')[1] || 'vi';
  const loginUrl = new URL(`/${locale}/login`, request.url);
  return NextResponse.redirect(loginUrl);
  }

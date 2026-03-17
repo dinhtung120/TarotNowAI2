@@ -5,7 +5,7 @@ import { useRouter } from "@/i18n/routing";
 import { useAuthStore } from "@/store/authStore";
 import { getHistorySessionsAction } from "@/actions/historyActions";
 import { Sparkles, Calendar, ArrowRight, Clock, Bot, ChevronLeft, ChevronRight, History } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import UserLayout from "@/components/layout/UserLayout";
 import { GlassCard, SectionHeader, Button } from "@/components/ui";
@@ -28,6 +28,8 @@ interface HistoryResponse {
 export default function HistoryPage() {
  const router = useRouter();
  const t = useTranslations("History");
+ const tApi = useTranslations("ApiErrors");
+ const locale = useLocale();
  const { isAuthenticated } = useAuthStore();
  const [historyData, setHistoryData] = useState<HistoryResponse | null>(null);
  const [isLoading, setIsLoading] = useState(true);
@@ -70,14 +72,14 @@ export default function HistoryPage() {
  setHistoryData(result.data as HistoryResponse);
  }
  } catch {
- setError("Network error. Please try again later.");
+ setError(tApi("network_error"));
  } finally {
  setIsLoading(false);
  }
  };
 
  fetchHistory();
- }, [isAuthenticated, currentPage, filterType, filterDate, router]);
+ }, [isAuthenticated, currentPage, filterType, filterDate, router, tApi]);
 
  const handlePrevPage = () => {
  if (currentPage > 1) setCurrentPage(prev => prev - 1);
@@ -138,7 +140,7 @@ export default function HistoryPage() {
  <div className="max-w-5xl mx-auto px-6 pt-8 pb-32 font-sans">
  <SectionHeader title={t('title')}
  subtitle={t('subtitle')}
- tag="Chronicles"
+ tag={t("tag")}
  tagIcon={<History className="w-3 h-3" />}
  action={FiltersContent}
  className="mb-12"
@@ -191,11 +193,11 @@ export default function HistoryPage() {
  <div className="flex items-center gap-3 mt-1.5 opacity-60">
  <span className="flex items-center text-[10px] uppercase font-black tracking-widest text-[var(--text-tertiary)]">
  <Calendar className="w-3 h-3 mr-1" />
- {new Date(session.createdAt).toLocaleDateString()}
+ {new Date(session.createdAt).toLocaleDateString(locale)}
  </span>
  <span className="flex items-center text-[10px] uppercase font-black tracking-widest text-[var(--text-tertiary)]">
  <Clock className="w-3 h-3 mr-1" />
- {new Date(session.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+ {new Date(session.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
  </span>
  </div>
  </div>
@@ -231,11 +233,8 @@ export default function HistoryPage() {
  </button>
 
  <div className="flex flex-col items-center min-w-[80px]">
- <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] mb-0.5">
- Page
- </span>
- <span className="text-[11px] font-bold tn-text-primary tracking-widest">
- {currentPage} <span className="tn-text-muted mx-1">/</span> {historyData.totalPages}
+ <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
+ {t("page_info", { current: currentPage, total: historyData.totalPages })}
  </span>
  </div>
 

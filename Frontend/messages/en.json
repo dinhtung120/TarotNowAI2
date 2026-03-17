@@ -8,43 +8,564 @@
         "heroDesc": "Experience the mystical art of Tarot combined with the deep analytical power of Artificial Intelligence. Unlock the answers hidden within your subconscious.",
         "ctaDraw": "Draw Cards Now",
         "ctaCollection": "Visit Collection",
+        "ctaMeetReaders": "Meet Readers",
         "featureTitle": "A Unique Experience",
         "featureDesc": "The perfect blend of ancient spirituality and future technology brings deeply personalized experiences.",
+        "scroll": "Scroll",
+        "stats": {
+            "readings": "Readings",
+            "readers": "Professional Readers",
+            "rating": "Average rating",
+            "support": "Global support"
+        },
+        "showcase": {
+            "tag": "Master connection",
+            "title": "Masters",
+            "titleMuted": "Guiding",
+            "viewAll": "View all Readers",
+            "profileCta": "Profile →"
+        },
         "f1Title": "In-depth AI Analysis",
         "f1Desc": "Trained on tens of thousands of ancient Tarot texts, our AI provides accurate and personalized interpretations for your specific situation.",
         "f2Title": "Mystical Card Collection",
         "f2Desc": "Every draw is a chance to collect card elements. Accumulate enough elements to upgrade your cards with more glorious and powerful appearances.",
         "f3Title": "RNG Lock & Absolute Authenticity",
-        "f3Desc": "Our Deterministic Shuffle algorithm uses Hashing technology to ensure the drawn cards are the unique, unaltered result of that exact moment."
+        "f3Desc": "Our Deterministic Shuffle algorithm uses Hashing technology to ensure the drawn cards are the unique, unaltered result of that exact moment.",
+        "final": {
+            "title1": "Begin your journey",
+            "title2": "Lunar Bloom Healing",
+            "cta": "Draw now"
+        }
     },
     "Navigation": {
         "home": "Home",
         "readings": "Readings",
+        "readers": "Readers",
+        "chat": "Chat",
         "login": "Login",
         "register": "Register",
         "logout": "Logout",
+        "adminPortal": "Admin Portal",
         "profile": "Profile",
         "wallet": "Wallet",
         "history": "History",
         "collection": "Collection"
     },
-    "AiInterpretation": {
-        "title": "Universal Interpretation",
-        "subtitle": "AI is analyzing the cards and connecting with your energy",
-        "status_complete": "Decoding Complete",
-        "error_stream": "The communication channel is disrupted. Please try again later.",
-        "follow_up_placeholder": "What else would you like to ask about this reading?..."
+    "Profile": {
+        "title": "Profile",
+        "subtitle": "Manage your details and fine-tune your connection.",
+        "loading": "Loading profile...",
+        "admin_portal": "Admin portal",
+        "reader_profile": "Reader profile",
+        "settings_title": "Edit settings",
+        "displayName": "Display name",
+        "display_name_placeholder": "Your display name",
+        "avatarUrl": "Avatar URL",
+        "avatar_url_placeholder": "https://example.com/avatar.jpg",
+        "dateOfBirth": "Date of birth",
+        "save": "Save changes",
+        "saving": "Saving...",
+        "successMsg": "Profile updated successfully!",
+        "errorLoad": "Unable to load profile",
+        "errorSave": "Failed to update profile",
+        "level": "Level",
+        "zodiac": "Zodiac",
+        "numerology": "Numerology",
+        "validation": {
+            "display_name_min": "Display name must be at least 2 characters",
+            "avatar_url_invalid": "Invalid avatar URL",
+            "date_of_birth_invalid": "Invalid date of birth"
+        },
+        "mfa": {
+            "tag": "Security",
+            "title": "Two-factor security",
+            "subtitle": "Multi-Factor Authentication (MFA/TOTP) protects your account from unauthorized access. Required for payouts.",
+            "status_checking": "Checking security...",
+            "enabled_title": "MFA Enabled",
+            "enabled_desc": "Your account is protected with MFA.",
+            "enabled_cta": "Go to Withdraw",
+            "disabled_title": "Security incomplete",
+            "disabled_desc": "Enable MFA to protect your wallet and withdraw.",
+            "setup_error_generic": "Failed to initialize MFA",
+            "start_setup": "Start MFA setup",
+            "step1_title": "1. Scan the QR code",
+            "step1_desc": "Use Google Authenticator, Authy or any TOTP app.",
+            "manual_code_label": "Or enter the code manually",
+            "copy": "Copy code",
+            "step2_title": "2. Save backup codes",
+            "step2_desc": "If you lose your device, you must use these codes to recover. Each code can only be used once.",
+            "step3_title": "3. Verify code",
+            "step3_desc": "Enter the 6-digit code from your app to finish setup.",
+            "code_placeholder": "000 000",
+            "verify_error_invalid": "Invalid code",
+            "verify_cta": "Confirm and enable MFA"
+        },
+        "reader": {
+            "tag": "Reader settings",
+            "title": "Reader console",
+            "subtitle": "Manage your public profile and availability.",
+            "loading": "Loading reader settings...",
+            "toast_not_found": "Reader profile not found. Have you been approved?",
+            "toast_save_success": "Saved successfully!",
+            "toast_save_fail": "Failed to save.",
+            "toast_status_updated": "Status updated.",
+            "toast_status_update_fail": "Failed to update status.",
+            "status_title": "Availability status",
+            "status_accepting": "Accepting questions",
+            "status_online": "Online (Busy)",
+            "status_offline": "Offline",
+            "public_profile_title": "Public profile",
+            "bio_label": "Bio",
+            "bio_placeholder": "Describe your reading style and experience...",
+            "specialties_label": "Specialties (comma-separated)",
+            "specialties_placeholder": "Love, Career, Finance...",
+            "price_label": "Diamond price per follow-up question",
+            "price_help": "The main question fee is charged via Escrow.",
+            "saving": "Saving...",
+            "save": "Save profile"
+        }
     },
+    "ApiErrors": {
+        "unknown_error": "An unknown system error occurred.",
+        "unauthorized": "Your session has expired. Please log in again.",
+        "forbidden": "You don't have permission to perform this action.",
+        "not_found": "The requested item could not be found.",
+        "invalid_code": "Invalid verification code.",
+        "network_error": "Network error. Please try again."
+    },
+	    "AiInterpretation": {
+	        "title": "Universal Interpretation",
+	        "subtitle": "AI is analyzing the cards and connecting with your energy",
+	        "status_complete": "Decoding Complete",
+	        "error_title": "Energetic Interference",
+	        "error_stream": "The communication channel is disrupted. Please try again later.",
+	        "error_retry": "Try Another Channel (Auto Refund)",
+	        "streaming_placeholder": "Aligning the stars...",
+	        "follow_up_placeholder": "What else would you like to ask about this reading?...",
+	        "follow_up_free_badge": "Free follow-up ({remaining}/{total})",
+	        "follow_up_fee_badge": "Fee: {cost} Diamond",
+	        "follow_up_hint": "Max 5 follow-up questions. Uses AI quota; free Diamonds if your cards are high enough level.",
+	        "hard_cap_title": "Cosmic limit reached",
+	        "hard_cap_desc": "This session has reached its energy limit (5/5 questions). Too many distractions can distort the original message. Take what you've received and reflect on it."
+	    },
     "Common": {
+        "app_title": "TarotNow AI",
+        "app_description": "A transparent and modern Tarot experience.",
         "loading": "Loading...",
         "error": "An error occurred",
         "back": "Back",
+        "close": "Close",
+        "avatar_alt": "Avatar",
+        "close_modal": "Close modal",
+        "menu": "Menu",
+        "notifications": "Notifications",
         "confirm": "Confirm",
         "status_complete": "Complete"
+    },
+    "Pagination": {
+        "page_info": "Page {current} / {total}",
+        "prev": "Previous page",
+        "next": "Next page"
+    },
+    "UserNav": {
+        "groups": {
+            "main": "Main",
+            "tarot": "Tarot",
+            "social": "Social",
+            "account": "Account"
+        }
+    },
+    "Auth": {
+        "validation": {
+            "email_invalid": "Invalid email address",
+            "email_or_username_required": "Email or Username is required",
+            "password_required": "Password is required",
+            "username_min": "Username must be at least 3 characters",
+            "username_pattern": "Only letters, numbers and underscores allowed",
+            "password_min": "Password must be at least 8 characters",
+            "password_complexity": "Requires uppercase, lowercase, number and special character",
+            "display_name_required": "Display name is required",
+            "age_minimum": "You must be at least 16 years old to use this service.",
+            "must_accept_terms": "You must accept the terms and conditions",
+            "passwords_no_match": "Passwords don't match",
+            "otp_length": "OTP must be exactly 6 digits",
+            "otp_numeric": "OTP must contain only numbers"
+        },
+        "login": {
+            "title": "Welcome Back",
+            "subtitle": "Enter your credentials to access your psychic realm",
+            "email_or_username_label": "Email or Username",
+            "email_or_username_placeholder": "seeker@tarotnow.com",
+            "password_label": "Password",
+            "password_placeholder": "••••••••",
+            "forgot_password": "Forgot password?",
+            "remember_me": "Remember me",
+            "cta": "Reveal Your Destiny",
+            "footer_prompt": "New to the realm?",
+            "footer_link": "Create an account",
+            "error_unexpected": "An unexpected error occurred."
+        },
+        "register": {
+            "title": "Join the Mystic",
+            "subtitle": "Create an account to begin your journey",
+            "success_title": "Check Your Inbox",
+            "success_desc": "An email with a verification OTP has been sent. Please verify your email to unlock your account.",
+            "success_cta": "Proceed to Verification",
+            "email_label": "Email",
+            "email_placeholder": "seeker@tarotnow.com",
+            "username_label": "Username",
+            "username_placeholder": "mystic_seeker",
+            "display_name_label": "Display Name",
+            "display_name_placeholder": "Mystic Seeker",
+            "dob_label": "Date of Birth",
+            "password_label": "Password",
+            "password_placeholder": "••••••••",
+            "confirm_password_label": "Confirm Password",
+            "confirm_password_placeholder": "••••••••",
+            "consent_prefix": "I agree to the",
+            "consent_terms": "Terms of Service",
+            "consent_and": "and",
+            "consent_privacy": "Privacy Policy",
+            "cta": "Embark on the Journey",
+            "footer_prompt": "Already a seeker?",
+            "footer_link": "Return to realm",
+            "error_unexpected": "An unexpected error occurred."
+        },
+        "forgot": {
+            "title": "Forgot Password",
+            "subtitle": "Enter your email to receive a reset code",
+            "back_to_login": "Back to Login",
+            "success_title": "Check Your Mail",
+            "success_desc": "If the email is valid, an OTP to reset your password has been sent to your inbox.",
+            "success_cta": "Enter Reset Code",
+            "email_label": "Email",
+            "email_placeholder": "seeker@tarotnow.com",
+            "cta": "Send Reset Code",
+            "error_unexpected": "An unexpected error occurred."
+        },
+        "reset": {
+            "title": "Create New Password",
+            "subtitle": "Enter your OTP and a new secure password",
+            "success_title": "Password Reset!",
+            "success_desc": "Your password has been successfully updated. All active devices have been logged out.",
+            "success_cta": "Return to Login",
+            "email_label": "Email",
+            "email_placeholder": "seeker@tarotnow.com",
+            "otp_label": "Reset OTP Code",
+            "otp_placeholder": "123456",
+            "password_label": "New Password",
+            "password_placeholder": "••••••••",
+            "cta": "Reset My Password",
+            "error_unexpected": "An unexpected error occurred."
+        },
+        "verify": {
+            "title": "Verify Email",
+            "subtitle": "Enter the OTP sent to your email",
+            "success_title": "Email Verified",
+            "success_desc": "Your account is now active. You may proceed to login.",
+            "success_cta": "Return to Login",
+            "email_label": "Email",
+            "email_placeholder": "seeker@tarotnow.com",
+            "otp_label": "OTP Code (6 digits)",
+            "otp_placeholder": "123456",
+            "cta": "Confirm Verification",
+            "resend": "Resend OTP",
+            "resend_with_timer": "Resend ({seconds}s)",
+            "toast_invalid_email": "Please enter a valid email to resend the code.",
+            "toast_resent_success": "A new OTP has been sent to your email.",
+            "toast_resent_fail": "Failed to resend the code.",
+            "toast_network_error": "Network error.",
+            "error_unexpected": "An unexpected error occurred."
+        },
+        "mfa": {
+            "title": "Two-factor authentication (MFA)",
+            "desc": "Please enter the code from your Authenticator app to continue {actionTitle}.",
+            "placeholder": "000000",
+            "submit": "Verify",
+            "error_generic": "Verification failed",
+            "action_default": "this action"
+        }
+    },
+    "Chat": {
+        "time": {
+            "just_now": "Just now",
+            "minutes_ago": "{count, plural, =1 {# minute ago} other {# minutes ago}}",
+            "hours_ago": "{count, plural, =1 {# hour ago} other {# hours ago}}",
+            "days_ago": "{count, plural, =1 {# day ago} other {# days ago}}"
+        },
+        "inbox": {
+            "tag": "Chat",
+            "title": "Inbox",
+            "subtitle": "Manage your conversations with readers and seekers.",
+            "role_user": "🔮 Seeker",
+            "role_reader": "📖 Reader",
+            "loading": "Loading...",
+            "empty_title": "No conversations yet.",
+            "empty_subtitle": "Start a new connection",
+            "list_label_reader": "Reader",
+            "list_label_user": "User",
+            "status": {
+                "active": "Chatting",
+                "pending": "Awaiting reply",
+                "completed": "Completed"
+            }
+        },
+        "room": {
+            "title": "Spiritual Connection Room",
+            "signal_ok": "Signal stable",
+            "syncing": "Syncing...",
+            "report_title": "Report violation",
+            "loading": "Synchronizing...",
+            "empty": "Connection is open. Send your first message.",
+            "input_placeholder": "Send your message...",
+            "payment_offer": "💎 Payment offer",
+            "payment_accept": "✅ Accepted",
+            "payment_reject": "❌ Declined"
+        },
+        "report": {
+            "success_title": "Report sent",
+            "success_desc": "Thank you. An admin will review and process it soon.",
+            "title": "Report violation",
+            "target_type_label": "Target type",
+            "target_conversation": "Conversation",
+            "target_user": "User",
+            "target_message": "Message",
+            "reason_label": "Reason *",
+            "reason_placeholder": "Describe the reason in detail (minimum 10 characters)...",
+            "submit": "Send report",
+            "validation_min": "Reason must be at least 10 characters.",
+            "error_failed": "Failed to send report. Please try again."
+        },
+        "dispute": {
+            "cta": "Dispute ({hours}h {minutes}m)",
+            "success_title": "Dispute sent",
+            "success_desc": "An admin will review and process it.",
+            "title": "Open dispute",
+            "remaining": "⏰ Remaining: {hours} hours {minutes} minutes to open a dispute",
+            "reason_label": "Reason *",
+            "reason_placeholder": "Describe the reason in detail (minimum 10 characters)...",
+            "submit": "Send dispute",
+            "validation_min": "Reason must be at least 10 characters.",
+            "error_failed": "Failed to submit dispute."
+        },
+        "escrow": {
+            "title": "Escrow",
+            "active": "Active",
+            "expired": "Expired",
+            "countdown": "{hours}h {minutes}m",
+            "status_accepted": "Accepted",
+            "status_released": "Released",
+            "status_refunded": "Refunded",
+            "status_disputed": "Disputed",
+            "type_main": "Main question",
+            "type_addon": "Add-on question",
+            "deadline_reply": "Reply deadline: {time}",
+            "auto_release": "Auto release: {time}",
+            "dispute_window": "Dispute window: {time}",
+            "action_confirm_release": "Confirm release",
+            "action_replied": "Mark as replied"
+        }
+    },
+    "Wallet": {
+        "widget": {
+            "title": "Your wallet",
+            "diamond_title": "Diamond - Premium",
+            "gold_title": "Gold - Free",
+            "frozen_suffix": "(+{amount})"
+        },
+        "overview": {
+            "tag": "Financial Protocol",
+            "title": "Mystic Vault",
+            "subtitle": "Manage your financial flow and your Diamond/Gold destiny within the TarotNow AI ecosystem.",
+            "deposit_cta": "Top up Diamond",
+            "diamond_label": "Diamond (Premium)",
+            "diamond_desc": "Official top-ups",
+            "frozen_label": "Frozen: {amount}",
+            "gold_label": "Gold (Reward)",
+            "gold_desc": "Lucky reward points",
+            "gold_note": "Earned from check-ins and activity",
+            "ledger_title": "Transaction Journey",
+            "search_placeholder": "SEARCH...",
+            "table_time": "Time",
+            "table_asset": "Asset",
+            "table_action": "Activity",
+            "table_amount": "Amount",
+            "ledger_loading": "Fetching history...",
+            "ledger_empty": "No transactions yet.",
+            "balance_after": "Balance: {amount}"
+        },
+        "deposit": {
+            "back_to_wallet": "Back to vault",
+            "tag": "Energy Supply",
+            "title": "Top up Diamond",
+            "subtitle": "Supply Diamond energy to perform premium divination protocols.",
+            "balance_label": "Current balance",
+            "select_title": "Choose top-up amount",
+            "custom_label": "Or enter a custom amount (VND)",
+            "custom_placeholder": "Min 10,000",
+            "bonus_gold": "+ {amount} Bonus Gold 🎁",
+            "confirm_title": "Order confirmation",
+            "value_label": "Top-up value",
+            "diamond_receive_label": "Diamond received",
+            "promo_bonus_label": "Promotion bonus (Gold)",
+            "total_assets_label": "Total assets",
+            "order_ready": "Order is ready",
+            "pay_now": "Pay now",
+            "submitting": "Activating...",
+            "submit": "Top up Diamond",
+            "security_note": "Secured by TarotNow Financial Protocol",
+            "notes_title": "Transaction notes",
+            "notes_item1": "1 Diamond equals 1,000 VND.",
+            "notes_item2": "Diamond is used for premium readings, Gold is for check-ins and gifts.",
+            "notes_item3": "Transactions are processed automatically within 1-3 minutes.",
+            "error_min_amount": "Minimum top-up is 10,000 VND.",
+            "error_create_failed": "Unable to create a top-up order. Please try again later.",
+            "error_generic": "Something went wrong. Please try again."
+        },
+        "withdraw": {
+            "back_to_wallet": "Back to vault",
+            "tag": "Withdrawal",
+            "title": "Withdraw",
+            "subtitle": "Convert Diamond to VND. 10% fee, minimum 50💎, max once per day.",
+            "action_title": "this withdrawal",
+            "amount_label": "Diamond amount",
+            "amount_placeholder": "Minimum 50",
+            "gross_label": "Gross VND",
+            "fee_label": "Fee 10%",
+            "net_label": "Net received",
+            "bank_label": "Bank",
+            "bank_placeholder": "e.g. Vietcombank, Techcombank...",
+            "account_name_label": "Account holder name",
+            "account_name_placeholder": "JOHN DOE",
+            "account_number_label": "Account number",
+            "account_number_placeholder": "0123456789",
+            "success_message": "Withdrawal request sent successfully!",
+            "submitting": "Processing...",
+            "submit": "Submit Withdrawal Request",
+            "history_title": "Withdrawal history",
+            "history_empty": "No withdrawal requests yet.",
+            "admin_note_prefix": "ADMIN:",
+            "status_pending": "Pending",
+            "status_approved": "Approved",
+            "status_rejected": "Rejected",
+            "status_paid": "Paid",
+            "error_min_amount": "Minimum 50 Diamond.",
+            "error_enter_bank": "Please enter a bank name.",
+            "error_enter_account_name": "Please enter the account holder name.",
+            "error_enter_account_number": "Please enter the account number.",
+            "error_create_failed": "Unable to create request."
+        }
+    },
+    "Readers": {
+        "directory": {
+            "tag": "Directory",
+            "title": "Priestess",
+            "subtitle": "Find a reader that resonates with you. Only those currently available can accept new questions.",
+            "total_label": "Total readers",
+            "search_placeholder": "Search by name...",
+            "specialties": {
+                "all": "All specialties",
+                "love": "💕 Love",
+                "career": "💼 Career",
+                "general": "🔮 General",
+                "health": "🌿 Health",
+                "finance": "💰 Finance"
+            },
+            "statuses": {
+                "all": "All statuses",
+                "accepting": "🟢 Accepting",
+                "online": "🟡 Online (Busy)",
+                "offline": "⚫ Offline"
+            },
+            "status_indicator": {
+                "ready": "Ready",
+                "busy": "Busy",
+                "offline": "Offline"
+            },
+            "loading": "Loading readers...",
+            "empty": "No readers match your filters.",
+            "reader_fallback": "Reader",
+            "bio_fallback": "No detailed bio yet.",
+            "per_question_suffix": "/ Q"
+        },
+        "profile": {
+            "loading": "Loading profile...",
+            "not_found": "Reader profile not found.",
+            "back_to_list": "Back to directory",
+            "status": {
+                "accepting": "Accepting questions",
+                "online": "Busy",
+                "offline": "Offline"
+            },
+            "diamond_per_question_suffix": "/ Q",
+            "rating_label": "Rating",
+            "reviews_label": "Reviews",
+            "soul_link": "Soul link",
+            "specialties_title": "Specialties",
+            "cta_connecting": "Connecting...",
+            "cta_send_question": "Send a question",
+            "not_accepting": "Not accepting right now",
+            "toast_create_conversation_fail": "Unable to start a conversation",
+            "member_since": "Joined Astral on {date}"
+        }
+    },
+    "ReaderApply": {
+        "loading": "Checking application status...",
+        "pending": {
+            "title": "Application pending",
+            "desc": "Your Reader application has been submitted and is awaiting admin review. You will be notified once a decision is made.",
+            "intro_label": "Submitted introduction",
+            "sent_at": "Submitted at: {date}"
+        },
+        "approved": {
+            "title": "You are a Reader!",
+            "desc": "Congratulations! Your application has been approved. Update your profile and start receiving questions."
+        },
+        "rejected": {
+            "title": "Previous application was rejected",
+            "reason": "Reason: {note}",
+            "can_resubmit": "You can submit a new application below."
+        },
+        "header": {
+            "tag": "Reader Application",
+            "title": "Become a Reader",
+            "subtitle": "Share your Tarot reading abilities with the community. Tell us why you want to become a Reader."
+        },
+        "steps": {
+            "intro": {
+                "title": "Introduce yourself",
+                "desc": "Share your Tarot experience"
+            },
+            "review": {
+                "title": "Await review",
+                "desc": "Admin will review your application"
+            },
+            "start": {
+                "title": "Start receiving questions",
+                "desc": "After approval"
+            }
+        },
+        "form": {
+            "intro_label": "Introduction *",
+            "intro_placeholder": "Share your Tarot reading experience, why you want to become a Reader, and what value you can bring to the community...",
+            "min_chars": "Minimum 20 characters",
+            "submitting": "Submitting...",
+            "submit": "Submit Application"
+        },
+        "validation": {
+            "min_intro": "Introduction must be at least 20 characters."
+        },
+        "errors": {
+            "submit_failed": "Failed to submit application."
+        },
+        "success": {
+            "submitted": "Your application has been submitted."
+        }
     },
     "ReadingSetup": {
         "title": "Select Your Spread",
         "subtitle": "Connect with universal energy through ancient card layouts.",
+        "tag": "Ritual setup",
         "daily_1_name": "Daily Oracle (1 Card)",
         "daily_1_desc": "Receive a guiding message for your day.",
         "spread_3_name": "The Triad (3 Cards)",
@@ -53,15 +574,64 @@
         "spread_5_desc": "A deep analysis of factors impacting your situation.",
         "spread_10_name": "Celtic Cross (10 Cards)",
         "spread_10_desc": "The most comprehensive and detailed panoramic view of your destiny.",
+        "cost_free": "Free",
+        "cost_gold": "{amount} Gold",
+        "cost_diamond": "{amount} Diamond",
         "question_label": "What is on your mind?",
         "question_placeholder": "Focus your mind and type your question here (optional)...",
         "cta_draw": "Draw Now",
-        "preparing": "Connecting energy..."
+        "preparing": "Connecting energy...",
+        "error_init_failed": "Failed to initialize reading session.",
+        "validation": {
+            "question_too_long": "Question is too long"
+        }
+    },
+    "ReadingSession": {
+        "header": {
+            "back_to_setup": "Back to ritual",
+            "title": "The Mystical Realm",
+            "session": "Session: {id}..."
+        },
+        "question": {
+            "label": "Intention"
+        },
+        "shuffle": {
+            "connecting_title": "Establishing connection...",
+            "cleansing": "Cleansing the cards"
+        },
+        "pick": {
+            "prompt": "Center yourself and pick {remaining} cards",
+            "done": "The cards are set",
+            "count": "{picked}/{total} cards",
+            "random": "Pick randomly"
+        },
+        "modal": {
+            "title": "Cards selected",
+            "desc": "The universe has heard you. Take a deep breath before receiving the message.",
+            "revealing": "Channeling energy...",
+            "reveal": "Channel energy and reveal",
+            "change_card": "Change a card"
+        },
+        "cards": {
+            "meaning_label": "Meaning"
+        },
+        "ai": {
+            "subtitle": "AI Divine Stream • {id}",
+            "live": "Live",
+            "waiting_flip": "Preparing the connection... Flip all cards to receive the message.",
+            "footer_note": "Listen to the resonance of your cards."
+        },
+        "errors": {
+            "reveal_failed": "Failed to reveal cards."
+        }
     },
     "Collection": {
+        "tag": "Arcane Sanctuary",
         "title": "Mystical Sanctuary",
         "subtitle": "Track your progress in unlocking the tarot card universe.",
+        "error_load_failed": "Unable to load your collection.",
         "progress_label": "Collection Progress",
+        "filters_label": "Filters",
         "filter_all": "All",
         "filter_owned": "Owned",
         "filter_unowned": "Hidden",
@@ -70,11 +640,17 @@
         "cta_draw": "Draw Now",
         "level_label": "Lv",
         "copies_label": "copies",
-        "unknown_card": "Unknown"
+        "unknown_card": "Unknown",
+        "locked_meaning": "The universe has not revealed this card's message to you yet."
     },
     "History": {
         "title": "Ritual Journey",
         "subtitle": "Chronicles of the messages from The Celestials.",
+        "tag": "Chronicles",
+        "detail_fragment": "Fragment: {id}...",
+        "essence_label": "Essence",
+        "ai_title": "Primal Oracle",
+        "ai_desc": "The universe has stored {count} imprints of wisdom in this session. Full conversation content will appear in future protocol updates.",
         "empty_title": "No imprints yet",
         "empty_desc": "The universe is waiting for you to utter the words for a new beginning.",
         "cta_draw": "Draw Now",
@@ -90,5 +666,790 @@
         "filter_type": "Spread Type",
         "filter_date": "Reading Date",
         "all_types": "All Spreads"
+    },
+    "Admin": {
+        "layout": {
+            "title": "Admin",
+            "subtitle": "Management",
+            "section_main": "Main control",
+            "exit_portal": "Exit portal",
+            "menu": {
+                "overview": "Overview",
+                "users": "Users",
+                "deposits": "Deposits",
+                "promotions": "Promotions",
+                "readings": "Readings",
+                "reader_requests": "Reader requests",
+                "withdrawals": "Withdrawals",
+                "disputes": "Disputes"
+            }
+        },
+        "dashboard": {
+            "loading": "Initializing admin system...",
+            "header": {
+                "tag": "System intelligence",
+                "title": "HQ overview",
+                "subtitle": "Monitor the flow of users and fate data across the TarotNow AI system."
+            },
+            "health": {
+                "title": "Health check",
+                "ok": "System stable"
+            },
+            "stats": {
+                "users": "Total users",
+                "deposits": "Top-ups",
+                "promotions": "Promotions",
+                "readings": "Reading sessions"
+            },
+            "notice": {
+                "title": "Admin bulletin",
+                "reminder_title": "Reminder",
+                "reminder_body": "Review pending top-ups and manually approve if MOMO/VNPay is delayed.",
+                "announcement_title": "Announcement",
+                "announcement_body": "Admin UI Astral v2.0 has been updated. Enjoy a smoother management experience."
+            },
+            "shortcuts": {
+                "title": "Quick shortcuts",
+                "users": "Manage users",
+                "deposits": "Deposit flow",
+                "readings": "New readings",
+                "reader_requests": "Review readers"
+            },
+            "insights": {
+                "revenue_title": "Estimated revenue",
+                "revenue_currency": "VND",
+                "revenue_note": "Calculated from {count} successful top-ups",
+                "activity_title": "Activity stream",
+                "activity_unit": "Sessions",
+                "activity_note": "Total number of fate decoding sessions completed"
+            }
+        },
+        "deposits": {
+            "header": {
+                "tag": "Finance",
+                "title": "System deposits",
+                "subtitle": "Track {count} Diamond top-up transactions."
+            },
+            "filters": {
+                "label": "Filter",
+                "all": "All",
+                "pending": "Pending",
+                "success": "Success",
+                "failed": "Failed"
+            },
+            "table": {
+                "heading_order": "Order / TXN",
+                "heading_user": "User",
+                "heading_amount": "Amount (VND)",
+                "heading_assets": "Assets received",
+                "heading_time": "Time",
+                "heading_status": "Status",
+                "heading_actions": "Actions"
+            },
+            "row": {
+                "txn_missing": "No TXN",
+                "system_user": "System user",
+                "user_id_prefix": "ID: {id}..."
+            },
+            "status": {
+                "success": "Success",
+                "failed": "Failed",
+                "pending": "Processing"
+            },
+            "actions": {
+                "approve_title": "Approve",
+                "reject_title": "Reject",
+                "na": "N/A"
+            },
+            "modal": {
+                "title_approve": "Approve transaction?",
+                "title_reject": "Reject transaction?",
+                "desc_approve": "This will change the money flow status and credit assets to this user.",
+                "desc_reject": "This will change the money flow status and cancel the request.",
+                "back": "Back",
+                "confirm": "Confirm"
+            },
+            "toast": {
+                "approve_success": "Approved successfully!",
+                "reject_success": "Order rejected.",
+                "action_failed": "Failed. Please try again.",
+                "network_error": "Server connection error."
+            },
+            "states": {
+                "loading": "Querying the ledger...",
+                "empty": "No transactions found in this view."
+            },
+            "pagination": {
+                "summary": "Page {page} | Total {total} transactions"
+            },
+            "summary": {
+                "confirm_title": "Confirm orders",
+                "confirm_desc": "The system syncs automatically from the payment gateway. Double-check the TXN before manual intervention.",
+                "ledger_title": "Ledger information",
+                "ledger_subtitle": "Financial record v2.4"
+            }
+        },
+	        "users": {
+	            "header": {
+	                "tag": "Database",
+	                "title": "User management",
+	                "subtitle": "Total {count} users in the system."
+	            },
+	            "search": {
+	                "placeholder": "NAME, EMAIL, USERNAME..."
+	            },
+	            "table": {
+	                "heading_account": "Account",
+	                "heading_rank": "Rank / XP",
+	                "heading_assets": "Assets (D/G)",
+	                "heading_role": "Role",
+	                "heading_status": "Status",
+	                "heading_actions": "Actions"
+	            },
+	            "row": {
+	                "level": "LV {level}",
+	                "exp": "{exp} EXP"
+	            },
+	            "states": {
+	                "loading": "Querying data...",
+	                "empty": "No matching users found."
+	            },
+            "roles": {
+                "admin": "Admin",
+                "tarot_reader": "Reader",
+                "user": "User"
+            },
+            "status": {
+                "locked": "Locked",
+                "active": "Active"
+            },
+            "actions": {
+                "add_balance_title": "Manual top-up",
+                "lock_title": "Lock account",
+                "unlock_title": "Unlock"
+            },
+            "pagination": {
+                "summary": "Page {page} | Total {total} users"
+            },
+            "lock_modal": {
+                "title_lock": "Lock this account?",
+                "title_unlock": "Unlock this account?",
+                "desc_lock": "Confirm to block access for user: {name}",
+                "desc_unlock": "Confirm to allow this user to continue their journey: {name}",
+                "cancel": "Cancel",
+                "confirm": "Proceed"
+            },
+            "add_balance": {
+                "title": "Manual top-up",
+                "subtitle": "Manual Balance Intervention",
+                "recipient_label": "Recipient",
+                "currency_gold": "Gold",
+                "currency_diamond": "Diamond",
+                "amount_label": "Amount",
+                "reason_label": "Reason",
+                "reason_placeholder": "e.g. System compensation, event gift...",
+                "cancel": "Cancel task",
+                "submit": "Activate"
+            },
+            "toast": {
+                "lock_success": "Account locked successfully.",
+                "unlock_success": "Account unlocked successfully.",
+                "toggle_failed": "Failed to change account status.",
+                "network_error": "Connection error.",
+                "amount_invalid": "Amount must be greater than 0.",
+                "add_success": "Added {amount} {currency} successfully!",
+                "add_failed": "Failed to add balance.",
+                "system_error": "System error."
+            }
+        },
+        "promotions": {
+            "header": {
+                "tag": "Marketing",
+                "title": "Promotions",
+                "subtitle": "Set top-up thresholds to reward bonus Gold."
+            },
+            "actions": {
+                "toggle_create_add": "Add promotion",
+                "toggle_create_cancel": "Cancel"
+            },
+            "create": {
+                "title": "Create a new reward threshold",
+                "min_amount_label": "Minimum top-up (VND)",
+                "min_amount_placeholder": "200,000",
+                "bonus_label": "Bonus Gold",
+                "bonus_placeholder": "500",
+                "note": "The promotion will be activated immediately after saving.",
+                "submit": "Save to system",
+                "submitting": "Saving..."
+            },
+            "table": {
+                "heading_condition": "Activation condition",
+                "heading_reward": "Reward (Gold)",
+                "heading_status": "Status",
+                "heading_commands": "Commands"
+            },
+            "states": {
+                "loading": "Loading promotions...",
+                "empty": "No promotions found."
+            },
+            "row": {
+                "condition_from": "From {amount}"
+            },
+            "status": {
+                "active": "Active",
+                "inactive": "Inactive"
+            },
+            "delete_modal": {
+                "title": "Delete promotion?",
+                "desc": "This will permanently remove this promotion from the system ledger. Existing transactions are not affected.",
+                "keep": "Keep",
+                "delete": "Delete"
+            },
+            "toast": {
+                "create_success": "Promotion created.",
+                "create_failed": "Failed to create promotion.",
+                "toggle_success": "Status updated.",
+                "toggle_failed": "Failed to update status.",
+                "delete_success": "Promotion deleted.",
+                "delete_failed": "Failed to delete promotion.",
+                "network_error": "Connection error."
+            }
+        },
+        "readings": {
+            "header": {
+                "tag": "Monitoring",
+                "title": "Fate journal",
+                "subtitle": "Explore {count} spiritual journeys through Tarot."
+            },
+            "filters": {
+                "username_label": "User",
+                "username_placeholder": "Username...",
+                "spread_label": "Spread",
+                "spread_all": "All spreads",
+                "spread_daily": "Daily 1 Card",
+                "spread_3": "Spread 3 Cards",
+                "spread_5": "Spread 5 Cards",
+                "spread_10": "Spread 10 Cards",
+                "start_date_label": "From date",
+                "end_date_label": "To date",
+                "submit": "Query"
+            },
+            "table": {
+                "heading_timeline": "Timeline",
+                "heading_user": "User",
+                "heading_spread": "Spread",
+                "heading_question": "Question",
+                "heading_status": "Status"
+            },
+            "states": {
+                "loading": "Opening the chapters of fate...",
+                "empty": "No readings found."
+            },
+            "row": {
+                "user_unknown": "Unknown",
+                "question_empty": "No question provided..."
+            },
+            "status": {
+                "completed": "Completed",
+                "processing": "In progress"
+            },
+            "pagination": {
+                "summary": "Chapter {page} / {total} realms of fate"
+            },
+            "insights": {
+                "total_title": "Total journeys",
+                "update_label": "Update cycle",
+                "update_value": "Real-time",
+                "monitor_label": "Monitoring zone",
+                "monitor_value": "Admin logbook"
+            },
+            "toast": {
+                "unauthorized": "Session expired or unauthorized."
+            }
+        },
+        "reader_requests": {
+            "header": {
+                "tag": "Review",
+                "title": "Reader applications",
+                "subtitle": "Review and approve Reader applications."
+            },
+            "summary": {
+                "total_label": "Total requests"
+            },
+            "filters": {
+                "pending": "Pending",
+                "approved": "Approved",
+                "rejected": "Rejected",
+                "all": "All"
+            },
+            "states": {
+                "loading": "Loading...",
+                "empty": "No requests found."
+            },
+            "row": {
+                "id_prefix": "ID: {id}...",
+                "intro_title": "Introduction",
+                "expand": "Expand",
+                "admin_note_title": "Admin note"
+            },
+            "input": {
+                "admin_note_placeholder": "ADMIN NOTE BEFORE REVIEW (OPTIONAL)..."
+            },
+            "actions": {
+                "approve": "Approve reader",
+                "reject": "Reject request"
+            },
+            "status": {
+                "pending": "Pending",
+                "approved": "Approved",
+                "rejected": "Rejected"
+            },
+            "pagination": {
+                "summary": "Page {page} / {total}"
+            },
+            "toast": {
+                "approve_success": "Reader approved.",
+                "reject_success": "Application rejected.",
+                "process_failed": "Failed to process request. Please try again."
+            }
+        },
+        "withdrawals": {
+            "header": {
+                "tag": "Admin",
+                "title": "Payout queue",
+                "subtitle": "Approve or reject Reader withdrawal requests (FIFO)."
+            },
+            "states": {
+                "loading": "Loading queue...",
+                "empty": "No pending requests."
+            },
+            "row": {
+                "gross": "Gross",
+                "fee": "Fee",
+                "net": "Net",
+                "id_prefix": "ID: {id}..."
+            },
+            "input": {
+                "admin_note_placeholder": "ADMIN NOTE..."
+            },
+            "actions": {
+                "approve": "Approve",
+                "reject": "Reject"
+            },
+            "toast": {
+                "success": "Request processed successfully.",
+                "failed": "Processing failed."
+            },
+            "mfa": {
+                "action_approve": "approve this withdrawal request",
+                "action_reject": "reject this withdrawal request"
+            }
+        },
+        "disputes": {
+            "header": {
+                "tag": "Escrow",
+                "title": "Dispute queue",
+                "subtitle": "Resolve escrow disputes. Decide release to Reader or refund to User."
+            },
+            "guide": {
+                "title": "Dispute handling guide",
+                "release_label": "Release",
+                "release_desc": "Reader answered correctly → Diamond transfers to reader (minus 10% fee).",
+                "refund_label": "Refund",
+                "refund_desc": "Wrong or no reply → Diamond refunds to user.",
+                "check_history": "Check chat history before deciding."
+            },
+            "form": {
+                "quick_title": "Quick resolve",
+                "item_id_label": "Item ID (UUID)",
+                "item_id_placeholder": "ENTER QUESTION ITEM UUID...",
+                "note_label": "Admin note",
+                "note_placeholder": "Reason for decision...",
+                "release_button": "Release to Reader",
+                "refund_button": "Refund to User"
+            },
+            "toast": {
+                "release_success": "Released to Reader successfully.",
+                "refund_success": "Refunded to User successfully.",
+                "failed": "Failed to resolve dispute. Please check again.",
+                "missing_item_id": "Please enter Item ID."
+            },
+            "resolved": {
+                "title": "Resolved in this session",
+                "badge": "Resolved"
+            }
+        }
+    },
+    "Tarot": {
+        "suits": {
+            "major": {
+                "full": "Major Arcana",
+                "short": "Major"
+            },
+            "wands": {
+                "full": "Wands",
+                "short": "Wands"
+            },
+            "cups": {
+                "full": "Cups",
+                "short": "Cups"
+            },
+            "swords": {
+                "full": "Swords",
+                "short": "Swords"
+            },
+            "pentacles": {
+                "full": "Pentacles",
+                "short": "Pentacles"
+            }
+        },
+        "cards": {
+            "c0": {
+                "name": "The Fool",
+                "meaning": "A new beginning full of potential, stepping into adventure with an open and free spirit."
+            },
+            "c1": {
+                "name": "The Magician",
+                "meaning": "Use your talents and resources to turn ideas into reality."
+            },
+            "c2": {
+                "name": "The High Priestess",
+                "meaning": "Listen to your inner voice, trust your intuition, and honor inner wisdom."
+            },
+            "c3": {
+                "name": "The Empress",
+                "meaning": "A season of abundance, creativity, and a deep connection with nature."
+            },
+            "c4": {
+                "name": "The Emperor",
+                "meaning": "Strong leadership, discipline, and building a solid foundation."
+            },
+            "c5": {
+                "name": "The Hierophant",
+                "meaning": "Seek spiritual guidance, follow tradition, and honor shared values."
+            },
+            "c6": {
+                "name": "The Lovers",
+                "meaning": "A deep bond, an important choice, and harmony in relationships."
+            },
+            "c7": {
+                "name": "The Chariot",
+                "meaning": "Overcome obstacles through strong will and focused determination."
+            },
+            "c8": {
+                "name": "Strength",
+                "meaning": "True strength comes from within: courage, patience, and compassion."
+            },
+            "c9": {
+                "name": "The Hermit",
+                "meaning": "A quiet time for reflection, seeking answers from within."
+            },
+            "c10": {
+                "name": "Wheel of Fortune",
+                "meaning": "Positive change, good luck arriving, and the turning cycles of life."
+            },
+            "c11": {
+                "name": "Justice",
+                "meaning": "Truth is revealed, fairness is served, and responsibility is required."
+            },
+            "c12": {
+                "name": "The Hanged Man",
+                "meaning": "Pause to see things from a different perspective and surrender what no longer serves."
+            },
+            "c13": {
+                "name": "Death",
+                "meaning": "An ending that opens a new beginning, a profound transformation."
+            },
+            "c14": {
+                "name": "Temperance",
+                "meaning": "Seek balance, practice patience, and harmonize opposing forces."
+            },
+            "c15": {
+                "name": "The Devil",
+                "meaning": "Being bound by temptation, unhealthy habits, or fear."
+            },
+            "c16": {
+                "name": "The Tower",
+                "meaning": "Sudden upheaval breaks what no longer fits, clearing the way to rebuild."
+            },
+            "c17": {
+                "name": "The Star",
+                "meaning": "Renewed hope, healing, and creative inspiration."
+            },
+            "c18": {
+                "name": "The Moon",
+                "meaning": "Confront fear, illusion, and what is hidden in the subconscious."
+            },
+            "c19": {
+                "name": "The Sun",
+                "meaning": "Radiant joy, success, and uplifting optimism."
+            },
+            "c20": {
+                "name": "Judgement",
+                "meaning": "A time to review and awaken, stepping into a new chapter."
+            },
+            "c21": {
+                "name": "The World",
+                "meaning": "Completion of a major cycle, bringing wholeness and fulfillment."
+            },
+            "c22": {
+                "name": "Ace of Wands",
+                "meaning": "Fresh creative energy, an inspired new start."
+            },
+            "c23": {
+                "name": "Two of Wands",
+                "meaning": "Look ahead and plan your next steps."
+            },
+            "c24": {
+                "name": "Three of Wands",
+                "meaning": "Expand your vision and embrace new opportunities."
+            },
+            "c25": {
+                "name": "Four of Wands",
+                "meaning": "Celebrate achievements and enjoy harmony at home."
+            },
+            "c26": {
+                "name": "Five of Wands",
+                "meaning": "Healthy competition or facing a challenge."
+            },
+            "c27": {
+                "name": "Six of Wands",
+                "meaning": "Victory and recognition for your success."
+            },
+            "c28": {
+                "name": "Seven of Wands",
+                "meaning": "Stand your ground through tests and defend your position."
+            },
+            "c29": {
+                "name": "Eight of Wands",
+                "meaning": "Things move quickly, calling for swift action."
+            },
+            "c30": {
+                "name": "Nine of Wands",
+                "meaning": "Persevere even when tired, preparing for the final challenge."
+            },
+            "c31": {
+                "name": "Ten of Wands",
+                "meaning": "Carrying too much responsibility, learning to delegate."
+            },
+            "c32": {
+                "name": "Page of Wands",
+                "meaning": "Explore the world with enthusiasm and curiosity."
+            },
+            "c33": {
+                "name": "Knight of Wands",
+                "meaning": "Bold action, passion, and adventure."
+            },
+            "c34": {
+                "name": "Queen of Wands",
+                "meaning": "Confidence, charisma, and inspiring others."
+            },
+            "c35": {
+                "name": "King of Wands",
+                "meaning": "Leadership through vision and seasoned experience."
+            },
+            "c36": {
+                "name": "Ace of Cups",
+                "meaning": "A blossoming new love or overflowing creative inspiration."
+            },
+            "c37": {
+                "name": "Two of Cups",
+                "meaning": "A harmonious bond and an ideal partnership."
+            },
+            "c38": {
+                "name": "Three of Cups",
+                "meaning": "Joy shared with friends and community."
+            },
+            "c39": {
+                "name": "Four of Cups",
+                "meaning": "Dissatisfied with the present and missing an opportunity."
+            },
+            "c40": {
+                "name": "Five of Cups",
+                "meaning": "Grieving a loss, while remembering what still remains."
+            },
+            "c41": {
+                "name": "Six of Cups",
+                "meaning": "Nostalgic memories, innocence, and simple sweetness."
+            },
+            "c42": {
+                "name": "Seven of Cups",
+                "meaning": "Many tempting choices, but discernment is needed."
+            },
+            "c43": {
+                "name": "Eight of Cups",
+                "meaning": "Walking away from a situation that no longer has meaning."
+            },
+            "c44": {
+                "name": "Nine of Cups",
+                "meaning": "Wishes coming true and deep satisfaction."
+            },
+            "c45": {
+                "name": "Ten of Cups",
+                "meaning": "Complete family happiness and emotional fulfillment."
+            },
+            "c46": {
+                "name": "Page of Cups",
+                "meaning": "Rich creativity and strong intuition."
+            },
+            "c47": {
+                "name": "Knight of Cups",
+                "meaning": "Romance and following the heart's calling."
+            },
+            "c48": {
+                "name": "Queen of Cups",
+                "meaning": "Deep empathy, strong intuition, and healing energy."
+            },
+            "c49": {
+                "name": "King of Cups",
+                "meaning": "Emotional control, kindness, and compassion."
+            },
+            "c50": {
+                "name": "Ace of Swords",
+                "meaning": "Mental clarity and a breakthrough idea."
+            },
+            "c51": {
+                "name": "Two of Swords",
+                "meaning": "A difficult choice, staying calm to weigh options."
+            },
+            "c52": {
+                "name": "Three of Swords",
+                "meaning": "Heartache, disappointment, or betrayal."
+            },
+            "c53": {
+                "name": "Four of Swords",
+                "meaning": "Time to rest and recover your energy."
+            },
+            "c54": {
+                "name": "Five of Swords",
+                "meaning": "Winning at any cost, often losing more than you gain."
+            },
+            "c55": {
+                "name": "Six of Swords",
+                "meaning": "Leaving hardship behind to find calmer waters."
+            },
+            "c56": {
+                "name": "Seven of Swords",
+                "meaning": "Stealthy action or using a clever strategy."
+            },
+            "c57": {
+                "name": "Eight of Swords",
+                "meaning": "Feeling trapped by circumstances or your own mind."
+            },
+            "c58": {
+                "name": "Nine of Swords",
+                "meaning": "Anxiety and fears that haunt, especially at night."
+            },
+            "c59": {
+                "name": "Ten of Swords",
+                "meaning": "A painful, sudden ending that can lead to a new beginning."
+            },
+            "c60": {
+                "name": "Page of Swords",
+                "meaning": "Curious, intelligent, and always ready to learn."
+            },
+            "c61": {
+                "name": "Knight of Swords",
+                "meaning": "Fast, decisive action driven by ambition."
+            },
+            "c62": {
+                "name": "Queen of Swords",
+                "meaning": "Sharp intellect, independence, and uncompromising honesty."
+            },
+            "c63": {
+                "name": "King of Swords",
+                "meaning": "Leadership through wisdom, fairness, and logic."
+            },
+            "c64": {
+                "name": "Ace of Pentacles",
+                "meaning": "A new financial opportunity and a solid foundation for the future."
+            },
+            "c65": {
+                "name": "Two of Pentacles",
+                "meaning": "Balance multiple priorities with flexibility."
+            },
+            "c66": {
+                "name": "Three of Pentacles",
+                "meaning": "Effective collaboration and developing your craft."
+            },
+            "c67": {
+                "name": "Four of Pentacles",
+                "meaning": "Protecting resources and seeking financial stability."
+            },
+            "c68": {
+                "name": "Five of Pentacles",
+                "meaning": "A challenging period financially or spiritually."
+            },
+            "c69": {
+                "name": "Six of Pentacles",
+                "meaning": "Sharing resources and being generous with others."
+            },
+            "c70": {
+                "name": "Seven of Pentacles",
+                "meaning": "Patience while waiting for long-term investments to pay off."
+            },
+            "c71": {
+                "name": "Eight of Pentacles",
+                "meaning": "Working diligently to refine and master skills."
+            },
+            "c72": {
+                "name": "Nine of Pentacles",
+                "meaning": "Prosperity and enjoying the fruits of your labor."
+            },
+            "c73": {
+                "name": "Ten of Pentacles",
+                "meaning": "A stable legacy and multi-generational security."
+            },
+            "c74": {
+                "name": "Page of Pentacles",
+                "meaning": "An opportunity to learn and grow financially."
+            },
+            "c75": {
+                "name": "Knight of Pentacles",
+                "meaning": "Slow and steady progress, reliable and patient."
+            },
+            "c76": {
+                "name": "Queen of Pentacles",
+                "meaning": "Creating safety and nurturing through practicality."
+            },
+            "c77": {
+                "name": "King of Pentacles",
+                "meaning": "Financial success and excellent business leadership."
+            }
+        }
+    },
+    "Legal": {
+        "tos_title": "Terms of Service",
+        "tos_meta_desc": "Terms of service and usage for TarotNow.",
+        "privacy_title": "Privacy Policy",
+        "privacy_meta_desc": "TarotNow's data privacy policy.",
+        "ai_disclaimer_title": "AI Disclaimer",
+        "ai_disclaimer_meta_desc": "Liability disclaimer for AI-generated information from TarotNow.",
+        "tos": {
+            "section1_title": "1. General terms",
+            "section1_body": "Welcome to TarotNow. By using our service, you agree to comply with these terms and conditions. Our service provides entertainment and supportive guidance for reference purposes through Tarot cards and Artificial Intelligence (AI) technology.",
+            "section2_title": "2. AI disclaimer",
+            "section2_body": "All Tarot interpretation content is generated by AI and is for entertainment and reference only. We are not legally responsible for personal, medical, financial, or legal decisions made based on TarotNow results.",
+            "section3_title": "3. Accounts and payments",
+            "section3_body": "Users are responsible for keeping their account information secure. Diamond top-up transactions are non-refundable except in cases of system errors caused by the payment gateway.",
+            "last_updated": "Last updated: 10/2026"
+        },
+        "privacy": {
+            "section1_title": "1. Information collection",
+            "section1_body": "TarotNow respects your privacy. We collect necessary information such as email address, display name, and date of birth to personalize your Tarot reading experience and to calculate zodiac signs and numerology.",
+            "section2_title": "2. Data usage",
+            "section2_body": "Your data is used internally to store reading history. AI query history is encrypted and sent to the provider (OpenAI) to obtain results and is not used for AI training, in line with the partner's commitment.",
+            "section3_title": "3. Data protection",
+            "section3_body": "All account information and passwords are securely encrypted. We do not sell, exchange, or share users' personal data with third parties for commercial purposes.",
+            "last_updated": "Last updated: 10/2026"
+        },
+        "ai_disclaimer": {
+            "warning": "Notice: Predictions and analyses from Astral AI are generated entirely by large language models (LLMs). Please do not treat this as a substitute for medical, psychological, or financial professional advice.",
+            "section1_title": "1. Nature of AI",
+            "section1_body": "All Tarot messages are interpreted through Artificial Intelligence (AI). Although we optimize mystical logic and Tarot intuition, AI interpretations may not be 100% accurate in all cases and contexts.",
+            "section2_title": "2. Not medical diagnosis",
+            "section2_body": "Results related to emotions, health, or money must not be used for self-diagnosis or as a replacement for legal/financial advice. Always consult a real-life professional if you are facing serious issues.",
+            "consent_note": "You must agree to this awareness statement before registering a TarotNow account."
+        }
     }
 }

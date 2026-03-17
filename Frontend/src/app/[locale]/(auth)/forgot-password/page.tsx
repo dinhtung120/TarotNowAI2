@@ -1,25 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Mail, ArrowLeft, Send } from 'lucide-react';
 import { forgotPasswordAction } from '@/actions/authActions';
 import { Link } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
 
 import AuthLayout from '@/components/layout/AuthLayout';
 import { Input, Button, GlassCard } from '@/components/ui';
 
-const forgotSchema = z.object({
- email: z.string().email('Invalid email address'),
-});
-
-type ForgotFormValues = z.infer<typeof forgotSchema>;
+type ForgotFormValues = { email: string };
 
 export default function ForgotPasswordPage() {
  const [errorMsg, setErrorMsg] = useState('');
  const [success, setSuccess] = useState(false);
+ const t = useTranslations('Auth');
+
+ const forgotSchema = useMemo(
+ () =>
+ z.object({
+ email: z.string().email(t('validation.email_invalid')),
+ }),
+ [t],
+ );
 
  const {
  register,
@@ -39,7 +45,7 @@ export default function ForgotPasswordPage() {
  }
  setSuccess(true);
  } catch {
- setErrorMsg('An unexpected error occurred.');
+ setErrorMsg(t('forgot.error_unexpected'));
  }
  };
 
@@ -52,28 +58,28 @@ export default function ForgotPasswordPage() {
  <div className="w-20 h-20 bg-[var(--info-bg)] rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_var(--info)] animate-pulse">
  <Mail className="w-10 h-10 text-[var(--info)]" />
  </div>
- <h2 className="text-3xl font-black italic tracking-tighter tn-text-primary mb-4 uppercase">Check Your Mail</h2>
- <p className="tn-text-secondary font-medium mb-8 leading-relaxed">
- If the email is valid, an OTP to reset your password has been sent to your inbox.
- </p>
- <Link href="/reset-password" tabIndex={-1}>
- <Button variant="brand" size="lg" fullWidth>
- Enter Reset Code
- </Button>
- </Link>
+	 <h2 className="text-3xl font-black italic tracking-tighter tn-text-primary mb-4 uppercase">{t('forgot.success_title')}</h2>
+	 <p className="tn-text-secondary font-medium mb-8 leading-relaxed">
+	 {t('forgot.success_desc')}
+	 </p>
+	 <Link href="/reset-password" tabIndex={-1}>
+	 <Button variant="brand" size="lg" fullWidth>
+	 {t('forgot.success_cta')}
+	 </Button>
+	 </Link>
  </GlassCard>
  </div>
  );
  }
 
  return (
- <AuthLayout title="Forgot Password" subtitle="Enter your email to receive a reset code"
- >
+	 <AuthLayout title={t('forgot.title')} subtitle={t('forgot.subtitle')}
+	 >
  <div className="mb-6 flex justify-center">
- <Link href="/login" className="inline-flex items-center text-xs font-bold tn-text-secondary hover:tn-text-primary transition-colors group uppercase tracking-widest">
+	 <Link href="/login" className="inline-flex items-center text-xs font-bold tn-text-secondary hover:tn-text-primary transition-colors group uppercase tracking-widest">
  <ArrowLeft className="w-4 h-4 mr-1.5 transform group-hover:-translate-x-1 transition-transform" />
- Back to Login
- </Link>
+	 {t('forgot.back_to_login')}
+	 </Link>
  </div>
 
  {errorMsg && (
@@ -84,25 +90,25 @@ export default function ForgotPasswordPage() {
  )}
 
  <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
- <Input
- label="Email"
- type="email"
- leftIcon={<Mail className="w-5 h-5" />}
- placeholder="seeker@tarotnow.com"
- error={errors.email?.message}
- {...register('email')}
- />
+	 <Input
+	 label={t('forgot.email_label')}
+	 type="email"
+	 leftIcon={<Mail className="w-5 h-5" />}
+	 placeholder={t('forgot.email_placeholder')}
+	 error={errors.email?.message}
+	 {...register('email')}
+	 />
 
- <Button
+	 <Button
  type="submit"
  variant="brand"
  size="lg"
  fullWidth
  isLoading={isSubmitting}
- rightIcon={!isSubmitting && <Send className="w-5 h-5 ml-2" />}
- >
- Send Reset Code
- </Button>
+	 rightIcon={!isSubmitting && <Send className="w-5 h-5 ml-2" />}
+	 >
+	 {t('forgot.cta')}
+	 </Button>
  </form>
  </AuthLayout>
  );

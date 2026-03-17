@@ -12,12 +12,15 @@ import {
 import MfaChallengeModal from '@/components/auth/MfaChallengeModal';
 import { SectionHeader, GlassCard, Button, Input } from '@/components/ui';
 import toast from 'react-hot-toast';
+import { useLocale, useTranslations } from "next-intl";
 
 /**
  * Admin Withdrawal Queue — danh sách yêu cầu rút tiền pending.
  * Admin approve hoặc reject.
  */
 export default function AdminWithdrawalsPage() {
+ const t = useTranslations("Admin");
+ const locale = useLocale();
  const [queue, setQueue] = useState<WithdrawalResult[]>([]);
  const [loading, setLoading] = useState(true);
  const [processing, setProcessing] = useState<string | null>(null);
@@ -59,13 +62,18 @@ export default function AdminWithdrawalsPage() {
  mfaCode
  });
  if (res.success) {
- toast.success('Xử lý yêu cầu thành công');
+ toast.success(t("withdrawals.toast.success"));
  setQueue(prev => prev.filter(r => r.id !== id));
  } else {
- toast.error(res.error || 'Xử lý thất bại');
+ toast.error(res.error || t("withdrawals.toast.failed"));
  }
  setProcessing(null);
  setPendingAction(null);
+ };
+
+ const formatVnd = (value: number | null | undefined) => {
+ if (value == null) return "-";
+ return new Intl.NumberFormat(locale, { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(value);
  };
 
  return (
@@ -73,10 +81,10 @@ export default function AdminWithdrawalsPage() {
  {/* Header */}
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
  <SectionHeader
- tag="Admin"
+ tag={t("withdrawals.header.tag")}
  tagIcon={<Sparkles className="w-3 h-3 text-[var(--success)]" />}
- title="Payout Queue"
- subtitle="Duyệt hoặc từ chối yêu cầu rút tiền của Reader. Thứ tự FIFO."
+ title={t("withdrawals.header.title")}
+ subtitle={t("withdrawals.header.subtitle")}
  className="mb-0 text-left items-start"
  />
  </div>
@@ -86,7 +94,7 @@ export default function AdminWithdrawalsPage() {
  <div className="flex items-center justify-center py-20">
  <div className="flex flex-col items-center justify-center space-y-4">
  <Loader2 className="w-8 h-8 animate-spin text-[var(--success)]" />
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Đang tải danh sách...</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("withdrawals.states.loading")}</span>
  </div>
  </div>
  )}
@@ -97,7 +105,7 @@ export default function AdminWithdrawalsPage() {
  <div className="w-16 h-16 rounded-full bg-[var(--success)]/10 border border-[var(--success)]/20 flex items-center justify-center mb-6 shadow-inner">
  <CheckCircle2 className="w-8 h-8 text-[var(--success)]" />
  </div>
- <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">Không có yêu cầu nào đang chờ duyệt.</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">{t("withdrawals.states.empty")}</p>
  </GlassCard>
  )}
 
@@ -115,20 +123,20 @@ export default function AdminWithdrawalsPage() {
  <div>
  <div className="text-2xl font-black tn-text-primary italic tracking-tighter drop-shadow-sm">{item.amountDiamond} <span className="text-xl text-[var(--warning)]">💎</span></div>
  <div className="text-[10px] font-bold text-[var(--text-secondary)] mt-1 flex gap-2 items-center">
- <span>Gross: {item.amountVnd?.toLocaleString('vi-VN')} ₫</span>
- <span className="opacity-50">|</span> <span>Fee: {item.feeVnd?.toLocaleString('vi-VN')} ₫</span>
- <span className="opacity-50">|</span> <span className="text-[var(--success)] drop-shadow-sm">Net: {item.netAmountVnd?.toLocaleString('vi-VN')} ₫</span>
+ <span>{t("withdrawals.row.gross")}: {formatVnd(item.amountVnd)}</span>
+ <span className="opacity-50">|</span> <span>{t("withdrawals.row.fee")}: {formatVnd(item.feeVnd)}</span>
+ <span className="opacity-50">|</span> <span className="text-[var(--success)] drop-shadow-sm">{t("withdrawals.row.net")}: {formatVnd(item.netAmountVnd)}</span>
  </div>
  </div>
  </div>
  <div className="flex flex-col items-start md:items-end gap-2 text-left md:text-right tn-surface p-3 rounded-2xl border tn-border-soft shadow-inner shrink-0">
  <div className="flex items-center gap-2 text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-tighter">
  <Clock className="w-3.5 h-3.5" />
- {new Date(item.createdAt).toLocaleString('vi-VN')}
+ {new Date(item.createdAt).toLocaleString(locale)}
  </div>
  <div className="flex items-center gap-2 text-[10px] font-bold text-[var(--text-tertiary)] italic">
  <User className="w-3.5 h-3.5" />
- ID: {item.userId.substring(0, 8)}...
+ {t("withdrawals.row.id_prefix", { id: item.userId.substring(0, 8) })}
  </div>
  </div>
  </div>
@@ -151,7 +159,7 @@ export default function AdminWithdrawalsPage() {
  <div className="flex flex-col md:flex-row items-center gap-4 pt-2 border-t tn-border-soft">
  <Input
  leftIcon={<User className="w-4 h-4" />}
- placeholder="GHI CHÚ ADMIN..."
+ placeholder={t("withdrawals.input.admin_note_placeholder")}
  value={notes[item.id] || ''}
  onChange={e => setNotes(prev => ({ ...prev, [item.id]: e.target.value }))}
  className="flex-1 w-full text-xs font-black uppercase tracking-widest tn-text-primary shadow-inner tn-panel-soft"
@@ -164,7 +172,7 @@ export default function AdminWithdrawalsPage() {
  className="flex-1 md:flex-none py-3 shadow-md bg-[var(--success)] tn-text-primary hover:bg-[var(--success)] hover:brightness-110"
  >
  {processing === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
- Approve
+ {t("withdrawals.actions.approve")}
  </Button>
  <Button
  variant="danger"
@@ -173,7 +181,7 @@ export default function AdminWithdrawalsPage() {
  className="flex-1 md:flex-none py-3 shadow-md"
  >
  {processing === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
- Reject
+ {t("withdrawals.actions.reject")}
  </Button>
  </div>
  </div>
@@ -186,7 +194,7 @@ export default function AdminWithdrawalsPage() {
  isOpen={showMfa}
  onClose={() => setShowMfa(false)}
  onSuccess={handleMfaSuccess}
- actionTitle={pendingAction?.action === 'approve' ? 'duyệt yêu cầu rút tiền' : 'từ chối yêu cầu rút tiền'}
+ actionTitle={pendingAction?.action === 'approve' ? t("withdrawals.mfa.action_approve") : t("withdrawals.mfa.action_reject")}
  skipApiCall={true}
  />
  </div>

@@ -11,8 +11,8 @@
  */
 
 import { cookies } from 'next/headers';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5037/api/v1';
+import { getTranslations } from 'next-intl/server';
+import { API_BASE_URL } from '@/lib/api';
 
 /**
  * Hàm helper lấy Access Token từ cookie.
@@ -38,10 +38,12 @@ export async function getHistorySessionsAction(
  spreadType?: string,
  date?: string
 ) {
+ const tApi = await getTranslations('ApiErrors');
+
  try {
  const token = await getAccessToken();
  if (!token) {
- return { error: 'Chưa đăng nhập' };
+ return { error: 'unauthorized' };
  }
 
  let query = `page=${page}&pageSize=${pageSize}`;
@@ -63,13 +65,13 @@ export async function getHistorySessionsAction(
  return { error: 'unauthorized' };
  }
  const result = await response.json().catch(() => ({}));
- return { error: result.message || 'Không thể tải lịch sử đọc bài' };
+ return { error: result.message || result.detail || tApi('unknown_error') };
  }
 
  const data = await response.json();
  return { success: true, data };
  } catch {
- return { error: 'Lỗi kết nối mạng' };
+ return { error: tApi('network_error') };
  }
 }
 
@@ -80,10 +82,12 @@ export async function getHistorySessionsAction(
  * @returns Chi tiết session hoặc error
  */
 export async function getHistoryDetailAction(sessionId: string) {
+ const tApi = await getTranslations('ApiErrors');
+
  try {
  const token = await getAccessToken();
  if (!token) {
- return { error: 'Chưa đăng nhập' };
+ return { error: 'unauthorized' };
  }
 
  const response = await fetch(
@@ -101,16 +105,16 @@ export async function getHistoryDetailAction(sessionId: string) {
  return { error: 'unauthorized' };
  }
  if (response.status === 404) {
- return { error: 'Không tìm thấy phiên đọc bài này' };
+ return { error: tApi('not_found') };
  }
  const result = await response.json().catch(() => ({}));
- return { error: result.message || 'Không thể tải chi tiết phiên đọc bài' };
+ return { error: result.message || result.detail || tApi('unknown_error') };
  }
 
  const data = await response.json();
  return { success: true, data };
  } catch {
- return { error: 'Lỗi kết nối mạng' };
+ return { error: tApi('network_error') };
  }
 }
 /**
@@ -124,10 +128,12 @@ export async function getAllHistorySessionsAdminAction(params: {
  startDate?: string;
  endDate?: string;
 }) {
+ const tApi = await getTranslations('ApiErrors');
+
  try {
  const token = await getAccessToken();
  if (!token) {
- return { error: 'Chưa đăng nhập' };
+ return { error: 'unauthorized' };
  }
 
  let query = `page=${params.page}&pageSize=${params.pageSize}`;
@@ -148,9 +154,9 @@ export async function getAllHistorySessionsAdminAction(params: {
 
  if (!response.ok) {
  if (response.status === 401) return { error: 'unauthorized' };
- if (response.status === 403) return { error: 'forbidden' };
+ if (response.status === 403) return { error: tApi('forbidden') };
  const result = await response.json().catch(() => ({}));
- return { error: result.message || 'Không thể tải lịch sử Admin' };
+ return { error: result.message || result.detail || tApi('unknown_error') };
  }
 
  const data = await response.json();
@@ -164,6 +170,6 @@ export async function getAllHistorySessionsAdminAction(params: {
  return { success: true, data: safeData };
  } catch (err) {
  console.error("Admin History Action Error:", err);
- return { error: 'Lỗi kết nối mạng' };
+ return { error: tApi('network_error') };
  }
 }

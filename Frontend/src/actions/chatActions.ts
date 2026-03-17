@@ -1,9 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
-
-// Base URL của Backend API
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5037/api/v1';
+import { API_BASE_URL } from '@/lib/api';
 
 // ======================================================================
 // Helper — lấy token từ HttpOnly cookie
@@ -76,7 +74,7 @@ export async function createConversation(
  if (!accessToken) return null;
 
  try {
- const response = await fetch(`${API_URL}/conversations`, {
+ const response = await fetch(`${API_BASE_URL}/conversations`, {
  method: 'POST',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -109,7 +107,7 @@ export async function listConversations(
  if (!accessToken) return null;
 
  try {
- const url = new URL(`${API_URL}/conversations`);
+ const url = new URL(`${API_BASE_URL}/conversations`);
  url.searchParams.append('role', role);
  url.searchParams.append('page', page.toString());
  url.searchParams.append('pageSize', pageSize.toString());
@@ -145,7 +143,7 @@ export async function listMessages(
  if (!accessToken) return null;
 
  try {
- const url = new URL(`${API_URL}/conversations/${conversationId}/messages`);
+ const url = new URL(`${API_BASE_URL}/conversations/${conversationId}/messages`);
  url.searchParams.append('page', page.toString());
  url.searchParams.append('pageSize', pageSize.toString());
 
@@ -179,7 +177,7 @@ export async function sendReport(data: {
  if (!accessToken) return false;
 
  try {
- const response = await fetch(`${API_URL}/reports`, {
+ const response = await fetch(`${API_BASE_URL}/reports`, {
  method: 'POST',
  headers: {
  'Authorization': `Bearer ${accessToken}`,

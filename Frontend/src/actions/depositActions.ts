@@ -1,9 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
-
-// Base URL của Backend API, đọc từ biến môi trường hoặc fallback về localhost.
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5037/api/v1';
+import { API_BASE_URL } from '@/lib/api';
 
 // ======================================================================
 // Kiểu dữ liệu cho Deposit
@@ -50,7 +48,7 @@ export async function listDepositsAdminAction(page: number, pageSize: number, st
  });
  if (status) query.append('status', status);
 
- const response = await fetch(`${API_URL}/admin/deposits?${query.toString()}`, {
+ const response = await fetch(`${API_BASE_URL}/admin/deposits?${query.toString()}`, {
  method: 'GET',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -88,7 +86,7 @@ export async function createDepositOrder(amountVnd: number): Promise<CreateDepos
  const accessToken = cookieStore.get('accessToken')?.value;
 
  try {
- const response = await fetch(`${API_URL}/deposits/orders`, {
+ const response = await fetch(`${API_BASE_URL}/deposits/orders`, {
  method: 'POST',
  headers: {
  'Authorization': `Bearer ${accessToken}`,

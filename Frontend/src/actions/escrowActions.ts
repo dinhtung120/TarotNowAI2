@@ -1,9 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
-
-// Base URL của Backend API
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5037/api/v1';
+import { API_BASE_URL } from '@/lib/api';
 
 // ======================================================================
 // Helper — lấy token từ HttpOnly cookie
@@ -59,7 +57,7 @@ export async function acceptOffer(data: {
  if (!accessToken) return { success: false };
 
  try {
- const res = await fetch(`${API_URL}/escrow/accept`, {
+ const res = await fetch(`${API_BASE_URL}/escrow/accept`, {
  method: 'POST',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -83,7 +81,7 @@ export async function readerReply(itemId: string): Promise<boolean> {
  if (!accessToken) return false;
 
  try {
- const res = await fetch(`${API_URL}/escrow/reply`, {
+ const res = await fetch(`${API_BASE_URL}/escrow/reply`, {
  method: 'POST',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -106,7 +104,7 @@ export async function confirmRelease(itemId: string): Promise<boolean> {
  if (!accessToken) return false;
 
  try {
- const res = await fetch(`${API_URL}/escrow/confirm`, {
+ const res = await fetch(`${API_BASE_URL}/escrow/confirm`, {
  method: 'POST',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -129,7 +127,7 @@ export async function openDispute(itemId: string, reason: string): Promise<boole
  if (!accessToken) return false;
 
  try {
- const res = await fetch(`${API_URL}/escrow/dispute`, {
+ const res = await fetch(`${API_BASE_URL}/escrow/dispute`, {
  method: 'POST',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -157,7 +155,7 @@ export async function addQuestion(data: {
  if (!accessToken) return { success: false };
 
  try {
- const res = await fetch(`${API_URL}/escrow/add-question`, {
+ const res = await fetch(`${API_BASE_URL}/escrow/add-question`, {
  method: 'POST',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -181,7 +179,7 @@ export async function getEscrowStatus(conversationId: string): Promise<EscrowSta
  if (!accessToken) return null;
 
  try {
- const res = await fetch(`${API_URL}/escrow/${conversationId}`, {
+ const res = await fetch(`${API_BASE_URL}/escrow/${conversationId}`, {
  method: 'GET',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -209,7 +207,7 @@ export async function resolveDispute(data: {
  if (!accessToken) return false;
 
  try {
- const res = await fetch(`${API_URL}/admin/escrow/resolve-dispute`, {
+ const res = await fetch(`${API_BASE_URL}/admin/escrow/resolve-dispute`, {
  method: 'POST',
  headers: {
  'Authorization': `Bearer ${accessToken}`,

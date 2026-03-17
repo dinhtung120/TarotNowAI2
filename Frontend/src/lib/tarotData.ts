@@ -1,90 +1,25 @@
-// Tarot Card Metadata for MVP
-// Dữ liệu 78 lá bài Tarot được đồng bộ từ Backend (seed_cards.js)
-// name: Tên lá bài hiển thị (Tiếng Việt)
-// suit: Loại bộ bài (Major Arcana hoặc tên bộ Minor)
-// meaning: Ý nghĩa xuôi của lá bài (Tiếng Việt)
+// Tarot metadata used for UI rendering.
+// Localized name/meaning lives in next-intl messages under `Tarot.cards.c{id}`.
 
-export const TAROT_DECK = [
- { id: 0, name: "Kẻ Khờ", suit: "Major Arcana", meaning: "Một khởi đầu mới đầy tiềm năng, bước vào cuộc phiêu lưu với tâm trí cởi mở và tự do." },
- { id: 1, name: "Nhà Ảo Thuật", suit: "Major Arcana", meaning: "Sử dụng tài năng và nguồn lực để biến ý tưởng thành hiện thực." },
- { id: 2, name: "Nữ Tư Tế", suit: "Major Arcana", meaning: "Lắng nghe tiếng nói nội tâm, tin tưởng trực giác và sự thông thái bên trong." },
- { id: 3, name: "Hoàng Hậu", suit: "Major Arcana", meaning: "Thời kỳ sung túc, sáng tạo và kết nối sâu sắc với thiên nhiên." },
- { id: 4, name: "Hoàng Đế", suit: "Major Arcana", meaning: "Sự lãnh đạo mạnh mẽ, kỷ luật và xây dựng nền tảng vững chắc." },
- { id: 5, name: "Giáo Hoàng", suit: "Major Arcana", meaning: "Tìm kiếm hướng dẫn tâm linh, tuân theo truyền thống và giá trị cộng đồng." },
- { id: 6, name: "Đôi Tình Nhân", suit: "Major Arcana", meaning: "Sự kết nối sâu sắc, lựa chọn quan trọng và mối quan hệ hài hòa." },
- { id: 7, name: "Cỗ Xe", suit: "Major Arcana", meaning: "Vượt qua trở ngại bằng ý chí mạnh mẽ và sự tập trung." },
- { id: 8, name: "Sức Mạnh", suit: "Major Arcana", meaning: "Sức mạnh thật sự đến từ bên trong: lòng can đảm, kiên nhẫn và từ bi." },
- { id: 9, name: "Ẩn Sĩ", suit: "Major Arcana", meaning: "Thời gian tĩnh lặng để suy ngẫm, tìm kiếm câu trả lời từ bên trong." },
- { id: 10, name: "Bánh Xe Vận Mệnh", suit: "Major Arcana", meaning: "Thay đổi tích cực, vận may đến và sự luân chuyển của cuộc sống." },
- { id: 11, name: "Công Lý", suit: "Major Arcana", meaning: "Sự thật được phơi bày, công lý được thực thi và chịu trách nhiệm." },
- { id: 12, name: "Người Bị Treo", suit: "Major Arcana", meaning: "Tạm dừng để nhìn mọi thứ từ góc độ khác, chấp nhận buông bỏ." },
- { id: 13, name: "Tử Thần", suit: "Major Arcana", meaning: "Kết thúc một giai đoạn để mở ra khởi đầu mới, sự chuyển đổi sâu sắc." },
- { id: 14, name: "Tiết Chế", suit: "Major Arcana", meaning: "Tìm kiếm sự cân bằng, kiên nhẫn trong mọi việc và hòa hợp các mặt đối lập." },
- { id: 15, name: "Ác Quỷ", suit: "Major Arcana", meaning: "Bị ràng buộc bởi cám dỗ, thói quen xấu hoặc nỗi sợ hãi." },
- { id: 16, name: "Tháp", suit: "Major Arcana", meaning: "Sự đổ vỡ bất ngờ phá bỏ những gì không còn phù hợp để xây dựng lại." },
- { id: 17, name: "Ngôi Sao", suit: "Major Arcana", meaning: "Niềm hy vọng mới, sự chữa lành và cảm hứng sáng tạo." },
- { id: 18, name: "Mặt Trăng", suit: "Major Arcana", meaning: "Đối mặt với nỗi sợ hãi, ảo tưởng và những điều ẩn giấu trong tiềm thức." },
- { id: 19, name: "Mặt Trời", suit: "Major Arcana", meaning: "Niềm vui rạng rỡ, thành công và sự lạc quan tràn đầy." },
- { id: 20, name: "Phán Xét", suit: "Major Arcana", meaning: "Thời điểm tổng kết, soi xét bản thân và bước vào giai đoạn mới." },
- { id: 21, name: "Thế Giới", suit: "Major Arcana", meaning: "Hoàn thành một chu kỳ lớn, đạt được sự trọn vẹn và hài lòng." },
- // Wands (22-35)
- { id: 22, name: "Át Gậy", suit: "Wands", meaning: "Nguồn năng lượng sáng tạo mới, khởi đầu đầy cảm hứng." },
- { id: 23, name: "Hai Gậy", suit: "Wands", meaning: "Nhìn về tương lai và lên kế hoạch hành động." },
- { id: 24, name: "Ba Gậy", suit: "Wands", meaning: "Mở rộng tầm nhìn, nắm bắt cơ hội mới." },
- { id: 25, name: "Bốn Gậy", suit: "Wands", meaning: "Ăn mừng thành tựu, sự hài hòa trong gia đình." },
- { id: 26, name: "Năm Gậy", suit: "Wands", meaning: "Cạnh tranh lành mạnh hoặc đối mặt với thách thức." },
- { id: 27, name: "Sáu Gậy", suit: "Wands", meaning: "Chiến thắng vinh quang, được thừa nhận thành tựu." },
- { id: 28, name: "Bảy Gậy", suit: "Wands", meaning: "Đứng vững trước thử thách, bảo vệ lập trường." },
- { id: 29, name: "Tám Gậy", suit: "Wands", meaning: "Sự việc tiến triển nhanh chóng, hành động tức thì." },
- { id: 30, name: "Chín Gậy", suit: "Wands", meaning: "Kiên trì dù mệt mỏi, sẵn sàng đối mặt thử thách cuối." },
- { id: 31, name: "Mười Gậy", suit: "Wands", meaning: "Gánh vác quá nhiều trách nhiệm, cần biết ủy thác." },
- { id: 32, name: "Thị Đồng Gậy", suit: "Wands", meaning: "Khám phá thế giới với sự nhiệt huyết và tò mò." },
- { id: 33, name: "Kỵ Sĩ Gậy", suit: "Wands", meaning: "Hành động táo bạo, đam mê và phiêu lưu." },
- { id: 34, name: "Nữ Hoàng Gậy", suit: "Wands", meaning: "Tự tin, quyến rũ và truyền cảm hứng cho người khác." },
- { id: 35, name: "Quốc Vương Gậy", suit: "Wands", meaning: "Lãnh đạo bằng tầm nhìn và kinh nghiệm phong phú." },
- // Cups (36-49)
- { id: 36, name: "Át Cốc", suit: "Cups", meaning: "Tình yêu mới nảy nở hoặc cảm hứng sáng tạo tràn đầy." },
- { id: 37, name: "Hai Cốc", suit: "Cups", meaning: "Mối quan hệ hòa hợp, đối tác lý tưởng." },
- { id: 38, name: "Ba Cốc", suit: "Cups", meaning: "Niềm vui chia sẻ cùng bạn bè và cộng đồng." },
- { id: 39, name: "Bốn Cốc", suit: "Cups", meaning: "Không hài lòng với hiện tại, bỏ lỡ cơ hội." },
- { id: 40, name: "Năm Cốc", suit: "Cups", meaning: "Đau buồn vì mất mát nhưng vẫn còn những gì đáng trân trọng." },
- { id: 41, name: "Sáu Cốc", suit: "Cups", meaning: "Hoài niệm ký ức đẹp, sự ngây thơ và đơn thuần." },
- { id: 42, name: "Bảy Cốc", suit: "Cups", meaning: "Nhiều lựa chọn hấp dẫn nhưng cần phân biệt thực tế." },
- { id: 43, name: "Tám Cốc", suit: "Cups", meaning: "Rời bỏ tình huống không còn mang lại ý nghĩa." },
- { id: 44, name: "Chín Cốc", suit: "Cups", meaning: "Ước nguyện thành hiện thực, sự mãn nguyện sâu sắc." },
- { id: 45, name: "Mười Cốc", suit: "Cups", meaning: "Hạnh phúc gia đình trọn vẹn, mối quan hệ viên mãn." },
- { id: 46, name: "Thị Đồng Cốc", suit: "Cups", meaning: "Sáng tạo phong phú, trực giác mạnh mẽ." },
- { id: 47, name: "Kỵ Sĩ Cốc", suit: "Cups", meaning: "Lãng mạn, đi theo tiếng gọi trái tim." },
- { id: 48, name: "Nữ Hoàng Cốc", suit: "Cups", meaning: "Đồng cảm sâu sắc, trực giác mạnh và khả năng chữa lành." },
- { id: 49, name: "Quốc Vương Cốc", suit: "Cups", meaning: "Kiểm soát cảm xúc tốt, tử tế và nhân từ." },
- // Swords (50-63)
- { id: 50, name: "Át Kiếm", suit: "Swords", meaning: "Sự sáng suốt và rõ ràng trong tư duy, ý tưởng đột phá." },
- { id: 51, name: "Hai Kiếm", suit: "Swords", meaning: "Đối mặt lựa chọn khó khăn, cần bình tĩnh cân nhắc." },
- { id: 52, name: "Ba Kiếm", suit: "Swords", meaning: "Nỗi đau lòng, sự thất vọng hoặc phản bội." },
- { id: 53, name: "Bốn Kiếm", suit: "Swords", meaning: "Cần thời gian nghỉ ngơi để phục hồi năng lượng." },
- { id: 54, name: "Năm Kiếm", suit: "Swords", meaning: "Chiến thắng bằng mọi giá nhưng mất mát nhiều hơn." },
- { id: 55, name: "Sáu Kiếm", suit: "Swords", meaning: "Rời xa khó khăn để tìm đến nơi bình yên hơn." },
- { id: 56, name: "Bảy Kiếm", suit: "Swords", meaning: "Hành động lén lút hoặc sử dụng chiến lược khôn ngoan." },
- { id: 57, name: "Tám Kiếm", suit: "Swords", meaning: "Cảm thấy bị giam giữ bởi hoàn cảnh hoặc chính mình." },
- { id: 58, name: "Chín Kiếm", suit: "Swords", meaning: "Lo âu và sợ hãi ám ảnh, đặc biệt vào ban đêm." },
- { id: 59, name: "Mười Kiếm", suit: "Swords", meaning: "Kết thúc đau đớn và đột ngột, nhưng mở ra khởi đầu mới." },
- { id: 60, name: "Thị Đồng Kiếm", suit: "Swords", meaning: "Tò mò, thông minh và luôn sẵn sàng học hỏi." },
- { id: 61, name: "Kỵ Sĩ Kiếm", suit: "Swords", meaning: "Hành động nhanh và quyết đoán với tham vọng lớn." },
- { id: 62, name: "Nữ Hoàng Kiếm", suit: "Swords", meaning: "Trí tuệ sắc bén, độc lập và trung thực không khoan nhượng." },
- { id: 63, name: "Quốc Vương Kiếm", suit: "Swords", meaning: "Lãnh đạo bằng trí tuệ, công bằng và logic." },
- // Pentacles (64-77)
- { id: 64, name: "Át Tiền", suit: "Pentacles", meaning: "Cơ hội tài chính mới, nền tảng vững chắc cho tương lai." },
- { id: 65, name: "Hai Tiền", suit: "Pentacles", meaning: "Cân bằng nhiều ưu tiên với sự linh hoạt." },
- { id: 66, name: "Ba Tiền", suit: "Pentacles", meaning: "Hợp tác hiệu quả, phát huy kỹ năng chuyên môn." },
- { id: 67, name: "Bốn Tiền", suit: "Pentacles", meaning: "Bảo vệ tài sản, tìm kiếm sự ổn định tài chính." },
- { id: 68, name: "Năm Tiền", suit: "Pentacles", meaning: "Giai đoạn khó khăn về tài chính hoặc tinh thần." },
- { id: 69, name: "Sáu Tiền", suit: "Pentacles", meaning: "Chia sẻ tài nguyên, hào phóng với người khác." },
- { id: 70, name: "Bảy Tiền", suit: "Pentacles", meaning: "Kiên nhẫn chờ đợi kết quả từ sự đầu tư lâu dài." },
- { id: 71, name: "Tám Tiền", suit: "Pentacles", meaning: "Chăm chỉ rèn luyện và hoàn thiện kỹ năng." },
- { id: 72, name: "Chín Tiền", suit: "Pentacles", meaning: "Thịnh vượng và tận hưởng thành quả lao động." },
- { id: 73, name: "Mười Tiền", suit: "Pentacles", meaning: "Gia tài vững chắc, sự ổn định qua nhiều thế hệ." },
- { id: 74, name: "Thị Đồng Tiền", suit: "Pentacles", meaning: "Cơ hội học hỏi và phát triển tài chính." },
- { id: 75, name: "Kỵ Sĩ Tiền", suit: "Pentacles", meaning: "Tiến bước chậm mà chắc, đáng tin cậy và kiên nhẫn." },
- { id: 76, name: "Nữ Hoàng Tiền", suit: "Pentacles", meaning: "Mang lại sự an toàn và nuôi dưỡng thông qua thực tế." },
- { id: 77, name: "Quốc Vương Tiền", suit: "Pentacles", meaning: "Thành công tài chính, lãnh đạo kinh doanh xuất sắc." }
-];
+export type TarotSuitKey = 'major' | 'wands' | 'cups' | 'swords' | 'pentacles';
+
+export interface TarotCardMeta {
+  id: number;
+  suit: TarotSuitKey;
+}
+
+export const TAROT_CARD_COUNT = 78;
+
+export function tarotSuitKeyFromId(id: number): TarotSuitKey {
+  if (id <= 21) return 'major';
+  if (id <= 35) return 'wands';
+  if (id <= 49) return 'cups';
+  if (id <= 63) return 'swords';
+  return 'pentacles';
+}
+
+export const TAROT_DECK: TarotCardMeta[] = Array.from(
+  { length: TAROT_CARD_COUNT },
+  (_, id) => ({ id, suit: tarotSuitKeyFromId(id) }),
+);
+

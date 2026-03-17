@@ -8,11 +8,13 @@ import {
  Sparkles, Save, Loader2, Activity, BookOpen, Gem
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useTranslations } from 'next-intl';
 import UserLayout from '@/components/layout/UserLayout';
 import { SectionHeader, GlassCard, Button } from '@/components/ui';
 
 export default function ReaderSettingsPage() {
  const router = useRouter();
+ const t = useTranslations("Profile");
  const { isAuthenticated, user } = useAuthStore();
  const [loading, setLoading] = useState(true);
  const [saving, setSaving] = useState(false);
@@ -38,7 +40,7 @@ export default function ReaderSettingsPage() {
  setSpecialtiesStr(profile.specialties?.join(', ') || '');
  setStatus(profile.status || 'offline');
  } else {
- toast.error('Không tìm thấy thông tin Reader. Bạn đã được duyệt chưa?', {
+ toast.error(t("reader.toast_not_found"), {
  style: {
  background: 'var(--bg-elevated)',
  color: 'var(--text-primary)',
@@ -51,7 +53,7 @@ export default function ReaderSettingsPage() {
  };
 
  fetchProfile();
- }, [isAuthenticated, user, router]);
+ }, [isAuthenticated, user, router, t]);
 
  const handleSave = async (e: React.FormEvent) => {
  e.preventDefault();
@@ -69,11 +71,11 @@ export default function ReaderSettingsPage() {
  });
 
  if (success) {
- toast.success('Lưu thông tin thành công!', {
+ toast.success(t("reader.toast_save_success"), {
  style: { background: 'var(--success-bg)', color: 'var(--success)', border: '1px solid var(--success)' }
  });
  } else {
- toast.error('Lưu thông tin thất bại!', {
+ toast.error(t("reader.toast_save_fail"), {
  style: { background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid var(--danger)' }
  });
  }
@@ -84,11 +86,11 @@ export default function ReaderSettingsPage() {
  setStatus(newStatus);
  const ok = await updateReaderStatus(newStatus);
  if (ok) {
- toast.success('Đã cập nhật trạng thái', {
+ toast.success(t("reader.toast_status_updated"), {
  style: { background: 'var(--success-bg)', color: 'var(--success)', border: '1px solid var(--success)' }
  });
  } else {
- toast.error('Lỗi cập nhật trạng thái', {
+ toast.error(t("reader.toast_status_update_fail"), {
  style: { background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid var(--danger)' }
  });
  }
@@ -102,7 +104,7 @@ export default function ReaderSettingsPage() {
  <div className="absolute inset-x-0 top-0 h-40 w-40 bg-[var(--warning)]/20 blur-[60px] rounded-full animate-pulse" />
  <Loader2 className="w-12 h-12 animate-spin text-[var(--warning)] relative z-10" />
  </div>
- <div className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-secondary)]">Đang tải cấu hình Reader...</div>
+ <div className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-secondary)]">{t("reader.loading")}</div>
  </div>
  </UserLayout>
  );
@@ -113,10 +115,10 @@ export default function ReaderSettingsPage() {
  <div className="max-w-3xl mx-auto px-6 pt-8 pb-32 space-y-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000">
  {/* Header */}
  <SectionHeader
- tag="Reader Settings"
+ tag={t("reader.tag")}
  tagIcon={<Sparkles className="w-3 h-3 text-[var(--warning)]" />}
- title="Giao Diện Reader"
- subtitle="Quản lý thông tin hiển thị và trạng thái hoạt động của bạn."
+ title={t("reader.title")}
+ subtitle={t("reader.subtitle")}
  />
 
  <div className="space-y-8">
@@ -124,7 +126,7 @@ export default function ReaderSettingsPage() {
  <GlassCard className="!p-8">
  <h3 className="text-lg font-black tn-text-primary italic tracking-tight mb-6 flex items-center gap-2.5">
  <Activity className="w-5 h-5 text-[var(--warning)]" />
- Trạng Thái Trực Tuyến
+ {t("reader.status_title")}
  </h3>
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
  <button
@@ -134,7 +136,7 @@ export default function ReaderSettingsPage() {
  }`}
  >
  <div className={`w-3.5 h-3.5 mx-auto rounded-full mb-3 shadow-[0_0_10px_currentColor] ${status === 'accepting_questions' ? 'bg-[var(--success)] text-[var(--success)] animate-pulse' : 'tn-surface tn-text-muted'}`} />
- <div className={`text-[10px] font-black uppercase tracking-widest ${status === 'accepting_questions' ? 'text-[var(--success)]' : 'text-[var(--text-secondary)]'}`}>Đang nhận khách</div>
+ <div className={`text-[10px] font-black uppercase tracking-widest ${status === 'accepting_questions' ? 'text-[var(--success)]' : 'text-[var(--text-secondary)]'}`}>{t("reader.status_accepting")}</div>
  </button>
  <button
  onClick={() => handleStatusChange('online')}
@@ -143,7 +145,7 @@ export default function ReaderSettingsPage() {
  }`}
  >
  <div className={`w-3.5 h-3.5 mx-auto rounded-full mb-3 shadow-[0_0_10px_currentColor] ${status === 'online' ? 'bg-[var(--warning)] text-[var(--warning)]' : 'tn-surface tn-text-muted'}`} />
- <div className={`text-[10px] font-black uppercase tracking-widest ${status === 'online' ? 'text-[var(--warning)]' : 'text-[var(--text-secondary)]'}`}>Online (Bận)</div>
+ <div className={`text-[10px] font-black uppercase tracking-widest ${status === 'online' ? 'text-[var(--warning)]' : 'text-[var(--text-secondary)]'}`}>{t("reader.status_online")}</div>
  </button>
  <button
  onClick={() => handleStatusChange('offline')}
@@ -152,7 +154,7 @@ export default function ReaderSettingsPage() {
  }`}
  >
  <div className={`w-3.5 h-3.5 mx-auto rounded-full mb-3 shadow-[0_0_10px_currentColor] ${status === 'offline' ? 'bg-[var(--text-secondary)] text-[var(--text-secondary)]' : 'tn-surface-strong tn-text-muted'}`} />
- <div className={`text-[10px] font-black uppercase tracking-widest ${status === 'offline' ? 'tn-text-primary' : 'text-[var(--text-secondary)]'}`}>Ngoại tuyến</div>
+ <div className={`text-[10px] font-black uppercase tracking-widest ${status === 'offline' ? 'tn-text-primary' : 'text-[var(--text-secondary)]'}`}>{t("reader.status_offline")}</div>
  </button>
  </div>
  </GlassCard>
@@ -162,30 +164,30 @@ export default function ReaderSettingsPage() {
  <form onSubmit={handleSave} className="space-y-8">
  <h3 className="text-lg font-black tn-text-primary italic tracking-tight mb-6 flex items-center gap-2.5">
  <BookOpen className="w-5 h-5 text-[var(--purple-accent)]" />
- Hồ Sơ Công Khai
+ {t("reader.public_profile_title")}
  </h3>
 
  <div className="space-y-6">
  {/* Bio */}
  <div className="space-y-2">
- <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] ml-1">Giới thiệu bản thân (Bio)</label>
+ <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] ml-1">{t("reader.bio_label")}</label>
  <textarea
  value={bioVi}
  onChange={e => setBioVi(e.target.value)}
  rows={4}
- placeholder="Hãy giới thiệu phong cách đọc bài, kinh nghiệm của bạn..."
+ placeholder={t("reader.bio_placeholder")}
  className="w-full tn-field rounded-xl px-4 py-3.5 text-sm tn-text-primary tn-field-accent transition-all shadow-inner resize-none"
  />
  </div>
 
  {/* Specialties */}
  <div className="space-y-2">
- <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] ml-1">Chuyên môn (Cách nhau bởi dấu phẩy)</label>
+ <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] ml-1">{t("reader.specialties_label")}</label>
  <input
  type="text"
  value={specialtiesStr}
  onChange={e => setSpecialtiesStr(e.target.value)}
- placeholder="Tình yêu, Sự nghiệp, Tài chính..."
+ placeholder={t("reader.specialties_placeholder")}
  className="w-full tn-field rounded-xl px-4 py-3.5 text-sm tn-text-primary tn-field-accent transition-all shadow-inner"
  />
  </div>
@@ -193,7 +195,7 @@ export default function ReaderSettingsPage() {
  {/* Price */}
  <div className="space-y-2">
  <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] ml-1 flex justify-between items-center">
- <span>Giá Diamond / 1 Câu hỏi phụ</span>
+ <span>{t("reader.price_label")}</span>
  <span className="text-[var(--warning)] font-bold flex items-center gap-1"><Gem className="w-3 h-3"/> {diamondPerQuestion} </span>
  </label>
  <div className="relative">
@@ -206,7 +208,7 @@ export default function ReaderSettingsPage() {
  className="w-full pl-12 pr-4 py-3.5 tn-field rounded-xl text-sm tn-text-primary tn-field-warning transition-all font-bold shadow-inner"
  />
  </div>
- <p className="text-[10px] text-[var(--text-tertiary)] italic pl-1">Câu hỏi chính của Session luôn được tính phí cố định qua Escrow.</p>
+ <p className="text-[10px] text-[var(--text-tertiary)] italic pl-1">{t("reader.price_help")}</p>
  </div>
  </div>
 
@@ -221,12 +223,12 @@ export default function ReaderSettingsPage() {
  {saving ? (
  <>
  <Loader2 className="w-4 h-4 animate-spin mr-2" />
- Lưu thay đổi...
+ {t("reader.saving")}
  </>
  ) : (
  <>
  <Save className="w-4 h-4 mr-2" />
- Lưu Hồ Sơ
+ {t("reader.save")}
  </>
  )}
  </Button>

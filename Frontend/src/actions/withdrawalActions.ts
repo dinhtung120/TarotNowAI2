@@ -1,8 +1,8 @@
 'use server';
 
 import { cookies } from 'next/headers';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5037/api/v1';
+import { API_BASE_URL } from '@/lib/api';
+import { getTranslations } from 'next-intl/server';
 
 async function getAccessToken(): Promise<string | undefined> {
  const cookieStore = await cookies();
@@ -43,11 +43,12 @@ export async function createWithdrawal(data: {
  bankAccountNumber: string;
  mfaCode: string;
 }): Promise<{ success: boolean; requestId?: string; error?: string }> {
+ const tApi = await getTranslations("ApiErrors");
  const accessToken = await getAccessToken();
- if (!accessToken) return { success: false, error: 'Chưa đăng nhập' };
+ if (!accessToken) return { success: false, error: tApi("unauthorized") };
 
  try {
- const res = await fetch(`${API_URL}/withdrawal/create`, {
+ const res = await fetch(`${API_BASE_URL}/withdrawal/create`, {
  method: 'POST',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -57,12 +58,12 @@ export async function createWithdrawal(data: {
  });
  if (!res.ok) {
  const err = await res.json().catch(() => ({}));
- return { success: false, error: err.detail || err.msg || 'Lỗi tạo yêu cầu' };
+ return { success: false, error: err.detail || err.msg || tApi("unknown_error") };
  }
  return await res.json();
  } catch (error) {
  console.error('[WithdrawalAction] createWithdrawal failed:', error);
- return { success: false, error: 'Lỗi kết nối' };
+ return { success: false, error: tApi("network_error") };
  }
 }
 
@@ -74,7 +75,7 @@ export async function listMyWithdrawals(page = 1, pageSize = 20): Promise<Withdr
  if (!accessToken) return [];
 
  try {
- const res = await fetch(`${API_URL}/withdrawal/my?page=${page}&pageSize=${pageSize}`, {
+ const res = await fetch(`${API_BASE_URL}/withdrawal/my?page=${page}&pageSize=${pageSize}`, {
  method: 'GET',
  headers: { 'Authorization': `Bearer ${accessToken}` },
  cache: 'no-store',
@@ -95,7 +96,7 @@ export async function listWithdrawalQueue(page = 1, pageSize = 20): Promise<With
  if (!accessToken) return [];
 
  try {
- const res = await fetch(`${API_URL}/admin/withdrawals/queue?page=${page}&pageSize=${pageSize}`, {
+ const res = await fetch(`${API_BASE_URL}/admin/withdrawals/queue?page=${page}&pageSize=${pageSize}`, {
  method: 'GET',
  headers: { 'Authorization': `Bearer ${accessToken}` },
  cache: 'no-store',
@@ -117,11 +118,12 @@ export async function processWithdrawal(data: {
  adminNote?: string;
  mfaCode: string;
 }): Promise<{ success: boolean; error?: string }> {
+ const tApi = await getTranslations("ApiErrors");
  const accessToken = await getAccessToken();
- if (!accessToken) return { success: false, error: 'Chưa đăng nhập' };
+ if (!accessToken) return { success: false, error: tApi("unauthorized") };
 
  try {
- const res = await fetch(`${API_URL}/admin/withdrawals/process`, {
+ const res = await fetch(`${API_BASE_URL}/admin/withdrawals/process`, {
  method: 'POST',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -131,11 +133,11 @@ export async function processWithdrawal(data: {
  });
  if (!res.ok) {
  const err = await res.json().catch(() => ({}));
- return { success: false, error: err.detail || err.msg || 'Xử lý thất bại' };
+ return { success: false, error: err.detail || err.msg || tApi("unknown_error") };
  }
  return { success: true };
  } catch (error) {
  console.error('[WithdrawalAction] processWithdrawal failed:', error);
- return { success: false, error: 'Lỗi kết nối' };
+ return { success: false, error: tApi("network_error") };
  }
 }

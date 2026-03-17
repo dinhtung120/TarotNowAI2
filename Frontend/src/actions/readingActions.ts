@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
+import { API_BASE_URL } from "@/lib/api";
 
 export interface InitReadingRequest {
  spreadType: string;
@@ -21,8 +22,6 @@ export interface RevealReadingResponse {
  cards: number[];
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5037/api/v1";
-
 /**
  * Hành động khởi tạo Phiên Rút Bài Tarot
  * (Gắn liền với logic Trừ Gold/Diamond từ Wallet qua Re-rendering)
@@ -35,10 +34,10 @@ export async function initReadingSession(data: InitReadingRequest) {
  const token = cookieStore.get("accessToken")?.value;
 
  if (!token) {
- return { success: false, error: t("unauthorized") || "Please login" };
+ return { success: false, error: t("unauthorized") };
  }
 
- const res = await fetch(`${API_URL}/reading/init`, {
+ const res = await fetch(`${API_BASE_URL}/reading/init`, {
  method: "POST",
  headers: {
  "Content-Type": "application/json",
@@ -54,8 +53,8 @@ export async function initReadingSession(data: InitReadingRequest) {
 
  const responseData: InitReadingResponse = await res.json();
  return { success: true, data: responseData };
- } catch (error: unknown) {
- return { success: false, error: (error as Error).message || t("network_error") };
+ } catch {
+ return { success: false, error: t("network_error") };
  }
 }
 
@@ -70,10 +69,10 @@ export async function revealReadingSession(data: RevealReadingRequest) {
  const token = cookieStore.get("accessToken")?.value;
 
  if (!token) {
- return { success: false, error: t("unauthorized") || "Please login" };
+ return { success: false, error: t("unauthorized") };
  }
 
- const res = await fetch(`${API_URL}/reading/reveal`, {
+ const res = await fetch(`${API_BASE_URL}/reading/reveal`, {
  method: "POST",
  headers: {
  "Content-Type": "application/json",
@@ -89,7 +88,7 @@ export async function revealReadingSession(data: RevealReadingRequest) {
 
  const responseData: RevealReadingResponse = await res.json();
  return { success: true, data: responseData };
- } catch (error: unknown) {
- return { success: false, error: (error as Error).message || t("network_error") };
+ } catch {
+ return { success: false, error: t("network_error") };
  }
 }

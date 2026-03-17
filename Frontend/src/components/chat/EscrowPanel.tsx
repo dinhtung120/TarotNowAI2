@@ -9,6 +9,7 @@ import {
  Shield, Loader2, CheckCircle2, Clock, AlertTriangle,
  Diamond, ChevronDown, ChevronUp
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 /**
  * EscrowPanel — In-chat escrow UI.
@@ -26,6 +27,7 @@ interface EscrowPanelProps {
 
 export default function EscrowPanel({ conversationId, currentUserId: _currentUserId }: EscrowPanelProps) {
  void _currentUserId;
+ const t = useTranslations("Chat");
  const [escrow, setEscrow] = useState<EscrowStatusResult | null>(null);
  const [loading, setLoading] = useState(true);
  const [expanded, setExpanded] = useState(false);
@@ -75,14 +77,14 @@ export default function EscrowPanel({ conversationId, currentUserId: _currentUse
  };
 
  /** Countdown timer helper */
- const getCountdown = (dateStr?: string | null) => {
- if (!dateStr) return null;
- if (!nowTs) return null;
+ const getCountdown = (dateStr?: string | null): string => {
+ if (!dateStr) return t("escrow.expired");
+ if (!nowTs) return t("escrow.countdown", { hours: 0, minutes: 0 });
  const diff = new Date(dateStr).getTime() - nowTs;
- if (diff <= 0) return 'Hết hạn';
+ if (diff <= 0) return t("escrow.expired");
  const hrs = Math.floor(diff / 3600000);
  const mins = Math.floor((diff % 3600000) / 60000);
- return `${hrs}h ${mins}m`;
+ return t("escrow.countdown", { hours: hrs, minutes: mins });
  };
 
  /** Status badge */
@@ -90,25 +92,25 @@ export default function EscrowPanel({ conversationId, currentUserId: _currentUse
  switch (status) {
  case 'accepted':
  return {
- text: 'Đang escrow',
+ text: t("escrow.status_accepted"),
  className: 'bg-[var(--warning)]/10 text-[var(--warning)] border-[var(--warning)]/20',
  icon: <Shield className="w-3 h-3" />
  };
  case 'released':
  return {
- text: 'Đã release',
+ text: t("escrow.status_released"),
  className: 'bg-[var(--success)]/10 text-[var(--success)] border-[var(--success)]/20',
  icon: <CheckCircle2 className="w-3 h-3" />
  };
  case 'refunded':
  return {
- text: 'Đã refund',
+ text: t("escrow.status_refunded"),
  className: 'bg-[var(--info)]/10 text-[var(--info)] border-[var(--info)]/20',
  icon: <CheckCircle2 className="w-3 h-3" />
  };
  case 'disputed':
  return {
- text: 'Tranh chấp',
+ text: t("escrow.status_disputed"),
  className: 'bg-[var(--danger)]/10 text-[var(--danger)] border-[var(--danger)]/20',
  icon: <AlertTriangle className="w-3 h-3" />
  };
@@ -133,14 +135,14 @@ export default function EscrowPanel({ conversationId, currentUserId: _currentUse
  <div className="flex items-center gap-2">
  <Shield className="w-4 h-4 text-[var(--warning)]" />
  <span className="text-[10px] font-black uppercase tracking-widest text-[var(--warning)]">
- Escrow
+ {t("escrow.title")}
  </span>
  <span className="text-xs font-bold tn-text-primary">
  {escrow.totalFrozen} 💎
  </span>
  {hasActiveItems && (
  <span className="px-1.5 py-0.5 rounded-full bg-[var(--warning)]/20 text-[8px] font-bold text-[var(--warning)] animate-pulse">
- ACTIVE
+ {t("escrow.active")}
  </span>
  )}
  </div>
@@ -165,7 +167,7 @@ export default function EscrowPanel({ conversationId, currentUserId: _currentUse
  <Diamond className="w-3 h-3 text-[var(--warning)]" />
  <span className="text-xs font-bold tn-text-primary">{item.amountDiamond} 💎</span>
  <span className="text-[9px] tn-text-muted uppercase">
- {item.type === 'main_question' ? 'Chính' : 'Bổ sung'}
+ {item.type === 'main_question' ? t("escrow.type_main") : t("escrow.type_addon")}
  </span>
  </div>
  <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${badge.className}`}>
@@ -180,13 +182,13 @@ export default function EscrowPanel({ conversationId, currentUserId: _currentUse
  {item.autoRefundAt && !item.repliedAt && (
  <div className="flex items-center gap-1 text-[var(--danger)]">
  <Clock className="w-3 h-3" />
- <span>Hạn reply: {getCountdown(item.autoRefundAt)}</span>
+ <span>{t("escrow.deadline_reply", { time: getCountdown(item.autoRefundAt) })}</span>
  </div>
  )}
  {item.autoReleaseAt && item.repliedAt && (
  <div className="flex items-center gap-1 text-[var(--success)]">
  <Clock className="w-3 h-3" />
- <span>Auto-release: {getCountdown(item.autoReleaseAt)}</span>
+ <span>{t("escrow.auto_release", { time: getCountdown(item.autoReleaseAt) })}</span>
  </div>
  )}
  </div>
@@ -196,7 +198,7 @@ export default function EscrowPanel({ conversationId, currentUserId: _currentUse
  {item.disputeWindowEnd && item.status === 'released' && (
  <div className="flex items-center gap-1 text-[10px] text-[var(--warning)]">
  <AlertTriangle className="w-3 h-3" />
- <span>Dispute window: {getCountdown(item.disputeWindowEnd)}</span>
+ <span>{t("escrow.dispute_window", { time: getCountdown(item.disputeWindowEnd) })}</span>
  </div>
  )}
 
@@ -213,7 +215,7 @@ export default function EscrowPanel({ conversationId, currentUserId: _currentUse
  {actionLoading === item.id
  ? <Loader2 className="w-3 h-3 animate-spin" />
  : <CheckCircle2 className="w-3 h-3" />}
- Xác nhận Release
+ {t("escrow.action_confirm_release")}
  </button>
  )}
 
@@ -227,7 +229,7 @@ export default function EscrowPanel({ conversationId, currentUserId: _currentUse
  {actionLoading === item.id
  ? <Loader2 className="w-3 h-3 animate-spin" />
  : <CheckCircle2 className="w-3 h-3" />}
- Đã trả lời
+ {t("escrow.action_replied")}
  </button>
  )}
  </div>

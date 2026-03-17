@@ -32,16 +32,29 @@
  * Giữ UI ổn định qua mọi lần render và không vi phạm purity rules.
  */
 const stableNoise = (seed: number) => {
- const x = Math.sin(seed * 12.9898) * 43758.5453;
- return x - Math.floor(x);
+ // NOTE: Avoid Math.sin based PRNG here.
+ // Different JS engines / V8 versions can produce slightly different results
+ // -> hydration mismatch for inline styles.
+ let t = seed + 0x6d2b79f5;
+ t = Math.imul(t ^ (t >>> 15), t | 1);
+ t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+ return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 };
 
-const getParticleStyle = (index: number) => ({
- top: `${stableNoise(index + 1) * 100}%`,
- left: `${stableNoise(index + 101) * 100}%`,
- animationDuration: `${20 + stableNoise(index + 201) * 35}s`,
- animationDelay: `${-stableNoise(index + 301) * 20}s`,
-});
+const getParticleStyle = (index: number) => {
+ const top = stableNoise(index + 1) * 100;
+ const left = stableNoise(index + 101) * 100;
+ const duration = 20 + stableNoise(index + 201) * 35;
+ const delay = -stableNoise(index + 301) * 20;
+
+ // Keep strings stable across SSR/CSR (avoid engine differences in float -> string formatting).
+ return {
+  top: `${top.toFixed(6)}%`,
+  left: `${left.toFixed(6)}%`,
+  animationDuration: `${duration.toFixed(6)}s`,
+  animationDelay: `${delay.toFixed(6)}s`,
+ } as const;
+};
 
 /**
  * Các variant cho phép điều chỉnh cường độ hiệu ứng:

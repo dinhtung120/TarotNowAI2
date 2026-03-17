@@ -9,19 +9,22 @@ import React, { useEffect, useState } from 'react';
 import { getLedger } from '@/actions/walletActions';
 import { PaginatedList, WalletTransaction } from '@/types/wallet';
 import { useWalletStore } from '@/store/walletStore';
-import { Coins, Gem, ArrowUpRight, ArrowDownLeft, Clock, Search, ChevronLeft, ChevronRight, Activity,
+import { Coins, Gem, ArrowUpRight, ArrowDownLeft, Clock, Search, Activity,
  Plus,
  Sparkles,
  Loader2,
  Wallet
 } from 'lucide-react';
 import { useRouter } from '@/i18n/routing';
+import { useLocale, useTranslations } from 'next-intl';
 
 import UserLayout from '@/components/layout/UserLayout';
-import { SectionHeader, Button, GlassCard } from '@/components/ui';
+import { SectionHeader, Button, GlassCard, Pagination } from '@/components/ui';
 
 export default function WalletPage() {
  const router = useRouter();
+ const t = useTranslations("Wallet");
+ const locale = useLocale();
  const { balance, fetchBalance } = useWalletStore();
  const [ledger, setLedger] = useState<PaginatedList<WalletTransaction> | null>(null);
  const [isLoadingLedger, setIsLoadingLedger] = useState(true);
@@ -47,16 +50,16 @@ export default function WalletPage() {
  <div className="max-w-5xl mx-auto px-6 pt-8 pb-32 font-sans relative">
  {/* Header Section */}
  <SectionHeader
- tag="Financial Protocol"
+ tag={t("overview.tag")}
  tagIcon={<Sparkles className="w-3 h-3" />}
- title="Kho Báu Tâm Linh"
- subtitle="Quản lý vận mệnh tài chính và dòng chảy Diamond/Gold của bạn trong hệ sinh thái TarotNow AI."
+ title={t("overview.title")}
+ subtitle={t("overview.subtitle")}
  action={
  <Button variant="primary" onClick={() => router.push('/wallet/deposit')}
  className="shadow-2xl md:ml-4"
  >
  <Plus className="w-4 h-4 mr-2" />
- Nạp Diamond
+ {t("overview.deposit_cta")}
  </Button>
  }
  className="mb-12 animate-in fade-in slide-in-from-bottom-4 duration-1000"
@@ -75,18 +78,18 @@ export default function WalletPage() {
  <Gem className="w-7 h-7 text-[var(--purple-accent)]" />
  </div>
  <div>
- <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Diamond (Premium)</div>
- <div className="text-xs font-bold tn-text-primary">Tiền nạp chính thức</div>
+ <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("overview.diamond_label")}</div>
+ <div className="text-xs font-bold tn-text-primary">{t("overview.diamond_desc")}</div>
  </div>
  </div>
 
  <div className="space-y-1 relative z-10 mt-8">
  <div className="text-5xl md:text-6xl font-black tn-text-primary italic tracking-tighter transition-transform duration-700 group-hover:translate-x-2">
- {balance?.diamondBalance.toLocaleString() ?? '...'}
+ {balance?.diamondBalance.toLocaleString(locale) ?? '...'}
  </div>
  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] group-hover:text-[var(--text-secondary)] transition-colors">
  <Activity className="w-3.5 h-3.5" />
- Đang đóng băng: {balance?.frozenDiamondBalance.toLocaleString() ?? 0}
+ {t("overview.frozen_label", { amount: (balance?.frozenDiamondBalance ?? 0).toLocaleString(locale) })}
  </div>
  </div>
  </GlassCard>
@@ -103,17 +106,17 @@ export default function WalletPage() {
  <Coins className="w-7 h-7 text-[var(--warning)]" />
  </div>
  <div>
- <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Gold (Reward)</div>
- <div className="text-xs font-bold tn-text-primary">Điểm thưởng vận may</div>
+ <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("overview.gold_label")}</div>
+ <div className="text-xs font-bold tn-text-primary">{t("overview.gold_desc")}</div>
  </div>
  </div>
 
  <div className="space-y-1 relative z-10 mt-8">
  <div className="text-5xl md:text-6xl font-black tn-text-primary italic tracking-tighter transition-transform duration-700 group-hover:translate-x-2">
- {balance?.goldBalance.toLocaleString() ?? '...'}
+ {balance?.goldBalance.toLocaleString(locale) ?? '...'}
  </div>
  <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] group-hover:text-[var(--text-secondary)] transition-colors">
- Nhận từ điểm danh & hoạt động
+ {t("overview.gold_note")}
  </div>
  </div>
  </GlassCard>
@@ -124,11 +127,11 @@ export default function WalletPage() {
  <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
  <h2 className="text-xl md:text-2xl font-black tn-text-primary uppercase italic tracking-tighter flex items-center gap-3">
  <Clock className="w-5 h-5 text-[var(--purple-accent)]" />
- Hành Trình Giao Dịch
+ {t("overview.ledger_title")}
  </h2>
  <div className="flex items-center gap-2 px-4 py-2 border tn-border focus-within:border-[var(--purple-accent)]/50 transition-all duration-300 rounded-xl tn-overlay ">
  <Search className="w-4 h-4 tn-text-muted" />
- <input type="text" placeholder="TÌM GIAO THỨC..." className="bg-transparent border-none text-[10px] font-black uppercase tracking-widest tn-text-primary w-full sm:w-48 placeholder:tn-text-muted" />
+ <input type="text" placeholder={t("overview.search_placeholder")} className="bg-transparent border-none text-[10px] font-black uppercase tracking-widest tn-text-primary w-full sm:w-48 placeholder:tn-text-muted" />
  </div>
  </div>
 
@@ -137,10 +140,10 @@ export default function WalletPage() {
  <table className="w-full text-left min-w-[600px]">
  <thead>
  <tr className="border-b tn-border-soft tn-overlay-soft">
- <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Thời gian</th>
- <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Tài sản</th>
- <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Hoạt động</th>
- <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-right">Lượng</th>
+ <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">{t("overview.table_time")}</th>
+ <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">{t("overview.table_asset")}</th>
+ <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">{t("overview.table_action")}</th>
+ <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-right">{t("overview.table_amount")}</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-white/5">
@@ -148,14 +151,14 @@ export default function WalletPage() {
  <tr>
  <td colSpan={4} className="py-24 text-center">
  <Loader2 className="w-8 h-8 animate-spin text-[var(--purple-accent)] mx-auto mb-4" />
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Đang truy vấn lịch sử...</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("overview.ledger_loading")}</span>
  </td>
  </tr>
  ) : ledger?.items.length === 0 ? (
  <tr>
  <td colSpan={4} className="py-24 text-center">
  <Wallet className="w-12 h-12 tn-text-muted mx-auto mb-4" />
- <span className="text-xs font-bold text-[var(--text-secondary)]">Dòng chảy tài chính chưa có biến động.</span>
+ <span className="text-xs font-bold text-[var(--text-secondary)]">{t("overview.ledger_empty")}</span>
  </td>
  </tr>
  ) : (
@@ -165,10 +168,10 @@ export default function WalletPage() {
  <tr key={tx.id} className="hover:tn-surface transition-colors group">
  <td className="px-6 py-5">
  <div className="text-[11px] font-bold text-[var(--text-primary)]">
- {new Date(tx.createdAt).toLocaleDateString()}
+ {new Date(tx.createdAt).toLocaleDateString(locale)}
  </div>
  <div className="text-[10px] font-medium text-[var(--text-secondary)] mt-0.5">
- {new Date(tx.createdAt).toLocaleTimeString()}
+ {new Date(tx.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
  </div>
  </td>
  <td className="px-6 py-5">
@@ -187,11 +190,11 @@ export default function WalletPage() {
  </td>
  <td className="px-6 py-5 text-right">
  <div className={`flex items-center justify-end gap-1 font-black text-sm md:text-base italic ${isPositive ? 'text-[var(--success)]' : 'tn-text-secondary'}`}>
- {isPositive ? '+' : ''}{tx.amount.toLocaleString()}
+ {isPositive ? '+' : ''}{tx.amount.toLocaleString(locale)}
  {isPositive ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownLeft className="w-4 h-4 opacity-50 tn-text-muted" />}
  </div>
  <div className="text-[9px] font-black uppercase tracking-widest text-[var(--text-secondary)] mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
- Dư: {tx.balanceAfter.toLocaleString()}
+ {t("overview.balance_after", { amount: tx.balanceAfter.toLocaleString(locale) })}
  </div>
  </td>
  </tr>
@@ -202,29 +205,15 @@ export default function WalletPage() {
  </table>
  </div>
 
- {/* Pagination - Compact */}
- {ledger && ledger.totalPages > 1 && (
- <div className="px-6 py-5 border-t tn-border-soft flex items-center justify-between tn-overlay-soft">
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
- Trang <strong className="tn-text-primary mx-1">{ledger.pageIndex}</strong> / {ledger.totalPages}
- </span>
- <div className="flex items-center gap-2">
- <button
- onClick={() => setPage(p => Math.max(1, p - 1))}
- disabled={!ledger.hasPreviousPage}
- className="p-2 rounded-xl tn-surface hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all border tn-border-soft"
- >
- <ChevronLeft className="w-4 h-4 tn-text-primary" />
- </button>
- <button
- onClick={() => setPage(p => Math.min(ledger.totalPages, p + 1))}
- disabled={!ledger.hasNextPage}
- className="p-2 rounded-xl tn-surface hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all border tn-border-soft"
- >
- <ChevronRight className="w-4 h-4 tn-text-primary" />
- </button>
- </div>
- </div>
+ {/* Pagination */}
+ {ledger && (
+ <Pagination
+ currentPage={ledger.pageIndex}
+ totalPages={ledger.totalPages}
+ onPageChange={setPage}
+ isLoading={isLoadingLedger}
+ className="tn-overlay-soft"
+ />
  )}
  </GlassCard>
  </div>

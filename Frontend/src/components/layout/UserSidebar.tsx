@@ -34,13 +34,14 @@ import {
  type LucideIcon,
 } from "lucide-react";
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 
 /**
  * Cấu trúc menu item.
  * `badge` dùng cho notification count (tin nhắn chưa đọc, v.v.)
  */
 interface MenuItem {
- name: string;
+ labelKey: string;
  href: string;
  icon: LucideIcon;
  badge?: number;
@@ -51,7 +52,8 @@ interface MenuItem {
  * Nhóm tách biệt bằng divider + label.
  */
 interface MenuGroup {
- label: string;
+ id: string;
+ labelKey: string;
  items: MenuItem[];
 }
 
@@ -65,32 +67,34 @@ interface MenuGroup {
  */
 const menuGroups: MenuGroup[] = [
  {
- label: "Chính",
- items: [
- { name: "Trang Chủ", href: "/", icon: Home },
- ],
+  id: "main",
+  labelKey: "groups.main",
+  items: [{ labelKey: "home", href: "/", icon: Home }],
  },
  {
- label: "Tarot",
- items: [
- { name: "Rút Bài", href: "/reading", icon: Sparkles },
- { name: "Miếu Bài", href: "/collection", icon: LayoutGrid },
- { name: "Lịch Sử", href: "/reading/history", icon: History },
- ],
+  id: "tarot",
+  labelKey: "groups.tarot",
+  items: [
+   { labelKey: "readings", href: "/reading", icon: Sparkles },
+   { labelKey: "collection", href: "/collection", icon: LayoutGrid },
+   { labelKey: "history", href: "/reading/history", icon: History },
+  ],
  },
  {
- label: "Xã Hội",
- items: [
- { name: "Tin Nhắn", href: "/chat", icon: MessageSquare },
- { name: "Tìm Reader", href: "/readers", icon: Users },
- ],
+  id: "social",
+  labelKey: "groups.social",
+  items: [
+   { labelKey: "chat", href: "/chat", icon: MessageSquare },
+   { labelKey: "readers", href: "/readers", icon: Users },
+  ],
  },
  {
- label: "Tài Khoản",
- items: [
- { name: "Ví", href: "/wallet", icon: Wallet },
- { name: "Hồ Sơ", href: "/profile", icon: User },
- ],
+  id: "account",
+  labelKey: "groups.account",
+  items: [
+   { labelKey: "wallet", href: "/wallet", icon: Wallet },
+   { labelKey: "profile", href: "/profile", icon: User },
+  ],
  },
 ];
 
@@ -117,17 +121,19 @@ const getMostSpecificActiveHref = (pathname: string) => {
 export default function UserSidebar() {
  const pathname = usePathname();
  const activeHref = useMemo(() => getMostSpecificActiveHref(pathname), [pathname]);
+ const tNav = useTranslations("Navigation");
+ const tUserNav = useTranslations("UserNav");
 
  return (
  <aside className="hidden md:flex relative z-20 w-64 h-full bg-[var(--bg-glass)] border-r border-[var(--border-subtle)] flex-col">
  {/* Navigation Groups */}
- <nav className="flex-1 px-3 py-6 space-y-6 overflow-y-auto">
- {menuGroups.map((group) => (
- <div key={group.label}>
- {/* Group Label */}
- <span className="px-4 mb-2 block text-[9px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)]">
- {group.label}
- </span>
+	 <nav className="flex-1 px-3 py-6 space-y-6 overflow-y-auto">
+	 {menuGroups.map((group) => (
+	 <div key={group.id}>
+	 {/* Group Label */}
+	 <span className="px-4 mb-2 block text-[9px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)]">
+	 {tUserNav(group.labelKey)}
+	 </span>
 
  {/* Group Items */}
  <div className="space-y-1">
@@ -155,14 +161,14 @@ export default function UserSidebar() {
  : "group-hover:text-[var(--text-ink)]",
  ].join(" ")}
  />
- <span
+	 <span
  className={[
  "text-[11px] uppercase tracking-widest",
  active ? "font-black" : "font-bold",
  ].join(" ")}
- >
- {item.name}
- </span>
+	 >
+	 {tNav(item.labelKey)}
+	 </span>
  </div>
 
  {/* Badge (notification count) */}

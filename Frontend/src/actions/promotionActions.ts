@@ -1,9 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
-
-// Base URL của Backend API
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5037/api/v1';
+import { API_BASE_URL } from '@/lib/api';
 
 // ======================================================================
 // Kiểu dữ liệu cho Promotions
@@ -35,7 +33,7 @@ export async function listPromotions(onlyActive = false): Promise<DepositPromoti
  const accessToken = cookieStore.get('accessToken')?.value;
 
  try {
- const response = await fetch(`${API_URL}/admin/promotions?onlyActive=${onlyActive}`, {
+ const response = await fetch(`${API_BASE_URL}/admin/promotions?onlyActive=${onlyActive}`, {
  method: 'GET',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -66,7 +64,7 @@ export async function createPromotion(minAmountVnd: number, bonusDiamond: number
  const accessToken = cookieStore.get('accessToken')?.value;
 
  try {
- const response = await fetch(`${API_URL}/admin/promotions`, {
+ const response = await fetch(`${API_BASE_URL}/admin/promotions`, {
  method: 'POST',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -94,7 +92,7 @@ export async function updatePromotion(
  const accessToken = cookieStore.get('accessToken')?.value;
 
  try {
- const response = await fetch(`${API_URL}/admin/promotions/${id}`, {
+ const response = await fetch(`${API_BASE_URL}/admin/promotions/${id}`, {
  method: 'PUT',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -119,7 +117,7 @@ export async function deletePromotion(id: string): Promise<boolean> {
  const accessToken = cookieStore.get('accessToken')?.value;
 
  try {
- const response = await fetch(`${API_URL}/admin/promotions/${id}`, {
+ const response = await fetch(`${API_BASE_URL}/admin/promotions/${id}`, {
  method: 'DELETE',
  headers: {
  'Authorization': `Bearer ${accessToken}`,

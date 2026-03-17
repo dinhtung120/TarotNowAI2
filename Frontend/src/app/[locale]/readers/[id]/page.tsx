@@ -9,12 +9,15 @@ import { useRouter } from '@/i18n/routing';
 import { useParams } from 'next/navigation';
 import { createConversation } from '@/actions/chatActions';
 import toast from 'react-hot-toast';
+import { useLocale, useTranslations } from 'next-intl';
 import UserLayout from '@/components/layout/UserLayout';
 import { GlassCard, Button } from '@/components/ui';
 
 export default function ReaderProfilePage() {
  const params = useParams();
  const router = useRouter();
+ const t = useTranslations("Readers");
+ const locale = useLocale();
  const userId = params.id as string;
 
  const [profile, setProfile] = useState<ReaderProfile | null>(null);
@@ -39,7 +42,7 @@ export default function ReaderProfilePage() {
  <div className="absolute inset-x-0 top-0 h-40 w-40 bg-[var(--purple-accent)]/20 blur-[60px] rounded-full animate-pulse" />
  <Loader2 className="w-12 h-12 animate-spin text-[var(--purple-accent)] relative z-10" />
  </div>
- <div className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-secondary)]">Đang tải hồ sơ...</div>
+ <div className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-secondary)]">{t("profile.loading")}</div>
  </div>
  </UserLayout>
  );
@@ -52,22 +55,28 @@ export default function ReaderProfilePage() {
  <div className="w-24 h-24 tn-panel-soft rounded-full flex items-center justify-center mb-2 shadow-inner">
  <User className="w-10 h-10 text-[var(--text-tertiary)] opacity-50" />
  </div>
- <p className="text-[var(--text-secondary)] text-sm font-medium">Không tìm thấy hồ sơ Reader.</p>
+ <p className="text-[var(--text-secondary)] text-sm font-medium">{t("profile.not_found")}</p>
  <Button
  variant="ghost"
  onClick={() => router.push('/readers')}
  className="text-[var(--text-secondary)] hover:tn-text-primary mt-4"
  >
  <ArrowLeft className="w-4 h-4 mr-2" />
- Quay lại danh sách
+ {t("profile.back_to_list")}
  </Button>
  </div>
  </UserLayout>
  );
  }
 
- // Lấy bio theo thứ tự ưu tiên: VI → EN → ZH
- const bio = profile.bioVi || profile.bioEn || profile.bioZh || 'Chưa có mô tả chi tiết.';
+ const bio =
+  (
+   locale === "vi"
+    ? (profile.bioVi || profile.bioEn || profile.bioZh)
+    : locale === "en"
+     ? (profile.bioEn || profile.bioVi || profile.bioZh)
+     : (profile.bioZh || profile.bioEn || profile.bioVi)
+  ) || t("directory.bio_fallback");
 
  const getStatusBadge = () => {
  switch (profile.status) {
@@ -75,21 +84,21 @@ export default function ReaderProfilePage() {
  return (
  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--success)]/10 border border-[var(--success)]/20 shadow-[0_0_15px_var(--c-16-185-129-10)] ">
  <div className="w-2 h-2 rounded-full bg-[var(--success)] animate-pulse shadow-[0_0_8px_currentColor]" />
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--success)]">Đang nhận câu hỏi</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--success)]">{t("profile.status.accepting")}</span>
  </div>
  );
  case 'online':
  return (
  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--warning)]/10 border border-[var(--warning)]/20 shadow-[0_0_15px_var(--c-245-158-11-10)] ">
  <div className="w-2 h-2 rounded-full bg-[var(--warning)] shadow-[0_0_8px_currentColor]" />
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--warning)]">Đang bận</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--warning)]">{t("profile.status.online")}</span>
  </div>
  );
  default:
  return (
  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full tn-surface-strong border tn-border ">
  <div className="w-2 h-2 rounded-full bg-[var(--text-muted)]" />
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Ngoại tuyến</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("profile.status.offline")}</span>
  </div>
  );
  }
@@ -104,7 +113,7 @@ export default function ReaderProfilePage() {
  className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-[var(--text-secondary)] hover:tn-text-primary transition-colors group"
  >
  <ArrowLeft className="w-4 h-4 text-[var(--purple-accent)] group-hover:-translate-x-1 transition-transform" />
- <span>Quay lại Directory</span>
+ <span>{t("profile.back_to_list")}</span>
  </button>
 
  {/* Profile Card */}
@@ -126,13 +135,13 @@ export default function ReaderProfilePage() {
  </div>
  <div className="space-y-4">
  <h1 className="text-4xl md:text-5xl font-black tn-text-primary uppercase italic tracking-tighter drop-shadow-lg">
- {profile.displayName || 'Reader'}
+ {profile.displayName || t("directory.reader_fallback")}
  </h1>
  <div className="flex flex-wrap justify-center md:justify-start gap-3">
  {getStatusBadge()}
  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full tn-panel ">
  <Gem className="w-3.5 h-3.5 text-[var(--purple-accent)]" />
- <span className="text-[10px] font-black uppercase tracking-widest tn-text-primary">{profile.diamondPerQuestion} / Q</span>
+ <span className="text-[10px] font-black uppercase tracking-widest tn-text-primary">{profile.diamondPerQuestion} {t("profile.diamond_per_question_suffix")}</span>
  </div>
  </div>
  </div>
@@ -145,14 +154,14 @@ export default function ReaderProfilePage() {
  <div className="text-3xl font-black tn-text-primary italic drop-shadow-md">
  {profile.avgRating > 0 ? profile.avgRating.toFixed(1) : '--'}
  </div>
- <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">Điểm Đánh Giá</div>
+ <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">{t("profile.rating_label")}</div>
  </div>
  <div className="p-6 rounded-3xl tn-panel-soft text-center space-y-2 hover:tn-surface-strong transition-colors shadow-inner">
  <MessageCircle className="w-6 h-6 text-[var(--purple-accent)] mx-auto mb-3" />
  <div className="text-3xl font-black tn-text-primary italic drop-shadow-md">
  {profile.totalReviews}
  </div>
- <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">Lượt Nhận Xét</div>
+ <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">{t("profile.reviews_label")}</div>
  </div>
  </div>
 
@@ -160,7 +169,7 @@ export default function ReaderProfilePage() {
  <div className="space-y-8 tn-overlay-soft p-8 rounded-3xl border tn-border-soft shadow-inner">
  <div className="space-y-4">
  <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-[var(--purple-accent)]">
- <User className="w-4 h-4" /> Liên kết tâm hồn
+ <User className="w-4 h-4" /> {t("profile.soul_link")}
  </div>
  <p className="text-[15px] font-medium text-[var(--text-secondary)] leading-relaxed italic border-l-2 border-[var(--purple-accent)]/30 pl-4 py-1">
  &ldquo;{bio}&rdquo;
@@ -170,7 +179,7 @@ export default function ReaderProfilePage() {
  {profile.specialties.length > 0 && (
  <div className="space-y-4 pt-6 border-t tn-border-soft">
  <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">
- <Sparkles className="w-4 h-4" /> Lĩnh vực chuyên môn
+ <Sparkles className="w-4 h-4" /> {t("profile.specialties_title")}
  </div>
  <div className="flex flex-wrap gap-2.5">
  {profile.specialties.map((spec) => (
@@ -197,7 +206,7 @@ export default function ReaderProfilePage() {
  if (result && result.id) {
  router.push(`/chat/${result.id}`);
  } else {
- toast.error('Không thể tạo cuộc hội thoại', {
+ toast.error(t("profile.toast_create_conversation_fail"), {
  style: { background: 'var(--danger-bg)', color: 'var(--danger)', border: '1px solid var(--danger)' }
  });
  setStartingChat(false);
@@ -208,19 +217,19 @@ export default function ReaderProfilePage() {
  {startingChat ? (
  <>
  <Loader2 className="w-5 h-5 animate-spin mr-3" />
- Đang kết nối tâm linh...
+ {t("profile.cta_connecting")}
  </>
  ) : (
  <>
  <MessageCircle className="w-5 h-5 mr-3" />
- Gửi Câu Hỏi Ngay
+ {t("profile.cta_send_question")}
  </>
  )}
  </Button>
  ) : (
  <div className="w-full h-16 rounded-2xl tn-panel-soft flex items-center justify-center gap-3 shadow-inner">
  <Activity className="w-5 h-5 text-[var(--text-tertiary)]" />
- <span className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)]">Hiện không nhận khách</span>
+ <span className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("profile.not_accepting")}</span>
  </div>
  )}
  </div>
@@ -230,7 +239,7 @@ export default function ReaderProfilePage() {
  <div className="text-center pt-8">
  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full tn-panel text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] shadow-inner">
  <Clock className="w-3 h-3 text-[var(--text-tertiary)]" />
- Tham gia Astral từ {new Date(profile.createdAt).toLocaleDateString('vi-VN')}
+ {t("profile.member_since", { date: new Date(profile.createdAt).toLocaleDateString(locale) })}
  </div>
  </div>
  </div>

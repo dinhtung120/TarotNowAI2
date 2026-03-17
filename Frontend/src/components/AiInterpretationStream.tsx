@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { Sparkles, Bot, AlertTriangle, RefreshCw, Send, User as UserIcon } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useTranslations } from "next-intl";
+import { API_BASE_URL } from "@/lib/api";
 
 interface AiInterpretationStreamProps {
  sessionId: string;
@@ -71,7 +72,7 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
  bottomRef.current?.scrollIntoView({ behavior: "smooth" });
  }, [messages, isStreaming]);
 
- const stopStream = (updateState = true) => {
+ const stopStream = useCallback((updateState = true) => {
  if (eventSourceRef.current) {
  eventSourceRef.current.close();
  eventSourceRef.current = null;
@@ -79,9 +80,16 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
  if (updateState) {
  setIsStreaming(false);
  }
- };
+ }, []);
 
- const startStream = (customPrompt?: string) => {
+ const startStream = useCallback((customPrompt?: string) => {
+ if (!accessToken) {
+ setError(t("error_stream"));
+ setIsStreaming(false);
+ setIsSendingFollowup(false);
+ return;
+ }
+
  setIsStreaming(true);
  setError(null);
 
@@ -98,8 +106,7 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
 
  // Khởi tạo Server-Sent Events Connection
  // Thêm tham số `access_token` và `followupQuestion` (nếu có)
- const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5221/api/v1";
- const baseUrl = `${apiUrl}/sessions/${sessionId}/stream?access_token=${accessToken}`;
+ const baseUrl = `${API_BASE_URL}/sessions/${sessionId}/stream?access_token=${accessToken}`;
  const finalUrl = customPrompt ? `${baseUrl}&followupQuestion=${encodeURIComponent(customPrompt)}` : baseUrl;
 
  eventSourceRef.current = new EventSource(finalUrl, {
@@ -139,10 +146,10 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
  }
  return newMsgs;
  });
- } catch (err) {
- console.error("Lỗi parse SSE Chunk", err);
- }
- };
+	 } catch (err) {
+	 console.error("Failed to parse SSE chunk", err);
+	 }
+	 };
 
  eventSourceRef.current.onerror = (err) => {
  console.error("SSE Connection Error:", err);
@@ -151,9 +158,11 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
  setIsStreaming(false);
  setIsSendingFollowup(false);
  };
- };
+ }, [accessToken, onComplete, sessionId, stopStream, t]);
 
  useEffect(() => {
+ if (!accessToken) return;
+
  const startTimer = window.setTimeout(() => {
  if (eventSourceRef.current || isComplete || error || messages.length > 0) return;
  startStream();
@@ -163,8 +172,7 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
  window.clearTimeout(startTimer);
  stopStream(false);
  };
- // eslint-disable-next-line react-hooks/exhaustive-deps
- }, [sessionId]);
+ }, [accessToken, error, isComplete, messages.length, sessionId, startStream, stopStream]);
 
  const handleFollowupSubmit = (e: React.FormEvent) => {
  e.preventDefault();
@@ -214,19 +222,19 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
  {/* Error Message */}
  {error && (
  <div className="m-6 p-4 bg-[var(--danger)]/20 border border-[var(--danger)]/30 rounded-xl flex items-start text-[var(--danger)]">
- <AlertTriangle className="w-5 h-5 mr-3 mt-0.5 shrink-0" />
- <div>
- <p className="font-medium">Lỗi Năng Lượng Thần Giao</p>
- <p className="text-sm opacity-80">{error}</p>
- <button
- onClick={() => startStream()}
- className="mt-3 flex items-center text-sm bg-[var(--danger)]/20 hover:bg-[var(--danger)]/30 px-4 py-2 rounded-lg transition"
- >
- <RefreshCw className="w-4 h-4 mr-2" /> Thử Kênh Khác (Refund Tự Động)
- </button>
- </div>
- </div>
- )}
+	 <AlertTriangle className="w-5 h-5 mr-3 mt-0.5 shrink-0" />
+	 <div>
+	 <p className="font-medium">{t("error_title")}</p>
+	 <p className="text-sm opacity-80">{error}</p>
+	 <button
+	 onClick={() => startStream()}
+	 className="mt-3 flex items-center text-sm bg-[var(--danger)]/20 hover:bg-[var(--danger)]/30 px-4 py-2 rounded-lg transition"
+	 >
+	 <RefreshCw className="w-4 h-4 mr-2" /> {t("error_retry")}
+	 </button>
+	 </div>
+	 </div>
+	 )}
 
  {/* Content Body (Chat Interface) */}
  <div className="p-6 h-[400px] md:h-[500px] flex flex-col relative">
@@ -234,13 +242,13 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
  {/* Scrollable Message Area */}
  <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-6">
  {messages.length === 0 && !error && isStreaming && (
- <div className="h-full flex items-center justify-center text-[var(--purple-accent)]/50">
- <div className="flex flex-col items-center">
- <Sparkles className="w-10 h-10 animate-pulse mb-4" />
- <p className="font-serif italic animate-pulse">Các Tinh Tú Đang Thẳng Hàng...</p>
- </div>
- </div>
- )}
+	 <div className="h-full flex items-center justify-center text-[var(--purple-accent)]/50">
+	 <div className="flex flex-col items-center">
+	 <Sparkles className="w-10 h-10 animate-pulse mb-4" />
+	 <p className="font-serif italic animate-pulse">{t("streaming_placeholder")}</p>
+	 </div>
+	 </div>
+	 )}
 
  {messages.map((msg) => (
  <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -286,12 +294,12 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
  <div className="absolute -top-6 left-2 flex items-center gap-2">
  {freeSlotsRemaining > 0 ? (
  <span className="px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded-md bg-[var(--warning)]/20 text-[var(--warning)] border border-[var(--warning)]/30">
- Miễn Phí Follow-up ({freeSlotsRemaining}/{freeSlotsTotal})
+ {t("follow_up_free_badge", { remaining: freeSlotsRemaining, total: freeSlotsTotal })}
  </span>
  ) : (
  <span className="px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded-md bg-[var(--purple-accent)]/20 text-[var(--purple-accent)] border border-[var(--purple-accent)]/30 flex items-center">
  <Sparkles className="w-3 h-3 mr-1" />
- Phí: {nextDiamondCost} Diamond
+ {t("follow_up_fee_badge", { cost: nextDiamondCost })}
  </span>
  )}
  </div>
@@ -317,15 +325,15 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
  </button>
  </div>
  <p className="text-center text-[10px] tn-text-muted mt-2 font-mono uppercase tracking-wider">
- Giới hạn 5 câu hỏi phụ. Tốn AI Quota nhưng miễn phí Diamond nếu bài đủ cấp.
+ {t("follow_up_hint")}
  </p>
  </form>
  )}
 
  {isComplete && isHardCapReached && (
  <div className="mt-4 shrink-0 text-center p-4 tn-surface-strong border tn-border-soft rounded-2xl animate-in slide-in-from-bottom-5 duration-500">
- <p className="text-sm font-medium text-[var(--warning)]">Giới hạn Vũ Trụ đã đạt</p>
- <p className="text-xs tn-text-muted mt-1">Năng lượng của dải ngân hà trong phiên này đã vơi cạn (5/5 câu). Quá nhiều sự phân tâm sẽ làm nhiễu loạn thông điệp ban đầu. Xin hãy đón nhận và chiêm nghiệm tinh hoa trên.</p>
+ <p className="text-sm font-medium text-[var(--warning)]">{t("hard_cap_title")}</p>
+ <p className="text-xs tn-text-muted mt-1">{t("hard_cap_desc")}</p>
  </div>
  )}
  </div>

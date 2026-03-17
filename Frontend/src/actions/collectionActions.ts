@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
+import { API_BASE_URL } from "@/lib/api";
 
 export interface UserCollectionDto {
  cardId: number;
@@ -11,8 +12,6 @@ export interface UserCollectionDto {
  lastDrawnAt: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5037/api/v1";
-
 export async function getUserCollection() {
  const t = await getTranslations("ApiErrors");
 
@@ -21,10 +20,10 @@ export async function getUserCollection() {
  const token = cookieStore.get("accessToken")?.value;
 
  if (!token) {
- return { success: false, error: t("unauthorized") || "Please login" };
+ return { success: false, error: t("unauthorized") };
  }
 
- const res = await fetch(`${API_URL}/reading/collection`, {
+ const res = await fetch(`${API_BASE_URL}/reading/collection`, {
  method: "GET",
  headers: {
  Authorization: `Bearer ${token}`,
@@ -43,8 +42,7 @@ export async function getUserCollection() {
 
  const responseData: UserCollectionDto[] = await res.json();
  return { success: true, data: responseData };
- } catch (error: unknown) {
- const errorMessage = error instanceof Error ? error.message : t("network_error");
- return { success: false, error: errorMessage };
+ } catch {
+ return { success: false, error: t("network_error") };
  }
 }

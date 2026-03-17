@@ -1,10 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { writeFileSync } from 'fs';
-
-// Base URL của Backend API
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5037/api/v1';
+import { API_BASE_URL } from '@/lib/api';
 
 // ======================================================================
 // Kiểu dữ liệu cho Admin
@@ -92,7 +89,7 @@ export async function listUsers(page = 1, pageSize = 20, searchTerm = ''): Promi
  if (!accessToken) return null;
 
  try {
- const url = new URL(`${API_URL}/admin/users`);
+ const url = new URL(`${API_BASE_URL}/admin/users`);
  url.searchParams.append('page', page.toString());
  url.searchParams.append('pageSize', pageSize.toString());
  if (searchTerm) {
@@ -136,7 +133,7 @@ export async function toggleUserLock(userId: string, isLocked: boolean): Promise
  if (!accessToken) return false;
 
  try {
- const response = await fetch(`${API_URL}/admin/users/lock`, {
+ const response = await fetch(`${API_BASE_URL}/admin/users/lock`, {
  method: 'PATCH',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -169,7 +166,7 @@ export async function listDeposits(page = 1, pageSize = 20, status = ''): Promis
  if (!accessToken) return null;
 
  try {
- const url = new URL(`${API_URL}/admin/deposits`);
+ const url = new URL(`${API_BASE_URL}/admin/deposits`);
  url.searchParams.append('page', page.toString());
  url.searchParams.append('pageSize', pageSize.toString());
  if (status) {
@@ -211,7 +208,7 @@ export async function getWalletMismatches(): Promise<MismatchRecord[] | null> {
  if (!accessToken) return null;
 
  try {
- const response = await fetch(`${API_URL}/admin/reconciliation/wallet`, {
+ const response = await fetch(`${API_BASE_URL}/admin/reconciliation/wallet`, {
  method: 'GET',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -251,7 +248,7 @@ export async function addUserBalance(userId: string, currency: string, amount: n
  if (!accessToken) return false;
 
  try {
- const response = await fetch(`${API_URL}/admin/users/add-balance`, {
+ const response = await fetch(`${API_BASE_URL}/admin/users/add-balance`, {
  method: 'POST',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -284,18 +281,9 @@ export async function addUserBalance(userId: string, currency: string, amount: n
  * Backend API: PATCH /api/v1/admin/deposits/process
  */
 export async function processDeposit(depositId: string, action: 'approve' | 'reject', transactionId?: string): Promise<boolean> {
- const debugLog = (msg: string) => {
- const line = `[${new Date().toISOString()}] ${msg}\n`;
- try { writeFileSync('/tmp/deposit_debug.log', line, { flag: 'a' }); } catch {}
- };
-
  try {
  const accessToken = await getAccessToken();
- debugLog(`processDeposit: depositId=${depositId}, action=${action}`);
- debugLog(`API_URL=${API_URL}`);
- debugLog(`accessToken exists=${!!accessToken}, length=${accessToken?.length}`);
  if (!accessToken) {
- debugLog(`ERROR: No access token found!`);
  return false;
  }
 
@@ -308,11 +296,7 @@ export async function processDeposit(depositId: string, action: 'approve' | 'rej
  TransactionId: transactionId || ""
  };
 
- const fullUrl = `${API_URL}/admin/deposits/process`;
- debugLog(`Calling: PATCH ${fullUrl}`);
- debugLog(`Payload: ${JSON.stringify(bodyPayload)}`);
-
- const response = await fetch(fullUrl, {
+ const response = await fetch(`${API_BASE_URL}/admin/deposits/process`, {
  method: 'PATCH',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -321,18 +305,15 @@ export async function processDeposit(depositId: string, action: 'approve' | 'rej
  body: JSON.stringify(bodyPayload),
  });
 
- debugLog(`Response status: ${response.status}`);
  const responseText = await response.text();
- debugLog(`Response body: ${responseText}`);
  if (!response.ok) {
- debugLog(`FAILED: ${response.status} - ${responseText}`);
+ console.error(`[AdminAction] processDeposit error: ${response.status} - ${responseText}`);
  return false;
  }
 
- debugLog(`SUCCESS`);
  return true;
  } catch (error) {
- debugLog(`EXCEPTION: ${error}`);
+ console.error('[AdminAction] processDeposit failed:', error);
  return false;
  }
 }
@@ -377,7 +358,7 @@ export async function listReaderRequests(
  if (!accessToken) return null;
 
  try {
- const url = new URL(`${API_URL}/admin/reader-requests`);
+ const url = new URL(`${API_BASE_URL}/admin/reader-requests`);
  url.searchParams.append('page', page.toString());
  url.searchParams.append('pageSize', pageSize.toString());
  if (statusFilter) url.searchParams.append('statusFilter', statusFilter);
@@ -424,7 +405,7 @@ export async function processReaderRequest(
  if (!accessToken) return false;
 
  try {
- const response = await fetch(`${API_URL}/admin/reader-requests/process`, {
+ const response = await fetch(`${API_BASE_URL}/admin/reader-requests/process`, {
  method: 'PATCH',
  headers: {
  'Authorization': `Bearer ${accessToken}`,

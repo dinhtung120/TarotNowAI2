@@ -4,17 +4,20 @@ import React, { useEffect, useState } from 'react';
 import { listReaders, type ReaderProfile } from '@/actions/readerActions';
 import {
  Users, Search, Star,
- Loader2, Sparkles, ChevronLeft, ChevronRight, Gem, Filter, Activity
+ Loader2, Sparkles, Gem, Filter, Activity
 } from 'lucide-react';
 import { useRouter } from '@/i18n/routing';
+import { useLocale, useTranslations } from 'next-intl';
 import UserLayout from '@/components/layout/UserLayout';
-import { SectionHeader, GlassCard } from '@/components/ui';
+import { SectionHeader, GlassCard, Pagination } from '@/components/ui';
 
 /**
  * Trang danh sách Reader công khai (Directory Listing).
  */
 export default function ReaderDirectoryPage() {
  const router = useRouter();
+ const t = useTranslations("Readers");
+ const locale = useLocale();
  // State quản lý danh sách và bộ lọc
  const [readers, setReaders] = useState<ReaderProfile[]>([]);
  const [totalCount, setTotalCount] = useState(0);
@@ -26,19 +29,19 @@ export default function ReaderDirectoryPage() {
 
  // Danh sách chuyên môn
  const specialties = [
- { value: '', label: 'Tất cả chuyên môn' },
- { value: 'love', label: '💕 Tình yêu' },
- { value: 'career', label: '💼 Sự nghiệp' },
- { value: 'general', label: '🔮 Tổng quát' },
- { value: 'health', label: '🌿 Sức khỏe' },
- { value: 'finance', label: '💰 Tài chính' },
+ { value: '', label: t('directory.specialties.all') },
+ { value: 'love', label: t('directory.specialties.love') },
+ { value: 'career', label: t('directory.specialties.career') },
+ { value: 'general', label: t('directory.specialties.general') },
+ { value: 'health', label: t('directory.specialties.health') },
+ { value: 'finance', label: t('directory.specialties.finance') },
  ];
 
  const statusOptions = [
- { value: '', label: 'Tất cả trạng thái' },
- { value: 'accepting_questions', label: '🟢 Đang nhận khách' },
- { value: 'online', label: '🟡 Trực tuyến (Bận)' },
- { value: 'offline', label: '⚫ Ngoại tuyến' },
+ { value: '', label: t('directory.statuses.all') },
+ { value: 'accepting_questions', label: t('directory.statuses.accepting') },
+ { value: 'online', label: t('directory.statuses.online') },
+ { value: 'offline', label: t('directory.statuses.offline') },
  ];
 
  const pageSize = 12;
@@ -65,11 +68,11 @@ export default function ReaderDirectoryPage() {
  const getStatusIndicator = (status: string) => {
  switch (status) {
  case 'accepting_questions':
- return <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[var(--success)] shadow-[0_0_8px_var(--c-16-185-129-50)] animate-pulse" /><span className="text-[var(--success)] font-black uppercase tracking-wider text-[9px]">Sẵn sàng</span></div>;
+ return <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[var(--success)] shadow-[0_0_8px_var(--c-16-185-129-50)] animate-pulse" /><span className="text-[var(--success)] font-black uppercase tracking-wider text-[9px]">{t("directory.status_indicator.ready")}</span></div>;
  case 'online':
- return <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[var(--warning)] shadow-[0_0_8px_var(--c-245-158-11-50)]" /><span className="text-[var(--warning)] font-black uppercase tracking-wider text-[9px]">Đang bận</span></div>;
+ return <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[var(--warning)] shadow-[0_0_8px_var(--c-245-158-11-50)]" /><span className="text-[var(--warning)] font-black uppercase tracking-wider text-[9px]">{t("directory.status_indicator.busy")}</span></div>;
  default:
- return <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[var(--text-muted)]" /><span className="tn-text-muted font-bold uppercase tracking-wider text-[9px]">Ngoại tuyến</span></div>;
+ return <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[var(--text-muted)]" /><span className="tn-text-muted font-bold uppercase tracking-wider text-[9px]">{t("directory.status_indicator.offline")}</span></div>;
  }
  };
 
@@ -79,10 +82,10 @@ export default function ReaderDirectoryPage() {
  {/* Header & Stats */}
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-2">
  <SectionHeader
- tag="Directory"
+ tag={t("directory.tag")}
  tagIcon={<Users className="w-3 h-3 text-[var(--purple-accent)]" />}
- title="Nhà Nữ Tế"
- subtitle="Tìm Reader phù hợp với bạn. Chỉ những người đang sẵn sàng mới có thể nhận câu hỏi."
+ title={t("directory.title")}
+ subtitle={t("directory.subtitle")}
  className="mb-0 text-left items-start md:mb-0"
  />
  <div className="tn-panel rounded-2xl px-5 py-3 flex items-center gap-3 self-start md:self-auto">
@@ -90,7 +93,7 @@ export default function ReaderDirectoryPage() {
  <Users className="w-5 h-5 text-[var(--purple-accent)]" />
  </div>
  <div>
- <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Tổng số Reader</div>
+ <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("directory.total_label")}</div>
  <div className="text-2xl font-black tn-text-primary leading-none">{totalCount}</div>
  </div>
  </div>
@@ -105,7 +108,7 @@ export default function ReaderDirectoryPage() {
  <input
  id="reader-search"
  type="text"
- placeholder="Tìm kiếm theo tên..."
+ placeholder={t("directory.search_placeholder")}
  value={searchTerm}
  onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
  className="w-full tn-field rounded-xl pl-11 pr-4 py-3 text-sm tn-text-primary placeholder:text-[var(--text-tertiary)] tn-field-accent transition-all font-medium"
@@ -145,7 +148,7 @@ export default function ReaderDirectoryPage() {
  <div className="absolute inset-x-0 top-0 h-40 w-40 bg-[var(--purple-accent)]/20 blur-[60px] rounded-full animate-pulse" />
  <Loader2 className="w-12 h-12 animate-spin text-[var(--purple-accent)] relative z-10" />
  </div>
- <div className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-secondary)]">Đang tải danh sách...</div>
+ <div className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-secondary)]">{t("directory.loading")}</div>
  </div>
  )}
 
@@ -153,7 +156,7 @@ export default function ReaderDirectoryPage() {
  {!loading && readers.length === 0 && (
  <GlassCard className="h-[40vh] flex flex-col items-center justify-center space-y-4 border-dashed">
  <Users className="w-16 h-16 text-[var(--text-tertiary)] opacity-50" />
- <p className="text-[var(--text-secondary)] text-sm font-medium">Chưa có Reader nào phù hợp với bộ lọc.</p>
+ <p className="text-[var(--text-secondary)] text-sm font-medium">{t("directory.empty")}</p>
  </GlassCard>
  )}
 
@@ -181,7 +184,7 @@ export default function ReaderDirectoryPage() {
  </div>
  </div>
  <div>
- <h3 className="text-base font-black tn-text-primary italic tracking-tight line-clamp-1">{reader.displayName || 'Reader'}</h3>
+ <h3 className="text-base font-black tn-text-primary italic tracking-tight line-clamp-1">{reader.displayName || t("directory.reader_fallback")}</h3>
  <div className="mt-1">
  {getStatusIndicator(reader.status)}
  </div>
@@ -190,7 +193,13 @@ export default function ReaderDirectoryPage() {
 
  {/* Bio */}
  <p className="text-xs text-[var(--text-secondary)] font-medium leading-relaxed line-clamp-2 flex-grow">
- {reader.bioVi || reader.bioEn || 'Chưa có mô tả chi tiết.'}
+ {(
+  locale === "vi"
+   ? (reader.bioVi || reader.bioEn || reader.bioZh)
+   : locale === "en"
+    ? (reader.bioEn || reader.bioVi || reader.bioZh)
+    : (reader.bioZh || reader.bioEn || reader.bioVi)
+ ) || t("directory.bio_fallback")}
  </p>
 
  <div className="space-y-4 pt-4 border-t tn-border-soft">
@@ -207,7 +216,7 @@ export default function ReaderDirectoryPage() {
  </div>
  <div className="flex items-center gap-1.5 bg-[var(--purple-accent)]/10 px-2.5 py-1.5 rounded-lg border border-[var(--purple-accent)]/20">
  <Gem className="w-3.5 h-3.5 text-[var(--purple-accent)]" />
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--purple-accent)]">{reader.diamondPerQuestion} / Q</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--purple-accent)]">{reader.diamondPerQuestion} {t("directory.per_question_suffix")}</span>
  </div>
  </div>
 
@@ -234,28 +243,13 @@ export default function ReaderDirectoryPage() {
  )}
 
  {/* Pagination */}
- {!loading && totalPages > 1 && (
- <div className="flex items-center justify-center gap-6 pt-8">
- <button
- onClick={() => setPage(p => Math.max(1, p - 1))}
- disabled={page === 1}
- className="p-3.5 rounded-xl tn-panel hover:tn-surface-strong hover:border-[var(--purple-accent)]/50 disabled:opacity-30 disabled:tn-border disabled:tn-surface disabled:cursor-not-allowed transition-all"
- >
- <ChevronLeft className="w-5 h-5 tn-text-primary" />
- </button>
- <div className="tn-panel-soft py-2 px-6 rounded-xl">
- <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">
- Trang <span className="tn-text-primary">{page}</span> / {totalPages}
- </span>
- </div>
- <button
- onClick={() => setPage(p => Math.min(totalPages, p + 1))}
- disabled={page === totalPages}
- className="p-3.5 rounded-xl tn-panel hover:tn-surface-strong hover:border-[var(--purple-accent)]/50 disabled:opacity-30 disabled:tn-border disabled:tn-surface disabled:cursor-not-allowed transition-all"
- >
- <ChevronRight className="w-5 h-5 tn-text-primary" />
- </button>
- </div>
+ {!loading && (
+ <Pagination
+ currentPage={page}
+ totalPages={totalPages}
+ onPageChange={setPage}
+ className="mt-8"
+ />
  )}
  </div>
  </UserLayout>

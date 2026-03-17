@@ -1,8 +1,8 @@
 'use server';
 
 import { cookies } from 'next/headers';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5037/api/v1';
+import { API_BASE_URL } from '@/lib/api';
+import { getTranslations } from 'next-intl/server';
 
 /**
  * Các Server Actions để thực hiện API call tới Backend Auth.
@@ -10,6 +10,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5037/a
  */
 
 export async function loginAction(data: Record<string, unknown>) {
+ const tApi = await getTranslations('ApiErrors');
+
  try {
  const response = await fetch(`${API_BASE_URL}/auth/login`, {
  method: 'POST',
@@ -38,7 +40,7 @@ export async function loginAction(data: Record<string, unknown>) {
  }
 
  if (!response.ok) {
- return { error: result.message || 'Login failed' };
+ return { error: result.message || result.detail || tApi('unknown_error') };
  }
 
  // Cần lưu ý access token cũng phải được set cookie để các Server Action (Collection, Reading) dùng được
@@ -56,11 +58,13 @@ export async function loginAction(data: Record<string, unknown>) {
 
  return { success: true, data: result };
  } catch {
- return { error: 'Network error occurred' };
+ return { error: tApi('network_error') };
  }
 }
 
 export async function registerAction(data: Record<string, unknown>) {
+ const tApi = await getTranslations('ApiErrors');
+
  try {
  const response = await fetch(`${API_BASE_URL}/auth/register`, {
  method: 'POST',
@@ -71,16 +75,18 @@ export async function registerAction(data: Record<string, unknown>) {
  const result = await response.json();
 
  if (!response.ok) {
- return { error: result.message || 'Registration failed' };
+ return { error: result.message || result.detail || tApi('unknown_error') };
  }
 
  return { success: true, data: result };
  } catch {
- return { error: 'Network error occurred' };
+ return { error: tApi('network_error') };
  }
 }
 
 export async function logoutAction() {
+ const tApi = await getTranslations('ApiErrors');
+
  try {
  const cookieStore = await cookies();
  const refreshToken = cookieStore.get('refreshToken')?.value;
@@ -100,16 +106,18 @@ export async function logoutAction() {
 
  if (!response.ok) {
  const result = await response.json();
- return { error: result.message || 'Logout failed' };
+ return { error: result.message || result.detail || tApi('unknown_error') };
  }
 
  return { success: true };
  } catch {
- return { error: 'Network error occurred' };
+ return { error: tApi('network_error') };
  }
 }
 
 export async function verifyEmailAction(data: { email: string; otpCode: string }) {
+ const tApi = await getTranslations('ApiErrors');
+
  try {
  const response = await fetch(`${API_BASE_URL}/auth/verify-email`, {
  method: 'POST',
@@ -120,16 +128,18 @@ export async function verifyEmailAction(data: { email: string; otpCode: string }
  const result = await response.json();
 
  if (!response.ok) {
- return { error: result.message || 'Verification failed' };
+ return { error: result.message || result.detail || tApi('unknown_error') };
  }
 
  return { success: true, data: result };
  } catch {
- return { error: 'Network error occurred' };
+ return { error: tApi('network_error') };
  }
 }
 
 export async function forgotPasswordAction(data: { email: string }) {
+ const tApi = await getTranslations('ApiErrors');
+
  try {
  const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
  method: 'POST',
@@ -140,16 +150,18 @@ export async function forgotPasswordAction(data: { email: string }) {
  const result = await response.json();
 
  if (!response.ok) {
- return { error: result.message || 'Failed to send reset email' };
+ return { error: result.message || result.detail || tApi('unknown_error') };
  }
 
  return { success: true, data: result };
  } catch {
- return { error: 'Network error occurred' };
+ return { error: tApi('network_error') };
  }
 }
 
 export async function resetPasswordAction(data: Record<string, unknown>) {
+ const tApi = await getTranslations('ApiErrors');
+
  try {
  const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
  method: 'POST',
@@ -160,12 +172,12 @@ export async function resetPasswordAction(data: Record<string, unknown>) {
  const result = await response.json();
 
  if (!response.ok) {
- return { error: result.message || 'Password reset failed' };
+ return { error: result.message || result.detail || tApi('unknown_error') };
  }
 
  return { success: true, data: result };
  } catch {
- return { error: 'Network error occurred' };
+ return { error: tApi('network_error') };
  }
 }
 
@@ -174,12 +186,14 @@ export async function resetPasswordAction(data: Record<string, unknown>) {
  * Hàm này thường được gọi bởi Middleware hoặc Client khi nhận được 401.
  */
 export async function refreshAccessTokenAction() {
+ const tApi = await getTranslations('ApiErrors');
+
  try {
  const cookieStore = await cookies();
  const refreshToken = cookieStore.get('refreshToken')?.value;
 
  if (!refreshToken) {
- return { error: 'No refresh token available' };
+ return { error: tApi('unauthorized') };
  }
 
  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
@@ -194,7 +208,7 @@ export async function refreshAccessTokenAction() {
  // Nếu refresh thất bại (hết hạn, revoke), ta nên xóa cookies và yêu cầu login lại
  cookieStore.delete('accessToken');
  cookieStore.delete('refreshToken');
- return { error: result.message || 'Refresh token failed' };
+ return { error: result.message || result.detail || tApi('unauthorized') };
  }
 
  // Cập nhật Access Token mới vào Cookie
@@ -227,7 +241,7 @@ export async function refreshAccessTokenAction() {
 
  return { success: true, accessToken: result.accessToken };
  } catch {
- return { error: 'Network error occurred' };
+ return { error: tApi('network_error') };
  }
 }
 
@@ -235,6 +249,8 @@ export async function refreshAccessTokenAction() {
  * [Phase 4] Gửi lại mã OTP xác thực email.
  */
 export async function resendVerificationEmailAction(email: string) {
+ const tApi = await getTranslations('ApiErrors');
+
  try {
  const response = await fetch(`${API_BASE_URL}/auth/send-verification-email`, {
  method: 'POST',
@@ -245,11 +261,11 @@ export async function resendVerificationEmailAction(email: string) {
  const result = await response.json();
 
  if (!response.ok) {
- return { error: result.message || 'Failed to resend email' };
+ return { error: result.message || result.detail || tApi('unknown_error') };
  }
 
- return { success: true, message: result.message || 'OTP sent successfully' };
+ return { success: true };
  } catch {
- return { error: 'Network error occurred' };
+ return { error: tApi('network_error') };
  }
 }

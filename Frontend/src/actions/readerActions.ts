@@ -1,9 +1,8 @@
 'use server';
 
 import { cookies } from 'next/headers';
-
-// Base URL của Backend API — thiết lập từ biến môi trường
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5037/api/v1';
+import { API_BASE_URL } from '@/lib/api';
+import { getTranslations } from 'next-intl/server';
 
 // ======================================================================
 // Helper Functions
@@ -92,11 +91,13 @@ export async function submitReaderApplication(
  introText: string,
  proofDocuments: string[] = []
 ): Promise<{ success: boolean; message: string }> {
+ const t = await getTranslations("ReaderApply");
+ const tApi = await getTranslations("ApiErrors");
  const accessToken = await getAccessToken();
- if (!accessToken) return { success: false, message: 'Bạn chưa đăng nhập.' };
+ if (!accessToken) return { success: false, message: tApi("unauthorized") };
 
  try {
- const response = await fetch(`${API_URL}/reader/apply`, {
+ const response = await fetch(`${API_BASE_URL}/reader/apply`, {
  method: 'POST',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -108,15 +109,15 @@ export async function submitReaderApplication(
  if (!response.ok) {
  // Parse error message từ ProblemDetails format
  const errorData = await response.json().catch(() => null);
- const msg = errorData?.detail || errorData?.message || 'Gửi đơn thất bại.';
+ const msg = errorData?.detail || errorData?.message || t("errors.submit_failed");
  return { success: false, message: msg };
  }
 
  const data = await response.json();
- return { success: true, message: data.message || 'Đơn đã được gửi thành công.' };
+ return { success: true, message: data.message || t("success.submitted") };
  } catch (error) {
  console.error('[ReaderAction] submitReaderApplication failed:', error);
- return { success: false, message: 'Lỗi kết nối. Vui lòng thử lại.' };
+ return { success: false, message: tApi("network_error") };
  }
 }
 
@@ -129,7 +130,7 @@ export async function getMyReaderRequest(): Promise<MyReaderRequest | null> {
  if (!accessToken) return null;
 
  try {
- const response = await fetch(`${API_URL}/reader/my-request`, {
+ const response = await fetch(`${API_BASE_URL}/reader/my-request`, {
  method: 'GET',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -163,7 +164,7 @@ export async function listReaders(
  searchTerm = ''
 ): Promise<ListReadersResponse | null> {
  try {
- const url = new URL(`${API_URL}/readers`);
+ const url = new URL(`${API_BASE_URL}/readers`);
  url.searchParams.append('page', page.toString());
  url.searchParams.append('pageSize', pageSize.toString());
  if (specialty) url.searchParams.append('specialty', specialty);
@@ -196,7 +197,7 @@ export async function listReaders(
  */
 export async function getReaderProfile(userId: string): Promise<ReaderProfile | null> {
  try {
- const response = await fetch(`${API_URL}/reader/profile/${userId}`, {
+ const response = await fetch(`${API_BASE_URL}/reader/profile/${userId}`, {
  method: 'GET',
  headers: { 'Content-Type': 'application/json' },
  cache: 'no-store',
@@ -225,7 +226,7 @@ export async function updateReaderProfile(data: {
  if (!accessToken) return false;
 
  try {
- const response = await fetch(`${API_URL}/reader/profile`, {
+ const response = await fetch(`${API_BASE_URL}/reader/profile`, {
  method: 'PATCH',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -251,7 +252,7 @@ export async function updateReaderStatus(status: string): Promise<boolean> {
  if (!accessToken) return false;
 
  try {
- const response = await fetch(`${API_URL}/reader/status`, {
+ const response = await fetch(`${API_BASE_URL}/reader/status`, {
  method: 'PATCH',
  headers: {
  'Authorization': `Bearer ${accessToken}`,

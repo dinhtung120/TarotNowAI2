@@ -1,8 +1,8 @@
 'use server';
 
 import { cookies } from 'next/headers';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5037/api/v1';
+import { getTranslations } from 'next-intl/server';
+import { API_BASE_URL } from '@/lib/api';
 
 async function getAccessToken(): Promise<string | undefined> {
  const cookieStore = await cookies();
@@ -23,7 +23,7 @@ export async function getMfaStatus(): Promise<boolean> {
  if (!accessToken) return false;
 
  try {
- const res = await fetch(`${API_URL}/mfa/status`, {
+ const res = await fetch(`${API_BASE_URL}/mfa/status`, {
  method: 'GET',
  headers: { 'Authorization': `Bearer ${accessToken}` },
  cache: 'no-store',
@@ -41,23 +41,25 @@ export async function getMfaStatus(): Promise<boolean> {
  * Bước 1: Setup MFA (Generate secret & QR)
  */
 export async function setupMfa(): Promise<{ success: boolean; data?: MfaSetupResult; error?: string }> {
+ const tApi = await getTranslations('ApiErrors');
  const accessToken = await getAccessToken();
- if (!accessToken) return { success: false, error: 'Chưa đăng nhập' };
+ if (!accessToken) return { success: false, error: tApi('unauthorized') };
 
  try {
- const res = await fetch(`${API_URL}/mfa/setup`, {
+ const res = await fetch(`${API_BASE_URL}/mfa/setup`, {
  method: 'POST',
  headers: { 'Authorization': `Bearer ${accessToken}` },
  });
  if (!res.ok) {
+ if (res.status === 401) return { success: false, error: tApi('unauthorized') };
  const err = await res.json().catch(() => ({}));
- return { success: false, error: err.detail || err.msg || 'Lỗi setup' };
+ return { success: false, error: err.detail || err.msg || tApi('unknown_error') };
  }
  const data = await res.json();
  return { success: true, data };
  } catch (error) {
  console.error('[MFA] setupMfa error:', error);
- return { success: false, error: 'Lỗi kết nối' };
+ return { success: false, error: tApi('network_error') };
  }
 }
 
@@ -65,11 +67,12 @@ export async function setupMfa(): Promise<{ success: boolean; data?: MfaSetupRes
  * Bước 2: Verify TOTP để chính thức bật MFA
  */
 export async function verifyMfa(code: string): Promise<{ success: boolean; error?: string }> {
+ const tApi = await getTranslations('ApiErrors');
  const accessToken = await getAccessToken();
- if (!accessToken) return { success: false, error: 'Chưa đăng nhập' };
+ if (!accessToken) return { success: false, error: tApi('unauthorized') };
 
  try {
- const res = await fetch(`${API_URL}/mfa/verify`, {
+ const res = await fetch(`${API_BASE_URL}/mfa/verify`, {
  method: 'POST',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -78,13 +81,15 @@ export async function verifyMfa(code: string): Promise<{ success: boolean; error
  body: JSON.stringify({ code }),
  });
  if (!res.ok) {
+ if (res.status === 401) return { success: false, error: tApi('unauthorized') };
+ if (res.status === 400) return { success: false, error: tApi('invalid_code') };
  const err = await res.json().catch(() => ({}));
- return { success: false, error: err.detail || err.msg || 'Mã xác thực không hợp lệ' };
+ return { success: false, error: err.detail || err.msg || tApi('unknown_error') };
  }
  return { success: true };
  } catch (error) {
  console.error('[MFA] verifyMfa error:', error);
- return { success: false, error: 'Lỗi kết nối' };
+ return { success: false, error: tApi('network_error') };
  }
 }
 
@@ -92,11 +97,12 @@ export async function verifyMfa(code: string): Promise<{ success: boolean; error
  * Challenge: Nhập TOTP code để thực hiện action nhạy cảm (VD: Payout, Admin)
  */
 export async function challengeMfa(code: string): Promise<{ success: boolean; error?: string }> {
+ const tApi = await getTranslations('ApiErrors');
  const accessToken = await getAccessToken();
- if (!accessToken) return { success: false, error: 'Chưa đăng nhập' };
+ if (!accessToken) return { success: false, error: tApi('unauthorized') };
 
  try {
- const res = await fetch(`${API_URL}/mfa/challenge`, {
+ const res = await fetch(`${API_BASE_URL}/mfa/challenge`, {
  method: 'POST',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -105,12 +111,14 @@ export async function challengeMfa(code: string): Promise<{ success: boolean; er
  body: JSON.stringify({ code }),
  });
  if (!res.ok) {
+ if (res.status === 401) return { success: false, error: tApi('unauthorized') };
+ if (res.status === 400) return { success: false, error: tApi('invalid_code') };
  const err = await res.json().catch(() => ({}));
- return { success: false, error: err.detail || err.msg || 'Mã MFA không đúng' };
+ return { success: false, error: err.detail || err.msg || tApi('unknown_error') };
  }
  return { success: true };
  } catch (error) {
  console.error('[MFA] challengeMfa error:', error);
- return { success: false, error: 'Lỗi kết nối' };
+ return { success: false, error: tApi('network_error') };
  }
 }

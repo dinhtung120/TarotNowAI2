@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
+import { getMessages, getTranslations } from 'next-intl/server';
 import Navbar from '@/components/common/Navbar';
 import { Toaster } from 'react-hot-toast';
 import "./globals.css";
@@ -21,20 +21,29 @@ const playfair = Playfair_Display({
  subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
- title: "TarotNow AI",
- description: "Trải nghiệm Tarot minh bạch và hiện đại.",
-};
+export async function generateMetadata(
+ { params }: { params: Promise<{ locale: string }> },
+): Promise<Metadata> {
+ const { locale } = await params;
+ const t = await getTranslations({ locale, namespace: "Common" });
+ return {
+  title: t("app_title"),
+  description: t("app_description"),
+ };
+}
 
 export default async function RootLayout({
  children,
+ params,
 }: Readonly<{
  children: React.ReactNode;
+ params: Promise<{ locale: string }>;
 }>) {
+ const { locale } = await params;
  const messages = await getMessages();
 
  return (
- <html lang="en">
+ <html lang={locale}>
  <body
  className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased`}
  >

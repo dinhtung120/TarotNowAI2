@@ -14,12 +14,8 @@
  */
 
 import { cookies } from 'next/headers';
-
-/**
- * Lấy URL gốc của Backend API từ biến môi trường.
- * Fallback về localhost:5037 nếu không có biến môi trường.
- */
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5037/api/v1';
+import { getTranslations } from 'next-intl/server';
+import { API_BASE_URL } from '@/lib/api';
 
 /**
  * Hàm helper lấy Access Token từ cookie.
@@ -37,10 +33,12 @@ async function getAccessToken(): Promise<string | undefined> {
  * Gọi [GET] /api/v1/profile với Bearer token.
  */
 export async function getProfileAction() {
+ const tApi = await getTranslations('ApiErrors');
+
  try {
  const token = await getAccessToken();
  if (!token) {
- return { error: 'Chưa đăng nhập' };
+ return { error: tApi('unauthorized') };
  }
 
  const response = await fetch(`${API_BASE_URL}/profile`, {
@@ -51,14 +49,17 @@ export async function getProfileAction() {
  });
 
  if (!response.ok) {
+ if (response.status === 401) {
+ return { error: tApi('unauthorized') };
+ }
  const result = await response.json().catch(() => ({}));
- return { error: result.message || 'Không thể tải thông tin cá nhân' };
+ return { error: result.message || result.detail || tApi('unknown_error') };
  }
 
  const data = await response.json();
  return { success: true, data };
  } catch {
- return { error: 'Lỗi kết nối mạng' };
+ return { error: tApi('network_error') };
  }
 }
 
@@ -73,10 +74,12 @@ export async function updateProfileAction(profileData: {
  avatarUrl: string | null;
  dateOfBirth: string;
 }) {
+ const tApi = await getTranslations('ApiErrors');
+
  try {
  const token = await getAccessToken();
  if (!token) {
- return { error: 'Chưa đăng nhập' };
+ return { error: tApi('unauthorized') };
  }
 
  const response = await fetch(`${API_BASE_URL}/profile`, {
@@ -89,12 +92,15 @@ export async function updateProfileAction(profileData: {
  });
 
  if (!response.ok) {
+ if (response.status === 401) {
+ return { error: tApi('unauthorized') };
+ }
  const result = await response.json().catch(() => ({}));
- return { error: result.message || 'Cập nhật thất bại' };
+ return { error: result.message || result.detail || tApi('unknown_error') };
  }
 
  return { success: true };
  } catch {
- return { error: 'Lỗi kết nối mạng' };
+ return { error: tApi('network_error') };
  }
 }

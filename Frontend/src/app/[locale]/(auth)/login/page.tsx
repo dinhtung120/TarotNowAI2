@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -8,21 +8,32 @@ import { Mail, Lock } from 'lucide-react';
 import { loginAction } from '@/actions/authActions';
 import { useAuthStore } from '@/store/authStore';
 import { Link } from '@/i18n/routing';
+import { useLocale, useTranslations } from 'next-intl';
 
 import AuthLayout from '@/components/layout/AuthLayout';
 import { Input, Button } from '@/components/ui';
 
-const loginSchema = z.object({
- emailOrUsername: z.string().min(1, 'Email or Username is required'),
- password: z.string().min(1, 'Password is required'),
- rememberMe: z.boolean().optional(),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
+type LoginFormValues = {
+ emailOrUsername: string;
+ password: string;
+ rememberMe?: boolean;
+};
 
 export default function LoginPage() {
  const setAuth = useAuthStore((state) => state.setAuth);
  const [errorMsg, setErrorMsg] = useState('');
+ const t = useTranslations('Auth');
+ const locale = useLocale();
+
+ const loginSchema = useMemo(
+ () =>
+ z.object({
+ emailOrUsername: z.string().min(1, t('validation.email_or_username_required')),
+ password: z.string().min(1, t('validation.password_required')),
+ rememberMe: z.boolean().optional(),
+ }),
+ [t],
+ );
 
  const {
  register,
@@ -61,19 +72,19 @@ export default function LoginPage() {
  setErrorMsg(result.error);
  return;
  }
- if (result.success && result.data) {
- // Lưu local Zustand
+	 if (result.success && result.data) {
+	 // Lưu local Zustand
  setAuth(result.data.user, result.data.accessToken);
- window.location.assign('/'); // Hard redirect để xoá Next.js cache
- }
- } catch {
- setErrorMsg('An unexpected error occurred.');
- }
- };
+	 window.location.assign(`/${locale}`); // Hard redirect để xoá Next.js cache
+	 }
+	 } catch {
+	 setErrorMsg(t('login.error_unexpected'));
+	 }
+	 };
 
  return (
- <AuthLayout title="Welcome Back" subtitle="Enter your credentials to access your psychic realm"
- >
+	 <AuthLayout title={t('login.title')} subtitle={t('login.subtitle')}
+	 >
  {errorMsg && (
  <div className="mb-6 p-4 rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 text-[var(--danger)] text-sm animate-in fade-in slide-in-from-top-2 flex items-center gap-3">
  <div className="w-1.5 h-1.5 rounded-full bg-[var(--danger)] animate-pulse" />
@@ -81,28 +92,28 @@ export default function LoginPage() {
  </div>
  )}
 
- <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
- <Input
- label="Email or Username"
- leftIcon={<Mail className="w-5 h-5" />}
- placeholder="seeker@tarotnow.com"
- error={errors.emailOrUsername?.message}
- {...register('emailOrUsername')}
- />
+	 <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+	 <Input
+	 label={t('login.email_or_username_label')}
+	 leftIcon={<Mail className="w-5 h-5" />}
+	 placeholder={t('login.email_or_username_placeholder')}
+	 error={errors.emailOrUsername?.message}
+	 {...register('emailOrUsername')}
+	 />
 
  <div className="space-y-1">
- <Input
- label="Password"
- type="password"
- leftIcon={<Lock className="w-5 h-5" />}
- placeholder="••••••••"
- error={errors.password?.message}
- {...register('password')}
- />
+	 <Input
+	 label={t('login.password_label')}
+	 type="password"
+	 leftIcon={<Lock className="w-5 h-5" />}
+	 placeholder={t('login.password_placeholder')}
+	 error={errors.password?.message}
+	 {...register('password')}
+	 />
  <div className="flex justify-end pt-1">
- <Link href="/forgot-password" className="text-[11px] font-bold text-[var(--purple-accent)] hover:tn-text-primary transition-colors uppercase tracking-widest">
- Forgot password?
- </Link>
+	 <Link href="/forgot-password" className="text-[11px] font-bold text-[var(--purple-accent)] hover:tn-text-primary transition-colors uppercase tracking-widest">
+	 {t('login.forgot_password')}
+	 </Link>
  </div>
  </div>
 
@@ -118,30 +129,30 @@ export default function LoginPage() {
  <path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
  </svg>
  </div>
- <span className="text-sm font-medium tn-text-secondary group-hover:tn-text-secondary transition-colors select-none">
- Remember me
- </span>
+	 <span className="text-sm font-medium tn-text-secondary group-hover:tn-text-secondary transition-colors select-none">
+	 {t('login.remember_me')}
+	 </span>
  </label>
  </div>
 
- <Button
+	 <Button
  type="submit"
  variant="brand"
  size="lg"
  fullWidth
  isLoading={isSubmitting}
- className="mt-2"
- >
- Reveal Your Destiny
- </Button>
+	 className="mt-2"
+	 >
+	 {t('login.cta')}
+	 </Button>
  </form>
 
- <p className="mt-8 text-center text-sm tn-text-muted font-medium">
- New to the realm?{' '}
- <Link href="/register" className="text-[var(--purple-accent)] font-bold hover:tn-text-primary transition-colors">
- Create an account
- </Link>
- </p>
+	 <p className="mt-8 text-center text-sm tn-text-muted font-medium">
+	 {t('login.footer_prompt')}{' '}
+	 <Link href="/register" className="text-[var(--purple-accent)] font-bold hover:tn-text-primary transition-colors">
+	 {t('login.footer_link')}
+	 </Link>
+	 </p>
  </AuthLayout>
  );
 }

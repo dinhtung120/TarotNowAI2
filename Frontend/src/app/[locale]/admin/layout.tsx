@@ -1,8 +1,6 @@
 'use client';
 
-import { ReactNode, use } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { ReactNode } from "react";
 import {
  Users,
  CreditCard,
@@ -17,29 +15,30 @@ import {
  Scale
 } from "lucide-react";
 import AstralBackground from "@/components/layout/AstralBackground";
+import { Link, usePathname } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 
 interface AdminLayoutProps {
  children: ReactNode;
- params: Promise<{ locale: string }>;
 }
 
-export default function AdminLayout({ children, params }: AdminLayoutProps) {
- const { locale } = use(params);
+export default function AdminLayout({ children }: AdminLayoutProps) {
+ const t = useTranslations("Admin");
  const pathname = usePathname();
 
  const menuItems = [
- { name: "Tổng Quan", href: `/${locale}/admin`, icon: LayoutDashboard },
- { name: "Người Dùng", href: `/${locale}/admin/users`, icon: Users },
- { name: "Giao Dịch", href: `/${locale}/admin/deposits`, icon: CreditCard },
- { name: "Khuyến Mãi", href: `/${locale}/admin/promotions`, icon: Gift },
- { name: "Xem Bài", href: `/${locale}/admin/readings`, icon: History },
- { name: "Đơn Xin Reader", href: `/${locale}/admin/reader-requests`, icon: ScrollText },
- { name: "Rút Tiền", href: `/${locale}/admin/withdrawals`, icon: Banknote },
- { name: "Tranh Chấp", href: `/${locale}/admin/disputes`, icon: Scale },
+ { name: t("layout.menu.overview"), href: `/admin`, icon: LayoutDashboard },
+ { name: t("layout.menu.users"), href: `/admin/users`, icon: Users },
+ { name: t("layout.menu.deposits"), href: `/admin/deposits`, icon: CreditCard },
+ { name: t("layout.menu.promotions"), href: `/admin/promotions`, icon: Gift },
+ { name: t("layout.menu.readings"), href: `/admin/readings`, icon: History },
+ { name: t("layout.menu.reader_requests"), href: `/admin/reader-requests`, icon: ScrollText },
+ { name: t("layout.menu.withdrawals"), href: `/admin/withdrawals`, icon: Banknote },
+ { name: t("layout.menu.disputes"), href: `/admin/disputes`, icon: Scale },
  ];
 
  const isActive = (href: string) => {
- if (href === `/${locale}/admin`) {
+ if (href === `/admin`) {
  return pathname === href;
  }
  return pathname.startsWith(href);
@@ -61,8 +60,8 @@ export default function AdminLayout({ children, params }: AdminLayoutProps) {
  <ShieldCheck className="w-6 h-6 text-[var(--purple-accent)]" />
  </div>
  <div className="relative z-10">
- <h2 className="text-sm font-black text-[var(--text-ink)] tracking-widest uppercase italic">Admin</h2>
- <div className="text-[10px] font-bold text-[var(--purple-muted)] tracking-tighter uppercase leading-none">Management</div>
+ <h2 className="text-sm font-black text-[var(--text-ink)] tracking-widest uppercase italic">{t("layout.title")}</h2>
+ <div className="text-[10px] font-bold text-[var(--purple-muted)] tracking-tighter uppercase leading-none">{t("layout.subtitle")}</div>
  </div>
  </div>
  </div>
@@ -70,7 +69,7 @@ export default function AdminLayout({ children, params }: AdminLayoutProps) {
  {/* Navigation Links */}
  <nav className="flex-1 px-4 space-y-2 overflow-y-auto no-scrollbar">
  <div className="px-6 mb-4">
- <span className="text-[9px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)]">Main Control</span>
+ <span className="text-[9px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)]">{t("layout.section_main")}</span>
  </div>
 
  {menuItems.map((item) => {
@@ -123,11 +122,11 @@ export default function AdminLayout({ children, params }: AdminLayoutProps) {
  {/* Footer Exit Portal */}
  <div className="p-8 border-t border-[var(--border-subtle)]">
  <Link
- href={`/${locale}/`}
+ href={`/`}
  className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] hover:bg-[var(--danger)]/10 hover:border-[var(--danger)]/20 hover:text-[var(--danger)] transition-all group"
  >
  <LogOut className="w-5 h-5 text-[var(--text-secondary)] group-hover:text-[var(--danger)] transition-colors" />
- <span className="text-[10px] font-black uppercase tracking-widest">Thoát Portal</span>
+ <span className="text-[10px] font-black uppercase tracking-widest">{t("layout.exit_portal")}</span>
  </Link>
  </div>
  </aside>

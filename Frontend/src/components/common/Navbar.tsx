@@ -37,11 +37,14 @@ import WalletWidget from "../common/WalletWidget";
 import { logoutAction } from "@/actions/authActions";
 import { useAuthStore } from "@/store/authStore";
 import { useEffect, useState, useRef } from "react";
+import { useTranslations } from "next-intl";
 
 export default function Navbar() {
  const router = useRouter();
  const pathname = usePathname();
  const { isAuthenticated, user, clearAuth } = useAuthStore();
+ const tNav = useTranslations("Navigation");
+ const tCommon = useTranslations("Common");
  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
  const avatarMenuRef = useRef<HTMLDivElement>(null);
@@ -104,9 +107,9 @@ export default function Navbar() {
  * Hiển thị trên Desktop, ẩn trên Mobile (dùng BottomTabBar thay thế).
  */
  const navLinks = [
- { name: "Trang Chủ", href: "/", icon: Home },
- { name: "Rút Bài", href: "/reading", icon: Sparkles },
- { name: "Readers", href: "/readers", icon: Users },
+ { labelKey: "home", href: "/", icon: Home },
+ { labelKey: "readings", href: "/reading", icon: Sparkles },
+ { labelKey: "readers", href: "/readers", icon: Users },
  ];
 
  /**
@@ -115,11 +118,11 @@ export default function Navbar() {
  * Admin link chỉ hiện khi user có role admin.
  */
  const menuItems = [
- { name: "Hồ Sơ", href: "/profile", icon: User },
- { name: "Ví", href: "/wallet", icon: Wallet },
- { name: "Lịch Sử", href: "/reading/history", icon: History },
+ { labelKey: "profile", href: "/profile", icon: User },
+ { labelKey: "wallet", href: "/wallet", icon: Wallet },
+ { labelKey: "history", href: "/reading/history", icon: History },
  ...(user?.role === "admin"
- ? [{ name: "Admin Portal", href: "/admin", icon: ShieldCheck }]
+ ? [{ labelKey: "adminPortal", href: "/admin", icon: ShieldCheck }]
  : []),
  ];
 
@@ -157,9 +160,9 @@ export default function Navbar() {
  ].join(" ")}
  >
  <Icon className="w-4 h-4" />
- <span className="text-xs font-bold tracking-wide">
- {link.name}
- </span>
+	 <span className="text-xs font-bold tracking-wide">
+	 {tNav(link.labelKey)}
+	 </span>
  </Link>
  );
  })}
@@ -176,13 +179,12 @@ export default function Navbar() {
  </div>
 
  {/* Notification Bell — placeholder cho Phase 4 */}
- <button
- className="relative p-2 rounded-xl hover:bg-[var(--purple-50)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-ink)] cursor-pointer"
- aria-label="Thông báo"
- >
- <Bell className="w-4 h-4" />
- {/* TODO: Badge count từ notification API */}
- </button>
+		 <button
+		 className="relative p-2 rounded-xl hover:bg-[var(--purple-50)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-ink)] cursor-pointer"
+		 aria-label={tCommon("notifications")}
+		 >
+	 <Bell className="w-4 h-4" />
+	 </button>
 
  {/* === AVATAR DROPDOWN MENU === */}
  <div ref={avatarMenuRef} className="relative">
@@ -199,9 +201,9 @@ export default function Navbar() {
  <div className="w-7 h-7 rounded-full bg-[var(--purple-100)] border border-[var(--border-default)] flex items-center justify-center text-[10px] font-black text-[var(--text-ink)]">
  {user?.displayName?.charAt(0)?.toUpperCase() || "U"}
  </div>
- <span className="hidden lg:block text-xs font-bold tracking-wide max-w-[100px] truncate">
- {user?.displayName || "Profile"}
- </span>
+	 <span className="hidden lg:block text-xs font-bold tracking-wide max-w-[100px] truncate">
+	 {user?.displayName || tNav("profile")}
+	 </span>
  <ChevronDown
  className={[
  "w-3 h-3 hidden lg:block transition-transform duration-200",
@@ -215,9 +217,9 @@ export default function Navbar() {
  <div className="absolute right-0 top-full mt-2 w-56 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-2xl shadow-[var(--shadow-elevated)] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50">
  {/* User Info Header */}
  <div className="px-4 py-3 border-b border-[var(--border-subtle)]">
- <p className="text-xs font-bold text-[var(--text-ink)] truncate">
- {user?.displayName || "User"}
- </p>
+	 <p className="text-xs font-bold text-[var(--text-ink)] truncate">
+	 {user?.displayName || tNav("profile")}
+	 </p>
  <p className="text-[10px] text-[var(--text-muted)] truncate">
  {user?.email || ""}
  </p>
@@ -225,42 +227,42 @@ export default function Navbar() {
 
  {/* Menu Items */}
  <div className="py-1">
- {menuItems.map((item) => {
- const Icon = item.icon;
- return (
- <Link
- key={item.href}
- href={item.href}
- onClick={() => setAvatarMenuOpen(false)}
- className="flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-ink)] hover:bg-[var(--purple-50)] transition-colors"
- >
- <Icon className="w-4 h-4" />
- {item.name}
- </Link>
- );
- })}
+	 {menuItems.map((item) => {
+	 const Icon = item.icon;
+	 return (
+	 <Link
+	 key={item.href}
+	 href={item.href}
+	 onClick={() => setAvatarMenuOpen(false)}
+	 className="flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-ink)] hover:bg-[var(--purple-50)] transition-colors"
+	 >
+	 <Icon className="w-4 h-4" />
+	 {tNav(item.labelKey)}
+	 </Link>
+	 );
+	 })}
  </div>
 
  {/* Logout */}
  <div className="border-t border-[var(--border-subtle)] py-1">
- <button
- onClick={handleLogout}
- className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-[var(--danger)] hover:bg-[var(--danger)]/10 transition-colors cursor-pointer"
- >
- <LogOut className="w-4 h-4" />
- Đăng Xuất
- </button>
+	 <button
+	 onClick={handleLogout}
+	 className="w-full flex items-center gap-3 px-4 py-2.5 text-xs font-medium text-[var(--danger)] hover:bg-[var(--danger)]/10 transition-colors cursor-pointer"
+	 >
+	 <LogOut className="w-4 h-4" />
+	 {tNav("logout")}
+	 </button>
  </div>
  </div>
  )}
  </div>
 
  {/* Mobile Hamburger */}
- <button
- onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
- className="md:hidden p-2 rounded-xl hover:bg-[var(--purple-50)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-ink)] cursor-pointer"
- aria-label="Menu"
- >
+	 <button
+	 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+	 className="md:hidden p-2 rounded-xl hover:bg-[var(--purple-50)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-ink)] cursor-pointer"
+	 aria-label={tCommon("menu")}
+	 >
  {mobileMenuOpen ? (
  <X className="w-5 h-5" />
  ) : (
@@ -271,18 +273,18 @@ export default function Navbar() {
  ) : (
  /* === GUEST STATE === */
  <>
- <Link
- href="/login"
- className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-ink)] transition-colors"
- >
- Đăng nhập
- </Link>
- <Link
- href="/register"
- className="px-4 py-2 rounded-xl bg-gradient-to-r from-[var(--purple-gradient-from)] via-[var(--purple-gradient-via)] to-[var(--purple-gradient-to)] text-[var(--text-ink)] text-sm font-bold hover:brightness-105 transition-all shadow-[var(--glow-purple-sm)]"
- >
- Đăng ký
- </Link>
+	 <Link
+	 href="/login"
+	 className="text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-ink)] transition-colors"
+	 >
+	 {tNav("login")}
+	 </Link>
+	 <Link
+	 href="/register"
+	 className="px-4 py-2 rounded-xl bg-gradient-to-r from-[var(--purple-gradient-from)] via-[var(--purple-gradient-via)] to-[var(--purple-gradient-to)] text-[var(--text-ink)] text-sm font-bold hover:brightness-105 transition-all shadow-[var(--glow-purple-sm)]"
+	 >
+	 {tNav("register")}
+	 </Link>
  </>
  )}
  </div>
@@ -294,19 +296,19 @@ export default function Navbar() {
  {mobileMenuOpen && (
  <div className="md:hidden absolute left-0 right-0 top-full bg-[var(--bg-glass)] border-b border-[var(--border-subtle)] animate-in slide-in-from-top duration-300">
  <div className="px-6 py-4 space-y-1">
- {navLinks.map((link) => {
- const Icon = link.icon;
- return (
- <Link
- key={link.href}
- href={link.href}
- className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-ink)] hover:bg-[var(--purple-50)] transition-colors"
- >
- <Icon className="w-4 h-4" />
- {link.name}
- </Link>
- );
- })}
+	 {navLinks.map((link) => {
+	 const Icon = link.icon;
+	 return (
+	 <Link
+	 key={link.href}
+	 href={link.href}
+	 className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-ink)] hover:bg-[var(--purple-50)] transition-colors"
+	 >
+	 <Icon className="w-4 h-4" />
+	 {tNav(link.labelKey)}
+	 </Link>
+	 );
+	 })}
  <div className="pt-3 border-t border-[var(--border-subtle)]">
  <WalletWidget />
  </div>

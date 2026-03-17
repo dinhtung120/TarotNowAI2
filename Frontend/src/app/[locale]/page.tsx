@@ -24,13 +24,21 @@ interface StatProps {
 }
 
 function StatItem({ icon: Icon, value, label, color }: StatProps) {
+ const styleByColor: Record<StatProps["color"], { bg: string; accent: string }> = {
+  purple: { bg: "var(--purple-50)", accent: "var(--purple-accent)" },
+  amber: { bg: "var(--amber-50)", accent: "var(--amber-accent)" },
+  success: { bg: "var(--success-bg)", accent: "var(--success)" },
+  info: { bg: "var(--info-bg)", accent: "var(--info)" },
+ };
+ const styles = styleByColor[color];
+
  return (
  <GlassCard variant="elevated" className="flex flex-col items-center">
- <div className={`w-10 h-10 rounded-2xl flex items-center justify-center mb-4 border`}
+ <div className={`w-10 h-10 rounded-2xl flex items-center justify-center mb-4 border border-[var(--border-subtle)]`}
  style={{
- backgroundColor: `var(--${color === 'success' ? 'success-bg' : color === 'info' ? 'info-bg' : color + '-50'})`,
- borderColor: `var(--${color === 'success' ? 'success' : color === 'info' ? 'info' : color + '-accent'})20`,
- color: `var(--${color === 'success' ? 'success' : color === 'info' ? 'info' : color + '-accent'})`
+ backgroundColor: styles.bg,
+ borderColor: `color-mix(in srgb, ${styles.accent} 20%, transparent)`,
+ color: styles.accent
  }}>
  <Icon className="w-5 h-5" />
  </div>
@@ -95,7 +103,7 @@ export default async function Home() {
  rightIcon={<Users className="w-5 h-5 ml-2 transition-transform duration-300 group-hover:translate-x-1" />}
  className="group"
  >
- Gặp Gỡ Readers
+ {t('ctaMeetReaders')}
  </Button>
  </Link>
  </div>
@@ -103,7 +111,7 @@ export default async function Home() {
 
  {/* Scroll Indicator */}
  <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 opacity-50">
- <div className="text-[9px] font-black uppercase tracking-[0.4em] text-[var(--text-muted)] rotate-90 origin-left translate-x-1.5 translate-y-2">Scroll</div>
+ <div className="text-[9px] font-black uppercase tracking-[0.4em] text-[var(--text-muted)] rotate-90 origin-left translate-x-1.5 translate-y-2">{t('scroll')}</div>
  <div className="w-[1px] h-16 bg-gradient-to-b from-[var(--purple-accent)] to-transparent"></div>
  </div>
  </section>
@@ -111,22 +119,22 @@ export default async function Home() {
  {/* ##### STATS SECTION: UNIVERSE GROWTH ##### */}
  <section className="relative w-full max-w-6xl mx-auto px-6 py-20">
  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
- <StatItem icon={Zap} value="50K+" label="Lượt Trải Bài" color="purple" />
- <StatItem icon={Users} value="120+" label="Reader Chuyên Nghiệp" color="amber" />
- <StatItem icon={Award} value="4.9" label="Rating Trung Bình" color="success" />
- <StatItem icon={Flame} value="24/7" label="Hỗ Trợ Toàn Cầu" color="info" />
+ <StatItem icon={Zap} value="50K+" label={t('stats.readings')} color="purple" />
+ <StatItem icon={Users} value="120+" label={t('stats.readers')} color="amber" />
+ <StatItem icon={Award} value="4.9" label={t('stats.rating')} color="success" />
+ <StatItem icon={Flame} value="24/7" label={t('stats.support')} color="info" />
  </div>
  </section>
 
  {/* ##### READER SHOWCASE: THE GUIDES ##### */}
  <section className="relative w-full max-w-7xl mx-auto px-6 py-32">
  <SectionHeader
- tag="Kết nối bậc thầy"
- title="Bậc Thầy"
- titleMuted="Dẫn Lối"
+ tag={t('showcase.tag')}
+ title={t('showcase.title')}
+ titleMuted={t('showcase.titleMuted')}
  action={
  <Link href="/readers" className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] hover:text-[var(--text-ink)] transition-colors flex items-center gap-2 group">
- Xem tất cả Readers <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
+ {t('showcase.viewAll')} <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
  </Link>
  }
  className="mb-20"
@@ -161,7 +169,7 @@ export default async function Home() {
  <Gem className="w-3.5 h-3.5 text-[var(--amber-accent)]" />
  <span className="text-xs font-black text-[var(--text-ink)]">{reader.diamondPerQuestion} 💎</span>
  </div>
- <div className="text-[10px] font-black uppercase tracking-widest text-[var(--purple-accent)] group-hover:translate-x-2 transition-transform">Hồ sơ →</div>
+ <div className="text-[10px] font-black uppercase tracking-widest text-[var(--purple-accent)] group-hover:translate-x-2 transition-transform">{t('showcase.profileCta')}</div>
  </div>
  </div>
  </Link>
@@ -218,11 +226,11 @@ export default async function Home() {
  <div className="relative z-10 flex flex-col items-center text-center max-w-4xl">
  <Sparkles className="w-16 h-16 text-[var(--purple-accent)] mb-10 animate-pulse" />
  <h2 className="text-5xl md:text-8xl font-black text-[var(--text-ink)] mb-12 tracking-tighter uppercase font-serif">
- Bắt đầu hành trình <br/> <span className="text-[var(--text-secondary)] italic">Lunar Bloom Healing</span>
+ {t('final.title1')} <br/> <span className="text-[var(--text-secondary)] italic">{t('final.title2')}</span>
  </h2>
  <Link href="/reading" tabIndex={-1}>
  <Button size="lg" className="group px-12 py-6 rounded-3xl" rightIcon={<ChevronRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />}>
- Trải bài ngay
+ {t('final.cta')}
  </Button>
  </Link>
  </div>

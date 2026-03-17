@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from '@/i18n/routing';
 import { SectionHeader, GlassCard } from '@/components/ui';
+import { useLocale, useTranslations } from 'next-intl';
 
 type AdminRoute =
  | '/admin/users'
@@ -28,6 +29,8 @@ type AdminRoute =
 
 export default function AdminDashboardPage() {
  const router = useRouter();
+ const t = useTranslations("Admin");
+ const locale = useLocale();
  const [stats, setStats] = useState({
  users: 0,
  deposits: 0,
@@ -78,7 +81,7 @@ export default function AdminDashboardPage() {
  href: AdminRoute;
  }> = [
  {
- name: "Tổng Người Dùng",
+ name: t("dashboard.stats.users"),
  value: stats.users,
  icon: Users,
  color: "text-[var(--info)]",
@@ -87,7 +90,7 @@ export default function AdminDashboardPage() {
  href: "/admin/users"
  },
  {
- name: "Lượt Nạp Tiền",
+ name: t("dashboard.stats.deposits"),
  value: stats.deposits,
  icon: CreditCard,
  color: "text-[var(--success)]",
@@ -96,7 +99,7 @@ export default function AdminDashboardPage() {
  href: "/admin/deposits"
  },
  {
- name: "Khuyến Mãi",
+ name: t("dashboard.stats.promotions"),
  value: stats.promotions,
  icon: Gift,
  color: "text-[var(--warning)]",
@@ -105,7 +108,7 @@ export default function AdminDashboardPage() {
  href: "/admin/promotions"
  },
  {
- name: "Phiên Xem Bài",
+ name: t("dashboard.stats.readings"),
  value: stats.readings,
  icon: History,
  color: "text-[var(--purple-accent)]",
@@ -122,7 +125,7 @@ export default function AdminDashboardPage() {
  <div className="absolute inset-x-0 top-0 h-40 w-40 bg-[var(--danger)]/20 blur-[60px] rounded-full animate-pulse" />
  <Loader2 className="w-12 h-12 animate-spin text-[var(--danger)] relative z-10" />
  </div>
- <div className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-secondary)]">Khởi tạo Hệ thống Quản trị...</div>
+ <div className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-secondary)]">{t("dashboard.loading")}</div>
  </div>
  );
  }
@@ -132,19 +135,19 @@ export default function AdminDashboardPage() {
  {/* Header Section */}
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
  <SectionHeader
- tag="System Intelligence"
+ tag={t("dashboard.header.tag")}
  tagIcon={<TrendingUp className="w-3 h-3 text-[var(--success)]" />}
- title="Cổng Tổng Quan HQ"
- subtitle="Theo dõi dòng chảy linh hồn và dữ liệu vận mệnh trên toàn hệ thống TarotNow AI."
+ title={t("dashboard.header.title")}
+ subtitle={t("dashboard.header.subtitle")}
  className="mb-0 text-left items-start"
  />
 
  <div className="flex items-center gap-4 shrink-0">
  <div className="px-6 py-3 rounded-2xl tn-panel ">
- <div className="text-[8px] font-black uppercase tracking-widest tn-text-muted text-left">Health Check</div>
+ <div className="text-[8px] font-black uppercase tracking-widest tn-text-muted text-left">{t("dashboard.health.title")}</div>
  <div className="flex items-center gap-2 text-xs font-bold text-[var(--success)]">
  <Activity className="w-3 h-3 animate-pulse" />
- Hệ thống ổn định
+ {t("dashboard.health.ok")}
  </div>
  </div>
  </div>
@@ -169,7 +172,7 @@ export default function AdminDashboardPage() {
 
  <div>
  <div className="text-4xl font-black tn-text-primary italic tracking-tighter mb-1 drop-shadow-md">
- {stat.value.toLocaleString()}
+ {stat.value.toLocaleString(locale)}
  </div>
  <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
  {stat.name}
@@ -193,21 +196,21 @@ export default function AdminDashboardPage() {
  <div className="w-10 h-10 rounded-xl bg-[var(--purple-accent)]/20 flex items-center justify-center border border-[var(--purple-accent)]/20 shadow-inner">
  <ShieldCheck className="w-5 h-5 text-[var(--purple-accent)]" />
  </div>
- <h2 className="text-2xl font-black tn-text-primary uppercase italic tracking-tighter drop-shadow-md">Bản tin Quản trị viên</h2>
+ <h2 className="text-2xl font-black tn-text-primary uppercase italic tracking-tighter drop-shadow-md">{t("dashboard.notice.title")}</h2>
  </div>
 
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
  <div className="p-6 rounded-2xl tn-panel-overlay-soft space-y-2 shadow-inner">
  <div className="text-[10px] font-black text-[var(--success)] uppercase tracking-widest flex items-center gap-2">
- <div className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" /> Lời nhắc
+ <div className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" /> {t("dashboard.notice.reminder_title")}
  </div>
- <p className="text-xs text-[var(--text-secondary)] font-medium leading-relaxed text-left">Kiểm tra các đơn nạp tiền đang chờ và xác nhận thủ công nếu ví MOMO/VNPay bị trễ lệnh.</p>
+ <p className="text-xs text-[var(--text-secondary)] font-medium leading-relaxed text-left">{t("dashboard.notice.reminder_body")}</p>
  </div>
  <div className="p-6 rounded-2xl tn-panel-overlay-soft space-y-2 shadow-inner">
  <div className="text-[10px] font-black text-[var(--warning)] uppercase tracking-widest flex items-center gap-2">
- <div className="w-1.5 h-1.5 rounded-full bg-[var(--warning)] animate-pulse" /> Thông báo
+ <div className="w-1.5 h-1.5 rounded-full bg-[var(--warning)] animate-pulse" /> {t("dashboard.notice.announcement_title")}
  </div>
- <p className="text-xs text-[var(--text-secondary)] font-medium leading-relaxed text-left">Đã cập nhật hệ thống Giao diện Admin Astral v2.0. Đảm bảo trải nghiệm quản lý tuyệt nhất.</p>
+ <p className="text-xs text-[var(--text-secondary)] font-medium leading-relaxed text-left">{t("dashboard.notice.announcement_body")}</p>
  </div>
  </div>
  </div>
@@ -217,7 +220,7 @@ export default function AdminDashboardPage() {
  <div className="space-y-6 text-left">
  <h2 className="text-xl font-black tn-text-primary uppercase italic tracking-tighter flex items-center gap-3 drop-shadow-md">
  <Zap className="w-5 h-5 text-[var(--success)]" />
- Lối tắt Nhanh
+ {t("dashboard.shortcuts.title")}
  </h2>
 
  <div className="space-y-4">
@@ -227,7 +230,7 @@ export default function AdminDashboardPage() {
  >
  <div className="flex items-center gap-4">
  <Users className="w-5 h-5 text-[var(--text-tertiary)] group-hover:text-[var(--purple-accent)] transition-colors" />
- <span className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] group-hover:tn-text-primary transition-colors">Quản lý User</span>
+ <span className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] group-hover:tn-text-primary transition-colors">{t("dashboard.shortcuts.users")}</span>
  </div>
  <ChevronRight className="w-4 h-4 tn-text-muted group-hover:text-[var(--purple-accent)] transition-colors" />
  </button>
@@ -238,7 +241,7 @@ export default function AdminDashboardPage() {
  >
  <div className="flex items-center gap-4">
  <CreditCard className="w-5 h-5 text-[var(--text-tertiary)] group-hover:text-[var(--success)] transition-colors" />
- <span className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] group-hover:tn-text-primary transition-colors">Dòng tiền Nạp</span>
+ <span className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] group-hover:tn-text-primary transition-colors">{t("dashboard.shortcuts.deposits")}</span>
  </div>
  <ChevronRight className="w-4 h-4 tn-text-muted group-hover:text-[var(--success)] transition-colors" />
  </button>
@@ -249,7 +252,7 @@ export default function AdminDashboardPage() {
  >
  <div className="flex items-center gap-4">
  <History className="w-5 h-5 text-[var(--text-tertiary)] group-hover:text-[var(--warning)] transition-colors" />
- <span className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] group-hover:tn-text-primary transition-colors">Xem bài Mới</span>
+ <span className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] group-hover:tn-text-primary transition-colors">{t("dashboard.shortcuts.readings")}</span>
  </div>
  <ChevronRight className="w-4 h-4 tn-text-muted group-hover:text-[var(--warning)] transition-colors" />
  </button>
@@ -260,7 +263,7 @@ export default function AdminDashboardPage() {
  >
  <div className="flex items-center gap-4">
  <ShieldCheck className="w-5 h-5 text-[var(--text-tertiary)] group-hover:text-[var(--danger)] transition-colors" />
- <span className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] group-hover:tn-text-primary transition-colors">Duyệt Reader</span>
+ <span className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] group-hover:tn-text-primary transition-colors">{t("dashboard.shortcuts.reader_requests")}</span>
  </div>
  <ChevronRight className="w-4 h-4 tn-text-muted group-hover:text-[var(--danger)] transition-colors" />
  </button>
@@ -279,16 +282,17 @@ export default function AdminDashboardPage() {
  <div className="w-12 h-12 rounded-2xl bg-[var(--purple-accent)]/10 border border-[var(--purple-accent)]/20 flex items-center justify-center shadow-inner">
  <TrendingUp className="w-6 h-6 text-[var(--purple-accent)]" />
  </div>
- <h3 className="text-2xl font-black tn-text-primary uppercase italic tracking-tighter drop-shadow-md">Doanh Thu Ước Tính</h3>
+ <h3 className="text-2xl font-black tn-text-primary uppercase italic tracking-tighter drop-shadow-md">{t("dashboard.insights.revenue_title")}</h3>
  </div>
 
  <div className="flex items-end gap-4">
  <div className="text-5xl md:text-6xl font-black tn-text-primary italic tracking-tighter drop-shadow-[0_0_15px_var(--c-168-85-247-40)]">
- {(stats.deposits * 50000).toLocaleString()} <span className="text-2xl text-[var(--purple-accent)]">VND</span>
+ {(stats.deposits * 50000).toLocaleString(locale)}{" "}
+ <span className="text-2xl text-[var(--purple-accent)]">{t("dashboard.insights.revenue_currency")}</span>
  </div>
  </div>
  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">
- Tính toán dựa trên {stats.deposits} lệnh nạp thành công
+ {t("dashboard.insights.revenue_note", { count: stats.deposits })}
  </p>
  </div>
  </GlassCard>
@@ -302,16 +306,16 @@ export default function AdminDashboardPage() {
  <div className="w-12 h-12 rounded-2xl bg-[var(--success)]/10 border border-[var(--success)]/20 flex items-center justify-center shadow-inner">
  <Zap className="w-6 h-6 text-[var(--success)]" />
  </div>
- <h3 className="text-2xl font-black tn-text-primary uppercase italic tracking-tighter drop-shadow-md">Luồng Hoạt Động</h3>
+ <h3 className="text-2xl font-black tn-text-primary uppercase italic tracking-tighter drop-shadow-md">{t("dashboard.insights.activity_title")}</h3>
  </div>
 
  <div className="flex items-end gap-4">
  <div className="text-5xl md:text-6xl font-black tn-text-primary italic tracking-tighter drop-shadow-[0_0_15px_var(--c-16-185-129-40)]">
- {stats.readings} <span className="text-2xl text-[var(--success)]">Mệnh Đề</span>
+ {stats.readings.toLocaleString(locale)} <span className="text-2xl text-[var(--success)]">{t("dashboard.insights.activity_unit")}</span>
  </div>
  </div>
  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">
- Tổng số phiên giải mã vận mệnh đã thực hiện
+ {t("dashboard.insights.activity_note")}
  </p>
  </div>
  </GlassCard>

@@ -22,23 +22,25 @@
 
 import { Link, usePathname } from "@/i18n/routing";
 import { Home, Sparkles, MessageSquare, Wallet, User, type LucideIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface TabItem {
- name: string;
+ labelKey: string;
  href: string;
  icon: LucideIcon;
 }
 
 const tabs: TabItem[] = [
- { name: "Home", href: "/", icon: Home },
- { name: "Tarot", href: "/reading", icon: Sparkles },
- { name: "Chat", href: "/chat", icon: MessageSquare },
- { name: "Ví", href: "/wallet", icon: Wallet },
- { name: "Tôi", href: "/profile", icon: User },
+ { labelKey: "home", href: "/", icon: Home },
+ { labelKey: "readings", href: "/reading", icon: Sparkles },
+ { labelKey: "chat", href: "/chat", icon: MessageSquare },
+ { labelKey: "wallet", href: "/wallet", icon: Wallet },
+ { labelKey: "profile", href: "/profile", icon: User },
 ];
 
 export default function BottomTabBar() {
  const pathname = usePathname();
+ const t = useTranslations("Navigation");
 
  const isActive = (href: string) => {
  if (href === "/") return pathname === "/";
@@ -75,14 +77,14 @@ export default function BottomTabBar() {
  active ? "scale-110" : "",
  ].join(" ")}
  />
- <span
+	 <span
  className={[
  "text-[9px] uppercase tracking-wider",
  active ? "font-black" : "font-bold",
  ].join(" ")}
- >
- {tab.name}
- </span>
+	 >
+	 {t(tab.labelKey)}
+	 </span>
 
  {/* Active dot indicator */}
  {active && (

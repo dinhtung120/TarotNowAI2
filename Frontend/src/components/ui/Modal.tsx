@@ -25,6 +25,7 @@
 import { useEffect, useCallback, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type ModalSize = "sm" | "md" | "lg";
 
@@ -66,6 +67,8 @@ export default function Modal({
  children,
  showCloseButton = true,
 }: ModalProps) {
+ const t = useTranslations("Common");
+
  /**
  * Xử lý phím ESC để đóng modal.
  *
@@ -148,11 +151,11 @@ export default function Modal({
 
  {/* Nút đóng X — luôn ở góc phải trên */}
  {showCloseButton && (
- <button
- onClick={onClose}
- className="p-2 rounded-xl hover:bg-[var(--purple-50)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
- aria-label="Đóng modal"
- >
+	 <button
+	 onClick={onClose}
+	 className="p-2 rounded-xl hover:bg-[var(--purple-50)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
+	 aria-label={t("close_modal")}
+	 >
  <X className="w-5 h-5" />
  </button>
  )}

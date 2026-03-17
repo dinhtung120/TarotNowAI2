@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "@/i18n/routing";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,11 +13,9 @@ import { useTranslations } from "next-intl";
 import UserLayout from "@/components/layout/UserLayout";
 import { GlassCard, Button, SectionHeader, Input } from "@/components/ui";
 
-const formSchema = z.object({
- question: z.string().max(300, "Question is too long").optional(),
-});
-
-type FormData = z.infer<typeof formSchema>;
+interface FormData {
+ question?: string;
+}
 
 export default function ReadingSetupPage() {
  const router = useRouter();
@@ -27,15 +25,19 @@ export default function ReadingSetupPage() {
  const [initError, setInitError] = useState("");
  const [isInitializing, setIsInitializing] = useState(false);
 
+ const formSchema = useMemo(() => z.object({
+  question: z.string().max(300, t("validation.question_too_long")).optional(),
+ }), [t]);
+
  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
  resolver: zodResolver(formSchema),
  });
 
  const SPREADS = [
- { id: "daily_1", name: t("daily_1_name"), desc: t("daily_1_desc"), cost: "Free", icon: <Star className="w-5 h-5" /> },
- { id: "spread_3", name: t("spread_3_name"), desc: t("spread_3_desc"), cost: "50 Gold", icon: <Flame className="w-5 h-5" /> },
- { id: "spread_5", name: t("spread_5_name"), desc: t("spread_5_desc"), cost: "100 Gold", icon: <ShieldCheck className="w-5 h-5" /> },
- { id: "spread_10", name: t("spread_10_name"), desc: t("spread_10_desc"), cost: "50 Diamond", icon: <Moon className="w-5 h-5" /> },
+ { id: "daily_1", name: t("daily_1_name"), desc: t("daily_1_desc"), cost: t("cost_free"), icon: <Star className="w-5 h-5" /> },
+ { id: "spread_3", name: t("spread_3_name"), desc: t("spread_3_desc"), cost: t("cost_gold", { amount: 50 }), icon: <Flame className="w-5 h-5" /> },
+ { id: "spread_5", name: t("spread_5_name"), desc: t("spread_5_desc"), cost: t("cost_gold", { amount: 100 }), icon: <ShieldCheck className="w-5 h-5" /> },
+ { id: "spread_10", name: t("spread_10_name"), desc: t("spread_10_desc"), cost: t("cost_diamond", { amount: 50 }), icon: <Moon className="w-5 h-5" /> },
  ];
 
  const onSubmit = async (data: FormData) => {
@@ -64,7 +66,7 @@ export default function ReadingSetupPage() {
 
  router.push(`/reading/session/${response.data.sessionId}`);
  } else {
- setInitError(response.error || "Failed to initialize reading session.");
+ setInitError(response.error || t("error_init_failed"));
  setIsInitializing(false);
  }
  };
@@ -74,7 +76,7 @@ export default function ReadingSetupPage() {
  <div className="max-w-4xl mx-auto px-6 pt-10 pb-20 font-sans">
  <SectionHeader title={t('title')}
  subtitle={t('subtitle')}
- tag="Ritual Setup"
+ tag={t("tag")}
  tagIcon={<Compass className="w-3 h-3" />}
  className="mb-10"
  />
@@ -90,7 +92,7 @@ export default function ReadingSetupPage() {
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
  {SPREADS.map((spread) => {
  const isSelected = selectedSpread === spread.id;
- const isFree = spread.cost === 'Free';
+ const isFree = spread.id === 'daily_1';
  const isPremium = spread.id === 'spread_10';
 
  return (

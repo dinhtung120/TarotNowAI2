@@ -4,11 +4,13 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { getMfaStatus, setupMfa, verifyMfa, type MfaSetupResult } from '@/actions/mfaActions';
 import { useQRCode } from 'next-qrcode';
 import { Shield, ShieldAlert, ShieldCheck, Loader2, ArrowRight, CheckCircle2, AlertTriangle, KeyRound, Copy } from 'lucide-react';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
 import UserLayout from '@/components/layout/UserLayout';
 import { SectionHeader, GlassCard, Button } from '@/components/ui';
 
 export default function MfaSetupPage() {
+ const t = useTranslations("Profile");
  const { Canvas } = useQRCode();
  const [mfaEnabled, setMfaEnabled] = useState<boolean | null>(null);
  // Setup state
@@ -47,7 +49,7 @@ export default function MfaSetupPage() {
  if (res.success && res.data) {
  setSetupData(res.data);
  } else {
- setSetupError(res.error || 'Lỗi khởi tạo MFA');
+ setSetupError(res.error || t("mfa.setup_error_generic"));
  }
  setSetupLoading(false);
  };
@@ -63,7 +65,7 @@ export default function MfaSetupPage() {
  setMfaEnabled(true);
  setSetupData(null);
  } else {
- setVerifyError(res.error || 'Mã không hợp lệ');
+ setVerifyError(res.error || t("mfa.verify_error_invalid"));
  }
  setVerifyLoading(false);
  };
@@ -80,7 +82,7 @@ export default function MfaSetupPage() {
  <div className="absolute inset-x-0 top-0 h-40 w-40 bg-[var(--success)]/20 blur-[60px] rounded-full animate-pulse" />
  <Loader2 className="w-12 h-12 animate-spin text-[var(--success)] relative z-10" />
  </div>
- <div className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-secondary)]">Kiểm tra bảo mật...</div>
+ <div className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-secondary)]">{t("mfa.status_checking")}</div>
  </div>
  </UserLayout>
  );
@@ -91,10 +93,10 @@ export default function MfaSetupPage() {
  <div className="max-w-2xl mx-auto px-6 pt-8 pb-32 space-y-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000">
  {/* Header */}
  <SectionHeader
- tag="Security"
+ tag={t("mfa.tag")}
  tagIcon={<Shield className="w-3 h-3 text-[var(--success)]" />}
- title="Bảo mật 2 lớp"
- subtitle="Multi-Factor Authentication (MFA/TOTP) bảo vệ tài khoản của bạn khỏi truy cập trái phép. Bắt buộc để thực hiện Payout."
+ title={t("mfa.title")}
+ subtitle={t("mfa.subtitle")}
  />
 
  {/* Tình trạng đã bật MFA */}
@@ -103,12 +105,12 @@ export default function MfaSetupPage() {
  <div className="mx-auto w-24 h-24 bg-[var(--success-bg)] border border-[var(--success)]/30 rounded-full flex items-center justify-center shadow-[0_0_30px_var(--c-16-185-129-20)] mb-6">
  <ShieldCheck className="w-12 h-12 text-[var(--success)]" />
  </div>
- <h2 className="text-2xl font-black tn-text-primary uppercase italic tracking-tight">MFA Đã Kích Hoạt</h2>
- <p className="text-[var(--text-secondary)] text-sm font-medium">Tài khoản của bạn đã được bảo vệ an toàn bằng MFA.</p>
+ <h2 className="text-2xl font-black tn-text-primary uppercase italic tracking-tight">{t("mfa.enabled_title")}</h2>
+ <p className="text-[var(--text-secondary)] text-sm font-medium">{t("mfa.enabled_desc")}</p>
  <div className="pt-6">
  <Link href="/wallet/withdraw">
  <Button variant="primary" className="!bg-[var(--success)] hover:!bg-[var(--success)]/80 tn-text-primary border-none shadow-[0_0_20px_var(--c-16-185-129-30)] hover:shadow-[0_0_30px_var(--c-16-185-129-50)]">
- Tới trang Rút Tiền <ArrowRight className="w-4 h-4 ml-2" />
+ {t("mfa.enabled_cta")} <ArrowRight className="w-4 h-4 ml-2" />
  </Button>
  </Link>
  </div>
@@ -122,8 +124,8 @@ export default function MfaSetupPage() {
  <ShieldAlert className="w-12 h-12 text-[var(--warning)]" />
  </div>
  <div className="space-y-3">
- <h2 className="text-2xl font-black tn-text-primary uppercase italic tracking-tight">Bảo mật chưa hoàn thiện</h2>
- <p className="text-[var(--warning)] text-sm font-medium">Bạn cần bật MFA để bảo vệ ví và thực hiện rút tiền.</p>
+ <h2 className="text-2xl font-black tn-text-primary uppercase italic tracking-tight">{t("mfa.disabled_title")}</h2>
+ <p className="text-[var(--warning)] text-sm font-medium">{t("mfa.disabled_desc")}</p>
  </div>
  {setupError && (
  <div className="text-[var(--danger)] text-xs font-bold uppercase tracking-widest flex justify-center items-center gap-2 bg-[var(--danger-bg)] border border-[var(--danger)]/30 p-4 rounded-xl">
@@ -139,7 +141,7 @@ export default function MfaSetupPage() {
  className="w-full h-14 !bg-[var(--warning)]/20 hover:!bg-[var(--warning)]/30 text-[var(--warning)] border-[var(--warning)]/30"
  >
  {setupLoading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <KeyRound className="w-5 h-5 mr-2" />}
- Bắt đầu thiết lập MFA ngay
+ {t("mfa.start_setup")}
  </Button>
  </div>
  </GlassCard>
@@ -150,8 +152,8 @@ export default function MfaSetupPage() {
  <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-700">
  <GlassCard className="!p-8 space-y-8">
  <div className="space-y-3 text-center">
- <h3 className="text-xl font-black tn-text-primary uppercase italic tracking-tight">1. Quét mã QR</h3>
- <p className="text-[var(--text-secondary)] text-sm font-medium">Sử dụng Google Authenticator, Authy hoặc ứng dụng TOTP tương tự.</p>
+ <h3 className="text-xl font-black tn-text-primary uppercase italic tracking-tight">{t("mfa.step1_title")}</h3>
+ <p className="text-[var(--text-secondary)] text-sm font-medium">{t("mfa.step1_desc")}</p>
  </div>
                 <div className="flex justify-center tn-surface-strong p-5 rounded-2xl w-fit mx-auto shadow-2xl">
                   <Canvas
@@ -167,12 +169,12 @@ export default function MfaSetupPage() {
                 </div>
 
  <div className="text-center space-y-4 pt-4 border-t tn-border">
- <p className="text-[10px] text-[var(--text-tertiary)] uppercase font-black tracking-widest">Hoặc nhập mã thủ công</p>
+ <p className="text-[10px] text-[var(--text-tertiary)] uppercase font-black tracking-widest">{t("mfa.manual_code_label")}</p>
  <div className="flex justify-center items-center gap-3">
  <code className="px-5 py-3 tn-panel rounded-xl text-[var(--success)] font-mono tracking-widest font-bold shadow-inner">
  {setupData.secretDisplay}
  </code>
- <button onClick={() => copyToClipboard(setupData.secretDisplay)} className="p-3 tn-panel rounded-xl hover:tn-surface-strong transition-all group">
+ <button onClick={() => copyToClipboard(setupData.secretDisplay)} aria-label={t("mfa.copy")} className="p-3 tn-panel rounded-xl hover:tn-surface-strong transition-all group">
  <Copy className="w-4 h-4 text-[var(--text-secondary)] group-hover:tn-text-primary transition-colors" />
  </button>
  </div>
@@ -183,9 +185,9 @@ export default function MfaSetupPage() {
  <div className="space-y-3">
  <h3 className="text-xl font-black uppercase italic tracking-tight text-[var(--danger)] flex items-center justify-center gap-2">
  <AlertTriangle className="w-5 h-5" />
- 2. Lưu Mã Dự Phòng
+ {t("mfa.step2_title")}
  </h3>
- <p className="text-[var(--danger)]/80 text-sm font-medium">Nếu mất thiết bị, bạn <strong className="font-black text-[var(--danger)] underline underline-offset-4">PHẢI</strong> dùng các mã này để khôi phục. Mỗi mã chỉ dùng 1 lần.</p>
+ <p className="text-[var(--danger)]/80 text-sm font-medium">{t("mfa.step2_desc")}</p>
  </div>
  <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto">
  {setupData.backupCodes.map((code, idx) => (
@@ -198,8 +200,8 @@ export default function MfaSetupPage() {
 
  <GlassCard className="!p-8 text-center space-y-8">
  <div className="space-y-3">
- <h3 className="text-xl font-black tn-text-primary uppercase italic tracking-tight">3. Xác nhận mã</h3>
- <p className="text-[var(--text-secondary)] text-sm font-medium">Nhập mã 6 số từ ứng dụng để hoàn tất thiết lập.</p>
+ <h3 className="text-xl font-black tn-text-primary uppercase italic tracking-tight">{t("mfa.step3_title")}</h3>
+ <p className="text-[var(--text-secondary)] text-sm font-medium">{t("mfa.step3_desc")}</p>
  </div>
 
  <form onSubmit={handleVerify} className="space-y-8">
@@ -207,7 +209,7 @@ export default function MfaSetupPage() {
  type="text"
  value={code}
  onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
- placeholder="000 000"
+ placeholder={t("mfa.code_placeholder")}
  className="w-full max-w-[240px] mx-auto block text-center text-4xl tracking-widest font-mono py-6 tn-field rounded-2xl tn-text-primary tn-field-success transition-all placeholder:text-[color:var(--c-154-144-171-58)] shadow-inner"
  autoFocus
  />
@@ -225,7 +227,7 @@ export default function MfaSetupPage() {
  className="w-full max-w-[240px] mx-auto h-14 !bg-[var(--success)] hover:!bg-[var(--success)]/80 tn-text-primary border-none shadow-[0_0_20px_var(--c-16-185-129-30)] disabled:opacity-50 disabled:shadow-none"
  >
  {verifyLoading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <CheckCircle2 className="w-5 h-5 mr-2" />}
- Xác nhận & Bật MFA
+ {t("mfa.verify_cta")}
  </Button>
  </form>
  </GlassCard>

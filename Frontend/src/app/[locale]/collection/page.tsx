@@ -10,7 +10,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { getUserCollection, UserCollectionDto } from "@/actions/collectionActions";
-import { TAROT_DECK } from "@/lib/tarotData";
+import { TAROT_CARD_COUNT, TAROT_DECK } from "@/lib/tarotData";
 import UserLayout from "@/components/layout/UserLayout";
 import { Loader2, LayoutGrid, AlertCircle, ChevronRight, Sparkles, Filter, CheckCircle2, Lock } from "lucide-react";
 import { Link } from "@/i18n/routing";
@@ -20,6 +20,8 @@ type FilterType = "all" | "owned" | "unowned";
 
 export default function CollectionPage() {
  const t = useTranslations("Collection");
+ const tCommon = useTranslations("Common");
+ const tTarot = useTranslations("Tarot");
  const [collection, setCollection] = useState<UserCollectionDto[]>([]);
  const [isLoading, setIsLoading] = useState(true);
  const [error, setError] = useState("");
@@ -32,12 +34,12 @@ export default function CollectionPage() {
  if (result.success && result.data) {
  setCollection(result.data);
  } else {
- setError(result.error || "Failed to load collection");
+ setError(result.error || t("error_load_failed"));
  }
  setIsLoading(false);
  };
  fetchCollection();
- }, []);
+ }, [t]);
 
  // Tìm thẻ bài đang được phóng to
  const selectedCardData = useMemo(() => {
@@ -73,7 +75,7 @@ export default function CollectionPage() {
  }
 
  const totalCollected = collection.length;
- const progressRatio = (totalCollected / 78) * 100;
+ const progressRatio = (totalCollected / TAROT_CARD_COUNT) * 100;
 
  return (
  <UserLayout>
@@ -103,10 +105,10 @@ export default function CollectionPage() {
  </div>
  <div className="absolute bottom-6 left-0 right-0 z-20 px-3 text-center">
  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--warning)]/60 block mb-1">
- {selectedCardData.suit}
+ {tTarot(`suits.${selectedCardData.suit}.full`)}
  </span>
  <h3 className="text-xl font-black tn-text-primary italic tracking-tighter leading-tight drop-shadow-lg">
- {selectedUserCard ? selectedCardData.name : t('unknown_card')}
+ {selectedUserCard ? tTarot(`cards.c${selectedCardData.id}.name`) : t('unknown_card')}
  </h3>
  </div>
  </div>
@@ -116,10 +118,10 @@ export default function CollectionPage() {
  {/* Info Section */}
  <div className="relative z-10 space-y-4 max-w-sm">
  <h2 className="text-2xl font-black tn-text-primary italic tracking-tight">
- {selectedUserCard ? selectedCardData.name : t('unknown_card')}
+ {selectedUserCard ? tTarot(`cards.c${selectedCardData.id}.name`) : t('unknown_card')}
  </h2>
  <p className="tn-text-secondary text-sm font-medium leading-relaxed italic">
- {selectedUserCard ? selectedCardData.meaning : "Vũ trụ chưa khai mở thông điệp của lá bài này cho bạn."}
+ {selectedUserCard ? tTarot(`cards.c${selectedCardData.id}.meaning`) : t("locked_meaning")}
  </p>
 
  {selectedUserCard && (
@@ -138,7 +140,7 @@ export default function CollectionPage() {
  <button onClick={() => setSelectedCardId(null)}
  className="mt-8 px-8 py-3 tn-surface-strong tn-text-ink rounded-full text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl"
  >
- Đóng Giao Thức
+ {tCommon("close")}
  </button>
  </div>
  </div>
@@ -151,7 +153,7 @@ export default function CollectionPage() {
  <div className="space-y-4">
  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--warning)]/5 border border-[var(--warning)]/10 text-[9px] uppercase tracking-[0.2em] font-black text-[var(--warning)] shadow-xl ">
  <Sparkles className="w-3 h-3" />
- Arcane Sanctuary
+ {t("tag")}
  </div>
  <h1 className="text-4xl md:text-5xl font-black tracking-tighter tn-text-primary">
  {t('title')}
@@ -165,7 +167,9 @@ export default function CollectionPage() {
  <div className="w-full lg:w-72 space-y-3 tn-panel-soft p-4 rounded-3xl shadow-xl">
  <div className="flex justify-between items-end">
  <span className="text-[10px] font-black uppercase tracking-widest tn-text-muted">{t('progress_label')}</span>
- <span className="text-sm font-black text-[var(--warning)] tracking-tighter">{totalCollected} <span className="tn-text-muted">/ 78</span></span>
+ <span className="text-sm font-black text-[var(--warning)] tracking-tighter">
+ {totalCollected} <span className="tn-text-muted">/ {TAROT_CARD_COUNT}</span>
+ </span>
  </div>
  <div className="h-1 w-full tn-surface rounded-full overflow-hidden">
  <div
@@ -180,7 +184,7 @@ export default function CollectionPage() {
  <div className="flex flex-wrap items-center gap-2 mb-10 animate-in fade-in duration-700 delay-300">
  <div className="flex items-center gap-2 mr-4 tn-text-muted">
  <Filter className="w-3.5 h-3.5" />
- <span className="text-[10px] uppercase font-black tracking-widest">Filters</span>
+ <span className="text-[10px] uppercase font-black tracking-widest">{t("filters_label")}</span>
  </div>
  {([
  { id: "all", label: t('filter_all'), icon: <LayoutGrid className="w-3 h-3" /> },
@@ -244,7 +248,7 @@ export default function CollectionPage() {
  <div className={`text-[8px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-full inline-block ${
  isOwned ? 'text-[var(--warning)] bg-[var(--warning)]/5 border border-[var(--warning)]/10' : 'tn-text-muted tn-surface-strong overflow-hidden'
  }`}>
- {deckCard.suit.split(' ')[0]}
+ {tTarot(`suits.${deckCard.suit}.short`)}
  </div>
  </div>
 
@@ -268,7 +272,7 @@ export default function CollectionPage() {
  <h4 className={`text-[11px] font-black text-center leading-snug mb-3 px-1 tracking-tight min-h-[1.5rem] flex items-center justify-center ${
  isOwned ? 'tn-text-primary' : 'tn-text-muted'
  }`}>
- {isOwned ? deckCard.name : t('unknown_card')}
+ {isOwned ? tTarot(`cards.c${deckCard.id}.name`) : t('unknown_card')}
  </h4>
 
  {/* Stats - Macro-UI */}

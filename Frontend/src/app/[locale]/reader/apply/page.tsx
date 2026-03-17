@@ -5,6 +5,8 @@ import { submitReaderApplication, getMyReaderRequest, type MyReaderRequest } fro
 import {
  FileText, Send, Clock, CheckCircle2, XCircle, Loader2, Sparkles, Star, ScrollText
 } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import UserLayout from '@/components/layout/UserLayout';
 
 /**
  * Trang đăng ký trở thành Reader (Nhà xem bài Tarot).
@@ -16,6 +18,8 @@ import {
  * → Premium astral design theo phong cách chung của hệ thống.
  */
 export default function ReaderApplyPage() {
+ const t = useTranslations("ReaderApply");
+ const locale = useLocale();
  // State quản lý form và trạng thái đơn
  const [introText, setIntroText] = useState('');
  const [submitting, setSubmitting] = useState(false);
@@ -41,7 +45,7 @@ export default function ReaderApplyPage() {
  const handleSubmit = async (e: React.FormEvent) => {
  e.preventDefault();
  if (introText.length < 20) {
- setMessage('Lời giới thiệu phải có ít nhất 20 ký tự.');
+ setMessage(t("validation.min_intro"));
  setMessageType('error');
  return;
  }
@@ -63,18 +67,21 @@ export default function ReaderApplyPage() {
  // Loading state
  if (loading) {
  return (
+ <UserLayout>
  <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-4">
  <Loader2 className="w-10 h-10 text-[var(--purple-accent)] animate-spin" />
  <span className="text-[10px] font-black uppercase tracking-[0.3em] tn-text-muted">
- Kiểm tra trạng thái đăng ký...
+ {t("loading")}
  </span>
  </div>
+ </UserLayout>
  );
  }
 
  // Nếu đã có đơn pending → hiển thị status card
  if (existingRequest?.hasRequest && existingRequest.status === 'pending') {
  return (
+ <UserLayout>
  <div className="max-w-2xl mx-auto px-6 py-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
  <div className="relative overflow-hidden bg-gradient-to-br from-[var(--warning)]/10 to-transparent rounded-[3rem] border border-[var(--warning)]/20 p-12 shadow-2xl">
  <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none">
@@ -85,28 +92,29 @@ export default function ReaderApplyPage() {
  <Clock className="w-8 h-8 text-[var(--warning)]" />
  </div>
  <h1 className="text-3xl font-black tn-text-primary uppercase italic tracking-tighter">
- Đơn Đang Chờ Duyệt
+ {t("pending.title")}
  </h1>
  <p className="tn-text-secondary text-sm leading-relaxed max-w-md mx-auto">
- Đơn đăng ký Reader của bạn đã được gửi thành công và đang chờ admin xem xét.
- Bạn sẽ nhận được thông báo khi có kết quả.
+ {t("pending.desc")}
  </p>
  <div className="p-6 rounded-2xl tn-panel-overlay-soft text-left space-y-2">
- <div className="text-[10px] font-black uppercase tracking-widest text-[var(--warning)]">Lời giới thiệu đã gửi</div>
+ <div className="text-[10px] font-black uppercase tracking-widest text-[var(--warning)]">{t("pending.intro_label")}</div>
  <p className="text-xs tn-text-secondary leading-relaxed">{existingRequest.introText}</p>
  </div>
  <div className="text-[10px] font-black uppercase tracking-[0.2em] tn-text-muted">
- Gửi lúc: {new Date(existingRequest.createdAt || '').toLocaleString('vi-VN')}
+ {t("pending.sent_at", { date: new Date(existingRequest.createdAt || '').toLocaleString(locale) })}
  </div>
  </div>
  </div>
  </div>
+ </UserLayout>
  );
  }
 
  // Nếu đã được approved
  if (existingRequest?.hasRequest && existingRequest.status === 'approved') {
  return (
+ <UserLayout>
  <div className="max-w-2xl mx-auto px-6 py-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
  <div className="relative overflow-hidden bg-gradient-to-br from-[var(--success)]/10 to-transparent rounded-[3rem] border border-[var(--success)]/20 p-12 shadow-2xl">
  <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none">
@@ -117,14 +125,15 @@ export default function ReaderApplyPage() {
  <CheckCircle2 className="w-8 h-8 text-[var(--success)]" />
  </div>
  <h1 className="text-3xl font-black tn-text-primary uppercase italic tracking-tighter">
- Bạn Đã Là Reader!
+ {t("approved.title")}
  </h1>
  <p className="tn-text-secondary text-sm leading-relaxed max-w-md mx-auto">
- Chúc mừng! Đơn đăng ký Reader của bạn đã được phê duyệt. Hãy cập nhật hồ sơ và bắt đầu nhận câu hỏi.
+ {t("approved.desc")}
  </p>
  </div>
  </div>
  </div>
+ </UserLayout>
  );
  }
 
@@ -132,20 +141,27 @@ export default function ReaderApplyPage() {
  const wasRejected = existingRequest?.hasRequest && existingRequest.status === 'rejected';
 
  // Form đăng ký
+ const iconClassByColor: Record<"purple" | "amber" | "emerald", string> = {
+  purple: "text-[var(--purple-accent)]",
+  amber: "text-[var(--warning)]",
+  emerald: "text-[var(--success)]",
+ };
+
  return (
+ <UserLayout>
  <div className="max-w-2xl mx-auto px-6 py-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
  <div className="space-y-10">
  {/* Header */}
  <div className="text-center space-y-4">
  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--purple-accent)]/5 border border-[var(--purple-accent)]/10 text-[9px] uppercase tracking-[0.2em] font-black text-[var(--purple-accent)] shadow-xl ">
  <Sparkles className="w-3 h-3 text-[var(--purple-accent)]" />
- Reader Application
+ {t("header.tag")}
  </div>
  <h1 className="text-4xl md:text-5xl font-black tracking-tighter tn-text-primary uppercase italic">
- Trở Thành Reader
+ {t("header.title")}
  </h1>
  <p className="tn-text-muted font-medium max-w-lg mx-auto text-sm leading-relaxed">
- Chia sẻ khả năng đọc bài Tarot của bạn với cộng đồng. Hãy cho chúng tôi biết tại sao bạn muốn trở thành Reader.
+ {t("header.subtitle")}
  </p>
  </div>
 
@@ -154,12 +170,12 @@ export default function ReaderApplyPage() {
  <div className="p-6 rounded-2xl bg-[var(--danger)]/5 border border-[var(--danger)]/20 space-y-2">
  <div className="flex items-center gap-2">
  <XCircle className="w-4 h-4 text-[var(--danger)]" />
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--danger)]">Đơn trước đã bị từ chối</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--danger)]">{t("rejected.title")}</span>
  </div>
  {existingRequest?.adminNote && (
- <p className="text-xs tn-text-secondary leading-relaxed">Lý do: {existingRequest.adminNote}</p>
+ <p className="text-xs tn-text-secondary leading-relaxed">{t("rejected.reason", { note: existingRequest.adminNote })}</p>
  )}
- <p className="text-xs tn-text-muted">Bạn có thể gửi đơn mới bên dưới.</p>
+ <p className="text-xs tn-text-muted">{t("rejected.can_resubmit")}</p>
  </div>
  )}
 
@@ -168,12 +184,12 @@ export default function ReaderApplyPage() {
  {/* Info Cards */}
  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
  {[
- { icon: ScrollText, title: 'Giới thiệu bản thân', desc: 'Chia sẻ kinh nghiệm Tarot', color: 'purple' },
- { icon: Clock, title: 'Chờ phê duyệt', desc: 'Admin sẽ xem xét đơn', color: 'amber' },
- { icon: Star, title: 'Bắt đầu nhận câu hỏi', desc: 'Sau khi được duyệt', color: 'emerald' }
+ { icon: ScrollText, title: t("steps.intro.title"), desc: t("steps.intro.desc"), color: 'purple' as const },
+ { icon: Clock, title: t("steps.review.title"), desc: t("steps.review.desc"), color: 'amber' as const },
+ { icon: Star, title: t("steps.start.title"), desc: t("steps.start.desc"), color: 'emerald' as const }
  ].map((step, i) => (
  <div key={i} className="p-5 rounded-2xl tn-panel-soft text-center space-y-2">
- <step.icon className={`w-6 h-6 mx-auto text-${step.color}-400`} />
+ <step.icon className={`w-6 h-6 mx-auto ${iconClassByColor[step.color]}`} />
  <div className="text-[10px] font-black uppercase tracking-widest tn-text-secondary">{step.title}</div>
  <p className="text-[10px] tn-text-muted">{step.desc}</p>
  </div>
@@ -184,19 +200,19 @@ export default function ReaderApplyPage() {
  <div className="space-y-3">
  <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest tn-text-secondary">
  <FileText className="w-3 h-3" />
- Lời giới thiệu *
+ {t("form.intro_label")}
  </label>
  <textarea
  id="reader-intro-text"
  value={introText}
  onChange={(e) => setIntroText(e.target.value)}
- placeholder="Hãy chia sẻ kinh nghiệm đọc bài Tarot của bạn, tại sao bạn muốn trở thành Reader, và bạn có thể mang lại giá trị gì cho cộng đồng..."
+ placeholder={t("form.intro_placeholder")}
  rows={6}
  className="w-full tn-field rounded-2xl p-6 text-sm tn-text-primary placeholder:tn-text-muted tn-field-accent transition-all resize-none"
  />
  <div className="flex justify-between">
  <span className={`text-[10px] ${introText.length >= 20 ? 'tn-text-muted' : 'text-[var(--danger)]'}`}>
- Tối thiểu 20 ký tự
+ {t("form.min_chars")}
  </span>
  <span className="text-[10px] tn-text-muted">{introText.length}/2000</span>
  </div>
@@ -221,17 +237,18 @@ export default function ReaderApplyPage() {
  {submitting ? (
  <span className="flex items-center justify-center gap-3">
  <Loader2 className="w-4 h-4 animate-spin" />
- Đang gửi đơn...
+ {t("form.submitting")}
  </span>
  ) : (
  <span className="flex items-center justify-center gap-3">
  <Send className="w-4 h-4" />
- Gửi Đơn Đăng Ký
+ {t("form.submit")}
  </span>
  )}
  </button>
  </form>
  </div>
  </div>
+ </UserLayout>
  );
 }

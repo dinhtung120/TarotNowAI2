@@ -1,9 +1,7 @@
 'use server';
 
 import { cookies } from 'next/headers';
-
-// Base URL của Backend API
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5037/api/v1';
+import { API_BASE_URL } from '@/lib/api';
 
 // ======================================================================
 // Kiểu dữ liệu cho Legal / Consent
@@ -42,7 +40,7 @@ export async function checkConsentStatus(documentType?: string, version?: string
  if (version) params.append('version', version);
  const queryString = params.toString() ? `?${params.toString()}` : '';
 
- const response = await fetch(`${API_URL}/legal/consent-status${queryString}`, {
+ const response = await fetch(`${API_BASE_URL}/legal/consent-status${queryString}`, {
  method: 'GET',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -75,7 +73,7 @@ export async function recordConsent(documentType: string, version: string): Prom
  const accessToken = cookieStore.get('accessToken')?.value;
 
  try {
- const response = await fetch(`${API_URL}/legal/consent`, {
+ const response = await fetch(`${API_BASE_URL}/legal/consent`, {
  method: 'POST',
  headers: {
  'Authorization': `Bearer ${accessToken}`,

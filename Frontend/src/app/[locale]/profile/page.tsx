@@ -13,7 +13,7 @@
  */
 
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -47,18 +47,15 @@ interface ProfileResponse {
 /**
  * Zod Schema — Validate dữ liệu form trước khi gửi lên server.
  */
-const profileSchema = z.object({
- displayName: z.string().min(2, "Tên hiển thị phải có ít nhất 2 ký tự"),
- avatarUrl: z.string().url("URL Avatar không hợp lệ").optional().or(z.literal("")),
- dateOfBirth: z.string().refine((date) => !isNaN(Date.parse(date)), {
- message: "Ngày sinh không hợp lệ",
- }),
-});
-
-type ProfileFormValues = z.infer<typeof profileSchema>;
+interface ProfileFormValues {
+ displayName: string;
+ avatarUrl?: string;
+ dateOfBirth: string;
+}
 
 export default function ProfilePage() {
  const t = useTranslations("Profile");
+ const tCommon = useTranslations("Common");
  const router = useRouter();
  const { isAuthenticated, user } = useAuthStore();
 
@@ -66,6 +63,14 @@ export default function ProfilePage() {
  const [loading, setLoading] = useState(true);
  const [successMsg, setSuccessMsg] = useState("");
  const [errorMsg, setErrorMsg] = useState("");
+
+ const profileSchema = useMemo(() => z.object({
+  displayName: z.string().min(2, t("validation.display_name_min")),
+  avatarUrl: z.string().url(t("validation.avatar_url_invalid")).optional().or(z.literal("")),
+  dateOfBirth: z.string().refine((date) => !isNaN(Date.parse(date)), {
+   message: t("validation.date_of_birth_invalid"),
+  }),
+ }), [t]);
 
  const {
  register,
@@ -165,7 +170,7 @@ export default function ProfilePage() {
  <div className="absolute inset-x-0 top-0 h-40 w-40 bg-[var(--purple-accent)]/20 blur-[60px] rounded-full animate-pulse" />
  <Loader2 className="w-12 h-12 animate-spin text-[var(--purple-accent)] relative z-10" />
  </div>
- <div className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-secondary)]">Đang tải hồ sơ...</div>
+ <div className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--text-secondary)]">{t("loading")}</div>
  </div>
  </UserLayout>
  );
@@ -179,7 +184,7 @@ export default function ProfilePage() {
  tag={t("title")}
  tagIcon={<Stars className="w-3 h-3 text-[var(--purple-accent)]" />}
  title={t("title")}
- subtitle="Quản lý thông tin và hiệu chỉnh kết nối của bạn."
+ subtitle={t("subtitle")}
  />
 
  <div className="grid grid-cols-1 gap-8">
@@ -193,7 +198,7 @@ export default function ProfilePage() {
  <div className="w-full h-full rounded-full border-2 tn-border overflow-hidden relative z-10 shadow-2xl tn-surface">
  <Image
  src={profileData.avatarUrl || `https://ui-avatars.com/api/?background=111&color=fff&name=${encodeURIComponent(profileData.displayName)}`}
- alt="Avatar"
+ alt={tCommon("avatar_alt")}
  fill
  sizes="112px"
  unoptimized
@@ -243,7 +248,7 @@ export default function ProfilePage() {
  className="flex-1 group flex justify-center items-center gap-2.5 bg-[var(--purple-accent)]/10 hover:bg-[var(--purple-accent)]/20 border border-[var(--purple-accent)]/30 text-[var(--purple-accent)] px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95"
  >
  <ShieldCheck className="w-3.5 h-3.5 transition-transform group-hover:rotate-12" />
- Trang Quản Trị
+ {t("admin_portal")}
  </button>
  )}
  {(user?.role === "admin" || user?.role === "reader") && (
@@ -252,7 +257,7 @@ export default function ProfilePage() {
  className="flex-1 group flex justify-center items-center gap-2.5 bg-[var(--warning)]/10 hover:bg-[var(--warning)]/20 border border-[var(--warning)]/30 text-[var(--warning)] px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95"
  >
  <Sparkles className="w-3.5 h-3.5 transition-transform group-hover:rotate-12" />
- Hồ Sơ Reader
+ {t("reader_profile")}
  </button>
  )}
  </div>
@@ -265,7 +270,7 @@ export default function ProfilePage() {
  <GlassCard className="!p-8">
  <h3 className="text-lg font-black tn-text-primary italic tracking-tight mb-8 flex items-center gap-2.5">
  <Sparkles className="w-4 h-4 text-[var(--warning)]" />
- Hiệu Chỉnh Thay Đổi
+ {t("settings_title")}
  </h3>
 
  {/* Status Messages */}
@@ -295,7 +300,7 @@ export default function ProfilePage() {
  type="text"
  {...register("displayName")}
  className="w-full tn-field rounded-xl px-4 py-3.5 text-sm tn-text-primary font-medium tn-field-accent transition-all shadow-inner"
- placeholder="Tên hiển thị của bạn"
+ placeholder={t("display_name_placeholder")}
  />
  {errors.displayName && <p className="text-[var(--danger)] text-[10px] font-bold ml-1 italic">{errors.displayName.message}</p>}
  </div>
@@ -322,7 +327,7 @@ export default function ProfilePage() {
  type="text"
  {...register("avatarUrl")}
  className="w-full tn-field rounded-xl px-4 py-3.5 text-sm tn-text-primary font-medium tn-field-accent transition-all shadow-inner"
- placeholder="https://example.com/avatar.jpg"
+ placeholder={t("avatar_url_placeholder")}
  />
  {errors.avatarUrl && <p className="text-[var(--danger)] text-[10px] font-bold ml-1 italic">{errors.avatarUrl.message}</p>}
  </div>

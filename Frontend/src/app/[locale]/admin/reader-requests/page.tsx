@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { SectionHeader, GlassCard, Button, Input } from '@/components/ui';
 import toast from 'react-hot-toast';
+import { useLocale, useTranslations } from "next-intl";
 
 /**
  * Trang Admin quản lý đơn xin Reader (Approval Queue).
@@ -20,6 +21,8 @@ import toast from 'react-hot-toast';
  * → Premium astral design đồng bộ với admin dashboard.
  */
 export default function AdminReaderRequestsPage() {
+ const t = useTranslations("Admin");
+ const locale = useLocale();
  // State quản lý danh sách và filter
  const [requests, setRequests] = useState<AdminReaderRequest[]>([]);
  const [totalCount, setTotalCount] = useState(0);
@@ -63,12 +66,12 @@ export default function AdminReaderRequestsPage() {
  setProcessing(requestId);
  const success = await processReaderRequest(requestId, action, adminNote);
  if (success) {
- toast.success(action === 'approve' ? 'Đã phê duyệt Reader thành công' : 'Đã từ chối đơn đăng ký');
+ toast.success(action === 'approve' ? t("reader_requests.toast.approve_success") : t("reader_requests.toast.reject_success"));
  setAdminNote('');
  setSelectedRequest(null);
  await fetchRequests();
  } else {
- toast.error('Xử lý đơn thất bại. Vui lòng thử lại.');
+ toast.error(t("reader_requests.toast.process_failed"));
  }
  setProcessing(null);
  };
@@ -77,11 +80,11 @@ export default function AdminReaderRequestsPage() {
  const getStatusBadge = (status: string) => {
  switch (status) {
  case 'pending':
- return <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--warning)]/10 text-[var(--warning)] text-[9px] font-black uppercase tracking-widest border border-[var(--warning)]/20 shadow-inner"><Clock className="w-3 h-3"/> Chờ duyệt</span>;
+ return <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--warning)]/10 text-[var(--warning)] text-[9px] font-black uppercase tracking-widest border border-[var(--warning)]/20 shadow-inner"><Clock className="w-3 h-3"/> {t("reader_requests.status.pending")}</span>;
  case 'approved':
- return <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--success)]/10 text-[var(--success)] text-[9px] font-black uppercase tracking-widest border border-[var(--success)]/20 shadow-inner"><CheckCircle2 className="w-3 h-3"/> Đã duyệt</span>;
+ return <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--success)]/10 text-[var(--success)] text-[9px] font-black uppercase tracking-widest border border-[var(--success)]/20 shadow-inner"><CheckCircle2 className="w-3 h-3"/> {t("reader_requests.status.approved")}</span>;
  case 'rejected':
- return <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--danger)]/10 text-[var(--danger)] text-[9px] font-black uppercase tracking-widest border border-[var(--danger)]/20 shadow-inner"><XCircle className="w-3 h-3"/> Đã từ chối</span>;
+ return <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--danger)]/10 text-[var(--danger)] text-[9px] font-black uppercase tracking-widest border border-[var(--danger)]/20 shadow-inner"><XCircle className="w-3 h-3"/> {t("reader_requests.status.rejected")}</span>;
  default:
  return null;
  }
@@ -92,10 +95,10 @@ export default function AdminReaderRequestsPage() {
  {/* Header */}
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
  <SectionHeader
- tag="Review"
+ tag={t("reader_requests.header.tag")}
  tagIcon={<ShieldCheck className="w-3 h-3 text-[var(--purple-accent)]" />}
- title="Duyệt Đơn Reader"
- subtitle="Xem xét và phê duyệt các đơn đăng ký trở thành Reader."
+ title={t("reader_requests.header.title")}
+ subtitle={t("reader_requests.header.subtitle")}
  className="mb-0 text-left items-start"
  />
  <div className="flex items-center gap-4 tn-panel rounded-[2rem] p-2 pr-4 shadow-inner min-w-max">
@@ -103,7 +106,7 @@ export default function AdminReaderRequestsPage() {
  <Users className="w-4 h-4 text-[var(--purple-accent)]" />
  </div>
  <div className="space-y-0.5">
- <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Tổng số đơn</div>
+ <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("reader_requests.summary.total_label")}</div>
  <div className="text-sm font-black tn-text-primary italic tracking-tighter drop-shadow-sm">{totalCount}</div>
  </div>
  </div>
@@ -114,25 +117,25 @@ export default function AdminReaderRequestsPage() {
  {[
  {
  value: 'pending',
- label: 'Chờ duyệt',
+ label: t("reader_requests.filters.pending"),
  icon: Clock,
  activeClass: 'bg-[var(--warning)]/10 border border-[var(--warning)]/30 text-[var(--warning)] shadow-md'
  },
  {
  value: 'approved',
- label: 'Đã duyệt',
+ label: t("reader_requests.filters.approved"),
  icon: CheckCircle2,
  activeClass: 'bg-[var(--success)]/10 border border-[var(--success)]/30 text-[var(--success)] shadow-md'
  },
  {
  value: 'rejected',
- label: 'Từ chối',
+ label: t("reader_requests.filters.rejected"),
  icon: XCircle,
  activeClass: 'bg-[var(--danger)]/10 border border-[var(--danger)]/30 text-[var(--danger)] shadow-md'
  },
  {
  value: '',
- label: 'Tất cả',
+ label: t("reader_requests.filters.all"),
  icon: Filter,
  activeClass: 'bg-[var(--purple-accent)]/10 border border-[var(--purple-accent)]/30 text-[var(--purple-accent)] shadow-md'
  },
@@ -165,7 +168,7 @@ export default function AdminReaderRequestsPage() {
  <div className="w-16 h-16 rounded-full tn-surface flex items-center justify-center mb-2 shadow-inner">
  <FileText className="w-8 h-8 text-[var(--text-tertiary)]" />
  </div>
- <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">Không có đơn nào trong danh sách.</p>
+ <p className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">{t("reader_requests.states.empty")}</p>
  </GlassCard>
  )}
 
@@ -183,12 +186,12 @@ export default function AdminReaderRequestsPage() {
  {getStatusBadge(req.status)}
  <span className="text-xs font-bold text-[var(--text-secondary)] flex items-center gap-2">
  <Users className="w-4 h-4" />
- ID: {req.userId.substring(0, 8)}...
+ {t("reader_requests.row.id_prefix", { id: req.userId.substring(0, 8) })}
  </span>
  </div>
  <div className="flex items-center gap-2 text-[10px] font-black text-[var(--text-tertiary)] uppercase tracking-tighter tn-surface px-3 py-1.5 rounded-lg shadow-inner">
  <Clock className="w-3.5 h-3.5" />
- {new Date(req.createdAt).toLocaleString('vi-VN')}
+ {new Date(req.createdAt).toLocaleString(locale)}
  </div>
  </div>
 
@@ -197,14 +200,14 @@ export default function AdminReaderRequestsPage() {
  <div className="flex items-center justify-between mb-3">
  <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] flex items-center gap-2">
  <FileText className="w-3.5 h-3.5" />
- Lời giới thiệu
+ {t("reader_requests.row.intro_title")}
  </div>
  {req.introText.length > 150 && selectedRequest?.id !== req.id && (
  <button
  onClick={() => setSelectedRequest(req)}
  className="text-[10px] font-black uppercase tracking-widest text-[var(--purple-accent)] hover:tn-text-primary flex items-center gap-1.5 transition-colors"
  >
- <Eye className="w-3.5 h-3.5" /> Mở rộng
+ <Eye className="w-3.5 h-3.5" /> {t("reader_requests.row.expand")}
  </button>
  )}
  </div>
@@ -223,7 +226,7 @@ export default function AdminReaderRequestsPage() {
  <div className="p-4 rounded-2xl bg-[var(--purple-accent)]/5 border border-[var(--purple-accent)]/20 shadow-inner">
  <div className="text-[10px] font-black uppercase tracking-widest text-[var(--purple-accent)] mb-2 flex items-center gap-2">
  <ShieldCheck className="w-3.5 h-3.5" />
- Ghi chú Admin
+ {t("reader_requests.row.admin_note_title")}
  </div>
  <p className="text-xs font-medium text-[var(--text-secondary)]">{req.adminNote}</p>
  </div>
@@ -234,7 +237,7 @@ export default function AdminReaderRequestsPage() {
  <div className="space-y-4 pt-2">
  {/* Admin Note Input */}
  <Input
- placeholder="GHI CHÚ ADMIN TRƯỚC KHI DUYỆT (TÙY CHỌN)..."
+ placeholder={t("reader_requests.input.admin_note_placeholder")}
  value={selectedRequest?.id === req.id ? adminNote : ''}
  onFocus={() => setSelectedRequest(req)}
  onChange={(e) => { setSelectedRequest(req); setAdminNote(e.target.value); }}
@@ -251,7 +254,7 @@ export default function AdminReaderRequestsPage() {
  className="flex-1 py-4 bg-[var(--success)] tn-text-primary hover:bg-[var(--success)] hover:brightness-110 shadow-md"
  >
  {processing === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
- Phê duyệt Reader
+ {t("reader_requests.actions.approve")}
  </Button>
  <Button
  variant="danger"
@@ -261,7 +264,7 @@ export default function AdminReaderRequestsPage() {
  className="flex-1 py-4 shadow-md bg-[var(--danger)]/20 border border-[var(--danger)]/30 text-[var(--danger)] hover:bg-[var(--danger)] hover:tn-text-primary"
  >
  {processing === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
- Từ chối Đơn
+ {t("reader_requests.actions.reject")}
  </Button>
  </div>
  </div>
@@ -282,7 +285,7 @@ export default function AdminReaderRequestsPage() {
  <ChevronLeft className="w-4 h-4 text-[var(--text-secondary)]" />
  </button>
  <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
- Trang {page} <span className="mx-2 opacity-50">/</span> {totalPages}
+ {t("reader_requests.pagination.summary", { page, total: totalPages })}
  </span>
  <button
  onClick={() => setPage(p => Math.min(totalPages, p + 1))}

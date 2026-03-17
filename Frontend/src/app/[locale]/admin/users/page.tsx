@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { listUsers, toggleUserLock, addUserBalance, AdminUserItem } from "@/actions/adminActions";
 import toast from 'react-hot-toast';
+import { useLocale, useTranslations } from "next-intl";
 import { Users, Search, Lock, Unlock, Plus, Gem, Coins, ChevronLeft, ChevronRight,
  Activity,
  Star,
@@ -17,6 +18,8 @@ interface User extends AdminUserItem {
 }
 
 export default function AdminUsersPage() {
+ const t = useTranslations("Admin");
+ const locale = useLocale();
  const [users, setUsers] = useState<User[]>([]);
  const [totalCount, setTotalCount] = useState(0);
  const [page, setPage] = useState(1);
@@ -75,13 +78,13 @@ export default function AdminUsersPage() {
  try {
  const success = await toggleUserLock(id, !isLocked);
  if (success) {
- toast.success(!isLocked ? "Đã khóa tài khoản thành công." : "Đã mở khóa tài khoản.");
+ toast.success(!isLocked ? t("users.toast.lock_success") : t("users.toast.unlock_success"));
  await fetchUsers();
  } else {
- toast.error("Lỗi khi thay đổi trạng thái tài khoản.");
+ toast.error(t("users.toast.toggle_failed"));
  }
  } catch {
- toast.error("Lỗi kết nối.");
+ toast.error(t("users.toast.network_error"));
  } finally {
  setActionLoading(false);
  }
@@ -90,23 +93,24 @@ export default function AdminUsersPage() {
  const handleAddBalance = async () => {
  if (!selectedUser) return;
  if (addAmount <= 0) {
- toast.error("Số tiền phải lớn hơn 0");
+ toast.error(t("users.toast.amount_invalid"));
  return;
  }
 
  setActionLoading(true);
  try {
+ const currencyLabel = addCurrency === "gold" ? t("users.add_balance.currency_gold") : t("users.add_balance.currency_diamond");
  const success = await addUserBalance(selectedUser.id, addCurrency, addAmount, addReason || `Admin manual topup ${addCurrency}`);
  if (success) {
  setIsAddBalanceOpen(false);
  setAddReason("");
- toast.success(`Đã cộng ${addAmount} ${addCurrency} thành công!`);
+ toast.success(t("users.toast.add_success", { amount: addAmount, currency: currencyLabel }));
  await fetchUsers();
  } else {
- toast.error("Lỗi khi cộng tiền.");
+ toast.error(t("users.toast.add_failed"));
  }
  } catch {
- toast.error("Lỗi hệ thống.");
+ toast.error(t("users.toast.system_error"));
  } finally {
  setActionLoading(false);
  }
@@ -126,11 +130,12 @@ export default function AdminUsersPage() {
  {confirmModal.user?.isLocked ? <Unlock className="w-8 h-8" /> : <Lock className="w-8 h-8" />}
  </div>
  <h3 className="text-xl font-black tn-text-primary uppercase italic tracking-tighter text-center mb-2">
- {confirmModal.user?.isLocked ? "Mở khóa Tài khoản?" : "Khóa Tài khoản này?"}
+ {confirmModal.user?.isLocked ? t("users.lock_modal.title_unlock") : t("users.lock_modal.title_lock")}
  </h3>
  <p className="text-xs tn-text-muted font-medium text-center leading-relaxed mb-8">
- Xác nhận {confirmModal.user?.isLocked ? 'cho phép linh hồn này tiếp tục hành trình' : 'ngăn chặn sự truy cập'} của người dùng: <br/>
- <span className="tn-text-secondary font-bold">{confirmModal.user?.displayName}</span>
+ {confirmModal.user?.isLocked
+ ? t("users.lock_modal.desc_unlock", { name: confirmModal.user?.displayName || "" })
+ : t("users.lock_modal.desc_lock", { name: confirmModal.user?.displayName || "" })}
  </p>
  <div className="flex gap-4">
  <Button
@@ -138,14 +143,14 @@ export default function AdminUsersPage() {
  onClick={() => setConfirmModal(prev => ({...prev, isOpen: false}))}
  className="flex-1"
  >
- Hủy
+ {t("users.lock_modal.cancel")}
  </Button>
  <Button
  variant={confirmModal.user?.isLocked ? 'primary' : 'danger'}
  onClick={handleConfirmToggleLock}
  className="flex-1"
  >
- Thực hiện
+ {t("users.lock_modal.confirm")}
  </Button>
  </div>
  </div>
@@ -154,17 +159,17 @@ export default function AdminUsersPage() {
  {/* Header Area */}
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
  <SectionHeader
- tag="Database"
+ tag={t("users.header.tag")}
  tagIcon={<Users className="w-3 h-3 text-[var(--purple-accent)]" />}
- title="Quản Lý Người Dùng"
- subtitle={`Tổng cộng ${totalCount} linh hồn đang hiện diện trong hệ thống`}
+ title={t("users.header.title")}
+ subtitle={t("users.header.subtitle", { count: totalCount })}
  className="mb-0 text-left items-start"
  />
 
  <div className="flex items-center gap-3 shrink-0">
  <Input
  leftIcon={<Search className="w-4 h-4" />}
- placeholder="TÊN, EMAIL, USERNAME..."
+ placeholder={t("users.search.placeholder")}
  value={searchTerm}
  onChange={(e) => {
  setSearchTerm(e.target.value);
@@ -181,12 +186,12 @@ export default function AdminUsersPage() {
  <table className="w-full text-left">
  <thead>
  <tr className="border-b tn-border-soft tn-surface">
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Thông tin Tài khoản</th>
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Thứ hạng / XP</th>
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Tài sản (D/G)</th>
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Vai trò</th>
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-center">Trạng thái</th>
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-right">Hành động</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">{t("users.table.heading_account")}</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">{t("users.table.heading_rank")}</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">{t("users.table.heading_assets")}</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">{t("users.table.heading_role")}</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-center">{t("users.table.heading_status")}</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-right">{t("users.table.heading_actions")}</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-white/5">
@@ -195,7 +200,7 @@ export default function AdminUsersPage() {
  <td colSpan={6} className="px-8 py-20 text-center">
  <div className="flex flex-col items-center justify-center space-y-4">
  <Loader2 className="w-8 h-8 animate-spin text-[var(--purple-accent)]" />
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Đang truy vấn dữ liệu...</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("users.states.loading")}</span>
  </div>
  </td>
  </tr>
@@ -206,7 +211,7 @@ export default function AdminUsersPage() {
  <div className="w-16 h-16 rounded-full tn-panel-soft flex items-center justify-center">
  <Users className="w-8 h-8 text-[var(--text-tertiary)] opacity-50" />
  </div>
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">Vũ trụ trống rỗng, không tìm thấy linh hồn phù hợp.</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">{t("users.states.empty")}</span>
  </div>
  </td>
  </tr>
@@ -231,20 +236,20 @@ export default function AdminUsersPage() {
  <td className="px-8 py-5">
  <div className="flex items-center gap-2">
  <div className="px-2 py-0.5 rounded-md bg-[var(--warning)]/10 border border-[var(--warning)]/20 text-[9px] font-black text-[var(--warning)] shadow-inner">
- LV {u.level}
+ {t("users.row.level", { level: u.level })}
  </div>
- <div className="text-[10px] font-bold text-[var(--text-tertiary)]">{u.exp} EXP</div>
+ <div className="text-[10px] font-bold text-[var(--text-tertiary)]">{t("users.row.exp", { exp: u.exp })}</div>
  </div>
  </td>
  <td className="px-8 py-5">
  <div className="space-y-1">
  <div className="flex items-center gap-2 text-[11px] font-black tn-text-primary italic">
  <Gem className="w-3 h-3 text-[var(--purple-accent)]" />
- {u.diamondBalance.toLocaleString()}
+ {u.diamondBalance.toLocaleString(locale)}
  </div>
  <div className="flex items-center gap-2 text-[10px] font-bold text-[var(--warning)] italic">
  <Coins className="w-3 h-3" />
- {u.goldBalance.toLocaleString()}
+ {u.goldBalance.toLocaleString(locale)}
  </div>
  </div>
  </td>
@@ -257,7 +262,7 @@ export default function AdminUsersPage() {
  }
  `}>
  <Star className="w-2.5 h-2.5 fill-current" />
- {u.role}
+ {u.role === "admin" ? t("users.roles.admin") : u.role === "tarot_reader" ? t("users.roles.tarot_reader") : u.role === "user" ? t("users.roles.user") : u.role}
  </div>
  </td>
  <td className="px-8 py-5 text-center">
@@ -266,7 +271,7 @@ export default function AdminUsersPage() {
  ${u.isLocked ? "text-[var(--danger)]" : "text-[var(--success)]"}
  `}>
  {u.isLocked ? <Lock className="w-3 h-3" /> : <Activity className="w-3 h-3 animate-pulse" />}
- {u.isLocked ? "Bị Khóa" : "Hoạt Động"}
+ {u.isLocked ? t("users.status.locked") : t("users.status.active")}
  </div>
  </td>
  <td className="px-8 py-5 text-right">
@@ -277,7 +282,7 @@ export default function AdminUsersPage() {
  setIsAddBalanceOpen(true);
  }}
  className="p-2 rounded-xl bg-[var(--purple-accent)]/10 border border-[var(--purple-accent)]/20 text-[var(--purple-accent)] hover:bg-[var(--purple-accent)] hover:tn-text-primary transition-all shadow-md group border-transparent"
- title="Cộng tiền thủ công"
+ title={t("users.actions.add_balance_title")}
  >
  <Plus className="w-4 h-4" />
  </button>
@@ -287,7 +292,7 @@ export default function AdminUsersPage() {
  ? "bg-[var(--success)]/10 border-[var(--success)]/20 text-[var(--success)] hover:bg-[var(--success)] hover:tn-text-primary"
  : "bg-[var(--danger)]/10 border-[var(--danger)]/20 text-[var(--danger)] hover:bg-[var(--danger)] hover:tn-text-primary"
  }`}
- title={u.isLocked ? "Mở khóa" : "Khóa tài khoản"}
+ title={u.isLocked ? t("users.actions.unlock_title") : t("users.actions.lock_title")}
  >
  {u.isLocked ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
  </button>
@@ -303,7 +308,7 @@ export default function AdminUsersPage() {
  {/* Pagination */}
  <div className="px-8 py-6 tn-surface-soft flex flex-col md:flex-row md:items-center justify-between gap-4 border-t tn-border-soft">
  <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] text-left">
- Vũ trụ {page} <span className="mx-2 opacity-30">|</span> Tổng {totalCount} người dùng
+ {t("users.pagination.summary", { page, total: totalCount })}
  </div>
  <div className="flex items-center gap-3">
  <button
@@ -337,8 +342,8 @@ export default function AdminUsersPage() {
  <Gem className="w-6 h-6 text-[var(--purple-accent)]" />
  </div>
  <div className="text-left">
- <h2 className="text-xl font-black tn-text-primary uppercase italic tracking-tighter drop-shadow-md">Cộng tiền Thủ công</h2>
- <p className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">Manual Balance Intervention</p>
+ <h2 className="text-xl font-black tn-text-primary uppercase italic tracking-tighter drop-shadow-md">{t("users.add_balance.title")}</h2>
+ <p className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">{t("users.add_balance.subtitle")}</p>
  </div>
  </div>
  <button onClick={() => setIsAddBalanceOpen(false)}
@@ -351,7 +356,7 @@ export default function AdminUsersPage() {
  {/* Modal Body */}
  <div className="p-10 space-y-8">
  <div className="space-y-3">
- <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] block text-left">Người nhận vận may</label>
+ <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] block text-left">{t("users.add_balance.recipient_label")}</label>
  <div className="flex items-center gap-4 p-5 rounded-2xl tn-panel-soft group transition-colors hover:tn-border shadow-inner">
  <div className="w-10 h-10 rounded-xl bg-[var(--purple-accent)]/20 flex items-center justify-center font-black text-xs tn-text-primary">
  {selectedUser?.displayName?.charAt(0) || 'U'}
@@ -371,7 +376,7 @@ export default function AdminUsersPage() {
  <div className={`p-2.5 rounded-xl border w-fit shadow-inner ${addCurrency === "gold" ? "bg-[var(--warning)]/20 border-[var(--warning)]/30" : "tn-panel"}`}>
  <Coins className={`w-5 h-5 ${addCurrency === "gold" ? "text-[var(--warning)]" : "text-[var(--text-secondary)]"}`} />
  </div>
- <span className={`text-[11px] font-black uppercase tracking-[0.2em] ${addCurrency === "gold" ? "text-[var(--warning)]" : "text-[var(--text-secondary)]"}`}>Gold</span>
+ <span className={`text-[11px] font-black uppercase tracking-[0.2em] ${addCurrency === "gold" ? "text-[var(--warning)]" : "text-[var(--text-secondary)]"}`}>{t("users.add_balance.currency_gold")}</span>
  </div>
  {addCurrency === "gold" && <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-[var(--warning)]/20 blur-2xl rounded-full" />}
  </button>
@@ -383,7 +388,7 @@ export default function AdminUsersPage() {
  <div className={`p-2.5 rounded-xl border w-fit shadow-inner ${addCurrency === "diamond" ? "bg-[var(--purple-accent)]/20 border-[var(--purple-accent)]/30" : "tn-panel"}`}>
  <Gem className={`w-5 h-5 ${addCurrency === "diamond" ? "text-[var(--purple-accent)]" : "text-[var(--text-secondary)]"}`} />
  </div>
- <span className={`text-[11px] font-black uppercase tracking-[0.2em] ${addCurrency === "diamond" ? "text-[var(--purple-accent)]" : "text-[var(--text-secondary)]"}`}>Diamond</span>
+ <span className={`text-[11px] font-black uppercase tracking-[0.2em] ${addCurrency === "diamond" ? "text-[var(--purple-accent)]" : "text-[var(--text-secondary)]"}`}>{t("users.add_balance.currency_diamond")}</span>
  </div>
  {addCurrency === "diamond" && <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-[var(--purple-accent)]/20 blur-2xl rounded-full" />}
  </button>
@@ -391,7 +396,7 @@ export default function AdminUsersPage() {
 
  <div className="space-y-4">
  <div className="space-y-3">
- <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] block text-left">Số lượng tài sản</label>
+ <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] block text-left">{t("users.add_balance.amount_label")}</label>
  <div className="relative group">
  <input
  type="number"
@@ -406,11 +411,11 @@ export default function AdminUsersPage() {
  </div>
 
  <div className="space-y-3">
- <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] block text-left">Lý do can thiệp</label>
+ <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] block text-left">{t("users.add_balance.reason_label")}</label>
  <textarea
  value={addReason}
  onChange={(e) => setAddReason(e.target.value)}
- placeholder="Ví dụ: Đền bù lỗi hệ thống, Quà tặng sự kiện..."
+ placeholder={t("users.add_balance.reason_placeholder")}
  className="w-full tn-field rounded-2xl px-6 py-4 text-xs font-bold tn-text-primary tn-field-accent transition-all h-24 resize-none placeholder:tn-text-muted shadow-inner"
  />
  </div>
@@ -422,7 +427,7 @@ export default function AdminUsersPage() {
  onClick={() => setIsAddBalanceOpen(false)}
  className="flex-1 py-6"
  >
- Hủy tác vụ
+ {t("users.add_balance.cancel")}
  </Button>
  <Button
  variant="primary"
@@ -434,7 +439,7 @@ export default function AdminUsersPage() {
  <Loader2 className="w-5 h-5 animate-spin mx-auto" />
  ) : (
  <span className="flex items-center justify-center gap-2">
- Kích hoạt <Plus className="w-4 h-4" />
+ {t("users.add_balance.submit")} <Plus className="w-4 h-4" />
  </span>
  )}
  </Button>

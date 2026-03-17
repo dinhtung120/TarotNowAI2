@@ -4,10 +4,11 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/routing";
 import { revealReadingSession } from "@/actions/readingActions";
-import { TAROT_DECK } from "@/lib/tarotData";
+import { TAROT_CARD_COUNT, TAROT_DECK } from "@/lib/tarotData";
 import { Sparkles, ArrowLeft, RefreshCw, Dices } from "lucide-react";
 import AiInterpretationStream from "@/components/AiInterpretationStream";
 import AstralBackground from "@/components/layout/AstralBackground";
+import { useTranslations } from "next-intl";
 
 // Generate positions for an elegant fanning and splitting shuffle effect
 const generateShufflePaths = () => {
@@ -36,6 +37,10 @@ export default function ReadingSessionPage() {
  const params = useParams();
  const router = useRouter();
  const sessionId = params.id as string;
+ const t = useTranslations("ReadingSession");
+ const tAi = useTranslations("AiInterpretation");
+ const tTarot = useTranslations("Tarot");
+ const sessionShort = sessionId.split("-")[0];
 
  const [cards, setCards] = useState<number[]>([]);
 
@@ -74,7 +79,7 @@ export default function ReadingSessionPage() {
  });
 
  } else {
- setError(response.error || "Failed to reveal cards.");
+ setError(response.error || t("errors.reveal_failed"));
  }
  setIsRevealing(false);
  };
@@ -87,7 +92,7 @@ export default function ReadingSessionPage() {
  if (isRevealing || pickedCards.length >= cardsToDraw) return;
 
  const remainingCount = cardsToDraw - pickedCards.length;
- const availableIdxs = Array.from({ length: 78 })
+ const availableIdxs = Array.from({ length: TAROT_CARD_COUNT })
  .map((_, i) => i)
  .filter(idx => !pickedCards.includes(idx));
 
@@ -125,13 +130,13 @@ export default function ReadingSessionPage() {
  className="flex items-center tn-text-secondary hover:tn-text-primary transition"
  >
  <ArrowLeft className="w-5 h-5 mr-2" />
- Về trang rút bài
+ {t("header.back_to_setup")}
  </button>
  <div className="text-right">
  <h1 className="text-2xl font-bold bg-gradient-to-r from-[var(--purple-accent)] to-[var(--warning)] text-transparent bg-clip-text">
- The Mystical Realm
+ {t("header.title")}
  </h1>
- <p className="text-xs tn-text-muted font-mono mt-1">Session: {sessionId.split('-')[0]}...</p>
+ <p className="text-xs tn-text-muted font-mono mt-1">{t("header.session", { id: sessionShort })}</p>
  </div>
  </div>
 
@@ -141,7 +146,7 @@ export default function ReadingSessionPage() {
  {/* Question Display */}
  {question && (
  <div className="tn-overlay p-6 rounded-2xl border border-[var(--purple-accent)]/20 text-center ">
- <p className="text-sm text-[var(--purple-accent)] uppercase tracking-widest mb-2 font-semibold">Tâm Niệm</p>
+ <p className="text-sm text-[var(--purple-accent)] uppercase tracking-widest mb-2 font-semibold">{t("question.label")}</p>
  <p className="text-xl font-serif tn-text-primary italic">&quot;{question}&quot;</p>
  </div>
  )}
@@ -181,11 +186,11 @@ export default function ReadingSessionPage() {
  ))}
  </div>
  <h2 className="text-2xl font-serif font-medium bg-gradient-to-r from-[var(--purple-accent)] via-[var(--danger)] to-[var(--warning)] text-transparent bg-clip-text animate-pulse drop-shadow-sm">
- Thiết Lập Kết Nối...
+ {t("shuffle.connecting_title")}
  </h2>
  <p className="text-sm tn-text-secondary mt-3 flex items-center">
  <RefreshCw className="w-4 h-4 mr-2 animate-spin text-[var(--purple-accent)]" />
- Các lá bài đang được thanh tẩy
+ {t("shuffle.cleansing")}
  </p>
  </div>
  ) : (
@@ -193,11 +198,11 @@ export default function ReadingSessionPage() {
  <div className="mb-4 text-center">
  <h2 className="text-2xl text-[var(--purple-accent)] font-medium mb-2 drop-shadow-[0_0_10px_var(--c-168-85-247-50)]">
  {pickedCards.length < cardsToDraw
- ? `Hãy tĩnh tâm và chọn ${cardsToDraw - pickedCards.length} lá bài`
- : "Các lá bài đã an bài"}
+ ? t("pick.prompt", { remaining: cardsToDraw - pickedCards.length })
+ : t("pick.done")}
  </h2>
  <p className="text-sm tn-text-secondary">
- {pickedCards.length}/{cardsToDraw} lá bài
+ {t("pick.count", { picked: pickedCards.length, total: cardsToDraw })}
  </p>
  {pickedCards.length < cardsToDraw && (
  <button
@@ -205,14 +210,14 @@ export default function ReadingSessionPage() {
  className="mt-4 relative z-50 flex items-center gap-2 px-6 py-2.5 rounded-full tn-surface-strong border border-[var(--purple-accent)]/50 text-xs font-bold text-[var(--purple-accent)] hover:bg-[var(--purple-accent)]/60 hover:border-[var(--purple-accent)] hover:tn-text-primary transition-all shadow-[0_0_20px_var(--c-168-85-247-20)] group active:scale-95"
  >
  <Dices className="w-4 h-4 group-hover:rotate-12 transition-transform" />
- Chọn ngẫu nhiên
+ {t("pick.random")}
  </button>
  )}
  </div>
 
  <div className={`relative w-full h-[300px] md:h-[400px] flex justify-center -mt-24 sm:-mt-28 mb-20 transition-opacity duration-1000
  ${pickedCards.length === cardsToDraw ? 'opacity-30 blur-sm pointer-events-none' : ''}`}>
- {Array.from({ length: 78 }).map((_, idx) => {
+ {Array.from({ length: TAROT_CARD_COUNT }).map((_, idx) => {
  const isPicked = pickedCards.includes(idx);
  const angle = -50 + (idx * (100 / 77));
 
@@ -259,8 +264,8 @@ export default function ReadingSessionPage() {
  <div className="w-16 h-16 bg-[var(--purple-accent)]/20 rounded-full flex items-center justify-center mb-6">
  <Sparkles className="w-8 h-8 text-[var(--warning)] animate-pulse" />
  </div>
- <h3 className="text-2xl font-serif font-bold tn-text-primary mb-2">Các Lá Bài Đã Được Chọn</h3>
- <p className="tn-text-secondary mb-8 text-sm">Vũ trụ đã lắng nghe. Hãy hít một hơi thật sâu trước khi đón nhận thông điệp.</p>
+ <h3 className="text-2xl font-serif font-bold tn-text-primary mb-2">{t("modal.title")}</h3>
+ <p className="tn-text-secondary mb-8 text-sm">{t("modal.desc")}</p>
 
  <button
  onClick={handleReveal}
@@ -272,7 +277,7 @@ export default function ReadingSessionPage() {
  ) : (
  <Sparkles className="w-5 h-5 mr-3 text-[var(--warning)] group-hover:animate-spin" />
  )}
- {isRevealing ? "Đang truyền năng lượng..." : "Truyền Năng Lượng & Lật Bài"}
+ {isRevealing ? t("modal.revealing") : t("modal.reveal")}
  </button>
 
  {!isRevealing && (
@@ -280,7 +285,7 @@ export default function ReadingSessionPage() {
  onClick={() => setPickedCards(prev => prev.slice(0, -1))}
  className="mt-6 text-sm font-medium tn-text-secondary hover:tn-text-primary transition-colors"
  >
- Đổi lá bài khác
+ {t("modal.change_card")}
  </button>
  )}
  </div>
@@ -296,7 +301,7 @@ export default function ReadingSessionPage() {
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 perspective-1000 items-start">
  {cards.map((cardId, index) => {
  const isFlipped = flippedIndex >= index;
- const cardData = TAROT_DECK.find(c => c.id === cardId) || TAROT_DECK[0];
+ const cardMeta = TAROT_DECK.find(c => c.id === cardId) || TAROT_DECK[0];
 
  return (
  <div key={index} className="flex flex-col items-center gap-3 w-full max-w-[180px] mx-auto">
@@ -315,20 +320,26 @@ export default function ReadingSessionPage() {
  <div className="absolute inset-0 backface-hidden w-full h-full bg-gradient-to-b from-[var(--warning)] to-[var(--warning)] rounded-xl border-2 border-[var(--warning)]/50 shadow-[0_0_20px_var(--c-251-191-36-15)] flex flex-col items-center p-4"
  style={{ transform: 'rotateY(180deg)' }}>
  <div className="w-full text-center border-b border-[var(--warning)] pb-1.5 mb-2.5">
- <span className="text-[10px] font-bold text-[var(--warning)] uppercase tracking-widest">{cardData.suit}</span>
+ <span className="text-[10px] font-bold text-[var(--warning)] uppercase tracking-widest">
+ {tTarot(`suits.${cardMeta.suit}.full`)}
+ </span>
  </div>
  <div className="flex-1 w-full tn-surface-strong rounded-md mb-2.5 flex items-center justify-center shadow-inner overflow-hidden relative">
  <div className="absolute inset-0 bg-gradient-to-tr from-[var(--purple-accent)]/40 to-transparent"></div>
  <span className="text-4xl font-serif text-[var(--warning)]/70 drop-shadow-md">{index + 1}</span>
  </div>
- <h3 className="text-sm font-bold tn-text-ink font-serif leading-tight text-center">{cardData.name}</h3>
+ <h3 className="text-sm font-bold tn-text-ink font-serif leading-tight text-center">
+ {tTarot(`cards.c${cardId}.name`)}
+ </h3>
  </div>
  </div>
 
  {/* Meaning Short text */}
  <div className={`text-center transition-opacity duration-1000 delay-500 ${isFlipped ? 'opacity-100' : 'opacity-0'}`}>
- <p className="text-[10px] font-semibold text-[var(--purple-accent)] mb-1 uppercase tracking-widest">Ý nghĩa</p>
- <p className="text-xs tn-text-secondary leading-relaxed px-2 line-clamp-3">{cardData.meaning}</p>
+ <p className="text-[10px] font-semibold text-[var(--purple-accent)] mb-1 uppercase tracking-widest">{t("cards.meaning_label")}</p>
+ <p className="text-xs tn-text-secondary leading-relaxed px-2 line-clamp-3">
+ {tTarot(`cards.c${cardId}.meaning`)}
+ </p>
  </div>
  </div>
  );
@@ -347,12 +358,12 @@ export default function ReadingSessionPage() {
  <Sparkles className="w-5 h-5 text-[var(--purple-accent)] animate-pulse" />
  </div>
  <div>
- <h2 className="text-lg font-bold tn-text-primary">Lời Diễn Giải Từ Vũ Trụ</h2>
- <p className="text-[10px] tn-text-muted font-mono tracking-tighter uppercase">AI Divine Stream • {sessionId.substring(0, 8)}</p>
+ <h2 className="text-lg font-bold tn-text-primary">{tAi("title")}</h2>
+ <p className="text-[10px] tn-text-muted font-mono tracking-tighter uppercase">{t("ai.subtitle", { id: sessionId.substring(0, 8) })}</p>
  </div>
  </div>
  <div className="px-3 py-1 bg-[var(--purple-accent)]/10 border border-[var(--purple-accent)]/20 rounded-full">
- <span className="text-[10px] text-[var(--purple-accent)] font-bold uppercase tracking-widest">Live</span>
+ <span className="text-[10px] text-[var(--purple-accent)] font-bold uppercase tracking-widest">{t("ai.live")}</span>
  </div>
  </div>
  <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1 bg-gradient-to-b from-transparent to-[var(--purple-accent)]/5">
@@ -364,14 +375,14 @@ export default function ReadingSessionPage() {
  ) : (
  <div className="h-64 flex flex-col items-center justify-center text-center space-y-4 opacity-40">
  <RefreshCw className="w-10 h-10 tn-text-muted animate-spin" />
- <p className="tn-text-muted font-serif italic max-w-xs px-4">Đang chuẩn bị kết nối tâm linh... Vui lòng lật hết các lá bài để nhận thông điệp.</p>
+ <p className="tn-text-muted font-serif italic max-w-xs px-4">{t("ai.waiting_flip")}</p>
  </div>
  )}
  </div>
 
  {/* Bottom decorative area */}
  <div className="px-6 py-4 tn-overlay border-t tn-border flex items-center justify-between">
- <p className="text-[10px] tn-text-muted italic">Lắng nghe rung động từ những lá bài của bạn.</p>
+ <p className="text-[10px] tn-text-muted italic">{t("ai.footer_note")}</p>
  <div className="flex gap-1">
  <div className="w-1.5 h-1.5 rounded-full bg-[var(--purple-accent)]/40"></div>
  <div className="w-1.5 h-1.5 rounded-full bg-[var(--warning)]/40"></div>

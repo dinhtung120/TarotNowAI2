@@ -9,7 +9,7 @@
  * 4. UX Optimization: Tối ưu hóa hiển thị câu hỏi và thông tin người dùng.
  */
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getAllHistorySessionsAdminAction } from "@/actions/historyActions";
 import { History, Search, User, Calendar, BookOpen, CheckCircle2, Clock, ChevronLeft, ChevronRight,
  Loader2,
@@ -20,6 +20,7 @@ import { History, Search, User, Calendar, BookOpen, CheckCircle2, Clock, Chevron
 } from "lucide-react";
 import { SectionHeader, GlassCard, Button } from "@/components/ui";
 import toast from 'react-hot-toast';
+import { useLocale, useTranslations } from "next-intl";
 
 interface AdminReading {
  id: string;
@@ -40,6 +41,8 @@ interface PaginatedResponse {
 }
 
 export default function AdminReadingsPage() {
+ const t = useTranslations("Admin");
+ const locale = useLocale();
  const [data, setData] = useState<PaginatedResponse | null>(null);
  const [loading, setLoading] = useState(true);
  const [page, setPage] = useState(1);
@@ -50,7 +53,7 @@ export default function AdminReadingsPage() {
  const [startDate, setStartDate] = useState("");
  const [endDate, setEndDate] = useState("");
 
- const fetchReadings = async (pageNum: number, currentFilters: { uname: string, type: string, start: string, end: string }) => {
+ const fetchReadings = useCallback(async (pageNum: number, currentFilters: { uname: string, type: string, start: string, end: string }) => {
  setLoading(true);
  try {
  const result = await getAllHistorySessionsAdminAction({
@@ -65,18 +68,18 @@ export default function AdminReadingsPage() {
  if (result.success && result.data) {
  setData(result.data);
  } else if (result.error === 'unauthorized') {
- toast.error("Phiên đăng nhập hết hạn hoặc không có quyền.");
+ toast.error(t("readings.toast.unauthorized"));
  }
  } catch (err) {
  console.error(err);
  } finally {
  setLoading(false);
  }
- };
+ }, [t]);
 
  useEffect(() => {
- fetchReadings(page, { uname: username, type: spreadType, start: startDate, end: endDate });
- }, [page, username, spreadType, startDate, endDate]);
+ void fetchReadings(page, { uname: username, type: spreadType, start: startDate, end: endDate });
+ }, [fetchReadings, page, username, spreadType, startDate, endDate]);
 
  const handleSearch = (e: React.FormEvent) => {
  e.preventDefault();
@@ -84,15 +87,30 @@ export default function AdminReadingsPage() {
  fetchReadings(1, { uname: username, type: spreadType, start: startDate, end: endDate });
  };
 
+ const getSpreadLabel = (type: string) => {
+ switch (type) {
+ case "daily_1":
+ return t("readings.filters.spread_daily");
+ case "spread_3":
+ return t("readings.filters.spread_3");
+ case "spread_5":
+ return t("readings.filters.spread_5");
+ case "spread_10":
+ return t("readings.filters.spread_10");
+ default:
+ return type.replace("_", " ");
+ }
+ };
+
  return (
  <div className="space-y-8 pb-20 animate-in fade-in duration-700">
  {/* Header Area */}
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
  <SectionHeader
- tag="Monitoring"
+ tag={t("readings.header.tag")}
  tagIcon={<Eye className="w-3 h-3 text-[var(--purple-accent)]" />}
- title="Nhật ký Vận mệnh"
- subtitle={`Khám phá ${data?.totalCount || 0} hành trình tâm linh qua các lá bài Tarot`}
+ title={t("readings.header.title")}
+ subtitle={t("readings.header.subtitle", { count: data?.totalCount || 0 })}
  className="mb-0 text-left items-start"
  />
  </div>
@@ -102,12 +120,12 @@ export default function AdminReadingsPage() {
  >
  <div className="flex-1 min-w-[240px] space-y-3 text-left">
  <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] flex items-center gap-2">
- <User className="w-3.5 h-3.5" /> Linh hồn
+ <User className="w-3.5 h-3.5" /> {t("readings.filters.username_label")}
  </label>
  <div className="relative">
  <input type="text" value={username}
  onChange={(e) => setUsername(e.target.value)}
- placeholder="Tên người dùng..."
+ placeholder={t("readings.filters.username_placeholder")}
  className="w-full tn-field rounded-2xl px-5 py-4 text-xs font-black tn-text-primary tn-field-accent transition-all placeholder:text-[var(--text-tertiary)] shadow-inner"
  />
  </div>
@@ -115,23 +133,23 @@ export default function AdminReadingsPage() {
 
  <div className="w-56 space-y-3 text-left">
  <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] flex items-center gap-2">
- <BookOpen className="w-3.5 h-3.5" /> Trải bài
+ <BookOpen className="w-3.5 h-3.5" /> {t("readings.filters.spread_label")}
  </label>
  <select value={spreadType}
  onChange={(e) => setSpreadType(e.target.value)}
  className="w-full tn-field rounded-2xl px-5 py-4 text-xs font-black tn-text-primary tn-field-accent transition-all appearance-none cursor-pointer shadow-inner"
  >
- <option value="" className="tn-surface">Tất cả loại bài</option>
- <option value="daily_1" className="tn-surface">Daily 1 Card</option>
- <option value="spread_3" className="tn-surface">Spread 3 Cards</option>
- <option value="spread_5" className="tn-surface">Spread 5 Cards</option>
- <option value="spread_10" className="tn-surface">Spread 10 Cards</option>
+ <option value="" className="tn-surface">{t("readings.filters.spread_all")}</option>
+ <option value="daily_1" className="tn-surface">{t("readings.filters.spread_daily")}</option>
+ <option value="spread_3" className="tn-surface">{t("readings.filters.spread_3")}</option>
+ <option value="spread_5" className="tn-surface">{t("readings.filters.spread_5")}</option>
+ <option value="spread_10" className="tn-surface">{t("readings.filters.spread_10")}</option>
  </select>
  </div>
 
  <div className="w-44 space-y-3 text-left">
  <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] flex items-center gap-2">
- <Calendar className="w-3.5 h-3.5" /> Từ ngày
+ <Calendar className="w-3.5 h-3.5" /> {t("readings.filters.start_date_label")}
  </label>
  <input type="date" value={startDate}
  onChange={(e) => setStartDate(e.target.value)}
@@ -141,7 +159,7 @@ export default function AdminReadingsPage() {
 
  <div className="w-44 space-y-3 text-left">
  <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] flex items-center gap-2">
- <Calendar className="w-3.5 h-3.5" /> Đến ngày
+ <Calendar className="w-3.5 h-3.5" /> {t("readings.filters.end_date_label")}
  </label>
  <input type="date" value={endDate}
  onChange={(e) => setEndDate(e.target.value)}
@@ -154,7 +172,7 @@ export default function AdminReadingsPage() {
  className="px-8 py-4 shrink-0 shadow-md flex items-center justify-center min-w-[140px]"
  >
  <Search className="w-4 h-4" />
- Truy vấn
+ {t("readings.filters.submit")}
  </Button>
  </form>
 
@@ -164,11 +182,11 @@ export default function AdminReadingsPage() {
  <table className="w-full text-left">
  <thead>
  <tr className="border-b tn-border-soft tn-surface">
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-left">Dòng thời gian</th>
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-left">Linh hồn</th>
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-left">Loại trải bài</th>
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-left">Câu hỏi Truy vấn</th>
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-center text-left">Tình trạng</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-left">{t("readings.table.heading_timeline")}</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-left">{t("readings.table.heading_user")}</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-left">{t("readings.table.heading_spread")}</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-left">{t("readings.table.heading_question")}</th>
+ <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-center text-left">{t("readings.table.heading_status")}</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-white/5">
@@ -177,7 +195,7 @@ export default function AdminReadingsPage() {
  <td colSpan={5} className="px-8 py-20 text-center">
  <div className="flex flex-col items-center justify-center space-y-4">
  <Loader2 className="w-8 h-8 animate-spin text-[var(--purple-accent)] mx-auto" />
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Đang lật mở các chương vận mệnh...</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("readings.states.loading")}</span>
  </div>
  </td>
  </tr>
@@ -188,7 +206,7 @@ export default function AdminReadingsPage() {
  <div className="w-16 h-16 rounded-full tn-panel-soft flex items-center justify-center">
  <History className="w-8 h-8 text-[var(--text-tertiary)] opacity-50" />
  </div>
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">Không có lời tiên tri nào được tìm thấy.</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">{t("readings.states.empty")}</span>
  </div>
  </td>
  </tr>
@@ -198,10 +216,10 @@ export default function AdminReadingsPage() {
  <td className="px-8 py-6 whitespace-nowrap">
  <div className="flex flex-col text-left">
  <div className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-tighter italic">
- {new Date(r.createdAt).toLocaleDateString("vi-VN")}
+ {new Date(r.createdAt).toLocaleDateString(locale)}
  </div>
  <div className="text-[10px] font-bold text-[var(--text-tertiary)] italic">
- {new Date(r.createdAt).toLocaleTimeString("vi-VN")}
+ {new Date(r.createdAt).toLocaleTimeString(locale)}
  </div>
  </div>
  </td>
@@ -211,7 +229,7 @@ export default function AdminReadingsPage() {
  <User className="w-4 h-4 text-[var(--text-secondary)]" />
  </div>
  <div>
- <div className="text-[11px] font-black tn-text-primary uppercase tracking-tighter drop-shadow-sm">{r.username || "Chưa định danh"}</div>
+ <div className="text-[11px] font-black tn-text-primary uppercase tracking-tighter drop-shadow-sm">{r.username || t("readings.row.user_unknown")}</div>
  <div className="text-[9px] font-bold text-[var(--text-tertiary)] uppercase tracking-tighter flex items-center gap-1 mt-0.5">
  <Hash className="w-2.5 h-2.5 opacity-50" /> {r.userId.split('-')[0]}...
  </div>
@@ -221,12 +239,12 @@ export default function AdminReadingsPage() {
  <td className="px-8 py-6">
  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg tn-panel-soft text-[10px] font-black tn-text-primary uppercase tracking-widest italic text-left shadow-inner">
  <BookOpen className="w-3.5 h-3.5 text-[var(--purple-accent)]" />
- {r.spreadType.replace('_', ' ')}
+ {getSpreadLabel(r.spreadType)}
  </div>
  </td>
  <td className="px-8 py-6 max-w-[200px] truncate text-left">
  <p className="text-[11px] font-bold text-[var(--text-secondary)] italic uppercase leading-relaxed tracking-tight text-left">
- {r.question || "Linh hồn không đặt câu hỏi..."}
+ {r.question || t("readings.row.question_empty")}
  </p>
  </td>
  <td className="px-8 py-6 text-center">
@@ -236,7 +254,7 @@ export default function AdminReadingsPage() {
  }
  `}>
  {r.isCompleted ? <CheckCircle2 className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
- {r.isCompleted ? "Hoàn tất" : "Đang mở bài"}
+ {r.isCompleted ? t("readings.status.completed") : t("readings.status.processing")}
  </div>
  </td>
  </tr>
@@ -250,7 +268,7 @@ export default function AdminReadingsPage() {
  {data && data.totalPages > 1 && (
  <div className="px-8 py-6 tn-surface-soft flex flex-col md:flex-row md:items-center justify-between gap-4 border-t tn-border-soft">
  <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] text-left">
- Chương {data.page} <span className="mx-2 opacity-50">/</span> {data.totalPages} đại lục vận mệnh
+ {t("readings.pagination.summary", { page: data.page, total: data.totalPages })}
  </div>
  <div className="flex items-center gap-3">
  <button
@@ -277,7 +295,7 @@ export default function AdminReadingsPage() {
  {!loading && data && (
  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
  <GlassCard className="!p-8 group flex flex-col justify-between min-h-[160px] text-left hover:border-[var(--purple-accent)]/30 transition-all">
- <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Tổng hành trình</div>
+ <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("readings.insights.total_title")}</div>
  <div className="flex items-end justify-between">
  <div className="text-4xl font-black tn-text-primary italic tracking-tighter drop-shadow-md">{data?.totalCount ?? 0}</div>
  <History className="w-12 h-12 text-[var(--purple-accent)]/20 -mb-2 -mr-2 group-hover:scale-110 group-hover:-rotate-12 transition-transform duration-500" />
@@ -289,15 +307,15 @@ export default function AdminReadingsPage() {
  <Sparkles className="w-6 h-6 text-[var(--success)]" />
  </div>
  <div>
- <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Chu kỳ cập nhật</div>
- <div className="text-sm font-black tn-text-primary uppercase italic tracking-tighter drop-shadow-md mt-1">Thời gian thực</div>
+ <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("readings.insights.update_label")}</div>
+ <div className="text-sm font-black tn-text-primary uppercase italic tracking-tighter drop-shadow-md mt-1">{t("readings.insights.update_value")}</div>
  </div>
  </GlassCard>
 
  <GlassCard className="!p-8 flex items-center justify-between group overflow-hidden relative text-left hover:border-[var(--accent)]/30 transition-all">
  <div className="relative z-10 text-left">
- <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">Khu vực Giám sát</div>
- <div className="text-sm font-black tn-text-primary uppercase italic tracking-tighter drop-shadow-md mt-1">Sổ lệnh Admin</div>
+ <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("readings.insights.monitor_label")}</div>
+ <div className="text-sm font-black tn-text-primary uppercase italic tracking-tighter drop-shadow-md mt-1">{t("readings.insights.monitor_value")}</div>
  </div>
  <ArrowUpRight className="w-12 h-12 text-[var(--text-secondary)] absolute right-8 group-hover:text-[var(--accent)] transition-colors duration-500" />
  <div className="absolute inset-0 bg-gradient-to-tr from-transparent to-[var(--accent)]/5 translate-y-full group-hover:translate-y-0 transition-transform duration-700" />

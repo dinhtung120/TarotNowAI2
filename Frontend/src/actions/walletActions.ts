@@ -2,8 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { PaginatedList, WalletBalance, WalletTransaction } from '@/types/wallet';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5037/api/v1';
+import { API_BASE_URL } from '@/lib/api';
 
 export async function getWalletBalance(): Promise<WalletBalance | null> {
  const cookieStore = await cookies();
@@ -12,7 +11,7 @@ export async function getWalletBalance(): Promise<WalletBalance | null> {
  const accessToken = cookieStore.get('accessToken')?.value; // Replace with actual token retrieval method
 
  try {
- const response = await fetch(`${API_URL}/Wallet/balance`, {
+ const response = await fetch(`${API_BASE_URL}/Wallet/balance`, {
  method: 'GET',
  headers: {
  'Authorization': `Bearer ${accessToken}`,
@@ -38,7 +37,7 @@ export async function getLedger(page = 1, limit = 20): Promise<PaginatedList<Wal
  const accessToken = cookieStore.get('accessToken')?.value;
 
  try {
- const response = await fetch(`${API_URL}/Wallet/ledger?page=${page}&limit=${limit}`, {
+ const response = await fetch(`${API_BASE_URL}/Wallet/ledger?page=${page}&limit=${limit}`, {
  method: 'GET',
  headers: {
  'Authorization': `Bearer ${accessToken}`,

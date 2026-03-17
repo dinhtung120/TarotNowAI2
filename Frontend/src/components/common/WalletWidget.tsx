@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { Coins, Gem } from 'lucide-react';
 import { useWalletStore } from '@/store/walletStore';
+import { useLocale, useTranslations } from 'next-intl';
 
 /**
  * Component WalletWidget (Ví Hiển Thị Nhanh)
@@ -12,6 +13,8 @@ import { useWalletStore } from '@/store/walletStore';
  * - Tại sao lại tách Freeze Diamond: Để trải nghiệm người dùng minh bạch, họ biết bao nhiêu Diamond đang bị giam (escrow) trong lúc đặt câu hỏi AI.
  */
 export default function WalletWidget() {
+ const t = useTranslations("Wallet");
+ const locale = useLocale();
  // Lấy trạng thái số dư, hàm gọi API (fetchBalance) và cờ loading từ store Zustand.
  const { balance, fetchBalance, isLoading } = useWalletStore();
 
@@ -30,25 +33,28 @@ export default function WalletWidget() {
 
  // Trả về UI hiển thị số Gold và Diamond: 13px, căn lề trái, padding và gap siêu nhỏ.
  return (
- <div className="flex flex-col justify-center items-start gap-0 px-2 py-0.5 rounded-lg bg-[var(--bg-glass)] border border-[var(--border-subtle)] hover:bg-[var(--bg-glass-hover)] transition-all cursor-pointer group" title="Ví của bạn">
+ <div
+ className="flex flex-col justify-center items-start gap-0 px-2 py-0.5 rounded-lg bg-[var(--bg-glass)] border border-[var(--border-subtle)] hover:bg-[var(--bg-glass-hover)] transition-all cursor-pointer group"
+ title={t("widget.title")}
+ >
  {/* Hàng DIAMOND (Trên) */}
- <div className="flex items-center gap-1 leading-none py-0.5" title="Diamond - Premium">
+ <div className="flex items-center gap-1 leading-none py-0.5" title={t("widget.diamond_title")}>
  <Gem className="w-3 h-3 text-[var(--purple-accent)] group-hover:animate-pulse" />
  <span className="text-[var(--purple-muted)] font-bold text-[13px] tracking-tighter">
- {balance.diamondBalance.toLocaleString()}
+ {balance.diamondBalance.toLocaleString(locale)}
  </span>
  {balance.frozenDiamondBalance > 0 && (
  <span className="text-[var(--text-muted)] text-[10px] font-medium ml-0.5">
- (+{balance.frozenDiamondBalance.toLocaleString()})
+ {t("widget.frozen_suffix", { amount: balance.frozenDiamondBalance.toLocaleString(locale) })}
  </span>
  )}
  </div>
 
  {/* Hàng GOLD (Dưới) */}
- <div className="flex items-center gap-1 leading-none py-0.5 border-t border-[var(--border-subtle)] w-full justify-start" title="Gold - Free">
+ <div className="flex items-center gap-1 leading-none py-0.5 border-t border-[var(--border-subtle)] w-full justify-start" title={t("widget.gold_title")}>
  <Coins className="w-3 h-3 text-[color:var(--c-hex-b89c4f)] group-hover:animate-spin" style={{ animationDuration: '3s' }} />
  <span className="text-[color:var(--c-hex-b89c4f)] font-bold text-[13px] tracking-tighter">
- {balance.goldBalance.toLocaleString()}
+ {balance.goldBalance.toLocaleString(locale)}
  </span>
  </div>
  </div>
