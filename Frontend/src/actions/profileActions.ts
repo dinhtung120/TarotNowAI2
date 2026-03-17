@@ -6,7 +6,7 @@
  * Tại sao cần Server Action thay vì gọi fetch trực tiếp từ Client Component?
  * - Bảo mật: Token xác thực được giữ an toàn phía server, không bị lộ ra client code.
  * - Nhất quán: Tất cả các trang khác (Auth, Wallet, Reading) đều dùng Server Actions.
- *   Profile page là trang DUY NHẤT gọi trực tiếp fetch() → tạo bất nhất quán và lỗi URL.
+ * Profile page là trang DUY NHẤT gọi trực tiếp fetch() → tạo bất nhất quán và lỗi URL.
  * - Đúng chuẩn Clean Architecture: Client Component → Server Action → Backend API.
  *
  * Trước khi sửa, Profile page gọi "/api/v1/profile" (URL tương đối → Next.js server),
@@ -28,8 +28,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5037/a
  * - Server Actions chạy trên server nên có thể đọc cookie trực tiếp.
  */
 async function getAccessToken(): Promise<string | undefined> {
-    const cookieStore = await cookies();
-    return cookieStore.get('accessToken')?.value;
+ const cookieStore = await cookies();
+ return cookieStore.get('accessToken')?.value;
 }
 
 /**
@@ -37,29 +37,29 @@ async function getAccessToken(): Promise<string | undefined> {
  * Gọi [GET] /api/v1/profile với Bearer token.
  */
 export async function getProfileAction() {
-    try {
-        const token = await getAccessToken();
-        if (!token) {
-            return { error: 'Chưa đăng nhập' };
-        }
+ try {
+ const token = await getAccessToken();
+ if (!token) {
+ return { error: 'Chưa đăng nhập' };
+ }
 
-        const response = await fetch(`${API_BASE_URL}/profile`, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-        });
+ const response = await fetch(`${API_BASE_URL}/profile`, {
+ headers: {
+ 'Content-Type': 'application/json',
+ 'Authorization': `Bearer ${token}`
+ },
+ });
 
-        if (!response.ok) {
-            const result = await response.json().catch(() => ({}));
-            return { error: result.message || 'Không thể tải thông tin cá nhân' };
-        }
+ if (!response.ok) {
+ const result = await response.json().catch(() => ({}));
+ return { error: result.message || 'Không thể tải thông tin cá nhân' };
+ }
 
-        const data = await response.json();
-        return { success: true, data };
-    } catch {
-        return { error: 'Lỗi kết nối mạng' };
-    }
+ const data = await response.json();
+ return { success: true, data };
+ } catch {
+ return { error: 'Lỗi kết nối mạng' };
+ }
 }
 
 /**
@@ -69,32 +69,32 @@ export async function getProfileAction() {
  * @param profileData - Đối tượng chứa displayName, avatarUrl, dateOfBirth
  */
 export async function updateProfileAction(profileData: {
-    displayName: string;
-    avatarUrl: string | null;
-    dateOfBirth: string;
+ displayName: string;
+ avatarUrl: string | null;
+ dateOfBirth: string;
 }) {
-    try {
-        const token = await getAccessToken();
-        if (!token) {
-            return { error: 'Chưa đăng nhập' };
-        }
+ try {
+ const token = await getAccessToken();
+ if (!token) {
+ return { error: 'Chưa đăng nhập' };
+ }
 
-        const response = await fetch(`${API_BASE_URL}/profile`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(profileData),
-        });
+ const response = await fetch(`${API_BASE_URL}/profile`, {
+ method: 'PATCH',
+ headers: {
+ 'Content-Type': 'application/json',
+ 'Authorization': `Bearer ${token}`
+ },
+ body: JSON.stringify(profileData),
+ });
 
-        if (!response.ok) {
-            const result = await response.json().catch(() => ({}));
-            return { error: result.message || 'Cập nhật thất bại' };
-        }
+ if (!response.ok) {
+ const result = await response.json().catch(() => ({}));
+ return { error: result.message || 'Cập nhật thất bại' };
+ }
 
-        return { success: true };
-    } catch {
-        return { error: 'Lỗi kết nối mạng' };
-    }
+ return { success: true };
+ } catch {
+ return { error: 'Lỗi kết nối mạng' };
+ }
 }

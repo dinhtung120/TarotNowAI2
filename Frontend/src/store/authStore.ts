@@ -3,11 +3,11 @@ import { persist } from 'zustand/middleware';
 import { UserProfile } from '../types/auth';
 
 interface AuthState {
-    user: UserProfile | null;
-    accessToken: string | null;
-    isAuthenticated: boolean;
-    setAuth: (user: UserProfile, token: string) => void;
-    clearAuth: () => void;
+ user: UserProfile | null;
+ accessToken: string | null;
+ isAuthenticated: boolean;
+ setAuth: (user: UserProfile, token: string) => void;
+ clearAuth: () => void;
 }
 
 /**
@@ -15,16 +15,16 @@ interface AuthState {
  * Có lưu giữ cấu hình persist vào localStorage để chống mất phiên (session) khi F5.
  */
 export const useAuthStore = create<AuthState>()(
-    persist(
-        (set) => ({
-            user: null,
-            accessToken: null,
-            isAuthenticated: false,
-            setAuth: (user, token) => set({ user, accessToken: token, isAuthenticated: true }),
-            clearAuth: () => set({ user: null, accessToken: null, isAuthenticated: false }),
-        }),
-        {
-            name: 'tarot-now-auth', // Tên key trong localStorage
-        }
-    )
+ persist(
+ (set) => ({
+ user: null,
+ accessToken: null,
+ isAuthenticated: false,
+ setAuth: (user, token) => set({ user, accessToken: token, isAuthenticated: true }),
+ clearAuth: () => set({ user: null, accessToken: null, isAuthenticated: false }),
+ }),
+ {
+ name: 'tarot-now-auth', // Tên key trong localStorage
+ }
+ )
 );

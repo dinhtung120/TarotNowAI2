@@ -14,162 +14,154 @@ import UserLayout from "@/components/layout/UserLayout";
 import { GlassCard, Button, SectionHeader, Input } from "@/components/ui";
 
 const formSchema = z.object({
-    question: z.string().max(300, "Question is too long").optional(),
+ question: z.string().max(300, "Question is too long").optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
 export default function ReadingSetupPage() {
-    const router = useRouter();
-    const t = useTranslations("ReadingSetup");
-    const { fetchBalance } = useWalletStore();
-    const [selectedSpread, setSelectedSpread] = useState<string>("daily_1");
-    const [initError, setInitError] = useState("");
-    const [isInitializing, setIsInitializing] = useState(false);
+ const router = useRouter();
+ const t = useTranslations("ReadingSetup");
+ const { fetchBalance } = useWalletStore();
+ const [selectedSpread, setSelectedSpread] = useState<string>("daily_1");
+ const [initError, setInitError] = useState("");
+ const [isInitializing, setIsInitializing] = useState(false);
 
-    const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
-        resolver: zodResolver(formSchema),
-    });
+ const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+ resolver: zodResolver(formSchema),
+ });
 
-    const SPREADS = [
-        { id: "daily_1", name: t("daily_1_name"), desc: t("daily_1_desc"), cost: "Free", icon: <Star className="w-5 h-5" /> },
-        { id: "spread_3", name: t("spread_3_name"), desc: t("spread_3_desc"), cost: "50 Gold", icon: <Flame className="w-5 h-5" /> },
-        { id: "spread_5", name: t("spread_5_name"), desc: t("spread_5_desc"), cost: "100 Gold", icon: <ShieldCheck className="w-5 h-5" /> },
-        { id: "spread_10", name: t("spread_10_name"), desc: t("spread_10_desc"), cost: "50 Diamond", icon: <Moon className="w-5 h-5" /> },
-    ];
+ const SPREADS = [
+ { id: "daily_1", name: t("daily_1_name"), desc: t("daily_1_desc"), cost: "Free", icon: <Star className="w-5 h-5" /> },
+ { id: "spread_3", name: t("spread_3_name"), desc: t("spread_3_desc"), cost: "50 Gold", icon: <Flame className="w-5 h-5" /> },
+ { id: "spread_5", name: t("spread_5_name"), desc: t("spread_5_desc"), cost: "100 Gold", icon: <ShieldCheck className="w-5 h-5" /> },
+ { id: "spread_10", name: t("spread_10_name"), desc: t("spread_10_desc"), cost: "50 Diamond", icon: <Moon className="w-5 h-5" /> },
+ ];
 
-    const onSubmit = async (data: FormData) => {
-        setIsInitializing(true);
-        setInitError("");
+ const onSubmit = async (data: FormData) => {
+ setIsInitializing(true);
+ setInitError("");
 
-        const response = await initReadingSession({
-            spreadType: selectedSpread
-        });
+ const response = await initReadingSession({
+ spreadType: selectedSpread
+ });
 
-        if (response.success && response.data) {
-            await fetchBalance();
+ if (response.success && response.data) {
+ await fetchBalance();
 
-            const cardsToDrawMap: Record<string, number> = {
-                "daily_1": 1,
-                "spread_3": 3,
-                "spread_5": 5,
-                "spread_10": 10,
-            };
-            const cardsToDraw = cardsToDrawMap[selectedSpread] || 1;
+ const cardsToDrawMap: Record<string, number> = {
+ "daily_1": 1,
+ "spread_3": 3,
+ "spread_5": 5,
+ "spread_10": 10,
+ };
+ const cardsToDraw = cardsToDrawMap[selectedSpread] || 1;
 
-            if (data.question) {
-                sessionStorage.setItem(`question_${response.data.sessionId}`, data.question);
-            }
-            sessionStorage.setItem(`cardsToDraw_${response.data.sessionId}`, cardsToDraw.toString());
+ if (data.question) {
+ sessionStorage.setItem(`question_${response.data.sessionId}`, data.question);
+ }
+ sessionStorage.setItem(`cardsToDraw_${response.data.sessionId}`, cardsToDraw.toString());
 
-            router.push(`/reading/session/${response.data.sessionId}`);
-        } else {
-            setInitError(response.error || "Failed to initialize reading session.");
-            setIsInitializing(false);
-        }
-    };
+ router.push(`/reading/session/${response.data.sessionId}`);
+ } else {
+ setInitError(response.error || "Failed to initialize reading session.");
+ setIsInitializing(false);
+ }
+ };
 
-    return (
-        <UserLayout>
-            <div className="max-w-4xl mx-auto px-6 pt-10 pb-20 font-sans">
-                <SectionHeader 
-                    title={t('title')}
-                    subtitle={t('subtitle')}
-                    tag="Ritual Setup"
-                    tagIcon={<Compass className="w-3 h-3" />}
-                    className="mb-10"
-                />
+ return (
+ <UserLayout>
+ <div className="max-w-4xl mx-auto px-6 pt-10 pb-20 font-sans">
+ <SectionHeader title={t('title')}
+ subtitle={t('subtitle')}
+ tag="Ritual Setup"
+ tagIcon={<Compass className="w-3 h-3" />}
+ className="mb-10"
+ />
 
-                {initError && (
-                    <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400 text-sm animate-in zoom-in-95">
-                        <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                        <p>{initError}</p>
-                    </div>
-                )}
+ {initError && (
+ <div className="mb-8 p-4 bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-xl flex items-center gap-3 text-[var(--danger)] text-sm animate-in zoom-in-95">
+ <AlertCircle className="w-5 h-5 flex-shrink-0" />
+ <p>{initError}</p>
+ </div>
+ )}
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
-                        {SPREADS.map((spread) => {
-                            const isSelected = selectedSpread === spread.id;
-                            const isFree = spread.cost === 'Free';
-                            const isPremium = spread.id === 'spread_10';
+ <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
+ {SPREADS.map((spread) => {
+ const isSelected = selectedSpread === spread.id;
+ const isFree = spread.cost === 'Free';
+ const isPremium = spread.id === 'spread_10';
 
-                            return (
-                                <GlassCard
-                                    key={spread.id}
-                                    variant={isSelected ? "elevated" : "interactive"}
-                                    className={`relative cursor-pointer transition-all duration-500 overflow-hidden ${
-                                        isSelected 
-                                            ? "border-[var(--purple-accent)]/50 shadow-[0_0_30px_rgba(168,85,247,0.15)] ring-1 ring-[var(--purple-accent)]/50" 
-                                            : "hover:border-white/10"
-                                    }`}
-                                    onClick={() => setSelectedSpread(spread.id)}
-                                    padding="lg"
-                                >
-                                    <div className="flex justify-between items-start mb-4 relative z-10">
-                                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-transform duration-500 ${
-                                            isSelected 
-                                                ? "bg-[var(--purple-accent)] text-black border-transparent scale-110 shadow-[0_0_20px_var(--purple-accent)]" 
-                                                : "bg-white/5 text-zinc-400 border-white/5 group-hover:bg-white/10 group-hover:scale-105"
-                                        }`}>
-                                            {spread.icon}
-                                        </div>
-                                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                                            isFree 
-                                                ? 'bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)]' 
-                                                : isPremium
-                                                    ? 'bg-[var(--info-bg)] text-[var(--info)] border-[var(--info)]'
-                                                    : 'bg-[var(--warning-bg)] text-[var(--warning)] border-[var(--warning)]'
-                                        }`}>
-                                            {spread.cost}
-                                        </span>
-                                    </div>
-                                    
-                                    <div className="relative z-10">
-                                        <h3 className={`text-xl font-bold mb-2 tracking-tight transition-colors ${
-                                            isSelected ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)] group-hover:text-white'
-                                        }`}>
-                                            {spread.name}
-                                        </h3>
-                                        <p className="text-[var(--text-tertiary)] text-sm leading-relaxed font-medium">
-                                            {spread.desc}
-                                        </p>
-                                    </div>
+ return (
+ <GlassCard
+ key={spread.id}
+ variant={isSelected ? "elevated" : "interactive"}
+ className={`relative cursor-pointer transition-all duration-500 overflow-hidden ${
+ isSelected ? "border-[var(--purple-accent)]/50 shadow-[0_0_30px_var(--c-168-85-247-15)] ring-1 ring-[var(--purple-accent)]/50" : "hover:tn-border"
+ }`}
+ onClick={() => setSelectedSpread(spread.id)}
+ padding="lg"
+ >
+ <div className="flex justify-between items-start mb-4 relative z-10">
+ <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-transform duration-500 ${
+ isSelected ? "bg-[var(--purple-accent)] tn-text-ink border-transparent scale-110 shadow-[0_0_20px_var(--purple-accent)]" : "tn-surface tn-text-secondary tn-border-soft group-hover:tn-surface-strong group-hover:scale-105"
+ }`}>
+ {spread.icon}
+ </div>
+ <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+ isFree ? 'bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)]' : isPremium
+ ? 'bg-[var(--info-bg)] text-[var(--info)] border-[var(--info)]'
+ : 'bg-[var(--warning-bg)] text-[var(--warning)] border-[var(--warning)]'
+ }`}>
+ {spread.cost}
+ </span>
+ </div>
+ <div className="relative z-10">
+ <h3 className={`text-xl font-bold mb-2 tracking-tight transition-colors ${
+ isSelected ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)] group-hover:tn-text-primary'
+ }`}>
+ {spread.name}
+ </h3>
+ <p className="text-[var(--text-tertiary)] text-sm leading-relaxed font-medium">
+ {spread.desc}
+ </p>
+ </div>
 
-                                    {/* Active Glow Effect */}
-                                    {isSelected && (
-                                        <div className="absolute inset-0 bg-gradient-to-br from-[var(--purple-accent)]/10 to-transparent pointer-events-none mix-blend-screen" />
-                                    )}
-                                </GlassCard>
-                            )
-                        })}
-                    </div>
+ {/* Active Glow Effect */}
+ {isSelected && (
+ <div className="absolute inset-0 bg-gradient-to-br from-[var(--purple-accent)]/10 to-transparent pointer-events-none " />
+ )}
+ </GlassCard>
+ )
+ })}
+ </div>
 
-                    <div className="animate-in fade-in slide-in-from-bottom-12 duration-700 delay-400">
-                        <Input
-                            label={t('question_label')}
-                            isTextarea
-                            placeholder={t('question_placeholder')}
-                            leftIcon={<Sparkles className="w-5 h-5 text-[var(--purple-accent)]" />}
-                            error={errors.question?.message}
-                            {...register("question")}
-                        />
-                    </div>
+ <div className="animate-in fade-in slide-in-from-bottom-12 duration-700 delay-400">
+ <Input
+ label={t('question_label')}
+ isTextarea
+ placeholder={t('question_placeholder')}
+ leftIcon={<Sparkles className="w-5 h-5 text-[var(--purple-accent)]" />}
+ error={errors.question?.message}
+ {...register("question")}
+ />
+ </div>
 
-                    <div className="flex justify-center pt-4 animate-in fade-in zoom-in-95 duration-700 delay-500">
-                        <Button
-                            type="submit"
-                            variant="brand"
-                            size="lg"
-                            isLoading={isInitializing}
-                            rightIcon={!isInitializing && <Zap className="w-5 h-5 ml-2" />}
-                            className="px-12 rounded-full font-black tracking-widest uppercase shadow-[0_10px_40px_rgba(255,255,255,0.15)] hover:shadow-[0_15px_50px_rgba(255,255,255,0.25)]"
-                        >
-                            {isInitializing ? t('preparing') : t('cta_draw')}
-                        </Button>
-                    </div>
-                </form>
-            </div>
-        </UserLayout>
-    );
+ <div className="flex justify-center pt-4 animate-in fade-in zoom-in-95 duration-700 delay-500">
+ <Button
+ type="submit"
+ variant="brand"
+ size="lg"
+ isLoading={isInitializing}
+ rightIcon={!isInitializing && <Zap className="w-5 h-5 ml-2" />}
+ className="px-12 rounded-full font-black tracking-widest uppercase shadow-[0_10px_40px_var(--c-255-255-255-15)] hover:shadow-[0_15px_50px_var(--c-255-255-255-25)]"
+ >
+ {isInitializing ? t('preparing') : t('cta_draw')}
+ </Button>
+ </div>
+ </form>
+ </div>
+ </UserLayout>
+ );
 }

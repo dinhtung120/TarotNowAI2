@@ -3,12 +3,12 @@
  *
  * Tại sao cần barrel export (index.ts)?
  * → Thay vì import từng file riêng lẻ:
- *   import Button from '@/components/ui/Button';
- *   import Badge from '@/components/ui/Badge';
- *   import GlassCard from '@/components/ui/GlassCard';
+ * import Button from '@/components/ui/Button';
+ * import Badge from '@/components/ui/Badge';
+ * import GlassCard from '@/components/ui/GlassCard';
  *
  * → Chỉ cần 1 dòng:
- *   import { Button, Badge, GlassCard } from '@/components/ui';
+ * import { Button, Badge, GlassCard } from '@/components/ui';
  *
  * → Gọn hơn, dễ quản lý import, IDE auto-complete tốt hơn.
  */

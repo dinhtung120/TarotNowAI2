@@ -10,8 +10,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5037/api/v1
 // ======================================================================
 
 async function getAccessToken(): Promise<string | undefined> {
-  const cookieStore = await cookies();
-  return cookieStore.get('accessToken')?.value;
+ const cookieStore = await cookies();
+ return cookieStore.get('accessToken')?.value;
 }
 
 // ======================================================================
@@ -20,43 +20,43 @@ async function getAccessToken(): Promise<string | undefined> {
 
 /** Conversation header */
 export interface ConversationDto {
-  id: string;
-  userId: string;
-  readerId: string;
-  status: string;
-  lastMessageAt?: string | null;
-  unreadCountUser: number;
-  unreadCountReader: number;
-  createdAt: string;
-  updatedAt?: string | null;
+ id: string;
+ userId: string;
+ readerId: string;
+ status: string;
+ lastMessageAt?: string | null;
+ unreadCountUser: number;
+ unreadCountReader: number;
+ createdAt: string;
+ updatedAt?: string | null;
 }
 
 /** Kết quả inbox */
 export interface ListConversationsResult {
-  conversations: ConversationDto[];
-  totalCount: number;
+ conversations: ConversationDto[];
+ totalCount: number;
 }
 
 /** Tin nhắn chat */
 export interface ChatMessageDto {
-  id: string;
-  conversationId: string;
-  senderId: string;
-  type: string;
-  content: string;
-  paymentPayload?: {
-    amountDiamond: number;
-    proposalId?: string;
-    expiresAt?: string;
-  } | null;
-  isRead: boolean;
-  createdAt: string;
+ id: string;
+ conversationId: string;
+ senderId: string;
+ type: string;
+ content: string;
+ paymentPayload?: {
+ amountDiamond: number;
+ proposalId?: string;
+ expiresAt?: string;
+ } | null;
+ isRead: boolean;
+ createdAt: string;
 }
 
 /** Kết quả lịch sử chat */
 export interface ListMessagesResult {
-  messages: ChatMessageDto[];
-  totalCount: number;
+ messages: ChatMessageDto[];
+ totalCount: number;
 }
 
 // ======================================================================
@@ -70,27 +70,27 @@ export interface ListMessagesResult {
  * @returns ConversationDto hoặc null nếu lỗi.
  */
 export async function createConversation(
-  readerId: string
+ readerId: string
 ): Promise<ConversationDto | null> {
-  const accessToken = await getAccessToken();
-  if (!accessToken) return null;
+ const accessToken = await getAccessToken();
+ if (!accessToken) return null;
 
-  try {
-    const response = await fetch(`${API_URL}/conversations`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ readerId }),
-    });
+ try {
+ const response = await fetch(`${API_URL}/conversations`, {
+ method: 'POST',
+ headers: {
+ 'Authorization': `Bearer ${accessToken}`,
+ 'Content-Type': 'application/json',
+ },
+ body: JSON.stringify({ readerId }),
+ });
 
-    if (!response.ok) return null;
-    return await response.json();
-  } catch (error) {
-    console.error('[ChatAction] createConversation failed:', error);
-    return null;
-  }
+ if (!response.ok) return null;
+ return await response.json();
+ } catch (error) {
+ console.error('[ChatAction] createConversation failed:', error);
+ return null;
+ }
 }
 
 /**
@@ -101,34 +101,34 @@ export async function createConversation(
  * @param pageSize - Số items mỗi trang.
  */
 export async function listConversations(
-  role = 'user',
-  page = 1,
-  pageSize = 20
+ role = 'user',
+ page = 1,
+ pageSize = 20
 ): Promise<ListConversationsResult | null> {
-  const accessToken = await getAccessToken();
-  if (!accessToken) return null;
+ const accessToken = await getAccessToken();
+ if (!accessToken) return null;
 
-  try {
-    const url = new URL(`${API_URL}/conversations`);
-    url.searchParams.append('role', role);
-    url.searchParams.append('page', page.toString());
-    url.searchParams.append('pageSize', pageSize.toString());
+ try {
+ const url = new URL(`${API_URL}/conversations`);
+ url.searchParams.append('role', role);
+ url.searchParams.append('page', page.toString());
+ url.searchParams.append('pageSize', pageSize.toString());
 
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    });
+ const response = await fetch(url.toString(), {
+ method: 'GET',
+ headers: {
+ 'Authorization': `Bearer ${accessToken}`,
+ 'Content-Type': 'application/json',
+ },
+ cache: 'no-store',
+ });
 
-    if (!response.ok) return null;
-    return await response.json();
-  } catch (error) {
-    console.error('[ChatAction] listConversations failed:', error);
-    return null;
-  }
+ if (!response.ok) return null;
+ return await response.json();
+ } catch (error) {
+ console.error('[ChatAction] listConversations failed:', error);
+ return null;
+ }
 }
 
 /**
@@ -137,62 +137,62 @@ export async function listConversations(
  * @param conversationId - ObjectId conversation.
  */
 export async function listMessages(
-  conversationId: string,
-  page = 1,
-  pageSize = 50
+ conversationId: string,
+ page = 1,
+ pageSize = 50
 ): Promise<ListMessagesResult | null> {
-  const accessToken = await getAccessToken();
-  if (!accessToken) return null;
+ const accessToken = await getAccessToken();
+ if (!accessToken) return null;
 
-  try {
-    const url = new URL(`${API_URL}/conversations/${conversationId}/messages`);
-    url.searchParams.append('page', page.toString());
-    url.searchParams.append('pageSize', pageSize.toString());
+ try {
+ const url = new URL(`${API_URL}/conversations/${conversationId}/messages`);
+ url.searchParams.append('page', page.toString());
+ url.searchParams.append('pageSize', pageSize.toString());
 
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    });
+ const response = await fetch(url.toString(), {
+ method: 'GET',
+ headers: {
+ 'Authorization': `Bearer ${accessToken}`,
+ 'Content-Type': 'application/json',
+ },
+ cache: 'no-store',
+ });
 
-    if (!response.ok) return null;
-    return await response.json();
-  } catch (error) {
-    console.error('[ChatAction] listMessages failed:', error);
-    return null;
-  }
+ if (!response.ok) return null;
+ return await response.json();
+ } catch (error) {
+ console.error('[ChatAction] listMessages failed:', error);
+ return null;
+ }
 }
 
 /**
  * Gửi báo cáo vi phạm.
  */
 export async function sendReport(data: {
-  targetType: string;
-  targetId: string;
-  conversationRef?: string;
-  reason: string;
+ targetType: string;
+ targetId: string;
+ conversationRef?: string;
+ reason: string;
 }): Promise<boolean> {
-  const accessToken = await getAccessToken();
-  if (!accessToken) return false;
+ const accessToken = await getAccessToken();
+ if (!accessToken) return false;
 
-  try {
-    const response = await fetch(`${API_URL}/reports`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
+ try {
+ const response = await fetch(`${API_URL}/reports`, {
+ method: 'POST',
+ headers: {
+ 'Authorization': `Bearer ${accessToken}`,
+ 'Content-Type': 'application/json',
+ },
+ body: JSON.stringify(data),
+ });
 
-    return response.ok;
-  } catch (error) {
-    console.error('[ChatAction] sendReport failed:', error);
-    return false;
-  }
+ return response.ok;
+ } catch (error) {
+ console.error('[ChatAction] sendReport failed:', error);
+ return false;
+ }
 }
 
 /**
@@ -200,6 +200,6 @@ export async function sendReport(data: {
  * Server action trả về token từ HttpOnly cookie.
  */
 export async function getSignalRToken(): Promise<string | null> {
-  const token = await getAccessToken();
-  return token || null;
+ const token = await getAccessToken();
+ return token || null;
 }

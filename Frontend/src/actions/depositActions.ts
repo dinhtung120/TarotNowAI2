@@ -12,63 +12,63 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5037/api/v1
 
 /** Kết quả tạo đơn nạp tiền — trả về URL thanh toán */
 export interface CreateDepositOrderResponse {
-  orderId: string;
-  paymentUrl: string;
-  amountVnd: number;
-  diamondAmount: number;
+ orderId: string;
+ paymentUrl: string;
+ amountVnd: number;
+ diamondAmount: number;
 }
 
 /** Đơn nạp tiền trong danh sách admin */
 export interface DepositOrder {
-  id: string;
-  userId: string;
-  username: string; // Thêm username từ backend
-  amountVnd: number;
-  diamondAmount: number;
-  status: string;
-  transactionId?: string;
-  createdAt: string;
-  completedAt?: string;
+ id: string;
+ userId: string;
+ username: string; // Thêm username từ backend
+ amountVnd: number;
+ diamondAmount: number;
+ status: string;
+ transactionId?: string;
+ createdAt: string;
+ completedAt?: string;
 }
 
 export interface ListDepositsResponse {
-  deposits: DepositOrder[];
-  totalCount: number;
+ deposits: DepositOrder[];
+ totalCount: number;
 }
 
 /**
  * Lấy danh sách đơn nạp tiền (dành cho Admin).
  */
 export async function listDepositsAdminAction(page: number, pageSize: number, status?: string): Promise<ListDepositsResponse | null> {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get('accessToken')?.value;
+ const cookieStore = await cookies();
+ const accessToken = cookieStore.get('accessToken')?.value;
 
-  try {
-    const query = new URLSearchParams({
-      page: page.toString(),
-      pageSize: pageSize.toString(),
-    });
-    if (status) query.append('status', status);
+ try {
+ const query = new URLSearchParams({
+ page: page.toString(),
+ pageSize: pageSize.toString(),
+ });
+ if (status) query.append('status', status);
 
-    const response = await fetch(`${API_URL}/admin/deposits?${query.toString()}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store'
-    });
+ const response = await fetch(`${API_URL}/admin/deposits?${query.toString()}`, {
+ method: 'GET',
+ headers: {
+ 'Authorization': `Bearer ${accessToken}`,
+ 'Content-Type': 'application/json',
+ },
+ cache: 'no-store'
+ });
 
-    if (!response.ok) {
-      console.error('listDepositsAdminAction error', response.status);
-      return null;
-    }
+ if (!response.ok) {
+ console.error('listDepositsAdminAction error', response.status);
+ return null;
+ }
 
-    return await response.json();
-  } catch (error) {
-    console.error('Failed to list deposits:', error);
-    return null;
-  }
+ return await response.json();
+ } catch (error) {
+ console.error('Failed to list deposits:', error);
+ return null;
+ }
 }
 
 // ======================================================================
@@ -80,32 +80,31 @@ export async function listDepositsAdminAction(page: number, pageSize: number, st
 /**
  * Tạo đơn nạp tiền mới cho user.
  * Backend tạo order status=pending và trả về payment URL để redirect.
- * 
- * @param amountVnd - Số tiền VND muốn nạp
+ * * @param amountVnd - Số tiền VND muốn nạp
  * @returns Object chứa orderId + paymentUrl, hoặc null nếu lỗi
  */
 export async function createDepositOrder(amountVnd: number): Promise<CreateDepositOrderResponse | null> {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get('accessToken')?.value;
+ const cookieStore = await cookies();
+ const accessToken = cookieStore.get('accessToken')?.value;
 
-  try {
-    const response = await fetch(`${API_URL}/deposits/orders`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ amountVnd }),
-    });
+ try {
+ const response = await fetch(`${API_URL}/deposits/orders`, {
+ method: 'POST',
+ headers: {
+ 'Authorization': `Bearer ${accessToken}`,
+ 'Content-Type': 'application/json',
+ },
+ body: JSON.stringify({ amountVnd }),
+ });
 
-    if (!response.ok) {
-      console.error('createDepositOrder error', response.status);
-      return null;
-    }
+ if (!response.ok) {
+ console.error('createDepositOrder error', response.status);
+ return null;
+ }
 
-    return await response.json();
-  } catch (error) {
-    console.error('Failed to create deposit order:', error);
-    return null;
-  }
+ return await response.json();
+ } catch (error) {
+ console.error('Failed to create deposit order:', error);
+ return null;
+ }
 }

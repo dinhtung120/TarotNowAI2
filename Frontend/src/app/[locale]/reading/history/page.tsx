@@ -11,248 +11,245 @@ import UserLayout from "@/components/layout/UserLayout";
 import { GlassCard, SectionHeader, Button } from "@/components/ui";
 
 interface ReadingSessionDto {
-    id: string;
-    spreadType: string;
-    isCompleted: boolean;
-    createdAt: string;
+ id: string;
+ spreadType: string;
+ isCompleted: boolean;
+ createdAt: string;
 }
 
 interface HistoryResponse {
-    page: number;
-    pageSize: number;
-    totalPages: number;
-    totalCount: number;
-    items: ReadingSessionDto[];
+ page: number;
+ pageSize: number;
+ totalPages: number;
+ totalCount: number;
+ items: ReadingSessionDto[];
 }
 
 export default function HistoryPage() {
-    const router = useRouter();
-    const t = useTranslations("History");
-    const { isAuthenticated } = useAuthStore();
-    const [historyData, setHistoryData] = useState<HistoryResponse | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [filterType, setFilterType] = useState<string>("all");
-    const [filterDate, setFilterDate] = useState<string>("");
-    const pageSize = 10;
+ const router = useRouter();
+ const t = useTranslations("History");
+ const { isAuthenticated } = useAuthStore();
+ const [historyData, setHistoryData] = useState<HistoryResponse | null>(null);
+ const [isLoading, setIsLoading] = useState(true);
+ const [error, setError] = useState<string | null>(null);
+ const [currentPage, setCurrentPage] = useState(1);
+ const [filterType, setFilterType] = useState<string>("all");
+ const [filterDate, setFilterDate] = useState<string>("");
+ const pageSize = 10;
 
-    useEffect(() => {
-        if (!isAuthenticated) {
-            router.push("/login");
-        }
-    }, [isAuthenticated, router]);
+ useEffect(() => {
+ if (!isAuthenticated) {
+ router.push("/login");
+ }
+ }, [isAuthenticated, router]);
 
-    useEffect(() => {
-        if (!isAuthenticated) return;
+ useEffect(() => {
+ if (!isAuthenticated) return;
 
-        const fetchHistory = async () => {
-            setIsLoading(true);
-            setError(null);
-            try {
-                const result = await getHistorySessionsAction(
-                    currentPage,
-                    pageSize,
-                    filterType,
-                    filterDate
-                );
+ const fetchHistory = async () => {
+ setIsLoading(true);
+ setError(null);
+ try {
+ const result = await getHistorySessionsAction(
+ currentPage,
+ pageSize,
+ filterType,
+ filterDate
+ );
 
-                if (result.error) {
-                    if (result.error === 'unauthorized') {
-                        router.push("/login");
-                        return;
-                    }
-                    setError(result.error);
-                    return;
-                }
+ if (result.error) {
+ if (result.error === 'unauthorized') {
+ router.push("/login");
+ return;
+ }
+ setError(result.error);
+ return;
+ }
 
-                if (result.success && result.data) {
-                    setHistoryData(result.data as HistoryResponse);
-                }
-            } catch {
-                setError("Network error. Please try again later.");
-            } finally {
-                setIsLoading(false);
-            }
-        };
+ if (result.success && result.data) {
+ setHistoryData(result.data as HistoryResponse);
+ }
+ } catch {
+ setError("Network error. Please try again later.");
+ } finally {
+ setIsLoading(false);
+ }
+ };
 
-        fetchHistory();
-    }, [isAuthenticated, currentPage, filterType, filterDate, router]);
+ fetchHistory();
+ }, [isAuthenticated, currentPage, filterType, filterDate, router]);
 
-    const handlePrevPage = () => {
-        if (currentPage > 1) setCurrentPage(prev => prev - 1);
-    };
+ const handlePrevPage = () => {
+ if (currentPage > 1) setCurrentPage(prev => prev - 1);
+ };
 
-    const handleNextPage = () => {
-        if (historyData && currentPage < historyData.totalPages) setCurrentPage(prev => prev + 1);
-    };
+ const handleNextPage = () => {
+ if (historyData && currentPage < historyData.totalPages) setCurrentPage(prev => prev + 1);
+ };
 
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [filterType, filterDate]);
+ useEffect(() => {
+ setCurrentPage(1);
+ }, [filterType, filterDate]);
 
-    const getSpreadName = (type: string) => {
-        const mapping: Record<string, string> = {
-            'Daily1Card': t('spread_daily'),
-            'daily_1': t('spread_daily'),
-            'PastPresentFuture': t('spread_3'),
-            'spread_3': t('spread_3'),
-            'spread_5': t('spread_5'),
-            'spread_10': t('spread_10'),
-        };
-        return mapping[type] || type;
-    };
+ const getSpreadName = (type: string) => {
+ const mapping: Record<string, string> = {
+ 'Daily1Card': t('spread_daily'),
+ 'daily_1': t('spread_daily'),
+ 'PastPresentFuture': t('spread_3'),
+ 'spread_3': t('spread_3'),
+ 'spread_5': t('spread_5'),
+ 'spread_10': t('spread_10'),
+ };
+ return mapping[type] || type;
+ };
 
-    const FiltersContent = (
-        <div className="flex flex-wrap items-center gap-3">
-            <div className="relative group/filter">
-                <select
-                    value={filterType}
-                    onChange={(e) => setFilterType(e.target.value)}
-                    className="appearance-none bg-black/40 hover:bg-black/60 border border-white/10 rounded-xl px-4 py-2.5 pr-10 text-[11px] font-black uppercase tracking-widest text-[var(--text-secondary)] transition-all focus:ring-2 focus:ring-[var(--purple-accent)]/50 outline-none cursor-pointer backdrop-blur-md"
-                >
-                    <option value="all" className="bg-[#121212]">{t('all_types')}</option>
-                    <option value="Daily1Card" className="bg-[#121212]">{t('spread_daily')}</option>
-                    <option value="PastPresentFuture" className="bg-[#121212]">{t('spread_3')}</option>
-                    <option value="spread_5" className="bg-[#121212]">{t('spread_5')}</option>
-                    <option value="spread_10" className="bg-[#121212]">{t('spread_10')}</option>
-                </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40 group-hover/filter:opacity-80 transition-opacity">
-                    <Sparkles className="w-3.5 h-3.5" />
-                </div>
-            </div>
+ const FiltersContent = (
+ <div className="flex flex-wrap items-center gap-3">
+ <div className="relative group/filter">
+ <select
+ value={filterType}
+ onChange={(e) => setFilterType(e.target.value)}
+ className="appearance-none tn-field tn-field-accent rounded-xl px-4 py-2.5 pr-10 text-[11px] font-black uppercase tracking-widest text-[var(--text-secondary)] cursor-pointer"
+ >
+ <option value="all" className="tn-surface">{t('all_types')}</option>
+ <option value="Daily1Card" className="tn-surface">{t('spread_daily')}</option>
+ <option value="PastPresentFuture" className="tn-surface">{t('spread_3')}</option>
+ <option value="spread_5" className="tn-surface">{t('spread_5')}</option>
+ <option value="spread_10" className="tn-surface">{t('spread_10')}</option>
+ </select>
+ <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40 group-hover/filter:opacity-80 transition-opacity">
+ <Sparkles className="w-3.5 h-3.5" />
+ </div>
+ </div>
 
-            <div className="relative group/filter">
-                <input
-                    type="date"
-                    value={filterDate}
-                    onChange={(e) => setFilterDate(e.target.value)}
-                    className="bg-black/40 hover:bg-black/60 border border-white/10 rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-widest text-[var(--text-secondary)] transition-all focus:ring-2 focus:ring-[var(--purple-accent)]/50 outline-none cursor-pointer backdrop-blur-md [color-scheme:dark]"
-                />
-            </div>
-        </div>
-    );
+ <div className="relative group/filter">
+ <input
+ type="date"
+ value={filterDate}
+ onChange={(e) => setFilterDate(e.target.value)}
+ className="tn-field tn-field-accent rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-widest text-[var(--text-secondary)] cursor-pointer"
+ />
+ </div>
+ </div>
+ );
 
-    return (
-        <UserLayout>
-            <div className="max-w-5xl mx-auto px-6 pt-8 pb-32 font-sans">
-                <SectionHeader 
-                    title={t('title')}
-                    subtitle={t('subtitle')}
-                    tag="Chronicles"
-                    tagIcon={<History className="w-3 h-3" />}
-                    action={FiltersContent}
-                    className="mb-12"
-                />
+ return (
+ <UserLayout>
+ <div className="max-w-5xl mx-auto px-6 pt-8 pb-32 font-sans">
+ <SectionHeader title={t('title')}
+ subtitle={t('subtitle')}
+ tag="Chronicles"
+ tagIcon={<History className="w-3 h-3" />}
+ action={FiltersContent}
+ className="mb-12"
+ />
 
-                {error && (
-                    <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400 text-sm animate-in zoom-in-95">
-                        <Clock className="w-5 h-5 flex-shrink-0" />
-                        <p>{error}</p>
-                    </div>
-                )}
+ {error && (
+ <div className="mb-8 p-4 bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-xl flex items-center gap-3 text-[var(--danger)] text-sm animate-in zoom-in-95">
+ <Clock className="w-5 h-5 flex-shrink-0" />
+ <p>{error}</p>
+ </div>
+ )}
 
-                {isLoading ? (
-                    <div className="space-y-4 animate-pulse">
-                        {[1, 2, 3, 4].map(i => (
-                            <div key={i} className="h-24 bg-white/5 rounded-2xl border border-white/5"></div>
-                        ))}
-                    </div>
-                ) : historyData?.items.length === 0 ? (
-                    <GlassCard className="text-center py-24 animate-in fade-in duration-1000">
-                        <Bot className="w-16 h-16 text-[var(--text-tertiary)] mx-auto mb-6" />
-                        <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2 tracking-tight">{t('empty_title')}</h3>
-                        <p className="text-[var(--text-secondary)] mb-8 max-w-sm mx-auto">{t('empty_desc')}</p>
-                        <Button
-                            variant="brand"
-                            onClick={() => router.push("/reading")}
-                        >
-                            {t('cta_draw')}
-                        </Button>
-                    </GlassCard>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
-                        {historyData?.items.map((session) => (
-                            <GlassCard
-                                key={session.id}
-                                variant="interactive"
-                                onClick={() => router.push(`/reading/history/${session.id}`)}
-                                className="group relative flex items-center justify-between !py-4"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-all duration-500 group-hover:scale-110 ${
-                                        session.isCompleted 
-                                            ? "bg-[var(--warning-bg)] border-[var(--warning)]" 
-                                            : "bg-[var(--bg-card)] border-white/10 group-hover:border-[var(--purple-accent)]/50"
-                                    }`}>
-                                        <Sparkles className={`w-5 h-5 ${session.isCompleted ? 'text-[var(--warning)]' : 'text-zinc-500'}`} />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-[15px] font-bold text-white group-hover:text-[var(--purple-accent)] transition-colors tracking-tight">
-                                            {getSpreadName(session.spreadType)}
-                                        </h3>
-                                        <div className="flex items-center gap-3 mt-1.5 opacity-60">
-                                            <span className="flex items-center text-[10px] uppercase font-black tracking-widest text-[var(--text-tertiary)]">
-                                                <Calendar className="w-3 h-3 mr-1" />
-                                                {new Date(session.createdAt).toLocaleDateString()}
-                                            </span>
-                                            <span className="flex items-center text-[10px] uppercase font-black tracking-widest text-[var(--text-tertiary)]">
-                                                <Clock className="w-3 h-3 mr-1" />
-                                                {new Date(session.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
+ {isLoading ? (
+ <div className="space-y-4 animate-pulse">
+ {[1, 2, 3, 4].map(i => (
+ <div key={i} className="h-24 tn-surface rounded-2xl border tn-border-soft"></div>
+ ))}
+ </div>
+ ) : historyData?.items.length === 0 ? (
+ <GlassCard className="text-center py-24 animate-in fade-in duration-1000">
+ <Bot className="w-16 h-16 text-[var(--text-tertiary)] mx-auto mb-6" />
+ <h3 className="text-xl font-bold text-[var(--text-primary)] mb-2 tracking-tight">{t('empty_title')}</h3>
+ <p className="text-[var(--text-secondary)] mb-8 max-w-sm mx-auto">{t('empty_desc')}</p>
+ <Button
+ variant="brand"
+ onClick={() => router.push("/reading")}
+ >
+ {t('cta_draw')}
+ </Button>
+ </GlassCard>
+ ) : (
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
+ {historyData?.items.map((session) => (
+ <GlassCard
+ key={session.id}
+ variant="interactive"
+ onClick={() => router.push(`/reading/history/${session.id}`)}
+ className="group relative flex items-center justify-between !py-4"
+ >
+ <div className="flex items-center gap-4">
+ <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-all duration-500 group-hover:scale-110 ${
+ session.isCompleted ? "bg-[var(--warning-bg)] border-[var(--warning)]" : "bg-[var(--bg-card)] tn-border group-hover:border-[var(--purple-accent)]/50"
+ }`}>
+ <Sparkles className={`w-5 h-5 ${session.isCompleted ? 'text-[var(--warning)]' : 'tn-text-muted'}`} />
+ </div>
+ <div>
+ <h3 className="text-[15px] font-bold tn-text-primary group-hover:text-[var(--purple-accent)] transition-colors tracking-tight">
+ {getSpreadName(session.spreadType)}
+ </h3>
+ <div className="flex items-center gap-3 mt-1.5 opacity-60">
+ <span className="flex items-center text-[10px] uppercase font-black tracking-widest text-[var(--text-tertiary)]">
+ <Calendar className="w-3 h-3 mr-1" />
+ {new Date(session.createdAt).toLocaleDateString()}
+ </span>
+ <span className="flex items-center text-[10px] uppercase font-black tracking-widest text-[var(--text-tertiary)]">
+ <Clock className="w-3 h-3 mr-1" />
+ {new Date(session.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+ </span>
+ </div>
+ </div>
+ </div>
 
-                                <div className="flex items-center gap-4">
-                                    <span className={`hidden sm:inline-flex text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-widest border ${
-                                        session.isCompleted
-                                            ? 'bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)]'
-                                            : 'bg-[var(--danger-bg)] text-[var(--danger)] border-[var(--danger)]'
-                                    }`}>
-                                        {session.isCompleted ? t('status_completed') : t('status_interrupted')}
-                                    </span>
-                                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[var(--purple-accent)] group-hover:text-black transition-all duration-300">
-                                        <ArrowRight className="w-4 h-4" />
-                                    </div>
-                                </div>
-                            </GlassCard>
-                        ))}
-                    </div>
-                )}
+ <div className="flex items-center gap-4">
+ <span className={`hidden sm:inline-flex text-[9px] px-2.5 py-1 rounded-full font-black uppercase tracking-widest border ${
+ session.isCompleted
+ ? 'bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)]'
+ : 'bg-[var(--danger-bg)] text-[var(--danger)] border-[var(--danger)]'
+ }`}>
+ {session.isCompleted ? t('status_completed') : t('status_interrupted')}
+ </span>
+ <div className="w-8 h-8 rounded-full tn-surface flex items-center justify-center group-hover:bg-[var(--purple-accent)] group-hover:tn-text-ink transition-all duration-300">
+ <ArrowRight className="w-4 h-4" />
+ </div>
+ </div>
+ </GlassCard>
+ ))}
+ </div>
+ )}
 
-                {/* Pagination */}
-                {historyData && historyData.totalPages > 1 && (
-                    <div className="fixed bottom-24 md:bottom-10 left-1/2 -translate-x-1/2 z-50 flex items-center gap-6 px-6 py-3 bg-[var(--bg-glass)]/90 backdrop-blur-xl border border-white/10 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.8)] animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                        <button
-                            onClick={handlePrevPage}
-                            disabled={currentPage === 1}
-                            className="p-2 rounded-full bg-white/5 text-zinc-400 disabled:opacity-20 hover:bg-white/10 hover:text-white transition-all active:scale-90"
-                            title={t('prev_page')}
-                        >
-                            <ChevronLeft className="w-4 h-4" />
-                        </button>
+ {/* Pagination */}
+ {historyData && historyData.totalPages > 1 && (
+ <div className="fixed bottom-24 md:bottom-10 left-1/2 -translate-x-1/2 z-50 flex items-center gap-6 px-6 py-3 bg-[var(--bg-glass)]/90 border tn-border rounded-full shadow-[0_20px_50px_var(--c-0-0-0-80)] animate-in fade-in slide-in-from-bottom-4 duration-1000">
+ <button
+ onClick={handlePrevPage}
+ disabled={currentPage === 1}
+ className="p-2 rounded-full tn-surface tn-text-secondary disabled:opacity-20 hover:tn-surface-strong hover:tn-text-primary transition-all active:scale-90"
+ title={t('prev_page')}
+ >
+ <ChevronLeft className="w-4 h-4" />
+ </button>
 
-                        <div className="flex flex-col items-center min-w-[80px]">
-                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] mb-0.5">
-                                Page
-                            </span>
-                            <span className="text-[11px] font-bold text-white tracking-widest">
-                                {currentPage} <span className="text-zinc-600 mx-1">/</span> {historyData.totalPages}
-                            </span>
-                        </div>
+ <div className="flex flex-col items-center min-w-[80px]">
+ <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] mb-0.5">
+ Page
+ </span>
+ <span className="text-[11px] font-bold tn-text-primary tracking-widest">
+ {currentPage} <span className="tn-text-muted mx-1">/</span> {historyData.totalPages}
+ </span>
+ </div>
 
-                        <button
-                            onClick={handleNextPage}
-                            disabled={currentPage === historyData.totalPages}
-                            className="p-2 rounded-full bg-white/5 text-zinc-400 disabled:opacity-20 hover:bg-white/10 hover:text-white transition-all active:scale-90"
-                            title={t('next_page')}
-                        >
-                            <ChevronRight className="w-4 h-4" />
-                        </button>
-                    </div>
-                )}
-            </div>
-        </UserLayout>
-    );
+ <button
+ onClick={handleNextPage}
+ disabled={currentPage === historyData.totalPages}
+ className="p-2 rounded-full tn-surface tn-text-secondary disabled:opacity-20 hover:tn-surface-strong hover:tn-text-primary transition-all active:scale-90"
+ title={t('next_page')}
+ >
+ <ChevronRight className="w-4 h-4" />
+ </button>
+ </div>
+ )}
+ </div>
+ </UserLayout>
+ );
 }

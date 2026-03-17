@@ -17,65 +17,65 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5037/api/v1
  * Hàm lấy Access Token từ cookie phía Server.
  */
 async function getAccessToken(): Promise<string | undefined> {
-  const cookieStore = await cookies();
-  return cookieStore.get('accessToken')?.value;
+ const cookieStore = await cookies();
+ return cookieStore.get('accessToken')?.value;
 }
 
 // ======================================================================
 
 /** Thông tin user trong danh sách admin */
 export interface AdminUserItem {
-  id: string;
-  email: string;
-  username: string;
-  displayName: string;
-  status: string;
-  role: string;
-  level: number;
-  exp: number;
-  goldBalance: number;
-  diamondBalance: number;
-  createdAt: string;
+ id: string;
+ email: string;
+ username: string;
+ displayName: string;
+ status: string;
+ role: string;
+ level: number;
+ exp: number;
+ goldBalance: number;
+ diamondBalance: number;
+ createdAt: string;
 }
 
 /** Kết quả danh sách người dùng từ backend */
 export interface ListUsersResponse {
-  users: AdminUserItem[];
-  totalCount: number;
+ users: AdminUserItem[];
+ totalCount: number;
 }
 
 /** Kết quả danh sách nạp tiền từ backend */
 export interface ListDepositsResponse {
-  deposits: AdminDepositOrder[];
-  totalCount: number;
+ deposits: AdminDepositOrder[];
+ totalCount: number;
 }
 
 /** Kết quả phân trang chung */
 export interface PaginatedResult<T> {
-  items: T[];
-  totalCount: number;
-  page: number;
-  pageSize: number;
+ items: T[];
+ totalCount: number;
+ page: number;
+ pageSize: number;
 }
 
 /** Kết quả kiểm tra bất đồng bộ sổ cái (reconciliation) */
 export interface MismatchRecord {
-  userId: string;
-  userBalance: number;
-  ledgerBalance: number;
-  difference: number;
+ userId: string;
+ userBalance: number;
+ ledgerBalance: number;
+ difference: number;
 }
 
 /** Đơn nạp tiền (dùng cho admin view) */
 export interface AdminDepositOrder {
-  id: string;
-  userId: string;
-  username?: string; // Tên người dùng hiển thị
-  amountVnd: number;
-  diamondAmount: number;
-  status: string;
-  transactionId?: string; // Mã giao dịch Gateway/Admin
-  createdAt: string;
+ id: string;
+ userId: string;
+ username?: string; // Tên người dùng hiển thị
+ amountVnd: number;
+ diamondAmount: number;
+ status: string;
+ transactionId?: string; // Mã giao dịch Gateway/Admin
+ createdAt: string;
 }
 
 // ======================================================================
@@ -88,40 +88,40 @@ export interface AdminDepositOrder {
  * Backend API: GET /api/v1/admin/users
  */
 export async function listUsers(page = 1, pageSize = 20, searchTerm = ''): Promise<ListUsersResponse | null> {
-  const accessToken = await getAccessToken();
-  if (!accessToken) return null;
+ const accessToken = await getAccessToken();
+ if (!accessToken) return null;
 
-  try {
-    const url = new URL(`${API_URL}/admin/users`);
-    url.searchParams.append('page', page.toString());
-    url.searchParams.append('pageSize', pageSize.toString());
-    if (searchTerm) {
-      url.searchParams.append('searchTerm', searchTerm);
-    }
+ try {
+ const url = new URL(`${API_URL}/admin/users`);
+ url.searchParams.append('page', page.toString());
+ url.searchParams.append('pageSize', pageSize.toString());
+ if (searchTerm) {
+ url.searchParams.append('searchTerm', searchTerm);
+ }
 
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    });
+ const response = await fetch(url.toString(), {
+ method: 'GET',
+ headers: {
+ 'Authorization': `Bearer ${accessToken}`,
+ 'Content-Type': 'application/json',
+ },
+ cache: 'no-store',
+ });
 
-    if (!response.ok) {
-      console.error(`[AdminAction] listUsers error: ${response.status} - ${await response.text()}`);
-      return null;
-    }
+ if (!response.ok) {
+ console.error(`[AdminAction] listUsers error: ${response.status} - ${await response.text()}`);
+ return null;
+ }
 
-    const data = await response.json();
-    return {
-      users: data.users || data.Users || [],
-      totalCount: data.totalCount ?? data.TotalCount ?? 0
-    };
-  } catch (error) {
-    console.error('[AdminAction] Failed to list users:', error);
-    return null;
-  }
+ const data = await response.json();
+ return {
+ users: data.users || data.Users || [],
+ totalCount: data.totalCount ?? data.TotalCount ?? 0
+ };
+ } catch (error) {
+ console.error('[AdminAction] Failed to list users:', error);
+ return null;
+ }
 }
 
 /**
@@ -132,32 +132,32 @@ export async function listUsers(page = 1, pageSize = 20, searchTerm = ''): Promi
  * @param isLocked - true = khóa, false = mở khóa
  */
 export async function toggleUserLock(userId: string, isLocked: boolean): Promise<boolean> {
-  const accessToken = await getAccessToken();
-  if (!accessToken) return false;
+ const accessToken = await getAccessToken();
+ if (!accessToken) return false;
 
-  try {
-    const response = await fetch(`${API_URL}/admin/users/lock`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        userId,
-        UserId: userId,
-        isLocked,
-        IsLocked: isLocked
-      }),
-    });
+ try {
+ const response = await fetch(`${API_URL}/admin/users/lock`, {
+ method: 'PATCH',
+ headers: {
+ 'Authorization': `Bearer ${accessToken}`,
+ 'Content-Type': 'application/json',
+ },
+ body: JSON.stringify({
+ userId,
+ UserId: userId,
+ isLocked,
+ IsLocked: isLocked
+ }),
+ });
 
-    if (!response.ok) {
-      console.error(`[AdminAction] toggleUserLock error: ${response.status} - ${await response.text()}`);
-    }
-    return response.ok;
-  } catch (error) {
-    console.error('[AdminAction] Failed to toggle user lock:', error);
-    return false;
-  }
+ if (!response.ok) {
+ console.error(`[AdminAction] toggleUserLock error: ${response.status} - ${await response.text()}`);
+ }
+ return response.ok;
+ } catch (error) {
+ console.error('[AdminAction] Failed to toggle user lock:', error);
+ return false;
+ }
 }
 
 /**
@@ -165,40 +165,40 @@ export async function toggleUserLock(userId: string, isLocked: boolean): Promise
  * Backend API: GET /api/v1/admin/deposits
  */
 export async function listDeposits(page = 1, pageSize = 20, status = ''): Promise<ListDepositsResponse | null> {
-  const accessToken = await getAccessToken();
-  if (!accessToken) return null;
+ const accessToken = await getAccessToken();
+ if (!accessToken) return null;
 
-  try {
-    const url = new URL(`${API_URL}/admin/deposits`);
-    url.searchParams.append('page', page.toString());
-    url.searchParams.append('pageSize', pageSize.toString());
-    if (status) {
-      url.searchParams.append('status', status);
-    }
+ try {
+ const url = new URL(`${API_URL}/admin/deposits`);
+ url.searchParams.append('page', page.toString());
+ url.searchParams.append('pageSize', pageSize.toString());
+ if (status) {
+ url.searchParams.append('status', status);
+ }
 
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    });
+ const response = await fetch(url.toString(), {
+ method: 'GET',
+ headers: {
+ 'Authorization': `Bearer ${accessToken}`,
+ 'Content-Type': 'application/json',
+ },
+ cache: 'no-store',
+ });
 
-    if (!response.ok) {
-      console.error(`[AdminAction] listDeposits error: ${response.status} - ${await response.text()}`);
-      return null;
-    }
+ if (!response.ok) {
+ console.error(`[AdminAction] listDeposits error: ${response.status} - ${await response.text()}`);
+ return null;
+ }
 
-    const data = await response.json();
-    return {
-      deposits: data.deposits || data.Deposits || [],
-      totalCount: data.totalCount ?? data.TotalCount ?? 0
-    };
-  } catch (error) {
-    console.error('[AdminAction] Failed to list deposits:', error);
-    return null;
-  }
+ const data = await response.json();
+ return {
+ deposits: data.deposits || data.Deposits || [],
+ totalCount: data.totalCount ?? data.TotalCount ?? 0
+ };
+ } catch (error) {
+ console.error('[AdminAction] Failed to list deposits:', error);
+ return null;
+ }
 }
 
 /**
@@ -207,39 +207,39 @@ export async function listDeposits(page = 1, pageSize = 20, status = ''): Promis
  * So sánh số dư users vs tổng ledger entries.
  */
 export async function getWalletMismatches(): Promise<MismatchRecord[] | null> {
-  const accessToken = await getAccessToken();
-  if (!accessToken) return null;
+ const accessToken = await getAccessToken();
+ if (!accessToken) return null;
 
-  try {
-    const response = await fetch(`${API_URL}/admin/reconciliation/wallet`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    });
+ try {
+ const response = await fetch(`${API_URL}/admin/reconciliation/wallet`, {
+ method: 'GET',
+ headers: {
+ 'Authorization': `Bearer ${accessToken}`,
+ 'Content-Type': 'application/json',
+ },
+ cache: 'no-store',
+ });
 
-    if (!response.ok) {
-      console.error(`[AdminAction] getWalletMismatches error: ${response.status} - ${await response.text()}`);
-      return null;
-    }
+ if (!response.ok) {
+ console.error(`[AdminAction] getWalletMismatches error: ${response.status} - ${await response.text()}`);
+ return null;
+ }
 
-    const data = await response.json();
-    // Safe Mapping for Reconciliation
-    if (Array.isArray(data)) {
-      return data.map((d: any) => ({
-        userId: d.userId || d.UserId,
-        userBalance: d.userBalance ?? d.UserBalance ?? 0,
-        ledgerBalance: d.ledgerBalance ?? d.LedgerBalance ?? 0,
-        difference: d.difference ?? d.Difference ?? 0
-      }));
-    }
-    return data;
-  } catch (error) {
-    console.error('[AdminAction] Failed to get wallet mismatches:', error);
-    return null;
-  }
+ const data = await response.json();
+ // Safe Mapping for Reconciliation
+ if (Array.isArray(data)) {
+ return data.map((d: Record<string, unknown>) => ({
+ userId: String(d.userId ?? d.UserId ?? ''),
+ userBalance: Number(d.userBalance ?? d.UserBalance ?? 0),
+ ledgerBalance: Number(d.ledgerBalance ?? d.LedgerBalance ?? 0),
+ difference: Number(d.difference ?? d.Difference ?? 0)
+ }));
+ }
+ return data;
+ } catch (error) {
+ console.error('[AdminAction] Failed to get wallet mismatches:', error);
+ return null;
+ }
 }
 
 /**
@@ -247,36 +247,36 @@ export async function getWalletMismatches(): Promise<MismatchRecord[] | null> {
  * Backend API: POST /api/v1/admin/users/add-balance
  */
 export async function addUserBalance(userId: string, currency: string, amount: number, reason?: string): Promise<boolean> {
-  const accessToken = await getAccessToken();
-  if (!accessToken) return false;
+ const accessToken = await getAccessToken();
+ if (!accessToken) return false;
 
-  try {
-    const response = await fetch(`${API_URL}/admin/users/add-balance`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        userId,
-        UserId: userId,
-        currency,
-        Currency: currency,
-        amount,
-        Amount: amount,
-        reason,
-        Reason: reason
-      }),
-    });
+ try {
+ const response = await fetch(`${API_URL}/admin/users/add-balance`, {
+ method: 'POST',
+ headers: {
+ 'Authorization': `Bearer ${accessToken}`,
+ 'Content-Type': 'application/json',
+ },
+ body: JSON.stringify({
+ userId,
+ UserId: userId,
+ currency,
+ Currency: currency,
+ amount,
+ Amount: amount,
+ reason,
+ Reason: reason
+ }),
+ });
 
-    if (!response.ok) {
-      console.error(`[AdminAction] addUserBalance error: ${response.status} - ${await response.text()}`);
-    }
-    return response.ok;
-  } catch (error) {
-    console.error('[AdminAction] Failed to add user balance:', error);
-    return false;
-  }
+ if (!response.ok) {
+ console.error(`[AdminAction] addUserBalance error: ${response.status} - ${await response.text()}`);
+ }
+ return response.ok;
+ } catch (error) {
+ console.error('[AdminAction] Failed to add user balance:', error);
+ return false;
+ }
 }
 
 /**
@@ -284,59 +284,57 @@ export async function addUserBalance(userId: string, currency: string, amount: n
  * Backend API: PATCH /api/v1/admin/deposits/process
  */
 export async function processDeposit(depositId: string, action: 'approve' | 'reject', transactionId?: string): Promise<boolean> {
-  const debugLog = (msg: string) => {
-    const line = `[${new Date().toISOString()}] ${msg}\n`;
-    try { writeFileSync('/tmp/deposit_debug.log', line, { flag: 'a' }); } catch {}
-  };
+ const debugLog = (msg: string) => {
+ const line = `[${new Date().toISOString()}] ${msg}\n`;
+ try { writeFileSync('/tmp/deposit_debug.log', line, { flag: 'a' }); } catch {}
+ };
 
-  try {
-    const accessToken = await getAccessToken();
-    debugLog(`processDeposit: depositId=${depositId}, action=${action}`);
-    debugLog(`API_URL=${API_URL}`);
-    debugLog(`accessToken exists=${!!accessToken}, length=${accessToken?.length}`);
-    
-    if (!accessToken) {
-      debugLog(`ERROR: No access token found!`);
-      return false;
-    }
+ try {
+ const accessToken = await getAccessToken();
+ debugLog(`processDeposit: depositId=${depositId}, action=${action}`);
+ debugLog(`API_URL=${API_URL}`);
+ debugLog(`accessToken exists=${!!accessToken}, length=${accessToken?.length}`);
+ if (!accessToken) {
+ debugLog(`ERROR: No access token found!`);
+ return false;
+ }
 
-    const bodyPayload = {
-      depositId: depositId,
-      DepositId: depositId,
-      action: action,
-      Action: action,
-      transactionId: transactionId || "",
-      TransactionId: transactionId || ""
-    };
+ const bodyPayload = {
+ depositId: depositId,
+ DepositId: depositId,
+ action: action,
+ Action: action,
+ transactionId: transactionId || "",
+ TransactionId: transactionId || ""
+ };
 
-    const fullUrl = `${API_URL}/admin/deposits/process`;
-    debugLog(`Calling: PATCH ${fullUrl}`);
-    debugLog(`Payload: ${JSON.stringify(bodyPayload)}`);
+ const fullUrl = `${API_URL}/admin/deposits/process`;
+ debugLog(`Calling: PATCH ${fullUrl}`);
+ debugLog(`Payload: ${JSON.stringify(bodyPayload)}`);
 
-    const response = await fetch(fullUrl, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(bodyPayload),
-    });
+ const response = await fetch(fullUrl, {
+ method: 'PATCH',
+ headers: {
+ 'Authorization': `Bearer ${accessToken}`,
+ 'Content-Type': 'application/json',
+ },
+ body: JSON.stringify(bodyPayload),
+ });
 
-    debugLog(`Response status: ${response.status}`);
-    const responseText = await response.text();
-    debugLog(`Response body: ${responseText}`);
-    
-    if (!response.ok) {
-      debugLog(`FAILED: ${response.status} - ${responseText}`);
-      return false;
-    }
+ debugLog(`Response status: ${response.status}`);
+ const responseText = await response.text();
+ debugLog(`Response body: ${responseText}`);
+ if (!response.ok) {
+ debugLog(`FAILED: ${response.status} - ${responseText}`);
+ return false;
+ }
 
-    debugLog(`SUCCESS`);
-    return true;
-  } catch (error) {
-    debugLog(`EXCEPTION: ${error}`);
-    return false;
-  }
+ debugLog(`SUCCESS`);
+ return true;
+ } catch (error) {
+ debugLog(`EXCEPTION: ${error}`);
+ return false;
+ }
 }
 
 // ======================================================================
@@ -345,21 +343,21 @@ export async function processDeposit(depositId: string, action: 'approve' | 'rej
 
 /** Đơn xin Reader (dùng cho admin view) */
 export interface AdminReaderRequest {
-  id: string;
-  userId: string;
-  status: string;
-  introText: string;
-  proofDocuments: string[];
-  adminNote?: string;
-  reviewedBy?: string;
-  reviewedAt?: string;
-  createdAt: string;
+ id: string;
+ userId: string;
+ status: string;
+ introText: string;
+ proofDocuments: string[];
+ adminNote?: string;
+ reviewedBy?: string;
+ reviewedAt?: string;
+ createdAt: string;
 }
 
 /** Kết quả danh sách đơn xin Reader */
 export interface ListReaderRequestsResponse {
-  requests: AdminReaderRequest[];
-  totalCount: number;
+ requests: AdminReaderRequest[];
+ totalCount: number;
 }
 
 /**
@@ -371,42 +369,42 @@ export interface ListReaderRequestsResponse {
  * @param statusFilter - Lọc theo status: pending | approved | rejected.
  */
 export async function listReaderRequests(
-  page = 1,
-  pageSize = 20,
-  statusFilter = ''
+ page = 1,
+ pageSize = 20,
+ statusFilter = ''
 ): Promise<ListReaderRequestsResponse | null> {
-  const accessToken = await getAccessToken();
-  if (!accessToken) return null;
+ const accessToken = await getAccessToken();
+ if (!accessToken) return null;
 
-  try {
-    const url = new URL(`${API_URL}/admin/reader-requests`);
-    url.searchParams.append('page', page.toString());
-    url.searchParams.append('pageSize', pageSize.toString());
-    if (statusFilter) url.searchParams.append('statusFilter', statusFilter);
+ try {
+ const url = new URL(`${API_URL}/admin/reader-requests`);
+ url.searchParams.append('page', page.toString());
+ url.searchParams.append('pageSize', pageSize.toString());
+ if (statusFilter) url.searchParams.append('statusFilter', statusFilter);
 
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    });
+ const response = await fetch(url.toString(), {
+ method: 'GET',
+ headers: {
+ 'Authorization': `Bearer ${accessToken}`,
+ 'Content-Type': 'application/json',
+ },
+ cache: 'no-store',
+ });
 
-    if (!response.ok) {
-      console.error(`[AdminAction] listReaderRequests error: ${response.status}`);
-      return null;
-    }
+ if (!response.ok) {
+ console.error(`[AdminAction] listReaderRequests error: ${response.status}`);
+ return null;
+ }
 
-    const data = await response.json();
-    return {
-      requests: data.requests || data.Requests || [],
-      totalCount: data.totalCount ?? data.TotalCount ?? 0,
-    };
-  } catch (error) {
-    console.error('[AdminAction] listReaderRequests failed:', error);
-    return null;
-  }
+ const data = await response.json();
+ return {
+ requests: data.requests || data.Requests || [],
+ totalCount: data.totalCount ?? data.TotalCount ?? 0,
+ };
+ } catch (error) {
+ console.error('[AdminAction] listReaderRequests failed:', error);
+ return null;
+ }
 }
 
 /**
@@ -418,37 +416,36 @@ export async function listReaderRequests(
  * @param adminNote - Ghi chú admin (tùy chọn).
  */
 export async function processReaderRequest(
-  requestId: string,
-  action: 'approve' | 'reject',
-  adminNote?: string
+ requestId: string,
+ action: 'approve' | 'reject',
+ adminNote?: string
 ): Promise<boolean> {
-  const accessToken = await getAccessToken();
-  if (!accessToken) return false;
+ const accessToken = await getAccessToken();
+ if (!accessToken) return false;
 
-  try {
-    const response = await fetch(`${API_URL}/admin/reader-requests/process`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        requestId,
-        RequestId: requestId,
-        action,
-        Action: action,
-        adminNote: adminNote || '',
-        AdminNote: adminNote || '',
-      }),
-    });
+ try {
+ const response = await fetch(`${API_URL}/admin/reader-requests/process`, {
+ method: 'PATCH',
+ headers: {
+ 'Authorization': `Bearer ${accessToken}`,
+ 'Content-Type': 'application/json',
+ },
+ body: JSON.stringify({
+ requestId,
+ RequestId: requestId,
+ action,
+ Action: action,
+ adminNote: adminNote || '',
+ AdminNote: adminNote || '',
+ }),
+ });
 
-    if (!response.ok) {
-      console.error(`[AdminAction] processReaderRequest error: ${response.status}`);
-    }
-    return response.ok;
-  } catch (error) {
-    console.error('[AdminAction] processReaderRequest failed:', error);
-    return false;
-  }
+ if (!response.ok) {
+ console.error(`[AdminAction] processReaderRequest error: ${response.status}`);
+ }
+ return response.ok;
+ } catch (error) {
+ console.error('[AdminAction] processReaderRequest failed:', error);
+ return false;
+ }
 }
-

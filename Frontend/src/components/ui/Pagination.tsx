@@ -24,70 +24,70 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface PaginationProps {
-  /** Trang hiện tại (1-indexed) */
-  currentPage: number;
+ /** Trang hiện tại (1-indexed) */
+ currentPage: number;
 
-  /** Tổng số trang */
-  totalPages: number;
+ /** Tổng số trang */
+ totalPages: number;
 
-  /** Callback khi chuyển trang */
-  onPageChange: (page: number) => void;
+ /** Callback khi chuyển trang */
+ onPageChange: (page: number) => void;
 
-  /** Có đang loading không (disable buttons khi loading) */
-  isLoading?: boolean;
+ /** Có đang loading không (disable buttons khi loading) */
+ isLoading?: boolean;
 
-  className?: string;
+ className?: string;
 }
 
 export default function Pagination({
-  currentPage,
-  totalPages,
-  onPageChange,
-  isLoading = false,
-  className = "",
+ currentPage,
+ totalPages,
+ onPageChange,
+ isLoading = false,
+ className = "",
 }: PaginationProps) {
-  /* Không hiển thị pagination nếu chỉ có 1 trang */
-  if (totalPages <= 1) return null;
+ /* Không hiển thị pagination nếu chỉ có 1 trang */
+ if (totalPages <= 1) return null;
 
-  const canGoPrev = currentPage > 1 && !isLoading;
-  const canGoNext = currentPage < totalPages && !isLoading;
+ const canGoPrev = currentPage > 1 && !isLoading;
+ const canGoNext = currentPage < totalPages && !isLoading;
 
-  return (
-    <div
-      className={[
-        "flex items-center justify-between px-6 py-4",
-        "border-t border-[var(--border-subtle)]",
-        className,
-      ].join(" ")}
-    >
-      {/* Text indicator — "Trang X / Y" */}
-      <span className="text-[9px] font-black uppercase tracking-widest text-zinc-600">
-        Trang{" "}
-        <strong className="text-zinc-300">{currentPage}</strong>
-        {" / "}
-        {totalPages}
-      </span>
+ return (
+ <div
+ className={[
+ "flex items-center justify-between px-6 py-4",
+ "border-t border-[var(--border-subtle)]",
+ className,
+ ].join(" ")}
+ >
+ {/* Text indicator — "Trang X / Y" */}
+ <span className="text-[9px] font-black uppercase tracking-widest tn-text-muted">
+ Trang{" "}
+ <strong className="tn-text-secondary">{currentPage}</strong>
+ {" / "}
+ {totalPages}
+ </span>
 
-      {/* Navigation buttons */}
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => onPageChange(currentPage - 1)}
-          disabled={!canGoPrev}
-          className="p-2 rounded-xl bg-[var(--bg-glass)] hover:bg-[var(--bg-glass-hover)] disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-[var(--border-subtle)] cursor-pointer"
-          aria-label="Trang trước"
-        >
-          <ChevronLeft className="w-4 h-4 text-zinc-300" />
-        </button>
+ {/* Navigation buttons */}
+ <div className="flex items-center gap-2">
+ <button
+ onClick={() => onPageChange(currentPage - 1)}
+ disabled={!canGoPrev}
+ className="p-2 rounded-xl bg-[var(--bg-glass)] hover:bg-[var(--bg-glass-hover)] disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-[var(--border-subtle)] cursor-pointer"
+ aria-label="Trang trước"
+ >
+ <ChevronLeft className="w-4 h-4 tn-text-secondary" />
+ </button>
 
-        <button
-          onClick={() => onPageChange(currentPage + 1)}
-          disabled={!canGoNext}
-          className="p-2 rounded-xl bg-[var(--bg-glass)] hover:bg-[var(--bg-glass-hover)] disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-[var(--border-subtle)] cursor-pointer"
-          aria-label="Trang tiếp"
-        >
-          <ChevronRight className="w-4 h-4 text-zinc-300" />
-        </button>
-      </div>
-    </div>
-  );
+ <button
+ onClick={() => onPageChange(currentPage + 1)}
+ disabled={!canGoNext}
+ className="p-2 rounded-xl bg-[var(--bg-glass)] hover:bg-[var(--bg-glass-hover)] disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-[var(--border-subtle)] cursor-pointer"
+ aria-label="Trang tiếp"
+ >
+ <ChevronRight className="w-4 h-4 tn-text-secondary" />
+ </button>
+ </div>
+ </div>
+ );
 }
