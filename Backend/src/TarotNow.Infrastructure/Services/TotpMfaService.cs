@@ -1,0 +1,100 @@
+using OtpNet;
+using System.Security.Cryptography;
+using System.Text;
+using TarotNow.Application.Interfaces;
+
+namespace TarotNow.Infrastructure.Services;
+
+/// <summary>
+/// Implementation của IMfaService sử dụng thư viện Otp.NET.
+/// Mã hóa/giải mã secret sử dụng AES.
+/// </summary>
+public class TotpMfaService : IMfaService
+{
+    // WARNING: Trong production, Encryption Key này phải lấy từ biến môi trường/AWS KMS/Azure Key Vault.
+    // Dùng key "mfa-encryption-key-must-be-32byte-" (32 bytes = 256 bit).
+    private const string EncryptionKey = "tarot-now-ai-mfa-encryption-keyx"; // Exactly 32 chars
+    private const string Issuer = "TarotNowAI";
+
+    public string GenerateSecretKey()
+    {
+        var secret = KeyGeneration.GenerateRandomKey(20);
+        return Base32Encoding.ToString(secret);
+    }
+
+    public string GenerateQrCodeUri(string plainSecret, string userEmail)
+    {
+        var secretBytes = Base32Encoding.ToBytes(plainSecret);
+        var totp = new Totp(secretBytes);
+        
+        // Format chuẩn URI để quét QR bằng GG Authenticator / Authy
+        // otpauth://totp/Issuer:userEmail?secret=XXXXX&issuer=Issuer
+        var encodedIssuer = Uri.EscapeDataString(Issuer);
+        var encodedEmail = Uri.EscapeDataString(userEmail);
+        
+        return $"otpauth://totp/{encodedIssuer}:{encodedEmail}?secret={plainSecret}&issuer={encodedIssuer}";
+    }
+
+    public bool VerifyCode(string plainSecret, string code)
+    {
+        if (string.IsNullOrWhiteSpace(plainSecret) || string.IsNullOrWhiteSpace(code)) return false;
+
+        var secretBytes = Base32Encoding.ToBytes(plainSecret);
+        var totp = new Totp(secretBytes);
+        
+        // VerificationWindow(2, 2) cho phép mã bị trễ tối đa 1-2 bước (mỗi bước 30s)
+        return totp.VerifyTotp(code, out long timeStepMatched, new VerificationWindow(2, 2));
+    }
+
+    public List<string> GenerateBackupCodes(int count = 6)
+    {
+        var result = new List<string>();
+        for (int i = 0; i < count; i++)
+        {
+            var bytes = new byte[4];
+            RandomNumberGenerator.Fill(bytes);
+            var code = BitConverter.ToUInt32(bytes, 0) % 100000000;
+            result.Add(code.ToString("D8")); // Mã 8 chữ số
+        }
+        return result;
+    }
+
+    public string EncryptSecret(string plainSecret)
+    {
+        using var aes = Aes.Create();
+        aes.Key = Encoding.UTF8.GetBytes(EncryptionKey);
+        aes.GenerateIV();
+
+        var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+        var plainBytes = Encoding.UTF8.GetBytes(plainSecret);
+        var encryptedBytes = encryptor.TransformFinalBlock(plainBytes, 0, plainBytes.Length);
+
+        // Nối IV và bản mã, sau đó encode Base64
+        var result = new byte[aes.IV.Length + encryptedBytes.Length];
+        Buffer.BlockCopy(aes.IV, 0, result, 0, aes.IV.Length);
+        Buffer.BlockCopy(encryptedBytes, 0, result, aes.IV.Length, encryptedBytes.Length);
+
+        return Convert.ToBase64String(result);
+    }
+
+    public string DecryptSecret(string encryptedSecret)
+    {
+        var fullBytes = Convert.FromBase64String(encryptedSecret);
+
+        using var aes = Aes.Create();
+        aes.Key = Encoding.UTF8.GetBytes(EncryptionKey);
+
+        // Tách IV ra khỏi mảng byte
+        var iv = new byte[aes.BlockSize / 8];
+        var cipherText = new byte[fullBytes.Length - iv.Length];
+
+        Buffer.BlockCopy(fullBytes, 0, iv, 0, iv.Length);
+        Buffer.BlockCopy(fullBytes, iv.Length, cipherText, 0, cipherText.Length);
+        aes.IV = iv;
+
+        var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
+        var plainBytes = decryptor.TransformFinalBlock(cipherText, 0, cipherText.Length);
+
+        return Encoding.UTF8.GetString(plainBytes);
+    }
+}

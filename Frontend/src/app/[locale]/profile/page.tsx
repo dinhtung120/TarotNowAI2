@@ -285,10 +285,21 @@ export default function ProfilePage() {
                                     {user?.role === "admin" && (
                                         <button
                                             onClick={() => router.push("/admin/users")}
-                                            className="group flex items-center gap-2.5 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-300 px-5 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all hover:scale-[1.03] active:scale-95 shadow-xl"
+                                            className="w-full group flex justify-center items-center gap-2.5 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 text-purple-300 px-5 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all hover:scale-[1.03] active:scale-95 shadow-xl mb-2"
                                         >
                                             <ShieldCheck className="w-3.5 h-3.5 transition-transform group-hover:rotate-12" />
                                             Vào Trang Quản Trị
+                                        </button>
+                                    )}
+
+                                    {/* Reader Settings Action */}
+                                    {(user?.role === "admin" || user?.role === "reader") && (
+                                        <button
+                                            onClick={() => router.push("/profile/reader" as any)}
+                                            className="w-full group flex justify-center items-center gap-2.5 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-400 px-5 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all hover:scale-[1.03] active:scale-95 shadow-xl"
+                                        >
+                                            <Sparkles className="w-3.5 h-3.5 transition-transform group-hover:rotate-12" />
+                                            Hồ Sơ Reader
                                         </button>
                                     )}
                                 </div>

@@ -12,6 +12,7 @@ public class RevealReadingSessionCommandHandlerTests
 {
     private readonly Mock<IReadingSessionRepository> _readingRepoMock;
     private readonly Mock<IUserCollectionRepository> _collectionRepoMock;
+    private readonly Mock<IUserRepository> _userRepoMock;
     private readonly Mock<IRngService> _rngMock;
     private readonly RevealReadingSessionCommandHandler _handler;
 
@@ -19,8 +20,9 @@ public class RevealReadingSessionCommandHandlerTests
     {
         _readingRepoMock = new Mock<IReadingSessionRepository>();
         _collectionRepoMock = new Mock<IUserCollectionRepository>();
+        _userRepoMock = new Mock<IUserRepository>();
         _rngMock = new Mock<IRngService>();
-        _handler = new RevealReadingSessionCommandHandler(_readingRepoMock.Object, _collectionRepoMock.Object, _rngMock.Object);
+        _handler = new RevealReadingSessionCommandHandler(_readingRepoMock.Object, _collectionRepoMock.Object, _userRepoMock.Object, _rngMock.Object);
     }
 
     [Fact]

@@ -47,11 +47,10 @@ export default function Navbar() {
 
     /**
      * CHẶN HIỂN THỊ:
-     * - Nếu chưa đăng nhập.
      * - Nếu chưa Mounted (tránh flash).
      * - Nếu đang ở trang Auth (tránh lộ Navbar trước khi redirect).
      */
-    if (!isAuthenticated || !isMounted || isAuthPage) return null;
+    if (!isMounted || isAuthPage) return null;
 
     return (
         <nav className="fixed top-0 left-0 right-0 z-50 bg-black/60 backdrop-blur-xl border-b border-white/10 px-6 py-4 animate-in fade-in slide-in-from-top duration-500 ease-in-out fill-mode-forwards">
@@ -72,37 +71,58 @@ export default function Navbar() {
                         <Link href="/collection" className="text-sm font-medium text-purple-200/70 hover:text-white flex items-center gap-2 transition-colors">
                             <LayoutGrid className="w-4 h-4 text-purple-400" /> <span className="hidden lg:inline">Miếu Bài</span>
                         </Link>
-                        <Link href="/reading/history" className="text-sm font-medium text-purple-200/70 hover:text-white flex items-center gap-2 transition-colors">
-                            <History className="w-4 h-4 text-cyan-400" /> <span className="hidden lg:inline">Lịch Sử</span>
-                        </Link>
+                        {isAuthenticated && (
+                            <Link href="/reading/history" className="text-sm font-medium text-purple-200/70 hover:text-white flex items-center gap-2 transition-colors">
+                                <History className="w-4 h-4 text-cyan-400" /> <span className="hidden lg:inline">Lịch Sử</span>
+                            </Link>
+                        )}
                     </div>
                 </div>
 
-                {/* ===== PHẦN BÊN PHẢI: Wallet + Profile + Logout ===== */}
+                {/* ===== PHẦN BÊN PHẢI: Trạng thái Login/Guest ===== */}
                 <div className="flex items-center gap-4">
-                    <WalletWidget />
+                    {isAuthenticated ? (
+                        <>
+                            <WalletWidget />
 
-                    <Link
-                        href="/profile"
-                        className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-sm font-medium text-purple-200/80 hover:text-white"
-                    >
-                        <User className="w-4 h-4" />
-                        <span className="hidden lg:inline">{user?.displayName || "Hồ Sơ"}</span>
-                    </Link>
+                            <Link
+                                href="/profile"
+                                className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-sm font-medium text-purple-200/80 hover:text-white"
+                            >
+                                <User className="w-4 h-4" />
+                                <span className="hidden lg:inline">{user?.displayName || "Hồ Sơ"}</span>
+                            </Link>
 
-                    <Link
-                        href="/wallet"
-                        className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-sm font-medium text-purple-200/80 hover:text-white"
-                    >
-                        <Wallet className="w-4 h-4" />
-                    </Link>
+                            <Link
+                                href="/wallet"
+                                className="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors text-sm font-medium text-purple-200/80 hover:text-white"
+                            >
+                                <Wallet className="w-4 h-4" />
+                            </Link>
 
-                    <button
-                        onClick={handleLogout}
-                        className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors text-sm font-medium"
-                    >
-                        <LogOut className="w-4 h-4" /> <span className="hidden lg:inline">Đăng Xuất</span>
-                    </button>
+                            <button
+                                onClick={handleLogout}
+                                className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors text-sm font-medium"
+                            >
+                                <LogOut className="w-4 h-4" /> <span className="hidden lg:inline">Đăng Xuất</span>
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <Link
+                                href="/login"
+                                className="text-sm font-medium text-purple-200/80 hover:text-white transition-colors"
+                            >
+                                Đăng nhập
+                            </Link>
+                            <Link
+                                href="/register"
+                                className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white text-sm font-medium hover:from-purple-400 hover:to-fuchsia-400 transition-all shadow-[0_0_15px_-3px_rgba(168,85,247,0.4)]"
+                            >
+                                Đăng ký
+                            </Link>
+                        </>
+                    )}
                 </div>
             </div>
         </nav>

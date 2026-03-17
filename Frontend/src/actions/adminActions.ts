@@ -338,3 +338,117 @@ export async function processDeposit(depositId: string, action: 'approve' | 'rej
     return false;
   }
 }
+
+// ======================================================================
+// Phase 2.1 — Reader Request Management (Admin)
+// ======================================================================
+
+/** Đơn xin Reader (dùng cho admin view) */
+export interface AdminReaderRequest {
+  id: string;
+  userId: string;
+  status: string;
+  introText: string;
+  proofDocuments: string[];
+  adminNote?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  createdAt: string;
+}
+
+/** Kết quả danh sách đơn xin Reader */
+export interface ListReaderRequestsResponse {
+  requests: AdminReaderRequest[];
+  totalCount: number;
+}
+
+/**
+ * Lấy danh sách đơn xin Reader có phân trang (Admin only).
+ * Backend API: GET /api/v1/admin/reader-requests
+ *
+ * @param page - Trang hiện tại.
+ * @param pageSize - Số đơn mỗi trang.
+ * @param statusFilter - Lọc theo status: pending | approved | rejected.
+ */
+export async function listReaderRequests(
+  page = 1,
+  pageSize = 20,
+  statusFilter = ''
+): Promise<ListReaderRequestsResponse | null> {
+  const accessToken = await getAccessToken();
+  if (!accessToken) return null;
+
+  try {
+    const url = new URL(`${API_URL}/admin/reader-requests`);
+    url.searchParams.append('page', page.toString());
+    url.searchParams.append('pageSize', pageSize.toString());
+    if (statusFilter) url.searchParams.append('statusFilter', statusFilter);
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      console.error(`[AdminAction] listReaderRequests error: ${response.status}`);
+      return null;
+    }
+
+    const data = await response.json();
+    return {
+      requests: data.requests || data.Requests || [],
+      totalCount: data.totalCount ?? data.TotalCount ?? 0,
+    };
+  } catch (error) {
+    console.error('[AdminAction] listReaderRequests failed:', error);
+    return null;
+  }
+}
+
+/**
+ * Admin phê duyệt hoặc từ chối đơn xin Reader.
+ * Backend API: PATCH /api/v1/admin/reader-requests/process
+ *
+ * @param requestId - ObjectId string của reader_requests document.
+ * @param action - "approve" | "reject".
+ * @param adminNote - Ghi chú admin (tùy chọn).
+ */
+export async function processReaderRequest(
+  requestId: string,
+  action: 'approve' | 'reject',
+  adminNote?: string
+): Promise<boolean> {
+  const accessToken = await getAccessToken();
+  if (!accessToken) return false;
+
+  try {
+    const response = await fetch(`${API_URL}/admin/reader-requests/process`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        requestId,
+        RequestId: requestId,
+        action,
+        Action: action,
+        adminNote: adminNote || '',
+        AdminNote: adminNote || '',
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`[AdminAction] processReaderRequest error: ${response.status}`);
+    }
+    return response.ok;
+  } catch (error) {
+    console.error('[AdminAction] processReaderRequest failed:', error);
+    return false;
+  }
+}
+

@@ -32,6 +32,13 @@ public class ApplicationDbContext : DbContext
     public DbSet<DepositOrder> DepositOrders { get; set; } = null!;
     public DbSet<DepositPromotion> DepositPromotions { get; set; } = null!;
 
+    // Phase 2.3 Escrow — EF Core entities cho PostgreSQL tables
+    public DbSet<ChatFinanceSession> ChatFinanceSessions { get; set; } = null!;
+    public DbSet<ChatQuestionItem> ChatQuestionItems { get; set; } = null!;
+
+    // Phase 2.4 Withdrawal — EF Core entity cho PostgreSQL
+    public DbSet<WithdrawalRequest> WithdrawalRequests { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

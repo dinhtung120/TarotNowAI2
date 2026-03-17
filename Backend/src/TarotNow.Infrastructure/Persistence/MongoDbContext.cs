@@ -60,6 +60,41 @@ public class MongoDbContext
     public IMongoCollection<NotificationDocument> Notifications
         => _database.GetCollection<NotificationDocument>("notifications");
 
+    /// <summary>
+    /// Đơn xin trở thành Reader — lưu trữ intro_text, proof_documents, trạng thái duyệt.
+    /// Tham chiếu: schema.md ## 6. reader_requests
+    /// </summary>
+    public IMongoCollection<ReaderRequestDocument> ReaderRequests
+        => _database.GetCollection<ReaderRequestDocument>("reader_requests");
+
+    /// <summary>
+    /// Hồ sơ công khai Reader — bio, pricing, specialties, online status.
+    /// Tham chiếu: schema.md ## 5. reader_profiles
+    /// </summary>
+    public IMongoCollection<ReaderProfileDocument> ReaderProfiles
+        => _database.GetCollection<ReaderProfileDocument>("reader_profiles");
+
+    /// <summary>
+    /// Conversations chat 1-1 giữa User và Reader.
+    /// Tham chiếu: schema.md ## 7. conversations
+    /// </summary>
+    public IMongoCollection<ConversationDocument> Conversations
+        => _database.GetCollection<ConversationDocument>("conversations");
+
+    /// <summary>
+    /// Tin nhắn trong conversations.
+    /// Tham chiếu: schema.md ## 8. chat_messages
+    /// </summary>
+    public IMongoCollection<ChatMessageDocument> ChatMessages
+        => _database.GetCollection<ChatMessageDocument>("chat_messages");
+
+    /// <summary>
+    /// Báo cáo vi phạm — admin queue.
+    /// Tham chiếu: schema.md ## 10. reports
+    /// </summary>
+    public IMongoCollection<ReportDocument> Reports
+        => _database.GetCollection<ReportDocument>("reports");
+
     // ======================================================================
     // INDEX MANAGEMENT
     // Tạo indexes từ code C# — backup cho init.js (phòng trường hợp
@@ -144,5 +179,73 @@ public class MongoDbContext
                 Name = "idx_ttl_30d",
                 ExpireAfter = TimeSpan.FromDays(30)
             }));
+
+        // --- reader_requests (Phase 2.1) ---
+        // Index (user_id, created_at desc): tìm đơn mới nhất của user
+        ReaderRequests.Indexes.CreateOne(new CreateIndexModel<ReaderRequestDocument>(
+            Builders<ReaderRequestDocument>.IndexKeys
+                .Ascending(r => r.UserId)
+                .Descending(r => r.CreatedAt),
+            new CreateIndexOptions { Name = "idx_userid_createdat_desc" }));
+
+        // Index (status, created_at desc): hàng đợi admin duyệt
+        ReaderRequests.Indexes.CreateOne(new CreateIndexModel<ReaderRequestDocument>(
+            Builders<ReaderRequestDocument>.IndexKeys
+                .Ascending(r => r.Status)
+                .Descending(r => r.CreatedAt),
+            new CreateIndexOptions { Name = "idx_status_createdat_desc" }));
+
+        // --- reader_profiles (Phase 2.1) ---
+        // Unique index (user_id): mỗi user chỉ có 1 profile
+        ReaderProfiles.Indexes.CreateOne(new CreateIndexModel<ReaderProfileDocument>(
+            Builders<ReaderProfileDocument>.IndexKeys.Ascending(r => r.UserId),
+            new CreateIndexOptions { Unique = true, Name = "idx_userid_unique" }));
+
+        // Index (status, updated_at desc): listing Reader online
+        ReaderProfiles.Indexes.CreateOne(new CreateIndexModel<ReaderProfileDocument>(
+            Builders<ReaderProfileDocument>.IndexKeys
+                .Ascending(r => r.Status)
+                .Descending(r => r.UpdatedAt),
+            new CreateIndexOptions { Name = "idx_status_updatedat_desc" }));
+
+        // --- conversations (Phase 2.2) ---
+        // Index (user_id, status, updated_at desc): inbox user
+        Conversations.Indexes.CreateOne(new CreateIndexModel<ConversationDocument>(
+            Builders<ConversationDocument>.IndexKeys
+                .Ascending(c => c.UserId)
+                .Ascending(c => c.Status)
+                .Descending(c => c.UpdatedAt),
+            new CreateIndexOptions { Name = "idx_userid_status_updatedat" }));
+
+        // Index (reader_id, status, updated_at desc): inbox reader
+        Conversations.Indexes.CreateOne(new CreateIndexModel<ConversationDocument>(
+            Builders<ConversationDocument>.IndexKeys
+                .Ascending(c => c.ReaderId)
+                .Ascending(c => c.Status)
+                .Descending(c => c.UpdatedAt),
+            new CreateIndexOptions { Name = "idx_readerid_status_updatedat" }));
+
+        // --- chat_messages (Phase 2.2) ---
+        // Index (conversation_id, created_at desc): timeline tin nhắn
+        ChatMessages.Indexes.CreateOne(new CreateIndexModel<ChatMessageDocument>(
+            Builders<ChatMessageDocument>.IndexKeys
+                .Ascending(m => m.ConversationId)
+                .Descending(m => m.CreatedAt),
+            new CreateIndexOptions { Name = "idx_conversationid_createdat_desc" }));
+
+        // Index (sender_id, created_at desc): audit/risk
+        ChatMessages.Indexes.CreateOne(new CreateIndexModel<ChatMessageDocument>(
+            Builders<ChatMessageDocument>.IndexKeys
+                .Ascending(m => m.SenderId)
+                .Descending(m => m.CreatedAt),
+            new CreateIndexOptions { Name = "idx_senderid_createdat_desc" }));
+
+        // --- reports (Phase 2.2) ---
+        // Index (status, created_at desc): admin queue
+        Reports.Indexes.CreateOne(new CreateIndexModel<ReportDocument>(
+            Builders<ReportDocument>.IndexKeys
+                .Ascending(r => r.Status)
+                .Descending(r => r.CreatedAt),
+            new CreateIndexOptions { Name = "idx_status_createdat_desc" }));
     }
 }

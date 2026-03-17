@@ -240,6 +240,17 @@ export default function AdminDashboardPage() {
                             </div>
                             <ChevronRight className="w-4 h-4 text-zinc-800" />
                         </button>
+
+                        <button 
+                            onClick={() => router.push('/admin/reader-requests')}
+                            className="w-full flex items-center justify-between p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:border-pink-500/30 transition-all group"
+                        >
+                            <div className="flex items-center gap-4">
+                                <ShieldCheck className="w-5 h-5 text-zinc-600 group-hover:text-pink-400" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-zinc-300">Duyệt Reader</span>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-zinc-800" />
+                        </button>
                     </div>
                 </div>
             </div>

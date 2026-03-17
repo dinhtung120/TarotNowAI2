@@ -1,0 +1,108 @@
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Moq;
+using System.Reflection;
+using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Entities;
+using TarotNow.Domain.Enums;
+using TarotNow.Infrastructure.BackgroundJobs;
+using Xunit;
+
+namespace TarotNow.Infrastructure.UnitTests.BackgroundJobs;
+
+public class EscrowTimerServiceTests
+{
+    private readonly Mock<IServiceScopeFactory> _mockScopeFactory;
+    private readonly Mock<IServiceScope> _mockScope;
+    private readonly Mock<IServiceProvider> _mockServiceProvider;
+    private readonly Mock<IChatFinanceRepository> _mockFinanceRepo;
+    private readonly Mock<IWalletRepository> _mockWalletRepo;
+    private readonly Mock<ILogger<EscrowTimerService>> _mockLogger;
+    private readonly EscrowTimerService _service;
+
+    public EscrowTimerServiceTests()
+    {
+        _mockScopeFactory = new Mock<IServiceScopeFactory>();
+        _mockScope = new Mock<IServiceScope>();
+        _mockServiceProvider = new Mock<IServiceProvider>();
+        _mockFinanceRepo = new Mock<IChatFinanceRepository>();
+        _mockWalletRepo = new Mock<IWalletRepository>();
+        _mockLogger = new Mock<ILogger<EscrowTimerService>>();
+
+        _mockScopeFactory.Setup(x => x.CreateScope()).Returns(_mockScope.Object);
+        _mockScope.Setup(x => x.ServiceProvider).Returns(_mockServiceProvider.Object);
+        
+        _mockServiceProvider.Setup(x => x.GetService(typeof(IChatFinanceRepository))).Returns(_mockFinanceRepo.Object);
+        _mockServiceProvider.Setup(x => x.GetService(typeof(IWalletRepository))).Returns(_mockWalletRepo.Object);
+
+        _service = new EscrowTimerService(_mockScopeFactory.Object, _mockLogger.Object);
+    }
+
+    private async Task InvokeProcessTimersAsync()
+    {
+        var method = typeof(EscrowTimerService).GetMethod("ProcessTimers", BindingFlags.NonPublic | BindingFlags.Instance);
+        var task = (Task)method!.Invoke(_service, new object[] { CancellationToken.None })!;
+        await task;
+    }
+
+    [Fact]
+    public async Task ProcessExpiredOffers_CancelsOffer()
+    {
+        var expiredItem = new ChatQuestionItem { Id = Guid.NewGuid(), Status = QuestionItemStatus.Pending };
+        _mockFinanceRepo.Setup(x => x.GetExpiredOffersAsync(default)).ReturnsAsync(new List<ChatQuestionItem> { expiredItem });
+        _mockFinanceRepo.Setup(x => x.GetItemsForAutoRefundAsync(default)).ReturnsAsync(new List<ChatQuestionItem>());
+        _mockFinanceRepo.Setup(x => x.GetItemsForAutoReleaseAsync(default)).ReturnsAsync(new List<ChatQuestionItem>());
+
+        await InvokeProcessTimersAsync();
+
+        Assert.Equal(QuestionItemStatus.Refunded, expiredItem.Status);
+        Assert.NotNull(expiredItem.RefundedAt);
+        _mockFinanceRepo.Verify(x => x.UpdateItemAsync(expiredItem, default), Times.Once);
+        _mockFinanceRepo.Verify(x => x.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessAutoRefunds_RefundsAndUpdatesSession()
+    {
+        var item = new ChatQuestionItem { Id = Guid.NewGuid(), PayerId = Guid.NewGuid(), AmountDiamond = 100, FinanceSessionId = Guid.NewGuid(), Status = QuestionItemStatus.Accepted };
+        var session = new ChatFinanceSession { Id = item.FinanceSessionId, TotalFrozen = 100 };
+
+        _mockFinanceRepo.Setup(x => x.GetExpiredOffersAsync(default)).ReturnsAsync(new List<ChatQuestionItem>());
+        _mockFinanceRepo.Setup(x => x.GetItemsForAutoRefundAsync(default)).ReturnsAsync(new List<ChatQuestionItem> { item });
+        _mockFinanceRepo.Setup(x => x.GetSessionByIdAsync(item.FinanceSessionId, default)).ReturnsAsync(session);
+        _mockFinanceRepo.Setup(x => x.GetItemsForAutoReleaseAsync(default)).ReturnsAsync(new List<ChatQuestionItem>());
+
+        await InvokeProcessTimersAsync();
+
+        Assert.Equal(QuestionItemStatus.Refunded, item.Status);
+        Assert.NotNull(item.RefundedAt);
+        Assert.Equal(0, session.TotalFrozen);
+
+        _mockWalletRepo.Verify(x => x.RefundAsync(item.PayerId, item.AmountDiamond, "chat_question_item", item.Id.ToString(), It.IsAny<string>(), null, $"autorefund_{item.Id}", default), Times.Once);
+        _mockFinanceRepo.Verify(x => x.UpdateItemAsync(item, default), Times.Once);
+        _mockFinanceRepo.Verify(x => x.UpdateSessionAsync(session, default), Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessAutoReleases_ReleasesConsumesFeeAndUpdatesSession()
+    {
+        var item = new ChatQuestionItem { Id = Guid.NewGuid(), PayerId = Guid.NewGuid(), ReceiverId = Guid.NewGuid(), AmountDiamond = 100, FinanceSessionId = Guid.NewGuid(), Status = QuestionItemStatus.Accepted };
+        var session = new ChatFinanceSession { Id = item.FinanceSessionId, TotalFrozen = 100 };
+
+        _mockFinanceRepo.Setup(x => x.GetExpiredOffersAsync(default)).ReturnsAsync(new List<ChatQuestionItem>());
+        _mockFinanceRepo.Setup(x => x.GetItemsForAutoRefundAsync(default)).ReturnsAsync(new List<ChatQuestionItem>());
+        _mockFinanceRepo.Setup(x => x.GetItemsForAutoReleaseAsync(default)).ReturnsAsync(new List<ChatQuestionItem> { item });
+        _mockFinanceRepo.Setup(x => x.GetSessionByIdAsync(item.FinanceSessionId, default)).ReturnsAsync(session);
+
+        await InvokeProcessTimersAsync();
+
+        Assert.Equal(QuestionItemStatus.Released, item.Status);
+        Assert.NotNull(item.ReleasedAt);
+        Assert.Equal(0, session.TotalFrozen);
+
+        _mockWalletRepo.Verify(x => x.ReleaseAsync(item.PayerId, item.ReceiverId, 90, "chat_question_item", item.Id.ToString(), It.IsAny<string>(), null, $"autorelease_{item.Id}", default), Times.Once);
+        _mockWalletRepo.Verify(x => x.ConsumeAsync(item.PayerId, 10, "platform_fee", item.Id.ToString(), It.IsAny<string>(), null, $"autofee_{item.Id}", default), Times.Once);
+        _mockFinanceRepo.Verify(x => x.UpdateItemAsync(item, default), Times.Once);
+        _mockFinanceRepo.Verify(x => x.UpdateSessionAsync(session, default), Times.Once);
+    }
+}

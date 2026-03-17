@@ -53,8 +53,12 @@ public class User
     public string Role { get; private set; }
     public string ReaderStatus { get; private set; }
 
-    public DateTime CreatedAt { get; private set; }
-    public DateTime? UpdatedAt { get; private set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+
+    // Phase 2.5 — MFA (TOTP)
+    public bool MfaEnabled { get; set; }
+    public string? MfaSecretEncrypted { get; set; }
 
     public ICollection<UserConsent> Consents { get; private set; } = new List<UserConsent>();
 
@@ -160,6 +164,35 @@ public class User
     public void PromoteToAdmin()
     {
         Role = "admin";
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Phê duyệt user trở thành Tarot Reader (Admin gọi).
+    ///
+    /// Quy trình: User submit request → Admin approve → gọi method này.
+    /// - Chuyển Role từ "user" sang "tarot_reader" để mở quyền Reader.
+    /// - Chuyển ReaderStatus từ "pending" sang "approved" để đánh dấu đã duyệt.
+    /// - Sau khi gọi method này, hệ thống cần tạo reader_profiles document
+    ///   trong MongoDB (xử lý ở Application layer, không phải ở đây).
+    /// </summary>
+    public void ApproveAsReader()
+    {
+        Role = UserRole.TarotReader;
+        ReaderStatus = ReaderApprovalStatus.Approved;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Từ chối yêu cầu đăng ký Reader (Admin gọi).
+    ///
+    /// - Giữ nguyên Role = "user" (không thay đổi quyền).
+    /// - Chuyển ReaderStatus sang "rejected" để user biết bị từ chối.
+    /// - User có thể submit lại request mới sau khi bị reject.
+    /// </summary>
+    public void RejectReaderRequest()
+    {
+        ReaderStatus = ReaderApprovalStatus.Rejected;
         UpdatedAt = DateTime.UtcNow;
     }
 

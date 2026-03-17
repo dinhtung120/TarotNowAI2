@@ -1,6 +1,7 @@
 using TarotNow.Application;
 using TarotNow.Infrastructure;
 using TarotNow.Api.Middlewares;
+using TarotNow.Api.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,10 @@ builder.Services.AddProblemDetails(); // RFC 7807 support
 // Thêm dependency injection cho Application và Infrastructure
 builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices(builder.Configuration);
+
+// Phase 2.2: Đăng ký SignalR cho Chat realtime
+// SignalR tự quản lý WebSocket connections + fallback.
+builder.Services.AddSignalR();
 
 // Cấu hình CORS
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
@@ -66,6 +71,11 @@ app.UseAuthorization();
 // Map routes cho Controllers
 // Map routes cho Controllers
 app.MapControllers();
+
+// Phase 2.2: Map SignalR ChatHub tại /api/v1/chat
+// Client kết nối: new HubConnectionBuilder().withUrl("/api/v1/chat?access_token=xxx")
+// JWT query string auth đã cấu hình trong DependencyInjection.cs
+app.MapHub<ChatHub>("/api/v1/chat");
 
 app.Run();
 

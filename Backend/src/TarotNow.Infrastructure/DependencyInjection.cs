@@ -8,6 +8,8 @@ using TarotNow.Infrastructure.Persistence.Repositories;
 using TarotNow.Infrastructure.Security;
 using TarotNow.Infrastructure.Services;
 using TarotNow.Infrastructure.Services.Ai;
+using TarotNow.Infrastructure.Repositories;
+using TarotNow.Infrastructure.BackgroundJobs;
 
 namespace TarotNow.Infrastructure;
 
@@ -71,6 +73,23 @@ public static class DependencyInjection
         services.AddScoped<ICardsCatalogRepository, MongoCardsCatalogRepository>();
         services.AddScoped<IAiProviderLogRepository, MongoAiProviderLogRepository>();
         services.AddScoped<INotificationRepository, MongoNotificationRepository>();
+        services.AddScoped<IReaderRequestRepository, MongoReaderRequestRepository>();
+        services.AddScoped<IReaderProfileRepository, MongoReaderProfileRepository>();
+
+        // Phase 2.2 — Chat repositories
+        services.AddScoped<IConversationRepository, MongoConversationRepository>();
+        services.AddScoped<IChatMessageRepository, MongoChatMessageRepository>();
+        services.AddScoped<IReportRepository, MongoReportRepository>();
+
+        // Phase 2.3 — Escrow repository + background timer
+        services.AddScoped<IChatFinanceRepository, ChatFinanceRepository>();
+        services.AddHostedService<EscrowTimerService>();
+
+        // Phase 2.4 — Withdrawal repository
+        services.AddScoped<IWithdrawalRepository, WithdrawalRepository>();
+
+        // Phase 2.5 — MFA service
+        services.AddScoped<IMfaService, TotpMfaService>();
 
         // Đăng ký Auth Services
         services.AddSingleton<IPasswordHasher, Argon2idPasswordHasher>();
