@@ -13,11 +13,13 @@ public interface IChatFinanceRepository
     // --- Sessions ---
     Task<ChatFinanceSession?> GetSessionByConversationRefAsync(string conversationRef, CancellationToken ct = default);
     Task<ChatFinanceSession?> GetSessionByIdAsync(Guid id, CancellationToken ct = default);
+    Task<ChatFinanceSession?> GetSessionForUpdateAsync(Guid id, CancellationToken ct = default);
     Task AddSessionAsync(ChatFinanceSession session, CancellationToken ct = default);
     Task UpdateSessionAsync(ChatFinanceSession session, CancellationToken ct = default);
 
     // --- Question Items ---
     Task<ChatQuestionItem?> GetItemByIdAsync(Guid id, CancellationToken ct = default);
+    Task<ChatQuestionItem?> GetItemForUpdateAsync(Guid id, CancellationToken ct = default);
     Task<ChatQuestionItem?> GetItemByIdempotencyKeyAsync(string key, CancellationToken ct = default);
     Task<List<ChatQuestionItem>> GetItemsBySessionIdAsync(Guid sessionId, CancellationToken ct = default);
     Task AddItemAsync(ChatQuestionItem item, CancellationToken ct = default);

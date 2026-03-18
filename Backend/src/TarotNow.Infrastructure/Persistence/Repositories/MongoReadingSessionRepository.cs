@@ -179,6 +179,8 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
         CancellationToken cancellationToken = default)
     {
         var idempotencyKey = $"read_{session.Id}";
+        var goldDebited = false;
+        var diamondDebited = false;
 
         try
         {
@@ -188,12 +190,14 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
                 await _walletRepository.DebitAsync(userId, CurrencyType.Gold, TransactionType.ReadingCostGold,
                     costGold, "Reading", $"Tarot_{spreadType}", $"Phiên rút Tarot {spreadType}",
                     null, idempotencyKey, cancellationToken);
+                goldDebited = true;
             }
             if (costDiamond > 0)
             {
                 await _walletRepository.DebitAsync(userId, CurrencyType.Diamond, TransactionType.ReadingCostDiamond,
                     costDiamond, "Reading", $"Tarot_{spreadType}", $"Phiên rút Tarot {spreadType}",
                     null, idempotencyKey, cancellationToken);
+                diamondDebited = true;
             }
 
             // 2. Tạo session trong MongoDB
@@ -208,13 +212,13 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
             // để đảm bảo tính nguyên tử (Atomicity) liên database.
             try
             {
-                if (costGold > 0)
+                if (goldDebited)
                 {
                     await _walletRepository.CreditAsync(userId, CurrencyType.Gold, TransactionType.ReadingRefund, costGold,
                         "System_Rollback", session.Id.ToString(), $"Hoàn trả Gold do lỗi hệ thống lưu Session",
                         null, $"refund_rollback_{session.Id}", CancellationToken.None);
                 }
-                if (costDiamond > 0)
+                if (diamondDebited)
                 {
                     await _walletRepository.CreditAsync(userId, CurrencyType.Diamond, TransactionType.ReadingRefund, costDiamond,
                         "System_Rollback", session.Id.ToString(), $"Hoàn trả Diamond do lỗi hệ thống lưu Session",
@@ -225,10 +229,12 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
             {
                 // CRITICAL: Nếu cả refund cũng fail, cần log lỗi cực kỳ nghiêm trọng để admin can thiệp thủ công.
                 // Ở đây ta re-throw exception gốc nhưng đính kèm thông tin lỗi refund.
-                throw new InvalidOperationException($"Lỗi nghiêm trọng: Trừ tiền thành công nhưng lưu Session thất bại và không thể Refund. Error: {ex.Message}. RefundError: {refundEx.Message}", ex);
+                throw new InvalidOperationException(
+                    "Lỗi nghiêm trọng: giao dịch không nhất quán khi khởi tạo phiên đọc bài. Vui lòng liên hệ hỗ trợ.",
+                    new AggregateException(ex, refundEx));
             }
 
-            return (false, ex.Message);
+            return (false, "start_paid_session_failed");
         }
     }
 
@@ -236,6 +242,9 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
     public async Task<(IEnumerable<ReadingSession> Items, int TotalCount)> GetSessionsByUserIdAsync(
         Guid userId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
+        var normalizedPage = page < 1 ? 1 : page;
+        var normalizedPageSize = pageSize <= 0 ? 10 : Math.Min(pageSize, 200);
+
         var userIdStr = userId.ToString();
         var filter = Builders<ReadingSessionDocument>.Filter.Eq(r => r.UserId, userIdStr)
             & Builders<ReadingSessionDocument>.Filter.Eq(r => r.IsDeleted, false);
@@ -245,8 +254,8 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
         var docs = await _mongoContext.ReadingSessions
             .Find(filter)
             .SortByDescending(r => r.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Limit(pageSize)
+            .Skip((normalizedPage - 1) * normalizedPageSize)
+            .Limit(normalizedPageSize)
             .ToListAsync(cancellationToken);
 
         var entities = docs.Select(MapToEntity).ToList();
@@ -283,6 +292,9 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
         DateTime? endDate = null,
         CancellationToken cancellationToken = default)
     {
+        var normalizedPage = page < 1 ? 1 : page;
+        var normalizedPageSize = pageSize <= 0 ? 10 : Math.Min(pageSize, 200);
+
         var builder = Builders<ReadingSessionDocument>.Filter;
         var filter = builder.Eq(r => r.IsDeleted, false);
 
@@ -311,8 +323,8 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
         var docs = await _mongoContext.ReadingSessions
             .Find(filter)
             .SortByDescending(r => r.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Limit(pageSize)
+            .Skip((normalizedPage - 1) * normalizedPageSize)
+            .Limit(normalizedPageSize)
             .ToListAsync(cancellationToken);
 
         var (items, totalCountResult) = (docs.Select(MapToEntity).ToList(), (int)totalCount);

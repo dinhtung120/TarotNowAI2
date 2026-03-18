@@ -29,6 +29,14 @@ public class ChatFinanceRepository : IChatFinanceRepository
     public async Task<ChatFinanceSession?> GetSessionByIdAsync(Guid id, CancellationToken ct = default)
         => await _db.ChatFinanceSessions.FindAsync(new object[] { id }, ct);
 
+    public async Task<ChatFinanceSession?> GetSessionForUpdateAsync(Guid id, CancellationToken ct = default)
+    {
+        var sessions = await _db.ChatFinanceSessions
+            .FromSqlRaw("SELECT * FROM chat_finance_sessions WHERE id = {0} FOR UPDATE", id)
+            .ToListAsync(ct);
+        return sessions.FirstOrDefault();
+    }
+
     public async Task AddSessionAsync(ChatFinanceSession session, CancellationToken ct = default)
         => await _db.ChatFinanceSessions.AddAsync(session, ct);
 
@@ -44,6 +52,14 @@ public class ChatFinanceRepository : IChatFinanceRepository
 
     public async Task<ChatQuestionItem?> GetItemByIdAsync(Guid id, CancellationToken ct = default)
         => await _db.ChatQuestionItems.FindAsync(new object[] { id }, ct);
+
+    public async Task<ChatQuestionItem?> GetItemForUpdateAsync(Guid id, CancellationToken ct = default)
+    {
+        var items = await _db.ChatQuestionItems
+            .FromSqlRaw("SELECT * FROM chat_question_items WHERE id = {0} FOR UPDATE", id)
+            .ToListAsync(ct);
+        return items.FirstOrDefault();
+    }
 
     public async Task<ChatQuestionItem?> GetItemByIdempotencyKeyAsync(string key, CancellationToken ct = default)
         => await _db.ChatQuestionItems.FirstOrDefaultAsync(i => i.IdempotencyKey == key, ct);

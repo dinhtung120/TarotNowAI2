@@ -1,4 +1,5 @@
 using MediatR;
+using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Enums;
 using System.Threading;
@@ -43,9 +44,15 @@ public class ProcessDepositCommandHandler : IRequestHandler<ProcessDepositComman
         var order = await _depositOrderRepository.GetByIdAsync(request.DepositId, cancellationToken);
         if (order == null || order.Status != "Pending") return false;
 
+        var action = request.Action?.Trim().ToLowerInvariant();
+        if (action != "approve" && action != "reject")
+        {
+            throw new BadRequestException("Action phải là 'approve' hoặc 'reject'.");
+        }
+
         var txnId = request.TransactionId ?? $"ADMIN_MANUAL_{Guid.NewGuid().ToString("N").Substring(0, 8)}";
 
-        if (request.Action.ToLower() == "approve")
+        if (action == "approve")
         {
             // QUAN TRỌNG: Phải CreditAsync TRƯỚC khi MarkAsSuccess
             // Lý do: CreditAsync gọi _dbContext.SaveChangesAsync() bên trong.

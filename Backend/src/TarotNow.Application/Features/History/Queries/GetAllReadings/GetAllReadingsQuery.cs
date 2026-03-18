@@ -53,7 +53,7 @@ public class GetAllReadingsQueryHandler : IRequestHandler<GetAllReadingsQuery, G
         // 1. Nếu có lọc theo Username, tìm IDs tương ứng từ SQL
         if (!string.IsNullOrWhiteSpace(request.Username))
         {
-            var usernameLower = request.Username.Trim().ToLower();
+            var usernameLower = request.Username.Trim().ToLowerInvariant();
             var users = await _userRepo.SearchUsersByUsernameAsync(usernameLower, cancellationToken);
             filteredUserIds = users.Select(u => u.Id).ToList();
             
@@ -76,27 +76,36 @@ public class GetAllReadingsQueryHandler : IRequestHandler<GetAllReadingsQuery, G
 
         // 3. Thu thập tất cả UserIds trong kết quả để lấy Username hàng loạt (Batching)
         // Lưu ý: UserRepo vẫn nhận Guid nên cần parse ở bước này để query SQL
-        var userGuids = items
-            .Where(s => !string.IsNullOrEmpty(s.UserId) && Guid.TryParse(s.UserId, out _))
-            .Select(s => Guid.Parse(s.UserId))
+        var parsedItems = items
+            .Select(s => new
+            {
+                Session = s,
+                ParsedUserId = Guid.TryParse(s.UserId, out var guid) ? guid : (Guid?)null
+            })
+            .ToList();
+
+        var userGuids = parsedItems
+            .Where(x => x.ParsedUserId.HasValue)
+            .Select(x => x.ParsedUserId!.Value)
             .Distinct()
             .ToList();
             
         var userMap = await _userRepo.GetUsernameMapAsync(userGuids, cancellationToken);
 
-        var dtos = items.Select(s => {
-            Guid.TryParse(s.UserId, out var g);
-            var foundUsername = (g != Guid.Empty && userMap.TryGetValue(g, out var uname)) ? uname : "Unknown";
+        var dtos = parsedItems.Select(x => {
+            var foundUsername = x.ParsedUserId.HasValue && userMap.TryGetValue(x.ParsedUserId.Value, out var uname)
+                ? uname
+                : "Unknown";
             
             return new AdminReadingDto
             {
-                Id = s.Id,
-                UserId = s.UserId,
+                Id = x.Session.Id,
+                UserId = x.Session.UserId,
                 Username = foundUsername,
-                SpreadType = s.SpreadType,
-                Question = s.Question,
-                IsCompleted = s.IsCompleted,
-                CreatedAt = s.CreatedAt
+                SpreadType = x.Session.SpreadType,
+                Question = x.Session.Question,
+                IsCompleted = x.Session.IsCompleted,
+                CreatedAt = x.Session.CreatedAt
             };
         });
 

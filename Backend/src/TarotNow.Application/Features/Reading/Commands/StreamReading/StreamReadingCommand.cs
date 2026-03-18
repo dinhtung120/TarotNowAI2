@@ -134,8 +134,13 @@ public class StreamReadingCommandHandler : IRequestHandler<StreamReadingCommand,
                 aiRequest.Status = AiRequestStatus.FailedBeforeFirstToken;
                 aiRequest.FinishReason = "insufficient_funds_or_error";
                 await _aiRequestRepo.UpdateAsync(aiRequest, cancellationToken);
-                
-                throw new BadRequestException("Not enough balance to perform AI Reading: " + ex.Message);
+
+                if (ex is InvalidOperationException)
+                {
+                    throw new BadRequestException("Not enough balance to perform AI Reading.");
+                }
+
+                throw new BadRequestException("Unable to reserve balance for AI Reading. Please try again later.");
             }
         }
 

@@ -51,7 +51,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
         // 4. Lưu vào Database
         await _userRepository.AddAsync(newUser, cancellationToken);
 
-        // TODO: (Trong bước tiếp theo) Xóa hoặc Publish DomainEvent để gửi Email verify OTP
+        // Luồng gửi OTP xác thực email được trigger bởi endpoint chuyên biệt `send-verification-email`
+        // để frontend chủ động kiểm soát thời điểm gửi và tần suất retry.
 
         // 5. Trả về Id của User mới
         return newUser.Id;

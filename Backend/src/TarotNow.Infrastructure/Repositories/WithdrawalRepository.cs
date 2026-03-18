@@ -30,21 +30,31 @@ public class WithdrawalRepository : IWithdrawalRepository
                         && r.Status != "paid", ct);
 
     public async Task<List<WithdrawalRequest>> ListByUserAsync(Guid userId, int page, int pageSize, CancellationToken ct = default)
-        => await _db.WithdrawalRequests
+    {
+        var normalizedPage = page < 1 ? 1 : page;
+        var normalizedPageSize = pageSize <= 0 ? 20 : Math.Min(pageSize, 200);
+
+        return await _db.WithdrawalRequests
             .Where(r => r.UserId == userId)
             .OrderByDescending(r => r.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((normalizedPage - 1) * normalizedPageSize)
+            .Take(normalizedPageSize)
             .ToListAsync(ct);
+    }
 
     /// <summary>Admin queue: pending requests mới nhất trước.</summary>
     public async Task<List<WithdrawalRequest>> ListPendingAsync(int page, int pageSize, CancellationToken ct = default)
-        => await _db.WithdrawalRequests
+    {
+        var normalizedPage = page < 1 ? 1 : page;
+        var normalizedPageSize = pageSize <= 0 ? 20 : Math.Min(pageSize, 200);
+
+        return await _db.WithdrawalRequests
             .Where(r => r.Status == "pending")
             .OrderBy(r => r.CreatedAt) // FIFO — cũ nhất trước
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((normalizedPage - 1) * normalizedPageSize)
+            .Take(normalizedPageSize)
             .ToListAsync(ct);
+    }
 
     public async Task AddAsync(WithdrawalRequest request, CancellationToken ct = default)
         => await _db.WithdrawalRequests.AddAsync(request, ct);

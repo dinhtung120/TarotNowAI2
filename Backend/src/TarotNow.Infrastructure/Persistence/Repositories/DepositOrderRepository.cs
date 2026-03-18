@@ -40,6 +40,9 @@ public class DepositOrderRepository : IDepositOrderRepository
 
     public async Task<(IEnumerable<DepositOrder> Orders, int TotalCount)> GetPaginatedAsync(int page, int pageSize, string? status, CancellationToken cancellationToken = default)
     {
+        var normalizedPage = page < 1 ? 1 : page;
+        var normalizedPageSize = pageSize <= 0 ? 20 : Math.Min(pageSize, 200);
+
         var query = _context.DepositOrders.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(status))
@@ -51,8 +54,8 @@ public class DepositOrderRepository : IDepositOrderRepository
 
         var orders = await query
             .OrderByDescending(o => o.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((normalizedPage - 1) * normalizedPageSize)
+            .Take(normalizedPageSize)
             .ToListAsync(cancellationToken);
 
         return (orders, totalCount);

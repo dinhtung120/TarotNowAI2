@@ -22,11 +22,14 @@ public class LedgerRepository : ILedgerRepository
 
     public async Task<IEnumerable<WalletTransaction>> GetTransactionsAsync(Guid userId, int page, int limit, CancellationToken cancellationToken = default)
     {
+        var normalizedPage = page < 1 ? 1 : page;
+        var normalizedLimit = limit <= 0 ? 20 : Math.Min(limit, 200);
+
         return await _dbContext.WalletTransactions
             .Where(x => x.UserId == userId)
             .OrderByDescending(x => x.CreatedAt)
-            .Skip((page - 1) * limit)
-            .Take(limit)
+            .Skip((normalizedPage - 1) * normalizedLimit)
+            .Take(normalizedLimit)
             .ToListAsync(cancellationToken);
     }
 }

@@ -60,6 +60,9 @@ public class MongoNotificationRepository : INotificationRepository
     public async Task<(IEnumerable<NotificationDto> Items, long TotalCount)> GetByUserIdAsync(
         Guid userId, bool? isRead, int page, int pageSize, CancellationToken cancellationToken = default)
     {
+        var normalizedPage = page < 1 ? 1 : page;
+        var normalizedPageSize = pageSize <= 0 ? 20 : Math.Min(pageSize, 200);
+
         var userIdStr = userId.ToString();
         var filterBuilder = Builders<NotificationDocument>.Filter;
 
@@ -74,8 +77,8 @@ public class MongoNotificationRepository : INotificationRepository
         var docs = await _mongoContext.Notifications
             .Find(filter)
             .SortByDescending(n => n.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Limit(pageSize)
+            .Skip((normalizedPage - 1) * normalizedPageSize)
+            .Limit(normalizedPageSize)
             .ToListAsync(cancellationToken);
 
         var dtos = docs.Select(d => new NotificationDto

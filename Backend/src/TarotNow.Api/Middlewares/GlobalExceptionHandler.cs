@@ -72,6 +72,20 @@ public class GlobalExceptionHandler : IExceptionHandler
                 problemDetails.Extensions["errorCode"] = domainException.ErrorCode;
                 break;
 
+            case ArgumentException argumentException:
+                problemDetails.Status = StatusCodes.Status400BadRequest;
+                problemDetails.Title = "Bad Request";
+                problemDetails.Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1";
+                problemDetails.Detail = argumentException.Message;
+                break;
+
+            case InvalidOperationException invalidOperationException:
+                problemDetails.Status = StatusCodes.Status422UnprocessableEntity;
+                problemDetails.Title = "Invalid Operation";
+                problemDetails.Type = "https://datatracker.ietf.org/doc/html/rfc4918#section-11.2";
+                problemDetails.Detail = invalidOperationException.Message;
+                break;
+
             case UnauthorizedAccessException:
                 // Lỗi chưa xác thực/phân quyền (HTTP 401/403)
                 problemDetails.Status = StatusCodes.Status401Unauthorized;

@@ -26,13 +26,22 @@ public class AddQuestionCommandHandlerTests
     /* Mock các repository — tách biệt handler logic khỏi database thực */
     private readonly Mock<IChatFinanceRepository> _mockFinanceRepo;
     private readonly Mock<IWalletRepository> _mockWalletRepo;
+    private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
     private readonly AddQuestionCommandHandler _handler;
 
     public AddQuestionCommandHandlerTests()
     {
         _mockFinanceRepo = new Mock<IChatFinanceRepository>();
         _mockWalletRepo = new Mock<IWalletRepository>();
-        _handler = new AddQuestionCommandHandler(_mockFinanceRepo.Object, _mockWalletRepo.Object);
+        _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
+        _mockTransactionCoordinator
+            .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
+            .Returns((Func<CancellationToken, Task> action, CancellationToken ct) => action(ct));
+
+        _handler = new AddQuestionCommandHandler(
+            _mockFinanceRepo.Object,
+            _mockWalletRepo.Object,
+            _mockTransactionCoordinator.Object);
     }
 
     /// <summary>

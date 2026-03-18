@@ -1,4 +1,5 @@
 using MongoDB.Driver;
+using Microsoft.Extensions.Logging;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence;
@@ -17,20 +18,21 @@ namespace TarotNow.Infrastructure.Persistence;
 public class MongoDbContext
 {
     private readonly IMongoDatabase _database;
+    private readonly ILogger<MongoDbContext> _logger;
 
-    public MongoDbContext(IMongoDatabase database)
+    public MongoDbContext(IMongoDatabase database, ILogger<MongoDbContext> logger)
     {
         _database = database;
+        _logger = logger;
 
-        // Tạo indexes khi khởi tạo context — idempotent (gọi lại không lỗi).
-        try 
+        try
         {
             EnsureIndexes();
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
-            // Log warning nhưng không làm sập app
-            System.Console.WriteLine($"[MongoDB] Warning: Không thể tạo indexes: {ex.Message}");
+            _logger.LogError(ex, "[MongoDB] Failed to ensure indexes at startup.");
+            throw;
         }
     }
 

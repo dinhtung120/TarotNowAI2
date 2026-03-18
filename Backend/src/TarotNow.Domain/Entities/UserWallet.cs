@@ -87,6 +87,10 @@ public class UserWallet
                 TotalDiamondsPurchased += amount;
             }
         }
+        else
+        {
+            throw new ArgumentException($"Loại tiền tệ không hợp lệ: {currency}", nameof(currency));
+        }
     }
 
     /// <summary>
@@ -112,6 +116,10 @@ public class UserWallet
             if (DiamondBalance < amount)
                 throw new InvalidOperationException("Số dư Diamond không đủ.");
             DiamondBalance -= amount;
+        }
+        else
+        {
+            throw new ArgumentException($"Loại tiền tệ không hợp lệ: {currency}", nameof(currency));
         }
     }
 

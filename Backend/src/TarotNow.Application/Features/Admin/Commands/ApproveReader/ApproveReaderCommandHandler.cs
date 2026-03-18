@@ -46,7 +46,9 @@ public class ApproveReaderCommandHandler : IRequestHandler<ApproveReaderCommand,
             throw new BadRequestException($"Đơn này đã được xử lý ({readerRequest.Status}).");
 
         // 4. Lấy user từ PostgreSQL
-        var userId = Guid.Parse(readerRequest.UserId);
+        if (!Guid.TryParse(readerRequest.UserId, out var userId))
+            throw new BadRequestException("Reader request chứa UserId không hợp lệ.");
+
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken)
             ?? throw new NotFoundException("Không tìm thấy người dùng.");
 

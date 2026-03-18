@@ -65,6 +65,9 @@ public class MongoReaderRequestRepository : IReaderRequestRepository
         int page, int pageSize, string? statusFilter = null,
         CancellationToken cancellationToken = default)
     {
+        var normalizedPage = page < 1 ? 1 : page;
+        var normalizedPageSize = pageSize <= 0 ? 20 : Math.Min(pageSize, 200);
+
         var filterBuilder = Builders<ReaderRequestDocument>.Filter;
         var filter = filterBuilder.Eq(r => r.IsDeleted, false);
 
@@ -78,8 +81,8 @@ public class MongoReaderRequestRepository : IReaderRequestRepository
         var docs = await _context.ReaderRequests
             .Find(filter)
             .SortByDescending(r => r.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Limit(pageSize)
+            .Skip((normalizedPage - 1) * normalizedPageSize)
+            .Limit(normalizedPageSize)
             .ToListAsync(cancellationToken);
 
         return (docs.Select(ToDto), totalCount);

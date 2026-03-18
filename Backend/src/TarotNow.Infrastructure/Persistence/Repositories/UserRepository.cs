@@ -55,6 +55,9 @@ public class UserRepository : IUserRepository
 
     public async Task<(IEnumerable<User> Users, int TotalCount)> GetPaginatedUsersAsync(int page, int pageSize, string? searchTerm, CancellationToken cancellationToken = default)
     {
+        var normalizedPage = page < 1 ? 1 : page;
+        var normalizedPageSize = pageSize <= 0 ? 20 : Math.Min(pageSize, 200);
+
         var query = _dbContext.Users.AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -66,8 +69,8 @@ public class UserRepository : IUserRepository
 
         var users = await query
             .OrderByDescending(u => u.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+            .Skip((normalizedPage - 1) * normalizedPageSize)
+            .Take(normalizedPageSize)
             .ToListAsync(cancellationToken);
 
         return (users, totalCount);

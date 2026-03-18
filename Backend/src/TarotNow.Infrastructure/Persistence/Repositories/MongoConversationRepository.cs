@@ -91,12 +91,15 @@ public class MongoConversationRepository : IConversationRepository
         FilterDefinition<ConversationDocument> filter, int page, int pageSize,
         CancellationToken cancellationToken)
     {
+        var normalizedPage = page < 1 ? 1 : page;
+        var normalizedPageSize = pageSize <= 0 ? 20 : Math.Min(pageSize, 200);
+
         var totalCount = await _context.Conversations.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
         var docs = await _context.Conversations.Find(filter)
             .SortByDescending(c => c.LastMessageAt)
             .ThenByDescending(c => c.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Limit(pageSize)
+            .Skip((normalizedPage - 1) * normalizedPageSize)
+            .Limit(normalizedPageSize)
             .ToListAsync(cancellationToken);
 
         return (docs.Select(ToDto), totalCount);

@@ -782,6 +782,11 @@ namespace TarotNow.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_withdrawal_requests");
 
+                    b.HasIndex("UserId", "BusinessDateUtc")
+                        .IsUnique()
+                        .HasFilter("status in ('pending','approved')")
+                        .HasDatabaseName("ix_withdrawal_one_per_day_active");
+
                     b.ToTable("withdrawal_requests");
                 });
 

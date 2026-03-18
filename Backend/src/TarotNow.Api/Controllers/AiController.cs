@@ -2,6 +2,7 @@ using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
 using TarotNow.Application.Features.Reading.Commands.StreamReading;
 using TarotNow.Domain.Enums;
@@ -25,14 +26,16 @@ namespace TarotNow.Api.Controllers;
 public class AiController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ILogger<AiController> _logger;
 
     /// <summary>
     /// Constructor chỉ nhận IMediator — đúng nguyên tắc Thin Controller.
     /// Trước đây inject thêm IAiRequestRepository + IWalletRepository (vi phạm CA).
     /// </summary>
-    public AiController(IMediator mediator)
+    public AiController(IMediator mediator, ILogger<AiController> logger)
     {
         _mediator = mediator;
+        _logger = logger;
     }
 
     /// <summary>
@@ -64,12 +67,23 @@ public class AiController : ControllerBase
                 FollowupQuestion = followUpQuestion
             }, cancellationToken);
         }
+        catch (BadRequestException ex)
+        {
+            Response.StatusCode = StatusCodes.Status400BadRequest;
+            await Response.WriteAsync($"data: {ex.Message}\n\n", cancellationToken);
+            return;
+        }
+        catch (NotFoundException ex)
+        {
+            Response.StatusCode = StatusCodes.Status404NotFound;
+            await Response.WriteAsync($"data: {ex.Message}\n\n", cancellationToken);
+            return;
+        }
         catch (Exception ex)
         {
-            // Guard rejection (hết tiền, quota, v.v) → trả lỗi text trước khi stream bắt đầu
-            Response.StatusCode = 400;
-            var errorMsg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
-            await Response.WriteAsync($"data: {errorMsg}\n\n", cancellationToken);
+            _logger.LogWarning(ex, "Failed to initialize AI stream for session {SessionId}.", sessionId);
+            Response.StatusCode = StatusCodes.Status500InternalServerError;
+            await Response.WriteAsync("data: Unable to start AI stream. Please try again later.\n\n", cancellationToken);
             return;
         }
 
@@ -193,10 +207,15 @@ public class AiController : ControllerBase
                     0, tokenCounter, 0, "failed", ex.Message);
             }
 
+            _logger.LogError(ex,
+                "AI stream runtime error for session {SessionId}, request {AiRequestId}.",
+                sessionId,
+                result.AiRequestId);
+
             if (!Response.HasStarted)
             {
                 Response.StatusCode = 500;
-                await Response.WriteAsync($"data: Stream Error: {ex.Message}\n\n");
+                await Response.WriteAsync("data: Stream Error: Unable to process AI stream. Please try again.\n\n");
             }
         }
     }

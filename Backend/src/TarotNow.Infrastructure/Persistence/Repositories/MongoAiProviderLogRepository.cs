@@ -49,6 +49,9 @@ public class MongoAiProviderLogRepository : IAiProviderLogRepository
     public async Task<(IEnumerable<AiProviderLogDto> Items, long TotalCount)> GetByUserIdAsync(
         Guid userId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
+        var normalizedPage = page < 1 ? 1 : page;
+        var normalizedPageSize = pageSize <= 0 ? 20 : Math.Min(pageSize, 200);
+
         var userIdStr = userId.ToString();
         var filter = Builders<AiProviderLogDocument>.Filter.Eq(a => a.UserId, userIdStr);
 
@@ -57,8 +60,8 @@ public class MongoAiProviderLogRepository : IAiProviderLogRepository
         var docs = await _mongoContext.AiProviderLogs
             .Find(filter)
             .SortByDescending(a => a.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Limit(pageSize)
+            .Skip((normalizedPage - 1) * normalizedPageSize)
+            .Limit(normalizedPageSize)
             .ToListAsync(cancellationToken);
 
         var dtos = docs.Select(d => new AiProviderLogDto

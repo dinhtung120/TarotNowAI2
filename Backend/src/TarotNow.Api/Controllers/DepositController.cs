@@ -55,15 +55,21 @@ public class DepositController : ControllerBase
         // 2. Parse payload lấy thông tin giao dịch
         // Lưu ý: Ở môi trường sản xuất cần map JSON chính xác bằng JsonSerializer.Deserialize 
         // dựa theo format của nhà cung cấp.
-        WebhookPayloadData payloadData;
+        WebhookPayloadData? payloadData;
         try
         {
             var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            payloadData = System.Text.Json.JsonSerializer.Deserialize<WebhookPayloadData>(rawPayload, options) 
-                          ?? throw new Exception("Payload is null.");
+            payloadData = System.Text.Json.JsonSerializer.Deserialize<WebhookPayloadData>(rawPayload, options);
         }
-        catch
+        catch (System.Text.Json.JsonException ex)
         {
+            _logger.LogWarning(ex, "Invalid webhook JSON payload.");
+            return BadRequest(new { msg = "Invalid JSON payload" });
+        }
+
+        if (payloadData == null)
+        {
+            _logger.LogWarning("Webhook payload is null after deserialization.");
             return BadRequest(new { msg = "Invalid JSON payload" });
         }
 
@@ -74,19 +80,7 @@ public class DepositController : ControllerBase
             PayloadData = payloadData
         };
 
-        try
-        {
-            var result = await Mediator.Send(command);
-            return result ? Ok(new { success = true }) : BadRequest();
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return Unauthorized(new { msg = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Unexpected error while processing deposit webhook.");
-            return StatusCode(500, new { msg = "Internal server error." });
-        }
+        var result = await Mediator.Send(command);
+        return result ? Ok(new { success = true }) : BadRequest();
     }
 }

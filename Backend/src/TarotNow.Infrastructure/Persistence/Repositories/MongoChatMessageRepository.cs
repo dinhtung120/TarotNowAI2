@@ -32,6 +32,9 @@ public class MongoChatMessageRepository : IChatMessageRepository
     public async Task<(IEnumerable<ChatMessageDto> Items, long TotalCount)> GetByConversationIdPaginatedAsync(
         string conversationId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
+        var normalizedPage = page < 1 ? 1 : page;
+        var normalizedPageSize = pageSize <= 0 ? 50 : Math.Min(pageSize, 200);
+
         var filter = Builders<ChatMessageDocument>.Filter.And(
             Builders<ChatMessageDocument>.Filter.Eq(m => m.ConversationId, conversationId),
             Builders<ChatMessageDocument>.Filter.Eq(m => m.IsDeleted, false));
@@ -40,8 +43,8 @@ public class MongoChatMessageRepository : IChatMessageRepository
 
         var docs = await _context.ChatMessages.Find(filter)
             .SortByDescending(m => m.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Limit(pageSize)
+            .Skip((normalizedPage - 1) * normalizedPageSize)
+            .Limit(normalizedPageSize)
             .ToListAsync(cancellationToken);
 
         return (docs.Select(ToDto), totalCount);

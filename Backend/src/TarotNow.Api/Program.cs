@@ -28,7 +28,17 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 builder.Services.AddSignalR();
 
 // Cấu hình CORS
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()?
+    .Where(origin => !string.IsNullOrWhiteSpace(origin))
+    .Select(origin => origin.Trim())
+    .Distinct(StringComparer.OrdinalIgnoreCase)
+    .ToArray() ?? Array.Empty<string>();
+
+if (allowedOrigins.Length == 0)
+{
+    throw new InvalidOperationException("Missing CORS configuration: Cors:AllowedOrigins must contain at least one origin.");
+}
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -71,7 +81,6 @@ app.UseCors();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Map routes cho Controllers
 // Map routes cho Controllers
 app.MapControllers();
 

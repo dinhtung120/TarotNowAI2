@@ -23,11 +23,16 @@ public class AddQuestionCommandHandler : IRequestHandler<AddQuestionCommand, Gui
 {
     private readonly IChatFinanceRepository _financeRepo;
     private readonly IWalletRepository _walletRepo;
+    private readonly ITransactionCoordinator _transactionCoordinator;
 
-    public AddQuestionCommandHandler(IChatFinanceRepository financeRepo, IWalletRepository walletRepo)
+    public AddQuestionCommandHandler(
+        IChatFinanceRepository financeRepo,
+        IWalletRepository walletRepo,
+        ITransactionCoordinator transactionCoordinator)
     {
         _financeRepo = financeRepo;
         _walletRepo = walletRepo;
+        _transactionCoordinator = transactionCoordinator;
     }
 
     public async Task<Guid> Handle(AddQuestionCommand req, CancellationToken ct)
@@ -43,49 +48,53 @@ public class AddQuestionCommandHandler : IRequestHandler<AddQuestionCommand, Gui
         var existing = await _financeRepo.GetItemByIdempotencyKeyAsync(idempotencyKey, ct);
         if (existing != null) return existing.Id;
 
-        // 2. Session phải tồn tại và active
-        var session = await _financeRepo.GetSessionByConversationRefAsync(req.ConversationRef, ct)
-            ?? throw new NotFoundException("Không tìm thấy phiên trò chuyện.");
-
-        if (session.UserId != req.UserId)
-            throw new BadRequestException("Bạn không phải chủ phiên.");
-
-        if (session.Status != "active" && session.Status != "pending")
-            throw new BadRequestException("Phiên đã kết thúc, không thể thêm câu hỏi.");
-
-        // 3. Freeze thêm diamond
-        await _walletRepo.FreezeAsync(
-            req.UserId, req.AmountDiamond,
-            referenceSource: "chat_question_item",
-            referenceId: idempotencyKey,
-            description: $"Escrow add-question {req.AmountDiamond}💎",
-            idempotencyKey: $"freeze_{idempotencyKey}",
-            cancellationToken: ct);
-
-        // 4. Tạo question item (add_question)
-        var now = DateTime.UtcNow;
-        var item = new ChatQuestionItem
+        Guid createdItemId = Guid.Empty;
+        await _transactionCoordinator.ExecuteAsync(async transactionCt =>
         {
-            FinanceSessionId = session.Id,
-            ConversationRef = req.ConversationRef,
-            PayerId = req.UserId,
-            ReceiverId = session.ReaderId,
-            Type = QuestionItemType.AddQuestion,
-            AmountDiamond = req.AmountDiamond,
-            Status = QuestionItemStatus.Accepted,
-            ProposalMessageRef = req.ProposalMessageRef,
-            AcceptedAt = now,
-            ReaderResponseDueAt = now.AddHours(24),
-            AutoRefundAt = now.AddHours(24),
-            IdempotencyKey = idempotencyKey,
-        };
-        await _financeRepo.AddItemAsync(item, ct);
+            // 2. Session phải tồn tại và active
+            var session = await _financeRepo.GetSessionByConversationRefAsync(req.ConversationRef, transactionCt)
+                ?? throw new NotFoundException("Không tìm thấy phiên trò chuyện.");
 
-        // 5. Cộng dồn total_frozen
-        session.TotalFrozen += req.AmountDiamond;
-        await _financeRepo.UpdateSessionAsync(session, ct);
-        await _financeRepo.SaveChangesAsync(ct);
+            if (session.UserId != req.UserId)
+                throw new BadRequestException("Bạn không phải chủ phiên.");
 
-        return item.Id;
+            if (session.Status != "active" && session.Status != "pending")
+                throw new BadRequestException("Phiên đã kết thúc, không thể thêm câu hỏi.");
+
+            // 3. Freeze + persist metadata trong cùng transaction
+            await _walletRepo.FreezeAsync(
+                req.UserId, req.AmountDiamond,
+                referenceSource: "chat_question_item",
+                referenceId: idempotencyKey,
+                description: $"Escrow add-question {req.AmountDiamond}💎",
+                idempotencyKey: $"freeze_{idempotencyKey}",
+                cancellationToken: transactionCt);
+
+            var now = DateTime.UtcNow;
+            var item = new ChatQuestionItem
+            {
+                FinanceSessionId = session.Id,
+                ConversationRef = req.ConversationRef,
+                PayerId = req.UserId,
+                ReceiverId = session.ReaderId,
+                Type = QuestionItemType.AddQuestion,
+                AmountDiamond = req.AmountDiamond,
+                Status = QuestionItemStatus.Accepted,
+                ProposalMessageRef = req.ProposalMessageRef,
+                AcceptedAt = now,
+                ReaderResponseDueAt = now.AddHours(24),
+                AutoRefundAt = now.AddHours(24),
+                IdempotencyKey = idempotencyKey,
+            };
+            await _financeRepo.AddItemAsync(item, transactionCt);
+
+            session.TotalFrozen += req.AmountDiamond;
+            await _financeRepo.UpdateSessionAsync(session, transactionCt);
+            await _financeRepo.SaveChangesAsync(transactionCt);
+
+            createdItemId = item.Id;
+        }, ct);
+
+        return createdItemId;
     }
 }

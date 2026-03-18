@@ -65,6 +65,7 @@ public static class DependencyInjection
         services.AddScoped<IUserConsentRepository, UserConsentRepository>();
         services.AddScoped<IDepositOrderRepository, DepositOrderRepository>();
         services.AddScoped<IDepositPromotionRepository, DepositPromotionRepository>();
+        services.AddScoped<ITransactionCoordinator, TransactionCoordinator>();
 
         // ======================================================================
         // REPOSITORIES — MongoDB repos (thay thế EF Core cho 5 collections)
@@ -110,13 +111,25 @@ public static class DependencyInjection
         var redisConnectionString = configuration.GetConnectionString("Redis") 
             ?? "localhost:6379"; // Fallback cho local dev
 
-        services.AddStackExchangeRedisCache(options =>
+        var redisMultiplexer = TryCreateRedisMultiplexer(redisConnectionString);
+        var usesRedisCache = redisMultiplexer != null;
+        if (redisMultiplexer != null)
         {
-            options.Configuration = redisConnectionString;
-            options.InstanceName = "TarotNow:"; // Prefix cho các key trong Redis
-        });
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = redisConnectionString;
+                options.InstanceName = "TarotNow:"; // Prefix cho các key trong Redis
+            });
 
-        services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnectionString));
+            services.AddSingleton<IConnectionMultiplexer>(redisMultiplexer);
+        }
+        else
+        {
+            services.AddDistributedMemoryCache();
+        }
+
+        services.AddSingleton(new CacheBackendState(usesRedisCache));
+        services.AddHostedService<CacheBackendStartupLogger>();
 
         // Đăng ký CacheService để Application layer sử dụng
         services.AddScoped<ICacheService, RedisCacheService>();
@@ -127,6 +140,7 @@ public static class DependencyInjection
         // Không dùng fallback hardcoded vì rủi ro bảo mật cao — nếu config thiếu, app phải dừng ngay.
         var secretKey = jwtSettings["SecretKey"] 
             ?? throw new InvalidOperationException("JWT SecretKey chưa được cấu hình. Vui lòng thiết lập 'Jwt:SecretKey' trong appsettings.json hoặc biến môi trường.");
+        ValidateJwtSecret(secretKey);
         
         services.AddAuthentication(options =>
         {
@@ -170,5 +184,40 @@ public static class DependencyInjection
         });
         
         return services;
+    }
+
+    private static void ValidateJwtSecret(string secretKey)
+    {
+        var normalized = secretKey.Trim();
+        if (normalized.Length < 32)
+            throw new InvalidOperationException("Jwt:SecretKey quá ngắn. Yêu cầu tối thiểu 32 ký tự.");
+
+        if (normalized.Contains("REPLACE", StringComparison.OrdinalIgnoreCase) ||
+            normalized.Contains("PHUONG_AN_B", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Jwt:SecretKey đang dùng placeholder. Vui lòng cấu hình secret thật.");
+        }
+    }
+
+    private static IConnectionMultiplexer? TryCreateRedisMultiplexer(string connectionString)
+    {
+        try
+        {
+            var options = ConfigurationOptions.Parse(connectionString);
+            options.AbortOnConnectFail = false;
+            options.ConnectTimeout = 2000;
+            options.SyncTimeout = 2000;
+            options.ConnectRetry = 1;
+
+            var multiplexer = ConnectionMultiplexer.Connect(options);
+            if (multiplexer.IsConnected) return multiplexer;
+
+            multiplexer.Dispose();
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
     }
 }

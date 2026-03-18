@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using TarotNow.Application.Features.Chat.Commands.MarkMessagesRead;
 using TarotNow.Application.Features.Chat.Commands.SendMessage;
+using TarotNow.Application.Exceptions;
 using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
 
@@ -167,10 +168,21 @@ public class ChatHub : Hub
             // Broadcast cho tất cả members trong conversation group
             await Clients.Group(conversationId).SendAsync("ReceiveMessage", message);
         }
+        catch (BadRequestException ex)
+        {
+            await Clients.Caller.SendAsync("Error", ex.Message);
+        }
+        catch (NotFoundException ex)
+        {
+            await Clients.Caller.SendAsync("Error", ex.Message);
+        }
         catch (Exception ex)
         {
-            // Gửi lỗi riêng cho caller — không broadcast
-            await Clients.Caller.SendAsync("Error", ex.Message);
+            _logger.LogError(ex,
+                "[ChatHub] SendMessage failed. ConversationId: {ConversationId}, UserId: {UserId}",
+                conversationId,
+                userGuid);
+            await Clients.Caller.SendAsync("Error", "Unable to send message. Please try again.");
         }
     }
 
@@ -206,9 +218,21 @@ public class ChatHub : Hub
                 readAt = DateTime.UtcNow
             });
         }
-        catch (Exception ex)
+        catch (BadRequestException ex)
         {
             await Clients.Caller.SendAsync("Error", ex.Message);
+        }
+        catch (NotFoundException ex)
+        {
+            await Clients.Caller.SendAsync("Error", ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "[ChatHub] MarkRead failed. ConversationId: {ConversationId}, UserId: {UserId}",
+                conversationId,
+                userGuid);
+            await Clients.Caller.SendAsync("Error", "Unable to mark messages as read. Please try again.");
         }
     }
 }

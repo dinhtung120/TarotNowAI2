@@ -1,4 +1,5 @@
 using MediatR;
+using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Enums;
 
@@ -43,11 +44,15 @@ public class AddUserBalanceCommandHandler : IRequestHandler<AddUserBalanceComman
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user == null) return false;
 
+        var normalizedCurrency = request.Currency?.Trim().ToLowerInvariant() ?? string.Empty;
+        if (normalizedCurrency != CurrencyType.Gold && normalizedCurrency != CurrencyType.Diamond)
+            throw new BadRequestException("Currency không hợp lệ. Chỉ chấp nhận 'gold' hoặc 'diamond'.");
+
         // 2. Thực hiện cộng tiền thông qua Repository (gọi Stored Procedure để an toàn)
         // Chúng ta sử dụng TransactionType.AdminTopup để đánh dấu đây là giao dịch từ Admin.
         await _walletRepository.CreditAsync(
             userId: request.UserId,
-            currency: request.Currency,
+            currency: normalizedCurrency,
             type: TransactionType.AdminTopup,
             amount: request.Amount,
             referenceSource: "Admin_Manual",

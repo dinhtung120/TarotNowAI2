@@ -13,6 +13,7 @@ public class CreateWithdrawalCommandHandlerTests
     private readonly Mock<IWalletRepository> _mockWalletRepo;
     private readonly Mock<IUserRepository> _mockUserRepo;
     private readonly Mock<IMfaService> _mockMfaService;
+    private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
     private readonly CreateWithdrawalCommandHandler _handler;
 
     public CreateWithdrawalCommandHandlerTests()
@@ -21,12 +22,17 @@ public class CreateWithdrawalCommandHandlerTests
         _mockWalletRepo = new Mock<IWalletRepository>();
         _mockUserRepo = new Mock<IUserRepository>();
         _mockMfaService = new Mock<IMfaService>();
+        _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
+        _mockTransactionCoordinator
+            .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
+            .Returns((Func<CancellationToken, Task> action, CancellationToken ct) => action(ct));
 
         _handler = new CreateWithdrawalCommandHandler(
             _mockWithdrawalRepo.Object,
             _mockWalletRepo.Object,
             _mockUserRepo.Object,
-            _mockMfaService.Object);
+            _mockMfaService.Object,
+            _mockTransactionCoordinator.Object);
     }
 
     private User CreateValidReader()

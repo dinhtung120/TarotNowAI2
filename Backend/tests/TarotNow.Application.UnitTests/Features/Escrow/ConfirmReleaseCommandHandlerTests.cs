@@ -12,13 +12,22 @@ public class ConfirmReleaseCommandHandlerTests
 {
     private readonly Mock<IChatFinanceRepository> _mockFinanceRepo;
     private readonly Mock<IWalletRepository> _mockWalletRepo;
+    private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
     private readonly ConfirmReleaseCommandHandler _handler;
 
     public ConfirmReleaseCommandHandlerTests()
     {
         _mockFinanceRepo = new Mock<IChatFinanceRepository>();
         _mockWalletRepo = new Mock<IWalletRepository>();
-        _handler = new ConfirmReleaseCommandHandler(_mockFinanceRepo.Object, _mockWalletRepo.Object);
+        _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
+        _mockTransactionCoordinator
+            .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
+            .Returns<Func<CancellationToken, Task>, CancellationToken>((action, ct) => action(ct));
+
+        _handler = new ConfirmReleaseCommandHandler(
+            _mockFinanceRepo.Object,
+            _mockWalletRepo.Object,
+            _mockTransactionCoordinator.Object);
     }
 
     [Fact]
@@ -26,7 +35,7 @@ public class ConfirmReleaseCommandHandlerTests
     {
         var command = new ConfirmReleaseCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid() };
         var item = new ChatQuestionItem { PayerId = Guid.NewGuid() }; // Different ID
-        _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default)).ReturnsAsync(item);
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default)).ReturnsAsync(item);
 
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
@@ -36,7 +45,7 @@ public class ConfirmReleaseCommandHandlerTests
     {
         var command = new ConfirmReleaseCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid() };
         var item = new ChatQuestionItem { PayerId = command.UserId, Status = QuestionItemStatus.Refunded };
-        _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default)).ReturnsAsync(item);
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default)).ReturnsAsync(item);
 
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
@@ -46,7 +55,7 @@ public class ConfirmReleaseCommandHandlerTests
     {
         var command = new ConfirmReleaseCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid() };
         var item = new ChatQuestionItem { PayerId = command.UserId, Status = QuestionItemStatus.Accepted, RepliedAt = null };
-        _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default)).ReturnsAsync(item);
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default)).ReturnsAsync(item);
 
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Contains("Reader chưa trả lời", ex.Message);
@@ -57,7 +66,7 @@ public class ConfirmReleaseCommandHandlerTests
     {
         var command = new ConfirmReleaseCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid() };
         var item = new ChatQuestionItem { PayerId = command.UserId, Status = QuestionItemStatus.Accepted, RepliedAt = DateTime.UtcNow, ReleasedAt = DateTime.UtcNow };
-        _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default)).ReturnsAsync(item);
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default)).ReturnsAsync(item);
 
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
@@ -78,8 +87,8 @@ public class ConfirmReleaseCommandHandlerTests
         };
         var session = new ChatFinanceSession { Id = item.FinanceSessionId, TotalFrozen = 100 };
         
-        _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default)).ReturnsAsync(item);
-        _mockFinanceRepo.Setup(x => x.GetSessionByIdAsync(item.FinanceSessionId, default)).ReturnsAsync(session);
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default)).ReturnsAsync(item);
+        _mockFinanceRepo.Setup(x => x.GetSessionForUpdateAsync(item.FinanceSessionId, default)).ReturnsAsync(session);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -89,8 +98,8 @@ public class ConfirmReleaseCommandHandlerTests
         Assert.NotNull(item.DisputeWindowStart);
         Assert.NotNull(item.DisputeWindowEnd);
 
-        _mockWalletRepo.Verify(x => x.ReleaseAsync(item.PayerId, item.ReceiverId, 90, "chat_question_item", item.Id.ToString(), It.IsAny<string>(), null, $"release_{item.Id}", default), Times.Once);
-        _mockWalletRepo.Verify(x => x.ConsumeAsync(item.PayerId, 10, "platform_fee", item.Id.ToString(), It.IsAny<string>(), null, $"fee_{item.Id}", default), Times.Once);
+        _mockWalletRepo.Verify(x => x.ReleaseAsync(item.PayerId, item.ReceiverId, 90, "chat_question_item", item.Id.ToString(), It.IsAny<string>(), null, $"settle_release_{item.Id}", default), Times.Once);
+        _mockWalletRepo.Verify(x => x.ConsumeAsync(item.PayerId, 10, "platform_fee", item.Id.ToString(), It.IsAny<string>(), null, $"settle_fee_{item.Id}", default), Times.Once);
 
         Assert.Equal(0, session.TotalFrozen);
         _mockFinanceRepo.Verify(x => x.UpdateItemAsync(item, default), Times.Once);
@@ -110,7 +119,7 @@ public class ConfirmReleaseCommandHandlerTests
         // Arrange
         var command = new ConfirmReleaseCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid() };
 
-        _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default))
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default))
             .ReturnsAsync((ChatQuestionItem)null!);
 
         // Act & Assert
@@ -144,8 +153,8 @@ public class ConfirmReleaseCommandHandlerTests
         };
         var session = new ChatFinanceSession { Id = item.FinanceSessionId, TotalFrozen = 1 };
 
-        _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default)).ReturnsAsync(item);
-        _mockFinanceRepo.Setup(x => x.GetSessionByIdAsync(item.FinanceSessionId, default)).ReturnsAsync(session);
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default)).ReturnsAsync(item);
+        _mockFinanceRepo.Setup(x => x.GetSessionForUpdateAsync(item.FinanceSessionId, default)).ReturnsAsync(session);
 
         // Act
         var result = await _handler.Handle(command, CancellationToken.None);
@@ -157,13 +166,13 @@ public class ConfirmReleaseCommandHandlerTests
         _mockWalletRepo.Verify(x => x.ReleaseAsync(
             item.PayerId, item.ReceiverId, 0,
             It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
-            It.IsAny<string>(), $"release_{item.Id}", default), Times.Once);
+            It.IsAny<string>(), $"settle_release_{item.Id}", default), Times.Once);
 
         // Fee consume = 1
         _mockWalletRepo.Verify(x => x.ConsumeAsync(
             item.PayerId, 1,
             It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
-            It.IsAny<string>(), $"fee_{item.Id}", default), Times.Once);
+            It.IsAny<string>(), $"settle_fee_{item.Id}", default), Times.Once);
     }
 
     /// <summary>
@@ -192,8 +201,8 @@ public class ConfirmReleaseCommandHandlerTests
         };
         var session = new ChatFinanceSession { Id = item.FinanceSessionId, TotalFrozen = 100 };
 
-        _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default)).ReturnsAsync(item);
-        _mockFinanceRepo.Setup(x => x.GetSessionByIdAsync(item.FinanceSessionId, default)).ReturnsAsync(session);
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default)).ReturnsAsync(item);
+        _mockFinanceRepo.Setup(x => x.GetSessionForUpdateAsync(item.FinanceSessionId, default)).ReturnsAsync(session);
 
         // Act
         await _handler.Handle(command, CancellationToken.None);

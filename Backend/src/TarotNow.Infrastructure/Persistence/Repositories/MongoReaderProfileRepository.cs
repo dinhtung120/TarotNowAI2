@@ -60,6 +60,9 @@ public class MongoReaderProfileRepository : IReaderProfileRepository
         string? specialty = null, string? status = null, string? searchTerm = null,
         CancellationToken cancellationToken = default)
     {
+        var normalizedPage = page < 1 ? 1 : page;
+        var normalizedPageSize = pageSize <= 0 ? 12 : Math.Min(pageSize, 200);
+
         var filterBuilder = Builders<ReaderProfileDocument>.Filter;
         var filter = filterBuilder.Eq(r => r.IsDeleted, false);
 
@@ -118,8 +121,8 @@ public class MongoReaderProfileRepository : IReaderProfileRepository
                 { "status_priority", 1 },
                 { "updated_at", -1 }
             }))
-            .Skip((page - 1) * pageSize)
-            .Limit(pageSize)
+            .Skip((normalizedPage - 1) * normalizedPageSize)
+            .Limit(normalizedPageSize)
             .AppendStage<BsonDocument>(new BsonDocument("$project", new BsonDocument("status_priority", 0)))
             .As<ReaderProfileDocument>()
             .ToListAsync(cancellationToken);

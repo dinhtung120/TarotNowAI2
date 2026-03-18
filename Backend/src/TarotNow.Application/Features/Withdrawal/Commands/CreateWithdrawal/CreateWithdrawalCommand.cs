@@ -35,17 +35,20 @@ public class CreateWithdrawalCommandHandler : IRequestHandler<CreateWithdrawalCo
     private readonly IWalletRepository _walletRepo;
     private readonly IUserRepository _userRepo;
     private readonly IMfaService _mfaService;
+    private readonly ITransactionCoordinator _transactionCoordinator;
 
     public CreateWithdrawalCommandHandler(
         IWithdrawalRepository withdrawalRepo,
         IWalletRepository walletRepo,
         IUserRepository userRepo,
-        IMfaService mfaService)
+        IMfaService mfaService,
+        ITransactionCoordinator transactionCoordinator)
     {
         _withdrawalRepo = withdrawalRepo;
         _walletRepo = walletRepo;
         _userRepo = userRepo;
         _mfaService = mfaService;
+        _transactionCoordinator = transactionCoordinator;
     }
 
     public async Task<Guid> Handle(CreateWithdrawalCommand req, CancellationToken ct)
@@ -91,31 +94,40 @@ public class CreateWithdrawalCommandHandler : IRequestHandler<CreateWithdrawalCo
         var feeVnd = (long)Math.Ceiling(amountVnd * 0.10);
         var netAmountVnd = amountVnd - feeVnd;
 
-        // Debit diamond — trừ ngay khi tạo request
-        await _walletRepo.DebitAsync(
-            req.UserId, "diamond", "withdrawal", req.AmountDiamond,
-            referenceSource: "withdrawal_request",
-            description: $"Rút {req.AmountDiamond}💎 (= {netAmountVnd:N0} VND sau phí 10%)",
-            cancellationToken: ct);
-
-        // Tạo withdrawal request
-        var request = new WithdrawalRequest
+        WithdrawalRequest? createdRequest = null;
+        await _transactionCoordinator.ExecuteAsync(async transactionCt =>
         {
-            UserId = req.UserId,
-            BusinessDateUtc = today,
-            AmountDiamond = req.AmountDiamond,
-            AmountVnd = amountVnd,
-            FeeVnd = feeVnd,
-            NetAmountVnd = netAmountVnd,
-            BankName = req.BankName,
-            BankAccountName = req.BankAccountName,
-            BankAccountNumber = req.BankAccountNumber,
-            Status = "pending",
-        };
+            // Debit diamond + create request trong cùng transaction boundary
+            await _walletRepo.DebitAsync(
+                req.UserId, "diamond", "withdrawal", req.AmountDiamond,
+                referenceSource: "withdrawal_request",
+                description: $"Rút {req.AmountDiamond}💎 (= {netAmountVnd:N0} VND sau phí 10%)",
+                cancellationToken: transactionCt);
 
-        await _withdrawalRepo.AddAsync(request, ct);
-        await _withdrawalRepo.SaveChangesAsync(ct);
+            // Re-check trong transaction sau khi đã khóa row user để chặn race condition tạo 2 request cùng ngày.
+            // Nếu phát hiện request đã tồn tại (do request đồng thời khác vừa commit), throw để rollback cả debit.
+            var duplicatedToday = await _withdrawalRepo.HasPendingRequestTodayAsync(req.UserId, today, transactionCt);
+            if (duplicatedToday)
+                throw new BadRequestException("Bạn đã có yêu cầu rút tiền hôm nay. Vui lòng thử lại ngày mai.");
 
-        return request.Id;
+            createdRequest = new WithdrawalRequest
+            {
+                UserId = req.UserId,
+                BusinessDateUtc = today,
+                AmountDiamond = req.AmountDiamond,
+                AmountVnd = amountVnd,
+                FeeVnd = feeVnd,
+                NetAmountVnd = netAmountVnd,
+                BankName = req.BankName,
+                BankAccountName = req.BankAccountName,
+                BankAccountNumber = req.BankAccountNumber,
+                Status = "pending",
+            };
+
+            await _withdrawalRepo.AddAsync(createdRequest, transactionCt);
+            await _withdrawalRepo.SaveChangesAsync(transactionCt);
+        }, ct);
+
+        return createdRequest!.Id;
     }
 }

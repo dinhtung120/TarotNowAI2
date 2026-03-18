@@ -29,6 +29,9 @@ public class MongoReportRepository : IReportRepository
         int page, int pageSize, string? statusFilter = null,
         CancellationToken cancellationToken = default)
     {
+        var normalizedPage = page < 1 ? 1 : page;
+        var normalizedPageSize = pageSize <= 0 ? 20 : Math.Min(pageSize, 200);
+
         var filterBuilder = Builders<ReportDocument>.Filter;
         var filter = filterBuilder.Eq(r => r.IsDeleted, false);
 
@@ -39,8 +42,8 @@ public class MongoReportRepository : IReportRepository
 
         var docs = await _context.Reports.Find(filter)
             .SortByDescending(r => r.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Limit(pageSize)
+            .Skip((normalizedPage - 1) * normalizedPageSize)
+            .Limit(normalizedPageSize)
             .ToListAsync(cancellationToken);
 
         return (docs.Select(ToDto), totalCount);

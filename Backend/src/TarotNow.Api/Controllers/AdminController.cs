@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TarotNow.Application.Features.Admin.Queries.GetLedgerMismatch;
-using TarotNow.Domain.Enums;
 
 namespace TarotNow.Api.Controllers;
 
@@ -109,72 +108,21 @@ public class AdminController : ControllerBase
     /// Action: "release" | "refund"
     /// </summary>
     [HttpPost("escrow/resolve-dispute")]
-    public async Task<IActionResult> ResolveDispute(
-        [FromBody] ResolveDisputeBody body,
-        [FromServices] TarotNow.Application.Interfaces.IChatFinanceRepository financeRepo,
-        [FromServices] TarotNow.Application.Interfaces.IWalletRepository walletRepo)
+    public async Task<IActionResult> ResolveDispute([FromBody] ResolveDisputeBody body)
     {
-        var action = body.Action?.Trim().ToLowerInvariant();
-        if (action != "release" && action != "refund")
-            return BadRequest(new { msg = "Action phải là 'release' hoặc 'refund'." });
+        var adminId = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : (Guid?)null;
+        if (adminId == null) return Unauthorized();
 
-        var item = await financeRepo.GetItemByIdAsync(body.ItemId);
-        if (item == null) return NotFound(new { msg = "Không tìm thấy câu hỏi." });
-        if (item.Status != QuestionItemStatus.Disputed)
-            return BadRequest(new { msg = "Câu hỏi không ở trạng thái dispute." });
-
-        // Backward-safety: dispute chỉ hợp lệ khi item còn frozen (status accepted -> disputed).
-        // Nếu item đã release/refund trước đó thì cần xử lý tài chính thủ công, tránh gọi nhầm proc_frozen.
-        if (item.ReleasedAt != null || item.RefundedAt != null)
-            return BadRequest(new { msg = "Dispute này thuộc flow cũ đã settle, cần xử lý thủ công." });
-
-        if (action == "release")
+        var command = new TarotNow.Application.Features.Admin.Commands.ResolveDispute.ResolveDisputeCommand
         {
-            var fee = (long)Math.Ceiling(item.AmountDiamond * 0.10);
-            var readerAmount = item.AmountDiamond - fee;
+            ItemId = body.ItemId,
+            Action = body.Action,
+            AdminNote = body.AdminNote,
+            AdminId = adminId.Value
+        };
 
-            await walletRepo.ReleaseAsync(
-                item.PayerId, item.ReceiverId, readerAmount,
-                referenceSource: "admin_dispute_resolve",
-                referenceId: item.Id.ToString(),
-                description: $"Admin resolve: release {readerAmount}💎",
-                idempotencyKey: $"dispute_release_{item.Id}");
-
-            if (fee > 0)
-                await walletRepo.ConsumeAsync(
-                    item.PayerId, fee,
-                    referenceSource: "platform_fee",
-                    referenceId: item.Id.ToString(),
-                    idempotencyKey: $"dispute_fee_{item.Id}");
-
-            item.Status = QuestionItemStatus.Released;
-            item.ReleasedAt = DateTime.UtcNow;
-        }
-        else
-        {
-            await walletRepo.RefundAsync(
-                item.PayerId, item.AmountDiamond,
-                referenceSource: "admin_dispute_resolve",
-                referenceId: item.Id.ToString(),
-                description: $"Admin resolve: refund {item.AmountDiamond}💎",
-                idempotencyKey: $"dispute_refund_{item.Id}");
-
-            item.Status = QuestionItemStatus.Refunded;
-            item.RefundedAt = DateTime.UtcNow;
-        }
-
-        await financeRepo.UpdateItemAsync(item);
-
-        var session = await financeRepo.GetSessionByIdAsync(item.FinanceSessionId);
-        if (session != null)
-        {
-            session.TotalFrozen -= item.AmountDiamond;
-            if (session.TotalFrozen < 0) session.TotalFrozen = 0;
-            await financeRepo.UpdateSessionAsync(session);
-        }
-
-        await financeRepo.SaveChangesAsync();
-        return Ok(new { success = true, action });
+        await _mediator.Send(command);
+        return Ok(new { success = true, action = body.Action?.Trim().ToLowerInvariant() });
     }
 
     // ======================================================================

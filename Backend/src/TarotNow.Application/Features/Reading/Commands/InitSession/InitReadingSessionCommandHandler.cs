@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using TarotNow.Application.Exceptions;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
@@ -11,20 +12,18 @@ public class InitReadingSessionCommandHandler : IRequestHandler<InitReadingSessi
     private readonly IReadingSessionRepository _readingRepo;
     private readonly IUserRepository _userRepo;
     private readonly IRngService _rngService;
-
-    // TODO: Nên move Pricing ra SystemConfig DB. Gắn cứng trong Phase này cho tiện.
-    private const long SPREAD_3_COST = 50;  // 50 Gold
-    private const long SPREAD_5_COST = 100; // 100 Gold
-    private const long SPREAD_10_COST = 50; // 50 Diamond
+    private readonly IConfiguration _configuration;
 
     public InitReadingSessionCommandHandler(
         IReadingSessionRepository readingRepo, 
         IUserRepository userRepo,
-        IRngService rngService)
+        IRngService rngService,
+        IConfiguration configuration)
     {
         _readingRepo = readingRepo;
         _userRepo = userRepo;
         _rngService = rngService;
+        _configuration = configuration;
     }
 
     public async Task<InitReadingSessionResult> Handle(InitReadingSessionCommand request, CancellationToken cancellationToken)
@@ -48,15 +47,15 @@ public class InitReadingSessionCommandHandler : IRequestHandler<InitReadingSessi
         }
         else if (request.SpreadType == SpreadType.Spread3Cards)
         {
-            costGold = SPREAD_3_COST;
+            costGold = ResolveCost("Spread3Gold", 50);
         }
         else if (request.SpreadType == SpreadType.Spread5Cards)
         {
-            costGold = SPREAD_5_COST;
+            costGold = ResolveCost("Spread5Gold", 100);
         }
         else if (request.SpreadType == SpreadType.Spread10Cards)
         {
-            costDiamond = SPREAD_10_COST;
+            costDiamond = ResolveCost("Spread10Diamond", 50);
         }
 
         // 3. Xác định loại tiền và số tiền (cho auditing/stats)
@@ -83,11 +82,11 @@ public class InitReadingSessionCommandHandler : IRequestHandler<InitReadingSessi
         );
 
         // 5. Lưu Database Transaction (Trừ tiền + Lưu session đồng thời)
-        var (success, error) = await _readingRepo.StartPaidSessionAtomicAsync(request.UserId, request.SpreadType, session, costGold, costDiamond, cancellationToken);
+        var (success, _) = await _readingRepo.StartPaidSessionAtomicAsync(request.UserId, request.SpreadType, session, costGold, costDiamond, cancellationToken);
         
         if (!success)
         {
-            throw new BadRequestException($"Failed to start session: {error}");
+            throw new BadRequestException("Failed to start session. Please try again.");
         }
 
         // 6. Trả kết quả (Lúc này CHƯA thực sự rút bài, chỉ là Cổng phòng chờ)
@@ -97,5 +96,11 @@ public class InitReadingSessionCommandHandler : IRequestHandler<InitReadingSessi
             CostGold = costGold,
             CostDiamond = costDiamond
         };
+    }
+
+    private long ResolveCost(string key, long defaultValue)
+    {
+        var configured = _configuration[$"SystemConfig:Pricing:{key}"];
+        return long.TryParse(configured, out var value) && value >= 0 ? value : defaultValue;
     }
 }
