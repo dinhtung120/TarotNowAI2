@@ -65,8 +65,10 @@ export default function AuthSessionManager() {
     // If cookie has already been cleared (e.g. middleware), reflect it immediately in UI.
     const cookieToken = getAccessToken();
     if (!cookieToken) {
-      clearAuth();
-      if (!pathname.includes("/login")) router.push("/login");
+      // Avoid logout race right after login when cookie propagation can be delayed briefly.
+      if (isJwtExpired(accessToken, EXPIRY_LEEWAY_SECONDS)) {
+        void runLogout(isAuthenticated);
+      }
       return;
     }
 
@@ -90,7 +92,7 @@ export default function AuthSessionManager() {
       if (expiryTimerRef.current) window.clearTimeout(expiryTimerRef.current);
       expiryTimerRef.current = null;
     };
-  }, [accessToken, clearAuth, isAuthenticated, pathname, router, runLogout]);
+  }, [accessToken, isAuthenticated, runLogout]);
 
   // If the tab wakes up after sleep, re-check expiry immediately.
   useEffect(() => {

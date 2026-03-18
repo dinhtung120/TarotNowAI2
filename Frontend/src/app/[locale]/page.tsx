@@ -2,7 +2,8 @@ import { Link } from "@/i18n/routing";
 import { Star, ChevronRight, ShieldCheck, Flame, Compass, Zap, Users, ArrowUpRight, Award, LucideIcon, Gem, Sparkles
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import { listReaders, type ReaderProfile } from "@/actions/readerActions";
+import { Suspense } from "react";
+import { listFeaturedReaders, type ReaderProfile } from "@/actions/readerActions";
 
 import AstralBackground from "@/components/layout/AstralBackground";
 import Footer from "@/components/layout/Footer";
@@ -48,11 +49,68 @@ function StatItem({ icon: Icon, value, label, color }: StatProps) {
  );
 }
 
+function FeaturedReadersFallback() {
+ return (
+ <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+ {Array.from({ length: 4 }).map((_, index) => (
+ <div
+ key={index}
+ className="h-96 rounded-[2.5rem] border border-[var(--border-default)] bg-[var(--bg-surface)] animate-pulse"
+ />
+ ))}
+ </div>
+ );
+}
+
+async function FeaturedReadersGrid() {
+ const t = await getTranslations("Index");
+ const featuredReaders = await listFeaturedReaders(4);
+
+ if (featuredReaders.length === 0) {
+ return <FeaturedReadersFallback />;
+ }
+
+ return (
+ <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+ {featuredReaders.map((reader: ReaderProfile) => (
+ <Link key={reader.userId} href={`/readers/${reader.userId}`}
+ className="group relative h-96 rounded-[2.5rem] overflow-hidden border border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-[var(--border-focus)] transition-all duration-700 hover:-translate-y-4 shadow-[var(--shadow-card)] preserve-3d"
+ >
+ {/* Background Glow */}
+ <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-void)] via-transparent to-transparent z-10" />
+ <div className="absolute inset-0 bg-[var(--purple-glow)] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+ {/* Reader Meta */}
+ <div className="absolute inset-x-0 bottom-0 p-8 z-20 space-y-4">
+ <div className="flex items-center justify-between">
+ <div className={`w-3 h-3 rounded-full ${reader.status === 'accepting_questions' ? 'bg-[var(--success)] animate-pulse' : 'bg-[var(--text-muted)]'}`} />
+ <Badge variant="default" size="sm" className="bg-[var(--bg-glass)] border-[var(--border-default)]">
+ <Star className="w-3 h-3 text-[var(--amber-accent)] fill-[var(--amber-accent)]" />
+ <span className="tn-text-primary">{reader.avgRating.toFixed(1)}</span>
+ </Badge>
+ </div>
+ <div>
+ <h3 className="text-xl font-black text-[var(--text-ink)] tracking-tighter uppercase italic truncate">{reader.displayName}</h3>
+ <div className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--purple-accent)] mt-1 line-clamp-1">
+ {reader.specialties.join(' • ')}
+ </div>
+ </div>
+
+ <div className="pt-4 border-t border-[var(--border-subtle)] flex items-center justify-between">
+ <div className="flex items-center gap-1.5">
+ <Gem className="w-3.5 h-3.5 text-[var(--amber-accent)]" />
+ <span className="text-xs font-black text-[var(--text-ink)]">{reader.diamondPerQuestion} 💎</span>
+ </div>
+ <div className="text-[10px] font-black uppercase tracking-widest text-[var(--purple-accent)] group-hover:translate-x-2 transition-transform">{t('showcase.profileCta')}</div>
+ </div>
+ </div>
+ </Link>
+ ))}
+ </div>
+ );
+}
+
 export default async function Home() {
  const t = await getTranslations("Index");
- // Lấy danh sách 4 reader nổi bật cho phần Showcase
- const readerData = await listReaders(1, 4);
- const featuredReaders = readerData?.readers || [];
 
  return (
  <div className="min-h-screen bg-[var(--bg-void)] text-[var(--text-primary)] overflow-x-hidden font-sans">
@@ -140,41 +198,9 @@ export default async function Home() {
  className="mb-20"
  />
 
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
- {featuredReaders.map((reader: ReaderProfile) => (
- <Link key={reader.userId} href={`/readers/${reader.userId}`}
- className="group relative h-96 rounded-[2.5rem] overflow-hidden border border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-[var(--border-focus)] transition-all duration-700 hover:-translate-y-4 shadow-[var(--shadow-card)] preserve-3d"
- >
- {/* Background Glow */}
- <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-void)] via-transparent to-transparent z-10" />
- <div className="absolute inset-0 bg-[var(--purple-glow)] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
- {/* Reader Meta */}
- <div className="absolute inset-x-0 bottom-0 p-8 z-20 space-y-4">
- <div className="flex items-center justify-between">
- <div className={`w-3 h-3 rounded-full ${reader.status === 'accepting_questions' ? 'bg-[var(--success)] animate-pulse' : 'bg-[var(--text-muted)]'}`} />
- <Badge variant="default" size="sm" className="bg-[var(--bg-glass)] border-[var(--border-default)]">
- <Star className="w-3 h-3 text-[var(--amber-accent)] fill-[var(--amber-accent)]" />
- <span className="tn-text-primary">{reader.avgRating.toFixed(1)}</span>
- </Badge>
- </div>
- <div>
- <h3 className="text-xl font-black text-[var(--text-ink)] tracking-tighter uppercase italic truncate">{reader.displayName}</h3>
- <div className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--purple-accent)] mt-1 line-clamp-1">
- {reader.specialties.join(' • ')}
- </div>
- </div>
-
- <div className="pt-4 border-t border-[var(--border-subtle)] flex items-center justify-between">
- <div className="flex items-center gap-1.5">
- <Gem className="w-3.5 h-3.5 text-[var(--amber-accent)]" />
- <span className="text-xs font-black text-[var(--text-ink)]">{reader.diamondPerQuestion} 💎</span>
- </div>
- <div className="text-[10px] font-black uppercase tracking-widest text-[var(--purple-accent)] group-hover:translate-x-2 transition-transform">{t('showcase.profileCta')}</div>
- </div>
- </div>
- </Link>
- ))}
- </div>
+ <Suspense fallback={<FeaturedReadersFallback />}>
+ <FeaturedReadersGrid />
+ </Suspense>
  </section>
 
  {/* ##### CORE FEATURES: THE ASTRAL ARCHITECTURE ##### */}

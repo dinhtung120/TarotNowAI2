@@ -192,6 +192,34 @@ export async function listReaders(
 }
 
 /**
+ * Lấy danh sách Reader nổi bật cho trang chủ với cache ngắn hạn.
+ * Dùng cho UX chuyển trang nhanh (đặc biệt sau login).
+ */
+export async function listFeaturedReaders(
+ limit = 4
+): Promise<ReaderProfile[]> {
+ try {
+ const url = new URL(`${API_BASE_URL}/readers`);
+ url.searchParams.append('page', '1');
+ url.searchParams.append('pageSize', limit.toString());
+
+ const response = await fetch(url.toString(), {
+ method: 'GET',
+ headers: { 'Content-Type': 'application/json' },
+ next: { revalidate: 120 },
+ });
+
+ if (!response.ok) return [];
+
+ const data = await response.json();
+ return data.readers || data.Readers || [];
+ } catch (error) {
+ console.error('[ReaderAction] listFeaturedReaders failed:', error);
+ return [];
+ }
+}
+
+/**
  * Lấy hồ sơ Reader theo userId.
  * Backend API: GET /api/v1/reader/profile/{userId}
  */

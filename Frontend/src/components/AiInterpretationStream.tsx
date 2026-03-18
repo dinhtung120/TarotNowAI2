@@ -31,6 +31,8 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
  const [isComplete, setIsComplete] = useState(false);
  const eventSourceRef = useRef<EventSource | null>(null);
  const bottomRef = useRef<HTMLDivElement>(null);
+ const pendingChunkRef = useRef("");
+ const flushTimerRef = useRef<number | null>(null);
 
  // Follow-up interaction states
  const [followupText, setFollowupText] = useState("");
@@ -67,12 +69,32 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
  const nextDiamondCost = paidFollowupCount < priceTiers.length ? priceTiers[paidFollowupCount] : priceTiers[priceTiers.length - 1];
  const isHardCapReached = userFollowupCount >= 5;
 
+ const flushPendingChunk = useCallback(() => {
+ if (!pendingChunkRef.current) return;
+ const chunk = pendingChunkRef.current;
+ pendingChunkRef.current = "";
+
+ setMessages((prev) => {
+ const newMsgs = [...prev];
+ const lastMsg = newMsgs[newMsgs.length - 1];
+ if (lastMsg && lastMsg.role === "ai") {
+ lastMsg.content += chunk;
+ }
+ return newMsgs;
+ });
+ }, []);
+
  // Auto scroll bottom when new message arrives or streaming
  useEffect(() => {
  bottomRef.current?.scrollIntoView({ behavior: "smooth" });
  }, [messages, isStreaming]);
 
  const stopStream = useCallback((updateState = true) => {
+ if (flushTimerRef.current !== null) {
+ window.clearTimeout(flushTimerRef.current);
+ flushTimerRef.current = null;
+ }
+ flushPendingChunk();
  if (eventSourceRef.current) {
  eventSourceRef.current.close();
  eventSourceRef.current = null;
@@ -80,7 +102,7 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
  if (updateState) {
  setIsStreaming(false);
  }
- }, []);
+ }, [flushPendingChunk]);
 
  const startStream = useCallback((customPrompt?: string) => {
  if (!accessToken) {
@@ -136,16 +158,13 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
  try {
  // Xóa Escape char `\n` backend đã encode
  const chunk = event.data.replace(/\\n/g, "\n");
-
- // Cập nhật State kiểu Typewriter cho message cuối
- setMessages((prev) => {
- const newMsgs = [...prev];
- const lastMsg = newMsgs[newMsgs.length - 1];
- if (lastMsg && lastMsg.role === "ai") {
- lastMsg.content += chunk;
+ pendingChunkRef.current += chunk;
+ if (flushTimerRef.current === null) {
+ flushTimerRef.current = window.setTimeout(() => {
+ flushPendingChunk();
+ flushTimerRef.current = null;
+ }, 48);
  }
- return newMsgs;
- });
 	 } catch (err) {
 	 console.error("Failed to parse SSE chunk", err);
 	 }
@@ -158,7 +177,7 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
  setIsStreaming(false);
  setIsSendingFollowup(false);
  };
- }, [accessToken, onComplete, sessionId, stopStream, t]);
+ }, [accessToken, flushPendingChunk, onComplete, sessionId, stopStream, t]);
 
  useEffect(() => {
  if (!accessToken) return;

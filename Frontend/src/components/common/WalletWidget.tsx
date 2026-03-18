@@ -3,6 +3,7 @@
 import React, { useEffect } from 'react';
 import { Coins, Gem } from 'lucide-react';
 import { useWalletStore } from '@/store/walletStore';
+import { useAuthStore } from '@/store/authStore';
 import { useLocale, useTranslations } from 'next-intl';
 
 /**
@@ -15,13 +16,17 @@ import { useLocale, useTranslations } from 'next-intl';
 export default function WalletWidget() {
  const t = useTranslations("Wallet");
  const locale = useLocale();
+ const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
  // Lấy trạng thái số dư, hàm gọi API (fetchBalance) và cờ loading từ store Zustand.
- const { balance, fetchBalance, isLoading } = useWalletStore();
+ const balance = useWalletStore((state) => state.balance);
+ const fetchBalance = useWalletStore((state) => state.fetchBalance);
+ const isLoading = useWalletStore((state) => state.isLoading);
 
  // useEffect sẽ chạy 1 lần khi component mount để tự động kéo số dư mới nhất từ server.
  useEffect(() => {
- fetchBalance();
- }, [fetchBalance]);
+ if (!isAuthenticated || isLoading || balance) return;
+ void fetchBalance();
+ }, [balance, fetchBalance, isAuthenticated, isLoading]);
 
  // Trạng thái Loading: Trả về một Skeleton mờ với hiệu ứng chớp sáng (pulse) để UI không bị giật khi chờ API.
  if (isLoading) {

@@ -10,8 +10,6 @@ import { getTranslations } from 'next-intl/server';
  */
 
 export async function loginAction(data: Record<string, unknown>) {
- const tApi = await getTranslations('ApiErrors');
-
  try {
  const response = await fetch(`${API_BASE_URL}/auth/login`, {
  method: 'POST',
@@ -19,7 +17,7 @@ export async function loginAction(data: Record<string, unknown>) {
  body: JSON.stringify(data),
  });
 
- const result = await response.json();
+ const result = await response.json().catch(() => ({}));
 
  // Chuyển set-cookie (refreshToken HttpOnly) từ BE sang Client
  const setCookieHeader = response.headers.get('set-cookie');
@@ -40,6 +38,7 @@ export async function loginAction(data: Record<string, unknown>) {
  }
 
  if (!response.ok) {
+ const tApi = await getTranslations('ApiErrors');
  return { error: result.message || result.detail || tApi('unknown_error') };
  }
 
@@ -58,6 +57,7 @@ export async function loginAction(data: Record<string, unknown>) {
 
  return { success: true, data: result };
  } catch {
+ const tApi = await getTranslations('ApiErrors');
  return { error: tApi('network_error') };
  }
 }

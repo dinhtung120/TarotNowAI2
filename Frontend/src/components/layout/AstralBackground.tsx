@@ -81,6 +81,16 @@ export default function AstralBackground({
  particleCount ??
  (variant === "subtle" ? 8 : variant === "intense" ? 25 : 15);
 
+  const purpleBlobClass =
+    variant === "subtle"
+      ? "absolute top-[-14%] -left-[18%] w-[60vw] h-[60vw] blur-[90px] rounded-full motion-reduce:animate-none"
+      : "absolute top-[-20%] -left-1/4 w-[80vw] h-[80vw] blur-[150px] rounded-full motion-reduce:animate-none";
+
+  const mintBlobClass =
+    variant === "subtle"
+      ? "absolute top-[16%] -right-[18%] w-[52vw] h-[52vw] blur-[80px] rounded-full motion-reduce:animate-none"
+      : "absolute top-1/4 -right-1/4 w-[70vw] h-[70vw] blur-[140px] rounded-full motion-reduce:animate-none";
+
   /**
    * Toàn bộ màu nebula được lấy từ global token để đổi theme tại 1 nơi.
    */
@@ -119,18 +129,18 @@ export default function AstralBackground({
  - Màu khác nhau (purple, indigo, fuchsia)
  - Animation drift/pulse khác nhau → chuyển động không đều = tự nhiên */}
       <div
-        className="absolute top-[-20%] -left-1/4 w-[80vw] h-[80vw] blur-[150px] rounded-full animate-drift"
+        className={`${purpleBlobClass} animate-drift`}
         style={{ backgroundColor: nebulaTone.purple }}
       />
       <div
-        className="absolute top-1/4 -right-1/4 w-[70vw] h-[70vw] blur-[140px] rounded-full animate-drift-reverse"
+        className={`${mintBlobClass} animate-drift-reverse`}
         style={{ backgroundColor: nebulaTone.mint }}
       />
 
  {/* Blob thứ 3 chỉ hiện ở variant default và intense */}
  {variant !== "subtle" && (
         <div
-          className="absolute -bottom-1/4 left-1/3 w-[60vw] h-[60vw] blur-[130px] rounded-full animate-slow-pulse"
+          className="absolute -bottom-1/4 left-1/3 w-[60vw] h-[60vw] blur-[130px] rounded-full animate-slow-pulse motion-reduce:animate-none"
           style={{ backgroundColor: nebulaTone.moon }}
         />
       )}
@@ -145,7 +155,7 @@ export default function AstralBackground({
  {/* --- SPIRITUAL PARTICLES ---
  Hạt sáng nhỏ bay lên dần dần, tạo hiệu ứng "magical".
  Vị trí/tốc độ được tính deterministic theo index để tránh mismatch. */}
- <div className="absolute inset-0">
+ <div className="absolute inset-0 motion-reduce:hidden">
  {Array.from({ length: resolvedParticleCount }).map((_, i) => (
  <div
  key={i}

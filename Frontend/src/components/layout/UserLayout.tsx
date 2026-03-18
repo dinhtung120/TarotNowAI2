@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * UserLayout — Layout framework cho khu vực User (Dashboard, Wallet, Chat, etc.)
  *
@@ -20,6 +18,7 @@ import { type ReactNode } from "react";
 import UserSidebar from "./UserSidebar";
 import BottomTabBar from "./BottomTabBar";
 import AstralBackground from "./AstralBackground";
+import RoutePrefetcher from "./RoutePrefetcher";
 
 interface UserLayoutProps {
  children: ReactNode;
@@ -28,7 +27,8 @@ interface UserLayoutProps {
 export default function UserLayout({ children }: UserLayoutProps) {
  return (
  <div className="flex flex-col h-screen bg-[var(--bg-void)] text-[var(--text-primary)] overflow-hidden relative">
- <AstralBackground />
+ <RoutePrefetcher />
+ <AstralBackground variant="subtle" particleCount={6} />
  {/* Phần lưới bên dưới Navbar (Navbar render ở app/[locale]/layout.tsx).
  Cách top bằng `pt-16` (thay đổi tùy breakpoint) để không bị Navbar đè lên content.
  h-screen - pt-16 = flex-1 (chiều cao còn lại).
@@ -46,9 +46,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
  pb-20 (Mobile only): Chừa không gian cho BottomTabBar tránh bị che khuất.
  */}
  <main className="flex-1 relative z-10 overflow-y-auto custom-scrollbar pb-20 md:pb-0">
- <div className="animate-in fade-in duration-500">
  {children}
- </div>
  </main>
  </div>
 

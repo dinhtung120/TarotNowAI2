@@ -2431,4 +2431,41 @@ body {
   animation: elegant-shuffle var(--anim-duration) ease-in-out infinite;
   animation-delay: var(--anim-delay);
   transform-origin: bottom center;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.tarot-card-fan {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.tarot-deck-card {
+  contain: layout paint style;
+  will-change: transform, box-shadow, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.tarot-card-flip {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Speed up page enter animations to improve route transition responsiveness. */
+.animate-in {
+  animation-duration: 260ms !important;
+  animation-delay: 0ms !important;
+  transition-duration: 260ms !important;
+  transition-delay: 0ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-in {
+    animation: none !important;
+    transition: none !important;
+  }
 }

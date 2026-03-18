@@ -7,8 +7,8 @@ import * as z from 'zod';
 import { Mail, Lock } from 'lucide-react';
 import { loginAction } from '@/actions/authActions';
 import { useAuthStore } from '@/store/authStore';
-import { Link } from '@/i18n/routing';
-import { useLocale, useTranslations } from 'next-intl';
+import { Link, useRouter } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
 
 import AuthLayout from '@/components/layout/AuthLayout';
 import { Input, Button } from '@/components/ui';
@@ -22,8 +22,9 @@ type LoginFormValues = {
 export default function LoginPage() {
  const setAuth = useAuthStore((state) => state.setAuth);
  const [errorMsg, setErrorMsg] = useState('');
+ const [isRedirecting, setIsRedirecting] = useState(false);
  const t = useTranslations('Auth');
- const locale = useLocale();
+ const router = useRouter();
 
  const loginSchema = useMemo(
  () =>
@@ -56,6 +57,11 @@ export default function LoginPage() {
  }
  }, [setValue]);
 
+ useEffect(() => {
+  router.prefetch('/');
+  router.prefetch('/reading');
+ }, [router]);
+
  const onSubmit = async (data: LoginFormValues) => {
  setErrorMsg('');
 
@@ -72,15 +78,17 @@ export default function LoginPage() {
  setErrorMsg(result.error);
  return;
  }
-	 if (result.success && result.data) {
-	 // Lưu local Zustand
- setAuth(result.data.user, result.data.accessToken);
-	 window.location.assign(`/${locale}`); // Hard redirect để xoá Next.js cache
-	 }
-	 } catch {
-	 setErrorMsg(t('login.error_unexpected'));
-	 }
-	 };
+			 if (result.success && result.data) {
+			 // Lưu local Zustand
+			 setAuth(result.data.user, result.data.accessToken);
+			 setIsRedirecting(true);
+			 router.replace("/");
+			 }
+		 } catch {
+		 setErrorMsg(t('login.error_unexpected'));
+		 setIsRedirecting(false);
+		 }
+		 };
 
  return (
 	 <AuthLayout title={t('login.title')} subtitle={t('login.subtitle')}
@@ -140,7 +148,7 @@ export default function LoginPage() {
  variant="brand"
  size="lg"
  fullWidth
- isLoading={isSubmitting}
+ isLoading={isSubmitting || isRedirecting}
 	 className="mt-2"
 	 >
 	 {t('login.cta')}
