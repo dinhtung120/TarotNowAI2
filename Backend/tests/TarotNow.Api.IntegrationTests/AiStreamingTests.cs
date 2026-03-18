@@ -454,7 +454,7 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
     }
 
     [Fact]
-    public async Task StreamReading_FailedAfterFirstToken_ShouldNotRefundDiamond()
+    public async Task StreamReading_FailedAfterFirstToken_FromUpstreamCancellation_ShouldRefundDiamond()
     {
         // 1. Arrange & Setup
         var refinedFactory = _factory.WithWebHostBuilder(builder =>
@@ -525,18 +525,19 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
 
         var userAfter = assertDb.Users.First(u => u.Id == userId);
         
-        // Trừ 5 Diamond khi Requested -> Còn 95. DO KHÔNG REFUND NÊN GIỮ NGUYÊN 95.
-        Assert.Equal(95, userAfter.DiamondBalance);
+        // Trừ 5 Diamond khi Requested -> Còn 95. Lỗi upstream sau token đầu phải refund về 100.
+        Assert.Equal(100, userAfter.DiamondBalance);
 
         // Kiểm tra State Machine
         var aiReq = assertDb.AiRequests.OrderByDescending(r => r.CreatedAt).FirstOrDefault(r => r.ReadingSessionRef.ToLower() == session.Id.ToString().ToLower());
         Assert.NotNull(aiReq);
         Assert.Equal(AiRequestStatus.FailedAfterFirstToken, aiReq.Status);
         Assert.NotNull(aiReq.FirstTokenAt); // Phải có First Token At
-        Assert.Contains("Client disconnected", aiReq.FinishReason ?? "");
+        Assert.Contains("Upstream timeout/cancellation", aiReq.FinishReason ?? "");
 
-        // Kiểm tra KHÔNG CÓ bản lưu lịch sử Refund
+        // Kiểm tra có bản lưu lịch sử Refund
         var refundTx = assertDb.WalletTransactions.FirstOrDefault(t => t.UserId == userId && t.Type == TransactionType.EscrowRefund);
-        Assert.Null(refundTx);
+        Assert.NotNull(refundTx);
+        Assert.Equal(5, refundTx.Amount);
     }
 }

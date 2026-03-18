@@ -24,6 +24,15 @@ public class DepositOrderRepository : IDepositOrderRepository
             .FirstOrDefaultAsync(o => o.Id == id, cancellationToken);
     }
 
+    public async Task<DepositOrder?> GetByIdForUpdateAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var orders = await _context.DepositOrders
+            .FromSqlRaw("SELECT * FROM deposit_orders WHERE id = {0} FOR UPDATE", id)
+            .ToListAsync(cancellationToken);
+
+        return orders.FirstOrDefault();
+    }
+
     public async Task<DepositOrder?> GetByTransactionIdAsync(string transactionId, CancellationToken cancellationToken = default)
     {
         return await _context.DepositOrders

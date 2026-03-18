@@ -104,8 +104,8 @@ public class StreamReadingCommandHandler : IRequestHandler<StreamReadingCommand,
             }
         }
 
-        // 2. Tạo Idempotency Key chống Deduplicate
-        var idempotencyKey = $"ai_stream_{session.Id}_{request.FollowupQuestion?.GetHashCode() ?? 0}_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+        // 2. Tạo Idempotency Key entropy cao để tránh collision khi user retry nhanh
+        var idempotencyKey = $"ai_stream_{session.Id}_{Guid.CreateVersion7():N}";
 
         // 3. Khởi tạo Entity Theo dõi AI Request (State Machine)
         var aiRequest = new AiRequest

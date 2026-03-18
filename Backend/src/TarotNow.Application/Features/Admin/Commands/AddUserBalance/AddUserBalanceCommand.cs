@@ -21,6 +21,11 @@ public class AddUserBalanceCommand : IRequest<bool>
 
     /// <summary>Lý do cộng tiền (ghi vào nhật ký giao dịch).</summary>
     public string? Reason { get; set; }
+
+    /// <summary>
+    /// Idempotency key từ client/admin UI để chống double-submit.
+    /// </summary>
+    public string IdempotencyKey { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -48,6 +53,10 @@ public class AddUserBalanceCommandHandler : IRequestHandler<AddUserBalanceComman
         if (normalizedCurrency != CurrencyType.Gold && normalizedCurrency != CurrencyType.Diamond)
             throw new BadRequestException("Currency không hợp lệ. Chỉ chấp nhận 'gold' hoặc 'diamond'.");
 
+        var idempotencyKey = request.IdempotencyKey?.Trim();
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
+            throw new BadRequestException("IdempotencyKey là bắt buộc cho thao tác cộng tiền thủ công.");
+
         // 2. Thực hiện cộng tiền thông qua Repository (gọi Stored Procedure để an toàn)
         // Chúng ta sử dụng TransactionType.AdminTopup để đánh dấu đây là giao dịch từ Admin.
         await _walletRepository.CreditAsync(
@@ -56,9 +65,9 @@ public class AddUserBalanceCommandHandler : IRequestHandler<AddUserBalanceComman
             type: TransactionType.AdminTopup,
             amount: request.Amount,
             referenceSource: "Admin_Manual",
-            referenceId: Guid.NewGuid().ToString(),
+            referenceId: idempotencyKey,
             description: request.Reason ?? $"Admin credited {request.Amount} {request.Currency}",
-            idempotencyKey: $"admin_credit_{Guid.NewGuid()}", // Đảm bảo key duy nhất cho mỗi lần bấm
+            idempotencyKey: $"admin_credit_{idempotencyKey}",
             cancellationToken: cancellationToken
         );
 

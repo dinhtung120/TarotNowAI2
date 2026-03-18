@@ -138,50 +138,44 @@ public class AiController : ControllerBase
                     0, tokenCounter, latency, "completed"); 
             }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
-            // Client disconnect or Timeout
-            var status = tokenCounter > 0 
-                ? AiRequestStatus.FailedAfterFirstToken 
+            var status = tokenCounter > 0
+                ? AiRequestStatus.FailedAfterFirstToken
                 : AiRequestStatus.FailedBeforeFirstToken;
+            var clientDisconnected = cancellationToken.IsCancellationRequested
+                                     || HttpContext.RequestAborted.IsCancellationRequested;
+            var finishReason = clientDisconnected ? "Client disconnected" : "Upstream timeout/cancellation";
 
             await _mediator.Send(new CompleteAiStreamCommand
             {
                 AiRequestId = result.AiRequestId,
                 UserId = userId,
                 FinalStatus = status,
-                ErrorMessage = "Client disconnected",
-                IsClientDisconnect = true,
+                ErrorMessage = finishReason,
+                IsClientDisconnect = clientDisconnected,
                 FirstTokenAt = firstTokenAt
             }, CancellationToken.None);
 
             if (result.Provider is OpenAiProvider openAi)
             {
-                await openAi.LogRequestAsync(userId, sessionId, result.AiRequestId.ToString(), 
-                    0, tokenCounter, 0, "failed", "Client disconnected");
+                await openAi.LogRequestAsync(
+                    userId,
+                    sessionId,
+                    result.AiRequestId.ToString(),
+                    0,
+                    tokenCounter,
+                    0,
+                    "failed",
+                    finishReason);
             }
-        }
-        catch (Exception ex) when (ex is TaskCanceledException || ex.InnerException is TaskCanceledException)
-        {
-            // Explicitly catch TaskCanceledException if not caught by OperationCanceledException
-            var status = tokenCounter > 0 
-                ? AiRequestStatus.FailedAfterFirstToken 
-                : AiRequestStatus.FailedBeforeFirstToken;
 
-            await _mediator.Send(new CompleteAiStreamCommand
+            if (!clientDisconnected)
             {
-                AiRequestId = result.AiRequestId,
-                UserId = userId,
-                FinalStatus = status,
-                ErrorMessage = "Client disconnected (TaskCanceled)",
-                IsClientDisconnect = true,
-                FirstTokenAt = firstTokenAt
-            }, CancellationToken.None);
-
-            if (result.Provider is OpenAiProvider openAi)
-            {
-                await openAi.LogRequestAsync(userId, sessionId, result.AiRequestId.ToString(), 
-                    0, tokenCounter, 0, "failed", "TaskCanceled");
+                _logger.LogWarning(ex,
+                    "AI stream canceled by upstream for session {SessionId}, request {AiRequestId}.",
+                    sessionId,
+                    result.AiRequestId);
             }
         }
         catch (Exception ex)

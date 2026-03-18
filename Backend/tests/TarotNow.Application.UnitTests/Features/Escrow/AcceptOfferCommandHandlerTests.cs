@@ -1,4 +1,5 @@
 using Moq;
+using TarotNow.Application.Common;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Escrow.Commands.AcceptOffer;
 using TarotNow.Application.Interfaces;
@@ -12,6 +13,7 @@ public class AcceptOfferCommandHandlerTests
 {
     private readonly Mock<IChatFinanceRepository> _mockFinanceRepo;
     private readonly Mock<IWalletRepository> _mockWalletRepo;
+    private readonly Mock<IConversationRepository> _mockConversationRepo;
     private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
     private readonly AcceptOfferCommandHandler _handler;
 
@@ -19,6 +21,7 @@ public class AcceptOfferCommandHandlerTests
     {
         _mockFinanceRepo = new Mock<IChatFinanceRepository>();
         _mockWalletRepo = new Mock<IWalletRepository>();
+        _mockConversationRepo = new Mock<IConversationRepository>();
         _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
         _mockTransactionCoordinator
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
@@ -27,6 +30,7 @@ public class AcceptOfferCommandHandlerTests
         _handler = new AcceptOfferCommandHandler(
             _mockFinanceRepo.Object,
             _mockWalletRepo.Object,
+            _mockConversationRepo.Object,
             _mockTransactionCoordinator.Object);
     }
 
@@ -47,10 +51,12 @@ public class AcceptOfferCommandHandlerTests
     [Fact]
     public async Task Handle_NewOffer_CreatesSessionAndItem_FreezesDiamond()
     {
+        var userId = Guid.NewGuid();
+        var readerId = Guid.NewGuid();
         var command = new AcceptOfferCommand 
         { 
-            UserId = Guid.NewGuid(), 
-            ReaderId = Guid.NewGuid(), 
+            UserId = userId, 
+            ReaderId = readerId, 
             ConversationRef = "conv_ref", 
             AmountDiamond = 100, 
             IdempotencyKey = "key123" 
@@ -58,6 +64,13 @@ public class AcceptOfferCommandHandlerTests
         
         _mockFinanceRepo.Setup(x => x.GetItemByIdempotencyKeyAsync("key123", default)).ReturnsAsync((ChatQuestionItem)null!);
         _mockFinanceRepo.Setup(x => x.GetSessionByConversationRefAsync("conv_ref", default)).ReturnsAsync((ChatFinanceSession)null!);
+        _mockConversationRepo.Setup(x => x.GetByIdAsync("conv_ref", default)).ReturnsAsync(new ConversationDto
+        {
+            Id = "conv_ref",
+            UserId = userId.ToString(),
+            ReaderId = readerId.ToString(),
+            Status = ConversationStatus.Active
+        });
 
         var expectedId = Guid.NewGuid();
         _mockFinanceRepo.Setup(x => x.AddItemAsync(It.IsAny<ChatQuestionItem>(), default))
@@ -78,5 +91,30 @@ public class AcceptOfferCommandHandlerTests
         // Assert item created
         _mockFinanceRepo.Verify(x => x.AddItemAsync(It.Is<ChatQuestionItem>(i => 
             i.PayerId == command.UserId && i.AmountDiamond == 100 && i.Status == QuestionItemStatus.Accepted), default), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_WhenConversationParticipantsMismatch_ThrowsBadRequestException()
+    {
+        var command = new AcceptOfferCommand
+        {
+            UserId = Guid.NewGuid(),
+            ReaderId = Guid.NewGuid(),
+            ConversationRef = "conv_ref",
+            AmountDiamond = 100,
+            IdempotencyKey = "key123"
+        };
+
+        _mockFinanceRepo.Setup(x => x.GetItemByIdempotencyKeyAsync("key123", default)).ReturnsAsync((ChatQuestionItem)null!);
+        _mockConversationRepo.Setup(x => x.GetByIdAsync("conv_ref", default)).ReturnsAsync(new ConversationDto
+        {
+            Id = "conv_ref",
+            UserId = Guid.NewGuid().ToString(),
+            ReaderId = Guid.NewGuid().ToString(),
+            Status = ConversationStatus.Active
+        });
+
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
+        Assert.Contains("không hợp lệ", ex.Message);
     }
 }

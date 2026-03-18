@@ -5,9 +5,9 @@ using System.Security.Claims;
 using TarotNow.Application.Features.Reader.Commands.SubmitReaderRequest;
 using TarotNow.Application.Features.Reader.Commands.UpdateReaderProfile;
 using TarotNow.Application.Features.Reader.Commands.UpdateReaderStatus;
+using TarotNow.Application.Features.Reader.Queries.GetMyReaderRequest;
 using TarotNow.Application.Features.Reader.Queries.GetReaderProfile;
 using TarotNow.Application.Features.Reader.Queries.ListReaders;
-using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Api.Controllers;
 
@@ -33,12 +33,10 @@ namespace TarotNow.Api.Controllers;
 public class ReaderController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly IReaderRequestRepository _readerRequestRepository;
 
-    public ReaderController(IMediator mediator, IReaderRequestRepository readerRequestRepository)
+    public ReaderController(IMediator mediator)
     {
         _mediator = mediator;
-        _readerRequestRepository = readerRequestRepository;
     }
 
     /// <summary>
@@ -80,20 +78,8 @@ public class ReaderController : ControllerBase
         if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
             return Unauthorized();
 
-        var request = await _readerRequestRepository.GetLatestByUserIdAsync(userId.ToString());
-
-        if (request == null)
-            return Ok(new { hasRequest = false });
-
-        return Ok(new
-        {
-            hasRequest = true,
-            status = request.Status,
-            introText = request.IntroText,
-            adminNote = request.AdminNote,
-            createdAt = request.CreatedAt,
-            reviewedAt = request.ReviewedAt
-        });
+        var result = await _mediator.Send(new GetMyReaderRequestQuery { UserId = userId });
+        return Ok(result);
     }
 
     /// <summary>

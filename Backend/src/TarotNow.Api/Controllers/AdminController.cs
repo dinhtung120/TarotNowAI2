@@ -50,6 +50,11 @@ public class AdminController : ControllerBase
     [HttpPost("users/add-balance")]
     public async Task<IActionResult> AddUserBalance([FromBody] TarotNow.Application.Features.Admin.Commands.AddUserBalance.AddUserBalanceCommand command)
     {
+        if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
+        {
+            command.IdempotencyKey = Request.Headers["X-Idempotency-Key"].ToString();
+        }
+
         var result = await _mediator.Send(command);
         return result ? Ok(new { success = true }) : BadRequest(new { msg = "Không thể cộng tiền cho người dùng này." });
     }

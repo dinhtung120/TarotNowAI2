@@ -50,7 +50,7 @@ public class ProcessDepositCommandHandler : IRequestHandler<ProcessDepositComman
             throw new BadRequestException("Action phải là 'approve' hoặc 'reject'.");
         }
 
-        var txnId = request.TransactionId ?? $"ADMIN_MANUAL_{Guid.NewGuid().ToString("N").Substring(0, 8)}";
+        var txnId = ResolveTransactionId(request.TransactionId, action);
 
         if (action == "approve")
         {
@@ -88,5 +88,16 @@ public class ProcessDepositCommandHandler : IRequestHandler<ProcessDepositComman
         await _depositOrderRepository.UpdateAsync(order, cancellationToken);
 
         return true;
+    }
+
+    private static string ResolveTransactionId(string? requestedTransactionId, string action)
+    {
+        if (!string.IsNullOrWhiteSpace(requestedTransactionId))
+        {
+            return requestedTransactionId.Trim();
+        }
+
+        // Luôn phát sinh transaction id duy nhất cho thao tác manual admin để tránh vi phạm unique index.
+        return $"ADMIN_{action.ToUpperInvariant()}_{Guid.CreateVersion7():N}";
     }
 }

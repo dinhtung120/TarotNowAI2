@@ -1,4 +1,5 @@
 using MongoDB.Driver;
+using MongoDB.Bson;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
@@ -37,49 +38,58 @@ public class MongoUserCollectionRepository : IUserCollectionRepository
     public async Task UpsertCardAsync(Guid userId, int cardId, long expToGain, CancellationToken cancellationToken = default)
     {
         var userIdStr = userId.ToString();
+        var now = DateTime.UtcNow;
 
-        // Filter: tìm theo composite key (user_id + card_id)
+        // Upsert atomic để tránh race condition read-then-write.
         var filter = Builders<UserCollectionDocument>.Filter.Eq(u => u.UserId, userIdStr)
             & Builders<UserCollectionDocument>.Filter.Eq(u => u.CardId, cardId);
 
-        // Kiểm tra document hiện tại để tính level
-        var existing = await _mongoContext.UserCollections
-            .Find(filter)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (existing == null)
+        var totalDrawsExpr = new BsonDocument("$add", new BsonArray
         {
-            // INSERT mới — lần đầu rút lá này
-            var doc = new UserCollectionDocument
+            new BsonDocument("$ifNull", new BsonArray { "$stats.times_drawn_upright", 0 }),
+            new BsonDocument("$ifNull", new BsonArray { "$stats.times_drawn_reversed", 0 }),
+            1
+        });
+
+        var levelExpr = new BsonDocument("$add", new BsonArray
+        {
+            1,
+            new BsonDocument("$floor", new BsonDocument("$divide", new BsonArray { totalDrawsExpr, 5 }))
+        });
+
+        var updatePipeline = new[]
+        {
+            new BsonDocument("$set", new BsonDocument
             {
-                UserId = userIdStr,
-                CardId = cardId,
-                Level = 1,
-                Exp = expToGain,
-                Stats = new DrawStats { TimesDrawnUpright = 1 }, // Default upright
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                LastDrawnAt = DateTime.UtcNow
-            };
-            await _mongoContext.UserCollections.InsertOneAsync(doc, cancellationToken: cancellationToken);
-        }
-        else
-        {
-            // UPDATE — rút trùng, cộng dồn
-            var totalDraws = existing.Stats.TimesDrawnUpright + existing.Stats.TimesDrawnReversed + 1;
-            var newLevel = existing.Level;
-            // Level up: mỗi 5 lần rút = +1 level
-            if (totalDraws % 5 == 0) newLevel++;
+                { "user_id", userIdStr },
+                { "card_id", cardId },
+                { "is_deleted", false },
+                { "created_at", new BsonDocument("$ifNull", new BsonArray { "$created_at", now }) },
+                { "updated_at", now },
+                { "last_drawn_at", now },
+                { "exp", new BsonDocument("$add", new BsonArray
+                    {
+                        new BsonDocument("$ifNull", new BsonArray { "$exp", 0 }),
+                        expToGain
+                    })
+                },
+                { "stats.times_drawn_upright", new BsonDocument("$add", new BsonArray
+                    {
+                        new BsonDocument("$ifNull", new BsonArray { "$stats.times_drawn_upright", 0 }),
+                        1
+                    })
+                },
+                { "level", levelExpr }
+            })
+        };
+        var pipeline = PipelineDefinition<UserCollectionDocument, UserCollectionDocument>.Create(updatePipeline);
+        var update = new PipelineUpdateDefinition<UserCollectionDocument>(pipeline);
 
-            var update = Builders<UserCollectionDocument>.Update
-                .Inc(u => u.Exp, expToGain)
-                .Inc(u => u.Stats.TimesDrawnUpright, 1)
-                .Set(u => u.Level, newLevel)
-                .Set(u => u.UpdatedAt, DateTime.UtcNow)
-                .Set(u => u.LastDrawnAt, DateTime.UtcNow);
-
-            await _mongoContext.UserCollections.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
-        }
+        await _mongoContext.UserCollections.UpdateOneAsync(
+            filter,
+            update,
+            new UpdateOptions { IsUpsert = true },
+            cancellationToken);
     }
 
     /// <summary>Lấy toàn bộ bộ sưu tập của user — sắp theo level giảm dần.</summary>

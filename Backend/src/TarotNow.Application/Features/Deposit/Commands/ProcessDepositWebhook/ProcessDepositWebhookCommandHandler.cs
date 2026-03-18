@@ -12,15 +12,18 @@ public class ProcessDepositWebhookCommandHandler : IRequestHandler<ProcessDeposi
     private readonly IPaymentGatewayService _paymentGatewayService;
     private readonly IDepositOrderRepository _depositOrderRepository;
     private readonly IWalletRepository _walletRepository;
+    private readonly ITransactionCoordinator _transactionCoordinator;
 
     public ProcessDepositWebhookCommandHandler(
         IPaymentGatewayService paymentGatewayService,
         IDepositOrderRepository depositOrderRepository,
-        IWalletRepository walletRepository)
+        IWalletRepository walletRepository,
+        ITransactionCoordinator transactionCoordinator)
     {
         _paymentGatewayService = paymentGatewayService;
         _depositOrderRepository = depositOrderRepository;
         _walletRepository = walletRepository;
+        _transactionCoordinator = transactionCoordinator;
     }
 
     public async Task<bool> Handle(ProcessDepositWebhookCommand request, CancellationToken cancellationToken)
@@ -49,59 +52,60 @@ public class ProcessDepositWebhookCommandHandler : IRequestHandler<ProcessDeposi
             throw new BadRequestException("Invalid OrderId format in webhook.");
         }
 
-        var order = await _depositOrderRepository.GetByIdAsync(orderId, cancellationToken)
-            ?? throw new NotFoundException($"Deposit order {orderId} not found.");
-
-        if (request.PayloadData.Amount != order.AmountVnd)
-            throw new BadRequestException("Webhook amount does not match order amount.");
-
-        // 3. Idempotency Check (Nếu đã xử lý, bỏ qua và trả về OK để cổng thanh toán không gọi lại)
-        if (order.Status == "Success" || order.Status == "Failed")
+        var handled = false;
+        await _transactionCoordinator.ExecuteAsync(async transactionCt =>
         {
-            if (!string.IsNullOrWhiteSpace(order.TransactionId) &&
-                !string.Equals(order.TransactionId, request.PayloadData.TransactionId, StringComparison.OrdinalIgnoreCase))
+            var order = await _depositOrderRepository.GetByIdForUpdateAsync(orderId, transactionCt)
+                ?? throw new NotFoundException($"Deposit order {orderId} not found.");
+
+            if (request.PayloadData.Amount != order.AmountVnd)
+                throw new BadRequestException("Webhook amount does not match order amount.");
+
+            // 3. Idempotency Check (Nếu đã xử lý, bỏ qua và trả về OK để cổng thanh toán không gọi lại)
+            if (order.Status == "Success" || order.Status == "Failed")
             {
-                throw new BadRequestException("Processed order transaction id mismatch.");
+                if (!string.IsNullOrWhiteSpace(order.TransactionId) &&
+                    !string.Equals(order.TransactionId, request.PayloadData.TransactionId, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new BadRequestException("Processed order transaction id mismatch.");
+                }
+
+                handled = true;
+                return;
             }
 
-            return true;
-        }
+            // 4. Xử lý ghi nhận số dư (Diamond)
+            if (isSuccessStatus)
+            {
+                // Dùng key ổn định theo order để tránh double-credit nếu webhook retry với transactionId khác.
+                var idempotencyKey = $"DEPOSIT_{order.Id}";
 
-        // 4. Xử lý ghi nhận số dư (Diamond)
-        if (isSuccessStatus)
-        {
-            // Atomically credit Diamond to Wallet via procedure or repository method.
-            // P1-DEP-BE-1.4: On success: credit Diamond via proc_wallet_credit.
-            // Sẽ dùng method CreditDiamondAsync (hoặc Write transaction trong DB).
-            
-            // Generate request Idempotency Key for Wallet
-            var idempotencyKey = $"DEPOSIT_{order.Id}_{request.PayloadData.TransactionId}";
-            
-            // Giả thiết IWalletRepository.CreditAsync có thể xử lý việc cộng tiền
-            await _walletRepository.CreditAsync(
-                userId: order.UserId,
-                currency: TarotNow.Domain.Enums.CurrencyType.Diamond,
-                type: TarotNow.Domain.Enums.TransactionType.Deposit,
-                amount: order.DiamondAmount,
-                referenceSource: "PaymentGateway",
-                referenceId: request.PayloadData.TransactionId,
-                description: "Mua Diamond từ Payment Gateway",
-                metadataJson: null,
-                idempotencyKey: idempotencyKey,
-                cancellationToken: cancellationToken
-            );
+                await _walletRepository.CreditAsync(
+                    userId: order.UserId,
+                    currency: TarotNow.Domain.Enums.CurrencyType.Diamond,
+                    type: TarotNow.Domain.Enums.TransactionType.Deposit,
+                    amount: order.DiamondAmount,
+                    referenceSource: "PaymentGateway",
+                    referenceId: request.PayloadData.TransactionId,
+                    description: "Mua Diamond từ Payment Gateway",
+                    metadataJson: null,
+                    idempotencyKey: idempotencyKey,
+                    cancellationToken: transactionCt
+                );
 
-            order.MarkAsSuccess(request.PayloadData.TransactionId, request.PayloadData.FxSnapshot);
-        }
-        else
-        {
-            // Nếu FAILED từ provider
-            order.MarkAsFailed(request.PayloadData.TransactionId);
-        }
+                order.MarkAsSuccess(request.PayloadData.TransactionId, request.PayloadData.FxSnapshot);
+            }
+            else
+            {
+                // Nếu FAILED từ provider
+                order.MarkAsFailed(request.PayloadData.TransactionId);
+            }
 
-        // 5. Cập nhật Order status
-        await _depositOrderRepository.UpdateAsync(order, cancellationToken);
+            // 5. Cập nhật Order status
+            await _depositOrderRepository.UpdateAsync(order, transactionCt);
+            handled = true;
+        }, cancellationToken);
 
-        return true;
+        return handled;
     }
 }

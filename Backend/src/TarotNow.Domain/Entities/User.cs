@@ -191,6 +191,16 @@ public class User
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// Dùng cho luồng compensation khi xử lý cross-database thất bại.
+    /// </summary>
+    public void RestoreRoleAndReaderStatus(string role, string readerStatus)
+    {
+        Role = role;
+        ReaderStatus = readerStatus;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     // ======================================================================
     // BACKWARD COMPATIBILITY: Delegate methods sang Wallet
     // Giữ lại để WalletRepository không bị breaking change.

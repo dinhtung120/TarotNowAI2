@@ -287,14 +287,18 @@ export async function processDeposit(depositId: string, action: 'approve' | 'rej
  return false;
  }
 
- const bodyPayload = {
+ const normalizedTransactionId = transactionId?.trim();
+ const bodyPayload: Record<string, string> = {
  depositId: depositId,
  DepositId: depositId,
  action: action,
- Action: action,
- transactionId: transactionId || "",
- TransactionId: transactionId || ""
+ Action: action
  };
+
+ if (normalizedTransactionId) {
+ bodyPayload.transactionId = normalizedTransactionId;
+ bodyPayload.TransactionId = normalizedTransactionId;
+ }
 
  const response = await fetch(`${API_BASE_URL}/admin/deposits/process`, {
  method: 'PATCH',

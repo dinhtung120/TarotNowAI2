@@ -24,15 +24,18 @@ public class AcceptOfferCommandHandler : IRequestHandler<AcceptOfferCommand, Gui
 {
     private readonly IChatFinanceRepository _financeRepo;
     private readonly IWalletRepository _walletRepo;
+    private readonly IConversationRepository _conversationRepo;
     private readonly ITransactionCoordinator _transactionCoordinator;
 
     public AcceptOfferCommandHandler(
         IChatFinanceRepository financeRepo,
         IWalletRepository walletRepo,
+        IConversationRepository conversationRepo,
         ITransactionCoordinator transactionCoordinator)
     {
         _financeRepo = financeRepo;
         _walletRepo = walletRepo;
+        _conversationRepo = conversationRepo;
         _transactionCoordinator = transactionCoordinator;
     }
 
@@ -48,6 +51,17 @@ public class AcceptOfferCommandHandler : IRequestHandler<AcceptOfferCommand, Gui
         // 1. Idempotency — kiểm tra double-freeze
         var existing = await _financeRepo.GetItemByIdempotencyKeyAsync(idempotencyKey, ct);
         if (existing != null) return existing.Id;
+
+        // 1.5. Verify conversation + participants từ nguồn dữ liệu thật (MongoDB)
+        // Không tin ConversationRef/ReaderId từ client để tránh settle sai ngữ cảnh chat.
+        var conversation = await _conversationRepo.GetByIdAsync(req.ConversationRef, ct)
+            ?? throw new NotFoundException("Không tìm thấy cuộc trò chuyện.");
+
+        if (conversation.UserId != req.UserId.ToString() || conversation.ReaderId != req.ReaderId.ToString())
+            throw new BadRequestException("Thông tin phiên trò chuyện không hợp lệ cho giao dịch escrow.");
+
+        if (conversation.Status != ConversationStatus.Pending && conversation.Status != ConversationStatus.Active)
+            throw new BadRequestException($"Cuộc trò chuyện ở trạng thái '{conversation.Status}', không thể accept offer.");
 
         Guid createdItemId = Guid.Empty;
         await _transactionCoordinator.ExecuteAsync(async transactionCt =>

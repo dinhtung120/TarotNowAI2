@@ -54,12 +54,42 @@ public class ApproveReaderCommandHandler : IRequestHandler<ApproveReaderCommand,
 
         if (action == "approve")
         {
-            // === APPROVE FLOW ===
-            // 5a. Cập nhật User entity
+            await HandleApproveFlowAsync(request, readerRequest, user, cancellationToken);
+            return true;
+        }
+
+        // === REJECT FLOW ===
+        user.RejectReaderRequest();
+        await _userRepository.UpdateAsync(user, cancellationToken);
+        readerRequest.Status = ReaderApprovalStatus.Rejected;
+
+        // 7. Cập nhật audit trail
+        readerRequest.AdminNote = request.AdminNote;
+        readerRequest.ReviewedBy = request.AdminId.ToString();
+        readerRequest.ReviewedAt = DateTime.UtcNow;
+
+        await _readerRequestRepository.UpdateAsync(readerRequest, cancellationToken);
+
+        return true;
+    }
+
+    private async Task HandleApproveFlowAsync(
+        ApproveReaderCommand request,
+        ReaderRequestDto readerRequest,
+        Domain.Entities.User user,
+        CancellationToken cancellationToken)
+    {
+        var originalRole = user.Role;
+        var originalReaderStatus = user.ReaderStatus;
+        var profileCreated = false;
+
+        try
+        {
+            // Step 1: Promote user trong PostgreSQL
             user.ApproveAsReader();
             await _userRepository.UpdateAsync(user, cancellationToken);
 
-            // 5b. Tạo reader_profiles (idempotent)
+            // Step 2: Tạo reader profile nếu chưa có
             var existingProfile = await _readerProfileRepository.GetByUserIdAsync(
                 readerRequest.UserId, cancellationToken);
 
@@ -79,25 +109,65 @@ public class ApproveReaderCommandHandler : IRequestHandler<ApproveReaderCommand,
                 };
 
                 await _readerProfileRepository.AddAsync(profile, cancellationToken);
+                profileCreated = true;
             }
 
+            // Step 3: Đóng đơn request
             readerRequest.Status = ReaderApprovalStatus.Approved;
+            readerRequest.AdminNote = request.AdminNote;
+            readerRequest.ReviewedBy = request.AdminId.ToString();
+            readerRequest.ReviewedAt = DateTime.UtcNow;
+            await _readerRequestRepository.UpdateAsync(readerRequest, cancellationToken);
         }
-        else
+        catch (Exception ex)
         {
-            // === REJECT FLOW ===
-            user.RejectReaderRequest();
+            await CompensateApproveFailureAsync(
+                user,
+                originalRole,
+                originalReaderStatus,
+                readerRequest.UserId,
+                profileCreated,
+                cancellationToken);
+
+            throw new InvalidOperationException("Approve reader failed and was rolled back.", ex);
+        }
+    }
+
+    private async Task CompensateApproveFailureAsync(
+        Domain.Entities.User user,
+        string originalRole,
+        string originalReaderStatus,
+        string userId,
+        bool profileCreated,
+        CancellationToken cancellationToken)
+    {
+        List<Exception>? compensationErrors = null;
+
+        try
+        {
+            user.RestoreRoleAndReaderStatus(originalRole, originalReaderStatus);
             await _userRepository.UpdateAsync(user, cancellationToken);
-            readerRequest.Status = ReaderApprovalStatus.Rejected;
+        }
+        catch (Exception ex)
+        {
+            compensationErrors ??= new List<Exception>();
+            compensationErrors.Add(ex);
         }
 
-        // 7. Cập nhật audit trail
-        readerRequest.AdminNote = request.AdminNote;
-        readerRequest.ReviewedBy = request.AdminId.ToString();
-        readerRequest.ReviewedAt = DateTime.UtcNow;
+        if (profileCreated)
+        {
+            try
+            {
+                await _readerProfileRepository.DeleteByUserIdAsync(userId, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                compensationErrors ??= new List<Exception>();
+                compensationErrors.Add(ex);
+            }
+        }
 
-        await _readerRequestRepository.UpdateAsync(readerRequest, cancellationToken);
-
-        return true;
+        if (compensationErrors is { Count: > 0 })
+            throw new AggregateException("Compensation failed after approve reader error.", compensationErrors);
     }
 }

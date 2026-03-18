@@ -19,6 +19,9 @@ public interface IReaderProfileRepository
     /// <summary>Cập nhật profile (bio, pricing, specialties, status).</summary>
     Task UpdateAsync(ReaderProfileDto profile, CancellationToken cancellationToken = default);
 
+    /// <summary>Soft delete profile theo userId (dùng cho compensation).</summary>
+    Task DeleteByUserIdAsync(string userId, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Lấy danh sách Reader có phân trang với bộ lọc.
     /// Chỉ trả về readers chưa bị soft delete.

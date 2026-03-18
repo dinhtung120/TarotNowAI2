@@ -51,6 +51,19 @@ public class MongoReaderProfileRepository : IReaderProfileRepository
         await _context.ReaderProfiles.ReplaceOneAsync(filter, doc, cancellationToken: cancellationToken);
     }
 
+    public async Task DeleteByUserIdAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<ReaderProfileDocument>.Filter.And(
+            Builders<ReaderProfileDocument>.Filter.Eq(r => r.UserId, userId),
+            Builders<ReaderProfileDocument>.Filter.Eq(r => r.IsDeleted, false));
+
+        var update = Builders<ReaderProfileDocument>.Update
+            .Set(r => r.IsDeleted, true)
+            .Set(r => r.UpdatedAt, DateTime.UtcNow);
+
+        await _context.ReaderProfiles.UpdateManyAsync(filter, update, cancellationToken: cancellationToken);
+    }
+
     /// <summary>
     /// Phân trang directory listing với bộ lọc nâng cao.
     /// Sắp xếp: accepting_questions trước, updated_at DESC.

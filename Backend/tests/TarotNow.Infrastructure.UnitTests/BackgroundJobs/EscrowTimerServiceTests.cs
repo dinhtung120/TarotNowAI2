@@ -17,6 +17,7 @@ public class EscrowTimerServiceTests
     private readonly Mock<IServiceProvider> _mockServiceProvider;
     private readonly Mock<IChatFinanceRepository> _mockFinanceRepo;
     private readonly Mock<IWalletRepository> _mockWalletRepo;
+    private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
     private readonly Mock<ILogger<EscrowTimerService>> _mockLogger;
     private readonly EscrowTimerService _service;
 
@@ -27,13 +28,18 @@ public class EscrowTimerServiceTests
         _mockServiceProvider = new Mock<IServiceProvider>();
         _mockFinanceRepo = new Mock<IChatFinanceRepository>();
         _mockWalletRepo = new Mock<IWalletRepository>();
+        _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
         _mockLogger = new Mock<ILogger<EscrowTimerService>>();
 
         _mockScopeFactory.Setup(x => x.CreateScope()).Returns(_mockScope.Object);
         _mockScope.Setup(x => x.ServiceProvider).Returns(_mockServiceProvider.Object);
-        
+
         _mockServiceProvider.Setup(x => x.GetService(typeof(IChatFinanceRepository))).Returns(_mockFinanceRepo.Object);
         _mockServiceProvider.Setup(x => x.GetService(typeof(IWalletRepository))).Returns(_mockWalletRepo.Object);
+        _mockServiceProvider.Setup(x => x.GetService(typeof(ITransactionCoordinator))).Returns(_mockTransactionCoordinator.Object);
+        _mockTransactionCoordinator
+            .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
+            .Returns((Func<CancellationToken, Task> action, CancellationToken ct) => action(ct));
 
         _service = new EscrowTimerService(_mockScopeFactory.Object, _mockLogger.Object);
     }
@@ -49,28 +55,37 @@ public class EscrowTimerServiceTests
     public async Task ProcessExpiredOffers_CancelsOffer()
     {
         var expiredItem = new ChatQuestionItem { Id = Guid.NewGuid(), Status = QuestionItemStatus.Pending };
-        _mockFinanceRepo.Setup(x => x.GetExpiredOffersAsync(default)).ReturnsAsync(new List<ChatQuestionItem> { expiredItem });
-        _mockFinanceRepo.Setup(x => x.GetItemsForAutoRefundAsync(default)).ReturnsAsync(new List<ChatQuestionItem>());
-        _mockFinanceRepo.Setup(x => x.GetItemsForAutoReleaseAsync(default)).ReturnsAsync(new List<ChatQuestionItem>());
+        _mockFinanceRepo.Setup(x => x.GetExpiredOffersAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem> { expiredItem });
+        _mockFinanceRepo.Setup(x => x.GetItemsForAutoRefundAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem>());
+        _mockFinanceRepo.Setup(x => x.GetItemsForAutoReleaseAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem>());
 
         await InvokeProcessTimersAsync();
 
         Assert.Equal(QuestionItemStatus.Refunded, expiredItem.Status);
         Assert.NotNull(expiredItem.RefundedAt);
-        _mockFinanceRepo.Verify(x => x.UpdateItemAsync(expiredItem, default), Times.Once);
-        _mockFinanceRepo.Verify(x => x.SaveChangesAsync(default), Times.Once);
+        _mockFinanceRepo.Verify(x => x.UpdateItemAsync(expiredItem, It.IsAny<CancellationToken>()), Times.Once);
+        _mockFinanceRepo.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task ProcessAutoRefunds_RefundsAndUpdatesSession()
     {
-        var item = new ChatQuestionItem { Id = Guid.NewGuid(), PayerId = Guid.NewGuid(), AmountDiamond = 100, FinanceSessionId = Guid.NewGuid(), Status = QuestionItemStatus.Accepted };
+        var item = new ChatQuestionItem
+        {
+            Id = Guid.NewGuid(),
+            PayerId = Guid.NewGuid(),
+            AmountDiamond = 100,
+            FinanceSessionId = Guid.NewGuid(),
+            Status = QuestionItemStatus.Accepted,
+            AutoRefundAt = DateTime.UtcNow.AddMinutes(-1)
+        };
         var session = new ChatFinanceSession { Id = item.FinanceSessionId, TotalFrozen = 100 };
 
-        _mockFinanceRepo.Setup(x => x.GetExpiredOffersAsync(default)).ReturnsAsync(new List<ChatQuestionItem>());
-        _mockFinanceRepo.Setup(x => x.GetItemsForAutoRefundAsync(default)).ReturnsAsync(new List<ChatQuestionItem> { item });
-        _mockFinanceRepo.Setup(x => x.GetSessionByIdAsync(item.FinanceSessionId, default)).ReturnsAsync(session);
-        _mockFinanceRepo.Setup(x => x.GetItemsForAutoReleaseAsync(default)).ReturnsAsync(new List<ChatQuestionItem>());
+        _mockFinanceRepo.Setup(x => x.GetExpiredOffersAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem>());
+        _mockFinanceRepo.Setup(x => x.GetItemsForAutoRefundAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem> { item });
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(item.Id, It.IsAny<CancellationToken>())).ReturnsAsync(item);
+        _mockFinanceRepo.Setup(x => x.GetSessionForUpdateAsync(item.FinanceSessionId, It.IsAny<CancellationToken>())).ReturnsAsync(session);
+        _mockFinanceRepo.Setup(x => x.GetItemsForAutoReleaseAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem>());
 
         await InvokeProcessTimersAsync();
 
@@ -78,21 +93,32 @@ public class EscrowTimerServiceTests
         Assert.NotNull(item.RefundedAt);
         Assert.Equal(0, session.TotalFrozen);
 
-        _mockWalletRepo.Verify(x => x.RefundAsync(item.PayerId, item.AmountDiamond, "chat_question_item", item.Id.ToString(), It.IsAny<string>(), null, $"autorefund_{item.Id}", default), Times.Once);
-        _mockFinanceRepo.Verify(x => x.UpdateItemAsync(item, default), Times.Once);
-        _mockFinanceRepo.Verify(x => x.UpdateSessionAsync(session, default), Times.Once);
+        _mockWalletRepo.Verify(x => x.RefundAsync(item.PayerId, item.AmountDiamond, "chat_question_item", item.Id.ToString(), It.IsAny<string>(), null, $"settle_refund_{item.Id}", It.IsAny<CancellationToken>()), Times.Once);
+        _mockFinanceRepo.Verify(x => x.UpdateItemAsync(item, It.IsAny<CancellationToken>()), Times.Once);
+        _mockFinanceRepo.Verify(x => x.UpdateSessionAsync(session, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task ProcessAutoReleases_ReleasesConsumesFeeAndUpdatesSession()
     {
-        var item = new ChatQuestionItem { Id = Guid.NewGuid(), PayerId = Guid.NewGuid(), ReceiverId = Guid.NewGuid(), AmountDiamond = 100, FinanceSessionId = Guid.NewGuid(), Status = QuestionItemStatus.Accepted };
+        var item = new ChatQuestionItem
+        {
+            Id = Guid.NewGuid(),
+            PayerId = Guid.NewGuid(),
+            ReceiverId = Guid.NewGuid(),
+            AmountDiamond = 100,
+            FinanceSessionId = Guid.NewGuid(),
+            Status = QuestionItemStatus.Accepted,
+            RepliedAt = DateTime.UtcNow.AddMinutes(-2),
+            AutoReleaseAt = DateTime.UtcNow.AddMinutes(-1)
+        };
         var session = new ChatFinanceSession { Id = item.FinanceSessionId, TotalFrozen = 100 };
 
-        _mockFinanceRepo.Setup(x => x.GetExpiredOffersAsync(default)).ReturnsAsync(new List<ChatQuestionItem>());
-        _mockFinanceRepo.Setup(x => x.GetItemsForAutoRefundAsync(default)).ReturnsAsync(new List<ChatQuestionItem>());
-        _mockFinanceRepo.Setup(x => x.GetItemsForAutoReleaseAsync(default)).ReturnsAsync(new List<ChatQuestionItem> { item });
-        _mockFinanceRepo.Setup(x => x.GetSessionByIdAsync(item.FinanceSessionId, default)).ReturnsAsync(session);
+        _mockFinanceRepo.Setup(x => x.GetExpiredOffersAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem>());
+        _mockFinanceRepo.Setup(x => x.GetItemsForAutoRefundAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem>());
+        _mockFinanceRepo.Setup(x => x.GetItemsForAutoReleaseAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem> { item });
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(item.Id, It.IsAny<CancellationToken>())).ReturnsAsync(item);
+        _mockFinanceRepo.Setup(x => x.GetSessionForUpdateAsync(item.FinanceSessionId, It.IsAny<CancellationToken>())).ReturnsAsync(session);
 
         await InvokeProcessTimersAsync();
 
@@ -100,9 +126,9 @@ public class EscrowTimerServiceTests
         Assert.NotNull(item.ReleasedAt);
         Assert.Equal(0, session.TotalFrozen);
 
-        _mockWalletRepo.Verify(x => x.ReleaseAsync(item.PayerId, item.ReceiverId, 90, "chat_question_item", item.Id.ToString(), It.IsAny<string>(), null, $"autorelease_{item.Id}", default), Times.Once);
-        _mockWalletRepo.Verify(x => x.ConsumeAsync(item.PayerId, 10, "platform_fee", item.Id.ToString(), It.IsAny<string>(), null, $"autofee_{item.Id}", default), Times.Once);
-        _mockFinanceRepo.Verify(x => x.UpdateItemAsync(item, default), Times.Once);
-        _mockFinanceRepo.Verify(x => x.UpdateSessionAsync(session, default), Times.Once);
+        _mockWalletRepo.Verify(x => x.ReleaseAsync(item.PayerId, item.ReceiverId, 90, "chat_question_item", item.Id.ToString(), It.IsAny<string>(), null, $"settle_release_{item.Id}", It.IsAny<CancellationToken>()), Times.Once);
+        _mockWalletRepo.Verify(x => x.ConsumeAsync(item.PayerId, 10, "platform_fee", item.Id.ToString(), It.IsAny<string>(), null, $"settle_fee_{item.Id}", It.IsAny<CancellationToken>()), Times.Once);
+        _mockFinanceRepo.Verify(x => x.UpdateItemAsync(item, It.IsAny<CancellationToken>()), Times.Once);
+        _mockFinanceRepo.Verify(x => x.UpdateSessionAsync(session, It.IsAny<CancellationToken>()), Times.Once);
     }
 }

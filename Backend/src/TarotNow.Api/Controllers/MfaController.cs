@@ -5,6 +5,7 @@ using System.Security.Claims;
 using TarotNow.Application.Features.Mfa.Commands.MfaChallenge;
 using TarotNow.Application.Features.Mfa.Commands.MfaSetup;
 using TarotNow.Application.Features.Mfa.Commands.MfaVerify;
+using TarotNow.Application.Features.Mfa.Queries.GetMfaStatus;
 
 namespace TarotNow.Api.Controllers;
 
@@ -64,13 +65,13 @@ public class MfaController : ControllerBase
 
     /// <summary>Lấy trạng thái MFA.</summary>
     [HttpGet("status")]
-    public async Task<IActionResult> Status([FromServices] TarotNow.Application.Interfaces.IUserRepository userRepo)
+    public async Task<IActionResult> Status()
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
-        var user = await userRepo.GetByIdAsync(userId.Value);
-        return Ok(new { mfaEnabled = user?.MfaEnabled ?? false });
+        var result = await _mediator.Send(new GetMfaStatusQuery { UserId = userId.Value });
+        return Ok(new { mfaEnabled = result.MfaEnabled });
     }
 }
 
