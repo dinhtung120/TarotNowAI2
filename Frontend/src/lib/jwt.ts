@@ -11,7 +11,6 @@ function base64UrlDecodeToUtf8(base64Url: string): string {
   }
 
   // Node.js fallback (e.g. tests). Avoids relying on atob being present.
-  // eslint-disable-next-line no-restricted-globals
   return Buffer.from(padded, "base64").toString("utf8");
 }
 
@@ -46,4 +45,3 @@ export function isJwtExpired(token: string, leewaySeconds = 0): boolean {
   const leewayMs = Math.max(0, leewaySeconds) * 1000;
   return Date.now() >= expMs - leewayMs;
 }
-
