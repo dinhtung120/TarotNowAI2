@@ -28,12 +28,17 @@ public class ReaderReplyCommandHandlerTests
 {
     /* Mock repository — chỉ cần finance repo vì reply không liên quan wallet */
     private readonly Mock<IChatFinanceRepository> _mockFinanceRepo;
+    private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
     private readonly ReaderReplyCommandHandler _handler;
 
     public ReaderReplyCommandHandlerTests()
     {
         _mockFinanceRepo = new Mock<IChatFinanceRepository>();
-        _handler = new ReaderReplyCommandHandler(_mockFinanceRepo.Object);
+        _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
+        _mockTransactionCoordinator
+            .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
+            .Returns((Func<CancellationToken, Task> action, CancellationToken ct) => action(ct));
+        _handler = new ReaderReplyCommandHandler(_mockFinanceRepo.Object, _mockTransactionCoordinator.Object);
     }
 
     /// <summary>
@@ -49,7 +54,7 @@ public class ReaderReplyCommandHandlerTests
         // Arrange
         var command = new ReaderReplyCommand { ItemId = Guid.NewGuid(), ReaderId = Guid.NewGuid() };
 
-        _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default))
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default))
             .ReturnsAsync((ChatQuestionItem)null!);
 
         // Act & Assert
@@ -71,7 +76,7 @@ public class ReaderReplyCommandHandlerTests
         var command = new ReaderReplyCommand { ItemId = Guid.NewGuid(), ReaderId = Guid.NewGuid() };
         var item = new ChatQuestionItem { ReceiverId = Guid.NewGuid() }; // Người khác
 
-        _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default))
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default))
             .ReturnsAsync(item);
 
         // Act & Assert
@@ -99,7 +104,7 @@ public class ReaderReplyCommandHandlerTests
             Status = QuestionItemStatus.Released // Trạng thái sai
         };
 
-        _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default))
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default))
             .ReturnsAsync(item);
 
         // Act & Assert
@@ -127,7 +132,7 @@ public class ReaderReplyCommandHandlerTests
             RepliedAt = DateTime.UtcNow.AddHours(-1) // Đã reply 1 giờ trước
         };
 
-        _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default))
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default))
             .ReturnsAsync(item);
 
         // Act & Assert
@@ -164,7 +169,7 @@ public class ReaderReplyCommandHandlerTests
             AutoRefundAt = DateTime.UtcNow.AddHours(20) // Timer auto-refund đang chạy
         };
 
-        _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default))
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default))
             .ReturnsAsync(item);
 
         // Act
@@ -190,7 +195,7 @@ public class ReaderReplyCommandHandlerTests
         Assert.Null(item.AutoRefundAt);
 
         // Assert — UpdateItemAsync + SaveChangesAsync được gọi
-        _mockFinanceRepo.Verify(x => x.UpdateItemAsync(item, default), Times.Once);
-        _mockFinanceRepo.Verify(x => x.SaveChangesAsync(default), Times.Once);
+        _mockFinanceRepo.Verify(x => x.UpdateItemAsync(item, It.IsAny<CancellationToken>()), Times.Once);
+        _mockFinanceRepo.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

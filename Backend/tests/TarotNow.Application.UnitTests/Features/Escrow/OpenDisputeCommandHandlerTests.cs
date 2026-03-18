@@ -11,12 +11,17 @@ namespace TarotNow.Application.UnitTests.Features.Escrow;
 public class OpenDisputeCommandHandlerTests
 {
     private readonly Mock<IChatFinanceRepository> _mockFinanceRepo;
+    private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
     private readonly OpenDisputeCommandHandler _handler;
 
     public OpenDisputeCommandHandlerTests()
     {
         _mockFinanceRepo = new Mock<IChatFinanceRepository>();
-        _handler = new OpenDisputeCommandHandler(_mockFinanceRepo.Object);
+        _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
+        _mockTransactionCoordinator
+            .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
+            .Returns((Func<CancellationToken, Task> action, CancellationToken ct) => action(ct));
+        _handler = new OpenDisputeCommandHandler(_mockFinanceRepo.Object, _mockTransactionCoordinator.Object);
     }
 
     [Fact]
@@ -24,7 +29,7 @@ public class OpenDisputeCommandHandlerTests
     {
         var command = new OpenDisputeCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid() };
         var item = new ChatQuestionItem { PayerId = Guid.NewGuid() }; // Different ID
-        _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default)).ReturnsAsync(item);
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default)).ReturnsAsync(item);
 
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
@@ -34,7 +39,7 @@ public class OpenDisputeCommandHandlerTests
     {
         var command = new OpenDisputeCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid() };
         var item = new ChatQuestionItem { PayerId = command.UserId, Status = QuestionItemStatus.Released };
-        _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default)).ReturnsAsync(item);
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default)).ReturnsAsync(item);
 
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
@@ -50,7 +55,7 @@ public class OpenDisputeCommandHandlerTests
             RepliedAt = DateTime.UtcNow.AddMinutes(-10),
             AutoReleaseAt = DateTime.UtcNow.AddHours(-1)
         };
-        _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default)).ReturnsAsync(item);
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default)).ReturnsAsync(item);
 
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Contains("quá thời hạn mở tranh chấp", ex.Message);
@@ -67,7 +72,7 @@ public class OpenDisputeCommandHandlerTests
             RepliedAt = DateTime.UtcNow.AddMinutes(-10),
             AutoReleaseAt = DateTime.UtcNow.AddHours(1)
         };
-        _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default)).ReturnsAsync(item);
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default)).ReturnsAsync(item);
 
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
@@ -92,8 +97,8 @@ public class OpenDisputeCommandHandlerTests
         };
         var session = new ChatFinanceSession { Id = item.FinanceSessionId, Status = "active" };
 
-        _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default)).ReturnsAsync(item);
-        _mockFinanceRepo.Setup(x => x.GetSessionByIdAsync(item.FinanceSessionId, default)).ReturnsAsync(session);
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default)).ReturnsAsync(item);
+        _mockFinanceRepo.Setup(x => x.GetSessionForUpdateAsync(item.FinanceSessionId, default)).ReturnsAsync(session);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -101,8 +106,8 @@ public class OpenDisputeCommandHandlerTests
         Assert.Equal(QuestionItemStatus.Disputed, item.Status);
         Assert.Equal("disputed", session.Status);
 
-        _mockFinanceRepo.Verify(x => x.UpdateItemAsync(item, default), Times.Once);
-        _mockFinanceRepo.Verify(x => x.UpdateSessionAsync(session, default), Times.Once);
+        _mockFinanceRepo.Verify(x => x.UpdateItemAsync(item, It.IsAny<CancellationToken>()), Times.Once);
+        _mockFinanceRepo.Verify(x => x.UpdateSessionAsync(session, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     /// <summary>
@@ -118,7 +123,7 @@ public class OpenDisputeCommandHandlerTests
         // Arrange
         var command = new OpenDisputeCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid() };
 
-        _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default))
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default))
             .ReturnsAsync((ChatQuestionItem)null!);
 
         // Act & Assert
@@ -147,7 +152,7 @@ public class OpenDisputeCommandHandlerTests
             RepliedAt = null
         };
 
-        _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default))
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default))
             .ReturnsAsync(item);
 
         var ex = await Assert.ThrowsAsync<BadRequestException>(

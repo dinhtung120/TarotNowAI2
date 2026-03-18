@@ -1,6 +1,7 @@
 using MediatR;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Constants;
 using TarotNow.Domain.Entities;
 
 namespace TarotNow.Application.Features.Withdrawal.Commands.CreateWithdrawal;
@@ -90,7 +91,7 @@ public class CreateWithdrawalCommandHandler : IRequestHandler<CreateWithdrawalCo
             throw new BadRequestException("Thông tin ngân hàng không hợp lệ.");
 
         // Fee calculation: 1 Diamond = 1000 VND, fee 10%
-        var amountVnd = req.AmountDiamond * 1000;
+        var amountVnd = req.AmountDiamond * EconomyConstants.VndPerDiamond;
         var feeVnd = (long)Math.Ceiling(amountVnd * 0.10);
         var netAmountVnd = amountVnd - feeVnd;
 

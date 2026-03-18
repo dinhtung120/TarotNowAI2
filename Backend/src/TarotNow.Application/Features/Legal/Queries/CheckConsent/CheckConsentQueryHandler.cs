@@ -1,4 +1,5 @@
 using MediatR;
+using TarotNow.Application.Exceptions;
 using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,21 +25,23 @@ public class CheckConsentQueryHandler : IRequestHandler<CheckConsentQuery, Check
         var response = new CheckConsentResponse();
 
         // 2. Xác định các bản version cần kiểm tra (Dùng query params nếu có, nếu không dùng config mặc định)
-        var requiredTOSVersion = request.Version ?? _configuration["LegalSettings:TOSVersion"] ?? "1.0";
-        var requiredPrivacyVersion = request.Version ?? _configuration["LegalSettings:PrivacyVersion"] ?? "1.0";
-        var requiredAiDisclaimerVersion = request.Version ?? _configuration["LegalSettings:AiDisclaimerVersion"] ?? "1.0";
+        var requiredTOSVersion = ResolveConfiguredVersion("TOS");
+        var requiredPrivacyVersion = ResolveConfiguredVersion("PrivacyPolicy");
+        var requiredAiDisclaimerVersion = ResolveConfiguredVersion("AiDisclaimer");
 
         var requiredDocs = new Dictionary<string, string>();
         
         if (!string.IsNullOrEmpty(request.DocumentType))
         {
-            requiredDocs.Add(request.DocumentType, request.Version ?? "1.0");
+            var normalizedDocType = NormalizeDocumentType(request.DocumentType);
+            requiredDocs.Add(normalizedDocType, ResolveRequiredVersion(normalizedDocType, request.Version));
         }
         else
         {
-            requiredDocs.Add("TOS", requiredTOSVersion);
-            requiredDocs.Add("PrivacyPolicy", requiredPrivacyVersion);
-            requiredDocs.Add("AiDisclaimer", requiredAiDisclaimerVersion);
+            var globalVersionOverride = string.IsNullOrWhiteSpace(request.Version) ? null : request.Version.Trim();
+            requiredDocs.Add("TOS", globalVersionOverride ?? requiredTOSVersion);
+            requiredDocs.Add("PrivacyPolicy", globalVersionOverride ?? requiredPrivacyVersion);
+            requiredDocs.Add("AiDisclaimer", globalVersionOverride ?? requiredAiDisclaimerVersion);
         }
 
         // 3. Lấy tất cả consent gần nhất của User này
@@ -61,5 +64,35 @@ public class CheckConsentQueryHandler : IRequestHandler<CheckConsentQuery, Check
         response.IsFullyConsented = response.PendingDocuments.Count == 0;
 
         return response;
+    }
+
+    private string ResolveRequiredVersion(string documentType, string? requestedVersion)
+    {
+        if (!string.IsNullOrWhiteSpace(requestedVersion))
+        {
+            return requestedVersion.Trim();
+        }
+
+        return ResolveConfiguredVersion(documentType);
+    }
+
+    private string ResolveConfiguredVersion(string documentType)
+    {
+        return documentType switch
+        {
+            "TOS" => _configuration["LegalSettings:TOSVersion"] ?? "1.0",
+            "PrivacyPolicy" => _configuration["LegalSettings:PrivacyVersion"] ?? "1.0",
+            "AiDisclaimer" => _configuration["LegalSettings:AiDisclaimerVersion"] ?? "1.0",
+            _ => throw new BadRequestException("DocumentType không hợp lệ.")
+        };
+    }
+
+    private static string NormalizeDocumentType(string documentType)
+    {
+        var normalized = documentType.Trim();
+        if (string.Equals(normalized, "TOS", System.StringComparison.OrdinalIgnoreCase)) return "TOS";
+        if (string.Equals(normalized, "PrivacyPolicy", System.StringComparison.OrdinalIgnoreCase)) return "PrivacyPolicy";
+        if (string.Equals(normalized, "AiDisclaimer", System.StringComparison.OrdinalIgnoreCase)) return "AiDisclaimer";
+        throw new BadRequestException("DocumentType không hợp lệ.");
     }
 }

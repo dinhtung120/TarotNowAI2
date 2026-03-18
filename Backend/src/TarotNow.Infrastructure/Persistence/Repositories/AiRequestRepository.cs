@@ -19,11 +19,6 @@ public class AiRequestRepository : IAiRequestRepository
         return await _context.AiRequests.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 
-    public async Task<AiRequest?> GetByIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken = default)
-    {
-        return await _context.AiRequests.FirstOrDefaultAsync(x => x.IdempotencyKey == idempotencyKey, cancellationToken);
-    }
-
     public async Task AddAsync(AiRequest request, CancellationToken cancellationToken = default)
     {
         await _context.AiRequests.AddAsync(request, cancellationToken);
@@ -42,7 +37,8 @@ public class AiRequestRepository : IAiRequestRepository
         return await _context.AiRequests.CountAsync(
             x => x.UserId == userId && 
                  x.CreatedAt >= todayOffset && 
-                 (x.Status == TarotNow.Domain.Enums.AiRequestStatus.Completed || x.Status == TarotNow.Domain.Enums.AiRequestStatus.FirstTokenReceived), 
+                 (x.Status == TarotNow.Domain.Enums.AiRequestStatus.Completed
+                     || x.Status == TarotNow.Domain.Enums.AiRequestStatus.FailedAfterFirstToken), 
             cancellationToken);
     }
 
@@ -50,7 +46,7 @@ public class AiRequestRepository : IAiRequestRepository
     {
         return await _context.AiRequests.CountAsync(
             x => x.UserId == userId && 
-                 (x.Status == TarotNow.Domain.Enums.AiRequestStatus.Requested || x.Status == TarotNow.Domain.Enums.AiRequestStatus.FirstTokenReceived), 
+                 x.Status == TarotNow.Domain.Enums.AiRequestStatus.Requested, 
             cancellationToken);
     }
 

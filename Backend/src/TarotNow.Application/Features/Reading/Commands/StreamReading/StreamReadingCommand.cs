@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Configuration;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
@@ -32,13 +33,17 @@ public class StreamReadingCommandHandler : IRequestHandler<StreamReadingCommand,
     private readonly IAiProvider _aiProvider;
     private readonly ICacheService _cacheService;
     private readonly FollowupPricingService _pricingService;
+    private readonly int _dailyAiQuota;
+    private readonly int _inFlightAiCap;
+    private readonly int _readingRateLimitSeconds;
 
     public StreamReadingCommandHandler(
         IReadingSessionRepository readingRepo,
         IAiRequestRepository aiRequestRepo,
         IWalletRepository walletRepo,
         IAiProvider aiProvider,
-        ICacheService cacheService)
+        ICacheService cacheService,
+        IConfiguration configuration)
     {
         _readingRepo = readingRepo;
         _aiRequestRepo = aiRequestRepo;
@@ -46,6 +51,10 @@ public class StreamReadingCommandHandler : IRequestHandler<StreamReadingCommand,
         _aiProvider = aiProvider;
         _cacheService = cacheService;
         _pricingService = new FollowupPricingService(); // Domain service is stateless, can instantiate directly or inject.
+
+        _dailyAiQuota = ResolvePositiveInt(configuration["SystemConfig:DailyAiQuota"], 3);
+        _inFlightAiCap = ResolvePositiveInt(configuration["SystemConfig:InFlightAiCap"], 3);
+        _readingRateLimitSeconds = ResolvePositiveInt(configuration["SystemConfig:ReadingRateLimitSeconds"], 30);
     }
 
     public async Task<StreamReadingResult> Handle(StreamReadingCommand request, CancellationToken cancellationToken)
@@ -57,24 +66,24 @@ public class StreamReadingCommandHandler : IRequestHandler<StreamReadingCommand,
             throw new UnauthorizedAccessException("Session not found or access denied");
         if (!session.IsCompleted) throw new BadRequestException("Cannot stream AI interpretation before revealing cards");
 
-        // Guard 1: Daily Quota Cap (Max 3)
+        // Guard 1: Daily Quota Cap
         var dailyCount = await _aiRequestRepo.GetDailyAiRequestCountAsync(request.UserId, cancellationToken);
-        if (dailyCount >= 3) throw new BadRequestException("Daily AI request quota exceeded");
+        if (dailyCount >= _dailyAiQuota) throw new BadRequestException("Daily AI request quota exceeded");
         
-        // Guard 1.5: In-flight Cap (Max 3 concurrent)
+        // Guard 1.5: In-flight Cap
         var activeCount = await _aiRequestRepo.GetActiveAiRequestCountAsync(request.UserId, cancellationToken);
-        if (activeCount >= 3) throw new BadRequestException("Too many in-flight AI requests");
+        if (activeCount >= _inFlightAiCap) throw new BadRequestException("Too many in-flight AI requests");
 
         // Guard 3: Rate Limiting (Phase 1.5 spec) - Chống spam request AI
-        // Giới hạn: tối đa 1 request interpretation/follow-up mỗi 30 giây cho mỗi user.
+        // Giới hạn đọc từ cấu hình SystemConfig:ReadingRateLimitSeconds.
         // Tại sao cần Guard này? 
         // -> Vì AI Interpretation là tốn phí thật (token OpenAI). User click spam nút bói bài
         //    có thể gây tốn quota hoặc freeze ví liên tục, làm crash bộ đếm.
         var rateLimitKey = $"ratelimit:{request.UserId}:ai_interpret";
-        var isAllowed = await _cacheService.CheckRateLimitAsync(rateLimitKey, TimeSpan.FromSeconds(30), cancellationToken);
+        var isAllowed = await _cacheService.CheckRateLimitAsync(rateLimitKey, TimeSpan.FromSeconds(_readingRateLimitSeconds), cancellationToken);
         if (!isAllowed) 
         {
-            throw new BadRequestException("Vui lòng đợi 30 giây giữa các lần yêu cầu AI giải bài.");
+            throw new BadRequestException($"Vui lòng đợi {_readingRateLimitSeconds} giây giữa các lần yêu cầu AI giải bài.");
         }
 
         // Guard 1.7: Follow-up Pricing & Hard Cap (Phase 1.5)
@@ -162,5 +171,10 @@ public class StreamReadingCommandHandler : IRequestHandler<StreamReadingCommand,
             AiRequestId = aiRequest.Id,
             Provider = _aiProvider
         };
+    }
+
+    private static int ResolvePositiveInt(string? configuredValue, int fallback)
+    {
+        return int.TryParse(configuredValue, out var parsed) && parsed > 0 ? parsed : fallback;
     }
 }

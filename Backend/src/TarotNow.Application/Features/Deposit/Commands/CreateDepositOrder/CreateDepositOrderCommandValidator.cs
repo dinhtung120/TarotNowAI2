@@ -11,6 +11,6 @@ public class CreateDepositOrderCommandValidator : AbstractValidator<CreateDeposi
 
         RuleFor(x => x.AmountVnd)
             .GreaterThan(0).WithMessage("AmountVnd must be greater than 0.")
-            .Must(amount => amount % 10000 == 0).WithMessage("AmountVnd must be a multiple of 10,000.");
+            .Must(amount => amount % 1000 == 0).WithMessage("AmountVnd must be a multiple of 1,000.");
     }
 }

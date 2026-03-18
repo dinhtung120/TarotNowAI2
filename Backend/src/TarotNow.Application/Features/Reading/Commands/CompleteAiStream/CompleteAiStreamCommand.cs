@@ -12,8 +12,9 @@ namespace TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
 /// Command này xử lý 3 tình huống:
 /// 1. Stream thành công (Completed) → Consume escrow + update state
 /// 2. Stream thất bại trước token đầu → Refund + quota rollback + update state
-/// 3. Stream thất bại sau token đầu → Refund + quota rollback + update state
-/// 4. Client disconnect sau token đầu → Chỉ update state (KHÔNG auto-refund)
+/// 3. Stream thất bại sau token đầu:
+///    - Client disconnect → Consume escrow
+///    - Lỗi server/provider → Refund escrow
 /// </summary>
 public class CompleteAiStreamCommand : IRequest<bool>
 {
@@ -62,66 +63,60 @@ public class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAiStreamCo
 {
     private readonly IAiRequestRepository _aiRequestRepo;
     private readonly IWalletRepository _walletRepo;
+    private readonly ITransactionCoordinator _transactionCoordinator;
 
     public CompleteAiStreamCommandHandler(
         IAiRequestRepository aiRequestRepo,
-        IWalletRepository walletRepo)
+        IWalletRepository walletRepo,
+        ITransactionCoordinator transactionCoordinator)
     {
         _aiRequestRepo = aiRequestRepo;
         _walletRepo = walletRepo;
+        _transactionCoordinator = transactionCoordinator;
     }
 
     public async Task<bool> Handle(CompleteAiStreamCommand request, CancellationToken cancellationToken)
     {
-        // 1. Lấy AI Request record từ DB
-        var record = await _aiRequestRepo.GetByIdAsync(request.AiRequestId, cancellationToken);
-        if (record == null) return false;
+        var processed = false;
 
-        // 2. Cập nhật state machine
-        record.Status = request.FinalStatus;
-        record.FinishReason = request.ErrorMessage;
-        record.UpdatedAt = DateTimeOffset.UtcNow;
-
-        // Ghi timestamp completion nếu thành công
-        if (request.FinalStatus == AiRequestStatus.Completed)
+        await _transactionCoordinator.ExecuteAsync(async transactionCt =>
         {
-            record.CompletionMarkerAt = DateTimeOffset.UtcNow;
-        }
+            var record = await _aiRequestRepo.GetByIdAsync(request.AiRequestId, transactionCt);
+            if (record == null) return;
 
-        // Ghi timestamp FirstToken nếu có
-        if (request.FirstTokenAt.HasValue)
-        {
-            record.FirstTokenAt = request.FirstTokenAt;
-        }
+            var now = DateTimeOffset.UtcNow;
+            record.Status = request.FinalStatus;
+            record.FinishReason = NormalizeFinishReason(request.ErrorMessage);
+            record.UpdatedAt = now;
 
-        await _aiRequestRepo.UpdateAsync(record, cancellationToken);
+            if (request.FinalStatus == AiRequestStatus.Completed)
+            {
+                record.CompletionMarkerAt = now;
+            }
 
-        // 3. Xử lý tài chính tùy theo trạng thái cuối
-        switch (request.FinalStatus)
-        {
-            case AiRequestStatus.Completed:
-                // Thành công → Consume (tiêu thụ) Diamond đã đóng băng
-                // Dùng ConsumeAsync thay cho ReleaseAsync(Guid.Empty) cũ (fix BL-03)
-                if (record.ChargeDiamond > 0)
-                {
-                    await _walletRepo.ConsumeAsync(
-                        userId: request.UserId,
-                        amount: record.ChargeDiamond,
-                        referenceSource: "AiRequestCompletedConsume",
-                        referenceId: record.Id.ToString(),
-                        description: "Diamond consumed for completed AI Stream",
-                        idempotencyKey: $"consume_{record.Id}",
-                        cancellationToken: cancellationToken
-                    );
-                }
-                break;
+            if (request.FirstTokenAt.HasValue)
+            {
+                record.FirstTokenAt = request.FirstTokenAt;
+            }
 
-            case AiRequestStatus.FailedBeforeFirstToken:
-            case AiRequestStatus.FailedAfterFirstToken:
-                // Thất bại chính thức (không phải client disconnect sau token) → Refund + Quota Rollback
-                if (!request.IsClientDisconnect)
-                {
-                    // Refund Diamond đã đóng băng
+            switch (request.FinalStatus)
+            {
+                case AiRequestStatus.Completed:
+                    if (record.ChargeDiamond > 0)
+                    {
+                        await _walletRepo.ConsumeAsync(
+                            userId: request.UserId,
+                            amount: record.ChargeDiamond,
+                            referenceSource: "AiRequestCompletedConsume",
+                            referenceId: record.Id.ToString(),
+                            description: "Diamond consumed for completed AI Stream",
+                            idempotencyKey: $"consume_{record.Id}",
+                            cancellationToken: transactionCt
+                        );
+                    }
+                    break;
+
+                case AiRequestStatus.FailedBeforeFirstToken:
                     if (record.ChargeDiamond > 0)
                     {
                         await _walletRepo.RefundAsync(
@@ -129,24 +124,62 @@ public class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAiStreamCo
                             amount: record.ChargeDiamond,
                             referenceSource: "AiRequestAutoRefund",
                             referenceId: record.Id.ToString(),
-                            description: $"Auto Refund for aborting AI Streaming ({request.FinalStatus})",
+                            description: "Auto refund for AI stream failure before first token",
                             idempotencyKey: $"refund_{record.Id}",
-                            cancellationToken: cancellationToken
+                            cancellationToken: transactionCt
                         );
                     }
+                    break;
 
-                    // BL-04 FIX: Rollback AI quota — giảm daily count vì request này không thành công.
-                    // Spec yêu cầu: "failed_before_first_token → quota rollback 1" 
-                    //                "failed_after_first_token → quota rollback 1"
-                    // Cách rollback: Đánh dấu AiRequest này là "không tính vào quota" 
-                    // bằng cách set RetryCount = -1 (sentinel value) để GetDailyAiRequestCountAsync exclude nó.
-                    record.RetryCount = -1; // Sentinel: đánh dấu request đã bị rollback quota
-                    await _aiRequestRepo.UpdateAsync(record, cancellationToken);
-                }
-                // Trường hợp client disconnect SAU token đầu → backend vẫn track, KHÔNG auto-refund (spec)
-                break;
+                case AiRequestStatus.FailedAfterFirstToken:
+                    if (record.ChargeDiamond > 0)
+                    {
+                        if (request.IsClientDisconnect)
+                        {
+                            await _walletRepo.ConsumeAsync(
+                                userId: request.UserId,
+                                amount: record.ChargeDiamond,
+                                referenceSource: "AiRequestDisconnectConsume",
+                                referenceId: record.Id.ToString(),
+                                description: "Client disconnected after first token, consume escrow",
+                                idempotencyKey: $"consume_{record.Id}",
+                                cancellationToken: transactionCt
+                            );
+                        }
+                        else
+                        {
+                            await _walletRepo.RefundAsync(
+                                userId: request.UserId,
+                                amount: record.ChargeDiamond,
+                                referenceSource: "AiRequestAutoRefund",
+                                referenceId: record.Id.ToString(),
+                                description: "Auto refund for AI stream failure after first token",
+                                idempotencyKey: $"refund_{record.Id}",
+                                cancellationToken: transactionCt
+                            );
+                        }
+                    }
+                    break;
+
+                default:
+                    return;
+            }
+
+            await _aiRequestRepo.UpdateAsync(record, transactionCt);
+            processed = true;
+        }, cancellationToken);
+
+        return processed;
+    }
+
+    private static string? NormalizeFinishReason(string? finishReason)
+    {
+        if (string.IsNullOrWhiteSpace(finishReason))
+        {
+            return null;
         }
 
-        return true;
+        var normalized = finishReason.Trim();
+        return normalized.Length <= 50 ? normalized : normalized[..50];
     }
 }

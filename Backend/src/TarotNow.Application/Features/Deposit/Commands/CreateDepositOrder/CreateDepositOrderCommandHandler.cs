@@ -1,6 +1,7 @@
 using MediatR;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Domain.Constants;
 using TarotNow.Domain.Entities;
 using TarotNow.Application.Interfaces;
 
@@ -19,8 +20,8 @@ public class CreateDepositOrderCommandHandler : IRequestHandler<CreateDepositOrd
 
     public async Task<CreateDepositOrderResponse> Handle(CreateDepositOrderCommand request, CancellationToken cancellationToken)
     {
-        // Tỉ lệ chuyển đổi: 10,000 VND = 1 Diamond (Có thể tách ra config sau)
-        long baseDiamondAmount = request.AmountVnd / 10000;
+        // Tỉ lệ chuyển đổi chuẩn: 1,000 VND = 1 Diamond
+        long baseDiamondAmount = request.AmountVnd / EconomyConstants.VndPerDiamond;
         
         // P1-PROMO-BE-1.2: Auto-apply promotion on deposit
         var activePromotions = await _promotionRepository.GetActivePromotionsAsync(cancellationToken);

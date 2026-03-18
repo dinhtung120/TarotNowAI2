@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using TarotNow.Application.Exceptions;
 using TarotNow.Domain.Exceptions;
 
@@ -92,6 +94,20 @@ public class GlobalExceptionHandler : IExceptionHandler
                 problemDetails.Title = "Unauthorized";
                 problemDetails.Detail = "You are not authorized to access this resource.";
                 break;
+
+            case DbUpdateException dbUpdateException when IsWithdrawalDailyLimitViolation(dbUpdateException):
+                problemDetails.Status = StatusCodes.Status400BadRequest;
+                problemDetails.Title = "Bad Request";
+                problemDetails.Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1";
+                problemDetails.Detail = "Bạn đã có yêu cầu rút tiền hôm nay. Vui lòng thử lại ngày mai.";
+                break;
+
+            case DbUpdateException dbUpdateException when IsEscrowUniquenessViolation(dbUpdateException):
+                problemDetails.Status = StatusCodes.Status409Conflict;
+                problemDetails.Title = "Conflict";
+                problemDetails.Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.8";
+                problemDetails.Detail = "Yêu cầu trùng lặp hoặc đã được xử lý trước đó.";
+                break;
         }
 
         httpContext.Response.StatusCode = problemDetails.Status.Value;
@@ -100,5 +116,32 @@ public class GlobalExceptionHandler : IExceptionHandler
         await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
         
         return true;
+    }
+
+    private static bool IsWithdrawalDailyLimitViolation(DbUpdateException exception)
+    {
+        if (exception.InnerException is not PostgresException postgresException)
+        {
+            return false;
+        }
+
+        return postgresException.SqlState == PostgresErrorCodes.UniqueViolation
+               && string.Equals(postgresException.ConstraintName, "ix_withdrawal_one_per_day_active", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsEscrowUniquenessViolation(DbUpdateException exception)
+    {
+        if (exception.InnerException is not PostgresException postgresException)
+        {
+            return false;
+        }
+
+        if (postgresException.SqlState != PostgresErrorCodes.UniqueViolation)
+        {
+            return false;
+        }
+
+        return string.Equals(postgresException.ConstraintName, "ix_chat_finance_sessions_conversation_ref", StringComparison.OrdinalIgnoreCase)
+               || string.Equals(postgresException.ConstraintName, "ix_chat_question_items_idempotency_key", StringComparison.OrdinalIgnoreCase);
     }
 }

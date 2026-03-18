@@ -85,12 +85,6 @@ public class User
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void MarkAsConsented()
-    {
-        HasConsented = true;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
     /// <summary>
     /// Cộng điểm kinh nghiệm (EXP) và xử lý thăng cấp (Level Up).
     /// Quy tắc: 100 EXP = 1 Level.
