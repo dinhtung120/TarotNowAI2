@@ -44,7 +44,7 @@ export default async function RootLayout({
     const messages = await getMessages();
 
     return (
-        <html lang={locale} data-theme="astral-premium">
+        <html lang={locale} data-theme="prismatic-royal">
             <body
                 className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased`}
             >

@@ -42,7 +42,7 @@ function StatItem({ icon: Icon, value, label, color }: StatProps) {
  }}>
  <Icon className="w-5 h-5" />
  </div>
- <div className="text-3xl font-black text-[var(--text-ink)] tracking-tighter italic mb-1">{value}</div>
+ <div className="text-2xl font-black text-[var(--text-ink)] tracking-tighter italic mb-1">{value}</div>
  <div className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)]">{label}</div>
  </GlassCard>
  );
@@ -61,7 +61,7 @@ export default async function Home() {
 
  <main className="relative z-10">
  {/* ##### HERO SECTION: THE MYSTIC PORTAL ##### */}
- <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-20">
+ <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-20 pb-28 md:pb-24">
  <div className="w-full max-w-6xl flex flex-col items-center text-center">
  {/* Live Tagline */}
  <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-[var(--bg-glass)] border border-[var(--border-default)] text-[10px] uppercase tracking-[0.3em] font-black text-[color:var(--c-hex-9f8338)] mb-10 shadow-[var(--shadow-card)] animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -74,22 +74,22 @@ export default async function Home() {
 
  {/* Main Title - Using Playfair Display */}
  <h1 className="relative mb-10 animate-in fade-in zoom-in-95 duration-1000 delay-200">
- <span className="block font-serif italic text-4xl sm:text-6xl lg:text-7xl font-light tracking-tight text-[var(--text-secondary)] mb-2 leading-tight">
+ <span className="block font-serif italic text-3xl sm:text-5xl lg:text-6xl font-light tracking-tight text-[var(--text-secondary)] mb-2 leading-tight">
  {t('heroTitle1')}
  </span>
- <span className="block text-6xl sm:text-8xl lg:text-9xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[color:var(--c-hex-8f7bb4)] via-[var(--purple-accent)] to-[var(--mint-accent)] leading-none pb-4 drop-shadow-[0_20px_40px_var(--c-168-156-255-30)]">
+ <span className="block text-5xl sm:text-7xl lg:text-8xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-[color:var(--c-hex-8f7bb4)] via-[var(--purple-accent)] to-[var(--mint-accent)] leading-none pb-4 drop-shadow-[0_20px_40px_var(--c-168-156-255-30)]">
  {t('heroTitle2')}
  </span>
  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-40 h-[1px] bg-gradient-to-r from-transparent via-[color:var(--c-168-156-255-50)] to-transparent"></div>
  </h1>
 
  {/* Description */}
- <p className="max-w-2xl text-lg sm:text-xl text-[var(--text-secondary)] font-medium mb-14 leading-relaxed tracking-wide animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500">
+ <p className="max-w-2xl text-base sm:text-lg text-[var(--text-secondary)] font-medium mb-14 leading-relaxed tracking-wide animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500">
  {t('heroDesc')}
  </p>
 
  {/* Hero Actions */}
- <div className="flex flex-col sm:flex-row items-center gap-6 w-full sm:w-auto animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-700">
+ <div className="relative z-10 flex flex-col sm:flex-row items-center gap-6 w-full sm:w-auto animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-700">
  <Link href="/reading" tabIndex={-1}>
  <Button size="lg" rightIcon={<Compass className="w-5 h-5 ml-2 transition-transform duration-700 group-hover:rotate-180" />}
  className="group shadow-[var(--glow-white)]"
@@ -110,7 +110,7 @@ export default async function Home() {
  </div>
 
  {/* Scroll Indicator */}
- <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 opacity-50">
+ <div className="pointer-events-none absolute bottom-4 left-1/2 z-0 hidden -translate-x-1/2 flex-col items-center gap-4 opacity-50 md:flex">
  <div className="text-[9px] font-black uppercase tracking-[0.4em] text-[var(--text-muted)] rotate-90 origin-left translate-x-1.5 translate-y-2">{t('scroll')}</div>
  <div className="w-[1px] h-16 bg-gradient-to-b from-[var(--purple-accent)] to-transparent"></div>
  </div>
@@ -158,7 +158,7 @@ export default async function Home() {
  </Badge>
  </div>
  <div>
- <h3 className="text-2xl font-black text-[var(--text-ink)] tracking-tighter uppercase italic truncate">{reader.displayName}</h3>
+ <h3 className="text-xl font-black text-[var(--text-ink)] tracking-tighter uppercase italic truncate">{reader.displayName}</h3>
  <div className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--purple-accent)] mt-1 line-clamp-1">
  {reader.specialties.join(' • ')}
  </div>
@@ -186,7 +186,7 @@ export default async function Home() {
  <Zap className="w-6 h-6 group-hover:text-[var(--text-ink)] transition-colors" />
  </div>
  <div className="space-y-4">
- <h3 className="text-2xl font-black text-[var(--text-ink)] italic tracking-tighter uppercase">{t('f1Title')}</h3>
+ <h3 className="text-xl font-black text-[var(--text-ink)] italic tracking-tighter uppercase">{t('f1Title')}</h3>
  <p className="text-[var(--text-secondary)] text-sm leading-relaxed font-semibold transition-colors duration-500 group-hover:text-[var(--text-ink)]">
  {t('f1Desc')}
  </p>
@@ -199,7 +199,7 @@ export default async function Home() {
  <Flame className="w-6 h-6 group-hover:text-[var(--text-ink)] transition-colors" />
  </div>
  <div className="space-y-4">
- <h3 className="text-2xl font-black text-[var(--text-ink)] italic tracking-tighter uppercase">{t('f2Title')}</h3>
+ <h3 className="text-xl font-black text-[var(--text-ink)] italic tracking-tighter uppercase">{t('f2Title')}</h3>
  <p className="text-[var(--text-secondary)] text-sm leading-relaxed font-semibold transition-colors duration-500 group-hover:text-[var(--text-ink)]">
  {t('f2Desc')}
  </p>
@@ -212,7 +212,7 @@ export default async function Home() {
  <ShieldCheck className="w-6 h-6 group-hover:text-[var(--text-ink)] transition-colors" />
  </div>
  <div className="space-y-4">
- <h3 className="text-2xl font-black text-[var(--text-ink)] italic tracking-tighter uppercase">{t('f3Title')}</h3>
+ <h3 className="text-xl font-black text-[var(--text-ink)] italic tracking-tighter uppercase">{t('f3Title')}</h3>
  <p className="text-[var(--text-secondary)] text-sm leading-relaxed font-semibold transition-colors duration-500 group-hover:text-[var(--text-ink)]">
  {t('f3Desc')}
  </p>
@@ -225,7 +225,7 @@ export default async function Home() {
  <section className="relative px-6 py-40 flex flex-col items-center overflow-hidden">
  <div className="relative z-10 flex flex-col items-center text-center max-w-4xl">
  <Sparkles className="w-16 h-16 text-[var(--purple-accent)] mb-10 animate-pulse" />
- <h2 className="text-5xl md:text-8xl font-black text-[var(--text-ink)] mb-12 tracking-tighter uppercase font-serif">
+ <h2 className="text-4xl md:text-6xl font-black text-[var(--text-ink)] mb-10 tracking-tighter uppercase font-serif">
  {t('final.title1')} <br/> <span className="text-[var(--text-secondary)] italic">{t('final.title2')}</span>
  </h2>
  <Link href="/reading" tabIndex={-1}>
