@@ -48,9 +48,6 @@ public class GetAllReadingsQueryHandler : IRequestHandler<GetAllReadingsQuery, G
 
     public async Task<GetAllReadingsResponse> Handle(GetAllReadingsQuery request, CancellationToken cancellationToken)
     {
-        // LOG THAM SO NHAN DUOC TRONG HANDLER
-        System.Console.WriteLine($"[Handler] Handling GetAllReadingsQuery: Username={request.Username}, SpreadType={request.SpreadType}");
-        
         List<Guid>? filteredUserIds = null;
 
         // 1. Nếu có lọc theo Username, tìm IDs tương ứng từ SQL

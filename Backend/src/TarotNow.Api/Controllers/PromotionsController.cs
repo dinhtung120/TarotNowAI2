@@ -24,9 +24,6 @@ public class PromotionsController : ControllerBase
     }
 
     [HttpGet]
-    [AllowAnonymous] // AllowAnonymous nếu client cũng cần list này hiển thị thông báo, hoặc Admin thì mới gọi được
-    // Ta tách riêng /api/v1/promotions cho client và /api/v1/admin/promotions cho admin nếu cần
-    // Cứ tạm để ở đây và check role
     public async Task<IActionResult> ListPromotions([FromQuery] bool onlyActive = false)
     {
         var result = await Mediator.Send(new ListPromotionsQuery { OnlyActive = onlyActive });

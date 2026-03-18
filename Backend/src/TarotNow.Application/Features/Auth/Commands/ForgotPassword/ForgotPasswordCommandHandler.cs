@@ -1,9 +1,9 @@
 using MediatR;
+using System.Security.Cryptography;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 using TarotNow.Domain.Exceptions;
-using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Auth.Commands.ForgotPassword;
 
@@ -32,8 +32,7 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
             return true;
         }
 
-        var random = new Random();
-        var otpCode = random.Next(100000, 999999).ToString();
+        var otpCode = RandomNumberGenerator.GetInt32(100000, 1000000).ToString();
 
         var otpEntity = new TarotNow.Domain.Entities.EmailOtp(
             userId: user.Id,

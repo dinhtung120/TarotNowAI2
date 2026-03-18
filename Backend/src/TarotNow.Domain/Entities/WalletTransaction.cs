@@ -10,8 +10,8 @@ public class WalletTransaction
 {
     public Guid Id { get; private set; }
     public Guid UserId { get; private set; }
-    public string Currency { get; private set; }
-    public string Type { get; private set; }
+    public string Currency { get; private set; } = string.Empty;
+    public string Type { get; private set; } = string.Empty;
     public long Amount { get; private set; }
     public long BalanceBefore { get; private set; }
     public long BalanceAfter { get; private set; }

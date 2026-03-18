@@ -31,7 +31,7 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, boo
 
         var latestOtp = await _emailOtpRepository.GetLatestActiveOtpAsync(user.Id, OtpType.VerifyEmail, cancellationToken);
         
-        if (latestOtp == null || latestOtp.OtpCode != request.OtpCode)
+        if (latestOtp == null || !latestOtp.VerifyCode(request.OtpCode))
         {
             throw new DomainException("INVALID_OTP", "Invalid email or OTP code.");
         }

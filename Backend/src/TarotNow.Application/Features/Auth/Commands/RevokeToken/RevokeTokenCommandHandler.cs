@@ -29,6 +29,8 @@ public class RevokeTokenCommandHandler : IRequestHandler<RevokeTokenCommand, boo
 
         var tokenEntity = await _refreshTokenRepository.GetByTokenAsync(request.Token, cancellationToken);
         if (tokenEntity == null) return false; // Không tìm thấy thì vẫn trả về false nhưng không throw Exception (idempotent)
+
+        if (!tokenEntity.MatchesToken(request.Token)) return false;
         
         if (!tokenEntity.IsRevoked)
         {

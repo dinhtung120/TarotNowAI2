@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,7 @@ namespace TarotNow.Api.IntegrationTests;
 [Collection("Testcontainers")]
 public class DepositWebhookIntegrationTests : IClassFixture<CustomWebApplicationFactory<Program>>
 {
+    private const string WebhookSecret = "TarotNow_Test_WebhookSecret_2026";
     private readonly CustomWebApplicationFactory<Program> _factory;
 
     public DepositWebhookIntegrationTests(CustomWebApplicationFactory<Program> factory)
@@ -34,7 +36,7 @@ public class DepositWebhookIntegrationTests : IClassFixture<CustomWebApplication
         };
         var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
         
-        // Pass wrong signature (normally our mock accepts "test_bypass" or "TEST_BYPASS_SIG" for bypass)
+        // Pass wrong signature để đảm bảo webhook bị reject.
         client.DefaultRequestHeaders.Add("X-Webhook-Signature", "wrong_signature");
 
         var response = await client.PostAsync("/api/v1/deposits/webhook/vnpay", content);
@@ -69,10 +71,13 @@ public class DepositWebhookIntegrationTests : IClassFixture<CustomWebApplication
             Amount = 50000,
             Status = "SUCCESS"
         };
-        var content1 = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-        var content2 = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-        
-        client.DefaultRequestHeaders.Add("X-Webhook-Signature", "test_bypass"); // Used by MockPaymentGatewayService
+        var rawPayload = JsonSerializer.Serialize(payload);
+        var signature = ComputeSignature(rawPayload, WebhookSecret);
+
+        var content1 = new StringContent(rawPayload, Encoding.UTF8, "application/json");
+        var content2 = new StringContent(rawPayload, Encoding.UTF8, "application/json");
+
+        client.DefaultRequestHeaders.Add("X-Webhook-Signature", signature);
 
         // 2. Act
         // Send first time
@@ -104,5 +109,12 @@ public class DepositWebhookIntegrationTests : IClassFixture<CustomWebApplication
         
         Assert.NotNull(updatedUser);
         Assert.Equal(5, updatedUser.DiamondBalance); // Because starting was 0, credited 5. Should NOT be 10.
+    }
+
+    private static string ComputeSignature(string payload, string secret)
+    {
+        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
+        var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+        return Convert.ToHexString(hash).ToLowerInvariant();
     }
 }

@@ -27,7 +27,7 @@ public class JwtTokenService : ITokenService
         var secretKey = _configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("Jwt:SecretKey is missing.");
         var issuer = _configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("Jwt:Issuer is missing.");
         var audience = _configuration["Jwt:Audience"] ?? throw new InvalidOperationException("Jwt:Audience is missing.");
-        var expirationMinutes = int.Parse(_configuration["Jwt:AccessTokenExpirationMinutes"] ?? "15");
+        var expirationMinutes = ResolveAccessTokenExpiryMinutes();
 
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
@@ -50,6 +50,16 @@ public class JwtTokenService : ITokenService
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    private int ResolveAccessTokenExpiryMinutes()
+    {
+        var configured = _configuration["Jwt:ExpiryMinutes"]
+                         ?? _configuration["Jwt:AccessTokenExpirationMinutes"];
+
+        return int.TryParse(configured, out var value) && value > 0
+            ? value
+            : 15;
     }
 
     public string GenerateRefreshToken()

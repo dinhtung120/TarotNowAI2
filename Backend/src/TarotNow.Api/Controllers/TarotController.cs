@@ -26,7 +26,10 @@ public class TarotController : ControllerBase
     public async Task<IActionResult> InitSession([FromBody] InitReadingSessionCommand command)
     {
         // Gắn UserId từ Token
-        command.UserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userIdStr, out var userId))
+            return Unauthorized();
+        command.UserId = userId;
 
         var result = await _mediator.Send(command);
         return Ok(result);
@@ -39,7 +42,10 @@ public class TarotController : ControllerBase
     [HttpPost("reveal")]
     public async Task<IActionResult> RevealCards([FromBody] TarotNow.Application.Features.Reading.Commands.RevealSession.RevealReadingSessionCommand command)
     {
-        command.UserId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userIdStr, out var userId))
+            return Unauthorized();
+        command.UserId = userId;
         var result = await _mediator.Send(command);
         return Ok(result);
     }
@@ -50,7 +56,9 @@ public class TarotController : ControllerBase
     [HttpGet("collection")]
     public async Task<IActionResult> GetCollection()
     {
-        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(userIdStr, out var userId))
+            return Unauthorized();
         var result = await _mediator.Send(new TarotNow.Application.Features.Reading.Queries.GetCollection.GetUserCollectionQuery { UserId = userId });
         return Ok(result);
     }

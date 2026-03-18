@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using OtpNet;
 using System.Security.Cryptography;
 using System.Text;
@@ -11,10 +12,20 @@ namespace TarotNow.Infrastructure.Services;
 /// </summary>
 public class TotpMfaService : IMfaService
 {
-    // WARNING: Trong production, Encryption Key này phải lấy từ biến môi trường/AWS KMS/Azure Key Vault.
-    // Dùng key "mfa-encryption-key-must-be-32byte-" (32 bytes = 256 bit).
-    private const string EncryptionKey = "tarot-now-ai-mfa-encryption-keyx"; // Exactly 32 chars
     private const string Issuer = "TarotNowAI";
+    private readonly byte[] _encryptionKey;
+
+    public TotpMfaService(IConfiguration configuration)
+    {
+        var configuredKey = configuration["Security:MfaEncryptionKey"]?.Trim();
+        if (string.IsNullOrWhiteSpace(configuredKey))
+            throw new InvalidOperationException("Missing Security:MfaEncryptionKey configuration.");
+
+        if (configuredKey.Contains("REPLACE", StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Security:MfaEncryptionKey is not configured with a real secret.");
+
+        _encryptionKey = SHA256.HashData(Encoding.UTF8.GetBytes(configuredKey));
+    }
 
     public string GenerateSecretKey()
     {
@@ -62,7 +73,7 @@ public class TotpMfaService : IMfaService
     public string EncryptSecret(string plainSecret)
     {
         using var aes = Aes.Create();
-        aes.Key = Encoding.UTF8.GetBytes(EncryptionKey);
+        aes.Key = _encryptionKey;
         aes.GenerateIV();
 
         var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
@@ -82,7 +93,7 @@ public class TotpMfaService : IMfaService
         var fullBytes = Convert.FromBase64String(encryptedSecret);
 
         using var aes = Aes.Create();
-        aes.Key = Encoding.UTF8.GetBytes(EncryptionKey);
+        aes.Key = _encryptionKey;
 
         // Tách IV ra khỏi mảng byte
         var iv = new byte[aes.BlockSize / 8];

@@ -5,6 +5,7 @@ using System.Security.Claims;
 using TarotNow.Application.Features.Chat.Commands.MarkMessagesRead;
 using TarotNow.Application.Features.Chat.Commands.SendMessage;
 using TarotNow.Application.Common;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Api.Hubs;
 
@@ -28,10 +29,17 @@ namespace TarotNow.Api.Hubs;
 public class ChatHub : Hub
 {
     private readonly IMediator _mediator;
+    private readonly IConversationRepository _conversationRepository;
+    private readonly ILogger<ChatHub> _logger;
 
-    public ChatHub(IMediator mediator)
+    public ChatHub(
+        IMediator mediator,
+        IConversationRepository conversationRepository,
+        ILogger<ChatHub> logger)
     {
         _mediator = mediator;
+        _conversationRepository = conversationRepository;
+        _logger = logger;
     }
 
     /// <summary>
@@ -51,7 +59,7 @@ public class ChatHub : Hub
     public override async Task OnConnectedAsync()
     {
         var userId = GetUserId();
-        Console.WriteLine($"[ChatHub] User {userId} connected. ConnectionId: {Context.ConnectionId}");
+        _logger.LogInformation("[ChatHub] User {UserId} connected. ConnectionId: {ConnectionId}", userId, Context.ConnectionId);
         await base.OnConnectedAsync();
     }
 
@@ -62,7 +70,7 @@ public class ChatHub : Hub
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var userId = GetUserId();
-        Console.WriteLine($"[ChatHub] User {userId} disconnected. Reason: {exception?.Message ?? "normal"}");
+        _logger.LogInformation("[ChatHub] User {UserId} disconnected. Reason: {Reason}", userId, exception?.Message ?? "normal");
         await base.OnDisconnectedAsync(exception);
     }
 
@@ -84,6 +92,25 @@ public class ChatHub : Hub
             return;
         }
 
+        if (string.IsNullOrWhiteSpace(conversationId))
+        {
+            await Clients.Caller.SendAsync("Error", "ConversationId is required");
+            return;
+        }
+
+        var conversation = await _conversationRepository.GetByIdAsync(conversationId);
+        if (conversation == null)
+        {
+            await Clients.Caller.SendAsync("Error", "Conversation not found");
+            return;
+        }
+
+        if (conversation.UserId != userId && conversation.ReaderId != userId)
+        {
+            await Clients.Caller.SendAsync("Error", "Forbidden");
+            return;
+        }
+
         // Thêm connection vào group — group name = conversationId
         await Groups.AddToGroupAsync(Context.ConnectionId, conversationId);
 
@@ -95,7 +122,7 @@ public class ChatHub : Hub
             joinedAt = DateTime.UtcNow
         });
 
-        Console.WriteLine($"[ChatHub] User {userId} joined conversation {conversationId}");
+        _logger.LogInformation("[ChatHub] User {UserId} joined conversation {ConversationId}", userId, conversationId);
     }
 
     /// <summary>
@@ -106,7 +133,7 @@ public class ChatHub : Hub
     {
         var userId = GetUserId();
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, conversationId);
-        Console.WriteLine($"[ChatHub] User {userId} left conversation {conversationId}");
+        _logger.LogInformation("[ChatHub] User {UserId} left conversation {ConversationId}", userId, conversationId);
     }
 
     /// <summary>

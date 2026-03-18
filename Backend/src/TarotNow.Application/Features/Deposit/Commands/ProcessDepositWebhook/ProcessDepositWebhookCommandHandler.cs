@@ -25,6 +25,18 @@ public class ProcessDepositWebhookCommandHandler : IRequestHandler<ProcessDeposi
 
     public async Task<bool> Handle(ProcessDepositWebhookCommand request, CancellationToken cancellationToken)
     {
+        if (request.PayloadData.Amount <= 0)
+            throw new BadRequestException("Invalid webhook amount.");
+
+        if (string.IsNullOrWhiteSpace(request.PayloadData.TransactionId))
+            throw new BadRequestException("Missing webhook transaction id.");
+
+        var webhookStatus = request.PayloadData.Status?.Trim();
+        var isSuccessStatus = string.Equals(webhookStatus, "SUCCESS", StringComparison.OrdinalIgnoreCase);
+        var isFailedStatus = string.Equals(webhookStatus, "FAILED", StringComparison.OrdinalIgnoreCase);
+        if (!isSuccessStatus && !isFailedStatus)
+            throw new BadRequestException($"Unsupported webhook status: {request.PayloadData.Status}");
+
         // 1. Xác thực chữ ký
         if (!_paymentGatewayService.VerifyWebhookSignature(request.RawPayload, request.Signature))
         {
@@ -40,14 +52,23 @@ public class ProcessDepositWebhookCommandHandler : IRequestHandler<ProcessDeposi
         var order = await _depositOrderRepository.GetByIdAsync(orderId, cancellationToken)
             ?? throw new NotFoundException($"Deposit order {orderId} not found.");
 
+        if (request.PayloadData.Amount != order.AmountVnd)
+            throw new BadRequestException("Webhook amount does not match order amount.");
+
         // 3. Idempotency Check (Nếu đã xử lý, bỏ qua và trả về OK để cổng thanh toán không gọi lại)
         if (order.Status == "Success" || order.Status == "Failed")
         {
+            if (!string.IsNullOrWhiteSpace(order.TransactionId) &&
+                !string.Equals(order.TransactionId, request.PayloadData.TransactionId, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new BadRequestException("Processed order transaction id mismatch.");
+            }
+
             return true;
         }
 
         // 4. Xử lý ghi nhận số dư (Diamond)
-        if (request.PayloadData.Status.Equals("SUCCESS", StringComparison.OrdinalIgnoreCase))
+        if (isSuccessStatus)
         {
             // Atomically credit Diamond to Wallet via procedure or repository method.
             // P1-DEP-BE-1.4: On success: credit Diamond via proc_wallet_credit.

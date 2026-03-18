@@ -6,7 +6,7 @@ namespace TarotNow.Application.Features.Reading.Commands.InitSession;
 public class InitReadingSessionCommand : IRequest<InitReadingSessionResult>
 {
     public Guid UserId { get; set; }
-    public string SpreadType { get; set; }
+    public string SpreadType { get; set; } = string.Empty;
     public string? Question { get; set; }
 }
 

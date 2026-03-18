@@ -20,6 +20,23 @@ public class UserCollection
         ExpGained = 0;
         LastDrawnAt = DateTime.UtcNow;
     }
+
+    public static UserCollection Rehydrate(
+        Guid userId,
+        int cardId,
+        int level,
+        int copies,
+        long expGained,
+        DateTime lastDrawnAt)
+    {
+        return new UserCollection(userId, cardId)
+        {
+            Level = level,
+            Copies = copies,
+            ExpGained = expGained,
+            LastDrawnAt = lastDrawnAt
+        };
+    }
     
     // Hàm Logic Upsert
     public void AddCopy(long expToGain)

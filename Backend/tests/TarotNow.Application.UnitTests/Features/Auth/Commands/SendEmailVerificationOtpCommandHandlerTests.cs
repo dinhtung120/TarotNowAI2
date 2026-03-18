@@ -3,7 +3,6 @@ using TarotNow.Application.Features.Auth.Commands.SendEmailVerificationOtp;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
-using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 

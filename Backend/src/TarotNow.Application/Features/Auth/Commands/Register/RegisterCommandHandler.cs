@@ -3,7 +3,6 @@ using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Exceptions;
-using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Auth.Commands.Register;
 

@@ -15,10 +15,12 @@ namespace TarotNow.Api.Controllers;
 public class DepositController : ControllerBase
 {
     private readonly IMediator Mediator;
+    private readonly ILogger<DepositController> _logger;
 
-    public DepositController(IMediator mediator)
+    public DepositController(IMediator mediator, ILogger<DepositController> logger)
     {
         Mediator = mediator;
+        _logger = logger;
     }
 
     [HttpPost("orders")]
@@ -83,8 +85,8 @@ public class DepositController : ControllerBase
         }
         catch (Exception ex)
         {
-            // Log ex
-            return StatusCode(500, new { msg = ex.Message, stack = ex.ToString() });
+            _logger.LogError(ex, "Unexpected error while processing deposit webhook.");
+            return StatusCode(500, new { msg = "Internal server error." });
         }
     }
 }

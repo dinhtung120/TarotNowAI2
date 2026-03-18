@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
+using StackExchange.Redis;
 using TarotNow.Application.Interfaces;
 using TarotNow.Infrastructure.Persistence;
 using TarotNow.Infrastructure.Persistence.Repositories;
@@ -98,7 +99,7 @@ public static class DependencyInjection
         // Đăng ký Services Khác
         services.AddScoped<IEmailSender, MockEmailSender>();
         services.AddSingleton<IRngService, RngService>();
-        services.AddSingleton<IPaymentGatewayService, MockPaymentGatewayService>();
+        services.AddSingleton<IPaymentGatewayService, HmacPaymentGatewayService>();
 
         // Phase 1.4: Tích hợp Streaming Provider (OpenAI)
         services.AddHttpClient<IAiProvider, OpenAiProvider>();
@@ -114,6 +115,8 @@ public static class DependencyInjection
             options.Configuration = redisConnectionString;
             options.InstanceName = "TarotNow:"; // Prefix cho các key trong Redis
         });
+
+        services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisConnectionString));
 
         // Đăng ký CacheService để Application layer sử dụng
         services.AddScoped<ICacheService, RedisCacheService>();
@@ -151,8 +154,13 @@ public static class DependencyInjection
                 {
                     var accessToken = context.Request.Query["access_token"];
                     var path = context.HttpContext.Request.Path;
-                    if (!string.IsNullOrEmpty(accessToken) && 
-                        (path.StartsWithSegments("/api/v1/chat") || path.StartsWithSegments("/api/v1/sessions")))
+                    var isChatHub = path.StartsWithSegments("/api/v1/chat");
+                    var isAiStreamEndpoint =
+                        path.StartsWithSegments("/api/v1/sessions", out var remaining) &&
+                        remaining.HasValue &&
+                        remaining.Value.EndsWith("/stream", StringComparison.OrdinalIgnoreCase);
+
+                    if (!string.IsNullOrEmpty(accessToken) && (isChatHub || isAiStreamEndpoint))
                     {
                         context.Token = accessToken;
                     }

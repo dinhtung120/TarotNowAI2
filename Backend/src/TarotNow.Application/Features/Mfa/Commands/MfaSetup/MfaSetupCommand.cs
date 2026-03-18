@@ -1,4 +1,7 @@
 using MediatR;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 
@@ -45,12 +48,11 @@ public class MfaSetupCommandHandler : IRequestHandler<MfaSetupCommand, MfaSetupR
         var encryptedSecret = _mfaService.EncryptSecret(plainSecret);
         var qrUri = _mfaService.GenerateQrCodeUri(plainSecret, user.Email);
         var backupCodes = _mfaService.GenerateBackupCodes();
+        var backupCodeHashes = backupCodes.Select(HashBackupCode).ToList();
 
         // Lưu secret vào User (chưa enable)
         user.MfaSecretEncrypted = encryptedSecret;
-        // Thực tế có thể lưu backup codes vào bảng riêng hoặc Serialize sang JSON lưu chung ở User.
-        // Tạm lưu JSON đơn giản vào 1 cột hoặc bỏ qua vì Phase 2.5 CODING_PLAN không bắt tạo cột backup.
-        // Đơn giản hóa: Trả về cho frontend hiển thị 1 lần. Backend không cần lưu (để demo).
+        user.MfaBackupCodesHashJson = JsonSerializer.Serialize(backupCodeHashes);
         
         await _userRepo.UpdateAsync(user, ct);
 
@@ -60,5 +62,12 @@ public class MfaSetupCommandHandler : IRequestHandler<MfaSetupCommand, MfaSetupR
             SecretDisplay = plainSecret,
             BackupCodes = backupCodes
         };
+    }
+
+    private static string HashBackupCode(string code)
+    {
+        var normalized = code.Trim();
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
+        return Convert.ToHexString(hash).ToLowerInvariant();
     }
 }

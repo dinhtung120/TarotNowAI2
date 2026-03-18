@@ -15,10 +15,10 @@ namespace TarotNow.Domain.Entities;
 public class User
 {
     public Guid Id { get; private set; }
-    public string Email { get; private set; }
-    public string Username { get; private set; }
-    public string PasswordHash { get; private set; }
-    public string DisplayName { get; private set; }
+    public string Email { get; private set; } = string.Empty;
+    public string Username { get; private set; } = string.Empty;
+    public string PasswordHash { get; private set; } = string.Empty;
+    public string DisplayName { get; private set; } = string.Empty;
     public string? AvatarUrl { get; private set; }
     public DateTime DateOfBirth { get; private set; }
 
@@ -49,9 +49,9 @@ public class User
     public long FrozenDiamondBalance => Wallet.FrozenDiamondBalance;
     public long TotalDiamondsPurchased => Wallet.TotalDiamondsPurchased;
 
-    public string Status { get; private set; }
-    public string Role { get; private set; }
-    public string ReaderStatus { get; private set; }
+    public string Status { get; private set; } = string.Empty;
+    public string Role { get; private set; } = string.Empty;
+    public string ReaderStatus { get; private set; } = string.Empty;
 
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
@@ -59,6 +59,7 @@ public class User
     // Phase 2.5 — MFA (TOTP)
     public bool MfaEnabled { get; set; }
     public string? MfaSecretEncrypted { get; set; }
+    public string? MfaBackupCodesHashJson { get; set; }
 
     public ICollection<UserConsent> Consents { get; private set; } = new List<UserConsent>();
 
@@ -245,4 +246,3 @@ public class User
         UpdatedAt = DateTime.UtcNow;
     }
 }
-

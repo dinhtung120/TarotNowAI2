@@ -33,7 +33,7 @@ public class OpenDisputeCommandHandlerTests
     public async Task Handle_NotReleased_ThrowsBadRequest()
     {
         var command = new OpenDisputeCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid() };
-        var item = new ChatQuestionItem { PayerId = command.UserId, Status = QuestionItemStatus.Accepted };
+        var item = new ChatQuestionItem { PayerId = command.UserId, Status = QuestionItemStatus.Released };
         _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default)).ReturnsAsync(item);
 
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
@@ -46,13 +46,14 @@ public class OpenDisputeCommandHandlerTests
         var item = new ChatQuestionItem 
         { 
             PayerId = command.UserId, 
-            Status = QuestionItemStatus.Released,
-            DisputeWindowEnd = DateTime.UtcNow.AddHours(-1) // Passed
+            Status = QuestionItemStatus.Accepted,
+            RepliedAt = DateTime.UtcNow.AddMinutes(-10),
+            AutoReleaseAt = DateTime.UtcNow.AddHours(-1)
         };
         _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default)).ReturnsAsync(item);
 
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
-        Assert.Contains("Đã hết thời hạn mở tranh chấp", ex.Message);
+        Assert.Contains("quá thời hạn mở tranh chấp", ex.Message);
     }
 
     [Fact]
@@ -62,8 +63,9 @@ public class OpenDisputeCommandHandlerTests
         var item = new ChatQuestionItem 
         { 
             PayerId = command.UserId, 
-            Status = QuestionItemStatus.Released,
-            DisputeWindowEnd = DateTime.UtcNow.AddHours(1)
+            Status = QuestionItemStatus.Accepted,
+            RepliedAt = DateTime.UtcNow.AddMinutes(-10),
+            AutoReleaseAt = DateTime.UtcNow.AddHours(1)
         };
         _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default)).ReturnsAsync(item);
 
@@ -83,8 +85,9 @@ public class OpenDisputeCommandHandlerTests
         { 
             Id = command.ItemId,
             PayerId = command.UserId, 
-            Status = QuestionItemStatus.Released,
-            DisputeWindowEnd = DateTime.UtcNow.AddHours(1),
+            Status = QuestionItemStatus.Accepted,
+            RepliedAt = DateTime.UtcNow.AddMinutes(-5),
+            AutoReleaseAt = DateTime.UtcNow.AddHours(1),
             FinanceSessionId = Guid.NewGuid()
         };
         var session = new ChatFinanceSession { Id = item.FinanceSessionId, Status = "active" };
@@ -124,17 +127,13 @@ public class OpenDisputeCommandHandlerTests
     }
 
     /// <summary>
-    /// TEST CASE: DisputeWindowEnd = null → BadRequestException.
+    /// TEST CASE: Reader chưa reply → BadRequestException.
     ///
-    /// Khi nào xảy ra?
-    /// → Item vừa được release nhưng chưa set DisputeWindowEnd (lỗi logic).
-    /// → Hoặc auto-release mà backend chưa set window.
-    ///   Handler phải reject vì không xác định được deadline.
+    /// Dispute chỉ mở được sau khi reader trả lời.
     /// </summary>
     [Fact]
-    public async Task Handle_NullDisputeWindow_ThrowsBadRequest()
+    public async Task Handle_ReaderNotReplied_ThrowsBadRequest()
     {
-        // Arrange — DisputeWindowEnd = null
         var command = new OpenDisputeCommand
         {
             ItemId = Guid.NewGuid(),
@@ -144,16 +143,15 @@ public class OpenDisputeCommandHandlerTests
         var item = new ChatQuestionItem
         {
             PayerId = command.UserId,
-            Status = QuestionItemStatus.Released,
-            DisputeWindowEnd = null // Chưa set window
+            Status = QuestionItemStatus.Accepted,
+            RepliedAt = null
         };
 
         _mockFinanceRepo.Setup(x => x.GetItemByIdAsync(command.ItemId, default))
             .ReturnsAsync(item);
 
-        // Act & Assert — reject vì now > null → cần check handler logic
         var ex = await Assert.ThrowsAsync<BadRequestException>(
             () => _handler.Handle(command, CancellationToken.None));
-        Assert.Contains("hết thời hạn", ex.Message);
+        Assert.Contains("Reader chưa trả lời", ex.Message);
     }
 }

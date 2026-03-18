@@ -102,15 +102,18 @@ public class MongoUserCollectionRepository : IUserCollectionRepository
     private static UserCollection MapToEntity(UserCollectionDocument doc)
     {
         Guid.TryParse(doc.UserId, out var userId);
-        var entity = new UserCollection(userId, doc.CardId);
-
-        // Simulate copies từ tổng draw count
         var totalDraws = doc.Stats.TimesDrawnUpright + doc.Stats.TimesDrawnReversed;
-        for (int i = 1; i < totalDraws; i++)
-        {
-            entity.AddCopy(0); // Recreate copies count
-        }
+        var copies = Math.Max(totalDraws, 1);
+        var level = Math.Max(doc.Level, 1);
+        var exp = Math.Max(doc.Exp, 0);
+        var lastDrawnAt = doc.LastDrawnAt == default ? doc.UpdatedAt : doc.LastDrawnAt;
 
-        return entity;
+        return UserCollection.Rehydrate(
+            userId: userId,
+            cardId: doc.CardId,
+            level: level,
+            copies: copies,
+            expGained: exp,
+            lastDrawnAt: lastDrawnAt);
     }
 }

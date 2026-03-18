@@ -33,8 +33,15 @@ public class AcceptOfferCommandHandler : IRequestHandler<AcceptOfferCommand, Gui
 
     public async Task<Guid> Handle(AcceptOfferCommand req, CancellationToken ct)
     {
+        var idempotencyKey = req.IdempotencyKey?.Trim();
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
+            throw new BadRequestException("IdempotencyKey là bắt buộc.");
+
+        if (idempotencyKey.Length > 128)
+            throw new BadRequestException("IdempotencyKey quá dài (tối đa 128 ký tự).");
+
         // 1. Idempotency — kiểm tra double-freeze
-        var existing = await _financeRepo.GetItemByIdempotencyKeyAsync(req.IdempotencyKey, ct);
+        var existing = await _financeRepo.GetItemByIdempotencyKeyAsync(idempotencyKey, ct);
         if (existing != null) return existing.Id;
 
         // 2. Lấy hoặc tạo finance session
@@ -56,9 +63,9 @@ public class AcceptOfferCommandHandler : IRequestHandler<AcceptOfferCommand, Gui
         await _walletRepo.FreezeAsync(
             req.UserId, req.AmountDiamond,
             referenceSource: "chat_question_item",
-            referenceId: req.IdempotencyKey,
+            referenceId: idempotencyKey,
             description: $"Escrow freeze {req.AmountDiamond}💎 cho conversation {req.ConversationRef}",
-            idempotencyKey: $"freeze_{req.IdempotencyKey}",
+            idempotencyKey: $"freeze_{idempotencyKey}",
             cancellationToken: ct);
 
         // 4. Tạo question item
@@ -76,7 +83,7 @@ public class AcceptOfferCommandHandler : IRequestHandler<AcceptOfferCommand, Gui
             AcceptedAt = now,
             ReaderResponseDueAt = now.AddHours(24),
             AutoRefundAt = now.AddHours(24),
-            IdempotencyKey = req.IdempotencyKey,
+            IdempotencyKey = idempotencyKey,
         };
         await _financeRepo.AddItemAsync(item, ct);
 

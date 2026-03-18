@@ -15,9 +15,14 @@ public class RefreshTokenRepository : IRefreshTokenRepository
 
     public async Task<RefreshToken?> GetByTokenAsync(string token, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(token)) return null;
+
+        var normalizedToken = token.Trim();
+        var hashedToken = RefreshToken.HashToken(normalizedToken);
+
         return await _dbContext.RefreshTokens
             .Include(rt => rt.User)
-            .FirstOrDefaultAsync(rt => rt.Token == token, cancellationToken);
+            .FirstOrDefaultAsync(rt => rt.Token == hashedToken || rt.Token == normalizedToken, cancellationToken);
     }
 
     public async Task AddAsync(RefreshToken refreshToken, CancellationToken cancellationToken = default)

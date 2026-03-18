@@ -55,8 +55,11 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-// Redirect HTTP sang HTTPS (có thể tắt ở local dev nếu cần)
-// app.UseHttpsRedirection(); 
+// Redirect HTTP sang HTTPS ngoài môi trường Development
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 // Phục vụ statics files (nếu có)
 // app.UseStaticFiles();

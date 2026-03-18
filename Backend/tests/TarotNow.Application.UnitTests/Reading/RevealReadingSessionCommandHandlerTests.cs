@@ -54,9 +54,9 @@ public class RevealReadingSessionCommandHandlerTests
         result.Cards[2].Should().Be(75);
 
         // Đảm bảo Repo Update Kho đồ bị gọi 3 lượt tương ứng với 3 Cards rút được
-        _collectionRepoMock.Verify(c => c.UpsertCardAsync(userId, 77, 10, CancellationToken.None), Times.Once);
-        _collectionRepoMock.Verify(c => c.UpsertCardAsync(userId, 76, 10, CancellationToken.None), Times.Once);
-        _collectionRepoMock.Verify(c => c.UpsertCardAsync(userId, 75, 10, CancellationToken.None), Times.Once);
+        _collectionRepoMock.Verify(c => c.UpsertCardAsync(userId, 77, 1, CancellationToken.None), Times.Once);
+        _collectionRepoMock.Verify(c => c.UpsertCardAsync(userId, 76, 1, CancellationToken.None), Times.Once);
+        _collectionRepoMock.Verify(c => c.UpsertCardAsync(userId, 75, 1, CancellationToken.None), Times.Once);
 
         // Đảm bảo Session được Mark As Completed
         _readingRepoMock.Verify(r => r.UpdateAsync(It.Is<ReadingSession>(s => s.IsCompleted == true), CancellationToken.None), Times.Once);

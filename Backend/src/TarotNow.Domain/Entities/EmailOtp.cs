@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Domain.Entities;
@@ -9,14 +11,14 @@ public class EmailOtp
 {
     public Guid Id { get; private set; }
     public Guid UserId { get; private set; }
-    public string OtpCode { get; private set; }
-    public string Type { get; private set; }
+    public string OtpCode { get; private set; } = string.Empty;
+    public string Type { get; private set; } = string.Empty;
     public DateTime ExpiresAt { get; private set; }
     public bool IsUsed { get; private set; }
     public DateTime CreatedAt { get; private set; }
 
     // Navigation Property
-    public User User { get; private set; }
+    public User User { get; private set; } = null!;
 
     public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
 
@@ -26,7 +28,7 @@ public class EmailOtp
     {
         Id = Guid.NewGuid();
         UserId = userId;
-        OtpCode = otpCode;
+        OtpCode = HashCode(otpCode);
         Type = type;
         CreatedAt = DateTime.UtcNow;
         ExpiresAt = DateTime.UtcNow.AddMinutes(expiryMinutes);
@@ -40,5 +42,32 @@ public class EmailOtp
     public void MarkAsUsed()
     {
         IsUsed = true;
+    }
+
+    public bool VerifyCode(string code)
+    {
+        if (string.IsNullOrWhiteSpace(code)) return false;
+
+        // Backward compatibility cho OTP plaintext đã phát hành trước khi áp dụng hashing.
+        if (OtpCode.Length <= 10)
+            return string.Equals(OtpCode, code, StringComparison.Ordinal);
+
+        var hashedInput = HashCode(code);
+        return FixedTimeEquals(OtpCode, hashedInput);
+    }
+
+    private static string HashCode(string code)
+    {
+        var normalized = code.Trim();
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
+        return Convert.ToHexString(hash).ToLowerInvariant();
+    }
+
+    private static bool FixedTimeEquals(string left, string right)
+    {
+        var leftBytes = Encoding.UTF8.GetBytes(left);
+        var rightBytes = Encoding.UTF8.GetBytes(right);
+        return leftBytes.Length == rightBytes.Length
+            && CryptographicOperations.FixedTimeEquals(leftBytes, rightBytes);
     }
 }

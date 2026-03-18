@@ -5,7 +5,6 @@ using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 using TarotNow.Domain.Exceptions;
-using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
@@ -26,8 +25,8 @@ public class LoginCommandHandlerTests
         _configurationMock = new Mock<IConfiguration>();
         _refreshTokenRepositoryMock = new Mock<IRefreshTokenRepository>();
 
-        _configurationMock.Setup(c => c["Jwt:RefreshTokenExpirationDays"]).Returns("7");
-        _configurationMock.Setup(c => c["Jwt:AccessTokenExpirationMinutes"]).Returns("15");
+        _configurationMock.Setup(c => c["Jwt:RefreshExpiryDays"]).Returns("7");
+        _configurationMock.Setup(c => c["Jwt:ExpiryMinutes"]).Returns("15");
 
         _handler = new LoginCommandHandler(
             _userRepositoryMock.Object,
@@ -113,7 +112,7 @@ public class LoginCommandHandlerTests
         Assert.Equal(user.Id, response.User.Id);
 
         _refreshTokenRepositoryMock.Verify(r => r.AddAsync(It.Is<RefreshToken>(rt => 
-            rt.Token == "mocked_refresh_token" && 
+            rt.MatchesToken("mocked_refresh_token") && 
             rt.UserId == user.Id &&
             rt.CreatedByIp == "127.0.0.1"
         ), It.IsAny<CancellationToken>()), Times.Once);

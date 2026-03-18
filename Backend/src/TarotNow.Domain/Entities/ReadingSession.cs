@@ -10,9 +10,9 @@ namespace TarotNow.Domain.Entities;
 /// </summary>
 public class ReadingSession
 {
-    public string Id { get; private set; }
-    public string UserId { get; private set; }
-    public string SpreadType { get; private set; }
+    public string Id { get; private set; } = string.Empty;
+    public string UserId { get; private set; } = string.Empty;
+    public string SpreadType { get; private set; } = string.Empty;
 
     /// <summary>
     /// Câu hỏi tùy chọn mà người dùng nhập khi trải bài (nullable vì optional).
@@ -57,6 +57,28 @@ public class ReadingSession
         AmountCharged = amountCharged;
         IsCompleted = false;
         CreatedAt = DateTime.UtcNow;
+    }
+
+    public static ReadingSession Rehydrate(
+        string id,
+        string userId,
+        string spreadType,
+        string? question,
+        string? cardsDrawn,
+        string? currencyUsed,
+        long amountCharged,
+        bool isCompleted,
+        DateTime createdAt,
+        DateTime? completedAt)
+    {
+        return new ReadingSession(userId, spreadType, question, currencyUsed, amountCharged)
+        {
+            Id = id,
+            CardsDrawn = cardsDrawn,
+            IsCompleted = isCompleted,
+            CreatedAt = createdAt,
+            CompletedAt = completedAt
+        };
     }
 
     public void CompleteSession(string cardsDrawnJson)

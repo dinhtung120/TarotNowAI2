@@ -39,9 +39,9 @@ public class CreateConversationCommandHandler : IRequestHandler<CreateConversati
             request.ReaderId.ToString(), cancellationToken)
             ?? throw new NotFoundException("Không tìm thấy Reader.");
 
-        // 3. Gate: Kiểm tra trạng thái online của reader
-        if (readerProfile.Status == ReaderOnlineStatus.Offline)
-            throw new BadRequestException("Reader hiện đang offline và không nhận liên hệ mới.");
+        // 3. Gate: Chỉ cho phép tạo conversation khi reader đang accepting_questions
+        if (readerProfile.Status != ReaderOnlineStatus.AcceptingQuestions)
+            throw new BadRequestException("Reader hiện chưa bật chế độ nhận câu hỏi.");
 
         // 4. Kiểm tra duplicate — đã có conversation active chưa
         var existing = await _conversationRepo.GetActiveByParticipantsAsync(

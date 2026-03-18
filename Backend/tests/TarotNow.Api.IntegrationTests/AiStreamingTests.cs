@@ -48,9 +48,11 @@ public class ErrorMockAiProvider : IAiProvider
 
     public async IAsyncEnumerable<string> StreamChatAsync(string systemPrompt, string userPrompt, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
+        if (cancellationToken.IsCancellationRequested)
+            yield break;
+
         await Task.Delay(10, cancellationToken);
         throw new HttpRequestException("OpenAI API is down or timeout.");
-        yield break;
     }
 }
 

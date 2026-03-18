@@ -325,30 +325,29 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
 
     /// <summary>
     /// Reconstruct Domain Entity từ MongoDB document.
-    /// Dùng constructor + CompleteSession nếu đã hoàn thành.
+    /// Giữ nguyên timestamp + trạng thái từ dữ liệu đã lưu.
     /// </summary>
     private static ReadingSession MapToEntity(ReadingSessionDocument doc)
     {
-        var session = new ReadingSession(
-            doc.UserId,
-            doc.SpreadType,
-            doc.Question,
-            doc.Cost?.Currency,
-            doc.Cost?.Amount ?? 0
-        );
-
-        // RECONSTRUCTION: Giữ nguyên ID từ MongoDB (string hoặc ObjectId)
         var idStr = doc.Id?.ToString() ?? string.Empty;
-        typeof(ReadingSession).GetProperty("Id")?.SetValue(session, idStr);
+        var isCompleted = string.Equals(doc.AiStatus, "completed", StringComparison.OrdinalIgnoreCase);
+        var cardsJson = doc.DrawnCards != null && doc.DrawnCards.Count > 0
+            ? System.Text.Json.JsonSerializer.Serialize(doc.DrawnCards
+                .OrderBy(c => c.Position)
+                .Select(c => c.CardId)
+                .ToArray())
+            : null;
 
-        // Nếu đã complete → gọi CompleteSession với cards drawn
-        if (doc.AiStatus == "completed" && doc.DrawnCards != null && doc.DrawnCards.Count > 0)
-        {
-            var cardIds = doc.DrawnCards.Select(c => c.CardId).ToArray();
-            var json = System.Text.Json.JsonSerializer.Serialize(cardIds);
-            session.CompleteSession(json);
-        }
-
-        return session;
+        return ReadingSession.Rehydrate(
+            id: idStr,
+            userId: doc.UserId,
+            spreadType: doc.SpreadType,
+            question: doc.Question,
+            cardsDrawn: cardsJson,
+            currencyUsed: doc.Cost?.Currency,
+            amountCharged: doc.Cost?.Amount ?? 0,
+            isCompleted: isCompleted,
+            createdAt: doc.CreatedAt,
+            completedAt: isCompleted ? doc.UpdatedAt : null);
     }
 }

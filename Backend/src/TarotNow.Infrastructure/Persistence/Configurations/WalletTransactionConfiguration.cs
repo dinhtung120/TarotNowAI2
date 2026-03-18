@@ -37,5 +37,10 @@ public class WalletTransactionConfiguration : IEntityTypeConfiguration<WalletTra
         builder.Property(e => e.IdempotencyKey).HasColumnName("idempotency_key");
         
         builder.Property(e => e.CreatedAt).HasColumnName("created_at");
+
+        builder.HasIndex(e => e.IdempotencyKey)
+            .HasDatabaseName("ix_wallet_transactions_idempotency_key")
+            .IsUnique()
+            .HasFilter("idempotency_key IS NOT NULL");
     }
 }

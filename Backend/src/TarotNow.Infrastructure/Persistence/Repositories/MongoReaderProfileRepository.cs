@@ -1,6 +1,8 @@
+using MongoDB.Bson;
 using MongoDB.Driver;
 using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Enums;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
@@ -82,12 +84,44 @@ public class MongoReaderProfileRepository : IReaderProfileRepository
 
         var totalCount = await _context.ReaderProfiles.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
 
+        var statusPriority = new BsonDocument("$switch", new BsonDocument
+        {
+            {
+                "branches", new BsonArray
+                {
+                    new BsonDocument
+                    {
+                        { "case", new BsonDocument("$eq", new BsonArray { "$status", ReaderOnlineStatus.AcceptingQuestions }) },
+                        { "then", 0 }
+                    },
+                    new BsonDocument
+                    {
+                        { "case", new BsonDocument("$eq", new BsonArray { "$status", ReaderOnlineStatus.Online }) },
+                        { "then", 1 }
+                    },
+                    new BsonDocument
+                    {
+                        { "case", new BsonDocument("$eq", new BsonArray { "$status", ReaderOnlineStatus.Offline }) },
+                        { "then", 2 }
+                    }
+                }
+            },
+            { "default", 3 }
+        });
+
         var docs = await _context.ReaderProfiles
-            .Find(filter)
-            .SortByDescending(r => r.Status)
-            .ThenByDescending(r => r.UpdatedAt)
+            .Aggregate()
+            .Match(filter)
+            .AppendStage<BsonDocument>(new BsonDocument("$addFields", new BsonDocument("status_priority", statusPriority)))
+            .AppendStage<BsonDocument>(new BsonDocument("$sort", new BsonDocument
+            {
+                { "status_priority", 1 },
+                { "updated_at", -1 }
+            }))
             .Skip((page - 1) * pageSize)
             .Limit(pageSize)
+            .AppendStage<BsonDocument>(new BsonDocument("$project", new BsonDocument("status_priority", 0)))
+            .As<ReaderProfileDocument>()
             .ToListAsync(cancellationToken);
 
         return (docs.Select(ToDto), totalCount);

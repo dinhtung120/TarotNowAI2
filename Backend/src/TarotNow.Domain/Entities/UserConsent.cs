@@ -13,20 +13,20 @@ public class UserConsent
     /// <summary>
     /// Loại tài liệu: TOS, PrivacyPolicy, AiDisclaimer
     /// </summary>
-    public string DocumentType { get; private set; }
+    public string DocumentType { get; private set; } = string.Empty;
     
     /// <summary>
     /// Phiên bản của tài liệu khi User đồng ý (ví dụ: "1.0", "1.1")
     /// </summary>
-    public string Version { get; private set; }
+    public string Version { get; private set; } = string.Empty;
     
     /// <summary>
     /// Thời điểm đồng ý
     /// </summary>
     public DateTime ConsentedAt { get; private set; }
     
-    public string IpAddress { get; private set; }
-    public string UserAgent { get; private set; }
+    public string IpAddress { get; private set; } = string.Empty;
+    public string UserAgent { get; private set; } = string.Empty;
 
     // Navigation Property
     public User User { get; private set; } = null!;

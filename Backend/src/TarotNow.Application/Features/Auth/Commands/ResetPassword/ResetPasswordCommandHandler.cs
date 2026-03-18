@@ -2,7 +2,6 @@ using MediatR;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Enums;
 using TarotNow.Domain.Exceptions;
-using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Auth.Commands.ResetPassword;
 
@@ -35,7 +34,7 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
 
         var latestOtp = await _emailOtpRepository.GetLatestActiveOtpAsync(user.Id, OtpType.ResetPassword, cancellationToken);
         
-        if (latestOtp == null || latestOtp.OtpCode != request.OtpCode)
+        if (latestOtp == null || !latestOtp.VerifyCode(request.OtpCode))
         {
             throw new DomainException("INVALID_OTP", "Invalid email or OTP code.");
         }

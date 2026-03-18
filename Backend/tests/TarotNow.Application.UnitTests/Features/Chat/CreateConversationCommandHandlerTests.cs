@@ -105,31 +105,24 @@ public class CreateConversationCommandHandlerTests
     }
 
     /// <summary>
-    /// TEST CASE: Reader status = Online (nhưng chưa accepting) → vẫn cho tạo conversation.
+    /// TEST CASE: Reader status = Online (nhưng chưa accepting) → bị chặn.
     ///
     /// Tại sao test case này quan trọng?
-    /// → Handler hiện chỉ reject khi status == Offline.
-    ///   Reader Online (nhưng chưa AcceptingQuestions) vẫn được tạo conversation.
-    ///   Verify rằng gate check chỉ block Offline cụ thể.
+    /// → Rule mới chỉ cho phép tạo conversation khi reader đang AcceptingQuestions.
     /// </summary>
     [Fact]
-    public async Task Handle_ReaderOnlineNotAccepting_AllowsConversation()
+    public async Task Handle_ReaderOnlineNotAccepting_ThrowsBadRequest()
     {
-        // Arrange — reader online (không phải offline)
+        // Arrange — reader online (không phải accepting)
         var userId = Guid.NewGuid();
         var readerId = Guid.NewGuid();
         var command = new CreateConversationCommand { UserId = userId, ReaderId = readerId };
-        var profile = new ReaderProfileDto { Status = ReaderOnlineStatus.Online }; // Online nhưng không accepting
+        var profile = new ReaderProfileDto { Status = ReaderOnlineStatus.Online };
 
         _mockProfileRepo.Setup(x => x.GetByUserIdAsync(readerId.ToString(), default)).ReturnsAsync(profile);
-        _mockConvRepo.Setup(x => x.GetActiveByParticipantsAsync(userId.ToString(), readerId.ToString(), default)).ReturnsAsync((ConversationDto)null!);
 
-        // Act — nên tạo được conversation
-        var result = await _handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(ConversationStatus.Pending, result.Status);
-        _mockConvRepo.Verify(x => x.AddAsync(It.IsAny<ConversationDto>(), default), Times.Once);
+        // Act & Assert
+        await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
+        _mockConvRepo.Verify(x => x.AddAsync(It.IsAny<ConversationDto>(), default), Times.Never);
     }
 }

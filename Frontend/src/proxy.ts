@@ -18,6 +18,13 @@ const decodeJwtPayload = (token: string): Record<string, unknown> => {
  return JSON.parse(atob(padded)) as Record<string, unknown>;
 };
 
+const isExpired = (decodedPayload: Record<string, unknown>, leewaySeconds = 0) => {
+ const exp = decodedPayload["exp"];
+ if (typeof exp !== "number" || !Number.isFinite(exp)) return true;
+ const nowSeconds = Math.floor(Date.now() / 1000);
+ return nowSeconds >= exp - Math.max(0, leewaySeconds);
+};
+
 const resolveLocale = (pathname: string) => {
  const maybeLocale = pathname.split('/')[1];
  if (maybeLocale && localeSet.has(maybeLocale as (typeof routing.locales)[number])) {
@@ -27,6 +34,33 @@ const resolveLocale = (pathname: string) => {
  return routing.defaultLocale;
 };
 
+const stripLocalePrefix = (pathname: string): string => {
+ const maybeLocale = pathname.split("/")[1];
+ if (maybeLocale && localeSet.has(maybeLocale as (typeof routing.locales)[number])) {
+  const rest = pathname.split("/").slice(2).join("/");
+  return `/${rest}`.replace(/\/+$/, "") || "/";
+ }
+ return pathname.replace(/\/+$/, "") || "/";
+};
+
+const matchesPrefix = (pathname: string, prefix: string) =>
+ pathname === prefix || pathname.startsWith(`${prefix}/`);
+
+const PROTECTED_PREFIXES = [
+ "/profile",
+ "/wallet",
+ "/chat",
+ "/collection",
+ "/reading",
+ "/reader", // NOTE: uses segment prefix check, so it won't match "/readers"
+ "/admin",
+];
+
+const clearAuthCookies = (response: NextResponse) => {
+ response.cookies.delete("accessToken");
+ response.cookies.delete("refreshToken");
+};
+
 /**
  * Proxy xử lý đa chức năng:
  * 1. Đa ngôn ngữ (next-intl)
@@ -34,43 +68,57 @@ const resolveLocale = (pathname: string) => {
  */
 export default async function proxy(request: NextRequest) {
  const { pathname } = request.nextUrl;
+ const locale = resolveLocale(pathname);
+ const pathWithoutLocale = stripLocalePrefix(pathname);
 
- // Kiểm tra nếu là route admin
- // Hỗ trợ cả /admin, /vi/admin, /en/admin, v.v.
- const isAdminRoute = /^\/([a-z]{2}\/)?admin(\/.*)?$/.test(pathname);
+ const isProtectedRoute = PROTECTED_PREFIXES.some((p) => matchesPrefix(pathWithoutLocale, p));
+ const isAdminRoute = matchesPrefix(pathWithoutLocale, "/admin");
+
+ const token = request.cookies.get("accessToken")?.value;
+ let decodedPayload: Record<string, unknown> | null = null;
+ let shouldClearCookies = false;
+
+ if (token) {
+  try {
+   decodedPayload = decodeJwtPayload(token);
+   if (isExpired(decodedPayload, 5)) {
+    decodedPayload = null;
+    shouldClearCookies = true;
+   }
+  } catch {
+   decodedPayload = null;
+   shouldClearCookies = true;
+  }
+ }
+
+ if (isProtectedRoute) {
+  if (!decodedPayload) {
+   const loginUrl = new URL(`/${locale}/login`, request.url);
+   const response = NextResponse.redirect(loginUrl);
+   clearAuthCookies(response);
+   return response;
+  }
+ }
 
  if (isAdminRoute) {
- const locale = resolveLocale(pathname);
+  // Nếu là admin route, yêu cầu role admin ngay trên Edge để tránh lộ portal.
+  // (BE vẫn validate role lại ở phía API)
+  const role =
+   decodedPayload?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ??
+   decodedPayload?.["role"];
 
- // Lấy accessToken từ cookie
- const token = request.cookies.get('accessToken')?.value;
-
- if (!token) {
- // Nếu không có token, redirect về trang login
- // Đảm bảo không redirect lặp nếu đã ở trang login (mặc dù matcher đã loại trừ nhưng vẫn check cho chắc)
- const loginUrl = new URL(`/${locale}/login`, request.url);
- return NextResponse.redirect(loginUrl);
- }
-
- try {
- // Giải mã JWT để kiểm tra Role phía Client (BE vẫn validate lại kỹ hơn)
- const decodedPayload = decodeJwtPayload(token);
- const role = decodedPayload["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || decodedPayload["role"];
-
- if (role !== 'admin') {
- // Nếu không phải admin, chặn ngay lập tức và đẩy về trang chủ
- const homeUrl = new URL(`/${locale}`, request.url);
- return NextResponse.redirect(homeUrl);
- }
- } catch (error) {
- console.error("Middleware Auth Error:", error);
- const loginUrl = new URL(`/${locale}/login`, request.url);
- return NextResponse.redirect(loginUrl);
- }
+  if (String(role) !== "admin") {
+   const homeUrl = new URL(`/${locale}`, request.url);
+   return NextResponse.redirect(homeUrl);
+  }
  }
 
  // Nếu hợp lệ hoặc không phải admin route, tiếp tục xử lý i18n
- return intlMiddleware(request);
+ const response = intlMiddleware(request);
+ if (shouldClearCookies) {
+  clearAuthCookies(response);
+ }
+ return response;
 }
 
 export const config = {

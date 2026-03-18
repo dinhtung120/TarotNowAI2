@@ -14,7 +14,7 @@ public class EmailOtpConfiguration : IEntityTypeConfiguration<EmailOtp>
 
         builder.Property(e => e.OtpCode)
             .IsRequired()
-            .HasMaxLength(6);
+            .HasMaxLength(128);
 
         builder.Property(e => e.CreatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");

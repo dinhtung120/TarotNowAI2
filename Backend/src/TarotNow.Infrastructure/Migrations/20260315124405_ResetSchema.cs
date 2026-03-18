@@ -325,6 +325,13 @@ namespace TarotNow.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "ix_wallet_transactions_idempotency_key",
+                table: "wallet_transactions",
+                column: "idempotency_key",
+                unique: true,
+                filter: "idempotency_key IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_users_email",
                 table: "users",
                 column: "email",

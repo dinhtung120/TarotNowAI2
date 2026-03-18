@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
 import Navbar from '@/components/common/Navbar';
+import AuthSessionManager from "@/components/auth/AuthSessionManager";
 import { Toaster } from 'react-hot-toast';
 import "./globals.css";
 
@@ -48,6 +49,7 @@ export default async function RootLayout({
                 className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased`}
             >
                 <NextIntlClientProvider messages={messages}>
+                    <AuthSessionManager />
                     <Navbar />
                     {children}
                     <Toaster position="top-right" />

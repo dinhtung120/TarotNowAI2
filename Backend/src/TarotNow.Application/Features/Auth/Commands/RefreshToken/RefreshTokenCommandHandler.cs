@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 using TarotNow.Application.Features.Auth.Commands.Login;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Exceptions;
-using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities; // Needed for refresh token entity 
 
 namespace TarotNow.Application.Features.Auth.Commands.RefreshToken;
@@ -36,6 +35,11 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, (
             throw new DomainException("INVALID_TOKEN", "Refresh token does not exist.");
         }
 
+        if (!existingToken.MatchesToken(request.Token))
+        {
+            throw new DomainException("INVALID_TOKEN", "Refresh token is invalid.");
+        }
+
         // Reuse Detection: Nếu token đã bị thu hồi mà vẫn được sử dụng để xin token mới -> Fraud Alert!
         if (existingToken.IsRevoked)
         {
@@ -63,7 +67,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, (
         var newAccessToken = _tokenService.GenerateAccessToken(user);
         var newRefreshTokenString = _tokenService.GenerateRefreshToken();
         
-        var refreshTokenExpiryDays = int.Parse(_configuration["Jwt:RefreshTokenExpirationDays"] ?? "7");
+        var refreshTokenExpiryDays = ResolveRefreshTokenExpiryDays();
         var newRefreshTokenEntity = new TarotNow.Domain.Entities.RefreshToken(
             userId: user.Id,
             token: newRefreshTokenString,
@@ -76,7 +80,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, (
         var resp = new AuthResponse
         {
             AccessToken = newAccessToken,
-            ExpiresInMinutes = int.Parse(_configuration["Jwt:AccessTokenExpirationMinutes"] ?? "15"),
+            ExpiresInMinutes = ResolveAccessTokenExpiryMinutes(),
             User = new UserProfileDto
             {
                 Id = user.Id,
@@ -89,5 +93,25 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, (
         };
 
         return (resp, newRefreshTokenString);
+    }
+
+    private int ResolveAccessTokenExpiryMinutes()
+    {
+        var configured = _configuration["Jwt:ExpiryMinutes"]
+                         ?? _configuration["Jwt:AccessTokenExpirationMinutes"];
+
+        return int.TryParse(configured, out var value) && value > 0
+            ? value
+            : 15;
+    }
+
+    private int ResolveRefreshTokenExpiryDays()
+    {
+        var configured = _configuration["Jwt:RefreshExpiryDays"]
+                         ?? _configuration["Jwt:RefreshTokenExpirationDays"];
+
+        return int.TryParse(configured, out var value) && value > 0
+            ? value
+            : 7;
     }
 }

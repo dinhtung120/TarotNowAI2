@@ -19,15 +19,13 @@ namespace TarotNow.Api.IntegrationTests;
 public class CustomWebApplicationFactory<TProgram> 
     : WebApplicationFactory<TProgram>, IAsyncLifetime where TProgram : class
 {
-    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
-        .WithImage("postgres:16-alpine")
+    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder("postgres:16-alpine")
         .WithDatabase("tarotweb_test")
         .WithUsername("postgres")
         .WithPassword("postgres_test_password")
         .Build();
 
-    private readonly MongoDbContainer _mongoContainer = new MongoDbBuilder()
-        .WithImage("mongo:7.0-jammy")
+    private readonly MongoDbContainer _mongoContainer = new MongoDbBuilder("mongo:7.0-jammy")
         .Build();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -40,7 +38,9 @@ public class CustomWebApplicationFactory<TProgram>
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ConnectionStrings:PostgreSQL"] = postgresConnectionString,
-                ["ConnectionStrings:MongoDB"] = mongoConnectionString
+                ["ConnectionStrings:MongoDB"] = mongoConnectionString,
+                ["PaymentGateway:WebhookSecret"] = "TarotNow_Test_WebhookSecret_2026",
+                ["Security:MfaEncryptionKey"] = "TarotNow_Test_MfaEncryption_2026"
             });
         });
         
@@ -67,6 +67,7 @@ public class CustomWebApplicationFactory<TProgram>
 
             // Override Redis with In-Memory for Tests
             services.AddDistributedMemoryCache();
+            services.RemoveAll<StackExchange.Redis.IConnectionMultiplexer>();
 
             // Ensure MongoDB uses the Container
             services.RemoveAll<MongoDB.Driver.IMongoClient>();

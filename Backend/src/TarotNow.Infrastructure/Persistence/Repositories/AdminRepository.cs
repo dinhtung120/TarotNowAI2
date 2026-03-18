@@ -20,7 +20,8 @@ public class AdminRepository : IAdminRepository
                    u.diamond_balance AS UserDiamondBalance, v.ledger_diamond AS LedgerDiamondBalance 
             FROM users u
             LEFT JOIN v_user_ledger_balance v ON u.id = v.user_id
-            WHERE u.gold_balance != v.ledger_gold OR u.diamond_balance != v.ledger_diamond;
+            WHERE u.gold_balance IS DISTINCT FROM COALESCE(v.ledger_gold, 0)
+               OR u.diamond_balance IS DISTINCT FROM COALESCE(v.ledger_diamond, 0);
         ";
 
         // Query raw SQL Mapping to Dto using EF Core

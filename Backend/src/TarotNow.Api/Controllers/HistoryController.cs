@@ -63,6 +63,7 @@ public class HistoryController : ControllerBase
         };
 
         var result = await _mediator.Send(query);
+        if (result == null) return NotFound(new { message = "Reading session not found." });
         return Ok(result);
     }
 
@@ -79,9 +80,6 @@ public class HistoryController : ControllerBase
         [FromQuery] DateTime? startDate = null,
         [FromQuery] DateTime? endDate = null)
     {
-        // DEBUG LOG: Kiểm tra tham số nhận được từ Frontend
-        System.Console.WriteLine($"[AdminController] Request: user={username}, spread={spreadType}, start={startDate}, end={endDate}");
-
         var query = new GetAllReadingsQuery
         {
             Page = page > 0 ? page : 1,

@@ -11,7 +11,7 @@ public class DepositOrder
     public long DiamondAmount { get; private set; }
     
     // Status: Pending, Success, Failed
-    public string Status { get; private set; }
+    public string Status { get; private set; } = string.Empty;
 
     // Idempotency: Lấy mã giao dịch từ Payment Gateway
     public string? TransactionId { get; private set; }

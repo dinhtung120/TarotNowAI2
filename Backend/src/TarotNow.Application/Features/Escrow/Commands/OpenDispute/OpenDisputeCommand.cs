@@ -9,9 +9,9 @@ namespace TarotNow.Application.Features.Escrow.Commands.OpenDispute;
 /// Command: User mở tranh chấp — validate dispute window.
 ///
 /// Business rules:
-/// → Chỉ mở dispute trong dispute_window (24h từ release/refund).
-/// → Item phải ở status = released (hoặc refunded — tùy policy).
-/// → Khi dispute → freeze lại tiền (nếu đã release) — admin quyết định.
+/// → Chỉ mở dispute khi item đang accepted (tiền còn frozen).
+/// → Reader phải đã reply, và còn trong cửa sổ xử lý trước auto-release.
+/// → Khi dispute → dừng auto-release để admin xử lý.
 /// </summary>
 public class OpenDisputeCommand : IRequest<bool>
 {
@@ -38,20 +38,25 @@ public class OpenDisputeCommandHandler : IRequestHandler<OpenDisputeCommand, boo
         if (item.PayerId != req.UserId)
             throw new BadRequestException("Chỉ người đặt câu hỏi mới được mở tranh chấp.");
 
-        // Validate status — chỉ released items
-        if (item.Status != QuestionItemStatus.Released)
+        // Validate status — chỉ accepted items (vẫn đang giữ frozen)
+        if (item.Status != QuestionItemStatus.Accepted)
             throw new BadRequestException($"Câu hỏi ở trạng thái {item.Status}, không thể mở tranh chấp.");
 
-        // Validate dispute window
+        if (item.RepliedAt == null)
+            throw new BadRequestException("Reader chưa trả lời, chưa thể mở tranh chấp.");
+
+        // Validate dispute window trước khi auto-release
         var now = DateTime.UtcNow;
-        if (item.DisputeWindowEnd == null || now > item.DisputeWindowEnd)
-            throw new BadRequestException("Đã hết thời hạn mở tranh chấp (24 giờ sau release).");
+        if (item.AutoReleaseAt != null && now > item.AutoReleaseAt)
+            throw new BadRequestException("Đã quá thời hạn mở tranh chấp.");
 
         if (string.IsNullOrWhiteSpace(req.Reason) || req.Reason.Length < 10)
             throw new BadRequestException("Lý do tranh chấp phải có ít nhất 10 ký tự.");
 
         // Chuyển status → disputed
         item.Status = QuestionItemStatus.Disputed;
+        item.AutoReleaseAt = null;
+        item.UpdatedAt = now;
 
         await _financeRepo.UpdateItemAsync(item, ct);
 

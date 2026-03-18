@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using TarotNow.Application.Features.Admin.Queries.GetLedgerMismatch;
+using TarotNow.Domain.Enums;
 
 namespace TarotNow.Api.Controllers;
 
@@ -113,14 +114,21 @@ public class AdminController : ControllerBase
         [FromServices] TarotNow.Application.Interfaces.IChatFinanceRepository financeRepo,
         [FromServices] TarotNow.Application.Interfaces.IWalletRepository walletRepo)
     {
-        if (body.Action != "release" && body.Action != "refund")
+        var action = body.Action?.Trim().ToLowerInvariant();
+        if (action != "release" && action != "refund")
             return BadRequest(new { msg = "Action phải là 'release' hoặc 'refund'." });
 
         var item = await financeRepo.GetItemByIdAsync(body.ItemId);
         if (item == null) return NotFound(new { msg = "Không tìm thấy câu hỏi." });
-        if (item.Status != "disputed") return BadRequest(new { msg = "Câu hỏi không ở trạng thái dispute." });
+        if (item.Status != QuestionItemStatus.Disputed)
+            return BadRequest(new { msg = "Câu hỏi không ở trạng thái dispute." });
 
-        if (body.Action == "release")
+        // Backward-safety: dispute chỉ hợp lệ khi item còn frozen (status accepted -> disputed).
+        // Nếu item đã release/refund trước đó thì cần xử lý tài chính thủ công, tránh gọi nhầm proc_frozen.
+        if (item.ReleasedAt != null || item.RefundedAt != null)
+            return BadRequest(new { msg = "Dispute này thuộc flow cũ đã settle, cần xử lý thủ công." });
+
+        if (action == "release")
         {
             var fee = (long)Math.Ceiling(item.AmountDiamond * 0.10);
             var readerAmount = item.AmountDiamond - fee;
@@ -139,7 +147,7 @@ public class AdminController : ControllerBase
                     referenceId: item.Id.ToString(),
                     idempotencyKey: $"dispute_fee_{item.Id}");
 
-            item.Status = "released";
+            item.Status = QuestionItemStatus.Released;
             item.ReleasedAt = DateTime.UtcNow;
         }
         else
@@ -151,7 +159,7 @@ public class AdminController : ControllerBase
                 description: $"Admin resolve: refund {item.AmountDiamond}💎",
                 idempotencyKey: $"dispute_refund_{item.Id}");
 
-            item.Status = "refunded";
+            item.Status = QuestionItemStatus.Refunded;
             item.RefundedAt = DateTime.UtcNow;
         }
 
@@ -166,7 +174,7 @@ public class AdminController : ControllerBase
         }
 
         await financeRepo.SaveChangesAsync();
-        return Ok(new { success = true, action = body.Action });
+        return Ok(new { success = true, action });
     }
 
     // ======================================================================

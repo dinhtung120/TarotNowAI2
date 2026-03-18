@@ -7,6 +7,7 @@ using TarotNow.Application.Features.Reader.Commands.UpdateReaderProfile;
 using TarotNow.Application.Features.Reader.Commands.UpdateReaderStatus;
 using TarotNow.Application.Features.Reader.Queries.GetReaderProfile;
 using TarotNow.Application.Features.Reader.Queries.ListReaders;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Api.Controllers;
 
@@ -32,10 +33,12 @@ namespace TarotNow.Api.Controllers;
 public class ReaderController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IReaderRequestRepository _readerRequestRepository;
 
-    public ReaderController(IMediator mediator)
+    public ReaderController(IMediator mediator, IReaderRequestRepository readerRequestRepository)
     {
         _mediator = mediator;
+        _readerRequestRepository = readerRequestRepository;
     }
 
     /// <summary>
@@ -77,10 +80,7 @@ public class ReaderController : ControllerBase
         if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
             return Unauthorized();
 
-        // Dùng repository trực tiếp vì đây là query đơn giản
-        var readerRequestRepo = HttpContext.RequestServices
-            .GetRequiredService<TarotNow.Application.Interfaces.IReaderRequestRepository>();
-        var request = await readerRequestRepo.GetLatestByUserIdAsync(userId.ToString());
+        var request = await _readerRequestRepository.GetLatestByUserIdAsync(userId.ToString());
 
         if (request == null)
             return Ok(new { hasRequest = false });

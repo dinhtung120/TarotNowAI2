@@ -47,6 +47,10 @@ public class ApplicationDbContext : DbContext
         // Cần làm điều này TRƯỚC khi chạy loop đặt tên snake_case để các HasColumnName được ưu tiên.
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
+        // Legacy SQL entities đã chuyển sang MongoDB — loại khỏi EF model để tránh drift schema.
+        modelBuilder.Ignore<ReadingSession>();
+        modelBuilder.Ignore<UserCollection>();
+
         // 2. Tự động chuyển đổi tên bảng và cột sang snake_case cho PostgreSQL
         foreach (var entity in modelBuilder.Model.GetEntityTypes())
         {

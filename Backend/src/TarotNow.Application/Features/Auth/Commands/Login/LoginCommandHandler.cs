@@ -4,7 +4,6 @@ using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 using TarotNow.Domain.Exceptions;
-using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Auth.Commands.Login;
 
@@ -79,7 +78,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, (AuthResponse R
 
         // 4. Generate Refresh Token
         var refreshTokenString = _tokenService.GenerateRefreshToken();
-        var refreshTokenExpiryDays = int.Parse(_configuration["Jwt:RefreshTokenExpirationDays"] ?? "7");
+        var refreshTokenExpiryDays = ResolveRefreshTokenExpiryDays();
         var refreshTokenEntity = new TarotNow.Domain.Entities.RefreshToken(
             userId: user.Id,
             token: refreshTokenString,
@@ -93,7 +92,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, (AuthResponse R
         var resp = new AuthResponse
         {
             AccessToken = accessToken,
-            ExpiresInMinutes = int.Parse(_configuration["Jwt:AccessTokenExpirationMinutes"] ?? "15"),
+            ExpiresInMinutes = ResolveAccessTokenExpiryMinutes(),
             User = new UserProfileDto
             {
                 Id = user.Id,
@@ -107,5 +106,25 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, (AuthResponse R
         };
 
         return (resp, refreshTokenString);
+    }
+
+    private int ResolveAccessTokenExpiryMinutes()
+    {
+        var configured = _configuration["Jwt:ExpiryMinutes"]
+                         ?? _configuration["Jwt:AccessTokenExpirationMinutes"];
+
+        return int.TryParse(configured, out var value) && value > 0
+            ? value
+            : 15;
+    }
+
+    private int ResolveRefreshTokenExpiryDays()
+    {
+        var configured = _configuration["Jwt:RefreshExpiryDays"]
+                         ?? _configuration["Jwt:RefreshTokenExpirationDays"];
+
+        return int.TryParse(configured, out var value) && value > 0
+            ? value
+            : 7;
     }
 }

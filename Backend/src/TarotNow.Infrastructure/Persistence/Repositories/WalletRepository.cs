@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 using TarotNow.Application.Interfaces;
@@ -33,213 +34,267 @@ public class WalletRepository : IWalletRepository
         });
     }
 
-    public Task CreditAsync(Guid userId, string currency, string type, long amount, string? referenceSource = null, string? referenceId = null, string? description = null, string? metadataJson = null, string? idempotencyKey = null, CancellationToken cancellationToken = default)
+    private static string? NormalizeIdempotencyKey(string? idempotencyKey)
+        => string.IsNullOrWhiteSpace(idempotencyKey) ? null : idempotencyKey.Trim();
+
+    private async Task<bool> ExistsByIdempotencyKeyAsync(string? idempotencyKey, CancellationToken cancellationToken)
     {
-        return ExecuteWithTransactionAsync(async () =>
-        {
-            if (!string.IsNullOrEmpty(idempotencyKey))
-            {
-                bool exists = await _dbContext.Set<WalletTransaction>().AnyAsync(t => t.IdempotencyKey == idempotencyKey, cancellationToken);
-                if (exists) return;
-            }
-
-            var users = await _dbContext.Set<User>().FromSqlRaw("SELECT * FROM users WHERE id = {0} FOR UPDATE", userId).ToListAsync(cancellationToken);
-            var user = users.FirstOrDefault() ?? throw new InvalidOperationException($"Không tìm thấy user {userId}");
-
-            long balanceBefore = currency == CurrencyType.Gold ? user.GoldBalance : user.DiamondBalance;
-
-            user.Credit(currency, amount, type);
-
-            long balanceAfter = currency == CurrencyType.Gold ? user.GoldBalance : user.DiamondBalance;
-
-            var ledgerEntry = WalletTransaction.Create(
-                userId: userId,
-                currency: currency,
-                type: type,
-                amount: amount,
-                balanceBefore: balanceBefore,
-                balanceAfter: balanceAfter,
-                referenceSource: referenceSource,
-                referenceId: referenceId,
-                description: description,
-                metadataJson: metadataJson,
-                idempotencyKey: idempotencyKey
-            );
-
-            _dbContext.Set<WalletTransaction>().Add(ledgerEntry);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }, cancellationToken);
+        if (idempotencyKey == null) return false;
+        return await _dbContext.Set<WalletTransaction>().AnyAsync(t => t.IdempotencyKey == idempotencyKey, cancellationToken);
     }
 
-    public Task DebitAsync(Guid userId, string currency, string type, long amount, string? referenceSource = null, string? referenceId = null, string? description = null, string? metadataJson = null, string? idempotencyKey = null, CancellationToken cancellationToken = default)
+    private static bool IsIdempotencyUniqueViolation(DbUpdateException exception, string? idempotencyKey)
     {
-        return ExecuteWithTransactionAsync(async () =>
-        {
-            if (!string.IsNullOrEmpty(idempotencyKey))
-            {
-                bool exists = await _dbContext.Set<WalletTransaction>().AnyAsync(t => t.IdempotencyKey == idempotencyKey, cancellationToken);
-                if (exists) return;
-            }
+        if (idempotencyKey == null) return false;
 
-            var users = await _dbContext.Set<User>().FromSqlRaw("SELECT * FROM users WHERE id = {0} FOR UPDATE", userId).ToListAsync(cancellationToken);
-            var user = users.FirstOrDefault() ?? throw new InvalidOperationException($"Không tìm thấy user {userId}");
-
-            long balanceBefore = currency == CurrencyType.Gold ? user.GoldBalance : user.DiamondBalance;
-
-            user.Debit(currency, amount);
-
-            long balanceAfter = currency == CurrencyType.Gold ? user.GoldBalance : user.DiamondBalance;
-
-            var ledgerEntry = WalletTransaction.Create(
-                userId: userId,
-                currency: currency,
-                type: type,
-                amount: -amount,
-                balanceBefore: balanceBefore,
-                balanceAfter: balanceAfter,
-                referenceSource: referenceSource,
-                referenceId: referenceId,
-                description: description,
-                metadataJson: metadataJson,
-                idempotencyKey: idempotencyKey
-            );
-
-            _dbContext.Set<WalletTransaction>().Add(ledgerEntry);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }, cancellationToken);
+        return exception.InnerException is PostgresException postgresException
+               && postgresException.SqlState == PostgresErrorCodes.UniqueViolation
+               && string.Equals(postgresException.ConstraintName, "ix_wallet_transactions_idempotency_key", StringComparison.OrdinalIgnoreCase);
     }
 
-    public Task FreezeAsync(Guid userId, long amount, string? referenceSource = null, string? referenceId = null, string? description = null, string? metadataJson = null, string? idempotencyKey = null, CancellationToken cancellationToken = default)
+    public async Task CreditAsync(Guid userId, string currency, string type, long amount, string? referenceSource = null, string? referenceId = null, string? description = null, string? metadataJson = null, string? idempotencyKey = null, CancellationToken cancellationToken = default)
     {
-        return ExecuteWithTransactionAsync(async () =>
+        var normalizedIdempotencyKey = NormalizeIdempotencyKey(idempotencyKey);
+
+        try
         {
-            if (!string.IsNullOrEmpty(idempotencyKey))
+            await ExecuteWithTransactionAsync(async () =>
             {
-                bool exists = await _dbContext.Set<WalletTransaction>().AnyAsync(t => t.IdempotencyKey == idempotencyKey, cancellationToken);
-                if (exists) return;
-            }
+                if (await ExistsByIdempotencyKeyAsync(normalizedIdempotencyKey, cancellationToken)) return;
 
-            var users = await _dbContext.Set<User>().FromSqlRaw("SELECT * FROM users WHERE id = {0} FOR UPDATE", userId).ToListAsync(cancellationToken);
-            var user = users.FirstOrDefault() ?? throw new InvalidOperationException($"Không tìm thấy user {userId}");
+                var users = await _dbContext.Set<User>().FromSqlRaw("SELECT * FROM users WHERE id = {0} FOR UPDATE", userId).ToListAsync(cancellationToken);
+                var user = users.FirstOrDefault() ?? throw new InvalidOperationException($"Không tìm thấy user {userId}");
 
-            long balanceBefore = user.DiamondBalance;
+                if (await ExistsByIdempotencyKeyAsync(normalizedIdempotencyKey, cancellationToken)) return;
 
-            user.FreezeDiamond(amount);
+                long balanceBefore = currency == CurrencyType.Gold ? user.GoldBalance : user.DiamondBalance;
 
-            long balanceAfter = user.DiamondBalance;
+                user.Credit(currency, amount, type);
 
-            var ledgerEntry = WalletTransaction.Create(
-                userId: userId,
-                currency: CurrencyType.Diamond,
-                type: TransactionType.EscrowFreeze,
-                amount: -amount,
-                balanceBefore: balanceBefore,
-                balanceAfter: balanceAfter,
-                referenceSource: referenceSource,
-                referenceId: referenceId,
-                description: description,
-                metadataJson: metadataJson,
-                idempotencyKey: idempotencyKey
-            );
+                long balanceAfter = currency == CurrencyType.Gold ? user.GoldBalance : user.DiamondBalance;
 
-            _dbContext.Set<WalletTransaction>().Add(ledgerEntry);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }, cancellationToken);
+                var ledgerEntry = WalletTransaction.Create(
+                    userId: userId,
+                    currency: currency,
+                    type: type,
+                    amount: amount,
+                    balanceBefore: balanceBefore,
+                    balanceAfter: balanceAfter,
+                    referenceSource: referenceSource,
+                    referenceId: referenceId,
+                    description: description,
+                    metadataJson: metadataJson,
+                    idempotencyKey: normalizedIdempotencyKey
+                );
+
+                _dbContext.Set<WalletTransaction>().Add(ledgerEntry);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }, cancellationToken);
+        }
+        catch (DbUpdateException ex) when (IsIdempotencyUniqueViolation(ex, normalizedIdempotencyKey))
+        {
+            // Concurrent duplicate request: unique index bảo vệ idempotency, coi như đã xử lý.
+        }
     }
 
-    public Task ReleaseAsync(Guid payerId, Guid receiverId, long amount, string? referenceSource = null, string? referenceId = null, string? description = null, string? metadataJson = null, string? idempotencyKey = null, CancellationToken cancellationToken = default)
+    public async Task DebitAsync(Guid userId, string currency, string type, long amount, string? referenceSource = null, string? referenceId = null, string? description = null, string? metadataJson = null, string? idempotencyKey = null, CancellationToken cancellationToken = default)
     {
-        return ExecuteWithTransactionAsync(async () =>
+        var normalizedIdempotencyKey = NormalizeIdempotencyKey(idempotencyKey);
+
+        try
         {
-            if (!string.IsNullOrEmpty(idempotencyKey))
+            await ExecuteWithTransactionAsync(async () =>
             {
-                bool exists = await _dbContext.Set<WalletTransaction>().AnyAsync(t => t.IdempotencyKey == idempotencyKey, cancellationToken);
-                if (exists) return;
-            }
+                if (await ExistsByIdempotencyKeyAsync(normalizedIdempotencyKey, cancellationToken)) return;
 
-            var payers = await _dbContext.Set<User>().FromSqlRaw("SELECT * FROM users WHERE id = {0} FOR UPDATE", payerId).ToListAsync(cancellationToken);
-            var payer = payers.FirstOrDefault() ?? throw new InvalidOperationException($"Không tìm thấy payer {payerId}");
-            
-            var receivers = await _dbContext.Set<User>().FromSqlRaw("SELECT * FROM users WHERE id = {0} FOR UPDATE", receiverId).ToListAsync(cancellationToken);
-            var receiver = receivers.FirstOrDefault() ?? throw new InvalidOperationException($"Không tìm thấy receiver {receiverId}");
+                var users = await _dbContext.Set<User>().FromSqlRaw("SELECT * FROM users WHERE id = {0} FOR UPDATE", userId).ToListAsync(cancellationToken);
+                var user = users.FirstOrDefault() ?? throw new InvalidOperationException($"Không tìm thấy user {userId}");
 
-            long payerBalanceBefore = payer.DiamondBalance;
-            payer.ReleaseFrozenDiamond(amount);
-            long payerBalanceAfter = payer.DiamondBalance;
+                if (await ExistsByIdempotencyKeyAsync(normalizedIdempotencyKey, cancellationToken)) return;
 
-            long receiverBalanceBefore = receiver.DiamondBalance;
-            receiver.Credit(CurrencyType.Diamond, amount, TransactionType.EscrowRelease);
-            long receiverBalanceAfter = receiver.DiamondBalance;
+                long balanceBefore = currency == CurrencyType.Gold ? user.GoldBalance : user.DiamondBalance;
 
-            var ledgerEntryPayer = WalletTransaction.Create(
-                userId: payerId,
-                currency: CurrencyType.Diamond,
-                type: TransactionType.EscrowRelease,
-                amount: -amount,
-                balanceBefore: payerBalanceBefore,
-                balanceAfter: payerBalanceAfter,
-                referenceSource: referenceSource,
-                referenceId: referenceId,
-                description: description,
-                metadataJson: metadataJson,
-                idempotencyKey: idempotencyKey
-            );
+                user.Debit(currency, amount);
 
-            var ledgerEntryReceiver = WalletTransaction.Create(
-                userId: receiverId,
-                currency: CurrencyType.Diamond,
-                type: TransactionType.EscrowRelease,
-                amount: amount,
-                balanceBefore: receiverBalanceBefore,
-                balanceAfter: receiverBalanceAfter,
-                referenceSource: referenceSource,
-                referenceId: referenceId,
-                description: description,
-                metadataJson: metadataJson,
-                idempotencyKey: idempotencyKey + "_receiver" // Phân biệt transaction của receiver
-            );
+                long balanceAfter = currency == CurrencyType.Gold ? user.GoldBalance : user.DiamondBalance;
 
-            _dbContext.Set<WalletTransaction>().AddRange(ledgerEntryPayer, ledgerEntryReceiver);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }, cancellationToken);
+                var ledgerEntry = WalletTransaction.Create(
+                    userId: userId,
+                    currency: currency,
+                    type: type,
+                    amount: -amount,
+                    balanceBefore: balanceBefore,
+                    balanceAfter: balanceAfter,
+                    referenceSource: referenceSource,
+                    referenceId: referenceId,
+                    description: description,
+                    metadataJson: metadataJson,
+                    idempotencyKey: normalizedIdempotencyKey
+                );
+
+                _dbContext.Set<WalletTransaction>().Add(ledgerEntry);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }, cancellationToken);
+        }
+        catch (DbUpdateException ex) when (IsIdempotencyUniqueViolation(ex, normalizedIdempotencyKey))
+        {
+            // Concurrent duplicate request: unique index bảo vệ idempotency, coi như đã xử lý.
+        }
     }
 
-    public Task RefundAsync(Guid userId, long amount, string? referenceSource = null, string? referenceId = null, string? description = null, string? metadataJson = null, string? idempotencyKey = null, CancellationToken cancellationToken = default)
+    public async Task FreezeAsync(Guid userId, long amount, string? referenceSource = null, string? referenceId = null, string? description = null, string? metadataJson = null, string? idempotencyKey = null, CancellationToken cancellationToken = default)
     {
-        return ExecuteWithTransactionAsync(async () =>
+        var normalizedIdempotencyKey = NormalizeIdempotencyKey(idempotencyKey);
+
+        try
         {
-            if (!string.IsNullOrEmpty(idempotencyKey))
+            await ExecuteWithTransactionAsync(async () =>
             {
-                bool exists = await _dbContext.Set<WalletTransaction>().AnyAsync(t => t.IdempotencyKey == idempotencyKey, cancellationToken);
-                if (exists) return;
-            }
+                if (await ExistsByIdempotencyKeyAsync(normalizedIdempotencyKey, cancellationToken)) return;
 
-            var users = await _dbContext.Set<User>().FromSqlRaw("SELECT * FROM users WHERE id = {0} FOR UPDATE", userId).ToListAsync(cancellationToken);
-            var user = users.FirstOrDefault() ?? throw new InvalidOperationException($"Không tìm thấy user {userId}");
+                var users = await _dbContext.Set<User>().FromSqlRaw("SELECT * FROM users WHERE id = {0} FOR UPDATE", userId).ToListAsync(cancellationToken);
+                var user = users.FirstOrDefault() ?? throw new InvalidOperationException($"Không tìm thấy user {userId}");
 
-            long balanceBefore = user.DiamondBalance;
+                if (await ExistsByIdempotencyKeyAsync(normalizedIdempotencyKey, cancellationToken)) return;
 
-            user.RefundFrozenDiamond(amount);
+                long balanceBefore = user.DiamondBalance;
 
-            long balanceAfter = user.DiamondBalance;
+                user.FreezeDiamond(amount);
 
-            var ledgerEntry = WalletTransaction.Create(
-                userId: userId,
-                currency: CurrencyType.Diamond,
-                type: TransactionType.EscrowRefund,
-                amount: amount, // Cộng lại vào Available
-                balanceBefore: balanceBefore,
-                balanceAfter: balanceAfter,
-                referenceSource: referenceSource,
-                referenceId: referenceId,
-                description: description,
-                metadataJson: metadataJson,
-                idempotencyKey: idempotencyKey
-            );
+                long balanceAfter = user.DiamondBalance;
 
-            _dbContext.Set<WalletTransaction>().Add(ledgerEntry);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }, cancellationToken);
+                var ledgerEntry = WalletTransaction.Create(
+                    userId: userId,
+                    currency: CurrencyType.Diamond,
+                    type: TransactionType.EscrowFreeze,
+                    amount: -amount,
+                    balanceBefore: balanceBefore,
+                    balanceAfter: balanceAfter,
+                    referenceSource: referenceSource,
+                    referenceId: referenceId,
+                    description: description,
+                    metadataJson: metadataJson,
+                    idempotencyKey: normalizedIdempotencyKey
+                );
+
+                _dbContext.Set<WalletTransaction>().Add(ledgerEntry);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }, cancellationToken);
+        }
+        catch (DbUpdateException ex) when (IsIdempotencyUniqueViolation(ex, normalizedIdempotencyKey))
+        {
+            // Concurrent duplicate request: unique index bảo vệ idempotency, coi như đã xử lý.
+        }
+    }
+
+    public async Task ReleaseAsync(Guid payerId, Guid receiverId, long amount, string? referenceSource = null, string? referenceId = null, string? description = null, string? metadataJson = null, string? idempotencyKey = null, CancellationToken cancellationToken = default)
+    {
+        var normalizedIdempotencyKey = NormalizeIdempotencyKey(idempotencyKey);
+        var receiverIdempotencyKey = normalizedIdempotencyKey == null ? null : $"{normalizedIdempotencyKey}_receiver";
+
+        try
+        {
+            await ExecuteWithTransactionAsync(async () =>
+            {
+                if (await ExistsByIdempotencyKeyAsync(normalizedIdempotencyKey, cancellationToken)) return;
+
+                var payers = await _dbContext.Set<User>().FromSqlRaw("SELECT * FROM users WHERE id = {0} FOR UPDATE", payerId).ToListAsync(cancellationToken);
+                var payer = payers.FirstOrDefault() ?? throw new InvalidOperationException($"Không tìm thấy payer {payerId}");
+
+                var receivers = await _dbContext.Set<User>().FromSqlRaw("SELECT * FROM users WHERE id = {0} FOR UPDATE", receiverId).ToListAsync(cancellationToken);
+                var receiver = receivers.FirstOrDefault() ?? throw new InvalidOperationException($"Không tìm thấy receiver {receiverId}");
+
+                if (await ExistsByIdempotencyKeyAsync(normalizedIdempotencyKey, cancellationToken)) return;
+
+                long payerBalanceBefore = payer.DiamondBalance;
+                payer.ReleaseFrozenDiamond(amount);
+                long payerBalanceAfter = payer.DiamondBalance;
+
+                long receiverBalanceBefore = receiver.DiamondBalance;
+                receiver.Credit(CurrencyType.Diamond, amount, TransactionType.EscrowRelease);
+                long receiverBalanceAfter = receiver.DiamondBalance;
+
+                var ledgerEntryPayer = WalletTransaction.Create(
+                    userId: payerId,
+                    currency: CurrencyType.Diamond,
+                    type: TransactionType.EscrowRelease,
+                    amount: -amount,
+                    balanceBefore: payerBalanceBefore,
+                    balanceAfter: payerBalanceAfter,
+                    referenceSource: referenceSource,
+                    referenceId: referenceId,
+                    description: description,
+                    metadataJson: metadataJson,
+                    idempotencyKey: normalizedIdempotencyKey
+                );
+
+                var ledgerEntryReceiver = WalletTransaction.Create(
+                    userId: receiverId,
+                    currency: CurrencyType.Diamond,
+                    type: TransactionType.EscrowRelease,
+                    amount: amount,
+                    balanceBefore: receiverBalanceBefore,
+                    balanceAfter: receiverBalanceAfter,
+                    referenceSource: referenceSource,
+                    referenceId: referenceId,
+                    description: description,
+                    metadataJson: metadataJson,
+                    idempotencyKey: receiverIdempotencyKey
+                );
+
+                _dbContext.Set<WalletTransaction>().AddRange(ledgerEntryPayer, ledgerEntryReceiver);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }, cancellationToken);
+        }
+        catch (DbUpdateException ex) when (IsIdempotencyUniqueViolation(ex, normalizedIdempotencyKey))
+        {
+            // Concurrent duplicate request: unique index bảo vệ idempotency, coi như đã xử lý.
+        }
+    }
+
+    public async Task RefundAsync(Guid userId, long amount, string? referenceSource = null, string? referenceId = null, string? description = null, string? metadataJson = null, string? idempotencyKey = null, CancellationToken cancellationToken = default)
+    {
+        var normalizedIdempotencyKey = NormalizeIdempotencyKey(idempotencyKey);
+
+        try
+        {
+            await ExecuteWithTransactionAsync(async () =>
+            {
+                if (await ExistsByIdempotencyKeyAsync(normalizedIdempotencyKey, cancellationToken)) return;
+
+                var users = await _dbContext.Set<User>().FromSqlRaw("SELECT * FROM users WHERE id = {0} FOR UPDATE", userId).ToListAsync(cancellationToken);
+                var user = users.FirstOrDefault() ?? throw new InvalidOperationException($"Không tìm thấy user {userId}");
+
+                if (await ExistsByIdempotencyKeyAsync(normalizedIdempotencyKey, cancellationToken)) return;
+
+                long balanceBefore = user.DiamondBalance;
+
+                user.RefundFrozenDiamond(amount);
+
+                long balanceAfter = user.DiamondBalance;
+
+                var ledgerEntry = WalletTransaction.Create(
+                    userId: userId,
+                    currency: CurrencyType.Diamond,
+                    type: TransactionType.EscrowRefund,
+                    amount: amount, // Cộng lại vào Available
+                    balanceBefore: balanceBefore,
+                    balanceAfter: balanceAfter,
+                    referenceSource: referenceSource,
+                    referenceId: referenceId,
+                    description: description,
+                    metadataJson: metadataJson,
+                    idempotencyKey: normalizedIdempotencyKey
+                );
+
+                _dbContext.Set<WalletTransaction>().Add(ledgerEntry);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }, cancellationToken);
+        }
+        catch (DbUpdateException ex) when (IsIdempotencyUniqueViolation(ex, normalizedIdempotencyKey))
+        {
+            // Concurrent duplicate request: unique index bảo vệ idempotency, coi như đã xử lý.
+        }
     }
 
     /// <summary>
@@ -248,44 +303,50 @@ public class WalletRepository : IWalletRepository
     /// Thay thế ReleaseAsync (cần receiver account) vì hệ thống chưa có System Master Account.
     /// Transaction đảm bảo atomicity: SELECT FOR UPDATE → consume → ghi ledger.
     /// </summary>
-    public Task ConsumeAsync(Guid userId, long amount, string? referenceSource = null, string? referenceId = null, string? description = null, string? metadataJson = null, string? idempotencyKey = null, CancellationToken cancellationToken = default)
+    public async Task ConsumeAsync(Guid userId, long amount, string? referenceSource = null, string? referenceId = null, string? description = null, string? metadataJson = null, string? idempotencyKey = null, CancellationToken cancellationToken = default)
     {
-        return ExecuteWithTransactionAsync(async () =>
+        var normalizedIdempotencyKey = NormalizeIdempotencyKey(idempotencyKey);
+
+        try
         {
-            // Kiểm tra idempotency: nếu đã consume 1 lần rồi thì bỏ qua
-            if (!string.IsNullOrEmpty(idempotencyKey))
+            await ExecuteWithTransactionAsync(async () =>
             {
-                bool exists = await _dbContext.Set<WalletTransaction>().AnyAsync(t => t.IdempotencyKey == idempotencyKey, cancellationToken);
-                if (exists) return;
-            }
+                if (await ExistsByIdempotencyKeyAsync(normalizedIdempotencyKey, cancellationToken)) return;
 
-            // Row-level lock tránh race condition khi nhiều request đồng thời
-            var users = await _dbContext.Set<User>().FromSqlRaw("SELECT * FROM users WHERE id = {0} FOR UPDATE", userId).ToListAsync(cancellationToken);
-            var user = users.FirstOrDefault() ?? throw new InvalidOperationException($"Không tìm thấy user {userId}");
+                // Row-level lock tránh race condition khi nhiều request đồng thời
+                var users = await _dbContext.Set<User>().FromSqlRaw("SELECT * FROM users WHERE id = {0} FOR UPDATE", userId).ToListAsync(cancellationToken);
+                var user = users.FirstOrDefault() ?? throw new InvalidOperationException($"Không tìm thấy user {userId}");
 
-            long balanceBefore = user.DiamondBalance;
+                if (await ExistsByIdempotencyKeyAsync(normalizedIdempotencyKey, cancellationToken)) return;
 
-            // Trừ Diamond khỏi frozen balance (consume = "đốt" → không cộng cho ai)
-            user.ConsumeFrozenDiamond(amount);
+                long balanceBefore = user.DiamondBalance;
 
-            long balanceAfter = user.DiamondBalance;
+                // Trừ Diamond khỏi frozen balance (consume = "đốt" → không cộng cho ai)
+                user.ConsumeFrozenDiamond(amount);
 
-            var ledgerEntry = WalletTransaction.Create(
-                userId: userId,
-                currency: CurrencyType.Diamond,
-                type: TransactionType.EscrowRelease, // Vẫn dùng type EscrowRelease cho audit trail
-                amount: -amount,
-                balanceBefore: balanceBefore,
-                balanceAfter: balanceAfter,
-                referenceSource: referenceSource,
-                referenceId: referenceId,
-                description: description,
-                metadataJson: metadataJson,
-                idempotencyKey: idempotencyKey
-            );
+                long balanceAfter = user.DiamondBalance;
 
-            _dbContext.Set<WalletTransaction>().Add(ledgerEntry);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }, cancellationToken);
+                var ledgerEntry = WalletTransaction.Create(
+                    userId: userId,
+                    currency: CurrencyType.Diamond,
+                    type: TransactionType.EscrowRelease, // Vẫn dùng type EscrowRelease cho audit trail
+                    amount: -amount,
+                    balanceBefore: balanceBefore,
+                    balanceAfter: balanceAfter,
+                    referenceSource: referenceSource,
+                    referenceId: referenceId,
+                    description: description,
+                    metadataJson: metadataJson,
+                    idempotencyKey: normalizedIdempotencyKey
+                );
+
+                _dbContext.Set<WalletTransaction>().Add(ledgerEntry);
+                await _dbContext.SaveChangesAsync(cancellationToken);
+            }, cancellationToken);
+        }
+        catch (DbUpdateException ex) when (IsIdempotencyUniqueViolation(ex, normalizedIdempotencyKey))
+        {
+            // Concurrent duplicate request: unique index bảo vệ idempotency, coi như đã xử lý.
+        }
     }
 }

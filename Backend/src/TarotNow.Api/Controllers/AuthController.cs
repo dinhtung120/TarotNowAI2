@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using TarotNow.Application.Features.Auth.Commands.Login;
 using TarotNow.Application.Features.Auth.Commands.Register;
 using TarotNow.Application.Features.Auth.Commands.RefreshToken;
@@ -12,10 +13,14 @@ namespace TarotNow.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IWebHostEnvironment _environment;
+    private readonly IConfiguration _configuration;
 
-    public AuthController(IMediator mediator)
+    public AuthController(IMediator mediator, IWebHostEnvironment environment, IConfiguration configuration)
     {
         _mediator = mediator;
+        _environment = environment;
+        _configuration = configuration;
     }
 
     /// <summary>
@@ -55,13 +60,7 @@ public class AuthController : ControllerBase
         var result = await _mediator.Send(command);
 
         // Thiết lập Refresh Token thành HttpOnly Cookie để chống XSS
-        var cookieOptions = new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true, // Yêu cầu HTTPS trong Production
-            SameSite = SameSiteMode.Strict, // Chống CSRF cơ bản
-            Expires = DateTime.UtcNow.AddDays(7) // Khớp với config Jwt:RefreshTokenExpirationDays
-        };
+        var cookieOptions = BuildRefreshCookieOptions();
         
         Response.Cookies.Append("refreshToken", result.RefreshToken, cookieOptions);
 
@@ -92,13 +91,7 @@ public class AuthController : ControllerBase
         var result = await _mediator.Send(command);
 
         // Reset HttpOnly Cookie mới
-        var cookieOptions = new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = true, // HTTPS required trong Prod
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTime.UtcNow.AddDays(7)
-        };
+        var cookieOptions = BuildRefreshCookieOptions();
         Response.Cookies.Append("refreshToken", result.NewRefreshToken, cookieOptions);
 
         return Ok(result.Response);
@@ -141,7 +134,7 @@ public class AuthController : ControllerBase
         await _mediator.Send(command);
 
         // Xóa Cookie ở phía client
-        Response.Cookies.Delete("refreshToken", new CookieOptions { Secure = true, SameSite = SameSiteMode.Strict });
+        Response.Cookies.Delete("refreshToken", BuildRefreshCookieOptions());
 
         return Ok(new { message = "Logged out successfully." });
     }
@@ -191,5 +184,29 @@ public class AuthController : ControllerBase
     {
         var result = await _mediator.Send(command);
         return Ok(new { message = "Password has been successfully reset. All existing devices have been logged out." });
+    }
+
+    private CookieOptions BuildRefreshCookieOptions()
+    {
+        var expiryDays = ResolveRefreshTokenExpiryDays();
+        var shouldUseSecureCookie = !_environment.IsDevelopment() || Request.IsHttps;
+
+        return new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = shouldUseSecureCookie,
+            SameSite = SameSiteMode.Strict,
+            Expires = DateTime.UtcNow.AddDays(expiryDays)
+        };
+    }
+
+    private int ResolveRefreshTokenExpiryDays()
+    {
+        var configured = _configuration["Jwt:RefreshExpiryDays"]
+                         ?? _configuration["Jwt:RefreshTokenExpirationDays"];
+
+        return int.TryParse(configured, out var value) && value > 0
+            ? value
+            : 7;
     }
 }

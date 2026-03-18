@@ -4,7 +4,7 @@ using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.History.Queries.GetReadingDetail;
 
-public class GetReadingDetailQuery : IRequest<GetReadingDetailResponse>
+public class GetReadingDetailQuery : IRequest<GetReadingDetailResponse?>
 {
     public Guid UserId { get; set; }
     public string SessionId { get; set; } = string.Empty;
@@ -37,7 +37,7 @@ public class AiRequestDto
     public string? RequestType { get; set; }
 }
 
-public class GetReadingDetailQueryHandler : IRequestHandler<GetReadingDetailQuery, GetReadingDetailResponse>
+public class GetReadingDetailQueryHandler : IRequestHandler<GetReadingDetailQuery, GetReadingDetailResponse?>
 {
     private readonly IReadingSessionRepository _readingRepo;
 
@@ -46,7 +46,7 @@ public class GetReadingDetailQueryHandler : IRequestHandler<GetReadingDetailQuer
         _readingRepo = readingRepo;
     }
 
-    public async Task<GetReadingDetailResponse> Handle(GetReadingDetailQuery request, CancellationToken cancellationToken)
+    public async Task<GetReadingDetailResponse?> Handle(GetReadingDetailQuery request, CancellationToken cancellationToken)
     {
         var session = await _readingRepo.GetSessionWithAiRequestsAsync(request.SessionId, cancellationToken);
 

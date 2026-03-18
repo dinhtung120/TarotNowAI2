@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace TarotNow.Api.Controllers;
@@ -7,10 +8,12 @@ namespace TarotNow.Api.Controllers;
 public class HealthController : ControllerBase
 {
     private readonly ILogger<HealthController> _logger;
+    private readonly IWebHostEnvironment _environment;
 
-    public HealthController(ILogger<HealthController> logger)
+    public HealthController(ILogger<HealthController> logger, IWebHostEnvironment environment)
     {
         _logger = logger;
+        _environment = environment;
     }
 
     /// <summary>
@@ -34,8 +37,12 @@ public class HealthController : ControllerBase
     /// Test endpoint để kiểm tra global error handling (ProblemDetails).
     /// </summary>
     [HttpGet("error-test")]
+    [Authorize(Roles = "admin")]
     public IActionResult TriggerError()
     {
+        if (!_environment.IsDevelopment())
+            return NotFound();
+
         throw new Exception("This is a test exception to verify ProblemDetails integration.");
     }
 }

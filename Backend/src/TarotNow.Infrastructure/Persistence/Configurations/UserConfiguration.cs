@@ -74,6 +74,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(20)
             .HasDefaultValue("pending");
 
+        builder.Property(u => u.MfaBackupCodesHashJson)
+            .HasColumnName("mfa_backup_codes_hash_json")
+            .HasColumnType("jsonb");
+
         builder.Property(u => u.CreatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");
 

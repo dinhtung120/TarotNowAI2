@@ -1,42 +1,79 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using TarotNow.Application.Interfaces;
 using TarotNow.Infrastructure.Persistence;
 
 namespace TarotNow.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
+[Authorize(Roles = "admin")]
+[ApiExplorerSettings(IgnoreApi = true)]
 public class DiagController : ControllerBase
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly IPasswordHasher _passwordHasher;
+    private readonly IWebHostEnvironment _environment;
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<DiagController> _logger;
 
-    private readonly TarotNow.Application.Interfaces.IPasswordHasher _passwordHasher;
-
-    public DiagController(ApplicationDbContext dbContext, TarotNow.Application.Interfaces.IPasswordHasher passwordHasher)
+    public DiagController(
+        ApplicationDbContext dbContext,
+        IPasswordHasher passwordHasher,
+        IWebHostEnvironment environment,
+        IConfiguration configuration,
+        ILogger<DiagController> logger)
     {
         _dbContext = dbContext;
         _passwordHasher = passwordHasher;
+        _environment = environment;
+        _configuration = configuration;
+        _logger = logger;
+    }
+
+    private IActionResult? RejectIfNotDevelopment()
+    {
+        if (_environment.IsDevelopment()) return null;
+        return NotFound();
     }
 
     [HttpPost("wipe")]
-    public async Task<IActionResult> Wipe()
+    public IActionResult Wipe()
     {
-        // ... (giữ nguyên code cũ)
-        return Ok(); 
+        var guard = RejectIfNotDevelopment();
+        if (guard != null) return guard;
+
+        return Ok(new { message = "Wipe endpoint is disabled by default." });
     }
 
-    [HttpGet("seed-admin")]
+    [HttpPost("seed-admin")]
     public async Task<IActionResult> SeedAdmin()
     {
+        var guard = RejectIfNotDevelopment();
+        if (guard != null) return guard;
+
         try 
         {
-            var adminEmail = "superadmin@tarotnow.com";
+            var adminEmail = _configuration["Diagnostics:SeedAdmin:Email"]?.Trim();
+            var adminUsername = _configuration["Diagnostics:SeedAdmin:Username"]?.Trim();
+            var adminPassword = _configuration["Diagnostics:SeedAdmin:Password"];
+
+            if (string.IsNullOrWhiteSpace(adminEmail) ||
+                string.IsNullOrWhiteSpace(adminUsername) ||
+                string.IsNullOrWhiteSpace(adminPassword) ||
+                adminPassword.Length < 12)
+            {
+                return BadRequest(new
+                {
+                    message = "Missing diagnostics seed admin config. Set Diagnostics:SeedAdmin:{Email,Username,Password} with strong password."
+                });
+            }
+
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == adminEmail);
-            
-            var password = "SuperSecret123!";
-            var passwordHash = _passwordHasher.HashPassword(password); 
+            var passwordHash = _passwordHasher.HashPassword(adminPassword);
 
             bool isNew = false;
             if (user == null)
@@ -44,7 +81,7 @@ public class DiagController : ControllerBase
                 isNew = true;
                 user = new TarotNow.Domain.Entities.User(
                     adminEmail, 
-                    "superadmin", 
+                    adminUsername,
                     passwordHash, 
                     "Super Admin", 
                     new DateTime(1985, 5, 5).ToUniversalTime(), 
@@ -66,20 +103,22 @@ public class DiagController : ControllerBase
             return Ok(new { 
                 Message = isNew ? "SuperAdmin created" : "SuperAdmin updated", 
                 Email = adminEmail, 
-                Username = "superadmin",
-                Password = password,
-                Note = "Sử dụng Email hoặc Username để đăng nhập"
+                Username = adminUsername
             });
         }
         catch (Exception ex)
         {
-            return BadRequest(new { Error = ex.Message });
+            _logger.LogError(ex, "Failed to seed admin account");
+            return StatusCode(500, new { message = "Failed to seed admin account." });
         }
     }
 
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats([FromServices] TarotNow.Infrastructure.Persistence.MongoDbContext mongoContext)
     {
+        var guard = RejectIfNotDevelopment();
+        if (guard != null) return guard;
+
         try
         {
             var totalSessions = await mongoContext.ReadingSessions.CountDocumentsAsync(new BsonDocument());
@@ -103,7 +142,8 @@ public class DiagController : ControllerBase
         }
         catch (Exception ex)
         {
-            return BadRequest(new { Error = ex.Message });
+            _logger.LogError(ex, "Failed to fetch diagnostics stats");
+            return StatusCode(500, new { message = "Failed to fetch diagnostics stats." });
         }
     }
 }
