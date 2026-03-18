@@ -126,15 +126,15 @@ export default function EscrowPanel({ conversationId, currentUserId: _currentUse
  const hasActiveItems = escrow.items.some(i => i.status === 'accepted');
 
  return (
- <div className="mx-6 mb-2">
+ <div className="mx-3 sm:mx-6 mb-2">
  {/* Header — luôn hiện */}
  <button
  onClick={() => setExpanded(!expanded)}
- className="w-full flex items-center justify-between px-4 py-3 bg-[var(--warning)]/5 hover:bg-[var(--warning)]/10 border border-[var(--warning)]/10 rounded-xl transition-all"
+ className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-[var(--warning)]/5 hover:bg-[var(--warning)]/10 border border-[var(--warning)]/10 rounded-xl transition-all text-left min-h-11"
  >
- <div className="flex items-center gap-2">
+ <div className="flex items-center gap-2 min-w-0">
  <Shield className="w-4 h-4 text-[var(--warning)]" />
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--warning)]">
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--warning)] truncate">
  {t("escrow.title")}
  </span>
  <span className="text-xs font-bold tn-text-primary">
@@ -210,7 +210,7 @@ export default function EscrowPanel({ conversationId, currentUserId: _currentUse
  <button
  onClick={() => handleConfirmRelease(item.id)}
  disabled={actionLoading === item.id}
- className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-[var(--success)]/20 hover:bg-[var(--success)]/30 border border-[var(--success)]/20 text-[var(--success)] text-[10px] font-bold uppercase tracking-wider transition-all disabled:opacity-50"
+ className="flex-1 flex items-center justify-center gap-1 px-3 py-2.5 rounded-lg bg-[var(--success)]/20 hover:bg-[var(--success)]/30 border border-[var(--success)]/20 text-[var(--success)] text-[10px] font-bold uppercase tracking-wider transition-all disabled:opacity-50 min-h-11"
  >
  {actionLoading === item.id
  ? <Loader2 className="w-3 h-3 animate-spin" />
@@ -224,7 +224,7 @@ export default function EscrowPanel({ conversationId, currentUserId: _currentUse
  <button
  onClick={() => handleReaderReply(item.id)}
  disabled={actionLoading === item.id}
- className="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-lg bg-[var(--purple-accent)]/20 hover:bg-[var(--purple-accent)]/30 border border-[var(--purple-accent)]/20 text-[var(--purple-accent)] text-[10px] font-bold uppercase tracking-wider transition-all disabled:opacity-50"
+ className="flex-1 flex items-center justify-center gap-1 px-3 py-2.5 rounded-lg bg-[var(--purple-accent)]/20 hover:bg-[var(--purple-accent)]/30 border border-[var(--purple-accent)]/20 text-[var(--purple-accent)] text-[10px] font-bold uppercase tracking-wider transition-all disabled:opacity-50 min-h-11"
  >
  {actionLoading === item.id
  ? <Loader2 className="w-3 h-3 animate-spin" />

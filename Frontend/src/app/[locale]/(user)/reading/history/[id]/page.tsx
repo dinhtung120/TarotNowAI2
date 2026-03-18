@@ -105,13 +105,13 @@ export default function HistoryDetailPage() {
  };
 
  return (
- <div className="max-w-[100rem] mx-auto px-6 pt-8 pb-32 font-sans relative">
+ <div className="max-w-[100rem] mx-auto px-4 sm:px-6 pt-8 pb-32 font-sans relative">
  {/* Header Section */}
- <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
+ <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12 sm:mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
  <div className="flex flex-col gap-6">
  <button
  onClick={() => router.push("/reading/history")}
- className="group flex items-center gap-2 text-[var(--text-secondary)] hover:tn-text-primary transition-all w-fit"
+ className="group flex items-center gap-2 text-[var(--text-secondary)] hover:tn-text-primary transition-all w-fit min-h-11 px-2 rounded-xl hover:tn-surface-soft"
  >
  <div className="w-8 h-8 rounded-full tn-surface flex items-center justify-center group-hover:bg-[var(--purple-accent)] group-hover:tn-text-ink transition-all">
  <ArrowLeft className="w-4 h-4" />
@@ -123,10 +123,10 @@ export default function HistoryDetailPage() {
  <Sparkles className="w-8 h-8 text-[var(--warning)]" />
  </div>
  <div>
- <h1 className="text-4xl md:text-5xl font-black tracking-tighter tn-text-primary uppercase italic">
+ <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter tn-text-primary uppercase italic">
  {detail ? getSpreadName(detail.spreadType) : "..."}
  </h1>
- <div className="flex items-center gap-4 mt-3 text-[var(--text-secondary)] font-medium text-xs">
+ <div className="flex flex-wrap items-center gap-3 mt-3 text-[var(--text-secondary)] font-medium text-xs">
  <span className="flex items-center gap-1.5 px-3 py-1.5 tn-surface rounded-full">
  <Calendar className="w-3.5 h-3.5" />
  {detail ? new Date(detail.createdAt).toLocaleDateString(locale) : "..."}

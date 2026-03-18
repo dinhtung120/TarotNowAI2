@@ -90,7 +90,7 @@ export default function InboxPage() {
 	};
 
 	return (
-			<div className="max-w-4xl mx-auto px-6 pt-8 pb-32 space-y-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000">
+			<div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8 pb-32 space-y-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000">
 				{/* Header */}
 				<SectionHeader
 					tag={t('inbox.tag')}
@@ -103,12 +103,12 @@ export default function InboxPage() {
 				<div className="grid grid-cols-1 gap-6">
 
 					{/* Role Tabs */}
-					<div className="flex gap-2 mb-2">
+					<div className="flex flex-wrap gap-2 mb-2">
 						{(['user', 'reader'] as const).map((r) => (
 							<button
 								key={r}
 								onClick={() => setRole(r)}
-								className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${role === r
+								className={`flex-1 sm:flex-none min-w-[9rem] px-4 sm:px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border min-h-11 ${role === r
 										? 'bg-[var(--purple-accent)]/10 border-[var(--purple-accent)]/30 text-[var(--purple-accent)]'
 										: 'bg-white/[0.02] border-white/5 text-[var(--text-secondary)] hover:border-white/10 hover:bg-white/[0.04]'
 									}`}
@@ -153,7 +153,7 @@ export default function InboxPage() {
 											href={`/chat/${conv.id}`}
 											className="w-full group block"
 										>
-										<GlassCard className="flex items-center gap-5 !p-5 hover:border-[var(--purple-accent)]/30 hover:bg-white/[0.03] transition-all duration-300 text-left">
+										<GlassCard className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 !p-4 sm:!p-5 hover:border-[var(--purple-accent)]/30 hover:bg-white/[0.03] transition-all duration-300 text-left">
 											{/* Avatar */}
 											<div className="relative flex-shrink-0">
 												<div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[var(--purple-accent)]/20 to-[var(--purple-accent)]/5 border border-[var(--purple-accent)]/20 flex items-center justify-center text-lg font-black text-[var(--purple-accent)] shadow-[0_0_15px_rgba(168,85,247,0.1)] group-hover:scale-105 transition-transform duration-300">
@@ -169,7 +169,7 @@ export default function InboxPage() {
 
 											{/* Content */}
 											<div className="flex-1 min-w-0 space-y-1.5">
-												<div className="flex items-center justify-between">
+												<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
 													<span className="text-base font-black text-white truncate group-hover:text-[var(--purple-accent)] transition-colors">
 														{role === 'user' ? t('inbox.list_label_reader') : t('inbox.list_label_user')}{" "}
 														{otherUserId.substring(0, 8)}...
@@ -187,7 +187,7 @@ export default function InboxPage() {
 												</div>
 											</div>
 
-											<div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-[var(--purple-accent)]/10 transition-colors shrink-0">
+											<div className="hidden sm:flex w-10 h-10 rounded-full bg-white/5 items-center justify-center group-hover:bg-[var(--purple-accent)]/10 transition-colors shrink-0">
 												<ChevronRight className="w-5 h-5 text-[var(--text-tertiary)] group-hover:text-[var(--purple-accent)] transition-colors" />
 											</div>
 										</GlassCard>

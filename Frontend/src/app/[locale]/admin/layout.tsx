@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import {
  Users,
  CreditCard,
@@ -12,7 +12,9 @@ import {
  LogOut,
  ScrollText,
  Banknote,
- Scale
+ Scale,
+ Menu,
+ X,
 } from "lucide-react";
 import AstralBackground from "@/components/layout/AstralBackground";
 import { Link, usePathname } from "@/i18n/routing";
@@ -25,6 +27,7 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
  const t = useTranslations("Admin");
  const pathname = usePathname();
+ const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
  const menuItems = [
  { name: t("layout.menu.overview"), href: `/admin`, icon: LayoutDashboard },
@@ -44,16 +47,19 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
  return pathname.startsWith(href);
  };
 
- return (
- <div className="flex h-screen bg-[var(--bg-void)] text-[var(--text-primary)] overflow-hidden">
- {/* ##### PREMIUM BACKGROUND SYSTEM ##### */}
- {/* Sử dụng component AstralBackground chung thay vì copy-paste */}
- <AstralBackground variant="subtle" />
+ useEffect(() => {
+ if (!mobileNavOpen) return undefined;
+ const previousOverflow = document.body.style.overflow;
+ document.body.style.overflow = "hidden";
+ return () => {
+ document.body.style.overflow = previousOverflow;
+ };
+ }, [mobileNavOpen]);
 
- {/* Sidebar — Dark Surface Navigation */}
- <aside className="relative z-20 w-72 h-full bg-[var(--bg-glass)] border-r border-[var(--border-subtle)] flex flex-col shadow-2xl">
+ const renderSidebarContent = (mobile = false) => (
+ <>
  {/* Header Logo Admin */}
- <div className="p-8 mb-4">
+ <div className="p-6 sm:p-8 mb-2 sm:mb-4">
  <div className="flex items-center gap-3 group px-4 py-3 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-default)] shadow-[var(--shadow-card)] overflow-hidden relative">
  <div className="absolute inset-0 bg-gradient-to-r from-[var(--purple-accent)]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
  <div className="w-10 h-10 rounded-xl bg-[var(--purple-accent)]/10 flex items-center justify-center border border-[var(--purple-accent)]/20 group-hover:scale-110 transition-transform duration-500">
@@ -80,8 +86,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
  <Link
  key={item.href}
  href={item.href}
+ onClick={() => {
+ if (mobile) setMobileNavOpen(false);
+ }}
  className={[
- "group flex items-center justify-between px-6 py-4 rounded-2xl transition-all duration-300 relative overflow-hidden",
+ "group flex items-center justify-between px-5 sm:px-6 py-4 rounded-2xl transition-all duration-300 relative overflow-hidden",
  active
  ? "bg-[var(--bg-elevated)] text-[var(--text-ink)] shadow-[var(--glow-purple-sm)] border border-[var(--border-hover)]"
  : "hover:bg-[var(--bg-surface-hover)] hover:text-[var(--text-ink)] text-[var(--text-secondary)] border border-transparent"
@@ -120,20 +129,71 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
  </nav>
 
  {/* Footer Exit Portal */}
- <div className="p-8 border-t border-[var(--border-subtle)]">
+ <div className="p-6 sm:p-8 border-t border-[var(--border-subtle)]">
  <Link
  href={`/`}
+ onClick={() => {
+ if (mobile) setMobileNavOpen(false);
+ }}
  className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] hover:bg-[var(--danger)]/10 hover:border-[var(--danger)]/20 hover:text-[var(--danger)] transition-all group"
  >
  <LogOut className="w-5 h-5 text-[var(--text-secondary)] group-hover:text-[var(--danger)] transition-colors" />
  <span className="text-[10px] font-black uppercase tracking-widest">{t("layout.exit_portal")}</span>
  </Link>
  </div>
+ </>
+ );
+
+ return (
+ <div className="flex h-dvh bg-[var(--bg-void)] text-[var(--text-primary)] overflow-hidden">
+ {/* ##### PREMIUM BACKGROUND SYSTEM ##### */}
+ {/* Sử dụng component AstralBackground chung thay vì copy-paste */}
+ <AstralBackground variant="subtle" />
+
+ {/* Sidebar — Desktop */}
+ <aside className="relative z-20 hidden lg:flex w-72 h-full bg-[var(--bg-glass)] border-r border-[var(--border-subtle)] flex-col shadow-2xl">
+ {renderSidebarContent()}
  </aside>
 
+ {/* Sidebar — Mobile Drawer */}
+ {mobileNavOpen && (
+ <div className="lg:hidden fixed inset-0 z-40">
+ <button
+ type="button"
+ className="absolute inset-0 bg-black/45"
+ onClick={() => setMobileNavOpen(false)}
+ aria-label="Close menu"
+ />
+ <aside className="absolute left-0 top-0 h-full w-[min(22rem,86vw)] bg-[var(--bg-glass)] border-r border-[var(--border-subtle)] shadow-2xl flex flex-col">
+ <div className="px-4 pt-4">
+ <button
+ type="button"
+ onClick={() => setMobileNavOpen(false)}
+ className="ml-auto flex h-11 w-11 items-center justify-center rounded-xl tn-surface hover:tn-surface-strong tn-text-secondary hover:tn-text-primary transition-colors"
+ aria-label="Close menu"
+ >
+ <X className="w-4 h-4" />
+ </button>
+ </div>
+ {renderSidebarContent(true)}
+ </aside>
+ </div>
+ )}
+
  {/* Main Content */}
- <main className="relative z-10 flex-1 overflow-y-auto custom-scrollbar">
- <div className="min-h-full p-8 md:p-12 animate-in fade-in duration-700">
+ <main className="relative z-10 flex-1 min-w-0 min-h-0 overflow-y-auto custom-scrollbar">
+ <div className="lg:hidden sticky top-0 z-30 bg-[var(--bg-glass)]/95 backdrop-blur border-b border-[var(--border-subtle)] px-4 py-3 flex items-center justify-between">
+ <button
+ type="button"
+ onClick={() => setMobileNavOpen(true)}
+ className="inline-flex items-center gap-2 px-3 py-2 rounded-xl tn-surface hover:tn-surface-strong tn-text-secondary hover:tn-text-primary transition-colors min-h-11"
+ >
+ <Menu className="w-4 h-4" />
+ <span className="text-[10px] font-black uppercase tracking-widest">{t("layout.section_main")}</span>
+ </button>
+ <span className="text-[11px] font-black uppercase tracking-widest tn-text-muted">{t("layout.title")}</span>
+ </div>
+ <div className="min-h-full p-4 sm:p-6 md:p-8 lg:p-12 animate-in fade-in duration-700">
  {children}
  </div>
  </main>

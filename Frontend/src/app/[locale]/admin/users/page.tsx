@@ -281,14 +281,14 @@ export default function AdminUsersPage() {
  setSelectedUser(u);
  setIsAddBalanceOpen(true);
  }}
- className="p-2 rounded-xl bg-[var(--purple-accent)]/10 border border-[var(--purple-accent)]/20 text-[var(--purple-accent)] hover:bg-[var(--purple-accent)] hover:tn-text-primary transition-all shadow-md group border-transparent"
+ className="p-2.5 min-h-11 min-w-11 rounded-xl bg-[var(--purple-accent)]/10 border border-[var(--purple-accent)]/20 text-[var(--purple-accent)] hover:bg-[var(--purple-accent)] hover:tn-text-primary transition-all shadow-md group border-transparent"
  title={t("users.actions.add_balance_title")}
  >
  <Plus className="w-4 h-4" />
  </button>
  <button
  onClick={() => setConfirmModal({ isOpen: true, user: u, isLockAction: true })}
- className={`p-2 rounded-xl border transition-all shadow-md ${u.isLocked
+ className={`p-2.5 min-h-11 min-w-11 rounded-xl border transition-all shadow-md ${u.isLocked
  ? "bg-[var(--success)]/10 border-[var(--success)]/20 text-[var(--success)] hover:bg-[var(--success)] hover:tn-text-primary"
  : "bg-[var(--danger)]/10 border-[var(--danger)]/20 text-[var(--danger)] hover:bg-[var(--danger)] hover:tn-text-primary"
  }`}
@@ -314,7 +314,7 @@ export default function AdminUsersPage() {
  <button
  onClick={() => setPage(p => Math.max(1, p - 1))}
  disabled={page === 1}
- className="p-2.5 rounded-xl tn-panel hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-md"
+ className="p-2.5 min-h-11 min-w-11 rounded-xl tn-panel hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-md"
  >
  <ChevronLeft className="w-4 h-4 text-[var(--text-secondary)]" />
  </button>
@@ -322,7 +322,7 @@ export default function AdminUsersPage() {
  <button
  onClick={() => setPage(p => p + 1)}
  disabled={page * 10 >= totalCount}
- className="p-2.5 rounded-xl tn-panel hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-md"
+ className="p-2.5 min-h-11 min-w-11 rounded-xl tn-panel hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-md"
  >
  <ChevronRight className="w-4 h-4 text-[var(--text-secondary)]" />
  </button>

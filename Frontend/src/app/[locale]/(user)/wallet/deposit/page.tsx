@@ -125,10 +125,10 @@ export default function DepositPage() {
       .sort((a, b) => b.bonusDiamond - a.bonusDiamond)[0] ?? null;
 
   return (
-      <div className="max-w-5xl mx-auto px-6 pt-8 pb-32 space-y-10 w-full">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 pb-32 space-y-10 w-full">
         <button
           onClick={() => router.push("/wallet")}
-          className="group flex items-center gap-2 text-[var(--text-secondary)] hover:tn-text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] w-fit"
+          className="group flex items-center gap-2 text-[var(--text-secondary)] hover:tn-text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] w-fit min-h-11 px-2 rounded-xl hover:tn-surface-soft"
         >
           <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
           {t("deposit.back_to_wallet")}
@@ -144,7 +144,7 @@ export default function DepositPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           <div className="lg:col-span-7 space-y-6">
-            <GlassCard className="flex items-center justify-between gap-6">
+            <GlassCard className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-xl bg-[var(--purple-accent)]/10 flex items-center justify-center border border-[var(--purple-accent)]/20">
                   <Gem className="w-5 h-5 text-[var(--purple-accent)]" />
@@ -158,7 +158,7 @@ export default function DepositPage() {
                   </div>
                 </div>
               </div>
-              <div className="text-[10px] font-black uppercase tracking-widest tn-text-muted">
+              <div className="text-[10px] font-black uppercase tracking-widest tn-text-muted self-start sm:self-auto">
                 {EXCHANGE_RATE.toLocaleString(locale)} VND / 💎
               </div>
             </GlassCard>
@@ -169,7 +169,7 @@ export default function DepositPage() {
                 {t("deposit.select_title")}
               </h3>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {PRESET_AMOUNTS_VND.map((v) => {
                   const selected = !isCustom && selectedAmount === v;
                   const promo = promoForPreset(v);

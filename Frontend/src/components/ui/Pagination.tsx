@@ -58,13 +58,13 @@ export default function Pagination({
  return (
  <div
  className={[
- "flex items-center justify-between px-6 py-4",
+ "flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-4",
  "border-t border-[var(--border-subtle)]",
  className,
  ].join(" ")}
 	 >
 	 {/* Text indicator — "Trang X / Y" */}
-	 <span className="text-[9px] font-black uppercase tracking-widest tn-text-muted">
+	 <span className="text-[9px] font-black uppercase tracking-widest tn-text-muted text-center sm:text-left">
 	 {t("page_info", { current: currentPage, total: totalPages })}
 	 </span>
 
@@ -73,7 +73,7 @@ export default function Pagination({
  <button
  onClick={() => onPageChange(currentPage - 1)}
 	 disabled={!canGoPrev}
-	 className="p-2 rounded-xl bg-[var(--bg-glass)] hover:bg-[var(--bg-glass-hover)] disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-[var(--border-subtle)] cursor-pointer"
+	 className="p-2.5 min-h-11 min-w-11 rounded-xl bg-[var(--bg-glass)] hover:bg-[var(--bg-glass-hover)] disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-[var(--border-subtle)] cursor-pointer"
 	 aria-label={t("prev")}
 	 >
  <ChevronLeft className="w-4 h-4 tn-text-secondary" />
@@ -82,7 +82,7 @@ export default function Pagination({
  <button
  onClick={() => onPageChange(currentPage + 1)}
 	 disabled={!canGoNext}
-	 className="p-2 rounded-xl bg-[var(--bg-glass)] hover:bg-[var(--bg-glass-hover)] disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-[var(--border-subtle)] cursor-pointer"
+	 className="p-2.5 min-h-11 min-w-11 rounded-xl bg-[var(--bg-glass)] hover:bg-[var(--bg-glass-hover)] disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-[var(--border-subtle)] cursor-pointer"
 	 aria-label={t("next")}
 	 >
  <ChevronRight className="w-4 h-4 tn-text-secondary" />

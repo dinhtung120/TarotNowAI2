@@ -10,7 +10,6 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { getAccessToken } from "@/lib/auth-client";
 import { Ticket, X, Trash2, CheckCircle2, Power, AlertTriangle,
  Coins,
  Sparkles,
@@ -19,16 +18,16 @@ import { Ticket, X, Trash2, CheckCircle2, Power, AlertTriangle,
 } from "lucide-react";
 import { SectionHeader, GlassCard, Button } from "@/components/ui";
 import toast from 'react-hot-toast';
-import { API_BASE_URL } from "@/lib/api";
 import { useLocale, useTranslations } from "next-intl";
+import {
+ listPromotions as listPromotionsAction,
+ createPromotion as createPromotionAction,
+ updatePromotion as updatePromotionAction,
+ deletePromotion as deletePromotionAction,
+ type DepositPromotion,
+} from "@/actions/promotionActions";
 
-interface Promotion {
- id: string;
- minAmountVnd: number;
- bonusDiamond: number; // Backend property name (representing Gold as per new rules)
- isActive: boolean;
- createdAt: string;
-}
+type Promotion = DepositPromotion;
 
 export default function AdminPromotionsPage() {
  const t = useTranslations("Admin");
@@ -43,30 +42,18 @@ export default function AdminPromotionsPage() {
  const [deleteId, setDeleteId] = useState<string | null>(null);
  const [submitting, setSubmitting] = useState(false);
 
- const baseUrl = API_BASE_URL;
-
  const fetchPromotions = useCallback(async () => {
  setLoading(true);
  try {
- const token = getAccessToken();
- const res = await fetch(`${baseUrl}/admin/promotions`, {
- headers: { "Content-Type": "application/json",
- "Authorization": `Bearer ${token}`
- }
- });
-
- if (!res.ok) {
- throw new Error("Failed to fetch");
- }
-
- const data = await res.json();
- setPromotions(data);
+ const data = await listPromotionsAction(false);
+ setPromotions(data ?? []);
  } catch (err) {
  console.error(err);
+ setPromotions([]);
  } finally {
  setLoading(false);
  }
- }, [baseUrl]);
+ }, []);
 
  useEffect(() => {
  fetchPromotions();
@@ -76,16 +63,8 @@ export default function AdminPromotionsPage() {
  e.preventDefault();
  setSubmitting(true);
  try {
- const token = getAccessToken();
- const res = await fetch(`${baseUrl}/admin/promotions`, {
- method: "POST",
- headers: { "Content-Type": "application/json",
- "Authorization": `Bearer ${token}`
- },
- body: JSON.stringify({ minAmountVnd: minAmount, bonusDiamond: bonusGold, // Mapping UI Gold to backend field
- isActive: true })
- });
- if (res.ok) {
+ const ok = await createPromotionAction(minAmount, bonusGold);
+ if (ok) {
  setIsCreating(false);
  setMinAmount(0);
  setBonusGold(0);
@@ -103,20 +82,12 @@ export default function AdminPromotionsPage() {
 
  const handleToggle = async (promotion: Promotion) => {
  try {
- const token = getAccessToken();
- const res = await fetch(`${baseUrl}/admin/promotions/${promotion.id}`, {
- method: "PUT",
- headers: {
- "Content-Type": "application/json",
- "Authorization": `Bearer ${token}`
- },
- body: JSON.stringify({
+ const ok = await updatePromotionAction(promotion.id, {
  minAmountVnd: promotion.minAmountVnd,
  bonusDiamond: promotion.bonusDiamond,
- isActive: !promotion.isActive
- })
+ isActive: !promotion.isActive,
  });
- if (res.ok) {
+ if (ok) {
  toast.success(t("promotions.toast.toggle_success"));
  await fetchPromotions();
  } else {
@@ -130,20 +101,13 @@ export default function AdminPromotionsPage() {
  const handleDelete = async () => {
  if (!deleteId) return;
  try {
- const token = getAccessToken();
- const res = await fetch(`${baseUrl}/admin/promotions/${deleteId}`, {
- method: "DELETE",
- headers: {
- "Authorization": `Bearer ${token}`
- }
- });
- if (res.ok) {
+ const ok = await deletePromotionAction(deleteId);
+ if (ok) {
  setDeleteId(null);
  toast.success(t("promotions.toast.delete_success"));
  await fetchPromotions();
  } else {
- const errorData = await res.json().catch(() => ({}));
- toast.error(errorData.message || t("promotions.toast.delete_failed"));
+ toast.error(t("promotions.toast.delete_failed"));
  }
  } catch {
  toast.error(t("promotions.toast.network_error"));
@@ -239,7 +203,69 @@ export default function AdminPromotionsPage() {
 
  {/* List Section */}
  <GlassCard className="!p-0 !rounded-[2.5rem] overflow-hidden text-left">
- <div className="overflow-x-auto custom-scrollbar">
+ <div className="md:hidden p-4 sm:p-6 space-y-3">
+ {loading ? (
+ <div className="py-16 text-center">
+ <div className="flex flex-col items-center justify-center space-y-4">
+ <Loader2 className="w-8 h-8 animate-spin text-[var(--warning)]" />
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("promotions.states.loading")}</span>
+ </div>
+ </div>
+ ) : promotions.length === 0 ? (
+ <div className="py-16 text-center">
+ <div className="flex flex-col items-center justify-center space-y-4">
+ <div className="w-16 h-16 rounded-full tn-panel-soft flex items-center justify-center">
+ <Ticket className="w-8 h-8 text-[var(--text-tertiary)] opacity-50" />
+ </div>
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">{t("promotions.states.empty")}</span>
+ </div>
+ </div>
+ ) : (
+ promotions.map((p) => (
+ <div key={p.id} className="rounded-2xl tn-panel-soft border tn-border-soft p-4 space-y-4">
+ <div className="flex items-center justify-between gap-3">
+ <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">
+ {t("promotions.table.heading_condition")}
+ </div>
+ <div className="text-[11px] font-black tn-text-primary uppercase tracking-tighter drop-shadow-sm text-right">
+ {t("promotions.row.condition_from", { amount: new Intl.NumberFormat(locale, { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(p.minAmountVnd) })}
+ </div>
+ </div>
+ <div className="flex items-center justify-between gap-3">
+ <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">
+ {t("promotions.table.heading_reward")}
+ </div>
+ <div className="flex items-center gap-2 text-sm font-black text-[var(--warning)] italic drop-shadow-sm">
+ <Coins className="w-4 h-4" />
+ +{p.bonusDiamond.toLocaleString(locale)}
+ </div>
+ </div>
+ <div className="flex items-center gap-2">
+ <button
+ onClick={() => handleToggle(p)}
+ className={`
+ relative inline-flex items-center justify-center gap-2 px-4 py-2.5 min-h-11 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all shadow-inner flex-1
+ ${p.isActive ? "bg-[var(--warning)]/10 border-[var(--warning)]/30 text-[var(--warning)] shadow-md hover:bg-[var(--warning)]/20" : "tn-panel text-[var(--text-secondary)] hover:tn-surface hover:tn-text-primary"
+ }
+ `}
+ >
+ <Power className="w-3 h-3" />
+ {p.isActive ? t("promotions.status.active") : t("promotions.status.inactive")}
+ </button>
+ <button
+ onClick={() => setDeleteId(p.id)}
+ className="p-3 min-h-11 min-w-11 rounded-xl text-[var(--text-secondary)] tn-panel-soft hover:tn-text-primary hover:bg-[var(--danger)] hover:border-transparent transition-all shadow-sm group"
+ aria-label={t("promotions.delete_modal.delete")}
+ >
+ <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+ </button>
+ </div>
+ </div>
+ ))
+ )}
+ </div>
+
+ <div className="hidden md:block overflow-x-auto custom-scrollbar">
  <table className="w-full text-left">
  <thead>
  <tr className="border-b tn-border-soft tn-surface">
@@ -293,7 +319,7 @@ export default function AdminPromotionsPage() {
  <button
  onClick={() => handleToggle(p)}
  className={`
- relative inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all shadow-inner
+ relative inline-flex items-center gap-2 px-4 py-2.5 min-h-11 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all shadow-inner
  ${p.isActive ? "bg-[var(--warning)]/10 border-[var(--warning)]/30 text-[var(--warning)] shadow-md hover:bg-[var(--warning)]/20" : "tn-panel text-[var(--text-secondary)] hover:tn-surface hover:tn-text-primary"
  }
  `}
@@ -305,7 +331,7 @@ export default function AdminPromotionsPage() {
  <td className="px-8 py-6 text-right">
  <button
  onClick={() => setDeleteId(p.id)}
- className="p-3 rounded-xl text-[var(--text-secondary)] tn-panel-soft hover:tn-text-primary hover:bg-[var(--danger)] hover:border-transparent transition-all shadow-sm group"
+ className="p-3 min-h-11 min-w-11 rounded-xl text-[var(--text-secondary)] tn-panel-soft hover:tn-text-primary hover:bg-[var(--danger)] hover:border-transparent transition-all shadow-sm group"
  >
  <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
  </button>

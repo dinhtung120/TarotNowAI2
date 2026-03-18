@@ -45,7 +45,7 @@ export default function WalletPage() {
  };
 
  return (
- <div className="max-w-5xl mx-auto px-6 pt-8 pb-32 font-sans relative">
+ <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 pb-32 font-sans relative">
  {/* Header Section */}
  <SectionHeader
  tag={t("overview.tag")}
@@ -54,7 +54,7 @@ export default function WalletPage() {
  subtitle={t("overview.subtitle")}
  action={
  <Button variant="primary" onClick={() => router.push('/wallet/deposit')}
- className="shadow-2xl md:ml-4"
+ className="w-full sm:w-auto shadow-2xl"
  >
  <Plus className="w-4 h-4 mr-2" />
  {t("overview.deposit_cta")}
@@ -66,7 +66,7 @@ export default function WalletPage() {
  {/* Balance Cards - Glassmorphism */}
  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
  {/* Diamond Card */}
- <GlassCard className="relative group overflow-hidden !p-10 flex flex-col justify-between min-h-[16rem]">
+ <GlassCard className="relative group overflow-hidden !p-6 sm:!p-10 flex flex-col justify-between min-h-[13.5rem] sm:min-h-[16rem]">
  <div className="absolute inset-0 bg-gradient-to-br from-[var(--purple-accent)]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
  <div className="absolute top-0 right-0 p-8 opacity-5 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12 pointer-events-none">
  <Gem className="w-40 h-40 text-[var(--purple-accent)]" />
@@ -82,7 +82,7 @@ export default function WalletPage() {
  </div>
 
  <div className="space-y-1 relative z-10 mt-8">
- <div className="text-5xl md:text-6xl font-black tn-text-primary italic tracking-tighter transition-transform duration-700 group-hover:translate-x-2">
+ <div className="text-4xl sm:text-5xl md:text-6xl font-black tn-text-primary italic tracking-tighter transition-transform duration-700 group-hover:translate-x-2">
  {balance?.diamondBalance.toLocaleString(locale) ?? '...'}
  </div>
  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] group-hover:text-[var(--text-secondary)] transition-colors">
@@ -93,7 +93,7 @@ export default function WalletPage() {
  </GlassCard>
 
  {/* Gold Card */}
- <GlassCard className="relative group overflow-hidden !p-10 flex flex-col justify-between min-h-[16rem]">
+ <GlassCard className="relative group overflow-hidden !p-6 sm:!p-10 flex flex-col justify-between min-h-[13.5rem] sm:min-h-[16rem]">
  <div className="absolute inset-0 bg-gradient-to-br from-[var(--warning)]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
  <div className="absolute top-0 right-0 p-8 opacity-5 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12 pointer-events-none">
  <Coins className="w-40 h-40 text-[var(--warning)]" />
@@ -110,7 +110,7 @@ export default function WalletPage() {
  </div>
 
  <div className="space-y-1 relative z-10 mt-8">
- <div className="text-5xl md:text-6xl font-black tn-text-primary italic tracking-tighter transition-transform duration-700 group-hover:translate-x-2">
+ <div className="text-4xl sm:text-5xl md:text-6xl font-black tn-text-primary italic tracking-tighter transition-transform duration-700 group-hover:translate-x-2">
  {balance?.goldBalance.toLocaleString(locale) ?? '...'}
  </div>
  <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] group-hover:text-[var(--text-secondary)] transition-colors">
@@ -127,9 +127,9 @@ export default function WalletPage() {
  <Clock className="w-5 h-5 text-[var(--purple-accent)]" />
  {t("overview.ledger_title")}
  </h2>
- <div className="flex items-center gap-2 px-4 py-2 border tn-border focus-within:border-[var(--purple-accent)]/50 transition-all duration-300 rounded-xl tn-overlay ">
+ <div className="flex items-center gap-2 px-4 py-2 border tn-border focus-within:border-[var(--purple-accent)]/50 transition-all duration-300 rounded-xl tn-overlay min-h-11">
  <Search className="w-4 h-4 tn-text-muted" />
- <input type="text" placeholder={t("overview.search_placeholder")} className="bg-transparent border-none text-[10px] font-black uppercase tracking-widest tn-text-primary w-full sm:w-48 placeholder:tn-text-muted" />
+ <input type="text" placeholder={t("overview.search_placeholder")} className="bg-transparent border-none text-[10px] font-black uppercase tracking-widest tn-text-primary w-full sm:w-48 placeholder:tn-text-muted min-h-11 py-2" />
  </div>
  </div>
 

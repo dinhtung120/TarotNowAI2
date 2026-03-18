@@ -71,7 +71,7 @@ export default function ReadingSetupPage() {
  };
 
  return (
- <div className="max-w-4xl mx-auto px-6 pt-10 pb-20 font-sans">
+ <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-10 pb-20 font-sans">
  <SectionHeader title={t('title')}
  subtitle={t('subtitle')}
  tag={t("tag")}
@@ -155,7 +155,7 @@ export default function ReadingSetupPage() {
  size="lg"
  isLoading={isInitializing}
  rightIcon={!isInitializing && <Zap className="w-5 h-5 ml-2" />}
- className="px-12 rounded-full font-black tracking-widest uppercase shadow-[0_10px_40px_var(--c-255-255-255-15)] hover:shadow-[0_15px_50px_var(--c-255-255-255-25)]"
+ className="w-full sm:w-auto rounded-full font-black tracking-widest uppercase shadow-[0_10px_40px_var(--c-255-255-255-15)] hover:shadow-[0_15px_50px_var(--c-255-255-255-25)]"
  >
  {isInitializing ? t('preparing') : t('cta_draw')}
  </Button>

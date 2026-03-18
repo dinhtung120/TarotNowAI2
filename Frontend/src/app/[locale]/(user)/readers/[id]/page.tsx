@@ -100,7 +100,7 @@ export default function ReaderProfilePage() {
  };
 
  return (
- <div className="max-w-3xl mx-auto px-6 pt-8 pb-32 space-y-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000">
+ <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-8 pb-32 space-y-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000">
  {/* Back Button */}
  <button
  onClick={() => router.push('/readers')}
@@ -118,7 +118,7 @@ export default function ReaderProfilePage() {
  <Sparkles size={240} className="text-[var(--purple-accent)]" />
  </div>
 
- <div className="relative z-10 p-10 md:p-14 space-y-12">
+ <div className="relative z-10 p-6 sm:p-8 md:p-14 space-y-10 md:space-y-12">
  {/* Header: Avatar + Info */}
  <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
  <div className="relative w-28 h-28 shrink-0 group">
@@ -142,7 +142,7 @@ export default function ReaderProfilePage() {
  </div>
 
  {/* Stats Row */}
- <div className="grid grid-cols-2 gap-4">
+ <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
  <div className="p-6 rounded-3xl tn-panel-soft text-center space-y-2 hover:tn-surface-strong transition-colors shadow-inner">
  <Star className="w-6 h-6 text-[var(--warning)] mx-auto mb-3" fill="currentColor" />
  <div className="text-3xl font-black tn-text-primary italic drop-shadow-md">

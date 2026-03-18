@@ -14,7 +14,7 @@ export default function TermsOfServicePage() {
  const t = useTranslations("Legal");
 
  return (
- <div className="container mx-auto px-4 py-12 max-w-4xl">
+ <div className="container mx-auto max-w-4xl px-4 pb-12 pt-20 md:pt-24">
  <h1 className="text-4xl font-extrabold tn-text-primary mb-8 text-center drop-shadow-lg">
  {t("tos_title")}
  </h1>

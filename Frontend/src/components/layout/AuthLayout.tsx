@@ -41,8 +41,8 @@ export default function AuthLayout({
  subtitle,
  children,
 }: AuthLayoutProps) {
- return (
- <div className="min-h-screen flex items-center justify-center bg-[var(--bg-void)] relative overflow-hidden font-sans">
+return (
+ <div className="min-h-dvh flex items-center justify-center bg-[var(--bg-void)] relative overflow-hidden font-sans px-4 py-10">
  {/* === DECORATIVE ORBS ===
  2 blob gradient lớn, blur mạnh, tạo ambient light.
  : hòa trộn ánh sáng, không che nội dung. */}
@@ -52,12 +52,12 @@ export default function AuthLayout({
  {/* === CONTENT CARD ===
  Glassmorphism card chứa toàn bộ form.
  max-w-md: tối ưu cho form fields, không quá rộng. */}
- <div className="relative z-10 w-full max-w-md p-8 bg-[var(--bg-glass)] border border-[var(--border-default)] shadow-[var(--shadow-elevated)] rounded-3xl ">
+ <div className="relative z-10 w-full max-w-md p-6 sm:p-8 bg-[var(--bg-glass)] border border-[var(--border-default)] shadow-[var(--shadow-elevated)] rounded-3xl ">
  {/* Logo link về Home */}
  <div className="text-center mb-3">
  <Link
  href="/"
- className="inline-block text-2xl font-black italic tracking-tighter lunar-metallic-text mb-1"
+ className="inline-flex items-center justify-center min-h-11 px-1 text-2xl font-black italic tracking-tighter lunar-metallic-text mb-1"
  >
  TarotNow AI
  </Link>

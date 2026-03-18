@@ -58,19 +58,19 @@ export default async function Footer() {
  </div>
 
  {/* Navigation Links */}
- <div className="flex flex-wrap justify-center gap-6 text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em]">
- <Link href="/reading" className="hover:text-[var(--text-ink)] transition-colors">{t("links.reading")}</Link>
- <Link href="/readers" className="hover:text-[var(--text-ink)] transition-colors">{t("links.readers")}</Link>
- <Link href="/wallet" className="hover:text-[var(--text-ink)] transition-colors">{t("links.wallet")}</Link>
- <Link href="/chat" className="hover:text-[var(--text-ink)] transition-colors">{t("links.chat")}</Link>
- </div>
+<div className="flex flex-wrap justify-center gap-6 text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-[0.2em]">
+ <Link href="/reading" className="inline-flex items-center min-h-11 px-1 hover:text-[var(--text-ink)] transition-colors">{t("links.reading")}</Link>
+ <Link href="/readers" className="inline-flex items-center min-h-11 px-1 hover:text-[var(--text-ink)] transition-colors">{t("links.readers")}</Link>
+ <Link href="/wallet" className="inline-flex items-center min-h-11 px-1 hover:text-[var(--text-ink)] transition-colors">{t("links.wallet")}</Link>
+ <Link href="/chat" className="inline-flex items-center min-h-11 px-1 hover:text-[var(--text-ink)] transition-colors">{t("links.chat")}</Link>
+</div>
 
  {/* Legal Links */}
- <div className="flex flex-wrap justify-center gap-4 text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
- <Link href="/legal/tos" className="hover:text-[var(--text-secondary)] transition-colors">{t("legal.tos")}</Link>
- <Link href="/legal/privacy" className="hover:text-[var(--text-secondary)] transition-colors">{t("legal.privacy")}</Link>
- <Link href="/legal/ai-disclaimer" className="hover:text-[var(--text-secondary)] transition-colors">{t("legal.ai")}</Link>
- </div>
+<div className="flex flex-wrap justify-center gap-4 text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
+ <Link href="/legal/tos" className="inline-flex items-center min-h-11 px-1 hover:text-[var(--text-secondary)] transition-colors">{t("legal.tos")}</Link>
+ <Link href="/legal/privacy" className="inline-flex items-center min-h-11 px-1 hover:text-[var(--text-secondary)] transition-colors">{t("legal.privacy")}</Link>
+ <Link href="/legal/ai-disclaimer" className="inline-flex items-center min-h-11 px-1 hover:text-[var(--text-secondary)] transition-colors">{t("legal.ai")}</Link>
+</div>
 
  {/* Social Icons + Copyright */}
  <div className="flex flex-col items-center gap-3 pt-2">
@@ -83,7 +83,7 @@ export default async function Footer() {
  rel="noopener noreferrer"
  aria-label={label}
  title={label}
- className="w-8 h-8 rounded-full border border-[var(--border-default)] bg-[var(--bg-glass)] hover:border-[var(--border-hover)] hover:shadow-[var(--glow-purple-sm)] transition-all flex items-center justify-center cursor-pointer text-[var(--text-secondary)] hover:text-[var(--text-ink)]"
+ className="w-11 h-11 rounded-full border border-[var(--border-default)] bg-[var(--bg-glass)] hover:border-[var(--border-hover)] hover:shadow-[var(--glow-purple-sm)] transition-all flex items-center justify-center cursor-pointer text-[var(--text-secondary)] hover:text-[var(--text-ink)]"
  >
  <Icon className="w-3.5 h-3.5" />
  </a>

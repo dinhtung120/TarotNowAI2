@@ -91,7 +91,7 @@ export default function AdminReaderRequestsPage() {
  };
 
  return (
- <div className="max-w-5xl mx-auto px-6 py-16 space-y-8 animate-in fade-in duration-700">
+ <div className="max-w-5xl mx-auto px-4 sm:px-6 py-16 space-y-8 animate-in fade-in duration-700">
  {/* Header */}
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
  <SectionHeader
@@ -143,7 +143,7 @@ export default function AdminReaderRequestsPage() {
  <button
  key={tab.value}
  onClick={() => { setStatusFilter(tab.value); setPage(1); }}
- className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-inner ${
+ className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-inner min-h-11 ${
  statusFilter === tab.value
  ? tab.activeClass
  : 'tn-panel-soft text-[var(--text-secondary)] hover:tn-text-primary hover:tn-surface'

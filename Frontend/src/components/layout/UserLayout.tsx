@@ -26,14 +26,14 @@ interface UserLayoutProps {
 
 export default function UserLayout({ children }: UserLayoutProps) {
  return (
- <div className="flex flex-col h-screen bg-[var(--bg-void)] text-[var(--text-primary)] overflow-hidden relative">
+ <div className="flex min-h-dvh flex-col bg-[var(--bg-void)] text-[var(--text-primary)] overflow-hidden relative">
  <RoutePrefetcher />
  <AstralBackground variant="subtle" particleCount={6} />
  {/* Phần lưới bên dưới Navbar (Navbar render ở app/[locale]/layout.tsx).
  Cách top bằng `pt-16` (thay đổi tùy breakpoint) để không bị Navbar đè lên content.
  h-screen - pt-16 = flex-1 (chiều cao còn lại).
  */}
- <div className="flex flex-1 pt-14 md:pt-16 overflow-hidden">
+ <div className="flex flex-1 min-h-0 pt-14 md:pt-16 overflow-hidden">
  {/*
  Sidebar bên trái (Desktop only).
  Tự động ẩn trên mobile nhờ w-0/hidden trong component của nó.
@@ -45,7 +45,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
  overflow-y-auto: phần nội dung được cuộn độc lập với sidebar.
  pb-20 (Mobile only): Chừa không gian cho BottomTabBar tránh bị che khuất.
  */}
- <main className="flex-1 relative z-10 overflow-y-auto custom-scrollbar pb-20 md:pb-0">
+ <main className="flex-1 min-h-0 relative z-10 overflow-y-auto custom-scrollbar pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0">
  {children}
  </main>
  </div>

@@ -148,10 +148,10 @@ export default function WithdrawPage() {
   };
 
   return (
-      <div className="max-w-3xl mx-auto px-6 pt-8 pb-32 space-y-12 w-full">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-8 pb-32 space-y-12 w-full">
         <button
           onClick={() => router.push("/wallet")}
-          className="group flex items-center gap-2 text-[var(--text-secondary)] hover:tn-text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] mb-8 w-fit"
+          className="group flex items-center gap-2 text-[var(--text-secondary)] hover:tn-text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] mb-8 w-fit min-h-11 px-2 rounded-xl hover:tn-surface-soft"
         >
           <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
           {t("withdraw.back_to_wallet")}
@@ -321,12 +321,12 @@ export default function WithdrawPage() {
                 return (
                   <div
                     key={item.id}
-                    className="p-6 space-y-4 hover:tn-surface transition-colors"
+                    className="p-4 sm:p-6 space-y-4 hover:tn-surface transition-colors"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="space-y-1 w-full">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                             <div className="flex items-center gap-1.5 bg-[var(--warning)]/10 px-2 py-1 rounded text-[var(--warning)] font-black text-sm italic">
                               {item.amountDiamond}{" "}
                               <Diamond className="w-3.5 h-3.5" />
@@ -341,7 +341,7 @@ export default function WithdrawPage() {
                           </div>
                           <span
                             className={[
-                              "px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border",
+                              "w-fit px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border",
                               badge.className,
                             ].join(" ")}
                           >
@@ -352,7 +352,7 @@ export default function WithdrawPage() {
                     </div>
 
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[10px] text-[var(--text-tertiary)] font-medium">
-                      <div className="flex items-center gap-1.5 uppercase tracking-widest">
+                      <div className="flex items-center gap-1.5 uppercase tracking-widest break-all">
                         <Building2 className="w-3 h-3 tn-text-muted" />
                         {item.bankName} • {item.bankAccountNumber}
                       </div>

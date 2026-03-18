@@ -174,7 +174,7 @@ export default function ProfilePage() {
  }
 
  return (
- <div className="max-w-3xl mx-auto px-6 pt-8 pb-32 space-y-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000">
+ <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-8 pb-32 space-y-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000">
  {/* Header */}
  <SectionHeader
  tag={t("title")}
@@ -186,7 +186,7 @@ export default function ProfilePage() {
  <div className="grid grid-cols-1 gap-8">
  {/* Profile Summary Card */}
  {profileData && (
- <GlassCard className="!p-8 overflow-hidden relative group">
+ <GlassCard className="!p-6 sm:!p-8 overflow-hidden relative group">
  <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8">
  {/* Avatar */}
  <div className="relative w-28 h-28 shrink-0">
@@ -263,7 +263,7 @@ export default function ProfilePage() {
  )}
 
  {/* Settings Form Section */}
- <GlassCard className="!p-8">
+ <GlassCard className="!p-6 sm:!p-8">
  <h3 className="text-lg font-black tn-text-primary italic tracking-tight mb-8 flex items-center gap-2.5">
  <Sparkles className="w-4 h-4 text-[var(--warning)]" />
  {t("settings_title")}

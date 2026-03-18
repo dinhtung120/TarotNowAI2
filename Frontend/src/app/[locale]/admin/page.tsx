@@ -61,8 +61,8 @@ export default function AdminDashboardPage() {
  promotions: promosRes?.length ?? 0,
  readings: readingCount
  });
- } catch (err) {
- console.error("Dashboard stats fetch failed:", err);
+ } catch {
+ // Keep dashboard usable when backend stats are unavailable.
  } finally {
  setLoading(false);
  }

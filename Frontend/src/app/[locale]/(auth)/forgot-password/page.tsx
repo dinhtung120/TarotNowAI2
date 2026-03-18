@@ -51,7 +51,7 @@ export default function ForgotPasswordPage() {
 
  if (success) {
  return (
- <div className="min-h-screen flex items-center justify-center bg-[var(--bg-void)] relative overflow-hidden font-sans">
+ <div className="min-h-dvh flex items-center justify-center bg-[var(--bg-void)] relative overflow-hidden font-sans px-4 py-10">
  {/* Decorative */}
  <div className="absolute top-[20%] right-[30%] w-96 h-96 bg-[var(--info-bg)] rounded-full filter blur-[120px] opacity-40 animate-pulse" />
  <GlassCard className="relative z-10 w-full max-w-md p-10 text-center animate-in zoom-in-95 duration-700">
@@ -76,7 +76,7 @@ export default function ForgotPasswordPage() {
 	 <AuthLayout title={t('forgot.title')} subtitle={t('forgot.subtitle')}
 	 >
  <div className="mb-6 flex justify-center">
-	 <Link href="/login" className="inline-flex items-center text-xs font-bold tn-text-secondary hover:tn-text-primary transition-colors group uppercase tracking-widest">
+	 <Link href="/login" className="inline-flex items-center text-xs font-bold tn-text-secondary hover:tn-text-primary transition-colors group uppercase tracking-widest min-h-11 px-2">
  <ArrowLeft className="w-4 h-4 mr-1.5 transform group-hover:-translate-x-1 transition-transform" />
 	 {t('forgot.back_to_login')}
 	 </Link>

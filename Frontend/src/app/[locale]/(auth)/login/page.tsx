@@ -119,7 +119,7 @@ export default function LoginPage() {
 	 {...register('password')}
 	 />
  <div className="flex justify-end pt-1">
-	 <Link href="/forgot-password" className="text-[11px] font-bold text-[var(--purple-accent)] hover:tn-text-primary transition-colors uppercase tracking-widest">
+	 <Link href="/forgot-password" className="inline-flex items-center min-h-11 px-1 text-[11px] font-bold text-[var(--purple-accent)] hover:tn-text-primary transition-colors uppercase tracking-widest">
 	 {t('login.forgot_password')}
 	 </Link>
  </div>
@@ -157,7 +157,7 @@ export default function LoginPage() {
 
 	 <p className="mt-8 text-center text-sm tn-text-muted font-medium">
 	 {t('login.footer_prompt')}{' '}
-	 <Link href="/register" className="text-[var(--purple-accent)] font-bold hover:tn-text-primary transition-colors">
+	 <Link href="/register" className="inline-flex items-center min-h-11 px-1 text-[var(--purple-accent)] font-bold hover:tn-text-primary transition-colors">
 	 {t('login.footer_link')}
 	 </Link>
 	 </p>

@@ -98,7 +98,7 @@ export default function VerifyEmailPage() {
 
  if (success) {
  return (
- <div className="min-h-screen flex items-center justify-center bg-[var(--bg-void)] relative overflow-hidden font-sans">
+ <div className="min-h-dvh flex items-center justify-center bg-[var(--bg-void)] relative overflow-hidden font-sans px-4 py-10">
  {/* Decorative */}
  <div className="absolute top-[20%] right-[30%] w-96 h-96 bg-[var(--success-bg)] rounded-full filter blur-[120px] opacity-40 animate-pulse" />
  <GlassCard className="relative z-10 w-full max-w-md p-10 text-center animate-in zoom-in-95 duration-700">
@@ -168,7 +168,7 @@ export default function VerifyEmailPage() {
 	 <button
  onClick={handleResendOtp}
  disabled={resendTimer > 0 || isResending}
-	 className="text-[10px] font-black uppercase tracking-widest tn-text-muted hover:tn-text-primary transition-all flex items-center justify-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed group"
+	 className="text-[10px] font-black uppercase tracking-widest tn-text-muted hover:tn-text-primary transition-all flex items-center justify-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed group min-h-11 px-3 rounded-xl hover:tn-surface-soft"
 	 >
  <RefreshCcw className={`w-3.5 h-3.5 ${isResending ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
 	 {resendTimer > 0 ? t('verify.resend_with_timer', { seconds: resendTimer }) : t('verify.resend')}

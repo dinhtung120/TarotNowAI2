@@ -111,9 +111,9 @@ const variantStyles: Record<ButtonVariant, string> = {
  * - lg: CTA lớn (Hero, form submit)
  */
 const sizeStyles: Record<ButtonSize, string> = {
- sm: "px-3 py-1.5 text-[10px] font-bold tracking-widest rounded-xl gap-1.5",
- md: "px-5 py-2.5 text-[11px] font-black tracking-widest rounded-2xl gap-2",
- lg: "px-8 py-4 text-xs font-black tracking-[0.2em] rounded-2xl gap-3",
+ sm: "px-3 py-1.5 min-h-11 text-[10px] font-bold tracking-widest rounded-xl gap-1.5",
+ md: "px-5 py-2.5 min-h-11 text-[11px] font-black tracking-widest rounded-2xl gap-2",
+ lg: "px-8 py-4 min-h-12 text-xs font-black tracking-[0.2em] rounded-2xl gap-3",
 };
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(

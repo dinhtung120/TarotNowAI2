@@ -11,6 +11,13 @@ import AstralBackground from "@/components/layout/AstralBackground";
 import { useTranslations } from "next-intl";
 
 const SHUFFLE_CARD_COUNT = 9;
+const DECK_WAVE_Y_AMPLITUDE = 6;
+const DECK_WAVE_ROTATION_AMPLITUDE = 7;
+const DECK_CARDS_PER_ROW_DESKTOP = 26; // 78 / 3 rows
+const DECK_CARDS_PER_ROW_MOBILE = 13; // 78 / 6 rows
+const DECK_HORIZONTAL_OVERLAP_FACTOR = 0.5;
+const DECK_VERTICAL_OVERLAP_FACTOR = 0.2;
+const CARD_ASPECT_HEIGHT_RATIO = 1.5; // aspect 2/3 => height = width * 1.5
 const PICKED_STACK_CARD_WIDTH = 72;
 const PICKED_STACK_CARD_HEIGHT = 108;
 const PICKED_STACK_TOP_OFFSET = 96;
@@ -60,6 +67,14 @@ const pickRandomIndexes = (availableIndexes: number[], count: number) => {
  return shuffled.slice(0, count);
 };
 
+const chunkDeckRows = (indexes: number[], cardsPerRow: number) => {
+ const rows: number[][] = [];
+ for (let i = 0; i < indexes.length; i += cardsPerRow) {
+ rows.push(indexes.slice(i, i + cardsPerRow));
+ }
+ return rows;
+};
+
 export default function ReadingSessionPage() {
  const params = useParams();
  const router = useRouter();
@@ -77,16 +92,26 @@ export default function ReadingSessionPage() {
  const [pickedCards, setPickedCards] = useState<number[]>([]);
  const [flyingCards, setFlyingCards] = useState<FlyingCard[]>([]);
  const [isShuffling, setIsShuffling] = useState(true);
+ const [isMobileViewport, setIsMobileViewport] = useState(false);
  const [shufflePaths] = useState<Record<string, string | number>[]>(generateShufflePaths);
  const flipTimersRef = useRef<number[]>([]);
  const animationTimersRef = useRef<number[]>([]);
  const flightSequenceRef = useRef(0);
  const pickedCardsRef = useRef<number[]>([]);
  const deckCardRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+ const stackAnchorRef = useRef<HTMLDivElement | null>(null);
 
  useEffect(() => {
  const timer = window.setTimeout(() => setIsShuffling(false), 2200);
  return () => clearTimeout(timer);
+ }, []);
+
+ useEffect(() => {
+ const mediaQuery = window.matchMedia("(max-width: 639px)");
+ const updateViewport = () => setIsMobileViewport(mediaQuery.matches);
+ updateViewport();
+ mediaQuery.addEventListener("change", updateViewport);
+ return () => mediaQuery.removeEventListener("change", updateViewport);
  }, []);
 
  useEffect(() => {
@@ -110,6 +135,19 @@ export default function ReadingSessionPage() {
  () => Array.from({ length: TAROT_CARD_COUNT }, (_, index) => index),
  [],
  );
+ const deckRowsDesktop = useMemo(
+ () => chunkDeckRows(deckIndexes, DECK_CARDS_PER_ROW_DESKTOP),
+ [deckIndexes],
+ );
+ const deckRowsMobile = useMemo(
+ () => chunkDeckRows(deckIndexes, DECK_CARDS_PER_ROW_MOBILE),
+ [deckIndexes],
+ );
+ const activeDeckRows = isMobileViewport ? deckRowsMobile : deckRowsDesktop;
+ const deckCardWidth = isMobileViewport
+ ? "clamp(30px, 8.4vw, 42px)"
+ : "clamp(56px, 6.8vw, 98px)";
+ const rowOverlapMargin = `calc(var(--deck-card-w) * -${DECK_VERTICAL_OVERLAP_FACTOR * CARD_ASPECT_HEIGHT_RATIO})`;
  const pickedCardSet = useMemo(() => new Set(pickedCards), [pickedCards]);
  const tarotById = useMemo(() => {
  const map = new Map<number, (typeof TAROT_DECK)[number]>();
@@ -130,6 +168,14 @@ export default function ReadingSessionPage() {
 
  const getStackTarget = (stackIndex: number) => {
  const { xOffset, yOffset, rotate } = getStackPlacement(stackIndex);
+ const anchorRect = stackAnchorRef.current?.getBoundingClientRect();
+ if (anchorRect) {
+ return {
+ x: anchorRect.left + PICKED_STACK_CARD_WIDTH / 2 + xOffset,
+ y: anchorRect.top + PICKED_STACK_CARD_HEIGHT / 2 + yOffset,
+ rotate,
+ };
+ }
  return {
  x: window.innerWidth - PICKED_STACK_RIGHT_OFFSET - PICKED_STACK_CARD_WIDTH / 2 + xOffset,
  y: PICKED_STACK_TOP_OFFSET + PICKED_STACK_CARD_HEIGHT / 2 + yOffset,
@@ -249,34 +295,34 @@ export default function ReadingSessionPage() {
  const allCardsFlipped = cards.length > 0 && flippedIndex >= cards.length - 1;
 
  return (
- <div className="min-h-screen tn-text-primary p-4 md:p-6 pt-24 overflow-x-hidden relative font-sans">
+ <div className="min-h-dvh tn-text-primary px-4 pb-4 pt-24 md:px-6 md:pb-6 md:pt-24 overflow-x-hidden relative font-sans">
  <AstralBackground variant="subtle" particleCount={8} />
  <div className="max-w-[1600px] mx-auto relative z-10 h-full">
  {/* Header - Fixed at top of the layout */}
- <div className="flex items-center justify-between mb-8 pb-4 border-b tn-border">
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b tn-border">
  <button
  onClick={() => router.push("/reading")}
- className="flex items-center tn-text-secondary hover:tn-text-primary transition"
+ className="flex items-center tn-text-secondary hover:tn-text-primary transition min-h-11 px-2 rounded-xl hover:tn-surface-soft"
  >
  <ArrowLeft className="w-5 h-5 mr-2" />
  {t("header.back_to_setup")}
  </button>
  <div className="text-right">
- <h1 className="text-2xl font-bold bg-gradient-to-r from-[var(--purple-accent)] to-[var(--warning)] text-transparent bg-clip-text">
+ <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-[var(--purple-accent)] to-[var(--warning)] text-transparent bg-clip-text">
  {t("header.title")}
  </h1>
  <p className="text-xs tn-text-muted font-mono mt-1">{t("header.session", { id: sessionShort })}</p>
  </div>
  </div>
 
- <div className="grid grid-cols-1 lg:grid-cols-[55fr_45fr] gap-8 items-start">
- {/* LEFT COLUMN: Cards & Question (55% width) */}
- <div className={`${cards.length > 0 ? 'lg:col-span-1' : 'lg:col-span-2'} space-y-8`}>
+ <div className={`grid grid-cols-1 ${cards.length > 0 ? "md:grid-cols-2" : ""} gap-8 items-start`}>
+ {/* LEFT COLUMN: Cards & Question */}
+ <div className="space-y-8">
  {/* Question Display */}
  {question && (
  <div className="tn-overlay p-6 rounded-2xl border border-[var(--purple-accent)]/20 text-center ">
  <p className="text-sm text-[var(--purple-accent)] uppercase tracking-widest mb-2 font-semibold">{t("question.label")}</p>
- <p className="text-xl font-serif tn-text-primary italic">&quot;{question}&quot;</p>
+ <p className="text-lg sm:text-xl font-serif tn-text-primary italic">&quot;{question}&quot;</p>
  </div>
  )}
 
@@ -325,7 +371,7 @@ export default function ReadingSessionPage() {
  ) : (
  <div className="w-full flex flex-col items-center animate-in zoom-in-95 duration-700">
  <div className="mb-4 text-center">
- <h2 className="text-2xl text-[var(--purple-accent)] font-medium mb-2 drop-shadow-[0_0_10px_var(--c-168-85-247-50)]">
+ <h2 className="text-xl sm:text-2xl text-[var(--purple-accent)] font-medium mb-2 drop-shadow-[0_0_10px_var(--c-168-85-247-50)]">
  {pickedCards.length < cardsToDraw
  ? t("pick.prompt", { remaining: cardsToDraw - pickedCards.length })
  : t("pick.done")}
@@ -336,7 +382,7 @@ export default function ReadingSessionPage() {
  {pickedCards.length < cardsToDraw && (
  <button
  onClick={handleRandomSelect}
- className="mt-4 relative z-50 flex items-center gap-2 px-6 py-2.5 rounded-full tn-surface-strong border border-[var(--purple-accent)]/50 text-xs font-bold text-[var(--purple-accent)] hover:bg-[var(--purple-accent)]/60 hover:border-[var(--purple-accent)] hover:tn-text-primary transition-all shadow-[0_0_20px_var(--c-168-85-247-20)] group active:scale-95"
+ className="mt-4 relative z-50 flex items-center gap-2 px-6 py-2.5 min-h-11 rounded-full tn-surface-strong border border-[var(--purple-accent)]/50 text-xs font-bold text-[var(--purple-accent)] hover:bg-[var(--purple-accent)]/60 hover:border-[var(--purple-accent)] hover:tn-text-primary transition-all shadow-[0_0_20px_var(--c-168-85-247-20)] group active:scale-95"
  >
  <Dices className="w-4 h-4 group-hover:rotate-12 transition-transform" />
  {t("pick.random")}
@@ -344,9 +390,12 @@ export default function ReadingSessionPage() {
  )}
  </div>
 
- {pickedCards.length > 0 && (
- <div className="fixed top-24 right-6 z-40">
+ <div className="w-full flex justify-center sm:justify-end mb-6 px-2">
  <div className="relative w-[90px] h-[180px]">
+ <div
+ ref={stackAnchorRef}
+ className="absolute left-0 top-0 w-[72px] aspect-[2/3] rounded-md border border-dashed border-[var(--purple-accent)]/30 bg-[var(--purple-accent)]/10"
+ />
  {pickedCards.map((cardId, stackIndex) => {
  const placement = getStackPlacement(stackIndex);
  return (
@@ -368,7 +417,6 @@ export default function ReadingSessionPage() {
  })}
  </div>
  </div>
- )}
 
  {flyingCards.length > 0 && (
  <div className="pointer-events-none fixed inset-0 z-[60]">
@@ -392,20 +440,31 @@ export default function ReadingSessionPage() {
  </div>
  )}
 
- <div className={`relative w-full h-[300px] md:h-[400px] flex justify-center -mt-24 sm:-mt-28 mb-20 transition-opacity duration-300
- ${pickedCards.length === cardsToDraw ? 'opacity-35 pointer-events-none' : ''}`}>
- {deckIndexes.map((idx) => {
+ <div
+ className={`w-full max-w-[1520px] mx-auto mb-20 transition-opacity duration-300
+ ${pickedCards.length === cardsToDraw ? 'opacity-35 pointer-events-none' : ''}`}
+ style={{ '--deck-card-w': deckCardWidth } as React.CSSProperties}
+ >
+ <div className="relative mx-auto w-full max-w-[1420px] px-1 sm:px-2">
+ {activeDeckRows.map((row, rowIndex) => (
+ <div
+ key={`row-${rowIndex}`}
+ className="flex justify-center items-end"
+ style={rowIndex === 0 ? undefined : { marginTop: rowOverlapMargin }}
+ >
+ {row.map((idx, columnIndex) => {
  const isPicked = pickedCardSet.has(idx);
- const angle = -52 + (idx * (104 / Math.max(1, deckIndexes.length - 1)));
+ const waveOffset = Math.sin(idx * 0.55) * DECK_WAVE_Y_AMPLITUDE;
+ const waveRotation = Math.sin(idx * 0.35) * DECK_WAVE_ROTATION_AMPLITUDE;
 
  return (
  <div
  key={idx}
- className="absolute bottom-0 left-1/2 w-[55px] sm:w-[65px] md:w-[75px] aspect-[2/3] -translate-x-1/2 origin-bottom group tarot-card-fan"
+ className="relative w-[var(--deck-card-w)] aspect-[2/3] group tarot-card-fan"
  style={{
- transformOrigin: "center clamp(240px, 41vw, 560px)",
- transform: `rotate(${angle}deg)`,
- zIndex: isPicked ? 0 : idx,
+ marginLeft: columnIndex === 0 ? 0 : `calc(var(--deck-card-w) * -${DECK_HORIZONTAL_OVERLAP_FACTOR})`,
+ transform: `translateY(${waveOffset}px) rotate(${waveRotation}deg)`,
+ zIndex: isPicked ? 0 : columnIndex + rowIndex * 100,
  }}
  >
  <div
@@ -416,9 +475,9 @@ export default function ReadingSessionPage() {
  }}
  className={`w-full h-full relative cursor-pointer transition-all duration-150 ease-out transform rounded-md border border-[var(--purple-accent)]/35 bg-gradient-to-br from-[var(--purple-accent)]/95 to-[color:var(--c-61-49-80-55)] shadow-sm tarot-deck-card
  ${isPicked
- ? 'opacity-0 scale-90 pointer-events-none'
+ ? 'opacity-0 scale-95 pointer-events-none'
  : pickedCards.length < cardsToDraw
- ? 'hover:-translate-y-5 md:hover:-translate-y-8 hover:shadow-[0_0_10px_var(--c-168-85-247-70)] hover:border-[var(--purple-accent)] hover:scale-105 opacity-90 hover:z-[99]'
+ ? 'hover:-translate-y-3 md:hover:-translate-y-5 hover:shadow-[0_0_10px_var(--c-168-85-247-70)] hover:border-[var(--purple-accent)] hover:scale-105 opacity-90 hover:z-40'
  : 'opacity-45 cursor-default'
  }`}
  >
@@ -427,7 +486,10 @@ export default function ReadingSessionPage() {
  </div>
  </div>
  );
-})}
+ })}
+ </div>
+ ))}
+ </div>
  </div>
 
  {pickedCards.length === cardsToDraw && (
@@ -460,7 +522,7 @@ export default function ReadingSessionPage() {
  removePickedCard(lastPickedCard);
  }
  }}
- className="mt-6 text-sm font-medium tn-text-secondary hover:tn-text-primary transition-colors"
+ className="mt-6 inline-flex items-center min-h-11 px-2 rounded-xl hover:tn-surface-soft text-sm font-medium tn-text-secondary hover:tn-text-primary transition-colors"
  >
  {t("modal.change_card")}
  </button>
@@ -473,9 +535,9 @@ export default function ReadingSessionPage() {
  </div>
  )}
 
- {/* Revealed Cards Area (3-column layout) */}
+ {/* Revealed Cards Area (3 cards per row) */}
  {cards.length > 0 && (
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 perspective-1000 items-start">
+ <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4 perspective-1000 items-start">
  {cards.map((cardId, index) => {
  const isFlipped = flippedIndex >= index;
  const cardMeta = tarotById.get(cardId) || TAROT_DECK[0];
@@ -525,10 +587,10 @@ export default function ReadingSessionPage() {
  )}
  </div>
 
- {/* RIGHT COLUMN: AI Interpretation (45% width) */}
+ {/* RIGHT COLUMN: AI Interpretation */}
  {cards.length > 0 && (
- <div className="lg:col-span-1 h-full sticky top-24">
- <div className="tn-surface-strong border tn-border shadow-2xl rounded-3xl overflow-hidden flex flex-col max-h-[calc(100vh-160px)]">
+ <div className="md:col-span-1 h-full md:sticky md:top-24">
+ <div className="tn-surface-strong border tn-border shadow-2xl rounded-3xl overflow-hidden flex flex-col md:max-h-[calc(100dvh-160px)]">
  <div className="p-5 border-b tn-border flex items-center justify-between tn-overlay">
  <div className="flex items-center gap-3">
  <div className="w-10 h-10 rounded-full bg-[var(--purple-accent)]/10 flex items-center justify-center border border-[var(--purple-accent)]/20">

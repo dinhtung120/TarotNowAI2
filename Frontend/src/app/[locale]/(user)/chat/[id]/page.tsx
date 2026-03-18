@@ -227,15 +227,15 @@ export default function ChatPage() {
 	// Main Render
 	// ======================================================================
 	return (
-			<div className="max-w-4xl mx-auto px-4 md:px-6 pt-6 pb-24 h-[calc(100vh-80px)] md:h-[calc(100vh)] flex flex-col w-full animate-in fade-in ease-out duration-700">
+			<div className="max-w-4xl mx-auto px-3 sm:px-4 md:px-6 pt-4 md:pt-6 pb-4 md:pb-6 h-full min-h-[32rem] flex flex-col w-full animate-in fade-in ease-out duration-700">
 				<GlassCard className="flex flex-col flex-1 overflow-hidden !p-0 border-white/10 shadow-2xl relative">
 
 					{/* Header */}
-					<div className="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-black/40 backdrop-blur-md z-10 shrink-0">
+					<div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-white/10 bg-black/40 backdrop-blur-md z-10 shrink-0">
 						<div className="flex items-center gap-4">
 								<button
 									onClick={() => router.push('/chat')}
-									className="p-2.5 rounded-xl hover:bg-white/10 transition-colors bg-white/5 group"
+									className="p-3 min-h-11 min-w-11 rounded-xl hover:bg-white/10 transition-colors bg-white/5 group"
 								>
 								<ArrowLeft className="w-4 h-4 text-[var(--text-secondary)] group-hover:text-white transition-colors" />
 							</button>
@@ -251,7 +251,7 @@ export default function ChatPage() {
 						</div>
 						<button
 							onClick={() => setShowReport(true)}
-							className="p-2.5 rounded-xl hover:bg-[var(--danger-bg)] transition-colors text-[var(--text-tertiary)] hover:text-[var(--danger)] group border border-transparent hover:border-[var(--danger)]/30"
+							className="p-3 min-h-11 min-w-11 rounded-xl hover:bg-[var(--danger-bg)] transition-colors text-[var(--text-tertiary)] hover:text-[var(--danger)] group border border-transparent hover:border-[var(--danger)]/30"
 							title={t('room.report_title')}
 						>
 							<Flag className="w-4 h-4" />
@@ -264,7 +264,7 @@ export default function ChatPage() {
 					</div>
 
 					{/* Messages Area */}
-					<div className="flex-1 overflow-y-auto px-6 py-6 space-y-2 relative scroll-smooth scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+					<div className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-6 space-y-2 relative scroll-smooth scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
 						{loading && (
 							<div className="absolute inset-0 flex flex-col items-center justify-center space-y-4 bg-black/40 backdrop-blur-sm z-20">
 								<Loader2 className="w-10 h-10 text-[var(--purple-accent)] animate-spin" />

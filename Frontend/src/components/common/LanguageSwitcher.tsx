@@ -70,7 +70,7 @@ export default function LanguageSwitcher() {
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="tn-panel inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-black uppercase tracking-[0.18em] tn-text-primary hover:tn-surface-strong transition-all"
+        className="tn-panel inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-black uppercase tracking-[0.18em] tn-text-primary hover:tn-surface-strong transition-all min-h-11"
         aria-label={`Current language: ${activeLocale.label}`}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
@@ -92,7 +92,7 @@ export default function LanguageSwitcher() {
                   key={option.id}
                   type="button"
                   onClick={() => applyLocale(option.id)}
-                  className={`w-full rounded-xl px-3 py-2 text-left text-xs font-semibold transition-all ${
+                  className={`w-full rounded-xl px-3 py-2.5 text-left text-xs font-semibold transition-all min-h-11 ${
                     isActive
                       ? "bg-[var(--purple-100)] border border-[var(--border-focus)] tn-text-ink"
                       : "tn-surface border tn-border-soft tn-text-secondary hover:tn-surface-strong hover:tn-text-primary"

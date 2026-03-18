@@ -82,14 +82,14 @@ export default function CollectionPage() {
  {/* Backdrop: Chỉ click vào đây mới đóng */}
  <div className="absolute inset-0 tn-overlay-strong " onClick={() => setSelectedCardId(null)}
  />
- <div className="relative z-10 max-w-lg w-full tn-panel rounded-[3rem] p-8 md:p-12 shadow-[0_30px_100px_var(--c-0-0-0-80)] animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 flex flex-col items-center text-center overflow-hidden"
+ <div className="relative z-10 max-w-lg w-full tn-panel rounded-[3rem] p-6 sm:p-8 md:p-12 shadow-[0_30px_100px_var(--c-0-0-0-80)] animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 flex flex-col items-center text-center overflow-hidden"
  >
  {/* Background Glow */}
  <div className="absolute -top-24 -left-24 w-64 h-64 bg-[var(--purple-accent)]/[0.08] blur-[100px] rounded-full" />
  <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-[var(--warning)]/[0.05] blur-[100px] rounded-full" />
 
  {/* Card Visual Large */}
- <div className={`relative aspect-[2/3.2] w-64 md:w-72 bg-gradient-to-br from-[var(--warning)]/10 to-transparent rounded-[2.5rem] border tn-border p-6 mb-8 transition-transform duration-700 hover:scale-[1.02] ${selectedUserCard ? 'shadow-[0_0_50px_var(--c-251-191-36-15)]' : 'grayscale opacity-50'}`}>
+ <div className={`relative aspect-[2/3.2] w-52 sm:w-64 md:w-72 bg-gradient-to-br from-[var(--warning)]/10 to-transparent rounded-[2.5rem] border tn-border p-6 mb-8 transition-transform duration-700 hover:scale-[1.02] ${selectedUserCard ? 'shadow-[0_0_50px_var(--c-251-191-36-15)]' : 'grayscale opacity-50'}`}>
  <div className="absolute inset-4 border border-[var(--warning)]/10 rounded-[1.8rem] pointer-events-none" />
  <div className="h-full flex flex-col">
  <div className="flex-1 rounded-2xl tn-overlay overflow-hidden relative shadow-inner mb-4 border tn-border-soft flex items-center justify-center">
@@ -143,7 +143,7 @@ export default function CollectionPage() {
  </div>
  )}
 
- <main className="container mx-auto px-6 pt-28 pb-20 relative z-10">
+ <main className="container mx-auto px-4 sm:px-6 pt-28 pb-20 relative z-10">
  {/* Header Section - Compact & Elegant */}
  <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700">
  <div className="space-y-4">

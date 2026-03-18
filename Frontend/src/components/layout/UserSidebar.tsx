@@ -146,7 +146,7 @@ export default function UserSidebar() {
  key={item.href}
  href={item.href}
  className={[
- "group flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 relative overflow-hidden",
+ "group flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 relative overflow-hidden min-h-11",
  active
  ? "bg-[var(--bg-elevated)] text-[var(--text-ink)] border border-[var(--border-hover)] shadow-[var(--glow-purple-sm)]"
  : "text-[var(--text-secondary)] hover:bg-[var(--bg-surface-hover)] hover:text-[var(--text-ink)] border border-transparent",

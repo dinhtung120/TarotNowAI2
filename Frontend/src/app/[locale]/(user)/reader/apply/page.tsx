@@ -78,7 +78,7 @@ export default function ReaderApplyPage() {
  // Nếu đã có đơn pending → hiển thị status card
  if (existingRequest?.hasRequest && existingRequest.status === 'pending') {
  return (
- <div className="max-w-2xl mx-auto px-6 py-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+ <div className="max-w-2xl mx-auto px-4 sm:px-6 py-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
  <div className="relative overflow-hidden bg-gradient-to-br from-[var(--warning)]/10 to-transparent rounded-[3rem] border border-[var(--warning)]/20 p-12 shadow-2xl">
  <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none">
  <Clock size={180} className="text-[var(--warning)]" />
@@ -109,7 +109,7 @@ export default function ReaderApplyPage() {
  // Nếu đã được approved
  if (existingRequest?.hasRequest && existingRequest.status === 'approved') {
  return (
- <div className="max-w-2xl mx-auto px-6 py-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+ <div className="max-w-2xl mx-auto px-4 sm:px-6 py-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
  <div className="relative overflow-hidden bg-gradient-to-br from-[var(--success)]/10 to-transparent rounded-[3rem] border border-[var(--success)]/20 p-12 shadow-2xl">
  <div className="absolute top-0 right-0 p-10 opacity-10 pointer-events-none">
  <CheckCircle2 size={180} className="text-[var(--success)]" />
@@ -141,7 +141,7 @@ export default function ReaderApplyPage() {
  };
 
  return (
- <div className="max-w-2xl mx-auto px-6 py-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+ <div className="max-w-2xl mx-auto px-4 sm:px-6 py-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
  <div className="space-y-10">
  {/* Header */}
  <div className="text-center space-y-4">

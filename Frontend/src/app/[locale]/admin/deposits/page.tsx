@@ -159,7 +159,7 @@ export default function AdminDepositsPage() {
  setPage(1);
  }}
  className={`
- px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
+ px-4 py-2.5 min-h-11 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
  ${statusFilter === value ? "bg-[var(--purple-accent)] tn-text-ink shadow-md" : "tn-surface text-[var(--text-tertiary)] hover:tn-surface-strong hover:tn-text-primary"
  }
  `}
@@ -276,7 +276,7 @@ export default function AdminDepositsPage() {
  setConfirmModal({ isOpen: true, type: 'approve', order: o });
  }}
  disabled={processingId === o.id}
- className="p-2 rounded-xl bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/20 hover:bg-[var(--success)] hover:tn-text-ink transition-all disabled:opacity-50 shadow-md group"
+ className="p-2.5 min-h-11 min-w-11 rounded-xl bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/20 hover:bg-[var(--success)] hover:tn-text-ink transition-all disabled:opacity-50 shadow-md group"
  title={t("deposits.actions.approve_title")}
  >
  {processingId === o.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ThumbsUp className="w-4 h-4 group-hover:scale-110 transition-transform" />}
@@ -286,7 +286,7 @@ export default function AdminDepositsPage() {
  setConfirmModal({ isOpen: true, type: 'reject', order: o });
  }}
  disabled={processingId === o.id}
- className="p-2 rounded-xl bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/20 hover:bg-[var(--danger)] hover:tn-text-primary transition-all disabled:opacity-50 shadow-md group"
+ className="p-2.5 min-h-11 min-w-11 rounded-xl bg-[var(--danger)]/10 text-[var(--danger)] border border-[var(--danger)]/20 hover:bg-[var(--danger)] hover:tn-text-primary transition-all disabled:opacity-50 shadow-md group"
  title={t("deposits.actions.reject_title")}
  >
  {processingId === o.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <ThumbsDown className="w-4 h-4 group-hover:scale-110 transition-transform" />}
@@ -312,7 +312,7 @@ export default function AdminDepositsPage() {
  <button
  onClick={() => setPage(p => Math.max(1, p - 1))}
  disabled={page === 1}
- className="p-2.5 rounded-xl tn-panel hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-md"
+ className="p-2.5 min-h-11 min-w-11 rounded-xl tn-panel hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-md"
  >
  <ChevronLeft className="w-4 h-4 text-[var(--text-secondary)]" />
  </button>
@@ -320,7 +320,7 @@ export default function AdminDepositsPage() {
  <button
  onClick={() => setPage(p => p + 1)}
  disabled={page * 10 >= totalCount}
- className="p-2.5 rounded-xl tn-panel hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-md"
+ className="p-2.5 min-h-11 min-w-11 rounded-xl tn-panel hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-md"
  >
  <ChevronRight className="w-4 h-4 text-[var(--text-secondary)]" />
  </button>

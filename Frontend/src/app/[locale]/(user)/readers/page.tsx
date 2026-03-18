@@ -84,7 +84,7 @@ export default function ReaderDirectoryPage() {
  };
 
  return (
- <div className="max-w-7xl mx-auto px-6 pt-8 pb-32 space-y-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000">
+ <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-32 space-y-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000">
  {/* Header & Stats */}
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-2">
  <SectionHeader

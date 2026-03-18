@@ -113,13 +113,13 @@ export default async function Home() {
  const t = await getTranslations("Index");
 
  return (
- <div className="min-h-screen bg-[var(--bg-void)] text-[var(--text-primary)] overflow-x-hidden font-sans">
+ <div className="min-h-dvh bg-[var(--bg-void)] text-[var(--text-primary)] overflow-x-hidden font-sans">
  {/* ##### HỆ THỐNG NỀN THIÊN HÀ (NEBULA SYSTEM) ##### */}
  <AstralBackground variant="intense" />
 
  <main className="relative z-10">
  {/* ##### HERO SECTION: THE MYSTIC PORTAL ##### */}
- <section className="relative min-h-screen flex flex-col items-center justify-center px-6 pt-20 pb-28 md:pb-24">
+ <section className="relative min-h-dvh flex flex-col items-center justify-center px-4 sm:px-6 pt-20 pb-28 md:pb-24">
  <div className="w-full max-w-6xl flex flex-col items-center text-center">
  {/* Live Tagline */}
  <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-[var(--bg-glass)] border border-[var(--border-default)] text-[10px] uppercase tracking-[0.3em] font-black text-[color:var(--c-hex-9f8338)] mb-10 shadow-[var(--shadow-card)] animate-in fade-in slide-in-from-bottom-4 duration-1000">
@@ -175,7 +175,7 @@ export default async function Home() {
  </section>
 
  {/* ##### STATS SECTION: UNIVERSE GROWTH ##### */}
- <section className="relative w-full max-w-6xl mx-auto px-6 py-20">
+ <section className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 py-20">
  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
  <StatItem icon={Zap} value="50K+" label={t('stats.readings')} color="purple" />
  <StatItem icon={Users} value="120+" label={t('stats.readers')} color="amber" />
@@ -185,13 +185,13 @@ export default async function Home() {
  </section>
 
  {/* ##### READER SHOWCASE: THE GUIDES ##### */}
- <section className="relative w-full max-w-7xl mx-auto px-6 py-32">
+ <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 py-32">
  <SectionHeader
  tag={t('showcase.tag')}
  title={t('showcase.title')}
  titleMuted={t('showcase.titleMuted')}
  action={
- <Link href="/readers" className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] hover:text-[var(--text-ink)] transition-colors flex items-center gap-2 group">
+ <Link href="/readers" className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)] hover:text-[var(--text-ink)] transition-colors inline-flex items-center gap-2 group min-h-11 px-2 rounded-xl hover:bg-[var(--purple-50)]">
  {t('showcase.viewAll')} <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
  </Link>
  }
@@ -204,10 +204,10 @@ export default async function Home() {
  </section>
 
  {/* ##### CORE FEATURES: THE ASTRAL ARCHITECTURE ##### */}
- <section className="relative w-full max-w-6xl mx-auto px-6 py-32">
+ <section className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 py-32">
  <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[var(--border-subtle)] border border-[var(--border-default)] rounded-[3rem] overflow-hidden shadow-[var(--shadow-elevated)] ">
  {/* Feature 1: AI Insight */}
- <div className="group relative p-12 flex flex-col gap-10 bg-[var(--bg-glass)] hover:bg-[var(--purple-50)] transition-all duration-700 border-b md:border-b-0 md:border-r border-[var(--border-subtle)]">
+ <div className="group relative p-8 sm:p-12 flex flex-col gap-10 bg-[var(--bg-glass)] hover:bg-[var(--purple-50)] transition-all duration-700 border-b md:border-b-0 md:border-r border-[var(--border-subtle)]">
  <div className="w-14 h-14 rounded-2xl bg-[var(--bg-elevated)] flex items-center justify-center border border-[var(--border-default)] transition-all duration-700 group-hover:scale-110 group-hover:bg-[var(--purple-accent)] animate-glow-pulse">
  <Zap className="w-6 h-6 group-hover:text-[var(--text-ink)] transition-colors" />
  </div>
@@ -220,7 +220,7 @@ export default async function Home() {
  </div>
 
  {/* Feature 2: Personalized Path */}
- <div className="group relative p-12 flex flex-col gap-10 bg-[var(--bg-glass)] hover:bg-[var(--amber-50)] transition-all duration-700 border-b md:border-b-0 md:border-r border-[var(--border-subtle)]">
+ <div className="group relative p-8 sm:p-12 flex flex-col gap-10 bg-[var(--bg-glass)] hover:bg-[var(--amber-50)] transition-all duration-700 border-b md:border-b-0 md:border-r border-[var(--border-subtle)]">
  <div className="w-14 h-14 rounded-2xl bg-[var(--bg-elevated)] flex items-center justify-center border border-[var(--border-default)] transition-all duration-700 group-hover:scale-110 group-hover:bg-[var(--amber-accent)] animate-glow-pulse">
  <Flame className="w-6 h-6 group-hover:text-[var(--text-ink)] transition-colors" />
  </div>
@@ -233,7 +233,7 @@ export default async function Home() {
  </div>
 
  {/* Feature 3: Transparent Protocol */}
- <div className="group relative p-12 flex flex-col gap-10 bg-[var(--bg-glass)] hover:bg-[var(--success-bg)] transition-all duration-700">
+ <div className="group relative p-8 sm:p-12 flex flex-col gap-10 bg-[var(--bg-glass)] hover:bg-[var(--success-bg)] transition-all duration-700">
  <div className="w-14 h-14 rounded-2xl bg-[var(--bg-elevated)] flex items-center justify-center border border-[var(--border-default)] transition-all duration-700 group-hover:scale-110 group-hover:bg-[var(--success)] animate-glow-pulse">
  <ShieldCheck className="w-6 h-6 group-hover:text-[var(--text-ink)] transition-colors" />
  </div>
@@ -248,7 +248,7 @@ export default async function Home() {
  </section>
 
  {/* ##### FINAL CALL: RESONANCE ##### */}
- <section className="relative px-6 py-40 flex flex-col items-center overflow-hidden">
+ <section className="relative px-4 sm:px-6 py-40 flex flex-col items-center overflow-hidden">
  <div className="relative z-10 flex flex-col items-center text-center max-w-4xl">
  <Sparkles className="w-16 h-16 text-[var(--purple-accent)] mb-10 animate-pulse" />
  <h2 className="text-4xl md:text-6xl font-black text-[var(--text-ink)] mb-10 tracking-tighter uppercase font-serif">

@@ -1909,12 +1909,26 @@ body[data-theme="candy-holo"] {
   --color-info: var(--info);
 }
 
+html,
 body {
+  width: 100%;
+  max-width: 100%;
+}
+
+html {
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+body {
+  min-height: 100dvh;
   background: var(--app-bg);
   color: var(--text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 ::-webkit-scrollbar {
@@ -2119,6 +2133,15 @@ body {
   outline: none;
   border-color: var(--border-focus);
   box-shadow: 0 0 0 1px var(--ring-input);
+}
+
+.tn-tap-target {
+  min-height: 44px;
+}
+
+.tn-tap-square {
+  min-height: 44px;
+  min-width: 44px;
 }
 
 .tn-grad-lunar {

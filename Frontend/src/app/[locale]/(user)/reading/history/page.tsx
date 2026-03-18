@@ -110,7 +110,7 @@ export default function HistoryPage() {
  <select
  value={filterType}
  onChange={(e) => setFilterType(e.target.value)}
- className="appearance-none tn-field tn-field-accent rounded-xl px-4 py-2.5 pr-10 text-[11px] font-black uppercase tracking-widest text-[var(--text-secondary)] cursor-pointer"
+ className="appearance-none tn-field tn-field-accent rounded-xl px-4 py-2.5 pr-10 text-[11px] font-black uppercase tracking-widest text-[var(--text-secondary)] cursor-pointer min-h-11"
  >
  <option value="all" className="tn-surface">{t('all_types')}</option>
  <option value="Daily1Card" className="tn-surface">{t('spread_daily')}</option>
@@ -128,14 +128,14 @@ export default function HistoryPage() {
  type="date"
  value={filterDate}
  onChange={(e) => setFilterDate(e.target.value)}
- className="tn-field tn-field-accent rounded-xl px-4 py-2 text-[11px] font-black uppercase tracking-widest text-[var(--text-secondary)] cursor-pointer"
+ className="tn-field tn-field-accent rounded-xl px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-[var(--text-secondary)] cursor-pointer min-h-11"
  />
  </div>
  </div>
  );
 
  return (
- <div className="max-w-5xl mx-auto px-6 pt-8 pb-32 font-sans">
+ <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 pb-32 font-sans">
  <SectionHeader title={t('title')}
  subtitle={t('subtitle')}
  tag={t("tag")}
@@ -220,18 +220,18 @@ export default function HistoryPage() {
 
  {/* Pagination */}
  {historyData && historyData.totalPages > 1 && (
- <div className="fixed bottom-24 md:bottom-10 left-1/2 -translate-x-1/2 z-50 flex items-center gap-6 px-6 py-3 bg-[var(--bg-glass)]/90 border tn-border rounded-full shadow-[0_20px_50px_var(--c-0-0-0-80)] animate-in fade-in slide-in-from-bottom-4 duration-1000">
+ <div className="fixed bottom-[calc(6.5rem+env(safe-area-inset-bottom))] md:bottom-10 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 sm:gap-6 px-4 sm:px-6 py-2.5 sm:py-3 bg-[var(--bg-glass)]/90 border tn-border rounded-full shadow-[0_20px_50px_var(--c-0-0-0-80)] animate-in fade-in slide-in-from-bottom-4 duration-1000 max-w-[calc(100vw-1rem)]">
  <button
  onClick={handlePrevPage}
  disabled={currentPage === 1}
- className="p-2 rounded-full tn-surface tn-text-secondary disabled:opacity-20 hover:tn-surface-strong hover:tn-text-primary transition-all active:scale-90"
+ className="p-2.5 min-h-11 min-w-11 rounded-full tn-surface tn-text-secondary disabled:opacity-20 hover:tn-surface-strong hover:tn-text-primary transition-all active:scale-90"
  title={t('prev_page')}
  >
  <ChevronLeft className="w-4 h-4" />
  </button>
 
- <div className="flex flex-col items-center min-w-[80px]">
- <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
+ <div className="flex flex-col items-center min-w-[72px]">
+ <span className="text-[9px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em] text-[var(--text-tertiary)] text-center">
  {t("page_info", { current: currentPage, total: historyData.totalPages })}
  </span>
  </div>
@@ -239,7 +239,7 @@ export default function HistoryPage() {
  <button
  onClick={handleNextPage}
  disabled={currentPage === historyData.totalPages}
- className="p-2 rounded-full tn-surface tn-text-secondary disabled:opacity-20 hover:tn-surface-strong hover:tn-text-primary transition-all active:scale-90"
+ className="p-2.5 min-h-11 min-w-11 rounded-full tn-surface tn-text-secondary disabled:opacity-20 hover:tn-surface-strong hover:tn-text-primary transition-all active:scale-90"
  title={t('next_page')}
  >
  <ChevronRight className="w-4 h-4" />

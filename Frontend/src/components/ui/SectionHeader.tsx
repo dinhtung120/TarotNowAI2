@@ -70,7 +70,7 @@ export default function SectionHeader({
  return (
  <div
  className={[
- "flex flex-col md:flex-row md:items-end justify-between gap-6",
+ "flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6",
  className,
  ].join(" ")}
  >
@@ -78,7 +78,7 @@ export default function SectionHeader({
  <div className="space-y-3 max-w-2xl">
  {/* Tag — nhãn nhỏ phía trên title */}
  {tag && (
- <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-[var(--purple-accent)]">
+ <div className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.25em] sm:tracking-[0.3em] text-[var(--purple-accent)]">
  {tagIcon}
  {tag}
  </div>
@@ -107,7 +107,7 @@ export default function SectionHeader({
  </div>
 
  {/* Action slot bên phải — tùy chọn */}
- {action && <div className="flex-shrink-0">{action}</div>}
+ {action && <div className="w-full md:w-auto md:flex-shrink-0">{action}</div>}
  </div>
  );
 }
