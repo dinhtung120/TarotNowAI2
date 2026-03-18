@@ -11,6 +11,22 @@ import AstralBackground from "@/components/layout/AstralBackground";
 import { useTranslations } from "next-intl";
 
 const SHUFFLE_CARD_COUNT = 9;
+const PICKED_STACK_CARD_WIDTH = 72;
+const PICKED_STACK_CARD_HEIGHT = 108;
+const PICKED_STACK_TOP_OFFSET = 96;
+const PICKED_STACK_RIGHT_OFFSET = 24;
+const PICKED_STACK_X_STEP = 2;
+const PICKED_STACK_Y_STEP = 6;
+
+interface FlyingCard {
+ key: string;
+ startX: number;
+ startY: number;
+ deltaX: number;
+ deltaY: number;
+ rotate: number;
+ stackIndex: number;
+}
 
 // Generate positions for an elegant fanning and splitting shuffle effect
 const generateShufflePaths = () => {
@@ -35,6 +51,15 @@ const generateShufflePaths = () => {
  });
 };
 
+const pickRandomIndexes = (availableIndexes: number[], count: number) => {
+ const shuffled = [...availableIndexes];
+ for (let i = shuffled.length - 1; i > 0; i--) {
+ const j = Math.floor(Math.random() * (i + 1));
+ [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+ }
+ return shuffled.slice(0, count);
+};
+
 export default function ReadingSessionPage() {
  const params = useParams();
  const router = useRouter();
@@ -50,9 +75,14 @@ export default function ReadingSessionPage() {
  const [error, setError] = useState("");
  const [flippedIndex, setFlippedIndex] = useState<number>(-1); // Index của lá bài đang được lật
  const [pickedCards, setPickedCards] = useState<number[]>([]);
+ const [flyingCards, setFlyingCards] = useState<FlyingCard[]>([]);
  const [isShuffling, setIsShuffling] = useState(true);
  const [shufflePaths] = useState<Record<string, string | number>[]>(generateShufflePaths);
  const flipTimersRef = useRef<number[]>([]);
+ const animationTimersRef = useRef<number[]>([]);
+ const flightSequenceRef = useRef(0);
+ const pickedCardsRef = useRef<number[]>([]);
+ const deckCardRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
  useEffect(() => {
  const timer = window.setTimeout(() => setIsShuffling(false), 2200);
@@ -60,9 +90,15 @@ export default function ReadingSessionPage() {
  }, []);
 
  useEffect(() => {
+ pickedCardsRef.current = pickedCards;
+ }, [pickedCards]);
+
+ useEffect(() => {
  return () => {
  flipTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
  flipTimersRef.current = [];
+ animationTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
+ animationTimersRef.current = [];
  };
  }, []);
 
@@ -83,11 +119,87 @@ export default function ReadingSessionPage() {
  return map;
  }, []);
 
+ const getStackPlacement = (stackIndex: number) => {
+ const clampedIndex = Math.min(stackIndex, 7);
+ return {
+ xOffset: clampedIndex * PICKED_STACK_X_STEP,
+ yOffset: clampedIndex * PICKED_STACK_Y_STEP,
+ rotate: -8 + (clampedIndex % 5) * 2,
+ };
+ };
+
+ const getStackTarget = (stackIndex: number) => {
+ const { xOffset, yOffset, rotate } = getStackPlacement(stackIndex);
+ return {
+ x: window.innerWidth - PICKED_STACK_RIGHT_OFFSET - PICKED_STACK_CARD_WIDTH / 2 + xOffset,
+ y: PICKED_STACK_TOP_OFFSET + PICKED_STACK_CARD_HEIGHT / 2 + yOffset,
+ rotate,
+ };
+ };
+
+ const launchCardToStack = (cardId: number, stackIndex: number, sourceElement?: HTMLDivElement | null) => {
+ const sourceRect = sourceElement?.getBoundingClientRect();
+ const startX = sourceRect ? sourceRect.left + sourceRect.width / 2 : window.innerWidth / 2;
+ const startY = sourceRect ? sourceRect.top + sourceRect.height / 2 : window.innerHeight * 0.72;
+ const target = getStackTarget(stackIndex);
+
+ flightSequenceRef.current += 1;
+ const flight: FlyingCard = {
+ key: `${cardId}-${flightSequenceRef.current}`,
+ startX,
+ startY,
+ deltaX: target.x - startX,
+ deltaY: target.y - startY,
+ rotate: target.rotate,
+ stackIndex,
+ };
+
+ setFlyingCards((prev) => [...prev, flight]);
+ const timerId = window.setTimeout(() => {
+ setFlyingCards((prev) => prev.filter((item) => item.key !== flight.key));
+ }, 460);
+ animationTimersRef.current.push(timerId);
+ };
+
+ const setDeckCardRef = (cardId: number) => (node: HTMLDivElement | null) => {
+ if (node) {
+ deckCardRefs.current.set(cardId, node);
+ return;
+ }
+ deckCardRefs.current.delete(cardId);
+ };
+
+ const addPickedCard = (cardId: number, sourceElement?: HTMLDivElement | null) => {
+ if (isRevealing) return;
+
+ const currentPicks = pickedCardsRef.current;
+ if (currentPicks.includes(cardId) || currentPicks.length >= cardsToDraw) return;
+
+ launchCardToStack(cardId, currentPicks.length, sourceElement);
+ const nextPicks = [...currentPicks, cardId];
+ pickedCardsRef.current = nextPicks;
+ setPickedCards(nextPicks);
+ };
+
+ const removePickedCard = (cardId: number) => {
+ if (isRevealing) return;
+
+ const currentPicks = pickedCardsRef.current;
+ if (!currentPicks.includes(cardId)) return;
+
+ const nextPicks = currentPicks.filter((pickedId) => pickedId !== cardId);
+ pickedCardsRef.current = nextPicks;
+ setPickedCards(nextPicks);
+ };
+
  const handleReveal = async () => {
  setIsRevealing(true);
  setError("");
  flipTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
  flipTimersRef.current = [];
+ animationTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
+ animationTimersRef.current = [];
+ setFlyingCards([]);
  setFlippedIndex(-1);
 
  const response = await revealReadingSession({ sessionId });
@@ -115,28 +227,21 @@ export default function ReadingSessionPage() {
  * Logic: Lấy bộ index 0-77, loại trừ các lá đã chọn, * xáo trộn và lấy đủ số lượng còn thiếu.
  */
  const handleRandomSelect = () => {
- if (isRevealing || pickedCards.length >= cardsToDraw) return;
+ if (isRevealing || pickedCardsRef.current.length >= cardsToDraw) return;
 
- const remainingCount = cardsToDraw - pickedCards.length;
- const availableIdxs = deckIndexes.filter((idx) => !pickedCardSet.has(idx));
+ const currentPickedSet = new Set(pickedCardsRef.current);
+ const remainingCount = cardsToDraw - pickedCardsRef.current.length;
+ const availableIdxs = deckIndexes.filter((idx) => !currentPickedSet.has(idx));
 
- // Xáo trộn mảng availableIdxs bằng thuật toán Fisher-Yates đơn giản
- const shuffled = [...availableIdxs];
- for (let i = shuffled.length - 1; i > 0; i--) {
- const j = Math.floor(Math.random() * (i + 1));
- [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
- }
-
- const newPicks = shuffled.slice(0, remainingCount);
+ const newPicks = pickRandomIndexes(availableIdxs, remainingCount);
 
  // Hiệu ứng bốc từng lá một để tăng tính trải nghiệm "magic"
  newPicks.forEach((idx, i) => {
- window.setTimeout(() => {
- setPickedCards(prev => {
- if (prev.includes(idx)) return prev; // Avoid duplicates just in case
- return [...prev, idx];
- });
- }, i * 200);
+ const timerId = window.setTimeout(() => {
+ const sourceElement = deckCardRefs.current.get(idx) ?? null;
+ addPickedCard(idx, sourceElement);
+ }, i * 180);
+ animationTimersRef.current.push(timerId);
  });
  };
 
@@ -239,6 +344,54 @@ export default function ReadingSessionPage() {
  )}
  </div>
 
+ {pickedCards.length > 0 && (
+ <div className="fixed top-24 right-6 z-40">
+ <div className="relative w-[90px] h-[180px]">
+ {pickedCards.map((cardId, stackIndex) => {
+ const placement = getStackPlacement(stackIndex);
+ return (
+ <button
+ key={`${cardId}-${stackIndex}`}
+ type="button"
+ onClick={() => removePickedCard(cardId)}
+ disabled={isRevealing}
+ className="absolute left-0 top-0 w-[72px] aspect-[2/3] rounded-md border border-[var(--purple-accent)]/35 bg-gradient-to-br from-[var(--purple-accent)]/95 to-[color:var(--c-61-49-80-55)] shadow-md tarot-deck-card transition-transform duration-200 hover:-translate-y-1 disabled:pointer-events-none"
+ style={{
+ transform: `translate(${placement.xOffset}px, ${placement.yOffset}px) rotate(${placement.rotate}deg)`,
+ zIndex: stackIndex + 1,
+ }}
+ >
+ <div className="absolute inset-1 border border-[var(--purple-accent)]/30 rounded-sm opacity-60 pointer-events-none"></div>
+ <div className="absolute inset-0 rounded-md bg-[radial-gradient(circle_at_24%_22%,var(--c-255-255-255-15)_0,transparent_34%),linear-gradient(160deg,var(--c-61-49-80-20),transparent_65%)] pointer-events-none"></div>
+ </button>
+ );
+ })}
+ </div>
+ </div>
+ )}
+
+ {flyingCards.length > 0 && (
+ <div className="pointer-events-none fixed inset-0 z-[60]">
+ {flyingCards.map((card) => (
+ <div
+ key={card.key}
+ className="tarot-flying-card rounded-md border border-[var(--purple-accent)]/35 bg-gradient-to-br from-[var(--purple-accent)]/95 to-[color:var(--c-61-49-80-55)] shadow-md"
+ style={{
+ top: `${card.startY}px`,
+ left: `${card.startX}px`,
+ zIndex: 120 + card.stackIndex,
+ '--fly-x': `${card.deltaX}px`,
+ '--fly-y': `${card.deltaY}px`,
+ '--fly-rotate': `${card.rotate}deg`,
+ } as React.CSSProperties}
+ >
+ <div className="absolute inset-1 border border-[var(--purple-accent)]/30 rounded-sm opacity-60 pointer-events-none"></div>
+ <div className="absolute inset-0 rounded-md bg-[radial-gradient(circle_at_24%_22%,var(--c-255-255-255-15)_0,transparent_34%),linear-gradient(160deg,var(--c-61-49-80-20),transparent_65%)] pointer-events-none"></div>
+ </div>
+ ))}
+ </div>
+ )}
+
  <div className={`relative w-full h-[300px] md:h-[400px] flex justify-center -mt-24 sm:-mt-28 mb-20 transition-opacity duration-300
  ${pickedCards.length === cardsToDraw ? 'opacity-35 pointer-events-none' : ''}`}>
  {deckIndexes.map((idx) => {
@@ -252,21 +405,18 @@ export default function ReadingSessionPage() {
  style={{
  transformOrigin: "center clamp(240px, 41vw, 560px)",
  transform: `rotate(${angle}deg)`,
- zIndex: isPicked ? 100 : idx,
+ zIndex: isPicked ? 0 : idx,
  }}
  >
  <div
- onClick={() => {
- if (isRevealing) return;
- if (isPicked) {
- setPickedCards(prev => prev.filter(p => p !== idx));
- } else if (pickedCards.length < cardsToDraw) {
- setPickedCards(prev => [...prev, idx]);
- }
+ ref={setDeckCardRef(idx)}
+ onClick={(event) => {
+ if (isRevealing || isPicked || pickedCards.length >= cardsToDraw) return;
+ addPickedCard(idx, event.currentTarget);
  }}
  className={`w-full h-full relative cursor-pointer transition-all duration-150 ease-out transform rounded-md border border-[var(--purple-accent)]/35 bg-gradient-to-br from-[var(--purple-accent)]/95 to-[color:var(--c-61-49-80-55)] shadow-sm tarot-deck-card
  ${isPicked
- ? 'ring-2 ring-[var(--warning)] shadow-[0_0_12px_var(--c-251-191-36-80)] opacity-100 -translate-y-8 sm:-translate-y-12 scale-110 md:scale-120 z-50'
+ ? 'opacity-0 scale-90 pointer-events-none'
  : pickedCards.length < cardsToDraw
  ? 'hover:-translate-y-5 md:hover:-translate-y-8 hover:shadow-[0_0_10px_var(--c-168-85-247-70)] hover:border-[var(--purple-accent)] hover:scale-105 opacity-90 hover:z-[99]'
  : 'opacity-45 cursor-default'
@@ -304,7 +454,12 @@ export default function ReadingSessionPage() {
 
  {!isRevealing && (
  <button
- onClick={() => setPickedCards(prev => prev.slice(0, -1))}
+ onClick={() => {
+ const lastPickedCard = pickedCards[pickedCards.length - 1];
+ if (typeof lastPickedCard === "number") {
+ removePickedCard(lastPickedCard);
+ }
+ }}
  className="mt-6 text-sm font-medium tn-text-secondary hover:tn-text-primary transition-colors"
  >
  {t("modal.change_card")}
