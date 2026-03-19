@@ -1,23 +1,42 @@
+/*
+ * ===================================================================
+ * FILE: IAiProvider.cs
+ * NAMESPACE: TarotNow.Application.Interfaces
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Bản Vẽ Giao Diện (Interface) Định Nghĩa Luật Lệ Phải Tuân Theo Cho Bất Cứ AI Nào.
+ *   (Dù xài ChatGPT, Gemini hay Claude thì đều phải đẻ ra hàm giống vầy).
+ * ===================================================================
+ */
+
+using System.Collections.Generic;
+using System.Threading;
+
 namespace TarotNow.Application.Interfaces;
 
 /// <summary>
-/// Interface trừu tượng hóa các gọi hàm tới Server AI (OpenAI, Gemini,...).
-/// Sử dụng IAsyncEnumerable để phục vụ chức năng Streaming (Server-Sent Events).
+/// Hợp đồng trừu tượng (Contract) cho bất kỳ ông AI nào muốn đầu quân làm Tarot Reader.
+/// Bắt buộc phải có Mánh Khóe Nhả Chữ Liên Tục (Streaming) để khách khỏi sốt ruột chờ đợi.
 /// </summary>
 public interface IAiProvider
 {
     /// <summary>
-    /// Gửi truy vấn tới AI Provider và nhận kết quả trả về liên tục (Streaming).
+    /// Gửi Lá Đơn Xin Bói Toán tới Vị Thần AI (LLM) và Bốc Hứng Text Chạy Rơi Lả Tả Về.
+    /// Kèm Theo Nút Panic (CancellationToken) Để Huỷ Gọi Nếu Khách Bấm Xoay Màn Hình Văng Ra Ngoài.
     /// </summary>
-    /// <param name="systemPrompt">Hướng dẫn cho hệ thống (Vd: You are a mystic Tarot reader).</param>
-    /// <param name="userPrompt">Nội dung câu hỏi và các lá bài của người dùng.</param>
-    /// <param name="cancellationToken">Token để hủy luồng Stream nếu Request bị ngắt (Client tắt Browser).</param>
-    /// <returns>Một luồng (Stream) chứa text sinh ra theo từng Chunk.</returns>
+    /// <param name="systemPrompt">Hướng dẫn Nhập Vai Thầy Cúng (Vd: You are a mystic Tarot reader).</param>
+    /// <param name="userPrompt">Hình Ảnh Lá Bài Bốc Được Kèm Lời Than Vãn Của Khách Khứa.</param>
+    /// <param name="cancellationToken">Lệnh Cắt Cầu Dao Đứt Dây Cuộc Gọi Nếu Cần (CancellationToken).</param>
+    /// <returns>Một đường ống IAsyncEnumerable cứ lâu lâu lọt ra vài chữ (Chunk stream).</returns>
     IAsyncEnumerable<string> StreamChatAsync(string systemPrompt, string userPrompt, CancellationToken cancellationToken);
     
     /// <summary>
-    /// Thuộc tính xác định Version Prompt / Policy đang sử dụng.
+    /// Niêm Yết Rõ Tên Thầy (VD: OpenAI hay Google) để tính tiền Auditing sau này.
     /// </summary>
     string ProviderName { get; }
+
+    /// <summary>
+    /// Đang xài Model phiên bản mấy? (GPT-4o hay Gemini-1.5-Pro).
+    /// </summary>
     string ModelName { get; }
 }

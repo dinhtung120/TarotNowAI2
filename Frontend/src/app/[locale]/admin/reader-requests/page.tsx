@@ -1,3 +1,14 @@
+/*
+ * ===================================================================
+ * FILE: page.tsx (Admin Reader Requests)
+ * BỐI CẢNH (CONTEXT):
+ *   Trang Admin để quản lý Kiểm duyệt các tài khoản xin làm Reader.
+ *   
+ * BẢO MẬT & LUỒNG DỮ LIỆU:
+ *   Sử dụng Client Component ('use client') tích hợp với Server Actions (`listReaderRequests`, `processReaderRequest`)
+ *   để ẩn giấu logic xác thực backend trong khi vẫn giữ lại ưu điểm tương tác nhạy của React.
+ * ===================================================================
+ */
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';

@@ -1,24 +1,17 @@
 "use client";
 
-/**
- * Input — Component input/textarea thống nhất cho toàn app.
- *
- * === VẤN ĐỀ TRƯỚC ĐÂY ===
- * Mỗi trang viết input styling riêng:
- * - Login: `tn-field tn-field-accent rounded-2xl`
- * - Reading: `tn-field tn-field-accent rounded-2xl`
- * - Wallet: `bg-transparent border-none text-[10px]`
- *
- * === GIẢI PHÁP ===
- * Một component thống nhất với:
- * - Label + Error message tích hợp
- * - Icon trái (prefix icon)
- * - Style consistent qua design tokens
- * - Hỗ trợ textarea mode
- *
- * Tại sao dùng forwardRef?
- * → React Hook Form cần access DOM element qua ref để register field.
- * → Không có ref → `{...register('email')}` không thể gắn vào input.
+/*
+ * ===================================================================
+ * COMPONENT: Input
+ * BỐI CẢNH (CONTEXT):
+ *   Trường nhập liệu Text (Input & Textarea) chuẩn hóa cho mọi Form.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Thiết kế tích hợp sẵn Label phía trên, Icon bên trái và thông báo lỗi (Error).
+ *   - Giải quyết xung đột kiểu dữ liệu giữa thẻ `<input>` và `<textarea>` thông qua 
+ *     Discriminated Union.
+ *   - Hỗ trợ `forwardRef` để nhận `register` từ React Hook Form dễ dàng.
+ * ===================================================================
  */
 
 import { forwardRef, type InputHTMLAttributes, type TextareaHTMLAttributes, type ReactNode } from "react";

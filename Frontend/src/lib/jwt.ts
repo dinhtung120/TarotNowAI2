@@ -1,3 +1,18 @@
+/*
+ * ===================================================================
+ * COMPONENT/FILE: Bộ công cụ xử lý JWT (jwt.ts)
+ * BỐI CẢNH (CONTEXT):
+ *   Thư viện nhỏ tự viết để giải mã và kiểm tra hạn sử dụng của JSON Web Token (JWT), 
+ *   có thể chạy tốt cả trên Server (Node.js) lẫn Client (Browser).
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Hàm `tryDecodeJwtPayload`: Tách phần thân (Payload) của JWT và dùng `atob` hoặc 
+ *     `Buffer` để giải mã Base64Url sang chuỗi JSON.
+ *   - Hàm `getJwtExpiryMs`: Trích xuất thời điểm hết hạn (exp) từ Payload định dạng Millisecond.
+ *   - Hàm `isJwtExpired`: Kiểm tra xem Token đã hết hạn chưa, hỗ trợ thêm tham số `leewaySeconds` 
+ *     để bù trừ độ trễ mạng hoặc sai số thời gian giữa Server-Client.
+ * ===================================================================
+ */
 export type JwtPayload = Record<string, unknown> & {
   exp?: number | string;
 };

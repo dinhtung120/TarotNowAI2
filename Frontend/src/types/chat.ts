@@ -1,3 +1,15 @@
+/*
+ * ===================================================================
+ * COMPONENT/FILE: Chat Types (chat.ts)
+ * BỐI CẢNH (CONTEXT):
+ *   Định nghĩa kiểu dữ liệu cho phân hệ Trò chuyện (Chat / SignalR) giữa User và Reader.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Định dạng `Conversation` (Cuộc trò chuyện) và `ChatMessage` (Tin nhắn đơn lẻ).
+ *   - Hỗ trợ nhiều loại tin nhắn (`Text`, `Offer`, `System`, `Payment`).
+ *   - Định nghĩa DTO cho việc Gửi tin nhắn (`SendMessageData`) và Tạo cuộc hội thoại.
+ * ===================================================================
+ */
 export interface Conversation {
  id: string;
  userId: string;

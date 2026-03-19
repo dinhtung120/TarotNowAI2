@@ -1,3 +1,16 @@
+/*
+ * ===================================================================
+ * FILE: collectionActions.ts
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Truy xuất Bộ Sưu Tập Lá Bài (Tarot Collection) của người dùng hiện tại
+ *   thông qua kênh Server-side an toàn (Next.js Actions).
+ *
+ * LƯU Ý CACHE:
+ *   Sử dụng cấu hình `next: { revalidate: 0 }` để "Xé Áo" bộ nhớ Cache mặc định của Next.js,
+ *   giúp người dùng bốc lá bài xong vào lại tủ đồ là thấy thẻ bài hiện lên ngay.
+ * ===================================================================
+ */
 "use server";
 
 import { cookies } from "next/headers";

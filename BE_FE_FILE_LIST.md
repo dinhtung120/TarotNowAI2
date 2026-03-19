@@ -8,297 +8,84 @@ Moi dong gom duong dan file va comment mo ta tac dung chinh.
 - `Backend/BE_FINAL_AUDIT_REPORT.md` - Bao cao audit tong hop cuoi cung cho backend.
 - `Backend/TarotNow.slnx` - Solution file gom cac project .NET cua backend de build/test dong bo.
 - `Backend/cookies.txt` - File luu cookie phuc vu test API thu cong hoac script local.
-- `Backend/src/TarotNow.Api/Contracts/RequestDtos.cs` - Tap hop DTO dau vao cho API layer de chuan hoa payload request.
-- `Backend/src/TarotNow.Api/Controllers/AdminController.cs` - API controller cho cac thao tac admin (user, nap/rut, duyet reader, doi soat).
-- `Backend/src/TarotNow.Api/Controllers/AiController.cs` - API controller cho cac endpoint lien quan AI (streaming, sinh noi dung).
-- `Backend/src/TarotNow.Api/Controllers/AuthController.cs` - API controller cho dang ky, dang nhap, refresh token, verify email, quen/mat khau.
-- `Backend/src/TarotNow.Api/Controllers/ConversationController.cs` - API controller quan ly danh sach cuoc tro chuyen va tin nhan theo hoi thoai.
-- `Backend/src/TarotNow.Api/Controllers/DepositController.cs` - API controller cho tao lenh nap tien va xu ly webhook thanh toan nap.
-- `Backend/src/TarotNow.Api/Controllers/DiagController.cs` - API controller cho endpoint chan doan/noi bo de debug he thong.
-- `Backend/src/TarotNow.Api/Controllers/EscrowController.cs` - API controller cho quy trinh escrow: chap nhan, hoi dap, tranh chap, giai phong tien.
-- `Backend/src/TarotNow.Api/Controllers/HealthController.cs` - API controller health-check de theo doi trang thai service.
-- `Backend/src/TarotNow.Api/Controllers/HistoryController.cs` - API controller truy van lich su doc bai va chi tiet phien da hoan thanh.
-- `Backend/src/TarotNow.Api/Controllers/LegalController.cs` - API controller ghi nhan va kiem tra user consent (TOS, privacy, disclaimer).
-- `Backend/src/TarotNow.Api/Controllers/MfaController.cs` - API controller cho setup/challenge/verify MFA.
-- `Backend/src/TarotNow.Api/Controllers/ProfileController.cs` - API controller doc/cap nhat thong tin ho so nguoi dung.
-- `Backend/src/TarotNow.Api/Controllers/PromotionsController.cs` - API controller quan ly va lay danh sach chuong trinh khuyen mai.
-- `Backend/src/TarotNow.Api/Controllers/ReaderController.cs` - API controller cho luong dang ky reader, cap nhat profile/status reader.
-- `Backend/src/TarotNow.Api/Controllers/ReportController.cs` - API controller tiep nhan bao cao vi pham/su co trong chat/phien doc bai.
-- `Backend/src/TarotNow.Api/Controllers/TarotController.cs` - API controller cho cac endpoint tarot (tao phien, reveal, AI interpretation).
-- `Backend/src/TarotNow.Api/Controllers/WalletController.cs` - API controller cho so du vi, lich su bien dong va truy van lien quan vi.
-- `Backend/src/TarotNow.Api/Controllers/WithdrawalController.cs` - API controller cho tao/duyet/liet ke yeu cau rut tien.
-- `Backend/src/TarotNow.Api/Hubs/ChatHub.cs` - SignalR hub cho giao tiep chat realtime giua user va reader.
-- `Backend/src/TarotNow.Api/Middlewares/GlobalExceptionHandler.cs` - Middleware bat va chuan hoa loi thanh response thong nhat toan API.
-- `Backend/src/TarotNow.Api/Program.cs` - Diem khoi dong API: dang ky DI, middleware pipeline, auth, cors, swagger, endpoint.
+
 - `Backend/src/TarotNow.Api/Properties/launchSettings.json` - Cau hinh profile chay/debug local cho project API.
 - `Backend/src/TarotNow.Api/TarotNow.Api.csproj` - Cau hinh project API: package reference, target framework, build settings.
 - `Backend/src/TarotNow.Api/TarotNow.Api.http` - Bo request mau de goi thu endpoint API tu IDE/rest client.
 - `Backend/src/TarotNow.Api/appsettings.Development.json` - Cau hinh moi truong Development (db, jwt, redis, provider...) cho API.
 - `Backend/src/TarotNow.Api/appsettings.json` - Cau hinh mac dinh cua API, duoc override theo env.
-- `Backend/src/TarotNow.Application/Behaviors/ValidationBehavior.cs` - MediatR pipeline behavior de chay validator truoc khi xu ly command/query.
-- `Backend/src/TarotNow.Application/Common/ChatDtos.cs` - DTO dung chung cho du lieu chat trong Application layer.
-- `Backend/src/TarotNow.Application/Common/Models/PaginatedList.cs` - Model dong goi du lieu phan trang (items, tong so, trang hien tai...).
-- `Backend/src/TarotNow.Application/Common/ReaderDtos.cs` - DTO dung chung cho du lieu reader trong Application layer.
-- `Backend/src/TarotNow.Application/DependencyInjection.cs` - Noi dang ky service Application layer vao DI container.
-- `Backend/src/TarotNow.Application/Exceptions/BadRequestException.cs` - Loai exception nghiep vu cua Application de handler va tra ma loi phu hop.
-- `Backend/src/TarotNow.Application/Exceptions/NotFoundException.cs` - Loai exception nghiep vu cua Application de handler va tra ma loi phu hop.
-- `Backend/src/TarotNow.Application/Exceptions/ValidationException.cs` - Loai exception nghiep vu cua Application de handler va tra ma loi phu hop.
-- `Backend/src/TarotNow.Application/Features/Admin/Commands/AddUserBalance/AddUserBalanceCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'AddUserBalance' thuoc module quan tri he thong.
-- `Backend/src/TarotNow.Application/Features/Admin/Commands/AddUserBalance/AddUserBalanceCommandValidator.cs` - Validator kiem tra rule dau vao cho use-case 'AddUserBalance' truoc khi xu ly.
-- `Backend/src/TarotNow.Application/Features/Admin/Commands/ApproveReader/ApproveReaderCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'ApproveReader' thuoc module quan tri he thong.
-- `Backend/src/TarotNow.Application/Features/Admin/Commands/ApproveReader/ApproveReaderCommandHandler.cs` - Handler thuc thi command 'ApproveReader' trong module quan tri he thong (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Admin/Commands/ProcessDeposit/ProcessDepositCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'ProcessDeposit' thuoc module quan tri he thong.
-- `Backend/src/TarotNow.Application/Features/Admin/Commands/ResolveDispute/ResolveDisputeCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'ResolveDispute' thuoc module quan tri he thong.
-- `Backend/src/TarotNow.Application/Features/Admin/Commands/ToggleUserLock/ToggleUserLockCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'ToggleUserLock' thuoc module quan tri he thong.
-- `Backend/src/TarotNow.Application/Features/Admin/Commands/ToggleUserLock/ToggleUserLockCommandHandler.cs` - Handler thuc thi command 'ToggleUserLock' trong module quan tri he thong (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Admin/Queries/GetLedgerMismatch/GetLedgerMismatchQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'GetLedgerMismatch' thuoc module quan tri he thong.
-- `Backend/src/TarotNow.Application/Features/Admin/Queries/GetLedgerMismatch/GetLedgerMismatchQueryHandler.cs` - Handler thuc thi query 'GetLedgerMismatch' trong module quan tri he thong (doc du lieu/tong hop ket qua).
-- `Backend/src/TarotNow.Application/Features/Admin/Queries/ListDeposits/ListDepositsQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'ListDeposits' thuoc module quan tri he thong.
-- `Backend/src/TarotNow.Application/Features/Admin/Queries/ListDeposits/ListDepositsQueryHandler.cs` - Handler thuc thi query 'ListDeposits' trong module quan tri he thong (doc du lieu/tong hop ket qua).
-- `Backend/src/TarotNow.Application/Features/Admin/Queries/ListReaderRequests/ListReaderRequestsQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'ListReaderRequests' thuoc module quan tri he thong.
-- `Backend/src/TarotNow.Application/Features/Admin/Queries/ListReaderRequests/ListReaderRequestsQueryHandler.cs` - Handler thuc thi query 'ListReaderRequests' trong module quan tri he thong (doc du lieu/tong hop ket qua).
-- `Backend/src/TarotNow.Application/Features/Admin/Queries/ListUsers/ListUsersQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'ListUsers' thuoc module quan tri he thong.
-- `Backend/src/TarotNow.Application/Features/Admin/Queries/ListUsers/ListUsersQueryHandler.cs` - Handler thuc thi query 'ListUsers' trong module quan tri he thong (doc du lieu/tong hop ket qua).
-- `Backend/src/TarotNow.Application/Features/Auth/Commands/ForgotPassword/ForgotPasswordCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'ForgotPassword' thuoc module xac thuc va tai khoan.
-- `Backend/src/TarotNow.Application/Features/Auth/Commands/ForgotPassword/ForgotPasswordCommandHandler.cs` - Handler thuc thi command 'ForgotPassword' trong module xac thuc va tai khoan (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Auth/Commands/Login/AuthResponse.cs` - Thanh phan use-case 'Login' trong module xac thuc va tai khoan (CQRS pipeline).
-- `Backend/src/TarotNow.Application/Features/Auth/Commands/Login/LoginCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'Login' thuoc module xac thuc va tai khoan.
-- `Backend/src/TarotNow.Application/Features/Auth/Commands/Login/LoginCommandHandler.cs` - Handler thuc thi command 'Login' trong module xac thuc va tai khoan (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Auth/Commands/Login/LoginCommandValidator.cs` - Validator kiem tra rule dau vao cho use-case 'Login' truoc khi xu ly.
-- `Backend/src/TarotNow.Application/Features/Auth/Commands/RefreshToken/RefreshTokenCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'RefreshToken' thuoc module xac thuc va tai khoan.
-- `Backend/src/TarotNow.Application/Features/Auth/Commands/RefreshToken/RefreshTokenCommandHandler.cs` - Handler thuc thi command 'RefreshToken' trong module xac thuc va tai khoan (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Auth/Commands/Register/RegisterCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'Register' thuoc module xac thuc va tai khoan.
-- `Backend/src/TarotNow.Application/Features/Auth/Commands/Register/RegisterCommandHandler.cs` - Handler thuc thi command 'Register' trong module xac thuc va tai khoan (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Auth/Commands/Register/RegisterCommandValidator.cs` - Validator kiem tra rule dau vao cho use-case 'Register' truoc khi xu ly.
-- `Backend/src/TarotNow.Application/Features/Auth/Commands/Register/RegisterResponse.cs` - Thanh phan use-case 'Register' trong module xac thuc va tai khoan (CQRS pipeline).
-- `Backend/src/TarotNow.Application/Features/Auth/Commands/ResetPassword/ResetPasswordCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'ResetPassword' thuoc module xac thuc va tai khoan.
-- `Backend/src/TarotNow.Application/Features/Auth/Commands/ResetPassword/ResetPasswordCommandHandler.cs` - Handler thuc thi command 'ResetPassword' trong module xac thuc va tai khoan (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Auth/Commands/RevokeToken/RevokeTokenCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'RevokeToken' thuoc module xac thuc va tai khoan.
-- `Backend/src/TarotNow.Application/Features/Auth/Commands/RevokeToken/RevokeTokenCommandHandler.cs` - Handler thuc thi command 'RevokeToken' trong module xac thuc va tai khoan (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Auth/Commands/SendEmailVerificationOtp/SendEmailVerificationOtpCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'SendEmailVerificationOtp' thuoc module xac thuc va tai khoan.
-- `Backend/src/TarotNow.Application/Features/Auth/Commands/SendEmailVerificationOtp/SendEmailVerificationOtpCommandHandler.cs` - Handler thuc thi command 'SendEmailVerificationOtp' trong module xac thuc va tai khoan (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Auth/Commands/VerifyEmail/VerifyEmailCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'VerifyEmail' thuoc module xac thuc va tai khoan.
-- `Backend/src/TarotNow.Application/Features/Auth/Commands/VerifyEmail/VerifyEmailCommandHandler.cs` - Handler thuc thi command 'VerifyEmail' trong module xac thuc va tai khoan (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Chat/Commands/CreateConversation/CreateConversationCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'CreateConversation' thuoc module chat va ho tro.
-- `Backend/src/TarotNow.Application/Features/Chat/Commands/CreateConversation/CreateConversationCommandHandler.cs` - Handler thuc thi command 'CreateConversation' trong module chat va ho tro (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Chat/Commands/CreateReport/CreateReportCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'CreateReport' thuoc module chat va ho tro.
-- `Backend/src/TarotNow.Application/Features/Chat/Commands/MarkMessagesRead/MarkMessagesReadCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'MarkMessagesRead' thuoc module chat va ho tro.
-- `Backend/src/TarotNow.Application/Features/Chat/Commands/SendMessage/SendMessageCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'SendMessage' thuoc module chat va ho tro.
-- `Backend/src/TarotNow.Application/Features/Chat/Commands/SendMessage/SendMessageCommandHandler.cs` - Handler thuc thi command 'SendMessage' trong module chat va ho tro (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Chat/Queries/ListConversations/ListConversationsQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'ListConversations' thuoc module chat va ho tro.
-- `Backend/src/TarotNow.Application/Features/Chat/Queries/ListMessages/ListMessagesQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'ListMessages' thuoc module chat va ho tro.
-- `Backend/src/TarotNow.Application/Features/Deposit/Commands/CreateDepositOrder/CreateDepositOrderCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'CreateDepositOrder' thuoc module nap tien.
-- `Backend/src/TarotNow.Application/Features/Deposit/Commands/CreateDepositOrder/CreateDepositOrderCommandHandler.cs` - Handler thuc thi command 'CreateDepositOrder' trong module nap tien (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Deposit/Commands/CreateDepositOrder/CreateDepositOrderCommandValidator.cs` - Validator kiem tra rule dau vao cho use-case 'CreateDepositOrder' truoc khi xu ly.
-- `Backend/src/TarotNow.Application/Features/Deposit/Commands/ProcessDepositWebhook/ProcessDepositWebhookCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'ProcessDepositWebhook' thuoc module nap tien.
-- `Backend/src/TarotNow.Application/Features/Deposit/Commands/ProcessDepositWebhook/ProcessDepositWebhookCommandHandler.cs` - Handler thuc thi command 'ProcessDepositWebhook' trong module nap tien (ghi du lieu/doi trang thai).
+
+
+
+
+
+
+
+
+
 - `Backend/src/TarotNow.Application/Features/Escrow/Commands/AcceptOffer/AcceptOfferCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'AcceptOffer' thuoc module escrow/giu tien giao dich.
-- `Backend/src/TarotNow.Application/Features/Escrow/Commands/AddQuestion/AddQuestionCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'AddQuestion' thuoc module escrow/giu tien giao dich.
-- `Backend/src/TarotNow.Application/Features/Escrow/Commands/ConfirmRelease/ConfirmReleaseCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'ConfirmRelease' thuoc module escrow/giu tien giao dich.
-- `Backend/src/TarotNow.Application/Features/Escrow/Commands/OpenDispute/OpenDisputeCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'OpenDispute' thuoc module escrow/giu tien giao dich.
-- `Backend/src/TarotNow.Application/Features/Escrow/Commands/ReaderReply/ReaderReplyCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'ReaderReply' thuoc module escrow/giu tien giao dich.
+
+
 - `Backend/src/TarotNow.Application/Features/Escrow/Queries/GetEscrowStatus/GetEscrowStatusQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'GetEscrowStatus' thuoc module escrow/giu tien giao dich.
-- `Backend/src/TarotNow.Application/Features/History/Queries/GetAllReadings/GetAllReadingsQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'GetAllReadings' thuoc module lich su giao dich/doc bai.
-- `Backend/src/TarotNow.Application/Features/History/Queries/GetReadingDetail/GetReadingDetailQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'GetReadingDetail' thuoc module lich su giao dich/doc bai.
-- `Backend/src/TarotNow.Application/Features/History/Queries/GetReadingHistory/GetReadingHistoryQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'GetReadingHistory' thuoc module lich su giao dich/doc bai.
-- `Backend/src/TarotNow.Application/Features/Legal/Commands/RecordConsent/RecordConsentCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'RecordConsent' thuoc module dong y phap ly.
-- `Backend/src/TarotNow.Application/Features/Legal/Commands/RecordConsent/RecordConsentCommandHandler.cs` - Handler thuc thi command 'RecordConsent' trong module dong y phap ly (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Legal/Commands/RecordConsent/RecordConsentCommandValidator.cs` - Validator kiem tra rule dau vao cho use-case 'RecordConsent' truoc khi xu ly.
-- `Backend/src/TarotNow.Application/Features/Legal/Queries/CheckConsent/CheckConsentQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'CheckConsent' thuoc module dong y phap ly.
-- `Backend/src/TarotNow.Application/Features/Legal/Queries/CheckConsent/CheckConsentQueryHandler.cs` - Handler thuc thi query 'CheckConsent' trong module dong y phap ly (doc du lieu/tong hop ket qua).
-- `Backend/src/TarotNow.Application/Features/Mfa/Commands/MfaChallenge/MfaChallengeCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'MfaChallenge' thuoc module bao mat MFA.
-- `Backend/src/TarotNow.Application/Features/Mfa/Commands/MfaSetup/MfaSetupCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'MfaSetup' thuoc module bao mat MFA.
-- `Backend/src/TarotNow.Application/Features/Mfa/Commands/MfaVerify/MfaVerifyCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'MfaVerify' thuoc module bao mat MFA.
-- `Backend/src/TarotNow.Application/Features/Mfa/Queries/GetMfaStatus/GetMfaStatusQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'GetMfaStatus' thuoc module bao mat MFA.
-- `Backend/src/TarotNow.Application/Features/Profile/Commands/UpdateProfile/UpdateProfileCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'UpdateProfile' thuoc module ho so nguoi dung.
-- `Backend/src/TarotNow.Application/Features/Profile/Commands/UpdateProfile/UpdateProfileCommandHandler.cs` - Handler thuc thi command 'UpdateProfile' trong module ho so nguoi dung (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Profile/Commands/UpdateProfile/UpdateProfileCommandValidator.cs` - Validator kiem tra rule dau vao cho use-case 'UpdateProfile' truoc khi xu ly.
-- `Backend/src/TarotNow.Application/Features/Profile/Queries/GetProfile/GetProfileQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'GetProfile' thuoc module ho so nguoi dung.
-- `Backend/src/TarotNow.Application/Features/Profile/Queries/GetProfile/GetProfileQueryHandler.cs` - Handler thuc thi query 'GetProfile' trong module ho so nguoi dung (doc du lieu/tong hop ket qua).
-- `Backend/src/TarotNow.Application/Features/Promotions/Commands/CreatePromotion/CreatePromotionCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'CreatePromotion' thuoc module khuyen mai.
-- `Backend/src/TarotNow.Application/Features/Promotions/Commands/CreatePromotion/CreatePromotionCommandHandler.cs` - Handler thuc thi command 'CreatePromotion' trong module khuyen mai (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Promotions/Commands/CreatePromotion/CreatePromotionCommandValidator.cs` - Validator kiem tra rule dau vao cho use-case 'CreatePromotion' truoc khi xu ly.
-- `Backend/src/TarotNow.Application/Features/Promotions/Commands/DeletePromotion/DeletePromotionCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'DeletePromotion' thuoc module khuyen mai.
-- `Backend/src/TarotNow.Application/Features/Promotions/Commands/DeletePromotion/DeletePromotionCommandHandler.cs` - Handler thuc thi command 'DeletePromotion' trong module khuyen mai (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Promotions/Commands/UpdatePromotion/UpdatePromotionCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'UpdatePromotion' thuoc module khuyen mai.
-- `Backend/src/TarotNow.Application/Features/Promotions/Commands/UpdatePromotion/UpdatePromotionCommandHandler.cs` - Handler thuc thi command 'UpdatePromotion' trong module khuyen mai (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Promotions/Commands/UpdatePromotion/UpdatePromotionCommandValidator.cs` - Validator kiem tra rule dau vao cho use-case 'UpdatePromotion' truoc khi xu ly.
-- `Backend/src/TarotNow.Application/Features/Promotions/Queries/ListPromotions/ListPromotionsQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'ListPromotions' thuoc module khuyen mai.
-- `Backend/src/TarotNow.Application/Features/Promotions/Queries/ListPromotions/ListPromotionsQueryHandler.cs` - Handler thuc thi query 'ListPromotions' trong module khuyen mai (doc du lieu/tong hop ket qua).
-- `Backend/src/TarotNow.Application/Features/Reader/Commands/SubmitReaderRequest/SubmitReaderRequestCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'SubmitReaderRequest' thuoc module reader va duyet reader.
-- `Backend/src/TarotNow.Application/Features/Reader/Commands/SubmitReaderRequest/SubmitReaderRequestCommandHandler.cs` - Handler thuc thi command 'SubmitReaderRequest' trong module reader va duyet reader (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Reader/Commands/SubmitReaderRequest/SubmitReaderRequestValidator.cs` - Validator kiem tra rule dau vao cho use-case 'SubmitReaderRequest' truoc khi xu ly.
-- `Backend/src/TarotNow.Application/Features/Reader/Commands/UpdateReaderProfile/UpdateReaderProfileCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'UpdateReaderProfile' thuoc module reader va duyet reader.
-- `Backend/src/TarotNow.Application/Features/Reader/Commands/UpdateReaderProfile/UpdateReaderProfileCommandHandler.cs` - Handler thuc thi command 'UpdateReaderProfile' trong module reader va duyet reader (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Reader/Commands/UpdateReaderStatus/UpdateReaderStatusCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'UpdateReaderStatus' thuoc module reader va duyet reader.
-- `Backend/src/TarotNow.Application/Features/Reader/Commands/UpdateReaderStatus/UpdateReaderStatusCommandHandler.cs` - Handler thuc thi command 'UpdateReaderStatus' trong module reader va duyet reader (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Reader/Queries/GetMyReaderRequest/GetMyReaderRequestQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'GetMyReaderRequest' thuoc module reader va duyet reader.
-- `Backend/src/TarotNow.Application/Features/Reader/Queries/GetReaderProfile/GetReaderProfileQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'GetReaderProfile' thuoc module reader va duyet reader.
-- `Backend/src/TarotNow.Application/Features/Reader/Queries/GetReaderProfile/GetReaderProfileQueryHandler.cs` - Handler thuc thi query 'GetReaderProfile' trong module reader va duyet reader (doc du lieu/tong hop ket qua).
-- `Backend/src/TarotNow.Application/Features/Reader/Queries/ListReaders/ListReadersQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'ListReaders' thuoc module reader va duyet reader.
-- `Backend/src/TarotNow.Application/Features/Reader/Queries/ListReaders/ListReadersQueryHandler.cs` - Handler thuc thi query 'ListReaders' trong module reader va duyet reader (doc du lieu/tong hop ket qua).
-- `Backend/src/TarotNow.Application/Features/Reading/Commands/CompleteAiStream/CompleteAiStreamCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'CompleteAiStream' thuoc module phien doc bai tarot.
-- `Backend/src/TarotNow.Application/Features/Reading/Commands/InitSession/InitReadingSessionCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'InitSession' thuoc module phien doc bai tarot.
-- `Backend/src/TarotNow.Application/Features/Reading/Commands/InitSession/InitReadingSessionCommandHandler.cs` - Handler thuc thi command 'InitSession' trong module phien doc bai tarot (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Reading/Commands/RevealSession/RevealReadingSessionCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'RevealSession' thuoc module phien doc bai tarot.
-- `Backend/src/TarotNow.Application/Features/Reading/Commands/RevealSession/RevealReadingSessionCommandHandler.cs` - Handler thuc thi command 'RevealSession' trong module phien doc bai tarot (ghi du lieu/doi trang thai).
-- `Backend/src/TarotNow.Application/Features/Reading/Commands/StreamReading/StreamReadingCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'StreamReading' thuoc module phien doc bai tarot.
-- `Backend/src/TarotNow.Application/Features/Reading/Queries/GetCollection/GetUserCollectionQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'GetCollection' thuoc module phien doc bai tarot.
-- `Backend/src/TarotNow.Application/Features/Reading/Queries/GetCollection/GetUserCollectionQueryHandler.cs` - Handler thuc thi query 'GetCollection' trong module phien doc bai tarot (doc du lieu/tong hop ket qua).
-- `Backend/src/TarotNow.Application/Features/Wallet/Queries/GetLedgerList/GetLedgerListQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'GetLedgerList' thuoc module vi va so cai.
-- `Backend/src/TarotNow.Application/Features/Wallet/Queries/GetLedgerList/GetLedgerListQueryHandler.cs` - Handler thuc thi query 'GetLedgerList' trong module vi va so cai (doc du lieu/tong hop ket qua).
-- `Backend/src/TarotNow.Application/Features/Wallet/Queries/GetWalletBalance/GetWalletBalanceQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'GetWalletBalance' thuoc module vi va so cai.
-- `Backend/src/TarotNow.Application/Features/Wallet/Queries/GetWalletBalance/GetWalletBalanceQueryHandler.cs` - Handler thuc thi query 'GetWalletBalance' trong module vi va so cai (doc du lieu/tong hop ket qua).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 - `Backend/src/TarotNow.Application/Features/Wallet/Queries/WalletDtos.cs` - Thanh phan use-case 'WalletDtos.cs' trong module vi va so cai (CQRS pipeline).
 - `Backend/src/TarotNow.Application/Features/Withdrawal/Commands/CreateWithdrawal/CreateWithdrawalCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'CreateWithdrawal' thuoc module rut tien.
 - `Backend/src/TarotNow.Application/Features/Withdrawal/Commands/ProcessWithdrawal/ProcessWithdrawalCommand.cs` - Command model mo ta request ghi/thao tac cho use-case 'ProcessWithdrawal' thuoc module rut tien.
 - `Backend/src/TarotNow.Application/Features/Withdrawal/Queries/ListWithdrawals/ListWithdrawalsQuery.cs` - Query model mo ta yeu cau doc du lieu cho use-case 'ListWithdrawals' thuoc module rut tien.
 - `Backend/src/TarotNow.Application/Interfaces/IAdminRepository.cs` - Interface abstraction 'AdminRepository' de tach Application khoi implementation ha tang (DI/test de mock).
 - `Backend/src/TarotNow.Application/Interfaces/IAiProvider.cs` - Interface abstraction 'AiProvider' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IAiProviderLogRepository.cs` - Interface abstraction 'AiProviderLogRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IAiRequestRepository.cs` - Interface abstraction 'AiRequestRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/ICacheService.cs` - Interface abstraction 'CacheService' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/ICardsCatalogRepository.cs` - Interface abstraction 'CardsCatalogRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IChatFinanceRepository.cs` - Interface abstraction 'ChatFinanceRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IChatMessageRepository.cs` - Interface abstraction 'ChatMessageRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IConversationRepository.cs` - Interface abstraction 'ConversationRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IDepositOrderRepository.cs` - Interface abstraction 'DepositOrderRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IDepositPromotionRepository.cs` - Interface abstraction 'DepositPromotionRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IEmailOtpRepository.cs` - Interface abstraction 'EmailOtpRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IEmailSender.cs` - Interface abstraction 'EmailSender' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/ILedgerRepository.cs` - Interface abstraction 'LedgerRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IMfaService.cs` - Interface abstraction 'MfaService' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/INotificationRepository.cs` - Interface abstraction 'NotificationRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IPasswordHasher.cs` - Interface abstraction 'PasswordHasher' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IPaymentGatewayService.cs` - Interface abstraction 'PaymentGatewayService' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IReaderProfileRepository.cs` - Interface abstraction 'ReaderProfileRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IReaderRequestRepository.cs` - Interface abstraction 'ReaderRequestRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IReadingSessionRepository.cs` - Interface abstraction 'ReadingSessionRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IRefreshTokenRepository.cs` - Interface abstraction 'RefreshTokenRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IReportRepository.cs` - Interface abstraction 'ReportRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IRngService.cs` - Interface abstraction 'RngService' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/ITokenService.cs` - Interface abstraction 'TokenService' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/ITransactionCoordinator.cs` - Interface abstraction 'TransactionCoordinator' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IUserCollectionRepository.cs` - Interface abstraction 'UserCollectionRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IUserConsentRepository.cs` - Interface abstraction 'UserConsentRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IUserRepository.cs` - Interface abstraction 'UserRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IWalletRepository.cs` - Interface abstraction 'WalletRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/Interfaces/IWithdrawalRepository.cs` - Interface abstraction 'WithdrawalRepository' de tach Application khoi implementation ha tang (DI/test de mock).
-- `Backend/src/TarotNow.Application/TarotNow.Application.csproj` - Cau hinh project Application (CQRS/use-case/validation abstractions).
-- `Backend/src/TarotNow.Domain/Constants/EconomyConstants.cs` - Hang so domain lien quan quy tac kinh te, tinh phi/gioi han giao dich.
-- `Backend/src/TarotNow.Domain/Entities/AiRequest.cs` - Domain entity 'AiRequest' dai dien doi tuong nghiep vu cot loi va trang thai ben vung.
-- `Backend/src/TarotNow.Domain/Entities/ChatFinanceSession.cs` - Domain entity 'ChatFinanceSession' dai dien doi tuong nghiep vu cot loi va trang thai ben vung.
-- `Backend/src/TarotNow.Domain/Entities/ChatQuestionItem.cs` - Domain entity 'ChatQuestionItem' dai dien doi tuong nghiep vu cot loi va trang thai ben vung.
-- `Backend/src/TarotNow.Domain/Entities/DepositOrder.cs` - Domain entity 'DepositOrder' dai dien doi tuong nghiep vu cot loi va trang thai ben vung.
-- `Backend/src/TarotNow.Domain/Entities/DepositPromotion.cs` - Domain entity 'DepositPromotion' dai dien doi tuong nghiep vu cot loi va trang thai ben vung.
-- `Backend/src/TarotNow.Domain/Entities/EmailOtp.cs` - Domain entity 'EmailOtp' dai dien doi tuong nghiep vu cot loi va trang thai ben vung.
-- `Backend/src/TarotNow.Domain/Entities/MismatchRecord.cs` - Domain entity 'MismatchRecord' dai dien doi tuong nghiep vu cot loi va trang thai ben vung.
-- `Backend/src/TarotNow.Domain/Entities/ReadingSession.cs` - Domain entity 'ReadingSession' dai dien doi tuong nghiep vu cot loi va trang thai ben vung.
-- `Backend/src/TarotNow.Domain/Entities/RefreshToken.cs` - Domain entity 'RefreshToken' dai dien doi tuong nghiep vu cot loi va trang thai ben vung.
-- `Backend/src/TarotNow.Domain/Entities/User.cs` - Domain entity 'User' dai dien doi tuong nghiep vu cot loi va trang thai ben vung.
-- `Backend/src/TarotNow.Domain/Entities/UserCollection.cs` - Domain entity 'UserCollection' dai dien doi tuong nghiep vu cot loi va trang thai ben vung.
-- `Backend/src/TarotNow.Domain/Entities/UserConsent.cs` - Domain entity 'UserConsent' dai dien doi tuong nghiep vu cot loi va trang thai ben vung.
-- `Backend/src/TarotNow.Domain/Entities/UserWallet.cs` - Domain entity 'UserWallet' dai dien doi tuong nghiep vu cot loi va trang thai ben vung.
-- `Backend/src/TarotNow.Domain/Entities/WalletTransaction.cs` - Domain entity 'WalletTransaction' dai dien doi tuong nghiep vu cot loi va trang thai ben vung.
-- `Backend/src/TarotNow.Domain/Entities/WithdrawalRequest.cs` - Domain entity 'WithdrawalRequest' dai dien doi tuong nghiep vu cot loi va trang thai ben vung.
-- `Backend/src/TarotNow.Domain/Enums/AiRequestStatus.cs` - Enum 'AiRequestStatus' chuan hoa tap gia tri nghiep vu de tranh magic string/int.
-- `Backend/src/TarotNow.Domain/Enums/ChatMessageType.cs` - Enum 'ChatMessageType' chuan hoa tap gia tri nghiep vu de tranh magic string/int.
-- `Backend/src/TarotNow.Domain/Enums/ConversationStatus.cs` - Enum 'ConversationStatus' chuan hoa tap gia tri nghiep vu de tranh magic string/int.
-- `Backend/src/TarotNow.Domain/Enums/CurrencyType.cs` - Enum 'CurrencyType' chuan hoa tap gia tri nghiep vu de tranh magic string/int.
-- `Backend/src/TarotNow.Domain/Enums/OtpType.cs` - Enum 'OtpType' chuan hoa tap gia tri nghiep vu de tranh magic string/int.
-- `Backend/src/TarotNow.Domain/Enums/QuestionItemStatus.cs` - Enum 'QuestionItemStatus' chuan hoa tap gia tri nghiep vu de tranh magic string/int.
-- `Backend/src/TarotNow.Domain/Enums/QuestionItemType.cs` - Enum 'QuestionItemType' chuan hoa tap gia tri nghiep vu de tranh magic string/int.
-- `Backend/src/TarotNow.Domain/Enums/ReaderApprovalStatus.cs` - Enum 'ReaderApprovalStatus' chuan hoa tap gia tri nghiep vu de tranh magic string/int.
-- `Backend/src/TarotNow.Domain/Enums/ReaderOnlineStatus.cs` - Enum 'ReaderOnlineStatus' chuan hoa tap gia tri nghiep vu de tranh magic string/int.
-- `Backend/src/TarotNow.Domain/Enums/SpreadType.cs` - Enum 'SpreadType' chuan hoa tap gia tri nghiep vu de tranh magic string/int.
-- `Backend/src/TarotNow.Domain/Enums/TransactionType.cs` - Enum 'TransactionType' chuan hoa tap gia tri nghiep vu de tranh magic string/int.
-- `Backend/src/TarotNow.Domain/Enums/UserRole.cs` - Enum 'UserRole' chuan hoa tap gia tri nghiep vu de tranh magic string/int.
-- `Backend/src/TarotNow.Domain/Enums/UserStatus.cs` - Enum 'UserStatus' chuan hoa tap gia tri nghiep vu de tranh magic string/int.
-- `Backend/src/TarotNow.Domain/Exceptions/DomainException.cs` - Exception goc cho cac vi pham bat bien/luat nghiep vu trong Domain.
-- `Backend/src/TarotNow.Domain/Helpers/ProfileHelper.cs` - Ham ho tro xu ly/chuan hoa du lieu profile theo quy tac domain.
-- `Backend/src/TarotNow.Domain/Services/FollowupPricingService.cs` - Domain service tinh toan gia/phi cho cau hoi follow-up.
-- `Backend/src/TarotNow.Domain/TarotNow.Domain.csproj` - Cau hinh project Domain (entities, enums, business rules co loi ich cot loi).
-- `Backend/src/TarotNow.Infrastructure/BackgroundJobs/CacheBackendStartupLogger.cs` - Hosted background job xu ly tac vu dinh ky/asynchronous cua he thong.
-- `Backend/src/TarotNow.Infrastructure/BackgroundJobs/EscrowTimerService.cs` - Hosted background job xu ly tac vu dinh ky/asynchronous cua he thong.
-- `Backend/src/TarotNow.Infrastructure/DependencyInjection.cs` - Dang ky implementation ha tang (repo, db context, security, external services).
-- `Backend/src/TarotNow.Infrastructure/Migrations/20260315124405_ResetSchema.Designer.cs` - File designer migration EF sinh tu dong, luu metadata schema migration.
-- `Backend/src/TarotNow.Infrastructure/Migrations/20260315124405_ResetSchema.cs` - Migration EF thay doi schema CSDL theo tung dot cap nhat.
-- `Backend/src/TarotNow.Infrastructure/Migrations/20260317211223_AlignSchemaWithMongoAndSecurity.Designer.cs` - File designer migration EF sinh tu dong, luu metadata schema migration.
-- `Backend/src/TarotNow.Infrastructure/Migrations/20260317211223_AlignSchemaWithMongoAndSecurity.cs` - Migration EF thay doi schema CSDL theo tung dot cap nhat.
-- `Backend/src/TarotNow.Infrastructure/Migrations/20260318163000_AddWithdrawalOnePerDayActiveIndex.cs` - Migration EF thay doi schema CSDL theo tung dot cap nhat.
-- `Backend/src/TarotNow.Infrastructure/Migrations/20260318180118_AddEscrowUniquenessIndexes.Designer.cs` - File designer migration EF sinh tu dong, luu metadata schema migration.
-- `Backend/src/TarotNow.Infrastructure/Migrations/20260318180118_AddEscrowUniquenessIndexes.cs` - Migration EF thay doi schema CSDL theo tung dot cap nhat.
-- `Backend/src/TarotNow.Infrastructure/Migrations/ApplicationDbContextModelSnapshot.cs` - EF migration snapshot mo ta schema hien tai cua SQL model.
-- `Backend/src/TarotNow.Infrastructure/Persistence/ApplicationDbContext.cs` - EF Core DbContext cho SQL storage va transaction chinh.
-- `Backend/src/TarotNow.Infrastructure/Persistence/ApplicationDbContextFactory.cs` - Factory tao DbContext cho design-time task (migrations/tools).
-- `Backend/src/TarotNow.Infrastructure/Persistence/Configurations/AiRequestConfiguration.cs` - Fluent API config cho entity: key, index, relationship, constraint.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Configurations/ChatFinanceSessionConfiguration.cs` - Fluent API config cho entity: key, index, relationship, constraint.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Configurations/ChatQuestionItemConfiguration.cs` - Fluent API config cho entity: key, index, relationship, constraint.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Configurations/DepositOrderConfiguration.cs` - Fluent API config cho entity: key, index, relationship, constraint.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Configurations/DepositPromotionConfiguration.cs` - Fluent API config cho entity: key, index, relationship, constraint.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Configurations/EmailOtpConfiguration.cs` - Fluent API config cho entity: key, index, relationship, constraint.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Configurations/RefreshTokenConfiguration.cs` - Fluent API config cho entity: key, index, relationship, constraint.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Configurations/UserConfiguration.cs` - Fluent API config cho entity: key, index, relationship, constraint.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Configurations/UserConsentConfiguration.cs` - Fluent API config cho entity: key, index, relationship, constraint.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Configurations/WalletTransactionConfiguration.cs` - Fluent API config cho entity: key, index, relationship, constraint.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Configurations/WithdrawalRequestConfiguration.cs` - Fluent API config cho entity: key, index, relationship, constraint.
-- `Backend/src/TarotNow.Infrastructure/Persistence/MongoDbContext.cs` - Mongo context quan ly ket noi va collection cho du lieu phi quan he.
-- `Backend/src/TarotNow.Infrastructure/Persistence/MongoDocuments/AiProviderLogDocument.cs` - Schema document MongoDB cho collection tuong ung.
-- `Backend/src/TarotNow.Infrastructure/Persistence/MongoDocuments/CardCatalogDocument.cs` - Schema document MongoDB cho collection tuong ung.
-- `Backend/src/TarotNow.Infrastructure/Persistence/MongoDocuments/ChatMessageDocument.cs` - Schema document MongoDB cho collection tuong ung.
-- `Backend/src/TarotNow.Infrastructure/Persistence/MongoDocuments/ConversationDocument.cs` - Schema document MongoDB cho collection tuong ung.
-- `Backend/src/TarotNow.Infrastructure/Persistence/MongoDocuments/NotificationDocument.cs` - Schema document MongoDB cho collection tuong ung.
-- `Backend/src/TarotNow.Infrastructure/Persistence/MongoDocuments/ReaderProfileDocument.cs` - Schema document MongoDB cho collection tuong ung.
-- `Backend/src/TarotNow.Infrastructure/Persistence/MongoDocuments/ReaderRequestDocument.cs` - Schema document MongoDB cho collection tuong ung.
-- `Backend/src/TarotNow.Infrastructure/Persistence/MongoDocuments/ReadingSessionDocument.cs` - Schema document MongoDB cho collection tuong ung.
-- `Backend/src/TarotNow.Infrastructure/Persistence/MongoDocuments/ReportDocument.cs` - Schema document MongoDB cho collection tuong ung.
-- `Backend/src/TarotNow.Infrastructure/Persistence/MongoDocuments/UserCollectionDocument.cs` - Schema document MongoDB cho collection tuong ung.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/AdminRepository.cs` - Repository implementation truy cap du lieu (SQL/Mongo) cho interface Application.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/AiRequestRepository.cs` - Repository implementation truy cap du lieu (SQL/Mongo) cho interface Application.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/DepositOrderRepository.cs` - Repository implementation truy cap du lieu (SQL/Mongo) cho interface Application.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/DepositPromotionRepository.cs` - Repository implementation truy cap du lieu (SQL/Mongo) cho interface Application.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/EmailOtpRepository.cs` - Repository implementation truy cap du lieu (SQL/Mongo) cho interface Application.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/LedgerRepository.cs` - Repository implementation truy cap du lieu (SQL/Mongo) cho interface Application.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/MongoAiProviderLogRepository.cs` - Repository implementation truy cap du lieu (SQL/Mongo) cho interface Application.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/MongoCardsCatalogRepository.cs` - Repository implementation truy cap du lieu (SQL/Mongo) cho interface Application.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/MongoChatMessageRepository.cs` - Repository implementation truy cap du lieu (SQL/Mongo) cho interface Application.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/MongoConversationRepository.cs` - Repository implementation truy cap du lieu (SQL/Mongo) cho interface Application.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/MongoNotificationRepository.cs` - Repository implementation truy cap du lieu (SQL/Mongo) cho interface Application.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/MongoReaderProfileRepository.cs` - Repository implementation truy cap du lieu (SQL/Mongo) cho interface Application.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/MongoReaderRequestRepository.cs` - Repository implementation truy cap du lieu (SQL/Mongo) cho interface Application.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/MongoReadingSessionRepository.cs` - Repository implementation truy cap du lieu (SQL/Mongo) cho interface Application.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/MongoReportRepository.cs` - Repository implementation truy cap du lieu (SQL/Mongo) cho interface Application.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/MongoUserCollectionRepository.cs` - Repository implementation truy cap du lieu (SQL/Mongo) cho interface Application.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/RefreshTokenRepository.cs` - Repository implementation truy cap du lieu (SQL/Mongo) cho interface Application.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/UserConsentRepository.cs` - Repository implementation truy cap du lieu (SQL/Mongo) cho interface Application.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/UserRepository.cs` - Repository implementation truy cap du lieu (SQL/Mongo) cho interface Application.
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/WalletRepository.cs` - Repository implementation truy cap du lieu (SQL/Mongo) cho interface Application.
-- `Backend/src/TarotNow.Infrastructure/Persistence/TransactionCoordinator.cs` - Dieu phoi transaction/unit-of-work qua nhieu repository.
-- `Backend/src/TarotNow.Infrastructure/Repositories/ChatFinanceRepository.cs` - Repository implementation bo sung cho module dac thu ngoai thu muc Persistence/Repositories.
-- `Backend/src/TarotNow.Infrastructure/Repositories/WithdrawalRepository.cs` - Repository implementation bo sung cho module dac thu ngoai thu muc Persistence/Repositories.
-- `Backend/src/TarotNow.Infrastructure/Security/Argon2idPasswordHasher.cs` - Implementation bam/xac minh mat khau bang Argon2id.
-- `Backend/src/TarotNow.Infrastructure/Security/JwtTokenService.cs` - Implementation tao/kiem tra JWT access-refresh token.
-- `Backend/src/TarotNow.Infrastructure/Services/Ai/OpenAiProvider.cs` - Adapter ket noi OpenAI provider de sinh noi dung/stream ket qua tarot.
-- `Backend/src/TarotNow.Infrastructure/Services/CacheBackendState.cs` - Service theo doi/trang thai cache backend phuc vu van hanh va chan doan.
-- `Backend/src/TarotNow.Infrastructure/Services/HmacPaymentGatewayService.cs` - Service xu ly ky/verify HMAC cho webhook va giao tiep cong thanh toan.
-- `Backend/src/TarotNow.Infrastructure/Services/MockEmailSender.cs` - Email sender gia lap dung cho local/test env.
-- `Backend/src/TarotNow.Infrastructure/Services/RedisCacheService.cs` - Implementation cache service su dung Redis.
-- `Backend/src/TarotNow.Infrastructure/Services/RngService.cs` - Service random/RNG cho nghiep vu can tinh ngau nhien co kiem soat.
-- `Backend/src/TarotNow.Infrastructure/Services/TotpMfaService.cs` - Service TOTP cho MFA: tao secret, challenge, verify OTP.
-- `Backend/src/TarotNow.Infrastructure/TarotNow.Infrastructure.csproj` - Cau hinh project Infrastructure (EF, Mongo, Redis, security, provider ngoai).
-- `Backend/test-api.js` - Script JS test nhanh cac endpoint API tu terminal.
-- `Backend/test-paid.js` - Script JS test luong thanh toan/nap tien da thanh cong.
-- `Backend/test-reveal.js` - Script JS test luong reveal phien doc bai.
-- `Backend/tests/TarotNow.Api.IntegrationTests/AdminRbacIntegrationTests.cs` - Integration test 'AdminRbacIntegrationTests' kiem tra hanh vi API end-to-end qua HTTP/pipeline that.
-- `Backend/tests/TarotNow.Api.IntegrationTests/AiStreamingTests.cs` - Integration test 'AiStreamingTests' kiem tra hanh vi API end-to-end qua HTTP/pipeline that.
-- `Backend/tests/TarotNow.Api.IntegrationTests/CustomWebApplicationFactory.cs` - Integration test 'CustomWebApplicationFactory' kiem tra hanh vi API end-to-end qua HTTP/pipeline that.
-- `Backend/tests/TarotNow.Api.IntegrationTests/DepositWebhookIntegrationTests.cs` - Integration test 'DepositWebhookIntegrationTests' kiem tra hanh vi API end-to-end qua HTTP/pipeline that.
-- `Backend/tests/TarotNow.Api.IntegrationTests/FollowupCapIntegrationTests.cs` - Integration test 'FollowupCapIntegrationTests' kiem tra hanh vi API end-to-end qua HTTP/pipeline that.
-- `Backend/tests/TarotNow.Api.IntegrationTests/LegalIntegrationTests.cs` - Integration test 'LegalIntegrationTests' kiem tra hanh vi API end-to-end qua HTTP/pipeline that.
-- `Backend/tests/TarotNow.Api.IntegrationTests/ProfileIntegrationTests.cs` - Integration test 'ProfileIntegrationTests' kiem tra hanh vi API end-to-end qua HTTP/pipeline that.
-- `Backend/tests/TarotNow.Api.IntegrationTests/PromotionIntegrationTests.cs` - Integration test 'PromotionIntegrationTests' kiem tra hanh vi API end-to-end qua HTTP/pipeline that.
-- `Backend/tests/TarotNow.Api.IntegrationTests/TarotNow.Api.IntegrationTests.csproj` - Project test xac dinh dependency/framework cho bo test tuong ung.
-- `Backend/tests/TarotNow.Api.IntegrationTests/TestAuthHandler.cs` - Integration test 'TestAuthHandler' kiem tra hanh vi API end-to-end qua HTTP/pipeline that.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 - `Backend/tests/TarotNow.Application.UnitTests/Admin/GetLedgerMismatchQueryHandlerTests.cs` - Unit test 'GetLedgerMismatchQueryHandlerTests' xac nhan logic use-case/handler cua Application layer.
 - `Backend/tests/TarotNow.Application.UnitTests/Features/Admin/ApproveReaderCommandHandlerTests.cs` - Unit test 'ApproveReaderCommandHandlerTests' xac nhan logic use-case/handler cua Application layer.
 - `Backend/tests/TarotNow.Application.UnitTests/Features/Admin/ProcessDepositCommandHandlerTests.cs` - Unit test 'ProcessDepositCommandHandlerTests' xac nhan logic use-case/handler cua Application layer.

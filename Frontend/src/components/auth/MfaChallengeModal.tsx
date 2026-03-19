@@ -13,8 +13,18 @@ interface MfaChallengeModalProps {
  skipApiCall?: boolean;
 }
 
-/**
- * Modal hiển thị yêu cầu nhập mã MFA khi thực hiện hành động nhạy cảm (VD: rút tiền).
+/*
+ * ===================================================================
+ * COMPONENT: MfaChallengeModal
+ * BỐI CẢNH (CONTEXT):
+ *   Modal bảo mật (Popup) yêu cầu User nhập mã OTP từ ứng dụng Authenticator 
+ *   trước khi thực hiện hành động nhạy cảm (Ví dụ: Thêm thẻ ngân hàng, Rút tiền).
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Nhập OTP 6 số và gọi `challengeMfa` (nếu không bật `skipApiCall`).
+ *   - Sau khi verify thành công, gọi callback `onSuccess(code)` để truyền 
+ *     MFA token về parent component để tiếp tục luồng giao dịch.
+ * ===================================================================
  */
 export default function MfaChallengeModal({ isOpen, onClose, onSuccess, actionTitle, skipApiCall = false }: MfaChallengeModalProps) {
  const t = useTranslations("Auth");

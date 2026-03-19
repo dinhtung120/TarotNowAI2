@@ -1,3 +1,15 @@
+/*
+ * ===================================================================
+ * COMPONENT/FILE: Reader Types (reader.ts)
+ * BỐI CẢNH (CONTEXT):
+ *   Định nghĩa dữ liệu hồ sơ dành riêng cho Reader (người đọc Tarot).
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - `ReaderProfile`: Lưu trữ giá cả, Bio, đánh giá và Trạng thái (Online/Busy) của Reader.
+ *   - `ReaderRequest`: Đơn đăng ký trở thành Reader đang chờ Admin xét duyệt.
+ *   - DTO cho việc Cập nhật giá/Thông tin cá nhân (UpdateReaderProfileData).
+ * ===================================================================
+ */
 export interface ReaderProfile {
  id: string;
  userId: string;

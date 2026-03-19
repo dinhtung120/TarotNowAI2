@@ -1,3 +1,15 @@
+/*
+ * ===================================================================
+ * FILE: (auth)/verify-email/page.tsx (Xác thực Email)
+ * BỐI CẢNH (CONTEXT):
+ *   Trang yêu cầu User nhập mã OTP để xác thực tài khoản sau khi đăng ký.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Nhập OTP 6 số và submit thông qua `verifyEmailAction`.
+ *   - Nếu thành công: Hiển thị giao diện chúc mừng và nút chuyển đến Login.
+ *   - Cho phép gửi lại OTP (`resendVerificationEmailAction`) với giới hạn 60 giây (ResendTimer).
+ * ===================================================================
+ */
 'use client';
 
 import { useMemo, useEffect, useState } from 'react';

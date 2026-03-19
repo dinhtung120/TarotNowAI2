@@ -1,25 +1,17 @@
 "use client";
 
-/**
- * Button — Component nút bấm thống nhất cho toàn app.
- *
- * === VẤN ĐỀ TRƯỚC ĐÂY ===
- * Mỗi trang tự viết button riêng với styling hơi khác nhau:
- * - Home: `tn-surface-strong tn-text-ink px-10 py-5 rounded-2xl font-black text-xs uppercase`
- * - Login: `bg-gradient-to-r from-[var(--purple-accent)] to-[var(--purple-accent)] rounded-2xl font-semibold`
- * - Wallet: `tn-surface-strong tn-text-ink px-6 py-3 rounded-2xl font-black text-[10px]`
- *
- * === GIẢI PHÁP ===
- * 1 component duy nhất với 5 variants:
- * - `primary` : CTA sáng dịu với lavender-mint glow
- * - `brand` : Gradient cosmic botanical (CTA phụ — đăng ký, xác nhận)
- * - `secondary`: Surface nhẹ, thanh lịch (hành động phụ)
- * - `ghost` : Không nền, chỉ text (link-style button)
- * - `danger` : Đỏ nhẹ (đăng xuất, xóa, hủy)
- *
- * Tại sao dùng forwardRef?
- * → Cho phép parent component access DOM node (focus, scroll to, v.v.)
- * → Cần thiết khi dùng với thư viện form (React Hook Form) hoặc tooltip.
+/*
+ * ===================================================================
+ * COMPONENT: Button
+ * BỐI CẢNH (CONTEXT):
+ *   Nút bấm (Button) cốt lõi của toàn hệ thống, áp dụng chuẩn thiết kế "Lunar Bloom".
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Tích hợp 5 Variants (Primary, Brand, Secondary, Ghost, Danger) và 3 Sizes.
+ *   - Hỗ trợ hiển thị Spinner quay (Loading) và Icon hai bên rập khuôn.
+ *   - Sử dụng `forwardRef` để tương thích hoàn hảo với React Hook Form và các 
+ *     thư viện Tooltip/Popover cần truy xuất phần tử DOM thực.
+ * ===================================================================
  */
 
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";

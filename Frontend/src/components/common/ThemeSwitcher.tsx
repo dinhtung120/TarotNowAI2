@@ -1,3 +1,16 @@
+/*
+ * ===================================================================
+ * COMPONENT: ThemeSwitcher
+ * BỐI CẢNH (CONTEXT):
+ *   Nút chuyển đổi Giao diện/Chủ đề (Theme) của người dùng.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Quản lý danh sách 16 Themes hệ thống cao cấp (Prismatic Royal, Astral...).
+ *   - Lấy Theme hiện tại từ `localStorage` và `data-theme` của Document.
+ *   - Cập nhật trực tiếp class `data-theme` trên HTML Element khi đổi Theme.
+ *   - Xử lý đóng Dropdown khi click ra ngoài hoặc bấm nút Escape.
+ * ===================================================================
+ */
 "use client";
 
 import { Check, ChevronDown, Palette } from "lucide-react";

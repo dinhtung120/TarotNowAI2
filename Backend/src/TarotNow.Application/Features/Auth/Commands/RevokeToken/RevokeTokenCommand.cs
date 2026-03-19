@@ -1,21 +1,37 @@
+/*
+ * ===================================================================
+ * FILE: RevokeTokenCommand.cs
+ * NAMESPACE: TarotNow.Application.Features.Auth.Commands.RevokeToken
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Gói lệnh thủ hồi Access/Refresh Token trước thời hạn (Chức năng LOGOUT).
+ *   - Logout cục bộ: Xoá bỏ 1 phiên trên đúng cái Browser/Thiết bị này.
+ *   - Logout toàn thiết bị: Xoá tất cả phiên của người dùng đó (RevokeAll = true).
+ * ===================================================================
+ */
+
 using MediatR;
 
 namespace TarotNow.Application.Features.Auth.Commands.RevokeToken;
 
 /// <summary>
-/// Dùng để đăng xuất / thu hồi Refresh Token hiện tại.
-/// Hoặc Logout Everywhere (truyền userId và thu hồi tất cả).
+/// Command báo hiệu tước quyền đăng nhập. Dùng khi user bấm Sign Out.
 /// </summary>
 public class RevokeTokenCommand : IRequest<bool>
 {
+    /// <summary>
+    /// Mã Refresh Token cũ trên thiết bị hiện tại (Đọc từ HttpOnly Cookie).
+    /// </summary>
     public string Token { get; set; } = string.Empty;
 
     /// <summary>
-    /// Nếu true, sẽ thực hiện Logout All Devices, thu hồi mọi token của User này.
-    /// Nếu false, chỉ thu hồi token cụ thể được cấp.
+    /// Chế độ Vô Hiệu Hoá Hàng Loạt (Logout Everywhere).
     /// </summary>
     public bool RevokeAll { get; set; } = false;
     
-    // Nếu RevokeAll = true, cần UserId (trích xuất từ HttpContext User Claims)
+    /// <summary>
+    /// Biến điều kiện khi RevokeAll=True. Phải biết User là ai thì mới xoá được tất cả thiết bị.
+    /// Thông số này sẽ lấy từ HttpContext Claims thông qua JWT Token xác thực.
+    /// </summary>
     public Guid? UserId { get; set; }
 }

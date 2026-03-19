@@ -1,3 +1,26 @@
+/*
+ * FILE: MongoReadingSessionRepository.cs
+ * MỤC ĐÍCH: Repository quản lý phiên đọc bài Tarot từ MongoDB (collection "reading_sessions").
+ *   ĐÂY LÀ REPOSITORY PHỨC TẠP NHẤT — vì xử lý cross-database (MongoDB + PostgreSQL).
+ *
+ *   CÁC CHỨC NĂNG:
+ *   → CreateAsync: tạo phiên mới trong MongoDB
+ *   → GetByIdAsync: lấy phiên theo ID (hỗ trợ cả ObjectId lẫn string ID)
+ *   → UpdateAsync: cập nhật phiên (drawn_cards, AI status)
+ *   → HasDrawnDailyCardAsync: kiểm tra User đã rút daily card hôm nay chưa
+ *   → StartPaidSessionAtomicAsync: PATTERN PHỨC TẠP — trừ tiền (PostgreSQL) + tạo session (MongoDB)
+ *   → GetSessionsByUserIdAsync: lịch sử phiên của User (phân trang)
+ *   → GetSessionWithAiRequestsAsync: cross-DB query (MongoDB session + PostgreSQL ai_requests)
+ *   → GetAllSessionsAsync: Admin dashboard với bộ lọc nâng cao
+ *
+ *   CROSS-DB PATTERN:
+ *   Vì dữ liệu nằm ở 2 database khác nhau (MongoDB + PostgreSQL), không thể dùng
+ *   single ACID transaction. Thay vào đó dùng compensating transaction pattern:
+ *   → Bước 1: Trừ tiền trong PostgreSQL (ACID transaction)
+ *   → Bước 2: Tạo session trong MongoDB
+ *   → Nếu bước 2 fail: hoàn tiền (refund) trong PostgreSQL
+ */
+
 using MongoDB.Driver;
 using MongoDB.Bson;
 using TarotNow.Application.Interfaces;
@@ -8,22 +31,17 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
 /// <summary>
-/// MongoDB implementation cho IReadingSessionRepository.
-///
-/// THAY THẾ ReadingSessionRepository (EF Core / PostgreSQL) trước đó.
-/// Phiên đọc bài giờ lưu trong MongoDB collection "reading_sessions".
-///
-/// Lưu ý quan trọng:
-/// - StartPaidSessionAtomicAsync vẫn dùng IWalletRepository (PostgreSQL)
-///   để trừ tiền, nhưng tạo session trong MongoDB.
-/// - GetSessionWithAiRequestsAsync vẫn query AiRequests từ PostgreSQL
-///   (cross-DB query) vì ai_requests là bảng PostgreSQL.
+/// Implement IReadingSessionRepository — phiên đọc bài trong MongoDB.
+/// Inject thêm IWalletRepository (PostgreSQL) và ApplicationDbContext (PostgreSQL)
+/// vì cần xử lý cross-database.
 /// </summary>
 public class MongoReadingSessionRepository : IReadingSessionRepository
 {
     private readonly MongoDbContext _mongoContext;
+    // WalletRepository (PG) để trừ/hoàn tiền trong StartPaidSessionAtomicAsync
     private readonly IWalletRepository _walletRepository;
-    private readonly ApplicationDbContext _pgContext; // Cần cho cross-DB query (AiRequests)
+    // ApplicationDbContext (PG) để query AiRequests trong GetSessionWithAiRequestsAsync
+    private readonly ApplicationDbContext _pgContext;
 
     public MongoReadingSessionRepository(
         MongoDbContext mongoContext,
@@ -35,13 +53,18 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
         _pgContext = pgContext;
     }
 
-    /// <summary>Tạo phiên đọc bài mới trong MongoDB.</summary>
+    /// <summary>
+    /// Tạo phiên đọc bài mới trong MongoDB.
+    /// Map Domain Entity → MongoDB Document, bao gồm:
+    ///   - Thử parse ID thành ObjectId (nếu là 24-char hex string)
+    ///   - Map drawn_cards từ JSON string → List&lt;DrawnCard&gt;
+    ///   - Map cost info (currency + amount) nếu phiên có phí
+    /// </summary>
     public async Task<ReadingSession> CreateAsync(ReadingSession session, CancellationToken cancellationToken = default)
     {
-        // Tạo document MongoDB từ Domain Entity
         var doc = new ReadingSessionDocument
         {
-            // Thử convert sang ObjectId nếu Id là 24 ký tự hex hợp lệ
+            // Thử convert ID sang ObjectId, nếu không được thì giữ nguyên string
             Id = ObjectId.TryParse(session.Id, out var oid) ? (object)oid : session.Id,
             UserId = session.UserId,
             SpreadType = session.SpreadType,
@@ -51,7 +74,7 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
             UpdatedAt = DateTime.UtcNow
         };
 
-        // Nếu session đã complete → map drawn cards
+        // Nếu phiên đã hoàn tất → parse JSON string lá bài → tạo DrawnCard objects
         if (session.IsCompleted && session.CardsDrawn != null)
         {
             var cardIds = System.Text.Json.JsonSerializer.Deserialize<int[]>(session.CardsDrawn) ?? Array.Empty<int>();
@@ -59,11 +82,11 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
             {
                 CardId = cardId,
                 Position = idx,
-                IsReversed = false
+                IsReversed = false // Mặc định — sẽ cập nhật sau
             }).ToList();
         }
 
-        // Thêm cost info nếu có
+        // Thêm thông tin chi phí nếu có (phiên trả phí)
         if (session.CurrencyUsed != null && session.AmountCharged > 0)
         {
             doc.Cost = new SessionCost
@@ -78,12 +101,13 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
     }
 
     /// <summary>
-    /// Lấy phiên theo ID — trả về Domain Entity.
-    /// Map từ MongoDB document → ReadingSession entity (reconstruct).
+    /// Lấy phiên theo ID — hỗ trợ cả ObjectId và string ID.
+    /// Tại sao cần flexible? → ID có thể là ObjectId (từ MongoDB insert) hoặc
+    /// custom string (từ logic cũ). TryParse xử lý cả 2 trường hợp.
     /// </summary>
     public async Task<ReadingSession?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
     {
-        // Logic lọc linh hoạt: Thử tìm theo ObjectId trước, sau đó là String
+        // Linh hoạt: thử tìm bằng ObjectId trước, nếu không parse được thì tìm bằng string
         FilterDefinition<ReadingSessionDocument> filter;
         if (ObjectId.TryParse(id, out var oid))
         {
@@ -101,10 +125,13 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
         return doc == null ? null : MapToEntity(doc);
     }
 
-    /// <summary>Update phiên — merge changes vào MongoDB document.</summary>
+    /// <summary>
+    /// Cập nhật phiên — chỉ set các trường cần thay đổi (partial update).
+    /// Không replace toàn bộ document → hiệu quả hơn khi document lớn.
+    /// </summary>
     public async Task UpdateAsync(ReadingSession session, CancellationToken cancellationToken = default)
     {
-        // Logic lọc linh hoạt cho ID
+        // Flexible ID filter (giống GetByIdAsync)
         FilterDefinition<ReadingSessionDocument> filter;
         if (ObjectId.TryParse(session.Id, out var oid))
         {
@@ -115,20 +142,19 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
             filter = Builders<ReadingSessionDocument>.Filter.Eq("_id", session.Id);
         }
 
-        // Build update definition từ Domain Entity
+        // Luôn cập nhật UpdatedAt
         var update = Builders<ReadingSessionDocument>.Update
             .Set(r => r.UpdatedAt, DateTime.UtcNow);
 
-        // Nếu session đã complete → cập nhật drawn_cards
+        // Nếu phiên đã hoàn tất → cập nhật drawn_cards + AI status
         if (session.IsCompleted && session.CardsDrawn != null)
         {
-            // Parse JSON string → DrawnCard objects
             var cardIds = System.Text.Json.JsonSerializer.Deserialize<int[]>(session.CardsDrawn) ?? Array.Empty<int>();
             var drawnCards = cardIds.Select((cardId, idx) => new DrawnCard
             {
                 CardId = cardId,
                 Position = idx,
-                IsReversed = false // Default
+                IsReversed = false
             }).ToList();
 
             update = update
@@ -142,12 +168,16 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
             cancellationToken: cancellationToken);
     }
 
-    /// <summary>Kiểm tra user đã rút daily card hôm nay (UTC) chưa.</summary>
+    /// <summary>
+    /// Kiểm tra User đã rút daily card HÔM NAY (UTC) chưa.
+    /// Mỗi User chỉ được rút 1 lá miễn phí/ngày (spread_type = "daily_1").
+    /// So sánh CreatedAt trong khoảng [startOfDay, endOfDay) UTC.
+    /// </summary>
     public async Task<bool> HasDrawnDailyCardAsync(Guid userId, DateTime utcNow, CancellationToken cancellationToken = default)
     {
         var userIdStr = userId.ToString();
-        var startOfDay = utcNow.Date;
-        var endOfDay = startOfDay.AddDays(1);
+        var startOfDay = utcNow.Date;        // 00:00:00 UTC hôm nay
+        var endOfDay = startOfDay.AddDays(1); // 00:00:00 UTC ngày mai
 
         var count = await _mongoContext.ReadingSessions.CountDocumentsAsync(
             r => r.UserId == userIdStr
@@ -156,19 +186,21 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
                 && r.CreatedAt < endOfDay,
             cancellationToken: cancellationToken);
 
-        return count > 0;
+        return count > 0; // Đã rút ít nhất 1 lần → true
     }
 
     /// <summary>
-    /// Atomic: Trừ tiền (PostgreSQL) + Tạo session (MongoDB).
-    /// 
-    /// Vì cross-DB (PostgreSQL wallet + MongoDB session), không thể dùng
-    /// single ACID transaction. Thay vào đó dùng pattern:
-    /// 1. Trừ tiền trước (PostgreSQL transaction)
-    /// 2. Tạo session sau (MongoDB)
-    /// 3. Nếu MongoDB fail → cần compensating transaction (refund)
-    /// 
-    /// Rủi ro thấp vì MongoDB insert rất hiếm khi fail.
+    /// PATTERN PHỨC TẠP: Trừ tiền (PostgreSQL) + Tạo session (MongoDB) — cross-database atomic.
+    ///
+    /// Vì 2 database khác nhau, KHÔNG THỂ dùng single ACID transaction.
+    /// Dùng COMPENSATING TRANSACTION pattern:
+    ///   1. Trừ Gold/Diamond trong PostgreSQL (ACID transaction riêng)
+    ///   2. Tạo reading session trong MongoDB
+    ///   3. Nếu MongoDB insert fail → HOÀN TIỀN (refund) trong PostgreSQL
+    ///   4. Nếu refund cũng fail → CRITICAL ERROR → log + throw → Admin can thiệp thủ công
+    ///
+    /// Rủi ro: MongoDB insert rất hiếm khi fail (chỉ khi database down hoàn toàn).
+    /// Idempotency key: "read_{sessionId}" → chặn double-charge nếu retry.
     /// </summary>
     public async Task<(bool Success, string ErrorMessage)> StartPaidSessionAtomicAsync(
         Guid userId,
@@ -184,32 +216,31 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
 
         try
         {
-            // 1. Trừ tiền trong PostgreSQL (giữ nguyên logic cũ)
+            // ===== BƯỚC 1: Trừ tiền trong PostgreSQL =====
             if (costGold > 0)
             {
                 await _walletRepository.DebitAsync(userId, CurrencyType.Gold, TransactionType.ReadingCostGold,
                     costGold, "Reading", $"Tarot_{spreadType}", $"Phiên rút Tarot {spreadType}",
                     null, idempotencyKey, cancellationToken);
-                goldDebited = true;
+                goldDebited = true; // Đánh dấu đã trừ Gold thành công
             }
             if (costDiamond > 0)
             {
                 await _walletRepository.DebitAsync(userId, CurrencyType.Diamond, TransactionType.ReadingCostDiamond,
                     costDiamond, "Reading", $"Tarot_{spreadType}", $"Phiên rút Tarot {spreadType}",
                     null, idempotencyKey, cancellationToken);
-                diamondDebited = true;
+                diamondDebited = true; // Đánh dấu đã trừ Diamond thành công
             }
 
-            // 2. Tạo session trong MongoDB
+            // ===== BƯỚC 2: Tạo session trong MongoDB =====
             await CreateAsync(session, cancellationToken);
 
             return (true, string.Empty);
         }
         catch (Exception ex)
         {
-            // COMPENSATING TRANSACTION:
-            // Nếu Postgres đã debit thành công nhưng MongoDB insert fail -> Cần Refund ngay lập tức
-            // để đảm bảo tính nguyên tử (Atomicity) liên database.
+            // ===== COMPENSATING TRANSACTION: Hoàn tiền nếu MongoDB fail =====
+            // PostgreSQL đã trừ tiền nhưng MongoDB chưa tạo session → cần refund
             try
             {
                 if (goldDebited)
@@ -227,8 +258,9 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
             }
             catch (Exception refundEx)
             {
-                // CRITICAL: Nếu cả refund cũng fail, cần log lỗi cực kỳ nghiêm trọng để admin can thiệp thủ công.
-                // Ở đây ta re-throw exception gốc nhưng đính kèm thông tin lỗi refund.
+                // ===== CRITICAL: Cả refund cũng fail =====
+                // Trạng thái KHÔNG NHẤT QUÁN: tiền đã trừ, session chưa tạo, refund cũng fail.
+                // Throw exception kèm cả 2 lỗi → Admin phải xử lý thủ công.
                 throw new InvalidOperationException(
                     "Lỗi nghiêm trọng: giao dịch không nhất quán khi khởi tạo phiên đọc bài. Vui lòng liên hệ hỗ trợ.",
                     new AggregateException(ex, refundEx));
@@ -238,7 +270,10 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
         }
     }
 
-    /// <summary>Lấy lịch sử phiên theo user — phân trang.</summary>
+    /// <summary>
+    /// Lịch sử phiên đọc bài của User — phân trang, mới nhất trước.
+    /// Chỉ lấy phiên chưa xóa (IsDeleted = false).
+    /// </summary>
     public async Task<(IEnumerable<ReadingSession> Items, int TotalCount)> GetSessionsByUserIdAsync(
         Guid userId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
@@ -263,8 +298,8 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
     }
 
     /// <summary>
-    /// Lấy session + AI requests — cross-DB query.
-    /// Session từ MongoDB, AiRequests từ PostgreSQL.
+    /// CROSS-DB QUERY: Lấy phiên (MongoDB) + AI requests liên quan (PostgreSQL).
+    /// Vì ai_requests nằm trong PostgreSQL, cần query 2 database riêng biệt rồi ghép kết quả.
     /// </summary>
     public async Task<(ReadingSession ReadingSession, IEnumerable<AiRequest> AiRequests)?> GetSessionWithAiRequestsAsync(
         string sessionId, CancellationToken cancellationToken = default)
@@ -273,7 +308,7 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
         var session = await GetByIdAsync(sessionId, cancellationToken);
         if (session == null) return null;
 
-        // 2. Lấy AiRequests từ PostgreSQL (cross-DB)
+        // 2. Lấy AiRequests từ PostgreSQL (cross-DB) — filter bằng ReadingSessionRef
         var aiRequests = _pgContext.AiRequests
             .Where(a => a.ReadingSessionRef == sessionId)
             .OrderBy(a => a.CreatedAt)
@@ -282,7 +317,10 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
         return (session, aiRequests);
     }
 
-    /// <summary>Admin: Lấy toàn bộ lịch sử phiên từ MongoDB — có hỗ trợ bộ lọc và phân trang.</summary>
+    /// <summary>
+    /// Admin dashboard: lấy toàn bộ phiên với bộ lọc nâng cao.
+    /// Filter: userIds (lọc theo user), spreadType, startDate/endDate (khoảng thời gian).
+    /// </summary>
     public async Task<(IEnumerable<ReadingSession> Items, int TotalCount)> GetAllSessionsAsync(
         int page, 
         int pageSize, 
@@ -298,21 +336,23 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
         var builder = Builders<ReadingSessionDocument>.Filter;
         var filter = builder.Eq(r => r.IsDeleted, false);
 
+        // Filter theo danh sách User IDs (nếu có)
         if (userIds != null && userIds.Any())
         {
             filter &= builder.In(r => r.UserId, userIds);
         }
 
+        // Filter theo loại trải bài
         if (!string.IsNullOrWhiteSpace(spreadType))
         {
             filter &= builder.Eq(r => r.SpreadType, spreadType);
         }
 
+        // Filter theo khoảng thời gian
         if (startDate.HasValue)
         {
             filter &= builder.Gte(r => r.CreatedAt, startDate.Value);
         }
-
         if (endDate.HasValue)
         {
             filter &= builder.Lte(r => r.CreatedAt, endDate.Value);
@@ -331,18 +371,18 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
         return (items, totalCountResult);
     }
 
-    // ======================================================================
-    // MAPPING: MongoDB Document → Domain Entity
-    // ======================================================================
+    // ==================== MAPPING ====================
 
     /// <summary>
-    /// Reconstruct Domain Entity từ MongoDB document.
-    /// Giữ nguyên timestamp + trạng thái từ dữ liệu đã lưu.
+    /// Reconstruct Domain Entity từ MongoDB Document.
+    /// Dùng Entity.Rehydrate() factory method — giữ nguyên timestamp + trạng thái gốc.
+    /// Parse DrawnCards → JSON string (vì Domain Entity lưu cards dạng JSON string).
     /// </summary>
     private static ReadingSession MapToEntity(ReadingSessionDocument doc)
     {
         var idStr = doc.Id?.ToString() ?? string.Empty;
         var isCompleted = string.Equals(doc.AiStatus, "completed", StringComparison.OrdinalIgnoreCase);
+        // Chuyển DrawnCards list → JSON array string [1, 5, 22] (định dạng Domain Entity)
         var cardsJson = doc.DrawnCards != null && doc.DrawnCards.Count > 0
             ? System.Text.Json.JsonSerializer.Serialize(doc.DrawnCards
                 .OrderBy(c => c.Position)

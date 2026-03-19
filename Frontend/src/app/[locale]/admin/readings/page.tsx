@@ -1,3 +1,14 @@
+/*
+ * ===================================================================
+ * FILE: page.tsx (Admin Readings)
+ * BỐI CẢNH (CONTEXT):
+ *   Trang Admin quản lý toàn bộ Lịch sử các phiên trải bài Tarot của người dùng trong hệ thống.
+ *
+ * RENDERING & FILTERING:
+ *   Sử dụng 'use client' để quản lý các state tìm kiếm/lọc phức tạp (theo user, ngày tháng, loại trải bài).
+ *   Sử dụng Server Action (getAllHistorySessionsAdminAction) để an toàn lấy dữ liệu tránh rò rỉ JWT tới trình duyệt.
+ * ===================================================================
+ */
 "use client";
 
 /**

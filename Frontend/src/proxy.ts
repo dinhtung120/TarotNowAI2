@@ -61,10 +61,20 @@ const clearAuthCookies = (response: NextResponse) => {
  response.cookies.delete("refreshToken");
 };
 
-/**
- * Proxy xử lý đa chức năng:
- * 1. Đa ngôn ngữ (next-intl)
- * 2. Bảo mật (Phân quyền Admin)
+/*
+ * ===================================================================
+ * COMPONENT/FILE: Proxy / Middleware Dự phòng (proxy.ts)
+ * BỐI CẢNH (CONTEXT):
+ *   Đóng vai trò như một Middleware luồng chặn (Edge Runtime) trước khi Request 
+ *   vào các Component.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Tích hợp Middleware Đa ngôn ngữ (`intlMiddleware`) xử lý Routing URL (Ví dụ: /vn/home).
+ *   - Chặn các đường dẫn Yêu cầu Đăng nhập (`PROTECTED_PREFIXES`) và chuyển hướng (Redirect) 
+ *     về trang Login nếu phát hiện `accessToken` trống hoặc đã hết hạn (Decode JWT).
+ *   - Rào chắn bảo mật bổ sung cho đường dẫn Admin (`/admin`), kiểm tra nhanh Claim `role` 
+ *     từ Token ngay trên Edge để tránh việc rò rỉ (Leak) giao diện Admin Portal ra ngoài.
+ * ===================================================================
  */
 export default async function proxy(request: NextRequest) {
  const { pathname } = request.nextUrl;

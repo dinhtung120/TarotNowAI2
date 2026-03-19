@@ -1,18 +1,15 @@
-/**
- * SkeletonLoader — Placeholder loading với shimmer animation.
- *
- * === TẠI SAO SKELETON TỐT HƠN SPINNER? ===
- * - Spinner: "Đang tải..." → user không biết CÁI GÌ sắp hiện.
- * - Skeleton: Hiển thị HÌNH DÁNG nội dung sắp tới → user biết trước layout.
- * - Giảm perceived waiting time (thời gian chờ cảm nhận) đáng kể.
- *
- * === CÁC LOẠI SKELETON ===
- * - `text`: Thanh ngang (giả text) — chiều rộng random để trông tự nhiên
- * - `card`: Hình chữ nhật (giả card) — aspect ratio tùy chỉnh
- * - `avatar`: Hình tròn (giả avatar)
- * - `row`: Thanh ngang full width (giả table row)
- *
- * Animation `animate-shimmer` đã khai báo ở globals.css.
+/*
+ * ===================================================================
+ * COMPONENT: SkeletonLoader
+ * BỐI CẢNH (CONTEXT):
+ *   Khung xương giả lập UI (Placeholder) hiển thị lúc chờ load dữ liệu thực tế.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Giải quyết nhược điểm của Spinner: Skeleton giúp người dùng hình dung trước 
+ *     bố cục (Layout) sẽ tải ra, làm giảm rào cản tâm lý khi phải chờ đợi.
+ *   - Cung cấp nhiều định dạng: Văn bản (Text - random chiều rộng từng dòng), 
+ *     Thẻ (Card), Ảnh Đại diện (Avatar) và Dòng Bảng (Row), kèm Animation Shimmer lướt nhẹ.
+ * ===================================================================
  */
 
 type SkeletonType = "text" | "card" | "avatar" | "row";

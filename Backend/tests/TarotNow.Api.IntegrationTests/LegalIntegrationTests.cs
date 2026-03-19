@@ -1,3 +1,22 @@
+/*
+ * FILE: LegalIntegrationTests.cs
+ * MỤC ĐÍCH: Integration test kiểm tra luồng pháp lý (consent/đồng thuận) end-to-end.
+ *
+ *   QUY TẮC KINH DOANH:
+ *   → User phải đồng ý 3 loại tài liệu: TOS, PrivacyPolicy, AiDisclaimer
+ *   → Mỗi loại có version → khi version mới release → User phải đồng ý lại
+ *   → isFullyConsented=true chỉ khi TẤT CẢ document types đều đã consent
+ *
+ *   TEST CASE:
+ *   Consent_ShouldRecord_And_CheckStatus:
+ *   1. Seed User
+ *   2. POST consent cho 3 document types (TOS, Privacy, AI)
+ *   3. GET consent-status → isFullyConsented=true, pendingDocuments=[]
+ *   4. GET consent-status?version=v2.0 → hasConsented=false (version mới chưa đồng ý)
+ *
+ *   KIỂM TRA: version tracking (v1.0 → v2.0 cần consent lại).
+ */
+
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
@@ -10,6 +29,9 @@ using Xunit;
 
 namespace TarotNow.Api.IntegrationTests;
 
+/// <summary>
+/// Test luồng pháp lý: consent tracking + version management.
+/// </summary>
 [Collection("IntegrationTests")]
 public class LegalIntegrationTests : IClassFixture<CustomWebApplicationFactory<Program>>
 {
@@ -23,10 +45,14 @@ public class LegalIntegrationTests : IClassFixture<CustomWebApplicationFactory<P
         _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(TestAuthHandler.AuthenticationScheme);
     }
 
+    /// <summary>
+    /// Luồng đầy đủ: consent 3 docs → check status → test version upgrade.
+    /// Verify: isFullyConsented=true sau khi consent tất cả, false khi có version mới.
+    /// </summary>
     [Fact]
     public async Task Consent_ShouldRecord_And_CheckStatus()
     {
-        // 0. Seed User
+        // Seed User
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         
@@ -40,35 +66,30 @@ public class LegalIntegrationTests : IClassFixture<CustomWebApplicationFactory<P
                 displayName: "Legal Test",
                 dateOfBirth: new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                 hasConsented: true);
-            
-            // Set Id via reflection since it's private set
             typeof(TarotNow.Domain.Entities.User).GetProperty("Id")?.SetValue(user, userId);
-            
-            user.Activate(); // Set status Active
-
+            user.Activate();
             db.Users.Add(user);
             await db.SaveChangesAsync();
         }
 
-        // 1. Check initial status (might be false or true depending on DB state, so let's record directly)
-        // 2. Act: Record Consent for all required documents
+        // Consent cho cả 3 document types (v1.0)
         await _client.PostAsJsonAsync("/api/v1/legal/consent", new { DocumentType = "TOS", Version = "1.0" });
         await _client.PostAsJsonAsync("/api/v1/legal/consent", new { DocumentType = "PrivacyPolicy", Version = "1.0" });
         await _client.PostAsJsonAsync("/api/v1/legal/consent", new { DocumentType = "AiDisclaimer", Version = "1.0" });
 
-        // 3. Act: Check Consent Status
+        // Kiểm tra: phải fully consented
         var getResponse = await _client.GetAsync("/api/v1/legal/consent-status");
         getResponse.EnsureSuccessStatusCode();
 
         var content = await getResponse.Content.ReadAsStringAsync();
         Assert.Contains("\"isFullyConsented\":true", content); 
-        Assert.Contains("[]", content); // PendingDocuments should be empty
+        Assert.Contains("[]", content); // Không còn document nào pending
 
-        // 4. Act: Check Consent for a newer version (simulate version change requirement)
+        // Kiểm tra version mới: TOS v2.0 chưa consent → false
         var getNewVersionResponse = await _client.GetAsync("/api/v1/legal/consent-status?documentType=TOS&version=v2.0");
         getNewVersionResponse.EnsureSuccessStatusCode();
 
         var newContent = await getNewVersionResponse.Content.ReadAsStringAsync();
-        Assert.Contains("false", newContent); // HasConsented should be false for a new un-consented version
+        Assert.Contains("false", newContent); // Chưa consent version mới
     }
 }

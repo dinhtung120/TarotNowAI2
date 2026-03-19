@@ -1,3 +1,14 @@
+/*
+ * ===================================================================
+ * FILE: legal/privacy/page.tsx (Chính Sách Bảo Mật - Privacy Policy)
+ * BỐI CẢNH (CONTEXT):
+ *   Trang hiển thị nội dung Chính Sách Bảo Mật Dữ Liệu hệ thống TarotNow.
+ * 
+ * TỐI ƯU SEO & RENDERING:
+ *   - `generateMetadata`: Khai báo SEO đa ngôn ngữ trên Server.
+ *   - Hoàn toàn render phía máy chủ (SSR) đảm bảo tốc độ và truy xuất Bot ổn định.
+ * ===================================================================
+ */
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 

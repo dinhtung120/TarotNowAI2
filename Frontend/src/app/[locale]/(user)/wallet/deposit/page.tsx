@@ -1,3 +1,16 @@
+/*
+ * ===================================================================
+ * FILE: wallet/deposit/page.tsx (Nạp Tiền)
+ * BỐI CẢNH (CONTEXT):
+ *   Trang cho phép User nạp VND để quy đổi ra Kim Cương (Diamond).
+ * 
+ * LUỒNG HOẠT ĐỘNG:
+ *   - Lựa chọn các mức nạp định sẵn hoặc nhập số tiền tùy chỉnh.
+ *   - Tự động áp dụng Promotion (Khuyến mãi) tốt nhất để tặng thêm Vàng (Gold).
+ *   - Gọi API `createDepositOrder` để sinh ra link thanh toán (VNPAY/PayOS).
+ *   - Link thanh toán mở ra ở tab/cửa sổ mới (window.open).
+ * ===================================================================
+ */
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";

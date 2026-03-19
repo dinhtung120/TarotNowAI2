@@ -1,73 +1,73 @@
+/*
+ * ===================================================================
+ * FILE: UserWallet.cs
+ * NAMESPACE: TarotNow.Domain.Entities
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Domain Value Object Cực Kì Lớn Chứa Ví Riêng Nằm Gọn Lõn Bên Trong Thể Xác User (Owned Entity EF Core).
+ *   Sử Dụng Khái Niệm SRP Tách Logic Túi Kim Cương Rõ Ràng Để Cầm Dắt Khỏi Bị Nặng DB Model User Và Bảo Mật Giữ Khảm Hạm.
+ * ===================================================================
+ */
+
 using TarotNow.Domain.Enums;
+using System;
 
 namespace TarotNow.Domain.Entities;
 
 /// <summary>
-/// Value Object / Owned Entity quản lý tài chính của người dùng.
+/// Value Object (Hoặc Gọi Owned Entity) quản lý tài chính bọc sắt của người dùng.
 /// 
-/// Tại sao tách riêng khỏi User?
-/// - Nguyên tắc SRP (Single Responsibility Principle): User entity chỉ nên quản lý 
-///   thông tin cá nhân + trạng thái tài khoản. Logic tài chính (credit, debit, freeze, 
-///   refund, consume) là một "nhóm trách nhiệm" hoàn toàn khác.
-/// - Dễ test: Có thể viết unit test cho logic tài chính mà không cần User context.
-/// - Dễ mở rộng: Nếu thêm tiền tệ mới (VD: Star, Coin), chỉ sửa class này.
+/// Đã được Giải Phóng Tách Riêng khỏi User Lớn Để Giải Mỏi:
+/// - Mảnh Ghép SRP (Single Responsibility Principle): Thằng User lớn ôm cả Đăng Nhập, Ảnh Ọc, Quyền Role Rồi Cho Nên Sẽ Bệnh To Béo. Nên Tách Nguyên Nhóm Kiếm Chác Trừ Tiền (credit, debit, freeze, refund) Vào Cái Tráp Riêng Chữ Tiền Này Sạch Nhất Quả Đất.
+/// - Ngon Ăn Lúc Unit Test: Ôm Nhau Dễ Test Đoán Trừ Tiền Mà Bỏ Cứu Pass Mệt Đầu Ra Của User Entity Bự.
+/// - Mở Tương Lai Dễ Thở: Rớt Cục Thạch Kim Cương Mai Thêm Tiền Khác Hay Vé Ép Thẻ Gọi (Shard) Thì Đóng Khối Code Ở Đây Chưa Tràn DB Sang.
 ///
-/// Cách hoạt động trong EF Core?
-/// - Dùng Owned Entity pattern: `builder.OwnsOne(u => u.Wallet, ...)`
-/// - Các cột wallet (gold_balance, diamond_balance, ...) vẫn nằm trong bảng `users`,
-///   nhưng logic code được tách biệt rõ ràng.
+/// Hoạt Động Đi Gắn Kiểu Gì Ở EF Core SQL?
+/// - Chạy Owned Entity pattern: `builder.OwnsOne(u => u.Wallet, ...)` Cấu Hình Khóa Tốt Bóp Nát DB Trải Nằm 4 Cột Này Trên Cùng 1 Bảng "users" Nhưng Ở C# Code Lại Hiện Nguyên Class Ảo Túi Lập Trình. Sực Mùi Clean Architecture Sang Chảnh Của Giang Hồ Thế Giới OOP.
 /// </summary>
 public class UserWallet
 {
     /// <summary>
-    /// Gold: tiền miễn phí — nhận qua điểm danh, hoạt động, đăng ký mới.
-    /// Không thể nạp bằng tiền thật.
+    /// Đồng Vàng Lá Nghèo (Gold): tiền cày miễn phí — xem qc nhặt, lấy exp level lên nhận (Đéo Nạp Được Bằng VNPay Máu Thật). Khách Thích Chơi Xài Đồng Này Bói Rẻ Mức Kinh Ngạc Thường Rất Nhanh Hết Do Tham Lam Hỏi Nhiều 1 Phiên Mất 5 G Trừ Sạch.
     /// </summary>
     public long GoldBalance { get; private set; } = 0;
 
     /// <summary>
-    /// Diamond: tiền nạp — dùng để trả phí AI Reading, Follow-up.
-    /// Tỷ giá mặc định: 1 Diamond = 1.000 VND.
+    /// Kim Cương Cứng Đỏ Tươi Lệ (Diamond): Tiền Quý Tộc Rút Tiền Húp Nạp Tươi Của Bọn Thanh Toán Bank Thẻ.
+    /// Chi Phí VIP AI Đọc Đắt (Thầy Đọc Có Hoa Hồng Tầm Này Trừ Cực Đau Khách Xài Kim Cương Lãi Nhất App).
     /// </summary>
     public long DiamondBalance { get; private set; } = 0;
 
     /// <summary>
-    /// Diamond đang bị đóng băng trong Escrow.
-    /// Khi user gọi AI stream → Diamond chuyển từ DiamondBalance sang FrozenDiamondBalance.
-    /// Stream thành công → Consume (trừ hẳn). Stream thất bại → Refund (trả lại).
+    /// Kim Cương Đang Bị Chặn Ở Khúc Giữa Oằn Nhau Escrow Không Thể Cầm Đi Chợ Tiêu Chỗ Khác (Frozen).
+    /// Lúc Bám AI Tức Khắc Nhát Bắn: Trừ Từ Túi Trống Phải Chuyển Liền Lên Túi Treo Bóng Lưỡng Này (Qũy Chung Bóng Đèn -> Chờ AI Text Nhả Về Vừa Xem Đúng Nghĩa Thành Công Thật -> Tiêu Rụi Hoàn Toàn Gói Băng (Consume). AI Chết Đuổi Bắt Hụt Code Mạng Hỏng -> Rơi Lại Túi Trống Về Hoàn Nguyên Gốc Diamond Thường).
     /// </summary>
     public long FrozenDiamondBalance { get; private set; } = 0;
 
     /// <summary>
-    /// Tổng Diamond đã nạp bằng tiền thật (chỉ tăng, không giảm).
-    /// Dùng cho VIP tier calculation, analytics.
+    /// Cột Đếm Góp Không Bao Giờ Tụt: Lưu Dấu Vết Tổng Cộng Mệnh Chủ Này Đã Đốt Nạp Bao Nhiêu Lớp Kim Cương (Không Dính Khuyến Mãi) Từ Đầu Tới Nay.
+    /// Giúp Bọn Admin Cắt Cờ Thu Hụi Để Treo Gắn Tượng (VIP TIER Analytics Nữ Vương Tài Phiệt Bảng Xếp Hạng Khách Sộp).
     /// </summary>
     public long TotalDiamondsPurchased { get; private set; } = 0;
 
     /// <summary>
-    /// EF Core cần parameterless constructor cho Owned Entity.
+    /// Buộc Dành Cho Thằng EF Core SQL Khát Param Điếm Lúc Load Bóp Gọi Khống Chạy Từ Constructor SQL Lên Lấy Bọc.
     /// </summary>
     protected UserWallet() { }
 
     /// <summary>
-    /// Constructor khởi tạo ví mới với số dư mặc định = 0.
-    /// Được gọi khi tạo User mới.
+    /// Ống Nặn Tạo Cái Túi Mủ Rỗng Túi Lúc New Acc Gắn Đón Thèn User Mới Khóc Ban Đầu Khởi Nghiệp Lên.
     /// </summary>
     public static UserWallet CreateDefault() => new UserWallet();
 
     // ======================================================================
-    // METHODS: Các thao tác tài chính
-    // Mỗi method enforce business invariants TRƯỚC KHI thay đổi state,
-    // đảm bảo ví luôn ở trạng thái hợp lệ dù xảy ra exception.
+    // MẠCH MÁU LUÂN CHUYỂN LOGIC RÚT THÊM TIỀN (METHODS CỘT LÕI)
     // ======================================================================
 
     /// <summary>
-    /// Cộng tiền vào ví (Gold hoặc Diamond).
-    /// Nếu type là Deposit (nạp tiền thật) → tính thêm vào TotalDiamondsPurchased.
-    /// 
-    /// Tại sao cần tham số `type`?
-    /// → Vì chỉ Deposit mới tăng TotalDiamondsPurchased (dùng cho VIP tier).
-    ///   Các loại credit khác (bonus, refund, reward) không tính vào tổng nạp.
+    /// Ném Tiền Cho Ví (Bơm Thêm Plus Tiền Tươi).
+    /// Nếu Khách Deposit Rải Băng Tiền Gốc Có Dấu Vết Bank Dán Cạch Mới Tính Chút Exp Lên Cột Nạp Tổng.
+    /// Bọc Lỗ Hổng Này Phải Sạch, Chống 0Đ Lót Tay Xuyên Cổng Lệnh Thức Đơn Để Đếm Chặn.
     /// </summary>
     public void Credit(string currency, long amount, string type)
     {
@@ -81,7 +81,7 @@ public class UserWallet
         else if (currency == CurrencyType.Diamond)
         {
             DiamondBalance += amount;
-            // Chỉ Deposit (nạp tiền thật) mới tăng TotalDiamondsPurchased
+            // Dấu Gác Bắt Tổng Nạp Cho Rank Vip Nghe Điêm Đợi Lệnh Deposit Bank Vô Nghia.
             if (type == TransactionType.Deposit)
             {
                 TotalDiamondsPurchased += amount;
@@ -94,11 +94,8 @@ public class UserWallet
     }
 
     /// <summary>
-    /// Trừ tiền từ ví.
-    /// 
-    /// Tại sao throw exception thay vì return false?
-    /// → Domain-Driven Design: exception thể hiện domain violation rõ ràng hơn,
-    ///   Application layer sẽ catch và chuyển thành ProblemDetails response.
+    /// Khứa Đứt Móc Túi Lụm Đem Thui Ví Khách Mua Hàng (Debit Thụt Tiền Ác Ý Không Thương).
+    /// Thủng Gò Hoặc Thuếu Tiền (Tiền Âm Lập Tức Chụp Lôi Về Hàm Domain Báo Nút Lầm Cầm InvalidOperationException Dẹp Cho Bọn Handler Application Cuộn Gói Ném Http Báo Về 400 Bad Request Cấm Lạm Phát DB).
     /// </summary>
     public void Debit(string currency, long amount)
     {
@@ -124,12 +121,7 @@ public class UserWallet
     }
 
     /// <summary>
-    /// Đóng băng Diamond — chuyển từ khả dụng sang Escrow.
-    /// 
-    /// Flow Escrow Pattern:
-    /// 1. FreezeDiamond(amount) → Diamond chờ xử lý
-    /// 2a. ConsumeFrozenDiamond(amount) → Dịch vụ thành công, Diamond bị "đốt"
-    /// 2b. RefundFrozenDiamond(amount) → Dịch vụ thất bại, Diamond trả lại
+    /// Nắm Cổ Túm Tiền Vứt Lên Cây Sào Giữ Chặt Đóng Băng Khối Trụ Nó Lại (Trừ Lòng Ví Giữ Thắng Kim Cương Chờ Oằn Phiên Trải Bài AI Chờ Đợi Phím Cuối).
     /// </summary>
     public void FreezeDiamond(long amount)
     {
@@ -144,8 +136,8 @@ public class UserWallet
     }
 
     /// <summary>
-    /// Giải phóng Diamond đã đóng băng — trừ khỏi frozen balance (dùng trong Release 2-party).
-    /// Lưu ý: Method này KHÔNG cộng vào DiamondBalance — receiver sẽ nhận qua Credit riêng.
+    /// Thước Kẻ Tuốt Áp Giải Cởi Cột Tảng Băng Nước (Mở Bỏ Sợi Khóa Bóng Bàng Cho Cục Diamond Chuyển Dịch Quyền Tiền Tệ Về Cửa Ngoài Đi Tới Thằng Chủ Nào Đó Ví Dụ Thầy Reader Đã Giao Code).
+    /// Lệnh Này Chỉ Tịt Số Dư Giam Mất Đi (Không Cộng Đâu Cho Lòng Này Của Mất Đi - Mất Hút Do Rút Release Từ Mở).
     /// </summary>
     public void ReleaseFrozenDiamond(long amount)
     {
@@ -159,8 +151,7 @@ public class UserWallet
     }
 
     /// <summary>
-    /// Hoàn trả Diamond — chuyển từ đóng băng về lại khả dụng.
-    /// Dùng khi AI stream thất bại → user nhận lại Diamond.
+    /// Nôn Oái Trả Hoàn Khách Gốc Vì AI Nguy Kịch / Hay Reader Treo Rớt Không Coi Rep Nhắn Cáu Nữa Ném Lại Nét Tốt Cho Ví Thằng Mua Lại (Refund Lấy Nước Trả Bể Đổ).
     /// </summary>
     public void RefundFrozenDiamond(long amount)
     {
@@ -175,9 +166,7 @@ public class UserWallet
     }
 
     /// <summary>
-    /// Tiêu thụ Diamond đã đóng băng — trừ hẳn, không cộng cho ai.
-    /// Dùng khi AI stream thành công → Diamond bị "đốt" (consumed).
-    /// Thay thế cho Release pattern cần System Master Account.
+    /// Bom Nuốt Mắc Phích Nổ Tung Hệ Đốt Sạch Bay Màu Thạch Khối Kim Cương (Bóc Phạt Cục Băng Giam Do Nhâm Cốt Bốc Bóp Gọi Mua AI Trực Tiếp Server Nát Mức Thành Tro Cho API Nuốt Tiền Không Có Release Trả Ai Cả, Cất Trữ Đi Đốt Lạc Đi Trôi Hầm Giới Phát Sinh Thành Chi Phí Phục Vụ Hãng AI OpenAI Chứ Ko Qua Reader Của Game).
     /// </summary>
     public void ConsumeFrozenDiamond(long amount)
     {

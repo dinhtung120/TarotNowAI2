@@ -10,8 +10,17 @@ import { Link } from '@/i18n/routing';
 import { useLocale, useTranslations } from 'next-intl';
 import { SectionHeader, GlassCard, Pagination } from '@/components/ui';
 
-/**
- * Trang danh sách Reader công khai (Directory Listing).
+/*
+ * ===================================================================
+ * FILE: readers/page.tsx (Danh bạ Reader)
+ * BỐI CẢNH (CONTEXT):
+ *   Trang danh sách công khai các Reader, hiển thị dưới dạng thẻ (Directory Listing).
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Cho phép tìm kiếm, lọc theo chuyên môn (Specialty) và trạng thái (Online/Accepting).
+ *   - Phân trang (Pagination) dữ liệu.
+ *   - Nhấn vào Reader sẽ chuyển hướng đến trang Chi Tiết Reader (`/readers/[id]`).
+ * ===================================================================
  */
 export default function ReaderDirectoryPage() {
  const t = useTranslations("Readers");

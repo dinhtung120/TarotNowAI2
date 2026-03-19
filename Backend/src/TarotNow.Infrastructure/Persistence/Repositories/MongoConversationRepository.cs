@@ -1,3 +1,16 @@
+/*
+ * FILE: MongoConversationRepository.cs
+ * MỤC ĐÍCH: Repository quản lý cuộc hội thoại chat từ MongoDB (collection "conversations").
+ *
+ *   CÁC CHỨC NĂNG:
+ *   → AddAsync: tạo cuộc hội thoại mới
+ *   → GetByIdAsync: lấy theo ID
+ *   → GetActiveByParticipantsAsync: tìm conversation đang active giữa 2 người (chặn trùng)
+ *   → GetByUserIdPaginatedAsync: inbox của User (phân trang)
+ *   → GetByReaderIdPaginatedAsync: inbox của Reader (phân trang)
+ *   → UpdateAsync: cập nhật (đổi status, last_message_at, v.v.)
+ */
+
 using MongoDB.Driver;
 using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
@@ -6,8 +19,7 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
 /// <summary>
-/// Repository cho conversations collection (MongoDB).
-/// Map giữa ConversationDto (Application) ↔ ConversationDocument (Infrastructure).
+/// Implement IConversationRepository — đọc/ghi cuộc hội thoại từ MongoDB.
 /// </summary>
 public class MongoConversationRepository : IConversationRepository
 {
@@ -18,6 +30,7 @@ public class MongoConversationRepository : IConversationRepository
         _context = context;
     }
 
+    /// <summary>Tạo cuộc hội thoại mới, gán ObjectId vừa sinh về DTO.</summary>
     public async Task AddAsync(ConversationDto conversation, CancellationToken cancellationToken = default)
     {
         var doc = ToDocument(conversation);
@@ -25,6 +38,7 @@ public class MongoConversationRepository : IConversationRepository
         conversation.Id = doc.Id;
     }
 
+    /// <summary>Lấy cuộc hội thoại theo ID, chỉ lấy chưa xóa (IsDeleted = false).</summary>
     public async Task<ConversationDto?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
     {
         var filter = Builders<ConversationDocument>.Filter.And(
@@ -36,8 +50,10 @@ public class MongoConversationRepository : IConversationRepository
     }
 
     /// <summary>
-    /// Tìm conversation active giữa 2 user — tránh tạo duplicate.
-    /// Chỉ xét status: pending hoặc active.
+    /// Tìm conversation ĐANG HOẠT ĐỘNG giữa 2 người (User + Reader).
+    /// Chỉ xét status = "pending" hoặc "active" (đang mở).
+    /// Mục đích: chặn tạo duplicate — nếu đã có conversation active thì dùng lại.
+    /// Lấy conversation mới nhất (SortByDescending CreatedAt) phòng trường hợp có nhiều.
     /// </summary>
     public async Task<ConversationDto?> GetActiveByParticipantsAsync(
         string userId, string readerId, CancellationToken cancellationToken = default)
@@ -55,7 +71,10 @@ public class MongoConversationRepository : IConversationRepository
         return doc == null ? null : ToDto(doc);
     }
 
-    /// <summary>Inbox user — sort by last_message_at DESC.</summary>
+    /// <summary>
+    /// Inbox User — lấy danh sách conversation của User, phân trang.
+    /// Sắp xếp: conversation có tin mới nhất hiện trước (LastMessageAt DESC).
+    /// </summary>
     public async Task<(IEnumerable<ConversationDto> Items, long TotalCount)> GetByUserIdPaginatedAsync(
         string userId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
@@ -66,7 +85,7 @@ public class MongoConversationRepository : IConversationRepository
         return await GetPaginatedInternal(filter, page, pageSize, cancellationToken);
     }
 
-    /// <summary>Inbox reader.</summary>
+    /// <summary>Inbox Reader — tương tự inbox User nhưng lọc theo ReaderId.</summary>
     public async Task<(IEnumerable<ConversationDto> Items, long TotalCount)> GetByReaderIdPaginatedAsync(
         string readerId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
@@ -77,6 +96,10 @@ public class MongoConversationRepository : IConversationRepository
         return await GetPaginatedInternal(filter, page, pageSize, cancellationToken);
     }
 
+    /// <summary>
+    /// Cập nhật conversation: map DTO → Document, set UpdatedAt, replace toàn bộ document.
+    /// ReplaceOneAsync thay thế TOÀN BỘ document (không merge) → đảm bảo consistency.
+    /// </summary>
     public async Task UpdateAsync(ConversationDto conversation, CancellationToken cancellationToken = default)
     {
         var doc = ToDocument(conversation);
@@ -85,8 +108,12 @@ public class MongoConversationRepository : IConversationRepository
         await _context.Conversations.ReplaceOneAsync(filter, doc, cancellationToken: cancellationToken);
     }
 
-    // --- Helpers ---
+    // ==================== HELPER ====================
 
+    /// <summary>
+    /// Logic phân trang chung cho cả inbox User và inbox Reader.
+    /// Sắp xếp: LastMessageAt DESC → CreatedAt DESC (conversation mới chat hiện trước).
+    /// </summary>
     private async Task<(IEnumerable<ConversationDto> Items, long TotalCount)> GetPaginatedInternal(
         FilterDefinition<ConversationDocument> filter, int page, int pageSize,
         CancellationToken cancellationToken)
@@ -96,8 +123,8 @@ public class MongoConversationRepository : IConversationRepository
 
         var totalCount = await _context.Conversations.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
         var docs = await _context.Conversations.Find(filter)
-            .SortByDescending(c => c.LastMessageAt)
-            .ThenByDescending(c => c.CreatedAt)
+            .SortByDescending(c => c.LastMessageAt)   // Conversation có tin mới nhất lên trước
+            .ThenByDescending(c => c.CreatedAt)        // Nếu chưa có tin → dùng CreatedAt
             .Skip((normalizedPage - 1) * normalizedPageSize)
             .Limit(normalizedPageSize)
             .ToListAsync(cancellationToken);
@@ -105,8 +132,9 @@ public class MongoConversationRepository : IConversationRepository
         return (docs.Select(ToDto), totalCount);
     }
 
-    // --- Mapping ---
+    // ==================== MAPPING ====================
 
+    /// <summary>Map Application DTO → MongoDB Document.</summary>
     private static ConversationDocument ToDocument(ConversationDto dto)
     {
         return new ConversationDocument
@@ -123,6 +151,7 @@ public class MongoConversationRepository : IConversationRepository
         };
     }
 
+    /// <summary>Map MongoDB Document → Application DTO.</summary>
     private static ConversationDto ToDto(ConversationDocument doc)
     {
         return new ConversationDto

@@ -1,3 +1,24 @@
+/*
+ * FILE: SendMessageCommandHandlerTests.cs
+ * MỤC ĐÍCH: Unit test cho handler gửi tin nhắn trong cuộc hội thoại.
+ *
+ *   CÁC TEST CASE (7 scenarios):
+ *   1. Handle_InvalidType_ThrowsBadRequest: loại tin nhắn sai → 400
+ *   2. Handle_EmptyText_ThrowsBadRequest: nội dung trống → 400
+ *   3. Handle_NotAMember_ThrowsBadRequest: User không thuộc conversation → 400
+ *   4. Handle_ValidMessage_PersistsMessageAndUpdatesUnreadCount:
+ *      → Happy path: lưu message + Pending→Active + tăng UnreadCountReader
+ *   5. Handle_ConversationNotFound_ThrowsNotFoundException: ConversationId sai → 404
+ *   6. Handle_CompletedConversation_ThrowsBadRequest: Conversation đã kết thúc → 400
+ *   7. Handle_ReaderSendsMessage_UserUnreadCountIncreases:
+ *      → Reader gửi → tăng UnreadCountUser (KHÔNG phải UnreadCountReader)
+ *
+ *   LOGIC QUAN TRỌNG:
+ *   → Phân biệt sender = User hay Reader → tăng đúng unread counter
+ *   → Tin nhắn đầu tiên chuyển Pending → Active (auto-activate)
+ *   → Conversation Completed/Cancelled/Disputed → không cho gửi tin mới
+ */
+
 using Moq;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Chat.Commands.SendMessage;
@@ -8,6 +29,9 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Chat;
 
+/// <summary>
+/// Test send message: validation, auto-activate, unread counter logic (User vs Reader).
+/// </summary>
 public class SendMessageCommandHandlerTests
 {
     private readonly Mock<IConversationRepository> _mockConvRepo;
@@ -21,6 +45,7 @@ public class SendMessageCommandHandlerTests
         _handler = new SendMessageCommandHandler(_mockConvRepo.Object, _mockMsgRepo.Object);
     }
 
+    /// <summary>Loại tin nhắn không hợp lệ → BadRequest.</summary>
     [Fact]
     public async Task Handle_InvalidType_ThrowsBadRequest()
     {
@@ -28,6 +53,7 @@ public class SendMessageCommandHandlerTests
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
+    /// <summary>Nội dung trống → BadRequest.</summary>
     [Fact]
     public async Task Handle_EmptyText_ThrowsBadRequest()
     {
@@ -35,6 +61,7 @@ public class SendMessageCommandHandlerTests
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
+    /// <summary>User không thuộc conversation → BadRequest.</summary>
     [Fact]
     public async Task Handle_NotAMember_ThrowsBadRequest()
     {
@@ -46,6 +73,9 @@ public class SendMessageCommandHandlerTests
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
+    /// <summary>
+    /// Happy path: lưu message + Pending→Active + tăng UnreadCountReader.
+    /// </summary>
     [Fact]
     public async Task Handle_ValidMessage_PersistsMessageAndUpdatesUnreadCount()
     {
@@ -61,118 +91,77 @@ public class SendMessageCommandHandlerTests
         Assert.NotNull(result);
         Assert.Equal(ChatMessageType.Text, result.Type);
         Assert.Equal("Hello", result.Content);
-        Assert.Equal(ConversationStatus.Active, conv.Status); // Pending -> Active
-        Assert.Equal(1, conv.UnreadCountReader); // User sent msg -> Reader unread count increases
+        Assert.Equal(ConversationStatus.Active, conv.Status); // Pending → Active
+        Assert.Equal(1, conv.UnreadCountReader); // User gửi → Reader chưa đọc
 
         _mockMsgRepo.Verify(x => x.AddAsync(It.IsAny<ChatMessageDto>(), default), Times.Once);
         _mockConvRepo.Verify(x => x.UpdateAsync(conv, default), Times.Once);
     }
 
-    /// <summary>
-    /// TEST CASE: Conversation không tồn tại → NotFoundException.
-    ///
-    /// Tại sao cần test?
-    /// → Phòng trường hợp ConversationId sai hoặc đã bị xóa.
-    ///   Handler phải throw rõ ràng, không phải NullReferenceException.
-    /// </summary>
+    /// <summary>ConversationId sai → NotFoundException.</summary>
     [Fact]
     public async Task Handle_ConversationNotFound_ThrowsNotFoundException()
     {
-        // Arrange — conversation không tồn tại trong DB
         var command = new SendMessageCommand
         {
-            Type = ChatMessageType.Text,
-            Content = "Hello",
-            ConversationId = "non_existent",
-            SenderId = Guid.NewGuid()
+            Type = ChatMessageType.Text, Content = "Hello",
+            ConversationId = "non_existent", SenderId = Guid.NewGuid()
         };
+        _mockConvRepo.Setup(x => x.GetByIdAsync("non_existent", default)).ReturnsAsync((ConversationDto)null!);
 
-        _mockConvRepo.Setup(x => x.GetByIdAsync("non_existent", default))
-            .ReturnsAsync((ConversationDto)null!);
-
-        // Act & Assert
-        await Assert.ThrowsAsync<NotFoundException>(
-            () => _handler.Handle(command, CancellationToken.None));
+        await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
     /// <summary>
-    /// TEST CASE: Conversation đã kết thúc (completed) → BadRequestException.
-    ///
-    /// Tại sao quan trọng?
-    /// → Khi conversation completed/cancelled/disputed, KHÔNG cho phép gửi tin mới.
-    ///   Nếu bug: user vẫn gửi tin vào conversation đã dispute → ảnh hưởng evidence.
-    ///   Đây là gate check ở handler line 48-49.
+    /// Conversation đã kết thúc → BadRequest (không cho gửi tin vào evidence).
     /// </summary>
     [Fact]
     public async Task Handle_CompletedConversation_ThrowsBadRequest()
     {
-        // Arrange — conversation đã completed
         var senderId = Guid.NewGuid();
         var command = new SendMessageCommand
         {
-            Type = ChatMessageType.Text,
-            Content = "Hello",
-            ConversationId = "c1",
-            SenderId = senderId
+            Type = ChatMessageType.Text, Content = "Hello",
+            ConversationId = "c1", SenderId = senderId
         };
         var conv = new ConversationDto
         {
-            Id = "c1",
-            UserId = senderId.ToString(),
+            Id = "c1", UserId = senderId.ToString(),
             ReaderId = Guid.NewGuid().ToString(),
-            Status = ConversationStatus.Completed // Đã kết thúc
+            Status = ConversationStatus.Completed // Kết thúc
         };
-
         _mockConvRepo.Setup(x => x.GetByIdAsync("c1", default)).ReturnsAsync(conv);
 
-        // Act & Assert
-        var ex = await Assert.ThrowsAsync<BadRequestException>(
-            () => _handler.Handle(command, CancellationToken.None));
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Contains("kết thúc", ex.Message);
-
-        // Verify — KHÔNG persist message nào
         _mockMsgRepo.Verify(x => x.AddAsync(It.IsAny<ChatMessageDto>(), default), Times.Never);
     }
 
     /// <summary>
-    /// TEST CASE: Reader gửi tin nhắn → UnreadCountUser phải tăng (không phải UnreadCountReader).
-    ///
-    /// Tại sao cần test riêng?
-    /// → Handler dùng logic if/else dựa trên senderId == UserId hay ReaderId.
-    ///   Nếu nhầm: reader gửi tin nhưng UnreadCountReader tăng → reader tự nhận unread badge.
-    ///   Bug này rất khó phát hiện bằng mắt mà phải có test.
+    /// Reader gửi tin → increment UnreadCountUser (KHÔNG PHẢI UnreadCountReader).
+    /// Bug tiềm ẩn: nhầm counter → reader tự thấy badge của chính mình.
     /// </summary>
     [Fact]
     public async Task Handle_ReaderSendsMessage_UserUnreadCountIncreases()
     {
-        // Arrange — reader là người gửi
         var userIdStr = Guid.NewGuid().ToString();
         var readerIdStr = Guid.NewGuid().ToString();
         var command = new SendMessageCommand
         {
-            Type = ChatMessageType.Text,
-            Content = "Reader reply",
-            ConversationId = "c1",
-            SenderId = Guid.Parse(readerIdStr) // Reader gửi
+            Type = ChatMessageType.Text, Content = "Reader reply",
+            ConversationId = "c1", SenderId = Guid.Parse(readerIdStr) // Reader gửi
         };
         var conv = new ConversationDto
         {
-            Id = "c1",
-            UserId = userIdStr,
-            ReaderId = readerIdStr,
+            Id = "c1", UserId = userIdStr, ReaderId = readerIdStr,
             Status = ConversationStatus.Active,
-            UnreadCountUser = 0,
-            UnreadCountReader = 0
+            UnreadCountUser = 0, UnreadCountReader = 0
         };
-
         _mockConvRepo.Setup(x => x.GetByIdAsync("c1", default)).ReturnsAsync(conv);
 
-        // Act
         await _handler.Handle(command, CancellationToken.None);
 
-        // Assert — UnreadCountUser tăng (vì reader gửi → user chưa đọc)
-        Assert.Equal(1, conv.UnreadCountUser);
-        // UnreadCountReader giữ nguyên = 0 (reader là người gửi, không cần tăng)
-        Assert.Equal(0, conv.UnreadCountReader);
+        Assert.Equal(1, conv.UnreadCountUser);   // Reader gửi → User chưa đọc
+        Assert.Equal(0, conv.UnreadCountReader);  // Reader gửi → giữ nguyên
     }
 }

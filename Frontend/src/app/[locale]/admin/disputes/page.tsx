@@ -1,3 +1,13 @@
+/*
+ * ===================================================================
+ * FILE: page.tsx (Admin Disputes)
+ * BỐI CẢNH (CONTEXT):
+ *   Giao diện xử lý Khiếu nại (Dispute) - Khi User và Reader có tranh chấp.
+ *   Admin quyết định 1 trong 2 hành động tối thượng:
+ *   - RELEASE: Chuyển tiền đóng băng cho Reader.
+ *   - REFUND: Hoàn tiền lại cho User (Không tính phí).
+ * ===================================================================
+ */
 'use client';
 
 import React, { useState } from 'react';

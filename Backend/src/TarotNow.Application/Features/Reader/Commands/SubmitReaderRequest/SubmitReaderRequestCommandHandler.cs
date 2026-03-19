@@ -1,3 +1,15 @@
+/*
+ * ===================================================================
+ * FILE: SubmitReaderRequestCommandHandler.cs
+ * NAMESPACE: TarotNow.Application.Features.Reader.Commands.SubmitReaderRequest
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Ánh Xạ và Phê Duyệt Sơ Bộ Đơn Xin Trở Thành Reader.
+ *   - Lỗi sẽ ném ra nếu rác rưởi (Ví dụ Banned ráng xin làm Reader).
+ *   - Thành công sẽ thẩy Document mới vào MongoDB cho Admin duyệt sau.
+ * ===================================================================
+ */
+
 using MediatR;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
@@ -6,15 +18,6 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Reader.Commands.SubmitReaderRequest;
 
-/// <summary>
-/// Handler xử lý đơn xin trở thành Reader.
-///
-/// Business rules:
-/// 1. User không được có đơn pending trước đó (tránh spam).
-/// 2. User phải có role = "user" (admin/reader không cần apply).
-/// 3. User phải active (không bị lock/banned).
-/// 4. Tạo document trong reader_requests collection với status = "pending".
-/// </summary>
 public class SubmitReaderRequestCommandHandler : IRequestHandler<SubmitReaderRequestCommand, bool>
 {
     private readonly IUserRepository _userRepository;
@@ -30,35 +33,36 @@ public class SubmitReaderRequestCommandHandler : IRequestHandler<SubmitReaderReq
 
     public async Task<bool> Handle(SubmitReaderRequestCommand request, CancellationToken cancellationToken)
     {
-        // 1. Lấy thông tin user từ PostgreSQL — kiểm tra tồn tại
+        // 1. Quét Căn Cước dưới PostgreSQL để xem khách này là ai.
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken)
             ?? throw new NotFoundException("Không tìm thấy người dùng.");
 
-        // 2. Kiểm tra user phải active — không cho locked/banned user apply
+        // 2. Anti-Spam (Chặn Nick Khóa) — Tài khoản có tì vết thì miễn làm thầy tu tập.
         if (user.Status != UserStatus.Active)
             throw new BadRequestException("Tài khoản chưa được kích hoạt hoặc đã bị khóa.");
 
-        // 3. Kiểm tra role — đã là reader/admin thì không cần apply
+        // 3. Phân biệt Giai Cấp — Nếu đã lên chức Reader/Admin rồi thì còn đi Vác Đơn xin làm gì nữa.
         if (user.Role != UserRole.User)
             throw new BadRequestException("Bạn đã có vai trò đặc biệt, không cần đăng ký Reader.");
 
-        // 4. Kiểm tra đơn pending — tránh gửi nhiều đơn cùng lúc
+        // 4. Anti-Spam (Chặn Multiple Request) — Đang có lá đơn chờ Duyệt thì cấm nộp thêm.
         var latestRequest = await _readerRequestRepository.GetLatestByUserIdAsync(
             request.UserId.ToString(), cancellationToken);
 
         if (latestRequest != null && latestRequest.Status == ReaderApprovalStatus.Pending)
             throw new BadRequestException("Bạn đã có đơn đang chờ duyệt. Vui lòng chờ admin xử lý.");
 
-        // 5. Tạo DTO mới — Repository sẽ map sang MongoDocument nội bộ
+        // 5. Mọi thứ trong sạch -> Tiến Hành đúc 1 Bản Ghi (Document) Nhét Sang Database MongoDB.
         var readerRequest = new ReaderRequestDto
         {
             UserId = request.UserId.ToString(),
-            Status = ReaderApprovalStatus.Pending,
+            Status = ReaderApprovalStatus.Pending, // Mặc định phải ngâm ở trạng thái Chờ (Pending)
             IntroText = request.IntroText,
             ProofDocuments = request.ProofDocuments,
             CreatedAt = DateTime.UtcNow
         };
 
+        // Lưu bản ghi vào bảng Chờ Trảm (ReaderRequests). Admin sẽ ngó vô bảng này.
         await _readerRequestRepository.AddAsync(readerRequest, cancellationToken);
 
         return true;

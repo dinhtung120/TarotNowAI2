@@ -1,3 +1,11 @@
+/*
+ * ===================================================================
+ * FILE: forgot-password/page.tsx (Quên Mật Khẩu)
+ * BỐI CẢNH (CONTEXT):
+ *   Giao diện yêu cầu cấp lại mật khẩu. User nhập email đang sử dụng.
+ *   Server sẽ bắn OTP về email để sang bước Đặt Lại Mật Khẩu.
+ * ===================================================================
+ */
 'use client';
 
 import { useMemo, useState } from 'react';

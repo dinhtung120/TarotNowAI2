@@ -6,12 +6,18 @@ import { useWalletStore } from '@/store/walletStore';
 import { useAuthStore } from '@/store/authStore';
 import { useLocale, useTranslations } from 'next-intl';
 
-/**
- * Component WalletWidget (Ví Hiển Thị Nhanh)
- * Giải thích lý do:
- * - Dùng để gắn trên Header hoặc Navbar, giúp người dùng luôn thấy số dư hiện tại của mình mà không cần vào trang chi tiết.
- * - Sử dụng Zustand store (`useWalletStore`) để dữ liệu tự động đồng bộ khi có nơi khác gọi hàm update balance.
- * - Tại sao lại tách Freeze Diamond: Để trải nghiệm người dùng minh bạch, họ biết bao nhiêu Diamond đang bị giam (escrow) trong lúc đặt câu hỏi AI.
+/*
+ * ===================================================================
+ * COMPONENT: WalletWidget
+ * BỐI CẢNH (CONTEXT):
+ *   Giao diện hiển thị nhanh số dư (Diamond, Gold, Frozen Diamond) của User 
+ *   trên Navbar (Desktop) và Sidebar (Mobile).
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Tự động gọi API (thông qua store Zustand `fetchBalance`) ở lần render đầu.
+ *   - Giám sát trạng thái `balance` từ `useWalletStore`, tự re-render khi số dư thay đổi.
+ *   - Trong lúc fetch hiện Skeleton mờ (pulse). Tách hiển thị Frozen Diamond (số dư bị đóng băng lúc chat).
+ * ===================================================================
  */
 export default function WalletWidget() {
  const t = useTranslations("Wallet");

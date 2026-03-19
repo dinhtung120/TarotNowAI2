@@ -1,3 +1,13 @@
+/*
+ * ===================================================================
+ * FILE: readerActions.ts
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Xử lý mọi nghiệp vụ liên quan đến Reader (Thợ xem Tarot).
+ *   Bao gồm: Gửi đơn đăng ký, Liệt kê danh sách Reader (Kèm bộ lọc/tìm kiếm),
+ *   và quản lý trạng thái Online/Offline.
+ * ===================================================================
+ */
 'use server';
 
 import { cookies } from 'next/headers';

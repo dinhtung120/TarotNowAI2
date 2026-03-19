@@ -13,16 +13,19 @@ import EscrowPanel from '@/components/chat/EscrowPanel';
 import { GlassCard } from '@/components/ui';
 import { useLocale, useTranslations } from 'next-intl';
 
-/**
- * Chat Screen — tin nhắn realtime qua SignalR.
- *
- * Tính năng:
- * → Kết nối SignalR hub tại /api/v1/chat
- * → Gửi/nhận tin nhắn realtime
- * → Load lịch sử chat lần đầu (REST API)
- * → Auto-scroll khi có tin mới
- * → Mark read khi mở conversation
- * → Report modal
+/*
+ * ===================================================================
+ * FILE: chat/[id]/page.tsx (Phòng Chat Realtime)
+ * BỐI CẢNH (CONTEXT):
+ *   Giao diện nhắn tin trực tiếp giữa User và Reader.
+ * 
+ * KIẾN TRÚC & GIAO TIẾP:
+ *   - Sử dụng WebSockets qua thư viện `@microsoft/signalr` kết nối tới backend `.NET`.
+ *   - Authenticate SignalR bằng token sinh ra từ Server Action `getSignalRToken` 
+ *     để không lộ JWT Cookie ra phía Client JavaScript.
+ *   - Fetch lịch sử tin nhắn ban đầu qua REST (`listMessages`), sau đó nghe event `ReceiveMessage`.
+ *   - Tích hợp tính năng thanh toán trong Chat (EscrowPanel).
+ * ===================================================================
  */
 export default function ChatPage() {
 	const params = useParams();

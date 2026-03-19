@@ -1,18 +1,15 @@
-/**
- * Badge — Component hiển thị nhãn trạng thái nhỏ gọn.
- *
- * Dùng cho:
- * - Trạng thái đơn hàng (pending, approved, rejected)
- * - Loại tiền tệ (Gold, Diamond)
- * - Role người dùng (Admin, Reader, User)
- * - Giá spread (Free, 50 Gold, 100 Diamond)
- *
- * Tại sao Badge cần thiết?
- * → Trước đây mỗi trang tự viết span với styling khác nhau cho cùng concept.
- * → Badge component đảm bảo:
- * 1. Màu sắc nhất quán cho cùng loại trạng thái
- * 2. Font size, padding, border-radius chuẩn theo design system
- * 3. Dễ mở rộng thêm variant mới (chỉ thêm 1 entry vào object map)
+/*
+ * ===================================================================
+ * COMPONENT: Badge
+ * BỐI CẢNH (CONTEXT):
+ *   Nhãn trạng thái (Status Label) nhỏ gọn dùng chung cho toàn bộ ứng dụng.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Hiển thị linh hoạt nhiều loại dữ liệu: Trạng thái (Pending, Success), 
+ *     Phân quyền (Admin, Reader), Tiền tệ (Gold, Diamond).
+ *   - Cung cấp sẵn 7 Variants (màu sắc) và 2 Sizes (kích cỡ) chuẩn Design System,
+ *     rút gọn code thay vì phải viết class Tailwind thủ công ở khắp mọi trang.
+ * ===================================================================
  */
 
 import { type ReactNode } from "react";

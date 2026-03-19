@@ -1,13 +1,29 @@
+/*
+ * ===================================================================
+ * FILE: WithdrawalRequestConfiguration.cs
+ * NAMESPACE: TarotNow.Infrastructure.Persistence.Configurations
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Kiểm soát Lược Rút Tiền Từ Wallet Reader.
+ *   Xoáy Chặt Giới Hạn (1 Người Chỉ Đoạt 1 Đơn Trượt Trống Nằm Cấp/Pending).
+ * ===================================================================
+ */
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TarotNow.Domain.Entities;
 
 namespace TarotNow.Infrastructure.Persistence.Configurations;
 
+/// <summary>
+/// Nẹp Khóa Ngàm Rút Ví (Cấm Rút X2 Khi Chưa Giải Quyết Nhất Khoát Ở Bảng Thanh Toán Withdraw Này).
+/// </summary>
 public sealed class WithdrawalRequestConfiguration : IEntityTypeConfiguration<WithdrawalRequest>
 {
     public void Configure(EntityTypeBuilder<WithdrawalRequest> builder)
     {
+        // Phá Xát Kép Cứng Ngắc Index Unique: 1 Đứa Mõm User Phải Nghỉ Chờ Hoặc Được Trả Hoặc Không 1 Ngày Chỉ Rụt Rút Xin 1 Lần Nếu Tờ Đơn Của Nó Báo Cục ("pending" Đang Chờ Admin Mắt Nửa / "approved" Duyệt Trả Nhưng Bank Chuyển Pending).
+        // Vứt Của Bỏ Khách Cứ Bấm Rút Tiền Nửa Đi Cưa 1 Tỷ Lần Vào Nén Report Admin Server Kêu Trống Giờ Mẻ Báo Nút Xin Lỗi Cắt.
         builder.HasIndex(x => new { x.UserId, x.BusinessDateUtc })
             .HasDatabaseName("ix_withdrawal_one_per_day_active")
             .IsUnique()

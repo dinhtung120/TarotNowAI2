@@ -1,3 +1,22 @@
+/*
+ * FILE: ProfileIntegrationTests.cs
+ * MỤC ĐÍCH: Integration test kiểm tra luồng cập nhật + lấy profile end-to-end.
+ *
+ *   QUY TẮC KINH DOANH:
+ *   → Khi User cập nhật DateOfBirth → hệ thống tự tính:
+ *     - Zodiac (cung hoàng đạo): dựa trên tháng + ngày sinh
+ *     - Numerology (thần số học): cộng tất cả chữ số ngày sinh → rút gọn về 1 chữ số
+ *   → Ví dụ: 15/07/1995 → Cancer (Cự Giải), Numerology = 1+5+0+7+1+9+9+5 = 37 → 3+7 = 10 → 1+0 = 1
+ *
+ *   TEST CASE:
+ *   UpdateProfile_ShouldComputeZodiacAndNumerology_Correctly:
+ *   1. Seed User
+ *   2. PATCH /api/v1/profile: cập nhật DisplayName + DateOfBirth + AvatarUrl
+ *   3. GET /api/v1/profile: verify Zodiac="Cancer (Cự Giải)", Numerology=1
+ *
+ *   KIỂM TRA: domain logic tính Zodiac + Numerology là đúng.
+ */
+
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
@@ -10,6 +29,9 @@ using Xunit;
 
 namespace TarotNow.Api.IntegrationTests;
 
+/// <summary>
+/// Test profile: update → auto-compute Zodiac + Numerology → verify.
+/// </summary>
 [Collection("IntegrationTests")]
 public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory<Program>>
 {
@@ -23,10 +45,15 @@ public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory
         _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(TestAuthHandler.AuthenticationScheme);
     }
 
+    /// <summary>
+    /// Cập nhật profile → hệ thống tự tính Zodiac + Numerology.
+    /// Input: DateOfBirth = 15/07/1995
+    /// Expected: Zodiac = "Cancer (Cự Giải)", Numerology = 1
+    /// </summary>
     [Fact]
     public async Task UpdateProfile_ShouldComputeZodiacAndNumerology_Correctly()
     {
-        // 0. Seed User
+        // Seed User
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         
@@ -40,17 +67,13 @@ public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory
                 displayName: "Old Name",
                 dateOfBirth: new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                 hasConsented: true);
-            
-            // Set Id via reflection since it's private set
             typeof(TarotNow.Domain.Entities.User).GetProperty("Id")?.SetValue(user, userId);
-            
-            user.Activate(); // Set status Active
-
+            user.Activate();
             db.Users.Add(user);
             await db.SaveChangesAsync();
         }
 
-        // 1. Arrange: Update DisplayName and DateOfBirth (e.g., July 15, 1995 -> Cancer, Numerology number)
+        // Cập nhật profile: ngày sinh 15/07/1995 → Cancer, Numerology = 1
         var updateRequest = new UpdateProfileRequest
         {
             DisplayName = "Test Name",
@@ -58,13 +81,10 @@ public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory
             AvatarUrl = "http://example.com/avatar.png"
         };
 
-        // 2. Act
         var patchResponse = await _client.PatchAsJsonAsync("/api/v1/profile", updateRequest);
-        
-        // 3. Assert Output is OK
         patchResponse.EnsureSuccessStatusCode();
 
-        // 4. Act: Get Profile to verify recalculation
+        // GET profile → verify computed fields
         var getResponse = await _client.GetAsync("/api/v1/profile");
         getResponse.EnsureSuccessStatusCode();
 
@@ -74,10 +94,10 @@ public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory
         Assert.Equal("Test Name", profile!.DisplayName);
         Assert.Equal("http://example.com/avatar.png", profile.AvatarUrl);
         
-        // Cancer is July 15
+        // Zodiac: July 15 → Cancer (Cự Giải)
         Assert.Equal("Cancer (Cự Giải)", profile.Zodiac);
 
-        // Numerology: 1+5+0+7+1+9+9+5 = 37 -> 3+7 = 10 -> 1+0 = 1
+        // Numerology: 1+5+0+7+1+9+9+5 = 37 → 3+7 = 10 → 1+0 = 1
         Assert.Equal(1, profile.Numerology);
     }
 }

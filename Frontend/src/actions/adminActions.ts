@@ -1,3 +1,17 @@
+/*
+ * ===================================================================
+ * FILE: adminActions.ts
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Định nghĩa các Server Actions (chạy hoàn toàn trên máy chủ Node.js của Next.js) 
+ *   để giao tiếp với Backend API dành riêng cho nghiệp vụ Quản trị (Admin).
+ *
+ * BẢO MẬT & KIẾN TRÚC:
+ *   - Sử dụng strict chỉ thị 'use server' giúp mã không bao giờ lọt xuống Client (Trình duyệt).
+ *   - Lấy accessToken từ cookie HttpOnly hoặc thẻ cookie mã hóa tăng tính bảo mật chống XSS.
+ *   - Điểm kiểm soát tập trung cho các chức năng nhạy cảm như khoá user, xem sai lệch số dư.
+ * ===================================================================
+ */
 'use server';
 
 import { cookies } from 'next/headers';

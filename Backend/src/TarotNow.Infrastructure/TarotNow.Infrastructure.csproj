@@ -1,4 +1,35 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<!--
+  FILE: TarotNow.Infrastructure.csproj
+  MỤC ĐÍCH: Cấu hình project Infrastructure — layer ngoài cùng của Clean Architecture.
+    Infrastructure tham chiếu Domain + Application (inner layers) và KHÔNG được tham chiếu ngược lại.
+
+  TARGET: .NET 9.0 (LTS — hỗ trợ dài hạn)
+  ImplicitUsings: tự động import System, System.Collections.Generic, System.Linq, v.v.
+  Nullable: bật nullable reference types (NRT) → chặn NullReferenceException tại compile time.
+
+  CÁC NHÓM THƯ VIỆN:
+  1. DATABASE:
+     - EntityFrameworkCore + Npgsql: ORM cho PostgreSQL (write model, SQL database)
+     - MongoDB.Driver: driver native cho MongoDB (read model, document database)
+     - EFCore.NamingConventions: tự động đổi PascalCase → snake_case cho bảng/cột (convention PostgreSQL)
+
+  2. CACHE:
+     - StackExchangeRedis: cache + rate limiting + quota counting
+
+  3. SECURITY:
+     - JwtBearer: xác thực JWT access token (middleware parse + validate)
+     - Isopoh.Cryptography.Argon2: băm mật khẩu (chống GPU brute-force)
+     - Otp.NET: TOTP MFA — sinh/verify mã OTP cho 2-Factor Authentication
+
+  4. CONFIG:
+     - Configuration.Abstractions: đọc config (appsettings.json)
+     - DependencyInjection.Abstractions: đăng ký DI services
+
+  5. DESIGN-TIME:
+     - EntityFrameworkCore.Design: chỉ dùng khi chạy lệnh migration CLI (dotnet ef)
+     - PrivateAssets=all: KHÔNG đi kèm khi publish production → giảm kích thước deploy
+-->
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -7,23 +38,36 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- EF Core: tự động tạo snake_case table/column names (PostgreSQL convention) -->
     <PackageReference Include="EFCore.NamingConventions" Version="9.0.0" />
+    <!-- Argon2id: băm mật khẩu memory-hard (thay thế bcrypt) -->
     <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
+    <!-- JWT Bearer: middleware parse + validate access token -->
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.2" />
+    <!-- EF Core ORM: DbContext, DbSet, LINQ-to-SQL -->
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.2" />
+    <!-- EF Core Design: chỉ dùng cho CLI migration (dotnet ef migrations add) -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <!-- EF Core Relational: hỗ trợ Raw SQL, FOR UPDATE, Execution Strategy -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.2" />
+    <!-- Redis cache: IDistributedCache + IConnectionMultiplexer (rate limit, quota) -->
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.2" />
+    <!-- Config abstractions: IConfiguration DI -->
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.3" />
+    <!-- DI abstractions: IServiceCollection -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.3" />
+    <!-- MongoDB driver: IMongoCollection, BSON serialization -->
     <PackageReference Include="MongoDB.Driver" Version="3.7.0" />
+    <!-- Npgsql EF Core PostgreSQL provider: DbContext → PostgreSQL connection -->
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.3" />
+    <!-- OTP.NET: TOTP MFA — sinh/verify mã 6 số cho Google Authenticator -->
     <PackageReference Include="Otp.NET" Version="1.4.1" />
   </ItemGroup>
 
+  <!-- Infrastructure → tham chiếu Domain + Application (Clean Architecture dependency rule) -->
   <ItemGroup>
     <ProjectReference Include="..\TarotNow.Domain\TarotNow.Domain.csproj" />
     <ProjectReference Include="..\TarotNow.Application\TarotNow.Application.csproj" />

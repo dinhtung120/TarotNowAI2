@@ -1,3 +1,15 @@
+/*
+ * ===================================================================
+ * FILE: legal/ai-disclaimer/page.tsx (Khước từ Trách nhiệm AI)
+ * BỐI CẢNH (CONTEXT):
+ *   Trang giải thích giới hạn pháp lý và độ chính xác của AI Tarot.
+ *   Cảnh báo không dùng AI cho mục đích Y tế/Tài chính/Pháp luật quan trọng.
+ * 
+ * TỐI ƯU SEO & RENDERING:
+ *   - `generateMetadata`: Tạo thẻ meta dynamic theo locale.
+ *   - Nội dung tĩnh render SSR.
+ * ===================================================================
+ */
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 

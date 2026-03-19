@@ -1,3 +1,29 @@
+/*
+ * FILE: RedisCacheService.cs
+ * MỤC ĐÍCH: Implementation cache service sử dụng Redis (hoặc fallback InMemory).
+ *
+ *   CÁC CHỨC NĂNG:
+ *   → GetAsync<T>: lấy object từ cache (deserialize JSON → T)
+ *   → SetAsync<T>: lưu object vào cache (serialize T → JSON, có TTL)
+ *   → RemoveAsync: xóa key
+ *   → CheckRateLimitAsync: rate limiting đơn giản (Set If Not Exists + TTL)
+ *   → IncrementAsync: tăng giá trị số (dùng cho quota counting)
+ *
+ *   KIẾN TRÚC DUAL-MODE:
+ *   → Redis available (production): dùng StackExchange.Redis trực tiếp
+ *   → Redis unavailable (local dev): fallback IDistributedCache (InMemory)
+ *   → Mỗi method kiểm tra _redisDatabase != null → chọn path phù hợp.
+ *
+ *   RATE LIMITING:
+ *   → Dùng NX (Not Exists) set: key chưa có → set + return true (allowed)
+ *   → Key đã có (trong TTL window) → return false (blocked)
+ *   → Phase 1 chỉ block/allow, Phase 2 có thể upgrade lên sliding window counter.
+ *
+ *   INCREMENT:
+ *   → Redis: dùng StringIncrementAsync (atomic INCR) + set TTL lần đầu.
+ *   → InMemory fallback: Get → Parse → +1 → Set (KHÔNG atomic, chấp nhận cho quota).
+ */
+
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
 using TarotNow.Application.Interfaces;
@@ -6,11 +32,12 @@ using StackExchange.Redis;
 namespace TarotNow.Infrastructure.Services;
 
 /// <summary>
-/// Implementation của ICacheService sử dụng Redis (thông qua IDistributedCache).
+/// Implement ICacheService — dual-mode Redis/InMemory cache.
 /// </summary>
 public class RedisCacheService : ICacheService
 {
     private readonly IDistributedCache _cache;
+    // _redisDatabase: null nếu Redis không khả dụng → fallback IDistributedCache
     private readonly IDatabase? _redisDatabase;
     private readonly JsonSerializerOptions _jsonOptions;
 
@@ -20,23 +47,25 @@ public class RedisCacheService : ICacheService
         _redisDatabase = redisConnection?.GetDatabase();
         _jsonOptions = new JsonSerializerOptions
         {
-            PropertyNameCaseInsensitive = true
+            PropertyNameCaseInsensitive = true // JSON key case-insensitive deserialization
         };
     }
 
     /// <summary>
-    /// Lấy object từ Redis, deserialize từ byte[] sang T.
+    /// Lấy object từ cache, deserialize JSON bytes → T.
+    /// Trả về default(T) nếu key không tồn tại (cache miss).
     /// </summary>
     public async Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
     {
         var data = await _cache.GetAsync(key, cancellationToken);
-        if (data == null) return default;
+        if (data == null) return default; // Cache miss
 
         return JsonSerializer.Deserialize<T>(data, _jsonOptions);
     }
 
     /// <summary>
-    /// Serialize object sang JSON string -> UTF8 bytes và lưu vào Redis.
+    /// Lưu object vào cache: serialize T → JSON string → UTF8 bytes → Redis/InMemory.
+    /// expiration: thời gian sống (TTL). Null = không hết hạn (permanent).
     /// </summary>
     public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken cancellationToken = default)
     {
@@ -50,63 +79,68 @@ public class RedisCacheService : ICacheService
         await _cache.SetStringAsync(key, json, options, cancellationToken);
     }
 
-    /// <summary>
-    /// Xóa key khỏi Redis.
-    /// </summary>
+    /// <summary>Xóa key khỏi cache.</summary>
     public async Task RemoveAsync(string key, CancellationToken cancellationToken = default)
     {
         await _cache.RemoveAsync(key, cancellationToken);
     }
 
     /// <summary>
-    /// Kiểm tra Rate Limit sử dụng cơ chế "Set if not exists" với TTL.
-    /// 
-    /// Logic:
-    /// - Key thường có dạng: "ratelimit:{userId}:{action}"
-    /// - Nếu key chưa có -> Set key với giá trị bất kỳ và TTL = limitWindow -> return true (Allowed).
-    /// - Nếu key đã có -> return false (Blocked).
-    /// 
-    /// Tại sao dùng SetStringAsync thay vì Increment?
-    /// -> Vì yêu cầu Phase 1 chỉ cần block request tiếp theo trong 1 khoảng thời gian (spam protection),
-    ///    chưa cần đếm số lượng request phức tạp (sliding window).
+    /// RATE LIMITING — kiểm tra User có bị giới hạn tần suất hay không.
+    ///
+    /// CÁCH HOẠT ĐỘNG:
+    /// → Key dạng: "ratelimit:{userId}:{action}" (vd: "ratelimit:abc:login")
+    /// → Key chưa có → SET key + TTL → trả true (ALLOWED)
+    /// → Key đã có (trong window) → trả false (BLOCKED)
+    ///
+    /// REDIS PATH (atomic):
+    /// → StringSetAsync(NX): atomic "Set If Not Exists" → thread-safe
+    ///
+    /// FALLBACK PATH (InMemory):
+    /// → Get → kiểm tra null → Set → không atomic nhưng chấp nhận cho dev
     /// </summary>
     public async Task<bool> CheckRateLimitAsync(string key, TimeSpan limitWindow, CancellationToken cancellationToken = default)
     {
         if (_redisDatabase != null)
         {
-            // Atomic NX set: chỉ set khi key chưa tồn tại.
+            // Atomic NX: chỉ set khi key CHƯA tồn tại + tự hết hạn sau limitWindow
             return await _redisDatabase.StringSetAsync(key, "1", expiry: limitWindow, when: When.NotExists);
         }
 
-        // Kiểm tra xem key đã tồn tại chưa
+        // Fallback InMemory (không atomic, chấp nhận cho local dev)
         var existing = await _cache.GetStringAsync(key, cancellationToken);
         if (existing != null)
         {
-            return false; // Đã bị limit
+            return false; // Đã bị limit trong window
         }
 
-        // Nếu chưa, set key với TTL
         var options = new DistributedCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = limitWindow
         };
 
-        // Lưu giá trị "1" làm flag
         await _cache.SetStringAsync(key, "1", options, cancellationToken);
         return true; // Được phép qua
     }
 
     /// <summary>
-    /// Tăng giá trị số trong cache. 
-    /// Lưu ý: IDistributedCache không hỗ trợ Increment atomic trực tiếp (cần dùng Lua script hoặc StackExchange.Redis trực tiếp).
-    /// Trong Phase 1, ta tạm dùng Get -> Parse -> Set vì quota count không yêu cầu độ chính xác tuyệt đối 100% 
-    /// như tài chính (wallet).
+    /// TĂNG giá trị số trong cache — dùng cho quota counting (vd: đếm số lần gọi AI/ngày).
+    ///
+    /// REDIS PATH (atomic):
+    /// → StringIncrementAsync: Redis INCR command (atomic) → thread-safe
+    /// → Set TTL lần đầu (value == 1) → auto-reset khi hết ngày/giờ
+    ///
+    /// FALLBACK PATH (InMemory):
+    /// → Get → Parse → +1 → Set → KHÔNG atomic
+    /// → Chấp nhận cho quota count (không yêu cầu chính xác tuyệt đối như tài chính)
     /// </summary>
     public async Task<long> IncrementAsync(string key, TimeSpan? expiration = null, CancellationToken cancellationToken = default)
     {
         if (_redisDatabase != null)
         {
+            // Atomic increment
             var value = await _redisDatabase.StringIncrementAsync(key);
+            // Set TTL lần đầu (khi counter mới tạo)
             if (value == 1 && expiration.HasValue)
             {
                 await _redisDatabase.KeyExpireAsync(key, expiration);
@@ -115,6 +149,7 @@ public class RedisCacheService : ICacheService
             return value;
         }
 
+        // Fallback: Get → +1 → Set (không atomic)
         var valString = await _cache.GetStringAsync(key, cancellationToken);
         long currentVal = 0;
 

@@ -11,14 +11,20 @@ import {
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-/**
- * EscrowPanel — In-chat escrow UI.
- *
- * Hiển thị:
- * → Trạng thái tổng (total frozen, session status).
- * → Danh sách question items + timer countdown.
- * → Actions: Confirm Release, Reader Reply.
- * → Collapsible — không chiếm quá nhiều không gian.
+/*
+ * ===================================================================
+ * COMPONENT: EscrowPanel
+ * BỐI CẢNH (CONTEXT):
+ *   Panel (Bảng điều khiển) tích hợp ngay bên trong giao diện Chat, giúp User 
+ *   và Reader theo dõi tiến trình giao dịch trung gian (Escrow) của một phiên xem Tarot.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Fetch trạng thái Escrow định kỳ 30s (Polling) qua `getEscrowStatus`.
+ *   - Hiển thị tổng số Diamond đang bị Đóng băng (Frozen).
+ *   - Hiển thị danh sách câu hỏi (Main/Add-on) cùng trạng thái (Accepted, Released, Refunded...).
+ *   - Cung cấp nút thao tác: "Reader Reply" (Dành cho Reader) và "Confirm Release" (Dành cho User).
+ *   - Timer đếm ngược (Countdown) cho các deadline Auto-refund hoặc Auto-release.
+ * ===================================================================
  */
 interface EscrowPanelProps {
  conversationId: string;

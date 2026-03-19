@@ -1,3 +1,17 @@
+/*
+ * ===================================================================
+ * COMPONENT: AuthSessionManager
+ * BỐI CẢNH (CONTEXT):
+ *   Component không giao diện (Headless) nằm ở Layer cao nhất để quản lý phiên 
+ *   đăng nhập của User (JWT Session).
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Đồng bộ trạng thái Auth `useAuthStore` giữa các Tab trình duyệt (StorageEvent).
+ *   - Đặt bộ đếm giờ (setTimeout) theo thời gian hết hạn (expiry) của JWT Token.
+ *   - Tự động gọi Server Action `logoutAction` và đá User ra khỏi màn hình (Force Logout) 
+ *     khi Access Token hết hạn.
+ * ===================================================================
+ */
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";

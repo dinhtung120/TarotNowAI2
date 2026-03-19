@@ -1,9 +1,23 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<!-- 
+  ===================================================================
+  FILE: TarotNow.Domain.csproj
+  ===================================================================
+  MỤC ĐÍCH: 
+    File Cấu Hình Gốc (Project Build XML) của Tầng Cốt Lõi Dự Án (Domain). 
+    Luật thép: Tầng này tinh khiết tuyệt đối, cấm tuyệt không móc nối hay thò dây references 
+    tới bất cứ library rác công cụ Database bẩn hay Web ASP nào khác ngoài vài cái chuẩn của .NET mộc (Sạch Nhất Theo Thiết Kế Clean Architecture).
+  =================================================================== 
+-->
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Mốc Giáng Máy Chạy .NET Core 9 Mức Cuối Hiện Đại Đu Sóng Nhất. -->
     <TargetFramework>net9.0</TargetFramework>
+    <!-- Tránh Đoạn Dài Dong Import using Lặt Vặt Nhờ Kẹp Auto Global Ở Đây -->
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Thọc Nốt Vít Nghiêm Chuẩn Tránh Crash Bất Ngờ Nếu Có Null Reference Kịp Báo Warn Xanh Cảnh Báo Ngay Từ Lúc Nhập Chữ Code -->
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <!-- Khúc Dưới Sạch Bong (Không Có Gì): Điều Nhất Quán Vang Quyết Không Tham Nhúng Dependency Library Hay Infrastructure Lệnh Nào Tại Class Lời Code Ở Cõi Này Lạc Nhau Bỏ Ngỏ Thép. -->
 </Project>

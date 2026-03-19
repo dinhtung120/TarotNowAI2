@@ -1,17 +1,15 @@
-/**
- * UserLayout — Layout framework cho khu vực User (Dashboard, Wallet, Chat, etc.)
- *
- * === CẤU TRÚC ===
- * 1. Navbar (top fixed) — Dùng cho tất cả
- * 2. UserSidebar (left fixed) — Chỉ hiện trên Desktop (≥ md)
- * 3. BottomTabBar (bottom fixed) — Chỉ hiện trên Mobile (< md)
- * 4. Main Content Area — Có scroll độc lập.
- *
- * === TẠI SAO CẦN LAYOUT RIÊNG? ===
- * → Trước đây Navbar nằm trong `app/layout.tsx`.
- * → Nhưng mỗi lần cuộn trang, Navbar cũng cuộn theo (trừ khi set fixed).
- * → Nếu có Sidebar, layout cần flex row + flex-1 content area.
- * → Không thể định nghĩa chung ở Root Layout vì Admin, Auth không dùng Sidebar.
+/*
+ * ===================================================================
+ * COMPONENT: UserLayout
+ * BỐI CẢNH (CONTEXT):
+ *   Khung Layout chính cho toàn bộ khu vực dành cho Người Dùng (Dashboard, Chat, Ví...).
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Tích hợp `UserSidebar` (Bên trái) cho Desktop và `BottomTabBar` (Bên dưới) cho Mobile.
+ *   - Tách biệt vùng Nội Dung Chính (Main Content Area) để thanh trượt (Scroll) 
+ *     hoạt động độc lập, không làm Sidebar hay Navbar bị trôi theo.
+ *   - Gắn nền `AstralBackground` (với chế độ Subtle) mặc định cho mọi trang User.
+ * ===================================================================
  */
 
 import { type ReactNode } from "react";

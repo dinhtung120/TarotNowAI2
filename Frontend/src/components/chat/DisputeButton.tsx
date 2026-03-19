@@ -5,14 +5,20 @@ import { openDispute } from '@/actions/escrowActions';
 import { AlertTriangle, Loader2, CheckCircle2, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-/**
- * DisputeButton — CTA mở tranh chấp + window countdown.
- *
- * Hiển thị khi:
- * → Item status = 'released'
- * → Dispute window chưa hết (disputeWindowEnd > now)
- *
- * Click → modal nhập lý do → submit.
+/*
+ * ===================================================================
+ * COMPONENT: DisputeButton
+ * BỐI CẢNH (CONTEXT):
+ *   Nút CTA (Call-to-Action) hiển thị trong khung Chat, cho phép User mở 
+ *   tranh chấp (Dispute) nếu có vấn đề với câu trả lời của Reader.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Hiển thị khi trạng thái item là 'released' và vẫn còn trong thời gian 
+ *     cho phép tranh chấp (disputeWindowEnd > now).
+ *   - Có đồng hồ đếm ngược (Countdown) cập nhật tự động bằng `setInterval`.
+ *   - Khi click, mở Modal để điền lý do vi phạm (tối thiểu 10 ký tự) và gọi 
+ *     API `openDispute`.
+ * ===================================================================
  */
 interface DisputeButtonProps {
  itemId: string;

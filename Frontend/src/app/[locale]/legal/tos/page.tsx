@@ -1,3 +1,14 @@
+/*
+ * ===================================================================
+ * FILE: legal/tos/page.tsx (Điều Khoản Dịch Vụ - Terms of Service)
+ * BỐI CẢNH (CONTEXT):
+ *   Trang hiển thị nội dung Điều Khoản Dịch Vụ của hệ thống TarotNow.
+ * 
+ * TỐI ƯU SEO & RENDERING:
+ *   - `generateMetadata`: Tải trước meta title/description đa ngôn ngữ trên Server.
+ *   - Server Component hoàn toàn, render siêu tốc vì chỉ chứa văn bản tĩnh.
+ * ===================================================================
+ */
 import { useTranslations } from "next-intl";
 import { getTranslations } from "next-intl/server";
 

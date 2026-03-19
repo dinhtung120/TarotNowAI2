@@ -1,3 +1,15 @@
+/*
+ * ===================================================================
+ * FILE: reading/history/page.tsx (Lịch Sử Trải Bài)
+ * BỐI CẢNH (CONTEXT):
+ *   Trang xem danh sách các phiên Tarot (Reading Sessions) mà User đã thực hiện.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Lấy lịch sử phân trang qua API (`getHistorySessionsAction`).
+ *   - Có thể lọc theo loại Trải bài (Spread Type) và Ngày tháng.
+ *   - Nhấn vào từng phiên sẽ điều hướng đến màn hình Kết Quả Chi Tiết (`/reading/history/[id]`).
+ * ===================================================================
+ */
 "use client";
 
 import { useState, useEffect } from "react";

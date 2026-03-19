@@ -1,3 +1,17 @@
+/*
+ * ===================================================================
+ * FILE: reading/session/[id]/page.tsx (Phiên Trải Bài Tương Tác)
+ * BỐI CẢNH (CONTEXT):
+ *   Giao diện tương tác chính khi bốc bài Tarot và nhận giải nghĩa từ AI.
+ * 
+ * KIẾN TRÚC & HOẠT ẢNH (ANIMATION):
+ *   - Hiệu ứng `shuffle` (xào bài) -> Dàn bài (`deckRowsDesktop/Mobile`).
+ *   - Cho phép User tự chọn lá bài bằng tay, hoặc auto Random.
+ *   - Lá bài bốc xong sẽ bay (FlyingCard) vào stack riêng.
+ *   - Khi đã bốc đủ, gọi `revealReadingSession` để chốt kết quả, sau đó lật bài.
+ *   - Sau khi bài lật hết, render `AiInterpretationStream` để AI bắt đầu streaming kết quả.
+ * ===================================================================
+ */
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";

@@ -1,21 +1,15 @@
-/**
- * Footer — Component chân trang dùng chung cho Public pages.
- *
- * === VẤN ĐỀ TRƯỚC ĐÂY ===
- * Footer chỉ có ở trang Home, viết inline ~30 dòng JSX trong page.tsx.
- * Các trang khác (Readers, Legal, Wallet) KHÔNG CÓ footer.
- *
- * === GIẢI PHÁP ===
- * Tách thành component độc lập, import vào layout.tsx.
- * Hiển thị ở TẤT CẢ public pages (Home, Readers, Legal).
- * Ẩn ở Auth pages và Admin pages (có layout riêng).
- *
- * Nội dung Footer:
- * 1. Logo + tagline
- * 2. Navigation links (Dịch vụ, Readers, Ví, Hỗ trợ)
- * 3. Legal links (ToS, Privacy)
- * 4. Social icons
- * 5. Copyright
+/*
+ * ===================================================================
+ * COMPONENT: Footer
+ * BỐI CẢNH (CONTEXT):
+ *   Phần Chân trang hiển thị thông tin bản quyền, điều khoản và các liên kết mạng xã hội.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Hiển thị trên mọi Public Pages (Trang chủ, Tìm Reader, Pháp lý...).
+ *   - Ẩn trên các trang Auth hoặc Admin Portal.
+ *   - Chứa các nút đổi Giao diện (ThemeSwitcher) và Ngôn ngữ (LanguageSwitcher) 
+ *     lặp lại cho khách vãng lai dễ thay đổi cấu hình.
+ * ===================================================================
  */
 
 import { Link } from "@/i18n/routing";

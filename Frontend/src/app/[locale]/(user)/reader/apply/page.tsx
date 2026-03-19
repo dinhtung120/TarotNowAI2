@@ -7,14 +7,18 @@ import {
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
-/**
- * Trang đăng ký trở thành Reader (Nhà xem bài Tarot).
- *
- * Thiết kế:
- * → Kiểm tra trạng thái đơn hiện tại trước khi hiển thị form.
- * → Nếu đã có đơn pending → hiển thị status card thay vì form.
- * → Nếu chưa có đơn hoặc đã bị reject → hiển thị form đăng ký.
- * → Premium astral design theo phong cách chung của hệ thống.
+/*
+ * ===================================================================
+ * FILE: (user)/reader/apply/page.tsx (Đăng ký Reader)
+ * BỐI CẢNH (CONTEXT):
+ *   Trang cho phép User (Người dùng thường) nộp đơn ứng tuyển làm Reader (Người đọc Tarot).
+ * 
+ * LUỒNG HOẠT ĐỘNG:
+ *   - Fetch trạng thái đơn (Pending, Approved, Rejected) ngay khi load.
+ *   - Nếu Pending/Approved: Hiện thi thông báo trạng thái.
+ *   - Nếu Chưa có hoặc Rejected: Hiện Form điền giới thiệu bản thân (Tối thiểu 20 ký tự).
+ *   - Submit qua Server Action `submitReaderApplication`.
+ * ===================================================================
  */
 export default function ReaderApplyPage() {
  const t = useTranslations("ReaderApply");

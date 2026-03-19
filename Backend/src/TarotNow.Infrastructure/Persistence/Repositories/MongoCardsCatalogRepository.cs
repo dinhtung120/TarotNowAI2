@@ -1,3 +1,16 @@
+/*
+ * FILE: MongoCardsCatalogRepository.cs
+ * MỤC ĐÍCH: Repository đọc dữ liệu 78 lá bài Tarot từ MongoDB (collection "cards_catalog").
+ *   Dữ liệu TĨNH (seed từ seed_cards.js) — chỉ có READ, không có Write.
+ *
+ *   CÁC CHỨC NĂNG:
+ *   → GetByIdAsync: lấy 1 lá theo ID (0-77)
+ *   → GetByCodeAsync: lấy 1 lá theo code ("the_fool", "ace_of_wands")
+ *   → GetAllAsync: lấy toàn bộ 78 lá (cache startup hoặc random draw)
+ *
+ *   MAPPING: Document → DTO thủ công (không dùng AutoMapper vì quá đơn giản).
+ */
+
 using MongoDB.Driver;
 using TarotNow.Application.Interfaces;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
@@ -5,13 +18,8 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
 /// <summary>
-/// MongoDB implementation cho ICardsCatalogRepository.
-///
-/// Đọc dữ liệu 78 lá bài Tarot từ collection "cards_catalog".
-/// Dữ liệu tĩnh (seed từ seed_cards.js), chỉ có READ operations.
-/// 
-/// Mapping: Document → DTO diễn ra tại repository level,
-/// đảm bảo Application layer không biết MongoDB tồn tại.
+/// Implement ICardsCatalogRepository — đọc catalog 78 lá bài từ MongoDB.
+/// Application layer chỉ nhận CardCatalogDto, không biết MongoDB Document tồn tại.
 /// </summary>
 public class MongoCardsCatalogRepository : ICardsCatalogRepository
 {
@@ -22,7 +30,7 @@ public class MongoCardsCatalogRepository : ICardsCatalogRepository
         _mongoContext = mongoContext;
     }
 
-    /// <summary>Lấy 1 lá bài theo ID (0-77).</summary>
+    /// <summary>Lấy 1 lá bài theo ID (0-77). Trả null nếu không tìm thấy.</summary>
     public async Task<CardCatalogDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         var doc = await _mongoContext.Cards
@@ -32,7 +40,9 @@ public class MongoCardsCatalogRepository : ICardsCatalogRepository
         return doc == null ? null : MapToDto(doc);
     }
 
-    /// <summary>Lấy 1 lá bài theo code (VD: "the_fool") — dùng unique index.</summary>
+    /// <summary>
+    /// Lấy 1 lá bài theo code (ví dụ: "the_fool"). Unique index đảm bảo chỉ có 1 kết quả.
+    /// </summary>
     public async Task<CardCatalogDto?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
     {
         var doc = await _mongoContext.Cards
@@ -42,20 +52,25 @@ public class MongoCardsCatalogRepository : ICardsCatalogRepository
         return doc == null ? null : MapToDto(doc);
     }
 
-    /// <summary>Lấy toàn bộ 78 lá — dùng cho cache startup hoặc random draw.</summary>
+    /// <summary>
+    /// Lấy toàn bộ 78 lá, sắp xếp theo ID tăng dần.
+    /// Dùng khi: khởi động app để cache, hoặc random draw cần biết tổng bộ bài.
+    /// </summary>
     public async Task<IEnumerable<CardCatalogDto>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         var docs = await _mongoContext.Cards
-            .Find(_ => true)
-            .SortBy(c => c.Id)
+            .Find(_ => true)   // Lấy tất cả (không filter)
+            .SortBy(c => c.Id) // Sắp xếp theo ID tăng dần (0 → 77)
             .ToListAsync(cancellationToken);
 
         return docs.Select(MapToDto);
     }
 
     /// <summary>
-    /// Map MongoDB document → Application DTO.
-    /// Tại sao không dùng AutoMapper? → Quá đơn giản, không cần overhead của AutoMapper.
+    /// Map MongoDB Document → Application DTO (thủ công, không dùng AutoMapper).
+    /// Tại sao không dùng AutoMapper? 
+    /// → Mapping quá đơn giản (chỉ copy property). AutoMapper gây overhead không cần thiết.
+    /// → Tên cũng khác nhau (Name.Vi → NameVi) — cần config riêng nếu dùng AutoMapper.
     /// </summary>
     private static CardCatalogDto MapToDto(CardCatalogDocument doc) => new()
     {

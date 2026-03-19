@@ -1,3 +1,17 @@
+/*
+ * ===================================================================
+ * FILE: wallet/withdraw/page.tsx (Rút Tiền)
+ * BỐI CẢNH (CONTEXT):
+ *   Trang cho phép User (thường là Reader/Admin có thu nhập) rút Kim Cương (Diamond) 
+ *   về tài khoản ngân hàng VND.
+ * 
+ * BẢO MẬT & LUỒNG HOẠT ĐỘNG:
+ *   - Tính toán phí rút (10%) và hiển thị trực quan (Gross/Net).
+ *   - Yêu cầu xác thực MFA (MfaChallengeModal) trước khi submit.
+ *   - Lưu yêu cầu rút tiền qua API `createWithdrawal`.
+ *   - Liệt kê lịch sử rút tiền ở nửa dưới trang (`listMyWithdrawals`).
+ * ===================================================================
+ */
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";

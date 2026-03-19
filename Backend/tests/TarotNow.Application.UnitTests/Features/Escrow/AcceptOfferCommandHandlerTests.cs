@@ -1,3 +1,19 @@
+/*
+ * FILE: AcceptOfferCommandHandlerTests.cs
+ * MỤC ĐÍCH: Unit test cho handler chấp nhận lời đề nghị (Accept Offer) trong hệ thống Escrow.
+ *
+ *   CÁC TEST CASE:
+ *   1. Handle_ExistingIdempotencyKey_ReturnsExistingItemId:
+ *      → IdempotencyKey đã tồn tại → trả ID cũ, KHÔNG freeze lần 2 (chống double-spend)
+ *   2. Handle_NewOffer_CreatesSessionAndItem_FreezesDiamond:
+ *      → Happy path: tạo session + item + freeze Diamond vào escrow
+ *   3. Handle_WhenConversationParticipantsMismatch_ThrowsBadRequestException:
+ *      → UserId/ReaderId không khớp với conversation → 400 (ngăn gian lận)
+ *
+ *   ESCROW FLOW: User accept → freeze Diamond → tạo ChatFinanceSession + ChatQuestionItem
+ *   → Diamond bị đóng băng cho đến khi Reader reply + User confirm release
+ */
+
 using Moq;
 using TarotNow.Application.Common;
 using TarotNow.Application.Exceptions;
@@ -9,6 +25,9 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Escrow;
 
+/// <summary>
+/// Test accept offer: idempotency, freeze Diamond, session creation, participant validation.
+/// </summary>
 public class AcceptOfferCommandHandlerTests
 {
     private readonly Mock<IChatFinanceRepository> _mockFinanceRepo;
@@ -23,17 +42,20 @@ public class AcceptOfferCommandHandlerTests
         _mockWalletRepo = new Mock<IWalletRepository>();
         _mockConversationRepo = new Mock<IConversationRepository>();
         _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
+        // Mock transaction coordinator: thực thi action trực tiếp (không cần DB transaction thật)
         _mockTransactionCoordinator
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
             .Returns((Func<CancellationToken, Task> action, CancellationToken ct) => action(ct));
 
         _handler = new AcceptOfferCommandHandler(
-            _mockFinanceRepo.Object,
-            _mockWalletRepo.Object,
-            _mockConversationRepo.Object,
-            _mockTransactionCoordinator.Object);
+            _mockFinanceRepo.Object, _mockWalletRepo.Object,
+            _mockConversationRepo.Object, _mockTransactionCoordinator.Object);
     }
 
+    /// <summary>
+    /// IdempotencyKey đã tồn tại → trả ID cũ, KHÔNG freeze lần 2.
+    /// Chống double-spend khi network retry.
+    /// </summary>
     [Fact]
     public async Task Handle_ExistingIdempotencyKey_ReturnsExistingItemId()
     {
@@ -48,6 +70,10 @@ public class AcceptOfferCommandHandlerTests
         _mockWalletRepo.Verify(x => x.FreezeAsync(It.IsAny<Guid>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), default), Times.Never);
     }
 
+    /// <summary>
+    /// Happy path: tạo session mới + item + freeze Diamond.
+    /// Verify: session.TotalFrozen = amount, item.Status = Accepted.
+    /// </summary>
     [Fact]
     public async Task Handle_NewOffer_CreatesSessionAndItem_FreezesDiamond()
     {
@@ -55,10 +81,8 @@ public class AcceptOfferCommandHandlerTests
         var readerId = Guid.NewGuid();
         var command = new AcceptOfferCommand 
         { 
-            UserId = userId, 
-            ReaderId = readerId, 
-            ConversationRef = "conv_ref", 
-            AmountDiamond = 100, 
+            UserId = userId, ReaderId = readerId, 
+            ConversationRef = "conv_ref", AmountDiamond = 100, 
             IdempotencyKey = "key123" 
         };
         
@@ -66,9 +90,7 @@ public class AcceptOfferCommandHandlerTests
         _mockFinanceRepo.Setup(x => x.GetSessionByConversationRefAsync("conv_ref", default)).ReturnsAsync((ChatFinanceSession)null!);
         _mockConversationRepo.Setup(x => x.GetByIdAsync("conv_ref", default)).ReturnsAsync(new ConversationDto
         {
-            Id = "conv_ref",
-            UserId = userId.ToString(),
-            ReaderId = readerId.ToString(),
+            Id = "conv_ref", UserId = userId.ToString(), ReaderId = readerId.ToString(),
             Status = ConversationStatus.Active
         });
 
@@ -80,37 +102,31 @@ public class AcceptOfferCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         Assert.Equal(expectedId, result);
-        
-        // Assert session created
         _mockFinanceRepo.Verify(x => x.AddSessionAsync(It.Is<ChatFinanceSession>(s => 
             s.ConversationRef == "conv_ref" && s.TotalFrozen == 100), default), Times.Once);
-            
-        // Assert freeze called
         _mockWalletRepo.Verify(x => x.FreezeAsync(command.UserId, 100, "chat_question_item", "key123", It.IsAny<string>(), null, "freeze_key123", default), Times.Once);
-        
-        // Assert item created
         _mockFinanceRepo.Verify(x => x.AddItemAsync(It.Is<ChatQuestionItem>(i => 
             i.PayerId == command.UserId && i.AmountDiamond == 100 && i.Status == QuestionItemStatus.Accepted), default), Times.Once);
     }
 
+    /// <summary>
+    /// UserId/ReaderId không khớp với conversation participants → BadRequest (chống gian lận).
+    /// </summary>
     [Fact]
     public async Task Handle_WhenConversationParticipantsMismatch_ThrowsBadRequestException()
     {
         var command = new AcceptOfferCommand
         {
-            UserId = Guid.NewGuid(),
-            ReaderId = Guid.NewGuid(),
-            ConversationRef = "conv_ref",
-            AmountDiamond = 100,
-            IdempotencyKey = "key123"
+            UserId = Guid.NewGuid(), ReaderId = Guid.NewGuid(),
+            ConversationRef = "conv_ref", AmountDiamond = 100, IdempotencyKey = "key123"
         };
 
         _mockFinanceRepo.Setup(x => x.GetItemByIdempotencyKeyAsync("key123", default)).ReturnsAsync((ChatQuestionItem)null!);
         _mockConversationRepo.Setup(x => x.GetByIdAsync("conv_ref", default)).ReturnsAsync(new ConversationDto
         {
             Id = "conv_ref",
-            UserId = Guid.NewGuid().ToString(),
-            ReaderId = Guid.NewGuid().ToString(),
+            UserId = Guid.NewGuid().ToString(), // Khác userId
+            ReaderId = Guid.NewGuid().ToString(), // Khác readerId
             Status = ConversationStatus.Active
         });
 

@@ -1,3 +1,15 @@
+/*
+ * ===================================================================
+ * FILE: (user)/reading/history/[id]/page.tsx (Chi tiết Lịch sử Trải bài)
+ * BỐI CẢNH (CONTEXT):
+ *   Trang hiển thị chi tiết một phiên trải bài Tarot đã hoàn thành hoặc bị gián đoạn.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Lấy thông tin phiên từ API `getHistoryDetailAction`.
+ *   - Hiển thị danh sách thẻ bài đã bốc (`cardsDrawn`) với hiệu ứng lật thẻ/ánh sáng.
+ *   - Tóm tắt hoạt động AI ở cuối trang (nếu trạng thái isCompleted = true).
+ * ===================================================================
+ */
 "use client";
 
 import { useMemo, useState, useEffect } from "react";

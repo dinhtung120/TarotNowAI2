@@ -1,15 +1,14 @@
-/**
- * LoadingSpinner — Spinner loading thống nhất cho toàn app.
- *
- * Tại sao cần component riêng thay vì dùng Loader2 trực tiếp?
- * → Đảm bảo styling (màu, size, animation) nhất quán.
- * → Có thể thêm text loading message bên dưới spinner.
- * → Centralized: thay đổi spinner style ở 1 nơi → cập nhật toàn app.
- *
- * Dùng ở:
- * - Trạng thái loading khi fetch data
- * - Placeholder khi chờ AI stream
- * - Loading overlay trên toàn trang
+/*
+ * ===================================================================
+ * COMPONENT: LoadingSpinner
+ * BỐI CẢNH (CONTEXT):
+ *   Biểu tượng vòng xoay (Spinner) báo hiệu ứng dụng đang xử lý dữ liệu.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Đồng bộ hiệu ứng loading trên toàn App thay vì dùng `<Loader2>` rải rác.
+ *   - Có thể cấu hình Kích cỡ (Size), đính kèm Dòng chữ chú thích (Message) 
+ *     hoặc chiếm toàn bộ chiều cao màn hình (Full Page) khi đang chặn tương tác.
+ * ===================================================================
  */
 
 import { Loader2 } from "lucide-react";

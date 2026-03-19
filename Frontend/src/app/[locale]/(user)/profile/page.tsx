@@ -1,15 +1,16 @@
 "use client";
 
-/**
- * Trang Hồ Sơ Cá Nhân (Profile Page)
- *
- * Phiên bản sửa lỗi:
- * - [TRƯỚC] Gọi trực tiếp fetch("/api/v1/profile") → URL tương đối → Next.js server → 404
- * - [SAU] Gọi qua Server Actions (profileActions.ts) → URL đúng đến Backend .NET → hoạt động
- *
- * Ngoài ra còn sửa:
- * - Thêm auth guard: redirect về /login nếu chưa đăng nhập
- * - Sử dụng i18n keys từ vi.json thay vì hardcode text
+/*
+ * ===================================================================
+ * FILE: (user)/profile/page.tsx (Hồ Sơ Cá Nhân)
+ * BỐI CẢNH (CONTEXT):
+ *   Trang xem và cập nhật thông tin cá nhân của User (Hiển thị Avatar, Tên, Cung Hoàng Đạo, Thần Số Học, EXP/Level).
+ * 
+ * DATA FLOW & BẢO MẬT:
+ *   - Auth Guard: Redirect về `/login` nếu Zustand báo chưa đăng nhập.
+ *   - Tích hợp `react-hook-form` + `zod` để validate form chỉnh sửa thông tin.
+ *   - Gọi trực tiếp `getProfileAction` / `updateProfileAction` từ Server Actions đảm bảo che giấu Endpoint.
+ * ===================================================================
  */
 
 import { useTranslations } from "next-intl";

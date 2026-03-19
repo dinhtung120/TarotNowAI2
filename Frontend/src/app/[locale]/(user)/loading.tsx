@@ -1,3 +1,11 @@
+/*
+ * ===================================================================
+ * FILE: (user)/loading.tsx (User Route Loading Suspense)
+ * BỐI CẢNH (CONTEXT):
+ *   Giao diện Loading Fallback (React Suspense) được kích hoạt
+ *   bất cứ khi nào app đang chuyển hướng giữa các trang trong User segment.
+ * ===================================================================
+ */
 import { Loader2 } from "lucide-react";
 
 export default function UserRouteLoading() {

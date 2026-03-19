@@ -9,14 +9,17 @@ import { Link } from '@/i18n/routing';
 import { SectionHeader, GlassCard } from '@/components/ui';
 import { useTranslations } from 'next-intl';
 
-/**
- * Trang Inbox — danh sách conversations.
- *
- * Thiết kế:
- * → Hiện danh sách conversations với unread badge.
- * → Tabs cho vai trò: "Người hỏi" và "Reader".
- * → Click → navigate đến chat screen.
- * → Premium astral design.
+/*
+ * ===================================================================
+ * FILE: (user)/chat/page.tsx (Hộp Thư - Inbox)
+ * BỐI CẢNH (CONTEXT):
+ *   Trang hộp thư chính của User, hiển thị danh sách các phiên Chat (Conversations).
+ *   Hỗ trợ hiển thị tab 2 vai trò: "Người hỏi" (User) và "Reader".
+ * 
+ * KIẾN TRÚC & UI:
+ *   - Client Component ('use client') fetch dữ liệu realtime thông qua Server Actions `listConversations`.
+ *   - Có Unread Badge (số lượng tin nhắn chưa đọc) và trạng thái thẻ (Pending/Active/Completed).
+ * ===================================================================
  */
 export default function InboxPage() {
 	const t = useTranslations('Chat');

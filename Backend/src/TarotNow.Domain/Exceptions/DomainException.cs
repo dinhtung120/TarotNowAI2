@@ -1,18 +1,31 @@
+/*
+ * ===================================================================
+ * FILE: DomainException.cs
+ * NAMESPACE: TarotNow.Domain.Exceptions
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Gốc Gác Sâu Thẳm Của Mọi Kiểu Khóc Lỗi Khác. Khi Một Lớp DB Bị Lỗi Logic Nào Đó (VD: Trừ Tiền Âm), Nó Phải Sút Object Lỗi Này Lên Cho Application Chụp Để Tránh Lộ "SqlException" Trắng Chữ.
+ * ===================================================================
+ */
+
+using System;
+
 namespace TarotNow.Domain.Exceptions;
 
 /// <summary>
-/// Exception gốc cho tất cả các lỗi thuộc về Business Logic / Domain Rule.
-/// Bất kỳ lỗi nào phát sinh do vi phạm logic kinh doanh (ví dụ: số dư nhỏ hơn 0, 
-/// lá bài không tồn tại, trạng thái không hợp lệ) đều nên kế thừa lớp này.
+/// Thùng Chứa Báo Lỗi Ngạo Mạn Thuần Tuý Tầng Core Domain (Business Logic Rule).
+/// Khối Code Này Đứng Đầu Kháng Gió Các Khối Ném Lỗi Khác (Khách Ko Đủ Tiền, Thẻ Bị Ẩn, Chát Khóa).
+/// Thay Vì Gào Khóc Bằng `Exception` Thường Gây Bối Rối Web Tạch. Ta Tạo Object Này Ném Báo Dịu Dàng (Sạch Clean Architecture).
 /// </summary>
 public class DomainException : Exception
 {
     /// <summary>
-    /// Mã lỗi chuẩn (ví dụ: "INSUFFICIENT_FUNDS", "CARD_NOT_FOUND").
-    /// Dành cho client xử lý thay vì parse text message.
+    /// ID Mã Lỗi In Chữ Viết Hoa (Ví dụ: "INSUFFICIENT_FUNDS_BROKE").
+    /// Giúp Thằng Frontend Dịch Bắt Key JSON Hiểu Sai Gì Không Cần Parse Chữ Tiếng Việt.
     /// </summary>
     public string ErrorCode { get; }
 
+    /// <summary>Đúc Nặn Quả Bom Lỗi Để Ọt Quăng Xa.</summary>
     public DomainException(string errorCode, string message) : base(message)
     {
         ErrorCode = errorCode;

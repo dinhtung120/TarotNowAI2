@@ -1,3 +1,16 @@
+/*
+ * ===================================================================
+ * COMPONENT: LanguageSwitcher
+ * BỐI CẢNH (CONTEXT):
+ *   Nút chuyển đổi Đa ngôn ngữ (i18n) cho ứng dụng TarotNow.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Lấy danh sách ngôn ngữ hỗ trợ (VI, EN, ZH) từ `LOCALE_OPTIONS`.
+ *   - Xử lý tương tác: Click bên ngoài/nhấn Esc để đóng Dropdown (Menu).
+ *   - Gọi Next-Intl Router (`useRouter().replace`) để chuyển đổi URL locale 
+ *     mà không phải reload lại toàn trang cứng (Soft Navigation).
+ * ===================================================================
+ */
 "use client";
 
 import { usePathname, useRouter } from "@/i18n/routing";

@@ -1,3 +1,15 @@
+/*
+ * ===================================================================
+ * FILE: walletActions.ts
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Truy vấn Lịch sử giao dịch (Ledger) và Số dư khả dụng (Balance).
+ *
+ * LƯU Ý CACHE:
+ *   Luôn sử dụng `cache: 'no-store'` vì số dư ví là dữ liệu nhạy cảm
+ *   cần độ chính xác tuyệt đối ở thời gian thực.
+ * ===================================================================
+ */
 'use server';
 
 import { cookies } from 'next/headers';

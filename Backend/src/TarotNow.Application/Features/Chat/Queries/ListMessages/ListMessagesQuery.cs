@@ -1,3 +1,19 @@
+/*
+ * ===================================================================
+ * FILE: ListMessagesQuery.cs
+ * NAMESPACE: TarotNow.Application.Features.Chat.Queries.ListMessages
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Gói lệnh truy xuất Lịch Sử Tin Nhắn bên trong một Box Chat cụ thể.
+ *   (Dùng khi bấm vào 1 dòng chat trên màn hình Inbox để mở giao diện nhắn tin).
+ *
+ * CHIẾN LƯỢC UI:
+ *   Backend luôn trả về dữ liệu sắp xếp theo Thời gian Mới Nhất (DESC) 
+ *   để phân trang. Khi đổ lên Frontend, điện thoại sẽ tự Reverse Lại 
+ *   rồi ép cuộn xuống đáy giống iMessage/Zalo.
+ * ===================================================================
+ */
+
 using MediatR;
 using TarotNow.Application.Common;
 using TarotNow.Application.Exceptions;
@@ -6,18 +22,20 @@ using TarotNow.Application.Interfaces;
 namespace TarotNow.Application.Features.Chat.Queries.ListMessages;
 
 /// <summary>
-/// Query lấy lịch sử tin nhắn trong conversation.
-/// Phân trang, sort by created_at DESC (frontend sẽ reverse).
+/// Yêu cầu chiết xuất lịch sử hội thoại cho mục đích hiển thị Màn Hình Chat.
 /// </summary>
 public class ListMessagesQuery : IRequest<ListMessagesResult>
 {
-    /// <summary>ObjectId conversation.</summary>
+    /// <summary>Khoá chính của Cuộc trò chuyện cần lục lịch sử.</summary>
     public string ConversationId { get; set; } = string.Empty;
 
-    /// <summary>UUID user yêu cầu — kiểm tra quyền.</summary>
+    /// <summary>Ai đang yêu cầu xem lịch sử này? (Dùng làm lá chắn bảo mật tránh nhìn lén).</summary>
     public Guid RequesterId { get; set; }
 
     public int Page { get; set; } = 1;
+    
+    // Mỗi lần vuốt Load More sẽ kéo 50 tin nhắn. 
+    // Tránh bị đơ RAM Điện Thoại nếu có 10,000 tin nhắn.
     public int PageSize { get; set; } = 50;
 }
 
@@ -28,7 +46,7 @@ public class ListMessagesResult
 }
 
 /// <summary>
-/// Handler lấy tin nhắn — kiểm tra quyền truy cập conversation.
+/// Cổng kiểm duyệt An Ninh và kéo dữ liệu mảng Lịch sử chat từ hệ thống NoSQL.
 /// </summary>
 public class ListMessagesQueryHandler : IRequestHandler<ListMessagesQuery, ListMessagesResult>
 {
@@ -45,16 +63,18 @@ public class ListMessagesQueryHandler : IRequestHandler<ListMessagesQuery, ListM
 
     public async Task<ListMessagesResult> Handle(ListMessagesQuery request, CancellationToken cancellationToken)
     {
-        // 1. Kiểm tra conversation tồn tại
+        // 1. Dò tìm Hộp thoại. Lỡ xoá mất rồi thì báo lỗi 404 (NotFound).
         var conversation = await _conversationRepo.GetByIdAsync(request.ConversationId, cancellationToken)
             ?? throw new NotFoundException("Không tìm thấy cuộc trò chuyện.");
 
-        // 2. Kiểm tra quyền — phải là member
+        // 2. NGĂN CHẶN XEM TRỘM GỐC RỄ:
+        // Đứa xin danh sách tin nhắn này CÓ TUỔI GÌ MÀ ĐÒI XEM? CÓ TRONG HỘI THOẠI KHÔNG?
+        // Nếu User C gọi API điền ID box chat của User A và Reader B -> Bị Đá Văng Ngay Lập Tức (BadRequest).
         var requesterId = request.RequesterId.ToString();
         if (conversation.UserId != requesterId && conversation.ReaderId != requesterId)
             throw new BadRequestException("Bạn không phải thành viên của cuộc trò chuyện này.");
 
-        // 3. Lấy tin nhắn phân trang
+        // 3. Sau khi an toàn, lấy dữ liệu Mảng Tin Nhắn theo Trang (Phân trang Pagination).
         var (items, totalCount) = await _messageRepo.GetByConversationIdPaginatedAsync(
             request.ConversationId, request.Page, request.PageSize, cancellationToken);
 

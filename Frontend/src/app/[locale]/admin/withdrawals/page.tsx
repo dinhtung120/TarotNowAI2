@@ -1,3 +1,14 @@
+/*
+ * ===================================================================
+ * FILE: page.tsx (Admin Withdrawals)
+ * BỐI CẢNH (CONTEXT):
+ *   Giao diện duyệt lệnh rút tiền (Payout) dành cho Readers.
+ * 
+ * BẢO MẬT:
+ *   Yêu cầu bắt buộc xác thực MFA bằng OTP trước khi Approve một lệnh rút tiền bất kỳ, tránh rủi ro
+ *   bị lộ phiên đăng nhập Admin gây thất thoát luồng tiền hệ thống.
+ * ===================================================================
+ */
 'use client';
 
 import React, { useEffect, useState } from 'react';

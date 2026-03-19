@@ -1,3 +1,16 @@
+/*
+ * ===================================================================
+ * FILE: chatActions.ts
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Cầu nối Server Action cho chức năng Trò chuyện trực tiếp giữa Khách và Reader.
+ *
+ * CHU TRÌNH XỬ LÝ:
+ *   - Tạo Phòng Chat (Create Conversation) an toàn từ phía Server.
+ *   - Trích xuất Lịch sử Tin nhắn để kết xuất trước (SSR/SSG).
+ *   - Kéo Token uỷ quyền cho giao thức SignalR Websockets.
+ * ===================================================================
+ */
 'use server';
 
 import { cookies } from 'next/headers';

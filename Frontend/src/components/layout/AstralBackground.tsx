@@ -1,30 +1,19 @@
 "use client";
 
-/**
- * AstralBackground — Component nền vũ trụ dùng chung toàn app.
- *
- * === VẤN ĐỀ TRƯỚC ĐÂY ===
- * Mỗi trang (Home, Reading, Wallet, Profile...) đều COPY-PASTE ~40 dòng code:
- * - Nebula blobs (3-4 div blur gradient)
- * - Noise texture overlay
- * - Spiritual Particles (15-20 hạt bay random)
- * - CSS animations (@keyframes float, drift, pulse-slow)
- *
- * Hậu quả:
- * → ~15 files chứa code gần giống nhau
- * → Muốn đổi màu nebula → sửa 15 files
- * → Particles render trên Server → Hydration Mismatch (Math.random()*100%)
- *
- * === GIẢI PHÁP ===
- * Component này tập trung TẤT CẢ hiệu ứng nền vào 1 nơi:
- * 1. Nebula Blobs — gradient lunar + botanical tạo hiệu ứng chữa lành
- * 2. Noise Overlay — texture hạt mịn cho chiều sâu
- * 3. Grid Overlay — lưới mờ nhẹ (chỉ ở variant intense)
- * 4. Spiritual Particles — hạt sáng bay lên với vị trí deterministic
- *
- * Tại sao dùng "use client"?
- * → Background dùng animation CSS và token theme global.
- * → Particles dùng công thức deterministic để luôn đồng bộ SSR/CSR.
+/*
+ * ===================================================================
+ * COMPONENT: AstralBackground
+ * BỐI CẢNH (CONTEXT):
+ *   Component Nền Vũ Trụ (Astral) dùng chung cho toàn bộ ứng dụng để tạo 
+ *   hiệu ứng chiều sâu, linh thiêng và huyền bí đặc trưng của TarotNow.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Gom chung toàn bộ logic render Nebula Blobs (đám mây thiên hà) và 
+ *     Spiritual Particles (hạt bụi sáng) vào một nơi, tránh copy-paste code.
+ *   - Sử dụng hàm `stableNoise` (thay vì Math.random) để giữ cho vị trí 
+ *     các hạt luôn cố định (Deterministic) giữa Server và Client, chống lỗi Hydration.
+ *   - Cung cấp 3 cấp độ `variant` (Subtle, Default, Intense) cho từng loại trang.
+ * ===================================================================
  */
 
 /**

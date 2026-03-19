@@ -1,18 +1,14 @@
-/**
- * EmptyState — Component hiển thị khi danh sách/bảng trống.
- *
- * === TẠI SAO CẦN THIẾT? ===
- * Một trang trống không có gì → user bối rối "Lỗi hay không có data?"
- * EmptyState giải quyết bằng:
- * 1. Icon minh họa → visual cue rõ ràng
- * 2. Message giải thích → "Chưa có giao dịch nào"
- * 3. CTA button (tùy chọn) → hướng dẫn hành động tiếp theo
- *
- * Dùng ở:
- * - Lịch sử giao dịch trống (Wallet ledger)
- * - Danh sách conversation trống (Chat inbox)
- * - Bộ sưu tập bài trống (Collection)
- * - Kết quả tìm kiếm không có (Admin users)
+/*
+ * ===================================================================
+ * COMPONENT: EmptyState
+ * BỐI CẢNH (CONTEXT):
+ *   Giao diện hiển thị khi một danh sách hay bảng dữ liệu bị trống (Không có Item nào).
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Xóa bỏ sự bối rối của người dùng bằng một thông điệp kèm Icon trực quan.
+ *   - Có thể đính kèm một nút Call-to-Action (CTA) để điều hướng người dùng 
+ *     thực hiện hành động tạo mới dữ liệu (Ví dụ: "Rút bài ngay").
+ * ===================================================================
  */
 
 import { type ReactNode } from "react";

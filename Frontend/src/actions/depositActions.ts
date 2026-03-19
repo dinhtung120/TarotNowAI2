@@ -1,3 +1,13 @@
+/*
+ * ===================================================================
+ * FILE: depositActions.ts
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Giao tiếp với API thanh toán để lập lệnh Nạp Tiền (Deposit).
+ *   Ví dụ: Tạo Request lên Backend -> Trả về Hóa đơn Payment URL của 
+ *   cổng thanh toán (VNPay/Momo) để tự động Redirect khách hàng qua cổng phụ.
+ * ===================================================================
+ */
 'use server';
 
 import { cookies } from 'next/headers';

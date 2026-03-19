@@ -12,9 +12,18 @@ interface AuthState {
  syncAuth: () => void;
 }
 
-/**
- * Zustand Store quản lý trạng thái Đăng nhập của người dùng.
- * Có lưu giữ cấu hình persist vào localStorage để chống mất phiên (session) khi F5.
+/*
+ * ===================================================================
+ * COMPONENT/FILE: Cửa hàng Trạng thái Xác thực (authStore.ts)
+ * BỐI CẢNH (CONTEXT):
+ *   Store quản lý trạng thái Đăng nhập của người dùng sử dụng thư viện Zustand.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Lưu trữ thông tin Thông tin cá nhân (User) và Access Token rải rác.
+ *   - Sử dụng Middleware `persist` để lưu trạng thái xuống `localStorage`, 
+ *     đảm bảo không bị mất Sesion khi người dùng nhấn F5 (Tải lại trang).
+ *   - Cung cấp hàm `syncAuth` để đồng bộ và tự động Logout nếu Token bị quá hạn (Expired).
+ * ===================================================================
  */
 export const useAuthStore = create<AuthState>()(
  persist(

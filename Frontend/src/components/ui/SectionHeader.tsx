@@ -1,27 +1,15 @@
-/**
- * SectionHeader — Component tiêu đề section thống nhất.
- *
- * === PATTERN LẶP LẠI TRƯỚC ĐÂY ===
- * Mỗi section trong mỗi trang đều có pattern giống nhau:
- * 1. Tag nhỏ uppercase (ví dụ: "Kết nối bậc thầy", "Financial Protocol")
- * 2. Tiêu đề lớn bold italic
- * 3. Mô tả phụ (tùy chọn)
- * 4. Action button/link bên phải (tùy chọn)
- *
- * Ví dụ trước đây (Home page):
- * ```
- * <div className="text-[10px] font-black uppercase tracking-[0.4em] text-[var(--purple-accent)]">
- * Kết nối bậc thầy
- * </div>
- * <h2 className="text-4xl md:text-6xl font-black tn-text-primary ...">
- * Bậc Thầy Dẫn Lối
- * </h2>
- * ```
- *
- * === GIẢI PHÁP ===
- * Component SectionHeader đóng gói pattern này, đảm bảo:
- * - Tag, title, subtitle styling nhất quán giữa tất cả pages
- * - Optional action slot (link "Xem tất cả", button, v.v.)
+/*
+ * ===================================================================
+ * COMPONENT: SectionHeader
+ * BỐI CẢNH (CONTEXT):
+ *   Bố cục Tiêu đề (Header) tiêu chuẩn dành cho các phân vùng (Section) lớn của App.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Gom gọn pattern "Tag nhỏ + Tiêu đề lớn + Mô tả + Nút bấm phụ" thành 
+ *     một khối logic thống nhất.
+ *   - Hỗ trợ truyền Slot (Action) cho phép đặt Button "Xem thêm", Link chuyển trang 
+ *     ở bên phải Tiêu đề (Desktop) hoặc rớt dòng linh hoạt (Mobile).
+ * ===================================================================
  */
 
 import { type ReactNode } from "react";

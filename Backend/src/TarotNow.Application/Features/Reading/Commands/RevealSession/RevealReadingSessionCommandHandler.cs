@@ -1,3 +1,14 @@
+/*
+ * ===================================================================
+ * FILE: RevealReadingSessionCommandHandler.cs
+ * NAMESPACE: TarotNow.Application.Features.Reading.Commands.RevealSession
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Trái Tim Của Tính Năng Gieo Quẻ Tarot: Thuật Toán Xào Bài (Shuffle), 
+ *   Phân Phối Kinh Nghiệm (Gamification EXP), Mở Khoá Bộ Sưu Tập (Collection).
+ * ===================================================================
+ */
+
 using System.Text.Json;
 using MediatR;
 using TarotNow.Application.Exceptions;
@@ -14,16 +25,16 @@ public class RevealReadingSessionCommandHandler : IRequestHandler<RevealReadingS
 {
     private readonly IReadingSessionRepository _readingRepo;
     private readonly IUserCollectionRepository _collectionRepo;
-    private readonly IUserRepository _userRepository; // Thêm UserRepository
+    private readonly IUserRepository _userRepository; 
     private readonly IRngService _rngService;
 
-    // Quy định: 1 lá bài = 1 EXP cho User và 1 EXP cho Card Collection
+    // Quy định: 1 lá bài bốc được = Cày lòi ra 1 EXP cho Tướng Lĩnh User và 1 EXP cho Điểm Thông Thạo Lá Bài Đó.
     private const long EXP_PER_CARD = 1; 
 
     public RevealReadingSessionCommandHandler(
         IReadingSessionRepository readingRepo,
         IUserCollectionRepository collectionRepo,
-        IUserRepository userRepository, // Tiêm UserRepository
+        IUserRepository userRepository, 
         IRngService rngService)
     {
         _readingRepo = readingRepo;
@@ -34,7 +45,8 @@ public class RevealReadingSessionCommandHandler : IRequestHandler<RevealReadingS
 
     public async Task<RevealReadingSessionResult> Handle(RevealReadingSessionCommand request, CancellationToken cancellationToken)
     {
-        // 1. Lấy phiên rút bài
+        // 1. Lọc Cửa Vào (Security Gate): 
+        // Lấy phòng bốc bài ra kiểm duyệt (Có phải của thằng này tạo không? Bốc mẹ rồi bốc nữa chi?)
         var session = await _readingRepo.GetByIdAsync(request.SessionId, cancellationToken);
         
         if (session == null) throw new NotFoundException("Session not found");
@@ -42,10 +54,11 @@ public class RevealReadingSessionCommandHandler : IRequestHandler<RevealReadingS
             throw new UnauthorizedAccessException("Reading session not found or access denied");
         if (session.IsCompleted) throw new BadRequestException("This session has already been revealed");
 
-        // 2. Kích hoạt thuật toán gieo quẻ Deterministic Shuffle (Xào bài RNG)
+        // 2. Kích hoạt thuật toán gieo quẻ Bằng Hàm Random Thần Thánh (Deterministic Shuffle RNG).
+        // Trộn Văng Khắp Nơi Nguyên Bộ 78 Lá Của Tarot (0-77).
         var shuffledDeck = _rngService.ShuffleDeck(78);
 
-        // 3. Trích xuất số lượng bài tùy theo loại Spsread 
+        // 3. Trích xuất số lượng bài tùy theo Bảng Giá Gói Dịch Vụ Của Cái Phòng Này (Vd Mua gói 3 lá thì cho 3 lá).
         int cardsToDraw = session.SpreadType switch
         {
             SpreadType.Daily1Card => 1,
@@ -55,29 +68,31 @@ public class RevealReadingSessionCommandHandler : IRequestHandler<RevealReadingS
             _ => throw new BadRequestException($"Invalid spread type: {session.SpreadType}")
         };
 
-        // Lấy N lá trên cùng của bộ xào
+        // Bốc N ngẫu nhiên mảng ID Lá Bài trên cùng của bộ xào (Top Deck Draw).
         var drawnCards = shuffledDeck.Take(cardsToDraw).ToArray();
 
-        // 4. Update Collection (Kho Đồ) & Tích luỹ thẻ trùng (Exp/Level Up cho thẻ)
+        // 4. Update Tủ Kính Kho Đồ (Collection) & Tính Cơ Chế Quay Gacha 
+        // Bốc Trúng Lá Mới Cấp 1, Lá Cũ Trùng Thì Nhồi Exp Lên Cấp.
         foreach (var cardId in drawnCards)
         {
             await _collectionRepo.UpsertCardAsync(request.UserId, cardId, EXP_PER_CARD, cancellationToken);
         }
 
-        // 5. Cộng EXP cho User (Yêu cầu: 1 lá = 1 EXP)
+        // 5. Cộng EXP Vào Hồ Sơ Cá Nhân (Gamification)
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user != null)
         {
+            // Tụ 10 lá Được 10 Ẽxp Sướng Run Người.
             user.AddExp(drawnCards.Length);
             await _userRepository.UpdateAsync(user, cancellationToken);
         }
 
-        // 6. Cập nhật Session hoàn tất
+        // 6. Ghi Nhận Lên SQL Dấu Chấm Hết Mã Hóa JSON (Chống Lật Đi Lật Lại 1 Phòng).
         var cardsJson = JsonSerializer.Serialize(drawnCards);
         session.CompleteSession(cardsJson);
         await _readingRepo.UpdateAsync(session, cancellationToken);
 
-        // 7. Trả về kết quả ngửa bài
+        // 7. Ném mảng Index cho Thằng JavaScript Vẽ Ra 3D Bằng Three.js
         return new RevealReadingSessionResult
         {
             Cards = drawnCards

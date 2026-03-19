@@ -1,87 +1,92 @@
+/*
+ * FILE: ReaderProfileDocument.cs
+ * MỤC ĐÍCH: Schema cho collection "reader_profiles" (MongoDB).
+ *   Hồ sơ công khai của Reader (thầy bói) — hiển thị trên trang danh sách Reader.
+ *   Chứa: bio, pricing, specialties, stats, trạng thái online/offline.
+ *
+ *   VÒNG ĐỜI:
+ *   → Tạo tự động khi Admin duyệt (approve) đơn xin làm Reader.
+ *   → Reader tự cập nhật bio, pricing, specialties, status.
+ *   → Unique index (user_id): mỗi user chỉ có tối đa 1 reader profile.
+ *
+ *   GATE CHECK (P2-READER-QA-1.2):
+ *   → Chỉ Reader có status = "accepting_questions" mới hiện trên directory.
+ *   → User chỉ gửi chat được tới Reader đang accepting_questions.
+ *
+ *   Tham chiếu: schema.md §5 (reader_profiles)
+ */
+
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 /// <summary>
-/// MongoDB Document cho collection "reader_profiles" — Hồ sơ công khai Reader.
-///
-/// Mục đích:
-/// → Hiển thị thông tin Reader trên directory listing (trang danh sách Reader).
-/// → Hỗ trợ tìm kiếm, lọc theo giá/đánh giá/chuyên môn/trạng thái online.
-/// → Trạng thái online/offline cập nhật realtime khi Reader toggle.
-///
-/// Lifecycle:
-/// → Tạo tự động khi admin approve reader request.
-/// → Reader tự cập nhật bio, pricing, specialties, status.
-/// → Soft delete khi reader bị revoke (Phase tương lai).
-///
-/// Gate check quan trọng (P2-READER-QA-1.2):
-/// → Chỉ readers có status = "accepting_questions" mới hiển thị trong directory.
-/// → User chỉ có thể gửi chat đến reader đang accepting_questions.
-///
-/// Tham chiếu: schema.md ## 5. reader_profiles
+/// 1 hồ sơ Reader trong collection "reader_profiles".
 /// </summary>
 public class ReaderProfileDocument
 {
-    /// <summary>MongoDB ObjectId — primary key tự động.</summary>
+    /// <summary>MongoDB ObjectId — tự sinh.</summary>
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
 
     /// <summary>
-    /// UUID user — 1:1 với users table (PostgreSQL).
-    /// Mỗi user chỉ có tối đa 1 reader_profile. Unique index đảm bảo.
+    /// UUID user (1:1 với PostgreSQL users table). Unique index đảm bảo 1 user = 1 profile.
     /// </summary>
     [BsonElement("user_id")]
     public string UserId { get; set; } = string.Empty;
 
     /// <summary>
-    /// Trạng thái online: online | offline | accepting_questions.
-    /// Mặc định "offline" khi mới tạo — Reader phải chủ động chuyển.
+    /// Trạng thái hoạt động: "online" | "offline" | "accepting_questions".
+    /// Mặc định "offline" khi mới tạo — Reader phải chủ động toggle sang trạng thái khác.
+    /// Chỉ "accepting_questions" mới hiện trên directory listing cho User chọn.
     /// </summary>
     [BsonElement("status")]
     public string Status { get; set; } = "offline";
 
     /// <summary>
-    /// Giá dịch vụ — số Diamond cho mỗi câu hỏi.
-    /// Embedded object để dễ mở rộng thêm pricing tiers trong tương lai.
+    /// Giá dịch vụ — hiện tại chỉ có DiamondPerQuestion.
+    /// Tách thành class con ReaderPricing để dễ mở rộng thêm tier giá trong tương lai
+    /// (ví dụ: giá cho đọc nhanh, đọc chi tiết, giảm giá cho subscriber).
     /// </summary>
     [BsonElement("pricing")]
     public ReaderPricing Pricing { get; set; } = new();
 
     /// <summary>
-    /// Mô tả bản thân đa ngôn ngữ (vi/en/zh).
-    /// Dùng LocalizedText class chung với NotificationDocument.
+    /// Mô tả bản thân (bio) đa ngôn ngữ (vi/en/zh).
+    /// Reader viết giới thiệu: kinh nghiệm, phương pháp bói, chuyên môn.
+    /// Dùng chung class LocalizedText với NotificationDocument.
     /// </summary>
     [BsonElement("bio")]
     public LocalizedText Bio { get; set; } = new();
 
     /// <summary>
-    /// Danh sách chuyên môn của Reader: love, career, general, health, finance...
-    /// Dùng cho filter trên directory listing.
+    /// Danh sách chuyên môn: ["love", "career", "finance", "health", "general"].
+    /// Dùng cho bộ lọc (filter) trên trang directory — User chọn "love" → chỉ hiện Reader chuyên tình cảm.
     /// </summary>
     [BsonElement("specialties")]
     public List<string> Specialties { get; set; } = new();
 
     /// <summary>
-    /// Thống kê đánh giá — denormalized cho fast read trên listing.
-    /// Cập nhật bằng aggregation pipeline khi có review mới.
+    /// Thống kê đánh giá (denormalized — lưu sẵn để UI load nhanh).
+    /// Chứa: avg_rating (trung bình sao) và total_reviews (tổng lượt đánh giá).
+    /// Cập nhật mỗi khi có review mới (không tính lại mỗi lần query).
     /// </summary>
     [BsonElement("stats")]
     public ReaderStats Stats { get; set; } = new();
 
-    /// <summary>Danh sách badge codes (Phase tương lai).</summary>
+    /// <summary>Danh sách badge codes (tính năng tương lai).</summary>
     [BsonElement("badges")]
     public List<string> Badges { get; set; } = new();
 
-    /// <summary>ObjectId tham chiếu titles._id — danh hiệu đang hiển thị.</summary>
+    /// <summary>ObjectId → titles collection (danh hiệu đang hiển thị, tính năng tương lai).</summary>
     [BsonElement("title_ref")]
     [BsonIgnoreIfNull]
     [BsonRepresentation(BsonType.ObjectId)]
     public string? TitleRef { get; set; }
 
-    /// <summary>Tên hiển thị của Reader — denormalized từ users.display_name.</summary>
+    /// <summary>Tên hiển thị — denormalized từ users.display_name để khỏi JOIN cross-DB.</summary>
     [BsonElement("display_name")]
     public string DisplayName { get; set; } = string.Empty;
 
@@ -90,49 +95,39 @@ public class ReaderProfileDocument
     [BsonIgnoreIfNull]
     public string? AvatarUrl { get; set; }
 
-    /// <summary>Soft delete flag.</summary>
+    /// <summary>Soft delete flag. True = profile bị ẩn nhưng vẫn trong DB.</summary>
     [BsonElement("is_deleted")]
     public bool IsDeleted { get; set; } = false;
 
-    /// <summary>Thời điểm soft delete.</summary>
     [BsonElement("deleted_at")]
     [BsonIgnoreIfNull]
     public DateTime? DeletedAt { get; set; }
 
-    /// <summary>Thời điểm tạo profile.</summary>
     [BsonElement("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    /// <summary>Thời điểm cập nhật cuối.</summary>
     [BsonElement("updated_at")]
     [BsonIgnoreIfNull]
     public DateTime? UpdatedAt { get; set; }
 }
 
 /// <summary>
-/// Thông tin giá dịch vụ Reader.
-/// Tách thành class riêng vì tương lai có thể mở rộng thêm:
-/// - DiamondPerQuickReading (đọc nhanh)
-/// - DiamondPerDetailedReading (đọc chi tiết)
-/// - DiscountPercentage (giảm giá cho subscriber)
+/// Giá dịch vụ Reader. Tách class riêng để mở rộng thêm tier giá sau.
 /// </summary>
 public class ReaderPricing
 {
-    /// <summary>Số Diamond mỗi câu hỏi — giá cơ bản.</summary>
+    /// <summary>Số Diamond mỗi câu hỏi — giá cơ bản. Mặc định 5.</summary>
     [BsonElement("diamond_per_question")]
     public long DiamondPerQuestion { get; set; } = 5;
 }
 
 /// <summary>
-/// Thống kê đánh giá Reader — denormalized cho fast read.
-/// Tại sao denormalize thay vì aggregate mỗi lần query?
-/// → Trang directory listing cần load nhanh (<200ms).
-/// → Tính toán aggregate trên reviews collection mỗi request quá tốn.
-/// → Cập nhật khi có review mới: stats.total_reviews++, stats.avg_rating recalc.
+/// Thống kê đánh giá Reader — denormalized cho fast read trên trang directory.
+/// Tại sao denormalize? → Trang listing cần load &lt;200ms, tính aggregate mỗi lần query quá chậm.
 /// </summary>
 public class ReaderStats
 {
-    /// <summary>Điểm đánh giá trung bình (1.0 – 5.0).</summary>
+    /// <summary>Điểm trung bình (1.0–5.0).</summary>
     [BsonElement("avg_rating")]
     public double AvgRating { get; set; } = 0;
 

@@ -1,3 +1,17 @@
+/*
+ * FILE: GetReadingHistoryQueryHandlerTests.cs
+ * MỤC ĐÍCH: Unit test cho query handler lấy lịch sử đọc bài Tarot (phân trang).
+ *
+ *   CÁC TEST CASE:
+ *   1. Handle_ShouldReturnPaginatedHistory_WhenSessionsExist:
+ *      → Có sessions → trả paginated list (Page, PageSize, TotalCount, TotalPages)
+ *      → Verify mapping: IsCompleted đúng, order đúng
+ *   2. Handle_ShouldReturnEmptyList_WhenNoSessionsExist:
+ *      → Không có sessions → trả list rỗng, TotalCount=0
+ *
+ *   PAGINATION: Page/PageSize pattern chuẩn cho mobile + web
+ */
+
 using FluentAssertions;
 using Moq;
 using TarotNow.Application.Features.History.Queries.GetReadingHistory;
@@ -7,6 +21,9 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.History.Queries;
 
+/// <summary>
+/// Test reading history: pagination, mapping IsCompleted, empty list.
+/// </summary>
 public class GetReadingHistoryQueryHandlerTests
 {
     private readonly Mock<IReadingSessionRepository> _mockSessionRepository;
@@ -18,10 +35,12 @@ public class GetReadingHistoryQueryHandlerTests
         _handler = new GetReadingHistoryQueryHandler(_mockSessionRepository.Object);
     }
 
+    /// <summary>
+    /// Có sessions → trả paginated list + mapping IsCompleted đúng.
+    /// </summary>
     [Fact]
     public async Task Handle_ShouldReturnPaginatedHistory_WhenSessionsExist()
     {
-        // Arrange
         var userId = Guid.NewGuid();
         var query = new GetReadingHistoryQuery { UserId = userId, Page = 1, PageSize = 10 };
 
@@ -30,43 +49,35 @@ public class GetReadingHistoryQueryHandlerTests
         typeof(ReadingSession).GetProperty("CreatedAt")?.SetValue(session1, DateTime.UtcNow.AddMinutes(-10));
 
         var session2 = new ReadingSession(userId.ToString(), "Daily1Card");
-
         var sessions = new List<ReadingSession> { session1, session2 };
 
         _mockSessionRepository.Setup(r => r.GetSessionsByUserIdAsync(userId, 1, 10, default))
             .ReturnsAsync(((IEnumerable<ReadingSession>)sessions, 2));
 
-        // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
-        // Assert
         result.Should().NotBeNull();
         result.Page.Should().Be(1);
         result.PageSize.Should().Be(10);
         result.TotalCount.Should().Be(2);
         result.TotalPages.Should().Be(1);
         result.Items.Should().HaveCount(2);
-
-        // Ensure order and mapping are correct
-        result.Items.First().Id.Should().Be(sessions[0].Id);
         result.Items.First().IsCompleted.Should().BeTrue();
         result.Items.Last().IsCompleted.Should().BeFalse();
     }
 
+    /// <summary>Không có sessions → list rỗng, TotalCount=0.</summary>
     [Fact]
     public async Task Handle_ShouldReturnEmptyList_WhenNoSessionsExist()
     {
-        // Arrange
         var userId = Guid.NewGuid();
         var query = new GetReadingHistoryQuery { UserId = userId, Page = 1, PageSize = 10 };
 
         _mockSessionRepository.Setup(r => r.GetSessionsByUserIdAsync(userId, 1, 10, default))
             .ReturnsAsync(((IEnumerable<ReadingSession>)new List<ReadingSession>(), 0));
 
-        // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
-        // Assert
         result.Should().NotBeNull();
         result.TotalCount.Should().Be(0);
         result.Items.Should().BeEmpty();

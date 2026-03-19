@@ -1,16 +1,14 @@
-/**
- * Barrel export — UI Components
- *
- * Tại sao cần barrel export (index.ts)?
- * → Thay vì import từng file riêng lẻ:
- * import Button from '@/components/ui/Button';
- * import Badge from '@/components/ui/Badge';
- * import GlassCard from '@/components/ui/GlassCard';
- *
- * → Chỉ cần 1 dòng:
- * import { Button, Badge, GlassCard } from '@/components/ui';
- *
- * → Gọn hơn, dễ quản lý import, IDE auto-complete tốt hơn.
+/*
+ * ===================================================================
+ * COMPONENT/FILE: UI Barrel Export (index.ts)
+ * BỐI CẢNH (CONTEXT):
+ *   Tập hợp phân phối (Barrel) cho toàn bộ UI Components tĩnh của ứng dụng.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Gom nhóm các UI Components (Button, Input, Modal, v.v.) vào một đầu mối import duy nhất.
+ *   - Giúp các file khác khai báo import gọn gàng: `import { Button, Input } from "@/components/ui"` 
+ *     thay vì phải import lẻ từng file.
+ * ===================================================================
  */
 
 export { default as Button } from "./Button";

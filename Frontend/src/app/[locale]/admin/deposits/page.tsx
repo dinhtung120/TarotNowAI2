@@ -1,3 +1,15 @@
+/*
+ * ===================================================================
+ * FILE: page.tsx (Admin Deposits)
+ * BỐI CẢNH (CONTEXT):
+ *   Màn hình kiểm soát các giao dịch Nạp Tiền (Deposit) của User.
+ *   Cho phép Admin Xem Lịch sử, Bộ lọc trạng thái, Duyệt (Approve) hoặc Hủy (Reject) đơn.
+ *
+ * BẢO MẬT:
+ *   Admin gọi hành động Phê Duyệt qua Server Actions. Quá trình xử lý phức tạp 
+ *   (Giao dịch, nạp kim cương) diễn ra hoàn toàn trên Backend.
+ * ===================================================================
+ */
 "use client";
 
 import { useCallback, useEffect, useState } from "react";

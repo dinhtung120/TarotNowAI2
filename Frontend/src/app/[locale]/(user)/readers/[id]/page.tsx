@@ -1,3 +1,15 @@
+/*
+ * ===================================================================
+ * FILE: readers/[id]/page.tsx (Chi Tiết Reader)
+ * BỐI CẢNH (CONTEXT):
+ *   Trang xem thông tin chi tiết một Reader (Nhà xem bài).
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Hiển thị Avatar, Tên, Trạng thái (Online/Accepting), Đánh giá và Feedback.
+ *   - "Bắt đầu Chat": Nút gọi Server Action `createConversation` để tạo phòng 
+ *     trò chuyện (nếu Reader đang chấp nhận câu hỏi).
+ * ===================================================================
+ */
 'use client';
 
 import React, { useEffect, useState } from 'react';

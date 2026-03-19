@@ -1,3 +1,13 @@
+/*
+ * ===================================================================
+ * FILE: withdrawalActions.ts
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Quy trình Rút Tiền Hậu Lộc (Withdrawal) dành cho Reader.
+ *   - Reader: Yêu cầu rút tiền, xem lịch sử.
+ *   - Admin: Xem hàng đợi duyệt đơn rút tiền và Xử lý (Approve/Reject) kèm MFA.
+ * ===================================================================
+ */
 'use server';
 
 import { cookies } from 'next/headers';

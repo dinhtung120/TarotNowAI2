@@ -1,3 +1,15 @@
+/*
+ * ===================================================================
+ * FILE: layout.tsx (Admin Layout)
+ * BỐI CẢNH (CONTEXT):
+ *   Bộ khung giao diện tĩnh bọc ngoài tất cả các trang Admin.
+ *   Chứa thanh điều hướng (Sidebar Nav) dùng chung.
+ *
+ * UI/UX:
+ *   Áp dụng giao diện Glassmorphism với Background Astral chung cho toàn app.
+ *   Responsive hỗ trợ Sidebar trên Desktop và Sidebar trượt (Drawer) trên Mobile.
+ * ===================================================================
+ */
 'use client';
 
 import { ReactNode, useEffect, useState } from "react";

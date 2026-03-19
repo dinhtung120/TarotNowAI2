@@ -1,24 +1,17 @@
 "use client";
 
-/**
- * Pagination — Component phân trang thống nhất.
- *
- * === VẤN ĐỀ TRƯỚC ĐÂY ===
- * Mỗi trang tự viết pagination riêng:
- * - Wallet: Nút prev/next + text "Vũ trụ X / Y"
- * - Admin Users: Inline text + buttons
- * - History: Khác styling hoàn toàn
- *
- * === GIẢI PHÁP ===
- * Một component thống nhất hiển thị:
- * 1. Text "Trang X / Y"
- * 2. Nút Previous và Next
- * 3. Tự động disable khi ở đầu/cuối
- *
- * Tại sao không dùng numbered page buttons (1, 2, 3...)?
- * → Với dark/glass theme, nhiều number buttons trông rối.
- * → Prev/Next đơn giản, phù hợp aesthetic minimalist.
- * → Có thể thêm numbered pagination sau nếu cần.
+/*
+ * ===================================================================
+ * COMPONENT: Pagination
+ * BỐI CẢNH (CONTEXT):
+ *   Thanh Phân trang (Pagination) chuẩn hóa cho các danh sách dài.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Cung cấp hai nút điều hướng Trái/Phải đơn giản thay vì danh sách số 
+ *     (1, 2, 3...) gây rối mắt trong Giao diện Glassmorphism.
+ *   - Tự động thay đổi trạng thái (Disable) của các nút khi đang ở trang đầu/cuối 
+ *     hoặc khi `isLoading` là true.
+ * ===================================================================
  */
 
 import { ChevronLeft, ChevronRight } from "lucide-react";

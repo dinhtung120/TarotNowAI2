@@ -1,3 +1,16 @@
+/*
+ * ===================================================================
+ * FILE: login/page.tsx (Đăng Nhập)
+ * BỐI CẢNH (CONTEXT):
+ *   Giao diện đăng nhập chính. Kết nối với zustand store (useAuthStore)
+ *   để lưu trạng thái xác thực trên Client.
+ * 
+ * BẢO MẬT & UX:
+ *   - Gọi loginAction (Server Action) để verify thông tin. Token được Set-Cookie
+ *     ở Backend, frontend chỉ giữ access token tạm thời trong bộ nhớ State.
+ *   - Tính năng "Remember Me" lưu tài khoản vào LocalStorage.
+ * ===================================================================
+ */
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';

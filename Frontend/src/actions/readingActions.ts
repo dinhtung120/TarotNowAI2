@@ -1,3 +1,13 @@
+/*
+ * ===================================================================
+ * FILE: readingActions.ts
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Điều phối logic cốt lõi của việc Rút Bài Tarot (Tarot Reading).
+ *   - initReadingSession: Trừ tiền (Gold/Diamond) và tạo Cột mốc.
+ *   - revealReadingSession: Kích hoạt thuật toán random thẻ bài.
+ * ===================================================================
+ */
 "use server";
 
 import { cookies } from "next/headers";

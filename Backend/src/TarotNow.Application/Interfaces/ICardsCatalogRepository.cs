@@ -1,56 +1,49 @@
+/*
+ * ===================================================================
+ * FILE: ICardsCatalogRepository.cs
+ * NAMESPACE: TarotNow.Application.Interfaces
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Bản Vẽ Giao Tiếp (Interface) với Thư Viện 78 Lá Bài Tarot.
+ *   Nơi duy nhất cung cấp Từ Điển Dữ Liệu Tĩnh về Tên Lá Bài, Thuộc Tính.
+ * ===================================================================
+ */
+
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace TarotNow.Application.Interfaces;
 
 /// <summary>
-/// Repository interface cho cards_catalog (78 lá bài Tarot).
-/// 
-/// Tại sao cần interface riêng?
-/// → cards_catalog là dữ liệu tĩnh trong MongoDB. Trước đây chưa có
-///   repository vì data chỉ tồn tại trong seed script. Nay cần đọc
-///   từ backend để phục vụ: rút bài random, hiển thị chi tiết lá bài,
-///   và tính EXP khi rút trùng.
+/// Giao Tiếp Đọc Cuốn Sách Bách Khoa Toàn Thư Tarot Kể Về 78 Lá Bài.
+/// Database lưu trữ dạng tĩnh bên MongoDB để Tăng Tốc Độ Gọi Bằng Mã Tên (The Fool, Ace Of Wands...)
 /// </summary>
 public interface ICardsCatalogRepository
 {
-    /// <summary>Lấy 1 lá bài theo ID (0-77).</summary>
+    /// <summary>Đi lùng đúng lá bài Tên Số Thứ Tự (VD 0 là The Fool).</summary>
     Task<CardCatalogDto?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
 
-    /// <summary>Lấy 1 lá bài theo code (VD: "the_fool").</summary>
+    /// <summary>Lục Danh Pháp Bằng Mã Kiểu Code (Mã này xài trong File Hình Ảnh luôn).</summary>
     Task<CardCatalogDto?> GetByCodeAsync(string code, CancellationToken cancellationToken = default);
 
-    /// <summary>Lấy toàn bộ 78 lá — dùng cho cache hoặc random draw.</summary>
+    /// <summary>Bê Nguyên Một Thùng 78 Lá Lên Bàn Cho Thuật Toán RNG Trộn Xào Ra Quẻ.</summary>
     Task<IEnumerable<CardCatalogDto>> GetAllAsync(CancellationToken cancellationToken = default);
 }
 
 /// <summary>
-/// DTO nhẹ cho cards_catalog — tách biệt khỏi MongoDB document model.
-/// Application layer chỉ nhận DTO, không biết MongoDB tồn tại.
+/// Đúc File Khuôn Dạng Card (DTO). Nhẹ Nhàng Bưng Bê Quăng Cho Thằng Khác Qua Lại Mà Không Rối Lớp Application.
+/// Tên Múi Ngôn Ngữ: Vi, En, Zh => Làm Giao Diện Translate Tự Động Rất Tiện Lợi Bằng Code Lập Trình Frontend.
 /// </summary>
 public class CardCatalogDto
 {
-    /// <summary>ID cố định (0-77).</summary>
     public int Id { get; set; }
-
-    /// <summary>Mã ổn định: the_fool, ace_of_wands, ...</summary>
     public string Code { get; set; } = string.Empty;
-
-    /// <summary>Tên tiếng Việt.</summary>
     public string NameVi { get; set; } = string.Empty;
-
-    /// <summary>Tên tiếng Anh.</summary>
     public string NameEn { get; set; } = string.Empty;
-
-    /// <summary>Tên tiếng Trung.</summary>
     public string NameZh { get; set; } = string.Empty;
-
-    /// <summary>major hoặc minor.</summary>
-    public string Arcana { get; set; } = string.Empty;
-
-    /// <summary>wands/cups/swords/pentacles hoặc null.</summary>
-    public string? Suit { get; set; }
-
-    /// <summary>Nguyên tố: fire/water/air/earth.</summary>
-    public string Element { get; set; } = string.Empty;
-
-    /// <summary>Số thứ tự trong bộ.</summary>
+    public string Arcana { get; set; } = string.Empty; // Ẩn Chính (Major) hay Ẩn Phụ (Minor)
+    public string? Suit { get; set; } // Chất Bài: Wands (Gậy), Cups (Ly)...
+    public string Element { get; set; } = string.Empty; // Hệ Lửa, Hệ Nước
     public int Number { get; set; }
 }

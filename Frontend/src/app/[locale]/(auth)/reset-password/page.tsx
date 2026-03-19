@@ -1,3 +1,10 @@
+/*
+ * ===================================================================
+ * FILE: reset-password/page.tsx (Đặt Lại Mật Khẩu)
+ * BỐI CẢNH (CONTEXT):
+ *   Nhập mã OTP (nhận từ Email) và Mật khẩu mới để cập nhật thông tin đăng nhập.
+ * ===================================================================
+ */
 'use client';
 
 import { useMemo, useState } from 'react';

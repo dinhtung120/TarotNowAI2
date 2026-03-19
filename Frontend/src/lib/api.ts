@@ -1,3 +1,18 @@
+/*
+ * ===================================================================
+ * COMPONENT/FILE: Khởi tạo Cấu hình API (api.ts)
+ * BỐI CẢNH (CONTEXT):
+ *   Đóng vai trò là trung tâm phân giải (Resolver) URL cho các cuộc gọi API từ Frontend 
+ *   lên Backend.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Lấy URL gốc (Base URL) từ biến môi trường `NEXT_PUBLIC_API_URL` hoặc 
+ *     dùng giá trị mặc định là `http://localhost:5037/api/v1`.
+ *   - Cung cấp hàm `apiUrl` để nối chuỗi (append) Path con vào URL gốc một cách an toàn, 
+ *     tránh lỗi dư hoặc thiếu dấu gạch chéo `/`.
+ *   - Cung cấp hàm `apiOriginUrl` để trích xuất `Origin` (phục vụ kết nối SignalR).
+ * ===================================================================
+ */
 const DEFAULT_API_ORIGIN = "http://localhost:5037";
 const API_VERSION_PATH = "/api/v1";
 

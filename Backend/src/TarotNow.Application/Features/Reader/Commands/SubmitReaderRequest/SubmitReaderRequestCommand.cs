@@ -1,30 +1,41 @@
+/*
+ * ===================================================================
+ * FILE: SubmitReaderRequestCommand.cs
+ * NAMESPACE: TarotNow.Application.Features.Reader.Commands.SubmitReaderRequest
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Gói Lệnh User Khởi kiện Yêu Cầu Trở Thành Người Đọc Bài (Reader).
+ *   Hồ sơ bao gồm Lời Mở Đầu (Intro) và Bằng Cấp (Proof).
+ * ===================================================================
+ */
+
 using MediatR;
+using System;
+using System.Collections.Generic;
 
 namespace TarotNow.Application.Features.Reader.Commands.SubmitReaderRequest;
 
 /// <summary>
-/// Command để user gửi đơn xin trở thành Reader.
-///
-/// Thuộc CQRS "Command" side — thay đổi trạng thái hệ thống:
-/// → Tạo document mới trong reader_requests collection (MongoDB).
-///
-/// Caller: ReaderController.Apply() — yêu cầu [Authorize].
-/// UserId lấy từ JWT claims, không từ request body (bảo mật).
+/// Gói Lệnh Nộp Đơn Xin Việc làm Reader.
+/// 
+/// LƯU Ý BẢO MẬT:
+/// UserId lấy từ Token Đăng Nhập (JWT), tuyệt đối không để Frontend truyền bậy trong Body Request
+/// Vì hacker có thể Fake UserId của người khác nộp đơn lừa đảo.
 /// </summary>
 public class SubmitReaderRequestCommand : IRequest<bool>
 {
-    /// <summary>UUID của user — lấy từ JWT ClaimTypes.NameIdentifier.</summary>
+    /// <summary>Căn cước công dân của ứng viên.</summary>
     public Guid UserId { get; set; }
 
     /// <summary>
-    /// Lời giới thiệu — tại sao user muốn trở thành Reader.
-    /// Bắt buộc, validate không trống qua FluentValidation.
+    /// Thư Giới Thiệu (Cover Letter) trả lời cho câu hỏi: Tại sao Tui hợp làm Reader?
+    /// Có thể kèm link Facebook/Insta xem bói của họ.
     /// </summary>
     public string IntroText { get; set; } = string.Empty;
 
     /// <summary>
-    /// Danh sách URL tài liệu chứng minh (ảnh bằng cấp, chứng chỉ...).
-    /// Tùy chọn, có thể trống.
+    /// File Bằng Cấp Chứng Chỉ.
+    /// Frontend sẽ Upload đống ảnh này lên s3/Cloudinary trước, rồi truyền một list URL vào đây.
     /// </summary>
     public List<string> ProofDocuments { get; set; } = new();
 }

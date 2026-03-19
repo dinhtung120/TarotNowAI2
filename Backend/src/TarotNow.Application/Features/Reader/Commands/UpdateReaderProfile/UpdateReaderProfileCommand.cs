@@ -1,30 +1,37 @@
+/*
+ * ===================================================================
+ * FILE: UpdateReaderProfileCommand.cs
+ * NAMESPACE: TarotNow.Application.Features.Reader.Commands.UpdateReaderProfile
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Gói lệnh Cập nhật trang cá nhân của Reader (Giá Tiền, Tiểu sử đa ngôn ngữ).
+ *   Chỉ những ai "Đã Đậu" kỳ thi sát hạch lên Reader thì mới xài được API này.
+ * ===================================================================
+ */
+
 using MediatR;
+using System;
+using System.Collections.Generic;
 
 namespace TarotNow.Application.Features.Reader.Commands.UpdateReaderProfile;
 
-/// <summary>
-/// Command cập nhật hồ sơ công khai Reader (bio, pricing, specialties).
-///
-/// Chỉ reader sở hữu profile mới được update — check ownership trong Handler.
-/// UserId lấy từ JWT claims, không từ request body.
-/// </summary>
 public class UpdateReaderProfileCommand : IRequest<bool>
 {
-    /// <summary>UUID reader — lấy từ JWT claims.</summary>
+    /// <summary>UUID reader — lấy tự động từ Token để tránh Hacker sửa bậy Profile của Reader khác.</summary>
     public Guid UserId { get; set; }
 
-    /// <summary>Mô tả bản thân tiếng Việt.</summary>
+    /// <summary>Cập nhật tiểu sử Tiếng Việt (Có thể null nếu họ không muốn sửa trường này).</summary>
     public string? BioVi { get; set; }
 
-    /// <summary>Mô tả bản thân tiếng Anh.</summary>
+    /// <summary>Cập nhật tiểu sử Tiếng Anh.</summary>
     public string? BioEn { get; set; }
 
-    /// <summary>Mô tả bản thân tiếng Trung.</summary>
+    /// <summary>Cập nhật tiểu sử Tiếng Trung.</summary>
     public string? BioZh { get; set; }
 
-    /// <summary>Giá Diamond mỗi câu hỏi.</summary>
+    /// <summary>Set giá Cát Sê mới cho mỗi câu hỏi cắc cớ từ Fan (Đơn vị Diamond).</summary>
     public long? DiamondPerQuestion { get; set; }
 
-    /// <summary>Cập nhật danh sách chuyên môn.</summary>
+    /// <summary>Danh sách Tụ Bài/Chuyên Môn (Tình Yêu, Sự Nghiệp, Âm Phần...).</summary>
     public List<string>? Specialties { get; set; }
 }

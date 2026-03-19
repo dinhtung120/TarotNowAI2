@@ -1,3 +1,13 @@
+/*
+ * ===================================================================
+ * FILE: legalActions.ts
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Quản lý sự Đồng thuận Pháp lý (Legal Consent) của người dùng đối với
+ *   Điều khoản dịch vụ (TOS), Chính sách bảo mật (Privacy Policy), và 
+ *   Cảnh báo AI (AI Disclaimer).
+ * ===================================================================
+ */
 'use server';
 
 import { cookies } from 'next/headers';

@@ -1,3 +1,16 @@
+/*
+ * ===================================================================
+ * FILE: escrowActions.ts
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Quản lý các thao tác Giao Dịch Trung Gian (Escrow) ngay trong màn hình Chat.
+ *   Xử lý việc Chấp Nhận Thanh Toán (Accept Offer), Reader Trả Lời (Reply),
+ *   Xác Nhận Nhận Hàng (Confirm Release) và Khiếu Nại (Dispute).
+ *
+ * KIẾN TRÚC:
+ *   Server Action gọi thẳng API Backend, giấu token, an toàn và bảo mật.
+ * ===================================================================
+ */
 'use server';
 
 import { cookies } from 'next/headers';

@@ -1,3 +1,13 @@
+/*
+ * ===================================================================
+ * FILE: DeletePromotionCommandHandler.cs
+ * NAMESPACE: TarotNow.Application.Features.Promotions.Commands.DeletePromotion
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Người thi hành án cho lệnh Xóa (DeletePromotionCommand). Tìm thấy là Băm.
+ * ===================================================================
+ */
+
 using MediatR;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,9 +27,11 @@ public class DeletePromotionCommandHandler : IRequestHandler<DeletePromotionComm
 
     public async Task<bool> Handle(DeletePromotionCommand request, CancellationToken cancellationToken)
     {
+        // Vạch lá tìm sâu
         var promotion = await _promotionRepository.GetByIdAsync(request.Id, cancellationToken)
             ?? throw new NotFoundException($"Promotion {request.Id} not found");
 
+        // Gọi DB gạch tên khỏi bảng Phong Thần
         await _promotionRepository.DeleteAsync(promotion, cancellationToken);
         
         return true;

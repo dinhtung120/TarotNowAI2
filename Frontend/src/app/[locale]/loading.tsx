@@ -1,3 +1,11 @@
+/*
+ * ===================================================================
+ * FILE: loading.tsx (Global Suspense Fallback)
+ * BỐI CẢNH (CONTEXT):
+ *   Loading UI mặc định của React Suspense được Next.js tự động bọc xung quanh các Page.
+ *   Sử dụng spinner để thông báo cho user khi app đang chuẩn bị (fetch) dữ liệu tĩnh hoặc server side.
+ * ===================================================================
+ */
 import { Loader2 } from "lucide-react";
 
 export default function LocaleLoading() {

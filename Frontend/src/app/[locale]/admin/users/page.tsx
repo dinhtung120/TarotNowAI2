@@ -1,3 +1,15 @@
+/*
+ * ===================================================================
+ * FILE: page.tsx (Admin Users Management)
+ * BỐI CẢNH (CONTEXT):
+ *   Phân hệ User dành cho Admin.
+ *   Bao gồm: Xem danh sách user, Khóa/Mở khóa tài khoản (Ban/Unban) và Nạp Kim Cương thủ công (Top-up).
+ * 
+ * KIẾN TRÚC UI:
+ *   Áp dụng mô hình Glassmorphism tối đa với Confirm Modal. Data mutation (thêm số dư, thay đổi trạng thái user)
+ *   phụ thuộc hoàn toàn vào Security Middleware của Backend.
+ * ===================================================================
+ */
 "use client";
 
 import { useCallback, useEffect, useState } from "react";

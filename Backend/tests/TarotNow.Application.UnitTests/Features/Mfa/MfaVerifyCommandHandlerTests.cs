@@ -1,3 +1,18 @@
+/*
+ * FILE: MfaVerifyCommandHandlerTests.cs
+ * MỤC ĐÍCH: Unit test cho handler xác thực MFA (bước 2: verify TOTP code → bật MFA).
+ *
+ *   CÁC TEST CASE (5 scenarios):
+ *   1. Handle_MfaAlreadyEnabled_ThrowsBadRequest: MFA đã bật → 400
+ *   2. Handle_SecretEmpty_ThrowsBadRequest: chưa setup → 400 (cần setup trước)
+ *   3. Handle_InvalidCode_ThrowsBadRequest: TOTP code sai → 400
+ *   4. Handle_ValidCode_EnablesMfa: code đúng → MfaEnabled=true
+ *   5. Handle_UserNotFound_ThrowsNotFoundException: userId sai → 404
+ *
+ *   FLOW: Setup (bước 1) → Verify (bước 2) → MfaEnabled=true
+ *   → Bước 2 là bước cuối: user scan QR + nhập TOTP code → hệ thống confirm
+ */
+
 using Moq;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Mfa.Commands.MfaVerify;
@@ -7,6 +22,9 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Mfa;
 
+/// <summary>
+/// Test MFA verify: bước 2 kích hoạt, validate code, enable flag.
+/// </summary>
 public class MfaVerifyCommandHandlerTests
 {
     private readonly Mock<IUserRepository> _mockUserRepo;
@@ -20,6 +38,7 @@ public class MfaVerifyCommandHandlerTests
         _handler = new MfaVerifyCommandHandler(_mockUserRepo.Object, _mockMfaService.Object);
     }
 
+    /* Helper: tạo User giả bằng reflection */
     private User CreateUser(bool mfaEnabled, string secretEncrypted)
     {
         var userType = typeof(User);
@@ -29,6 +48,7 @@ public class MfaVerifyCommandHandlerTests
         return user;
     }
 
+    /// <summary>MFA đã bật → BadRequest.</summary>
     [Fact]
     public async Task Handle_MfaAlreadyEnabled_ThrowsBadRequest()
     {
@@ -40,6 +60,7 @@ public class MfaVerifyCommandHandlerTests
         Assert.Contains("MFA đã được bật rồi", ex.Message);
     }
 
+    /// <summary>Chưa setup (secret trống) → BadRequest.</summary>
     [Fact]
     public async Task Handle_SecretEmpty_ThrowsBadRequest()
     {
@@ -51,6 +72,7 @@ public class MfaVerifyCommandHandlerTests
         Assert.Contains("vui lòng thực hiện bước setup", ex.Message.ToLower());
     }
 
+    /// <summary>TOTP code sai → BadRequest.</summary>
     [Fact]
     public async Task Handle_InvalidCode_ThrowsBadRequest()
     {
@@ -64,6 +86,7 @@ public class MfaVerifyCommandHandlerTests
         Assert.Contains("không hợp lệ", ex.Message);
     }
 
+    /// <summary>Code đúng → MfaEnabled=true.</summary>
     [Fact]
     public async Task Handle_ValidCode_EnablesMfa()
     {
@@ -76,27 +99,16 @@ public class MfaVerifyCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         Assert.True(result);
-        Assert.True(user.MfaEnabled);
+        Assert.True(user.MfaEnabled); // MFA bật thành công!
         _mockUserRepo.Verify(x => x.UpdateAsync(user, default), Times.Once);
     }
 
-    /// <summary>
-    /// TEST CASE: User không tồn tại → NotFoundException.
-    ///
-    /// Khi nào xảy ra?
-    /// → UserId sai hoặc user đã bị xóa.
-    ///   Quan trọng vì verify là bước cuối cùng khi bật MFA.
-    /// </summary>
+    /// <summary>UserId sai → NotFoundException.</summary>
     [Fact]
     public async Task Handle_UserNotFound_ThrowsNotFoundException()
     {
-        // Arrange
         var command = new MfaVerifyCommand { UserId = Guid.NewGuid(), Code = "123" };
-        _mockUserRepo.Setup(x => x.GetByIdAsync(command.UserId, default))
-            .ReturnsAsync((User)null!);
-
-        // Act & Assert
-        await Assert.ThrowsAsync<NotFoundException>(
-            () => _handler.Handle(command, CancellationToken.None));
+        _mockUserRepo.Setup(x => x.GetByIdAsync(command.UserId, default)).ReturnsAsync((User)null!);
+        await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
     }
 }

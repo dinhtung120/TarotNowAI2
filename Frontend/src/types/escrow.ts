@@ -1,3 +1,15 @@
+/*
+ * ===================================================================
+ * COMPONENT/FILE: Escrow Types (escrow.ts)
+ * BỐI CẢNH (CONTEXT):
+ *   Định nghĩa dữ liệu cho Giao dịch Trung gian (Escrow) - Nút thắt tài chính của TarotNow.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Gồm `EscrowSession` (Phiên tổng) chứa tổng số khoá/mở/hoàn và `EscrowQuestionItem` (Từng câu hỏi).
+ *   - Hỗ trợ phân định các trạng thái Escrow cực kỳ chặt chẽ (Frozen, Accepted, Released...).
+ *   - Chứa DTO của các nút Action như: Chấp nhận Offer, Thêm câu hỏi phụ, Mở tranh chấp.
+ * ===================================================================
+ */
 export interface EscrowSession {
  id: string;
  conversationId: string;

@@ -5,14 +5,19 @@ import { sendReport } from '@/actions/chatActions';
 import { X, Flag, Loader2, CheckCircle2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-/**
- * Report Modal — báo cáo vi phạm trong cuộc trò chuyện.
- *
- * Hiển thị form:
- * → Chọn loại vi phạm (tin nhắn, cuộc trò chuyện, user).
- * → Nhập lý do chi tiết (tối thiểu 10 ký tự).
- * → Submit qua server action.
- * → Hiện success/error state.
+/*
+ * ===================================================================
+ * COMPONENT: ReportModal
+ * BỐI CẢNH (CONTEXT):
+ *   Modal (Popup) dùng để báo cáo (Report) các hành vi vi phạm chuẩn mực cộng đồng 
+ *   hoặc nội dung không phù hợp ở trong khu vực Trò chuyện (Chat).
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Cho phép chọn đối tượng muốn báo cáo (Cuộc trò chuyện, Người dùng, hoặc Tin nhắn).
+ *   - Khung nhập lý do cụ thể (tối thiểu 10, tối đa 500 ký tự).
+ *   - Gọi Server Action `sendReport` đưa dữ liệu về Admin xử lý.
+ *   - Hiển thị màn hình Success khi gửi báo cáo thành công.
+ * ===================================================================
  */
 interface ReportModalProps {
  conversationId: string;

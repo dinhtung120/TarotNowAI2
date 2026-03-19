@@ -1,8 +1,15 @@
-/**
- * GlassCard (legacy name) — card dùng chung cho toàn app.
- *
- * Lưu ý: giữ tên component để không phá vỡ import cũ,
- * nhưng style đã chuyển sang Lunar Bloom surface sáng dịu.
+/*
+ * ===================================================================
+ * COMPONENT: GlassCard
+ * BỐI CẢNH (CONTEXT):
+ *   Khối giao diện (Card) dạng kính mờ (Glassmorphism), tạo chiều sâu 3D cho App.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Đóng gói logic UI của nền tối/mờ, đổ bóng (Shadow) và đường viền (Border).
+ *   - Hỗ trợ chế độ "interactive" (Có tương tác) khi hover sẽ nảy lên và phát sáng, 
+ *     thích hợp làm các nút chọn lớn (Card Button).
+ *   - Tên component giữ nguyên từ phiên bản cũ (Legacy) để tương thích code hiện tại.
+ * ===================================================================
  */
 
 import { type HTMLAttributes, type ReactNode } from "react";

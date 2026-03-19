@@ -1,3 +1,15 @@
+/*
+ * ===================================================================
+ * FILE: (user)/profile/reader/page.tsx (Cài đặt Hồ Sơ Reader)
+ * BỐI CẢNH (CONTEXT):
+ *   Trang dành riêng cho User có role Reader để cập nhật hồ sơ hành nghề.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Đổi trạng thái nhận câu hỏi (Accepting/Online/Offline) -> Gọi API `updateReaderStatus`.
+ *   - Cập nhật Bio (Giới thiệu bản thân), Specialties (Chuyên môn chuyên ngành).
+ *   - Chỉnh sửa mức giá thu phí (Diamond Per Question).
+ * ===================================================================
+ */
 'use client';
 
 import React, { useEffect, useState } from 'react';

@@ -1,20 +1,23 @@
+/*
+ * ===================================================================
+ * FILE: UpdateReaderStatusCommandHandler.cs
+ * NAMESPACE: TarotNow.Application.Features.Reader.Commands.UpdateReaderStatus
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Áp Dụng lệnh gạt công tắc Online/Offline ở Database.
+ * ===================================================================
+ */
+
 using MediatR;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Reader.Commands.UpdateReaderStatus;
 
-/// <summary>
-/// Handler chuyển đổi trạng thái online của Reader.
-///
-/// Validate status hợp lệ (online/offline/accepting_questions)
-/// và cập nhật trong reader_profiles collection.
-///
-/// Tại sao validate status ở handler thay vì FluentValidation?
-/// → Status là domain concept (ReaderOnlineStatus enum).
-/// → Validate ở đây để có error message business-friendly.
-/// </summary>
 public class UpdateReaderStatusCommandHandler : IRequestHandler<UpdateReaderStatusCommand, bool>
 {
     private readonly IReaderProfileRepository _readerProfileRepository;
@@ -26,7 +29,8 @@ public class UpdateReaderStatusCommandHandler : IRequestHandler<UpdateReaderStat
 
     public async Task<bool> Handle(UpdateReaderStatusCommand request, CancellationToken cancellationToken)
     {
-        // 1. Validate status hợp lệ — chỉ chấp nhận 3 giá trị
+        // 1. Dựng Hàng Rào Phòng Thủ (Validation):
+        // Nếu Frontend truyền bậy chữ "DangDiChoi" vào, ta Búng Tay văng Lỗi Error 400.
         var validStatuses = new[] {
             ReaderOnlineStatus.Online,
             ReaderOnlineStatus.Offline,
@@ -36,13 +40,15 @@ public class UpdateReaderStatusCommandHandler : IRequestHandler<UpdateReaderStat
         if (!validStatuses.Contains(request.Status))
             throw new BadRequestException($"Trạng thái '{request.Status}' không hợp lệ. Chỉ chấp nhận: online, offline, accepting_questions.");
 
-        // 2. Lấy profile Reader — chỉ reader đã approved mới có profile
+        // 2. Tra Lý Lịch: Thầy Bói này có Hồ Sơ Môn Phái (Profile) không?
         var profile = await _readerProfileRepository.GetByUserIdAsync(
             request.UserId.ToString(), cancellationToken)
             ?? throw new NotFoundException("Không tìm thấy hồ sơ Reader.");
 
-        // 3. Cập nhật status và lưu
+        // 3. Phép Dịch Chuyển Ký Tự.
         profile.Status = request.Status;
+        
+        // 4. Lãnh Ấn Lưu.
         await _readerProfileRepository.UpdateAsync(profile, cancellationToken);
 
         return true;

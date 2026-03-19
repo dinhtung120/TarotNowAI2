@@ -1,3 +1,19 @@
+/*
+ * ===================================================================
+ * FILE: ListConversationsQuery.cs
+ * NAMESPACE: TarotNow.Application.Features.Chat.Queries.ListConversations
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Gói lệnh truy vấn lấy Danh Sách Phòng Chat (Màn Hình Inbox/Tin Nhắn).
+ *   Sử dụng chung cho cả Khách Hàng (User) và Thầy bói Tarot (Reader).
+ *
+ * TÍNH NĂNG VƯỢT TRỘI:
+ *   - Phân Trang (Pagination) giúp app tải nhanh, cuộn mượt mà.
+ *   - Sắp xếp (Sort) theo `last_message_at DESC`: Phòng nào vừa nhắn tin 
+ *     sẽ được trồi lên đầu danh sách y như Zalo/Messenger.
+ * ===================================================================
+ */
+
 using MediatR;
 using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
@@ -5,20 +21,21 @@ using TarotNow.Application.Interfaces;
 namespace TarotNow.Application.Features.Chat.Queries.ListConversations;
 
 /// <summary>
-/// Query lấy danh sách conversations (inbox) cho user hoặc reader.
-/// Phân trang, sort by last_message_at DESC.
+/// Yêu cầu cung cấp dữ liệu danh sách Box Chat từ phía Frontend.
 /// </summary>
 public class ListConversationsQuery : IRequest<ListConversationsResult>
 {
-    /// <summary>UUID user hiện tại.</summary>
+    /// <summary>Truyền từ Header Auth JWT Token: Bạn là ai?</summary>
     public Guid UserId { get; set; }
 
     /// <summary>
-    /// Vai trò trong query: "user" hoặc "reader".
-    /// Xác định query theo user_id hay reader_id.
+    /// Chế độ truy vấn (Ngữ cảnh thao tác).
+    /// Vì TarotNow cho phép đóng 2 vai, bạn có thể xem Inbox góc độ Khách ("user") 
+    /// hoặc xem Inbox góc độ làm ăn của Thợ ("reader").
     /// </summary>
     public string Role { get; set; } = "user";
 
+    // Phân trang
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 20;
 }
@@ -30,7 +47,7 @@ public class ListConversationsResult
 }
 
 /// <summary>
-/// Handler phân trang inbox — delegate sang repository.
+/// Cỗ máy lấy dữ liệu từ NoSQL MongoDB trả về Frontend.
 /// </summary>
 public class ListConversationsQueryHandler : IRequestHandler<ListConversationsQuery, ListConversationsResult>
 {
@@ -46,7 +63,9 @@ public class ListConversationsQueryHandler : IRequestHandler<ListConversationsQu
         var userId = request.UserId.ToString();
         (IEnumerable<ConversationDto> items, long totalCount) result;
 
-        // Phân biệt query dựa trên role
+        // Cơ chế Rẽ Nhánh Truy Vấn (Query Dispatch):
+        // Nếu bạn là Reader -> Trích xuất danh sách khách hàng đang chờ/đang chat với bạn.
+        // Nếu bạn là User -> Trích xuất danh sách các Thầy Tarot bạn đã book.
         if (request.Role == "reader")
             result = await _conversationRepo.GetByReaderIdPaginatedAsync(userId, request.Page, request.PageSize, cancellationToken);
         else

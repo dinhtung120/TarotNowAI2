@@ -1,11 +1,16 @@
 "use client";
 
-/**
- * Trang Bộ Sưu Tập (Collection Page)
- * Premium & compact, nền dùng hệ thống global từ UserLayout/AstralBackground.
- * - Bộ lọc: Tất cả, Đã có, Chưa có.
- * - Card UI: semantic token + trạng thái sở hữu.
- * - Progress gọn, dễ maintain.
+/*
+ * ===================================================================
+ * FILE: (user)/collection/page.tsx (Bộ Sưu Tập Bài Tarot)
+ * BỐI CẢNH (CONTEXT):
+ *   Giao diện hiển thị các lá bài Tarot mà User đã sở hữu thông qua gacha/rút bài.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Lọc bài: Tất cả / Đã có / Chưa có.
+ *   - Hiển thị tỷ lệ hoàn thành tiến độ thu thập thẻ (Progress Bar).
+ *   - Overlay hiển thị chi tiết thẻ bài khi click vào 1 lá bài đã sở hữu (Level, Số bản sao).
+ * ===================================================================
  */
 
 import { useEffect, useState, useMemo } from "react";

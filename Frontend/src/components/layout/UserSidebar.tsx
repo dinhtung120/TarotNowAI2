@@ -1,24 +1,17 @@
 "use client";
 
-/**
- * UserSidebar — Thanh điều hướng bên trái cho khu vực người dùng.
- *
- * === TẠI SAO CẦN SIDEBAR? ===
- * Trước đây: User muốn đi từ Wallet → Chat → Profile → History
- * → Phải click vào Navbar nhỏ ở trên cùng, các link bị ẩn trên mobile.
- * → Trải nghiệm "rời rạc" — mỗi trang là một ốc đảo riêng.
- *
- * === GIẢI PHÁP ===
- * Sidebar cố định bên trái (desktop) với các nhóm navigation rõ ràng:
- * - Nhóm 1 (Tarot): Rút Bài, Miếu Bài, Lịch Sử
- * - Nhóm 2 (Xã Hội): Tin Nhắn, Tìm Reader
- * - Nhóm 3 (Tài Khoản): Ví, Hồ Sơ
- *
- * Trên Mobile (< md): Sidebar ẨN → thay bằng BottomTabBar.
- *
- * === STYLING ===
- * Sidebar surface sáng dịu, phù hợp Lunar Bloom Mystic.
- * Active item: Purple highlight + left indicator bar + glow.
+/*
+ * ===================================================================
+ * COMPONENT: UserSidebar
+ * BỐI CẢNH (CONTEXT):
+ *   Thanh điều hướng dọc (Sidebar) nằm bên trái màn hình, CHỈ DÀNH cho Desktop.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Giúp chuyển trang cực nhanh giữa các phân hệ: Tarot, Xã hội, Tài khoản.
+ *   - Tính toán Logic `getMostSpecificActiveHref` để bật trạng thái Active 
+ *     chuẩn xác kể cả khi User đang ở các màn hình con (VD: /reading/history/[id]).
+ *   - Hỗ trợ hiển thị Badge báo Noti (Ví dụ: 99+ tin nhắn chưa đọc).
+ * ===================================================================
  */
 
 import { Link, usePathname } from "@/i18n/routing";

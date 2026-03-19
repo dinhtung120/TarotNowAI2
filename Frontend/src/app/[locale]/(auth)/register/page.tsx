@@ -1,3 +1,14 @@
+/*
+ * ===================================================================
+ * FILE: register/page.tsx (Đăng Ký Tài Khoản)
+ * BỐI CẢNH (CONTEXT):
+ *   Trang đăng ký tài khoản mới cho User.
+ * 
+ * VALIDATION:
+ *   Sử dụng Zod + React Hook Form xác thực gắt gao mật khẩu bảo mật cao
+ *   và ràng buộc độ tuổi tối thiểu 16 tuổi.
+ * ===================================================================
+ */
 'use client';
 
 import { useMemo, useState } from 'react';

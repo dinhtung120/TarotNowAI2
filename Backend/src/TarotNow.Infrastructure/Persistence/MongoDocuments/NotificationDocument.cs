@@ -1,61 +1,66 @@
+/*
+ * FILE: NotificationDocument.cs
+ * MỤC ĐÍCH: Schema cho collection "notifications" (MongoDB). TTL 30 ngày tự xóa.
+ *   Hỗ trợ đa ngôn ngữ (vi/en/zh) cho title và body.
+ */
+
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 /// <summary>
-/// MongoDB Document cho collection "notifications" — Thông báo in-app.
-///
-/// TTL 30 ngày — MongoDB tự động xóa document khi created_at quá 30 ngày.
-/// TTL index: created_at + expireAfterSeconds: 2,592,000 (xem init.js dòng 190).
-///
-/// Hỗ trợ đa ngôn ngữ (vi/en/zh) cho title và body.
+/// 1 thông báo in-app trong collection "notifications". TTL 30 ngày tự xóa bởi MongoDB.
 /// </summary>
 public class NotificationDocument
 {
+    /// <summary>ID duy nhất (ObjectId tự sinh).</summary>
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
 
-    /// <summary>UUID user nhận thông báo.</summary>
+    /// <summary>UUID User nhận thông báo (từ PostgreSQL users table).</summary>
     [BsonElement("user_id")]
     public string UserId { get; set; } = string.Empty;
 
-    /// <summary>Tiêu đề đa ngôn ngữ.</summary>
+    /// <summary>Tiêu đề đa ngôn ngữ (vi/en/zh). Hiển thị dạng bold trên UI.</summary>
     [BsonElement("title")]
     public LocalizedText Title { get; set; } = new();
 
-    /// <summary>Nội dung đa ngôn ngữ.</summary>
+    /// <summary>Nội dung chi tiết đa ngôn ngữ. Hiển thị bên dưới tiêu đề.</summary>
     [BsonElement("body")]
     public LocalizedText Body { get; set; } = new();
 
     /// <summary>
-    /// Loại thông báo: quest, system, streak, escrow, ...
-    /// Dùng để filter và icon trên UI.
+    /// Loại thông báo: "quest" (nhiệm vụ), "system" (hệ thống), "streak" (chuỗi), "escrow" (tài chính).
+    /// Quyết định icon và màu trên UI.
     /// </summary>
     [BsonElement("type")]
     public string Type { get; set; } = "system";
 
-    /// <summary>Đã đọc hay chưa — dùng cho badge count trên UI.</summary>
+    /// <summary>Đã đọc chưa — dùng tính badge count (số đỏ) trên icon chuông.</summary>
     [BsonElement("is_read")]
     public bool IsRead { get; set; } = false;
 
     /// <summary>
-    /// Dữ liệu bổ sung — VD: deep link URL, quest_code, reading_session_id.
-    /// Flexible object cho mỗi loại notification khác nhau.
+    /// Dữ liệu bổ sung dạng JSON tự do (khác nhau tùy loại thông báo).
+    /// Ví dụ: { "quest_code": "daily_reading", "deep_link": "/history/abc" }.
+    /// Dùng BsonDocument vì mỗi loại notification có metadata khác nhau.
     /// </summary>
     [BsonElement("metadata")]
     [BsonIgnoreIfNull]
     public BsonDocument? Metadata { get; set; }
 
     /// <summary>
-    /// Thời điểm tạo — TTL index dựa trên field này (30 ngày auto-delete).
+    /// Thời điểm tạo (UTC). TTL Index nhắm vào trường này: sau 30 ngày → MongoDB TỰ ĐỘNG XÓA.
     /// </summary>
     [BsonElement("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
-/// <summary>Text đa ngôn ngữ — vi/en/zh với fallback chain.</summary>
+/// <summary>
+/// Văn bản đa ngôn ngữ (vi/en/zh). Fallback: locale → en nếu locale rỗng.
+/// </summary>
 public class LocalizedText
 {
     [BsonElement("vi")] public string Vi { get; set; } = string.Empty;

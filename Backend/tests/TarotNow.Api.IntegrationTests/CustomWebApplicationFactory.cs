@@ -1,3 +1,26 @@
+/*
+ * FILE: CustomWebApplicationFactory.cs
+ * MỤC ĐÍCH: Fixture dùng chung cho Integration Tests — tạo môi trường test thật.
+ *   Khởi tạo Docker containers (PostgreSQL + MongoDB) qua Testcontainers library.
+ *
+ *   TẠI SAO DÙNG TESTCONTAINERS THAY VÌ IN-MEMORY DB?
+ *   → InMemory DB (EF Core): không hỗ trợ Raw SQL, FOR UPDATE, stored procedures.
+ *   → Testcontainers: tạo PostgreSQL/MongoDB thật trong Docker → test chính xác 100%.
+ *   → Mỗi test class dùng database riêng → không conflict giữa các test.
+ *
+ *   CÁC BƯỚC KHỞI TẠO:
+ *   1. Tạo Docker containers: PostgreSQL 16 + MongoDB 7.0
+ *   2. Override connection strings → trỏ vào containers
+ *   3. Override auth → TestAuthHandler (mock JWT)
+ *   4. Override Redis → InMemory cache (không cần Redis container)
+ *   5. Override MongoDB → trỏ vào MongoDB container
+ *   6. EnsureCreatedAsync(): tạo schema tự động từ EF Core model
+ *   7. Tạo stored procedures (debit_currency, refund_currency) cho wallet tests
+ *   8. Tạo extension unaccent cho full-text search
+ *
+ *   IAsyncLifetime: InitializeAsync chạy TRƯỚC tests, DisposeAsync chạy SAU tests.
+ */
+
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,12 +36,12 @@ using TarotNow.Infrastructure.Persistence;
 namespace TarotNow.Api.IntegrationTests;
 
 /// <summary>
-/// Fixture dùng chung cho các Integration Tests của tầng API.
-/// Khởi tạo và quản lý vòng đời của Docker containers (PostgreSQL, MongoDB) thông qua Testcontainers.
+/// Factory tạo TestServer + Docker containers cho integration tests.
 /// </summary>
 public class CustomWebApplicationFactory<TProgram> 
     : WebApplicationFactory<TProgram>, IAsyncLifetime where TProgram : class
 {
+    // Docker containers: PostgreSQL 16 Alpine (nhẹ) + MongoDB 7.0
     private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder("postgres:16-alpine")
         .WithDatabase("tarotweb_test")
         .WithUsername("postgres")
@@ -28,11 +51,15 @@ public class CustomWebApplicationFactory<TProgram>
     private readonly MongoDbContainer _mongoContainer = new MongoDbBuilder("mongo:7.0-jammy")
         .Build();
 
+    /// <summary>
+    /// Override cấu hình web host: thay database, auth, cache bằng test versions.
+    /// </summary>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         var postgresConnectionString = _dbContainer.GetConnectionString();
         var mongoConnectionString = _mongoContainer.GetConnectionString();
         
+        // Override config: trỏ connection strings vào Docker containers
         builder.ConfigureAppConfiguration((context, config) =>
         {
             config.AddInMemoryCollection(new Dictionary<string, string?>
@@ -46,17 +73,17 @@ public class CustomWebApplicationFactory<TProgram>
         
         builder.ConfigureServices(services =>
         {
-            // Xoá connection cũ
+            // Remove production DbContext → thay bằng test DbContext
             var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(Microsoft.EntityFrameworkCore.DbContextOptions<TarotNow.Infrastructure.Persistence.ApplicationDbContext>));
             if (descriptor != null) services.Remove(descriptor);
 
-            // Add Entity Framework Core using Postgres Testcontainer
+            // Đăng ký DbContext trỏ vào PostgreSQL container
             services.AddDbContext<TarotNow.Infrastructure.Persistence.ApplicationDbContext>(options =>
             {
                 options.UseNpgsql(postgresConnectionString);
             });
 
-            // Register TestAuthHandler by default for Integration Tests
+            // TestAuthHandler: mock authentication (không cần JWT thật)
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = TestAuthHandler.AuthenticationScheme;
@@ -65,11 +92,11 @@ public class CustomWebApplicationFactory<TProgram>
             .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, TestAuthHandler>(
                 TestAuthHandler.AuthenticationScheme, options => { });
 
-            // Override Redis with In-Memory for Tests
+            // Override Redis → InMemory (không cần Docker cho cache)
             services.AddDistributedMemoryCache();
             services.RemoveAll<StackExchange.Redis.IConnectionMultiplexer>();
 
-            // Ensure MongoDB uses the Container
+            // Override MongoDB → trỏ vào MongoDB container
             services.RemoveAll<MongoDB.Driver.IMongoClient>();
             services.AddSingleton<MongoDB.Driver.IMongoClient>(new MongoDB.Driver.MongoClient(mongoConnectionString));
             
@@ -82,17 +109,19 @@ public class CustomWebApplicationFactory<TProgram>
             });
         });
 
-        // Đặt environment để load appsettings phù hợp nếu cần
         builder.UseEnvironment("Development");
     }
 
+    /// <summary>
+    /// Chạy TRƯỚC tất cả tests: khởi động containers + tạo schema + stored procedures.
+    /// </summary>
     public async Task InitializeAsync()
     {
-        // Khởi động các Docker containers trước khi chạy test
+        // Khởi động Docker containers
         await _dbContainer.StartAsync();
         await _mongoContainer.StartAsync();
 
-        // Bật Extension "unaccent" cho Testcontainer tránh lỗi "unrecognized dictionary parameter: unaccent"
+        // Tạo extension unaccent (cần cho full-text search tiếng Việt)
         using (var rawConn = new Npgsql.NpgsqlConnection(_dbContainer.GetConnectionString()))
         {
             await rawConn.OpenAsync();
@@ -100,16 +129,14 @@ public class CustomWebApplicationFactory<TProgram>
             await cmd.ExecuteNonQueryAsync();
         }
 
-        // Tự động Add Schema + Apply Migration cho Postgres Test Container
-        // Thay vì chạy code Migration riêng lẻ, dùng schema raw của ứng dụng test là ổn định nhất
-        // Hoặc có thể migrate tự động: EnsureCreatedAsync()
+        // Tạo schema từ EF Core model (thay vì chạy migrations)
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
         optionsBuilder.UseNpgsql(_dbContainer.GetConnectionString());
         
         using var context = new ApplicationDbContext(optionsBuilder.Options);
         await context.Database.EnsureCreatedAsync();
 
-        // Run Init Stored procedures required for Wallet & Refund system
+        // Tạo stored procedures cần cho wallet tests (debit + refund)
         var initSql = @"
         CREATE OR REPLACE PROCEDURE debit_currency(
             p_user_id UUID, p_currency VARCHAR, p_type VARCHAR, p_amount BIGINT, 
@@ -156,9 +183,9 @@ public class CustomWebApplicationFactory<TProgram>
         await context.Database.ExecuteSqlRawAsync(initSql);
     }
 
+    /// <summary>Dọn dẹp Docker containers sau khi tất cả tests xong.</summary>
     public new async Task DisposeAsync()
     {
-        // Dọn dẹp containers sau khi test xong
         await _dbContainer.DisposeAsync().AsTask();
         await _mongoContainer.DisposeAsync().AsTask();
     }

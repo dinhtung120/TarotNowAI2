@@ -1,3 +1,15 @@
+/*
+ * ===================================================================
+ * FILE: page.tsx (Admin Dashboard)
+ * BỐI CẢNH (CONTEXT):
+ *   Trang chủ của khu vực Quản trị viên (Admin). 
+ *   Hiển thị tổng quan các thống kê số liệu (Users, Deposits, Promotions, Readings).
+ *
+ * RENDERING:
+ *   Sử dụng 'use client' vì có tương tác state cục bộ và fetch dữ liệu 
+ *   trực tiếp bằng Server Actions (React Server Actions) trong useEffect.
+ * ===================================================================
+ */
 'use client';
 
 import React, { useEffect, useState } from 'react';

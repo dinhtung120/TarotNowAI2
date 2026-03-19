@@ -1,25 +1,18 @@
 "use client";
 
-/**
- * Modal — Component dialog overlay thống nhất cho toàn app.
- *
- * === CÁC NƠI CẦN DÙNG ===
- * - MfaChallengeModal (xác thực 2 lớp)
- * - ReportModal (báo cáo vi phạm)
- * - Card detail modal (xem chi tiết bài Tarot)
- * - Confirm actions (xác nhận xóa, approve, reject)
- *
- * === DESIGN ===
- * - Overlay tím-mờ nhẹ để giữ focus mà vẫn mềm mại
- * - Content card: pearl surface + lunar glow
- * - Animation: fade-in overlay + scale-in content
- * - ESC key + click outside → đóng modal
- * - Focus trap? Chưa implement (sẽ thêm sau nếu cần accessibility)
- *
- * Tại sao dùng Portal (createPortal)?
- * → Modal cần render ở NGOÀI DOM tree của component cha.
- * → Nếu parent có overflow:hidden hoặc z-index thấp → modal bị cắt/che.
- * → Portal render vào document.body → luôn nổi trên cùng.
+/*
+ * ===================================================================
+ * COMPONENT: Modal
+ * BỐI CẢNH (CONTEXT):
+ *   Hộp thoại nổi (Dialog/Popup) dùng chung cho các tác vụ cần sự tập trung 
+ *   hoặc đòi hỏi xác nhận (Ví dụ: MFA, Báo cáo, Confirm Xóa).
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Sử dụng `createPortal` để render Modal lên thẳng `document.body` nhằm 
+ *     tránh bị che khuất bởi `z-index` hay `overflow: hidden` của component cha.
+ *   - Hỗ trợ đóng Modal mượt mà bằng phím `ESC` hoặc click ra ngoài Overlay.
+ *   - Tự động khóa cuộn trang (Lock body scroll) khi Modal đang mở.
+ * ===================================================================
  */
 
 import { useEffect, useCallback, type ReactNode } from "react";

@@ -1,7 +1,16 @@
-/**
- * Tiện ích hỗ trợ lấy Token từ Cookie ở phía Client.
- * Vì accessToken được set httpOnly: false trong authActions.ts,
- * nên client-side component có thể đọc được để gửi trong Header Authorization.
+/*
+ * ===================================================================
+ * COMPONENT/FILE: Auth Client Utilities (auth-client.ts)
+ * BỐI CẢNH (CONTEXT):
+ *   Các hàm tiện ích hoạt động TẠI CLIENT-SIDE (Trình duyệt) để thao tác với Auth.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Cung cấp hàm `getAccessToken` để bóc tách và lấy mã Access Token từ chuỗi Cookie 
+ *     của trình duyệt.
+ *   - Vì Action đăng nhập (authActions) đã set Cookie accessToken với `httpOnly: false`, 
+ *     nên Client có toàn quyền đọc được giá trị này để đính kèm vào Header Authorization 
+ *     khi gọi API trực tiếp.
+ * ===================================================================
  */
 export const getAccessToken = (): string | null => {
  if (typeof document === 'undefined') return null;

@@ -1,3 +1,18 @@
+/*
+ * FILE: MfaSetupCommandHandlerTests.cs
+ * MỤC ĐÍCH: Unit test cho handler thiết lập MFA (bước 1: tạo secret + QR code).
+ *
+ *   CÁC TEST CASE:
+ *   1. Handle_UserNotFound_ThrowsNotFound: userId sai → 404
+ *   2. Handle_MfaAlreadyEnabled_ThrowsBadRequest: MFA đã bật → 400
+ *   3. Handle_ValidRequest_ReturnsSetupResult:
+ *      → Tạo secret + encrypt + QR URI + backup codes
+ *      → MfaEnabled vẫn = false (chưa verify)
+ *
+ *   FLOW: Setup → lưu encrypted secret → trả QR URI cho user scan
+ *   → User phải verify (bước 2) mới bật MfaEnabled=true
+ */
+
 using Moq;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Mfa.Commands.MfaSetup;
@@ -7,6 +22,9 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Mfa;
 
+/// <summary>
+/// Test MFA setup: secret generation, QR URI, backup codes, 2-step activation.
+/// </summary>
 public class MfaSetupCommandHandlerTests
 {
     private readonly Mock<IUserRepository> _mockUserRepo;
@@ -20,6 +38,7 @@ public class MfaSetupCommandHandlerTests
         _handler = new MfaSetupCommandHandler(_mockUserRepo.Object, _mockMfaService.Object);
     }
 
+    /* Helper: tạo User giả bằng reflection */
     private User CreateUser(bool mfaEnabled)
     {
         var userType = typeof(User);
@@ -28,15 +47,16 @@ public class MfaSetupCommandHandlerTests
         return user;
     }
 
+    /// <summary>UserId sai → NotFoundException.</summary>
     [Fact]
     public async Task Handle_UserNotFound_ThrowsNotFound()
     {
         var command = new MfaSetupCommand { UserId = Guid.NewGuid() };
         _mockUserRepo.Setup(x => x.GetByIdAsync(command.UserId, default)).ReturnsAsync((User)null!);
-
         await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
+    /// <summary>MFA đã bật → BadRequest (không cho setup lại).</summary>
     [Fact]
     public async Task Handle_MfaAlreadyEnabled_ThrowsBadRequest()
     {
@@ -48,6 +68,10 @@ public class MfaSetupCommandHandlerTests
         Assert.Contains("MFA đã được bật", ex.Message);
     }
 
+    /// <summary>
+    /// Happy path: tạo secret + encrypt + QR + backup codes.
+    /// MfaEnabled vẫn false (chờ verify bước 2).
+    /// </summary>
     [Fact]
     public async Task Handle_ValidRequest_ReturnsSetupResult()
     {
@@ -66,10 +90,8 @@ public class MfaSetupCommandHandlerTests
         Assert.Equal("qr_uri", result.QrCodeUri);
         Assert.Equal("plain_secret", result.SecretDisplay);
         Assert.Equal(2, result.BackupCodes.Count);
-
         Assert.Equal("encrypted_secret", user.MfaSecretEncrypted);
-        Assert.False(user.MfaEnabled);
-
+        Assert.False(user.MfaEnabled); // Chưa verify → vẫn false!
         _mockUserRepo.Verify(x => x.UpdateAsync(user, default), Times.Once);
     }
 }

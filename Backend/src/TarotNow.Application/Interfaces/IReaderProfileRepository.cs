@@ -1,30 +1,42 @@
+/*
+ * ===================================================================
+ * FILE: IReaderProfileRepository.cs
+ * NAMESPACE: TarotNow.Application.Interfaces
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Giao Diện Bản Vẽ Sổ Tay Hồ Sơ Lăng Xê Cho Các Thầy Bói (Reader: Những Chuyên Gia Xem Tarot Đã Approve).
+ *   Giữ Kho Dữ Liệu Ở MongoDB Và Application Chỉ Kéo DTO Ra Vô.
+ * ===================================================================
+ */
+
 using TarotNow.Application.Common;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace TarotNow.Application.Interfaces;
 
 /// <summary>
-/// Repository abstraction cho collection reader_profiles (MongoDB).
-///
-/// Dùng ReaderProfileDto (Application layer) thay vì ReaderProfileDocument (Infrastructure).
-/// Repository implementation chịu trách nhiệm map DTO ↔ MongoDocument.
+/// Tổ Chức Profile Công Khai Của Reader Dành Cho Khách Hàng Book Lịch Hoặc Xem Info.
+/// Đảm bảo Application không Lấm Lem Bùn Đất "Document" Của MongoDB Gốc.
 /// </summary>
 public interface IReaderProfileRepository
 {
-    /// <summary>Tạo profile mới — gọi khi admin approve reader request.</summary>
+    /// <summary>Nhập Sổ Thành Môn Chuyên Nghiệp: Sau Khi Đơn Xin Admin Đậu, Tạo Sổ Profiler Công Tác (Tạo Reader Mới).</summary>
     Task AddAsync(ReaderProfileDto profile, CancellationToken cancellationToken = default);
 
-    /// <summary>Lấy profile theo userId (UUID string từ PostgreSQL users).</summary>
+    /// <summary>Tra Giở Hồ Sơ Bằng Id Chứng Minh Thằng User (Postgres Auth -> Lấy Kèm Data Reader Ở Mongo).</summary>
     Task<ReaderProfileDto?> GetByUserIdAsync(string userId, CancellationToken cancellationToken = default);
 
-    /// <summary>Cập nhật profile (bio, pricing, specialties, status).</summary>
+    /// <summary>Thầy Mới Nâng Phí Cắt Cổ, Đổi Quẻ Phép, Thay Bio Update Cho Vào Đóng Dấu Cái Cụp Lại.</summary>
     Task UpdateAsync(ReaderProfileDto profile, CancellationToken cancellationToken = default);
 
-    /// <summary>Soft delete profile theo userId (dùng cho compensation).</summary>
+    /// <summary>Rạch Mặt Kéo Tên Xuống Hầm (Rút Thẻ Hoành Nghề). Ẩn Mềm Không Ai Thấy Nữa Nhưng Vẫn Lưu Lịch Sử Admin Trị Tội (Soft Delete).</summary>
     Task DeleteByUserIdAsync(string userId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Lấy danh sách Reader có phân trang với bộ lọc.
-    /// Chỉ trả về readers chưa bị soft delete.
+    /// Bộ Loc Trải Bài Quảng Cáo Ra Cho Khách Lướt (Reader Directory).
+    /// Kèm Theo Tính Năng Có Search Từ Khoá Và Lọc Chỉ Mấy Ông Lên Online Sống Động Mà Phân Băng (Paginate).
     /// </summary>
     Task<(IEnumerable<ReaderProfileDto> Profiles, long TotalCount)> GetPaginatedAsync(
         int page, int pageSize,

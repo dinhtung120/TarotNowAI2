@@ -1,3 +1,15 @@
+/*
+ * ===================================================================
+ * FILE: layout.tsx (Root Layout)
+ * BỐI CẢNH (CONTEXT):
+ *   Layout gốc (Root) bọc toàn bộ ứng dụng Next.js.
+ *   Xử lý cấu hình font, multi-language (i18n), Auth Session, và Toast Notifications.
+ * 
+ * RENDERING (SERVER COMPONENT):
+ *   Phục vụ HTML khung xương và Metadata chung ban đầu trên Server.
+ *   Font chữ được tải bằng next/font để tối ưu Core Web Vitals (CLS/LCP).
+ * ===================================================================
+ */
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';

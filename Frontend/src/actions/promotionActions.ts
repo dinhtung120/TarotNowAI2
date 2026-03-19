@@ -1,3 +1,12 @@
+/*
+ * ===================================================================
+ * FILE: promotionActions.ts
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Giao tiếp với API Quản trị Khuyến Mãi (Promotions).
+ *   Hỗ trợ Admin CRUD các gói khuyến mãi nạp Kim Cương.
+ * ===================================================================
+ */
 'use server';
 
 import { cookies } from 'next/headers';

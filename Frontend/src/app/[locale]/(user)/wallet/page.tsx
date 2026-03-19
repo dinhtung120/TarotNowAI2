@@ -1,8 +1,17 @@
 'use client';
 
-/**
- * Trang Ví (Wallet Page)
- * Đã Refactor với UserLayout, SectionHeader và GlassCard.
+/*
+ * ===================================================================
+ * FILE: (user)/wallet/page.tsx (Ví Điện Tử)
+ * BỐI CẢNH (CONTEXT):
+ *   Giao diện quản lý số dư (Balance) Kim Cương (Diamond) và Vàng (Gold) của User.
+ *   Hiển thị Lịch sử giao dịch (Ledger) với phân trang.
+ * 
+ * KIẾN TRÚC TÍCH HỢP:
+ *   - Sử dụng Zustand (`useWalletStore`) để lấy số dư (được sync trên toàn app).
+ *   - Fetch lịch sử giao dịch trực tiếp từ API qua Server Action `getLedger`.
+ *   - Các giao dịch được thiết kế bảng responsive (GlassCard, Custom Scrollbar).
+ * ===================================================================
  */
 
 import React, { useEffect, useState } from 'react';

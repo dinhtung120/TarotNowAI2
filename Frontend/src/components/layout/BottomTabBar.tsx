@@ -1,23 +1,18 @@
 "use client";
 
-/**
- * BottomTabBar — Thanh điều hướng dưới cùng cho Mobile.
- *
- * === TẠI SAO CẦN? ===
- * UserSidebar ẩn trên mobile (hidden md:flex).
- * User mobile cần cách navigate nhanh giữa các section chính.
- * BottomTabBar là pattern chuẩn của mobile apps (Instagram, TikTok, etc.).
- *
- * === 5 TAB CHÍNH ===
- * Chọn 5 action quan trọng nhất:
- * 1. Home (Trang chủ)
- * 2. Tarot (Rút bài — CTA chính)
- * 3. Chat (Tin nhắn — social)
- * 4. Wallet (Ví — tài chính)
- * 5. Profile (Hồ sơ — cá nhân)
- *
- * Tại sao chỉ 5? → iOS/Android UI guidelines khuyến nghị 3-5 tabs.
- * Nhiều hơn → bé quá, khó bấm. Ít hơn → thiếu tính năng.
+/*
+ * ===================================================================
+ * COMPONENT: BottomTabBar
+ * BỐI CẢNH (CONTEXT):
+ *   Thanh điều hướng ở mép dưới màn hình, CHỈ DÀNH cho giao diện Mobile (< md).
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Thay thế cho UserSidebar trên điện thoại, tiết kiệm diện tích bề ngang.
+ *   - Chứa 5 nút điều hướng quan trọng nhất (Home, Tarot, Chat, Wallet, Profile) 
+ *     theo chuẩn thiết kế Mobile App (Ví dụ: Instagram, TikTok).
+ *   - Xử lý hiệu ứng Active State (Nổi màu tím + icon bự lên) khi User đang ở trang đó.
+ *   - Có `safe-area-inset-bottom` để tránh bị cấn thanh Hone Indicator trên iPhone đời mới.
+ * ===================================================================
  */
 
 import { Link, usePathname } from "@/i18n/routing";

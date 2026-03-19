@@ -1,3 +1,12 @@
+/*
+ * ===================================================================
+ * FILE: mfaActions.ts
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Server Actions xử lý quy trình Xác thực Đa Yếu Tố (MFA/2FA) bằng TOTP.
+ *   Hỗ trợ Lấy Trạng thái, Cài đặt Mã QR, và Xác minh rào chắn an ninh (Challenge).
+ * ===================================================================
+ */
 'use server';
 
 import { cookies } from 'next/headers';

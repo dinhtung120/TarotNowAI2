@@ -1,3 +1,20 @@
+/*
+ * FILE: GetLedgerMismatchQueryHandlerTests.cs
+ * MỤC ĐÍCH: Unit test cho query handler kiểm tra SỔ CÁI LỆCH (ledger reconciliation).
+ *   Đảm bảo handler phát hiện sai lệch giữa balance User và sổ cái wallet_transactions.
+ *
+ *   CÁC TEST CASE:
+ *   1. Handle_WhenMismatchesExist_ReturnsMismatchList:
+ *      → Có mismatch (User.Gold=100, Ledger.Gold=90) → trả list 1 phần tử
+ *   2. Handle_WhenNoMismatches_ReturnsEmptyList:
+ *      → Không có mismatch → trả empty list (KHÔNG phải null)
+ *
+ *   TẠI SAO QUAN TRỌNG?
+ *   → Reconciliation: kiểm tra freeze_sum - release_sum = frozen_balance
+ *   → Nếu lệch → BUG tài chính → cần alert Admin
+ *   → Handler phải trả empty list khi healthy, KHÔNG được throw exception.
+ */
+
 using TarotNow.Application.Features.Admin.Queries;
 using TarotNow.Application.Features.Admin.Queries.GetLedgerMismatch;
 using TarotNow.Application.Interfaces;
@@ -7,6 +24,9 @@ using FluentAssertions;
 
 namespace TarotNow.Application.UnitTests.Admin;
 
+/// <summary>
+/// Test reconciliation query: phát hiện sổ cái lệch vs balance User.
+/// </summary>
 public class GetLedgerMismatchQueryHandlerTests
 {
     private readonly Mock<IAdminRepository> _mockAdminRepository;
@@ -18,10 +38,12 @@ public class GetLedgerMismatchQueryHandlerTests
         _handler = new GetLedgerMismatchQueryHandler(_mockAdminRepository.Object);
     }
 
+    /// <summary>
+    /// Có mismatch: User Gold=100, Ledger Gold=90 → trả list 1 phần tử.
+    /// </summary>
     [Fact]
     public async Task Handle_WhenMismatchesExist_ReturnsMismatchList()
     {
-        // Arrange
         var query = new GetLedgerMismatchQuery();
         var mismatches = new List<MismatchRecord>
         {
@@ -30,10 +52,8 @@ public class GetLedgerMismatchQueryHandlerTests
 
         _mockAdminRepository.Setup(r => r.GetLedgerMismatchesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mismatches);
 
-        // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
-        // Assert
         result.Should().NotBeNull();
         result.Should().HaveCount(1);
         result.First().UserGoldBalance.Should().Be(100);
@@ -41,31 +61,20 @@ public class GetLedgerMismatchQueryHandlerTests
     }
 
     /// <summary>
-    /// TEST CASE: Không có mismatch → trả empty list.
-    ///
-    /// Map trực tiếp đến Phase 2.3 TEST.md (Reconciliation):
-    /// "Trả 0 rows" = frozen_diamond_balance khớp ledger → hệ thống healthy.
-    ///
-    /// Tại sao test case này quan trọng?
-    /// → Đảm bảo handler KHÔNG throw exception khi empty list.
-    /// → Confirm query trả empty collection (không phải null).
-    /// → Verify reconciliation logic: khi SUM(freeze) - SUM(release/refund) = users.frozen,
-    ///   không có bản ghi nào bị mismatch.
+    /// Không có mismatch → empty list (hệ thống healthy).
+    /// Quan trọng: handler KHÔNG throw exception khi empty, trả collection rỗng.
     /// </summary>
     [Fact]
     public async Task Handle_WhenNoMismatches_ReturnsEmptyList()
     {
-        // Arrange — reconciliation OK, không có dòng nào lệch
         var query = new GetLedgerMismatchQuery();
         var emptyList = new List<MismatchRecord>();
 
         _mockAdminRepository.Setup(r => r.GetLedgerMismatchesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(emptyList);
 
-        // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
-        // Assert — trả về empty list (không phải null), 0 rows
         result.Should().NotBeNull();
         result.Should().BeEmpty();
     }

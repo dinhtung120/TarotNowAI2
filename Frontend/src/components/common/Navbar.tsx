@@ -1,21 +1,18 @@
 "use client";
 
-/**
- * Navbar — Thanh Điều Hướng Chính (Phiên bản Redesign)
- *
- * === CẢI TIẾN SO VỚI BẢN CŨ ===
- * 1. Thêm link "Readers" vào navigation
- * 2. Thêm Avatar Dropdown Menu (Profile, Wallet, History, Admin, Logout)
- * 3. Thêm link "Admin" cho user có role admin
- * 4. Notification bell placeholder (sẵn sàng cho Phase 4)
- * 5. Mobile hamburger menu
- * 6. Dùng design tokens từ globals.css thay vì hardcode colors
- *
- * === LOGIC HIỂN THỊ ===
- * - Ẩn hoàn toàn trên: Auth pages, Admin pages
- * - Hiển thị trên: Tất cả trang còn lại
- * - On Desktop: Full links + Avatar menu
- * - On Mobile: Logo + Icons + Hamburger
+/*
+ * ===================================================================
+ * COMPONENT: Navbar
+ * BỐI CẢNH (CONTEXT):
+ *   Thanh Điều Hướng Chính (Navigation Bar) ở trên cùng của màn hình.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Ẩn hoàn toàn trên các trang Auth (Login, Register...) và Admin.
+ *   - Desktop: Hiện menu tĩnh, Avatar Dropdown, WalletWidget.
+ *   - Thêm nút tắt "Admin" vào Menu cho những User có Role admin.
+ *   - Mobile: Thu gọn qua Hamburger Menu.
+ *   - Kiểm soát click ra ngoài (Click Outside) để tắt Menu Dropdown mượt mà.
+ * ===================================================================
  */
 
 import { Link, useRouter, usePathname } from "@/i18n/routing";

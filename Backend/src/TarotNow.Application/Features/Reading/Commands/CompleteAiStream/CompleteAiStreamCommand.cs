@@ -1,3 +1,15 @@
+/*
+ * ===================================================================
+ * FILE: CompleteAiStreamCommand.cs
+ * NAMESPACE: TarotNow.Application.Features.Reading.Commands.CompleteAiStream
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Gói Lệnh Khép Lại (Hoàn Tất Toán) Phiên Box Chat AI.
+ *   Xử lý việc phân xử Trừ Tiền (Consume Escrow) hay Hoàn Đầu Kính Tiền (Refund Escrow)
+ *   dựa vào việc AI trả lời Xuyên Suốt hay Gãy Kết Nối Giữa Dòng.
+ * ===================================================================
+ */
+
 using MediatR;
 using TarotNow.Domain.Enums;
 using TarotNow.Application.Interfaces;
@@ -10,54 +22,36 @@ namespace TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
 /// đảm bảo Controller chỉ đóng vai trò "thin" theo Clean Architecture.
 /// 
 /// Command này xử lý 3 tình huống:
-/// 1. Stream thành công (Completed) → Consume escrow + update state
-/// 2. Stream thất bại trước token đầu → Refund + quota rollback + update state
-/// 3. Stream thất bại sau token đầu:
-///    - Client disconnect → Consume escrow
-///    - Lỗi server/provider → Refund escrow
+/// 1. Stream thành công (Completed) → Tịch Thu Tiền Giam giữ (Consume escrow).
+/// 2. Stream thất bại trước khi AI mở miệng ngậm chữ (token đầu) → Trả lại tiền (Refund) + Trả quota.
+/// 3. Stream thất bại lúc đang nhả chữ lai rai:
+///    - Client ngắt mạng/rút dây mạng (Disconnect) → Vẫn móp túi trừ tiền (Consume escrow) chống bịa cớ chạy làng.
+///    - Lỗi Error 500 từ ChatGPT (Server/provider) → Tuyên Lỗi do web, Refund Tiền Cho Khách.
 /// </summary>
 public class CompleteAiStreamCommand : IRequest<bool>
 {
-    /// <summary>
-    /// ID của AiRequest record cần cập nhật
-    /// </summary>
+    /// <summary>Căn Cước của Record dòng AI chat log.</summary>
     public Guid AiRequestId { get; set; }
 
-    /// <summary>
-    /// ID của user sở hữu request
-    /// </summary>
+    /// <summary>Căn cước Của Kẻ Hao Tiền Nạp Card (UserId).</summary>
     public Guid UserId { get; set; }
 
-    /// <summary>
-    /// Trạng thái cuối cùng: completed, failed_before_first_token, failed_after_first_token
-    /// </summary>
+    /// <summary>Chỉ chấp nhận 3 Trạng thái Của Cái Dòng Sinh Ra Bằng Enum: completed, failed_before_first_token, failed_after_first_token.</summary>
     public string FinalStatus { get; set; } = null!;
 
-    /// <summary>
-    /// Lý do kết thúc (null nếu thành công)
-    /// </summary>
+    /// <summary>Lý do Màn Hình Tắt Điện (Báo lỗi 429 Too many request, hoặc Null nếu Lướt Êm Thru).</summary>
     public string? ErrorMessage { get; set; }
 
-    /// <summary>
-    /// Đánh dấu liệu client tự ngắt kết nối (disconnect).
-    /// Nếu true + có token → KHÔNG auto-refund (spec requirement).
-    /// </summary>
+    /// <summary>Cờ Gạt Tố Cáo: Client bứng dây mạng tự nguyện (Disconnect) hay Server bưng bít lỗi?</summary>
     public bool IsClientDisconnect { get; set; }
 
-    /// <summary>
-    /// Timestamp nhận token đầu tiên từ AI Provider (để track latency)
-    /// </summary>
+    /// <summary>Camera Giám Sát Tốc Độ: Lưu lại ms Cỡ chừng nào AI nhả chữ đầu tiên (Track Latency UX).</summary>
     public DateTimeOffset? FirstTokenAt { get; set; }
 }
 
 /// <summary>
-/// Handler xử lý hoàn tất AI Stream — nơi tập trung toàn bộ logic:
-/// - State machine transitions (status, timestamps)
-/// - Escrow consume (khi thành công)
-/// - Escrow refund (khi thất bại)
-/// - AI quota rollback (khi thất bại)
-/// 
-/// Trước đây logic này nằm trong AiController (vi phạm CA), nay chuyển về đúng tầng Application.
+/// Người Thực Thi Đóng Đóng Dấu Kết Án Cuối Cùng Của ChatAI.
+/// Trừ Tiền (Consume), Trả Tiền (Refund) Gọi DB tại Đây.
 /// </summary>
 public class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAiStreamCommand, bool>
 {
@@ -79,29 +73,33 @@ public class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAiStreamCo
     {
         var processed = false;
 
+        // Bắt Khung Transaction 2 Mảng: Update Bảng AI + Trừ Tiền Bảng Tài Khoản Cùng Lúc. Rớt mạng phải Hoàn nguyên Rollback cả 2.
         await _transactionCoordinator.ExecuteAsync(async transactionCt =>
         {
             var record = await _aiRequestRepo.GetByIdAsync(request.AiRequestId, transactionCt);
-            if (record == null) return;
+            if (record == null) return; // Ma Trơi -> Lơ đi luôn.
 
             var now = DateTimeOffset.UtcNow;
             record.Status = request.FinalStatus;
             record.FinishReason = NormalizeFinishReason(request.ErrorMessage);
             record.UpdatedAt = now;
 
+            // Chúc Mừng Sinh Nhật
             if (request.FinalStatus == AiRequestStatus.Completed)
             {
                 record.CompletionMarkerAt = now;
             }
 
+            // Đồng Hồ Đo Latency Hoạt Động Cực Nhọc.
             if (request.FirstTokenAt.HasValue)
             {
                 record.FirstTokenAt = request.FirstTokenAt;
             }
 
+            // Tòa Án Kinh Tế (Economics Escrow Logic)
             switch (request.FinalStatus)
             {
-                case AiRequestStatus.Completed:
+                case AiRequestStatus.Completed: // Suôn Sẻ.
                     if (record.ChargeDiamond > 0)
                     {
                         await _walletRepo.ConsumeAsync(
@@ -110,15 +108,16 @@ public class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAiStreamCo
                             referenceSource: "AiRequestCompletedConsume",
                             referenceId: record.Id.ToString(),
                             description: "Diamond consumed for completed AI Stream",
-                            idempotencyKey: $"consume_{record.Id}",
+                            idempotencyKey: $"consume_{record.Id}", // Khóa Đúp Idempotent (Chống Lỗi Click 2 Lần)
                             cancellationToken: transactionCt
                         );
                     }
                     break;
 
-                case AiRequestStatus.FailedBeforeFirstToken:
+                case AiRequestStatus.FailedBeforeFirstToken: // Chưa Ra Chữ Nào, Thằng ChatGPT Giãy Đành Đạch.
                     if (record.ChargeDiamond > 0)
                     {
+                        // Hoàn Tiền X100%.
                         await _walletRepo.RefundAsync(
                             userId: request.UserId,
                             amount: record.ChargeDiamond,
@@ -131,10 +130,10 @@ public class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAiStreamCo
                     }
                     break;
 
-                case AiRequestStatus.FailedAfterFirstToken:
+                case AiRequestStatus.FailedAfterFirstToken: // Lạy Thánh, Ra Chữ Rồi Mà Nghẽn Cơ Mạch Đứt Chừng.
                     if (record.ChargeDiamond > 0)
                     {
-                        if (request.IsClientDisconnect)
+                        if (request.IsClientDisconnect) // Do Khách Tắt Trình Duyệt Ngang Bất Ngờ (Anti Cheating Xù Tiền).
                         {
                             await _walletRepo.ConsumeAsync(
                                 userId: request.UserId,
@@ -146,8 +145,9 @@ public class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAiStreamCo
                                 cancellationToken: transactionCt
                             );
                         }
-                        else
+                        else 
                         {
+                            // Do Thằng Đô Ra Ê Mon ChatGPT Hư Thật Á -> Kính Lão Đắc Thọ, Thối Tiền Refund Cho Khách VIP.
                             await _walletRepo.RefundAsync(
                                 userId: request.UserId,
                                 amount: record.ChargeDiamond,
@@ -165,6 +165,7 @@ public class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAiStreamCo
                     return;
             }
 
+            // Đóng Hồ Sơ Cất Kho.
             await _aiRequestRepo.UpdateAsync(record, transactionCt);
             processed = true;
         }, cancellationToken);
@@ -172,6 +173,7 @@ public class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAiStreamCo
         return processed;
     }
 
+    // Dao Tẩu Rác Của Thằng ChatGPT Trả Về Lấy 50 Chữ Đầu, Coi Nó Trả Dài Choán Bảng SQL Của Mình
     private static string? NormalizeFinishReason(string? finishReason)
     {
         if (string.IsNullOrWhiteSpace(finishReason))

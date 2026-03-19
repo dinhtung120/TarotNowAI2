@@ -1,3 +1,17 @@
+/*
+ * ===================================================================
+ * COMPONENT: AiInterpretationStream
+ * BỐI CẢNH (CONTEXT):
+ *   Component chính đảm nhiệm việc stream kết quả giải nghĩa Tarot từ AI 
+ *   qua Server-Sent Events (SSE). Nằm ở bên phải của màn hình Session Detail.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Lắng nghe sự kiện SSE từ backend `.NET` kết nối OpenAI.
+ *   - Tích hợp Text-streaming vào Markdown (ReactMarkdown) ra luồng văn bản thực tế.
+ *   - Cho phép User gõ câu hỏi Follow-up (Hỏi thêm) và trả phí bằng thẻ (Free/Diamond) 
+ *     tùy theo Cấp độ thẻ bài (Major Arcana, Minors...) và giới hạn Follow-up Hard-cap (Tối đa 5 câu).
+ * ===================================================================
+ */
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";

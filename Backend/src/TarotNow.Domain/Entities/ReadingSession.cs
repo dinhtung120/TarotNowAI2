@@ -1,51 +1,65 @@
+/*
+ * ===================================================================
+ * FILE: ReadingSession.cs
+ * NAMESPACE: TarotNow.Domain.Entities
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Entity Đóng Kén Một Lượt Rút Bài (ReadingSession).
+ *   Sử Dụng Ở SQL Để Căn Xem Phiên Chơi Này Được Rút Ngày Nào Tốn Xu Nào.
+ * ===================================================================
+ */
+
 using TarotNow.Domain.Enums;
+using System;
 
 namespace TarotNow.Domain.Entities;
 
 /// <summary>
-/// Domain Entity đại diện cho một phiên đọc bài Tarot.
-/// Mỗi phiên lưu trữ: loại trải bài, câu hỏi tùy chọn, các lá bài đã rút,
-/// loại tiền tệ sử dụng, và số tiền đã trừ.
-/// Thiết kế bổ sung các trường mà spec Phase 1.3 yêu cầu nhưng entity ban đầu thiếu.
+/// Domain Entity đại diện cho một phiên Khách Đập Bàn Hét Đòi Rút Lá Tarot.
+/// Lưu ý: Bản ghi này ở SQL Postgres - Tập trung theo dõi Lượng Tiền Trừ (AmountCharged) 
+/// Phân mảnh MongoDB Mới Là Đứa Lưu Trữ Lời Giải Thích Dài Cuộn Theo.
 /// </summary>
 public class ReadingSession
 {
+    // Bút Mã Định Danh Của Dòng Phiên Bói Tán.
     public string Id { get; private set; } = string.Empty;
+    // Khách Hàng Nào Chơi Cờ Bạc Phiên Này (Trỏ Lên GUID User).
     public string UserId { get; private set; } = string.Empty;
+    
+    // Loại Lịch Bày Bố Quẻ Tarot Nổi Tiếng Nào Đang Xài (Cross, Daily Rút Mảnh, Love 3 Lá...)
     public string SpreadType { get; private set; } = string.Empty;
 
     /// <summary>
-    /// Câu hỏi tùy chọn mà người dùng nhập khi trải bài (nullable vì optional).
-    /// Spec Phase 1.3: "Câu hỏi tùy chọn (optional question)"
+    /// Gửi Thông Điệp Ước Nguyện Gì Của Khách Muốn Thay Đổi Tới Vũ Trụ Trong Đầu Lúc Rút.
+    /// Phase 1.3: "Giờ em thèm lấy thằng đại gia kia làm Chồng Nhờ Cô Giải Dùm Lá" (Question Tùy Chọn).
     /// </summary>
     public string? Question { get; private set; }
 
-    // JSON array chứa index các lá bài đã rút. Ex: "[12, 45, 71]"
+    // Kho Mảng Array Text: Mấy Lá Nào Được Chọt Nằm Ở Slot Nào Đựng Bỏ Vô Mảng (VD Rút Được Lá Mã [20, 11, 00]).
     public string? CardsDrawn { get; private set; }
 
     /// <summary>
-    /// Loại tiền đã sử dụng thanh toán cho phiên này (Gold hoặc Diamond).
-    /// Dùng để tính EXP: Gold ít hơn Diamond theo spec Phase 1.3.
+    /// Đã Dùng Kim Cương Hay Vàng Để Ném Trả (Ai Nạp Đô Dùng Kim Cương Sang Xịn Trừ Đi Có Cấp EXP Gấp Bội Hơn Môn Đồ Chơi Free Cày Vàng Ra Từ Nhiệm Vụ Quảng Cáo).
     /// </summary>
     public string? CurrencyUsed { get; private set; }
 
     /// <summary>
-    /// Số tiền thực tế đã trừ cho phiên đọc bài này.
+    /// Bọc Số Liền Chốt Giá Bơm Phí Xong - Trừ 5 Hoặc 10 Nhát Mất Vĩnh Viễn Túi Ví Khách.
     /// </summary>
     public long AmountCharged { get; private set; }
 
-    // Status
+    // Đánh Dấu Phiên Giao Cảm Bài Này Đã Đọc Dịch Thấy Ánh Sáng Ra Text AI Thành Công Hay Mới Chỉ Treo Trừ Tiền DB Ở SQL Mới Gửi Bàn Lên AI Nơi Trần Tục (False = Đang Vẫn Lộn Cầu Stream Bị Cấn Lag Tạch Mất Rụng Đừng Có In Ra Cho Khách).
     public bool IsCompleted { get; private set; }
 
-    // Timestamp
     public DateTime CreatedAt { get; private set; }
+    // Lúc Gập Sổ Bói Chấm Dứt Xong Phim Coi.
     public DateTime? CompletedAt { get; private set; }
 
-    // Dành cho EF Core
+    // Dành cho Chiêu Gọi Của Máy Đọc Database Lưng Sau EF Core Cắn Dữ Liệu SQL Nên Gốc Cần Bắt Để Ẩn.
     protected ReadingSession() { }
 
     /// <summary>
-    /// Constructor chính khi khởi tạo phiên mới.
+    /// Thuật Dọn Bàn Giao Cảo Mở Quẻ Mớ Căng Bắt Đầu: Chui Vào Là Chỉ Tạo Đóng Id Chưa Rút Lá Bơm Bọc Khách (Trừ Tiền Chưa Xong).
     /// </summary>
     public ReadingSession(string userId, string spreadType, string? question = null, string? currencyUsed = null, long amountCharged = 0)
     {
@@ -59,6 +73,7 @@ public class ReadingSession
         CreatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>Cầm Chổi Lên Khẩy Lá Xong Hô Hồi Quẻ (Lấy DB Lên).</summary>
     public static ReadingSession Rehydrate(
         string id,
         string userId,
@@ -81,6 +96,7 @@ public class ReadingSession
         };
     }
 
+    /// <summary>Chốt Sổ Cuộn Tranh Lá Ấn Triện AI Trả Về Khách.</summary>
     public void CompleteSession(string cardsDrawnJson)
     {
         CardsDrawn = cardsDrawnJson;

@@ -1,3 +1,15 @@
+/*
+ * ===================================================================
+ * FILE: page.tsx (Trang Chủ Astral Premium)
+ * BỐI CẢNH (CONTEXT):
+ *   Landing page tĩnh hiển thị giới thiệu, thông số và Reader nổi bật.
+ * 
+ * RENDERING (SERVER COMPONENT):
+ *   Render nội dung từ Server với cấu trúc HTML tĩnh có sẵn SEO. 
+ *   Sử dụng Suspense để loading danh sách Reader song song mà không khóa
+ *   tiến trình render nội dung phía trên.
+ * ===================================================================
+ */
 import { Link } from "@/i18n/routing";
 import { Star, ChevronRight, ShieldCheck, Flame, Compass, Zap, Users, ArrowUpRight, Award, LucideIcon, Gem, Sparkles
 } from "lucide-react";

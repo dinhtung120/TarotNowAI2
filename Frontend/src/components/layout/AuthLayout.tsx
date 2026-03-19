@@ -1,25 +1,18 @@
 "use client";
 
-/**
- * AuthLayout — Layout wrapper cho các trang xác thực.
- *
- * Trang áp dụng: Login, Register, Verify Email, Forgot Password, Reset Password.
- *
- * === VẤN ĐỀ TRƯỚC ĐÂY ===
- * Mỗi trang Auth tự viết layout riêng:
- * - Login: `bg-gradient-to-br from-[var(--purple-accent)] via-[var(--purple-accent)] to-[color:var(--c-61-49-80-55)]`
- * - Register: Copy tương tự → code lặp
- * - Forgot Password: Lại copy → 5 files cùng pattern
- *
- * === GIẢI PHÁP ===
- * Component AuthLayout bọc ngoài form content, cung cấp:
- * 1. Background lunar-bloom dịu nhẹ
- * 2. Decorative orbs mờ nhẹ để giữ chiều sâu
- * 3. Logo ở trên
- * 4. Title + subtitle
- * 5. Center-aligned pearl card cho form content
- *
- * Trang Auth KHÔNG hiển thị Navbar hoặc Footer (đã config ở Navbar.tsx).
+/*
+ * ===================================================================
+ * COMPONENT: AuthLayout
+ * BỐI CẢNH (CONTEXT):
+ *   Layout bọc ngoài (Wrapper) dành riêng cho nhóm trang Xác thực (Authentication)
+ *   như: Login, Register, Forgot Password, Verify Email.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Cung cấp giao diện nền tối (Void Background) kết hợp với các đốm sáng mờ 
+ *     (Decorative Orbs) tạo cảm giác tĩnh lặng, tập trung.
+ *   - Canh giữa một khối Glassmorphism Card để chứa Form đăng nhập/đăng ký nhập vào từ `children`.
+ *   - Không render Navbar hay Footer để người dùng tập trung hoàn thành flow Xác thực.
+ * ===================================================================
  */
 
 import { type ReactNode } from "react";

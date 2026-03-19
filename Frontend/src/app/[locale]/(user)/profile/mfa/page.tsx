@@ -1,3 +1,16 @@
+/*
+ * ===================================================================
+ * FILE: (user)/profile/mfa/page.tsx (Cài đặt Bảo Mật 2 Lớp)
+ * BỐI CẢNH (CONTEXT):
+ *   Trang quản lý tính năng xác thực 2 bước (MFA/2FA) bằng Authenticator App.
+ * 
+ * TÍNH NĂNG CHÍNH:
+ *   - Kiểm tra trạng thái MFA (Đã bật/Chưa bật).
+ *   - Bước 1: Fetch secret key & URI (`setupMfa`) -> vẽ QR Code bằng `next-qrcode`.
+ *   - Bước 2: Hiển thị Backup Codes để User lưu trữ phòng hờ.
+ *   - Bước 3: User nhập mã OTP 6 số để xác nhận (`verifyMfa`).
+ * ===================================================================
+ */
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';

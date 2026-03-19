@@ -1,3 +1,18 @@
+/*
+ * ===================================================================
+ * FILE: authActions.ts
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Quản lý toàn bộ quy trình Xác Thực & Cấp Quyền (Authentication/Authorization)
+ *   bao gồm Login, Register, Logout, Reset Password, OTP.
+ *
+ * CƠ CHẾ HOẠT ĐỘNG:
+ *   - Nhận yêu cầu từ UI Components (Client), gửi request an toàn qua Backend.
+ *   - Bóc xuất Header 'set-cookie' từ Backend trả về, đưa thẻ 'refreshToken'
+ *     thành HttpOnly Cookie trong hệ thống Router Next.js (bảo vệ khỏi Javascript trộm cắp).
+ *   - Tự động làm mới phiên đăng nhập (Refresh Token) êm ru không gián đoạn trải nghiệm.
+ * ===================================================================
+ */
 'use server';
 
 import { cookies } from 'next/headers';

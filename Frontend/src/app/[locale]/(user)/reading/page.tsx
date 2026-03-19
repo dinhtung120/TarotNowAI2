@@ -1,3 +1,16 @@
+/*
+ * ===================================================================
+ * FILE: reading/page.tsx (Khởi Tạo Phiên Trải Bài)
+ * BỐI CẢNH (CONTEXT):
+ *   Trang cho phép User thiết lập phiên xem bài Tarot với AI.
+ * 
+ * FLOW GIAO DỊCH & STATE:
+ *   - Lựa chọn loại trải bài (1 lá, 3 lá, 5 lá, 10 lá) và nhập nội dung câu hỏi.
+ *   - Validation Zod giới hạn ký tự câu hỏi.
+ *   - Gọi API `initReadingSession` để thanh toán hóa đơn (trừ Gold/Diamond từ Wallet).
+ *   - Lưu question và metadata tạm thời vào `sessionStorage` rồi đẩy sang `/reading/session/[id]`.
+ * ===================================================================
+ */
 "use client";
 
 import { useMemo, useState } from "react";
