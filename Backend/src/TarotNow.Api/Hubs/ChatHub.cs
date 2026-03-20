@@ -48,11 +48,11 @@ using System.Security.Claims;             // Đọc JWT claims
 // Import các Command cho chat
 using TarotNow.Application.Features.Chat.Commands.MarkMessagesRead;
 using TarotNow.Application.Features.Chat.Commands.SendMessage;
+using TarotNow.Application.Features.Chat.Queries.ValidateConversationAccess;
 
 // Import exceptions và interfaces
 using TarotNow.Application.Exceptions;   // BadRequestException, NotFoundException
 using TarotNow.Application.Common;       // Các class dùng chung
-using TarotNow.Application.Interfaces;   // IConversationRepository
 
 namespace TarotNow.Api.Hubs;
 
@@ -70,22 +70,17 @@ public class ChatHub : Hub
 {
     /*
      * _mediator: gửi commands để lưu tin nhắn vào DB.
-     * _conversationRepository: truy cập trực tiếp MongoDB để kiểm tra conversation.
-     *   ⚠️ Inject repository ở đây (thay vì qua MediatR) vì cần kiểm tra quyền TRƯỚC.
-     *   Nếu qua MediatR, phải tạo thêm Query riêng chỉ cho mục đích kiểm tra → dư thừa.
+     *   Đồng thời dùng query ValidateConversationAccess để kiểm tra quyền join conversation.
      * _logger: ghi log kết nối, gửi tin, lỗi.
      */
     private readonly IMediator _mediator;
-    private readonly IConversationRepository _conversationRepository;
     private readonly ILogger<ChatHub> _logger;
 
     public ChatHub(
         IMediator mediator,
-        IConversationRepository conversationRepository,
         ILogger<ChatHub> logger)
     {
         _mediator = mediator;
-        _conversationRepository = conversationRepository;
         _logger = logger;
     }
 
@@ -169,7 +164,7 @@ public class ChatHub : Hub
         var userId = GetUserId();
 
         // Kiểm tra đã xác thực
-        if (string.IsNullOrEmpty(userId))
+        if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out var userGuid))
         {
             // Gửi event "Error" chỉ cho client gọi (Caller)
             await Clients.Caller.SendAsync("Error", "Unauthorized");
@@ -183,21 +178,19 @@ public class ChatHub : Hub
             return;
         }
 
-        // Kiểm tra conversation tồn tại trong MongoDB
-        var conversation = await _conversationRepository.GetByIdAsync(conversationId);
-        if (conversation == null)
+        var accessStatus = await _mediator.Send(new ValidateConversationAccessQuery
+        {
+            ConversationId = conversationId,
+            RequesterId = userGuid
+        });
+
+        if (accessStatus == ConversationAccessStatus.NotFound)
         {
             await Clients.Caller.SendAsync("Error", "Conversation not found");
             return;
         }
 
-        /*
-         * Kiểm tra quyền: user phải là thành viên của conversation.
-         * conversation.UserId: ID user tạo conversation
-         * conversation.ReaderId: ID reader trong conversation
-         * Nếu userId không thuộc một trong hai → từ chối
-         */
-        if (conversation.UserId != userId && conversation.ReaderId != userId)
+        if (accessStatus == ConversationAccessStatus.Forbidden)
         {
             await Clients.Caller.SendAsync("Error", "Forbidden");
             return;

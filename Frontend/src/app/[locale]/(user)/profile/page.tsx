@@ -57,7 +57,8 @@ export default function ProfilePage() {
  const t = useTranslations("Profile");
  const tCommon = useTranslations("Common");
  const router = useRouter();
- const { isAuthenticated, user } = useAuthStore();
+ const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+ const user = useAuthStore((state) => state.user);
 
  const [profileData, setProfileData] = useState<ProfileResponse | null>(null);
  const [loading, setLoading] = useState(true);

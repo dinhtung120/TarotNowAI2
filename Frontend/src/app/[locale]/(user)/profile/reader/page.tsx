@@ -26,7 +26,8 @@ import { SectionHeader, GlassCard, Button } from '@/components/ui';
 export default function ReaderSettingsPage() {
  const router = useRouter();
  const t = useTranslations("Profile");
- const { isAuthenticated, user } = useAuthStore();
+ const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+ const user = useAuthStore((state) => state.user);
  const [loading, setLoading] = useState(true);
  const [saving, setSaving] = useState(false);
  // States cho form

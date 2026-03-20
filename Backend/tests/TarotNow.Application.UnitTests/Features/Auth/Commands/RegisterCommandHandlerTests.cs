@@ -3,10 +3,10 @@
  * MỤC ĐÍCH: Unit test cho handler đăng ký tài khoản (Register).
  *
  *   CÁC TEST CASE:
- *   1. Handle_ShouldThrowDomainException_WhenEmailAlreadyExists:
- *      → Email đã tồn tại → DomainException EMAIL_ALREADY_EXISTS
- *   2. Handle_ShouldThrowDomainException_WhenUsernameAlreadyExists:
- *      → Username đã tồn tại → DomainException USERNAME_ALREADY_EXISTS
+ *   1. Handle_ShouldThrowBusinessRuleException_WhenEmailAlreadyExists:
+ *      → Email đã tồn tại → BusinessRuleException EMAIL_ALREADY_EXISTS
+ *   2. Handle_ShouldThrowBusinessRuleException_WhenUsernameAlreadyExists:
+ *      → Username đã tồn tại → BusinessRuleException USERNAME_ALREADY_EXISTS
  *   3. Handle_ShouldCreateUserAndReturnUserId_WhenDataIsValid:
  *      → Happy path: tạo User + hash password + status=Pending → trả userId
  *
@@ -19,8 +19,8 @@
 using Moq;
 using TarotNow.Application.Features.Auth.Commands.Register;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Exceptions;
 using TarotNow.Domain.Entities;
-using TarotNow.Domain.Exceptions;
 
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
@@ -42,25 +42,25 @@ public class RegisterCommandHandlerTests
 
     /// <summary>Email đã tồn tại → EMAIL_ALREADY_EXISTS.</summary>
     [Fact]
-    public async Task Handle_ShouldThrowDomainException_WhenEmailAlreadyExists()
+    public async Task Handle_ShouldThrowBusinessRuleException_WhenEmailAlreadyExists()
     {
         var command = new RegisterCommand { Email = "test@example.com" };
         _mockUserRepository.Setup(r => r.ExistsByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        var exception = await Assert.ThrowsAsync<DomainException>(() => _handler.Handle(command, CancellationToken.None));
+        var exception = await Assert.ThrowsAsync<BusinessRuleException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Equal("EMAIL_ALREADY_EXISTS", exception.ErrorCode);
     }
 
     /// <summary>Username đã tồn tại → USERNAME_ALREADY_EXISTS.</summary>
     [Fact]
-    public async Task Handle_ShouldThrowDomainException_WhenUsernameAlreadyExists()
+    public async Task Handle_ShouldThrowBusinessRuleException_WhenUsernameAlreadyExists()
     {
         var command = new RegisterCommand { Username = "testuser" };
         _mockUserRepository.Setup(r => r.ExistsByUsernameAsync(command.Username, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        var exception = await Assert.ThrowsAsync<DomainException>(() => _handler.Handle(command, CancellationToken.None));
+        var exception = await Assert.ThrowsAsync<BusinessRuleException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Equal("USERNAME_ALREADY_EXISTS", exception.ErrorCode);
     }
 

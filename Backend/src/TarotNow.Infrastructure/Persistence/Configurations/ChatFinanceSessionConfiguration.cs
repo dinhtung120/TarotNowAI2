@@ -21,6 +21,36 @@ public class ChatFinanceSessionConfiguration : IEntityTypeConfiguration<ChatFina
 {
     public void Configure(EntityTypeBuilder<ChatFinanceSession> builder)
     {
+        builder.ToTable("chat_finance_sessions");
+
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.Id)
+            .HasColumnName("id");
+
+        builder.Property(x => x.ConversationRef)
+            .HasColumnName("conversation_ref")
+            .IsRequired();
+
+        builder.Property(x => x.UserId)
+            .HasColumnName("user_id");
+
+        builder.Property(x => x.ReaderId)
+            .HasColumnName("reader_id");
+
+        builder.Property(x => x.Status)
+            .HasColumnName("status")
+            .IsRequired();
+
+        builder.Property(x => x.TotalFrozen)
+            .HasColumnName("total_frozen");
+
+        builder.Property(x => x.CreatedAt)
+            .HasColumnName("created_at");
+
+        builder.Property(x => x.UpdatedAt)
+            .HasColumnName("updated_at");
+
         // Chấn Lưới Index Tránh Gửi Mép Chat Gọi Bug Click 2 Lần Chát Giống Nhanh API Rẽ Đẻ Ra 2 Cái Ví Giữ Tiền Khác Nhau Đụng Mâu Thuẫn DB Cả Trận.
         builder.HasIndex(x => x.ConversationRef)
             .HasDatabaseName("ix_chat_finance_sessions_conversation_ref")

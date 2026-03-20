@@ -10,7 +10,6 @@
  */
 
 using MediatR;
-using Microsoft.Extensions.Configuration;
 using TarotNow.Application.Exceptions;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
@@ -23,18 +22,18 @@ public class InitReadingSessionCommandHandler : IRequestHandler<InitReadingSessi
     private readonly IReadingSessionRepository _readingRepo;
     private readonly IUserRepository _userRepo;
     private readonly IRngService _rngService;
-    private readonly IConfiguration _configuration;
+    private readonly ISystemConfigSettings _systemConfigSettings;
 
     public InitReadingSessionCommandHandler(
         IReadingSessionRepository readingRepo, 
         IUserRepository userRepo,
         IRngService rngService,
-        IConfiguration configuration)
+        ISystemConfigSettings systemConfigSettings)
     {
         _readingRepo = readingRepo;
         _userRepo = userRepo;
         _rngService = rngService;
-        _configuration = configuration;
+        _systemConfigSettings = systemConfigSettings;
     }
 
     public async Task<InitReadingSessionResult> Handle(InitReadingSessionCommand request, CancellationToken cancellationToken)
@@ -60,16 +59,16 @@ public class InitReadingSessionCommandHandler : IRequestHandler<InitReadingSessi
         else if (request.SpreadType == SpreadType.Spread3Cards)
         {
             // Trải 3 Lá Chết Tiền Vàng (50 Cắc)
-            costGold = ResolveCost("Spread3Gold", 50);
+            costGold = _systemConfigSettings.Spread3GoldCost;
         }
         else if (request.SpreadType == SpreadType.Spread5Cards)
         {
-            costGold = ResolveCost("Spread5Gold", 100);
+            costGold = _systemConfigSettings.Spread5GoldCost;
         }
         else if (request.SpreadType == SpreadType.Spread10Cards)
         {
             // Trải Đại Thập Tự Giá Celtic Cross (10 Lá) - Đòi Máu Kim Cương. (Hệ VIP Trả Tiền Tươi Thóc Thật Trả Nạp Card).
-            costDiamond = ResolveCost("Spread10Diamond", 50);
+            costDiamond = _systemConfigSettings.Spread10DiamondCost;
         }
 
         // 3. Phân Mảnh Giới Thiệu Ngoại Tệ (Dùng cho Ghi Bill Auditing/Log Trạng Thái Xài Tiền).
@@ -113,14 +112,5 @@ public class InitReadingSessionCommandHandler : IRequestHandler<InitReadingSessi
             CostGold = costGold,
             CostDiamond = costDiamond
         };
-    }
-
-    /// <summary>
-    /// Hàm đọc Thông Số Từ Bảng Giá Khách Sạn (Appsettings.json Hệ Thống Quản Lý).
-    /// </summary>
-    private long ResolveCost(string key, long defaultValue)
-    {
-        var configured = _configuration[$"SystemConfig:Pricing:{key}"];
-        return long.TryParse(configured, out var value) && value >= 0 ? value : defaultValue;
     }
 }

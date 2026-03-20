@@ -26,7 +26,7 @@
  *   ValidationException       → 400 Bad Request (dữ liệu sai)
  *   BadRequestException       → 400 Bad Request (yêu cầu không hợp lệ)
  *   NotFoundException         → 404 Not Found (không tìm thấy)
- *   DomainException           → 422 Unprocessable (vi phạm quy tắc nghiệp vụ)
+ *   BusinessRuleException     → 422 Unprocessable (vi phạm quy tắc nghiệp vụ)
  *   ArgumentException         → 400 Bad Request (tham số sai)
  *   InvalidOperationException → 422 Unprocessable (thao tác không hợp lệ)
  *   UnauthorizedAccessException → 401 Unauthorized (chưa xác thực)
@@ -41,8 +41,7 @@ using Microsoft.AspNetCore.Mvc;          // ProblemDetails class
 using Microsoft.EntityFrameworkCore;     // DbUpdateException
 using Npgsql;                            // PostgresException, PostgresErrorCodes
 
-using TarotNow.Application.Exceptions;  // ValidationException, BadRequestException, NotFoundException
-using TarotNow.Domain.Exceptions;        // DomainException
+using TarotNow.Application.Exceptions;  // ValidationException, BadRequestException, NotFoundException, BusinessRuleException
 
 namespace TarotNow.Api.Middlewares;
 
@@ -140,14 +139,14 @@ public class GlobalExceptionHandler : IExceptionHandler
             // Do Domain layer bắn khi business rule bị vi phạm
             // Ví dụ: số dư không đủ, email đã tồn tại, vượt quota
             // 422 thay vì 400: dữ liệu đúng format nhưng vi phạm logic nghiệp vụ
-            case DomainException domainException:
+            case BusinessRuleException businessRuleException:
                 problemDetails.Status = StatusCodes.Status422UnprocessableEntity;
                 problemDetails.Title = "Domain Rule Violation";
                 problemDetails.Type = "https://datatracker.ietf.org/doc/html/rfc4918#section-11.2";
-                problemDetails.Detail = domainException.Message;
+                problemDetails.Detail = businessRuleException.Message;
                 // Thêm errorCode: để client xử lý theo từng loại lỗi cụ thể
                 // Ví dụ: "INSUFFICIENT_BALANCE", "EMAIL_EXISTS"
-                problemDetails.Extensions["errorCode"] = domainException.ErrorCode;
+                problemDetails.Extensions["errorCode"] = businessRuleException.ErrorCode;
                 break;
 
             // ===== THAM SỐ SAI (400 Bad Request) =====
@@ -266,4 +265,5 @@ public class GlobalExceptionHandler : IExceptionHandler
         return string.Equals(postgresException.ConstraintName, "ix_chat_finance_sessions_conversation_ref", StringComparison.OrdinalIgnoreCase)
                || string.Equals(postgresException.ConstraintName, "ix_chat_question_items_idempotency_key", StringComparison.OrdinalIgnoreCase);
     }
+
 }

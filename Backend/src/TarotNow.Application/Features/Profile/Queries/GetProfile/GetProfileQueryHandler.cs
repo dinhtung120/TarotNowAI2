@@ -10,7 +10,6 @@
  */
 
 using MediatR;
-using Microsoft.Extensions.Configuration;
 using System.Threading;
 using System.Threading.Tasks;
 using TarotNow.Application.Exceptions;
@@ -23,16 +22,16 @@ public class GetProfileQueryHandler : IRequestHandler<GetProfileQuery, ProfileRe
 {
     private readonly IUserRepository _userRepository;
     private readonly IUserConsentRepository _consentRepository;
-    private readonly IConfiguration _configuration;
+    private readonly ILegalVersionSettings _legalVersionSettings;
 
     public GetProfileQueryHandler(
         IUserRepository userRepository,
         IUserConsentRepository consentRepository,
-        IConfiguration configuration)
+        ILegalVersionSettings legalVersionSettings)
     {
         _userRepository = userRepository;
         _consentRepository = consentRepository;
-        _configuration = configuration;
+        _legalVersionSettings = legalVersionSettings;
     }
 
     public async Task<ProfileResponse> Handle(GetProfileQuery request, CancellationToken cancellationToken)
@@ -42,9 +41,9 @@ public class GetProfileQueryHandler : IRequestHandler<GetProfileQuery, ProfileRe
             ?? throw new NotFoundException($"User with Id {request.UserId} not found.");
 
         // 2. Chọt thẳng xuống Cấu Hình Lấy Rule Pháp Lý "Tắt Phụt Màn Hình" Version Hiện Tại.
-        var requiredTosVersion = _configuration["LegalSettings:TOSVersion"] ?? "1.0";
-        var requiredPrivacyVersion = _configuration["LegalSettings:PrivacyVersion"] ?? "1.0";
-        var requiredAiDisclaimerVersion = _configuration["LegalSettings:AiDisclaimerVersion"] ?? "1.0";
+        var requiredTosVersion = _legalVersionSettings.TOSVersion;
+        var requiredPrivacyVersion = _legalVersionSettings.PrivacyVersion;
+        var requiredAiDisclaimerVersion = _legalVersionSettings.AiDisclaimerVersion;
 
         // Móc toàn bộ Giấy tờ đã kê khai ra đối chuẩn.
         var userConsents = await _consentRepository.GetUserConsentsAsync(request.UserId, cancellationToken);

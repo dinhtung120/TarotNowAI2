@@ -19,6 +19,7 @@ using TarotNow.Infrastructure.Persistence.Repositories;
 using TarotNow.Infrastructure.Security;
 using TarotNow.Infrastructure.Services;
 using TarotNow.Infrastructure.Services.Ai;
+using TarotNow.Infrastructure.Services.Configuration;
 using TarotNow.Infrastructure.Repositories;
 using TarotNow.Infrastructure.BackgroundJobs;
 using System;
@@ -112,10 +113,14 @@ public static class DependencyInjection
         // ======================================================================
         services.AddSingleton<IPasswordHasher, Argon2idPasswordHasher>();
         services.AddSingleton<ITokenService, JwtTokenService>();
+        services.AddSingleton<IJwtTokenSettings, JwtTokenSettings>();
+        services.AddSingleton<ILegalVersionSettings, LegalVersionSettings>();
+        services.AddSingleton<ISystemConfigSettings, SystemConfigSettings>();
 
         services.AddScoped<IEmailSender, MockEmailSender>(); // Móc Đóng Giả Gửi Mail Nhanh Chống Tắt Bật Tịt Giữa Trưởng Tịt.
         services.AddSingleton<IRngService, RngService>(); // Trò Máy Trộn Thóc Shuffle Bóc Bài Vững Gacha Bọc Khung Ngẫu Nhiên Hút Tiêu. 
         services.AddSingleton<IPaymentGatewayService, HmacPaymentGatewayService>();
+        services.AddScoped<IDiagnosticsService, DiagnosticsService>();
 
         // Thêm HTTP Cắm Vào Chảo Dịch Gọi Stream Cho Vọng Bói Gọi Tóc OpenAI Khốn (Dựng HttpClient Bằng IHttpClientFactory Tiện Góp Thêm Đụng Trắng Socket Kiệt Vòi).
         services.AddHttpClient<IAiProvider, OpenAiProvider>();

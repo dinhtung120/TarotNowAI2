@@ -52,6 +52,16 @@ public class MockAiProvider : IAiProvider
     public string ProviderName => "Mock-OpenAI";
     public string ModelName => "gpt-mock-mini";
 
+    public Task LogRequestAsync(
+        Guid userId,
+        string? sessionId,
+        string? requestId,
+        int inputTokens,
+        int outputTokens,
+        int latencyMs,
+        string status,
+        string? errorCode = null) => Task.CompletedTask;
+
     /// <summary>
     /// Stream 7 chunks text với delay 50ms/chunk (giả lập network latency).
     /// IAsyncEnumerable: yield return từng chunk → controller push qua SSE.
@@ -80,6 +90,16 @@ public class ErrorMockAiProvider : IAiProvider
     public string ProviderName => "ErrorMock-OpenAI";
     public string ModelName => "gpt-error";
 
+    public Task LogRequestAsync(
+        Guid userId,
+        string? sessionId,
+        string? requestId,
+        int inputTokens,
+        int outputTokens,
+        int latencyMs,
+        string status,
+        string? errorCode = null) => Task.CompletedTask;
+
     public async IAsyncEnumerable<string> StreamChatAsync(string systemPrompt, string userPrompt, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
@@ -99,6 +119,16 @@ public class PartialMockAiProvider : IAiProvider
 {
     public string ProviderName => "PartialMock-OpenAI";
     public string ModelName => "gpt-partial";
+
+    public Task LogRequestAsync(
+        Guid userId,
+        string? sessionId,
+        string? requestId,
+        int inputTokens,
+        int outputTokens,
+        int latencyMs,
+        string status,
+        string? errorCode = null) => Task.CompletedTask;
 
     public async IAsyncEnumerable<string> StreamChatAsync(string systemPrompt, string userPrompt, [EnumeratorCancellation] CancellationToken cancellationToken)
     {

@@ -562,7 +562,7 @@ npm install next-intl zustand react-hook-form @hookform/resolvers zod react-hot-
 | 5 | `Domain/Enums/CurrencyType.cs` | Hằng số tiền: `gold`, `diamond` |
 | 6 | `Domain/Enums/TransactionType.cs` | Hằng số giao dịch: `deposit`, `spend`, `release`... |
 | 7 | `Domain/Constants/EconomyConstants.cs` | Hằng số kinh tế: giá AI, tỉ giá VNĐ→Diamond |
-| 8 | `Domain/Exceptions/DomainException.cs` | Exception base cho lỗi domain |
+| 8 | `Application/Exceptions/BusinessRuleException.cs` | Exception base cho lỗi nghiệp vụ Application (thay cho DomainException) |
 
 #### Bước 0.2 — Backend Infrastructure Layer (kết nối DB)
 

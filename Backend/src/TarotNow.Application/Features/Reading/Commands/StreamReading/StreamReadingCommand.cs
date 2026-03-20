@@ -12,7 +12,6 @@
  */
 
 using MediatR;
-using Microsoft.Extensions.Configuration;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
@@ -49,9 +48,6 @@ public class StreamReadingResult
     
     // Lưu ID Bắt Bóng Lỗi. Nếu Rớt Mạng Đụt Xương Cột Mốc Thời Gian -> Phạt / Hoàn Tiền Theo Nó.
     public required Guid AiRequestId { get; set; }
-    
-    // Hãng Phát Hành Model. OpenAi Hay Gemini...
-    public required IAiProvider Provider { get; set; }
 }
 
 /// <summary>
@@ -77,7 +73,7 @@ public class StreamReadingCommandHandler : IRequestHandler<StreamReadingCommand,
         IWalletRepository walletRepo,
         IAiProvider aiProvider,
         ICacheService cacheService,
-        IConfiguration configuration)
+        ISystemConfigSettings systemConfigSettings)
     {
         _readingRepo = readingRepo;
         _aiRequestRepo = aiRequestRepo;
@@ -87,9 +83,9 @@ public class StreamReadingCommandHandler : IRequestHandler<StreamReadingCommand,
         _pricingService = new FollowupPricingService(); // Lãnh sự Định Giá Theo Lịch Trình (Slot free -> Tier X).
 
         // Xin Giấy Phép Cho Từng Loại Quota (Hạn Mức). Lấy Từ appsettings.json
-        _dailyAiQuota = ResolvePositiveInt(configuration["SystemConfig:DailyAiQuota"], 3); // Cả ngày hỏi mấy lần.
-        _inFlightAiCap = ResolvePositiveInt(configuration["SystemConfig:InFlightAiCap"], 3); // Lâu la Đang Treo (Spam Multi-Click).
-        _readingRateLimitSeconds = ResolvePositiveInt(configuration["SystemConfig:ReadingRateLimitSeconds"], 30); // Ép Không Quá 30 Giây Ấn 1 Lượt.
+        _dailyAiQuota = systemConfigSettings.DailyAiQuota;
+        _inFlightAiCap = systemConfigSettings.InFlightAiCap;
+        _readingRateLimitSeconds = systemConfigSettings.ReadingRateLimitSeconds;
     }
 
     public async Task<StreamReadingResult> Handle(StreamReadingCommand request, CancellationToken cancellationToken)
@@ -200,14 +196,7 @@ public class StreamReadingCommandHandler : IRequestHandler<StreamReadingCommand,
         return new StreamReadingResult
         {
             Stream = asyncStream,
-            AiRequestId = aiRequest.Id,
-            Provider = _aiProvider
+            AiRequestId = aiRequest.Id
         };
-    }
-
-    // Tiện ích Chống Đứt Gánh Kiểu Chữ Do Lỗi Cột Config String.
-    private static int ResolvePositiveInt(string? configuredValue, int fallback)
-    {
-        return int.TryParse(configuredValue, out var parsed) && parsed > 0 ? parsed : fallback;
     }
 }

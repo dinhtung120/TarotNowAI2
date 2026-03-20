@@ -17,7 +17,6 @@
 
 using MediatR;
 using TarotNow.Application.Exceptions;
-using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -29,14 +28,14 @@ namespace TarotNow.Application.Features.Legal.Queries.CheckConsent;
 public class CheckConsentQueryHandler : IRequestHandler<CheckConsentQuery, CheckConsentResponse>
 {
     private readonly IUserConsentRepository _consentRepository;
-    
-    // IConfiguration giúp đọc biến Môi Trường chứa các Version Luật mới nhất.
-    private readonly IConfiguration _configuration;
+    private readonly ILegalVersionSettings _legalVersionSettings;
 
-    public CheckConsentQueryHandler(IUserConsentRepository consentRepository, IConfiguration configuration)
+    public CheckConsentQueryHandler(
+        IUserConsentRepository consentRepository,
+        ILegalVersionSettings legalVersionSettings)
     {
         _consentRepository = consentRepository;
-        _configuration = configuration;
+        _legalVersionSettings = legalVersionSettings;
     }
 
     public async Task<CheckConsentResponse> Handle(CheckConsentQuery request, CancellationToken cancellationToken)
@@ -109,9 +108,9 @@ public class CheckConsentQueryHandler : IRequestHandler<CheckConsentQuery, Check
     {
         return documentType switch
         {
-            "TOS" => _configuration["LegalSettings:TOSVersion"] ?? "1.0",
-            "PrivacyPolicy" => _configuration["LegalSettings:PrivacyVersion"] ?? "1.0",
-            "AiDisclaimer" => _configuration["LegalSettings:AiDisclaimerVersion"] ?? "1.0",
+            "TOS" => _legalVersionSettings.TOSVersion,
+            "PrivacyPolicy" => _legalVersionSettings.PrivacyVersion,
+            "AiDisclaimer" => _legalVersionSettings.AiDisclaimerVersion,
             _ => throw new BadRequestException("DocumentType không hợp lệ.")
         };
     }

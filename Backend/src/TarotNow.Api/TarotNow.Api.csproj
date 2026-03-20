@@ -19,7 +19,6 @@
   <ItemGroup>
     <ProjectReference Include="..\TarotNow.Application\TarotNow.Application.csproj" />
     <ProjectReference Include="..\TarotNow.Infrastructure\TarotNow.Infrastructure.csproj" />
-    <ProjectReference Include="..\TarotNow.Domain\TarotNow.Domain.csproj" />
   </ItemGroup>
 
 </Project>

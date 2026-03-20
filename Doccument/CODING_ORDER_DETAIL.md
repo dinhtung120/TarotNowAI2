@@ -89,13 +89,13 @@ Nội dung cần code:
 Phụ thuộc: Không
 ```
 
-#### File 7: `Domain/Exceptions/DomainException.cs`
+#### File 7: `Application/Exceptions/BusinessRuleException.cs`
 
 ```
-Mục đích: Exception base khi vi phạm quy tắc nghiệp vụ
-Nội dung: class DomainException kế thừa Exception
+Mục đích: Exception base khi vi phạm quy tắc nghiệp vụ (thay thế cho DomainException cũ)
+Nội dung: class BusinessRuleException kế thừa Exception
   - Constructor nhận message
-  - Dùng khi: số dư không đủ, trùng email, v.v.
+  - Dùng khi: số dư không đủ, mã OTP sai, v.v.
 Phụ thuộc: Không
 ```
 
@@ -104,6 +104,7 @@ Phụ thuộc: Không
 ### BƯỚC 0.2 — Domain Entities (Cấu trúc dữ liệu)
 
 > **Tại sao code Entity sau Enum?** Entity dùng Enum để gán giá trị mặc định (VD: `Role = UserRole.User`).
+> ⚠️ **Quy Tắc Clean Architecture (Sprint 3):** KHÔNG dùng Data Annotations (`[Table]`, `[Column]`, `[Key]`) trong project Domain. Toàn bộ mapping Database phải viết bằng Fluent API trong project `Infrastructure/Persistence/Configurations`.
 
 #### File 8: `Domain/Entities/UserWallet.cs`
 
@@ -1388,14 +1389,21 @@ StreamReadingCommandHandler — LOGIC PHỨC TẠP NHẤT:
      - Ghi WalletTransaction
   6. Tạo AiRequest entity (status = "requested")
   7. Lưu DB (Commit transaction)
-  8. Gọi IAiProvider.StreamReadingInterpretationAsync:
-     - Mỗi chunk → ghi SSE "data: {text}\n\n" vào HttpResponse
-     - Nếu thành công → cập nhật status = "completed", ghi interpretation vào MongoDB
-     - Nếu lỗi/timeout → status = "failed" → HOÀN TIỀN (user.Credit hoặc RefundFrozenDiamond)
-  9. Ghi AiProviderLog MongoDB (token count, latency)
+  8. Gọi IAiProvider.StreamChatAsync:
+     - Trả về EventStream qua Controller (Không trả về Provider).
+     - Không tự gọi ghi LogTelemetry tại Handler này (Sprint 8).
+
+#### File 140: `Features/Reading/Commands/CompleteAiStream/` (Command + Handler)
+
+```
+Mục đích: Sau khi Stream kết thúc từ Frontend, nhận request hoàn tất để ghi Telemetry.
+Nội dung:
+  - Nhận: AiRequestId, FinalStatus, OutputTokens, LatencyMs, FullInterpretation
+  - Cập nhật trạng thái DB (dùng AiStreamFinalStatuses thay vi string).
+  - Khởi tạo ghi log `IAiProviderLogRepository` (Telemetry) theo best-effort.
 ```
 
-#### File 140-141: `Features/Reading/Commands/FollowupReading/` (Command + Handler)
+#### File 141: `Features/Reading/Commands/FollowupReading/` (Command + Handler)
 
 ```
 Tương tự StreamReading nhưng:
@@ -1449,9 +1457,10 @@ Schema: Id, UserId, ReadingRef, AiRequestRef, Model, Tokens (in/out), LatencyMs,
 ```
 - [Route("api/v1/sessions")] [Authorize]
 - GET "{sessionId}/stream?access_token=..." → SSE endpoint
-  - Set Response.ContentType = "text/event-stream"
-  - Gọi StreamReadingCommand
-  - Hỗ trợ access_token từ query string (vì EventSource không gắn header được)
+  - Gọi StreamReadingCommand để cấp token Stream
+  - Lặp inừng chunk "text/event-stream"
+  - Sau khi kết thúc luồng, khởi tạo `CompleteAiStreamCommand` đẩy về Application.
+  - KHÔNG gọi `LogRequestAsync` trực tiếp tại đây (Quy tắc Sprint 8).
 ```
 
 #### File 149: `Controllers/HistoryController.cs`

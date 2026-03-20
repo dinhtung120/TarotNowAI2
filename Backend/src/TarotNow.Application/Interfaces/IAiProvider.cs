@@ -11,6 +11,7 @@
 
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace TarotNow.Application.Interfaces;
 
@@ -39,4 +40,17 @@ public interface IAiProvider
     /// Đang xài Model phiên bản mấy? (GPT-4o hay Gemini-1.5-Pro).
     /// </summary>
     string ModelName { get; }
+
+    /// <summary>
+    /// Ghi telemetry cho request AI; implementation có thể no-op nếu không hỗ trợ.
+    /// </summary>
+    Task LogRequestAsync(
+        Guid userId,
+        string? sessionId,
+        string? requestId,
+        int inputTokens,
+        int outputTokens,
+        int latencyMs,
+        string status,
+        string? errorCode = null);
 }

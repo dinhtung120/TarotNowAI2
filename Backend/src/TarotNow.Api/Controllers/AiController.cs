@@ -45,12 +45,6 @@ using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
 using TarotNow.Application.Features.Reading.Commands.StreamReading;
 
-// Import enum trạng thái AI request
-using TarotNow.Domain.Enums;
-
-// Import OpenAI provider để ghi log telemetry
-using TarotNow.Infrastructure.Services.Ai;
-
 // Namespace - "địa chỉ" logic của file
 namespace TarotNow.Api.Controllers;
 
@@ -139,7 +133,6 @@ public class AiController : ControllerBase
          * StreamReadingResult: kết quả từ Application layer, chứa:
          * - Stream: IAsyncEnumerable<string> - luồng text từ AI
          * - AiRequestId: ID bản ghi AI request trong database
-         * - Provider: đối tượng AI provider (OpenAI) để ghi log
          */
         StreamReadingResult result;
         try
@@ -293,38 +286,17 @@ public class AiController : ControllerBase
              * - Dù client đóng kết nối sau [DONE], server vẫn phải hoàn tất nghiệp vụ
              * - Nếu dùng requestToken, việc client đóng tab có thể cancel → mất dữ liệu tài chính
              */
+            var latency = firstTokenAt.HasValue ? (int)(DateTimeOffset.UtcNow - firstTokenAt.Value).TotalMilliseconds : 0;
             await _mediator.Send(new CompleteAiStreamCommand
             {
                 AiRequestId = result.AiRequestId,     // ID bản ghi AI request
                 UserId = userId,                       // User đã yêu cầu
-                FinalStatus = AiRequestStatus.Completed, // Trạng thái cuối: hoàn tất
+                FinalStatus = AiStreamFinalStatuses.Completed, // Trạng thái cuối: hoàn tất
                 IsClientDisconnect = false,             // Client KHÔNG ngắt kết nối (stream thành công)
-                FirstTokenAt = firstTokenAt             // Thời điểm token đầu tiên (để tính metrics)
+                FirstTokenAt = firstTokenAt,            // Thời điểm token đầu tiên (để tính metrics)
+                OutputTokens = tokenCounter,
+                LatencyMs = latency
             }, CancellationToken.None);
-
-            // ========================================
-            // BƯỚC 6: GHI LOG TELEMETRY VÀO MONGODB
-            // ========================================
-
-            /*
-             * Telemetry (đo lường từ xa): ghi lại thông tin về hiệu năng AI.
-             * Chỉ ghi khi provider là OpenAI (có thể có provider khác trong tương lai).
-             * 
-             * "is OpenAiProvider openAi": Pattern matching của C# - kiểm tra kiểu
-             * đồng thời ép kiểu (cast) sang OpenAiProvider để dùng method LogRequestAsync.
-             * 
-             * Dữ liệu ghi log:
-             * - userId, sessionId: ai yêu cầu, phiên nào
-             * - tokenCounter: số lượng chunk đã stream (đo kích thước phản hồi)
-             * - latency: thời gian từ token đầu đến kết thúc (đo tốc độ AI)
-             * - status: "completed" (thành công)
-             */
-            if (result.Provider is OpenAiProvider openAi)
-            {
-                var latency = firstTokenAt.HasValue ? (int)(DateTimeOffset.UtcNow - firstTokenAt.Value).TotalMilliseconds : 0;
-                await openAi.LogRequestAsync(userId, sessionId, result.AiRequestId.ToString(), 
-                    0, tokenCounter, latency, "completed"); 
-            }
         }
         catch (OperationCanceledException ex)
         {
@@ -342,8 +314,8 @@ public class AiController : ControllerBase
              * - Đã có token → FailedAfterFirstToken (có thể partial refund)
              */
             var status = tokenCounter > 0
-                ? AiRequestStatus.FailedAfterFirstToken   // Đã nhận một số token rồi mới lỗi
-                : AiRequestStatus.FailedBeforeFirstToken; // Chưa nhận token nào đã lỗi
+                ? AiStreamFinalStatuses.FailedAfterFirstToken   // Đã nhận một số token rồi mới lỗi
+                : AiStreamFinalStatuses.FailedBeforeFirstToken; // Chưa nhận token nào đã lỗi
 
             /*
              * Phân biệt nguyên nhân hủy:
@@ -365,22 +337,10 @@ public class AiController : ControllerBase
                 FinalStatus = status,
                 ErrorMessage = finishReason,
                 IsClientDisconnect = clientDisconnected,
-                FirstTokenAt = firstTokenAt
+                FirstTokenAt = firstTokenAt,
+                OutputTokens = tokenCounter,
+                LatencyMs = 0
             }, CancellationToken.None); // Dùng None vì phải hoàn tất nghiệp vụ dù đang cancel
-
-            // Ghi log telemetry cho trường hợp thất bại
-            if (result.Provider is OpenAiProvider openAi)
-            {
-                await openAi.LogRequestAsync(
-                    userId,
-                    sessionId,
-                    result.AiRequestId.ToString(),
-                    0,             // Input tokens (chưa đếm được)
-                    tokenCounter,  // Output tokens (đã nhận được bao nhiêu)
-                    0,             // Latency (không tính vì bị hủy)
-                    "failed",      // Trạng thái: thất bại
-                    finishReason); // Lý do thất bại
-            }
 
             // Chỉ ghi warning log nếu lỗi từ upstream (không phải client tự ngắt)
             // Vì client ngắt kết nối là bình thường (user đóng tab), không cần cảnh báo
@@ -406,8 +366,8 @@ public class AiController : ControllerBase
              * 3. Log được ghi lại để dev điều tra
              */
             var status = tokenCounter > 0 
-                ? AiRequestStatus.FailedAfterFirstToken 
-                : AiRequestStatus.FailedBeforeFirstToken;
+                ? AiStreamFinalStatuses.FailedAfterFirstToken 
+                : AiStreamFinalStatuses.FailedBeforeFirstToken;
 
             // Hoàn tất AI request với trạng thái failed
             await _mediator.Send(new CompleteAiStreamCommand
@@ -417,15 +377,10 @@ public class AiController : ControllerBase
                 FinalStatus = status,
                 ErrorMessage = ex.Message,      // Lưu message lỗi để debug
                 IsClientDisconnect = false,     // Lỗi server, không phải client ngắt
-                FirstTokenAt = firstTokenAt
+                FirstTokenAt = firstTokenAt,
+                OutputTokens = tokenCounter,
+                LatencyMs = 0
             }, CancellationToken.None);
-
-            // Ghi log telemetry
-            if (result.Provider is OpenAiProvider openAi)
-            {
-                await openAi.LogRequestAsync(userId, sessionId, result.AiRequestId.ToString(), 
-                    0, tokenCounter, 0, "failed", ex.Message);
-            }
 
             // Ghi log Error (mức cao nhất) vì đây là lỗi server cần điều tra
             _logger.LogError(ex,

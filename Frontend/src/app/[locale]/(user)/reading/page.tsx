@@ -32,7 +32,7 @@ interface FormData {
 export default function ReadingSetupPage() {
  const router = useRouter();
  const t = useTranslations("ReadingSetup");
- const { fetchBalance } = useWalletStore();
+ const fetchBalance = useWalletStore((state) => state.fetchBalance);
  const [selectedSpread, setSelectedSpread] = useState<string>("daily_1");
  const [initError, setInitError] = useState("");
  const [isInitializing, setIsInitializing] = useState(false);

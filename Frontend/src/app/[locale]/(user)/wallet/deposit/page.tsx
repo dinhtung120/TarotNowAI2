@@ -41,7 +41,8 @@ export default function DepositPage() {
   const router = useRouter();
   const t = useTranslations("Wallet");
   const locale = useLocale();
-  const { balance, fetchBalance } = useWalletStore();
+  const balance = useWalletStore((state) => state.balance);
+  const fetchBalance = useWalletStore((state) => state.fetchBalance);
 
   const [isCustom, setIsCustom] = useState(false);
   const [selectedAmount, setSelectedAmount] = useState<number>(PRESET_AMOUNTS_VND[1]);

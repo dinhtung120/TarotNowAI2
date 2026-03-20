@@ -18,9 +18,9 @@
  */
 
 using MediatR;
+using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Enums;
-using TarotNow.Domain.Exceptions;
 
 namespace TarotNow.Application.Features.Auth.Commands.ResetPassword;
 
@@ -51,7 +51,7 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
         var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
         if (user == null)
         {
-            throw new DomainException("INVALID_OTP", "Invalid email or OTP code.");
+            throw new BusinessRuleException("INVALID_OTP", "Invalid email or OTP code.");
         }
 
         // Lấy mã OTP mới nhất còn hanh hiệu và thuộc về user này. Thể loại OTP: Dành cho Reset.
@@ -60,7 +60,7 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
         // Cổng kiểm định: Nếu mã null, quá thời hạn, hoặc nhập sai mã -> Đều báo chung "OTP không hợp lệ".
         if (latestOtp == null || !latestOtp.VerifyCode(request.OtpCode))
         {
-            throw new DomainException("INVALID_OTP", "Invalid email or OTP code.");
+            throw new BusinessRuleException("INVALID_OTP", "Invalid email or OTP code.");
         }
 
         // Đổi mật khẩu: Cần Hash bảo vệ mới trước khi nhét ngược lại Domain.

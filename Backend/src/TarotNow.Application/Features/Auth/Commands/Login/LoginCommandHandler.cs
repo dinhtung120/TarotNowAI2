@@ -18,11 +18,10 @@
  */
 
 using MediatR;
-using Microsoft.Extensions.Configuration;
+using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
-using TarotNow.Domain.Exceptions;
 
 namespace TarotNow.Application.Features.Auth.Commands.Login;
 
@@ -34,7 +33,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, (AuthResponse R
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ITokenService _tokenService;
-    private readonly IConfiguration _configuration;
+    private readonly IJwtTokenSettings _jwtTokenSettings;
     
     // Repository lưu trữ RefreshToken thay vì lưu hết vào bảng User 
     // Giúp hỗ trợ một tài khoản đăng nhập nhiều thiết bị (Multi-Device Sessions).
@@ -44,13 +43,13 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, (AuthResponse R
         IUserRepository userRepository, 
         IPasswordHasher passwordHasher, 
         ITokenService tokenService, 
-        IConfiguration configuration,
+        IJwtTokenSettings jwtTokenSettings,
         IRefreshTokenRepository refreshTokenRepository)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _tokenService = tokenService;
-        _configuration = configuration;
+        _jwtTokenSettings = jwtTokenSettings;
         _refreshTokenRepository = refreshTokenRepository;
     }
 
@@ -75,7 +74,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, (AuthResponse R
         // Tránh tình trạng lộ thông tin: "Email này có trên DB nhưng sai pass".
         if (user == null)
         {
-            throw new DomainException("INVALID_CREDENTIALS", "Invalid email/username or password.");
+            throw new BusinessRuleException("INVALID_CREDENTIALS", "Invalid email/username or password.");
         }
 
         // -------------------------------------------------------------
@@ -85,7 +84,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, (AuthResponse R
         // -------------------------------------------------------------
         if (!_passwordHasher.VerifyPassword(user.PasswordHash, request.Password))
         {
-            throw new DomainException("INVALID_CREDENTIALS", "Invalid email/username or password.");
+            throw new BusinessRuleException("INVALID_CREDENTIALS", "Invalid email/username or password.");
         }
 
         // -------------------------------------------------------------
@@ -94,12 +93,12 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, (AuthResponse R
         if (user.Status == UserStatus.Pending)
         {
             // Pending: User chưa click link xác thực đăng ký gửi vào Email.
-            throw new DomainException("USER_PENDING", "Please verify your email address to log in.");
+            throw new BusinessRuleException("USER_PENDING", "Please verify your email address to log in.");
         }
         else if (user.Status == UserStatus.Banned || user.Status == UserStatus.Locked)
         {
             // Banned/Locked: User bị quản trị viên khóa, từ chối cấp token.
-            throw new DomainException("USER_BLOCKED", "Your account is temporarily locked or banned.");
+            throw new BusinessRuleException("USER_BLOCKED", "Your account is temporarily locked or banned.");
         }
 
         // -------------------------------------------------------------
@@ -114,7 +113,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, (AuthResponse R
         // Khi JWT chết, Frontend gửi TokenString này để xin JWT mới.
         // -------------------------------------------------------------
         var refreshTokenString = _tokenService.GenerateRefreshToken();
-        var refreshTokenExpiryDays = ResolveRefreshTokenExpiryDays(); // Tính từ appsettings.json
+        var refreshTokenExpiryDays = _jwtTokenSettings.RefreshTokenExpiryDays;
         var refreshTokenEntity = new TarotNow.Domain.Entities.RefreshToken(
             userId: user.Id,
             token: refreshTokenString,
@@ -131,7 +130,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, (AuthResponse R
         var resp = new AuthResponse
         {
             AccessToken = accessToken,
-            ExpiresInMinutes = ResolveAccessTokenExpiryMinutes(),
+            ExpiresInMinutes = _jwtTokenSettings.AccessTokenExpiryMinutes,
             User = new UserProfileDto
             {
                 Id = user.Id,
@@ -146,33 +145,5 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, (AuthResponse R
 
         // Tuple Result
         return (resp, refreshTokenString);
-    }
-
-    /// <summary>
-    /// Helper: Đọc config thời hạn JWT (theo phút) từ appsettings.json
-    /// Trả về 15 phút nếu cấu hình sai hoặc thiếu.
-    /// </summary>
-    private int ResolveAccessTokenExpiryMinutes()
-    {
-        var configured = _configuration["Jwt:ExpiryMinutes"]
-                         ?? _configuration["Jwt:AccessTokenExpirationMinutes"];
-
-        return int.TryParse(configured, out var value) && value > 0
-            ? value
-            : 15;
-    }
-
-    /// <summary>
-    /// Helper: Đọc config thời hạn Refresh Token (theo ngày) từ appsettings.json
-    /// Trả về 7 ngày bảo hiểm.
-    /// </summary>
-    private int ResolveRefreshTokenExpiryDays()
-    {
-        var configured = _configuration["Jwt:RefreshExpiryDays"]
-                         ?? _configuration["Jwt:RefreshTokenExpirationDays"];
-
-        return int.TryParse(configured, out var value) && value > 0
-            ? value
-            : 7;
     }
 }

@@ -18,7 +18,7 @@ using Moq;
 using TarotNow.Application.Features.Auth.Commands.VerifyEmail;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
-using TarotNow.Domain.Exceptions;
+using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
@@ -50,7 +50,7 @@ public class VerifyEmailCommandHandlerTests
         _userRepositoryMock.Setup(r => r.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
                            .ReturnsAsync((User?)null);
 
-        var ex = await Assert.ThrowsAsync<DomainException>(() => _handler.Handle(command, CancellationToken.None));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Equal("INVALID_OTP", ex.ErrorCode);
     }
 
@@ -65,7 +65,7 @@ public class VerifyEmailCommandHandlerTests
         _userRepositoryMock.Setup(r => r.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
                            .ReturnsAsync(user);
 
-        var ex = await Assert.ThrowsAsync<DomainException>(() => _handler.Handle(command, CancellationToken.None));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Equal("EMAIL_ALREADY_VERIFIED", ex.ErrorCode);
     }
 
@@ -81,7 +81,7 @@ public class VerifyEmailCommandHandlerTests
         _emailOtpRepositoryMock.Setup(r => r.GetLatestActiveOtpAsync(user.Id, OtpType.VerifyEmail, It.IsAny<CancellationToken>()))
                                .ReturnsAsync((EmailOtp?)null);
 
-        var ex = await Assert.ThrowsAsync<DomainException>(() => _handler.Handle(command, CancellationToken.None));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Equal("INVALID_OTP", ex.ErrorCode);
     }
 

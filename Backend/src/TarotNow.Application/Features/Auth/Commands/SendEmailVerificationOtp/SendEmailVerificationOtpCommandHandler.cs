@@ -19,7 +19,6 @@ using System.Security.Cryptography;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
-using TarotNow.Domain.Exceptions;
 
 namespace TarotNow.Application.Features.Auth.Commands.SendEmailVerificationOtp;
 

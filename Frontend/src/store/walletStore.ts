@@ -22,11 +22,12 @@ interface WalletState {
  fetchBalance: () => Promise<void>;
 }
 
-export const useWalletStore = create<WalletState>((set) => ({
+export const useWalletStore = create<WalletState>((set, get) => ({
  balance: null,
  isLoading: false,
  error: null,
  fetchBalance: async () => {
+ if (get().isLoading) return;
  set({ isLoading: true, error: null });
  try {
  const data = await getWalletBalance();

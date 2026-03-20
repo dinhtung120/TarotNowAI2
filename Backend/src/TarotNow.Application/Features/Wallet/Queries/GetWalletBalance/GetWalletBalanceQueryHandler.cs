@@ -11,7 +11,7 @@
  */
 
 using MediatR;
-using TarotNow.Domain.Exceptions;
+using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,7 +31,7 @@ public class GetWalletBalanceQueryHandler : IRequestHandler<GetWalletBalanceQuer
     {
         // Tra ID Này Coi Có Ở Đợ Nhà Ai Không. (User Tái Phạm hoặc Xoá Nick Sẽ K Có Số Dư Này).
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken)
-            ?? throw new DomainException("USER_NOT_FOUND", "User not found.");
+            ?? throw new BusinessRuleException("USER_NOT_FOUND", "User not found.");
 
         // Nhặt Số Dư ra Thẩy Về Thôi.
         return new WalletBalanceDto

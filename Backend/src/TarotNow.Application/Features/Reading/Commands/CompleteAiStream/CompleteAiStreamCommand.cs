@@ -16,6 +16,20 @@ using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
 
+public static class AiStreamFinalStatuses
+{
+    public static readonly string Completed = AiRequestStatus.Completed;
+    public static readonly string FailedBeforeFirstToken = AiRequestStatus.FailedBeforeFirstToken;
+    public static readonly string FailedAfterFirstToken = AiRequestStatus.FailedAfterFirstToken;
+
+    public static bool IsSupported(string? status)
+    {
+        return string.Equals(status, Completed, StringComparison.Ordinal)
+               || string.Equals(status, FailedBeforeFirstToken, StringComparison.Ordinal)
+               || string.Equals(status, FailedAfterFirstToken, StringComparison.Ordinal);
+    }
+}
+
 /// <summary>
 /// Command để xử lý hoàn tất / thất bại của AI Stream.
 /// Mục đích: Chuyển logic nghiệp vụ từ AiController sang Application layer,
@@ -37,7 +51,7 @@ public class CompleteAiStreamCommand : IRequest<bool>
     public Guid UserId { get; set; }
 
     /// <summary>Chỉ chấp nhận 3 Trạng thái Của Cái Dòng Sinh Ra Bằng Enum: completed, failed_before_first_token, failed_after_first_token.</summary>
-    public string FinalStatus { get; set; } = null!;
+    public string FinalStatus { get; set; } = AiStreamFinalStatuses.Completed;
 
     /// <summary>Lý do Màn Hình Tắt Điện (Báo lỗi 429 Too many request, hoặc Null nếu Lướt Êm Thru).</summary>
     public string? ErrorMessage { get; set; }
@@ -47,6 +61,12 @@ public class CompleteAiStreamCommand : IRequest<bool>
 
     /// <summary>Camera Giám Sát Tốc Độ: Lưu lại ms Cỡ chừng nào AI nhả chữ đầu tiên (Track Latency UX).</summary>
     public DateTimeOffset? FirstTokenAt { get; set; }
+
+    /// <summary>Số chunk/token stream server đã trả cho client.</summary>
+    public int OutputTokens { get; set; }
+
+    /// <summary>Độ trễ từ token đầu tới lúc stream kết thúc (ms).</summary>
+    public int LatencyMs { get; set; }
 }
 
 /// <summary>
@@ -58,20 +78,32 @@ public class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAiStreamCo
     private readonly IAiRequestRepository _aiRequestRepo;
     private readonly IWalletRepository _walletRepo;
     private readonly ITransactionCoordinator _transactionCoordinator;
+    private readonly IAiProvider _aiProvider;
 
     public CompleteAiStreamCommandHandler(
         IAiRequestRepository aiRequestRepo,
         IWalletRepository walletRepo,
-        ITransactionCoordinator transactionCoordinator)
+        ITransactionCoordinator transactionCoordinator,
+        IAiProvider aiProvider)
     {
         _aiRequestRepo = aiRequestRepo;
         _walletRepo = walletRepo;
         _transactionCoordinator = transactionCoordinator;
+        _aiProvider = aiProvider;
     }
 
     public async Task<bool> Handle(CompleteAiStreamCommand request, CancellationToken cancellationToken)
     {
+        if (!AiStreamFinalStatuses.IsSupported(request.FinalStatus))
+        {
+            return false;
+        }
+
         var processed = false;
+        string? sessionRef = null;
+        string? requestId = null;
+        string telemetryStatus = "failed";
+        string? telemetryErrorCode = null;
 
         // Bắt Khung Transaction 2 Mảng: Update Bảng AI + Trừ Tiền Bảng Tài Khoản Cùng Lúc. Rớt mạng phải Hoàn nguyên Rollback cả 2.
         await _transactionCoordinator.ExecuteAsync(async transactionCt =>
@@ -85,7 +117,7 @@ public class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAiStreamCo
             record.UpdatedAt = now;
 
             // Chúc Mừng Sinh Nhật
-            if (request.FinalStatus == AiRequestStatus.Completed)
+            if (request.FinalStatus == AiStreamFinalStatuses.Completed)
             {
                 record.CompletionMarkerAt = now;
             }
@@ -99,7 +131,7 @@ public class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAiStreamCo
             // Tòa Án Kinh Tế (Economics Escrow Logic)
             switch (request.FinalStatus)
             {
-                case AiRequestStatus.Completed: // Suôn Sẻ.
+                case var status when status == AiStreamFinalStatuses.Completed: // Suôn Sẻ.
                     if (record.ChargeDiamond > 0)
                     {
                         await _walletRepo.ConsumeAsync(
@@ -114,7 +146,7 @@ public class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAiStreamCo
                     }
                     break;
 
-                case AiRequestStatus.FailedBeforeFirstToken: // Chưa Ra Chữ Nào, Thằng ChatGPT Giãy Đành Đạch.
+                case var status when status == AiStreamFinalStatuses.FailedBeforeFirstToken: // Chưa Ra Chữ Nào, Thằng ChatGPT Giãy Đành Đạch.
                     if (record.ChargeDiamond > 0)
                     {
                         // Hoàn Tiền X100%.
@@ -130,7 +162,7 @@ public class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAiStreamCo
                     }
                     break;
 
-                case AiRequestStatus.FailedAfterFirstToken: // Lạy Thánh, Ra Chữ Rồi Mà Nghẽn Cơ Mạch Đứt Chừng.
+                case var status when status == AiStreamFinalStatuses.FailedAfterFirstToken: // Lạy Thánh, Ra Chữ Rồi Mà Nghẽn Cơ Mạch Đứt Chừng.
                     if (record.ChargeDiamond > 0)
                     {
                         if (request.IsClientDisconnect) // Do Khách Tắt Trình Duyệt Ngang Bất Ngờ (Anti Cheating Xù Tiền).
@@ -165,10 +197,38 @@ public class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAiStreamCo
                     return;
             }
 
+            sessionRef = record.ReadingSessionRef;
+            requestId = record.Id.ToString();
+            telemetryStatus = request.FinalStatus == AiStreamFinalStatuses.Completed ? "completed" : "failed";
+            telemetryErrorCode = telemetryStatus == "failed" ? request.ErrorMessage : null;
+
             // Đóng Hồ Sơ Cất Kho.
             await _aiRequestRepo.UpdateAsync(record, transactionCt);
             processed = true;
         }, cancellationToken);
+
+        if (!processed || string.IsNullOrWhiteSpace(requestId))
+        {
+            return processed;
+        }
+
+        // Ghi telemetry theo best-effort; không rollback business transaction nếu Mongo/log provider gặp lỗi.
+        try
+        {
+            await _aiProvider.LogRequestAsync(
+                request.UserId,
+                sessionRef,
+                requestId,
+                inputTokens: 0,
+                outputTokens: request.OutputTokens,
+                latencyMs: request.LatencyMs,
+                status: telemetryStatus,
+                errorCode: telemetryErrorCode);
+        }
+        catch
+        {
+            // no-op: telemetry errors must not alter financial/business outcomes.
+        }
 
         return processed;
     }

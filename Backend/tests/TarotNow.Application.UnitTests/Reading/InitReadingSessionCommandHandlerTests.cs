@@ -33,7 +33,7 @@ public class InitReadingSessionCommandHandlerTests
     private readonly Mock<IReadingSessionRepository> _repoMock;
     private readonly Mock<IUserRepository> _userRepoMock;
     private readonly Mock<IRngService> _rngMock;
-    private readonly Mock<Microsoft.Extensions.Configuration.IConfiguration> _configurationMock;
+    private readonly Mock<ISystemConfigSettings> _systemConfigSettingsMock;
     private readonly InitReadingSessionCommandHandler _handler;
 
     public InitReadingSessionCommandHandlerTests()
@@ -41,15 +41,15 @@ public class InitReadingSessionCommandHandlerTests
         _repoMock = new Mock<IReadingSessionRepository>();
         _userRepoMock = new Mock<IUserRepository>();
         _rngMock = new Mock<IRngService>();
-        _configurationMock = new Mock<Microsoft.Extensions.Configuration.IConfiguration>();
+        _systemConfigSettingsMock = new Mock<ISystemConfigSettings>();
         // Cấu hình giá từ config (giống production)
-        _configurationMock.Setup(x => x["SystemConfig:Pricing:Spread3Gold"]).Returns("50");
-        _configurationMock.Setup(x => x["SystemConfig:Pricing:Spread5Gold"]).Returns("100");
-        _configurationMock.Setup(x => x["SystemConfig:Pricing:Spread10Diamond"]).Returns("50");
+        _systemConfigSettingsMock.SetupGet(x => x.Spread3GoldCost).Returns(50);
+        _systemConfigSettingsMock.SetupGet(x => x.Spread5GoldCost).Returns(100);
+        _systemConfigSettingsMock.SetupGet(x => x.Spread10DiamondCost).Returns(50);
 
         _handler = new InitReadingSessionCommandHandler(
             _repoMock.Object, _userRepoMock.Object,
-            _rngMock.Object, _configurationMock.Object);
+            _rngMock.Object, _systemConfigSettingsMock.Object);
     }
 
     /// <summary>Daily1Card đã bốc hôm nay → BadRequest (max 1 lần/ngày).</summary>

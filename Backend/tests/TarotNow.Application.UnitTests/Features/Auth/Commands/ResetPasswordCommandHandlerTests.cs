@@ -18,9 +18,9 @@
 using Moq;
 using TarotNow.Application.Features.Auth.Commands.ResetPassword;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Exceptions;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
-using TarotNow.Domain.Exceptions;
 
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
@@ -56,7 +56,7 @@ public class ResetPasswordCommandHandlerTests
         _userRepositoryMock.Setup(r => r.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
                            .ReturnsAsync((User?)null);
 
-        var ex = await Assert.ThrowsAsync<DomainException>(() => _handler.Handle(command, CancellationToken.None));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Equal("INVALID_OTP", ex.ErrorCode);
     }
 
@@ -72,7 +72,7 @@ public class ResetPasswordCommandHandlerTests
         _emailOtpRepositoryMock.Setup(r => r.GetLatestActiveOtpAsync(user.Id, OtpType.ResetPassword, It.IsAny<CancellationToken>()))
                                .ReturnsAsync((EmailOtp?)null); // Không có OTP hợp lệ
 
-        var ex = await Assert.ThrowsAsync<DomainException>(() => _handler.Handle(command, CancellationToken.None));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Equal("INVALID_OTP", ex.ErrorCode);
     }
 

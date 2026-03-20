@@ -39,7 +39,9 @@ import { useTranslations } from "next-intl";
 export default function Navbar() {
  const router = useRouter();
  const pathname = usePathname();
- const { isAuthenticated, user, clearAuth } = useAuthStore();
+ const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+ const user = useAuthStore((state) => state.user);
+ const clearAuth = useAuthStore((state) => state.clearAuth);
  const tNav = useTranslations("Navigation");
  const tCommon = useTranslations("Common");
  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);

@@ -14,8 +14,8 @@
  */
 
 using MediatR;
-using TarotNow.Domain.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Exceptions;
 
 namespace TarotNow.Application.Features.Auth.Commands.RevokeToken;
 
@@ -44,7 +44,7 @@ public class RevokeTokenCommandHandler : IRequestHandler<RevokeTokenCommand, boo
         // Nhánh 2: Logout 1 Thiết bị cục bộ.
         if (string.IsNullOrWhiteSpace(request.Token))
         {
-            throw new DomainException("INVALID_TOKEN", "Token is required for revocation.");
+            throw new BusinessRuleException("INVALID_TOKEN", "Token is required for revocation.");
         }
 
         // Tìm kiếm gốc rễ cái dòng Cookie.

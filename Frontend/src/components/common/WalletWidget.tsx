@@ -27,12 +27,13 @@ export default function WalletWidget() {
  const balance = useWalletStore((state) => state.balance);
  const fetchBalance = useWalletStore((state) => state.fetchBalance);
  const isLoading = useWalletStore((state) => state.isLoading);
+ const error = useWalletStore((state) => state.error);
 
  // useEffect sẽ chạy 1 lần khi component mount để tự động kéo số dư mới nhất từ server.
  useEffect(() => {
- if (!isAuthenticated || isLoading || balance) return;
+ if (!isAuthenticated || isLoading || balance || error) return;
  void fetchBalance();
- }, [balance, fetchBalance, isAuthenticated, isLoading]);
+ }, [balance, error, fetchBalance, isAuthenticated, isLoading]);
 
  // Trạng thái Loading: Trả về một Skeleton mờ với hiệu ứng chớp sáng (pulse) để UI không bị giật khi chờ API.
  if (isLoading) {

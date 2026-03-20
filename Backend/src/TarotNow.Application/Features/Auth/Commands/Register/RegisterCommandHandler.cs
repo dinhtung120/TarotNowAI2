@@ -23,7 +23,6 @@ using MediatR;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
-using TarotNow.Domain.Exceptions;
 
 namespace TarotNow.Application.Features.Auth.Commands.Register;
 
@@ -47,16 +46,16 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
     {
         // --------------------------------------------------------------------
         // BƯỚC 1: RÀ SOÁT TRÙNG LẶP SỐ LIỆU ĐỊNH DANH (Email, Username)
-        // Hệ thống sẽ trả DomainException 400 Bad Request ngay nếu đã có người khác lấy.
+        // Hệ thống sẽ trả BusinessRuleException 400 Bad Request ngay nếu đã có người khác lấy.
         // --------------------------------------------------------------------
         if (await _userRepository.ExistsByEmailAsync(request.Email, cancellationToken))
         {
-            throw new DomainException("EMAIL_ALREADY_EXISTS", $"The email '{request.Email}' is already registered.");
+            throw new BusinessRuleException("EMAIL_ALREADY_EXISTS", $"The email '{request.Email}' is already registered.");
         }
 
         if (await _userRepository.ExistsByUsernameAsync(request.Username, cancellationToken))
         {
-            throw new DomainException("USERNAME_ALREADY_EXISTS", $"The username '{request.Username}' is already taken.");
+            throw new BusinessRuleException("USERNAME_ALREADY_EXISTS", $"The username '{request.Username}' is already taken.");
         }
 
         // --------------------------------------------------------------------

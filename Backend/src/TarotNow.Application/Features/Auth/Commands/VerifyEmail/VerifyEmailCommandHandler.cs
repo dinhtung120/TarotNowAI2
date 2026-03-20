@@ -17,8 +17,8 @@
  */
 
 using MediatR;
+using TarotNow.Application.Exceptions;
 using TarotNow.Domain.Enums;
-using TarotNow.Domain.Exceptions;
 using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Auth.Commands.VerifyEmail;
@@ -43,13 +43,13 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, boo
         var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
         if (user == null)
         {
-            throw new DomainException("INVALID_OTP", "Invalid email or OTP code.");
+            throw new BusinessRuleException("INVALID_OTP", "Invalid email or OTP code.");
         }
 
         // 2. Tránh làm hệ thống chạy dư thừa nếu User vô tình click 2 lần.
         if (user.Status == UserStatus.Active)
         {
-            throw new DomainException("EMAIL_ALREADY_VERIFIED", "This email address is already verified.");
+            throw new BusinessRuleException("EMAIL_ALREADY_VERIFIED", "This email address is already verified.");
         }
 
         // 3. Đọc dữ liệu OTP thuộc thể loại VerifyEmail (Phân biệt rạch ròi với ForgotPassword OTP).
@@ -58,7 +58,7 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, boo
         // Cổng chốt an ninh
         if (latestOtp == null || !latestOtp.VerifyCode(request.OtpCode))
         {
-            throw new DomainException("INVALID_OTP", "Invalid email or OTP code.");
+            throw new BusinessRuleException("INVALID_OTP", "Invalid email or OTP code.");
         }
 
         // Đánh dấu để Phế bỏ OTP (Chống Dùng Lại).

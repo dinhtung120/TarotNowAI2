@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 using System.Threading;
 using System.Threading.Tasks;

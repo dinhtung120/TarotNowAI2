@@ -4,11 +4,11 @@
  *
  *   CÁC TEST CASE:
  *   1. Handle_ShouldThrowException_WhenUserNotFound:
- *      → Email/username không tồn tại → DomainException INVALID_CREDENTIALS
+ *      → Email/username không tồn tại → BusinessRuleException INVALID_CREDENTIALS
  *   2. Handle_ShouldThrowException_WhenPasswordIsWrong:
- *      → Password sai → DomainException INVALID_CREDENTIALS (CÙNG lỗi với user not found → chống dò)
+ *      → Password sai → BusinessRuleException INVALID_CREDENTIALS (CÙNG lỗi với user not found → chống dò)
  *   3. Handle_ShouldThrowException_WhenUserStatusIsPending:
- *      → User chưa verify email (Pending) → DomainException USER_PENDING
+ *      → User chưa verify email (Pending) → BusinessRuleException USER_PENDING
  *   4. Handle_ShouldReturnAuthResponseAndRefreshToken_WhenValid:
  *      → Happy path: login OK → trả JWT + refresh token + lưu refresh vào DB
  *
@@ -17,13 +17,12 @@
  *   → Refresh token lưu kèm IP address (tracking)
  */
 
-using Microsoft.Extensions.Configuration;
 using Moq;
 using TarotNow.Application.Features.Auth.Commands.Login;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Exceptions;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
-using TarotNow.Domain.Exceptions;
 
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
@@ -35,7 +34,7 @@ public class LoginCommandHandlerTests
     private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
     private readonly Mock<ITokenService> _tokenServiceMock;
-    private readonly Mock<IConfiguration> _configurationMock;
+    private readonly Mock<IJwtTokenSettings> _jwtTokenSettingsMock;
     private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock;
     private readonly LoginCommandHandler _handler;
 
@@ -44,15 +43,15 @@ public class LoginCommandHandlerTests
         _userRepositoryMock = new Mock<IUserRepository>();
         _passwordHasherMock = new Mock<IPasswordHasher>();
         _tokenServiceMock = new Mock<ITokenService>();
-        _configurationMock = new Mock<IConfiguration>();
+        _jwtTokenSettingsMock = new Mock<IJwtTokenSettings>();
         _refreshTokenRepositoryMock = new Mock<IRefreshTokenRepository>();
 
-        _configurationMock.Setup(c => c["Jwt:RefreshExpiryDays"]).Returns("7");
-        _configurationMock.Setup(c => c["Jwt:ExpiryMinutes"]).Returns("15");
+        _jwtTokenSettingsMock.SetupGet(x => x.RefreshTokenExpiryDays).Returns(7);
+        _jwtTokenSettingsMock.SetupGet(x => x.AccessTokenExpiryMinutes).Returns(15);
 
         _handler = new LoginCommandHandler(
             _userRepositoryMock.Object, _passwordHasherMock.Object,
-            _tokenServiceMock.Object, _configurationMock.Object,
+            _tokenServiceMock.Object, _jwtTokenSettingsMock.Object,
             _refreshTokenRepositoryMock.Object
         );
     }
@@ -65,7 +64,7 @@ public class LoginCommandHandlerTests
         _userRepositoryMock.Setup(r => r.GetByEmailAsync(command.EmailOrUsername, It.IsAny<CancellationToken>()))
                            .ReturnsAsync((User?)null);
 
-        var ex = await Assert.ThrowsAsync<DomainException>(() => _handler.Handle(command, CancellationToken.None));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Equal("INVALID_CREDENTIALS", ex.ErrorCode);
     }
 
@@ -80,7 +79,7 @@ public class LoginCommandHandlerTests
                            .ReturnsAsync(user);
         _passwordHasherMock.Setup(h => h.VerifyPassword("correctHash", "WrongPassword")).Returns(false);
 
-        var ex = await Assert.ThrowsAsync<DomainException>(() => _handler.Handle(command, CancellationToken.None));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Equal("INVALID_CREDENTIALS", ex.ErrorCode);
     }
 
@@ -96,7 +95,7 @@ public class LoginCommandHandlerTests
                            .ReturnsAsync(user);
         _passwordHasherMock.Setup(h => h.VerifyPassword("correctHash", "Password123")).Returns(true);
 
-        var ex = await Assert.ThrowsAsync<DomainException>(() => _handler.Handle(command, CancellationToken.None));
+        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Equal("USER_PENDING", ex.ErrorCode);
     }
 

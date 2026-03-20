@@ -46,7 +46,7 @@ export default function HistoryDetailPage() {
  const params = useParams();
  const router = useRouter();
  const sessionId = params.id as string;
- const { isAuthenticated } = useAuthStore();
+ const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
  const t = useTranslations("History");
  const tApi = useTranslations("ApiErrors");
  const tTarot = useTranslations("Tarot");

@@ -41,7 +41,7 @@ export default function HistoryPage() {
  const t = useTranslations("History");
  const tApi = useTranslations("ApiErrors");
  const locale = useLocale();
- const { isAuthenticated } = useAuthStore();
+ const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
  const [historyData, setHistoryData] = useState<HistoryResponse | null>(null);
  const [isLoading, setIsLoading] = useState(true);
  const [error, setError] = useState<string | null>(null);
