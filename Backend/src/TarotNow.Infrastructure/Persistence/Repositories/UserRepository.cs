@@ -131,4 +131,22 @@ public class UserRepository : IUserRepository
             .Select(u => new { u.Id, u.Username }) // Chỉ lấy 2 trường cần thiết (không load toàn bộ User)
             .ToDictionaryAsync(x => x.Id, x => x.Username, cancellationToken);
     }
+
+    /// <summary>
+    /// Bản Đồ Kéo Gộp Cho Lệnh Tranh Trang Tin Nhắn Hộp Thư Tổng Hợp:
+    /// Trả Name Và Hình Thay Vì Sầu Rụng UUID (Yêu cầu Mới Tính Năng Hỗn Hợp Vai Trò).
+    /// </summary>
+    public async Task<Dictionary<Guid, (string DisplayName, string? AvatarUrl)>> GetUserBasicInfoMapAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default)
+    {
+        var idList = userIds.ToList();
+        var users = await _dbContext.Users
+            .Where(u => idList.Contains(u.Id))
+            .Select(u => new { u.Id, u.DisplayName, u.Username, u.AvatarUrl })
+            .ToListAsync(cancellationToken);
+            
+        return users.ToDictionary(
+            x => x.Id, 
+            x => (!string.IsNullOrWhiteSpace(x.DisplayName) ? x.DisplayName : x.Username, x.AvatarUrl)
+        );
+    }
 }

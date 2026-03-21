@@ -46,6 +46,14 @@
     "ConnectionString": "localhost:6379",
     "InstanceName": "TarotNow:"
   },
+  "Email": {
+    "SmtpServer": "smtp.gmail.com",
+    "SmtpPort": 587,
+    "UseSsl": false,
+    "SmtpUsername": "your_email@gmail.com",
+    "SmtpPassword": "your_app_password_here",
+    "FromName": "TarotNow Support"
+  },
   "AiProvider": {
     "ApiKey": "REPLACE_WITH_REAL_KEY_OR_USE_ENV_VAR",
     "BaseUrl": "https://api.openai.com/v1/",
@@ -108,6 +116,7 @@
 | `SystemConfig.DailyAiQuota` | Mỗi ngày được hỏi AI tối đa 3 lần |
 | `SystemConfig.InFlightAiCap` | Tối đa 3 request AI chạy cùng lúc |
 | `SystemConfig.ReadingRateLimitSeconds` | Giãn cách tối thiểu 30 giây giữa 2 lần rút bài |
+| `Email.SmtpServer`, `SmtpPort`... | Cấu hình MailKit để gửi thư. Dùng Gmail cần App Password. |
 
 ---
 
@@ -144,6 +153,14 @@
         "Microsoft.EntityFrameworkCore.Database.Command": "Information"
       }
     }
+  },
+  "Email": {
+    "SmtpServer": "smtp.gmail.com",
+    "SmtpPort": 587,
+    "UseSsl": false,
+    "SmtpUsername": "dev_email@gmail.com",
+    "SmtpPassword": "dev_password",
+    "FromName": "TarotNow Local Dev"
   }
 }
 ```

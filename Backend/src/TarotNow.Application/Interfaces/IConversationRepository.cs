@@ -48,6 +48,12 @@ public interface IConversationRepository
         string readerId, int page, int pageSize, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Yêu cầu mới: Hộp thư Gộp Chung Cho Cả Hai Vai Trò Mở Cửa Sẵn: Lấy Các Cuộc Trò Chuyện Trong Đó Bạn Là `UserId` Hoặc `ReaderId`!
+    /// </summary>
+    Task<(IEnumerable<ConversationDto> Items, long TotalCount)> GetByParticipantIdPaginatedAsync(
+        string participantId, int page, int pageSize, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Thay Đổi Điểm Báo Mốc Thời Gian Tin Rán Lên Top Kéo Box Mới Bay Đầu Mục Gần Đây! (Bumpy Tăng Dễ Thấy Gửi Lần Nữa Trồi Lên).
     /// </summary>
     Task UpdateAsync(ConversationDto conversation, CancellationToken cancellationToken = default);

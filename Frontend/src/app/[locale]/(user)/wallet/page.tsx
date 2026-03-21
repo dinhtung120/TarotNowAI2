@@ -39,8 +39,21 @@ export default function WalletPage() {
  const [isLoadingLedger, setIsLoadingLedger] = useState(true);
  const [page, setPage] = useState(1);
 
+ /*
+  * TÁCH RIÊNG 2 CONCERN:
+  * 1. fetchBalance: chỉ cần gọi 1 lần khi mount để cập nhật số dư.
+  *    Không cần gọi lại khi chuyển trang ledger.
+  * 2. fetchLedger: phụ thuộc `page` — khi user chuyển trang → re-fetch.
+  *
+  * LÝ DO TÁCH: Trước đây `fetchBalance` nằm chung useEffect với `page` dep
+  * → mỗi lần chuyển trang ledger đều re-fetch balance → thừa API call.
+  */
  useEffect(() => {
  fetchBalance();
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, []);
+
+ useEffect(() => {
  const fetchLedger = async () => {
  setIsLoadingLedger(true);
  const data = await getLedger(page, 10);
@@ -48,7 +61,7 @@ export default function WalletPage() {
  setIsLoadingLedger(false);
  };
  fetchLedger();
- }, [page, fetchBalance]);
+ }, [page]);
 
  const formatType = (typeStr: string) => {
  return typeStr.replace(/([A-Z])/g, ' $1').trim();

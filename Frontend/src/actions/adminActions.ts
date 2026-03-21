@@ -406,6 +406,41 @@ export async function listReaderRequests(
  }
 }
 
+export interface UpdateUserParams {
+	role: string;
+	status: string;
+	diamondBalance: number;
+	goldBalance: number;
+}
+
+/**
+ * Cập nhật toàn diện thông tin User (Admin only).
+ * Backend API: PUT /api/v1/Admin/users/{id}
+ */
+export async function updateUser(userId: string, data: UpdateUserParams): Promise<boolean> {
+	const accessToken = await getAccessToken();
+	if (!accessToken) return false;
+
+	try {
+		const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
+			method: 'PUT',
+			headers: {
+				'Authorization': `Bearer ${accessToken}`,
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify(data),
+		});
+
+		if (!response.ok) {
+			console.error(`[AdminAction] updateUser error: ${response.status} - ${await response.text()}`);
+		}
+		return response.ok;
+	} catch (error) {
+		console.error('[AdminAction] Failed to update user:', error);
+		return false;
+	}
+}
+
 /**
  * Admin phê duyệt hoặc từ chối đơn xin Reader.
  * Backend API: PATCH /api/v1/admin/reader-requests/process

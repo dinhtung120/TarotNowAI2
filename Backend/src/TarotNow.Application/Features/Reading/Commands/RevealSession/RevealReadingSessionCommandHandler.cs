@@ -73,17 +73,23 @@ public class RevealReadingSessionCommandHandler : IRequestHandler<RevealReadingS
 
         // 4. Update Tủ Kính Kho Đồ (Collection) & Tính Cơ Chế Quay Gacha 
         // Bốc Trúng Lá Mới Cấp 1, Lá Cũ Trùng Thì Nhồi Exp Lên Cấp.
+        // HỆ SỐ: Kim cương x2 EXP (+2), Vàng x1 EXP (+1).
+        // YÊU CẦU: Daily 1 Card luôn là 1 EXP. Các loại khác dùng Diamond thì x2.
+        long expToGrant = (session.SpreadType != SpreadType.Daily1Card && 
+                          string.Equals(session.CurrencyUsed, CurrencyType.Diamond, StringComparison.OrdinalIgnoreCase)) 
+                          ? 2 : 1;
+
         foreach (var cardId in drawnCards)
         {
-            await _collectionRepo.UpsertCardAsync(request.UserId, cardId, EXP_PER_CARD, cancellationToken);
+            await _collectionRepo.UpsertCardAsync(request.UserId, cardId, expToGrant, cancellationToken);
         }
 
         // 5. Cộng EXP Vào Hồ Sơ Cá Nhân (Gamification)
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user != null)
         {
-            // Tụ 10 lá Được 10 Ẽxp Sướng Run Người.
-            user.AddExp(drawnCards.Length);
+            // Tụ 10 lá Diamond Được 20 Exp Sướng Run Người.
+            user.AddExp(drawnCards.Length * expToGrant);
             await _userRepository.UpdateAsync(user, cancellationToken);
         }
 

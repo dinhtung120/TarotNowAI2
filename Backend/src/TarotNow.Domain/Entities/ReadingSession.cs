@@ -56,6 +56,12 @@ public class ReadingSession
     public DateTime? CompletedAt { get; private set; }
 
     // Dành cho Chiêu Gọi Của Máy Đọc Database Lưng Sau EF Core Cắn Dữ Liệu SQL Nên Gốc Cần Bắt Để Ẩn.
+    public string? AiSummary { get; private set; }
+    
+    // Lưu các câu Followups dưới dạng (Question, Answer, Cost) thành list record hoặc class nội bộ.
+    // Dùng List<ReadingFollowup> cho sạch
+    public IReadOnlyList<ReadingFollowup> Followups { get; private set; } = new List<ReadingFollowup>();
+
     protected ReadingSession() { }
 
     /// <summary>
@@ -84,7 +90,9 @@ public class ReadingSession
         long amountCharged,
         bool isCompleted,
         DateTime createdAt,
-        DateTime? completedAt)
+        DateTime? completedAt,
+        string? aiSummary = null,
+        IReadOnlyList<ReadingFollowup>? followups = null)
     {
         return new ReadingSession(userId, spreadType, question, currencyUsed, amountCharged)
         {
@@ -92,7 +100,9 @@ public class ReadingSession
             CardsDrawn = cardsDrawn,
             IsCompleted = isCompleted,
             CreatedAt = createdAt,
-            CompletedAt = completedAt
+            CompletedAt = completedAt,
+            AiSummary = aiSummary,
+            Followups = followups ?? new List<ReadingFollowup>()
         };
     }
 
@@ -103,4 +113,10 @@ public class ReadingSession
         IsCompleted = true;
         CompletedAt = DateTime.UtcNow;
     }
+}
+
+public class ReadingFollowup
+{
+    public string Question { get; set; } = string.Empty;
+    public string Answer { get; set; } = string.Empty;
 }

@@ -49,7 +49,8 @@
         "profile": "Profile",
         "wallet": "Wallet",
         "history": "History",
-        "collection": "Collection"
+        "collection": "Collection",
+        "notifications": "Notifications"
     },
     "Footer": {
         "tagline": "Lunar Bloom Guidance",
@@ -95,6 +96,17 @@
             "display_name_min": "Display name must be at least 2 characters",
             "avatar_url_invalid": "Invalid avatar URL",
             "date_of_birth_invalid": "Invalid date of birth"
+        },
+        "upgrade": {
+            "title": "Become a Tarot Reader",
+            "subtitle": "Unlock master-level abilities",
+            "desc": "Want to share your Tarot reading skills with the community? Apply to become a Reader — receive questions from seekers and earn Diamond.",
+            "cta": "Apply Now",
+            "pending_title": "Application Pending",
+            "pending_desc": "Your Reader application has been submitted and is awaiting admin review. You will be notified when a decision is made.",
+            "rejected_title": "Previous Application Rejected",
+            "rejected_reason": "Reason: {note}",
+            "reapply_cta": "Submit New Application"
         },
         "mfa": {
             "tag": "Security",
@@ -181,6 +193,28 @@
         "notifications": "Notifications",
         "confirm": "Confirm",
         "status_complete": "Complete"
+    },
+    "Notifications": {
+        "tag": "Notification center",
+        "title": "Notifications",
+        "subtitle": "Stay updated with your TarotNow activity and news.",
+        "filter_all": "All",
+        "filter_unread": "Unread",
+        "mark_read": "Mark as read",
+        "mark_read_success": "Marked as read.",
+        "mark_read_fail": "Failed to mark as read.",
+        "empty_title": "No notifications",
+        "empty_desc": "New notifications will appear here.",
+        "loading": "Loading notifications...",
+        "time_just_now": "Just now",
+        "time_minutes_ago": "{count} min ago",
+        "time_hours_ago": "{count}h ago",
+        "time_days_ago": "{count}d ago",
+        "type_system": "System",
+        "type_quest": "Quest",
+        "type_streak": "Streak",
+        "type_escrow": "Finance",
+        "type_payment": "Payment"
     },
     "Pagination": {
         "page_info": "Page {current} / {total}",
@@ -370,6 +404,7 @@
         },
         "escrow": {
             "title": "Escrow",
+            "total_frozen": "Total Locked",
             "active": "Active",
             "expired": "Expired",
             "countdown": "{hours}h {minutes}m",

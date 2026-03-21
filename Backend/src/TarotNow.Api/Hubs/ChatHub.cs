@@ -285,6 +285,24 @@ public class ChatHub : Hub
                 Content = content
             };
 
+            // [MỚI]: Móc nối Gói Payment Offer từ Frontend JSON vào C# DTO
+            if (type == TarotNow.Domain.Enums.ChatMessageType.PaymentOffer)
+            {
+                try
+                {
+                    command.PaymentPayload = System.Text.Json.JsonSerializer.Deserialize<PaymentPayloadDto>(content, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    // Lấy Lời Nhắn (description) mà Reader đã ghi khi tạo đề xuất.
+                    // Nếu không có lời nhắn → dùng chữ mặc định.
+                    command.Content = !string.IsNullOrWhiteSpace(command.PaymentPayload?.Description) 
+                        ? command.PaymentPayload.Description 
+                        : "Đề xuất Thanh toán Dịch vụ";
+                }
+                catch (System.Text.Json.JsonException ex)
+                {
+                    _logger.LogWarning(ex, "[ChatHub] Lỗi giải mã Payment Payload.");
+                }
+            }
+
             var message = await _mediator.Send(command);
 
             /*

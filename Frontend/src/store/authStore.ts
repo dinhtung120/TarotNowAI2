@@ -8,6 +8,7 @@ interface AuthState {
  accessToken: string | null;
  isAuthenticated: boolean;
  setAuth: (user: UserProfile, token: string) => void;
+ updateUser: (user: Partial<UserProfile>) => void;
  clearAuth: () => void;
  syncAuth: () => void;
 }
@@ -37,6 +38,11 @@ export const useAuthStore = create<AuthState>()(
     return { user: null, accessToken: null, isAuthenticated: false };
    }
    return { user, accessToken: token, isAuthenticated: true };
+  }),
+ updateUser: (partialUser) =>
+  set((state) => {
+   if (!state.user) return state;
+   return { user: { ...state.user, ...partialUser } };
   }),
  clearAuth: () => set({ user: null, accessToken: null, isAuthenticated: false }),
  syncAuth: () =>

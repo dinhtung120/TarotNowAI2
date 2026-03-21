@@ -1,1475 +1,1487 @@
 {
-    "Index": {
-        "title": "TarotNow 主页",
-        "description": "AI 在线塔罗占卜",
-        "tagline": "与 TarotNow AI 一起发现命运",
-        "heroTitle1": "倾听神谕",
-        "heroTitle2": "来自宇宙的 AI。",
-        "heroDesc": "体验神秘的塔罗艺术与人工智能的深度解析相结合，解锁潜意识中隐藏的答案。",
-        "ctaDraw": "立即抽牌",
-        "ctaCollection": "查看收藏",
-        "ctaMeetReaders": "认识占卜师",
-        "featureTitle": "独特体验",
-        "featureDesc": "古老灵性与未来科技的完美融合，带来深度个性化的体验。",
-        "scroll": "滚动",
-        "stats": {
-            "readings": "占卜次数",
-            "readers": "专业占卜师",
-            "rating": "平均评分",
-            "support": "全球支持"
-        },
-        "showcase": {
-            "tag": "大师连接",
-            "title": "大师",
-            "titleMuted": "指引",
-            "viewAll": "查看全部占卜师",
-            "profileCta": "查看资料 →"
-        },
-        "f1Title": "深度 AI 解析",
-        "f1Desc": "AI 训练自大量塔罗资料，为你的处境提供准确且个性化的解读。",
-        "f2Title": "神秘卡牌收藏",
-        "f2Desc": "每次抽牌都是一次收集卡牌元素的机会，累积足够元素后卡牌将升级并焕发更强能量。",
-        "f3Title": "RNG 锁定与绝对真实",
-        "f3Desc": "确定性洗牌算法结合哈希技术，确保抽到的牌是当下瞬间唯一且不可篡改的结果。",
-        "final": {
-            "title1": "开启旅程",
-            "title2": "Lunar Bloom Healing",
-            "cta": "立即抽牌"
-        }
+  "Index": {
+    "title": "TarotNow 主页",
+    "description": "AI 在线塔罗占卜",
+    "tagline": "与 TarotNow AI 一起发现命运",
+    "heroTitle1": "倾听神谕",
+    "heroTitle2": "来自宇宙的 AI。",
+    "heroDesc": "体验神秘的塔罗艺术与人工智能的深度解析相结合，解锁潜意识中隐藏的答案。",
+    "ctaDraw": "立即抽牌",
+    "ctaCollection": "查看收藏",
+    "ctaMeetReaders": "认识占卜师",
+    "featureTitle": "独特体验",
+    "featureDesc": "古老灵性与未来科技的完美融合，带来深度个性化的体验。",
+    "scroll": "滚动",
+    "stats": {
+      "readings": "占卜次数",
+      "readers": "专业占卜师",
+      "rating": "平均评分",
+      "support": "全球支持"
     },
-    "Navigation": {
-        "home": "主页",
-        "readings": "占卜",
-        "readers": "占卜师",
-        "chat": "聊天",
-        "login": "登录",
-        "register": "注册",
-        "logout": "退出",
-        "adminPortal": "管理后台",
-        "profile": "个人资料",
-        "wallet": "钱包",
-        "history": "历史",
-        "collection": "收藏"
+    "showcase": {
+      "tag": "大师连接",
+      "title": "大师",
+      "titleMuted": "指引",
+      "viewAll": "查看全部占卜师",
+      "profileCta": "查看资料 →"
     },
-    "Footer": {
-        "tagline": "月华绽放指引",
-        "links": {
-            "reading": "占卜",
-            "readers": "占卜师",
-            "wallet": "积分",
-            "chat": "消息"
-        },
-        "legal": {
-            "tos": "条款",
-            "privacy": "隐私",
-            "ai": "AI 免责声明"
-        },
-        "social": {
-            "facebook": "Facebook",
-            "instagram": "Instagram",
-            "tiktok": "TikTok"
-        },
-        "copyright": "© {year} TarotNow AI • 高端灵性体验 • 保留所有权利"
-    },
-    "Profile": {
-        "title": "个人资料",
-        "subtitle": "管理你的信息并微调你的连接。",
-        "loading": "正在加载个人资料...",
-        "admin_portal": "管理后台",
-        "reader_profile": "占卜师资料",
-        "settings_title": "修改设置",
-        "displayName": "显示名称",
-        "display_name_placeholder": "你的显示名称",
-        "avatarUrl": "头像链接（Avatar URL）",
-        "avatar_url_placeholder": "https://example.com/avatar.jpg",
-        "dateOfBirth": "出生日期",
-        "save": "保存更改",
-        "saving": "处理中...",
-        "successMsg": "更新成功！",
-        "errorLoad": "无法加载个人资料",
-        "errorSave": "更新失败",
-        "level": "等级",
-        "zodiac": "星座",
-        "numerology": "数字命理",
-        "validation": {
-            "display_name_min": "显示名称至少 2 个字符",
-            "avatar_url_invalid": "头像链接无效",
-            "date_of_birth_invalid": "出生日期无效"
-        },
-        "mfa": {
-            "tag": "安全",
-            "title": "双重验证",
-            "subtitle": "多因素验证（MFA/TOTP）可防止未授权访问。提现时必需。",
-            "status_checking": "正在检查安全状态...",
-            "enabled_title": "MFA 已启用",
-            "enabled_desc": "你的账号已通过 MFA 保护。",
-            "enabled_cta": "前往提现",
-            "disabled_title": "安全未完成",
-            "disabled_desc": "请启用 MFA 以保护钱包并提现。",
-            "setup_error_generic": "初始化 MFA 失败",
-            "start_setup": "开始设置 MFA",
-            "step1_title": "1. 扫描二维码",
-            "step1_desc": "使用 Google Authenticator、Authy 或其他 TOTP 应用。",
-            "manual_code_label": "或手动输入密钥",
-            "copy": "复制",
-            "step2_title": "2. 保存备用码",
-            "step2_desc": "如果丢失设备，你必须使用这些备用码恢复。每个码只能使用一次。",
-            "step3_title": "3. 验证验证码",
-            "step3_desc": "输入应用中的 6 位验证码以完成设置。",
-            "code_placeholder": "000 000",
-            "verify_error_invalid": "验证码无效",
-            "verify_cta": "确认并启用 MFA"
-        },
-        "reader": {
-            "tag": "占卜师设置",
-            "title": "占卜师控制台",
-            "subtitle": "管理你的公开资料与在线状态。",
-            "loading": "正在加载占卜师设置...",
-            "toast_not_found": "未找到占卜师信息。你已被批准了吗？",
-            "toast_save_success": "保存成功！",
-            "toast_save_fail": "保存失败！",
-            "toast_status_updated": "状态已更新",
-            "toast_status_update_fail": "更新状态失败",
-            "status_title": "在线状态",
-            "status_accepting": "接受提问",
-            "status_online": "在线（忙碌）",
-            "status_offline": "离线",
-            "public_profile_title": "公开资料",
-            "bio_label": "自我介绍（Bio）",
-            "bio_placeholder": "介绍你的解牌风格与经验...",
-            "specialties_label": "擅长领域（逗号分隔）",
-            "specialties_placeholder": "爱情，事业，财务...",
-            "price_label": "每个追加问题的 Diamond 价格",
-            "price_help": "主问题费用通过 Escrow 固定扣除。",
-            "saving": "保存中...",
-            "save": "保存资料"
-        }
-    },
-    "ApiErrors": {
-        "unknown_error": "发生未知错误。",
-        "unauthorized": "登录已失效，请重新登录。",
-        "forbidden": "您没有权限执行此操作。",
-        "not_found": "未找到请求的数据。",
-        "invalid_code": "验证码无效。",
-        "network_error": "网络连接错误，请重试。"
-    },
-	    "AiInterpretation": {
-	        "title": "宇宙解读",
-	        "subtitle": "AI 正在解读牌面并连接你的能量",
-	        "status_complete": "解读完成",
-	        "error_title": "能量干扰",
-	        "error_stream": "通信通道中断，请稍后再试。",
-	        "error_retry": "尝试其他通道（自动退款）",
-	        "streaming_placeholder": "星辰正在对齐...",
-	        "follow_up_placeholder": "你还想问这次解读什么？...",
-	        "follow_up_free_badge": "免费追问 ({remaining}/{total})",
-	        "follow_up_fee_badge": "费用：{cost} Diamond",
-	        "follow_up_hint": "最多 5 个追问。会消耗 AI 配额；若牌等级足够则不消耗 Diamond。",
-	        "hard_cap_title": "已达到宇宙上限",
-	        "hard_cap_desc": "本次会话的能量已耗尽（5/5）。过多的分心会扭曲最初的信息。请接纳已得到的指引并慢慢体会。"
-	    },
-    "Common": {
-        "app_title": "TarotNow AI",
-        "app_description": "透明且现代的塔罗体验。",
-        "loading": "加载中...",
-        "error": "发生错误",
-        "back": "返回",
-        "close": "关闭",
-        "avatar_alt": "头像",
-        "close_modal": "关闭弹窗",
-        "menu": "菜单",
-        "notifications": "通知",
-        "confirm": "确认",
-        "status_complete": "完成"
-    },
-    "Pagination": {
-        "page_info": "第 {current} / {total} 页",
-        "prev": "上一页",
-        "next": "下一页"
-    },
-    "UserNav": {
-        "groups": {
-            "main": "主要",
-            "tarot": "塔罗",
-            "social": "社交",
-            "account": "账户"
-        }
-    },
-    "Auth": {
-        "validation": {
-            "email_invalid": "邮箱地址无效",
-            "email_or_username_required": "请输入邮箱或用户名",
-            "password_required": "请输入密码",
-            "username_min": "用户名至少 3 个字符",
-            "username_pattern": "仅允许字母、数字和下划线",
-            "password_min": "密码至少 8 个字符",
-            "password_complexity": "需包含大写、小写、数字和特殊字符",
-            "display_name_required": "请输入显示名称",
-            "age_minimum": "你必须年满 16 岁才能使用此服务。",
-            "must_accept_terms": "你必须同意条款与政策",
-            "passwords_no_match": "两次输入的密码不一致",
-            "otp_length": "OTP 必须为 6 位数字",
-            "otp_numeric": "OTP 只能包含数字"
-        },
-        "login": {
-            "title": "欢迎回来",
-            "subtitle": "输入凭据以进入你的神秘领域",
-            "email_or_username_label": "邮箱或用户名",
-            "email_or_username_placeholder": "seeker@tarotnow.com",
-            "password_label": "密码",
-            "password_placeholder": "••••••••",
-            "forgot_password": "忘记密码？",
-            "remember_me": "记住我",
-            "cta": "揭示你的命运",
-            "footer_prompt": "新来的吗？",
-            "footer_link": "创建账号",
-            "error_unexpected": "发生意外错误。"
-        },
-        "register": {
-            "title": "加入神秘之旅",
-            "subtitle": "创建账号以开启你的旅程",
-            "success_title": "查看收件箱",
-            "success_desc": "验证 OTP 已发送至你的邮箱，请完成验证以激活账号。",
-            "success_cta": "前往验证",
-            "email_label": "邮箱",
-            "email_placeholder": "seeker@tarotnow.com",
-            "username_label": "用户名",
-            "username_placeholder": "mystic_seeker",
-            "display_name_label": "显示名称",
-            "display_name_placeholder": "Mystic Seeker",
-            "dob_label": "出生日期",
-            "password_label": "密码",
-            "password_placeholder": "••••••••",
-            "confirm_password_label": "确认密码",
-            "confirm_password_placeholder": "••••••••",
-            "consent_prefix": "我同意",
-            "consent_terms": "服务条款",
-            "consent_and": "以及",
-            "consent_privacy": "隐私政策",
-            "cta": "开始旅程",
-            "footer_prompt": "已经有账号？",
-            "footer_link": "返回登录",
-            "error_unexpected": "发生意外错误。"
-        },
-        "forgot": {
-            "title": "忘记密码",
-            "subtitle": "输入邮箱以获取重置码",
-            "back_to_login": "返回登录",
-            "success_title": "查看邮件",
-            "success_desc": "如果邮箱有效，重置密码的 OTP 已发送至你的收件箱。",
-            "success_cta": "输入重置码",
-            "email_label": "邮箱",
-            "email_placeholder": "seeker@tarotnow.com",
-            "cta": "发送重置码",
-            "error_unexpected": "发生意外错误。"
-        },
-        "reset": {
-            "title": "创建新密码",
-            "subtitle": "输入 OTP 与新的安全密码",
-            "success_title": "密码已重置！",
-            "success_desc": "密码已更新，所有已登录设备将被登出。",
-            "success_cta": "返回登录",
-            "email_label": "邮箱",
-            "email_placeholder": "seeker@tarotnow.com",
-            "otp_label": "重置 OTP",
-            "otp_placeholder": "123456",
-            "password_label": "新密码",
-            "password_placeholder": "••••••••",
-            "cta": "重置密码",
-            "error_unexpected": "发生意外错误。"
-        },
-        "verify": {
-            "title": "验证邮箱",
-            "subtitle": "输入发送到邮箱的 OTP",
-            "success_title": "验证成功",
-            "success_desc": "账号已激活，你可以登录了。",
-            "success_cta": "返回登录",
-            "email_label": "邮箱",
-            "email_placeholder": "seeker@tarotnow.com",
-            "otp_label": "OTP（6 位）",
-            "otp_placeholder": "123456",
-            "cta": "确认验证",
-            "resend": "重新发送 OTP",
-            "resend_with_timer": "重新发送（{seconds}s）",
-            "toast_invalid_email": "请输入有效邮箱以重新发送验证码。",
-            "toast_resent_success": "新的 OTP 已发送至你的邮箱。",
-            "toast_resent_fail": "重新发送失败。",
-            "toast_network_error": "网络错误。",
-            "error_unexpected": "发生意外错误。"
-        },
-        "mfa": {
-            "title": "双重验证（MFA）",
-            "desc": "请输入 Authenticator 应用中的验证码以继续{actionTitle}。",
-            "placeholder": "000000",
-            "submit": "验证",
-            "error_generic": "验证失败",
-            "action_default": "此操作"
-        }
-    },
-    "Chat": {
-        "time": {
-            "just_now": "刚刚",
-            "minutes_ago": "{count} 分钟前",
-            "hours_ago": "{count} 小时前",
-            "days_ago": "{count} 天前"
-        },
-        "inbox": {
-            "tag": "聊天",
-            "title": "收件箱",
-            "subtitle": "管理你与占卜师和用户的对话。",
-            "role_user": "🔮 咨询者",
-            "role_reader": "📖 占卜师",
-            "loading": "加载中...",
-            "empty_title": "暂无对话。",
-            "empty_subtitle": "开始新的连接",
-            "list_label_reader": "占卜师",
-            "list_label_user": "用户",
-            "status": {
-                "active": "聊天中",
-                "pending": "等待回复",
-                "completed": "已完成"
-            }
-        },
-        "room": {
-            "title": "灵性连接房间",
-            "signal_ok": "信号稳定",
-            "syncing": "同步中...",
-            "report_title": "举报违规",
-            "loading": "正在同步...",
-            "empty": "连接已建立，发送第一条消息吧。",
-            "input_placeholder": "发送你的消息...",
-            "payment_offer": "💎 支付提议",
-            "payment_accept": "✅ 已接受",
-            "payment_reject": "❌ 已拒绝"
-        },
-        "report": {
-            "success_title": "已发送举报",
-            "success_desc": "感谢你，管理员将尽快审核并处理。",
-            "title": "举报违规",
-            "target_type_label": "违规类型",
-            "target_conversation": "对话",
-            "target_user": "用户",
-            "target_message": "消息",
-            "reason_label": "原因 *",
-            "reason_placeholder": "详细描述原因（至少 10 个字符）...",
-            "submit": "发送举报",
-            "validation_min": "原因至少需要 10 个字符。",
-            "error_failed": "举报发送失败，请重试。"
-        },
-        "dispute": {
-            "cta": "争议（{hours}小时 {minutes}分）",
-            "success_title": "已提交争议",
-            "success_desc": "管理员将审核并处理。",
-            "title": "开启争议",
-            "remaining": "⏰ 剩余：{hours} 小时 {minutes} 分钟可开启争议",
-            "reason_label": "原因 *",
-            "reason_placeholder": "详细描述原因（至少 10 个字符）...",
-            "submit": "提交争议",
-            "validation_min": "原因至少需要 10 个字符。",
-            "error_failed": "争议提交失败。"
-        },
-        "escrow": {
-            "title": "托管",
-            "active": "进行中",
-            "expired": "已过期",
-            "countdown": "{hours}小时 {minutes}分",
-            "status_accepted": "已接受",
-            "status_released": "已释放",
-            "status_refunded": "已退款",
-            "status_disputed": "争议中",
-            "type_main": "主问题",
-            "type_addon": "追加问题",
-            "deadline_reply": "回复截止：{time}",
-            "auto_release": "自动释放：{time}",
-            "dispute_window": "争议窗口：{time}",
-            "action_confirm_release": "确认释放",
-            "action_replied": "标记已回复"
-        }
-    },
-    "Wallet": {
-        "widget": {
-            "title": "你的钱包",
-            "diamond_title": "Diamond - 高级",
-            "gold_title": "Gold - 免费",
-            "frozen_suffix": "(+{amount})"
-        },
-        "overview": {
-            "tag": "财务协议",
-            "title": "神秘宝库",
-            "subtitle": "在 TarotNow AI 生态中管理你的 Diamond/Gold 流动与命运。",
-            "deposit_cta": "充值 Diamond",
-            "diamond_label": "Diamond（高级）",
-            "diamond_desc": "官方充值",
-            "frozen_label": "冻结中：{amount}",
-            "gold_label": "Gold（奖励）",
-            "gold_desc": "幸运奖励点",
-            "gold_note": "来自签到与活动",
-            "ledger_title": "交易旅程",
-            "search_placeholder": "搜索...",
-            "table_time": "时间",
-            "table_asset": "资产",
-            "table_action": "活动",
-            "table_amount": "数量",
-            "ledger_loading": "正在获取记录...",
-            "ledger_empty": "暂无交易记录。",
-            "balance_after": "余额：{amount}"
-        },
-        "deposit": {
-            "back_to_wallet": "返回宝库",
-            "tag": "能量补给",
-            "title": "充值 Diamond",
-            "subtitle": "为高级占卜协议注入 Diamond 能量。",
-            "balance_label": "当前余额",
-            "select_title": "选择充值金额",
-            "custom_label": "或输入自定义金额（VND）",
-            "custom_placeholder": "最低 10,000",
-            "bonus_gold": "+ {amount} 额外 Gold 🎁",
-            "confirm_title": "确认订单",
-            "value_label": "充值金额",
-            "diamond_receive_label": "获得 Diamond",
-            "promo_bonus_label": "促销赠送（Gold）",
-            "total_assets_label": "合计资产",
-            "order_ready": "订单已就绪",
-            "pay_now": "立即支付",
-            "submitting": "正在激活...",
-            "submit": "充值 Diamond",
-            "security_note": "由 TarotNow Financial Protocol 加密保护",
-            "notes_title": "交易说明",
-            "notes_item1": "1 Diamond = 1,000 VND。",
-            "notes_item2": "Diamond 用于高级占卜，Gold 用于签到与礼赠。",
-            "notes_item3": "交易将在 1-3 分钟内自动处理。",
-            "error_min_amount": "最低充值金额为 10,000 VND。",
-            "error_create_failed": "无法创建充值订单，请稍后再试。",
-            "error_generic": "发生错误，请重试。"
-        },
-        "withdraw": {
-            "back_to_wallet": "返回宝库",
-            "tag": "提现",
-            "title": "提现",
-            "subtitle": "将 Diamond 兑换为 VND。手续费 10%，最低 50💎，每天最多 1 次。",
-            "action_title": "此次提现",
-            "amount_label": "Diamond 数量",
-            "amount_placeholder": "最低 50",
-            "gross_label": "总额 VND",
-            "fee_label": "手续费 10%",
-            "net_label": "实收",
-            "bank_label": "银行",
-            "bank_placeholder": "例如：Vietcombank、Techcombank...",
-            "account_name_label": "账户持有人姓名",
-            "account_name_placeholder": "ZHANG SAN",
-            "account_number_label": "账号",
-            "account_number_placeholder": "0123456789",
-            "success_message": "提现申请已提交！",
-            "submitting": "处理中...",
-            "submit": "提交提现申请",
-            "history_title": "提现历史",
-            "history_empty": "暂无提现申请。",
-            "admin_note_prefix": "管理员：",
-            "status_pending": "待处理",
-            "status_approved": "已批准",
-            "status_rejected": "已拒绝",
-            "status_paid": "已支付",
-            "error_min_amount": "最低 50 Diamond。",
-            "error_enter_bank": "请输入银行名称。",
-            "error_enter_account_name": "请输入账户持有人姓名。",
-            "error_enter_account_number": "请输入账号。",
-            "error_create_failed": "无法创建申请。"
-        }
-    },
-    "Readers": {
-        "directory": {
-            "tag": "目录",
-            "title": "女祭司",
-            "subtitle": "找到与你共鸣的占卜师。只有当前可用者才能接收新问题。",
-            "total_label": "占卜师总数",
-            "search_placeholder": "按名称搜索...",
-            "specialties": {
-                "all": "全部领域",
-                "love": "💕 爱情",
-                "career": "💼 事业",
-                "general": "🔮 综合",
-                "health": "🌿 健康",
-                "finance": "💰 财务"
-            },
-            "statuses": {
-                "all": "全部状态",
-                "accepting": "🟢 可接单",
-                "online": "🟡 在线（忙碌）",
-                "offline": "⚫ 离线"
-            },
-            "status_indicator": {
-                "ready": "可接单",
-                "busy": "忙碌中",
-                "offline": "离线"
-            },
-            "loading": "正在加载列表...",
-            "empty": "没有符合筛选条件的占卜师。",
-            "reader_fallback": "占卜师",
-            "bio_fallback": "暂无详细介绍。",
-            "per_question_suffix": "/ 问"
-        },
-        "profile": {
-            "loading": "正在加载资料...",
-            "not_found": "未找到占卜师资料。",
-            "back_to_list": "返回目录",
-            "status": {
-                "accepting": "接受提问",
-                "online": "忙碌中",
-                "offline": "离线"
-            },
-            "diamond_per_question_suffix": "/ 问",
-            "rating_label": "评分",
-            "reviews_label": "评价数",
-            "soul_link": "灵魂连接",
-            "specialties_title": "擅长领域",
-            "cta_connecting": "正在连接...",
-            "cta_send_question": "立即提问",
-            "not_accepting": "暂不接单",
-            "toast_create_conversation_fail": "无法创建对话",
-            "member_since": "加入于 {date}"
-        }
-    },
-    "ReaderApply": {
-        "loading": "正在检查申请状态...",
-        "pending": {
-            "title": "申请待审核",
-            "desc": "你的占卜师申请已提交，正在等待管理员审核。结果出来后会通知你。",
-            "intro_label": "已提交的自我介绍",
-            "sent_at": "提交时间：{date}"
-        },
-        "approved": {
-            "title": "你已成为占卜师！",
-            "desc": "恭喜！你的申请已通过。请完善资料并开始接收提问。"
-        },
-        "rejected": {
-            "title": "上一次申请被拒绝",
-            "reason": "原因：{note}",
-            "can_resubmit": "你可以在下面重新提交申请。"
-        },
-        "header": {
-            "tag": "占卜师申请",
-            "title": "成为占卜师",
-            "subtitle": "与社区分享你的塔罗解读能力。告诉我们你想成为占卜师的原因。"
-        },
-        "steps": {
-            "intro": {
-                "title": "自我介绍",
-                "desc": "分享你的塔罗经验"
-            },
-            "review": {
-                "title": "等待审核",
-                "desc": "管理员将审核申请"
-            },
-            "start": {
-                "title": "开始接收提问",
-                "desc": "审核通过后"
-            }
-        },
-        "form": {
-            "intro_label": "自我介绍 *",
-            "intro_placeholder": "分享你的塔罗解读经验、你想成为占卜师的原因，以及你能为社区带来什么价值...",
-            "min_chars": "至少 20 个字符",
-            "submitting": "提交中...",
-            "submit": "提交申请"
-        },
-        "validation": {
-            "min_intro": "自我介绍至少需要 20 个字符。"
-        },
-        "errors": {
-            "submit_failed": "提交失败。"
-        },
-        "success": {
-            "submitted": "申请已提交成功。"
-        }
-    },
-    "ReadingSetup": {
-        "title": "选择牌阵",
-        "subtitle": "通过古老牌阵连接宇宙能量。",
-        "tag": "仪式准备",
-        "daily_1_name": "每日神谕（1 张）",
-        "daily_1_desc": "获取今日指引信息。",
-        "spread_3_name": "三位一体（3 张）",
-        "spread_3_desc": "探索过去、现在与未来的关联。",
-        "spread_5_name": "五元素（5 张）",
-        "spread_5_desc": "深入分析影响你处境的因素。",
-        "spread_10_name": "凯尔特十字（10 张）",
-        "spread_10_desc": "最全面、最细致的命运全景。",
-        "cost_free": "免费",
-        "cost_gold": "{amount} Gold",
-        "cost_diamond": "{amount} Diamond",
-        "question_label": "你在想什么？",
-        "question_placeholder": "集中注意力，在此输入你的问题（可选）...",
-        "cta_draw": "开始解读",
-        "preparing": "正在连接能量...",
-        "error_init_failed": "无法初始化占卜会话。",
-        "validation": {
-            "question_too_long": "问题过长"
-        }
-    },
-    "ReadingSession": {
-        "header": {
-            "back_to_setup": "返回抽牌",
-            "title": "神秘领域",
-            "session": "会话：{id}..."
-        },
-        "question": {
-            "label": "心念"
-        },
-        "shuffle": {
-            "connecting_title": "正在建立连接...",
-            "cleansing": "正在净化卡牌"
-        },
-        "pick": {
-            "prompt": "静心并选择 {remaining} 张牌",
-            "done": "卡牌已就位",
-            "count": "{picked}/{total} 张牌",
-            "random": "随机选择"
-        },
-        "modal": {
-            "title": "已选择卡牌",
-            "desc": "宇宙已听见你的心声。在接收讯息前深呼吸一下。",
-            "revealing": "正在注入能量...",
-            "reveal": "注入能量并翻牌",
-            "change_card": "更换一张牌"
-        },
-        "cards": {
-            "meaning_label": "含义"
-        },
-        "ai": {
-            "subtitle": "AI Divine Stream • {id}",
-            "live": "实时",
-            "waiting_flip": "正在准备连接... 请翻开所有卡牌以接收讯息。",
-            "footer_note": "聆听你卡牌的共振。"
-        },
-        "errors": {
-            "reveal_failed": "无法翻牌。"
-        }
-    },
-    "Collection": {
-        "tag": "奥秘圣殿",
-        "title": "神秘圣殿",
-        "subtitle": "追踪你解锁塔罗卡牌宇宙的进度。",
-        "error_load_failed": "无法加载你的收藏。",
-        "progress_label": "收藏进度",
-        "filters_label": "筛选",
-        "filter_all": "全部",
-        "filter_owned": "已拥有",
-        "filter_unowned": "隐藏",
-        "empty_title": "你的收藏为空",
-        "empty_desc": "完成第一次塔罗占卜以解锁卡牌元素。",
-        "cta_draw": "立即抽牌",
-        "level_label": "等级",
-        "copies_label": "份",
-        "unknown_card": "未知",
-        "locked_meaning": "宇宙尚未向你揭示这张牌的信息。"
-    },
-    "History": {
-        "title": "仪式旅程",
-        "subtitle": "记录来自星辰的信息。",
-        "tag": "编年史",
-        "detail_fragment": "片段：{id}...",
-        "essence_label": "精华",
-        "ai_title": "原初神谕",
-        "ai_desc": "宇宙已在本次会话中保存了 {count} 条智慧印记。完整对话内容将在后续协议更新中呈现。",
-        "empty_title": "暂无记录",
-        "empty_desc": "宇宙正等待你开启新的起点。",
-        "cta_draw": "立即抽牌",
-        "status_completed": "已完成",
-        "status_interrupted": "已中断",
-        "page_info": "第 {current} / {total} 页",
-        "prev_page": "上一页",
-        "next_page": "下一页",
-        "spread_daily": "每日神谕（1 张）",
-        "spread_3": "三位一体（3 张）",
-        "spread_5": "五元素（5 张）",
-        "spread_10": "凯尔特十字（10 张）",
-        "filter_type": "牌阵类型",
-        "filter_date": "日期",
-        "all_types": "全部牌阵"
-    },
-    "Admin": {
-        "layout": {
-            "title": "Admin",
-            "subtitle": "管理",
-            "section_main": "主控台",
-            "exit_portal": "退出入口",
-            "menu": {
-                "overview": "总览",
-                "users": "用户",
-                "deposits": "充值",
-                "promotions": "促销",
-                "readings": "占卜会话",
-                "reader_requests": "占卜师申请",
-                "withdrawals": "提现",
-                "disputes": "争议"
-            }
-        },
-	        "dashboard": {
-	            "loading": "正在初始化管理系统...",
-	            "header": {
-	                "tag": "系统智能",
-	                "title": "HQ 总览",
-	                "subtitle": "监控 TarotNow AI 全系统的用户流与命运数据。"
-            },
-            "health": {
-                "title": "健康检查",
-                "ok": "系统稳定"
-            },
-            "stats": {
-                "users": "用户总数",
-                "deposits": "充值次数",
-                "promotions": "促销",
-                "readings": "占卜会话"
-            },
-            "notice": {
-                "title": "管理员公告",
-                "reminder_title": "提醒",
-                "reminder_body": "检查待处理充值订单，如 MOMO/VNPay 延迟可进行人工确认。",
-                "announcement_title": "公告",
-                "announcement_body": "Admin 界面 Astral v2.0 已更新，带来更顺滑的管理体验。"
-            },
-            "shortcuts": {
-                "title": "快捷入口",
-                "users": "用户管理",
-                "deposits": "充值流水",
-                "readings": "最新占卜",
-                "reader_requests": "审核占卜师"
-            },
-            "insights": {
-                "revenue_title": "预估收入",
-                "revenue_currency": "VND",
-                "revenue_note": "基于 {count} 笔成功充值计算",
-                "activity_title": "活动流",
-                "activity_unit": "会话",
-                "activity_note": "已完成的命运解读会话总数"
-            }
-	        },
-	        "deposits": {
-	            "header": {
-	                "tag": "财务",
-	                "title": "系统充值",
-	                "subtitle": "追踪 {count} 笔 Diamond 充值交易。"
-	            },
-	            "filters": {
-	                "label": "筛选",
-	                "all": "全部",
-	                "pending": "待处理",
-	                "success": "成功",
-	                "failed": "失败"
-	            },
-	            "table": {
-	                "heading_order": "订单 / TXN",
-	                "heading_user": "用户",
-	                "heading_amount": "金额 (VND)",
-	                "heading_assets": "到账资产",
-	                "heading_time": "时间",
-	                "heading_status": "状态",
-	                "heading_actions": "操作"
-	            },
-	            "row": {
-	                "txn_missing": "无 TXN",
-	                "system_user": "系统用户",
-	                "user_id_prefix": "ID: {id}..."
-	            },
-	            "status": {
-	                "success": "成功",
-	                "failed": "失败",
-	                "pending": "处理中"
-	            },
-	            "actions": {
-	                "approve_title": "批准",
-	                "reject_title": "拒绝",
-	                "na": "N/A"
-	            },
-	            "modal": {
-	                "title_approve": "批准交易？",
-	                "title_reject": "拒绝交易？",
-	                "desc_approve": "这将更新资金流状态，并为该用户入账资产。",
-	                "desc_reject": "这将更新资金流状态并取消请求。",
-	                "back": "返回",
-	                "confirm": "确认"
-	            },
-	            "toast": {
-	                "approve_success": "批准成功！",
-	                "reject_success": "已拒绝订单。",
-	                "action_failed": "失败，请重试。",
-	                "network_error": "服务器连接错误。"
-	            },
-	            "states": {
-	                "loading": "正在查询账本...",
-	                "empty": "此视图下暂无交易。"
-	            },
-	            "pagination": {
-	                "summary": "第 {page} 页 | 共 {total} 笔交易"
-	            },
-	            "summary": {
-	                "confirm_title": "确认订单",
-	                "confirm_desc": "系统会从支付网关自动同步。手动干预前请核对 TXN。",
-	                "ledger_title": "账本信息",
-	                "ledger_subtitle": "财务记录 v2.4"
-	            }
-	        },
-	        "users": {
-	            "header": {
-	                "tag": "数据库",
-	                "title": "用户管理",
-	                "subtitle": "系统共有 {count} 位用户。"
-	            },
-	            "search": {
-	                "placeholder": "姓名、邮箱、用户名..."
-	            },
-	            "table": {
-	                "heading_account": "账户",
-	                "heading_rank": "等级 / XP",
-	                "heading_assets": "资产 (D/G)",
-	                "heading_role": "角色",
-	                "heading_status": "状态",
-	                "heading_actions": "操作"
-	            },
-	            "row": {
-	                "level": "LV {level}",
-	                "exp": "{exp} EXP"
-	            },
-	            "states": {
-	                "loading": "正在查询数据...",
-	                "empty": "未找到匹配用户。"
-	            },
-	            "roles": {
-	                "admin": "管理员",
-	                "tarot_reader": "占卜师",
-	                "user": "用户"
-	            },
-	            "status": {
-	                "locked": "已锁定",
-	                "active": "活跃"
-	            },
-	            "actions": {
-	                "add_balance_title": "手动充值",
-	                "lock_title": "锁定账户",
-	                "unlock_title": "解锁"
-	            },
-	            "pagination": {
-	                "summary": "第 {page} 页 | 共 {total} 位用户"
-	            },
-	            "lock_modal": {
-	                "title_lock": "锁定此账户？",
-	                "title_unlock": "解锁此账户？",
-	                "desc_lock": "确认阻止用户访问：{name}",
-	                "desc_unlock": "确认允许该用户继续旅程：{name}",
-	                "cancel": "取消",
-	                "confirm": "执行"
-	            },
-	            "add_balance": {
-	                "title": "手动充值",
-	                "subtitle": "手动余额干预",
-	                "recipient_label": "接收用户",
-	                "currency_gold": "Gold",
-	                "currency_diamond": "Diamond",
-	                "amount_label": "数量",
-	                "reason_label": "原因",
-	                "reason_placeholder": "例如：系统补偿、活动赠礼...",
-	                "cancel": "取消",
-	                "submit": "执行"
-	            },
-	            "toast": {
-	                "lock_success": "账户已锁定。",
-	                "unlock_success": "账户已解锁。",
-	                "toggle_failed": "更改账户状态失败。",
-	                "network_error": "连接错误。",
-	                "amount_invalid": "数量必须大于 0。",
-	                "add_success": "已成功添加 {amount} {currency}！",
-	                "add_failed": "添加余额失败。",
-	                "system_error": "系统错误。"
-	            }
-	        },
-	        "promotions": {
-	            "header": {
-	                "tag": "营销",
-	                "title": "促销",
-	                "subtitle": "设置充值门槛以奖励额外 Gold。"
-	            },
-	            "actions": {
-	                "toggle_create_add": "新增促销",
-	                "toggle_create_cancel": "取消"
-	            },
-	            "create": {
-	                "title": "创建新的奖励门槛",
-	                "min_amount_label": "最低充值 (VND)",
-	                "min_amount_placeholder": "200,000",
-	                "bonus_label": "奖励 Gold",
-	                "bonus_placeholder": "500",
-	                "note": "保存后将立即生效。",
-	                "submit": "保存到系统",
-	                "submitting": "保存中..."
-	            },
-	            "table": {
-	                "heading_condition": "触发条件",
-	                "heading_reward": "奖励 (Gold)",
-	                "heading_status": "状态",
-	                "heading_commands": "操作"
-	            },
-	            "states": {
-	                "loading": "正在加载促销...",
-	                "empty": "暂无促销。"
-	            },
-	            "row": {
-	                "condition_from": "从 {amount} 起"
-	            },
-	            "status": {
-	                "active": "启用中",
-	                "inactive": "已停用"
-	            },
-	            "delete_modal": {
-	                "title": "删除促销？",
-	                "desc": "这将从系统账本中永久删除该促销门槛，已有交易不受影响。",
-	                "keep": "保留",
-	                "delete": "删除"
-	            },
-	            "toast": {
-	                "create_success": "促销已创建。",
-	                "create_failed": "创建促销失败。",
-	                "toggle_success": "状态已更新。",
-	                "toggle_failed": "更新状态失败。",
-	                "delete_success": "促销已删除。",
-	                "delete_failed": "删除促销失败。",
-	                "network_error": "连接错误。"
-	            }
-	        },
-	        "readings": {
-	            "header": {
-	                "tag": "监控",
-	                "title": "命运日志",
-	                "subtitle": "探索 {count} 次塔罗旅程。"
-	            },
-	            "filters": {
-	                "username_label": "用户",
-	                "username_placeholder": "用户名...",
-	                "spread_label": "牌阵",
-	                "spread_all": "全部牌阵",
-	                "spread_daily": "每日一张",
-	                "spread_3": "三张牌阵",
-	                "spread_5": "五张牌阵",
-	                "spread_10": "十字牌阵（10 张）",
-	                "start_date_label": "起始日期",
-	                "end_date_label": "结束日期",
-	                "submit": "查询"
-	            },
-	            "table": {
-	                "heading_timeline": "时间线",
-	                "heading_user": "用户",
-	                "heading_spread": "牌阵",
-	                "heading_question": "问题",
-	                "heading_status": "状态"
-	            },
-	            "states": {
-	                "loading": "正在翻阅命运篇章...",
-	                "empty": "未找到占卜记录。"
-	            },
-	            "row": {
-	                "user_unknown": "未知",
-	                "question_empty": "未提供问题..."
-	            },
-	            "status": {
-	                "completed": "已完成",
-	                "processing": "进行中"
-	            },
-	            "pagination": {
-	                "summary": "第 {page} 章 / 共 {total} 个命运领域"
-	            },
-	            "insights": {
-	                "total_title": "总旅程",
-	                "update_label": "更新周期",
-	                "update_value": "实时",
-	                "monitor_label": "监控区",
-	                "monitor_value": "Admin 日志簿"
-	            },
-	            "toast": {
-	                "unauthorized": "会话过期或无权限。"
-	            }
-	        },
-	        "reader_requests": {
-	            "header": {
-	                "tag": "审核",
-	                "title": "占卜师申请",
-	                "subtitle": "审核并批准占卜师申请。"
-	            },
-	            "summary": {
-	                "total_label": "申请总数"
-	            },
-	            "filters": {
-	                "pending": "待审核",
-	                "approved": "已批准",
-	                "rejected": "已拒绝",
-	                "all": "全部"
-	            },
-	            "states": {
-	                "loading": "加载中...",
-	                "empty": "暂无申请。"
-	            },
-	            "row": {
-	                "id_prefix": "ID: {id}...",
-	                "intro_title": "自我介绍",
-	                "expand": "展开",
-	                "admin_note_title": "管理员备注"
-	            },
-	            "input": {
-	                "admin_note_placeholder": "审核前管理员备注（可选）..."
-	            },
-	            "actions": {
-	                "approve": "批准占卜师",
-	                "reject": "拒绝申请"
-	            },
-	            "status": {
-	                "pending": "待审核",
-	                "approved": "已批准",
-	                "rejected": "已拒绝"
-	            },
-	            "pagination": {
-	                "summary": "第 {page} 页 / 共 {total}"
-	            },
-	            "toast": {
-	                "approve_success": "已批准占卜师。",
-	                "reject_success": "申请已拒绝。",
-	                "process_failed": "处理失败，请重试。"
-	            }
-	        },
-	        "withdrawals": {
-	            "header": {
-	                "tag": "Admin",
-	                "title": "提现队列",
-	                "subtitle": "审核或拒绝占卜师的提现申请（FIFO）。"
-	            },
-	            "states": {
-	                "loading": "正在加载队列...",
-	                "empty": "暂无待处理申请。"
-	            },
-	            "row": {
-	                "gross": "总额",
-	                "fee": "手续费",
-	                "net": "净额",
-	                "id_prefix": "ID: {id}..."
-	            },
-	            "input": {
-	                "admin_note_placeholder": "管理员备注..."
-	            },
-	            "actions": {
-	                "approve": "批准",
-	                "reject": "拒绝"
-	            },
-	            "toast": {
-	                "success": "处理成功。",
-	                "failed": "处理失败。"
-	            },
-	            "mfa": {
-	                "action_approve": "批准该提现申请",
-	                "action_reject": "拒绝该提现申请"
-	            }
-	        },
-	        "disputes": {
-	            "header": {
-	                "tag": "Escrow",
-	                "title": "争议队列",
-	                "subtitle": "处理 escrow 争议。决定向占卜师放款或向用户退款。"
-	            },
-	            "guide": {
-	                "title": "争议处理指南",
-	                "release_label": "放款",
-	                "release_desc": "占卜师回答正确 → Diamond 转给占卜师（扣除 10% 手续费）。",
-	                "refund_label": "退款",
-	                "refund_desc": "回答错误或未回复 → Diamond 退还给用户。",
-	                "check_history": "决策前请检查聊天记录。"
-	            },
-	            "form": {
-	                "quick_title": "快速处理",
-	                "item_id_label": "Item ID (UUID)",
-	                "item_id_placeholder": "输入 QUESTION ITEM 的 UUID...",
-	                "note_label": "管理员备注",
-	                "note_placeholder": "决定原因...",
-	                "release_button": "放款给占卜师",
-	                "refund_button": "退款给用户"
-	            },
-	            "toast": {
-	                "release_success": "已成功放款给占卜师。",
-	                "refund_success": "已成功退款给用户。",
-	                "failed": "处理争议失败，请检查后重试。",
-	                "missing_item_id": "请输入 Item ID。"
-	            },
-	            "resolved": {
-	                "title": "本次会话已处理",
-	                "badge": "已处理"
-	            }
-	        }
-	    },
-    "Tarot": {
-        "suits": {
-            "major": {
-                "full": "大阿卡那",
-                "short": "大阿"
-            },
-            "wands": {
-                "full": "权杖",
-                "short": "权杖"
-            },
-            "cups": {
-                "full": "圣杯",
-                "short": "圣杯"
-            },
-            "swords": {
-                "full": "宝剑",
-                "short": "宝剑"
-            },
-            "pentacles": {
-                "full": "星币",
-                "short": "星币"
-            }
-        },
-        "cards": {
-            "c0": {
-                "name": "愚者",
-                "meaning": "充满潜力的新开始；以开放自由的心踏上冒险。"
-            },
-            "c1": {
-                "name": "魔术师",
-                "meaning": "运用天赋与资源，把想法化为现实。"
-            },
-            "c2": {
-                "name": "女祭司",
-                "meaning": "倾听内在声音，信任直觉与内在智慧。"
-            },
-            "c3": {
-                "name": "女皇",
-                "meaning": "丰盛、创造力，以及与自然的深度连接。"
-            },
-            "c4": {
-                "name": "皇帝",
-                "meaning": "强而有力的领导、纪律，与稳固的基础。"
-            },
-            "c5": {
-                "name": "教皇",
-                "meaning": "寻求灵性指引，遵循传统与共同价值。"
-            },
-            "c6": {
-                "name": "恋人",
-                "meaning": "深刻的连结、重要的选择，以及关系中的和谐。"
-            },
-            "c7": {
-                "name": "战车",
-                "meaning": "凭借意志与专注战胜阻碍。"
-            },
-            "c8": {
-                "name": "力量",
-                "meaning": "真正的力量来自内在：勇气、耐心与慈悲。"
-            },
-            "c9": {
-                "name": "隐者",
-                "meaning": "安静反思的时刻，从内心寻找答案。"
-            },
-            "c10": {
-                "name": "命运之轮",
-                "meaning": "积极的转变、好运到来，以及生命循环的流转。"
-            },
-            "c11": {
-                "name": "正义",
-                "meaning": "真相显现，公正得以伸张，并承担责任。"
-            },
-            "c12": {
-                "name": "倒吊人",
-                "meaning": "暂停片刻，从不同角度看问题；学会放下与臣服。"
-            },
-            "c13": {
-                "name": "死神",
-                "meaning": "一个阶段的结束，开启新的开始；深层转化。"
-            },
-            "c14": {
-                "name": "节制",
-                "meaning": "寻找平衡，对一切保持耐心，调和对立面。"
-            },
-            "c15": {
-                "name": "恶魔",
-                "meaning": "被欲望、坏习惯或恐惧所束缚。"
-            },
-            "c16": {
-                "name": "高塔",
-                "meaning": "突如其来的崩塌打破不再适合的事物，为重建腾出空间。"
-            },
-            "c17": {
-                "name": "星星",
-                "meaning": "新的希望、疗愈与创意灵感。"
-            },
-            "c18": {
-                "name": "月亮",
-                "meaning": "直面恐惧与幻象，以及潜意识中隐藏的事物。"
-            },
-            "c19": {
-                "name": "太阳",
-                "meaning": "灿烂的喜悦、成功与满满的乐观。"
-            },
-            "c20": {
-                "name": "审判",
-                "meaning": "审视与总结的时刻，觉醒并迈入新阶段。"
-            },
-            "c21": {
-                "name": "世界",
-                "meaning": "完成一个重要循环，获得圆满与满足。"
-            },
-            "c22": {
-                "name": "权杖王牌",
-                "meaning": "新的创意能量涌现；充满灵感的开端。"
-            },
-            "c23": {
-                "name": "权杖二",
-                "meaning": "展望未来，规划行动。"
-            },
-            "c24": {
-                "name": "权杖三",
-                "meaning": "扩展视野，把握新的机会。"
-            },
-            "c25": {
-                "name": "权杖四",
-                "meaning": "庆祝成就，家庭与关系中的和谐。"
-            },
-            "c26": {
-                "name": "权杖五",
-                "meaning": "良性的竞争或面对挑战。"
-            },
-            "c27": {
-                "name": "权杖六",
-                "meaning": "辉煌的胜利与认可。"
-            },
-            "c28": {
-                "name": "权杖七",
-                "meaning": "在考验中站稳立场，捍卫自己的观点。"
-            },
-            "c29": {
-                "name": "权杖八",
-                "meaning": "事情快速推进，立即行动。"
-            },
-            "c30": {
-                "name": "权杖九",
-                "meaning": "即使疲惫也要坚持，为最后的挑战做好准备。"
-            },
-            "c31": {
-                "name": "权杖十",
-                "meaning": "负担过重，学会分担与授权。"
-            },
-            "c32": {
-                "name": "权杖侍从",
-                "meaning": "带着热情与好奇探索世界。"
-            },
-            "c33": {
-                "name": "权杖骑士",
-                "meaning": "大胆行动，充满激情与冒险精神。"
-            },
-            "c34": {
-                "name": "权杖王后",
-                "meaning": "自信、有魅力，并能激励他人。"
-            },
-            "c35": {
-                "name": "权杖国王",
-                "meaning": "以远见与丰富经验领导。"
-            },
-            "c36": {
-                "name": "圣杯王牌",
-                "meaning": "新的爱意萌芽，或创作灵感满溢。"
-            },
-            "c37": {
-                "name": "圣杯二",
-                "meaning": "和谐的关系，理想的伙伴。"
-            },
-            "c38": {
-                "name": "圣杯三",
-                "meaning": "与朋友和群体共享喜悦。"
-            },
-            "c39": {
-                "name": "圣杯四",
-                "meaning": "对现状不满足，错过机会。"
-            },
-            "c40": {
-                "name": "圣杯五",
-                "meaning": "为失去而悲伤，但仍有值得珍惜的部分。"
-            },
-            "c41": {
-                "name": "圣杯六",
-                "meaning": "怀念美好回忆，纯真与单纯。"
-            },
-            "c42": {
-                "name": "圣杯七",
-                "meaning": "选择诱人却繁多，需要分辨现实。"
-            },
-            "c43": {
-                "name": "圣杯八",
-                "meaning": "离开不再有意义的处境。"
-            },
-            "c44": {
-                "name": "圣杯九",
-                "meaning": "愿望成真，深深的满足。"
-            },
-            "c45": {
-                "name": "圣杯十",
-                "meaning": "家庭幸福圆满，关系与情感的丰盈。"
-            },
-            "c46": {
-                "name": "圣杯侍从",
-                "meaning": "丰富的想象力与强烈直觉。"
-            },
-            "c47": {
-                "name": "圣杯骑士",
-                "meaning": "浪漫，追随内心的呼唤。"
-            },
-            "c48": {
-                "name": "圣杯王后",
-                "meaning": "深度共情、直觉强，并具疗愈能力。"
-            },
-            "c49": {
-                "name": "圣杯国王",
-                "meaning": "情绪掌控良好，善良而仁慈。"
-            },
-            "c50": {
-                "name": "宝剑王牌",
-                "meaning": "思维的清晰与理智，突破性的想法。"
-            },
-            "c51": {
-                "name": "宝剑二",
-                "meaning": "面对艰难抉择，需要冷静权衡。"
-            },
-            "c52": {
-                "name": "宝剑三",
-                "meaning": "心碎、失望或背叛。"
-            },
-            "c53": {
-                "name": "宝剑四",
-                "meaning": "需要休息与修复，恢复能量。"
-            },
-            "c54": {
-                "name": "宝剑五",
-                "meaning": "不惜代价的胜利，得不偿失。"
-            },
-            "c55": {
-                "name": "宝剑六",
-                "meaning": "离开困境，驶向更平静的地方。"
-            },
-            "c56": {
-                "name": "宝剑七",
-                "meaning": "隐秘行动或运用聪明策略。"
-            },
-            "c57": {
-                "name": "宝剑八",
-                "meaning": "感觉被环境或自我束缚所困。"
-            },
-            "c58": {
-                "name": "宝剑九",
-                "meaning": "焦虑与恐惧萦绕，尤其在夜晚。"
-            },
-            "c59": {
-                "name": "宝剑十",
-                "meaning": "痛苦而突然的结束，但也为新开始打开可能。"
-            },
-            "c60": {
-                "name": "宝剑侍从",
-                "meaning": "好奇、聪慧，总是准备学习。"
-            },
-            "c61": {
-                "name": "宝剑骑士",
-                "meaning": "行动迅速果断，雄心驱动。"
-            },
-            "c62": {
-                "name": "宝剑王后",
-                "meaning": "锐利智慧、独立，以及毫不妥协的诚实。"
-            },
-            "c63": {
-                "name": "宝剑国王",
-                "meaning": "以智慧领导，公正并重逻辑。"
-            },
-            "c64": {
-                "name": "星币王牌",
-                "meaning": "新的财务机会，为未来奠定稳固基础。"
-            },
-            "c65": {
-                "name": "星币二",
-                "meaning": "灵活地平衡多重优先事项。"
-            },
-            "c66": {
-                "name": "星币三",
-                "meaning": "有效合作，发挥专业技能。"
-            },
-            "c67": {
-                "name": "星币四",
-                "meaning": "守住财富，寻求财务稳定。"
-            },
-            "c68": {
-                "name": "星币五",
-                "meaning": "在财务或精神层面经历困难阶段。"
-            },
-            "c69": {
-                "name": "星币六",
-                "meaning": "分享资源，慷慨支持他人。"
-            },
-            "c70": {
-                "name": "星币七",
-                "meaning": "耐心等待长期投入的成果。"
-            },
-            "c71": {
-                "name": "星币八",
-                "meaning": "勤奋练习，打磨并完善技能。"
-            },
-            "c72": {
-                "name": "星币九",
-                "meaning": "富足并享受劳动成果。"
-            },
-            "c73": {
-                "name": "星币十",
-                "meaning": "稳固的家业与传承，跨世代的稳定。"
-            },
-            "c74": {
-                "name": "星币侍从",
-                "meaning": "学习与财务成长的机会。"
-            },
-            "c75": {
-                "name": "星币骑士",
-                "meaning": "稳步前进，可靠且有耐心。"
-            },
-            "c76": {
-                "name": "星币王后",
-                "meaning": "以务实方式带来安全感与滋养。"
-            },
-            "c77": {
-                "name": "星币国王",
-                "meaning": "财务成功，卓越的商业领导力。"
-            }
-        }
-    },
-    "Legal": {
-        "tos_title": "服务条款",
-        "tos_meta_desc": "TarotNow 的服务与使用条款。",
-        "privacy_title": "隐私政策",
-        "privacy_meta_desc": "TarotNow 的数据隐私政策。",
-        "ai_disclaimer_title": "AI 免责声明",
-        "ai_disclaimer_meta_desc": "TarotNow 关于 AI 生成信息的责任声明。",
-        "tos": {
-            "section1_title": "1. 一般条款",
-            "section1_body": "欢迎使用 TarotNow。使用我们的服务即表示你同意遵守这些条款与条件。我们的服务通过塔罗牌与人工智能（AI）技术提供娱乐与参考性的心理支持。",
-            "section2_title": "2. AI 免责声明",
-            "section2_body": "所有塔罗解读内容均由 AI 生成，仅供娱乐与参考。我们不对用户依据 TarotNow 结果作出的个人、医疗、财务或法律决定承担法律责任。",
-            "section3_title": "3. 账户与支付",
-            "section3_body": "用户需自行负责保护账户信息安全。Diamond 充值交易原则上不予退款，除非因支付网关导致的系统错误。",
-            "last_updated": "最后更新：10/2026"
-        },
-        "privacy": {
-            "section1_title": "1. 信息收集",
-            "section1_body": "TarotNow 尊重你的隐私。我们会收集必要信息，例如邮箱地址、显示名称和生日，以便个性化塔罗体验，并用于计算星座与数字命理。",
-            "section2_title": "2. 数据使用",
-            "section2_body": "你的数据仅用于内部目的，例如存储占卜历史。AI 查询历史会以加密方式发送给服务提供方（OpenAI）以获取结果，并不用于训练 AI（training），遵循合作方承诺。",
-            "section3_title": "3. 数据保护",
-            "section3_body": "所有账户信息与密码均会安全加密。我们不会以商业目的向第三方出售、交换或共享用户个人数据。",
-            "last_updated": "最后更新：10/2026"
-        },
-        "ai_disclaimer": {
-            "warning": "提示：来自 Astral AI 的预测与分析完全由大型语言模型（LLM）生成。请不要将其视为替代医学、心理或财务专业建议。",
-            "section1_title": "1. AI 的特性",
-            "section1_body": "所有塔罗信息均由人工智能（AI）进行解读。尽管我们已优化相关算法与塔罗直觉逻辑，但 AI 的解读在所有情境中都不一定 100% 准确。",
-            "section2_title": "2. 非医疗诊断",
-            "section2_body": "与情绪、健康或金钱相关的解读结果不应作为自我医疗诊断依据，也不应替代法律或财务建议。若你正面临严重问题，请务必咨询现实生活中的专业人士。",
-            "consent_note": "在注册 TarotNow 账号前，你需要同意以上免责声明。"
-        }
+    "f1Title": "深度 AI 解析",
+    "f1Desc": "AI 训练自大量塔罗资料，为你的处境提供准确且个性化的解读。",
+    "f2Title": "神秘卡牌收藏",
+    "f2Desc": "每次抽牌都是一次收集卡牌元素的机会，累积足够元素后卡牌将升级并焕发更强能量。",
+    "f3Title": "RNG 锁定与绝对真实",
+    "f3Desc": "确定性洗牌算法结合哈希技术，确保抽到的牌是当下瞬间唯一且不可篡改的结果。",
+    "final": {
+      "title1": "开启旅程",
+      "title2": "Lunar Bloom Healing",
+      "cta": "立即抽牌"
     }
+  },
+  "Navigation": {
+    "home": "主页",
+    "readings": "占卜",
+    "readers": "占卜师",
+    "chat": "聊天",
+    "login": "登录",
+    "register": "注册",
+    "logout": "退出",
+    "adminPortal": "管理后台",
+    "profile": "个人资料",
+    "wallet": "钱包",
+    "history": "历史",
+    "collection": "收藏"
+  },
+  "Footer": {
+    "tagline": "月华绽放指引",
+    "links": {
+      "reading": "占卜",
+      "readers": "占卜师",
+      "wallet": "积分",
+      "chat": "消息"
+    },
+    "legal": {
+      "tos": "条款",
+      "privacy": "隐私",
+      "ai": "AI 免责声明"
+    },
+    "social": {
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "tiktok": "TikTok"
+    },
+    "copyright": "© {year} TarotNow AI • 高端灵性体验 • 保留所有权利"
+  },
+  "Profile": {
+    "title": "个人资料",
+    "subtitle": "管理你的信息并微调你的连接。",
+    "loading": "正在加载个人资料...",
+    "admin_portal": "管理后台",
+    "reader_profile": "占卜师资料",
+    "settings_title": "修改设置",
+    "displayName": "显示名称",
+    "display_name_placeholder": "你的显示名称",
+    "avatarUrl": "头像链接（Avatar URL）",
+    "avatar_url_placeholder": "https://example.com/avatar.jpg",
+    "dateOfBirth": "出生日期",
+    "save": "保存更改",
+    "saving": "处理中...",
+    "successMsg": "更新成功！",
+    "errorLoad": "无法加载个人资料",
+    "errorSave": "更新失败",
+    "level": "等级",
+    "zodiac": "星座",
+    "numerology": "数字命理",
+    "validation": {
+      "display_name_min": "显示名称至少 2 个字符",
+      "avatar_url_invalid": "头像链接无效",
+      "date_of_birth_invalid": "出生日期无效"
+    },
+    "upgrade": {
+      "title": "成为塔罗占卜师",
+      "subtitle": "解锁大师级能力",
+      "desc": "想与社区分享你的塔罗解读能力吗？申请成为占卜师——接收来自求问者的问题并赚取 Diamond。",
+      "cta": "立即申请",
+      "pending_title": "申请待审核",
+      "pending_desc": "你的占卜师申请已提交，正在等待管理员审核。结果出来后将通知你。",
+      "rejected_title": "上次申请被拒绝",
+      "rejected_reason": "原因：{note}",
+      "reapply_cta": "重新提交申请"
+    },
+    "mfa": {
+      "tag": "安全",
+      "title": "双重验证",
+      "subtitle": "多因素验证（MFA/TOTP）可防止未授权访问。提现时必需。",
+      "status_checking": "正在检查安全状态...",
+      "enabled_title": "MFA 已启用",
+      "enabled_desc": "你的账号已通过 MFA 保护。",
+      "enabled_cta": "前往提现",
+      "disabled_title": "安全未完成",
+      "disabled_desc": "请启用 MFA 以保护钱包并提现。",
+      "setup_error_generic": "初始化 MFA 失败",
+      "start_setup": "开始设置 MFA",
+      "step1_title": "1. 扫描二维码",
+      "step1_desc": "使用 Google Authenticator、Authy 或其他 TOTP 应用。",
+      "manual_code_label": "或手动输入密钥",
+      "copy": "复制",
+      "step2_title": "2. 保存备用码",
+      "step2_desc": "如果丢失设备，你必须使用这些备用码恢复。每个码只能使用一次。",
+      "step3_title": "3. 验证验证码",
+      "step3_desc": "输入应用中的 6 位验证码以完成设置。",
+      "code_placeholder": "000 000",
+      "verify_error_invalid": "验证码无效",
+      "verify_cta": "确认并启用 MFA"
+    },
+    "reader": {
+      "tag": "占卜师设置",
+      "title": "占卜师控制台",
+      "subtitle": "管理你的公开资料与在线状态。",
+      "loading": "正在加载占卜师设置...",
+      "toast_not_found": "未找到占卜师信息。你已被批准了吗？",
+      "toast_save_success": "保存成功！",
+      "toast_save_fail": "保存失败！",
+      "toast_status_updated": "状态已更新",
+      "toast_status_update_fail": "更新状态失败",
+      "status_title": "在线状态",
+      "status_accepting": "接受提问",
+      "status_online": "在线（忙碌）",
+      "status_offline": "离线",
+      "public_profile_title": "公开资料",
+      "bio_label": "自我介绍（Bio）",
+      "bio_placeholder": "介绍你的解牌风格与经验...",
+      "specialties_label": "擅长领域（逗号分隔）",
+      "specialties_placeholder": "爱情，事业，财务...",
+      "price_label": "每个追加问题的 Diamond 价格",
+      "price_help": "主问题费用通过 Escrow 固定扣除。",
+      "saving": "保存中...",
+      "save": "保存资料"
+    }
+  },
+  "ApiErrors": {
+    "unknown_error": "发生未知错误。",
+    "unauthorized": "登录已失效，请重新登录。",
+    "forbidden": "您没有权限执行此操作。",
+    "not_found": "未找到请求的数据。",
+    "invalid_code": "验证码无效。",
+    "network_error": "网络连接错误，请重试。"
+  },
+  "AiInterpretation": {
+    "title": "宇宙解读",
+    "subtitle": "AI 正在解读牌面并连接你的能量",
+    "status_complete": "解读完成",
+    "error_title": "能量干扰",
+    "error_stream": "通信通道中断，请稍后再试。",
+    "error_retry": "尝试其他通道（自动退款）",
+    "streaming_placeholder": "星辰正在对齐...",
+    "follow_up_placeholder": "你还想问这次解读什么？...",
+    "follow_up_free_badge": "免费追问 ({remaining}/{total})",
+    "follow_up_fee_badge": "费用：{cost} Diamond",
+    "follow_up_hint": "最多 5 个追问。会消耗 AI 配额；若牌等级足够则不消耗 Diamond。",
+    "hard_cap_title": "已达到宇宙上限",
+    "hard_cap_desc": "本次会话的能量已耗尽（5/5）。过多的分心会扭曲最初的信息。请接纳已得到的指引并慢慢体会。"
+  },
+  "Common": {
+    "app_title": "TarotNow AI",
+    "app_description": "透明且现代的塔罗体验。",
+    "loading": "加载中...",
+    "error": "发生错误",
+    "back": "返回",
+    "close": "关闭",
+    "avatar_alt": "头像",
+    "close_modal": "关闭弹窗",
+    "menu": "菜单",
+    "notifications": "通知",
+    "confirm": "确认",
+    "status_complete": "完成"
+  },
+  "Pagination": {
+    "page_info": "第 {current} / {total} 页",
+    "prev": "上一页",
+    "next": "下一页"
+  },
+  "UserNav": {
+    "groups": {
+      "main": "主要",
+      "tarot": "塔罗",
+      "social": "社交",
+      "account": "账户"
+    }
+  },
+  "Auth": {
+    "validation": {
+      "email_invalid": "邮箱地址无效",
+      "email_or_username_required": "请输入邮箱或用户名",
+      "password_required": "请输入密码",
+      "username_min": "用户名至少 3 个字符",
+      "username_pattern": "仅允许字母、数字和下划线",
+      "password_min": "密码至少 8 个字符",
+      "password_complexity": "需包含大写、小写、数字和特殊字符",
+      "display_name_required": "请输入显示名称",
+      "age_minimum": "你必须年满 16 岁才能使用此服务。",
+      "must_accept_terms": "你必须同意条款与政策",
+      "passwords_no_match": "两次输入的密码不一致",
+      "otp_length": "OTP 必须为 6 位数字",
+      "otp_numeric": "OTP 只能包含数字"
+    },
+    "login": {
+      "title": "欢迎回来",
+      "subtitle": "输入凭据以进入你的神秘领域",
+      "email_or_username_label": "邮箱或用户名",
+      "email_or_username_placeholder": "seeker@tarotnow.com",
+      "password_label": "密码",
+      "password_placeholder": "••••••••",
+      "forgot_password": "忘记密码？",
+      "remember_me": "记住我",
+      "cta": "揭示你的命运",
+      "footer_prompt": "新来的吗？",
+      "footer_link": "创建账号",
+      "error_unexpected": "发生意外错误。"
+    },
+    "register": {
+      "title": "加入神秘之旅",
+      "subtitle": "创建账号以开启你的旅程",
+      "success_title": "查看收件箱",
+      "success_desc": "验证 OTP 已发送至你的邮箱，请完成验证以激活账号。",
+      "success_cta": "前往验证",
+      "email_label": "邮箱",
+      "email_placeholder": "seeker@tarotnow.com",
+      "username_label": "用户名",
+      "username_placeholder": "mystic_seeker",
+      "display_name_label": "显示名称",
+      "display_name_placeholder": "Mystic Seeker",
+      "dob_label": "出生日期",
+      "password_label": "密码",
+      "password_placeholder": "••••••••",
+      "confirm_password_label": "确认密码",
+      "confirm_password_placeholder": "••••••••",
+      "consent_prefix": "我同意",
+      "consent_terms": "服务条款",
+      "consent_and": "以及",
+      "consent_privacy": "隐私政策",
+      "cta": "开始旅程",
+      "footer_prompt": "已经有账号？",
+      "footer_link": "返回登录",
+      "error_unexpected": "发生意外错误。"
+    },
+    "forgot": {
+      "title": "忘记密码",
+      "subtitle": "输入邮箱以获取重置码",
+      "back_to_login": "返回登录",
+      "success_title": "查看邮件",
+      "success_desc": "如果邮箱有效，重置密码的 OTP 已发送至你的收件箱。",
+      "success_cta": "输入重置码",
+      "email_label": "邮箱",
+      "email_placeholder": "seeker@tarotnow.com",
+      "cta": "发送重置码",
+      "error_unexpected": "发生意外错误。"
+    },
+    "reset": {
+      "title": "创建新密码",
+      "subtitle": "输入 OTP 与新的安全密码",
+      "success_title": "密码已重置！",
+      "success_desc": "密码已更新，所有已登录设备将被登出。",
+      "success_cta": "返回登录",
+      "email_label": "邮箱",
+      "email_placeholder": "seeker@tarotnow.com",
+      "otp_label": "重置 OTP",
+      "otp_placeholder": "123456",
+      "password_label": "新密码",
+      "password_placeholder": "••••••••",
+      "cta": "重置密码",
+      "error_unexpected": "发生意外错误。"
+    },
+    "verify": {
+      "title": "验证邮箱",
+      "subtitle": "输入发送到邮箱的 OTP",
+      "success_title": "验证成功",
+      "success_desc": "账号已激活，你可以登录了。",
+      "success_cta": "返回登录",
+      "email_label": "邮箱",
+      "email_placeholder": "seeker@tarotnow.com",
+      "otp_label": "OTP（6 位）",
+      "otp_placeholder": "123456",
+      "cta": "确认验证",
+      "resend": "重新发送 OTP",
+      "resend_with_timer": "重新发送（{seconds}s）",
+      "toast_invalid_email": "请输入有效邮箱以重新发送验证码。",
+      "toast_resent_success": "新的 OTP 已发送至你的邮箱。",
+      "toast_resent_fail": "重新发送失败。",
+      "toast_network_error": "网络错误。",
+      "error_unexpected": "发生意外错误。"
+    },
+    "mfa": {
+      "title": "双重验证（MFA）",
+      "desc": "请输入 Authenticator 应用中的验证码以继续{actionTitle}。",
+      "placeholder": "000000",
+      "submit": "验证",
+      "error_generic": "验证失败",
+      "action_default": "此操作"
+    }
+  },
+  "Chat": {
+    "time": {
+      "just_now": "刚刚",
+      "minutes_ago": "{count} 分钟前",
+      "hours_ago": "{count} 小时前",
+      "days_ago": "{count} 天前"
+    },
+    "inbox": {
+      "tag": "聊天",
+      "title": "收件箱",
+      "subtitle": "管理你与占卜师和用户的对话。",
+      "role_user": "🔮 咨询者",
+      "role_reader": "📖 占卜师",
+      "loading": "加载中...",
+      "empty_title": "暂无对话。",
+      "empty_subtitle": "开始新的连接",
+      "list_label_reader": "占卜师",
+      "list_label_user": "用户",
+      "status": {
+        "active": "聊天中",
+        "pending": "等待回复",
+        "completed": "已完成"
+      }
+    },
+    "room": {
+      "title": "灵性连接房间",
+      "signal_ok": "信号稳定",
+      "syncing": "同步中...",
+      "report_title": "举报违规",
+      "loading": "正在同步...",
+      "empty": "连接已建立，发送第一条消息吧。",
+      "input_placeholder": "发送你的消息...",
+      "payment_offer": "💎 支付提议",
+      "payment_accept": "✅ 已接受",
+      "payment_reject": "❌ 已拒绝"
+    },
+    "report": {
+      "success_title": "已发送举报",
+      "success_desc": "感谢你，管理员将尽快审核并处理。",
+      "title": "举报违规",
+      "target_type_label": "违规类型",
+      "target_conversation": "对话",
+      "target_user": "用户",
+      "target_message": "消息",
+      "reason_label": "原因 *",
+      "reason_placeholder": "详细描述原因（至少 10 个字符）...",
+      "submit": "发送举报",
+      "validation_min": "原因至少需要 10 个字符。",
+      "error_failed": "举报发送失败，请重试。"
+    },
+    "dispute": {
+      "cta": "争议（{hours}小时 {minutes}分）",
+      "success_title": "已提交争议",
+      "success_desc": "管理员将审核并处理。",
+      "title": "开启争议",
+      "remaining": "⏰ 剩余：{hours} 小时 {minutes} 分钟可开启争议",
+      "reason_label": "原因 *",
+      "reason_placeholder": "详细描述原因（至少 10 个字符）...",
+      "submit": "提交争议",
+      "validation_min": "原因至少需要 10 个字符。",
+      "error_failed": "争议提交失败。"
+    },
+    "escrow": {
+      "title": "托管",
+      "total_frozen": "锁定总额",
+      "active": "进行中",
+      "expired": "已过期",
+      "countdown": "{hours}小时 {minutes}分",
+      "status_accepted": "已接受",
+      "status_released": "已释放",
+      "status_refunded": "已退款",
+      "status_disputed": "争议中",
+      "type_main": "主问题",
+      "type_addon": "追加问题",
+      "deadline_reply": "回复截止：{time}",
+      "auto_release": "自动释放：{time}",
+      "dispute_window": "争议窗口：{time}",
+      "action_confirm_release": "确认释放",
+      "action_replied": "标记已回复"
+    }
+  },
+  "Wallet": {
+    "widget": {
+      "title": "你的钱包",
+      "diamond_title": "Diamond - 高级",
+      "gold_title": "Gold - 免费",
+      "frozen_suffix": "(+{amount})"
+    },
+    "overview": {
+      "tag": "财务协议",
+      "title": "神秘宝库",
+      "subtitle": "在 TarotNow AI 生态中管理你的 Diamond/Gold 流动与命运。",
+      "deposit_cta": "充值 Diamond",
+      "diamond_label": "Diamond（高级）",
+      "diamond_desc": "官方充值",
+      "frozen_label": "冻结中：{amount}",
+      "gold_label": "Gold（奖励）",
+      "gold_desc": "幸运奖励点",
+      "gold_note": "来自签到与活动",
+      "ledger_title": "交易旅程",
+      "search_placeholder": "搜索...",
+      "table_time": "时间",
+      "table_asset": "资产",
+      "table_action": "活动",
+      "table_amount": "数量",
+      "ledger_loading": "正在获取记录...",
+      "ledger_empty": "暂无交易记录。",
+      "balance_after": "余额：{amount}"
+    },
+    "deposit": {
+      "back_to_wallet": "返回宝库",
+      "tag": "能量补给",
+      "title": "充值 Diamond",
+      "subtitle": "为高级占卜协议注入 Diamond 能量。",
+      "balance_label": "当前余额",
+      "select_title": "选择充值金额",
+      "custom_label": "或输入自定义金额（VND）",
+      "custom_placeholder": "最低 10,000",
+      "bonus_gold": "+ {amount} 额外 Gold 🎁",
+      "confirm_title": "确认订单",
+      "value_label": "充值金额",
+      "diamond_receive_label": "获得 Diamond",
+      "promo_bonus_label": "促销赠送（Gold）",
+      "total_assets_label": "合计资产",
+      "order_ready": "订单已就绪",
+      "pay_now": "立即支付",
+      "submitting": "正在激活...",
+      "submit": "充值 Diamond",
+      "security_note": "由 TarotNow Financial Protocol 加密保护",
+      "notes_title": "交易说明",
+      "notes_item1": "1 Diamond = 1,000 VND。",
+      "notes_item2": "Diamond 用于高级占卜，Gold 用于签到与礼赠。",
+      "notes_item3": "交易将在 1-3 分钟内自动处理。",
+      "error_min_amount": "最低充值金额为 10,000 VND。",
+      "error_create_failed": "无法创建充值订单，请稍后再试。",
+      "error_generic": "发生错误，请重试。"
+    },
+    "withdraw": {
+      "back_to_wallet": "返回宝库",
+      "tag": "提现",
+      "title": "提现",
+      "subtitle": "将 Diamond 兑换为 VND。手续费 10%，最低 50💎，每天最多 1 次。",
+      "action_title": "此次提现",
+      "amount_label": "Diamond 数量",
+      "amount_placeholder": "最低 50",
+      "gross_label": "总额 VND",
+      "fee_label": "手续费 10%",
+      "net_label": "实收",
+      "bank_label": "银行",
+      "bank_placeholder": "例如：Vietcombank、Techcombank...",
+      "account_name_label": "账户持有人姓名",
+      "account_name_placeholder": "ZHANG SAN",
+      "account_number_label": "账号",
+      "account_number_placeholder": "0123456789",
+      "success_message": "提现申请已提交！",
+      "submitting": "处理中...",
+      "submit": "提交提现申请",
+      "history_title": "提现历史",
+      "history_empty": "暂无提现申请。",
+      "admin_note_prefix": "管理员：",
+      "status_pending": "待处理",
+      "status_approved": "已批准",
+      "status_rejected": "已拒绝",
+      "status_paid": "已支付",
+      "error_min_amount": "最低 50 Diamond。",
+      "error_enter_bank": "请输入银行名称。",
+      "error_enter_account_name": "请输入账户持有人姓名。",
+      "error_enter_account_number": "请输入账号。",
+      "error_create_failed": "无法创建申请。"
+    }
+  },
+  "Readers": {
+    "directory": {
+      "tag": "目录",
+      "title": "女祭司",
+      "subtitle": "找到与你共鸣的占卜师。只有当前可用者才能接收新问题。",
+      "total_label": "占卜师总数",
+      "search_placeholder": "按名称搜索...",
+      "specialties": {
+        "all": "全部领域",
+        "love": "💕 爱情",
+        "career": "💼 事业",
+        "general": "🔮 综合",
+        "health": "🌿 健康",
+        "finance": "💰 财务"
+      },
+      "statuses": {
+        "all": "全部状态",
+        "accepting": "🟢 可接单",
+        "online": "🟡 在线（忙碌）",
+        "offline": "⚫ 离线"
+      },
+      "status_indicator": {
+        "ready": "可接单",
+        "busy": "忙碌中",
+        "offline": "离线"
+      },
+      "loading": "正在加载列表...",
+      "empty": "没有符合筛选条件的占卜师。",
+      "reader_fallback": "占卜师",
+      "bio_fallback": "暂无详细介绍。",
+      "per_question_suffix": "/ 问"
+    },
+    "profile": {
+      "loading": "正在加载资料...",
+      "not_found": "未找到占卜师资料。",
+      "back_to_list": "返回目录",
+      "status": {
+        "accepting": "接受提问",
+        "online": "忙碌中",
+        "offline": "离线"
+      },
+      "diamond_per_question_suffix": "/ 问",
+      "rating_label": "评分",
+      "reviews_label": "评价数",
+      "soul_link": "灵魂连接",
+      "specialties_title": "擅长领域",
+      "cta_connecting": "正在连接...",
+      "cta_send_question": "立即提问",
+      "not_accepting": "暂不接单",
+      "toast_create_conversation_fail": "无法创建对话",
+      "member_since": "加入于 {date}"
+    }
+  },
+  "ReaderApply": {
+    "loading": "正在检查申请状态...",
+    "pending": {
+      "title": "申请待审核",
+      "desc": "你的占卜师申请已提交，正在等待管理员审核。结果出来后会通知你。",
+      "intro_label": "已提交的自我介绍",
+      "sent_at": "提交时间：{date}"
+    },
+    "approved": {
+      "title": "你已成为占卜师！",
+      "desc": "恭喜！你的申请已通过。请完善资料并开始接收提问。"
+    },
+    "rejected": {
+      "title": "上一次申请被拒绝",
+      "reason": "原因：{note}",
+      "can_resubmit": "你可以在下面重新提交申请。"
+    },
+    "header": {
+      "tag": "占卜师申请",
+      "title": "成为占卜师",
+      "subtitle": "与社区分享你的塔罗解读能力。告诉我们你想成为占卜师的原因。"
+    },
+    "steps": {
+      "intro": {
+        "title": "自我介绍",
+        "desc": "分享你的塔罗经验"
+      },
+      "review": {
+        "title": "等待审核",
+        "desc": "管理员将审核申请"
+      },
+      "start": {
+        "title": "开始接收提问",
+        "desc": "审核通过后"
+      }
+    },
+    "form": {
+      "intro_label": "自我介绍 *",
+      "intro_placeholder": "分享你的塔罗解读经验、你想成为占卜师的原因，以及你能为社区带来什么价值...",
+      "min_chars": "至少 20 个字符",
+      "submitting": "提交中...",
+      "submit": "提交申请"
+    },
+    "validation": {
+      "min_intro": "自我介绍至少需要 20 个字符。"
+    },
+    "errors": {
+      "submit_failed": "提交失败。"
+    },
+    "success": {
+      "submitted": "申请已提交成功。"
+    }
+  },
+  "ReadingSetup": {
+    "title": "选择牌阵",
+    "subtitle": "通过古老牌阵连接宇宙能量。",
+    "tag": "仪式准备",
+    "daily_1_name": "每日神谕（1 张）",
+    "daily_1_desc": "获取今日指引信息。",
+    "spread_3_name": "三位一体（3 张）",
+    "spread_3_desc": "探索过去、现在与未来的关联。",
+    "spread_5_name": "五元素（5 张）",
+    "spread_5_desc": "深入分析影响你处境的因素。",
+    "spread_10_name": "凯尔特十字（10 张）",
+    "spread_10_desc": "最全面、最细致的命运全景。",
+    "cost_free": "免费",
+    "cost_gold": "{amount} Gold",
+    "cost_diamond": "{amount} Diamond",
+    "question_label": "你在想什么？",
+    "question_placeholder": "集中注意力，在此输入你的问题（可选）...",
+    "cta_draw": "开始解读",
+    "preparing": "正在连接能量...",
+    "error_init_failed": "无法初始化占卜会话。",
+    "validation": {
+      "question_too_long": "问题过长"
+    }
+  },
+  "ReadingSession": {
+    "header": {
+      "back_to_setup": "返回抽牌",
+      "title": "神秘领域",
+      "session": "会话：{id}..."
+    },
+    "question": {
+      "label": "心念"
+    },
+    "shuffle": {
+      "connecting_title": "正在建立连接...",
+      "cleansing": "正在净化卡牌"
+    },
+    "pick": {
+      "prompt": "静心并选择 {remaining} 张牌",
+      "done": "卡牌已就位",
+      "count": "{picked}/{total} 张牌",
+      "random": "随机选择"
+    },
+    "modal": {
+      "title": "已选择卡牌",
+      "desc": "宇宙已听见你的心声。在接收讯息前深呼吸一下。",
+      "revealing": "正在注入能量...",
+      "reveal": "注入能量并翻牌",
+      "change_card": "更换一张牌"
+    },
+    "cards": {
+      "meaning_label": "含义"
+    },
+    "ai": {
+      "subtitle": "AI Divine Stream • {id}",
+      "live": "实时",
+      "waiting_flip": "正在准备连接... 请翻开所有卡牌以接收讯息。",
+      "footer_note": "聆听你卡牌的共振。"
+    },
+    "errors": {
+      "reveal_failed": "无法翻牌。"
+    }
+  },
+  "Collection": {
+    "tag": "奥秘圣殿",
+    "title": "神秘圣殿",
+    "subtitle": "追踪你解锁塔罗卡牌宇宙的进度。",
+    "error_load_failed": "无法加载你的收藏。",
+    "progress_label": "收藏进度",
+    "filters_label": "筛选",
+    "filter_all": "全部",
+    "filter_owned": "已拥有",
+    "filter_unowned": "隐藏",
+    "empty_title": "你的收藏为空",
+    "empty_desc": "完成第一次塔罗占卜以解锁卡牌元素。",
+    "cta_draw": "立即抽牌",
+    "level_label": "等级",
+    "copies_label": "份",
+    "unknown_card": "未知",
+    "locked_meaning": "宇宙尚未向你揭示这张牌的信息。"
+  },
+  "History": {
+    "title": "仪式旅程",
+    "subtitle": "记录来自星辰的信息。",
+    "tag": "编年史",
+    "detail_fragment": "片段：{id}...",
+    "essence_label": "精华",
+    "ai_title": "原初神谕",
+    "ai_desc": "宇宙已在本次会话中保存了 {count} 条智慧印记。完整对话内容将在后续协议更新中呈现。",
+    "empty_title": "暂无记录",
+    "empty_desc": "宇宙正等待你开启新的起点。",
+    "cta_draw": "立即抽牌",
+    "status_completed": "已完成",
+    "status_interrupted": "已中断",
+    "page_info": "第 {current} / {total} 页",
+    "prev_page": "上一页",
+    "next_page": "下一页",
+    "spread_daily": "每日神谕（1 张）",
+    "spread_3": "三位一体（3 张）",
+    "spread_5": "五元素（5 张）",
+    "spread_10": "凯尔特十字（10 张）",
+    "filter_type": "牌阵类型",
+    "filter_date": "日期",
+    "all_types": "全部牌阵"
+  },
+  "Admin": {
+    "layout": {
+      "title": "Admin",
+      "subtitle": "管理",
+      "section_main": "主控台",
+      "exit_portal": "退出入口",
+      "menu": {
+        "overview": "总览",
+        "users": "用户",
+        "deposits": "充值",
+        "promotions": "促销",
+        "readings": "占卜会话",
+        "reader_requests": "占卜师申请",
+        "withdrawals": "提现",
+        "disputes": "争议"
+      }
+    },
+    "dashboard": {
+      "loading": "正在初始化管理系统...",
+      "header": {
+        "tag": "系统智能",
+        "title": "HQ 总览",
+        "subtitle": "监控 TarotNow AI 全系统的用户流与命运数据。"
+      },
+      "health": {
+        "title": "健康检查",
+        "ok": "系统稳定"
+      },
+      "stats": {
+        "users": "用户总数",
+        "deposits": "充值次数",
+        "promotions": "促销",
+        "readings": "占卜会话"
+      },
+      "notice": {
+        "title": "管理员公告",
+        "reminder_title": "提醒",
+        "reminder_body": "检查待处理充值订单，如 MOMO/VNPay 延迟可进行人工确认。",
+        "announcement_title": "公告",
+        "announcement_body": "Admin 界面 Astral v2.0 已更新，带来更顺滑的管理体验。"
+      },
+      "shortcuts": {
+        "title": "快捷入口",
+        "users": "用户管理",
+        "deposits": "充值流水",
+        "readings": "最新占卜",
+        "reader_requests": "审核占卜师"
+      },
+      "insights": {
+        "revenue_title": "预估收入",
+        "revenue_currency": "VND",
+        "revenue_note": "基于 {count} 笔成功充值计算",
+        "activity_title": "活动流",
+        "activity_unit": "会话",
+        "activity_note": "已完成的命运解读会话总数"
+      }
+    },
+    "deposits": {
+      "header": {
+        "tag": "财务",
+        "title": "系统充值",
+        "subtitle": "追踪 {count} 笔 Diamond 充值交易。"
+      },
+      "filters": {
+        "label": "筛选",
+        "all": "全部",
+        "pending": "待处理",
+        "success": "成功",
+        "failed": "失败"
+      },
+      "table": {
+        "heading_order": "订单 / TXN",
+        "heading_user": "用户",
+        "heading_amount": "金额 (VND)",
+        "heading_assets": "到账资产",
+        "heading_time": "时间",
+        "heading_status": "状态",
+        "heading_actions": "操作"
+      },
+      "row": {
+        "txn_missing": "无 TXN",
+        "system_user": "系统用户",
+        "user_id_prefix": "ID: {id}..."
+      },
+      "status": {
+        "success": "成功",
+        "failed": "失败",
+        "pending": "处理中"
+      },
+      "actions": {
+        "approve_title": "批准",
+        "reject_title": "拒绝",
+        "na": "N/A"
+      },
+      "modal": {
+        "title_approve": "批准交易？",
+        "title_reject": "拒绝交易？",
+        "desc_approve": "这将更新资金流状态，并为该用户入账资产。",
+        "desc_reject": "这将更新资金流状态并取消请求。",
+        "back": "返回",
+        "confirm": "确认"
+      },
+      "toast": {
+        "approve_success": "批准成功！",
+        "reject_success": "已拒绝订单。",
+        "action_failed": "失败，请重试。",
+        "network_error": "服务器连接错误。"
+      },
+      "states": {
+        "loading": "正在查询账本...",
+        "empty": "此视图下暂无交易。"
+      },
+      "pagination": {
+        "summary": "第 {page} 页 | 共 {total} 笔交易"
+      },
+      "summary": {
+        "confirm_title": "确认订单",
+        "confirm_desc": "系统会从支付网关自动同步。手动干预前请核对 TXN。",
+        "ledger_title": "账本信息",
+        "ledger_subtitle": "财务记录 v2.4"
+      }
+    },
+    "users": {
+      "header": {
+        "tag": "数据库",
+        "title": "用户管理",
+        "subtitle": "系统共有 {count} 位用户。"
+      },
+      "search": {
+        "placeholder": "姓名、邮箱、用户名..."
+      },
+      "table": {
+        "heading_account": "账户",
+        "heading_rank": "等级 / XP",
+        "heading_assets": "资产 (D/G)",
+        "heading_role": "角色",
+        "heading_status": "状态",
+        "heading_actions": "操作"
+      },
+      "row": {
+        "level": "LV {level}",
+        "exp": "{exp} EXP"
+      },
+      "states": {
+        "loading": "正在查询数据...",
+        "empty": "未找到匹配用户。"
+      },
+      "roles": {
+        "admin": "管理员",
+        "tarot_reader": "占卜师",
+        "user": "用户"
+      },
+      "status": {
+        "locked": "已锁定",
+        "active": "活跃"
+      },
+      "actions": {
+        "add_balance_title": "手动充值",
+        "lock_title": "锁定账户",
+        "unlock_title": "解锁"
+      },
+      "pagination": {
+        "summary": "第 {page} 页 | 共 {total} 位用户"
+      },
+      "lock_modal": {
+        "title_lock": "锁定此账户？",
+        "title_unlock": "解锁此账户？",
+        "desc_lock": "确认阻止用户访问：{name}",
+        "desc_unlock": "确认允许该用户继续旅程：{name}",
+        "cancel": "取消",
+        "confirm": "执行"
+      },
+      "add_balance": {
+        "title": "手动充值",
+        "subtitle": "手动余额干预",
+        "recipient_label": "接收用户",
+        "currency_gold": "Gold",
+        "currency_diamond": "Diamond",
+        "amount_label": "数量",
+        "reason_label": "原因",
+        "reason_placeholder": "例如：系统补偿、活动赠礼...",
+        "cancel": "取消",
+        "submit": "执行"
+      },
+      "toast": {
+        "lock_success": "账户已锁定。",
+        "unlock_success": "账户已解锁。",
+        "toggle_failed": "更改账户状态失败。",
+        "network_error": "连接错误。",
+        "amount_invalid": "数量必须大于 0。",
+        "add_success": "已成功添加 {amount} {currency}！",
+        "add_failed": "添加余额失败。",
+        "system_error": "系统错误。"
+      }
+    },
+    "promotions": {
+      "header": {
+        "tag": "营销",
+        "title": "促销",
+        "subtitle": "设置充值门槛以奖励额外 Gold。"
+      },
+      "actions": {
+        "toggle_create_add": "新增促销",
+        "toggle_create_cancel": "取消"
+      },
+      "create": {
+        "title": "创建新的奖励门槛",
+        "min_amount_label": "最低充值 (VND)",
+        "min_amount_placeholder": "200,000",
+        "bonus_label": "奖励 Gold",
+        "bonus_placeholder": "500",
+        "note": "保存后将立即生效。",
+        "submit": "保存到系统",
+        "submitting": "保存中..."
+      },
+      "table": {
+        "heading_condition": "触发条件",
+        "heading_reward": "奖励 (Gold)",
+        "heading_status": "状态",
+        "heading_commands": "操作"
+      },
+      "states": {
+        "loading": "正在加载促销...",
+        "empty": "暂无促销。"
+      },
+      "row": {
+        "condition_from": "从 {amount} 起"
+      },
+      "status": {
+        "active": "启用中",
+        "inactive": "已停用"
+      },
+      "delete_modal": {
+        "title": "删除促销？",
+        "desc": "这将从系统账本中永久删除该促销门槛，已有交易不受影响。",
+        "keep": "保留",
+        "delete": "删除"
+      },
+      "toast": {
+        "create_success": "促销已创建。",
+        "create_failed": "创建促销失败。",
+        "toggle_success": "状态已更新。",
+        "toggle_failed": "更新状态失败。",
+        "delete_success": "促销已删除。",
+        "delete_failed": "删除促销失败。",
+        "network_error": "连接错误。"
+      }
+    },
+    "readings": {
+      "header": {
+        "tag": "监控",
+        "title": "命运日志",
+        "subtitle": "探索 {count} 次塔罗旅程。"
+      },
+      "filters": {
+        "username_label": "用户",
+        "username_placeholder": "用户名...",
+        "spread_label": "牌阵",
+        "spread_all": "全部牌阵",
+        "spread_daily": "每日一张",
+        "spread_3": "三张牌阵",
+        "spread_5": "五张牌阵",
+        "spread_10": "十字牌阵（10 张）",
+        "start_date_label": "起始日期",
+        "end_date_label": "结束日期",
+        "submit": "查询"
+      },
+      "table": {
+        "heading_timeline": "时间线",
+        "heading_user": "用户",
+        "heading_spread": "牌阵",
+        "heading_question": "问题",
+        "heading_status": "状态"
+      },
+      "states": {
+        "loading": "正在翻阅命运篇章...",
+        "empty": "未找到占卜记录。"
+      },
+      "row": {
+        "user_unknown": "未知",
+        "question_empty": "未提供问题..."
+      },
+      "status": {
+        "completed": "已完成",
+        "processing": "进行中"
+      },
+      "pagination": {
+        "summary": "第 {page} 章 / 共 {total} 个命运领域"
+      },
+      "insights": {
+        "total_title": "总旅程",
+        "update_label": "更新周期",
+        "update_value": "实时",
+        "monitor_label": "监控区",
+        "monitor_value": "Admin 日志簿"
+      },
+      "toast": {
+        "unauthorized": "会话过期或无权限。"
+      }
+    },
+    "reader_requests": {
+      "header": {
+        "tag": "审核",
+        "title": "占卜师申请",
+        "subtitle": "审核并批准占卜师申请。"
+      },
+      "summary": {
+        "total_label": "申请总数"
+      },
+      "filters": {
+        "pending": "待审核",
+        "approved": "已批准",
+        "rejected": "已拒绝",
+        "all": "全部"
+      },
+      "states": {
+        "loading": "加载中...",
+        "empty": "暂无申请。"
+      },
+      "row": {
+        "id_prefix": "ID: {id}...",
+        "intro_title": "自我介绍",
+        "expand": "展开",
+        "admin_note_title": "管理员备注"
+      },
+      "input": {
+        "admin_note_placeholder": "审核前管理员备注（可选）..."
+      },
+      "actions": {
+        "approve": "批准占卜师",
+        "reject": "拒绝申请"
+      },
+      "status": {
+        "pending": "待审核",
+        "approved": "已批准",
+        "rejected": "已拒绝"
+      },
+      "pagination": {
+        "summary": "第 {page} 页 / 共 {total}"
+      },
+      "toast": {
+        "approve_success": "已批准占卜师。",
+        "reject_success": "申请已拒绝。",
+        "process_failed": "处理失败，请重试。"
+      }
+    },
+    "withdrawals": {
+      "header": {
+        "tag": "Admin",
+        "title": "提现队列",
+        "subtitle": "审核或拒绝占卜师的提现申请（FIFO）。"
+      },
+      "states": {
+        "loading": "正在加载队列...",
+        "empty": "暂无待处理申请。"
+      },
+      "row": {
+        "gross": "总额",
+        "fee": "手续费",
+        "net": "净额",
+        "id_prefix": "ID: {id}..."
+      },
+      "input": {
+        "admin_note_placeholder": "管理员备注..."
+      },
+      "actions": {
+        "approve": "批准",
+        "reject": "拒绝"
+      },
+      "toast": {
+        "success": "处理成功。",
+        "failed": "处理失败。"
+      },
+      "mfa": {
+        "action_approve": "批准该提现申请",
+        "action_reject": "拒绝该提现申请"
+      }
+    },
+    "disputes": {
+      "header": {
+        "tag": "Escrow",
+        "title": "争议队列",
+        "subtitle": "处理 escrow 争议。决定向占卜师放款或向用户退款。"
+      },
+      "guide": {
+        "title": "争议处理指南",
+        "release_label": "放款",
+        "release_desc": "占卜师回答正确 → Diamond 转给占卜师（扣除 10% 手续费）。",
+        "refund_label": "退款",
+        "refund_desc": "回答错误或未回复 → Diamond 退还给用户。",
+        "check_history": "决策前请检查聊天记录。"
+      },
+      "form": {
+        "quick_title": "快速处理",
+        "item_id_label": "Item ID (UUID)",
+        "item_id_placeholder": "输入 QUESTION ITEM 的 UUID...",
+        "note_label": "管理员备注",
+        "note_placeholder": "决定原因...",
+        "release_button": "放款给占卜师",
+        "refund_button": "退款给用户"
+      },
+      "toast": {
+        "release_success": "已成功放款给占卜师。",
+        "refund_success": "已成功退款给用户。",
+        "failed": "处理争议失败，请检查后重试。",
+        "missing_item_id": "请输入 Item ID。"
+      },
+      "resolved": {
+        "title": "本次会话已处理",
+        "badge": "已处理"
+      }
+    }
+  },
+  "Tarot": {
+    "suits": {
+      "major": {
+        "full": "大阿卡那",
+        "short": "大阿"
+      },
+      "wands": {
+        "full": "权杖",
+        "short": "权杖"
+      },
+      "cups": {
+        "full": "圣杯",
+        "short": "圣杯"
+      },
+      "swords": {
+        "full": "宝剑",
+        "short": "宝剑"
+      },
+      "pentacles": {
+        "full": "星币",
+        "short": "星币"
+      }
+    },
+    "cards": {
+      "c0": {
+        "name": "The Fool",
+        "meaning": "充满潜力的新开始；以开放自由的心踏上冒险。"
+      },
+      "c1": {
+        "name": "The Magician",
+        "meaning": "运用天赋与资源，把想法化为现实。"
+      },
+      "c2": {
+        "name": "The High Priestess",
+        "meaning": "倾听内在声音，信任直觉与内在智慧。"
+      },
+      "c3": {
+        "name": "The Empress",
+        "meaning": "丰盛、创造力，以及与自然的深度连接。"
+      },
+      "c4": {
+        "name": "The Emperor",
+        "meaning": "强而有力的领导、纪律，与稳固的基础。"
+      },
+      "c5": {
+        "name": "The Hierophant",
+        "meaning": "寻求灵性指引，遵循传统与共同价值。"
+      },
+      "c6": {
+        "name": "The Lovers",
+        "meaning": "深刻的连结、重要的选择，以及关系中的和谐。"
+      },
+      "c7": {
+        "name": "The Chariot",
+        "meaning": "凭借意志与专注战胜阻碍。"
+      },
+      "c8": {
+        "name": "Strength",
+        "meaning": "真正的力量来自内在：勇气、耐心与慈悲。"
+      },
+      "c9": {
+        "name": "The Hermit",
+        "meaning": "安静反思的时刻，从内心寻找答案。"
+      },
+      "c10": {
+        "name": "Wheel of Fortune",
+        "meaning": "积极的转变、好运到来，以及生命循环的流转。"
+      },
+      "c11": {
+        "name": "Justice",
+        "meaning": "真相显现，公正得以伸张，并承担责任。"
+      },
+      "c12": {
+        "name": "The Hanged Man",
+        "meaning": "暂停片刻，从不同角度看问题；学会放下与臣服。"
+      },
+      "c13": {
+        "name": "Death",
+        "meaning": "一个阶段的结束，开启新的开始；深层转化。"
+      },
+      "c14": {
+        "name": "Temperance",
+        "meaning": "寻找平衡，对一切保持耐心，调和对立面。"
+      },
+      "c15": {
+        "name": "The Devil",
+        "meaning": "被欲望、坏习惯或恐惧所束缚。"
+      },
+      "c16": {
+        "name": "The Tower",
+        "meaning": "突如其来的崩塌打破不再适合的事物，为重建腾出空间。"
+      },
+      "c17": {
+        "name": "The Star",
+        "meaning": "新的希望、疗愈与创意灵感。"
+      },
+      "c18": {
+        "name": "The Moon",
+        "meaning": "直面恐惧与幻象，以及潜意识中隐藏的事物。"
+      },
+      "c19": {
+        "name": "The Sun",
+        "meaning": "灿烂的喜悦、成功与满满的乐观。"
+      },
+      "c20": {
+        "name": "Judgement",
+        "meaning": "审视与总结的时刻，觉醒并迈入新阶段。"
+      },
+      "c21": {
+        "name": "The World",
+        "meaning": "完成一个重要循环，获得圆满与满足。"
+      },
+      "c22": {
+        "name": "Ace of Wands",
+        "meaning": "新的创意能量涌现；充满灵感的开端。"
+      },
+      "c23": {
+        "name": "Two of Wands",
+        "meaning": "展望未来，规划行动。"
+      },
+      "c24": {
+        "name": "Three of Wands",
+        "meaning": "扩展视野，把握新的机会。"
+      },
+      "c25": {
+        "name": "Four of Wands",
+        "meaning": "庆祝成就，家庭与关系中的和谐。"
+      },
+      "c26": {
+        "name": "Five of Wands",
+        "meaning": "良性的竞争或面对挑战。"
+      },
+      "c27": {
+        "name": "Six of Wands",
+        "meaning": "辉煌的胜利与认可。"
+      },
+      "c28": {
+        "name": "Seven of Wands",
+        "meaning": "在考验中站稳立场，捍卫自己的观点。"
+      },
+      "c29": {
+        "name": "Eight of Wands",
+        "meaning": "事情快速推进，立即行动。"
+      },
+      "c30": {
+        "name": "Nine of Wands",
+        "meaning": "即使疲惫也要坚持，为最后的挑战做好准备。"
+      },
+      "c31": {
+        "name": "Ten of Wands",
+        "meaning": "负担过重，学会分担与授权。"
+      },
+      "c32": {
+        "name": "Page of Wands",
+        "meaning": "带着热情与好奇探索世界。"
+      },
+      "c33": {
+        "name": "Knight of Wands",
+        "meaning": "大胆行动，充满激情与冒险精神。"
+      },
+      "c34": {
+        "name": "Queen of Wands",
+        "meaning": "自信、有魅力，并能激励他人。"
+      },
+      "c35": {
+        "name": "King of Wands",
+        "meaning": "以远见与丰富经验领导。"
+      },
+      "c36": {
+        "name": "Ace of Cups",
+        "meaning": "新的爱意萌芽，或创作灵感满溢。"
+      },
+      "c37": {
+        "name": "Two of Cups",
+        "meaning": "和谐的关系，理想的伙伴。"
+      },
+      "c38": {
+        "name": "Three of Cups",
+        "meaning": "与朋友和群体共享喜悦。"
+      },
+      "c39": {
+        "name": "Four of Cups",
+        "meaning": "对现状不满足，错过机会。"
+      },
+      "c40": {
+        "name": "Five of Cups",
+        "meaning": "为失去而悲伤，但仍有值得珍惜的部分。"
+      },
+      "c41": {
+        "name": "Six of Cups",
+        "meaning": "怀念美好回忆，纯真与单纯。"
+      },
+      "c42": {
+        "name": "Seven of Cups",
+        "meaning": "选择诱人却繁多，需要分辨现实。"
+      },
+      "c43": {
+        "name": "Eight of Cups",
+        "meaning": "离开不再有意义的处境。"
+      },
+      "c44": {
+        "name": "Nine of Cups",
+        "meaning": "愿望成真，深深的满足。"
+      },
+      "c45": {
+        "name": "Ten of Cups",
+        "meaning": "家庭幸福圆满，关系与情感的丰盈。"
+      },
+      "c46": {
+        "name": "Page of Cups",
+        "meaning": "丰富的想象力与强烈直觉。"
+      },
+      "c47": {
+        "name": "Knight of Cups",
+        "meaning": "浪漫，追随内心的呼唤。"
+      },
+      "c48": {
+        "name": "Queen of Cups",
+        "meaning": "深度共情、直觉强，并具疗愈能力。"
+      },
+      "c49": {
+        "name": "King of Cups",
+        "meaning": "情绪掌控良好，善良而仁慈。"
+      },
+      "c50": {
+        "name": "Ace of Swords",
+        "meaning": "思维的清晰与理智，突破性的想法。"
+      },
+      "c51": {
+        "name": "Two of Swords",
+        "meaning": "面对艰难抉择，需要冷静权衡。"
+      },
+      "c52": {
+        "name": "Three of Swords",
+        "meaning": "心碎、失望或背叛。"
+      },
+      "c53": {
+        "name": "Four of Swords",
+        "meaning": "需要休息与修复，恢复能量。"
+      },
+      "c54": {
+        "name": "Five of Swords",
+        "meaning": "不惜代价的胜利，得不偿失。"
+      },
+      "c55": {
+        "name": "Six of Swords",
+        "meaning": "离开困境，驶向更平静的地方。"
+      },
+      "c56": {
+        "name": "Seven of Swords",
+        "meaning": "隐秘行动或运用聪明策略。"
+      },
+      "c57": {
+        "name": "Eight of Swords",
+        "meaning": "感觉被环境或自我束缚所困。"
+      },
+      "c58": {
+        "name": "Nine of Swords",
+        "meaning": "焦虑与恐惧萦绕，尤其在夜晚。"
+      },
+      "c59": {
+        "name": "Ten of Swords",
+        "meaning": "痛苦而突然的结束，但也为新开始打开可能。"
+      },
+      "c60": {
+        "name": "Page of Swords",
+        "meaning": "好奇、聪慧，总是准备学习。"
+      },
+      "c61": {
+        "name": "Knight of Swords",
+        "meaning": "行动迅速果断，雄心驱动。"
+      },
+      "c62": {
+        "name": "Queen of Swords",
+        "meaning": "锐利智慧、独立，以及毫不妥协的诚实。"
+      },
+      "c63": {
+        "name": "King of Swords",
+        "meaning": "以智慧领导，公正并重逻辑。"
+      },
+      "c64": {
+        "name": "Ace of Pentacles",
+        "meaning": "新的财务机会，为未来奠定稳固基础。"
+      },
+      "c65": {
+        "name": "Two of Pentacles",
+        "meaning": "灵活地平衡多重优先事项。"
+      },
+      "c66": {
+        "name": "Three of Pentacles",
+        "meaning": "有效合作，发挥专业技能。"
+      },
+      "c67": {
+        "name": "Four of Pentacles",
+        "meaning": "守住财富，寻求财务稳定。"
+      },
+      "c68": {
+        "name": "Five of Pentacles",
+        "meaning": "在财务或精神层面经历困难阶段。"
+      },
+      "c69": {
+        "name": "Six of Pentacles",
+        "meaning": "分享资源，慷慨支持他人。"
+      },
+      "c70": {
+        "name": "Seven of Pentacles",
+        "meaning": "耐心等待长期投入的成果。"
+      },
+      "c71": {
+        "name": "Eight of Pentacles",
+        "meaning": "勤奋练习，打磨并完善技能。"
+      },
+      "c72": {
+        "name": "Nine of Pentacles",
+        "meaning": "富足并享受劳动成果。"
+      },
+      "c73": {
+        "name": "Ten of Pentacles",
+        "meaning": "稳固的家业与传承，跨世代的稳定。"
+      },
+      "c74": {
+        "name": "Page of Pentacles",
+        "meaning": "学习与财务成长的机会。"
+      },
+      "c75": {
+        "name": "Knight of Pentacles",
+        "meaning": "稳步前进，可靠且有耐心。"
+      },
+      "c76": {
+        "name": "Queen of Pentacles",
+        "meaning": "以务实方式带来安全感与滋养。"
+      },
+      "c77": {
+        "name": "King of Pentacles",
+        "meaning": "财务成功，卓越的商业领导力。"
+      }
+    }
+  },
+  "Legal": {
+    "tos_title": "服务条款",
+    "tos_meta_desc": "TarotNow 的服务与使用条款。",
+    "privacy_title": "隐私政策",
+    "privacy_meta_desc": "TarotNow 的数据隐私政策。",
+    "ai_disclaimer_title": "AI 免责声明",
+    "ai_disclaimer_meta_desc": "TarotNow 关于 AI 生成信息的责任声明。",
+    "tos": {
+      "section1_title": "1. 一般条款",
+      "section1_body": "欢迎使用 TarotNow。使用我们的服务即表示你同意遵守这些条款与条件。我们的服务通过塔罗牌与人工智能（AI）技术提供娱乐与参考性的心理支持。",
+      "section2_title": "2. AI 免责声明",
+      "section2_body": "所有塔罗解读内容均由 AI 生成，仅供娱乐与参考。我们不对用户依据 TarotNow 结果作出的个人、医疗、财务或法律决定承担法律责任。",
+      "section3_title": "3. 账户与支付",
+      "section3_body": "用户需自行负责保护账户信息安全。Diamond 充值交易原则上不予退款，除非因支付网关导致的系统错误。",
+      "last_updated": "最后更新：10/2026"
+    },
+    "privacy": {
+      "section1_title": "1. 信息收集",
+      "section1_body": "TarotNow 尊重你的隐私。我们会收集必要信息，例如邮箱地址、显示名称和生日，以便个性化塔罗体验，并用于计算星座与数字命理。",
+      "section2_title": "2. 数据使用",
+      "section2_body": "你的数据仅用于内部目的，例如存储占卜历史。AI 查询历史会以加密方式发送给服务提供方（OpenAI）以获取结果，并不用于训练 AI（training），遵循合作方承诺。",
+      "section3_title": "3. 数据保护",
+      "section3_body": "所有账户信息与密码均会安全加密。我们不会以商业目的向第三方出售、交换或共享用户个人数据。",
+      "last_updated": "最后更新：10/2026"
+    },
+    "ai_disclaimer": {
+      "warning": "提示：来自 Astral AI 的预测与分析完全由大型语言模型（LLM）生成。请不要将其视为替代医学、心理或财务专业建议。",
+      "section1_title": "1. AI 的特性",
+      "section1_body": "所有塔罗信息均由人工智能（AI）进行解读。尽管我们已优化相关算法与塔罗直觉逻辑，但 AI 的解读在所有情境中都不一定 100% 准确。",
+      "section2_title": "2. 非医疗诊断",
+      "section2_body": "与情绪、健康或金钱相关的解读结果不应作为自我医疗诊断依据，也不应替代法律或财务建议。若你正面临严重问题，请务必咨询现实生活中的专业人士。",
+      "consent_note": "在注册 TarotNow 账号前，你需要同意以上免责声明。"
+    }
+  }
 }

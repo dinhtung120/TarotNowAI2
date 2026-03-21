@@ -52,9 +52,10 @@ public class CreateConversationCommandHandler : IRequestHandler<CreateConversati
             ?? throw new NotFoundException("Không tìm thấy Reader.");
 
         // 3. Rào cản trạng thái Cửa hàng (Gate):
-        // Reader hiện đang Treo biển Đi ngủ (Offline) -> Chặn mở cửa nói chuyện.
-        if (readerProfile.Status != ReaderOnlineStatus.AcceptingQuestions)
-            throw new BadRequestException("Reader hiện chưa bật chế độ nhận câu hỏi.");
+        // [CẬP NHẬT THEO YÊU CẦU]: Bỏ chặn trạng thái ở đây để user luôn có thể 
+        // tạo cuộc trò chuyện và nhắn tin cho Reader ngay cả khi Reader đang ngoại tuyến (offline)
+        // hoặc không nhận khách (not_accepting).
+        // Xóa điều kiện (readerProfile.Status != ReaderOnlineStatus.AcceptingQuestions).
 
         // 4. Giải Quyết Vấn Đề UX (User Experience) - Double Click Bug:
         // Quét trên MongoDB xem 2 ID này đang có Hợp đồng chat nào Mở cửa (Active/Pending) không.

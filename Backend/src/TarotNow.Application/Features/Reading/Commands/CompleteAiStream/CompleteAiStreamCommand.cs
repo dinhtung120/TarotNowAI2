@@ -13,6 +13,7 @@
 using MediatR;
 using TarotNow.Domain.Enums;
 using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Entities;
 
 namespace TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
 
@@ -67,6 +68,12 @@ public class CompleteAiStreamCommand : IRequest<bool>
 
     /// <summary>Độ trễ từ token đầu tới lúc stream kết thúc (ms).</summary>
     public int LatencyMs { get; set; }
+
+    /// <summary>Văn bản hoàn chỉnh của AI (để lưu vào DB).</summary>
+    public string? FullResponse { get; set; }
+
+    /// <summary>Câu hỏi do user đặt ra (để lưu vào DB History).</summary>
+    public string? FollowupQuestion { get; set; }
 }
 
 /// <summary>
@@ -79,17 +86,20 @@ public class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAiStreamCo
     private readonly IWalletRepository _walletRepo;
     private readonly ITransactionCoordinator _transactionCoordinator;
     private readonly IAiProvider _aiProvider;
+    private readonly IReadingSessionRepository _readingRepo;
 
     public CompleteAiStreamCommandHandler(
         IAiRequestRepository aiRequestRepo,
         IWalletRepository walletRepo,
         ITransactionCoordinator transactionCoordinator,
-        IAiProvider aiProvider)
+        IAiProvider aiProvider,
+        IReadingSessionRepository readingRepo)
     {
         _aiRequestRepo = aiRequestRepo;
         _walletRepo = walletRepo;
         _transactionCoordinator = transactionCoordinator;
         _aiProvider = aiProvider;
+        _readingRepo = readingRepo;
     }
 
     public async Task<bool> Handle(CompleteAiStreamCommand request, CancellationToken cancellationToken)
@@ -205,6 +215,65 @@ public class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAiStreamCo
             // Đóng Hồ Sơ Cất Kho.
             await _aiRequestRepo.UpdateAsync(record, transactionCt);
             processed = true;
+            
+            // Xử lý lưu nội dung chữ của AI xuống MongoDB thông qua Cập nhật Session
+            if (request.FinalStatus == AiStreamFinalStatuses.Completed && !string.IsNullOrWhiteSpace(request.FullResponse))
+            {
+                var session = await _readingRepo.GetByIdAsync(record.ReadingSessionRef, transactionCt);
+                if (session != null)
+                {
+                    // Update AiSummary or Followups based on RequestType (InitialReading vs Followup)
+                    // We can use the logic from record.IdempotencyKey or request type
+                    var isFollowUp = record.IdempotencyKey != null && record.IdempotencyKey.Contains("ai_stream") 
+                        && record.ChargeDiamond <= 5 && record.ChargeDiamond > 0;
+                        
+                    // If it's free, we might not differentiate easily if we don't know the exact Followup string, 
+                    // but we can just append it to Followups if AiSummary is already set.
+                    if (!string.IsNullOrEmpty(session.AiSummary))
+                    {
+                        var newFollowups = session.Followups.ToList();
+                        newFollowups.Add(new ReadingFollowup 
+                        { 
+                            Question = string.IsNullOrWhiteSpace(request.FollowupQuestion) ? "Câu hỏi Follow-up" : request.FollowupQuestion, 
+                            Answer = request.FullResponse 
+                        });
+                        
+                        var updatedSession = TarotNow.Domain.Entities.ReadingSession.Rehydrate(
+                            id: session.Id,
+                            userId: session.UserId,
+                            spreadType: session.SpreadType,
+                            question: session.Question,
+                            cardsDrawn: session.CardsDrawn,
+                            currencyUsed: session.CurrencyUsed,
+                            amountCharged: session.AmountCharged,
+                            isCompleted: session.IsCompleted,
+                            createdAt: session.CreatedAt,
+                            completedAt: session.CompletedAt,
+                            aiSummary: session.AiSummary,
+                            followups: newFollowups
+                        );
+                        await _readingRepo.UpdateAsync(updatedSession, transactionCt);
+                    }
+                    else
+                    {
+                        var updatedSession = TarotNow.Domain.Entities.ReadingSession.Rehydrate(
+                            id: session.Id,
+                            userId: session.UserId,
+                            spreadType: session.SpreadType,
+                            question: session.Question,
+                            cardsDrawn: session.CardsDrawn,
+                            currencyUsed: session.CurrencyUsed,
+                            amountCharged: session.AmountCharged,
+                            isCompleted: session.IsCompleted,
+                            createdAt: session.CreatedAt,
+                            completedAt: session.CompletedAt,
+                            aiSummary: request.FullResponse,
+                            followups: session.Followups
+                        );
+                        await _readingRepo.UpdateAsync(updatedSession, transactionCt);
+                    }
+                }
+            }
         }, cancellationToken);
 
         if (!processed || string.IsNullOrWhiteSpace(requestId))

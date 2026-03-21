@@ -162,6 +162,21 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
                 .Set(r => r.AiStatus, "completed");
         }
 
+        if (!string.IsNullOrEmpty(session.AiSummary))
+        {
+            update = update.Set(r => r.AiResult, new AiResult { Summary = session.AiSummary });
+        }
+
+        if (session.Followups != null && session.Followups.Any())
+        {
+            var mappedFollowups = session.Followups.Select(f => new FollowupEntry 
+            {
+                Question = f.Question,
+                Answer = f.Answer
+            }).ToList();
+            update = update.Set(r => r.Followups, mappedFollowups);
+        }
+
         await _mongoContext.ReadingSessions.UpdateOneAsync(
             filter,
             update,
@@ -390,6 +405,12 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
                 .ToArray())
             : null;
 
+        var followups = doc.Followups?.Select(f => new ReadingFollowup
+        {
+            Question = f.Question,
+            Answer = f.Answer
+        }).ToList();
+
         return ReadingSession.Rehydrate(
             id: idStr,
             userId: doc.UserId,
@@ -400,6 +421,8 @@ public class MongoReadingSessionRepository : IReadingSessionRepository
             amountCharged: doc.Cost?.Amount ?? 0,
             isCompleted: isCompleted,
             createdAt: doc.CreatedAt,
-            completedAt: isCompleted ? doc.UpdatedAt : null);
+            completedAt: isCompleted ? doc.UpdatedAt : null,
+            aiSummary: doc.AiResult?.Summary,
+            followups: followups);
     }
 }

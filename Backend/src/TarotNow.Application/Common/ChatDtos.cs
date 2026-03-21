@@ -52,6 +52,17 @@ public class ConversationDto
     /// </summary>
     public string ReaderId { get; set; } = string.Empty;
 
+    // --- CÁC TRƯỜNG BỔ SUNG ĐỂ HIỂN THỊ TÊN/AVATAR TRÊN GIAO DIỆN (Bơm dữ liệu từ Users table) ---
+    public string? UserName { get; set; }
+    public string? UserAvatar { get; set; }
+    public string? ReaderName { get; set; }
+    public string? ReaderAvatar { get; set; }
+    
+    // --- ESCROW INFO (Thêm vào để phục vụ hiển thị ngoài Inbox) ---
+    public long EscrowTotalFrozen { get; set; }
+    public string? EscrowStatus { get; set; }
+    // --------------------------------------------------------------------------
+
     /// <summary>
     /// Trạng thái cuộc trò chuyện:
     ///   - "pending": đang chờ reader chấp nhận
@@ -153,6 +164,13 @@ public class PaymentPayloadDto
 {
     /// <summary>Số diamond mà reader đề xuất cho câu hỏi/dịch vụ.</summary>
     public long AmountDiamond { get; set; }
+
+    /// <summary>
+    /// Lời nhắn mô tả của Reader khi tạo đề xuất thanh toán.
+    /// Ví dụ: "Thanh toán cho lá bài thứ 2", "Giải mã lá The Tower"...
+    /// Nullable vì không bắt buộc phải nhập.
+    /// </summary>
+    public string? Description { get; set; }
 
     /// <summary>
     /// ID của đề xuất - dùng để accept/reject.

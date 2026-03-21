@@ -131,6 +131,7 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, (
                 Email = user.Email,
                 DisplayName = user.DisplayName,
                 Level = user.Level,
+                Exp = user.Exp,
                 Role = user.Role,
                 Status = user.Status.ToString()
             }

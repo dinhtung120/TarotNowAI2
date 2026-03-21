@@ -117,7 +117,7 @@ public static class DependencyInjection
         services.AddSingleton<ILegalVersionSettings, LegalVersionSettings>();
         services.AddSingleton<ISystemConfigSettings, SystemConfigSettings>();
 
-        services.AddScoped<IEmailSender, MockEmailSender>(); // Móc Đóng Giả Gửi Mail Nhanh Chống Tắt Bật Tịt Giữa Trưởng Tịt.
+        services.AddScoped<IEmailSender, SmtpEmailSender>(); // Sử dụng giao thức kết nối SMTP.
         services.AddSingleton<IRngService, RngService>(); // Trò Máy Trộn Thóc Shuffle Bóc Bài Vững Gacha Bọc Khung Ngẫu Nhiên Hút Tiêu. 
         services.AddSingleton<IPaymentGatewayService, HmacPaymentGatewayService>();
         services.AddScoped<IDiagnosticsService, DiagnosticsService>();

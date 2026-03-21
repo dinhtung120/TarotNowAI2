@@ -40,8 +40,8 @@ public class MongoDbContext
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "[MongoDB] Failed to ensure indexes at startup.");
-            throw; // Rớt DB Cứng Mõm Thì Cút Đi Code Dịch Chặn Đập Mái Khỏi Cho Web App Sống Do Bug Dính Lỗi Sai Database (Nhẫn Sai Database) Lỡ Tạo Mongo Nháp Sai Quá Thách App Kêu Ra Ráp Index Thất Bại Tụt Ra Trắng Báo Mẻ Khối Chứ Không Chạy Tiếp Ém Lỗi Rồi Cố Rác Database.
+            _logger.LogError(ex, "[MongoDB] Failed to ensure indexes at startup. Quá trình tạo index tự động bị lỗi (thường do trùng tên Index cũ). App vẫn chạy tiếp tục mà không crash.");
+            // ĐÃ BỎ THROW để app không sụp đổ hoàn toàn chỉ vì khác tên index.
         }
     }
 
@@ -121,23 +121,16 @@ public class MongoDbContext
         // 3. Nạp Quét Gọi Nhanh Cụm Rạch Dứt Thảm History Session Bói App Phụ Ngát Theo Thời Gian.
         ReadingSessions.Indexes.CreateOne(new CreateIndexModel<ReadingSessionDocument>(
             Builders<ReadingSessionDocument>.IndexKeys
-                .Ascending(r => r.UserId)
+                .Ascending(r => r.IsDeleted)
                 .Descending(r => r.CreatedAt),
-            new CreateIndexOptions { Name = "idx_userid_createdat_desc" }));
-
-        // Tìm Dọn Rác Thất Rớt AI Chat Sinh Đôi Cứt Rác Chết Nghẽn API Không Status "Completed" Đuổi Rễ.
-        ReadingSessions.Indexes.CreateOne(new CreateIndexModel<ReadingSessionDocument>(
-            Builders<ReadingSessionDocument>.IndexKeys
-                .Ascending(r => r.AiStatus)
-                .Descending(r => r.CreatedAt),
-            new CreateIndexOptions { Name = "idx_aistatus_createdat" }));
+            new CreateIndexOptions { Name = "idx_isdeleted_createdat_desc" }));
 
         ReadingSessions.Indexes.CreateOne(new CreateIndexModel<ReadingSessionDocument>(
             Builders<ReadingSessionDocument>.IndexKeys
                 .Ascending(r => r.UserId)
-                .Ascending(r => r.SpreadType)
+                .Ascending(r => r.IsDeleted)
                 .Descending(r => r.CreatedAt),
-            new CreateIndexOptions { Name = "idx_userid_spreadtype_createdat" }));
+            new CreateIndexOptions { Name = "idx_userid_isdeleted_createdat_desc" }));
 
         // 4. Mũ Hẹn Giờ TTL Nổ Rác AiProviderLogs Sau 90 Ngày Ngắn Không Chứa Tốn Storage Gây Vi Phạm Tiền Bạc (Tầm Tã Khổ Cắn RAM MongoDB Ngang). Lọc Rác.
         AiProviderLogs.Indexes.CreateOne(new CreateIndexModel<AiProviderLogDocument>(
@@ -189,34 +182,38 @@ public class MongoDbContext
             Builders<ReaderProfileDocument>.IndexKeys.Ascending(r => r.UserId),
             new CreateIndexOptions { Unique = true, Name = "idx_userid_unique" }));
 
-        // Tọng Cho Lên Danh Sách Dashboard App Tarot Show Active Online Nhanh Nhất (Quét Cục Nóng Status).
+        // Reader Profiles - Thêm index hỗ trợ lọc IsDeleted trong Aggregation
         ReaderProfiles.Indexes.CreateOne(new CreateIndexModel<ReaderProfileDocument>(
             Builders<ReaderProfileDocument>.IndexKeys
+                .Ascending(r => r.IsDeleted)
                 .Ascending(r => r.Status)
                 .Descending(r => r.UpdatedAt),
-            new CreateIndexOptions { Name = "idx_status_updatedat_desc" }));
+            new CreateIndexOptions { Name = "idx_isdeleted_status_updatedat_desc" }));
 
         // --- Cục Conversations Tạp Dây Liên Kết Khách Và Bói Lỗi Oa Rút Gắn 
         Conversations.Indexes.CreateOne(new CreateIndexModel<ConversationDocument>(
             Builders<ConversationDocument>.IndexKeys
+                .Ascending(c => c.IsDeleted)
                 .Ascending(c => c.UserId)
                 .Ascending(c => c.Status)
                 .Descending(c => c.UpdatedAt),
-            new CreateIndexOptions { Name = "idx_userid_status_updatedat" }));
+            new CreateIndexOptions { Name = "idx_isdeleted_userid_status_updatedat" }));
 
         Conversations.Indexes.CreateOne(new CreateIndexModel<ConversationDocument>(
             Builders<ConversationDocument>.IndexKeys
+                .Ascending(c => c.IsDeleted)
                 .Ascending(c => c.ReaderId)
                 .Ascending(c => c.Status)
                 .Descending(c => c.UpdatedAt),
-            new CreateIndexOptions { Name = "idx_readerid_status_updatedat" }));
+            new CreateIndexOptions { Name = "idx_isdeleted_readerid_status_updatedat" }));
 
         // --- Trùm Soát Chat Timeline Chống Mờ Phanh Chat Kéo Căng DB 
         ChatMessages.Indexes.CreateOne(new CreateIndexModel<ChatMessageDocument>(
             Builders<ChatMessageDocument>.IndexKeys
                 .Ascending(m => m.ConversationId)
+                .Ascending(m => m.IsDeleted)
                 .Descending(m => m.CreatedAt),
-            new CreateIndexOptions { Name = "idx_conversationid_createdat_desc" }));
+            new CreateIndexOptions { Name = "idx_conversationid_isdeleted_createdat_desc" }));
 
         // Trích Ác Ai Độc Phát Spam Cần Soi DB Trace Report 
         ChatMessages.Indexes.CreateOne(new CreateIndexModel<ChatMessageDocument>(

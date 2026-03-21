@@ -18,13 +18,14 @@ import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { Sparkles, Bot, AlertTriangle, RefreshCw, Send, User as UserIcon } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { API_BASE_URL } from "@/lib/api";
 
 interface AiInterpretationStreamProps {
- sessionId: string;
- cards?: number[];
- onComplete?: () => void;
+	sessionId: string;
+	cards?: number[];
+	onComplete?: () => void;
+	isReadyToShow?: boolean;
 }
 
 interface Message {
@@ -34,10 +35,11 @@ interface Message {
  isStreaming?: boolean;
 }
 
-export default function AiInterpretationStream({ sessionId, cards, onComplete }: AiInterpretationStreamProps) {
- const accessToken = useAuthStore((state) => state.accessToken);
- const t = useTranslations("AiInterpretation");
- const [messages, setMessages] = useState<Message[]>([]);
+export default function AiInterpretationStream({ sessionId, cards, onComplete, isReadyToShow = true }: AiInterpretationStreamProps) {
+	const accessToken = useAuthStore((state) => state.accessToken);
+	const t = useTranslations("AiInterpretation");
+	const locale = useLocale();
+	const [messages, setMessages] = useState<Message[]>([]);
 
  // Initial reading states
  const [isStreaming, setIsStreaming] = useState(false);
@@ -52,26 +54,12 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
  const [followupText, setFollowupText] = useState("");
  const [isSendingFollowup, setIsSendingFollowup] = useState(false);
 
- // Follow-up pricing states
- const freeSlotsTotal = useMemo(() => {
- if (!cards || cards.length === 0) return 0;
-
- let highestLevel = 1;
- cards.forEach(cardId => {
- // This mirrors BE logic: Id 0-21 are Major Arcana.
- // Simplified level mapping: 0-9 -> 1-10 level, 10-19 -> 11-20 level. // In a real app the exact logic should match BE or be passed by BE directly.
- // We use a simplified approximation here for MVP UI.
- if (cardId < 22) {
- const calculatedLvl = cardId < 10 ? cardId + 1 : cardId < 20 ? cardId - 5 : 20;
- if (calculatedLvl > highestLevel) highestLevel = calculatedLvl;
- }
- });
-
- if (highestLevel >= 16) return 3;
- if (highestLevel >= 11) return 2;
- if (highestLevel >= 6) return 1;
- return 0;
- }, [cards]);
+ 	// Follow-up pricing states
+	const freeSlotsTotal = useMemo(() => {
+		if (!cards || cards.length === 0) return 0;
+		// [FIX]: Theo yêu cầu của người dùng, không cho phép hiển thị hay sử dụng lượt hỏi miễn phí nào (Luôn bắt đầu từ 0 lượt FREE).
+		return 0;
+	}, [cards]);
 
  // Calculate derived states based on message history
  const userFollowupCount = messages.filter(m => m.role === "user").length;
@@ -90,18 +78,23 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
 
  setMessages((prev) => {
  const newMsgs = [...prev];
- const lastMsg = newMsgs[newMsgs.length - 1];
+ const lastMsgIndex = newMsgs.length - 1;
+ const lastMsg = newMsgs[lastMsgIndex];
  if (lastMsg && lastMsg.role === "ai") {
- lastMsg.content += chunk;
+ // BẮT BUỘC: Phải tạo object mới để tránh bị mutate (React Strict Mode chạy hàm này 2 lần)
+ newMsgs[lastMsgIndex] = {
+ ...lastMsg,
+ content: lastMsg.content + chunk
+ };
  }
  return newMsgs;
  });
  }, []);
 
- // Auto scroll bottom when new message arrives or streaming
- useEffect(() => {
- bottomRef.current?.scrollIntoView({ behavior: "smooth" });
- }, [messages, isStreaming]);
+ 	// [User Request: Đã tắt tính năng tự động scroll xuống dòng mới nhất khi AI đang stream]
+	// useEffect(() => {
+	// 	bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+	// }, [messages, isStreaming]);
 
  const stopStream = useCallback((updateState = true) => {
  if (flushTimerRef.current !== null) {
@@ -130,7 +123,7 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
  setError(null);
 
  const isFollowup = !!customPrompt;
- const messageId = Date.now().toString();
+ const messageId = Date.now().toString() + "-ai";
 
  if (!isFollowup) {
  // Initial reading message
@@ -141,8 +134,8 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
  }
 
  // Khởi tạo Server-Sent Events Connection
- // Thêm tham số `access_token` và `followupQuestion` (nếu có)
- const baseUrl = `${API_BASE_URL}/sessions/${sessionId}/stream?access_token=${accessToken}`;
+ // Thêm tham số `access_token` và `followupQuestion` và `language`
+ const baseUrl = `${API_BASE_URL}/sessions/${sessionId}/stream?access_token=${accessToken}&language=${locale}`;
  const finalUrl = customPrompt ? `${baseUrl}&followupQuestion=${encodeURIComponent(customPrompt)}` : baseUrl;
 
  eventSourceRef.current = new EventSource(finalUrl, {
@@ -197,15 +190,17 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
  if (!accessToken) return;
 
  const startTimer = window.setTimeout(() => {
- if (eventSourceRef.current || isComplete || error || messages.length > 0) return;
+ // Dùng ref để đảm bảo chỉ start 1 lần duy nhất cho mỗi sessionId
+ if (eventSourceRef.current) return;
  startStream();
- }, 0);
+ }, 100);
 
  return () => {
  window.clearTimeout(startTimer);
  stopStream(false);
  };
- }, [accessToken, error, isComplete, messages.length, sessionId, startStream, stopStream]);
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [accessToken, sessionId]);
 
  const handleFollowupSubmit = (e: React.FormEvent) => {
  e.preventDefault();
@@ -216,41 +211,26 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
  setIsSendingFollowup(true);
 
  // Add user question to UI
- setMessages((prev) => [...prev, { id: Date.now().toString(), role: "user", content: question }]);
+ setMessages((prev) => [...prev, { id: Date.now().toString() + "-user", role: "user", content: question }]);
 
  // Start streaming AI response
  startStream(question);
  };
 
- return (
- <div className="w-full max-w-4xl mx-auto mt-16 tn-overlay rounded-3xl border border-[var(--purple-accent)]/20 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-10 duration-1000">
- {/* Header / Title */}
- <div className="tn-grad-ai-header p-6 border-b border-[var(--purple-accent)]/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
- <div className="flex items-center">
- <div className="w-12 h-12 bg-[var(--purple-accent)]/20 rounded-full flex items-center justify-center mr-4">
- <Bot className="w-6 h-6 text-[var(--purple-accent)]" />
- </div>
- <div>
- <h3 className="text-xl font-serif font-bold tn-text-primary flex items-center">
- {t("title")}
- {isStreaming && (
- <span className="ml-3 flex space-x-1">
- <span className="w-2 h-2 bg-[var(--purple-accent)] rounded-full animate-bounce [animation-delay:-0.3s]"></span>
- <span className="w-2 h-2 bg-[var(--purple-accent)] rounded-full animate-bounce [animation-delay:-0.15s]"></span>
- <span className="w-2 h-2 bg-[var(--purple-accent)] rounded-full animate-bounce"></span>
- </span>
- )}
- </h3>
- <p className="text-sm tn-text-secondary">{t("subtitle")}</p>
- </div>
- </div>
+ 	if (!isReadyToShow) {
+		return (
+			<div className="w-full h-full flex flex-col relative animate-in fade-in duration-1000 px-0 md:px-2 overflow-hidden">
+				<div className="flex-1 flex flex-col items-center justify-center text-center space-y-4 opacity-40">
+					<RefreshCw className="w-10 h-10 tn-text-muted animate-spin" />
+					<p className="tn-text-muted font-serif italic max-w-xs px-4">Đang đợi lật bài...</p>
+				</div>
+			</div>
+		);
+	}
 
- {isComplete && (
- <div className="flex items-center text-[var(--warning)] text-sm font-medium bg-[var(--warning)]/10 px-4 py-2 rounded-full border border-[var(--warning)]/20">
- <Sparkles className="w-4 h-4 mr-2" /> {t("status_complete")}
- </div>
- )}
- </div>
+	return (
+		<div className="w-full h-full flex flex-col relative animate-in fade-in duration-1000 px-0 md:px-2 overflow-hidden">
+		{/* Header Removed */}
 
  {/* Error Message */}
  {error && (
@@ -269,11 +249,10 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
 	 </div>
 	 )}
 
- {/* Content Body (Chat Interface) */}
- <div className="p-6 h-[400px] md:h-[500px] flex flex-col relative">
+ {/* Inner wrapper removed */}
 
  {/* Scrollable Message Area */}
- <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-6">
+ <div className="flex-1 overflow-y-auto custom-scrollbar px-3 md:px-6 space-y-6 pt-4 pb-2">
  {messages.length === 0 && !error && isStreaming && (
 	 <div className="h-full flex items-center justify-center text-[var(--purple-accent)]/50">
 	 <div className="flex flex-col items-center">
@@ -285,18 +264,15 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
 
  {messages.map((msg) => (
  <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
- <div className={`flex max-w-[90%] md:max-w-[85%] gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+ <div className={`flex max-w-[95%] md:max-w-[92%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
 
- {/* Avatar */}
- <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center border
- ${msg.role === 'user'
- ? 'bg-[var(--warning)]/40 border-[var(--warning)]/30 text-[var(--warning)]'
- : 'bg-[var(--purple-accent)]/40 border-[var(--purple-accent)]/30 text-[var(--purple-accent)]'}`}>
- {msg.role === 'user' ? <UserIcon className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
- </div>
-
+ {/* 
+  * [TINH CHỈNH UI]: Đã xóa icon người dùng (User & AI) theo yêu cầu 
+  * để nới rộng không gian hiển thị cho đoạn hội thoại (chat bubble).
+  * Điều này giúp văn bản của AI chiếm được nhiều diện tích hơn (max-w-[95%] ở mobile, 92% ở desktop).
+  */}
  {/* Message Bubble */}
- <div className={`px-5 py-4 rounded-3xl ${msg.role === 'user'
+ <div className={`px-6 md:px-8 py-5 rounded-3xl ${msg.role === 'user'
  ? 'bg-[var(--warning)]/10 border border-[var(--warning)]/20 rounded-tr-none'
  : 'bg-[var(--purple-accent)]/10 border border-[var(--purple-accent)]/20 rounded-tl-none prose prose-purple max-w-none prose-p:leading-relaxed prose-p:tn-text-secondary prose-headings:font-serif prose-headings:text-[var(--warning)] prose-strong:text-[var(--purple-accent)] prose-strong:font-bold prose-em:tn-text-secondary prose-em:italic prose-li:tn-text-secondary'}`}>
 
@@ -369,8 +345,7 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete }:
  <p className="text-xs tn-text-muted mt-1">{t("hard_cap_desc")}</p>
  </div>
  )}
- </div>
-
+  {/* Duplicate closing tags removed */}
  </div>
  );
 }

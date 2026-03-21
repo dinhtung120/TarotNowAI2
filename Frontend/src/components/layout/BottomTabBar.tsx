@@ -16,7 +16,7 @@
  */
 
 import { Link, usePathname } from "@/i18n/routing";
-import { Home, Sparkles, MessageSquare, Wallet, User, type LucideIcon } from "lucide-react";
+import { Home, Sparkles, MessageSquare, Wallet, Bell, type LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 interface TabItem {
@@ -25,12 +25,19 @@ interface TabItem {
  icon: LucideIcon;
 }
 
+/*
+ * Bottom Tab Bar: 5 tabs chính cho mobile.
+ * Thay Profile bằng Notifications vì:
+ * - Mobile cần truy cập thông báo nhanh (icon chuông quen thuộc).
+ * - Profile ít truy cập hơn, user có thể vào từ sidebar hoặc settings.
+ * - Instagram, TikTok cũng đặt notification ở bottom bar.
+ */
 const tabs: TabItem[] = [
  { labelKey: "home", href: "/", icon: Home },
  { labelKey: "readings", href: "/reading", icon: Sparkles },
  { labelKey: "chat", href: "/chat", icon: MessageSquare },
  { labelKey: "wallet", href: "/wallet", icon: Wallet },
- { labelKey: "profile", href: "/profile", icon: User },
+ { labelKey: "notifications", href: "/notifications", icon: Bell },
 ];
 
 export default function BottomTabBar() {

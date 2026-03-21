@@ -34,6 +34,7 @@ export default function ReadingSetupPage() {
  const t = useTranslations("ReadingSetup");
  const fetchBalance = useWalletStore((state) => state.fetchBalance);
  const [selectedSpread, setSelectedSpread] = useState<string>("daily_1");
+ const [selectedCurrency, setSelectedCurrency] = useState<"gold" | "diamond">("gold");
  const [initError, setInitError] = useState("");
  const [isInitializing, setIsInitializing] = useState(false);
 
@@ -45,19 +46,42 @@ export default function ReadingSetupPage() {
  resolver: zodResolver(formSchema),
  });
 
- const SPREADS = [
- { id: "daily_1", name: t("daily_1_name"), desc: t("daily_1_desc"), cost: t("cost_free"), icon: <Star className="w-5 h-5" /> },
- { id: "spread_3", name: t("spread_3_name"), desc: t("spread_3_desc"), cost: t("cost_gold", { amount: 50 }), icon: <Flame className="w-5 h-5" /> },
- { id: "spread_5", name: t("spread_5_name"), desc: t("spread_5_desc"), cost: t("cost_gold", { amount: 100 }), icon: <ShieldCheck className="w-5 h-5" /> },
- { id: "spread_10", name: t("spread_10_name"), desc: t("spread_10_desc"), cost: t("cost_diamond", { amount: 50 }), icon: <Moon className="w-5 h-5" /> },
- ];
+ const SPREADS = useMemo(() => [
+  { id: "daily_1", name: t("daily_1_name"), desc: t("daily_1_desc"), cost: t("cost_free"), exp: 1, icon: <Star className="w-5 h-5" />, currency: 'gold' },
+  { 
+   id: "spread_3", 
+   name: t("spread_3_name"), 
+   desc: t("spread_3_desc"), 
+   cost: selectedCurrency === 'diamond' ? t("cost_diamond", { amount: 5 }) : t("cost_gold", { amount: 50 }),
+   exp: selectedCurrency === 'diamond' ? 2 : 1,
+   icon: <Flame className="w-5 h-5" /> 
+  },
+  { 
+   id: "spread_5", 
+   name: t("spread_5_name"), 
+   desc: t("spread_5_desc"), 
+   cost: selectedCurrency === 'diamond' ? t("cost_diamond", { amount: 10 }) : t("cost_gold", { amount: 100 }),
+   exp: selectedCurrency === 'diamond' ? 2 : 1,
+   icon: <ShieldCheck className="w-5 h-5" /> 
+  },
+  { 
+   id: "spread_10", 
+   name: t("spread_10_name"), 
+   desc: t("spread_10_desc"), 
+   cost: selectedCurrency === 'gold' ? t("cost_gold", { amount: 500 }) : t("cost_diamond", { amount: 50 }),
+   exp: selectedCurrency === 'diamond' ? 2 : 1,
+   icon: <Moon className="w-5 h-5" /> 
+  },
+ ], [t, selectedCurrency]);
 
  const onSubmit = async (data: FormData) => {
  setIsInitializing(true);
  setInitError("");
 
  const response = await initReadingSession({
- spreadType: selectedSpread
+  spreadType: selectedSpread,
+  question: data.question,
+  currency: selectedCurrency
  });
 
  if (response.success && response.data) {
@@ -99,36 +123,80 @@ export default function ReadingSetupPage() {
  </div>
  )}
 
+  {/* Currency Selector */}
+ <div className="flex flex-col items-center mb-10 space-y-4 animate-in fade-in slide-in-from-top-4 duration-700">
+  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] italic">
+   {t('select_currency')}
+  </label>
+  <div className="inline-flex p-1.5 bg-[var(--bg-glass)] border border-[var(--border-default)] rounded-2xl shadow-lg backdrop-blur-xl">
+   <button
+    type="button"
+    onClick={() => setSelectedCurrency("gold")}
+    className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-500 ${
+     selectedCurrency === "gold"
+      ? "bg-[var(--purple-accent)] tn-text-ink shadow-[0_0_20px_var(--purple-accent)]"
+      : "tn-text-secondary hover:tn-text-primary hover:bg-[var(--purple-50)]"
+    }`}
+   >
+    <Zap className="w-3.5 h-3.5" />
+    {t('currency_gold')}
+   </button>
+   <button
+    type="button"
+    onClick={() => setSelectedCurrency("diamond")}
+    className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-500 ${
+     selectedCurrency === "diamond"
+      ? "bg-[var(--amber-accent)] tn-text-ink shadow-[0_0_20px_var(--amber-accent)]"
+      : "tn-text-secondary hover:tn-text-primary hover:bg-[var(--amber-50)]"
+    }`}
+   >
+    <Star className="w-3.5 h-3.5" />
+    {t('currency_diamond')}
+   </button>
+  </div>
+ </div>
+
  <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
  {SPREADS.map((spread) => {
  const isSelected = selectedSpread === spread.id;
  const isFree = spread.id === 'daily_1';
- const isPremium = spread.id === 'spread_10';
+ const isPremiumSpread = spread.id === 'spread_10';
+ const showExpBonus = spread.exp > 1;
 
  return (
  <GlassCard
  key={spread.id}
  variant={isSelected ? "elevated" : "interactive"}
- className={`relative cursor-pointer transition-all duration-500 overflow-hidden ${
+ className={`group relative cursor-pointer transition-all duration-500 overflow-hidden ${
  isSelected ? "border-[var(--purple-accent)]/50 shadow-[0_0_30px_var(--c-168-85-247-15)] ring-1 ring-[var(--purple-accent)]/50" : "hover:tn-border"
  }`}
  onClick={() => setSelectedSpread(spread.id)}
  padding="lg"
  >
  <div className="flex justify-between items-start mb-4 relative z-10">
- <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-transform duration-500 ${
+ <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border transition-all duration-500 ${
  isSelected ? "bg-[var(--purple-accent)] tn-text-ink border-transparent scale-110 shadow-[0_0_20px_var(--purple-accent)]" : "tn-surface tn-text-secondary tn-border-soft group-hover:tn-surface-strong group-hover:scale-105"
  }`}>
  {spread.icon}
  </div>
- <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
- isFree ? 'bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)]' : isPremium
- ? 'bg-[var(--info-bg)] text-[var(--info)] border-[var(--info)]'
+ <div className="flex flex-col items-end gap-2">
+ <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border transition-colors ${
+ isFree ? 'bg-[var(--success-bg)] text-[var(--success)] border-[var(--success)]' 
+ : selectedCurrency === 'diamond' 
+ ? 'bg-[var(--info-bg)] text-[var(--info)] border-[var(--info)] shadow-[0_0_10px_var(--info-bg)]'
  : 'bg-[var(--warning-bg)] text-[var(--warning)] border-[var(--warning)]'
  }`}>
  {spread.cost}
  </span>
+ <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter border animate-pulse ${
+ showExpBonus 
+ ? 'bg-[var(--purple-accent)] tn-text-ink border-transparent shadow-[0_0_10px_var(--purple-accent)]'
+ : 'tn-surface tn-text-tertiary tn-border-soft'
+ }`}>
+ {t('exp_bonus', { amount: spread.exp })}
+ </span>
+ </div>
  </div>
  <div className="relative z-10">
  <h3 className={`text-xl font-bold mb-2 tracking-tight transition-colors ${

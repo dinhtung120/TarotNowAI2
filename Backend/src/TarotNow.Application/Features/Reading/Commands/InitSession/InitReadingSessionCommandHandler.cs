@@ -45,6 +45,8 @@ public class InitReadingSessionCommandHandler : IRequestHandler<InitReadingSessi
         long costGold = 0;
         long costDiamond = 0;
 
+        string normalizedCurrency = request.Currency?.Trim().ToLower() ?? "gold";
+
         // 2. Tòa Án Định Giá Quy Mô Bàn Gõ (Logic Pricing & Daily Limit)
         if (request.SpreadType == SpreadType.Daily1Card)
         {
@@ -54,35 +56,40 @@ public class InitReadingSessionCommandHandler : IRequestHandler<InitReadingSessi
             {
                 throw new BadRequestException("You have already drawn your free daily card today. Please try other spreads.");
             }
-            // Free cost = 0 (Từ Thủy Chí Chung)
+            // Free cost = 0 (Luôn miễn phí)
         }
         else if (request.SpreadType == SpreadType.Spread3Cards)
         {
-            // Trải 3 Lá Chết Tiền Vàng (50 Cắc)
-            costGold = _systemConfigSettings.Spread3GoldCost;
+            if (normalizedCurrency == "diamond")
+                costDiamond = _systemConfigSettings.Spread3DiamondCost;
+            else
+                costGold = _systemConfigSettings.Spread3GoldCost;
         }
         else if (request.SpreadType == SpreadType.Spread5Cards)
         {
-            costGold = _systemConfigSettings.Spread5GoldCost;
+            if (normalizedCurrency == "diamond")
+                costDiamond = _systemConfigSettings.Spread5DiamondCost;
+            else
+                costGold = _systemConfigSettings.Spread5GoldCost;
         }
         else if (request.SpreadType == SpreadType.Spread10Cards)
         {
-            // Trải Đại Thập Tự Giá Celtic Cross (10 Lá) - Đòi Máu Kim Cương. (Hệ VIP Trả Tiền Tươi Thóc Thật Trả Nạp Card).
-            costDiamond = _systemConfigSettings.Spread10DiamondCost;
+            if (normalizedCurrency == "gold")
+                costGold = _systemConfigSettings.Spread10GoldCost;
+            else
+                costDiamond = _systemConfigSettings.Spread10DiamondCost;
         }
 
         // 3. Phân Mảnh Giới Thiệu Ngoại Tệ (Dùng cho Ghi Bill Auditing/Log Trạng Thái Xài Tiền).
-        string? currencyUsed = null;
+        string currencyUsed = normalizedCurrency; // Mặc định dùng theo yêu cầu của khách (gold/diamond)
         long amountCharged = 0;
         
         if (costGold > 0)
         {
-            currencyUsed = CurrencyType.Gold;
             amountCharged = costGold;
         }
         else if (costDiamond > 0)
         {
-            currencyUsed = CurrencyType.Diamond;
             amountCharged = costDiamond;
         }
 

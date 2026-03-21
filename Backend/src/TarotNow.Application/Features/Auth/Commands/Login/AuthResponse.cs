@@ -56,6 +56,7 @@ public class UserProfileDto
     public string DisplayName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public int Level { get; set; } // Gamification level
+    public long Exp { get; set; } // Gamification experience points
     public string Role { get; set; } = string.Empty; // "admin", "user", "tarot_reader"
     public string Status { get; set; } = string.Empty; // "Active", "Locked", "Banned"
 }

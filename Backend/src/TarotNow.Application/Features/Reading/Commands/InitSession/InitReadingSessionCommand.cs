@@ -25,6 +25,9 @@ public class InitReadingSessionCommand : IRequest<InitReadingSessionResult>
     
     /// <summary>Câu Liền Đề Khách Ghi Trong Ô Textbox: "Bao Giờ Lấy Được Vợ Đi Xế Hộp?"</summary>
     public string? Question { get; set; }
+
+    /// <summary>Người dùng chọn thanh toán bằng gì (Gold hoặc Diamond)</summary>
+    public string Currency { get; set; } = string.Empty;
 }
 
 public class InitReadingSessionResult

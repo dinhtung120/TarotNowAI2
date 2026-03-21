@@ -25,6 +25,7 @@ public interface IChatFinanceRepository
 {
     // === XỬ LÝ PHIÊN GIAO DỊCH LỚN (Đóng Phí Khởi Điểm Chat) ===
     Task<ChatFinanceSession?> GetSessionByConversationRefAsync(string conversationRef, CancellationToken ct = default);
+    Task<List<ChatFinanceSession>> GetSessionsByConversationRefsAsync(IEnumerable<string> conversationRefs, CancellationToken ct = default);
     Task<ChatFinanceSession?> GetSessionByIdAsync(Guid id, CancellationToken ct = default);
     
     // Cái Lock Bất Tử Này Dành Riêng Cho Đóng Khóa Mềm Cho Giao Dịch Chậm Ở Dòng Đó Kẻo Bi Banh. (Pessimistic Locking)

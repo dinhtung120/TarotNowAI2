@@ -1,6 +1,6 @@
 # 📋 Tổng Hợp API & Trang Web — TarotNowAI2
 
-> **Cập nhật lần cuối:** 2026-03-17  
+> **Cập nhật lần cuối:** 2026-03-21  
 > **Mục đích:** Liệt kê toàn bộ API endpoints (Backend) và trang web (Frontend), kèm trạng thái tích hợp.
 
 **Chú thích:**
@@ -161,7 +161,8 @@
 |---|--------|----------|--------|----------|---------|
 | 46| `GET` | `/admin/reconciliation/wallet` | Kiểm tra bất đồng bộ sổ cái | ✅ | 📍 [adminActions.ts](file:///Users/lucifer/Desktop/TarotNowAI2/Frontend/src/actions/adminActions.ts) |
 | 47| `GET` | `/admin/users` | Danh sách users (phân trang) | ✅ | 📍 [adminActions.ts](file:///Users/lucifer/Desktop/TarotNowAI2/Frontend/src/actions/adminActions.ts) |
-| 48| `PATCH` | `/admin/users/lock` | Khóa/Mở khóa user | ✅ | 📍 [adminActions.ts](file:///Users/lucifer/Desktop/TarotNowAI2/Frontend/src/actions/adminActions.ts) |
+| 48| `PATCH` | `/admin/users` | Cập nhật thông tin user | ✅ | 📍 [adminActions.ts](file:///Users/lucifer/Desktop/TarotNowAI2/Frontend/src/actions/adminActions.ts) |
+| 48.1| `PATCH`| `/admin/users/lock`| Khóa/Mở khóa user | ✅ | 📍 [adminActions.ts](file:///Users/lucifer/Desktop/TarotNowAI2/Frontend/src/actions/adminActions.ts) |
 | 49| `GET` | `/admin/deposits` | Danh sách đơn nạp tiền | ✅ | 📍 [adminActions.ts](file:///Users/lucifer/Desktop/TarotNowAI2/Frontend/src/actions/adminActions.ts), [depositActions.ts](file:///Users/lucifer/Desktop/TarotNowAI2/Frontend/src/actions/depositActions.ts) |
 | 50| `POST` | `/admin/users/add-balance` | Cộng tiền cho user | ✅ | 📍 [adminActions.ts](file:///Users/lucifer/Desktop/TarotNowAI2/Frontend/src/actions/adminActions.ts) |
 | 51| `PATCH` | `/admin/deposits/process` | Phê duyệt/Từ chối đơn nạp tiền | ✅ | 📍 [adminActions.ts](file:///Users/lucifer/Desktop/TarotNowAI2/Frontend/src/actions/adminActions.ts) |
@@ -203,14 +204,24 @@
 
 ---
 
+## 19. 🔔 NotificationController — `api/v1/notification`
+
+| # | Method | Endpoint | Mô tả | Tích hợp | Nơi gọi |
+|---|--------|----------|--------|----------|---------|
+| 66| `GET` | `/notification` | Lấy danh sách thông báo | ✅ | 📍 [notificationActions.ts](file:///Users/lucifer/Desktop/TarotNowAI2/Frontend/src/actions/notificationActions.ts) |
+| 67| `GET` | `/notification/unread-count` | Lấy số lượng thông báo chưa đọc | ✅ | 📍 [notificationActions.ts](file:///Users/lucifer/Desktop/TarotNowAI2/Frontend/src/actions/notificationActions.ts) |
+| 68| `PATCH` | `/notification/{id}/read` | Đánh dấu thông báo đã đọc | ✅ | 📍 [notificationActions.ts](file:///Users/lucifer/Desktop/TarotNowAI2/Frontend/src/actions/notificationActions.ts) |
+
+---
+
 ## 📊 Thống Kê Tích Hợp
 
 | Metric | Số lượng |
 |--------|----------|
-| **Tổng số API endpoints** | **65** |
-| ✅ Đã tích hợp Frontend | **58** |
+| **Tổng số API endpoints** | **69** |
+| ✅ Đã tích hợp Frontend | **62** |
 | ❌ Chưa tích hợp | **7** |
-| **Tỷ lệ tích hợp** | **89.2%** |
+| **Tỷ lệ tích hợp** | **89.8%** |
 
 ### API Chưa Tích Hợp (Chi tiết)
 
@@ -270,19 +281,20 @@
 | 23| `/[locale]/wallet/withdraw` | Rút tiền | `POST /withdrawal/create`, `GET /withdrawal/my` |
 | 24| `/[locale]/chat` | Inbox (danh sách cuộc hội thoại) | `GET /conversations` |
 | 25| `/[locale]/chat/[id]` | Phòng chat (SignalR realtime) | `GET /conversations/{id}/messages`, SignalR Hub |
+| 26| `/[locale]/notifications` | Danh sách thông báo | `GET /notification`, `PATCH /notification/{id}/read` |
 
 ### Trang Admin
 
 | # | Route | Mô tả | API Sử Dụng |
 |---|-------|--------|-------------|
-| 26| `/[locale]/admin` | Dashboard Admin | — |
-| 27| `/[locale]/admin/users` | Quản lý người dùng | `GET /admin/users`, `PATCH /admin/users/lock`, `POST /admin/users/add-balance` |
-| 28| `/[locale]/admin/deposits` | Quản lý nạp tiền | `GET /admin/deposits`, `PATCH /admin/deposits/process` |
-| 29| `/[locale]/admin/reader-requests` | Quản lý đơn xin Reader | `GET /admin/reader-requests`, `PATCH /admin/reader-requests/process` |
-| 30| `/[locale]/admin/readings` | Lịch sử bốc bài (all users) | `GET /History/admin/all-sessions` |
-| 31| `/[locale]/admin/promotions` | Quản lý khuyến mãi | `GET/POST/PUT/DELETE /admin/promotions` |
-| 32| `/[locale]/admin/withdrawals` | Quản lý rút tiền | `GET /admin/withdrawals/queue`, `POST /admin/withdrawals/process` |
-| 33| `/[locale]/admin/disputes` | Quản lý tranh chấp | `POST /admin/escrow/resolve-dispute` |
+| 27| `/[locale]/admin` | Dashboard Admin | — |
+| 28| `/[locale]/admin/users` | Quản lý người dùng | `GET /admin/users`, `PATCH /admin/users/lock`, `PATCH /admin/users`, `POST /admin/users/add-balance` |
+| 29| `/[locale]/admin/deposits` | Quản lý nạp tiền | `GET /admin/deposits`, `PATCH /admin/deposits/process` |
+| 30| `/[locale]/admin/reader-requests` | Quản lý đơn xin Reader | `GET /admin/reader-requests`, `PATCH /admin/reader-requests/process` |
+| 31| `/[locale]/admin/readings` | Lịch sử bốc bài (all users) | `GET /History/admin/all-sessions` |
+| 32| `/[locale]/admin/promotions` | Quản lý khuyến mãi | `GET/POST/PUT/DELETE /admin/promotions` |
+| 33| `/[locale]/admin/withdrawals` | Quản lý rút tiền | `GET /admin/withdrawals/queue`, `POST /admin/withdrawals/process` |
+| 34| `/[locale]/admin/disputes` | Quản lý tranh chấp | `POST /admin/escrow/resolve-dispute` |
 
 ---
 
@@ -302,6 +314,7 @@
 | [escrowActions.ts](file:///Users/lucifer/Desktop/TarotNowAI2/Frontend/src/actions/escrowActions.ts) | Escrow + Dispute | 7 |
 | [mfaActions.ts](file:///Users/lucifer/Desktop/TarotNowAI2/Frontend/src/actions/mfaActions.ts) | Xác thực 2 lớp MFA | 4 |
 | [legalActions.ts](file:///Users/lucifer/Desktop/TarotNowAI2/Frontend/src/actions/legalActions.ts) | Pháp lý (consent) | 2 |
+| [notificationActions.ts](file:///Users/lucifer/Desktop/TarotNowAI2/Frontend/src/actions/notificationActions.ts) | Thông báo (in-app) | 3 |
 | [promotionActions.ts](file:///Users/lucifer/Desktop/TarotNowAI2/Frontend/src/actions/promotionActions.ts) | Khuyến mãi | 4 |
 | [withdrawalActions.ts](file:///Users/lucifer/Desktop/TarotNowAI2/Frontend/src/actions/withdrawalActions.ts) | Rút tiền | 4 |
-| [adminActions.ts](file:///Users/lucifer/Desktop/TarotNowAI2/Frontend/src/actions/adminActions.ts) | Admin (users, deposits, reader-requests) | 8 |
+| [adminActions.ts](file:///Users/lucifer/Desktop/TarotNowAI2/Frontend/src/actions/adminActions.ts) | Admin (users, deposits, reader-requests) | 9 |

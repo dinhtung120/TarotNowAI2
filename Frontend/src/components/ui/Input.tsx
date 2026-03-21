@@ -124,6 +124,7 @@ const Input = forwardRef<HTMLInputElement, CombinedProps>(
  {isTextarea ? (
  /* Textarea mode — dùng cho câu hỏi, mô tả, bio */
  <textarea
+ ref={ref as any}
  className={[
  baseInputStyles,
  "resize-none min-h-[80px]",

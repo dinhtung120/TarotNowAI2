@@ -23,9 +23,10 @@ import { useAuthStore } from "@/store/authStore";
 import { getProfileAction, updateProfileAction } from "@/actions/profileActions";
 import Image from "next/image";
 import { Sparkles, User, Calendar, AtSign, ShieldCheck, Save, Loader2, Trophy,
- Stars
+ Stars, ArrowUpRight, Clock, XCircle
 } from "lucide-react";
 import { SectionHeader, GlassCard, Button } from "@/components/ui";
+import { getMyReaderRequest, type MyReaderRequest } from "@/actions/readerActions";
 
 /**
  * DTO (Data Transfer Object) — Mô tả cấu trúc dữ liệu trả về từ API Profile.
@@ -64,6 +65,14 @@ export default function ProfilePage() {
  const [loading, setLoading] = useState(true);
  const [successMsg, setSuccessMsg] = useState("");
  const [errorMsg, setErrorMsg] = useState("");
+
+ /*
+  * State cho Reader Upgrade Card:
+  * - readerRequest: trạng thái đơn xin Reader hiện tại (pending/approved/rejected/null)
+  * - readerRequestLoading: cờ loading riêng để không block toàn bộ profile page
+  */
+ const [readerRequest, setReaderRequest] = useState<MyReaderRequest | null>(null);
+ const [readerRequestLoading, setReaderRequestLoading] = useState(false);
 
  const profileSchema = useMemo(() => z.object({
   displayName: z.string().min(2, t("validation.display_name_min")),
@@ -131,6 +140,26 @@ export default function ProfilePage() {
  }
  fetchProfile();
  }, [isAuthenticated, setValue, t]);
+
+ /*
+  * useEffect #3: Fetch trạng thái đơn xin Reader (chỉ cho user thường).
+  * LÝ DO TÁCH RIÊNG:
+  *   - Không block profile loading (chạy song song)
+  *   - Chỉ gọi khi user chưa phải reader/admin
+  *   - getMyReaderRequest() trả về null nếu chưa nộp đơn
+  */
+ useEffect(() => {
+ if (!isAuthenticated || !user) return;
+ /* Chỉ fetch khi user là "user" thường — reader/admin không cần */
+ if (user.role === 'reader' || user.role === 'admin') return;
+
+ setReaderRequestLoading(true);
+ getMyReaderRequest().then((result) => {
+  setReaderRequest(result);
+  setReaderRequestLoading(false);
+ });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [isAuthenticated, user?.role]);
 
  /**
  * Xử lý Submit Form
@@ -262,6 +291,96 @@ export default function ProfilePage() {
  </div>
  </div>
  </GlassCard>
+ )}
+
+ {/* ===== READER UPGRADE CARD =====
+  Hiển thị CHỈ KHI user là người dùng thường (role !== reader/admin).
+  3 trạng thái:
+  1. Chưa nộp đơn → CTA button đi đến /reader/apply
+  2. Đơn đang chờ (pending) → Badge vàng + thông báo
+  3. Đơn bị từ chối (rejected) → Badge đỏ + nút nộp lại
+ */}
+ {user?.role !== "admin" && user?.role !== "reader" && !readerRequestLoading && (
+  <GlassCard className="!p-6 sm:!p-8 overflow-hidden relative group">
+  <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12">
+   <Sparkles className="w-32 h-32 text-[var(--purple-accent)]" />
+  </div>
+  <div className="relative z-10 space-y-5">
+   {/* Header */}
+   <div className="flex items-center gap-3">
+   <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[var(--purple-accent)]/20 to-[var(--warning)]/10 flex items-center justify-center border border-[var(--purple-accent)]/20 shadow-xl">
+    <Sparkles className="w-6 h-6 text-[var(--purple-accent)]" />
+   </div>
+   <div>
+    <h3 className="text-lg font-black tn-text-primary italic tracking-tight">
+    {t("upgrade.title")}
+    </h3>
+    <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)]">
+    {t("upgrade.subtitle")}
+    </p>
+   </div>
+   </div>
+
+   {/* STATE 1: Chưa nộp đơn hoặc không có request */}
+   {(!readerRequest || !readerRequest.hasRequest) && (
+   <>
+    <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+    {t("upgrade.desc")}
+    </p>
+    <div className="flex flex-wrap gap-3 pt-1">
+    <button
+     onClick={() => router.push("/reader/apply")}
+     className="group/btn flex items-center gap-2.5 bg-gradient-to-r from-[var(--purple-accent)] to-[var(--purple-accent)] hover:brightness-110 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest tn-text-primary transition-all hover:scale-[1.02] active:scale-95 shadow-xl cursor-pointer"
+    >
+     <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+     {t("upgrade.cta")}
+    </button>
+    </div>
+   </>
+   )}
+
+   {/* STATE 2: Đơn đang chờ duyệt (pending) */}
+   {readerRequest?.hasRequest && readerRequest.status === 'pending' && (
+   <div className="p-4 rounded-xl bg-[var(--warning)]/5 border border-[var(--warning)]/20 space-y-2">
+    <div className="flex items-center gap-2">
+    <Clock className="w-4 h-4 text-[var(--warning)]" />
+    <span className="text-[10px] font-black uppercase tracking-widest text-[var(--warning)]">
+     {t("upgrade.pending_title")}
+    </span>
+    </div>
+    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+    {t("upgrade.pending_desc")}
+    </p>
+   </div>
+   )}
+
+   {/* STATE 3: Đơn bị từ chối (rejected) → cho phép nộp lại */}
+   {readerRequest?.hasRequest && readerRequest.status === 'rejected' && (
+   <div className="space-y-3">
+    <div className="p-4 rounded-xl bg-[var(--danger)]/5 border border-[var(--danger)]/20 space-y-2">
+    <div className="flex items-center gap-2">
+     <XCircle className="w-4 h-4 text-[var(--danger)]" />
+     <span className="text-[10px] font-black uppercase tracking-widest text-[var(--danger)]">
+     {t("upgrade.rejected_title")}
+     </span>
+    </div>
+    {readerRequest.adminNote && (
+     <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+     {t("upgrade.rejected_reason", { note: readerRequest.adminNote })}
+     </p>
+    )}
+    </div>
+    <button
+    onClick={() => router.push("/reader/apply")}
+    className="group/btn flex items-center gap-2.5 bg-[var(--purple-accent)]/10 hover:bg-[var(--purple-accent)]/20 border border-[var(--purple-accent)]/30 text-[var(--purple-accent)] px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
+    >
+    <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+    {t("upgrade.reapply_cta")}
+    </button>
+   </div>
+   )}
+  </div>
+  </GlassCard>
  )}
 
  {/* Settings Form Section */}

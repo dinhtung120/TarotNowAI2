@@ -63,7 +63,7 @@
 FE: register/page.tsx → authActions.ts → lib/api.ts
     → BE: AuthController.Register → RegisterCommand → RegisterCommandHandler
     → UserRepository → User entity (PostgreSQL)
-    → EmailOtpRepository → EmailOtp entity → MockEmailSender
+    → EmailOtpRepository → EmailOtp entity → SmtpEmailSender (MailKit)
 
 ĐĂNG NHẬP:
 FE: login/page.tsx → authActions.ts → lib/api.ts
@@ -81,7 +81,7 @@ FE: verify-email/page.tsx → authActions.ts
 QUÊN MẬT KHẨU:
 FE: forgot-password/page.tsx → authActions.ts
     → BE: AuthController.ForgotPassword → ForgotPasswordCommand → ForgotPasswordCommandHandler
-    → UserRepository → EmailOtpRepository → MockEmailSender
+    → UserRepository → EmailOtpRepository → SmtpEmailSender
 
 ĐẶT LẠI MẬT KHẨU:
 FE: reset-password/page.tsx → authActions.ts
@@ -120,7 +120,7 @@ FE: reset-password/page.tsx → authActions.ts
 | `Persistence/Repositories/EmailOtpRepository.cs` | Infrastructure | Truy cập DB EmailOtp |
 | `Security/Argon2idPasswordHasher.cs` | Infrastructure | Hash Argon2id |
 | `Security/JwtTokenService.cs` | Infrastructure | Tạo JWT |
-| `Services/MockEmailSender.cs` | Infrastructure | Gửi email giả lập |
+| `Services/SmtpEmailSender.cs` | Infrastructure | Gửi email SMTP qua MailKit |
 | `Persistence/Configurations/UserConfiguration.cs` | Infrastructure | EF Config User |
 | `Persistence/Configurations/RefreshTokenConfiguration.cs` | Infrastructure | EF Config RefreshToken |
 | `Persistence/Configurations/EmailOtpConfiguration.cs` | Infrastructure | EF Config EmailOtp |
@@ -149,7 +149,7 @@ FE: reset-password/page.tsx → authActions.ts
 |-------------|----------|
 | Không đăng nhập được | `LoginCommandHandler` → `PasswordHasher` → `UserRepository` |
 | Token hết hạn không refresh | `RefreshTokenCommandHandler` → `JwtTokenService` → API `/auth/refresh` chưa tích hợp FE |
-| Không nhận OTP email | `MockEmailSender` (dev) → kiểm tra log server |
+| Không nhận OTP email | `SmtpEmailSender` → kiểm tra cấu hình Gmail trong appsettings.json |
 | Lỗi validate form | `RegisterCommandValidator` / `LoginCommandValidator` |
 
 ---
@@ -582,7 +582,7 @@ FE: chat/[id]/page.tsx → DisputeButton.tsx → escrowActions.ts
 
 **Backend:** `Controllers/EscrowController.cs`, `Features/Escrow/Commands/AcceptOffer/*`, `Features/Escrow/Commands/AddQuestion/*`, `Features/Escrow/Commands/ConfirmRelease/*`, `Features/Escrow/Commands/OpenDispute/*`, `Features/Escrow/Commands/ReaderReply/*`, `Features/Escrow/Queries/GetEscrowStatus/*`, `Interfaces/IChatFinanceRepository.cs`, `Domain/Entities/ChatFinanceSession.cs`, `Domain/Entities/ChatQuestionItem.cs`, `Domain/Enums/QuestionItemStatus.cs`, `Domain/Enums/QuestionItemType.cs`, `Persistence/Configurations/ChatFinanceSessionConfiguration.cs`, `Persistence/Configurations/ChatQuestionItemConfiguration.cs`, `Repositories/ChatFinanceRepository.cs`, `BackgroundJobs/EscrowTimerService.cs`
 
-**Frontend:** `actions/escrowActions.ts`, `components/chat/EscrowPanel.tsx`, `components/chat/DisputeButton.tsx`, `types/escrow.ts`
+**Frontend:** `actions/escrowActions.ts`, `components/chat/EscrowPanel.tsx`, `components/chat/PaymentOfferModal.tsx`, `components/chat/DisputeButton.tsx`, `types/escrow.ts`
 
 ### 12.4 Khu vực khoanh lỗi
 
@@ -682,6 +682,7 @@ FE: admin/promotions/page.tsx → promotions-client.tsx → promotionActions.ts
 | 46 | GET | `/admin/reconciliation/wallet` | Đối soát sổ cái | 🟢 |
 | 47 | GET | `/admin/users` | Danh sách users | 🟢 |
 | 48 | PATCH | `/admin/users/lock` | Khóa/mở khóa user | 🟢 |
+| 48b | PATCH | `/admin/users` | Cập nhật profile user thủ công | 🟢 |
 | 49 | GET | `/admin/deposits` | Danh sách đơn nạp | 🟢 |
 | 50 | POST | `/admin/users/add-balance` | Cộng tiền cho user | 🟢 |
 | 51 | PATCH | `/admin/deposits/process` | Phê duyệt đơn nạp | 🟢 |
@@ -727,19 +728,46 @@ FE: admin/page.tsx → adminActions.ts
 
 ---
 
-## 17. 🏥 HẠ TẦNG CHUNG (Infrastructure / Cross-cutting)
+## 17. 🔔 THÔNG BÁO IN-APP (Notifications)
 
-### 17.1 Hệ thống DevOps / Debug
+### 17.1 API Endpoints
+
+| # | Method | Endpoint | Mô tả | Trạng thái |
+|---|--------|----------|--------|------------|
+| 62 | GET | `/notification` | Danh sách thông báo | 🟢 |
+| 63 | GET | `/notification/unread-count` | Đếm thông báo chưa đọc | 🟢 |
+| 64 | PATCH | `/notification/{id}/read` | Đánh dấu đã đọc | 🟢 |
+
+### 17.2 Luồng xử lý
+
+```
+XEM THÔNG BÁO:
+FE: notifications/page.tsx → notificationActions.ts → lib/api.ts
+    → BE: NotificationController.GetNotifications → GetNotificationsQuery → Handler
+    → MongoNotificationRepository → NotificationDocument (phân trang)
+```
+
+### 17.3 File liên quan
+
+**Backend:** `Controllers/NotificationController.cs`, `Features/Notification/Commands/MarkAsRead/*`, `Features/Notification/Queries/GetNotifications/*`, `Features/Notification/Queries/CountUnread/*`, `Domain/Entities/Notification.cs`
+
+**Frontend:** `app/[locale]/(user)/notifications/page.tsx`, `actions/notificationActions.ts`
+
+---
+
+## 18. 🏥 HẠ TẦNG CHUNG (Infrastructure / Cross-cutting)
+
+### 18.1 Hệ thống DevOps / Debug
 
 | # | Endpoint | Mô tả | Trạng thái |
 |---|----------|--------|------------|
-| 61 | `GET /health` | Health check | 🔴 (monitoring) |
-| 62 | `GET /health/error-test` | Test error handling | 🔴 (debug) |
-| 63 | `POST /diag/wipe` | Xóa dữ liệu dev | 🔴 (debug) |
-| 64 | `GET /diag/seed-admin` | Tạo SuperAdmin | 🔴 (debug) |
-| 65 | `GET /diag/stats` | Thống kê MongoDB | 🔴 (debug) |
+| 65 | `GET /health` | Health check | 🔴 (monitoring) |
+| 66 | `GET /health/error-test` | Test error handling | 🔴 (debug) |
+| 67 | `POST /diag/wipe` | Xóa dữ liệu dev | 🔴 (debug) |
+| 68 | `GET /diag/seed-admin` | Tạo SuperAdmin | 🔴 (debug) |
+| 69 | `GET /diag/stats` | Thống kê MongoDB | 🔴 (debug) |
 
-### 17.2 File hạ tầng BE
+### 18.2 File hạ tầng BE
 
 | File | Tác dụng |
 |------|----------|
@@ -758,7 +786,7 @@ FE: admin/page.tsx → adminActions.ts
 | `BackgroundJobs/EscrowTimerService.cs` | Timer auto-release escrow |
 | `Exceptions/*` | BadRequest, NotFound, Validation, DomainException |
 
-### 17.3 File hạ tầng FE
+### 18.3 File hạ tầng FE
 
 | File | Tác dụng |
 |------|----------|
@@ -779,12 +807,12 @@ FE: admin/page.tsx → adminActions.ts
 
 ---
 
-## 📊 THỐNG KÊ TỔNG HỢP
+## 19. 📊 THỐNG KÊ TỔNG HỢP
 
 | Metric | Backend | Frontend |
 |--------|---------|----------|
-| Tổng API endpoints | 65 | — |
-| Đã tích hợp FE↔BE | 58 (89.2%) | — |
+| Tổng API endpoints | 69 | — |
+| Đã tích hợp FE↔BE | 62 (89.8%) | — |
 | Controllers | 18 | — |
 | Trang web (routes) | — | 33 |
 | Action files | — | 15 |

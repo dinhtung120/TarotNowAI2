@@ -1,0 +1,47 @@
+services:
+  mongodb:
+    image: mongo:7-jammy
+    container_name: tarot-mongodb
+    command: mongod --quiet
+    ports:
+      - "27017:27017"
+    volumes:
+      - tarotnowai_mongo_data:/data/db
+      - ./database/mongodb/init.js:/docker-entrypoint-initdb.d/01-init.js:ro
+    restart: always
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: tarot-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: tarot_user
+      POSTGRES_PASSWORD: tarot_dev_pass
+      POSTGRES_DB: tarotweb
+    volumes:
+      - tarotnowai_postgres_data:/var/lib/postgresql/data
+      - ./database/postgresql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    container_name: tarot-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - tarotnowai_redis_data:/data
+    restart: always
+
+volumes:
+  tarotnowai_mongo_data:
+    external: true
+  tarotnowai_postgres_data:
+    external: true
+  tarotnowai_redis_data:
+    external: true
+
+networks:
+  default:
+    name: tarotnowai_default
+    external: true

@@ -189,7 +189,6 @@ export default function AdminDepositsPage() {
  <table className="w-full text-left">
  <thead>
  <tr className="border-b tn-border-soft tn-surface">
- <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">{t("deposits.table.heading_order")}</th>
  <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">{t("deposits.table.heading_user")}</th>
  <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">{t("deposits.table.heading_amount")}</th>
  <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">{t("deposits.table.heading_assets")}</th>
@@ -201,7 +200,7 @@ export default function AdminDepositsPage() {
  <tbody className="divide-y divide-white/5">
  {loading ? (
  <tr>
- <td colSpan={7} className="px-8 py-20 text-center">
+ <td colSpan={6} className="px-8 py-20 text-center">
  <div className="flex flex-col items-center justify-center space-y-4">
  <Loader2 className="w-8 h-8 animate-spin text-[var(--purple-accent)]" />
  <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("deposits.states.loading")}</span>
@@ -210,7 +209,7 @@ export default function AdminDepositsPage() {
  </tr>
  ) : orders.length === 0 ? (
  <tr>
- <td colSpan={7} className="px-8 py-20 text-center">
+ <td colSpan={6} className="px-8 py-20 text-center">
  <div className="flex flex-col items-center justify-center space-y-4">
  <div className="w-16 h-16 rounded-full tn-panel-soft flex items-center justify-center">
  <CreditCard className="w-8 h-8 text-[var(--text-tertiary)] opacity-50" />
@@ -222,21 +221,6 @@ export default function AdminDepositsPage() {
  ) : (
  orders.map((o) => (
  <tr key={o.id} className="group/row hover:tn-surface transition-colors">
- <td className="px-8 py-5">
- <div className="space-y-1">
- <div className="flex items-center gap-1.5 text-[9px] font-black text-[var(--text-secondary)] uppercase tracking-tighter">
- <Hash className="w-2.5 h-2.5 opacity-50" />
- {o.id.split('-')[0]}...
- </div>
- {o.transactionId ? (
- <div className="text-[11px] font-black text-[var(--accent)] uppercase tracking-tighter italic drop-shadow-sm">
- {o.transactionId}
- </div>
- ) : (
- <div className="text-[10px] font-bold tn-text-muted uppercase italic">{t("deposits.row.txn_missing")}</div>
- )}
- </div>
- </td>
  <td className="px-8 py-5">
  <div className="flex items-center gap-3">
  <div className="w-8 h-8 rounded-lg tn-panel-overlay flex items-center justify-center shadow-inner">

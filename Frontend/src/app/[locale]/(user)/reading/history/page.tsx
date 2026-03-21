@@ -56,6 +56,16 @@ export default function HistoryPage() {
  }
  }, [isAuthenticated, router]);
 
+ /*
+  * useEffect phụ thuộc vào các giá trị THỰC SỰ thay đổi logic fetching:
+  *   - isAuthenticated: cần re-check khi auth state đổi
+  *   - currentPage, filterType, filterDate: user thay đổi bộ lọc → re-fetch
+  *
+  * LOẠI BỎ `router` và `tApi` khỏi deps vì:
+  *   - `router` là Next.js router singleton, không cần reactive
+  *   - `tApi` tạo reference mới mỗi render → gây re-fetch thừa
+  *   Cả hai vẫn lấy giá trị mới nhất nhờ closure.
+  */
  useEffect(() => {
  if (!isAuthenticated) return;
 
@@ -90,7 +100,8 @@ export default function HistoryPage() {
  };
 
  fetchHistory();
- }, [isAuthenticated, currentPage, filterType, filterDate, router, tApi]);
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [isAuthenticated, currentPage, filterType, filterDate]);
 
  const handlePrevPage = () => {
  if (currentPage > 1) setCurrentPage(prev => prev - 1);

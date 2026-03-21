@@ -43,6 +43,9 @@ public class ListMessagesResult
 {
     public IEnumerable<ChatMessageDto> Messages { get; set; } = Enumerable.Empty<ChatMessageDto>();
     public long TotalCount { get; set; }
+    
+    // [YÊU CẦU MỚI]: Đính kèm thông tin Header cho Room Chat
+    public ConversationDto Conversation { get; set; } = null!;
 }
 
 /// <summary>
@@ -52,13 +55,16 @@ public class ListMessagesQueryHandler : IRequestHandler<ListMessagesQuery, ListM
 {
     private readonly IConversationRepository _conversationRepo;
     private readonly IChatMessageRepository _messageRepo;
+    private readonly IUserRepository _userRepo;
 
     public ListMessagesQueryHandler(
         IConversationRepository conversationRepo,
-        IChatMessageRepository messageRepo)
+        IChatMessageRepository messageRepo,
+        IUserRepository userRepo)
     {
         _conversationRepo = conversationRepo;
         _messageRepo = messageRepo;
+        _userRepo = userRepo;
     }
 
     public async Task<ListMessagesResult> Handle(ListMessagesQuery request, CancellationToken cancellationToken)
@@ -78,10 +84,31 @@ public class ListMessagesQueryHandler : IRequestHandler<ListMessagesQuery, ListM
         var (items, totalCount) = await _messageRepo.GetByConversationIdPaginatedAsync(
             request.ConversationId, request.Page, request.PageSize, cancellationToken);
 
+        // 4. [YÊU CẦU MỚI]: Đính kèm Full-Name của Cả 2 User Trả Về Màn Hình Để Không Phải Fetch 2 Lần.
+        var uniqueIds = new HashSet<Guid>();
+        if (Guid.TryParse(conversation.UserId, out var uid)) uniqueIds.Add(uid);
+        if (Guid.TryParse(conversation.ReaderId, out var rid)) uniqueIds.Add(rid);
+
+        if (uniqueIds.Count > 0)
+        {
+            var userMap = await _userRepo.GetUserBasicInfoMapAsync(uniqueIds, cancellationToken);
+            if (uid != Guid.Empty && userMap.TryGetValue(uid, out var userInfo))
+            {
+                conversation.UserName = userInfo.DisplayName;
+                conversation.UserAvatar = userInfo.AvatarUrl;
+            }
+            if (rid != Guid.Empty && userMap.TryGetValue(rid, out var readerInfo))
+            {
+                conversation.ReaderName = readerInfo.DisplayName;
+                conversation.ReaderAvatar = readerInfo.AvatarUrl;
+            }
+        }
+
         return new ListMessagesResult
         {
             Messages = items,
-            TotalCount = totalCount
+            TotalCount = totalCount,
+            Conversation = conversation
         };
     }
 }

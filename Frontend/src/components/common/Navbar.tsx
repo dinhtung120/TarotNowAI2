@@ -33,15 +33,25 @@ import {
 import WalletWidget from "../common/WalletWidget";
 import { logoutAction } from "@/actions/authActions";
 import { useAuthStore } from "@/store/authStore";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { useShallow } from "zustand/react/shallow";
 import { useTranslations } from "next-intl";
 
 export default function Navbar() {
  const router = useRouter();
  const pathname = usePathname();
- const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
- const user = useAuthStore((state) => state.user);
- const clearAuth = useAuthStore((state) => state.clearAuth);
+ /*
+  * TỐI ƯU ZUSTAND SELECTOR:
+  * Dùng `useShallow` để so sánh shallow equality cho object selector.
+  * Nếu KHÔNG dùng useShallow → Zustand tạo object mới mỗi render → infinite loop.
+  * clearAuth là function ổn định → lấy bằng getState() tránh subscribe thừa.
+  */
+ const { user, isAuthenticated } = useAuthStore(
+  useShallow((state) => ({
+   user: state.user,
+   isAuthenticated: state.isAuthenticated,
+  }))
+ );
  const tNav = useTranslations("Navigation");
  const tCommon = useTranslations("Common");
  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -92,12 +102,17 @@ export default function Navbar() {
  };
  }, [pathname]);
 
- const handleLogout = async () => {
+ /*
+  * handleLogout dùng useCallback + getState() để lấy clearAuth.
+  * Lý do: clearAuth là action function, không cần subscribe reactive.
+  * getState() lấy giá trị tức thời mà không gây re-render.
+  */
+ const handleLogout = useCallback(async () => {
  setAvatarMenuOpen(false);
  await logoutAction();
- clearAuth();
+ useAuthStore.getState().clearAuth();
  router.push("/login");
- };
+ }, [router]);
 
  if (isAuthPage) return null;
 
@@ -200,9 +215,23 @@ export default function Navbar() {
  <div className="w-7 h-7 rounded-full bg-[var(--purple-100)] border border-[var(--border-default)] flex items-center justify-center text-[10px] font-black text-[var(--text-ink)]">
  {user?.displayName?.charAt(0)?.toUpperCase() || "U"}
  </div>
-	 <span className="hidden lg:block text-xs font-bold tracking-wide max-w-[100px] truncate">
+	 <div className="hidden lg:flex flex-col items-start leading-tight -space-y-0.5">
+	 <span className="text-[11px] font-black tracking-wide max-w-[100px] truncate text-[var(--text-ink)]">
 	 {user?.displayName || tNav("profile")}
 	 </span>
+
+	 {/* Level & EXP Badge — Tăng tính Gamification ngay trên Header */}
+	 <div className="flex items-center gap-1.5 translate-y-[2px]">
+		 <div className="flex items-center justify-center h-4 px-1.5 rounded-md bg-[var(--purple-accent)]/10 border border-[var(--purple-accent)]/20 shadow-[0_0_10px_rgba(168,156,255,0.1)]">
+			 <span className="text-[9px] font-black uppercase tracking-tighter text-[var(--purple-accent)] animate-pulse">
+				 Lv.{user?.level ?? 1}
+			 </span>
+		 </div>
+		 <span className="text-[8px] font-bold text-[var(--text-muted)] tracking-widest uppercase opacity-80">
+			 {user?.exp ?? 0} EXP
+		 </span>
+	 </div>
+	 </div>
  <ChevronDown
  className={[
  "w-3 h-3 hidden lg:block transition-transform duration-200",
@@ -215,13 +244,28 @@ export default function Navbar() {
  {avatarMenuOpen && (
  <div className="absolute right-0 top-full mt-2 w-56 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-2xl shadow-[var(--shadow-elevated)] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-50">
  {/* User Info Header */}
- <div className="px-4 py-3 border-b border-[var(--border-subtle)]">
-	 <p className="text-xs font-bold text-[var(--text-ink)] truncate">
+ <div className="px-4 py-4 border-b border-[var(--border-subtle)] bg-gradient-to-br from-[var(--purple-accent)]/[0.03] to-transparent">
+	 <div className="flex items-baseline justify-between mb-0.5">
+	 <p className="text-xs font-black text-[var(--text-ink)] truncate tracking-tight">
 	 {user?.displayName || tNav("profile")}
 	 </p>
- <p className="text-[10px] text-[var(--text-muted)] truncate">
+	 <span className="text-[10px] font-black text-[var(--purple-accent)]">Lv.{user?.level ?? 1}</span>
+	 </div>
+ <p className="text-[10px] text-[var(--text-muted)] truncate mb-2">
  {user?.email || ""}
  </p>
+
+ {/* Progress bar EXP đơn giản trong Dropdown */}
+ <div className="w-full bg-[var(--bg-surface-hover)] h-1 rounded-full overflow-hidden">
+ <div 
+ className="h-full bg-[var(--purple-accent)] shadow-[0_0_8px_var(--purple-accent)] transition-all duration-1000" 
+ style={{ width: `${(user?.exp ?? 0) % 100}%` }}
+ />
+ </div>
+ <div className="flex justify-between mt-1">
+ <span className="text-[8px] font-bold text-[var(--text-muted)] uppercase tracking-tighter">Current EXP</span>
+ <span className="text-[8px] font-black text-[var(--purple-muted)]">{user?.exp ?? 0}</span>
+ </div>
  </div>
 
  {/* Menu Items */}

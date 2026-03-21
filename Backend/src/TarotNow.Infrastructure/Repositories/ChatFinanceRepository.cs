@@ -49,6 +49,16 @@ public class ChatFinanceRepository : IChatFinanceRepository
         => await _db.ChatFinanceSessions.FindAsync(new object[] { id }, ct);
 
     /// <summary>
+    /// Lấy nhiều sessions theo ConversationRefs.
+    /// </summary>
+    public async Task<List<ChatFinanceSession>> GetSessionsByConversationRefsAsync(IEnumerable<string> refs, CancellationToken ct = default)
+    {
+        return await _db.ChatFinanceSessions
+                             .Where(s => refs.Contains(s.ConversationRef))
+                             .ToListAsync(ct);
+    }
+
+    /// <summary>
     /// Lấy session với FOR UPDATE lock — dùng khi cập nhật status/tổng tiền.
     /// FOR UPDATE: khóa hàng để tránh 2 request đồng thời cập nhật cùng session.
     /// </summary>

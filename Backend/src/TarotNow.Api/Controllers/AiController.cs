@@ -108,7 +108,7 @@ public class AiController : ControllerBase
     ///   Bước 6: Ghi log telemetry vào MongoDB
     /// </summary>
     [HttpGet("{sessionId}/stream")]
-    public async Task StreamReading(string sessionId, [FromQuery] string? followUpQuestion, CancellationToken cancellationToken)
+    public async Task StreamReading(string sessionId, [FromQuery] string? followUpQuestion, [FromQuery] string? language, CancellationToken cancellationToken)
     {
         // ========================================
         // BƯỚC 0: XÁC THỰC NGƯỜI DÙNG
@@ -149,7 +149,8 @@ public class AiController : ControllerBase
             {
                 UserId = userId,                     // ID người dùng đang yêu cầu
                 ReadingSessionId = sessionId,        // ID phiên đọc bài
-                FollowupQuestion = followUpQuestion  // Câu hỏi bổ sung (nếu có)
+                FollowupQuestion = followUpQuestion, // Câu hỏi bổ sung (nếu có)
+                Language = language ?? "vi"          // Ngôn ngữ hệ thống (mặc định vi)
             }, cancellationToken);
         }
         catch (BadRequestException ex)
@@ -198,7 +199,6 @@ public class AiController : ControllerBase
         Response.Headers.Append("Cache-Control", "no-cache");
         Response.Headers.Append("Connection", "keep-alive");
 
-        // Lưu lại cancellation token để kiểm tra khi nào client ngắt kết nối
         var requestToken = cancellationToken;
 
         // Biến đếm số lượng token (chunk text) đã gửi thành công
@@ -207,95 +207,53 @@ public class AiController : ControllerBase
         // Thời điểm nhận được token đầu tiên từ AI
         // Dùng để tính "Time to First Token" - chỉ số đo hiệu năng AI
         DateTimeOffset? firstTokenAt = null;
+        
+        // Dùng để hứng lại toàn bộ câu trả lời của AI hòng lưu vào DB (Cái này trước đó đang thiếu, làm Lịch Sử Trải Bài chả hiện gì cả)
+        var fullResponseBuilder = new System.Text.StringBuilder();
 
         try
         {
             // ========================================
             // BƯỚC 3: STREAM TỪNG CHUNK TEXT TỪ AI
             // ========================================
-
-            /*
-             * "await foreach" là cú pháp C# để ĐỌC TUẦN TỰ từ IAsyncEnumerable.
-             * IAsyncEnumerable giống như một "ống dẫn" - dữ liệu chảy ra từng chút một.
-             * 
-             * result.Stream là IAsyncEnumerable<string> từ OpenAI:
-             * - Mỗi "chunk" là một đoạn text ngắn (vài từ hoặc một câu)
-             * - Stream kết thúc khi AI trả lời xong
-             * 
-             * WithCancellation(requestToken): cho phép hủy vòng lặp nếu client ngắt kết nối
-             * (ví dụ user đóng tab trình duyệt giữa chừng)
-             */
             await foreach (var chunk in result.Stream.WithCancellation(requestToken))
             {
-                // Ghi nhận thời điểm token đầu tiên (chỉ lần đầu khi tokenCounter == 0)
                 if (tokenCounter == 0)
                 {
                     firstTokenAt = DateTimeOffset.UtcNow;
                 }
 
-                /*
-                 * Thay thế ký tự xuống dòng \n thành \\n trong nội dung.
-                 * LÝ DO: Trong giao thức SSE, "\n\n" (2 dòng trống) nghĩa là KẾT THÚC một event.
-                 * Nếu nội dung AI có chứa \n (xuống dòng bình thường), nó sẽ bị hiểu nhầm
-                 * thành kết thúc event → client đọc sai dữ liệu.
-                 * Escape thành "\\n" để giữ nguyên ý nghĩa, client sẽ decode lại.
-                 */
+                // Ghi nhận chunk vào bộ nhớ để hồi sau lưu Text
+                fullResponseBuilder.Append(chunk);
+
                 var sanitizedChunk = chunk.Replace("\n", "\\n");
-
-                /*
-                 * Gửi chunk xuống client theo format SSE: "data: {nội dung}\n\n"
-                 * - "data: " là prefix bắt buộc của SSE protocol
-                 * - "\n\n" (2 lần xuống dòng) đánh dấu kết thúc một event
-                 */
                 await Response.WriteAsync($"data: {sanitizedChunk}\n\n", requestToken);
-
-                /*
-                 * FlushAsync: Đẩy dữ liệu ra ngay lập tức qua mạng.
-                 * Nếu không flush, ASP.NET có thể buffer (gom lại) nhiều chunk
-                 * rồi gửi một lần → client không thấy hiệu ứng typewriter.
-                 */
                 await Response.Body.FlushAsync(requestToken);
 
-                tokenCounter++; // Tăng bộ đếm token
+                tokenCounter++; 
             }
 
             // ========================================
             // BƯỚC 4: BÁO HIỆU HOÀN TẤT
             // ========================================
-
-            /*
-             * Gửi event đặc biệt "[DONE]" để client biết stream đã kết thúc.
-             * Đây là quy ước chung (OpenAI cũng dùng format này).
-             * Client nhận [DONE] sẽ ngắt kết nối SSE và hiển thị nút tiếp tục.
-             */
             await Response.WriteAsync("data: [DONE]\n\n", requestToken);
             await Response.Body.FlushAsync(requestToken);
 
             // ========================================
             // BƯỚC 5: XỬ LÝ NGHIỆP VỤ SAU STREAM
             // ========================================
-
-            /*
-             * Sau khi stream thành công, gửi CompleteAiStreamCommand để:
-             * 1. Cập nhật trạng thái AiRequest → "Completed" (hoàn tất)
-             * 2. Consume escrow (giải phóng tiền đóng băng cho reader/hệ thống)
-             * 3. Lưu lại metadata (thời gian, số token, v.v.)
-             * 
-             * CancellationToken.None: Dùng None thay vì requestToken vì:
-             * - Client đã nhận TOÀN BỘ dữ liệu thành công
-             * - Dù client đóng kết nối sau [DONE], server vẫn phải hoàn tất nghiệp vụ
-             * - Nếu dùng requestToken, việc client đóng tab có thể cancel → mất dữ liệu tài chính
-             */
             var latency = firstTokenAt.HasValue ? (int)(DateTimeOffset.UtcNow - firstTokenAt.Value).TotalMilliseconds : 0;
             await _mediator.Send(new CompleteAiStreamCommand
             {
-                AiRequestId = result.AiRequestId,     // ID bản ghi AI request
-                UserId = userId,                       // User đã yêu cầu
-                FinalStatus = AiStreamFinalStatuses.Completed, // Trạng thái cuối: hoàn tất
-                IsClientDisconnect = false,             // Client KHÔNG ngắt kết nối (stream thành công)
-                FirstTokenAt = firstTokenAt,            // Thời điểm token đầu tiên (để tính metrics)
+                AiRequestId = result.AiRequestId,
+                UserId = userId,
+                FinalStatus = AiStreamFinalStatuses.Completed,
+                IsClientDisconnect = false,
+                FirstTokenAt = firstTokenAt,
                 OutputTokens = tokenCounter,
-                LatencyMs = latency
+                LatencyMs = latency,
+                FullResponse = fullResponseBuilder.ToString(),
+                FollowupQuestion = followUpQuestion
             }, CancellationToken.None);
         }
         catch (OperationCanceledException ex)

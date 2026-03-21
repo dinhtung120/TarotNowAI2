@@ -202,9 +202,13 @@ export default function ReaderProfilePage() {
  </div>
 
  {/* CTA Button */}
- {profile.status === 'accepting_questions' ? (
- <Button
- variant="primary"
+        {/*
+         * [CẬP NHẬT THEO YÊU CẦU]: Cho phép người dùng kết nối qua tin nhắn 
+         * bất kể trạng thái của Reader (ngay cả khi họ offline hoặc không nhận khách).
+         * Nút bắt đầu chat sẽ luôn hiện.
+         */}
+        <Button
+          variant="primary"
  disabled={startingChat}
  onClick={async () => {
  setStartingChat(true);
@@ -232,12 +236,6 @@ export default function ReaderProfilePage() {
  </>
  )}
  </Button>
- ) : (
- <div className="w-full h-16 rounded-2xl tn-panel-soft flex items-center justify-center gap-3 shadow-inner">
- <Activity className="w-5 h-5 text-[var(--text-tertiary)]" />
- <span className="text-xs font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("profile.not_accepting")}</span>
- </div>
- )}
  </div>
  </GlassCard>
 

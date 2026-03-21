@@ -16,6 +16,8 @@ import { API_BASE_URL } from "@/lib/api";
 
 export interface InitReadingRequest {
  spreadType: string;
+ question?: string;
+ currency?: string;
 }
 
 export interface InitReadingResponse {

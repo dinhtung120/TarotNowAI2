@@ -29,9 +29,10 @@ import { useTranslations } from 'next-intl';
 interface EscrowPanelProps {
  conversationId: string;
  currentUserId: string;
+ isUser: boolean | null;
 }
 
-export default function EscrowPanel({ conversationId, currentUserId: _currentUserId }: EscrowPanelProps) {
+export default function EscrowPanel({ conversationId, isUser, currentUserId: _currentUserId }: EscrowPanelProps) {
  void _currentUserId;
  const t = useTranslations("Chat");
  const [escrow, setEscrow] = useState<EscrowStatusResult | null>(null);
@@ -75,12 +76,38 @@ export default function EscrowPanel({ conversationId, currentUserId: _currentUse
  };
 
  /** Xử lý reader reply */
- const handleReaderReply = async (itemId: string) => {
- setActionLoading(itemId);
- const ok = await readerReply(itemId);
- if (ok) await fetchStatus();
- setActionLoading(null);
- };
+ 	const handleReaderReply = async (itemId: string) => {
+		setActionLoading(itemId);
+		try {
+			const ok = await readerReply(itemId);
+			if (ok) {
+				fetchStatus();
+			}
+		} finally {
+			setActionLoading(null);
+		}
+	};
+
+	const handleCompleteAll = async () => {
+		if (!escrow || !escrow.items) return;
+		const activeItems = escrow.items.filter(i => i.status === 'accepted');
+		if (activeItems.length === 0) return;
+
+		const isConfirm = window.confirm(t('escrow.confirm_release_all_prompt') || 'Bạn có chắc chắn muốn xác nhận hoàn thành và giải ngân toàn bộ số Kim Cương đang giữ?');
+		if (!isConfirm) return;
+
+		setActionLoading('ALL');
+		try {
+			await Promise.all(activeItems.map(item => confirmRelease(item.id)));
+			fetchStatus();
+			setExpanded(false);
+		} catch (error) {
+			console.error("Failed to release all items:", error);
+			alert(t('escrow.error_release_all') || 'Có lỗi xảy ra khi hoàn thành toàn bộ. Vui lòng thử lại.');
+		} finally {
+			setActionLoading(null);
+		}
+	};
 
  /** Countdown timer helper */
  const getCountdown = (dateStr?: string | null): string => {
@@ -131,33 +158,38 @@ export default function EscrowPanel({ conversationId, currentUserId: _currentUse
 
  const hasActiveItems = escrow.items.some(i => i.status === 'accepted');
 
- return (
- <div className="mx-3 sm:mx-6 mb-2">
- {/* Header — luôn hiện */}
- <button
- onClick={() => setExpanded(!expanded)}
- className="w-full flex items-center justify-between gap-3 px-4 py-3 bg-[var(--warning)]/5 hover:bg-[var(--warning)]/10 border border-[var(--warning)]/10 rounded-xl transition-all text-left min-h-11"
- >
- <div className="flex items-center gap-2 min-w-0">
- <Shield className="w-4 h-4 text-[var(--warning)]" />
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--warning)] truncate">
- {t("escrow.title")}
- </span>
- <span className="text-xs font-bold tn-text-primary">
- {escrow.totalFrozen} 💎
- </span>
- {hasActiveItems && (
- <span className="px-1.5 py-0.5 rounded-full bg-[var(--warning)]/20 text-[8px] font-bold text-[var(--warning)] animate-pulse">
- {t("escrow.active")}
- </span>
- )}
- </div>
- {expanded ? <ChevronUp className="w-3 h-3 tn-text-muted" /> : <ChevronDown className="w-3 h-3 tn-text-muted" />}
- </button>
+ 	return (
+		<div className="relative">
+			{/* Header Badge — luôn hiện */}
+			<button
+				onClick={() => setExpanded(!expanded)}
+				className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-[var(--warning)]/10 hover:bg-[var(--warning)]/20 border border-[var(--warning)]/20 rounded-xl transition-all shadow-[0_4px_10px_rgba(245,158,11,0.05)] active:scale-95"
+				title={t("escrow.title")}
+			>
+				<Diamond className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--warning)]" />
+				<span className="text-xs sm:text-sm font-black text-white tracking-widest">{escrow.totalFrozen}</span>
+				
+				{hasActiveItems && (
+					<div className="flex items-center gap-1.5 ml-1 pl-2.5 sm:ml-2 sm:pl-3 border-l border-[var(--warning)]/20">
+						<Clock className="w-3 h-3 text-[var(--warning)] animate-pulse" />
+						<span className="text-[10px] font-bold text-[var(--warning)] tracking-widest uppercase">
+							{t("escrow.active")}
+						</span>
+					</div>
+				)}
+			</button>
 
- {/* Expanded content */}
- {expanded && (
- <div className="mt-2 space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+			{/* Expanded Dropdown content */}
+			{expanded && (
+				<div className="absolute right-0 top-full mt-3 w-[280px] sm:w-[320px] bg-[#1A1A1A] border border-white/10 rounded-2xl shadow-2xl p-4 space-y-3 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+					{/* Tiêu đề Dropdown */}
+					<div className="flex items-center justify-between pb-3 border-b border-white/5">
+						<div className="flex items-center gap-2 text-[var(--warning)]">
+							<Shield className="w-4 h-4" />
+							<span className="text-[10px] font-black uppercase tracking-widest">{t("escrow.title")}</span>
+						</div>
+						<span className="text-xs font-bold text-white uppercase tracking-widest">{t("escrow.total_frozen")}: {escrow.totalFrozen} 💎</span>
+					</div>
  {escrow.items.map((item) => {
  const badge = getStatusBadge(item.status);
  const isAccepted = item.status === 'accepted';
@@ -211,8 +243,8 @@ export default function EscrowPanel({ conversationId, currentUserId: _currentUse
  {/* Action buttons */}
  {isAccepted && (
  <div className="flex gap-2">
- {/* User: Confirm Release — chỉ khi reader đã reply */}
- {item.repliedAt && (
+ {/* User: Confirm Release — hiện mọi lúc khi isUser = true */}
+ {isUser && (
  <button
  onClick={() => handleConfirmRelease(item.id)}
  disabled={actionLoading === item.id}
@@ -225,8 +257,8 @@ export default function EscrowPanel({ conversationId, currentUserId: _currentUse
  </button>
  )}
 
- {/* Reader: Reply — khi chưa reply */}
- {!item.repliedAt && (
+ {/* Reader: Reply — cho reader khi chưa reply */}
+ {isUser === false && !item.repliedAt && (
  <button
  onClick={() => handleReaderReply(item.id)}
  disabled={actionLoading === item.id}
@@ -243,8 +275,29 @@ export default function EscrowPanel({ conversationId, currentUserId: _currentUse
  </div>
  );
  })}
- </div>
- )}
- </div>
- );
+
+						{/* NÚT Hoàn Thành Cuộc Trò Chuyện (Release All) Dành Cho User */}
+						{isUser && hasActiveItems && (
+							<div className="pt-2 border-t border-white/10 mt-2">
+								<button
+									onClick={handleCompleteAll}
+									disabled={actionLoading === 'ALL'}
+									className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[var(--success)] shadow-[0_0_20px_var(--c-16-185-129-20)] hover:bg-emerald-400 text-black rounded-xl font-bold uppercase tracking-widest text-xs transition-all active:scale-95 disabled:opacity-50"
+								>
+									{actionLoading === 'ALL' ? (
+										<Loader2 className="w-4 h-4 animate-spin" />
+									) : (
+										<CheckCircle2 className="w-4 h-4" />
+									)}
+									{t('escrow.action_complete_all', { fallback: 'Hoàn Thành Toàn Bộ Cuộc Trò Chuyện' })}
+								</button>
+								<p className="text-[9px] text-center text-[var(--success)] mt-2 italic px-2">
+									{t('escrow.complete_all_hint', { fallback: 'Bấm vào đây để xác nhận hài lòng và chuyển toàn bộ tiền cho Reader.' })}
+								</p>
+							</div>
+						)}
+					</div>
+				)}
+		</div>
+	);
 }

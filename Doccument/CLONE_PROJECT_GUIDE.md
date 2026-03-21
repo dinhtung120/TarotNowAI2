@@ -436,19 +436,26 @@ GRANT ALL PRIVILEGES ON DATABASE tarotweb TO tarot_user;
 }
 ```
 
-#### Collection 10: `notifications` — Thông báo (chưa hoàn thiện)
+#### Collection 10: `notifications` — Thông báo in-app (đã hoàn thiện)
 
 ```json
 {
   "_id": "ObjectId",
   "userId": "Guid string",
-  "type": "system | escrow | chat",
-  "title": "Tiêu đề",
-  "message": "Nội dung",
+  "type": "system | quest | streak | escrow | payment",
+  "titleVi": "Tiêu đề tiếng Việt",
+  "titleEn": "Title in English",
+  "bodyVi": "Nội dung tiếng Việt",
+  "bodyEn": "Body in English",
   "isRead": false,
   "createdAt": "DateTime"
 }
 ```
+
+> **API Endpoints (đã có):**
+> - `GET /api/v1/Notification?page=1&pageSize=20&isRead=false` — Danh sách thông báo
+> - `GET /api/v1/Notification/unread-count` — Đếm chưa đọc `{ count: N }`
+> - `PATCH /api/v1/Notification/{id}/read` — Đánh dấu đã đọc
 
 ---
 
@@ -519,6 +526,7 @@ dotnet add package StackExchange.Redis
 dotnet add package Konscious.Security.Cryptography.Argon2
 dotnet add package Microsoft.AspNetCore.SignalR.Common
 dotnet add package System.IdentityModel.Tokens.Jwt
+dotnet add package MailKit
 cd ../..
 
 # Api
@@ -655,7 +663,7 @@ npm install next-intl zustand react-hook-form @hookform/resolvers zod react-hot-
 | `Persistence/Configurations/EmailOtpConfiguration.cs` | EF cấu hình bảng email_otps |
 | `Security/Argon2idPasswordHasher.cs` | Hash mật khẩu Argon2id |
 | `Security/JwtTokenService.cs` | Tạo JWT access token |
-| `Services/MockEmailSender.cs` | Gửi email giả lập (dev) |
+| `Services/SmtpEmailSender.cs` | Gửi email thật qua SMTP (MailKit) |
 
 #### BE — API
 
@@ -892,6 +900,39 @@ npm install next-intl zustand react-hook-form @hookform/resolvers zod react-hot-
 | `app/[locale]/admin/page.tsx` + `users/page.tsx` + `deposits/page.tsx` + `reader-requests/page.tsx` + `readings/page.tsx` + `withdrawals/page.tsx` + `disputes/page.tsx` + `promotions/page.tsx` | 8 trang admin |
 
 **✅ Test:** Đăng nhập bằng admin → Xem dashboard → Duyệt Reader → Duyệt nạp tiền → Đối soát sổ cái.
+
+---
+
+### 🟢 TÍNH NĂNG 9: NOTIFICATION + AUTO-REFRESH TOKEN
+
+> Thông báo in-app và cải thiện UX phiên đăng nhập.
+
+#### Nâng cấp AuthSessionManager
+
+| File | Mục đích |
+|------|---------|
+| `components/auth/AuthSessionManager.tsx` | Auto-refresh token 60s trước khi hết hạn, chỉ logout khi refresh thất bại |
+
+#### BE — Notification
+
+| File | Mục đích |
+|------|---------|
+| `Features/Notification/Queries/GetNotifications/*` | Query + Handler danh sách thông báo (phân trang, filter isRead) |
+| `Features/Notification/Queries/CountUnread/*` | Query + Handler đếm chưa đọc (badge count) |
+| `Features/Notification/Commands/MarkAsRead/*` | Command + Handler đánh dấu đã đọc (ownership check) |
+| `Controllers/NotificationController.cs` | 3 endpoints: GET list, GET unread-count, PATCH mark-read |
+
+#### FE — Notification
+
+| File | Mục đích |
+|------|---------|
+| `actions/notificationActions.ts` | 3 Server Actions (getNotifications, getUnreadCount, markAsRead) |
+| `app/[locale]/(user)/notifications/page.tsx` | Trang thông báo (filter, mark read, pagination) |
+| `components/layout/UserSidebar.tsx` | Thêm Bell icon vào nhóm Account |
+| `components/layout/BottomTabBar.tsx` | Thay Profile bằng Notifications trên mobile |
+| `messages/vi.json` + `messages/en.json` | Thêm i18n keys cho Notifications |
+
+**✅ Test:** Mở `/notifications` → Thấy empty state → Kiểm tra sidebar có Bell icon → Kiểm tra auto-refresh khi token gần hết hạn.
 
 ---
 

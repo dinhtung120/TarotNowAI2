@@ -189,6 +189,13 @@ public class User
         UpdatedAt = DateTime.UtcNow;
     }
 
+    /// <summary>Thay đổi chức vụ (Role) của người dùng từ Admin UI.</summary>
+    public void UpdateRole(string newRole)
+    {
+        Role = newRole;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     // ======================================================================
     // THỪA KẾ CHO NHANH: Ném Qủa Múc Ví Truyền Khớp Proxy Về Tận Entity Con Bọc Nó Chặn Rườm Rà Cho API Repo Đừng Đứt Refactor Giữ Sạch Cũ Bê Tới Thể Khơi Nguồn.
     // ======================================================================

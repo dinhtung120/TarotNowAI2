@@ -68,9 +68,7 @@ public class ConfirmReleaseCommandHandler : IRequestHandler<ConfirmReleaseComman
             if (item.Status != QuestionItemStatus.Accepted)
                 throw new BadRequestException($"Câu hỏi ở trạng thái {item.Status}, không thể release.");
 
-            // Hàng phòng ngự 3: Thợ bói chưa trả lời dòng nào mà đã đòi lấy tiền à?
-            if (item.RepliedAt == null)
-                throw new BadRequestException("Reader chưa trả lời. Không thể release.");
+            // ĐÃ GỠ BỎ: Hàng phòng ngự số 3 (Reader chưa trả lời) - Cho phép Khách hàng Release sớm (Tip cho Reader trước).
 
             // Hàng phòng ngự 4: Cảnh báo Lag Server bấm đúp (Idempotency thủ công).
             if (item.ReleasedAt != null)

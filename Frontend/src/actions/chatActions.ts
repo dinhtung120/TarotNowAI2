@@ -34,6 +34,15 @@ export interface ConversationDto {
  id: string;
  userId: string;
  readerId: string;
+ // --- CÁC TRƯỜNG BỔ SUNG ĐỂ HIỂN THỊ TÊN/AVATAR TRÊN GIAO DIỆN ---
+ userName?: string | null;
+ userAvatar?: string | null;
+ readerName?: string;
+ readerAvatar?: string;
+ // --- ESCROW INFO ---
+ escrowTotalFrozen?: number;
+ escrowStatus?: string;
+ // -------------------------------------------------------------
  status: string;
  lastMessageAt?: string | null;
  unreadCountUser: number;
@@ -46,6 +55,7 @@ export interface ConversationDto {
 export interface ListConversationsResult {
  conversations: ConversationDto[];
  totalCount: number;
+ currentUserId: string;
 }
 
 /** Tin nhắn chat */
@@ -68,6 +78,7 @@ export interface ChatMessageDto {
 export interface ListMessagesResult {
  messages: ChatMessageDto[];
  totalCount: number;
+ conversation?: ConversationDto;
 }
 
 // ======================================================================

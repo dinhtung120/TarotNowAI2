@@ -18,6 +18,7 @@ import { useRouter } from "@/i18n/routing";
 import { useAuthStore } from "@/store/authStore";
 import { getHistoryDetailAction } from "@/actions/historyActions";
 import { Sparkles, ArrowLeft, Bot, Calendar, Clock, AlertCircle } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { TAROT_DECK } from "@/lib/tarotData";
 import { useLocale, useTranslations } from "next-intl";
 
@@ -32,6 +33,11 @@ interface AiRequestDto {
  requestType: string;
 }
 
+interface FollowupDto {
+ question: string;
+ answer: string;
+}
+
 interface ReadingDetailResponse {
  id: string;
  spreadType: string;
@@ -39,6 +45,8 @@ interface ReadingDetailResponse {
  isCompleted: boolean;
  createdAt: string;
  completedAt: string | null;
+ aiSummary?: string;
+ followups?: FollowupDto[];
  aiInteractions: AiRequestDto[];
 }
 
@@ -165,7 +173,7 @@ export default function HistoryDetailPage() {
  {isLoading ? (
  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 animate-pulse">
  {[1, 2, 3, 4, 5].map(i => (
- <div key={i} className="aspect-[3/4] tn-surface rounded-[2.5rem] border tn-border-soft"></div>
+ <div key={i} className="aspect-[14/22] tn-surface rounded-[2.5rem] border tn-border-soft"></div>
  ))}
  </div>
  ) : error ? (
@@ -190,39 +198,23 @@ export default function HistoryDetailPage() {
  return (
  <div key={index} className="group flex flex-col items-center gap-6">
  {/* Tarot Card - Compact Vertical */}
- <div className="relative aspect-[2/3.2] w-full bg-[var(--bg-glass)] rounded-[2.5rem] border tn-border p-5 cursor-default transition-all duration-700 hover:border-[var(--warning)] hover:shadow-[0_20px_80px_var(--c-251-191-36-10)] hover:-translate-y-2">
- {/* Card Background Pattern */}
- <div className="absolute inset-4 border border-[var(--warning)]/10 rounded-[1.8rem] pointer-events-none" />
- <div className="h-full flex flex-col relative z-10">
- {/* Card Art Area */}
- <div className="flex-1 rounded-2xl tn-surface overflow-hidden relative shadow-inner group-hover/art transition-all duration-700 mb-4 border tn-border-soft">
- <div className="absolute inset-0 tn-card-art-fade z-10" />
- <div className="absolute inset-0 flex items-center justify-center opacity-20 group-hover:opacity-40 transition-opacity">
- <Sparkles className="w-10 h-10 text-[var(--warning)]" />
+ <div className="relative w-full aspect-[14/22] flex flex-col items-center group cursor-pointer transition-all duration-700 hover:-translate-y-2">
+ {/* 
+  * [TINH CHỈNH UI]: Đồng bộ thiết kế với trang Session (xóa viền vàng, 
+  * đưa tên xuống text bên dưới).
+  */}
+ <div className="w-full h-full tn-surface-strong rounded-xl flex items-center justify-center shadow-xl overflow-hidden relative border tn-border-soft group-hover:shadow-[0_10px_40px_var(--c-168-85-247-20)] transition-shadow">
+ <div className="absolute inset-0 bg-gradient-to-tr from-[var(--purple-accent)]/20 to-transparent pointer-events-none"></div>
+ <div className="absolute inset-2 border border-[var(--purple-accent)]/10 rounded-lg pointer-events-none"></div>
+ <span className="text-5xl font-serif font-black tn-text-primary/10 drop-shadow-sm">{index + 1}</span>
  </div>
- {/* Card Name Overlay */}
- <div className="absolute bottom-4 left-0 right-0 z-20 px-3 text-center">
- <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--warning)]/60 block mb-1">
- {tTarot(`suits.${cardMeta.suit}.full`)}
- </span>
- <h3 className="text-xs sm:text-sm font-black tn-text-primary italic tracking-tighter leading-tight drop-shadow-lg">
+ </div>
+
+ {/* Main Card Name and Meaning */}
+ <div className="mt-4 text-center px-2 transition-all duration-500 group-hover:scale-105">
+ <h3 className="text-sm font-bold tn-text-primary font-serif leading-tight px-2 mb-2">
  {tTarot(`cards.c${cardId}.name`)}
  </h3>
- </div>
- </div>
-
- {/* Index Ribbon */}
- <div className="absolute top-0 right-8 w-6 h-10 bg-[var(--warning)]/20 rounded-b-lg flex items-center justify-center border border-t-0 border-[var(--warning)]/30">
- <span className="text-[10px] font-black italic text-[var(--warning)]">{index + 1}</span>
- </div>
- </div>
-
- {/* Hover Shine */}
- <div className="absolute inset-0 tn-card-shine-overlay opacity-0 group-hover:opacity-100 transition-opacity rounded-[2.5rem] pointer-events-none" />
- </div>
-
- {/* Micro-Meaning - Simple & Elegant */}
- <div className="text-center px-2 transition-all duration-500 group-hover:scale-105">
  <p className="text-[9px] font-black uppercase tracking-[0.25em] text-[var(--purple-accent)] mb-2">{t("essence_label")}</p>
  <p className="text-[11px] font-medium text-[var(--text-secondary)] leading-relaxed italic line-clamp-2 hover:line-clamp-none transition-all">
  {tTarot(`cards.c${cardId}.meaning`)}
@@ -242,20 +234,40 @@ export default function HistoryDetailPage() {
  <div className="w-16 h-16 tn-panel rounded-full flex items-center justify-center animate-bounce-slow relative z-10 shadow-xl">
  <Bot className="w-8 h-8 text-[var(--purple-accent)]" />
  </div>
- <div className="relative z-10">
- <h3 className="text-2xl font-black italic tracking-tight tn-text-primary mb-4 uppercase">
+ <div className="relative z-10 w-full text-left">
+ <h3 className="text-2xl font-black italic tracking-tight tn-text-primary mb-6 uppercase text-center">
  {t("ai_title")}
  </h3>
- <p className="text-[var(--text-secondary)] font-medium leading-[1.8] max-w-2xl mx-auto">
+ {detail.aiSummary ? (
+ <div className="prose prose-purple max-w-none prose-p:leading-relaxed prose-p:tn-text-secondary prose-headings:font-serif prose-headings:text-[var(--warning)] prose-strong:text-[var(--purple-accent)] prose-strong:font-bold prose-em:tn-text-secondary prose-em:italic prose-li:tn-text-secondary text-left">
+ <ReactMarkdown>{detail.aiSummary}</ReactMarkdown>
+ {detail.followups && detail.followups.map((f, i) => (
+ <div key={i} className="mt-6 space-y-4">
+ <div className="flex justify-end">
+ <div className="bg-[var(--warning)]/10 border border-[var(--warning)]/20 px-5 py-4 rounded-3xl rounded-tr-none max-w-[85%] text-[var(--warning)]">
+ {f.question}
+ </div>
+ </div>
+ <div className="flex justify-start">
+ <div className="bg-[var(--purple-accent)]/10 border border-[var(--purple-accent)]/20 px-5 py-4 rounded-3xl rounded-tl-none max-w-[85%]">
+ <ReactMarkdown>{f.answer}</ReactMarkdown>
+ </div>
+ </div>
+ </div>
+ ))}
+ </div>
+ ) : (
+ <p className="text-[var(--text-secondary)] font-medium leading-[1.8] max-w-2xl mx-auto text-center">
  {t("ai_desc", { count: detail.aiInteractions.length })}
  </p>
+ )}
  </div>
 
  <div className="h-px w-32 bg-gradient-to-r from-transparent via-[var(--purple-accent)] to-transparent opacity-50 relative z-10" />
  <div className="flex items-center gap-2 opacity-40 relative z-10">
  <div className="w-1.5 h-1.5 bg-[var(--purple-accent)] rounded-full animate-pulse" />
  <div className="w-1.5 h-1.5 bg-[var(--warning)] rounded-full animate-pulse delay-75" />
-                                                <div className="w-1.5 h-1.5 bg-[var(--text-inverse)] rounded-full animate-pulse delay-150" />
+ <div className="w-1.5 h-1.5 bg-[var(--text-inverse)] rounded-full animate-pulse delay-150" />
  </div>
  </div>
  </div>

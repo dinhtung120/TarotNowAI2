@@ -16,7 +16,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Mail, Lock, User, AtSign, Calendar, Sparkles } from 'lucide-react';
-import { registerAction } from '@/actions/authActions';
+import { registerAction, resendVerificationEmailAction } from '@/actions/authActions';
 import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 
@@ -94,6 +94,8 @@ export default function RegisterPage() {
  }
  if (result.success) {
  setSuccess(true);
+ // GỌI OTP: Tự động gửi OTP sau khi user đăng ký xong
+ resendVerificationEmailAction(data.email).catch(console.error);
  }
  } catch {
  setErrorMsg(t('register.error_unexpected'));

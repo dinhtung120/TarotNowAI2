@@ -708,12 +708,12 @@ Nội dung:
   - GenerateRefreshToken: RandomNumberGenerator 64 bytes → Base64
 ```
 
-#### File 69: `Services/MockEmailSender.cs`
+#### File 69: `Services/SmtpEmailSender.cs`
 
 ```
-Mục đích: "Gửi" email giả lập — chỉ log ra console
-Nội dung: Implement IEmailSender → Console.WriteLine($"OTP for {email}: {otpCode}")
-Tại sao Mock? Chưa tích hợp SMTP thật. Xem OTP trong terminal output.
+Mục đích: Gửi email thật qua SMTP (dùng MailKit)
+Nội dung: Implement IEmailSender → Kết nối SmtpClient của MailKit, gửi tin nhắn chứa mã OTP.
+Tại sao? Để user nhận được mã xác thực thực tế. Yêu cầu cấu hình Email trong appsettings.json.
 ```
 
 ### BƯỚC 1.5 — BE API: Controller
@@ -1977,6 +1977,140 @@ promotions/page.tsx:
 
 ---
 
+## GIAI ĐOẠN 9: NOTIFICATION + AUTO-REFRESH TOKEN
+
+> **Mục tiêu:** Thông báo in-app hoàn chỉnh + session user không bị đăng xuất bất ngờ.
+
+---
+
+### BƯỚC 9.1 — Nâng cấp AuthSessionManager (Auto-refresh Token)
+
+> **Tại sao cần?** Trước đây khi JWT hết hạn → user bị logout ngay lập tức, mất trải nghiệm. Giờ thay bằng auto-refresh: gọi refreshAccessTokenAction() trước khi token hết hạn 60s.
+
+#### File đã sửa: `Frontend/src/components/auth/AuthSessionManager.tsx`
+
+```
+Thay đổi:
+  - Thêm hàm tryRefresh() gọi refreshAccessTokenAction() qua server action
+  - Timer schedule refresh 60 giây TRƯỚC khi token hết hạn
+  - Nếu refresh thành công → cập nhật token mới vào Zustand store → timer tự reset
+  - Nếu refresh thất bại → logout như cũ
+  - Khi tab wake up (visibilitychange) → kiểm tra token + thử refresh thay vì logout ngay
+Phụ thuộc: authActions.ts (refreshAccessTokenAction), authStore (setAccessToken, clearAuth)
+```
+
+---
+
+### BƯỚC 9.2 — BE: Notification CQRS + Controller
+
+> **Tại sao code sau?** Notification phụ thuộc vào INotificationRepository + NotificationDocument đã có sẵn từ giai đoạn 7.
+
+#### File 1-2: `Application/Features/Notification/Queries/GetNotifications/GetNotificationsQuery.cs` + `GetNotificationsQueryHandler.cs`
+
+```
+Mục đích: Lấy danh sách thông báo của user (phân trang + filter isRead)
+Query trả về: NotificationListResponse { Items, TotalCount, Page, PageSize }
+Handler: gọi INotificationRepository.GetByUserIdAsync()
+Phụ thuộc: INotificationRepository
+```
+
+#### File 3-4: `Application/Features/Notification/Queries/CountUnread/CountUnreadQuery.cs` + `CountUnreadQueryHandler.cs`
+
+```
+Mục đích: Đếm thông báo chưa đọc — dùng cho badge count icon chuông
+Trả về: long (số nguyên)
+Handler: gọi INotificationRepository.CountUnreadAsync()
+```
+
+#### File 5-6: `Application/Features/Notification/Commands/MarkAsRead/MarkNotificationReadCommand.cs` + `MarkNotificationReadCommandHandler.cs`
+
+```
+Mục đích: Đánh dấu 1 thông báo đã đọc (PATCH)
+Bảo mật: UserId từ JWT → chỉ mark notification CỦA MÌNH (ownership check)
+Trả về: bool (true=thành công, false=không tìm thấy)
+```
+
+#### File 7: `Api/Controllers/NotificationController.cs`
+
+```
+Mục đích: 3 endpoints thông báo
+Nội dung:
+  - [Route("api/v1/[controller]")]
+  - [Authorize] toàn controller
+  - GET "/" → Danh sách thông báo (phân trang, filter isRead)
+  - GET "/unread-count" → Đếm chưa đọc { count: N }
+  - PATCH "/{id}/read" → Đánh dấu đã đọc
+Phụ thuộc: MediatR (IMediator)
+Lưu ý: DI đã đăng ký sẵn INotificationRepository trong Infrastructure/DependencyInjection.cs
+```
+
+---
+
+### BƯỚC 9.3 — FE: Notification Actions + Page + Layout
+
+#### File 8: `Frontend/src/actions/notificationActions.ts`
+
+```
+Mục đích: 3 Server Actions cho Notification module
+Nội dung:
+  - getNotifications(page, pageSize, isRead?) → NotificationListResponse | null
+  - getUnreadNotificationCount() → number (trả 0 nếu lỗi, không break UI)
+  - markNotificationAsRead(id) → { success, error? }
+Phụ thuộc: lib/api.ts (API_BASE_URL), cookies (accessToken)
+```
+
+#### File 9: `Frontend/src/app/[locale]/(user)/notifications/page.tsx`
+
+```
+Mục đích: Trang danh sách thông báo
+Nội dung:
+  - Filter tabs: "Tất cả" / "Chưa đọc"
+  - Mỗi notification: icon theo type, title/body theo locale, relative time, nút mark read
+  - Empty state khi không có thông báo
+  - Pagination khi nhiều trang
+  - Optimistic update: mark read → cập nhật local state ngay, không re-fetch
+Phụ thuộc: notificationActions.ts, components/ui (GlassCard, Button, SectionHeader, EmptyState, Pagination)
+```
+
+#### File 10-11: Sửa `UserSidebar.tsx` + `BottomTabBar.tsx`
+
+```
+UserSidebar.tsx:
+  - Thêm import Bell icon từ lucide-react
+  - Thêm menu item: { labelKey: "notifications", href: "/notifications", icon: Bell }
+  - Đặt trong nhóm "account" (giữa Wallet và Profile)
+
+BottomTabBar.tsx:
+  - Thay tab Profile bằng Notifications (Bell icon)
+  - Lý do: mobile cần truy cập thông báo nhanh hơn profile
+  - Profile vẫn truy cập được từ sidebar khi xoay ngang hoặc menu
+```
+
+#### File 12-13: Sửa `messages/vi.json` + `messages/en.json`
+
+```
+Thêm vào Navigation:
+  - "notifications": "Thông Báo" / "Notifications"
+
+Thêm section mới "Notifications":
+  - tag, title, subtitle, filter_all, filter_unread
+  - mark_read, mark_read_success, mark_read_fail
+  - empty_title, empty_desc, loading
+  - time_just_now, time_minutes_ago, time_hours_ago, time_days_ago
+  - type_system, type_quest, type_streak, type_escrow, type_payment
+```
+
+**✅ KIỂM TRA GIAI ĐOẠN 9:**
+```
+1. Restart backend: dotnet run → kiểm tra Swagger có 3 endpoint /Notification
+2. Mở FE: http://localhost:3000/vi/notifications → thấy empty state
+3. Kiểm tra sidebar desktop: Bell icon trong nhóm Account
+4. Kiểm tra bottom bar mobile: Bell icon thay thế Profile
+5. Test auto-refresh: đợi token gần hết hạn → kiểm tra console log "Token refreshed"
+```
+
+---
+
 ## 📌 QUY TẮC VÀNG KHI CODE
 
 | # | Quy tắc | Tại sao |
@@ -2007,4 +2141,5 @@ promotions/page.tsx:
 | 6 | Deposit + Legal + Promo | 18 | 8 | 26 |
 | 7 | Reader + Chat + Escrow + MFA | 50 | 18 | 68 |
 | 8 | Admin | 12 | 10 | 22 |
-| **TỔNG** | | **~191** | **~78** | **~269 file** |
+| 9 | Notification + Auto-refresh | 7 | 6 | 13 |
+| **TỔNG** | | **~198** | **~84** | **~282 file** |

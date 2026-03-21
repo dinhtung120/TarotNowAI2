@@ -97,6 +97,23 @@ public class MongoConversationRepository : IConversationRepository
     }
 
     /// <summary>
+    /// Truy vấn danh sách Hộp Thư Mới Gộp Chung cả Vai User Lẫn Reader.
+    /// </summary>
+    public async Task<(IEnumerable<ConversationDto> Items, long TotalCount)> GetByParticipantIdPaginatedAsync(
+        string participantId, int page, int pageSize, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<ConversationDocument>.Filter.And(
+            Builders<ConversationDocument>.Filter.Or(
+                Builders<ConversationDocument>.Filter.Eq(c => c.UserId, participantId),
+                Builders<ConversationDocument>.Filter.Eq(c => c.ReaderId, participantId)
+            ),
+            Builders<ConversationDocument>.Filter.Eq(c => c.IsDeleted, false)
+        );
+
+        return await GetPaginatedInternal(filter, page, pageSize, cancellationToken);
+    }
+
+    /// <summary>
     /// Cập nhật conversation: map DTO → Document, set UpdatedAt, replace toàn bộ document.
     /// ReplaceOneAsync thay thế TOÀN BỘ document (không merge) → đảm bảo consistency.
     /// </summary>

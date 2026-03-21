@@ -142,6 +142,25 @@ public class AdminController : ControllerBase
     }
 
     /*
+     * ENDPOINT: PUT api/v1/Admin/users/{id}
+     * MỤC ĐÍCH: Admin sửa đổi thông tin toàn diện của user (Role, Status, Balance).
+     */
+    [HttpPut("users/{id}")]
+    public async Task<IActionResult> UpdateUser(Guid id, [FromBody] TarotNow.Application.Features.Admin.Commands.UpdateUser.UpdateUserCommand command)
+    {
+        command.UserId = id;
+
+        if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
+        {
+            var headerKey = Request.Headers["X-Idempotency-Key"].ToString();
+            command.IdempotencyKey = !string.IsNullOrWhiteSpace(headerKey) ? headerKey : Guid.NewGuid().ToString();
+        }
+
+        var result = await _mediator.Send(command);
+        return result ? Ok(new { success = true }) : BadRequest(new { msg = "Không thể cập nhật User." });
+    }
+
+    /*
      * ENDPOINT: GET api/v1/Admin/deposits
      * MỤC ĐÍCH: Lấy danh sách tất cả đơn nạp tiền (admin xem để duyệt hoặc theo dõi).
      */

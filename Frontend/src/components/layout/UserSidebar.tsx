@@ -24,6 +24,7 @@ import {
  Wallet,
  User,
  Home,
+ Bell,
  type LucideIcon,
 } from "lucide-react";
 import { useMemo } from "react";
@@ -86,6 +87,8 @@ const menuGroups: MenuGroup[] = [
   labelKey: "groups.account",
   items: [
    { labelKey: "wallet", href: "/wallet", icon: Wallet },
+   /* Thêm link Thông báo vào nhóm Tài khoản — user truy cập nhanh từ sidebar */
+   { labelKey: "notifications", href: "/notifications", icon: Bell },
    { labelKey: "profile", href: "/profile", icon: User },
   ],
  },

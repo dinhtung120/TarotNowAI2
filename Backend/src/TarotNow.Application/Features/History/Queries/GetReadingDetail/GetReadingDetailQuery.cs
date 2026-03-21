@@ -51,11 +51,20 @@ public class GetReadingDetailResponse
     // CÂU HỎI VÀ TRẢ LỜI CỦA AI VỚI NHAU
     // ==========================================
     
+    public string? AiSummary { get; set; }
+    public IEnumerable<FollowupDto> Followups { get; set; } = new List<FollowupDto>();
+
     /// <summary>
     /// Bảng Thống Kê Các Cuốc Chat Với AI.
     /// Dùng cho Phiên Bản MVP hiện tại (Trích xuất từ Collection log AiRequests).
     /// </summary>
     public IEnumerable<AiRequestDto> AiInteractions { get; set; } = new List<AiRequestDto>();
+}
+
+public class FollowupDto
+{
+    public string Question { get; set; } = string.Empty;
+    public string Answer { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -110,6 +119,13 @@ public class GetReadingDetailQueryHandler : IRequestHandler<GetReadingDetailQuer
             IsCompleted = session.Value.ReadingSession.IsCompleted,
             CreatedAt = session.Value.ReadingSession.CreatedAt,
             CompletedAt = session.Value.ReadingSession.CompletedAt,
+            
+            AiSummary = session.Value.ReadingSession.AiSummary,
+            Followups = session.Value.ReadingSession.Followups.Select(f => new FollowupDto
+            {
+                Question = f.Question,
+                Answer = f.Answer
+            }).ToList(),
             
             // Xử lý Phân Cấp Loại Hình Chat Tóm Tắt (Dựa vào mẹo Check Tiền và Khóa Sinh Tồn IdempotencyKey).
             AiInteractions = session.Value.AiRequests.Select(a => new AiRequestDto

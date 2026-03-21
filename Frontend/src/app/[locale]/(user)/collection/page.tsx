@@ -32,18 +32,26 @@ export default function CollectionPage() {
  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
  const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
 
+ /*
+  * useEffect chỉ chạy 1 lần khi component mount (dependency = []).
+  * LÝ DO KHÔNG ĐƯA `t` VÀO DEPS:
+  *   `t` (useTranslations) tạo reference mới mỗi lần component re-render
+  *   → nếu để `[t]` → useEffect chạy lại → gọi API thừa.
+  *   `t` luôn lấy giá trị mới nhất nhờ closure, không cần reactive dependency.
+  */
  useEffect(() => {
  const fetchCollection = async () => {
  const result = await getUserCollection();
  if (result.success && result.data) {
  setCollection(result.data);
  } else {
- setError(result.error || t("error_load_failed"));
+ setError(result.error || "Failed to load collection");
  }
  setIsLoading(false);
  };
  fetchCollection();
- }, [t]);
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, []);
 
  // Tìm thẻ bài đang được phóng to
  const selectedCardData = useMemo(() => {
@@ -94,7 +102,7 @@ export default function CollectionPage() {
  <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-[var(--warning)]/[0.05] blur-[100px] rounded-full" />
 
  {/* Card Visual Large */}
- <div className={`relative aspect-[2/3.2] w-52 sm:w-64 md:w-72 bg-gradient-to-br from-[var(--warning)]/10 to-transparent rounded-[2.5rem] border tn-border p-6 mb-8 transition-transform duration-700 hover:scale-[1.02] ${selectedUserCard ? 'shadow-[0_0_50px_var(--c-251-191-36-15)]' : 'grayscale opacity-50'}`}>
+ <div className={`relative aspect-[14/22] w-52 sm:w-64 md:w-72 bg-gradient-to-br from-[var(--warning)]/10 to-transparent rounded-[2.5rem] border tn-border p-6 mb-8 transition-transform duration-700 hover:scale-[1.02] ${selectedUserCard ? 'shadow-[0_0_50px_var(--c-251-191-36-15)]' : 'grayscale opacity-50'}`}>
  <div className="absolute inset-4 border border-[var(--warning)]/10 rounded-[1.8rem] pointer-events-none" />
  <div className="h-full flex flex-col">
  <div className="flex-1 rounded-2xl tn-overlay overflow-hidden relative shadow-inner mb-4 border tn-border-soft flex items-center justify-center">
@@ -121,7 +129,7 @@ export default function CollectionPage() {
  <h2 className="text-2xl font-black tn-text-primary italic tracking-tight">
  {selectedUserCard ? tTarot(`cards.c${selectedCardData.id}.name`) : t('unknown_card')}
  </h2>
- <p className="tn-text-secondary text-sm font-medium leading-relaxed italic">
+ <p className="tn-text-muted max-w-md text-sm font-medium leading-relaxed italic">
  {selectedUserCard ? tTarot(`cards.c${selectedCardData.id}.meaning`) : t("locked_meaning")}
  </p>
 
@@ -244,17 +252,28 @@ export default function CollectionPage() {
  : "tn-panel-overlay-soft opacity-40 grayscale hover:grayscale-0 hover:opacity-100"
  }`}
  >
- {/* Suit Tag - Compact */}
- <div className="w-full text-center mt-1 mb-2">
- <div className={`text-[8px] font-black uppercase tracking-[0.2em] px-2 py-0.5 rounded-full inline-block ${
- isOwned ? 'text-[var(--warning)] bg-[var(--warning)]/5 border border-[var(--warning)]/10' : 'tn-text-muted tn-surface-strong overflow-hidden'
- }`}>
- {tTarot(`suits.${deckCard.suit}.short`)}
- </div>
- </div>
+ {/* Level/EXP Header */}
+  <div className="w-full mb-2">
+    {isOwned ? (
+      <div className="flex flex-col gap-1.5 w-full">
+        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-tighter tn-text-primary px-1">
+          <span>Lv. {userCard.level}</span>
+          <span className="text-[var(--warning)]">{userCard.copies % 5} / 5</span>
+        </div>
+        <div className="w-full h-1 tn-surface rounded-full overflow-hidden">
+          <div
+            className="h-full bg-[var(--warning)] shadow-[0_0_5px_var(--c-245-158-11-30)] transition-all duration-1000"
+            style={{ width: `${((userCard.copies % 5) / 5) * 100}%` }}
+          />
+        </div>
+      </div>
+    ) : (
+      <div className="h-4 w-full" />
+    )}
+  </div>
 
  {/* Visual Portion */}
- <div className={`w-full aspect-[2.5/4] rounded-2xl mb-3 flex items-center justify-center relative overflow-hidden transition-transform duration-500 group-hover:scale-[1.03] ${
+ <div className={`w-full aspect-[14/22] rounded-2xl mb-3 flex items-center justify-center relative overflow-hidden transition-transform duration-500 group-hover:scale-[1.03] ${
  isOwned ? 'bg-gradient-to-br from-[color:var(--c-215-189-226-26)] to-[color:var(--c-168-156-255-28)] border tn-border-soft' : 'tn-overlay'
  }`}>
  <span className={`text-4xl font-serif font-black tracking-tighter opacity-20 ${isOwned ? 'text-[var(--warning)]' : 'tn-text-muted'}`}>
@@ -277,21 +296,12 @@ export default function CollectionPage() {
  </h4>
 
  {/* Stats - Macro-UI */}
- {isOwned ? (
- <div className="w-full space-y-2 mt-auto">
- <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-tighter tn-text-muted">
- <span>{t('level_label')} <span className="text-[var(--warning)]">{userCard.level}</span></span>
- <span className="opacity-60">{userCard.copies} {t('copies_label')}</span>
- </div>
- <div className="w-full h-0.5 tn-surface rounded-full overflow-hidden">
- <div className="h-full bg-[var(--warning)] shadow-[0_0_5px_var(--c-245-158-11-30)] transition-all duration-1000" style={{ width: `${Math.min((userCard.copies / 5) * 100, 100)}%` }} />
- </div>
- </div>
- ) : (
- <div className="w-full mt-auto py-1.5 tn-surface rounded-xl border tn-border-soft flex items-center justify-center">
- <Lock className="w-2.5 h-2.5 tn-text-muted" />
- </div>
- )}
+  {/* Lock for unowned - macro-ui space */}
+  {!isOwned && (
+    <div className="w-full mt-auto py-1.5 tn-surface rounded-xl border tn-border-soft flex items-center justify-center">
+      <Lock className="w-2.5 h-2.5 tn-text-muted" />
+    </div>
+  )}
  </div>
  );
  })}

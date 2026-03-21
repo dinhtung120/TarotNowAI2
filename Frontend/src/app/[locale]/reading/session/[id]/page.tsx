@@ -24,6 +24,10 @@ import AiInterpretationStream from "@/components/AiInterpretationStream";
 import AstralBackground from "@/components/layout/AstralBackground";
 import { useTranslations } from "next-intl";
 
+// Import actions và store để đồng bộ Level/EXP sau khi bốc bài
+import { getProfileAction } from "@/actions/profileActions";
+import { useAuthStore } from "@/store/authStore";
+
 const SHUFFLE_CARD_COUNT = 9;
 const DECK_WAVE_Y_AMPLITUDE = 6;
 const DECK_WAVE_ROTATION_AMPLITUDE = 7;
@@ -97,6 +101,8 @@ export default function ReadingSessionPage() {
  const tAi = useTranslations("AiInterpretation");
  const tTarot = useTranslations("Tarot");
  const sessionShort = sessionId.split("-")[0];
+
+ const updateUser = useAuthStore((s) => s.updateUser); // Hook cập nhật Profile Store
 
  const [cards, setCards] = useState<number[]>([]);
 
@@ -276,6 +282,16 @@ export default function ReadingSessionPage() {
  flipTimersRef.current.push(timerId);
  });
 
+ // ==========================================
+ // ĐỒNG BỘ EXP & LEVEL (Gamification Sync)
+ // ==========================================
+ // Sau khi bốc bài thành công, gọi API lấy Profile mới nhất để cập nhật Navbar
+ // Tránh việc EXP bị đứng im do Store chỉ lưu dữ liệu cũ lúc Login.
+ const profileResponse = await getProfileAction();
+ if (profileResponse.success && profileResponse.data) {
+ updateUser(profileResponse.data);
+ }
+
  } else {
  setError(response.error || t("errors.reveal_failed"));
  }
@@ -408,7 +424,7 @@ export default function ReadingSessionPage() {
  <div className="relative w-[90px] h-[180px]">
  <div
  ref={stackAnchorRef}
- className="absolute left-0 top-0 w-[72px] aspect-[2/3] rounded-md border border-dashed border-[var(--purple-accent)]/30 bg-[var(--purple-accent)]/10"
+ className="absolute left-0 top-0 w-[72px] aspect-[14/22] rounded-md border border-dashed border-[var(--purple-accent)]/30 bg-[var(--purple-accent)]/10"
  />
  {pickedCards.map((cardId, stackIndex) => {
  const placement = getStackPlacement(stackIndex);
@@ -418,7 +434,7 @@ export default function ReadingSessionPage() {
  type="button"
  onClick={() => removePickedCard(cardId)}
  disabled={isRevealing}
- className="absolute left-0 top-0 w-[72px] aspect-[2/3] rounded-md border border-[var(--purple-accent)]/35 bg-gradient-to-br from-[var(--purple-accent)]/95 to-[color:var(--c-61-49-80-55)] shadow-md tarot-deck-card transition-transform duration-200 hover:-translate-y-1 disabled:pointer-events-none"
+ className="absolute left-0 top-0 w-[72px] aspect-[14/22] rounded-md border border-[var(--purple-accent)]/35 bg-gradient-to-br from-[var(--purple-accent)]/95 to-[color:var(--c-61-49-80-55)] shadow-md tarot-deck-card transition-transform duration-200 hover:-translate-y-1 disabled:pointer-events-none"
  style={{
  transform: `translate(${placement.xOffset}px, ${placement.yOffset}px) rotate(${placement.rotate}deg)`,
  zIndex: stackIndex + 1,
@@ -474,7 +490,7 @@ export default function ReadingSessionPage() {
  return (
  <div
  key={idx}
- className="relative w-[var(--deck-card-w)] aspect-[2/3] group tarot-card-fan"
+ className="relative w-[var(--deck-card-w)] aspect-[14/22] group tarot-card-fan"
  style={{
  marginLeft: columnIndex === 0 ? 0 : `calc(var(--deck-card-w) * -${DECK_HORIZONTAL_OVERLAP_FACTOR})`,
  transform: `translateY(${waveOffset}px) rotate(${waveRotation}deg)`,
@@ -541,17 +557,17 @@ export default function ReadingSessionPage() {
  {t("modal.change_card")}
  </button>
  )}
- </div>
- </div>
- )}
- </div>
- )}
- </div>
- )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    )}
 
- {/* Revealed Cards Area (3 cards per row) */}
- {cards.length > 0 && (
- <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4 perspective-1000 items-start">
+  {/* Revealed Cards Area (3 cards per row) */}
+  {cards.length > 0 && (
+  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4 perspective-1000 items-start">
  {cards.map((cardId, index) => {
  const isFlipped = flippedIndex >= index;
  const cardMeta = tarotById.get(cardId) || TAROT_DECK[0];
@@ -559,7 +575,7 @@ export default function ReadingSessionPage() {
  return (
  <div key={index} className="flex flex-col items-center gap-3 w-full max-w-[180px] mx-auto">
  {/* 3D Flip Card Container */}
- <div className="relative w-full aspect-[2/3.2] preserve-3d transition-transform duration-700 ease-out cursor-pointer group tarot-card-flip"
+ <div className="relative w-full aspect-[14/22] preserve-3d transition-transform duration-700 ease-out cursor-pointer group tarot-card-flip"
  style={{ transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}>
 
  {/* Card Back */}
@@ -570,25 +586,25 @@ export default function ReadingSessionPage() {
  </div>
 
  {/* Card Front */}
- <div className="absolute inset-0 backface-hidden w-full h-full bg-gradient-to-b from-[var(--warning)] to-[var(--warning)] rounded-xl border-2 border-[var(--warning)]/50 shadow-[0_0_20px_var(--c-251-191-36-15)] flex flex-col items-center p-4"
+ <div className="absolute inset-0 backface-hidden w-full h-full bg-transparent flex items-center justify-center"
  style={{ transform: 'rotateY(180deg)' }}>
- <div className="w-full text-center border-b border-[var(--warning)] pb-1.5 mb-2.5">
- <span className="text-[10px] font-bold text-[var(--warning)] uppercase tracking-widest">
- {tTarot(`suits.${cardMeta.suit}.full`)}
- </span>
+ {/*
+  * [TINH CHỈNH UI]: Đã xóa viền vàng theo yêu cầu.
+  * Chỉ giữ lại phần "hình ảnh" (box đại diện) và tên lá bài ở bên dưới.
+  */}
+ <div className="w-full h-full tn-surface-strong rounded-xl flex items-center justify-center shadow-xl overflow-hidden relative border tn-border-soft">
+ <div className="absolute inset-0 bg-gradient-to-tr from-[var(--purple-accent)]/20 to-transparent pointer-events-none"></div>
+ <div className="absolute inset-2 border border-[var(--purple-accent)]/10 rounded-lg pointer-events-none"></div>
+ <span className="text-5xl font-serif font-black tn-text-primary/10 drop-shadow-sm">{index + 1}</span>
  </div>
- <div className="flex-1 w-full tn-surface-strong rounded-md mb-2.5 flex items-center justify-center shadow-inner overflow-hidden relative">
- <div className="absolute inset-0 bg-gradient-to-tr from-[var(--purple-accent)]/40 to-transparent"></div>
- <span className="text-4xl font-serif text-[var(--warning)]/70 drop-shadow-md">{index + 1}</span>
- </div>
- <h3 className="text-sm font-bold tn-text-ink font-serif leading-tight text-center">
- {tTarot(`cards.c${cardId}.name`)}
- </h3>
  </div>
  </div>
 
- {/* Meaning Short text */}
- <div className={`text-center transition-opacity duration-1000 delay-500 ${isFlipped ? 'opacity-100' : 'opacity-0'}`}>
+        {/* Main Card Name and Meaning */}
+        <div className={`mt-4 text-center transition-opacity duration-1000 delay-500 ${isFlipped ? 'opacity-100' : 'opacity-0'}`}>
+          <h3 className="text-sm font-bold tn-text-primary font-serif leading-tight px-2 mb-2">
+            {tTarot(`cards.c${cardId}.name`)}
+          </h3>
  <p className="text-[10px] font-semibold text-[var(--purple-accent)] mb-1 uppercase tracking-widest">{t("cards.meaning_label")}</p>
  <p className="text-xs tn-text-secondary leading-relaxed px-2 line-clamp-3">
  {tTarot(`cards.c${cardId}.meaning`)}
@@ -619,18 +635,12 @@ export default function ReadingSessionPage() {
  <span className="text-[10px] text-[var(--purple-accent)] font-bold uppercase tracking-widest">{t("ai.live")}</span>
  </div>
  </div>
- <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar flex-1 bg-gradient-to-b from-transparent to-[var(--purple-accent)]/5">
- {allCardsFlipped ? (
- <AiInterpretationStream
- sessionId={sessionId}
- cards={cards}
- />
- ) : (
- <div className="h-64 flex flex-col items-center justify-center text-center space-y-4 opacity-40">
- <RefreshCw className="w-10 h-10 tn-text-muted animate-spin" />
- <p className="tn-text-muted font-serif italic max-w-xs px-4">{t("ai.waiting_flip")}</p>
- </div>
- )}
+ <div className="flex-1 overflow-hidden flex flex-col bg-gradient-to-b from-transparent to-[var(--purple-accent)]/5">
+ 						<AiInterpretationStream
+							sessionId={sessionId}
+							cards={cards}
+							isReadyToShow={allCardsFlipped}
+						/>
  </div>
 
  {/* Bottom decorative area */}

@@ -125,10 +125,10 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins(allowedOrigins) // Chỉ cho phép các domain đã cấu hình
-              .AllowAnyHeader()            // Cho phép mọi HTTP header (Authorization, Content-Type,...)
-              .AllowAnyMethod()            // Cho phép mọi HTTP method (GET, POST, PUT, DELETE,...)
-              .AllowCredentials();         // Cho phép gửi cookies (cần cho Refresh Token HttpOnly Cookie)
+        policy.SetIsOriginAllowed(origin => true) // Thay vì WithOrigins, cho phép mọi client domain kể cả di động
+              .AllowAnyHeader()            
+              .AllowAnyMethod()            
+              .AllowCredentials();         
     });
 });
 

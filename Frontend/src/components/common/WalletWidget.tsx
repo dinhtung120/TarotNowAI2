@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Coins, Gem } from 'lucide-react';
 import { useWalletStore } from '@/store/walletStore';
 import { useAuthStore } from '@/store/authStore';
 import { useLocale, useTranslations } from 'next-intl';
+import { useShallow } from 'zustand/react/shallow';
 
 /*
  * ===================================================================
@@ -13,27 +14,41 @@ import { useLocale, useTranslations } from 'next-intl';
  *   Giao diện hiển thị nhanh số dư (Diamond, Gold, Frozen Diamond) của User 
  *   trên Navbar (Desktop) và Sidebar (Mobile).
  * 
- * TÍNH NĂNG CHÍNH:
- *   - Tự động gọi API (thông qua store Zustand `fetchBalance`) ở lần render đầu.
- *   - Giám sát trạng thái `balance` từ `useWalletStore`, tự re-render khi số dư thay đổi.
- *   - Trong lúc fetch hiện Skeleton mờ (pulse). Tách hiển thị Frozen Diamond (số dư bị đóng băng lúc chat).
+ * TỐI ƯU RE-RENDER:
+ *   - Gộp wallet selectors + dùng `useShallow` để so sánh shallow equality,
+ *     tránh tạo object mới mỗi render → ngăn infinite re-render loop.
+ *   - Dùng useRef flag `hasFetched` để đảm bảo chỉ gọi API 1 lần duy nhất.
+ *   - useEffect chỉ phụ thuộc `isAuthenticated` — không phụ thuộc balance/error state.
  * ===================================================================
  */
 export default function WalletWidget() {
  const t = useTranslations("Wallet");
  const locale = useLocale();
  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
- // Lấy trạng thái số dư, hàm gọi API (fetchBalance) và cờ loading từ store Zustand.
- const balance = useWalletStore((state) => state.balance);
- const fetchBalance = useWalletStore((state) => state.fetchBalance);
- const isLoading = useWalletStore((state) => state.isLoading);
- const error = useWalletStore((state) => state.error);
 
- // useEffect sẽ chạy 1 lần khi component mount để tự động kéo số dư mới nhất từ server.
+ /*
+  * TỐI ƯU: Gộp wallet state vào 1 selector + useShallow.
+  * useShallow so sánh từng field bằng === thay vì so sánh reference của object.
+  * → Chỉ re-render khi balance hoặc isLoading thực sự thay đổi giá trị.
+  */
+ const { balance, isLoading } = useWalletStore(
+ useShallow((state) => ({
+  balance: state.balance,
+  isLoading: state.isLoading,
+ }))
+ );
+
+ /*
+  * useRef flag `hasFetched` → đảm bảo chỉ gọi fetchBalance() đúng 1 lần.
+  * Chống lại StrictMode double-mount và dependency thừa.
+  * Dependency chỉ có `isAuthenticated` — chỉ re-fetch khi user login/logout.
+  */
+ const hasFetched = useRef(false);
  useEffect(() => {
- if (!isAuthenticated || isLoading || balance || error) return;
- void fetchBalance();
- }, [balance, error, fetchBalance, isAuthenticated, isLoading]);
+ if (!isAuthenticated || hasFetched.current) return;
+ hasFetched.current = true;
+ void useWalletStore.getState().fetchBalance();
+ }, [isAuthenticated]);
 
  // Trạng thái Loading: Trả về một Skeleton mờ với hiệu ứng chớp sáng (pulse) để UI không bị giật khi chờ API.
  if (isLoading) {
