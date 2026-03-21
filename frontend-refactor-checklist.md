@@ -1,6 +1,6 @@
 # Frontend Refactor Checklist - TarotNow FE (Clean Architecture + SOLID)
 
-**Ngày kiểm tra:** 21/03/2026  
+**Ngày kiểm tra:** 22/03/2026  
 **Phạm vi:** `Frontend/src`, `Frontend/messages`  
 **Mục tiêu chính:**
 - Loại bỏ lỗi còn sót và chuẩn hóa chất lượng code.
@@ -8,30 +8,38 @@
 - Giảm duplicate code, giảm độ dài file, giảm số trách nhiệm trong mỗi file.
 - Tăng khả năng bảo trì dài hạn và tốc độ phát triển feature mới.
 
-## Cập nhật tiến độ (21/03/2026)
+## Cập nhật tiến độ (22/03/2026)
 
 - Hoàn tất xử lý lỗi lint blocker và warning ưu tiên cao; `lint/build` đang pass.
 - Tạo nền tảng shared (`serverAuth`, `serverHttpClient`, `parseApiError`, `logger`, `browserStorage`, `formatCurrency`, `formatDateTime`, `useAuthGuard`).
 - Migrate toàn bộ `src/actions/*` sang lớp HTTP dùng chung (không còn `await fetch()` trong action code).
 - Chuẩn hóa nhiều lỗi SSR/client safety: bỏ `alert/confirm`, thay `<img>` bằng `next/image`, sửa dependency hooks, bỏ `key={index|i}`.
+- Hoàn tất tách action layer theo domain với facade tương thích ngược: `actions/{admin,auth,reader,chat,escrow}/*`.
+- Làm mỏng nhiều route lớn: chuyển logic UI sang `src/features/**/presentation/*`, route `app/**/page.tsx` còn wrapper.
+- Tách thêm hook ứng dụng cho các cụm nặng: `useProfilePage`, `useWithdrawPage`, `useAdminPromotions`.
+- Hoàn tất auth feature split theo clean layers: `domain/schemas`, `application/hooks`, `presentation/components` + route wrappers cho `register|verify|forgot|reset`.
+- Hoàn tất wallet split: `wallet overview` + `deposit` chuyển sang `features/wallet` (hook + presentation), bổ sung domain constants và status mapper cho withdrawal.
+- Hoàn tất chat split theo concern: thêm `useChatConnection`, `usePaymentOfferActions`, `mergeMessages` utility; `ChatRoomPage` chỉ còn orchestration/render.
+- Chuẩn hóa admin data layer bằng `useAdminUsers`, `useAdminDeposits`, `useAdminReaderRequests`, `useAdminReadings` để tách logic khỏi presentation.
+- Chuẩn hóa contract `ActionResult<T>` cho cụm auth actions (`session/registration/recovery`) và giữ tương thích call-site hiện tại.
 
 ## 1) Snapshot hiện trạng (đã quét thực tế)
 
 | Hạng mục | Số liệu hiện tại | Ghi chú |
 |---|---:|---|
-| Tổng file TS/TSX trong `src` | 109 | Tập trung ở `app/`, `components/`, `actions/`, `shared/` |
+| Tổng file TS/TSX trong `src` | 144 | Tập trung ở `app/`, `features/`, `components/`, `actions/`, `shared/` |
 | Số route `page.tsx` | 34 | App Router (locale + auth/user/admin) |
-| File > 100 dòng | 65 | Dấu hiệu quá tải trách nhiệm |
-| File > 200 dòng | 38 | Nhiều god page/god component |
-| Action files | 16 | ~3020 dòng, đã chuẩn hóa qua shared http client |
-| Components files | 28 | Có nhiều component >150 dòng |
+| File > 100 dòng | 70 | Bao gồm nhiều file feature mới tách từ route |
+| File > 200 dòng | 33 | Đã giảm so với mốc trước |
+| Action files | 36 | ~2812 dòng, đã tách module theo domain |
+| Components files | 29 | Có nhiều component >150 dòng |
 | `messages/*.json` | 3 file / 4509 dòng | Monolithic i18n (en/vi/zh) |
 | `console.log` | 0 | Tốt |
-| `console.error` | 15 | Đã giảm mạnh, còn lại chủ yếu ngoài action layer |
+| `console.error` | 14 | Đã giảm mạnh, còn lại chủ yếu ngoài action layer |
 | `any` | 0 | Đã xử lý explicit `any` còn sót |
 | `key={index|i}` | 0 | Đã thay bằng key ổn định |
 | Truy cập trực tiếp `window/document/storage` | 103 | Cần chuẩn hóa SSR-safe utility |
-| `getAccessToken()` alias | 8 alias | Đã dùng chung `getServerAccessToken` trong action layer |
+| `getAccessToken()` alias | 14 alias | Đã dùng chung `getServerAccessToken` trong action layer (còn alias cần gom tiếp) |
 | `await fetch` trong `actions` | 0 calls | Đã chuyển qua `serverHttpClient` (còn 2 chỗ trong comment) |
 
 ## 2) Kết quả kiểm tra nhanh chất lượng hiện tại
@@ -170,7 +178,7 @@ src/
 
 ## Phase 1 - Scaffold Clean Layers (1 ngày)
 **Mục tiêu:** tạo skeleton `features/` + `shared/` không đổi behavior.
-- [ ] Tạo cấu trúc thư mục chuẩn (mục 7).
+- [x] Tạo cấu trúc thư mục chuẩn (mục 7).
 - [ ] Tạo `README.md` ngắn cho quy tắc import/dependency.
 - [ ] Tạo barrel exports theo feature (`index.ts`) để migration dễ.
 - [ ] Giữ `src/actions/*` hiện tại, chưa đổi logic.
@@ -201,55 +209,55 @@ src/
 
 ## Phase 4 - Action Layer Modularization (2-3 ngày)
 **Mục tiêu:** tách `actions` theo feature + chuẩn hóa response contract.
-- [ ] Tách `adminActions.ts` thành nhiều file theo nghiệp vụ.
-- [ ] Tách `authActions.ts`, `readerActions.ts`, `chatActions.ts`, `escrowActions.ts` thành module nhỏ.
-- [ ] Chuẩn hóa kiểu trả về `Result<T, E>` (success/error rõ ràng).
+- [x] Tách `adminActions.ts` thành nhiều file theo nghiệp vụ.
+- [x] Tách `authActions.ts`, `readerActions.ts`, `chatActions.ts`, `escrowActions.ts` thành module nhỏ.
+- [x] Chuẩn hóa kiểu trả về `Result<T, E>` (success/error rõ ràng).
 - [x] Dùng chung `serverHttpClient` + `serverAuth`.
-- [ ] Để tương thích ngược: giữ file cũ làm facade re-export trong giai đoạn chuyển tiếp.
+- [x] Để tương thích ngược: giữ file cũ làm facade re-export trong giai đoạn chuyển tiếp.
 
 **Exit criteria:** 100% action gọi qua helper chung, giảm duplicate fetch/token.
 
 ## Phase 5 - Auth + Profile Feature Refactor (2 ngày)
 **Mục tiêu:** làm mỏng các page auth/profile.
-- [ ] Tách logic form login/register/verify/reset vào `features/auth/application/hooks`.
-- [ ] Tách schema validation vào `features/auth/domain/schemas`.
-- [ ] Tách UI sections vào `features/auth/presentation/components`.
-- [ ] Refactor `profile/page.tsx` thành container mỏng + card/form nhỏ.
+- [x] Tách logic form login/register/verify/reset vào `features/auth/application/hooks`.
+- [x] Tách schema validation vào `features/auth/domain/schemas`.
+- [x] Tách UI sections vào `features/auth/presentation/components`.
+- [x] Refactor `profile/page.tsx` thành container mỏng + card/form nhỏ.
 
 **Exit criteria:** mỗi page auth/profile <= ~180 dòng, không đổi UI.
 
 ## Phase 6 - Wallet + Promotions + Withdrawal Refactor (2 ngày)
 **Mục tiêu:** chuẩn hóa flow tài chính phía user/admin.
-- [ ] Tách `wallet/page.tsx`, `wallet/deposit/page.tsx`, `wallet/withdraw/page.tsx` thành hook + component.
-- [ ] Dùng chung `Pagination`, `TableStates`, `formatCurrency`, `formatDateTime`.
-- [ ] Tách promotion logic vào `features/wallet` hoặc `features/admin/promotions` rõ ràng.
-- [ ] Chuẩn hóa status badge mapping.
+- [x] Tách `wallet/page.tsx`, `wallet/deposit/page.tsx`, `wallet/withdraw/page.tsx` thành hook + component.
+- [x] Dùng chung `Pagination`, `TableStates`, `formatCurrency`, `formatDateTime`.
+- [x] Tách promotion logic vào `features/wallet` hoặc `features/admin/promotions` rõ ràng.
+- [x] Chuẩn hóa status badge mapping.
 
 **Exit criteria:** wallet pages mỏng hơn, không còn lặp format/status.
 
 ## Phase 7 - Reading Flow + History Refactor (3 ngày)
 **Mục tiêu:** xử lý cụm file lớn nhất/rủi ro nhất.
-- [ ] Tách `reading/page.tsx` thành setup hook + spread cards component.
-- [ ] Tách `reading/session/[id]/page.tsx` (deck, animation, reveal, storage, stream trigger).
-- [ ] Chuyển `sessionStorage` access vào hook SSR-safe.
-- [ ] Tách 2 trang history thành hook dữ liệu + UI render cards/list.
+- [x] Tách `reading/page.tsx` thành setup hook + spread cards component.
+- [x] Tách `reading/session/[id]/page.tsx` (deck, animation, reveal, storage, stream trigger).
+- [x] Chuyển `sessionStorage` access vào hook SSR-safe.
+- [x] Tách 2 trang history thành hook dữ liệu + UI render cards/list.
 
 **Exit criteria:** reading session page giảm mạnh độ dài, behavior giữ nguyên.
 
 ## Phase 8 - Chat + Escrow Refactor (3 ngày)
 **Mục tiêu:** ổn định realtime + giảm coupling.
-- [ ] Tách SignalR connection lifecycle thành hook riêng.
-- [ ] Tách message merge/reconcile logic thành utility thuần.
-- [ ] Tách payment-offer/accept flow thành module application.
-- [ ] Refactor `EscrowPanel` và modal/report/dispute theo pattern nhất quán.
+- [x] Tách SignalR connection lifecycle thành hook riêng.
+- [x] Tách message merge/reconcile logic thành utility thuần.
+- [x] Tách payment-offer/accept flow thành module application.
+- [x] Refactor `EscrowPanel` và modal/report/dispute theo pattern nhất quán.
 
 **Exit criteria:** chat room page thành thin container, dễ test logic.
 
 ## Phase 9 - Admin Module Refactor (3 ngày)
 **Mục tiêu:** giảm god pages admin.
-- [ ] Refactor `admin/users`, `admin/deposits`, `admin/reader-requests`, `admin/readings`, `admin/withdrawals`, `admin/promotions`.
+- [x] Refactor `admin/users`, `admin/deposits`, `admin/reader-requests`, `admin/readings`, `admin/withdrawals`, `admin/promotions`.
 - [ ] Dùng lại shared table/pagination/filter/action-modal.
-- [ ] Chuẩn hóa `useAdminXxx` hooks và DTO mappers.
+- [x] Chuẩn hóa `useAdminXxx` hooks và DTO mappers.
 
 **Exit criteria:** admin pages tách theo list/filter/modal rõ ràng.
 

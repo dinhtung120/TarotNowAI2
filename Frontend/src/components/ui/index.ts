@@ -21,3 +21,4 @@ export { default as SkeletonLoader } from "./SkeletonLoader";
 export { default as EmptyState } from "./EmptyState";
 export { default as SectionHeader } from "./SectionHeader";
 export { default as Pagination } from "./Pagination";
+export { default as TableStates } from "./TableStates";

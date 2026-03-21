@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { type DepositPromotion } from "@/actions/promotionActions";
 import {
  Ticket,
  X,
@@ -14,122 +14,34 @@ import {
  PlusCircle,
 } from "lucide-react";
 import { SectionHeader, GlassCard, Button } from "@/components/ui";
-import toast from "react-hot-toast";
-import { useLocale, useTranslations } from "next-intl";
-import {
- listPromotions as listPromotionsAction,
- createPromotion as createPromotionAction,
- updatePromotion as updatePromotionAction,
- deletePromotion as deletePromotionAction,
- type DepositPromotion,
-} from "@/actions/promotionActions";
+import { useAdminPromotions } from "@/features/admin/promotions/application/useAdminPromotions";
 
 interface AdminPromotionsClientProps {
  initialPromotions: DepositPromotion[];
 }
 
-type Promotion = DepositPromotion;
-
 export default function AdminPromotionsClient({ initialPromotions }: AdminPromotionsClientProps) {
- const t = useTranslations("Admin");
- const locale = useLocale();
- const [promotions, setPromotions] = useState<Promotion[]>(initialPromotions);
- const [loading, setLoading] = useState(false);
-
- // Form states
- const [isCreating, setIsCreating] = useState(false);
- const [minAmount, setMinAmount] = useState<number>(0);
- const [bonusGold, setBonusGold] = useState<number>(0);
- const [deleteId, setDeleteId] = useState<string | null>(null);
- const [submitting, setSubmitting] = useState(false);
- const [togglingId, setTogglingId] = useState<string | null>(null);
- const [deletingId, setDeletingId] = useState<string | null>(null);
-
- const moneyFormatter = useMemo(
-  () => new Intl.NumberFormat(locale, { style: "currency", currency: "VND", maximumFractionDigits: 0 }),
-  [locale],
- );
-
- const formatMoney = useCallback((value: number) => moneyFormatter.format(value), [moneyFormatter]);
-
- const refreshPromotions = useCallback(async (options?: { showLoading?: boolean }) => {
-  const showLoading = options?.showLoading ?? true;
-  if (showLoading) setLoading(true);
-
-  try {
-   const data = await listPromotionsAction(false);
-   setPromotions(data ?? []);
-  } catch (err) {
-   console.error(err);
-   setPromotions([]);
-  } finally {
-   if (showLoading) setLoading(false);
-  }
- }, []);
-
- const handleCreate = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setSubmitting(true);
-  try {
-   const ok = await createPromotionAction(minAmount, bonusGold);
-   if (ok) {
-    setIsCreating(false);
-    setMinAmount(0);
-    setBonusGold(0);
-    toast.success(t("promotions.toast.create_success"));
-    await refreshPromotions({ showLoading: false });
-   } else {
-    toast.error(t("promotions.toast.create_failed"));
-   }
-  } catch {
-   toast.error(t("promotions.toast.network_error"));
-  } finally {
-   setSubmitting(false);
-  }
- };
-
- const handleToggle = async (promotion: Promotion) => {
-  setTogglingId(promotion.id);
-  try {
-   const nextActive = !promotion.isActive;
-   const ok = await updatePromotionAction(promotion.id, {
-    minAmountVnd: promotion.minAmountVnd,
-    bonusDiamond: promotion.bonusDiamond,
-    isActive: nextActive,
-   });
-   if (ok) {
-    setPromotions((prev) =>
-     prev.map((item) => (item.id === promotion.id ? { ...item, isActive: nextActive } : item)),
-    );
-    toast.success(t("promotions.toast.toggle_success"));
-   } else {
-    toast.error(t("promotions.toast.toggle_failed"));
-   }
-  } catch {
-   toast.error(t("promotions.toast.network_error"));
-  } finally {
-   setTogglingId(null);
-  }
- };
-
- const handleDelete = async () => {
-  if (!deleteId) return;
-  setDeletingId(deleteId);
-  try {
-   const ok = await deletePromotionAction(deleteId);
-   if (ok) {
-    setPromotions((prev) => prev.filter((item) => item.id !== deleteId));
-    setDeleteId(null);
-    toast.success(t("promotions.toast.delete_success"));
-   } else {
-    toast.error(t("promotions.toast.delete_failed"));
-   }
-  } catch {
-   toast.error(t("promotions.toast.network_error"));
-  } finally {
-   setDeletingId(null);
-  }
- };
+ const {
+  t,
+  locale,
+  promotions,
+  loading,
+  isCreating,
+  setIsCreating,
+  minAmount,
+  setMinAmount,
+  bonusGold,
+  setBonusGold,
+  deleteId,
+  setDeleteId,
+  submitting,
+  togglingId,
+  deletingId,
+  formatMoney,
+  handleCreate,
+  handleToggle,
+  handleDelete,
+ } = useAdminPromotions(initialPromotions);
 
  return (
   <div className="space-y-8 pb-20 animate-in fade-in duration-700">
