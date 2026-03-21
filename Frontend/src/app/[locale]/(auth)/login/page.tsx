@@ -25,6 +25,11 @@ import { useTranslations } from 'next-intl';
 
 import AuthLayout from '@/components/layout/AuthLayout';
 import { Input, Button } from '@/components/ui';
+import {
+ getLocalStorageItem,
+ removeLocalStorageItem,
+ setLocalStorageItem,
+} from '@/shared/infrastructure/storage/browserStorage';
 
 type LoginFormValues = {
  emailOrUsername: string;
@@ -63,7 +68,7 @@ export default function LoginPage() {
 
  useEffect(() => {
  // Khôi phục email nếu người dùng đã tích Remember me lần trước
- const savedEmail = localStorage.getItem('tarot_remembered_email');
+ const savedEmail = getLocalStorageItem('tarot_remembered_email');
  if (savedEmail) {
  setValue('emailOrUsername', savedEmail);
  setValue('rememberMe', true);
@@ -80,9 +85,9 @@ export default function LoginPage() {
 
  // Xử lý lưu hoặc xóa ghi nhớ đăng nhập
  if (data.rememberMe) {
- localStorage.setItem('tarot_remembered_email', data.emailOrUsername);
+ setLocalStorageItem('tarot_remembered_email', data.emailOrUsername);
  } else {
- localStorage.removeItem('tarot_remembered_email');
+ removeLocalStorageItem('tarot_remembered_email');
  }
 
  try {

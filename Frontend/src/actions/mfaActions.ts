@@ -9,14 +9,12 @@
  */
 'use server';
 
-import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
-import { API_BASE_URL } from '@/lib/api';
+import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
+import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { logger } from '@/shared/infrastructure/logging/logger';
 
-async function getAccessToken(): Promise<string | undefined> {
- const cookieStore = await cookies();
- return cookieStore.get('accessToken')?.value;
-}
+const getAccessToken = getServerAccessToken;
 
 export interface MfaSetupResult {
  qrCodeUri: string;
@@ -32,16 +30,18 @@ export async function getMfaStatus(): Promise<boolean> {
  if (!accessToken) return false;
 
  try {
- const res = await fetch(`${API_BASE_URL}/mfa/status`, {
+ const result = await serverHttpRequest<{ mfaEnabled?: boolean }>('/mfa/status', {
  method: 'GET',
- headers: { 'Authorization': `Bearer ${accessToken}` },
- cache: 'no-store',
+ token: accessToken,
+ fallbackErrorMessage: 'Failed to get MFA status',
  });
- if (!res.ok) return false;
- const data = await res.json();
- return !!data.mfaEnabled;
+ if (!result.ok) {
+ logger.error('[MFA] getMfaStatus', result.error, { status: result.status });
+ return false;
+ }
+ return !!result.data.mfaEnabled;
  } catch (error) {
- console.error('[MFA] getMfaStatus error:', error);
+ logger.error('[MFA] getMfaStatus', error);
  return false;
  }
 }
@@ -55,19 +55,19 @@ export async function setupMfa(): Promise<{ success: boolean; data?: MfaSetupRes
  if (!accessToken) return { success: false, error: tApi('unauthorized') };
 
  try {
- const res = await fetch(`${API_BASE_URL}/mfa/setup`, {
+ const result = await serverHttpRequest<MfaSetupResult>('/mfa/setup', {
  method: 'POST',
- headers: { 'Authorization': `Bearer ${accessToken}` },
+ token: accessToken,
+ fallbackErrorMessage: tApi('unknown_error'),
  });
- if (!res.ok) {
- if (res.status === 401) return { success: false, error: tApi('unauthorized') };
- const err = await res.json().catch(() => ({}));
- return { success: false, error: err.detail || err.msg || tApi('unknown_error') };
+ if (!result.ok) {
+ if (result.status === 401) return { success: false, error: tApi('unauthorized') };
+ logger.error('[MFA] setupMfa', result.error, { status: result.status });
+ return { success: false, error: result.error || tApi('unknown_error') };
  }
- const data = await res.json();
- return { success: true, data };
+ return { success: true, data: result.data };
  } catch (error) {
- console.error('[MFA] setupMfa error:', error);
+ logger.error('[MFA] setupMfa', error);
  return { success: false, error: tApi('network_error') };
  }
 }
@@ -81,23 +81,21 @@ export async function verifyMfa(code: string): Promise<{ success: boolean; error
  if (!accessToken) return { success: false, error: tApi('unauthorized') };
 
  try {
- const res = await fetch(`${API_BASE_URL}/mfa/verify`, {
+ const result = await serverHttpRequest<unknown>('/mfa/verify', {
  method: 'POST',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify({ code }),
+ token: accessToken,
+ json: { code },
+ fallbackErrorMessage: tApi('unknown_error'),
  });
- if (!res.ok) {
- if (res.status === 401) return { success: false, error: tApi('unauthorized') };
- if (res.status === 400) return { success: false, error: tApi('invalid_code') };
- const err = await res.json().catch(() => ({}));
- return { success: false, error: err.detail || err.msg || tApi('unknown_error') };
+ if (!result.ok) {
+ if (result.status === 401) return { success: false, error: tApi('unauthorized') };
+ if (result.status === 400) return { success: false, error: tApi('invalid_code') };
+ logger.error('[MFA] verifyMfa', result.error, { status: result.status });
+ return { success: false, error: result.error || tApi('unknown_error') };
  }
  return { success: true };
  } catch (error) {
- console.error('[MFA] verifyMfa error:', error);
+ logger.error('[MFA] verifyMfa', error);
  return { success: false, error: tApi('network_error') };
  }
 }
@@ -111,23 +109,21 @@ export async function challengeMfa(code: string): Promise<{ success: boolean; er
  if (!accessToken) return { success: false, error: tApi('unauthorized') };
 
  try {
- const res = await fetch(`${API_BASE_URL}/mfa/challenge`, {
+ const result = await serverHttpRequest<unknown>('/mfa/challenge', {
  method: 'POST',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify({ code }),
+ token: accessToken,
+ json: { code },
+ fallbackErrorMessage: tApi('unknown_error'),
  });
- if (!res.ok) {
- if (res.status === 401) return { success: false, error: tApi('unauthorized') };
- if (res.status === 400) return { success: false, error: tApi('invalid_code') };
- const err = await res.json().catch(() => ({}));
- return { success: false, error: err.detail || err.msg || tApi('unknown_error') };
+ if (!result.ok) {
+ if (result.status === 401) return { success: false, error: tApi('unauthorized') };
+ if (result.status === 400) return { success: false, error: tApi('invalid_code') };
+ logger.error('[MFA] challengeMfa', result.error, { status: result.status });
+ return { success: false, error: result.error || tApi('unknown_error') };
  }
  return { success: true };
  } catch (error) {
- console.error('[MFA] challengeMfa error:', error);
+ logger.error('[MFA] challengeMfa', error);
  return { success: false, error: tApi('network_error') };
  }
 }

@@ -10,8 +10,9 @@
  */
 'use server';
 
-import { cookies } from 'next/headers';
-import { API_BASE_URL } from '@/lib/api';
+import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
+import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { logger } from '@/shared/infrastructure/logging/logger';
 
 // ======================================================================
 // Kiểu dữ liệu cho Legal / Consent
@@ -40,8 +41,8 @@ export interface ConsentStatus {
  * @param version - Phiên bản cần kiểm tra (ví dụ: '1.0')
  */
 export async function checkConsentStatus(documentType?: string, version?: string): Promise<ConsentStatus[] | null> {
- const cookieStore = await cookies();
- const accessToken = cookieStore.get('accessToken')?.value;
+ const accessToken = await getServerAccessToken();
+ if (!accessToken) return null;
 
  try {
  // Xây dựng query params động dựa trên tham số truyền vào
@@ -50,23 +51,24 @@ export async function checkConsentStatus(documentType?: string, version?: string
  if (version) params.append('version', version);
  const queryString = params.toString() ? `?${params.toString()}` : '';
 
- const response = await fetch(`${API_BASE_URL}/legal/consent-status${queryString}`, {
+ const result = await serverHttpRequest<ConsentStatus[]>(`/legal/consent-status${queryString}`, {
  method: 'GET',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- cache: 'no-store',
+ token: accessToken,
+ fallbackErrorMessage: 'Failed to check consent status',
  });
 
- if (!response.ok) {
- console.error('checkConsentStatus error', response.status);
+ if (!result.ok) {
+ logger.error('LegalAction.checkConsentStatus', result.error, {
+ status: result.status,
+ documentType,
+ version,
+ });
  return null;
  }
 
- return await response.json();
+ return result.data;
  } catch (error) {
- console.error('Failed to check consent status:', error);
+ logger.error('LegalAction.checkConsentStatus', error, { documentType, version });
  return null;
  }
 }
@@ -79,22 +81,28 @@ export async function checkConsentStatus(documentType?: string, version?: string
  * @returns true nếu ghi nhận thành công
  */
 export async function recordConsent(documentType: string, version: string): Promise<boolean> {
- const cookieStore = await cookies();
- const accessToken = cookieStore.get('accessToken')?.value;
+ const accessToken = await getServerAccessToken();
+ if (!accessToken) return false;
 
  try {
- const response = await fetch(`${API_BASE_URL}/legal/consent`, {
+ const result = await serverHttpRequest<unknown>('/legal/consent', {
  method: 'POST',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify({ documentType, version }),
+ token: accessToken,
+ json: { documentType, version },
+ fallbackErrorMessage: 'Failed to record consent',
  });
 
- return response.ok;
+ if (!result.ok) {
+ logger.error('LegalAction.recordConsent', result.error, {
+ status: result.status,
+ documentType,
+ version,
+ });
+ return false;
+ }
+ return true;
  } catch (error) {
- console.error('Failed to record consent:', error);
+ logger.error('LegalAction.recordConsent', error, { documentType, version });
  return false;
  }
 }

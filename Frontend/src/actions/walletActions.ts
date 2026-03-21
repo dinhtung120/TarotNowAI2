@@ -12,60 +12,52 @@
  */
 'use server';
 
-import { cookies } from 'next/headers';
 import { PaginatedList, WalletBalance, WalletTransaction } from '@/types/wallet';
-import { API_BASE_URL } from '@/lib/api';
+import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
+import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { logger } from '@/shared/infrastructure/logging/logger';
 
 export async function getWalletBalance(): Promise<WalletBalance | null> {
- const cookieStore = await cookies();
- // Normally auth logic attaches tokens. In a standard setup with HTTP-Only cookies, we might just pass credentials if same-site.
- // However, if we're using a Bearer token stored in cookies, we append it here.
- const accessToken = cookieStore.get('accessToken')?.value; // Replace with actual token retrieval method
+ const accessToken = await getServerAccessToken();
+ if (!accessToken) return null;
 
  try {
- const response = await fetch(`${API_BASE_URL}/Wallet/balance`, {
+ const result = await serverHttpRequest<WalletBalance>('/Wallet/balance', {
  method: 'GET',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- cache: 'no-store', // Always fetch fresh balance
+ token: accessToken,
+ fallbackErrorMessage: 'Failed to get wallet balance',
  });
-
- if (!response.ok) {
- console.error('getWalletBalance error', response.status);
+ if (!result.ok) {
+ logger.error('WalletAction.getWalletBalance', result.error, { status: result.status });
  return null;
  }
-
- return await response.json();
+ return result.data;
  } catch (error) {
- console.error('Failed to get wallet balance:', error);
+ logger.error('WalletAction.getWalletBalance', error);
  return null;
  }
 }
 
 export async function getLedger(page = 1, limit = 20): Promise<PaginatedList<WalletTransaction> | null> {
- const cookieStore = await cookies();
- const accessToken = cookieStore.get('accessToken')?.value;
+ const accessToken = await getServerAccessToken();
+ if (!accessToken) return null;
 
  try {
- const response = await fetch(`${API_BASE_URL}/Wallet/ledger?page=${page}&limit=${limit}`, {
+ const result = await serverHttpRequest<PaginatedList<WalletTransaction>>(
+ `/Wallet/ledger?page=${page}&limit=${limit}`,
+ {
  method: 'GET',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- cache: 'no-store',
- });
-
- if (!response.ok) {
- console.error('getLedger error', response.status);
+ token: accessToken,
+ fallbackErrorMessage: 'Failed to get ledger',
+ }
+ );
+ if (!result.ok) {
+ logger.error('WalletAction.getLedger', result.error, { status: result.status, page, limit });
  return null;
  }
-
- return await response.json();
+ return result.data;
  } catch (error) {
- console.error('Failed to get ledger:', error);
+ logger.error('WalletAction.getLedger', error, { page, limit });
  return null;
  }
 }

@@ -183,8 +183,8 @@ export default function ReaderApplyPage() {
  { icon: ScrollText, title: t("steps.intro.title"), desc: t("steps.intro.desc"), color: 'purple' as const },
  { icon: Clock, title: t("steps.review.title"), desc: t("steps.review.desc"), color: 'amber' as const },
  { icon: Star, title: t("steps.start.title"), desc: t("steps.start.desc"), color: 'emerald' as const }
- ].map((step, i) => (
- <div key={i} className="p-5 rounded-2xl tn-panel-soft text-center space-y-2">
+ ].map((step) => (
+ <div key={step.title} className="p-5 rounded-2xl tn-panel-soft text-center space-y-2">
  <step.icon className={`w-6 h-6 mx-auto ${iconClassByColor[step.color]}`} />
  <div className="text-[10px] font-black uppercase tracking-widest tn-text-secondary">{step.title}</div>
  <p className="text-[10px] tn-text-muted">{step.desc}</p>

@@ -20,6 +20,7 @@ import { Sparkles, Calendar, ArrowRight, Clock, Bot, ChevronLeft, ChevronRight, 
 import { useLocale, useTranslations } from "next-intl";
 
 import { GlassCard, SectionHeader, Button } from "@/components/ui";
+import { useAuthGuard } from "@/shared/application/hooks/useAuthGuard";
 
 interface ReadingSessionDto {
  id: string;
@@ -50,11 +51,7 @@ export default function HistoryPage() {
  const [filterDate, setFilterDate] = useState<string>("");
  const pageSize = 10;
 
- useEffect(() => {
- if (!isAuthenticated) {
- router.push("/login");
- }
- }, [isAuthenticated, router]);
+ useAuthGuard(isAuthenticated);
 
  /*
   * useEffect phụ thuộc vào các giá trị THỰC SỰ thay đổi logic fetching:
@@ -177,7 +174,7 @@ export default function HistoryPage() {
  {isLoading ? (
  <div className="space-y-4 animate-pulse">
  {[1, 2, 3, 4].map(i => (
- <div key={i} className="h-24 tn-surface rounded-2xl border tn-border-soft"></div>
+ <div key={`history-list-skeleton-${i}`} className="h-24 tn-surface rounded-2xl border tn-border-soft"></div>
  ))}
  </div>
  ) : historyData?.items.length === 0 ? (

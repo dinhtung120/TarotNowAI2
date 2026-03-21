@@ -19,13 +19,14 @@ import { useLocale, useTranslations } from "next-intl";
 import { CreditCard, Filter, CheckCircle2, XCircle, Clock, ChevronLeft, ChevronRight,
  ArrowUpRight,
  Gem,
- Hash,
  User,
  Loader2,
  ThumbsUp,
  ThumbsDown
 } from "lucide-react";
 import { SectionHeader, GlassCard, Button } from "@/components/ui";
+import { formatCurrency } from "@/shared/utils/format/formatCurrency";
+import { formatDate, formatTime } from "@/shared/utils/format/formatDateTime";
 
 export default function AdminDepositsPage() {
  const t = useTranslations("Admin");
@@ -236,7 +237,7 @@ export default function AdminDepositsPage() {
  </td>
  <td className="px-8 py-5">
  <div className="text-[11px] font-black tn-text-primary uppercase tracking-tighter">
- {new Intl.NumberFormat(locale, { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(o.amountVnd)}
+ {formatCurrency(o.amountVnd, locale)}
  </div>
  </td>
  <td className="px-8 py-5">
@@ -248,10 +249,10 @@ export default function AdminDepositsPage() {
  <td className="px-8 py-5">
  <div className="flex flex-col text-left">
  <div className="text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-tighter">
- {new Date(o.createdAt).toLocaleDateString(locale)}
+ {formatDate(o.createdAt, locale)}
  </div>
  <div className="text-[10px] font-bold text-[var(--text-tertiary)] italic">
- {new Date(o.createdAt).toLocaleTimeString(locale)}
+ {formatTime(o.createdAt, locale)}
  </div>
  </div>
  </td>

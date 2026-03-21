@@ -14,17 +14,18 @@
  *
  * Tại sao cần Server Action thay vì gọi fetch trực tiếp từ Client Component?
  * - Bảo mật: Token xác thực được giữ an toàn phía server, không bị lộ ra client code.
- * - Nhất quán: Tất cả các trang khác (Auth, Wallet, Reading) đều dùng Server Actions.
- * Profile page là trang DUY NHẤT gọi trực tiếp fetch() → tạo bất nhất quán và lỗi URL.
+ * - Nhất quán: toàn bộ luồng frontend gọi backend qua cùng một lớp Server Actions.
+ * Phiên bản cũ từng gọi trực tiếp fetch() trong page profile gây bất nhất và lỗi URL.
  * - Đúng chuẩn Clean Architecture: Client Component → Server Action → Backend API.
  *
  * Trước khi sửa, Profile page gọi "/api/v1/profile" (URL tương đối → Next.js server),
  * nhưng API thực sự nằm ở http://localhost:5037/api/v1/profile (Backend .NET).
  */
 
-import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
-import { API_BASE_URL } from '@/lib/api';
+import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
+import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { logger } from '@/shared/infrastructure/logging/logger';
 
 /**
  * Hàm helper lấy Access Token từ cookie.
@@ -32,10 +33,7 @@ import { API_BASE_URL } from '@/lib/api';
  * - Vì loginAction() đã lưu accessToken vào cookie khi đăng nhập thành công.
  * - Server Actions chạy trên server nên có thể đọc cookie trực tiếp.
  */
-async function getAccessToken(): Promise<string | undefined> {
- const cookieStore = await cookies();
- return cookieStore.get('accessToken')?.value;
-}
+const getAccessToken = getServerAccessToken;
 
 /**
  * Lấy thông tin hồ sơ người dùng hiện tại.
@@ -50,24 +48,23 @@ export async function getProfileAction() {
  return { error: tApi('unauthorized') };
  }
 
- const response = await fetch(`${API_BASE_URL}/profile`, {
- headers: {
- 'Content-Type': 'application/json',
- 'Authorization': `Bearer ${token}`
- },
+ const result = await serverHttpRequest<unknown>('/profile', {
+ method: 'GET',
+ token,
+ fallbackErrorMessage: tApi('unknown_error'),
  });
 
- if (!response.ok) {
- if (response.status === 401) {
+ if (!result.ok) {
+ if (result.status === 401) {
  return { error: tApi('unauthorized') };
  }
- const result = await response.json().catch(() => ({}));
- return { error: result.message || result.detail || tApi('unknown_error') };
+ logger.error('ProfileAction.getProfileAction', result.error, { status: result.status });
+ return { error: result.error || tApi('unknown_error') };
  }
 
- const data = await response.json();
- return { success: true, data };
- } catch {
+ return { success: true, data: result.data };
+ } catch (error) {
+ logger.error('ProfileAction.getProfileAction', error);
  return { error: tApi('network_error') };
  }
 }
@@ -91,25 +88,24 @@ export async function updateProfileAction(profileData: {
  return { error: tApi('unauthorized') };
  }
 
- const response = await fetch(`${API_BASE_URL}/profile`, {
+ const result = await serverHttpRequest<unknown>('/profile', {
  method: 'PATCH',
- headers: {
- 'Content-Type': 'application/json',
- 'Authorization': `Bearer ${token}`
- },
- body: JSON.stringify(profileData),
+ token,
+ json: profileData,
+ fallbackErrorMessage: tApi('unknown_error'),
  });
 
- if (!response.ok) {
- if (response.status === 401) {
+ if (!result.ok) {
+ if (result.status === 401) {
  return { error: tApi('unauthorized') };
  }
- const result = await response.json().catch(() => ({}));
- return { error: result.message || result.detail || tApi('unknown_error') };
+ logger.error('ProfileAction.updateProfileAction', result.error, { status: result.status });
+ return { error: result.error || tApi('unknown_error') };
  }
 
  return { success: true };
- } catch {
+ } catch (error) {
+ logger.error('ProfileAction.updateProfileAction', error);
  return { error: tApi('network_error') };
  }
 }

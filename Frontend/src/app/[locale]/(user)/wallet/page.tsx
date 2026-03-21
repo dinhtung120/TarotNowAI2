@@ -28,6 +28,7 @@ import { useRouter } from '@/i18n/routing';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { SectionHeader, Button, GlassCard, Pagination } from '@/components/ui';
+import { formatDate, formatTime } from '@/shared/utils/format/formatDateTime';
 
 export default function WalletPage() {
  const router = useRouter();
@@ -189,10 +190,10 @@ export default function WalletPage() {
  <tr key={tx.id} className="hover:tn-surface transition-colors group">
  <td className="px-6 py-5">
  <div className="text-[11px] font-bold text-[var(--text-primary)]">
- {new Date(tx.createdAt).toLocaleDateString(locale)}
+ {formatDate(tx.createdAt, locale)}
  </div>
  <div className="text-[10px] font-medium text-[var(--text-secondary)] mt-0.5">
- {new Date(tx.createdAt).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
+ {formatTime(tx.createdAt, locale, { hour: '2-digit', minute: '2-digit' })}
  </div>
  </td>
  <td className="px-6 py-5">

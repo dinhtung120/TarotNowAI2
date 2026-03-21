@@ -5,6 +5,7 @@ import { listConversations, type ConversationDto } from '@/actions/chatActions';
 import {
 	Loader2, Sparkles, ChevronRight, Inbox
 } from 'lucide-react';
+import Image from 'next/image';
 import { Link } from '@/i18n/routing';
 import { SectionHeader, GlassCard } from '@/components/ui';
 import { useTranslations } from 'next-intl';
@@ -169,7 +170,14 @@ export default function InboxPage() {
 											{/* Avatar */}
 											<div className="relative flex-shrink-0">
 												{otherAvatar ? (
-													<img src={otherAvatar} alt={otherName} className="w-14 h-14 rounded-2xl object-cover" />
+													<Image
+														src={otherAvatar}
+														alt={otherName}
+														width={56}
+														height={56}
+														unoptimized
+														className="w-14 h-14 rounded-2xl object-cover"
+													/>
 												) : (
 													<div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[var(--purple-accent)]/20 to-[var(--purple-accent)]/5 border border-[var(--purple-accent)]/20 flex items-center justify-center text-lg font-black text-[var(--purple-accent)] shadow-[0_0_15px_rgba(168,85,247,0.1)] group-hover:scale-105 transition-transform duration-300">
 														{otherName.charAt(0).toUpperCase()}

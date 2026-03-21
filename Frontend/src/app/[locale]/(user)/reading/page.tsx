@@ -24,6 +24,7 @@ import { useWalletStore } from "@/store/walletStore";
 import { useTranslations } from "next-intl";
 
 import { GlassCard, Button, SectionHeader, Input } from "@/components/ui";
+import { setSessionStorageItem } from "@/shared/infrastructure/storage/browserStorage";
 
 interface FormData {
  question?: string;
@@ -96,9 +97,9 @@ export default function ReadingSetupPage() {
  const cardsToDraw = cardsToDrawMap[selectedSpread] || 1;
 
  if (data.question) {
- sessionStorage.setItem(`question_${response.data.sessionId}`, data.question);
+ setSessionStorageItem(`question_${response.data.sessionId}`, data.question);
  }
- sessionStorage.setItem(`cardsToDraw_${response.data.sessionId}`, cardsToDraw.toString());
+ setSessionStorageItem(`cardsToDraw_${response.data.sessionId}`, cardsToDraw.toString());
 
  router.push(`/reading/session/${response.data.sessionId}`);
  } else {
@@ -161,7 +162,6 @@ export default function ReadingSetupPage() {
  {SPREADS.map((spread) => {
  const isSelected = selectedSpread === spread.id;
  const isFree = spread.id === 'daily_1';
- const isPremiumSpread = spread.id === 'spread_10';
  const showExpBonus = spread.exp > 1;
 
  return (

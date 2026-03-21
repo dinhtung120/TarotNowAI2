@@ -34,7 +34,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-import { GlassCard, Button, SectionHeader, EmptyState, Pagination } from '@/components/ui';
+import { GlassCard, SectionHeader, EmptyState, Pagination } from '@/components/ui';
 import {
   getNotifications,
   markNotificationAsRead,
@@ -112,7 +112,12 @@ export default function NotificationsPage() {
 
   /* Fetch dữ liệu khi mount và khi filter/page thay đổi */
   useEffect(() => {
-    void fetchData();
+    const initialFetchTimer = window.setTimeout(() => {
+      void fetchData();
+    }, 0);
+    return () => {
+      window.clearTimeout(initialFetchTimer);
+    };
   }, [fetchData]);
 
   /*

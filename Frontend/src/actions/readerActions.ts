@@ -10,9 +10,10 @@
  */
 'use server';
 
-import { cookies } from 'next/headers';
-import { API_BASE_URL } from '@/lib/api';
 import { getTranslations } from 'next-intl/server';
+import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
+import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { logger } from '@/shared/infrastructure/logging/logger';
 
 // ======================================================================
 // Helper Functions
@@ -24,10 +25,7 @@ import { getTranslations } from 'next-intl/server';
  * → Bảo mật: Access token lưu trong HttpOnly cookie, client JS không đọc được.
  * → Next.js Server Components/Actions chạy trên server, có quyền đọc cookie.
  */
-async function getAccessToken(): Promise<string | undefined> {
- const cookieStore = await cookies();
- return cookieStore.get('accessToken')?.value;
-}
+const getAccessToken = getServerAccessToken;
 
 // ======================================================================
 // Kiểu dữ liệu — tương ứng với backend DTOs
@@ -107,26 +105,21 @@ export async function submitReaderApplication(
  if (!accessToken) return { success: false, message: tApi("unauthorized") };
 
  try {
- const response = await fetch(`${API_BASE_URL}/reader/apply`, {
+ const result = await serverHttpRequest<{ message?: string }>('/reader/apply', {
  method: 'POST',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify({ introText, proofDocuments }),
+ token: accessToken,
+ json: { introText, proofDocuments },
+ fallbackErrorMessage: t("errors.submit_failed"),
  });
 
- if (!response.ok) {
- // Parse error message từ ProblemDetails format
- const errorData = await response.json().catch(() => null);
- const msg = errorData?.detail || errorData?.message || t("errors.submit_failed");
- return { success: false, message: msg };
+ if (!result.ok) {
+ logger.error('[ReaderAction] submitReaderApplication', result.error, { status: result.status });
+ return { success: false, message: result.error || t("errors.submit_failed") };
  }
 
- const data = await response.json();
- return { success: true, message: data.message || t("success.submitted") };
+ return { success: true, message: result.data.message || t("success.submitted") };
  } catch (error) {
- console.error('[ReaderAction] submitReaderApplication failed:', error);
+ logger.error('[ReaderAction] submitReaderApplication', error);
  return { success: false, message: tApi("network_error") };
  }
 }
@@ -140,19 +133,19 @@ export async function getMyReaderRequest(): Promise<MyReaderRequest | null> {
  if (!accessToken) return null;
 
  try {
- const response = await fetch(`${API_BASE_URL}/reader/my-request`, {
+ const result = await serverHttpRequest<MyReaderRequest>('/reader/my-request', {
  method: 'GET',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- cache: 'no-store',
+ token: accessToken,
+ fallbackErrorMessage: 'Failed to get reader request',
  });
 
- if (!response.ok) return null;
- return await response.json();
+ if (!result.ok) {
+ logger.error('[ReaderAction] getMyReaderRequest', result.error, { status: result.status });
+ return null;
+ }
+ return result.data;
  } catch (error) {
- console.error('[ReaderAction] getMyReaderRequest failed:', error);
+ logger.error('[ReaderAction] getMyReaderRequest', error);
  return null;
  }
 }
@@ -174,29 +167,46 @@ export async function listReaders(
  searchTerm = ''
 ): Promise<ListReadersResponse | null> {
  try {
- const url = new URL(`${API_BASE_URL}/readers`);
- url.searchParams.append('page', page.toString());
- url.searchParams.append('pageSize', pageSize.toString());
- if (specialty) url.searchParams.append('specialty', specialty);
- if (status) url.searchParams.append('status', status);
- if (searchTerm) url.searchParams.append('searchTerm', searchTerm);
+ const params = new URLSearchParams({
+ page: page.toString(),
+ pageSize: pageSize.toString(),
+ });
+ if (specialty) params.append('specialty', specialty);
+ if (status) params.append('status', status);
+ if (searchTerm) params.append('searchTerm', searchTerm);
 
  // Endpoint public — không cần auth token
- const response = await fetch(url.toString(), {
+ const result = await serverHttpRequest<{ readers?: ReaderProfile[]; Readers?: ReaderProfile[]; totalCount?: number; TotalCount?: number }>(
+ `/readers?${params.toString()}`,
+ {
  method: 'GET',
- headers: { 'Content-Type': 'application/json' },
- cache: 'no-store',
+ fallbackErrorMessage: 'Failed to list readers',
  });
 
- if (!response.ok) return null;
-
- const data = await response.json();
+ if (!result.ok) {
+ logger.error('[ReaderAction] listReaders', result.error, {
+ status: result.status,
+ page,
+ pageSize,
+ specialty,
+ statusFilter: status,
+ searchTerm,
+ });
+ return null;
+ }
+ const data = result.data;
  return {
  readers: data.readers || data.Readers || [],
  totalCount: data.totalCount ?? data.TotalCount ?? 0,
  };
  } catch (error) {
- console.error('[ReaderAction] listReaders failed:', error);
+ logger.error('[ReaderAction] listReaders', error, {
+ page,
+ pageSize,
+ specialty,
+ statusFilter: status,
+ searchTerm,
+ });
  return null;
  }
 }
@@ -209,22 +219,25 @@ export async function listFeaturedReaders(
  limit = 4
 ): Promise<ReaderProfile[]> {
  try {
- const url = new URL(`${API_BASE_URL}/readers`);
- url.searchParams.append('page', '1');
- url.searchParams.append('pageSize', limit.toString());
-
- const response = await fetch(url.toString(), {
+ const result = await serverHttpRequest<{ readers?: ReaderProfile[]; Readers?: ReaderProfile[] }>(
+ `/readers?page=1&pageSize=${limit}`,
+ {
  method: 'GET',
- headers: { 'Content-Type': 'application/json' },
  next: { revalidate: 120 },
+ fallbackErrorMessage: 'Failed to list featured readers',
  });
 
- if (!response.ok) return [];
-
- const data = await response.json();
+ if (!result.ok) {
+ logger.error('[ReaderAction] listFeaturedReaders', result.error, {
+ status: result.status,
+ limit,
+ });
+ return [];
+ }
+ const data = result.data;
  return data.readers || data.Readers || [];
  } catch (error) {
- console.error('[ReaderAction] listFeaturedReaders failed:', error);
+ logger.error('[ReaderAction] listFeaturedReaders', error, { limit });
  return [];
  }
 }
@@ -235,16 +248,21 @@ export async function listFeaturedReaders(
  */
 export async function getReaderProfile(userId: string): Promise<ReaderProfile | null> {
  try {
- const response = await fetch(`${API_BASE_URL}/reader/profile/${userId}`, {
+ const result = await serverHttpRequest<ReaderProfile>(`/reader/profile/${userId}`, {
  method: 'GET',
- headers: { 'Content-Type': 'application/json' },
- cache: 'no-store',
+ fallbackErrorMessage: 'Failed to get reader profile',
  });
 
- if (!response.ok) return null;
- return await response.json();
+ if (!result.ok) {
+ logger.error('[ReaderAction] getReaderProfile', result.error, {
+ status: result.status,
+ userId,
+ });
+ return null;
+ }
+ return result.data;
  } catch (error) {
- console.error('[ReaderAction] getReaderProfile failed:', error);
+ logger.error('[ReaderAction] getReaderProfile', error, { userId });
  return null;
  }
 }
@@ -264,18 +282,20 @@ export async function updateReaderProfile(data: {
  if (!accessToken) return false;
 
  try {
- const response = await fetch(`${API_BASE_URL}/reader/profile`, {
+ const result = await serverHttpRequest<unknown>('/reader/profile', {
  method: 'PATCH',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify(data),
+ token: accessToken,
+ json: data,
+ fallbackErrorMessage: 'Failed to update reader profile',
  });
 
- return response.ok;
+ if (!result.ok) {
+ logger.error('[ReaderAction] updateReaderProfile', result.error, { status: result.status });
+ return false;
+ }
+ return true;
  } catch (error) {
- console.error('[ReaderAction] updateReaderProfile failed:', error);
+ logger.error('[ReaderAction] updateReaderProfile', error);
  return false;
  }
 }
@@ -290,18 +310,23 @@ export async function updateReaderStatus(status: string): Promise<boolean> {
  if (!accessToken) return false;
 
  try {
- const response = await fetch(`${API_BASE_URL}/reader/status`, {
+ const result = await serverHttpRequest<unknown>('/reader/status', {
  method: 'PATCH',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify({ status }),
+ token: accessToken,
+ json: { status },
+ fallbackErrorMessage: 'Failed to update reader status',
  });
 
- return response.ok;
+ if (!result.ok) {
+ logger.error('[ReaderAction] updateReaderStatus', result.error, {
+ status: result.status,
+ readerStatus: status,
+ });
+ return false;
+ }
+ return true;
  } catch (error) {
- console.error('[ReaderAction] updateReaderStatus failed:', error);
+ logger.error('[ReaderAction] updateReaderStatus', error, { readerStatus: status });
  return false;
  }
 }

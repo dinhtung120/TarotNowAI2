@@ -147,7 +147,7 @@ export default function AstralBackground({
  <div className="absolute inset-0 motion-reduce:hidden">
  {Array.from({ length: resolvedParticleCount }).map((_, i) => (
  <div
- key={i}
+ key={`astral-particle-${i}`}
  className="absolute w-[2px] h-[2px] bg-[var(--holo-silver)] rounded-full animate-float opacity-[0.4] shadow-[0_0_10px_var(--c-168-156-255-55)]"
  style={getParticleStyle(i)}
  />

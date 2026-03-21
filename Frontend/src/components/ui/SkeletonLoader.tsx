@@ -58,7 +58,7 @@ export default function SkeletonLoader({
  <div className={`space-y-3 ${className}`}>
  {Array.from({ length: count }).map((_, i) => (
  <div
- key={i}
+ key={`skeleton-${type}-${i}`}
  className={[
  /* Base styling theo type */
  typeStyles[type],

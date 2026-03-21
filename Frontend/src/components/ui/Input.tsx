@@ -14,7 +14,13 @@
  * ===================================================================
  */
 
-import { forwardRef, type InputHTMLAttributes, type TextareaHTMLAttributes, type ReactNode } from "react";
+import {
+ forwardRef,
+ type InputHTMLAttributes,
+ type TextareaHTMLAttributes,
+ type ReactNode,
+ type Ref,
+} from "react";
 
 /**
  * Props kế thừa HTML input attributes + custom props.
@@ -87,10 +93,12 @@ const baseInputStyles = [
  * → Giải pháp: Render nội bộ dựa trên isTextarea, forward ref chỉ cho input.
  * → Textarea nhận ref riêng thông qua callback.
  */
-const Input = forwardRef<HTMLInputElement, CombinedProps>(
+const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, CombinedProps>(
  ({ label, error, hint, leftIcon, fullWidth = true, className = "", ...rest }, ref) => {
  const props = rest as CombinedProps;
  const isTextarea = "isTextarea" in props && props.isTextarea;
+ const inputRef = ref as Ref<HTMLInputElement>;
+ const textareaRef = ref as Ref<HTMLTextAreaElement>;
 
  /**
  * Tách isTextarea ra khỏi các props khác để tránh truyền vào DOM element.
@@ -124,7 +132,7 @@ const Input = forwardRef<HTMLInputElement, CombinedProps>(
  {isTextarea ? (
  /* Textarea mode — dùng cho câu hỏi, mô tả, bio */
  <textarea
- ref={ref as any}
+ ref={textareaRef}
  className={[
  baseInputStyles,
  "resize-none min-h-[80px]",
@@ -137,7 +145,7 @@ const Input = forwardRef<HTMLInputElement, CombinedProps>(
  ) : (
  /* Input mode — text, email, password, number */
  <input
- ref={ref}
+ ref={inputRef}
  className={[
  baseInputStyles,
  leftIcon ? "pl-11" : "",

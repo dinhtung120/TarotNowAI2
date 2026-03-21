@@ -50,7 +50,6 @@ export default function CollectionPage() {
  setIsLoading(false);
  };
  fetchCollection();
- // eslint-disable-next-line react-hooks/exhaustive-deps
  }, []);
 
  // Tìm thẻ bài đang được phóng to

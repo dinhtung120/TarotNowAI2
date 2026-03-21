@@ -27,6 +27,7 @@ import { Sparkles, User, Calendar, AtSign, ShieldCheck, Save, Loader2, Trophy,
 } from "lucide-react";
 import { SectionHeader, GlassCard, Button } from "@/components/ui";
 import { getMyReaderRequest, type MyReaderRequest } from "@/actions/readerActions";
+import { useAuthGuard } from "@/shared/application/hooks/useAuthGuard";
 
 /**
  * DTO (Data Transfer Object) — Mô tả cấu trúc dữ liệu trả về từ API Profile.
@@ -91,14 +92,7 @@ export default function ProfilePage() {
  resolver: zodResolver(profileSchema),
  });
 
- /**
- * Auth Guard
- */
- useEffect(() => {
- if (!isAuthenticated) {
- router.push("/login");
- }
- }, [isAuthenticated, router]);
+ useAuthGuard(isAuthenticated);
 
  /**
  * Fetch dữ liệu Profile

@@ -18,11 +18,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/routing";
 import { revealReadingSession } from "@/actions/readingActions";
-import { TAROT_CARD_COUNT, TAROT_DECK } from "@/lib/tarotData";
+import { TAROT_CARD_COUNT } from "@/lib/tarotData";
 import { Sparkles, ArrowLeft, RefreshCw, Dices } from "lucide-react";
 import AiInterpretationStream from "@/components/AiInterpretationStream";
 import AstralBackground from "@/components/layout/AstralBackground";
 import { useTranslations } from "next-intl";
+import {
+ getSessionStorageItem,
+ getSessionStorageNumber,
+} from "@/shared/infrastructure/storage/browserStorage";
 
 // Import actions và store để đồng bộ Level/EXP sau khi bốc bài
 import { getProfileAction } from "@/actions/profileActions";
@@ -147,10 +151,9 @@ export default function ReadingSessionPage() {
  };
  }, []);
 
- // Restore data từ sessionStorage
- const isBrowser = typeof window !== "undefined";
- const question = isBrowser ? sessionStorage.getItem(`question_${sessionId}`) : "";
- const cardsToDraw = isBrowser ? parseInt(sessionStorage.getItem(`cardsToDraw_${sessionId}`) || "1", 10) : 1;
+ // Restore data từ sessionStorage (SSR-safe)
+ const question = getSessionStorageItem(`question_${sessionId}`, "");
+ const cardsToDraw = getSessionStorageNumber(`cardsToDraw_${sessionId}`, 1);
  const deckIndexes = useMemo(
  () => Array.from({ length: TAROT_CARD_COUNT }, (_, index) => index),
  [],
@@ -169,13 +172,6 @@ export default function ReadingSessionPage() {
  : "clamp(56px, 6.8vw, 98px)";
  const rowOverlapMargin = `calc(var(--deck-card-w) * -${DECK_VERTICAL_OVERLAP_FACTOR * CARD_ASPECT_HEIGHT_RATIO})`;
  const pickedCardSet = useMemo(() => new Set(pickedCards), [pickedCards]);
- const tarotById = useMemo(() => {
- const map = new Map<number, (typeof TAROT_DECK)[number]>();
- TAROT_DECK.forEach((card) => {
- map.set(card.id, card);
- });
- return map;
- }, []);
 
  const getStackPlacement = (stackIndex: number) => {
  const clampedIndex = Math.min(stackIndex, 7);
@@ -368,9 +364,9 @@ export default function ReadingSessionPage() {
  {isShuffling ? (
  <div className="flex flex-col items-center justify-center animate-in fade-in zoom-in duration-1000 mt-12">
  <div className="relative w-36 h-56 perspective-1000 mb-20 mt-10 will-change-transform">
- {shufflePaths.map((path, i) => (
+ {shufflePaths.map((path) => (
  <div
- key={i}
+ key={`shuffle-card-${path.z}`}
  className="absolute inset-0 bg-gradient-to-br from-[var(--purple-accent)] via-[var(--purple-accent)] to-[color:var(--c-61-49-80-55)] rounded-xl border-2 border-[var(--purple-accent)]/30 shadow-[0_10px_30px_var(--c-168-85-247-20)] tarot-shuffling-card motion-reduce:animate-none"
  style={{
  '--tx': path.tx, '--ty': path.ty, '--r': path.r,
@@ -567,13 +563,12 @@ export default function ReadingSessionPage() {
 
   {/* Revealed Cards Area (3 cards per row) */}
   {cards.length > 0 && (
-  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4 perspective-1000 items-start">
+ <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4 perspective-1000 items-start">
  {cards.map((cardId, index) => {
  const isFlipped = flippedIndex >= index;
- const cardMeta = tarotById.get(cardId) || TAROT_DECK[0];
 
  return (
- <div key={index} className="flex flex-col items-center gap-3 w-full max-w-[180px] mx-auto">
+ <div key={`revealed-card-${cardId}`} className="flex flex-col items-center gap-3 w-full max-w-[180px] mx-auto">
  {/* 3D Flip Card Container */}
  <div className="relative w-full aspect-[14/22] preserve-3d transition-transform duration-700 ease-out cursor-pointer group tarot-card-flip"
  style={{ transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}>

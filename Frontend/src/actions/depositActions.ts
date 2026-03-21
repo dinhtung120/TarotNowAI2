@@ -10,8 +10,9 @@
  */
 'use server';
 
-import { cookies } from 'next/headers';
-import { API_BASE_URL } from '@/lib/api';
+import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
+import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { logger } from '@/shared/infrastructure/logging/logger';
 
 // ======================================================================
 // Kiểu dữ liệu cho Deposit
@@ -48,8 +49,8 @@ export interface ListDepositsResponse {
  * Lấy danh sách đơn nạp tiền (dành cho Admin).
  */
 export async function listDepositsAdminAction(page: number, pageSize: number, status?: string): Promise<ListDepositsResponse | null> {
- const cookieStore = await cookies();
- const accessToken = cookieStore.get('accessToken')?.value;
+ const accessToken = await getServerAccessToken();
+ if (!accessToken) return null;
 
  try {
  const query = new URLSearchParams({
@@ -58,23 +59,25 @@ export async function listDepositsAdminAction(page: number, pageSize: number, st
  });
  if (status) query.append('status', status);
 
- const response = await fetch(`${API_BASE_URL}/admin/deposits?${query.toString()}`, {
+ const result = await serverHttpRequest<ListDepositsResponse>(`/admin/deposits?${query.toString()}`, {
  method: 'GET',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- cache: 'no-store'
+ token: accessToken,
+ fallbackErrorMessage: 'Failed to list deposits',
  });
 
- if (!response.ok) {
- console.error('listDepositsAdminAction error', response.status);
+ if (!result.ok) {
+ logger.error('DepositAction.listDepositsAdminAction', result.error, {
+ status: result.status,
+ page,
+ pageSize,
+ statusFilter: status,
+ });
  return null;
  }
 
- return await response.json();
+ return result.data;
  } catch (error) {
- console.error('Failed to list deposits:', error);
+ logger.error('DepositAction.listDepositsAdminAction', error, { page, pageSize, statusFilter: status });
  return null;
  }
 }
@@ -92,27 +95,28 @@ export async function listDepositsAdminAction(page: number, pageSize: number, st
  * @returns Object chứa orderId + paymentUrl, hoặc null nếu lỗi
  */
 export async function createDepositOrder(amountVnd: number): Promise<CreateDepositOrderResponse | null> {
- const cookieStore = await cookies();
- const accessToken = cookieStore.get('accessToken')?.value;
+ const accessToken = await getServerAccessToken();
+ if (!accessToken) return null;
 
  try {
- const response = await fetch(`${API_BASE_URL}/deposits/orders`, {
+ const result = await serverHttpRequest<CreateDepositOrderResponse>('/deposits/orders', {
  method: 'POST',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify({ amountVnd }),
+ token: accessToken,
+ json: { amountVnd },
+ fallbackErrorMessage: 'Failed to create deposit order',
  });
 
- if (!response.ok) {
- console.error('createDepositOrder error', response.status);
+ if (!result.ok) {
+ logger.error('DepositAction.createDepositOrder', result.error, {
+ status: result.status,
+ amountVnd,
+ });
  return null;
  }
 
- return await response.json();
+ return result.data;
  } catch (error) {
- console.error('Failed to create deposit order:', error);
+ logger.error('DepositAction.createDepositOrder', error, { amountVnd });
  return null;
  }
 }

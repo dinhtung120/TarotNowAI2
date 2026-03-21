@@ -13,17 +13,15 @@
  */
 'use server';
 
-import { cookies } from 'next/headers';
-import { API_BASE_URL } from '@/lib/api';
+import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
+import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { logger } from '@/shared/infrastructure/logging/logger';
 
 // ======================================================================
 // Helper — lấy token từ HttpOnly cookie
 // ======================================================================
 
-async function getAccessToken(): Promise<string | undefined> {
- const cookieStore = await cookies();
- return cookieStore.get('accessToken')?.value;
-}
+const getAccessToken = getServerAccessToken;
 
 // ======================================================================
 // Types — phải match backend response
@@ -70,18 +68,19 @@ export async function acceptOffer(data: {
  if (!accessToken) return { success: false };
 
  try {
- const res = await fetch(`${API_BASE_URL}/escrow/accept`, {
+ const result = await serverHttpRequest<{ success: boolean; itemId?: string }>('/escrow/accept', {
  method: 'POST',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify(data),
+ token: accessToken,
+ json: data,
+ fallbackErrorMessage: 'Failed to accept offer',
  });
- if (!res.ok) return { success: false };
- return await res.json();
+ if (!result.ok) {
+ logger.error('[EscrowAction] acceptOffer', result.error, { status: result.status });
+ return { success: false };
+ }
+ return result.data;
  } catch (error) {
- console.error('[EscrowAction] acceptOffer failed:', error);
+ logger.error('[EscrowAction] acceptOffer', error);
  return { success: false };
  }
 }
@@ -94,17 +93,19 @@ export async function readerReply(itemId: string): Promise<boolean> {
  if (!accessToken) return false;
 
  try {
- const res = await fetch(`${API_BASE_URL}/escrow/reply`, {
+ const result = await serverHttpRequest<unknown>('/escrow/reply', {
  method: 'POST',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify({ itemId }),
+ token: accessToken,
+ json: { itemId },
+ fallbackErrorMessage: 'Failed to send reader reply',
  });
- return res.ok;
+ if (!result.ok) {
+ logger.error('[EscrowAction] readerReply', result.error, { status: result.status, itemId });
+ return false;
+ }
+ return true;
  } catch (error) {
- console.error('[EscrowAction] readerReply failed:', error);
+ logger.error('[EscrowAction] readerReply', error, { itemId });
  return false;
  }
 }
@@ -117,17 +118,19 @@ export async function confirmRelease(itemId: string): Promise<boolean> {
  if (!accessToken) return false;
 
  try {
- const res = await fetch(`${API_BASE_URL}/escrow/confirm`, {
+ const result = await serverHttpRequest<unknown>('/escrow/confirm', {
  method: 'POST',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify({ itemId }),
+ token: accessToken,
+ json: { itemId },
+ fallbackErrorMessage: 'Failed to confirm release',
  });
- return res.ok;
+ if (!result.ok) {
+ logger.error('[EscrowAction] confirmRelease', result.error, { status: result.status, itemId });
+ return false;
+ }
+ return true;
  } catch (error) {
- console.error('[EscrowAction] confirmRelease failed:', error);
+ logger.error('[EscrowAction] confirmRelease', error, { itemId });
  return false;
  }
 }
@@ -140,17 +143,22 @@ export async function openDispute(itemId: string, reason: string): Promise<boole
  if (!accessToken) return false;
 
  try {
- const res = await fetch(`${API_BASE_URL}/escrow/dispute`, {
+ const result = await serverHttpRequest<unknown>('/escrow/dispute', {
  method: 'POST',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify({ itemId, reason }),
+ token: accessToken,
+ json: { itemId, reason },
+ fallbackErrorMessage: 'Failed to open dispute',
  });
- return res.ok;
+ if (!result.ok) {
+ logger.error('[EscrowAction] openDispute', result.error, {
+ status: result.status,
+ itemId,
+ });
+ return false;
+ }
+ return true;
  } catch (error) {
- console.error('[EscrowAction] openDispute failed:', error);
+ logger.error('[EscrowAction] openDispute', error, { itemId });
  return false;
  }
 }
@@ -168,18 +176,19 @@ export async function addQuestion(data: {
  if (!accessToken) return { success: false };
 
  try {
- const res = await fetch(`${API_BASE_URL}/escrow/add-question`, {
+ const result = await serverHttpRequest<{ success: boolean; itemId?: string }>('/escrow/add-question', {
  method: 'POST',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify(data),
+ token: accessToken,
+ json: data,
+ fallbackErrorMessage: 'Failed to add question',
  });
- if (!res.ok) return { success: false };
- return await res.json();
+ if (!result.ok) {
+ logger.error('[EscrowAction] addQuestion', result.error, { status: result.status });
+ return { success: false };
+ }
+ return result.data;
  } catch (error) {
- console.error('[EscrowAction] addQuestion failed:', error);
+ logger.error('[EscrowAction] addQuestion', error);
  return { success: false };
  }
 }
@@ -192,18 +201,21 @@ export async function getEscrowStatus(conversationId: string): Promise<EscrowSta
  if (!accessToken) return null;
 
  try {
- const res = await fetch(`${API_BASE_URL}/escrow/${conversationId}`, {
+ const result = await serverHttpRequest<EscrowStatusResult>(`/escrow/${conversationId}`, {
  method: 'GET',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- cache: 'no-store',
+ token: accessToken,
+ fallbackErrorMessage: 'Failed to get escrow status',
  });
- if (!res.ok) return null;
- return await res.json();
+ if (!result.ok) {
+ logger.error('[EscrowAction] getEscrowStatus', result.error, {
+ status: result.status,
+ conversationId,
+ });
+ return null;
+ }
+ return result.data;
  } catch (error) {
- console.error('[EscrowAction] getEscrowStatus failed:', error);
+ logger.error('[EscrowAction] getEscrowStatus', error, { conversationId });
  return null;
  }
 }
@@ -220,17 +232,19 @@ export async function resolveDispute(data: {
  if (!accessToken) return false;
 
  try {
- const res = await fetch(`${API_BASE_URL}/admin/escrow/resolve-dispute`, {
+ const result = await serverHttpRequest<unknown>('/admin/escrow/resolve-dispute', {
  method: 'POST',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify(data),
+ token: accessToken,
+ json: data,
+ fallbackErrorMessage: 'Failed to resolve dispute',
  });
- return res.ok;
+ if (!result.ok) {
+ logger.error('[EscrowAction] resolveDispute', result.error, { status: result.status });
+ return false;
+ }
+ return true;
  } catch (error) {
- console.error('[EscrowAction] resolveDispute failed:', error);
+ logger.error('[EscrowAction] resolveDispute', error);
  return false;
  }
 }

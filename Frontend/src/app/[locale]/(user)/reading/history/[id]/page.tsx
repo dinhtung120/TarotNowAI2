@@ -19,10 +19,10 @@ import { useAuthStore } from "@/store/authStore";
 import { getHistoryDetailAction } from "@/actions/historyActions";
 import { Sparkles, ArrowLeft, Bot, Calendar, Clock, AlertCircle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
-import { TAROT_DECK } from "@/lib/tarotData";
 import { useLocale, useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui";
+import { useAuthGuard } from "@/shared/application/hooks/useAuthGuard";
 
 interface AiRequestDto {
  id: string;
@@ -64,11 +64,7 @@ export default function HistoryDetailPage() {
  const [isLoading, setIsLoading] = useState(true);
  const [error, setError] = useState<string | null>(null);
 
- useEffect(() => {
- if (!isAuthenticated) {
- router.push("/login");
- }
- }, [isAuthenticated, router]);
+ useAuthGuard(isAuthenticated);
 
  useEffect(() => {
  if (!isAuthenticated) return;
@@ -173,7 +169,7 @@ export default function HistoryDetailPage() {
  {isLoading ? (
  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 animate-pulse">
  {[1, 2, 3, 4, 5].map(i => (
- <div key={i} className="aspect-[14/22] tn-surface rounded-[2.5rem] border tn-border-soft"></div>
+ <div key={`history-detail-skeleton-${i}`} className="aspect-[14/22] tn-surface rounded-[2.5rem] border tn-border-soft"></div>
  ))}
  </div>
  ) : error ? (
@@ -193,10 +189,8 @@ export default function HistoryDetailPage() {
  {/* Cards Grid */}
  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8 lg:gap-10">
  {parsedCards.map((cardId, index) => {
- const cardMeta = TAROT_DECK.find(c => c.id === cardId) || TAROT_DECK[0];
-
  return (
- <div key={index} className="group flex flex-col items-center gap-6">
+ <div key={`history-card-${cardId}`} className="group flex flex-col items-center gap-6">
  {/* Tarot Card - Compact Vertical */}
  <div className="relative w-full aspect-[14/22] flex flex-col items-center group cursor-pointer transition-all duration-700 hover:-translate-y-2">
  {/* 
@@ -241,8 +235,8 @@ export default function HistoryDetailPage() {
  {detail.aiSummary ? (
  <div className="prose prose-purple max-w-none prose-p:leading-relaxed prose-p:tn-text-secondary prose-headings:font-serif prose-headings:text-[var(--warning)] prose-strong:text-[var(--purple-accent)] prose-strong:font-bold prose-em:tn-text-secondary prose-em:italic prose-li:tn-text-secondary text-left">
  <ReactMarkdown>{detail.aiSummary}</ReactMarkdown>
- {detail.followups && detail.followups.map((f, i) => (
- <div key={i} className="mt-6 space-y-4">
+ {detail.followups && detail.followups.map((f) => (
+ <div key={`${f.question}-${f.answer.slice(0, 24)}`} className="mt-6 space-y-4">
  <div className="flex justify-end">
  <div className="bg-[var(--warning)]/10 border border-[var(--warning)]/20 px-5 py-4 rounded-3xl rounded-tr-none max-w-[85%] text-[var(--warning)]">
  {f.question}

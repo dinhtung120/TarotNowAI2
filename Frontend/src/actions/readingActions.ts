@@ -10,9 +10,10 @@
  */
 "use server";
 
-import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
-import { API_BASE_URL } from "@/lib/api";
+import { getServerAccessToken } from "@/shared/infrastructure/auth/serverAuth";
+import { serverHttpRequest } from "@/shared/infrastructure/http/serverHttpClient";
+import { logger } from "@/shared/infrastructure/logging/logger";
 
 export interface InitReadingRequest {
  spreadType: string;
@@ -42,30 +43,30 @@ export async function initReadingSession(data: InitReadingRequest) {
  const t = await getTranslations("ApiErrors");
 
  try {
- const cookieStore = await cookies();
- const token = cookieStore.get("accessToken")?.value;
+ const token = await getServerAccessToken();
 
  if (!token) {
  return { success: false, error: t("unauthorized") };
  }
 
- const res = await fetch(`${API_BASE_URL}/reading/init`, {
+ const result = await serverHttpRequest<InitReadingResponse>("/reading/init", {
  method: "POST",
- headers: {
- "Content-Type": "application/json",
- Authorization: `Bearer ${token}`,
- },
- body: JSON.stringify(data),
+ token,
+ json: data,
+ fallbackErrorMessage: t("unknown_error"),
  });
 
- if (!res.ok) {
- const errorData = await res.json().catch(() => ({}));
- return { success: false, error: errorData.message || errorData.detail || t("unknown_error") };
+ if (!result.ok) {
+ if (result.status === 401) {
+ return { success: false, error: t("unauthorized") };
+ }
+ logger.error("ReadingAction.initReadingSession", result.error, { status: result.status });
+ return { success: false, error: result.error || t("unknown_error") };
  }
 
- const responseData: InitReadingResponse = await res.json();
- return { success: true, data: responseData };
- } catch {
+ return { success: true, data: result.data };
+ } catch (error) {
+ logger.error("ReadingAction.initReadingSession", error);
  return { success: false, error: t("network_error") };
  }
 }
@@ -77,30 +78,30 @@ export async function revealReadingSession(data: RevealReadingRequest) {
  const t = await getTranslations("ApiErrors");
 
  try {
- const cookieStore = await cookies();
- const token = cookieStore.get("accessToken")?.value;
+ const token = await getServerAccessToken();
 
  if (!token) {
  return { success: false, error: t("unauthorized") };
  }
 
- const res = await fetch(`${API_BASE_URL}/reading/reveal`, {
+ const result = await serverHttpRequest<RevealReadingResponse>("/reading/reveal", {
  method: "POST",
- headers: {
- "Content-Type": "application/json",
- Authorization: `Bearer ${token}`,
- },
- body: JSON.stringify(data),
+ token,
+ json: data,
+ fallbackErrorMessage: t("unknown_error"),
  });
 
- if (!res.ok) {
- const errorData = await res.json().catch(() => ({}));
- return { success: false, error: errorData.message || errorData.detail || t("unknown_error") };
+ if (!result.ok) {
+ if (result.status === 401) {
+ return { success: false, error: t("unauthorized") };
+ }
+ logger.error("ReadingAction.revealReadingSession", result.error, { status: result.status });
+ return { success: false, error: result.error || t("unknown_error") };
  }
 
- const responseData: RevealReadingResponse = await res.json();
- return { success: true, data: responseData };
- } catch {
+ return { success: true, data: result.data };
+ } catch (error) {
+ logger.error("ReadingAction.revealReadingSession", error);
  return { success: false, error: t("network_error") };
  }
 }

@@ -16,64 +16,79 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { API_BASE_URL } from '@/lib/api';
 import { getTranslations } from 'next-intl/server';
+import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { logger } from '@/shared/infrastructure/logging/logger';
+import type { AuthResponse } from '@/types/auth';
 
 /**
  * Các Server Actions để thực hiện API call tới Backend Auth.
  * Sử dụng 'use server' để ẩn đi logic thao tác API / che dấu các endpoint và bảo lưu cookies dễ hơn.
  */
 
+function parseRefreshTokenFromSetCookie(setCookieHeader: string | null): string | undefined {
+ if (!setCookieHeader) return undefined;
+ const firstPair = setCookieHeader.split(';')[0];
+ const [name, ...valueParts] = firstPair.split('=');
+ if (name !== 'refreshToken' || valueParts.length === 0) return undefined;
+ return valueParts.join('=');
+}
+
+async function syncRefreshTokenCookie(setCookieHeader: string | null): Promise<void> {
+ const refreshToken = parseRefreshTokenFromSetCookie(setCookieHeader);
+ if (!refreshToken) return;
+
+ const cookieStore = await cookies();
+ cookieStore.set({
+  name: 'refreshToken',
+  value: refreshToken,
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict',
+  path: '/',
+ });
+}
+
+function readAccessToken(payload: Record<string, unknown>): string | undefined {
+ const token = payload.accessToken;
+ return typeof token === 'string' ? token : undefined;
+}
+
 export async function loginAction(data: Record<string, unknown>) {
+ const tApi = await getTranslations('ApiErrors');
+
  try {
- const response = await fetch(`${API_BASE_URL}/auth/login`, {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify(data),
- });
+  const result = await serverHttpRequest<AuthResponse>('/auth/login', {
+   method: 'POST',
+   json: data,
+   fallbackErrorMessage: tApi('unknown_error'),
+  });
 
- const result = await response.json().catch(() => ({}));
+  // Chuyển set-cookie (refreshToken HttpOnly) từ BE sang cookie store của Next.js
+  await syncRefreshTokenCookie(result.headers.get('set-cookie'));
 
- // Chuyển set-cookie (refreshToken HttpOnly) từ BE sang Client
- const setCookieHeader = response.headers.get('set-cookie');
- if (setCookieHeader) {
- const cookieStore = await cookies();
- // Lấy cookie refreshToken và ghi đè vào hệ thống Cookie của trình duyệt (via Nextjs)
- const parts = setCookieHeader.split(';')[0].split('=');
- if (parts.length === 2 && parts[0] === 'refreshToken') {
- cookieStore.set({
- name: 'refreshToken',
- value: parts[1],
- httpOnly: true,
- secure: process.env.NODE_ENV === 'production',
- sameSite: 'strict',
- path: '/'
- });
- }
- }
+  if (!result.ok) {
+   return { error: result.error || tApi('unknown_error') };
+  }
 
- if (!response.ok) {
- const tApi = await getTranslations('ApiErrors');
- return { error: result.message || result.detail || tApi('unknown_error') };
- }
+  // Lưu access token để các Server Actions khác dùng được
+  const accessToken = result.data.accessToken;
+  if (accessToken) {
+   const cookieStore = await cookies();
+   cookieStore.set({
+    name: 'accessToken',
+    value: accessToken,
+    httpOnly: false, // Để client đọc được nếu cần, hoặc quản lý trong Zustand
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+   });
+  }
 
- // Cần lưu ý access token cũng phải được set cookie để các Server Action (Collection, Reading) dùng được
- if (result.accessToken) {
- const cookieStore = await cookies();
- cookieStore.set({
- name: 'accessToken',
- value: result.accessToken,
- httpOnly: false, // Để client đọc được nếu cần, hoặc quản lý trong Zustand
- secure: process.env.NODE_ENV === 'production',
- sameSite: 'lax',
- path: '/'
- });
- }
-
- return { success: true, data: result };
- } catch {
- const tApi = await getTranslations('ApiErrors');
- return { error: tApi('network_error') };
+  return { success: true, data: result.data };
+ } catch (error) {
+  logger.error('[AuthAction] loginAction', error);
+  return { error: tApi('network_error') };
  }
 }
 
@@ -81,21 +96,20 @@ export async function registerAction(data: Record<string, unknown>) {
  const tApi = await getTranslations('ApiErrors');
 
  try {
- const response = await fetch(`${API_BASE_URL}/auth/register`, {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify(data),
- });
+  const result = await serverHttpRequest<Record<string, unknown>>('/auth/register', {
+   method: 'POST',
+   json: data,
+   fallbackErrorMessage: tApi('unknown_error'),
+  });
 
- const result = await response.json();
+  if (!result.ok) {
+   return { error: result.error || tApi('unknown_error') };
+  }
 
- if (!response.ok) {
- return { error: result.message || result.detail || tApi('unknown_error') };
- }
-
- return { success: true, data: result };
- } catch {
- return { error: tApi('network_error') };
+  return { success: true, data: result.data };
+ } catch (error) {
+  logger.error('[AuthAction] registerAction', error);
+  return { error: tApi('network_error') };
  }
 }
 
@@ -103,30 +117,30 @@ export async function logoutAction() {
  const tApi = await getTranslations('ApiErrors');
 
  try {
- const cookieStore = await cookies();
- const refreshToken = cookieStore.get('refreshToken')?.value;
+  const cookieStore = await cookies();
+  const refreshToken = cookieStore.get('refreshToken')?.value;
 
- // Kể cả không có cookie ở client, gửi request để BE xóa Refresh Token DB
- const response = await fetch(`${API_BASE_URL}/auth/logout`, {
- method: 'POST',
- headers: {
- 'Content-Type': 'application/json',
- 'Cookie': `refreshToken=${refreshToken}`
- },
- });
+  // Kể cả không có cookie ở client, gửi request để BE xóa Refresh Token DB
+  const result = await serverHttpRequest<Record<string, unknown>>('/auth/logout', {
+   method: 'POST',
+   headers: {
+    Cookie: `refreshToken=${refreshToken ?? ''}`,
+   },
+   fallbackErrorMessage: tApi('unknown_error'),
+  });
 
- // Clear local cookies
- cookieStore.delete('refreshToken');
- cookieStore.delete('accessToken');
+  // Clear local cookies
+  cookieStore.delete('refreshToken');
+  cookieStore.delete('accessToken');
 
- if (!response.ok) {
- const result = await response.json();
- return { error: result.message || result.detail || tApi('unknown_error') };
- }
+  if (!result.ok) {
+   return { error: result.error || tApi('unknown_error') };
+  }
 
- return { success: true };
- } catch {
- return { error: tApi('network_error') };
+  return { success: true };
+ } catch (error) {
+  logger.error('[AuthAction] logoutAction', error);
+  return { error: tApi('network_error') };
  }
 }
 
@@ -134,21 +148,20 @@ export async function verifyEmailAction(data: { email: string; otpCode: string }
  const tApi = await getTranslations('ApiErrors');
 
  try {
- const response = await fetch(`${API_BASE_URL}/auth/verify-email`, {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify(data),
- });
+  const result = await serverHttpRequest<Record<string, unknown>>('/auth/verify-email', {
+   method: 'POST',
+   json: data,
+   fallbackErrorMessage: tApi('unknown_error'),
+  });
 
- const result = await response.json();
+  if (!result.ok) {
+   return { error: result.error || tApi('unknown_error') };
+  }
 
- if (!response.ok) {
- return { error: result.message || result.detail || tApi('unknown_error') };
- }
-
- return { success: true, data: result };
- } catch {
- return { error: tApi('network_error') };
+  return { success: true, data: result.data };
+ } catch (error) {
+  logger.error('[AuthAction] verifyEmailAction', error, { email: data.email });
+  return { error: tApi('network_error') };
  }
 }
 
@@ -156,21 +169,20 @@ export async function forgotPasswordAction(data: { email: string }) {
  const tApi = await getTranslations('ApiErrors');
 
  try {
- const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify(data),
- });
+  const result = await serverHttpRequest<Record<string, unknown>>('/auth/forgot-password', {
+   method: 'POST',
+   json: data,
+   fallbackErrorMessage: tApi('unknown_error'),
+  });
 
- const result = await response.json();
+  if (!result.ok) {
+   return { error: result.error || tApi('unknown_error') };
+  }
 
- if (!response.ok) {
- return { error: result.message || result.detail || tApi('unknown_error') };
- }
-
- return { success: true, data: result };
- } catch {
- return { error: tApi('network_error') };
+  return { success: true, data: result.data };
+ } catch (error) {
+  logger.error('[AuthAction] forgotPasswordAction', error, { email: data.email });
+  return { error: tApi('network_error') };
  }
 }
 
@@ -178,21 +190,20 @@ export async function resetPasswordAction(data: Record<string, unknown>) {
  const tApi = await getTranslations('ApiErrors');
 
  try {
- const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify(data),
- });
+  const result = await serverHttpRequest<Record<string, unknown>>('/auth/reset-password', {
+   method: 'POST',
+   json: data,
+   fallbackErrorMessage: tApi('unknown_error'),
+  });
 
- const result = await response.json();
+  if (!result.ok) {
+   return { error: result.error || tApi('unknown_error') };
+  }
 
- if (!response.ok) {
- return { error: result.message || result.detail || tApi('unknown_error') };
- }
-
- return { success: true, data: result };
- } catch {
- return { error: tApi('network_error') };
+  return { success: true, data: result.data };
+ } catch (error) {
+  logger.error('[AuthAction] resetPasswordAction', error);
+  return { error: tApi('network_error') };
  }
 }
 
@@ -204,59 +215,49 @@ export async function refreshAccessTokenAction() {
  const tApi = await getTranslations('ApiErrors');
 
  try {
- const cookieStore = await cookies();
- const refreshToken = cookieStore.get('refreshToken')?.value;
+  const cookieStore = await cookies();
+  const refreshToken = cookieStore.get('refreshToken')?.value;
 
- if (!refreshToken) {
- return { error: tApi('unauthorized') };
- }
+  if (!refreshToken) {
+   return { error: tApi('unauthorized') };
+  }
 
- const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
- method: 'POST',
- headers: { 'Content-Type': 'application/json',
- 'Cookie': `refreshToken=${refreshToken}` },
- });
+  const result = await serverHttpRequest<Record<string, unknown>>('/auth/refresh', {
+   method: 'POST',
+   headers: {
+    Cookie: `refreshToken=${refreshToken}`,
+   },
+   fallbackErrorMessage: tApi('unauthorized'),
+  });
 
- const result = await response.json();
+  if (!result.ok) {
+   // Nếu refresh thất bại (hết hạn, revoke), ta nên xóa cookies và yêu cầu login lại
+   cookieStore.delete('accessToken');
+   cookieStore.delete('refreshToken');
+   return { error: result.error || tApi('unauthorized') };
+  }
 
- if (!response.ok) {
- // Nếu refresh thất bại (hết hạn, revoke), ta nên xóa cookies và yêu cầu login lại
- cookieStore.delete('accessToken');
- cookieStore.delete('refreshToken');
- return { error: result.message || result.detail || tApi('unauthorized') };
- }
+  const accessToken = readAccessToken(result.data);
 
- // Cập nhật Access Token mới vào Cookie
- if (result.accessToken) {
- cookieStore.set({
- name: 'accessToken',
- value: result.accessToken,
- httpOnly: false,
- secure: process.env.NODE_ENV === 'production',
- sameSite: 'lax',
- path: '/'
- });
- }
+  // Cập nhật Access Token mới vào Cookie
+  if (accessToken) {
+   cookieStore.set({
+    name: 'accessToken',
+    value: accessToken,
+    httpOnly: false,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+   });
+  }
 
- // Cập nhật Refresh Token mới (nếu BE có cơ chế rotation)
- const setCookieHeader = response.headers.get('set-cookie');
- if (setCookieHeader) {
- const parts = setCookieHeader.split(';')[0].split('=');
- if (parts.length === 2 && parts[0] === 'refreshToken') {
- cookieStore.set({
- name: 'refreshToken',
- value: parts[1],
- httpOnly: true,
- secure: process.env.NODE_ENV === 'production',
- sameSite: 'strict',
- path: '/'
- });
- }
- }
+  // Cập nhật Refresh Token mới (nếu BE có cơ chế rotation)
+  await syncRefreshTokenCookie(result.headers.get('set-cookie'));
 
- return { success: true, accessToken: result.accessToken };
- } catch {
- return { error: tApi('network_error') };
+  return { success: true, accessToken };
+ } catch (error) {
+  logger.error('[AuthAction] refreshAccessTokenAction', error);
+  return { error: tApi('network_error') };
  }
 }
 
@@ -267,20 +268,19 @@ export async function resendVerificationEmailAction(email: string) {
  const tApi = await getTranslations('ApiErrors');
 
  try {
- const response = await fetch(`${API_BASE_URL}/auth/send-verification-email`, {
- method: 'POST',
- headers: { 'Content-Type': 'application/json' },
- body: JSON.stringify({ email }),
- });
+  const result = await serverHttpRequest<unknown>('/auth/send-verification-email', {
+   method: 'POST',
+   json: { email },
+   fallbackErrorMessage: tApi('unknown_error'),
+  });
 
- const result = await response.json();
+  if (!result.ok) {
+   return { error: result.error || tApi('unknown_error') };
+  }
 
- if (!response.ok) {
- return { error: result.message || result.detail || tApi('unknown_error') };
- }
-
- return { success: true };
- } catch {
- return { error: tApi('network_error') };
+  return { success: true };
+ } catch (error) {
+  logger.error('[AuthAction] resendVerificationEmailAction', error, { email });
+  return { error: tApi('network_error') };
  }
 }

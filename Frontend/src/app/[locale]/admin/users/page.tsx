@@ -17,7 +17,7 @@ import { useCallback, useEffect, useState } from "react";
 import { listUsers, updateUser, AdminUserItem, UpdateUserParams } from "@/actions/adminActions";
 import toast from 'react-hot-toast';
 import { useLocale, useTranslations } from "next-intl";
-import { Users, Search, Lock, Unlock, Gem, Coins, ChevronLeft, ChevronRight,
+import { Users, Search, Lock, Gem, Coins, ChevronLeft, ChevronRight,
 	Activity,
 	Star,
 	Mail,

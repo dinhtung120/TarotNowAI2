@@ -13,17 +13,15 @@
  */
 'use server';
 
-import { cookies } from 'next/headers';
-import { API_BASE_URL } from '@/lib/api';
+import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
+import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { logger } from '@/shared/infrastructure/logging/logger';
 
 // ======================================================================
 // Helper — lấy token từ HttpOnly cookie
 // ======================================================================
 
-async function getAccessToken(): Promise<string | undefined> {
- const cookieStore = await cookies();
- return cookieStore.get('accessToken')?.value;
-}
+const getAccessToken = getServerAccessToken;
 
 // ======================================================================
 // Types — phải match backend DTOs
@@ -98,19 +96,20 @@ export async function createConversation(
  if (!accessToken) return null;
 
  try {
- const response = await fetch(`${API_BASE_URL}/conversations`, {
+ const result = await serverHttpRequest<ConversationDto>('/conversations', {
  method: 'POST',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify({ readerId }),
+ token: accessToken,
+ json: { readerId },
+ fallbackErrorMessage: 'Failed to create conversation',
  });
 
- if (!response.ok) return null;
- return await response.json();
+ if (!result.ok) {
+ logger.error('[ChatAction] createConversation', result.error, { status: result.status, readerId });
+ return null;
+ }
+ return result.data;
  } catch (error) {
- console.error('[ChatAction] createConversation failed:', error);
+ logger.error('[ChatAction] createConversation', error, { readerId });
  return null;
  }
 }
@@ -131,24 +130,33 @@ export async function listConversations(
  if (!accessToken) return null;
 
  try {
- const url = new URL(`${API_BASE_URL}/conversations`);
- url.searchParams.append('role', role);
- url.searchParams.append('page', page.toString());
- url.searchParams.append('pageSize', pageSize.toString());
-
- const response = await fetch(url.toString(), {
- method: 'GET',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- cache: 'no-store',
+ const query = new URLSearchParams({
+ role,
+ page: page.toString(),
+ pageSize: pageSize.toString(),
  });
 
- if (!response.ok) return null;
- return await response.json();
+ const result = await serverHttpRequest<ListConversationsResult>(
+ `/conversations?${query.toString()}`,
+ {
+ method: 'GET',
+ token: accessToken,
+ fallbackErrorMessage: 'Failed to list conversations',
+ }
+ );
+
+ if (!result.ok) {
+ logger.error('[ChatAction] listConversations', result.error, {
+ status: result.status,
+ role,
+ page,
+ pageSize,
+ });
+ return null;
+ }
+ return result.data;
  } catch (error) {
- console.error('[ChatAction] listConversations failed:', error);
+ logger.error('[ChatAction] listConversations', error, { role, page, pageSize });
  return null;
  }
 }
@@ -167,23 +175,31 @@ export async function listMessages(
  if (!accessToken) return null;
 
  try {
- const url = new URL(`${API_BASE_URL}/conversations/${conversationId}/messages`);
- url.searchParams.append('page', page.toString());
- url.searchParams.append('pageSize', pageSize.toString());
-
- const response = await fetch(url.toString(), {
- method: 'GET',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- cache: 'no-store',
+ const query = new URLSearchParams({
+ page: page.toString(),
+ pageSize: pageSize.toString(),
  });
 
- if (!response.ok) return null;
- return await response.json();
+ const result = await serverHttpRequest<ListMessagesResult>(
+ `/conversations/${conversationId}/messages?${query.toString()}`,
+ {
+ method: 'GET',
+ token: accessToken,
+ fallbackErrorMessage: 'Failed to list messages',
+ }
+ );
+ if (!result.ok) {
+ logger.error('[ChatAction] listMessages', result.error, {
+ status: result.status,
+ conversationId,
+ page,
+ pageSize,
+ });
+ return null;
+ }
+ return result.data;
  } catch (error) {
- console.error('[ChatAction] listMessages failed:', error);
+ logger.error('[ChatAction] listMessages', error, { conversationId, page, pageSize });
  return null;
  }
 }
@@ -201,18 +217,27 @@ export async function sendReport(data: {
  if (!accessToken) return false;
 
  try {
- const response = await fetch(`${API_BASE_URL}/reports`, {
+ const result = await serverHttpRequest<unknown>('/reports', {
  method: 'POST',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify(data),
+ token: accessToken,
+ json: data,
+ fallbackErrorMessage: 'Failed to send report',
  });
 
- return response.ok;
+ if (!result.ok) {
+ logger.error('[ChatAction] sendReport', result.error, {
+ status: result.status,
+ targetType: data.targetType,
+ targetId: data.targetId,
+ });
+ return false;
+ }
+ return true;
  } catch (error) {
- console.error('[ChatAction] sendReport failed:', error);
+ logger.error('[ChatAction] sendReport', error, {
+ targetType: data.targetType,
+ targetId: data.targetId,
+ });
  return false;
  }
 }

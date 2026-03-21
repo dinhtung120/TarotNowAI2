@@ -6,6 +6,7 @@ import {
 	Send, Loader2, ArrowLeft, Flag, MessageCircle, Coins, Check, X
 } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import Image from 'next/image';
 import { useRouter } from '@/i18n/routing';
 import type { HubConnection } from '@microsoft/signalr';
 import ReportModal from '@/components/chat/ReportModal';
@@ -13,7 +14,9 @@ import EscrowPanel from '@/components/chat/EscrowPanel';
 import PaymentOfferModal from '@/components/chat/PaymentOfferModal';
 import { GlassCard } from '@/components/ui';
 import { useLocale, useTranslations } from 'next-intl';
+import toast from 'react-hot-toast';
 import { acceptOffer } from '@/actions/escrowActions';
+import { API_ORIGIN } from '@/lib/api';
 
 /*
  * ===================================================================
@@ -93,7 +96,7 @@ export default function ChatPage() {
 
 			// 2. Tạo SignalR connection
 			const signalR = await import('@microsoft/signalr');
-			const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:5037';
+			const apiUrl = API_ORIGIN;
 			hubConnection = new signalR.HubConnectionBuilder()
 				.withUrl(`${apiUrl}/api/v1/chat`, {
 					accessTokenFactory: () => token,
@@ -191,7 +194,7 @@ export default function ChatPage() {
 				hubConnection.stop();
 			}
 		};
-	}, [conversationId, scrollToBottom]);
+	}, [conversationId, scrollToBottom, t]);
 
 	// ======================================================================
 	// Gửi tin nhắn
@@ -248,11 +251,11 @@ export default function ChatPage() {
 				
 				// Optional: Tự update UI hoặc refetch 
 			} else {
-				alert('Không đủ số dư Kim Cương hoặc đã có lỗi xảy ra.');
+				toast.error('Không đủ số dư Kim Cương hoặc đã có lỗi xảy ra.');
 			}
 		} catch (error) {
 			console.error('[Chat] Chấp nhận Payment Offer thất bại:', error);
-			alert('Không thể thực hiện thanh toán.');
+			toast.error('Không thể thực hiện thanh toán.');
 		} finally {
 			setProcessingOfferId(null);
 		}
@@ -420,7 +423,14 @@ export default function ChatPage() {
 								<div className="flex items-center gap-2 sm:gap-3">
 									{/* Avatar nhỏ nhắn trên Header */}
 									{otherAvatar ? (
-										<img src={otherAvatar} alt={otherName} className="w-8 h-8 rounded-full object-cover border border-white/10" />
+										<Image
+											src={otherAvatar}
+											alt={otherName}
+											width={32}
+											height={32}
+											unoptimized
+											className="w-8 h-8 rounded-full object-cover border border-white/10"
+										/>
 									) : (
 										<div className="w-8 h-8 rounded-full bg-[var(--purple-accent)]/20 border border-[var(--purple-accent)]/30 flex items-center justify-center text-xs font-black text-[var(--purple-accent)]">
 											{otherName ? otherName.charAt(0).toUpperCase() : '?'}

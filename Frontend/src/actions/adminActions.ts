@@ -3,7 +3,7 @@
  * FILE: adminActions.ts
  * ===================================================================
  * MỤC ĐÍCH:
- *   Định nghĩa các Server Actions (chạy hoàn toàn trên máy chủ Node.js của Next.js) 
+ *   Định nghĩa các Server Actions (chạy hoàn toàn trên máy chủ Node.js của Next.js)
  *   để giao tiếp với Backend API dành riêng cho nghiệp vụ Quản trị (Admin).
  *
  * BẢO MẬT & KIẾN TRÚC:
@@ -14,8 +14,9 @@
  */
 'use server';
 
-import { cookies } from 'next/headers';
-import { API_BASE_URL } from '@/lib/api';
+import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
+import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { logger } from '@/shared/infrastructure/logging/logger';
 
 // ======================================================================
 // Kiểu dữ liệu cho Admin
@@ -24,13 +25,7 @@ import { API_BASE_URL } from '@/lib/api';
 // Helper Functions
 // ======================================================================
 
-/**
- * Hàm lấy Access Token từ cookie phía Server.
- */
-async function getAccessToken(): Promise<string | undefined> {
- const cookieStore = await cookies();
- return cookieStore.get('accessToken')?.value;
-}
+const getAccessToken = getServerAccessToken;
 
 // ======================================================================
 
@@ -103,35 +98,39 @@ export async function listUsers(page = 1, pageSize = 20, searchTerm = ''): Promi
  if (!accessToken) return null;
 
  try {
- const url = new URL(`${API_BASE_URL}/admin/users`);
- url.searchParams.append('page', page.toString());
- url.searchParams.append('pageSize', pageSize.toString());
- if (searchTerm) {
- url.searchParams.append('searchTerm', searchTerm);
- }
+  const query = new URLSearchParams({
+   page: page.toString(),
+   pageSize: pageSize.toString(),
+  });
+  if (searchTerm) query.append('searchTerm', searchTerm);
 
- const response = await fetch(url.toString(), {
- method: 'GET',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- cache: 'no-store',
- });
+  const result = await serverHttpRequest<{ users?: AdminUserItem[]; Users?: AdminUserItem[]; totalCount?: number; TotalCount?: number }>(
+   `/admin/users?${query.toString()}`,
+   {
+    method: 'GET',
+    token: accessToken,
+    fallbackErrorMessage: 'Failed to list users',
+   }
+  );
 
- if (!response.ok) {
- console.error(`[AdminAction] listUsers error: ${response.status} - ${await response.text()}`);
- return null;
- }
+  if (!result.ok) {
+   logger.error('[AdminAction] listUsers', result.error, {
+    status: result.status,
+    page,
+    pageSize,
+    searchTerm,
+   });
+   return null;
+  }
 
- const data = await response.json();
- return {
- users: data.users || data.Users || [],
- totalCount: data.totalCount ?? data.TotalCount ?? 0
- };
+  const data = result.data;
+  return {
+   users: data.users || data.Users || [],
+   totalCount: data.totalCount ?? data.TotalCount ?? 0,
+  };
  } catch (error) {
- console.error('[AdminAction] Failed to list users:', error);
- return null;
+  logger.error('[AdminAction] listUsers', error, { page, pageSize, searchTerm });
+  return null;
  }
 }
 
@@ -147,27 +146,30 @@ export async function toggleUserLock(userId: string, isLocked: boolean): Promise
  if (!accessToken) return false;
 
  try {
- const response = await fetch(`${API_BASE_URL}/admin/users/lock`, {
- method: 'PATCH',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify({
- userId,
- UserId: userId,
- isLocked,
- IsLocked: isLocked
- }),
- });
+  const result = await serverHttpRequest<unknown>('/admin/users/lock', {
+   method: 'PATCH',
+   token: accessToken,
+   json: {
+    userId,
+    UserId: userId,
+    isLocked,
+    IsLocked: isLocked,
+   },
+   fallbackErrorMessage: 'Failed to toggle user lock',
+  });
 
- if (!response.ok) {
- console.error(`[AdminAction] toggleUserLock error: ${response.status} - ${await response.text()}`);
- }
- return response.ok;
+  if (!result.ok) {
+   logger.error('[AdminAction] toggleUserLock', result.error, {
+    status: result.status,
+    userId,
+    isLocked,
+   });
+   return false;
+  }
+  return true;
  } catch (error) {
- console.error('[AdminAction] Failed to toggle user lock:', error);
- return false;
+  logger.error('[AdminAction] toggleUserLock', error, { userId, isLocked });
+  return false;
  }
 }
 
@@ -180,35 +182,39 @@ export async function listDeposits(page = 1, pageSize = 20, status = ''): Promis
  if (!accessToken) return null;
 
  try {
- const url = new URL(`${API_BASE_URL}/admin/deposits`);
- url.searchParams.append('page', page.toString());
- url.searchParams.append('pageSize', pageSize.toString());
- if (status) {
- url.searchParams.append('status', status);
- }
+  const query = new URLSearchParams({
+   page: page.toString(),
+   pageSize: pageSize.toString(),
+  });
+  if (status) query.append('status', status);
 
- const response = await fetch(url.toString(), {
- method: 'GET',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- cache: 'no-store',
- });
+  const result = await serverHttpRequest<{ deposits?: AdminDepositOrder[]; Deposits?: AdminDepositOrder[]; totalCount?: number; TotalCount?: number }>(
+   `/admin/deposits?${query.toString()}`,
+   {
+    method: 'GET',
+    token: accessToken,
+    fallbackErrorMessage: 'Failed to list deposits',
+   }
+  );
 
- if (!response.ok) {
- console.error(`[AdminAction] listDeposits error: ${response.status} - ${await response.text()}`);
- return null;
- }
+  if (!result.ok) {
+   logger.error('[AdminAction] listDeposits', result.error, {
+    status: result.status,
+    page,
+    pageSize,
+    statusFilter: status,
+   });
+   return null;
+  }
 
- const data = await response.json();
- return {
- deposits: data.deposits || data.Deposits || [],
- totalCount: data.totalCount ?? data.TotalCount ?? 0
- };
+  const data = result.data;
+  return {
+   deposits: data.deposits || data.Deposits || [],
+   totalCount: data.totalCount ?? data.TotalCount ?? 0,
+  };
  } catch (error) {
- console.error('[AdminAction] Failed to list deposits:', error);
- return null;
+  logger.error('[AdminAction] listDeposits', error, { page, pageSize, statusFilter: status });
+  return null;
  }
 }
 
@@ -222,34 +228,31 @@ export async function getWalletMismatches(): Promise<MismatchRecord[] | null> {
  if (!accessToken) return null;
 
  try {
- const response = await fetch(`${API_BASE_URL}/admin/reconciliation/wallet`, {
- method: 'GET',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- cache: 'no-store',
- });
+  const result = await serverHttpRequest<unknown>('/admin/reconciliation/wallet', {
+   method: 'GET',
+   token: accessToken,
+   fallbackErrorMessage: 'Failed to get wallet mismatches',
+  });
 
- if (!response.ok) {
- console.error(`[AdminAction] getWalletMismatches error: ${response.status} - ${await response.text()}`);
- return null;
- }
+  if (!result.ok) {
+   logger.error('[AdminAction] getWalletMismatches', result.error, { status: result.status });
+   return null;
+  }
 
- const data = await response.json();
- // Safe Mapping for Reconciliation
- if (Array.isArray(data)) {
- return data.map((d: Record<string, unknown>) => ({
- userId: String(d.userId ?? d.UserId ?? ''),
- userBalance: Number(d.userBalance ?? d.UserBalance ?? 0),
- ledgerBalance: Number(d.ledgerBalance ?? d.LedgerBalance ?? 0),
- difference: Number(d.difference ?? d.Difference ?? 0)
- }));
- }
- return data;
+  const data = result.data;
+  // Safe Mapping for Reconciliation
+  if (Array.isArray(data)) {
+   return data.map((d: Record<string, unknown>) => ({
+    userId: String(d.userId ?? d.UserId ?? ''),
+    userBalance: Number(d.userBalance ?? d.UserBalance ?? 0),
+    ledgerBalance: Number(d.ledgerBalance ?? d.LedgerBalance ?? 0),
+    difference: Number(d.difference ?? d.Difference ?? 0),
+   }));
+  }
+  return data as MismatchRecord[];
  } catch (error) {
- console.error('[AdminAction] Failed to get wallet mismatches:', error);
- return null;
+  logger.error('[AdminAction] getWalletMismatches', error);
+  return null;
  }
 }
 
@@ -262,31 +265,35 @@ export async function addUserBalance(userId: string, currency: string, amount: n
  if (!accessToken) return false;
 
  try {
- const response = await fetch(`${API_BASE_URL}/admin/users/add-balance`, {
- method: 'POST',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify({
- userId,
- UserId: userId,
- currency,
- Currency: currency,
- amount,
- Amount: amount,
- reason,
- Reason: reason
- }),
- });
+  const result = await serverHttpRequest<unknown>('/admin/users/add-balance', {
+   method: 'POST',
+   token: accessToken,
+   json: {
+    userId,
+    UserId: userId,
+    currency,
+    Currency: currency,
+    amount,
+    Amount: amount,
+    reason,
+    Reason: reason,
+   },
+   fallbackErrorMessage: 'Failed to add user balance',
+  });
 
- if (!response.ok) {
- console.error(`[AdminAction] addUserBalance error: ${response.status} - ${await response.text()}`);
- }
- return response.ok;
+  if (!result.ok) {
+   logger.error('[AdminAction] addUserBalance', result.error, {
+    status: result.status,
+    userId,
+    currency,
+    amount,
+   });
+   return false;
+  }
+  return true;
  } catch (error) {
- console.error('[AdminAction] Failed to add user balance:', error);
- return false;
+  logger.error('[AdminAction] addUserBalance', error, { userId, currency, amount });
+  return false;
  }
 }
 
@@ -296,43 +303,44 @@ export async function addUserBalance(userId: string, currency: string, amount: n
  */
 export async function processDeposit(depositId: string, action: 'approve' | 'reject', transactionId?: string): Promise<boolean> {
  try {
- const accessToken = await getAccessToken();
- if (!accessToken) {
- return false;
- }
+  const accessToken = await getAccessToken();
+  if (!accessToken) {
+   return false;
+  }
 
- const normalizedTransactionId = transactionId?.trim();
- const bodyPayload: Record<string, string> = {
- depositId: depositId,
- DepositId: depositId,
- action: action,
- Action: action
- };
+  const normalizedTransactionId = transactionId?.trim();
+  const bodyPayload: Record<string, string> = {
+   depositId: depositId,
+   DepositId: depositId,
+   action: action,
+   Action: action,
+  };
 
- if (normalizedTransactionId) {
- bodyPayload.transactionId = normalizedTransactionId;
- bodyPayload.TransactionId = normalizedTransactionId;
- }
+  if (normalizedTransactionId) {
+   bodyPayload.transactionId = normalizedTransactionId;
+   bodyPayload.TransactionId = normalizedTransactionId;
+  }
 
- const response = await fetch(`${API_BASE_URL}/admin/deposits/process`, {
- method: 'PATCH',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify(bodyPayload),
- });
+  const result = await serverHttpRequest<unknown>('/admin/deposits/process', {
+   method: 'PATCH',
+   token: accessToken,
+   json: bodyPayload,
+   fallbackErrorMessage: 'Failed to process deposit',
+  });
 
- const responseText = await response.text();
- if (!response.ok) {
- console.error(`[AdminAction] processDeposit error: ${response.status} - ${responseText}`);
- return false;
- }
+  if (!result.ok) {
+   logger.error('[AdminAction] processDeposit', result.error, {
+    status: result.status,
+    depositId,
+    action,
+   });
+   return false;
+  }
 
- return true;
+  return true;
  } catch (error) {
- console.error('[AdminAction] processDeposit failed:', error);
- return false;
+  logger.error('[AdminAction] processDeposit', error, { depositId, action });
+  return false;
  }
 }
 
@@ -376,41 +384,47 @@ export async function listReaderRequests(
  if (!accessToken) return null;
 
  try {
- const url = new URL(`${API_BASE_URL}/admin/reader-requests`);
- url.searchParams.append('page', page.toString());
- url.searchParams.append('pageSize', pageSize.toString());
- if (statusFilter) url.searchParams.append('statusFilter', statusFilter);
+  const query = new URLSearchParams({
+   page: page.toString(),
+   pageSize: pageSize.toString(),
+  });
+  if (statusFilter) query.append('statusFilter', statusFilter);
 
- const response = await fetch(url.toString(), {
- method: 'GET',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- cache: 'no-store',
- });
+  const result = await serverHttpRequest<{ requests?: AdminReaderRequest[]; Requests?: AdminReaderRequest[]; totalCount?: number; TotalCount?: number }>(
+   `/admin/reader-requests?${query.toString()}`,
+   {
+    method: 'GET',
+    token: accessToken,
+    fallbackErrorMessage: 'Failed to list reader requests',
+   }
+  );
 
- if (!response.ok) {
- console.error(`[AdminAction] listReaderRequests error: ${response.status}`);
- return null;
- }
+  if (!result.ok) {
+   logger.error('[AdminAction] listReaderRequests', result.error, {
+    status: result.status,
+    page,
+    pageSize,
+    statusFilter,
+   });
+   return null;
+  }
 
- const data = await response.json();
- return {
- requests: data.requests || data.Requests || [],
- totalCount: data.totalCount ?? data.TotalCount ?? 0,
- };
+  const data = result.data;
+  return {
+   requests: data.requests || data.Requests || [],
+   totalCount: data.totalCount ?? data.TotalCount ?? 0,
+  };
  } catch (error) {
- console.error('[AdminAction] listReaderRequests failed:', error);
- return null;
+  logger.error('[AdminAction] listReaderRequests', error, { page, pageSize, statusFilter });
+  return null;
  }
 }
 
 export interface UpdateUserParams {
-	role: string;
-	status: string;
-	diamondBalance: number;
-	goldBalance: number;
+ role: string;
+ status: string;
+ diamondBalance: number;
+ goldBalance: number;
 }
 
 /**
@@ -418,27 +432,26 @@ export interface UpdateUserParams {
  * Backend API: PUT /api/v1/Admin/users/{id}
  */
 export async function updateUser(userId: string, data: UpdateUserParams): Promise<boolean> {
-	const accessToken = await getAccessToken();
-	if (!accessToken) return false;
+ const accessToken = await getAccessToken();
+ if (!accessToken) return false;
 
-	try {
-		const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
-			method: 'PUT',
-			headers: {
-				'Authorization': `Bearer ${accessToken}`,
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify(data),
-		});
+ try {
+  const result = await serverHttpRequest<unknown>(`/admin/users/${userId}`, {
+   method: 'PUT',
+   token: accessToken,
+   json: data,
+   fallbackErrorMessage: 'Failed to update user',
+  });
 
-		if (!response.ok) {
-			console.error(`[AdminAction] updateUser error: ${response.status} - ${await response.text()}`);
-		}
-		return response.ok;
-	} catch (error) {
-		console.error('[AdminAction] Failed to update user:', error);
-		return false;
-	}
+  if (!result.ok) {
+   logger.error('[AdminAction] updateUser', result.error, { status: result.status, userId });
+   return false;
+  }
+  return true;
+ } catch (error) {
+  logger.error('[AdminAction] updateUser', error, { userId });
+  return false;
+ }
 }
 
 /**
@@ -458,28 +471,31 @@ export async function processReaderRequest(
  if (!accessToken) return false;
 
  try {
- const response = await fetch(`${API_BASE_URL}/admin/reader-requests/process`, {
- method: 'PATCH',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify({
- requestId,
- RequestId: requestId,
- action,
- Action: action,
- adminNote: adminNote || '',
- AdminNote: adminNote || '',
- }),
- });
+  const result = await serverHttpRequest<unknown>('/admin/reader-requests/process', {
+   method: 'PATCH',
+   token: accessToken,
+   json: {
+    requestId,
+    RequestId: requestId,
+    action,
+    Action: action,
+    adminNote: adminNote || '',
+    AdminNote: adminNote || '',
+   },
+   fallbackErrorMessage: 'Failed to process reader request',
+  });
 
- if (!response.ok) {
- console.error(`[AdminAction] processReaderRequest error: ${response.status}`);
- }
- return response.ok;
+  if (!result.ok) {
+   logger.error('[AdminAction] processReaderRequest', result.error, {
+    status: result.status,
+    requestId,
+    action,
+   });
+   return false;
+  }
+  return true;
  } catch (error) {
- console.error('[AdminAction] processReaderRequest failed:', error);
- return false;
+  logger.error('[AdminAction] processReaderRequest', error, { requestId, action });
+  return false;
  }
 }

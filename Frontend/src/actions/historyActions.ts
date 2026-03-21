@@ -19,9 +19,28 @@
  * và quản lý token xác thực an toàn phía server.
  */
 
-import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
-import { API_BASE_URL } from '@/lib/api';
+import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
+import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { logger } from '@/shared/infrastructure/logging/logger';
+
+interface AdminHistorySessionItem {
+ id: string;
+ userId: string;
+ username: string;
+ spreadType: string;
+ question: string | null;
+ isCompleted: boolean;
+ createdAt: string;
+}
+
+interface AdminHistoryPaginatedResponse {
+ page: number;
+ pageSize: number;
+ totalPages: number;
+ totalCount: number;
+ items: AdminHistorySessionItem[];
+}
 
 /**
  * Hàm helper lấy Access Token từ cookie.
@@ -29,10 +48,7 @@ import { API_BASE_URL } from '@/lib/api';
  * - Server Actions chạy trên server, không có access vào Zustand (client-side store).
  * - Token đã được lưu vào cookie khi login → đọc từ cookie an toàn hơn.
  */
-async function getAccessToken(): Promise<string | undefined> {
- const cookieStore = await cookies();
- return cookieStore.get('accessToken')?.value;
-}
+const getAccessToken = getServerAccessToken;
 
 /**
  * Lấy danh sách phiên đọc bài (Reading Sessions) — có phân trang và bộ lọc.
@@ -59,27 +75,29 @@ export async function getHistorySessionsAction(
  if (spreadType && spreadType !== 'all') query += `&spreadType=${encodeURIComponent(spreadType)}`;
  if (date) query += `&date=${encodeURIComponent(date)}`;
 
- const response = await fetch(
- `${API_BASE_URL}/history/sessions?${query}`,
- {
- headers: {
- 'Content-Type': 'application/json',
- 'Authorization': `Bearer ${token}`
- },
- }
- );
+ const result = await serverHttpRequest<unknown>(`/history/sessions?${query}`, {
+ method: 'GET',
+ token,
+ fallbackErrorMessage: tApi('unknown_error'),
+ });
 
- if (!response.ok) {
- if (response.status === 401) {
+ if (!result.ok) {
+ if (result.status === 401) {
  return { error: 'unauthorized' };
  }
- const result = await response.json().catch(() => ({}));
- return { error: result.message || result.detail || tApi('unknown_error') };
+ logger.error('HistoryAction.getHistorySessionsAction', result.error, {
+ status: result.status,
+ page,
+ pageSize,
+ spreadType,
+ date,
+ });
+ return { error: result.error || tApi('unknown_error') };
  }
 
- const data = await response.json();
- return { success: true, data };
- } catch {
+ return { success: true, data: result.data };
+ } catch (error) {
+ logger.error('HistoryAction.getHistorySessionsAction', error, { page, pageSize, spreadType, date });
  return { error: tApi('network_error') };
  }
 }
@@ -99,30 +117,29 @@ export async function getHistoryDetailAction(sessionId: string) {
  return { error: 'unauthorized' };
  }
 
- const response = await fetch(
- `${API_BASE_URL}/history/sessions/${sessionId}`,
- {
- headers: {
- 'Content-Type': 'application/json',
- 'Authorization': `Bearer ${token}`
- },
- }
- );
+ const result = await serverHttpRequest<unknown>(`/history/sessions/${sessionId}`, {
+ method: 'GET',
+ token,
+ fallbackErrorMessage: tApi('unknown_error'),
+ });
 
- if (!response.ok) {
- if (response.status === 401) {
+ if (!result.ok) {
+ if (result.status === 401) {
  return { error: 'unauthorized' };
  }
- if (response.status === 404) {
+ if (result.status === 404) {
  return { error: tApi('not_found') };
  }
- const result = await response.json().catch(() => ({}));
- return { error: result.message || result.detail || tApi('unknown_error') };
+ logger.error('HistoryAction.getHistoryDetailAction', result.error, {
+ status: result.status,
+ sessionId,
+ });
+ return { error: result.error || tApi('unknown_error') };
  }
 
- const data = await response.json();
- return { success: true, data };
- } catch {
+ return { success: true, data: result.data };
+ } catch (error) {
+ logger.error('HistoryAction.getHistoryDetailAction', error, { sessionId });
  return { error: tApi('network_error') };
  }
 }
@@ -151,34 +168,35 @@ export async function getAllHistorySessionsAdminAction(params: {
  if (params.startDate) query += `&startDate=${encodeURIComponent(params.startDate)}`;
  if (params.endDate) query += `&endDate=${encodeURIComponent(params.endDate)}`;
 
- const response = await fetch(
- `${API_BASE_URL}/History/admin/all-sessions?${query}`,
- {
- headers: {
- 'Content-Type': 'application/json',
- 'Authorization': `Bearer ${token}`
- },
- }
- );
+ const result = await serverHttpRequest<Record<string, unknown>>(`/History/admin/all-sessions?${query}`, {
+ method: 'GET',
+ token,
+ fallbackErrorMessage: tApi('unknown_error'),
+ });
 
- if (!response.ok) {
- if (response.status === 401) return { error: 'unauthorized' };
- if (response.status === 403) return { error: tApi('forbidden') };
- const result = await response.json().catch(() => ({}));
- return { error: result.message || result.detail || tApi('unknown_error') };
+ if (!result.ok) {
+ if (result.status === 401) return { error: 'unauthorized' };
+ if (result.status === 403) return { error: tApi('forbidden') };
+ logger.error('HistoryAction.getAllHistorySessionsAdminAction', result.error, {
+ status: result.status,
+ params,
+ });
+ return { error: result.error || tApi('unknown_error') };
  }
 
- const data = await response.json();
+ const data = result.data as Record<string, unknown>;
  // Safe Mapping for Admin History
- const safeData = {
+ const safeData: AdminHistoryPaginatedResponse = {
  ...data,
- items: data.items || data.Items || [],
- totalCount: data.totalCount ?? data.TotalCount ?? 0,
- totalPages: data.totalPages ?? data.TotalPages ?? 0
+ items: (data.items as AdminHistorySessionItem[] | undefined) || (data.Items as AdminHistorySessionItem[] | undefined) || [],
+ totalCount: (data.totalCount as number | undefined) ?? (data.TotalCount as number | undefined) ?? 0,
+ totalPages: (data.totalPages as number | undefined) ?? (data.TotalPages as number | undefined) ?? 0,
+ page: (data.page as number | undefined) ?? (data.Page as number | undefined) ?? params.page,
+ pageSize: (data.pageSize as number | undefined) ?? (data.PageSize as number | undefined) ?? params.pageSize,
  };
  return { success: true, data: safeData };
  } catch (err) {
- console.error("Admin History Action Error:", err);
+ logger.error('HistoryAction.getAllHistorySessionsAdminAction', err, { params });
  return { error: tApi('network_error') };
  }
 }

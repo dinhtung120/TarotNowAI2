@@ -10,14 +10,12 @@
  */
 'use server';
 
-import { cookies } from 'next/headers';
-import { API_BASE_URL } from '@/lib/api';
 import { getTranslations } from 'next-intl/server';
+import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
+import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { logger } from '@/shared/infrastructure/logging/logger';
 
-async function getAccessToken(): Promise<string | undefined> {
- const cookieStore = await cookies();
- return cookieStore.get('accessToken')?.value;
-}
+const getAccessToken = getServerAccessToken;
 
 // ======================================================================
 // Types
@@ -58,21 +56,22 @@ export async function createWithdrawal(data: {
  if (!accessToken) return { success: false, error: tApi("unauthorized") };
 
  try {
- const res = await fetch(`${API_BASE_URL}/withdrawal/create`, {
+ const result = await serverHttpRequest<{ success: boolean; requestId?: string; error?: string }>(
+ '/withdrawal/create',
+ {
  method: 'POST',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify(data),
- });
- if (!res.ok) {
- const err = await res.json().catch(() => ({}));
- return { success: false, error: err.detail || err.msg || tApi("unknown_error") };
+ token: accessToken,
+ json: data,
+ fallbackErrorMessage: tApi("unknown_error"),
  }
- return await res.json();
+ );
+ if (!result.ok) {
+ logger.error('[WithdrawalAction] createWithdrawal', result.error, { status: result.status });
+ return { success: false, error: result.error || tApi("unknown_error") };
+ }
+ return result.data;
  } catch (error) {
- console.error('[WithdrawalAction] createWithdrawal failed:', error);
+ logger.error('[WithdrawalAction] createWithdrawal', error);
  return { success: false, error: tApi("network_error") };
  }
 }
@@ -85,15 +84,25 @@ export async function listMyWithdrawals(page = 1, pageSize = 20): Promise<Withdr
  if (!accessToken) return [];
 
  try {
- const res = await fetch(`${API_BASE_URL}/withdrawal/my?page=${page}&pageSize=${pageSize}`, {
+ const result = await serverHttpRequest<WithdrawalResult[]>(
+ `/withdrawal/my?page=${page}&pageSize=${pageSize}`,
+ {
  method: 'GET',
- headers: { 'Authorization': `Bearer ${accessToken}` },
- cache: 'no-store',
+ token: accessToken,
+ fallbackErrorMessage: 'Failed to list my withdrawals',
+ }
+ );
+ if (!result.ok) {
+ logger.error('[WithdrawalAction] listMyWithdrawals', result.error, {
+ status: result.status,
+ page,
+ pageSize,
  });
- if (!res.ok) return [];
- return await res.json();
+ return [];
+ }
+ return result.data;
  } catch (error) {
- console.error('[WithdrawalAction] listMyWithdrawals failed:', error);
+ logger.error('[WithdrawalAction] listMyWithdrawals', error, { page, pageSize });
  return [];
  }
 }
@@ -106,15 +115,25 @@ export async function listWithdrawalQueue(page = 1, pageSize = 20): Promise<With
  if (!accessToken) return [];
 
  try {
- const res = await fetch(`${API_BASE_URL}/admin/withdrawals/queue?page=${page}&pageSize=${pageSize}`, {
+ const result = await serverHttpRequest<WithdrawalResult[]>(
+ `/admin/withdrawals/queue?page=${page}&pageSize=${pageSize}`,
+ {
  method: 'GET',
- headers: { 'Authorization': `Bearer ${accessToken}` },
- cache: 'no-store',
+ token: accessToken,
+ fallbackErrorMessage: 'Failed to list withdrawal queue',
+ }
+ );
+ if (!result.ok) {
+ logger.error('[WithdrawalAction] listWithdrawalQueue', result.error, {
+ status: result.status,
+ page,
+ pageSize,
  });
- if (!res.ok) return [];
- return await res.json();
+ return [];
+ }
+ return result.data;
  } catch (error) {
- console.error('[WithdrawalAction] listQueue failed:', error);
+ logger.error('[WithdrawalAction] listWithdrawalQueue', error, { page, pageSize });
  return [];
  }
 }
@@ -133,21 +152,26 @@ export async function processWithdrawal(data: {
  if (!accessToken) return { success: false, error: tApi("unauthorized") };
 
  try {
- const res = await fetch(`${API_BASE_URL}/admin/withdrawals/process`, {
+ const result = await serverHttpRequest<unknown>('/admin/withdrawals/process', {
  method: 'POST',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify(data),
+ token: accessToken,
+ json: data,
+ fallbackErrorMessage: tApi("unknown_error"),
  });
- if (!res.ok) {
- const err = await res.json().catch(() => ({}));
- return { success: false, error: err.detail || err.msg || tApi("unknown_error") };
+ if (!result.ok) {
+ logger.error('[WithdrawalAction] processWithdrawal', result.error, {
+ status: result.status,
+ withdrawalId: data.withdrawalId,
+ action: data.action,
+ });
+ return { success: false, error: result.error || tApi("unknown_error") };
  }
  return { success: true };
  } catch (error) {
- console.error('[WithdrawalAction] processWithdrawal failed:', error);
+ logger.error('[WithdrawalAction] processWithdrawal', error, {
+ withdrawalId: data.withdrawalId,
+ action: data.action,
+ });
  return { success: false, error: tApi("network_error") };
  }
 }

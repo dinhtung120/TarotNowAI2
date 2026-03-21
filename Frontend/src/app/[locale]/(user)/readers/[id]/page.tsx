@@ -15,7 +15,7 @@
 import React, { useEffect, useState } from 'react';
 import { getReaderProfile, type ReaderProfile } from '@/actions/readerActions';
 import {
- Star, Gem, MessageCircle, Loader2, Sparkles, ArrowLeft, Clock, User, Activity
+ Star, Gem, MessageCircle, Loader2, Sparkles, ArrowLeft, Clock, User
 } from 'lucide-react';
 import { useRouter } from '@/i18n/routing';
 import { useParams } from 'next/navigation';

@@ -9,8 +9,9 @@
  */
 'use server';
 
-import { cookies } from 'next/headers';
-import { API_BASE_URL } from '@/lib/api';
+import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
+import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { logger } from '@/shared/infrastructure/logging/logger';
 
 // ======================================================================
 // Kiểu dữ liệu cho Promotions
@@ -38,27 +39,26 @@ export interface DepositPromotion {
  * * @param onlyActive - true = chỉ lấy promo đang hoạt động
  */
 export async function listPromotions(onlyActive = false): Promise<DepositPromotion[] | null> {
- const cookieStore = await cookies();
- const accessToken = cookieStore.get('accessToken')?.value;
+ const accessToken = await getServerAccessToken();
 
  try {
- const response = await fetch(`${API_BASE_URL}/admin/promotions?onlyActive=${onlyActive}`, {
+ const result = await serverHttpRequest<DepositPromotion[]>(`/admin/promotions?onlyActive=${onlyActive}`, {
  method: 'GET',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- cache: 'no-store',
+ token: accessToken,
+ fallbackErrorMessage: 'Failed to list promotions',
  });
 
- if (!response.ok) {
- console.error('listPromotions error', response.status);
+ if (!result.ok) {
+ logger.error('PromotionAction.listPromotions', result.error, {
+ status: result.status,
+ onlyActive,
+ });
  return null;
  }
 
- return await response.json();
+ return result.data;
  } catch (error) {
- console.error('Failed to list promotions:', error);
+ logger.error('PromotionAction.listPromotions', error, { onlyActive });
  return null;
  }
 }
@@ -69,22 +69,28 @@ export async function listPromotions(onlyActive = false): Promise<DepositPromoti
  * @param bonusDiamond - Số Diamond thưởng thêm
  */
 export async function createPromotion(minAmountVnd: number, bonusDiamond: number): Promise<boolean> {
- const cookieStore = await cookies();
- const accessToken = cookieStore.get('accessToken')?.value;
+ const accessToken = await getServerAccessToken();
+ if (!accessToken) return false;
 
  try {
- const response = await fetch(`${API_BASE_URL}/admin/promotions`, {
+ const result = await serverHttpRequest<unknown>('/admin/promotions', {
  method: 'POST',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify({ minAmountVnd, bonusDiamond }),
+ token: accessToken,
+ json: { minAmountVnd, bonusDiamond },
+ fallbackErrorMessage: 'Failed to create promotion',
  });
 
- return response.ok;
+ if (!result.ok) {
+ logger.error('PromotionAction.createPromotion', result.error, {
+ status: result.status,
+ minAmountVnd,
+ bonusDiamond,
+ });
+ return false;
+ }
+ return true;
  } catch (error) {
- console.error('Failed to create promotion:', error);
+ logger.error('PromotionAction.createPromotion', error, { minAmountVnd, bonusDiamond });
  return false;
  }
 }
@@ -97,22 +103,27 @@ export async function createPromotion(minAmountVnd: number, bonusDiamond: number
 export async function updatePromotion(
  id: string, data: { minAmountVnd: number; bonusDiamond: number; isActive: boolean }
 ): Promise<boolean> {
- const cookieStore = await cookies();
- const accessToken = cookieStore.get('accessToken')?.value;
+ const accessToken = await getServerAccessToken();
+ if (!accessToken) return false;
 
  try {
- const response = await fetch(`${API_BASE_URL}/admin/promotions/${id}`, {
+ const result = await serverHttpRequest<unknown>(`/admin/promotions/${id}`, {
  method: 'PUT',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
- body: JSON.stringify(data),
+ token: accessToken,
+ json: data,
+ fallbackErrorMessage: 'Failed to update promotion',
  });
 
- return response.ok;
+ if (!result.ok) {
+ logger.error('PromotionAction.updatePromotion', result.error, {
+ status: result.status,
+ promotionId: id,
+ });
+ return false;
+ }
+ return true;
  } catch (error) {
- console.error('Failed to update promotion:', error);
+ logger.error('PromotionAction.updatePromotion', error, { promotionId: id });
  return false;
  }
 }
@@ -122,21 +133,26 @@ export async function updatePromotion(
  * * @param id - ID promotion cần xóa
  */
 export async function deletePromotion(id: string): Promise<boolean> {
- const cookieStore = await cookies();
- const accessToken = cookieStore.get('accessToken')?.value;
+ const accessToken = await getServerAccessToken();
+ if (!accessToken) return false;
 
  try {
- const response = await fetch(`${API_BASE_URL}/admin/promotions/${id}`, {
+ const result = await serverHttpRequest<unknown>(`/admin/promotions/${id}`, {
  method: 'DELETE',
- headers: {
- 'Authorization': `Bearer ${accessToken}`,
- 'Content-Type': 'application/json',
- },
+ token: accessToken,
+ fallbackErrorMessage: 'Failed to delete promotion',
  });
 
- return response.ok;
+ if (!result.ok) {
+ logger.error('PromotionAction.deletePromotion', result.error, {
+ status: result.status,
+ promotionId: id,
+ });
+ return false;
+ }
+ return true;
  } catch (error) {
- console.error('Failed to delete promotion:', error);
+ logger.error('PromotionAction.deletePromotion', error, { promotionId: id });
  return false;
  }
 }

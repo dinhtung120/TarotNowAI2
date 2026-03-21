@@ -19,8 +19,9 @@
  */
 'use server';
 
-import { cookies } from 'next/headers';
-import { API_BASE_URL } from '@/lib/api';
+import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
+import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { logger } from '@/shared/infrastructure/logging/logger';
 
 /*
  * ========== TYPE DEFINITIONS ==========
@@ -59,9 +60,8 @@ export async function getNotifications(
   pageSize = 20,
   isRead?: boolean
 ): Promise<NotificationListResponse | null> {
-  const cookieStore = await cookies();
-  /* Lấy accessToken từ cookie — đã được loginAction set sẵn */
-  const accessToken = cookieStore.get('accessToken')?.value;
+  const accessToken = await getServerAccessToken();
+  if (!accessToken) return null;
 
   try {
     /*
@@ -77,58 +77,57 @@ export async function getNotifications(
       params.set('isRead', isRead.toString());
     }
 
-    const response = await fetch(
-      `${API_BASE_URL}/Notification?${params.toString()}`,
+    const result = await serverHttpRequest<NotificationListResponse>(
+      `/Notification?${params.toString()}`,
       {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        cache: 'no-store', // Thông báo cần realtime, không cache
+        token: accessToken,
+        fallbackErrorMessage: 'Failed to get notifications',
       }
     );
 
-    if (!response.ok) {
-      console.error('getNotifications error', response.status);
+    if (!result.ok) {
+      logger.error('NotificationAction.getNotifications', result.error, {
+        status: result.status,
+        page,
+        pageSize,
+        isRead,
+      });
       return null;
     }
 
-    return await response.json();
+    return result.data;
   } catch (error) {
-    console.error('Failed to get notifications:', error);
+    logger.error('NotificationAction.getNotifications', error, { page, pageSize, isRead });
     return null;
   }
 }
 
 /// Đếm số thông báo chưa đọc — dùng cho badge count icon chuông
 export async function getUnreadNotificationCount(): Promise<number> {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get('accessToken')?.value;
+  const accessToken = await getServerAccessToken();
+  if (!accessToken) return 0;
 
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/Notification/unread-count`,
-      {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-        cache: 'no-store',
-      }
-    );
+    const result = await serverHttpRequest<{ count?: number }>('/Notification/unread-count', {
+      method: 'GET',
+      token: accessToken,
+      fallbackErrorMessage: 'Failed to get unread notification count',
+    });
 
-    if (!response.ok) {
+    if (!result.ok) {
       /* Không throw error — trả 0 để UI không hiển thị badge lỗi */
+      logger.error('NotificationAction.getUnreadNotificationCount', result.error, {
+        status: result.status,
+      });
       return 0;
     }
 
     /* BE trả { count: 5 } — lấy field count */
-    const data = await response.json();
-    return data.count ?? 0;
-  } catch {
+    return result.data.count ?? 0;
+  } catch (error) {
     /* Lỗi mạng → trả 0, không break UI */
+    logger.error('NotificationAction.getUnreadNotificationCount', error);
     return 0;
   }
 }
@@ -137,28 +136,27 @@ export async function getUnreadNotificationCount(): Promise<number> {
 export async function markNotificationAsRead(
   notificationId: string
 ): Promise<{ success: boolean; error?: string }> {
-  const cookieStore = await cookies();
-  const accessToken = cookieStore.get('accessToken')?.value;
+  const accessToken = await getServerAccessToken();
+  if (!accessToken) return { success: false, error: 'Unauthorized' };
 
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/Notification/${notificationId}/read`,
-      {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    const result = await serverHttpRequest<unknown>(`/Notification/${notificationId}/read`, {
+      method: 'PATCH',
+      token: accessToken,
+      fallbackErrorMessage: 'Failed to mark as read',
+    });
 
-    if (!response.ok) {
-      const result = await response.json().catch(() => ({}));
-      return { success: false, error: result.message || 'Failed to mark as read' };
+    if (!result.ok) {
+      logger.error('NotificationAction.markNotificationAsRead', result.error, {
+        status: result.status,
+        notificationId,
+      });
+      return { success: false, error: result.error };
     }
 
     return { success: true };
-  } catch {
+  } catch (error) {
+    logger.error('NotificationAction.markNotificationAsRead', error, { notificationId });
     return { success: false, error: 'Network error' };
   }
 }

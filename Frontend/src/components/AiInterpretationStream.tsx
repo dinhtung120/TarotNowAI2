@@ -16,7 +16,7 @@
 
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import ReactMarkdown from "react-markdown";
-import { Sparkles, Bot, AlertTriangle, RefreshCw, Send, User as UserIcon } from "lucide-react";
+import { Sparkles, AlertTriangle, RefreshCw, Send } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useTranslations, useLocale } from "next-intl";
 import { API_BASE_URL } from "@/lib/api";
@@ -184,7 +184,7 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete, i
  setIsStreaming(false);
  setIsSendingFollowup(false);
  };
- }, [accessToken, flushPendingChunk, onComplete, sessionId, stopStream, t]);
+ }, [accessToken, flushPendingChunk, locale, onComplete, sessionId, stopStream, t]);
 
  useEffect(() => {
  if (!accessToken) return;

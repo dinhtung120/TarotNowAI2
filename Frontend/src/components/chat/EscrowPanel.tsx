@@ -7,9 +7,10 @@ import {
 } from '@/actions/escrowActions';
 import {
  Shield, Loader2, CheckCircle2, Clock, AlertTriangle,
- Diamond, ChevronDown, ChevronUp
+ Diamond
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import toast from 'react-hot-toast';
 
 /*
  * ===================================================================
@@ -39,6 +40,7 @@ export default function EscrowPanel({ conversationId, isUser, currentUserId: _cu
  const [loading, setLoading] = useState(true);
  const [expanded, setExpanded] = useState(false);
  const [actionLoading, setActionLoading] = useState<string | null>(null);
+ const [confirmingCompleteAll, setConfirmingCompleteAll] = useState(false);
  const [nowTs, setNowTs] = useState<number>(0);
 
  // Fetch escrow status
@@ -93,19 +95,18 @@ export default function EscrowPanel({ conversationId, isUser, currentUserId: _cu
 		const activeItems = escrow.items.filter(i => i.status === 'accepted');
 		if (activeItems.length === 0) return;
 
-		const isConfirm = window.confirm(t('escrow.confirm_release_all_prompt') || 'Bạn có chắc chắn muốn xác nhận hoàn thành và giải ngân toàn bộ số Kim Cương đang giữ?');
-		if (!isConfirm) return;
-
 		setActionLoading('ALL');
 		try {
 			await Promise.all(activeItems.map(item => confirmRelease(item.id)));
 			fetchStatus();
 			setExpanded(false);
+			toast.success(t('escrow.complete_all_success', { fallback: 'Đã hoàn thành và giải ngân toàn bộ.' }));
 		} catch (error) {
 			console.error("Failed to release all items:", error);
-			alert(t('escrow.error_release_all') || 'Có lỗi xảy ra khi hoàn thành toàn bộ. Vui lòng thử lại.');
+			toast.error(t('escrow.error_release_all', { fallback: 'Có lỗi xảy ra khi hoàn thành toàn bộ. Vui lòng thử lại.' }));
 		} finally {
 			setActionLoading(null);
+			setConfirmingCompleteAll(false);
 		}
 	};
 
@@ -280,7 +281,13 @@ export default function EscrowPanel({ conversationId, isUser, currentUserId: _cu
 						{isUser && hasActiveItems && (
 							<div className="pt-2 border-t border-white/10 mt-2">
 								<button
-									onClick={handleCompleteAll}
+									onClick={() => {
+										if (confirmingCompleteAll) {
+											void handleCompleteAll();
+											return;
+										}
+										setConfirmingCompleteAll(true);
+									}}
 									disabled={actionLoading === 'ALL'}
 									className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[var(--success)] shadow-[0_0_20px_var(--c-16-185-129-20)] hover:bg-emerald-400 text-black rounded-xl font-bold uppercase tracking-widest text-xs transition-all active:scale-95 disabled:opacity-50"
 								>
@@ -289,8 +296,26 @@ export default function EscrowPanel({ conversationId, isUser, currentUserId: _cu
 									) : (
 										<CheckCircle2 className="w-4 h-4" />
 									)}
-									{t('escrow.action_complete_all', { fallback: 'Hoàn Thành Toàn Bộ Cuộc Trò Chuyện' })}
+									{confirmingCompleteAll
+										? t('escrow.confirm_release_all_cta', { fallback: 'Xác nhận giải ngân toàn bộ' })
+										: t('escrow.action_complete_all', { fallback: 'Hoàn Thành Toàn Bộ Cuộc Trò Chuyện' })}
 								</button>
+								{confirmingCompleteAll && actionLoading !== 'ALL' && (
+									<div className="mt-2 flex items-center gap-2">
+										<button
+											onClick={() => setConfirmingCompleteAll(false)}
+											className="flex-1 min-h-11 px-3 py-2 rounded-lg tn-panel-soft text-[10px] font-bold uppercase tracking-widest text-[var(--text-secondary)] hover:tn-text-primary transition-colors"
+										>
+											{t('escrow.confirm_cancel', { fallback: 'Hủy' })}
+										</button>
+										<button
+											onClick={() => void handleCompleteAll()}
+											className="flex-1 min-h-11 px-3 py-2 rounded-lg bg-[var(--success)]/20 border border-[var(--success)]/20 text-[var(--success)] text-[10px] font-bold uppercase tracking-widest hover:bg-[var(--success)]/30 transition-colors"
+										>
+											{t('escrow.confirm_ok', { fallback: 'Đồng ý' })}
+										</button>
+									</div>
+								)}
 								<p className="text-[9px] text-center text-[var(--success)] mt-2 italic px-2">
 									{t('escrow.complete_all_hint', { fallback: 'Bấm vào đây để xác nhận hài lòng và chuyển toàn bộ tiền cho Reader.' })}
 								</p>

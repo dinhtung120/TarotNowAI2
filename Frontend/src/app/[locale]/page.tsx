@@ -66,7 +66,7 @@ function FeaturedReadersFallback() {
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
  {Array.from({ length: 4 }).map((_, index) => (
  <div
- key={index}
+ key={`featured-reader-skeleton-${index}`}
  className="h-96 rounded-[2.5rem] border border-[var(--border-default)] bg-[var(--bg-surface)] animate-pulse"
  />
  ))}

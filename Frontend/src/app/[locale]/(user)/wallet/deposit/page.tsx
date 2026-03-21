@@ -32,6 +32,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import { formatCurrency } from "@/shared/utils/format/formatCurrency";
 
 const EXCHANGE_RATE = 1000; // 1 Diamond = 1,000 VND
 const MIN_AMOUNT_VND = 10_000;
@@ -83,12 +84,7 @@ export default function DepositPage() {
 
   const bonusGold = bestPromotion?.bonusDiamond ?? 0;
 
-  const formatVnd = (value: number) =>
-    new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency: "VND",
-      maximumFractionDigits: 0,
-    }).format(value);
+  const formatVnd = (value: number) => formatCurrency(value, locale);
 
   const resetOrderState = () => {
     setOrder(null);
