@@ -1,3 +1,3 @@
-export * from './session';
-export * from './registration';
 export * from './recovery';
+export * from './registration';
+export * from './session';

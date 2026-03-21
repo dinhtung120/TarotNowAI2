@@ -13,7 +13,7 @@ import {
  Loader2,
  PlusCircle,
 } from "lucide-react";
-import { SectionHeader, GlassCard, Button } from "@/components/ui";
+import { SectionHeader, GlassCard, Button, ActionConfirmModal } from "@/components/ui";
 import { useAdminPromotions } from "@/features/admin/promotions/application/useAdminPromotions";
 
 interface AdminPromotionsClientProps {
@@ -300,40 +300,22 @@ export default function AdminPromotionsClient({ initialPromotions }: AdminPromot
    </GlassCard>
 
    {/* Delete Confirmation Modal */}
-   {deleteId && (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-     <div className="absolute inset-0 tn-overlay-strong transition-opacity" onClick={() => setDeleteId(null)} />
-     <div className="relative tn-panel rounded-[2.5rem] p-10 shadow-2xl max-w-sm w-full transform transition-all animate-in fade-in zoom-in duration-300">
-      <div className="text-center space-y-6">
-       <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 text-[var(--danger)] shadow-inner">
-        <AlertTriangle className="h-8 w-8" />
-       </div>
-       <div className="space-y-4 text-left">
-        <h3 className="text-xl font-black tn-text-primary uppercase italic tracking-tighter text-center mb-2">
-         {t("promotions.delete_modal.title")}
-        </h3>
-        <p className="text-[11px] font-bold text-[var(--text-secondary)] uppercase leading-relaxed tracking-wide text-center">
-         {t("promotions.delete_modal.desc")}
-        </p>
-       </div>
-      </div>
-      <div className="flex gap-4 mt-8">
-       <Button variant="secondary" onClick={() => setDeleteId(null)} className="flex-1">
-        {t("promotions.delete_modal.keep")}
-       </Button>
-       <Button
-        variant="danger"
-        onClick={handleDelete}
-        disabled={Boolean(deletingId)}
-        className="flex-1 shadow-[0_0_20px_var(--c-244-63-94-30)] hover:shadow-[0_0_30px_var(--c-244-63-94-50)]"
-       >
-        {deletingId ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-        {t("promotions.delete_modal.delete")}
-       </Button>
-      </div>
+   <ActionConfirmModal
+    open={Boolean(deleteId)}
+    onCancel={() => setDeleteId(null)}
+    onConfirm={handleDelete}
+    icon={
+     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 text-[var(--danger)] shadow-inner">
+      <AlertTriangle className="h-8 w-8" />
      </div>
-    </div>
-   )}
+    }
+    title={t("promotions.delete_modal.title")}
+    description={t("promotions.delete_modal.desc")}
+    cancelLabel={t("promotions.delete_modal.keep")}
+    confirmLabel={t("promotions.delete_modal.delete")}
+    confirmVariant="danger"
+    confirmDisabled={Boolean(deletingId)}
+   />
   </div>
  );
 }

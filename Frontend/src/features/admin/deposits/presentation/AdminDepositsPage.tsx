@@ -12,7 +12,7 @@
  */
 "use client";
 
-import { CreditCard, Filter, CheckCircle2, XCircle, Clock, ChevronLeft, ChevronRight,
+import { CreditCard, Filter, CheckCircle2, XCircle, Clock,
  ArrowUpRight,
  Gem,
  User,
@@ -20,7 +20,7 @@ import { CreditCard, Filter, CheckCircle2, XCircle, Clock, ChevronLeft, ChevronR
  ThumbsUp,
  ThumbsDown
 } from "lucide-react";
-import { SectionHeader, GlassCard, Button, TableStates } from "@/components/ui";
+import { SectionHeader, GlassCard, TableStates, FilterTabs, ActionConfirmModal, StepPagination } from "@/components/ui";
 import { formatCurrency } from "@/shared/utils/format/formatCurrency";
 import { formatDate, formatTime } from "@/shared/utils/format/formatDateTime";
 import { useAdminDeposits } from "@/features/admin/deposits/application/useAdminDeposits";
@@ -62,38 +62,27 @@ export default function AdminDepositsPage() {
  <div className="space-y-8 pb-20 animate-in fade-in duration-700">
 
  {/* Custom Confirm Modal */}
- {confirmModal.isOpen && (
- <div className="fixed inset-0 z-[150] flex items-center justify-center p-6 animate-in fade-in duration-300">
- <div className="absolute inset-0 tn-overlay-strong " onClick={() => setConfirmModal(prev => ({...prev, isOpen: false}))} />
- <div className="relative z-10 w-full max-w-sm tn-panel rounded-[2.5rem] p-10 shadow-2xl animate-in zoom-in-95 duration-300">
- <div className={`w-16 h-16 rounded-2xl mx-auto mb-6 flex items-center justify-center border shadow-inner ${
- confirmModal.type === 'approve' ? 'bg-[var(--success)]/10 border-[var(--success)]/20 text-[var(--success)]' : 'bg-[var(--danger)]/10 border-[var(--danger)]/20 text-[var(--danger)]'
- }`}>
+ <ActionConfirmModal
+ open={confirmModal.isOpen}
+ onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+ onConfirm={handleAction}
+ icon={
+ <div
+ className={`w-16 h-16 rounded-2xl flex items-center justify-center border shadow-inner ${
+ confirmModal.type === 'approve'
+ ? 'bg-[var(--success)]/10 border-[var(--success)]/20 text-[var(--success)]'
+ : 'bg-[var(--danger)]/10 border-[var(--danger)]/20 text-[var(--danger)]'
+ }`}
+ >
  {confirmModal.type === 'approve' ? <ThumbsUp className="w-8 h-8" /> : <ThumbsDown className="w-8 h-8" />}
  </div>
- <h3 className="text-xl font-black tn-text-primary uppercase italic tracking-tighter text-center mb-2">
- {confirmModal.type === 'approve' ? t("deposits.modal.title_approve") : t("deposits.modal.title_reject")}
- </h3>
- <p className="text-xs text-[var(--text-secondary)] font-medium text-center leading-relaxed mb-8">
- {confirmModal.type === 'approve' ? t("deposits.modal.desc_approve") : t("deposits.modal.desc_reject")}
- </p>
- <div className="flex gap-4">
- <Button variant="secondary"
- onClick={() => setConfirmModal(prev => ({...prev, isOpen: false}))}
- className="flex-1"
- >
- {t("deposits.modal.back")}
- </Button>
- <Button variant={confirmModal.type === 'approve' ? 'primary' : 'danger'}
- onClick={handleAction}
- className="flex-1"
- >
- {t("deposits.modal.confirm")}
- </Button>
- </div>
- </div>
- </div>
- )}
+ }
+ title={confirmModal.type === 'approve' ? t("deposits.modal.title_approve") : t("deposits.modal.title_reject")}
+ description={confirmModal.type === 'approve' ? t("deposits.modal.desc_approve") : t("deposits.modal.desc_reject")}
+ cancelLabel={t("deposits.modal.back")}
+ confirmLabel={t("deposits.modal.confirm")}
+ confirmVariant={confirmModal.type === 'approve' ? 'primary' : 'danger'}
+ />
 
  {/* Header Area */}
  <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -110,29 +99,22 @@ export default function AdminDepositsPage() {
  <Filter className="w-4 h-4 text-[var(--text-secondary)]" />
  <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("deposits.filters.label")}:</span>
  </div>
- <div className="flex gap-2">
- {[
- { value: "", label: t("deposits.filters.all") },
- { value: "Pending", label: t("deposits.filters.pending") },
- { value: "Success", label: t("deposits.filters.success") },
- { value: "Failed", label: t("deposits.filters.failed") },
- ].map(({ value, label }) => (
- <button
- key={value}
- onClick={() => {
+ <FilterTabs
+ value={statusFilter}
+ options={[
+ { value: "", label: t("deposits.filters.all"), activeClassName: "bg-[var(--purple-accent)] tn-text-ink shadow-md" },
+ { value: "Pending", label: t("deposits.filters.pending"), activeClassName: "bg-[var(--purple-accent)] tn-text-ink shadow-md" },
+ { value: "Success", label: t("deposits.filters.success"), activeClassName: "bg-[var(--purple-accent)] tn-text-ink shadow-md" },
+ { value: "Failed", label: t("deposits.filters.failed"), activeClassName: "bg-[var(--purple-accent)] tn-text-ink shadow-md" },
+ ]}
+ containerClassName="flex gap-2"
+ buttonClassName="px-4 py-2.5 min-h-11 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+ inactiveClassName="tn-surface text-[var(--text-tertiary)] hover:tn-surface-strong hover:tn-text-primary"
+ onChange={(value) => {
  setStatusFilter(value);
  setPage(1);
  }}
- className={`
- px-4 py-2.5 min-h-11 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
- ${statusFilter === value ? "bg-[var(--purple-accent)] tn-text-ink shadow-md" : "tn-surface text-[var(--text-tertiary)] hover:tn-surface-strong hover:tn-text-primary"
- }
- `}
- >
- {label}
- </button>
- ))}
- </div>
+ />
  </div>
  </div>
 
@@ -246,28 +228,14 @@ export default function AdminDepositsPage() {
  </div>
 
  {/* Pagination */}
- <div className="px-8 py-6 tn-surface-soft flex flex-col md:flex-row md:items-center justify-between gap-4 border-t tn-border-soft">
- <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] text-left">
- {t("deposits.pagination.summary", { page, total: totalCount })}
- </div>
- <div className="flex items-center gap-3">
- <button
- onClick={() => setPage(p => Math.max(1, p - 1))}
- disabled={page === 1}
- className="p-2.5 min-h-11 min-w-11 rounded-xl tn-panel hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-md"
- >
- <ChevronLeft className="w-4 h-4 text-[var(--text-secondary)]" />
- </button>
- <span className="text-xs font-black text-[var(--purple-accent)] italic mx-2">{page}</span>
- <button
- onClick={() => setPage(p => p + 1)}
- disabled={page * 10 >= totalCount}
- className="p-2.5 min-h-11 min-w-11 rounded-xl tn-panel hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-md"
- >
- <ChevronRight className="w-4 h-4 text-[var(--text-secondary)]" />
- </button>
- </div>
- </div>
+ <StepPagination
+ summary={t("deposits.pagination.summary", { page, total: totalCount })}
+ currentLabel={String(page)}
+ canPrev={page > 1}
+ canNext={page * 10 < totalCount}
+ onPrev={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
+ onNext={() => setPage((currentPage) => currentPage + 1)}
+ />
  </GlassCard>
  {/* Quick Summary Section */}
  {!loading && orders.length > 0 && (

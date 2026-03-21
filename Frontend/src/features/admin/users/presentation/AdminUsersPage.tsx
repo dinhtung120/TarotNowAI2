@@ -13,7 +13,7 @@
  */
 "use client";
 
-import { Users, Search, Lock, Gem, Coins, ChevronLeft, ChevronRight,
+import { Users, Search, Lock, Gem, Coins,
 	Activity,
 	Star,
 	Mail,
@@ -21,7 +21,7 @@ import { Users, Search, Lock, Gem, Coins, ChevronLeft, ChevronRight,
 	X,
 	Edit2
 } from "lucide-react";
-import { SectionHeader, GlassCard, Button, Input } from "@/components/ui";
+import { SectionHeader, GlassCard, Button, Input, TableStates, StepPagination } from "@/components/ui";
 import { useAdminUsers } from "@/features/admin/users/application/useAdminUsers";
 
 export default function AdminUsersPage() {
@@ -204,27 +204,20 @@ export default function AdminUsersPage() {
 							</tr>
 						</thead>
 						<tbody className="divide-y divide-white/5">
-							{loading ? (
-								<tr>
-									<td colSpan={6} className="px-8 py-20 text-center">
-										<div className="flex flex-col items-center justify-center space-y-4">
-											<Loader2 className="w-8 h-8 animate-spin text-[var(--purple-accent)]" />
-											<span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">{t("users.states.loading")}</span>
-										</div>
-									</td>
-								</tr>
-							) : users.length === 0 ? (
-								<tr>
-									<td colSpan={6} className="px-8 py-20 text-center">
-										<div className="flex flex-col items-center justify-center space-y-4">
-											<div className="w-16 h-16 rounded-full tn-panel-soft flex items-center justify-center">
-												<Users className="w-8 h-8 text-[var(--text-tertiary)] opacity-50" />
-											</div>
-											<span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">{t("users.states.empty")}</span>
-										</div>
-									</td>
-								</tr>
-							) : (
+							<TableStates
+								colSpan={6}
+								isLoading={loading}
+								isEmpty={!loading && users.length === 0}
+								loadingLabel={t("users.states.loading")}
+								emptyLabel={t("users.states.empty")}
+								loadingIcon={<Loader2 className="w-8 h-8 animate-spin text-[var(--purple-accent)]" />}
+								emptyIcon={
+									<div className="w-16 h-16 rounded-full tn-panel-soft flex items-center justify-center">
+										<Users className="w-8 h-8 text-[var(--text-tertiary)] opacity-50" />
+									</div>
+								}
+							/>
+							{!loading && users.length > 0 && (
 								users.map((u) => (
 									<tr key={u.id} className="group/row hover:tn-surface transition-colors">
 										<td className="px-8 py-5">
@@ -302,28 +295,14 @@ export default function AdminUsersPage() {
 				</div>
 
 				{/* Pagination */}
-				<div className="px-8 py-6 tn-surface-soft flex flex-col md:flex-row md:items-center justify-between gap-4 border-t tn-border-soft">
-					<div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] text-left">
-						{t("users.pagination.summary", { page, total: totalCount })}
-					</div>
-					<div className="flex items-center gap-3">
-						<button
-							onClick={() => setPage(p => Math.max(1, p - 1))}
-							disabled={page === 1}
-							className="p-2.5 min-h-11 min-w-11 rounded-xl tn-panel hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-md"
-						>
-							<ChevronLeft className="w-4 h-4 text-[var(--text-secondary)]" />
-						</button>
-						<span className="text-xs font-black text-[var(--purple-accent)] italic mx-2">{page}</span>
-						<button
-							onClick={() => setPage(p => p + 1)}
-							disabled={page * 10 >= totalCount}
-							className="p-2.5 min-h-11 min-w-11 rounded-xl tn-panel hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-md"
-						>
-							<ChevronRight className="w-4 h-4 text-[var(--text-secondary)]" />
-						</button>
-					</div>
-				</div>
+				<StepPagination
+					summary={t("users.pagination.summary", { page, total: totalCount })}
+					currentLabel={String(page)}
+					canPrev={page > 1}
+					canNext={page * 10 < totalCount}
+					onPrev={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
+					onNext={() => setPage((currentPage) => currentPage + 1)}
+				/>
 			</GlassCard>
 		</div>
 	);

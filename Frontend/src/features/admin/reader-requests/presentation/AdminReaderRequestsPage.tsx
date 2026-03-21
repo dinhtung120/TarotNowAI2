@@ -14,9 +14,9 @@
 import React from 'react';
 import {
  Users, CheckCircle2, XCircle, Clock, Loader2,
- FileText, ChevronLeft, ChevronRight, Filter, Eye, ShieldCheck
+ FileText, Filter, Eye, ShieldCheck
 } from 'lucide-react';
-import { SectionHeader, GlassCard, Button, Input } from '@/components/ui';
+import { SectionHeader, GlassCard, Button, Input, FilterTabs, StepPagination } from '@/components/ui';
 import { useAdminReaderRequests } from '@/features/admin/reader-requests/application/useAdminReaderRequests';
 
 /**
@@ -86,47 +86,36 @@ export default function AdminReaderRequestsPage() {
  </div>
 
  {/* Status Filter Tabs */}
- <div className="flex flex-wrap gap-2">
- {[
+ <FilterTabs
+ value={statusFilter}
+ options={[
  {
  value: 'pending',
  label: t("reader_requests.filters.pending"),
- icon: Clock,
- activeClass: 'bg-[var(--warning)]/10 border border-[var(--warning)]/30 text-[var(--warning)] shadow-md'
+ icon: <Clock className="w-4 h-4" />,
+ activeClassName: 'bg-[var(--warning)]/10 border border-[var(--warning)]/30 text-[var(--warning)] shadow-md'
  },
  {
  value: 'approved',
  label: t("reader_requests.filters.approved"),
- icon: CheckCircle2,
- activeClass: 'bg-[var(--success)]/10 border border-[var(--success)]/30 text-[var(--success)] shadow-md'
+ icon: <CheckCircle2 className="w-4 h-4" />,
+ activeClassName: 'bg-[var(--success)]/10 border border-[var(--success)]/30 text-[var(--success)] shadow-md'
  },
  {
  value: 'rejected',
  label: t("reader_requests.filters.rejected"),
- icon: XCircle,
- activeClass: 'bg-[var(--danger)]/10 border border-[var(--danger)]/30 text-[var(--danger)] shadow-md'
+ icon: <XCircle className="w-4 h-4" />,
+ activeClassName: 'bg-[var(--danger)]/10 border border-[var(--danger)]/30 text-[var(--danger)] shadow-md'
  },
  {
  value: '',
  label: t("reader_requests.filters.all"),
- icon: Filter,
- activeClass: 'bg-[var(--purple-accent)]/10 border border-[var(--purple-accent)]/30 text-[var(--purple-accent)] shadow-md'
+ icon: <Filter className="w-4 h-4" />,
+ activeClassName: 'bg-[var(--purple-accent)]/10 border border-[var(--purple-accent)]/30 text-[var(--purple-accent)] shadow-md'
  },
- ].map((tab) => (
- <button
- key={tab.value}
- onClick={() => { setStatusFilter(tab.value); setPage(1); }}
- className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-inner min-h-11 ${
- statusFilter === tab.value
- ? tab.activeClass
- : 'tn-panel-soft text-[var(--text-secondary)] hover:tn-text-primary hover:tn-surface'
- }`}
- >
- <tab.icon className="w-4 h-4" />
- {tab.label}
- </button>
- ))}
- </div>
+ ]}
+ onChange={(value) => { setStatusFilter(value); setPage(1); }}
+ />
 
  {/* Loading */}
  {loading && (
@@ -248,27 +237,16 @@ export default function AdminReaderRequestsPage() {
  )}
 
  {/* Pagination */}
- {!loading && totalPages > 1 && (
- <div className="flex items-center justify-center gap-4 pt-6">
- <button
- onClick={() => setPage(p => Math.max(1, p - 1))}
- disabled={page === 1}
- className="p-3.5 rounded-2xl tn-panel hover:tn-surface-strong disabled:opacity-30 transition-all shadow-inner"
- >
- <ChevronLeft className="w-4 h-4 text-[var(--text-secondary)]" />
- </button>
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
- {t("reader_requests.pagination.summary", { page, total: totalPages })}
- </span>
- <button
- onClick={() => setPage(p => Math.min(totalPages, p + 1))}
- disabled={page === totalPages}
- className="p-3.5 rounded-2xl tn-panel hover:tn-surface-strong disabled:opacity-30 transition-all shadow-inner"
- >
- <ChevronRight className="w-4 h-4 text-[var(--text-secondary)]" />
- </button>
- </div>
- )}
+{!loading && totalPages > 1 && (
+ <StepPagination
+ className="flex items-center justify-center gap-4 pt-6"
+ currentLabel={t("reader_requests.pagination.summary", { page, total: totalPages })}
+ canPrev={page > 1}
+ canNext={page < totalPages}
+ onPrev={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
+ onNext={() => setPage((currentPage) => Math.min(totalPages, currentPage + 1))}
+ />
+)}
  </div>
  );
 }

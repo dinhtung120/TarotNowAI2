@@ -22,6 +22,7 @@
 - Hoàn tất chat split theo concern: thêm `useChatConnection`, `usePaymentOfferActions`, `mergeMessages` utility; `ChatRoomPage` chỉ còn orchestration/render.
 - Chuẩn hóa admin data layer bằng `useAdminUsers`, `useAdminDeposits`, `useAdminReaderRequests`, `useAdminReadings` để tách logic khỏi presentation.
 - Chuẩn hóa contract `ActionResult<T>` cho cụm auth actions (`session/registration/recovery`) và giữ tương thích call-site hiện tại.
+- Bổ sung shared admin UI primitives (`FilterTabs`, `ActionConfirmModal`, `StepPagination`, `TableStates`) và áp dụng vào các màn `users/deposits/reader-requests/promotions`.
 
 ## 1) Snapshot hiện trạng (đã quét thực tế)
 
@@ -256,7 +257,7 @@ src/
 ## Phase 9 - Admin Module Refactor (3 ngày)
 **Mục tiêu:** giảm god pages admin.
 - [x] Refactor `admin/users`, `admin/deposits`, `admin/reader-requests`, `admin/readings`, `admin/withdrawals`, `admin/promotions`.
-- [ ] Dùng lại shared table/pagination/filter/action-modal.
+- [x] Dùng lại shared table/pagination/filter/action-modal.
 - [x] Chuẩn hóa `useAdminXxx` hooks và DTO mappers.
 
 **Exit criteria:** admin pages tách theo list/filter/modal rõ ràng.
