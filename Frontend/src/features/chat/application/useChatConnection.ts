@@ -2,31 +2,18 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { HubConnection } from '@microsoft/signalr';
-import { getSignalRToken, listMessages, type ChatMessageDto } from '@/actions/chatActions';
-import { API_ORIGIN } from '@/lib/api';
+import { listMessages, type ChatMessageDto } from '@/features/chat/application/actions';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { useTranslations } from 'next-intl';
+import { useAuthStore } from '@/store/authStore';
 import {
  appendUniqueMessage,
  mergeHistoryWithRealtimeMessages,
 } from '@/features/chat/domain/mergeMessages';
 
-function parseUserIdFromToken(token: string): string {
- try {
-  const payload = JSON.parse(atob(token.split('.')[1]));
-  return (
-   payload.sub ||
-   payload.nameid ||
-   payload['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] ||
-   ''
-  );
- } catch {
-  return '';
- }
-}
-
 export function useChatConnection(conversationId: string) {
  const t = useTranslations('Chat');
+ const authUserId = useAuthStore((state) => state.user?.id ?? '');
 
  const [messages, setMessages] = useState<ChatMessageDto[]>([]);
  const [newMessage, setNewMessage] = useState('');
@@ -80,29 +67,20 @@ export function useChatConnection(conversationId: string) {
  }, [newMessage, sendTypedMessage]);
 
  useEffect(() => {
+  setCurrentUserId(authUserId);
+ }, [authUserId]);
+
+ useEffect(() => {
   if (!conversationId) return;
 
   let isCancelled = false;
   let hubConnection: HubConnection | null = null;
 
   const initConnection = async () => {
-   const token = await getSignalRToken();
-   if (!token) {
-    if (!isCancelled) {
-     setLoading(false);
-    }
-    return;
-   }
-
-   const parsedUserId = parseUserIdFromToken(token);
-   if (parsedUserId && !isCancelled) {
-    setCurrentUserId(parsedUserId);
-   }
-
    const signalR = await import('@microsoft/signalr');
    hubConnection = new signalR.HubConnectionBuilder()
-    .withUrl(`${API_ORIGIN}/api/v1/chat`, {
-     accessTokenFactory: () => token,
+    .withUrl('/api/v1/chat', {
+     withCredentials: true,
     })
     .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
     .configureLogging(signalR.LogLevel.Warning)
@@ -151,11 +129,12 @@ export function useChatConnection(conversationId: string) {
     logger.error('[Chat] Connection failed', error, { conversationId });
    }
 
-   const history = await listMessages(conversationId);
+   const historyResult = await listMessages(conversationId);
    if (isCancelled) return;
+   const history = historyResult.success ? historyResult.data : undefined;
 
-   if (history?.conversation && parsedUserId) {
-    const isUser = parsedUserId === history.conversation.userId;
+   if (history?.conversation && authUserId) {
+    const isUser = authUserId === history.conversation.userId;
     const name = isUser
      ? history.conversation.readerName || `${t('inbox.list_label_reader')} ${history.conversation.readerId.substring(0, 8)}`
      : history.conversation.userName || `${t('inbox.list_label_user')} ${history.conversation.userId.substring(0, 8)}`;
@@ -185,7 +164,7 @@ export function useChatConnection(conversationId: string) {
 
    connectionRef.current = null;
   };
- }, [conversationId, scrollToBottom, t]);
+ }, [authUserId, conversationId, scrollToBottom, t]);
 
  return {
   messages,

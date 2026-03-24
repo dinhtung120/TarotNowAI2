@@ -1,0 +1,76 @@
+/* Theme variables for jade-lotus. */
+
+:root,
+:root[data-theme="jade-lotus"],
+body[data-theme="jade-lotus"] {
+  --font-sans: "Gill Sans", "Trebuchet MS", system-ui, sans-serif;
+  --font-serif: "Cinzel", "Georgia", serif;
+  --font-mono: "Courier New", monospace;
+  --bg-void: #06110d;
+  --bg-surface: #10201a;
+  --bg-elevated: #183129;
+  --bg-surface-hover: #224338;
+  --bg-glass: #10201acc;
+  --bg-glass-hover: #183129d4;
+  --bg-glass-active: #224338e0;
+  --surface-soft: rgba(16, 32, 26, 0.5);
+  --surface-base: rgba(16, 32, 26, 0.76);
+  --surface-strong: rgba(24, 49, 41, 0.9);
+  --overlay-soft: rgba(63, 178, 127, 0.11);
+  --overlay-base: rgba(123, 220, 174, 0.1);
+  --overlay-strong: rgba(6, 17, 13, 0.78);
+  --app-bg:
+    radial-gradient(120% 90% at 10% -8%, rgba(63, 178, 127, 0.32) 0%, transparent 56%),
+    radial-gradient(90% 78% at 88% 8%, rgba(123, 220, 174, 0.24) 0%, transparent 58%),
+    radial-gradient(108% 88% at 52% 108%, rgba(255, 188, 214, 0.16) 0%, transparent 62%),
+    linear-gradient(180deg, #06110d 0%, #10201a 66%, #0d1a15 100%);
+  --purple-accent: #3fb27f;
+  --purple-muted: rgba(63, 178, 127, 0.84);
+  --purple-gradient-from: #3fb27f;
+  --purple-gradient-via: #7bdcae;
+  --purple-gradient-to: #ffbcd6;
+  --mint-accent: #7bdcae;
+  --forest-accent: #2f8f66;
+  --amber-accent: #f4d487;
+  --amber-soft: #c3a760;
+  --holo-silver: #c4f3df;
+  --success: #7bdcae;
+  --error: #c981a3;
+  --warning: #f4d487;
+  --info: #77b8ad;
+  --text-primary: #ddf4e8;
+  --text-secondary: #abd1be;
+  --text-muted: #7ca58f;
+  --text-tertiary: #7ca58f;
+  --text-disabled: #4b6d5d;
+  --text-ink: #f2fff8;
+  --text-inverse: #10201a;
+  --accent: #f4d487;
+  --border-subtle: rgba(63, 178, 127, 0.18);
+  --border-default: rgba(63, 178, 127, 0.3);
+  --border-hover: rgba(123, 220, 174, 0.42);
+  --border-focus: rgba(196, 243, 223, 0.54);
+  --scrollbar-thumb: rgba(63, 178, 127, 0.34);
+  --scrollbar-thumb-hover: rgba(123, 220, 174, 0.42);
+  --selection-bg: rgba(63, 178, 127, 0.24);
+  --selection-text: #f2fff8;
+  --theme-border-style: solid;
+  --theme-border-width: 1px;
+  --theme-panel-shadow: 0 0 0 1px rgba(63, 178, 127, 0.2), 0 22px 50px rgba(6, 17, 13, 0.72);
+  --theme-panel-blur: blur(4px);
+  --theme-card-shine: linear-gradient(120deg, rgba(123, 220, 174, 0.12), rgba(255, 188, 214, 0.16) 58%, rgba(123, 220, 174, 0.08));
+  --theme-starfield-size: 20px 20px, 28px 28px, 12px 12px, 100% 100%;
+  --theme-motion-scale: 0.76;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 26px;
+  --shadow-card: 0 14px 28px rgba(6, 17, 13, 0.56);
+  --shadow-elevated: 0 22px 48px rgba(6, 17, 13, 0.72);
+  --glow-purple-sm: 0 0 20px rgba(63, 178, 127, 0.18);
+  --glow-purple-md: 0 0 34px rgba(63, 178, 127, 0.24);
+  --glow-purple-lg: 0 0 54px rgba(63, 178, 127, 0.3);
+  --glow-amber: 0 0 24px rgba(244, 212, 135, 0.2);
+  --shimmer-bg: linear-gradient(90deg, rgba(63, 178, 127, 0.12) 25%, rgba(196, 243, 223, 0.3) 50%, rgba(255, 188, 214, 0.14) 75%);
+  --grad-lunar: linear-gradient(135deg, rgba(20, 77, 57, 0.86), rgba(37, 117, 88, 0.8), rgba(95, 62, 89, 0.74));
+  --metallic-text-gradient: linear-gradient(115deg, #2d8f65 0%, #3fb27f 30%, #c4f3df 55%, #7bdcae 80%, #f4d487 100%);
+}

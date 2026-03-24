@@ -16,39 +16,14 @@ import { useMemo, useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/routing";
 import { useAuthStore } from "@/store/authStore";
-import { getHistoryDetailAction } from "@/actions/historyActions";
+import { getHistoryDetailAction } from "@/features/reading/application/actions/history";
+import type { HistoryDetailResponse } from "@/features/reading/application/actions/history";
 import { Sparkles, ArrowLeft, Bot, Calendar, Clock, AlertCircle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useLocale, useTranslations } from "next-intl";
 
-import { Button } from "@/components/ui";
+import { Button } from "@/shared/components/ui";
 import { useAuthGuard } from "@/shared/application/hooks/useAuthGuard";
-
-interface AiRequestDto {
- id: string;
- status: string;
- finishReason: string | null;
- chargeDiamond: number;
- createdAt: string;
- requestType: string;
-}
-
-interface FollowupDto {
- question: string;
- answer: string;
-}
-
-interface ReadingDetailResponse {
- id: string;
- spreadType: string;
- cardsDrawn: string | null;
- isCompleted: boolean;
- createdAt: string;
- completedAt: string | null;
- aiSummary?: string;
- followups?: FollowupDto[];
- aiInteractions: AiRequestDto[];
-}
 
 export default function HistoryDetailPage() {
  const params = useParams();
@@ -60,7 +35,7 @@ export default function HistoryDetailPage() {
  const tTarot = useTranslations("Tarot");
  const locale = useLocale();
 
- const [detail, setDetail] = useState<ReadingDetailResponse | null>(null);
+ const [detail, setDetail] = useState<HistoryDetailResponse | null>(null);
  const [isLoading, setIsLoading] = useState(true);
  const [error, setError] = useState<string | null>(null);
 
@@ -84,9 +59,9 @@ export default function HistoryDetailPage() {
  return;
  }
 
- if (result.success && result.data) {
- setDetail(result.data as ReadingDetailResponse);
- }
+	 if (result.success && result.data) {
+	 setDetail(result.data);
+	 }
  } catch {
  setError(tApi("network_error"));
  } finally {

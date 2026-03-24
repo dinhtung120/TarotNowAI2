@@ -27,7 +27,7 @@ import { History, Search, User, Calendar, BookOpen, CheckCircle2, Clock, Chevron
  ArrowUpRight,
  Hash
 } from "lucide-react";
-import { SectionHeader, GlassCard, Button } from "@/components/ui";
+import { SectionHeader, GlassCard, Button } from "@/shared/components/ui";
 import { useAdminReadings } from "@/features/admin/readings/application/useAdminReadings";
 
 export default function AdminReadingsPage() {

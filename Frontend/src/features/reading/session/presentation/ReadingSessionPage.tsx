@@ -17,11 +17,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/routing";
-import { revealReadingSession } from "@/actions/readingActions";
+import { revealReadingSession } from "@/features/reading/application/actions";
 import { TAROT_CARD_COUNT } from "@/lib/tarotData";
 import { Sparkles, ArrowLeft, RefreshCw, Dices } from "lucide-react";
-import AiInterpretationStream from "@/components/AiInterpretationStream";
-import AstralBackground from "@/components/layout/AstralBackground";
+import AiInterpretationStream from "@/features/reading/presentation/components/AiInterpretationStream";
+import AstralBackground from "@/shared/components/layout/AstralBackground";
 import { useTranslations } from "next-intl";
 import {
  getSessionStorageItem,
@@ -29,7 +29,7 @@ import {
 } from "@/shared/infrastructure/storage/browserStorage";
 
 // Import actions và store để đồng bộ Level/EXP sau khi bốc bài
-import { getProfileAction } from "@/actions/profileActions";
+import { getProfileAction } from "@/features/profile/public";
 import { useAuthStore } from "@/store/authStore";
 
 const SHUFFLE_CARD_COUNT = 9;

@@ -1,0 +1,117 @@
+/* Theme variables for neon-oracle. */
+
+:root,
+:root[data-theme="neon-oracle"],
+body[data-theme="neon-oracle"] {
+  --font-sans: "Trebuchet MS", "Avenir Next", system-ui, sans-serif;
+  --font-serif: "Times New Roman", Georgia, serif;
+  --font-mono: "Courier New", "Lucida Console", monospace;
+  --bg-void: #07030f;
+  --bg-surface: #130823;
+  --bg-elevated: #1d0d31;
+  --bg-surface-hover: #291248;
+  --bg-glass: #130823cc;
+  --bg-glass-hover: #1d0d31d4;
+  --bg-glass-active: #291248e0;
+  --surface-soft: rgba(19, 8, 35, 0.5);
+  --surface-base: rgba(19, 8, 35, 0.76);
+  --surface-strong: rgba(29, 13, 49, 0.9);
+  --overlay-soft: rgba(255, 63, 212, 0.12);
+  --overlay-base: rgba(46, 242, 255, 0.12);
+  --overlay-strong: rgba(8, 2, 15, 0.74);
+  --app-bg:
+    radial-gradient(120% 90% at 10% -8%, rgba(255, 63, 212, 0.36) 0%, transparent 56%),
+    radial-gradient(90% 78% at 88% 8%, rgba(46, 242, 255, 0.28) 0%, transparent 58%),
+    radial-gradient(108% 88% at 52% 108%, rgba(208, 255, 85, 0.18) 0%, transparent 62%),
+    linear-gradient(180deg, #07030f 0%, #130823 66%, #0d0618 100%);
+  --scrollbar-thumb: rgba(255, 63, 212, 0.36);
+  --scrollbar-thumb-hover: rgba(46, 242, 255, 0.46);
+  --selection-bg: rgba(255, 63, 212, 0.28);
+  --selection-text: #f9f3ff;
+  --ring-accent: rgba(255, 63, 212, 0.3);
+  --ring-success: rgba(46, 242, 255, 0.28);
+  --ring-warning: rgba(208, 255, 85, 0.28);
+  --ring-danger: rgba(255, 108, 177, 0.28);
+  --ring-input: rgba(230, 210, 255, 0.24);
+  --border-subtle: rgba(255, 63, 212, 0.24);
+  --border-default: rgba(255, 63, 212, 0.4);
+  --border-hover: rgba(46, 242, 255, 0.5);
+  --border-focus: rgba(230, 210, 255, 0.62);
+  --purple-50: rgba(255, 63, 212, 0.1);
+  --purple-100: rgba(255, 63, 212, 0.16);
+  --purple-200: rgba(255, 63, 212, 0.28);
+  --purple-glow: rgba(255, 63, 212, 0.34);
+  --purple-accent: #ff3fd4;
+  --purple-muted: rgba(255, 125, 225, 0.84);
+  --purple-gradient-from: #ff3fd4;
+  --purple-gradient-via: #2ef2ff;
+  --purple-gradient-to: #d0ff55;
+  --mint-accent: #2ef2ff;
+  --forest-accent: #1bb4c4;
+  --amber-accent: #d0ff55;
+  --amber-soft: #f9ffb0;
+  --amber-50: rgba(208, 255, 85, 0.2);
+  --holo-silver: #e6d2ff;
+  --success: #2ef2ff;
+  --success-bg: rgba(46, 242, 255, 0.16);
+  --error: #ff6cb1;
+  --error-bg: rgba(255, 108, 177, 0.18);
+  --warning: #d0ff55;
+  --warning-bg: rgba(208, 255, 85, 0.2);
+  --info: #9ea8ff;
+  --info-bg: rgba(158, 168, 255, 0.2);
+  --text-primary: #f9f3ff;
+  --text-secondary: #d6cbf1;
+  --text-muted: #9d90c4;
+  --text-tertiary: #9d90c4;
+  --text-disabled: #5f5682;
+  --text-ink: #ffffff;
+  --text-inverse: #0f0820;
+  --danger: #ff6cb1;
+  --danger-bg: rgba(255, 108, 177, 0.18);
+  --accent: #d0ff55;
+  --c-hex-b89c4f: #d0ff55;
+  --c-hex-9f8338: #c5ef52;
+  --c-hex-8f7bb4: #ff3fd4;
+  --c-hex-8c7a2f: #9cb53d;
+  --c-hex-a89cff28: #ff3fd428;
+  --c-hex-b2e8d628: #2ef2ff28;
+  --c-215-189-226-50: rgba(255, 63, 212, 0.46);
+  --c-178-232-214-42: rgba(46, 242, 255, 0.36);
+  --c-168-156-255-55: rgba(255, 63, 212, 0.55);
+  --c-168-156-255-50: rgba(255, 63, 212, 0.5);
+  --c-168-156-255-30: rgba(255, 63, 212, 0.3);
+  --c-168-156-255-28: rgba(255, 63, 212, 0.28);
+  --c-168-156-255-12: rgba(255, 63, 212, 0.12);
+  --nebula-purple-subtle: rgba(255, 63, 212, 0.12);
+  --nebula-purple-default: rgba(255, 63, 212, 0.18);
+  --nebula-purple-intense: rgba(255, 63, 212, 0.26);
+  --nebula-mint-subtle: rgba(46, 242, 255, 0.1);
+  --nebula-mint-default: rgba(46, 242, 255, 0.18);
+  --nebula-mint-intense: rgba(46, 242, 255, 0.26);
+  --nebula-moon-subtle: rgba(208, 255, 85, 0.08);
+  --nebula-moon-default: rgba(208, 255, 85, 0.14);
+  --nebula-moon-intense: rgba(208, 255, 85, 0.2);
+  --shadow-card: 0 16px 36px rgba(8, 2, 15, 0.7);
+  --shadow-elevated: 0 24px 56px rgba(8, 2, 15, 0.82);
+  --glow-purple-sm: 0 0 24px rgba(255, 63, 212, 0.24);
+  --glow-purple-md: 0 0 44px rgba(255, 63, 212, 0.34);
+  --glow-purple-lg: 0 0 68px rgba(255, 63, 212, 0.44);
+  --glow-amber: 0 0 28px rgba(208, 255, 85, 0.24);
+  --glow-white: 0 18px 36px rgba(230, 210, 255, 0.12);
+  --glow-pulse-from: 0 0 18px rgba(255, 63, 212, 0.24);
+  --glow-pulse-to: 0 0 34px rgba(46, 242, 255, 0.26);
+  --shimmer-bg: linear-gradient(90deg, rgba(255, 63, 212, 0.16) 25%, rgba(230, 210, 255, 0.34) 50%, rgba(46, 242, 255, 0.16) 75%);
+  --theme-border-style: solid;
+  --theme-border-width: 1px;
+  --theme-panel-shadow: 0 0 0 1px rgba(255, 63, 212, 0.22), 0 22px 60px rgba(8, 2, 15, 0.78);
+  --theme-panel-blur: blur(10px);
+  --theme-card-shine: linear-gradient(120deg, rgba(255, 63, 212, 0.1) 0%, rgba(46, 242, 255, 0.24) 46%, rgba(208, 255, 85, 0.2) 62%, rgba(255, 63, 212, 0.1) 100%);
+  --theme-starfield-size: 12px 12px, 16px 16px, 8px 8px, 100% 100%;
+  --theme-motion-scale: 0.52;
+  --radius-sm: 10px;
+  --radius-md: 18px;
+  --radius-lg: 28px;
+  --grad-lunar: linear-gradient(135deg, rgba(95, 18, 95, 0.86), rgba(17, 88, 118, 0.8), rgba(84, 115, 32, 0.74));
+  --metallic-text-gradient: linear-gradient(115deg, #ff3fd4 0%, #ff90ec 24%, #e6d2ff 52%, #2ef2ff 78%, #d0ff55 100%);
+}

@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { useLocale, useTranslations } from 'next-intl';
-import { SectionHeader, GlassCard, Pagination } from '@/components/ui';
+import { SectionHeader, GlassCard, Pagination } from '@/shared/components/ui';
 import { useReadersDirectoryPage } from '@/features/reader/application/useReadersDirectoryPage';
 
 /*

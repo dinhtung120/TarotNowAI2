@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { listConversations, type ConversationDto } from '@/actions/chatActions';
+import { listConversations, type ConversationDto } from '@/features/chat/application/actions';
 
 export function useChatInboxPage() {
   const [conversations, setConversations] = useState<ConversationDto[]>([]);
@@ -13,9 +13,9 @@ export function useChatInboxPage() {
     const fetchConversations = async () => {
       setLoading(true);
       const result = await listConversations('all');
-      if (result) {
-        setConversations(result.conversations);
-        setCurrentUserId(result.currentUserId);
+      if (result.success && result.data) {
+        setConversations(result.data.conversations);
+        setCurrentUserId(result.data.currentUserId);
       }
       setLoading(false);
     };

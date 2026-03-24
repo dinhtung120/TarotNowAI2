@@ -6,25 +6,6 @@ import { routing } from './i18n/routing';
 const intlMiddleware = createMiddleware(routing);
 const localeSet = new Set(routing.locales);
 
-const decodeJwtPayload = (token: string): Record<string, unknown> => {
- const payload = token.split('.')[1];
- if (!payload) {
- throw new Error('Invalid token');
- }
-
- // JWT dùng base64url, cần normalize trước khi decode
- const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
- const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
- return JSON.parse(atob(padded)) as Record<string, unknown>;
-};
-
-const isExpired = (decodedPayload: Record<string, unknown>, leewaySeconds = 0) => {
- const exp = decodedPayload["exp"];
- if (typeof exp !== "number" || !Number.isFinite(exp)) return true;
- const nowSeconds = Math.floor(Date.now() / 1000);
- return nowSeconds >= exp - Math.max(0, leewaySeconds);
-};
-
 const resolveLocale = (pathname: string) => {
  const maybeLocale = pathname.split('/')[1];
  if (maybeLocale && localeSet.has(maybeLocale as (typeof routing.locales)[number])) {
@@ -71,9 +52,9 @@ const clearAuthCookies = (response: NextResponse) => {
  * TÍNH NĂNG CHÍNH:
  *   - Tích hợp Middleware Đa ngôn ngữ (`intlMiddleware`) xử lý Routing URL (Ví dụ: /vn/home).
  *   - Chặn các đường dẫn Yêu cầu Đăng nhập (`PROTECTED_PREFIXES`) và chuyển hướng (Redirect) 
- *     về trang Login nếu phát hiện `accessToken` trống hoặc đã hết hạn (Decode JWT).
- *   - Rào chắn bảo mật bổ sung cho đường dẫn Admin (`/admin`), kiểm tra nhanh Claim `role` 
- *     từ Token ngay trên Edge để tránh việc rò rỉ (Leak) giao diện Admin Portal ra ngoài.
+ *     về trang Login nếu phát hiện thiếu `accessToken` cookie.
+ *   - Middleware này chỉ đóng vai trò UX guard ở tầng Edge.
+ *     Authorization thực tế (đặc biệt role admin) vẫn do Backend/API xác thực chữ ký JWT.
  * ===================================================================
  */
 export default async function proxy(request: NextRequest) {
@@ -82,27 +63,11 @@ export default async function proxy(request: NextRequest) {
  const pathWithoutLocale = stripLocalePrefix(pathname);
 
  const isProtectedRoute = PROTECTED_PREFIXES.some((p) => matchesPrefix(pathWithoutLocale, p));
- const isAdminRoute = matchesPrefix(pathWithoutLocale, "/admin");
 
  const token = request.cookies.get("accessToken")?.value;
- let decodedPayload: Record<string, unknown> | null = null;
- let shouldClearCookies = false;
-
- if (token) {
-  try {
-   decodedPayload = decodeJwtPayload(token);
-   if (isExpired(decodedPayload, 5)) {
-    decodedPayload = null;
-    shouldClearCookies = true;
-   }
-  } catch {
-   decodedPayload = null;
-   shouldClearCookies = true;
-  }
- }
 
  if (isProtectedRoute) {
-  if (!decodedPayload) {
+  if (!token) {
    const loginUrl = new URL(`/${locale}/login`, request.url);
    const response = NextResponse.redirect(loginUrl);
    clearAuthCookies(response);
@@ -110,25 +75,8 @@ export default async function proxy(request: NextRequest) {
   }
  }
 
- if (isAdminRoute) {
-  // Nếu là admin route, yêu cầu role admin ngay trên Edge để tránh lộ portal.
-  // (BE vẫn validate role lại ở phía API)
-  const role =
-   decodedPayload?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ??
-   decodedPayload?.["role"];
-
-  if (String(role) !== "admin") {
-   const homeUrl = new URL(`/${locale}`, request.url);
-   return NextResponse.redirect(homeUrl);
-  }
- }
-
  // Nếu hợp lệ hoặc không phải admin route, tiếp tục xử lý i18n
- const response = intlMiddleware(request);
- if (shouldClearCookies) {
-  clearAuthCookies(response);
- }
- return response;
+ return intlMiddleware(request);
 }
 
 export const config = {

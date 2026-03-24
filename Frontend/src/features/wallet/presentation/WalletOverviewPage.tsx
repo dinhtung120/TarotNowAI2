@@ -14,7 +14,7 @@ import {
  Wallet,
 } from 'lucide-react';
 import { useRouter } from '@/i18n/routing';
-import { SectionHeader, Button, GlassCard, Pagination, TableStates } from '@/components/ui';
+import { SectionHeader, Button, GlassCard, Pagination, TableStates } from '@/shared/components/ui';
 import { formatDate, formatTime } from '@/shared/utils/format/formatDateTime';
 import { useWalletOverviewPage } from '@/features/wallet/application/useWalletOverviewPage';
 

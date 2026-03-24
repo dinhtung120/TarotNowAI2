@@ -15,27 +15,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "@/i18n/routing";
 import { useAuthStore } from "@/store/authStore";
-import { getHistorySessionsAction } from "@/actions/historyActions";
+import { getHistorySessionsAction } from "@/features/reading/application/actions/history";
+import type { HistorySessionsResponse } from "@/features/reading/application/actions/history";
 import { Sparkles, Calendar, ArrowRight, Clock, Bot, ChevronLeft, ChevronRight, History } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
-import { GlassCard, SectionHeader, Button } from "@/components/ui";
+import { GlassCard, SectionHeader, Button } from "@/shared/components/ui";
 import { useAuthGuard } from "@/shared/application/hooks/useAuthGuard";
-
-interface ReadingSessionDto {
- id: string;
- spreadType: string;
- isCompleted: boolean;
- createdAt: string;
-}
-
-interface HistoryResponse {
- page: number;
- pageSize: number;
- totalPages: number;
- totalCount: number;
- items: ReadingSessionDto[];
-}
 
 export default function HistoryPage() {
  const router = useRouter();
@@ -43,7 +29,7 @@ export default function HistoryPage() {
  const tApi = useTranslations("ApiErrors");
  const locale = useLocale();
  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
- const [historyData, setHistoryData] = useState<HistoryResponse | null>(null);
+ const [historyData, setHistoryData] = useState<HistorySessionsResponse | null>(null);
  const [isLoading, setIsLoading] = useState(true);
  const [error, setError] = useState<string | null>(null);
  const [currentPage, setCurrentPage] = useState(1);
@@ -86,9 +72,9 @@ export default function HistoryPage() {
  return;
  }
 
- if (result.success && result.data) {
- setHistoryData(result.data as HistoryResponse);
- }
+	 if (result.success && result.data) {
+	 setHistoryData(result.data);
+	 }
  } catch {
  setError(tApi("network_error"));
  } finally {

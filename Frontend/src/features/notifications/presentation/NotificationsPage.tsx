@@ -33,10 +33,10 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-import { GlassCard, SectionHeader, EmptyState, Pagination } from '@/components/ui';
+import { GlassCard, SectionHeader, EmptyState, Pagination } from '@/shared/components/ui';
 import {
   type NotificationItem,
-} from '@/actions/notificationActions';
+} from '@/features/notifications/application/actions';
 import { useNotificationsPage } from '@/features/notifications/application/useNotificationsPage';
 
 /*

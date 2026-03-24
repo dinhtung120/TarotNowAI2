@@ -18,12 +18,12 @@ import { useRouter } from "@/i18n/routing";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { initReadingSession } from "@/actions/readingActions";
+import { initReadingSession } from "@/features/reading/application/actions";
 import { Sparkles, AlertCircle, Compass, Zap, Star, Flame, ShieldCheck, Moon } from "lucide-react";
 import { useWalletStore } from "@/store/walletStore";
 import { useTranslations } from "next-intl";
 
-import { GlassCard, Button, SectionHeader, Input } from "@/components/ui";
+import { GlassCard, Button, SectionHeader, Input } from "@/shared/components/ui";
 import { setSessionStorageItem } from "@/shared/infrastructure/storage/browserStorage";
 
 interface FormData {

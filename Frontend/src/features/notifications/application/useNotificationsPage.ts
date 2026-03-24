@@ -5,7 +5,7 @@ import {
   getNotifications,
   markNotificationAsRead,
   type NotificationListResponse,
-} from '@/actions/notificationActions';
+} from '@/features/notifications/application/actions';
 
 export function useNotificationsPage() {
   const [data, setData] = useState<NotificationListResponse | null>(null);
@@ -21,7 +21,7 @@ export function useNotificationsPage() {
       pageSize,
       filterUnread ? false : undefined
     );
-    setData(result);
+    setData(result.success ? result.data ?? null : null);
     setLoading(false);
   }, [page, filterUnread]);
 

@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
-import { registerAction, resendVerificationEmailAction } from '@/actions/authActions';
+import { registerAction, resendVerificationEmailAction } from '@/features/auth/application/actions';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import {
  createRegisterSchema,

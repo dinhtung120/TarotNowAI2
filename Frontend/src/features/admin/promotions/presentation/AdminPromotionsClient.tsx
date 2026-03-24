@@ -1,6 +1,6 @@
 "use client";
 
-import { type DepositPromotion } from "@/actions/promotionActions";
+import { type DepositPromotion } from "@/features/admin/application/actions/promotion";
 import {
  Ticket,
  X,
@@ -13,7 +13,7 @@ import {
  Loader2,
  PlusCircle,
 } from "lucide-react";
-import { SectionHeader, GlassCard, Button, ActionConfirmModal } from "@/components/ui";
+import { SectionHeader, GlassCard, Button, ActionConfirmModal } from "@/shared/components/ui";
 import { useAdminPromotions } from "@/features/admin/promotions/application/useAdminPromotions";
 
 interface AdminPromotionsClientProps {

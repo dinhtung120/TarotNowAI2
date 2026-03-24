@@ -49,7 +49,8 @@
     "profile": "个人资料",
     "wallet": "钱包",
     "history": "历史",
-    "collection": "收藏"
+    "collection": "收藏",
+    "notifications": "通知"
   },
   "Footer": {
     "tagline": "月华绽放指引",
@@ -172,6 +173,7 @@
     "error_stream": "通信通道中断，请稍后再试。",
     "error_retry": "尝试其他通道（自动退款）",
     "streaming_placeholder": "星辰正在对齐...",
+    "waiting_for_cards": "等待翻开卡牌...",
     "follow_up_placeholder": "你还想问这次解读什么？...",
     "follow_up_free_badge": "免费追问 ({remaining}/{total})",
     "follow_up_fee_badge": "费用：{cost} Diamond",
@@ -192,6 +194,36 @@
     "notifications": "通知",
     "confirm": "确认",
     "status_complete": "完成"
+  },
+  "LanguageSwitcher": {
+    "menu_title": "语言",
+    "options_aria": "语言选项",
+    "current_aria": "当前语言：{language}",
+    "locale_vi": "Tiếng Việt",
+    "locale_en": "English",
+    "locale_zh": "中文"
+  },
+  "Notifications": {
+    "tag": "通知中心",
+    "title": "通知",
+    "subtitle": "随时了解 TarotNow 的最新动态与消息。",
+    "filter_all": "全部",
+    "filter_unread": "未读",
+    "mark_read": "标记为已读",
+    "mark_read_success": "已标记为已读。",
+    "mark_read_fail": "标记已读失败。",
+    "empty_title": "暂无通知",
+    "empty_desc": "有新通知时会显示在这里。",
+    "loading": "正在加载通知...",
+    "time_just_now": "刚刚",
+    "time_minutes_ago": "{count} 分钟前",
+    "time_hours_ago": "{count} 小时前",
+    "time_days_ago": "{count} 天前",
+    "type_system": "系统",
+    "type_quest": "任务",
+    "type_streak": "连续签到",
+    "type_escrow": "资金",
+    "type_payment": "支付"
   },
   "Pagination": {
     "page_info": "第 {current} / {total} 页",
@@ -351,7 +383,16 @@
       "input_placeholder": "发送你的消息...",
       "payment_offer": "💎 支付提议",
       "payment_accept": "✅ 已接受",
-      "payment_reject": "❌ 已拒绝"
+      "payment_reject": "❌ 已拒绝",
+      "payment_offer_accept": "接受",
+      "payment_offer_reject": "拒绝",
+      "payment_offer_received": "已接收",
+      "payment_accept_fallback": "支付确认成功",
+      "payment_reject_fallback": "提议已被拒绝",
+      "payment_modal_amount_label": "请求的 Diamond 数量",
+      "payment_modal_note_label": "留言（可选）",
+      "payment_modal_note_placeholder": "为此提议添加留言（例如：第 2 张牌的费用）...",
+      "payment_modal_submit": "发送 Diamond 提议"
     },
     "report": {
       "success_title": "已发送举报",
@@ -395,7 +436,14 @@
       "auto_release": "自动释放：{time}",
       "dispute_window": "争议窗口：{time}",
       "action_confirm_release": "确认释放",
-      "action_replied": "标记已回复"
+      "action_replied": "标记已回复",
+      "action_complete_all": "完成整场对话",
+      "confirm_release_all_cta": "确认全部释放",
+      "confirm_cancel": "取消",
+      "confirm_ok": "确认",
+      "complete_all_hint": "点击这里确认满意并将全部款项释放给解读师。",
+      "complete_all_success": "已成功完成并全部释放。",
+      "error_release_all": "全部完成时发生错误，请重试。"
     }
   },
   "Wallet": {
@@ -616,7 +664,11 @@
     "error_init_failed": "无法初始化占卜会话。",
     "validation": {
       "question_too_long": "问题过长"
-    }
+    },
+    "exp_bonus": "+{amount} EXP/张",
+    "select_currency": "支付能量类型",
+    "currency_gold": "Gold",
+    "currency_diamond": "Diamond"
   },
   "ReadingSession": {
     "header": {
@@ -891,7 +943,9 @@
         "amount_invalid": "数量必须大于 0。",
         "add_success": "已成功添加 {amount} {currency}！",
         "add_failed": "添加余额失败。",
-        "system_error": "系统错误。"
+        "system_error": "系统错误。",
+        "update_success": "用户信息已更新。",
+        "update_failed": "更新用户信息失败，请重试。"
       }
     },
     "promotions": {

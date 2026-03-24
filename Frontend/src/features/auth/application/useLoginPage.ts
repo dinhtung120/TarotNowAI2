@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
-import { loginAction } from '@/actions/authActions';
+import { loginAction } from '@/features/auth/application/actions';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from '@/i18n/routing';
 import {
@@ -60,13 +60,13 @@ export function useLoginPage() {
 
   try {
    const result = await loginAction(data);
-   if (result.error) {
+   if (!result.success) {
     setErrorMsg(result.error);
     return;
    }
 
-   if (result.success && result.data) {
-    setAuth(result.data.user, result.data.accessToken);
+   if (result.data) {
+    setAuth(result.data.user);
     setIsRedirecting(true);
     router.replace('/');
    }

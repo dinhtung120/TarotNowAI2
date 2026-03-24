@@ -1,0 +1,76 @@
+/* Theme variables for arctic-frost. */
+
+:root,
+:root[data-theme="arctic-frost"],
+body[data-theme="arctic-frost"] {
+  --font-sans: "Segoe UI", "Verdana", system-ui, sans-serif;
+  --font-serif: "Cambria", "Georgia", serif;
+  --font-mono: "Consolas", "Courier New", monospace;
+  --bg-void: #e8f2fb;
+  --bg-surface: #f4f9ff;
+  --bg-elevated: #ffffff;
+  --bg-surface-hover: #dfecfb;
+  --bg-glass: #f4f9ffb3;
+  --bg-glass-hover: #ffffffc9;
+  --bg-glass-active: #dfecfbe0;
+  --surface-soft: rgba(244, 249, 255, 0.7);
+  --surface-base: rgba(244, 249, 255, 0.84);
+  --surface-strong: rgba(226, 239, 254, 0.92);
+  --overlay-soft: rgba(95, 135, 200, 0.08);
+  --overlay-base: rgba(95, 135, 200, 0.14);
+  --overlay-strong: rgba(95, 135, 200, 0.24);
+  --app-bg:
+    radial-gradient(115% 85% at 10% -10%, rgba(125, 169, 232, 0.3) 0%, transparent 52%),
+    radial-gradient(85% 65% at 88% 2%, rgba(126, 215, 238, 0.28) 0%, transparent 50%),
+    radial-gradient(120% 95% at 50% 105%, rgba(183, 232, 255, 0.3) 0%, transparent 58%),
+    linear-gradient(180deg, #e8f2fb 0%, #eef6ff 44%, #e8f8ff 100%);
+  --purple-accent: #5f87c8;
+  --purple-muted: rgba(95, 135, 200, 0.84);
+  --purple-gradient-from: #7da9e8;
+  --purple-gradient-via: #7ed7ee;
+  --purple-gradient-to: #b7e8ff;
+  --mint-accent: #7ed7ee;
+  --forest-accent: #5db4cc;
+  --amber-accent: #8bb8ff;
+  --amber-soft: #bdd3ff;
+  --holo-silver: #f5fbff;
+  --success: #4da7be;
+  --error: #b97ca6;
+  --warning: #8bb8ff;
+  --info: #5f87c8;
+  --text-primary: #1f344f;
+  --text-secondary: #44617f;
+  --text-muted: #7188a4;
+  --text-tertiary: #7188a4;
+  --text-disabled: #a7b6c7;
+  --text-ink: #14263d;
+  --text-inverse: #ffffff;
+  --accent: #5f87c8;
+  --border-subtle: rgba(95, 135, 200, 0.18);
+  --border-default: rgba(95, 135, 200, 0.3);
+  --border-hover: rgba(126, 215, 238, 0.44);
+  --border-focus: rgba(95, 135, 200, 0.52);
+  --scrollbar-thumb: rgba(95, 135, 200, 0.34);
+  --scrollbar-thumb-hover: rgba(93, 180, 204, 0.44);
+  --selection-bg: rgba(95, 135, 200, 0.24);
+  --selection-text: #14263d;
+  --theme-border-style: solid;
+  --theme-border-width: 1px;
+  --theme-panel-shadow: 0 14px 28px rgba(95, 135, 200, 0.18);
+  --theme-panel-blur: blur(6px);
+  --theme-card-shine: linear-gradient(125deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.12) 58%);
+  --theme-starfield-size: 24px 24px, 32px 32px, 14px 14px, 100% 100%;
+  --theme-motion-scale: 0.8;
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 30px;
+  --shadow-card: 0 10px 24px rgba(95, 135, 200, 0.16);
+  --shadow-elevated: 0 18px 44px rgba(95, 135, 200, 0.24);
+  --glow-purple-sm: 0 0 20px rgba(95, 135, 200, 0.14);
+  --glow-purple-md: 0 0 34px rgba(95, 135, 200, 0.2);
+  --glow-purple-lg: 0 0 52px rgba(95, 135, 200, 0.26);
+  --glow-amber: 0 0 24px rgba(126, 215, 238, 0.2);
+  --shimmer-bg: linear-gradient(90deg, rgba(95, 135, 200, 0.12) 25%, rgba(255, 255, 255, 0.86) 50%, rgba(126, 215, 238, 0.14) 75%);
+  --grad-lunar: linear-gradient(135deg, rgba(163, 196, 241, 0.9), rgba(138, 216, 235, 0.82), rgba(191, 233, 255, 0.76));
+  --metallic-text-gradient: linear-gradient(115deg, #4f72ab 0%, #5f87c8 30%, #ffffff 55%, #7ed7ee 80%, #8bb8ff 100%);
+}

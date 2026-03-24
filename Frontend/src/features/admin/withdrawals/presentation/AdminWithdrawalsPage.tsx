@@ -16,8 +16,8 @@ import {
  Sparkles, Loader2, CheckCircle2, XCircle,
  Diamond, Building2, Clock, User
 } from 'lucide-react';
-import MfaChallengeModal from '@/components/auth/MfaChallengeModal';
-import { SectionHeader, GlassCard, Button, Input } from '@/components/ui';
+import MfaChallengeModal from '@/shared/components/auth/MfaChallengeModal';
+import { SectionHeader, GlassCard, Button, Input } from '@/shared/components/ui';
 import { useLocale, useTranslations } from "next-intl";
 import { useAdminWithdrawals } from '@/features/admin/withdrawals/application/useAdminWithdrawals';
 

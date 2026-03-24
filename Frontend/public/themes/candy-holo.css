@@ -1,0 +1,76 @@
+/* Theme variables for candy-holo. */
+
+:root,
+:root[data-theme="candy-holo"],
+body[data-theme="candy-holo"] {
+  --font-sans: "Comic Sans MS", "Trebuchet MS", system-ui, sans-serif;
+  --font-serif: "Palatino Linotype", "Georgia", serif;
+  --font-mono: "Courier New", monospace;
+  --bg-void: #fff4fb;
+  --bg-surface: #fffaff;
+  --bg-elevated: #ffffff;
+  --bg-surface-hover: #ffeef8;
+  --bg-glass: #fffaffcc;
+  --bg-glass-hover: #ffffffdc;
+  --bg-glass-active: #ffeef8ea;
+  --surface-soft: rgba(255, 250, 255, 0.72);
+  --surface-base: rgba(255, 250, 255, 0.88);
+  --surface-strong: rgba(255, 238, 248, 0.94);
+  --overlay-soft: rgba(255, 107, 195, 0.1);
+  --overlay-base: rgba(91, 231, 255, 0.1);
+  --overlay-strong: rgba(255, 107, 195, 0.2);
+  --app-bg:
+    radial-gradient(115% 85% at 10% -10%, rgba(255, 107, 195, 0.34) 0%, transparent 52%),
+    radial-gradient(85% 65% at 88% 2%, rgba(91, 231, 255, 0.32) 0%, transparent 50%),
+    radial-gradient(120% 95% at 50% 105%, rgba(255, 225, 107, 0.28) 0%, transparent 58%),
+    linear-gradient(180deg, #fff4fb 0%, #fdf7ff 44%, #f2fdff 100%);
+  --purple-accent: #ff6bc3;
+  --purple-muted: rgba(255, 107, 195, 0.82);
+  --purple-gradient-from: #ff6bc3;
+  --purple-gradient-via: #5be7ff;
+  --purple-gradient-to: #ffe16b;
+  --mint-accent: #5be7ff;
+  --forest-accent: #2ec9e4;
+  --amber-accent: #ffe16b;
+  --amber-soft: #ffb7e4;
+  --holo-silver: #e9dbff;
+  --success: #43d5ef;
+  --error: #ff78a9;
+  --warning: #ffe16b;
+  --info: #a58fff;
+  --text-primary: #352445;
+  --text-secondary: #654b7d;
+  --text-muted: #8d73a9;
+  --text-tertiary: #8d73a9;
+  --text-disabled: #b7a8c9;
+  --text-ink: #241033;
+  --text-inverse: #ffffff;
+  --accent: #ff6bc3;
+  --border-subtle: rgba(255, 107, 195, 0.2);
+  --border-default: rgba(255, 107, 195, 0.32);
+  --border-hover: rgba(91, 231, 255, 0.44);
+  --border-focus: rgba(169, 143, 255, 0.52);
+  --scrollbar-thumb: rgba(255, 107, 195, 0.32);
+  --scrollbar-thumb-hover: rgba(91, 231, 255, 0.44);
+  --selection-bg: rgba(255, 107, 195, 0.22);
+  --selection-text: #241033;
+  --theme-border-style: dotted;
+  --theme-border-width: 2px;
+  --theme-panel-shadow: 0 0 0 1px rgba(255, 107, 195, 0.18), 0 18px 40px rgba(255, 107, 195, 0.18);
+  --theme-panel-blur: blur(12px);
+  --theme-card-shine: linear-gradient(120deg, rgba(255, 107, 195, 0.1) 0%, rgba(91, 231, 255, 0.22) 42%, rgba(255, 225, 107, 0.24) 58%, rgba(255, 107, 195, 0.1) 100%);
+  --theme-starfield-size: 14px 14px, 20px 20px, 10px 10px, 100% 100%;
+  --theme-motion-scale: 0.62;
+  --radius-sm: 18px;
+  --radius-md: 26px;
+  --radius-lg: 42px;
+  --shadow-card: 0 12px 26px rgba(169, 143, 255, 0.18);
+  --shadow-elevated: 0 20px 44px rgba(169, 143, 255, 0.24);
+  --glow-purple-sm: 0 0 22px rgba(255, 107, 195, 0.2);
+  --glow-purple-md: 0 0 38px rgba(255, 107, 195, 0.28);
+  --glow-purple-lg: 0 0 58px rgba(255, 107, 195, 0.34);
+  --glow-amber: 0 0 24px rgba(255, 225, 107, 0.22);
+  --shimmer-bg: linear-gradient(90deg, rgba(255, 107, 195, 0.14) 25%, rgba(255, 255, 255, 0.84) 50%, rgba(91, 231, 255, 0.14) 75%);
+  --grad-lunar: linear-gradient(135deg, rgba(255, 145, 217, 0.9), rgba(113, 239, 255, 0.82), rgba(255, 232, 141, 0.76));
+  --metallic-text-gradient: linear-gradient(115deg, #ff6bc3 0%, #ff9cda 24%, #ffffff 52%, #5be7ff 78%, #ffe16b 100%);
+}

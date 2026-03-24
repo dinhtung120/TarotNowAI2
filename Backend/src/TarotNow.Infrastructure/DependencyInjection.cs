@@ -191,19 +191,25 @@ public static class DependencyInjection
             {
                 OnMessageReceived = context =>
                 {
-                    var accessToken = context.Request.Query["access_token"];
+                    var queryToken = context.Request.Query["access_token"].ToString();
+                    var cookieToken = context.Request.Cookies["accessToken"];
                     var path = context.HttpContext.Request.Path;
                     
-                    var isChatHub = path.StartsWithSegments("/api/v1/chat"); // Pháo Tụt WebSocket Chạy Nối Token Náo
+                    var isChatHub = path.StartsWithSegments("/api/v1/chat");
                     var isAiStreamEndpoint =
                         path.StartsWithSegments("/api/v1/sessions", out var remaining) &&
                         remaining.HasValue &&
                         remaining.Value.EndsWith("/stream", StringComparison.OrdinalIgnoreCase);
 
-                    // Trích Thần Gắn Đi Ném Vô Đầu Thách Vòng Lỗi Phê Lọt Context Token Gấp Của Tụt 
-                    if (!string.IsNullOrEmpty(accessToken) && (isChatHub || isAiStreamEndpoint))
+                    // Ưu tiên mô hình cookie HttpOnly cho chat hub để không cần lộ access token ở runtime JS.
+                    if (isChatHub && !string.IsNullOrWhiteSpace(cookieToken))
                     {
-                        context.Token = accessToken;
+                        context.Token = cookieToken;
+                    }
+                    // Giữ backward-compatible cho SSE legacy luồng query token.
+                    else if (!string.IsNullOrWhiteSpace(queryToken) && isAiStreamEndpoint)
+                    {
+                        context.Token = queryToken;
                     }
                     return Task.CompletedTask;
                 }

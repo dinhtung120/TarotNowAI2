@@ -43,6 +43,12 @@ function isEmptyResponse(response: Response): boolean {
   return length === '0';
 }
 
+function hasNextRevalidate(nextConfig: RequestInit['next']): boolean {
+  if (!nextConfig || typeof nextConfig !== 'object') return false;
+  const value = (nextConfig as { revalidate?: unknown }).revalidate;
+  return typeof value === 'number';
+}
+
 async function parseResponseBody<T>(response: Response): Promise<T> {
   if (isEmptyResponse(response)) {
     return undefined as T;
@@ -61,9 +67,10 @@ export async function serverHttpRequest<T>(
   options: ServerHttpRequestOptions = {}
 ): Promise<ServerHttpResult<T>> {
   const { token, headers: rawHeaders, json, fallbackErrorMessage, ...rest } = options;
+  const resolvedCache = rest.cache ?? (hasNextRevalidate(rest.next) ? undefined : 'no-store');
   const response = await fetch(apiUrl(path), {
     ...rest,
-    cache: rest.cache ?? 'no-store',
+    ...(resolvedCache ? { cache: resolvedCache } : {}),
     headers: buildHeaders(token, rawHeaders, json !== undefined),
     body: json === undefined ? undefined : JSON.stringify(json),
   });

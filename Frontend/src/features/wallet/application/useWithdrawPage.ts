@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { createWithdrawal, listMyWithdrawals, type WithdrawalResult } from '@/actions/withdrawalActions';
+import { createWithdrawal, listMyWithdrawals, type WithdrawalResult } from '@/features/wallet/application/actions/withdrawal';
 import { useLocale, useTranslations } from 'next-intl';
 import { getWithdrawalStatusBadge } from '@/features/wallet/domain/withdrawalStatus';
 
@@ -21,8 +21,8 @@ export function useWithdrawPage() {
  const [loadingHistory, setLoadingHistory] = useState(true);
 
  const loadHistory = useCallback(async () => {
-  const data = await listMyWithdrawals();
-  setHistory(data);
+  const result = await listMyWithdrawals();
+  setHistory(result.success && result.data ? result.data : []);
   setLoadingHistory(false);
  }, []);
 
@@ -99,12 +99,12 @@ export function useWithdrawPage() {
     setAmount('');
     await loadHistory();
    } else {
-    setError(result.error || t('withdraw.error_create_failed'));
+    setError(result.error);
    }
 
    setSubmitting(false);
   },
-  [accountName, accountNumber, amountNum, bankName, loadHistory, t]
+  [accountName, accountNumber, amountNum, bankName, loadHistory]
  );
 
  return {

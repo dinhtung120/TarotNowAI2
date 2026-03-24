@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { Link } from '@/i18n/routing';
-import { Button, GlassCard } from '@/components/ui';
+import { Button, GlassCard } from '@/shared/components/ui';
 
 interface AuthSuccessCardProps {
  icon: ReactNode;

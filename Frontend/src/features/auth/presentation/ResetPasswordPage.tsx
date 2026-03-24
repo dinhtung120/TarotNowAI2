@@ -1,8 +1,8 @@
 'use client';
 
 import { Mail, Lock, KeyRound, CheckCircle2 } from 'lucide-react';
-import AuthLayout from '@/components/layout/AuthLayout';
-import { Input, Button } from '@/components/ui';
+import AuthLayout from '@/shared/components/layout/AuthLayout';
+import { Input, Button } from '@/shared/components/ui';
 import { useResetPasswordPage } from '@/features/auth/application/useResetPasswordPage';
 import { AuthErrorBanner } from '@/features/auth/presentation/components/AuthErrorBanner';
 import { AuthSuccessCard } from '@/features/auth/presentation/components/AuthSuccessCard';

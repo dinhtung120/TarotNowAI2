@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
-import { forgotPasswordAction } from '@/actions/authActions';
+import { forgotPasswordAction } from '@/features/auth/application/actions';
 import {
  createForgotPasswordSchema,
  type ForgotPasswordFormValues,

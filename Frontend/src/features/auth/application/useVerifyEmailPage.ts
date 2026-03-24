@@ -5,7 +5,7 @@ import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import { useTranslations } from 'next-intl';
-import { resendVerificationEmailAction, verifyEmailAction } from '@/actions/authActions';
+import { resendVerificationEmailAction, verifyEmailAction } from '@/features/auth/application/actions';
 import {
  createVerifyEmailSchema,
  type VerifyEmailFormValues,

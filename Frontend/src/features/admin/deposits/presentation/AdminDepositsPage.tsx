@@ -20,7 +20,7 @@ import { CreditCard, Filter, CheckCircle2, XCircle, Clock,
  ThumbsUp,
  ThumbsDown
 } from "lucide-react";
-import { SectionHeader, GlassCard, TableStates, FilterTabs, ActionConfirmModal, StepPagination } from "@/components/ui";
+import { SectionHeader, GlassCard, TableStates, FilterTabs, ActionConfirmModal, StepPagination } from "@/shared/components/ui";
 import { formatCurrency } from "@/shared/utils/format/formatCurrency";
 import { formatDate, formatTime } from "@/shared/utils/format/formatDateTime";
 import { useAdminDeposits } from "@/features/admin/deposits/application/useAdminDeposits";

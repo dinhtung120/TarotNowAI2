@@ -2,8 +2,8 @@
 
 import { useCallback, useState } from 'react';
 import toast from 'react-hot-toast';
-import { acceptOffer } from '@/actions/escrowActions';
-import type { ChatMessageDto } from '@/actions/chatActions';
+import { acceptOffer } from '@/features/chat/application/actions/escrow';
+import type { ChatMessageDto } from '@/features/chat/application/actions';
 import { logger } from '@/shared/infrastructure/logging/logger';
 
 interface UsePaymentOfferActionsParams {

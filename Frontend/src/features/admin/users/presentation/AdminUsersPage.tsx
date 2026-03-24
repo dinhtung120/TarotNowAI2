@@ -21,7 +21,7 @@ import { Users, Search, Lock, Gem, Coins,
 	X,
 	Edit2
 } from "lucide-react";
-import { SectionHeader, GlassCard, Button, Input, TableStates, StepPagination } from "@/components/ui";
+import { SectionHeader, GlassCard, Button, Input, TableStates, StepPagination } from "@/shared/components/ui";
 import { useAdminUsers } from "@/features/admin/users/application/useAdminUsers";
 
 export default function AdminUsersPage() {

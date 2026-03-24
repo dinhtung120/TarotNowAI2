@@ -17,7 +17,7 @@ import Image from "next/image";
 import { Sparkles, User, Calendar, AtSign, ShieldCheck, Save, Loader2, Trophy,
  Stars, ArrowUpRight, Clock, XCircle
 } from "lucide-react";
-import { SectionHeader, GlassCard, Button } from "@/components/ui";
+import { SectionHeader, GlassCard, Button } from "@/shared/components/ui";
 import { useProfilePage } from "@/features/profile/application/useProfilePage";
 
 export default function ProfilePage() {

@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import { useRouter } from '@/i18n/routing';
 import { useLocale, useTranslations } from 'next-intl';
-import type { ChatMessageDto } from '@/actions/chatActions';
+import type { ChatMessageDto } from '@/features/chat/application/actions';
 import {
  Send,
  Loader2,
@@ -16,10 +16,10 @@ import {
  Check,
  X,
 } from 'lucide-react';
-import ReportModal from '@/components/chat/ReportModal';
-import EscrowPanel from '@/components/chat/EscrowPanel';
-import PaymentOfferModal from '@/components/chat/PaymentOfferModal';
-import { GlassCard } from '@/components/ui';
+import ReportModal from '@/features/chat/presentation/components/ReportModal';
+import EscrowPanel from '@/features/chat/presentation/components/EscrowPanel';
+import PaymentOfferModal from '@/features/chat/presentation/components/PaymentOfferModal';
+import { GlassCard } from '@/shared/components/ui';
 import { useChatConnection } from '@/features/chat/application/useChatConnection';
 import { usePaymentOfferActions } from '@/features/chat/application/usePaymentOfferActions';
 
@@ -101,8 +101,8 @@ export default function ChatRoomPage() {
     if (message.type === 'payment_accept' || message.type === 'payment_reject') {
      const fallbackText =
       message.type === 'payment_accept'
-       ? 'Xác nhận thanh toán thành công'
-       : 'Đã từ chối đề xuất';
+       ? t('room.payment_accept_fallback')
+       : t('room.payment_reject_fallback');
 
      try {
       const refData = JSON.parse(message.content);
@@ -174,7 +174,7 @@ export default function ChatRoomPage() {
             ) : (
              <Check className="w-3 h-3" />
             )}
-            {isAccepted ? 'Đã Nhận' : 'Chấp Nhận'}
+            {isAccepted ? t('room.payment_offer_received') : t('room.payment_offer_accept')}
            </button>
            {!isAccepted && (
             <button
@@ -182,7 +182,7 @@ export default function ChatRoomPage() {
              className="flex items-center justify-center gap-1 px-3 py-1.5 bg-[var(--danger)]/10 hover:bg-[var(--danger)]/20 text-[var(--danger)] rounded-lg transition-all active:scale-95 border border-[var(--danger)]/20 text-[10px] font-bold uppercase tracking-widest"
             >
              <X className="w-3 h-3" />
-             Từ Chối
+             {t('room.payment_offer_reject')}
             </button>
            )}
           </div>

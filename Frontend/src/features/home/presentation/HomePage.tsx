@@ -15,11 +15,11 @@ import { Star, ChevronRight, ShieldCheck, Flame, Compass, Zap, Users, ArrowUpRig
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
-import { listFeaturedReaders, type ReaderProfile } from "@/actions/readerActions";
+import { listFeaturedReaders, type ReaderProfile } from "@/features/reader/public";
 
-import AstralBackground from "@/components/layout/AstralBackground";
-import Footer from "@/components/layout/Footer";
-import { Button, GlassCard, SectionHeader, Badge } from "@/components/ui";
+import AstralBackground from "@/shared/components/layout/AstralBackground";
+import Footer from "@/shared/components/layout/Footer";
+import { Button, GlassCard, SectionHeader, Badge } from "@/shared/components/ui";
 
 /**
  * Trang Chủ Redesign - Phong cách Ultra Premium Astral
@@ -76,7 +76,11 @@ function FeaturedReadersFallback() {
 
 async function FeaturedReadersGrid() {
  const t = await getTranslations("Index");
- const featuredReaders = await listFeaturedReaders(4);
+ const featuredReadersResult = await listFeaturedReaders(4);
+ const featuredReaders =
+  featuredReadersResult.success && featuredReadersResult.data
+   ? featuredReadersResult.data
+   : [];
 
  if (featuredReaders.length === 0) {
  return <FeaturedReadersFallback />;

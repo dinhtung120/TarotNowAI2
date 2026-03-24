@@ -1,0 +1,230 @@
+/* Theme variables for lunar-bloom. */
+
+:root,
+:root[data-theme="lunar-bloom"],
+body[data-theme="lunar-bloom"] {
+  /* --- BACKGROUNDS & SURFACES --- */
+  --bg-void: #f8f1e9;
+  --bg-surface: #fff9f4;
+  --bg-elevated: #fffdf9;
+  --bg-surface-hover: #f7f0fc;
+  --bg-glass: #fff9f4;
+  --bg-glass-hover: #f7f0fc;
+  --bg-glass-active: #ede7e3;
+  --surface-soft: rgba(255, 249, 244, 0.58);
+  --surface-base: rgba(255, 249, 244, 0.7);
+  --surface-strong: rgba(247, 240, 252, 0.86);
+  --overlay-soft: rgba(61, 49, 80, 0.12);
+  --overlay-base: rgba(61, 49, 80, 0.2);
+  --overlay-strong: rgba(61, 49, 80, 0.34);
+
+  /* App backdrop (body background) */
+  --app-bg:
+    radial-gradient(115% 85% at 10% -10%, rgba(215, 189, 226, 0.46) 0%, transparent 52%),
+    radial-gradient(85% 65% at 88% 2%, rgba(178, 232, 214, 0.44) 0%, transparent 50%),
+    radial-gradient(120% 95% at 50% 105%, rgba(255, 250, 205, 0.4) 0%, transparent 58%),
+    linear-gradient(180deg, #f8f1e9 0%, #f7f2f8 44%, #eff8f4 100%);
+
+  /* UI chrome */
+  --scrollbar-thumb: rgba(168, 156, 255, 0.34);
+  --scrollbar-thumb-hover: rgba(138, 184, 154, 0.5);
+  --scrollbar-track: transparent;
+  --selection-bg: rgba(168, 156, 255, 0.38);
+  --selection-text: var(--text-ink);
+
+  /* Focus rings */
+  --ring-accent: rgba(168, 156, 255, 0.22);
+  --ring-success: rgba(138, 184, 154, 0.22);
+  --ring-warning: rgba(215, 190, 125, 0.22);
+  --ring-danger: rgba(204, 124, 149, 0.22);
+  --ring-input: rgba(168, 156, 255, 0.24);
+
+  /* --- BORDERS --- */
+  --border-subtle: rgba(168, 156, 255, 0.2);
+  --border-default: rgba(168, 156, 255, 0.34);
+  --border-hover: rgba(138, 184, 154, 0.42);
+  --border-focus: rgba(168, 156, 255, 0.64);
+
+  /* --- BRAND: LUNAR PURPLE --- */
+  --purple-50: rgba(215, 189, 226, 0.22);
+  --purple-100: rgba(168, 156, 255, 0.24);
+  --purple-200: rgba(168, 156, 255, 0.4);
+  --purple-glow: rgba(168, 156, 255, 0.34);
+  --purple-accent: #a89cff;
+  --purple-muted: rgba(123, 107, 167, 0.84);
+  --purple-gradient-from: #d7bde2;
+  --purple-gradient-via: #a89cff;
+  --purple-gradient-to: #b2e8d6;
+
+  /* --- BOTANICAL / HEALING ACCENTS --- */
+  --mint-accent: #b2e8d6;
+  --forest-accent: #8ab89a;
+  --amber-accent: #f0e68c;
+  --amber-soft: #ffdab9;
+  --amber-50: rgba(240, 230, 140, 0.22);
+  --holo-silver: #e0e0ff;
+
+  /* --- STATUS --- */
+  --success: #7baa8c;
+  --success-bg: rgba(138, 184, 154, 0.2);
+  --error: #cc7c95;
+  --error-bg: rgba(204, 124, 149, 0.16);
+  --warning: #d7be7d;
+  --warning-bg: rgba(215, 190, 125, 0.22);
+  --info: #8ea7db;
+  --info-bg: rgba(142, 167, 219, 0.2);
+
+  /* --- EXTRACTED COLOR TOKENS (NO HEX/RGBA IN TSX) --- */
+  --c-hex-b89c4f: #b89c4f;
+  --c-hex-9f8338: #9f8338;
+  --c-hex-8f7bb4: #8f7bb4;
+  --c-hex-8c7a2f: #8c7a2f;
+  --c-hex-a89cff28: #a89cff28;
+  --c-hex-b2e8d628: #b2e8d628;
+  --c-hex-000000: #000000;
+  --c-hex-ffffff: #ffffff;
+  --qr-code-dark: #2d213f;
+  --qr-code-light: #fffdf9;
+
+  --c-255-255-255-05: rgba(255, 255, 255, 0.05);
+  --c-255-255-255-15: rgba(255, 255, 255, 0.15);
+  --c-255-255-255-25: rgba(255, 255, 255, 0.25);
+  --c-248-241-233-65: rgba(248, 241, 233, 0.65);
+  --c-237-231-227-88: rgba(237, 231, 227, 0.88);
+  --c-255-250-205-36: rgba(255, 250, 205, 0.36);
+
+  --c-224-224-255-60: rgba(224, 224, 255, 0.6);
+  --c-215-189-226-62: rgba(215, 189, 226, 0.62);
+  --c-215-189-226-50: rgba(215, 189, 226, 0.5);
+  --c-215-189-226-26: rgba(215, 189, 226, 0.26);
+  --c-178-232-214-58: rgba(178, 232, 214, 0.58);
+  --c-178-232-214-42: rgba(178, 232, 214, 0.42);
+  --c-168-156-255-55: rgba(168, 156, 255, 0.55);
+  --c-168-156-255-50: rgba(168, 156, 255, 0.5);
+  --c-168-156-255-30: rgba(168, 156, 255, 0.3);
+  --c-168-156-255-28: rgba(168, 156, 255, 0.28);
+  --c-168-156-255-12: rgba(168, 156, 255, 0.12);
+  --c-154-144-171-58: rgba(154, 144, 171, 0.58);
+
+  --c-70-53-105-28: rgba(70, 53, 105, 0.28);
+  --c-61-49-80-60: rgba(61, 49, 80, 0.6);
+  --c-61-49-80-55: rgba(61, 49, 80, 0.55);
+  --c-61-49-80-20: rgba(61, 49, 80, 0.2);
+
+  --c-168-85-247-70: rgba(168, 85, 247, 0.7);
+  --c-168-85-247-60: rgba(168, 85, 247, 0.6);
+  --c-168-85-247-50: rgba(168, 85, 247, 0.5);
+  --c-168-85-247-40: rgba(168, 85, 247, 0.4);
+  --c-168-85-247-30: rgba(168, 85, 247, 0.3);
+  --c-168-85-247-20: rgba(168, 85, 247, 0.2);
+  --c-168-85-247-15: rgba(168, 85, 247, 0.15);
+  --c-168-85-247-10: rgba(168, 85, 247, 0.1);
+
+  --c-16-185-129-50: rgba(16, 185, 129, 0.5);
+  --c-16-185-129-40: rgba(16, 185, 129, 0.4);
+  --c-16-185-129-30: rgba(16, 185, 129, 0.3);
+  --c-16-185-129-20: rgba(16, 185, 129, 0.2);
+  --c-16-185-129-10: rgba(16, 185, 129, 0.1);
+
+  --c-245-158-11-60: rgba(245, 158, 11, 0.6);
+  --c-245-158-11-50: rgba(245, 158, 11, 0.5);
+  --c-245-158-11-30: rgba(245, 158, 11, 0.3);
+  --c-245-158-11-20: rgba(245, 158, 11, 0.2);
+  --c-245-158-11-10: rgba(245, 158, 11, 0.1);
+  --c-245-158-11-08: rgba(245, 158, 11, 0.08);
+  --c-251-191-36-80: rgba(251, 191, 36, 0.8);
+  --c-251-191-36-20: rgba(251, 191, 36, 0.2);
+  --c-251-191-36-15: rgba(251, 191, 36, 0.15);
+  --c-251-191-36-10: rgba(251, 191, 36, 0.1);
+
+  --c-244-63-94-50: rgba(244, 63, 94, 0.5);
+  --c-244-63-94-30: rgba(244, 63, 94, 0.3);
+  --c-239-68-68-05: rgba(239, 68, 68, 0.05);
+
+  --c-142-167-219-42: rgba(142, 167, 219, 0.42);
+  --c-138-184-154-42: rgba(138, 184, 154, 0.42);
+  --c-215-190-125-42: rgba(215, 190, 125, 0.42);
+  --c-204-124-149-38: rgba(204, 124, 149, 0.38);
+  --c-240-230-140-46: rgba(240, 230, 140, 0.46);
+  --c-240-230-140-24: rgba(240, 230, 140, 0.24);
+
+  --c-59-130-246-60: rgba(59, 130, 246, 0.6);
+  --c-0-0-0-80: rgba(0, 0, 0, 0.8);
+  --c-0-0-0-20: rgba(0, 0, 0, 0.2);
+
+  --nebula-purple-subtle: rgba(168, 156, 255, 0.16);
+  --nebula-purple-default: rgba(168, 156, 255, 0.24);
+  --nebula-purple-intense: rgba(168, 156, 255, 0.34);
+  --nebula-mint-subtle: rgba(178, 232, 214, 0.16);
+  --nebula-mint-default: rgba(178, 232, 214, 0.24);
+  --nebula-mint-intense: rgba(178, 232, 214, 0.34);
+  --nebula-moon-subtle: rgba(240, 230, 140, 0.14);
+  --nebula-moon-default: rgba(240, 230, 140, 0.16);
+  --nebula-moon-intense: rgba(240, 230, 140, 0.26);
+
+  /* --- TEXT --- */
+  --text-primary: #3d3150;
+  --text-secondary: #6f6282;
+  --text-muted: #9a90ab;
+  --text-tertiary: #9a90ab;
+  --text-disabled: #c5bdd4;
+  --text-ink: #2d213f;
+  --text-inverse: #fffdf9;
+  --danger: #cc7c95;
+  --danger-bg: rgba(204, 124, 149, 0.16);
+  --accent: #f0e68c;
+
+  /* --- SHADOWS & GLOWS --- */
+  --shadow-card: 0 14px 32px rgba(168, 156, 255, 0.16);
+  --shadow-elevated: 0 22px 52px rgba(168, 156, 255, 0.22);
+  --glow-purple-sm: 0 0 24px rgba(168, 156, 255, 0.24);
+  --glow-purple-md: 0 0 44px rgba(168, 156, 255, 0.34);
+  --glow-purple-lg: 0 0 66px rgba(168, 156, 255, 0.44);
+  --glow-amber: 0 0 28px rgba(240, 230, 140, 0.28);
+  --glow-white: 0 18px 36px rgba(255, 250, 244, 0.5);
+  --glow-pulse-from: 0 0 15px rgba(168, 156, 255, 0.2);
+  --glow-pulse-to: 0 0 30px rgba(178, 232, 214, 0.35);
+  --shimmer-bg: linear-gradient(
+    90deg,
+    rgba(215, 189, 226, 0.2) 25%,
+    rgba(224, 224, 255, 0.56) 50%,
+    rgba(178, 232, 214, 0.25) 75%
+  );
+
+  /* --- BORDER RADIUS --- */
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 40px;
+
+  /* --- TRANSITIONS --- */
+  --transition-fast: 150ms ease;
+  --transition-base: 300ms ease;
+  --transition-slow: 500ms ease;
+  --transition-glacial: 700ms ease;
+
+  /* --- VISUAL TRAITS (theme personality) --- */
+  --theme-border-style: solid;
+  --theme-border-width: 1px;
+  --theme-panel-shadow: var(--shadow-card);
+  --theme-panel-blur: blur(0px);
+  --theme-card-shine: linear-gradient(to top right, var(--c-255-255-255-05), transparent 72%);
+  --theme-starfield-size: 24px 24px, 30px 30px, 18px 18px, 100% 100%;
+  --theme-motion-scale: 1;
+
+  /* Gradients (reused by utility classes) */
+  --grad-lunar: linear-gradient(
+    135deg,
+    rgba(215, 189, 226, 0.84),
+    rgba(168, 156, 255, 0.78),
+    rgba(178, 232, 214, 0.7)
+  );
+  --metallic-text-gradient: linear-gradient(
+    115deg,
+    #8b7bb4 0%,
+    #a89cff 30%,
+    #e0e0ff 55%,
+    #b2e8d6 80%,
+    #d7be7d 100%
+  );
+}

@@ -173,6 +173,7 @@
 	        "error_stream": "The communication channel is disrupted. Please try again later.",
 	        "error_retry": "Try Another Channel (Auto Refund)",
 	        "streaming_placeholder": "Aligning the stars...",
+	        "waiting_for_cards": "Waiting for cards to be flipped...",
 	        "follow_up_placeholder": "What else would you like to ask about this reading?...",
 	        "follow_up_free_badge": "Free follow-up ({remaining}/{total})",
 	        "follow_up_fee_badge": "Fee: {cost} Diamond",
@@ -193,6 +194,14 @@
         "notifications": "Notifications",
         "confirm": "Confirm",
         "status_complete": "Complete"
+    },
+    "LanguageSwitcher": {
+        "menu_title": "Language",
+        "options_aria": "Language options",
+        "current_aria": "Current language: {language}",
+        "locale_vi": "Tiếng Việt",
+        "locale_en": "English",
+        "locale_zh": "中文"
     },
     "Notifications": {
         "tag": "Notification center",
@@ -374,7 +383,16 @@
             "input_placeholder": "Send your message...",
             "payment_offer": "💎 Payment offer",
             "payment_accept": "✅ Accepted",
-            "payment_reject": "❌ Declined"
+            "payment_reject": "❌ Declined",
+            "payment_offer_accept": "Accept",
+            "payment_offer_reject": "Decline",
+            "payment_offer_received": "Received",
+            "payment_accept_fallback": "Payment confirmation successful",
+            "payment_reject_fallback": "Offer was declined",
+            "payment_modal_amount_label": "Requested Diamond amount",
+            "payment_modal_note_label": "Message (optional)",
+            "payment_modal_note_placeholder": "Enter a note for this offer (e.g. Payment for the second card)...",
+            "payment_modal_submit": "Send Diamond Offer"
         },
         "report": {
             "success_title": "Report sent",
@@ -418,7 +436,14 @@
             "auto_release": "Auto release: {time}",
             "dispute_window": "Dispute window: {time}",
             "action_confirm_release": "Confirm release",
-            "action_replied": "Mark as replied"
+            "action_replied": "Mark as replied",
+            "action_complete_all": "Complete full conversation",
+            "confirm_release_all_cta": "Confirm release all",
+            "confirm_cancel": "Cancel",
+            "confirm_ok": "Confirm",
+            "complete_all_hint": "Tap here to confirm satisfaction and release full payment to the reader.",
+            "complete_all_success": "All accepted items were released successfully.",
+            "error_release_all": "Failed to complete all releases. Please try again."
         }
     },
     "Wallet": {
@@ -639,7 +664,11 @@
         "error_init_failed": "Failed to initialize reading session.",
         "validation": {
             "question_too_long": "Question is too long"
-        }
+        },
+        "exp_bonus": "+{amount} EXP/Card",
+        "select_currency": "Payment energy type",
+        "currency_gold": "Gold",
+        "currency_diamond": "Diamond"
     },
     "ReadingSession": {
         "header": {
@@ -914,7 +943,9 @@
                 "amount_invalid": "Amount must be greater than 0.",
                 "add_success": "Added {amount} {currency} successfully!",
                 "add_failed": "Failed to add balance.",
-                "system_error": "System error."
+                "system_error": "System error.",
+                "update_success": "User information updated successfully.",
+                "update_failed": "Failed to update user information. Please try again."
             }
         },
         "promotions": {

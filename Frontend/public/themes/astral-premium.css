@@ -1,0 +1,199 @@
+/* Theme variables for astral-premium. */
+
+:root,
+:root[data-theme="astral-premium"],
+body[data-theme="astral-premium"] {
+  /* --- BACKGROUNDS & SURFACES --- */
+  --bg-void: #000000;
+  --bg-surface: #04050a;
+  --bg-elevated: #0a0c14;
+  --bg-surface-hover: #111528;
+  --bg-glass: #04050a;
+  --bg-glass-hover: #0a0c14;
+  --bg-glass-active: #111528;
+  --surface-soft: rgba(0, 0, 0, 0.62);
+  --surface-base: rgba(4, 5, 10, 0.8);
+  --surface-strong: rgba(10, 12, 20, 0.9);
+  --overlay-soft: rgba(107, 99, 184, 0.08);
+  --overlay-base: rgba(107, 99, 184, 0.14);
+  --overlay-strong: rgba(0, 0, 0, 0.86);
+
+  --app-bg:
+    radial-gradient(120% 90% at 14% -6%, rgba(38, 32, 84, 0.18) 0%, transparent 58%),
+    radial-gradient(95% 78% at 88% 10%, rgba(33, 45, 79, 0.16) 0%, transparent 60%),
+    radial-gradient(105% 86% at 50% 105%, rgba(24, 43, 63, 0.14) 0%, transparent 64%),
+    radial-gradient(68% 56% at 72% 24%, rgba(141, 125, 99, 0.06) 0%, transparent 74%),
+    linear-gradient(180deg, #000000 0%, #000000 70%, #010102 100%);
+
+  --scrollbar-thumb: rgba(107, 99, 184, 0.24);
+  --scrollbar-thumb-hover: rgba(49, 77, 104, 0.38);
+  --scrollbar-track: transparent;
+  --selection-bg: rgba(107, 99, 184, 0.28);
+  --selection-text: var(--text-ink);
+
+  /* Focus rings */
+  --ring-accent: rgba(107, 99, 184, 0.22);
+  --ring-success: rgba(60, 111, 123, 0.24);
+  --ring-warning: rgba(141, 125, 99, 0.22);
+  --ring-danger: rgba(156, 111, 132, 0.22);
+  --ring-input: rgba(166, 173, 207, 0.2);
+
+  /* --- BORDERS --- */
+  --border-subtle: rgba(107, 99, 184, 0.14);
+  --border-default: rgba(107, 99, 184, 0.26);
+  --border-hover: rgba(49, 77, 104, 0.4);
+  --border-focus: rgba(166, 173, 207, 0.48);
+
+  /* --- BRAND --- */
+  --purple-50: rgba(107, 99, 184, 0.1);
+  --purple-100: rgba(107, 99, 184, 0.14);
+  --purple-200: rgba(107, 99, 184, 0.24);
+  --purple-glow: rgba(107, 99, 184, 0.2);
+  --purple-accent: #6b63b8;
+  --purple-muted: rgba(85, 78, 142, 0.86);
+  --purple-gradient-from: #090713;
+  --purple-gradient-via: #121630;
+  --purple-gradient-to: #182b3f;
+
+  --mint-accent: #314d68;
+  --forest-accent: #243944;
+  --amber-accent: #8d7d63;
+  --amber-soft: #685944;
+  --amber-50: rgba(141, 125, 99, 0.16);
+  --holo-silver: #a6adcf;
+
+  /* --- STATUS --- */
+  --success: #3c6f7b;
+  --success-bg: rgba(60, 111, 123, 0.18);
+  --error: #9c6f84;
+  --error-bg: rgba(156, 111, 132, 0.14);
+  --warning: #8d7d63;
+  --warning-bg: rgba(141, 125, 99, 0.18);
+  --info: #7a87b7;
+  --info-bg: rgba(122, 135, 183, 0.16);
+
+  /* --- EXTRACTED COLOR TOKENS (OVERRIDES) --- */
+  --c-hex-b89c4f: #8d7d63;
+  --c-hex-9f8338: #7f7057;
+  --c-hex-8f7bb4: #6b63b8;
+  --c-hex-8c7a2f: #685944;
+  --c-hex-a89cff28: #6b63b828;
+  --c-hex-b2e8d628: #314d6828;
+
+  --qr-code-dark: #000000;
+  --qr-code-light: #e6dfd5;
+
+  --c-255-255-255-05: rgba(230, 223, 213, 0.04);
+  --c-255-255-255-15: rgba(230, 223, 213, 0.1);
+  --c-255-255-255-25: rgba(230, 223, 213, 0.16);
+  --c-248-241-233-65: rgba(4, 5, 10, 0.72);
+  --c-237-231-227-88: rgba(0, 0, 0, 0.9);
+  --c-255-250-205-36: rgba(141, 125, 99, 0.16);
+  --c-224-224-255-60: rgba(166, 173, 207, 0.52);
+  --c-215-189-226-62: rgba(107, 99, 184, 0.28);
+  --c-215-189-226-50: rgba(107, 99, 184, 0.34);
+  --c-215-189-226-26: rgba(107, 99, 184, 0.2);
+  --c-178-232-214-58: rgba(49, 77, 104, 0.24);
+  --c-178-232-214-42: rgba(49, 77, 104, 0.3);
+  --c-168-156-255-55: rgba(107, 99, 184, 0.5);
+  --c-168-156-255-50: rgba(107, 99, 184, 0.46);
+  --c-168-156-255-30: rgba(107, 99, 184, 0.28);
+  --c-168-156-255-28: rgba(107, 99, 184, 0.26);
+  --c-168-156-255-12: rgba(107, 99, 184, 0.12);
+  --c-154-144-171-58: rgba(166, 173, 207, 0.52);
+
+  --c-70-53-105-28: rgba(0, 0, 0, 0.7);
+  --c-61-49-80-60: rgba(0, 0, 0, 0.64);
+  --c-61-49-80-55: rgba(0, 0, 0, 0.58);
+  --c-61-49-80-20: rgba(0, 0, 0, 0.28);
+
+  --c-168-85-247-70: rgba(107, 99, 184, 0.7);
+  --c-168-85-247-60: rgba(107, 99, 184, 0.6);
+  --c-168-85-247-50: rgba(107, 99, 184, 0.5);
+  --c-168-85-247-40: rgba(107, 99, 184, 0.4);
+  --c-168-85-247-30: rgba(107, 99, 184, 0.3);
+  --c-168-85-247-20: rgba(107, 99, 184, 0.2);
+  --c-168-85-247-15: rgba(107, 99, 184, 0.15);
+  --c-168-85-247-10: rgba(107, 99, 184, 0.1);
+
+  --c-16-185-129-50: rgba(60, 111, 123, 0.5);
+  --c-16-185-129-40: rgba(60, 111, 123, 0.4);
+  --c-16-185-129-30: rgba(60, 111, 123, 0.3);
+  --c-16-185-129-20: rgba(60, 111, 123, 0.2);
+  --c-16-185-129-10: rgba(60, 111, 123, 0.1);
+
+  --c-245-158-11-60: rgba(141, 125, 99, 0.6);
+  --c-245-158-11-50: rgba(141, 125, 99, 0.5);
+  --c-245-158-11-30: rgba(141, 125, 99, 0.3);
+  --c-245-158-11-20: rgba(141, 125, 99, 0.2);
+  --c-245-158-11-10: rgba(141, 125, 99, 0.1);
+  --c-245-158-11-08: rgba(141, 125, 99, 0.08);
+  --c-251-191-36-80: rgba(141, 125, 99, 0.8);
+  --c-251-191-36-20: rgba(141, 125, 99, 0.2);
+  --c-251-191-36-15: rgba(141, 125, 99, 0.15);
+  --c-251-191-36-10: rgba(141, 125, 99, 0.1);
+
+  --c-142-167-219-42: rgba(122, 135, 183, 0.42);
+  --c-138-184-154-42: rgba(60, 111, 123, 0.42);
+  --c-215-190-125-42: rgba(141, 125, 99, 0.42);
+  --c-204-124-149-38: rgba(156, 111, 132, 0.38);
+  --c-240-230-140-46: rgba(141, 125, 99, 0.46);
+  --c-240-230-140-24: rgba(141, 125, 99, 0.24);
+
+  --c-59-130-246-60: rgba(122, 135, 183, 0.6);
+
+  /* --- NEBULA --- */
+  --nebula-purple-subtle: rgba(85, 78, 142, 0.1);
+  --nebula-purple-default: rgba(85, 78, 142, 0.16);
+  --nebula-purple-intense: rgba(85, 78, 142, 0.24);
+  --nebula-mint-subtle: rgba(49, 77, 104, 0.1);
+  --nebula-mint-default: rgba(49, 77, 104, 0.16);
+  --nebula-mint-intense: rgba(49, 77, 104, 0.24);
+  --nebula-moon-subtle: rgba(141, 125, 99, 0.08);
+  --nebula-moon-default: rgba(141, 125, 99, 0.14);
+  --nebula-moon-intense: rgba(141, 125, 99, 0.2);
+
+  /* --- TEXT --- */
+  --text-primary: #e6dfd5;
+  --text-secondary: #b8bdd4;
+  --text-muted: #8087a6;
+  --text-tertiary: #8087a6;
+  --text-disabled: #434962;
+  --text-ink: #f4efe7;
+  --text-inverse: #a6adcf;
+  --danger: #9c6f84;
+  --danger-bg: rgba(156, 111, 132, 0.14);
+  --accent: #8d7d63;
+
+  /* --- SHADOWS & GLOWS --- */
+  --shadow-card: 0 16px 36px rgba(0, 0, 0, 0.72);
+  --shadow-elevated: 0 24px 56px rgba(0, 0, 0, 0.84);
+  --glow-purple-sm: 0 0 24px rgba(107, 99, 184, 0.12);
+  --glow-purple-md: 0 0 44px rgba(107, 99, 184, 0.18);
+  --glow-purple-lg: 0 0 66px rgba(107, 99, 184, 0.24);
+  --glow-amber: 0 0 28px rgba(141, 125, 99, 0.12);
+  --glow-white: 0 18px 36px rgba(166, 173, 207, 0.08);
+  --glow-pulse-from: 0 0 15px rgba(107, 99, 184, 0.18);
+  --glow-pulse-to: 0 0 30px rgba(49, 77, 104, 0.22);
+  --shimmer-bg: linear-gradient(
+    90deg,
+    rgba(107, 99, 184, 0.12) 25%,
+    rgba(166, 173, 207, 0.2) 50%,
+    rgba(49, 77, 104, 0.12) 75%
+  );
+
+  --grad-lunar: linear-gradient(
+    135deg,
+    rgba(9, 7, 19, 0.86),
+    rgba(18, 22, 48, 0.8),
+    rgba(24, 43, 63, 0.72)
+  );
+  --metallic-text-gradient: linear-gradient(
+    115deg,
+    #2b2550 0%,
+    #6b63b8 30%,
+    #a6adcf 55%,
+    #314d68 80%,
+    #8d7d63 100%
+  );
+}

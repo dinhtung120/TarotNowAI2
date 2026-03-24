@@ -5,7 +5,7 @@ import {
   submitReaderApplication,
   getMyReaderRequest,
   type MyReaderRequest,
-} from '@/actions/readerActions';
+} from '@/features/reader/application/actions';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 
@@ -20,7 +20,7 @@ export function useReaderApplyPage(t: TranslateFn) {
   useEffect(() => {
     const fetchStatus = async () => {
       const result = await getMyReaderRequest();
-      setExistingRequest(result);
+      setExistingRequest(result.success ? result.data ?? null : null);
       setLoading(false);
     };
 
@@ -39,13 +39,13 @@ export function useReaderApplyPage(t: TranslateFn) {
     setMessage('');
 
     const result = await submitReaderApplication(introText);
-    setMessage(result.message);
+    setMessage(result.success ? result.data?.message || t('success.submitted') : result.error);
     setMessageType(result.success ? 'success' : 'error');
     setSubmitting(false);
 
     if (result.success) {
       const updatedRequest = await getMyReaderRequest();
-      setExistingRequest(updatedRequest);
+      setExistingRequest(updatedRequest.success ? updatedRequest.data ?? null : null);
     }
   };
 

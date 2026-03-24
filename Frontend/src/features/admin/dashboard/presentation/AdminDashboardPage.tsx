@@ -27,7 +27,7 @@ import {
  Loader2
 } from 'lucide-react';
 import { useRouter } from '@/i18n/routing';
-import { SectionHeader, GlassCard } from '@/components/ui';
+import { SectionHeader, GlassCard } from '@/shared/components/ui';
 import { useLocale, useTranslations } from 'next-intl';
 import { useAdminDashboard } from '@/features/admin/dashboard/application/useAdminDashboard';
 

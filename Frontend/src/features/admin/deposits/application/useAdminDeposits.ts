@@ -7,7 +7,7 @@ import {
  listDeposits,
  processDeposit,
  type AdminDepositOrder,
-} from '@/actions/adminActions';
+} from '@/features/admin/application/actions';
 
 interface ConfirmModalState {
  isOpen: boolean;
@@ -34,11 +34,11 @@ export function useAdminDeposits() {
  const fetchOrders = useCallback(async () => {
   setLoading(true);
   try {
-   const data = await listDeposits(page, 10, statusFilter);
-   if (!data) return;
+   const result = await listDeposits(page, 10, statusFilter);
+   if (!result.success || !result.data) return;
 
-   setOrders(data.deposits);
-   setTotalCount(data.totalCount);
+   setOrders(result.data.deposits);
+   setTotalCount(result.data.totalCount);
   } finally {
    setLoading(false);
   }
@@ -63,8 +63,8 @@ export function useAdminDeposits() {
   setProcessingId(id);
 
   try {
-   const success = await processDeposit(id, action);
-   if (!success) {
+   const result = await processDeposit(id, action);
+   if (!result.success) {
     toast.error(t('deposits.toast.action_failed'));
     return;
    }

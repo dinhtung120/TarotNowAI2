@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useLocale, useTranslations } from 'next-intl';
-import { getAllHistorySessionsAdminAction } from '@/actions/historyActions';
+import { getAllHistorySessionsAdminAction } from '@/features/reading/public';
 
 interface AdminReading {
  id: string;

@@ -7,7 +7,7 @@ import {
  listReaderRequests,
  processReaderRequest,
  type AdminReaderRequest,
-} from '@/actions/adminActions';
+} from '@/features/admin/application/actions';
 
 export function useAdminReaderRequests() {
  const t = useTranslations('Admin');
@@ -27,9 +27,9 @@ export function useAdminReaderRequests() {
  const fetchRequests = useCallback(async () => {
   setLoading(true);
   const result = await listReaderRequests(page, pageSize, statusFilter);
-  if (result) {
-   setRequests(result.requests);
-   setTotalCount(result.totalCount);
+  if (result.success && result.data) {
+   setRequests(result.data.requests);
+   setTotalCount(result.data.totalCount);
   }
   setLoading(false);
  }, [page, pageSize, statusFilter]);
@@ -49,8 +49,8 @@ export function useAdminReaderRequests() {
   action: 'approve' | 'reject'
  ) => {
   setProcessing(requestId);
-  const success = await processReaderRequest(requestId, action, adminNote);
-  if (success) {
+  const result = await processReaderRequest(requestId, action, adminNote);
+  if (result.success) {
    toast.success(
     action === 'approve'
      ? t('reader_requests.toast.approve_success')

@@ -16,7 +16,7 @@ import {
  Users, CheckCircle2, XCircle, Clock, Loader2,
  FileText, Filter, Eye, ShieldCheck
 } from 'lucide-react';
-import { SectionHeader, GlassCard, Button, Input, FilterTabs, StepPagination } from '@/components/ui';
+import { SectionHeader, GlassCard, Button, Input, FilterTabs, StepPagination } from '@/shared/components/ui';
 import { useAdminReaderRequests } from '@/features/admin/reader-requests/application/useAdminReaderRequests';
 
 /**

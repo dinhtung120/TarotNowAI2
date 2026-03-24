@@ -9,7 +9,7 @@ import {
  updatePromotion as updatePromotionAction,
  deletePromotion as deletePromotionAction,
  type DepositPromotion,
-} from '@/actions/promotionActions';
+} from '@/features/admin/application/actions/promotion';
 
 export function useAdminPromotions(initialPromotions: DepositPromotion[]) {
  const t = useTranslations('Admin');
@@ -37,8 +37,8 @@ export function useAdminPromotions(initialPromotions: DepositPromotion[]) {
   if (showLoading) setLoading(true);
 
   try {
-   const data = await listPromotionsAction(false);
-   setPromotions(data ?? []);
+   const result = await listPromotionsAction(false);
+   setPromotions(result.success && result.data ? result.data : []);
   } catch {
    setPromotions([]);
   } finally {
@@ -51,8 +51,8 @@ export function useAdminPromotions(initialPromotions: DepositPromotion[]) {
   setSubmitting(true);
 
   try {
-   const ok = await createPromotionAction(minAmount, bonusGold);
-   if (ok) {
+   const result = await createPromotionAction(minAmount, bonusGold);
+   if (result.success) {
     setIsCreating(false);
     setMinAmount(0);
     setBonusGold(0);
@@ -72,12 +72,12 @@ export function useAdminPromotions(initialPromotions: DepositPromotion[]) {
   setTogglingId(promotion.id);
   try {
    const nextActive = !promotion.isActive;
-   const ok = await updatePromotionAction(promotion.id, {
+   const result = await updatePromotionAction(promotion.id, {
     minAmountVnd: promotion.minAmountVnd,
     bonusDiamond: promotion.bonusDiamond,
     isActive: nextActive,
    });
-   if (ok) {
+   if (result.success) {
     setPromotions((prev) =>
      prev.map((item) => (item.id === promotion.id ? { ...item, isActive: nextActive } : item))
     );
@@ -97,8 +97,8 @@ export function useAdminPromotions(initialPromotions: DepositPromotion[]) {
 
   setDeletingId(deleteId);
   try {
-   const ok = await deletePromotionAction(deleteId);
-   if (ok) {
+   const result = await deletePromotionAction(deleteId);
+   if (result.success) {
     setPromotions((prev) => prev.filter((item) => item.id !== deleteId));
     setDeleteId(null);
     toast.success(t('promotions.toast.delete_success'));

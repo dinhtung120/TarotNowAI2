@@ -6,7 +6,7 @@ import {
   setupMfa,
   verifyMfa,
   type MfaSetupResult,
-} from '@/actions/mfaActions';
+} from '@/features/profile/mfa/application/actions';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 
@@ -40,8 +40,8 @@ export function useProfileMfaPage(t: TranslateFn) {
 
   useEffect(() => {
     const loadStatus = async () => {
-      const status = await getMfaStatus();
-      setMfaEnabled(status);
+      const result = await getMfaStatus();
+      setMfaEnabled(result.success ? result.data ?? false : false);
     };
 
     void loadStatus();
@@ -54,7 +54,7 @@ export function useProfileMfaPage(t: TranslateFn) {
     if (res.success && res.data) {
       setSetupData(res.data);
     } else {
-      setSetupError(res.error || t('mfa.setup_error_generic'));
+      setSetupError(res.success ? t('mfa.setup_error_generic') : res.error);
     }
     setSetupLoading(false);
   };
@@ -70,7 +70,7 @@ export function useProfileMfaPage(t: TranslateFn) {
       setMfaEnabled(true);
       setSetupData(null);
     } else {
-      setVerifyError(res.error || t('mfa.verify_error_invalid'));
+      setVerifyError(res.error);
     }
     setVerifyLoading(false);
   };

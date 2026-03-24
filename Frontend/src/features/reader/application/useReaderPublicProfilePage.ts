@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
 import toast from 'react-hot-toast';
-import { createConversation } from '@/actions/chatActions';
-import { getReaderProfile, type ReaderProfile } from '@/actions/readerActions';
+import { createConversation } from '@/features/chat/public';
+import { getReaderProfile, type ReaderProfile } from '@/features/reader/application/actions';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 
@@ -23,7 +23,7 @@ export function useReaderPublicProfilePage(t: TranslateFn) {
 
     const fetchProfile = async () => {
       const result = await getReaderProfile(userId);
-      setProfile(result);
+      setProfile(result.success ? result.data ?? null : null);
       setLoading(false);
     };
 
@@ -35,8 +35,8 @@ export function useReaderPublicProfilePage(t: TranslateFn) {
 
     setStartingChat(true);
     const result = await createConversation(profile.userId);
-    if (result && result.id) {
-      router.push(`/chat/${result.id}`);
+    if (result.success && result.data?.id) {
+      router.push(`/chat/${result.data.id}`);
       return;
     }
 

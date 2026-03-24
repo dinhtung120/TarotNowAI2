@@ -27,9 +27,9 @@ import {
   Clock,
   ArrowLeft,
 } from "lucide-react";
-import MfaChallengeModal from "@/components/auth/MfaChallengeModal";
+import MfaChallengeModal from "@/shared/components/auth/MfaChallengeModal";
 import { useRouter } from "@/i18n/routing";
-import { Button, GlassCard, SectionHeader } from "@/components/ui";
+import { Button, GlassCard, SectionHeader } from "@/shared/components/ui";
 import { useWithdrawPage } from "@/features/wallet/application/useWithdrawPage";
 
 export default function WithdrawPage() {

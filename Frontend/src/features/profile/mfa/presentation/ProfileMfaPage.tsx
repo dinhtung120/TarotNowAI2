@@ -18,7 +18,7 @@ import { useQRCode } from 'next-qrcode';
 import { Shield, ShieldAlert, ShieldCheck, Loader2, ArrowRight, CheckCircle2, AlertTriangle, KeyRound, Copy } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
-import { SectionHeader, GlassCard, Button } from '@/components/ui';
+import { SectionHeader, GlassCard, Button } from '@/shared/components/ui';
 import { useProfileMfaPage } from '@/features/profile/mfa/application/useProfileMfaPage';
 
 export default function MfaSetupPage() {

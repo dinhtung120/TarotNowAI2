@@ -17,7 +17,7 @@ import {
  Star, Gem, MessageCircle, Loader2, Sparkles, ArrowLeft, Clock, User
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { GlassCard, Button } from '@/components/ui';
+import { GlassCard, Button } from '@/shared/components/ui';
 import { useReaderPublicProfilePage } from '@/features/reader/application/useReaderPublicProfilePage';
 
 export default function ReaderProfilePage() {

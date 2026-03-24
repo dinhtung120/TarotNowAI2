@@ -9,7 +9,7 @@ import {
  Sparkles,
  Zap,
 } from 'lucide-react';
-import { Button, GlassCard, SectionHeader } from '@/components/ui';
+import { Button, GlassCard, SectionHeader } from '@/shared/components/ui';
 import { useRouter } from '@/i18n/routing';
 import { formatCurrency } from '@/shared/utils/format/formatCurrency';
 import { useDepositPage } from '@/features/wallet/application/useDepositPage';

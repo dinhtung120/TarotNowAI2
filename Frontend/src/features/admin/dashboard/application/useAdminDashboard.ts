@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { listUsers, listDeposits } from '@/actions/adminActions';
-import { listPromotions } from '@/actions/promotionActions';
-import { getAllHistorySessionsAdminAction } from '@/actions/historyActions';
+import { listUsers, listDeposits } from '@/features/admin/application/actions';
+import { listPromotions } from '@/features/admin/application/actions/promotion';
+import { getAllHistorySessionsAdminAction } from '@/features/reading/public';
 
 export interface AdminStats {
   users: number;
@@ -34,13 +34,13 @@ export function useAdminDashboard() {
 
         const readingCount =
           readingsRes && 'success' in readingsRes && readingsRes.success
-            ? readingsRes.data.totalCount
+            ? readingsRes.data?.totalCount ?? 0
             : 0;
 
         setStats({
-          users: usersRes?.totalCount ?? 0,
-          deposits: depositsRes?.totalCount ?? 0,
-          promotions: promosRes?.length ?? 0,
+          users: usersRes.success && usersRes.data ? usersRes.data.totalCount : 0,
+          deposits: depositsRes.success && depositsRes.data ? depositsRes.data.totalCount : 0,
+          promotions: promosRes.success && promosRes.data ? promosRes.data.length : 0,
           readings: readingCount,
         });
       } catch {

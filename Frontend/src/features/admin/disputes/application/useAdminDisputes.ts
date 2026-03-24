@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { resolveDispute } from '@/actions/escrowActions';
+import { resolveDispute } from '@/features/chat/public';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 

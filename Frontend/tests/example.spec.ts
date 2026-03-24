@@ -1,18 +1,15 @@
 import { test, expect } from '@playwright/test';
 
-test('has title', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
-
-  // Expect a title "to contain" a substring.
-  await expect(page).toHaveTitle(/Playwright/);
+test('redirects private route to login when no auth cookie', async ({ page }) => {
+  const baseURL = process.env.QA_BASE_URL || 'http://127.0.0.1:3100';
+  await page.goto(`${baseURL}/vi/chat`);
+  await expect(page).toHaveURL(/\/vi\/login/);
 });
 
-test('get started link', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
-
-  // Click the get started link.
-  await page.getByRole('link', { name: 'Get started' }).click();
-
-  // Expects page to have a heading with the name of Installation.
-  await expect(page.getByRole('heading', { name: 'Installation' })).toBeVisible();
+test('reading stream proxy rejects when unauthenticated', async ({ request }) => {
+  const baseURL = process.env.QA_BASE_URL || 'http://127.0.0.1:3100';
+  const response = await request.get(
+    `${baseURL}/api/reading/sessions/00000000-0000-0000-0000-000000000000/stream`
+  );
+  expect(response.status()).toBe(401);
 });

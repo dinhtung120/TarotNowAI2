@@ -15,7 +15,7 @@ import {
  AlertTriangle, Loader2, CheckCircle2, Sparkles,
  Shield, ArrowRight
 } from 'lucide-react';
-import { SectionHeader, GlassCard, Button, Input } from '@/components/ui';
+import { SectionHeader, GlassCard, Button, Input } from '@/shared/components/ui';
 import { useTranslations } from "next-intl";
 import { useAdminDisputes } from '@/features/admin/disputes/application/useAdminDisputes';
 

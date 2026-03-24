@@ -17,7 +17,7 @@ import {
  Sparkles, Save, Loader2, Activity, BookOpen, Gem
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { SectionHeader, GlassCard, Button } from '@/components/ui';
+import { SectionHeader, GlassCard, Button } from '@/shared/components/ui';
 import { useProfileReaderSettingsPage } from '@/features/profile/reader/application/useProfileReaderSettingsPage';
 
 export default function ReaderSettingsPage() {

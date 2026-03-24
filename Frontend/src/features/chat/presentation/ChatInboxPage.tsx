@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { Link } from '@/i18n/routing';
-import { SectionHeader, GlassCard } from '@/components/ui';
+import { SectionHeader, GlassCard } from '@/shared/components/ui';
 import { useTranslations } from 'next-intl';
 import { useChatInboxPage } from '@/features/chat/application/useChatInboxPage';
 

@@ -10,7 +10,7 @@
  * ===================================================================
  */
 import type { ReactNode } from "react";
-import UserLayout from "@/components/layout/UserLayout";
+import UserLayout from "@/shared/components/layout/UserLayout";
 
 interface UserSegmentLayoutProps {
   children: ReactNode;

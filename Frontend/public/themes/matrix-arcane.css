@@ -1,0 +1,75 @@
+/* Theme variables for matrix-arcane. */
+
+:root,
+:root[data-theme="matrix-arcane"],
+body[data-theme="matrix-arcane"] {
+  --font-sans: "Consolas", "JetBrains Mono", "Courier New", monospace;
+  --font-serif: "Consolas", "JetBrains Mono", "Courier New", monospace;
+  --font-mono: "Consolas", "JetBrains Mono", "Courier New", monospace;
+  --bg-void: #030904;
+  --bg-surface: #06110a;
+  --bg-elevated: #0a1a0f;
+  --bg-surface-hover: #112916;
+  --bg-glass: #06110ad6;
+  --bg-glass-hover: #0a1a0fe0;
+  --bg-glass-active: #112916ea;
+  --surface-soft: rgba(6, 17, 10, 0.56);
+  --surface-base: rgba(6, 17, 10, 0.82);
+  --surface-strong: rgba(10, 26, 15, 0.92);
+  --overlay-soft: rgba(92, 255, 131, 0.1);
+  --overlay-base: rgba(92, 255, 131, 0.16);
+  --overlay-strong: rgba(3, 9, 4, 0.82);
+  --app-bg:
+    radial-gradient(120% 90% at 10% -8%, rgba(16, 73, 29, 0.38) 0%, transparent 56%),
+    radial-gradient(90% 78% at 88% 8%, rgba(20, 102, 43, 0.24) 0%, transparent 58%),
+    linear-gradient(180deg, #030904 0%, #06110a 66%, #08140b 100%);
+  --purple-accent: #5cff83;
+  --purple-muted: rgba(120, 255, 158, 0.84);
+  --purple-gradient-from: #5cff83;
+  --purple-gradient-via: #31d66f;
+  --purple-gradient-to: #98ffa6;
+  --mint-accent: #31d66f;
+  --forest-accent: #24984f;
+  --amber-accent: #d6ff8f;
+  --amber-soft: #8db85b;
+  --holo-silver: #b7ffd0;
+  --success: #5cff83;
+  --error: #ff6f8a;
+  --warning: #d6ff8f;
+  --info: #64de93;
+  --text-primary: #d8ffe4;
+  --text-secondary: #9fddb4;
+  --text-muted: #67a07b;
+  --text-tertiary: #67a07b;
+  --text-disabled: #3a5f47;
+  --text-ink: #ebfff2;
+  --text-inverse: #06110a;
+  --accent: #5cff83;
+  --border-subtle: rgba(92, 255, 131, 0.2);
+  --border-default: rgba(92, 255, 131, 0.36);
+  --border-hover: rgba(152, 255, 166, 0.48);
+  --border-focus: rgba(183, 255, 208, 0.56);
+  --scrollbar-thumb: rgba(92, 255, 131, 0.34);
+  --scrollbar-thumb-hover: rgba(152, 255, 166, 0.44);
+  --selection-bg: rgba(92, 255, 131, 0.2);
+  --selection-text: #ebfff2;
+  --theme-border-style: solid;
+  --theme-border-width: 1px;
+  --theme-panel-shadow: 0 0 0 1px rgba(92, 255, 131, 0.2), 0 18px 38px rgba(3, 9, 4, 0.74);
+  --theme-panel-blur: blur(0px);
+  --theme-card-shine: linear-gradient(135deg, rgba(92, 255, 131, 0.08), rgba(0, 0, 0, 0) 54%);
+  --theme-starfield-size: 8px 8px, 12px 12px, 6px 6px, 100% 100%;
+  --theme-motion-scale: 0.34;
+  --radius-sm: 0;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --shadow-card: 0 10px 18px rgba(3, 9, 4, 0.6);
+  --shadow-elevated: 0 16px 28px rgba(3, 9, 4, 0.78);
+  --glow-purple-sm: 0 0 18px rgba(92, 255, 131, 0.2);
+  --glow-purple-md: 0 0 30px rgba(92, 255, 131, 0.28);
+  --glow-purple-lg: 0 0 46px rgba(92, 255, 131, 0.34);
+  --glow-amber: 0 0 22px rgba(214, 255, 143, 0.2);
+  --shimmer-bg: linear-gradient(90deg, rgba(92, 255, 131, 0.14) 25%, rgba(183, 255, 208, 0.3) 50%, rgba(49, 214, 111, 0.14) 75%);
+  --grad-lunar: linear-gradient(135deg, rgba(8, 45, 19, 0.9), rgba(15, 72, 31, 0.84), rgba(32, 103, 48, 0.76));
+  --metallic-text-gradient: linear-gradient(115deg, #2e9e4d 0%, #5cff83 30%, #b7ffd0 55%, #98ffa6 80%, #d6ff8f 100%);
+}

@@ -28,7 +28,7 @@ import {
     Menu,
     X,
 } from "lucide-react";
-import AstralBackground from "@/components/layout/AstralBackground";
+import AstralBackground from "@/shared/components/layout/AstralBackground";
 import { Link, usePathname } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 

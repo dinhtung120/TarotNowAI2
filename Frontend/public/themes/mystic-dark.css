@@ -1,0 +1,196 @@
+/* Theme variables for mystic-dark. */
+
+:root,
+:root[data-theme="mystic-dark"],
+body[data-theme="mystic-dark"] {
+  /* --- BACKGROUNDS & SURFACES --- */
+  --bg-void: #0f1221;
+  --bg-surface: #12121a;
+  --bg-elevated: #1e1e2a;
+  --bg-surface-hover: #1a2639;
+  --bg-glass: #12121a;
+  --bg-glass-hover: #1e1e2a;
+  --bg-glass-active: #1a2639;
+  --surface-soft: rgba(18, 18, 26, 0.46);
+  --surface-base: rgba(18, 18, 26, 0.72);
+  --surface-strong: rgba(30, 30, 42, 0.86);
+  --overlay-soft: rgba(106, 76, 147, 0.1);
+  --overlay-base: rgba(106, 76, 147, 0.16);
+  --overlay-strong: rgba(10, 10, 14, 0.74);
+
+  --app-bg:
+    radial-gradient(120% 90% at 12% -10%, rgba(44, 26, 77, 0.24) 0%, transparent 58%),
+    radial-gradient(90% 80% at 88% 10%, rgba(26, 38, 57, 0.22) 0%, transparent 60%),
+    radial-gradient(110% 90% at 50% 110%, rgba(15, 46, 42, 0.22) 0%, transparent 62%),
+    radial-gradient(65% 55% at 66% 35%, rgba(191, 175, 122, 0.12) 0%, transparent 70%),
+    linear-gradient(180deg, #0f1221 0%, #0a0a0e 55%, #0f2e2a 100%);
+
+  --scrollbar-thumb: rgba(138, 107, 191, 0.28);
+  --scrollbar-thumb-hover: rgba(58, 95, 90, 0.42);
+  --scrollbar-track: transparent;
+  --selection-bg: rgba(138, 107, 191, 0.28);
+  --selection-text: var(--text-ink);
+
+  /* Focus rings */
+  --ring-accent: rgba(138, 107, 191, 0.24);
+  --ring-success: rgba(58, 95, 90, 0.24);
+  --ring-warning: rgba(191, 175, 122, 0.22);
+  --ring-danger: rgba(204, 124, 149, 0.22);
+  --ring-input: rgba(168, 168, 194, 0.2);
+
+  /* --- BORDERS --- */
+  --border-subtle: rgba(138, 107, 191, 0.18);
+  --border-default: rgba(138, 107, 191, 0.3);
+  --border-hover: rgba(58, 95, 90, 0.42);
+  --border-focus: rgba(168, 168, 194, 0.5);
+
+  /* --- BRAND --- */
+  --purple-50: rgba(106, 76, 147, 0.14);
+  --purple-100: rgba(138, 107, 191, 0.16);
+  --purple-200: rgba(138, 107, 191, 0.28);
+  --purple-glow: rgba(138, 107, 191, 0.2);
+  --purple-accent: #8a6bbf;
+  --purple-muted: rgba(106, 76, 147, 0.86);
+  --purple-gradient-from: #2c1a4d;
+  --purple-gradient-via: #1a2639;
+  --purple-gradient-to: #0f2e2a;
+
+  --mint-accent: #3a5f5a;
+  --forest-accent: #3a5f5a;
+  --amber-accent: #bfaf7a;
+  --amber-soft: #8c7a5e;
+  --amber-50: rgba(191, 175, 122, 0.18);
+  --holo-silver: #a8a8c2;
+
+  /* --- STATUS --- */
+  --success: #3a5f5a;
+  --success-bg: rgba(58, 95, 90, 0.18);
+  --error: #cc7c95;
+  --error-bg: rgba(204, 124, 149, 0.14);
+  --warning: #bfaf7a;
+  --warning-bg: rgba(191, 175, 122, 0.16);
+  --info: #a8a8c2;
+  --info-bg: rgba(168, 168, 194, 0.14);
+
+  /* --- EXTRACTED COLOR TOKENS (OVERRIDES) --- */
+  --c-hex-b89c4f: #bfaf7a;
+  --c-hex-9f8338: #bfaf7a;
+  --c-hex-8f7bb4: #8a6bbf;
+  --c-hex-8c7a2f: #8c7a5e;
+  --c-hex-a89cff28: #8a6bbf28;
+  --c-hex-b2e8d628: #3a5f5a28;
+
+  --qr-code-dark: #0a0a0e;
+  --qr-code-light: #ede7e3;
+
+  --c-248-241-233-65: rgba(18, 18, 26, 0.65);
+  --c-237-231-227-88: rgba(15, 18, 33, 0.88);
+  --c-255-250-205-36: rgba(191, 175, 122, 0.18);
+  --c-224-224-255-60: rgba(168, 168, 194, 0.6);
+  --c-215-189-226-62: rgba(106, 76, 147, 0.22);
+  --c-215-189-226-50: rgba(106, 76, 147, 0.4);
+  --c-215-189-226-26: rgba(106, 76, 147, 0.22);
+  --c-178-232-214-58: rgba(58, 95, 90, 0.22);
+  --c-178-232-214-42: rgba(58, 95, 90, 0.3);
+  --c-168-156-255-55: rgba(138, 107, 191, 0.55);
+  --c-168-156-255-50: rgba(138, 107, 191, 0.5);
+  --c-168-156-255-30: rgba(138, 107, 191, 0.3);
+  --c-168-156-255-28: rgba(138, 107, 191, 0.28);
+  --c-168-156-255-12: rgba(138, 107, 191, 0.12);
+  --c-154-144-171-58: rgba(192, 192, 208, 0.58);
+
+  --c-70-53-105-28: rgba(10, 10, 14, 0.62);
+  --c-61-49-80-60: rgba(10, 10, 14, 0.6);
+  --c-61-49-80-55: rgba(10, 10, 14, 0.55);
+  --c-61-49-80-20: rgba(10, 10, 14, 0.2);
+
+  --c-168-85-247-70: rgba(138, 107, 191, 0.7);
+  --c-168-85-247-60: rgba(138, 107, 191, 0.6);
+  --c-168-85-247-50: rgba(138, 107, 191, 0.5);
+  --c-168-85-247-40: rgba(138, 107, 191, 0.4);
+  --c-168-85-247-30: rgba(138, 107, 191, 0.3);
+  --c-168-85-247-20: rgba(138, 107, 191, 0.2);
+  --c-168-85-247-15: rgba(138, 107, 191, 0.15);
+  --c-168-85-247-10: rgba(138, 107, 191, 0.1);
+
+  --c-16-185-129-50: rgba(58, 95, 90, 0.5);
+  --c-16-185-129-40: rgba(58, 95, 90, 0.4);
+  --c-16-185-129-30: rgba(58, 95, 90, 0.3);
+  --c-16-185-129-20: rgba(58, 95, 90, 0.2);
+  --c-16-185-129-10: rgba(58, 95, 90, 0.1);
+
+  --c-245-158-11-60: rgba(191, 175, 122, 0.6);
+  --c-245-158-11-50: rgba(191, 175, 122, 0.5);
+  --c-245-158-11-30: rgba(191, 175, 122, 0.3);
+  --c-245-158-11-20: rgba(191, 175, 122, 0.2);
+  --c-245-158-11-10: rgba(191, 175, 122, 0.1);
+  --c-245-158-11-08: rgba(191, 175, 122, 0.08);
+  --c-251-191-36-80: rgba(191, 175, 122, 0.8);
+  --c-251-191-36-20: rgba(191, 175, 122, 0.2);
+  --c-251-191-36-15: rgba(191, 175, 122, 0.15);
+  --c-251-191-36-10: rgba(191, 175, 122, 0.1);
+
+  --c-142-167-219-42: rgba(168, 168, 194, 0.42);
+  --c-138-184-154-42: rgba(58, 95, 90, 0.42);
+  --c-215-190-125-42: rgba(191, 175, 122, 0.42);
+  --c-204-124-149-38: rgba(204, 124, 149, 0.38);
+  --c-240-230-140-46: rgba(191, 175, 122, 0.46);
+  --c-240-230-140-24: rgba(191, 175, 122, 0.24);
+
+  --c-59-130-246-60: rgba(168, 168, 194, 0.6);
+
+  /* --- NEBULA --- */
+  --nebula-purple-subtle: rgba(106, 76, 147, 0.1);
+  --nebula-purple-default: rgba(106, 76, 147, 0.16);
+  --nebula-purple-intense: rgba(106, 76, 147, 0.22);
+  --nebula-mint-subtle: rgba(58, 95, 90, 0.1);
+  --nebula-mint-default: rgba(58, 95, 90, 0.16);
+  --nebula-mint-intense: rgba(58, 95, 90, 0.22);
+  --nebula-moon-subtle: rgba(191, 175, 122, 0.08);
+  --nebula-moon-default: rgba(191, 175, 122, 0.12);
+  --nebula-moon-intense: rgba(191, 175, 122, 0.18);
+
+  /* --- TEXT --- */
+  --text-primary: #ede7e3;
+  --text-secondary: #c0c0d0;
+  --text-muted: #8f8fa3;
+  --text-tertiary: #8f8fa3;
+  --text-disabled: #525266;
+  --text-ink: #f8f1e9;
+  --text-inverse: #a8a8c2;
+  --danger: #cc7c95;
+  --danger-bg: rgba(204, 124, 149, 0.14);
+  --accent: #bfaf7a;
+
+  /* --- SHADOWS & GLOWS --- */
+  --shadow-card: 0 14px 32px rgba(0, 0, 0, 0.55);
+  --shadow-elevated: 0 22px 52px rgba(0, 0, 0, 0.72);
+  --glow-purple-sm: 0 0 24px rgba(138, 107, 191, 0.12);
+  --glow-purple-md: 0 0 44px rgba(138, 107, 191, 0.18);
+  --glow-purple-lg: 0 0 66px rgba(138, 107, 191, 0.24);
+  --glow-amber: 0 0 28px rgba(191, 175, 122, 0.14);
+  --glow-white: 0 18px 36px rgba(168, 168, 194, 0.08);
+  --glow-pulse-from: 0 0 15px rgba(138, 107, 191, 0.18);
+  --glow-pulse-to: 0 0 30px rgba(58, 95, 90, 0.22);
+  --shimmer-bg: linear-gradient(
+    90deg,
+    rgba(106, 76, 147, 0.14) 25%,
+    rgba(168, 168, 194, 0.22) 50%,
+    rgba(58, 95, 90, 0.14) 75%
+  );
+
+  --grad-lunar: linear-gradient(
+    135deg,
+    rgba(44, 26, 77, 0.84),
+    rgba(26, 38, 57, 0.78),
+    rgba(15, 46, 42, 0.7)
+  );
+  --metallic-text-gradient: linear-gradient(
+    115deg,
+    #6a4c93 0%,
+    #8a6bbf 30%,
+    #a8a8c2 55%,
+    #3a5f5a 80%,
+    #bfaf7a 100%
+  );
+}

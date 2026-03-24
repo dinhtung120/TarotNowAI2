@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { listReaders, type ReaderProfile } from '@/actions/readerActions';
+import { listReaders, type ReaderProfile } from '@/features/reader/application/actions';
 
 export function useReadersDirectoryPage() {
   const [readers, setReaders] = useState<ReaderProfile[]>([]);
@@ -32,9 +32,9 @@ export function useReadersDirectoryPage() {
         selectedStatus,
         searchTerm
       );
-      if (result) {
-        setReaders(result.readers);
-        setTotalCount(result.totalCount);
+      if (result.success && result.data) {
+        setReaders(result.data.readers);
+        setTotalCount(result.data.totalCount);
       }
       setLoading(false);
     };

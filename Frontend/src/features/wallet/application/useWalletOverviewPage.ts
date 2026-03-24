@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getLedger } from '@/actions/walletActions';
+import { getLedger } from '@/features/wallet/application/actions';
 import type { PaginatedList, WalletTransaction } from '@/types/wallet';
 import { useWalletStore } from '@/store/walletStore';
 import { useLocale, useTranslations } from 'next-intl';
@@ -25,9 +25,9 @@ export function useWalletOverviewPage() {
 
   const loadLedger = async () => {
    setIsLoadingLedger(true);
-   const data = await getLedger(page, 10);
+   const result = await getLedger(page, 10);
    if (!isMounted) return;
-   setLedger(data);
+   setLedger(result.success && result.data ? result.data : null);
    setIsLoadingLedger(false);
   };
 

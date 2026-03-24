@@ -6,7 +6,7 @@ import {
   listWithdrawalQueue,
   processWithdrawal,
   type WithdrawalResult,
-} from '@/actions/withdrawalActions';
+} from '@/features/wallet/public';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 
@@ -22,8 +22,8 @@ export function useAdminWithdrawals(t: TranslateFn, locale: string) {
 
   useEffect(() => {
     const loadQueue = async () => {
-      const data = await listWithdrawalQueue();
-      setQueue(data);
+      const result = await listWithdrawalQueue();
+      setQueue(result.success && result.data ? result.data : []);
       setLoading(false);
     };
 
@@ -59,7 +59,7 @@ export function useAdminWithdrawals(t: TranslateFn, locale: string) {
       toast.success(t('withdrawals.toast.success'));
       setQueue((prev) => prev.filter((item) => item.id !== id));
     } else {
-      toast.error(res.error || t('withdrawals.toast.failed'));
+      toast.error(res.error);
     }
 
     setProcessing(null);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { getUserCollection, type UserCollectionDto } from '@/actions/collectionActions';
+import { getUserCollection, type UserCollectionDto } from '@/features/collection/application/actions';
 import { TAROT_CARD_COUNT, TAROT_DECK } from '@/lib/tarotData';
 
 export type CollectionFilter = 'all' | 'owned' | 'unowned';

@@ -4,26 +4,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 import { useAuthStore } from '@/store/authStore';
-import { getProfileAction, updateProfileAction } from '@/actions/profileActions';
-import { getMyReaderRequest, type MyReaderRequest } from '@/actions/readerActions';
+import { getProfileAction, updateProfileAction, type ProfileDto } from '@/features/profile/application/actions';
+import { getMyReaderRequest, type MyReaderRequest } from '@/features/reader/public';
 import { useAuthGuard } from '@/shared/application/hooks/useAuthGuard';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-
-interface ProfileResponse {
- id: string;
- email: string;
- username: string;
- displayName: string;
- avatarUrl: string | null;
- dateOfBirth: string;
- zodiac: string;
- numerology: number;
- level: number;
- exp: number;
- hasConsented: boolean;
-}
 
 interface ProfileFormValues {
  displayName: string;
@@ -38,7 +24,7 @@ export function useProfilePage() {
  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
  const user = useAuthStore((state) => state.user);
 
- const [profileData, setProfileData] = useState<ProfileResponse | null>(null);
+ const [profileData, setProfileData] = useState<ProfileDto | null>(null);
  const [loading, setLoading] = useState(true);
  const [successMsg, setSuccessMsg] = useState('');
  const [errorMsg, setErrorMsg] = useState('');
@@ -73,16 +59,16 @@ export function useProfilePage() {
 
   async function fetchProfile() {
    try {
-    const result = await getProfileAction();
+   const result = await getProfileAction();
 
-    if (result.error) {
-     setErrorMsg(result.error);
-     return;
-    }
+   if (!result.success) {
+    setErrorMsg(result.error);
+    return;
+   }
 
-    if (result.success && result.data) {
-     const data = result.data as ProfileResponse;
-     setProfileData(data);
+	   if (result.data) {
+	    const data = result.data;
+	     setProfileData(data);
 
      setValue('displayName', data.displayName);
      setValue('avatarUrl', data.avatarUrl || '');
@@ -111,7 +97,7 @@ export function useProfilePage() {
 
   setReaderRequestLoading(true);
   getMyReaderRequest().then((result) => {
-   setReaderRequest(result);
+   setReaderRequest(result.success ? result.data ?? null : null);
    setReaderRequestLoading(false);
   });
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -127,17 +113,17 @@ export function useProfilePage() {
     dateOfBirth: new Date(data.dateOfBirth).toISOString(),
    });
 
-   if (result.error) {
+   if (!result.success) {
     setErrorMsg(result.error);
     return;
    }
 
    setSuccessMsg(t('successMsg'));
 
-   const profileResult = await getProfileAction();
-   if (profileResult.success && profileResult.data) {
-    setProfileData(profileResult.data as ProfileResponse);
-   }
+	   const profileResult = await getProfileAction();
+	   if (profileResult.success && profileResult.data) {
+	    setProfileData(profileResult.data);
+	   }
   } catch {
    setErrorMsg(t('errorSave'));
   }

@@ -2,8 +2,8 @@
 
 import { Mail, ArrowLeft, Send } from 'lucide-react';
 import { Link } from '@/i18n/routing';
-import AuthLayout from '@/components/layout/AuthLayout';
-import { Input, Button } from '@/components/ui';
+import AuthLayout from '@/shared/components/layout/AuthLayout';
+import { Input, Button } from '@/shared/components/ui';
 import { useForgotPasswordPage } from '@/features/auth/application/useForgotPasswordPage';
 import { AuthErrorBanner } from '@/features/auth/presentation/components/AuthErrorBanner';
 import { AuthSuccessCard } from '@/features/auth/presentation/components/AuthSuccessCard';

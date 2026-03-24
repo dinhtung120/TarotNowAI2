@@ -173,6 +173,7 @@
     "error_stream": "Kênh truyền tin bị nhiễu đoạn. Vui lòng thử lại sau.",
     "error_retry": "Thử Kênh Khác (Refund Tự Động)",
     "streaming_placeholder": "Các Tinh Tú Đang Thẳng Hàng...",
+    "waiting_for_cards": "Đang đợi lật bài...",
     "follow_up_placeholder": "Bạn muốn hỏi thêm gì về trải bài này?...",
     "follow_up_free_badge": "Miễn Phí Follow-up ({remaining}/{total})",
     "follow_up_fee_badge": "Phí: {cost} Diamond",
@@ -193,6 +194,14 @@
     "notifications": "Thông báo",
     "confirm": "Xác nhận",
     "status_complete": "Hoàn tất"
+  },
+  "LanguageSwitcher": {
+    "menu_title": "Ngôn ngữ",
+    "options_aria": "Tùy chọn ngôn ngữ",
+    "current_aria": "Ngôn ngữ hiện tại: {language}",
+    "locale_vi": "Tiếng Việt",
+    "locale_en": "English",
+    "locale_zh": "中文"
   },
   "Notifications": {
     "tag": "Hệ thống thông báo",
@@ -374,7 +383,16 @@
       "input_placeholder": "Truyền tải thông điệp của bạn...",
       "payment_offer": "💎 Đề xuất thanh toán",
       "payment_accept": "✅ Đã chấp nhận",
-      "payment_reject": "❌ Đã từ chối"
+      "payment_reject": "❌ Đã từ chối",
+      "payment_offer_accept": "Chấp nhận",
+      "payment_offer_reject": "Từ chối",
+      "payment_offer_received": "Đã nhận",
+      "payment_accept_fallback": "Xác nhận thanh toán thành công",
+      "payment_reject_fallback": "Đã từ chối đề xuất",
+      "payment_modal_amount_label": "Số Diamond yêu cầu",
+      "payment_modal_note_label": "Lời nhắn (tùy chọn)",
+      "payment_modal_note_placeholder": "Nhập lời nhắn cho đề xuất này (ví dụ: Thanh toán cho lá bài thứ 2)...",
+      "payment_modal_submit": "Gửi đề xuất Kim Cương"
     },
     "report": {
       "success_title": "Đã gửi báo cáo",
@@ -418,7 +436,14 @@
       "auto_release": "Tự giải ngân: {time}",
       "dispute_window": "Cửa sổ tranh chấp: {time}",
       "action_confirm_release": "Xác nhận giải ngân",
-      "action_replied": "Đánh dấu đã trả lời"
+      "action_replied": "Đánh dấu đã trả lời",
+      "action_complete_all": "Hoàn thành toàn bộ cuộc trò chuyện",
+      "confirm_release_all_cta": "Xác nhận giải ngân toàn bộ",
+      "confirm_cancel": "Hủy",
+      "confirm_ok": "Đồng ý",
+      "complete_all_hint": "Bấm để xác nhận hài lòng và chuyển toàn bộ tiền cho Reader.",
+      "complete_all_success": "Đã hoàn thành và giải ngân toàn bộ.",
+      "error_release_all": "Có lỗi khi hoàn thành toàn bộ. Vui lòng thử lại."
     }
   },
   "Wallet": {
@@ -918,7 +943,9 @@
         "amount_invalid": "Số tiền phải lớn hơn 0",
         "add_success": "Đã cộng {amount} {currency} thành công!",
         "add_failed": "Lỗi khi cộng tiền.",
-        "system_error": "Lỗi hệ thống."
+        "system_error": "Lỗi hệ thống.",
+        "update_success": "Đã cập nhật thông tin người dùng thành công.",
+        "update_failed": "Cập nhật thất bại. Vui lòng thử lại."
       }
     },
     "promotions": {

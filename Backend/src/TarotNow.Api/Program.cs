@@ -31,10 +31,53 @@ using TarotNow.Api.Middlewares; // GlobalExceptionHandler
 using TarotNow.Api.Hubs;       // ChatHub (SignalR)
 
 /*
+ * LOAD FILE .ENV TRƯỚC KHI BUILD CONFIGURATION:
+ * -----------------------------------------------
+ * TẠI SAO PHẢI LOAD .ENV Ở ĐÂY (TRƯỚC CreateBuilder)?
+ *   Vì CreateBuilder() sẽ đọc environment variables để xây dựng IConfiguration.
+ *   Nếu load .env SAU CreateBuilder → biến môi trường chưa tồn tại
+ *   → IConfiguration không có giá trị override → dùng placeholder rỗng trong appsettings.json.
+ *
+ * CÁCH HOẠT ĐỘNG:
+ *   1. DotNetEnv.Env.Load() đọc file .env → set vào Environment.SetEnvironmentVariable()
+ *   2. CreateBuilder() gọi AddEnvironmentVariables() tự động
+ *   3. IConfiguration ưu tiên: appsettings.json < appsettings.{env}.json < env vars < command-line
+ *   → Giá trị từ .env (qua env vars) sẽ OVERRIDE giá trị trong appsettings.json
+ *
+ * QUY ƯỚC TÊN BIẾN:
+ *   .NET dùng "__" (double underscore) thay cho ":" trong IConfiguration path.
+ *   Ví dụ: biến môi trường JWT__SECRETKEY → IConfiguration["Jwt:SecretKey"]
+ *
+ * TÌM FILE .ENV:
+ *   File .env nằm ở Backend/ (thư mục gốc backend).
+ *   Từ working directory (src/TarotNow.Api/), cần đi lên 2 cấp (../../).
+ *   Nếu file .env không tồn tại → DotNetEnv bỏ qua, không crash.
+ */
+var envFilePath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", ".env");
+var resolvedEnvPath = Path.GetFullPath(envFilePath);
+
+// Kiểm tra sự tồn tại để tránh crash khi không có file .env (ví dụ: Production dùng env vars hệ thống)
+if (File.Exists(resolvedEnvPath))
+{
+    DotNetEnv.Env.Load(resolvedEnvPath);
+}
+else
+{
+    // Thử tìm .env tại thư mục hiện tại hoặc thư mục project (dùng khi chạy dotnet run)
+    var projectEnvPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", ".env");
+    var resolvedProjectPath = Path.GetFullPath(projectEnvPath);
+    if (File.Exists(resolvedProjectPath))
+    {
+        DotNetEnv.Env.Load(resolvedProjectPath);
+    }
+}
+
+/*
  * WebApplication.CreateBuilder(args):
  * Tạo builder để cấu hình ứng dụng web.
  * "args" là command-line arguments (tham số dòng lệnh khi chạy ứng dụng).
  * Builder tự động đọc: appsettings.json, biến môi trường, user secrets.
+ * Tại thời điểm này, biến môi trường từ .env đã được load → IConfiguration sẽ override.
  */
 var builder = WebApplication.CreateBuilder(args);
 

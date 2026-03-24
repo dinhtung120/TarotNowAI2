@@ -87,7 +87,6 @@ const QA_AUTH_STATE = JSON.stringify({
       displayName: "QA User",
       role: "admin",
     },
-    accessToken: QA_JWT,
   },
   version: 0,
 });
@@ -178,7 +177,7 @@ test("viewport QA (mobile/tablet/desktop)", async ({ page }) => {
       domain: baseHost,
       path: "/",
       expires: QA_TOKEN_EXP,
-      httpOnly: false,
+      httpOnly: true,
       secure: false,
       sameSite: "Lax",
     },

@@ -7,7 +7,7 @@ import {
   getReaderProfile,
   updateReaderProfile,
   updateReaderStatus,
-} from '@/actions/readerActions';
+} from '@/features/reader/public';
 import toast from 'react-hot-toast';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
@@ -31,12 +31,12 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
     }
 
     const fetchProfile = async () => {
-      const profile = await getReaderProfile(user.id);
-      if (profile) {
-        setBioVi(profile.bioVi || '');
-        setDiamondPerQuestion(profile.diamondPerQuestion || 100);
-        setSpecialtiesStr(profile.specialties?.join(', ') || '');
-        setStatus(profile.status || 'offline');
+      const result = await getReaderProfile(user.id);
+      if (result.success && result.data) {
+        setBioVi(result.data.bioVi || '');
+        setDiamondPerQuestion(result.data.diamondPerQuestion || 100);
+        setSpecialtiesStr(result.data.specialties?.join(', ') || '');
+        setStatus(result.data.status || 'offline');
       } else {
         toast.error(t('reader.toast_not_found'), {
           style: {
@@ -62,13 +62,13 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
       .map((item) => item.trim())
       .filter((item) => item.length > 0);
 
-    const success = await updateReaderProfile({
+    const result = await updateReaderProfile({
       bioVi,
       diamondPerQuestion,
       specialties: specArray,
     });
 
-    if (success) {
+    if (result.success) {
       toast.success(t('reader.toast_save_success'), {
         style: {
           background: 'var(--success-bg)',
@@ -91,8 +91,8 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
 
   const handleStatusChange = async (newStatus: string) => {
     setStatus(newStatus);
-    const ok = await updateReaderStatus(newStatus);
-    if (ok) {
+    const result = await updateReaderStatus(newStatus);
+    if (result.success) {
       toast.success(t('reader.toast_status_updated'), {
         style: {
           background: 'var(--success-bg)',

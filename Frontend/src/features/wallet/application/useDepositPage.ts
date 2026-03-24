@@ -4,11 +4,11 @@ import { useEffect, useMemo, useState } from 'react';
 import {
  createDepositOrder,
  type CreateDepositOrderResponse,
-} from '@/actions/depositActions';
+} from '@/features/wallet/application/actions/deposit';
 import {
  listPromotions,
  type DepositPromotion,
-} from '@/actions/promotionActions';
+} from '@/features/admin/public';
 import { useWalletStore } from '@/store/walletStore';
 import { useLocale, useTranslations } from 'next-intl';
 import {
@@ -39,8 +39,8 @@ export function useDepositPage() {
 
   const fetchPromotions = async () => {
    setLoadingPromos(true);
-   const data = await listPromotions(true);
-   setPromotions(data ?? []);
+   const result = await listPromotions(true);
+   setPromotions(result.success && result.data ? result.data : []);
    setLoadingPromos(false);
   };
 
@@ -89,15 +89,16 @@ export function useDepositPage() {
 
   try {
    const result = await createDepositOrder(amountVnd);
-   if (!result) {
-    setError(t('deposit.error_create_failed'));
+   if (!result.success || !result.data) {
+    setError(result.error || t('deposit.error_create_failed'));
     return;
    }
+   const orderData = result.data;
 
-   setOrder(result);
-   if (result.paymentUrl) {
+   setOrder(orderData);
+   if (orderData.paymentUrl) {
     window.setTimeout(() => {
-     window.open(result.paymentUrl, '_blank');
+     window.open(orderData.paymentUrl, '_blank');
     }, 800);
    }
   } catch {

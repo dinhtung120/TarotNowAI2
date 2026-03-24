@@ -8,7 +8,7 @@ import {
  updateUser,
  type AdminUserItem,
  type UpdateUserParams,
-} from '@/actions/adminActions';
+} from '@/features/admin/application/actions';
 
 interface User extends AdminUserItem {
  isLocked: boolean;
@@ -38,15 +38,15 @@ export function useAdminUsers() {
  const fetchUsers = useCallback(async () => {
   setLoading(true);
   try {
-   const data = await listUsers(page, 10, searchTerm);
-   if (!data) return;
+   const result = await listUsers(page, 10, searchTerm);
+   if (!result.success || !result.data) return;
 
-   const mappedUsers: User[] = data.users.map((item) => ({
+   const mappedUsers: User[] = result.data.users.map((item) => ({
     ...item,
     isLocked: item.status === 'Locked',
    }));
    setUsers(mappedUsers);
-   setTotalCount(data.totalCount);
+   setTotalCount(result.data.totalCount);
   } finally {
    setLoading(false);
   }
@@ -81,14 +81,14 @@ export function useAdminUsers() {
 
   setActionLoading(true);
   try {
-   const success = await updateUser(editModal.user.id, editForm);
-   if (!success) {
-    toast.error('Cập nhật thất bại. Xin vui lòng thử lại.');
+   const result = await updateUser(editModal.user.id, editForm);
+   if (!result.success) {
+    toast.error(t('users.toast.update_failed'));
     return;
    }
 
    closeEditModal();
-   toast.success('Đã cập nhật thông tin người dùng thành công.');
+   toast.success(t('users.toast.update_success'));
    await fetchUsers();
   } catch {
    toast.error(t('users.toast.system_error'));
