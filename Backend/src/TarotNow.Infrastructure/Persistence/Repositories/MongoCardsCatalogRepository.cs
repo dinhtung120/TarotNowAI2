@@ -82,6 +82,11 @@ public class MongoCardsCatalogRepository : ICardsCatalogRepository
         Arcana = doc.Arcana,
         Suit = doc.Suit,
         Element = doc.Element,
-        Number = doc.Number
+        Number = doc.Number,
+        ImageUrl = doc.ImageUrl,
+        UprightKeywords = doc.Meanings?.Upright?.Keywords?.ToList() ?? new List<string>(),
+        UprightDescription = doc.Meanings?.Upright?.Description ?? string.Empty,
+        ReversedKeywords = doc.Meanings?.Reversed?.Keywords?.ToList() ?? new List<string>(),
+        ReversedDescription = doc.Meanings?.Reversed?.Description ?? string.Empty
     };
 }

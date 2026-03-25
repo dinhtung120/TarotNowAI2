@@ -406,9 +406,101 @@
   });
 
   // =========================================================================
+  // Mapping code lá bài -> filename ảnh thực tế trong Frontend/public/img
+  // =========================================================================
+  // Lưu ý: Không map theo _id + 1 vì thứ tự ảnh hiện tại không trùng thứ tự suit trong seed.
+  // Map theo code ổn định để đảm bảo đúng lá bài.
+  const CARD_IMAGE_FILENAME_BY_CODE = {
+    "the_fool": "01_The_Fool_50_20260325_181348.avif",
+    "the_magician": "02_The_Magician_50_20260325_181348.avif",
+    "the_high_priestess": "03_The_High Priestess _50_20260325_181348.avif",
+    "the_empress": "04_The_Empress_50_20260325_181348.avif",
+    "the_emperor": "05_The_Emperor_50_20260325_181348.avif",
+    "the_hierophant": "06_The_Hierophant_50_20260325_181348.avif",
+    "the_lovers": "07_The_Lovers_50_20260325_181351.avif",
+    "the_chariot": "08_The_Chariot_50_20260325_181351.avif",
+    "strength": "09_Strength_50_20260325_181351.avif",
+    "the_hermit": "10_The_Hermit_50_20260325_181353.avif",
+    "wheel_of_fortune": "11_Wheel_of _Fortune_50_20260325_181353.avif",
+    "justice": "12_Justice_50_20260325_181353.avif",
+    "the_hanged_man": "13_The_Hanged_Man_50_20260325_181356.avif",
+    "death": "14_Death_50_20260325_181356.avif",
+    "temperance": "15_Temperance_50_20260325_181356.avif",
+    "the_devil": "16_The_Devil_50_20260325_181357.avif",
+    "the_tower": "17_The_Tower_50_20260325_181357.avif",
+    "the_star": "18_The_Star_50_20260325_181357.avif",
+    "the_moon": "19_The_Moon_50_20260325_181359.avif",
+    "the_sun": "20_The_Sun_50_20260325_181359.avif",
+    "judgement": "21_Judgement_50_20260325_181359.avif",
+    "the_world": "22_The_World_50_20260325_181401.avif",
+    "ace_of_wands": "65_Ace_of_Wands_50_20260325_181428.avif",
+    "two_of_wands": "66_Two_of_Wands_50_20260325_181428.avif",
+    "three_of_wands": "67_Three_of_Wands_50_20260325_181431.avif",
+    "four_of_wands": "68_Four_of_Wands_50_20260325_181431.avif",
+    "five_of_wands": "69_Five_of _Wands_50_20260325_181431.avif",
+    "six_of_wands": "70_Six_of_Wands_50_20260325_181433.avif",
+    "seven_of_wands": "71_Seven_of_Wands_50_20260325_181433.avif",
+    "eight_of_wands": "72_Eight_of_Wands_50_20260325_181433.avif",
+    "nine_of_wands": "73_Nine_of_Wands_50_20260325_181435.avif",
+    "ten_of_wands": "74_Ten_of_Wands_50_20260325_181435.avif",
+    "page_of_wands": "75_Page_of_Wands_50_20260325_181435.avif",
+    "knight_of_wands": "76_Knight_of_Wands_50_20260325_181436.avif",
+    "queen_of_wands": "77_Queen_of_Wands_50_20260325_181436.avif",
+    "king_of_wands": "78_King_of_Wands_50_20260325_181436.avif",
+    "ace_of_cups": "23_Ace_of_Cups_50_20260325_181401.avif",
+    "two_of_cups": "24_Two_of_Cups_50_20260325_181401.avif",
+    "three_of_cups": "25_Three_of_Cups_50_20260325_181402.avif",
+    "four_of_cups": "26_Four_of_Cups_50_20260325_181402.avif",
+    "five_of_cups": "27_Five_of_Cups_50_20260325_181402.avif",
+    "six_of_cups": "28_Six_of_Cups_50_20260325_181405.avif",
+    "seven_of_cups": "29_Seven_of_Cups_50_20260325_181405.avif",
+    "eight_of_cups": "30_Eight_of_Cups_50_20260325_181405.avif",
+    "nine_of_cups": "31_Nine_of_Cups_50_20260325_181406.avif",
+    "ten_of_cups": "32_Ten_of_Cups_50_20260325_181406.avif",
+    "page_of_cups": "33_Page_of_Cups_50_20260325_181406.avif",
+    "knight_of_cups": "34_Knight_of_Cups_50_20260325_181408.avif",
+    "queen_of_cups": "35_Queen_of_Cups_50_20260325_181408.avif",
+    "king_of_cups": "36_King_of_Cups_50_20260325_181408.avif",
+    "ace_of_swords": "51_Ace_of_Swords_50_20260325_181419.avif",
+    "two_of_swords": "52_Two_of_Swords_50_20260325_181422.avif",
+    "three_of_swords": "53_Three_of_Swords_50_20260325_181422.avif",
+    "four_of_swords": "54_Four_of_Swords_50_20260325_181422.avif",
+    "five_of_swords": "55_Five_of_Swords_50_20260325_181424.avif",
+    "six_of_swords": "56_Six_of_Swords_50_20260325_181424.avif",
+    "seven_of_swords": "57_Seven_of_Swords_50_20260325_181424.avif",
+    "eight_of_swords": "58_Eight_of_Swords_50_20260325_181426.avif",
+    "nine_of_swords": "59_Nine_of_Swords_50_20260325_181426.avif",
+    "ten_of_swords": "60_Ten_of_Swords_50_20260325_181426.avif",
+    "page_of_swords": "61_Page_of_Swords_50_20260325_181427.avif",
+    "knight_of_swords": "62_Knight_of_Swords_50_20260325_181427.avif",
+    "queen_of_swords": "63_Queen_of_Swords_50_20260325_181427.avif",
+    "king_of_swords": "64_King_of_Swords_50_20260325_181428.avif",
+    "ace_of_pentacles": "37_Ace_of_Pentacles_50_20260325_181411.avif",
+    "two_of_pentacles": "38_Two_of_Pentacles_50_20260325_181411.avif",
+    "three_of_pentacles": "39_Three_of_Pentacles_50_20260325_181411.avif",
+    "four_of_pentacles": "40_Four_of_Pentacles_50_20260325_181413.avif",
+    "five_of_pentacles": "41_Five_of_Pentacles_50_20260325_181413.avif",
+    "six_of_pentacles": "42_Six_of_Pentacles_50_20260325_181413.avif",
+    "seven_of_pentacles": "43_Seven_of_Pentacles_50_20260325_181416.avif",
+    "eight_of_pentacles": "44_Eight_of_Pentacles_50_20260325_181416.avif",
+    "nine_of_pentacles": "45_Nine_of_Pentacles_50_20260325_181416.avif",
+    "ten_of_pentacles": "46_Ten_of_Pentacles_50_20260325_181417.avif",
+    "page_of_pentacles": "47_Page_of_Pentacles_50_20260325_181417.avif",
+    "knight_of_pentacles": "48_Knight_of_Pentacles_50_20260325_181417.avif",
+    "queen_of_pentacles": "49_Queen_of_Pentacles_50_20260325_181419.avif",
+    "king_of_pentacles": "50_King_of_Pentacles_50_20260325_181419.avif"
+  };
+
+  // =========================================================================
   // Gộp 22 Major + 56 Minor = 78 lá bài
   // =========================================================================
-  const allCards = majorArcana.concat(minorArcana);
+  const allCards = majorArcana.concat(minorArcana).map(function (card) {
+    var filename = CARD_IMAGE_FILENAME_BY_CODE[card.code];
+    if (filename) {
+      card.image_url = "/img/" + filename;
+    }
+    return card;
+  });
 
   // Kiểm tra: đảm bảo đúng 78 lá
   if (allCards.length !== 78) {
@@ -434,6 +526,27 @@
       throw e;
     }
   }
+
+  // Backfill image_url cho dữ liệu đã tồn tại từ trước (trường hợp chạy seed nhiều lần)
+  var bulkOps = allCards.map(function (card) {
+    return {
+      updateOne: {
+        filter: { _id: card._id },
+        update: {
+          $set: {
+            image_url: card.image_url,
+            updated_at: now
+          }
+        }
+      }
+    };
+  });
+
+  var backfillResult = db.cards_catalog.bulkWrite(bulkOps, { ordered: false });
+  print(
+    "Backfill image_url completed. Matched: " + backfillResult.matchedCount +
+    ", Modified: " + backfillResult.modifiedCount
+  );
 
   // Verify: đếm tổng số lá trong collection
   var count = db.cards_catalog.countDocuments();

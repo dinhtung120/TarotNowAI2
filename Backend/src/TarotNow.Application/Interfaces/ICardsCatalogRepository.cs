@@ -46,4 +46,10 @@ public class CardCatalogDto
     public string? Suit { get; set; } // Chất Bài: Wands (Gậy), Cups (Ly)...
     public string Element { get; set; } = string.Empty; // Hệ Lửa, Hệ Nước
     public int Number { get; set; }
+    public string? ImageUrl { get; set; }
+
+    public List<string> UprightKeywords { get; set; } = new();
+    public string UprightDescription { get; set; } = string.Empty;
+    public List<string> ReversedKeywords { get; set; } = new();
+    public string ReversedDescription { get; set; } = string.Empty;
 }

@@ -35,6 +35,7 @@ namespace TarotNow.Infrastructure.Persistence.MongoDocuments;
 /// Đại diện cho 1 lá bài Tarot trong collection "cards_catalog" trên MongoDB.
 /// Tổng cộng có 78 document trong collection này (mỗi lá bài = 1 document).
 /// </summary>
+[BsonIgnoreExtraElements]
 public class CardCatalogDocument
 {
     /// <summary>
@@ -102,6 +103,13 @@ public class CardCatalogDocument
     public string Element { get; set; } = string.Empty;
 
     /// <summary>
+    /// Đường dẫn ảnh của lá bài (ví dụ: "/img/01_The_Fool_...avif" hoặc URL CDN production).
+    /// </summary>
+    [BsonElement("image_url")]
+    [BsonIgnoreIfNull]
+    public string? ImageUrl { get; set; }
+
+    /// <summary>
     /// Ý nghĩa của lá bài theo 2 hướng: xuôi (upright) và ngược (reversed).
     /// Khi bốc bài Tarot, lá bài có thể rơi xuôi hoặc ngược → ý nghĩa khác nhau.
     /// Sử dụng class con CardMeanings chứa 2 object Upright và Reversed.
@@ -123,6 +131,7 @@ public class CardCatalogDocument
 /// Fallback chain: locale người dùng → en (tiếng Anh) nếu locale không có.
 /// Trong MongoDB lưu dạng: { "vi": "...", "en": "...", "zh": "..." }
 /// </summary>
+[BsonIgnoreExtraElements]
 public class LocalizedName
 {
     /// <summary>Tên tiếng Việt. Ví dụ: "Kẻ Khờ", "Vua Cốc".</summary>
@@ -139,6 +148,7 @@ public class LocalizedName
 /// Ý nghĩa lá bài theo 2 hướng: xuôi (upright) và ngược (reversed).
 /// Mỗi hướng có danh sách từ khóa (keywords) và mô tả chi tiết (description).
 /// </summary>
+[BsonIgnoreExtraElements]
 public class CardMeanings
 {
     /// <summary>Ý nghĩa khi lá bài xuôi (upright = đúng chiều). Thường mang nghĩa tích cực.</summary>
@@ -152,6 +162,7 @@ public class CardMeanings
 /// Chi tiết ý nghĩa cho 1 hướng (xuôi hoặc ngược) của lá bài.
 /// Keywords dùng để AI tạo prompt nhanh, Description dùng để hiển thị cho người dùng đọc.
 /// </summary>
+[BsonIgnoreExtraElements]
 public class MeaningDetail
 {
     /// <summary>

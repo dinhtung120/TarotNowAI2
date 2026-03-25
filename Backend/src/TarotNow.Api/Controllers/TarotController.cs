@@ -33,6 +33,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TarotNow.Application.Features.Reading.Commands.InitSession;
 using System.Security.Claims;
+using System.Threading;
 
 namespace TarotNow.Api.Controllers;
 
@@ -116,6 +117,22 @@ public class TarotController : ControllerBase
 
         var result = await _mediator.Send(command);
         return Ok(result); // Trả về danh sách lá bài đã rút
+    }
+
+    /// <summary>
+    /// ENDPOINT: GET /api/v1/reading/cards-catalog
+    /// MỤC ĐÍCH: Lấy toàn bộ catalog 78 lá bài (tên đa ngôn ngữ, ý nghĩa, ảnh, suit...).
+    /// Dùng cho frontend hiển thị tên/meaning/ảnh đồng nhất từ DB.
+    /// </summary>
+    [HttpGet("cards-catalog")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetCardsCatalog(CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new TarotNow.Application.Features.Reading.Queries.GetCardsCatalog.GetCardsCatalogQuery(),
+            cancellationToken
+        );
+        return Ok(result);
     }
 
     /// <summary>

@@ -21,6 +21,7 @@ import type { HistoryDetailResponse } from "@/features/reading/application/actio
 import { Sparkles, ArrowLeft, Bot, Calendar, Clock, AlertCircle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { useLocale, useTranslations } from "next-intl";
+import { useCardsCatalog } from "@/shared/application/hooks/useCardsCatalog";
 
 import { Button } from "@/shared/components/ui";
 import { useAuthGuard } from "@/shared/application/hooks/useAuthGuard";
@@ -32,7 +33,7 @@ export default function HistoryDetailPage() {
  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
  const t = useTranslations("History");
  const tApi = useTranslations("ApiErrors");
- const tTarot = useTranslations("Tarot");
+ const { getCardImageUrl, getCardName, getCardMeaning } = useCardsCatalog();
  const locale = useLocale();
 
  const [detail, setDetail] = useState<HistoryDetailResponse | null>(null);
@@ -164,6 +165,9 @@ export default function HistoryDetailPage() {
  {/* Cards Grid */}
  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8 lg:gap-10">
  {parsedCards.map((cardId, index) => {
+ const cardImageUrl = getCardImageUrl(cardId);
+ const cardName = getCardName(cardId) ?? `Card ${cardId + 1}`;
+ const cardMeaning = getCardMeaning(cardId) ?? '';
  return (
  <div key={`history-card-${cardId}`} className="group flex flex-col items-center gap-6">
  {/* Tarot Card - Compact Vertical */}
@@ -175,18 +179,27 @@ export default function HistoryDetailPage() {
  <div className="w-full h-full tn-surface-strong rounded-xl flex items-center justify-center shadow-xl overflow-hidden relative border tn-border-soft group-hover:shadow-[0_10px_40px_var(--c-168-85-247-20)] transition-shadow">
  <div className="absolute inset-0 bg-gradient-to-tr from-[var(--purple-accent)]/20 to-transparent pointer-events-none"></div>
  <div className="absolute inset-2 border border-[var(--purple-accent)]/10 rounded-lg pointer-events-none"></div>
+ {cardImageUrl ? (
+ <img
+ src={cardImageUrl}
+ alt={cardName}
+ className="h-full w-full object-cover"
+ loading="lazy"
+ />
+ ) : (
  <span className="text-5xl font-serif font-black tn-text-primary/10 drop-shadow-sm">{index + 1}</span>
+ )}
  </div>
  </div>
 
  {/* Main Card Name and Meaning */}
  <div className="mt-4 text-center px-2 transition-all duration-500 group-hover:scale-105">
  <h3 className="text-sm font-bold tn-text-primary font-serif leading-tight px-2 mb-2">
- {tTarot(`cards.c${cardId}.name`)}
+ {cardName}
  </h3>
  <p className="text-[9px] font-black uppercase tracking-[0.25em] text-[var(--purple-accent)] mb-2">{t("essence_label")}</p>
  <p className="text-[11px] font-medium text-[var(--text-secondary)] leading-relaxed italic line-clamp-2 hover:line-clamp-none transition-all">
- {tTarot(`cards.c${cardId}.meaning`)}
+ {cardMeaning}
  </p>
  </div>
  </div>

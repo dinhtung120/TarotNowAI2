@@ -17,11 +17,13 @@ import { useCollectionPage, type CollectionFilter } from "@/features/collection/
 import { Loader2, LayoutGrid, AlertCircle, ChevronRight, Sparkles, Filter, CheckCircle2, Lock } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
+import { useCardsCatalog } from "@/shared/application/hooks/useCardsCatalog";
 
 export default function CollectionPage() {
  const t = useTranslations("Collection");
  const tCommon = useTranslations("Common");
  const tTarot = useTranslations("Tarot");
+ const { getCardImageUrl, getCardName, getCardMeaning } = useCardsCatalog();
  const {
  collection,
  isLoading,
@@ -37,6 +39,14 @@ export default function CollectionPage() {
  totalCardCount,
  progressRatio,
  } = useCollectionPage();
+
+ const selectedCardImageUrl = selectedCardData ? getCardImageUrl(selectedCardData.id) : undefined;
+ const selectedCardName = selectedCardData
+  ? (getCardName(selectedCardData.id) ?? '')
+  : '';
+ const selectedCardMeaning = selectedCardData
+  ? (getCardMeaning(selectedCardData.id) ?? '')
+  : '';
 
  if (isLoading) {
  return (
@@ -68,18 +78,28 @@ export default function CollectionPage() {
  <div className="absolute inset-4 border border-[var(--warning)]/10 rounded-[1.8rem] pointer-events-none" />
  <div className="h-full flex flex-col">
  <div className="flex-1 rounded-2xl tn-overlay overflow-hidden relative shadow-inner mb-4 border tn-border-soft flex items-center justify-center">
+ {selectedCardImageUrl ? (
+ <img
+ src={selectedCardImageUrl}
+ alt={selectedCardName || t('unknown_card')}
+ className={`h-full w-full object-cover transition-all duration-500 ${selectedUserCard ? '' : 'blur-[6px]'}`}
+ />
+ ) : (
+ <>
  <Sparkles className={`w-20 h-20 ${selectedUserCard ? 'text-[var(--warning)]/30' : 'tn-text-muted'}`} />
  <div className="absolute inset-0 flex items-center justify-center">
  <span className="text-8xl font-serif font-black tracking-tighter tn-text-primary opacity-5">
  {selectedCardData.id + 1}
  </span>
  </div>
+ </>
+ )}
  <div className="absolute bottom-6 left-0 right-0 z-20 px-3 text-center">
  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--warning)]/60 block mb-1">
  {tTarot(`suits.${selectedCardData.suit}.full`)}
  </span>
  <h3 className="text-xl font-black tn-text-primary italic tracking-tighter leading-tight drop-shadow-lg">
- {selectedUserCard ? tTarot(`cards.c${selectedCardData.id}.name`) : t('unknown_card')}
+ {selectedUserCard ? (selectedCardName || t('unknown_card')) : t('unknown_card')}
  </h3>
  </div>
  </div>
@@ -89,10 +109,10 @@ export default function CollectionPage() {
  {/* Info Section */}
  <div className="relative z-10 space-y-4 max-w-sm">
  <h2 className="text-2xl font-black tn-text-primary italic tracking-tight">
- {selectedUserCard ? tTarot(`cards.c${selectedCardData.id}.name`) : t('unknown_card')}
+ {selectedUserCard ? (selectedCardName || t('unknown_card')) : t('unknown_card')}
  </h2>
  <p className="tn-text-muted max-w-md text-sm font-medium leading-relaxed italic">
- {selectedUserCard ? tTarot(`cards.c${selectedCardData.id}.meaning`) : t("locked_meaning")}
+ {selectedUserCard ? (selectedCardMeaning || t("locked_meaning")) : t("locked_meaning")}
  </p>
 
  {selectedUserCard && (
@@ -203,15 +223,17 @@ export default function CollectionPage() {
  {filteredDeck.map((deckCard) => {
  const userCard = collection.find(c => c.cardId === deckCard.id);
  const isOwned = !!userCard;
+ const cardImageUrl = getCardImageUrl(deckCard.id);
+ const cardName = getCardName(deckCard.id) ?? '';
 
  return (
  <div
  key={deckCard.id}
  onClick={() => setSelectedCardId(deckCard.id)}
- className={`group relative rounded-3xl p-3 flex flex-col items-center transition-all duration-500 border overflow-hidden cursor-pointer ${
+ className={`group relative rounded-3xl p-3 flex flex-col items-center transition-transform duration-500 transform-gpu antialiased will-change-transform border overflow-hidden cursor-pointer ${
  isOwned
  ? "tn-panel hover:border-[var(--warning)]/40 hover:tn-surface-strong shadow-sm hover:shadow-[0_10px_30px_var(--c-245-158-11-08)]"
- : "tn-panel-overlay-soft opacity-40 grayscale hover:grayscale-0 hover:opacity-100"
+ : "tn-panel-overlay-soft opacity-50 grayscale"
  }`}
  >
  {/* Level/EXP Header */}
@@ -235,12 +257,21 @@ export default function CollectionPage() {
   </div>
 
  {/* Visual Portion */}
- <div className={`w-full aspect-[14/22] rounded-2xl mb-3 flex items-center justify-center relative overflow-hidden transition-transform duration-500 group-hover:scale-[1.03] ${
+ <div className={`w-full aspect-[14/22] rounded-2xl mb-3 flex items-center justify-center relative overflow-hidden transition-transform duration-500 transform-gpu antialiased will-change-transform ${isOwned ? 'group-hover:scale-[1.03]' : ''} ${
  isOwned ? 'bg-gradient-to-br from-[color:var(--c-215-189-226-26)] to-[color:var(--c-168-156-255-28)] border tn-border-soft' : 'tn-overlay'
  }`}>
- <span className={`text-4xl font-serif font-black tracking-tighter opacity-20 ${isOwned ? 'text-[var(--warning)]' : 'tn-text-muted'}`}>
+ {cardImageUrl ? (
+ <img
+ src={cardImageUrl}
+ alt={cardName || t('unknown_card')}
+ className={`h-full w-full object-cover ${isOwned ? 'backface-hidden' : 'blur-[6px]'}`}
+ loading="lazy"
+ />
+ ) : (
+ <span className={`text-4xl font-serif font-black tracking-tighter opacity-20 ${isOwned ? 'text-[var(--warning)]' : 'tn-text-muted blur-[4px]'}`}>
  {deckCard.id + 1}
  </span>
+ )}
  {/* Symbolic Glow for owned cards */}
  {isOwned && (
  <>
@@ -254,7 +285,7 @@ export default function CollectionPage() {
  <h4 className={`text-[11px] font-black text-center leading-snug mb-3 px-1 tracking-tight min-h-[1.5rem] flex items-center justify-center ${
  isOwned ? 'tn-text-primary' : 'tn-text-muted'
  }`}>
- {isOwned ? tTarot(`cards.c${deckCard.id}.name`) : t('unknown_card')}
+ {isOwned ? (cardName || t('unknown_card')) : t('unknown_card')}
  </h4>
 
  {/* Stats - Macro-UI */}

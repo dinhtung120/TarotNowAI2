@@ -22,6 +22,7 @@ import { revealReadingSession } from "@/features/reading/application/actions";
 import { TAROT_CARD_COUNT } from "@/shared/domain/tarotData";
 import { Sparkles, ArrowLeft, RefreshCw, Dices } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useCardsCatalog } from "@/shared/application/hooks/useCardsCatalog";
 import {
  getSessionStorageItem,
  getSessionStorageNumber,
@@ -111,7 +112,7 @@ export default function ReadingSessionPage() {
  const sessionId = params.id as string;
  const t = useTranslations("ReadingSession");
  const tAi = useTranslations("AiInterpretation");
- const tTarot = useTranslations("Tarot");
+ const { getCardImageUrl, getCardName, getCardMeaning } = useCardsCatalog();
  const sessionShort = sessionId.split("-")[0];
 
  const updateUser = useAuthStore((s) => s.updateUser); // Hook cập nhật Profile Store
@@ -574,6 +575,9 @@ export default function ReadingSessionPage() {
  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4 perspective-1000 items-start">
  {cards.map((cardId, index) => {
  const isFlipped = flippedIndex >= index;
+ const cardImageUrl = getCardImageUrl(cardId);
+ const cardName = getCardName(cardId) ?? `Card ${cardId + 1}`;
+ const cardMeaning = getCardMeaning(cardId) ?? '';
 
  return (
  <div key={`revealed-card-${cardId}`} className="flex flex-col items-center gap-3 w-full max-w-[180px] mx-auto">
@@ -598,7 +602,16 @@ export default function ReadingSessionPage() {
  <div className="w-full h-full tn-surface-strong rounded-xl flex items-center justify-center shadow-xl overflow-hidden relative border tn-border-soft">
  <div className="absolute inset-0 bg-gradient-to-tr from-[var(--purple-accent)]/20 to-transparent pointer-events-none"></div>
  <div className="absolute inset-2 border border-[var(--purple-accent)]/10 rounded-lg pointer-events-none"></div>
+ {cardImageUrl ? (
+ <img
+ src={cardImageUrl}
+ alt={cardName}
+ className="h-full w-full object-cover"
+ loading="lazy"
+ />
+ ) : (
  <span className="text-5xl font-serif font-black tn-text-primary/10 drop-shadow-sm">{index + 1}</span>
+ )}
  </div>
  </div>
  </div>
@@ -606,11 +619,11 @@ export default function ReadingSessionPage() {
         {/* Main Card Name and Meaning */}
         <div className={`mt-4 text-center transition-opacity duration-1000 delay-500 ${isFlipped ? 'opacity-100' : 'opacity-0'}`}>
           <h3 className="text-sm font-bold tn-text-primary font-serif leading-tight px-2 mb-2">
-            {tTarot(`cards.c${cardId}.name`)}
+            {cardName}
           </h3>
  <p className="text-[10px] font-semibold text-[var(--purple-accent)] mb-1 uppercase tracking-widest">{t("cards.meaning_label")}</p>
  <p className="text-xs tn-text-secondary leading-relaxed px-2 line-clamp-3">
- {tTarot(`cards.c${cardId}.meaning`)}
+ {cardMeaning}
  </p>
  </div>
  </div>
