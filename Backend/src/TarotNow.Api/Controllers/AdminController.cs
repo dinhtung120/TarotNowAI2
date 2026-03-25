@@ -121,6 +121,13 @@ public class AdminController : ControllerBase
         return Ok(result); // Trả danh sách user dạng JSON
     }
 
+    [HttpPost("users")]
+    public async Task<IActionResult> CreateUser([FromBody] TarotNow.Application.Features.Admin.Commands.CreateUser.CreateUserCommand command)
+    {
+        var userId = await _mediator.Send(command);
+        return Ok(new { userId });
+    }
+
     /*
      * ENDPOINT: PATCH api/v1/Admin/users/lock
      * MỤC ĐÍCH: Khóa hoặc mở khóa tài khoản người dùng.

@@ -19,7 +19,8 @@ import { Users, Search, Lock, Gem, Coins,
 	Mail,
 	Loader2,
 	X,
-	Edit2
+	Edit2,
+	UserPlus
 } from "lucide-react";
 import { SectionHeader, GlassCard, Button, Input, TableStates, StepPagination } from "@/shared/components/ui";
 import { useAdminUsers } from "@/features/admin/users/application/useAdminUsers";
@@ -32,23 +33,152 @@ export default function AdminUsersPage() {
 		totalCount,
 		page,
 		setPage,
-		searchTerm,
-		setSearchTerm,
-		loading,
-		editModal,
-		editForm,
-		setEditForm,
-		actionLoading,
-		handleOpenEdit,
-		closeEditModal,
-		handleSaveUser,
-	} = useAdminUsers();
+			searchTerm,
+			setSearchTerm,
+			loading,
+			addModal,
+			addForm,
+			setAddForm,
+			editModal,
+			editForm,
+			setEditForm,
+			actionLoading,
+			createLoading,
+			handleOpenAdd,
+			closeAddModal,
+			handleCreateUser,
+			handleOpenEdit,
+			closeEditModal,
+			handleSaveUser,
+		} = useAdminUsers();
 
 	return (
-		<div className="space-y-8 pb-20 animate-in fade-in duration-700">
+			<div className="space-y-8 pb-20 animate-in fade-in duration-700">
 
-			{/* Custom Edit User Modal */}
-			{editModal.isOpen && editModal.user && (
+				{/* Add User Modal */}
+				{addModal.isOpen && (
+					<div className="fixed inset-0 z-[160] flex items-center justify-center p-4 md:p-6 animate-in fade-in duration-300">
+						<div className="absolute inset-0 tn-overlay-strong" onClick={closeAddModal} />
+						<div className="relative z-10 w-full max-w-xl tn-panel rounded-[3rem] overflow-hidden shadow-[0_0_100px_var(--c-168-85-247-15)] animate-in zoom-in-95 duration-300">
+							<div className="p-8 border-b tn-border-soft tn-surface flex items-center justify-between">
+								<div className="flex items-center gap-4">
+									<div className="w-12 h-12 rounded-2xl bg-[var(--info)]/10 border border-[var(--info)]/20 flex items-center justify-center shadow-inner">
+										<UserPlus className="w-6 h-6 text-[var(--info)]" />
+									</div>
+									<div className="text-left">
+										<h2 className="text-xl font-black tn-text-primary uppercase italic tracking-tighter drop-shadow-md">{t("users.add_user.title")}</h2>
+										<p className="text-[9px] font-black text-[var(--text-tertiary)] uppercase tracking-widest">{t("users.add_user.subtitle")}</p>
+									</div>
+								</div>
+								<button
+									onClick={closeAddModal}
+									className="w-10 h-10 rounded-full tn-surface flex items-center justify-center text-[var(--text-secondary)] hover:bg-[var(--danger)] hover:tn-text-primary transition-all shadow-xl border border-transparent"
+								>
+									<X className="w-5 h-5" />
+								</button>
+							</div>
+
+							<div className="p-8 space-y-5">
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+									<div className="space-y-2">
+										<label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] block text-left">
+											{t("users.add_user.email_label")}
+										</label>
+										<input
+											type="email"
+											value={addForm.email}
+											onChange={(e) => setAddForm((prev) => ({ ...prev, email: e.target.value }))}
+											placeholder={t("users.add_user.email_placeholder")}
+											className="w-full tn-field tn-field-accent border-[var(--text-tertiary)]/20 tn-text-primary rounded-xl px-4 py-3 bg-[var(--surface-color)] font-bold shadow-inner"
+										/>
+									</div>
+									<div className="space-y-2">
+										<label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] block text-left">
+											{t("users.add_user.username_label")}
+										</label>
+										<input
+											type="text"
+											value={addForm.username}
+											onChange={(e) => setAddForm((prev) => ({ ...prev, username: e.target.value }))}
+											placeholder={t("users.add_user.username_placeholder")}
+											className="w-full tn-field tn-field-accent border-[var(--text-tertiary)]/20 tn-text-primary rounded-xl px-4 py-3 bg-[var(--surface-color)] font-bold shadow-inner"
+										/>
+									</div>
+								</div>
+
+								<div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+									<div className="space-y-2">
+										<label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] block text-left">
+											{t("users.add_user.display_name_label")}
+										</label>
+										<input
+											type="text"
+											value={addForm.displayName}
+											onChange={(e) => setAddForm((prev) => ({ ...prev, displayName: e.target.value }))}
+											placeholder={t("users.add_user.display_name_placeholder")}
+											className="w-full tn-field tn-field-accent border-[var(--text-tertiary)]/20 tn-text-primary rounded-xl px-4 py-3 bg-[var(--surface-color)] font-bold shadow-inner"
+										/>
+									</div>
+									<div className="space-y-2">
+										<label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] block text-left">
+											{t("users.add_user.password_label")}
+										</label>
+										<input
+											type="password"
+											value={addForm.password}
+											onChange={(e) => setAddForm((prev) => ({ ...prev, password: e.target.value }))}
+											placeholder={t("users.add_user.password_placeholder")}
+											className="w-full tn-field tn-field-accent border-[var(--text-tertiary)]/20 tn-text-primary rounded-xl px-4 py-3 bg-[var(--surface-color)] font-bold shadow-inner"
+										/>
+									</div>
+								</div>
+
+								<div className="space-y-2">
+									<label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] block text-left">
+										{t("users.add_user.role_label")}
+									</label>
+									<select
+										value={addForm.role}
+										onChange={(e) => setAddForm((prev) => ({ ...prev, role: e.target.value }))}
+										className="w-full tn-field tn-field-accent border-[var(--text-tertiary)]/20 tn-text-primary rounded-xl px-4 py-3 bg-[var(--surface-color)] font-bold shadow-inner"
+									>
+										<option value="user">{t("users.roles.user")}</option>
+										<option value="tarot_reader">{t("users.roles.tarot_reader")}</option>
+										<option value="admin">{t("users.roles.admin")}</option>
+									</select>
+								</div>
+							</div>
+
+							<div className="flex gap-4 p-8 pt-0">
+								<Button
+									variant="secondary"
+									onClick={closeAddModal}
+									disabled={createLoading}
+									className="flex-1 py-5 shadow-sm"
+								>
+									{t("users.add_user.cancel")}
+								</Button>
+								<Button
+									variant="primary"
+									onClick={handleCreateUser}
+									disabled={createLoading}
+									className="flex-1 py-5 shadow-[0_0_20px_var(--c-168-85-247-30)] hover:shadow-[0_0_30px_var(--c-168-85-247-50)]"
+								>
+									{createLoading ? (
+										<Loader2 className="w-5 h-5 animate-spin mx-auto" />
+									) : (
+										<span className="flex items-center justify-center gap-2">
+											{t("users.add_user.submit")} <UserPlus className="w-4 h-4 ml-1" />
+										</span>
+									)}
+								</Button>
+							</div>
+						</div>
+					</div>
+				)}
+
+				{/* Custom Edit User Modal */}
+				{editModal.isOpen && editModal.user && (
 				<div className="fixed inset-0 z-[150] flex items-center justify-center p-4 md:p-6 animate-in fade-in duration-300">
 					<div className="absolute inset-0 tn-overlay-strong " onClick={closeEditModal} />
 					<div className="relative z-10 w-full max-w-lg tn-panel rounded-[3rem] overflow-hidden shadow-[0_0_100px_var(--c-168-85-247-15)] animate-in zoom-in-95 duration-300">
@@ -166,7 +296,7 @@ export default function AdminUsersPage() {
 			)}
 
 			{/* Header Area */}
-			<div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+				<div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
 				<SectionHeader
 					tag={t("users.header.tag")}
 					tagIcon={<Users className="w-3 h-3 text-[var(--purple-accent)]" />}
@@ -175,19 +305,29 @@ export default function AdminUsersPage() {
 					className="mb-0 text-left items-start"
 				/>
 
-				<div className="flex items-center gap-3 shrink-0">
-					<Input
-						leftIcon={<Search className="w-4 h-4" />}
-						placeholder={t("users.search.placeholder")}
+					<div className="flex items-center gap-3 shrink-0">
+						<Input
+							leftIcon={<Search className="w-4 h-4" />}
+							placeholder={t("users.search.placeholder")}
 						value={searchTerm}
 						onChange={(e) => {
 							setSearchTerm(e.target.value);
 							setPage(1);
 						}}
-						className="w-full md:w-80"
-					/>
+							className="w-full md:w-80"
+						/>
+						<Button
+							variant="primary"
+							onClick={handleOpenAdd}
+							className="px-5 py-3 whitespace-nowrap shadow-[0_0_20px_var(--c-168-85-247-25)] hover:shadow-[0_0_30px_var(--c-168-85-247-40)]"
+						>
+							<span className="inline-flex items-center gap-2">
+								<UserPlus className="w-4 h-4" />
+								{t("users.add_user.button")}
+							</span>
+						</Button>
+					</div>
 				</div>
-			</div>
 
 			{/* Main Table Card */}
 			<GlassCard className="!p-0 !rounded-[2.5rem] overflow-hidden">

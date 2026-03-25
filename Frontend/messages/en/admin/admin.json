@@ -183,6 +183,23 @@
         "cancel": "Cancel task",
         "submit": "Activate"
       },
+      "add_user": {
+        "button": "Add User",
+        "title": "Add New User",
+        "subtitle": "Create a new account in the system",
+        "email_label": "Email",
+        "email_placeholder": "example@email.com",
+        "username_label": "Username",
+        "username_placeholder": "username...",
+        "display_name_label": "Display Name",
+        "display_name_placeholder": "John Doe...",
+        "password_label": "Password",
+        "password_placeholder": "At least 8 characters...",
+        "role_label": "Role",
+        "cancel": "Cancel",
+        "submit": "Create Account",
+        "submitting": "Creating..."
+      },
       "toast": {
         "lock_success": "Account locked successfully.",
         "unlock_success": "Account unlocked successfully.",
@@ -191,6 +208,8 @@
         "amount_invalid": "Amount must be greater than 0.",
         "add_success": "Added {amount} {currency} successfully!",
         "add_failed": "Failed to add balance.",
+        "create_success": "Account created successfully!",
+        "create_failed": "Failed to create account. Please try again.",
         "system_error": "System error.",
         "update_success": "User information updated successfully.",
         "update_failed": "Failed to update user information. Please try again."

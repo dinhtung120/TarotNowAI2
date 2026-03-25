@@ -39,6 +39,14 @@ export interface UpdateUserParams {
  goldBalance: number;
 }
 
+export interface CreateUserParams {
+ email: string;
+ username: string;
+ displayName: string;
+ password: string;
+ role: string;
+}
+
 export async function listUsers(
  page = 1,
  pageSize = 20,
@@ -184,5 +192,50 @@ export async function updateUser(
  } catch (error) {
   logger.error('[AdminAction] updateUser', error, { userId });
   return actionFail('Failed to update user');
+ }
+}
+
+export async function createUser(
+ data: CreateUserParams
+): Promise<ActionResult<{ userId: string }>> {
+ const accessToken = await getServerAccessToken();
+ if (!accessToken) return actionFail('Unauthorized');
+
+ try {
+  const result = await serverHttpRequest<{ userId?: string; UserId?: string }>('/admin/users', {
+   method: 'POST',
+   token: accessToken,
+   json: data,
+   fallbackErrorMessage: 'Failed to create user',
+  });
+
+  if (!result.ok) {
+   logger.error('[AdminAction] createUser', result.error, {
+    status: result.status,
+    email: data.email,
+    username: data.username,
+    role: data.role,
+   });
+   return actionFail(result.error || 'Failed to create user');
+  }
+
+  const userId = result.data.userId ?? result.data.UserId;
+  if (!userId) {
+   logger.error('[AdminAction] createUser', 'Missing user id in response', {
+    email: data.email,
+    username: data.username,
+    role: data.role,
+   });
+   return actionFail('Failed to create user');
+  }
+
+  return actionOk({ userId });
+ } catch (error) {
+  logger.error('[AdminAction] createUser', error, {
+   email: data.email,
+   username: data.username,
+   role: data.role,
+  });
+  return actionFail('Failed to create user');
  }
 }

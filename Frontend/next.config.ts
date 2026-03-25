@@ -17,6 +17,7 @@ const apiOrigin = resolveApiOrigin(process.env.NEXT_PUBLIC_API_URL);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+ allowedDevOrigins: ['192.168.0.102'],
  poweredByHeader: false,
  async rewrites() {
   return [

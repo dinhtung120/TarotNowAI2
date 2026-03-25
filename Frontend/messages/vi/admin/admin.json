@@ -183,6 +183,23 @@
         "cancel": "Hủy tác vụ",
         "submit": "Kích hoạt"
       },
+      "add_user": {
+        "button": "Thêm User",
+        "title": "Thêm User Mới",
+        "subtitle": "Tạo tài khoản mới vào hệ thống",
+        "email_label": "Email",
+        "email_placeholder": "example@email.com",
+        "username_label": "Username",
+        "username_placeholder": "username...",
+        "display_name_label": "Tên hiển thị",
+        "display_name_placeholder": "Nguyễn Văn A...",
+        "password_label": "Mật khẩu",
+        "password_placeholder": "Tối thiểu 8 ký tự...",
+        "role_label": "Vai trò",
+        "cancel": "Hủy",
+        "submit": "Tạo tài khoản",
+        "submitting": "Đang tạo..."
+      },
       "toast": {
         "lock_success": "Đã khóa tài khoản thành công.",
         "unlock_success": "Đã mở khóa tài khoản.",
@@ -191,6 +208,8 @@
         "amount_invalid": "Số tiền phải lớn hơn 0",
         "add_success": "Đã cộng {amount} {currency} thành công!",
         "add_failed": "Lỗi khi cộng tiền.",
+        "create_success": "Tạo tài khoản thành công!",
+        "create_failed": "Tạo tài khoản thất bại. Vui lòng thử lại.",
         "system_error": "Lỗi hệ thống.",
         "update_success": "Đã cập nhật thông tin người dùng thành công.",
         "update_failed": "Cập nhật thất bại. Vui lòng thử lại."

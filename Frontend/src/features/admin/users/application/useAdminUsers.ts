@@ -5,9 +5,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useLocale, useTranslations } from 'next-intl';
 import {
+ createUser,
  listUsers,
  updateUser,
  type AdminUserItem,
+ type CreateUserParams,
  type UpdateUserParams,
 } from '@/features/admin/application/actions';
 
@@ -25,6 +27,16 @@ export function useAdminUsers() {
  const [editModal, setEditModal] = useState<{ isOpen: boolean; user: User | null }>({
   isOpen: false,
   user: null,
+ });
+ const [addModal, setAddModal] = useState<{ isOpen: boolean }>({
+  isOpen: false,
+ });
+ const [addForm, setAddForm] = useState<CreateUserParams>({
+  email: '',
+  username: '',
+  displayName: '',
+  password: '',
+  role: 'user',
  });
  const [editForm, setEditForm] = useState<UpdateUserParams>({
   role: 'user',
@@ -48,7 +60,7 @@ export function useAdminUsers() {
    return {
     users: result.data.users.map((item) => ({
      ...item,
-     isLocked: item.status === 'Locked',
+     isLocked: item.status?.toLowerCase() === 'locked',
     })),
     totalCount: result.data.totalCount,
    };
@@ -64,6 +76,10 @@ export function useAdminUsers() {
    updateUser(payload.userId, payload.values),
  });
 
+ const createMutation = useMutation({
+  mutationFn: async (values: CreateUserParams) => createUser(values),
+ });
+
  const handleOpenEdit = (user: User) => {
   setEditForm({
    role: user.role,
@@ -76,6 +92,42 @@ export function useAdminUsers() {
 
  const closeEditModal = () => {
   setEditModal({ isOpen: false, user: null });
+ };
+
+ const resetAddForm = () => {
+  setAddForm({
+   email: '',
+   username: '',
+   displayName: '',
+   password: '',
+   role: 'user',
+  });
+ };
+
+ const handleOpenAdd = () => {
+  resetAddForm();
+  setAddModal({ isOpen: true });
+ };
+
+ const closeAddModal = () => {
+  setAddModal({ isOpen: false });
+  resetAddForm();
+ };
+
+ const handleCreateUser = async () => {
+  try {
+   const result = await createMutation.mutateAsync(addForm);
+   if (!result.success) {
+    toast.error(result.error || t('users.toast.create_failed'));
+    return;
+   }
+
+   closeAddModal();
+   toast.success(t('users.toast.create_success'));
+   await queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+  } catch {
+   toast.error(t('users.toast.system_error'));
+  }
  };
 
  const handleSaveUser = async () => {
@@ -109,11 +161,19 @@ export function useAdminUsers() {
   searchTerm,
   setSearchTerm,
   loading,
+  addModal,
+  setAddModal,
+  addForm,
+  setAddForm,
   editModal,
   setEditModal,
   editForm,
   setEditForm,
   actionLoading: updateMutation.isPending,
+  createLoading: createMutation.isPending,
+  handleOpenAdd,
+  closeAddModal,
+  handleCreateUser,
   handleOpenEdit,
   closeEditModal,
   handleSaveUser,
