@@ -63,18 +63,18 @@ export default function CollectionPage() {
  <div className="min-h-screen tn-surface tn-text-primary selection:bg-[var(--purple-accent)]/40 overflow-hidden font-sans">
  {/* ##### ZOOM OVERLAY ##### */}
  {selectedCardId !== null && selectedCardData && (
- <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 md:p-12 animate-in fade-in duration-500">
+ <div className="fixed inset-0 md:left-64 z-[100] flex items-center justify-center p-6 md:p-12 animate-in fade-in duration-500">
  {/* Backdrop: Chỉ click vào đây mới đóng */}
  <div className="absolute inset-0 tn-overlay-strong " onClick={() => setSelectedCardId(null)}
  />
- <div className="relative z-10 max-w-lg w-full tn-panel rounded-[3rem] p-6 sm:p-8 md:p-12 shadow-[0_30px_100px_var(--c-0-0-0-80)] animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 flex flex-col items-center text-center overflow-hidden"
+ <div className="relative z-10 max-w-4xl w-full tn-panel rounded-[3rem] p-6 sm:p-8 md:p-12 shadow-[0_30px_100px_var(--c-0-0-0-80)] animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 flex flex-col md:flex-row items-center md:items-stretch gap-8 md:gap-12 text-center md:text-left overflow-hidden"
  >
  {/* Background Glow */}
  <div className="absolute -top-24 -left-24 w-64 h-64 bg-[var(--purple-accent)]/[0.08] blur-[100px] rounded-full" />
  <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-[var(--warning)]/[0.05] blur-[100px] rounded-full" />
 
  {/* Card Visual Large */}
- <div className={`relative aspect-[14/22] w-52 sm:w-64 md:w-72 bg-gradient-to-br from-[var(--warning)]/10 to-transparent rounded-[2.5rem] border tn-border p-6 mb-8 transition-transform duration-700 hover:scale-[1.02] ${selectedUserCard ? 'shadow-[0_0_50px_var(--c-251-191-36-15)]' : 'grayscale opacity-50'}`}>
+ <div className={`relative aspect-[14/22] w-52 sm:w-64 md:w-80 flex-shrink-0 bg-gradient-to-br from-[var(--warning)]/10 to-transparent rounded-[2.5rem] border tn-border p-5 sm:p-6 mb-2 md:mb-0 transition-transform duration-700 hover:scale-[1.02] ${selectedUserCard ? 'shadow-[0_0_50px_var(--c-251-191-36-15)]' : 'grayscale opacity-50'}`}>
  <div className="absolute inset-4 border border-[var(--warning)]/10 rounded-[1.8rem] pointer-events-none" />
  <div className="h-full flex flex-col">
  <div className="flex-1 rounded-2xl tn-overlay overflow-hidden relative shadow-inner mb-4 border tn-border-soft flex items-center justify-center">
@@ -107,32 +107,35 @@ export default function CollectionPage() {
  </div>
 
  {/* Info Section */}
- <div className="relative z-10 space-y-4 max-w-sm">
- <h2 className="text-2xl font-black tn-text-primary italic tracking-tight">
+ <div className="relative z-10 flex-1 flex flex-col justify-center">
+ <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tn-text-primary italic tracking-tight mb-4">
  {selectedUserCard ? (selectedCardName || t('unknown_card')) : t('unknown_card')}
  </h2>
- <p className="tn-text-muted max-w-md text-sm font-medium leading-relaxed italic">
+ <div className="w-16 h-1 bg-[var(--warning)]/40 rounded-full mb-6 mx-auto md:mx-0" />
+  <p className="tn-text-muted text-sm md:text-base font-medium leading-relaxed italic border-l-2 border-transparent md:border-[var(--warning)]/20 md:pl-4 py-2">
  {selectedUserCard ? (selectedCardMeaning || t("locked_meaning")) : t("locked_meaning")}
  </p>
 
  {selectedUserCard && (
- <div className="grid grid-cols-2 gap-4 mt-8">
- <div className="tn-panel rounded-2xl p-3 text-center">
- <span className="block text-[10px] uppercase font-black tracking-widest tn-text-muted mb-1">{t('level_label')}</span>
- <span className="text-lg font-black text-[var(--warning)]">{selectedUserCard.level}</span>
- </div>
- <div className="tn-panel rounded-2xl p-3 text-center">
- <span className="block text-[10px] uppercase font-black tracking-widest tn-text-muted mb-1">{t('copies_label')}</span>
- <span className="text-lg font-black tn-text-primary">{selectedUserCard.copies}</span>
- </div>
+ <div className="grid grid-cols-2 gap-4 mt-8 md:mt-10 max-w-xs mx-auto md:mx-0">
+ <div className="tn-panel rounded-2xl p-4 text-center transform transition duration-300 hover:scale-105 border tn-border-soft">
+  <span className="block text-[10px] md:text-xs uppercase font-black tracking-widest tn-text-muted mb-2">{t('level_label')}</span>
+  <span className="text-2xl md:text-3xl font-black text-[var(--warning)]">{selectedUserCard.level}</span>
+  </div>
+ <div className="tn-panel rounded-2xl p-4 text-center transform transition duration-300 hover:scale-105 border tn-border-soft">
+  <span className="block text-[10px] md:text-xs uppercase font-black tracking-widest tn-text-muted mb-2">{t('copies_label')}</span>
+  <span className="text-2xl md:text-3xl font-black tn-text-primary">{selectedUserCard.copies}</span>
+  </div>
  </div>
  )}
 
- <button onClick={() => setSelectedCardId(null)}
- className="mt-8 px-8 py-3 tn-surface-strong tn-text-ink rounded-full text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl"
- >
- {tCommon("close")}
- </button>
+ <div className="mt-10 md:mt-auto pt-4 flex justify-center md:justify-start">
+  <button onClick={() => setSelectedCardId(null)}
+  className="px-10 py-3.5 tn-surface-strong tn-text-ink rounded-full text-[10px] md:text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl"
+  >
+  {tCommon("close")}
+  </button>
+  </div>
  </div>
  </div>
  </div>
