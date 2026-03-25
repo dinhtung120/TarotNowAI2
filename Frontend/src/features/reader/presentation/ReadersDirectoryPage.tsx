@@ -94,7 +94,7 @@ export default function ReaderDirectoryPage() {
  </div>
 
  {/* Filters */}
- <GlassCard className="!p-4 sticky top-24 z-30 shadow-2xl ">
+ <GlassCard className="!p-4 md:sticky md:top-24 md:z-30 shadow-2xl">
  <div className="flex flex-col md:flex-row gap-4">
  {/* Search */}
  <div className="relative flex-1">

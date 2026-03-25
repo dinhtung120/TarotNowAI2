@@ -246,13 +246,13 @@ export default function ChatRoomPage() {
  );
 
  return (
-  <div className="max-w-2xl mx-auto px-3 sm:px-4 md:px-0 pt-4 md:pt-6 pb-4 md:pb-6 h-[calc(100vh-6rem)] min-h-[32rem] flex flex-col w-full animate-in fade-in ease-out duration-700">
+ <div className="max-w-2xl mx-auto px-3 sm:px-4 md:px-0 pt-4 md:pt-6 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-6 h-full min-h-[32rem] flex flex-col w-full animate-in fade-in ease-out duration-700">
    <GlassCard className="flex flex-col flex-1 overflow-hidden !p-0 border-white/10 shadow-2xl relative">
     <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 bg-black/40 backdrop-blur-md z-30 shrink-0 relative">
      <div className="flex items-center gap-3 sm:gap-4">
       <button
        onClick={() => router.push('/chat')}
-       className="p-2 sm:p-3 min-h-10 min-w-10 sm:min-h-11 sm:min-w-11 rounded-xl hover:bg-white/10 transition-colors bg-white/5 group"
+       className="p-2.5 sm:p-3 min-h-11 min-w-11 rounded-xl hover:bg-white/10 transition-colors bg-white/5 group"
       >
        <ArrowLeft className="w-4 h-4 text-[var(--text-secondary)] group-hover:text-white transition-colors" />
       </button>
@@ -296,7 +296,7 @@ export default function ChatRoomPage() {
 
       <button
        onClick={() => setShowReport(true)}
-       className="p-2.5 sm:p-3 min-h-10 min-w-10 sm:min-h-11 sm:min-w-11 flex items-center justify-center rounded-xl hover:bg-[var(--danger-bg)] transition-colors text-[var(--text-tertiary)] hover:text-[var(--danger)] group border border-transparent hover:border-[var(--danger)]/30"
+       className="p-2.5 sm:p-3 min-h-11 min-w-11 flex items-center justify-center rounded-xl hover:bg-[var(--danger-bg)] transition-colors text-[var(--text-tertiary)] hover:text-[var(--danger)] group border border-transparent hover:border-[var(--danger)]/30"
        title={t('room.report_title')}
       >
        <Flag className="w-4 h-4 sm:w-4 sm:h-4" />

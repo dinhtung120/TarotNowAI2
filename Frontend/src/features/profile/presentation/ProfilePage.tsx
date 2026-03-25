@@ -120,7 +120,7 @@ export default function ProfilePage() {
  {user?.role === "admin" && (
  <button
  onClick={() => router.push("/admin/users")}
- className="flex-1 group flex justify-center items-center gap-2.5 bg-[var(--purple-accent)]/10 hover:bg-[var(--purple-accent)]/20 border border-[var(--purple-accent)]/30 text-[var(--purple-accent)] px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95"
+ className="flex-1 group flex justify-center items-center gap-2.5 bg-[var(--purple-accent)]/10 hover:bg-[var(--purple-accent)]/20 border border-[var(--purple-accent)]/30 text-[var(--purple-accent)] px-5 py-2.5 min-h-11 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95"
  >
  <ShieldCheck className="w-3.5 h-3.5 transition-transform group-hover:rotate-12" />
  {t("admin_portal")}
@@ -129,7 +129,7 @@ export default function ProfilePage() {
  {(user?.role === "admin" || user?.role === "reader") && (
  <button
  onClick={() => router.push("/profile/reader")}
- className="flex-1 group flex justify-center items-center gap-2.5 bg-[var(--warning)]/10 hover:bg-[var(--warning)]/20 border border-[var(--warning)]/30 text-[var(--warning)] px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95"
+ className="flex-1 group flex justify-center items-center gap-2.5 bg-[var(--warning)]/10 hover:bg-[var(--warning)]/20 border border-[var(--warning)]/30 text-[var(--warning)] px-5 py-2.5 min-h-11 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95"
  >
  <Sparkles className="w-3.5 h-3.5 transition-transform group-hover:rotate-12" />
  {t("reader_profile")}
@@ -178,7 +178,7 @@ export default function ProfilePage() {
     <div className="flex flex-wrap gap-3 pt-1">
     <button
      onClick={() => router.push("/reader/apply")}
-     className="group/btn flex items-center gap-2.5 bg-gradient-to-r from-[var(--purple-accent)] to-[var(--purple-accent)] hover:brightness-110 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest tn-text-primary transition-all hover:scale-[1.02] active:scale-95 shadow-xl cursor-pointer"
+     className="group/btn flex items-center gap-2.5 bg-gradient-to-r from-[var(--purple-accent)] to-[var(--purple-accent)] hover:brightness-110 px-6 py-3 min-h-11 rounded-xl text-[10px] font-black uppercase tracking-widest tn-text-primary transition-all hover:scale-[1.02] active:scale-95 shadow-xl cursor-pointer"
     >
      <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
      {t("upgrade.cta")}
@@ -220,7 +220,7 @@ export default function ProfilePage() {
     </div>
     <button
     onClick={() => router.push("/reader/apply")}
-    className="group/btn flex items-center gap-2.5 bg-[var(--purple-accent)]/10 hover:bg-[var(--purple-accent)]/20 border border-[var(--purple-accent)]/30 text-[var(--purple-accent)] px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
+    className="group/btn flex items-center gap-2.5 bg-[var(--purple-accent)]/10 hover:bg-[var(--purple-accent)]/20 border border-[var(--purple-accent)]/30 text-[var(--purple-accent)] px-5 py-2.5 min-h-11 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
     >
     <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
     {t("upgrade.reapply_cta")}

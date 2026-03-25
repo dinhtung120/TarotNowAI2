@@ -45,8 +45,9 @@ const SHUFFLE_CARD_COUNT = 9;
 const DECK_WAVE_Y_AMPLITUDE = 6;
 const DECK_WAVE_ROTATION_AMPLITUDE = 7;
 const DECK_CARDS_PER_ROW_DESKTOP = 26; // 78 / 3 rows
-const DECK_CARDS_PER_ROW_MOBILE = 13; // 78 / 6 rows
-const DECK_HORIZONTAL_OVERLAP_FACTOR = 0.5;
+const DECK_CARDS_PER_ROW_MOBILE = 9; // 78 / 9 rows
+const DECK_HORIZONTAL_OVERLAP_FACTOR_DESKTOP = 0.5;
+const DECK_HORIZONTAL_OVERLAP_FACTOR_MOBILE = 0.32;
 const DECK_VERTICAL_OVERLAP_FACTOR = 0.2;
 const CARD_ASPECT_HEIGHT_RATIO = 1.5; // aspect 2/3 => height = width * 1.5
 const PICKED_STACK_CARD_WIDTH = 72;
@@ -177,8 +178,11 @@ export default function ReadingSessionPage() {
  );
  const activeDeckRows = isMobileViewport ? deckRowsMobile : deckRowsDesktop;
  const deckCardWidth = isMobileViewport
- ? "clamp(30px, 8.4vw, 42px)"
+ ? "clamp(44px, 11.2vw, 56px)"
  : "clamp(56px, 6.8vw, 98px)";
+ const horizontalOverlapFactor = isMobileViewport
+ ? DECK_HORIZONTAL_OVERLAP_FACTOR_MOBILE
+ : DECK_HORIZONTAL_OVERLAP_FACTOR_DESKTOP;
  const rowOverlapMargin = `calc(var(--deck-card-w) * -${DECK_VERTICAL_OVERLAP_FACTOR * CARD_ASPECT_HEIGHT_RATIO})`;
  const pickedCardSet = useMemo(() => new Set(pickedCards), [pickedCards]);
 
@@ -497,7 +501,7 @@ export default function ReadingSessionPage() {
  key={idx}
  className="relative w-[var(--deck-card-w)] aspect-[14/22] group tarot-card-fan"
  style={{
- marginLeft: columnIndex === 0 ? 0 : `calc(var(--deck-card-w) * -${DECK_HORIZONTAL_OVERLAP_FACTOR})`,
+ marginLeft: columnIndex === 0 ? 0 : `calc(var(--deck-card-w) * -${horizontalOverlapFactor})`,
  transform: `translateY(${waveOffset}px) rotate(${waveRotation}deg)`,
  zIndex: isPicked ? 0 : columnIndex + rowIndex * 100,
  }}

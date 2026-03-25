@@ -96,38 +96,44 @@ export default function RegisterPage() {
     </div>
 
     <div className="pt-2">
-     <label className="flex items-center gap-3 cursor-pointer group p-3 rounded-xl hover:tn-surface border border-transparent hover:tn-border-soft transition-all">
-      <div className="relative flex items-center justify-center mt-0.5">
-       <input
-        type="checkbox"
-        {...register('hasConsented')}
-        className="peer appearance-none w-5 h-5 border border-[var(--purple-accent)]/50 rounded-md tn-overlay checked:bg-[var(--purple-accent)] transition-all cursor-pointer"
-       />
-       <svg
-        className="absolute w-3 h-3 tn-text-ink pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity"
-        viewBox="0 0 14 10"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-       >
-        <path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-       </svg>
+     <label className="flex flex-col gap-2 cursor-pointer group p-3 rounded-xl hover:tn-surface border border-transparent hover:tn-border-soft transition-all">
+      <div className="flex items-center gap-3 min-h-11">
+       <div className="relative flex items-center justify-center w-11 h-11">
+        <input
+         type="checkbox"
+         {...register('hasConsented')}
+         className="peer absolute inset-0 w-11 h-11 opacity-0 cursor-pointer"
+        />
+        <span className="pointer-events-none w-5 h-5 border border-[var(--purple-accent)]/50 rounded-md tn-overlay peer-checked:bg-[var(--purple-accent)] transition-all" />
+        <svg
+         className="absolute w-3 h-3 tn-text-ink pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity"
+         viewBox="0 0 14 10"
+         fill="none"
+         xmlns="http://www.w3.org/2000/svg"
+        >
+         <path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+       </div>
+       <span className="text-[11px] font-medium tn-text-secondary group-hover:tn-text-secondary transition-colors leading-snug">
+        {t('register.consent_prefix')}
+       </span>
       </div>
-      <span className="text-[11px] font-medium tn-text-secondary group-hover:tn-text-secondary transition-colors leading-none whitespace-nowrap">
-       {t('register.consent_prefix')}{' '}
+
+      <div className="ml-8 flex flex-wrap items-center gap-2">
        <Link
         href="/legal/tos"
-        className="text-[var(--purple-accent)] hover:underline border-b border-[var(--purple-accent)]/30 pb-0.5 align-middle"
+        className="inline-flex items-center min-h-11 px-2 text-[var(--purple-accent)] hover:underline border-b border-[var(--purple-accent)]/30"
        >
         {t('register.consent_terms')}
-       </Link>{' '}
-       {t('register.consent_and')}{' '}
+       </Link>
+       <span className="text-[11px] font-medium tn-text-secondary">{t('register.consent_and')}</span>
        <Link
         href="/legal/privacy"
-        className="text-[var(--purple-accent)] hover:underline border-b border-[var(--purple-accent)]/30 pb-0.5 align-middle"
+        className="inline-flex items-center min-h-11 px-2 text-[var(--purple-accent)] hover:underline border-b border-[var(--purple-accent)]/30"
        >
         {t('register.consent_privacy')}
        </Link>
-      </span>
+      </div>
      </label>
      {errors.hasConsented && (
       <p className="text-[11px] text-[var(--danger)] font-medium mt-1 ml-4">{errors.hasConsented.message}</p>
