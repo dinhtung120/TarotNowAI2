@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useLocale, useTranslations } from 'next-intl';
 import {
@@ -17,12 +18,10 @@ interface User extends AdminUserItem {
 export function useAdminUsers() {
  const t = useTranslations('Admin');
  const locale = useLocale();
+ const queryClient = useQueryClient();
 
- const [users, setUsers] = useState<User[]>([]);
- const [totalCount, setTotalCount] = useState(0);
  const [page, setPage] = useState(1);
  const [searchTerm, setSearchTerm] = useState('');
- const [loading, setLoading] = useState(true);
  const [editModal, setEditModal] = useState<{ isOpen: boolean; user: User | null }>({
   isOpen: false,
   user: null,
@@ -33,34 +32,37 @@ export function useAdminUsers() {
   diamondBalance: 0,
   goldBalance: 0,
  });
- const [actionLoading, setActionLoading] = useState(false);
+ const queryKey = ['admin', 'users', page, searchTerm] as const;
 
- const fetchUsers = useCallback(async () => {
-  setLoading(true);
-  try {
+ const { data, isLoading, isFetching } = useQuery({
+  queryKey,
+  queryFn: async () => {
    const result = await listUsers(page, 10, searchTerm);
-   if (!result.success || !result.data) return;
+   if (!result.success || !result.data) {
+    return {
+     users: [] as User[],
+     totalCount: 0,
+    };
+   }
 
-   const mappedUsers: User[] = result.data.users.map((item) => ({
-    ...item,
-    isLocked: item.status === 'Locked',
-   }));
-   setUsers(mappedUsers);
-   setTotalCount(result.data.totalCount);
-  } finally {
-   setLoading(false);
-  }
- }, [page, searchTerm]);
+   return {
+    users: result.data.users.map((item) => ({
+     ...item,
+     isLocked: item.status === 'Locked',
+    })),
+    totalCount: result.data.totalCount,
+   };
+  },
+ });
 
- useEffect(() => {
-  const timer = window.setTimeout(() => {
-   void fetchUsers();
-  }, 0);
+ const users = useMemo(() => data?.users ?? [], [data]);
+ const totalCount = data?.totalCount ?? 0;
+ const loading = isLoading || isFetching;
 
-  return () => {
-   window.clearTimeout(timer);
-  };
- }, [fetchUsers]);
+ const updateMutation = useMutation({
+  mutationFn: async (payload: { userId: string; values: UpdateUserParams }) =>
+   updateUser(payload.userId, payload.values),
+ });
 
  const handleOpenEdit = (user: User) => {
   setEditForm({
@@ -79,9 +81,11 @@ export function useAdminUsers() {
  const handleSaveUser = async () => {
   if (!editModal.user) return;
 
-  setActionLoading(true);
   try {
-   const result = await updateUser(editModal.user.id, editForm);
+   const result = await updateMutation.mutateAsync({
+    userId: editModal.user.id,
+    values: editForm,
+   });
    if (!result.success) {
     toast.error(t('users.toast.update_failed'));
     return;
@@ -89,11 +93,9 @@ export function useAdminUsers() {
 
    closeEditModal();
    toast.success(t('users.toast.update_success'));
-   await fetchUsers();
+   await queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
   } catch {
    toast.error(t('users.toast.system_error'));
-  } finally {
-   setActionLoading(false);
   }
  };
 
@@ -111,7 +113,7 @@ export function useAdminUsers() {
   setEditModal,
   editForm,
   setEditForm,
-  actionLoading,
+  actionLoading: updateMutation.isPending,
   handleOpenEdit,
   closeEditModal,
   handleSaveUser,

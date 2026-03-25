@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import {
   listWithdrawalQueue,
@@ -13,28 +14,24 @@ type TranslateFn = (key: string, values?: Record<string, string | number | Date>
 type PendingAction = { id: string; action: 'approve' | 'reject' } | null;
 
 export function useAdminWithdrawals(t: TranslateFn, locale: string) {
-  const [queue, setQueue] = useState<WithdrawalResult[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [processing, setProcessing] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [showMfa, setShowMfa] = useState(false);
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
 
-  useEffect(() => {
-    const loadQueue = async () => {
-      const result = await listWithdrawalQueue();
-      setQueue(result.success && result.data ? result.data : []);
-      setLoading(false);
-    };
+ const queueQueryKey = ['admin', 'withdrawals', 'queue'] as const;
+ const { data, isLoading, isFetching } = useQuery<WithdrawalResult[]>({
+  queryKey: queueQueryKey,
+  queryFn: async () => {
+   const result = await listWithdrawalQueue();
+   return result.success && result.data ? result.data : [];
+  },
+ });
 
-    const initialFetchTimer = window.setTimeout(() => {
-      void loadQueue();
-    }, 0);
-
-    return () => {
-      window.clearTimeout(initialFetchTimer);
-    };
-  }, []);
+ const processMutation = useMutation({
+  mutationFn: processWithdrawal,
+ });
 
   const handleProcess = (id: string, action: 'approve' | 'reject') => {
     setPendingAction({ id, action });
@@ -48,7 +45,7 @@ export function useAdminWithdrawals(t: TranslateFn, locale: string) {
     setShowMfa(false);
     setProcessing(id);
 
-    const res = await processWithdrawal({
+    const res = await processMutation.mutateAsync({
       withdrawalId: id,
       action,
       adminNote: notes[id] || undefined,
@@ -57,7 +54,9 @@ export function useAdminWithdrawals(t: TranslateFn, locale: string) {
 
     if (res.success) {
       toast.success(t('withdrawals.toast.success'));
-      setQueue((prev) => prev.filter((item) => item.id !== id));
+   queryClient.setQueryData<WithdrawalResult[]>(queueQueryKey, (prev) =>
+    (prev ?? []).filter((item) => item.id !== id)
+   );
     } else {
       toast.error(res.error);
     }
@@ -76,8 +75,8 @@ export function useAdminWithdrawals(t: TranslateFn, locale: string) {
   };
 
   return {
-    queue,
-    loading,
+  queue: data ?? [],
+  loading: isLoading || isFetching,
     processing,
     notes,
     setNotes,

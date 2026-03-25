@@ -1,4 +1,4 @@
-import { apiUrl } from '@/lib/api';
+import { apiUrl } from '@/shared/infrastructure/http/apiUrl';
 import { parseApiError } from '@/shared/infrastructure/error/parseApiError';
 
 export interface ServerHttpResultOk<T> {

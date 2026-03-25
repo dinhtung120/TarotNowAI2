@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { apiUrl } from '@/lib/api';
+import { apiUrl } from '@/shared/infrastructure/http/apiUrl';
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 
 const SESSION_ID_PATTERN = /^[A-Za-z0-9-]+$/;

@@ -1,40 +1,37 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createWithdrawal, listMyWithdrawals, type WithdrawalResult } from '@/features/wallet/application/actions/withdrawal';
 import { useLocale, useTranslations } from 'next-intl';
 import { getWithdrawalStatusBadge } from '@/features/wallet/domain/withdrawalStatus';
 
+const HISTORY_QUERY_KEY = ['wallet', 'withdrawals', 'mine'] as const;
+
 export function useWithdrawPage() {
  const t = useTranslations('Wallet');
  const locale = useLocale();
+ const queryClient = useQueryClient();
 
  const [amount, setAmount] = useState('');
  const [bankName, setBankName] = useState('');
  const [accountName, setAccountName] = useState('');
  const [accountNumber, setAccountNumber] = useState('');
- const [submitting, setSubmitting] = useState(false);
  const [success, setSuccess] = useState(false);
  const [error, setError] = useState<string | null>(null);
  const [showMfa, setShowMfa] = useState(false);
- const [history, setHistory] = useState<WithdrawalResult[]>([]);
- const [loadingHistory, setLoadingHistory] = useState(true);
 
- const loadHistory = useCallback(async () => {
-  const result = await listMyWithdrawals();
-  setHistory(result.success && result.data ? result.data : []);
-  setLoadingHistory(false);
- }, []);
+ const { data: historyData, isLoading, isFetching } = useQuery<WithdrawalResult[]>({
+  queryKey: HISTORY_QUERY_KEY,
+  queryFn: async () => {
+   const result = await listMyWithdrawals();
+   return result.success && result.data ? result.data : [];
+  },
+ });
 
- useEffect(() => {
-  const initialFetchTimer = window.setTimeout(() => {
-   void loadHistory();
-  }, 0);
-
-  return () => {
-   window.clearTimeout(initialFetchTimer);
-  };
- }, [loadHistory]);
+ const withdrawalMutation = useMutation({
+  mutationFn: createWithdrawal,
+ });
 
  const amountNum = useMemo(() => parseInt(amount, 10) || 0, [amount]);
  const grossVnd = amountNum * 1000;
@@ -81,14 +78,13 @@ export function useWithdrawPage() {
  );
 
  const handleMfaSuccess = useCallback(
-  async (mfaCode: string) => {
-   setShowMfa(false);
-   setSubmitting(true);
-   setError(null);
+ async (mfaCode: string) => {
+  setShowMfa(false);
+  setError(null);
 
-   const result = await createWithdrawal({
-    amountDiamond: amountNum,
-    bankName: bankName.trim(),
+  const result = await withdrawalMutation.mutateAsync({
+   amountDiamond: amountNum,
+   bankName: bankName.trim(),
     bankAccountName: accountName.trim(),
     bankAccountNumber: accountNumber.trim(),
     mfaCode,
@@ -97,14 +93,12 @@ export function useWithdrawPage() {
    if (result.success) {
     setSuccess(true);
     setAmount('');
-    await loadHistory();
-   } else {
-    setError(result.error);
-   }
-
-   setSubmitting(false);
+    await queryClient.invalidateQueries({ queryKey: HISTORY_QUERY_KEY });
+  } else {
+   setError(result.error);
+  }
   },
-  [accountName, accountNumber, amountNum, bankName, loadHistory]
+  [accountName, accountNumber, amountNum, bankName, queryClient, withdrawalMutation]
  );
 
  return {
@@ -118,13 +112,13 @@ export function useWithdrawPage() {
   setAccountName,
   accountNumber,
   setAccountNumber,
-  submitting,
+  submitting: withdrawalMutation.isPending,
   success,
   error,
   showMfa,
   setShowMfa,
-  history,
-  loadingHistory,
+  history: historyData ?? [],
+  loadingHistory: isLoading || isFetching,
   amountNum,
   grossVnd,
   feeVnd,

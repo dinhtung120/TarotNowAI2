@@ -1,1 +1,1 @@
-export { default } from '@/features/home/presentation/HomePage';
+export { HomePage as default } from '@/features/home/public';

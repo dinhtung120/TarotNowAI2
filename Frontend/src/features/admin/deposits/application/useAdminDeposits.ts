@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useLocale, useTranslations } from 'next-intl';
 import {
@@ -18,12 +19,10 @@ interface ConfirmModalState {
 export function useAdminDeposits() {
  const t = useTranslations('Admin');
  const locale = useLocale();
+ const queryClient = useQueryClient();
 
- const [orders, setOrders] = useState<AdminDepositOrder[]>([]);
- const [totalCount, setTotalCount] = useState(0);
  const [page, setPage] = useState(1);
  const [statusFilter, setStatusFilter] = useState('');
- const [loading, setLoading] = useState(true);
  const [processingId, setProcessingId] = useState<string | null>(null);
  const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({
   isOpen: false,
@@ -31,28 +30,24 @@ export function useAdminDeposits() {
   order: null,
  });
 
- const fetchOrders = useCallback(async () => {
-  setLoading(true);
-  try {
+ const { data, isLoading, isFetching } = useQuery({
+  queryKey: ['admin', 'deposits', page, statusFilter],
+  queryFn: async () => {
    const result = await listDeposits(page, 10, statusFilter);
-   if (!result.success || !result.data) return;
+   if (!result.success || !result.data) {
+    return {
+     deposits: [] as AdminDepositOrder[],
+     totalCount: 0,
+    };
+   }
+   return result.data;
+  },
+ });
 
-   setOrders(result.data.deposits);
-   setTotalCount(result.data.totalCount);
-  } finally {
-   setLoading(false);
-  }
- }, [page, statusFilter]);
-
- useEffect(() => {
-  const timer = window.setTimeout(() => {
-   void fetchOrders();
-  }, 0);
-
-  return () => {
-   window.clearTimeout(timer);
-  };
- }, [fetchOrders]);
+ const processMutation = useMutation({
+  mutationFn: async (payload: { id: string; action: 'approve' | 'reject' }) =>
+   processDeposit(payload.id, payload.action),
+ });
 
  const handleAction = async () => {
   if (!confirmModal.order) return;
@@ -63,7 +58,7 @@ export function useAdminDeposits() {
   setProcessingId(id);
 
   try {
-   const result = await processDeposit(id, action);
+   const result = await processMutation.mutateAsync({ id, action });
    if (!result.success) {
     toast.error(t('deposits.toast.action_failed'));
     return;
@@ -74,7 +69,7 @@ export function useAdminDeposits() {
      ? t('deposits.toast.approve_success')
      : t('deposits.toast.reject_success')
    );
-   await fetchOrders();
+   await queryClient.invalidateQueries({ queryKey: ['admin', 'deposits'] });
   } catch {
    toast.error(t('deposits.toast.network_error'));
   } finally {
@@ -85,13 +80,13 @@ export function useAdminDeposits() {
  return {
   t,
   locale,
-  orders,
-  totalCount,
+  orders: data?.deposits ?? [],
+  totalCount: data?.totalCount ?? 0,
   page,
   setPage,
   statusFilter,
   setStatusFilter,
-  loading,
+  loading: isLoading || isFetching,
   processingId,
   confirmModal,
   setConfirmModal,

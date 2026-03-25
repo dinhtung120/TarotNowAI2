@@ -10,6 +10,8 @@
  *   - Định nghĩa DTO cho việc Gửi tin nhắn (`SendMessageData`) và Tạo cuộc hội thoại.
  * ===================================================================
  */
+import type { OffsetPaginatedList } from '@/shared/domain/pagination';
+
 export interface Conversation {
  id: string;
  userId: string;
@@ -35,12 +37,7 @@ export interface ChatMessage {
  createdAt: string;
 }
 
-export interface PaginatedList<T> {
- items: T[];
- page: number;
- pageSize: number;
- totalCount: number;
-}
+export type ChatPaginatedList<T> = OffsetPaginatedList<T>;
 
 export interface CreateConversationData {
  readerId: string;

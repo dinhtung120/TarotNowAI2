@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
 import toast from 'react-hot-toast';
@@ -14,27 +14,23 @@ export function useReaderPublicProfilePage(t: TranslateFn) {
   const router = useRouter();
   const userId = params.id as string;
 
-  const [profile, setProfile] = useState<ReaderProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [startingChat, setStartingChat] = useState(false);
+ const { data: profile, isLoading, isFetching } = useQuery<ReaderProfile | null>({
+  queryKey: ['reader-profile', userId],
+  queryFn: async () => {
+   const result = await getReaderProfile(userId);
+   return result.success ? result.data ?? null : null;
+  },
+  enabled: Boolean(userId),
+ });
 
-  useEffect(() => {
-    if (!userId) return;
-
-    const fetchProfile = async () => {
-      const result = await getReaderProfile(userId);
-      setProfile(result.success ? result.data ?? null : null);
-      setLoading(false);
-    };
-
-    void fetchProfile();
-  }, [userId]);
+ const createConversationMutation = useMutation({
+  mutationFn: async (readerId: string) => createConversation(readerId),
+ });
 
   const startConversation = async () => {
     if (!profile) return;
 
-    setStartingChat(true);
-    const result = await createConversation(profile.userId);
+    const result = await createConversationMutation.mutateAsync(profile.userId);
     if (result.success && result.data?.id) {
       router.push(`/chat/${result.data.id}`);
       return;
@@ -47,14 +43,13 @@ export function useReaderPublicProfilePage(t: TranslateFn) {
         border: '1px solid var(--danger)',
       },
     });
-    setStartingChat(false);
   };
 
   return {
     router,
     profile,
-    loading,
-    startingChat,
+  loading: isLoading || isFetching,
+  startingChat: createConversationMutation.isPending,
     startConversation,
   };
 }

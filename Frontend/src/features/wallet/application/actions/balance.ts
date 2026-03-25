@@ -4,7 +4,7 @@ import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
-import type { WalletBalance } from '@/types/wallet';
+import type { WalletBalance } from '@/features/wallet/domain/types';
 
 export async function getWalletBalance(): Promise<ActionResult<WalletBalance>> {
  const accessToken = await getServerAccessToken();

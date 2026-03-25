@@ -12,7 +12,7 @@
  * ===================================================================
  */
 import { create } from 'zustand';
-import { WalletBalance } from '@/types/wallet';
+import { WalletBalance } from '@/features/wallet/domain/types';
 import type { ActionResult } from '@/shared/domain/actionResult';
 
 type WalletBalanceFetcher = () => Promise<ActionResult<WalletBalance>>;

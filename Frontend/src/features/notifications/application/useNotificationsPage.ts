@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getNotifications,
   markNotificationAsRead,
@@ -8,37 +9,35 @@ import {
 } from '@/features/notifications/application/actions';
 
 export function useNotificationsPage() {
-  const [data, setData] = useState<NotificationListResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [filterUnread, setFilterUnread] = useState(false);
   const pageSize = 20;
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    const result = await getNotifications(
-      page,
-      pageSize,
-      filterUnread ? false : undefined
-    );
-    setData(result.success ? result.data ?? null : null);
-    setLoading(false);
-  }, [page, filterUnread]);
+  const queryKey = ['notifications', page, filterUnread] as const;
 
-  useEffect(() => {
-    const initialFetchTimer = window.setTimeout(() => {
-      void fetchData();
-    }, 0);
+  const { data, isLoading, isFetching } = useQuery<NotificationListResponse | null>({
+    queryKey,
+    queryFn: async () => {
+      const result = await getNotifications(
+        page,
+        pageSize,
+        filterUnread ? false : undefined
+      );
+      return result.success ? result.data ?? null : null;
+    },
+  });
 
-    return () => {
-      window.clearTimeout(initialFetchTimer);
-    };
-  }, [fetchData]);
+  const markReadMutation = useMutation({
+    mutationFn: async (id: string) => markNotificationAsRead(id),
+  });
+
+  const loading = isLoading || isFetching;
 
   const markAsRead = async (id: string) => {
-    const result = await markNotificationAsRead(id);
+    const result = await markReadMutation.mutateAsync(id);
     if (result.success) {
-      setData((prev) => {
+      queryClient.setQueryData<NotificationListResponse | null>(queryKey, (prev) => {
         if (!prev) return prev;
         return {
           ...prev,

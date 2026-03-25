@@ -4,17 +4,17 @@ import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
-import type { PaginatedList, WalletTransaction } from '@/types/wallet';
+import type { WalletPaginatedList, WalletTransaction } from '@/features/wallet/domain/types';
 
 export async function getLedger(
  page = 1,
  limit = 20
-): Promise<ActionResult<PaginatedList<WalletTransaction>>> {
+): Promise<ActionResult<WalletPaginatedList<WalletTransaction>>> {
  const accessToken = await getServerAccessToken();
  if (!accessToken) return actionFail('Unauthorized');
 
  try {
-  const result = await serverHttpRequest<PaginatedList<WalletTransaction>>(
+  const result = await serverHttpRequest<WalletPaginatedList<WalletTransaction>>(
    `/Wallet/ledger?page=${page}&limit=${limit}`,
    {
     method: 'GET',

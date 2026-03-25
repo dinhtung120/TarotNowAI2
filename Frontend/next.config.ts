@@ -1,4 +1,5 @@
 import createNextIntlPlugin from 'next-intl/plugin';
+import { resolveApiOrigin } from './src/shared/infrastructure/http/apiUrl';
 
 /*
  * ===================================================================
@@ -12,18 +13,16 @@ import createNextIntlPlugin from 'next-intl/plugin';
  * ===================================================================
  */
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
-const API_VERSION_PATH = '/api/v1';
-
-function resolveApiOrigin(): string {
- const raw = process.env.NEXT_PUBLIC_API_URL?.trim() || 'http://localhost:5037/api/v1';
- const normalized = raw.replace(/\/+$/, '');
- if (normalized.endsWith(API_VERSION_PATH)) {
-  return normalized.slice(0, -API_VERSION_PATH.length);
- }
- return normalized;
+const apiOrigin = resolveApiOrigin(process.env.NEXT_PUBLIC_API_URL);
+const wsApiOrigin = apiOrigin.startsWith('https://')
+ ? `wss://${apiOrigin.slice('https://'.length)}`
+ : apiOrigin.startsWith('http://')
+  ? `ws://${apiOrigin.slice('http://'.length)}`
+  : '';
+const scriptSources = ["'self'", "'unsafe-inline'", 'https:'];
+if (process.env.NODE_ENV !== 'production') {
+ scriptSources.push("'unsafe-eval'");
 }
-
-const apiOrigin = resolveApiOrigin();
 const contentSecurityPolicy = [
  "default-src 'self'",
  "base-uri 'self'",
@@ -32,8 +31,8 @@ const contentSecurityPolicy = [
  "img-src 'self' data: blob: https:",
  "font-src 'self' data: https:",
  "style-src 'self' 'unsafe-inline' https:",
- "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:",
- "connect-src 'self' https: ws: wss:",
+ `script-src ${scriptSources.join(' ')}`,
+ `connect-src 'self' ${apiOrigin} ${wsApiOrigin}`.trim(),
 ].join('; ');
 
 /** @type {import('next').NextConfig} */

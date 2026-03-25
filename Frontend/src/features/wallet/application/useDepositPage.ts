@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
  createDepositOrder,
  type CreateDepositOrderResponse,
@@ -27,39 +28,41 @@ export function useDepositPage() {
  const [selectedAmount, setSelectedAmount] = useState<number>(PRESET_DEPOSIT_AMOUNTS_VND[1]);
  const [customAmount, setCustomAmount] = useState('');
 
- const [promotions, setPromotions] = useState<DepositPromotion[]>([]);
- const [loadingPromos, setLoadingPromos] = useState(true);
-
  const [submitting, setSubmitting] = useState(false);
  const [order, setOrder] = useState<CreateDepositOrderResponse | null>(null);
  const [error, setError] = useState<string | null>(null);
 
- useEffect(() => {
-  void fetchBalance();
+ useQuery({
+  queryKey: ['wallet', 'balance'],
+  queryFn: async () => {
+   await fetchBalance();
+   return true;
+  },
+ });
 
-  const fetchPromotions = async () => {
-   setLoadingPromos(true);
+ const { data: promotions, isLoading: loadingPromos, isFetching: refetchingPromos } = useQuery<
+  DepositPromotion[]
+ >({
+  queryKey: ['wallet', 'deposit-promotions'],
+  queryFn: async () => {
    const result = await listPromotions(true);
-   setPromotions(result.success && result.data ? result.data : []);
-   setLoadingPromos(false);
-  };
-
-  void fetchPromotions();
- }, [fetchBalance]);
+   return result.success && result.data ? result.data : [];
+  },
+ });
 
  const amountVnd = isCustom ? parseInt(customAmount, 10) || 0 : selectedAmount;
  const isValid = amountVnd >= MIN_DEPOSIT_AMOUNT_VND;
  const baseDiamond = Math.floor(amountVnd / EXCHANGE_RATE_VND_PER_DIAMOND);
 
  const bestPromotion = useMemo(() => {
-  if (loadingPromos) return null;
+  if (loadingPromos || refetchingPromos) return null;
 
   return (
-   promotions
+   (promotions ?? [])
     .filter((item) => item.isActive && item.minAmountVnd <= amountVnd)
     .sort((a, b) => b.bonusDiamond - a.bonusDiamond)[0] ?? null
   );
- }, [amountVnd, loadingPromos, promotions]);
+ }, [amountVnd, loadingPromos, promotions, refetchingPromos]);
 
  const bonusGold = bestPromotion?.bonusDiamond ?? 0;
 
@@ -109,7 +112,7 @@ export function useDepositPage() {
  };
 
  const promoForPreset = (value: number) =>
-  promotions
+  (promotions ?? [])
    .filter((item) => item.isActive && item.minAmountVnd <= value)
    .sort((a, b) => b.bonusDiamond - a.bonusDiamond)[0] ?? null;
 
@@ -122,8 +125,8 @@ export function useDepositPage() {
   selectedAmount,
   customAmount,
   setCustomAmount,
-  promotions,
-  loadingPromos,
+  promotions: promotions ?? [],
+  loadingPromos: loadingPromos || refetchingPromos,
   submitting,
   order,
   error,

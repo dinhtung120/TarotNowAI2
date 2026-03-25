@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   getMfaStatus,
   setupMfa,
@@ -11,7 +12,7 @@ import {
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 
 export function useProfileMfaPage(t: TranslateFn) {
-  const [mfaEnabled, setMfaEnabled] = useState<boolean | null>(null);
+ const [mfaEnabledOverride, setMfaEnabledOverride] = useState<boolean | null>(null);
   const [setupData, setSetupData] = useState<MfaSetupResult | null>(null);
   const [setupLoading, setSetupLoading] = useState(false);
   const [setupError, setSetupError] = useState('');
@@ -38,14 +39,16 @@ export function useProfileMfaPage(t: TranslateFn) {
   const qrColorOptions =
     qrColors.dark && qrColors.light ? { color: qrColors } : {};
 
-  useEffect(() => {
-    const loadStatus = async () => {
-      const result = await getMfaStatus();
-      setMfaEnabled(result.success ? result.data ?? false : false);
-    };
+ const statusQuery = useQuery({
+ queryKey: ['profile', 'mfa-status'],
+  queryFn: async () => {
+   const result = await getMfaStatus();
+   return result.success ? result.data ?? false : false;
+  },
+ });
 
-    void loadStatus();
-  }, []);
+ const mfaEnabled =
+  mfaEnabledOverride ?? (typeof statusQuery.data === 'boolean' ? statusQuery.data : null);
 
   const handleStartSetup = async () => {
     setSetupLoading(true);
@@ -67,7 +70,7 @@ export function useProfileMfaPage(t: TranslateFn) {
     setVerifyError('');
     const res = await verifyMfa(code);
     if (res.success) {
-      setMfaEnabled(true);
+   setMfaEnabledOverride(true);
       setSetupData(null);
     } else {
       setVerifyError(res.error);

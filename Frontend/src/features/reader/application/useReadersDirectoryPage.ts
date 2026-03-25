@@ -1,13 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { listReaders, type ReaderProfile } from '@/features/reader/application/actions';
 
 export function useReadersDirectoryPage() {
-  const [readers, setReaders] = useState<ReaderProfile[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
   const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('');
@@ -22,25 +20,26 @@ export function useReadersDirectoryPage() {
     return () => window.clearTimeout(debounceTimer);
   }, [searchInput]);
 
-  useEffect(() => {
-    const fetchReaders = async () => {
-      setLoading(true);
-      const result = await listReaders(
-        page,
-        pageSize,
-        selectedSpecialty,
-        selectedStatus,
-        searchTerm
-      );
-      if (result.success && result.data) {
-        setReaders(result.data.readers);
-        setTotalCount(result.data.totalCount);
-      }
-      setLoading(false);
-    };
+ const { data, isLoading, isFetching } = useQuery({
+  queryKey: ['readers', page, pageSize, selectedSpecialty, selectedStatus, searchTerm],
+  queryFn: async () => {
+   const result = await listReaders(
+    page,
+    pageSize,
+    selectedSpecialty,
+    selectedStatus,
+    searchTerm
+   );
+   if (result.success && result.data) {
+    return result.data;
+   }
+   return { readers: [] as ReaderProfile[], totalCount: 0 };
+  },
+ });
 
-    void fetchReaders();
-  }, [page, selectedSpecialty, selectedStatus, searchTerm]);
+ const readers = data?.readers ?? [];
+ const totalCount = data?.totalCount ?? 0;
+ const loading = isLoading || isFetching;
 
   const totalPages = useMemo(
     () => Math.ceil(totalCount / pageSize),

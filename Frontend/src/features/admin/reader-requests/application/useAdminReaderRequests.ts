@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useLocale, useTranslations } from 'next-intl';
 import {
@@ -12,44 +13,45 @@ import {
 export function useAdminReaderRequests() {
  const t = useTranslations('Admin');
  const locale = useLocale();
+ const queryClient = useQueryClient();
 
- const [requests, setRequests] = useState<AdminReaderRequest[]>([]);
- const [totalCount, setTotalCount] = useState(0);
  const [page, setPage] = useState(1);
  const [statusFilter, setStatusFilter] = useState('pending');
- const [loading, setLoading] = useState(true);
  const [processing, setProcessing] = useState<string | null>(null);
  const [adminNote, setAdminNote] = useState('');
  const [selectedRequest, setSelectedRequest] = useState<AdminReaderRequest | null>(null);
 
  const pageSize = 10;
 
- const fetchRequests = useCallback(async () => {
-  setLoading(true);
-  const result = await listReaderRequests(page, pageSize, statusFilter);
-  if (result.success && result.data) {
-   setRequests(result.data.requests);
-   setTotalCount(result.data.totalCount);
-  }
-  setLoading(false);
- }, [page, pageSize, statusFilter]);
+ const { data, isLoading, isFetching } = useQuery({
+  queryKey: ['admin', 'reader-requests', page, statusFilter],
+  queryFn: async () => {
+   const result = await listReaderRequests(page, pageSize, statusFilter);
+   if (!result.success || !result.data) {
+    return {
+     requests: [] as AdminReaderRequest[],
+     totalCount: 0,
+    };
+   }
+   return result.data;
+  },
+ });
 
- useEffect(() => {
-  const timer = window.setTimeout(() => {
-   void fetchRequests();
-  }, 0);
-
-  return () => {
-   window.clearTimeout(timer);
-  };
- }, [fetchRequests]);
+ const processMutation = useMutation({
+  mutationFn: async (payload: { requestId: string; action: 'approve' | 'reject'; note?: string }) =>
+   processReaderRequest(payload.requestId, payload.action, payload.note),
+ });
 
  const handleProcess = async (
   requestId: string,
   action: 'approve' | 'reject'
  ) => {
   setProcessing(requestId);
-  const result = await processReaderRequest(requestId, action, adminNote);
+  const result = await processMutation.mutateAsync({
+   requestId,
+   action,
+   note: adminNote,
+  });
   if (result.success) {
    toast.success(
     action === 'approve'
@@ -58,7 +60,7 @@ export function useAdminReaderRequests() {
    );
    setAdminNote('');
    setSelectedRequest(null);
-   await fetchRequests();
+   await queryClient.invalidateQueries({ queryKey: ['admin', 'reader-requests'] });
   } else {
    toast.error(t('reader_requests.toast.process_failed'));
   }
@@ -68,19 +70,19 @@ export function useAdminReaderRequests() {
  return {
   t,
   locale,
-  requests,
-  totalCount,
+  requests: data?.requests ?? [],
+  totalCount: data?.totalCount ?? 0,
   page,
   setPage,
   statusFilter,
   setStatusFilter,
-  loading,
+  loading: isLoading || isFetching,
   processing,
   adminNote,
   setAdminNote,
   selectedRequest,
   setSelectedRequest,
-  totalPages: Math.ceil(totalCount / pageSize),
+  totalPages: useMemo(() => Math.ceil((data?.totalCount ?? 0) / pageSize), [data, pageSize]),
   handleProcess,
  };
 }

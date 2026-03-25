@@ -18,7 +18,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/routing";
 import { revealReadingSession } from "@/features/reading/application/actions";
-import { TAROT_CARD_COUNT } from "@/lib/tarotData";
+import { TAROT_CARD_COUNT } from "@/shared/domain/tarotData";
 import { Sparkles, ArrowLeft, RefreshCw, Dices } from "lucide-react";
 import AiInterpretationStream from "@/features/reading/presentation/components/AiInterpretationStream";
 import AstralBackground from "@/shared/components/layout/AstralBackground";

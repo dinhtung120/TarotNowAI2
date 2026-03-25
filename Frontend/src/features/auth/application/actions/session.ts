@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { getTranslations } from 'next-intl/server';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
-import type { AuthResponse } from '@/types/auth';
+import type { AuthResponse } from '@/features/auth/domain/types';
 import {
  actionFail,
  actionOk,

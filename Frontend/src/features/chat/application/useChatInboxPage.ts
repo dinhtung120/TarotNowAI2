@@ -1,27 +1,26 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { listConversations, type ConversationDto } from '@/features/chat/application/actions';
 
 export function useChatInboxPage() {
-  const [conversations, setConversations] = useState<ConversationDto[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState('');
   const [nowTs, setNowTs] = useState(0);
 
-  useEffect(() => {
-    const fetchConversations = async () => {
-      setLoading(true);
-      const result = await listConversations('all');
-      if (result.success && result.data) {
-        setConversations(result.data.conversations);
-        setCurrentUserId(result.data.currentUserId);
-      }
-      setLoading(false);
-    };
-
-    void fetchConversations();
-  }, []);
+ const { data, isLoading, isFetching } = useQuery({
+  queryKey: ['chat', 'inbox', 'all'],
+  queryFn: async () => {
+   const result = await listConversations('all');
+   if (result.success && result.data) {
+    return result.data;
+   }
+   return {
+    conversations: [] as ConversationDto[],
+    currentUserId: '',
+    totalCount: 0,
+   };
+  },
+ });
 
   useEffect(() => {
     const updateNow = () => setNowTs(Date.now());
@@ -31,9 +30,9 @@ export function useChatInboxPage() {
   }, []);
 
   return {
-    conversations,
-    loading,
-    currentUserId,
+    conversations: data?.conversations ?? [],
+    loading: isLoading || isFetching,
+    currentUserId: data?.currentUserId ?? '',
     nowTs,
   };
 }

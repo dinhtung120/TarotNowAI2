@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getLedger } from '@/features/wallet/application/actions';
-import type { PaginatedList, WalletTransaction } from '@/types/wallet';
+import type { WalletPaginatedList, WalletTransaction } from '@/features/wallet/domain/types';
 import { useWalletStore } from '@/store/walletStore';
 import { useLocale, useTranslations } from 'next-intl';
 
@@ -12,31 +13,25 @@ export function useWalletOverviewPage() {
  const balance = useWalletStore((state) => state.balance);
  const fetchBalance = useWalletStore((state) => state.fetchBalance);
 
- const [ledger, setLedger] = useState<PaginatedList<WalletTransaction> | null>(null);
- const [isLoadingLedger, setIsLoadingLedger] = useState(true);
  const [page, setPage] = useState(1);
 
- useEffect(() => {
-  void fetchBalance();
- }, [fetchBalance]);
+ useQuery({
+  queryKey: ['wallet', 'balance'],
+  queryFn: async () => {
+   await fetchBalance();
+   return true;
+  },
+ });
 
- useEffect(() => {
-  let isMounted = true;
-
-  const loadLedger = async () => {
-   setIsLoadingLedger(true);
+ const { data: ledger, isFetching: isLoadingLedger } = useQuery<
+  WalletPaginatedList<WalletTransaction> | null
+ >({
+  queryKey: ['wallet', 'ledger', page],
+  queryFn: async () => {
    const result = await getLedger(page, 10);
-   if (!isMounted) return;
-   setLedger(result.success && result.data ? result.data : null);
-   setIsLoadingLedger(false);
-  };
-
-  void loadLedger();
-
-  return () => {
-   isMounted = false;
-  };
- }, [page]);
+   return result.success && result.data ? result.data : null;
+  },
+ });
 
  const formatType = (typeStr: string) => typeStr.replace(/([A-Z])/g, ' $1').trim();
 

@@ -1,31 +1,30 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getUserCollection, type UserCollectionDto } from '@/features/collection/application/actions';
-import { TAROT_CARD_COUNT, TAROT_DECK } from '@/lib/tarotData';
+import { TAROT_CARD_COUNT, TAROT_DECK } from '@/shared/domain/tarotData';
 
 export type CollectionFilter = 'all' | 'owned' | 'unowned';
 
 export function useCollectionPage() {
-  const [collection, setCollection] = useState<UserCollectionDto[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
   const [activeFilter, setActiveFilter] = useState<CollectionFilter>('all');
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
 
-  useEffect(() => {
-    const fetchCollection = async () => {
-      const result = await getUserCollection();
-      if (result.success && result.data) {
-        setCollection(result.data);
-      } else {
-        setError(result.error || 'Failed to load collection');
-      }
-      setIsLoading(false);
-    };
+ const { data, isLoading, isFetching } = useQuery({
+  queryKey: ['collection', 'user'],
+  queryFn: getUserCollection,
+ });
 
-    void fetchCollection();
-  }, []);
+ const collection = useMemo<UserCollectionDto[]>(
+  () => (data?.success && data.data ? data.data : []),
+  [data]
+ );
+ const error = useMemo(
+  () => (data && !data.success ? data.error || 'Failed to load collection' : ''),
+  [data]
+ );
+ const loading = isLoading || isFetching;
 
   const selectedCardData = useMemo(() => {
     if (selectedCardId === null) return null;
@@ -51,7 +50,7 @@ export function useCollectionPage() {
 
   return {
     collection,
-    isLoading,
+    isLoading: loading,
     error,
     activeFilter,
     setActiveFilter,

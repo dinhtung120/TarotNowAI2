@@ -44,7 +44,7 @@ const clearAuthCookies = (response: NextResponse) => {
 
 /*
  * ===================================================================
- * COMPONENT/FILE: Proxy / Middleware Dự phòng (proxy.ts)
+ * COMPONENT/FILE: Proxy (proxy.ts)
  * BỐI CẢNH (CONTEXT):
  *   Đóng vai trò như một Middleware luồng chặn (Edge Runtime) trước khi Request 
  *   vào các Component.

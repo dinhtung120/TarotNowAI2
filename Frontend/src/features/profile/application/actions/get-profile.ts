@@ -5,7 +5,7 @@ import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
-import type { UserProfile } from '@/types/auth';
+import type { UserProfile } from '@/features/auth/domain/types';
 
 
 export interface ProfileDto extends UserProfile {

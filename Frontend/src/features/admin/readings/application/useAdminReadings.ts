@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useLocale, useTranslations } from 'next-intl';
 import { getAllHistorySessionsAdminAction } from '@/features/reading/public';
@@ -27,64 +28,39 @@ export function useAdminReadings() {
  const t = useTranslations('Admin');
  const locale = useLocale();
 
- const [data, setData] = useState<PaginatedResponse | null>(null);
- const [loading, setLoading] = useState(true);
  const [page, setPage] = useState(1);
  const [username, setUsername] = useState('');
  const [spreadType, setSpreadType] = useState('');
  const [startDate, setStartDate] = useState('');
  const [endDate, setEndDate] = useState('');
 
- const fetchReadings = useCallback(
-  async (
-   pageNumber: number,
-   currentFilters: { uname: string; type: string; start: string; end: string }
-  ) => {
-   setLoading(true);
+ const { data, isLoading, isFetching } = useQuery<PaginatedResponse | null>({
+  queryKey: ['admin', 'readings', page, username, spreadType, startDate, endDate],
+  queryFn: async () => {
+   const result = await getAllHistorySessionsAdminAction({
+    page,
+    pageSize: 10,
+    username,
+    spreadType,
+    startDate: startDate ? new Date(startDate).toISOString() : undefined,
+    endDate: endDate ? new Date(endDate).toISOString() : undefined,
+   });
 
-   try {
-    const result = await getAllHistorySessionsAdminAction({
-     page: pageNumber,
-     pageSize: 10,
-     username: currentFilters.uname,
-     spreadType: currentFilters.type,
-     startDate: currentFilters.start ? new Date(currentFilters.start).toISOString() : undefined,
-     endDate: currentFilters.end ? new Date(currentFilters.end).toISOString() : undefined,
-    });
-
-    if (result.success && result.data) {
-     setData(result.data as PaginatedResponse);
-     return;
-    }
-
-    if (result.error === 'unauthorized') {
-     toast.error(t('readings.toast.unauthorized'));
-    }
-   } finally {
-    setLoading(false);
+   if (result.success && result.data) {
+    return result.data as PaginatedResponse;
    }
-  },
-  [t]
- );
 
- useEffect(() => {
-  void fetchReadings(page, {
-   uname: username,
-   type: spreadType,
-   start: startDate,
-   end: endDate,
-  });
- }, [endDate, fetchReadings, page, spreadType, startDate, username]);
+   if (result.error === 'unauthorized') {
+    toast.error(t('readings.toast.unauthorized'));
+   }
+
+   return null;
+  },
+ });
 
  const handleSearch = (event: React.FormEvent) => {
   event.preventDefault();
   setPage(1);
-  void fetchReadings(1, {
-   uname: username,
-   type: spreadType,
-   start: startDate,
-   end: endDate,
-  });
  };
 
  const getSpreadLabel = (type: string) => {
@@ -106,7 +82,7 @@ export function useAdminReadings() {
   t,
   locale,
   data,
-  loading,
+  loading: isLoading || isFetching,
   page,
   setPage,
   username,

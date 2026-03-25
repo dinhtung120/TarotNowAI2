@@ -19,6 +19,7 @@ import AppNavbar from "@/features/auth/presentation/components/AppNavbar";
 import AppAuthSessionManager from "@/features/auth/presentation/components/AppAuthSessionManager";
 import WalletStoreBridge from "@/features/wallet/presentation/components/WalletStoreBridge";
 import ThemeStylesheetManager from "@/shared/components/common/ThemeStylesheetManager";
+import AppQueryProvider from "@/shared/components/common/AppQueryProvider";
 import {
     DEFAULT_THEME,
     getThemeStylesheetHref,
@@ -27,7 +28,7 @@ import {
     type ThemeId,
 } from "@/shared/domain/theme";
 import { Toaster } from 'react-hot-toast';
-import "./globals.css";
+import "../globals.css";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -78,11 +79,13 @@ export default async function RootLayout({
             >
                 <ThemeStylesheetManager initialTheme={initialTheme} />
                 <NextIntlClientProvider messages={messages}>
-                    <AppAuthSessionManager />
-                    <WalletStoreBridge />
-                    <AppNavbar />
-                    {children}
-                    <Toaster position="top-right" />
+                    <AppQueryProvider>
+                        <AppAuthSessionManager />
+                        <WalletStoreBridge />
+                        <AppNavbar />
+                        {children}
+                        <Toaster position="top-right" />
+                    </AppQueryProvider>
                 </NextIntlClientProvider>
             </body>
         </html>

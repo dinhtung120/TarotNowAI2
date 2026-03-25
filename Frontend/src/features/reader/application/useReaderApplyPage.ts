@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   submitReaderApplication,
   getMyReaderRequest,
@@ -10,22 +11,23 @@ import {
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 
 export function useReaderApplyPage(t: TranslateFn) {
+ const queryClient = useQueryClient();
   const [introText, setIntroText] = useState('');
-  const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
-  const [existingRequest, setExistingRequest] = useState<MyReaderRequest | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchStatus = async () => {
-      const result = await getMyReaderRequest();
-      setExistingRequest(result.success ? result.data ?? null : null);
-      setLoading(false);
-    };
+ const statusQueryKey = ['reader', 'my-request'] as const;
+ const { data: existingRequest, isLoading, isFetching } = useQuery<MyReaderRequest | null>({
+  queryKey: statusQueryKey,
+  queryFn: async () => {
+   const result = await getMyReaderRequest();
+   return result.success ? result.data ?? null : null;
+  },
+ });
 
-    void fetchStatus();
-  }, []);
+ const submitMutation = useMutation({
+  mutationFn: async (text: string) => submitReaderApplication(text),
+ });
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -35,28 +37,25 @@ export function useReaderApplyPage(t: TranslateFn) {
       return;
     }
 
-    setSubmitting(true);
     setMessage('');
 
-    const result = await submitReaderApplication(introText);
+    const result = await submitMutation.mutateAsync(introText);
     setMessage(result.success ? result.data?.message || t('success.submitted') : result.error);
     setMessageType(result.success ? 'success' : 'error');
-    setSubmitting(false);
 
     if (result.success) {
-      const updatedRequest = await getMyReaderRequest();
-      setExistingRequest(updatedRequest.success ? updatedRequest.data ?? null : null);
+   await queryClient.invalidateQueries({ queryKey: statusQueryKey });
     }
   };
 
   return {
     introText,
     setIntroText,
-    submitting,
+  submitting: submitMutation.isPending,
     message,
     messageType,
     existingRequest,
-    loading,
+  loading: isLoading || isFetching,
     handleSubmit,
   };
 }

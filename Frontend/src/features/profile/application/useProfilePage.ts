@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 import { useAuthStore } from '@/store/authStore';
@@ -21,15 +22,13 @@ export function useProfilePage() {
  const t = useTranslations('Profile');
  const tCommon = useTranslations('Common');
  const router = useRouter();
+ const queryClient = useQueryClient();
  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
  const user = useAuthStore((state) => state.user);
 
- const [profileData, setProfileData] = useState<ProfileDto | null>(null);
- const [loading, setLoading] = useState(true);
  const [successMsg, setSuccessMsg] = useState('');
  const [errorMsg, setErrorMsg] = useState('');
- const [readerRequest, setReaderRequest] = useState<MyReaderRequest | null>(null);
- const [readerRequestLoading, setReaderRequestLoading] = useState(false);
+ const profileQueryKey = ['profile', 'me'] as const;
 
  const profileSchema = useMemo(
   () =>
@@ -54,54 +53,48 @@ export function useProfilePage() {
 
  useAuthGuard(isAuthenticated);
 
- useEffect(() => {
-  if (!isAuthenticated) return;
-
-  async function fetchProfile() {
-   try {
+ const profileQuery = useQuery<{ profile: ProfileDto | null; error: string }>({
+  queryKey: profileQueryKey,
+  enabled: isAuthenticated,
+  queryFn: async () => {
    const result = await getProfileAction();
-
    if (!result.success) {
-    setErrorMsg(result.error);
-    return;
+    return { profile: null, error: result.error };
    }
-
-	   if (result.data) {
-	    const data = result.data;
-	     setProfileData(data);
-
-     setValue('displayName', data.displayName);
-     setValue('avatarUrl', data.avatarUrl || '');
-
-     if (data.dateOfBirth) {
-      const dateObj = new Date(data.dateOfBirth);
-      const yyyy = dateObj.getFullYear();
-      const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const dd = String(dateObj.getDate()).padStart(2, '0');
-      setValue('dateOfBirth', `${yyyy}-${mm}-${dd}`);
-     }
-    }
-   } catch {
-    setErrorMsg(t('errorLoad'));
-   } finally {
-    setLoading(false);
-   }
-  }
-
-  void fetchProfile();
- }, [isAuthenticated, setValue, t]);
+   return { profile: result.data ?? null, error: '' };
+  },
+ });
 
  useEffect(() => {
-  if (!isAuthenticated || !user) return;
-  if (user.role === 'reader' || user.role === 'admin') return;
+  const payload = profileQuery.data;
+  if (!payload) return;
 
-  setReaderRequestLoading(true);
-  getMyReaderRequest().then((result) => {
-   setReaderRequest(result.success ? result.data ?? null : null);
-   setReaderRequestLoading(false);
-  });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
- }, [isAuthenticated, user?.role]);
+  if (payload.error) return;
+  if (!payload.profile) return;
+
+  const data = payload.profile;
+  setValue('displayName', data.displayName);
+  setValue('avatarUrl', data.avatarUrl || '');
+
+  if (data.dateOfBirth) {
+   const dateObj = new Date(data.dateOfBirth);
+   const yyyy = dateObj.getFullYear();
+   const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+   const dd = String(dateObj.getDate()).padStart(2, '0');
+   setValue('dateOfBirth', `${yyyy}-${mm}-${dd}`);
+  }
+ }, [profileQuery.data, setValue]);
+
+ const shouldLoadReaderRequest =
+  isAuthenticated && !!user && user.role !== 'reader' && user.role !== 'admin';
+ const readerRequestQuery = useQuery<MyReaderRequest | null>({
+  queryKey: ['reader', 'my-request'],
+  enabled: shouldLoadReaderRequest,
+  queryFn: async () => {
+   const result = await getMyReaderRequest();
+   return result.success ? result.data ?? null : null;
+  },
+ });
 
  const onSubmit = async (data: ProfileFormValues) => {
   setSuccessMsg('');
@@ -119,11 +112,7 @@ export function useProfilePage() {
    }
 
    setSuccessMsg(t('successMsg'));
-
-	   const profileResult = await getProfileAction();
-	   if (profileResult.success && profileResult.data) {
-	    setProfileData(profileResult.data);
-	   }
+   await queryClient.invalidateQueries({ queryKey: profileQueryKey });
   } catch {
    setErrorMsg(t('errorSave'));
   }
@@ -134,12 +123,12 @@ export function useProfilePage() {
   tCommon,
   router,
   user,
-  profileData,
-  loading,
+  profileData: profileQuery.data?.profile ?? null,
+  loading: profileQuery.isLoading || profileQuery.isFetching,
   successMsg,
-  errorMsg,
-  readerRequest,
-  readerRequestLoading,
+  errorMsg: errorMsg || profileQuery.data?.error || '',
+  readerRequest: readerRequestQuery.data ?? null,
+  readerRequestLoading: readerRequestQuery.isLoading || readerRequestQuery.isFetching,
   register,
   handleSubmit,
   errors,
