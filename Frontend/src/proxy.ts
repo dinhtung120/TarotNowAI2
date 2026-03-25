@@ -63,6 +63,14 @@ const createNonce = (): string => {
  return nonce;
 };
 
+const toSpaceDelimited = (parts: string[]): string => {
+ let output = '';
+ for (const part of parts) {
+  output = output ? `${output} ${part}` : part;
+ }
+ return output;
+};
+
 const buildContentSecurityPolicy = (nonce: string): string => {
  const scriptSources = ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'"];
  if (process.env.NODE_ENV !== 'production') {
@@ -78,7 +86,7 @@ const buildContentSecurityPolicy = (nonce: string): string => {
   "font-src 'self' data: https:",
   // Tailwind/runtime style injection still needs inline styles.
   "style-src 'self' 'unsafe-inline'",
-  `script-src ${scriptSources.join(' ')}`,
+  `script-src ${toSpaceDelimited(scriptSources)}`,
   `connect-src 'self' ${apiOrigin} ${wsApiOrigin}`.trim(),
  ].join('; ');
 };
