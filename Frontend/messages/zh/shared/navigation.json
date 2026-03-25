@@ -12,6 +12,9 @@
     "wallet": "钱包",
     "history": "历史",
     "collection": "收藏",
-    "notifications": "通知"
+    "notifications": "通知",
+    "tarot": "塔罗",
+    "social": "社交",
+    "account": "账户"
   }
 }

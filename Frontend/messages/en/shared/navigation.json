@@ -12,6 +12,9 @@
     "wallet": "Wallet",
     "history": "History",
     "collection": "Collection",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "tarot": "Tarot",
+    "social": "Social",
+    "account": "Account"
   }
 }
