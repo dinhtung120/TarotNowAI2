@@ -1,0 +1,10 @@
+{
+  "UserNav": {
+    "groups": {
+      "main": "Main",
+      "tarot": "Tarot",
+      "social": "Social",
+      "account": "Account"
+    }
+  }
+}

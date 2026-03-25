@@ -1,0 +1,22 @@
+{
+  "Footer": {
+    "tagline": "月华绽放指引",
+    "links": {
+      "reading": "占卜",
+      "readers": "占卜师",
+      "wallet": "积分",
+      "chat": "消息"
+    },
+    "legal": {
+      "tos": "条款",
+      "privacy": "隐私",
+      "ai": "AI 免责声明"
+    },
+    "social": {
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "tiktok": "TikTok"
+    },
+    "copyright": "© {year} TarotNow AI • 高端灵性体验 • 保留所有权利"
+  }
+}

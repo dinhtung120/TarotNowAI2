@@ -1,0 +1,55 @@
+{
+  "Readers": {
+    "directory": {
+      "tag": "Directory",
+      "title": "Nhà Nữ Tế",
+      "subtitle": "Tìm Reader phù hợp với bạn. Chỉ những người đang sẵn sàng mới có thể nhận câu hỏi.",
+      "total_label": "Tổng số Reader",
+      "search_placeholder": "Tìm kiếm theo tên...",
+      "specialties": {
+        "all": "Tất cả chuyên môn",
+        "love": "💕 Tình yêu",
+        "career": "💼 Sự nghiệp",
+        "general": "🔮 Tổng quát",
+        "health": "🌿 Sức khỏe",
+        "finance": "💰 Tài chính"
+      },
+      "statuses": {
+        "all": "Tất cả trạng thái",
+        "accepting": "🟢 Đang nhận khách",
+        "online": "🟡 Trực tuyến (Bận)",
+        "offline": "⚫ Ngoại tuyến"
+      },
+      "status_indicator": {
+        "ready": "Sẵn sàng",
+        "busy": "Đang bận",
+        "offline": "Ngoại tuyến"
+      },
+      "loading": "Đang tải danh sách...",
+      "empty": "Chưa có Reader nào phù hợp với bộ lọc.",
+      "reader_fallback": "Reader",
+      "bio_fallback": "Chưa có mô tả chi tiết.",
+      "per_question_suffix": "/ Câu"
+    },
+    "profile": {
+      "loading": "Đang tải hồ sơ...",
+      "not_found": "Không tìm thấy hồ sơ Reader.",
+      "back_to_list": "Quay lại Directory",
+      "status": {
+        "accepting": "Đang nhận câu hỏi",
+        "online": "Đang bận",
+        "offline": "Ngoại tuyến"
+      },
+      "diamond_per_question_suffix": "/ Câu",
+      "rating_label": "Điểm Đánh Giá",
+      "reviews_label": "Lượt Nhận Xét",
+      "soul_link": "Liên kết tâm hồn",
+      "specialties_title": "Lĩnh vực chuyên môn",
+      "cta_connecting": "Đang kết nối tâm linh...",
+      "cta_send_question": "Gửi Câu Hỏi Ngay",
+      "not_accepting": "Hiện không nhận khách",
+      "toast_create_conversation_fail": "Không thể tạo cuộc hội thoại",
+      "member_since": "Tham gia Astral từ {date}"
+    }
+  }
+}

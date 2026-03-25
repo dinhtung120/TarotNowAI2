@@ -1,0 +1,10 @@
+{
+  "ApiErrors": {
+    "unknown_error": "Đã xảy ra lỗi không xác định từ hệ thống.",
+    "unauthorized": "Phiên đăng nhập không hợp lệ, vui lòng đăng nhập lại.",
+    "forbidden": "Bạn không có quyền thực hiện thao tác này.",
+    "not_found": "Không tìm thấy dữ liệu yêu cầu.",
+    "invalid_code": "Mã xác thực không hợp lệ.",
+    "network_error": "Lỗi kết nối mạng, vui lòng kiểm tra lại."
+  }
+}

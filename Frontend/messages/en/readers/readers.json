@@ -1,0 +1,55 @@
+{
+  "Readers": {
+    "directory": {
+      "tag": "Directory",
+      "title": "Priestess",
+      "subtitle": "Find a reader that resonates with you. Only those currently available can accept new questions.",
+      "total_label": "Total readers",
+      "search_placeholder": "Search by name...",
+      "specialties": {
+        "all": "All specialties",
+        "love": "💕 Love",
+        "career": "💼 Career",
+        "general": "🔮 General",
+        "health": "🌿 Health",
+        "finance": "💰 Finance"
+      },
+      "statuses": {
+        "all": "All statuses",
+        "accepting": "🟢 Accepting",
+        "online": "🟡 Online (Busy)",
+        "offline": "⚫ Offline"
+      },
+      "status_indicator": {
+        "ready": "Ready",
+        "busy": "Busy",
+        "offline": "Offline"
+      },
+      "loading": "Loading readers...",
+      "empty": "No readers match your filters.",
+      "reader_fallback": "Reader",
+      "bio_fallback": "No detailed bio yet.",
+      "per_question_suffix": "/ Q"
+    },
+    "profile": {
+      "loading": "Loading profile...",
+      "not_found": "Reader profile not found.",
+      "back_to_list": "Back to directory",
+      "status": {
+        "accepting": "Accepting questions",
+        "online": "Busy",
+        "offline": "Offline"
+      },
+      "diamond_per_question_suffix": "/ Q",
+      "rating_label": "Rating",
+      "reviews_label": "Reviews",
+      "soul_link": "Soul link",
+      "specialties_title": "Specialties",
+      "cta_connecting": "Connecting...",
+      "cta_send_question": "Send a question",
+      "not_accepting": "Not accepting right now",
+      "toast_create_conversation_fail": "Unable to start a conversation",
+      "member_since": "Joined Astral on {date}"
+    }
+  }
+}

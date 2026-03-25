@@ -1,0 +1,18 @@
+{
+  "AiInterpretation": {
+    "title": "宇宙解读",
+    "subtitle": "AI 正在解读牌面并连接你的能量",
+    "status_complete": "解读完成",
+    "error_title": "能量干扰",
+    "error_stream": "通信通道中断，请稍后再试。",
+    "error_retry": "尝试其他通道（自动退款）",
+    "streaming_placeholder": "星辰正在对齐...",
+    "waiting_for_cards": "等待翻开卡牌...",
+    "follow_up_placeholder": "你还想问这次解读什么？...",
+    "follow_up_free_badge": "免费追问 ({remaining}/{total})",
+    "follow_up_fee_badge": "费用：{cost} Diamond",
+    "follow_up_hint": "最多 5 个追问。会消耗 AI 配额；若牌等级足够则不消耗 Diamond。",
+    "hard_cap_title": "已达到宇宙上限",
+    "hard_cap_desc": "本次会话的能量已耗尽（5/5）。过多的分心会扭曲最初的信息。请接纳已得到的指引并慢慢体会。"
+  }
+}

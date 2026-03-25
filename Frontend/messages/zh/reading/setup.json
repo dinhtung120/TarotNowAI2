@@ -1,0 +1,27 @@
+{
+  "ReadingSetup": {
+    "title": "选择牌阵",
+    "subtitle": "通过古老牌阵连接宇宙能量。",
+    "tag": "仪式准备",
+    "daily_1_name": "每日神谕（1 张）",
+    "daily_1_desc": "获取今日指引信息。",
+    "spread_3_name": "三位一体（3 张）",
+    "spread_3_desc": "探索过去、现在与未来的关联。",
+    "spread_5_name": "五元素（5 张）",
+    "spread_5_desc": "深入分析影响你处境的因素。",
+    "spread_10_name": "凯尔特十字（10 张）",
+    "spread_10_desc": "最全面、最细致的命运全景。",
+    "cost_free": "免费",
+    "cost_gold": "{amount} Gold",
+    "cost_diamond": "{amount} Diamond",
+    "question_label": "你在想什么？",
+    "question_placeholder": "集中注意力，在此输入你的问题（可选）...",
+    "cta_draw": "开始解读",
+    "preparing": "正在连接能量...",
+    "error_init_failed": "无法初始化占卜会话。",
+    "exp_bonus": "+{amount} EXP/张",
+    "select_currency": "支付能量类型",
+    "currency_gold": "Gold",
+    "currency_diamond": "Diamond"
+  }
+}

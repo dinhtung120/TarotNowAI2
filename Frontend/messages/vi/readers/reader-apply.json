@@ -1,0 +1,52 @@
+{
+  "ReaderApply": {
+    "loading": "Kiểm tra trạng thái đăng ký...",
+    "pending": {
+      "title": "Đơn Đang Chờ Duyệt",
+      "desc": "Đơn đăng ký Reader của bạn đã được gửi thành công và đang chờ admin xem xét. Bạn sẽ nhận được thông báo khi có kết quả.",
+      "intro_label": "Lời giới thiệu đã gửi",
+      "sent_at": "Gửi lúc: {date}"
+    },
+    "approved": {
+      "title": "Bạn Đã Là Reader!",
+      "desc": "Chúc mừng! Đơn đăng ký Reader của bạn đã được phê duyệt. Hãy cập nhật hồ sơ và bắt đầu nhận câu hỏi."
+    },
+    "rejected": {
+      "title": "Đơn trước đã bị từ chối",
+      "reason": "Lý do: {note}",
+      "can_resubmit": "Bạn có thể gửi đơn mới bên dưới."
+    },
+    "header": {
+      "tag": "Reader Application",
+      "title": "Trở Thành Reader",
+      "subtitle": "Chia sẻ khả năng đọc bài Tarot của bạn với cộng đồng. Hãy cho chúng tôi biết tại sao bạn muốn trở thành Reader."
+    },
+    "steps": {
+      "intro": {
+        "title": "Giới thiệu bản thân",
+        "desc": "Chia sẻ kinh nghiệm Tarot"
+      },
+      "review": {
+        "title": "Chờ phê duyệt",
+        "desc": "Admin sẽ xem xét đơn"
+      },
+      "start": {
+        "title": "Bắt đầu nhận câu hỏi",
+        "desc": "Sau khi được duyệt"
+      }
+    },
+    "form": {
+      "intro_label": "Lời giới thiệu *",
+      "intro_placeholder": "Hãy chia sẻ kinh nghiệm đọc bài Tarot của bạn, tại sao bạn muốn trở thành Reader, và bạn có thể mang lại giá trị gì cho cộng đồng...",
+      "min_chars": "Tối thiểu 20 ký tự",
+      "submitting": "Đang gửi đơn...",
+      "submit": "Gửi Đơn Đăng Ký"
+    },
+    "errors": {
+      "submit_failed": "Gửi đơn thất bại."
+    },
+    "success": {
+      "submitted": "Đơn đã được gửi thành công."
+    }
+  }
+}

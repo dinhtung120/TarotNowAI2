@@ -1,0 +1,17 @@
+{
+  "Navigation": {
+    "home": "Trang Chủ",
+    "readings": "Trải Bài",
+    "readers": "Readers",
+    "chat": "Tin nhắn",
+    "login": "Đăng Nhập",
+    "register": "Đăng Ký",
+    "logout": "Đăng Xuất",
+    "adminPortal": "Admin Portal",
+    "profile": "Hồ Sơ",
+    "wallet": "Ví",
+    "history": "Lịch Sử",
+    "collection": "Bộ Sưu Tập",
+    "notifications": "Thông Báo"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "Collection": {
+    "tag": "Arcane Sanctuary",
+    "title": "Mystical Sanctuary",
+    "subtitle": "Track your progress in unlocking the tarot card universe.",
+    "error_load_failed": "Unable to load your collection.",
+    "progress_label": "Collection Progress",
+    "filters_label": "Filters",
+    "filter_all": "All",
+    "filter_owned": "Owned",
+    "filter_unowned": "Hidden",
+    "empty_title": "Your vault is empty",
+    "empty_desc": "Perform your first tarot reading to unlock card elements.",
+    "cta_draw": "Draw Now",
+    "level_label": "Lv",
+    "copies_label": "copies",
+    "unknown_card": "Unknown",
+    "locked_meaning": "The universe has not revealed this card's message to you yet."
+  }
+}

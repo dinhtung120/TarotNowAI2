@@ -1,0 +1,18 @@
+{
+  "AiInterpretation": {
+    "title": "Universal Interpretation",
+    "subtitle": "AI is analyzing the cards and connecting with your energy",
+    "status_complete": "Decoding Complete",
+    "error_title": "Energetic Interference",
+    "error_stream": "The communication channel is disrupted. Please try again later.",
+    "error_retry": "Try Another Channel (Auto Refund)",
+    "streaming_placeholder": "Aligning the stars...",
+    "waiting_for_cards": "Waiting for cards to be flipped...",
+    "follow_up_placeholder": "What else would you like to ask about this reading?...",
+    "follow_up_free_badge": "Free follow-up ({remaining}/{total})",
+    "follow_up_fee_badge": "Fee: {cost} Diamond",
+    "follow_up_hint": "Max 5 follow-up questions. Uses AI quota; free Diamonds if your cards are high enough level.",
+    "hard_cap_title": "Cosmic limit reached",
+    "hard_cap_desc": "This session has reached its energy limit (5/5 questions). Too many distractions can distort the original message. Take what you've received and reflect on it."
+  }
+}

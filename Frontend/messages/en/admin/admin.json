@@ -1,0 +1,417 @@
+{
+  "Admin": {
+    "layout": {
+      "title": "Admin",
+      "subtitle": "Management",
+      "section_main": "Main control",
+      "exit_portal": "Exit portal",
+      "menu": {
+        "overview": "Overview",
+        "users": "Users",
+        "deposits": "Deposits",
+        "promotions": "Promotions",
+        "readings": "Readings",
+        "reader_requests": "Reader requests",
+        "withdrawals": "Withdrawals",
+        "disputes": "Disputes"
+      }
+    },
+    "dashboard": {
+      "loading": "Initializing admin system...",
+      "header": {
+        "tag": "System intelligence",
+        "title": "HQ overview",
+        "subtitle": "Monitor the flow of users and fate data across the TarotNow AI system."
+      },
+      "health": {
+        "title": "Health check",
+        "ok": "System stable"
+      },
+      "stats": {
+        "users": "Total users",
+        "deposits": "Top-ups",
+        "promotions": "Promotions",
+        "readings": "Reading sessions"
+      },
+      "notice": {
+        "title": "Admin bulletin",
+        "reminder_title": "Reminder",
+        "reminder_body": "Review pending top-ups and manually approve if MOMO/VNPay is delayed.",
+        "announcement_title": "Announcement",
+        "announcement_body": "Admin UI Astral v2.0 has been updated. Enjoy a smoother management experience."
+      },
+      "shortcuts": {
+        "title": "Quick shortcuts",
+        "users": "Manage users",
+        "deposits": "Deposit flow",
+        "readings": "New readings",
+        "reader_requests": "Review readers"
+      },
+      "insights": {
+        "revenue_title": "Estimated revenue",
+        "revenue_currency": "VND",
+        "revenue_note": "Calculated from {count} successful top-ups",
+        "activity_title": "Activity stream",
+        "activity_unit": "Sessions",
+        "activity_note": "Total number of fate decoding sessions completed"
+      }
+    },
+    "deposits": {
+      "header": {
+        "tag": "Finance",
+        "title": "System deposits",
+        "subtitle": "Track {count} Diamond top-up transactions."
+      },
+      "filters": {
+        "label": "Filter",
+        "all": "All",
+        "pending": "Pending",
+        "success": "Success",
+        "failed": "Failed"
+      },
+      "table": {
+        "heading_order": "Order / TXN",
+        "heading_user": "User",
+        "heading_amount": "Amount (VND)",
+        "heading_assets": "Assets received",
+        "heading_time": "Time",
+        "heading_status": "Status",
+        "heading_actions": "Actions"
+      },
+      "row": {
+        "txn_missing": "No TXN",
+        "system_user": "System user",
+        "user_id_prefix": "ID: {id}..."
+      },
+      "status": {
+        "success": "Success",
+        "failed": "Failed",
+        "pending": "Processing"
+      },
+      "actions": {
+        "approve_title": "Approve",
+        "reject_title": "Reject",
+        "na": "N/A"
+      },
+      "modal": {
+        "title_approve": "Approve transaction?",
+        "title_reject": "Reject transaction?",
+        "desc_approve": "This will change the money flow status and credit assets to this user.",
+        "desc_reject": "This will change the money flow status and cancel the request.",
+        "back": "Back",
+        "confirm": "Confirm"
+      },
+      "toast": {
+        "approve_success": "Approved successfully!",
+        "reject_success": "Order rejected.",
+        "action_failed": "Failed. Please try again.",
+        "network_error": "Server connection error."
+      },
+      "states": {
+        "loading": "Querying the ledger...",
+        "empty": "No transactions found in this view."
+      },
+      "pagination": {
+        "summary": "Page {page} | Total {total} transactions"
+      },
+      "summary": {
+        "confirm_title": "Confirm orders",
+        "confirm_desc": "The system syncs automatically from the payment gateway. Double-check the TXN before manual intervention.",
+        "ledger_title": "Ledger information",
+        "ledger_subtitle": "Financial record v2.4"
+      }
+    },
+    "users": {
+      "header": {
+        "tag": "Database",
+        "title": "User management",
+        "subtitle": "Total {count} users in the system."
+      },
+      "search": {
+        "placeholder": "NAME, EMAIL, USERNAME..."
+      },
+      "table": {
+        "heading_account": "Account",
+        "heading_rank": "Rank / XP",
+        "heading_assets": "Assets (D/G)",
+        "heading_role": "Role",
+        "heading_status": "Status",
+        "heading_actions": "Actions"
+      },
+      "row": {
+        "level": "LV {level}",
+        "exp": "{exp} EXP"
+      },
+      "states": {
+        "loading": "Querying data...",
+        "empty": "No matching users found."
+      },
+      "roles": {
+        "admin": "Admin",
+        "tarot_reader": "Reader",
+        "user": "User"
+      },
+      "status": {
+        "locked": "Locked",
+        "active": "Active"
+      },
+      "actions": {
+        "add_balance_title": "Manual top-up",
+        "lock_title": "Lock account",
+        "unlock_title": "Unlock"
+      },
+      "pagination": {
+        "summary": "Page {page} | Total {total} users"
+      },
+      "lock_modal": {
+        "title_lock": "Lock this account?",
+        "title_unlock": "Unlock this account?",
+        "desc_lock": "Confirm to block access for user: {name}",
+        "desc_unlock": "Confirm to allow this user to continue their journey: {name}",
+        "cancel": "Cancel",
+        "confirm": "Proceed"
+      },
+      "add_balance": {
+        "title": "Manual top-up",
+        "subtitle": "Manual Balance Intervention",
+        "recipient_label": "Recipient",
+        "currency_gold": "Gold",
+        "currency_diamond": "Diamond",
+        "amount_label": "Amount",
+        "reason_label": "Reason",
+        "reason_placeholder": "e.g. System compensation, event gift...",
+        "cancel": "Cancel task",
+        "submit": "Activate"
+      },
+      "toast": {
+        "lock_success": "Account locked successfully.",
+        "unlock_success": "Account unlocked successfully.",
+        "toggle_failed": "Failed to change account status.",
+        "network_error": "Connection error.",
+        "amount_invalid": "Amount must be greater than 0.",
+        "add_success": "Added {amount} {currency} successfully!",
+        "add_failed": "Failed to add balance.",
+        "system_error": "System error.",
+        "update_success": "User information updated successfully.",
+        "update_failed": "Failed to update user information. Please try again."
+      }
+    },
+    "promotions": {
+      "header": {
+        "tag": "Marketing",
+        "title": "Promotions",
+        "subtitle": "Set top-up thresholds to reward bonus Gold."
+      },
+      "actions": {
+        "toggle_create_add": "Add promotion",
+        "toggle_create_cancel": "Cancel"
+      },
+      "create": {
+        "title": "Create a new reward threshold",
+        "min_amount_label": "Minimum top-up (VND)",
+        "min_amount_placeholder": "200,000",
+        "bonus_label": "Bonus Gold",
+        "bonus_placeholder": "500",
+        "note": "The promotion will be activated immediately after saving.",
+        "submit": "Save to system",
+        "submitting": "Saving..."
+      },
+      "table": {
+        "heading_condition": "Activation condition",
+        "heading_reward": "Reward (Gold)",
+        "heading_status": "Status",
+        "heading_commands": "Commands"
+      },
+      "states": {
+        "loading": "Loading promotions...",
+        "empty": "No promotions found."
+      },
+      "row": {
+        "condition_from": "From {amount}"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "delete_modal": {
+        "title": "Delete promotion?",
+        "desc": "This will permanently remove this promotion from the system ledger. Existing transactions are not affected.",
+        "keep": "Keep",
+        "delete": "Delete"
+      },
+      "toast": {
+        "create_success": "Promotion created.",
+        "create_failed": "Failed to create promotion.",
+        "toggle_success": "Status updated.",
+        "toggle_failed": "Failed to update status.",
+        "delete_success": "Promotion deleted.",
+        "delete_failed": "Failed to delete promotion.",
+        "network_error": "Connection error."
+      }
+    },
+    "readings": {
+      "header": {
+        "tag": "Monitoring",
+        "title": "Fate journal",
+        "subtitle": "Explore {count} spiritual journeys through Tarot."
+      },
+      "filters": {
+        "username_label": "User",
+        "username_placeholder": "Username...",
+        "spread_label": "Spread",
+        "spread_all": "All spreads",
+        "spread_daily": "Daily 1 Card",
+        "spread_3": "Spread 3 Cards",
+        "spread_5": "Spread 5 Cards",
+        "spread_10": "Spread 10 Cards",
+        "start_date_label": "From date",
+        "end_date_label": "To date",
+        "submit": "Query"
+      },
+      "table": {
+        "heading_timeline": "Timeline",
+        "heading_user": "User",
+        "heading_spread": "Spread",
+        "heading_question": "Question",
+        "heading_status": "Status"
+      },
+      "states": {
+        "loading": "Opening the chapters of fate...",
+        "empty": "No readings found."
+      },
+      "row": {
+        "user_unknown": "Unknown",
+        "question_empty": "No question provided..."
+      },
+      "status": {
+        "completed": "Completed",
+        "processing": "In progress"
+      },
+      "pagination": {
+        "summary": "Chapter {page} / {total} realms of fate"
+      },
+      "insights": {
+        "total_title": "Total journeys",
+        "update_label": "Update cycle",
+        "update_value": "Real-time",
+        "monitor_label": "Monitoring zone",
+        "monitor_value": "Admin logbook"
+      },
+      "toast": {
+        "unauthorized": "Session expired or unauthorized."
+      }
+    },
+    "reader_requests": {
+      "header": {
+        "tag": "Review",
+        "title": "Reader applications",
+        "subtitle": "Review and approve Reader applications."
+      },
+      "summary": {
+        "total_label": "Total requests"
+      },
+      "filters": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "all": "All"
+      },
+      "states": {
+        "loading": "Loading...",
+        "empty": "No requests found."
+      },
+      "row": {
+        "id_prefix": "ID: {id}...",
+        "intro_title": "Introduction",
+        "expand": "Expand",
+        "admin_note_title": "Admin note"
+      },
+      "input": {
+        "admin_note_placeholder": "ADMIN NOTE BEFORE REVIEW (OPTIONAL)..."
+      },
+      "actions": {
+        "approve": "Approve reader",
+        "reject": "Reject request"
+      },
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "pagination": {
+        "summary": "Page {page} / {total}"
+      },
+      "toast": {
+        "approve_success": "Reader approved.",
+        "reject_success": "Application rejected.",
+        "process_failed": "Failed to process request. Please try again."
+      }
+    },
+    "withdrawals": {
+      "header": {
+        "tag": "Admin",
+        "title": "Payout queue",
+        "subtitle": "Approve or reject Reader withdrawal requests (FIFO)."
+      },
+      "states": {
+        "loading": "Loading queue...",
+        "empty": "No pending requests."
+      },
+      "row": {
+        "gross": "Gross",
+        "fee": "Fee",
+        "net": "Net",
+        "id_prefix": "ID: {id}..."
+      },
+      "input": {
+        "admin_note_placeholder": "ADMIN NOTE..."
+      },
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject"
+      },
+      "toast": {
+        "success": "Request processed successfully.",
+        "failed": "Processing failed."
+      },
+      "mfa": {
+        "action_approve": "approve this withdrawal request",
+        "action_reject": "reject this withdrawal request"
+      }
+    },
+    "disputes": {
+      "header": {
+        "tag": "Escrow",
+        "title": "Dispute queue",
+        "subtitle": "Resolve escrow disputes. Decide release to Reader or refund to User."
+      },
+      "guide": {
+        "title": "Dispute handling guide",
+        "release_label": "Release",
+        "release_desc": "Reader answered correctly → Diamond transfers to reader (minus 10% fee).",
+        "refund_label": "Refund",
+        "refund_desc": "Wrong or no reply → Diamond refunds to user.",
+        "check_history": "Check chat history before deciding."
+      },
+      "form": {
+        "quick_title": "Quick resolve",
+        "item_id_label": "Item ID (UUID)",
+        "item_id_placeholder": "ENTER QUESTION ITEM UUID...",
+        "note_label": "Admin note",
+        "note_placeholder": "Reason for decision...",
+        "release_button": "Release to Reader",
+        "refund_button": "Refund to User"
+      },
+      "toast": {
+        "release_success": "Released to Reader successfully.",
+        "refund_success": "Refunded to User successfully.",
+        "failed": "Failed to resolve dispute. Please check again.",
+        "missing_item_id": "Please enter Item ID."
+      },
+      "resolved": {
+        "title": "Resolved in this session",
+        "badge": "Resolved"
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "Navigation": {
+    "home": "Home",
+    "readings": "Readings",
+    "readers": "Readers",
+    "chat": "Chat",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "adminPortal": "Admin Portal",
+    "profile": "Profile",
+    "wallet": "Wallet",
+    "history": "History",
+    "collection": "Collection",
+    "notifications": "Notifications"
+  }
+}

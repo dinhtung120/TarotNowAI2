@@ -1,0 +1,27 @@
+{
+  "ReadingSetup": {
+    "title": "Select Your Spread",
+    "subtitle": "Connect with universal energy through ancient card layouts.",
+    "tag": "Ritual setup",
+    "daily_1_name": "Daily Oracle (1 Card)",
+    "daily_1_desc": "Receive a guiding message for your day.",
+    "spread_3_name": "The Triad (3 Cards)",
+    "spread_3_desc": "Explore the links between Past, Present, and Future.",
+    "spread_5_name": "The Five Elements (5 Cards)",
+    "spread_5_desc": "A deep analysis of factors impacting your situation.",
+    "spread_10_name": "Celtic Cross (10 Cards)",
+    "spread_10_desc": "The most comprehensive and detailed panoramic view of your destiny.",
+    "cost_free": "Free",
+    "cost_gold": "{amount} Gold",
+    "cost_diamond": "{amount} Diamond",
+    "question_label": "What is on your mind?",
+    "question_placeholder": "Focus your mind and type your question here (optional)...",
+    "cta_draw": "Draw Now",
+    "preparing": "Connecting energy...",
+    "error_init_failed": "Failed to initialize reading session.",
+    "exp_bonus": "+{amount} EXP/Card",
+    "select_currency": "Payment energy type",
+    "currency_gold": "Gold",
+    "currency_diamond": "Diamond"
+  }
+}

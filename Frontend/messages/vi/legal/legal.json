@@ -1,0 +1,36 @@
+{
+  "Legal": {
+    "tos_title": "Điều khoản dịch vụ",
+    "tos_meta_desc": "Điều khoản dịch vụ và sử dụng của TarotNow.",
+    "privacy_title": "Chính sách bảo mật",
+    "privacy_meta_desc": "Chính sách bảo mật dữ liệu của TarotNow.",
+    "ai_disclaimer_title": "Miễn trừ trách nhiệm AI",
+    "ai_disclaimer_meta_desc": "Miễn trừ trách nhiệm về thông tin do AI tạo ra của TarotNow.",
+    "tos": {
+      "section1_title": "1. Điều khoản chung",
+      "section1_body": "Chào mừng bạn đến với TarotNow. Khi sử dụng dịch vụ của chúng tôi, bạn đồng ý tuân thủ các điều khoản và điều kiện này. Dịch vụ của chúng tôi cung cấp giải trí tư vấn tâm lý mang tính chất tham khảo qua các lá bài Tarot và công nghệ Trí Tuệ Nhân Tạo (AI).",
+      "section2_title": "2. Miễn trừ trách nhiệm AI",
+      "section2_body": "Tất cả nội dung giải nghĩa bài Tarot đều được tạo ra bởi AI và chỉ mang tính chất giải trí, tham khảo. Chúng tôi không chịu trách nhiệm pháp lý cho các quyết định cá nhân, y tế, tài chính hoặc pháp lý của người dùng dự vào kết quả từ TarotNow.",
+      "section3_title": "3. Tài khoản và thanh toán",
+      "section3_body": "Người dùng chịu trách nhiệm bảo mật thông tin tài khoản của mình. Các giao dịch nạp Diamond không được hoàn tiền trừ trường hợp lỗi hệ thống phát sinh từ phía cổng thanh toán.",
+      "last_updated": "Cập nhật lần cuối: 10/2026"
+    },
+    "privacy": {
+      "section1_title": "1. Thu thập thông tin",
+      "section1_body": "TarotNow tôn trọng quyền riêng tư của bạn. Chúng tôi thu thập các thông tin cần thiết như Địa chỉ Email, Tên hiển thị, và Ngày sinh nhằm cá nhân hóa trải nghiệm đọc bài Tarot, tính toán Cung Hoàng Đạo và Thần Số Học.",
+      "section2_title": "2. Sử dụng dữ liệu",
+      "section2_body": "Dữ liệu của bạn được sử dụng mục đích nội bộ để lưu trữ lịch sử xem bài (Reading History). Lịch sử truy vấn AI được gửi một cách mã hóa đến nhà cung cấp (OpenAI) để thu thập kết quả và không nhằm mục đích huấn luyện AI (training) theo cam kết của đối tác.",
+      "section3_title": "3. Bảo vệ dữ liệu",
+      "section3_body": "Tất cả thông tin tài khoản và mật khẩu được mã hóa an toàn. Chúng tôi không mua bán, trao đổi dữ liệu cá nhân của người dùng cho bên thứ ba dưới mọi hình thức vì mục đích thương mại.",
+      "last_updated": "Cập nhật lần cuối: 10/2026"
+    },
+    "ai_disclaimer": {
+      "warning": "Khuyến cáo: Các dự đoán và phân tích từ Tinh Tú AI được tạo hoàn toàn bởi mô hình ngôn ngữ lớn (LLM). Vui lòng không coi đây là một lời khuyên thay thế cho tư vấn tâm lý y khoa hay chuyên gia tài chính.",
+      "section1_title": "1. Đặc tính của AI",
+      "section1_body": "Tất cả các thông điệp Tarot được diễn giải qua trí tuệ nhân tạo (AI). Mặc dù chúng tôi đã thiết lập thuật toán tối ưu hóa logic huyền học và trực giác Tarot, kết quả giải nghĩa của AI có thể không đúng 100% trong mọi trường hợp và ngữ cảnh.",
+      "section2_title": "2. Không phải là chẩn đoán y khoa",
+      "section2_body": "Kết quả xem bài liên quan đến Cảm xúc, Sức khỏe hay Tiền bạc không được dùng làm căn cứ tự chẩn đoán y tế hoặc thay thế luật pháp/tài chính. Hãy luôn tham khảo ý kiến chuyên gia ngoài đời thực nếu bạn đang gặp vấn đề nghiêm trọng.",
+      "consent_note": "Bạn cần đồng ý với điều khoản nhận thức này trước khi đăng ký tài khoản TarotNow."
+    }
+  }
+}

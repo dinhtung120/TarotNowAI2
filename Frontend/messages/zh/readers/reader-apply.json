@@ -1,0 +1,52 @@
+{
+  "ReaderApply": {
+    "loading": "正在检查申请状态...",
+    "pending": {
+      "title": "申请待审核",
+      "desc": "你的占卜师申请已提交，正在等待管理员审核。结果出来后会通知你。",
+      "intro_label": "已提交的自我介绍",
+      "sent_at": "提交时间：{date}"
+    },
+    "approved": {
+      "title": "你已成为占卜师！",
+      "desc": "恭喜！你的申请已通过。请完善资料并开始接收提问。"
+    },
+    "rejected": {
+      "title": "上一次申请被拒绝",
+      "reason": "原因：{note}",
+      "can_resubmit": "你可以在下面重新提交申请。"
+    },
+    "header": {
+      "tag": "占卜师申请",
+      "title": "成为占卜师",
+      "subtitle": "与社区分享你的塔罗解读能力。告诉我们你想成为占卜师的原因。"
+    },
+    "steps": {
+      "intro": {
+        "title": "自我介绍",
+        "desc": "分享你的塔罗经验"
+      },
+      "review": {
+        "title": "等待审核",
+        "desc": "管理员将审核申请"
+      },
+      "start": {
+        "title": "开始接收提问",
+        "desc": "审核通过后"
+      }
+    },
+    "form": {
+      "intro_label": "自我介绍 *",
+      "intro_placeholder": "分享你的塔罗解读经验、你想成为占卜师的原因，以及你能为社区带来什么价值...",
+      "min_chars": "至少 20 个字符",
+      "submitting": "提交中...",
+      "submit": "提交申请"
+    },
+    "errors": {
+      "submit_failed": "提交失败。"
+    },
+    "success": {
+      "submitted": "申请已提交成功。"
+    }
+  }
+}

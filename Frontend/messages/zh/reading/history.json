@@ -1,0 +1,26 @@
+{
+  "History": {
+    "title": "仪式旅程",
+    "subtitle": "记录来自星辰的信息。",
+    "tag": "编年史",
+    "detail_fragment": "片段：{id}...",
+    "essence_label": "精华",
+    "ai_title": "原初神谕",
+    "ai_desc": "宇宙已在本次会话中保存了 {count} 条智慧印记。完整对话内容将在后续协议更新中呈现。",
+    "empty_title": "暂无记录",
+    "empty_desc": "宇宙正等待你开启新的起点。",
+    "cta_draw": "立即抽牌",
+    "status_completed": "已完成",
+    "status_interrupted": "已中断",
+    "page_info": "第 {current} / {total} 页",
+    "prev_page": "上一页",
+    "next_page": "下一页",
+    "spread_daily": "每日神谕（1 张）",
+    "spread_3": "三位一体（3 张）",
+    "spread_5": "五元素（5 张）",
+    "spread_10": "凯尔特十字（10 张）",
+    "filter_type": "牌阵类型",
+    "filter_date": "日期",
+    "all_types": "全部牌阵"
+  }
+}

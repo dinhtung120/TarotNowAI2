@@ -1,0 +1,24 @@
+{
+  "Notifications": {
+    "tag": "Hệ thống thông báo",
+    "title": "Thông Báo",
+    "subtitle": "Cập nhật tin tức và hoạt động trong hệ sinh thái TarotNow.",
+    "filter_all": "Tất cả",
+    "filter_unread": "Chưa đọc",
+    "mark_read": "Đánh dấu đã đọc",
+    "mark_read_success": "Đã đánh dấu đọc.",
+    "mark_read_fail": "Không thể đánh dấu đã đọc.",
+    "empty_title": "Chưa có thông báo",
+    "empty_desc": "Khi có thông báo mới, chúng sẽ hiển thị ở đây.",
+    "loading": "Đang tải thông báo...",
+    "time_just_now": "Vừa xong",
+    "time_minutes_ago": "{count} phút trước",
+    "time_hours_ago": "{count} giờ trước",
+    "time_days_ago": "{count} ngày trước",
+    "type_system": "Hệ thống",
+    "type_quest": "Nhiệm vụ",
+    "type_streak": "Chuỗi",
+    "type_escrow": "Tài chính",
+    "type_payment": "Thanh toán"
+  }
+}

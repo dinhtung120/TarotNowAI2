@@ -1,0 +1,52 @@
+{
+  "ReaderApply": {
+    "loading": "Checking application status...",
+    "pending": {
+      "title": "Application pending",
+      "desc": "Your Reader application has been submitted and is awaiting admin review. You will be notified once a decision is made.",
+      "intro_label": "Submitted introduction",
+      "sent_at": "Submitted at: {date}"
+    },
+    "approved": {
+      "title": "You are a Reader!",
+      "desc": "Congratulations! Your application has been approved. Update your profile and start receiving questions."
+    },
+    "rejected": {
+      "title": "Previous application was rejected",
+      "reason": "Reason: {note}",
+      "can_resubmit": "You can submit a new application below."
+    },
+    "header": {
+      "tag": "Reader Application",
+      "title": "Become a Reader",
+      "subtitle": "Share your Tarot reading abilities with the community. Tell us why you want to become a Reader."
+    },
+    "steps": {
+      "intro": {
+        "title": "Introduce yourself",
+        "desc": "Share your Tarot experience"
+      },
+      "review": {
+        "title": "Await review",
+        "desc": "Admin will review your application"
+      },
+      "start": {
+        "title": "Start receiving questions",
+        "desc": "After approval"
+      }
+    },
+    "form": {
+      "intro_label": "Introduction *",
+      "intro_placeholder": "Share your Tarot reading experience, why you want to become a Reader, and what value you can bring to the community...",
+      "min_chars": "Minimum 20 characters",
+      "submitting": "Submitting...",
+      "submit": "Submit Application"
+    },
+    "errors": {
+      "submit_failed": "Failed to submit application."
+    },
+    "success": {
+      "submitted": "Your application has been submitted."
+    }
+  }
+}

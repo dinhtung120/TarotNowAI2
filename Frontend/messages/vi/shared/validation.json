@@ -1,0 +1,36 @@
+{
+  "Profile": {
+    "validation": {
+      "display_name_min": "Tên hiển thị phải có ít nhất 2 ký tự",
+      "avatar_url_invalid": "URL Avatar không hợp lệ",
+      "date_of_birth_invalid": "Ngày sinh không hợp lệ"
+    }
+  },
+  "Auth": {
+    "validation": {
+      "email_invalid": "Email không hợp lệ",
+      "email_or_username_required": "Vui lòng nhập Email hoặc Username",
+      "password_required": "Vui lòng nhập mật khẩu",
+      "username_min": "Username phải có ít nhất 3 ký tự",
+      "username_pattern": "Chỉ cho phép chữ, số và dấu gạch dưới",
+      "password_min": "Mật khẩu phải có ít nhất 8 ký tự",
+      "password_complexity": "Cần chữ hoa, chữ thường, số và ký tự đặc biệt",
+      "display_name_required": "Vui lòng nhập tên hiển thị",
+      "age_minimum": "Bạn phải đủ 16 tuổi để sử dụng dịch vụ.",
+      "must_accept_terms": "Bạn cần đồng ý với điều khoản và chính sách",
+      "passwords_no_match": "Mật khẩu không khớp",
+      "otp_length": "OTP phải gồm đúng 6 chữ số",
+      "otp_numeric": "OTP chỉ gồm chữ số"
+    }
+  },
+  "ReaderApply": {
+    "validation": {
+      "min_intro": "Lời giới thiệu phải có ít nhất 20 ký tự."
+    }
+  },
+  "ReadingSetup": {
+    "validation": {
+      "question_too_long": "Câu hỏi quá dài"
+    }
+  }
+}

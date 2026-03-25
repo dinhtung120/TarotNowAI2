@@ -1,0 +1,18 @@
+{
+  "AiInterpretation": {
+    "title": "Lời Diễn Giải Từ Vũ Trụ",
+    "subtitle": "AI đang phân tích các lá bài và kết nối với năng lượng của bạn",
+    "status_complete": "Đã Hoàn Tất Giải Mã",
+    "error_title": "Lỗi Năng Lượng Thần Giao",
+    "error_stream": "Kênh truyền tin bị nhiễu đoạn. Vui lòng thử lại sau.",
+    "error_retry": "Thử Kênh Khác (Refund Tự Động)",
+    "streaming_placeholder": "Các Tinh Tú Đang Thẳng Hàng...",
+    "waiting_for_cards": "Đang đợi lật bài...",
+    "follow_up_placeholder": "Bạn muốn hỏi thêm gì về trải bài này?...",
+    "follow_up_free_badge": "Miễn Phí Follow-up ({remaining}/{total})",
+    "follow_up_fee_badge": "Phí: {cost} Diamond",
+    "follow_up_hint": "Giới hạn 5 câu hỏi phụ. Tốn AI Quota nhưng miễn phí Diamond nếu bài đủ cấp.",
+    "hard_cap_title": "Giới hạn Vũ Trụ đã đạt",
+    "hard_cap_desc": "Năng lượng của dải ngân hà trong phiên này đã vơi cạn (5/5 câu). Quá nhiều sự phân tâm sẽ làm nhiễu loạn thông điệp ban đầu. Xin hãy đón nhận và chiêm nghiệm tinh hoa trên."
+  }
+}

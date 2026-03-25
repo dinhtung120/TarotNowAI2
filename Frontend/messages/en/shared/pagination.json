@@ -1,0 +1,7 @@
+{
+  "Pagination": {
+    "page_info": "Page {current} / {total}",
+    "prev": "Previous page",
+    "next": "Next page"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "ReadingSession": {
+    "header": {
+      "back_to_setup": "返回抽牌",
+      "title": "神秘领域",
+      "session": "会话：{id}..."
+    },
+    "question": {
+      "label": "心念"
+    },
+    "shuffle": {
+      "connecting_title": "正在建立连接...",
+      "cleansing": "正在净化卡牌"
+    },
+    "pick": {
+      "prompt": "静心并选择 {remaining} 张牌",
+      "done": "卡牌已就位",
+      "count": "{picked}/{total} 张牌",
+      "random": "随机选择"
+    },
+    "modal": {
+      "title": "已选择卡牌",
+      "desc": "宇宙已听见你的心声。在接收讯息前深呼吸一下。",
+      "revealing": "正在注入能量...",
+      "reveal": "注入能量并翻牌",
+      "change_card": "更换一张牌"
+    },
+    "cards": {
+      "meaning_label": "含义"
+    },
+    "ai": {
+      "subtitle": "AI Divine Stream • {id}",
+      "live": "实时",
+      "waiting_flip": "正在准备连接... 请翻开所有卡牌以接收讯息。",
+      "footer_note": "聆听你卡牌的共振。"
+    },
+    "errors": {
+      "reveal_failed": "无法翻牌。"
+    }
+  }
+}

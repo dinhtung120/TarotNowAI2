@@ -1,0 +1,16 @@
+{
+  "Common": {
+    "app_title": "TarotNow AI",
+    "app_description": "透明且现代的塔罗体验。",
+    "loading": "加载中...",
+    "error": "发生错误",
+    "back": "返回",
+    "close": "关闭",
+    "avatar_alt": "头像",
+    "close_modal": "关闭弹窗",
+    "menu": "菜单",
+    "notifications": "通知",
+    "confirm": "确认",
+    "status_complete": "完成"
+  }
+}

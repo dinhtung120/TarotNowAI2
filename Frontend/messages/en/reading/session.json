@@ -1,0 +1,41 @@
+{
+  "ReadingSession": {
+    "header": {
+      "back_to_setup": "Back to ritual",
+      "title": "The Mystical Realm",
+      "session": "Session: {id}..."
+    },
+    "question": {
+      "label": "Intention"
+    },
+    "shuffle": {
+      "connecting_title": "Establishing connection...",
+      "cleansing": "Cleansing the cards"
+    },
+    "pick": {
+      "prompt": "Center yourself and pick {remaining} cards",
+      "done": "The cards are set",
+      "count": "{picked}/{total} cards",
+      "random": "Pick randomly"
+    },
+    "modal": {
+      "title": "Cards selected",
+      "desc": "The universe has heard you. Take a deep breath before receiving the message.",
+      "revealing": "Channeling energy...",
+      "reveal": "Channel energy and reveal",
+      "change_card": "Change a card"
+    },
+    "cards": {
+      "meaning_label": "Meaning"
+    },
+    "ai": {
+      "subtitle": "AI Divine Stream • {id}",
+      "live": "Live",
+      "waiting_flip": "Preparing the connection... Flip all cards to receive the message.",
+      "footer_note": "Listen to the resonance of your cards."
+    },
+    "errors": {
+      "reveal_failed": "Failed to reveal cards."
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "ReadingSetup": {
+    "title": "Chọn Kiểu Trải Bài",
+    "subtitle": "Kết nối với năng lượng vũ trụ thông qua các thức trải bài cổ xưa.",
+    "tag": "Thiết lập nghi lễ",
+    "daily_1_name": "Nhật Ấn (1 Lá)",
+    "daily_1_desc": "Nhận thông điệp chỉ dẫn cho ngày mới.",
+    "spread_3_name": "Tam Nguyên (3 Lá)",
+    "spread_3_desc": "Khám phá sự liên kết giữa Quá khứ, Hiện tại và Tương lai.",
+    "spread_5_name": "Ngũ Hành (5 Lá)",
+    "spread_5_desc": "Phân tích sâu sắc các yếu tố tác động đến tình huống.",
+    "spread_10_name": "Thập Tự Celtic (10 Lá)",
+    "spread_10_desc": "Cái nhìn toàn cảnh và chi tiết nhất về vận mệnh của bạn.",
+    "cost_free": "Miễn phí",
+    "cost_gold": "{amount} Gold",
+    "cost_diamond": "{amount} Diamond",
+    "question_label": "Điều gì đang trăn trở trong lòng bạn?",
+    "question_placeholder": "Hãy tập trung tâm trí và ghi lại câu hỏi của bạn tại đây (tùy chọn)...",
+    "cta_draw": "Bắt Đầu Giải Mã",
+    "preparing": "Đang kết nối năng lượng...",
+    "error_init_failed": "Không thể khởi tạo phiên trải bài.",
+    "exp_bonus": "+{amount} EXP/Lá",
+    "select_currency": "Loại năng lượng thanh toán",
+    "currency_gold": "Vàng (Gold)",
+    "currency_diamond": "Kim cương (Diamond)"
+  }
+}

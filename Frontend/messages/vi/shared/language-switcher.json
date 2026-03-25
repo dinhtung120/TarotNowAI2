@@ -1,0 +1,10 @@
+{
+  "LanguageSwitcher": {
+    "menu_title": "Ngôn ngữ",
+    "options_aria": "Tùy chọn ngôn ngữ",
+    "current_aria": "Ngôn ngữ hiện tại: {language}",
+    "locale_vi": "Tiếng Việt",
+    "locale_en": "English",
+    "locale_zh": "中文"
+  }
+}

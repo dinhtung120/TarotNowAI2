@@ -1,0 +1,22 @@
+{
+  "Footer": {
+    "tagline": "Lunar Bloom Guidance",
+    "links": {
+      "reading": "Readings",
+      "readers": "Readers",
+      "wallet": "Credits",
+      "chat": "Messages"
+    },
+    "legal": {
+      "tos": "Terms",
+      "privacy": "Privacy",
+      "ai": "AI Disclaimer"
+    },
+    "social": {
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "tiktok": "TikTok"
+    },
+    "copyright": "© {year} TarotNow AI • Premium Spiritual Experience • All Rights Reserved"
+  }
+}

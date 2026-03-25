@@ -1,0 +1,26 @@
+{
+  "History": {
+    "title": "Ritual Journey",
+    "subtitle": "Chronicles of the messages from The Celestials.",
+    "tag": "Chronicles",
+    "detail_fragment": "Fragment: {id}...",
+    "essence_label": "Essence",
+    "ai_title": "Primal Oracle",
+    "ai_desc": "The universe has stored {count} imprints of wisdom in this session. Full conversation content will appear in future protocol updates.",
+    "empty_title": "No imprints yet",
+    "empty_desc": "The universe is waiting for you to utter the words for a new beginning.",
+    "cta_draw": "Draw Now",
+    "status_completed": "Completed",
+    "status_interrupted": "Interrupted",
+    "page_info": "Page {current} / {total}",
+    "prev_page": "Previous",
+    "next_page": "Next",
+    "spread_daily": "Daily Oracle (1 Card)",
+    "spread_3": "The Triad (3 Cards)",
+    "spread_5": "The Five Elements (5 Cards)",
+    "spread_10": "Celtic Cross (10 Cards)",
+    "filter_type": "Spread Type",
+    "filter_date": "Reading Date",
+    "all_types": "All Spreads"
+  }
+}

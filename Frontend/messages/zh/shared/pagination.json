@@ -1,0 +1,7 @@
+{
+  "Pagination": {
+    "page_info": "第 {current} / {total} 页",
+    "prev": "上一页",
+    "next": "下一页"
+  }
+}

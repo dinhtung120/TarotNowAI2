@@ -1,0 +1,55 @@
+{
+  "Readers": {
+    "directory": {
+      "tag": "目录",
+      "title": "女祭司",
+      "subtitle": "找到与你共鸣的占卜师。只有当前可用者才能接收新问题。",
+      "total_label": "占卜师总数",
+      "search_placeholder": "按名称搜索...",
+      "specialties": {
+        "all": "全部领域",
+        "love": "💕 爱情",
+        "career": "💼 事业",
+        "general": "🔮 综合",
+        "health": "🌿 健康",
+        "finance": "💰 财务"
+      },
+      "statuses": {
+        "all": "全部状态",
+        "accepting": "🟢 可接单",
+        "online": "🟡 在线（忙碌）",
+        "offline": "⚫ 离线"
+      },
+      "status_indicator": {
+        "ready": "可接单",
+        "busy": "忙碌中",
+        "offline": "离线"
+      },
+      "loading": "正在加载列表...",
+      "empty": "没有符合筛选条件的占卜师。",
+      "reader_fallback": "占卜师",
+      "bio_fallback": "暂无详细介绍。",
+      "per_question_suffix": "/ 问"
+    },
+    "profile": {
+      "loading": "正在加载资料...",
+      "not_found": "未找到占卜师资料。",
+      "back_to_list": "返回目录",
+      "status": {
+        "accepting": "接受提问",
+        "online": "忙碌中",
+        "offline": "离线"
+      },
+      "diamond_per_question_suffix": "/ 问",
+      "rating_label": "评分",
+      "reviews_label": "评价数",
+      "soul_link": "灵魂连接",
+      "specialties_title": "擅长领域",
+      "cta_connecting": "正在连接...",
+      "cta_send_question": "立即提问",
+      "not_accepting": "暂不接单",
+      "toast_create_conversation_fail": "无法创建对话",
+      "member_since": "加入于 {date}"
+    }
+  }
+}

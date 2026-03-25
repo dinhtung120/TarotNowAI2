@@ -1,0 +1,17 @@
+{
+  "Navigation": {
+    "home": "主页",
+    "readings": "占卜",
+    "readers": "占卜师",
+    "chat": "聊天",
+    "login": "登录",
+    "register": "注册",
+    "logout": "退出",
+    "adminPortal": "管理后台",
+    "profile": "个人资料",
+    "wallet": "钱包",
+    "history": "历史",
+    "collection": "收藏",
+    "notifications": "通知"
+  }
+}

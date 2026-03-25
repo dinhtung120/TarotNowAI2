@@ -1,0 +1,41 @@
+{
+  "ReadingSession": {
+    "header": {
+      "back_to_setup": "Về trang rút bài",
+      "title": "Cõi Huyền Bí",
+      "session": "Phiên: {id}..."
+    },
+    "question": {
+      "label": "Tâm Niệm"
+    },
+    "shuffle": {
+      "connecting_title": "Thiết Lập Kết Nối...",
+      "cleansing": "Các lá bài đang được thanh tẩy"
+    },
+    "pick": {
+      "prompt": "Hãy tĩnh tâm và chọn {remaining} lá bài",
+      "done": "Các lá bài đã an bài",
+      "count": "{picked}/{total} lá bài",
+      "random": "Chọn ngẫu nhiên"
+    },
+    "modal": {
+      "title": "Các Lá Bài Đã Được Chọn",
+      "desc": "Vũ trụ đã lắng nghe. Hãy hít một hơi thật sâu trước khi đón nhận thông điệp.",
+      "revealing": "Đang truyền năng lượng...",
+      "reveal": "Truyền Năng Lượng & Lật Bài",
+      "change_card": "Đổi lá bài khác"
+    },
+    "cards": {
+      "meaning_label": "Ý nghĩa"
+    },
+    "ai": {
+      "subtitle": "AI Divine Stream • {id}",
+      "live": "Live",
+      "waiting_flip": "Đang chuẩn bị kết nối tâm linh... Vui lòng lật hết các lá bài để nhận thông điệp.",
+      "footer_note": "Lắng nghe rung động từ những lá bài của bạn."
+    },
+    "errors": {
+      "reveal_failed": "Không thể lật bài."
+    }
+  }
+}

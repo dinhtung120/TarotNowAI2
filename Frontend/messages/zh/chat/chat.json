@@ -1,0 +1,99 @@
+{
+  "Chat": {
+    "time": {
+      "just_now": "刚刚",
+      "minutes_ago": "{count} 分钟前",
+      "hours_ago": "{count} 小时前",
+      "days_ago": "{count} 天前"
+    },
+    "inbox": {
+      "tag": "聊天",
+      "title": "收件箱",
+      "subtitle": "管理你与占卜师和用户的对话。",
+      "role_user": "🔮 咨询者",
+      "role_reader": "📖 占卜师",
+      "loading": "加载中...",
+      "empty_title": "暂无对话。",
+      "empty_subtitle": "开始新的连接",
+      "list_label_reader": "占卜师",
+      "list_label_user": "用户",
+      "status": {
+        "active": "聊天中",
+        "pending": "等待回复",
+        "completed": "已完成"
+      }
+    },
+    "room": {
+      "title": "灵性连接房间",
+      "signal_ok": "信号稳定",
+      "syncing": "同步中...",
+      "report_title": "举报违规",
+      "loading": "正在同步...",
+      "empty": "连接已建立，发送第一条消息吧。",
+      "input_placeholder": "发送你的消息...",
+      "payment_offer": "💎 支付提议",
+      "payment_accept": "✅ 已接受",
+      "payment_reject": "❌ 已拒绝",
+      "payment_offer_accept": "接受",
+      "payment_offer_reject": "拒绝",
+      "payment_offer_received": "已接收",
+      "payment_accept_fallback": "支付确认成功",
+      "payment_reject_fallback": "提议已被拒绝",
+      "payment_modal_amount_label": "请求的 Diamond 数量",
+      "payment_modal_note_label": "留言（可选）",
+      "payment_modal_note_placeholder": "为此提议添加留言（例如：第 2 张牌的费用）...",
+      "payment_modal_submit": "发送 Diamond 提议"
+    },
+    "report": {
+      "success_title": "已发送举报",
+      "success_desc": "感谢你，管理员将尽快审核并处理。",
+      "title": "举报违规",
+      "target_type_label": "违规类型",
+      "target_conversation": "对话",
+      "target_user": "用户",
+      "target_message": "消息",
+      "reason_label": "原因 *",
+      "reason_placeholder": "详细描述原因（至少 10 个字符）...",
+      "submit": "发送举报",
+      "validation_min": "原因至少需要 10 个字符。",
+      "error_failed": "举报发送失败，请重试。"
+    },
+    "dispute": {
+      "cta": "争议（{hours}小时 {minutes}分）",
+      "success_title": "已提交争议",
+      "success_desc": "管理员将审核并处理。",
+      "title": "开启争议",
+      "remaining": "⏰ 剩余：{hours} 小时 {minutes} 分钟可开启争议",
+      "reason_label": "原因 *",
+      "reason_placeholder": "详细描述原因（至少 10 个字符）...",
+      "submit": "提交争议",
+      "validation_min": "原因至少需要 10 个字符。",
+      "error_failed": "争议提交失败。"
+    },
+    "escrow": {
+      "title": "托管",
+      "total_frozen": "锁定总额",
+      "active": "进行中",
+      "expired": "已过期",
+      "countdown": "{hours}小时 {minutes}分",
+      "status_accepted": "已接受",
+      "status_released": "已释放",
+      "status_refunded": "已退款",
+      "status_disputed": "争议中",
+      "type_main": "主问题",
+      "type_addon": "追加问题",
+      "deadline_reply": "回复截止：{time}",
+      "auto_release": "自动释放：{time}",
+      "dispute_window": "争议窗口：{time}",
+      "action_confirm_release": "确认释放",
+      "action_replied": "标记已回复",
+      "action_complete_all": "完成整场对话",
+      "confirm_release_all_cta": "确认全部释放",
+      "confirm_cancel": "取消",
+      "confirm_ok": "确认",
+      "complete_all_hint": "点击这里确认满意并将全部款项释放给解读师。",
+      "complete_all_success": "已成功完成并全部释放。",
+      "error_release_all": "全部完成时发生错误，请重试。"
+    }
+  }
+}

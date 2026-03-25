@@ -1,0 +1,36 @@
+{
+  "Profile": {
+    "validation": {
+      "display_name_min": "Display name must be at least 2 characters",
+      "avatar_url_invalid": "Invalid avatar URL",
+      "date_of_birth_invalid": "Invalid date of birth"
+    }
+  },
+  "Auth": {
+    "validation": {
+      "email_invalid": "Invalid email address",
+      "email_or_username_required": "Email or Username is required",
+      "password_required": "Password is required",
+      "username_min": "Username must be at least 3 characters",
+      "username_pattern": "Only letters, numbers and underscores allowed",
+      "password_min": "Password must be at least 8 characters",
+      "password_complexity": "Requires uppercase, lowercase, number and special character",
+      "display_name_required": "Display name is required",
+      "age_minimum": "You must be at least 16 years old to use this service.",
+      "must_accept_terms": "You must accept the terms and conditions",
+      "passwords_no_match": "Passwords don't match",
+      "otp_length": "OTP must be exactly 6 digits",
+      "otp_numeric": "OTP must contain only numbers"
+    }
+  },
+  "ReaderApply": {
+    "validation": {
+      "min_intro": "Introduction must be at least 20 characters."
+    }
+  },
+  "ReadingSetup": {
+    "validation": {
+      "question_too_long": "Question is too long"
+    }
+  }
+}

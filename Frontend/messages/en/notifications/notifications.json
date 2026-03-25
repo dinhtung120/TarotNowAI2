@@ -1,0 +1,24 @@
+{
+  "Notifications": {
+    "tag": "Notification center",
+    "title": "Notifications",
+    "subtitle": "Stay updated with your TarotNow activity and news.",
+    "filter_all": "All",
+    "filter_unread": "Unread",
+    "mark_read": "Mark as read",
+    "mark_read_success": "Marked as read.",
+    "mark_read_fail": "Failed to mark as read.",
+    "empty_title": "No notifications",
+    "empty_desc": "New notifications will appear here.",
+    "loading": "Loading notifications...",
+    "time_just_now": "Just now",
+    "time_minutes_ago": "{count} min ago",
+    "time_hours_ago": "{count}h ago",
+    "time_days_ago": "{count}d ago",
+    "type_system": "System",
+    "type_quest": "Quest",
+    "type_streak": "Streak",
+    "type_escrow": "Finance",
+    "type_payment": "Payment"
+  }
+}

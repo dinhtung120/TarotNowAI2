@@ -1,0 +1,26 @@
+{
+  "History": {
+    "title": "Hành Trình Giao Thức",
+    "subtitle": "Ghi chép lại những thông điệp từ Các Tinh Tú.",
+    "tag": "Niên Sử",
+    "detail_fragment": "Fragment: {id}...",
+    "essence_label": "Tinh túy",
+    "ai_title": "Lời Sấm Bản Nguyên",
+    "ai_desc": "Vũ trụ đã lưu trữ {count} dấu ấn trí tuệ trong phiên này. Nội dung hội thoại sẽ hiện diện đầy đủ trong các lần cập nhật Giao Thức tiếp theo.",
+    "empty_title": "Chưa có dấu ấn nào",
+    "empty_desc": "Vũ trụ đang chờ đón bạn mở lời cho điểm khởi đầu mới.",
+    "cta_draw": "Rút Bài Ngay",
+    "status_completed": "Hoàn Tất",
+    "status_interrupted": "Bị Gián Đoạn",
+    "page_info": "Trang {current} / {total}",
+    "prev_page": "Trang trước",
+    "next_page": "Trang sau",
+    "spread_daily": "Nhật Ấn (1 Lá)",
+    "spread_3": "Tam Nguyên (3 Lá)",
+    "spread_5": "Ngũ Hành (5 Lá)",
+    "spread_10": "Thập Tự Celtic (10 Lá)",
+    "filter_type": "Thức trải bài",
+    "filter_date": "Ngày xem",
+    "all_types": "Mọi thức trải"
+  }
+}

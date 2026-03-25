@@ -1,0 +1,340 @@
+{
+  "Tarot": {
+    "suits": {
+      "major": {
+        "full": "Ẩn Chính",
+        "short": "Ẩn"
+      },
+      "wands": {
+        "full": "Gậy",
+        "short": "Gậy"
+      },
+      "cups": {
+        "full": "Cốc",
+        "short": "Cốc"
+      },
+      "swords": {
+        "full": "Kiếm",
+        "short": "Kiếm"
+      },
+      "pentacles": {
+        "full": "Tiền",
+        "short": "Tiền"
+      }
+    },
+    "cards": {
+      "c0": {
+        "name": "The Fool",
+        "meaning": "Một khởi đầu mới đầy tiềm năng, bước vào cuộc phiêu lưu với tâm trí cởi mở và tự do."
+      },
+      "c1": {
+        "name": "The Magician",
+        "meaning": "Sử dụng tài năng và nguồn lực để biến ý tưởng thành hiện thực."
+      },
+      "c2": {
+        "name": "The High Priestess",
+        "meaning": "Lắng nghe tiếng nói nội tâm, tin tưởng trực giác và sự thông thái bên trong."
+      },
+      "c3": {
+        "name": "The Empress",
+        "meaning": "Thời kỳ sung túc, sáng tạo và kết nối sâu sắc với thiên nhiên."
+      },
+      "c4": {
+        "name": "The Emperor",
+        "meaning": "Sự lãnh đạo mạnh mẽ, kỷ luật và xây dựng nền tảng vững chắc."
+      },
+      "c5": {
+        "name": "The Hierophant",
+        "meaning": "Tìm kiếm hướng dẫn tâm linh, tuân theo truyền thống và giá trị cộng đồng."
+      },
+      "c6": {
+        "name": "The Lovers",
+        "meaning": "Sự kết nối sâu sắc, lựa chọn quan trọng và mối quan hệ hài hòa."
+      },
+      "c7": {
+        "name": "The Chariot",
+        "meaning": "Vượt qua trở ngại bằng ý chí mạnh mẽ và sự tập trung."
+      },
+      "c8": {
+        "name": "Strength",
+        "meaning": "Sức mạnh thật sự đến từ bên trong: lòng can đảm, kiên nhẫn và từ bi."
+      },
+      "c9": {
+        "name": "The Hermit",
+        "meaning": "Thời gian tĩnh lặng để suy ngẫm, tìm kiếm câu trả lời từ bên trong."
+      },
+      "c10": {
+        "name": "Wheel of Fortune",
+        "meaning": "Thay đổi tích cực, vận may đến và sự luân chuyển của cuộc sống."
+      },
+      "c11": {
+        "name": "Justice",
+        "meaning": "Sự thật được phơi bày, công lý được thực thi và chịu trách nhiệm."
+      },
+      "c12": {
+        "name": "The Hanged Man",
+        "meaning": "Tạm dừng để nhìn mọi thứ từ góc độ khác, chấp nhận buông bỏ."
+      },
+      "c13": {
+        "name": "Death",
+        "meaning": "Kết thúc một giai đoạn để mở ra khởi đầu mới, sự chuyển đổi sâu sắc."
+      },
+      "c14": {
+        "name": "Temperance",
+        "meaning": "Tìm kiếm sự cân bằng, kiên nhẫn trong mọi việc và hòa hợp các mặt đối lập."
+      },
+      "c15": {
+        "name": "The Devil",
+        "meaning": "Bị ràng buộc bởi cám dỗ, thói quen xấu hoặc nỗi sợ hãi."
+      },
+      "c16": {
+        "name": "The Tower",
+        "meaning": "Sự đổ vỡ bất ngờ phá bỏ những gì không còn phù hợp để xây dựng lại."
+      },
+      "c17": {
+        "name": "The Star",
+        "meaning": "Niềm hy vọng mới, sự chữa lành và cảm hứng sáng tạo."
+      },
+      "c18": {
+        "name": "The Moon",
+        "meaning": "Đối mặt với nỗi sợ hãi, ảo tưởng và những điều ẩn giấu trong tiềm thức."
+      },
+      "c19": {
+        "name": "The Sun",
+        "meaning": "Niềm vui rạng rỡ, thành công và sự lạc quan tràn đầy."
+      },
+      "c20": {
+        "name": "Judgement",
+        "meaning": "Thời điểm tổng kết, soi xét bản thân và bước vào giai đoạn mới."
+      },
+      "c21": {
+        "name": "The World",
+        "meaning": "Hoàn thành một chu kỳ lớn, đạt được sự trọn vẹn và hài lòng."
+      },
+      "c22": {
+        "name": "Ace of Wands",
+        "meaning": "Nguồn năng lượng sáng tạo mới, khởi đầu đầy cảm hứng."
+      },
+      "c23": {
+        "name": "Two of Wands",
+        "meaning": "Nhìn về tương lai và lên kế hoạch hành động."
+      },
+      "c24": {
+        "name": "Three of Wands",
+        "meaning": "Mở rộng tầm nhìn, nắm bắt cơ hội mới."
+      },
+      "c25": {
+        "name": "Four of Wands",
+        "meaning": "Ăn mừng thành tựu, sự hài hòa trong gia đình."
+      },
+      "c26": {
+        "name": "Five of Wands",
+        "meaning": "Cạnh tranh lành mạnh hoặc đối mặt với thách thức."
+      },
+      "c27": {
+        "name": "Six of Wands",
+        "meaning": "Chiến thắng vinh quang, được thừa nhận thành tựu."
+      },
+      "c28": {
+        "name": "Seven of Wands",
+        "meaning": "Đứng vững trước thử thách, bảo vệ lập trường."
+      },
+      "c29": {
+        "name": "Eight of Wands",
+        "meaning": "Sự việc tiến triển nhanh chóng, hành động tức thì."
+      },
+      "c30": {
+        "name": "Nine of Wands",
+        "meaning": "Kiên trì dù mệt mỏi, sẵn sàng đối mặt thử thách cuối."
+      },
+      "c31": {
+        "name": "Ten of Wands",
+        "meaning": "Gánh vác quá nhiều trách nhiệm, cần biết ủy thác."
+      },
+      "c32": {
+        "name": "Page of Wands",
+        "meaning": "Khám phá thế giới với sự nhiệt huyết và tò mò."
+      },
+      "c33": {
+        "name": "Knight of Wands",
+        "meaning": "Hành động táo bạo, đam mê và phiêu lưu."
+      },
+      "c34": {
+        "name": "Queen of Wands",
+        "meaning": "Tự tin, quyến rũ và truyền cảm hứng cho người khác."
+      },
+      "c35": {
+        "name": "King of Wands",
+        "meaning": "Lãnh đạo bằng tầm nhìn và kinh nghiệm phong phú."
+      },
+      "c36": {
+        "name": "Ace of Cups",
+        "meaning": "Tình yêu mới nảy nở hoặc cảm hứng sáng tạo tràn đầy."
+      },
+      "c37": {
+        "name": "Two of Cups",
+        "meaning": "Mối quan hệ hòa hợp, đối tác lý tưởng."
+      },
+      "c38": {
+        "name": "Three of Cups",
+        "meaning": "Niềm vui chia sẻ cùng bạn bè và cộng đồng."
+      },
+      "c39": {
+        "name": "Four of Cups",
+        "meaning": "Không hài lòng với hiện tại, bỏ lỡ cơ hội."
+      },
+      "c40": {
+        "name": "Five of Cups",
+        "meaning": "Đau buồn vì mất mát nhưng vẫn còn những gì đáng trân trọng."
+      },
+      "c41": {
+        "name": "Six of Cups",
+        "meaning": "Hoài niệm ký ức đẹp, sự ngây thơ và đơn thuần."
+      },
+      "c42": {
+        "name": "Seven of Cups",
+        "meaning": "Nhiều lựa chọn hấp dẫn nhưng cần phân biệt thực tế."
+      },
+      "c43": {
+        "name": "Eight of Cups",
+        "meaning": "Rời bỏ tình huống không còn mang lại ý nghĩa."
+      },
+      "c44": {
+        "name": "Nine of Cups",
+        "meaning": "Ước nguyện thành hiện thực, sự mãn nguyện sâu sắc."
+      },
+      "c45": {
+        "name": "Ten of Cups",
+        "meaning": "Hạnh phúc gia đình trọn vẹn, mối quan hệ viên mãn."
+      },
+      "c46": {
+        "name": "Page of Cups",
+        "meaning": "Sáng tạo phong phú, trực giác mạnh mẽ."
+      },
+      "c47": {
+        "name": "Knight of Cups",
+        "meaning": "Lãng mạn, đi theo tiếng gọi trái tim."
+      },
+      "c48": {
+        "name": "Queen of Cups",
+        "meaning": "Đồng cảm sâu sắc, trực giác mạnh và khả năng chữa lành."
+      },
+      "c49": {
+        "name": "King of Cups",
+        "meaning": "Kiểm soát cảm xúc tốt, tử tế và nhân từ."
+      },
+      "c50": {
+        "name": "Ace of Swords",
+        "meaning": "Sự sáng suốt và rõ ràng trong tư duy, ý tưởng đột phá."
+      },
+      "c51": {
+        "name": "Two of Swords",
+        "meaning": "Đối mặt lựa chọn khó khăn, cần bình tĩnh cân nhắc."
+      },
+      "c52": {
+        "name": "Three of Swords",
+        "meaning": "Nỗi đau lòng, sự thất vọng hoặc phản bội."
+      },
+      "c53": {
+        "name": "Four of Swords",
+        "meaning": "Cần thời gian nghỉ ngơi để phục hồi năng lượng."
+      },
+      "c54": {
+        "name": "Five of Swords",
+        "meaning": "Chiến thắng bằng mọi giá nhưng mất mát nhiều hơn."
+      },
+      "c55": {
+        "name": "Six of Swords",
+        "meaning": "Rời xa khó khăn để tìm đến nơi bình yên hơn."
+      },
+      "c56": {
+        "name": "Seven of Swords",
+        "meaning": "Hành động lén lút hoặc sử dụng chiến lược khôn ngoan."
+      },
+      "c57": {
+        "name": "Eight of Swords",
+        "meaning": "Cảm thấy bị giam giữ bởi hoàn cảnh hoặc chính mình."
+      },
+      "c58": {
+        "name": "Nine of Swords",
+        "meaning": "Lo âu và sợ hãi ám ảnh, đặc biệt vào ban đêm."
+      },
+      "c59": {
+        "name": "Ten of Swords",
+        "meaning": "Kết thúc đau đớn và đột ngột, nhưng mở ra khởi đầu mới."
+      },
+      "c60": {
+        "name": "Page of Swords",
+        "meaning": "Tò mò, thông minh và luôn sẵn sàng học hỏi."
+      },
+      "c61": {
+        "name": "Knight of Swords",
+        "meaning": "Hành động nhanh và quyết đoán với tham vọng lớn."
+      },
+      "c62": {
+        "name": "Queen of Swords",
+        "meaning": "Trí tuệ sắc bén, độc lập và trung thực không khoan nhượng."
+      },
+      "c63": {
+        "name": "King of Swords",
+        "meaning": "Lãnh đạo bằng trí tuệ, công bằng và logic."
+      },
+      "c64": {
+        "name": "Ace of Pentacles",
+        "meaning": "Cơ hội tài chính mới, nền tảng vững chắc cho tương lai."
+      },
+      "c65": {
+        "name": "Two of Pentacles",
+        "meaning": "Cân bằng nhiều ưu tiên với sự linh hoạt."
+      },
+      "c66": {
+        "name": "Three of Pentacles",
+        "meaning": "Hợp tác hiệu quả, phát huy kỹ năng chuyên môn."
+      },
+      "c67": {
+        "name": "Four of Pentacles",
+        "meaning": "Bảo vệ tài sản, tìm kiếm sự ổn định tài chính."
+      },
+      "c68": {
+        "name": "Five of Pentacles",
+        "meaning": "Giai đoạn khó khăn về tài chính hoặc tinh thần."
+      },
+      "c69": {
+        "name": "Six of Pentacles",
+        "meaning": "Chia sẻ tài nguyên, hào phóng với người khác."
+      },
+      "c70": {
+        "name": "Seven of Pentacles",
+        "meaning": "Kiên nhẫn chờ đợi kết quả từ sự đầu tư lâu dài."
+      },
+      "c71": {
+        "name": "Eight of Pentacles",
+        "meaning": "Chăm chỉ rèn luyện và hoàn thiện kỹ năng."
+      },
+      "c72": {
+        "name": "Nine of Pentacles",
+        "meaning": "Thịnh vượng và tận hưởng thành quả lao động."
+      },
+      "c73": {
+        "name": "Ten of Pentacles",
+        "meaning": "Gia tài vững chắc, sự ổn định qua nhiều thế hệ."
+      },
+      "c74": {
+        "name": "Page of Pentacles",
+        "meaning": "Cơ hội học hỏi và phát triển tài chính."
+      },
+      "c75": {
+        "name": "Knight of Pentacles",
+        "meaning": "Tiến bước chậm mà chắc, đáng tin cậy và kiên nhẫn."
+      },
+      "c76": {
+        "name": "Queen of Pentacles",
+        "meaning": "Mang lại sự an toàn và nuôi dưỡng thông qua thực tế."
+      },
+      "c77": {
+        "name": "King of Pentacles",
+        "meaning": "Thành công tài chính, lãnh đạo kinh doanh xuất sắc."
+      }
+    }
+  }
+}

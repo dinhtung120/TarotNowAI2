@@ -1,0 +1,36 @@
+{
+  "Legal": {
+    "tos_title": "服务条款",
+    "tos_meta_desc": "TarotNow 的服务与使用条款。",
+    "privacy_title": "隐私政策",
+    "privacy_meta_desc": "TarotNow 的数据隐私政策。",
+    "ai_disclaimer_title": "AI 免责声明",
+    "ai_disclaimer_meta_desc": "TarotNow 关于 AI 生成信息的责任声明。",
+    "tos": {
+      "section1_title": "1. 一般条款",
+      "section1_body": "欢迎使用 TarotNow。使用我们的服务即表示你同意遵守这些条款与条件。我们的服务通过塔罗牌与人工智能（AI）技术提供娱乐与参考性的心理支持。",
+      "section2_title": "2. AI 免责声明",
+      "section2_body": "所有塔罗解读内容均由 AI 生成，仅供娱乐与参考。我们不对用户依据 TarotNow 结果作出的个人、医疗、财务或法律决定承担法律责任。",
+      "section3_title": "3. 账户与支付",
+      "section3_body": "用户需自行负责保护账户信息安全。Diamond 充值交易原则上不予退款，除非因支付网关导致的系统错误。",
+      "last_updated": "最后更新：10/2026"
+    },
+    "privacy": {
+      "section1_title": "1. 信息收集",
+      "section1_body": "TarotNow 尊重你的隐私。我们会收集必要信息，例如邮箱地址、显示名称和生日，以便个性化塔罗体验，并用于计算星座与数字命理。",
+      "section2_title": "2. 数据使用",
+      "section2_body": "你的数据仅用于内部目的，例如存储占卜历史。AI 查询历史会以加密方式发送给服务提供方（OpenAI）以获取结果，并不用于训练 AI（training），遵循合作方承诺。",
+      "section3_title": "3. 数据保护",
+      "section3_body": "所有账户信息与密码均会安全加密。我们不会以商业目的向第三方出售、交换或共享用户个人数据。",
+      "last_updated": "最后更新：10/2026"
+    },
+    "ai_disclaimer": {
+      "warning": "提示：来自 Astral AI 的预测与分析完全由大型语言模型（LLM）生成。请不要将其视为替代医学、心理或财务专业建议。",
+      "section1_title": "1. AI 的特性",
+      "section1_body": "所有塔罗信息均由人工智能（AI）进行解读。尽管我们已优化相关算法与塔罗直觉逻辑，但 AI 的解读在所有情境中都不一定 100% 准确。",
+      "section2_title": "2. 非医疗诊断",
+      "section2_body": "与情绪、健康或金钱相关的解读结果不应作为自我医疗诊断依据，也不应替代法律或财务建议。若你正面临严重问题，请务必咨询现实生活中的专业人士。",
+      "consent_note": "在注册 TarotNow 账号前，你需要同意以上免责声明。"
+    }
+  }
+}

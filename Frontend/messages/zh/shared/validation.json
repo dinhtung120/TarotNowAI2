@@ -1,0 +1,36 @@
+{
+  "Profile": {
+    "validation": {
+      "display_name_min": "显示名称至少 2 个字符",
+      "avatar_url_invalid": "头像链接无效",
+      "date_of_birth_invalid": "出生日期无效"
+    }
+  },
+  "Auth": {
+    "validation": {
+      "email_invalid": "邮箱地址无效",
+      "email_or_username_required": "请输入邮箱或用户名",
+      "password_required": "请输入密码",
+      "username_min": "用户名至少 3 个字符",
+      "username_pattern": "仅允许字母、数字和下划线",
+      "password_min": "密码至少 8 个字符",
+      "password_complexity": "需包含大写、小写、数字和特殊字符",
+      "display_name_required": "请输入显示名称",
+      "age_minimum": "你必须年满 16 岁才能使用此服务。",
+      "must_accept_terms": "你必须同意条款与政策",
+      "passwords_no_match": "两次输入的密码不一致",
+      "otp_length": "OTP 必须为 6 位数字",
+      "otp_numeric": "OTP 只能包含数字"
+    }
+  },
+  "ReaderApply": {
+    "validation": {
+      "min_intro": "自我介绍至少需要 20 个字符。"
+    }
+  },
+  "ReadingSetup": {
+    "validation": {
+      "question_too_long": "问题过长"
+    }
+  }
+}

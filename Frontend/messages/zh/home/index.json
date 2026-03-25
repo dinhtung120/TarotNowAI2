@@ -1,0 +1,40 @@
+{
+  "Index": {
+    "title": "TarotNow 主页",
+    "description": "AI 在线塔罗占卜",
+    "tagline": "与 TarotNow AI 一起发现命运",
+    "heroTitle1": "倾听神谕",
+    "heroTitle2": "来自宇宙的 AI。",
+    "heroDesc": "体验神秘的塔罗艺术与人工智能的深度解析相结合，解锁潜意识中隐藏的答案。",
+    "ctaDraw": "立即抽牌",
+    "ctaCollection": "查看收藏",
+    "ctaMeetReaders": "认识占卜师",
+    "featureTitle": "独特体验",
+    "featureDesc": "古老灵性与未来科技的完美融合，带来深度个性化的体验。",
+    "scroll": "滚动",
+    "stats": {
+      "readings": "占卜次数",
+      "readers": "专业占卜师",
+      "rating": "平均评分",
+      "support": "全球支持"
+    },
+    "showcase": {
+      "tag": "大师连接",
+      "title": "大师",
+      "titleMuted": "指引",
+      "viewAll": "查看全部占卜师",
+      "profileCta": "查看资料 →"
+    },
+    "f1Title": "深度 AI 解析",
+    "f1Desc": "AI 训练自大量塔罗资料，为你的处境提供准确且个性化的解读。",
+    "f2Title": "神秘卡牌收藏",
+    "f2Desc": "每次抽牌都是一次收集卡牌元素的机会，累积足够元素后卡牌将升级并焕发更强能量。",
+    "f3Title": "RNG 锁定与绝对真实",
+    "f3Desc": "确定性洗牌算法结合哈希技术，确保抽到的牌是当下瞬间唯一且不可篡改的结果。",
+    "final": {
+      "title1": "开启旅程",
+      "title2": "Lunar Bloom Healing",
+      "cta": "立即抽牌"
+    }
+  }
+}

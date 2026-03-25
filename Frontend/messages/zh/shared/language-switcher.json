@@ -1,0 +1,10 @@
+{
+  "LanguageSwitcher": {
+    "menu_title": "语言",
+    "options_aria": "语言选项",
+    "current_aria": "当前语言：{language}",
+    "locale_vi": "Tiếng Việt",
+    "locale_en": "English",
+    "locale_zh": "中文"
+  }
+}

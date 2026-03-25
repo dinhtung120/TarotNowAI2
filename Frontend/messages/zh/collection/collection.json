@@ -1,0 +1,20 @@
+{
+  "Collection": {
+    "tag": "奥秘圣殿",
+    "title": "神秘圣殿",
+    "subtitle": "追踪你解锁塔罗卡牌宇宙的进度。",
+    "error_load_failed": "无法加载你的收藏。",
+    "progress_label": "收藏进度",
+    "filters_label": "筛选",
+    "filter_all": "全部",
+    "filter_owned": "已拥有",
+    "filter_unowned": "隐藏",
+    "empty_title": "你的收藏为空",
+    "empty_desc": "完成第一次塔罗占卜以解锁卡牌元素。",
+    "cta_draw": "立即抽牌",
+    "level_label": "等级",
+    "copies_label": "份",
+    "unknown_card": "未知",
+    "locked_meaning": "宇宙尚未向你揭示这张牌的信息。"
+  }
+}

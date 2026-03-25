@@ -1,0 +1,20 @@
+{
+  "Collection": {
+    "tag": "Thánh Điện Huyền Thuật",
+    "title": "Miếu Bài Thần Bí",
+    "subtitle": "Dõi theo tiến trình khai mở vũ trụ thẻ bài của bạn.",
+    "error_load_failed": "Không thể tải bộ sưu tập.",
+    "progress_label": "Tiến độ Sưu Tầm",
+    "filters_label": "Bộ lọc",
+    "filter_all": "Tất cả",
+    "filter_owned": "Đã có",
+    "filter_unowned": "Chưa có",
+    "empty_title": "Kho bài đang trống",
+    "empty_desc": "Hãy thực hiện phiên rút Tarot đầu tiên để mở khóa thẻ bài.",
+    "cta_draw": "Rút Thuật Ngay",
+    "level_label": "Cấp",
+    "copies_label": "Bản sao",
+    "unknown_card": "Chưa Khám Phá",
+    "locked_meaning": "Vũ trụ chưa khai mở thông điệp của lá bài này cho bạn."
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "Notifications": {
+    "tag": "通知中心",
+    "title": "通知",
+    "subtitle": "随时了解 TarotNow 的最新动态与消息。",
+    "filter_all": "全部",
+    "filter_unread": "未读",
+    "mark_read": "标记为已读",
+    "mark_read_success": "已标记为已读。",
+    "mark_read_fail": "标记已读失败。",
+    "empty_title": "暂无通知",
+    "empty_desc": "有新通知时会显示在这里。",
+    "loading": "正在加载通知...",
+    "time_just_now": "刚刚",
+    "time_minutes_ago": "{count} 分钟前",
+    "time_hours_ago": "{count} 小时前",
+    "time_days_ago": "{count} 天前",
+    "type_system": "系统",
+    "type_quest": "任务",
+    "type_streak": "连续签到",
+    "type_escrow": "资金",
+    "type_payment": "支付"
+  }
+}

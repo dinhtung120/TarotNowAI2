@@ -1,0 +1,40 @@
+{
+  "Index": {
+    "title": "Trang chủ TarotNow",
+    "description": "Bốc bài Tarot trực tuyến với AI",
+    "tagline": "Khám Phá Định Mệnh Cùng TarotNow AI",
+    "heroTitle1": "Lắng Nghe Lời Sấm Truyền",
+    "heroTitle2": "Từ Vũ Trụ Bằng AI.",
+    "heroDesc": "Trải nghiệm nghệ thuật bốc bài Tarot kỳ bí kết hợp cùng sức mạnh phân tích sâu sắc của Trí Tuệ Nhân Tạo. Mở khóa những câu trả lời đang lẩn khuất trong tiềm thức của bạn.",
+    "ctaDraw": "Rút Bài Ngay",
+    "ctaCollection": "Ghé Thăm Miếu Bài",
+    "ctaMeetReaders": "Gặp Gỡ Readers",
+    "featureTitle": "Trải Nghiệm Độc Bản",
+    "featureDesc": "Sự kết hợp hoàn hảo giữa tâm linh cổ đại và công nghệ tương lai mang lại những trải nghiệm cá nhân hóa sâu sắc.",
+    "scroll": "Scroll",
+    "stats": {
+      "readings": "Lượt Trải Bài",
+      "readers": "Reader Chuyên Nghiệp",
+      "rating": "Rating Trung Bình",
+      "support": "Hỗ Trợ Toàn Cầu"
+    },
+    "showcase": {
+      "tag": "Kết nối bậc thầy",
+      "title": "Bậc Thầy",
+      "titleMuted": "Dẫn Lối",
+      "viewAll": "Xem tất cả Readers",
+      "profileCta": "Hồ sơ →"
+    },
+    "f1Title": "AI Phân Tích Chuyên Sâu",
+    "f1Desc": "Được huấn luyện trên hàng vạn bộ tài liệu Tarot cổ học, AI đưa ra những diễn giải chính xác và cá nhân hóa cho từng hoàn cảnh của bạn.",
+    "f2Title": "Sưu Tầm Thẻ Bài Huyễn Hoặc",
+    "f2Desc": "Mỗi lần bốc bài là một lần thu thập nguyên tố thẻ bài. Tích lũy đủ nguyên tố, thẻ bài sẽ thăng cấp và thay đổi diện mạo quyền năng rực rỡ hơn.",
+    "f3Title": "Khóa RNG & Tính Chân Thật tuyệt đối",
+    "f3Desc": "Thuật toán Gieo Quẻ Determistic Shuffle sử dụng công nghệ mã hóa Hashing bảo đảm các lá bài rút ra là kết quả duy nhất của khoảnh khắc đó.",
+    "final": {
+      "title1": "Bắt đầu hành trình",
+      "title2": "Lunar Bloom Healing",
+      "cta": "Trải bài ngay"
+    }
+  }
+}

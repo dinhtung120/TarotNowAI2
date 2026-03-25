@@ -1,0 +1,16 @@
+{
+  "Common": {
+    "app_title": "TarotNow AI",
+    "app_description": "Trải nghiệm Tarot minh bạch và hiện đại.",
+    "loading": "Đang tải...",
+    "error": "Có lỗi xảy ra",
+    "back": "Quay lại",
+    "close": "Đóng",
+    "avatar_alt": "Ảnh đại diện",
+    "close_modal": "Đóng modal",
+    "menu": "Menu",
+    "notifications": "Thông báo",
+    "confirm": "Xác nhận",
+    "status_complete": "Hoàn tất"
+  }
+}

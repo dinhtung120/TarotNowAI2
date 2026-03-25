@@ -23,6 +23,14 @@
 - Chuẩn hóa admin data layer bằng `useAdminUsers`, `useAdminDeposits`, `useAdminReaderRequests`, `useAdminReadings` để tách logic khỏi presentation.
 - Chuẩn hóa contract `ActionResult<T>` cho cụm auth actions (`session/registration/recovery`) và giữ tương thích call-site hiện tại.
 - Bổ sung shared admin UI primitives (`FilterTabs`, `ActionConfirmModal`, `StepPagination`, `TableStates`) và áp dụng vào các màn `users/deposits/reader-requests/promotions`.
+- (25/03/2026) Tạo branch làm việc `codex/fe-refactor-phase-0`, bổ sung `Frontend/src/README.md` cho quy tắc dependency/import.
+- (25/03/2026) Chuẩn hóa barrel export ở root từng feature (`src/features/*/index.ts`) và bổ sung `public.ts` còn thiếu (`auth`, `legal`).
+- (25/03/2026) Bắt đầu Phase 10 i18n: tách messages theo feature/domain (`messages/{locale}/**/*.json`), thêm `shared/{common,validation,http-errors}` và nâng cấp `src/i18n/request.ts` để merge runtime từ module messages.
+- (25/03/2026) Bổ sung test `src/i18n/messages.test.ts` để xác nhận output runtime của messages module tương đương nguồn monolithic cũ.
+- (25/03/2026) Bổ sung smoke Playwright tối thiểu cho 5 luồng chính tại `Frontend/tests/smoke-flows.spec.ts` + script `npm run test:e2e`.
+- (25/03/2026) Đã chạy smoke Playwright (`tests/smoke-flows.spec.ts`, chromium) với `QA_BASE_URL=http://127.0.0.1:3000`: 5/5 PASS.
+- (25/03/2026) Verify modular i18n parity: mỗi locale có `24` file module, `1047` leaf keys khớp 1:1 với bản legacy trước khi xóa.
+- (25/03/2026) Xóa `messages/en.json`, `messages/vi.json`, `messages/zh.json`; bỏ legacy fallback khỏi `src/i18n/messages.ts`.
 
 ## 1) Snapshot hiện trạng (đã quét thực tế)
 
@@ -170,7 +178,7 @@ src/
 
 ## Phase 0 - Baseline & Guardrails (0.5 ngày)
 **Mục tiêu:** đóng băng hành vi trước khi refactor.
-- [ ] Tạo branch `codex/fe-refactor-phase-0`.
+- [x] Tạo branch `codex/fe-refactor-phase-0`.
 - [x] Chụp baseline `lint`, `build`, route list.
 - [x] Ghi danh sách file ưu tiên cao (bảng ở mục 5).
 - [x] Thống nhất rule PR: không đổi UI/layout và không đổi behavior.
@@ -180,9 +188,9 @@ src/
 ## Phase 1 - Scaffold Clean Layers (1 ngày)
 **Mục tiêu:** tạo skeleton `features/` + `shared/` không đổi behavior.
 - [x] Tạo cấu trúc thư mục chuẩn (mục 7).
-- [ ] Tạo `README.md` ngắn cho quy tắc import/dependency.
-- [ ] Tạo barrel exports theo feature (`index.ts`) để migration dễ.
-- [ ] Giữ `src/actions/*` hiện tại, chưa đổi logic.
+- [x] Tạo `README.md` ngắn cho quy tắc import/dependency.
+- [x] Tạo barrel exports theo feature (`index.ts`) để migration dễ.
+- [x] Hoàn tất migration khỏi `src/actions/*`; action hiện nằm dưới `features/*/application/actions`.
 
 **Exit criteria:** code chạy bình thường, import path mới sẵn sàng.
 
@@ -264,20 +272,21 @@ src/
 
 ## Phase 10 - i18n Modularization (1-2 ngày)
 **Mục tiêu:** bỏ monolithic messages và cho phép feature ownership.
-- [ ] Tách `messages/{locale}.json` thành file theo feature/domain.
-- [ ] Tạo cơ chế merge messages trong `src/i18n/request.ts`.
-- [ ] Đưa key dùng chung vào `shared/i18n/common|validation|http-errors`.
-- [ ] Đảm bảo không thay key public trong phase đầu (để tránh regression).
+- [x] Tách `messages/{locale}.json` thành file theo feature/domain.
+- [x] Tạo cơ chế merge messages trong `src/i18n/request.ts`.
+- [x] Đưa key dùng chung vào `shared/i18n/common|validation|http-errors`.
+- [x] Đảm bảo không thay key public trong phase đầu (để tránh regression).
+- [x] Xóa legacy `messages/{locale}.json` sau khi verify parity key/value.
 
 **Exit criteria:** i18n chia theo feature nhưng output runtime không đổi.
 
 ## Phase 11 - Stabilization, Tests, Cleanup (2 ngày)
 **Mục tiêu:** khóa chất lượng sau refactor.
 - [x] Lint/build xanh hoàn toàn.
-- [ ] Bổ sung smoke Playwright cho flow quan trọng: auth, reading, chat, wallet, admin.
-- [ ] Bổ sung unit tests cho utils/hooks thuần logic.
-- [ ] Xóa facade cũ khi migration hoàn tất.
-- [ ] Cập nhật tài liệu cấu trúc FE mới.
+- [x] Bổ sung smoke Playwright cho flow quan trọng: auth, reading, chat, wallet, admin.
+- [x] Bổ sung unit tests cho utils/hooks thuần logic.
+- [x] Xóa facade cũ khi migration hoàn tất.
+- [x] Cập nhật tài liệu cấu trúc FE mới.
 
 **Exit criteria:** baseline mới ổn định, không regression chức năng chính.
 
@@ -285,7 +294,7 @@ src/
 
 - [x] `npm -C Frontend run lint`.
 - [x] `npm -C Frontend run build`.
-- [ ] Chạy smoke test Playwright cho route bị ảnh hưởng.
+- [x] Chạy smoke test Playwright cho route bị ảnh hưởng.
 - [ ] Kiểm tra thủ công 5 luồng chính:
   1. Auth (login/register/verify)
   2. Reading (setup/session/history)

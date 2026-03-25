@@ -1,0 +1,16 @@
+{
+  "Common": {
+    "app_title": "TarotNow AI",
+    "app_description": "A transparent and modern Tarot experience.",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "back": "Back",
+    "close": "Close",
+    "avatar_alt": "Avatar",
+    "close_modal": "Close modal",
+    "menu": "Menu",
+    "notifications": "Notifications",
+    "confirm": "Confirm",
+    "status_complete": "Complete"
+  }
+}

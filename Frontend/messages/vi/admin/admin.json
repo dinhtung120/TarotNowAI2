@@ -1,0 +1,417 @@
+{
+  "Admin": {
+    "layout": {
+      "title": "Admin",
+      "subtitle": "Quản trị",
+      "section_main": "Điều khiển chính",
+      "exit_portal": "Thoát Portal",
+      "menu": {
+        "overview": "Tổng Quan",
+        "users": "Người Dùng",
+        "deposits": "Giao Dịch",
+        "promotions": "Khuyến Mãi",
+        "readings": "Xem Bài",
+        "reader_requests": "Đơn Xin Reader",
+        "withdrawals": "Rút Tiền",
+        "disputes": "Tranh Chấp"
+      }
+    },
+    "dashboard": {
+      "loading": "Khởi tạo hệ thống quản trị...",
+      "header": {
+        "tag": "Trí tuệ hệ thống",
+        "title": "Cổng Tổng Quan HQ",
+        "subtitle": "Theo dõi dòng chảy linh hồn và dữ liệu vận mệnh trên toàn hệ thống TarotNow AI."
+      },
+      "health": {
+        "title": "Health Check",
+        "ok": "Hệ thống ổn định"
+      },
+      "stats": {
+        "users": "Tổng Người Dùng",
+        "deposits": "Lượt Nạp Tiền",
+        "promotions": "Khuyến Mãi",
+        "readings": "Phiên Xem Bài"
+      },
+      "notice": {
+        "title": "Bản tin Quản trị viên",
+        "reminder_title": "Lời nhắc",
+        "reminder_body": "Kiểm tra các đơn nạp tiền đang chờ và xác nhận thủ công nếu ví MOMO/VNPay bị trễ lệnh.",
+        "announcement_title": "Thông báo",
+        "announcement_body": "Đã cập nhật hệ thống Giao diện Admin Astral v2.0. Đảm bảo trải nghiệm quản lý tuyệt nhất."
+      },
+      "shortcuts": {
+        "title": "Lối tắt Nhanh",
+        "users": "Quản lý User",
+        "deposits": "Dòng tiền Nạp",
+        "readings": "Xem bài Mới",
+        "reader_requests": "Duyệt Reader"
+      },
+      "insights": {
+        "revenue_title": "Doanh Thu Ước Tính",
+        "revenue_currency": "VND",
+        "revenue_note": "Tính toán dựa trên {count} lệnh nạp thành công",
+        "activity_title": "Luồng Hoạt Động",
+        "activity_unit": "Phiên",
+        "activity_note": "Tổng số phiên giải mã vận mệnh đã thực hiện"
+      }
+    },
+    "deposits": {
+      "header": {
+        "tag": "Finance",
+        "title": "Dòng tiền Hệ thống",
+        "subtitle": "Theo dõi {count} giao dịch nạp Diamond từ nhân gian"
+      },
+      "filters": {
+        "label": "Lọc",
+        "all": "Tất cả",
+        "pending": "Chờ xử lý",
+        "success": "Thành công",
+        "failed": "Thất bại"
+      },
+      "table": {
+        "heading_order": "Mã Đơn / TXN ID",
+        "heading_user": "Linh hồn Phù hợp",
+        "heading_amount": "Giá trị (VND)",
+        "heading_assets": "Tài sản Thực nhận",
+        "heading_time": "Thời điểm",
+        "heading_status": "Hiện trạng",
+        "heading_actions": "Thao tác"
+      },
+      "row": {
+        "txn_missing": "Chưa có mã TXN",
+        "system_user": "System User",
+        "user_id_prefix": "ID: {id}..."
+      },
+      "status": {
+        "success": "Thành công",
+        "failed": "Thất bại",
+        "pending": "Đang xử lý"
+      },
+      "actions": {
+        "approve_title": "Phê duyệt",
+        "reject_title": "Từ chối",
+        "na": "N/A"
+      },
+      "modal": {
+        "title_approve": "Phê duyệt Giao dịch?",
+        "title_reject": "Từ chối Giao dịch?",
+        "desc_approve": "Hành động này sẽ thay đổi trạng thái dòng tiền và cộng tài sản cho linh hồn này.",
+        "desc_reject": "Hành động này sẽ thay đổi trạng thái dòng tiền và hủy bỏ yêu cầu.",
+        "back": "Quay lại",
+        "confirm": "Xác nhận"
+      },
+      "toast": {
+        "approve_success": "Phê duyệt thành công!",
+        "reject_success": "Đã từ chối đơn hàng.",
+        "action_failed": "Thất bại. Vui lòng thử lại.",
+        "network_error": "Lỗi kết nối máy chủ."
+      },
+      "states": {
+        "loading": "Đang truy vấn sổ cái...",
+        "empty": "Không có giao dịch nào xuất hiện trong tầm nhìn này."
+      },
+      "pagination": {
+        "summary": "Trang {page} | Tổng {total} giao dịch"
+      },
+      "summary": {
+        "confirm_title": "Xác nhận Đơn hàng",
+        "confirm_desc": "Hệ thống tự động đồng bộ từ cổng thanh toán. Hãy kiểm tra kỹ mã TXN trước khi can thiệp thủ công.",
+        "ledger_title": "Thông tin Sổ cái",
+        "ledger_subtitle": "Bản ghi Tài chính v2.4"
+      }
+    },
+    "users": {
+      "header": {
+        "tag": "Database",
+        "title": "Quản Lý Người Dùng",
+        "subtitle": "Tổng cộng {count} linh hồn đang hiện diện trong hệ thống"
+      },
+      "search": {
+        "placeholder": "TÊN, EMAIL, USERNAME..."
+      },
+      "table": {
+        "heading_account": "Thông tin Tài khoản",
+        "heading_rank": "Thứ hạng / XP",
+        "heading_assets": "Tài sản (D/G)",
+        "heading_role": "Vai trò",
+        "heading_status": "Trạng thái",
+        "heading_actions": "Hành động"
+      },
+      "row": {
+        "level": "LV {level}",
+        "exp": "{exp} EXP"
+      },
+      "states": {
+        "loading": "Đang truy vấn dữ liệu...",
+        "empty": "Vũ trụ trống rỗng, không tìm thấy linh hồn phù hợp."
+      },
+      "roles": {
+        "admin": "Admin",
+        "tarot_reader": "Reader",
+        "user": "User"
+      },
+      "status": {
+        "locked": "Bị Khóa",
+        "active": "Hoạt Động"
+      },
+      "actions": {
+        "add_balance_title": "Cộng tiền thủ công",
+        "lock_title": "Khóa tài khoản",
+        "unlock_title": "Mở khóa"
+      },
+      "pagination": {
+        "summary": "Vũ trụ {page} | Tổng {total} người dùng"
+      },
+      "lock_modal": {
+        "title_lock": "Khóa Tài khoản này?",
+        "title_unlock": "Mở khóa Tài khoản?",
+        "desc_lock": "Xác nhận ngăn chặn sự truy cập của người dùng: {name}",
+        "desc_unlock": "Xác nhận cho phép linh hồn này tiếp tục hành trình của người dùng: {name}",
+        "cancel": "Hủy",
+        "confirm": "Thực hiện"
+      },
+      "add_balance": {
+        "title": "Cộng tiền Thủ công",
+        "subtitle": "Manual Balance Intervention",
+        "recipient_label": "Người nhận vận may",
+        "currency_gold": "Gold",
+        "currency_diamond": "Diamond",
+        "amount_label": "Số lượng tài sản",
+        "reason_label": "Lý do can thiệp",
+        "reason_placeholder": "Ví dụ: Đền bù lỗi hệ thống, Quà tặng sự kiện...",
+        "cancel": "Hủy tác vụ",
+        "submit": "Kích hoạt"
+      },
+      "toast": {
+        "lock_success": "Đã khóa tài khoản thành công.",
+        "unlock_success": "Đã mở khóa tài khoản.",
+        "toggle_failed": "Lỗi khi thay đổi trạng thái tài khoản.",
+        "network_error": "Lỗi kết nối.",
+        "amount_invalid": "Số tiền phải lớn hơn 0",
+        "add_success": "Đã cộng {amount} {currency} thành công!",
+        "add_failed": "Lỗi khi cộng tiền.",
+        "system_error": "Lỗi hệ thống.",
+        "update_success": "Đã cập nhật thông tin người dùng thành công.",
+        "update_failed": "Cập nhật thất bại. Vui lòng thử lại."
+      }
+    },
+    "promotions": {
+      "header": {
+        "tag": "Marketing",
+        "title": "Chương trình Ưu đãi",
+        "subtitle": "Thiết lập các mốc nạp tệ để ban thưởng Vàng cho linh hồn"
+      },
+      "actions": {
+        "toggle_create_add": "Thêm Ưu đãi mới",
+        "toggle_create_cancel": "Hủy bỏ"
+      },
+      "create": {
+        "title": "Khởi tạo Mốc thưởng mới",
+        "min_amount_label": "Mức nạp tối thiểu (VND)",
+        "min_amount_placeholder": "200,000",
+        "bonus_label": "Lượng Vàng thưởng thêm",
+        "bonus_placeholder": "500",
+        "note": "Mốc ưu đãi sẽ được kích hoạt ngay sau khi lưu vào Sổ cái.",
+        "submit": "Lưu vào Hệ thống",
+        "submitting": "Đang ghi sổ..."
+      },
+      "table": {
+        "heading_condition": "Điều kiện Kích hoạt",
+        "heading_reward": "Phần thưởng (Gold)",
+        "heading_status": "Tình trạng",
+        "heading_commands": "Pháp lệnh"
+      },
+      "states": {
+        "loading": "Đang đọc Sổ lệnh...",
+        "empty": "Vùng không gian ưu đãi đang trống vắng."
+      },
+      "row": {
+        "condition_from": "Từ {amount}"
+      },
+      "status": {
+        "active": "Đang áp dụng",
+        "inactive": "Vô hiệu hóa"
+      },
+      "delete_modal": {
+        "title": "Xóa Khuyến mãi?",
+        "desc": "Hành động này sẽ xóa vĩnh viễn mức ưu đãi này khỏi Sổ cái Hệ thống. Các giao dịch hiện tại sẽ không bị ảnh hưởng.",
+        "keep": "Giữ lại",
+        "delete": "Xóa bỏ"
+      },
+      "toast": {
+        "create_success": "Đã thêm ưu đãi thành công!",
+        "create_failed": "Lỗi khi thêm khuyến mãi.",
+        "toggle_success": "Đã cập nhật trạng thái.",
+        "toggle_failed": "Lỗi khi thay đổi trạng thái.",
+        "delete_success": "Đã xóa ưu đãi vĩnh viễn.",
+        "delete_failed": "Lỗi khi xóa.",
+        "network_error": "Lỗi kết nối."
+      }
+    },
+    "readings": {
+      "header": {
+        "tag": "Monitoring",
+        "title": "Nhật ký Vận mệnh",
+        "subtitle": "Khám phá {count} hành trình tâm linh qua các lá bài Tarot"
+      },
+      "filters": {
+        "username_label": "Linh hồn",
+        "username_placeholder": "Tên người dùng...",
+        "spread_label": "Trải bài",
+        "spread_all": "Tất cả loại bài",
+        "spread_daily": "Daily 1 Card",
+        "spread_3": "Spread 3 Cards",
+        "spread_5": "Spread 5 Cards",
+        "spread_10": "Spread 10 Cards",
+        "start_date_label": "Từ ngày",
+        "end_date_label": "Đến ngày",
+        "submit": "Truy vấn"
+      },
+      "table": {
+        "heading_timeline": "Dòng thời gian",
+        "heading_user": "Linh hồn",
+        "heading_spread": "Loại trải bài",
+        "heading_question": "Câu hỏi Truy vấn",
+        "heading_status": "Tình trạng"
+      },
+      "states": {
+        "loading": "Đang lật mở các chương vận mệnh...",
+        "empty": "Không có lời tiên tri nào được tìm thấy."
+      },
+      "row": {
+        "user_unknown": "Chưa định danh",
+        "question_empty": "Linh hồn không đặt câu hỏi..."
+      },
+      "status": {
+        "completed": "Hoàn tất",
+        "processing": "Đang mở bài"
+      },
+      "pagination": {
+        "summary": "Chương {page} / {total} đại lục vận mệnh"
+      },
+      "insights": {
+        "total_title": "Tổng hành trình",
+        "update_label": "Chu kỳ cập nhật",
+        "update_value": "Thời gian thực",
+        "monitor_label": "Khu vực Giám sát",
+        "monitor_value": "Sổ lệnh Admin"
+      },
+      "toast": {
+        "unauthorized": "Phiên đăng nhập hết hạn hoặc không có quyền."
+      }
+    },
+    "reader_requests": {
+      "header": {
+        "tag": "Review",
+        "title": "Duyệt Đơn Reader",
+        "subtitle": "Xem xét và phê duyệt các đơn đăng ký trở thành Reader."
+      },
+      "summary": {
+        "total_label": "Tổng số đơn"
+      },
+      "filters": {
+        "pending": "Chờ duyệt",
+        "approved": "Đã duyệt",
+        "rejected": "Từ chối",
+        "all": "Tất cả"
+      },
+      "states": {
+        "loading": "Đang tải...",
+        "empty": "Không có đơn nào trong danh sách."
+      },
+      "row": {
+        "id_prefix": "ID: {id}...",
+        "intro_title": "Lời giới thiệu",
+        "expand": "Mở rộng",
+        "admin_note_title": "Ghi chú Admin"
+      },
+      "input": {
+        "admin_note_placeholder": "GHI CHÚ ADMIN TRƯỚC KHI DUYỆT (TÙY CHỌN)..."
+      },
+      "actions": {
+        "approve": "Phê duyệt Reader",
+        "reject": "Từ chối Đơn"
+      },
+      "status": {
+        "pending": "Chờ duyệt",
+        "approved": "Đã duyệt",
+        "rejected": "Đã từ chối"
+      },
+      "pagination": {
+        "summary": "Trang {page} / {total}"
+      },
+      "toast": {
+        "approve_success": "Đã phê duyệt Reader thành công",
+        "reject_success": "Đã từ chối đơn đăng ký",
+        "process_failed": "Xử lý đơn thất bại. Vui lòng thử lại."
+      }
+    },
+    "withdrawals": {
+      "header": {
+        "tag": "Admin",
+        "title": "Hàng đợi Chi trả",
+        "subtitle": "Duyệt hoặc từ chối yêu cầu rút tiền của Reader. Thứ tự FIFO."
+      },
+      "states": {
+        "loading": "Đang tải danh sách...",
+        "empty": "Không có yêu cầu nào đang chờ duyệt."
+      },
+      "row": {
+        "gross": "Tổng",
+        "fee": "Phí",
+        "net": "Thực nhận",
+        "id_prefix": "ID: {id}..."
+      },
+      "input": {
+        "admin_note_placeholder": "GHI CHÚ ADMIN..."
+      },
+      "actions": {
+        "approve": "Phê duyệt",
+        "reject": "Từ chối"
+      },
+      "toast": {
+        "success": "Xử lý yêu cầu thành công",
+        "failed": "Xử lý thất bại"
+      },
+      "mfa": {
+        "action_approve": "duyệt yêu cầu rút tiền",
+        "action_reject": "từ chối yêu cầu rút tiền"
+      }
+    },
+    "disputes": {
+      "header": {
+        "tag": "Escrow",
+        "title": "Dispute Queue",
+        "subtitle": "Xử lý các tranh chấp escrow. Quyết định release cho reader hoặc refund cho user."
+      },
+      "guide": {
+        "title": "Hướng dẫn xử lý Dispute",
+        "release_label": "Release",
+        "release_desc": "Reader đã trả lời đúng → diamond chuyển cho reader (trừ 10% phí).",
+        "refund_label": "Refund",
+        "refund_desc": "Reader trả lời sai/không trả lời → diamond hoàn cho user.",
+        "check_history": "Kiểm tra lịch sử chat trước khi quyết định."
+      },
+      "form": {
+        "quick_title": "Xử lý nhanh",
+        "item_id_label": "Item ID (UUID)",
+        "item_id_placeholder": "NHẬP UUID CỦA QUESTION ITEM...",
+        "note_label": "Ghi chú admin",
+        "note_placeholder": "Lý do quyết định...",
+        "release_button": "Release cho Reader",
+        "refund_button": "Refund cho User"
+      },
+      "toast": {
+        "release_success": "Đã giải ngân cho Reader thành công",
+        "refund_success": "Đã hoàn tiền cho User thành công",
+        "failed": "Xử lý tranh chấp thất bại. Vui lòng kiểm tra lại.",
+        "missing_item_id": "Vui lòng nhập Item ID"
+      },
+      "resolved": {
+        "title": "Đã xử lý trong phiên",
+        "badge": "Đã Resolve"
+      }
+    }
+  }
+}

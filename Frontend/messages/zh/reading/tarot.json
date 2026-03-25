@@ -1,0 +1,340 @@
+{
+  "Tarot": {
+    "suits": {
+      "major": {
+        "full": "大阿卡那",
+        "short": "大阿"
+      },
+      "wands": {
+        "full": "权杖",
+        "short": "权杖"
+      },
+      "cups": {
+        "full": "圣杯",
+        "short": "圣杯"
+      },
+      "swords": {
+        "full": "宝剑",
+        "short": "宝剑"
+      },
+      "pentacles": {
+        "full": "星币",
+        "short": "星币"
+      }
+    },
+    "cards": {
+      "c0": {
+        "name": "The Fool",
+        "meaning": "充满潜力的新开始；以开放自由的心踏上冒险。"
+      },
+      "c1": {
+        "name": "The Magician",
+        "meaning": "运用天赋与资源，把想法化为现实。"
+      },
+      "c2": {
+        "name": "The High Priestess",
+        "meaning": "倾听内在声音，信任直觉与内在智慧。"
+      },
+      "c3": {
+        "name": "The Empress",
+        "meaning": "丰盛、创造力，以及与自然的深度连接。"
+      },
+      "c4": {
+        "name": "The Emperor",
+        "meaning": "强而有力的领导、纪律，与稳固的基础。"
+      },
+      "c5": {
+        "name": "The Hierophant",
+        "meaning": "寻求灵性指引，遵循传统与共同价值。"
+      },
+      "c6": {
+        "name": "The Lovers",
+        "meaning": "深刻的连结、重要的选择，以及关系中的和谐。"
+      },
+      "c7": {
+        "name": "The Chariot",
+        "meaning": "凭借意志与专注战胜阻碍。"
+      },
+      "c8": {
+        "name": "Strength",
+        "meaning": "真正的力量来自内在：勇气、耐心与慈悲。"
+      },
+      "c9": {
+        "name": "The Hermit",
+        "meaning": "安静反思的时刻，从内心寻找答案。"
+      },
+      "c10": {
+        "name": "Wheel of Fortune",
+        "meaning": "积极的转变、好运到来，以及生命循环的流转。"
+      },
+      "c11": {
+        "name": "Justice",
+        "meaning": "真相显现，公正得以伸张，并承担责任。"
+      },
+      "c12": {
+        "name": "The Hanged Man",
+        "meaning": "暂停片刻，从不同角度看问题；学会放下与臣服。"
+      },
+      "c13": {
+        "name": "Death",
+        "meaning": "一个阶段的结束，开启新的开始；深层转化。"
+      },
+      "c14": {
+        "name": "Temperance",
+        "meaning": "寻找平衡，对一切保持耐心，调和对立面。"
+      },
+      "c15": {
+        "name": "The Devil",
+        "meaning": "被欲望、坏习惯或恐惧所束缚。"
+      },
+      "c16": {
+        "name": "The Tower",
+        "meaning": "突如其来的崩塌打破不再适合的事物，为重建腾出空间。"
+      },
+      "c17": {
+        "name": "The Star",
+        "meaning": "新的希望、疗愈与创意灵感。"
+      },
+      "c18": {
+        "name": "The Moon",
+        "meaning": "直面恐惧与幻象，以及潜意识中隐藏的事物。"
+      },
+      "c19": {
+        "name": "The Sun",
+        "meaning": "灿烂的喜悦、成功与满满的乐观。"
+      },
+      "c20": {
+        "name": "Judgement",
+        "meaning": "审视与总结的时刻，觉醒并迈入新阶段。"
+      },
+      "c21": {
+        "name": "The World",
+        "meaning": "完成一个重要循环，获得圆满与满足。"
+      },
+      "c22": {
+        "name": "Ace of Wands",
+        "meaning": "新的创意能量涌现；充满灵感的开端。"
+      },
+      "c23": {
+        "name": "Two of Wands",
+        "meaning": "展望未来，规划行动。"
+      },
+      "c24": {
+        "name": "Three of Wands",
+        "meaning": "扩展视野，把握新的机会。"
+      },
+      "c25": {
+        "name": "Four of Wands",
+        "meaning": "庆祝成就，家庭与关系中的和谐。"
+      },
+      "c26": {
+        "name": "Five of Wands",
+        "meaning": "良性的竞争或面对挑战。"
+      },
+      "c27": {
+        "name": "Six of Wands",
+        "meaning": "辉煌的胜利与认可。"
+      },
+      "c28": {
+        "name": "Seven of Wands",
+        "meaning": "在考验中站稳立场，捍卫自己的观点。"
+      },
+      "c29": {
+        "name": "Eight of Wands",
+        "meaning": "事情快速推进，立即行动。"
+      },
+      "c30": {
+        "name": "Nine of Wands",
+        "meaning": "即使疲惫也要坚持，为最后的挑战做好准备。"
+      },
+      "c31": {
+        "name": "Ten of Wands",
+        "meaning": "负担过重，学会分担与授权。"
+      },
+      "c32": {
+        "name": "Page of Wands",
+        "meaning": "带着热情与好奇探索世界。"
+      },
+      "c33": {
+        "name": "Knight of Wands",
+        "meaning": "大胆行动，充满激情与冒险精神。"
+      },
+      "c34": {
+        "name": "Queen of Wands",
+        "meaning": "自信、有魅力，并能激励他人。"
+      },
+      "c35": {
+        "name": "King of Wands",
+        "meaning": "以远见与丰富经验领导。"
+      },
+      "c36": {
+        "name": "Ace of Cups",
+        "meaning": "新的爱意萌芽，或创作灵感满溢。"
+      },
+      "c37": {
+        "name": "Two of Cups",
+        "meaning": "和谐的关系，理想的伙伴。"
+      },
+      "c38": {
+        "name": "Three of Cups",
+        "meaning": "与朋友和群体共享喜悦。"
+      },
+      "c39": {
+        "name": "Four of Cups",
+        "meaning": "对现状不满足，错过机会。"
+      },
+      "c40": {
+        "name": "Five of Cups",
+        "meaning": "为失去而悲伤，但仍有值得珍惜的部分。"
+      },
+      "c41": {
+        "name": "Six of Cups",
+        "meaning": "怀念美好回忆，纯真与单纯。"
+      },
+      "c42": {
+        "name": "Seven of Cups",
+        "meaning": "选择诱人却繁多，需要分辨现实。"
+      },
+      "c43": {
+        "name": "Eight of Cups",
+        "meaning": "离开不再有意义的处境。"
+      },
+      "c44": {
+        "name": "Nine of Cups",
+        "meaning": "愿望成真，深深的满足。"
+      },
+      "c45": {
+        "name": "Ten of Cups",
+        "meaning": "家庭幸福圆满，关系与情感的丰盈。"
+      },
+      "c46": {
+        "name": "Page of Cups",
+        "meaning": "丰富的想象力与强烈直觉。"
+      },
+      "c47": {
+        "name": "Knight of Cups",
+        "meaning": "浪漫，追随内心的呼唤。"
+      },
+      "c48": {
+        "name": "Queen of Cups",
+        "meaning": "深度共情、直觉强，并具疗愈能力。"
+      },
+      "c49": {
+        "name": "King of Cups",
+        "meaning": "情绪掌控良好，善良而仁慈。"
+      },
+      "c50": {
+        "name": "Ace of Swords",
+        "meaning": "思维的清晰与理智，突破性的想法。"
+      },
+      "c51": {
+        "name": "Two of Swords",
+        "meaning": "面对艰难抉择，需要冷静权衡。"
+      },
+      "c52": {
+        "name": "Three of Swords",
+        "meaning": "心碎、失望或背叛。"
+      },
+      "c53": {
+        "name": "Four of Swords",
+        "meaning": "需要休息与修复，恢复能量。"
+      },
+      "c54": {
+        "name": "Five of Swords",
+        "meaning": "不惜代价的胜利，得不偿失。"
+      },
+      "c55": {
+        "name": "Six of Swords",
+        "meaning": "离开困境，驶向更平静的地方。"
+      },
+      "c56": {
+        "name": "Seven of Swords",
+        "meaning": "隐秘行动或运用聪明策略。"
+      },
+      "c57": {
+        "name": "Eight of Swords",
+        "meaning": "感觉被环境或自我束缚所困。"
+      },
+      "c58": {
+        "name": "Nine of Swords",
+        "meaning": "焦虑与恐惧萦绕，尤其在夜晚。"
+      },
+      "c59": {
+        "name": "Ten of Swords",
+        "meaning": "痛苦而突然的结束，但也为新开始打开可能。"
+      },
+      "c60": {
+        "name": "Page of Swords",
+        "meaning": "好奇、聪慧，总是准备学习。"
+      },
+      "c61": {
+        "name": "Knight of Swords",
+        "meaning": "行动迅速果断，雄心驱动。"
+      },
+      "c62": {
+        "name": "Queen of Swords",
+        "meaning": "锐利智慧、独立，以及毫不妥协的诚实。"
+      },
+      "c63": {
+        "name": "King of Swords",
+        "meaning": "以智慧领导，公正并重逻辑。"
+      },
+      "c64": {
+        "name": "Ace of Pentacles",
+        "meaning": "新的财务机会，为未来奠定稳固基础。"
+      },
+      "c65": {
+        "name": "Two of Pentacles",
+        "meaning": "灵活地平衡多重优先事项。"
+      },
+      "c66": {
+        "name": "Three of Pentacles",
+        "meaning": "有效合作，发挥专业技能。"
+      },
+      "c67": {
+        "name": "Four of Pentacles",
+        "meaning": "守住财富，寻求财务稳定。"
+      },
+      "c68": {
+        "name": "Five of Pentacles",
+        "meaning": "在财务或精神层面经历困难阶段。"
+      },
+      "c69": {
+        "name": "Six of Pentacles",
+        "meaning": "分享资源，慷慨支持他人。"
+      },
+      "c70": {
+        "name": "Seven of Pentacles",
+        "meaning": "耐心等待长期投入的成果。"
+      },
+      "c71": {
+        "name": "Eight of Pentacles",
+        "meaning": "勤奋练习，打磨并完善技能。"
+      },
+      "c72": {
+        "name": "Nine of Pentacles",
+        "meaning": "富足并享受劳动成果。"
+      },
+      "c73": {
+        "name": "Ten of Pentacles",
+        "meaning": "稳固的家业与传承，跨世代的稳定。"
+      },
+      "c74": {
+        "name": "Page of Pentacles",
+        "meaning": "学习与财务成长的机会。"
+      },
+      "c75": {
+        "name": "Knight of Pentacles",
+        "meaning": "稳步前进，可靠且有耐心。"
+      },
+      "c76": {
+        "name": "Queen of Pentacles",
+        "meaning": "以务实方式带来安全感与滋养。"
+      },
+      "c77": {
+        "name": "King of Pentacles",
+        "meaning": "财务成功，卓越的商业领导力。"
+      }
+    }
+  }
+}

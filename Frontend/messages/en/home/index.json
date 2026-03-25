@@ -1,0 +1,40 @@
+{
+  "Index": {
+    "title": "TarotNow Home",
+    "description": "Online Tarot Readings with AI",
+    "tagline": "Discover Your Destiny with TarotNow AI",
+    "heroTitle1": "Listen to the Oracles",
+    "heroTitle2": "From the Universe via AI.",
+    "heroDesc": "Experience the mystical art of Tarot combined with the deep analytical power of Artificial Intelligence. Unlock the answers hidden within your subconscious.",
+    "ctaDraw": "Draw Cards Now",
+    "ctaCollection": "Visit Collection",
+    "ctaMeetReaders": "Meet Readers",
+    "featureTitle": "A Unique Experience",
+    "featureDesc": "The perfect blend of ancient spirituality and future technology brings deeply personalized experiences.",
+    "scroll": "Scroll",
+    "stats": {
+      "readings": "Readings",
+      "readers": "Professional Readers",
+      "rating": "Average rating",
+      "support": "Global support"
+    },
+    "showcase": {
+      "tag": "Master connection",
+      "title": "Masters",
+      "titleMuted": "Guiding",
+      "viewAll": "View all Readers",
+      "profileCta": "Profile →"
+    },
+    "f1Title": "In-depth AI Analysis",
+    "f1Desc": "Trained on tens of thousands of ancient Tarot texts, our AI provides accurate and personalized interpretations for your specific situation.",
+    "f2Title": "Mystical Card Collection",
+    "f2Desc": "Every draw is a chance to collect card elements. Accumulate enough elements to upgrade your cards with more glorious and powerful appearances.",
+    "f3Title": "RNG Lock & Absolute Authenticity",
+    "f3Desc": "Our Deterministic Shuffle algorithm uses Hashing technology to ensure the drawn cards are the unique, unaltered result of that exact moment.",
+    "final": {
+      "title1": "Begin your journey",
+      "title2": "Lunar Bloom Healing",
+      "cta": "Draw now"
+    }
+  }
+}

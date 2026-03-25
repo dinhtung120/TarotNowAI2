@@ -1,0 +1,417 @@
+{
+  "Admin": {
+    "layout": {
+      "title": "Admin",
+      "subtitle": "管理",
+      "section_main": "主控台",
+      "exit_portal": "退出入口",
+      "menu": {
+        "overview": "总览",
+        "users": "用户",
+        "deposits": "充值",
+        "promotions": "促销",
+        "readings": "占卜会话",
+        "reader_requests": "占卜师申请",
+        "withdrawals": "提现",
+        "disputes": "争议"
+      }
+    },
+    "dashboard": {
+      "loading": "正在初始化管理系统...",
+      "header": {
+        "tag": "系统智能",
+        "title": "HQ 总览",
+        "subtitle": "监控 TarotNow AI 全系统的用户流与命运数据。"
+      },
+      "health": {
+        "title": "健康检查",
+        "ok": "系统稳定"
+      },
+      "stats": {
+        "users": "用户总数",
+        "deposits": "充值次数",
+        "promotions": "促销",
+        "readings": "占卜会话"
+      },
+      "notice": {
+        "title": "管理员公告",
+        "reminder_title": "提醒",
+        "reminder_body": "检查待处理充值订单，如 MOMO/VNPay 延迟可进行人工确认。",
+        "announcement_title": "公告",
+        "announcement_body": "Admin 界面 Astral v2.0 已更新，带来更顺滑的管理体验。"
+      },
+      "shortcuts": {
+        "title": "快捷入口",
+        "users": "用户管理",
+        "deposits": "充值流水",
+        "readings": "最新占卜",
+        "reader_requests": "审核占卜师"
+      },
+      "insights": {
+        "revenue_title": "预估收入",
+        "revenue_currency": "VND",
+        "revenue_note": "基于 {count} 笔成功充值计算",
+        "activity_title": "活动流",
+        "activity_unit": "会话",
+        "activity_note": "已完成的命运解读会话总数"
+      }
+    },
+    "deposits": {
+      "header": {
+        "tag": "财务",
+        "title": "系统充值",
+        "subtitle": "追踪 {count} 笔 Diamond 充值交易。"
+      },
+      "filters": {
+        "label": "筛选",
+        "all": "全部",
+        "pending": "待处理",
+        "success": "成功",
+        "failed": "失败"
+      },
+      "table": {
+        "heading_order": "订单 / TXN",
+        "heading_user": "用户",
+        "heading_amount": "金额 (VND)",
+        "heading_assets": "到账资产",
+        "heading_time": "时间",
+        "heading_status": "状态",
+        "heading_actions": "操作"
+      },
+      "row": {
+        "txn_missing": "无 TXN",
+        "system_user": "系统用户",
+        "user_id_prefix": "ID: {id}..."
+      },
+      "status": {
+        "success": "成功",
+        "failed": "失败",
+        "pending": "处理中"
+      },
+      "actions": {
+        "approve_title": "批准",
+        "reject_title": "拒绝",
+        "na": "N/A"
+      },
+      "modal": {
+        "title_approve": "批准交易？",
+        "title_reject": "拒绝交易？",
+        "desc_approve": "这将更新资金流状态，并为该用户入账资产。",
+        "desc_reject": "这将更新资金流状态并取消请求。",
+        "back": "返回",
+        "confirm": "确认"
+      },
+      "toast": {
+        "approve_success": "批准成功！",
+        "reject_success": "已拒绝订单。",
+        "action_failed": "失败，请重试。",
+        "network_error": "服务器连接错误。"
+      },
+      "states": {
+        "loading": "正在查询账本...",
+        "empty": "此视图下暂无交易。"
+      },
+      "pagination": {
+        "summary": "第 {page} 页 | 共 {total} 笔交易"
+      },
+      "summary": {
+        "confirm_title": "确认订单",
+        "confirm_desc": "系统会从支付网关自动同步。手动干预前请核对 TXN。",
+        "ledger_title": "账本信息",
+        "ledger_subtitle": "财务记录 v2.4"
+      }
+    },
+    "users": {
+      "header": {
+        "tag": "数据库",
+        "title": "用户管理",
+        "subtitle": "系统共有 {count} 位用户。"
+      },
+      "search": {
+        "placeholder": "姓名、邮箱、用户名..."
+      },
+      "table": {
+        "heading_account": "账户",
+        "heading_rank": "等级 / XP",
+        "heading_assets": "资产 (D/G)",
+        "heading_role": "角色",
+        "heading_status": "状态",
+        "heading_actions": "操作"
+      },
+      "row": {
+        "level": "LV {level}",
+        "exp": "{exp} EXP"
+      },
+      "states": {
+        "loading": "正在查询数据...",
+        "empty": "未找到匹配用户。"
+      },
+      "roles": {
+        "admin": "管理员",
+        "tarot_reader": "占卜师",
+        "user": "用户"
+      },
+      "status": {
+        "locked": "已锁定",
+        "active": "活跃"
+      },
+      "actions": {
+        "add_balance_title": "手动充值",
+        "lock_title": "锁定账户",
+        "unlock_title": "解锁"
+      },
+      "pagination": {
+        "summary": "第 {page} 页 | 共 {total} 位用户"
+      },
+      "lock_modal": {
+        "title_lock": "锁定此账户？",
+        "title_unlock": "解锁此账户？",
+        "desc_lock": "确认阻止用户访问：{name}",
+        "desc_unlock": "确认允许该用户继续旅程：{name}",
+        "cancel": "取消",
+        "confirm": "执行"
+      },
+      "add_balance": {
+        "title": "手动充值",
+        "subtitle": "手动余额干预",
+        "recipient_label": "接收用户",
+        "currency_gold": "Gold",
+        "currency_diamond": "Diamond",
+        "amount_label": "数量",
+        "reason_label": "原因",
+        "reason_placeholder": "例如：系统补偿、活动赠礼...",
+        "cancel": "取消",
+        "submit": "执行"
+      },
+      "toast": {
+        "lock_success": "账户已锁定。",
+        "unlock_success": "账户已解锁。",
+        "toggle_failed": "更改账户状态失败。",
+        "network_error": "连接错误。",
+        "amount_invalid": "数量必须大于 0。",
+        "add_success": "已成功添加 {amount} {currency}！",
+        "add_failed": "添加余额失败。",
+        "system_error": "系统错误。",
+        "update_success": "用户信息已更新。",
+        "update_failed": "更新用户信息失败，请重试。"
+      }
+    },
+    "promotions": {
+      "header": {
+        "tag": "营销",
+        "title": "促销",
+        "subtitle": "设置充值门槛以奖励额外 Gold。"
+      },
+      "actions": {
+        "toggle_create_add": "新增促销",
+        "toggle_create_cancel": "取消"
+      },
+      "create": {
+        "title": "创建新的奖励门槛",
+        "min_amount_label": "最低充值 (VND)",
+        "min_amount_placeholder": "200,000",
+        "bonus_label": "奖励 Gold",
+        "bonus_placeholder": "500",
+        "note": "保存后将立即生效。",
+        "submit": "保存到系统",
+        "submitting": "保存中..."
+      },
+      "table": {
+        "heading_condition": "触发条件",
+        "heading_reward": "奖励 (Gold)",
+        "heading_status": "状态",
+        "heading_commands": "操作"
+      },
+      "states": {
+        "loading": "正在加载促销...",
+        "empty": "暂无促销。"
+      },
+      "row": {
+        "condition_from": "从 {amount} 起"
+      },
+      "status": {
+        "active": "启用中",
+        "inactive": "已停用"
+      },
+      "delete_modal": {
+        "title": "删除促销？",
+        "desc": "这将从系统账本中永久删除该促销门槛，已有交易不受影响。",
+        "keep": "保留",
+        "delete": "删除"
+      },
+      "toast": {
+        "create_success": "促销已创建。",
+        "create_failed": "创建促销失败。",
+        "toggle_success": "状态已更新。",
+        "toggle_failed": "更新状态失败。",
+        "delete_success": "促销已删除。",
+        "delete_failed": "删除促销失败。",
+        "network_error": "连接错误。"
+      }
+    },
+    "readings": {
+      "header": {
+        "tag": "监控",
+        "title": "命运日志",
+        "subtitle": "探索 {count} 次塔罗旅程。"
+      },
+      "filters": {
+        "username_label": "用户",
+        "username_placeholder": "用户名...",
+        "spread_label": "牌阵",
+        "spread_all": "全部牌阵",
+        "spread_daily": "每日一张",
+        "spread_3": "三张牌阵",
+        "spread_5": "五张牌阵",
+        "spread_10": "十字牌阵（10 张）",
+        "start_date_label": "起始日期",
+        "end_date_label": "结束日期",
+        "submit": "查询"
+      },
+      "table": {
+        "heading_timeline": "时间线",
+        "heading_user": "用户",
+        "heading_spread": "牌阵",
+        "heading_question": "问题",
+        "heading_status": "状态"
+      },
+      "states": {
+        "loading": "正在翻阅命运篇章...",
+        "empty": "未找到占卜记录。"
+      },
+      "row": {
+        "user_unknown": "未知",
+        "question_empty": "未提供问题..."
+      },
+      "status": {
+        "completed": "已完成",
+        "processing": "进行中"
+      },
+      "pagination": {
+        "summary": "第 {page} 章 / 共 {total} 个命运领域"
+      },
+      "insights": {
+        "total_title": "总旅程",
+        "update_label": "更新周期",
+        "update_value": "实时",
+        "monitor_label": "监控区",
+        "monitor_value": "Admin 日志簿"
+      },
+      "toast": {
+        "unauthorized": "会话过期或无权限。"
+      }
+    },
+    "reader_requests": {
+      "header": {
+        "tag": "审核",
+        "title": "占卜师申请",
+        "subtitle": "审核并批准占卜师申请。"
+      },
+      "summary": {
+        "total_label": "申请总数"
+      },
+      "filters": {
+        "pending": "待审核",
+        "approved": "已批准",
+        "rejected": "已拒绝",
+        "all": "全部"
+      },
+      "states": {
+        "loading": "加载中...",
+        "empty": "暂无申请。"
+      },
+      "row": {
+        "id_prefix": "ID: {id}...",
+        "intro_title": "自我介绍",
+        "expand": "展开",
+        "admin_note_title": "管理员备注"
+      },
+      "input": {
+        "admin_note_placeholder": "审核前管理员备注（可选）..."
+      },
+      "actions": {
+        "approve": "批准占卜师",
+        "reject": "拒绝申请"
+      },
+      "status": {
+        "pending": "待审核",
+        "approved": "已批准",
+        "rejected": "已拒绝"
+      },
+      "pagination": {
+        "summary": "第 {page} 页 / 共 {total}"
+      },
+      "toast": {
+        "approve_success": "已批准占卜师。",
+        "reject_success": "申请已拒绝。",
+        "process_failed": "处理失败，请重试。"
+      }
+    },
+    "withdrawals": {
+      "header": {
+        "tag": "Admin",
+        "title": "提现队列",
+        "subtitle": "审核或拒绝占卜师的提现申请（FIFO）。"
+      },
+      "states": {
+        "loading": "正在加载队列...",
+        "empty": "暂无待处理申请。"
+      },
+      "row": {
+        "gross": "总额",
+        "fee": "手续费",
+        "net": "净额",
+        "id_prefix": "ID: {id}..."
+      },
+      "input": {
+        "admin_note_placeholder": "管理员备注..."
+      },
+      "actions": {
+        "approve": "批准",
+        "reject": "拒绝"
+      },
+      "toast": {
+        "success": "处理成功。",
+        "failed": "处理失败。"
+      },
+      "mfa": {
+        "action_approve": "批准该提现申请",
+        "action_reject": "拒绝该提现申请"
+      }
+    },
+    "disputes": {
+      "header": {
+        "tag": "Escrow",
+        "title": "争议队列",
+        "subtitle": "处理 escrow 争议。决定向占卜师放款或向用户退款。"
+      },
+      "guide": {
+        "title": "争议处理指南",
+        "release_label": "放款",
+        "release_desc": "占卜师回答正确 → Diamond 转给占卜师（扣除 10% 手续费）。",
+        "refund_label": "退款",
+        "refund_desc": "回答错误或未回复 → Diamond 退还给用户。",
+        "check_history": "决策前请检查聊天记录。"
+      },
+      "form": {
+        "quick_title": "快速处理",
+        "item_id_label": "Item ID (UUID)",
+        "item_id_placeholder": "输入 QUESTION ITEM 的 UUID...",
+        "note_label": "管理员备注",
+        "note_placeholder": "决定原因...",
+        "release_button": "放款给占卜师",
+        "refund_button": "退款给用户"
+      },
+      "toast": {
+        "release_success": "已成功放款给占卜师。",
+        "refund_success": "已成功退款给用户。",
+        "failed": "处理争议失败，请检查后重试。",
+        "missing_item_id": "请输入 Item ID。"
+      },
+      "resolved": {
+        "title": "本次会话已处理",
+        "badge": "已处理"
+      }
+    }
+  }
+}

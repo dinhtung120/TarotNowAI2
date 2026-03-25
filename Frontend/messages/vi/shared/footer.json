@@ -1,0 +1,22 @@
+{
+  "Footer": {
+    "tagline": "Lunar Bloom Guidance",
+    "links": {
+      "reading": "Dịch vụ",
+      "readers": "Readers",
+      "wallet": "Tín dụng",
+      "chat": "Tin nhắn"
+    },
+    "legal": {
+      "tos": "Điều khoản",
+      "privacy": "Bảo mật",
+      "ai": "AI Disclaimer"
+    },
+    "social": {
+      "facebook": "Facebook",
+      "instagram": "Instagram",
+      "tiktok": "TikTok"
+    },
+    "copyright": "© {year} TarotNow AI • Trải nghiệm tâm linh cao cấp • Đã đăng ký bản quyền"
+  }
+}

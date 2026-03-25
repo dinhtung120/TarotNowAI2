@@ -1,0 +1,7 @@
+{
+  "Pagination": {
+    "page_info": "Trang {current} / {total}",
+    "prev": "Trang trước",
+    "next": "Trang tiếp"
+  }
+}
