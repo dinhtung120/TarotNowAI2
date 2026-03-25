@@ -15,6 +15,7 @@
  */
 
 using Isopoh.Cryptography.Argon2;
+using Microsoft.Extensions.Configuration;
 using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Infrastructure.Security;
@@ -24,13 +25,41 @@ namespace TarotNow.Infrastructure.Security;
 /// </summary>
 public class Argon2idPasswordHasher : IPasswordHasher
 {
+    private const int DefaultMemoryKb = 19456;
+    private const int DefaultIterations = 2;
+    private const int DefaultParallelism = 1;
+
+    private readonly int _memoryCost;
+    private readonly int _timeCost;
+    private readonly int _parallelism;
+
+    public Argon2idPasswordHasher(IConfiguration configuration)
+    {
+        var section = configuration.GetSection("Argon2");
+
+        var configuredParallelism = ReadPositiveInt(section["Parallelism"], DefaultParallelism, min: 1, max: 4);
+        _parallelism = configuredParallelism;
+
+        var configuredMemory = ReadPositiveInt(section["MemoryKB"], DefaultMemoryKb, min: 8 * 1024, max: 1_048_576);
+        _memoryCost = NormalizeMemoryCost(configuredMemory, _parallelism);
+
+        _timeCost = ReadPositiveInt(section["Iterations"], DefaultIterations, min: 1, max: 10);
+    }
+
     /// <summary>
     /// Băm mật khẩu: tạo salt ngẫu nhiên + Argon2id → chuỗi hash (chứa cả config + salt).
     /// Tham số mặc định Isopoh: 64MB memory, 3 iterations, 4 parallel lanes.
     /// </summary>
     public string HashPassword(string password)
     {
-        return Argon2.Hash(password);
+        return Argon2.Hash(
+            password: password,
+            timeCost: _timeCost,
+            memoryCost: _memoryCost,
+            parallelism: _parallelism,
+            type: Argon2Type.HybridAddressing,
+            hashLength: 32
+        );
     }
 
     /// <summary>
@@ -41,5 +70,50 @@ public class Argon2idPasswordHasher : IPasswordHasher
     public bool VerifyPassword(string hash, string providedPassword)
     {
         return Argon2.Verify(hash, providedPassword);
+    }
+
+    public bool NeedsRehash(string hash)
+    {
+        if (string.IsNullOrWhiteSpace(hash))
+        {
+            return true;
+        }
+
+        try
+        {
+            var parsedConfig = new Argon2Config();
+            if (!parsedConfig.DecodeString(hash, out _))
+            {
+                return true;
+            }
+
+            return parsedConfig.Type != Argon2Type.HybridAddressing ||
+                   parsedConfig.Version != Argon2Version.Nineteen ||
+                   parsedConfig.MemoryCost != _memoryCost ||
+                   parsedConfig.TimeCost != _timeCost ||
+                   parsedConfig.Lanes != _parallelism;
+        }
+        catch
+        {
+            return true;
+        }
+    }
+
+    private static int ReadPositiveInt(string? rawValue, int fallback, int min, int max)
+    {
+        if (!int.TryParse(rawValue, out var parsed))
+        {
+            return fallback;
+        }
+
+        return Math.Clamp(parsed, min, max);
+    }
+
+    private static int NormalizeMemoryCost(int memoryCost, int lanes)
+    {
+        var minimum = 2 * Argon2.SyncPointCount * lanes;
+        var adjusted = Math.Max(memoryCost, minimum);
+        var segment = Argon2.SyncPointCount * lanes;
+        return adjusted - (adjusted % segment);
     }
 }

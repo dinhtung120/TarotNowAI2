@@ -14,6 +14,7 @@
  *   chống brute-force và side-channel attacks so với bcrypt/PBKDF2.
  */
 
+using Microsoft.Extensions.Configuration;
 using TarotNow.Infrastructure.Security;
 using Xunit; // Added Xunit explicitly based on [Fact] usage
 
@@ -29,7 +30,7 @@ public class Argon2idPasswordHasherTests
 
     public Argon2idPasswordHasherTests()
     {
-        _hasher = new Argon2idPasswordHasher();
+        _hasher = new Argon2idPasswordHasher(CreateConfiguration(memoryKb: 19456, iterations: 2, parallelism: 1));
     }
 
     /// <summary>
@@ -69,5 +70,41 @@ public class Argon2idPasswordHasherTests
         var result = _hasher.VerifyPassword(hash, incorrectPassword);
 
         Assert.False(result); // Phải là false
+    }
+
+    [Fact]
+    public void HashPassword_ShouldUseConfiguredArgon2Policy()
+    {
+        var password = "SecurePassword123!";
+        var hash = _hasher.HashPassword(password);
+
+        Assert.Contains("m=19456", hash);
+        Assert.Contains("t=2", hash);
+        Assert.Contains("p=1", hash);
+    }
+
+    [Fact]
+    public void NeedsRehash_ShouldReturnTrue_WhenPolicyChanges()
+    {
+        var legacyHasher = new Argon2idPasswordHasher(CreateConfiguration(memoryKb: 19456, iterations: 2, parallelism: 1));
+        var strongerHasher = new Argon2idPasswordHasher(CreateConfiguration(memoryKb: 46080, iterations: 2, parallelism: 1));
+        var hash = legacyHasher.HashPassword("SecurePassword123!");
+
+        Assert.False(legacyHasher.NeedsRehash(hash));
+        Assert.True(strongerHasher.NeedsRehash(hash));
+    }
+
+    private static IConfiguration CreateConfiguration(int memoryKb, int iterations, int parallelism)
+    {
+        var settings = new Dictionary<string, string?>
+        {
+            ["Argon2:MemoryKB"] = memoryKb.ToString(),
+            ["Argon2:Iterations"] = iterations.ToString(),
+            ["Argon2:Parallelism"] = parallelism.ToString()
+        };
+
+        return new ConfigurationBuilder()
+            .AddInMemoryCollection(settings)
+            .Build();
     }
 }

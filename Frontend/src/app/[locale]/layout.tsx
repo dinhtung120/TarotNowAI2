@@ -15,11 +15,7 @@ import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 import { cookies } from "next/headers";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
-import AppNavbar from "@/features/auth/presentation/components/AppNavbar";
-import AppAuthSessionManager from "@/features/auth/presentation/components/AppAuthSessionManager";
-import WalletStoreBridge from "@/features/wallet/presentation/components/WalletStoreBridge";
 import ThemeStylesheetManager from "@/shared/components/common/ThemeStylesheetManager";
-import AppQueryProvider from "@/shared/components/common/AppQueryProvider";
 import {
     DEFAULT_THEME,
     getThemeStylesheetHref,
@@ -33,16 +29,19 @@ import "../globals.css";
 const geistSans = Geist({
     variable: "--font-geist-sans",
     subsets: ["latin"],
+    display: "swap",
 });
 
 const geistMono = Geist_Mono({
     variable: "--font-geist-mono",
     subsets: ["latin"],
+    display: "swap",
 });
 
 const playfair = Playfair_Display({
     variable: "--font-playfair",
     subsets: ["latin"],
+    display: "swap",
 });
 
 export async function generateMetadata(
@@ -79,13 +78,8 @@ export default async function RootLayout({
             >
                 <ThemeStylesheetManager initialTheme={initialTheme} />
                 <NextIntlClientProvider messages={messages}>
-                    <AppQueryProvider>
-                        <AppAuthSessionManager />
-                        <WalletStoreBridge />
-                        <AppNavbar />
-                        {children}
-                        <Toaster position="top-right" />
-                    </AppQueryProvider>
+                    {children}
+                    <Toaster position="top-right" />
                 </NextIntlClientProvider>
             </body>
         </html>

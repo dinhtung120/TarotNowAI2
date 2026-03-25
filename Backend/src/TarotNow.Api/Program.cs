@@ -29,6 +29,9 @@ using TarotNow.Application;   // Extension method đăng ký Application service
 using TarotNow.Infrastructure; // Extension method đăng ký Infrastructure services
 using TarotNow.Api.Middlewares; // GlobalExceptionHandler
 using TarotNow.Api.Hubs;       // ChatHub (SignalR)
+using Microsoft.AspNetCore.RateLimiting;
+using System.Globalization;
+using System.Threading.RateLimiting;
 
 /*
  * LOAD FILE .ENV TRƯỚC KHI BUILD CONFIGURATION:
@@ -136,6 +139,39 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
  */
 builder.Services.AddSignalR();
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, token) =>
+    {
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        {
+            var retryAfterSeconds = Math.Max(1, (int)Math.Ceiling(retryAfter.TotalSeconds));
+            context.HttpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString(CultureInfo.InvariantCulture);
+        }
+
+        await context.HttpContext.Response.WriteAsJsonAsync(
+            new
+            {
+                error = "TOO_MANY_REQUESTS",
+                message = "Too many requests. Please try again later."
+            },
+            cancellationToken: token);
+    };
+
+    options.AddPolicy("login", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: ResolveClientIp(httpContext),
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromSeconds(60),
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+});
+
 /*
  * CẤU HÌNH CORS (Cross-Origin Resource Sharing):
  * 
@@ -218,6 +254,7 @@ if (!app.Environment.IsDevelopment())
  * trước khi authentication middleware kịp xử lý.
  */
 app.UseCors();
+app.UseRateLimiter();
 
 /*
  * UseAuthentication(): Xác thực JWT token.
@@ -253,6 +290,21 @@ app.MapControllers();
  * (OnMessageReceived event handler đọc token từ query string).
  */
 app.MapHub<ChatHub>("/api/v1/chat");
+
+static string ResolveClientIp(HttpContext httpContext)
+{
+    var forwardedFor = httpContext.Request.Headers["X-Forwarded-For"].ToString();
+    if (!string.IsNullOrWhiteSpace(forwardedFor))
+    {
+        var first = forwardedFor.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(first))
+        {
+            return first;
+        }
+    }
+
+    return httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+}
 
 /*
  * app.Run(): Khởi động server và bắt đầu lắng nghe HTTP request.

@@ -22,4 +22,7 @@ public interface IPasswordHasher
 
     /// <summary>Kiểm Tra Pass Có Vừa Rửa So Miệng Đúng Kiểu Chuỗi Chữ Xay Trước Đây Hông Mới Mở Cửa Cho Vô DB.</summary>
     bool VerifyPassword(string hash, string providedPassword);
+
+    /// <summary>Cho biết hash hiện tại có cần băm lại theo policy mới không.</summary>
+    bool NeedsRehash(string hash);
 }

@@ -28,6 +28,7 @@
 // Import các thư viện cần thiết
 using MediatR;                 // MediatR: gửi Command/Query đến Handler xử lý
 using Microsoft.AspNetCore.Mvc; // Nền tảng xây dựng API controller
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Configuration; // Đọc cấu hình từ appsettings.json
 
 // Import các Command cho từng use-case xác thực
@@ -131,6 +132,7 @@ public class AuthController : ControllerBase
     ///   4. Access Token được trả về trong response body (client lưu trong memory)
     /// </summary>
     [HttpPost("login")]
+    [EnableRateLimiting("login")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AuthResponse))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)] // Domain Rule violation (invalid criteria)

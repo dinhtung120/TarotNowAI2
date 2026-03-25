@@ -101,6 +101,14 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, (AuthResponse R
             throw new BusinessRuleException("USER_BLOCKED", "Your account is temporarily locked or banned.");
         }
 
+        // Nếu hash cũ không còn khớp policy hiện tại thì băm lại ngay sau lần login thành công.
+        // Cách này giúp nâng cấp dần toàn bộ user mà không cần chạy migration batch.
+        if (_passwordHasher.NeedsRehash(user.PasswordHash))
+        {
+            user.UpdatePassword(_passwordHasher.HashPassword(request.Password));
+            await _userRepository.UpdateAsync(user, cancellationToken);
+        }
+
         // -------------------------------------------------------------
         // BƯỚC 4: Tạo JWT Access Token
         // Token này sẽ chứa {userId, Role, Tên} được ký bí mật HMAC.
