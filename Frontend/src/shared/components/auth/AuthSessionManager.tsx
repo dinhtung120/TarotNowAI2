@@ -8,7 +8,10 @@ import { useAuthStore } from '@/store/authStore';
 import type { ActionResult } from '@/shared/domain/actionResult';
 
 const REFRESH_INTERVAL_MS = 9 * 60 * 1000;
-const FOCUS_REFRESH_THROTTLE_MS = 30 * 1000;
+const MIN_REFRESH_THROTTLE_MS = 5 * 60 * 1000;
+
+// Biến global để chặn gọi liên tục khi component remount do Next.js nhảy Layout
+let globalLastRefreshAt = 0;
 
 export interface AuthSessionManagerProps {
  logout: () => Promise<unknown> | unknown;
@@ -29,7 +32,6 @@ export default function AuthSessionManager({
 
  const logoutInProgressRef = useRef(false);
  const refreshInProgressRef = useRef(false);
- const lastRefreshAtRef = useRef(0);
  const pathnameRef = useRef(pathname);
  const tApiRef = useRef(tApi);
 
@@ -69,7 +71,13 @@ export default function AuthSessionManager({
  const tryRefresh = useCallback(
   async (showToastOnFailure = false) => {
    if (refreshInProgressRef.current || logoutInProgressRef.current) return;
+   
+   // Chặn việc gọi refresh liên tục do re-render hoặc Next.js remount layout
+   const now = Date.now();
+   if (now - globalLastRefreshAt < MIN_REFRESH_THROTTLE_MS) return;
+   
    refreshInProgressRef.current = true;
+   globalLastRefreshAt = Date.now();
 
    try {
     const result = await refreshAccessToken();
@@ -117,11 +125,6 @@ export default function AuthSessionManager({
  useEffect(() => {
   const refreshWhenActive = () => {
    if (!useAuthStore.getState().isAuthenticated) return;
-
-   const now = Date.now();
-   if (now - lastRefreshAtRef.current < FOCUS_REFRESH_THROTTLE_MS) return;
-
-   lastRefreshAtRef.current = now;
    void tryRefresh(false);
   };
 
