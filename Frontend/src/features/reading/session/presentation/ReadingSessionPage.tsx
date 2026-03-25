@@ -333,12 +333,20 @@ export default function ReadingSessionPage() {
  // Calculate when all cards have finished flipping
  const allCardsFlipped = cards.length > 0 && flippedIndex >= cards.length - 1;
 
- return (
- <div className="min-h-dvh tn-text-primary px-4 pb-4 pt-24 md:px-6 md:pb-6 md:pt-24 overflow-x-hidden relative font-sans">
+ // [UI Tinh Chỉnh] - Tối ưu hóa không gian (Padding & Margin):
+  // 1. Navbar Container: Giúp đẩy layout lên tối đa bằng cách giảm padding-top xuống mức pt-12 (mobile/desktop).
+  // 2. Header Container: Loại bỏ gần như bộ đệm margin-bottom (mb-0 / md:mb-1) để tiêu đề sát với thẻ bài nhất.
+  // Yêu cầu: "khoảng cách từ navbar bên trên đến Về trang rút bài bị cách quá xa".
+  // Mục đích của việc điều chỉnh hai thuộc tính CSS Tailwind này là nhằm thu hẹp khoảng cách dư thừa
+  // từ thanh điều hướng (navbar) cố định bên trên xuống khu vực nội dung chính ở phía dưới.
+  // Qua đó bố cục được đẩy lên cao, mang lại trải nghiệm xem liền mạch, gọn gàng và cân đối hơn
+  // cho người dùng trên mọi loại nền tảng.
+  return (
+ <div className="min-h-dvh tn-text-primary px-4 pb-0 pt-8 md:px-6 md:pb-2 md:pt-8 overflow-x-hidden relative font-sans">
  <AstralBackground variant="subtle" particleCount={8} />
  <div className="max-w-[1600px] mx-auto relative z-10 h-full">
  {/* Header - Fixed at top of the layout */}
- <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b tn-border">
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-0 pb-0 border-b tn-border">
  <button
  onClick={() => router.push("/reading")}
  className="flex items-center tn-text-secondary hover:tn-text-primary transition min-h-11 px-2 rounded-xl hover:tn-surface-soft"
