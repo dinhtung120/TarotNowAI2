@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import { useRouter } from '@/i18n/routing';
@@ -74,6 +74,30 @@ export default function ChatRoomPage() {
 
  const [showReport, setShowReport] = useState(false);
  const [showPaymentOffer, setShowPaymentOffer] = useState(false);
+
+ useEffect(() => {
+  const isMobile = window.matchMedia('(max-width: 767px)').matches;
+  if (!isMobile) return;
+
+  const body = document.body;
+  const previousOverflow = body.style.overflow;
+  body.style.overflow = 'hidden';
+
+  const keepViewportStable = () => {
+   const currentY = window.scrollY;
+   window.requestAnimationFrame(() => {
+    window.scrollTo(0, currentY);
+   });
+  };
+
+  const input = document.getElementById('chat-input');
+  input?.addEventListener('focus', keepViewportStable);
+
+  return () => {
+   body.style.overflow = previousOverflow;
+   input?.removeEventListener('focus', keepViewportStable);
+  };
+ }, []);
 
  const handleKeyDown = (event: React.KeyboardEvent) => {
   if (event.key === 'Enter' && !event.shiftKey) {
@@ -246,7 +270,7 @@ export default function ChatRoomPage() {
  );
 
  return (
- <div className="max-w-2xl mx-auto px-3 sm:px-4 md:px-0 pt-4 md:pt-6 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-6 h-full min-h-[32rem] flex flex-col w-full animate-in fade-in ease-out duration-700">
+ <div className="max-w-2xl mx-auto px-3 sm:px-4 md:px-0 pt-3 md:pt-6 pb-2 md:pb-6 h-[calc(100dvh-8rem-env(safe-area-inset-bottom))] md:h-full min-h-[32rem] flex flex-col w-full animate-in fade-in ease-out duration-700">
    <GlassCard className="flex flex-col flex-1 overflow-hidden !p-0 border-white/10 shadow-2xl relative">
     <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 bg-black/40 backdrop-blur-md z-30 shrink-0 relative">
      <div className="flex items-center gap-3 sm:gap-4">
@@ -343,12 +367,16 @@ export default function ChatRoomPage() {
        ref={inputRef}
        id="chat-input"
        type="text"
+       inputMode="text"
+       autoComplete="off"
+       autoCorrect="off"
+       spellCheck={false}
        value={newMessage}
        onChange={(event) => setNewMessage(event.target.value)}
        onKeyDown={handleKeyDown}
        placeholder={t('room.input_placeholder')}
        disabled={!connected}
-       className="flex-1 bg-white/[0.03] border border-white/10 hover:border-white/20 rounded-[1.5rem] px-5 py-4 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--purple-accent)]/50 focus:bg-white/[0.05] transition-all disabled:opacity-50"
+       className="flex-1 bg-white/[0.03] border border-white/10 hover:border-white/20 rounded-[1.5rem] px-5 py-4 text-base md:text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-[var(--purple-accent)]/50 focus:bg-white/[0.05] transition-all disabled:opacity-50"
       />
       <button
        id="chat-send-btn"

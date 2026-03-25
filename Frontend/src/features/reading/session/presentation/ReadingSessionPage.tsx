@@ -346,19 +346,19 @@ export default function ReadingSessionPage() {
  <AstralBackground variant="subtle" particleCount={8} />
  <div className="max-w-[1600px] mx-auto relative z-10 h-full">
  {/* Header - Fixed at top of the layout */}
- <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-0 pb-0 border-b tn-border">
+ <div className="flex items-center justify-between gap-2 mb-0 pb-0 border-b tn-border">
  <button
  onClick={() => router.push("/reading")}
- className="flex items-center tn-text-secondary hover:tn-text-primary transition min-h-11 px-2 rounded-xl hover:tn-surface-soft"
+ className="flex items-center text-xs sm:text-sm tn-text-secondary hover:tn-text-primary transition min-h-11 px-2 rounded-xl hover:tn-surface-soft whitespace-nowrap"
  >
  <ArrowLeft className="w-5 h-5 mr-2" />
  {t("header.back_to_setup")}
  </button>
- <div className="text-right">
- <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-[var(--purple-accent)] to-[var(--warning)] text-transparent bg-clip-text">
+ <div className="text-right shrink-0">
+ <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-[var(--purple-accent)] to-[var(--warning)] text-transparent bg-clip-text whitespace-nowrap">
  {t("header.title")}
  </h1>
- <p className="text-xs tn-text-muted font-mono mt-1">{t("header.session", { id: sessionShort })}</p>
+ <p className="hidden sm:block text-xs tn-text-muted font-mono mt-1">{t("header.session", { id: sessionShort })}</p>
  </div>
  </div>
 
