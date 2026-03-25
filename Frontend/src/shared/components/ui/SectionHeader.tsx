@@ -13,6 +13,7 @@
  */
 
 import { type ReactNode } from "react";
+import { cn } from "@/shared/utils/cn";
 
 interface SectionHeaderProps {
  /** Tag nhỏ phía trên title (ví dụ: "Financial Protocol") */
@@ -57,10 +58,10 @@ export default function SectionHeader({
 }: SectionHeaderProps) {
  return (
  <div
- className={[
+ className={cn(
  "flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6",
  className,
- ].join(" ")}
+ )}
  >
  {/* Phần text bên trái */}
  <div className="space-y-3 max-w-2xl">
@@ -74,10 +75,10 @@ export default function SectionHeader({
 
  {/* Title — heading chính */}
  <h2
- className={[
+ className={cn(
  sizeMap[size],
  "font-black tracking-tighter uppercase italic leading-tight lunar-metallic-text",
- ].join(" ")}
+ )}
  >
  {title}
  {/* Phần muted — màu nhạt hơn, thường italic */}

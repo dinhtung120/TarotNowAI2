@@ -13,6 +13,7 @@ import { Button, GlassCard, SectionHeader } from '@/shared/components/ui';
 import { useRouter } from '@/i18n/routing';
 import { formatCurrency } from '@/shared/utils/format/formatCurrency';
 import { useDepositPage } from '@/features/wallet/application/useDepositPage';
+import { cn } from '@/shared/utils/cn';
 
 export default function DepositPage() {
  const router = useRouter();
@@ -95,12 +96,12 @@ export default function DepositPage() {
          <button
           key={value}
           onClick={() => handleSelectPreset(value)}
-          className={[
+          className={cn(
            'relative p-4 rounded-2xl border transition-all text-left',
            selected
             ? 'tn-panel-strong border-[var(--border-hover)] shadow-[var(--glow-purple-sm)]'
             : 'tn-panel border-[var(--border-subtle)] hover:border-[var(--border-hover)] hover:bg-[var(--bg-surface-hover)]',
-          ].join(' ')}
+          )}
          >
           <div className="text-xs font-black tn-text-primary">{formatVnd(value)}</div>
           <div className="text-[10px] font-bold tn-text-muted mt-1">

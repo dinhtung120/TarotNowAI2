@@ -11,8 +11,9 @@
  * ===================================================================
  */
 
-import { type ReactNode } from "react";
+import { memo, type ReactNode } from "react";
 import { Ghost } from "lucide-react";
+import { cn } from "@/shared/utils/cn";
 
 interface EmptyStateProps {
  /** Icon hiển thị — mặc định Ghost icon */
@@ -30,7 +31,7 @@ interface EmptyStateProps {
  className?: string;
 }
 
-export default function EmptyState({
+function EmptyStateComponent({
  icon,
  title = "",
  message,
@@ -39,10 +40,10 @@ export default function EmptyState({
 }: EmptyStateProps) {
  return (
  <div
- className={[
+ className={cn(
  "flex flex-col items-center justify-center text-center py-20 px-6",
  className,
- ].join(" ")}
+ )}
  >
  {/* Icon — kích thước lớn, opacity thấp → decorative */}
  <div className="mb-6 tn-text-muted">
@@ -68,3 +69,8 @@ export default function EmptyState({
  </div>
  );
 }
+
+const EmptyState = memo(EmptyStateComponent);
+EmptyState.displayName = "EmptyState";
+
+export default EmptyState;

@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
+import { cn } from "@/shared/utils/cn";
 
 /**
  * Cấu trúc menu item.
@@ -141,27 +142,27 @@ export default function UserSidebar() {
  <Link
  key={item.href}
  href={item.href}
- className={[
+ className={cn(
  "group flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 relative overflow-hidden min-h-11",
  active
  ? "bg-[var(--bg-elevated)] text-[var(--text-ink)] border border-[var(--border-hover)] shadow-[var(--glow-purple-sm)]"
  : "text-[var(--text-secondary)] hover:bg-[var(--bg-surface-hover)] hover:text-[var(--text-ink)] border border-transparent",
- ].join(" ")}
+ )}
  >
  <div className="flex items-center gap-3 relative z-10">
  <Icon
- className={[
+ className={cn(
  "w-4 h-4 transition-all duration-300",
  active
  ? "text-[var(--purple-accent)] scale-110"
  : "group-hover:text-[var(--text-ink)]",
- ].join(" ")}
+ )}
  />
 	 <span
- className={[
+ className={cn(
  "text-[11px] uppercase tracking-widest",
  active ? "font-black" : "font-bold",
- ].join(" ")}
+ )}
 	 >
 	 {tNav(item.labelKey)}
 	 </span>

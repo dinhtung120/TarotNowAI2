@@ -1,0 +1,125 @@
+/*
+ * Fallback tokens to avoid unstyled flashes before the theme stylesheet finishes loading.
+ * The selected theme stylesheet will override these values.
+ */
+:root {
+  --bg-void: #0f1221;
+  --bg-surface: #12121a;
+  --bg-elevated: #1e1e2a;
+  --bg-glass: #12121a;
+  --bg-glass-hover: #1e1e2a;
+  --bg-glass-active: #1a2639;
+  --surface-soft: rgba(18, 18, 26, 0.46);
+  --surface-base: rgba(18, 18, 26, 0.72);
+  --surface-strong: rgba(30, 30, 42, 0.86);
+  --overlay-soft: rgba(106, 76, 147, 0.1);
+  --overlay-base: rgba(106, 76, 147, 0.16);
+  --overlay-strong: rgba(10, 10, 14, 0.74);
+  --app-bg: linear-gradient(180deg, #0f1221 0%, #0a0a0e 55%, #0f2e2a 100%);
+  --scrollbar-thumb: rgba(138, 107, 191, 0.28);
+  --scrollbar-thumb-hover: rgba(58, 95, 90, 0.42);
+  --scrollbar-track: transparent;
+  --selection-bg: rgba(138, 107, 191, 0.28);
+  --selection-text: #f8f1e9;
+  --ring-accent: rgba(138, 107, 191, 0.24);
+  --ring-success: rgba(58, 95, 90, 0.24);
+  --ring-warning: rgba(191, 175, 122, 0.22);
+  --ring-danger: rgba(204, 124, 149, 0.22);
+  --ring-input: rgba(168, 168, 194, 0.2);
+  --border-subtle: rgba(138, 107, 191, 0.18);
+  --border-default: rgba(138, 107, 191, 0.3);
+  --border-hover: rgba(58, 95, 90, 0.42);
+  --border-focus: rgba(168, 168, 194, 0.5);
+  --purple-accent: #8a6bbf;
+  --success: #3a5f5a;
+  --warning: #bfaf7a;
+  --danger: #cc7c95;
+  --text-primary: #ede7e3;
+  --text-secondary: #c0c0d0;
+  --text-muted: #8f8fa3;
+  --text-ink: #f8f1e9;
+  --text-inverse: #a8a8c2;
+  --shadow-card: 0 14px 32px rgba(0, 0, 0, 0.55);
+  --theme-border-style: solid;
+  --theme-border-width: 1px;
+  --theme-panel-shadow: var(--shadow-card);
+  --theme-panel-blur: blur(0px);
+  --theme-card-shine: linear-gradient(to top right, rgba(255, 255, 255, 0.05), transparent 72%);
+  --theme-starfield-size: 24px 24px, 30px 30px, 18px 18px, 100% 100%;
+  --theme-motion-scale: 1;
+  --transition-fast: 150ms ease;
+  --grad-lunar: linear-gradient(135deg, rgba(44, 26, 77, 0.84), rgba(26, 38, 57, 0.78), rgba(15, 46, 42, 0.7));
+  --metallic-text-gradient: linear-gradient(115deg, #6a4c93 0%, #8a6bbf 30%, #a8a8c2 55%, #3a5f5a 80%, #bfaf7a 100%);
+  --glow-pulse-from: 0 0 15px rgba(138, 107, 191, 0.18);
+  --glow-pulse-to: 0 0 30px rgba(58, 95, 90, 0.22);
+  --shimmer-bg: linear-gradient(90deg, rgba(106, 76, 147, 0.14) 25%, rgba(168, 168, 194, 0.22) 50%, rgba(58, 95, 90, 0.14) 75%);
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), monospace;
+  --font-serif: var(--font-playfair), Georgia, serif;
+
+  --color-void: var(--bg-void);
+  --color-surface: var(--bg-surface);
+  --color-elevated: var(--bg-elevated);
+  --color-glass: var(--bg-glass);
+  --color-glass-hover: var(--bg-glass-hover);
+
+  --color-accent-purple: var(--purple-accent);
+  --color-accent-amber: var(--amber-accent);
+  --color-accent-mint: var(--mint-accent);
+
+  --color-success: var(--success);
+  --color-error: var(--error);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+}
+
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+}
+
+html {
+  overflow-x: clip;
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--app-bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+::selection {
+  background: var(--selection-bg);
+  color: var(--selection-text);
+}

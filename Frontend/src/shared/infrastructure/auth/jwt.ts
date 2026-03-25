@@ -6,11 +6,13 @@ function base64UrlDecodeToUtf8(base64Url: string): string {
  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
  const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
 
- if (typeof atob === 'function') {
-  return atob(padded);
+ if (typeof atob !== 'function') {
+  throw new Error('Base64 decoder is not available in this runtime');
  }
 
- return Buffer.from(padded, 'base64').toString('utf8');
+ const binary = atob(padded);
+ const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+ return new TextDecoder().decode(bytes);
 }
 
 export function tryDecodeJwtPayload(token: string): JwtPayload | null {

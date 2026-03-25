@@ -12,6 +12,8 @@
  */
 
 import { Loader2 } from "lucide-react";
+import { memo } from "react";
+import { cn } from "@/shared/utils/cn";
 
 type SpinnerSize = "sm" | "md" | "lg";
 
@@ -34,7 +36,7 @@ const sizeMap: Record<SpinnerSize, string> = {
  lg: "w-10 h-10",
 };
 
-export default function LoadingSpinner({
+function LoadingSpinnerComponent({
  size = "md",
  message,
  fullPage = false,
@@ -42,11 +44,11 @@ export default function LoadingSpinner({
 }: LoadingSpinnerProps) {
  return (
  <div
- className={[
+ className={cn(
  "flex flex-col items-center justify-center gap-4",
  fullPage ? "min-h-[60vh]" : "py-12",
  className,
- ].join(" ")}
+ )}
  >
  {/* Spinner icon — màu tím brand, xoay vô hạn */}
  <Loader2
@@ -62,3 +64,8 @@ export default function LoadingSpinner({
  </div>
  );
 }
+
+const LoadingSpinner = memo(LoadingSpinnerComponent);
+LoadingSpinner.displayName = "LoadingSpinner";
+
+export default LoadingSpinner;

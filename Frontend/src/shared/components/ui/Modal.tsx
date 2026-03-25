@@ -19,6 +19,7 @@ import { useEffect, useCallback, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { cn } from "@/shared/utils/cn";
 
 type ModalSize = "sm" | "md" | "lg";
 
@@ -116,7 +117,7 @@ export default function Modal({
  animate-in + zoom-in-95: card xuất hiện với hiệu ứng scale nhẹ.
  bg-surface (không dùng glass) vì modal cần contrast rõ với nền. */}
  <div
- className={[
+ className={cn(
  "relative z-10 w-full",
  sizeStyles[size],
  "bg-[var(--bg-elevated)]",
@@ -124,7 +125,7 @@ export default function Modal({
  "rounded-3xl",
  "shadow-[var(--shadow-elevated)] ring-1 ring-[color:var(--c-224-224-255-60)]",
  "animate-in fade-in zoom-in-95 duration-300",
- ].join(" ")}
+ )}
  >
  {/* === HEADER (nếu có title) === */}
  {(title || showCloseButton) && (

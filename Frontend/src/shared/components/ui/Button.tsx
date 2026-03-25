@@ -16,6 +16,7 @@
 
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { Loader2 } from "lucide-react";
+import { cn } from "@/shared/utils/cn";
 
 /**
  * Các variant và size được thiết kế dựa trên Design System:
@@ -54,45 +55,45 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  * → Đọc nhanh hơn chuỗi if-else dài.
  */
 const variantStyles: Record<ButtonVariant, string> = {
- primary: [
+ primary: cn(
  "bg-[var(--bg-elevated)] text-[var(--text-ink)]",
  "border border-[var(--border-default)]",
  "hover:bg-[var(--bg-surface-hover)] hover:border-[var(--border-hover)]",
  "active:scale-[0.97]",
  "shadow-[var(--shadow-card)]",
  "hover:shadow-[var(--glow-purple-md)]",
- ].join(" "),
+ ),
 
- brand: [
+ brand: cn(
  "bg-gradient-to-r from-[var(--purple-gradient-from)] via-[var(--purple-gradient-via)] to-[var(--purple-gradient-to)]",
  "text-[var(--text-ink)]",
  "border border-[var(--border-hover)]",
  "hover:brightness-105",
  "active:scale-[0.97]",
  "shadow-[var(--glow-purple-sm)] hover:shadow-[var(--glow-purple-lg)]",
- ].join(" "),
+ ),
 
- secondary: [
+ secondary: cn(
  "bg-[var(--bg-glass)]",
  "text-[var(--text-primary)]",
  "border border-[var(--border-default)]",
  "hover:bg-[var(--bg-glass-hover)] hover:border-[var(--border-hover)] hover:shadow-[var(--shadow-card)]",
  "active:scale-[0.97]",
- ].join(" "),
+ ),
 
- ghost: [
+ ghost: cn(
  "bg-transparent",
  "text-[var(--text-secondary)]",
  "hover:text-[var(--text-ink)] hover:bg-[var(--purple-50)]",
- ].join(" "),
+ ),
 
- danger: [
+ danger: cn(
  "bg-[var(--danger)]/10",
  "text-[var(--danger)]",
  "border border-[var(--danger)]/20",
  "hover:bg-[var(--danger)]/20 hover:border-[var(--danger)]/30",
  "active:scale-[0.97]",
- ].join(" "),
+ ),
 };
 
 /**
@@ -128,7 +129,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
  <button
  ref={ref}
  disabled={disabled || isLoading}
- className={[
+ className={cn(
  /* Base — áp dụng cho TẤT CẢ variants */
  "inline-flex items-center justify-center",
  "uppercase",
@@ -143,7 +144,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
  fullWidth ? "w-full" : "",
  /* Custom classes từ parent */
  className,
- ].join(" ")}
+ )}
  {...props}
  >
  {/* Loading spinner thay thế leftIcon khi đang loading */}

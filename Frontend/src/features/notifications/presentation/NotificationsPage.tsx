@@ -20,6 +20,7 @@
  */
 'use client';
 
+import { memo, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import {
   Bell,
@@ -38,6 +39,7 @@ import {
   type NotificationItem,
 } from '@/features/notifications/application/actions';
 import { useNotificationsPage } from '@/features/notifications/application/useNotificationsPage';
+import { cn } from '@/shared/utils/cn';
 
 /*
  * ICON MAP: ánh xạ loại thông báo → icon + màu phù hợp.
@@ -78,6 +80,92 @@ function formatRelativeTime(
   return t('time_days_ago', { count: diffDays });
 }
 
+interface NotificationListItemProps {
+  item: NotificationItem;
+  title: string;
+  body: string;
+  timeLabel: string;
+  markReadLabel: string;
+  onMarkRead: (id: string) => Promise<void>;
+}
+
+const NotificationListItem = memo(function NotificationListItem({
+  item,
+  title,
+  body,
+  timeLabel,
+  markReadLabel,
+  onMarkRead,
+}: NotificationListItemProps) {
+  const typeConfig = typeIconMap[item.type] ?? typeIconMap.system;
+  const Icon = typeConfig.icon;
+
+  return (
+    <GlassCard
+      className={cn(
+        'p-4 transition-all duration-300',
+        !item.isRead
+          ? 'border-l-2 border-l-[var(--purple-accent)]'
+          : 'opacity-70',
+      )}
+    >
+      <div className="flex items-start gap-4">
+        <div
+          className={cn(
+            'w-10 h-10 rounded-xl flex items-center justify-center shrink-0',
+            'bg-[var(--bg-glass)]',
+          )}
+        >
+          <Icon className={`w-5 h-5 ${typeConfig.colorClass}`} />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <h3
+              className={cn(
+                'text-sm leading-tight',
+                !item.isRead
+                  ? 'font-bold tn-text-primary'
+                  : 'font-medium tn-text-secondary',
+              )}
+            >
+              {title}
+            </h3>
+            <span className="text-[10px] font-medium tn-text-muted whitespace-nowrap shrink-0">
+              {timeLabel}
+            </span>
+          </div>
+
+          {body && (
+            <p className="mt-1 text-xs tn-text-secondary leading-relaxed line-clamp-2">
+              {body}
+            </p>
+          )}
+
+          {!item.isRead && (
+            <button
+              onClick={() => void onMarkRead(item.id)}
+              className="mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[var(--purple-muted)] hover:text-[var(--purple-accent)] transition-colors"
+            >
+              <CheckCheck className="w-3.5 h-3.5" />
+              {markReadLabel}
+            </button>
+          )}
+        </div>
+      </div>
+    </GlassCard>
+  );
+}, (prev, next) => (
+  prev.item.id === next.item.id &&
+  prev.item.type === next.item.type &&
+  prev.item.isRead === next.item.isRead &&
+  prev.title === next.title &&
+  prev.body === next.body &&
+  prev.timeLabel === next.timeLabel &&
+  prev.markReadLabel === next.markReadLabel &&
+  prev.onMarkRead === next.onMarkRead
+));
+
 export default function NotificationsPage() {
   const t = useTranslations('Notifications');
   const locale = useLocale();
@@ -97,14 +185,14 @@ export default function NotificationsPage() {
    * Gọi server action → nếu thành công, cập nhật local state (isRead=true)
    * thay vì re-fetch toàn bộ → nhanh hơn, giảm load server.
    */
-  const handleMarkRead = async (id: string) => {
+  const handleMarkRead = useCallback(async (id: string) => {
     const result = await markAsRead(id);
     if (result.success) {
       toast.success(t('mark_read_success'));
     } else {
       toast.error(t('mark_read_fail'));
     }
-  };
+  }, [markAsRead, t]);
 
   /*
    * getLocalizedText: chọn title/body theo locale hiện tại.
@@ -134,23 +222,23 @@ export default function NotificationsPage() {
       <div className="flex gap-2">
         <button
           onClick={() => { setFilterUnread(false); setPage(1); }}
-          className={[
+          className={cn(
             'px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all min-h-11',
             !filterUnread
               ? 'bg-[var(--bg-elevated)] text-[var(--text-ink)] border border-[var(--border-hover)] shadow-[var(--glow-purple-sm)]'
               : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] border border-transparent hover:bg-[var(--bg-surface-hover)]',
-          ].join(' ')}
+          )}
         >
           {t('filter_all')}
         </button>
         <button
           onClick={() => { setFilterUnread(true); setPage(1); }}
-          className={[
+          className={cn(
             'px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all min-h-11',
             filterUnread
               ? 'bg-[var(--bg-elevated)] text-[var(--text-ink)] border border-[var(--border-hover)] shadow-[var(--glow-purple-sm)]'
               : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)] border border-transparent hover:bg-[var(--bg-surface-hover)]',
-          ].join(' ')}
+          )}
         >
           {t('filter_unread')}
         </button>
@@ -190,72 +278,17 @@ export default function NotificationsPage() {
         */}
       {!loading && data && data.items.length > 0 && (
         <div className="space-y-3">
-          {data.items.map((item) => {
-            const typeConfig = typeIconMap[item.type] ?? typeIconMap.system;
-            const Icon = typeConfig.icon;
-            const title = getTitle(item);
-            const body = getBody(item);
-
-            return (
-              <GlassCard
-                key={item.id}
-                className={[
-                  'p-4 transition-all duration-300',
-                  !item.isRead
-                    ? 'border-l-2 border-l-[var(--purple-accent)]'
-                    : 'opacity-70',
-                ].join(' ')}
-              >
-                <div className="flex items-start gap-4">
-                  {/* === Icon === */}
-                  <div
-                    className={[
-                      'w-10 h-10 rounded-xl flex items-center justify-center shrink-0',
-                      'bg-[var(--bg-glass)]',
-                    ].join(' ')}
-                  >
-                    <Icon className={`w-5 h-5 ${typeConfig.colorClass}`} />
-                  </div>
-
-                  {/* === Content === */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3
-                        className={[
-                          'text-sm leading-tight',
-                          !item.isRead
-                            ? 'font-bold tn-text-primary'
-                            : 'font-medium tn-text-secondary',
-                        ].join(' ')}
-                      >
-                        {title}
-                      </h3>
-                      <span className="text-[10px] font-medium tn-text-muted whitespace-nowrap shrink-0">
-                        {formatRelativeTime(item.createdAt, t)}
-                      </span>
-                    </div>
-
-                    {body && (
-                      <p className="mt-1 text-xs tn-text-secondary leading-relaxed line-clamp-2">
-                        {body}
-                      </p>
-                    )}
-
-                    {/* === Mark as read button (chỉ hiện khi chưa đọc) === */}
-                    {!item.isRead && (
-                      <button
-                        onClick={() => handleMarkRead(item.id)}
-                        className="mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[var(--purple-muted)] hover:text-[var(--purple-accent)] transition-colors"
-                      >
-                        <CheckCheck className="w-3.5 h-3.5" />
-                        {t('mark_read')}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </GlassCard>
-            );
-          })}
+          {data.items.map((item) => (
+            <NotificationListItem
+              key={item.id}
+              item={item}
+              title={getTitle(item)}
+              body={getBody(item)}
+              timeLabel={formatRelativeTime(item.createdAt, t)}
+              markReadLabel={t('mark_read')}
+              onMarkRead={handleMarkRead}
+            />
+          ))}
         </div>
       )}
 

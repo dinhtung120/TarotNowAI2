@@ -12,7 +12,8 @@
  * ===================================================================
  */
 
-import { type ReactNode } from "react";
+import { memo, type ReactNode } from "react";
+import { cn } from "@/shared/utils/cn";
 
 type BadgeVariant =
  | "default" /* Zinc — neutral, mặc định */
@@ -60,7 +61,7 @@ const sizeStyles: Record<BadgeSize, string> = {
  md: "px-3 py-1 text-[10px]",
 };
 
-export default function Badge({
+function BadgeComponent({
  variant = "default",
  size = "sm",
  children,
@@ -68,7 +69,7 @@ export default function Badge({
 }: BadgeProps) {
  return (
  <span
- className={[
+ className={cn(
  "inline-flex items-center gap-1",
  "font-black uppercase tracking-wider",
  "border rounded-full",
@@ -76,9 +77,14 @@ export default function Badge({
  variantStyles[variant],
  sizeStyles[size],
  className,
- ].join(" ")}
+ )}
  >
  {children}
  </span>
  );
 }
+
+const Badge = memo(BadgeComponent);
+Badge.displayName = "Badge";
+
+export default Badge;

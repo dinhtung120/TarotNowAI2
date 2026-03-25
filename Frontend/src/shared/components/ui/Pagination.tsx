@@ -16,6 +16,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { cn } from "@/shared/utils/cn";
 
 interface PaginationProps {
  /** Trang hiện tại (1-indexed) */
@@ -50,11 +51,11 @@ export default function Pagination({
 
  return (
  <div
- className={[
+ className={cn(
  "flex flex-col sm:flex-row items-center justify-between gap-3 px-4 sm:px-6 py-4",
  "border-t border-[var(--border-subtle)]",
  className,
- ].join(" ")}
+ )}
 	 >
 	 {/* Text indicator — "Trang X / Y" */}
 	 <span className="text-[9px] font-black uppercase tracking-widest tn-text-muted text-center sm:text-left">

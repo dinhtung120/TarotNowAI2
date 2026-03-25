@@ -12,6 +12,8 @@
  * ===================================================================
  */
 
+import { cn } from "@/shared/utils/cn";
+
 type SkeletonType = "text" | "card" | "avatar" | "row";
 
 interface SkeletonLoaderProps {
@@ -59,7 +61,7 @@ export default function SkeletonLoader({
  {Array.from({ length: count }).map((_, i) => (
  <div
  key={`skeleton-${type}-${i}`}
- className={[
+ className={cn(
  /* Base styling theo type */
  typeStyles[type],
  /* Text type: width ngẫu nhiên. Các type khác: full width */
@@ -68,7 +70,7 @@ export default function SkeletonLoader({
  "animate-shimmer",
  /* Fallback background nếu shimmer chưa load */
  "tn-surface",
- ].join(" ")}
+ )}
  />
  ))}
  </div>

@@ -31,6 +31,7 @@ import MfaChallengeModal from "@/shared/components/auth/MfaChallengeModal";
 import { useRouter } from "@/i18n/routing";
 import { Button, GlassCard, SectionHeader } from "@/shared/components/ui";
 import { useWithdrawPage } from "@/features/wallet/application/useWithdrawPage";
+import { cn } from "@/shared/utils/cn";
 
 export default function WithdrawPage() {
   const router = useRouter();
@@ -254,10 +255,10 @@ export default function WithdrawPage() {
                             </div>
                           </div>
                           <span
-                            className={[
+                            className={cn(
                               "w-fit px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border",
                               badge.className,
-                            ].join(" ")}
+                            )}
                           >
                             {badge.text}
                           </span>

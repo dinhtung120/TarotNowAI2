@@ -21,6 +21,7 @@ import {
  type ReactNode,
  type Ref,
 } from "react";
+import { cn } from "@/shared/utils/cn";
 
 /**
  * Props kế thừa HTML input attributes + custom props.
@@ -74,7 +75,7 @@ type CombinedProps = (InputProps & { isTextarea?: false }) | TextareaProps;
  * - Focus ring tím-mint nhẹ
  * - Border radius = --radius-md (16px)
  */
-const baseInputStyles = [
+const baseInputStyles = cn(
  "w-full",
  "tn-field",
  "tn-field-accent",
@@ -83,7 +84,7 @@ const baseInputStyles = [
  "min-h-11",
  "text-sm",
  "disabled:opacity-50 disabled:cursor-not-allowed",
-].join(" ");
+);
 
 /**
  * Component Input sử dụng forwardRef để tương thích với React Hook Form.
@@ -133,25 +134,25 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, CombinedProps>(
  /* Textarea mode — dùng cho câu hỏi, mô tả, bio */
  <textarea
  ref={textareaRef}
- className={[
+ className={cn(
  baseInputStyles,
  "resize-none min-h-[80px]",
  leftIcon ? "pl-11" : "",
  error ? "border-[var(--danger)]/50 tn-field-danger" : "",
  className,
- ].join(" ")}
+ )}
  {...getTextareaDomProps()}
  />
  ) : (
  /* Input mode — text, email, password, number */
  <input
  ref={inputRef}
- className={[
+ className={cn(
  baseInputStyles,
  leftIcon ? "pl-11" : "",
  error ? "border-[var(--danger)]/50 tn-field-danger" : "",
  className,
- ].join(" ")}
+ )}
  {...(props as InputProps)}
  />
  )}

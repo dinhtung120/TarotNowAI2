@@ -36,6 +36,7 @@ import { useWalletStore } from "@/store/walletStore";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useTranslations } from "next-intl";
+import { cn } from "@/shared/utils/cn";
 
 export interface NavbarProps {
  onLogout?: () => Promise<unknown> | unknown;
@@ -171,12 +172,12 @@ export default function Navbar({ onLogout }: NavbarProps = {}) {
  <Link
  key={link.href}
  href={link.href}
- className={[
+ className={cn(
  "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 min-h-11",
  active
  ? "text-[var(--text-ink)] bg-[var(--bg-elevated)] border border-[var(--border-default)] shadow-[var(--shadow-card)]"
  : "text-[var(--text-secondary)] hover:text-[var(--text-ink)] hover:bg-[var(--purple-50)]",
- ].join(" ")}
+ )}
  >
  <Icon className="w-4 h-4" />
 	 <span className="text-xs font-bold tracking-wide">
@@ -209,12 +210,12 @@ export default function Navbar({ onLogout }: NavbarProps = {}) {
  <div ref={avatarMenuRef} className="relative">
  <button
  onClick={() => setAvatarMenuOpen(!avatarMenuOpen)}
- className={[
+ className={cn(
  "flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl transition-all cursor-pointer min-h-11",
  avatarMenuOpen
  ? "bg-[var(--bg-elevated)] text-[var(--text-ink)] border border-[var(--border-default)] shadow-[var(--shadow-card)]"
  : "bg-[var(--bg-surface-hover)] hover:bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-ink)] border border-[var(--border-subtle)]",
- ].join(" ")}
+ )}
  >
  {/* Avatar circle — chữ cái đầu tên */}
  <div className="w-7 h-7 rounded-full bg-[var(--purple-100)] border border-[var(--border-default)] flex items-center justify-center text-[10px] font-black text-[var(--text-ink)]">
@@ -238,10 +239,10 @@ export default function Navbar({ onLogout }: NavbarProps = {}) {
 	 </div>
 	 </div>
  <ChevronDown
- className={[
+ className={cn(
  "w-3 h-3 hidden lg:block transition-transform duration-200",
  avatarMenuOpen ? "rotate-180" : "",
- ].join(" ")}
+ )}
  />
  </button>
 

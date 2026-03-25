@@ -18,6 +18,7 @@
 import { Link, usePathname } from "@/i18n/routing";
 import { Home, Sparkles, MessageSquare, Wallet, Bell, type LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { cn } from "@/shared/utils/cn";
 
 interface TabItem {
  labelKey: string;
@@ -66,24 +67,24 @@ export default function BottomTabBar() {
  <Link
  key={tab.href}
  href={tab.href}
- className={[
+ className={cn(
  "flex-1 min-w-0 flex flex-col items-center justify-center gap-1 px-1.5 sm:px-3 py-2 rounded-xl transition-all duration-300 min-h-11",
  active
  ? "text-[var(--purple-muted)]"
  : "text-[var(--text-muted)] active:text-[var(--text-secondary)]",
- ].join(" ")}
+ )}
  >
  <Icon
- className={[
+ className={cn(
  "w-5 h-5 transition-transform duration-300",
  active ? "scale-110" : "",
- ].join(" ")}
+ )}
  />
 	 <span
- className={[
+ className={cn(
  "text-[9px] uppercase tracking-wider truncate",
  active ? "font-black" : "font-bold",
- ].join(" ")}
+ )}
 	 >
 	 {t(tab.labelKey)}
 	 </span>

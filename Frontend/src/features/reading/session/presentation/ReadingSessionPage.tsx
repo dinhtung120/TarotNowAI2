@@ -14,14 +14,13 @@
  */
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/routing";
 import { revealReadingSession } from "@/features/reading/application/actions";
 import { TAROT_CARD_COUNT } from "@/shared/domain/tarotData";
 import { Sparkles, ArrowLeft, RefreshCw, Dices } from "lucide-react";
-import AiInterpretationStream from "@/features/reading/presentation/components/AiInterpretationStream";
-import AstralBackground from "@/shared/components/layout/AstralBackground";
 import { useTranslations } from "next-intl";
 import {
  getSessionStorageItem,
@@ -31,6 +30,15 @@ import {
 // Import actions và store để đồng bộ Level/EXP sau khi bốc bài
 import { getProfileAction } from "@/features/profile/public";
 import { useAuthStore } from "@/store/authStore";
+
+const AiInterpretationStream = dynamic(
+ () => import("@/features/reading/presentation/components/AiInterpretationStream"),
+ { loading: () => null },
+);
+const AstralBackground = dynamic(
+ () => import("@/shared/components/layout/AstralBackground"),
+ { ssr: false, loading: () => null },
+);
 
 const SHUFFLE_CARD_COUNT = 9;
 const DECK_WAVE_Y_AMPLITUDE = 6;
@@ -631,11 +639,20 @@ export default function ReadingSessionPage() {
  </div>
  </div>
  <div className="flex-1 overflow-hidden flex flex-col bg-gradient-to-b from-transparent to-[var(--purple-accent)]/5">
- 						<AiInterpretationStream
-							sessionId={sessionId}
-							cards={cards}
-							isReadyToShow={allCardsFlipped}
-						/>
+ <Suspense
+ fallback={
+ <div className="flex flex-1 items-center justify-center gap-3 tn-text-muted">
+ <RefreshCw className="h-4 w-4 animate-spin text-[var(--purple-accent)]" />
+ <span className="text-[10px] font-black uppercase tracking-widest">{tAi("title")}</span>
+ </div>
+ }
+ >
+ <AiInterpretationStream
+ sessionId={sessionId}
+ cards={cards}
+ isReadyToShow={allCardsFlipped}
+ />
+ </Suspense>
  </div>
 
  {/* Bottom decorative area */}

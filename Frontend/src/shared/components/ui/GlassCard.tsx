@@ -12,7 +12,8 @@
  * ===================================================================
  */
 
-import { type HTMLAttributes, type ReactNode } from "react";
+import { memo, type HTMLAttributes, type ReactNode } from "react";
+import { cn } from "@/shared/utils/cn";
 
 type GlassCardVariant = "default" | "elevated" | "interactive";
 
@@ -23,20 +24,20 @@ interface GlassCardProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const variantStyles: Record<GlassCardVariant, string> = {
- default: [
+ default: cn(
  "tn-panel",
  "shadow-[var(--shadow-card)]",
  "",
- ].join(" "),
+ ),
 
- elevated: [
+ elevated: cn(
  "tn-panel-strong",
  "border-[var(--border-hover)]",
  "shadow-[var(--shadow-elevated)]",
  "",
- ].join(" "),
+ ),
 
- interactive: [
+ interactive: cn(
  "tn-panel",
  "shadow-[var(--shadow-card)]",
  "",
@@ -47,7 +48,7 @@ const variantStyles: Record<GlassCardVariant, string> = {
  "hover:shadow-[var(--glow-purple-md)]",
  "hover:-translate-y-1",
  "active:scale-[0.985]",
- ].join(" "),
+ ),
 };
 
 const paddingStyles: Record<string, string> = {
@@ -57,7 +58,7 @@ const paddingStyles: Record<string, string> = {
  lg: "p-8 md:p-10",
 };
 
-export default function GlassCard({
+function GlassCardComponent({
  variant = "default",
  padding = "md",
  children,
@@ -66,15 +67,20 @@ export default function GlassCard({
 }: GlassCardProps) {
  return (
  <div
- className={[
+ className={cn(
  "rounded-3xl overflow-hidden",
  variantStyles[variant],
  paddingStyles[padding],
  className,
- ].join(" ")}
+ )}
  {...props}
  >
  {children}
  </div>
  );
 }
+
+const GlassCard = memo(GlassCardComponent);
+GlassCard.displayName = "GlassCard";
+
+export default GlassCard;

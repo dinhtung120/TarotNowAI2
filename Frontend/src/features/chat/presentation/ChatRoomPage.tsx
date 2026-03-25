@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useCallback, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
@@ -16,12 +17,26 @@ import {
  Check,
  X,
 } from 'lucide-react';
-import ReportModal from '@/features/chat/presentation/components/ReportModal';
-import EscrowPanel from '@/features/chat/presentation/components/EscrowPanel';
-import PaymentOfferModal from '@/features/chat/presentation/components/PaymentOfferModal';
 import { GlassCard } from '@/shared/components/ui';
 import { useChatConnection } from '@/features/chat/application/useChatConnection';
 import { usePaymentOfferActions } from '@/features/chat/application/usePaymentOfferActions';
+
+const ReportModal = dynamic(
+ () => import('@/features/chat/presentation/components/ReportModal'),
+ { loading: () => null },
+);
+const EscrowPanel = dynamic(
+ () => import('@/features/chat/presentation/components/EscrowPanel'),
+ {
+  loading: () => (
+   <div className="h-10 w-16 sm:h-11 sm:w-20 rounded-xl bg-white/5 border border-white/10 animate-pulse" />
+  ),
+ },
+);
+const PaymentOfferModal = dynamic(
+ () => import('@/features/chat/presentation/components/PaymentOfferModal'),
+ { loading: () => null },
+);
 
 export default function ChatRoomPage() {
  const params = useParams();
@@ -350,11 +365,11 @@ export default function ChatRoomPage() {
    {showReport && <ReportModal conversationId={conversationId} onClose={() => setShowReport(false)} />}
 
    {showPaymentOffer && (
-   <PaymentOfferModal
-    onClose={() => setShowPaymentOffer(false)}
-    onSubmit={(amount, note) => handleSendPaymentOffer(amount, note)}
-   />
-  )}
+    <PaymentOfferModal
+     onClose={() => setShowPaymentOffer(false)}
+     onSubmit={(amount, note) => handleSendPaymentOffer(amount, note)}
+    />
+   )}
  </div>
  );
 }
