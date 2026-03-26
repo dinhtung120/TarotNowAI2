@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using TarotNow.Infrastructure.Constants;
 using TarotNow.Infrastructure.Options;
 
 namespace TarotNow.Infrastructure;
@@ -59,8 +60,8 @@ public static partial class DependencyInjection
         var cookieToken = context.Request.Cookies["accessToken"];
         var path = context.HttpContext.Request.Path;
 
-        var isChatHub = path.StartsWithSegments("/api/v1/chat");
-        var isAiStream = path.StartsWithSegments("/api/v1/sessions", out var remaining)
+        var isChatHub = path.StartsWithSegments(ApiPathConstants.ChatHub);
+        var isAiStream = path.StartsWithSegments(ApiPathConstants.Sessions, out var remaining)
                          && remaining.HasValue
                          && remaining.Value.EndsWith("/stream", StringComparison.OrdinalIgnoreCase);
 

@@ -38,12 +38,13 @@ using TarotNow.Application.Features.Reading.Commands.InitSession;
 namespace TarotNow.Api.Controllers;
 
 /*
- * [Route("api/v1/reading")]: URL gốc = /api/v1/reading
+ * [Route(ApiRoutes.Reading)]: URL gốc = /api/v1/reading
  * [Authorize]: Tất cả endpoint yêu cầu đăng nhập.
  *   Rút bài cần trừ tiền → phải biết ai đang rút.
  */
 [ApiController]
-[Route("api/v1/reading")]
+[ApiVersion(ApiVersions.V1)]
+[Route(ApiRoutes.Reading)]
 [Authorize] // Bắt buộc đăng nhập
 public class TarotController : ControllerBase
 {

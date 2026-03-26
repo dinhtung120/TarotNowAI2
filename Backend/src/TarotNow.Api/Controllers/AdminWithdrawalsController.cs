@@ -7,7 +7,8 @@ using TarotNow.Api.Extensions;
 namespace TarotNow.Api.Controllers;
 
 [ApiController]
-[Route("api/v1/Admin")]
+[ApiVersion(ApiVersions.V1)]
+[Route(ApiRoutes.Admin)]
 [Authorize(Roles = "admin")]
 public sealed class AdminWithdrawalsController : ControllerBase
 {
@@ -18,6 +19,9 @@ public sealed class AdminWithdrawalsController : ControllerBase
         _mediator = mediator;
     }
 
+    /// <summary>
+    /// Returns pending withdrawal requests for admin queue.
+    /// </summary>
     [HttpGet("withdrawals/queue")]
     public async Task<IActionResult> WithdrawalQueue([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
@@ -32,6 +36,9 @@ public sealed class AdminWithdrawalsController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// Processes a withdrawal request with admin MFA verification.
+    /// </summary>
     [HttpPost("withdrawals/process")]
     public async Task<IActionResult> ProcessWithdrawal([FromBody] ProcessWithdrawalBody body)
     {

@@ -7,7 +7,8 @@ using TarotNow.Api.Extensions;
 namespace TarotNow.Api.Controllers;
 
 [ApiController]
-[Route("api/v1/Admin")]
+[ApiVersion(ApiVersions.V1)]
+[Route(ApiRoutes.Admin)]
 [Authorize(Roles = "admin")]
 public sealed class AdminEscrowController : ControllerBase
 {
@@ -18,6 +19,9 @@ public sealed class AdminEscrowController : ControllerBase
         _mediator = mediator;
     }
 
+    /// <summary>
+    /// Resolves an escrow dispute by releasing funds or refunding to the payer.
+    /// </summary>
     [HttpPost("escrow/resolve-dispute")]
     public async Task<IActionResult> ResolveDispute([FromBody] ResolveDisputeBody body)
     {

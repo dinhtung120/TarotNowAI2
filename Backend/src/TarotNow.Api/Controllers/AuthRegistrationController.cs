@@ -7,7 +7,8 @@ using TarotNow.Application.Features.Auth.Commands.VerifyEmail;
 namespace TarotNow.Api.Controllers;
 
 [ApiController]
-[Route("api/v1/auth")]
+[ApiVersion(ApiVersions.V1)]
+[Route(ApiRoutes.Auth)]
 public sealed class AuthRegistrationController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -17,6 +18,9 @@ public sealed class AuthRegistrationController : ControllerBase
         _mediator = mediator;
     }
 
+    /// <summary>
+    /// Registers a new user account and returns the created identifier.
+    /// </summary>
     [HttpPost("register")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(RegisterResponse))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -34,6 +38,9 @@ public sealed class AuthRegistrationController : ControllerBase
         return CreatedAtAction("GetProfile", "Profile", null, response);
     }
 
+    /// <summary>
+    /// Sends email verification OTP for pending account activation.
+    /// </summary>
     [HttpPost("send-verification-email")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> SendVerificationEmail([FromBody] SendEmailVerificationOtpCommand command)
@@ -42,6 +49,9 @@ public sealed class AuthRegistrationController : ControllerBase
         return Ok(new { message = "If the email is valid and unverified, an OTP has been sent." });
     }
 
+    /// <summary>
+    /// Verifies email ownership using OTP code.
+    /// </summary>
     [HttpPost("verify-email")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

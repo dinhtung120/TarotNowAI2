@@ -22,9 +22,10 @@ public sealed partial class DiagnosticsService
 
     private bool TryReadSeedAdminConfig(out SeedAdminConfig? config)
     {
-        var email = _configuration["Diagnostics:SeedAdmin:Email"]?.Trim();
-        var username = _configuration["Diagnostics:SeedAdmin:Username"]?.Trim();
-        var password = _configuration["Diagnostics:SeedAdmin:Password"];
+        var seedAdmin = _options.SeedAdmin;
+        var email = seedAdmin.Email?.Trim();
+        var username = seedAdmin.Username?.Trim();
+        var password = seedAdmin.Password;
 
         if (string.IsNullOrWhiteSpace(email)
             || string.IsNullOrWhiteSpace(username)

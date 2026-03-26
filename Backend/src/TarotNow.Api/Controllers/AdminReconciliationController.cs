@@ -6,7 +6,8 @@ using TarotNow.Application.Features.Admin.Queries.GetLedgerMismatch;
 namespace TarotNow.Api.Controllers;
 
 [ApiController]
-[Route("api/v1/Admin")]
+[ApiVersion(ApiVersions.V1)]
+[Route(ApiRoutes.Admin)]
 [Authorize(Roles = "admin")]
 public sealed class AdminReconciliationController : ControllerBase
 {
@@ -17,6 +18,9 @@ public sealed class AdminReconciliationController : ControllerBase
         _mediator = mediator;
     }
 
+    /// <summary>
+    /// Returns detected wallet ledger mismatches for reconciliation.
+    /// </summary>
     [HttpGet("reconciliation/wallet")]
     public async Task<IActionResult> GetWalletMismatches()
     {

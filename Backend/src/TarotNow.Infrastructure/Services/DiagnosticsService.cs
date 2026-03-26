@@ -1,9 +1,10 @@
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
+using TarotNow.Infrastructure.Options;
 using TarotNow.Infrastructure.Persistence;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
@@ -14,20 +15,20 @@ public sealed partial class DiagnosticsService : IDiagnosticsService
     private readonly ApplicationDbContext _dbContext;
     private readonly MongoDbContext _mongoContext;
     private readonly IPasswordHasher _passwordHasher;
-    private readonly IConfiguration _configuration;
+    private readonly DiagnosticsOptions _options;
     private readonly ILogger<DiagnosticsService> _logger;
 
     public DiagnosticsService(
         ApplicationDbContext dbContext,
         MongoDbContext mongoContext,
         IPasswordHasher passwordHasher,
-        IConfiguration configuration,
+        IOptions<DiagnosticsOptions> options,
         ILogger<DiagnosticsService> logger)
     {
         _dbContext = dbContext;
         _mongoContext = mongoContext;
         _passwordHasher = passwordHasher;
-        _configuration = configuration;
+        _options = options.Value;
         _logger = logger;
     }
 

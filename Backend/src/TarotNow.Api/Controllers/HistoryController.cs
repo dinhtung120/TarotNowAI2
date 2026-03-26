@@ -35,7 +35,8 @@ namespace TarotNow.Api.Controllers;
  *   Lịch sử đọc bài là dữ liệu CÁ NHÂN → không cho phép xem nếu chưa đăng nhập.
  */
 [ApiController]
-[Route("api/v1/[controller]")]
+[ApiVersion(ApiVersions.V1)]
+[Route(ApiRoutes.Controller)]
 [Authorize] // Yêu cầu đăng nhập (Header: "Authorization: Bearer <token>")
 public class HistoryController : ControllerBase
 {

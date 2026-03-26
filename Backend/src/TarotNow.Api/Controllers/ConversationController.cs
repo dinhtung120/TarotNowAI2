@@ -49,11 +49,12 @@ namespace TarotNow.Api.Controllers;
 /// - GET /conversations/{id}/messages: Lịch sử chat.
 /// </summary>
 /*
- * [Route("api/v1/conversations")]: URL gốc cho tất cả endpoint trong controller.
+ * [Route(ApiRoutes.Conversations)]: URL gốc cho tất cả endpoint trong controller.
  * [Authorize]: Tất cả endpoint yêu cầu đăng nhập (có JWT token hợp lệ).
  */
-[Route("api/v1/conversations")]
+[Route(ApiRoutes.Conversations)]
 [ApiController]
+[ApiVersion(ApiVersions.V1)]
 [Authorize]
 public class ConversationController : ControllerBase
 {

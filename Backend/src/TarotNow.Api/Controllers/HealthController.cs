@@ -35,7 +35,8 @@ namespace TarotNow.Api.Controllers;
  * KHÔNG có [Authorize] ở cấp class → endpoint health check ai cũng gọi được.
  */
 [ApiController]
-[Route("api/v1/[controller]")]
+[ApiVersion(ApiVersions.V1)]
+[Route(ApiRoutes.Controller)]
 public class HealthController : ControllerBase
 {
     /*

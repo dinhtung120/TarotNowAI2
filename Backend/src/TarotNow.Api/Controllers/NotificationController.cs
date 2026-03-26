@@ -40,8 +40,9 @@ namespace TarotNow.Api.Controllers;
 /// Controller xử lý thông báo in-app.
 /// Tất cả endpoint yêu cầu user đã đăng nhập (JWT valid).
 /// </summary>
-[Route("api/v1/[controller]")]
+[Route(ApiRoutes.Controller)]
 [ApiController]
+[ApiVersion(ApiVersions.V1)]
 [Authorize]
 public class NotificationController : ControllerBase
 {

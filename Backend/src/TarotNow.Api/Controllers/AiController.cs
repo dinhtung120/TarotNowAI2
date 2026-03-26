@@ -8,7 +8,8 @@ using TarotNow.Application.Features.Reading.Commands.StreamReading;
 namespace TarotNow.Api.Controllers;
 
 [ApiController]
-[Route("api/v1/sessions")]
+[ApiVersion(ApiVersions.V1)]
+[Route(ApiRoutes.Sessions)]
 [Authorize]
 public partial class AiController : ControllerBase
 {
@@ -26,6 +27,9 @@ public partial class AiController : ControllerBase
         _featureManager = featureManager;
     }
 
+    /// <summary>
+    /// Streams AI response for an existing reading session using Server-Sent Events.
+    /// </summary>
     [HttpGet("{sessionId}/stream")]
     public async Task StreamReading(
         string sessionId,
@@ -33,7 +37,7 @@ public partial class AiController : ControllerBase
         [FromQuery] string? language,
         CancellationToken cancellationToken)
     {
-        if (!await _featureManager.IsEnabledAsync("AiStreamingEnabled"))
+        if (!await _featureManager.IsEnabledAsync(FeatureFlags.AiStreamingEnabled))
         {
             Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
             await WriteServerEventAsync("AI streaming is temporarily disabled by feature flag.", cancellationToken);

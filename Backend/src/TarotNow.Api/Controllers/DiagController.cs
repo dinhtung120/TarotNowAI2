@@ -40,7 +40,8 @@ namespace TarotNow.Api.Controllers;
  *   Ẩn đi vì đây là endpoint nội bộ, không muốn ai biết đến.
  */
 [ApiController]
-[Route("api/v1/[controller]")]
+[ApiVersion(ApiVersions.V1)]
+[Route(ApiRoutes.Controller)]
 [Authorize(Roles = "admin")]
 [ApiExplorerSettings(IgnoreApi = true)] // Ẩn khỏi Swagger - endpoint bí mật
 public class DiagController : ControllerBase

@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using TarotNow.Application.Interfaces;
+using MailKit.Net.Smtp;
 using TarotNow.Infrastructure.Security;
 using TarotNow.Infrastructure.Services;
 using TarotNow.Infrastructure.Services.Ai;
@@ -17,6 +18,7 @@ public static partial class DependencyInjection
         services.AddSingleton<ILegalVersionSettings, LegalVersionSettings>();
         services.AddSingleton<ISystemConfigSettings, SystemConfigSettings>();
 
+        services.AddScoped<ISmtpClient, SmtpClient>();
         services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddScoped<IDomainEventPublisher, MediatRDomainEventPublisher>();
         services.AddSingleton<IRngService, RngService>();

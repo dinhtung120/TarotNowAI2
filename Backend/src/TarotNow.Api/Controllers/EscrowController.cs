@@ -5,8 +5,9 @@ using TarotNow.Api.Extensions;
 
 namespace TarotNow.Api.Controllers;
 
-[Route("api/v1/escrow")]
+[Route(ApiRoutes.Escrow)]
 [ApiController]
+[ApiVersion(ApiVersions.V1)]
 [Authorize]
 public partial class EscrowController : ControllerBase
 {

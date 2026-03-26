@@ -44,12 +44,13 @@ using TarotNow.Application.Features.Deposit.Commands.ProcessDepositWebhook;
 namespace TarotNow.Api.Controllers;
 
 /*
- * [Route("api/v1/deposits")]: URL gốc = /api/v1/deposits
+ * [Route(ApiRoutes.Deposits)]: URL gốc = /api/v1/deposits
  * KHÔNG có [Authorize] ở cấp class vì endpoint webhook cần [AllowAnonymous]
  * (cổng thanh toán gọi webhook mà không có JWT token của user).
  */
-[Route("api/v1/deposits")]
+[Route(ApiRoutes.Deposits)]
 [ApiController]
+[ApiVersion(ApiVersions.V1)]
 public class DepositController : ControllerBase
 {
     /*

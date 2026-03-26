@@ -45,8 +45,9 @@ namespace TarotNow.Api.Controllers;
 ///   - GET /my: reader xem lịch sử rút của mình
 ///   - Admin endpoints: ở AdminController
 /// </summary>
-[Route("api/v1/withdrawal")]
+[Route(ApiRoutes.Withdrawal)]
 [ApiController]
+[ApiVersion(ApiVersions.V1)]
 [Authorize] // Tất cả endpoint đều cần đăng nhập
 public class WithdrawalController : ControllerBase
 {

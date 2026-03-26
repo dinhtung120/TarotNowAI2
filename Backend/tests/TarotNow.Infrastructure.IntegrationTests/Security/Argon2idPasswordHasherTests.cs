@@ -14,7 +14,8 @@
  *   chống brute-force và side-channel attacks so với bcrypt/PBKDF2.
  */
 
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using TarotNow.Infrastructure.Options;
 using TarotNow.Infrastructure.Security;
 using Xunit; // Added Xunit explicitly based on [Fact] usage
 
@@ -30,7 +31,7 @@ public class Argon2idPasswordHasherTests
 
     public Argon2idPasswordHasherTests()
     {
-        _hasher = new Argon2idPasswordHasher(CreateConfiguration(memoryKb: 19456, iterations: 2, parallelism: 1));
+        _hasher = new Argon2idPasswordHasher(CreateOptions(memoryKb: 19456, iterations: 2, parallelism: 1));
     }
 
     /// <summary>
@@ -86,25 +87,23 @@ public class Argon2idPasswordHasherTests
     [Fact]
     public void NeedsRehash_ShouldReturnTrue_WhenPolicyChanges()
     {
-        var legacyHasher = new Argon2idPasswordHasher(CreateConfiguration(memoryKb: 19456, iterations: 2, parallelism: 1));
-        var strongerHasher = new Argon2idPasswordHasher(CreateConfiguration(memoryKb: 46080, iterations: 2, parallelism: 1));
+        var legacyHasher = new Argon2idPasswordHasher(CreateOptions(memoryKb: 19456, iterations: 2, parallelism: 1));
+        var strongerHasher = new Argon2idPasswordHasher(CreateOptions(memoryKb: 46080, iterations: 2, parallelism: 1));
         var hash = legacyHasher.HashPassword("SecurePassword123!");
 
         Assert.False(legacyHasher.NeedsRehash(hash));
         Assert.True(strongerHasher.NeedsRehash(hash));
     }
 
-    private static IConfiguration CreateConfiguration(int memoryKb, int iterations, int parallelism)
+    private static IOptions<Argon2Options> CreateOptions(int memoryKb, int iterations, int parallelism)
     {
-        var settings = new Dictionary<string, string?>
+        var options = new Argon2Options
         {
-            ["Argon2:MemoryKB"] = memoryKb.ToString(),
-            ["Argon2:Iterations"] = iterations.ToString(),
-            ["Argon2:Parallelism"] = parallelism.ToString()
+            MemoryKB = memoryKb,
+            Iterations = iterations,
+            Parallelism = parallelism
         };
 
-        return new ConfigurationBuilder()
-            .AddInMemoryCollection(settings)
-            .Build();
+        return Microsoft.Extensions.Options.Options.Create(options);
     }
 }

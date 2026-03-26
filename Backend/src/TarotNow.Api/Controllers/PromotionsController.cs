@@ -34,12 +34,13 @@ using TarotNow.Application.Features.Promotions.Queries.ListPromotions;
 namespace TarotNow.Api.Controllers;
 
 /*
- * [Route("api/v1/admin/promotions")]: URL nằm trong nhóm /admin/
+ * [Route(ApiRoutes.Admin + "/promotions")]: URL nằm trong nhóm /admin/
  *   vì chỉ admin mới quản lý khuyến mãi.
  * [Authorize(Roles = "admin")]: Bắt buộc có role admin.
  */
-[Route("api/v1/admin/promotions")]
+[Route(ApiRoutes.Admin + "/promotions")]
 [ApiController]
+[ApiVersion(ApiVersions.V1)]
 [Authorize(Roles = "admin")] // Yêu cầu role admin
 public class PromotionsController : ControllerBase
 {

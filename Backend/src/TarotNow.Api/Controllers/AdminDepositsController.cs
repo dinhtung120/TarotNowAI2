@@ -5,7 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace TarotNow.Api.Controllers;
 
 [ApiController]
-[Route("api/v1/Admin")]
+[ApiVersion(ApiVersions.V1)]
+[Route(ApiRoutes.Admin)]
 [Authorize(Roles = "admin")]
 public sealed class AdminDepositsController : ControllerBase
 {
@@ -16,6 +17,9 @@ public sealed class AdminDepositsController : ControllerBase
         _mediator = mediator;
     }
 
+    /// <summary>
+    /// Returns paginated deposit requests for admin backoffice.
+    /// </summary>
     [HttpGet("deposits")]
     public async Task<IActionResult> ListDeposits([FromQuery] TarotNow.Application.Features.Admin.Queries.ListDeposits.ListDepositsQuery query)
     {
@@ -23,6 +27,9 @@ public sealed class AdminDepositsController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// Processes a deposit order by approving or rejecting the request.
+    /// </summary>
     [HttpPatch("deposits/process")]
     public async Task<IActionResult> ProcessDeposit([FromBody] TarotNow.Application.Features.Admin.Commands.ProcessDeposit.ProcessDepositCommand command)
     {

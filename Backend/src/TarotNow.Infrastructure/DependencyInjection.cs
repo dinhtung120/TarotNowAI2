@@ -24,5 +24,10 @@ public static partial class DependencyInjection
         services.Configure<AiProviderOptions>(configuration.GetSection("AiProvider"));
         services.Configure<SystemConfigOptions>(configuration.GetSection("SystemConfig"));
         services.Configure<PaymentGatewayOptions>(configuration.GetSection("PaymentGateway"));
+        services.Configure<Argon2Options>(configuration.GetSection("Argon2"));
+        services.Configure<SecurityOptions>(configuration.GetSection("Security"));
+        services.Configure<SmtpOptions>(configuration.GetSection("Smtp"));
+        services.Configure<LegalSettingsOptions>(configuration.GetSection("LegalSettings"));
+        services.Configure<DiagnosticsOptions>(configuration.GetSection("Diagnostics"));
     }
 }

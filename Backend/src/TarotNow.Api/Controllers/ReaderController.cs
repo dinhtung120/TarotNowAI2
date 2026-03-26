@@ -47,8 +47,9 @@ namespace TarotNow.Api.Controllers;
 /// Controller quản lý tính năng Reader — thin controller theo Clean Architecture.
 /// Endpoints có mix giữa public (không cần đăng nhập) và private (cần auth).
 /// </summary>
-[Route("api/v1/reader")]
+[Route(ApiRoutes.Reader)]
 [ApiController]
+[ApiVersion(ApiVersions.V1)]
 public class ReaderController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -214,7 +215,7 @@ public class ReaderController : ControllerBase
     ///
     /// HỖ TRỢ LỌC: specialty (chuyên môn), status (online/offline), search text.
     /// </summary>
-    [HttpGet("/api/v1/readers")] // Route tuyệt đối (override route class-level)
+    [HttpGet(ApiRoutes.ReadersAbsolute)] // Route tuyệt đối (override route class-level)
     public async Task<IActionResult> ListReaders([FromQuery] ListReadersQuery query)
     {
         var result = await _mediator.Send(query);

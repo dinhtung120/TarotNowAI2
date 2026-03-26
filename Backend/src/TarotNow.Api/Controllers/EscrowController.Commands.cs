@@ -9,6 +9,9 @@ namespace TarotNow.Api.Controllers;
 
 public partial class EscrowController
 {
+    /// <summary>
+    /// Accepts reader offer and creates escrow item with frozen funds.
+    /// </summary>
     [HttpPost("accept")]
     public async Task<IActionResult> AcceptOffer([FromBody] AcceptOfferBody body)
     {
@@ -32,6 +35,9 @@ public partial class EscrowController
         return Ok(new { success = true, itemId });
     }
 
+    /// <summary>
+    /// Marks a disputed escrow item as replied by reader.
+    /// </summary>
     [HttpPost("reply")]
     public async Task<IActionResult> ReaderReply([FromBody] ReaderReplyBody body)
     {
@@ -51,6 +57,9 @@ public partial class EscrowController
         return Ok(new { success = true });
     }
 
+    /// <summary>
+    /// Confirms release of escrow funds to reader side.
+    /// </summary>
     [HttpPost("confirm")]
     public async Task<IActionResult> ConfirmRelease([FromBody] ConfirmReleaseBody body)
     {
@@ -70,6 +79,9 @@ public partial class EscrowController
         return Ok(new { success = true });
     }
 
+    /// <summary>
+    /// Opens a dispute for an escrow item within allowed window.
+    /// </summary>
     [HttpPost("dispute")]
     public async Task<IActionResult> OpenDispute([FromBody] OpenDisputeBody body)
     {

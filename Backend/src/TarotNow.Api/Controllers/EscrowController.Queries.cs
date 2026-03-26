@@ -7,6 +7,9 @@ namespace TarotNow.Api.Controllers;
 
 public partial class EscrowController
 {
+    /// <summary>
+    /// Adds follow-up paid question into escrow flow.
+    /// </summary>
     [HttpPost("add-question")]
     public async Task<IActionResult> AddQuestion([FromBody] AddQuestionBody body)
     {
@@ -29,6 +32,9 @@ public partial class EscrowController
         return Ok(new { success = true, itemId });
     }
 
+    /// <summary>
+    /// Returns current escrow status by conversation identifier.
+    /// </summary>
     [HttpGet("{conversationId}")]
     public async Task<IActionResult> GetStatus(string conversationId)
     {

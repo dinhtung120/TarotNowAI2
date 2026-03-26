@@ -37,8 +37,9 @@ namespace TarotNow.Api.Controllers;
  * endpoint public (ví dụ: xem nội dung Điều khoản mà không cần đăng nhập).
  * Các endpoint cần auth đánh dấu [Authorize] riêng.
  */
-[Route("api/v1/legal")]
+[Route(ApiRoutes.Legal)]
 [ApiController]
+[ApiVersion(ApiVersions.V1)]
 public class LegalController : ControllerBase
 {
     private readonly IMediator Mediator;

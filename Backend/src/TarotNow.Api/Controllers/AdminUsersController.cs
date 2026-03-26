@@ -5,7 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace TarotNow.Api.Controllers;
 
 [ApiController]
-[Route("api/v1/Admin")]
+[ApiVersion(ApiVersions.V1)]
+[Route(ApiRoutes.Admin)]
 [Authorize(Roles = "admin")]
 public sealed class AdminUsersController : ControllerBase
 {
@@ -16,6 +17,9 @@ public sealed class AdminUsersController : ControllerBase
         _mediator = mediator;
     }
 
+    /// <summary>
+    /// Returns paginated users for admin management.
+    /// </summary>
     [HttpGet("users")]
     public async Task<IActionResult> ListUsers([FromQuery] TarotNow.Application.Features.Admin.Queries.ListUsers.ListUsersQuery query)
     {
@@ -23,6 +27,9 @@ public sealed class AdminUsersController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// Creates a new user account from admin portal.
+    /// </summary>
     [HttpPost("users")]
     public async Task<IActionResult> CreateUser([FromBody] TarotNow.Application.Features.Admin.Commands.CreateUser.CreateUserCommand command)
     {
@@ -30,6 +37,9 @@ public sealed class AdminUsersController : ControllerBase
         return Ok(new { userId });
     }
 
+    /// <summary>
+    /// Locks or unlocks a user account.
+    /// </summary>
     [HttpPatch("users/lock")]
     public async Task<IActionResult> ToggleUserLock([FromBody] TarotNow.Application.Features.Admin.Commands.ToggleUserLock.ToggleUserLockCommand command)
     {
@@ -37,6 +47,9 @@ public sealed class AdminUsersController : ControllerBase
         return success ? Ok() : BadRequest();
     }
 
+    /// <summary>
+    /// Updates user profile fields and status by user identifier.
+    /// </summary>
     [HttpPut("users/{id}")]
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] TarotNow.Application.Features.Admin.Commands.UpdateUser.UpdateUserCommand command)
     {
@@ -51,6 +64,9 @@ public sealed class AdminUsersController : ControllerBase
         return result ? Ok(new { success = true }) : BadRequest(new { msg = "Không thể cập nhật User." });
     }
 
+    /// <summary>
+    /// Adds balance to a user wallet with idempotency support.
+    /// </summary>
     [HttpPost("users/add-balance")]
     public async Task<IActionResult> AddUserBalance([FromBody] TarotNow.Application.Features.Admin.Commands.AddUserBalance.AddUserBalanceCommand command)
     {

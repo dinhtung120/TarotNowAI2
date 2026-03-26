@@ -10,7 +10,8 @@ using TarotNow.Application.Features.Auth.Commands.RevokeToken;
 namespace TarotNow.Api.Controllers;
 
 [ApiController]
-[Route("api/v1/auth")]
+[ApiVersion(ApiVersions.V1)]
+[Route(ApiRoutes.Auth)]
 public sealed class AuthSessionController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -24,6 +25,9 @@ public sealed class AuthSessionController : ControllerBase
         _cookieService = cookieService;
     }
 
+    /// <summary>
+    /// Authenticates user credentials and issues access/refresh tokens.
+    /// </summary>
     [HttpPost("login")]
     [EnableRateLimiting("login")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AuthResponse))]
@@ -39,6 +43,9 @@ public sealed class AuthSessionController : ControllerBase
         return Ok(result.Response);
     }
 
+    /// <summary>
+    /// Rotates access and refresh tokens using refresh token cookie.
+    /// </summary>
     [HttpPost("refresh")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AuthResponse))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -62,6 +69,9 @@ public sealed class AuthSessionController : ControllerBase
         return Ok(result.Response);
     }
 
+    /// <summary>
+    /// Revokes current session token or all sessions for authenticated user.
+    /// </summary>
     [HttpPost("logout")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Logout([FromQuery] bool revokeAll = false)

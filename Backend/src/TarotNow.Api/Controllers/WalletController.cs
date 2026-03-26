@@ -37,8 +37,9 @@ namespace TarotNow.Api.Controllers;
 /// Controller xử lý các tác vụ liên quan đến Ví người dùng.
 /// Bắt buộc đăng nhập — thông tin ví là dữ liệu nhạy cảm.
 /// </summary>
-[Route("api/v1/[controller]")]
+[Route(ApiRoutes.Controller)]
 [ApiController]
+[ApiVersion(ApiVersions.V1)]
 [Authorize] // Bảo mật: chỉ user đã xác thực mới truy cập
 public class WalletController : ControllerBase
 {

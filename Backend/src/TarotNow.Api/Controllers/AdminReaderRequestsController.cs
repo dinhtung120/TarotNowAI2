@@ -7,7 +7,8 @@ using TarotNow.Api.Extensions;
 namespace TarotNow.Api.Controllers;
 
 [ApiController]
-[Route("api/v1/Admin")]
+[ApiVersion(ApiVersions.V1)]
+[Route(ApiRoutes.Admin)]
 [Authorize(Roles = "admin")]
 public sealed class AdminReaderRequestsController : ControllerBase
 {
@@ -18,6 +19,9 @@ public sealed class AdminReaderRequestsController : ControllerBase
         _mediator = mediator;
     }
 
+    /// <summary>
+    /// Returns reader registration requests for admin moderation queue.
+    /// </summary>
     [HttpGet("reader-requests")]
     public async Task<IActionResult> ListReaderRequests([FromQuery] TarotNow.Application.Features.Admin.Queries.ListReaderRequests.ListReaderRequestsQuery query)
     {
@@ -25,6 +29,9 @@ public sealed class AdminReaderRequestsController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>
+    /// Approves or rejects a reader request and records admin note.
+    /// </summary>
     [HttpPatch("reader-requests/process")]
     public async Task<IActionResult> ProcessReaderRequest([FromBody] ProcessReaderRequestBody body)
     {

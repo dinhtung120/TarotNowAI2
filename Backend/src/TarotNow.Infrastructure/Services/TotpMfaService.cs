@@ -21,11 +21,12 @@
  *   → VerificationWindow(2, 2): chấp nhận mã ±2 time-step (±60s) → tolerance cho đồng hồ lệch.
  */
 
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using OtpNet;
 using System.Security.Cryptography;
 using System.Text;
 using TarotNow.Application.Interfaces;
+using TarotNow.Infrastructure.Options;
 
 namespace TarotNow.Infrastructure.Services;
 
@@ -37,10 +38,10 @@ public class TotpMfaService : IMfaService
     private const string Issuer = "TarotNowAI"; // Tên app hiển thị trong Google Authenticator
     private readonly byte[] _encryptionKey; // AES-256 key (32 bytes)
 
-    public TotpMfaService(IConfiguration configuration)
+    public TotpMfaService(IOptions<SecurityOptions> options)
     {
         // Đọc encryption key từ config — bắt buộc
-        var configuredKey = configuration["Security:MfaEncryptionKey"]?.Trim();
+        var configuredKey = options.Value.MfaEncryptionKey?.Trim();
         if (string.IsNullOrWhiteSpace(configuredKey))
             throw new InvalidOperationException("Missing Security:MfaEncryptionKey configuration.");
 

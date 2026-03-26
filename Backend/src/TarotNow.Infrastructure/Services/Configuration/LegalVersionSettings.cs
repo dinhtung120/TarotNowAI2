@@ -1,15 +1,17 @@
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using TarotNow.Application.Interfaces;
+using TarotNow.Infrastructure.Options;
 
 namespace TarotNow.Infrastructure.Services.Configuration;
 
 public sealed class LegalVersionSettings : ILegalVersionSettings
 {
-    public LegalVersionSettings(IConfiguration configuration)
+    public LegalVersionSettings(IOptions<LegalSettingsOptions> options)
     {
-        TOSVersion = ResolveVersion(configuration["LegalSettings:TOSVersion"]);
-        PrivacyVersion = ResolveVersion(configuration["LegalSettings:PrivacyVersion"]);
-        AiDisclaimerVersion = ResolveVersion(configuration["LegalSettings:AiDisclaimerVersion"]);
+        var configured = options.Value;
+        TOSVersion = ResolveVersion(configured.TOSVersion);
+        PrivacyVersion = ResolveVersion(configured.PrivacyVersion);
+        AiDisclaimerVersion = ResolveVersion(configured.AiDisclaimerVersion);
     }
 
     public string TOSVersion { get; }

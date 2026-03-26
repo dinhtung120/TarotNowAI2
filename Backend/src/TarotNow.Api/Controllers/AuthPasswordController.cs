@@ -6,7 +6,8 @@ using TarotNow.Application.Features.Auth.Commands.ResetPassword;
 namespace TarotNow.Api.Controllers;
 
 [ApiController]
-[Route("api/v1/auth")]
+[ApiVersion(ApiVersions.V1)]
+[Route(ApiRoutes.Auth)]
 public sealed class AuthPasswordController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -16,6 +17,9 @@ public sealed class AuthPasswordController : ControllerBase
         _mediator = mediator;
     }
 
+    /// <summary>
+    /// Sends a password reset OTP to the requested email when account exists.
+    /// </summary>
     [HttpPost("forgot-password")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordCommand command)
@@ -24,6 +28,9 @@ public sealed class AuthPasswordController : ControllerBase
         return Ok(new { message = "If the email exists, a password reset OTP has been sent." });
     }
 
+    /// <summary>
+    /// Resets password using a valid OTP and revokes active sessions.
+    /// </summary>
     [HttpPost("reset-password")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

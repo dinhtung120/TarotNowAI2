@@ -29,11 +29,12 @@ using TarotNow.Application.Features.Profile.Queries.GetProfile;     // Query l�
 namespace TarotNow.Api.Controllers;
 
 /*
- * [Route("api/v1/profile")]: URL gốc = /api/v1/profile
+ * [Route(ApiRoutes.Profile)]: URL gốc = /api/v1/profile
  * KHÔNG dùng [controller] vì tên tường minh hơn (profile thay vì Profile).
  */
-[Route("api/v1/profile")]
+[Route(ApiRoutes.Profile)]
 [ApiController]
+[ApiVersion(ApiVersions.V1)]
 public class ProfileController : ControllerBase
 {
     private readonly IMediator Mediator;

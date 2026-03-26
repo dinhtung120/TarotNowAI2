@@ -1,113 +1,84 @@
-/*
- * FILE: SmtpEmailSender.cs
- * MỤC ĐÍCH: Triển khai IEmailSender gửi thư thông qua chuẩn thư tín SMTP (SMTP Client).
- * 
- * LƯU Ý KHI DÙNG GMAIL:
- * - Để dùng Gmail, bạn KHÔNG ĐƯỢC phép dùng mật khẩu đăng nhập tài khoản.
- * - Bạn phải bật [Bảo mật 2 Lớp (2FA)] trên tải khoản Google. 
- * - Sau đó vào [App passwords / Mật khẩu ứng dụng] sinh ra dãy 16 kí tự. Dùng nó chép vào "appsettings.json".
- */
-
 using MailKit.Net.Smtp;
 using MailKit.Security;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using MimeKit;
 using TarotNow.Application.Interfaces;
+using TarotNow.Infrastructure.Options;
 
 namespace TarotNow.Infrastructure.Services;
 
-/// <summary>
-/// Trình điều khiển gửi Email tiêu chuẩn, ưu tiên sử dụng cấu hình Gmail của Google cho server.
-/// Đặc tả qua thư viện khuyết MailKit thay cho SmtpClient gốc của Microsoft do tính ổn định và không bị block thread.
-/// </summary>
-public class SmtpEmailSender : IEmailSender, IDisposable
+public sealed class SmtpEmailSender : IEmailSender
 {
     private readonly ILogger<SmtpEmailSender> _logger;
-    private readonly string _host;
-    private readonly int _port;
-    private readonly string _username;
-    private readonly string _password;
-    private readonly string _senderEmail;
-    private readonly string _senderName;
-    private readonly SmtpClient _client; // Tái sử dụng TCP connection tiết kiệm chi phí Memory
+    private readonly ISmtpClient _smtpClient;
+    private readonly SmtpOptions _options;
 
-    public SmtpEmailSender(IConfiguration configuration, ILogger<SmtpEmailSender> logger)
+    public SmtpEmailSender(
+        IOptions<SmtpOptions> options,
+        ILogger<SmtpEmailSender> logger,
+        ISmtpClient smtpClient)
     {
+        _options = options.Value;
         _logger = logger;
-        
-        // Cú đẩy cài đặt từ file cấu hình, fallback thành Gmail SMTP.
-        _host = configuration["Smtp:Host"] ?? "smtp.gmail.com";
-        _port = int.TryParse(configuration["Smtp:Port"], out var p) ? p : 587;
-        _username = configuration["Smtp:Username"] ?? "";
-        _password = configuration["Smtp:Password"] ?? "";
-        _senderEmail = configuration["Smtp:SenderEmail"] ?? "no-reply@tarotnow.vn";
-        _senderName = configuration["Smtp:SenderName"] ?? "TarotNow Security";
-
-        if (string.IsNullOrEmpty(_password) || _password.Contains("REPLACE_WITH"))
-        {
-            _logger.LogWarning("Smtp:Password chưa được thiết lập thực tế. Tính năng cấp OTP sẽ văng lỗi Authenticated failed!");
-        }
-
-        _client = new SmtpClient();
+        _smtpClient = smtpClient;
     }
 
-    /// <summary>
-    /// Hàm chính: Gói ghém, phân tích Header / Payload thành cục Tin nhắn MIME. Khởi trệ tiến trình bắn Server.
-    /// </summary>
     public async Task SendEmailAsync(string to, string subject, string body, CancellationToken cancellationToken = default)
     {
+        var smtpConfig = ValidateConfiguration();
+
         try
         {
-            // Bọc thành gói tin chuẩn Mime
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress(_senderName, _senderEmail));
+            message.From.Add(new MailboxAddress(smtpConfig.SenderName, smtpConfig.SenderEmail));
             message.To.Add(MailboxAddress.Parse(to));
             message.Subject = subject;
-            
-            // Format Plaintext, vì OTP không đòi hỏi HTML Render (Có thể đổi sang TextPart("html") dưới này nếu nâng cấp Template).
-            message.Body = new TextPart("plain") 
-            { 
-                Text = body 
-            };
+            message.Body = new TextPart("plain") { Text = body };
 
-            // Nếu cửa Socket SMTP đang đóng băng, ta dùng Secure Socket Opt cho STARTTLS (Bảo mật luồng vận chuyển Email)
-            if (!_client.IsConnected)
+            if (!_smtpClient.IsConnected)
             {
-                await _client.ConnectAsync(_host, _port, SecureSocketOptions.StartTls, cancellationToken);
+                await _smtpClient.ConnectAsync(smtpConfig.Host, smtpConfig.Port, SecureSocketOptions.StartTls, cancellationToken);
             }
 
-            // Chứng thực bản thân bằng tài khoản mật khẩu Mail (Vd: pass 16 số Gmail)
-            if (!_client.IsAuthenticated)
+            if (!_smtpClient.IsAuthenticated)
             {
-                await _client.AuthenticateAsync(_username, _password, cancellationToken);
+                await _smtpClient.AuthenticateAsync(smtpConfig.Username, smtpConfig.Password, cancellationToken);
             }
 
-            // Giao kết tiến trình phát đi
-            await _client.SendAsync(message, cancellationToken);
-            
-            _logger.LogInformation("SMTP MimeKit Info: Đã gửi email thành công tới hòm thư đích {ToEmail}", to);
-            
-            // Note: Để giữ tối ưu Socket Pooling, không _client.Disconnect() ngay lập tức,
-            // để Disconnect ở tầng Dispose() vòng đời Scoped.
+            await _smtpClient.SendAsync(message, cancellationToken);
+            await _smtpClient.DisconnectAsync(true, cancellationToken);
+            _logger.LogInformation("Sent SMTP email to {ToEmail}", to);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Tiến trình gửi SMTP hỏng xé, nguyên nhân dứt gãy tại MailKit: {Message}", ex.Message);
-            throw; // Propagate lỗi thẳng đứng lên Handle để Application xử rớt.
+            _logger.LogError(ex, "Failed to send SMTP email to {ToEmail}", to);
+            throw;
         }
     }
 
-    /// <summary>
-    /// Khi chu kỳ vòng đời HttpRequest tàn tro, framework tự động gọi chày Dispose() giúp xả Socket, đóng đường TCP nhẹ nhõm RAM server.
-    /// </summary>
-    public void Dispose()
+    private SmtpConfig ValidateConfiguration()
     {
-        if (_client.IsConnected)
+        if (string.IsNullOrWhiteSpace(_options.Password) ||
+            _options.Password.Contains("REPLACE_WITH", StringComparison.OrdinalIgnoreCase))
         {
-            _client.Disconnect(true);
+            throw new InvalidOperationException("Smtp:Password is missing or still a placeholder.");
         }
-        _client.Dispose();
-        GC.SuppressFinalize(this);
+
+        var host = string.IsNullOrWhiteSpace(_options.Host) ? "smtp.gmail.com" : _options.Host.Trim();
+        var port = _options.Port > 0 ? _options.Port : 587;
+        var senderEmail = string.IsNullOrWhiteSpace(_options.SenderEmail) ? "no-reply@tarotnow.vn" : _options.SenderEmail.Trim();
+        var senderName = string.IsNullOrWhiteSpace(_options.SenderName) ? "TarotNow Security" : _options.SenderName.Trim();
+        var username = _options.Username?.Trim() ?? string.Empty;
+        var password = _options.Password;
+        return new SmtpConfig(host, port, username, password, senderEmail, senderName);
     }
+
+    private sealed record SmtpConfig(
+        string Host,
+        int Port,
+        string Username,
+        string Password,
+        string SenderEmail,
+        string SenderName);
 }

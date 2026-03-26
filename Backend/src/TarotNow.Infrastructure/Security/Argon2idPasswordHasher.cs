@@ -15,8 +15,9 @@
  */
 
 using Isopoh.Cryptography.Argon2;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using TarotNow.Application.Interfaces;
+using TarotNow.Infrastructure.Options;
 
 namespace TarotNow.Infrastructure.Security;
 
@@ -33,17 +34,17 @@ public class Argon2idPasswordHasher : IPasswordHasher
     private readonly int _timeCost;
     private readonly int _parallelism;
 
-    public Argon2idPasswordHasher(IConfiguration configuration)
+    public Argon2idPasswordHasher(IOptions<Argon2Options> options)
     {
-        var section = configuration.GetSection("Argon2");
+        var configured = options.Value;
 
-        var configuredParallelism = ReadPositiveInt(section["Parallelism"], DefaultParallelism, min: 1, max: 4);
+        var configuredParallelism = ReadPositiveInt(configured.Parallelism, DefaultParallelism, min: 1, max: 4);
         _parallelism = configuredParallelism;
 
-        var configuredMemory = ReadPositiveInt(section["MemoryKB"], DefaultMemoryKb, min: 8 * 1024, max: 1_048_576);
+        var configuredMemory = ReadPositiveInt(configured.MemoryKB, DefaultMemoryKb, min: 8 * 1024, max: 1_048_576);
         _memoryCost = NormalizeMemoryCost(configuredMemory, _parallelism);
 
-        _timeCost = ReadPositiveInt(section["Iterations"], DefaultIterations, min: 1, max: 10);
+        _timeCost = ReadPositiveInt(configured.Iterations, DefaultIterations, min: 1, max: 10);
     }
 
     /// <summary>
@@ -99,14 +100,14 @@ public class Argon2idPasswordHasher : IPasswordHasher
         }
     }
 
-    private static int ReadPositiveInt(string? rawValue, int fallback, int min, int max)
+    private static int ReadPositiveInt(int configuredValue, int fallback, int min, int max)
     {
-        if (!int.TryParse(rawValue, out var parsed))
+        if (configuredValue <= 0)
         {
             return fallback;
         }
 
-        return Math.Clamp(parsed, min, max);
+        return Math.Clamp(configuredValue, min, max);
     }
 
     private static int NormalizeMemoryCost(int memoryCost, int lanes)

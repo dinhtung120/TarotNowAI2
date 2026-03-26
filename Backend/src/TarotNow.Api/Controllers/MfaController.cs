@@ -47,8 +47,9 @@ namespace TarotNow.Api.Controllers;
  * [Authorize]: Tất cả endpoint đều yêu cầu đăng nhập.
  *   Vì MFA gắn liền với tài khoản user → phải biết ai đang gọi.
  */
-[Route("api/v1/[controller]")]
+[Route(ApiRoutes.Controller)]
 [ApiController]
+[ApiVersion(ApiVersions.V1)]
 [Authorize]
 public class MfaController : ControllerBase
 {
