@@ -237,7 +237,7 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete, i
  {/* Inner wrapper removed */}
 
  {/* Scrollable Message Area */}
- <div className="flex-1 overflow-y-auto custom-scrollbar px-3 md:px-6 space-y-6 pt-4 pb-2">
+ <div className="flex-1 overflow-y-auto custom-scrollbar space-y-6 pt-4 pb-2">
  {messages.length === 0 && !error && isStreaming && (
 	 <div className="h-full flex items-center justify-center text-[var(--purple-accent)]/50">
 	 <div className="flex flex-col items-center">
@@ -248,8 +248,8 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete, i
 	 )}
 
  {messages.map((msg) => (
- <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
- <div className={`flex max-w-[95%] md:max-w-[92%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+ <div key={msg.id} className={`flex w-full ${msg.role === 'user' ? 'justify-end px-3 md:px-6' : 'justify-start'}`}>
+ <div className={`flex ${msg.role === 'user' ? 'max-w-[95%] md:max-w-[92%] flex-row-reverse' : 'w-full flex-row'}`}>
 
  {/* 
   * [TINH CHỈNH UI]: Đã xóa icon người dùng (User & AI) theo yêu cầu 
@@ -257,9 +257,9 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete, i
   * Điều này giúp văn bản của AI chiếm được nhiều diện tích hơn (max-w-[95%] ở mobile, 92% ở desktop).
   */}
  {/* Message Bubble */}
- <div className={`px-6 md:px-8 py-5 rounded-3xl ${msg.role === 'user'
- ? 'bg-[var(--warning)]/10 border border-[var(--warning)]/20 rounded-tr-none'
- : 'bg-[var(--purple-accent)]/10 border border-[var(--purple-accent)]/20 rounded-tl-none prose prose-purple max-w-none prose-p:leading-relaxed prose-p:tn-text-secondary prose-headings:font-serif prose-headings:text-[var(--warning)] prose-strong:text-[var(--purple-accent)] prose-strong:font-bold prose-em:tn-text-secondary prose-em:italic prose-li:tn-text-secondary'}`}>
+ <div className={`py-5 ${msg.role === 'user'
+ ? 'px-6 md:px-8 bg-[var(--warning)]/10 border border-[var(--warning)]/20 rounded-3xl rounded-tr-none'
+ : 'w-full px-6 md:px-8 bg-[var(--purple-accent)]/10 border border-[var(--purple-accent)]/20 rounded-3xl rounded-tl-none prose prose-purple max-w-none prose-p:leading-relaxed prose-p:tn-text-secondary prose-headings:font-serif prose-headings:text-[var(--warning)] prose-strong:text-[var(--purple-accent)] prose-strong:font-bold prose-em:tn-text-secondary prose-em:italic prose-li:tn-text-secondary'}`}>
 
  {msg.role === 'user' ? (
  <p className="text-[var(--warning)]">{msg.content}</p>
