@@ -44,13 +44,4 @@ public partial class MongoDbContext
 
     public IMongoCollection<ReaderProfileDocument> ReaderProfiles
         => _database.GetCollection<ReaderProfileDocument>("reader_profiles");
-
-    public IMongoCollection<ConversationDocument> Conversations
-        => _database.GetCollection<ConversationDocument>("conversations");
-
-    public IMongoCollection<ChatMessageDocument> ChatMessages
-        => _database.GetCollection<ChatMessageDocument>("chat_messages");
-
-    public IMongoCollection<ReportDocument> Reports
-        => _database.GetCollection<ReportDocument>("reports");
 }

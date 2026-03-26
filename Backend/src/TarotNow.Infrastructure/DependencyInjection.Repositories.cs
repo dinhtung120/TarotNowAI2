@@ -32,14 +32,9 @@ public static partial class DependencyInjection
         services.AddScoped<INotificationRepository, MongoNotificationRepository>();
         services.AddScoped<IReaderRequestRepository, MongoReaderRequestRepository>();
         services.AddScoped<IReaderProfileRepository, MongoReaderProfileRepository>();
-        services.AddScoped<IConversationRepository, MongoConversationRepository>();
-        services.AddScoped<IChatMessageRepository, MongoChatMessageRepository>();
-        services.AddScoped<IReportRepository, MongoReportRepository>();
+        services.AddScoped<IReaderProfileRepository, MongoReaderProfileRepository>();
 
-        services.AddScoped<IChatFinanceRepository, ChatFinanceRepository>();
         services.AddScoped<IWithdrawalRepository, WithdrawalRepository>();
         services.AddScoped<IMfaService, TotpMfaService>();
-
-        services.AddHostedService<EscrowTimerService>();
     }
 }

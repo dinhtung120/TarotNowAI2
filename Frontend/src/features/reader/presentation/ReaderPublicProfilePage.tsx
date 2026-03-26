@@ -23,7 +23,7 @@ import { useReaderPublicProfilePage } from '@/features/reader/application/useRea
 export default function ReaderProfilePage() {
  const t = useTranslations("Readers");
  const locale = useLocale();
- const { router, profile, loading, startingChat, startConversation } = useReaderPublicProfilePage(t);
+ const { router, profile, loading } = useReaderPublicProfilePage(t);
 
  if (loading) {
  return (
@@ -180,31 +180,6 @@ export default function ReaderProfilePage() {
  </div>
  )}
  </div>
-
- {/* CTA Button */}
-        {/*
-         * [CẬP NHẬT THEO YÊU CẦU]: Cho phép người dùng kết nối qua tin nhắn 
-         * bất kể trạng thái của Reader (ngay cả khi họ offline hoặc không nhận khách).
-         * Nút bắt đầu chat sẽ luôn hiện.
-         */}
-        <Button
-          variant="primary"
- disabled={startingChat}
- onClick={startConversation}
- className="w-full h-16 text-lg tracking-widest shadow-[0_0_30px_var(--c-168-85-247-30)] hover:shadow-[0_0_50px_var(--c-168-85-247-50)] !rounded-2xl"
- >
- {startingChat ? (
- <>
- <Loader2 className="w-5 h-5 animate-spin mr-3" />
- {t("profile.cta_connecting")}
- </>
- ) : (
- <>
- <MessageCircle className="w-5 h-5 mr-3" />
- {t("profile.cta_send_question")}
- </>
- )}
- </Button>
  </div>
  </GlassCard>
 

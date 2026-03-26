@@ -46,10 +46,6 @@ public partial class ApplicationDbContext : DbContext
     public DbSet<DepositOrder> DepositOrders { get; set; } = null!;
     public DbSet<DepositPromotion> DepositPromotions { get; set; } = null!;
 
-    // Phase 2.3 Escrow — Khung Chặn Tiền Cầm Đồ Ví Chat Lấy Kim Cương
-    public DbSet<ChatFinanceSession> ChatFinanceSessions { get; set; } = null!;
-    public DbSet<ChatQuestionItem> ChatQuestionItems { get; set; } = null!;
-
     // Phase 2.4 Withdrawal — Giấy Viết Tờ Đơn Xin Chuyển Tiền Trắng Về ATM
     public DbSet<WithdrawalRequest> WithdrawalRequests { get; set; } = null!;
 

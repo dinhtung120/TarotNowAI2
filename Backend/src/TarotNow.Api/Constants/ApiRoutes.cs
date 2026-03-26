@@ -11,7 +11,6 @@ public static class ApiRoutes
     public const string Sessions = Prefix + "/sessions";
     public const string Escrow = Prefix + "/escrow";
     public const string Deposits = Prefix + "/deposits";
-    public const string Conversations = Prefix + "/conversations";
     public const string Legal = Prefix + "/legal";
     public const string Reader = Prefix + "/reader";
     public const string Reports = Prefix + "/reports";
@@ -19,5 +18,4 @@ public static class ApiRoutes
     public const string Withdrawal = Prefix + "/withdrawal";
 
     public const string ReadersAbsolute = "/" + Prefix + "/readers";
-    public const string ChatHub = "/" + Prefix + "/chat";
 }

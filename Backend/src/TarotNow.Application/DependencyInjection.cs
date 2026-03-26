@@ -35,7 +35,6 @@ using FluentValidation;             // Thư viện validation (kiểm tra dữ l
 using MediatR;                      // Thư viện CQRS mediator pattern
 using Microsoft.Extensions.DependencyInjection; // DI container
 using TarotNow.Application.Interfaces;
-using TarotNow.Application.Services;
 using TarotNow.Domain.Services;
 
 namespace TarotNow.Application;
@@ -94,8 +93,6 @@ public static class DependencyInjection
          *   → chạy validation → nếu lỗi throw → nếu OK cho qua handler.
          */
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
-        services.AddScoped<IEscrowSettlementService, EscrowSettlementService>();
-        services.AddSingleton<FollowupPricingService>();
 
         return services; // Trả về để hỗ trợ method chaining
     }

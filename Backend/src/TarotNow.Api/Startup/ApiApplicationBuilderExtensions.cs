@@ -1,4 +1,3 @@
-using TarotNow.Api.Hubs;
 using TarotNow.Api.Middlewares;
 using TarotNow.Api.Constants;
 
@@ -30,7 +29,6 @@ public static class ApiApplicationBuilderExtensions
         app.UseAuthorization();
 
         app.MapControllers();
-        app.MapHub<ChatHub>(ApiRoutes.ChatHub);
 
         return app;
     }
