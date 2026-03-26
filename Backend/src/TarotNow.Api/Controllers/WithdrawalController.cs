@@ -27,11 +27,12 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 using TarotNow.Application.Features.Withdrawal.Commands.CreateWithdrawal;
 using TarotNow.Application.Features.Withdrawal.Commands.ProcessWithdrawal;
 using TarotNow.Application.Features.Withdrawal.Queries.ListWithdrawals;
+using TarotNow.Api.Contracts.Requests;
+using TarotNow.Api.Extensions;
 
 namespace TarotNow.Api.Controllers;
 
@@ -59,8 +60,7 @@ public class WithdrawalController : ControllerBase
     /// </summary>
     private Guid? GetUserId()
     {
-        var str = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return Guid.TryParse(str, out var id) ? id : null;
+        return User.GetUserIdOrNull();
     }
 
     /// <summary>
@@ -106,7 +106,7 @@ public class WithdrawalController : ControllerBase
     }
 
     /// <summary>
-    /// ENDPOINT: GET /api/v1/withdrawal/my?page=1&pageSize=20
+    /// ENDPOINT: GET /api/v1/withdrawal/my?page=1&amp;pageSize=20
     /// MỤC ĐÍCH: Reader xem lịch sử rút tiền của mình.
     ///
     /// PendingOnly = false nghĩa là lấy TẤT CẢ (pending + approved + rejected).
@@ -131,32 +131,4 @@ public class WithdrawalController : ControllerBase
         var result = await _mediator.Send(query);
         return Ok(result);
     }
-}
-
-// ===================================================================
-// DTO (Request Body)
-// ===================================================================
-
-/// <summary>
-/// DTO cho POST /withdrawal/create - Tạo yêu cầu rút tiền.
-/// </summary>
-public class CreateWithdrawalBody
-{
-    /// <summary>Số diamond muốn rút (tối thiểu 50).</summary>
-    public long AmountDiamond { get; set; }
-
-    /// <summary>Tên ngân hàng. Ví dụ: "Vietcombank", "Techcombank".</summary>
-    public string BankName { get; set; } = string.Empty;
-
-    /// <summary>Tên chủ tài khoản ngân hàng. Phải khớp với tên đăng ký KYC.</summary>
-    public string BankAccountName { get; set; } = string.Empty;
-
-    /// <summary>Số tài khoản ngân hàng.</summary>
-    public string BankAccountNumber { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Mã MFA (TOTP 6 số) để xác thực hành động rút tiền.
-    /// Bắt buộc vì rút tiền là hành động tài chính nhạy cảm.
-    /// </summary>
-    public string MfaCode { get; set; } = string.Empty;
 }

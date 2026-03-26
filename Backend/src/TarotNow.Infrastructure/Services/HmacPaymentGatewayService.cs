@@ -19,8 +19,9 @@
 
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using TarotNow.Application.Interfaces;
+using TarotNow.Infrastructure.Options;
 
 namespace TarotNow.Infrastructure.Services;
 
@@ -31,10 +32,11 @@ public class HmacPaymentGatewayService : IPaymentGatewayService
 {
     private readonly string _secretKey;
 
-    public HmacPaymentGatewayService(IConfiguration configuration)
+    public HmacPaymentGatewayService(IOptions<PaymentGatewayOptions> options)
     {
+        var paymentOptions = options.Value;
         // Đọc secret key từ config — bắt buộc, throw nếu thiếu
-        _secretKey = configuration["PaymentGateway:WebhookSecret"]?.Trim()
+        _secretKey = paymentOptions.WebhookSecret?.Trim()
             ?? throw new InvalidOperationException("Missing PaymentGateway:WebhookSecret configuration.");
 
         // Kiểm tra secret key đủ mạnh: ≥16 ký tự + không phải placeholder

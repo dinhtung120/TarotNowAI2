@@ -18,29 +18,41 @@ namespace TarotNow.Domain.Helpers;
 /// </summary>
 public static class ProfileHelper
 {
+    private const string Capricorn = "Capricorn (Ma Kết)";
+
+    private static readonly (int Boundary, string Zodiac)[] ZodiacBoundaries =
+    [
+        (120, "Aquarius (Bảo Bình)"),
+        (219, "Pisces (Song Ngư)"),
+        (321, "Aries (Bạch Dương)"),
+        (420, "Taurus (Kim Ngưu)"),
+        (521, "Gemini (Song Tử)"),
+        (622, "Cancer (Cự Giải)"),
+        (723, "Leo (Sư Tử)"),
+        (823, "Virgo (Xử Nữ)"),
+        (923, "Libra (Thiên Bình)"),
+        (1024, "Scorpio (Bọ Cạp)"),
+        (1122, "Sagittarius (Nhân Mã)"),
+        (1222, Capricorn)
+    ];
+
     /// <summary>
     /// Nhận Cái Ngày Đẻ (Date Of Birth) Rút Ngược Coi Lọt Khe Nhánh Nào 12 Chòm Sao Cung Hoàng Đạo Tây Học.
     /// </summary>
     public static string CalculateZodiac(DateTime dob)
     {
-        int month = dob.Month;
-        int day = dob.Day;
+        var dayCode = dob.Month * 100 + dob.Day;
 
-        // Bập Vào Tháng Đẻ - Cứa Cột Ngày Giao Thoa Xem Trượt Sang Mép Chòm Mới Chưa.
-        if (month == 1) return day >= 20 ? "Aquarius (Bảo Bình)" : "Capricorn (Ma Kết)";
-        if (month == 2) return day >= 19 ? "Pisces (Song Ngư)" : "Aquarius (Bảo Bình)";
-        if (month == 3) return day >= 21 ? "Aries (Bạch Dương)" : "Pisces (Song Ngư)";
-        if (month == 4) return day >= 20 ? "Taurus (Kim Ngưu)" : "Aries (Bạch Dương)";
-        if (month == 5) return day >= 21 ? "Gemini (Song Tử)" : "Taurus (Kim Ngưu)";
-        if (month == 6) return day >= 22 ? "Cancer (Cự Giải)" : "Gemini (Song Tử)"; 
-        if (month == 7) return day >= 23 ? "Leo (Sư Tử)" : "Cancer (Cự Giải)";
-        if (month == 8) return day >= 23 ? "Virgo (Xử Nữ)" : "Leo (Sư Tử)";
-        if (month == 9) return day >= 23 ? "Libra (Thiên Bình)" : "Virgo (Xử Nữ)";
-        if (month == 10) return day >= 24 ? "Scorpio (Bọ Cạp)" : "Libra (Thiên Bình)";
-        if (month == 11) return day >= 22 ? "Sagittarius (Nhân Mã)" : "Scorpio (Bọ Cạp)";
-        if (month == 12) return day >= 22 ? "Capricorn (Ma Kết)" : "Sagittarius (Nhân Mã)";
+        for (var index = ZodiacBoundaries.Length - 1; index >= 0; index--)
+        {
+            var (boundary, zodiac) = ZodiacBoundaries[index];
+            if (dayCode >= boundary)
+            {
+                return zodiac;
+            }
+        }
 
-        return "Unknown";
+        return Capricorn;
     }
 
     /// <summary>

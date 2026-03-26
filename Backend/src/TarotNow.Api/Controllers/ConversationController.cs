@@ -27,7 +27,8 @@
 using MediatR;                 // MediatR: gửi Command/Query đến Handler
 using Microsoft.AspNetCore.Authorization; // [Authorize] kiểm soát quyền
 using Microsoft.AspNetCore.Mvc; // Nền tảng API controller
-using System.Security.Claims;   // Đọc thông tin user từ JWT
+using TarotNow.Api.Contracts.Requests;
+using TarotNow.Api.Extensions;
 
 // Import các Command/Query cho chat
 using TarotNow.Application.Features.Chat.Commands.CreateConversation;
@@ -80,9 +81,7 @@ public class ConversationController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateConversationBody body)
     {
-        // Lấy userId từ JWT token (giống các controller khác)
-        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         // Tạo command tạo conversation
@@ -98,7 +97,7 @@ public class ConversationController : ControllerBase
     }
 
     /// <summary>
-    /// ENDPOINT: GET /api/v1/conversations?page=1&pageSize=20&role=user
+    /// ENDPOINT: GET /api/v1/conversations?page=1&amp;pageSize=20&amp;role=user
     /// MỤC ĐÍCH: Lấy danh sách conversations (inbox) của người dùng hiện tại.
     ///
     /// HỖ TRỢ CẢ 2 VAI TRÒ:
@@ -118,9 +117,7 @@ public class ConversationController : ControllerBase
         [FromQuery] int pageSize = 20,
         [FromQuery] string role = "user")
     {
-        // Xác thực user từ JWT
-        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         // Tạo query với các tham số phân trang và vai trò
@@ -137,7 +134,7 @@ public class ConversationController : ControllerBase
     }
 
     /// <summary>
-    /// ENDPOINT: GET /api/v1/conversations/{id}/messages?page=1&pageSize=50
+    /// ENDPOINT: GET /api/v1/conversations/{id}/messages?page=1&amp;pageSize=50
     /// MỤC ĐÍCH: Lấy lịch sử tin nhắn trong một cuộc trò chuyện cụ thể.
     ///
     /// THỨ TỰ SẮP XẾP:
@@ -158,9 +155,7 @@ public class ConversationController : ControllerBase
         [FromQuery] int page = 1,        // trang (mặc định 1)
         [FromQuery] int pageSize = 50)   // số tin mỗi trang (mặc định 50, nhiều hơn vì cần ngữ cảnh)
     {
-        // Xác thực user
-        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var query = new ListMessagesQuery
@@ -174,17 +169,4 @@ public class ConversationController : ControllerBase
         var result = await _mediator.Send(query);
         return Ok(result);
     }
-}
-
-/// <summary>
-/// DTO cho endpoint POST /conversations.
-/// Chứa thông tin reader mà user muốn bắt đầu chat.
-/// </summary>
-public class CreateConversationBody
-{
-    /// <summary>
-    /// UUID (Guid) của reader mà user muốn tạo cuộc trò chuyện.
-    /// Client lấy ID này từ danh sách reader trên giao diện.
-    /// </summary>
-    public Guid ReaderId { get; set; }
 }

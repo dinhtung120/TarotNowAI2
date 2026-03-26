@@ -18,7 +18,6 @@
  */
 
 using MongoDB.Driver;
-using MongoDB.Bson;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
@@ -28,7 +27,7 @@ namespace TarotNow.Infrastructure.Persistence.Repositories;
 /// <summary>
 /// Implement IUserCollectionRepository — bộ sưu tập lá bài trong MongoDB.
 /// </summary>
-public class MongoUserCollectionRepository : IUserCollectionRepository
+public partial class MongoUserCollectionRepository : IUserCollectionRepository
 {
     private readonly MongoDbContext _mongoContext;
 
@@ -55,64 +54,9 @@ public class MongoUserCollectionRepository : IUserCollectionRepository
     /// </summary>
     public async Task UpsertCardAsync(Guid userId, int cardId, long expToGain, CancellationToken cancellationToken = default)
     {
-        var userIdStr = userId.ToString();
         var now = DateTime.UtcNow;
-
-        // Filter: tìm document theo userId + cardId (unique index đảm bảo tối đa 1 kết quả)
-        var filter = Builders<UserCollectionDocument>.Filter.Eq(u => u.UserId, userIdStr)
-            & Builders<UserCollectionDocument>.Filter.Eq(u => u.CardId, cardId);
-
-        // ===== Biểu thức tính totalDraws =====
-        // totalDraws = times_drawn_upright + times_drawn_reversed + 1 (lần rút hiện tại)
-        // $ifNull: nếu trường chưa tồn tại (insert lần đầu) → mặc định 0
-        var totalDrawsExpr = new BsonDocument("$add", new BsonArray
-        {
-            new BsonDocument("$ifNull", new BsonArray { "$stats.times_drawn_upright", 0 }),
-            new BsonDocument("$ifNull", new BsonArray { "$stats.times_drawn_reversed", 0 }),
-            1
-        });
-
-        // ===== Biểu thức tính level =====
-        // level = 1 + floor(totalDraws / 5)
-        // Ví dụ: 1 lần rút → level 1, 5 lần → level 2, 10 lần → level 3
-        var levelExpr = new BsonDocument("$add", new BsonArray
-        {
-            1,
-            new BsonDocument("$floor", new BsonDocument("$divide", new BsonArray { totalDrawsExpr, 5 }))
-        });
-
-        // ===== Pipeline update: set tất cả trường trong 1 lệnh =====
-        var updatePipeline = new[]
-        {
-            new BsonDocument("$set", new BsonDocument
-            {
-                { "user_id", userIdStr },
-                { "card_id", cardId },
-                { "is_deleted", false },
-                // created_at: giữ nguyên nếu đã có, set now nếu insert mới
-                { "created_at", new BsonDocument("$ifNull", new BsonArray { "$created_at", now }) },
-                { "updated_at", now },
-                { "last_drawn_at", now },
-                // exp: cộng dồn (exp hiện tại + expToGain)
-                { "exp", new BsonDocument("$add", new BsonArray
-                    {
-                        new BsonDocument("$ifNull", new BsonArray { "$exp", 0 }),
-                        expToGain
-                    })
-                },
-                // times_drawn_upright: +1 mỗi lần rút (mặc định upright)
-                { "stats.times_drawn_upright", new BsonDocument("$add", new BsonArray
-                    {
-                        new BsonDocument("$ifNull", new BsonArray { "$stats.times_drawn_upright", 0 }),
-                        1
-                    })
-                },
-                // level: tính tự động từ totalDraws
-                { "level", levelExpr }
-            })
-        };
-        var pipeline = PipelineDefinition<UserCollectionDocument, UserCollectionDocument>.Create(updatePipeline);
-        var update = new PipelineUpdateDefinition<UserCollectionDocument>(pipeline);
+        var filter = BuildUserCardFilter(userId, cardId);
+        var update = BuildUpsertUpdate(userId, cardId, expToGain, now);
 
         // IsUpsert = true: chưa có → insert, đã có → update
         await _mongoContext.UserCollections.UpdateOneAsync(
@@ -138,28 +82,4 @@ public class MongoUserCollectionRepository : IUserCollectionRepository
         return docs.Select(MapToEntity);
     }
 
-    // ==================== MAPPING ====================
-
-    /// <summary>
-    /// Map MongoDB Document → Domain Entity.
-    /// Parse userId (string → Guid), tính copies từ totalDraws, đảm bảo level ≥ 1.
-    /// Dùng Entity.Rehydrate() factory method — reconstruct entity từ dữ liệu đã lưu.
-    /// </summary>
-    private static UserCollection MapToEntity(UserCollectionDocument doc)
-    {
-        Guid.TryParse(doc.UserId, out var userId);
-        var totalDraws = doc.Stats.TimesDrawnUpright + doc.Stats.TimesDrawnReversed;
-        var copies = Math.Max(totalDraws, 1);   // Tối thiểu 1 copy
-        var level = Math.Max(doc.Level, 1);      // Tối thiểu level 1
-        var exp = Math.Max(doc.Exp, 0);          // Không âm
-        var lastDrawnAt = doc.LastDrawnAt == default ? doc.UpdatedAt : doc.LastDrawnAt;
-
-        return UserCollection.Rehydrate(
-            userId: userId,
-            cardId: doc.CardId,
-            level: level,
-            copies: copies,
-            expGained: exp,
-            lastDrawnAt: lastDrawnAt);
-    }
 }

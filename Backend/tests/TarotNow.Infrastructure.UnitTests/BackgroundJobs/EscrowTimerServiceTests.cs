@@ -20,6 +20,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using System.Reflection;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Services;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 using TarotNow.Infrastructure.BackgroundJobs;
@@ -39,6 +40,7 @@ public class EscrowTimerServiceTests
     private readonly Mock<IWalletRepository> _mockWalletRepo;
     private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
     private readonly Mock<ILogger<EscrowTimerService>> _mockLogger;
+    private readonly IEscrowSettlementService _settlementService;
     private readonly EscrowTimerService _service;
 
     public EscrowTimerServiceTests()
@@ -50,6 +52,7 @@ public class EscrowTimerServiceTests
         _mockWalletRepo = new Mock<IWalletRepository>();
         _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
         _mockLogger = new Mock<ILogger<EscrowTimerService>>();
+        _settlementService = new EscrowSettlementService(_mockFinanceRepo.Object, _mockWalletRepo.Object);
 
         _mockScopeFactory.Setup(x => x.CreateScope()).Returns(_mockScope.Object);
         _mockScope.Setup(x => x.ServiceProvider).Returns(_mockServiceProvider.Object);
@@ -57,6 +60,7 @@ public class EscrowTimerServiceTests
         // Inject các repository giả lập
         _mockServiceProvider.Setup(x => x.GetService(typeof(IChatFinanceRepository))).Returns(_mockFinanceRepo.Object);
         _mockServiceProvider.Setup(x => x.GetService(typeof(IWalletRepository))).Returns(_mockWalletRepo.Object);
+        _mockServiceProvider.Setup(x => x.GetService(typeof(IEscrowSettlementService))).Returns(_settlementService);
         _mockServiceProvider.Setup(x => x.GetService(typeof(ITransactionCoordinator))).Returns(_mockTransactionCoordinator.Object);
         
         // Mock Coordinator để chạy hàm Invoke bình thường thay vì transaction thật

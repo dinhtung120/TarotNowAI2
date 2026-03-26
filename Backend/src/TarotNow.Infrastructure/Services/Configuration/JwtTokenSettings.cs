@@ -1,18 +1,20 @@
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using TarotNow.Application.Interfaces;
+using TarotNow.Infrastructure.Options;
 
 namespace TarotNow.Infrastructure.Services.Configuration;
 
 public sealed class JwtTokenSettings : IJwtTokenSettings
 {
-    public JwtTokenSettings(IConfiguration configuration)
+    public JwtTokenSettings(IOptions<JwtOptions> options)
     {
+        var jwtOptions = options.Value;
         AccessTokenExpiryMinutes = ResolvePositiveInt(
-            configuration["Jwt:ExpiryMinutes"] ?? configuration["Jwt:AccessTokenExpirationMinutes"],
+            jwtOptions.ExpiryMinutes.ToString(),
             fallback: 15);
 
         RefreshTokenExpiryDays = ResolvePositiveInt(
-            configuration["Jwt:RefreshExpiryDays"] ?? configuration["Jwt:RefreshTokenExpirationDays"],
+            jwtOptions.RefreshExpiryDays.ToString(),
             fallback: 7);
     }
 

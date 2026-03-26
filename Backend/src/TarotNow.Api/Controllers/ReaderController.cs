@@ -30,7 +30,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 // Import Command/Query cho Reader
 using TarotNow.Application.Features.Reader.Commands.SubmitReaderRequest;
@@ -39,6 +38,8 @@ using TarotNow.Application.Features.Reader.Commands.UpdateReaderStatus;
 using TarotNow.Application.Features.Reader.Queries.GetMyReaderRequest;
 using TarotNow.Application.Features.Reader.Queries.GetReaderProfile;
 using TarotNow.Application.Features.Reader.Queries.ListReaders;
+using TarotNow.Api.Contracts.Requests;
+using TarotNow.Api.Extensions;
 
 namespace TarotNow.Api.Controllers;
 
@@ -75,9 +76,7 @@ public class ReaderController : ControllerBase
     [Authorize] // Phải đăng nhập
     public async Task<IActionResult> Apply([FromBody] SubmitReaderRequestBody body)
     {
-        // Lấy userId từ JWT claims — không tin request body
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var command = new SubmitReaderRequestCommand
@@ -111,8 +110,7 @@ public class ReaderController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetMyRequest()
     {
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var result = await _mediator.Send(new GetMyReaderRequestQuery { UserId = userId });
@@ -157,8 +155,7 @@ public class ReaderController : ControllerBase
     [Authorize(Roles = "tarot_reader")] // Chỉ reader đã được duyệt
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateReaderProfileBody body)
     {
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var command = new UpdateReaderProfileCommand
@@ -190,8 +187,7 @@ public class ReaderController : ControllerBase
     [Authorize(Roles = "tarot_reader")]
     public async Task<IActionResult> UpdateStatus([FromBody] UpdateReaderStatusBody body)
     {
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var command = new UpdateReaderStatusCommand
@@ -224,54 +220,4 @@ public class ReaderController : ControllerBase
         var result = await _mediator.Send(query);
         return Ok(result);
     }
-}
-
-// ======================================================================
-// CÁC CLASS DTO (Request Bodies)
-// ======================================================================
-// Tách riêng DTO khỏi Command để KHÔNG expose MediatR Command ra API.
-// Lý do: Command có UserId lấy từ JWT, không cho client gửi trực tiếp
-// → Ngăn chặn mass assignment attack (client gửi userId giả).
-// ======================================================================
-
-/// <summary>DTO cho POST /reader/apply - Nộp đơn xin làm Reader.</summary>
-public class SubmitReaderRequestBody
-{
-    /// <summary>Lời giới thiệu bản thân: kinh nghiệm, bằng cấp, chuyên môn.</summary>
-    public string IntroText { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Danh sách URL tài liệu chứng minh (ảnh chứng chỉ, bằng cấp).
-    /// Nullable vì không bắt buộc phải có.
-    /// </summary>
-    public List<string>? ProofDocuments { get; set; }
-}
-
-/// <summary>DTO cho PATCH /reader/profile - Cập nhật hồ sơ Reader.</summary>
-public class UpdateReaderProfileBody
-{
-    /// <summary>Giới thiệu tiếng Việt (nullable = không bắt buộc).</summary>
-    public string? BioVi { get; set; }
-
-    /// <summary>Giới thiệu tiếng Anh.</summary>
-    public string? BioEn { get; set; }
-
-    /// <summary>Giới thiệu tiếng Trung.</summary>
-    public string? BioZh { get; set; }
-
-    /// <summary>Giá cho mỗi câu hỏi (tính bằng diamond). Nullable = không đổi.</summary>
-    public long? DiamondPerQuestion { get; set; }
-
-    /// <summary>
-    /// Danh sách chuyên môn. Ví dụ: ["tình yêu", "sự nghiệp", "tài chính"].
-    /// Nullable = không đổi.
-    /// </summary>
-    public List<string>? Specialties { get; set; }
-}
-
-/// <summary>DTO cho PATCH /reader/status - Đổi trạng thái hoạt động.</summary>
-public class UpdateReaderStatusBody
-{
-    /// <summary>Trạng thái mới: "online" | "offline" | "accepting_questions".</summary>
-    public string Status { get; set; } = string.Empty;
 }

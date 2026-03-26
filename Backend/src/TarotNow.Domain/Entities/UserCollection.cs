@@ -45,20 +45,14 @@ public class UserCollection
     }
 
     /// <summary>Úm Ba La Kép Database Trực Trào Phọt Nguyên Con User Colection Trạng Nhĩ Kéo Form Nổi Phục Cả Level Xịn Lên Gấp Dịch Vụ API.</summary>
-    public static UserCollection Rehydrate(
-        Guid userId,
-        int cardId,
-        int level,
-        int copies,
-        long expGained,
-        DateTime lastDrawnAt)
+    public static UserCollection Rehydrate(UserCollectionSnapshot snapshot)
     {
-        return new UserCollection(userId, cardId)
+        return new UserCollection(snapshot.UserId, snapshot.CardId)
         {
-            Level = level,
-            Copies = copies,
-            ExpGained = expGained,
-            LastDrawnAt = lastDrawnAt
+            Level = snapshot.Level,
+            Copies = snapshot.Copies,
+            ExpGained = snapshot.ExpGained,
+            LastDrawnAt = snapshot.LastDrawnAt
         };
     }
     
@@ -78,4 +72,14 @@ public class UserCollection
             Level += 1;
         }
     }
+}
+
+public sealed class UserCollectionSnapshot
+{
+    public Guid UserId { get; init; }
+    public int CardId { get; init; }
+    public int Level { get; init; }
+    public int Copies { get; init; }
+    public long ExpGained { get; init; }
+    public DateTime LastDrawnAt { get; init; }
 }

@@ -31,9 +31,9 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TarotNow.Application.Features.Reading.Commands.InitSession;
-using System.Security.Claims;
 using System.Threading;
+using TarotNow.Api.Extensions;
+using TarotNow.Application.Features.Reading.Commands.InitSession;
 
 namespace TarotNow.Api.Controllers;
 
@@ -78,8 +78,7 @@ public class TarotController : ControllerBase
         // Gắn UserId từ JWT Token vào command
         // TẠI SAO GÁN TRỰC TIẾP? Vì ở đây command được dũng trực tiếp từ body,
         // chỉ override trường UserId từ JWT (các trường khác client gửi).
-        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(userIdStr, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
         command.UserId = userId; // Override userId bằng JWT (bảo mật)
 
@@ -110,8 +109,7 @@ public class TarotController : ControllerBase
     [HttpPost("reveal")]
     public async Task<IActionResult> RevealCards([FromBody] TarotNow.Application.Features.Reading.Commands.RevealSession.RevealReadingSessionCommand command)
     {
-        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(userIdStr, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
         command.UserId = userId; // Override userId từ JWT
 
@@ -152,8 +150,7 @@ public class TarotController : ControllerBase
     [HttpGet("collection")]
     public async Task<IActionResult> GetCollection()
     {
-        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (!Guid.TryParse(userIdStr, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var result = await _mediator.Send(

@@ -73,7 +73,7 @@ public class AdminReadingDto
     public DateTime CreatedAt { get; set; }
 }
 
-public class GetAllReadingsQueryHandler : IRequestHandler<GetAllReadingsQuery, GetAllReadingsResponse>
+public partial class GetAllReadingsQueryHandler : IRequestHandler<GetAllReadingsQuery, GetAllReadingsResponse>
 {
     private readonly IReadingSessionRepository _readingRepo;
     
@@ -88,89 +88,14 @@ public class GetAllReadingsQueryHandler : IRequestHandler<GetAllReadingsQuery, G
 
     public async Task<GetAllReadingsResponse> Handle(GetAllReadingsQuery request, CancellationToken cancellationToken)
     {
-        List<Guid>? filteredUserIds = null;
-
-        // -----------------------------------------------------------------
-        // BƯỚC 1: XỬ LÝ LỌC THEO TÊN (Cross-Database Search)
-        // Nếu Admin cố tình gõ Tên để tìm, ta phải rẽ vào SQL Server tìm Tên trước, 
-        // Lấy ra đóng Danh sách UUID của những người trùng tên đó.
-        // -----------------------------------------------------------------
-        if (!string.IsNullOrWhiteSpace(request.Username))
+        var filteredUserIds = await ResolveUserFilterAsync(request.Username, cancellationToken);
+        if (filteredUserIds is { Count: 0 })
         {
-            var usernameLower = request.Username.Trim().ToLowerInvariant();
-            var users = await _userRepo.SearchUsersByUsernameAsync(usernameLower, cancellationToken);
-            filteredUserIds = users.Select(u => u.Id).ToList();
-            
-            // Nếu không có mống nào tên này -> Khỏi cần chui vào MongoDB mất công. Trả về mảng rỗng.
-            if (filteredUserIds.Count == 0)
-            {
-                return new GetAllReadingsResponse { Page = request.Page, PageSize = request.PageSize, TotalCount = 0, Items = new List<AdminReadingDto>() };
-            }
+            return BuildEmptyResponse(request);
         }
 
-        // -----------------------------------------------------------------
-        // BƯỚC 2: CÀO DB MÔNG CỔ (MongoDB)
-        // Nhồi đống UUID vừa tìm được (hoặc Null) vào DB NoSQL để lấy Lịch Sử.
-        // -----------------------------------------------------------------
-        var (items, totalCount) = await _readingRepo.GetAllSessionsAsync(
-            request.Page, 
-            request.PageSize, 
-            filteredUserIds?.Select(id => id.ToString()).ToList(),
-            request.SpreadType,
-            request.StartDate,
-            request.EndDate,
-            cancellationToken);
-
-        // -----------------------------------------------------------------
-        // BƯỚC 3: KẾT HỢP DỮ LIỆU ĐỈNH CAO (BATCH MAPPING - GIẢ LẬP JOIN)
-        // Đây là cách tối ưu nhất để tránh lỗi N+1 Query.
-        // Thay vì Vòng lặp For -> 100 Câu SQL tìm Tên.
-        // Ta gom 100 ID lại -> Gọi 1 Câu SQL duy nhất tìm 100 Tên!
-        // -----------------------------------------------------------------
-        var parsedItems = items
-            .Select(s => new
-            {
-                Session = s, // Lịch sử thô nhặt từ Mongo
-                // An toàn: Ép kiểu Chuỗi (Mongo) thành Guid (SQL). Thất bại thì bỏ Null.
-                ParsedUserId = Guid.TryParse(s.UserId, out var guid) ? guid : (Guid?)null
-            })
-            .ToList();
-
-        // Rút trích Tập Vị Tự (Distinct) - Ví dụ 10 dòng đều của User A -> Chỉ lấy cái tên User A đi hỏi DB 1 lần.
-        var userGuids = parsedItems
-            .Where(x => x.ParsedUserId.HasValue)
-            .Select(x => x.ParsedUserId!.Value)
-            .Distinct()
-            .ToList();
-            
-        // Gõ cửa SQL 1 lần duy nhất: Lấy về cuốn Từ Điển [ID: TÊN].
-        var userMap = await _userRepo.GetUsernameMapAsync(userGuids, cancellationToken);
-
-        // Đúc Frame (DTO) để bắn về Frontend. Ráp tên tương ứng theo mã ID.
-        var dtos = parsedItems.Select(x => {
-            var foundUsername = x.ParsedUserId.HasValue && userMap.TryGetValue(x.ParsedUserId.Value, out var uname)
-                ? uname
-                : "Unknown"; // Không có tên thì cho Vô danh.
-            
-            return new AdminReadingDto
-            {
-                Id = x.Session.Id,
-                UserId = x.Session.UserId,
-                Username = foundUsername, // <--- Đây là thành quả.
-                SpreadType = x.Session.SpreadType,
-                Question = x.Session.Question,
-                IsCompleted = x.Session.IsCompleted,
-                CreatedAt = x.Session.CreatedAt
-            };
-        });
-
-        return new GetAllReadingsResponse
-        {
-            Page = request.Page,
-            PageSize = request.PageSize,
-            TotalCount = totalCount,
-            TotalPages = (int)Math.Ceiling(totalCount / (double)request.PageSize),
-            Items = dtos
-        };
+        var (items, totalCount) = await LoadReadingsAsync(request, filteredUserIds, cancellationToken);
+        var dtos = await BuildDtosAsync(items, cancellationToken);
+        return BuildResponse(request, totalCount, dtos);
     }
 }

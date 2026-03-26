@@ -31,6 +31,7 @@ namespace TarotNow.Application.UnitTests.Reading;
 public class InitReadingSessionCommandHandlerTests
 {
     private readonly Mock<IReadingSessionRepository> _repoMock;
+    private readonly Mock<IReadingSessionOrchestrator> _orchestratorMock;
     private readonly Mock<IUserRepository> _userRepoMock;
     private readonly Mock<IRngService> _rngMock;
     private readonly Mock<ISystemConfigSettings> _systemConfigSettingsMock;
@@ -39,6 +40,7 @@ public class InitReadingSessionCommandHandlerTests
     public InitReadingSessionCommandHandlerTests()
     {
         _repoMock = new Mock<IReadingSessionRepository>();
+        _orchestratorMock = new Mock<IReadingSessionOrchestrator>();
         _userRepoMock = new Mock<IUserRepository>();
         _rngMock = new Mock<IRngService>();
         _systemConfigSettingsMock = new Mock<ISystemConfigSettings>();
@@ -48,7 +50,7 @@ public class InitReadingSessionCommandHandlerTests
         _systemConfigSettingsMock.SetupGet(x => x.Spread10DiamondCost).Returns(50);
 
         _handler = new InitReadingSessionCommandHandler(
-            _repoMock.Object, _userRepoMock.Object,
+            _repoMock.Object, _orchestratorMock.Object, _userRepoMock.Object,
             _rngMock.Object, _systemConfigSettingsMock.Object);
     }
 
@@ -77,8 +79,13 @@ public class InitReadingSessionCommandHandlerTests
         typeof(User).GetProperty("Id")?.SetValue(user, request.UserId);
 
         _userRepoMock.Setup(x => x.GetByIdAsync(request.UserId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
-        _repoMock.Setup(x => x.StartPaidSessionAtomicAsync(
-            request.UserId, request.SpreadType, It.IsAny<ReadingSession>(), 50, 0, CancellationToken.None))
+        _orchestratorMock.Setup(x => x.StartPaidSessionAsync(
+            It.Is<StartPaidSessionRequest>(payload =>
+                payload.UserId == request.UserId
+                && payload.SpreadType == request.SpreadType
+                && payload.CostGold == 50
+                && payload.CostDiamond == 0),
+            CancellationToken.None))
             .ReturnsAsync((true, string.Empty));
 
         var result = await _handler.Handle(request, CancellationToken.None);

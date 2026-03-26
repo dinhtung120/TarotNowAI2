@@ -67,7 +67,10 @@ public class CustomWebApplicationFactory<TProgram>
                 ["ConnectionStrings:PostgreSQL"] = postgresConnectionString,
                 ["ConnectionStrings:MongoDB"] = mongoConnectionString,
                 ["PaymentGateway:WebhookSecret"] = "TarotNow_Test_WebhookSecret_2026",
-                ["Security:MfaEncryptionKey"] = "TarotNow_Test_MfaEncryption_2026"
+                ["Security:MfaEncryptionKey"] = "TarotNow_Test_MfaEncryption_2026",
+                ["SystemConfig:DailyAiQuota"] = "3",
+                ["SystemConfig:InFlightAiCap"] = "3",
+                ["SystemConfig:ReadingRateLimitSeconds"] = "1"
             });
         });
         

@@ -42,7 +42,7 @@ public class AddQuestionCommand : IRequest<Guid>
     public string IdempotencyKey { get; set; } = string.Empty;
 }
 
-public class AddQuestionCommandHandler : IRequestHandler<AddQuestionCommand, Guid>
+public partial class AddQuestionCommandHandler : IRequestHandler<AddQuestionCommand, Guid>
 {
     private readonly IChatFinanceRepository _financeRepo;
     private readonly IWalletRepository _walletRepo;
@@ -60,74 +60,13 @@ public class AddQuestionCommandHandler : IRequestHandler<AddQuestionCommand, Gui
 
     public async Task<Guid> Handle(AddQuestionCommand req, CancellationToken ct)
     {
-        var idempotencyKey = req.IdempotencyKey?.Trim();
-        if (string.IsNullOrWhiteSpace(idempotencyKey))
-            throw new BadRequestException("IdempotencyKey là bắt buộc.");
-
-        if (idempotencyKey.Length > 128)
-            throw new BadRequestException("IdempotencyKey quá dài (tối đa 128 ký tự).");
-
-        // 1. Quét khiên chặn Lũy đẳng (Idempotency) - Xem đã thao tác cục tiền này chưa
+        var idempotencyKey = ValidateIdempotencyKey(req.IdempotencyKey);
         var existing = await _financeRepo.GetItemByIdempotencyKeyAsync(idempotencyKey, ct);
-        if (existing != null) return existing.Id;
-
-        Guid createdItemId = Guid.Empty;
-        
-        // 2. ACID Transaction: Bắt đầu giao dịch nguyên tử (Không được đứt gánh giữa chừng)
-        await _transactionCoordinator.ExecuteAsync(async transactionCt =>
+        if (existing != null)
         {
-            // 3. Truy xuất Phiên Giao Dịch Phụ Huynh (Session)
-            var session = await _financeRepo.GetSessionByConversationRefAsync(req.ConversationRef, transactionCt)
-                ?? throw new NotFoundException("Không tìm thấy phiên trò chuyện.");
+            return existing.Id;
+        }
 
-            // Chỉ người Bấm nút Gốc mới có quyền mở mồm hỏi thêm
-            if (session.UserId != req.UserId)
-                throw new BadRequestException("Bạn không phải chủ phiên.");
-
-            // Chỉ khi Box Chat còn Tồn tại / Đang chạy mới được phép bơm thêm tiền
-            if (session.Status != "active" && session.Status != "pending")
-                throw new BadRequestException("Phiên đã kết thúc, không thể thêm câu hỏi.");
-
-            // 4. Ký quỹ Đóng băng tiền trong ví Database
-            await _walletRepo.FreezeAsync(
-                req.UserId, req.AmountDiamond,
-                referenceSource: "chat_question_item",
-                referenceId: idempotencyKey,
-                description: $"Escrow add-question {req.AmountDiamond}💎",
-                idempotencyKey: $"freeze_{idempotencyKey}",
-                cancellationToken: transactionCt);
-
-            var now = DateTime.UtcNow;
-            
-            // 5. Nặn ra hóa đơn con (Lưu là AddQuestion chứ không phải MainQuestion)
-            var item = new ChatQuestionItem
-            {
-                FinanceSessionId = session.Id,
-                ConversationRef = req.ConversationRef,
-                PayerId = req.UserId,
-                ReceiverId = session.ReaderId,
-                Type = QuestionItemType.AddQuestion, // <--- Loại hình câu hỏi Phụ.
-                AmountDiamond = req.AmountDiamond,
-                Status = QuestionItemStatus.Accepted,
-                ProposalMessageRef = req.ProposalMessageRef,
-                AcceptedAt = now,
-                ReaderResponseDueAt = now.AddHours(24),
-                AutoRefundAt = now.AddHours(24),
-                IdempotencyKey = idempotencyKey,
-            };
-            await _financeRepo.AddItemAsync(item, transactionCt);
-
-            // 6. Cập nhật Số tổng cục diện cho Phiên Mẹ (Session)
-            session.TotalFrozen += req.AmountDiamond;
-            await _financeRepo.UpdateSessionAsync(session, transactionCt);
-            
-            // Commit vĩnh viễn
-            await _financeRepo.SaveChangesAsync(transactionCt);
-
-            createdItemId = item.Id;
-            
-        }, ct);
-
-        return createdItemId;
+        return await ExecuteAddQuestionAsync(req, idempotencyKey, ct);
     }
 }

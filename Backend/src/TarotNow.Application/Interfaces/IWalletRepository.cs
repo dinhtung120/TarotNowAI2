@@ -11,6 +11,7 @@
  */
 
 using TarotNow.Domain.Enums;
+using TarotNow.Application.Common;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,8 +24,16 @@ namespace TarotNow.Application.Interfaces;
 /// </summary>
 public interface IWalletRepository
 {
+    Task<WalletOperationResult> CreditWithResultAsync(Guid userId, string currency, string type, long amount,
+        string? referenceSource = null, string? referenceId = null, string? description = null,
+        string? metadataJson = null, string? idempotencyKey = null, CancellationToken cancellationToken = default);
+
     /// <summary>Nạp Phiếu Trắng Cho Vào Ví Khách (Tăng Tiền/Credit).</summary>
     Task CreditAsync(Guid userId, string currency, string type, long amount, 
+        string? referenceSource = null, string? referenceId = null, string? description = null,
+        string? metadataJson = null, string? idempotencyKey = null, CancellationToken cancellationToken = default);
+
+    Task<WalletOperationResult> DebitWithResultAsync(Guid userId, string currency, string type, long amount,
         string? referenceSource = null, string? referenceId = null, string? description = null,
         string? metadataJson = null, string? idempotencyKey = null, CancellationToken cancellationToken = default);
 

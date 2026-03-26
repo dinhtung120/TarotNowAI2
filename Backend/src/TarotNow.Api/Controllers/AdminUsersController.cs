@@ -1,0 +1,65 @@
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace TarotNow.Api.Controllers;
+
+[ApiController]
+[Route("api/v1/Admin")]
+[Authorize(Roles = "admin")]
+public sealed class AdminUsersController : ControllerBase
+{
+    private readonly IMediator _mediator;
+
+    public AdminUsersController(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
+    [HttpGet("users")]
+    public async Task<IActionResult> ListUsers([FromQuery] TarotNow.Application.Features.Admin.Queries.ListUsers.ListUsersQuery query)
+    {
+        var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    [HttpPost("users")]
+    public async Task<IActionResult> CreateUser([FromBody] TarotNow.Application.Features.Admin.Commands.CreateUser.CreateUserCommand command)
+    {
+        var userId = await _mediator.Send(command);
+        return Ok(new { userId });
+    }
+
+    [HttpPatch("users/lock")]
+    public async Task<IActionResult> ToggleUserLock([FromBody] TarotNow.Application.Features.Admin.Commands.ToggleUserLock.ToggleUserLockCommand command)
+    {
+        var success = await _mediator.Send(command);
+        return success ? Ok() : BadRequest();
+    }
+
+    [HttpPut("users/{id}")]
+    public async Task<IActionResult> UpdateUser(Guid id, [FromBody] TarotNow.Application.Features.Admin.Commands.UpdateUser.UpdateUserCommand command)
+    {
+        command.UserId = id;
+        if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
+        {
+            var headerKey = Request.Headers["X-Idempotency-Key"].ToString();
+            command.IdempotencyKey = !string.IsNullOrWhiteSpace(headerKey) ? headerKey : Guid.NewGuid().ToString();
+        }
+
+        var result = await _mediator.Send(command);
+        return result ? Ok(new { success = true }) : BadRequest(new { msg = "Không thể cập nhật User." });
+    }
+
+    [HttpPost("users/add-balance")]
+    public async Task<IActionResult> AddUserBalance([FromBody] TarotNow.Application.Features.Admin.Commands.AddUserBalance.AddUserBalanceCommand command)
+    {
+        if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
+        {
+            command.IdempotencyKey = Request.Headers["X-Idempotency-Key"].ToString();
+        }
+
+        var result = await _mediator.Send(command);
+        return result ? Ok(new { success = true }) : BadRequest(new { msg = "Không thể cộng tiền cho người dùng này." });
+    }
+}

@@ -50,7 +50,7 @@ public class ListConversationsResult
 /// <summary>
 /// Cỗ máy lấy dữ liệu từ NoSQL MongoDB trả về Frontend.
 /// </summary>
-public class ListConversationsQueryHandler : IRequestHandler<ListConversationsQuery, ListConversationsResult>
+public partial class ListConversationsQueryHandler : IRequestHandler<ListConversationsQuery, ListConversationsResult>
 {
     private readonly IConversationRepository _conversationRepo;
     private readonly IUserRepository _userRepo;
@@ -69,63 +69,14 @@ public class ListConversationsQueryHandler : IRequestHandler<ListConversationsQu
     public async Task<ListConversationsResult> Handle(ListConversationsQuery request, CancellationToken cancellationToken)
     {
         var userId = request.UserId.ToString();
-
-        // [CẬP NHẬT THEO YÊU CẦU]: Bỏ rẽ nhánh Role ("user" hoặc "reader"). 
-        // Lấy tất cả các Hộp thoại mà Client là người tham gia (Participant).
-        var result = await _conversationRepo.GetByParticipantIdPaginatedAsync(userId, request.Page, request.PageSize, cancellationToken);
-        var items = result.Items.ToList(); // Ép vật lý (Materialize) ở memory vì result.Items là IEnumerable lười (Lazy Evaluation)
-
-        // Chuẩn bị danh sách ID để kéo tên và ảnh đại diện 1 mẻ duy nhất (Tránh bị N+1 Query vào Database)
-        var uniqueUserIds = new HashSet<Guid>();
-        foreach (var conv in items)
-        {
-            if (Guid.TryParse(conv.UserId, out var uid)) uniqueUserIds.Add(uid);
-            if (Guid.TryParse(conv.ReaderId, out var rid)) uniqueUserIds.Add(rid);
-        }
-
-        if (uniqueUserIds.Count > 0)
-        {
-            // Tra cứu Map thông tin người dùng từ Entity Framework
-            var userMap = await _userRepo.GetUserBasicInfoMapAsync(uniqueUserIds, cancellationToken);
-
-            foreach (var conv in items)
-            {
-                if (Guid.TryParse(conv.UserId, out var uid) && userMap.TryGetValue(uid, out var userInfo))
-                {
-                    conv.UserName = userInfo.DisplayName;
-                    conv.UserAvatar = userInfo.AvatarUrl;
-                }
-                if (Guid.TryParse(conv.ReaderId, out var rid) && userMap.TryGetValue(rid, out var readerInfo))
-                {
-                    conv.ReaderName = readerInfo.DisplayName;
-                    conv.ReaderAvatar = readerInfo.AvatarUrl;
-                }
-            }
-        }
-
-        // [TÍNH NĂNG MỚI]: Bơm thông tin Ví tiền / Ký quỹ vào danh sách hiển thị
-        if (items.Count > 0)
-        {
-            var conversationRefs = items.Select(x => x.Id).ToList();
-            var activeSessions = await _financeRepo.GetSessionsByConversationRefsAsync(conversationRefs, cancellationToken);
-            
-            // Map bằng Dictionary để truy xuất thời gian O(1)
-            var sessionMap = activeSessions.ToDictionary(s => s.ConversationRef);
-
-            foreach (var conv in items)
-            {
-                if (sessionMap.TryGetValue(conv.Id, out var session))
-                {
-                    conv.EscrowTotalFrozen = session.TotalFrozen;
-                    conv.EscrowStatus = session.Status;
-                }
-            }
-        }
+        var (items, totalCount) = await LoadConversationsAsync(userId, request, cancellationToken);
+        await EnrichParticipantProfilesAsync(items, cancellationToken);
+        await EnrichEscrowSummaryAsync(items, cancellationToken);
 
         return new ListConversationsResult
         {
             Conversations = items,
-            TotalCount = result.TotalCount,
+            TotalCount = totalCount,
             CurrentUserId = userId
         };
     }

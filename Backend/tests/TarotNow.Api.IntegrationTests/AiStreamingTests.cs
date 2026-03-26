@@ -52,15 +52,8 @@ public class MockAiProvider : IAiProvider
     public string ProviderName => "Mock-OpenAI";
     public string ModelName => "gpt-mock-mini";
 
-    public Task LogRequestAsync(
-        Guid userId,
-        string? sessionId,
-        string? requestId,
-        int inputTokens,
-        int outputTokens,
-        int latencyMs,
-        string status,
-        string? errorCode = null) => Task.CompletedTask;
+    public Task LogRequestAsync(AiProviderRequestLog logEntry, CancellationToken cancellationToken = default)
+        => Task.CompletedTask;
 
     /// <summary>
     /// Stream 7 chunks text với delay 50ms/chunk (giả lập network latency).
@@ -90,15 +83,8 @@ public class ErrorMockAiProvider : IAiProvider
     public string ProviderName => "ErrorMock-OpenAI";
     public string ModelName => "gpt-error";
 
-    public Task LogRequestAsync(
-        Guid userId,
-        string? sessionId,
-        string? requestId,
-        int inputTokens,
-        int outputTokens,
-        int latencyMs,
-        string status,
-        string? errorCode = null) => Task.CompletedTask;
+    public Task LogRequestAsync(AiProviderRequestLog logEntry, CancellationToken cancellationToken = default)
+        => Task.CompletedTask;
 
     public async IAsyncEnumerable<string> StreamChatAsync(string systemPrompt, string userPrompt, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
@@ -120,15 +106,8 @@ public class PartialMockAiProvider : IAiProvider
     public string ProviderName => "PartialMock-OpenAI";
     public string ModelName => "gpt-partial";
 
-    public Task LogRequestAsync(
-        Guid userId,
-        string? sessionId,
-        string? requestId,
-        int inputTokens,
-        int outputTokens,
-        int latencyMs,
-        string status,
-        string? errorCode = null) => Task.CompletedTask;
+    public Task LogRequestAsync(AiProviderRequestLog logEntry, CancellationToken cancellationToken = default)
+        => Task.CompletedTask;
 
     public async IAsyncEnumerable<string> StreamChatAsync(string systemPrompt, string userPrompt, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
@@ -227,8 +206,20 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         await readingRepo.CreateAsync(session);
 
         // Seed WalletTransaction (ledger entry cho Diamond)
-        var walletTx = WalletTransaction.Create(
-            userId, CurrencyType.Diamond, TransactionType.AdminTopup, 100, 0, 100, "AiRequest", "Seed", "Seed Balance", null, "seed_idempotency_123");
+        var walletTx = WalletTransaction.Create(new WalletTransactionCreateRequest
+        {
+            UserId = userId,
+            Currency = CurrencyType.Diamond,
+            Type = TransactionType.AdminTopup,
+            Amount = 100,
+            BalanceBefore = 0,
+            BalanceAfter = 100,
+            ReferenceSource = "AiRequest",
+            ReferenceId = "Seed",
+            Description = "Seed Balance",
+            MetadataJson = null,
+            IdempotencyKey = "seed_idempotency_123"
+        });
         db.WalletTransactions.Add(walletTx);
         await db.SaveChangesAsync();
 
@@ -486,8 +477,20 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         session.CompleteSession("[1,2,3]");
         await readingRepo.CreateAsync(session);
 
-        var walletTx = WalletTransaction.Create(
-            userId, CurrencyType.Diamond, TransactionType.AdminTopup, 100, 0, 100, "AiRequest", "Seed", "Seed Balance Test4", null, "seed_idempotency_test4");
+        var walletTx = WalletTransaction.Create(new WalletTransactionCreateRequest
+        {
+            UserId = userId,
+            Currency = CurrencyType.Diamond,
+            Type = TransactionType.AdminTopup,
+            Amount = 100,
+            BalanceBefore = 0,
+            BalanceAfter = 100,
+            ReferenceSource = "AiRequest",
+            ReferenceId = "Seed",
+            Description = "Seed Balance Test4",
+            MetadataJson = null,
+            IdempotencyKey = "seed_idempotency_test4"
+        });
         db.WalletTransactions.Add(walletTx);
         await db.SaveChangesAsync();
 
@@ -510,10 +513,10 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         Assert.Null(aiReq.FirstTokenAt); // Chưa nhận được token nào
         Assert.Contains("OpenAI API is down", aiReq.FinishReason ?? "");
 
-        // Ledger: phải có bản ghi refund
+        Assert.Equal(0, aiReq.ChargeDiamond);
+        // Initial stream hiện không freeze tiền, nên không có ledger refund.
         var refundTx = assertDb.WalletTransactions.FirstOrDefault(t => t.UserId == userId && t.Type == TransactionType.EscrowRefund);
-        Assert.NotNull(refundTx);
-        Assert.Equal(5, refundTx.Amount); // Hoàn 5 Diamond
+        Assert.Null(refundTx);
     }
 
     /// <summary>
@@ -567,8 +570,20 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         session.CompleteSession("[4]");
         await readingRepo.CreateAsync(session);
 
-        var walletTx = WalletTransaction.Create(
-            userId, CurrencyType.Diamond, TransactionType.AdminTopup, 100, 0, 100, "AiRequest", "Seed", "Seed Balance Test5", null, "seed_idempotency_test5");
+        var walletTx = WalletTransaction.Create(new WalletTransactionCreateRequest
+        {
+            UserId = userId,
+            Currency = CurrencyType.Diamond,
+            Type = TransactionType.AdminTopup,
+            Amount = 100,
+            BalanceBefore = 0,
+            BalanceAfter = 100,
+            ReferenceSource = "AiRequest",
+            ReferenceId = "Seed",
+            Description = "Seed Balance Test5",
+            MetadataJson = null,
+            IdempotencyKey = "seed_idempotency_test5"
+        });
         db.WalletTransactions.Add(walletTx);
         await db.SaveChangesAsync();
 
@@ -591,9 +606,9 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         Assert.NotNull(aiReq.FirstTokenAt); // Đã nhận được token trước khi lỗi
         Assert.Contains("Upstream timeout/cancellation", aiReq.FinishReason ?? "");
 
-        // Ledger: có bản ghi refund
+        Assert.Equal(0, aiReq.ChargeDiamond);
+        // Initial stream hiện không freeze tiền, nên không có ledger refund.
         var refundTx = assertDb.WalletTransactions.FirstOrDefault(t => t.UserId == userId && t.Type == TransactionType.EscrowRefund);
-        Assert.NotNull(refundTx);
-        Assert.Equal(5, refundTx.Amount);
+        Assert.Null(refundTx);
     }
 }

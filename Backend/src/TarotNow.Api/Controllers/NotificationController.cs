@@ -24,7 +24,6 @@
  * ===================================================================
  */
 
-using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -33,6 +32,7 @@ using Microsoft.AspNetCore.Mvc;
 using TarotNow.Application.Features.Notification.Commands.MarkAsRead;
 using TarotNow.Application.Features.Notification.Queries.CountUnread;
 using TarotNow.Application.Features.Notification.Queries.GetNotifications;
+using TarotNow.Api.Extensions;
 
 namespace TarotNow.Api.Controllers;
 
@@ -54,7 +54,7 @@ public class NotificationController : ControllerBase
     }
 
     /// <summary>
-    /// ENDPOINT: GET /api/v1/Notification?page=1&pageSize=20&isRead=false
+    /// ENDPOINT: GET /api/v1/Notification?page=1&amp;pageSize=20&amp;isRead=false
     /// MỤC ĐÍCH: Lấy danh sách thông báo của user hiện tại.
     ///
     /// THAM SỐ (Query string):
@@ -80,8 +80,7 @@ public class NotificationController : ControllerBase
          * ClaimTypes.NameIdentifier chứa GUID user đã đăng nhập.
          * Nếu parse thất bại → JWT không hợp lệ → trả 401.
          */
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         /* Tạo Query object — controller KHÔNG chứa business logic,
@@ -113,8 +112,7 @@ public class NotificationController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetUnreadCount()
     {
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         /* Query đơn giản: chỉ cần UserId, trả về 1 con số */
@@ -146,8 +144,7 @@ public class NotificationController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> MarkAsRead(string id)
     {
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         /* Command chứa NotificationId + UserId cho ownership check */

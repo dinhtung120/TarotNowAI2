@@ -32,7 +32,8 @@
 using MediatR;                 // MediatR trung gian
 using Microsoft.AspNetCore.Authorization; // Kiểm soát quyền
 using Microsoft.AspNetCore.Mvc; // API controller
-using System.Security.Claims;   // Đọc JWT claims
+using TarotNow.Api.Contracts.Requests;
+using TarotNow.Api.Extensions;
 
 // Import các MFA Command/Query
 using TarotNow.Application.Features.Mfa.Commands.MfaChallenge; // Thử thách MFA
@@ -62,8 +63,7 @@ public class MfaController : ControllerBase
     /// </summary>
     private Guid? GetUserId()
     {
-        var str = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return Guid.TryParse(str, out var id) ? id : null;
+        return User.GetUserIdOrNull();
     }
 
     /// <summary>
@@ -73,7 +73,7 @@ public class MfaController : ControllerBase
     /// CÁCH HOẠT ĐỘNG:
     ///   1. Server tạo secret key ngẫu nhiên (base32 string)
     ///   2. Tạo "OTP Auth URI" (đường dẫn đặc biệt chứa secret key)
-    ///      Format: otpauth://totp/TarotNow:user@email.com?secret=JBSWY3...&issuer=TarotNow
+    ///      Format: otpauth://totp/TarotNow:user@email.com?secret=JBSWY3...&amp;issuer=TarotNow
     ///   3. Trả về URI cho client → Client tạo QR code từ URI
     ///   4. User quét QR bằng Google Authenticator
     ///      → App lưu secret key và bắt đầu sinh mã 6 số
@@ -160,28 +160,4 @@ public class MfaController : ControllerBase
         var result = await _mediator.Send(new GetMfaStatusQuery { UserId = userId.Value });
         return Ok(new { mfaEnabled = result.MfaEnabled });
     }
-}
-
-/// <summary>
-/// DTO cho POST /Mfa/verify - Xác nhận setup MFA.
-/// </summary>
-public class MfaVerifyBody
-{
-    /// <summary>
-    /// Mã TOTP 6 chữ số từ app Authenticator.
-    /// Ví dụ: "123456"
-    /// Mã này thay đổi mỗi 30 giây.
-    /// </summary>
-    public string Code { get; set; } = string.Empty;
-}
-
-/// <summary>
-/// DTO cho POST /Mfa/challenge - Xác thực MFA cho hành động nhạy cảm.
-/// </summary>
-public class MfaChallengeBody
-{
-    /// <summary>
-    /// Mã TOTP 6 chữ số từ app Authenticator.
-    /// </summary>
-    public string Code { get; set; } = string.Empty;
 }

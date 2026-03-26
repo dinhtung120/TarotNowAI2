@@ -25,10 +25,11 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
+using TarotNow.Infrastructure.Options;
 
 namespace TarotNow.Infrastructure.Security;
 
@@ -37,11 +38,11 @@ namespace TarotNow.Infrastructure.Security;
 /// </summary>
 public class JwtTokenService : ITokenService
 {
-    private readonly IConfiguration _configuration;
+    private readonly JwtOptions _jwtOptions;
 
-    public JwtTokenService(IConfiguration configuration)
+    public JwtTokenService(IOptions<JwtOptions> options)
     {
-        _configuration = configuration;
+        _jwtOptions = options.Value;
     }
 
     /// <summary>
@@ -57,9 +58,9 @@ public class JwtTokenService : ITokenService
     public string GenerateAccessToken(User user)
     {
         // Đọc cấu hình bắt buộc — throw nếu thiếu
-        var secretKey = _configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("Jwt:SecretKey is missing.");
-        var issuer = _configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("Jwt:Issuer is missing.");
-        var audience = _configuration["Jwt:Audience"] ?? throw new InvalidOperationException("Jwt:Audience is missing.");
+        var secretKey = _jwtOptions.SecretKey ?? throw new InvalidOperationException("Jwt:SecretKey is missing.");
+        var issuer = _jwtOptions.Issuer ?? throw new InvalidOperationException("Jwt:Issuer is missing.");
+        var audience = _jwtOptions.Audience ?? throw new InvalidOperationException("Jwt:Audience is missing.");
         var expirationMinutes = ResolveAccessTokenExpiryMinutes();
 
         // Tạo signing credentials từ secret key + HMAC-SHA256
@@ -94,11 +95,8 @@ public class JwtTokenService : ITokenService
     /// </summary>
     private int ResolveAccessTokenExpiryMinutes()
     {
-        var configured = _configuration["Jwt:ExpiryMinutes"]
-                         ?? _configuration["Jwt:AccessTokenExpirationMinutes"];
-
-        return int.TryParse(configured, out var value) && value > 0
-            ? value
+        return _jwtOptions.ExpiryMinutes > 0
+            ? _jwtOptions.ExpiryMinutes
             : 15; // Mặc định 15 phút
     }
 

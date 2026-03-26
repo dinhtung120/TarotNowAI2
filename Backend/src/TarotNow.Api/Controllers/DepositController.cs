@@ -31,11 +31,11 @@ using MediatR;                 // MediatR: gửi Command/Query
 using Microsoft.AspNetCore.Authorization; // Kiểm soát quyền truy cập
 using Microsoft.AspNetCore.Mvc; // Nền tảng API
 using System;                   // Guid, v.v.
-using System.Security.Claims;   // Đọc JWT claims
 using System.Threading.Tasks;   // async/await
 
 // Import DTO từ Contracts
 using TarotNow.Api.Contracts;
+using TarotNow.Api.Extensions;
 
 // Import Command cho nạp tiền
 using TarotNow.Application.Features.Deposit.Commands.CreateDepositOrder;
@@ -84,9 +84,7 @@ public class DepositController : ControllerBase
     [Authorize]
     public async Task<IActionResult> CreateOrder([FromBody] CreateDepositOrderRequest request)
     {
-        // Lấy userId từ JWT token (ai đang nạp tiền)
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         // Tạo command nạp tiền

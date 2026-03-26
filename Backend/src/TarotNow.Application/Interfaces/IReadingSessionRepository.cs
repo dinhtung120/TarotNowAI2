@@ -34,14 +34,6 @@ public interface IReadingSessionRepository
     /// <summary>Theo Dõi Giới Hạn Phúc Lợi Daily Lệnh Không Tốn Tiền Không Bốc Được Nữa Quá Nữa Đêm Khung Mới Mở Reset Lại Cầu Thủ Free (Quản Lý Daily Rút Miễn Phí).</summary>
     Task<bool> HasDrawnDailyCardAsync(Guid userId, DateTime utcNow, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Khớp Lệnh Lớn Siêu Bất Khả Xâm Phạm (Transaction Đi Liền Rủi Ro DB Bị Lỏng Atomically):
-    /// Bắn 1 Phát Tên Hai Con Chim: Vừa Trừ Sập Két Tiền Vừa Rơi Xuống Tạo Phòng Kín Dành Xem Bói Chốt Giành.
-    /// Có Bất Cứ Cục Rớt Nào Đập Đứt DB Thẻ Quá Tiền Sạch Nó Tuột Rollback Lại Mất Sạch Trả Lại Vị Trí Vẹn Y.
-    /// </summary>
-    Task<(bool Success, string ErrorMessage)> StartPaidSessionAtomicAsync(
-        Guid userId, string spreadType, ReadingSession session, long costGold, long costDiamond, CancellationToken cancellationToken = default);
-
     /// <summary>Người Khách Mở Hồ Sơ Đọc Tưởng Thấy Mảnh Tình Xưa Hiện Về Xem Lại Lá Nào Ngàn Năm Trứ Cũ Nương (History Tụ Của Mình).</summary>
     Task<(IEnumerable<ReadingSession> Items, int TotalCount)> GetSessionsByUserIdAsync(
         Guid userId, int page, int pageSize, CancellationToken cancellationToken = default);

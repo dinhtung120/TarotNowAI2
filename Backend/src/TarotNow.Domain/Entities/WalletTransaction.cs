@@ -75,19 +75,34 @@ public class WalletTransaction
     /// <summary>
     /// Cổng Phát Tạo Tem Trả Ledger Mẫu Sẵn Thôi Cho Ngoài Repo Không Bị Nát Cần Dựng Đóng Mã An Toàn Có Bọc Tốt Trực Tiếp Tới Constructor Đang Kẹt Trong Lệnh Giới Hạn Mở (Factory Method Pattern).
     /// </summary>
-    public static WalletTransaction Create(
-        Guid userId, 
-        string currency, 
-        string type, 
-        long amount, 
-        long balanceBefore, 
-        long balanceAfter, 
-        string? referenceSource = null, 
-        string? referenceId = null, 
-        string? description = null, 
-        string? metadataJson = null, 
-        string? idempotencyKey = null)
+    public static WalletTransaction Create(WalletTransactionCreateRequest request)
     {
-        return new WalletTransaction(userId, currency, type, amount, balanceBefore, balanceAfter, referenceSource, referenceId, description, metadataJson, idempotencyKey);
+        return new WalletTransaction(
+            request.UserId,
+            request.Currency,
+            request.Type,
+            request.Amount,
+            request.BalanceBefore,
+            request.BalanceAfter,
+            request.ReferenceSource,
+            request.ReferenceId,
+            request.Description,
+            request.MetadataJson,
+            request.IdempotencyKey);
     }
+}
+
+public sealed class WalletTransactionCreateRequest
+{
+    public Guid UserId { get; init; }
+    public string Currency { get; init; } = string.Empty;
+    public string Type { get; init; } = string.Empty;
+    public long Amount { get; init; }
+    public long BalanceBefore { get; init; }
+    public long BalanceAfter { get; init; }
+    public string? ReferenceSource { get; init; }
+    public string? ReferenceId { get; init; }
+    public string? Description { get; init; }
+    public string? MetadataJson { get; init; }
+    public string? IdempotencyKey { get; init; }
 }

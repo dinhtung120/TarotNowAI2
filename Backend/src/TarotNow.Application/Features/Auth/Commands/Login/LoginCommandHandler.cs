@@ -28,7 +28,7 @@ namespace TarotNow.Application.Features.Auth.Commands.Login;
 /// <summary>
 /// Core Handler cho Use-Case. Nhận vào LoginCommand, trả về tuple chứa response JWT và refresh token nguyên thuỷ.
 /// </summary>
-public class LoginCommandHandler : IRequestHandler<LoginCommand, (AuthResponse Response, string RefreshToken)>
+public partial class LoginCommandHandler : IRequestHandler<LoginCommand, (AuthResponse Response, string RefreshToken)>
 {
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
@@ -55,104 +55,15 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, (AuthResponse R
 
     public async Task<(AuthResponse Response, string RefreshToken)> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        // -------------------------------------------------------------
-        // BƯỚC 1: Tìm kiếm định danh User linh hoạt
-        // Nếu chuỗi chứa kí tự '@', hệ thống cho đó là Email. Nếu không → username.
-        // -------------------------------------------------------------
-        User? user = null;
-        if (request.EmailOrUsername.Contains('@'))
-        {
-            user = await _userRepository.GetByEmailAsync(request.EmailOrUsername, cancellationToken);
-        }
-        else
-        {
-            user = await _userRepository.GetByUsernameAsync(request.EmailOrUsername, cancellationToken);
-        }
+        var user = EnsureValidCredentials(
+            await GetUserByIdentityAsync(request.EmailOrUsername, cancellationToken),
+            request.Password);
+        EnsureUserCanLogin(user);
+        await RehashPasswordIfNeededAsync(user, request.Password, cancellationToken);
 
-        // BẢO MẬT KHÔNG NHẬN CỤ THỂ LỖI (Obfuscation):
-        // Nếu sai user hoặc sai mật khẩu, ta quăng CHUNG 1 thông báo "Tài khoản hoặc mật khẩu không đúng".
-        // Tránh tình trạng lộ thông tin: "Email này có trên DB nhưng sai pass".
-        if (user == null)
-        {
-            throw new BusinessRuleException("INVALID_CREDENTIALS", "Invalid email/username or password.");
-        }
-
-        // -------------------------------------------------------------
-        // BƯỚC 2: So khớp Password Hash
-        // Gọi thư viện Hash (Argon2id/BCrypt) để xác minh mật khẩu trơn gửi lên 
-        // có khớp với bản băm đang lưu trên Postgres không.
-        // -------------------------------------------------------------
-        if (!_passwordHasher.VerifyPassword(user.PasswordHash, request.Password))
-        {
-            throw new BusinessRuleException("INVALID_CREDENTIALS", "Invalid email/username or password.");
-        }
-
-        // -------------------------------------------------------------
-        // BƯỚC 3: Rào cản Trạng thái tài khoản (Status Gateway)
-        // -------------------------------------------------------------
-        if (user.Status == UserStatus.Pending)
-        {
-            // Pending: User chưa click link xác thực đăng ký gửi vào Email.
-            throw new BusinessRuleException("USER_PENDING", "Please verify your email address to log in.");
-        }
-        else if (user.Status == UserStatus.Banned || user.Status == UserStatus.Locked)
-        {
-            // Banned/Locked: User bị quản trị viên khóa, từ chối cấp token.
-            throw new BusinessRuleException("USER_BLOCKED", "Your account is temporarily locked or banned.");
-        }
-
-        // Nếu hash cũ không còn khớp policy hiện tại thì băm lại ngay sau lần login thành công.
-        // Cách này giúp nâng cấp dần toàn bộ user mà không cần chạy migration batch.
-        if (_passwordHasher.NeedsRehash(user.PasswordHash))
-        {
-            user.UpdatePassword(_passwordHasher.HashPassword(request.Password));
-            await _userRepository.UpdateAsync(user, cancellationToken);
-        }
-
-        // -------------------------------------------------------------
-        // BƯỚC 4: Tạo JWT Access Token
-        // Token này sẽ chứa {userId, Role, Tên} được ký bí mật HMAC.
-        // -------------------------------------------------------------
         var accessToken = _tokenService.GenerateAccessToken(user);
-
-        // -------------------------------------------------------------
-        // BƯỚC 5: Xử lý Refresh Token (Vé lên tàu dài hạn)
-        // Lưu xuống Database cấu trúc RefreshToken Entity (Id, TokenString, Hạn chót, IP).
-        // Khi JWT chết, Frontend gửi TokenString này để xin JWT mới.
-        // -------------------------------------------------------------
-        var refreshTokenString = _tokenService.GenerateRefreshToken();
-        var refreshTokenExpiryDays = _jwtTokenSettings.RefreshTokenExpiryDays;
-        var refreshTokenEntity = new TarotNow.Domain.Entities.RefreshToken(
-            userId: user.Id,
-            token: refreshTokenString,
-            expiresAt: DateTime.UtcNow.AddDays(refreshTokenExpiryDays),
-            createdByIp: request.ClientIpAddress // Lưu lại IP gác cổng lúc tạo, audit bảo mật.
-        );
-
-        // Lưu vào cơ sở dữ liệu
-        await _refreshTokenRepository.AddAsync(refreshTokenEntity, cancellationToken);
-
-        // -------------------------------------------------------------
-        // BƯỚC 6: Trả về kết quả
-        // -------------------------------------------------------------
-        var resp = new AuthResponse
-        {
-            AccessToken = accessToken,
-            ExpiresInMinutes = _jwtTokenSettings.AccessTokenExpiryMinutes,
-            User = new UserProfileDto
-            {
-                Id = user.Id,
-                Username = user.Username,
-                Email = user.Email,
-                DisplayName = user.DisplayName,
-                Level = user.Level,
-                Exp = user.Exp,
-                Role = user.Role,
-                Status = user.Status.ToString()
-            }
-        };
-
-        // Tuple Result
-        return (resp, refreshTokenString);
+        var refreshTokenString = await CreateRefreshTokenAsync(user, request.ClientIpAddress, cancellationToken);
+        var response = BuildAuthResponse(user, accessToken);
+        return (response, refreshTokenString);
     }
 }

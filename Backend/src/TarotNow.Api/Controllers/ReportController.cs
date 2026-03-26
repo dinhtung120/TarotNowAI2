@@ -23,8 +23,9 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using TarotNow.Application.Features.Chat.Commands.CreateReport;
+using TarotNow.Api.Contracts.Requests;
+using TarotNow.Api.Extensions;
 
 namespace TarotNow.Api.Controllers;
 
@@ -62,9 +63,7 @@ public class ReportController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateReportBody body)
     {
-        // Lấy ID người báo cáo từ JWT
-        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         var command = new CreateReportCommand
@@ -80,35 +79,4 @@ public class ReportController : ControllerBase
         var result = await _mediator.Send(command);
         return Ok(new { success = true, reportId = result.Id });
     }
-}
-
-/// <summary>DTO cho POST /reports - Tạo báo cáo vi phạm.</summary>
-public class CreateReportBody
-{
-    /// <summary>
-    /// Loại đối tượng bị báo cáo:
-    ///   - "message": một tin nhắn cụ thể
-    ///   - "conversation": toàn bộ cuộc trò chuyện
-    ///   - "user": một người dùng
-    /// </summary>
-    public string TargetType { get; set; } = string.Empty;
-
-    /// <summary>
-    /// ID của đối tượng bị báo cáo.
-    /// Tùy targetType: ID tin nhắn, ID conversation, hoặc ID user.
-    /// </summary>
-    public string TargetId { get; set; } = string.Empty;
-
-    /// <summary>
-    /// ID cuộc trò chuyện liên quan (ObjectId MongoDB).
-    /// Tùy chọn - giúp admin tìm ngữ cảnh nhanh hơn.
-    /// </summary>
-    public string? ConversationRef { get; set; }
-
-    /// <summary>
-    /// Lý do báo cáo do user nhập.
-    /// Validator yêu cầu tối thiểu 10 ký tự để tránh report rác.
-    /// Ví dụ: "Reader gửi tin nhắn quảng cáo spam liên tục".
-    /// </summary>
-    public string Reason { get; set; } = string.Empty;
 }

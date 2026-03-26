@@ -19,10 +19,10 @@ using MediatR;                 // MediatR trung gian
 using Microsoft.AspNetCore.Authorization; // Kiểm soát quyền
 using Microsoft.AspNetCore.Mvc; // API controller
 using System;
-using System.Security.Claims;   // Đọc JWT claims
 using System.Threading.Tasks;
 
 using TarotNow.Api.Contracts; // Import UpdateProfileRequest DTO
+using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.Profile.Commands.UpdateProfile; // Command cập nhật
 using TarotNow.Application.Features.Profile.Queries.GetProfile;     // Query lấy profile
 
@@ -63,9 +63,7 @@ public class ProfileController : ControllerBase
     [Authorize] // Phải đăng nhập
     public async Task<IActionResult> GetProfile()
     {
-        // Lấy userId từ JWT token
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         // Tạo query "Lấy profile của user với ID này"
@@ -98,9 +96,7 @@ public class ProfileController : ControllerBase
     [Authorize] // Phải đăng nhập
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
     {
-        // Lấy userId từ JWT
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         // Tạo command cập nhật profile

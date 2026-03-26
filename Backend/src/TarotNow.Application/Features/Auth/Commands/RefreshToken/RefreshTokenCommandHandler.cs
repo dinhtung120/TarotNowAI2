@@ -29,7 +29,7 @@ namespace TarotNow.Application.Features.Auth.Commands.RefreshToken;
 /// <summary>
 /// Handler cấp phép Refresh Token an toàn với chống replay attacks.
 /// </summary>
-public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, (AuthResponse Response, string NewRefreshToken)>
+public partial class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, (AuthResponse Response, string NewRefreshToken)>
 {
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IUserRepository _userRepository;
@@ -50,93 +50,16 @@ public class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, (
 
     public async Task<(AuthResponse Response, string NewRefreshToken)> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
     {
-        // 1. Quét Database xem tồn tại dòng chữ Token giả mạo hay không.
-        var existingToken = await _refreshTokenRepository.GetByTokenAsync(request.Token, cancellationToken);
-        if (existingToken == null)
-        {
-            throw new BusinessRuleException("INVALID_TOKEN", "Refresh token does not exist.");
-        }
+        var token = await GetRefreshTokenOrThrowAsync(request.Token, cancellationToken);
+        EnsureTokenMatches(token, request.Token);
+        await EnsureTokenNotCompromisedAsync(token, cancellationToken);
+        EnsureTokenNotExpired(token);
+        await RotateTokenAsync(token, cancellationToken);
 
-        // Domain Rule check: Kiểm tra Token có khớp 100% hay không.
-        if (!existingToken.MatchesToken(request.Token))
-        {
-            throw new BusinessRuleException("INVALID_TOKEN", "Refresh token is invalid.");
-        }
-
-        // --------------------------------------------------------------------------
-        // 2. NHẬN DIỆN LỪA ĐẢO (FRAUD DETECTION / TOKEN REUSE ALERT)
-        // --------------------------------------------------------------------------
-        // Nếu token đã được sử dụng (IsRevoked) mà lại bị đòi sử dụng tiếp...
-        // Chứng tỏ có 2 thực thể đang cạnh tranh dùng Token, ÍT NHẤT 1 bên là Hacker trộm Cookie!
-        if (existingToken.IsRevoked)
-        {
-            // Bắn phá toàn bộ rễ của Cookie: Xoá tất cả Token của User, log out tất cả thiết bị.
-            await _refreshTokenRepository.RevokeAllByUserIdAsync(existingToken.UserId, cancellationToken);
-            
-            throw new BusinessRuleException(
-                "TOKEN_COMPROMISED", 
-                "Token reuse detected. All sessions have been revoked for security reasons. Please log in again."
-            );
-        }
-
-        // 3. Kiểm tra Token còn thời hạn không. (Token thiu thì đuổi đi)
-        if (existingToken.IsExpired)
-        {
-            throw new BusinessRuleException("TOKEN_EXPIRED", "Refresh token has expired. Please log in again.");
-        }
-
-        // --------------------------------------------------------------------------
-        // 4. MỌI THỨ HỢP LỆ -> LUÂN CHUYỂN TOKEN (ROTATION)
-        // Đốt bỏ chiếc vé Token cũ vừa dùng. (Mark "Revoked")
-        // --------------------------------------------------------------------------
-        existingToken.Revoke();
-        await _refreshTokenRepository.UpdateAsync(existingToken, cancellationToken);
-
-        var user = existingToken.User;
-        
-        // 5. Kiểm duyệt lần cuối: Có thể User bị Admin Banned trong lúc đang cầm Token hợp lệ.
-        if (user == null || user.Status == Domain.Enums.UserStatus.Banned || user.Status == Domain.Enums.UserStatus.Locked)
-        {
-            throw new BusinessRuleException("USER_BLOCKED", "User account is no longer active.");
-        }
-
-        // --------------------------------------------------------------------------
-        // 6. CẤP PHÁT (ISSUANCE) LẠI 2 LOẠI TOKEN MỚI
-        // --------------------------------------------------------------------------
-        // Tạo JWT ngắn hạn
+        var user = EnsureUserIsActive(token.User);
         var newAccessToken = _tokenService.GenerateAccessToken(user);
-        
-        // Tạo dây chuỗi Refresh dài hạn
-        var newRefreshTokenString = _tokenService.GenerateRefreshToken();
-        var refreshTokenExpiryDays = _jwtTokenSettings.RefreshTokenExpiryDays;
-        
-        var newRefreshTokenEntity = new TarotNow.Domain.Entities.RefreshToken(
-            userId: user.Id,
-            token: newRefreshTokenString,
-            expiresAt: DateTime.UtcNow.AddDays(refreshTokenExpiryDays), // Chờ 7 ngày
-            createdByIp: request.ClientIpAddress // Đính tên vị trí xin vé
-        );
-
-        // Đẩy xuống Database
-        await _refreshTokenRepository.AddAsync(newRefreshTokenEntity, cancellationToken);
-
-        var resp = new AuthResponse
-        {
-            AccessToken = newAccessToken,
-            ExpiresInMinutes = _jwtTokenSettings.AccessTokenExpiryMinutes,
-            User = new UserProfileDto
-            {
-                Id = user.Id,
-                Username = user.Username,
-                Email = user.Email,
-                DisplayName = user.DisplayName,
-                Level = user.Level,
-                Exp = user.Exp,
-                Role = user.Role,
-                Status = user.Status.ToString()
-            }
-        };
-
-        return (resp, newRefreshTokenString);
+        var newRefreshToken = await IssueRefreshTokenAsync(user, request.ClientIpAddress, cancellationToken);
+        var response = BuildAuthResponse(user, newAccessToken);
+        return (response, newRefreshToken);
     }
 }

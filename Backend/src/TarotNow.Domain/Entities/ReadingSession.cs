@@ -80,29 +80,22 @@ public class ReadingSession
     }
 
     /// <summary>Cầm Chổi Lên Khẩy Lá Xong Hô Hồi Quẻ (Lấy DB Lên).</summary>
-    public static ReadingSession Rehydrate(
-        string id,
-        string userId,
-        string spreadType,
-        string? question,
-        string? cardsDrawn,
-        string? currencyUsed,
-        long amountCharged,
-        bool isCompleted,
-        DateTime createdAt,
-        DateTime? completedAt,
-        string? aiSummary = null,
-        IReadOnlyList<ReadingFollowup>? followups = null)
+    public static ReadingSession Rehydrate(ReadingSessionSnapshot snapshot)
     {
-        return new ReadingSession(userId, spreadType, question, currencyUsed, amountCharged)
+        return new ReadingSession(
+            snapshot.UserId,
+            snapshot.SpreadType,
+            snapshot.Question,
+            snapshot.CurrencyUsed,
+            snapshot.AmountCharged)
         {
-            Id = id,
-            CardsDrawn = cardsDrawn,
-            IsCompleted = isCompleted,
-            CreatedAt = createdAt,
-            CompletedAt = completedAt,
-            AiSummary = aiSummary,
-            Followups = followups ?? new List<ReadingFollowup>()
+            Id = snapshot.Id,
+            CardsDrawn = snapshot.CardsDrawn,
+            IsCompleted = snapshot.IsCompleted,
+            CreatedAt = snapshot.CreatedAt,
+            CompletedAt = snapshot.CompletedAt,
+            AiSummary = snapshot.AiSummary,
+            Followups = snapshot.Followups ?? new List<ReadingFollowup>()
         };
     }
 
@@ -119,4 +112,20 @@ public class ReadingFollowup
 {
     public string Question { get; set; } = string.Empty;
     public string Answer { get; set; } = string.Empty;
+}
+
+public sealed class ReadingSessionSnapshot
+{
+    public string Id { get; init; } = string.Empty;
+    public string UserId { get; init; } = string.Empty;
+    public string SpreadType { get; init; } = string.Empty;
+    public string? Question { get; init; }
+    public string? CardsDrawn { get; init; }
+    public string? CurrencyUsed { get; init; }
+    public long AmountCharged { get; init; }
+    public bool IsCompleted { get; init; }
+    public DateTime CreatedAt { get; init; }
+    public DateTime? CompletedAt { get; init; }
+    public string? AiSummary { get; init; }
+    public IReadOnlyList<ReadingFollowup>? Followups { get; init; }
 }

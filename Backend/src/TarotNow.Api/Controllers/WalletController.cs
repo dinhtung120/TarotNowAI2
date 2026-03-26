@@ -22,7 +22,6 @@
  * ===================================================================
  */
 
-using System.Security.Claims;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -30,6 +29,7 @@ using Microsoft.AspNetCore.Mvc;
 // Import Query cho wallet
 using TarotNow.Application.Features.Wallet.Queries.GetLedgerList;
 using TarotNow.Application.Features.Wallet.Queries.GetWalletBalance;
+using TarotNow.Api.Extensions;
 
 namespace TarotNow.Api.Controllers;
 
@@ -65,9 +65,7 @@ public class WalletController : ControllerBase
     [HttpGet("balance")]
     public async Task<IActionResult> GetBalance()
     {
-        // Lấy userId từ JWT
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         /*
@@ -82,7 +80,7 @@ public class WalletController : ControllerBase
     }
 
     /// <summary>
-    /// ENDPOINT: GET /api/v1/Wallet/ledger?page=1&limit=20
+    /// ENDPOINT: GET /api/v1/Wallet/ledger?page=1&amp;limit=20
     /// MỤC ĐÍCH: Lấy lịch sử giao dịch ví (Ledger) có phân trang.
     ///
     /// MỖI GIAO DỊCH BAO GỒM:
@@ -100,8 +98,7 @@ public class WalletController : ControllerBase
     [HttpGet("ledger")]
     public async Task<IActionResult> GetLedger([FromQuery] int page = 1, [FromQuery] int limit = 20)
     {
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         // Constructor với 3 tham số: userId, page, limit

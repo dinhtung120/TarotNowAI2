@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
@@ -10,7 +9,7 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Services;
 
-public sealed class DiagnosticsService : IDiagnosticsService
+public sealed partial class DiagnosticsService : IDiagnosticsService
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly MongoDbContext _mongoContext;
@@ -30,61 +29,6 @@ public sealed class DiagnosticsService : IDiagnosticsService
         _passwordHasher = passwordHasher;
         _configuration = configuration;
         _logger = logger;
-    }
-
-    public async Task<SeedAdminResult> SeedAdminAsync(CancellationToken cancellationToken = default)
-    {
-        var adminEmail = _configuration["Diagnostics:SeedAdmin:Email"]?.Trim();
-        var adminUsername = _configuration["Diagnostics:SeedAdmin:Username"]?.Trim();
-        var adminPassword = _configuration["Diagnostics:SeedAdmin:Password"];
-
-        if (string.IsNullOrWhiteSpace(adminEmail) ||
-            string.IsNullOrWhiteSpace(adminUsername) ||
-            string.IsNullOrWhiteSpace(adminPassword) ||
-            adminPassword.Length < 12)
-        {
-            return new SeedAdminResult
-            {
-                Status = SeedAdminStatus.InvalidConfiguration,
-                Message = "Missing diagnostics seed admin config. Set Diagnostics:SeedAdmin:{Email,Username,Password} with strong password."
-            };
-        }
-
-        var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Email == adminEmail, cancellationToken);
-        var passwordHash = _passwordHasher.HashPassword(adminPassword);
-        var isNew = false;
-
-        if (user == null)
-        {
-            isNew = true;
-            user = new User(
-                adminEmail,
-                adminUsername,
-                passwordHash,
-                "Super Admin",
-                new DateTime(1985, 5, 5).ToUniversalTime(),
-                true);
-
-            user.Activate();
-            user.PromoteToAdmin();
-            await _dbContext.Users.AddAsync(user, cancellationToken);
-        }
-        else
-        {
-            user.PromoteToAdmin();
-            user.Activate();
-            user.UpdatePassword(passwordHash);
-        }
-
-        await _dbContext.SaveChangesAsync(cancellationToken);
-
-        return new SeedAdminResult
-        {
-            Status = SeedAdminStatus.Success,
-            Message = isNew ? "SuperAdmin created" : "SuperAdmin updated",
-            Email = adminEmail,
-            Username = adminUsername
-        };
     }
 
     public async Task<DiagnosticsStatsResult> GetStatsAsync(CancellationToken cancellationToken = default)

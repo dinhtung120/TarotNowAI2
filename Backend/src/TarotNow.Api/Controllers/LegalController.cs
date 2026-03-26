@@ -22,11 +22,11 @@ using MediatR;                 // MediatR trung gian
 using Microsoft.AspNetCore.Authorization; // Kiểm soát quyền
 using Microsoft.AspNetCore.Mvc; // API controller
 using System;
-using System.Security.Claims;   // Đọc JWT claims
 using System.Threading.Tasks;
 
 // Import DTO và Command/Query
 using TarotNow.Api.Contracts; // RecordConsentRequest DTO
+using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.Legal.Commands.RecordConsent;
 using TarotNow.Application.Features.Legal.Queries.CheckConsent;
 
@@ -49,7 +49,7 @@ public class LegalController : ControllerBase
     }
 
     /// <summary>
-    /// ENDPOINT: GET /api/v1/legal/consent-status?documentType=tos&version=1.0
+    /// ENDPOINT: GET /api/v1/legal/consent-status?documentType=tos&amp;version=1.0
     /// MỤC ĐÍCH: Kiểm tra user đã đồng ý với văn bản pháp lý cụ thể chưa.
     ///
     /// CÁC TRƯỜNG HỢP SỬ DỤNG:
@@ -67,9 +67,7 @@ public class LegalController : ControllerBase
     [Authorize]
     public async Task<IActionResult> CheckConsentStatus([FromQuery] string? documentType, [FromQuery] string? version)
     {
-        // Lấy userId từ JWT token
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
  
         var query = new CheckConsentQuery 
@@ -102,8 +100,7 @@ public class LegalController : ControllerBase
     [Authorize]
     public async Task<IActionResult> RecordConsent([FromBody] RecordConsentRequest request)
     {
-        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out var userId))
+        if (!User.TryGetUserId(out var userId))
             return Unauthorized();
 
         /*

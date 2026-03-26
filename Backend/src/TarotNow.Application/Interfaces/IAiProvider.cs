@@ -44,13 +44,17 @@ public interface IAiProvider
     /// <summary>
     /// Ghi telemetry cho request AI; implementation có thể no-op nếu không hỗ trợ.
     /// </summary>
-    Task LogRequestAsync(
-        Guid userId,
-        string? sessionId,
-        string? requestId,
-        int inputTokens,
-        int outputTokens,
-        int latencyMs,
-        string status,
-        string? errorCode = null);
+    Task LogRequestAsync(AiProviderRequestLog logEntry, CancellationToken cancellationToken = default);
+}
+
+public sealed class AiProviderRequestLog
+{
+    public Guid UserId { get; init; }
+    public string? SessionId { get; init; }
+    public string? RequestId { get; init; }
+    public int InputTokens { get; init; }
+    public int OutputTokens { get; init; }
+    public int LatencyMs { get; init; }
+    public string Status { get; init; } = "requested";
+    public string? ErrorCode { get; init; }
 }

@@ -47,7 +47,7 @@ public class HistoryController : ControllerBase
     }
 
     /// <summary>
-    /// ENDPOINT: GET /api/v1/History/sessions?page=1&pageSize=10
+    /// ENDPOINT: GET /api/v1/History/sessions?page=1&amp;pageSize=10
     /// MỤC ĐÍCH: Lấy danh sách lịch sử bốc bài Tarot của user hiện tại.
     ///
     /// PHÂN TRANG:

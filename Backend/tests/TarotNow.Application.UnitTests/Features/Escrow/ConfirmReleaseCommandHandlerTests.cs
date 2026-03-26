@@ -22,6 +22,7 @@ using Moq;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Escrow.Commands.ConfirmRelease;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Services;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 using Xunit;
@@ -36,6 +37,7 @@ public class ConfirmReleaseCommandHandlerTests
     private readonly Mock<IChatFinanceRepository> _mockFinanceRepo;
     private readonly Mock<IWalletRepository> _mockWalletRepo;
     private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
+    private readonly IEscrowSettlementService _settlementService;
     private readonly ConfirmReleaseCommandHandler _handler;
 
     public ConfirmReleaseCommandHandlerTests()
@@ -46,9 +48,10 @@ public class ConfirmReleaseCommandHandlerTests
         _mockTransactionCoordinator
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
             .Returns<Func<CancellationToken, Task>, CancellationToken>((action, ct) => action(ct));
+        _settlementService = new EscrowSettlementService(_mockFinanceRepo.Object, _mockWalletRepo.Object);
 
         _handler = new ConfirmReleaseCommandHandler(
-            _mockFinanceRepo.Object, _mockWalletRepo.Object,
+            _mockFinanceRepo.Object, _settlementService,
             _mockTransactionCoordinator.Object);
     }
 

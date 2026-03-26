@@ -38,16 +38,16 @@ public class ConfirmReleaseCommand : IRequest<bool>
 public class ConfirmReleaseCommandHandler : IRequestHandler<ConfirmReleaseCommand, bool>
 {
     private readonly IChatFinanceRepository _financeRepo;
-    private readonly IWalletRepository _walletRepo;
+    private readonly IEscrowSettlementService _escrowSettlementService;
     private readonly ITransactionCoordinator _transactionCoordinator;
 
     public ConfirmReleaseCommandHandler(
         IChatFinanceRepository financeRepo,
-        IWalletRepository walletRepo,
+        IEscrowSettlementService escrowSettlementService,
         ITransactionCoordinator transactionCoordinator)
     {
         _financeRepo = financeRepo;
-        _walletRepo = walletRepo;
+        _escrowSettlementService = escrowSettlementService;
         _transactionCoordinator = transactionCoordinator;
     }
 
@@ -68,66 +68,17 @@ public class ConfirmReleaseCommandHandler : IRequestHandler<ConfirmReleaseComman
             if (item.Status != QuestionItemStatus.Accepted)
                 throw new BadRequestException($"Câu hỏi ở trạng thái {item.Status}, không thể release.");
 
-            // ĐÃ GỠ BỎ: Hàng phòng ngự số 3 (Reader chưa trả lời) - Cho phép Khách hàng Release sớm (Tip cho Reader trước).
+            if (item.RepliedAt == null)
+                throw new BadRequestException("Reader chưa trả lời, chưa thể release.");
 
             // Hàng phòng ngự 4: Cảnh báo Lag Server bấm đúp (Idempotency thủ công).
             if (item.ReleasedAt != null)
                 throw new BadRequestException("Đã release rồi.");
 
-            // ===================================
-            // TOÁN TÀI CHÍNH KINH TẾ HỌC (ECONOMY)
-            // ===================================
-            
-            // 1. Phí Bảo Kê (Platform Fee) - 10%, làm tròn lên (Tránh bị thọt 0.1 Cents).
-            var fee = (long)Math.Ceiling(item.AmountDiamond * 0.10);
-            
-            // 2. Thu nhập Thân Chủ Thực Tế mang về (Take-home balance).
-            var readerAmount = item.AmountDiamond - fee;
-
-            // Hành Động 1: Sang tên Đổi Chủ Wallet từ User -> Reader. Trừ đi phí nhà sàn.
-            await _walletRepo.ReleaseAsync(
-                item.PayerId, item.ReceiverId, readerAmount,
-                referenceSource: "chat_question_item",
-                referenceId: item.Id.ToString(),
-                description: $"Release {readerAmount}💎 (fee {fee}💎) cho reader",
-                idempotencyKey: $"settle_release_{item.Id}",
+            await _escrowSettlementService.ApplyReleaseAsync(
+                item,
+                isAutoRelease: false,
                 cancellationToken: transactionCt);
-
-            // Hành Động 2: (Trừ thẳng vào túi của KHÁCH nhưng thực chất là xẻo trên cục băng gốc)
-            // Thuế 10% sẽ bị "Hắc Vô Thường" (Admin) rút vào chân không quỹ hệ thống (Burn coin).
-            if (fee > 0)
-            {
-                await _walletRepo.ConsumeAsync(
-                    item.PayerId, fee,
-                    referenceSource: "platform_fee",
-                    referenceId: item.Id.ToString(),
-                    description: $"Platform fee 10% = {fee}💎",
-                    idempotencyKey: $"settle_fee_{item.Id}",
-                    cancellationToken: transactionCt);
-            }
-
-            var now = DateTime.UtcNow;
-            
-            // Cập nhật thẻ bài: Trạng thái Giải Ngân Thành Công.
-            item.Status = QuestionItemStatus.Released;
-            item.ReleasedAt = now;
-            item.ConfirmedAt = now;
-            item.AutoReleaseAt = null; // Đã Release bằng cơm thì tắt Bot Auto Release đi.
-            
-            // Thời gian Khiếu nại đếm ngược: (Cho phép 24H Khiếu Nại sau khi đọc Kết quả bói Tarot).
-            item.DisputeWindowStart = now;
-            item.DisputeWindowEnd = now.AddHours(24);
-
-            await _financeRepo.UpdateItemAsync(item, transactionCt);
-
-            // Bất biến: Tổng tiền kẹt băng trong Phòng Chat (Session) này đã Giảm xuống.
-            var session = await _financeRepo.GetSessionForUpdateAsync(item.FinanceSessionId, transactionCt);
-            if (session != null)
-            {
-                session.TotalFrozen -= item.AmountDiamond;
-                if (session.TotalFrozen < 0) session.TotalFrozen = 0; // Backup Safety.
-                await _financeRepo.UpdateSessionAsync(session, transactionCt);
-            }
 
             // Ghi vết vào DB
             await _financeRepo.SaveChangesAsync(transactionCt);

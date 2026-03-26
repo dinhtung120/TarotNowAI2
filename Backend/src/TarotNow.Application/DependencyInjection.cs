@@ -34,6 +34,9 @@ using System.Reflection;            // Assembly.GetExecutingAssembly()
 using FluentValidation;             // Thư viện validation (kiểm tra dữ liệu)
 using MediatR;                      // Thư viện CQRS mediator pattern
 using Microsoft.Extensions.DependencyInjection; // DI container
+using TarotNow.Application.Interfaces;
+using TarotNow.Application.Services;
+using TarotNow.Domain.Services;
 
 namespace TarotNow.Application;
 
@@ -71,8 +74,10 @@ public static class DependencyInjection
          */
         services.AddMediatR(cfg => {
             cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
-            // Thêm Pipeline Behavior: Validation chạy trước mọi handler
+            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(Behaviors.LoggingBehavior<,>));
+            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(Behaviors.PerformanceBehavior<,>));
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(Behaviors.ValidationBehavior<,>));
+            cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(Behaviors.CachingBehavior<,>));
         });
         
         /*
@@ -89,6 +94,8 @@ public static class DependencyInjection
          *   → chạy validation → nếu lỗi throw → nếu OK cho qua handler.
          */
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+        services.AddScoped<IEscrowSettlementService, EscrowSettlementService>();
+        services.AddSingleton<FollowupPricingService>();
 
         return services; // Trả về để hỗ trợ method chaining
     }
