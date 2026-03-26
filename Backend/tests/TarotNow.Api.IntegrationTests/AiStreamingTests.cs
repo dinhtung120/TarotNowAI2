@@ -244,11 +244,18 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         using var reader = new StreamReader(stream);
 
         var output = new System.Text.StringBuilder();
-        while (!reader.EndOfStream)
+        while (true)
         {
             var line = await reader.ReadLineAsync();
+            if (line == null)
+            {
+                break;
+            }
+
             if (!string.IsNullOrWhiteSpace(line))
+            {
                 output.AppendLine(line);
+            }
         }
 
         var fullStreamString = output.ToString();
@@ -262,7 +269,10 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         var assertDb = assertScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         var aiReqs = await assertDb.AiRequests.ToListAsync();
-        var aiReq = aiReqs.OrderByDescending(r => r.CreatedAt).FirstOrDefault(r => r.ReadingSessionRef?.ToLower() == session.Id.ToString().ToLower());
+        var sessionRef = session.Id.ToString();
+        var aiReq = aiReqs
+            .OrderByDescending(r => r.CreatedAt)
+            .FirstOrDefault(r => string.Equals(r.ReadingSessionRef, sessionRef, StringComparison.OrdinalIgnoreCase));
         
         if (aiReq == null)
         {
@@ -507,11 +517,14 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         Assert.Equal(100, userAfter.DiamondBalance); // Không mất tiền
 
         // AiRequest: status = FailedBeforeFirstToken, FirstTokenAt = null
-        var aiReq = assertDb.AiRequests.OrderByDescending(r => r.CreatedAt).FirstOrDefault(r => r.ReadingSessionRef.ToLower() == session.Id.ToString().ToLower());
+        var sessionRef = session.Id.ToString();
+        var aiReq = assertDb.AiRequests
+            .OrderByDescending(r => r.CreatedAt)
+            .FirstOrDefault(r => r.ReadingSessionRef != null && EF.Functions.ILike(r.ReadingSessionRef, sessionRef));
         Assert.NotNull(aiReq);
         Assert.Equal(AiRequestStatus.FailedBeforeFirstToken, aiReq.Status);
         Assert.Null(aiReq.FirstTokenAt); // Chưa nhận được token nào
-        Assert.Contains("OpenAI API is down", aiReq.FinishReason ?? "");
+        Assert.Contains("OpenAI API is down", aiReq.FinishReason ?? string.Empty);
 
         Assert.Equal(0, aiReq.ChargeDiamond);
         // Initial stream hiện không freeze tiền, nên không có ledger refund.
@@ -600,11 +613,14 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         Assert.Equal(100, userAfter.DiamondBalance); // Không mất tiền
 
         // AiRequest: status = FailedAfterFirstToken, FirstTokenAt IS NOT NULL
-        var aiReq = assertDb.AiRequests.OrderByDescending(r => r.CreatedAt).FirstOrDefault(r => r.ReadingSessionRef.ToLower() == session.Id.ToString().ToLower());
+        var sessionRef = session.Id.ToString();
+        var aiReq = assertDb.AiRequests
+            .OrderByDescending(r => r.CreatedAt)
+            .FirstOrDefault(r => r.ReadingSessionRef != null && EF.Functions.ILike(r.ReadingSessionRef, sessionRef));
         Assert.NotNull(aiReq);
         Assert.Equal(AiRequestStatus.FailedAfterFirstToken, aiReq.Status);
         Assert.NotNull(aiReq.FirstTokenAt); // Đã nhận được token trước khi lỗi
-        Assert.Contains("Upstream timeout/cancellation", aiReq.FinishReason ?? "");
+        Assert.Contains("Upstream timeout/cancellation", aiReq.FinishReason ?? string.Empty);
 
         Assert.Equal(0, aiReq.ChargeDiamond);
         // Initial stream hiện không freeze tiền, nên không có ledger refund.

@@ -20,9 +20,14 @@ public partial class OpenAiProvider
         await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
         using var reader = new StreamReader(responseStream);
 
-        while (!reader.EndOfStream && !cancellationToken.IsCancellationRequested)
+        while (!cancellationToken.IsCancellationRequested)
         {
             var line = await reader.ReadLineAsync(cancellationToken);
+            if (line == null)
+            {
+                break;
+            }
+
             var chunkContent = TryReadChunkContent(line);
             if (chunkContent == StreamChunkDone)
             {

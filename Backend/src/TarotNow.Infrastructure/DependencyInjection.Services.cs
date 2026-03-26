@@ -18,6 +18,7 @@ public static partial class DependencyInjection
         services.AddSingleton<ISystemConfigSettings, SystemConfigSettings>();
 
         services.AddScoped<IEmailSender, SmtpEmailSender>();
+        services.AddScoped<IDomainEventPublisher, MediatRDomainEventPublisher>();
         services.AddSingleton<IRngService, RngService>();
         services.AddSingleton<IPaymentGatewayService, HmacPaymentGatewayService>();
         services.AddScoped<IDiagnosticsService, DiagnosticsService>();

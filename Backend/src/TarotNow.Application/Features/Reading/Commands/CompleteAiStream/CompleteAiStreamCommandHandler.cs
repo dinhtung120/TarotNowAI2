@@ -11,19 +11,22 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
     private readonly ITransactionCoordinator _transactionCoordinator;
     private readonly IAiProvider _aiProvider;
     private readonly IReadingSessionRepository _readingRepo;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     public CompleteAiStreamCommandHandler(
         IAiRequestRepository aiRequestRepo,
         IWalletRepository walletRepo,
         ITransactionCoordinator transactionCoordinator,
         IAiProvider aiProvider,
-        IReadingSessionRepository readingRepo)
+        IReadingSessionRepository readingRepo,
+        IDomainEventPublisher domainEventPublisher)
     {
         _aiRequestRepo = aiRequestRepo;
         _walletRepo = walletRepo;
         _transactionCoordinator = transactionCoordinator;
         _aiProvider = aiProvider;
         _readingRepo = readingRepo;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     public async Task<bool> Handle(CompleteAiStreamCommand request, CancellationToken cancellationToken)

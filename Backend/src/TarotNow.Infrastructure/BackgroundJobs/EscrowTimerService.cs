@@ -47,9 +47,10 @@ public partial class EscrowTimerService : BackgroundService
         var walletRepo = scope.ServiceProvider.GetRequiredService<IWalletRepository>();
         var escrowSettlementService = scope.ServiceProvider.GetRequiredService<IEscrowSettlementService>();
         var transactionCoordinator = scope.ServiceProvider.GetRequiredService<ITransactionCoordinator>();
+        var domainEventPublisher = scope.ServiceProvider.GetRequiredService<IDomainEventPublisher>();
 
         await ProcessExpiredOffers(financeRepo, cancellationToken);
-        await ProcessAutoRefunds(financeRepo, walletRepo, transactionCoordinator, cancellationToken);
+        await ProcessAutoRefunds(financeRepo, walletRepo, transactionCoordinator, domainEventPublisher, cancellationToken);
         await ProcessAutoReleases(financeRepo, escrowSettlementService, transactionCoordinator, cancellationToken);
     }
 }

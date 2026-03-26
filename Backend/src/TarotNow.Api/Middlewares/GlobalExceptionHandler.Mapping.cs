@@ -13,17 +13,48 @@ public partial class GlobalExceptionHandler
             return databaseProblem;
         }
 
-        return exception switch
+        var knownProblem = CreateKnownProblem(exception);
+        return knownProblem ?? CreateServerProblem();
+    }
+
+    private static ProblemDetails? CreateKnownProblem(Exception exception)
+    {
+        if (exception is ValidationException validationException)
         {
-            ValidationException validationException => CreateValidationProblem(validationException),
-            BadRequestException badRequestException => CreateBadRequestProblem(badRequestException.Message),
-            NotFoundException notFoundException => CreateNotFoundProblem(notFoundException.Message),
-            BusinessRuleException businessRuleException => CreateBusinessRuleProblem(businessRuleException),
-            ArgumentException argumentException => CreateBadRequestProblem(argumentException.Message),
-            InvalidOperationException invalidOperationException => CreateInvalidOperationProblem(invalidOperationException.Message),
-            UnauthorizedAccessException => CreateUnauthorizedProblem(),
-            _ => CreateServerProblem()
-        };
+            return CreateValidationProblem(validationException);
+        }
+
+        if (exception is BadRequestException badRequestException)
+        {
+            return CreateBadRequestProblem(badRequestException.Message);
+        }
+
+        if (exception is NotFoundException notFoundException)
+        {
+            return CreateNotFoundProblem(notFoundException.Message);
+        }
+
+        if (exception is BusinessRuleException businessRuleException)
+        {
+            return CreateBusinessRuleProblem(businessRuleException);
+        }
+
+        if (exception is ArgumentException argumentException)
+        {
+            return CreateBadRequestProblem(argumentException.Message);
+        }
+
+        if (exception is InvalidOperationException invalidOperationException)
+        {
+            return CreateInvalidOperationProblem(invalidOperationException.Message);
+        }
+
+        if (exception is UnauthorizedAccessException)
+        {
+            return CreateUnauthorizedProblem();
+        }
+
+        return null;
     }
 
     private static bool TryCreateDatabaseProblem(Exception exception, out ProblemDetails problemDetails)

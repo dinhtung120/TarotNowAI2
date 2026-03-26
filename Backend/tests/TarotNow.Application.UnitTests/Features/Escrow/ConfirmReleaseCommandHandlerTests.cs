@@ -36,6 +36,7 @@ public class ConfirmReleaseCommandHandlerTests
 {
     private readonly Mock<IChatFinanceRepository> _mockFinanceRepo;
     private readonly Mock<IWalletRepository> _mockWalletRepo;
+    private readonly Mock<IDomainEventPublisher> _mockDomainEventPublisher;
     private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
     private readonly IEscrowSettlementService _settlementService;
     private readonly ConfirmReleaseCommandHandler _handler;
@@ -44,11 +45,15 @@ public class ConfirmReleaseCommandHandlerTests
     {
         _mockFinanceRepo = new Mock<IChatFinanceRepository>();
         _mockWalletRepo = new Mock<IWalletRepository>();
+        _mockDomainEventPublisher = new Mock<IDomainEventPublisher>();
         _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
         _mockTransactionCoordinator
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
             .Returns<Func<CancellationToken, Task>, CancellationToken>((action, ct) => action(ct));
-        _settlementService = new EscrowSettlementService(_mockFinanceRepo.Object, _mockWalletRepo.Object);
+        _settlementService = new EscrowSettlementService(
+            _mockFinanceRepo.Object,
+            _mockWalletRepo.Object,
+            _mockDomainEventPublisher.Object);
 
         _handler = new ConfirmReleaseCommandHandler(
             _mockFinanceRepo.Object, _settlementService,

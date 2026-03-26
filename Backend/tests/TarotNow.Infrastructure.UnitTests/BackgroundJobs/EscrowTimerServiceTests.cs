@@ -38,6 +38,7 @@ public class EscrowTimerServiceTests
     private readonly Mock<IServiceProvider> _mockServiceProvider;
     private readonly Mock<IChatFinanceRepository> _mockFinanceRepo;
     private readonly Mock<IWalletRepository> _mockWalletRepo;
+    private readonly Mock<IDomainEventPublisher> _mockDomainEventPublisher;
     private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
     private readonly Mock<ILogger<EscrowTimerService>> _mockLogger;
     private readonly IEscrowSettlementService _settlementService;
@@ -50,9 +51,13 @@ public class EscrowTimerServiceTests
         _mockServiceProvider = new Mock<IServiceProvider>();
         _mockFinanceRepo = new Mock<IChatFinanceRepository>();
         _mockWalletRepo = new Mock<IWalletRepository>();
+        _mockDomainEventPublisher = new Mock<IDomainEventPublisher>();
         _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
         _mockLogger = new Mock<ILogger<EscrowTimerService>>();
-        _settlementService = new EscrowSettlementService(_mockFinanceRepo.Object, _mockWalletRepo.Object);
+        _settlementService = new EscrowSettlementService(
+            _mockFinanceRepo.Object,
+            _mockWalletRepo.Object,
+            _mockDomainEventPublisher.Object);
 
         _mockScopeFactory.Setup(x => x.CreateScope()).Returns(_mockScope.Object);
         _mockScope.Setup(x => x.ServiceProvider).Returns(_mockServiceProvider.Object);
@@ -62,6 +67,7 @@ public class EscrowTimerServiceTests
         _mockServiceProvider.Setup(x => x.GetService(typeof(IWalletRepository))).Returns(_mockWalletRepo.Object);
         _mockServiceProvider.Setup(x => x.GetService(typeof(IEscrowSettlementService))).Returns(_settlementService);
         _mockServiceProvider.Setup(x => x.GetService(typeof(ITransactionCoordinator))).Returns(_mockTransactionCoordinator.Object);
+        _mockServiceProvider.Setup(x => x.GetService(typeof(IDomainEventPublisher))).Returns(_mockDomainEventPublisher.Object);
         
         // Mock Coordinator để chạy hàm Invoke bình thường thay vì transaction thật
         _mockTransactionCoordinator

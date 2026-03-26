@@ -74,6 +74,7 @@ public partial class ResolveDisputeCommandHandler
 
         item.Status = QuestionItemStatus.Released;
         item.ReleasedAt = DateTime.UtcNow;
+        await PublishReleaseDomainEventAsync(item, readerAmount, fee, cancellationToken);
     }
 
     private async Task RefundToUserAsync(
@@ -94,22 +95,6 @@ public partial class ResolveDisputeCommandHandler
 
         item.Status = QuestionItemStatus.Refunded;
         item.RefundedAt = DateTime.UtcNow;
-    }
-
-    private async Task ReduceSessionFrozenBalanceAsync(ChatQuestionItem item, CancellationToken cancellationToken)
-    {
-        var session = await _financeRepo.GetSessionForUpdateAsync(item.FinanceSessionId, cancellationToken);
-        if (session == null)
-        {
-            return;
-        }
-
-        session.TotalFrozen -= item.AmountDiamond;
-        if (session.TotalFrozen < 0)
-        {
-            session.TotalFrozen = 0;
-        }
-
-        await _financeRepo.UpdateSessionAsync(session, cancellationToken);
+        await PublishRefundDomainEventAsync(item, "admin_dispute_resolve", cancellationToken);
     }
 }

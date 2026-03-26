@@ -16,10 +16,11 @@ public partial class CompleteAiStreamCommandHandler
         }
 
         ApplyRecordFinalState(record, request);
-        await ApplyWalletSettlementAsync(request, record, cancellationToken);
+        var wasRefunded = await ApplyWalletSettlementAsync(request, record, cancellationToken);
 
         await _aiRequestRepo.UpdateAsync(record, cancellationToken);
         await UpdateReadingSessionContentAsync(request, record, cancellationToken);
+        await PublishReadingBillingEventAsync(request, record, wasRefunded, cancellationToken);
 
         context.Processed = true;
         context.RequestId = record.Id.ToString();
@@ -46,35 +47,38 @@ public partial class CompleteAiStreamCommandHandler
         }
     }
 
-    private async Task ApplyWalletSettlementAsync(
+    private async Task<bool> ApplyWalletSettlementAsync(
         CompleteAiStreamCommand request,
         AiRequest record,
         CancellationToken cancellationToken)
     {
         if (record.ChargeDiamond <= 0)
         {
-            return;
+            return false;
         }
 
         switch (request.FinalStatus)
         {
             case var status when status == AiStreamFinalStatuses.Completed:
                 await ConsumeEscrowAsync(request.UserId, record, "AiRequestCompletedConsume", cancellationToken);
-                break;
+                return false;
 
             case var status when status == AiStreamFinalStatuses.FailedBeforeFirstToken:
                 await RefundEscrowAsync(request.UserId, record, "Auto refund for AI stream failure before first token", cancellationToken);
-                break;
+                return true;
 
             case var status when status == AiStreamFinalStatuses.FailedAfterFirstToken:
                 if (request.IsClientDisconnect)
                 {
                     await ConsumeEscrowAsync(request.UserId, record, "AiRequestDisconnectConsume", cancellationToken);
-                    return;
+                    return false;
                 }
 
                 await RefundEscrowAsync(request.UserId, record, "Auto refund for AI stream failure after first token", cancellationToken);
-                break;
+                return true;
+
+            default:
+                return false;
         }
     }
 }

@@ -9,15 +9,18 @@ public partial class ResolveDisputeCommandHandler : IRequestHandler<ResolveDispu
     private readonly IChatFinanceRepository _financeRepo;
     private readonly IWalletRepository _walletRepo;
     private readonly ITransactionCoordinator _transactionCoordinator;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     public ResolveDisputeCommandHandler(
         IChatFinanceRepository financeRepo,
         IWalletRepository walletRepo,
-        ITransactionCoordinator transactionCoordinator)
+        ITransactionCoordinator transactionCoordinator,
+        IDomainEventPublisher domainEventPublisher)
     {
         _financeRepo = financeRepo;
         _walletRepo = walletRepo;
         _transactionCoordinator = transactionCoordinator;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     public async Task<bool> Handle(ResolveDisputeCommand request, CancellationToken cancellationToken)

@@ -1,4 +1,5 @@
 using TarotNow.Application.Exceptions;
+using TarotNow.Application.Common.Mappings;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 using RefreshTokenEntity = TarotNow.Domain.Entities.RefreshToken;
@@ -68,17 +69,7 @@ public partial class LoginCommandHandler
         {
             AccessToken = accessToken,
             ExpiresInMinutes = _jwtTokenSettings.AccessTokenExpiryMinutes,
-            User = new UserProfileDto
-            {
-                Id = user.Id,
-                Username = user.Username,
-                Email = user.Email,
-                DisplayName = user.DisplayName,
-                Level = user.Level,
-                Exp = user.Exp,
-                Role = user.Role,
-                Status = user.Status.ToString()
-            }
+            User = user.ToUserProfileDto()
         };
     }
 }

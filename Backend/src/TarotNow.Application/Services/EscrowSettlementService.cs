@@ -4,17 +4,20 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Services;
 
-public sealed class EscrowSettlementService : IEscrowSettlementService
+public sealed partial class EscrowSettlementService : IEscrowSettlementService
 {
     private readonly IChatFinanceRepository _financeRepository;
     private readonly IWalletRepository _walletRepository;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     public EscrowSettlementService(
         IChatFinanceRepository financeRepository,
-        IWalletRepository walletRepository)
+        IWalletRepository walletRepository,
+        IDomainEventPublisher domainEventPublisher)
     {
         _financeRepository = financeRepository;
         _walletRepository = walletRepository;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     public async Task ApplyReleaseAsync(
@@ -52,34 +55,7 @@ public sealed class EscrowSettlementService : IEscrowSettlementService
 
         await _financeRepository.UpdateItemAsync(item, cancellationToken);
         await DecreaseSessionFrozenAsync(item, cancellationToken);
-    }
-
-    private static (string ReleaseDescription, string FeeDescription) BuildDescriptions(
-        bool isAutoRelease,
-        long readerAmount,
-        long fee)
-    {
-        if (isAutoRelease)
-        {
-            return ($"Auto-release {readerAmount}💎 (fee {fee}💎)", $"Platform fee auto 10% = {fee}💎");
-        }
-
-        return ($"Release {readerAmount}💎 (fee {fee}💎) cho reader", $"Platform fee 10% = {fee}💎");
-    }
-
-    private static void ApplyReleasedState(ChatQuestionItem item, bool isAutoRelease)
-    {
-        var now = DateTime.UtcNow;
-        item.Status = QuestionItemStatus.Released;
-        item.ReleasedAt = now;
-        item.DisputeWindowStart = now;
-        item.DisputeWindowEnd = now.AddHours(24);
-        item.AutoReleaseAt = null;
-
-        if (!isAutoRelease)
-        {
-            item.ConfirmedAt = now;
-        }
+        await PublishReleaseEventAsync(item, readerAmount, fee, isAutoRelease, cancellationToken);
     }
 
     private async Task DecreaseSessionFrozenAsync(ChatQuestionItem item, CancellationToken cancellationToken)

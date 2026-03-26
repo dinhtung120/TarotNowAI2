@@ -50,6 +50,17 @@ public class ValidationException : Exception
     /// </summary>
     public IDictionary<string, string[]> Errors { get; }
 
+    public ValidationException()
+        : this(new Dictionary<string, string[]>())
+    {
+    }
+
+    public ValidationException(string message)
+        : base(message)
+    {
+        Errors = new Dictionary<string, string[]>();
+    }
+
     /// <summary>
     /// Constructor nhận errors dictionary.
     ///
@@ -61,5 +72,11 @@ public class ValidationException : Exception
         : base("One or more validation failures have occurred.")
     {
         Errors = errors;
+    }
+
+    public ValidationException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+        Errors = new Dictionary<string, string[]>();
     }
 }

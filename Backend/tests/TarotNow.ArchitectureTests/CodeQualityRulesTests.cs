@@ -11,6 +11,7 @@ public class CodeQualityRulesTests
     private const int MaxMethodLines = 40;
     private const int MaxMethodParameters = 5;
     private const int MaxMethodCyclomaticComplexity = 10;
+    private const int MaxMethodCognitiveComplexity = 15;
 
     [Fact]
     public void SourceFiles_ShouldStayWithinLogicalLineBudget()
@@ -74,6 +75,22 @@ public class CodeQualityRulesTests
         AssertNoViolations(violations, $"Each method/function must stay <= {MaxMethodCyclomaticComplexity} cyclomatic complexity.");
     }
 
+    [Fact]
+    public void Methods_ShouldStayWithinCognitiveComplexityBudget()
+    {
+        var metrics = AnalyzeSourceFiles();
+
+        var violations = metrics
+            .SelectMany(metric => metric.Methods.Select(method => (metric.RelativePath, method)))
+            .Where(item => item.method.CognitiveComplexity > MaxMethodCognitiveComplexity)
+            .Select(item =>
+                $"{item.RelativePath}:{item.method.StartLine} {item.method.Name} (CogC={item.method.CognitiveComplexity})")
+            .OrderBy(item => item, StringComparer.Ordinal)
+            .ToArray();
+
+        AssertNoViolations(violations, $"Each method/function must stay <= {MaxMethodCognitiveComplexity} cognitive complexity.");
+    }
+
     private static IReadOnlyList<FileMetrics> AnalyzeSourceFiles()
     {
         var backendRoot = FindBackendRoot();
@@ -123,7 +140,8 @@ public class CodeQualityRulesTests
             StartLine: lineSpan.StartLinePosition.Line + 1,
             ParameterCount: CountRequiredParameters(method.ParameterList.Parameters),
             LogicalLines: logicalLines,
-            CyclomaticComplexity: CalculateCyclomaticComplexity(method));
+            CyclomaticComplexity: CalculateCyclomaticComplexity(method),
+            CognitiveComplexity: CalculateCognitiveComplexity(method));
     }
 
     private static MethodMetrics CreateMethodMetrics(
@@ -138,7 +156,8 @@ public class CodeQualityRulesTests
             StartLine: lineSpan.StartLinePosition.Line + 1,
             ParameterCount: CountRequiredParameters(function.ParameterList.Parameters),
             LogicalLines: logicalLines,
-            CyclomaticComplexity: CalculateCyclomaticComplexity(function));
+            CyclomaticComplexity: CalculateCyclomaticComplexity(function),
+            CognitiveComplexity: CalculateCognitiveComplexity(function));
     }
 
     private static bool[] BuildLogicalLineMap(SyntaxNode root, SourceText sourceText, string rawText)
@@ -273,6 +292,57 @@ public class CodeQualityRulesTests
         return complexity;
     }
 
+    private static int CalculateCognitiveComplexity(SyntaxNode node)
+    {
+        var complexity = 0;
+
+        foreach (var descendant in node.DescendantNodes())
+        {
+            if (IsCognitiveFlowNode(descendant))
+            {
+                var nesting = descendant.Ancestors().Count(IsCognitiveNestingNode);
+                complexity += 1 + nesting;
+            }
+
+            if (descendant is BinaryExpressionSyntax binaryExpression
+                && (binaryExpression.IsKind(SyntaxKind.LogicalAndExpression)
+                    || binaryExpression.IsKind(SyntaxKind.LogicalOrExpression)))
+            {
+                complexity++;
+            }
+        }
+
+        return complexity;
+    }
+
+    private static bool IsCognitiveFlowNode(SyntaxNode node)
+    {
+        return node is IfStatementSyntax
+            or SwitchSectionSyntax
+            or ForStatementSyntax
+            or ForEachStatementSyntax
+            or ForEachVariableStatementSyntax
+            or WhileStatementSyntax
+            or DoStatementSyntax
+            or CatchClauseSyntax
+            or ConditionalExpressionSyntax
+            or SwitchExpressionArmSyntax;
+    }
+
+    private static bool IsCognitiveNestingNode(SyntaxNode node)
+    {
+        return node is IfStatementSyntax
+            or SwitchStatementSyntax
+            or SwitchExpressionSyntax
+            or ForStatementSyntax
+            or ForEachStatementSyntax
+            or ForEachVariableStatementSyntax
+            or WhileStatementSyntax
+            or DoStatementSyntax
+            or CatchClauseSyntax
+            or ConditionalExpressionSyntax;
+    }
+
     private static bool ShouldSkip(string path)
     {
         if (path.Contains($"{Path.DirectorySeparatorChar}Migrations{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
@@ -343,5 +413,6 @@ public class CodeQualityRulesTests
         int StartLine,
         int ParameterCount,
         int LogicalLines,
-        int CyclomaticComplexity);
+        int CyclomaticComplexity,
+        int CognitiveComplexity);
 }

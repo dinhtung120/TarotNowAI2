@@ -1,5 +1,6 @@
 using TarotNow.Domain.Entities;
 using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
 
@@ -57,6 +58,28 @@ public partial class CompleteAiStreamCommandHandler
         {
             // Ignore telemetry failures. Business transaction is already committed.
         }
+    }
+
+    private Task PublishReadingBillingEventAsync(
+        CompleteAiStreamCommand request,
+        AiRequest record,
+        bool wasRefunded,
+        CancellationToken cancellationToken)
+    {
+        if (record.ChargeDiamond <= 0)
+        {
+            return Task.CompletedTask;
+        }
+
+        return _domainEventPublisher.PublishAsync(new ReadingBillingCompletedDomainEvent
+        {
+            UserId = request.UserId,
+            AiRequestId = record.Id,
+            ReadingSessionRef = record.ReadingSessionRef ?? string.Empty,
+            ChargeDiamond = record.ChargeDiamond,
+            FinalStatus = request.FinalStatus,
+            WasRefunded = wasRefunded
+        }, cancellationToken);
     }
 
     private static string? NormalizeFinishReason(string? finishReason)
