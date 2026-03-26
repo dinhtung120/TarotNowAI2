@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState, useRef } from 'react';
 import {
  Users,
  CreditCard,
@@ -72,6 +72,8 @@ const isRouteActive = (pathname: string, href: string) => {
 export default function AdminLayoutShell({ children, labels }: AdminLayoutShellProps) {
  const pathname = usePathname();
  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+ const [desktopNavOpen, setDesktopNavOpen] = useState(false);
+ const desktopSidebarRef = useRef<HTMLDivElement>(null);
 
  const menuItems = useMemo(
   () =>
@@ -82,6 +84,7 @@ export default function AdminLayoutShell({ children, labels }: AdminLayoutShellP
   [labels.menu]
  );
 
+ // Prevent scrolling when mobile nav is open
  useEffect(() => {
   if (!mobileNavOpen) return undefined;
   const previousOverflow = document.body.style.overflow;
@@ -91,27 +94,48 @@ export default function AdminLayoutShell({ children, labels }: AdminLayoutShellP
   };
  }, [mobileNavOpen]);
 
- const renderSidebarContent = (mobile = false) => (
+ // Close desktop nav when clicking outside
+ useEffect(() => {
+  const handleClickOutside = (event: MouseEvent) => {
+   if (desktopSidebarRef.current && !desktopSidebarRef.current.contains(event.target as Node)) {
+    setDesktopNavOpen(false);
+   }
+  };
+  if (desktopNavOpen) {
+   document.addEventListener('mousedown', handleClickOutside);
+  }
+  return () => {
+   document.removeEventListener('mousedown', handleClickOutside);
+  };
+ }, [desktopNavOpen]);
+
+ // Close all navs on route change
+ useEffect(() => {
+  setDesktopNavOpen(false);
+  setMobileNavOpen(false);
+ }, [pathname]);
+
+ const renderSidebarContent = (mobile = false, isDropdown = false) => (
   <>
-   <div className="p-6 sm:p-8 mb-2 sm:mb-4">
+   <div className={cn("mb-2 sm:mb-4", isDropdown ? "p-4" : "p-6 sm:p-8")}>
     <div className="flex items-center gap-3 group px-4 py-3 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-default)] shadow-[var(--shadow-card)] overflow-hidden relative">
      <div className="absolute inset-0 bg-gradient-to-r from-[var(--purple-accent)]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-     <div className="w-10 h-10 rounded-xl bg-[var(--purple-accent)]/10 flex items-center justify-center border border-[var(--purple-accent)]/20 group-hover:scale-110 transition-transform duration-500">
+     <div className="w-10 h-10 rounded-xl bg-[var(--purple-accent)]/10 flex items-center justify-center border border-[var(--purple-accent)]/20 group-hover:scale-110 transition-transform duration-500 shrink-0">
       <ShieldCheck className="w-6 h-6 text-[var(--purple-accent)]" />
      </div>
-     <div className="relative z-10">
-      <h2 className="text-sm font-black text-[var(--text-ink)] tracking-widest uppercase italic">
+     <div className="relative z-10 flex-1 min-w-0">
+      <h2 className="text-sm font-black text-[var(--text-ink)] tracking-widest uppercase italic truncate">
        {labels.title}
       </h2>
-      <div className="text-[10px] font-bold text-[var(--purple-muted)] tracking-tighter uppercase leading-none">
+      <div className="text-[10px] font-bold text-[var(--purple-muted)] tracking-tighter uppercase leading-none truncate">
        {labels.subtitle}
       </div>
      </div>
     </div>
    </div>
 
-   <nav className="flex-1 px-4 space-y-2 overflow-y-auto no-scrollbar">
-    <div className="px-6 mb-4">
+   <nav className={cn("flex-1 px-4 space-y-2 overflow-y-auto no-scrollbar", isDropdown && "max-h-[60vh] custom-scrollbar")}>
+    <div className={cn("mb-4", isDropdown ? "px-2" : "px-6")}>
      <span className="text-[9px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)]">
       {labels.sectionMain}
      </span>
@@ -163,11 +187,12 @@ export default function AdminLayoutShell({ children, labels }: AdminLayoutShellP
     })}
    </nav>
 
-   <div className="p-6 sm:p-8 border-t border-[var(--border-subtle)]">
+   <div className={cn("border-t border-[var(--border-subtle)] shrink-0", isDropdown ? "p-4" : "p-6 sm:p-8")}>
     <Link
      href="/"
      onClick={() => {
       if (mobile) setMobileNavOpen(false);
+      else setDesktopNavOpen(false);
      }}
      className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] hover:bg-[var(--danger)]/10 hover:border-[var(--danger)]/20 hover:text-[var(--danger)] transition-all group"
     >
@@ -182,9 +207,30 @@ export default function AdminLayoutShell({ children, labels }: AdminLayoutShellP
   <div className="flex h-dvh bg-[var(--bg-void)] text-[var(--text-primary)] overflow-hidden">
    <AstralBackground variant="subtle" />
 
-   <aside className="relative z-20 hidden lg:flex w-72 h-full bg-[var(--bg-glass)] border-r border-[var(--border-subtle)] flex-col shadow-2xl">
-    {renderSidebarContent()}
-   </aside>
+   {/* Desktop Dropdown Sidebar Toggle */}
+   <div ref={desktopSidebarRef} className="hidden lg:block fixed top-3 left-4 z-50">
+    <button
+     onClick={() => setDesktopNavOpen(!desktopNavOpen)}
+     className="flex items-center justify-center w-12 h-12 rounded-2xl bg-[var(--bg-glass)]/80 border border-[var(--border-subtle)] backdrop-blur-md shadow-lg transition-all duration-300 hover:bg-[var(--bg-elevated)] hover:border-[var(--border-hover)] text-[var(--text-secondary)] hover:text-[var(--text-ink)]"
+     aria-label="Toggle Admin Menu"
+    >
+     {desktopNavOpen ? (
+      <X className="w-6 h-6 transition-transform duration-300 rotate-90" />
+     ) : (
+      <Menu className="w-6 h-6 transition-transform duration-300" />
+     )}
+    </button>
+
+    {/* Dropdown Navigation Menu */}
+    <aside
+     className={cn(
+      "absolute top-14 left-0 w-[19rem] bg-[var(--bg-overlay)]/95 border border-[var(--border-subtle)] rounded-3xl flex-col backdrop-blur-2xl shadow-[var(--glow-purple-lg)] transition-all duration-300 origin-top-left overflow-hidden",
+      desktopNavOpen ? "flex opacity-100 scale-100 visible" : "opacity-0 scale-95 invisible pointer-events-none"
+     )}
+    >
+     {renderSidebarContent(false, true)}
+    </aside>
+   </div>
 
    {mobileNavOpen && (
     <div className="lg:hidden fixed inset-0 z-40">
