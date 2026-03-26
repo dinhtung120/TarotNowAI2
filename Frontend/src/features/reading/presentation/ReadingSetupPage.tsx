@@ -218,6 +218,13 @@ export default function ReadingSetupPage() {
  })}
  </div>
 
+ {/* 
+ * Ẩn phần nhập câu hỏi khi người dùng chọn trải bài "Nhật ấn" (daily_1).
+ * Lý do: Trải bài hàng ngày thường mang tính chất nhận thông điệp chung từ vũ trụ 
+ * chứ không giải quyết một câu hỏi cụ thể nào. Việc ẩn đi giúp giao diện gọn gàng hơn
+ * và định hướng người dùng tập trung vào thông điệp tổng quan.
+ */}
+ {selectedSpread !== 'daily_1' && (
  <div className="animate-in fade-in slide-in-from-bottom-12 duration-700 delay-400">
  <Input
  label={t('question_label')}
@@ -228,6 +235,7 @@ export default function ReadingSetupPage() {
  {...register("question")}
  />
  </div>
+ )}
 
  <div className="flex justify-center pt-4 animate-in fade-in zoom-in-95 duration-700 delay-500">
  <Button
