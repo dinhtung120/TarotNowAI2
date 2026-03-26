@@ -94,6 +94,9 @@ public static class DependencyInjection
          */
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
+        // Đăng ký Domain Services
+        services.AddTransient<FollowupPricingService>();
+
         return services; // Trả về để hỗ trợ method chaining
     }
 }
