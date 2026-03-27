@@ -1,0 +1,16 @@
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
+import LoadingSpinner from '@/shared/components/ui/LoadingSpinner';
+
+const ChatRoomPage = dynamic(
+ () => import('@/features/chat/presentation/ChatRoomPage'),
+ { loading: () => <LoadingSpinner fullPage message="Loading chat room" /> },
+);
+
+export default function ChatRoomRoutePage() {
+ return (
+  <Suspense fallback={<LoadingSpinner fullPage message="Loading chat room" />}>
+   <ChatRoomPage />
+  </Suspense>
+ );
+}
