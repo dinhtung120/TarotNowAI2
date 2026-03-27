@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { HubConnectionState, type HubConnection } from '@microsoft/signalr';
+import { HubConnectionState, type HubConnection, type ILogger, type LogLevel } from '@microsoft/signalr';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
 import {
  listMessages,
@@ -26,6 +27,17 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
  const authUserId = authStore.user?.id ?? '';
  const token = authStore.token;
 
+ const queryClient = useQueryClient();
+
+ const getCachedConversation = (id?: string | null): ConversationDto | null => {
+  if (!id) return null;
+  const cachedActive = queryClient.getQueryData<{ conversations: ConversationDto[] }>(['chat', 'inbox', 'active']);
+  const activeMatch = cachedActive?.conversations?.find((c) => c.id === id);
+  if (activeMatch) return activeMatch;
+  const cachedPending = queryClient.getQueryData<{ conversations: ConversationDto[] }>(['chat', 'inbox', 'pending']);
+  return cachedPending?.conversations?.find((c) => c.id === id) ?? null;
+ };
+
  const [messages, setMessages] = useState<ChatMessageDto[]>([]);
  const [newMessage, setNewMessage] = useState('');
  const [loading, setLoading] = useState(false);
@@ -41,6 +53,30 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
  const messagesEndRef = useRef<HTMLDivElement>(null);
  const inputRef = useRef<HTMLInputElement>(null);
  const hasLoadedInitialRef = useRef(false);
+
+ /* ========================================================================
+  * Ref ổn định cho các callback dùng bên trong useEffect chính.
+  *
+  * Vấn đề gốc (BUG): useEffect khởi tạo SignalR connection có dependency
+  * array chứa loadInitial, markRead, scrollToBottom. Ba hàm này là
+  * useCallback phụ thuộc vào conversationId / scrollToBottom → mỗi khi
+  * reference thay đổi, useEffect chạy lại → teardown connection cũ →
+  * tạo connection mới → setConversation(null) (line reset) →
+  * canShowInput = false → UI read-only tạm thời.
+  *
+  * Triệu chứng: Lần đầu load trang chat qua client-side navigation,
+  * input/ảnh/ghi âm bị disabled (read-only). F5 lại thì hoạt động bình
+  * thường vì lúc đó effect chỉ chạy 1 lần.
+  *
+  * Cách sửa: Dùng ref để giữ reference ổn định cho các callback.
+  * useEffect chính CHỈ phụ thuộc vào conversationId, currentUserId, token
+  * (những giá trị thực sự cần tạo lại connection khi thay đổi).
+  * Bên trong effect, gọi qua ref.current() để luôn dùng phiên bản
+  * mới nhất mà không trigger re-run effect.
+  * ======================================================================== */
+ const loadInitialRef = useRef<(silent?: boolean) => Promise<void>>(async () => {});
+ const markReadRef = useRef<() => Promise<void>>(async () => {});
+ const scrollToBottomRef = useRef<(behavior?: ScrollBehavior) => void>(() => {});
 
  const currentUserId = authUserId;
  const isUserRole = useMemo(() => {
@@ -58,18 +94,24 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
  const remoteTyping = typingUserId !== null && typingUserId !== currentUserId;
  const hasMore = Boolean(nextCursor);
 
+ /* scrollToBottom: stable callback (deps rỗng) → ít khi thay đổi reference,
+  * nhưng vẫn cập nhật ref để đảm bảo an toàn. */
  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
   messagesEndRef.current?.scrollIntoView({ behavior });
  }, []);
+ scrollToBottomRef.current = scrollToBottom;
 
+ /* markRead: phụ thuộc conversationId → mỗi khi đổi phòng chat, reference
+  * mới. Cập nhật ref để useEffect luôn gọi đúng phiên bản. */
  const markRead = useCallback(async () => {
   if (!connectionRef.current || !conversationId) return;
   try {
    await connectionRef.current.invoke('MarkRead', conversationId);
   } catch (error) {
-   logger.error('[Chat] markRead failed', error, { conversationId });
+   logger.warn('[Chat] markRead failed', error, { conversationId });
   }
  }, [conversationId]);
+ markReadRef.current = markRead;
 
  const sendTypedMessage = useCallback(
   async (content: string, messageType = 'text') => {
@@ -82,7 +124,7 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
     await connectionRef.current.invoke('SendMessage', conversationId, normalizedContent, messageType);
     return true;
    } catch (error) {
-    logger.error('[Chat] SendMessage failed', error, {
+    logger.warn('[Chat] SendMessage failed', error, {
      conversationId,
      messageType,
     });
@@ -102,7 +144,7 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
     await connectionRef.current.invoke('SendMessage', conversationId, JSON.stringify(payload), type);
     return true;
    } catch (error) {
-    logger.error('[Chat] SendMediaMessage failed', error, {
+    logger.warn('[Chat] SendMediaMessage failed', error, {
      conversationId,
      type,
     });
@@ -134,6 +176,9 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
   [connected, conversationId]
  );
 
+ /* loadInitial: phụ thuộc conversationId → reference thay đổi khi đổi phòng.
+  * Trước đây còn phụ thuộc scrollToBottom → gây thêm lần thay đổi reference
+  * không cần thiết. Giờ dùng scrollToBottomRef bên trong thay vì closure. */
  const loadInitial = useCallback(async (silent = false) => {
   if (!conversationId) return;
   if (!silent) {
@@ -153,7 +198,8 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
    setNextCursor(payload.nextCursor ?? null);
    if (!hasLoadedInitialRef.current) {
     hasLoadedInitialRef.current = true;
-    setTimeout(() => scrollToBottom('auto'), 10);
+    /* Dùng ref thay vì closure trực tiếp để tránh dependency cycle */
+    setTimeout(() => scrollToBottomRef.current('auto'), 10);
    }
   } else {
    if (!silent) {
@@ -166,7 +212,8 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
   if (!silent) {
    setLoading(false);
   }
- }, [conversationId, scrollToBottom]);
+ }, [conversationId]);
+ loadInitialRef.current = loadInitial;
 
  const loadMore = useCallback(async () => {
   if (!conversationId || !nextCursor || loadingMore) return;
@@ -189,8 +236,20 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
   setLoadingMore(false);
  }, [conversationId, loadingMore, nextCursor]);
 
+ /* ========================================================================
+  * useEffect chính: khởi tạo SignalR hub connection
+  *
+  * Dependency array CHỈ chứa 3 giá trị thực sự cần tạo lại connection:
+  * - conversationId: đổi phòng chat → cần connection mới
+  * - currentUserId: đổi user đăng nhập → cần connection mới
+  * - token: token mới (refresh) → cần connection mới
+  *
+  * Các callback (loadInitial, markRead, scrollToBottom) được truy cập
+  * qua ref để tránh dependency thay đổi gây re-initialization vô hạn.
+  * Đây chính là fix cho bug "read-only khi lần đầu navigate vào chat room".
+  * ======================================================================== */
  useEffect(() => {
-  if (!conversationId) {
+  if (!conversationId || !token) {
    setMessages([]);
    setConversation(null);
    setConnected(false);
@@ -206,12 +265,26 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
   const initConnection = async () => {
    const signalR = await import('@microsoft/signalr');
    const { getSignalRHubUrl } = await import('@/shared/infrastructure/realtime/signalRUrl');
-   hubConnection = new signalR.HubConnectionBuilder()
-    .withUrl(getSignalRHubUrl('/api/v1/chat'), {
-     accessTokenFactory: () => token ?? '',
-    })
-    .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
-    .configureLogging(signalR.LogLevel.Warning)
+    const customLogger: ILogger = {
+     log: (logLevel: LogLevel, message: string) => {
+      if (logLevel === signalR.LogLevel.Error || logLevel === signalR.LogLevel.Critical) {
+       console.warn(`[SignalR Error] ${message}`);
+      } else if (logLevel === signalR.LogLevel.Warning) {
+       console.warn(`[SignalR Warn] ${message}`);
+      } else if (logLevel === signalR.LogLevel.Information) {
+       console.info(`[SignalR Info] ${message}`);
+      } else {
+       console.debug(`[SignalR Debug] ${message}`);
+      }
+     }
+    };
+
+    hubConnection = new signalR.HubConnectionBuilder()
+     .withUrl(getSignalRHubUrl('/api/v1/chat'), {
+      accessTokenFactory: () => token ?? '',
+     })
+     .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+     .configureLogging(customLogger)
     .build();
 
    hubConnection.serverTimeoutInMilliseconds = 120000; // 2 minutes server timeout
@@ -219,7 +292,6 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
    hubConnection.on('message.created', (message: ChatMessageDto) => {
     if (message.conversationId !== conversationId) return;
     setMessages((prev) => appendUniqueMessage(prev, message));
-    setTimeout(() => scrollToBottom(), 0);
    });
 
    hubConnection.on('message.read', (payload: { userId: string; conversationId: string }) => {
@@ -246,14 +318,17 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
     setTypingUserId(null);
    });
 
+   /* Khi conversation cập nhật (status đổi, escrow đổi...),
+    * gọi loadInitialRef.current(true) để refresh metadata
+    * mà không xóa message list (silent = true). */
    hubConnection.on('conversation.updated', (payload: { conversationId: string; type?: string }) => {
     if (payload.conversationId !== conversationId) return;
     if (payload.type === 'message_created') return;
-    void loadInitial(true);
+    void loadInitialRef.current(true);
    });
 
    hubConnection.on('Error', (error: string) => {
-    logger.error('[Chat] Hub error', error, { conversationId });
+    logger.warn('[Chat] Hub error', error, { conversationId });
    });
 
    hubConnection.onreconnecting(() => setConnected(false));
@@ -261,7 +336,7 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
     if (cancelled) return;
     setConnected(true);
     void hubConnection?.invoke('JoinConversation', conversationId);
-    void markRead();
+    void markReadRef.current();
    });
    hubConnection.onclose(() => setConnected(false));
 
@@ -277,16 +352,18 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
     setConnected(true);
 
     await hubConnection.invoke('JoinConversation', conversationId);
-    await loadInitial(false);
-    await markRead();
+    await loadInitialRef.current(false);
+    await markReadRef.current();
    } catch (error) {
-    logger.error('[Chat] Connection failed', error, { conversationId });
-    await loadInitial(false);
+    /* Đổi sang logger.warn thay cho error để tránh Next.js dev overlay đỏ màn hình
+     * khi rớt mạng hoặc 401 do token hết hạn */
+    logger.warn('[Chat] Connection failed', error, { conversationId });
+    await loadInitialRef.current(false);
    }
   };
 
   setMessages([]);
-  setConversation(null);
+  setConversation(getCachedConversation(conversationId));
   setNextCursor(null);
   setTypingUserId(null);
   hasLoadedInitialRef.current = false;
@@ -307,7 +384,8 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
    }
    connectionRef.current = null;
   };
- }, [conversationId, currentUserId, token, loadInitial, markRead, scrollToBottom]);
+ // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [conversationId, currentUserId, token]);
 
  return {
   messages,

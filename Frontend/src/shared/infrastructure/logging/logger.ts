@@ -56,13 +56,13 @@ export const logger = {
  error(scope: string, error: unknown, meta?: LogMeta): void {
   writeLog('error', scope, error, meta);
  },
- warn(scope: string, message: string, meta?: LogMeta): void {
-  writeLog('warn', scope, message, meta);
+ warn(scope: string, payload: unknown, meta?: LogMeta): void {
+  writeLog('warn', scope, payload, meta);
  },
- info(scope: string, message: string, meta?: LogMeta): void {
-  writeLog('info', scope, message, meta);
+ info(scope: string, payload: unknown, meta?: LogMeta): void {
+  writeLog('info', scope, payload, meta);
  },
- debug(scope: string, message: string, meta?: LogMeta): void {
-  writeLog('debug', scope, message, meta);
+ debug(scope: string, payload: unknown, meta?: LogMeta): void {
+  writeLog('debug', scope, payload, meta);
  },
 };

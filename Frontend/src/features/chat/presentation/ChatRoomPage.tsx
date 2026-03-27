@@ -13,8 +13,6 @@ import {
  Image as ImageIcon,
  Loader2,
  MoreVertical,
- Music2,
- Paperclip,
  Send,
  Trash2,
  X,
@@ -36,10 +34,28 @@ import {
  type MediaPayloadDto,
 } from '@/features/chat/application/actions';
 import { normalizeReaderStatus } from '@/features/reader/domain/readerStatus';
+import type { VoiceRecordingResult } from '@/features/chat/application/useVoiceRecorder';
 
+/* ========================================================================
+ * Lazy load các component nặng:
+ * - PaymentOfferModal: modal yêu cầu cộng tiền, chỉ dùng khi Reader bấm
+ * - VoiceRecorderButton: ghi âm microphone, có AudioContext + AnalyserNode
+ * - VoiceMessageBubble: phát lại voice message, tạo Audio element
+ *
+ * Dynamic import giúp giảm bundle size ban đầu vì các component này
+ * không cần thiết ngay lúc trang load (user chưa bấm ghi âm ngay).
+ * ======================================================================== */
 const PaymentOfferModal = dynamic(
  () => import('@/features/chat/presentation/components/PaymentOfferModal'),
  { loading: () => null }
+);
+const VoiceRecorderButton = dynamic(
+ () => import('@/features/chat/presentation/components/VoiceRecorderButton'),
+ { ssr: false }
+);
+const VoiceMessageBubble = dynamic(
+ () => import('@/features/chat/presentation/components/VoiceMessageBubble'),
+ { ssr: false }
 );
 
 interface ChatRoomPageProps {
@@ -79,7 +95,6 @@ function parseStatusLabel(status?: string | null) {
 
 const MAX_MEDIA_PAYLOAD_BYTES = 5 * 1024 * 1024;
 const MAX_RAW_IMAGE_BYTES = 20 * 1024 * 1024;
-const MAX_RAW_AUDIO_BYTES = 12 * 1024 * 1024;
 
 function readBlobAsDataUrl(blob: Blob): Promise<string> {
  return new Promise((resolve, reject) => {
@@ -172,140 +187,37 @@ async function buildImageMediaPayload(file: File): Promise<MediaPayloadDto> {
  }
 }
 
-function getAudioDurationMs(file: Blob): Promise<number | null> {
- const objectUrl = URL.createObjectURL(file);
- const audio = document.createElement('audio');
- audio.preload = 'metadata';
- audio.src = objectUrl;
+/* ========================================================================
+ * buildVoiceMediaPayloadFromBlob – Tạo MediaPayloadDto từ Blob ghi âm trực tiếp
+ *
+ * Khác với hàm buildVoiceMediaPayload cũ (nhận File từ file picker),
+ * hàm này nhận Blob trực tiếp từ useVoiceRecorder hook.
+ *
+ * Blob đã được encode Opus/WebM 16kbps bởi MediaRecorder trong hook,
+ * nên KHÔNG cần transcode lại – chỉ cần convert sang data URL rồi gửi.
+ *
+ * Tại sao vẫn dùng data URL thay vì upload file riêng?
+ * - Kiến trúc hiện tại gửi media qua SignalR (sendMediaMessage invokes
+ *   'SendMessage' với JSON payload chứa data URL)
+ * - Giới hạn 5MB đủ cho voice message 120 giây ở 16kbps (~240KB)
+ * ======================================================================== */
+async function buildVoiceMediaPayloadFromBlob(
+  blob: Blob,
+  durationMs: number
+): Promise<MediaPayloadDto> {
+  if (blob.size > MAX_MEDIA_PAYLOAD_BYTES) {
+    throw new Error('Tin nhắn thoại vượt quá 5MB, vui lòng ghi ngắn hơn.');
+  }
 
- return new Promise((resolve) => {
-  const finalize = (value: number | null) => {
-   URL.revokeObjectURL(objectUrl);
-   resolve(value);
-  };
-
-  audio.onloadedmetadata = () => {
-   if (!Number.isFinite(audio.duration) || audio.duration <= 0) {
-    finalize(null);
-    return;
-   }
-
-   finalize(Math.max(1, Math.round(audio.duration * 1000)));
-  };
-
-  audio.onerror = () => finalize(null);
- });
-}
-
-async function transcodeAudioToOpus(file: File): Promise<{
- blob: Blob;
- mimeType: string;
- processingStatus: string;
- durationMs: number | null;
-}> {
- const durationMs = await getAudioDurationMs(file);
- const supportsMediaRecorder = typeof window !== 'undefined'
-  && typeof window.MediaRecorder !== 'undefined'
-  && window.MediaRecorder.isTypeSupported('audio/webm;codecs=opus');
-
- if (!supportsMediaRecorder) {
+  const url = await readBlobAsDataUrl(blob);
   return {
-   blob: file,
-   mimeType: file.type || 'audio/webm',
-   processingStatus: 'passthrough_requires_server_opus_transcode',
-   durationMs,
-  };
- }
-
- const audio = document.createElement('audio');
- audio.preload = 'auto';
- audio.src = URL.createObjectURL(file);
- audio.volume = 0;
-
- try {
-  await new Promise<void>((resolve, reject) => {
-   audio.onloadedmetadata = () => resolve();
-   audio.onerror = () => reject(new Error('Không thể đọc file âm thanh.'));
-  });
-
-  type CaptureAudioElement = HTMLAudioElement & {
-   captureStream?: () => MediaStream;
-   mozCaptureStream?: () => MediaStream;
-  };
-
-  const audioElement = audio as CaptureAudioElement;
-  const mediaStream = audioElement.captureStream?.() ?? audioElement.mozCaptureStream?.();
-  if (!mediaStream) {
-   return {
-    blob: file,
-    mimeType: file.type || 'audio/webm',
-    processingStatus: 'passthrough_requires_server_opus_transcode',
+    url,
+    mimeType: blob.type || 'audio/webm',
+    sizeBytes: blob.size,
     durationMs,
-   };
-  }
-
-  const chunks: BlobPart[] = [];
-  const recorder = new window.MediaRecorder(mediaStream, {
-   mimeType: 'audio/webm;codecs=opus',
-   audioBitsPerSecond: 16_000,
-  });
-
-  const recordingCompleted = new Promise<Blob>((resolve, reject) => {
-   recorder.ondataavailable = (event) => {
-    if (event.data && event.data.size > 0) {
-     chunks.push(event.data);
-    }
-   };
-
-   recorder.onerror = () => reject(new Error('Không thể mã hóa âm thanh sang Opus.'));
-   recorder.onstop = () => resolve(new Blob(chunks, { type: 'audio/webm' }));
-  });
-
-  recorder.start();
-  await audio.play();
-  await new Promise<void>((resolve) => {
-   audio.onended = () => resolve();
-  });
-
-  recorder.stop();
-  const blob = await recordingCompleted;
-  if (blob.size === 0) {
-   throw new Error('Âm thanh đã mã hóa không hợp lệ.');
-  }
-
-  return {
-   blob,
-   mimeType: 'audio/webm',
-   processingStatus: 'client_transcoded_opus',
-   durationMs,
+    description: 'voice_recording',
+    processingStatus: 'client_recorded_opus',
   };
- } catch {
-  return {
-   blob: file,
-   mimeType: file.type || 'audio/webm',
-   processingStatus: 'passthrough_requires_server_opus_transcode',
-   durationMs,
-  };
- } finally {
-  URL.revokeObjectURL(audio.src);
- }
-}
-
-async function buildVoiceMediaPayload(file: File): Promise<MediaPayloadDto> {
- const transcoded = await transcodeAudioToOpus(file);
- if (transcoded.blob.size > MAX_MEDIA_PAYLOAD_BYTES) {
-  throw new Error('File âm thanh sau nén vượt quá 5MB.');
- }
-
- const url = await readBlobAsDataUrl(transcoded.blob);
- return {
-  url,
-  mimeType: transcoded.mimeType,
-  sizeBytes: transcoded.blob.size,
-  durationMs: transcoded.durationMs,
-  description: file.name,
-  processingStatus: transcoded.processingStatus,
- };
 }
 
 export default function ChatRoomPage({ conversationId: externalConversationId, embedded = false, onBack }: ChatRoomPageProps) {
@@ -331,11 +243,11 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
   otherAvatar,
   isUserRole,
   remoteTyping,
- messagesEndRef,
- inputRef,
- sendMediaMessage,
- handleSendTextMessage,
- notifyTyping,
+  messagesEndRef,
+  inputRef,
+  sendMediaMessage,
+  handleSendTextMessage,
+  notifyTyping,
  } = useChatConnection({ conversationId: resolvedConversationId });
 
  const {
@@ -354,15 +266,12 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
  const [processingAction, setProcessingAction] = useState<string | null>(null);
  const [startingNewSession, setStartingNewSession] = useState(false);
  const [disputeReason, setDisputeReason] = useState('');
- const [showMediaMenu, setShowMediaMenu] = useState(false);
  const [showActionMenu, setShowActionMenu] = useState(false);
  const [uploadingMedia, setUploadingMedia] = useState(false);
  const scrollRef = useRef<HTMLDivElement>(null);
  const typingStopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
- const mediaMenuRef = useRef<HTMLDivElement>(null);
  const actionMenuRef = useRef<HTMLDivElement>(null);
  const imageInputRef = useRef<HTMLInputElement>(null);
- const audioInputRef = useRef<HTMLInputElement>(null);
 
  const offerResponseMap = useMemo(() => parseOfferResponseMap(messages), [messages]);
  const normalizedReaderStatus = normalizeReaderStatus(conversation?.readerStatus);
@@ -418,11 +327,21 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
   return 'Bạn chưa thể gửi tin nhắn ở trạng thái hiện tại.';
  }, [conversation]);
 
+ const lastMessageId = messages[messages.length - 1]?.id;
+
+ useEffect(() => {
+  if (lastMessageId) {
+   setTimeout(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+   }, 100);
+  }
+ }, [lastMessageId, messagesEndRef]);
+
  useEffect(() => {
   if (!remoteTyping) return;
   setTimeout(() => {
    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, 0);
+  }, 100);
  }, [messagesEndRef, remoteTyping]);
 
  useEffect(() => {
@@ -448,9 +367,6 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
  useEffect(() => {
   const onMouseDown = (event: MouseEvent) => {
    const target = event.target as Node;
-   if (mediaMenuRef.current && !mediaMenuRef.current.contains(target)) {
-    setShowMediaMenu(false);
-   }
    if (actionMenuRef.current && !actionMenuRef.current.contains(target)) {
     setShowActionMenu(false);
    }
@@ -461,7 +377,6 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
  }, []);
 
  useEffect(() => {
-  setShowMediaMenu(false);
   setShowActionMenu(false);
   setShowDisputeModal(false);
  }, [resolvedConversationId]);
@@ -480,33 +395,63 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
   typingStopTimer.current = setTimeout(() => notifyTyping(false), 1200);
  };
 
- const handleMediaFileSelected = useCallback(
-  async (type: 'image' | 'voice', event: React.ChangeEvent<HTMLInputElement>) => {
+ /* ========================================================================
+  * handleImageFileSelected – xử lý khi user chọn ảnh từ file picker
+  *
+  * Tách riêng chỉ xử lý image (không còn voice file picker nữa).
+  * Voice message giờ đi qua handleVoiceRecordingComplete ở dưới.
+  * ======================================================================== */
+ const handleImageFileSelected = useCallback(
+  async (event: React.ChangeEvent<HTMLInputElement>) => {
    const file = event.target.files?.[0];
    event.target.value = '';
    if (!file || !connected) return;
 
-   const maxRawSize = type === 'image' ? MAX_RAW_IMAGE_BYTES : MAX_RAW_AUDIO_BYTES;
-   if (file.size > maxRawSize) {
-    toast.error(
-     type === 'image'
-      ? 'Ảnh gốc vượt quá 20MB.'
-      : 'Âm thanh gốc vượt quá 12MB.'
-    );
+   if (file.size > MAX_RAW_IMAGE_BYTES) {
+    toast.error('Ảnh gốc vượt quá 20MB.');
     return;
    }
 
    setUploadingMedia(true);
    try {
-    const payload = type === 'image'
-     ? await buildImageMediaPayload(file)
-     : await buildVoiceMediaPayload(file);
-    const success = await sendMediaMessage(type, payload);
+    const payload = await buildImageMediaPayload(file);
+    const success = await sendMediaMessage('image', payload);
     if (!success) {
-     toast.error('Không thể gửi media.');
+     toast.error('Không thể gửi ảnh.');
     }
    } catch (error) {
-    toast.error(error instanceof Error ? error.message : 'Không thể gửi media.');
+    toast.error(error instanceof Error ? error.message : 'Không thể gửi ảnh.');
+   } finally {
+    setUploadingMedia(false);
+   }
+  },
+  [connected, sendMediaMessage]
+ );
+
+ /* ========================================================================
+  * handleVoiceRecordingComplete – xử lý khi ghi âm xong từ VoiceRecorderButton
+  *
+  * Nhận Blob + durationMs từ useVoiceRecorder hook → encode thành
+  * MediaPayloadDto (data URL) → gửi qua SignalR.
+  *
+  * Tại sao tách riêng thay vì gộp vào handleMediaFileSelected?
+  * - Voice recording trả về Blob (không phải File từ file picker)
+  * - Không cần kiểm tra file size raw (đã giới hạn 120s ≈ ~240KB)
+  * - Không cần transcode (đã encode Opus trong MediaRecorder)
+  * ======================================================================== */
+ const handleVoiceRecordingComplete = useCallback(
+  async (result: VoiceRecordingResult) => {
+   if (!connected) return;
+
+   setUploadingMedia(true);
+   try {
+    const payload = await buildVoiceMediaPayloadFromBlob(result.blob, result.durationMs);
+    const success = await sendMediaMessage('voice', payload);
+    if (!success) {
+     toast.error('Không thể gửi tin nhắn thoại.');
+    }
+   } catch (error) {
+    toast.error(error instanceof Error ? error.message : 'Không thể gửi tin nhắn thoại.');
    } finally {
     setUploadingMedia(false);
    }
@@ -641,7 +586,11 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
 
       <div className="min-w-0">
        <p className="font-semibold truncate text-white">{otherName || t('room.title')}</p>
-       <p className={`text-[11px] ${readerStatus.color}`}>{readerStatus.text}</p>
+       {!conversation && loading ? (
+        <p className="text-[11px] text-[var(--text-secondary)]">...</p>
+       ) : (
+        <p className={`text-[11px] ${readerStatus.color}`}>{readerStatus.text}</p>
+       )}
       </div>
      </div>
 
@@ -804,11 +753,37 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
        );
       }
 
+      {/* === Voice Message Bubble ===
+       * Thay thế <audio controls> mặc định bằng component tùy chỉnh
+       * với waveform visualization + Play/Pause + progress sweep.
+       * isMe ảnh hưởng màu sắc: purple cho mình, white cho đối phương.
+       */}
       if (message.type === 'voice' && message.mediaPayload?.url) {
        return (
         <div key={message.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-         <div className="max-w-[75%] rounded-xl border border-white/10 bg-white/5 p-3">
-          <audio controls src={message.mediaPayload.url} className="w-full h-8" />
+         <div
+          className={`max-w-[80%] rounded-2xl px-3 py-2.5 ${
+           isMe
+            ? 'bg-[var(--purple-accent)] rounded-br-md'
+            : 'bg-white/6 border border-white/10 rounded-bl-md'
+          }`}
+         >
+          <VoiceMessageBubble
+           audioUrl={message.mediaPayload.url}
+           durationMs={message.mediaPayload.durationMs}
+           isMe={isMe}
+          />
+          <div className={`mt-1 text-[10px] flex items-center gap-1 ${isMe ? 'justify-end text-white/75' : 'text-[var(--text-secondary)]'}`}>
+           <span>
+            {new Date(message.createdAt).toLocaleTimeString(locale, {
+             hour: '2-digit',
+             minute: '2-digit',
+            })}
+           </span>
+           {isMe ? (
+            message.isRead ? <CheckCheck className="w-3 h-3 text-sky-300" /> : <Check className="w-3 h-3" />
+           ) : null}
+          </div>
          </div>
         </div>
        );
@@ -868,45 +843,26 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
      </div>
     ) : null}
 
+    {/* ========================================================================
+     * Input bar mới: [Nút ảnh] [Input text] [Nút Mic] [Nút Send] [Menu actions]
+     *
+     * Thay đổi so với cũ:
+     * - Xóa Paperclip menu (có 2 option ảnh + audio) → thay bằng nút ảnh trực tiếp
+     * - Xóa audio file input → thay bằng VoiceRecorderButton (ghi âm trực tiếp)
+     * ======================================================================== */}
     {canShowInput ? (
      <div className="p-3 border-t border-white/10 bg-black/30">
       <div className="flex gap-2">
-       <div className="relative" ref={mediaMenuRef}>
-        <button
-         onClick={() => setShowMediaMenu((prev) => !prev)}
-         disabled={!connected || uploadingMedia}
-         className="h-11 w-11 rounded-xl bg-white/5 border border-white/10 text-[var(--text-secondary)] hover:text-white disabled:opacity-50 flex items-center justify-center"
-         title="Gửi ảnh hoặc âm thanh"
-        >
-         {uploadingMedia ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
-        </button>
-        {showMediaMenu ? (
-         <div className="absolute bottom-12 left-0 w-44 rounded-xl border border-white/10 bg-[#121212] shadow-xl p-1 space-y-1 z-20">
-          <button
-           type="button"
-           onClick={() => {
-            setShowMediaMenu(false);
-            imageInputRef.current?.click();
-           }}
-           className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg hover:bg-white/10"
-          >
-           <ImageIcon className="w-4 h-4 text-[var(--info)]" />
-           Gửi ảnh
-          </button>
-          <button
-           type="button"
-           onClick={() => {
-            setShowMediaMenu(false);
-            audioInputRef.current?.click();
-           }}
-           className="w-full flex items-center gap-2 px-3 py-2 text-xs rounded-lg hover:bg-white/10"
-          >
-           <Music2 className="w-4 h-4 text-[var(--warning)]" />
-           Gửi âm thanh
-          </button>
-         </div>
-        ) : null}
-       </div>
+       {/* Nút chọn ảnh – mở file picker chỉ cho image */}
+       <button
+        type="button"
+        onClick={() => imageInputRef.current?.click()}
+        disabled={!connected || uploadingMedia}
+        className="h-11 w-11 shrink-0 rounded-xl bg-white/5 border border-white/10 text-[var(--text-secondary)] hover:text-white disabled:opacity-50 flex items-center justify-center"
+        title="Gửi ảnh"
+       >
+        {uploadingMedia ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
+       </button>
 
        <input
         ref={inputRef}
@@ -917,10 +873,22 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
         placeholder={t('room.input_placeholder')}
         className="flex-1 h-11 rounded-xl bg-white/5 border border-white/10 px-3 text-sm text-white"
        />
+
+       {/* === VoiceRecorderButton ===
+        * Khi idle: hiện icon Mic nhỏ gọn
+        * Khi recording: component mở rộng ra thay thế input bar
+        *
+        * onRecordingComplete: nhận Blob audio → encode → gửi
+        */}
+       <VoiceRecorderButton
+        onRecordingComplete={(result: VoiceRecordingResult) => void handleVoiceRecordingComplete(result)}
+        disabled={!connected || uploadingMedia || sending}
+       />
+
        <button
         onClick={() => void handleSendTextMessage()}
         disabled={!newMessage.trim() || sending || !connected}
-        className="h-11 w-11 rounded-xl bg-[var(--purple-accent)] disabled:bg-white/10 text-white flex items-center justify-center"
+        className="h-11 w-11 shrink-0 rounded-xl bg-[var(--purple-accent)] disabled:bg-white/10 text-white flex items-center justify-center"
        >
         {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
        </button>
@@ -978,19 +946,13 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
         </div>
        ) : null}
       </div>
+      {/* File input ẩn – chỉ còn cho ảnh (voice giờ dùng VoiceRecorderButton) */}
       <input
        ref={imageInputRef}
        type="file"
        accept="image/avif,image/webp,image/jpeg,image/png"
        className="hidden"
-       onChange={(event) => void handleMediaFileSelected('image', event)}
-      />
-      <input
-       ref={audioInputRef}
-       type="file"
-       accept="audio/webm,audio/ogg,audio/mp4,audio/mpeg,audio/wav,.m4a,.ogg,.webm"
-       className="hidden"
-       onChange={(event) => void handleMediaFileSelected('voice', event)}
+       onChange={(event) => void handleImageFileSelected(event)}
       />
      </div>
     ) : (

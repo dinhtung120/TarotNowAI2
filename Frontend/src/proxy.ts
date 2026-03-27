@@ -84,6 +84,10 @@ const buildContentSecurityPolicy = (nonce: string): string => {
   "form-action 'self'",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data: https:",
+  /* media-src: cho phép phát audio/video từ blob: và data: URL.
+   * blob: – VoiceMessageBubble convert data URL → Blob URL để phát audio
+   * data: – fallback nếu dùng data URL trực tiếp (base64 audio) */
+  "media-src 'self' blob: data:",
   // Tailwind/runtime style injection still needs inline styles.
   "style-src 'self' 'unsafe-inline'",
   `script-src ${toSpaceDelimited(scriptSources)}`,
