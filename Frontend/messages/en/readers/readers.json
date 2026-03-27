@@ -16,15 +16,13 @@
       },
       "statuses": {
         "all": "All statuses",
-        "accepting": "🟢 Accepting",
-        "online": "🟡 Online (Busy)",
-        "away": "🟠 Away",
+        "online": "🟢 Online",
+        "busy": "🟡 Busy",
         "offline": "⚫ Offline"
       },
       "status_indicator": {
-        "ready": "Ready",
+        "online": "Ready",
         "busy": "Busy",
-        "away": "Away",
         "offline": "Offline"
       },
       "loading": "Loading readers...",
@@ -38,9 +36,8 @@
       "not_found": "Reader profile not found.",
       "back_to_list": "Back to directory",
       "status": {
-        "accepting": "Accepting questions",
-        "online": "Busy",
-        "away": "Away",
+        "online": "Accepting questions",
+        "busy": "Busy",
         "offline": "Offline"
       },
       "diamond_per_question_suffix": "/ Q",

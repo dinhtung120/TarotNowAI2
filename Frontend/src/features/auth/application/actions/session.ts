@@ -13,6 +13,7 @@ import {
 
 interface LoginActionPayload {
  user: AuthResponse['user'];
+ accessToken: string;
  expiresIn: number;
 }
 
@@ -79,6 +80,7 @@ export async function loginAction(data: { emailOrUsername: string; password: str
 
   return actionOk({
    user: result.data.user,
+   accessToken,
    expiresIn: result.data.expiresIn,
   });
  } catch (error) {

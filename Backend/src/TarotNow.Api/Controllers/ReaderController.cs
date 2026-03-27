@@ -243,6 +243,8 @@ public class ReaderController : ControllerBase
             return;
         }
 
+        // Chỉ ghi đè thành Online nếu DB đang là Offline.
+        // Nếu DB đang là Busy thì tôn trọng trạng thái bận.
         if (string.Equals(
                 ReaderOnlineStatus.NormalizeOrDefault(profile.Status),
                 ReaderOnlineStatus.Offline,

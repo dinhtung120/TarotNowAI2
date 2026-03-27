@@ -8,7 +8,6 @@ public partial class ChatHub
 
         if (string.IsNullOrWhiteSpace(userId) == false)
         {
-            _presenceTracker.MarkConnected(userId, Context.ConnectionId);
             await Groups.AddToGroupAsync(Context.ConnectionId, UserGroup(userId));
         }
 
@@ -26,7 +25,6 @@ public partial class ChatHub
 
         if (string.IsNullOrWhiteSpace(userId) == false)
         {
-            _presenceTracker.MarkDisconnected(userId, Context.ConnectionId);
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, UserGroup(userId));
         }
 

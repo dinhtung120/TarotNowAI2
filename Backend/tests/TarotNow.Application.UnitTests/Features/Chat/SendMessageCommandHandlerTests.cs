@@ -41,6 +41,7 @@ public class SendMessageCommandHandlerTests
     private readonly Mock<IWalletRepository> _mockWalletRepo;
     private readonly Mock<IReaderProfileRepository> _mockReaderProfileRepo;
     private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
+    private readonly Mock<IMediaProcessorService> _mockMediaProcessorService;
     private readonly SendMessageCommandHandler _handler;
 
     public SendMessageCommandHandlerTests()
@@ -54,6 +55,10 @@ public class SendMessageCommandHandlerTests
         _mockTransactionCoordinator
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
             .Returns((Func<CancellationToken, Task> action, CancellationToken token) => action(token));
+        _mockMediaProcessorService = new Mock<IMediaProcessorService>();
+        _mockMediaProcessorService
+            .Setup(x => x.ProcessAndCompressVoiceAsync(It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((byte[] data, string ext, CancellationToken _) => (data, "audio/webm"));
 
         _handler = new SendMessageCommandHandler(
             _mockConvRepo.Object,
@@ -61,7 +66,8 @@ public class SendMessageCommandHandlerTests
             _mockFinanceRepo.Object,
             _mockWalletRepo.Object,
             _mockReaderProfileRepo.Object,
-            _mockTransactionCoordinator.Object);
+            _mockTransactionCoordinator.Object,
+            _mockMediaProcessorService.Object);
     }
 
     /// <summary>Loại tin nhắn không hợp lệ → BadRequest.</summary>
@@ -109,7 +115,7 @@ public class SendMessageCommandHandlerTests
             .ReturnsAsync(new ReaderProfileDto
             {
                 UserId = readerIdStr,
-                Status = ReaderOnlineStatus.AcceptingQuestions,
+                Status = ReaderOnlineStatus.Online,
                 DiamondPerQuestion = 10
             });
         _mockFinanceRepo

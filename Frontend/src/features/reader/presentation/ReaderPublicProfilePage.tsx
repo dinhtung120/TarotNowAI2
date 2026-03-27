@@ -68,27 +68,21 @@ export default function ReaderProfilePage() {
 
  const getStatusBadge = () => {
  switch (normalizeReaderStatus(profile.status)) {
- case 'accepting_questions':
+ case 'online':
  return (
  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--success)]/10 border border-[var(--success)]/20 shadow-[0_0_15px_var(--c-16-185-129-10)] ">
  <div className="w-2 h-2 rounded-full bg-[var(--success)] animate-pulse shadow-[0_0_8px_currentColor]" />
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--success)]">{t("profile.status.accepting")}</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--success)]">{t("profile.status.online")}</span>
  </div>
  );
- case 'online':
+ case 'busy':
  return (
  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--warning)]/10 border border-[var(--warning)]/20 shadow-[0_0_15px_var(--c-245-158-11-10)] ">
  <div className="w-2 h-2 rounded-full bg-[var(--warning)] shadow-[0_0_8px_currentColor]" />
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--warning)]">{t("profile.status.online")}</span>
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--warning)]">{t("profile.status.busy")}</span>
  </div>
  );
- case 'away':
- return (
- <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--warning)]/10 border border-[var(--warning)]/20 shadow-[0_0_15px_var(--c-245-158-11-10)] ">
- <div className="w-2 h-2 rounded-full bg-[var(--warning)] shadow-[0_0_8px_currentColor]" />
- <span className="text-[10px] font-black uppercase tracking-widest text-[var(--warning)]">{t("profile.status.away")}</span>
- </div>
- );
+ case 'offline':
  default:
  return (
  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full tn-surface-strong border tn-border ">

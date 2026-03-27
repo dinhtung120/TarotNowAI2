@@ -98,7 +98,7 @@ public partial class MongoChatMessageRepository : IChatMessageRepository
             .Match(Builders<ChatMessageDocument>.Filter.And(
                 Builders<ChatMessageDocument>.Filter.In(m => m.ConversationId, ids),
                 Builders<ChatMessageDocument>.Filter.Eq(m => m.IsDeleted, false)))
-            .Sort(Builders<ChatMessageDocument>.Filter.And(
+            .Sort(Builders<ChatMessageDocument>.Sort.Combine(
                 Builders<ChatMessageDocument>.Sort.Descending(m => m.ConversationId),
                 Builders<ChatMessageDocument>.Sort.Descending(m => m.CreatedAt)))
             .Group(m => m.ConversationId, g => g.First())

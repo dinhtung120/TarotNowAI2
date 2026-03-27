@@ -23,7 +23,7 @@ public partial class MongoReaderProfileRepository
         var totalCount = await _context.ReaderProfiles.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
         var docs = await QueryDirectoryDocsAsync(filter, normalizedPage, normalizedPageSize, cancellationToken);
         var mappedDocs = docs.Select(doc => BsonSerializer.Deserialize<ReaderProfileDocument>(doc));
-        return (mappedDocs.Select(ToDto), totalCount);
+        return (mappedDocs.Select(ToDto).ToList(), totalCount);
     }
 
     private async Task<List<BsonDocument>> QueryDirectoryDocsAsync(

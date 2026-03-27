@@ -6,7 +6,10 @@ public static class ClaimsPrincipalExtensions
 {
     public static Guid? GetUserIdOrNull(this ClaimsPrincipal? user)
     {
-        var userIdValue = user?.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userIdValue = user?.FindFirstValue(ClaimTypes.NameIdentifier) 
+                       ?? user?.FindFirstValue("sub")
+                       ?? user?.FindFirstValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub);
+
         return Guid.TryParse(userIdValue, out var userId) ? userId : null;
     }
 

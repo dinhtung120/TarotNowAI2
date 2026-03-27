@@ -16,15 +16,13 @@
       },
       "statuses": {
         "all": "全部状态",
-        "accepting": "🟢 可接单",
-        "online": "🟡 在线（忙碌）",
-        "away": "🟠 暂离",
+        "online": "🟢 在线",
+        "busy": "🟡 忙碌",
         "offline": "⚫ 离线"
       },
       "status_indicator": {
-        "ready": "可接单",
+        "online": "可接单",
         "busy": "忙碌中",
-        "away": "暂离",
         "offline": "离线"
       },
       "loading": "正在加载列表...",
@@ -38,9 +36,8 @@
       "not_found": "未找到占卜师资料。",
       "back_to_list": "返回目录",
       "status": {
-        "accepting": "接受提问",
-        "online": "忙碌中",
-        "away": "暂离",
+        "online": "接受提问",
+        "busy": "忙碌中",
         "offline": "离线"
       },
       "diamond_per_question_suffix": "/ 问",

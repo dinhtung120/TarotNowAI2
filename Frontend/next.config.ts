@@ -29,6 +29,14 @@ const nextConfig = {
     source: '/api/v1/chat/:path*',
     destination: `${apiOrigin}/api/v1/chat/:path*`,
    },
+   {
+    source: '/api/v1/presence',
+    destination: `${apiOrigin}/api/v1/presence`,
+   },
+   {
+    source: '/api/v1/presence/:path*',
+    destination: `${apiOrigin}/api/v1/presence/:path*`,
+   },
   ];
  },
  async headers() {

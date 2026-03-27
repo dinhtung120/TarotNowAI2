@@ -1,6 +1,7 @@
 using MediatR;
 using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Common.Interfaces;
 
 namespace TarotNow.Application.Features.Chat.Queries.ListMessages;
 
@@ -11,19 +12,22 @@ public partial class ListMessagesQueryHandler : IRequestHandler<ListMessagesQuer
     private readonly IUserRepository _userRepo;
     private readonly IReaderProfileRepository _readerProfileRepository;
     private readonly IChatFinanceRepository _financeRepository;
+    private readonly IUserPresenceTracker _presenceTracker;
 
     public ListMessagesQueryHandler(
         IConversationRepository conversationRepo,
         IChatMessageRepository messageRepo,
         IUserRepository userRepo,
         IReaderProfileRepository readerProfileRepository,
-        IChatFinanceRepository financeRepository)
+        IChatFinanceRepository financeRepository,
+        IUserPresenceTracker presenceTracker)
     {
         _conversationRepo = conversationRepo;
         _messageRepo = messageRepo;
         _userRepo = userRepo;
         _readerProfileRepository = readerProfileRepository;
         _financeRepository = financeRepository;
+        _presenceTracker = presenceTracker;
     }
 
     public async Task<ListMessagesResult> Handle(ListMessagesQuery request, CancellationToken cancellationToken)

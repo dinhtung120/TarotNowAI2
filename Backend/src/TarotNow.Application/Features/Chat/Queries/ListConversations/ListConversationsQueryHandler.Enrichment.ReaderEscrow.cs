@@ -1,4 +1,5 @@
 using TarotNow.Application.Common;
+using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Queries.ListConversations;
 
@@ -62,9 +63,10 @@ public partial class ListConversationsQueryHandler
                 
             if (_presenceTracker.IsOnline(profile.UserId))
             {
-                if (string.Equals(status, "offline", StringComparison.OrdinalIgnoreCase))
+                // Chỉ overlay "online" nếu DB đang là "offline". Nếu đang là "busy" thì tôn trọng "busy"
+                if (string.Equals(status, ReaderOnlineStatus.Offline, StringComparison.OrdinalIgnoreCase))
                 {
-                    status = "online";
+                    status = ReaderOnlineStatus.Online;
                 }
             }
 

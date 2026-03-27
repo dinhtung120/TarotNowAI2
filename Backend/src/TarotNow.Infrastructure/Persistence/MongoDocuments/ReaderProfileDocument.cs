@@ -38,9 +38,9 @@ public class ReaderProfileDocument
     public string UserId { get; set; } = string.Empty;
 
     /// <summary>
-    /// Trạng thái hoạt động: "online" | "offline" | "accepting_questions".
+    /// Trạng thái hoạt động: "online" | "offline" | "busy".
     /// Mặc định "offline" khi mới tạo — Reader phải chủ động toggle sang trạng thái khác.
-    /// Chỉ "accepting_questions" mới hiện trên directory listing cho User chọn.
+    /// Khác biệt với user thường: Reader có thêm trạng thái "busy".
     /// </summary>
     [BsonElement("status")]
     public string Status { get; set; } = "offline";

@@ -31,7 +31,11 @@ public class UpdateReaderStatusCommandHandler : IRequestHandler<UpdateReaderStat
         // 1. Dựng Hàng Rào Phòng Thủ (Validation):
         // Nếu Frontend truyền bậy chữ "DangDiChoi" vào, ta Búng Tay văng Lỗi Error 400.
         if (!ReaderOnlineStatus.TryNormalize(request.Status, out var normalizedStatus))
-            throw new BadRequestException($"Trạng thái '{request.Status}' không hợp lệ. Chỉ chấp nhận: online, offline, accepting_questions, away.");
+            throw new BadRequestException($"Trạng thái '{request.Status}' không hợp lệ. Chỉ chấp nhận: offline, busy.");
+            
+        // Đảm bảo Reader không chủ động set Online qua API - Online được kích hoạt tự động qua PresenceHub
+        if (normalizedStatus == ReaderOnlineStatus.Online)
+            throw new BadRequestException("Trạng thái 'online' được cập nhật tự động khi kết nối. Truyền 'busy' hoặc 'offline' để đổi trạng thái thủ công.");
 
         // 2. Tra Lý Lịch: Thầy Bói này có Hồ Sơ Môn Phái (Profile) không?
         var profile = await _readerProfileRepository.GetByUserIdAsync(

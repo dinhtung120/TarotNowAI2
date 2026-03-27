@@ -16,15 +16,13 @@
       },
       "statuses": {
         "all": "Tất cả trạng thái",
-        "accepting": "🟢 Đang nhận khách",
-        "online": "🟡 Trực tuyến (Bận)",
-        "away": "🟠 Tạm nghỉ",
+        "online": "🟢 Trực tuyến",
+        "busy": "🟡 Bận",
         "offline": "⚫ Ngoại tuyến"
       },
       "status_indicator": {
-        "ready": "Sẵn sàng",
+        "online": "Sẵn sàng",
         "busy": "Đang bận",
-        "away": "Tạm nghỉ",
         "offline": "Ngoại tuyến"
       },
       "loading": "Đang tải danh sách...",
@@ -38,9 +36,8 @@
       "not_found": "Không tìm thấy hồ sơ Reader.",
       "back_to_list": "Quay lại Directory",
       "status": {
-        "accepting": "Đang nhận câu hỏi",
-        "online": "Đang bận",
-        "away": "Tạm nghỉ",
+        "online": "Sẵn sàng nhận câu hỏi",
+        "busy": "Đang bận",
         "offline": "Ngoại tuyến"
       },
       "diamond_per_question_suffix": "/ Câu",

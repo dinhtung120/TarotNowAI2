@@ -14,13 +14,12 @@ public partial class MongoReaderProfileRepository
             {
                 "branches", new BsonArray
                 {
-                    CreateStatusPriorityBranch(ReaderOnlineStatus.AcceptingQuestions, 0),
-                    CreateStatusPriorityBranch(ReaderOnlineStatus.Online, 1),
-                    CreateStatusPriorityBranch(ReaderOnlineStatus.Away, 2),
-                    CreateStatusPriorityBranch(ReaderOnlineStatus.Offline, 3)
+                    CreateStatusPriorityBranch(ReaderOnlineStatus.Online, 0),
+                    CreateStatusPriorityBranch(ReaderOnlineStatus.Busy, 1),
+                    CreateStatusPriorityBranch(ReaderOnlineStatus.Offline, 2)
                 }
             },
-            { "default", 4 }
+            { "default", 3 }
         });
     }
 

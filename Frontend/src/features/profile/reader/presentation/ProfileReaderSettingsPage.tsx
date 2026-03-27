@@ -60,33 +60,15 @@ export default function ReaderSettingsPage({ embedded = false }: ReaderSettingsP
  <Activity className="w-5 h-5 text-[var(--warning)]" />
  {t("reader.status_title")}
  </h3>
- <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+ <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
  <button
- onClick={() => handleStatusChange('accepting_questions')}
+ onClick={() => handleStatusChange('busy')}
  className={`p-5 rounded-2xl border text-center transition-all shadow-lg ${
- status === 'accepting_questions' ? 'bg-[var(--success)]/10 border-[var(--success)]/40 ring-1 ring-[var(--success)]/20' : 'tn-panel-soft hover:tn-surface-strong hover:border-[var(--success)]/20'
+ status === 'busy' ? 'bg-[var(--warning)]/10 border-[var(--warning)]/40 ring-1 ring-[var(--warning)]/20' : 'tn-panel-soft hover:tn-surface-strong hover:border-[var(--warning)]/20'
  }`}
  >
- <div className={`w-3.5 h-3.5 mx-auto rounded-full mb-3 shadow-[0_0_10px_currentColor] ${status === 'accepting_questions' ? 'bg-[var(--success)] text-[var(--success)] animate-pulse' : 'tn-surface tn-text-muted'}`} />
- <div className={`text-[10px] font-black uppercase tracking-widest ${status === 'accepting_questions' ? 'text-[var(--success)]' : 'text-[var(--text-secondary)]'}`}>{t("reader.status_accepting")}</div>
- </button>
- <button
- onClick={() => handleStatusChange('online')}
- className={`p-5 rounded-2xl border text-center transition-all shadow-lg ${
- status === 'online' ? 'bg-[var(--warning)]/10 border-[var(--warning)]/40 ring-1 ring-[var(--warning)]/20' : 'tn-panel-soft hover:tn-surface-strong hover:border-[var(--warning)]/20'
- }`}
- >
- <div className={`w-3.5 h-3.5 mx-auto rounded-full mb-3 shadow-[0_0_10px_currentColor] ${status === 'online' ? 'bg-[var(--warning)] text-[var(--warning)]' : 'tn-surface tn-text-muted'}`} />
- <div className={`text-[10px] font-black uppercase tracking-widest ${status === 'online' ? 'text-[var(--warning)]' : 'text-[var(--text-secondary)]'}`}>{t("reader.status_online")}</div>
- </button>
- <button
- onClick={() => handleStatusChange('away')}
- className={`p-5 rounded-2xl border text-center transition-all shadow-lg ${
- status === 'away' ? 'bg-[var(--warning)]/10 border-[var(--warning)]/40 ring-1 ring-[var(--warning)]/20' : 'tn-panel-soft hover:tn-surface-strong hover:border-[var(--warning)]/20'
- }`}
- >
- <div className={`w-3.5 h-3.5 mx-auto rounded-full mb-3 shadow-[0_0_10px_currentColor] ${status === 'away' ? 'bg-[var(--warning)] text-[var(--warning)]' : 'tn-surface tn-text-muted'}`} />
- <div className={`text-[10px] font-black uppercase tracking-widest ${status === 'away' ? 'text-[var(--warning)]' : 'text-[var(--text-secondary)]'}`}>{t("reader.status_away")}</div>
+ <div className={`w-3.5 h-3.5 mx-auto rounded-full mb-3 shadow-[0_0_10px_currentColor] ${status === 'busy' ? 'bg-[var(--warning)] text-[var(--warning)] animate-pulse' : 'tn-surface tn-text-muted'}`} />
+ <div className={`text-[10px] font-black uppercase tracking-widest ${status === 'busy' ? 'text-[var(--warning)]' : 'text-[var(--text-secondary)]'}`}>{t("reader.status_busy")}</div>
  </button>
  <button
  onClick={() => handleStatusChange('offline')}
@@ -98,6 +80,10 @@ export default function ReaderSettingsPage({ embedded = false }: ReaderSettingsP
  <div className={`text-[10px] font-black uppercase tracking-widest ${status === 'offline' ? 'tn-text-primary' : 'text-[var(--text-secondary)]'}`}>{t("reader.status_offline")}</div>
  </button>
  </div>
+ <p className="text-[11px] text-[var(--text-secondary)] italic mt-4">
+ * Trạng thái <strong>Online</strong> (🟢) được bật tự động khi bạn truy cập trang web. 
+ Tùy chọn <strong>Offline</strong> hoặc <strong>Busy</strong> sẽ vô hiệu hóa nhận diện tự động đó.
+ </p>
  </GlassCard>
 
  {/* Form cập nhật Info */}

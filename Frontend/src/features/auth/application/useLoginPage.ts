@@ -66,7 +66,7 @@ export function useLoginPage() {
    }
 
    if (result.data) {
-    setAuth(result.data.user);
+    setAuth(result.data.user, result.data.accessToken);
     setIsRedirecting(true);
     router.replace('/');
    }

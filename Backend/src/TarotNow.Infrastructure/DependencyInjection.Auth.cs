@@ -61,15 +61,16 @@ public static partial class DependencyInjection
         var path = context.HttpContext.Request.Path;
 
         var isChatHub = path.StartsWithSegments(ApiPathConstants.ChatHub);
+        var isPresenceHub = path.StartsWithSegments(ApiPathConstants.PresenceHub);
         var isAiStream = path.StartsWithSegments(ApiPathConstants.Sessions, out var remaining)
                          && remaining.HasValue
                          && remaining.Value.EndsWith("/stream", StringComparison.OrdinalIgnoreCase);
 
-        if (isChatHub && !string.IsNullOrWhiteSpace(cookieToken))
+        if ((isChatHub || isPresenceHub) && !string.IsNullOrWhiteSpace(cookieToken))
         {
             context.Token = cookieToken;
         }
-        else if (!string.IsNullOrWhiteSpace(queryToken) && isAiStream)
+        else if (!string.IsNullOrWhiteSpace(queryToken) && (isAiStream || isChatHub || isPresenceHub))
         {
             context.Token = queryToken;
         }

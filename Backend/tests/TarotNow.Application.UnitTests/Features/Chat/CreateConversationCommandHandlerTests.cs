@@ -73,7 +73,7 @@ public class CreateConversationCommandHandlerTests
         var userId = Guid.NewGuid();
         var readerId = Guid.NewGuid();
         var command = new CreateConversationCommand { UserId = userId, ReaderId = readerId };
-        var profile = new ReaderProfileDto { Status = ReaderOnlineStatus.AcceptingQuestions };
+        var profile = new ReaderProfileDto { Status = ReaderOnlineStatus.Online };
         var existing = new ConversationDto { Id = "existing123" };
         
         _mockProfileRepo.Setup(x => x.GetByUserIdAsync(readerId.ToString(), default)).ReturnsAsync(profile);
@@ -94,7 +94,7 @@ public class CreateConversationCommandHandlerTests
         var userId = Guid.NewGuid();
         var readerId = Guid.NewGuid();
         var command = new CreateConversationCommand { UserId = userId, ReaderId = readerId };
-        var profile = new ReaderProfileDto { Status = ReaderOnlineStatus.AcceptingQuestions };
+        var profile = new ReaderProfileDto { Status = ReaderOnlineStatus.Online };
         
         _mockProfileRepo.Setup(x => x.GetByUserIdAsync(readerId.ToString(), default)).ReturnsAsync(profile);
         _mockConvRepo.Setup(x => x.GetActiveByParticipantsAsync(userId.ToString(), readerId.ToString(), default)).ReturnsAsync((ConversationDto)null!);
@@ -120,14 +120,14 @@ public class CreateConversationCommandHandlerTests
         await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-    /// <summary>Reader Online nhưng KHÔNG AcceptingQuestions vẫn cho phép tạo room pending.</summary>
+    /// <summary>Reader Online hoặc Busy đều cho phép tạo room pending.</summary>
     [Fact]
-    public async Task Handle_ReaderOnlineNotAccepting_StillCreatesPending()
+    public async Task Handle_ReaderBusy_StillCreatesPending()
     {
         var userId = Guid.NewGuid();
         var readerId = Guid.NewGuid();
         var command = new CreateConversationCommand { UserId = userId, ReaderId = readerId };
-        var profile = new ReaderProfileDto { Status = ReaderOnlineStatus.Online }; // Online ≠ Accepting
+        var profile = new ReaderProfileDto { Status = ReaderOnlineStatus.Busy }; // Hợp lệ, tạo bình thường
 
         _mockProfileRepo.Setup(x => x.GetByUserIdAsync(readerId.ToString(), default)).ReturnsAsync(profile);
         _mockConvRepo.Setup(x => x.GetActiveByParticipantsAsync(userId.ToString(), readerId.ToString(), default))

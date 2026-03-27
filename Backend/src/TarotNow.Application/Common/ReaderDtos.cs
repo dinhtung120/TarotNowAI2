@@ -99,9 +99,9 @@ public class ReaderProfileDto
 
     /// <summary>
     /// Trạng thái hoạt động:
-    ///   - "online": đang trực tuyến
-    ///   - "offline": không hoạt động
-    ///   - "accepting_questions": đang nhận câu hỏi mới
+    ///   - "online": đang trực tuyến (tự động)
+    ///   - "offline": không hoạt động hoặc timeout (tự động)
+    ///   - "busy": đang bận rộn (chủ động)
     /// </summary>
     public string Status { get; set; } = string.Empty;
 

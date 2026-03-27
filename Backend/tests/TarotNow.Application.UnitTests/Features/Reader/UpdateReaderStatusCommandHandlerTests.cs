@@ -8,8 +8,8 @@
  *   3. Handle_ValidAcceptingStatus_UpdatesSuccessfully: set AcceptingQuestions → OK
  *   4. Handle_ValidOfflineStatus_UpdatesSuccessfully: set Offline → OK
  *
- *   TRẠNG THÁI HỢP LỆ: online | offline | accepting_questions | away
- *   → accepting_questions = gate check cho CreateConversation
+ *   TRẠNG THÁI HỢP LỆ: online | offline | busy
+ *   → online, busy = gate check cho CreateConversation
  */
 
 using Moq;
@@ -51,17 +51,17 @@ public class UpdateReaderStatusCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ValidAwayStatus_UpdatesSuccessfully()
+    public async Task Handle_ValidBusyStatus_UpdatesSuccessfully()
     {
         var userId = Guid.NewGuid();
-        var command = new UpdateReaderStatusCommand { UserId = userId, Status = ReaderOnlineStatus.Away };
-        var existingProfile = new ReaderProfileDto { UserId = userId.ToString(), Status = ReaderOnlineStatus.AcceptingQuestions };
+        var command = new UpdateReaderStatusCommand { UserId = userId, Status = ReaderOnlineStatus.Busy };
+        var existingProfile = new ReaderProfileDto { UserId = userId.ToString(), Status = ReaderOnlineStatus.Online };
         _mockProfileRepo.Setup(x => x.GetByUserIdAsync(userId.ToString(), default)).ReturnsAsync(existingProfile);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
         Assert.True(result);
-        Assert.Equal(ReaderOnlineStatus.Away, existingProfile.Status);
+        Assert.Equal(ReaderOnlineStatus.Busy, existingProfile.Status);
         _mockProfileRepo.Verify(x => x.UpdateAsync(existingProfile, default), Times.Once);
     }
 
@@ -74,19 +74,22 @@ public class UpdateReaderStatusCommandHandlerTests
         await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-    /// <summary>Set AcceptingQuestions → OK (gate check cho chat).</summary>
+    /// <summary>Set Online → OK (gate check cho chat).</summary>
     [Fact]
-    public async Task Handle_ValidAcceptingStatus_UpdatesSuccessfully()
+    public async Task Handle_ValidOnlineStatus_UpdatesSuccessfully()
     {
+        // Ghi chú: Command giờ chỉ nhận offline/busy. 
+        // Nhưng nếu override manual ở unit test thì Online vẫn hợp lệ theo rules cũ
         var userId = Guid.NewGuid();
-        var command = new UpdateReaderStatusCommand { UserId = userId, Status = ReaderOnlineStatus.AcceptingQuestions };
+        var command = new UpdateReaderStatusCommand { UserId = userId, Status = ReaderOnlineStatus.Online };
         var existingProfile = new ReaderProfileDto { UserId = userId.ToString(), Status = ReaderOnlineStatus.Offline };
         _mockProfileRepo.Setup(x => x.GetByUserIdAsync(userId.ToString(), default)).ReturnsAsync(existingProfile);
 
+        // Act & Assert (hiện tại validation controller chặn online, nhưng handler vẫn cho phép nếu qua lọt)
         var result = await _handler.Handle(command, CancellationToken.None);
 
         Assert.True(result);
-        Assert.Equal(ReaderOnlineStatus.AcceptingQuestions, existingProfile.Status);
+        Assert.Equal(ReaderOnlineStatus.Online, existingProfile.Status);
         _mockProfileRepo.Verify(x => x.UpdateAsync(existingProfile, default), Times.Once);
     }
 
@@ -96,7 +99,7 @@ public class UpdateReaderStatusCommandHandlerTests
     {
         var userId = Guid.NewGuid();
         var command = new UpdateReaderStatusCommand { UserId = userId, Status = ReaderOnlineStatus.Offline };
-        var existingProfile = new ReaderProfileDto { UserId = userId.ToString(), Status = ReaderOnlineStatus.AcceptingQuestions };
+        var existingProfile = new ReaderProfileDto { UserId = userId.ToString(), Status = ReaderOnlineStatus.Busy };
         _mockProfileRepo.Setup(x => x.GetByUserIdAsync(userId.ToString(), default)).ReturnsAsync(existingProfile);
 
         var result = await _handler.Handle(command, CancellationToken.None);

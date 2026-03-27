@@ -4,34 +4,26 @@
  * NAMESPACE: TarotNow.Domain.Enums
  * ===================================================================
  * MỤC ĐÍCH:
- *   Trạng Thái Biển Treo Cửa Của Thầy Bói (Có Khách Vô Hay Tắt Đèn Bấm Nút Đi Ngủ Kệ Chat Mời).
+ *   Trạng Thái Biển Treo Cửa Của Thầy Bói (Reader).
  * ===================================================================
  */
 
 namespace TarotNow.Domain.Enums;
 
 /// <summary>
-/// Trạng thái biển chỉ dẫn trực tuyến của Reader để bọn UI ngoài sảnh Search List Hiển Thị Nhấp Nháy Hàng Mời Khách Đi Ngang.
-///
-/// Tại sao Constant Chữ Ở SQL Mongo?
-/// → Nhất quán với Các Pattern Status khác (UserStatus, ReaderApprovalStatus).
-/// → Mắt người đọc file JSON Database dễ hơn đọc mớ Enum số 0 1 2 lủm chủm đi debug rát đầu.
-///
-/// Đặc biệt dính luật P2-READER-QA-1.2: Cổng Gate Kiểm Duyệt Phải Nhất Thiết Qua Chữ "accepting_questions" Mới Cho Nhắn Text.
+/// Trạng thái biển chỉ dẫn trực tuyến của Reader để UI hiển thị.
+/// Gồm 3 trạng thái: Online (tự động), Offline (tự động sau 15p), Busy (thủ công).
 /// </summary>
 public static class ReaderOnlineStatus
 {
-    /// <summary>Có Mặt Ở Trên Web Nhưng Treo Máy Không Ghi Cửa Đèn Đỏ Vẫn Ẩn (Không Thẻ Chat Nhắn Qua Chặn).</summary>
+    /// <summary>Có mặt trên web (tự động bắt từ PresenceHub).</summary>
     public const string Online = "online";
 
-    /// <summary>Giật Cục Rút Dây Điện Hoặc Nhấn Nút Tắt Ca Nghỉ Ẩn Vào Góc Không Thấy Mặt Ở Card List Directory Trang Chủ.</summary>
+    /// <summary>Tắt ca nghỉ hoặc timeout quá 15 phút không thao tác.</summary>
     public const string Offline = "offline";
 
-    /// <summary>Sẵn Sàng Mở Lò Bát Quái Đón Tiền Đón Thớt Lên (Trạng Thái Xăng Dầu Độc Nhất Ưu Tiên Mở Barrier Check Ném Chat Yêu Cầu Kết Nối Bằng Kim Cương User).</summary>
-    public const string AcceptingQuestions = "accepting_questions";
-
-    /// <summary>Reader tạm rời máy nhưng chưa tắt ca hoàn toàn; vẫn cho phép mở chat nhưng cần cảnh báo SLA có thể chậm.</summary>
-    public const string Away = "away";
+    /// <summary>Reader đang bận, chủ động chuyển sang trạng thái này báo khách báo chậm.</summary>
+    public const string Busy = "busy";
 
     public static bool IsValid(string? status)
         => TryNormalize(status, out _);
@@ -58,16 +50,16 @@ public static class ReaderOnlineStatus
             case "invisible":
                 normalized = Offline;
                 return true;
-            case AcceptingQuestions:
+            case Busy:
+            case "away":
+            case "idle":
+            case "accepting_questions":
             case "acceptingquestions":
             case "accepting-questions":
             case "accepting":
             case "ready":
-                normalized = AcceptingQuestions;
-                return true;
-            case Away:
-            case "idle":
-                normalized = Away;
+                // Map cả các trạng thái cũ sang Busy để tương thích ngược data cũ
+                normalized = Busy;
                 return true;
             default:
                 return false;

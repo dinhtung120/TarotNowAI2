@@ -59,9 +59,8 @@ export default function ReaderDirectoryPage() {
 
  const statusOptions = [
  { value: '', label: t('directory.statuses.all') },
- { value: 'accepting_questions', label: t('directory.statuses.accepting') },
  { value: 'online', label: t('directory.statuses.online') },
- { value: 'away', label: t('directory.statuses.away') },
+ { value: 'busy', label: t('directory.statuses.busy') },
  { value: 'offline', label: t('directory.statuses.offline') },
  ];
 
@@ -70,12 +69,11 @@ export default function ReaderDirectoryPage() {
  */
  const getStatusIndicator = (status: string) => {
  switch (normalizeReaderStatus(status)) {
- case 'accepting_questions':
- return <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[var(--success)] shadow-[0_0_8px_var(--c-16-185-129-50)] animate-pulse" /><span className="text-[var(--success)] font-black uppercase tracking-wider text-[9px]">{t("directory.status_indicator.ready")}</span></div>;
  case 'online':
+ return <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[var(--success)] shadow-[0_0_8px_var(--c-16-185-129-50)] animate-pulse" /><span className="text-[var(--success)] font-black uppercase tracking-wider text-[9px]">{t("directory.status_indicator.online")}</span></div>;
+ case 'busy':
  return <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[var(--warning)] shadow-[0_0_8px_var(--c-245-158-11-50)]" /><span className="text-[var(--warning)] font-black uppercase tracking-wider text-[9px]">{t("directory.status_indicator.busy")}</span></div>;
- case 'away':
- return <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[var(--warning)] shadow-[0_0_8px_var(--c-245-158-11-50)]" /><span className="text-[var(--warning)] font-black uppercase tracking-wider text-[9px]">{t("directory.status_indicator.away")}</span></div>;
+ case 'offline':
  default:
  return <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[var(--text-muted)]" /><span className="tn-text-muted font-bold uppercase tracking-wider text-[9px]">{t("directory.status_indicator.offline")}</span></div>;
  }

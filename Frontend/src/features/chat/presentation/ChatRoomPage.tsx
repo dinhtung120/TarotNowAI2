@@ -67,12 +67,11 @@ function parseOfferResponseMap(messages: ChatMessageDto[]): OfferResponseMap {
 
 function parseStatusLabel(status?: string | null) {
  switch (normalizeReaderStatus(status)) {
-  case 'accepting_questions':
-   return { text: 'Online', color: 'text-[var(--success)]' };
   case 'online':
    return { text: 'Online', color: 'text-[var(--success)]' };
-  case 'away':
-   return { text: 'Away', color: 'text-[var(--warning)]' };
+  case 'busy':
+   return { text: 'Busy', color: 'text-[var(--warning)]' };
+  case 'offline':
   default:
    return { text: 'Offline', color: 'text-[var(--danger)]' };
  }
@@ -602,7 +601,7 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
   }
  }, [conversation, router]);
 
- const headerWarning = normalizedReaderStatus === 'away' || normalizedReaderStatus === 'offline';
+ const headerWarning = normalizedReaderStatus === 'busy' || normalizedReaderStatus === 'offline';
 
  if (!resolvedConversationId) {
   return (

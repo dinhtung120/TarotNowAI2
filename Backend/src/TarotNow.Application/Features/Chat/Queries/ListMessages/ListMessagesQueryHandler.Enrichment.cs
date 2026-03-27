@@ -1,4 +1,5 @@
 using TarotNow.Application.Common;
+using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Queries.ListMessages;
 
@@ -45,7 +46,15 @@ public partial class ListMessagesQueryHandler
         var readerProfile = await _readerProfileRepository.GetByUserIdAsync(conversation.ReaderId, cancellationToken);
         if (readerProfile != null)
         {
-            conversation.ReaderStatus = readerProfile.Status;
+            var status = readerProfile.Status;
+            if (_presenceTracker.IsOnline(readerProfile.UserId))
+            {
+                if (string.Equals(status, ReaderOnlineStatus.Offline, StringComparison.OrdinalIgnoreCase))
+                {
+                    status = ReaderOnlineStatus.Online;
+                }
+            }
+            conversation.ReaderStatus = status;
         }
 
         var session = await _financeRepository.GetSessionByConversationRefAsync(conversation.Id, cancellationToken);

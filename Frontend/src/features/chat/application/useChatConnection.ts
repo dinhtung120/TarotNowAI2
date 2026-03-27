@@ -22,7 +22,9 @@ interface UseChatConnectionOptions {
 const PAGE_SIZE = 50;
 
 export function useChatConnection({ conversationId }: UseChatConnectionOptions) {
- const authUserId = useAuthStore((state) => state.user?.id ?? '');
+ const authStore = useAuthStore();
+ const authUserId = authStore.user?.id ?? '';
+ const token = authStore.token;
 
  const [messages, setMessages] = useState<ChatMessageDto[]>([]);
  const [newMessage, setNewMessage] = useState('');
@@ -203,8 +205,11 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
 
   const initConnection = async () => {
    const signalR = await import('@microsoft/signalr');
+   const { getSignalRHubUrl } = await import('@/shared/infrastructure/realtime/signalRUrl');
    hubConnection = new signalR.HubConnectionBuilder()
-    .withUrl('/api/v1/chat', { withCredentials: true })
+    .withUrl(getSignalRHubUrl('/api/v1/chat'), {
+     accessTokenFactory: () => token ?? '',
+    })
     .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
     .configureLogging(signalR.LogLevel.Warning)
     .build();
@@ -300,7 +305,7 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
    }
    connectionRef.current = null;
   };
- }, [conversationId, currentUserId, loadInitial, markRead, scrollToBottom]);
+ }, [conversationId, currentUserId, token, loadInitial, markRead, scrollToBottom]);
 
  return {
   messages,
