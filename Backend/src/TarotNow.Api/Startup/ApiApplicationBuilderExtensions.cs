@@ -1,5 +1,5 @@
+using TarotNow.Api.Hubs;
 using TarotNow.Api.Middlewares;
-using TarotNow.Api.Constants;
 
 namespace TarotNow.Api.Startup;
 
@@ -9,6 +9,7 @@ public static class ApiApplicationBuilderExtensions
     {
         app.UseExceptionHandler();
         app.UseMiddleware<CorrelationIdMiddleware>();
+        app.UseMiddleware<ChatFeatureGateMiddleware>();
 
         if (app.Environment.IsDevelopment())
         {
@@ -29,6 +30,7 @@ public static class ApiApplicationBuilderExtensions
         app.UseAuthorization();
 
         app.MapControllers();
+        app.MapHub<ChatHub>("/" + ApiRoutes.ChatHub);
 
         return app;
     }

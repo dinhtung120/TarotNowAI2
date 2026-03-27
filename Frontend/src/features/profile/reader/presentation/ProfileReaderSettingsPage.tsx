@@ -20,7 +20,11 @@ import { useTranslations } from 'next-intl';
 import { SectionHeader, GlassCard, Button } from '@/shared/components/ui';
 import { useProfileReaderSettingsPage } from '@/features/profile/reader/application/useProfileReaderSettingsPage';
 
-export default function ReaderSettingsPage() {
+interface ReaderSettingsPageProps {
+ embedded?: boolean;
+}
+
+export default function ReaderSettingsPage({ embedded = false }: ReaderSettingsPageProps) {
  const t = useTranslations("Profile");
  const {
  loading,
@@ -48,16 +52,7 @@ export default function ReaderSettingsPage() {
  );
  }
 
- return (
- <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-8 pb-32 space-y-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000">
- {/* Header */}
- <SectionHeader
- tag={t("reader.tag")}
- tagIcon={<Sparkles className="w-3 h-3 text-[var(--warning)]" />}
- title={t("reader.title")}
- subtitle={t("reader.subtitle")}
- />
-
+ const content = (
  <div className="space-y-8">
  {/* Trạng thái hoạt động */}
  <GlassCard className="!p-8">
@@ -65,7 +60,7 @@ export default function ReaderSettingsPage() {
  <Activity className="w-5 h-5 text-[var(--warning)]" />
  {t("reader.status_title")}
  </h3>
- <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+ <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
  <button
  onClick={() => handleStatusChange('accepting_questions')}
  className={`p-5 rounded-2xl border text-center transition-all shadow-lg ${
@@ -83,6 +78,15 @@ export default function ReaderSettingsPage() {
  >
  <div className={`w-3.5 h-3.5 mx-auto rounded-full mb-3 shadow-[0_0_10px_currentColor] ${status === 'online' ? 'bg-[var(--warning)] text-[var(--warning)]' : 'tn-surface tn-text-muted'}`} />
  <div className={`text-[10px] font-black uppercase tracking-widest ${status === 'online' ? 'text-[var(--warning)]' : 'text-[var(--text-secondary)]'}`}>{t("reader.status_online")}</div>
+ </button>
+ <button
+ onClick={() => handleStatusChange('away')}
+ className={`p-5 rounded-2xl border text-center transition-all shadow-lg ${
+ status === 'away' ? 'bg-[var(--warning)]/10 border-[var(--warning)]/40 ring-1 ring-[var(--warning)]/20' : 'tn-panel-soft hover:tn-surface-strong hover:border-[var(--warning)]/20'
+ }`}
+ >
+ <div className={`w-3.5 h-3.5 mx-auto rounded-full mb-3 shadow-[0_0_10px_currentColor] ${status === 'away' ? 'bg-[var(--warning)] text-[var(--warning)]' : 'tn-surface tn-text-muted'}`} />
+ <div className={`text-[10px] font-black uppercase tracking-widest ${status === 'away' ? 'text-[var(--warning)]' : 'text-[var(--text-secondary)]'}`}>{t("reader.status_away")}</div>
  </button>
  <button
  onClick={() => handleStatusChange('offline')}
@@ -173,6 +177,23 @@ export default function ReaderSettingsPage() {
  </form>
  </GlassCard>
  </div>
+ );
+
+ if (embedded) {
+  return content;
+ }
+
+ return (
+ <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-8 pb-32 space-y-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000">
+ {/* Header */}
+ <SectionHeader
+ tag={t("reader.tag")}
+ tagIcon={<Sparkles className="w-3 h-3 text-[var(--warning)]" />}
+ title={t("reader.title")}
+ subtitle={t("reader.subtitle")}
+ />
+
+ {content}
  </div>
  );
 }

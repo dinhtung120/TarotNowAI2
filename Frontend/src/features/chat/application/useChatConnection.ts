@@ -1,42 +1,78 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import type { HubConnection } from '@microsoft/signalr';
-import { listMessages, type ChatMessageDto } from '@/features/chat/application/actions';
-import { logger } from '@/shared/infrastructure/logging/logger';
-import { useTranslations } from 'next-intl';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { HubConnectionState, type HubConnection } from '@microsoft/signalr';
 import { useAuthStore } from '@/store/authStore';
+import {
+ listMessages,
+ type ChatMessageDto,
+ type ConversationDto,
+ type MediaPayloadDto,
+} from '@/features/chat/application/actions';
 import {
  appendUniqueMessage,
  mergeHistoryWithRealtimeMessages,
 } from '@/features/chat/domain/mergeMessages';
+import { logger } from '@/shared/infrastructure/logging/logger';
 
-export function useChatConnection(conversationId: string) {
- const t = useTranslations('Chat');
+interface UseChatConnectionOptions {
+ conversationId?: string | null;
+}
+
+const PAGE_SIZE = 50;
+
+export function useChatConnection({ conversationId }: UseChatConnectionOptions) {
  const authUserId = useAuthStore((state) => state.user?.id ?? '');
 
  const [messages, setMessages] = useState<ChatMessageDto[]>([]);
  const [newMessage, setNewMessage] = useState('');
- const [loading, setLoading] = useState(true);
+ const [loading, setLoading] = useState(false);
+ const [loadingMore, setLoadingMore] = useState(false);
  const [sending, setSending] = useState(false);
  const [connected, setConnected] = useState(false);
- const [otherName, setOtherName] = useState('');
- const [otherAvatar, setOtherAvatar] = useState<string | null>(null);
- const [isUserRole, setIsUserRole] = useState<boolean | null>(null);
- const [currentUserId, setCurrentUserId] = useState('');
+ const [conversation, setConversation] = useState<ConversationDto | null>(null);
+ const [nextCursor, setNextCursor] = useState<string | null>(null);
+ const [typingUserId, setTypingUserId] = useState<string | null>(null);
 
  const connectionRef = useRef<HubConnection | null>(null);
+ const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
  const messagesEndRef = useRef<HTMLDivElement>(null);
  const inputRef = useRef<HTMLInputElement>(null);
+ const hasLoadedInitialRef = useRef(false);
 
- const scrollToBottom = useCallback(() => {
-  messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+ const currentUserId = authUserId;
+ const isUserRole = useMemo(() => {
+  if (!conversation || !authUserId) return null;
+  return conversation.userId === authUserId;
+ }, [authUserId, conversation]);
+ const otherName = useMemo(() => {
+  if (!conversation || isUserRole === null) return '';
+  return isUserRole ? conversation.readerName ?? '' : conversation.userName ?? '';
+ }, [conversation, isUserRole]);
+ const otherAvatar = useMemo(() => {
+  if (!conversation || isUserRole === null) return null;
+  return isUserRole ? conversation.readerAvatar ?? null : conversation.userAvatar ?? null;
+ }, [conversation, isUserRole]);
+ const remoteTyping = typingUserId !== null && typingUserId !== currentUserId;
+ const hasMore = Boolean(nextCursor);
+
+ const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
+  messagesEndRef.current?.scrollIntoView({ behavior });
  }, []);
 
+ const markRead = useCallback(async () => {
+  if (!connectionRef.current || !conversationId) return;
+  try {
+   await connectionRef.current.invoke('MarkRead', conversationId);
+  } catch (error) {
+   logger.error('[Chat] markRead failed', error, { conversationId });
+  }
+ }, [conversationId]);
+
  const sendTypedMessage = useCallback(
-  async (content: string, messageType: string) => {
+  async (content: string, messageType = 'text') => {
    const normalizedContent = content.trim();
-   if (!normalizedContent || !connectionRef.current || !connected) {
+   if (!normalizedContent || !connectionRef.current || !connected || !conversationId) {
     return false;
    }
 
@@ -54,117 +90,217 @@ export function useChatConnection(conversationId: string) {
   [connected, conversationId]
  );
 
- const handleSendTextMessage = useCallback(async () => {
-  if (!newMessage.trim()) return;
+ const sendMediaMessage = useCallback(
+  async (type: 'image' | 'voice', payload: MediaPayloadDto) => {
+   if (!connectionRef.current || !connected || !conversationId) {
+    return false;
+   }
 
+   try {
+    await connectionRef.current.invoke('SendMessage', conversationId, JSON.stringify(payload), type);
+    return true;
+   } catch (error) {
+    logger.error('[Chat] SendMediaMessage failed', error, {
+     conversationId,
+     type,
+    });
+    return false;
+   }
+  },
+  [connected, conversationId]
+ );
+
+ const handleSendTextMessage = useCallback(async () => {
+  if (!newMessage.trim()) return false;
   setSending(true);
   const success = await sendTypedMessage(newMessage, 'text');
+  setSending(false);
   if (success) {
    setNewMessage('');
    inputRef.current?.focus();
+   void connectionRef.current?.invoke('TypingStopped', conversationId);
   }
-  setSending(false);
- }, [newMessage, sendTypedMessage]);
+  return success;
+ }, [conversationId, newMessage, sendTypedMessage]);
 
- useEffect(() => {
-  setCurrentUserId(authUserId);
- }, [authUserId]);
+ const notifyTyping = useCallback(
+  (typing: boolean) => {
+   if (!connectionRef.current || !conversationId || !connected) return;
+   const event = typing ? 'TypingStarted' : 'TypingStopped';
+   void connectionRef.current.invoke(event, conversationId).catch(() => undefined);
+  },
+  [connected, conversationId]
+ );
 
- useEffect(() => {
+ const loadInitial = useCallback(async (silent = false) => {
   if (!conversationId) return;
+  if (!silent) {
+   setLoading(true);
+  }
+  const history = await listMessages(conversationId, { limit: PAGE_SIZE });
+  if (history.success && history.data) {
+   const payload = history.data;
+   setMessages((prev) => {
+    if (silent && hasLoadedInitialRef.current) {
+     return mergeHistoryWithRealtimeMessages(prev, payload.messages);
+    }
 
-  let isCancelled = false;
+    return mergeHistoryWithRealtimeMessages([], payload.messages);
+   });
+   setConversation(payload.conversation ?? null);
+   setNextCursor(payload.nextCursor ?? null);
+   if (!hasLoadedInitialRef.current) {
+    hasLoadedInitialRef.current = true;
+    setTimeout(() => scrollToBottom('auto'), 10);
+   }
+  } else {
+   if (!silent) {
+    setMessages([]);
+    setConversation(null);
+    setNextCursor(null);
+   }
+  }
+
+  if (!silent) {
+   setLoading(false);
+  }
+ }, [conversationId, scrollToBottom]);
+
+ const loadMore = useCallback(async () => {
+  if (!conversationId || !nextCursor || loadingMore) return;
+  setLoadingMore(true);
+  const result = await listMessages(conversationId, { cursor: nextCursor, limit: PAGE_SIZE });
+  if (result.success && result.data) {
+   const payload = result.data;
+   const older = [...payload.messages].reverse();
+   setMessages((prev) => {
+    const combined = [...older, ...prev];
+    const ids = new Set<string>();
+    return combined.filter((item) => {
+      if (ids.has(item.id)) return false;
+      ids.add(item.id);
+      return true;
+    });
+   });
+   setNextCursor(payload.nextCursor ?? null);
+  }
+  setLoadingMore(false);
+ }, [conversationId, loadingMore, nextCursor]);
+
+ useEffect(() => {
+  if (!conversationId) {
+   setMessages([]);
+   setConversation(null);
+   setConnected(false);
+   setLoading(false);
+   setNextCursor(null);
+   hasLoadedInitialRef.current = false;
+   return;
+  }
+
+  let cancelled = false;
   let hubConnection: HubConnection | null = null;
 
   const initConnection = async () => {
    const signalR = await import('@microsoft/signalr');
    hubConnection = new signalR.HubConnectionBuilder()
-    .withUrl('/api/v1/chat', {
-     withCredentials: true,
-    })
+    .withUrl('/api/v1/chat', { withCredentials: true })
     .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
     .configureLogging(signalR.LogLevel.Warning)
     .build();
 
-   hubConnection.on('ReceiveMessage', (message: ChatMessageDto) => {
+   hubConnection.on('message.created', (message: ChatMessageDto) => {
+    if (message.conversationId !== conversationId) return;
     setMessages((prev) => appendUniqueMessage(prev, message));
-    scrollToBottom();
+    setTimeout(() => scrollToBottom(), 0);
    });
 
-   hubConnection.on('UserJoined', (payload: { userId: string }) => {
-    void payload.userId;
+   hubConnection.on('message.read', (payload: { userId: string; conversationId: string }) => {
+    if (payload.conversationId !== conversationId) return;
+    if (payload.userId === currentUserId) return;
+    setMessages((prev) =>
+     prev.map((item) =>
+      item.senderId === currentUserId
+       ? { ...item, isRead: true }
+       : item
+     )
+    );
    });
 
-   hubConnection.on('MessagesRead', (payload: { userId: string }) => {
-    void payload.userId;
+   hubConnection.on('typing.started', (payload: { userId: string; conversationId: string }) => {
+    if (payload.conversationId !== conversationId || payload.userId === currentUserId) return;
+    setTypingUserId(payload.userId);
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => setTypingUserId(null), 2500);
+   });
+
+   hubConnection.on('typing.stopped', (payload: { userId: string; conversationId: string }) => {
+    if (payload.conversationId !== conversationId || payload.userId === currentUserId) return;
+    setTypingUserId(null);
+   });
+
+   hubConnection.on('conversation.updated', (payload: { conversationId: string; type?: string }) => {
+    if (payload.conversationId !== conversationId) return;
+    if (payload.type === 'message_created') return;
+    void loadInitial(true);
    });
 
    hubConnection.on('Error', (error: string) => {
     logger.error('[Chat] Hub error', error, { conversationId });
    });
 
-   hubConnection.onreconnecting(() => {
-    setConnected(false);
-   });
-
+   hubConnection.onreconnecting(() => setConnected(false));
    hubConnection.onreconnected(() => {
+    if (cancelled) return;
     setConnected(true);
     void hubConnection?.invoke('JoinConversation', conversationId);
+    void markRead();
    });
-
-   hubConnection.onclose(() => {
-    setConnected(false);
-   });
+   hubConnection.onclose(() => setConnected(false));
 
    try {
     await hubConnection.start();
-    if (isCancelled) return;
-
-    setConnected(true);
+    if (cancelled) {
+     if (hubConnection.state !== HubConnectionState.Disconnected) {
+      await hubConnection.stop().catch(() => undefined);
+     }
+     return;
+    }
     connectionRef.current = hubConnection;
+    setConnected(true);
 
     await hubConnection.invoke('JoinConversation', conversationId);
-    await hubConnection.invoke('MarkRead', conversationId);
+    await loadInitial(false);
+    await markRead();
    } catch (error) {
     logger.error('[Chat] Connection failed', error, { conversationId });
+    await loadInitial(false);
    }
-
-   const historyResult = await listMessages(conversationId);
-   if (isCancelled) return;
-   const history = historyResult.success ? historyResult.data : undefined;
-
-   if (history?.conversation && authUserId) {
-    const isUser = authUserId === history.conversation.userId;
-    const name = isUser
-     ? history.conversation.readerName || `${t('inbox.list_label_reader')} ${history.conversation.readerId.substring(0, 8)}`
-     : history.conversation.userName || `${t('inbox.list_label_user')} ${history.conversation.userId.substring(0, 8)}`;
-
-    setOtherName(name);
-    setOtherAvatar(isUser ? history.conversation.readerAvatar ?? null : history.conversation.userAvatar ?? null);
-    setIsUserRole(isUser);
-   }
-
-   if (history?.messages) {
-    setMessages((prev) => mergeHistoryWithRealtimeMessages(prev, history.messages));
-   }
-
-   setLoading(false);
-   window.setTimeout(scrollToBottom, 500);
   };
 
+  setMessages([]);
+  setConversation(null);
+  setNextCursor(null);
+  setTypingUserId(null);
+  hasLoadedInitialRef.current = false;
   void initConnection();
 
   return () => {
-   isCancelled = true;
-
+   cancelled = true;
+   if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
    if (hubConnection) {
-    void hubConnection.invoke('LeaveConversation', conversationId).catch(() => undefined);
-    void hubConnection.stop();
+    if (hubConnection.state === HubConnectionState.Connected) {
+     void hubConnection.invoke('LeaveConversation', conversationId).catch(() => undefined);
+    }
+    if (hubConnection.state === HubConnectionState.Connected
+      || hubConnection.state === HubConnectionState.Reconnecting
+      || hubConnection.state === HubConnectionState.Disconnecting) {
+     void hubConnection.stop().catch(() => undefined);
+    }
    }
-
    connectionRef.current = null;
   };
- }, [authUserId, conversationId, scrollToBottom, t]);
+ }, [conversationId, currentUserId, loadInitial, markRead, scrollToBottom]);
 
  return {
   messages,
@@ -172,15 +308,23 @@ export function useChatConnection(conversationId: string) {
   newMessage,
   setNewMessage,
   loading,
+  loadingMore,
+  hasMore,
+  loadMore,
   sending,
   connected,
   currentUserId,
+  conversation,
   otherName,
   otherAvatar,
   isUserRole,
+  remoteTyping,
   messagesEndRef,
   inputRef,
   sendTypedMessage,
+  sendMediaMessage,
   handleSendTextMessage,
+  notifyTyping,
+  markRead,
  };
 }

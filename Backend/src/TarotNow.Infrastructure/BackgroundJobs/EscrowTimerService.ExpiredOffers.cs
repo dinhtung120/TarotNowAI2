@@ -2,21 +2,26 @@ using Microsoft.Extensions.Logging;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Infrastructure.BackgroundJobs;
 
 public partial class EscrowTimerService
 {
-    private async Task ProcessExpiredOffers(IChatFinanceRepository repo, CancellationToken cancellationToken)
+    private async Task ProcessExpiredOffers(
+        RefundDependencies dependencies,
+        CancellationToken cancellationToken)
     {
-        var expired = await repo.GetExpiredOffersAsync(cancellationToken);
+        var expired = await dependencies.FinanceRepository.GetExpiredOffersAsync(cancellationToken);
         foreach (var item in expired)
         {
             try
             {
-                item.Status = QuestionItemStatus.Refunded;
-                item.RefundedAt = DateTime.UtcNow;
-                await repo.UpdateItemAsync(item, cancellationToken);
+                await ProcessExpiredOfferCandidateAsync(
+                    dependencies,
+                    item.Id,
+                    cancellationToken);
+
                 _logger.LogInformation("[EscrowTimer] Expired offer cancelled: {ItemId}", item.Id);
             }
             catch (Exception ex)
@@ -24,30 +29,21 @@ public partial class EscrowTimerService
                 _logger.LogError(ex, "[EscrowTimer] Failed to cancel offer: {ItemId}", item.Id);
             }
         }
-
-        if (expired.Count > 0)
-        {
-            await repo.SaveChangesAsync(cancellationToken);
-        }
     }
 
-    private static async Task UpdateSessionFrozenBalanceAsync(
-        IChatFinanceRepository repo,
-        ChatQuestionItem item,
+    private async Task ProcessExpiredOfferCandidateAsync(
+        RefundDependencies dependencies,
+        Guid candidateId,
         CancellationToken cancellationToken)
     {
-        var session = await repo.GetSessionForUpdateAsync(item.FinanceSessionId, cancellationToken);
-        if (session == null)
+        var outcome = await ExecuteExpiredOfferRefundAsync(dependencies, candidateId, cancellationToken);
+        if (string.IsNullOrWhiteSpace(outcome.ConversationId) == false && outcome.RefundedAmount > 0)
         {
-            return;
+            await MarkConversationExpiredAsync(
+                dependencies,
+                outcome.ConversationId,
+                $"Reader không phản hồi trong thời gian quy định. Đã hoàn {outcome.RefundedAmount} 💎.",
+                cancellationToken);
         }
-
-        session.TotalFrozen -= item.AmountDiamond;
-        if (session.TotalFrozen < 0)
-        {
-            session.TotalFrozen = 0;
-        }
-
-        await repo.UpdateSessionAsync(session, cancellationToken);
     }
 }

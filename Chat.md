@@ -49,7 +49,7 @@ Pending → AwaitingAcceptance → Ongoing → Completed
 | Cài đặt | Mô tả |
 |---|---|
 | **Giá cố định** (vd: 10 💎) | Giá cho **1 câu hỏi chính**. Nếu User muốn hỏi thêm → Reader dùng tính năng "Yêu cầu cộng thêm tiền" |
-| **Mức SLA cam kết** | 3 mức: **Nhanh (4h)** / **Bình thường (24h)** / **Chậm (48h)**. User thấy rõ mốc này trước khi tạo chat |
+| **Mức SLA cam kết** | 3 mức: **Nhanh (6h)** / **Bình thường (12)** / **Chậm (24)**. User thấy rõ mốc này trước khi tạo chat |
 | **Trạng thái hoạt động** | Reader có thể đặt: Online / **Away (Tạm nghỉ)** / Offline. Hệ thống **tự động chuyển Offline sau 1 giờ** không hoạt động trên app |
 
 ### 2.3. Flow tạo phòng chat
@@ -71,10 +71,10 @@ Pending → AwaitingAcceptance → Ongoing → Completed
    - Cả User và Reader đều thấy: **"Đang đóng băng: X 💎"** ở header phòng chat.
 
 4. **Reader phản hồi (trong AwaitingAcceptance):**
-   - Reader có **30 phút** để **Accept** hoặc **Reject**.
+   - Reader có **6-12h** để **Accept** hoặc **Reject**.
    - **Accept** → trạng thái chuyển sang `Ongoing`. SLA timer bắt đầu tính.
    - **Reject** → trạng thái chuyển sang `Cancelled`. Hệ thống tự động **hoàn 100% 💎** cho User. Reader bắt buộc nhập lý do từ chối. System message: _"Reader đã từ chối câu hỏi. Lý do: [lý do]. Đã hoàn X 💎 về ví của bạn."_
-   - **Timeout 30 phút không phản hồi** → trạng thái chuyển sang `Expired`. **Hoàn 100% 💎** cho User. System message: _"Reader không phản hồi trong thời gian quy định. Đã hoàn X 💎."_
+   - **Timeout 6-12h không phản hồi** → trạng thái chuyển sang `Expired`. **Hoàn 100% 💎** cho User. System message: _"Reader không phản hồi trong thời gian quy định. Đã hoàn X 💎."_
 
 ### 2.4. Edge Cases
 
@@ -90,15 +90,15 @@ Pending → AwaitingAcceptance → Ongoing → Completed
 
 - Tất cả khoản tiền (ban đầu + cộng thêm) gộp vào **1 khoản đóng băng duy nhất**.
 - **Phí nền tảng: 10%** – Reader nhận 90% tổng kim cương sau khi giải ngân.
-- Hệ thống sử dụng **cron job chạy mỗi 6 giờ** (00:00, 06:00, 12:00, 18:00 UTC) để xử lý timeout và auto-complete.
-- ⚠️ Do cron job 6h, các thời hạn thông báo cho User đã **tính cả độ trễ tối đa 6h**:
-  - Thông báo "24h" thực tế = **tối đa 30 giờ**.
-  - Thông báo "48h" thực tế = **tối đa 54 giờ**.
+- Hệ thống sử dụng **cron job chạy mỗi 1 giờ** (UTC) để xử lý timeout và auto-complete.
+- ⚠️ Do cron job 1h, các thời hạn thông báo cho User đã **tính cả độ trễ tối đa 1h**:
+  - Thông báo "24h" thực tế = **tối đa 25 giờ**.
+  - Thông báo "48h" thực tế = **tối đa 49 giờ**.
 
 ### 3.2. SLA Timeout – Reader chưa reply
 
 - Tính từ lúc chat chuyển sang `Ongoing` (Reader accept).
-- Nếu Reader **không gửi tin nhắn nào** trong thời gian SLA cam kết (4h/24h/48h):
+- Nếu Reader **không gửi tin nhắn nào** trong thời gian SLA cam kết (6h/12h/24h):
   - Hệ thống tự động **hoàn 100% 💎** cho User.
   - Chuyển trạng thái → `Expired`.
   - Xử lý ở cron job gần nhất sau khi đáo hạn.
@@ -116,14 +116,14 @@ Khi chat đang `Ongoing` và Reader đã reply (có trao đổi thực tế):
 | Tình huống | Kết quả | Thời gian |
 |---|---|---|
 | **Cả hai đồng ý** | Giải ngân ngay (Reader nhận 90%, platform 10%) | Ngay lập tức |
-| **User bấm, Reader chưa phản hồi** | Giải ngân cho Reader | Tối đa **30 giờ** (24h + cron) |
+| **User bấm, Reader chưa phản hồi** | Giải ngân cho Reader | Tối đa **12 giờ** (6h + cron) |
 | **Reader bấm, User đồng ý** | Giải ngân cho Reader | Ngay lập tức |
-| **Reader bấm, User không bấm gì** | Giải ngân cho Reader | Tối đa **54 giờ** (48h + cron) |
+| **Reader bấm, User không bấm gì** | Giải ngân cho Reader | Tối đa **48 giờ** (47h + cron) |
 | **Reader bấm, User từ chối** | Tiền giữ freeze. User có nút "Tố cáo" | Xem mục Dispute bên dưới |
 
 **Khi Reader bấm "Hoàn thành":**
 - Hệ thống gửi system message vào chat:  
-  _"Reader đã đánh dấu hoàn thành. Nếu bạn không phản hồi, hệ thống sẽ tự động giải ngân cho Reader sau tối đa 54 giờ."_
+  _"Reader đã đánh dấu hoàn thành. Nếu bạn không phản hồi, hệ thống sẽ tự động giải ngân cho Reader sau tối đa 48 giờ."_
 - User có 3 lựa chọn: **Đồng ý** / **Từ chối** / **Không làm gì**.
 
 **Khi User từ chối hoàn thành:**
@@ -187,7 +187,7 @@ Admin phải xử lý trong tối đa **48 giờ**:
 | **Admin quá hạn 48h** | Tự động giải ngân 100% cho Reader | Rating được tính | Escalate lên Senior Admin |
 
 **Quy tắc bổ sung:**
-- Reader có **> 3 dispute trong 30 ngày** → Admin freeze tài khoản Reader để review.
+- Reader có **> 3 dispute trong 7 ngày** → Admin freeze tài khoản Reader để review.
 - Mọi phán quyết đều được ghi log vĩnh viễn + lý do.
 
 ---
@@ -327,7 +327,7 @@ Admin phải xử lý trong tối đa **48 giờ**:
 - Admin dashboard:
   - Bộ lọc dispute theo trạng thái, thời gian, Reader.
   - Manual refund capability.
-  - Freeze tài khoản Reader nếu > 3 dispute trong 30 ngày.
+  - Freeze tài khoản Reader nếu > 3 dispute trong 7 ngày.
   - Transaction history và audit trail đầy đủ.
 
 ---
@@ -344,7 +344,7 @@ Admin phải xử lý trong tối đa **48 giờ**:
 │       ├── User gửi tin nhắn đầu (freeze 💎)                        │
 │       │       │                                                     │
 │       │       ▼                                                     │
-│       │   [AwaitingAcceptance] ──30min──→ [Expired] (hoàn 💎)      │
+│       │   [AwaitingAcceptance] ──6-12h──→ [Expired] (hoàn 💎)   │
 │       │       │                                                     │
 │       │       ├── Reader Accept ──→ [Ongoing]                       │
 │       │       │       │                                             │

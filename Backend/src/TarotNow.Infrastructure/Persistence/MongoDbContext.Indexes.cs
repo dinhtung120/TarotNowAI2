@@ -6,5 +6,6 @@ public partial class MongoDbContext
     {
         EnsureCoreCollectionIndexes();
         EnsureReaderCollectionIndexes();
+        EnsureChatCollectionIndexes();
     }
 }

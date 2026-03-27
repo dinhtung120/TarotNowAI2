@@ -34,7 +34,7 @@ namespace TarotNow.Infrastructure.Persistence.MongoDocuments;
 /// Đại diện cho 1 tin nhắn trong collection "chat_messages" trên MongoDB.
 /// Mỗi tin nhắn thuộc về 1 cuộc hội thoại (conversation), được xác định qua ConversationId.
 /// </summary>
-public class ChatMessageDocument
+public partial class ChatMessageDocument
 {
     /// <summary>
     /// ID duy nhất của tin nhắn trong MongoDB (ObjectId tự sinh).
@@ -121,6 +121,12 @@ public class ChatMessageDocument
     /// <summary>Thời điểm cập nhật cuối (nếu tin nhắn bị sửa). Null nếu chưa sửa.</summary>
     [BsonElement("updated_at")]
     public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>
+    /// Cờ đánh dấu tin nhắn vi phạm tiêu chuẩn cộng đồng (Bị Worker tự động ghim).
+    /// </summary>
+    [BsonElement("is_flagged")]
+    public bool IsFlagged { get; set; }
 }
 
 /// <summary>

@@ -92,6 +92,13 @@ public class ConversationDocument
     public DateTime? OfferExpiresAt { get; set; }
 
     /// <summary>
+    /// SLA phản hồi của Reader (giờ) sau khi đã accept.
+    /// Hỗ trợ 3 mức: 6h, 12h, 24h.
+    /// </summary>
+    [BsonElement("sla_hours")]
+    public int SlaHours { get; set; } = 12;
+
+    /// <summary>
     /// Bộ đếm tin nhắn chưa đọc (denormalized counter).
     /// "Denormalized" nghĩa là: thông tin này THỪA (có thể tính lại từ chat_messages),
     /// nhưng lưu sẵn ở đây để UI lấy NHANH (không cần đếm lại mỗi lần mở inbox).
@@ -134,6 +141,15 @@ public class ConversationConfirm
     /// <summary>Thời điểm Reader xác nhận hoàn thành. Null = Reader chưa xác nhận.</summary>
     [BsonElement("reader_at")]
     public DateTime? ReaderAt { get; set; }
+
+    [BsonElement("requested_by")]
+    public string? RequestedBy { get; set; }
+
+    [BsonElement("requested_at")]
+    public DateTime? RequestedAt { get; set; }
+
+    [BsonElement("auto_resolve_at")]
+    public DateTime? AutoResolveAt { get; set; }
 }
 
 /// <summary>

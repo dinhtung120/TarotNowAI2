@@ -17,6 +17,7 @@
 using MediatR;
 using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Common.Interfaces;
 
 namespace TarotNow.Application.Features.Chat.Queries.ListConversations;
 
@@ -29,11 +30,9 @@ public class ListConversationsQuery : IRequest<ListConversationsResult>
     public Guid UserId { get; set; }
 
     /// <summary>
-    /// Chế độ truy vấn (Ngữ cảnh thao tác).
-    /// Vì TarotNow cho phép đóng 2 vai, bạn có thể xem Inbox góc độ Khách ("user") 
-    /// hoặc xem Inbox góc độ làm ăn của Thợ ("reader").
+    /// Tab inbox: active | completed | all.
     /// </summary>
-    public string Role { get; set; } = "user";
+    public string Tab { get; set; } = "active";
 
     // Phân trang
     public int Page { get; set; } = 1;
@@ -55,15 +54,24 @@ public partial class ListConversationsQueryHandler : IRequestHandler<ListConvers
     private readonly IConversationRepository _conversationRepo;
     private readonly IUserRepository _userRepo;
     private readonly IChatFinanceRepository _financeRepo;
+    private readonly IReaderProfileRepository _readerProfileRepo;
+    private readonly IChatMessageRepository _messageRepo;
+    private readonly IUserPresenceTracker _presenceTracker;
 
     public ListConversationsQueryHandler(
         IConversationRepository conversationRepo, 
         IUserRepository userRepo,
-        IChatFinanceRepository financeRepo)
+        IChatFinanceRepository financeRepo,
+        IReaderProfileRepository readerProfileRepo,
+        IChatMessageRepository messageRepo,
+        IUserPresenceTracker presenceTracker)
     {
         _conversationRepo = conversationRepo;
         _userRepo = userRepo;
         _financeRepo = financeRepo;
+        _readerProfileRepo = readerProfileRepo;
+        _messageRepo = messageRepo;
+        _presenceTracker = presenceTracker;
     }
 
     public async Task<ListConversationsResult> Handle(ListConversationsQuery request, CancellationToken cancellationToken)
@@ -71,7 +79,9 @@ public partial class ListConversationsQueryHandler : IRequestHandler<ListConvers
         var userId = request.UserId.ToString();
         var (items, totalCount) = await LoadConversationsAsync(userId, request, cancellationToken);
         await EnrichParticipantProfilesAsync(items, cancellationToken);
+        await EnrichReaderStatusAsync(items, cancellationToken);
         await EnrichEscrowSummaryAsync(items, cancellationToken);
+        await EnrichLastMessagePreviewAsync(items, cancellationToken);
 
         return new ListConversationsResult
         {

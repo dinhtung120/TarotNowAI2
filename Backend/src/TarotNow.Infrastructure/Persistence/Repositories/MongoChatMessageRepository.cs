@@ -21,13 +21,23 @@ namespace TarotNow.Infrastructure.Persistence.Repositories;
 /// <summary>
 /// Implement IChatMessageRepository — đọc/ghi tin nhắn chat từ MongoDB.
 /// </summary>
-public class MongoChatMessageRepository : IChatMessageRepository
+public partial class MongoChatMessageRepository : IChatMessageRepository
 {
     private readonly MongoDbContext _context;
 
     public MongoChatMessageRepository(MongoDbContext context)
     {
         _context = context;
+    }
+
+    public async Task<ChatMessageDto?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<ChatMessageDocument>.Filter.And(
+            Builders<ChatMessageDocument>.Filter.Eq(m => m.Id, id),
+            Builders<ChatMessageDocument>.Filter.Eq(m => m.IsDeleted, false));
+
+        var doc = await _context.ChatMessages.Find(filter).FirstOrDefaultAsync(cancellationToken);
+        return doc == null ? null : ToDto(doc);
     }
 
     /// <summary>
@@ -40,34 +50,6 @@ public class MongoChatMessageRepository : IChatMessageRepository
         var doc = ToDocument(message);
         await _context.ChatMessages.InsertOneAsync(doc, cancellationToken: cancellationToken);
         message.Id = doc.Id; // Gán ObjectId vừa sinh ngược về DTO
-    }
-
-    /// <summary>
-    /// Lấy tin nhắn theo cuộc hội thoại, phân trang, mới nhất trước.
-    /// Frontend sẽ reverse lại danh sách để hiển thị đúng timeline (cũ → mới).
-    /// Chỉ lấy tin chưa bị xóa (IsDeleted = false).
-    /// Trả về: (danh sách DTO, tổng số tin) — UI dùng totalCount cho pagination.
-    /// </summary>
-    public async Task<(IEnumerable<ChatMessageDto> Items, long TotalCount)> GetByConversationIdPaginatedAsync(
-        string conversationId, int page, int pageSize, CancellationToken cancellationToken = default)
-    {
-        var normalizedPage = page < 1 ? 1 : page;
-        var normalizedPageSize = pageSize <= 0 ? 50 : Math.Min(pageSize, 200);
-
-        // Filter: đúng conversation + chưa xóa
-        var filter = Builders<ChatMessageDocument>.Filter.And(
-            Builders<ChatMessageDocument>.Filter.Eq(m => m.ConversationId, conversationId),
-            Builders<ChatMessageDocument>.Filter.Eq(m => m.IsDeleted, false));
-
-        var totalCount = await _context.ChatMessages.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
-
-        var docs = await _context.ChatMessages.Find(filter)
-            .SortByDescending(m => m.CreatedAt) // Mới nhất trước (frontend reverse lại)
-            .Skip((normalizedPage - 1) * normalizedPageSize)
-            .Limit(normalizedPageSize)
-            .ToListAsync(cancellationToken);
-
-        return (docs.Select(ToDto), totalCount);
     }
 
     /// <summary>
@@ -93,49 +75,36 @@ public class MongoChatMessageRepository : IChatMessageRepository
         return result.ModifiedCount;
     }
 
-    // ==================== MAPPING ====================
-
-    /// <summary>Map Application DTO → MongoDB Document (khi ghi).</summary>
-    private static ChatMessageDocument ToDocument(ChatMessageDto dto)
+    /// <summary>
+    /// Cập nhật cờ IsFlagged cho một Message khi vi phạm (Auto Moderation).
+    /// Gắn nhãn để phân loại tin nhắn đen.
+    /// </summary>
+    public async Task UpdateFlagAsync(string messageId, bool isFlagged, CancellationToken cancellationToken = default)
     {
-        return new ChatMessageDocument
-        {
-            // Nếu chưa có ID → tự sinh ObjectId mới
-            Id = string.IsNullOrEmpty(dto.Id) ? MongoDB.Bson.ObjectId.GenerateNewId().ToString() : dto.Id,
-            ConversationId = dto.ConversationId,
-            SenderId = dto.SenderId,
-            Type = dto.Type,
-            Content = dto.Content,
-            // PaymentPayload chỉ có khi type = "payment_offer"
-            PaymentPayload = dto.PaymentPayload != null ? new ChatPaymentPayload
-            {
-                AmountDiamond = dto.PaymentPayload.AmountDiamond,
-                ProposalId = dto.PaymentPayload.ProposalId,
-                ExpiresAt = dto.PaymentPayload.ExpiresAt
-            } : null,
-            IsRead = dto.IsRead,
-            CreatedAt = dto.CreatedAt
-        };
+        var filter = Builders<ChatMessageDocument>.Filter.Eq(m => m.Id, messageId);
+        var update = Builders<ChatMessageDocument>.Update
+            .Set(m => m.IsFlagged, isFlagged)
+            .Set(m => m.UpdatedAt, DateTime.UtcNow);
+
+        await _context.ChatMessages.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
     }
 
-    /// <summary>Map MongoDB Document → Application DTO (khi đọc).</summary>
-    private static ChatMessageDto ToDto(ChatMessageDocument doc)
+    public async Task<IEnumerable<ChatMessageDto>> GetLatestMessagesAsync(IEnumerable<string> conversationIds, CancellationToken cancellationToken = default)
     {
-        return new ChatMessageDto
-        {
-            Id = doc.Id,
-            ConversationId = doc.ConversationId,
-            SenderId = doc.SenderId,
-            Type = doc.Type,
-            Content = doc.Content,
-            PaymentPayload = doc.PaymentPayload != null ? new PaymentPayloadDto
-            {
-                AmountDiamond = doc.PaymentPayload.AmountDiamond,
-                ProposalId = doc.PaymentPayload.ProposalId,
-                ExpiresAt = doc.PaymentPayload.ExpiresAt
-            } : null,
-            IsRead = doc.IsRead,
-            CreatedAt = doc.CreatedAt
-        };
+        var ids = conversationIds.ToList();
+        if (ids.Count == 0) return Enumerable.Empty<ChatMessageDto>();
+
+        var pipeline = new EmptyPipelineDefinition<ChatMessageDocument>()
+            .Match(Builders<ChatMessageDocument>.Filter.And(
+                Builders<ChatMessageDocument>.Filter.In(m => m.ConversationId, ids),
+                Builders<ChatMessageDocument>.Filter.Eq(m => m.IsDeleted, false)))
+            .Sort(Builders<ChatMessageDocument>.Filter.And(
+                Builders<ChatMessageDocument>.Sort.Descending(m => m.ConversationId),
+                Builders<ChatMessageDocument>.Sort.Descending(m => m.CreatedAt)))
+            .Group(m => m.ConversationId, g => g.First())
+            .Project(m => m); // First() returns the Document
+
+        var docs = await _context.ChatMessages.Aggregate(pipeline, cancellationToken: cancellationToken).ToListAsync(cancellationToken);
+        return docs.Select(ToDto);
     }
 }

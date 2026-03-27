@@ -30,4 +30,7 @@ public class CreateConversationCommand : IRequest<ConversationDto>
 
     /// <summary>UUID định dạng dạng chuỗi của Thợ xem Tarot (Tarot Reader).</summary>
     public Guid ReaderId { get; set; }
+
+    /// <summary>SLA phản hồi mong muốn của Reader sau khi accept (6/12/24 giờ).</summary>
+    public int SlaHours { get; set; } = 12;
 }

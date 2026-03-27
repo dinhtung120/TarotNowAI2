@@ -7,21 +7,19 @@ namespace TarotNow.Infrastructure.BackgroundJobs;
 public partial class EscrowTimerService
 {
     private async Task ProcessAutoReleases(
-        IChatFinanceRepository repo,
+        RefundDependencies dependencies,
         IEscrowSettlementService escrowSettlementService,
-        ITransactionCoordinator transactionCoordinator,
         CancellationToken cancellationToken)
     {
-        var candidates = await repo.GetItemsForAutoReleaseAsync(cancellationToken);
+        var candidates = await dependencies.FinanceRepository.GetItemsForAutoReleaseAsync(cancellationToken);
 
         foreach (var candidate in candidates)
         {
             try
             {
                 await ProcessAutoReleaseCandidateAsync(
-                    repo,
+                    dependencies,
                     escrowSettlementService,
-                    transactionCoordinator,
                     candidate.Id,
                     cancellationToken);
             }
@@ -33,15 +31,17 @@ public partial class EscrowTimerService
     }
 
     private async Task ProcessAutoReleaseCandidateAsync(
-        IChatFinanceRepository repo,
+        RefundDependencies dependencies,
         IEscrowSettlementService escrowSettlementService,
-        ITransactionCoordinator transactionCoordinator,
         Guid candidateId,
         CancellationToken cancellationToken)
     {
-        await transactionCoordinator.ExecuteAsync(async transactionCt =>
+        string? completedConversationId = null;
+        long releasedAmount = 0;
+
+        await dependencies.TransactionCoordinator.ExecuteAsync(async transactionCt =>
         {
-            var item = await repo.GetItemForUpdateAsync(candidateId, transactionCt);
+            var item = await dependencies.FinanceRepository.GetItemForUpdateAsync(candidateId, transactionCt);
             if (item == null || !IsEligibleForAutoRelease(item, DateTime.UtcNow))
             {
                 return;
@@ -52,9 +52,29 @@ public partial class EscrowTimerService
                 isAutoRelease: true,
                 cancellationToken: transactionCt);
 
-            await repo.SaveChangesAsync(transactionCt);
+            await dependencies.FinanceRepository.SaveChangesAsync(transactionCt);
             _logger.LogInformation("[EscrowTimer] Auto-release: {ItemId}", item.Id);
+
+            var session = await dependencies.FinanceRepository.GetSessionByConversationRefAsync(item.ConversationRef, transactionCt);
+            if (session != null && session.TotalFrozen <= 0)
+            {
+                session.Status = "completed";
+                session.UpdatedAt = DateTime.UtcNow;
+                await dependencies.FinanceRepository.UpdateSessionAsync(session, transactionCt);
+                await dependencies.FinanceRepository.SaveChangesAsync(transactionCt);
+                completedConversationId = item.ConversationRef;
+                releasedAmount = item.AmountDiamond;
+            }
         }, cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(completedConversationId) == false && releasedAmount > 0)
+        {
+            await MarkConversationCompletedAsync(
+                dependencies,
+                completedConversationId,
+                $"Hệ thống đã tự động giải ngân {releasedAmount} 💎 cho Reader theo timeout.",
+                cancellationToken);
+        }
     }
 
     private static bool IsEligibleForAutoRelease(Domain.Entities.ChatQuestionItem item, DateTime now)

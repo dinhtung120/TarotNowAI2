@@ -29,5 +29,6 @@ public static partial class DependencyInjection
         services.Configure<SmtpOptions>(configuration.GetSection("Smtp"));
         services.Configure<LegalSettingsOptions>(configuration.GetSection("LegalSettings"));
         services.Configure<DiagnosticsOptions>(configuration.GetSection("Diagnostics"));
+        services.Configure<ChatModerationOptions>(configuration.GetSection("ChatModeration"));
     }
 }

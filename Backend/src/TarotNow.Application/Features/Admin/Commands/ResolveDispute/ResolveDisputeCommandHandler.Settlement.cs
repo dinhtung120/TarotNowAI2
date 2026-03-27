@@ -1,4 +1,5 @@
 using TarotNow.Application.Exceptions;
+using TarotNow.Application.Common;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 
@@ -25,91 +26,56 @@ public partial class ResolveDisputeCommandHandler
             throw new BadRequestException("Dispute này đã được settle trước đó.");
         }
 
+        await FreezeReaderIfDisputeThresholdExceededAsync(item, cancellationToken);
+
         if (action == "release")
         {
             await ReleaseToReaderAsync(request.AdminId, item, auditMetadata, cancellationToken);
         }
-        else
+        else if (action == "refund")
         {
             await RefundToUserAsync(request.AdminId, item, auditMetadata, cancellationToken);
+        }
+        else
+        {
+            await SplitBetweenReaderAndUserAsync(
+                request.AdminId,
+                item,
+                request.SplitPercentToReader ?? 50,
+                auditMetadata,
+                cancellationToken);
         }
 
         await _financeRepo.UpdateItemAsync(item, cancellationToken);
         await ReduceSessionFrozenBalanceAsync(item, cancellationToken);
         await _financeRepo.SaveChangesAsync(cancellationToken);
+        await MarkConversationResolvedAsync(item, cancellationToken);
     }
 
-    private async Task ReleaseToReaderAsync(
-        Guid adminId,
-        ChatQuestionItem item,
-        string auditMetadata,
-        CancellationToken cancellationToken)
+    private async Task MarkConversationResolvedAsync(ChatQuestionItem item, CancellationToken cancellationToken)
     {
-        var fee = (long)Math.Ceiling(item.AmountDiamond * 0.10);
-        var readerAmount = item.AmountDiamond - fee;
-
-        await _walletRepo.ReleaseAsync(
-            item.PayerId,
-            item.ReceiverId,
-            readerAmount,
-            referenceSource: "admin_dispute_resolve",
-            referenceId: item.Id.ToString(),
-            description: $"Admin {adminId} resolve: release {readerAmount}💎",
-            metadataJson: auditMetadata,
-            idempotencyKey: $"settle_release_{item.Id}",
-            cancellationToken: cancellationToken);
-
-        if (fee > 0)
-        {
-            await _walletRepo.ConsumeAsync(
-                item.PayerId,
-                fee,
-                referenceSource: "platform_fee",
-                referenceId: item.Id.ToString(),
-                description: $"Admin {adminId} settle fee {fee}💎",
-                metadataJson: auditMetadata,
-                idempotencyKey: $"settle_fee_{item.Id}",
-                cancellationToken: cancellationToken);
-        }
-
-        item.Status = QuestionItemStatus.Released;
-        item.ReleasedAt = DateTime.UtcNow;
-    }
-
-    private async Task RefundToUserAsync(
-        Guid adminId,
-        ChatQuestionItem item,
-        string auditMetadata,
-        CancellationToken cancellationToken)
-    {
-        await _walletRepo.RefundAsync(
-            item.PayerId,
-            item.AmountDiamond,
-            referenceSource: "admin_dispute_resolve",
-            referenceId: item.Id.ToString(),
-            description: $"Admin {adminId} resolve: refund {item.AmountDiamond}💎",
-            metadataJson: auditMetadata,
-            idempotencyKey: $"settle_refund_{item.Id}",
-            cancellationToken: cancellationToken);
-
-        item.Status = QuestionItemStatus.Refunded;
-        item.RefundedAt = DateTime.UtcNow;
-    }
-
-    private async Task ReduceSessionFrozenBalanceAsync(ChatQuestionItem item, CancellationToken cancellationToken)
-    {
-        var session = await _financeRepo.GetSessionForUpdateAsync(item.FinanceSessionId, cancellationToken);
-        if (session == null)
+        var conversation = await _conversationRepository.GetByIdAsync(item.ConversationRef, cancellationToken);
+        if (conversation == null || conversation.Status != ConversationStatus.Disputed)
         {
             return;
         }
 
-        session.TotalFrozen -= item.AmountDiamond;
-        if (session.TotalFrozen < 0)
-        {
-            session.TotalFrozen = 0;
-        }
+        var now = DateTime.UtcNow;
+        conversation.Status = ConversationStatus.Completed;
+        conversation.UpdatedAt = now;
 
-        await _financeRepo.UpdateSessionAsync(session, cancellationToken);
+        var systemMessage = new ChatMessageDto
+        {
+            ConversationId = conversation.Id,
+            SenderId = conversation.ReaderId,
+            Type = ChatMessageType.System,
+            Content = "Tranh chấp đã được Admin xử lý. Cuộc trò chuyện đã hoàn thành.",
+            IsRead = false,
+            CreatedAt = now
+        };
+
+        await _chatMessageRepository.AddAsync(systemMessage, cancellationToken);
+        conversation.LastMessageAt = systemMessage.CreatedAt;
+        await _conversationRepository.UpdateAsync(conversation, cancellationToken);
     }
 }

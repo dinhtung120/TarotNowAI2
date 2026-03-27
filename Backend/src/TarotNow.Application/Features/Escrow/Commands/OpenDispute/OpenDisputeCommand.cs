@@ -60,28 +60,22 @@ public class OpenDisputeCommandHandler : IRequestHandler<OpenDisputeCommand, boo
             var item = await _financeRepo.GetItemForUpdateAsync(req.ItemId, transactionCt)
                 ?? throw new NotFoundException("Không tìm thấy câu hỏi.");
 
-            // Hàng rào 1: Ai xì tiền thì người đó làm Cha nội. Chỉ Payer mới được quyền Tranh Chấp.
-            if (item.PayerId != req.UserId)
-                throw new BadRequestException("Chỉ người đặt câu hỏi mới được mở tranh chấp.");
+            if (item.PayerId != req.UserId && item.ReceiverId != req.UserId)
+                throw new BadRequestException("Bạn không có quyền mở tranh chấp cho mục thanh toán này.");
 
-            // Hàng rào 2: Nếu tiền đã trôi về Ví Thợ ròi (Thấy dở nhưng vẫn bấm Rút/Release), 
-            // Thì không còn cơ hội mở Kiện Cáo nữa. Hàng đã bóc tem.
+            if (item.Status == QuestionItemStatus.Disputed)
+            {
+                return;
+            }
+
             if (item.Status != QuestionItemStatus.Accepted)
                 throw new BadRequestException($"Câu hỏi ở trạng thái {item.Status}, không thể mở tranh chấp.");
-
-            // Hàng rào 3: Thầy bói chưa coi bài lá nào mà đã vu oan dỏm? Cấm mở Tranh chấp.
-            if (item.RepliedAt == null)
-                throw new BadRequestException("Reader chưa trả lời, chưa thể mở tranh chấp.");
-
-            // Hàng rào 4: Kẻ gian (User) lợi dụng lúc Đồng Hồ Cát gần hết (23H59) rồi mới Bấm Giải Quyết 
-            // Đề phòng Bot Auto chạy. Tính năng này chặn giới hạn AutoWindow (Thường là 2-3 Ngày Tùy Admin).
-            var now = DateTime.UtcNow;
-            if (item.AutoReleaseAt != null && now > item.AutoReleaseAt)
-                throw new BadRequestException("Đã quá thời hạn mở tranh chấp.");
 
             // Bức tâm thư Tối Thiểu 10 Chữ. "Lag" hay "Bịp" 1 chữ là Cấm Kiện.
             if (string.IsNullOrWhiteSpace(req.Reason) || req.Reason.Length < 10)
                 throw new BadRequestException("Lý do tranh chấp phải có ít nhất 10 ký tự.");
+
+            var now = DateTime.UtcNow;
 
             // -----------------------------------------------------------------
             //  THI HÀNH LỆNH BẮT GIỮ:
@@ -89,6 +83,8 @@ public class OpenDisputeCommandHandler : IRequestHandler<OpenDisputeCommand, boo
             // -----------------------------------------------------------------
             item.Status = QuestionItemStatus.Disputed;
             item.AutoReleaseAt = null; // <= Quan trọng nhất. Tắt Trigger tự cộng tiền cho Reader.
+            item.DisputeWindowStart = now;
+            item.DisputeWindowEnd = now.AddHours(48);
             item.UpdatedAt = now;
 
             await _financeRepo.UpdateItemAsync(item, transactionCt);

@@ -15,6 +15,7 @@
 
 import { useCollectionPage, type CollectionFilter } from "@/features/collection/application/useCollectionPage";
 import { Loader2, LayoutGrid, AlertCircle, ChevronRight, Sparkles, Filter, CheckCircle2, Lock } from "lucide-react";
+import Image from "next/image";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { useCardsCatalog } from "@/shared/application/hooks/useCardsCatalog";
@@ -79,9 +80,12 @@ export default function CollectionPage() {
  <div className="h-full flex flex-col">
  <div className="flex-1 rounded-2xl tn-overlay overflow-hidden relative shadow-inner mb-4 border tn-border-soft flex items-center justify-center">
  {selectedCardImageUrl ? (
- <img
+ <Image
  src={selectedCardImageUrl}
  alt={selectedCardName || t('unknown_card')}
+ fill
+ unoptimized
+ sizes="(max-width: 768px) 13rem, 20rem"
  className={`h-full w-full object-cover transition-all duration-500 ${selectedUserCard ? '' : 'blur-[6px]'}`}
  />
  ) : (
@@ -264,11 +268,13 @@ export default function CollectionPage() {
  isOwned ? 'bg-gradient-to-br from-[color:var(--c-215-189-226-26)] to-[color:var(--c-168-156-255-28)] border tn-border-soft' : 'tn-overlay'
  }`}>
  {cardImageUrl ? (
- <img
+ <Image
  src={cardImageUrl}
  alt={cardName || t('unknown_card')}
+ fill
+ unoptimized
+ sizes="(max-width: 768px) 33vw, 220px"
  className={`h-full w-full object-cover ${isOwned ? 'backface-hidden' : 'blur-[6px]'}`}
- loading="lazy"
  />
  ) : (
  <span className={`text-4xl font-serif font-black tracking-tighter opacity-20 ${isOwned ? 'text-[var(--warning)]' : 'tn-text-muted blur-[4px]'}`}>

@@ -19,6 +19,7 @@ import { Sparkles, User, Calendar, AtSign, ShieldCheck, Save, Loader2, Trophy,
 } from "lucide-react";
 import { SectionHeader, GlassCard, Button } from "@/shared/components/ui";
 import { useProfilePage } from "@/features/profile/application/useProfilePage";
+import ProfileReaderSettingsPage from "@/features/profile/reader/presentation/ProfileReaderSettingsPage";
 
 export default function ProfilePage() {
  const {
@@ -36,8 +37,10 @@ export default function ProfilePage() {
   handleSubmit,
   errors,
   isSubmitting,
-  onSubmit,
+ onSubmit,
  } = useProfilePage();
+ const isAdmin = user?.role === "admin";
+ const isTarotReader = user?.role === "tarot_reader";
 
  // Loading spinner khi đang fetch dữ liệu
  if (loading) {
@@ -117,7 +120,7 @@ export default function ProfilePage() {
 
  {/* Action Buttons */}
  <div className="flex flex-col sm:flex-row gap-3 pt-2">
- {user?.role === "admin" && (
+ {isAdmin && (
  <button
  onClick={() => router.push("/admin/users")}
  className="flex-1 group flex justify-center items-center gap-2.5 bg-[var(--purple-accent)]/10 hover:bg-[var(--purple-accent)]/20 border border-[var(--purple-accent)]/30 text-[var(--purple-accent)] px-5 py-2.5 min-h-11 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95"
@@ -126,9 +129,9 @@ export default function ProfilePage() {
  {t("admin_portal")}
  </button>
  )}
- {(user?.role === "admin" || user?.role === "reader") && (
+ {isTarotReader && (
  <button
- onClick={() => router.push("/profile/reader")}
+  onClick={() => router.push("/profile/reader")}
  className="flex-1 group flex justify-center items-center gap-2.5 bg-[var(--warning)]/10 hover:bg-[var(--warning)]/20 border border-[var(--warning)]/30 text-[var(--warning)] px-5 py-2.5 min-h-11 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95"
  >
  <Sparkles className="w-3.5 h-3.5 transition-transform group-hover:rotate-12" />
@@ -148,7 +151,7 @@ export default function ProfilePage() {
   2. Đơn đang chờ (pending) → Badge vàng + thông báo
   3. Đơn bị từ chối (rejected) → Badge đỏ + nút nộp lại
  */}
- {user?.role !== "admin" && user?.role !== "reader" && !readerRequestLoading && (
+ {!isAdmin && !isTarotReader && !readerRequestLoading && (
   <GlassCard className="!p-6 sm:!p-8 overflow-hidden relative group">
   <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12">
    <Sparkles className="w-32 h-32 text-[var(--purple-accent)]" />
@@ -228,8 +231,12 @@ export default function ProfilePage() {
    </div>
    )}
   </div>
-  </GlassCard>
+ </GlassCard>
  )}
+
+ {isTarotReader ? (
+  <ProfileReaderSettingsPage embedded />
+ ) : null}
 
  {/* Settings Form Section */}
  <GlassCard className="!p-6 sm:!p-8">

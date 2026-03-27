@@ -43,7 +43,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
  overflow-y-auto: phần nội dung được cuộn độc lập với sidebar.
  pb-20 (Mobile only): Chừa không gian cho BottomTabBar tránh bị che khuất.
  */}
-        <main className="flex-1 min-h-0 relative z-10 overflow-y-auto custom-scrollbar pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0">
+        <main className="flex-1 min-h-0 relative z-10 custom-scrollbar pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0">
           {children}
         </main>
       </div>

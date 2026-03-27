@@ -29,4 +29,51 @@ public static class ReaderOnlineStatus
 
     /// <summary>Sẵn Sàng Mở Lò Bát Quái Đón Tiền Đón Thớt Lên (Trạng Thái Xăng Dầu Độc Nhất Ưu Tiên Mở Barrier Check Ném Chat Yêu Cầu Kết Nối Bằng Kim Cương User).</summary>
     public const string AcceptingQuestions = "accepting_questions";
+
+    /// <summary>Reader tạm rời máy nhưng chưa tắt ca hoàn toàn; vẫn cho phép mở chat nhưng cần cảnh báo SLA có thể chậm.</summary>
+    public const string Away = "away";
+
+    public static bool IsValid(string? status)
+        => TryNormalize(status, out _);
+
+    public static bool TryNormalize(string? status, out string normalized)
+    {
+        normalized = Offline;
+        if (string.IsNullOrWhiteSpace(status))
+        {
+            return false;
+        }
+
+        var value = status.Trim().ToLowerInvariant();
+        switch (value)
+        {
+            case Online:
+            case "active":
+            case "connected":
+            case "available":
+                normalized = Online;
+                return true;
+            case Offline:
+            case "disconnected":
+            case "invisible":
+                normalized = Offline;
+                return true;
+            case AcceptingQuestions:
+            case "acceptingquestions":
+            case "accepting-questions":
+            case "accepting":
+            case "ready":
+                normalized = AcceptingQuestions;
+                return true;
+            case Away:
+            case "idle":
+                normalized = Away;
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    public static string NormalizeOrDefault(string? status, string defaultStatus = Offline)
+        => TryNormalize(status, out var normalized) ? normalized : defaultStatus;
 }

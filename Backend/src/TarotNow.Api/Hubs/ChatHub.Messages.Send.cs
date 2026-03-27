@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.SignalR;
-using TarotNow.Application.Common;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Chat.Commands.SendMessage;
 
@@ -27,13 +26,18 @@ public partial class ChatHub
         try
         {
             var command = BuildSendMessageCommand(conversationId, content, type, userGuid);
-            if (string.Equals(type, "payment_offer", StringComparison.Ordinal))
-            {
-                TryAttachPaymentPayload(command, content);
-            }
+            TryAttachSpecialPayload(command, content);
 
             var message = await _mediator.Send(command);
-            await Clients.Group(conversationId).SendAsync("ReceiveMessage", message);
+            var groupKey = ConversationGroup(conversationId);
+
+            await Clients.Group(groupKey).SendAsync("message.created", message);
+            await BroadcastConversationUpdatedToParticipantsAsync(
+                conversationId,
+                "message_created",
+                message.CreatedAt);
+
+            await TryQueueModerationAsync(message);
         }
         catch (BadRequestException ex)
         {
@@ -67,23 +71,5 @@ public partial class ChatHub
             Type = type,
             Content = content
         };
-    }
-
-    private void TryAttachPaymentPayload(SendMessageCommand command, string content)
-    {
-        try
-        {
-            command.PaymentPayload = System.Text.Json.JsonSerializer.Deserialize<PaymentPayloadDto>(
-                content,
-                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-            command.Content = !string.IsNullOrWhiteSpace(command.PaymentPayload?.Description)
-                ? command.PaymentPayload.Description
-                : "Đề xuất Thanh toán Dịch vụ";
-        }
-        catch (System.Text.Json.JsonException ex)
-        {
-            _logger.LogWarning(ex, "[ChatHub] Lỗi giải mã Payment Payload.");
-        }
     }
 }

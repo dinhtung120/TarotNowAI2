@@ -20,7 +20,7 @@ export function useReadersDirectoryPage() {
     return () => window.clearTimeout(debounceTimer);
   }, [searchInput]);
 
- const { data, isLoading, isFetching } = useQuery({
+ const { data, isLoading } = useQuery({
   queryKey: ['readers', page, pageSize, selectedSpecialty, selectedStatus, searchTerm],
   queryFn: async () => {
    const result = await listReaders(
@@ -35,11 +35,14 @@ export function useReadersDirectoryPage() {
    }
    return { readers: [] as ReaderProfile[], totalCount: 0 };
   },
+  refetchOnWindowFocus: true,
+  refetchOnReconnect: true,
+  refetchOnMount: true,
  });
 
  const readers = data?.readers ?? [];
  const totalCount = data?.totalCount ?? 0;
- const loading = isLoading || isFetching;
+ const loading = isLoading;
 
   const totalPages = useMemo(
     () => Math.ceil(totalCount / pageSize),

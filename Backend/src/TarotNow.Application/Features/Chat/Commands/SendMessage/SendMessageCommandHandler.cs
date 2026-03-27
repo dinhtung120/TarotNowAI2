@@ -17,88 +17,81 @@
 
 using MediatR;
 using TarotNow.Application.Common;
-using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
-using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Commands.SendMessage;
 
 /// <summary>
 /// Xử lý logic nghiệp vụ ghi lưu Tin nhắn, đẩy đếm số chấm đỏ UnreadCount.
 /// </summary>
-public class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, ChatMessageDto>
+public partial class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, ChatMessageDto>
 {
     private readonly IConversationRepository _conversationRepo;
     private readonly IChatMessageRepository _messageRepo;
+    private readonly IChatFinanceRepository _financeRepo;
+    private readonly IWalletRepository _walletRepo;
+    private readonly IReaderProfileRepository _readerProfileRepo;
+    private readonly ITransactionCoordinator _transactionCoordinator;
+    private readonly IMediaProcessorService _mediaProcessor;
 
     public SendMessageCommandHandler(
         IConversationRepository conversationRepo,
-        IChatMessageRepository messageRepo)
+        IChatMessageRepository messageRepo,
+        IChatFinanceRepository financeRepo,
+        IWalletRepository walletRepo,
+        IReaderProfileRepository readerProfileRepo,
+        ITransactionCoordinator transactionCoordinator,
+        IMediaProcessorService mediaProcessor)
     {
         _conversationRepo = conversationRepo;
         _messageRepo = messageRepo;
+        _financeRepo = financeRepo;
+        _walletRepo = walletRepo;
+        _readerProfileRepo = readerProfileRepo;
+        _transactionCoordinator = transactionCoordinator;
+        _mediaProcessor = mediaProcessor;
     }
 
     public async Task<ChatMessageDto> Handle(SendMessageCommand request, CancellationToken cancellationToken)
     {
-        // 1. Kiểm duyệt Định dạng: Loại tin lạ không thuộc hệ sinh thái sẽ bị ném ra ngoài.
-        if (!ChatMessageType.IsValid(request.Type))
-            throw new BadRequestException($"Loại tin nhắn không hợp lệ: {request.Type}");
-
-        // 2. Chặn gửi tin nhắn trống trơn (Nhỡ User bấm nút Enter liên tục).
-        if (request.Type == ChatMessageType.Text && string.IsNullOrWhiteSpace(request.Content))
-            throw new BadRequestException("Nội dung tin nhắn không được để trống.");
-
-        // 3. Truy vết Box Chat.
-        var conversation = await _conversationRepo.GetByIdAsync(request.ConversationId, cancellationToken)
-            ?? throw new NotFoundException("Không tìm thấy cuộc trò chuyện.");
-
-        // 4. An Ninh: Chỉ thành viên phòng Chat mới được nói chuyện.
+        ValidateRequest(request);
+        await ProcessMediaRequestAsync(request, cancellationToken);
+        var conversation = await LoadConversationAsync(request, cancellationToken);
         var senderId = request.SenderId.ToString();
-        if (conversation.UserId != senderId && conversation.ReaderId != senderId)
-            throw new BadRequestException("Bạn không phải thành viên của cuộc trò chuyện này.");
 
-        // 5. Kiểm tra Trạng Thái: Hợp đồng kết thúc (Ended/Closed) thì không thể nhắn gửi nhung nhớ gì nữa.
-        if (conversation.Status != ConversationStatus.Active && conversation.Status != ConversationStatus.Pending)
-            throw new BadRequestException($"Cuộc trò chuyện đã kết thúc ({conversation.Status}).");
+        ValidateSender(conversation, senderId);
+        ValidateConversationForSend(conversation, senderId);
 
-        // 6. Trigger Cờ Tự Động: 
-        // Lần đầu tiên Reader Rep lại hộp thoại Pending -> Room sẽ tự nhảy sang Active (Hai bên chính thức bắt sóng).
-        if (conversation.Status == ConversationStatus.Pending)
+        var firstMessageFreeze = await TryFreezeMainQuestionOnFirstUserMessageAsync(
+            conversation,
+            senderId,
+            cancellationToken);
+        ApplyConversationStateTransition(conversation, senderId, firstMessageFreeze.OfferExpiresAtUtc);
+
+        var message = BuildMessage(request, senderId);
+        await _messageRepo.AddAsync(message, cancellationToken);
+        await TryMarkReaderRepliedAsync(conversation, senderId, request.Type, cancellationToken);
+
+        IncrementUnreadCounter(conversation, senderId);
+
+        if (firstMessageFreeze.IsTriggered)
         {
-            conversation.Status = ConversationStatus.Active;
+            var systemMessage = BuildSystemMessage(
+                conversation.Id,
+                senderId,
+                $"Đã đóng băng {firstMessageFreeze.AmountDiamond} 💎 cho cuộc chat này. Đang chờ Reader phản hồi.");
+            await _messageRepo.AddAsync(systemMessage, cancellationToken);
+            conversation.LastMessageAt = systemMessage.CreatedAt;
+            conversation.UpdatedAt = systemMessage.CreatedAt;
+        }
+        else
+        {
+            conversation.LastMessageAt = message.CreatedAt;
+            conversation.UpdatedAt = message.CreatedAt;
         }
 
-        // 7. Sinh Nở Đối Tượng DTO Tin Nhắn mới.
-        var message = new ChatMessageDto
-        {
-            ConversationId = request.ConversationId,
-            SenderId = senderId,
-            Type = request.Type,
-            Content = request.Content,
-            PaymentPayload = request.PaymentPayload,
-            IsRead = false, // Vừa ra lò thì dĩ nhiên chưa ai đọc (Chấm Đỏ Kích Hoạt)
-            CreatedAt = DateTime.UtcNow
-        };
-
-        // 8. Đẩy vào lò nung Database (Collection: chat_messages).
-        await _messageRepo.AddAsync(message, cancellationToken);
-
-        // 9. CẬP NHẬT TRẠNG THÁI BOX CHAT BÊN NGOÀI BẢNG (Collection: conversations).
-        // Phải cập nhật thời gian để Frontend kéo Box Chat lên Đầu Danh Sách.
-        conversation.LastMessageAt = message.CreatedAt;
-        conversation.UpdatedAt = message.CreatedAt;
-
-        // 10. TÍNH TOÁN CHẤM ĐỎ UNREAD THÔNG MINH
-        // Nếu BẠN là người gửi -> Đối Phương sẽ bị tăng Bộ đếm Unread.
-        if (senderId == conversation.UserId)
-            conversation.UnreadCountReader += 1;
-        else
-            conversation.UnreadCountUser += 1;
-
         await _conversationRepo.UpdateAsync(conversation, cancellationToken);
-
-        // 11. Trả về DTO rực rỡ để SignalR cầm đi rải mạng (Broadcast).
         return message;
     }
+
 }

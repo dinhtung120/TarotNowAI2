@@ -1,4 +1,5 @@
 using TarotNow.Application.Common;
+using TarotNow.Domain.Enums;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
@@ -11,7 +12,7 @@ public partial class MongoReaderProfileRepository
         {
             Id = string.IsNullOrEmpty(dto.Id) ? MongoDB.Bson.ObjectId.GenerateNewId().ToString() : dto.Id,
             UserId = dto.UserId,
-            Status = dto.Status,
+            Status = ReaderOnlineStatus.NormalizeOrDefault(dto.Status),
             DisplayName = dto.DisplayName,
             AvatarUrl = dto.AvatarUrl,
             Pricing = new ReaderPricing { DiamondPerQuestion = dto.DiamondPerQuestion },
@@ -38,7 +39,7 @@ public partial class MongoReaderProfileRepository
         {
             Id = doc.Id,
             UserId = doc.UserId,
-            Status = doc.Status,
+            Status = ReaderOnlineStatus.NormalizeOrDefault(doc.Status),
             DiamondPerQuestion = doc.Pricing.DiamondPerQuestion,
             BioVi = doc.Bio.Vi,
             BioEn = doc.Bio.En,

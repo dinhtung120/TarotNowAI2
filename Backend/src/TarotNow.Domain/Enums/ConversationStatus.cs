@@ -18,22 +18,30 @@ namespace TarotNow.Domain.Enums;
 /// </summary>
 public static class ConversationStatus
 {
-    /// <summary>Đèn Vàng: Thằng Khách Vừa Bốc Lệnh Thầy Bói Đang Ngủ Chờ Thao Tác Chấp Nhận Khớp 2 Cú (Pending).</summary>
+    /// <summary>Phòng đã tạo nhưng chưa có tương tác thanh toán/messaging.</summary>
     public const string Pending = "pending";
 
-    /// <summary>Đèn Xanh: Máy Đẩy Text Bật Sáng Mạng Chat Bắt Sóng Hai Chữ Sống Bấm Thả Tin 1-1 Tụt Tốc Ra.</summary>
-    public const string Active = "active";
+    /// <summary>Đã có tin đầu tiên, đang chờ Reader chấp nhận xử lý phiên.</summary>
+    public const string AwaitingAcceptance = "awaiting_acceptance";
 
-    /// <summary>Chuông Ren Re: Nén Giao Dịch Done, Tính Tiền Xong Mọi Chuyện Hút Đáy Quét Ra File Chốt Sổ Chat Xong Ko Rep Đc Nữa.</summary>
+    /// <summary>Phiên chat đang hoạt động.</summary>
+    public const string Ongoing = "ongoing";
+
+    /// <summary>Hoàn tất và đã settlement.</summary>
     public const string Completed = "completed";
 
-    /// <summary>Khẩu Gãy Giữa Chừng Do Đứa Khách Đi Ngủ Cúp Ngang Bỏ Lệnh Chat Gọi Hoặc Thầy Dis Quá Lâu Chết.</summary>
+    /// <summary>Hủy bởi người dùng/reader/system.</summary>
     public const string Cancelled = "cancelled";
 
-    /// <summary>Bao Cát Ăn Đập UI Do Lôi Admin Kiện Lên Kiện Xuống Cấm Giết Trẻ Đổi Code Án 2 Tội Khóa Đèn Đỏ Đo Tiền Ở Kiện.</summary>
+    /// <summary>Hết hạn SLA hoặc accept window.</summary>
+    public const string Expired = "expired";
+
+    /// <summary>Đang tranh chấp, chat chuyển read-only.</summary>
     public const string Disputed = "disputed";
 
-    /// <summary>Cơ Phép Kiểm Soát Coi Thằng Post Bắn DB Lỗi Enum Bậy Vô Đâm Kẹt Gián (Bắt Guards Clause Check Chữ Đẩy Mất Tiền).</summary>
+    public static bool IsTerminal(string status)
+        => status is Completed or Cancelled or Expired;
+
     public static bool IsValid(string status) =>
-        status is Pending or Active or Completed or Cancelled or Disputed;
+        status is Pending or AwaitingAcceptance or Ongoing or Completed or Cancelled or Expired or Disputed;
 }

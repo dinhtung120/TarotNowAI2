@@ -4,8 +4,10 @@ using System.Globalization;
 using System.Reflection;
 using System.Threading.RateLimiting;
 using TarotNow.Api.Middlewares;
+using TarotNow.Api.Realtime;
 using TarotNow.Api.Services;
 using TarotNow.Application;
+using TarotNow.Application.Common.Interfaces;
 using TarotNow.Infrastructure;
 
 namespace TarotNow.Api.Startup;
@@ -57,12 +59,16 @@ public static partial class ApiServiceCollectionExtensions
     {
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
-        services.AddApplicationServices();
+        services.AddApplicationServices(Assembly.GetExecutingAssembly());
         services.AddInfrastructureServices(configuration);
         services.AddApiObservability(configuration);
         services.AddScoped<IRefreshTokenCookieService, RefreshTokenCookieService>();
+        services.AddSingleton<IUserPresenceTracker, InMemoryUserPresenceTracker>();
         services.AddAuthorization();
-        services.AddSignalR();
+        services.AddSignalR(options =>
+        {
+            options.MaximumReceiveMessageSize = 10 * 1024 * 1024; // 10MB for media metadata payload (base64/data-url).
+        });
     }
 
     private static void AddRateLimitPolicies(IServiceCollection services)

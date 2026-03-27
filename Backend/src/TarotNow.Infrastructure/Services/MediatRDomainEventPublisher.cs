@@ -21,6 +21,7 @@ public sealed class MediatRDomainEventPublisher : IDomainEventPublisher
             EscrowReleasedDomainEvent released => _mediator.Publish(new EscrowReleasedNotification(released), cancellationToken),
             EscrowRefundedDomainEvent refunded => _mediator.Publish(new EscrowRefundedNotification(refunded), cancellationToken),
             ReadingBillingCompletedDomainEvent readingBilling => _mediator.Publish(new ReadingBillingCompletedNotification(readingBilling), cancellationToken),
+            ConversationUpdatedDomainEvent updated => _mediator.Publish(new ConversationUpdatedNotification(updated), cancellationToken),
             _ => Task.CompletedTask
         };
     }

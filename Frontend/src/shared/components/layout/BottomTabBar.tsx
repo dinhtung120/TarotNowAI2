@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/shared/utils/cn";
-import { useMemo, useState, useRef, useEffect } from "react";
+import { useMemo, useState, useRef, useEffect, type ComponentProps } from "react";
 
 interface SubItem {
   labelKey: string;
@@ -45,6 +45,8 @@ interface TabGroup {
   matchPrefixes: string[];
   subItems?: SubItem[];
 }
+
+type LinkHref = ComponentProps<typeof Link>["href"];
 
 /*
  * Cấu trúc 4 tab chính, nhóm các module bên trong subItems để tiết kiệm không gian
@@ -124,11 +126,6 @@ export default function BottomTabBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  /** Tự động đóng menu khi URL thay đổi (chuyển trang) */
-  useEffect(() => {
-    setActiveMenu(null);
-  }, [pathname]);
-
   const matchesPath = (candidatePath: string, prefix: string) => {
     if (prefix === "/") return candidatePath === "/";
     return candidatePath === prefix || candidatePath.startsWith(`${prefix}/`);
@@ -177,8 +174,7 @@ export default function BottomTabBar() {
                 return (
                   <Link
                     key={sub.href}
-                    // Casting to any để bỏ qua NextIntl typing error strictness
-                    href={sub.href as any}
+                    href={sub.href as LinkHref}
                     onClick={() => setActiveMenu(null)}
                     className={cn(
                       "flex items-center gap-3 p-3 rounded-2xl transition-all",
@@ -222,7 +218,10 @@ export default function BottomTabBar() {
               e.preventDefault();
               // Nếu click lại đúng tab đang mở thì đóng nó đi, ngược lại mở nó ra
               setActiveMenu(isOpen ? null : tab.id);
+              return;
             }
+
+            setActiveMenu(null);
           };
 
           const content = (
@@ -261,7 +260,7 @@ export default function BottomTabBar() {
             return (
               <Link
                 key={tab.id}
-                href={tab.href as any}
+                href={tab.href as LinkHref}
                 onClick={handleClick}
                 className={classNameProps}
               >

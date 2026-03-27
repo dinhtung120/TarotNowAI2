@@ -19,6 +19,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Reflection;
+using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
 using TarotNow.Application.Services;
 using TarotNow.Domain.Entities;
@@ -38,6 +39,8 @@ public class EscrowTimerServiceTests
     private readonly Mock<IServiceProvider> _mockServiceProvider;
     private readonly Mock<IChatFinanceRepository> _mockFinanceRepo;
     private readonly Mock<IWalletRepository> _mockWalletRepo;
+    private readonly Mock<IConversationRepository> _mockConversationRepo;
+    private readonly Mock<IChatMessageRepository> _mockMessageRepo;
     private readonly Mock<IDomainEventPublisher> _mockDomainEventPublisher;
     private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
     private readonly Mock<ILogger<EscrowTimerService>> _mockLogger;
@@ -51,6 +54,8 @@ public class EscrowTimerServiceTests
         _mockServiceProvider = new Mock<IServiceProvider>();
         _mockFinanceRepo = new Mock<IChatFinanceRepository>();
         _mockWalletRepo = new Mock<IWalletRepository>();
+        _mockConversationRepo = new Mock<IConversationRepository>();
+        _mockMessageRepo = new Mock<IChatMessageRepository>();
         _mockDomainEventPublisher = new Mock<IDomainEventPublisher>();
         _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
         _mockLogger = new Mock<ILogger<EscrowTimerService>>();
@@ -65,9 +70,21 @@ public class EscrowTimerServiceTests
         // Inject các repository giả lập
         _mockServiceProvider.Setup(x => x.GetService(typeof(IChatFinanceRepository))).Returns(_mockFinanceRepo.Object);
         _mockServiceProvider.Setup(x => x.GetService(typeof(IWalletRepository))).Returns(_mockWalletRepo.Object);
+        _mockServiceProvider.Setup(x => x.GetService(typeof(IConversationRepository))).Returns(_mockConversationRepo.Object);
+        _mockServiceProvider.Setup(x => x.GetService(typeof(IChatMessageRepository))).Returns(_mockMessageRepo.Object);
         _mockServiceProvider.Setup(x => x.GetService(typeof(IEscrowSettlementService))).Returns(_settlementService);
         _mockServiceProvider.Setup(x => x.GetService(typeof(ITransactionCoordinator))).Returns(_mockTransactionCoordinator.Object);
         _mockServiceProvider.Setup(x => x.GetService(typeof(IDomainEventPublisher))).Returns(_mockDomainEventPublisher.Object);
+
+        _mockConversationRepo
+            .Setup(x => x.GetConversationsAwaitingCompletionResolutionAsync(It.IsAny<DateTime>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ConversationDto>());
+        _mockFinanceRepo
+            .Setup(x => x.GetDisputedItemsForAutoResolveAsync(It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ChatQuestionItem>());
+        _mockMessageRepo
+            .Setup(x => x.GetExpiredPendingPaymentOffersAsync(It.IsAny<DateTime>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ChatMessageDto>());
         
         // Mock Coordinator để chạy hàm Invoke bình thường thay vì transaction thật
         _mockTransactionCoordinator
@@ -95,8 +112,14 @@ public class EscrowTimerServiceTests
     [Fact]
     public async Task ProcessExpiredOffers_CancelsOffer()
     {
-        var expiredItem = new ChatQuestionItem { Id = Guid.NewGuid(), Status = QuestionItemStatus.Pending };
+        var expiredItem = new ChatQuestionItem
+        {
+            Id = Guid.NewGuid(),
+            Status = QuestionItemStatus.Pending,
+            OfferExpiresAt = DateTime.UtcNow.AddMinutes(-1)
+        };
         _mockFinanceRepo.Setup(x => x.GetExpiredOffersAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem> { expiredItem });
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(expiredItem.Id, It.IsAny<CancellationToken>())).ReturnsAsync(expiredItem);
         _mockFinanceRepo.Setup(x => x.GetItemsForAutoRefundAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem>());
         _mockFinanceRepo.Setup(x => x.GetItemsForAutoReleaseAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem>());
 
@@ -137,10 +160,11 @@ public class EscrowTimerServiceTests
         Assert.Equal(QuestionItemStatus.Refunded, item.Status);
         Assert.NotNull(item.RefundedAt);
         Assert.Equal(0, session.TotalFrozen); // Tiền đã được hoàn nên không còn đóng băng
+        Assert.Equal("refunded", session.Status);
 
         _mockWalletRepo.Verify(x => x.RefundAsync(item.PayerId, item.AmountDiamond, "chat_question_item", item.Id.ToString(), It.IsAny<string>(), null, $"settle_refund_{item.Id}", It.IsAny<CancellationToken>()), Times.Once);
         _mockFinanceRepo.Verify(x => x.UpdateItemAsync(item, It.IsAny<CancellationToken>()), Times.Once);
-        _mockFinanceRepo.Verify(x => x.UpdateSessionAsync(session, It.IsAny<CancellationToken>()), Times.Once);
+        _mockFinanceRepo.Verify(x => x.UpdateSessionAsync(session, It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
 
     /// <summary>

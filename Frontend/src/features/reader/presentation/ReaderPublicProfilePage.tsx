@@ -14,16 +14,17 @@
 
 import React from 'react';
 import {
- Star, Gem, MessageCircle, Loader2, Sparkles, ArrowLeft, Clock, User
+ Star, Gem, MessageCircle, Loader2, Sparkles, ArrowLeft, Clock, User,
 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { GlassCard, Button } from '@/shared/components/ui';
 import { useReaderPublicProfilePage } from '@/features/reader/application/useReaderPublicProfilePage';
+import { normalizeReaderStatus } from '@/features/reader/domain/readerStatus';
 
 export default function ReaderProfilePage() {
  const t = useTranslations("Readers");
  const locale = useLocale();
- const { router, profile, loading } = useReaderPublicProfilePage(t);
+ const { router, profile, loading, startChat, startingChat } = useReaderPublicProfilePage(t);
 
  if (loading) {
  return (
@@ -66,7 +67,7 @@ export default function ReaderProfilePage() {
   ) || t("directory.bio_fallback");
 
  const getStatusBadge = () => {
- switch (profile.status) {
+ switch (normalizeReaderStatus(profile.status)) {
  case 'accepting_questions':
  return (
  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--success)]/10 border border-[var(--success)]/20 shadow-[0_0_15px_var(--c-16-185-129-10)] ">
@@ -79,6 +80,13 @@ export default function ReaderProfilePage() {
  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--warning)]/10 border border-[var(--warning)]/20 shadow-[0_0_15px_var(--c-245-158-11-10)] ">
  <div className="w-2 h-2 rounded-full bg-[var(--warning)] shadow-[0_0_8px_currentColor]" />
  <span className="text-[10px] font-black uppercase tracking-widest text-[var(--warning)]">{t("profile.status.online")}</span>
+ </div>
+ );
+ case 'away':
+ return (
+ <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--warning)]/10 border border-[var(--warning)]/20 shadow-[0_0_15px_var(--c-245-158-11-10)] ">
+ <div className="w-2 h-2 rounded-full bg-[var(--warning)] shadow-[0_0_8px_currentColor]" />
+ <span className="text-[10px] font-black uppercase tracking-widest text-[var(--warning)]">{t("profile.status.away")}</span>
  </div>
  );
  default:
@@ -185,6 +193,15 @@ export default function ReaderProfilePage() {
 
  {/* Member Since Footer */}
  <div className="text-center pt-8">
+ <Button
+ onClick={startChat}
+ disabled={startingChat}
+ className="mb-4 px-6 py-3"
+ >
+ {startingChat ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <MessageCircle className="w-4 h-4 mr-2" />}
+ {t("profile.cta_send_question")}
+ </Button>
+
  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full tn-panel text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] shadow-inner">
  <Clock className="w-3 h-3 text-[var(--text-tertiary)]" />
  {t("profile.member_since", { date: new Date(profile.createdAt).toLocaleDateString(locale) })}

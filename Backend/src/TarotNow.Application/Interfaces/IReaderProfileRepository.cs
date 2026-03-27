@@ -28,6 +28,9 @@ public interface IReaderProfileRepository
     /// <summary>Tra Giở Hồ Sơ Bằng Id Chứng Minh Thằng User (Postgres Auth -> Lấy Kèm Data Reader Ở Mongo).</summary>
     Task<ReaderProfileDto?> GetByUserIdAsync(string userId, CancellationToken cancellationToken = default);
 
+    /// <summary>Lấy Danh Sách Hồ Sơ Reader Theo List UserId (Bulk Fetch).</summary>
+    Task<IEnumerable<ReaderProfileDto>> GetByUserIdsAsync(IEnumerable<string> userIds, CancellationToken cancellationToken = default);
+
     /// <summary>Thầy Mới Nâng Phí Cắt Cổ, Đổi Quẻ Phép, Thay Bio Update Cho Vào Đóng Dấu Cái Cụp Lại.</summary>
     Task UpdateAsync(ReaderProfileDto profile, CancellationToken cancellationToken = default);
 

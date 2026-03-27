@@ -16,6 +16,7 @@ import { Star, ChevronRight, ShieldCheck, Flame, Compass, Zap, Users, ArrowUpRig
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { listFeaturedReaders, type ReaderProfile } from "@/features/reader/public";
+import { normalizeReaderStatus } from "@/features/reader/domain/readerStatus";
 
 import AstralBackground from "@/shared/components/layout/AstralBackground";
 import Footer from "@/shared/components/layout/Footer";
@@ -88,7 +89,16 @@ async function FeaturedReadersGrid() {
 
  return (
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
- {featuredReaders.map((reader: ReaderProfile) => (
+ {featuredReaders.map((reader: ReaderProfile) => {
+ const readerStatus = normalizeReaderStatus(reader.status);
+ const statusIndicatorClassName =
+  readerStatus === 'accepting_questions'
+   ? 'bg-[var(--success)] animate-pulse'
+   : readerStatus === 'online' || readerStatus === 'away'
+    ? 'bg-[var(--warning)]'
+    : 'bg-[var(--text-muted)]';
+
+ return (
  <Link key={reader.userId} href={`/readers/${reader.userId}`}
  className="group relative h-96 rounded-[2.5rem] overflow-hidden border border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-[var(--border-focus)] transition-all duration-700 hover:-translate-y-4 shadow-[var(--shadow-card)] preserve-3d"
  >
@@ -98,7 +108,7 @@ async function FeaturedReadersGrid() {
  {/* Reader Meta */}
  <div className="absolute inset-x-0 bottom-0 p-8 z-20 space-y-4">
  <div className="flex items-center justify-between">
- <div className={`w-3 h-3 rounded-full ${reader.status === 'accepting_questions' ? 'bg-[var(--success)] animate-pulse' : 'bg-[var(--text-muted)]'}`} />
+ <div className={`w-3 h-3 rounded-full ${statusIndicatorClassName}`} />
  <Badge variant="default" size="sm" className="bg-[var(--bg-glass)] border-[var(--border-default)]">
  <Star className="w-3 h-3 text-[var(--amber-accent)] fill-[var(--amber-accent)]" />
  <span className="tn-text-primary">{reader.avgRating.toFixed(1)}</span>
@@ -120,7 +130,8 @@ async function FeaturedReadersGrid() {
  </div>
  </div>
  </Link>
- ))}
+ );
+ })}
  </div>
  );
 }

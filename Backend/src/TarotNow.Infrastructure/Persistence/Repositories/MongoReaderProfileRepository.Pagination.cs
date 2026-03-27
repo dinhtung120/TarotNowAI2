@@ -2,7 +2,6 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using TarotNow.Application.Common;
-using TarotNow.Domain.Enums;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
@@ -49,60 +48,5 @@ public partial class MongoReaderProfileRepository
             .AppendStage<BsonDocument>(new BsonDocument("$project", new BsonDocument("status_priority", 0)))
             .As<BsonDocument>()
             .ToListAsync(cancellationToken);
-    }
-
-    private static BsonDocument BuildStatusPriorityExpression()
-    {
-        return new BsonDocument("$switch", new BsonDocument
-        {
-            {
-                "branches", new BsonArray
-                {
-                    new BsonDocument
-                    {
-                        { "case", new BsonDocument("$eq", new BsonArray { "$status", ReaderOnlineStatus.AcceptingQuestions }) },
-                        { "then", 0 }
-                    },
-                    new BsonDocument
-                    {
-                        { "case", new BsonDocument("$eq", new BsonArray { "$status", ReaderOnlineStatus.Online }) },
-                        { "then", 1 }
-                    },
-                    new BsonDocument
-                    {
-                        { "case", new BsonDocument("$eq", new BsonArray { "$status", ReaderOnlineStatus.Offline }) },
-                        { "then", 2 }
-                    }
-                }
-            },
-            { "default", 3 }
-        });
-    }
-
-    private static FilterDefinition<ReaderProfileDocument> BuildDirectoryFilter(
-        string? specialty,
-        string? status,
-        string? searchTerm)
-    {
-        var filterBuilder = Builders<ReaderProfileDocument>.Filter;
-        var filter = filterBuilder.Eq(r => r.IsDeleted, false);
-
-        if (!string.IsNullOrEmpty(specialty))
-        {
-            filter = filterBuilder.And(filter, filterBuilder.AnyEq(r => r.Specialties, specialty));
-        }
-
-        if (!string.IsNullOrEmpty(status))
-        {
-            filter = filterBuilder.And(filter, filterBuilder.Eq(r => r.Status, status));
-        }
-
-        if (!string.IsNullOrEmpty(searchTerm))
-        {
-            var regex = new BsonRegularExpression(searchTerm, "i");
-            filter = filterBuilder.And(filter, filterBuilder.Regex(r => r.DisplayName, regex));
-        }
-
-        return filter;
     }
 }

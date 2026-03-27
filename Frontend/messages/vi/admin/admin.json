@@ -404,6 +404,13 @@
         "title": "Dispute Queue",
         "subtitle": "Xử lý các tranh chấp escrow. Quyết định release cho reader hoặc refund cho user."
       },
+      "empty": "Không có tranh chấp nào đang chờ xử lý.",
+      "card": {
+        "item_id": "Item ID",
+        "amount": "Số tiền",
+        "payer": "User",
+        "reader": "Reader"
+      },
       "guide": {
         "title": "Hướng dẫn xử lý Dispute",
         "release_label": "Release",

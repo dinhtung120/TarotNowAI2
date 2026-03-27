@@ -25,6 +25,8 @@ export function useProfilePage() {
  const queryClient = useQueryClient();
  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
  const user = useAuthStore((state) => state.user);
+ const isAdmin = user?.role === 'admin';
+ const isTarotReader = user?.role === 'tarot_reader';
 
  const [successMsg, setSuccessMsg] = useState('');
  const [errorMsg, setErrorMsg] = useState('');
@@ -86,7 +88,7 @@ export function useProfilePage() {
  }, [profileQuery.data, setValue]);
 
  const shouldLoadReaderRequest =
-  isAuthenticated && !!user && user.role !== 'reader' && user.role !== 'admin';
+  isAuthenticated && !!user && !isTarotReader && !isAdmin;
  const readerRequestQuery = useQuery<MyReaderRequest | null>({
   queryKey: ['reader', 'my-request'],
   enabled: shouldLoadReaderRequest,

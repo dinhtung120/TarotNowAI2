@@ -3,12 +3,12 @@
  * MỤC ĐÍCH: Unit test cho handler chuyển đổi trạng thái online của Reader.
  *
  *   CÁC TEST CASE (4 scenarios):
- *   1. Handle_InvalidStatus_ThrowsBadRequestException: [Theory] "busy","away","invalid","" → 400
+ *   1. Handle_InvalidStatus_ThrowsBadRequestException: [Theory] "busy","invalid","" → 400
  *   2. Handle_ProfileNotFound_ThrowsNotFoundException: chưa approved → 404
  *   3. Handle_ValidAcceptingStatus_UpdatesSuccessfully: set AcceptingQuestions → OK
  *   4. Handle_ValidOfflineStatus_UpdatesSuccessfully: set Offline → OK
  *
- *   TRẠNG THÁI HỢP LỆ: online | offline | accepting_questions
+ *   TRẠNG THÁI HỢP LỆ: online | offline | accepting_questions | away
  *   → accepting_questions = gate check cho CreateConversation
  */
 
@@ -39,7 +39,6 @@ public class UpdateReaderStatusCommandHandlerTests
     /// <summary>Trạng thái không hợp lệ → BadRequest + không gọi DB.</summary>
     [Theory]
     [InlineData("busy")]
-    [InlineData("away")]
     [InlineData("invalid")]
     [InlineData("")]
     public async Task Handle_InvalidStatus_ThrowsBadRequestException(string invalidStatus)
@@ -49,6 +48,21 @@ public class UpdateReaderStatusCommandHandlerTests
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Contains("không hợp lệ", ex.Message);
         _mockProfileRepo.Verify(x => x.GetByUserIdAsync(It.IsAny<string>(), default), Times.Never); // Không gọi DB
+    }
+
+    [Fact]
+    public async Task Handle_ValidAwayStatus_UpdatesSuccessfully()
+    {
+        var userId = Guid.NewGuid();
+        var command = new UpdateReaderStatusCommand { UserId = userId, Status = ReaderOnlineStatus.Away };
+        var existingProfile = new ReaderProfileDto { UserId = userId.ToString(), Status = ReaderOnlineStatus.AcceptingQuestions };
+        _mockProfileRepo.Setup(x => x.GetByUserIdAsync(userId.ToString(), default)).ReturnsAsync(existingProfile);
+
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        Assert.True(result);
+        Assert.Equal(ReaderOnlineStatus.Away, existingProfile.Status);
+        _mockProfileRepo.Verify(x => x.UpdateAsync(existingProfile, default), Times.Once);
     }
 
     /// <summary>Profile chưa tồn tại → NotFoundException.</summary>

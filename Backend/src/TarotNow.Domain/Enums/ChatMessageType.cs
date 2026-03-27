@@ -26,6 +26,12 @@ public static class ChatMessageType
     /// <summary>Thẻ Rút Bài Quăng Đè Tấm Lên Face Giữa Đoạn Màn Hình Hai Đứa Cùng Chờ (Giao Hiện Lên Bọc Trái Đất Bóng Cửa Chắn Nhấn Nút Chữ Tiếng Chữ "CardShare").</summary>
     public const string CardShare = "card_share";
 
+    /// <summary>Tin nhắn media ảnh.</summary>
+    public const string Image = "image";
+
+    /// <summary>Tin nhắn media giọng nói.</summary>
+    public const string Voice = "voice";
+
     /// <summary>Thạch Bảng Báo Giá Thầy Ném Tờ Đơn Ra "50k Xem Câu Này Em Có Chơi Không Nhấn Accept Phát" (UI Payment).</summary>
     public const string PaymentOffer = "payment_offer";
 
@@ -45,7 +51,10 @@ public static class ChatMessageType
     public const string SystemDispute = "system_dispute";
 
     /// <summary>Cầm Cái Kiếm Đâm Lấy Mã Type Để Kiểm Tranh Hacker Mò Rác Thêm Rác Kiểu Tin Text Gì Bậy Bạ Hủy Nát UI.</summary>
-    public static bool IsValid(string type) =>
-        type is Text or System or CardShare or PaymentOffer or PaymentAccept
-            or PaymentReject or SystemRefund or SystemRelease or SystemDispute;
+    public static bool IsValid(string type)
+    {
+        return type is Text or System or CardShare or Image or Voice
+            or PaymentOffer or PaymentAccept or PaymentReject
+            or SystemRefund or SystemRelease or SystemDispute;
+    }
 }

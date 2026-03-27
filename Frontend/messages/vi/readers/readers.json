@@ -18,11 +18,13 @@
         "all": "Tất cả trạng thái",
         "accepting": "🟢 Đang nhận khách",
         "online": "🟡 Trực tuyến (Bận)",
+        "away": "🟠 Tạm nghỉ",
         "offline": "⚫ Ngoại tuyến"
       },
       "status_indicator": {
         "ready": "Sẵn sàng",
         "busy": "Đang bận",
+        "away": "Tạm nghỉ",
         "offline": "Ngoại tuyến"
       },
       "loading": "Đang tải danh sách...",
@@ -38,6 +40,7 @@
       "status": {
         "accepting": "Đang nhận câu hỏi",
         "online": "Đang bận",
+        "away": "Tạm nghỉ",
         "offline": "Ngoại tuyến"
       },
       "diamond_per_question_suffix": "/ Câu",

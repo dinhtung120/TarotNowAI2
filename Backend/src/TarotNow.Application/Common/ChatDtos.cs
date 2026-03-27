@@ -57,6 +57,7 @@ public class ConversationDto
     public string? UserAvatar { get; set; }
     public string? ReaderName { get; set; }
     public string? ReaderAvatar { get; set; }
+    public string? ReaderStatus { get; set; }
     
     // --- ESCROW INFO (Thêm vào để phục vụ hiển thị ngoài Inbox) ---
     public long EscrowTotalFrozen { get; set; }
@@ -80,12 +81,25 @@ public class ConversationDto
     /// </summary>
     public DateTime? LastMessageAt { get; set; }
 
+    /// <summary>Preview ngắn của tin nhắn cuối cùng để hiển thị inbox.</summary>
+    public string? LastMessagePreview { get; set; }
+
     /// <summary>
     /// Thời hạn chờ reader phản hồi.
     /// Nếu hết hạn mà reader chưa phản hồi → tự động hủy conversation.
     /// Nullable vì không phải tất cả conversation đều có deadline.
     /// </summary>
     public DateTime? OfferExpiresAt { get; set; }
+
+    /// <summary>
+    /// SLA phản hồi của reader sau khi đã accept phiên. Giá trị hợp lệ: 6 | 12 | 24 (giờ).
+    /// </summary>
+    public int SlaHours { get; set; } = 12;
+
+    /// <summary>
+    /// Trạng thái xác nhận hoàn tất từ 2 phía.
+    /// </summary>
+    public ConversationConfirmDto? Confirm { get; set; }
 
     /// <summary>
     /// Số tin nhắn chưa đọc CỦA USER.
@@ -105,6 +119,19 @@ public class ConversationDto
 
     /// <summary>Thời điểm cập nhật cuối cùng.</summary>
     public DateTime? UpdatedAt { get; set; }
+}
+
+public class ConversationConfirmDto
+{
+    public DateTime? UserAt { get; set; }
+
+    public DateTime? ReaderAt { get; set; }
+
+    public string? RequestedBy { get; set; }
+
+    public DateTime? RequestedAt { get; set; }
+
+    public DateTime? AutoResolveAt { get; set; }
 }
 
 /// <summary>
@@ -145,6 +172,11 @@ public class ChatMessageDto
     public PaymentPayloadDto? PaymentPayload { get; set; }
 
     /// <summary>
+    /// Metadata media cho tin nhắn image/voice.
+    /// </summary>
+    public MediaPayloadDto? MediaPayload { get; set; }
+
+    /// <summary>
     /// Đã đọc hay chưa.
     /// true = người nhận đã mở và đọc tin nhắn.
     /// Dùng cho tính năng "tick xanh" (read receipt) giống WhatsApp.
@@ -153,6 +185,11 @@ public class ChatMessageDto
 
     /// <summary>Thời điểm gửi tin nhắn (UTC).</summary>
     public DateTime CreatedAt { get; set; }
+
+    /// <summary>
+    /// Cờ đánh dấu tin nhắn vi phạm tiêu chuẩn cộng đồng (Auto Moderation).
+    /// </summary>
+    public bool IsFlagged { get; set; }
 }
 
 /// <summary>

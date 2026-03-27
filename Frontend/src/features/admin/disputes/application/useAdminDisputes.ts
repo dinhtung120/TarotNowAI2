@@ -1,57 +1,79 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { resolveDispute } from '@/features/chat/public';
+import {
+ listAdminDisputes,
+ resolveAdminDispute,
+ type AdminDisputeItemDto,
+} from '@/features/chat/application/actions';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 
 export function useAdminDisputes(t: TranslateFn) {
-  const [processing, setProcessing] = useState<string | null>(null);
-  const [resolved, setResolved] = useState<Set<string>>(new Set());
-  const [itemId, setItemId] = useState('');
-  const [note, setNote] = useState('');
+ const queryClient = useQueryClient();
+ const [noteById, setNoteById] = useState<Record<string, string>>({});
+ const [splitPercentById, setSplitPercentById] = useState<Record<string, number>>({});
 
-  const handleResolve = async (targetItemId: string, action: 'release' | 'refund') => {
-    setProcessing(targetItemId);
-    const ok = await resolveDispute({
-      itemId: targetItemId,
-      action,
-      adminNote: note || undefined,
-    });
+ const disputesQuery = useQuery({
+  queryKey: ['admin', 'disputes', 'list'],
+  queryFn: async () => {
+   const result = await listAdminDisputes(1, 100);
+   if (result.success && result.data) {
+    return result.data.items;
+   }
+   return [] as AdminDisputeItemDto[];
+  },
+ });
 
-    if (ok) {
-      toast.success(
-        action === 'release'
-          ? t('disputes.toast.release_success')
-          : t('disputes.toast.refund_success')
-      );
-      setResolved((prev) => new Set(prev).add(targetItemId));
-    } else {
-      toast.error(t('disputes.toast.failed'));
-    }
+ const resolveMutation = useMutation({
+  mutationFn: async (payload: { itemId: string; action: 'release' | 'refund' | 'split' }) => {
+   return resolveAdminDispute(payload.itemId, {
+    action: payload.action,
+    splitPercentToReader:
+     payload.action === 'split'
+      ? Math.max(1, Math.min(99, splitPercentById[payload.itemId] ?? 50))
+      : undefined,
+    adminNote: noteById[payload.itemId] || undefined,
+   });
+  },
+  onSuccess: (result, variables) => {
+   if (result.success) {
+    const message =
+     variables.action === 'release'
+      ? t('disputes.toast.release_success')
+      : variables.action === 'refund'
+       ? t('disputes.toast.refund_success')
+       : t('disputes.toast.release_success');
+    toast.success(message);
+    void queryClient.invalidateQueries({ queryKey: ['admin', 'disputes', 'list'] });
+   } else {
+    toast.error(result.error || t('disputes.toast.failed'));
+   }
+  },
+  onError: () => {
+   toast.error(t('disputes.toast.failed'));
+  },
+ });
 
-    setProcessing(null);
-    setNote('');
-  };
+ const processingId = resolveMutation.isPending ? resolveMutation.variables?.itemId ?? null : null;
 
-  const resolveByCurrentItem = (action: 'release' | 'refund') => {
-    const trimmed = itemId.trim();
-    if (!trimmed) {
-      toast.error(t('disputes.toast.missing_item_id'));
-      return;
-    }
+ const sortedItems = useMemo(
+  () => [...(disputesQuery.data ?? [])].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+  [disputesQuery.data]
+ );
 
-    void handleResolve(trimmed, action);
-  };
-
-  return {
-    processing,
-    resolved,
-    itemId,
-    setItemId,
-    note,
-    setNote,
-    resolveByCurrentItem,
-  };
+ return {
+  disputes: sortedItems,
+  loading: disputesQuery.isLoading,
+  fetching: disputesQuery.isFetching,
+  processingId,
+  noteById,
+  setNoteById,
+  splitPercentById,
+  setSplitPercentById,
+  resolveDispute: (itemId: string, action: 'release' | 'refund' | 'split') =>
+   resolveMutation.mutate({ itemId, action }),
+ };
 }

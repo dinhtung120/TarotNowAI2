@@ -38,4 +38,7 @@ public class SendMessageCommand : IRequest<ChatMessageDto>
 
     /// <summary>Đặc quyền mở rộng: Chứa gói thông tin Báo Giá tiền (Chỉ gởi khi Type = payment_offer).</summary>
     public PaymentPayloadDto? PaymentPayload { get; set; }
+
+    /// <summary>Metadata media cho tin nhắn image/voice.</summary>
+    public MediaPayloadDto? MediaPayload { get; set; }
 }

@@ -142,11 +142,6 @@ export default function UserSidebar() {
     };
   }, [isOpen]);
 
-  // Đóng sidebar nếu URL context (pathname) thay đổi -> người dùng đã chuyển trang
-  useEffect(() => {
-    setIsOpen(false);
-  }, [pathname]);
-
   return (
     <div ref={sidebarRef} className="hidden md:block fixed top-[4.5rem] left-4 z-50">
       {/* Nút Toggle Menu - Hiển thị menu khi click, dùng glassmorphism */}
@@ -187,6 +182,7 @@ export default function UserSidebar() {
                     <Link
                       key={item.href}
                       href={item.href}
+                      onClick={() => setIsOpen(false)}
                       className={cn(
                         "group flex items-center justify-between px-4 py-2.5 rounded-xl transition-all duration-300 relative overflow-hidden min-h-10",
                         active

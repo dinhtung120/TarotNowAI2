@@ -4,14 +4,14 @@
  *
  *   CÁC TEST CASE (6 scenarios):
  *   1. Handle_SameUserAndReader_ThrowsBadRequest: User chat với chính mình → 400
- *   2. Handle_OfflineReader_ThrowsBadRequest: Reader offline → 400 (không thể chat)
+ *   2. Handle_OfflineReader_StillCreatesPending: Reader offline vẫn tạo được room pending
  *   3. Handle_ExistingConversation_ReturnsExisting: đã có conversation → trả existing (không duplicate)
  *   4. Handle_ValidRequest_CreatesPendingConversation: tạo mới → status=Pending + OfferExpiresAt
  *   5. Handle_ReaderProfileNotFound_ThrowsNotFoundException: Reader chưa approved → 404
- *   6. Handle_ReaderOnlineNotAccepting_ThrowsBadRequest: Reader Online nhưng chưa AcceptingQuestions → 400
+ *   6. Handle_ReaderOnlineNotAccepting_StillCreatesPending: Reader Online (không accepting_questions) vẫn tạo được room pending
  *
  *   QUY TẮC:
- *   → Chỉ tạo conversation khi Reader đang AcceptingQuestions (không phải chỉ Online)
+ *   → Cho phép tạo conversation với Reader ở mọi trạng thái hợp lệ để hiển thị cảnh báo trong phòng chat
  *   → Nếu đã có conversation active giữa 2 người → trả existing (idempotent)
  *   → conversation mới luôn có OfferExpiresAt (timer cho Reader accept/reject)
  */
@@ -51,16 +51,19 @@ public class CreateConversationCommandHandlerTests
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-    /// <summary>Reader offline → không thể tạo conversation.</summary>
+    /// <summary>Reader offline vẫn cho phép tạo conversation pending.</summary>
     [Fact]
-    public async Task Handle_OfflineReader_ThrowsBadRequest()
+    public async Task Handle_OfflineReader_StillCreatesPending()
     {
         var readerId = Guid.NewGuid();
         var command = new CreateConversationCommand { UserId = Guid.NewGuid(), ReaderId = readerId };
         var profile = new ReaderProfileDto { Status = ReaderOnlineStatus.Offline };
         _mockProfileRepo.Setup(x => x.GetByUserIdAsync(readerId.ToString(), default)).ReturnsAsync(profile);
+        _mockConvRepo.Setup(x => x.GetActiveByParticipantsAsync(command.UserId.ToString(), readerId.ToString(), default))
+            .ReturnsAsync((ConversationDto?)null);
 
-        await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
+        var result = await _handler.Handle(command, CancellationToken.None);
+        Assert.Equal(ConversationStatus.Pending, result.Status);
     }
 
     /// <summary>Đã có conversation active → trả existing (idempotent, không duplicate).</summary>
@@ -83,7 +86,7 @@ public class CreateConversationCommandHandlerTests
     }
 
     /// <summary>
-    /// Happy path: tạo conversation Pending + OfferExpiresAt timer.
+    /// Happy path: tạo conversation Pending chưa có OfferExpiresAt.
     /// </summary>
     [Fact]
     public async Task Handle_ValidRequest_CreatesPendingConversation()
@@ -102,8 +105,8 @@ public class CreateConversationCommandHandlerTests
         Assert.Equal(ConversationStatus.Pending, result.Status);
         Assert.Equal(userId.ToString(), result.UserId);
         Assert.Equal(readerId.ToString(), result.ReaderId);
-        Assert.NotNull(result.OfferExpiresAt); // Có timer cho Reader accept
-        _mockConvRepo.Verify(x => x.AddAsync(It.Is<ConversationDto>(c => c.Status == ConversationStatus.Pending && c.OfferExpiresAt != null), default), Times.Once);
+        Assert.Null(result.OfferExpiresAt);
+        _mockConvRepo.Verify(x => x.AddAsync(It.Is<ConversationDto>(c => c.Status == ConversationStatus.Pending && c.OfferExpiresAt == null), default), Times.Once);
     }
 
     /// <summary>Reader profile không tồn tại (chưa approved) → NotFoundException.</summary>
@@ -117,9 +120,9 @@ public class CreateConversationCommandHandlerTests
         await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-    /// <summary>Reader Online nhưng KHÔNG AcceptingQuestions → BadRequest.</summary>
+    /// <summary>Reader Online nhưng KHÔNG AcceptingQuestions vẫn cho phép tạo room pending.</summary>
     [Fact]
-    public async Task Handle_ReaderOnlineNotAccepting_ThrowsBadRequest()
+    public async Task Handle_ReaderOnlineNotAccepting_StillCreatesPending()
     {
         var userId = Guid.NewGuid();
         var readerId = Guid.NewGuid();
@@ -127,8 +130,11 @@ public class CreateConversationCommandHandlerTests
         var profile = new ReaderProfileDto { Status = ReaderOnlineStatus.Online }; // Online ≠ Accepting
 
         _mockProfileRepo.Setup(x => x.GetByUserIdAsync(readerId.ToString(), default)).ReturnsAsync(profile);
+        _mockConvRepo.Setup(x => x.GetActiveByParticipantsAsync(userId.ToString(), readerId.ToString(), default))
+            .ReturnsAsync((ConversationDto?)null);
 
-        await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
-        _mockConvRepo.Verify(x => x.AddAsync(It.IsAny<ConversationDto>(), default), Times.Never);
+        var result = await _handler.Handle(command, CancellationToken.None);
+        Assert.Equal(ConversationStatus.Pending, result.Status);
+        _mockConvRepo.Verify(x => x.AddAsync(It.IsAny<ConversationDto>(), default), Times.Once);
     }
 }

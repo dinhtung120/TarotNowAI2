@@ -18,11 +18,13 @@
         "all": "All statuses",
         "accepting": "🟢 Accepting",
         "online": "🟡 Online (Busy)",
+        "away": "🟠 Away",
         "offline": "⚫ Offline"
       },
       "status_indicator": {
         "ready": "Ready",
         "busy": "Busy",
+        "away": "Away",
         "offline": "Offline"
       },
       "loading": "Loading readers...",
@@ -38,6 +40,7 @@
       "status": {
         "accepting": "Accepting questions",
         "online": "Busy",
+        "away": "Away",
         "offline": "Offline"
       },
       "diamond_per_question_suffix": "/ Q",

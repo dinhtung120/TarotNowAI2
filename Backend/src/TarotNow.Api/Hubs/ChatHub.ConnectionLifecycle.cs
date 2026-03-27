@@ -5,6 +5,13 @@ public partial class ChatHub
     public override async Task OnConnectedAsync()
     {
         var userId = GetUserId();
+
+        if (string.IsNullOrWhiteSpace(userId) == false)
+        {
+            _presenceTracker.MarkConnected(userId, Context.ConnectionId);
+            await Groups.AddToGroupAsync(Context.ConnectionId, UserGroup(userId));
+        }
+
         _logger.LogInformation(
             "[ChatHub] User {UserId} connected. ConnectionId: {ConnectionId}",
             userId,
@@ -16,6 +23,13 @@ public partial class ChatHub
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var userId = GetUserId();
+
+        if (string.IsNullOrWhiteSpace(userId) == false)
+        {
+            _presenceTracker.MarkDisconnected(userId, Context.ConnectionId);
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, UserGroup(userId));
+        }
+
         _logger.LogInformation(
             "[ChatHub] User {UserId} disconnected. Reason: {Reason}",
             userId,

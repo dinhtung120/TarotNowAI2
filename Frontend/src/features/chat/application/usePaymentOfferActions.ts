@@ -2,68 +2,103 @@
 
 import { useCallback, useState } from 'react';
 import toast from 'react-hot-toast';
-import { acceptOffer } from '@/features/chat/application/actions/escrow';
-import type { ChatMessageDto } from '@/features/chat/application/actions';
+import {
+ requestConversationAddMoney,
+ respondConversationAddMoney,
+ type ChatMessageDto,
+} from '@/features/chat/application/actions';
 import { logger } from '@/shared/infrastructure/logging/logger';
 
 interface UsePaymentOfferActionsParams {
  conversationId: string;
- sendTypedMessage: (content: string, messageType: string) => Promise<boolean>;
 }
 
-export function usePaymentOfferActions({
- conversationId,
- sendTypedMessage,
-}: UsePaymentOfferActionsParams) {
+export function usePaymentOfferActions({ conversationId }: UsePaymentOfferActionsParams) {
  const [processingOfferId, setProcessingOfferId] = useState<string | null>(null);
+ const [requestingAddMoney, setRequestingAddMoney] = useState(false);
 
  const handleSendPaymentOffer = useCallback(
   async (amount: number, note: string) => {
-   const payload = { amountDiamond: amount, description: note };
-   await sendTypedMessage(JSON.stringify(payload), 'payment_offer');
+   setRequestingAddMoney(true);
+   try {
+    const response = await requestConversationAddMoney(conversationId, {
+     amountDiamond: amount,
+     description: note,
+    });
+
+    if (!response.success) {
+     toast.error(response.error || 'Không thể gửi yêu cầu cộng tiền.');
+     return false;
+    }
+
+    return true;
+   } catch (error) {
+    logger.error('[Chat] handleSendPaymentOffer', error, { conversationId });
+    toast.error('Không thể gửi yêu cầu cộng tiền.');
+    return false;
+   } finally {
+    setRequestingAddMoney(false);
+   }
   },
-  [sendTypedMessage]
+  [conversationId]
  );
 
  const handleAcceptOffer = useCallback(
   async (message: ChatMessageDto) => {
-   if (!message.paymentPayload) return;
-
    setProcessingOfferId(message.id);
    try {
-    const response = await acceptOffer({
-     readerId: message.senderId,
-     conversationRef: conversationId,
-     amountDiamond: message.paymentPayload.amountDiamond,
-     proposalMessageRef: message.id,
-     idempotencyKey: crypto.randomUUID(),
+    const response = await respondConversationAddMoney(conversationId, {
+      accept: true,
+      offerMessageId: message.id,
     });
 
     if (!response.success) {
-     toast.error('Không đủ số dư Kim Cương hoặc đã có lỗi xảy ra.');
-     return;
+     toast.error(response.error || 'Không thể chấp nhận đề xuất cộng tiền.');
+     return false;
     }
 
-    await sendTypedMessage(JSON.stringify({ offerId: message.id }), 'payment_accept');
+    return true;
    } catch (error) {
-    logger.error('[Chat] handleAcceptOffer', error, { messageId: message.id });
-    toast.error('Không thể thực hiện thanh toán.');
+    logger.error('[Chat] handleAcceptOffer', error, { messageId: message.id, conversationId });
+    toast.error('Không thể chấp nhận đề xuất cộng tiền.');
+    return false;
    } finally {
     setProcessingOfferId(null);
    }
   },
-  [conversationId, sendTypedMessage]
+  [conversationId]
  );
 
  const handleRejectOffer = useCallback(
-  async (message: ChatMessageDto) => {
-   await sendTypedMessage(JSON.stringify({ offerId: message.id }), 'payment_reject');
+  async (message: ChatMessageDto, reason?: string) => {
+   setProcessingOfferId(message.id);
+   try {
+    const response = await respondConversationAddMoney(conversationId, {
+      accept: false,
+      offerMessageId: message.id,
+      rejectReason: reason,
+    });
+
+    if (!response.success) {
+     toast.error(response.error || 'Không thể từ chối đề xuất cộng tiền.');
+     return false;
+    }
+
+    return true;
+   } catch (error) {
+    logger.error('[Chat] handleRejectOffer', error, { messageId: message.id, conversationId });
+    toast.error('Không thể từ chối đề xuất cộng tiền.');
+    return false;
+   } finally {
+    setProcessingOfferId(null);
+   }
   },
-  [sendTypedMessage]
+  [conversationId]
  );
 
  return {
   processingOfferId,
+  requestingAddMoney,
   handleSendPaymentOffer,
   handleAcceptOffer,
   handleRejectOffer,

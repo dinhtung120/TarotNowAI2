@@ -39,19 +39,32 @@ public interface IConversationRepository
     /// Tổng Đài Điều Hành Giao Diện Message Sidebar của Cậu Bé Lạ Này Tới Các Nhà Tiên Tri. (Inbox Khách Hỏi).
     /// </summary>
     Task<(IEnumerable<ConversationDto> Items, long TotalCount)> GetByUserIdPaginatedAsync(
-        string userId, int page, int pageSize, CancellationToken cancellationToken = default);
+        string userId, int page, int pageSize, IReadOnlyCollection<string>? statuses = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Tổng Đài Điều Hành Hộp Thư Phía Sau Hậu Cung Dành Cho Thầy (Thầy có 50 hộp thư đập cửa hằng hằng đòi hỏi bốc lịch xin bài). => Inbox cho Reader.
     /// </summary>
     Task<(IEnumerable<ConversationDto> Items, long TotalCount)> GetByReaderIdPaginatedAsync(
-        string readerId, int page, int pageSize, CancellationToken cancellationToken = default);
+        string readerId, int page, int pageSize, IReadOnlyCollection<string>? statuses = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Yêu cầu mới: Hộp thư Gộp Chung Cho Cả Hai Vai Trò Mở Cửa Sẵn: Lấy Các Cuộc Trò Chuyện Trong Đó Bạn Là `UserId` Hoặc `ReaderId`!
     /// </summary>
     Task<(IEnumerable<ConversationDto> Items, long TotalCount)> GetByParticipantIdPaginatedAsync(
-        string participantId, int page, int pageSize, CancellationToken cancellationToken = default);
+        string participantId, int page, int pageSize, IReadOnlyCollection<string>? statuses = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Đếm số cuộc trò chuyện chưa kết thúc của một user theo vai trò user-side.
+    /// Dùng để enforce giới hạn active room trên mỗi user.
+    /// </summary>
+    Task<long> CountActiveByUserIdAsync(
+        string userId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ConversationDto>> GetConversationsAwaitingCompletionResolutionAsync(
+        DateTime dueAtUtc,
+        int limit = 200,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Thay Đổi Điểm Báo Mốc Thời Gian Tin Rán Lên Top Kéo Box Mới Bay Đầu Mục Gần Đây! (Bumpy Tăng Dễ Thấy Gửi Lần Nữa Trồi Lên).

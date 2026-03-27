@@ -37,6 +37,8 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useTranslations } from "next-intl";
 import { cn } from "@/shared/utils/cn";
+import { useChatUnreadNotifications } from "@/shared/application/hooks/useChatUnreadNotifications";
+import { useChatRealtimeSync } from "@/shared/application/hooks/useChatRealtimeSync";
 
 export interface NavbarProps {
  onLogout?: () => Promise<unknown> | unknown;
@@ -59,6 +61,8 @@ export default function Navbar({ onLogout }: NavbarProps = {}) {
  );
  const tNav = useTranslations("Navigation");
  const tCommon = useTranslations("Common");
+ const { unreadCount } = useChatUnreadNotifications();
+ useChatRealtimeSync();
  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
  const avatarMenuRef = useRef<HTMLDivElement>(null);
@@ -200,10 +204,16 @@ export default function Navbar({ onLogout }: NavbarProps = {}) {
 
  {/* Notification Bell — placeholder cho Phase 4 */}
 		 <button
-		 className="hidden sm:inline-flex relative items-center justify-center p-2 rounded-xl hover:bg-[var(--purple-50)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-ink)] cursor-pointer min-h-11 min-w-11"
+		 onClick={() => router.push("/chat")}
+		 className="inline-flex relative items-center justify-center p-2 rounded-xl hover:bg-[var(--purple-50)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-ink)] cursor-pointer min-h-11 min-w-11"
 		 aria-label={tCommon("notifications")}
 		 >
 	 <Bell className="w-4 h-4" />
+	 {unreadCount > 0 ? (
+	  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[var(--danger)] text-white text-[9px] font-black flex items-center justify-center">
+	   {unreadCount > 99 ? "99+" : unreadCount}
+	  </span>
+	 ) : null}
 	 </button>
 
  {/* === AVATAR DROPDOWN MENU === */}

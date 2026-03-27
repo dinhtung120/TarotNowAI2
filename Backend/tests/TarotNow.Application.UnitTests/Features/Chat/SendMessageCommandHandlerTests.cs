@@ -24,6 +24,7 @@ using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Chat.Commands.SendMessage;
 using TarotNow.Application.Interfaces;
 using TarotNow.Application.Common;
+using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 using Xunit;
 
@@ -36,13 +37,31 @@ public class SendMessageCommandHandlerTests
 {
     private readonly Mock<IConversationRepository> _mockConvRepo;
     private readonly Mock<IChatMessageRepository> _mockMsgRepo;
+    private readonly Mock<IChatFinanceRepository> _mockFinanceRepo;
+    private readonly Mock<IWalletRepository> _mockWalletRepo;
+    private readonly Mock<IReaderProfileRepository> _mockReaderProfileRepo;
+    private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
     private readonly SendMessageCommandHandler _handler;
 
     public SendMessageCommandHandlerTests()
     {
         _mockConvRepo = new Mock<IConversationRepository>();
         _mockMsgRepo = new Mock<IChatMessageRepository>();
-        _handler = new SendMessageCommandHandler(_mockConvRepo.Object, _mockMsgRepo.Object);
+        _mockFinanceRepo = new Mock<IChatFinanceRepository>();
+        _mockWalletRepo = new Mock<IWalletRepository>();
+        _mockReaderProfileRepo = new Mock<IReaderProfileRepository>();
+        _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
+        _mockTransactionCoordinator
+            .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
+            .Returns((Func<CancellationToken, Task> action, CancellationToken token) => action(token));
+
+        _handler = new SendMessageCommandHandler(
+            _mockConvRepo.Object,
+            _mockMsgRepo.Object,
+            _mockFinanceRepo.Object,
+            _mockWalletRepo.Object,
+            _mockReaderProfileRepo.Object,
+            _mockTransactionCoordinator.Object);
     }
 
     /// <summary>Loại tin nhắn không hợp lệ → BadRequest.</summary>
@@ -85,17 +104,42 @@ public class SendMessageCommandHandlerTests
         var conv = new ConversationDto { Id = "c1", UserId = senderIdStr, ReaderId = readerIdStr, Status = ConversationStatus.Pending, UnreadCountReader = 0 };
         
         _mockConvRepo.Setup(x => x.GetByIdAsync("c1", default)).ReturnsAsync(conv);
+        _mockReaderProfileRepo
+            .Setup(x => x.GetByUserIdAsync(readerIdStr, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ReaderProfileDto
+            {
+                UserId = readerIdStr,
+                Status = ReaderOnlineStatus.AcceptingQuestions,
+                DiamondPerQuestion = 10
+            });
+        _mockFinanceRepo
+            .Setup(x => x.GetItemByIdempotencyKeyAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ChatQuestionItem?)null);
+        _mockFinanceRepo
+            .Setup(x => x.GetSessionByConversationRefAsync("c1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ChatFinanceSession?)null);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
         Assert.NotNull(result);
         Assert.Equal(ChatMessageType.Text, result.Type);
         Assert.Equal("Hello", result.Content);
-        Assert.Equal(ConversationStatus.Active, conv.Status); // Pending → Active
+        Assert.Equal(ConversationStatus.AwaitingAcceptance, conv.Status); // Pending → AwaitingAcceptance
         Assert.Equal(1, conv.UnreadCountReader); // User gửi → Reader chưa đọc
 
-        _mockMsgRepo.Verify(x => x.AddAsync(It.IsAny<ChatMessageDto>(), default), Times.Once);
+        _mockMsgRepo.Verify(x => x.AddAsync(It.IsAny<ChatMessageDto>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
         _mockConvRepo.Verify(x => x.UpdateAsync(conv, default), Times.Once);
+        _mockWalletRepo.Verify(
+            x => x.FreezeAsync(
+                It.IsAny<Guid>(),
+                10,
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     /// <summary>ConversationId sai → NotFoundException.</summary>
@@ -154,7 +198,7 @@ public class SendMessageCommandHandlerTests
         var conv = new ConversationDto
         {
             Id = "c1", UserId = userIdStr, ReaderId = readerIdStr,
-            Status = ConversationStatus.Active,
+            Status = ConversationStatus.Ongoing,
             UnreadCountUser = 0, UnreadCountReader = 0
         };
         _mockConvRepo.Setup(x => x.GetByIdAsync("c1", default)).ReturnsAsync(conv);
@@ -163,5 +207,133 @@ public class SendMessageCommandHandlerTests
 
         Assert.Equal(1, conv.UnreadCountUser);   // Reader gửi → User chưa đọc
         Assert.Equal(0, conv.UnreadCountReader);  // Reader gửi → giữ nguyên
+    }
+
+    /// <summary>
+    /// Image message có URL hợp lệ sẽ tự fallback payload và được lưu.
+    /// </summary>
+    [Fact]
+    public async Task Handle_ImageMessageWithUrl_FallbackPayloadAccepted()
+    {
+        var senderId = Guid.NewGuid();
+        var command = new SendMessageCommand
+        {
+            Type = ChatMessageType.Image,
+            Content = "https://cdn.example.com/card.png",
+            ConversationId = "c1",
+            SenderId = senderId
+        };
+        var conv = new ConversationDto
+        {
+            Id = "c1",
+            UserId = senderId.ToString(),
+            ReaderId = Guid.NewGuid().ToString(),
+            Status = ConversationStatus.Ongoing
+        };
+        _mockConvRepo.Setup(x => x.GetByIdAsync("c1", default)).ReturnsAsync(conv);
+
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        Assert.Equal(ChatMessageType.Image, result.Type);
+        Assert.NotNull(result.MediaPayload);
+        Assert.Equal("image/png", result.MediaPayload!.MimeType);
+    }
+
+    /// <summary>
+    /// Voice message duration vượt giới hạn sẽ bị chặn.
+    /// </summary>
+    [Fact]
+    public async Task Handle_VoiceMessageDurationTooLong_ThrowsBadRequest()
+    {
+        var senderId = Guid.NewGuid();
+        var command = new SendMessageCommand
+        {
+            Type = ChatMessageType.Voice,
+            Content = "voice",
+            MediaPayload = new MediaPayloadDto
+            {
+                Url = "https://cdn.example.com/voice.webm",
+                MimeType = "audio/webm",
+                DurationMs = 700_000
+            },
+            ConversationId = "c1",
+            SenderId = senderId
+        };
+        var conv = new ConversationDto
+        {
+            Id = "c1",
+            UserId = senderId.ToString(),
+            ReaderId = Guid.NewGuid().ToString(),
+            Status = ConversationStatus.Ongoing
+        };
+        _mockConvRepo.Setup(x => x.GetByIdAsync("c1", default)).ReturnsAsync(conv);
+
+        await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
+    }
+
+    /// <summary>
+    /// Image AVIF được phép gửi theo media spec mới.
+    /// </summary>
+    [Fact]
+    public async Task Handle_ImageMessageAvif_IsAccepted()
+    {
+        var senderId = Guid.NewGuid();
+        var command = new SendMessageCommand
+        {
+            Type = ChatMessageType.Image,
+            Content = "https://cdn.example.com/card.avif",
+            ConversationId = "c1",
+            SenderId = senderId
+        };
+        var conv = new ConversationDto
+        {
+            Id = "c1",
+            UserId = senderId.ToString(),
+            ReaderId = Guid.NewGuid().ToString(),
+            Status = ConversationStatus.Ongoing
+        };
+        _mockConvRepo.Setup(x => x.GetByIdAsync("c1", default)).ReturnsAsync(conv);
+
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        Assert.Equal(ChatMessageType.Image, result.Type);
+        Assert.NotNull(result.MediaPayload);
+        Assert.Equal("image/avif", result.MediaPayload!.MimeType);
+    }
+
+    /// <summary>
+    /// Voice mime chứa codec suffix vẫn được normalize và chấp nhận.
+    /// </summary>
+    [Fact]
+    public async Task Handle_VoiceMessageWithCodecSuffix_IsAccepted()
+    {
+        var senderId = Guid.NewGuid();
+        var command = new SendMessageCommand
+        {
+            Type = ChatMessageType.Voice,
+            Content = "voice",
+            MediaPayload = new MediaPayloadDto
+            {
+                Url = "data:audio/webm;codecs=opus;base64,ZmFrZQ==",
+                MimeType = "audio/webm;codecs=opus",
+                DurationMs = 1_500
+            },
+            ConversationId = "c1",
+            SenderId = senderId
+        };
+        var conv = new ConversationDto
+        {
+            Id = "c1",
+            UserId = senderId.ToString(),
+            ReaderId = Guid.NewGuid().ToString(),
+            Status = ConversationStatus.Ongoing
+        };
+        _mockConvRepo.Setup(x => x.GetByIdAsync("c1", default)).ReturnsAsync(conv);
+
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        Assert.Equal(ChatMessageType.Voice, result.Type);
+        Assert.NotNull(result.MediaPayload);
+        Assert.Equal("audio/webm", result.MediaPayload!.MimeType);
     }
 }

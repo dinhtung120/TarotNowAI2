@@ -31,6 +31,16 @@ public partial class MongoReaderProfileRepository : IReaderProfileRepository
         return doc == null ? null : ToDto(doc);
     }
 
+    public async Task<IEnumerable<ReaderProfileDto>> GetByUserIdsAsync(IEnumerable<string> userIds, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<ReaderProfileDocument>.Filter.And(
+            Builders<ReaderProfileDocument>.Filter.In(r => r.UserId, userIds),
+            Builders<ReaderProfileDocument>.Filter.Eq(r => r.IsDeleted, false));
+
+        var docs = await _context.ReaderProfiles.Find(filter).ToListAsync(cancellationToken);
+        return docs.Select(ToDto);
+    }
+
     public async Task UpdateAsync(ReaderProfileDto profile, CancellationToken cancellationToken = default)
     {
         var doc = ToDocument(profile);

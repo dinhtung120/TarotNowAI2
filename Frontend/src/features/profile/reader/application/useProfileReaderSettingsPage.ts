@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@/i18n/routing';
 import { useAuthStore } from '@/store/authStore';
 import {
@@ -10,6 +10,7 @@ import {
  updateReaderStatus,
 } from '@/features/reader/public';
 import type { ReaderProfile } from '@/features/reader/application/actions';
+import { normalizeReaderStatus, type ReaderStatus } from '@/features/reader/domain/readerStatus';
 import toast from 'react-hot-toast';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
@@ -18,29 +19,31 @@ interface ReaderSettingsDraft {
  bioVi: string;
  diamondPerQuestion: number;
  specialtiesStr: string;
- status: string;
+ status: ReaderStatus;
 }
 
 function toDraft(profile: ReaderProfile | null | undefined): ReaderSettingsDraft {
- return {
-  bioVi: profile?.bioVi || '',
+  return {
+   bioVi: profile?.bioVi || '',
   diamondPerQuestion: profile?.diamondPerQuestion || 100,
   specialtiesStr: profile?.specialties?.join(', ') || '',
-  status: profile?.status || 'offline',
+  status: normalizeReaderStatus(profile?.status),
  };
 }
 
 export function useProfileReaderSettingsPage(t: TranslateFn) {
  const router = useRouter();
+ const queryClient = useQueryClient();
  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
  const user = useAuthStore((state) => state.user);
  const redirectShownRef = useRef(false);
+ const isTarotReader = user?.role === 'tarot_reader';
 
  const [draft, setDraft] = useState<ReaderSettingsDraft | null>(null);
 
  const profileQuery = useQuery({
   queryKey: ['reader-profile-settings', user?.id],
-  enabled: isAuthenticated && !!user,
+  enabled: isAuthenticated && !!user && isTarotReader,
   queryFn: async () => {
    if (!user) return null;
    const result = await getReaderProfile(user.id);
@@ -59,11 +62,24 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
  useEffect(() => {
   if (!isAuthenticated || !user) {
    router.push('/login');
+   return;
   }
- }, [isAuthenticated, router, user]);
+
+  if (!isTarotReader && !redirectShownRef.current) {
+   redirectShownRef.current = true;
+   toast.error(t('reader.toast_not_found'), {
+    style: {
+     background: 'var(--bg-elevated)',
+     color: 'var(--text-primary)',
+     border: '1px solid var(--border-default)',
+    },
+   });
+   router.push('/profile');
+  }
+ }, [isAuthenticated, isTarotReader, router, t, user]);
 
  useEffect(() => {
-  if (!isAuthenticated || !user) return;
+  if (!isAuthenticated || !user || !isTarotReader) return;
   if (profileQuery.isLoading) return;
 
   const profile = profileQuery.data;
@@ -78,7 +94,7 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
    });
    router.push('/profile');
   }
- }, [isAuthenticated, profileQuery.data, profileQuery.isLoading, router, t, user]);
+ }, [isAuthenticated, isTarotReader, profileQuery.data, profileQuery.isLoading, router, t, user]);
 
  const effectiveValues = useMemo(
   () => draft ?? toDraft(profileQuery.data),
@@ -135,11 +151,13 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
   }
  };
 
- const handleStatusChange = async (newStatus: string) => {
+ const handleStatusChange = async (newStatus: ReaderStatus) => {
+  const previousStatus = effectiveValues.status;
   updateDraft((current) => ({ ...current, status: newStatus }));
 
   const result = await statusMutation.mutateAsync(newStatus);
   if (result.success) {
+   await queryClient.invalidateQueries({ queryKey: ['reader-profile-settings', user?.id] });
    toast.success(t('reader.toast_status_updated'), {
     style: {
      background: 'var(--success-bg)',
@@ -148,6 +166,7 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
     },
    });
   } else {
+   updateDraft((current) => ({ ...current, status: previousStatus }));
    toast.error(t('reader.toast_status_update_fail'), {
     style: {
      background: 'var(--danger-bg)',

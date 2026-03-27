@@ -26,5 +26,9 @@ public partial class MongoDbContext
         Reports.Indexes.CreateOne(new CreateIndexModel<ReportDocument>(
             Builders<ReportDocument>.IndexKeys.Ascending(r => r.Status).Descending(r => r.CreatedAt),
             new CreateIndexOptions { Name = "idx_status_createdat_desc" }));
+
+        Reports.Indexes.CreateOne(new CreateIndexModel<ReportDocument>(
+            Builders<ReportDocument>.IndexKeys.Ascending(r => r.Target.Type).Ascending(r => r.Target.Id).Descending(r => r.CreatedAt),
+            new CreateIndexOptions { Name = "idx_targettype_targetid_createdat_desc" }));
     }
 }

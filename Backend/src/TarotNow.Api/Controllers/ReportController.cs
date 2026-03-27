@@ -34,8 +34,9 @@ namespace TarotNow.Api.Controllers;
 /// User báo cáo tin nhắn, conversation, hoặc user vi phạm.
 /// Admin xem xét + xử lý qua admin panel (Phase tương lai).
 /// </summary>
-[Route("api/v1/reports")]
+[Route(ApiRoutes.Reports)]
 [ApiController]
+[ApiVersion(ApiVersions.V1)]
 [Authorize] // Phải đăng nhập mới được báo cáo (để biết ai báo cáo)
 public class ReportController : ControllerBase
 {

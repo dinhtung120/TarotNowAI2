@@ -9,7 +9,6 @@
  */
 
 using MediatR;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TarotNow.Application.Exceptions;
@@ -31,14 +30,8 @@ public class UpdateReaderStatusCommandHandler : IRequestHandler<UpdateReaderStat
     {
         // 1. Dựng Hàng Rào Phòng Thủ (Validation):
         // Nếu Frontend truyền bậy chữ "DangDiChoi" vào, ta Búng Tay văng Lỗi Error 400.
-        var validStatuses = new[] {
-            ReaderOnlineStatus.Online,
-            ReaderOnlineStatus.Offline,
-            ReaderOnlineStatus.AcceptingQuestions
-        };
-
-        if (!validStatuses.Contains(request.Status))
-            throw new BadRequestException($"Trạng thái '{request.Status}' không hợp lệ. Chỉ chấp nhận: online, offline, accepting_questions.");
+        if (!ReaderOnlineStatus.TryNormalize(request.Status, out var normalizedStatus))
+            throw new BadRequestException($"Trạng thái '{request.Status}' không hợp lệ. Chỉ chấp nhận: online, offline, accepting_questions, away.");
 
         // 2. Tra Lý Lịch: Thầy Bói này có Hồ Sơ Môn Phái (Profile) không?
         var profile = await _readerProfileRepository.GetByUserIdAsync(
@@ -46,7 +39,7 @@ public class UpdateReaderStatusCommandHandler : IRequestHandler<UpdateReaderStat
             ?? throw new NotFoundException("Không tìm thấy hồ sơ Reader.");
 
         // 3. Phép Dịch Chuyển Ký Tự.
-        profile.Status = request.Status;
+        profile.Status = normalizedStatus;
         
         // 4. Lãnh Ấn Lưu.
         await _readerProfileRepository.UpdateAsync(profile, cancellationToken);

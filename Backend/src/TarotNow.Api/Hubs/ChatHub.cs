@@ -2,6 +2,9 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using TarotNow.Api.Extensions;
+using TarotNow.Api.Realtime;
+using TarotNow.Application.Common.Interfaces;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Api.Hubs;
 
@@ -9,11 +12,19 @@ namespace TarotNow.Api.Hubs;
 public partial class ChatHub : Hub
 {
     private readonly IMediator _mediator;
+    private readonly IConversationRepository _conversationRepository;
+    private readonly IUserPresenceTracker _presenceTracker;
     private readonly ILogger<ChatHub> _logger;
 
-    public ChatHub(IMediator mediator, ILogger<ChatHub> logger)
+    public ChatHub(
+        IMediator mediator,
+        IConversationRepository conversationRepository,
+        IUserPresenceTracker presenceTracker,
+        ILogger<ChatHub> logger)
     {
         _mediator = mediator;
+        _conversationRepository = conversationRepository;
+        _presenceTracker = presenceTracker;
         _logger = logger;
     }
 
@@ -23,6 +34,9 @@ public partial class ChatHub : Hub
     {
         return Guid.TryParse(GetUserId(), out userGuid);
     }
+
+    private static string ConversationGroup(string conversationId) => $"conversation:{conversationId}";
+    private static string UserGroup(string userId) => $"user:{userId}";
 
     private Task SendClientErrorAsync(string message)
     {

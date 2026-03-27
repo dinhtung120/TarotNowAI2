@@ -21,6 +21,8 @@ namespace TarotNow.Application.Interfaces;
 /// </summary>
 public interface IChatMessageRepository
 {
+    Task<ChatMessageDto?> GetByIdAsync(string id, CancellationToken cancellationToken = default);
+
     /// <summary>Vứt 1 Dòng Chữ Vào Đám Đông (Insert Tin Mới).</summary>
     Task AddAsync(ChatMessageDto message, CancellationToken cancellationToken = default);
 
@@ -31,9 +33,37 @@ public interface IChatMessageRepository
     Task<(IEnumerable<ChatMessageDto> Items, long TotalCount)> GetByConversationIdPaginatedAsync(
         string conversationId, int page, int pageSize, CancellationToken cancellationToken = default);
 
+    Task<(IReadOnlyList<ChatMessageDto> Items, string? NextCursor)> GetByConversationIdCursorAsync(
+        string conversationId,
+        string? cursor,
+        int limit,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> HasPaymentOfferResponseAsync(
+        string conversationId,
+        string offerMessageId,
+        CancellationToken cancellationToken = default);
+
+    Task<ChatMessageDto?> FindLatestPendingPaymentOfferAsync(
+        string conversationId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<ChatMessageDto>> GetExpiredPendingPaymentOffersAsync(
+        DateTime nowUtc,
+        int limit = 200,
+        CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Con Dấu Tẩy "Đã Quỷ Ám 1 Chữ Rùi": Sập Lệ Quyền Cả Cuộn Unread Chớp Nháy Cứ Cuộn Tới Chỗ Nào Lì Xóa Kêu Đi.
     /// Trả Lại Tổng Thiệt Hại Bao Nhiêu Chữ Vừa Mất Nhãn Chưa Đọc Bảng Đã Fix Trở Lại Đếm Trừ Trừ Bỏ Trống Nhỏ Giọt (Red Dot Bubble UI).
     /// </summary>
     Task<long> MarkAsReadAsync(string conversationId, string readerId, CancellationToken cancellationToken = default);
+
+    /// <summary>Lấy danh sách tin nhắn mới nhất cho danh sách ConversationId (Bulk Fetch).</summary>
+    Task<IEnumerable<ChatMessageDto>> GetLatestMessagesAsync(IEnumerable<string> conversationIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Cập nhật cờ IsFlagged cho một Message khi vi phạm (Auto Moderation).
+    /// </summary>
+    Task UpdateFlagAsync(string messageId, bool isFlagged, CancellationToken cancellationToken = default);
 }

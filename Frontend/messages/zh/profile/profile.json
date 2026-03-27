@@ -67,6 +67,7 @@
       "status_title": "在线状态",
       "status_accepting": "接受提问",
       "status_online": "在线（忙碌）",
+      "status_away": "暂离",
       "status_offline": "离线",
       "public_profile_title": "公开资料",
       "bio_label": "自我介绍（Bio）",

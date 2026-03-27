@@ -38,8 +38,12 @@ using TarotNow.Application.Features.Reader.Commands.UpdateReaderStatus;
 using TarotNow.Application.Features.Reader.Queries.GetMyReaderRequest;
 using TarotNow.Application.Features.Reader.Queries.GetReaderProfile;
 using TarotNow.Application.Features.Reader.Queries.ListReaders;
+using TarotNow.Application.Common;
 using TarotNow.Api.Contracts.Requests;
 using TarotNow.Api.Extensions;
+using TarotNow.Api.Realtime;
+using TarotNow.Application.Common.Interfaces;
+using TarotNow.Domain.Enums;
 
 namespace TarotNow.Api.Controllers;
 
@@ -53,10 +57,14 @@ namespace TarotNow.Api.Controllers;
 public class ReaderController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly IUserPresenceTracker _presenceTracker;
 
-    public ReaderController(IMediator mediator)
+    public ReaderController(
+        IMediator mediator,
+        IUserPresenceTracker presenceTracker)
     {
         _mediator = mediator;
+        _presenceTracker = presenceTracker;
     }
 
     /// <summary>
@@ -137,6 +145,7 @@ public class ReaderController : ControllerBase
         if (profile == null)
             return NotFound(new { message = "Không tìm thấy hồ sơ Reader." });
 
+        ApplyPresenceStatus(profile);
         return Ok(profile);
     }
 
@@ -219,6 +228,27 @@ public class ReaderController : ControllerBase
     public async Task<IActionResult> ListReaders([FromQuery] ListReadersQuery query)
     {
         var result = await _mediator.Send(query);
+        foreach (var reader in result.Readers)
+        {
+            ApplyPresenceStatus(reader);
+        }
+
         return Ok(result);
+    }
+
+    private void ApplyPresenceStatus(ReaderProfileDto profile)
+    {
+        if (_presenceTracker.IsOnline(profile.UserId) == false)
+        {
+            return;
+        }
+
+        if (string.Equals(
+                ReaderOnlineStatus.NormalizeOrDefault(profile.Status),
+                ReaderOnlineStatus.Offline,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            profile.Status = ReaderOnlineStatus.Online;
+        }
     }
 }

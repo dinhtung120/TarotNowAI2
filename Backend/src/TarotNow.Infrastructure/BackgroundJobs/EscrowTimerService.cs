@@ -7,7 +7,7 @@ namespace TarotNow.Infrastructure.BackgroundJobs;
 
 public partial class EscrowTimerService : BackgroundService
 {
-    private static readonly TimeSpan ScanInterval = TimeSpan.FromSeconds(60);
+    private static readonly TimeSpan ScanInterval = TimeSpan.FromHours(1);
 
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<EscrowTimerService> _logger;
@@ -45,11 +45,32 @@ public partial class EscrowTimerService : BackgroundService
 
         var financeRepo = scope.ServiceProvider.GetRequiredService<IChatFinanceRepository>();
         var walletRepo = scope.ServiceProvider.GetRequiredService<IWalletRepository>();
+        var conversationRepo = scope.ServiceProvider.GetRequiredService<IConversationRepository>();
+        var messageRepo = scope.ServiceProvider.GetRequiredService<IChatMessageRepository>();
         var escrowSettlementService = scope.ServiceProvider.GetRequiredService<IEscrowSettlementService>();
+        var domainEventPublisher = scope.ServiceProvider.GetRequiredService<IDomainEventPublisher>();
         var transactionCoordinator = scope.ServiceProvider.GetRequiredService<ITransactionCoordinator>();
+        var refundDependencies = new RefundDependencies(
+            financeRepo,
+            walletRepo,
+            conversationRepo,
+            messageRepo,
+            domainEventPublisher,
+            transactionCoordinator);
 
-        await ProcessExpiredOffers(financeRepo, cancellationToken);
-        await ProcessAutoRefunds(financeRepo, walletRepo, transactionCoordinator, cancellationToken);
-        await ProcessAutoReleases(financeRepo, escrowSettlementService, transactionCoordinator, cancellationToken);
+        await ProcessExpiredOffers(refundDependencies, cancellationToken);
+        await ProcessAutoRefunds(refundDependencies, cancellationToken);
+        await ProcessAutoReleases(refundDependencies, escrowSettlementService, cancellationToken);
+        await ProcessCompletionTimeouts(refundDependencies, escrowSettlementService, cancellationToken);
+        await ProcessDisputeAutoResolutions(refundDependencies, escrowSettlementService, cancellationToken);
+        await ProcessExpiredAddMoneyOffers(refundDependencies, cancellationToken);
     }
+
+    private readonly record struct RefundDependencies(
+        IChatFinanceRepository FinanceRepository,
+        IWalletRepository WalletRepository,
+        IConversationRepository ConversationRepository,
+        IChatMessageRepository MessageRepository,
+        IDomainEventPublisher DomainEventPublisher,
+        ITransactionCoordinator TransactionCoordinator);
 }

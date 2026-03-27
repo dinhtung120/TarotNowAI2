@@ -109,12 +109,6 @@ export default function AdminLayoutShell({ children, labels }: AdminLayoutShellP
   };
  }, [desktopNavOpen]);
 
- // Close all navs on route change
- useEffect(() => {
-  setDesktopNavOpen(false);
-  setMobileNavOpen(false);
- }, [pathname]);
-
  const renderSidebarContent = (mobile = false, isDropdown = false) => (
   <>
    <div className={cn("mb-2 sm:mb-4", isDropdown ? "p-4" : "p-6 sm:p-8")}>
@@ -151,6 +145,7 @@ export default function AdminLayoutShell({ children, labels }: AdminLayoutShellP
        href={item.href}
        onClick={() => {
         if (mobile) setMobileNavOpen(false);
+        setDesktopNavOpen(false);
        }}
        className={cn(
         'group flex items-center justify-between px-5 sm:px-6 py-4 rounded-2xl transition-all duration-300 relative overflow-hidden',
@@ -192,7 +187,7 @@ export default function AdminLayoutShell({ children, labels }: AdminLayoutShellP
      href="/"
      onClick={() => {
       if (mobile) setMobileNavOpen(false);
-      else setDesktopNavOpen(false);
+      setDesktopNavOpen(false);
      }}
      className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] hover:bg-[var(--danger)]/10 hover:border-[var(--danger)]/20 hover:text-[var(--danger)] transition-all group"
     >

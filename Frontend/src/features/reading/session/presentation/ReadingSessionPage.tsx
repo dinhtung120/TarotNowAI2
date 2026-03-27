@@ -17,6 +17,7 @@
 import dynamic from "next/dynamic";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import { useRouter } from "@/i18n/routing";
 import { revealReadingSession } from "@/features/reading/application/actions";
 import { TAROT_CARD_COUNT } from "@/shared/domain/tarotData";
@@ -615,11 +616,13 @@ export default function ReadingSessionPage() {
  <div className="absolute inset-0 bg-gradient-to-tr from-[var(--purple-accent)]/20 to-transparent pointer-events-none"></div>
  <div className="absolute inset-2 border border-[var(--purple-accent)]/10 rounded-lg pointer-events-none"></div>
  {cardImageUrl ? (
- <img
+ <Image
  src={cardImageUrl}
  alt={cardName}
+ fill
+ unoptimized
+ sizes="(max-width: 1024px) 45vw, 220px"
  className="h-full w-full object-cover"
- loading="lazy"
  />
  ) : (
  <span className="text-5xl font-serif font-black tn-text-primary/10 drop-shadow-sm">{index + 1}</span>

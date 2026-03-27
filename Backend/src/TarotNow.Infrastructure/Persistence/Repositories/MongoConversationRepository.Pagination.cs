@@ -10,11 +10,12 @@ public partial class MongoConversationRepository
         string userId,
         int page,
         int pageSize,
+        IReadOnlyCollection<string>? statuses = null,
         CancellationToken cancellationToken = default)
     {
-        var filter = Builders<ConversationDocument>.Filter.And(
+        var filter = BuildParticipantFilter(
             Builders<ConversationDocument>.Filter.Eq(c => c.UserId, userId),
-            Builders<ConversationDocument>.Filter.Eq(c => c.IsDeleted, false));
+            statuses);
 
         return GetPaginatedInternal(filter, page, pageSize, cancellationToken);
     }
@@ -23,11 +24,12 @@ public partial class MongoConversationRepository
         string readerId,
         int page,
         int pageSize,
+        IReadOnlyCollection<string>? statuses = null,
         CancellationToken cancellationToken = default)
     {
-        var filter = Builders<ConversationDocument>.Filter.And(
+        var filter = BuildParticipantFilter(
             Builders<ConversationDocument>.Filter.Eq(c => c.ReaderId, readerId),
-            Builders<ConversationDocument>.Filter.Eq(c => c.IsDeleted, false));
+            statuses);
 
         return GetPaginatedInternal(filter, page, pageSize, cancellationToken);
     }
@@ -36,15 +38,34 @@ public partial class MongoConversationRepository
         string participantId,
         int page,
         int pageSize,
+        IReadOnlyCollection<string>? statuses = null,
         CancellationToken cancellationToken = default)
     {
-        var filter = Builders<ConversationDocument>.Filter.And(
+        var filter = BuildParticipantFilter(
             Builders<ConversationDocument>.Filter.Or(
                 Builders<ConversationDocument>.Filter.Eq(c => c.UserId, participantId),
                 Builders<ConversationDocument>.Filter.Eq(c => c.ReaderId, participantId)),
-            Builders<ConversationDocument>.Filter.Eq(c => c.IsDeleted, false));
+            statuses);
 
         return GetPaginatedInternal(filter, page, pageSize, cancellationToken);
+    }
+
+    private static FilterDefinition<ConversationDocument> BuildParticipantFilter(
+        FilterDefinition<ConversationDocument> participantFilter,
+        IReadOnlyCollection<string>? statuses)
+    {
+        var filters = new List<FilterDefinition<ConversationDocument>>
+        {
+            participantFilter,
+            Builders<ConversationDocument>.Filter.Eq(c => c.IsDeleted, false)
+        };
+
+        if (statuses != null && statuses.Count > 0)
+        {
+            filters.Add(Builders<ConversationDocument>.Filter.In(c => c.Status, statuses));
+        }
+
+        return Builders<ConversationDocument>.Filter.And(filters);
     }
 
     private async Task<(IEnumerable<ConversationDto> Items, long TotalCount)> GetPaginatedInternal(

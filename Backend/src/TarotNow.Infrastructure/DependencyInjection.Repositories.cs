@@ -32,9 +32,18 @@ public static partial class DependencyInjection
         services.AddScoped<INotificationRepository, MongoNotificationRepository>();
         services.AddScoped<IReaderRequestRepository, MongoReaderRequestRepository>();
         services.AddScoped<IReaderProfileRepository, MongoReaderProfileRepository>();
-        services.AddScoped<IReaderProfileRepository, MongoReaderProfileRepository>();
+        services.AddScoped<IConversationRepository, MongoConversationRepository>();
+        services.AddScoped<IChatMessageRepository, MongoChatMessageRepository>();
+        services.AddScoped<IReportRepository, MongoReportRepository>();
 
+        services.AddScoped<IChatFinanceRepository, ChatFinanceRepository>();
         services.AddScoped<IWithdrawalRepository, WithdrawalRepository>();
         services.AddScoped<IMfaService, TotpMfaService>();
+
+        services.AddSingleton<ChatModerationQueue>();
+        services.AddSingleton<IChatModerationQueue>(sp => sp.GetRequiredService<ChatModerationQueue>());
+
+        services.AddHostedService<EscrowTimerService>();
+        services.AddHostedService<ChatModerationWorker>();
     }
 }

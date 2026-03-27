@@ -52,6 +52,18 @@ public interface IChatFinanceRepository
     // Thầy Đã Trả Lời Hay Chảy Nước Mắt, Khách Im Re (Auto-Done Sau 24h ko Kiện Cáo Dispute).
     Task<List<ChatQuestionItem>> GetItemsForAutoReleaseAsync(CancellationToken ct = default);
 
+    Task<List<ChatQuestionItem>> GetDisputedItemsForAutoResolveAsync(DateTime dueAtUtc, CancellationToken ct = default);
+
+    Task<(IReadOnlyList<ChatQuestionItem> Items, long TotalCount)> GetDisputedItemsPaginatedAsync(
+        int page,
+        int pageSize,
+        CancellationToken ct = default);
+
+    Task<long> CountRecentDisputesByReceiverAsync(
+        Guid receiverId,
+        DateTime fromUtc,
+        CancellationToken ct = default);
+
     // Chốt Sổ Xuống Đĩa SQL 1 Nhát DB. (Unit Of Work Pattern Nhúng Trực Tiếp Save Đi Kèm).
     Task SaveChangesAsync(CancellationToken ct = default);
 }

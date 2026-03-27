@@ -404,6 +404,13 @@
         "title": "Dispute queue",
         "subtitle": "Resolve escrow disputes. Decide release to Reader or refund to User."
       },
+      "empty": "No disputes are waiting for review.",
+      "card": {
+        "item_id": "Item ID",
+        "amount": "Amount",
+        "payer": "User",
+        "reader": "Reader"
+      },
       "guide": {
         "title": "Dispute handling guide",
         "release_label": "Release",

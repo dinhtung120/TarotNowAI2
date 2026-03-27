@@ -6,10 +6,12 @@ public static class ApiRoutes
 
     public const string Controller = Prefix + "/[controller]";
     public const string Admin = Prefix + "/admin";
+    public const string AdminDisputes = Admin + "/disputes";
     public const string Auth = Prefix + "/auth";
     public const string Reading = Prefix + "/reading";
     public const string Sessions = Prefix + "/sessions";
-    public const string Escrow = Prefix + "/escrow";
+    public const string Conversations = Prefix + "/conversations";
+    public const string ChatHub = Prefix + "/chat";
     public const string Deposits = Prefix + "/deposits";
     public const string Legal = Prefix + "/legal";
     public const string Reader = Prefix + "/reader";

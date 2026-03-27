@@ -35,6 +35,7 @@ using FluentValidation;             // Thư viện validation (kiểm tra dữ l
 using MediatR;                      // Thư viện CQRS mediator pattern
 using Microsoft.Extensions.DependencyInjection; // DI container
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Services;
 using TarotNow.Domain.Services;
 
 namespace TarotNow.Application;
@@ -52,7 +53,7 @@ public static class DependencyInjection
     /// Trả về IServiceCollection để hỗ trợ "method chaining":
     ///   services.AddApplicationServices().AddInfrastructureServices(config);
     /// </summary>
-    public static IServiceCollection AddApplicationServices(this IServiceCollection services)
+    public static IServiceCollection AddApplicationServices(this IServiceCollection services, params Assembly[] additionalAssemblies)
     {
         /*
          * AddMediatR: Đăng ký MediatR cho CQRS pattern.
@@ -73,6 +74,10 @@ public static class DependencyInjection
          */
         services.AddMediatR(cfg => {
             cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
+            foreach (var assembly in additionalAssemblies)
+            {
+                cfg.RegisterServicesFromAssembly(assembly);
+            }
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(Behaviors.LoggingBehavior<,>));
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(Behaviors.PerformanceBehavior<,>));
             cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(Behaviors.ValidationBehavior<,>));
@@ -91,8 +96,9 @@ public static class DependencyInjection
          * Kết hợp với ValidationBehavior:
          *   Request vào → ValidationBehavior tìm IValidator cho request
          *   → chạy validation → nếu lỗi throw → nếu OK cho qua handler.
-         */
+        */
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+        services.AddScoped<IEscrowSettlementService, EscrowSettlementService>();
 
         // Đăng ký Domain Services
         services.AddTransient<FollowupPricingService>();

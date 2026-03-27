@@ -20,8 +20,7 @@ interface PaymentOfferModalProps {
 
 export default function PaymentOfferModal({ onClose, onSubmit }: PaymentOfferModalProps) {
 	const t = useTranslations('Chat');
-	// Khởi tạo mặc định số Diamond cần tip (Ví dụ là 50💎)
-	const [amount, setAmount] = useState<number>(50);
+	const [amount, setAmount] = useState<number>(10);
 	const [note, setNote] = useState('');
 	const [submitting, setSubmitting] = useState(false);
 
@@ -30,11 +29,11 @@ export default function PaymentOfferModal({ onClose, onSubmit }: PaymentOfferMod
 	 */
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		// Rào cản số lượng tiền tổi thiểu để gởi gán là 10 Kim cương
-		if (amount < 10) return;
+		if (amount <= 0) return;
+		if (!note.trim() || note.trim().length > 100) return;
 		
 		setSubmitting(true);
-		await onSubmit(amount, note);
+		await onSubmit(amount, note.trim());
 		setSubmitting(false);
 		onClose();
 	};
@@ -69,7 +68,7 @@ export default function PaymentOfferModal({ onClose, onSubmit }: PaymentOfferMod
 						</label>
                         <input 
 							type="number" 
-							min="10" 
+							min="1" 
 							step="1" 
 							value={amount} 
 							onChange={e => setAmount(Number(e.target.value))} 
@@ -86,14 +85,17 @@ export default function PaymentOfferModal({ onClose, onSubmit }: PaymentOfferMod
 							onChange={e => setNote(e.target.value)} 
 							placeholder={t('room.payment_modal_note_placeholder')}
 							rows={3} 
+							maxLength={100}
+							required
 							className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[var(--warning)]/50 resize-none transition-colors" 
 						/>
+						<div className="text-[10px] text-[var(--text-tertiary)] mt-1">{note.length}/100</div>
                     </div>
                     
 					{/* Nút gửi (Submit Button) */}
                     <button 
 						type="submit" 
-						disabled={submitting || amount < 10} 
+						disabled={submitting || amount <= 0 || !note.trim() || note.trim().length > 100} 
 						className="w-full flex items-center justify-center gap-2 py-3 bg-[var(--warning)] hover:bg-amber-400 text-black font-bold uppercase tracking-widest rounded-xl transition-colors disabled:opacity-50 mt-4"
 					>
                         {submitting ? <Loader2 className="w-5 h-5 animate-spin"/> : t('room.payment_modal_submit')}

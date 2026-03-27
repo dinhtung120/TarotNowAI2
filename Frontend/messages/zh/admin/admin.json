@@ -404,6 +404,13 @@
         "title": "争议队列",
         "subtitle": "处理 escrow 争议。决定向占卜师放款或向用户退款。"
       },
+      "empty": "当前没有待处理争议。",
+      "card": {
+        "item_id": "Item ID",
+        "amount": "金额",
+        "payer": "用户",
+        "reader": "占卜师"
+      },
       "guide": {
         "title": "争议处理指南",
         "release_label": "放款",
