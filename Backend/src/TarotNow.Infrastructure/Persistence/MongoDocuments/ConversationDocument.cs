@@ -31,6 +31,7 @@ namespace TarotNow.Infrastructure.Persistence.MongoDocuments;
 /// <summary>
 /// Đại diện cho 1 cuộc hội thoại chat 1-1 giữa User và Reader trong collection "conversations".
 /// </summary>
+[BsonIgnoreExtraElements]
 public class ConversationDocument
 {
     /// <summary>
@@ -132,6 +133,7 @@ public class ConversationDocument
 /// Khi cả UserAt VÀ ReaderAt đều có giá trị (không null) → cuộc hội thoại coi như "completed".
 /// Cơ chế xác nhận 2 bên giúp tránh tranh chấp: không bên nào tự ý kết thúc được.
 /// </summary>
+[BsonIgnoreExtraElements]
 public class ConversationConfirm
 {
     /// <summary>Thời điểm User xác nhận hoàn thành. Null = User chưa xác nhận.</summary>
@@ -160,6 +162,7 @@ public class ConversationConfirm
 /// → Mỗi bên có số tin chưa đọc khác nhau (ai gửi thì bên kia tăng count).
 /// → UI hiển thị badge đỏ riêng cho từng người.
 /// </summary>
+[BsonIgnoreExtraElements]
 public class UnreadCount
 {
     /// <summary>Số tin nhắn mà User chưa đọc (do Reader gửi).</summary>

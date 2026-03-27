@@ -34,6 +34,7 @@ namespace TarotNow.Infrastructure.Persistence.MongoDocuments;
 /// Đại diện cho 1 tin nhắn trong collection "chat_messages" trên MongoDB.
 /// Mỗi tin nhắn thuộc về 1 cuộc hội thoại (conversation), được xác định qua ConversationId.
 /// </summary>
+[BsonIgnoreExtraElements]
 public partial class ChatMessageDocument
 {
     /// <summary>
@@ -133,6 +134,7 @@ public partial class ChatMessageDocument
 /// Payload chi tiết đính kèm cho tin nhắn loại "payment_offer" (đề xuất thanh toán).
 /// Khi Reader gửi đề xuất giá cho User, tin nhắn sẽ chứa object này bên trong.
 /// </summary>
+[BsonIgnoreExtraElements]
 public class ChatPaymentPayload
 {
     /// <summary>

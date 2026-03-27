@@ -14,7 +14,7 @@ builder.Host.UseSerilog((context, services, loggerConfiguration) =>
 
 builder.Services
     .AddApiPresentationServices(builder.Configuration)
-    .AddConfiguredCors(builder.Configuration);
+    .AddConfiguredCors(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
 app.UseApiPipeline();

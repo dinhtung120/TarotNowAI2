@@ -1,4 +1,4 @@
-const DEFAULT_API_ORIGIN = 'http://localhost:5037';
+const DEFAULT_API_ORIGIN = 'http://127.0.0.1:5037';
 const API_VERSION_PATH = '/api/v1';
 
 export function resolveApiBaseUrl(value: string | undefined): string {

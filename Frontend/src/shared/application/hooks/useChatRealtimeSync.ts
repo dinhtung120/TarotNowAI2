@@ -5,14 +5,16 @@ import { HubConnectionState, type HubConnection } from '@microsoft/signalr';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
 import { logger } from '@/shared/infrastructure/logging/logger';
+import { getSignalRHubUrl } from '@/shared/infrastructure/realtime/signalRUrl';
 
 export function useChatRealtimeSync() {
  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+ const token = useAuthStore((state) => state.token);
  const connectionRef = useRef<HubConnection | null>(null);
  const queryClient = useQueryClient();
 
  useEffect(() => {
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !token) {
    const existing = connectionRef.current;
    if (
     existing &&
@@ -37,10 +39,14 @@ export function useChatRealtimeSync() {
   const init = async () => {
    const signalR = await import('@microsoft/signalr');
    hubConnection = new signalR.HubConnectionBuilder()
-    .withUrl('/api/v1/chat', { withCredentials: true })
+    .withUrl(getSignalRHubUrl('/api/v1/chat'), { 
+     accessTokenFactory: () => token ?? '',
+    })
     .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
     .configureLogging(signalR.LogLevel.Warning)
     .build();
+
+   hubConnection.serverTimeoutInMilliseconds = 120000; // 2 minutes server timeout
 
    hubConnection.on('conversation.updated', () => invalidateChatQueries());
    hubConnection.on('message.read', () => invalidateChatQueries());
@@ -76,5 +82,5 @@ export function useChatRealtimeSync() {
    }
    connectionRef.current = null;
   };
- }, [isAuthenticated, queryClient]);
+ }, [isAuthenticated, token, queryClient]);
 }

@@ -24,6 +24,7 @@ namespace TarotNow.Infrastructure.Persistence.MongoDocuments;
 /// <summary>
 /// 1 hồ sơ Reader trong collection "reader_profiles".
 /// </summary>
+[BsonIgnoreExtraElements]
 public class ReaderProfileDocument
 {
     /// <summary>MongoDB ObjectId — tự sinh.</summary>
@@ -114,6 +115,7 @@ public class ReaderProfileDocument
 /// <summary>
 /// Giá dịch vụ Reader. Tách class riêng để mở rộng thêm tier giá sau.
 /// </summary>
+[BsonIgnoreExtraElements]
 public class ReaderPricing
 {
     /// <summary>Số Diamond mỗi câu hỏi — giá cơ bản. Mặc định 5.</summary>
@@ -125,6 +127,7 @@ public class ReaderPricing
 /// Thống kê đánh giá Reader — denormalized cho fast read trên trang directory.
 /// Tại sao denormalize? → Trang listing cần load &lt;200ms, tính aggregate mỗi lần query quá chậm.
 /// </summary>
+[BsonIgnoreExtraElements]
 public class ReaderStats
 {
     /// <summary>Điểm trung bình (1.0–5.0).</summary>

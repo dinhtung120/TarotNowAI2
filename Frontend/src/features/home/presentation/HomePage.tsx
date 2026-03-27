@@ -92,9 +92,9 @@ async function FeaturedReadersGrid() {
  {featuredReaders.map((reader: ReaderProfile) => {
  const readerStatus = normalizeReaderStatus(reader.status);
  const statusIndicatorClassName =
-  readerStatus === 'accepting_questions'
+  readerStatus === 'online'
    ? 'bg-[var(--success)] animate-pulse'
-   : readerStatus === 'online' || readerStatus === 'away'
+   : readerStatus === 'busy'
     ? 'bg-[var(--warning)]'
     : 'bg-[var(--text-muted)]';
 

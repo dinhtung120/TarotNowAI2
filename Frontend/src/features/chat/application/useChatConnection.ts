@@ -214,6 +214,8 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
     .configureLogging(signalR.LogLevel.Warning)
     .build();
 
+   hubConnection.serverTimeoutInMilliseconds = 120000; // 2 minutes server timeout
+
    hubConnection.on('message.created', (message: ChatMessageDto) => {
     if (message.conversationId !== conversationId) return;
     setMessages((prev) => appendUniqueMessage(prev, message));

@@ -47,8 +47,8 @@ export function usePresenceConnection() {
     .configureLogging(signalR.LogLevel.Warning)
     .build();
 
-   // Tăng timeout lên 60s (mặc định 30s) để tránh bị ngắt kết nối do delay qua proxy Next.js
-   hubConnection.serverTimeoutInMilliseconds = 60000;
+   // Tăng timeout lên 120s (mặc định 30s) để tránh bị ngắt kết nối do delay qua proxy Next.js
+   hubConnection.serverTimeoutInMilliseconds = 120000;
 
    // Khi có một user thay đổi trạng thái (timeout hoặc log in)
    hubConnection.on('UserStatusChanged', (userId: string, status: string) => {
