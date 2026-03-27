@@ -109,8 +109,8 @@ export default function ReaderDirectoryPage() {
 
  return (
  <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-32 space-y-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000">
- {selectedReader ? (
-  <div className="fixed inset-0 md:left-64 z-[100] flex items-center justify-center p-6 md:p-12 animate-in fade-in duration-500">
+  {selectedReader ? (
+   <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 md:p-12 animate-in fade-in duration-500">
    <div className="absolute inset-0 tn-overlay-strong" onClick={() => setSelectedReader(null)} />
    <div className="relative z-10 max-w-3xl w-full tn-panel rounded-[2.5rem] p-6 sm:p-8 md:p-10 shadow-[0_30px_100px_var(--c-0-0-0-80)] animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 overflow-hidden">
     <div className="absolute top-4 right-4">

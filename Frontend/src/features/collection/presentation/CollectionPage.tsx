@@ -63,8 +63,8 @@ export default function CollectionPage() {
  return (
  <div className="min-h-screen tn-surface tn-text-primary selection:bg-[var(--purple-accent)]/40 overflow-hidden font-sans">
  {/* ##### ZOOM OVERLAY ##### */}
- {selectedCardId !== null && selectedCardData && (
- <div className="fixed inset-0 md:left-64 z-[100] flex items-center justify-center p-6 md:p-12 animate-in fade-in duration-500">
+  {selectedCardId !== null && selectedCardData && (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 md:p-12 animate-in fade-in duration-500">
  {/* Backdrop: Chỉ click vào đây mới đóng */}
  <div className="absolute inset-0 tn-overlay-strong " onClick={() => setSelectedCardId(null)}
  />
@@ -273,6 +273,7 @@ export default function CollectionPage() {
  alt={cardName || t('unknown_card')}
  fill
  unoptimized
+ priority={deckCard.id < 7}
  sizes="(max-width: 768px) 33vw, 220px"
  className={`h-full w-full object-cover ${isOwned ? 'backface-hidden' : 'blur-[6px]'}`}
  />

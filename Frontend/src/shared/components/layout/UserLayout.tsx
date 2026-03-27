@@ -39,11 +39,11 @@ export default function UserLayout({ children }: UserLayoutProps) {
         <UserSidebar />
 
         {/* Main Content Area.
- flex-1: chiếm toàn bộ không gian còn lại (bên phải sidebar).
- overflow-y-auto: phần nội dung được cuộn độc lập với sidebar.
- pb-20 (Mobile only): Chừa không gian cho BottomTabBar tránh bị che khuất.
- */}
-        <main className="flex-1 min-h-0 relative z-10 custom-scrollbar pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0">
+         flex-1: chiếm toàn bộ không gian còn lại (bên phải sidebar).
+         overflow-y-auto: phần nội dung được cuộn độc lập với sidebar.
+         pb-20 (Mobile only): Chừa không gian cho BottomTabBar tránh bị che khuất.
+         */}
+        <main className="flex-1 min-h-0 relative z-10 custom-scrollbar overflow-y-auto pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0">
           {children}
         </main>
       </div>
