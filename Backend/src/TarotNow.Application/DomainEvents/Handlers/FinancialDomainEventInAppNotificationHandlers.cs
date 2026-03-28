@@ -1,3 +1,26 @@
+/*
+ * ===================================================================
+ * FILE: FinancialDomainEventInAppNotificationHandlers.cs
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Xử lý DomainEvent tài chính (EscrowReleased, EscrowRefunded)
+ *   → Tạo thông báo in-app (lưu vào MongoDB)
+ *   → Push real-time xuống client qua SignalR (PresenceHub)
+ *
+ * LUỒNG HOẠT ĐỘNG:
+ *   1. DomainEvent được publish từ lớp Domain/Application
+ *   2. MediatR route event đến handler tương ứng (INotificationHandler)
+ *   3. Handler tạo NotificationCreateDto → lưu vào MongoDB
+ *   4. Handler gọi INotificationPushService → push event xuống FE
+ *   5. FE nhận "notification.new" → invalidate cache → UI cập nhật
+ *
+ * TẠI SAO PUSH SAU KHI LƯU?
+ *   - Đảm bảo dữ liệu đã PERSISTENT trước khi gửi signal.
+ *   - Nếu push lỗi → user vẫn thấy notification khi refresh.
+ *   - Push là "best effort" → lỗi push KHÔNG rollback tạo notification.
+ * ===================================================================
+ */
+
 using MediatR;
 using TarotNow.Application.DomainEvents.Notifications;
 using TarotNow.Application.Interfaces;
@@ -7,17 +30,32 @@ namespace TarotNow.Application.DomainEvents.Handlers;
 public sealed class EscrowReleasedInAppNotificationHandler : INotificationHandler<EscrowReleasedNotification>
 {
     private readonly INotificationRepository _notificationRepository;
+    private readonly INotificationPushService _pushService;
+    private readonly IWalletPushService _walletPushService;
 
-    public EscrowReleasedInAppNotificationHandler(INotificationRepository notificationRepository)
+    public EscrowReleasedInAppNotificationHandler(
+        INotificationRepository notificationRepository,
+        INotificationPushService pushService,
+        IWalletPushService walletPushService)
     {
         _notificationRepository = notificationRepository;
+        _pushService = pushService;
+        _walletPushService = walletPushService;
     }
 
     public async Task Handle(EscrowReleasedNotification notification, CancellationToken cancellationToken)
     {
         var domainEvent = notification.DomainEvent;
 
-        await _notificationRepository.CreateAsync(new NotificationCreateDto
+        /*
+         * Tạo 2 thông báo:
+         *   1. Cho PAYER (người trả tiền) — "Đã giải ngân X kim cương"
+         *   2. Cho RECEIVER (reader) — "Bạn nhận được X kim cương"
+         * Sau mỗi lần lưu vào DB, push signal realtime xuống client tương ứng.
+         */
+
+        // === Thông báo cho Payer ===
+        var payerDto = new NotificationCreateDto
         {
             UserId = domainEvent.PayerId,
             Type = "escrow_released",
@@ -32,9 +70,12 @@ public sealed class EscrowReleasedInAppNotificationHandler : INotificationHandle
                 ["itemId"] = domainEvent.ItemId.ToString(),
                 ["receiverId"] = domainEvent.ReceiverId.ToString()
             }
-        }, cancellationToken);
+        };
+        await _notificationRepository.CreateAsync(payerDto, cancellationToken);
+        await _pushService.PushNewNotificationAsync(payerDto, cancellationToken);
 
-        await _notificationRepository.CreateAsync(new NotificationCreateDto
+        // === Thông báo cho Receiver (Reader) ===
+        var receiverDto = new NotificationCreateDto
         {
             UserId = domainEvent.ReceiverId,
             Type = "escrow_income",
@@ -49,24 +90,37 @@ public sealed class EscrowReleasedInAppNotificationHandler : INotificationHandle
                 ["itemId"] = domainEvent.ItemId.ToString(),
                 ["payerId"] = domainEvent.PayerId.ToString()
             }
-        }, cancellationToken);
+        };
+        await _notificationRepository.CreateAsync(receiverDto, cancellationToken);
+        await _pushService.PushNewNotificationAsync(receiverDto, cancellationToken);
+
+        // [Real-time Push] Báo cho 2 bên biết ví vừa được cộng/trừ 
+        await _walletPushService.PushBalanceChangedAsync(domainEvent.PayerId, cancellationToken);
+        await _walletPushService.PushBalanceChangedAsync(domainEvent.ReceiverId, cancellationToken);
     }
 }
 
 public sealed class EscrowRefundedInAppNotificationHandler : INotificationHandler<EscrowRefundedNotification>
 {
     private readonly INotificationRepository _notificationRepository;
+    private readonly INotificationPushService _pushService;
+    private readonly IWalletPushService _walletPushService;
 
-    public EscrowRefundedInAppNotificationHandler(INotificationRepository notificationRepository)
+    public EscrowRefundedInAppNotificationHandler(
+        INotificationRepository notificationRepository,
+        INotificationPushService pushService,
+        IWalletPushService walletPushService)
     {
         _notificationRepository = notificationRepository;
+        _pushService = pushService;
+        _walletPushService = walletPushService;
     }
 
     public async Task Handle(EscrowRefundedNotification notification, CancellationToken cancellationToken)
     {
         var domainEvent = notification.DomainEvent;
 
-        await _notificationRepository.CreateAsync(new NotificationCreateDto
+        var dto = new NotificationCreateDto
         {
             UserId = domainEvent.UserId,
             Type = "escrow_refunded",
@@ -81,6 +135,11 @@ public sealed class EscrowRefundedInAppNotificationHandler : INotificationHandle
                 ["itemId"] = domainEvent.ItemId.ToString(),
                 ["source"] = domainEvent.RefundSource
             }
-        }, cancellationToken);
+        };
+        await _notificationRepository.CreateAsync(dto, cancellationToken);
+        await _pushService.PushNewNotificationAsync(dto, cancellationToken);
+
+        // [Real-time Push] Báo cho user (payer) biết ví vừa được hoàn tiền
+        await _walletPushService.PushBalanceChangedAsync(domainEvent.UserId, cancellationToken);
     }
 }

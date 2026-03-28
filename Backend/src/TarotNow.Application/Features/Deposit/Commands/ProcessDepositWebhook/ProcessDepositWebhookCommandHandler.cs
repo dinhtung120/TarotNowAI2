@@ -36,17 +36,20 @@ public partial class ProcessDepositWebhookCommandHandler : IRequestHandler<Proce
     private readonly IDepositOrderRepository _depositOrderRepository;
     private readonly IWalletRepository _walletRepository;
     private readonly ITransactionCoordinator _transactionCoordinator;
+    private readonly IWalletPushService _walletPushService;
 
     public ProcessDepositWebhookCommandHandler(
         IPaymentGatewayService paymentGatewayService,
         IDepositOrderRepository depositOrderRepository,
         IWalletRepository walletRepository,
-        ITransactionCoordinator transactionCoordinator)
+        ITransactionCoordinator transactionCoordinator,
+        IWalletPushService walletPushService)
     {
         _paymentGatewayService = paymentGatewayService;
         _depositOrderRepository = depositOrderRepository;
         _walletRepository = walletRepository;
         _transactionCoordinator = transactionCoordinator;
+        _walletPushService = walletPushService;
     }
 
     public async Task<bool> Handle(ProcessDepositWebhookCommand request, CancellationToken cancellationToken)

@@ -35,9 +35,10 @@ public class AuthResponse
     public string TokenType { get; set; } = "Bearer";
 
     /// <summary>
-    /// Thời gian Access Token sẽ hết hạn (để Frontend tự tính toán khi nào cần refresh).
+    /// Thời gian Access Token sẽ hết hạn, tính bằng phút (để Frontend tự tính toán khi nào cần refresh).
+    /// Tên field "ExpiresIn" (không có "Minutes") để khớp với contract frontend AuthResponse.expiresIn.
     /// </summary>
-    public int ExpiresInMinutes { get; set; }
+    public int ExpiresIn { get; set; }
     
     /// <summary>
     /// Thông tin vắn tắt của user (được phép hiển thị lên UI ngay lúc đăng nhập).

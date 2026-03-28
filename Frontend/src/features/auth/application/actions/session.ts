@@ -20,16 +20,85 @@ interface LoginActionPayload {
 const ACCESS_TOKEN_COOKIE = 'accessToken';
 const REFRESH_TOKEN_COOKIE = 'refreshToken';
 
-function parseRefreshTokenFromSetCookie(setCookieHeader: string | null): string | undefined {
- if (!setCookieHeader) return undefined;
- const firstPair = setCookieHeader.split(';')[0];
- const [name, ...valueParts] = firstPair.split('=');
- if (name !== REFRESH_TOKEN_COOKIE || valueParts.length === 0) return undefined;
- return valueParts.join('=');
+/**
+ * Xác định xem có nên dùng `Secure` flag cho cookie hay không.
+ *
+ * VẤN ĐỀ:
+ * Trước đây dùng `process.env.NODE_ENV === 'production'` → nhưng khi chạy
+ * `npm run build` + `npm start` trên localhost (HTTP, không phải HTTPS),
+ * trình duyệt sẽ REJECT tất cả cookies có `Secure` flag vì kết nối không phải HTTPS.
+ * → Hậu quả: accessToken và refreshToken cookies không được lưu → mất auth state.
+ *
+ * GIẢI PHÁP:
+ * Dùng env var `NEXT_PUBLIC_BASE_URL` hoặc `NEXTAUTH_URL` để kiểm tra protocol.
+ * Nếu URL bắt đầu bằng "https://", set Secure = true. Ngược lại, Secure = false.
+ * Fallback: nếu không có env var, mặc định an toàn → Secure = false cho dev/local.
+ */
+function shouldUseSecureCookie(): boolean {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
+    ?? process.env.NEXTAUTH_URL
+    ?? '';
+  return baseUrl.startsWith('https://');
 }
 
-async function syncRefreshTokenCookie(setCookieHeader: string | null): Promise<void> {
- const refreshToken = parseRefreshTokenFromSetCookie(setCookieHeader);
+/**
+ * Parse refresh token từ set-cookie header(s).
+ *
+ * VẤN ĐỀ CŨ: `headers.get('set-cookie')` trong Node.js fetch trả về
+ * TẤT CẢ set-cookie headers nối lại bằng ", " (comma + space).
+ * Cách parse cũ chỉ tách theo ";" → chỉ lấy được cookie đầu tiên,
+ * nếu cookie đầu tiên không phải refreshToken thì sẽ trả undefined.
+ *
+ * GIẢI PHÁP MỚI:
+ * 1. Ưu tiên dùng `headers.getSetCookie()` (Node 20+) trả mảng riêng biệt.
+ * 2. Nếu không có, tách combined string bằng regex pattern cookie boundary.
+ * 3. Duyệt từng cookie string để tìm refreshToken.
+ */
+function parseRefreshTokenFromHeaders(headers: Headers): string | undefined {
+  /* 
+   * Bước 1: Lấy danh sách set-cookie headers dưới dạng mảng.
+   * `getSetCookie()` có sẵn từ Node.js 20+ / Undici — trả mỗi phần tử là 1 cookie string riêng.
+   * Nếu runtime chưa hỗ trợ, fallback sang headers.get('set-cookie') rồi tách thủ công.
+   */
+  let cookieStrings: string[];
+  if (typeof headers.getSetCookie === 'function') {
+    cookieStrings = headers.getSetCookie();
+  } else {
+    const raw = headers.get('set-cookie');
+    if (!raw) return undefined;
+    /* 
+     * Tách combined set-cookie string.
+     * Mỗi cookie pair bắt đầu bằng "name=value", sau đó có ";"-separated attributes.
+     * Khi nhiều cookies bị nối bằng ", ", ta tách tại ", " NHƯNG chỉ khi phía sau dấu phẩy
+     * là một cookie name mới (không phải giá trị attribute như "Mon, 01 Jan...").
+     * Cách đơn giản nhất: split theo ", " rồi tìm cookie chứa refreshToken=
+     */
+    cookieStrings = raw.split(/,\s*(?=[a-zA-Z_]+=)/);
+  }
+
+  /* 
+   * Bước 2: Tìm cookie string có name = REFRESH_TOKEN_COOKIE ("refreshToken").
+   * Mỗi cookie string có dạng: "refreshToken=abc123; HttpOnly; Path=/; ..."
+   * Ta chỉ cần phần value (phần trước dấu ";" đầu tiên, sau dấu "=" đầu tiên).
+   */
+  for (const cookieStr of cookieStrings) {
+    const firstPair = cookieStr.trim().split(';')[0];
+    const eqIndex = firstPair.indexOf('=');
+    if (eqIndex === -1) continue;
+
+    const name = firstPair.substring(0, eqIndex).trim();
+    const value = firstPair.substring(eqIndex + 1).trim();
+
+    if (name === REFRESH_TOKEN_COOKIE && value.length > 0) {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
+async function syncRefreshTokenCookie(headers: Headers): Promise<void> {
+ const refreshToken = parseRefreshTokenFromHeaders(headers);
  if (!refreshToken) return;
 
  const cookieStore = await cookies();
@@ -37,7 +106,7 @@ async function syncRefreshTokenCookie(setCookieHeader: string | null): Promise<v
   name: REFRESH_TOKEN_COOKIE,
   value: refreshToken,
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
+  secure: shouldUseSecureCookie(),
   sameSite: 'strict',
   path: '/',
  });
@@ -49,7 +118,7 @@ async function setAccessTokenCookie(accessToken: string): Promise<void> {
   name: ACCESS_TOKEN_COOKIE,
   value: accessToken,
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
+  secure: shouldUseSecureCookie(),
   sameSite: 'strict',
   path: '/',
  });
@@ -65,7 +134,7 @@ export async function loginAction(data: { emailOrUsername: string; password: str
    fallbackErrorMessage: tApi('unknown_error'),
   });
 
-  await syncRefreshTokenCookie(result.headers.get('set-cookie'));
+  await syncRefreshTokenCookie(result.headers);
 
   if (!result.ok) {
    return actionFail(result.error || tApi('unknown_error'));
@@ -161,7 +230,7 @@ export async function refreshAccessTokenAction(): Promise<ActionResult<{ accessT
   }
   await setAccessTokenCookie(accessToken);
 
-  await syncRefreshTokenCookie(result.headers.get('set-cookie'));
+  await syncRefreshTokenCookie(result.headers);
 
   // Trả về accessToken mới để client cập nhật vào Zustand store
   return actionOk({ accessToken });

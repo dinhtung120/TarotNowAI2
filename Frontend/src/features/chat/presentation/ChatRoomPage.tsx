@@ -422,7 +422,7 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
   async (event: React.ChangeEvent<HTMLInputElement>) => {
    const file = event.target.files?.[0];
    event.target.value = '';
-   if (!file || !connected) return;
+   if (!file || !conversation) return;
 
    if (file.size > MAX_RAW_IMAGE_BYTES) {
     toast.error('Ảnh gốc vượt quá 20MB.');
@@ -442,7 +442,7 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
     setUploadingMedia(false);
    }
   },
-  [connected, sendMediaMessage]
+  [conversation, sendMediaMessage]
  );
 
  /* ========================================================================
@@ -458,7 +458,7 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
   * ======================================================================== */
  const handleVoiceRecordingComplete = useCallback(
   async (result: VoiceRecordingResult) => {
-   if (!connected) return;
+   if (!conversation) return;
 
    setUploadingMedia(true);
    try {
@@ -874,7 +874,7 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
        <button
         type="button"
         onClick={() => imageInputRef.current?.click()}
-        disabled={!connected || uploadingMedia}
+        disabled={!conversation || uploadingMedia}
         className="h-11 w-11 shrink-0 rounded-xl bg-white/5 border border-white/10 text-[var(--text-secondary)] hover:text-white disabled:opacity-50 flex items-center justify-center"
         title="Gửi ảnh"
        >
@@ -886,7 +886,7 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
         value={newMessage}
         onChange={(event) => onInputChange(event.target.value)}
         onKeyDown={handleKeyDown}
-        disabled={sending || !connected}
+        disabled={sending || !conversation}
         placeholder={t('room.input_placeholder')}
         className="flex-1 h-11 rounded-xl bg-white/5 border border-white/10 px-3 text-sm text-white"
        />
@@ -899,12 +899,12 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
         */}
        <VoiceRecorderButton
         onRecordingComplete={(result: VoiceRecordingResult) => void handleVoiceRecordingComplete(result)}
-        disabled={!connected || uploadingMedia || sending}
+        disabled={!conversation || uploadingMedia || sending}
        />
 
        <button
         onClick={() => void handleSendTextMessage()}
-        disabled={!newMessage.trim() || sending || !connected}
+        disabled={!newMessage.trim() || sending || !conversation}
         className="h-11 w-11 shrink-0 rounded-xl bg-[var(--purple-accent)] disabled:bg-white/10 text-white flex items-center justify-center"
        >
         {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}

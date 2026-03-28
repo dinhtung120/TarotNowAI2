@@ -19,6 +19,8 @@ public partial class StreamReadingCommandHandler : IRequestHandler<StreamReading
     private readonly int _inFlightAiCap;
     private readonly int _readingRateLimitSeconds;
 
+    private readonly IWalletPushService _walletPushService;
+
     public StreamReadingCommandHandler(
         IReadingSessionRepository readingRepo,
         IAiRequestRepository aiRequestRepo,
@@ -26,7 +28,8 @@ public partial class StreamReadingCommandHandler : IRequestHandler<StreamReading
         IAiProvider aiProvider,
         ICacheService cacheService,
         FollowupPricingService pricingService,
-        ISystemConfigSettings systemConfigSettings)
+        ISystemConfigSettings systemConfigSettings,
+        IWalletPushService walletPushService)
     {
         _readingRepo = readingRepo;
         _aiRequestRepo = aiRequestRepo;
@@ -37,6 +40,7 @@ public partial class StreamReadingCommandHandler : IRequestHandler<StreamReading
         _dailyAiQuota = systemConfigSettings.DailyAiQuota;
         _inFlightAiCap = systemConfigSettings.InFlightAiCap;
         _readingRateLimitSeconds = systemConfigSettings.ReadingRateLimitSeconds;
+        _walletPushService = walletPushService;
     }
 
     public async Task<StreamReadingResult> Handle(StreamReadingCommand request, CancellationToken cancellationToken)
@@ -52,6 +56,9 @@ public partial class StreamReadingCommandHandler : IRequestHandler<StreamReading
 
         var prompts = StreamReadingPromptFactory.Build(session, request.FollowupQuestion, request.Language);
         var stream = _aiProvider.StreamChatAsync(prompts.SystemPrompt, prompts.UserPrompt, cancellationToken);
+
+        // Báo cho FE biết số dư (Kim Cương Mềm) đã bị trừ / đóng băng
+        await _walletPushService.PushBalanceChangedAsync(request.UserId, cancellationToken);
 
         return new StreamReadingResult
         {

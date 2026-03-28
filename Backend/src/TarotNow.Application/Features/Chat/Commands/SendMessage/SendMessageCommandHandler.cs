@@ -33,6 +33,7 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
     private readonly IReaderProfileRepository _readerProfileRepo;
     private readonly ITransactionCoordinator _transactionCoordinator;
     private readonly IMediaProcessorService _mediaProcessor;
+    private readonly IWalletPushService _walletPushService;
 
     public SendMessageCommandHandler(
         IConversationRepository conversationRepo,
@@ -41,7 +42,8 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
         IWalletRepository walletRepo,
         IReaderProfileRepository readerProfileRepo,
         ITransactionCoordinator transactionCoordinator,
-        IMediaProcessorService mediaProcessor)
+        IMediaProcessorService mediaProcessor,
+        IWalletPushService walletPushService)
     {
         _conversationRepo = conversationRepo;
         _messageRepo = messageRepo;
@@ -50,6 +52,7 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
         _readerProfileRepo = readerProfileRepo;
         _transactionCoordinator = transactionCoordinator;
         _mediaProcessor = mediaProcessor;
+        _walletPushService = walletPushService;
     }
 
     public async Task<ChatMessageDto> Handle(SendMessageCommand request, CancellationToken cancellationToken)
@@ -91,6 +94,13 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
         }
 
         await _conversationRepo.UpdateAsync(conversation, cancellationToken);
+
+        // Báo Front-end refetch số dư ví nếu lệnh đóng băng kim cương vừa chạy
+        if (firstMessageFreeze.IsTriggered)
+        {
+            await _walletPushService.PushBalanceChangedAsync(request.SenderId, cancellationToken);
+        }
+
         return message;
     }
 

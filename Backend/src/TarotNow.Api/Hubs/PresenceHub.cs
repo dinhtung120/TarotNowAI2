@@ -30,6 +30,14 @@ public class PresenceHub : Hub
         if (!string.IsNullOrWhiteSpace(userId))
         {
             _presenceTracker.MarkConnected(userId, Context.ConnectionId);
+
+            /*
+             * Thêm connection vào group "user:{userId}" để cho phép
+             * INotificationPushService gửi event tới đúng user.
+             * Một user có thể có nhiều connections (nhiều tabs/devices)
+             * → tất cả đều nhận được event khi push vào group.
+             */
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"user:{userId}");
             
             // Broadcast event cho client biết user vừa online
             await Clients.All.SendAsync("UserStatusChanged", userId, "online");
@@ -50,9 +58,9 @@ public class PresenceHub : Hub
         if (!string.IsNullOrWhiteSpace(userId))
         {
             _presenceTracker.MarkDisconnected(userId, Context.ConnectionId);
-            
-            // KHÔNG broadcast offline ngay lập tức vì Tracker sẽ xử lý timeout trong 15 phút.
-            // Client sẽ vẫn thấy user là online cho đến khi TimeoutBackgroundService quét tới.
+
+            /* Rời group khi disconnect để tránh push vào connection đã chết */
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"user:{userId}");
         }
 
         _logger.LogInformation(

@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
 import {
  listMessages,
+ sendConversationMessage,
  type ChatMessageDto,
  type ConversationDto,
  type MediaPayloadDto,
@@ -126,21 +127,51 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
  }, [conversationId]);
  markReadRef.current = markRead;
 
+ /**
+  * Gửi tin nhắn text qua SignalR hoặc REST API fallback.
+  *
+  * TRƯỚC ĐÂY: Chỉ gửi qua SignalR → nếu connected === false thì không gửi được.
+  * Trên mobile, SignalR connection bị chậm/fail → conversation stuck ở pending.
+  *
+  * GIẢI PHÁP: Khi SignalR chưa connected, dùng REST API `sendConversationMessage`
+  * như fallback. Tin nhắn vẫn được gửi tới server, và khi SignalR reconnect,
+  * `loadInitial(true)` sẽ sync lại message list.
+  */
  const sendTypedMessage = useCallback(
   async (content: string, messageType = 'text') => {
    const normalizedContent = content.trim();
-   if (!normalizedContent || !connectionRef.current || !connected || !conversationId) {
+   if (!normalizedContent || !conversationId) {
     return false;
    }
 
+   /* Ưu tiên SignalR nếu đã connected (real-time) */
+   if (connectionRef.current && connected) {
+    try {
+     await connectionRef.current.invoke('SendMessage', conversationId, normalizedContent, messageType);
+     return true;
+    } catch (error) {
+     logger.warn('[Chat] SendMessage via SignalR failed, trying REST fallback', error, {
+      conversationId,
+      messageType,
+     });
+    }
+   }
+
+   /* Fallback: gửi qua REST API khi SignalR không khả dụng */
    try {
-    await connectionRef.current.invoke('SendMessage', conversationId, normalizedContent, messageType);
-    return true;
-   } catch (error) {
-    logger.warn('[Chat] SendMessage failed', error, {
-     conversationId,
-     messageType,
+    const result = await sendConversationMessage(conversationId, {
+     type: messageType,
+     content: normalizedContent,
     });
+    if (result.success && result.data) {
+     /* Thêm message vào list ngay lập tức (optimistic update) */
+     setMessages((prev) => appendUniqueMessage(prev, result.data!));
+     return true;
+    }
+    logger.warn('[Chat] REST SendMessage failed', result.error, { conversationId });
+    return false;
+   } catch (error) {
+    logger.warn('[Chat] REST SendMessage error', error, { conversationId });
     return false;
    }
   },
@@ -149,18 +180,38 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
 
  const sendMediaMessage = useCallback(
   async (type: 'image' | 'voice', payload: MediaPayloadDto) => {
-   if (!connectionRef.current || !connected || !conversationId) {
+   if (!conversationId) {
     return false;
    }
 
+   if (connectionRef.current && connected) {
+    try {
+     await connectionRef.current.invoke('SendMessage', conversationId, JSON.stringify(payload), type);
+     return true;
+    } catch (error) {
+     logger.warn('[Chat] SendMediaMessage via SignalR failed, trying REST fallback', error, {
+      conversationId,
+      type,
+     });
+    }
+   }
+
+   /* Fallback: gửi qua REST API khi SignalR không khả dụng */
    try {
-    await connectionRef.current.invoke('SendMessage', conversationId, JSON.stringify(payload), type);
-    return true;
-   } catch (error) {
-    logger.warn('[Chat] SendMediaMessage failed', error, {
-     conversationId,
+    const result = await sendConversationMessage(conversationId, {
      type,
+     content: JSON.stringify(payload),
+     mediaPayload: payload,
     });
+    if (result.success && result.data) {
+     /* Thêm message vào list ngay lập tức (optimistic update) */
+     setMessages((prev) => appendUniqueMessage(prev, result.data!));
+     return true;
+    }
+    logger.warn('[Chat] REST SendMediaMessage failed', result.error, { conversationId });
+    return false;
+   } catch (error) {
+    logger.warn('[Chat] REST SendMediaMessage error', error, { conversationId });
     return false;
    }
   },
@@ -175,10 +226,13 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
   if (success) {
    setNewMessage('');
    inputRef.current?.focus();
-   void connectionRef.current?.invoke('TypingStopped', conversationId);
+   /* Chỉ gửi TypingStopped nếu SignalR đang connected */
+   if (connectionRef.current && connected) {
+    void connectionRef.current.invoke('TypingStopped', conversationId).catch(() => undefined);
+   }
   }
   return success;
- }, [conversationId, newMessage, sendTypedMessage]);
+ }, [conversationId, connected, newMessage, sendTypedMessage]);
 
  const notifyTyping = useCallback(
   (typing: boolean) => {

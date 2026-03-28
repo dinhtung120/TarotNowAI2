@@ -68,7 +68,7 @@ public partial class LoginCommandHandler
         return new AuthResponse
         {
             AccessToken = accessToken,
-            ExpiresInMinutes = _jwtTokenSettings.AccessTokenExpiryMinutes,
+            ExpiresIn = _jwtTokenSettings.AccessTokenExpiryMinutes,
             User = user.ToUserProfileDto()
         };
     }

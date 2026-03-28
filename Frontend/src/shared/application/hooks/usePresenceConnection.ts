@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { HubConnectionState, type HubConnection } from '@microsoft/signalr';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
+import { useWalletStore } from '@/store/walletStore';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { getSignalRHubUrl } from '@/shared/infrastructure/realtime/signalRUrl';
 
@@ -59,6 +60,37 @@ export function usePresenceConnection() {
     // Invalidate readers directory & profile queries để UI tự fetch lại data mới nhất
     void queryClient.invalidateQueries({ queryKey: ['readers'] });
     void queryClient.invalidateQueries({ queryKey: ['reader', userId] });
+    void queryClient.invalidateQueries({ queryKey: ['chat', 'inbox'] });
+   });
+
+   /*
+    * NOTIFICATION PUSH: Lắng nghe event "notification.new" từ PresenceHub.
+    * Khi backend tạo thông báo mới, nó push event này xuống client qua SignalR.
+    * FE nhận event → invalidate tất cả notification queries → React Query refetch
+    * → Badge chuông + dropdown danh sách thông báo cập nhật real-time.
+    *
+    * Thay thế hoàn toàn cơ chế polling 30 giây trước đó.
+    */
+   hubConnection.on('notification.new', () => {
+    void queryClient.invalidateQueries({ queryKey: ['notifications'] });
+   });
+
+   /*
+    * WALLET BALANCE PUSH: Lắng nghe event "wallet.balance_changed".
+    * Gọi Zustand store để fetch lại số dư mới nhất.
+    */
+   hubConnection.on('wallet.balance_changed', () => {
+    logger.info('[PresenceRealtimeSync]', 'wallet.balance_changed received. Refetching balance...');
+    void useWalletStore.getState().fetchBalance();
+   });
+
+   /*
+    * INBOX UPDATED PUSH: Lắng nghe event "conversation.updated".
+    * Force React Query refetch lại danh sách chat (Inbox) để hiển thị 
+    * tin nhắn mới nhất / đẩy conversation lên đầu.
+    */
+   hubConnection.on('conversation.updated', () => {
+    logger.info('[PresenceRealtimeSync]', 'conversation.updated received. Invalidating inbox queries...');
     void queryClient.invalidateQueries({ queryKey: ['chat', 'inbox'] });
    });
 

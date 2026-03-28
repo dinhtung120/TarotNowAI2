@@ -24,6 +24,14 @@ public sealed class RefreshTokenCookieService : IRefreshTokenCookieService
             HttpOnly = true,
             Secure = shouldUseSecureCookie,
             SameSite = SameSiteMode.Strict,
+            /* 
+             * FIX: Bắt buộc phải set Path = "/" 
+             * Nếu không set, cookie sẽ mặc định lấy path từ URL request (ví dụ: /api/v1/auth/login).
+             * Khi đó, cookie CHỈ được trình duyệt gửi kèm các request có path bắt đầu bằng /api/v1/auth/login,
+             * mà KHÔNG gửi cho /api/v1/auth/refresh hay /api/v1/auth/logout → gây lỗi refresh/logout thất bại.
+             * Set Path = "/" đảm bảo cookie được gửi cho MỌI request tới cùng domain.
+             */
+            Path = "/",
             Expires = DateTime.UtcNow.AddDays(expiryDays)
         };
     }

@@ -65,6 +65,8 @@ public static partial class ApiServiceCollectionExtensions
         services.AddScoped<IRefreshTokenCookieService, RefreshTokenCookieService>();
         services.AddSingleton<IUserPresenceTracker, InMemoryUserPresenceTracker>();
         services.AddHostedService<PresenceTimeoutBackgroundService>(); // MỚI: Thêm BackgroundService quản lý timeout
+        services.AddScoped<Application.Interfaces.INotificationPushService, SignalRNotificationPushService>();
+        services.AddScoped<Application.Interfaces.IWalletPushService, SignalRWalletPushService>();
         services.AddAuthorization();
         services.AddSignalR(options =>
         {

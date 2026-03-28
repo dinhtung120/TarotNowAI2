@@ -30,6 +30,8 @@ export function useNotificationDropdown() {
   });
 
   // 2. Fetch unread count
+  // KHÔNG CẦN refetchInterval nữa: SignalR push event "notification.new" sẽ
+  // invalidate query này mỗi khi có thông báo mới → React Query tự refetch.
   const { data: unreadCount = 0 } = useQuery<number>({
     queryKey: queryKeyCount,
     queryFn: async () => {
@@ -37,7 +39,7 @@ export function useNotificationDropdown() {
       return result.success ? result.data ?? 0 : 0;
     },
     enabled: isAuthenticated,
-    refetchInterval: 30000, // Poll every 30s as required by backend comments
+    staleTime: 1000 * 30, // 30 giây stale time — chỉ refetch khi cache bị invalidate
   });
 
   // 3. Mark as read mutation
