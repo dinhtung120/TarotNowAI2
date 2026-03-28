@@ -20,6 +20,7 @@ import { Sparkles, User, Calendar, AtSign, ShieldCheck, Save, Loader2, Trophy,
 import { SectionHeader, GlassCard, Button } from "@/shared/components/ui";
 import { useProfilePage } from "@/features/profile/application/useProfilePage";
 import ProfileReaderSettingsPage from "@/features/profile/reader/presentation/ProfileReaderSettingsPage";
+import ReaderBusyToggle from "@/features/profile/presentation/ReaderBusyToggle";
 
 export default function ProfilePage() {
  const {
@@ -129,15 +130,7 @@ export default function ProfilePage() {
  {t("admin_portal")}
  </button>
  )}
- {isTarotReader && (
- <button
-  onClick={() => router.push("/profile/reader")}
- className="flex-1 group flex justify-center items-center gap-2.5 bg-[var(--warning)]/10 hover:bg-[var(--warning)]/20 border border-[var(--warning)]/30 text-[var(--warning)] px-5 py-2.5 min-h-11 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95"
- >
- <Sparkles className="w-3.5 h-3.5 transition-transform group-hover:rotate-12" />
- {t("reader_profile")}
- </button>
- )}
+ {isTarotReader && <ReaderBusyToggle />}
  </div>
  </div>
  </div>
@@ -234,10 +227,6 @@ export default function ProfilePage() {
  </GlassCard>
  )}
 
- {isTarotReader ? (
-  <ProfileReaderSettingsPage embedded />
- ) : null}
-
  {/* Settings Form Section */}
  <GlassCard className="!p-6 sm:!p-8">
  <h3 className="text-lg font-black tn-text-primary italic tracking-tight mb-8 flex items-center gap-2.5">
@@ -327,6 +316,10 @@ export default function ProfilePage() {
  </div>
  </form>
  </GlassCard>
+
+ {isTarotReader ? (
+  <ProfileReaderSettingsPage embedded />
+ ) : null}
  </div>
  </div>
  );

@@ -54,38 +54,6 @@ export default function ReaderSettingsPage({ embedded = false }: ReaderSettingsP
 
  const content = (
  <div className="space-y-8">
- {/* Trạng thái hoạt động */}
- <GlassCard className="!p-8">
- <h3 className="text-lg font-black tn-text-primary italic tracking-tight mb-6 flex items-center gap-2.5">
- <Activity className="w-5 h-5 text-[var(--warning)]" />
- {t("reader.status_title")}
- </h3>
- <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
- <button
- onClick={() => handleStatusChange('busy')}
- className={`p-5 rounded-2xl border text-center transition-all shadow-lg ${
- status === 'busy' ? 'bg-[var(--warning)]/10 border-[var(--warning)]/40 ring-1 ring-[var(--warning)]/20' : 'tn-panel-soft hover:tn-surface-strong hover:border-[var(--warning)]/20'
- }`}
- >
- <div className={`w-3.5 h-3.5 mx-auto rounded-full mb-3 shadow-[0_0_10px_currentColor] ${status === 'busy' ? 'bg-[var(--warning)] text-[var(--warning)] animate-pulse' : 'tn-surface tn-text-muted'}`} />
- <div className={`text-[10px] font-black uppercase tracking-widest ${status === 'busy' ? 'text-[var(--warning)]' : 'text-[var(--text-secondary)]'}`}>{t("reader.status_busy")}</div>
- </button>
- <button
- onClick={() => handleStatusChange('offline')}
- className={`p-5 rounded-2xl border text-center transition-all shadow-lg ${
- status === 'offline' ? 'bg-[var(--text-secondary)]/10 border-[var(--text-secondary)]/30 ring-1 ring-[var(--text-secondary)]/10' : 'tn-panel-soft hover:tn-surface-strong hover:border-[var(--text-secondary)]/20'
- }`}
- >
- <div className={`w-3.5 h-3.5 mx-auto rounded-full mb-3 shadow-[0_0_10px_currentColor] ${status === 'offline' ? 'bg-[var(--text-secondary)] text-[var(--text-secondary)]' : 'tn-surface-strong tn-text-muted'}`} />
- <div className={`text-[10px] font-black uppercase tracking-widest ${status === 'offline' ? 'tn-text-primary' : 'text-[var(--text-secondary)]'}`}>{t("reader.status_offline")}</div>
- </button>
- </div>
- <p className="text-[11px] text-[var(--text-secondary)] italic mt-4">
- * Trạng thái <strong>Online</strong> (🟢) được bật tự động khi bạn truy cập trang web. 
- Tùy chọn <strong>Offline</strong> hoặc <strong>Busy</strong> sẽ vô hiệu hóa nhận diện tự động đó.
- </p>
- </GlassCard>
-
  {/* Form cập nhật Info */}
  <GlassCard className="!p-8">
  <form onSubmit={handleSave} className="space-y-8">
