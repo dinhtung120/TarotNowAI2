@@ -40,7 +40,11 @@ export function useChatRealtimeSync() {
    const signalR = await import('@microsoft/signalr');
    hubConnection = new signalR.HubConnectionBuilder()
     .withUrl(getSignalRHubUrl('/api/v1/chat'), { 
-     accessTokenFactory: () => token ?? '',
+     /**
+			 * Dùng useAuthStore.getState().token thay vì closure variable `token`
+			 * để luôn đọc token mới nhất từ Zustand store.
+			 */
+			accessTokenFactory: () => useAuthStore.getState().token ?? '',
     })
     .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
     .configureLogging(signalR.LogLevel.Warning)

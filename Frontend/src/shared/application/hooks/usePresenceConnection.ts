@@ -41,7 +41,11 @@ export function usePresenceConnection() {
    logger.info('[PresenceRealtimeSync]', `Connecting to: ${hubUrl}`);
    hubConnection = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, { 
-     accessTokenFactory: () => token ?? '',
+     /**
+			 * Dùng useAuthStore.getState().token thay vì closure variable `token`
+			 * để luôn đọc token mới nhất từ Zustand store.
+			 */
+			accessTokenFactory: () => useAuthStore.getState().token ?? '',
     })
     .withAutomaticReconnect([0, 2000, 5000, 10000, 30000]) // Auto reconnect như ChatHub
     .configureLogging(signalR.LogLevel.Warning)

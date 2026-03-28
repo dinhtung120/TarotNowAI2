@@ -118,7 +118,18 @@ export async function logoutAction(): Promise<ActionResult<undefined>> {
  }
 }
 
-export async function refreshAccessTokenAction(): Promise<ActionResult<undefined>> {
+/**
+ * Refresh access token và trả về token mới cho client.
+ *
+ * QUAN TRỌNG: Trước đây hàm này chỉ cập nhật cookie trên server mà KHÔNG trả
+ * token mới về client. Điều này gây ra lỗi 401 cho SignalR vì:
+ *   1. Zustand authStore.token vẫn giữ token cũ (hết hạn)
+ *   2. SignalR accessTokenFactory đọc token cũ từ store → gửi expired token → 401
+ *
+ * Giải pháp: Trả về { accessToken: string } để client cập nhật Zustand store,
+ * đảm bảo SignalR luôn có token mới nhất khi negotiate/reconnect.
+ */
+export async function refreshAccessTokenAction(): Promise<ActionResult<{ accessToken: string }>> {
  const tApi = await getTranslations('ApiErrors');
 
  try {
@@ -152,7 +163,8 @@ export async function refreshAccessTokenAction(): Promise<ActionResult<undefined
 
   await syncRefreshTokenCookie(result.headers.get('set-cookie'));
 
-  return actionOk();
+  // Trả về accessToken mới để client cập nhật vào Zustand store
+  return actionOk({ accessToken });
  } catch (error) {
   logger.error('[AuthAction] refreshAccessTokenAction', error);
   return actionFail(tApi('network_error'));
