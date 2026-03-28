@@ -248,6 +248,7 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
   sendMediaMessage,
   handleSendTextMessage,
   notifyTyping,
+  initializing,
  } = useChatConnection({ conversationId: resolvedConversationId });
 
  const {
@@ -277,22 +278,38 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
  const normalizedReaderStatus = normalizeReaderStatus(conversation?.readerStatus);
  const readerStatus = parseStatusLabel(conversation?.readerStatus);
 
+ /**
+  * canShowInput: Quyết định có hiện input bar hay không.
+  *
+  * Khi đang initializing (chưa load xong conversation từ server),
+  * vẫn hiện input bar để tránh flash read-only hint.
+  * Input sẽ tự disabled vì connected = false trong giai đoạn này.
+  */
  const canShowInput = useMemo(() => {
+  if (initializing) return true;
   if (!conversation) return false;
   if (conversation.status === 'pending') return isUserRole === true;
   if (conversation.status === 'ongoing') return true;
   return false;
- }, [conversation, isUserRole]);
+ }, [conversation, initializing, isUserRole]);
 
  const canReaderAcceptReject = useMemo(
   () => conversation?.status === 'awaiting_acceptance' && isUserRole === false,
   [conversation?.status, isUserRole]
  );
 
+ /**
+  * isReadOnly: Xác định cuộc trò chuyện đã kết thúc (không thể gửi tin nhắn).
+  *
+  * Khi đang initializing, KHOONG coi là read-only vì chưa biết
+  * conversation.status thực tế. Tránh hiện sai "cuộc trò chuyện đã hoàn thành"
+  * khi thực chất chỉ là chưa load xong data.
+  */
  const isReadOnly = useMemo(() => {
+  if (initializing) return false;
   if (!conversation) return true;
   return ['completed', 'cancelled', 'expired', 'disputed', 'awaiting_acceptance'].includes(conversation.status);
- }, [conversation]);
+ }, [conversation, initializing]);
 
  const canStartNewSession = useMemo(
   () => conversation?.status === 'completed' && isUserRole === true,

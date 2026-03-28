@@ -48,6 +48,19 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
  const [nextCursor, setNextCursor] = useState<string | null>(null);
  const [typingUserId, setTypingUserId] = useState<string | null>(null);
 
+ /**
+  * initializing: Trạng thái khởi tạo ban đầu.
+  *
+  * Khi lần đầu truy cập trực tiếp URL /chat/[id], TanStack Query cache
+  * trống nên conversation = null. Nếu không phân biệt "đang load" vs
+  * "thực sự không có data", UI sẽ hiện read-only hint gây nhầm lẫn.
+  *
+  * - initializing = true: Đang connect SignalR + load messages lần đầu
+  *   → UI nên hiện input bar (disabled vì connected = false)
+  * - initializing = false: Đã load xong → quyết định dựa trên conversation.status
+  */
+ const [initializing, setInitializing] = useState(true);
+
  const connectionRef = useRef<HubConnection | null>(null);
  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
  const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -211,6 +224,9 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
 
   if (!silent) {
    setLoading(false);
+   /* Đánh dấu đã hoàn tất khởi tạo – UI sẽ chuyển sang dựa vào
+    * conversation.status thực tế thay vì giả định đang load */
+   setInitializing(false);
   }
  }, [conversationId]);
  loadInitialRef.current = loadInitial;
@@ -371,6 +387,9 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
   setNextCursor(null);
   setTypingUserId(null);
   hasLoadedInitialRef.current = false;
+  /* Reset initializing khi đổi phòng chat – đảm bảo UI hiện input bar
+   * (disabled) thay vì read-only hint trong lúc chờ load conversation mới */
+  setInitializing(true);
   void initConnection();
 
   return () => {
@@ -415,5 +434,7 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
   handleSendTextMessage,
   notifyTyping,
   markRead,
+  /** Đang khởi tạo connection + load dữ liệu lần đầu */
+  initializing,
  };
 }
