@@ -102,9 +102,23 @@ async function FeaturedReadersGrid() {
  <Link key={reader.userId} href={`/readers/${reader.userId}`}
  className="group relative h-96 rounded-[2.5rem] overflow-hidden border border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-[var(--border-focus)] transition-all duration-700 hover:-translate-y-4 shadow-[var(--shadow-card)] preserve-3d"
  >
- {/* Background Glow */}
- <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-void)] via-transparent to-transparent z-10" />
- <div className="absolute inset-0 bg-[var(--purple-glow)] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+ {/* Avatar ảnh nền — hiển thị ảnh đại diện reader phủ kín card */}
+ {reader.avatarUrl ? (
+ <img
+  src={reader.avatarUrl}
+  alt={reader.displayName}
+  className="absolute inset-0 w-full h-full object-cover z-0 transition-transform duration-700 group-hover:scale-110"
+ />
+ ) : (
+ <div className="absolute inset-0 w-full h-full z-0 flex items-center justify-center bg-gradient-to-br from-[var(--purple-accent)]/20 to-[var(--bg-surface)]">
+  <span className="text-6xl font-black text-[var(--text-muted)]/30 italic uppercase select-none">
+  {reader.displayName?.charAt(0) || '?'}
+  </span>
+ </div>
+ )}
+ {/* Gradient Overlay */}
+ <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-void)] via-[var(--bg-void)]/40 to-transparent z-10" />
+ <div className="absolute inset-0 bg-[var(--purple-glow)] opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-10" />
  {/* Reader Meta */}
  <div className="absolute inset-x-0 bottom-0 p-8 z-20 space-y-4">
  <div className="flex items-center justify-between">

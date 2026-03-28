@@ -167,4 +167,36 @@ public class NotificationController : ControllerBase
 
         return Ok(new { message = "Notification marked as read." });
     }
+
+    /// <summary>
+    /// ENDPOINT: PATCH /api/v1/Notification/read-all
+    /// MỤC ĐÍCH: Đánh dấu TẤT CẢ thông báo chưa đọc của user thành đã đọc.
+    ///
+    /// TRẢ VỀ:
+    ///   - 200 OK: Thành công sửa ít nhất 1 thông báo
+    ///   - 204 No Content: Không có thông báo nào cần đánh dấu (đã đọc hết rồi)
+    /// </summary>
+    [HttpPatch("read-all")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> MarkAllAsRead()
+    {
+        if (!User.TryGetUserId(out var userId))
+            return Unauthorized();
+
+        var command = new TarotNow.Application.Features.Notification.Commands.MarkAllAsRead.MarkAllNotificationsReadCommand
+        {
+            UserId = userId
+        };
+
+        var modifiedAny = await _mediator.Send(command);
+
+        if (!modifiedAny)
+        {
+            return NoContent(); // Không có gì thay đổi (tất cả đã đọc sẵn)
+        }
+
+        return Ok(new { message = "All notifications marked as read." });
+    }
 }

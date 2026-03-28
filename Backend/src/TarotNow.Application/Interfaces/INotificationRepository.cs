@@ -34,6 +34,9 @@ public interface INotificationRepository
     /// <summary>Lệnh Triệt Tiêu Ấn Nút Dấu Đỏ: "Click Mở Ra Chữ Thường Chìm Nghỉm (Has Read)".</summary>
     Task<bool> MarkAsReadAsync(string notificationId, Guid userId, CancellationToken cancellationToken = default);
 
+    /// <summary>Đánh dấu toàn bộ thông báo của User thành đã đọc (Mark All As Read).</summary>
+    Task<bool> MarkAllAsReadAsync(Guid userId, CancellationToken cancellationToken = default);
+
     /// <summary>Bộ Đếm Chứa Chỉ Số To Chìm Nền Đỏ (Bạn Đang Có 99+ Thông Báo Rợn Người Kèm Chưa Mở Cửa Tủ Đọc Đo).</summary>
     Task<long> CountUnreadAsync(Guid userId, CancellationToken cancellationToken = default);
 }

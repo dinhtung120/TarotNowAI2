@@ -11,10 +11,11 @@ import { useAuthGuard } from '@/shared/application/hooks/useAuthGuard';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { compressAvatarImage } from '@/features/profile/application/compressAvatarImage';
+import { uploadAvatarAction } from '@/features/profile/application/actions/upload-avatar';
 
 interface ProfileFormValues {
  displayName: string;
- avatarUrl?: string;
  dateOfBirth: string;
 }
 
@@ -30,13 +31,14 @@ export function useProfilePage() {
 
  const [successMsg, setSuccessMsg] = useState('');
  const [errorMsg, setErrorMsg] = useState('');
+ const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+ const [avatarUploading, setAvatarUploading] = useState(false);
  const profileQueryKey = ['profile', 'me'] as const;
 
  const profileSchema = useMemo(
   () =>
    z.object({
     displayName: z.string().min(2, t('validation.display_name_min')),
-    avatarUrl: z.string().url(t('validation.avatar_url_invalid')).optional().or(z.literal('')),
     dateOfBirth: z.string().refine((date) => !isNaN(Date.parse(date)), {
      message: t('validation.date_of_birth_invalid'),
     }),
@@ -76,7 +78,7 @@ export function useProfilePage() {
 
   const data = payload.profile;
   setValue('displayName', data.displayName);
-  setValue('avatarUrl', data.avatarUrl || '');
+  setAvatarPreview(data.avatarUrl || null);
 
   if (data.dateOfBirth) {
    const dateObj = new Date(data.dateOfBirth);
@@ -104,7 +106,7 @@ export function useProfilePage() {
   try {
    const result = await updateProfileAction({
     displayName: data.displayName,
-    avatarUrl: data.avatarUrl || null,
+    avatarUrl: avatarPreview || null,
     dateOfBirth: new Date(data.dateOfBirth).toISOString(),
    });
 
@@ -114,9 +116,54 @@ export function useProfilePage() {
    }
 
    setSuccessMsg(t('successMsg'));
+   useAuthStore.getState().updateUser({ 
+     displayName: data.displayName, 
+     avatarUrl: avatarPreview || null 
+   });
    await queryClient.invalidateQueries({ queryKey: profileQueryKey });
   } catch {
    setErrorMsg(t('errorSave'));
+  }
+ };
+
+ const handleAvatarSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0];
+  event.target.value = '';
+  if (!file) return;
+
+  // Giới hạn 10MB file ảnh nguyên bản như BE cấu hình
+  if (file.size > 10 * 1024 * 1024) {
+    setErrorMsg(t('validation.avatar_file_too_large') || 'Ảnh quá lớn (tối đa 10MB)');
+    return;
+  }
+
+  setAvatarUploading(true);
+  setErrorMsg('');
+  
+  try {
+    const compressedFile = await compressAvatarImage(file);
+    const formData = new FormData();
+    formData.append('file', compressedFile, compressedFile.name);
+
+    const result = await uploadAvatarAction(formData);
+
+    if (!result.success) {
+      setErrorMsg(result.error);
+      return;
+    }
+
+    setAvatarPreview(result.data?.avatarUrl || null);
+    setSuccessMsg(t('avatar_upload_success') || 'Đã cập nhật ảnh đại diện');
+    
+    // Đồng bộ lập tức Avatar URL mới vào Global AuthStore để Navbar hiển thị
+    useAuthStore.getState().updateUser({ avatarUrl: result.data?.avatarUrl || null });
+
+    // Yêu cầu tải lại profile để đồng bộ toàn cục avatar
+    await queryClient.invalidateQueries({ queryKey: profileQueryKey });
+  } catch (error) {
+    setErrorMsg(t('avatar_upload_error') || 'Không thể tải ảnh lên');
+  } finally {
+    setAvatarUploading(false);
   }
  };
 
@@ -136,5 +183,8 @@ export function useProfilePage() {
   errors,
   isSubmitting,
   onSubmit,
+  avatarPreview,
+  avatarUploading,
+  handleAvatarSelect
  };
 }

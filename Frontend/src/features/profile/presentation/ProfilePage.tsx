@@ -15,7 +15,7 @@
 
 import Image from "next/image";
 import { Sparkles, User, Calendar, AtSign, ShieldCheck, Save, Loader2, Trophy,
- Stars, ArrowUpRight, Clock, XCircle
+ Stars, ArrowUpRight, Clock, XCircle, Camera
 } from "lucide-react";
 import { SectionHeader, GlassCard, Button } from "@/shared/components/ui";
 import { useProfilePage } from "@/features/profile/application/useProfilePage";
@@ -39,6 +39,9 @@ export default function ProfilePage() {
   errors,
   isSubmitting,
  onSubmit,
+ avatarPreview,
+ avatarUploading,
+ handleAvatarSelect,
  } = useProfilePage();
  const isAdmin = user?.role === "admin";
  const isTarotReader = user?.role === "tarot_reader";
@@ -71,18 +74,38 @@ export default function ProfilePage() {
  {profileData && (
  <GlassCard className="!p-6 sm:!p-8 overflow-hidden relative group">
  <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8">
- {/* Avatar */}
- <div className="relative w-28 h-28 shrink-0">
+ {/* Avatar with Upload */}
+ <div className="relative w-28 h-28 shrink-0 group/avatar cursor-pointer">
+   <input 
+      type="file" 
+      accept="image/jpeg,image/png,image/webp"
+      onChange={handleAvatarSelect}
+      disabled={avatarUploading || isSubmitting}
+      className="absolute inset-0 w-full h-full opacity-0 z-50 cursor-pointer disabled:cursor-not-allowed"
+      title={t("avatar_upload") || "Đổi ảnh đại diện"}
+   />
  <div className="absolute inset-[-6px] rounded-full bg-gradient-to-tr from-[var(--purple-accent)]/30 via-transparent to-[var(--warning)]/20 blur-xl group-hover:inset-[-12px] transition-all duration-700 opacity-70" />
- <div className="w-full h-full rounded-full border-2 tn-border overflow-hidden relative z-10 shadow-2xl tn-surface">
+ <div className="w-full h-full rounded-full border-2 tn-border overflow-hidden relative z-10 shadow-2xl tn-surface group-hover/avatar:border-[var(--purple-accent)] transition-colors">
  <Image
- src={profileData.avatarUrl || `https://ui-avatars.com/api/?background=111&color=fff&name=${encodeURIComponent(profileData.displayName)}`}
+ src={avatarPreview || `https://ui-avatars.com/api/?background=111&color=fff&name=${encodeURIComponent(profileData.displayName)}`}
  alt={tCommon("avatar_alt")}
  fill
  sizes="112px"
  unoptimized
- className="object-cover transition-transform duration-1000 group-hover:scale-110"
+ className={`object-cover transition-transform duration-1000 group-hover/avatar:scale-110 ${avatarUploading ? 'opacity-50 blur-sm' : ''}`}
  />
+ 
+ {/* Upload Overlay */}
+ <div className="absolute inset-0 bg-black/40 flex flex-col justify-center items-center opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300">
+   {avatarUploading ? (
+     <Loader2 className="w-6 h-6 text-white animate-spin" />
+   ) : (
+     <>
+      <Camera className="w-6 h-6 text-white mb-1" />
+      <span className="text-[8px] font-bold text-white uppercase tracking-wider">{t("avatar_upload") || "Đổi ảnh"}</span>
+     </>
+   )}
+ </div>
  </div>
  <div className="absolute -bottom-1 -right-1 w-8 h-8 tn-panel rounded-xl flex items-center justify-center text-[var(--warning)] shadow-xl z-20">
  <Trophy className="w-4 h-4" />
@@ -279,19 +302,6 @@ export default function ProfilePage() {
  {errors.dateOfBirth && <p className="text-[var(--danger)] text-[10px] font-bold ml-1 italic">{errors.dateOfBirth.message}</p>}
  </div>
 
- <div className="space-y-2 md:col-span-2">
- <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] ml-1">
- <AtSign className="w-3.5 h-3.5" />
- {t("avatarUrl")}
- </label>
- <input
- type="text"
- {...register("avatarUrl")}
- className="w-full tn-field rounded-xl px-4 py-3.5 text-sm tn-text-primary font-medium tn-field-accent transition-all shadow-inner"
- placeholder={t("avatar_url_placeholder")}
- />
- {errors.avatarUrl && <p className="text-[var(--danger)] text-[10px] font-bold ml-1 italic">{errors.avatarUrl.message}</p>}
- </div>
  </div>
 
  <div className="pt-4 mt-8 border-t tn-border">

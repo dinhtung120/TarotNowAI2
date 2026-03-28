@@ -21,6 +21,7 @@ export interface ServerHttpRequestOptions extends Omit<RequestInit, 'body' | 'he
   token?: string;
   headers?: HeadersInit;
   json?: unknown;
+  formData?: FormData;
   fallbackErrorMessage?: string;
 }
 
@@ -66,13 +67,22 @@ export async function serverHttpRequest<T>(
   path: string,
   options: ServerHttpRequestOptions = {}
 ): Promise<ServerHttpResult<T>> {
-  const { token, headers: rawHeaders, json, fallbackErrorMessage, ...rest } = options;
+  const { token, headers: rawHeaders, json, formData, fallbackErrorMessage, ...rest } = options;
   const resolvedCache = rest.cache ?? (hasNextRevalidate(rest.next) ? undefined : 'no-store');
+  
+  // Xác định body: ưu tiên formData nếu có, sau đó đến json
+  let body: BodyInit | undefined;
+  if (formData !== undefined) {
+    body = formData;
+  } else if (json !== undefined) {
+    body = JSON.stringify(json);
+  }
+
   const response = await fetch(apiUrl(path), {
     ...rest,
     ...(resolvedCache ? { cache: resolvedCache } : {}),
     headers: buildHeaders(token, rawHeaders, json !== undefined),
-    body: json === undefined ? undefined : JSON.stringify(json),
+    body,
   });
 
   if (!response.ok) {

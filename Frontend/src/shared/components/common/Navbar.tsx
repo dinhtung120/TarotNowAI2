@@ -31,6 +31,7 @@ import {
  ChevronDown,
 } from "lucide-react";
 import WalletWidget from "../common/WalletWidget";
+import NotificationDropdown from "./NotificationDropdown";
 import { useAuthStore } from "@/store/authStore";
 import { useWalletStore } from "@/store/walletStore";
 import { useEffect, useState, useRef, useCallback } from "react";
@@ -202,19 +203,8 @@ export default function Navbar({ onLogout }: NavbarProps = {}) {
  <WalletWidget />
  </div>
 
- {/* Notification Bell — placeholder cho Phase 4 */}
-		 <button
-		 onClick={() => router.push("/chat")}
-		 className="inline-flex relative items-center justify-center p-2 rounded-xl hover:bg-[var(--purple-50)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-ink)] cursor-pointer min-h-11 min-w-11"
-		 aria-label={tCommon("notifications")}
-		 >
-	 <Bell className="w-4 h-4" />
-	 {unreadCount > 0 ? (
-	  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[var(--danger)] text-white text-[9px] font-black flex items-center justify-center">
-	   {unreadCount > 99 ? "99+" : unreadCount}
-	  </span>
-	 ) : null}
-	 </button>
+ {/* Notification Dropdown Component */}
+ <NotificationDropdown />
 
  {/* === AVATAR DROPDOWN MENU === */}
  <div ref={avatarMenuRef} className="relative">
@@ -227,9 +217,13 @@ export default function Navbar({ onLogout }: NavbarProps = {}) {
  : "bg-[var(--bg-surface-hover)] hover:bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-[var(--text-ink)] border border-[var(--border-subtle)]",
  )}
  >
- {/* Avatar circle — chữ cái đầu tên */}
- <div className="w-7 h-7 rounded-full bg-[var(--purple-100)] border border-[var(--border-default)] flex items-center justify-center text-[10px] font-black text-[var(--text-ink)]">
- {user?.displayName?.charAt(0)?.toUpperCase() || "U"}
+ {/* Avatar circle */}
+ <div className="w-7 h-7 rounded-full bg-[var(--purple-100)] border border-[var(--border-default)] flex items-center justify-center text-[10px] font-black text-[var(--text-ink)] relative overflow-hidden">
+ {user?.avatarUrl ? (
+   <img src={user.avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+ ) : (
+   user?.displayName?.charAt(0)?.toUpperCase() || "U"
+ )}
  </div>
 	 <div className="hidden lg:flex flex-col items-start leading-tight -space-y-0.5">
 	 <span className="text-[11px] font-black tracking-wide max-w-[100px] truncate text-[var(--text-ink)]">

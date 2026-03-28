@@ -134,6 +134,22 @@ public class MongoNotificationRepository : INotificationRepository
     }
 
     /// <summary>
+    /// Đánh dấu tất cả thông báo TỒN TẠI VÀ CHƯA ĐỌC của User thành đã đọc.
+    /// Dùng cho nút "Mark all as read". Rất tối ưu khi dùng UpdateMany thay vì loop.
+    /// </summary>
+    public async Task<bool> MarkAllAsReadAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var userIdStr = userId.ToString();
+
+        var result = await _mongoContext.Notifications.UpdateManyAsync(
+            n => n.UserId == userIdStr && !n.IsRead,
+            Builders<NotificationDocument>.Update.Set(n => n.IsRead, true),
+            cancellationToken: cancellationToken);
+
+        return result.ModifiedCount > 0;
+    }
+
+    /// <summary>
     /// Đếm số thông báo CHƯA ĐỌC của User — dùng cho badge count (số đỏ trên icon chuông).
     /// Query đơn giản: filter userId + IsRead = false → count.
     /// </summary>

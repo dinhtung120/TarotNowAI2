@@ -125,8 +125,12 @@ export default function ReaderDirectoryPage() {
 
     <div className="space-y-6">
      <div className="flex items-center gap-4">
-      <div className="w-16 h-16 rounded-full tn-surface-strong border-2 tn-border flex items-center justify-center text-xl font-black tn-text-primary overflow-hidden">
-       {selectedReader.displayName?.charAt(0)?.toUpperCase() || '?'}
+      <div className="w-16 h-16 rounded-full tn-surface-strong border-2 tn-border flex items-center justify-center text-xl font-black tn-text-primary overflow-hidden relative">
+       {selectedReader.avatarUrl ? (
+         <img src={selectedReader.avatarUrl} alt={selectedReader.displayName} className="w-full h-full object-cover bg-white" />
+       ) : (
+         selectedReader.displayName?.charAt(0)?.toUpperCase() || '?'
+       )}
       </div>
       <div className="min-w-0">
        <h3 className="text-2xl font-black italic tracking-tight line-clamp-1">{selectedReader.displayName || t("directory.reader_fallback")}</h3>
@@ -280,9 +284,13 @@ export default function ReaderDirectoryPage() {
  <div className="flex items-center gap-4">
  <div className="relative w-14 h-14 shrink-0">
  <div className="absolute inset-0 bg-gradient-to-br from-[var(--purple-accent)]/40 to-[var(--warning)]/20 rounded-full blur-md opacity-50 group-hover:opacity-100 transition-opacity" />
- <div className="w-full h-full rounded-full tn-surface-strong border-2 tn-border flex items-center justify-center text-xl font-black tn-text-primary relative z-10 overflow-hidden">
- {reader.displayName?.charAt(0)?.toUpperCase() || '?'}
- </div>
+  <div className="w-full h-full rounded-full tn-surface-strong border-2 tn-border flex items-center justify-center text-xl font-black tn-text-primary relative z-10 overflow-hidden bg-white/5">
+   {reader.avatarUrl ? (
+     <img src={reader.avatarUrl} alt={reader.displayName} className="w-full h-full object-cover" />
+   ) : (
+     reader.displayName?.charAt(0)?.toUpperCase() || '?'
+   )}
+  </div>
  </div>
  <div>
  <h3 className="text-base font-black tn-text-primary italic tracking-tight line-clamp-1">{reader.displayName || t("directory.reader_fallback")}</h3>

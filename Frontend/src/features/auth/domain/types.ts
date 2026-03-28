@@ -3,6 +3,7 @@ export interface UserProfile {
  email: string;
  username: string;
  displayName: string;
+ avatarUrl: string | null;
  level: number;
  exp: number;
  role: string;

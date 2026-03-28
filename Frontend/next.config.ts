@@ -37,6 +37,10 @@ const nextConfig = {
     source: '/api/v1/presence/:path*',
     destination: `${apiOrigin}/api/v1/presence/:path*`,
    },
+   {
+    source: '/uploads/:path*',
+    destination: `${apiOrigin}/uploads/:path*`,
+   },
   ];
  },
  async headers() {
@@ -52,6 +56,12 @@ const nextConfig = {
    },
   ];
  },
+  serverExternalPackages: ['sharp'],
+  experimental: {
+    serverActions: {
+      bodySizeLimit: 10485760, // 10MB
+    },
+  },
 };
 
 // Export sau khi wrap plugin

@@ -100,4 +100,41 @@ public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory
         // Numerology: 1+5+0+7+1+9+9+5 = 37 → 3+7 = 10 → 1+0 = 1
         Assert.Equal(1, profile.Numerology);
     }
+
+    /// <summary>
+    /// Upload avatar: gửi file ảnh → server nén + lưu → trả về đường dẫn.
+    /// Expected: AvatarUrl trả về bắt đầu bằng /uploads/avatars/
+    /// </summary>
+    [Fact]
+    public async Task UploadAvatar_ShouldCompressAndSaveFile()
+    {
+        // 1. Tạo file ảnh giả lập (1 pixel jpeg data)
+        var imageBytes = Convert.FromBase64String("/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=");
+        using var stream = new MemoryStream(imageBytes);
+        var content = new MultipartFormDataContent();
+        var streamContent = new StreamContent(stream);
+        streamContent.Headers.Add("Content-Type", "image/jpeg");
+        content.Add(streamContent, "file", "test.jpg");
+
+        // 2. Gửi file lên endpoint mới
+        var response = await _client.PostAsync("/api/v1/profile/avatar", content);
+        response.EnsureSuccessStatusCode();
+
+        // 3. Đọc kết quả
+        var resultText = await response.Content.ReadAsStringAsync();
+        Assert.Contains("success\":true", resultText);
+        Assert.Contains("avatarUrl\":\"/uploads/avatars/", resultText);
+
+        // Lấy avatarUrl để GET và verify
+        using var jsonDoc = System.Text.Json.JsonDocument.Parse(resultText);
+        var avatarUrl = jsonDoc.RootElement.GetProperty("avatarUrl").GetString();
+
+        // 4. Kiểm tra xem file có được gán vào profile không
+        var getResponse = await _client.GetAsync("/api/v1/profile");
+        getResponse.EnsureSuccessStatusCode();
+        var profile = await getResponse.Content.ReadFromJsonAsync<Application.Features.Profile.Queries.GetProfile.ProfileResponse>();
+
+        Assert.NotNull(profile);
+        Assert.Equal(avatarUrl, profile!.AvatarUrl);
+    }
 }

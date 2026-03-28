@@ -32,3 +32,28 @@ export async function markNotificationAsRead(
   return actionFail('Network error');
  }
 }
+
+export async function markAllNotificationsAsRead(): Promise<ActionResult<undefined>> {
+ const accessToken = await getServerAccessToken();
+ if (!accessToken) return actionFail('Unauthorized');
+
+ try {
+  const result = await serverHttpRequest<unknown>(`/Notification/read-all`, {
+   method: 'PATCH',
+   token: accessToken,
+   fallbackErrorMessage: 'Failed to mark all as read',
+  });
+
+  if (!result.ok) {
+   logger.error('NotificationAction.markAllNotificationsAsRead', result.error, {
+    status: result.status,
+   });
+   return actionFail(result.error || 'Failed to mark all as read');
+  }
+
+  return actionOk();
+ } catch (error) {
+  logger.error('NotificationAction.markAllNotificationsAsRead', error);
+  return actionFail('Network error');
+ }
+}
