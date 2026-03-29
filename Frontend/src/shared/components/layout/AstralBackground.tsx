@@ -104,7 +104,7 @@ export default function AstralBackground({
 
  return (
  <div
- className="fixed inset-0 z-0 pointer-events-none"
+ className="fixed inset-0 z-0 pointer-events-none astral-background"
  aria-hidden="true" /* Ẩn khỏi screen reader — purely decorative */
  >
  {/* --- BACKGROUND OVERLAY ---
@@ -118,18 +118,18 @@ export default function AstralBackground({
  - Màu khác nhau (purple, indigo, fuchsia)
  - Animation drift/pulse khác nhau → chuyển động không đều = tự nhiên */}
       <div
-        className={`${purpleBlobClass} animate-drift`}
+        className={`${purpleBlobClass} animate-drift astral-heavy`}
         style={{ backgroundColor: nebulaTone.purple }}
       />
       <div
-        className={`${mintBlobClass} animate-drift-reverse`}
+        className={`${mintBlobClass} animate-drift-reverse astral-heavy`}
         style={{ backgroundColor: nebulaTone.mint }}
       />
 
  {/* Blob thứ 3 chỉ hiện ở variant default và intense */}
  {variant !== "subtle" && (
         <div
-          className="absolute -bottom-1/4 left-1/3 w-[60vw] h-[60vw] blur-[130px] rounded-full animate-slow-pulse motion-reduce:animate-none"
+          className="absolute -bottom-1/4 left-1/3 w-[60vw] h-[60vw] blur-[130px] rounded-full animate-slow-pulse motion-reduce:animate-none astral-heavy"
           style={{ backgroundColor: nebulaTone.moon }}
         />
       )}
@@ -144,7 +144,7 @@ export default function AstralBackground({
  {/* --- SPIRITUAL PARTICLES ---
  Hạt sáng nhỏ bay lên dần dần, tạo hiệu ứng "magical".
  Vị trí/tốc độ được tính deterministic theo index để tránh mismatch. */}
- <div className="absolute inset-0 motion-reduce:hidden">
+ <div className="absolute inset-0 motion-reduce:hidden astral-heavy">
  {Array.from({ length: resolvedParticleCount }).map((_, i) => (
  <div
  key={`astral-particle-${i}`}

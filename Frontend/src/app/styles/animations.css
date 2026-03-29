@@ -211,3 +211,37 @@
     animation: none !important;
   }
 }
+
+/*
+ * Mobile landscape guard:
+ * On touch devices in landscape, reduce expensive effects to avoid UI stalls.
+ */
+@media (hover: none) and (pointer: coarse) and (orientation: landscape) {
+  .astral-heavy {
+    display: none !important;
+  }
+
+  .astral-background {
+    opacity: 0.7;
+  }
+
+  .animate-float,
+  .animate-drift,
+  .animate-drift-reverse,
+  .animate-slow-pulse,
+  .animate-glow-pulse,
+  .animate-ping,
+  .animate-pulse {
+    animation: none !important;
+  }
+
+  .backdrop-blur,
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
