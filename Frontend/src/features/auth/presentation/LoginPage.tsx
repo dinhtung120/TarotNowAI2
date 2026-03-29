@@ -23,7 +23,7 @@ export default function LoginPage() {
   <AuthLayout title={t('login.title')} subtitle={t('login.subtitle')}>
    <AuthErrorBanner message={errorMsg} />
 
-   <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+   <form onSubmit={handleSubmit(onSubmit)} method="post" className="space-y-5">
     <Input
      label={t('login.email_or_username_label')}
      leftIcon={<Mail className="w-5 h-5" />}

@@ -38,7 +38,7 @@ export default function RegisterPage() {
   <AuthLayout title={t('register.title')} subtitle={t('register.subtitle')}>
    <AuthErrorBanner message={errorMsg} />
 
-   <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+   <form onSubmit={handleSubmit(onSubmit)} method="post" className="space-y-4">
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
      <Input
       label={t('register.email_label')}
@@ -147,6 +147,7 @@ export default function RegisterPage() {
       size="lg"
       fullWidth
       isLoading={isSubmitting}
+      className="mt-6 font-bold tracking-wide"
       rightIcon={!isSubmitting && <Sparkles className="w-5 h-5 ml-2" />}
      >
       {t('register.cta')}

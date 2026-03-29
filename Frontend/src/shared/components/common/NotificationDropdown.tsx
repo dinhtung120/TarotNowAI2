@@ -168,7 +168,7 @@ export default function NotificationDropdown() {
       {isOpen && (
         <div
           ref={dropdownRef}
-          className="absolute right-0 top-[calc(100%+8px)] w-[320px] sm:w-[380px] bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-2xl shadow-[var(--shadow-elevated)] overflow-hidden z-[100] animate-in slide-in-from-top-2 fade-in duration-200"
+          className="fixed sm:absolute top-[72px] sm:top-[calc(100%+8px)] left-0 right-0 mx-auto sm:left-auto sm:right-0 sm:mx-0 w-[calc(100vw-32px)] sm:w-[380px] max-w-[360px] sm:max-w-none bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-2xl shadow-[var(--shadow-elevated)] overflow-hidden z-[100] animate-in slide-in-from-top-2 fade-in duration-200"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-glass)]">

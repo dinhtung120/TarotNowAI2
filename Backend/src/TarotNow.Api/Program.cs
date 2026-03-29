@@ -18,6 +18,6 @@ builder.Services
 
 var app = builder.Build();
 app.UseApiPipeline();
-app.Run();
+app.Run("http://0.0.0.0:5037");
 
 public partial class Program { }

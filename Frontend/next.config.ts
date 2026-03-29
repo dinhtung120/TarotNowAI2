@@ -17,7 +17,7 @@ const apiOrigin = resolveApiOrigin(process.env.NEXT_PUBLIC_API_URL);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
- allowedDevOrigins: ['192.168.0.102'],
+  allowedDevOrigins: ['192.168.0.102'],
  poweredByHeader: false,
  async rewrites() {
   return [
@@ -58,9 +58,10 @@ const nextConfig = {
  },
   serverExternalPackages: ['sharp'],
   experimental: {
-    serverActions: {
-      bodySizeLimit: 10485760, // 10MB
-    },
+   serverActions: {
+    allowedOrigins: ['localhost:3000', '192.168.0.102:3000'],
+    bodySizeLimit: 10485760, // 10MB
+   },
   },
 };
 

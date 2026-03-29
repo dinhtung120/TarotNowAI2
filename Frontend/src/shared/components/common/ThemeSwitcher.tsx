@@ -86,7 +86,7 @@ export default function ThemeSwitcher() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-[18rem] tn-panel rounded-2xl p-2 shadow-[var(--shadow-elevated)]">
+        <div className="absolute left-1/2 sm:left-auto right-auto sm:right-0 -translate-x-1/2 sm:translate-x-0 bottom-[calc(100%+8px)] sm:bottom-auto sm:top-[calc(100%+8px)] w-[calc(100vw-32px)] max-w-[288px] sm:max-w-none sm:w-[18rem] tn-panel rounded-2xl p-2 shadow-[var(--shadow-elevated)] z-[100]">
           <div className="px-2 pb-1 text-[10px] font-black uppercase tracking-[0.18em] tn-text-secondary">
             {activeLabel}
           </div>

@@ -288,10 +288,13 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
  const canShowInput = useMemo(() => {
   if (initializing) return true;
   if (!conversation) return false;
-  if (conversation.status === 'pending') return isUserRole === true;
+  if (conversation.status === 'pending') {
+    const hasUserMessage = messages.some(m => m.senderId === currentUserId && m.type !== 'system');
+    return isUserRole === true && !hasUserMessage;
+  }
   if (conversation.status === 'ongoing') return true;
   return false;
- }, [conversation, initializing, isUserRole]);
+ }, [conversation, initializing, isUserRole, messages, currentUserId]);
 
  const canReaderAcceptReject = useMemo(
   () => conversation?.status === 'awaiting_acceptance' && isUserRole === false,
@@ -308,8 +311,15 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
  const isReadOnly = useMemo(() => {
   if (initializing) return false;
   if (!conversation) return true;
-  return ['completed', 'cancelled', 'expired', 'disputed', 'awaiting_acceptance'].includes(conversation.status);
- }, [conversation, initializing]);
+  if (['completed', 'cancelled', 'expired', 'disputed', 'awaiting_acceptance'].includes(conversation.status)) {
+    return true;
+  }
+  // Optimistic check for pending state
+  if (conversation.status === 'pending' && isUserRole === true) {
+    return messages.some(m => m.senderId === currentUserId && m.type !== 'system');
+  }
+  return false;
+ }, [conversation, initializing, isUserRole, messages, currentUserId]);
 
  const canStartNewSession = useMemo(
   () => conversation?.status === 'completed' && isUserRole === true,
@@ -341,8 +351,11 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
   if (conversation.status === 'expired') return 'Cuộc trò chuyện đã hết hạn.';
   if (conversation.status === 'disputed') return 'Cuộc trò chuyện đang chờ Admin xử lý tranh chấp.';
   if (conversation.status === 'awaiting_acceptance') return 'Cuộc trò chuyện đang chờ Reader phản hồi.';
+  if (conversation.status === 'pending' && isUserRole === true && messages.some(m => m.senderId === currentUserId && m.type !== 'system')) {
+    return 'Cuộc trò chuyện đang chờ Reader phản hồi.';
+  }
   return 'Bạn chưa thể gửi tin nhắn ở trạng thái hiện tại.';
- }, [conversation]);
+ }, [conversation, isUserRole, messages, currentUserId]);
 
  const lastMessageId = messages[messages.length - 1]?.id;
 

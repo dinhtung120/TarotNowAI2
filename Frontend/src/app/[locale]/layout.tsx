@@ -10,7 +10,7 @@
  *   Font chữ được tải bằng next/font để tối ưu Core Web Vitals (CLS/LCP).
  * ===================================================================
  */
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 import { cookies } from "next/headers";
 import { NextIntlClientProvider } from 'next-intl';
@@ -43,6 +43,13 @@ const playfair = Playfair_Display({
     subsets: ["latin"],
     display: "swap",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export async function generateMetadata(
     { params }: { params: Promise<{ locale: string }> },
