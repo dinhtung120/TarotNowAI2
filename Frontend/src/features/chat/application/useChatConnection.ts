@@ -393,12 +393,17 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
    });
 
    /* Khi conversation cập nhật (status đổi, escrow đổi...),
-    * gọi loadInitialRef.current(true) để refresh metadata
-    * mà không xóa message list (silent = true). */
+    * ta chỉ cần fetch 1 tin nhắn ảo (limit: 1) để lấy lại metadata
+    * của conversation, KHÔNG gọi lại toàn bộ 50 tin nhắn làm giật lag.
+    * Các tin nhắn mới thực sự đã được update qua event 'message.created'. */
    hubConnection.on('conversation.updated', (payload: { conversationId: string; type?: string }) => {
     if (payload.conversationId !== conversationId) return;
     if (payload.type === 'message_created') return;
-    void loadInitialRef.current(true);
+    void listMessages(conversationId, { limit: 1 }).then((res) => {
+     if (res.success && res.data?.conversation) {
+      setConversation(res.data.conversation);
+     }
+    });
    });
 
    hubConnection.on('Error', (error: string) => {

@@ -1,3 +1,4 @@
+using System;
 using Microsoft.AspNetCore.SignalR;
 using TarotNow.Application.Features.Chat.Queries.ValidateConversationAccess;
 
@@ -5,6 +6,8 @@ namespace TarotNow.Api.Hubs;
 
 public partial class CallHub
 {
+    private static readonly TimeSpan ConversationAccessCacheDuration = TimeSpan.FromMinutes(2);
+
     /// <summary>
     /// Relay WebRTC SDP Offer
     /// Caller (người gọi) tạo Offer và đẩy vào hub, Hub forward sang cho đối phương.
@@ -68,12 +71,33 @@ public partial class CallHub
             return false;
         }
 
+        var userIdText = userId.ToString();
+        if (HasConversationAccessCached(userIdText, conversationId))
+        {
+            return true;
+        }
+
+        var cacheKey = $"callhub:conv_access:{userIdText}:{conversationId}";
+        var cachedAccess = await _cacheService.GetAsync<bool>(cacheKey);
+        if (cachedAccess == true)
+        {
+            RememberConversationAccess(userIdText, conversationId);
+            return true;
+        }
+
         var accessStatus = await _mediator.Send(new ValidateConversationAccessQuery
         {
             ConversationId = conversationId,
             RequesterId = userId
         });
 
-        return accessStatus == ConversationAccessStatus.Allowed;
+        var isAllowed = accessStatus == ConversationAccessStatus.Allowed;
+        if (isAllowed)
+        {
+            RememberConversationAccess(userIdText, conversationId);
+            await _cacheService.SetAsync(cacheKey, true, ConversationAccessCacheDuration);
+        }
+
+        return isAllowed;
     }
 }

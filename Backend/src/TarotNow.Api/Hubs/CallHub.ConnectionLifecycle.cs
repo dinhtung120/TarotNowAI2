@@ -26,8 +26,10 @@ public partial class CallHub
             return;
         }
 
+        RegisterConnection(userId, Context.ConnectionId);
         await Groups.AddToGroupAsync(Context.ConnectionId, $"user:{userId}");
         var conversationIds = await GetActiveConversationIdsAsync(userId);
+        RememberConversationAccess(userId, conversationIds);
         foreach (var conversationId in conversationIds)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, ConversationGroup(conversationId));
@@ -41,7 +43,8 @@ public partial class CallHub
         var userId = GetUserId();
         if (string.IsNullOrWhiteSpace(userId) == false)
         {
-            await HandleDisconnectedUserCleanupAsync(userId);
+            UnregisterConnection(userId, Context.ConnectionId);
+            await DelayCleanupForTransientDisconnectAsync(userId);
         }
 
         await base.OnDisconnectedAsync(exception);

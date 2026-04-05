@@ -32,6 +32,7 @@ export function usePresenceConnection() {
   let cancelled = false;
   let hubConnection: HubConnection | null = null;
   let heartbeatInterval: NodeJS.Timeout | null = null;
+  let inboxInvalidateTimeout: NodeJS.Timeout | null = null;
 
   const init = async () => {
    const signalR = await import('@microsoft/signalr');
@@ -84,6 +85,13 @@ export function usePresenceConnection() {
     void useWalletStore.getState().fetchBalance();
    });
 
+   const invalidateInbox = () => {
+    if (inboxInvalidateTimeout) clearTimeout(inboxInvalidateTimeout);
+    inboxInvalidateTimeout = setTimeout(() => {
+     void queryClient.invalidateQueries({ queryKey: ['chat', 'inbox'] });
+    }, 1000);
+   };
+
    /*
     * INBOX UPDATED PUSH: Lắng nghe event "conversation.updated".
     * Force React Query refetch lại danh sách chat (Inbox) để hiển thị 
@@ -91,7 +99,7 @@ export function usePresenceConnection() {
     */
    hubConnection.on('conversation.updated', () => {
     logger.info('[PresenceRealtimeSync]', 'conversation.updated received. Invalidating inbox queries...');
-    void queryClient.invalidateQueries({ queryKey: ['chat', 'inbox'] });
+    invalidateInbox();
    });
 
    hubConnection.on('Error', (error: string) => {
@@ -144,6 +152,9 @@ export function usePresenceConnection() {
    cancelled = true;
    if (heartbeatInterval) {
     clearInterval(heartbeatInterval);
+   }
+   if (inboxInvalidateTimeout) {
+    clearTimeout(inboxInvalidateTimeout);
    }
    if (
     hubConnection &&

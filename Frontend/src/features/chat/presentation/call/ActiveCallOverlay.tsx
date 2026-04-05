@@ -30,6 +30,8 @@ export const ActiveCallOverlay = () => {
 
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
+      // Luôn mute thẻ video để tránh phát audio kép (video + audio element).
+      remoteVideoRef.current.muted = true;
       if (remoteVideoRef.current.srcObject !== remoteStream) {
         remoteVideoRef.current.srcObject = remoteStream;
       }
@@ -41,9 +43,13 @@ export const ActiveCallOverlay = () => {
    */
   useEffect(() => {
     if (remoteAudioRef.current && remoteStream) {
+      remoteAudioRef.current.muted = false;
+      remoteAudioRef.current.volume = 1;
       if (remoteAudioRef.current.srcObject !== remoteStream) {
         remoteAudioRef.current.srcObject = remoteStream;
       }
+
+      remoteAudioRef.current.play().catch(() => undefined);
     }
   }, [remoteStream, isOpen]);
 
@@ -104,7 +110,7 @@ export const ActiveCallOverlay = () => {
 
           <div className="flex-1 relative bg-black flex items-center justify-center">
             {isVideo ? (
-               <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
+               <video ref={remoteVideoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
             ) : (
                 <div className="w-16 h-16 rounded-full bg-indigo-500/30 flex items-center justify-center animate-pulse">
                     <span className="text-white text-2xl">🔮</span>
@@ -141,6 +147,7 @@ export const ActiveCallOverlay = () => {
                 ref={remoteVideoRef} 
                 autoPlay 
                 playsInline 
+                muted
                 className="w-full h-full object-cover" 
               />
             ) : (

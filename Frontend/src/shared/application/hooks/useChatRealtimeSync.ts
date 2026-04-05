@@ -31,9 +31,14 @@ export function useChatRealtimeSync() {
   let cancelled = false;
   let hubConnection: HubConnection | null = null;
 
+  let invalidateTimeout: NodeJS.Timeout | null = null;
+
   const invalidateChatQueries = () => {
-   void queryClient.invalidateQueries({ queryKey: ['chat', 'inbox'] });
-   void queryClient.invalidateQueries({ queryKey: ['chat', 'unread-badge'] });
+   if (invalidateTimeout) clearTimeout(invalidateTimeout);
+   invalidateTimeout = setTimeout(() => {
+    void queryClient.invalidateQueries({ queryKey: ['chat', 'inbox'] });
+    void queryClient.invalidateQueries({ queryKey: ['chat', 'unread-badge'] });
+   }, 1000); // Debounce 1 giây để gộp các event liên tiếp
   };
 
   const init = async () => {
@@ -76,6 +81,7 @@ export function useChatRealtimeSync() {
 
   return () => {
    cancelled = true;
+   if (invalidateTimeout) clearTimeout(invalidateTimeout);
    if (
     hubConnection &&
     (hubConnection.state === HubConnectionState.Connected

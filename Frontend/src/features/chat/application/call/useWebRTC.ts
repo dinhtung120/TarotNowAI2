@@ -11,16 +11,82 @@ interface UseWebRTCOptions {
   sendIceCandidate: (convoId: string, candidate: RTCIceCandidateInit) => Promise<void>;
 }
 
-const ICE_SERVERS: RTCConfiguration = {
-  iceServers: [
+function parseIceUrls(rawValue: string | undefined): string[] {
+  if (!rawValue) {
+    return [];
+  }
+
+  return rawValue
+    .split(',')
+    .map(value => value.trim())
+    .filter(value => value.length > 0);
+}
+
+function buildIceConfiguration(): RTCConfiguration {
+  const stunServers: RTCIceServer[] = [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
     { urls: 'stun:stun2.l.google.com:19302' },
     { urls: 'stun:stun3.l.google.com:19302' },
     { urls: 'stun:stun4.l.google.com:19302' },
-    { urls: 'stun:global.stun.twilio.com:3478?transport=udp' }
-    // TODO: Tương lai thêm TURN servers trả về từ API backend để vượt firewall
-  ]
+    { urls: 'stun:global.stun.twilio.com:3478' }
+  ];
+
+  const turnUrls = parseIceUrls(process.env.NEXT_PUBLIC_TURN_URLS);
+  const turnUsername = process.env.NEXT_PUBLIC_TURN_USERNAME?.trim();
+  const turnCredential = process.env.NEXT_PUBLIC_TURN_CREDENTIAL?.trim();
+
+  const hasTurnCredentials = !!turnUsername && !!turnCredential;
+  const turnServers: RTCIceServer[] = hasTurnCredentials && turnUrls.length > 0
+    ? [{ urls: turnUrls, username: turnUsername, credential: turnCredential }]
+    : [];
+
+  if (turnUrls.length > 0 && hasTurnCredentials === false) {
+    logger.warn('Call.WebRTC', 'TURN URLs configured but missing TURN credential/username.');
+  }
+
+  return {
+    iceServers: [...stunServers, ...turnServers],
+    iceCandidatePoolSize: 8
+  };
+}
+
+async function getUserMediaWithFallback(type: CallType): Promise<MediaStream> {
+  const withPreferredConstraints: MediaStreamConstraints = {
+    audio: {
+      echoCancellation: { ideal: true },
+      noiseSuppression: { ideal: true },
+      autoGainControl: { ideal: true }
+    },
+    video: type === 'video'
+  };
+
+  try {
+    return await navigator.mediaDevices.getUserMedia(withPreferredConstraints);
+  } catch (firstError) {
+    logger.warn('Call.WebRTC', 'Preferred media constraints failed, fallback to browser defaults.', { error: firstError });
+    return navigator.mediaDevices.getUserMedia({ audio: true, video: type === 'video' });
+  }
+}
+
+async function applyAudioSenderParametersAsync(pc: RTCPeerConnection): Promise<void> {
+  const audioSenders = pc.getSenders().filter(sender => sender.track?.kind === 'audio');
+  for (const sender of audioSenders) {
+    try {
+      const parameters = sender.getParameters();
+      parameters.encodings ??= [{}];
+      if (parameters.encodings[0].maxBitrate == null) {
+        parameters.encodings[0].maxBitrate = 32_000;
+      }
+      await sender.setParameters(parameters);
+    } catch (error) {
+      logger.warn('Call.WebRTC', 'Unable to apply audio sender parameters.', { error });
+    }
+  }
+}
+
+const ICE_SERVERS: RTCConfiguration = {
+  ...buildIceConfiguration()
 };
 
 /**
@@ -65,24 +131,7 @@ export function useWebRTC({ sendOffer, sendAnswer, sendIceCandidate }: UseWebRTC
     const conversationId = useCallStore.getState().conversationId;
 
     try {
-      /* FIX #21: Tối ưu audio constraints cho gọi VoIP.
-       * - echoCancellation: Chống tiếng vọng (echo) khi dùng loa ngoài.
-       * - noiseSuppression: Giảm tiếng ồn nền (quạt, xe cộ, ...).
-       * - autoGainControl: Tự động điều chỉnh âm lượng micro khi nói to/nhỏ.
-       * - channelCount: 1 (mono) vì VoIP chỉ cần 1 kênh, giảm bandwidth 50%.
-       * - sampleRate: 48000Hz là chuẩn WebRTC Opus codec, cho chất lượng tốt nhất.
-       * Trước đây chỉ dùng `audio: true` (mặc định) → trình duyệt tự chọn,
-       * dẫn đến stereo không cần thiết và thiếu noise suppression → âm thanh giật. */
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          channelCount: 1,
-          sampleRate: 48000,
-        },
-        video: type === 'video'
-      });
+      const stream = await getUserMediaWithFallback(type);
       
       useCallStore.getState().setStreams(stream, null);
 
@@ -91,6 +140,7 @@ export function useWebRTC({ sendOffer, sendAnswer, sendIceCandidate }: UseWebRTC
 
       // Thêm local tracks vào RTCPeerConnection
       stream.getTracks().forEach(track => pc.addTrack(track, stream));
+      await applyAudioSenderParametersAsync(pc);
 
       // Bắt remote tracks
       pc.ontrack = (event) => {
