@@ -64,6 +64,15 @@ public partial class CallHub
     {
         if (!TryGetUserGuid(out var userId)) return;
 
+        // FIX #6: Cùng một User không được phản hồi liên tiếp quá nhanh.
+        var rateLimitKey = $"ratelimit:call_respond:{userId}";
+        var isAllowed = await _cacheService.CheckRateLimitAsync(rateLimitKey, TimeSpan.FromSeconds(2));
+        if (!isAllowed)
+        {
+            await SendClientErrorAsync("too_many_requests", "Thao tác quá nhanh.");
+            return;
+        }
+
         try
         {
             var command = new RespondCallCommand
@@ -93,6 +102,15 @@ public partial class CallHub
     {
         if (!TryGetUserGuid(out var userId)) return;
 
+        // FIX #6: Cùng một User không được EndCall liên tiếp quá nhanh.
+        var rateLimitKey = $"ratelimit:call_end:{userId}";
+        var isAllowed = await _cacheService.CheckRateLimitAsync(rateLimitKey, TimeSpan.FromSeconds(2));
+        if (!isAllowed)
+        {
+            await SendClientErrorAsync("too_many_requests", "Thao tác quá nhanh.");
+            return;
+        }
+
         try
         {
             var command = new EndCallCommand
@@ -113,21 +131,14 @@ public partial class CallHub
             // Sau khi phát tín hiệu EndCall, ghi thêm một dòng Log vào cuộc trò chuyện
             try
             {
-                var duration = session.DurationSeconds ?? 0;
-                var logContent = System.Text.Json.JsonSerializer.Serialize(new
-                {
-                    SessionId = session.Id,
-                    CallType = session.Type.ToString().ToLower(),
-                    Reason = reason,
-                    DurationSeconds = duration
-                });
-
+                // FIX #5 & #10: Không dùng JSON Serialize thô nữa, đổi sang DTO mạnh.
                 var logCmd = new TarotNow.Application.Features.Chat.Commands.SendMessage.SendMessageCommand
                 {
                     ConversationId = session.ConversationId,
                     SenderId = Guid.Parse(session.InitiatorId),
                     Type = ChatMessageType.CallLog,
-                    Content = logContent
+                    Content = string.Empty, // Bỏ trường lưu Text
+                    CallPayload = session   // Dùng Payload rõ ràng.
                 };
 
                 // Gọi tới hệ thống Message để ghi Log mà lại tự động bỏ qua tính năng trừ tiền theo luồng đã lập trình

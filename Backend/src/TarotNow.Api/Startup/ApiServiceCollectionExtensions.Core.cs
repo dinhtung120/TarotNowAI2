@@ -79,6 +79,7 @@ public static partial class ApiServiceCollectionExtensions
         services.AddHostedService<PresenceTimeoutBackgroundService>(); // MỚI: Thêm BackgroundService quản lý timeout
         services.AddScoped<Application.Interfaces.INotificationPushService, SignalRNotificationPushService>();
         services.AddScoped<Application.Interfaces.IWalletPushService, SignalRWalletPushService>();
+        services.AddScoped<Application.Interfaces.IChatPushService, SignalRChatPushService>();
         services.AddAuthorization();
         var redisConnectionString = configuration.GetConnectionString("Redis");
         var signalRBuilder = services.AddSignalR(options =>

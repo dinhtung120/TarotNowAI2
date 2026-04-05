@@ -49,5 +49,6 @@ public static partial class DependencyInjection
 
         services.AddHostedService<EscrowTimerService>();
         services.AddHostedService<ChatModerationWorker>();
+        services.AddHostedService<CallTimeoutBackgroundService>();
     }
 }

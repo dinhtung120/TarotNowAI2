@@ -128,6 +128,13 @@ public partial class ChatMessageDocument
     /// </summary>
     [BsonElement("is_flagged")]
     public bool IsFlagged { get; set; }
+
+    /// <summary>
+    /// Payload lịch sử cuộc gọi đính kèm cho tin nhắn loại "call_log".
+    /// </summary>
+    [BsonElement("call_payload")]
+    [BsonIgnoreIfNull]
+    public ChatCallPayload? CallPayload { get; set; }
 }
 
 /// <summary>
@@ -157,4 +164,23 @@ public class ChatPaymentPayload
     /// </summary>
     [BsonElement("expires_at")]
     public DateTime? ExpiresAt { get; set; }
+}
+
+/// <summary>
+/// Payload lịch sử cuộc gọi đính kèm cho tin nhắn loại "call_log".
+/// </summary>
+[BsonIgnoreExtraElements]
+public class ChatCallPayload
+{
+    [BsonElement("session_id")]
+    public string SessionId { get; set; } = string.Empty;
+
+    [BsonElement("call_type")]
+    public string CallType { get; set; } = string.Empty;
+
+    [BsonElement("end_reason")]
+    public string? EndReason { get; set; }
+
+    [BsonElement("duration_seconds")]
+    public int DurationSeconds { get; set; }
 }

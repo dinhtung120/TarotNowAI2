@@ -15,12 +15,14 @@ export const CallButton = ({ conversationId }: CallButtonProps) => {
   const t = useTranslations('Chat.call');
 
   const handleStartAudio = async () => {
+    if (!conversationId || typeof conversationId !== 'string') return;
     if (uiState !== 'idle' && uiState !== 'ended') return;
     setOutgoingCall(conversationId, 'audio');
     await initiateCall(conversationId, 'audio');
   };
 
   const handleStartVideo = async () => {
+    if (!conversationId || typeof conversationId !== 'string') return;
     if (uiState !== 'idle' && uiState !== 'ended') return;
     setOutgoingCall(conversationId, 'video');
     await initiateCall(conversationId, 'video');

@@ -16,6 +16,7 @@ public partial class MongoChatMessageRepository
             Content = dto.Content,
             PaymentPayload = MapPaymentPayloadToDocument(dto.PaymentPayload),
             MediaPayload = MapMediaPayloadToDocument(dto.MediaPayload),
+            CallPayload = MapCallPayloadToDocument(dto.CallPayload),
             IsRead = dto.IsRead,
             CreatedAt = dto.CreatedAt
         };
@@ -32,6 +33,7 @@ public partial class MongoChatMessageRepository
             Content = doc.Content,
             PaymentPayload = MapPaymentPayloadToDto(doc.PaymentPayload),
             MediaPayload = MapMediaPayloadToDto(doc.MediaPayload),
+            CallPayload = MapCallPayloadToDto(doc.CallPayload),
             IsRead = doc.IsRead,
             CreatedAt = doc.CreatedAt
         };
@@ -64,6 +66,32 @@ public partial class MongoChatMessageRepository
             AmountDiamond = payload.AmountDiamond,
             ProposalId = payload.ProposalId,
             ExpiresAt = payload.ExpiresAt
+        };
+    }
+
+    private static ChatCallPayload? MapCallPayloadToDocument(CallSessionDto? payload)
+    {
+        if (payload == null) return null;
+
+        return new ChatCallPayload
+        {
+            SessionId = payload.Id,
+            CallType = payload.Type.ToString().ToLower(),
+            EndReason = payload.EndReason,
+            DurationSeconds = payload.DurationSeconds ?? 0
+        };
+    }
+
+    private static CallSessionDto? MapCallPayloadToDto(ChatCallPayload? payload)
+    {
+        if (payload == null) return null;
+
+        return new CallSessionDto
+        {
+            Id = payload.SessionId,
+            Type = payload.CallType == "video" ? TarotNow.Domain.Enums.CallType.Video : TarotNow.Domain.Enums.CallType.Audio,
+            EndReason = payload.EndReason,
+            DurationSeconds = payload.DurationSeconds
         };
     }
 }

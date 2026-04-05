@@ -177,6 +177,12 @@ public class ChatMessageDto
     public MediaPayloadDto? MediaPayload { get; set; }
 
     /// <summary>
+    /// Thông tin lịch sử cuộc gọi đính kèm (chỉ có khi Type = "call_log").
+    /// Giải quyết nợ kỹ thuật phải serialze JSON vào trường Content.
+    /// </summary>
+    public CallSessionDto? CallPayload { get; set; }
+
+    /// <summary>
     /// Đã đọc hay chưa.
     /// true = người nhận đã mở và đọc tin nhắn.
     /// Dùng cho tính năng "tick xanh" (read receipt) giống WhatsApp.

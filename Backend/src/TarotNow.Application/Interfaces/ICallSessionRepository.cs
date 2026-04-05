@@ -26,6 +26,11 @@ public interface ICallSessionRepository
     Task<CallSessionDto?> GetActiveByConversationAsync(string conversationId, CancellationToken ct = default);
 
     /// <summary>
+    /// Lấy danh sách các cuộc gọi ĐANG DIỄN RA dựa theo danh sách conversation Ids (tránh N+1 query)
+    /// </summary>
+    Task<IEnumerable<CallSessionDto>> GetActiveByConversationIdsAsync(IEnumerable<string> conversationIds, CancellationToken ct = default);
+
+    /// <summary>
     /// Cập nhật nguyên trạng thái của cuộc gọi.
     /// Database lưu theo dạng atomic update để đảm bảo tính nhất quán (không thay đổi field khác).
     /// </summary>

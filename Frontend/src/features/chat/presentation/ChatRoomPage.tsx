@@ -294,7 +294,7 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
   if (initializing) return true;
   if (!conversation) return false;
   if (conversation.status === 'pending') {
-    const hasUserMessage = messages.some(m => m.senderId === currentUserId && m.type !== 'system');
+    const hasUserMessage = messages.some(m => m.senderId === currentUserId && m.type !== 'system' && m.type !== 'call_log');
     return isUserRole === true && !hasUserMessage;
   }
   if (conversation.status === 'ongoing') return true;
@@ -321,7 +321,7 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
   }
   // Optimistic check for pending state
   if (conversation.status === 'pending' && isUserRole === true) {
-    return messages.some(m => m.senderId === currentUserId && m.type !== 'system');
+    return messages.some(m => m.senderId === currentUserId && m.type !== 'system' && m.type !== 'call_log');
   }
   return false;
  }, [conversation, initializing, isUserRole, messages, currentUserId]);
@@ -356,7 +356,7 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
   if (conversation.status === 'expired') return 'Cuộc trò chuyện đã hết hạn.';
   if (conversation.status === 'disputed') return 'Cuộc trò chuyện đang chờ Admin xử lý tranh chấp.';
   if (conversation.status === 'awaiting_acceptance') return 'Cuộc trò chuyện đang chờ Reader phản hồi.';
-  if (conversation.status === 'pending' && isUserRole === true && messages.some(m => m.senderId === currentUserId && m.type !== 'system')) {
+  if (conversation.status === 'pending' && isUserRole === true && messages.some(m => m.senderId === currentUserId && m.type !== 'system' && m.type !== 'call_log')) {
     return 'Cuộc trò chuyện đang chờ Reader phản hồi.';
   }
   return 'Bạn chưa thể gửi tin nhắn ở trạng thái hiện tại.';

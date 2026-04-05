@@ -83,6 +83,7 @@ public partial class SendMessageCommandHandler
             Content = request.Content,
             PaymentPayload = request.PaymentPayload,
             MediaPayload = request.MediaPayload,
+            CallPayload = request.CallPayload,
             IsRead = false,
             CreatedAt = DateTime.UtcNow
         };

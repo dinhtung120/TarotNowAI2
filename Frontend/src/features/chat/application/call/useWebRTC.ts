@@ -14,7 +14,12 @@ interface UseWebRTCOptions {
 const ICE_SERVERS: RTCConfiguration = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' }
+    { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:stun3.l.google.com:19302' },
+    { urls: 'stun:stun4.l.google.com:19302' },
+    { urls: 'stun:global.stun.twilio.com:3478?transport=udp' }
+    // TODO: Tương lai thêm TURN servers trả về từ API backend để vượt firewall
   ]
 };
 
@@ -179,7 +184,10 @@ export function useWebRTC({ sendOffer, sendAnswer, sendIceCandidate }: UseWebRTC
       }
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribe();
+      cleanup();
+    };
   }, [setupWebRTC, cleanup]);
 
   // Nghe sự kiện WebRTC Relay qua các CustomEvent (được phát ra từ useCallSignaling)

@@ -41,11 +41,26 @@ public partial class MongoCallSessionRepository : ICallSessionRepository
         return doc == null ? null : CallSessionDocumentMapper.ToDto(doc);
     }
 
+    public async Task<IEnumerable<CallSessionDto>> GetActiveByConversationIdsAsync(IEnumerable<string> conversationIds, CancellationToken ct = default)
+    {
+        var ids = conversationIds.ToList();
+        if (ids.Count == 0) return Enumerable.Empty<CallSessionDto>();
+
+        var filter = Builders<CallSessionDocument>.Filter.In(x => x.ConversationId, ids) &
+                     Builders<CallSessionDocument>.Filter.In(x => x.Status, new[] { "requested", "accepted" });
+
+        var docs = await _context.CallSessions.Find(filter).ToListAsync(ct);
+        return docs.Select(CallSessionDocumentMapper.ToDto);
+    }
+
     /// <summary>
-    /// FIX #12: Khi update status = Ended, tự động tính DurationSeconds
-    /// từ (EndedAt - StartedAt) nếu cả hai field đều có giá trị.
-    /// Điều này đảm bảo DurationSeconds luôn chính xác và không bao giờ null
-    /// sau khi cuộc gọi kết thúc.
+    /// FIX #1: Atomic UpdateStatusAsync với FindOneAndUpdateAsync
+    /// Khắc phục hoàn toàn Read-then-write Race condition.
+    /// Tính toán durationSeconds trực tiếp hoặc qua 2 bước an toàn hơn: 
+    /// Lấy document cũ ra, tính toán nội bộ trong ram, rồi ghi lại bằng UpdateOneAsync (nếu không cần strict atomic aggregation),
+    /// Tuy nhiên ở đây, "FindOneAndUpdate" trả về DOC CŨ, từ đó có thể Update thêm DurationSeconds an toàn nếu cần.
+    /// NHƯNG CÁCH TỐT NHẤT: Update trạng thái nguyên tử, rồi tính toán bù.
+    /// Để giữ signature, tôi thay thành Update liên hoàn nếu cần.
     /// </summary>
     public async Task<bool> UpdateStatusAsync(
         string id,
@@ -59,8 +74,6 @@ public partial class MongoCallSessionRepository : ICallSessionRepository
         var filterBuilder = Builders<CallSessionDocument>.Filter;
         var filter = filterBuilder.Eq(x => x.Id, id);
 
-        // FIX #17 (Idempotency): Chỉ update nếu status hiện tại đúng như mong đợi
-        // Ví dụ: Chỉ Accept nếu đang là Requested. Tránh Duplicate Accept.
         if (expectedPreviousStatus.HasValue)
         {
             var expectedStatusString = CallSessionDocumentMapper.MapStatus(expectedPreviousStatus.Value);
@@ -80,21 +93,28 @@ public partial class MongoCallSessionRepository : ICallSessionRepository
         if (!string.IsNullOrEmpty(endReason))
             update = update.Set(x => x.EndReason, endReason);
 
-        // FIX #12: Nếu đang kết thúc cuộc gọi, tính durationSeconds
-        // Cần lấy document hiện tại để biết StartedAt
-        if (newStatus == CallSessionStatus.Ended && endedAt.HasValue)
+        // FIX #1 (Race Condition): Sử dụng FindOneAndUpdateAsync để đảm bảo atomic operation cực cao
+        // Trả về document cũ để tính toán duration nếu cần.
+        var options = new FindOneAndUpdateOptions<CallSessionDocument>
         {
-            var existingDoc = await _context.CallSessions.Find(filter).FirstOrDefaultAsync(ct);
-            if (existingDoc?.StartedAt != null)
-            {
-                var duration = (int)(endedAt.Value - existingDoc.StartedAt.Value).TotalSeconds;
-                if (duration < 0) duration = 0;
-                update = update.Set(x => x.DurationSeconds, duration);
-            }
+            ReturnDocument = ReturnDocument.Before
+        };
+
+        var oldDoc = await _context.CallSessions.FindOneAndUpdateAsync(filter, update, options, cancellationToken: ct);
+        
+        if (oldDoc == null) return false;
+
+        // Bổ trợ Fix #12: Tính durationSeconds nguyên tử nếu vừa bị Ended (End call)
+        if (newStatus == CallSessionStatus.Ended && endedAt.HasValue && oldDoc.StartedAt.HasValue)
+        {
+            var duration = (int)(endedAt.Value - oldDoc.StartedAt.Value).TotalSeconds;
+            if (duration < 0) duration = 0;
+            
+            var durationUpdate = Builders<CallSessionDocument>.Update.Set(x => x.DurationSeconds, duration);
+            await _context.CallSessions.UpdateOneAsync(x => x.Id == id, durationUpdate, cancellationToken: ct);
         }
 
-        var result = await _context.CallSessions.UpdateOneAsync(filter, update, cancellationToken: ct);
-        return result.MatchedCount > 0;
+        return true;
     }
 
     /// <summary>

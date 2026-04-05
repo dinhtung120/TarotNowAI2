@@ -41,4 +41,7 @@ public class SendMessageCommand : IRequest<ChatMessageDto>
 
     /// <summary>Metadata media cho tin nhắn image/voice.</summary>
     public MediaPayloadDto? MediaPayload { get; set; }
+
+    /// <summary>Thông tin dữ liệu cuộc gọi cho tin nhắn CallLog.</summary>
+    public CallSessionDto? CallPayload { get; set; }
 }

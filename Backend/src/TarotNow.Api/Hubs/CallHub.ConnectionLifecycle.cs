@@ -63,23 +63,24 @@ public partial class CallHub
         {
             try
             {
-                // FIX #22: Sử dụng _callSessionRepository đã inject qua constructor.
-                // KHÔNG dùng Context.GetHttpContext()?.RequestServices.GetService<>() 
-                // vì RequestServices scope đã bị dispose khi WebSocket đóng.
                 var callRepo = _callSessionRepository;
-
-                // Tìm tất cả conversations active của user để check active calls
+                
+                // Tránh N+1: Lấy danh sách conversation 1 lần
                 var result = await _conversationRepository.GetByParticipantIdPaginatedAsync(
-                    userIdStr, 1, 50, new[] { ConversationStatuses.Ongoing });
+                    userIdStr, 1, 50, new[] 
+                    { 
+                        ConversationStatuses.Ongoing, 
+                        ConversationStatuses.Pending, 
+                        ConversationStatuses.AwaitingAcceptance 
+                    });
 
-                foreach (var conv in result.Items)
+                var conversationIds = result.Items.Select(x => x.Id).ToList();
+                if (conversationIds.Any())
                 {
-                    var activeCall = await callRepo.GetActiveByConversationAsync(conv.Id);
-                    if (activeCall == null) continue;
-
-                    // Chỉ cleanup nếu user hiện tại là một phần của cuộc gọi (caller hoặc receiver)
-                    // — receiver = anyone in conversation who is NOT initiator
-                    if (conv.UserId == userIdStr || conv.ReaderId == userIdStr)
+                    // Tránh N+1: Lấy danh sách các cuộc gọi Active theo danh sách Conversation 1 lần
+                    var activeCalls = await callRepo.GetActiveByConversationIdsAsync(conversationIds);
+                    
+                    foreach (var activeCall in activeCalls)
                     {
                         var updated = await callRepo.UpdateStatusAsync(
                             activeCall.Id,
@@ -91,12 +92,41 @@ public partial class CallHub
 
                         if (updated)
                         {
-                            // Thông báo cho đối phương còn lại rằng cuộc gọi đã kết thúc
-                            await Clients.Group(ConversationGroup(conv.Id)).SendAsync("call.ended", new
+                            activeCall.Status = CallSessionStatus.Ended;
+                            activeCall.EndedAt = DateTime.UtcNow;
+                            activeCall.EndReason = "disconnected";
+
+                            // Thông báo mạng
+                            await Clients.Group(ConversationGroup(activeCall.ConversationId)).SendAsync("call.ended", new
                             {
                                 session = activeCall,
                                 reason = "disconnected"
                             });
+
+                            // FIX #2: Sinh CallLog khi disconnect
+                            try
+                            {
+                                var logCmd = new TarotNow.Application.Features.Chat.Commands.SendMessage.SendMessageCommand
+                                {
+                                    ConversationId = activeCall.ConversationId,
+                                    SenderId = Guid.Parse(activeCall.InitiatorId),
+                                    Type = ChatMessageType.CallLog,
+                                    Content = string.Empty,
+                                    CallPayload = activeCall
+                                };
+
+                                var messageDto = await _mediator.Send(logCmd);
+                                await _chatHubContext.Clients.Group(ConversationGroup(activeCall.ConversationId)).SendAsync("message.created", messageDto);
+                                await _chatHubContext.Clients.Group(ConversationGroup(activeCall.ConversationId)).SendAsync("conversation.updated", new
+                                {
+                                    conversationId = activeCall.ConversationId,
+                                    type = "message_created"
+                                });
+                            }
+                            catch (Exception chatEx)
+                            {
+                                _logger.LogWarning(chatEx, "Không tạo được dòng Log khi disconnect {SessionId}: {Msg}", activeCall.Id, chatEx.Message);
+                            }
                         }
                     }
                 }
