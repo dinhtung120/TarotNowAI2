@@ -109,7 +109,7 @@ export default function VoiceMessageBubble({ audioUrl, durationMs, isMe }: Voice
    * 2. Tự động pause khi tab không active → tiết kiệm CPU
    * 3. Không bị drift như setInterval
    * ======================================================================== */
-  const updateProgress = useCallback(() => {
+  const updateProgress = useCallback(function tick() {
     const audio = audioRef.current;
     if (!audio || audio.paused) return;
 
@@ -119,7 +119,7 @@ export default function VoiceMessageBubble({ audioUrl, durationMs, isMe }: Voice
       setCurrentTimeMs(Math.round(audio.currentTime * 1000));
     }
 
-    animationFrameRef.current = requestAnimationFrame(updateProgress);
+    animationFrameRef.current = requestAnimationFrame(tick);
   }, []);
 
   /* ========================================================================

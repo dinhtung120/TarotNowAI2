@@ -95,7 +95,12 @@ const nextConfig = {
      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
      { key: 'X-Frame-Options', value: 'DENY' },
      { key: 'X-Content-Type-Options', value: 'nosniff' },
-     { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+     /* FIX #19: Cho phép camera và microphone trên chính domain (self) để WebRTC hoạt động.
+      * Trước đó header này set camera=(), microphone=() -> CẤM HOÀN TOÀN
+      * -> getUserMedia bị reject -> Video không có hình, Audio bị giật/mất tiếng.
+      * Giải pháp: camera=(self), microphone=(self) chỉ cho phép trang web của mình dùng,
+      * vẫn chặn iframe bên ngoài truy cập media (bảo mật giữ nguyên). */
+     { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=()' },
     ],
    },
   ];

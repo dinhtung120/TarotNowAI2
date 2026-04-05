@@ -62,15 +62,19 @@ public static partial class DependencyInjection
 
         var isChatHub = path.StartsWithSegments(ApiPathConstants.ChatHub);
         var isPresenceHub = path.StartsWithSegments(ApiPathConstants.PresenceHub);
+        /* FIX #23: Thêm CallHub vào danh sách endpoint được phép đọc token.
+         * Trước đây thiếu dòng này → CallHub WebSocket gửi access_token qua query string
+         * nhưng server bỏ qua → trả về 401 Unauthorized → "connection not found". */
+        var isCallHub = path.StartsWithSegments(ApiPathConstants.CallHub);
         var isAiStream = path.StartsWithSegments(ApiPathConstants.Sessions, out var remaining)
                          && remaining.HasValue
                          && remaining.Value.EndsWith("/stream", StringComparison.OrdinalIgnoreCase);
 
-        if ((isChatHub || isPresenceHub) && !string.IsNullOrWhiteSpace(cookieToken))
+        if ((isChatHub || isPresenceHub || isCallHub) && !string.IsNullOrWhiteSpace(cookieToken))
         {
             context.Token = cookieToken;
         }
-        else if (!string.IsNullOrWhiteSpace(queryToken) && (isAiStream || isChatHub || isPresenceHub))
+        else if (!string.IsNullOrWhiteSpace(queryToken) && (isAiStream || isChatHub || isPresenceHub || isCallHub))
         {
             context.Token = queryToken;
         }

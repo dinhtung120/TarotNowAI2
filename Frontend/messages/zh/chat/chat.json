@@ -94,6 +94,15 @@
       "complete_all_hint": "点击这里确认满意并将全部款项释放给解读师。",
       "complete_all_success": "已成功完成并全部释放。",
       "error_release_all": "全部完成时发生错误，请重试。"
+    },
+    "call": {
+      "audio": "语音通话",
+      "video": "视频通话",
+      "incoming": "来电...",
+      "calling": "呼叫中...",
+      "active_title": "正在通话",
+      "start_audio": "发起语音通话",
+      "start_video": "发起视频通话"
     }
   }
 }

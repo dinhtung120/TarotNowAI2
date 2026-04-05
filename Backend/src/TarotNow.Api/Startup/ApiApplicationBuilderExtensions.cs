@@ -58,6 +58,7 @@ public static class ApiApplicationBuilderExtensions
         app.MapControllers();
         app.MapHub<ChatHub>("/" + ApiRoutes.ChatHub);
         app.MapHub<PresenceHub>("/api/v1/presence");
+        app.MapHub<CallHub>("/" + ApiRoutes.CallHub);
 
         return app;
     }

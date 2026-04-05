@@ -277,3 +277,48 @@ public class ReportDto
     /// <summary>Thời điểm tạo báo cáo.</summary>
     public DateTime CreatedAt { get; set; }
 }
+
+/// <summary>
+/// DTO biểu diễn metadata một cuộc gọi thoại/video.
+/// Lưu ý: Chỉ chứa metadata (trạng thái, thời gian) - KHÔNG lưu nội dung media.
+/// </summary>
+public class CallSessionDto
+{
+    /// <summary>MongoDB ObjectId dạng string.</summary>
+    public string Id { get; set; } = string.Empty;
+
+    /// <summary>ID của cuộc trò chuyện (Conversation) diễn ra cuộc gọi này.</summary>
+    public string ConversationId { get; set; } = string.Empty;
+
+    /// <summary>UUID của người bấm nút "Gọi" (Initiator).</summary>
+    public string InitiatorId { get; set; } = string.Empty;
+
+    /// <summary>Loại cuộc gọi (Audio hoặc Video).</summary>
+    public TarotNow.Domain.Enums.CallType Type { get; set; }
+
+    /// <summary>Trạng thái hiện tại của cuộc gọi.</summary>
+    public TarotNow.Domain.Enums.CallSessionStatus Status { get; set; }
+
+    /// <summary>Thời điểm có người bấm chấp nhận cuộc gọi.</summary>
+    public DateTime? StartedAt { get; set; }
+
+    /// <summary>Thời điểm cuộc gọi kết thúc.</summary>
+    public DateTime? EndedAt { get; set; }
+
+    /// <summary>
+    /// Lý do kết thúc cuộc gọi:
+    /// - "normal": Một trong hai bên bấm kết thúc.
+    /// - "timeout": Hết 60s không có người nghe.
+    /// - "cancelled": Người gọi tự hủy trước khi đối phương nghe máy.
+    /// </summary>
+    public string? EndReason { get; set; }
+
+    /// <summary>Thời lượng cuộc gọi (giây). Chỉ được tính ra khi cuộc gọi kết thúc.</summary>
+    public int? DurationSeconds { get; set; }
+
+    /// <summary>Thời điểm tạo record.</summary>
+    public DateTime CreatedAt { get; set; }
+
+    /// <summary>Thời điểm cập nhật record cuối cùng.</summary>
+    public DateTime UpdatedAt { get; set; }
+}

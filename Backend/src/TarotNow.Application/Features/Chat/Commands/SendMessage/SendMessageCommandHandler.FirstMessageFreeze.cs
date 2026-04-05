@@ -9,9 +9,16 @@ public partial class SendMessageCommandHandler
     private async Task<FirstMessageFreezeResult> TryFreezeMainQuestionOnFirstUserMessageAsync(
         ConversationDto conversation,
         string senderId,
+        string messageType,
         CancellationToken cancellationToken)
     {
         if (conversation.Status != ConversationStatus.Pending || senderId != conversation.UserId)
+        {
+            return FirstMessageFreezeResult.None;
+        }
+
+        // FIX: Bỏ qua giam tiền nếu người dùng gọi Call và hệ thống cắm trả tin nhắn Log
+        if (messageType == ChatMessageType.CallLog)
         {
             return FirstMessageFreezeResult.None;
         }

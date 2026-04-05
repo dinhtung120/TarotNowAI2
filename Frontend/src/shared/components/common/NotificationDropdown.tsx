@@ -10,9 +10,9 @@
  */
 
 import { useState, useRef, useEffect, useCallback, memo } from 'react';
-import { Bell, Info, Star, Flame, Wallet, Zap, CheckCheck } from 'lucide-react';
+import { Bell, Info, Star, Flame, Wallet, Zap } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Link, useRouter } from '@/i18n/routing';
+import { useRouter } from '@/i18n/routing';
 import { cn } from '@/shared/utils/cn';
 import { useNotificationDropdown } from '@/features/notifications/application/useNotificationDropdown';
 import { type NotificationItem } from '@/features/notifications/application/actions';
@@ -42,15 +42,13 @@ function formatRelativeTime(dateStr: string, t: ReturnType<typeof useTranslation
 interface DropdownItemProps {
   item: NotificationItem;
   title: string;
-  body: string;
   timeLabel: string;
-  onMarkRead: (id: string) => Promise<any>;
+  onMarkRead: (id: string) => Promise<unknown>;
 }
 
 const DropdownItem = memo(function DropdownItem({
   item,
   title,
-  body,
   timeLabel,
   onMarkRead,
 }: DropdownItemProps) {
@@ -202,7 +200,6 @@ export default function NotificationDropdown() {
                     key={item.id}
                     item={item}
                     title={getTitle(item)}
-                    body={getBody(item)}
                     timeLabel={formatRelativeTime(item.createdAt, t)}
                     onMarkRead={markAsRead}
                   />

@@ -62,4 +62,7 @@ public partial class MongoDbContext
 
     public IMongoCollection<CommunityCommentDocument> CommunityComments
         => _database.GetCollection<CommunityCommentDocument>("community_comments");
+
+    public IMongoCollection<CallSessionDocument> CallSessions
+        => _database.GetCollection<CallSessionDocument>("call_sessions");
 }

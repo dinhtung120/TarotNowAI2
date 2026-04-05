@@ -16,6 +16,10 @@ import {
  Send,
  Trash2,
  X,
+ Phone,
+ PhoneOff,
+ Video,
+ VideoOff,
  } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
@@ -35,6 +39,7 @@ import {
 } from '@/features/chat/application/actions';
 import { normalizeReaderStatus } from '@/features/reader/domain/readerStatus';
 import type { VoiceRecordingResult } from '@/features/chat/application/useVoiceRecorder';
+import { CallButton } from '@/features/chat/presentation/call';
 
 /* ========================================================================
  * Lazy load các component nặng:
@@ -624,6 +629,14 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
       </div>
      </div>
 
+     {/* FIX #13: Chỉ hiện nút gọi khi conversation đang ongoing.
+         Trước đây nút hiện cho mọi status → user bấm → backend throw exception. */}
+     {conversation && conversation.status === 'ongoing' && (
+      <div className="flex items-center gap-4">
+        <CallButton conversationId={conversation.id} />
+      </div>
+     )}
+
      <div className="flex items-center gap-2">
       {conversation?.escrowTotalFrozen && conversation.escrowTotalFrozen > 0 ? (
        <div className="px-2 py-1 rounded-lg text-xs bg-[var(--warning)]/10 border border-[var(--warning)]/25 text-[var(--warning)]">
@@ -723,6 +736,43 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
         <div key={message.id} className="flex justify-center py-1">
          <div className="px-3 py-1 rounded-full bg-white/5 text-[10px] text-[var(--text-secondary)]">
           {message.content}
+         </div>
+        </div>
+       );
+      }
+
+      {/* Hiển thị Bong bóng Nhật ký cuộc gọi */}
+      if (message.type === 'call_log') {
+       let callData: any = {};
+       try { callData = JSON.parse(message.content); } catch { /* ignore */ }
+       
+       // Handle Backend PascalCase JSON serialization
+       const duration = callData.DurationSeconds ?? callData.durationSeconds ?? 0;
+       const callType = callData.CallType ?? callData.callType ?? 'audio';
+       const reason = callData.Reason ?? callData.reason ?? '';
+       
+       const isMissed = duration === 0;
+       
+       const icon = callType === 'video' ? 
+           (isMissed ? <VideoOff className="w-4 h-4" /> : <Video className="w-4 h-4" />) :
+           (isMissed ? <PhoneOff className="w-4 h-4" /> : <Phone className="w-4 h-4" />);
+       
+       return (
+        <div key={message.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'} py-2`}>
+         <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl flex items-center gap-3 border shadow-sm transition-all hover:brightness-110 ${isMe ? 'bg-[var(--purple-accent)] border-white/5 rounded-br-md text-white' : 'bg-white/6 border-white/10 rounded-bl-md text-white'}`}>
+          <div className={`p-2 rounded-full ${isMissed ? 'bg-white/20 text-red-300' : 'bg-white/20 text-emerald-300'}`}>
+            {icon}
+          </div>
+          <div className="flex flex-col">
+            <span className="text-sm font-medium text-white/90">
+             {callType === 'video' ? 'Cuộc gọi video' : 'Cuộc gọi thoại'}
+            </span>
+            <span className={`text-[11px] font-mono ${isMissed ? 'text-red-200' : 'text-white/75'}`}>
+             {isMissed ? (reason === 'cancelled' || reason === 'timeout' ? 'Chưa trả lời' : 'Bị nhỡ') : 
+               `${Math.floor(duration / 60).toString().padStart(2, '0')}:${(duration % 60).toString().padStart(2, '0')}`
+             }
+            </span>
+          </div>
          </div>
         </div>
        );

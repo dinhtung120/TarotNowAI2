@@ -42,6 +42,7 @@ public class SendMessageCommandHandlerTests
     private readonly Mock<IReaderProfileRepository> _mockReaderProfileRepo;
     private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
     private readonly Mock<IMediaProcessorService> _mockMediaProcessorService;
+    private readonly Mock<IWalletPushService> _mockWalletPushService;
     private readonly SendMessageCommandHandler _handler;
 
     public SendMessageCommandHandlerTests()
@@ -60,6 +61,8 @@ public class SendMessageCommandHandlerTests
             .Setup(x => x.ProcessAndCompressVoiceAsync(It.IsAny<byte[]>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((byte[] data, string ext, CancellationToken _) => (data, "audio/webm"));
 
+        _mockWalletPushService = new Mock<IWalletPushService>();
+
         _handler = new SendMessageCommandHandler(
             _mockConvRepo.Object,
             _mockMsgRepo.Object,
@@ -67,7 +70,8 @@ public class SendMessageCommandHandlerTests
             _mockWalletRepo.Object,
             _mockReaderProfileRepo.Object,
             _mockTransactionCoordinator.Object,
-            _mockMediaProcessorService.Object);
+            _mockMediaProcessorService.Object,
+            _mockWalletPushService.Object);
     }
 
     /// <summary>Loại tin nhắn không hợp lệ → BadRequest.</summary>

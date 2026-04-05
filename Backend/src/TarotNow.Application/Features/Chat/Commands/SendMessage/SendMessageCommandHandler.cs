@@ -63,11 +63,12 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
         var senderId = request.SenderId.ToString();
 
         ValidateSender(conversation, senderId);
-        ValidateConversationForSend(conversation, senderId);
+        ValidateConversationForSend(conversation, senderId, request.Type);
 
         var firstMessageFreeze = await TryFreezeMainQuestionOnFirstUserMessageAsync(
             conversation,
             senderId,
+            request.Type,
             cancellationToken);
         ApplyConversationStateTransition(conversation, senderId, firstMessageFreeze.OfferExpiresAtUtc);
 

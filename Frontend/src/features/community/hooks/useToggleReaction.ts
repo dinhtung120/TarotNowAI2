@@ -36,18 +36,19 @@ export const useToggleReaction = ({ postId, visibility }: UseToggleReactionProps
       // Lưu lại cái cũ đề phòng Backend trả lỗi thì Rollback
       const previousFeed = queryClient.getQueryData(['community', 'feed', visibility]);
 
-      // Thay mận đổi đào trong Cache của React Query
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       queryClient.setQueryData(['community', 'feed', visibility], (old: any) => {
         if (!old) return old;
 
         return {
           ...old,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           pages: old.pages.map((page: any) => ({
             ...page,
             data: page.data.map((post: CommunityPost) => {
               if (post.id !== postId) return post; // Không phải con mình không rớ
 
-              let newReactionsCount = { ...post.reactionsCount };
+              const newReactionsCount = { ...post.reactionsCount };
               let currentReaction = post.viewerReaction;
 
               // Logic cập nhật state nháp:

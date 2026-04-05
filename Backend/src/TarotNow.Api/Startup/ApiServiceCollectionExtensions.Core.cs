@@ -2,6 +2,8 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.RateLimiting;
 using System.Globalization;
 using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using TarotNow.Api.Middlewares;
 using TarotNow.Api.Realtime;
@@ -16,7 +18,17 @@ public static partial class ApiServiceCollectionExtensions
 {
     public static IServiceCollection AddApiPresentationServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddControllers();
+        services.AddControllers()
+            .AddJsonOptions(options =>
+            {
+                /* FIX #24: Dùng CamelCase naming policy cho Enum serialization.
+                 * JsonStringEnumConverter() mặc định serialize PascalCase: Audio → "Audio", Video → "Video".
+                 * Frontend TypeScript expect lowercase: 'audio', 'video'.
+                 * CamelCase policy chuyển thành: Audio → "audio", Video → "video".
+                 * Nếu thiếu điều này, session.type === 'video' luôn FALSE → không bật camera. */
+                options.JsonSerializerOptions.Converters.Add(
+                    new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+            });
         AddApiVersioningServices(services);
         AddOpenApiServices(services);
         AddPlatformServices(services, configuration);
@@ -68,10 +80,23 @@ public static partial class ApiServiceCollectionExtensions
         services.AddScoped<Application.Interfaces.INotificationPushService, SignalRNotificationPushService>();
         services.AddScoped<Application.Interfaces.IWalletPushService, SignalRWalletPushService>();
         services.AddAuthorization();
-        services.AddSignalR(options =>
+        var redisConnectionString = configuration.GetConnectionString("Redis");
+        var signalRBuilder = services.AddSignalR(options =>
         {
             options.MaximumReceiveMessageSize = 10 * 1024 * 1024; // 10MB for media metadata payload (base64/data-url).
+        }).AddJsonProtocol(options =>
+        {
+            /* FIX #24: CamelCase cho cả SignalR Hub (giống API Controllers).
+             * SignalR gửi CallSessionDto qua Hub events (call.initiated, call.incoming...).
+             * Nếu không CamelCase, session.type sẽ là "Video" thay vì "video". */
+            options.PayloadSerializerOptions.Converters.Add(
+                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
         });
+
+        if (!string.IsNullOrEmpty(redisConnectionString))
+        {
+            signalRBuilder.AddStackExchangeRedis(redisConnectionString);
+        }
     }
 
     private static void AddRateLimitPolicies(IServiceCollection services)

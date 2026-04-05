@@ -8,5 +8,6 @@ public partial class MongoDbContext
         EnsureReaderCollectionIndexes();
         EnsureChatCollectionIndexes();
         EnsureCommunityIndexes();
+        EnsureCallIndexes();
     }
 }

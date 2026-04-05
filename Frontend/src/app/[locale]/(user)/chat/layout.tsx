@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import ConversationSidebar from '@/features/chat/presentation/components/ConversationSidebar';
+import { CallProvider, IncomingCallOverlay, ActiveCallOverlay } from '@/features/chat/presentation/call';
 
 /*
  * File: chat/layout.tsx
@@ -23,30 +24,35 @@ export default function ChatLayout({ children }: { children: React.ReactNode }) 
   const isChatRoom = pathname.split('/').filter(Boolean).length > 2;
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-[#050505]/40 backdrop-blur-sm">
-      {/* 
-        Sidebar: 
-        - Luôn hiện trên desktop (md:flex). 
-        - Trên mobile: Chỉ hiện nếu KHÔNG phải đang ở trong phòng chat (!isChatRoom).
-      */}
-      <aside className={`
-        ${isChatRoom ? 'hidden md:flex' : 'flex'} 
-        w-full md:w-[350px] lg:w-[400px] border-r border-white/5 flex-col shrink-0
-      `}>
-        <ConversationSidebar />
-      </aside>
+    <CallProvider>
+      <div className="flex h-full w-full overflow-hidden bg-[#050505]/40 backdrop-blur-sm">
+        {/* 
+          Sidebar: 
+          - Luôn hiện trên desktop (md:flex). 
+          - Trên mobile: Chỉ hiện nếu KHÔNG phải đang ở trong phòng chat (!isChatRoom).
+        */}
+        <aside className={`
+          ${isChatRoom ? 'hidden md:flex' : 'flex'} 
+          w-full md:w-[350px] lg:w-[400px] border-r border-white/5 flex-col shrink-0
+        `}>
+          <ConversationSidebar />
+        </aside>
 
-      {/* 
-        Main Detail Area (Children):
-        - Luôn hiện trên desktop (md:flex).
-        - Trên mobile: Chỉ hiện nếu ĐANG ở trong phòng chat (isChatRoom).
-      */}
-      <main className={`
-        ${isChatRoom ? 'flex' : 'hidden md:flex'} 
-        flex-1 min-w-0 flex-col relative
-      `}>
-        {children}
-      </main>
-    </div>
+        {/* 
+          Main Detail Area (Children):
+          - Luôn hiện trên desktop (md:flex).
+          - Trên mobile: Chỉ hiện nếu ĐANG ở trong phòng chat (isChatRoom).
+        */}
+        <main className={`
+          ${isChatRoom ? 'flex' : 'hidden md:flex'} 
+          flex-1 min-w-0 flex-col relative
+        `}>
+          {children}
+        </main>
+      </div>
+
+      <IncomingCallOverlay />
+      <ActiveCallOverlay />
+    </CallProvider>
   );
 }

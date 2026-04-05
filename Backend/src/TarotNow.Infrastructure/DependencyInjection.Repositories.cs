@@ -38,6 +38,7 @@ public static partial class DependencyInjection
         services.AddScoped<IConversationRepository, MongoConversationRepository>();
         services.AddScoped<IChatMessageRepository, MongoChatMessageRepository>();
         services.AddScoped<IReportRepository, MongoReportRepository>();
+        services.AddScoped<ICallSessionRepository, MongoCallSessionRepository>();
 
         services.AddScoped<IChatFinanceRepository, ChatFinanceRepository>();
         services.AddScoped<IWithdrawalRepository, WithdrawalRepository>();

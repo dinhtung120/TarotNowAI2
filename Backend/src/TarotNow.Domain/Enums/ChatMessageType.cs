@@ -50,11 +50,15 @@ public static class ChatMessageType
     /// <summary>Màn Khóc To Tòa Án Admin Mở Kẹp Dispute Thùng Lều Án Chặt Phạt Mở Cửa Sổ Call.</summary>
     public const string SystemDispute = "system_dispute";
 
+    /// <summary>Tin nhắn Hệ thống Lưu Dấu Vết Lịch Sử Cuộc Gọi (Nhỡ / Kéo Dài Bao Lâu).</summary>
+    public const string CallLog = "call_log";
+
     /// <summary>Cầm Cái Kiếm Đâm Lấy Mã Type Để Kiểm Tranh Hacker Mò Rác Thêm Rác Kiểu Tin Text Gì Bậy Bạ Hủy Nát UI.</summary>
     public static bool IsValid(string type)
     {
         return type is Text or System or CardShare or Image or Voice
             or PaymentOffer or PaymentAccept or PaymentReject
-            or SystemRefund or SystemRelease or SystemDispute;
+            or SystemRefund or SystemRelease or SystemDispute
+            or CallLog;
     }
 }
