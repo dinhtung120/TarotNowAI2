@@ -11,7 +11,7 @@ public partial class ChatHub
             await Groups.AddToGroupAsync(Context.ConnectionId, UserGroup(userId));
         }
 
-        _logger.LogInformation(
+        _logger.LogDebug(
             "[ChatHub] User {UserId} connected. ConnectionId: {ConnectionId}",
             userId,
             Context.ConnectionId);
@@ -28,7 +28,7 @@ public partial class ChatHub
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, UserGroup(userId));
         }
 
-        _logger.LogInformation(
+        _logger.LogDebug(
             "[ChatHub] User {UserId} disconnected. Reason: {Reason}",
             userId,
             exception?.Message ?? "normal");

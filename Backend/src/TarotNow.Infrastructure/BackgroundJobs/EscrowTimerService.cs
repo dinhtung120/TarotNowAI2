@@ -20,7 +20,7 @@ public partial class EscrowTimerService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("[EscrowTimer] Service started.");
+        _logger.LogDebug("[EscrowTimer] Service started.");
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -36,7 +36,7 @@ public partial class EscrowTimerService : BackgroundService
             await Task.Delay(ScanInterval, stoppingToken);
         }
 
-        _logger.LogInformation("[EscrowTimer] Service stopped.");
+        _logger.LogDebug("[EscrowTimer] Service stopped.");
     }
 
     private async Task ProcessTimers(CancellationToken cancellationToken)

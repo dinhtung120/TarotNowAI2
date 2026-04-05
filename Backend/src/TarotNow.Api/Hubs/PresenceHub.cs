@@ -43,7 +43,7 @@ public class PresenceHub : Hub
             await Clients.All.SendAsync("UserStatusChanged", userId, "online");
         }
 
-        _logger.LogInformation(
+        _logger.LogDebug(
             "[PresenceHub] User {UserId} connected. ConnectionId: {ConnectionId}",
             userId,
             Context.ConnectionId);
@@ -63,7 +63,7 @@ public class PresenceHub : Hub
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"user:{userId}");
         }
 
-        _logger.LogInformation(
+        _logger.LogDebug(
             "[PresenceHub] User {UserId} disconnected. Reason: {Reason}",
             userId,
             exception?.Message ?? "normal");

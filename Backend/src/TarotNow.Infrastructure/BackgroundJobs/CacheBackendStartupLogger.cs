@@ -41,7 +41,7 @@ public sealed class CacheBackendStartupLogger : IHostedService
         if (_cacheBackendState.UsesRedis)
         {
             // Bền Chặt Ngon Ăn Khỏi Phải Check Nút Nghẹt Giật.
-            _logger.LogInformation("Cache backend initialized with Redis.");
+            _logger.LogDebug("Cache backend initialized with Redis.");
         }
         else
         {

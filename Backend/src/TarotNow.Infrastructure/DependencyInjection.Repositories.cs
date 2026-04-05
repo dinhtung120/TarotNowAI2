@@ -16,6 +16,9 @@ public static partial class DependencyInjection
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IEmailOtpRepository, EmailOtpRepository>();
         services.AddScoped<IWalletRepository, WalletRepository>();
+        services.AddScoped<ICommunityPostRepository, CommunityPostRepository>();
+        services.AddScoped<ICommunityReactionRepository, CommunityReactionRepository>();
+        services.AddScoped<ICommunityCommentRepository, CommunityCommentRepository>();
         services.AddScoped<IAiRequestRepository, AiRequestRepository>();
         services.AddScoped<ILedgerRepository, LedgerRepository>();
         services.AddScoped<IAdminRepository, AdminRepository>();

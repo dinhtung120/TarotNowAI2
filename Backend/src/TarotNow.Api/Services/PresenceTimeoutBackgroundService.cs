@@ -36,7 +36,7 @@ public class PresenceTimeoutBackgroundService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("[PresenceTimeout] Service started. Scan interval: {Interval}s, Timeout: {Timeout}m", 
+        _logger.LogDebug("[PresenceTimeout] Service started. Scan interval: {Interval}s, Timeout: {Timeout}m", 
             _scanInterval.TotalSeconds, _timeoutPeriod.TotalMinutes);
 
         while (!stoppingToken.IsCancellationRequested)
@@ -64,7 +64,7 @@ public class PresenceTimeoutBackgroundService : BackgroundService
             return;
         }
 
-        _logger.LogInformation("[PresenceTimeout] Found {Count} users timed out: {Users}", 
+        _logger.LogDebug("[PresenceTimeout] Found {Count} users timed out: {Users}", 
             timedOutUsers.Count, string.Join(", ", timedOutUsers));
 
         foreach (var userId in timedOutUsers)
@@ -104,7 +104,7 @@ public class PresenceTimeoutBackgroundService : BackgroundService
                     profile.Status = ReaderOnlineStatus.Offline;
                     await profileRepo.UpdateAsync(profile, cancellationToken);
                     
-                    _logger.LogInformation("[PresenceTimeout] Updated Reader DB status to Offline for user {UserId}", profile.UserId);
+                    _logger.LogDebug("[PresenceTimeout] Updated Reader DB status to Offline for user {UserId}", profile.UserId);
                 }
             }
         }

@@ -81,6 +81,7 @@ const menuGroups: MenuGroup[] = [
   id: "social",
   labelKey: "groups.social",
   items: [
+   { labelKey: "community", href: "/community", icon: Sparkles },
    { labelKey: "chat", href: "/chat", icon: MessageSquare },
    { labelKey: "readers", href: "/readers", icon: Users },
   ],

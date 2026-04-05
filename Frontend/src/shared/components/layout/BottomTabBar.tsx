@@ -74,8 +74,9 @@ const tabs: TabGroup[] = [
     id: "social",
     labelKey: "social",
     icon: Users,
-    matchPrefixes: ["/chat", "/readers"],
+    matchPrefixes: ["/chat", "/readers", "/community"],
     subItems: [
+      { labelKey: "community", href: "/community", icon: Sparkles, matchPrefixes: ["/community"] },
       { labelKey: "chat", href: "/chat", icon: MessageSquare, matchPrefixes: ["/chat"] },
       { labelKey: "readers", href: "/readers", icon: Users, matchPrefixes: ["/readers"] },
     ],

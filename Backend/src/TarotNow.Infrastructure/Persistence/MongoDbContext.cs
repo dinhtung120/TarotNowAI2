@@ -53,4 +53,13 @@ public partial class MongoDbContext
 
     public IMongoCollection<ReportDocument> Reports
         => _database.GetCollection<ReportDocument>("reports");
+
+    public IMongoCollection<CommunityPostDocument> CommunityPosts
+        => _database.GetCollection<CommunityPostDocument>("community_posts");
+
+    public IMongoCollection<CommunityReactionDocument> CommunityReactions
+        => _database.GetCollection<CommunityReactionDocument>("community_reactions");
+
+    public IMongoCollection<CommunityCommentDocument> CommunityComments
+        => _database.GetCollection<CommunityCommentDocument>("community_comments");
 }
