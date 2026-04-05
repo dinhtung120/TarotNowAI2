@@ -35,7 +35,7 @@ public class InitiateCallCommandHandlerTests
         _mockConvRepo.Setup(r => r.GetByIdAsync(conversationId, default)).ReturnsAsync(conv);
         _mockCallRepo.Setup(r => r.GetActiveByConversationAsync(conversationId, default)).ReturnsAsync((CallSessionDto)null!);
 
-        var command = new InitiateCallCommand { ConversationId = conversationId, InitiatorId = initiatorId, Type = CallType.Video };
+        var command = new InitiateCallCommand { ConversationId = conversationId, InitiatorId = initiatorId, Type = "video" };
         var result = await _handler.Handle(command, CancellationToken.None);
 
         Assert.NotNull(result);
@@ -56,7 +56,7 @@ public class InitiateCallCommandHandlerTests
 
         _mockConvRepo.Setup(r => r.GetByIdAsync(conversationId, default)).ReturnsAsync(conv);
 
-        var command = new InitiateCallCommand { ConversationId = conversationId, InitiatorId = initiatorId, Type = CallType.Audio };
+        var command = new InitiateCallCommand { ConversationId = conversationId, InitiatorId = initiatorId, Type = "audio" };
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
@@ -69,7 +69,7 @@ public class InitiateCallCommandHandlerTests
 
         _mockConvRepo.Setup(r => r.GetByIdAsync(conversationId, default)).ReturnsAsync(conv);
 
-        var command = new InitiateCallCommand { ConversationId = conversationId, InitiatorId = initiatorId, Type = CallType.Audio };
+        var command = new InitiateCallCommand { ConversationId = conversationId, InitiatorId = initiatorId, Type = "audio" };
         await Assert.ThrowsAsync<ForbiddenException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
@@ -84,7 +84,7 @@ public class InitiateCallCommandHandlerTests
         _mockConvRepo.Setup(r => r.GetByIdAsync(conversationId, default)).ReturnsAsync(conv);
         _mockCallRepo.Setup(r => r.GetActiveByConversationAsync(conversationId, default)).ReturnsAsync(activeCall);
 
-        var command = new InitiateCallCommand { ConversationId = conversationId, InitiatorId = initiatorId, Type = CallType.Audio };
+        var command = new InitiateCallCommand { ConversationId = conversationId, InitiatorId = initiatorId, Type = "audio" };
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
 }

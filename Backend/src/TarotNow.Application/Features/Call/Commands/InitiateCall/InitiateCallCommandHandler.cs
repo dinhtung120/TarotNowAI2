@@ -44,11 +44,12 @@ public class InitiateCallCommandHandler : IRequestHandler<InitiateCallCommand, C
             throw new BadRequestException("Đang có một cuộc gọi khác diễn ra trong trò chuyện này.");
 
         // 5. Khởi tạo phiên gọi (status là Requested)
+        var callType = ParseCallTypeOrThrow(request.Type);
         var newCallSession = new CallSessionDto
         {
             ConversationId = request.ConversationId,
             InitiatorId = callerIdString,
-            Type = request.Type,
+            Type = callType,
             Status = CallSessionStatus.Requested,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -58,5 +59,20 @@ public class InitiateCallCommandHandler : IRequestHandler<InitiateCallCommand, C
         await _callSessionRepository.AddAsync(newCallSession, cancellationToken);
 
         return newCallSession;
+    }
+
+    private static CallType ParseCallTypeOrThrow(string rawType)
+    {
+        if (string.IsNullOrWhiteSpace(rawType))
+        {
+            throw new BadRequestException("Loại cuộc gọi không hợp lệ.");
+        }
+
+        return rawType.Trim().ToLowerInvariant() switch
+        {
+            "audio" => CallType.Audio,
+            "video" => CallType.Video,
+            _ => throw new BadRequestException("Loại cuộc gọi không hợp lệ.")
+        };
     }
 }

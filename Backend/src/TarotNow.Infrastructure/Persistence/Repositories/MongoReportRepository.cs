@@ -20,7 +20,7 @@ namespace TarotNow.Infrastructure.Persistence.Repositories;
 /// <summary>
 /// Implement IReportRepository — đọc/ghi báo cáo vi phạm từ MongoDB.
 /// </summary>
-public class MongoReportRepository : IReportRepository
+public partial class MongoReportRepository : IReportRepository
 {
     private readonly MongoDbContext _context;
 
@@ -37,13 +37,23 @@ public class MongoReportRepository : IReportRepository
         report.Id = doc.Id;
     }
 
+    public async Task<ReportDto?> GetByIdAsync(string reportId, CancellationToken cancellationToken = default)
+    {
+        var filter = Builders<ReportDocument>.Filter.And(
+            Builders<ReportDocument>.Filter.Eq(x => x.Id, reportId),
+            Builders<ReportDocument>.Filter.Eq(x => x.IsDeleted, false));
+
+        var doc = await _context.Reports.Find(filter).FirstOrDefaultAsync(cancellationToken);
+        return doc == null ? null : ToDto(doc);
+    }
+
     /// <summary>
     /// Phân trang cho Admin báo cáo queue.
     /// Hỗ trợ filter theo status: "pending" (chờ xử lý), "processing", "resolved", "rejected".
     /// Sắp xếp: mới nhất trước — Admin cần xem báo cáo gần đây ưu tiên.
     /// </summary>
     public async Task<(IEnumerable<ReportDto> Items, long TotalCount)> GetPaginatedAsync(
-        int page, int pageSize, string? statusFilter = null,
+        int page, int pageSize, string? statusFilter = null, string? targetType = null,
         CancellationToken cancellationToken = default)
     {
         var normalizedPage = page < 1 ? 1 : page;
@@ -56,6 +66,11 @@ public class MongoReportRepository : IReportRepository
         if (!string.IsNullOrEmpty(statusFilter))
             filter = filterBuilder.And(filter, filterBuilder.Eq(r => r.Status, statusFilter));
 
+        if (!string.IsNullOrWhiteSpace(targetType))
+        {
+            filter = filterBuilder.And(filter, filterBuilder.Eq(r => r.Target.Type, targetType));
+        }
+
         var totalCount = await _context.Reports.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
 
         var docs = await _context.Reports.Find(filter)
@@ -67,46 +82,4 @@ public class MongoReportRepository : IReportRepository
         return (docs.Select(ToDto), totalCount);
     }
 
-    // ==================== MAPPING ====================
-
-    /// <summary>
-    /// Map Application DTO → MongoDB Document.
-    /// Lưu ý: DTO có TargetType + TargetId (flat) → Document có Target object (nested).
-    /// </summary>
-    private static ReportDocument ToDocument(ReportDto dto)
-    {
-        return new ReportDocument
-        {
-            Id = string.IsNullOrEmpty(dto.Id) ? MongoDB.Bson.ObjectId.GenerateNewId().ToString() : dto.Id,
-            ReporterId = dto.ReporterId,
-            Target = new ReportTarget { Type = dto.TargetType, Id = dto.TargetId },
-            ConversationRef = dto.ConversationRef,
-            Reason = dto.Reason,
-            Status = dto.Status,
-            Result = dto.Result,
-            AdminNote = dto.AdminNote,
-            CreatedAt = dto.CreatedAt
-        };
-    }
-
-    /// <summary>
-    /// Map MongoDB Document → Application DTO.
-    /// Flatten: Target { Type, Id } → TargetType, TargetId.
-    /// </summary>
-    private static ReportDto ToDto(ReportDocument doc)
-    {
-        return new ReportDto
-        {
-            Id = doc.Id,
-            ReporterId = doc.ReporterId,
-            TargetType = doc.Target.Type,
-            TargetId = doc.Target.Id,
-            ConversationRef = doc.ConversationRef,
-            Reason = doc.Reason,
-            Status = doc.Status,
-            Result = doc.Result,
-            AdminNote = doc.AdminNote,
-            CreatedAt = doc.CreatedAt
-        };
-    }
 }

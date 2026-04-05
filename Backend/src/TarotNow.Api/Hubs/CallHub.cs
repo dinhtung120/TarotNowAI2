@@ -15,30 +15,19 @@ namespace TarotNow.Api.Hubs;
 public partial class CallHub : Hub
 {
     private readonly IMediator _mediator;
-    private readonly IConversationRepository _conversationRepository;
     private readonly ILogger<CallHub> _logger;
     private readonly ICacheService _cacheService;
-    /* FIX #22: Inject ICallSessionRepository trực tiếp qua constructor.
-     * Trước đây dùng Context.GetHttpContext()?.RequestServices.GetService<>() 
-     * trong OnDisconnectedAsync → ObjectDisposedException vì DI scope đã bị dispose
-     * khi WebSocket connection đóng. Constructor injection an toàn vì Hub instance
-     * tồn tại suốt vòng đời của connection. */
-    private readonly ICallSessionRepository _callSessionRepository;
     private readonly IHubContext<ChatHub> _chatHubContext;
 
     public CallHub(
         IMediator mediator,
-        IConversationRepository conversationRepository,
         ILogger<CallHub> logger,
         ICacheService cacheService,
-        ICallSessionRepository callSessionRepository,
         IHubContext<ChatHub> chatHubContext)
     {
         _mediator = mediator;
-        _conversationRepository = conversationRepository;
         _logger = logger;
         _cacheService = cacheService;
-        _callSessionRepository = callSessionRepository;
         _chatHubContext = chatHubContext;
     }
 

@@ -1,28 +1,12 @@
-/*
- * ===================================================================
- * FILE: ReaderOnlineStatus.cs
- * NAMESPACE: TarotNow.Domain.Enums
- * ===================================================================
- * MỤC ĐÍCH:
- *   Trạng Thái Biển Treo Cửa Của Thầy Bói (Reader).
- * ===================================================================
- */
-
-namespace TarotNow.Domain.Enums;
+namespace TarotNow.Api.Constants;
 
 /// <summary>
-/// Trạng thái biển chỉ dẫn trực tuyến của Reader để UI hiển thị.
-/// Gồm 3 trạng thái: Online (tự động), Offline (tự động sau 15p), Busy (thủ công).
+/// Reader presence states used by API/presentation layer.
 /// </summary>
-public static class ReaderOnlineStatus
+public static class ApiReaderStatusConstants
 {
-    /// <summary>Có mặt trên web (tự động bắt từ PresenceHub).</summary>
     public const string Online = "online";
-
-    /// <summary>Tắt ca nghỉ hoặc timeout quá 15 phút không thao tác.</summary>
     public const string Offline = "offline";
-
-    /// <summary>Reader đang bận, chủ động chuyển sang trạng thái này báo khách báo chậm.</summary>
     public const string Busy = "busy";
 
     private static readonly IReadOnlyDictionary<string, string> AliasToStatus =
@@ -44,9 +28,6 @@ public static class ReaderOnlineStatus
             ["accepting"] = Busy,
             ["ready"] = Busy
         };
-
-    public static bool IsValid(string? status)
-        => TryNormalize(status, out _);
 
     public static bool TryNormalize(string? status, out string normalized)
     {

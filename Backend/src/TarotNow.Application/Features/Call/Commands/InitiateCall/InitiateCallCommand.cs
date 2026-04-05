@@ -1,6 +1,5 @@
 using MediatR;
 using TarotNow.Application.Common;
-using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Call.Commands.InitiateCall;
 
@@ -20,7 +19,7 @@ public class InitiateCallCommand : IRequest<CallSessionDto>
     public Guid InitiatorId { get; set; }
 
     /// <summary>
-    /// Loại cuộc gọi (Audio hoặc Video).
+    /// Loại cuộc gọi (audio|video).
     /// </summary>
-    public CallType Type { get; set; }
+    public string Type { get; set; } = "audio";
 }

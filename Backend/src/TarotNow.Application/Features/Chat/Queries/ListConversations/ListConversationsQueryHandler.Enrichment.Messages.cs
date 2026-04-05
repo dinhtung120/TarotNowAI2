@@ -34,30 +34,16 @@ public partial class ListConversationsQueryHandler
     {
         if (message.Type == ChatMessageType.CallLog)
         {
-            try
-            {
-                using var doc = System.Text.Json.JsonDocument.Parse(message.Content);
-                var callTypeRaw = doc.RootElement.TryGetProperty("CallType", out var cProp) ? cProp.GetString() : 
-                                  (doc.RootElement.TryGetProperty("callType", out var cProp2) ? cProp2.GetString() : "audio");
-                var duration = doc.RootElement.TryGetProperty("DurationSeconds", out var dProp) && dProp.TryGetInt32(out var d) ? d : 
-                               (doc.RootElement.TryGetProperty("durationSeconds", out var dProp2) && dProp2.TryGetInt32(out var d2) ? d2 : 0);
-
-                var typeStr = callTypeRaw == "video" ? "Cuộc gọi video" : "Cuộc gọi thoại";
-                var icon = callTypeRaw == "video" ? "🎥" : "📞";
-
-                if (duration == 0) return $"{icon} {typeStr} bị nhỡ";
-                
-                var min = duration / 60;
-                var sec = duration % 60;
-                return $"{icon} {typeStr} ({min:00}:{sec:00})";
-            }
-            catch
-            {
-                return "📞 Cuộc gọi";
-            }
+            return BuildCallPreview(message);
         }
 
-        var content = message.Type switch
+        var content = ResolveMessageContent(message);
+        return ToNormalizedPreview(content);
+    }
+
+    private static string ResolveMessageContent(ChatMessageDto message)
+    {
+        return message.Type switch
         {
             ChatMessageType.Image => "📸 [Hình ảnh]",
             ChatMessageType.Voice => "🎤 [Tin nhắn thoại]",
@@ -67,10 +53,14 @@ public partial class ListConversationsQueryHandler
             _ => message.Content
         };
 
+    }
+
+    private static string ToNormalizedPreview(string content)
+    {
         var normalized = string.IsNullOrWhiteSpace(content)
             ? "(empty)"
             : content.Trim();
-
         return normalized.Length <= 90 ? normalized : $"{normalized[..90]}…";
     }
+
 }

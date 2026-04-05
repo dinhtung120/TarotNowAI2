@@ -54,11 +54,27 @@ public class RespondCallCommandHandlerTests
             });
         
         _mockConvRepo.Setup(r => r.GetByIdAsync("conv-1", default)).ReturnsAsync(conv);
+        _mockCallRepo.Setup(x => x.UpdateStatusAsync(
+                callId,
+                CallSessionStatus.Accepted,
+                It.IsAny<DateTime?>(),
+                null,
+                null,
+                CallSessionStatus.Requested,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         var command = new RespondCallCommand { CallSessionId = callId, ResponderId = responderId, Accept = true };
         var result = await _handler.Handle(command, CancellationToken.None);
 
-        _mockCallRepo.Verify(x => x.UpdateStatusAsync(callId, CallSessionStatus.Accepted, It.IsNotNull<DateTime>(), null, null, default), Times.Once);
+        _mockCallRepo.Verify(x => x.UpdateStatusAsync(
+            callId,
+            CallSessionStatus.Accepted,
+            It.IsNotNull<DateTime>(),
+            null,
+            null,
+            CallSessionStatus.Requested,
+            It.IsAny<CancellationToken>()), Times.Once);
         Assert.Equal(CallSessionStatus.Accepted, result.Status);
     }
 

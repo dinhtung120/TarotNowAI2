@@ -24,11 +24,23 @@ public interface IReportRepository
     /// <summary>Viết Lờ Tranh Cãi Nhắm Chị Mất Gà Tố Trễ Bỏ Thư Vào Hộp.</summary>
     Task AddAsync(ReportDto report, CancellationToken cancellationToken = default);
 
+    /// <summary>Lấy báo cáo theo id.</summary>
+    Task<ReportDto?> GetByIdAsync(string reportId, CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Admin Bê Hòm Rác Tố Biểu Kéo Từng Đống Thư Ra Xem Chuyển Vào Nhóm Nào Đã Phán Xử Giải Tiền,
     /// Bọc Nhóm Mới Chữ Chữ (Lọc Qua Bộ Phân Trang Paginate Bớt Ngộp Chữ).
     /// </summary>
     Task<(IEnumerable<ReportDto> Items, long TotalCount)> GetPaginatedAsync(
-        int page, int pageSize, string? statusFilter = null,
+        int page, int pageSize, string? statusFilter = null, string? targetType = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Cập nhật kết quả xử lý report theo kiểu atomic update.</summary>
+    Task<bool> ResolveAsync(
+        string reportId,
+        string status,
+        string result,
+        string resolvedBy,
+        string? adminNote,
         CancellationToken cancellationToken = default);
 }

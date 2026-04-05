@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.SignalR;
+using TarotNow.Api.Constants;
 using TarotNow.Api.Hubs;
 using TarotNow.Application.Common.Interfaces;
 using TarotNow.Application.Interfaces;
-using TarotNow.Domain.Enums;
 
 namespace TarotNow.Api.Services;
 
@@ -99,9 +99,9 @@ public class PresenceTimeoutBackgroundService : BackgroundService
                 // Chỉ cập nhật nếu trạng thái hiện tại đang là Online.
                 // Nếu Reader đang "Busy" (Busy) thì KHÔNG tự động chuyển sang Offline,
                 // tôn trọng lựa chọn thủ công của Reader.
-                if (string.Equals(profile.Status, ReaderOnlineStatus.Online, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(profile.Status, ApiReaderStatusConstants.Online, StringComparison.OrdinalIgnoreCase))
                 {
-                    profile.Status = ReaderOnlineStatus.Offline;
+                    profile.Status = ApiReaderStatusConstants.Offline;
                     await profileRepo.UpdateAsync(profile, cancellationToken);
                     
                     _logger.LogDebug("[PresenceTimeout] Updated Reader DB status to Offline for user {UserId}", profile.UserId);

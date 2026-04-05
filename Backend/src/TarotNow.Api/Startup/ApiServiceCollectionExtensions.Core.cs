@@ -1,15 +1,8 @@
 using Asp.Versioning;
-using Microsoft.AspNetCore.RateLimiting;
-using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.RateLimiting;
-using TarotNow.Api.Middlewares;
-using TarotNow.Api.Realtime;
-using TarotNow.Api.Services;
 using TarotNow.Application;
-using TarotNow.Application.Common.Interfaces;
 using TarotNow.Infrastructure;
 
 namespace TarotNow.Api.Startup;
@@ -66,70 +59,4 @@ public static partial class ApiServiceCollectionExtensions
             }
         });
     }
-
-    private static void AddPlatformServices(IServiceCollection services, IConfiguration configuration)
-    {
-        services.AddExceptionHandler<GlobalExceptionHandler>();
-        services.AddProblemDetails();
-        services.AddApplicationServices(Assembly.GetExecutingAssembly());
-        services.AddInfrastructureServices(configuration);
-        services.AddApiObservability(configuration);
-        services.AddScoped<IRefreshTokenCookieService, RefreshTokenCookieService>();
-        services.AddSingleton<IUserPresenceTracker, InMemoryUserPresenceTracker>();
-        services.AddHostedService<PresenceTimeoutBackgroundService>(); // MỚI: Thêm BackgroundService quản lý timeout
-        services.AddScoped<Application.Interfaces.INotificationPushService, SignalRNotificationPushService>();
-        services.AddScoped<Application.Interfaces.IWalletPushService, SignalRWalletPushService>();
-        services.AddScoped<Application.Interfaces.IChatPushService, SignalRChatPushService>();
-        services.AddAuthorization();
-        var redisConnectionString = configuration.GetConnectionString("Redis");
-        var signalRBuilder = services.AddSignalR(options =>
-        {
-            options.MaximumReceiveMessageSize = 10 * 1024 * 1024; // 10MB for media metadata payload (base64/data-url).
-        }).AddJsonProtocol(options =>
-        {
-            /* FIX #24: CamelCase cho cả SignalR Hub (giống API Controllers).
-             * SignalR gửi CallSessionDto qua Hub events (call.initiated, call.incoming...).
-             * Nếu không CamelCase, session.type sẽ là "Video" thay vì "video". */
-            options.PayloadSerializerOptions.Converters.Add(
-                new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
-        });
-
-        if (!string.IsNullOrEmpty(redisConnectionString))
-        {
-            signalRBuilder.AddStackExchangeRedis(redisConnectionString);
-        }
-    }
-
-    private static void AddRateLimitPolicies(IServiceCollection services)
-    {
-        services.AddRateLimiter(options =>
-        {
-            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-            options.OnRejected = async (context, token) =>
-            {
-                if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
-                {
-                    var retryAfterSeconds = Math.Max(1, (int)Math.Ceiling(retryAfter.TotalSeconds));
-                    context.HttpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString(CultureInfo.InvariantCulture);
-                }
-
-                await context.HttpContext.Response.WriteAsJsonAsync(
-                    new { error = "TOO_MANY_REQUESTS", message = "Too many requests. Please try again later." },
-                    cancellationToken: token);
-            };
-
-            options.AddPolicy("login", httpContext =>
-                RateLimitPartition.GetFixedWindowLimiter(
-                    partitionKey: ResolveClientIp(httpContext),
-                    factory: _ => new FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = 5,
-                        Window = TimeSpan.FromSeconds(60),
-                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                        QueueLimit = 0,
-                        AutoReplenishment = true
-                    }));
-        });
-    }
-
 }

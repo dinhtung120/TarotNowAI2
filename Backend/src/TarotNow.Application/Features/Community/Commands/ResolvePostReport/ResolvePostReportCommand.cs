@@ -1,14 +1,3 @@
-/*
- * ===================================================================
- * FILE: ResolvePostReportCommand.cs
- * NAMESPACE: TarotNow.Application.Features.Community.Commands.ResolvePostReport
- * ===================================================================
- * MỤC ĐÍCH:
- *   Admin duyệt đơn report và đưa ra phán quyết (Resolve).
- *   Sẽ cập nhật trạng thái report, và cập nhật Target (Bài viết) nếu cần.
- * ===================================================================
- */
-
 using MediatR;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
@@ -16,6 +5,9 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Community.Commands.ResolvePostReport;
 
+/// <summary>
+/// Command xử lý report bài viết bởi admin.
+/// </summary>
 public class ResolvePostReportCommand : IRequest<bool>
 {
     public string ReportId { get; set; } = string.Empty;
@@ -24,38 +16,85 @@ public class ResolvePostReportCommand : IRequest<bool>
     public string? AdminNote { get; set; }
 }
 
+/// <summary>
+/// Handler cập nhật trạng thái report và áp dụng hậu quả moderation lên post nếu cần.
+/// </summary>
 public class ResolvePostReportCommandHandler : IRequestHandler<ResolvePostReportCommand, bool>
 {
-    private readonly ICommunityPostRepository _postRepo;
-    // NOTE: Cần một IAdminReportRepository hoặc update IReportRepository để Resolve.
-    // Lấy tạm IReportRepository. Dưới thực tế có thể update IReportRepository.
-    
-    // Vì Interface IReportRepository hiện chưa có hàm Resolve (chỉ có Add, GetPaginated), 
-    // chúng ta sẽ cần giả lập update hoặc ở Phase này ta quy định AdminCommunity workflow
-    // sẽ call direct repo Mongo. Ở đây để code Application đúng chuẩn, ta sẽ gọi interface giả định (hoặc ta sẽ update IReportRepository sau).
-    // Tạm thời mock logic để thể hiện CQRS pattern cho Plan 4.1.
+    private readonly ICommunityPostRepository _postRepository;
+    private readonly IReportRepository _reportRepository;
 
-    public ResolvePostReportCommandHandler(ICommunityPostRepository postRepo)
+    public ResolvePostReportCommandHandler(
+        ICommunityPostRepository postRepository,
+        IReportRepository reportRepository)
     {
-        _postRepo = postRepo;
+        _postRepository = postRepository;
+        _reportRepository = reportRepository;
     }
 
     public async Task<bool> Handle(ResolvePostReportCommand request, CancellationToken cancellationToken)
     {
-        // Logic sẽ gọi IReportRepository.GetById, .UpdateStatus (Cần update IReportRepository)
-        // Hiện tại chỉ implement logic tác động đến Post.
-        
-        var validResults = new[] { ModerationResult.Warn, ModerationResult.RemovePost, ModerationResult.FreezeAccount, ModerationResult.NoAction };
-        if (!validResults.Contains(request.Result))
-            throw new BadRequestException("Kết quả xử lý không hợp lệ.");
+        ValidateModerationResult(request.Result);
 
-        // Giả sử lấy được ReportTargetId = "abc"
-        // Nếu kết quả là RemovePost -> Call SoftDelete
-        if (request.Result == ModerationResult.RemovePost)
+        var report = await _reportRepository.GetByIdAsync(request.ReportId, cancellationToken)
+            ?? throw new NotFoundException("Không tìm thấy report.");
+
+        if (string.Equals(report.TargetType, "post", StringComparison.OrdinalIgnoreCase) == false)
         {
-            // await _postRepo.SoftDeleteAsync(report.TargetId, request.AdminId.ToString(), cancellationToken);
+            throw new BadRequestException("Report không thuộc community post.");
         }
 
-        return await Task.FromResult(true);
+        if (report.Status != PostReportStatus.Pending && report.Status != PostReportStatus.Processing)
+        {
+            throw new BadRequestException("Report đã được xử lý trước đó.");
+        }
+
+        if (request.Result == ModerationResult.RemovePost)
+        {
+            await RemovePostOrThrowAsync(report.TargetId, request.AdminId, cancellationToken);
+        }
+
+        var resolved = await _reportRepository.ResolveAsync(
+            reportId: request.ReportId,
+            status: PostReportStatus.Resolved,
+            result: request.Result,
+            resolvedBy: request.AdminId.ToString(),
+            adminNote: request.AdminNote,
+            cancellationToken: cancellationToken);
+
+        if (!resolved)
+        {
+            throw new BadRequestException("Không thể cập nhật trạng thái report.");
+        }
+
+        return true;
+    }
+
+    private static void ValidateModerationResult(string result)
+    {
+        var validResults = new HashSet<string>(StringComparer.Ordinal)
+        {
+            ModerationResult.Warn,
+            ModerationResult.RemovePost,
+            ModerationResult.FreezeAccount,
+            ModerationResult.NoAction
+        };
+
+        if (validResults.Contains(result) == false)
+        {
+            throw new BadRequestException("Kết quả xử lý không hợp lệ.");
+        }
+    }
+
+    private async Task RemovePostOrThrowAsync(
+        string postId,
+        Guid adminId,
+        CancellationToken cancellationToken)
+    {
+        var removed = await _postRepository.SoftDeleteAsync(postId, adminId.ToString(), cancellationToken);
+        if (!removed)
+        {
+            throw new NotFoundException("Không tìm thấy bài viết để gỡ.");
+        }
     }
 }

@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using TarotNow.Api.Extensions;
 using TarotNow.Api.Realtime;
-using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Api.Hubs;
 
@@ -11,16 +10,13 @@ namespace TarotNow.Api.Hubs;
 public partial class ChatHub : Hub
 {
     private readonly IMediator _mediator;
-    private readonly IConversationRepository _conversationRepository;
     private readonly ILogger<ChatHub> _logger;
 
     public ChatHub(
         IMediator mediator,
-        IConversationRepository conversationRepository,
         ILogger<ChatHub> logger)
     {
         _mediator = mediator;
-        _conversationRepository = conversationRepository;
         _logger = logger;
     }
 

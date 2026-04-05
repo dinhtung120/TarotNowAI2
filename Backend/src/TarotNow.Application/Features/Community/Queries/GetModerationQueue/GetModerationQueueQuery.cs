@@ -32,11 +32,15 @@ public class GetModerationQueueQueryHandler : IRequestHandler<GetModerationQueue
 
     public async Task<(IEnumerable<ReportDto> Items, long TotalCount)> Handle(GetModerationQueueQuery request, CancellationToken cancellationToken)
     {
-        // Lấy queue từ Repository chung của Report
-        // NOTE: Hiện IReportRepository/GetPaginatedAsync chưa hỗ trợ lọc riêng type="post"
-        // Ở phiên bản thực tế, cần thêm filter type="post" vào repository để phân loại 
-        // Report Message chat và Report Post cộng đồng. 
-        // Hiện tại ta re-use hàm hiện có để demo luồng.
-        return await _reportRepo.GetPaginatedAsync(request.Page, request.PageSize, request.StatusFilter, cancellationToken);
+        var page = request.Page < 1 ? 1 : request.Page;
+        var pageSize = request.PageSize <= 0 ? 20 : Math.Min(request.PageSize, 100);
+
+        // Chỉ lấy report target = "post" cho moderation queue community.
+        return await _reportRepo.GetPaginatedAsync(
+            page,
+            pageSize,
+            request.StatusFilter,
+            targetType: "post",
+            cancellationToken: cancellationToken);
     }
 }

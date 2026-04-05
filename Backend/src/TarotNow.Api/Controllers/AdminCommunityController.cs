@@ -17,14 +17,13 @@ using TarotNow.Api.Contracts.Requests;
 using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.Community.Commands.ResolvePostReport;
 using TarotNow.Application.Features.Community.Queries.GetModerationQueue;
-using TarotNow.Domain.Enums;
 
 namespace TarotNow.Api.Controllers;
 
 [Route(ApiRoutes.AdminCommunity)]
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
-[Authorize(Roles = UserRole.Admin)] // Tường lửa: Chỉ Admin mới được bước vào đây
+[Authorize(Roles = ApiRoleConstants.Admin)] // Tường lửa: Chỉ Admin mới được bước vào đây
 public class AdminCommunityController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -34,6 +33,9 @@ public class AdminCommunityController : ControllerBase
         _mediator = mediator;
     }
 
+    /// <summary>
+    /// Lấy hàng đợi các báo cáo community post để admin kiểm duyệt.
+    /// </summary>
     [HttpGet("reports")]
     public async Task<IActionResult> GetModerationQueue(
         [FromQuery] int page = 1,
@@ -56,6 +58,9 @@ public class AdminCommunityController : ControllerBase
         });
     }
 
+    /// <summary>
+    /// Xử lý một báo cáo community post theo quyết định của admin.
+    /// </summary>
     [HttpPut("reports/{id}/resolve")]
     public async Task<IActionResult> ResolveReport(string id, [FromBody] ResolveReportBody body)
     {

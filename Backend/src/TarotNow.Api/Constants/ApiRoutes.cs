@@ -12,6 +12,7 @@ public static class ApiRoutes
     public const string Reading = Prefix + "/reading";
     public const string Sessions = Prefix + "/sessions";
     public const string Conversations = Prefix + "/conversations";
+    public const string ConversationCalls = Conversations + "/{conversationId}/calls";
     public const string Community = Prefix + "/community";
     public const string ChatHub = Prefix + "/chat";
     public const string Deposits = Prefix + "/deposits";

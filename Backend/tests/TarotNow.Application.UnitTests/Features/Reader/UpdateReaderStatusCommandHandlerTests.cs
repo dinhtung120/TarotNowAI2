@@ -3,13 +3,13 @@
  * MỤC ĐÍCH: Unit test cho handler chuyển đổi trạng thái online của Reader.
  *
  *   CÁC TEST CASE (4 scenarios):
- *   1. Handle_InvalidStatus_ThrowsBadRequestException: [Theory] "busy","invalid","" → 400
+ *   1. Handle_InvalidStatus_ThrowsBadRequestException: [Theory] "invalid","" → 400
  *   2. Handle_ProfileNotFound_ThrowsNotFoundException: chưa approved → 404
- *   3. Handle_ValidAcceptingStatus_UpdatesSuccessfully: set AcceptingQuestions → OK
+ *   3. Handle_OnlineStatus_ThrowsBadRequestException: online chỉ do Presence set
  *   4. Handle_ValidOfflineStatus_UpdatesSuccessfully: set Offline → OK
  *
- *   TRẠNG THÁI HỢP LỆ: online | offline | busy
- *   → online, busy = gate check cho CreateConversation
+ *   TRẠNG THÁI CHO PHÉP THỦ CÔNG: offline | busy
+ *   → online được PresenceHub cập nhật tự động
  */
 
 using Moq;
@@ -38,7 +38,6 @@ public class UpdateReaderStatusCommandHandlerTests
 
     /// <summary>Trạng thái không hợp lệ → BadRequest + không gọi DB.</summary>
     [Theory]
-    [InlineData("busy")]
     [InlineData("invalid")]
     [InlineData("")]
     public async Task Handle_InvalidStatus_ThrowsBadRequestException(string invalidStatus)
@@ -69,28 +68,22 @@ public class UpdateReaderStatusCommandHandlerTests
     [Fact]
     public async Task Handle_ProfileNotFound_ThrowsNotFoundException()
     {
-        var command = new UpdateReaderStatusCommand { UserId = Guid.NewGuid(), Status = ReaderOnlineStatus.Online };
+        var command = new UpdateReaderStatusCommand { UserId = Guid.NewGuid(), Status = ReaderOnlineStatus.Busy };
         _mockProfileRepo.Setup(x => x.GetByUserIdAsync(command.UserId.ToString(), default)).ReturnsAsync((ReaderProfileDto)null!);
         await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-    /// <summary>Set Online → OK (gate check cho chat).</summary>
+    /// <summary>Set Online thủ công bị chặn vì trạng thái này do Presence cập nhật tự động.</summary>
     [Fact]
-    public async Task Handle_ValidOnlineStatus_UpdatesSuccessfully()
+    public async Task Handle_OnlineStatus_ThrowsBadRequestException()
     {
-        // Ghi chú: Command giờ chỉ nhận offline/busy. 
-        // Nhưng nếu override manual ở unit test thì Online vẫn hợp lệ theo rules cũ
         var userId = Guid.NewGuid();
         var command = new UpdateReaderStatusCommand { UserId = userId, Status = ReaderOnlineStatus.Online };
-        var existingProfile = new ReaderProfileDto { UserId = userId.ToString(), Status = ReaderOnlineStatus.Offline };
-        _mockProfileRepo.Setup(x => x.GetByUserIdAsync(userId.ToString(), default)).ReturnsAsync(existingProfile);
+        var ex = await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
 
-        // Act & Assert (hiện tại validation controller chặn online, nhưng handler vẫn cho phép nếu qua lọt)
-        var result = await _handler.Handle(command, CancellationToken.None);
-
-        Assert.True(result);
-        Assert.Equal(ReaderOnlineStatus.Online, existingProfile.Status);
-        _mockProfileRepo.Verify(x => x.UpdateAsync(existingProfile, default), Times.Once);
+        Assert.Contains("cập nhật tự động", ex.Message);
+        _mockProfileRepo.Verify(x => x.GetByUserIdAsync(It.IsAny<string>(), default), Times.Never);
+        _mockProfileRepo.Verify(x => x.UpdateAsync(It.IsAny<ReaderProfileDto>(), default), Times.Never);
     }
 
     /// <summary>Set Offline → OK (ẩn khỏi directory).</summary>

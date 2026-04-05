@@ -1,13 +1,16 @@
 using MediatR;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TarotNow.Api.Constants;
 using TarotNow.Application.Features.Call.Queries.GetCallHistory;
 
 namespace TarotNow.Api.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/v1/conversations/{conversationId}/calls")]
+[ApiVersion(ApiVersions.V1)]
+[Route(ApiRoutes.ConversationCalls)]
 public class CallController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -18,9 +21,7 @@ public class CallController : ControllerBase
     }
 
     /// <summary>
-    /// GET /api/v1/conversations/{conversationId}/calls?page=1&amp;pageSize=20
-    /// Lịch sử cuộc gọi trong conversation (paginated).
-    /// Cho phép xem cả khi conversation đã completed.
+    /// Lấy lịch sử cuộc gọi có phân trang trong một cuộc trò chuyện.
     /// </summary>
     [HttpGet]
     public async Task<IActionResult> GetCallHistory(

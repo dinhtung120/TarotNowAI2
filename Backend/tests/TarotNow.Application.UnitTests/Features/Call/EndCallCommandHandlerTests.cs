@@ -41,11 +41,27 @@ public class EndCallCommandHandlerTests
 
         _mockCallRepo.Setup(r => r.GetByIdAsync(callId, default)).ReturnsAsync(callSession);
         _mockConvRepo.Setup(r => r.GetByIdAsync("conv-1", default)).ReturnsAsync(conv);
+        _mockCallRepo.Setup(x => x.UpdateStatusAsync(
+                callId,
+                CallSessionStatus.Ended,
+                null,
+                It.IsAny<DateTime?>(),
+                "normal",
+                CallSessionStatus.Accepted,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         var command = new EndCallCommand { CallSessionId = callId, UserId = userId, Reason = "normal" };
         await _handler.Handle(command, CancellationToken.None);
 
-        _mockCallRepo.Verify(x => x.UpdateStatusAsync(callId, CallSessionStatus.Ended, null, It.IsNotNull<DateTime>(), "normal", default), Times.Once);
+        _mockCallRepo.Verify(x => x.UpdateStatusAsync(
+            callId,
+            CallSessionStatus.Ended,
+            null,
+            It.IsNotNull<DateTime>(),
+            "normal",
+            CallSessionStatus.Accepted,
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

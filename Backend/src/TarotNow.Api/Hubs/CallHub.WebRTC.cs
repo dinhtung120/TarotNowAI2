@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
+using TarotNow.Application.Features.Chat.Queries.ValidateConversationAccess;
 
 namespace TarotNow.Api.Hubs;
 
@@ -62,12 +63,17 @@ public partial class CallHub
     /// </summary>
     private async Task<bool> IsConversationParticipantAsync(string conversationId)
     {
-        var userIdStr = GetUserId();
-        if (string.IsNullOrEmpty(userIdStr)) return false;
+        if (TryGetUserGuid(out var userId) == false)
+        {
+            return false;
+        }
 
-        var conversation = await _conversationRepository.GetByIdAsync(conversationId);
-        if (conversation == null) return false;
+        var accessStatus = await _mediator.Send(new ValidateConversationAccessQuery
+        {
+            ConversationId = conversationId,
+            RequesterId = userId
+        });
 
-        return conversation.UserId == userIdStr || conversation.ReaderId == userIdStr;
+        return accessStatus == ConversationAccessStatus.Allowed;
     }
 }

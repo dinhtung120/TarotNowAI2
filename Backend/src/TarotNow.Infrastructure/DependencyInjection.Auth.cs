@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -60,26 +61,36 @@ public static partial class DependencyInjection
         var cookieToken = context.Request.Cookies["accessToken"];
         var path = context.HttpContext.Request.Path;
 
-        var isChatHub = path.StartsWithSegments(ApiPathConstants.ChatHub);
-        var isPresenceHub = path.StartsWithSegments(ApiPathConstants.PresenceHub);
-        /* FIX #23: Thêm CallHub vào danh sách endpoint được phép đọc token.
-         * Trước đây thiếu dòng này → CallHub WebSocket gửi access_token qua query string
-         * nhưng server bỏ qua → trả về 401 Unauthorized → "connection not found". */
-        var isCallHub = path.StartsWithSegments(ApiPathConstants.CallHub);
-        var isAiStream = path.StartsWithSegments(ApiPathConstants.Sessions, out var remaining)
-                         && remaining.HasValue
-                         && remaining.Value.EndsWith("/stream", StringComparison.OrdinalIgnoreCase);
-
-        if ((isChatHub || isPresenceHub || isCallHub) && !string.IsNullOrWhiteSpace(cookieToken))
+        var isHubEndpoint = IsHubEndpoint(path);
+        if (isHubEndpoint && HasToken(cookieToken))
         {
             context.Token = cookieToken;
         }
-        else if (!string.IsNullOrWhiteSpace(queryToken) && (isAiStream || isChatHub || isPresenceHub || isCallHub))
+        else if (HasToken(queryToken) && (isHubEndpoint || IsAiStreamEndpoint(path)))
         {
             context.Token = queryToken;
         }
 
         return Task.CompletedTask;
+    }
+
+    private static bool IsHubEndpoint(PathString path)
+    {
+        return path.StartsWithSegments(ApiPathConstants.ChatHub)
+            || path.StartsWithSegments(ApiPathConstants.PresenceHub)
+            || path.StartsWithSegments(ApiPathConstants.CallHub);
+    }
+
+    private static bool IsAiStreamEndpoint(PathString path)
+    {
+        return path.StartsWithSegments(ApiPathConstants.Sessions, out var remaining)
+            && remaining.HasValue
+            && remaining.Value.EndsWith("/stream", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool HasToken(string? token)
+    {
+        return !string.IsNullOrWhiteSpace(token);
     }
 
     private static void ValidateJwtSecret(string secretKey)

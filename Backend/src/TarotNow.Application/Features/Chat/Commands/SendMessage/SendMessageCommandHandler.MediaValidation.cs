@@ -21,46 +21,6 @@ public partial class SendMessageCommandHandler
         }
     }
 
-    private async Task ProcessMediaRequestAsync(SendMessageCommand request, CancellationToken cancellationToken)
-    {
-        if (IsMediaType(request.Type) == false || request.MediaPayload == null) return;
-
-        if (IsDataUri(request.MediaPayload.Url))
-        {
-            var commaIndex = request.MediaPayload.Url.IndexOf(',');
-            if (commaIndex >= 0)
-            {
-                var base64Data = request.MediaPayload.Url.Substring(commaIndex + 1);
-                var mediaBytes = Convert.FromBase64String(base64Data);
-                
-                byte[] processedBytes;
-                string newMimeType;
-
-                if (string.Equals(request.Type, "image", StringComparison.OrdinalIgnoreCase))
-                {
-                    (processedBytes, newMimeType) = await _mediaProcessor.ProcessAndCompressImageAsync(mediaBytes, cancellationToken);
-                }
-                else
-                {
-                    var ext = GetExtensionFromMime(request.MediaPayload.MimeType) ?? ".webm";
-                    (processedBytes, newMimeType) = await _mediaProcessor.ProcessAndCompressVoiceAsync(mediaBytes, ext, cancellationToken);
-                }
-
-                var processedBase64 = Convert.ToBase64String(processedBytes);
-                request.MediaPayload.Url = $"data:{newMimeType};base64,{processedBase64}";
-                request.MediaPayload.MimeType = newMimeType;
-                request.MediaPayload.SizeBytes = processedBytes.Length;
-                request.MediaPayload.ProcessingStatus = "compressed";
-                
-                // Cập nhật lại Content nếu đó là DataUri root
-                if (IsDataUri(request.Content))
-                {
-                    request.Content = request.MediaPayload.Url;
-                }
-            }
-        }
-    }
-
     private static bool IsMediaType(string type)
     {
         return string.Equals(type, "image", StringComparison.OrdinalIgnoreCase)
