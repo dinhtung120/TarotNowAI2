@@ -35,9 +35,6 @@ export default function AuthSessionManager({
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
     const clearAuth = useAuthStore((s) => s.clearAuth);
     const syncAuth = useAuthStore((s) => s.syncAuth);
-    // Lấy hàm updateToken để cập nhật token mới sau khi refresh
-    // Tránh giữ reference cũ → dùng getState() khi cần gọi
-    const updateUser = useAuthStore((s) => s.updateUser);
 
     const logoutInProgressRef = useRef(false);
     const refreshInProgressRef = useRef(false);

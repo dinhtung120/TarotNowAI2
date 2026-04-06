@@ -55,7 +55,7 @@ public partial class CallHub
         return await _mediator.Send(new GetParticipantConversationIdsQuery
         {
             ParticipantId = userId,
-            MaxCount = 50,
+            MaxCount = 200,
             Statuses = CallConversationStatuses.ActiveConversationStates
         });
     }

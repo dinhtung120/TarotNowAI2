@@ -31,6 +31,7 @@
  */
 
 using System.Reflection;            // Assembly.GetExecutingAssembly()
+using AutoMapper;
 using FluentValidation;             // Thư viện validation (kiểm tra dữ liệu)
 using MediatR;                      // Thư viện CQRS mediator pattern
 using Microsoft.Extensions.DependencyInjection; // DI container
@@ -98,6 +99,7 @@ public static class DependencyInjection
          *   → chạy validation → nếu lỗi throw → nếu OK cho qua handler.
         */
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+        services.AddAutoMapper(Assembly.GetExecutingAssembly());
         services.AddScoped<IEscrowSettlementService, EscrowSettlementService>();
 
         // Đăng ký Domain Services

@@ -1,5 +1,7 @@
 using System.Globalization;
+using System.Security.Claims;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Mvc;
 using System.Threading.RateLimiting;
 
 namespace TarotNow.Api.Startup;
@@ -11,31 +13,55 @@ public static partial class ApiServiceCollectionExtensions
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-            options.OnRejected = async (context, token) =>
-            {
-                if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
-                {
-                    var seconds = Math.Max(1, (int)Math.Ceiling(retryAfter.TotalSeconds));
-                    context.HttpContext.Response.Headers.RetryAfter = seconds.ToString(CultureInfo.InvariantCulture);
-                }
-
-                await context.HttpContext.Response.WriteAsJsonAsync(
-                    new { error = "TOO_MANY_REQUESTS", message = "Too many requests. Please try again later." },
-                    cancellationToken: token);
-            };
-
-            options.AddPolicy("login", httpContext =>
-                RateLimitPartition.GetFixedWindowLimiter(
-                    ResolveClientIp(httpContext),
-                    _ => new FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = 5,
-                        Window = TimeSpan.FromSeconds(60),
-                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                        QueueLimit = 0,
-                        AutoReplenishment = true
-                    }));
+            options.OnRejected = WriteRateLimitProblemAsync;
+            ConfigureRateLimitPolicies(options);
         });
+    }
+
+    private static void ConfigureRateLimitPolicies(RateLimiterOptions options)
+    {
+        AddFixedWindowPolicy(options, "login", ResolveClientIp, permitLimit: 5, TimeSpan.FromSeconds(60));
+        AddFixedWindowPolicy(options, "community-write", ResolveAuthenticatedPartitionKey, permitLimit: 30, TimeSpan.FromMinutes(1));
+        AddFixedWindowPolicy(options, "call-history", ResolveAuthenticatedPartitionKey, permitLimit: 60, TimeSpan.FromMinutes(1));
+    }
+
+    private static void AddFixedWindowPolicy(
+        RateLimiterOptions options,
+        string policyName,
+        Func<HttpContext, string> partitionResolver,
+        int permitLimit,
+        TimeSpan window)
+    {
+        options.AddPolicy(policyName, httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionResolver(httpContext),
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = permitLimit,
+                    Window = window,
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0,
+                    AutoReplenishment = true
+                }));
+    }
+
+    private static ValueTask WriteRateLimitProblemAsync(OnRejectedContext context, CancellationToken token)
+    {
+        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        {
+            var seconds = Math.Max(1, (int)Math.Ceiling(retryAfter.TotalSeconds));
+            context.HttpContext.Response.Headers.RetryAfter = seconds.ToString(CultureInfo.InvariantCulture);
+        }
+
+        var problem = new ProblemDetails
+        {
+            Status = StatusCodes.Status429TooManyRequests,
+            Title = "Too Many Requests",
+            Type = "https://datatracker.ietf.org/doc/html/rfc6585#section-4",
+            Detail = "Too many requests. Please try again later."
+        };
+
+        return new ValueTask(context.HttpContext.Response.WriteAsJsonAsync(problem, cancellationToken: token));
     }
 
     private static string ResolveClientIp(HttpContext httpContext)
@@ -52,5 +78,16 @@ public static partial class ApiServiceCollectionExtensions
         }
 
         return httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+    }
+
+    private static string ResolveAuthenticatedPartitionKey(HttpContext httpContext)
+    {
+        var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            return $"user:{userId}";
+        }
+
+        return $"ip:{ResolveClientIp(httpContext)}";
     }
 }

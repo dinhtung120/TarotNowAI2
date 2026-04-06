@@ -1,0 +1,40 @@
+{
+  "Community": {
+    "title": "Cộng Đồng TarotNow",
+    "tabs": {
+      "public": "Khám Phá (Public)",
+      "private": "Nhật Ký (Private)"
+    },
+    "feed": {
+      "loading": "Vũ trụ đang truyền tin...",
+      "load_more": "Mở rộng tầm mắt",
+      "loading_more": "Đang tò mò thêm...",
+      "end": "Bạn đã lướt hết dòng thời gian rồi.",
+      "empty": "Khoảng không im lặng. Chưa có thông điệp nào.",
+      "report_placeholder": "Mở modal báo cáo cho bài viết [{postId}] (MVP phase)"
+    },
+    "composer": {
+      "placeholder": "Hôm nay vũ trụ gửi thông điệp gì đến bạn?...",
+      "visibility_public": "🌐 Công khai",
+      "visibility_private": "🔒 Riêng tư",
+      "attach_image": "Đính kèm ảnh",
+      "upload_failed": "Upload ảnh thất bại",
+      "upload_error": "Lỗi khi tải ảnh lên",
+      "posting": "Đang đăng...",
+      "submit": "Đăng Bài"
+    },
+    "post": {
+      "at": "lúc",
+      "report": "Báo cáo vi phạm",
+      "post_media_alt": "Ảnh bài viết"
+    },
+    "comments": {
+      "load_error": "Lỗi khi tải bình luận",
+      "load_more": "Xem thêm bình luận",
+      "loading_more": "Đang tải...",
+      "empty": "Chưa có bình luận nào. Hãy là người đầu tiên!",
+      "placeholder": "Viết bình luận...",
+      "login_required": "Vui lòng đăng nhập để bình luận"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Contracts.Requests;
 using TarotNow.Application.Features.Community.Commands.ReportPost;
 using TarotNow.Application.Features.Community.Commands.ToggleReaction;
@@ -11,6 +12,7 @@ public partial class CommunityController
     /// Bật hoặc tắt reaction của người dùng trên bài viết.
     /// </summary>
     [HttpPost("posts/{id}/reactions")]
+    [EnableRateLimiting("community-write")]
     public async Task<IActionResult> ToggleReaction(string id, [FromBody] ToggleReactionBody body)
     {
         await _mediator.Send(new ToggleReactionCommand
@@ -27,6 +29,7 @@ public partial class CommunityController
     /// Tạo báo cáo vi phạm cho một bài viết cộng đồng.
     /// </summary>
     [HttpPost("posts/{id}/reports")]
+    [EnableRateLimiting("community-write")]
     public async Task<IActionResult> ReportPost(string id, [FromBody] ReportPostBody body)
     {
         var result = await _mediator.Send(new ReportPostCommand

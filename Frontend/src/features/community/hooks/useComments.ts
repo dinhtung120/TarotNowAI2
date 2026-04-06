@@ -1,6 +1,5 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCommentsAction, addCommentAction } from '../application/actions/communityActions';
-import { CommunityComment } from '../types';
 
 export function useComments(postId: string) {
   const query = useInfiniteQuery({

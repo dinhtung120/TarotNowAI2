@@ -1,6 +1,5 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
 import { MessageSquareText } from 'lucide-react';
 import { GlassCard } from '@/shared/components/ui';
 
@@ -11,8 +10,6 @@ import { GlassCard } from '@/shared/components/ui';
  */
 
 export default function ChatInboxPage() {
-  const t = useTranslations('Chat');
-
   return (
     <div className="h-full flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-500">
       <GlassCard className="max-w-md !p-12 flex flex-col items-center gap-6 border-white/5 bg-white/5 shadow-2xl">

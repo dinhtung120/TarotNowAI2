@@ -1,4 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useTranslations } from 'next-intl';
+import { useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useComments, useAddComment } from '../hooks/useComments';
 import { Loader2, Send } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
@@ -7,27 +11,42 @@ interface CommentSectionProps {
   postId: string;
 }
 
+const commentSchema = z.object({
+  content: z.string().trim().min(1).max(1000)
+});
+
+type CommentFormValues = z.infer<typeof commentSchema>;
+
 export const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
-  const [content, setContent] = useState('');
+  const t = useTranslations('Community');
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError } = useComments(postId);
   const addComment = useAddComment(postId);
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset
+  } = useForm<CommentFormValues>({
+    resolver: zodResolver(commentSchema),
+    defaultValues: {
+      content: ''
+    }
+  });
+  const content = useWatch({ control, name: 'content' }) ?? '';
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!content.trim()) return;
-    
-    addComment.mutate(content, {
-      onSuccess: () => setContent('')
+  const submitComment = handleSubmit((values) => {
+    addComment.mutate(values.content, {
+      onSuccess: () => reset({ content: '' })
     });
-  };
+  });
 
   return (
     <div className="mt-4 pt-4 border-t border-[#2a2b3d]">
       {/* Danh sách bình luận */}
       <div className="space-y-4 mb-4 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
         {isLoading && <div className="text-center py-2 text-gray-500"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></div>}
-        {isError && <div className="text-center py-2 text-red-400">Lỗi khi tải bình luận</div>}
+        {isError && <div className="text-center py-2 text-red-400">{t('comments.load_error')}</div>}
         
         {data?.pages?.map((page, i) => (
           <React.Fragment key={i}>
@@ -66,22 +85,21 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
             disabled={isFetchingNextPage}
             className="text-xs font-semibold text-[#8a2be2] hover:text-[#ff00ff] block w-full text-center py-2"
           >
-            {isFetchingNextPage ? 'Đang tải...' : 'Xem thêm bình luận'}
+            {isFetchingNextPage ? t('comments.loading_more') : t('comments.load_more')}
           </button>
         )}
         
         {!isLoading && data?.pages[0]?.items.length === 0 && (
-          <div className="text-center py-4 text-gray-500 text-sm">Chưa có bình luận nào. Hãy là người đầu tiên!</div>
+          <div className="text-center py-4 text-gray-500 text-sm">{t('comments.empty')}</div>
         )}
       </div>
 
       {/* Box nhập bình luận */}
       {isAuthenticated ? (
-        <form onSubmit={handleSubmit} className="flex gap-2 items-end relative">
+        <form onSubmit={submitComment} className="flex gap-2 items-end relative">
           <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Viết bình luận..."
+            {...register('content')}
+            placeholder={t('comments.placeholder')}
             maxLength={1000}
             className="flex-1 bg-[#0f0f16] border border-[#2a2b3d] rounded-xl px-4 py-3 text-sm text-gray-200 focus:outline-none focus:border-[#8a2be2] resize-none h-[46px] min-h-[46px] custom-scrollbar focus:ring-1 focus:ring-[#8a2be2]/50 transition-all"
             rows={1}
@@ -89,7 +107,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                handleSubmit(e);
+                void submitComment();
               }
             }}
           />
@@ -108,7 +126,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
         </form>
       ) : (
         <div className="text-center py-3 text-xs text-gray-500 bg-[#0f0f16] rounded-xl border border-[#2a2b3d]/50">
-          Vui lòng đăng nhập để bình luận
+          {t('comments.login_required')}
         </div>
       )}
     </div>

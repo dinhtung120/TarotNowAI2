@@ -67,6 +67,11 @@ public interface IConversationRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Tính tổng số tin nhắn chưa đọc của một người tham gia qua tất cả các phòng chat.
+    /// </summary>
+    Task<int> GetTotalUnreadCountAsync(string participantId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Thay Đổi Điểm Báo Mốc Thời Gian Tin Rán Lên Top Kéo Box Mới Bay Đầu Mục Gần Đây! (Bumpy Tăng Dễ Thấy Gửi Lần Nữa Trồi Lên).
     /// </summary>
     Task UpdateAsync(ConversationDto conversation, CancellationToken cancellationToken = default);

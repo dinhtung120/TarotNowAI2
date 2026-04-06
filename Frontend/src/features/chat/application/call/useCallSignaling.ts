@@ -120,7 +120,6 @@ export function useCallSignaling() {
       }
       connectionRef.current = null;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   // Subscribe webRTC relays

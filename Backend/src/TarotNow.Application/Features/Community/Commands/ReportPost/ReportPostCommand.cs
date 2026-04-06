@@ -12,6 +12,7 @@
 using MediatR;
 using TarotNow.Application.Common;
 using TarotNow.Application.Exceptions;
+using TarotNow.Application.Features.Community;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Enums;
 
@@ -43,11 +44,14 @@ public class ReportPostCommandHandler : IRequestHandler<ReportPostCommand, Repor
         if (post == null || post.IsDeleted)
             throw new NotFoundException("Bài viết không tồn tại hoặc đã bị xoá.");
 
-        if (post.AuthorId == request.ReporterId.ToString())
+        var reporterId = request.ReporterId.ToString();
+        if (post.Visibility == PostVisibility.Private && post.AuthorId != reporterId)
+            throw new ForbiddenException("Bạn không có quyền báo cáo bài viết riêng tư này.");
+
+        if (post.AuthorId == reporterId)
             throw new BadRequestException("Bạn không thể tự báo cáo bài viết của chính mình.");
 
-        var validReasonCodes = new[] { "spam", "hate_speech", "harassment", "misinformation", "inappropriate", "other" };
-        if (!validReasonCodes.Contains(request.ReasonCode))
+        if (!CommunityModuleConstants.SupportedReportReasonCodes.Contains(request.ReasonCode))
             throw new BadRequestException("Mã lý do không hợp lệ.");
 
         if (string.IsNullOrWhiteSpace(request.Description) || request.Description.Length < 10)

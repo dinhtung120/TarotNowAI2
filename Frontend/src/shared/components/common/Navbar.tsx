@@ -16,6 +16,7 @@
  */
 
 import { Link, useRouter, usePathname } from "@/i18n/routing";
+import Image from "next/image";
 import {
  LogOut,
  Home,
@@ -27,7 +28,6 @@ import {
  ShieldCheck,
  Menu,
  X,
- Bell,
  ChevronDown,
 } from "lucide-react";
 import WalletWidget from "../common/WalletWidget";
@@ -62,7 +62,7 @@ export default function Navbar({ onLogout }: NavbarProps = {}) {
  );
  const tNav = useTranslations("Navigation");
  const tCommon = useTranslations("Common");
- const { unreadCount } = useChatUnreadNotifications();
+ useChatUnreadNotifications();
  useChatRealtimeSync();
  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
  const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
@@ -218,12 +218,12 @@ export default function Navbar({ onLogout }: NavbarProps = {}) {
  )}
  >
  {/* Avatar circle */}
- <div className="w-7 h-7 rounded-full bg-[var(--purple-100)] border border-[var(--border-default)] flex items-center justify-center text-[10px] font-black text-[var(--text-ink)] relative overflow-hidden">
- {user?.avatarUrl ? (
-   <img src={user.avatarUrl} alt="avatar" className="w-full h-full object-cover" />
- ) : (
-   user?.displayName?.charAt(0)?.toUpperCase() || "U"
- )}
+	 <div className="w-7 h-7 rounded-full bg-[var(--purple-100)] border border-[var(--border-default)] flex items-center justify-center text-[10px] font-black text-[var(--text-ink)] relative overflow-hidden">
+	 {user?.avatarUrl ? (
+	   <Image src={user.avatarUrl} alt="avatar" fill sizes="28px" unoptimized className="w-full h-full object-cover" />
+	 ) : (
+	   user?.displayName?.charAt(0)?.toUpperCase() || "U"
+	 )}
  </div>
 	 <div className="hidden lg:flex flex-col items-start leading-tight -space-y-0.5">
 	 <span className="text-[11px] font-black tracking-wide max-w-[100px] truncate text-[var(--text-ink)]">

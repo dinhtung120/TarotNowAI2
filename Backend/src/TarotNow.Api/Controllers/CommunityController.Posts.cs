@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Contracts.Requests;
+using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Community.Commands.CreatePost;
 using TarotNow.Application.Features.Community.Commands.DeletePost;
 using TarotNow.Application.Features.Community.Commands.UpdatePost;
@@ -15,6 +17,7 @@ public partial class CommunityController
     /// Tạo bài viết cộng đồng mới cho người dùng hiện tại.
     /// </summary>
     [HttpPost("posts")]
+    [EnableRateLimiting("community-write")]
     public async Task<IActionResult> CreatePost([FromBody] CreatePostBody body)
     {
         var result = await _mediator.Send(new CreatePostCommand
@@ -32,11 +35,12 @@ public partial class CommunityController
     /// </summary>
     [HttpPost("images")]
     [RequestSizeLimit(10 * 1024 * 1024)]
+    [EnableRateLimiting("community-write")]
     public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
     {
         if (file == null || file.Length == 0)
         {
-            return BadRequest(new { success = false, message = "File rỗng" });
+            throw new BadRequestException("File rỗng.");
         }
 
         using var stream = file.OpenReadStream();
@@ -91,6 +95,7 @@ public partial class CommunityController
     /// Cập nhật nội dung bài viết cộng đồng do chính người dùng tạo.
     /// </summary>
     [HttpPut("posts/{id}")]
+    [EnableRateLimiting("community-write")]
     public async Task<IActionResult> UpdatePost(string id, [FromBody] UpdatePostBody body)
     {
         await _mediator.Send(new UpdatePostCommand
@@ -107,6 +112,7 @@ public partial class CommunityController
     /// Xóa mềm bài viết cộng đồng theo quyền tác giả hoặc quản trị.
     /// </summary>
     [HttpDelete("posts/{id}")]
+    [EnableRateLimiting("community-write")]
     public async Task<IActionResult> DeletePost(string id)
     {
         var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? string.Empty;

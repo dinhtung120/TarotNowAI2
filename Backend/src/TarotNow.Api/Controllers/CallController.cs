@@ -2,13 +2,14 @@ using MediatR;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Constants;
 using TarotNow.Application.Features.Call.Queries.GetCallHistory;
 
 namespace TarotNow.Api.Controllers;
 
 [ApiController]
-[Authorize]
+[Authorize(Policy = ApiAuthorizationPolicies.AuthenticatedUser)]
 [ApiVersion(ApiVersions.V1)]
 [Route(ApiRoutes.ConversationCalls)]
 public class CallController : ControllerBase
@@ -24,6 +25,7 @@ public class CallController : ControllerBase
     /// Lấy lịch sử cuộc gọi có phân trang trong một cuộc trò chuyện.
     /// </summary>
     [HttpGet]
+    [EnableRateLimiting("call-history")]
     public async Task<IActionResult> GetCallHistory(
         [FromRoute] string conversationId, 
         [FromQuery] int page = 1, 
@@ -31,7 +33,7 @@ public class CallController : ControllerBase
     {
         var participantIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(participantIdStr, out var participantId))
-            return Unauthorized();
+            throw new UnauthorizedAccessException();
 
         var query = new GetCallHistoryQuery
         {

@@ -12,7 +12,7 @@ public partial class CallTimeoutBackgroundService : BackgroundService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<CallTimeoutBackgroundService> _logger;
     private readonly TimeSpan _checkInterval = TimeSpan.FromSeconds(30);
-    private readonly TimeSpan _timeoutThreshold = TimeSpan.FromSeconds(90);
+    private readonly TimeSpan _timeoutThreshold = TimeSpan.FromSeconds(60);
 
     public CallTimeoutBackgroundService(IServiceScopeFactory scopeFactory, ILogger<CallTimeoutBackgroundService> logger)
     {

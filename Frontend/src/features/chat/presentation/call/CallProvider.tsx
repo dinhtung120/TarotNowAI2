@@ -1,7 +1,6 @@
 'use client';
 
 import React, { createContext, useContext } from 'react';
-import { useCallStore } from '../../application/call/useCallStore';
 import { useCallSignaling } from '../../application/call/useCallSignaling';
 import { useWebRTC } from '../../application/call/useWebRTC';
 import { useCallTimeout } from '../../application/call/useCallTimeout';
@@ -25,7 +24,7 @@ export const CallProvider = ({ children }: { children: React.ReactNode }) => {
   } = useCallSignaling();
 
   // Đăng ký WebRTC (Listen Offer/Answer & ICE Candidates)
-  const { peerConnectionRef } = useWebRTC({ sendOffer, sendAnswer, sendIceCandidate });
+  useWebRTC({ sendOffer, sendAnswer, sendIceCandidate });
 
   // Hook đo timeout 60s
   useCallTimeout(endCall);

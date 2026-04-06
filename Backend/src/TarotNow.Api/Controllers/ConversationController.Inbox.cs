@@ -3,6 +3,7 @@ using TarotNow.Api.Contracts.Requests;
 using TarotNow.Application.Features.Chat.Commands.CancelPendingConversation;
 using TarotNow.Application.Features.Chat.Commands.CreateConversation;
 using TarotNow.Application.Features.Chat.Queries.ListConversations;
+using TarotNow.Application.Features.Chat.Queries.GetUnreadTotal;
 
 namespace TarotNow.Api.Controllers;
 
@@ -49,6 +50,25 @@ public partial class ConversationController
             Tab = tab,
             Page = page,
             PageSize = pageSize
+        });
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Lấy tổng số tin nhắn chưa đọc của người dùng hiện tại (cho badge thông báo).
+    /// </summary>
+    [HttpGet("unread-total")]
+    public async Task<IActionResult> GetUnreadTotal()
+    {
+        if (!TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var result = await Mediator.Send(new GetUnreadTotalQuery
+        {
+            UserId = userId
         });
 
         return Ok(result);

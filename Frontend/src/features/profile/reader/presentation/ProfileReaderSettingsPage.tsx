@@ -14,7 +14,7 @@
 
 import React from 'react';
 import {
- Sparkles, Save, Loader2, Activity, BookOpen, Gem
+ Sparkles, Save, Loader2, BookOpen, Gem
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { SectionHeader, GlassCard, Button } from '@/shared/components/ui';
@@ -35,9 +35,7 @@ export default function ReaderSettingsPage({ embedded = false }: ReaderSettingsP
  setDiamondPerQuestion,
  specialtiesStr,
  setSpecialtiesStr,
- status,
  handleSave,
- handleStatusChange,
  } = useProfileReaderSettingsPage(t);
 
  if (loading) {

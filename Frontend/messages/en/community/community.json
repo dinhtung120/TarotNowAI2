@@ -1,0 +1,40 @@
+{
+  "Community": {
+    "title": "TarotNow Community",
+    "tabs": {
+      "public": "Explore (Public)",
+      "private": "Journal (Private)"
+    },
+    "feed": {
+      "loading": "Receiving signals from the universe...",
+      "load_more": "Load more",
+      "loading_more": "Loading more...",
+      "end": "You've reached the end of the timeline.",
+      "empty": "Silence in the void. No messages yet.",
+      "report_placeholder": "Open report modal for post [{postId}] (MVP phase)"
+    },
+    "composer": {
+      "placeholder": "What message did the universe send to you today?...",
+      "visibility_public": "🌐 Public",
+      "visibility_private": "🔒 Private",
+      "attach_image": "Attach image",
+      "upload_failed": "Image upload failed",
+      "upload_error": "Error while uploading image",
+      "posting": "Posting...",
+      "submit": "Post"
+    },
+    "post": {
+      "at": "at",
+      "report": "Report violation",
+      "post_media_alt": "Post media"
+    },
+    "comments": {
+      "load_error": "Failed to load comments",
+      "load_more": "View more comments",
+      "loading_more": "Loading...",
+      "empty": "No comments yet. Be the first one!",
+      "placeholder": "Write a comment...",
+      "login_required": "Please sign in to comment"
+    }
+  }
+}

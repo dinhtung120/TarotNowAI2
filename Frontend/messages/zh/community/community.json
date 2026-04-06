@@ -1,0 +1,40 @@
+{
+  "Community": {
+    "title": "TarotNow 社区",
+    "tabs": {
+      "public": "发现（公开）",
+      "private": "日记（私密）"
+    },
+    "feed": {
+      "loading": "宇宙正在传来讯息...",
+      "load_more": "加载更多",
+      "loading_more": "正在加载...",
+      "end": "你已经浏览完时间线了。",
+      "empty": "一片寂静。还没有任何讯息。",
+      "report_placeholder": "打开帖子 [{postId}] 的举报弹窗（MVP 阶段）"
+    },
+    "composer": {
+      "placeholder": "今天宇宙给你什么讯息？...",
+      "visibility_public": "🌐 公开",
+      "visibility_private": "🔒 私密",
+      "attach_image": "添加图片",
+      "upload_failed": "图片上传失败",
+      "upload_error": "上传图片时出错",
+      "posting": "发布中...",
+      "submit": "发布"
+    },
+    "post": {
+      "at": "",
+      "report": "举报违规",
+      "post_media_alt": "帖子图片"
+    },
+    "comments": {
+      "load_error": "加载评论失败",
+      "load_more": "查看更多评论",
+      "loading_more": "加载中...",
+      "empty": "还没有评论，来当第一个吧！",
+      "placeholder": "写下评论...",
+      "login_required": "请先登录后再评论"
+    }
+  }
+}

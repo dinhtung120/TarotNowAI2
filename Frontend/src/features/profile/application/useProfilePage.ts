@@ -160,7 +160,7 @@ export function useProfilePage() {
 
     // Yêu cầu tải lại profile để đồng bộ toàn cục avatar
     await queryClient.invalidateQueries({ queryKey: profileQueryKey });
-  } catch (error) {
+  } catch {
     setErrorMsg(t('avatar_upload_error') || 'Không thể tải ảnh lên');
   } finally {
     setAvatarUploading(false);

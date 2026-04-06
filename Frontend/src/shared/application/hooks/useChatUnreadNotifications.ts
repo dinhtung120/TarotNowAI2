@@ -1,23 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { listConversations, type ConversationDto } from '@/features/chat/application/actions';
+import { getUnreadConversationCount } from '@/features/chat/application/actions';
 import { useAuthStore } from '@/store/authStore';
 
 interface ChatUnreadResult {
  unreadCount: number;
  loading: boolean;
-}
-
-function computeUnreadCount(
- conversations: ConversationDto[],
- currentUserId: string
-): number {
- return conversations.reduce((sum, conversation) => {
-  const isUser = conversation.userId === currentUserId;
-  return sum + (isUser ? conversation.unreadCountUser : conversation.unreadCountReader);
- }, 0);
 }
 
 function maybeNotifyBrowser(diff: number, unreadCount: number) {
@@ -61,22 +51,17 @@ function maybeNotifyBrowser(diff: number, unreadCount: number) {
 
 export function useChatUnreadNotifications(): ChatUnreadResult {
  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
- const authUserId = useAuthStore((state) => state.user?.id ?? '');
  const previousUnreadRef = useRef<number | null>(null);
 
  const { data, isLoading } = useQuery({
   queryKey: ['chat', 'unread-badge'],
   enabled: isAuthenticated,
   queryFn: async () => {
-   const result = await listConversations('all', 1, 100);
+   const result = await getUnreadConversationCount();
    if (result.success && result.data) {
-    return result.data;
+    return result.data.count;
    }
-
-   return {
-    conversations: [] as ConversationDto[],
-    currentUserId: authUserId,
-   };
+   return 0;
   },
   staleTime: Infinity,
   refetchOnWindowFocus: false,
@@ -84,11 +69,7 @@ export function useChatUnreadNotifications(): ChatUnreadResult {
   refetchOnMount: false,
  });
 
- const unreadCount = useMemo(() => {
-  const conversations = data?.conversations ?? [];
-  const currentUserId = data?.currentUserId || authUserId;
-  return computeUnreadCount(conversations, currentUserId);
- }, [authUserId, data?.conversations, data?.currentUserId]);
+ const unreadCount = data ?? 0;
 
  useEffect(() => {
   const previous = previousUnreadRef.current;

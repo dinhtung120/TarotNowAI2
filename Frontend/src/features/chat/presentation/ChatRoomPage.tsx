@@ -65,11 +65,17 @@ const VoiceMessageBubble = dynamic(
 
 interface ChatRoomPageProps {
  conversationId?: string;
- embedded?: boolean;
- onBack?: () => void;
 }
 
 type OfferResponseMap = Record<string, 'accept' | 'reject'>;
+type CallLogPayload = {
+ DurationSeconds?: number;
+ durationSeconds?: number;
+ CallType?: string;
+ callType?: string;
+ Reason?: string;
+ reason?: string;
+};
 
 function parseOfferResponseMap(messages: ChatMessageDto[]): OfferResponseMap {
  const map: OfferResponseMap = {};
@@ -225,7 +231,7 @@ async function buildVoiceMediaPayloadFromBlob(
   };
 }
 
-export default function ChatRoomPage({ conversationId: externalConversationId, embedded = false, onBack }: ChatRoomPageProps) {
+export default function ChatRoomPage({ conversationId: externalConversationId }: ChatRoomPageProps) {
  const params = useParams();
  const router = useRouter();
  const locale = useLocale();
@@ -241,7 +247,6 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
   hasMore,
   loadMore,
   sending,
-  connected,
   currentUserId,
   conversation,
   otherName,
@@ -491,7 +496,7 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
     setUploadingMedia(false);
    }
   },
-  [connected, sendMediaMessage]
+  [conversation, sendMediaMessage]
  );
 
  const runAction = useCallback(async (key: string, fn: () => Promise<void>) => {
@@ -743,8 +748,15 @@ export default function ChatRoomPage({ conversationId: externalConversationId, e
 
       {/* Hiển thị Bong bóng Nhật ký cuộc gọi */}
       if (message.type === 'call_log') {
-       let callData: any = {};
-       try { callData = JSON.parse(message.content); } catch { /* ignore */ }
+       let callData: CallLogPayload = {};
+       try {
+        const parsed = JSON.parse(message.content) as unknown;
+        if (parsed && typeof parsed === 'object') {
+         callData = parsed as CallLogPayload;
+        }
+       } catch {
+        // ignore
+       }
        
        // Handle Backend PascalCase JSON serialization
        const duration = callData.DurationSeconds ?? callData.durationSeconds ?? 0;

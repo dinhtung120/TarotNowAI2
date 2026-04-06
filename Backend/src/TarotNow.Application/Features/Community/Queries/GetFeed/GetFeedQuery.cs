@@ -11,6 +11,7 @@
  */
 
 using MediatR;
+using AutoMapper;
 using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
 
@@ -29,11 +30,16 @@ public class GetFeedQueryHandler : IRequestHandler<GetFeedQuery, (IEnumerable<Co
 {
     private readonly ICommunityPostRepository _postRepo;
     private readonly ICommunityReactionRepository _reactionRepo;
+    private readonly IMapper _mapper;
 
-    public GetFeedQueryHandler(ICommunityPostRepository postRepo, ICommunityReactionRepository reactionRepo)
+    public GetFeedQueryHandler(
+        ICommunityPostRepository postRepo,
+        ICommunityReactionRepository reactionRepo,
+        IMapper mapper)
     {
         _postRepo = postRepo;
         _reactionRepo = reactionRepo;
+        _mapper = mapper;
     }
 
     public async Task<(IEnumerable<CommunityPostFeedItemDto> Items, long TotalCount)> Handle(GetFeedQuery request, CancellationToken cancellationToken)
@@ -63,22 +69,11 @@ public class GetFeedQueryHandler : IRequestHandler<GetFeedQuery, (IEnumerable<Co
             cancellationToken);
 
         // 3. Xào chẻ DTO chuẩn hóa cho Frontend
-        var feedItems = posts.Select(p => new CommunityPostFeedItemDto
+        var feedItems = posts.Select(p =>
         {
-            Id = p.Id,
-            AuthorId = p.AuthorId,
-            AuthorDisplayName = p.AuthorDisplayName,
-            AuthorAvatarUrl = p.AuthorAvatarUrl,
-            Content = p.Content,
-            Visibility = p.Visibility,
-            ReactionsCount = p.ReactionsCount,
-            TotalReactions = p.TotalReactions,
-            CommentsCount = p.CommentsCount,
-            IsDeleted = p.IsDeleted,
-            CreatedAt = p.CreatedAt,
-            UpdatedAt = p.UpdatedAt,
-            // Nếu có thả thính thì gắn vào đây để UI bật cờ
-            ViewerReaction = userReactions.ContainsKey(p.Id) ? userReactions[p.Id] : null
+            var mapped = _mapper.Map<CommunityPostFeedItemDto>(p);
+            mapped.ViewerReaction = userReactions.GetValueOrDefault(p.Id);
+            return mapped;
         });
 
         return (feedItems, total);

@@ -175,6 +175,29 @@ export async function listConversations(
  }
 }
 
+export async function getUnreadConversationCount(): Promise<ActionResult<{ count: number }>> {
+ const accessToken = await getServerAccessToken();
+ if (!accessToken) return unauthorized();
+
+ try {
+  const result = await serverHttpRequest<{ count: number }>('/conversations/unread-total', {
+   method: 'GET',
+   token: accessToken,
+   fallbackErrorMessage: 'Failed to get unread total',
+  });
+
+  if (!result.ok) {
+   logger.error('[ChatAction] getUnreadConversationCount', result.error, { status: result.status });
+   return actionFail(result.error || 'Failed to get unread total');
+  }
+
+  return actionOk(result.data);
+ } catch (error) {
+  logger.error('[ChatAction] getUnreadConversationCount', error);
+  return actionFail('Failed to get unread total');
+ }
+}
+
 export async function listMessages(
  conversationId: string,
  options?: { cursor?: string; limit?: number }

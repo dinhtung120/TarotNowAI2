@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useCallStore } from '../../application/call/useCallStore';
 import { useCallContext } from './CallProvider';
@@ -13,11 +13,39 @@ export const ActiveCallOverlay = () => {
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
+  const remoteAudioContextRef = useRef<AudioContext | null>(null);
+  const remoteAudioSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const remoteAudioGainRef = useRef<GainNode | null>(null);
+  const remoteAudioDestinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
 
   const [duration, setDuration] = useState(0);
   const [isMinimized, setIsMinimized] = useState(false);
 
   const isOpen = uiState === 'connected';
+
+  const resolveRemoteGain = useCallback(() => {
+    const raw = process.env.NEXT_PUBLIC_CALL_REMOTE_GAIN;
+    const parsed = raw ? Number(raw) : 2.2;
+    if (!Number.isFinite(parsed)) {
+      return 2.2;
+    }
+
+    return Math.min(4, Math.max(1, parsed));
+  }, []);
+
+  const cleanupRemoteAudioPipeline = useCallback(() => {
+    remoteAudioSourceRef.current?.disconnect();
+    remoteAudioGainRef.current?.disconnect();
+
+    remoteAudioSourceRef.current = null;
+    remoteAudioGainRef.current = null;
+    remoteAudioDestinationRef.current = null;
+
+    if (remoteAudioContextRef.current) {
+      remoteAudioContextRef.current.close().catch(() => undefined);
+      remoteAudioContextRef.current = null;
+    }
+  }, []);
 
   // Attach streams to <video> tags
   useEffect(() => {
@@ -26,7 +54,7 @@ export const ActiveCallOverlay = () => {
         localVideoRef.current.srcObject = localStream;
       }
     }
-  }, [localStream, isOpen, isMinimized]); // Thêm isMinimized vì khi toggle, ref của video có thể bị mount lại
+  }, [localStream, isMinimized]); // Ref video có thể mount lại khi toggle minimize.
 
   useEffect(() => {
     if (remoteVideoRef.current && remoteStream) {
@@ -36,31 +64,119 @@ export const ActiveCallOverlay = () => {
         remoteVideoRef.current.srcObject = remoteStream;
       }
     }
-  }, [remoteStream, isOpen, isMinimized]);
+  }, [remoteStream, isMinimized]);
 
   /* Cài đặt audio stream: LUÔN TRỰC TIẾP
    * Không phụ thuộc vào isMinimized vì thẻ audio được gắn cố định tại root của component.
    */
   useEffect(() => {
-    if (remoteAudioRef.current && remoteStream) {
-      remoteAudioRef.current.muted = false;
-      remoteAudioRef.current.volume = 1;
-      if (remoteAudioRef.current.srcObject !== remoteStream) {
-        remoteAudioRef.current.srcObject = remoteStream;
+    const remoteAudio = remoteAudioRef.current;
+    if (!remoteAudio) {
+      return;
+    }
+
+    cleanupRemoteAudioPipeline();
+
+    if (!remoteStream) {
+      remoteAudio.srcObject = null;
+      return;
+    }
+
+    const audioTracks = remoteStream.getAudioTracks();
+    if (audioTracks.length === 0) {
+      remoteAudio.srcObject = remoteStream;
+      return;
+    }
+
+    const audioOnlyStream = new MediaStream(audioTracks);
+    const AudioContextCtor = window.AudioContext
+      || ((window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext ?? null);
+    if (!AudioContextCtor) {
+      remoteAudio.srcObject = audioOnlyStream;
+      remoteAudio.volume = 1;
+      remoteAudio.play().catch(() => undefined);
+      return;
+    }
+
+    try {
+      const context = new AudioContextCtor();
+      const source = context.createMediaStreamSource(audioOnlyStream);
+      const gainNode = context.createGain();
+      const compressor = context.createDynamicsCompressor();
+      const destination = context.createMediaStreamDestination();
+
+      gainNode.gain.value = resolveRemoteGain();
+      compressor.threshold.value = -18;
+      compressor.knee.value = 18;
+      compressor.ratio.value = 3;
+      compressor.attack.value = 0.003;
+      compressor.release.value = 0.25;
+
+      source.connect(gainNode);
+      gainNode.connect(compressor);
+      compressor.connect(destination);
+
+      remoteAudioContextRef.current = context;
+      remoteAudioSourceRef.current = source;
+      remoteAudioGainRef.current = gainNode;
+      remoteAudioDestinationRef.current = destination;
+
+      remoteAudio.srcObject = destination.stream;
+      remoteAudio.muted = false;
+      remoteAudio.volume = 1;
+
+      const mediaWithSinkId = remoteAudio as HTMLAudioElement & {
+        setSinkId?: (sinkId: string) => Promise<void>;
+      };
+
+      if (typeof mediaWithSinkId.setSinkId === 'function') {
+        mediaWithSinkId.setSinkId('default').catch(() => undefined);
       }
 
-      remoteAudioRef.current.play().catch(() => undefined);
+      if (context.state === 'suspended') {
+        context.resume().catch(() => undefined);
+      }
+
+      remoteAudio.play().catch(() => undefined);
+    } catch {
+      remoteAudio.srcObject = audioOnlyStream;
+      remoteAudio.volume = 1;
+      remoteAudio.play().catch(() => undefined);
     }
-  }, [remoteStream, isOpen]);
+
+    return () => {
+      cleanupRemoteAudioPipeline();
+    };
+  }, [cleanupRemoteAudioPipeline, remoteStream, resolveRemoteGain]);
+
+  useEffect(() => {
+    return () => {
+      cleanupRemoteAudioPipeline();
+    };
+  }, [cleanupRemoteAudioPipeline]);
 
   // Bộ đếm thời gian
   useEffect(() => {
-    if (isOpen) {
-      setDuration(0);
-      const timer = setInterval(() => setDuration(prev => prev + 1), 1000);
-      return () => clearInterval(timer);
+    if (!isOpen) {
+      const resetTimer = window.setTimeout(() => {
+        setDuration(0);
+      }, 0);
+      return () => window.clearTimeout(resetTimer);
     }
-  }, [isOpen]);
+
+    let elapsedSeconds = 0;
+    const resetTimer = window.setTimeout(() => {
+      setDuration(0);
+    }, 0);
+    const timer = window.setInterval(() => {
+      elapsedSeconds += 1;
+      setDuration(elapsedSeconds);
+    }, 1000);
+    return () => {
+      window.clearTimeout(resetTimer);
+      window.clearInterval(timer);
+    };
+  }, [isOpen, session?.id]);
 
   const handleEndCall = () => {
     if (session?.id) {
@@ -83,7 +199,7 @@ export const ActiveCallOverlay = () => {
 
   return (
     <>
-      <audio ref={remoteAudioRef} autoPlay playsInline hidden />
+      <audio ref={remoteAudioRef} autoPlay playsInline className="sr-only" />
 
       {isMinimized ? (
         <div className="fixed bottom-24 right-4 z-50 w-48 h-64 bg-gray-900 rounded-xl overflow-hidden shadow-2xl border border-gray-700 flex flex-col group transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,0,0,0.5)]">
@@ -91,7 +207,7 @@ export const ActiveCallOverlay = () => {
             <button 
               onClick={() => setIsMinimized(false)}
               className="p-1.5 bg-black/50 hover:bg-black/80 rounded-md backdrop-blur-md text-white transition-colors"
-              title="Phóng to"
+              title={t('maximize')}
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M3 3a1 1 0 011-1h4a1 1 0 110 2H5.414l3.293 3.293a1 1 0 11-1.414 1.414L4 5.414V8a1 1 0 11-2 0V4a1 1 0 011-1zm14 0a1 1 0 00-1-1h-4a1 1 0 100 2h2.586l-3.293 3.293a1 1 0 101.414 1.414L20 14.586V12a1 1 0 102 0v-4a1 1 0 00-1-1zm-1 14a1 1 0 01-1 1h-4a1 1 0 110-2h2.586l-3.293-3.293a1 1 0 111.414-1.414L20 14.586V12a1 1 0 112 0v4a1 1 0 01-1 1zm-14 0a1 1 0 001 1h4a1 1 0 100-2H5.414l3.293-3.293a1 1 0 10-1.414-1.414L4 14.586V12a1 1 0 10-2 0v4a1 1 0 001 1z" clipRule="evenodd" />
@@ -100,7 +216,7 @@ export const ActiveCallOverlay = () => {
             <button 
               onClick={handleEndCall}
               className="p-1.5 bg-red-600/80 hover:bg-red-600 rounded-md backdrop-blur-md text-white transition-colors"
-              title="Kết thúc cuộc gọi"
+              title={t('end_call')}
             >
                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -133,7 +249,7 @@ export const ActiveCallOverlay = () => {
              <button 
                 onClick={() => setIsMinimized(true)}
                 className="pointer-events-auto w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm transition-colors cursor-pointer mr-[140px]"
-                title="Thu nhỏ để chat"
+                title={t('minimize')}
              >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
@@ -177,7 +293,7 @@ export const ActiveCallOverlay = () => {
             <button 
               onClick={handleEndCall}
               className="w-16 h-16 rounded-full bg-red-600 flex items-center justify-center shadow-[0_0_30px_rgba(220,38,38,0.6)] hover:bg-red-500 transition-all hover:scale-105 active:scale-95 cursor-pointer"
-              title="Kết thúc cuộc gọi"
+              title={t('end_call')}
             >
               <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

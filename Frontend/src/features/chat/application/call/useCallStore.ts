@@ -35,13 +35,16 @@ export const useCallStore = create<CallState>((set) => ({
     isCaller: false 
   }),
   
-  setOutgoingCall: (conversationId, type) => set({ 
-    uiState: 'ringing', 
-    // Chúng ta fake tạm session cho đến khi Backend trả về session id qua SignalR
-    session: null, 
-    conversationId,
-    isCaller: true 
-  }),
+  setOutgoingCall: (conversationId, type) => {
+    void type;
+    return set({
+      uiState: 'ringing',
+      // Chúng ta fake tạm session cho đến khi Backend trả về session id qua SignalR
+      session: null,
+      conversationId,
+      isCaller: true
+    });
+  },
 
   setConnected: (session) => set({ 
     uiState: 'connected', 

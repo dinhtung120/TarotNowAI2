@@ -465,7 +465,7 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
     }
    }
    connectionRef.current = null;
-  };
+ };
  // eslint-disable-next-line react-hooks/exhaustive-deps
  }, [conversationId, currentUserId, token]);
 

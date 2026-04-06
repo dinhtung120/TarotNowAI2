@@ -102,7 +102,13 @@
       "calling": "Calling...",
       "active_title": "Connecting",
       "start_audio": "Start Audio Call",
-      "start_video": "Start Video Call"
+      "start_video": "Start Video Call",
+      "accept": "Accept",
+      "decline": "Decline",
+      "cancel": "Cancel call",
+      "end_call": "End call",
+      "minimize": "Minimize for chat",
+      "maximize": "Maximize"
     }
   }
 }

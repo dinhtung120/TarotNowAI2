@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Reflection;
+using TarotNow.Api.Constants;
 using TarotNow.Api.Middlewares;
 using TarotNow.Api.Realtime;
 using TarotNow.Api.Services;
@@ -25,7 +26,10 @@ public static partial class ApiServiceCollectionExtensions
         services.AddScoped<Application.Interfaces.INotificationPushService, SignalRNotificationPushService>();
         services.AddScoped<Application.Interfaces.IWalletPushService, SignalRWalletPushService>();
         services.AddScoped<Application.Interfaces.IChatPushService, SignalRChatPushService>();
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy(ApiAuthorizationPolicies.AuthenticatedUser, ApiAuthorizationPolicies.RequireAuthenticatedUser);
+        });
         ConfigureSignalR(services, configuration.GetConnectionString("Redis"));
     }
 

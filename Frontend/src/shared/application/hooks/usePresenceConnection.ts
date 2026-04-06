@@ -57,11 +57,11 @@ export function usePresenceConnection() {
    hubConnection.serverTimeoutInMilliseconds = 120000;
 
    // Khi có một user thay đổi trạng thái (timeout hoặc log in)
-   hubConnection.on('UserStatusChanged', (userId: string, status: string) => {
-    // Invalidate readers directory & profile queries để UI tự fetch lại data mới nhất
+   hubConnection.on('UserStatusChanged', (userId: string) => {
+    // Invalidate readers directory & profile queries để UI tự fetch lại data mới nhất.
+    // KHÔNG invalidate 'chat/inbox' ở đây vì nó gây ra bão request diện rộng không đáng có.
     void queryClient.invalidateQueries({ queryKey: ['readers'] });
     void queryClient.invalidateQueries({ queryKey: ['reader', userId] });
-    void queryClient.invalidateQueries({ queryKey: ['chat', 'inbox'] });
    });
 
    /*
@@ -166,5 +166,6 @@ export function usePresenceConnection() {
    }
    connectionRef.current = null;
   };
- }, [isAuthenticated, token, queryClient]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [isAuthenticated, queryClient]);
 }

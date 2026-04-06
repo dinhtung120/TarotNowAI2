@@ -33,7 +33,6 @@
  * Dùng khi biến môi trường NEXT_PUBLIC_API_URL chưa được cấu hình.
  */
 const DEFAULT_BACKEND_ORIGIN = 'http://127.0.0.1:5037';
-const API_VERSION_PATH = '/api/v1';
 
 /**
  * Lấy origin (scheme + host + port) của Backend từ biến môi trường.

@@ -1,12 +1,10 @@
 'use client';
 
-import { useMemo } from 'react';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
 import { Loader2, MessageSquareText } from 'lucide-react';
-import { GlassCard } from '@/shared/components/ui';
 import { useChatInboxPage } from '@/features/chat/application/useChatInboxPage';
 import type { ConversationDto } from '@/features/chat/application/actions';
 

@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using TarotNow.Api.Constants;
 using TarotNow.Application.Interfaces;
 using System.Security.Claims;
 
@@ -11,7 +12,7 @@ namespace TarotNow.Api.Hubs;
 /// Hub quản lý kết nối và WebRTC Signaling cho các cuộc gọi Voice/Video.
 /// WebRTC P2P trao đổi thông tin (SDP, ICE Candidates) thông qua Hub này.
 /// </summary>
-[Authorize]
+[Authorize(Policy = ApiAuthorizationPolicies.AuthenticatedUser)]
 public partial class CallHub : Hub
 {
     private readonly IMediator _mediator;

@@ -102,7 +102,13 @@
       "calling": "呼叫中...",
       "active_title": "正在通话",
       "start_audio": "发起语音通话",
-      "start_video": "发起视频通话"
+      "start_video": "发起视频通话",
+      "accept": "接听",
+      "decline": "拒绝",
+      "cancel": "取消通话",
+      "end_call": "结束通话",
+      "minimize": "缩小以聊天",
+      "maximize": "放大"
     }
   }
 }

@@ -9,10 +9,14 @@ import { useCallStore } from './useCallStore';
 export function useCallTimeout(endCallCallback: (sessionID: string, reason: string) => void) {
   const { uiState, session, isCaller, reset } = useCallStore();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timeoutSeconds = Number(process.env.NEXT_PUBLIC_CALL_RING_TIMEOUT_SECONDS ?? '60');
+  const timeoutMs = Number.isFinite(timeoutSeconds) && timeoutSeconds > 0
+    ? timeoutSeconds * 1000
+    : 60_000;
 
   useEffect(() => {
     if (uiState === 'ringing' || uiState === 'incoming') {
-      // 60 giây chờ chuông
+      // Timeout chờ chuông (mặc định 60s, có thể override bằng NEXT_PUBLIC_CALL_RING_TIMEOUT_SECONDS)
       timeoutRef.current = setTimeout(() => {
         if (isCaller && session?.id) {
           // Người gọi chủ động báo huỷ do timeout
@@ -21,7 +25,7 @@ export function useCallTimeout(endCallCallback: (sessionID: string, reason: stri
           // Người nhận tự tắt giao diện
           reset();
         }
-      }, 60000);
+      }, timeoutMs);
     } else {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -34,5 +38,5 @@ export function useCallTimeout(endCallCallback: (sessionID: string, reason: stri
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [uiState, isCaller, session, endCallCallback, reset]);
+  }, [uiState, isCaller, session, endCallCallback, reset, timeoutMs]);
 }

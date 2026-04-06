@@ -52,31 +52,39 @@ function buildIceConfiguration(): RTCConfiguration {
 }
 
 async function getUserMediaWithFallback(type: CallType): Promise<MediaStream> {
-  const withPreferredConstraints: MediaStreamConstraints = {
+  const enhancedConstraints: MediaStreamConstraints = {
     audio: {
       echoCancellation: { ideal: true },
       noiseSuppression: { ideal: true },
-      autoGainControl: { ideal: true }
+      autoGainControl: { ideal: true },
+      channelCount: { ideal: 1 },
+      sampleRate: { ideal: 48_000 },
+      sampleSize: { ideal: 16 }
     },
     video: type === 'video'
   };
 
   try {
-    return await navigator.mediaDevices.getUserMedia(withPreferredConstraints);
+    return await navigator.mediaDevices.getUserMedia(enhancedConstraints);
   } catch (firstError) {
-    logger.warn('Call.WebRTC', 'Preferred media constraints failed, fallback to browser defaults.', { error: firstError });
+    logger.warn('Call.WebRTC', 'Enhanced media profile failed, fallback to default constraints.', { error: firstError });
     return navigator.mediaDevices.getUserMedia({ audio: true, video: type === 'video' });
   }
 }
 
 async function applyAudioSenderParametersAsync(pc: RTCPeerConnection): Promise<void> {
+  const configuredMaxBitrate = Number(process.env.NEXT_PUBLIC_CALL_AUDIO_MAX_BITRATE ?? '');
+  const shouldSetMaxBitrate = Number.isFinite(configuredMaxBitrate) && configuredMaxBitrate > 0;
+
   const audioSenders = pc.getSenders().filter(sender => sender.track?.kind === 'audio');
   for (const sender of audioSenders) {
     try {
       const parameters = sender.getParameters();
       parameters.encodings ??= [{}];
-      if (parameters.encodings[0].maxBitrate == null) {
-        parameters.encodings[0].maxBitrate = 32_000;
+      if (shouldSetMaxBitrate) {
+        parameters.encodings[0].maxBitrate = configuredMaxBitrate;
+      } else {
+        delete parameters.encodings[0].maxBitrate;
       }
       await sender.setParameters(parameters);
     } catch (error) {
@@ -139,13 +147,26 @@ export function useWebRTC({ sendOffer, sendAnswer, sendIceCandidate }: UseWebRTC
       peerConnectionRef.current = pc;
 
       // Thêm local tracks vào RTCPeerConnection
-      stream.getTracks().forEach(track => pc.addTrack(track, stream));
+      stream.getTracks().forEach(track => {
+        if (track.kind === 'audio') {
+          track.enabled = true;
+          track.contentHint = 'speech';
+        }
+        pc.addTrack(track, stream);
+      });
       await applyAudioSenderParametersAsync(pc);
 
       // Bắt remote tracks
       pc.ontrack = (event) => {
         if (event.streams && event.streams[0]) {
-          useCallStore.getState().setStreams(stream, event.streams[0]);
+          const incoming = event.streams[0];
+          const state = useCallStore.getState();
+          const hasSameLocal = state.localStream?.id === stream.id;
+          const hasSameRemote = state.remoteStream?.id === incoming.id;
+
+          if (!hasSameLocal || !hasSameRemote) {
+            useCallStore.getState().setStreams(stream, incoming);
+          }
         }
       };
 

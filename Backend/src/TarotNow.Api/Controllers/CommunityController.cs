@@ -10,7 +10,7 @@ namespace TarotNow.Api.Controllers;
 [Route(ApiRoutes.Community)]
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
-[Authorize]
+[Authorize(Policy = ApiAuthorizationPolicies.AuthenticatedUser)]
 public partial class CommunityController : ControllerBase
 {
     private readonly IMediator _mediator;

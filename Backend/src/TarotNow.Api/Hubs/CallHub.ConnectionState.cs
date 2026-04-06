@@ -11,9 +11,12 @@ public partial class CallHub
         new(StringComparer.Ordinal);
     private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> UserConversationAccess =
         new(StringComparer.Ordinal);
+    private static readonly ConcurrentDictionary<string, CancellationTokenSource> PendingDisconnectCleanup =
+        new(StringComparer.Ordinal);
 
     private static void RegisterConnection(string userId, string connectionId)
     {
+        CancelPendingDisconnectCleanup(userId);
         var connectionMap = UserConnections.GetOrAdd(userId, _ => new ConcurrentDictionary<string, byte>(StringComparer.Ordinal));
         connectionMap[connectionId] = 0;
     }
@@ -60,12 +63,48 @@ public partial class CallHub
 
     private async Task DelayCleanupForTransientDisconnectAsync(string userId)
     {
-        await Task.Delay(DisconnectGracePeriod);
+        var cleanupCts = ReplacePendingDisconnectCleanup(userId);
+
+        try
+        {
+            await Task.Delay(DisconnectGracePeriod, cleanupCts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        finally
+        {
+            if (PendingDisconnectCleanup.TryGetValue(userId, out var current)
+                && ReferenceEquals(current, cleanupCts))
+            {
+                PendingDisconnectCleanup.TryRemove(userId, out _);
+                cleanupCts.Dispose();
+            }
+        }
+
         if (HasAnyConnection(userId))
         {
             return;
         }
 
         await HandleDisconnectedUserCleanupAsync(userId);
+    }
+
+    private static CancellationTokenSource ReplacePendingDisconnectCleanup(string userId)
+    {
+        CancelPendingDisconnectCleanup(userId);
+        var cts = new CancellationTokenSource();
+        PendingDisconnectCleanup[userId] = cts;
+        return cts;
+    }
+
+    private static void CancelPendingDisconnectCleanup(string userId)
+    {
+        if (PendingDisconnectCleanup.TryRemove(userId, out var existing))
+        {
+            existing.Cancel();
+            existing.Dispose();
+        }
     }
 }

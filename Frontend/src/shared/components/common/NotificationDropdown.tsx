@@ -135,11 +135,6 @@ export default function NotificationDropdown() {
     return item.titleEn || item.titleVi;
   }, [locale]);
 
-  const getBody = useCallback((item: NotificationItem) => {
-    if (locale === 'vi') return item.bodyVi || item.bodyEn;
-    return item.bodyEn || item.bodyVi;
-  }, [locale]);
-
   return (
     <div className="relative inline-flex items-center">
       {/* Nút Chuông */}

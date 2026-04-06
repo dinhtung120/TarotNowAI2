@@ -1,3 +1,5 @@
+ 'use client';
+
 /*
  * ===================================================================
  * FILE: FeedPage.tsx
@@ -8,23 +10,25 @@
  */
 
 import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useFeed } from '../hooks/useFeed';
 import { PostComposer } from './PostComposer';
 import { PostCard } from './PostCard';
 // Tạm thời bỏ đi Modal Report thực, sẽ mock logic.
 
 export const FeedPage: React.FC = () => {
+  const t = useTranslations('Community');
   const [activeVisibility, setActiveVisibility] = useState<string>('public');
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useFeed(activeVisibility);
 
   const handleReport = (postId: string) => {
-    alert(`Mở modal báo cáo cho bài viết [${postId}] (MVP phase)`);
+    alert(t('feed.report_placeholder', { postId }));
   };
 
   return (
     <div className="w-full max-w-2xl mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 mb-6 font-serif">
-        Cộng Đồng TarotNow
+        {t('title')}
       </h1>
 
       <PostComposer currentVisibilityTab={activeVisibility} />
@@ -39,7 +43,7 @@ export const FeedPage: React.FC = () => {
             : 'border-transparent text-gray-500 hover:text-gray-300'
           }`}
         >
-          Khám Phá (Public)
+          {t('tabs.public')}
         </button>
         <button 
           onClick={() => setActiveVisibility('private')}
@@ -49,12 +53,12 @@ export const FeedPage: React.FC = () => {
             : 'border-transparent text-gray-500 hover:text-gray-300'
           }`}
         >
-          Nhật Ký (Private)
+          {t('tabs.private')}
         </button>
       </div>
 
       {isLoading ? (
-        <div className="text-center text-gray-500 py-10">Vũ trụ đang truyền tin...</div>
+        <div className="text-center text-gray-500 py-10">{t('feed.loading')}</div>
       ) : (
         <div className="space-y-4">
           {data?.pages.map((page, i) => (
@@ -77,19 +81,19 @@ export const FeedPage: React.FC = () => {
               disabled={isFetchingNextPage}
               className="w-full py-3 mt-4 text-sm text-[#8a2be2] border border-[#2a2b3d] rounded-xl hover:bg-[#2a2b3d]/50 transition-colors"
             >
-              {isFetchingNextPage ? 'Đang tò mò thêm...' : 'Mở rộng tầm mắt'}
+              {isFetchingNextPage ? t('feed.loading_more') : t('feed.load_more')}
             </button>
           )}
 
           {!hasNextPage && data?.pages[0].data.length !== 0 && (
             <div className="text-center text-gray-600 py-6 text-sm">
-              Bạn đã lướt hết dòng thời gian rồi.
+              {t('feed.end')}
             </div>
           )}
 
           {data?.pages[0].data.length === 0 && (
             <div className="text-center text-gray-500 py-10 border border-dashed border-[#2a2b3d] rounded-xl">
-              Khoảng không im lặng. Chưa có thông điệp nào.
+              {t('feed.empty')}
             </div>
           )}
         </div>

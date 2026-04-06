@@ -92,5 +92,6 @@ export function useChatRealtimeSync() {
    }
    connectionRef.current = null;
   };
- }, [isAuthenticated, token, queryClient]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+ }, [isAuthenticated, queryClient]);
 }

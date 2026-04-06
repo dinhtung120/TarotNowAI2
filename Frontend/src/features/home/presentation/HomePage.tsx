@@ -11,6 +11,7 @@
  * ===================================================================
  */
 import { Link } from "@/i18n/routing";
+import Image from "next/image";
 import { Star, ChevronRight, ShieldCheck, Flame, Compass, Zap, Users, ArrowUpRight, Award, LucideIcon, Gem, Sparkles
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
@@ -104,9 +105,12 @@ async function FeaturedReadersGrid() {
  >
  {/* Avatar ảnh nền — hiển thị ảnh đại diện reader phủ kín card */}
  {reader.avatarUrl ? (
- <img
+ <Image
   src={reader.avatarUrl}
   alt={reader.displayName}
+  fill
+  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+  unoptimized
   className="absolute inset-0 w-full h-full object-cover z-0 transition-transform duration-700 group-hover:scale-110"
  />
  ) : (

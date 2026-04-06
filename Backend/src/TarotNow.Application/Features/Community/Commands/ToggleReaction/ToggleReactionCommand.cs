@@ -14,6 +14,7 @@
 using MediatR;
 using TarotNow.Application.Common;
 using TarotNow.Application.Exceptions;
+using TarotNow.Application.Features.Community;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Enums;
 
@@ -40,12 +41,7 @@ public class ToggleReactionCommandHandler : IRequestHandler<ToggleReactionComman
     public async Task<bool> Handle(ToggleReactionCommand request, CancellationToken cancellationToken)
     {
         // 1. Validate Reaction Type
-        var validTypes = new[] { 
-            ReactionType.Like, ReactionType.Love, ReactionType.Insightful, 
-            ReactionType.Haha, ReactionType.Sad 
-        };
-        
-        if (!validTypes.Contains(request.ReactionType))
+        if (!CommunityModuleConstants.SupportedReactionTypes.Contains(request.ReactionType))
             throw new BadRequestException("Loại biểu cảm không hợp lệ.");
 
         // 2. Validate Post
@@ -53,8 +49,11 @@ public class ToggleReactionCommandHandler : IRequestHandler<ToggleReactionComman
         if (post == null || post.IsDeleted)
             throw new NotFoundException("Bài viết không tồn tại hoặc đã bị xoá.");
 
-        // 3. Xử lý Logic Toggle
         var userIdStr = request.UserId.ToString();
+        if (post.Visibility == PostVisibility.Private && post.AuthorId != userIdStr)
+            throw new ForbiddenException("Bạn không có quyền tương tác với bài viết riêng tư này.");
+
+        // 3. Xử lý Logic Toggle
         var existingReaction = await _reactionRepo.GetAsync(request.PostId, userIdStr, cancellationToken);
 
         if (existingReaction == null)

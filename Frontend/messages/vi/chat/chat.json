@@ -102,7 +102,13 @@
       "calling": "Đang gọi...",
       "active_title": "Cuộc Sẻ Chia",
       "start_audio": "Khởi đầu Cuộc gọi Thoại",
-      "start_video": "Tiến hành Cuộc gọi Video"
+      "start_video": "Tiến hành Cuộc gọi Video",
+      "accept": "Đồng ý",
+      "decline": "Từ chối",
+      "cancel": "Hủy cuộc gọi",
+      "end_call": "Kết thúc cuộc gọi",
+      "minimize": "Thu nhỏ để chat",
+      "maximize": "Phóng to"
     }
   }
 }

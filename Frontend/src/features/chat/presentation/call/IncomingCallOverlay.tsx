@@ -83,7 +83,7 @@ export const IncomingCallOverlay = () => {
               <button 
                 onClick={handleDecline}
                 className="w-14 h-14 rounded-full bg-red-500 flex items-center justify-center hover:bg-red-600 transition-colors"
-                title="Từ chối"
+                title={t('decline')}
               >
                 <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -92,7 +92,7 @@ export const IncomingCallOverlay = () => {
               <button 
                 onClick={handleAccept}
                 className="w-14 h-14 rounded-full bg-green-500 flex items-center justify-center hover:bg-green-600 transition-colors shadow-[0_0_20px_rgba(34,197,94,0.4)]"
-                title="Đồng ý"
+                title={t('accept')}
               >
                 <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -103,7 +103,7 @@ export const IncomingCallOverlay = () => {
             <button 
                 onClick={handleCancel}
                 className="w-14 h-14 rounded-full bg-red-500 flex items-center justify-center hover:bg-red-600 transition-colors"
-                title="Hủy cuộc gọi"
+                title={t('cancel')}
               >
                 <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

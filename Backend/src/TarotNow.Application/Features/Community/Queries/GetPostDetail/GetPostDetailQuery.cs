@@ -9,9 +9,12 @@
  */
 
 using MediatR;
+using AutoMapper;
 using TarotNow.Application.Common;
 using TarotNow.Application.Exceptions;
+using TarotNow.Application.Features.Community;
 using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Community.Queries.GetPostDetail;
 
@@ -25,11 +28,16 @@ public class GetPostDetailQueryHandler : IRequestHandler<GetPostDetailQuery, Com
 {
     private readonly ICommunityPostRepository _postRepo;
     private readonly ICommunityReactionRepository _reactionRepo;
+    private readonly IMapper _mapper;
 
-    public GetPostDetailQueryHandler(ICommunityPostRepository postRepo, ICommunityReactionRepository reactionRepo)
+    public GetPostDetailQueryHandler(
+        ICommunityPostRepository postRepo,
+        ICommunityReactionRepository reactionRepo,
+        IMapper mapper)
     {
         _postRepo = postRepo;
         _reactionRepo = reactionRepo;
+        _mapper = mapper;
     }
 
     public async Task<CommunityPostFeedItemDto> Handle(GetPostDetailQuery request, CancellationToken cancellationToken)
@@ -38,23 +46,14 @@ public class GetPostDetailQueryHandler : IRequestHandler<GetPostDetailQuery, Com
         if (post == null || post.IsDeleted)
             throw new NotFoundException("Bài viết không tồn tại hoặc đã bị xoá.");
 
-        var viewerReaction = await _reactionRepo.GetAsync(request.PostId, request.ViewerId.ToString(), cancellationToken);
+        var viewerId = request.ViewerId.ToString();
+        if (post.Visibility == PostVisibility.Private && post.AuthorId != viewerId)
+            throw new ForbiddenException("Bạn không có quyền xem bài viết riêng tư này.");
 
-        return new CommunityPostFeedItemDto
-        {
-            Id = post.Id,
-            AuthorId = post.AuthorId,
-            AuthorDisplayName = post.AuthorDisplayName,
-            AuthorAvatarUrl = post.AuthorAvatarUrl,
-            Content = post.Content,
-            Visibility = post.Visibility,
-            ReactionsCount = post.ReactionsCount,
-            TotalReactions = post.TotalReactions,
-            CommentsCount = post.CommentsCount,
-            IsDeleted = post.IsDeleted,
-            CreatedAt = post.CreatedAt,
-            UpdatedAt = post.UpdatedAt,
-            ViewerReaction = viewerReaction?.Type
-        };
+        var viewerReaction = await _reactionRepo.GetAsync(request.PostId, viewerId, cancellationToken);
+
+        var mapped = _mapper.Map<CommunityPostFeedItemDto>(post);
+        mapped.ViewerReaction = viewerReaction?.Type;
+        return mapped;
     }
 }
