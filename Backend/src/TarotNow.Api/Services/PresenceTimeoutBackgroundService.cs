@@ -39,20 +39,33 @@ public class PresenceTimeoutBackgroundService : BackgroundService
         _logger.LogDebug("[PresenceTimeout] Service started. Scan interval: {Interval}s, Timeout: {Timeout}m", 
             _scanInterval.TotalSeconds, _timeoutPeriod.TotalMinutes);
 
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
+            while (!stoppingToken.IsCancellationRequested)
             {
-                await ProcessTimeoutsAsync(stoppingToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "[PresenceTimeout] Error occurred while processing timeouts.");
-            }
+                try
+                {
+                    await ProcessTimeoutsAsync(stoppingToken);
+                }
+                catch (ObjectDisposedException) when (stoppingToken.IsCancellationRequested)
+                {
+                    // Shutdown phase
+                }
+                catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
+                {
+                    _logger.LogError(ex, "[PresenceTimeout] Error occurred while processing timeouts.");
+                }
 
-            // Đợi đến chu kỳ quét tiếp theo
-            await Task.Delay(_scanInterval, stoppingToken);
+                // Đợi đến chu kỳ quét tiếp theo
+                await Task.Delay(_scanInterval, stoppingToken);
+            }
         }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("[PresenceTimeout] Dịch vụ dọn dẹp hiện diện đang dừng...");
+        }
+
+        _logger.LogDebug("[PresenceTimeout] Service stopped.");
     }
 
     private async Task ProcessTimeoutsAsync(CancellationToken cancellationToken)

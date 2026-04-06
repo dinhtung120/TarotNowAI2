@@ -93,4 +93,25 @@ public class SignalRNotificationPushService : INotificationPushService
                 notification.UserId);
         }
     }
+
+    public async Task SendEventAsync(string userId, string eventName, object payload, CancellationToken cancellationToken = default)
+    {
+        var groupName = $"user:{userId}";
+
+        try
+        {
+            await _hubContext.Clients.Group(groupName).SendAsync(eventName, payload, cancellationToken);
+            _logger.LogInformation(
+                "[NotificationPush] Pushed custom event '{EventName}' to user {UserId}",
+                eventName,
+                userId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "[NotificationPush] Failed to push custom event '{EventName}' to user {UserId}",
+                eventName,
+                userId);
+        }
+    }
 }

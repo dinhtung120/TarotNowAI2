@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TarotNow.Infrastructure.Options;
+using TarotNow.Infrastructure.BackgroundJobs;
 
 namespace TarotNow.Infrastructure;
 
@@ -14,6 +15,7 @@ public static partial class DependencyInjection
         AddExternalServices(services);
         AddRedisCaching(services, configuration);
         AddJwtAuthentication(services, configuration);
+        AddBackgroundJobs(services);
         return services;
     }
 
@@ -30,5 +32,11 @@ public static partial class DependencyInjection
         services.Configure<LegalSettingsOptions>(configuration.GetSection("LegalSettings"));
         services.Configure<DiagnosticsOptions>(configuration.GetSection("Diagnostics"));
         services.Configure<ChatModerationOptions>(configuration.GetSection("ChatModeration"));
+    }
+
+    private static void AddBackgroundJobs(IServiceCollection services)
+    {
+        services.AddHostedService<LeaderboardSnapshotJob>();
+        services.AddHostedService<GamificationSeedService>();
     }
 }

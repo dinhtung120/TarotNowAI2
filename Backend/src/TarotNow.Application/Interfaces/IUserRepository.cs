@@ -46,6 +46,6 @@ public interface IUserRepository
     // Thu Thập Tên Xóa ID Guids Gọi Về Dict Truy Ngược Mạng Không Để Mấy Ô UI Kẹp Chat Hiển Thị Giùm Guid Phê Mã (Convert Ráp Áo Bù UUID Thành Chữ Thường Trả UI).
     Task<Dictionary<Guid, string>> GetUsernameMapAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default);
 
-    // Kéo Đồng Thời Cả DisplayName Lẫn AvatarUrl Về Để Trải Ra Map Giao Diện Chat Mới Gộp Chức Năng.
-    Task<Dictionary<Guid, (string DisplayName, string? AvatarUrl)>> GetUserBasicInfoMapAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default);
+    // Kéo Đồng Thời Cả DisplayName, AvatarUrl Lẫn ActiveTitle Về Để Trải Ra Map Giao Diện Chat/Leaderboard Mới Gộp Chức Năng.
+    Task<Dictionary<Guid, (string DisplayName, string? AvatarUrl, string? ActiveTitle)>> GetUserBasicInfoMapAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default);
 }

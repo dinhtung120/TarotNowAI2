@@ -47,6 +47,13 @@ public partial class WalletRepository
 
                 _dbContext.Set<WalletTransaction>().Add(ledgerEntry);
                 await _dbContext.SaveChangesAsync(cancellationToken);
+
+                // -- Gamification: Ghi nhận điểm khi tiền bị "Tiêu thụ" (Consume) --
+                if (request.TransactionType == TransactionType.EscrowRelease)
+                {
+                    // AI Reading hiện tại chủ yếu dùng Diamond, nhưng ta dùng currency từ ledgerEntry cho linh hoạt
+                    await TrackSpendingToLeaderboardAsync(request.UserId, CurrencyType.Diamond, request.Amount, cancellationToken);
+                }
             }, cancellationToken);
         }
         catch (DbUpdateException exception) when (IsIdempotencyUniqueViolation(exception, normalizedIdempotencyKey))

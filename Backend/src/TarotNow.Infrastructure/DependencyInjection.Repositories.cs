@@ -43,6 +43,13 @@ public static partial class DependencyInjection
         services.AddScoped<IDailyCheckinRepository, MongoDailyCheckinRepository>();
         services.AddScoped<IStreakService, StreakService>();
 
+        services.AddScoped<IQuestRepository, MongoQuestRepository>();
+        services.AddScoped<IAchievementRepository, MongoAchievementRepository>();
+        services.AddScoped<ITitleRepository, MongoTitleRepository>();
+        services.AddScoped<ILeaderboardRepository, MongoLeaderboardRepository>();
+        services.AddScoped<IGamificationService, GamificationService>();
+        services.AddScoped<IGamificationPushService, GamificationPushService>();
+
         services.AddScoped<IChatFinanceRepository, ChatFinanceRepository>();
         services.AddScoped<IWithdrawalRepository, WithdrawalRepository>();
         services.AddScoped<IMfaService, TotpMfaService>();
@@ -56,5 +63,6 @@ public static partial class DependencyInjection
         services.AddHostedService<StreakBreakBackgroundJob>();
         services.AddHostedService<EntitlementDailyResetJob>();
         services.AddHostedService<SubscriptionExpiryJob>();
+        services.AddHostedService<LeaderboardSnapshotJob>();
     }
 }

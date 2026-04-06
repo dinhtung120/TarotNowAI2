@@ -43,7 +43,7 @@ public partial class ListConversationsQueryHandler
 
     private static void ApplyUserProfile(
         ConversationDto conversation,
-        IReadOnlyDictionary<Guid, (string DisplayName, string? AvatarUrl)> userMap)
+        IReadOnlyDictionary<Guid, (string DisplayName, string? AvatarUrl, string? ActiveTitle)> userMap)
     {
         if (Guid.TryParse(conversation.UserId, out var userId) && userMap.TryGetValue(userId, out var userInfo))
         {

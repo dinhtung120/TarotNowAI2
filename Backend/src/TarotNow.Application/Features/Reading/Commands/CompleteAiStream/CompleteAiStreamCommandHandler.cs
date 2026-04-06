@@ -13,6 +13,7 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
     private readonly IReadingSessionRepository _readingRepo;
     private readonly IDomainEventPublisher _domainEventPublisher;
     private readonly IStreakService _streakService;
+    private readonly IGamificationService _gamificationService;
 
     public CompleteAiStreamCommandHandler(
         IAiRequestRepository aiRequestRepo,
@@ -21,7 +22,8 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
         IAiProvider aiProvider,
         IReadingSessionRepository readingRepo,
         IDomainEventPublisher domainEventPublisher,
-        IStreakService streakService)
+        IStreakService streakService,
+        IGamificationService gamificationService)
     {
         _aiRequestRepo = aiRequestRepo;
         _walletRepo = walletRepo;
@@ -30,6 +32,7 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
         _readingRepo = readingRepo;
         _domainEventPublisher = domainEventPublisher;
         _streakService = streakService;
+        _gamificationService = gamificationService;
     }
 
     public async Task<bool> Handle(CompleteAiStreamCommand request, CancellationToken cancellationToken)
@@ -55,6 +58,9 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
         if (request.FinalStatus == AiStreamFinalStatuses.Completed)
         {
             await _streakService.IncrementStreakOnValidDrawAsync(request.UserId, cancellationToken);
+            
+            // --- GAMIFICATION PHASE 5.3 ---
+            await _gamificationService.OnReadingCompletedAsync(request.UserId, cancellationToken);
         }
 
         await LogTelemetrySafeAsync(request, context);

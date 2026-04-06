@@ -24,19 +24,32 @@ public partial class CallTimeoutBackgroundService : BackgroundService
     {
         _logger.LogInformation("[CallTimeoutService] Bắt đầu tác vụ chạy nền dọn dẹp cuộc gọi bị treo.");
 
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
+            while (!stoppingToken.IsCancellationRequested)
             {
-                await ProcessTimeoutsAsync(stoppingToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "[CallTimeoutService] Lỗi trong quá trình quét timeout cuộc gọi.");
-            }
+                try
+                {
+                    await ProcessTimeoutsAsync(stoppingToken);
+                }
+                catch (ObjectDisposedException) when (stoppingToken.IsCancellationRequested)
+                {
+                    // Ignore expected disposal during shutdown
+                }
+                catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
+                {
+                    _logger.LogError(ex, "[CallTimeoutService] Lỗi trong quá trình quét timeout cuộc gọi.");
+                }
 
-            await Task.Delay(_checkInterval, stoppingToken);
+                await Task.Delay(_checkInterval, stoppingToken);
+            }
         }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("[CallTimeoutService] Dịch vụ đang tắt dần...");
+        }
+
+        _logger.LogInformation("[CallTimeoutService] Tác vụ đã dừng.");
     }
 
     private async Task ProcessTimeoutsAsync(CancellationToken stoppingToken)

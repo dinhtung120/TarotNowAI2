@@ -11,6 +11,7 @@ public static partial class DependencyInjection
 {
     private static void AddRedisCaching(IServiceCollection services, IConfiguration configuration)
     {
+        services.AddMemoryCache();
         var redisConnectionString = configuration.GetConnectionString("Redis") ?? "localhost:6379";
 
         var redisMultiplexer = TryCreateRedisMultiplexer(redisConnectionString);

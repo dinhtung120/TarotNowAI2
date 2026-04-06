@@ -72,6 +72,19 @@ public class UserCollectionDocument
     [BsonIgnoreIfNull]
     public CardCustomization? Customization { get; set; }
 
+    /// <summary>Chỉ số Tấn công (Attack) của lá bài. Base = 10, tăng ngẫu nhiên mỗi level.</summary>
+    [BsonElement("atk")]
+    public int Atk { get; set; } = 10;
+
+    /// <summary>Chỉ số Phòng thủ (Defense) của lá bài. Base = 10, tăng ngẫu nhiên mỗi level.</summary>
+    [BsonElement("def")]
+    public int Def { get; set; } = 10;
+
+    /// <summary>Lịch sử roll stat mỗi lần level up — audit trail cho tính công bằng (fairness).</summary>
+    [BsonElement("stat_history")]
+    [BsonIgnoreIfNull]
+    public List<StatRollRecord>? StatHistory { get; set; }
+
     /// <summary>Soft delete flag.</summary>
     [BsonElement("is_deleted")]
     public bool IsDeleted { get; set; } = false;
@@ -114,4 +127,23 @@ public class CardCustomization
     [BsonElement("signature_name")][BsonIgnoreIfNull] public string? SignatureName { get; set; }
     /// <summary>ID skin đang dùng (tính năng cosmetic tương lai).</summary>
     [BsonElement("active_skin_id")][BsonIgnoreIfNull] public string? ActiveSkinId { get; set; }
+}
+
+/// <summary>
+/// Ghi lại mỗi lần roll ATK/DEF khi level up — phục vụ audit và hiển thị UI theo yêu cầu của Gamification Phase.
+/// Giúp người chơi biết được lá bài đã mạnh lên bao nhiêu qua mỗi cấp.
+/// </summary>
+public class StatRollRecord
+{
+    [BsonElement("level")] 
+    public int Level { get; set; }
+    
+    [BsonElement("atk_bonus")] 
+    public int AtkBonus { get; set; }
+    
+    [BsonElement("def_bonus")] 
+    public int DefBonus { get; set; }
+    
+    [BsonElement("rolled_at")] 
+    public DateTime RolledAt { get; set; }
 }

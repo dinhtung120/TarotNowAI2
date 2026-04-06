@@ -102,6 +102,26 @@ export function usePresenceConnection() {
     invalidateInbox();
    });
 
+   /*
+    * GAMIFICATION PUSH: Lắng nghe event từ GamificationPushService
+    */
+   hubConnection.on('gamification.quest_completed', () => {
+    logger.info('[PresenceRealtimeSync]', 'gamification.quest_completed received');
+    void queryClient.invalidateQueries({ queryKey: ['gamification', 'quests'] });
+    void queryClient.invalidateQueries({ queryKey: ['wallet'] });
+   });
+
+   hubConnection.on('gamification.achievement_unlocked', () => {
+    logger.info('[PresenceRealtimeSync]', 'gamification.achievement_unlocked received');
+    void queryClient.invalidateQueries({ queryKey: ['gamification', 'achievements'] });
+    void queryClient.invalidateQueries({ queryKey: ['gamification', 'titles'] });
+   });
+
+   hubConnection.on('gamification.card_level_up', () => {
+    logger.info('[PresenceRealtimeSync]', 'gamification.card_level_up received');
+    void queryClient.invalidateQueries({ queryKey: ['collection'] });
+   });
+
    hubConnection.on('Error', (error: string) => {
     logger.error('[PresenceRealtimeSync] hub error', error);
    });

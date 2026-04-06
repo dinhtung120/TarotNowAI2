@@ -38,26 +38,33 @@ public class EntitlementDailyResetJob : BackgroundService
     {
         _logger.LogInformation("EntitlementDailyResetJob đang khởi động vòng lặp canh gác rổ Quyền lợi...");
 
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
+            while (!stoppingToken.IsCancellationRequested)
             {
-                // Chờ Mỗi Tiếng (Hoặc Nửa Tiếng) Dội Một Lần Xem Có Thằng Nào Sụp Ngày Thừa Không.
-                // Ở Môi Trường Thật Có Thể Để Delay = 1 Tiếng, Nhưng Nhằm An Toàn Ở Game Này:
-                // Ta Chạy Cứ Mỗi 15 Phút Kéo Lượt 1000 Chú Dư Date Cũ Vào Xóa Về 0.
+                try
+                {
+                    await ProcessResetBatchAsync(stoppingToken);
+                }
+                catch (ObjectDisposedException) when (stoppingToken.IsCancellationRequested)
+                {
+                    // Shutdown phase
+                }
+                catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
+                {
+                    _logger.LogError(ex, "Có Bug Tung Nồi Rớt Mạng Đứt Bóng Khi Reset Entitlement Quota.");
+                }
+
+                // Chờ Mỗi 15 Phút Kéo Lượt 1000 Chú Dư Date Cũ Vào Xóa Về 0.
                 await Task.Delay(TimeSpan.FromMinutes(15), stoppingToken);
-                
-                await ProcessResetBatchAsync(stoppingToken);
-            }
-            catch (TaskCanceledException)
-            {
-                // Mặc kệ, Lệnh Host Chết Ép Sập
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Có Bug Tung Nồi Rớt Mạng Đứt Bóng Khi Reset Entitlement Quota.");
             }
         }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("EntitlementDailyResetJob đang dừng rổ Quyền lợi...");
+        }
+
+        _logger.LogInformation("EntitlementDailyResetJob đã dừng.");
     }
 
     private async Task ProcessResetBatchAsync(CancellationToken cancellationToken)

@@ -26,6 +26,8 @@ public static class ApiRoutes
     public const string CheckIn = Prefix + "/checkin";
     public const string UserContext = Prefix + "/user-context";
     public const string Subscriptions = Prefix + "/subscriptions";
+    public const string Gamification = Prefix + "/gamification";
+    public const string AdminGamification = Admin + "/gamification";
 
     public const string ReadersAbsolute = "/" + Prefix + "/readers";
 }

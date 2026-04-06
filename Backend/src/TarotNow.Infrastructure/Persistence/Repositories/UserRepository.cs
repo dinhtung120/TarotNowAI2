@@ -136,17 +136,17 @@ public class UserRepository : IUserRepository
     /// Bản Đồ Kéo Gộp Cho Lệnh Tranh Trang Tin Nhắn Hộp Thư Tổng Hợp:
     /// Trả Name Và Hình Thay Vì Sầu Rụng UUID (Yêu cầu Mới Tính Năng Hỗn Hợp Vai Trò).
     /// </summary>
-    public async Task<Dictionary<Guid, (string DisplayName, string? AvatarUrl)>> GetUserBasicInfoMapAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default)
+    public async Task<Dictionary<Guid, (string DisplayName, string? AvatarUrl, string? ActiveTitle)>> GetUserBasicInfoMapAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken = default)
     {
         var idList = userIds.ToList();
         var users = await _dbContext.Users
             .Where(u => idList.Contains(u.Id))
-            .Select(u => new { u.Id, u.DisplayName, u.Username, u.AvatarUrl })
+            .Select(u => new { u.Id, u.DisplayName, xUsername = u.Username, u.AvatarUrl, u.ActiveTitleRef })
             .ToListAsync(cancellationToken);
             
         return users.ToDictionary(
             x => x.Id, 
-            x => (!string.IsNullOrWhiteSpace(x.DisplayName) ? x.DisplayName : x.Username, x.AvatarUrl)
+            x => (!string.IsNullOrWhiteSpace(x.DisplayName) ? x.DisplayName : x.xUsername, x.AvatarUrl, x.ActiveTitleRef)
         );
     }
 }

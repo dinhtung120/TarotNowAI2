@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using TarotNow.Application.Helpers;
 using TarotNow.Domain.Entities;
+using TarotNow.Domain.Enums;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
@@ -48,5 +50,47 @@ public partial class WalletRepository
             operationName,
             principalId,
             idempotencyKey);
+    }
+
+    /// <summary>
+    /// Ghi nhận điểm chi tiêu vào Bảng Xếp Hạng Gamification.
+    /// Hàm này được dùng chung cho cả Debit trực tiếp và các giao dịch Escrow (Consume/Release).
+    /// </summary>
+    private async Task TrackSpendingToLeaderboardAsync(
+        Guid userId, 
+        string currency, 
+        long amount, 
+        CancellationToken ct)
+    {
+        if (amount <= 0) return;
+
+        var normalizedCurrency = currency?.Trim().ToLowerInvariant();
+        if (normalizedCurrency != CurrencyType.Gold && normalizedCurrency != CurrencyType.Diamond)
+        {
+            return;
+        }
+
+        try
+        {
+            var track = normalizedCurrency == CurrencyType.Gold ? "spent_gold" : "spent_diamond";
+            var dailyKey = PeriodKeyHelper.GetPeriodKey("daily");
+            var monthlyKey = PeriodKeyHelper.GetPeriodKey("monthly");
+
+            /*
+             * [GAMIFICATION-LOG]: Xác nhận việc ghi công chi tiêu.
+             * Log này xuất hiện nghĩa là giao dịch Ví đã thành công và đang cập nhật BXH.
+             */
+            _logger.LogInformation("[Gamification] Gửi {Amount} {Currency} lên BXH (User: {UserId}, Track: {Track}, Daily: {DailyKey})", 
+                amount, normalizedCurrency, userId, track, dailyKey);
+
+            await _lbRepo.IncrementScoreAsync(userId, track, dailyKey, amount, ct);
+            await _lbRepo.IncrementScoreAsync(userId, track, monthlyKey, amount, ct);
+            await _lbRepo.IncrementScoreAsync(userId, track, "all", amount, ct);
+        }
+        catch (Exception ex)
+        {
+            // Tránh làm gián đoạn giao dịch ví chính nếu Gamification gặp lỗi
+            _logger.LogError(ex, "[Gamification] Lỗi khi cập nhật bảng xếp hạng cho User {UserId}", userId);
+        }
     }
 }

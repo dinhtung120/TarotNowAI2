@@ -10,11 +10,16 @@ public partial class WalletRepository : IWalletRepository
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly ILogger<WalletRepository> _logger;
+    private readonly ILeaderboardRepository _lbRepo;
 
-    public WalletRepository(ApplicationDbContext dbContext, ILogger<WalletRepository> logger)
+    public WalletRepository(
+        ApplicationDbContext dbContext,
+        ILogger<WalletRepository> logger,
+        ILeaderboardRepository lbRepo)
     {
         _dbContext = dbContext;
         _logger = logger;
+        _lbRepo = lbRepo;
     }
 
     private async Task ExecuteWithTransactionAsync(Func<Task> action, CancellationToken cancellationToken)

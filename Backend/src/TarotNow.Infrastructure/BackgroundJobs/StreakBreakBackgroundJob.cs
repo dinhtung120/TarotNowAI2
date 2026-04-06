@@ -30,29 +30,33 @@ public class StreakBreakBackgroundJob : BackgroundService
     {
         _logger.LogInformation("[StreakBreakBackgroundJob] Rình rập khởi động...");
 
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
+            while (!stoppingToken.IsCancellationRequested)
             {
-                await ProcessBreakingStreaksAsync(stoppingToken);
+                try
+                {
+                    await ProcessBreakingStreaksAsync(stoppingToken);
+                }
+                catch (ObjectDisposedException) when (stoppingToken.IsCancellationRequested)
+                {
+                    // Shutdown phase
+                }
+                catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
+                {
+                    _logger.LogError(ex, "[StreakBreakBackgroundJob] Ngã ngựa lúc xử tử Steak.");
+                }
 
                 // Quét 1 giờ 1 lần. Job này không cần phải realtime khắt khe từng giây. 
-                // AI quay vào rút bài muộn cũng tự bị gãy do service.
                 await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
             }
-            catch (OperationCanceledException)
-            {
-                // Khi ứng dụng tắt, Task.Delay hoặc các lệnh async sẽ ném OperationCanceledException
-                // Chúng ta chỉ cần log nhẹ nhàng và thoát vòng lặp.
-                _logger.LogInformation("[StreakBreakBackgroundJob] Đang dừng công việc đồ tể thầm lặng...");
-                return;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "[StreakBreakBackgroundJob] Ngã ngựa lúc xử tử Steak.");
-                await Task.Delay(TimeSpan.FromMinutes(10), stoppingToken);
-            }
         }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("[StreakBreakBackgroundJob] Đang dừng công việc đồ tể thầm lặng...");
+        }
+
+        _logger.LogInformation("[StreakBreakBackgroundJob] Đã dừng.");
     }
 
     private async Task ProcessBreakingStreaksAsync(CancellationToken stoppingToken)

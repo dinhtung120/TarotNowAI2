@@ -10,5 +10,6 @@ public partial class MongoDbContext
         EnsureCommunityIndexes();
         EnsureCallIndexes();
         EnsureCheckinIndexes();
+        EnsureGamificationIndexes();
     }
 }

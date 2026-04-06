@@ -35,7 +35,7 @@ public class EntitlementConsumeConfiguration : IEntityTypeConfiguration<Entitlem
 
         builder.Property(x => x.IdempotencyKey)
             .IsRequired()
-            .HasMaxLength(100);
+            .HasMaxLength(255); // Tăng từ 100 lên 255 để tránh lỗi 500 khi sinh mã Idempotency dài cho vé miễn phí.
 
         // Map Foreign Keys
         builder.HasOne(x => x.Bucket)

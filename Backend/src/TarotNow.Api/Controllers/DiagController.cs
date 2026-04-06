@@ -30,6 +30,7 @@ using Microsoft.AspNetCore.Authorization; // [Authorize] kiểm soát quyền
 using Microsoft.AspNetCore.Mvc;           // API controller base
 
 using TarotNow.Application.Interfaces;
+using TarotNow.Infrastructure.Persistence;
 
 namespace TarotNow.Api.Controllers;
 
@@ -142,6 +143,28 @@ public class DiagController : ControllerBase
             // Ghi log lỗi và trả 500
             _logger.LogError(ex, "Failed to seed admin account");
             return StatusCode(500, new { message = "Failed to seed admin account." });
+        }
+    }
+
+    /// <summary>
+    /// ENDPOINT: POST /api/v1/Diag/seed-gamification
+    /// MỤC ĐÍCH: Nạp dữ liệu init (quests, achievements, titles) cho Gamification Phase.
+    /// </summary>
+    [HttpPost("seed-gamification")]
+    public async Task<IActionResult> SeedGamification([FromServices] MongoDbContext mongoDbContext)
+    {
+        var guard = RejectIfNotDevelopment();
+        if (guard != null) return guard;
+
+        try
+        {
+            await SeedGamificationData.SeedAsync(mongoDbContext);
+            return Ok(new { message = "Gamification data seeded successfully." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to seed gamification data");
+            return StatusCode(500, new { message = "Failed to seed gamification data." });
         }
     }
 

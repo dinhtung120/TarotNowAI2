@@ -31,6 +31,11 @@ public class UserCollection
     // Ngày Gần Khít Níu Vào Nhát Quay Thẻ Được Card Này Mới Hay Tũ Giảng Nát Ở Cổ Vùng (Quay Vào Năm Ngoái).
     public DateTime LastDrawnAt { get; private set; }
 
+    // Cấp độ Tấn công (Attack) của lá bài, base = 10, tăng ngẫu nhiên mỗi khi lên cấp.
+    public int Atk { get; private set; }
+    // Cấp độ Phòng thủ (Defense) của lá bài, base = 10, tăng ngẫu nhiên mỗi khi lên cấp.
+    public int Def { get; private set; }
+
     protected UserCollection() { } // Dành Cho Database Vọc EF Core Tách
 
     /// <summary>Cầm Lá Được Ép Cứng Ở Máy Gacha Đầu Khi Chưa Từng Mở Rương.</summary>
@@ -42,6 +47,8 @@ public class UserCollection
         Copies = 1;
         ExpGained = 0;
         LastDrawnAt = DateTime.UtcNow;
+        Atk = 10;
+        Def = 10;
     }
 
     /// <summary>Úm Ba La Kép Database Trực Trào Phọt Nguyên Con User Colection Trạng Nhĩ Kéo Form Nổi Phục Cả Level Xịn Lên Gấp Dịch Vụ API.</summary>
@@ -52,7 +59,9 @@ public class UserCollection
             Level = snapshot.Level,
             Copies = snapshot.Copies,
             ExpGained = snapshot.ExpGained,
-            LastDrawnAt = snapshot.LastDrawnAt
+            LastDrawnAt = snapshot.LastDrawnAt,
+            Atk = snapshot.Atk,
+            Def = snapshot.Def
         };
     }
     
@@ -72,6 +81,25 @@ public class UserCollection
             Level += 1;
         }
     }
+
+    /// <summary>
+    /// Khi lá bài lên level, tung xúc xắc RNG cộng thêm ATK và DEF ngẫu nhiên.
+    /// Công thức: ATK += random(10, newLevel × 10), DEF += random(10, newLevel × 10)
+    /// </summary>
+    public void ApplyLevelUpStats(int atkBonus, int defBonus)
+    {
+        Atk += atkBonus;
+        Def += defBonus;
+    }
+
+    /// <summary>
+    /// Tính khoảng giới hạn (range) random cho điểm thưởng ATK/DEF dựa trên level mới.
+    /// Min = 10, Max = newLevel * 10 (inclusive)
+    /// </summary>
+    public static (int min, int max) GetStatBonusRange(int newLevel)
+    {
+        return (10, newLevel * 10);
+    }
 }
 
 public sealed class UserCollectionSnapshot
@@ -82,4 +110,6 @@ public sealed class UserCollectionSnapshot
     public int Copies { get; init; }
     public long ExpGained { get; init; }
     public DateTime LastDrawnAt { get; init; }
+    public int Atk { get; init; }
+    public int Def { get; init; }
 }

@@ -121,14 +121,22 @@ export default function CollectionPage() {
  </p>
 
  {selectedUserCard && (
- <div className="grid grid-cols-2 gap-4 mt-8 md:mt-10 max-w-xs mx-auto md:mx-0">
- <div className="tn-panel rounded-2xl p-4 text-center transform transition duration-300 hover:scale-105 border tn-border-soft">
-  <span className="block text-[10px] md:text-xs uppercase font-black tracking-widest tn-text-muted mb-2">{t('level_label')}</span>
+ <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 md:mt-10 mx-auto md:mx-0">
+ <div className="tn-panel rounded-2xl p-4 text-center transform transition duration-300 hover:scale-105 border tn-border-soft flex flex-col justify-center">
+  <span className="block text-[10px] md:text-xs uppercase font-black tracking-widest tn-text-muted mb-1">{t('level_label')}</span>
   <span className="text-2xl md:text-3xl font-black text-[var(--warning)]">{selectedUserCard.level}</span>
   </div>
- <div className="tn-panel rounded-2xl p-4 text-center transform transition duration-300 hover:scale-105 border tn-border-soft">
-  <span className="block text-[10px] md:text-xs uppercase font-black tracking-widest tn-text-muted mb-2">{t('copies_label')}</span>
+ <div className="tn-panel rounded-2xl p-4 text-center transform transition duration-300 hover:scale-105 border tn-border-soft flex flex-col justify-center">
+  <span className="block text-[10px] md:text-xs uppercase font-black tracking-widest tn-text-muted mb-1">{t('copies_label')}</span>
   <span className="text-2xl md:text-3xl font-black tn-text-primary">{selectedUserCard.copies}</span>
+  </div>
+  <div className="tn-panel rounded-2xl p-4 text-center transform transition duration-300 hover:scale-105 border border-red-500/20 bg-red-500/5 flex flex-col justify-center">
+    <span className="block text-[10px] md:text-xs uppercase font-black tracking-widest text-red-500/70 mb-1">ATK</span>
+    <span className="text-2xl md:text-3xl font-black text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.5)]">{selectedUserCard.atk || 0}</span>
+  </div>
+  <div className="tn-panel rounded-2xl p-4 text-center transform transition duration-300 hover:scale-105 border border-blue-500/20 bg-blue-500/5 flex flex-col justify-center">
+    <span className="block text-[10px] md:text-xs uppercase font-black tracking-widest text-blue-500/70 mb-1">DEF</span>
+    <span className="text-2xl md:text-3xl font-black text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]">{selectedUserCard.def || 0}</span>
   </div>
  </div>
  )}
@@ -299,8 +307,17 @@ export default function CollectionPage() {
  </h4>
 
  {/* Stats - Macro-UI */}
-  {/* Lock for unowned - macro-ui space */}
-  {!isOwned && (
+ {/* Stats - Macro-UI */}
+  {isOwned ? (
+    <div className="w-full mt-auto flex gap-1 text-[9px] font-bold text-center">
+      <div className="flex-1 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg py-1 shadow-inner shadow-red-500/10">
+        ⚔️ {userCard.atk || 0}
+      </div>
+      <div className="flex-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-lg py-1 shadow-inner shadow-blue-500/10">
+        🛡️ {userCard.def || 0}
+      </div>
+    </div>
+  ) : (
     <div className="w-full mt-auto py-1.5 tn-surface rounded-xl border tn-border-soft flex items-center justify-center">
       <Lock className="w-2.5 h-2.5 tn-text-muted" />
     </div>

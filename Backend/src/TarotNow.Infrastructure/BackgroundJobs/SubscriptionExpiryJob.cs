@@ -40,23 +40,33 @@ public class SubscriptionExpiryJob : BackgroundService
     {
         _logger.LogInformation("SubscriptionExpiryJob bắt đầu công việc canh chừng dọn sạch bọn xài lố giờ ...");
 
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
+            while (!stoppingToken.IsCancellationRequested)
             {
+                try
+                {
+                    await ProcessExpirationsAsync(stoppingToken);
+                }
+                catch (ObjectDisposedException) when (stoppingToken.IsCancellationRequested)
+                {
+                    // Graceful exit
+                }
+                catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
+                {
+                    _logger.LogError(ex, "Lỗi Nghiêm Trọng Xảy Ra Khi Lấy Đồ Quá Hạn Máy Chém.");
+                }
+
                 // Dạo Quanh Phố Trảm 1 Tiếng Một Lần Đi Tuần Nhé.
                 await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
-                await ProcessExpirationsAsync(stoppingToken);
-            }
-            catch (TaskCanceledException)
-            {
-                // Nghẹn Chết Tắt Server Dẹp Thread.
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi Nghiêm Trọng Xảy Ra Khi Lấy Đồ Quá Hạn Máy Chém.");
             }
         }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("SubscriptionExpiryJob đang dừng do yêu cầu từ hệ thống.");
+        }
+
+        _logger.LogInformation("SubscriptionExpiryJob đã dừng.");
     }
 
     private async Task ProcessExpirationsAsync(CancellationToken cancellationToken)

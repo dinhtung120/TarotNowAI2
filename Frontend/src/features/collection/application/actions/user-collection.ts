@@ -11,6 +11,8 @@ export interface UserCollectionDto {
  level: number;
  copies: number;
  expGained: number;
+ atk?: number;
+ def?: number;
  lastDrawnAt: string;
 }
 

@@ -22,18 +22,33 @@ public partial class EscrowTimerService : BackgroundService
     {
         _logger.LogDebug("[EscrowTimer] Service started.");
 
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
+            while (!stoppingToken.IsCancellationRequested)
             {
-                await ProcessTimers(stoppingToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "[EscrowTimer] Unhandled error in timer loop.");
-            }
+                try
+                {
+                    await ProcessTimers(stoppingToken);
+                }
+                catch (ObjectDisposedException) when (stoppingToken.IsCancellationRequested)
+                {
+                    // Ignore expected disposal during shutdown
+                }
+                catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
+                {
+                    _logger.LogError(ex, "[EscrowTimer] Unhandled error in timer loop.");
+                }
 
-            await Task.Delay(ScanInterval, stoppingToken);
+                await Task.Delay(ScanInterval, stoppingToken);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("[EscrowTimer] Service is shutting down gracefully.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogCritical(ex, "[EscrowTimer] Fatal error in service loop.");
         }
 
         _logger.LogDebug("[EscrowTimer] Service stopped.");

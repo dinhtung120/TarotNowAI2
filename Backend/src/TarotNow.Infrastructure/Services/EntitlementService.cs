@@ -96,7 +96,16 @@ public class EntitlementService : IEntitlementService
                 );
 
                 await _repository.AddConsumeLogAsync(log, cancellation);
-                await _repository.SaveChangesAsync(cancellation);
+                try
+                {
+                    await _repository.SaveChangesAsync(cancellation);
+                }
+                catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
+                {
+                    _logger.LogError(ex, "[Entitlement] Save log failed. UserId: {UserId}, Key: {Key}, Ref: {RefId}, Idem: {Idem}. DB Error: {DbError}", 
+                        userId, entitlementKey, referenceId, idempotencyKey, ex.InnerException?.Message);
+                    throw;
+                }
 
                 // Publish Event Cho Thế Giới Biết Tao Vừa Đớp (Hủy Cache UI Update)
                 await _domainEventPublisher.PublishAsync(new EntitlementConsumedDomainEvent(userId, entitlementKey, targetBucket.Id), cancellation);

@@ -465,8 +465,8 @@ namespace TarotNow.Infrastructure.Migrations
 
                     b.Property<string>("IdempotencyKey")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("idempotency_key");
 
                     b.Property<string>("ReferenceId")
@@ -714,6 +714,10 @@ namespace TarotNow.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
+
+                    b.Property<string>("ActiveTitleRef")
+                        .HasColumnType("text")
+                        .HasColumnName("active_title_ref");
 
                     b.Property<string>("AvatarUrl")
                         .HasColumnType("text")

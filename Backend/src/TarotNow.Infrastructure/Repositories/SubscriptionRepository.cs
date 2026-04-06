@@ -90,6 +90,7 @@ public class SubscriptionRepository : ISubscriptionRepository
         // Lấy 1 lượng nhỏ 50 dòng chạy cuốn chiếu (Paging/Batch) đỡ Kẹt Ram Hệ Thống
         return _context.UserSubscriptions
             .Where(s => s.Status == SubscriptionStatus.Active && s.EndDate <= cutoff)
+            .OrderBy(s => s.EndDate)
             .Take(50)
             .ToListAsync(ct);
     }
@@ -196,6 +197,7 @@ public class SubscriptionRepository : ISubscriptionRepository
         var now = DateTime.UtcNow;
         return await _context.SubscriptionEntitlementBuckets
             .Where(b => b.BusinessDate < oldBusinessDate && b.SubscriptionEndDate > now)
+            .OrderBy(b => b.Id)
             .Take(1000)
             .ToListAsync(ct);
     }

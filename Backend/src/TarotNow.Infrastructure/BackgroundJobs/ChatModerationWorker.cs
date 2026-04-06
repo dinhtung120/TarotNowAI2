@@ -29,26 +29,41 @@ public sealed partial class ChatModerationWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await foreach (var payload in _queue.ReadAllAsync(stoppingToken))
-        {
-            if (_options.CurrentValue.Enabled == false)
-            {
-                continue;
-            }
+        _logger.LogInformation("[ChatModerationWorker] Bắt đầu lắng nghe hàng đợi kiểm duyệt...");
 
-            try
+        try
+        {
+            await foreach (var payload in _queue.ReadAllAsync(stoppingToken))
             {
-                await ProcessPayloadAsync(payload, stoppingToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "[ChatModerationWorker] Failed to process payload. ConversationId={ConversationId}, MessageId={MessageId}",
-                    payload.ConversationId,
-                    payload.MessageId);
+                if (_options.CurrentValue.Enabled == false)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    await ProcessPayloadAsync(payload, stoppingToken);
+                }
+                catch (ObjectDisposedException) when (stoppingToken.IsCancellationRequested)
+                {
+                    // Shutdown phase
+                }
+                catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
+                {
+                    _logger.LogError(
+                        ex,
+                        "[ChatModerationWorker] Failed to process payload. ConversationId={ConversationId}, MessageId={MessageId}",
+                        payload.ConversationId,
+                        payload.MessageId);
+                }
             }
         }
+        catch (OperationCanceledException)
+        {
+            _logger.LogInformation("[ChatModerationWorker] Đang dừng công việc kiểm duyệt...");
+        }
+
+        _logger.LogInformation("[ChatModerationWorker] Tác vụ đã dừng.");
     }
 
     private async Task ProcessPayloadAsync(ChatModerationPayload payload, CancellationToken cancellationToken)

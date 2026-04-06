@@ -64,7 +64,7 @@ public partial class InitReadingSessionCommandHandler
                 entitlementKey: entitlementKey,
                 referenceSource: "InitReadingSession",
                 referenceId: request.SpreadType.ToString(),
-                idempotencyKey: $"init_reading_{request.UserId}_{request.SpreadType}_{dateStr}_{Guid.NewGuid():N}",
+                idempotencyKey: $"ir_{request.UserId:N}_{request.SpreadType}_{dateStr}_{Guid.NewGuid():N}",
                 ct: cancellationToken
             );
 

@@ -27,11 +27,16 @@ public class CreatePostCommandHandler : IRequestHandler<CreatePostCommand, Commu
 {
     private readonly ICommunityPostRepository _postRepo;
     private readonly IUserRepository _userRepo;
+    private readonly IGamificationService _gamificationService;
 
-    public CreatePostCommandHandler(ICommunityPostRepository postRepo, IUserRepository userRepo)
+    public CreatePostCommandHandler(
+        ICommunityPostRepository postRepo, 
+        IUserRepository userRepo,
+        IGamificationService gamificationService)
     {
         _postRepo = postRepo;
         _userRepo = userRepo;
+        _gamificationService = gamificationService;
     }
 
     public async Task<CommunityPostDto> Handle(CreatePostCommand request, CancellationToken cancellationToken)
@@ -64,6 +69,11 @@ public class CreatePostCommandHandler : IRequestHandler<CreatePostCommand, Commu
         };
 
         // 4. Update Database
-        return await _postRepo.CreateAsync(newPost, cancellationToken);
+        var result = await _postRepo.CreateAsync(newPost, cancellationToken);
+
+        // 5. Trigger Gamification
+        await _gamificationService.OnPostCreatedAsync(request.AuthorId, cancellationToken);
+
+        return result;
     }
 }

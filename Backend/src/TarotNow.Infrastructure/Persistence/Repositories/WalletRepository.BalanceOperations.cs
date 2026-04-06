@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TarotNow.Application.Common;
+using TarotNow.Application.Helpers;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 
@@ -65,6 +67,13 @@ public partial class WalletRepository
 
         _dbContext.Set<WalletTransaction>().Add(ledgerEntry);
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        // -- Gamification: Ghi nhận điểm chi tiêu vào Bảng Xếp Hạng --
+        if (request.IsDebit)
+        {
+            await TrackSpendingToLeaderboardAsync(request.UserId, request.Currency, request.Amount, cancellationToken);
+        }
+
         return false;
     }
 

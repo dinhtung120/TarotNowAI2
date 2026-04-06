@@ -38,4 +38,9 @@ public interface INotificationPushService
     /// <param name="notification">DTO chứa thông tin thông báo vừa được tạo.</param>
     /// <param name="cancellationToken">Token hủy bỏ.</param>
     Task PushNewNotificationAsync(NotificationCreateDto notification, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Push custom event xuống client (e.g., gamification events).
+    /// </summary>
+    Task SendEventAsync(string userId, string eventName, object payload, CancellationToken cancellationToken = default);
 }

@@ -28,6 +28,8 @@ const PREFETCH_ROUTES = [
   "/profile",
   "/readers",
   "/collection",
+  "/gamification",
+  "/subscription",
 ];
 
 export default function RoutePrefetcher() {

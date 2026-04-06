@@ -14,17 +14,20 @@ public class DailyCheckInCommandHandler : IRequestHandler<DailyCheckInCommand, D
     private readonly IDailyCheckinRepository _checkinRepository;
     private readonly IWalletRepository _walletRepository;
     private readonly ISystemConfigSettings _settings;
+    private readonly IGamificationService _gamificationService;
 
     public DailyCheckInCommandHandler(
         IUserRepository userRepository,
         IDailyCheckinRepository checkinRepository,
         IWalletRepository walletRepository,
-        ISystemConfigSettings settings)
+        ISystemConfigSettings settings,
+        IGamificationService gamificationService)
     {
         _userRepository = userRepository;
         _checkinRepository = checkinRepository;
         _walletRepository = walletRepository;
         _settings = settings;
+        _gamificationService = gamificationService;
     }
 
     public async Task<DailyCheckInResult> Handle(DailyCheckInCommand request, CancellationToken cancellationToken)
@@ -70,6 +73,10 @@ public class DailyCheckInCommandHandler : IRequestHandler<DailyCheckInCommand, D
 
         // (Tuỳ chọn: Nếu push notification ví đã lên tiền thì IWalletRepository tự bắn hoặc PushSvc bắn).
         
+        // --- GAMIFICATION PHASE 5.3 ---
+        // Báo cho Gamification biết user vừa điểm danh để chạy Nhiệm Vụ (Quest) & Leaderboard.
+        await _gamificationService.OnCheckInAsync(user.Id, user.CurrentStreak, cancellationToken);
+
         // 6. Trả Kết Quả Về Vinh Quang
         return new DailyCheckInResult
         {

@@ -24,6 +24,7 @@ import {
   History,
   Bookmark,
   Bell,
+  Gamepad2,
   type LucideIcon,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -68,6 +69,7 @@ const tabs: TabGroup[] = [
       { labelKey: "readings", href: "/reading", icon: Sparkles, matchPrefixes: ["/reading"] },
       { labelKey: "collection", href: "/collection", icon: Bookmark, matchPrefixes: ["/collection"] },
       { labelKey: "history", href: "/reading/history", icon: History, matchPrefixes: ["/reading/history"] },
+      { labelKey: "gamification", href: "/gamification", icon: Gamepad2, matchPrefixes: ["/gamification"] },
     ],
   },
   {
