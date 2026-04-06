@@ -15,4 +15,7 @@ public interface ISystemConfigSettings
     int DailyAiQuota { get; }
     int InFlightAiCap { get; }
     int ReadingRateLimitSeconds { get; }
+
+    long DailyCheckinGold { get; }
+    int StreakFreezeWindowHours { get; }
 }

@@ -33,6 +33,9 @@ public partial class MongoDbContext
     public IMongoCollection<ReadingSessionDocument> ReadingSessions
         => _database.GetCollection<ReadingSessionDocument>("reading_sessions");
 
+    public IMongoCollection<DailyCheckinDocument> DailyCheckins
+        => _database.GetCollection<DailyCheckinDocument>("daily_checkins");
+
     public IMongoCollection<AiProviderLogDocument> AiProviderLogs
         => _database.GetCollection<AiProviderLogDocument>("ai_provider_logs");
 

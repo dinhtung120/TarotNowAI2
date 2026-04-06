@@ -39,6 +39,8 @@ public static partial class DependencyInjection
         services.AddScoped<IChatMessageRepository, MongoChatMessageRepository>();
         services.AddScoped<IReportRepository, MongoReportRepository>();
         services.AddScoped<ICallSessionRepository, MongoCallSessionRepository>();
+        services.AddScoped<IDailyCheckinRepository, MongoDailyCheckinRepository>();
+        services.AddScoped<IStreakService, StreakService>();
 
         services.AddScoped<IChatFinanceRepository, ChatFinanceRepository>();
         services.AddScoped<IWithdrawalRepository, WithdrawalRepository>();
@@ -50,5 +52,6 @@ public static partial class DependencyInjection
         services.AddHostedService<EscrowTimerService>();
         services.AddHostedService<ChatModerationWorker>();
         services.AddHostedService<CallTimeoutBackgroundService>();
+        services.AddHostedService<StreakBreakBackgroundJob>();
     }
 }

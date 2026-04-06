@@ -40,6 +40,7 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/shared/utils/cn";
 import { useChatUnreadNotifications } from "@/shared/application/hooks/useChatUnreadNotifications";
 import { useChatRealtimeSync } from "@/shared/application/hooks/useChatRealtimeSync";
+import StreakBadge from "@/features/checkin/presentation/StreakBadge";
 
 export interface NavbarProps {
  onLogout?: () => Promise<unknown> | unknown;
@@ -198,6 +199,9 @@ export default function Navbar({ onLogout }: NavbarProps = {}) {
  <div className="flex items-center gap-2 sm:gap-3">
  {isAuthenticated ? (
  <>
+ {/* Streak Badge — hiển thị chuỗi ngày rút bài */}
+ <StreakBadge />
+
  {/* Wallet Widget — hiển thị số dư nhanh */}
  <div className="hidden sm:block">
  <WalletWidget />
@@ -362,7 +366,8 @@ export default function Navbar({ onLogout }: NavbarProps = {}) {
 	 </Link>
 	 );
 	 })}
- <div className="pt-3 border-t border-[var(--border-subtle)]">
+ <div className="pt-3 border-t border-[var(--border-subtle)] flex items-center gap-2">
+ <StreakBadge />
  <WalletWidget />
  </div>
  </div>

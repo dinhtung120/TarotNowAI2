@@ -17,6 +17,7 @@ builder.Services
     .AddConfiguredCors(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
+
 app.UseApiPipeline();
 app.Run();
 

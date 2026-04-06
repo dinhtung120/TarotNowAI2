@@ -49,6 +49,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.ReaderStatus).HasMaxLength(20);
         builder.Property(u => u.Level).HasColumnName("user_level").HasDefaultValue(1);
         builder.Property(u => u.Exp).HasColumnName("user_exp").HasDefaultValue(0);
+        
+        builder.Property(u => u.CurrentStreak).HasColumnName("current_streak").HasDefaultValue(0);
+        builder.Property(u => u.LastStreakDate).HasColumnName("last_streak_date");
+        builder.Property(u => u.PreBreakStreak).HasColumnName("pre_break_streak").HasDefaultValue(0);
+
         builder.Ignore(u => u.HasConsented);
     }
 

@@ -12,6 +12,7 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
     private readonly IAiProvider _aiProvider;
     private readonly IReadingSessionRepository _readingRepo;
     private readonly IDomainEventPublisher _domainEventPublisher;
+    private readonly IStreakService _streakService;
 
     public CompleteAiStreamCommandHandler(
         IAiRequestRepository aiRequestRepo,
@@ -19,7 +20,8 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
         ITransactionCoordinator transactionCoordinator,
         IAiProvider aiProvider,
         IReadingSessionRepository readingRepo,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        IStreakService streakService)
     {
         _aiRequestRepo = aiRequestRepo;
         _walletRepo = walletRepo;
@@ -27,6 +29,7 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
         _aiProvider = aiProvider;
         _readingRepo = readingRepo;
         _domainEventPublisher = domainEventPublisher;
+        _streakService = streakService;
     }
 
     public async Task<bool> Handle(CompleteAiStreamCommand request, CancellationToken cancellationToken)
@@ -44,6 +47,14 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
         if (!context.Processed || string.IsNullOrWhiteSpace(context.RequestId))
         {
             return context.Processed;
+        }
+
+        // Streak increment phải chạy NGOÀI transaction scope
+        // vì ProcessCompletionAsync đã dùng DbContext trong transaction,
+        // nếu streak update cũng nằm trong đó sẽ bị conflict/double-save.
+        if (request.FinalStatus == AiStreamFinalStatuses.Completed)
+        {
+            await _streakService.IncrementStreakOnValidDrawAsync(request.UserId, cancellationToken);
         }
 
         await LogTelemetrySafeAsync(request, context);

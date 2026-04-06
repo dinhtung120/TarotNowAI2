@@ -23,6 +23,7 @@ public static class ApiRoutes
     public const string Withdrawal = Prefix + "/withdrawal";
     public const string CallHub = Prefix + "/call";
     public const string Calls = Prefix + "/calls";
+    public const string CheckIn = Prefix + "/checkin";
 
     public const string ReadersAbsolute = "/" + Prefix + "/readers";
 }

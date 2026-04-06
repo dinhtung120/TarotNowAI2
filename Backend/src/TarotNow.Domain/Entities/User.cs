@@ -42,6 +42,12 @@ public partial class User
 
     public string? MfaBackupCodesHashJson { get; set; }
 
+    public int CurrentStreak { get; private set; } = 0;
+
+    public DateOnly? LastStreakDate { get; private set; }
+
+    public int PreBreakStreak { get; private set; } = 0;
+
     public ICollection<UserConsent> Consents { get; private set; } = new List<UserConsent>();
 
     protected User()
