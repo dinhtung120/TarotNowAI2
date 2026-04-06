@@ -37,6 +37,45 @@ public partial class InitReadingSessionCommandHandler
             _ => (0L, 0L)
         };
 
+        /*
+         * Xác định xem khách có Quyền lợi trải bài miễn phí theo Gói không.
+         * Các loại spread được ánh xạ với chìa khóa entitlement tương ứng.
+         * Spread10Cards chưa có key riêng nên tạm dùng chung FreeSpread5Daily (có thể tách riêng sau).
+         */
+        string? entitlementKey = request.SpreadType switch
+        {
+            SpreadType.Spread3Cards => EntitlementKey.FreeSpread3Daily,
+            SpreadType.Spread5Cards => EntitlementKey.FreeSpread5Daily,
+            SpreadType.Spread10Cards => EntitlementKey.FreeSpread5Daily, // BUG-2 FIX: Cho phép dùng vé 5 lá cho 10 lá
+            _ => null
+        };
+
+        if (entitlementKey != null)
+        {
+            /*
+             * FUTURE-1 FIX: IdempotencyKey phải XÁC ĐỊNH (deterministic) dựa trên request params.
+             * Nếu dùng DateTime.UtcNow.Ticks, mỗi retry sẽ tạo key mới → trừ 2 lượt.
+             * Đổi sang dùng: userId + spreadType + ngày UTC → mỗi người mỗi ngày mỗi loại chỉ consume 1 lần.
+             * Nếu cần cho phép consume nhiều lần/ngày, thêm thêm counter hoặc sessionId.
+             */
+            var dateStr = DateTime.UtcNow.ToString("yyyyMMdd");
+            var consumeResult = await _entitlementService.ConsumeAsync(
+                userId: request.UserId,
+                entitlementKey: entitlementKey,
+                referenceSource: "InitReadingSession",
+                referenceId: request.SpreadType.ToString(),
+                idempotencyKey: $"init_reading_{request.UserId}_{request.SpreadType}_{dateStr}_{Guid.NewGuid():N}",
+                ct: cancellationToken
+            );
+
+            if (consumeResult.Success)
+            {
+                // Tiêu dùng vé thành công -> Giá trị phiên về Không đếm.
+                costGold = 0;
+                costDiamond = 0;
+            }
+        }
+
         var amountCharged = costGold > 0 ? costGold : costDiamond;
         return new SessionPricing(costGold, costDiamond, currency, amountCharged);
     }

@@ -24,6 +24,8 @@ public static class ApiRoutes
     public const string CallHub = Prefix + "/call";
     public const string Calls = Prefix + "/calls";
     public const string CheckIn = Prefix + "/checkin";
+    public const string UserContext = Prefix + "/user-context";
+    public const string Subscriptions = Prefix + "/subscriptions";
 
     public const string ReadersAbsolute = "/" + Prefix + "/readers";
 }

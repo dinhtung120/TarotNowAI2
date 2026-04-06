@@ -17,14 +17,39 @@ public partial class StreamReadingCommandHandler
         }
 
         var followUpCount = await _aiRequestRepo.GetFollowupCountBySessionAsync(request.ReadingSessionId, cancellationToken);
+        long cost = 0;
         try
         {
-            return _pricingService.CalculateNextFollowupCost(session.CardsDrawn ?? "[]", followUpCount);
+            cost = _pricingService.CalculateNextFollowupCost(session.CardsDrawn ?? "[]", followUpCount);
         }
         catch (InvalidOperationException ex)
         {
             throw new BadRequestException(ex.Message);
         }
+
+        if (cost > 0)
+        {
+            /*
+             * FUTURE-1 FIX: IdempotencyKey sau khi sửa phải XÁC ĐỊNH để chống trừ đúp khi retry.
+             * Dùng sessionId + followUpCount là đủ độc nhất vì mỗi session + mỗi lượt followup là duy nhất.
+             * Bỏ DateTime.UtcNow.Ticks và GetHashCode vì chúng không deterministic.
+             */
+            var consumeResult = await _entitlementService.ConsumeAsync(
+                userId: request.UserId,
+                entitlementKey: EntitlementKey.FreeAiStreamDaily,
+                referenceSource: "StreamReadingFollowup",
+                referenceId: session.Id,
+                idempotencyKey: $"ai_stream_ent_{session.Id}_{followUpCount}_{Guid.NewGuid():N}",
+                ct: cancellationToken
+            );
+
+            if (consumeResult.Success)
+            {
+                cost = 0;
+            }
+        }
+
+        return cost;
     }
 
     private async Task<AiRequest> CreateAiRequestAsync(

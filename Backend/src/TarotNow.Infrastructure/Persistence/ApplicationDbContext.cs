@@ -48,6 +48,13 @@ public partial class ApplicationDbContext : DbContext
     public DbSet<ChatFinanceSession> ChatFinanceSessions { get; set; } = null!;
     public DbSet<ChatQuestionItem> ChatQuestionItems { get; set; } = null!;
 
+    // Phase 5.2 - Subscriptions & Entitlements
+    public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; } = null!;
+    public DbSet<UserSubscription> UserSubscriptions { get; set; } = null!;
+    public DbSet<SubscriptionEntitlementBucket> SubscriptionEntitlementBuckets { get; set; } = null!;
+    public DbSet<EntitlementConsume> EntitlementConsumes { get; set; } = null!;
+    public DbSet<EntitlementMappingRule> EntitlementMappingRules { get; set; } = null!;
+
     // Phase 2.4 Withdrawal — Giấy Viết Tờ Đơn Xin Chuyển Tiền Trắng Về ATM
     public DbSet<WithdrawalRequest> WithdrawalRequests { get; set; } = null!;
 

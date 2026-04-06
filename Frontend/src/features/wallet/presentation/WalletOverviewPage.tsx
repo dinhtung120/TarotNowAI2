@@ -17,6 +17,7 @@ import { useRouter } from '@/i18n/routing';
 import { SectionHeader, Button, GlassCard, Pagination, TableStates } from '@/shared/components/ui';
 import { formatDate, formatTime } from '@/shared/utils/format/formatDateTime';
 import { useWalletOverviewPage } from '@/features/wallet/application/useWalletOverviewPage';
+import { EntitlementsWidget } from './components/EntitlementsWidget';
 
 export default function WalletOverviewPage() {
  const router = useRouter();
@@ -109,6 +110,8 @@ export default function WalletOverviewPage() {
      </div>
     </GlassCard>
    </div>
+
+   <EntitlementsWidget />
 
    <div className="animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500">
     <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">

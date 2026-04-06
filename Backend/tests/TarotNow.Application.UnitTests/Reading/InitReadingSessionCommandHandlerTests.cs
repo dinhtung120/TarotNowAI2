@@ -35,6 +35,7 @@ public class InitReadingSessionCommandHandlerTests
     private readonly Mock<IUserRepository> _userRepoMock;
     private readonly Mock<IRngService> _rngMock;
     private readonly Mock<ISystemConfigSettings> _systemConfigSettingsMock;
+    private readonly Mock<IEntitlementService> _entitlementServiceMock;
     private readonly InitReadingSessionCommandHandler _handler;
 
     public InitReadingSessionCommandHandlerTests()
@@ -44,14 +45,19 @@ public class InitReadingSessionCommandHandlerTests
         _userRepoMock = new Mock<IUserRepository>();
         _rngMock = new Mock<IRngService>();
         _systemConfigSettingsMock = new Mock<ISystemConfigSettings>();
+        _entitlementServiceMock = new Mock<IEntitlementService>();
         // Cấu hình giá từ config (giống production)
         _systemConfigSettingsMock.SetupGet(x => x.Spread3GoldCost).Returns(50);
         _systemConfigSettingsMock.SetupGet(x => x.Spread5GoldCost).Returns(100);
         _systemConfigSettingsMock.SetupGet(x => x.Spread10DiamondCost).Returns(50);
 
+        _entitlementServiceMock.Setup(x => x.ConsumeAsync(
+            It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new EntitlementConsumeResult(false, "No entitlement"));
+
         _handler = new InitReadingSessionCommandHandler(
             _repoMock.Object, _orchestratorMock.Object, _userRepoMock.Object,
-            _rngMock.Object, _systemConfigSettingsMock.Object);
+            _rngMock.Object, _systemConfigSettingsMock.Object, _entitlementServiceMock.Object);
     }
 
     /// <summary>Daily1Card đã bốc hôm nay → BadRequest (max 1 lần/ngày).</summary>

@@ -15,15 +15,27 @@ import AppNavbar from "@/features/auth/presentation/components/AppNavbar";
 import WalletStoreBridge from "@/features/wallet/presentation/components/WalletStoreBridge";
 import AppQueryProvider from "@/shared/components/common/AppQueryProvider";
 import UserLayout from "@/shared/components/layout/UserLayout";
+import MetadataInitialLoader from "@/shared/components/common/MetadataInitialLoader";
+import { getInitialMetadata } from "@/shared/application/actions/metadata";
 
 interface UserSegmentLayoutProps {
   children: ReactNode;
 }
 
-export default function UserSegmentLayout({ children }: UserSegmentLayoutProps) {
+/**
+ * Server Component: UserSegmentLayout.
+ * TỐI ƯU HÓA: Thực hiện fetch Metadata Batch ngay trên Server để tránh bão request ở Client.
+ */
+export default async function UserSegmentLayout({ children }: UserSegmentLayoutProps) {
+  // 1. Fetch Metadata ngay trên Server
+  const metadataResult = await getInitialMetadata();
+  const initialMetadata = metadataResult.success ? metadataResult.data : null;
+
   return (
     <AppQueryProvider>
       <AppAuthSessionManager />
+      {/* 2. Truyền dữ liệu xuống Client Loader để mồi cache tức thì */}
+      <MetadataInitialLoader initialMetadata={initialMetadata} />
       <WalletStoreBridge />
       <AppNavbar />
       <UserLayout>{children}</UserLayout>

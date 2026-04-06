@@ -442,6 +442,111 @@ namespace TarotNow.Infrastructure.Migrations
                     b.ToTable("email_otps", (string)null);
                 });
 
+            modelBuilder.Entity("TarotNow.Domain.Entities.EntitlementConsume", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BucketId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("bucket_id");
+
+                    b.Property<DateTime>("ConsumedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("consumed_at");
+
+                    b.Property<string>("EntitlementKey")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("entitlement_key");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<string>("ReferenceId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("reference_id");
+
+                    b.Property<string>("ReferenceSource")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("reference_source");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_entitlement_consumes");
+
+                    b.HasIndex("BucketId")
+                        .HasDatabaseName("ix_entitlement_consumes_bucket_id");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_entitlement_consumes_idempotency_key");
+
+                    b.HasIndex("UserId", "ConsumedAt")
+                        .HasDatabaseName("ix_entitlement_consumes_user_time");
+
+                    b.ToTable("entitlement_consumes", (string)null);
+                });
+
+            modelBuilder.Entity("TarotNow.Domain.Entities.EntitlementMappingRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("timezone('utc', now())");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_enabled");
+
+                    b.Property<decimal>("Ratio")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("ratio");
+
+                    b.Property<string>("SourceKey")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("source_key");
+
+                    b.Property<string>("TargetKey")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("target_key");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_entitlement_mapping_rules");
+
+                    b.HasIndex("SourceKey", "TargetKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_mapping_rules_source_target");
+
+                    b.ToTable("entitlement_mapping_rules", (string)null);
+                });
+
             modelBuilder.Entity("TarotNow.Domain.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -490,6 +595,117 @@ namespace TarotNow.Infrastructure.Migrations
                         .HasDatabaseName("ix_refresh_tokens_user_id");
 
                     b.ToTable("refresh_tokens", (string)null);
+                });
+
+            modelBuilder.Entity("TarotNow.Domain.Entities.SubscriptionEntitlementBucket", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateOnly>("BusinessDate")
+                        .HasColumnType("date")
+                        .HasColumnName("business_date");
+
+                    b.Property<int>("DailyQuota")
+                        .HasColumnType("integer")
+                        .HasColumnName("daily_quota");
+
+                    b.Property<string>("EntitlementKey")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("entitlement_key");
+
+                    b.Property<DateTime>("SubscriptionEndDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("subscription_end_date");
+
+                    b.Property<int>("UsedToday")
+                        .HasColumnType("integer")
+                        .HasColumnName("used_today");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<Guid>("UserSubscriptionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_subscription_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_subscription_entitlement_buckets");
+
+                    b.HasIndex("BusinessDate")
+                        .HasDatabaseName("ix_buckets_business_date");
+
+                    b.HasIndex("UserSubscriptionId")
+                        .HasDatabaseName("ix_buckets_subscription_id");
+
+                    b.HasIndex("UserId", "EntitlementKey", "BusinessDate", "SubscriptionEndDate")
+                        .HasDatabaseName("ix_buckets_user_key_date");
+
+                    b.ToTable("subscription_entitlement_buckets", (string)null);
+                });
+
+            modelBuilder.Entity("TarotNow.Domain.Entities.SubscriptionPlan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("timezone('utc', now())");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("display_order");
+
+                    b.Property<int>("DurationDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("duration_days");
+
+                    b.Property<string>("EntitlementsJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("entitlements_json");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<long>("PriceDiamond")
+                        .HasColumnType("bigint")
+                        .HasColumnName("price_diamond");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_subscription_plans");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("ix_subscription_plans_is_active")
+                        .HasFilter("is_active = true");
+
+                    b.ToTable("subscription_plans", (string)null);
                 });
 
             modelBuilder.Entity("TarotNow.Domain.Entities.User", b =>
@@ -662,6 +878,70 @@ namespace TarotNow.Infrastructure.Migrations
                         .HasDatabaseName("ix_user_consents_user_id_document_type_version");
 
                     b.ToTable("user_consents", (string)null);
+                });
+
+            modelBuilder.Entity("TarotNow.Domain.Entities.UserSubscription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("timezone('utc', now())");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("end_date");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("plan_id");
+
+                    b.Property<long>("PricePaidDiamond")
+                        .HasColumnType("bigint")
+                        .HasColumnName("price_paid_diamond");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("start_date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_user_subscriptions");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_user_subscriptions_idempotency_key");
+
+                    b.HasIndex("PlanId")
+                        .HasDatabaseName("ix_user_subscriptions_plan_id");
+
+                    b.HasIndex("Status", "EndDate")
+                        .HasDatabaseName("ix_user_subscriptions_status_end_date");
+
+                    b.HasIndex("UserId", "Status")
+                        .HasDatabaseName("ix_user_subscriptions_user_id_status");
+
+                    b.ToTable("user_subscriptions", (string)null);
                 });
 
             modelBuilder.Entity("TarotNow.Domain.Entities.WalletTransaction", b =>
@@ -863,6 +1143,27 @@ namespace TarotNow.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("TarotNow.Domain.Entities.EntitlementConsume", b =>
+                {
+                    b.HasOne("TarotNow.Domain.Entities.SubscriptionEntitlementBucket", "Bucket")
+                        .WithMany()
+                        .HasForeignKey("BucketId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_entitlement_consumes_subscription_entitlement_buckets_bucke~");
+
+                    b.HasOne("TarotNow.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_entitlement_consumes_users_user_id");
+
+                    b.Navigation("Bucket");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("TarotNow.Domain.Entities.RefreshToken", b =>
                 {
                     b.HasOne("TarotNow.Domain.Entities.User", "User")
@@ -873,6 +1174,18 @@ namespace TarotNow.Infrastructure.Migrations
                         .HasConstraintName("fk_refresh_tokens_users_user_id");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TarotNow.Domain.Entities.SubscriptionEntitlementBucket", b =>
+                {
+                    b.HasOne("TarotNow.Domain.Entities.UserSubscription", "UserSubscription")
+                        .WithMany()
+                        .HasForeignKey("UserSubscriptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_subscription_entitlement_buckets_user_subscriptions_user_su~");
+
+                    b.Navigation("UserSubscription");
                 });
 
             modelBuilder.Entity("TarotNow.Domain.Entities.User", b =>
@@ -929,6 +1242,27 @@ namespace TarotNow.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_user_consents_users_user_id");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TarotNow.Domain.Entities.UserSubscription", b =>
+                {
+                    b.HasOne("TarotNow.Domain.Entities.SubscriptionPlan", "Plan")
+                        .WithMany()
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_subscriptions_subscription_plans_plan_id");
+
+                    b.HasOne("TarotNow.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_user_subscriptions_users_user_id");
+
+                    b.Navigation("Plan");
 
                     b.Navigation("User");
                 });

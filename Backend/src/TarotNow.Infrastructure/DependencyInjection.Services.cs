@@ -25,6 +25,7 @@ public static partial class DependencyInjection
         services.AddSingleton<IPaymentGatewayService, HmacPaymentGatewayService>();
         services.AddScoped<IDiagnosticsService, DiagnosticsService>();
         services.AddScoped<IMediaProcessorService, MediaProcessorService>();
+        services.AddScoped<IEntitlementService, EntitlementService>();
         
         // Avatar / Image services
         services.AddScoped<IFileStorageService, LocalFileStorageService>();

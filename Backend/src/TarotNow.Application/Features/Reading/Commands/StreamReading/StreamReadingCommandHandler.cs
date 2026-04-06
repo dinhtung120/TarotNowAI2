@@ -20,6 +20,7 @@ public partial class StreamReadingCommandHandler : IRequestHandler<StreamReading
     private readonly int _readingRateLimitSeconds;
 
     private readonly IWalletPushService _walletPushService;
+    private readonly IEntitlementService _entitlementService;
 
     public StreamReadingCommandHandler(
         IReadingSessionRepository readingRepo,
@@ -29,7 +30,8 @@ public partial class StreamReadingCommandHandler : IRequestHandler<StreamReading
         ICacheService cacheService,
         FollowupPricingService pricingService,
         ISystemConfigSettings systemConfigSettings,
-        IWalletPushService walletPushService)
+        IWalletPushService walletPushService,
+        IEntitlementService entitlementService)
     {
         _readingRepo = readingRepo;
         _aiRequestRepo = aiRequestRepo;
@@ -41,6 +43,7 @@ public partial class StreamReadingCommandHandler : IRequestHandler<StreamReading
         _inFlightAiCap = systemConfigSettings.InFlightAiCap;
         _readingRateLimitSeconds = systemConfigSettings.ReadingRateLimitSeconds;
         _walletPushService = walletPushService;
+        _entitlementService = entitlementService;
     }
 
     public async Task<StreamReadingResult> Handle(StreamReadingCommand request, CancellationToken cancellationToken)

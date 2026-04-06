@@ -1,0 +1,23 @@
+{
+  "Subscription": {
+    "premiumTitle": "TarotNow 高级版",
+    "premiumSubtitle": "解锁无限占卜、每日免费塔罗牌阵，并与 AI 深入交流探索命运。",
+    "days": "天",
+    "buyNow": "立即订阅",
+    "processing": "处理中...",
+    "subscribeSuccess": "成功订阅 {name}！",
+    "subscribeError": "订阅失败，请重试。",
+    "notEnoughDiamond": "钻石余额不足，请充值。",
+    "loadError": "加载订阅计划失败。",
+    "noPlansAvailable": "暂无高级订阅计划。",
+    "entitlement_free_spread_3_daily": "免费每日 3 张牌阵",
+    "entitlement_free_spread_5_daily": "免费每日 5 张牌阵",
+    "entitlement_free_ai_stream_daily": "免费每日 AI 后续问答",
+    "entitlement_bonus_exp_multiplier": "x 经验值加成",
+    "premiumEntitlements": "高级特权",
+    "entitlementSubtitle": "您的每日配额和特权",
+    "leftToday": "今日剩余",
+    "unlimited": "无限",
+    "alreadySubscribed": "您已有此计划正在运行。"
+  }
+}

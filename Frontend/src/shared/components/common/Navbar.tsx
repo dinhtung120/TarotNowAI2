@@ -29,6 +29,7 @@ import {
  Menu,
  X,
  ChevronDown,
+ Crown,
 } from "lucide-react";
 import WalletWidget from "../common/WalletWidget";
 import NotificationDropdown from "./NotificationDropdown";
@@ -136,6 +137,7 @@ export default function Navbar({ onLogout }: NavbarProps = {}) {
  { labelKey: "home", href: "/", icon: Home },
  { labelKey: "readings", href: "/reading", icon: Sparkles },
  { labelKey: "readers", href: "/readers", icon: Users },
+ { labelKey: "premium", href: "/premium", icon: Crown },
  ];
 
  /**

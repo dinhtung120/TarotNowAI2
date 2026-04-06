@@ -67,6 +67,7 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
  const messagesEndRef = useRef<HTMLDivElement>(null);
  const inputRef = useRef<HTMLInputElement>(null);
  const hasLoadedInitialRef = useRef(false);
+ const lastInitialLoadTimeRef = useRef(0);
 
  /* ========================================================================
   * Ref ổn định cho các callback dùng bên trong useEffect chính.
@@ -281,6 +282,7 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
    /* Đánh dấu đã hoàn tất khởi tạo – UI sẽ chuyển sang dựa vào
     * conversation.status thực tế thay vì giả định đang load */
    setInitializing(false);
+   lastInitialLoadTimeRef.current = Date.now();
   }
  }, [conversationId]);
  loadInitialRef.current = loadInitial;
@@ -399,6 +401,10 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
    hubConnection.on('conversation.updated', (payload: { conversationId: string; type?: string }) => {
     if (payload.conversationId !== conversationId) return;
     if (payload.type === 'message_created') return;
+
+    // TỐI ƯU: Nếu vừa load xong trong vòng 2 giây, bỏ qua vì dữ liệu đã mới nhất từ loadInitial
+    if (Date.now() - lastInitialLoadTimeRef.current < 2000) return;
+
     void listMessages(conversationId, { limit: 1 }).then((res) => {
      if (res.success && res.data?.conversation) {
       setConversation(res.data.conversation);

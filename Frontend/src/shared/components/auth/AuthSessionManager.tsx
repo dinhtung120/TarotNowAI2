@@ -14,6 +14,27 @@ const MIN_REFRESH_THROTTLE_MS = 20 * 60 * 1000;
 let globalLastRefreshAt = 0;
 
 /**
+ * Kiểm tra xem JWT token có sắp hết hạn hay không.
+ * @param token Chuỗi JWT
+ * @param thresholdSeconds Ngưỡng thời gian (giây) để quyết định refresh. Mặc định 10 phút.
+ */
+function isTokenExpiringSoon(token: string | null, thresholdSeconds: number = 600): boolean {
+    if (!token) return true;
+    try {
+        const payloadBase64 = token.split('.')[1];
+        if (!payloadBase64) return true;
+        const decodedJson = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
+        const payload = JSON.parse(decodedJson);
+        const exp = payload.exp;
+        if (!exp) return true;
+        const nowInSeconds = Math.floor(Date.now() / 1000);
+        return exp - nowInSeconds < thresholdSeconds;
+    } catch {
+        return true;
+    }
+}
+
+/**
  * Props cho AuthSessionManager.
  * refreshAccessToken phải trả về { accessToken: string } sau khi refresh thành công
  * để AuthSessionManager cập nhật Zustand store với token mới nhất.
@@ -81,6 +102,12 @@ export default function AuthSessionManager({
             // Chặn việc gọi refresh liên tục do re-render hoặc Next.js remount layout
             const now = Date.now();
             if (now - globalLastRefreshAt < MIN_REFRESH_THROTTLE_MS) return;
+
+            // TỐI ƯU: Chỉ refresh nếu token sắp hết hạn (dưới 10 phút)
+            const currentToken = useAuthStore.getState().token;
+            if (!isTokenExpiringSoon(currentToken, 600) && !showToastOnFailure) {
+              return;
+            }
 
             refreshInProgressRef.current = true;
             globalLastRefreshAt = Date.now();

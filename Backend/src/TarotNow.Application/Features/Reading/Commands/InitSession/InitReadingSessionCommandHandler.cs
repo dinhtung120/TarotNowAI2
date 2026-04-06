@@ -24,19 +24,22 @@ public partial class InitReadingSessionCommandHandler : IRequestHandler<InitRead
     private readonly IUserRepository _userRepo;
     private readonly IRngService _rngService;
     private readonly ISystemConfigSettings _systemConfigSettings;
+    private readonly IEntitlementService _entitlementService;
 
     public InitReadingSessionCommandHandler(
         IReadingSessionRepository readingRepo,
         IReadingSessionOrchestrator readingSessionOrchestrator,
         IUserRepository userRepo,
         IRngService rngService,
-        ISystemConfigSettings systemConfigSettings)
+        ISystemConfigSettings systemConfigSettings,
+        IEntitlementService entitlementService)
     {
         _readingRepo = readingRepo;
         _readingSessionOrchestrator = readingSessionOrchestrator;
         _userRepo = userRepo;
         _rngService = rngService;
         _systemConfigSettings = systemConfigSettings;
+        _entitlementService = entitlementService;
     }
 
     public async Task<InitReadingSessionResult> Handle(InitReadingSessionCommand request, CancellationToken cancellationToken)

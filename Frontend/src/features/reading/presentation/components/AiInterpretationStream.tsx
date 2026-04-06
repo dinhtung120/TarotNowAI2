@@ -18,6 +18,8 @@ import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { Sparkles, AlertTriangle, RefreshCw, Send } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
+import { useQueryClient } from "@tanstack/react-query";
+import { CHECKIN_QUERY_KEYS } from "@/features/checkin/application/hooks";
 
 interface AiInterpretationStreamProps {
 	sessionId: string;
@@ -37,6 +39,7 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete, i
 	const t = useTranslations("AiInterpretation");
 	const locale = useLocale();
 	const [messages, setMessages] = useState<Message[]>([]);
+	const queryClient = useQueryClient();
 
  // Initial reading states
 	 const [isStreaming, setIsStreaming] = useState(false);
@@ -144,6 +147,9 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete, i
  }
  return newMsgs;
  });
+
+ // Kích hoạt làm mới Navbar Streak ngầm khi rút bài/hỏi thêm hoàn tất
+ queryClient.invalidateQueries({ queryKey: CHECKIN_QUERY_KEYS.streakStatus });
 
  if (onComplete && !isFollowup) onComplete();
  return;

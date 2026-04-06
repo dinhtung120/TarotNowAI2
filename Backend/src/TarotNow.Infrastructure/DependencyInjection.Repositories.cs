@@ -25,6 +25,7 @@ public static partial class DependencyInjection
         services.AddScoped<IUserConsentRepository, UserConsentRepository>();
         services.AddScoped<IDepositOrderRepository, DepositOrderRepository>();
         services.AddScoped<IDepositPromotionRepository, DepositPromotionRepository>();
+        services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
         services.AddScoped<ITransactionCoordinator, TransactionCoordinator>();
 
         services.AddScoped<IReadingSessionRepository, MongoReadingSessionRepository>();
@@ -53,5 +54,7 @@ public static partial class DependencyInjection
         services.AddHostedService<ChatModerationWorker>();
         services.AddHostedService<CallTimeoutBackgroundService>();
         services.AddHostedService<StreakBreakBackgroundJob>();
+        services.AddHostedService<EntitlementDailyResetJob>();
+        services.AddHostedService<SubscriptionExpiryJob>();
     }
 }

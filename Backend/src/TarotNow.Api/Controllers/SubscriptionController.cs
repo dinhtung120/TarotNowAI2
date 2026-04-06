@@ -1,0 +1,101 @@
+/*
+ * ===================================================================
+ * FILE: SubscriptionController.cs
+ * NAMESPACE: TarotNow.Api.Controllers
+ * ===================================================================
+ * MỤC ĐÍCH:
+ *   Giao diện API RESTful dành cho Mobile / Web Gọi Chức Năng Đăng Ký Gói.
+ * ===================================================================
+ */
+
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using TarotNow.Api.Constants;
+using TarotNow.Application.Features.Subscription.Commands.CreateSubscriptionPlan;
+using TarotNow.Application.Features.Subscription.Commands.Subscribe;
+
+namespace TarotNow.Api.Controllers;
+
+[ApiController]
+[Route(ApiRoutes.Subscriptions)]
+[Authorize]
+public class SubscriptionController : ControllerBase
+{
+    private readonly IMediator _mediator;
+
+    public SubscriptionController(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
+    /// <summary>
+    /// Tạo Gói Đăng Ký Mới (Chỉ Admin).
+    /// </summary>
+    [HttpPost("plans")]
+    [Authorize(Policy = "AdminOnly")] // Giả thiết đã có policy AdminOnly
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Guid))]
+    public async Task<IActionResult> CreatePlan(
+        [FromBody] CreateSubscriptionPlanCommand command,
+        CancellationToken cancellationToken)
+    {
+        var planId = await _mediator.Send(command, cancellationToken);
+        return Created($"/api/subscriptions/plans/{planId}", planId);
+    }
+
+    /// <summary>
+    /// Người dùng Mua Gói (Dùng Kim Cương).
+    /// </summary>
+    [HttpPost("subscribe")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Guid))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Subscribe(
+        [FromBody] SubscribeRequest request,
+        CancellationToken cancellationToken)
+    {
+        // Lấy User từ Claims Token (Extension method giả thiết)
+        // var userId = User.GetUserId();
+        // Tạm parse từ JWT - Nếu có helper thì dùng, ở đây parse claim sub.
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userIdStr, out var userId))
+            return Unauthorized();
+
+        var command = new SubscribeCommand(userId, request.PlanId, request.IdempotencyKey);
+        var subId = await _mediator.Send(command, cancellationToken);
+        
+        return Ok(new { SubscriptionId = subId });
+    }
+
+    /// <summary>
+    /// Lấy danh sách các Gói nạp đang mở bán.
+    /// </summary>
+    [HttpGet("plans")]
+    [AllowAnonymous]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(System.Collections.Generic.List<TarotNow.Application.Features.Subscription.Queries.Dtos.SubscriptionPlanDto>))]
+    public async Task<IActionResult> GetPlans(CancellationToken cancellationToken)
+    {
+        var plans = await _mediator.Send(new TarotNow.Application.Features.Subscription.Queries.GetSubscriptionPlans.GetSubscriptionPlansQuery(), cancellationToken);
+        return Ok(plans);
+    }
+
+    /// <summary>
+    /// Lấy số dư các thẻ/quyền lợi còn lại của tôi.
+    /// </summary>
+    [HttpGet("me/entitlements")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(System.Collections.Generic.List<TarotNow.Application.Interfaces.EntitlementBalanceDto>))]
+    public async Task<IActionResult> GetMyEntitlements(CancellationToken cancellationToken)
+    {
+        var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (!Guid.TryParse(userIdStr, out var userId))
+            return Unauthorized();
+
+        var entitlements = await _mediator.Send(new TarotNow.Application.Features.Subscription.Queries.GetMyEntitlements.GetMyEntitlementsQuery(userId), cancellationToken);
+        return Ok(entitlements);
+    }
+}
+
+public record SubscribeRequest(Guid PlanId, string IdempotencyKey);
