@@ -177,7 +177,7 @@ export default function AiInterpretationStream({ sessionId, cards, onComplete, i
  setIsStreaming(false);
  setIsSendingFollowup(false);
  };
-	 }, [flushPendingChunk, locale, onComplete, sessionId, stopStream, t]);
+	 }, [flushPendingChunk, locale, onComplete, queryClient, sessionId, stopStream, t]);
 
 	 useEffect(() => {
 	 const startTimer = window.setTimeout(() => {

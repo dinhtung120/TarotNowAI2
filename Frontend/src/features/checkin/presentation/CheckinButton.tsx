@@ -20,7 +20,7 @@ export const CheckinButton = ({ isCheckedIn }: CheckinButtonProps) => {
     
     // Gọi API bóp trigger lột tiền
     performCheckIn(undefined, {
-      onError: (err: any) => console.error("Điểm danh lỗi tẹo:", err),
+      onError: (err: unknown) => console.error("Điểm danh lỗi tẹo:", err),
     });
   };
 

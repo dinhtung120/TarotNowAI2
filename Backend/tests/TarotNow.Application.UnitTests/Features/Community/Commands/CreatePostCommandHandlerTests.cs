@@ -20,13 +20,18 @@ public class CreatePostCommandHandlerTests
 {
     private readonly Mock<ICommunityPostRepository> _postRepoMock;
     private readonly Mock<IUserRepository> _userRepoMock;
+    private readonly Mock<IGamificationService> _gamificationServiceMock;
     private readonly CreatePostCommandHandler _handler;
 
     public CreatePostCommandHandlerTests()
     {
         _postRepoMock = new Mock<ICommunityPostRepository>();
         _userRepoMock = new Mock<IUserRepository>();
-        _handler = new CreatePostCommandHandler(_postRepoMock.Object, _userRepoMock.Object);
+        _gamificationServiceMock = new Mock<IGamificationService>();
+        _gamificationServiceMock
+            .Setup(x => x.OnPostCreatedAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _handler = new CreatePostCommandHandler(_postRepoMock.Object, _userRepoMock.Object, _gamificationServiceMock.Object);
     }
 
     [Fact]
@@ -60,6 +65,7 @@ public class CreatePostCommandHandlerTests
         result.AuthorDisplayName.Should().Be("Alice");
         result.Content.Should().Be("Hello World!");
         result.Visibility.Should().Be(PostVisibility.Public);
+        _gamificationServiceMock.Verify(x => x.OnPostCreatedAsync(request.AuthorId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

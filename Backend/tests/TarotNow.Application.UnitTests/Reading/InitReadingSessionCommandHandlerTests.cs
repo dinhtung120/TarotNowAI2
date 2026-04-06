@@ -52,7 +52,8 @@ public class InitReadingSessionCommandHandlerTests
         _systemConfigSettingsMock.SetupGet(x => x.Spread10DiamondCost).Returns(50);
 
         _entitlementServiceMock.Setup(x => x.ConsumeAsync(
-            It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            It.IsAny<EntitlementConsumeRequest>(),
+            It.IsAny<CancellationToken>()))
             .ReturnsAsync(new EntitlementConsumeResult(false, "No entitlement"));
 
         _handler = new InitReadingSessionCommandHandler(

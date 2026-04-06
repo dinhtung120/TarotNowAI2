@@ -13,5 +13,12 @@ public interface IGamificationPushService
     Task PushAchievementUnlockedAsync(Guid userId, string achievementCode, string? grantedTitle, CancellationToken ct);
     
     /// <summary>Push event "gamification.card_level_up" qua SignalR — khi card level up</summary>
-    Task PushCardLevelUpAsync(Guid userId, int cardId, int newLevel, int atkBonus, int defBonus, CancellationToken ct);
+    Task PushCardLevelUpAsync(CardLevelUpPushPayload payload, CancellationToken ct);
 }
+
+public sealed record CardLevelUpPushPayload(
+    Guid UserId,
+    int CardId,
+    int NewLevel,
+    int AtkBonus,
+    int DefBonus);

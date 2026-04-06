@@ -36,12 +36,12 @@ public class GamificationPushService : IGamificationPushService
             ct);
     }
 
-    public async Task PushCardLevelUpAsync(Guid userId, int cardId, int newLevel, int atkBonus, int defBonus, CancellationToken ct)
+    public async Task PushCardLevelUpAsync(CardLevelUpPushPayload payload, CancellationToken ct)
     {
         await _pushService.SendEventAsync(
-            userId.ToString(),
+            payload.UserId.ToString(),
             "gamification.card_level_up",
-            new { cardId, newLevel, atkBonus, defBonus },
+            new { payload.CardId, payload.NewLevel, payload.AtkBonus, payload.DefBonus },
             ct);
     }
 }

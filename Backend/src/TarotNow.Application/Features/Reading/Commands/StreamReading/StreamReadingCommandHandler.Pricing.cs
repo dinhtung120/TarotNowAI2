@@ -1,4 +1,5 @@
 using TarotNow.Application.Exceptions;
+using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 
@@ -35,13 +36,13 @@ public partial class StreamReadingCommandHandler
              * Bỏ DateTime.UtcNow.Ticks và GetHashCode vì chúng không deterministic.
              */
             var consumeResult = await _entitlementService.ConsumeAsync(
-                userId: request.UserId,
-                entitlementKey: EntitlementKey.FreeAiStreamDaily,
-                referenceSource: "StreamReadingFollowup",
-                referenceId: session.Id,
-                idempotencyKey: $"ai_stream_ent_{session.Id}_{followUpCount}_{Guid.NewGuid():N}",
-                ct: cancellationToken
-            );
+                new EntitlementConsumeRequest(
+                    request.UserId,
+                    EntitlementKey.FreeAiStreamDaily,
+                    "StreamReadingFollowup",
+                    session.Id,
+                    $"ai_stream_ent_{request.UserId:N}_{session.Id}_{followUpCount + 1}"),
+                cancellationToken);
 
             if (consumeResult.Success)
             {
@@ -50,27 +51,6 @@ public partial class StreamReadingCommandHandler
         }
 
         return cost;
-    }
-
-    private async Task<AiRequest> CreateAiRequestAsync(
-        StreamReadingCommand request,
-        ReadingSession session,
-        long calculatedCost,
-        CancellationToken cancellationToken)
-    {
-        var idempotencyKey = $"ai_stream_{session.Id}_{Guid.CreateVersion7():N}";
-        var aiRequest = new AiRequest
-        {
-            UserId = request.UserId,
-            ReadingSessionRef = session.Id,
-            Status = AiRequestStatus.Requested,
-            IdempotencyKey = idempotencyKey,
-            PromptVersion = "v1.5",
-            ChargeDiamond = calculatedCost
-        };
-
-        await _aiRequestRepo.AddAsync(aiRequest, cancellationToken);
-        return aiRequest;
     }
 
     private async Task FreezeEscrowAsync(
@@ -109,7 +89,6 @@ public partial class StreamReadingCommandHandler
             throw new BadRequestException("Unable to reserve balance for AI Reading. Please try again later.");
         }
     }
-
     private static string ResolveEscrowDescription(string? followupQuestion)
     {
         return string.IsNullOrWhiteSpace(followupQuestion)

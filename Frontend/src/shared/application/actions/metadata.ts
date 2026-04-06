@@ -39,7 +39,7 @@ export async function getInitialMetadata(): Promise<ActionResult<UserMetadataDto
     }
 
     return actionOk(result.data);
-  } catch (error) {
+  } catch {
     return actionFail("Metadata fetch error");
   }
 }

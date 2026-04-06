@@ -26,6 +26,7 @@ namespace TarotNow.Api.Controllers;
 
 [ApiController]
 [Authorize] // Tất cả API Gacha yêu cầu đăng nhập
+[ApiVersion(ApiVersions.V1)]
 [Produces("application/json")]
 public class GachaController : ControllerBase
 {

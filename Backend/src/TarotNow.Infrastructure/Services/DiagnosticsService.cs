@@ -7,6 +7,7 @@ using TarotNow.Domain.Entities;
 using TarotNow.Infrastructure.Options;
 using TarotNow.Infrastructure.Persistence;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
+using TarotNow.Infrastructure.Persistence.Seeds;
 
 namespace TarotNow.Infrastructure.Services;
 
@@ -52,5 +53,10 @@ public sealed partial class DiagnosticsService : IDiagnosticsService
             TestUserSessions = testUserSessions,
             SampleDataRaw = sampleDocs.Select(d => d.ToJson()).ToList()
         };
+    }
+
+    public Task SeedGamificationDataAsync(CancellationToken cancellationToken = default)
+    {
+        return SeedGamificationData.SeedAsync(_mongoContext);
     }
 }

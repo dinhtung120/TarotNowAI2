@@ -30,7 +30,6 @@ using Microsoft.AspNetCore.Authorization; // [Authorize] kiểm soát quyền
 using Microsoft.AspNetCore.Mvc;           // API controller base
 
 using TarotNow.Application.Interfaces;
-using TarotNow.Infrastructure.Persistence;
 
 namespace TarotNow.Api.Controllers;
 
@@ -151,14 +150,14 @@ public class DiagController : ControllerBase
     /// MỤC ĐÍCH: Nạp dữ liệu init (quests, achievements, titles) cho Gamification Phase.
     /// </summary>
     [HttpPost("seed-gamification")]
-    public async Task<IActionResult> SeedGamification([FromServices] MongoDbContext mongoDbContext)
+    public async Task<IActionResult> SeedGamification()
     {
         var guard = RejectIfNotDevelopment();
         if (guard != null) return guard;
 
         try
         {
-            await SeedGamificationData.SeedAsync(mongoDbContext);
+            await _diagnosticsService.SeedGamificationDataAsync(HttpContext.RequestAborted);
             return Ok(new { message = "Gamification data seeded successfully." });
         }
         catch (Exception ex)

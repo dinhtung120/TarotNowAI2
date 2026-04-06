@@ -22,6 +22,28 @@ export const StreakFreezeModal = ({
   const { mutate: purchaseFreeze, isPending } = usePurchaseFreeze();
   const [errorDesc, setErrorDesc] = useState<string | null>(null);
 
+  const getErrorDescription = (error: unknown): string => {
+    if (error instanceof Error && error.message) {
+      return error.message;
+    }
+
+    if (typeof error === 'object' && error !== null) {
+      const maybeHttpError = error as {
+        response?: {
+          data?: {
+            message?: string;
+          };
+        };
+      };
+
+      if (maybeHttpError.response?.data?.message) {
+        return maybeHttpError.response.data.message;
+      }
+    }
+
+    return 'Có lỗi khi mua quyền cứu vớt.';
+  };
+
   if (!isOpen) return null;
 
   // Tính lùi thời gian cho vui mắt UX
@@ -36,8 +58,8 @@ export const StreakFreezeModal = ({
         onSuccess: () => {
           onClose(); // Thành công rồi, đóng phắc cái rẹt. UI ngoài kia tự Query invalidate & đổi lửa.
         },
-        onError: (err: any) => {
-          setErrorDesc(err?.response?.data?.message || 'Có lỗi khi mua quyền cứu vớt.');
+        onError: (err: unknown) => {
+          setErrorDesc(getErrorDescription(err));
         },
       }
     );

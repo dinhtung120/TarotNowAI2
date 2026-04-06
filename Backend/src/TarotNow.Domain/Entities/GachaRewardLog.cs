@@ -41,29 +41,43 @@ public class GachaRewardLog
 
     protected GachaRewardLog() { }
 
-    private GachaRewardLog(Guid userId, Guid bannerId, Guid bannerItemId, string oddsVersion, long spentDiamond, string rarity, string rewardType, string rewardValue, int pityCountAtSpin, bool wasPityTriggered, string? rngSeed, string idempotencyKey)
+    private GachaRewardLog(GachaRewardLogCreateRequest request)
     {
         Id = Guid.NewGuid();
-        UserId = userId;
-        BannerId = bannerId;
-        BannerItemId = bannerItemId;
-        OddsVersion = oddsVersion;
-        SpentDiamond = spentDiamond;
-        Rarity = rarity;
-        RewardType = rewardType;
-        RewardValue = rewardValue;
-        PityCountAtSpin = pityCountAtSpin;
-        WasPityTriggered = wasPityTriggered;
-        RngSeed = rngSeed;
-        IdempotencyKey = idempotencyKey;
+        UserId = request.UserId;
+        BannerId = request.BannerId;
+        BannerItemId = request.BannerItemId;
+        OddsVersion = request.OddsVersion;
+        SpentDiamond = request.SpentDiamond;
+        Rarity = request.Rarity;
+        RewardType = request.RewardType;
+        RewardValue = request.RewardValue;
+        PityCountAtSpin = request.PityCountAtSpin;
+        WasPityTriggered = request.WasPityTriggered;
+        RngSeed = request.RngSeed;
+        IdempotencyKey = request.IdempotencyKey;
         CreatedAt = DateTime.UtcNow;
     }
 
     /// <summary>
     /// Đẻ biên bản Kế toán tay
     /// </summary>
-    public static GachaRewardLog Create(Guid userId, Guid bannerId, Guid bannerItemId, string oddsVersion, long spentDiamond, string rarity, string rewardType, string rewardValue, int pityCountAtSpin, bool wasPityTriggered, string? rngSeed, string idempotencyKey)
+    public static GachaRewardLog Create(GachaRewardLogCreateRequest request)
     {
-        return new GachaRewardLog(userId, bannerId, bannerItemId, oddsVersion, spentDiamond, rarity, rewardType, rewardValue, pityCountAtSpin, wasPityTriggered, rngSeed, idempotencyKey);
+        return new GachaRewardLog(request);
     }
 }
+
+public sealed record GachaRewardLogCreateRequest(
+    Guid UserId,
+    Guid BannerId,
+    Guid BannerItemId,
+    string OddsVersion,
+    long SpentDiamond,
+    string Rarity,
+    string RewardType,
+    string RewardValue,
+    int PityCountAtSpin,
+    bool WasPityTriggered,
+    string? RngSeed,
+    string IdempotencyKey);

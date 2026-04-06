@@ -103,5 +103,5 @@ export function useChatRealtimeSync() {
       }
       connectionRef.current = null;
     };
-  }, [isAuthenticated, queryClient]);
+  }, [isAuthenticated, queryClient, token]);
 }

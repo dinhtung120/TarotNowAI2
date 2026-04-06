@@ -5,6 +5,7 @@ import { Medal, Trophy, Flame, Zap } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useTitles, useAchievements } from '../useGamification';
 import { useLocalizedField } from '../useLocalizedField';
+import type { TitleDefinition } from '../gamification.types';
 
 export default function GamificationStatsBar() {
   const t = useTranslations('Gamification');
@@ -16,7 +17,9 @@ export default function GamificationStatsBar() {
   // Derived values
   const ownedTitlesCount = titlesData?.unlockedList?.length || 0;
   const totalTitlesCount = titlesData?.definitions?.length || 0;
-  const activeTitle = titlesData?.definitions?.find((title: any) => title.code === titlesData.activeTitleCode);
+  const activeTitle = titlesData?.definitions?.find(
+    (title: TitleDefinition) => title.code === titlesData.activeTitleCode,
+  );
   const activeTitleName = activeTitle ? localize(activeTitle.nameVi, activeTitle.nameEn) : null;
   
   const unlockedAchievementsCount = achievementsData?.unlockedList?.length || 0;

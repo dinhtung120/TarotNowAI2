@@ -47,13 +47,7 @@ public interface IEntitlementService
     /// Nếu Hết Hạn Ngạch -> Trả Về Lỗi Failed.
     /// Tự Động Xử Lý Khóa Dòng Transaction + Idempotency Bảo Lãnh Không Hút Nhầm Dù Bắn Hai Lệnh.
     /// </summary>
-    Task<EntitlementConsumeResult> ConsumeAsync(
-        Guid userId, 
-        string entitlementKey, 
-        string referenceSource,
-        string referenceId, 
-        string idempotencyKey, 
-        CancellationToken ct);
+    Task<EntitlementConsumeResult> ConsumeAsync(EntitlementConsumeRequest request, CancellationToken ct);
     
     /// <summary>
     /// Dò Khám Bảng Cân Đối Hiện Tại Xem Khách Còn Mã Giảm Không Nhé? (Sẽ Có Redis Chặn Thống Kê Nhanh Đây).
@@ -71,3 +65,10 @@ public interface IEntitlementService
         Guid userId, 
         CancellationToken ct);
 }
+
+public sealed record EntitlementConsumeRequest(
+    Guid UserId,
+    string EntitlementKey,
+    string ReferenceSource,
+    string ReferenceId,
+    string IdempotencyKey);

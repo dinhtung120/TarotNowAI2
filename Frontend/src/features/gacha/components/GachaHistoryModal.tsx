@@ -2,7 +2,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import Modal from '@/shared/components/ui/Modal';
 import { useGachaHistory } from '../hooks/useGacha';
 import { formatDateTime } from '@/shared/utils/format/formatDateTime';
-import { Clock, History, Award, Diamond, Coins, Sparkles } from 'lucide-react';
+import { Clock, Award, Diamond, Coins, Sparkles } from 'lucide-react';
 import type { GachaHistoryItemDto } from '../gacha.types';
 import Badge from '@/shared/components/ui/Badge';
 
@@ -50,7 +50,7 @@ export function GachaHistoryModal({ isOpen, onClose }: GachaHistoryModalProps) {
           </div>
         ) : isError ? (
           <div className="text-center py-12 text-red-400 border border-dashed border-red-900/30 bg-red-950/10 rounded-3xl">
-            <p className="font-bold mb-1 italic">{(error as any)?.message || t('errorLoadingHistory')}</p>
+            <p className="font-bold mb-1 italic">{error instanceof Error ? error.message : t('errorLoadingHistory')}</p>
           </div>
         ) : !history || history.length === 0 ? (
           <div className="text-center py-12 text-stone-500 border border-dashed border-stone-800 rounded-3xl">

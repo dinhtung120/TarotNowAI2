@@ -5,11 +5,6 @@ using System.Security.Claims;
 using TarotNow.Api.Constants;
 using TarotNow.Application.Features.Gamification.Commands;
 using TarotNow.Application.Features.Gamification.Queries;
-using TarotNow.Application.Interfaces;
-using TarotNow.Application.Helpers;
-using MongoDB.Driver;
-using TarotNow.Infrastructure.Persistence;
-using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Api.Controllers;
 
@@ -20,149 +15,63 @@ namespace TarotNow.Api.Controllers;
 public class GamificationController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly ITitleRepository _titleRepository;
-    private readonly ILeaderboardRepository _leaderboardRepository;
-    private readonly MongoDbContext _mongoContext;
 
-    public GamificationController(
-        IMediator mediator, 
-        ITitleRepository titleRepository,
-        ILeaderboardRepository leaderboardRepository,
-        MongoDbContext mongoContext)
+    public GamificationController(IMediator mediator)
     {
         _mediator = mediator;
-        _titleRepository = titleRepository;
-        _leaderboardRepository = leaderboardRepository;
-        _mongoContext = mongoContext;
     }
 
     private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-    // === QUESTS ===
+    /// <summary>Lấy danh sách nhiệm vụ đang hoạt động theo loại chu kỳ.</summary>
     [HttpGet("quests")]
     public async Task<IActionResult> GetActiveQuests([FromQuery] string type = "daily")
     {
-        var query = new GetActiveQuestsQuery(GetUserId(), type);
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(new GetActiveQuestsQuery(GetUserId(), type));
         return Ok(result);
     }
 
+    /// <summary>Nhận thưởng của một nhiệm vụ đã hoàn thành.</summary>
     [HttpPost("quests/{questCode}/claim")]
-    public async Task<IActionResult> ClaimQuestReward(string questCode, [FromBody] ClaimQuestRewardRequest req)
+    public async Task<IActionResult> ClaimQuestReward(string questCode, [FromBody] ClaimQuestRewardRequest request)
     {
-        var command = new ClaimQuestRewardCommand(GetUserId(), questCode, req.PeriodKey);
-        var result = await _mediator.Send(command);
-        
-        if (!result.Success && result.AlreadyClaimed) 
-            return Problem(statusCode: 400, detail: "QUEST_ALREADY_CLAIMED");
-            
-        if (!result.Success) 
-            return Problem(statusCode: 400, detail: "QUEST_NOT_COMPLETED_OR_FAILED");
-        
+        var result = await _mediator.Send(new ClaimQuestRewardCommand(GetUserId(), questCode, request.PeriodKey));
+        if (!result.Success && result.AlreadyClaimed) return Problem(statusCode: 400, detail: "QUEST_ALREADY_CLAIMED");
+        if (!result.Success) return Problem(statusCode: 400, detail: "QUEST_NOT_COMPLETED_OR_FAILED");
         return Ok(result);
     }
 
-    // === ACHIEVEMENTS ===
+    /// <summary>Lấy danh sách thành tựu và trạng thái mở khóa của người dùng.</summary>
     [HttpGet("achievements")]
     public async Task<IActionResult> GetAchievements()
     {
-        var query = new GetUserAchievementsQuery(GetUserId());
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(new GetUserAchievementsQuery(GetUserId()));
         return Ok(result);
     }
 
-    // === TITLES ===
+    /// <summary>Lấy danh sách danh hiệu đã sở hữu và danh hiệu đang kích hoạt.</summary>
     [HttpGet("titles")]
     public async Task<IActionResult> GetTitles()
     {
-        var query = new GetUserTitlesQuery(GetUserId());
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(new GetUserTitlesQuery(GetUserId()));
         return Ok(result);
     }
 
+    /// <summary>Đặt danh hiệu đang hiển thị của người dùng.</summary>
     [HttpPost("titles/active")]
-    public async Task<IActionResult> SetActiveTitle([FromBody] SetActiveTitleRequest req)
+    public async Task<IActionResult> SetActiveTitle([FromBody] SetActiveTitleRequest request)
     {
-        var command = new SetActiveTitleCommand(GetUserId(), req.TitleCode);
-        var success = await _mediator.Send(command);
-        if (!success) return BadRequest(new { message = "Bạn không sở hữu danh hiệu này." });
+        var success = await _mediator.Send(new SetActiveTitleCommand(GetUserId(), request.TitleCode));
+        if (!success) return Problem(statusCode: 400, detail: "TITLE_NOT_OWNED");
         return Ok(new { message = "Cập nhật danh hiệu thành công." });
     }
 
-    [HttpPost("sandbox-grant-me")]
-    public async Task<IActionResult> SandboxGrantMeAllTitles(CancellationToken ct)
-    {
-        var userId = GetUserId();
-        var titles = await _titleRepository.GetAllTitlesAsync(ct);
-        foreach (var title in titles)
-        {
-            if (!await _titleRepository.OwnsTitleAsync(userId, title.Code, ct))
-            {
-                await _titleRepository.GrantTitleAsync(userId, title.Code, ct);
-            }
-        }
-        return Ok(new { message = "Dev Sandbox: Chúc mừng bạn đã được ban tặng toàn quyền sở hữu toàn bộ danh hiệu trong game!" });
-    }
-
-    [HttpDelete("sandbox-purge-leaderboard")]
-    public async Task<IActionResult> SandboxPurgeLeaderboard(CancellationToken ct)
-    {
-        // Xóa trắng dữ liệu bảng xếp hạng để reset môi trường test
-        await _mongoContext.LeaderboardEntries.DeleteManyAsync(FilterDefinition<LeaderboardEntryDocument>.Empty, ct);
-        await _mongoContext.LeaderboardSnapshots.DeleteManyAsync(FilterDefinition<LeaderboardSnapshotDocument>.Empty, ct);
-        return Ok(new { message = "Đã xóa toàn bộ dữ liệu bảng xếp hạng." });
-    }
-
+    /// <summary>Lấy bảng xếp hạng theo track và period.</summary>
     [HttpGet("leaderboard")]
     public async Task<IActionResult> GetLeaderboard([FromQuery] string track = "daily_rank_score", [FromQuery] string? periodKey = null)
     {
-        var query = new GetLeaderboardQuery(GetUserId(), track, periodKey);
-        var result = await _mediator.Send(query);
+        var result = await _mediator.Send(new GetLeaderboardQuery(GetUserId(), track, periodKey));
         return Ok(result);
-    }
-
-    // === DEBUG & SANDBOX ===
-    [HttpGet("debug-stats")]
-    [AllowAnonymous] // Tạm thời cho phép anonymous để test nhanh hoặc có thể giữ Authorize tùy ý
-    public async Task<IActionResult> GetDebugStats()
-    {
-        var totalEntries = await _mongoContext.LeaderboardEntries.CountDocumentsAsync(FilterDefinition<LeaderboardEntryDocument>.Empty);
-        var totalSnapshots = await _mongoContext.LeaderboardSnapshots.CountDocumentsAsync(FilterDefinition<LeaderboardSnapshotDocument>.Empty);
-        
-        // Lấy 5 bản ghi mới nhất để xem track name thực tế
-        var latestEntries = await _mongoContext.LeaderboardEntries.Find(FilterDefinition<LeaderboardEntryDocument>.Empty)
-            .SortByDescending(x => x.UpdatedAt)
-            .Limit(5)
-            .ToListAsync();
-
-        return Ok(new 
-        { 
-            TotalEntries = totalEntries, 
-            TotalSnapshots = totalSnapshots,
-            LatestEntries = latestEntries.Select(e => new { e.ScoreTrack, e.PeriodKey, e.Score, e.UserId })
-        });
-    }
-
-    // Endpoint phục vụ việc kiểm tra dữ liệu mẫu (Sẽ được bảo mật lại sau khi test thành công)
-    [AllowAnonymous]
-    [HttpPost("sandbox-grant-score")]
-    public async Task<IActionResult> SandboxGrantScore([FromQuery] string track = "spent_gold", [FromQuery] long points = 1000)
-    {
-        // Phục vụ việc kiểm tra tự động khi chưa đăng nhập. 
-        // Fallback về ID của SuperAdmin nếu không tìm thấy UserID trong Token.
-        var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        var userId = string.IsNullOrEmpty(userIdStr) 
-            ? Guid.Parse("86e87b7b-bf14-46a1-927a-a41899f3057b") 
-            : Guid.Parse(userIdStr);
-            
-        var dailyKey = PeriodKeyHelper.GetPeriodKey("daily");
-        var monthlyKey = PeriodKeyHelper.GetPeriodKey("monthly");
-
-        await _leaderboardRepository.IncrementScoreAsync(userId, track, dailyKey, points, default);
-        await _leaderboardRepository.IncrementScoreAsync(userId, track, monthlyKey, points, default);
-        await _leaderboardRepository.IncrementScoreAsync(userId, track, "all", points, default);
-
-        return Ok(new { message = $"Đã cộng {points} điểm vào track '{track}' cho user {userId}" });
     }
 }
 

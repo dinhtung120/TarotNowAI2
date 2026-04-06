@@ -1,6 +1,5 @@
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
-import { getTranslations } from 'next-intl/server';
 import AdminGamificationClient from '@/features/gamification/AdminGamificationClient';
 import type { QuestDefinition, AchievementDefinition, TitleDefinition } from '@/features/gamification/gamification.types';
 

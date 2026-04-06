@@ -24,19 +24,19 @@ public class GachaLogRepository : IGachaLogRepository
         _mongoDbContext = mongoDbContext;
     }
 
-    public async Task InsertLogAsync(Guid userId, string bannerCode, string rarity, string rewardType, string rewardValue, long spentDiamond, bool wasPity, string? rngSeed, DateTime createdAt, CancellationToken ct)
+    public async Task InsertLogAsync(GachaLogInsertRequest request, CancellationToken ct)
     {
         var doc = new GachaLogDocument
         {
-            UserId = userId,
-            BannerCode = bannerCode,
-            Rarity = rarity,
-            RewardType = rewardType,
-            RewardValue = rewardValue,
-            SpentDiamond = spentDiamond,
-            WasPity = wasPity,
-            RngSeed = rngSeed,
-            CreatedAt = createdAt
+            UserId = request.UserId,
+            BannerCode = request.BannerCode,
+            Rarity = request.Rarity,
+            RewardType = request.RewardType,
+            RewardValue = request.RewardValue,
+            SpentDiamond = request.SpentDiamond,
+            WasPity = request.WasPity,
+            RngSeed = request.RngSeed,
+            CreatedAt = request.CreatedAt
         };
 
         await _mongoDbContext.GachaLogs.InsertOneAsync(doc, cancellationToken: ct);

@@ -32,8 +32,9 @@ export default function GachaPage() {
         // Update local tracking so it doesn't wait for another network fetch to feel snappy
         setOptimisticPity(prev => ({ ...prev, [bannerCode]: result.currentPityCount }));
       }
-    } catch (error: any) {
-      toast.error(error.message || tCommon('error_unknown'));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : tCommon('error_unknown');
+      toast.error(message);
     }
   };
 

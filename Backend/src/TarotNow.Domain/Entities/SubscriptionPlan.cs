@@ -86,22 +86,24 @@ public class SubscriptionPlan
     /// <summary>
     /// Các tác vụ bảo trì gói do Admin băm sửa.
     /// </summary>
-    public void Update(
-        string name, 
-        string? description, 
-        long priceDiamond, 
-        int durationDays, 
-        string entitlementsJson, 
-        int displayOrder, 
-        bool isActive)
+    public void Update(SubscriptionPlanUpdateDetails details)
     {
-        Name = name;
-        Description = description;
-        PriceDiamond = priceDiamond;
-        DurationDays = durationDays;
-        EntitlementsJson = entitlementsJson;
-        DisplayOrder = displayOrder;
-        IsActive = isActive;
+        Name = details.Name;
+        Description = details.Description;
+        PriceDiamond = details.PriceDiamond;
+        DurationDays = details.DurationDays;
+        EntitlementsJson = details.EntitlementsJson;
+        DisplayOrder = details.DisplayOrder;
+        IsActive = details.IsActive;
         UpdatedAt = DateTime.UtcNow;
     }
 }
+
+public sealed record SubscriptionPlanUpdateDetails(
+    string Name,
+    string? Description,
+    long PriceDiamond,
+    int DurationDays,
+    string EntitlementsJson,
+    int DisplayOrder,
+    bool IsActive);

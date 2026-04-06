@@ -9,7 +9,9 @@ const EXPECTED_TOP_LEVEL_KEYS = [
  'Chat',
  'Collection',
  'Common',
+ 'Community',
  'Footer',
+ 'Gamification',
  'History',
  'Index',
  'LanguageSwitcher',
@@ -22,9 +24,11 @@ const EXPECTED_TOP_LEVEL_KEYS = [
  'Readers',
  'ReadingSession',
  'ReadingSetup',
+ 'Subscription',
  'Tarot',
  'UserNav',
  'Wallet',
+ 'gacha',
 ].sort();
 
 describe('mergeMessages', () => {

@@ -7,6 +7,25 @@ namespace TarotNow.Infrastructure.Services;
 
 public sealed class MediatRDomainEventPublisher : IDomainEventPublisher
 {
+    private static readonly IReadOnlyDictionary<Type, Func<IDomainEvent, INotification>> NotificationFactories =
+        new Dictionary<Type, Func<IDomainEvent, INotification>>
+        {
+            [typeof(EscrowReleasedDomainEvent)] = domainEvent =>
+                new EscrowReleasedNotification((EscrowReleasedDomainEvent)domainEvent),
+            [typeof(EscrowRefundedDomainEvent)] = domainEvent =>
+                new EscrowRefundedNotification((EscrowRefundedDomainEvent)domainEvent),
+            [typeof(ReadingBillingCompletedDomainEvent)] = domainEvent =>
+                new ReadingBillingCompletedNotification((ReadingBillingCompletedDomainEvent)domainEvent),
+            [typeof(ConversationUpdatedDomainEvent)] = domainEvent =>
+                new ConversationUpdatedNotification((ConversationUpdatedDomainEvent)domainEvent),
+            [typeof(SubscriptionActivatedDomainEvent)] = domainEvent =>
+                new SubscriptionActivatedNotification((SubscriptionActivatedDomainEvent)domainEvent),
+            [typeof(SubscriptionExpiredDomainEvent)] = domainEvent =>
+                new SubscriptionExpiredNotification((SubscriptionExpiredDomainEvent)domainEvent),
+            [typeof(EntitlementConsumedDomainEvent)] = domainEvent =>
+                new EntitlementConsumedNotification((EntitlementConsumedDomainEvent)domainEvent)
+        };
+
     private readonly IMediator _mediator;
 
     public MediatRDomainEventPublisher(IMediator mediator)
@@ -16,16 +35,16 @@ public sealed class MediatRDomainEventPublisher : IDomainEventPublisher
 
     public Task PublishAsync(IDomainEvent domainEvent, CancellationToken cancellationToken = default)
     {
-        return domainEvent switch
-        {
-            EscrowReleasedDomainEvent released => _mediator.Publish(new EscrowReleasedNotification(released), cancellationToken),
-            EscrowRefundedDomainEvent refunded => _mediator.Publish(new EscrowRefundedNotification(refunded), cancellationToken),
-            ReadingBillingCompletedDomainEvent readingBilling => _mediator.Publish(new ReadingBillingCompletedNotification(readingBilling), cancellationToken),
-            ConversationUpdatedDomainEvent updated => _mediator.Publish(new ConversationUpdatedNotification(updated), cancellationToken),
-            SubscriptionActivatedDomainEvent subAct => _mediator.Publish(new SubscriptionActivatedNotification(subAct), cancellationToken),
-            SubscriptionExpiredDomainEvent subExp => _mediator.Publish(new SubscriptionExpiredNotification(subExp), cancellationToken),
-            EntitlementConsumedDomainEvent entCons => _mediator.Publish(new EntitlementConsumedNotification(entCons), cancellationToken),
-            _ => Task.CompletedTask
-        };
+        var notification = MapNotification(domainEvent);
+        return notification == null
+            ? Task.CompletedTask
+            : _mediator.Publish(notification, cancellationToken);
+    }
+
+    private static INotification? MapNotification(IDomainEvent domainEvent)
+    {
+        return NotificationFactories.TryGetValue(domainEvent.GetType(), out var factory)
+            ? factory(domainEvent)
+            : null;
     }
 }

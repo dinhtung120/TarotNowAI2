@@ -22,6 +22,7 @@ using TarotNow.Application.Features.Subscription.Commands.Subscribe;
 namespace TarotNow.Api.Controllers;
 
 [ApiController]
+[ApiVersion(ApiVersions.V1)]
 [Route(ApiRoutes.Subscriptions)]
 [Authorize]
 public class SubscriptionController : ControllerBase

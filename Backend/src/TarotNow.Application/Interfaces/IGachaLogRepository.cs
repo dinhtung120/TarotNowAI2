@@ -19,6 +19,17 @@ namespace TarotNow.Application.Interfaces;
 // Ta định nghĩa 1 DTO gọn trong Layer App.
 public interface IGachaLogRepository
 {
-    Task InsertLogAsync(Guid userId, string bannerCode, string rarity, string rewardType, string rewardValue, long spentDiamond, bool wasPity, string? rngSeed, DateTime createdAt, CancellationToken ct);
+    Task InsertLogAsync(GachaLogInsertRequest request, CancellationToken ct);
     Task<List<TarotNow.Application.Features.Gacha.Dtos.GachaHistoryItemDto>> GetUserLogsAsync(Guid userId, int limit, CancellationToken ct);
 }
+
+public sealed record GachaLogInsertRequest(
+    Guid UserId,
+    string BannerCode,
+    string Rarity,
+    string RewardType,
+    string RewardValue,
+    long SpentDiamond,
+    bool WasPity,
+    string? RngSeed,
+    DateTime CreatedAt);

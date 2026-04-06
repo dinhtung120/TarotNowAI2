@@ -12,6 +12,16 @@ public static partial class DependencyInjection
 {
     private static void AddRepositories(IServiceCollection services)
     {
+        AddCoreRepositories(services);
+        AddMongoRepositories(services);
+        AddGamificationRepositories(services);
+        AddGachaRepositories(services);
+        AddSupportRepositories(services);
+        AddHostedWorkers(services);
+    }
+
+    private static void AddCoreRepositories(IServiceCollection services)
+    {
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IEmailOtpRepository, EmailOtpRepository>();
@@ -27,7 +37,10 @@ public static partial class DependencyInjection
         services.AddScoped<IDepositPromotionRepository, DepositPromotionRepository>();
         services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
         services.AddScoped<ITransactionCoordinator, TransactionCoordinator>();
+    }
 
+    private static void AddMongoRepositories(IServiceCollection services)
+    {
         services.AddScoped<IReadingSessionRepository, MongoReadingSessionRepository>();
         services.AddScoped<IReadingSessionOrchestrator, ReadingSessionOrchestrator>();
         services.AddScoped<IUserCollectionRepository, MongoUserCollectionRepository>();
@@ -42,30 +55,41 @@ public static partial class DependencyInjection
         services.AddScoped<ICallSessionRepository, MongoCallSessionRepository>();
         services.AddScoped<IDailyCheckinRepository, MongoDailyCheckinRepository>();
         services.AddScoped<IStreakService, StreakService>();
+    }
 
+    private static void AddGamificationRepositories(IServiceCollection services)
+    {
         services.AddScoped<IQuestRepository, MongoQuestRepository>();
         services.AddScoped<IAchievementRepository, MongoAchievementRepository>();
         services.AddScoped<ITitleRepository, MongoTitleRepository>();
         services.AddScoped<ILeaderboardRepository, MongoLeaderboardRepository>();
         services.AddScoped<IGamificationService, GamificationService>();
         services.AddScoped<IGamificationPushService, GamificationPushService>();
+    }
 
+    private static void AddGachaRepositories(IServiceCollection services)
+    {
         services.AddScoped<IGachaRepository, GachaRepository>();
         services.AddScoped<IGachaLogRepository, GachaLogRepository>();
+    }
 
+    private static void AddSupportRepositories(IServiceCollection services)
+    {
         services.AddScoped<IChatFinanceRepository, ChatFinanceRepository>();
         services.AddScoped<IWithdrawalRepository, WithdrawalRepository>();
         services.AddScoped<IMfaService, TotpMfaService>();
 
         services.AddSingleton<ChatModerationQueue>();
         services.AddSingleton<IChatModerationQueue>(sp => sp.GetRequiredService<ChatModerationQueue>());
+    }
 
+    private static void AddHostedWorkers(IServiceCollection services)
+    {
         services.AddHostedService<EscrowTimerService>();
         services.AddHostedService<ChatModerationWorker>();
         services.AddHostedService<CallTimeoutBackgroundService>();
         services.AddHostedService<StreakBreakBackgroundJob>();
         services.AddHostedService<EntitlementDailyResetJob>();
         services.AddHostedService<SubscriptionExpiryJob>();
-        services.AddHostedService<LeaderboardSnapshotJob>();
     }
 }

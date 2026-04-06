@@ -35,8 +35,9 @@ export const useStreakStatus = (enabled: boolean = true) => {
     // TRẢ LỜI CÂU HỎI USER: Tại sao bị gọi nhiều lần?
     // Mặc định React Query sẽ thử lại 3 lần nếu lỗi. Với lỗi 401/403 (Auth), 
     // thử lại là vô ích nên ta tắt retry ở đây để giảm số lượng request lỗi.
-    retry: (failureCount, error: any) => {
-      if (error?.message?.includes('401') || error?.message?.includes('Unauthorized')) {
+    retry: (failureCount, error) => {
+      const message = error instanceof Error ? error.message : '';
+      if (message.includes('401') || message.includes('Unauthorized')) {
         return false;
       }
       return failureCount < 2; // Vẫn cho phép thử lại 2 lần với các lỗi network khác.

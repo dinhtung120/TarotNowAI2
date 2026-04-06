@@ -29,55 +29,54 @@ public partial class InitReadingSessionCommandHandler
         var currency = NormalizeCurrency(request.Currency);
         await EnsureDailyCardLimitAsync(request, cancellationToken);
 
-        var (costGold, costDiamond) = request.SpreadType switch
+        var (costGold, costDiamond) = ResolveBasePricing(request.SpreadType, currency);
+        var entitlementKey = ResolveEntitlementKey(request.SpreadType);
+        var usedEntitlement = await TryUseEntitlementAsync(request, entitlementKey, cancellationToken);
+        if (usedEntitlement) (costGold, costDiamond) = (0, 0);
+
+        var amountCharged = costGold > 0 ? costGold : costDiamond;
+        return new SessionPricing(costGold, costDiamond, currency, amountCharged);
+    }
+
+    private (long CostGold, long CostDiamond) ResolveBasePricing(string spreadType, string currency)
+    {
+        return spreadType switch
         {
             SpreadType.Spread3Cards => GetConfiguredPrice(currency, _systemConfigSettings.Spread3GoldCost, _systemConfigSettings.Spread3DiamondCost),
             SpreadType.Spread5Cards => GetConfiguredPrice(currency, _systemConfigSettings.Spread5GoldCost, _systemConfigSettings.Spread5DiamondCost),
             SpreadType.Spread10Cards => GetConfiguredPrice(currency, _systemConfigSettings.Spread10GoldCost, _systemConfigSettings.Spread10DiamondCost),
             _ => (0L, 0L)
         };
+    }
 
-        /*
-         * Xác định xem khách có Quyền lợi trải bài miễn phí theo Gói không.
-         * Các loại spread được ánh xạ với chìa khóa entitlement tương ứng.
-         * Spread10Cards chưa có key riêng nên tạm dùng chung FreeSpread5Daily (có thể tách riêng sau).
-         */
-        string? entitlementKey = request.SpreadType switch
+    private static string? ResolveEntitlementKey(string spreadType)
+    {
+        return spreadType switch
         {
             SpreadType.Spread3Cards => EntitlementKey.FreeSpread3Daily,
             SpreadType.Spread5Cards => EntitlementKey.FreeSpread5Daily,
-            SpreadType.Spread10Cards => EntitlementKey.FreeSpread5Daily, // BUG-2 FIX: Cho phép dùng vé 5 lá cho 10 lá
+            SpreadType.Spread10Cards => EntitlementKey.FreeSpread5Daily,
             _ => null
         };
+    }
 
-        if (entitlementKey != null)
-        {
-            /*
-             * FUTURE-1 FIX: IdempotencyKey phải XÁC ĐỊNH (deterministic) dựa trên request params.
-             * Nếu dùng DateTime.UtcNow.Ticks, mỗi retry sẽ tạo key mới → trừ 2 lượt.
-             * Đổi sang dùng: userId + spreadType + ngày UTC → mỗi người mỗi ngày mỗi loại chỉ consume 1 lần.
-             * Nếu cần cho phép consume nhiều lần/ngày, thêm thêm counter hoặc sessionId.
-             */
-            var dateStr = DateTime.UtcNow.ToString("yyyyMMdd");
-            var consumeResult = await _entitlementService.ConsumeAsync(
-                userId: request.UserId,
-                entitlementKey: entitlementKey,
-                referenceSource: "InitReadingSession",
-                referenceId: request.SpreadType.ToString(),
-                idempotencyKey: $"ir_{request.UserId:N}_{request.SpreadType}_{dateStr}_{Guid.NewGuid():N}",
-                ct: cancellationToken
-            );
-
-            if (consumeResult.Success)
-            {
-                // Tiêu dùng vé thành công -> Giá trị phiên về Không đếm.
-                costGold = 0;
-                costDiamond = 0;
-            }
-        }
-
-        var amountCharged = costGold > 0 ? costGold : costDiamond;
-        return new SessionPricing(costGold, costDiamond, currency, amountCharged);
+    private async Task<bool> TryUseEntitlementAsync(
+        InitReadingSessionCommand request,
+        string? entitlementKey,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(entitlementKey)) return false;
+        var dateStr = DateTime.UtcNow.ToString("yyyyMMdd");
+        var idempotencyKey = $"ir_{request.UserId:N}_{request.SpreadType}_{dateStr}_{Guid.NewGuid():N}";
+        var consumeResult = await _entitlementService.ConsumeAsync(
+            new EntitlementConsumeRequest(
+                request.UserId,
+                entitlementKey,
+                "InitReadingSession",
+                request.SpreadType.ToString(),
+                idempotencyKey),
+            cancellationToken);
+        return consumeResult.Success;
     }
 
     private async Task EnsureDailyCardLimitAsync(
@@ -112,39 +111,4 @@ public partial class InitReadingSessionCommandHandler
         return normalized == CurrencyType.Diamond ? CurrencyType.Diamond : CurrencyType.Gold;
     }
 
-    private static ReadingSession BuildSession(
-        InitReadingSessionCommand request,
-        string currencyUsed,
-        long amountCharged)
-    {
-        return new ReadingSession(
-            request.UserId.ToString(),
-            request.SpreadType,
-            request.Question,
-            currencyUsed,
-            amountCharged);
-    }
-
-    private async Task StartSessionAsync(
-        InitReadingSessionCommand request,
-        ReadingSession session,
-        SessionPricing pricing,
-        CancellationToken cancellationToken)
-    {
-        var (success, _) = await _readingSessionOrchestrator.StartPaidSessionAsync(
-            new StartPaidSessionRequest
-            {
-                UserId = request.UserId,
-                SpreadType = request.SpreadType,
-                Session = session,
-                CostGold = pricing.CostGold,
-                CostDiamond = pricing.CostDiamond
-            },
-            cancellationToken);
-
-        if (!success)
-        {
-            throw new BadRequestException("Failed to start session. Please try again.");
-        }
-    }
 }

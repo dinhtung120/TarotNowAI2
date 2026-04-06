@@ -18,7 +18,15 @@ public interface IQuestRepository
     // === Quest Progress ===
     Task<QuestProgressDto?> GetProgressAsync(Guid userId, string questCode, string periodKey, CancellationToken ct);
     Task<List<QuestProgressDto>> GetAllProgressAsync(Guid userId, string questType, string periodKey, CancellationToken ct);
-    Task UpsertProgressAsync(Guid userId, string questCode, string periodKey, int target, int incrementBy, CancellationToken ct);
+    Task UpsertProgressAsync(QuestProgressUpsertRequest request, CancellationToken ct);
     Task MarkClaimedAsync(Guid userId, string questCode, string periodKey, CancellationToken ct);
     Task<bool> TryMarkClaimedAsync(Guid userId, string questCode, string periodKey, CancellationToken ct);
+    Task RevertClaimedAsync(Guid userId, string questCode, string periodKey, CancellationToken ct);
 }
+
+public sealed record QuestProgressUpsertRequest(
+    Guid UserId,
+    string QuestCode,
+    string PeriodKey,
+    int Target,
+    int IncrementBy);

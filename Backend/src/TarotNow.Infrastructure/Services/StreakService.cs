@@ -31,43 +31,11 @@ public class StreakService : IStreakService
         }
 
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
-
-        // Đã cộng trong ngày hôm nay rồi thì thôi bỏ.
-        if (user.LastStreakDate.HasValue && user.LastStreakDate.Value == today)
-        {
-            return;
-        }
+        if (IsAlreadyProcessedForToday(user, today)) return;
 
         try
         {
-            if (!user.LastStreakDate.HasValue)
-            {
-                // Chưa bao giờ rút (Lính mới)
-                user.IncrementStreak(today);
-                _logger.LogInformation("[StreakService] User {UserId} lính mới, bắt đầu Streak = {Streak}.", userId, user.CurrentStreak);
-            }
-            else
-            {
-                // Kiểm tra xem có bị thủng đoạn ở giữa không (hôm qua chưa rút)
-                var yesterday = today.AddDays(-1);
-                
-                if (user.LastStreakDate.Value == yesterday)
-                {
-                    // Liền tù tì
-                    user.IncrementStreak(today);
-                    _logger.LogInformation("[StreakService] User {UserId} streak liền mạch = {Streak}.", userId, user.CurrentStreak);
-                }
-                else if (user.LastStreakDate.Value < yesterday)
-                {
-                    // Đứt xích. Gọi chém Streak làm Freeze mồi, sau đó bắt đầu điểm 1.
-                    _logger.LogInformation("[StreakService] User {UserId} bị đứt Streak (Từ {LastDate} tới {Today}). Cắt chuỗi.", 
-                        userId, user.LastStreakDate.Value, today);
-                        
-                    user.BreakStreak();
-                    user.IncrementStreak(today);
-                }
-            }
-
+            ApplyStreakTransition(user, userId, today);
             await _userRepository.UpdateAsync(user, cancellationToken);
             _logger.LogInformation("[StreakService] ✅ Save Streak thành công cho User {UserId}. CurrentStreak={Streak}, LastDate={Date}.", 
                 userId, user.CurrentStreak, user.LastStreakDate);
@@ -75,6 +43,35 @@ public class StreakService : IStreakService
         catch (Exception ex)
         {
             _logger.LogError(ex, "[StreakService] Lỗi tèo khi tăng Streak cho User {UserId}.", userId);
+        }
+    }
+
+    private static bool IsAlreadyProcessedForToday(Domain.Entities.User user, DateOnly today)
+        => user.LastStreakDate.HasValue && user.LastStreakDate.Value == today;
+
+    private void ApplyStreakTransition(Domain.Entities.User user, Guid userId, DateOnly today)
+    {
+        if (!user.LastStreakDate.HasValue)
+        {
+            user.IncrementStreak(today);
+            _logger.LogInformation("[StreakService] User {UserId} lính mới, bắt đầu Streak = {Streak}.", userId, user.CurrentStreak);
+            return;
+        }
+
+        var yesterday = today.AddDays(-1);
+        if (user.LastStreakDate.Value == yesterday)
+        {
+            user.IncrementStreak(today);
+            _logger.LogInformation("[StreakService] User {UserId} streak liền mạch = {Streak}.", userId, user.CurrentStreak);
+            return;
+        }
+
+        if (user.LastStreakDate.Value < yesterday)
+        {
+            _logger.LogInformation("[StreakService] User {UserId} bị đứt Streak (Từ {LastDate} tới {Today}). Cắt chuỗi.",
+                userId, user.LastStreakDate.Value, today);
+            user.BreakStreak();
+            user.IncrementStreak(today);
         }
     }
 }

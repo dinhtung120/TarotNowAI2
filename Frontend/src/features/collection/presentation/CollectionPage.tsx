@@ -13,7 +13,7 @@
  * ===================================================================
  */
 
-import { useCollectionPage, type CollectionFilter } from "@/features/collection/application/useCollectionPage";
+import { useCollectionPage, type CollectionFilter, type CollectionSortOrder } from "@/features/collection/application/useCollectionPage";
 import { Loader2, LayoutGrid, AlertCircle, ChevronRight, Sparkles, Filter, CheckCircle2, Lock } from "lucide-react";
 import Image from "next/image";
 import { Link } from "@/i18n/routing";
@@ -50,6 +50,12 @@ export default function CollectionPage() {
  const selectedCardMeaning = selectedCardData
   ? (getCardMeaning(selectedCardData.id) ?? '')
   : '';
+ const sortOptions: Array<{ id: CollectionSortOrder; label: string; icon: string }> = [
+  { id: "id", label: "ID", icon: "📖" },
+  { id: "level", label: "Level", icon: "⭐" },
+  { id: "atk", label: "ATK", icon: "⚔️" },
+  { id: "def", label: "DEF", icon: "🛡️" },
+ ];
 
  if (isLoading) {
  return (
@@ -222,18 +228,10 @@ export default function CollectionPage() {
         <Sparkles className="w-3.5 h-3.5" />
         <span className="text-[10px] uppercase font-black tracking-widest">{tCommon("sort_by") || "Sắp xếp theo"}</span>
       </div>
-      {([
-        { id: "id", label: "ID", icon: "📖" },
-        { id: "level", label: "Level", icon: "⭐" },
-        { id: "atk", label: "ATK", icon: "⚔️" },
-        { id: "def", label: "DEF", icon: "🛡️" }
-      ] as const).map((sort) => (
+      {sortOptions.map((sort) => (
         <button
           key={sort.id}
-          onClick={() => {
-            // @ts-ignore
-            setSortBy(sort.id);
-          }}
+          onClick={() => setSortBy(sort.id)}
           className={`flex items-center gap-2 px-4 py-1.5 rounded-xl text-[10px] font-black transition-all duration-300 border ${
             sortBy === sort.id
               ? "bg-[var(--warning)]/10 border-[var(--warning)]/30 text-[var(--warning)] shadow-lg scale-105"

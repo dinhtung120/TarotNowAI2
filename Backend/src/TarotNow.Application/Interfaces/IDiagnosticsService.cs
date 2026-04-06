@@ -6,6 +6,7 @@ namespace TarotNow.Application.Interfaces;
 public interface IDiagnosticsService
 {
     Task<SeedAdminResult> SeedAdminAsync(CancellationToken cancellationToken = default);
+    Task SeedGamificationDataAsync(CancellationToken cancellationToken = default);
     Task<DiagnosticsStatsResult> GetStatsAsync(CancellationToken cancellationToken = default);
 }
 
