@@ -22,4 +22,22 @@ public interface IRngService
     /// <param name="deckSize">Xẻo Bao Nhiêu Lá Xuống Bàn Tay Từ Không Trung? 78 Là Toàn Bộ.</param>
     /// <returns>1 Dãy Chỉ Số Mới Tinh Kéo Căng Cú Ngẫu Nhiên: Vd (Lá 7, Lá 44, Lá 0...)</returns>
     int[] ShuffleDeck(int deckSize = 78);
+
+    /// <summary>
+    /// Lựa chọn có trọng số để quay Gacha.
+    /// Dùng RandomNumberGenerator chuẩn mã hóa (CSPRNG) để xóc không ai đoán được.
+    /// </summary>
+    GachaRngResult WeightedSelect(System.Collections.Generic.IEnumerable<WeightedItem> items, string? seedForAudit = null);
+}
+
+public class WeightedItem
+{
+    public System.Guid ItemId { get; set; }
+    public int WeightBasisPoints { get; set; }
+}
+
+public class GachaRngResult
+{
+    public System.Guid SelectedItemId { get; set; }
+    public string RngSeed { get; set; } = string.Empty;
 }

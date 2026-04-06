@@ -38,5 +38,6 @@ public static partial class DependencyInjection
     {
         services.AddHostedService<LeaderboardSnapshotJob>();
         services.AddHostedService<GamificationSeedService>();
+        services.AddHostedService<GachaSeedService>();
     }
 }

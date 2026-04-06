@@ -11,6 +11,7 @@
     "menu": "菜单",
     "notifications": "通知",
     "confirm": "确认",
-    "status_complete": "完成"
+    "status_complete": "完成",
+    "sort_by": "排序方式"
   }
 }

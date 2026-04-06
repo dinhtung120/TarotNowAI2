@@ -38,7 +38,9 @@ public class GetUserCollectionQueryHandler : IRequestHandler<GetUserCollectionQu
             Level = c.Level,
             Copies = c.Copies,
             ExpGained = c.ExpGained, // Điểm Tích Lũy Từ Lúc Sinh Thành.
-            LastDrawnAt = c.LastDrawnAt
+            LastDrawnAt = c.LastDrawnAt,
+            Atk = c.Atk, // Trả Về Chỉ Số Tấn Công Thực Tế Của Lá Bài.
+            Def = c.Def  // Trả Về Chỉ Số Phòng Thủ Thực Tế Của Lá Bài.
         }).ToList();
     }
 }

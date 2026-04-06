@@ -88,6 +88,12 @@ public partial class MongoUserCollectionRepository
         var exp = Math.Max(doc.Exp, 0);
         var lastDrawnAt = doc.LastDrawnAt == default ? doc.UpdatedAt : doc.LastDrawnAt;
 
+        /*
+         * ÁNH XẠ (MAPPING) DỮ LIỆU TỪ MONGODB DOCUMENT SANG DOMAIN ENTITY.
+         * Ở đây ta sử dụng UserCollectionSnapshot để giữ tính linh hoạt và bảo vệ các Domain Rule
+         * trong constructor của thực thể UserCollection.
+         * Lỗi hiển thị ATK/DEF = 0 do trước đây thiếu việc map 2 thuộc tính Atk và Def này.
+         */
         return UserCollection.Rehydrate(new UserCollectionSnapshot
         {
             UserId = userId,
@@ -95,7 +101,9 @@ public partial class MongoUserCollectionRepository
             Level = level,
             Copies = copies,
             ExpGained = exp,
-            LastDrawnAt = lastDrawnAt
+            LastDrawnAt = lastDrawnAt,
+            Atk = doc.Atk, // Map chỉ số tấn công từ MongoDB Document sang Domain Entity Snapshot.
+            Def = doc.Def  // Map chỉ số phòng thủ từ MongoDB Document sang Domain Entity Snapshot.
         });
     }
 }

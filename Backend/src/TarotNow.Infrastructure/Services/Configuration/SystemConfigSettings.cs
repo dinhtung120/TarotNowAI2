@@ -39,6 +39,7 @@ public sealed class SystemConfigSettings : ISystemConfigSettings
     
     public long DailyCheckinGold { get; }
     public int StreakFreezeWindowHours { get; }
+    public long GachaCostDiamond { get; }
 
     private static int ResolvePositiveInt(int configuredValue, int fallback)
     {

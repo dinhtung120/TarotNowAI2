@@ -93,4 +93,8 @@ public partial class MongoDbContext
 
     public IMongoCollection<LeaderboardSnapshotDocument> LeaderboardSnapshots
         => _database.GetCollection<LeaderboardSnapshotDocument>("leaderboard_snapshots");
+
+    // === Gacha Phase 5.6 ===
+    public IMongoCollection<GachaLogDocument> GachaLogs
+        => _database.GetCollection<GachaLogDocument>("gacha_logs");
 }

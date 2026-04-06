@@ -28,6 +28,7 @@ public static class ApiRoutes
     public const string Subscriptions = Prefix + "/subscriptions";
     public const string Gamification = Prefix + "/gamification";
     public const string AdminGamification = Admin + "/gamification";
+    public const string Gacha = Prefix + "/gacha";
 
     public const string ReadersAbsolute = "/" + Prefix + "/readers";
 }

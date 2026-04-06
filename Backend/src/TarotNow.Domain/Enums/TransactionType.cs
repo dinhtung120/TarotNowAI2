@@ -38,6 +38,7 @@ public static class TransactionType
     public const string Subscription = "subscription";            // Quẹt Cố Thẻ Mua Lệnh VIP Xài Cố Tháng Auto Kéo Bank Lặp.
     public const string FollowupCost = "followup_cost";           // Quất Câu Ép Thầy Giá Phạt Cửa (Câu Tiếp Cùng Lệnh).
     public const string GachaCost = "gacha_cost";                 // Nướng Trọc Tiền Cho Card Pack Ép Đồ Game Xoay May Rủi Bóc Lá Đẹp Trang Trí Avatar Thích Lè Thức Đốt Máu Nhanh Nhất (Gacha Sưu Tầm).
+    public const string GachaReward = "gacha_reward";             // Rơi ngược vàng/kim cương bonus từ hộp quay gacha.
     public const string EscrowFreeze = "escrow_freeze";           // Níu Cục Đá Vô Ngăn Lạnh Từ Accept Báo. Giữ Đá Lát Không Phát Khác Nhả Tui Lại Phát Tiêm Code Thật Refund Cáo Từ (Đống Chat Trực Tiếp).
     public const string EscrowRefund = "escrow_refund";           // Oái Nghén Bom Nhảm Cháy Không Trả Lời Trả Cục Đá Quăng Về (Refnd Dải).
     public const string StreakFreezeCost = "streak_freeze_cost";  // Ngồi Phủ Khóa Nhựa Nuốt Cốt Đồ Đóng Lấy Phí Bọc Kim Để Níu Điểm Đăng Nhập Gọi (Tiền Xứ Cụ Án Điểm Đóng Băng Nào Của Game Duolingo Đang Code).

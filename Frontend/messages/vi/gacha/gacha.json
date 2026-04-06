@@ -1,0 +1,24 @@
+{
+  "gacha": {
+    "lang": "vi",
+    "title": "Vòng Quay May Mắn",
+    "subtitle": "Thử vận may và nhận những phần thưởng độc quyền!",
+    "pityProgress": "Tiến trình Tích lũy (Pity)",
+    "guaranteedLegendary": "Chắc chắn nhận quà Huyền thoại khi đầy thanh",
+    "spinning": "Đang quay...",
+    "spin1x": "Quay 1x",
+    "viewOdds": "Xem tỷ lệ rớt đồ (công khai)",
+    "oddsTitle": "Tỷ Lệ Trúng Thưởng",
+    "oddsVersion": "Phiên bản tỷ lệ",
+    "item": "Phần thưởng",
+    "rarity": "Độ hiếm",
+    "probability": "Tỷ lệ",
+    "spinResult": "Phần thưởng của bạn",
+    "revealing": "Đang mở",
+    "pityTriggered": "Đã kích hoạt bảo hiểm (Pity)!",
+    "awesome": "Tuyệt vời!",
+    "noActiveBanners": "Hiện tại không có vòng quay nào mở. Vui lòng quay lại sau!",
+    "historyTitle": "Lịch sử quay thưởng",
+    "emptyHistory": "Bạn chưa thực hiện lượt quay nào."
+  }
+}

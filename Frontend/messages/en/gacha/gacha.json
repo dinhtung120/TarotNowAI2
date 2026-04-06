@@ -1,0 +1,24 @@
+{
+  "gacha": {
+    "lang": "en",
+    "title": "Gacha",
+    "subtitle": "Test your luck and win exclusive rewards!",
+    "pityProgress": "Pity Progress",
+    "guaranteedLegendary": "Guaranteed Legendary at maximum pity",
+    "spinning": "Spinning...",
+    "spin1x": "Spin 1x",
+    "viewOdds": "View exact odds",
+    "oddsTitle": "Drop Rates & Odds",
+    "oddsVersion": "Odds Version",
+    "item": "Reward Item",
+    "rarity": "Rarity",
+    "probability": "Probability",
+    "spinResult": "Your Reward",
+    "revealing": "Revealing",
+    "pityTriggered": "Pity Guarantee Triggered!",
+    "awesome": "Awesome!",
+    "noActiveBanners": "There are no active banners at the moment. Please come back later!",
+    "historyTitle": "Gacha History",
+    "emptyHistory": "You haven't made any spins yet."
+  }
+}

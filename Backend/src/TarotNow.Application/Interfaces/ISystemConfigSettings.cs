@@ -18,4 +18,6 @@ public interface ISystemConfigSettings
 
     long DailyCheckinGold { get; }
     int StreakFreezeWindowHours { get; }
+    
+    long GachaCostDiamond { get; }
 }

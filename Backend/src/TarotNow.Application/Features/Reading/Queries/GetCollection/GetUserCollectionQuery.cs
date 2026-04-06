@@ -37,4 +37,10 @@ public class UserCollectionDto
     
     /// <summary>Có Bao Nhiêu Bản Sao Khác Nhau Nếu Trò Chơi Thích Áp Dụng Chế Độ Trộn Thẻ Gacha.</summary>
     public int Copies { get; set; }
+
+    /// <summary>Chỉ số Tấn công của lá bài (Dùng cho Gacha/Battle Mode).</summary>
+    public int Atk { get; set; }
+
+    /// <summary>Chỉ số Phòng thủ của lá bài (Dùng cho Gacha/Battle Mode).</summary>
+    public int Def { get; set; }
 }

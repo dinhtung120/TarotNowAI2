@@ -28,6 +28,7 @@ import {
   Menu,
   X,
   Gamepad2,
+  Gift,
   type LucideIcon,
 } from "lucide-react";
 import { useMemo, useState, useRef, useEffect } from "react";
@@ -77,6 +78,7 @@ const menuGroups: MenuGroup[] = [
    { labelKey: "collection", href: "/collection", icon: LayoutGrid },
    { labelKey: "history", href: "/reading/history", icon: History },
    { labelKey: "gamification", href: "/gamification", icon: Gamepad2 },
+   { labelKey: "gacha", href: "/gacha", icon: Gift },
   ],
  },
  {

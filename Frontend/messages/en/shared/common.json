@@ -11,6 +11,7 @@
     "menu": "Menu",
     "notifications": "Notifications",
     "confirm": "Confirm",
-    "status_complete": "Complete"
+    "status_complete": "Complete",
+    "sort_by": "Sort by"
   }
 }

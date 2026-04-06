@@ -50,6 +50,9 @@ public static partial class DependencyInjection
         services.AddScoped<IGamificationService, GamificationService>();
         services.AddScoped<IGamificationPushService, GamificationPushService>();
 
+        services.AddScoped<IGachaRepository, GachaRepository>();
+        services.AddScoped<IGachaLogRepository, GachaLogRepository>();
+
         services.AddScoped<IChatFinanceRepository, ChatFinanceRepository>();
         services.AddScoped<IWithdrawalRepository, WithdrawalRepository>();
         services.AddScoped<IMfaService, TotpMfaService>();

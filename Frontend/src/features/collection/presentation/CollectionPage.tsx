@@ -26,19 +26,21 @@ export default function CollectionPage() {
  const tTarot = useTranslations("Tarot");
  const { getCardImageUrl, getCardName, getCardMeaning } = useCardsCatalog();
  const {
- collection,
- isLoading,
- error,
- activeFilter,
- setActiveFilter,
- selectedCardId,
- setSelectedCardId,
- selectedCardData,
- selectedUserCard,
- filteredDeck,
- totalCollected,
- totalCardCount,
- progressRatio,
+  collection,
+  isLoading,
+  error,
+  activeFilter,
+  setActiveFilter,
+  sortBy,
+  setSortBy,
+  selectedCardId,
+  setSelectedCardId,
+  selectedCardData,
+  selectedUserCard,
+  filteredDeck,
+  totalCollected,
+  totalCardCount,
+  progressRatio,
  } = useCollectionPage();
 
  const selectedCardImageUrl = selectedCardData ? getCardImageUrl(selectedCardData.id) : undefined;
@@ -186,31 +188,64 @@ export default function CollectionPage() {
  </div>
  </div>
 
- {/* Filter Controls - Modern Tabs */}
- <div className="flex flex-wrap items-center gap-2 mb-10 animate-in fade-in duration-700 delay-300">
- <div className="flex items-center gap-2 mr-4 tn-text-muted">
- <Filter className="w-3.5 h-3.5" />
- <span className="text-[10px] uppercase font-black tracking-widest">{t("filters_label")}</span>
- </div>
- {([
- { id: "all", label: t('filter_all'), icon: <LayoutGrid className="w-3 h-3" /> },
- { id: "owned", label: t('filter_owned'), icon: <CheckCircle2 className="w-3 h-3" /> },
- { id: "unowned", label: t('filter_unowned'), icon: <Lock className="w-3 h-3" /> }
- ] as const).map((filter) => (
- <button
- key={filter.id}
- onClick={() => setActiveFilter(filter.id as CollectionFilter)}
- className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs font-black transition-all duration-300 border ${
- activeFilter === filter.id
- ? "tn-surface-strong tn-text-ink tn-border shadow-xl scale-105"
- : "tn-surface tn-text-muted tn-border-soft hover:tn-border-strong hover:tn-text-secondary"
- }`}
- >
- {filter.icon}
- {filter.label}
- </button>
- ))}
- </div>
+  {/* Filter & Sort Controls */}
+  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 animate-in fade-in duration-700 delay-300">
+    {/* Left: Filter Tabs */}
+    <div className="flex flex-wrap items-center gap-2">
+      <div className="flex items-center gap-2 mr-4 tn-text-muted">
+        <Filter className="w-3.5 h-3.5" />
+        <span className="text-[10px] uppercase font-black tracking-widest">{t("filters_label")}</span>
+      </div>
+      {([
+        { id: "all", label: t('filter_all'), icon: <LayoutGrid className="w-3 h-3" /> },
+        { id: "owned", label: t('filter_owned'), icon: <CheckCircle2 className="w-3 h-3" /> },
+        { id: "unowned", label: t('filter_unowned'), icon: <Lock className="w-3 h-3" /> }
+      ] as const).map((filter) => (
+        <button
+          key={filter.id}
+          onClick={() => setActiveFilter(filter.id as CollectionFilter)}
+          className={`flex items-center gap-2 px-5 py-2 rounded-full text-xs font-black transition-all duration-300 border ${
+            activeFilter === filter.id
+              ? "tn-surface-strong tn-text-ink tn-border shadow-xl scale-105"
+              : "tn-surface tn-text-muted tn-border-soft hover:tn-border-strong hover:tn-text-secondary"
+          }`}
+        >
+          {filter.icon}
+          {filter.label}
+        </button>
+      ))}
+    </div>
+
+    {/* Right: Sort Tabs */}
+    <div className="flex flex-wrap items-center gap-2">
+      <div className="flex items-center gap-2 mr-4 tn-text-muted">
+        <Sparkles className="w-3.5 h-3.5" />
+        <span className="text-[10px] uppercase font-black tracking-widest">{tCommon("sort_by") || "Sắp xếp theo"}</span>
+      </div>
+      {([
+        { id: "id", label: "ID", icon: "📖" },
+        { id: "level", label: "Level", icon: "⭐" },
+        { id: "atk", label: "ATK", icon: "⚔️" },
+        { id: "def", label: "DEF", icon: "🛡️" }
+      ] as const).map((sort) => (
+        <button
+          key={sort.id}
+          onClick={() => {
+            // @ts-ignore
+            setSortBy(sort.id);
+          }}
+          className={`flex items-center gap-2 px-4 py-1.5 rounded-xl text-[10px] font-black transition-all duration-300 border ${
+            sortBy === sort.id
+              ? "bg-[var(--warning)]/10 border-[var(--warning)]/30 text-[var(--warning)] shadow-lg scale-105"
+              : "tn-surface tn-text-muted tn-border-soft hover:tn-border-strong hover:tn-text-secondary"
+          }`}
+        >
+          <span className="text-xs">{sort.icon}</span>
+          {sort.label}
+        </button>
+      ))}
+    </div>
+  </div>
 
  {error && (
  <div className="mb-10 p-4 bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-2xl flex items-center gap-3 text-[var(--danger)] text-xs animate-in zoom-in-95">

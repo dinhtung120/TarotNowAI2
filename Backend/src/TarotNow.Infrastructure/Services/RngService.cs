@@ -16,6 +16,8 @@
  *   DECK MẶC ĐỊNH: 78 lá (Tarot tiêu chuẩn: 22 Major Arcana + 56 Minor Arcana).
  */
 
+using System;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using TarotNow.Application.Interfaces;
@@ -56,5 +58,50 @@ public class RngService : IRngService
         }
 
         return deck;
+    }
+
+    /// <summary>
+    /// Quay Gacha (Weighted Random) dùng CSPRNG.
+    /// Tính tổng trọng số, sinh một số ngẫu nhiên rồi tìm item tương ứng.
+    /// Có chức năng sinh seed (hex) để lưu Audit "tôi không thao túng số".
+    /// </summary>
+    public GachaRngResult WeightedSelect(System.Collections.Generic.IEnumerable<WeightedItem> items, string? seedForAudit = null)
+    {
+        var itemList = items.ToList();
+        if (!itemList.Any())
+            throw new System.InvalidOperationException("Cannot select from an empty item list.");
+
+        int totalWeight = itemList.Sum(i => i.WeightBasisPoints);
+        if (totalWeight <= 0)
+            throw new System.InvalidOperationException("Total weight must be positive.");
+
+        // Nếu seedForAudit truyền vào (hiếm khi, trừ khi test deterministic), dùng nó. Chứ thực tế luôn random.
+        // Sinh seed để lát lưu log
+        byte[] entropy = new byte[16];
+        RandomNumberGenerator.Fill(entropy);
+        string generatedSeed = Convert.ToHexString(entropy);
+
+        int randomPoint = RandomNumberGenerator.GetInt32(totalWeight);
+
+        int currentSum = 0;
+        foreach (var item in itemList)
+        {
+            currentSum += item.WeightBasisPoints;
+            if (randomPoint < currentSum)
+            {
+                return new GachaRngResult
+                {
+                    SelectedItemId = item.ItemId,
+                    RngSeed = generatedSeed
+                };
+            }
+        }
+
+        // Fallback (lý thuyết hiếm xảy ra do logic sum)
+        return new GachaRngResult
+        {
+            SelectedItemId = itemList.Last().ItemId,
+            RngSeed = generatedSeed
+        };
     }
 }

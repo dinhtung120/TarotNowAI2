@@ -1,0 +1,24 @@
+{
+  "gacha": {
+    "lang": "zh",
+    "title": "抽奖",
+    "subtitle": "测试你的运气，赢取专属奖励！",
+    "pityProgress": "保底进度",
+    "guaranteedLegendary": "达到保底必定获得传说奖励",
+    "spinning": "抽取中...",
+    "spin1x": "抽取 1次",
+    "viewOdds": "查看具体概率",
+    "oddsTitle": "掉落概率说明",
+    "oddsVersion": "概率版本",
+    "item": "奖励项",
+    "rarity": "稀有度",
+    "probability": "概率",
+    "spinResult": "你的奖励",
+    "revealing": "揭晓中",
+    "pityTriggered": "触发保底！",
+    "awesome": "太棒了！",
+    "noActiveBanners": "目前没有活动的抽奖。请稍后再来！",
+    "historyTitle": "抽奖记录",
+    "emptyHistory": "你还没有进行过抽取。"
+  }
+}

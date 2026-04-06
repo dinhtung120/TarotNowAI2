@@ -58,6 +58,11 @@ public partial class ApplicationDbContext : DbContext
     // Phase 2.4 Withdrawal — Giấy Viết Tờ Đơn Xin Chuyển Tiền Trắng Về ATM
     public DbSet<WithdrawalRequest> WithdrawalRequests { get; set; } = null!;
 
+    // Phase 5.6 Gacha - Vòng Quay
+    public DbSet<GachaBanner> GachaBanners { get; set; } = null!;
+    public DbSet<GachaBannerItem> GachaBannerItems { get; set; } = null!;
+    public DbSet<GachaRewardLog> GachaRewardLogs { get; set; } = null!;
+
     // ======================================================================
     // NẶN KHUNG SCHEMA SQL TRƯỚC KHI MIGRATION ỤP XUỐNG CƠ SỞ DỮ LIỆU
     // ======================================================================

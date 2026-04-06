@@ -547,6 +547,238 @@ namespace TarotNow.Infrastructure.Migrations
                     b.ToTable("entitlement_mapping_rules", (string)null);
                 });
 
+            modelBuilder.Entity("TarotNow.Domain.Entities.GachaBanner", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("code");
+
+                    b.Property<long>("CostDiamond")
+                        .HasColumnType("bigint")
+                        .HasColumnName("cost_diamond");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("DescriptionEn")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)")
+                        .HasColumnName("description_en");
+
+                    b.Property<string>("DescriptionVi")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)")
+                        .HasColumnName("description_vi");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("effective_from");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("effective_to");
+
+                    b.Property<int>("HardPityCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("hard_pity_count");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("name_en");
+
+                    b.Property<string>("NameVi")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("name_vi");
+
+                    b.Property<string>("OddsVersion")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("odds_version");
+
+                    b.Property<bool>("PityEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("pity_enabled");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_gacha_banners");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_gacha_banners_code");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("ix_gacha_banners_is_active");
+
+                    b.ToTable("gacha_banners", (string)null);
+                });
+
+            modelBuilder.Entity("TarotNow.Domain.Entities.GachaBannerItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BannerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("banner_id");
+
+                    b.Property<string>("DisplayIcon")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("display_icon");
+
+                    b.Property<string>("DisplayNameEn")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("display_name_en");
+
+                    b.Property<string>("DisplayNameVi")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("display_name_vi");
+
+                    b.Property<string>("Rarity")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("rarity");
+
+                    b.Property<string>("RewardType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("reward_type");
+
+                    b.Property<string>("RewardValue")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("reward_value");
+
+                    b.Property<int>("WeightBasisPoints")
+                        .HasColumnType("integer")
+                        .HasColumnName("weight_basis_points");
+
+                    b.HasKey("Id")
+                        .HasName("pk_gacha_banner_items");
+
+                    b.HasIndex("BannerId")
+                        .HasDatabaseName("ix_gacha_banner_items_banner_id");
+
+                    b.ToTable("gacha_banner_items", (string)null);
+                });
+
+            modelBuilder.Entity("TarotNow.Domain.Entities.GachaRewardLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("BannerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("banner_id");
+
+                    b.Property<Guid>("BannerItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("banner_item_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("IdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("idempotency_key");
+
+                    b.Property<string>("OddsVersion")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("odds_version");
+
+                    b.Property<int>("PityCountAtSpin")
+                        .HasColumnType("integer")
+                        .HasColumnName("pity_count_at_spin");
+
+                    b.Property<string>("Rarity")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("rarity");
+
+                    b.Property<string>("RewardType")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("reward_type");
+
+                    b.Property<string>("RewardValue")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("reward_value");
+
+                    b.Property<string>("RngSeed")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("rng_seed");
+
+                    b.Property<long>("SpentDiamond")
+                        .HasColumnType("bigint")
+                        .HasColumnName("spent_diamond");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<bool>("WasPityTriggered")
+                        .HasColumnType("boolean")
+                        .HasColumnName("was_pity_triggered");
+
+                    b.HasKey("Id")
+                        .HasName("pk_gacha_reward_logs");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_gacha_reward_logs_idempotency_key");
+
+                    b.HasIndex("UserId", "CreatedAt")
+                        .IsDescending(false, true)
+                        .HasDatabaseName("ix_gacha_reward_logs_user_id_created_at");
+
+                    b.HasIndex("UserId", "BannerId", "Rarity", "CreatedAt")
+                        .HasDatabaseName("ix_gacha_reward_logs_user_id_banner_id_rarity_created_at");
+
+                    b.ToTable("gacha_reward_logs", (string)null);
+                });
+
             modelBuilder.Entity("TarotNow.Domain.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1168,6 +1400,18 @@ namespace TarotNow.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("TarotNow.Domain.Entities.GachaBannerItem", b =>
+                {
+                    b.HasOne("TarotNow.Domain.Entities.GachaBanner", "Banner")
+                        .WithMany("Items")
+                        .HasForeignKey("BannerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_gacha_banner_items_gacha_banners_banner_id");
+
+                    b.Navigation("Banner");
+                });
+
             modelBuilder.Entity("TarotNow.Domain.Entities.RefreshToken", b =>
                 {
                     b.HasOne("TarotNow.Domain.Entities.User", "User")
@@ -1274,6 +1518,11 @@ namespace TarotNow.Infrastructure.Migrations
             modelBuilder.Entity("TarotNow.Domain.Entities.ChatFinanceSession", b =>
                 {
                     b.Navigation("QuestionItems");
+                });
+
+            modelBuilder.Entity("TarotNow.Domain.Entities.GachaBanner", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("TarotNow.Domain.Entities.User", b =>
