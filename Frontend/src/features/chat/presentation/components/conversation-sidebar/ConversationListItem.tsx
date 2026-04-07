@@ -19,6 +19,7 @@ export function ConversationListItem({ conversation, currentId, currentUserId, n
 
  return (
   <button
+   type="button"
    onClick={() => router.push(`/chat/${conversation.id}`)}
    className={cn('w-full rounded-xl px-3 py-3 border text-left transition-all duration-200 group', active ? 'bg-[var(--purple-accent)]/15 border-[var(--purple-accent)]/35 shadow-[0_0_15px_rgba(168,85,247,0.1)]' : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20')}
   >

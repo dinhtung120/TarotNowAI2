@@ -43,10 +43,10 @@ export function AdminTitleTable({ titles, onEdit, onDelete }: AdminTitleTablePro
                 </span>
               </td>
               <td className={cn("px-6 py-4 text-right flex justify-end gap-2")}>
-                <button onClick={() => onEdit(title.code)} className={cn("p-2 hover:bg-slate-700/50 rounded-lg text-slate-400 hover:text-white transition-colors")}>
+                <button type="button" onClick={() => onEdit(title.code)} className={cn("p-2 hover:bg-slate-700/50 rounded-lg text-slate-400 hover:text-white transition-colors")}>
                   <Edit className={cn("w-4 h-4")} />
                 </button>
-                <button onClick={() => onDelete(title.code)} className={cn("p-2 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-400 transition-colors")}>
+                <button type="button" onClick={() => onDelete(title.code)} className={cn("p-2 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-400 transition-colors")}>
                   <Trash2 className={cn("w-4 h-4")} />
                 </button>
               </td>

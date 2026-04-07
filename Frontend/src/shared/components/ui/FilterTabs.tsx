@@ -27,11 +27,12 @@ export default function FilterTabs({
  return (
   <div className={containerClassName}>
    {options.map((option) => (
-    <button
+   <button
      key={option.value}
+     type="button"
      onClick={() => onChange(option.value)}
      className={`${buttonClassName} ${value === option.value ? option.activeClassName ?? '' : inactiveClassName}`}
-    >
+   >
      {option.icon}
      {option.label}
     </button>

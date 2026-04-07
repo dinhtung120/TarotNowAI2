@@ -39,10 +39,10 @@ export function AdminAchievementTable({ achievements, onEdit, onDelete }: AdminA
               </td>
               <td className={cn("px-6 py-4 text-indigo-400 text-sm font-medium")}>{achievement.grantsTitleCode || '-'}</td>
               <td className={cn("px-6 py-4 text-right flex justify-end gap-2")}>
-                <button onClick={() => onEdit(achievement.code)} className={cn("p-2 hover:bg-slate-700/50 rounded-lg text-slate-400 hover:text-white transition-colors")}>
+                <button type="button" onClick={() => onEdit(achievement.code)} className={cn("p-2 hover:bg-slate-700/50 rounded-lg text-slate-400 hover:text-white transition-colors")}>
                   <Edit className={cn("w-4 h-4")} />
                 </button>
-                <button onClick={() => onDelete(achievement.code)} className={cn("p-2 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-400 transition-colors")}>
+                <button type="button" onClick={() => onDelete(achievement.code)} className={cn("p-2 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-400 transition-colors")}>
                   <Trash2 className={cn("w-4 h-4")} />
                 </button>
               </td>

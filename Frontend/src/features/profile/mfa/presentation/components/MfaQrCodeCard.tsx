@@ -40,7 +40,7 @@ export function MfaQrCodeCard({
     <p className={cn('text-[10px] text-[var(--text-tertiary)] uppercase font-black tracking-widest')}>{manualCodeLabel}</p>
     <div className={cn('flex justify-center items-center gap-3')}>
      <code className={cn('px-5 py-3 tn-panel rounded-xl text-[var(--success)] font-mono tracking-widest font-bold shadow-inner')}>{secretDisplay}</code>
-     <button onClick={() => onCopy(secretDisplay)} aria-label={copyLabel} className={cn('p-3 tn-panel rounded-xl hover:tn-surface-strong transition-all group')}>
+     <button type="button" onClick={() => onCopy(secretDisplay)} aria-label={copyLabel} className={cn('p-3 tn-panel rounded-xl hover:tn-surface-strong transition-all group')}>
       <Copy className={cn('w-4 h-4 text-[var(--text-secondary)] group-hover:tn-text-primary transition-colors')} />
      </button>
     </div>

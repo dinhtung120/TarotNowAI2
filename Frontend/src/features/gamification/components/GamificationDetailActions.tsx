@@ -29,6 +29,7 @@ export function GamificationDetailActions({
   return (
     <div className={cn("mt-10 flex gap-3")}>
       <button
+        type="button"
         onClick={onClose}
         className={cn("flex-1 py-3.5 rounded-2xl bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 transition-colors border border-slate-700/50")}
       >
@@ -37,6 +38,7 @@ export function GamificationDetailActions({
 
       {showClaimButton && (
         <button
+          type="button"
           onClick={onClaim}
           disabled={isClaiming}
           className={cn("flex-[2] py-3.5 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-black hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2")}
@@ -54,6 +56,7 @@ export function GamificationDetailActions({
 
       {showEquipButton && (
         <button
+          type="button"
           onClick={onEquip}
           className={cn("flex-[2] py-3.5 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-black hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2")}
         >

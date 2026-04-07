@@ -18,9 +18,9 @@ function tabClass(active: boolean) {
 export function ConversationSidebarTabs({ tab, setTab }: ConversationSidebarTabsProps) {
  return (
   <div className={cn('flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide')}>
-   <button onClick={() => setTab('active')} className={tabClass(tab === 'active')}>Đang chat</button>
-   <button onClick={() => setTab('pending')} className={tabClass(tab === 'pending')}>Pending</button>
-   <button onClick={() => setTab('completed')} className={tabClass(tab === 'completed')}>Đã hoàn thành</button>
+   <button type="button" onClick={() => setTab('active')} className={tabClass(tab === 'active')}>Đang chat</button>
+   <button type="button" onClick={() => setTab('pending')} className={tabClass(tab === 'pending')}>Pending</button>
+   <button type="button" onClick={() => setTab('completed')} className={tabClass(tab === 'completed')}>Đã hoàn thành</button>
   </div>
  );
 }

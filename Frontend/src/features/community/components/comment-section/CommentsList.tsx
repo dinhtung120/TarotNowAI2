@@ -26,7 +26,7 @@ export function CommentsList(props: CommentsListProps) {
    {props.isLoading ? <div className={cn('text-center py-2 text-gray-500')}><Loader2 className={cn('w-5 h-5 animate-spin mx-auto')} /></div> : null}
    {props.isError ? <div className={cn('text-center py-2 text-red-400')}>{props.errorLabel}</div> : null}
    {props.commentsPages?.map((page, index) => <Fragment key={index}>{page?.items?.map((comment) => <CommentItem key={comment.id} comment={comment} />)}</Fragment>)}
-   {props.hasNextPage ? <button onClick={props.onLoadMore} disabled={props.isFetchingNextPage} className={cn('text-xs font-semibold text-[#8a2be2] hover:text-[#ff00ff] block w-full text-center py-2')}>{props.isFetchingNextPage ? props.loadingMoreLabel : props.loadMoreLabel}</button> : null}
+   {props.hasNextPage ? <button type="button" onClick={props.onLoadMore} disabled={props.isFetchingNextPage} className={cn('text-xs font-semibold text-[#8a2be2] hover:text-[#ff00ff] block w-full text-center py-2')}>{props.isFetchingNextPage ? props.loadingMoreLabel : props.loadMoreLabel}</button> : null}
    {!props.isLoading && firstPageItems.length === 0 ? <div className={cn('text-center py-4 text-gray-500 text-sm')}>{props.emptyLabel}</div> : null}
   </div>
  );

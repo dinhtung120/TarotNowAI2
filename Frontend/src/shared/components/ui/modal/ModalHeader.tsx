@@ -21,7 +21,7 @@ export default function ModalHeader({ description, showCloseButton, title, onClo
         {description ? <p className={cn('text-sm font-medium text-[var(--text-secondary)]')}>{description}</p> : null}
       </div>
       {showCloseButton ? (
-        <button onClick={onClose} className={cn('cursor-pointer rounded-xl p-2 text-[var(--text-secondary)] transition-colors hover:bg-[var(--purple-50)] hover:text-[var(--text-primary)]')} aria-label={t('close_modal')}>
+        <button type="button" onClick={onClose} className={cn('cursor-pointer rounded-xl p-2 text-[var(--text-secondary)] transition-colors hover:bg-[var(--purple-50)] hover:text-[var(--text-primary)]')} aria-label={t('close_modal')}>
           <X className={cn('h-5 w-5')} />
         </button>
       ) : null}

@@ -14,7 +14,26 @@ export const IncomingCallOverlay = () => {
     <h3 className="text-2xl font-semibold text-white mb-2">{vm.isCaller ? vm.t("calling") : vm.t("incoming")}</h3>
     <p className="text-gray-400 text-sm mb-8">{vm.session?.type === "video" ? vm.t("video") : vm.t("audio")}</p>
     <div className="flex gap-6 w-full justify-center">
-     {!vm.isCaller ? <><button onClick={vm.declineCall} className="w-14 h-14 rounded-full bg-red-500 flex items-center justify-center hover:bg-red-600 transition-colors" title={vm.t("decline")}><svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button><button onClick={vm.acceptCall} className="w-14 h-14 rounded-full bg-green-500 flex items-center justify-center hover:bg-green-600 transition-colors shadow-[0_0_20px_rgba(34,197,94,0.4)]" title={vm.t("accept")}><svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></button></> : <button onClick={vm.cancelCall} className="w-14 h-14 rounded-full bg-red-500 flex items-center justify-center hover:bg-red-600 transition-colors" title={vm.t("cancel")}><svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>}
+     {!vm.isCaller ? (
+      <>
+       <button type="button" onClick={vm.declineCall} className="w-14 h-14 rounded-full bg-red-500 flex items-center justify-center hover:bg-red-600 transition-colors" title={vm.t("decline")}>
+        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+       </button>
+       <button type="button" onClick={vm.acceptCall} className="w-14 h-14 rounded-full bg-green-500 flex items-center justify-center hover:bg-green-600 transition-colors shadow-[0_0_20px_rgba(34,197,94,0.4)]" title={vm.t("accept")}>
+        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+       </button>
+      </>
+     ) : (
+      <button type="button" onClick={vm.cancelCall} className="w-14 h-14 rounded-full bg-red-500 flex items-center justify-center hover:bg-red-600 transition-colors" title={vm.t("cancel")}>
+       <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+       </svg>
+      </button>
+     )}
     </div>
    </div>
   </div>

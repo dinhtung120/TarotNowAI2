@@ -13,8 +13,8 @@ export function FeedVisibilityTabs({ activeVisibility, labels, onChange }: FeedV
 
  return (
   <div className="flex border-b border-[#2a2b3d] mb-6">
-   <button onClick={() => onChange("public")} className={`pb-2 px-4 text-sm font-medium border-b-2 transition-colors ${publicClassName}`}>{labels.public}</button>
-   <button onClick={() => onChange("private")} className={`pb-2 px-4 text-sm font-medium border-b-2 transition-colors ${privateClassName}`}>{labels.private}</button>
+   <button type="button" onClick={() => onChange("public")} className={`pb-2 px-4 text-sm font-medium border-b-2 transition-colors ${publicClassName}`}>{labels.public}</button>
+   <button type="button" onClick={() => onChange("private")} className={`pb-2 px-4 text-sm font-medium border-b-2 transition-colors ${privateClassName}`}>{labels.private}</button>
   </div>
  );
 }

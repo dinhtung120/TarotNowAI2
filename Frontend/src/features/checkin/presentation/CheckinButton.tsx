@@ -14,6 +14,7 @@ export const CheckinButton = ({ isCheckedIn }: CheckinButtonProps) => {
   if (isCheckedIn) {
     return (
       <button 
+        type="button"
         disabled
         className={cn("relative overflow-hidden w-full py-3 px-4 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-400 rounded-xl font-medium cursor-not-allowed flex items-center justify-center gap-2")}
       >
@@ -27,6 +28,7 @@ export const CheckinButton = ({ isCheckedIn }: CheckinButtonProps) => {
 
   return (
     <button
+      type="button"
       onClick={vm.handleClick}
       disabled={vm.isPending}
       className={`relative overflow-hidden w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-amber-950 rounded-xl font-bold font-inter shadow-[0_0_15px_rgba(251,191,36,0.3)] hover:shadow-[0_0_25px_rgba(251,191,36,0.5)] transition-all flex items-center justify-center gap-2 group ${vm.animating ? 'scale-95' : 'hover:-translate-y-0.5'}`}

@@ -28,7 +28,7 @@ export function HistoryDetailHeader({
  return (
   <div className={cn('flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12 sm:mb-16 animate-in fade-in slide-in-from-bottom-4 duration-700')}>
    <div className={cn('flex flex-col gap-6')}>
-    <button onClick={() => router.push('/reading/history')} className={cn('group flex items-center gap-2 text-[var(--text-secondary)] hover:tn-text-primary transition-all w-fit min-h-11 px-2 rounded-xl hover:tn-surface-soft')}>
+    <button type="button" onClick={() => router.push('/reading/history')} className={cn('group flex items-center gap-2 text-[var(--text-secondary)] hover:tn-text-primary transition-all w-fit min-h-11 px-2 rounded-xl hover:tn-surface-soft')}>
      <div className={cn('w-8 h-8 rounded-full tn-surface flex items-center justify-center group-hover:bg-[var(--purple-accent)] group-hover:tn-text-ink transition-all')}>
       <ArrowLeft className={cn('w-4 h-4')} />
      </div>

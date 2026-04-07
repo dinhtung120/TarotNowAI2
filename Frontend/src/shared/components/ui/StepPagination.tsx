@@ -27,6 +27,7 @@ export default function StepPagination({
    ) : null}
    <div className={cn("flex items-center gap-3")}>
     <button
+     type="button"
      onClick={onPrev}
      disabled={!canPrev}
      className={cn("p-2.5 min-h-11 min-w-11 rounded-xl tn-panel hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-md")}
@@ -37,6 +38,7 @@ export default function StepPagination({
      <span className={cn("text-xs font-black text-[var(--purple-accent)] italic mx-2")}>{currentLabel}</span>
     ) : null}
     <button
+     type="button"
      onClick={onNext}
      disabled={!canNext}
      className={cn("p-2.5 min-h-11 min-w-11 rounded-xl tn-panel hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-md")}

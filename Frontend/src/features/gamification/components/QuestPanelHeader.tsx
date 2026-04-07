@@ -26,6 +26,7 @@ export function QuestPanelHeader({ questType, setQuestType, t }: QuestPanelHeade
 
       <div className={cn("flex bg-slate-900/50 p-1 rounded-xl border border-slate-700/50")}>
         <button
+          type="button"
           onClick={() => setQuestType('daily')}
           className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
             questType === 'daily'
@@ -36,6 +37,7 @@ export function QuestPanelHeader({ questType, setQuestType, t }: QuestPanelHeade
           {t('DailyQuests')}
         </button>
         <button
+          type="button"
           onClick={() => setQuestType('weekly')}
           className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
             questType === 'weekly'

@@ -16,7 +16,7 @@ export default function ReportModalSuccessView({ onClose }: ReportModalSuccessVi
       <CheckCircle2 className={cn('mx-auto h-12 w-12 text-[var(--success)]')} />
       <h3 className={cn('text-lg font-black uppercase italic text-[var(--text-primary)]')}>{t('report.success_title')}</h3>
       <p className={cn('text-xs text-[var(--text-muted)]')}>{t('report.success_desc')}</p>
-      <button onClick={onClose} className={cn('rounded-xl bg-[var(--purple-accent)] px-6 py-2 text-xs font-bold uppercase tracking-widest text-white transition-all hover:brightness-110')}>
+      <button type="button" onClick={onClose} className={cn('rounded-xl bg-[var(--purple-accent)] px-6 py-2 text-xs font-bold uppercase tracking-widest text-white transition-all hover:brightness-110')}>
         {tCommon('close')}
       </button>
     </ReportModalShell>
