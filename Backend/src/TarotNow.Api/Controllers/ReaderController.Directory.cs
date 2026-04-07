@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Constants;
 using TarotNow.Application.Features.Reader.Queries.GetReaderProfile;
 using TarotNow.Application.Features.Reader.Queries.ListReaders;
@@ -8,6 +9,7 @@ namespace TarotNow.Api.Controllers;
 public partial class ReaderController
 {
         [HttpGet("profile/{userId}")]
+    [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> GetProfile(string userId)
     {
         var profile = await _mediator.Send(new GetReaderProfileQuery { UserId = userId });
@@ -24,6 +26,7 @@ public partial class ReaderController
     }
 
         [HttpGet(ApiRoutes.ReadersAbsolute)]
+    [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> ListReaders([FromQuery] ListReadersQuery query)
     {
         var result = await _mediator.Send(query);

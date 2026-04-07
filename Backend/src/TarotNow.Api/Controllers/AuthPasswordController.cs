@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using TarotNow.Application.Features.Auth.Commands.ForgotPassword;
 using TarotNow.Application.Features.Auth.Commands.ResetPassword;
@@ -8,6 +9,7 @@ namespace TarotNow.Api.Controllers;
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
 [Route(ApiRoutes.Auth)]
+[EnableRateLimiting("login")]
 public sealed class AuthPasswordController : ControllerBase
 {
     private readonly IMediator _mediator;

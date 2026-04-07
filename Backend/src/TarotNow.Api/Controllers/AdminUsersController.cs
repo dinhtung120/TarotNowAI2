@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 
 namespace TarotNow.Api.Controllers;
@@ -8,6 +9,7 @@ namespace TarotNow.Api.Controllers;
 [ApiVersion(ApiVersions.V1)]
 [Route(ApiRoutes.Admin)]
 [Authorize(Roles = "admin")]
+[EnableRateLimiting("auth-session")]
 public sealed class AdminUsersController : ControllerBase
 {
     private readonly IMediator _mediator;

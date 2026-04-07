@@ -1,3 +1,10 @@
+'use client';
+
+import { useEffect } from "react";
+import type { FormEvent } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { GlassCard } from "@/shared/components/ui";
 import { cn } from "@/lib/utils";
 import { WithdrawAmountSection } from "./WithdrawAmountSection";
@@ -5,16 +12,99 @@ import { WithdrawBankFields } from "./WithdrawBankFields";
 import { WithdrawSubmitSection } from "./WithdrawSubmitSection";
 import type { WithdrawFormCardProps } from "./WithdrawFormCard.types";
 
+const withdrawFormCardSchema = z.object({
+  amount: z
+    .string()
+    .trim()
+    .min(1)
+    .refine((value) => {
+      const parsed = Number.parseInt(value, 10);
+      return Number.isFinite(parsed) && parsed >= 50;
+    }),
+  bankName: z.string().trim().min(1).max(120),
+  accountName: z.string().trim().min(1).max(120),
+  accountNumber: z.string().trim().min(1).max(64),
+});
+
+type WithdrawFormCardFormValues = z.infer<typeof withdrawFormCardSchema>;
+
 export function WithdrawFormCard(props: WithdrawFormCardProps) {
+  const {
+    onAccountNameChange,
+    onAccountNumberChange,
+    onAmountChange,
+    onBankNameChange,
+    onSubmit,
+  } = props;
+  const { handleSubmit, setValue, watch } = useForm<WithdrawFormCardFormValues>({
+    resolver: zodResolver(withdrawFormCardSchema),
+    defaultValues: {
+      amount: props.amount,
+      bankName: props.bankName,
+      accountName: props.accountName,
+      accountNumber: props.accountNumber,
+    },
+  });
+
+  const watchedAmount = watch("amount") ?? "";
+  const watchedBankName = watch("bankName") ?? "";
+  const watchedAccountName = watch("accountName") ?? "";
+  const watchedAccountNumber = watch("accountNumber") ?? "";
+
+  useEffect(() => {
+    setValue("amount", props.amount, { shouldDirty: false, shouldValidate: false });
+  }, [props.amount, setValue]);
+
+  useEffect(() => {
+    setValue("bankName", props.bankName, { shouldDirty: false, shouldValidate: false });
+  }, [props.bankName, setValue]);
+
+  useEffect(() => {
+    setValue("accountName", props.accountName, {
+      shouldDirty: false,
+      shouldValidate: false,
+    });
+  }, [props.accountName, setValue]);
+
+  useEffect(() => {
+    setValue("accountNumber", props.accountNumber, {
+      shouldDirty: false,
+      shouldValidate: false,
+    });
+  }, [props.accountNumber, setValue]);
+
+  useEffect(() => {
+    onAmountChange(watchedAmount);
+  }, [onAmountChange, watchedAmount]);
+
+  useEffect(() => {
+    onBankNameChange(watchedBankName);
+  }, [onBankNameChange, watchedBankName]);
+
+  useEffect(() => {
+    onAccountNameChange(watchedAccountName);
+  }, [onAccountNameChange, watchedAccountName]);
+
+  useEffect(() => {
+    onAccountNumberChange(watchedAccountNumber);
+  }, [onAccountNumberChange, watchedAccountNumber]);
+
+  const submitWithValidation = handleSubmit(() => {
+    onSubmit({
+      preventDefault: () => undefined,
+      stopPropagation: () => undefined,
+    } as unknown as FormEvent<HTMLFormElement>);
+  });
+
   return (
     <GlassCard
       className={cn(
         "animate-in fade-in slide-in-from-bottom-8 delay-200 duration-1000",
       )}
     >
-      <form className={cn("space-y-6")} onSubmit={props.onSubmit}>
+      <form className={cn("space-y-6")} onSubmit={submitWithValidation}>
         <WithdrawAmountSection
-          amount={props.amount}
+          amount={watchedAmount}
           amountNum={props.amountNum}
           feeVnd={props.feeVnd}
           grossVnd={props.grossVnd}
@@ -27,12 +117,14 @@ export function WithdrawFormCard(props: WithdrawFormCardProps) {
           }}
           locale={props.locale}
           netVnd={props.netVnd}
-          onAmountChange={props.onAmountChange}
+          onAmountChange={(value) =>
+            setValue("amount", value, { shouldDirty: true, shouldValidate: true })
+          }
         />
         <WithdrawBankFields
-          accountName={props.accountName}
-          accountNumber={props.accountNumber}
-          bankName={props.bankName}
+          accountName={watchedAccountName}
+          accountNumber={watchedAccountNumber}
+          bankName={watchedBankName}
           labels={{
             bankLabel: props.labels.bankLabel,
             bankPlaceholder: props.labels.bankPlaceholder,
@@ -41,9 +133,18 @@ export function WithdrawFormCard(props: WithdrawFormCardProps) {
             accountNumberLabel: props.labels.accountNumberLabel,
             accountNumberPlaceholder: props.labels.accountNumberPlaceholder,
           }}
-          onAccountNameChange={props.onAccountNameChange}
-          onAccountNumberChange={props.onAccountNumberChange}
-          onBankNameChange={props.onBankNameChange}
+          onAccountNameChange={(value) =>
+            setValue("accountName", value, { shouldDirty: true, shouldValidate: true })
+          }
+          onAccountNumberChange={(value) =>
+            setValue("accountNumber", value, {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
+          }
+          onBankNameChange={(value) =>
+            setValue("bankName", value, { shouldDirty: true, shouldValidate: true })
+          }
         />
         <WithdrawSubmitSection
           amountNum={props.amountNum}

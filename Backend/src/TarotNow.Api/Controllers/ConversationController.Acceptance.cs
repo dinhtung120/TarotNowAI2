@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Contracts.Requests;
 using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.Chat.Commands.AcceptConversation;
@@ -11,6 +12,7 @@ public partial class ConversationController
 {
         [HttpPost("{id}/accept")]
     [Authorize(Roles = "tarot_reader")]
+    [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> AcceptConversation(string id)
     {
         if (TryGetUserId(out var readerId) == false)
@@ -30,6 +32,7 @@ public partial class ConversationController
 
         [HttpPost("{id}/reject")]
     [Authorize(Roles = "tarot_reader")]
+    [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> RejectConversation(string id, [FromBody] ConversationRejectBody body)
     {
         if (TryGetUserId(out var readerId) == false)

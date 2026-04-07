@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.Tasks;
 using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.CheckIn.Commands.DailyCheckIn;
@@ -13,6 +14,7 @@ namespace TarotNow.Api.Controllers;
 [ApiVersion(ApiVersions.V1)]
 [Route(ApiRoutes.CheckIn)]
 [Authorize]
+[EnableRateLimiting("auth-session")]
 public class CheckInController : ControllerBase
 {
     private readonly IMediator _mediator;

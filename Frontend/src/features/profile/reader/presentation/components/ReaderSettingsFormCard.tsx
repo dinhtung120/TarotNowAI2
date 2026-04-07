@@ -1,7 +1,11 @@
 'use client';
 
+import { useEffect } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
 import type { FormEvent } from 'react';
 import { BookOpen } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { GlassCard } from '@/shared/components/ui';
 import { cn } from '@/lib/utils';
 import { ReaderSettingsBioField } from './ReaderSettingsBioField';
@@ -29,18 +33,71 @@ interface ReaderSettingsFormCardProps {
  title: string;
 }
 
+const readerSettingsFormCardSchema = z.object({
+ bio: z.string().max(2000),
+ specialties: z.string().max(500),
+ price: z.number().min(50),
+});
+
+type ReaderSettingsFormCardFormValues = z.infer<typeof readerSettingsFormCardSchema>;
+
 export function ReaderSettingsFormCard(props: ReaderSettingsFormCardProps) {
+ const { onChangeBio, onChangePrice, onChangeSpecialties, onSubmit } = props;
+ const { handleSubmit, setValue, watch } = useForm<ReaderSettingsFormCardFormValues>({
+  resolver: zodResolver(readerSettingsFormCardSchema),
+  defaultValues: {
+   bio: props.bioValue,
+   specialties: props.specialtiesValue,
+   price: props.priceValue,
+  },
+ });
+
+ const watchedBio = watch('bio') ?? '';
+ const watchedSpecialties = watch('specialties') ?? '';
+ const watchedPrice = watch('price') ?? 50;
+
+ useEffect(() => {
+  setValue('bio', props.bioValue, { shouldDirty: false, shouldValidate: false });
+ }, [props.bioValue, setValue]);
+
+ useEffect(() => {
+  setValue('specialties', props.specialtiesValue, { shouldDirty: false, shouldValidate: false });
+ }, [props.specialtiesValue, setValue]);
+
+ useEffect(() => {
+  setValue('price', props.priceValue, { shouldDirty: false, shouldValidate: false });
+ }, [props.priceValue, setValue]);
+
+ useEffect(() => {
+  onChangeBio(watchedBio);
+ }, [onChangeBio, watchedBio]);
+
+ useEffect(() => {
+  onChangeSpecialties(watchedSpecialties);
+ }, [onChangeSpecialties, watchedSpecialties]);
+
+ useEffect(() => {
+  onChangePrice(watchedPrice);
+ }, [onChangePrice, watchedPrice]);
+
+ const submitWithValidation = handleSubmit(() => {
+  onSubmit({
+   preventDefault: () => undefined,
+   stopPropagation: () => undefined,
+  } as unknown as FormEvent<HTMLFormElement>);
+ });
+
  return (
   <GlassCard className={cn('!p-8')}>
-   <form onSubmit={props.onSubmit} className={cn('space-y-8')}>
+   <form onSubmit={submitWithValidation} className={cn('space-y-8')}>
     <h3 className={cn('text-lg font-black tn-text-primary italic tracking-tight mb-6 flex items-center gap-2.5')}>
      <BookOpen className={cn('w-5 h-5 text-[var(--purple-accent)]')} />
      {props.title}
     </h3>
     <div className={cn('space-y-6')}>
-     <ReaderSettingsBioField label={props.bioLabel} value={props.bioValue} onChange={props.onChangeBio} placeholder={props.bioPlaceholder} />
-     <ReaderSettingsSpecialtiesField label={props.specialtiesLabel} value={props.specialtiesValue} onChange={props.onChangeSpecialties} placeholder={props.specialtiesPlaceholder} />
-     <ReaderSettingsPriceField label={props.priceLabel} value={props.priceValue} onChange={props.onChangePrice} helpLabel={props.priceHelp} />
+     <ReaderSettingsBioField label={props.bioLabel} value={watchedBio} onChange={(value) => setValue('bio', value, { shouldDirty: true, shouldValidate: true })} placeholder={props.bioPlaceholder} />
+     <ReaderSettingsSpecialtiesField label={props.specialtiesLabel} value={watchedSpecialties} onChange={(value) => setValue('specialties', value, { shouldDirty: true, shouldValidate: true })} placeholder={props.specialtiesPlaceholder} />
+     <ReaderSettingsPriceField label={props.priceLabel} value={watchedPrice} onChange={(value) => setValue('price', value, { shouldDirty: true, shouldValidate: true })} helpLabel={props.priceHelp} />
     </div>
     <div className={cn('pt-6 border-t tn-border mt-6')}>
      <ReaderSettingsSubmitButton disabled={props.saving} loadingLabel={props.savingLabel} saveLabel={props.saveLabel} />

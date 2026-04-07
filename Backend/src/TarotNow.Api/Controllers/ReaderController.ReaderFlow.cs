@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Constants;
 using TarotNow.Api.Contracts.Requests;
 using TarotNow.Api.Extensions;
@@ -14,6 +15,7 @@ public partial class ReaderController
 {
         [HttpPost("apply")]
     [Authorize]
+    [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> Apply([FromBody] SubmitReaderRequestBody body)
     {
         if (!User.TryGetUserId(out var userId))
@@ -38,6 +40,7 @@ public partial class ReaderController
 
         [HttpGet("my-request")]
     [Authorize]
+    [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> GetMyRequest()
     {
         if (!User.TryGetUserId(out var userId))
@@ -51,6 +54,7 @@ public partial class ReaderController
 
         [HttpPatch("profile")]
     [Authorize(Roles = ApiRoleConstants.TarotReader)]
+    [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateReaderProfileBody body)
     {
         if (!User.TryGetUserId(out var userId))
@@ -78,6 +82,7 @@ public partial class ReaderController
 
         [HttpPatch("status")]
     [Authorize(Roles = ApiRoleConstants.TarotReader)]
+    [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> UpdateStatus([FromBody] UpdateReaderStatusBody body)
     {
         if (!User.TryGetUserId(out var userId))

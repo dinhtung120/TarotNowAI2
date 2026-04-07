@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using TarotNow.Api.Constants;
 using TarotNow.Api.Extensions;
@@ -18,6 +19,7 @@ namespace TarotNow.Api.Controllers;
 [ApiVersion(ApiVersions.V1)]
 [Route(ApiRoutes.Subscriptions)]
 [Authorize]
+[EnableRateLimiting("auth-session")]
 public class SubscriptionController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -28,7 +30,7 @@ public class SubscriptionController : ControllerBase
     }
 
         [HttpPost("plans")]
-    [Authorize(Policy = "AdminOnly")] 
+    [Authorize(Policy = ApiAuthorizationPolicies.AdminOnly)] 
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Guid))]
     public async Task<IActionResult> CreatePlan(
         [FromBody] CreateSubscriptionPlanCommand command,

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using TarotNow.Api.Contracts.Requests;
 using TarotNow.Api.Extensions;
@@ -12,6 +13,7 @@ namespace TarotNow.Api.Controllers;
 public partial class ConversationController
 {
         [HttpGet("{id}/messages")]
+    [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> Messages(
         string id,
         [FromQuery] string? cursor = null,
@@ -34,6 +36,7 @@ public partial class ConversationController
     }
 
         [HttpPost("{id}/messages")]
+    [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> SendMessage(string id, [FromBody] ConversationSendMessageBody body)
     {
         if (TryGetUserId(out var userId) == false)

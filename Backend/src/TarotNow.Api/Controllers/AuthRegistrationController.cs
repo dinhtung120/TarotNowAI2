@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using TarotNow.Application.Features.Auth.Commands.Register;
 using TarotNow.Application.Features.Auth.Commands.SendEmailVerificationOtp;
@@ -9,6 +10,7 @@ namespace TarotNow.Api.Controllers;
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
 [Route(ApiRoutes.Auth)]
+[EnableRateLimiting("login")]
 public sealed class AuthRegistrationController : ControllerBase
 {
     private readonly IMediator _mediator;

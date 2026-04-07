@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.ComponentModel.DataAnnotations;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,6 +21,7 @@ namespace TarotNow.Api.Controllers;
 [Authorize] 
 [ApiVersion(ApiVersions.V1)]
 [Produces("application/json")]
+[EnableRateLimiting("auth-session")]
 public class GachaController : ControllerBase
 {
     private readonly IMediator _mediator;

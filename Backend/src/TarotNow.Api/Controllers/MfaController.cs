@@ -3,6 +3,7 @@
 using MediatR;                 
 using Microsoft.AspNetCore.Authorization; 
 using Microsoft.AspNetCore.Mvc; 
+using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Contracts.Requests;
 using TarotNow.Api.Extensions;
 
@@ -19,6 +20,7 @@ namespace TarotNow.Api.Controllers;
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
 [Authorize]
+[EnableRateLimiting("auth-session")]
 public class MfaController : ControllerBase
 {
     private readonly IMediator _mediator;

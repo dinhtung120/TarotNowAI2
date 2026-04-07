@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 using TarotNow.Api.Constants;
 using TarotNow.Application.Features.Gamification.Commands;
@@ -12,6 +13,7 @@ namespace TarotNow.Api.Controllers;
 [ApiVersion(ApiVersions.V1)]
 [Route(ApiRoutes.Gamification)]
 [Authorize]
+[EnableRateLimiting("auth-session")]
 public class GamificationController : ControllerBase
 {
     private readonly IMediator _mediator;

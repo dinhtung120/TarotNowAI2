@@ -29,6 +29,7 @@ public static partial class ApiServiceCollectionExtensions
         services.AddAuthorization(options =>
         {
             options.AddPolicy(ApiAuthorizationPolicies.AuthenticatedUser, ApiAuthorizationPolicies.RequireAuthenticatedUser);
+            options.AddPolicy(ApiAuthorizationPolicies.AdminOnly, ApiAuthorizationPolicies.RequireAdminOnly);
         });
         ConfigureSignalR(services, configuration.GetConnectionString("Redis"));
     }

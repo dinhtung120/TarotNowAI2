@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Contracts.Requests;
 using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.Chat.Commands.OpenConversationDispute;
@@ -12,6 +13,7 @@ public partial class ConversationController
 {
         [HttpPost("{id}/add-money/request")]
     [Authorize(Roles = "tarot_reader")]
+    [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> RequestAddMoney(string id, [FromBody] ConversationAddMoneyRequestBody body)
     {
         if (TryGetUserId(out var readerId) == false)
@@ -33,6 +35,7 @@ public partial class ConversationController
     }
 
         [HttpPost("{id}/add-money/respond")]
+    [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> RespondAddMoney(string id, [FromBody] ConversationAddMoneyRespondBody body)
     {
         if (TryGetUserId(out var userId) == false)
@@ -54,6 +57,7 @@ public partial class ConversationController
     }
 
         [HttpPost("{id}/dispute")]
+    [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> OpenDispute(string id, [FromBody] ConversationDisputeBody body)
     {
         if (TryGetUserId(out var userId) == false)

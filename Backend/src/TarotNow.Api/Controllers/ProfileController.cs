@@ -3,6 +3,7 @@
 using MediatR;                 
 using Microsoft.AspNetCore.Authorization; 
 using Microsoft.AspNetCore.Mvc; 
+using Microsoft.AspNetCore.RateLimiting;
 using System;
 using System.Threading.Tasks;
 
@@ -19,6 +20,7 @@ namespace TarotNow.Api.Controllers;
 [Route(ApiRoutes.Profile)]
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
+[EnableRateLimiting("auth-session")]
 public class ProfileController : ControllerBase
 {
     private readonly IMediator Mediator;

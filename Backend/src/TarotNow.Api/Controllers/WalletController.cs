@@ -3,6 +3,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 
 using TarotNow.Application.Features.Wallet.Queries.GetLedgerList;
@@ -15,6 +16,7 @@ namespace TarotNow.Api.Controllers;
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
 [Authorize] 
+[EnableRateLimiting("auth-session")]
 public class WalletController : ControllerBase
 {
     private readonly IMediator _mediator;
