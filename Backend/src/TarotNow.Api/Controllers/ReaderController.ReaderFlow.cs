@@ -18,7 +18,7 @@ public partial class ReaderController
     {
         if (!User.TryGetUserId(out var userId))
         {
-            return Unauthorized();
+            return this.UnauthorizedProblem();
         }
 
         var result = await _mediator.Send(new SubmitReaderRequestCommand
@@ -42,7 +42,7 @@ public partial class ReaderController
     {
         if (!User.TryGetUserId(out var userId))
         {
-            return Unauthorized();
+            return this.UnauthorizedProblem();
         }
 
         var result = await _mediator.Send(new GetMyReaderRequestQuery { UserId = userId });
@@ -55,7 +55,7 @@ public partial class ReaderController
     {
         if (!User.TryGetUserId(out var userId))
         {
-            return Unauthorized();
+            return this.UnauthorizedProblem();
         }
 
         var result = await _mediator.Send(new UpdateReaderProfileCommand
@@ -82,7 +82,7 @@ public partial class ReaderController
     {
         if (!User.TryGetUserId(out var userId))
         {
-            return Unauthorized();
+            return this.UnauthorizedProblem();
         }
 
         var result = await _mediator.Send(new UpdateReaderStatusCommand

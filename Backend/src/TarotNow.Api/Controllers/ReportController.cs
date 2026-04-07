@@ -26,7 +26,7 @@ public class ReportController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateReportBody body)
     {
         if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
 
         var command = new CreateReportCommand
         {

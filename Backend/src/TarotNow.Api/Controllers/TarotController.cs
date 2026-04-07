@@ -30,7 +30,7 @@ public class TarotController : ControllerBase
         
         
         if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
         command.UserId = userId; 
 
         var result = await _mediator.Send(command);
@@ -41,7 +41,7 @@ public class TarotController : ControllerBase
     public async Task<IActionResult> RevealCards([FromBody] TarotNow.Application.Features.Reading.Commands.RevealSession.RevealReadingSessionCommand command)
     {
         if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
         command.UserId = userId; 
 
         var result = await _mediator.Send(command);
@@ -63,7 +63,7 @@ public class TarotController : ControllerBase
     public async Task<IActionResult> GetCollection()
     {
         if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
 
         var result = await _mediator.Send(
             new TarotNow.Application.Features.Reading.Queries.GetCollection.GetUserCollectionQuery { UserId = userId }

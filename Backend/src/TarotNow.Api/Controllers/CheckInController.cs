@@ -26,7 +26,7 @@ public class CheckInController : ControllerBase
     public async Task<IActionResult> DailyCheckIn()
     {
         if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
 
         var command = new DailyCheckInCommand { UserId = userId };
         var result = await _mediator.Send(command);
@@ -37,7 +37,7 @@ public class CheckInController : ControllerBase
     public async Task<IActionResult> GetStreakStatus()
     {
         if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
 
         var query = new GetStreakStatusQuery { UserId = userId };
         var result = await _mediator.Send(query);
@@ -48,7 +48,7 @@ public class CheckInController : ControllerBase
     public async Task<IActionResult> PurchaseFreeze([FromBody] PurchaseStreakFreezeCommand command)
     {
         if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
 
         command.UserId = userId; 
 

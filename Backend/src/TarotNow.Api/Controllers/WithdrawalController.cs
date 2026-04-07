@@ -32,12 +32,13 @@ public class WithdrawalController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CreateWithdrawalBody body)
     {
         var userId = GetUserId();
-        if (userId == null) return Unauthorized();
+        if (userId == null) return this.UnauthorizedProblem();
 
         var command = new CreateWithdrawalCommand
         {
             UserId = userId.Value,                       
             AmountDiamond = body.AmountDiamond,           
+            IdempotencyKey = body.IdempotencyKey,
             BankName = body.BankName,                     
             BankAccountName = body.BankAccountName,       
             BankAccountNumber = body.BankAccountNumber,   
@@ -53,7 +54,7 @@ public class WithdrawalController : ControllerBase
     public async Task<IActionResult> MyWithdrawals([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var userId = GetUserId();
-        if (userId == null) return Unauthorized();
+        if (userId == null) return this.UnauthorizedProblem();
 
         var query = new ListWithdrawalsQuery
         {

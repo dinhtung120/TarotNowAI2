@@ -33,7 +33,7 @@ public class ProfileController : ControllerBase
     public async Task<IActionResult> GetProfile()
     {
         if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
 
         
         var query = new GetProfileQuery { UserId = userId };
@@ -48,7 +48,7 @@ public class ProfileController : ControllerBase
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
     {
         if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
 
         
         
@@ -78,7 +78,7 @@ public class ProfileController : ControllerBase
     public async Task<IActionResult> UploadAvatar(IFormFile file)
     {
         if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
 
         if (file == null || file.Length == 0)
             return Problem(

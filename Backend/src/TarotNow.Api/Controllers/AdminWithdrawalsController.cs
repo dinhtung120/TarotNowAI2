@@ -37,7 +37,7 @@ public sealed class AdminWithdrawalsController : ControllerBase
     public async Task<IActionResult> ProcessWithdrawal([FromBody] ProcessWithdrawalBody body)
     {
         if (!User.TryGetUserId(out var adminId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
 
         var command = new TarotNow.Application.Features.Withdrawal.Commands.ProcessWithdrawal.ProcessWithdrawalCommand
         {

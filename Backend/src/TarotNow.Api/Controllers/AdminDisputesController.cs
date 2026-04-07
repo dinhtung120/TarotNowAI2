@@ -32,7 +32,7 @@ public sealed class AdminDisputesController : ControllerBase
     public async Task<IActionResult> Resolve(Guid id, [FromBody] AdminResolveDisputeBody body)
     {
         if (!User.TryGetUserId(out var adminId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
 
         await _mediator.Send(new ResolveDisputeCommand
         {

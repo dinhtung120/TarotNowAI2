@@ -3,6 +3,7 @@
 using MediatR;                 
 using Microsoft.AspNetCore.Authorization; 
 using Microsoft.AspNetCore.Mvc; 
+using TarotNow.Api.Extensions;
 
 
 using TarotNow.Application.Features.History.Queries.GetReadingDetail;  
@@ -33,7 +34,7 @@ public class HistoryController : ControllerBase
         
         var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userIdStr, out var userId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
 
         var query = new GetReadingHistoryQuery
         {
@@ -57,7 +58,7 @@ public class HistoryController : ControllerBase
     {
         var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userIdStr, out var userId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
 
         var query = new GetReadingDetailQuery
         {

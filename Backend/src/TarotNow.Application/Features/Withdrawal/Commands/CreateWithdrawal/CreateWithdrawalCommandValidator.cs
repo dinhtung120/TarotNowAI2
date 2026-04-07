@@ -12,6 +12,10 @@ public class CreateWithdrawalCommandValidator : AbstractValidator<CreateWithdraw
         RuleFor(x => x.AmountDiamond)
             .GreaterThan(0);
 
+        RuleFor(x => x.IdempotencyKey)
+            .NotEmpty()
+            .MaximumLength(128);
+
         RuleFor(x => x.BankName)
             .NotEmpty()
             .MaximumLength(255);

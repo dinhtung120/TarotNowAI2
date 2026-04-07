@@ -28,7 +28,7 @@ public class WalletController : ControllerBase
     public async Task<IActionResult> GetBalance()
     {
         if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
 
         
         var query = new GetWalletBalanceQuery(userId);
@@ -41,7 +41,7 @@ public class WalletController : ControllerBase
     public async Task<IActionResult> GetLedger([FromQuery] int page = 1, [FromQuery] int limit = 20)
     {
         if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
 
         
         var query = new GetLedgerListQuery(userId, page, limit);

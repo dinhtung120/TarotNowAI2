@@ -25,7 +25,7 @@ public class UserContextController : ControllerBase
     public async Task<IActionResult> GetInitialMetadata()
     {
         if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
 
         var query = new GetInitialMetadataQuery(userId);
         var result = await _mediator.Send(query);

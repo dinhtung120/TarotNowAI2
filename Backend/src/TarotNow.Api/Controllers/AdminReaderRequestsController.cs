@@ -30,7 +30,7 @@ public sealed class AdminReaderRequestsController : ControllerBase
     public async Task<IActionResult> ProcessReaderRequest([FromBody] ProcessReaderRequestBody body)
     {
         if (!User.TryGetUserId(out var adminId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
 
         var command = new TarotNow.Application.Features.Admin.Commands.ApproveReader.ApproveReaderCommand
         {

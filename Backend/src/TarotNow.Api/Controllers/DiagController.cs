@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;           
 
 using TarotNow.Application.Interfaces;
+using TarotNow.Api.Extensions;
 
 namespace TarotNow.Api.Controllers;
 
@@ -29,11 +30,11 @@ public partial class DiagController : ControllerBase
         _logger = logger;
     }
 
-        private IActionResult? RejectIfNotDevelopment()
+    private IActionResult? RejectIfNotDevelopment()
     {
         
         if (_environment.IsDevelopment()) return null; 
-        return NotFound(); 
+        return this.NotFoundProblem("Endpoint chỉ khả dụng trong môi trường development.");
     }
 
         [HttpPost("wipe")]

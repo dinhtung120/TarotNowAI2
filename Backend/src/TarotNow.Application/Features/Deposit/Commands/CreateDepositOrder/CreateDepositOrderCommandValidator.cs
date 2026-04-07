@@ -17,5 +17,9 @@ public class CreateDepositOrderCommandValidator : AbstractValidator<CreateDeposi
             
             
             .Must(amount => amount % 1000 == 0).WithMessage("AmountVnd must be a multiple of 1,000.");
+
+        RuleFor(x => x.IdempotencyKey)
+            .NotEmpty()
+            .MaximumLength(128);
     }
 }

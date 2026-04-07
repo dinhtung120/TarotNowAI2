@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TarotNow.Api.Contracts.Requests;
+using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.Chat.Commands.CancelPendingConversation;
 using TarotNow.Application.Features.Chat.Commands.CreateConversation;
 using TarotNow.Application.Features.Chat.Queries.ListConversations;
@@ -14,7 +15,7 @@ public partial class ConversationController
     {
         if (!TryGetUserId(out var userId))
         {
-            return Unauthorized();
+            return this.UnauthorizedProblem();
         }
 
         var result = await Mediator.Send(new CreateConversationCommand
@@ -35,7 +36,7 @@ public partial class ConversationController
     {
         if (!TryGetUserId(out var userId))
         {
-            return Unauthorized();
+            return this.UnauthorizedProblem();
         }
 
         var result = await Mediator.Send(new ListConversationsQuery
@@ -54,7 +55,7 @@ public partial class ConversationController
     {
         if (!TryGetUserId(out var userId))
         {
-            return Unauthorized();
+            return this.UnauthorizedProblem();
         }
 
         var result = await Mediator.Send(new GetUnreadTotalQuery
@@ -70,7 +71,7 @@ public partial class ConversationController
     {
         if (!TryGetUserId(out var userId))
         {
-            return Unauthorized();
+            return this.UnauthorizedProblem();
         }
 
         var result = await Mediator.Send(new CancelPendingConversationCommand

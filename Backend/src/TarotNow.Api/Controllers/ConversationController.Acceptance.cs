@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TarotNow.Api.Contracts.Requests;
+using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.Chat.Commands.AcceptConversation;
 using TarotNow.Application.Features.Chat.Commands.RejectConversation;
 
@@ -14,7 +15,7 @@ public partial class ConversationController
     {
         if (TryGetUserId(out var readerId) == false)
         {
-            return Unauthorized();
+            return this.UnauthorizedProblem();
         }
 
         var result = await Mediator.Send(new AcceptConversationCommand
@@ -33,7 +34,7 @@ public partial class ConversationController
     {
         if (TryGetUserId(out var readerId) == false)
         {
-            return Unauthorized();
+            return this.UnauthorizedProblem();
         }
 
         var result = await Mediator.Send(new RejectConversationCommand

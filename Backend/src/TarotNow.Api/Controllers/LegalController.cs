@@ -32,7 +32,7 @@ public class LegalController : ControllerBase
     public async Task<IActionResult> CheckConsentStatus([FromQuery] string? documentType, [FromQuery] string? version)
     {
         if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
  
         var query = new CheckConsentQuery 
         { 
@@ -49,7 +49,7 @@ public class LegalController : ControllerBase
     public async Task<IActionResult> RecordConsent([FromBody] RecordConsentRequest request)
     {
         if (!User.TryGetUserId(out var userId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
 
         
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";

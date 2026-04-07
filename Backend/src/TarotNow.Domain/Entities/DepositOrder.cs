@@ -55,7 +55,7 @@ public class DepositOrder
         ProcessedAt = DateTime.UtcNow;
     }
 
-        public void MarkAsFailed(string transactionId)
+    public void MarkAsFailed(string transactionId)
     {
         if (Status == "Success")
             throw new InvalidOperationException("Cannot fail a successful order.");
@@ -63,5 +63,19 @@ public class DepositOrder
         Status = "Failed";
         TransactionId = transactionId;
         ProcessedAt = DateTime.UtcNow;
+    }
+
+    public void SetClientTransactionToken(string transactionToken)
+    {
+        if (string.IsNullOrWhiteSpace(transactionToken))
+            throw new ArgumentException("Transaction token is required.", nameof(transactionToken));
+
+        if (Status != "Pending")
+            throw new InvalidOperationException("Client transaction token can only be set on pending order.");
+
+        if (!string.IsNullOrWhiteSpace(TransactionId))
+            throw new InvalidOperationException("Transaction token is already set.");
+
+        TransactionId = transactionToken.Trim();
     }
 }

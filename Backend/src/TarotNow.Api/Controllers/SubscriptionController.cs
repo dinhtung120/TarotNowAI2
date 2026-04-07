@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TarotNow.Api.Constants;
+using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.Subscription.Commands.CreateSubscriptionPlan;
 using TarotNow.Application.Features.Subscription.Commands.Subscribe;
 
@@ -49,7 +50,7 @@ public class SubscriptionController : ControllerBase
         
         var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userIdStr, out var userId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
 
         var command = new SubscribeCommand(userId, request.PlanId, request.IdempotencyKey);
         var subId = await _mediator.Send(command, cancellationToken);
@@ -72,7 +73,7 @@ public class SubscriptionController : ControllerBase
     {
         var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userIdStr, out var userId))
-            return Unauthorized();
+            return this.UnauthorizedProblem();
 
         var entitlements = await _mediator.Send(new TarotNow.Application.Features.Subscription.Queries.GetMyEntitlements.GetMyEntitlementsQuery(userId), cancellationToken);
         return Ok(entitlements);

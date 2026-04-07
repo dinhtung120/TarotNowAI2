@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TarotNow.Api.Contracts.Requests;
+using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.Chat.Commands.OpenConversationDispute;
 using TarotNow.Application.Features.Chat.Commands.RequestConversationAddMoney;
 using TarotNow.Application.Features.Chat.Commands.RespondConversationAddMoney;
@@ -15,7 +16,7 @@ public partial class ConversationController
     {
         if (TryGetUserId(out var readerId) == false)
         {
-            return Unauthorized();
+            return this.UnauthorizedProblem();
         }
 
         var result = await Mediator.Send(new RequestConversationAddMoneyCommand
@@ -36,7 +37,7 @@ public partial class ConversationController
     {
         if (TryGetUserId(out var userId) == false)
         {
-            return Unauthorized();
+            return this.UnauthorizedProblem();
         }
 
         var result = await Mediator.Send(new RespondConversationAddMoneyCommand
@@ -57,7 +58,7 @@ public partial class ConversationController
     {
         if (TryGetUserId(out var userId) == false)
         {
-            return Unauthorized();
+            return this.UnauthorizedProblem();
         }
 
         var result = await Mediator.Send(new OpenConversationDisputeCommand

@@ -21,6 +21,8 @@ public class CreateDepositOrderRequest
 {
     
     public long AmountVnd { get; set; }
+
+    public string IdempotencyKey { get; set; } = string.Empty;
 }
 
 public class RecordConsentRequest

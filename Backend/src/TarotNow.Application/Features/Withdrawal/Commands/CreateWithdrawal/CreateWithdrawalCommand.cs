@@ -9,6 +9,7 @@ public class CreateWithdrawalCommand : IRequest<Guid>
 {
     public Guid UserId { get; set; }
     public long AmountDiamond { get; set; }
+    public string IdempotencyKey { get; set; } = string.Empty;
     public string BankName { get; set; } = string.Empty;
     public string BankAccountName { get; set; } = string.Empty;
     public string BankAccountNumber { get; set; } = string.Empty;

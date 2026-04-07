@@ -2,6 +2,7 @@
 
 using Microsoft.AspNetCore.Authorization; 
 using Microsoft.AspNetCore.Mvc;           
+using TarotNow.Api.Extensions;
 
 namespace TarotNow.Api.Controllers;
 
@@ -42,7 +43,7 @@ public class HealthController : ControllerBase
     {
         
         if (!_environment.IsDevelopment())
-            return NotFound();
+            return this.NotFoundProblem("Endpoint chỉ khả dụng trong môi trường development.");
 
         
         throw new Exception("This is a test exception to verify ProblemDetails integration.");
