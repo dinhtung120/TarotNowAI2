@@ -4,7 +4,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { getFeedAction } from '../application/actions/communityActions';
 import { CommunityPost } from '../types';
 
-interface FeedResponse {
+export interface FeedResponse {
   data: CommunityPost[];
   metadata: {
     totalCount: number;

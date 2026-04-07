@@ -1,0 +1,20 @@
+import { cn } from "@/lib/utils";
+import { formatDate, formatTime } from "@/shared/utils/format/formatDateTime";
+
+interface AdminDepositTimeCellProps {
+ locale: string;
+ createdAt: string;
+}
+
+export function AdminDepositTimeCell({ locale, createdAt }: AdminDepositTimeCellProps) {
+ return (
+  <td className={cn("px-8 py-5")}>
+   <div className={cn("flex flex-col text-left")}>
+    <div className={cn("text-[10px] font-black text-[var(--text-secondary)] uppercase tracking-tighter")}>
+     {formatDate(createdAt, locale)}
+    </div>
+    <div className={cn("text-[10px] font-bold text-[var(--text-tertiary)] italic")}>{formatTime(createdAt, locale)}</div>
+   </div>
+  </td>
+ );
+}

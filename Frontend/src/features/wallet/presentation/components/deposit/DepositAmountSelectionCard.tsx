@@ -1,56 +1,57 @@
-import { jsx as t, jsxs as o } from "react/jsx-runtime";
-import { Sparkles as h } from "lucide-react";
-import { GlassCard as v } from "@/shared/components/ui";
-import { cn as e } from "@/lib/utils";
-import { DepositCustomAmountInput as P } from "./DepositCustomAmountInput";
-import { DepositPresetGrid as x } from "./DepositPresetGrid";
-function G({
-  title: n,
-  customLabel: r,
-  customPlaceholder: s,
-  minAmount: m,
-  customAmount: a,
-  locale: u,
-  isCustom: i,
-  selectedAmount: l,
-  presetAmounts: c,
-  exchangeRate: p,
-  formatVnd: b,
-  bonusLabel: d,
-  onCustomFocus: g,
-  onCustomChange: C,
-  onSelectPreset: f,
-  getPromotion: A,
-}) {
-  return o(v, {
-    className: e("space-y-6"),
-    children: [
-      o("h3", {
-        className: e(
-          "text-sm font-black tn-text-primary uppercase tracking-widest flex items-center gap-2",
-        ),
-        children: [t(h, { className: e("w-4 h-4 text-[var(--warning)]") }), n],
-      }),
-      t(x, {
-        presetAmounts: c,
-        isCustom: i,
-        selectedAmount: l,
-        exchangeRate: p,
-        locale: u,
-        formatVnd: b,
-        bonusLabel: d,
-        onSelectPreset: f,
-        getPromotion: A,
-      }),
-      t(P, {
-        label: r,
-        placeholder: s,
-        minAmount: m,
-        value: a,
-        onFocus: g,
-        onChange: C,
-      }),
-    ],
-  });
+import { Sparkles } from "lucide-react";
+import { GlassCard } from "@/shared/components/ui";
+import { cn } from "@/lib/utils";
+import { DepositCustomAmountInput } from "./DepositCustomAmountInput";
+import { DepositPresetGrid } from "./DepositPresetGrid";
+import type { DepositAmountSelectionCardProps } from "./DepositAmountSelectionCard.types";
+
+export function DepositAmountSelectionCard({
+  title,
+  customLabel,
+  customPlaceholder,
+  minAmount,
+  customAmount,
+  locale,
+  isCustom,
+  selectedAmount,
+  presetAmounts,
+  exchangeRate,
+  formatVnd,
+  bonusLabel,
+  onCustomFocus,
+  onCustomChange,
+  onSelectPreset,
+  getPromotion,
+}: DepositAmountSelectionCardProps) {
+  return (
+    <GlassCard className={cn("space-y-6")}>
+      <h3
+        className={cn(
+          "flex items-center gap-2 text-sm font-black uppercase tracking-widest tn-text-primary",
+        )}
+      >
+        <Sparkles className={cn("w-4 h-4 text-[var(--warning)]")} />
+        {title}
+      </h3>
+      <DepositPresetGrid
+        presetAmounts={presetAmounts}
+        isCustom={isCustom}
+        selectedAmount={selectedAmount}
+        exchangeRate={exchangeRate}
+        locale={locale}
+        formatVnd={formatVnd}
+        bonusLabel={bonusLabel}
+        onSelectPreset={onSelectPreset}
+        getPromotion={getPromotion}
+      />
+      <DepositCustomAmountInput
+        label={customLabel}
+        placeholder={customPlaceholder}
+        minAmount={minAmount}
+        value={customAmount}
+        onFocus={onCustomFocus}
+        onChange={onCustomChange}
+      />
+    </GlassCard>
+  );
 }
-export { G as DepositAmountSelectionCard };

@@ -1,58 +1,54 @@
-import { jsx as t, jsxs as L } from "react/jsx-runtime";
-import { GlassCard as b } from "@/shared/components/ui";
-import { cn as o } from "@/lib/utils";
-import { DepositOrderState as c } from "./DepositOrderState";
-import { DepositSubmitAction as g } from "./DepositSubmitAction";
-import { DepositSummaryBreakdown as y } from "./DepositSummaryBreakdown";
-function C({
-  locale: r,
-  amountVnd: i,
-  baseDiamond: a,
-  bonusGold: s,
-  submitting: n,
-  isValid: m,
-  order: d,
-  error: u,
-  formatVnd: p,
-  onDeposit: l,
-  labels: e,
-}) {
-  return L(b, {
-    className: o("space-y-6"),
-    children: [
-      t("h3", {
-        className: o(
-          "text-sm font-black tn-text-primary uppercase tracking-widest",
-        ),
-        children: e.title,
-      }),
-      t(y, {
-        locale: r,
-        amountVnd: i,
-        baseDiamond: a,
-        bonusGold: s,
-        formatVnd: p,
-        labels: {
-          valueLabel: e.valueLabel,
-          diamondReceiveLabel: e.diamondReceiveLabel,
-          promoBonusLabel: e.promoBonusLabel,
-          totalAssetsLabel: e.totalAssetsLabel,
-        },
-      }),
-      t(c, {
-        order: d,
-        error: u,
-        labels: { orderReady: e.orderReady, payNow: e.payNow },
-      }),
-      t(g, {
-        submitting: n,
-        isValid: m,
-        submittingLabel: e.submitting,
-        submitLabel: e.submit,
-        securityNote: e.securityNote,
-        onDeposit: l,
-      }),
-    ],
-  });
+import { GlassCard } from "@/shared/components/ui";
+import { cn } from "@/lib/utils";
+import { DepositOrderState } from "./DepositOrderState";
+import { DepositSubmitAction } from "./DepositSubmitAction";
+import { DepositSummaryBreakdown } from "./DepositSummaryBreakdown";
+import type { DepositSummaryCardProps } from "./DepositSummaryCard.types";
+
+export function DepositSummaryCard({
+  locale,
+  amountVnd,
+  baseDiamond,
+  bonusGold,
+  submitting,
+  isValid,
+  order,
+  error,
+  formatVnd,
+  onDeposit,
+  labels,
+}: DepositSummaryCardProps) {
+  return (
+    <GlassCard className={cn("space-y-6")}>
+      <h3 className={cn("text-sm font-black uppercase tracking-widest tn-text-primary")}>
+        {labels.title}
+      </h3>
+      <DepositSummaryBreakdown
+        locale={locale}
+        amountVnd={amountVnd}
+        baseDiamond={baseDiamond}
+        bonusGold={bonusGold}
+        formatVnd={formatVnd}
+        labels={{
+          valueLabel: labels.valueLabel,
+          diamondReceiveLabel: labels.diamondReceiveLabel,
+          promoBonusLabel: labels.promoBonusLabel,
+          totalAssetsLabel: labels.totalAssetsLabel,
+        }}
+      />
+      <DepositOrderState
+        order={order}
+        error={error}
+        labels={{ orderReady: labels.orderReady, payNow: labels.payNow }}
+      />
+      <DepositSubmitAction
+        submitting={submitting}
+        isValid={isValid}
+        submittingLabel={labels.submitting}
+        submitLabel={labels.submit}
+        securityNote={labels.securityNote}
+        onDeposit={onDeposit}
+      />
+    </GlassCard>
+  );
 }
-export { C as DepositSummaryCard };

@@ -1,55 +1,66 @@
-import { jsx as r, jsxs as D } from "react/jsx-runtime";
-import { AlertCircle as u } from "lucide-react";
-import { cn as i } from "@/lib/utils";
-import { CollectionDeckCard as C } from "./CollectionDeckCard";
-import { CollectionEmptyState as y } from "./CollectionEmptyState";
-function N({
-  collection: o,
-  filteredDeck: a,
-  activeFilter: d,
-  error: n,
-  getCardImageUrl: l,
-  getCardName: c,
-  onSelectCard: m,
-  labels: t,
-}) {
-  return n
-    ? D("div", {
-        className: i(
-          "mb-10 p-4 bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-2xl flex items-center gap-3 text-[var(--danger)] text-xs animate-in zoom-in-95",
-        ),
-        children: [
-          r(u, { className: i("w-4 h-4 flex-shrink-0") }),
-          r("p", { className: i("font-medium"), children: n }),
-        ],
-      })
-    : o.length === 0 && d !== "unowned"
-      ? r(y, {
-          title: t.emptyTitle,
-          description: t.emptyDescription,
-          cta: t.emptyCta,
-        })
-      : r("div", {
-          className: i(
-            "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-500",
-          ),
-          children: a.map((e) => {
-            const s = o.find((f) => f.cardId === e.id),
-              p = l(e.id),
-              g = c(e.id) ?? "";
-            return r(
-              C,
-              {
-                deckCard: e,
-                userCard: s,
-                cardImageUrl: p,
-                cardName: g,
-                unknownCardLabel: t.unknownCard,
-                onSelect: m,
-              },
-              e.id,
-            );
-          }),
-        });
+import type { UserCollectionDto } from "@/features/collection/application/actions";
+import type { CollectionFilter } from "@/features/collection/application/useCollectionPage";
+import { CollectionDeckCard } from "@/features/collection/presentation/components/CollectionDeckCard";
+import { CollectionEmptyState } from "@/features/collection/presentation/components/CollectionEmptyState";
+import CollectionDeckError from "@/features/collection/presentation/components/collection-grid/CollectionDeckError";
+import type { TarotCardMeta } from "@/shared/domain/tarotData";
+import { cn } from "@/lib/utils";
+
+interface CollectionDeckGridProps {
+  activeFilter: CollectionFilter;
+  collection: UserCollectionDto[];
+  error: string;
+  filteredDeck: TarotCardMeta[];
+  getCardImageUrl: (cardId: number) => string | undefined;
+  getCardName: (cardId: number) => string | undefined;
+  labels: {
+    emptyCta: string;
+    emptyDescription: string;
+    emptyTitle: string;
+    unknownCard: string;
+  };
+  onSelectCard: (cardId: number) => void;
 }
-export { N as CollectionDeckGrid };
+
+export function CollectionDeckGrid({
+  activeFilter,
+  collection,
+  error,
+  filteredDeck,
+  getCardImageUrl,
+  getCardName,
+  labels,
+  onSelectCard,
+}: CollectionDeckGridProps) {
+  if (error) return <CollectionDeckError error={error} />;
+
+  if (collection.length === 0 && activeFilter !== "unowned") {
+    return (
+      <CollectionEmptyState
+        title={labels.emptyTitle}
+        description={labels.emptyDescription}
+        cta={labels.emptyCta}
+      />
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        "animate-in fade-in slide-in-from-bottom-8 grid grid-cols-2 gap-4 delay-500 duration-1000 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7",
+      )}
+    >
+      {filteredDeck.map((deckCard) => (
+        <CollectionDeckCard
+          key={deckCard.id}
+          deckCard={deckCard}
+          userCard={collection.find((card) => card.cardId === deckCard.id)}
+          cardImageUrl={getCardImageUrl(deckCard.id)}
+          cardName={getCardName(deckCard.id) ?? ""}
+          unknownCardLabel={labels.unknownCard}
+          onSelect={onSelectCard}
+        />
+      ))}
+    </div>
+  );
+}

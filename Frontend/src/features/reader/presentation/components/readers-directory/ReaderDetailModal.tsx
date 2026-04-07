@@ -15,9 +15,9 @@ interface ReaderDetailModalProps {
   readerFallback: string;
   perQuestionSuffix: string;
   startConversationCta: string;
-  statusOnline: string;
-  statusBusy: string;
-  statusOffline: string;
+  online: string;
+  busy: string;
+  offline: string;
  };
 }
 
@@ -47,7 +47,7 @@ export function ReaderDetailModal({
       </div>
       <div className={cn('min-w-0')}>
        <h3 className={cn('text-2xl font-black italic tracking-tight line-clamp-1')}>{reader.displayName || labels.readerFallback}</h3>
-       <div className={cn('mt-1')}><ReaderStatusIndicator status={reader.status} labels={{ online: labels.statusOnline, busy: labels.statusBusy, offline: labels.statusOffline }} /></div>
+       <div className={cn('mt-1')}><ReaderStatusIndicator status={reader.status} labels={{ online: labels.online, busy: labels.busy, offline: labels.offline }} /></div>
       </div>
      </div>
      <p className={cn('text-sm text-[var(--text-secondary)] leading-relaxed')}>{bio}</p>
