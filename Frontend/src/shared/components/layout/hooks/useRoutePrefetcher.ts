@@ -16,11 +16,18 @@ const PREFETCH_ROUTES = [
 ];
 
 const PrefetchDelayMs = 2000;
+const PREFETCH_SESSION_KEY = 'tn-route-prefetch-done-v1';
 
 export function useRoutePrefetcher() {
   const router = useRouter();
 
   useEffect(() => {
+    if (process.env.NODE_ENV !== 'production') return;
+
+    const hasPrefetched = window.sessionStorage.getItem(PREFETCH_SESSION_KEY);
+    if (hasPrefetched === '1') return;
+    window.sessionStorage.setItem(PREFETCH_SESSION_KEY, '1');
+
     const timer = window.setTimeout(() => {
       PREFETCH_ROUTES.forEach((route) => {
         router.prefetch(route);

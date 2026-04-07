@@ -23,18 +23,18 @@ export const useStreakStatus = (enabled: boolean = true) => {
       return result.data;
     },
     enabled: enabled && isAuthenticated,
-    
+
     retry: (failureCount, error) => {
       const message = error instanceof Error ? error.message : '';
       if (message.includes('401') || message.includes('Unauthorized')) {
         return false;
       }
-      return failureCount < 2; 
+      return failureCount < 2;
     },
 
-    staleTime: 60 * 1000,
-    
-    refetchInterval: 5 * 60 * 1000, 
+    staleTime: Infinity,
+
+    refetchOnWindowFocus: false,
   });
 };
 

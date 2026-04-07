@@ -6,21 +6,17 @@ import WalletStoreBridge from "@/features/wallet/presentation/components/WalletS
 import AppQueryProvider from "@/shared/components/common/AppQueryProvider";
 import UserLayout from "@/shared/components/layout/UserLayout";
 import MetadataInitialLoader from "@/shared/components/common/MetadataInitialLoader";
-import { getInitialMetadata } from "@/shared/application/actions/metadata";
 
 interface UserSegmentLayoutProps {
   children: ReactNode;
 }
 
-export default async function UserSegmentLayout({ children }: UserSegmentLayoutProps) {
-  const metadataResult = await getInitialMetadata();
-  const initialMetadata = metadataResult.success ? metadataResult.data : null;
-
+export default function UserSegmentLayout({ children }: UserSegmentLayoutProps) {
   return (
     <AppQueryProvider>
       <AppAuthSessionManager />
       {}
-      <MetadataInitialLoader initialMetadata={initialMetadata} />
+      <MetadataInitialLoader />
       <WalletStoreBridge />
       <AppNavbar />
       <UserLayout>{children}</UserLayout>
