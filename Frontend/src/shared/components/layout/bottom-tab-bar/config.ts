@@ -1,5 +1,6 @@
-import {
- Bell,
+ import {
+  BarChart3,
+  Bell,
  Bookmark,
  Gamepad2,
  Gift,
@@ -45,12 +46,13 @@ export const bottomTabs: BottomTabGroup[] = [
   id: 'tarot',
   labelKey: 'tarot',
   icon: Sparkles,
-  matchPrefixes: ['/reading', '/collection', '/gamification', '/gacha'],
+  matchPrefixes: ['/reading', '/collection', '/gamification', '/leaderboard', '/gacha'],
   subItems: [
    { labelKey: 'readings', href: '/reading', icon: Sparkles, matchPrefixes: ['/reading'] },
    { labelKey: 'collection', href: '/collection', icon: Bookmark, matchPrefixes: ['/collection'] },
    { labelKey: 'history', href: '/reading/history', icon: History, matchPrefixes: ['/reading/history'] },
    { labelKey: 'gamification', href: '/gamification', icon: Gamepad2, matchPrefixes: ['/gamification'] },
+   { labelKey: 'leaderboard', href: '/leaderboard', icon: BarChart3, matchPrefixes: ['/leaderboard'] },
    { labelKey: 'gacha', href: '/gacha', icon: Gift, matchPrefixes: ['/gacha'] },
   ],
  },

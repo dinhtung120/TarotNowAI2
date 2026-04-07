@@ -2,6 +2,8 @@
   "Gamification": {
     "GamificationMetaTitle": "獎勵與排行榜",
     "GamificationMetaDesc": "完成每日占卜任務，收集稱號並攀登 TarotNow AI 排行榜之巔。",
+    "LeaderboardMetaTitle": "排行榜",
+    "LeaderboardMetaDesc": "TarotNow AI 上最出色的塔羅占卜師排行榜。",
     "DailyQuests": "每日任務",
     "CompleteThemBeforeMidnight": "在午夜鐘聲響起前完成任務以獲取獎勵。",
     "FailedToLoadQuests": "無法載入任務列表。請稍後再試。",

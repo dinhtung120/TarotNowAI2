@@ -2,6 +2,8 @@
   "Gamification": {
     "GamificationMetaTitle": "Rewards & Leaderboards",
     "GamificationMetaDesc": "Complete daily reading quests, collect titles and climb the ranks of TarotNow AI.",
+    "LeaderboardMetaTitle": "Leaderboard",
+    "LeaderboardMetaDesc": "Leaderboard of the most talented Tarot Readers on TarotNow AI.",
     "DailyQuests": "Daily Quests",
     "CompleteThemBeforeMidnight": "Complete them before the clock strikes midnight to claim rewards.",
     "FailedToLoadQuests": "Failed to load quests. Please try again later.",

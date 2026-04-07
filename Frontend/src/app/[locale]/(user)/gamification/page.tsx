@@ -1,7 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import AchievementsGrid from "@/features/gamification/components/AchievementsGrid";
 import GamificationStatsBar from "@/features/gamification/components/GamificationStatsBar";
-import LeaderboardTable from "@/features/gamification/components/LeaderboardTable";
 import QuestsPanel from "@/features/gamification/components/QuestsPanel";
 import TitleSelector from "@/features/gamification/components/TitleSelector";
 import { Gamepad2 } from "lucide-react";
@@ -69,8 +68,7 @@ const pageClasses = {
   "text-white",
  ),
  desc: cn("mt-3", "max-w-2xl", "text-lg", "text-slate-400"),
- grid: cn("grid", "grid-cols-3", "gap-8"),
- left: cn("col-span-2", "space-y-8"),
+ contentLayout: cn("flex", "flex-col", "gap-8"),
  sectionCard: cn(
   "rounded-3xl",
   "border",
@@ -79,9 +77,7 @@ const pageClasses = {
   "p-8",
   "shadow-2xl",
   "backdrop-blur-md",
- ),
- right: cn("col-span-1"),
- rightSticky: cn("sticky", "top-8"),
+ )
 };
 
 export default async function GamificationPage() {
@@ -110,26 +106,18 @@ export default async function GamificationPage() {
 
         <GamificationStatsBar />
 
-        <div className={cn(pageClasses.grid)}>
-          <div className={cn(pageClasses.left)}>
-            <section className={cn(pageClasses.sectionCard)}>
-              <QuestsPanel />
-            </section>
+        <div className={cn(pageClasses.contentLayout)}>
+          <section className={cn(pageClasses.sectionCard)}>
+            <QuestsPanel />
+          </section>
 
-            <section>
-              <TitleSelector />
-            </section>
+          <section>
+            <TitleSelector />
+          </section>
 
-            <section className={cn(pageClasses.sectionCard)}>
-              <AchievementsGrid />
-            </section>
-          </div>
-
-          <div className={cn(pageClasses.right)}>
-            <div className={cn(pageClasses.rightSticky)}>
-              <LeaderboardTable />
-            </div>
-          </div>
+          <section className={cn(pageClasses.sectionCard)}>
+            <AchievementsGrid />
+          </section>
         </div>
       </main>
     </div>

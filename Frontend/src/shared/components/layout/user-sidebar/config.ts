@@ -1,5 +1,6 @@
-import {
- Bell,
+ import {
+  BarChart3,
+  Bell,
  Gamepad2,
  Gift,
  History,
@@ -40,6 +41,7 @@ export const userSidebarMenuGroups: UserSidebarMenuGroup[] = [
    { labelKey: 'collection', href: '/collection', icon: LayoutGrid },
    { labelKey: 'history', href: '/reading/history', icon: History },
    { labelKey: 'gamification', href: '/gamification', icon: Gamepad2 },
+   { labelKey: 'leaderboard', href: '/leaderboard', icon: BarChart3 },
    { labelKey: 'gacha', href: '/gacha', icon: Gift },
   ],
  },

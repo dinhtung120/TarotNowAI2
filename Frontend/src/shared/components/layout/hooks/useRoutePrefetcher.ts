@@ -12,6 +12,7 @@ const PREFETCH_ROUTES = [
   '/readers',
   '/collection',
   '/gamification',
+  '/leaderboard',
   '/subscription',
 ];
 

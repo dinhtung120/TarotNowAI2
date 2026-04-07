@@ -2,6 +2,8 @@
   "Gamification": {
     "GamificationMetaTitle": "Phần Thưởng & Xếp Hạng",
     "GamificationMetaDesc": "Hoàn thành các nhiệm vụ bói bài hằng ngày, thu thập danh hiệu và leo lên bảng xếp hạng cao nhất của TarotNow AI.",
+    "LeaderboardMetaTitle": "Bảng Xếp Hạng",
+    "LeaderboardMetaDesc": "Bảng xếp hạng những Tarot Reader xuất sắc nhất trên TarotNow AI.",
     "DailyQuests": "Nhiệm Vụ Hàng Ngày",
     "CompleteThemBeforeMidnight": "Hoàn thành trước khi đồng hồ điểm nửa đêm để nhận thưởng.",
     "FailedToLoadQuests": "Không thể tải danh sách nhiệm vụ. Vui lòng thử lại sau.",
