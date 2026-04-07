@@ -1,36 +1,46 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { useShallow } from "zustand/react/shallow";
 import { useAuthStore } from "@/store/authStore";
 import { useWalletStore } from "@/store/walletStore";
 
 export function useWalletWidgetState() {
-    const t = useTranslations("Wallet");
-    const locale = useLocale();
-    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-    const authUserId = useAuthStore((state) => state.user?.id ?? null);
-    const walletStore = useWalletStore(useShallow((state) => ({ balance: state.balance, isLoading: state.isLoading })));
-    const lastFetchedUserId = useRef<string | null>(null);
+   const t = useTranslations("Wallet");
+   const locale = useLocale();
+   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+   const authUserId = useAuthStore((state) => state.user?.id ?? null);
 
-    useEffect(() => {
-        const store = useWalletStore.getState();
+   const balance = useWalletStore((state) => state.balance);
+   const isLoading = useWalletStore((state) => state.isLoading);
 
-        if (!isAuthenticated || !authUserId) {
-            lastFetchedUserId.current = null;
+   const lastFetchedUserId = useRef<string | null>(null);
+
+   useEffect(() => {
+      const store = useWalletStore.getState();
+
+      if (!isAuthenticated || !authUserId) {
+         lastFetchedUserId.current = null;
+         if (store.balance !== null || store.isLoading) {
             store.resetWallet();
-            return;
-        }
+         }
+         return;
+      }
 
-        if (lastFetchedUserId.current === authUserId) return;
-        lastFetchedUserId.current = authUserId;
-        if (store.balance) return;
+      if (lastFetchedUserId.current === authUserId) return;
+      lastFetchedUserId.current = authUserId;
+      if (store.isLoading) return;
 
-        store.resetWallet();
-        void store.fetchBalance();
-    }, [authUserId, isAuthenticated]);
+      if (store.balance !== null) return;
 
-    return { t, locale, balance: walletStore.balance, isLoading: walletStore.isLoading };
+      void store.fetchBalance();
+   }, [authUserId, isAuthenticated]);
+
+   return useMemo(() => ({
+      t,
+      locale,
+      balance,
+      isLoading
+   }), [t, locale, balance, isLoading]);
 }
 
