@@ -23,7 +23,7 @@ export function AdminReadingsTable({
  getSpreadLabel,
 }: AdminReadingsTableProps) {
  return (
-  <GlassCard className={cn('!p-0 !rounded-[2.5rem] overflow-hidden text-left')}>
+  <GlassCard className={cn('!p-0 !tn-rounded-2_5xl overflow-hidden text-left')}>
    <div className={cn('overflow-x-auto custom-scrollbar')}>
     <table className={cn('w-full text-left')}>
      <AdminReadingsTableHead />

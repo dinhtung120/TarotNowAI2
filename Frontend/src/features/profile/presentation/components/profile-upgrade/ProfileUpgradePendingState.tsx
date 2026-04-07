@@ -13,20 +13,20 @@ export default function ProfileUpgradePendingState({
   return (
     <div
       className={cn(
-        "space-y-2 rounded-xl border border-[var(--warning)]/20 bg-[var(--warning)]/5 p-4",
+        "space-y-2 rounded-xl border tn-border-warning-20 tn-bg-warning-10 p-4",
       )}
     >
       <div className={cn("flex items-center gap-2")}>
-        <Clock className={cn("h-4 w-4 text-[var(--warning)]")} />
+        <Clock className={cn("h-4 w-4 tn-text-warning")} />
         <span
           className={cn(
-            "text-[10px] font-black tracking-widest text-[var(--warning)] uppercase",
+            "tn-text-10 font-black tracking-widest tn-text-warning uppercase",
           )}
         >
           {title}
         </span>
       </div>
-      <p className={cn("text-xs leading-relaxed text-[var(--text-secondary)]")}>
+      <p className={cn("text-xs leading-relaxed tn-text-secondary")}>
         {description}
       </p>
     </div>

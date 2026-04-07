@@ -11,7 +11,7 @@ export function AstralParticles({ particleCount }: AstralParticlesProps) {
    {Array.from({ length: particleCount }).map((_, index) => (
     <div
      key={`astral-particle-${index}`}
-     className={cn("absolute w-[2px] h-[2px] bg-[var(--holo-silver)] rounded-full animate-float opacity-[0.4] shadow-[0_0_10px_var(--c-168-156-255-55)]")}
+     className={cn("absolute tn-size-2px tn-bg-holo-silver rounded-full animate-float tn-opacity-40 tn-shadow-particle")}
      style={getParticleStyle(index)}
     />
    ))}

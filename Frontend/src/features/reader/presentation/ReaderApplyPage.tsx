@@ -5,7 +5,7 @@ import type { FormEvent } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { CheckCircle2, Clock } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { useReaderApplyPage } from '@/features/reader/application/useReaderApplyPage';
 import ReaderApplyFeedbackMessage from '@/features/reader/presentation/components/ReaderApplyFeedbackMessage';
@@ -28,14 +28,14 @@ export default function ReaderApplyPage() {
   const t = useTranslations('ReaderApply');
   const locale = useLocale();
   const { introText, setIntroText, submitting, message, messageType, existingRequest, loading, handleSubmit } = useReaderApplyPage(t);
-  const { handleSubmit: handleValidatedSubmit, setValue, watch } = useForm<ReaderApplyFormValues>({
+  const { handleSubmit: handleValidatedSubmit, setValue, control } = useForm<ReaderApplyFormValues>({
     resolver: zodResolver(readerApplyFormSchema),
     defaultValues: {
       introText,
     },
   });
 
-  const watchedIntroText = watch('introText') ?? '';
+  const watchedIntroText = useWatch({ control, name: 'introText' }) ?? '';
 
   useEffect(() => {
     setValue('introText', introText, { shouldDirty: false, shouldValidate: false });
@@ -75,7 +75,7 @@ export default function ReaderApplyPage() {
   const wasRejected = existingRequest?.hasRequest && existingRequest.status === 'rejected';
 
   return (
-    <div className={cn('mx-auto max-w-2xl animate-in fade-in slide-in-from-bottom-8 space-y-10 px-4 py-20 duration-1000 sm:px-6')}>
+    <div className={cn('mx-auto max-w-2xl animate-in fade-in slide-in-from-bottom-8 space-y-10 tn-page-x py-20 duration-1000')}>
       <ReaderApplyHeader />
       {wasRejected ? <ReaderApplyRejectedNotice adminNote={existingRequest?.adminNote} /> : null}
       <form onSubmit={submitWithValidation} className={cn('space-y-8')}>

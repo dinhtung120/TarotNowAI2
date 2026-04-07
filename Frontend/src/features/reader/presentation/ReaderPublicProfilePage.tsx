@@ -31,7 +31,7 @@ export default function ReaderProfilePage() {
   ) || t('directory.bio_fallback');
 
  return (
-  <div className={cn('max-w-3xl mx-auto px-4 sm:px-6 pt-8 pb-32 space-y-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000')}>
+  <div className={cn('max-w-3xl mx-auto tn-page-x pt-8 pb-32 space-y-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000')}>
    <ReaderProfileBackButton label={t('profile.back_to_list')} onBack={() => router.push('/readers')} />
    <ReaderProfileCard
     bio={bio}

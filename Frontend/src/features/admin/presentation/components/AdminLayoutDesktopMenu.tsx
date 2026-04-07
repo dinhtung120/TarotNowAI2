@@ -26,18 +26,18 @@ export function AdminLayoutDesktopMenu({
  pathname,
 }: AdminLayoutDesktopMenuProps) {
  return (
-  <div ref={desktopSidebarRef} className={cn('hidden lg:block fixed top-3 left-4 z-50')}>
+  <div ref={desktopSidebarRef} className={cn('tn-admin-desktop-anchor fixed top-3 left-4 z-50')}>
    <button
     type="button"
     onClick={onToggle}
-    className={cn('flex items-center justify-center w-12 h-12 rounded-2xl bg-[var(--bg-glass)]/80 border border-[var(--border-subtle)] backdrop-blur-md shadow-lg transition-all duration-300 hover:bg-[var(--bg-elevated)] hover:border-[var(--border-hover)] text-[var(--text-secondary)] hover:text-[var(--text-ink)]')}
+    className={cn('flex items-center justify-center w-12 h-12 rounded-2xl border tn-admin-desktop-toggle backdrop-blur-md shadow-lg transition-all duration-300')}
     aria-label="Toggle Admin Menu"
    >
     {desktopNavOpen ? <X className={cn('w-6 h-6 transition-transform duration-300 rotate-90')} /> : <Menu className={cn('w-6 h-6 transition-transform duration-300')} />}
    </button>
    <aside
     className={cn(
-     'absolute top-14 left-0 w-[19rem] bg-[var(--bg-overlay)]/95 border border-[var(--border-subtle)] rounded-3xl flex-col backdrop-blur-2xl shadow-[var(--glow-purple-lg)] transition-all duration-300 origin-top-left overflow-hidden',
+     'absolute top-14 left-0 tn-admin-desktop-aside border rounded-3xl flex-col backdrop-blur-2xl transition-all duration-300 origin-top-left overflow-hidden',
      desktopNavOpen ? 'flex opacity-100 scale-100 visible' : 'opacity-0 scale-95 invisible pointer-events-none'
     )}
    >

@@ -29,7 +29,7 @@ export default function ChatActionMenuDropdown({
   return (
     <div
       className={cn(
-        "absolute right-0 bottom-12 z-20 w-52 space-y-1 rounded-xl border border-white/10 bg-[#121212] p-1 shadow-xl",
+        "absolute right-0 bottom-12 z-20 w-52 space-y-1 rounded-xl border border-white/10 tn-chat-action-menu-shell p-1 shadow-xl",
       )}
     >
       {!awaitingCompleteResponse && (
@@ -39,7 +39,7 @@ export default function ChatActionMenuDropdown({
       )}
 
       <ChatActionMenuItemButton
-        className={cn("text-[var(--danger)]")}
+        className={cn("tn-text-danger")}
         onClick={() => {
           onClose();
           onOpenDispute();
@@ -50,7 +50,7 @@ export default function ChatActionMenuDropdown({
 
       {isUserRole === false && (
         <ChatActionMenuItemButton
-          className={cn("flex items-center gap-2 text-[var(--warning)]")}
+          className={cn("flex items-center gap-2 tn-text-warning")}
           onClick={() => {
             onClose();
             onOpenPaymentOffer();

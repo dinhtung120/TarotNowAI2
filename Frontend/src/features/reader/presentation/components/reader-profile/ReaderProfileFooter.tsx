@@ -23,8 +23,8 @@ export function ReaderProfileFooter({
     {startingChat ? <Loader2 className={cn('w-4 h-4 animate-spin mr-2')} /> : <MessageCircle className={cn('w-4 h-4 mr-2')} />}
     {ctaLabel}
    </Button>
-   <div className={cn('inline-flex items-center gap-2 px-4 py-2 rounded-full tn-panel text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] shadow-inner')}>
-    <Clock className={cn('w-3 h-3 text-[var(--text-tertiary)]')} />
+   <div className={cn('inline-flex items-center gap-2 px-4 py-2 rounded-full tn-panel tn-text-10 font-black uppercase tn-tracking-02 tn-text-tertiary shadow-inner')}>
+    <Clock className={cn('w-3 h-3 tn-text-tertiary')} />
     {memberSinceLabel}
    </div>
   </div>

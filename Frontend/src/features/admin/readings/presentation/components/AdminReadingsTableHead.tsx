@@ -9,19 +9,19 @@ export function AdminReadingsTableHead() {
  return (
   <thead>
    <tr className={cn('border-b tn-border-soft tn-surface')}>
-    <th className={cn('px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-left')}>
+    <th className={cn('px-8 py-6 tn-text-overline tn-text-tertiary text-left')}>
      {t('readings.table.heading_timeline')}
     </th>
-    <th className={cn('px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-left')}>
+    <th className={cn('px-8 py-6 tn-text-overline tn-text-tertiary text-left')}>
      {t('readings.table.heading_user')}
     </th>
-    <th className={cn('px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-left')}>
+    <th className={cn('px-8 py-6 tn-text-overline tn-text-tertiary text-left')}>
      {t('readings.table.heading_spread')}
     </th>
-    <th className={cn('px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-left')}>
+    <th className={cn('px-8 py-6 tn-text-overline tn-text-tertiary text-left')}>
      {t('readings.table.heading_question')}
     </th>
-    <th className={cn('px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-left')}>
+    <th className={cn('px-8 py-6 tn-text-overline tn-text-tertiary text-left')}>
      {t('readings.table.heading_status')}
     </th>
    </tr>

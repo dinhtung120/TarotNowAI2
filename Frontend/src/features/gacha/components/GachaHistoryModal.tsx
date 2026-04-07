@@ -2,6 +2,7 @@ import { Award, Clock, Coins, Diamond, Sparkles } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import type { GachaHistoryItemDto } from "@/features/gacha/gacha.types";
 import { useGachaHistory } from "@/features/gacha/hooks/useGacha";
+import { cn } from "@/lib/utils";
 import Badge from "@/shared/components/ui/Badge";
 import Modal from "@/shared/components/ui/Modal";
 import { formatDateTime } from "@/shared/utils/format/formatDateTime";
@@ -12,10 +13,10 @@ interface GachaHistoryModalProps {
 }
 
 function HistoryTypeIcon({ type }: { type: string }) {
- if (type === "diamond") return <Diamond className="w-4 h-4 text-cyan-400" />;
- if (type === "gold") return <Coins className="w-4 h-4 text-yellow-400" />;
- if (type === "title") return <Award className="w-4 h-4 text-rose-400" />;
- return <Sparkles className="w-4 h-4" />;
+ if (type === "diamond") return <Diamond className={cn("h-4", "w-4", "text-cyan-400")} />;
+ if (type === "gold") return <Coins className={cn("h-4", "w-4", "text-yellow-400")} />;
+ if (type === "title") return <Award className={cn("h-4", "w-4", "text-rose-400")} />;
+ return <Sparkles className={cn("h-4", "w-4")} />;
 }
 
 export function GachaHistoryModal({ isOpen, onClose }: GachaHistoryModalProps) {
@@ -26,7 +27,68 @@ export function GachaHistoryModal({ isOpen, onClose }: GachaHistoryModalProps) {
 
  return (
   <Modal isOpen={isOpen} onClose={onClose} title={t("historyTitle")} size="lg">
-   <div className="mt-2">{isLoading ? <div className="space-y-3">{[1, 2, 3, 4, 5].map((index) => <div key={index} className="h-16 bg-stone-800/50 rounded-2xl animate-pulse" />)}</div> : isError ? <div className="text-center py-12 text-red-400 border border-dashed border-red-900/30 bg-red-950/10 rounded-3xl"><p className="font-bold mb-1 italic">{error instanceof Error ? error.message : t("errorLoadingHistory")}</p></div> : !history?.length ? <div className="text-center py-12 text-stone-500 border border-dashed border-stone-800 rounded-3xl">{t("emptyHistory")}</div> : <div className="h-[450px] overflow-y-auto pr-2 custom-scrollbar space-y-3">{history.map((log: GachaHistoryItemDto, index: number) => <div key={`${log.createdAt}-${index}`} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-2xl bg-stone-900/50 border border-stone-800 hover:border-stone-700 transition-colors"><div className="flex items-center gap-4"><Badge variant={rarityVariant(log.rarity)}>{log.rarity}</Badge><div><div className="flex items-center gap-2"><HistoryTypeIcon type={log.rewardType} /><span className="font-black text-[11px] uppercase tracking-widest text-stone-200">{log.rewardValue}</span></div>{log.wasPityTriggered ? <span className="text-[9px] font-black uppercase text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full mt-1 inline-block border border-amber-500/20">Pity Triggered</span> : null}</div></div><div className="flex sm:flex-col items-center sm:items-end gap-2 sm:gap-1 mt-3 sm:mt-0"><span className="flex items-center gap-1 text-amber-400/80 text-[10px] font-bold">-{log.spentDiamond} <Diamond className="w-3 h-3" /></span><span className="flex items-center gap-1 text-[10px] text-stone-500 font-medium"><Clock className="w-3 h-3" />{formatDateTime(new Date(log.createdAt), locale)}</span></div></div>)}</div>}</div>
+   <div className={cn("mt-2")}>
+    {isLoading ? (
+     <div className={cn("space-y-3")}>
+      {[1, 2, 3, 4, 5].map((index) => (
+       <div key={index} className={cn("h-16", "animate-pulse", "rounded-2xl", "bg-stone-800/50")} />
+      ))}
+     </div>
+    ) : isError ? (
+     <div className={cn("rounded-3xl", "border", "border-dashed", "border-red-900/30", "bg-red-950/10", "py-12", "text-center", "text-red-400")}>
+      <p className={cn("mb-1", "font-bold", "italic")}>{error instanceof Error ? error.message : t("errorLoadingHistory")}</p>
+     </div>
+    ) : !history?.length ? (
+     <div className={cn("rounded-3xl", "border", "border-dashed", "border-stone-800", "py-12", "text-center", "text-stone-500")}>
+      {t("emptyHistory")}
+     </div>
+    ) : (
+     <div className={cn("h-96", "space-y-3", "overflow-y-auto", "pr-2", "custom-scrollbar")}>
+      {history.map((log: GachaHistoryItemDto, index: number) => (
+       <div
+        key={`${log.createdAt}-${index}`}
+        className={cn(
+         "flex",
+         "items-center",
+         "justify-between",
+         "gap-3",
+         "rounded-2xl",
+         "border",
+         "border-stone-800",
+         "bg-stone-900/50",
+         "p-4",
+         "transition-colors",
+         "hover:border-stone-700",
+        )}
+       >
+        <div className={cn("flex", "items-center", "gap-4")}>
+         <Badge variant={rarityVariant(log.rarity)}>{log.rarity}</Badge>
+         <div>
+          <div className={cn("flex", "items-center", "gap-2")}>
+           <HistoryTypeIcon type={log.rewardType} />
+           <span className={cn("text-xs", "font-black", "uppercase", "tracking-widest", "text-stone-200")}>{log.rewardValue}</span>
+          </div>
+          {log.wasPityTriggered ? (
+           <span className={cn("mt-1", "inline-block", "rounded-full", "border", "border-amber-500/20", "bg-amber-500/10", "px-2", "py-0.5", "text-xs", "font-black", "uppercase", "text-amber-500")}>
+            Pity Triggered
+           </span>
+          ) : null}
+         </div>
+        </div>
+        <div className={cn("mt-0", "flex", "flex-col", "items-end", "gap-1")}>
+         <span className={cn("flex", "items-center", "gap-1", "text-xs", "font-bold", "text-amber-400/80")}>
+          -{log.spentDiamond} <Diamond className={cn("h-3", "w-3")} />
+         </span>
+         <span className={cn("flex", "items-center", "gap-1", "text-xs", "font-medium", "text-stone-500")}>
+          <Clock className={cn("h-3", "w-3")} />
+          {formatDateTime(new Date(log.createdAt), locale)}
+         </span>
+        </div>
+       </div>
+      ))}
+     </div>
+    )}
+   </div>
   </Modal>
  );
 }

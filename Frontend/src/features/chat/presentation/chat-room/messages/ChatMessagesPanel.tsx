@@ -23,7 +23,7 @@ export default function ChatMessagesPanel({
 }: ChatMessagesPanelProps) {
   return (
     <div ref={scrollRef} className={cn('flex-1 space-y-4 overflow-y-auto bg-black/5 px-3 py-3')}>
-      {loading ? <div className={cn('flex h-full items-center justify-center')}><Loader2 className={cn('h-5 w-5 animate-spin text-[var(--text-secondary)]')} /></div> : null}
+      {loading ? <div className={cn('flex h-full items-center justify-center')}><Loader2 className={cn('h-5 w-5 animate-spin tn-text-secondary')} /></div> : null}
 
       {!loading && hasMore ? (
         <div className={cn('flex justify-center py-2')}>
@@ -31,7 +31,7 @@ export default function ChatMessagesPanel({
             type="button"
             onClick={() => void loadMore()}
             disabled={loadingMore}
-            className={cn('rounded-full bg-white/5 px-3 py-1 text-xs hover:bg-white/10')}
+            className={cn('rounded-full tn-chat-load-more-btn px-3 py-1 text-xs')}
           >
             {loadingMore ? 'Đang tải...' : 'Tải tin nhắn cũ'}
           </button>
@@ -53,7 +53,7 @@ export default function ChatMessagesPanel({
         />
       ))}
 
-      {remoteTyping ? <div className={cn('px-2 text-xs text-[var(--text-secondary)]')}>Đối phương đang nhập...</div> : null}
+      {remoteTyping ? <div className={cn('px-2 text-xs tn-text-secondary')}>Đối phương đang nhập...</div> : null}
       <div ref={messagesEndRef} />
     </div>
   );

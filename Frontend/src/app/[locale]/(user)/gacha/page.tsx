@@ -5,36 +5,101 @@ import { GachaBannerCard } from "@/features/gacha/components/GachaBannerCard";
 import { GachaHistoryModal } from "@/features/gacha/components/GachaHistoryModal";
 import { GachaSpinReveal } from "@/features/gacha/components/GachaSpinReveal";
 import { useGachaPageState } from "@/features/gacha/presentation/hooks/useGachaPageState";
+import { cn } from "@/lib/utils";
 import Button from "@/shared/components/ui/Button";
+
+const pageClasses = {
+ container: cn("container", "mx-auto", "flex", "max-w-5xl", "flex-col", "items-center", "px-4", "py-8"),
+ toolbar: cn("mb-4", "flex", "w-full", "justify-end"),
+ hero: cn("mb-12", "space-y-4", "text-center"),
+ heroTitle: cn(
+  "flex",
+  "items-center",
+  "justify-center",
+  "gap-3",
+  "bg-gradient-to-r",
+  "from-amber-200",
+  "via-yellow-400",
+  "to-orange-500",
+  "bg-clip-text",
+  "text-5xl",
+  "font-black",
+  "text-transparent",
+  "drop-shadow-sm",
+ ),
+ heroIconLeft: cn("h-8", "w-8", "text-yellow-400"),
+ heroIconRight: cn("h-8", "w-8", "text-orange-400"),
+ heroSubtitle: cn("mx-auto", "max-w-xl", "text-lg", "text-stone-400"),
+ grid: cn("flex", "w-full", "flex-wrap", "justify-center", "gap-8"),
+ loadingCard: cn(
+  "flex",
+  "h-96",
+  "w-full",
+  "max-w-md",
+  "items-center",
+  "justify-center",
+  "rounded-3xl",
+  "border",
+  "border-stone-800",
+  "bg-stone-900/50",
+  "animate-pulse",
+ ),
+ loadingText: cn("italic", "text-stone-600"),
+ errorCard: cn(
+  "w-full",
+  "max-w-2xl",
+  "rounded-2xl",
+  "border",
+  "border-dashed",
+  "border-red-900/30",
+  "bg-red-950/20",
+  "p-12",
+  "text-center",
+  "text-red-400",
+ ),
+ errorTitle: cn("mb-2", "font-bold"),
+ errorBody: cn("mb-4", "text-sm", "opacity-80"),
+ emptyCard: cn(
+  "w-full",
+  "max-w-2xl",
+  "rounded-2xl",
+  "border",
+  "border-dashed",
+  "border-stone-800",
+  "p-12",
+  "text-center",
+  "text-stone-500",
+ ),
+};
 
 export default function GachaPage() {
  const vm = useGachaPageState();
 
  return (
-  <div className="container max-w-5xl mx-auto py-8 px-4 flex flex-col items-center">
-   <div className="w-full flex justify-end mb-4">
-    <Button variant="secondary" className="gap-2" onClick={vm.openHistory}>
-     <History className="w-4 h-4" />
+  <div className={cn(pageClasses.container)}>
+   <div className={cn(pageClasses.toolbar)}>
+    <Button variant="secondary" className={cn("gap-2")} onClick={vm.openHistory}>
+     <History className={cn("h-4", "w-4")} />
      {vm.t("historyTitle")}
     </Button>
    </div>
-   <div className="text-center mb-12 space-y-4">
-    <h1 className="text-4xl md:text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-yellow-400 to-orange-500 drop-shadow-sm flex items-center justify-center gap-3">
-     <Sparkles className="w-8 h-8 text-yellow-400" />
+   <div className={cn(pageClasses.hero)}>
+    <h1 className={cn(pageClasses.heroTitle)}>
+     <Sparkles className={cn(pageClasses.heroIconLeft)} />
      {vm.t("title")}
-     <Sparkles className="w-8 h-8 text-orange-400" />
+     <Sparkles className={cn(pageClasses.heroIconRight)} />
     </h1>
-    <p className="text-lg text-stone-400 max-w-xl mx-auto">{vm.t("subtitle")}</p>
+    <p className={cn(pageClasses.heroSubtitle)}>{vm.t("subtitle")}</p>
    </div>
-   <div className="w-full flex flex-wrap justify-center gap-8">
+   <div className={cn(pageClasses.grid)}>
     {vm.isLoading ? (
-     <div className="w-full max-w-md h-[400px] border border-stone-800 bg-stone-900/50 rounded-3xl animate-pulse flex items-center justify-center">
-      <span className="text-stone-600 italic">Đang tải dữ liệu vòng quay...</span>
+     <div className={cn(pageClasses.loadingCard)}>
+      <span className={cn(pageClasses.loadingText)}>Đang tải dữ liệu vòng quay...</span>
      </div>
     ) : vm.isError ? (
-     <div className="text-center text-red-400 p-12 border border-dashed border-red-900/30 bg-red-950/20 rounded-2xl w-full max-w-2xl">
-      <p className="font-bold mb-2">Opps! Đã có lỗi xảy ra:</p>
-      <p className="text-sm opacity-80 mb-4">{vm.error?.message ?? "Có lỗi không xác định"}</p>
+     <div className={cn(pageClasses.errorCard)}>
+      <p className={cn(pageClasses.errorTitle)}>Opps! Đã có lỗi xảy ra:</p>
+      <p className={cn(pageClasses.errorBody)}>{vm.error?.message ?? "Có lỗi không xác định"}</p>
       <Button variant="secondary" size="sm" onClick={vm.retryLoad}>
        Thử lại
       </Button>
@@ -48,10 +113,10 @@ export default function GachaPage() {
        isSpinning={vm.spinMutation.isPending && vm.spinMutation.variables?.bannerCode === banner.code}
        currentPity={vm.optimisticPity[banner.code] ?? banner.userCurrentPity ?? 0}
        hardPityCount={90}
-      />
+     />
      ))
     ) : (
-     <div className="text-center text-stone-500 p-12 border border-dashed border-stone-800 rounded-2xl w-full max-w-2xl">
+     <div className={cn(pageClasses.emptyCard)}>
       {vm.t("noActiveBanners")}
      </div>
     )}

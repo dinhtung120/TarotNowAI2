@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface FooterSocialItem {
  icon: LucideIcon;
@@ -13,15 +14,15 @@ interface FooterSocialRowProps {
 
 export function FooterSocialRow({ items, copyright }: FooterSocialRowProps) {
  return (
-  <div className="flex flex-col items-center gap-3 pt-2">
-   <div className="flex gap-3">
-    {items.map(({ icon: Icon, label, href }) => (
-     <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} className="w-11 h-11 rounded-full border border-[var(--border-default)] bg-[var(--bg-glass)] hover:border-[var(--border-hover)] hover:shadow-[var(--glow-purple-sm)] transition-all flex items-center justify-center cursor-pointer text-[var(--text-secondary)] hover:text-[var(--text-ink)]">
-      <Icon className="w-3.5 h-3.5" />
+  <div className={cn("flex", "flex-col", "items-center", "gap-3", "pt-2")}>
+   <div className={cn("flex", "gap-3")}>
+   {items.map(({ icon: Icon, label, href }) => (
+     <a key={label} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} title={label} className={cn("flex", "h-11", "w-11", "cursor-pointer", "items-center", "justify-center", "rounded-full", "border", "border-slate-700", "bg-slate-900/60", "text-slate-400", "transition-all")}>
+      <Icon className={cn("h-4", "w-4")} />
      </a>
     ))}
    </div>
-   <p className="text-[8px] text-[var(--text-muted)] font-black tracking-[0.2em] uppercase leading-tight text-center">{copyright}</p>
+   <p className={cn("text-center", "tn-text-8", "font-black", "uppercase", "leading-tight", "tn-tracking-02", "text-slate-400")}>{copyright}</p>
   </div>
  );
 }

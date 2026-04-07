@@ -13,7 +13,7 @@ export default function LocaleError({ error, reset }: LocaleErrorProps) {
  useErrorBoundaryLogger('LocaleErrorBoundary', error);
 
  return (
-  <div className={cn("mx-auto flex min-h-[60vh] max-w-2xl flex-col items-center justify-center gap-6 px-6 text-center")}>
+  <div className={cn("mx-auto flex tn-min-h-60vh max-w-2xl flex-col items-center justify-center gap-6 px-6 text-center")}>
    <h1 className={cn("text-2xl font-bold tn-text-primary")}>Something went wrong</h1>
    <p className={cn("tn-text-secondary")}>
     We could not load this page right now. Please retry or return to the homepage.
@@ -28,7 +28,7 @@ export default function LocaleError({ error, reset }: LocaleErrorProps) {
     </button>
     <Link
      href="/"
-     className={cn("rounded-xl border px-4 py-2 text-sm font-semibold tn-border tn-text-secondary hover:tn-text-primary")}
+     className={cn("rounded-xl border px-4 py-2 text-sm font-semibold tn-border tn-text-secondary tn-hover-text-primary")}
     >
      Back to home
     </Link>

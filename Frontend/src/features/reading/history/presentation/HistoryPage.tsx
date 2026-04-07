@@ -2,6 +2,7 @@
 
 import { useRouter } from "@/i18n/routing";
 import { useLocale, useTranslations } from "next-intl";
+import { cn } from "@/lib/utils";
 import { useHistorySessionsPage } from "@/features/reading/history/application/useHistorySessionsPage";
 import { useAuthGuard } from "@/shared/application/hooks/useAuthGuard";
 import { useAuthStore } from "@/store/authStore";
@@ -26,7 +27,7 @@ export default function HistoryPage() {
  const isEmpty = !state.isLoading && state.historyData?.items.length === 0;
 
  return (
-  <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 pb-32 font-sans">
+  <div className={cn("max-w-5xl", "mx-auto", "tn-page-x", "pt-8", "pb-32", "font-sans")}>
    <HistoryPageHeader title={t("title")} subtitle={t("subtitle")} tag={t("tag")} filterType={state.filterType} filterDate={state.filterDate} labels={{ all: t("all_types"), daily: t("spread_daily"), spread3: t("spread_3"), spread5: t("spread_5"), spread10: t("spread_10") }} onFilterTypeChange={state.setFilterType} onFilterDateChange={state.setFilterDate} />
    {state.error ? <HistoryErrorBanner message={state.error} /> : null}
    {state.isLoading ? <HistoryLoadingGrid /> : null}

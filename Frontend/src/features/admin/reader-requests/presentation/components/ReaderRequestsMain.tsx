@@ -24,7 +24,7 @@ export function ReaderRequestsMain(props: ReaderRequestsMainProps) {
  };
 
  return (
-  <div className={cn('max-w-5xl mx-auto px-4 sm:px-6 py-16 space-y-8 animate-in fade-in duration-700')}>
+  <div className={cn('max-w-5xl mx-auto tn-page-x py-16 space-y-8 animate-in fade-in duration-700')}>
    <ReaderRequestsHeader totalCount={props.totalCount} labels={{ tag: props.t('reader_requests.header.tag'), title: props.t('reader_requests.header.title'), subtitle: props.t('reader_requests.header.subtitle'), totalLabel: props.t('reader_requests.summary.total_label') }} />
    <ReaderRequestsFilterTabs value={props.statusFilter} pendingLabel={props.t('reader_requests.filters.pending')} approvedLabel={props.t('reader_requests.filters.approved')} rejectedLabel={props.t('reader_requests.filters.rejected')} allLabel={props.t('reader_requests.filters.all')} onChange={(value) => { props.setStatusFilter(value); props.setPage(1); }} />
    <ReaderRequestsContent adminNote={props.adminNote} emptyLabel={props.t('reader_requests.states.empty')} labels={labels} loading={props.loading} locale={props.locale} onAdminNoteChange={props.setAdminNote} onApprove={(requestId) => props.handleProcess(requestId, 'approve')} onReject={(requestId) => props.handleProcess(requestId, 'reject')} onSelectRequest={props.setSelectedRequest} page={props.page} paginationLabel={props.t('reader_requests.pagination.summary', { page: props.page, total: props.totalPages })} processingId={props.processing} requests={props.requests} selectedRequestId={props.selectedRequest?.id ?? null} setPage={props.setPage} totalPages={props.totalPages} />

@@ -26,7 +26,7 @@ interface DepositPageLeftColumnProps {
 
 export function DepositPageLeftColumn(props: DepositPageLeftColumnProps) {
  return (
-  <div className={cn('lg:col-span-7 space-y-6')}>
+  <div className={cn('tn-col-span-7-lg space-y-6')}>
    <DepositBalanceCard
     balance={props.balance}
     locale={props.locale}

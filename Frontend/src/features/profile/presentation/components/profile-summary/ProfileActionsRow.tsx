@@ -18,14 +18,14 @@ export function ProfileActionsRow({
  onOpenAdminPortal,
 }: ProfileActionsRowProps) {
  return (
-  <div className={cn('flex flex-col sm:flex-row gap-3 pt-2')}>
+  <div className={cn('tn-flex-col-row-sm gap-3 pt-2')}>
    {isAdmin ? (
     <button
      type="button"
      onClick={onOpenAdminPortal}
-     className={cn('flex-1 group flex justify-center items-center gap-2.5 bg-[var(--purple-accent)]/10 hover:bg-[var(--purple-accent)]/20 border border-[var(--purple-accent)]/30 text-[var(--purple-accent)] px-5 py-2.5 min-h-11 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95')}
+     className={cn('flex-1 group flex justify-center items-center gap-2.5 tn-admin-portal-btn border px-5 py-2.5 min-h-11 rounded-xl tn-text-10 font-black uppercase tracking-widest')}
     >
-     <ShieldCheck className={cn('w-3.5 h-3.5 transition-transform group-hover:rotate-12')} />
+     <ShieldCheck className={cn('w-3.5 h-3.5 tn-admin-portal-icon')} />
      {adminPortalLabel}
     </button>
    ) : null}

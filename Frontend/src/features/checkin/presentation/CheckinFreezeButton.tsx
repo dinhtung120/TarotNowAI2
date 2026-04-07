@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+
 interface CheckinFreezeButtonProps {
   preBreakStreak: number;
   onClick: () => void;
@@ -9,12 +11,29 @@ export default function CheckinFreezeButton({
 }: CheckinFreezeButtonProps) {
   return (
     <button
-      className="font-inter flex items-center gap-1.5 self-start rounded-md border border-cyan-800/50 bg-cyan-950/40 px-3 py-1.5 text-xs font-medium text-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.15)] transition-colors hover:text-cyan-300"
+      className={cn(
+        "font-inter",
+        "flex",
+        "self-start",
+        "items-center",
+        "gap-1.5",
+        "rounded-md",
+        "border",
+        "border-cyan-800/50",
+        "bg-cyan-950/40",
+        "px-3",
+        "py-1.5",
+        "text-xs",
+        "font-medium",
+        "text-cyan-400",
+        "shadow-lg",
+        "transition-colors",
+      )}
       type="button"
       onClick={onClick}
     >
       <svg
-        className="h-3.5 w-3.5"
+        className={cn("h-3.5", "w-3.5")}
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"

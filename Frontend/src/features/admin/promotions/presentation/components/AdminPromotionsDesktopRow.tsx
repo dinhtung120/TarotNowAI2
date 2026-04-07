@@ -26,19 +26,19 @@ export function AdminPromotionsDesktopRow({
  const t = useTranslations('Admin');
 
  return (
-  <tr className={cn('group/row hover:tn-surface transition-colors')}>
+  <tr className={cn('group/row tn-row-hover-surface transition-colors')}>
    <td className={cn('px-8 py-6')}>
     <div className={cn('flex items-center gap-4')}>
-     <div className={cn('w-10 h-10 rounded-xl tn-panel-overlay flex items-center justify-center shadow-inner group-hover/row:scale-110 transition-transform')}>
-      <span className={cn('text-[12px] font-black text-[var(--text-secondary)]')}>₫</span>
+     <div className={cn('w-10 h-10 rounded-xl tn-panel-overlay flex items-center justify-center shadow-inner transition-transform')}>
+      <span className={cn('text-xs font-black tn-text-secondary')}>₫</span>
      </div>
-     <div className={cn('text-[11px] font-black tn-text-primary uppercase tracking-tighter drop-shadow-sm')}>
+     <div className={cn('tn-text-11 font-black tn-text-primary uppercase tracking-tighter drop-shadow-sm')}>
       {t('promotions.row.condition_from', { amount: formatMoney(promotion.minAmountVnd) })}
      </div>
     </div>
    </td>
    <td className={cn('px-8 py-6')}>
-    <div className={cn('flex items-center gap-2 text-sm font-black text-[var(--warning)] italic drop-shadow-sm')}>
+    <div className={cn('flex items-center gap-2 text-sm font-black tn-text-warning italic drop-shadow-sm')}>
      <Coins className={cn('w-4 h-4')} />+{promotion.bonusDiamond.toLocaleString(locale)}
     </div>
    </td>
@@ -49,9 +49,9 @@ export function AdminPromotionsDesktopRow({
     <button
      type="button"
      onClick={() => onDelete(promotion.id)}
-     className={cn('p-3 min-h-11 min-w-11 rounded-xl text-[var(--text-secondary)] tn-panel-soft hover:tn-text-primary hover:bg-[var(--danger)] hover:border-transparent transition-all shadow-sm group')}
+     className={cn('tn-admin-promo-delete-btn p-3 min-h-11 min-w-11 rounded-xl tn-text-secondary tn-panel-soft transition-all shadow-sm group')}
     >
-     <Trash2 className={cn('w-4 h-4 group-hover:scale-110 transition-transform')} />
+     <Trash2 className={cn('tn-group-scale-110 w-4 h-4 transition-transform')} />
     </button>
    </td>
   </tr>

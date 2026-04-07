@@ -12,16 +12,16 @@ function AdminPromotionsTableHead() {
  return (
   <thead>
    <tr className={cn('border-b tn-border-soft tn-surface')}>
-    <th className={cn('px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]')}>
+    <th className={cn('px-8 py-6 tn-text-overline tn-text-tertiary')}>
      {t('promotions.table.heading_condition')}
     </th>
-    <th className={cn('px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]')}>
+    <th className={cn('px-8 py-6 tn-text-overline tn-text-tertiary')}>
      {t('promotions.table.heading_reward')}
     </th>
-    <th className={cn('px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-center')}>
+    <th className={cn('px-8 py-6 tn-text-overline tn-text-tertiary text-center')}>
      {t('promotions.table.heading_status')}
     </th>
-    <th className={cn('px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-right')}>
+    <th className={cn('px-8 py-6 tn-text-overline tn-text-tertiary text-right')}>
      {t('promotions.table.heading_commands')}
     </th>
    </tr>
@@ -39,7 +39,7 @@ export function AdminPromotionsDesktopTable({
  onDelete,
 }: AdminPromotionsCommonProps) {
  return (
-  <div className={cn('hidden md:block overflow-x-auto custom-scrollbar')}>
+  <div className={cn('tn-hide-show-md-block overflow-x-auto custom-scrollbar')}>
    <table className={cn('w-full text-left')}>
     <AdminPromotionsTableHead />
     <tbody className={cn('divide-y divide-white/5')}>

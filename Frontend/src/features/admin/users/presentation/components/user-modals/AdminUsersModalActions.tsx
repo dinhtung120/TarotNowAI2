@@ -24,12 +24,12 @@ export function AdminUsersModalActions({
 }: AdminUsersModalActionsProps) {
  return (
   <div className={cn('flex gap-4 p-8 pt-0')}>
-   <Button variant="secondary" onClick={onCancel} disabled={isLoading} className={cn('flex-1 py-5 shadow-sm')}>
-    {cancelLabel}
-   </Button>
-   <Button variant="primary" onClick={onConfirm} disabled={isLoading} className={cn('flex-1 py-5 shadow-[0_0_20px_var(--c-168-85-247-30)] hover:shadow-[0_0_30px_var(--c-168-85-247-50)]')}>
-    {isLoading ? <Loader2 className={cn('w-5 h-5 animate-spin mx-auto')} /> : <span className={cn('flex items-center justify-center gap-2')}>{confirmLabel} <ConfirmIcon className={cn('w-4 h-4 ml-1')} /></span>}
-   </Button>
+  <Button variant="secondary" onClick={onCancel} disabled={isLoading} className={cn('flex-1 py-5 shadow-sm')}>
+   {cancelLabel}
+  </Button>
+  <Button variant="primary" onClick={onConfirm} disabled={isLoading} className={cn('flex-1 py-5 tn-btn-primary-shadow')}>
+   {isLoading ? <Loader2 className={cn('w-5 h-5 animate-spin mx-auto')} /> : <span className={cn('flex items-center justify-center gap-2')}>{confirmLabel} <ConfirmIcon className={cn('w-4 h-4 ml-1')} /></span>}
+  </Button>
   </div>
  );
 }

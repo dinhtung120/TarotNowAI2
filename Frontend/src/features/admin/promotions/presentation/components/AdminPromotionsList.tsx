@@ -8,7 +8,7 @@ import { AdminPromotionsDesktopTable } from './AdminPromotionsDesktopTable';
 
 export function AdminPromotionsList(props: AdminPromotionsCommonProps) {
  return (
-  <GlassCard className={cn('!p-0 !rounded-[2.5rem] overflow-hidden text-left')}>
+  <GlassCard className={cn('!p-0 !tn-rounded-2_5xl overflow-hidden text-left')}>
    <AdminPromotionsMobileList {...props} />
    <AdminPromotionsDesktopTable {...props} />
   </GlassCard>

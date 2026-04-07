@@ -17,7 +17,7 @@ export function ReaderSettingsSpecialtiesField({
 }: ReaderSettingsSpecialtiesFieldProps) {
  return (
   <div className={cn('space-y-2')}>
-   <label className={cn('text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] ml-1')}>{label}</label>
+   <label className={cn('tn-text-10 font-black uppercase tracking-widest tn-text-secondary ml-1')}>{label}</label>
    <input
     type="text"
     value={value}

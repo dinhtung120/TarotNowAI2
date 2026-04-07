@@ -20,7 +20,7 @@ export default function ChatCompleteResponseBar({
           type="button"
           onClick={() => void onRespondComplete(true)}
           disabled={processingAction !== null}
-          className={cn('rounded-lg border border-[var(--success)]/25 bg-[var(--success)]/20 px-3 py-1.5 text-xs text-[var(--success)]')}
+          className={cn('rounded-lg border tn-border-success-20 tn-bg-success-20 px-3 py-1.5 text-xs tn-text-success')}
         >
           Đồng ý hoàn thành
         </button>
@@ -28,7 +28,7 @@ export default function ChatCompleteResponseBar({
           type="button"
           onClick={() => void onRespondComplete(false)}
           disabled={processingAction !== null}
-          className={cn('rounded-lg border border-[var(--danger)]/25 bg-[var(--danger)]/20 px-3 py-1.5 text-xs text-[var(--danger)]')}
+          className={cn('rounded-lg border tn-border-danger-50 tn-bg-danger-soft px-3 py-1.5 text-xs tn-text-danger')}
         >
           Từ chối
         </button>

@@ -18,7 +18,7 @@ export function ReaderSettingsHeader({
  return (
   <SectionHeader
    tag={tag}
-   tagIcon={<Sparkles className={cn('w-3 h-3 text-[var(--warning)]')} />}
+   tagIcon={<Sparkles className={cn('w-3 h-3 tn-text-warning')} />}
    title={title}
    subtitle={subtitle}
   />

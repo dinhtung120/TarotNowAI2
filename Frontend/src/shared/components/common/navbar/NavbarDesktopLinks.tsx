@@ -10,7 +10,7 @@ interface NavbarDesktopLinksProps {
 
 export function NavbarDesktopLinks({ links, pathname, tNav }: NavbarDesktopLinksProps) {
  return (
-  <div className={cn("hidden md:flex items-center gap-1")}> 
+  <div className={cn("tn-hidden-flex-md items-center gap-1")}> 
    {links.map((link) => {
     const isActive = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
     const Icon = link.icon;

@@ -18,8 +18,8 @@ export function ReaderStatusIndicator({ status, labels }: ReaderStatusIndicatorP
  if (normalizedStatus === 'online') {
   return (
    <div className={cn(baseClass)}>
-    <div className={cn('w-2 h-2 rounded-full bg-[var(--success)] shadow-[0_0_8px_var(--c-16-185-129-50)] animate-pulse')} />
-    <span className={cn('text-[var(--success)] font-black uppercase tracking-wider text-[9px]')}>{labels.online}</span>
+    <div className={cn('w-2 h-2 rounded-full tn-bg-success animate-pulse')} />
+    <span className={cn('tn-text-success font-black uppercase tracking-wider tn-text-9')}>{labels.online}</span>
    </div>
   );
  }
@@ -27,16 +27,16 @@ export function ReaderStatusIndicator({ status, labels }: ReaderStatusIndicatorP
  if (normalizedStatus === 'busy') {
   return (
    <div className={cn(baseClass)}>
-    <div className={cn('w-2 h-2 rounded-full bg-[var(--warning)] shadow-[0_0_8px_var(--c-245-158-11-50)]')} />
-    <span className={cn('text-[var(--warning)] font-black uppercase tracking-wider text-[9px]')}>{labels.busy}</span>
+    <div className={cn('w-2 h-2 rounded-full tn-bg-warning')} />
+    <span className={cn('tn-text-warning font-black uppercase tracking-wider tn-text-9')}>{labels.busy}</span>
    </div>
   );
  }
 
  return (
   <div className={cn(baseClass)}>
-   <div className={cn('w-2 h-2 rounded-full bg-[var(--text-muted)]')} />
-   <span className={cn('tn-text-muted font-bold uppercase tracking-wider text-[9px]')}>{labels.offline}</span>
+   <div className={cn('w-2 h-2 rounded-full tn-bg-muted')} />
+   <span className={cn('tn-text-muted font-bold uppercase tracking-wider tn-text-9')}>{labels.offline}</span>
   </div>
  );
 }

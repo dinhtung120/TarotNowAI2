@@ -21,9 +21,9 @@ export default function ChatHeaderIdentity({
         {otherName || title}
       </p>
       {!hasConversation && loading ? (
-        <p className={cn("text-[11px] text-[var(--text-secondary)]")}>...</p>
+        <p className={cn("tn-text-11 tn-text-secondary")}>...</p>
       ) : (
-        <p className={cn("text-[11px]", readerStatus.color)}>
+        <p className={cn("tn-text-11", readerStatus.color)}>
           {readerStatus.text}
         </p>
       )}

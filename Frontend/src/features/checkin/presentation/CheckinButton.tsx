@@ -31,9 +31,29 @@ export const CheckinButton = ({ isCheckedIn }: CheckinButtonProps) => {
       type="button"
       onClick={vm.handleClick}
       disabled={vm.isPending}
-      className={`relative overflow-hidden w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-amber-950 rounded-xl font-bold font-inter shadow-[0_0_15px_rgba(251,191,36,0.3)] hover:shadow-[0_0_25px_rgba(251,191,36,0.5)] transition-all flex items-center justify-center gap-2 group ${vm.animating ? 'scale-95' : 'hover:-translate-y-0.5'}`}
+      className={cn(
+        "relative",
+        "flex",
+        "w-full",
+        "items-center",
+        "justify-center",
+        "gap-2",
+        "overflow-hidden",
+        "rounded-xl",
+        "bg-gradient-to-r",
+        "from-amber-500",
+        "to-yellow-400",
+        "px-4",
+        "py-3",
+        "font-inter",
+        "font-bold",
+        "text-amber-950",
+        "shadow-lg",
+        "transition-all",
+        vm.animating ? "scale-95" : null,
+      )}
     >
-      <div className={`absolute inset-0 bg-white/30 skew-x-12 -translate-x-full ${vm.animating ? 'animate-[shimmer_0.8s_ease-out]' : 'group-hover:animate-[shimmer_1s_ease-out]'}`} />
+      <div className={cn("absolute", "inset-0", "-translate-x-full", "skew-x-12", "bg-white/30", vm.animating ? "animate-pulse" : null)} />
       
       {vm.isPending ? (
         <span className={cn("animate-pulse")}>Đang Lượm...</span>

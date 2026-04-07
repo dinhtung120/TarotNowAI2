@@ -21,7 +21,7 @@ export default function RevealedCardsGrid({
   if (cards.length === 0) return null;
 
   return (
-    <div className={cn("grid grid-cols-2 items-start gap-3 perspective-1000 sm:grid-cols-3 md:gap-4")}>
+    <div className={cn("tn-revealed-grid perspective-1000")}>
       {cards.map((cardId, index) => (
         <RevealedCardItem
           key={`revealed-card-${cardId}`}

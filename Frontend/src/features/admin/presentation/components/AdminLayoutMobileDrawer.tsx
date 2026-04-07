@@ -19,14 +19,14 @@ export function AdminLayoutMobileDrawer({
  pathname,
 }: AdminLayoutMobileDrawerProps) {
  return (
-  <div className={cn('lg:hidden fixed inset-0 z-40')}>
+  <div className={cn('tn-admin-mobile-root fixed inset-0 z-40')}>
    <button type="button" className={cn('absolute inset-0 bg-black/45')} onClick={onClose} aria-label="Close menu" />
-   <aside className={cn('absolute left-0 top-0 h-full w-[min(22rem,86vw)] bg-[var(--bg-glass)] border-r border-[var(--border-subtle)] shadow-2xl flex flex-col')}>
+   <aside className={cn('absolute left-0 top-0 h-full tn-admin-mobile-drawer-shell border-r shadow-2xl flex flex-col')}>
     <div className={cn('px-4 pt-4')}>
      <button
       type="button"
       onClick={onClose}
-      className={cn('ml-auto flex h-11 w-11 items-center justify-center rounded-xl tn-surface hover:tn-surface-strong tn-text-secondary hover:tn-text-primary transition-colors')}
+      className={cn('ml-auto flex h-11 w-11 items-center justify-center rounded-xl tn-surface tn-mobile-topbar-trigger tn-text-secondary transition-colors')}
       aria-label="Close menu"
      >
       <X className={cn('w-4 h-4')} />

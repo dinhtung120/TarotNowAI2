@@ -8,15 +8,22 @@ export const StreakDisplay = ({ streak, isBroken }: { streak: number; isBroken: 
     <div className={cn("flex items-center gap-2")}>
       {}
       <div
-        className={`w-10 h-10 flex items-center justify-center rounded-full shadow-inner ${
-          isBroken ? 'bg-gray-700/50 grayscale' : 'bg-orange-500/20 shadow-orange-500/30'
-        }`}
+        className={cn(
+          "flex",
+          "h-10",
+          "w-10",
+          "items-center",
+          "justify-center",
+          "rounded-full",
+          "shadow-inner",
+          isBroken ? "bg-gray-700/50 grayscale" : "bg-orange-500/20",
+        )}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill={isBroken ? '#9ca3af' : '#f97316'}
-          className={`w-6 h-6 ${!isBroken && streak > 0 ? 'animate-pulse drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]' : ''}`}
+          className={cn("h-6", "w-6", !isBroken && streak > 0 ? "animate-pulse" : null)}
         >
           <path
             fillRule="evenodd"
@@ -27,7 +34,7 @@ export const StreakDisplay = ({ streak, isBroken }: { streak: number; isBroken: 
       </div>
 
       <div className={cn("flex flex-col")}>
-        <span className={`text-xl font-bold font-space ${isBroken ? 'text-gray-400' : 'text-orange-400'}`}>
+        <span className={cn("font-space", "text-xl", "font-bold", isBroken ? "text-gray-400" : "text-orange-400")}>
           {streak} Ngày
         </span>
         <span className={cn("text-xs text-gray-400 font-inter")}>

@@ -19,13 +19,13 @@ export function ProfileSettingsFormCard({
   onSubmit,
 }: ProfileSettingsFormCardProps) {
   return (
-    <GlassCard className={cn("!p-6 sm:!p-8")}>
+    <GlassCard className={cn("!tn-pad-6-8-sm")}>
       <h3
         className={cn(
           "tn-text-primary mb-8 flex items-center gap-2.5 text-lg font-black tracking-tight italic",
         )}
       >
-        <Sparkles className={cn("h-4 w-4 text-[var(--warning)]")} />
+        <Sparkles className={cn("h-4 w-4 tn-text-warning")} />
         {t("settings_title")}
       </h3>
       <ProfileFormStatusMessages successMsg={successMsg} errorMsg={errorMsg} />

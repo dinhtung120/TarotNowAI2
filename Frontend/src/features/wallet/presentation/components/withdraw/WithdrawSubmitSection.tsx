@@ -30,14 +30,14 @@ export function WithdrawSubmitSection({
    <WithdrawAlertMessage
      icon={AlertTriangle}
      message={error}
-     className={cn('bg-[var(--danger)]/10 border border-[var(--danger)]/20 text-[var(--danger)]')}
+     className={cn('tn-bg-danger-soft border tn-border-danger-50 tn-text-danger')}
     />
    ) : null}
    {success ? (
     <WithdrawAlertMessage
      icon={CheckCircle2}
      message={successMessage}
-     className={cn('bg-[var(--success)]/10 border border-[var(--success)]/20 text-[var(--success)]')}
+     className={cn('tn-bg-success-10 border tn-border-success-20 tn-text-success')}
     />
    ) : null}
    <WithdrawSubmitButton

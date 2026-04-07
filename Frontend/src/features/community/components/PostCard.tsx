@@ -1,4 +1,5 @@
 import type { CommunityPost } from "@/features/community/types";
+import { cn } from "@/lib/utils";
 import { PostCardActions } from "@/features/community/components/post-card/PostCardActions";
 import { PostCardContent } from "@/features/community/components/post-card/PostCardContent";
 import { PostCardHeader } from "@/features/community/components/post-card/PostCardHeader";
@@ -14,7 +15,7 @@ export function PostCard({ post, currentVisibilityTab, onReportClick }: PostCard
  const vm = usePostCardState({ post });
 
  return (
-  <div className="bg-[#1a1b26] rounded-xl p-5 shadow-lg border border-[#2a2b3d] mb-4">
+  <div className={cn("tn-community-card", "rounded-xl", "border", "p-5", "shadow-lg", "mb-4")}>
    <PostCardHeader post={post} dateText={vm.dateText} timeText={vm.timeText} onReportClick={() => onReportClick(post.id)} />
    <PostCardContent content={post.content} />
    <PostCardActions post={post} currentVisibilityTab={currentVisibilityTab} showComments={vm.showComments} onToggleComments={vm.toggleComments} />

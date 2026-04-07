@@ -1,4 +1,5 @@
 import { Link } from "@/i18n/routing";
+import { cn } from "@/lib/utils";
 
 interface FooterLinkItem {
  href: string;
@@ -13,9 +14,9 @@ interface FooterLinksRowProps {
 
 export function FooterLinksRow({ items, className, linkClassName }: FooterLinksRowProps) {
  return (
-  <div className={className}>
+  <div className={cn(className)}>
    {items.map((item) => (
-    <Link key={item.href} href={item.href} className={linkClassName}>
+    <Link key={item.href} href={item.href} className={cn(linkClassName)}>
      {item.label}
     </Link>
    ))}

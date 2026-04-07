@@ -18,11 +18,11 @@ export default function CollectionDeckCardHeader({
     <div className={cn("flex w-full flex-col gap-1.5")}>
       <div
         className={cn(
-          "tn-text-primary flex items-center justify-between px-1 text-[10px] font-black tracking-tighter uppercase",
+          "tn-text-primary flex items-center justify-between px-1 tn-text-10 font-black tracking-tighter uppercase",
         )}
       >
         <span>Lv. {userCard.level}</span>
-        <span className={cn("text-[var(--warning)]")}>
+        <span className={cn("tn-text-warning")}>
           {userCard.copies % 5} / 5
         </span>
       </div>

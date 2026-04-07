@@ -23,7 +23,7 @@ export function OverviewHeader({ tag, title, subtitle, depositCta }: OverviewHea
     <Button
      variant="primary"
      onClick={() => router.push('/wallet/deposit')}
-     className={cn('w-full sm:w-auto shadow-2xl')}
+     className={cn('tn-w-full-auto-sm shadow-2xl')}
     >
      <Plus className={cn('w-4 h-4 mr-2')} />
      {depositCta}

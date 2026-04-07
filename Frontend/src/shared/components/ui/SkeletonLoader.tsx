@@ -30,10 +30,10 @@ const randomTextWidth = (index: number): string => {
 export default function SkeletonLoader({
  type = "text",
  count = 1,
- className = "",
+ className,
 }: SkeletonLoaderProps) {
  return (
- <div className={`space-y-3 ${className}`}>
+ <div className={cn("space-y-3", className)}>
  {Array.from({ length: count }).map((_, i) => (
  <div
  key={`skeleton-${type}-${i}`}

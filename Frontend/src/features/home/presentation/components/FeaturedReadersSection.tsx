@@ -12,7 +12,7 @@ export async function FeaturedReadersSection() {
 
   return (
     <section
-      className={cn("relative mx-auto w-full max-w-7xl px-4 py-32 sm:px-6")}
+      className={cn("relative mx-auto w-full max-w-7xl tn-page-x py-32")}
     >
       <SectionHeader
         tag={t("showcase.tag")}
@@ -23,7 +23,7 @@ export async function FeaturedReadersSection() {
           <Link
             href="/readers"
             className={cn(
-              "group inline-flex min-h-11 items-center gap-2 rounded-xl px-2 text-xs font-black tracking-widest text-[var(--text-secondary)] uppercase transition-colors hover:bg-[var(--purple-50)] hover:text-[var(--text-ink)]",
+              "group inline-flex min-h-11 items-center gap-2 rounded-xl px-2 text-xs font-black tracking-widest tn-text-secondary uppercase transition-colors hover:bg-[var(--purple-50)] hover:text-[var(--text-ink)]",
             )}
           >
             {t("showcase.viewAll")}

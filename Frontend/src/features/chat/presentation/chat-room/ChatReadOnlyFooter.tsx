@@ -16,14 +16,14 @@ export default function ChatReadOnlyFooter({
   onStartNewSession,
 }: ChatReadOnlyFooterProps) {
   return (
-    <div className={cn('border-t border-white/10 p-3 text-xs text-[var(--text-secondary)]')}>
+    <div className={cn('border-t border-white/10 p-3 text-xs tn-chat-readonly-footer')}>
       <div>{isReadOnly ? hint : 'Bạn chưa thể gửi tin nhắn ở trạng thái hiện tại.'}</div>
       {canStartNewSession ? (
         <button
           type="button"
           onClick={() => void onStartNewSession()}
           disabled={startingNewSession}
-          className={cn('mt-2 rounded-lg border border-[var(--purple-accent)]/30 bg-[var(--purple-accent)]/20 px-3 py-2 text-xs font-semibold text-[var(--purple-accent)] disabled:opacity-60')}
+          className={cn('mt-2 rounded-lg px-3 py-2 text-xs font-semibold tn-chat-readonly-action')}
         >
           {startingNewSession ? 'Đang tạo phiên...' : 'Bắt đầu phiên tư vấn mới'}
         </button>

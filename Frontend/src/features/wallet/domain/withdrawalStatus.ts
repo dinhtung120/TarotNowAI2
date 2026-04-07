@@ -18,27 +18,27 @@ export function getWithdrawalStatusBadge(
   case 'pending':
    return {
     text: labels.pending,
-    className: 'bg-[var(--warning)]/10 text-[var(--warning)] border-[var(--warning)]/20',
+    className: 'tn-bg-warning-10 tn-text-warning tn-border-warning-20',
    };
   case 'approved':
    return {
     text: labels.approved,
-    className: 'bg-[var(--success)]/10 text-[var(--success)] border-[var(--success)]/20',
+    className: 'tn-bg-success-10 tn-text-success tn-border-success-20',
    };
   case 'rejected':
    return {
     text: labels.rejected,
-    className: 'bg-[var(--danger)]/10 text-[var(--danger)] border-[var(--danger)]/20',
+    className: 'tn-bg-danger-soft tn-text-danger tn-border-danger',
    };
   case 'paid':
    return {
     text: labels.paid,
-    className: 'bg-[var(--info)]/10 text-[var(--info)] border-[var(--info)]/20',
+    className: 'tn-bg-info-10 tn-text-info tn-border-info-20',
    };
   default:
    return {
     text: status,
-    className: 'bg-[var(--bg-surface-hover)] text-[var(--text-secondary)] border-[var(--border-subtle)]',
+    className: 'tn-bg-surface-hover tn-text-secondary tn-border-soft',
    };
  }
 }

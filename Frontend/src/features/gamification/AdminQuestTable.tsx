@@ -25,7 +25,7 @@ export function AdminQuestTable({ quests, onEdit, onDelete }: AdminQuestTablePro
         </thead>
         <tbody className={cn("divide-y divide-slate-800/40 text-slate-300")}>
           {quests.map((quest) => (
-            <tr key={quest.code} className={cn("group hover:bg-slate-800/30 transition-colors")}>
+            <tr key={quest.code} className={cn("group transition-colors")}>
               <td className={cn("px-6 py-4")}>
                 <code className={cn("text-pink-400 font-mono text-xs")}>{quest.code}</code>
               </td>
@@ -35,10 +35,10 @@ export function AdminQuestTable({ quests, onEdit, onDelete }: AdminQuestTablePro
               </td>
               <td className={cn("px-6 py-4")}>{quest.target}</td>
               <td className={cn("px-6 py-4 text-right flex justify-end gap-2")}>
-                <button type="button" onClick={() => onEdit(quest.code)} className={cn("p-2 hover:bg-slate-700/50 rounded-lg text-slate-400 hover:text-white transition-colors")}>
+                <button type="button" onClick={() => onEdit(quest.code)} className={cn("p-2 rounded-lg text-slate-400 transition-colors")}>
                   <Edit className={cn("w-4 h-4")} />
                 </button>
-                <button type="button" onClick={() => onDelete(quest.code)} className={cn("p-2 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-400 transition-colors")}>
+                <button type="button" onClick={() => onDelete(quest.code)} className={cn("p-2 rounded-lg text-slate-400 transition-colors")}>
                   <Trash2 className={cn("w-4 h-4")} />
                 </button>
               </td>

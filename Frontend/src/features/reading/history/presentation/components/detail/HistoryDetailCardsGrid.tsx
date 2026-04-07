@@ -16,7 +16,7 @@ export function HistoryDetailCardsGrid({
  const { getCardImageUrl, getCardMeaning, getCardName } = useCardsCatalog();
 
  return (
-  <div className={cn('grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8 lg:gap-10')}>
+  <div className={cn('tn-grid-cols-cards-history gap-8')}>
    {parsedCards.map((cardId, index) => (
     <HistoryDetailCardItem
      key={`history-card-${cardId}`}

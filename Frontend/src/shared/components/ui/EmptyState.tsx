@@ -25,7 +25,7 @@ function EmptyStateComponent({
  title = "",
  message,
  action,
- className = "",
+ className,
 }: EmptyStateProps) {
  return (
  <div

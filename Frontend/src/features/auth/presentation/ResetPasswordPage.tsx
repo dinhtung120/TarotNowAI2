@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckCircle2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useResetPasswordPage } from "@/features/auth/application/useResetPasswordPage";
 import { AuthErrorBanner } from "@/features/auth/presentation/components/AuthErrorBanner";
 import { AuthSuccessCard } from "@/features/auth/presentation/components/AuthSuccessCard";
@@ -26,7 +27,7 @@ export default function ResetPasswordPage() {
         ctaLabel={t("reset.success_cta")}
         description={t("reset.success_desc")}
         glowClass="bg-[var(--success-bg)]"
-        icon={<CheckCircle2 className="h-10 w-10 text-[var(--success)]" />}
+        icon={<CheckCircle2 className={cn("h-10", "w-10", "tn-text-success")} />}
         iconWrapperClass="bg-[var(--success-bg)] shadow-[0_0_30px_var(--success)]"
         title={t("reset.success_title")}
       />

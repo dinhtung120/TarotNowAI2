@@ -16,22 +16,22 @@ export function NavbarMobileMenu({ open, links, tNav }: NavbarMobileMenuProps) {
  }
 
  return (
-  <div className={cn("md:hidden absolute left-0 right-0 top-full bg-[var(--bg-glass)] border-b border-[var(--border-subtle)] animate-in slide-in-from-top duration-300 max-h-[calc(100dvh-3.5rem)] overflow-y-auto")}>
-   <div className={cn("px-3 sm:px-4 py-4 space-y-1")}>
+  <div className={cn("tn-navbar-mobile-menu-shell animate-in slide-in-from-top duration-300")}>
+   <div className={cn("tn-navbar-mobile-menu-inner space-y-1")}>
     {links.map((link) => {
      const Icon = link.icon;
      return (
       <Link
        key={link.href}
        href={link.href}
-       className={cn("flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-ink)] hover:bg-[var(--purple-50)] transition-colors")}
+       className={cn("flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium tn-navbar-mobile-link")}
       >
        <Icon className={cn("w-4 h-4")} />
        {tNav(link.labelKey)}
       </Link>
      );
     })}
-    <div className={cn("pt-3 border-t border-[var(--border-subtle)] flex items-center gap-2")}>
+    <div className={cn("pt-3 border-t tn-border-soft flex items-center gap-2")}>
      <StreakBadge />
      <WalletWidget />
     </div>

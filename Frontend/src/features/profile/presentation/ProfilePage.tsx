@@ -8,6 +8,7 @@ import { ProfileSettingsFormCard } from "@/features/profile/presentation/compone
 import { ProfileSummaryCard } from "@/features/profile/presentation/components/ProfileSummaryCard";
 import ProfileReaderSettingsPage from "@/features/profile/reader/presentation/ProfileReaderSettingsPage";
 import { SectionHeader } from "@/shared/components/ui";
+import { cn } from "@/lib/utils";
 
 export default function ProfilePage() {
   const state = useProfilePage();
@@ -19,15 +20,15 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-8 mx-auto w-full max-w-3xl space-y-10 px-4 pt-8 pb-32 duration-1000 sm:px-6">
+    <div className={cn("mx-auto", "w-full", "max-w-3xl", "space-y-10", "px-6", "pt-8", "pb-32", "animate-in", "fade-in", "slide-in-from-bottom-8", "duration-1000")}>
       <SectionHeader
         tag={state.t("title")}
         title={state.t("title")}
         subtitle={state.t("subtitle")}
-        tagIcon={<Stars className="h-3 w-3 text-[var(--purple-accent)]" />}
+        tagIcon={<Stars className={cn("h-3", "w-3", "text-violet-400")} />}
       />
 
-      <div className="grid grid-cols-1 gap-8">
+      <div className={cn("grid", "grid-cols-1", "gap-8")}>
         <ProfileSummaryCard
           t={state.t}
           tCommon={state.tCommon}

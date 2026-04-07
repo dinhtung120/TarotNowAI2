@@ -29,7 +29,7 @@ export async function FinalCtaSection() {
           )}
         >
           {t("final.title1")} <br />
-          <span className={cn("text-[var(--text-secondary)] italic")}>
+          <span className={cn("tn-text-secondary italic")}>
             {t("final.title2")}
           </span>
         </h2>

@@ -35,7 +35,7 @@ export default function CollectionDeckCardVisual({
           unoptimized
           priority={deckCard.id < 7}
           sizes="(max-width: 768px) 33vw, 220px"
-          className={cn("h-full w-full object-cover", !isOwned && "blur-[6px]")}
+          className={cn("h-full w-full object-cover", !isOwned && "blur-sm")}
         />
       ) : (
         <span

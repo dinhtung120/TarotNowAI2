@@ -35,9 +35,7 @@ export default function RevealConfirmModal(props: RevealConfirmModalProps) {
             "mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--purple-accent)]/20",
           )}
         >
-          <Sparkles
-            className={cn("h-8 w-8 animate-pulse text-[var(--warning)]")}
-          />
+          <Sparkles className={cn("h-8 w-8 animate-pulse tn-text-warning")} />
         </div>
         <h3
           className={cn("tn-text-primary mb-2 font-serif text-2xl font-bold")}

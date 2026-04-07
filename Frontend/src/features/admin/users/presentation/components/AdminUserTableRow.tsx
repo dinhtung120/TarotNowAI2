@@ -9,7 +9,7 @@ import { AdminUserStatusCell } from './user-row/AdminUserStatusCell';
 
 export function AdminUserTableRow({ locale, onEdit, t, user }: AdminUserTableRowProps) {
  return (
-  <tr className={cn('group/row hover:tn-surface transition-colors')}>
+  <tr className={cn('group-row tn-hover-surface-strong transition-colors')}>
    <AdminUserIdentityCell user={user} />
    <AdminUserLevelCell t={t} user={user} />
    <AdminUserBalanceCell locale={locale} user={user} />

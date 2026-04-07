@@ -29,14 +29,14 @@ export function LeaderboardEntryRow({
         leaderboardRowClass(index),
       )}
     >
-      <div className="relative flex h-8 w-8 shrink-0 items-center justify-center">
+      <div className={cn("relative", "flex", "h-8", "w-8", "shrink-0", "items-center", "justify-center")}>
         <LeaderboardRankBadge index={index} />
       </div>
       <LeaderboardAvatar
         avatar={entry.avatar}
         displayName={entry.displayName}
       />
-      <div className="min-w-0 flex-1">
+      <div className={cn("min-w-0", "flex-1")}>
         <h4
           className={cn(
             "truncate text-base font-bold",
@@ -45,7 +45,7 @@ export function LeaderboardEntryRow({
         >
           {entry.displayName}
         </h4>
-        <p className="truncate text-[11px] font-bold tracking-wider text-blue-400/80 uppercase">
+        <p className={cn("truncate", "text-xs", "font-bold", "uppercase", "tracking-wider", "text-blue-400/80")}>
           {entry.activeTitle || noTitleLabel}
         </p>
       </div>

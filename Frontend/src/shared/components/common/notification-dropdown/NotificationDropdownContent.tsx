@@ -14,8 +14,8 @@ interface NotificationDropdownContentProps {
 }
 
 export default function NotificationDropdownContent({ getTitle, isLoading, notifications, onMarkRead, t }: NotificationDropdownContentProps) {
-  if (isLoading) return <div className={cn('flex h-24 items-center justify-center text-[var(--text-muted)]')}><Bell className={cn('h-5 w-5 animate-pulse')} /></div>;
-  if (notifications.length === 0) return <div className={cn('px-4 py-8 text-center')}><div className={cn('mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--bg-surface-hover)]')}><Bell className={cn('h-5 w-5 text-[var(--text-muted)]')} /></div><p className={cn('text-sm font-medium text-[var(--text-secondary)]')}>{t('empty_desc')}</p></div>;
+  if (isLoading) return <div className={cn('flex h-24 items-center justify-center tn-text-muted')}><Bell className={cn('h-5 w-5 animate-pulse')} /></div>;
+  if (notifications.length === 0) return <div className={cn('px-4 py-8 text-center')}><div className={cn('mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full tn-bg-surface-hover')}><Bell className={cn('h-5 w-5 tn-text-muted')} /></div><p className={cn('text-sm font-medium tn-text-secondary')}>{t('empty_desc')}</p></div>;
 
   return (
     <div className={cn('flex flex-col')}>

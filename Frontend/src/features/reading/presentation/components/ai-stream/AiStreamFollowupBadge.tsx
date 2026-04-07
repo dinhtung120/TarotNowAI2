@@ -10,14 +10,14 @@ interface AiStreamFollowupBadgeProps {
 export function AiStreamFollowupBadge({ freeSlotsRemaining, freeBadgeText, paidBadgeText }: AiStreamFollowupBadgeProps) {
  if (freeSlotsRemaining > 0) {
   return (
-   <span className={cn("px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded-md bg-[var(--warning)]/20 text-[var(--warning)] border border-[var(--warning)]/30")}>
+   <span className={cn("px-2.5 py-1 tn-text-10 uppercase font-bold tracking-wider rounded-md tn-bg-warning-20 tn-text-warning border tn-border-warning-30")}>
     {freeBadgeText}
    </span>
   );
  }
 
  return (
-  <span className={cn("px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded-md bg-[var(--purple-accent)]/20 text-[var(--purple-accent)] border border-[var(--purple-accent)]/30 flex items-center")}>
+  <span className={cn("px-2.5 py-1 tn-text-10 uppercase font-bold tracking-wider rounded-md tn-bg-accent-20 tn-text-accent border tn-border-accent-30 flex items-center")}>
    <Sparkles className={cn("w-3 h-3 mr-1")} />
    {paidBadgeText}
   </span>

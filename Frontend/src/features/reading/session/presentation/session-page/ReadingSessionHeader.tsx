@@ -35,7 +35,7 @@ export default function ReadingSessionHeader({
         >
           {title}
         </h1>
-        <p className={cn("mt-1 hidden font-mono text-xs sm:block tn-text-muted")}>
+        <p className={cn("mt-1 tn-show-sm font-mono text-xs tn-text-muted")}>
           {sessionLabel}
         </p>
       </div>

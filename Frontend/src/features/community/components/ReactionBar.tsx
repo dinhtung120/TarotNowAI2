@@ -33,7 +33,7 @@ export const ReactionBar: React.FC<ReactionBarProps> = ({
   };
 
   return (
-    <div className={cn("flex flex-wrap gap-2 pt-3 border-t border-[#2a2b3d]")}>
+    <div className={cn("flex flex-wrap gap-2 pt-3 border-t border-slate-700/80")}>
       {(Object.entries(REACTIONS_MAP) as [ReactionType, string][]).map(([type, emoji]) => {
         const count = reactionsCount[type] || 0;
         const isActive = viewerReaction === type;
@@ -43,12 +43,12 @@ export const ReactionBar: React.FC<ReactionBarProps> = ({
             key={type}
             type="button"
             onClick={() => handleReact(type)}
-            className={`
-              flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all
-              ${isActive 
-                ? 'bg-[#8a2be2]/20 text-[#8a2be2] border border-[#8a2be2]/30' 
-                : 'bg-transparent text-gray-400 hover:bg-[#2a2b3d] border border-transparent'}
-            `}
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all",
+              isActive
+                ? "bg-violet-600/20 text-violet-400 border border-violet-500/30"
+                : "bg-transparent text-gray-400 tn-hover-surface-strong border border-transparent",
+            )}
           >
             <span className={cn("text-sm")}>{emoji}</span>
             {count > 0 && <span>{count}</span>}

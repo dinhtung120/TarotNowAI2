@@ -23,7 +23,7 @@ export function AdminDashboardShortcuts({
           "tn-text-primary flex items-center gap-3 text-xl font-black tracking-tighter uppercase italic drop-shadow-md",
         )}
       >
-        <Zap className={cn("h-5 w-5 text-[var(--success)]")} />
+        <Zap className={cn("h-5 w-5 tn-text-success")} />
         {t("dashboard.shortcuts.title")}
       </h2>
       <div className={cn("space-y-4")}>
@@ -40,13 +40,13 @@ export function AdminDashboardShortcuts({
             <div className={cn("flex items-center gap-4")}>
               <shortcut.icon
                 className={cn(
-                  "h-5 w-5 text-[var(--text-tertiary)] transition-colors",
+                  "h-5 w-5 tn-text-tertiary transition-colors",
                   shortcut.iconHoverClass,
                 )}
               />
               <span
                 className={cn(
-                  "group-hover:tn-text-primary text-xs font-black tracking-widest text-[var(--text-secondary)] uppercase transition-colors",
+                  "text-xs font-black tracking-widest tn-text-secondary uppercase transition-colors",
                 )}
               >
                 {shortcut.label}

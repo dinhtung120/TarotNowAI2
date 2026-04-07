@@ -32,7 +32,7 @@ export default function AdminLayoutShell({ children, labels }: AdminLayoutShellP
  } = useAdminLayoutShellState(labels);
 
  return (
-  <div className={cn('flex h-dvh bg-[var(--bg-void)] text-[var(--text-primary)] overflow-hidden')}>
+  <div className={cn('flex h-dvh tn-admin-layout-shell overflow-hidden')}>
    <AstralBackground variant="subtle" />
 
    <AdminLayoutDesktopMenu
@@ -49,7 +49,7 @@ export default function AdminLayoutShell({ children, labels }: AdminLayoutShellP
 
    <main className={cn('relative z-10 flex-1 min-w-0 min-h-0 overflow-y-auto custom-scrollbar')}>
     <AdminLayoutMobileTopBar label={labels.title} sectionMain={labels.sectionMain} onOpenMenu={() => setMobileNavOpen(true)} />
-    <div className={cn('min-h-full p-4 sm:p-6 md:p-8 lg:p-12 animate-in fade-in duration-700')}>{children}</div>
+    <div className={cn('min-h-full tn-admin-layout-content animate-in fade-in duration-700')}>{children}</div>
    </main>
   </div>
  );

@@ -5,6 +5,7 @@ import { useVerifyEmailPage } from "@/features/auth/application/useVerifyEmailPa
 import { AuthErrorBanner } from "@/features/auth/presentation/components/AuthErrorBanner";
 import { AuthSuccessCard } from "@/features/auth/presentation/components/AuthSuccessCard";
 import { VerifyEmailResendButton } from "@/features/auth/presentation/components/VerifyEmailResendButton";
+import { cn } from "@/lib/utils";
 import AuthLayout from "@/shared/components/layout/AuthLayout";
 import { Button, Input } from "@/shared/components/ui";
 
@@ -12,18 +13,63 @@ export default function VerifyEmailPage() {
  const vm = useVerifyEmailPage();
 
  if (vm.success) {
-  return <AuthSuccessCard icon={<CheckCircle2 className="w-10 h-10 text-[var(--success)]" />} title={vm.t("verify.success_title")} description={vm.t("verify.success_desc")} ctaHref="/login" ctaLabel={vm.t("verify.success_cta")} glowClass="bg-[var(--success-bg)]" iconWrapperClass="bg-[var(--success-bg)] shadow-[0_0_30px_var(--success)]" />;
+  return (
+   <AuthSuccessCard
+    icon={<CheckCircle2 className={cn("h-10", "w-10", "text-emerald-400")} />}
+    title={vm.t("verify.success_title")}
+    description={vm.t("verify.success_desc")}
+    ctaHref="/login"
+    ctaLabel={vm.t("verify.success_cta")}
+    glowClass="bg-emerald-500/20"
+    iconWrapperClass="bg-emerald-500/20 shadow-lg"
+   />
+  );
  }
 
  return (
   <AuthLayout title={vm.t("verify.title")} subtitle={vm.t("verify.subtitle")}>
    <AuthErrorBanner message={vm.errorMsg} />
-   <form onSubmit={vm.handleSubmit(vm.onSubmit)} className="space-y-6">
-    <Input label={vm.t("verify.email_label")} type="email" leftIcon={<Mail className="w-5 h-5" />} placeholder={vm.t("verify.email_placeholder")} error={vm.errors.email?.message} {...vm.register("email")} />
-    <Input label={vm.t("verify.otp_label")} type="text" leftIcon={<KeyRound className="w-5 h-5" />} placeholder={vm.t("verify.otp_placeholder")} maxLength={6} error={vm.errors.otpCode?.message} {...vm.register("otpCode")} className="text-center font-bold tracking-widest text-xl" />
-    <div className="pt-2"><Button type="submit" variant="brand" size="lg" fullWidth isLoading={vm.isSubmitting} rightIcon={!vm.isSubmitting ? <CheckCircle2 className="w-5 h-5 ml-2" /> : undefined}>{vm.t("verify.cta")}</Button></div>
+   <form onSubmit={vm.handleSubmit(vm.onSubmit)} className={cn("space-y-6")}>
+    <Input
+     label={vm.t("verify.email_label")}
+     type="email"
+     leftIcon={<Mail className={cn("h-5", "w-5")} />}
+     placeholder={vm.t("verify.email_placeholder")}
+     error={vm.errors.email?.message}
+     {...vm.register("email")}
+    />
+    <Input
+     label={vm.t("verify.otp_label")}
+     type="text"
+     leftIcon={<KeyRound className={cn("h-5", "w-5")} />}
+     placeholder={vm.t("verify.otp_placeholder")}
+     maxLength={6}
+     error={vm.errors.otpCode?.message}
+     {...vm.register("otpCode")}
+     className={cn("text-center", "text-xl", "font-bold", "tracking-widest")}
+    />
+    <div className={cn("pt-2")}>
+     <Button
+      type="submit"
+      variant="brand"
+      size="lg"
+      fullWidth
+      isLoading={vm.isSubmitting}
+      rightIcon={!vm.isSubmitting ? <CheckCircle2 className={cn("ml-2", "h-5", "w-5")} /> : undefined}
+     >
+      {vm.t("verify.cta")}
+     </Button>
+    </div>
    </form>
-   <div className="text-center mt-6"><VerifyEmailResendButton isResending={vm.isResending} resendTimer={vm.resendTimer} resendLabel={vm.t("verify.resend")} resendWithTimerLabel={(seconds) => vm.t("verify.resend_with_timer", { seconds })} onResend={vm.handleResendOtp} /></div>
+   <div className={cn("mt-6", "text-center")}>
+    <VerifyEmailResendButton
+     isResending={vm.isResending}
+     resendTimer={vm.resendTimer}
+     resendLabel={vm.t("verify.resend")}
+     resendWithTimerLabel={(seconds) => vm.t("verify.resend_with_timer", { seconds })}
+     onResend={vm.handleResendOtp}
+    />
+   </div>
   </AuthLayout>
  );
 }

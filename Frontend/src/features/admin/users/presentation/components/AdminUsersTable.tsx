@@ -6,12 +6,21 @@ import { AdminUserTableRow } from "./AdminUserTableRow";
 
 export function AdminUsersTable({ loading, locale, onEdit, onNextPage, onPrevPage, page, t, totalCount, users }: AdminUsersTableProps) {
  return (
-  <GlassCard className={cn("!p-0 !rounded-[2.5rem] overflow-hidden")}>
+  <GlassCard className={cn("!p-0 !tn-rounded-2_5xl overflow-hidden")}>
    <div className={cn("overflow-x-auto custom-scrollbar")}>
     <table className={cn("w-full text-left")}>
-     <thead><tr className={cn("border-b tn-border-soft tn-surface")}><th className={cn("px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]")}>{t("users.table.heading_account")}</th><th className={cn("px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]")}>{t("users.table.heading_rank")}</th><th className={cn("px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]")}>{t("users.table.heading_assets")}</th><th className={cn("px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]")}>{t("users.table.heading_role")}</th><th className={cn("px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-center")}>{t("users.table.heading_status")}</th><th className={cn("px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-right")}>{t("users.table.heading_actions")}</th></tr></thead>
+     <thead>
+      <tr className={cn("border-b tn-border-soft tn-surface")}>
+       <th className={cn("px-8 py-6 tn-text-overline tn-text-tertiary")}>{t("users.table.heading_account")}</th>
+       <th className={cn("px-8 py-6 tn-text-overline tn-text-tertiary")}>{t("users.table.heading_rank")}</th>
+       <th className={cn("px-8 py-6 tn-text-overline tn-text-tertiary")}>{t("users.table.heading_assets")}</th>
+       <th className={cn("px-8 py-6 tn-text-overline tn-text-tertiary")}>{t("users.table.heading_role")}</th>
+       <th className={cn("px-8 py-6 tn-text-overline tn-text-tertiary text-center")}>{t("users.table.heading_status")}</th>
+       <th className={cn("px-8 py-6 tn-text-overline tn-text-tertiary text-right")}>{t("users.table.heading_actions")}</th>
+      </tr>
+     </thead>
      <tbody className={cn("divide-y divide-white/5")}>
-      <TableStates colSpan={6} isLoading={loading} isEmpty={!loading && users.length === 0} loadingLabel={t("users.states.loading")} emptyLabel={t("users.states.empty")} loadingIcon={<Loader2 className={cn("w-8 h-8 animate-spin text-[var(--purple-accent)]")} />} emptyIcon={<div className={cn("w-16 h-16 rounded-full tn-panel-soft flex items-center justify-center")}><Users className={cn("w-8 h-8 text-[var(--text-tertiary)] opacity-50")} /></div>} />
+      <TableStates colSpan={6} isLoading={loading} isEmpty={!loading && users.length === 0} loadingLabel={t("users.states.loading")} emptyLabel={t("users.states.empty")} loadingIcon={<Loader2 className={cn("w-8 h-8 animate-spin tn-text-accent")} />} emptyIcon={<div className={cn("w-16 h-16 rounded-full tn-panel-soft flex items-center justify-center")}><Users className={cn("w-8 h-8 tn-text-tertiary opacity-50")} /></div>} />
       {loading ? null : users.map((user) => <AdminUserTableRow key={user.id} user={user} locale={locale} onEdit={onEdit} t={t} />)}
      </tbody>
     </table>

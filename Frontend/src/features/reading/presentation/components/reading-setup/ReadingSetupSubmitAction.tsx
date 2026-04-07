@@ -21,7 +21,7 @@ export function ReadingSetupSubmitAction({
     size="lg"
     isLoading={isInitializing}
     rightIcon={!isInitializing ? <Zap className={cn('w-5 h-5 ml-2')} /> : undefined}
-    className={cn('w-full sm:w-auto rounded-full font-black tracking-widest uppercase shadow-[0_10px_40px_var(--c-255-255-255-15)] hover:shadow-[0_15px_50px_var(--c-255-255-255-25)]')}
+    className={cn('tn-w-full-auto-sm rounded-full font-black tracking-widest uppercase tn-shadow-reading-submit tn-hover-shadow-reading-submit')}
    >
     {isInitializing ? preparingLabel : submitLabel}
    </Button>

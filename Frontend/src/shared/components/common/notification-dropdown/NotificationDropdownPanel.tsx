@@ -22,9 +22,9 @@ interface NotificationDropdownPanelProps {
 
 export default function NotificationDropdownPanel({ dropdownRef, getTitle, isLoading, isMarkingAll, notifications, unreadCount, viewAllLabel, title, t, onMarkAllRead, onMarkRead, onViewAll }: NotificationDropdownPanelProps) {
   return (
-    <div ref={dropdownRef} className={cn('fixed left-0 right-0 top-[72px] z-[100] mx-auto w-[calc(100vw-32px)] max-w-[360px] animate-in slide-in-from-top-2 fade-in overflow-hidden rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-elevated)] shadow-[var(--shadow-elevated)] duration-200 sm:absolute sm:left-auto sm:right-0 sm:top-[calc(100%+8px)] sm:mx-0 sm:w-[380px] sm:max-w-none')}>
+    <div ref={dropdownRef} className={cn('tn-notification-panel animate-in slide-in-from-top-2 fade-in duration-200')}>
       <NotificationDropdownHeader title={title} unreadCount={unreadCount} isMarkingAll={isMarkingAll} onMarkAllRead={onMarkAllRead} />
-      <div className={cn('max-h-[360px] overflow-y-auto')}>
+      <div className={cn('tn-notification-panel-content')}>
         <NotificationDropdownContent t={t} isLoading={isLoading} notifications={notifications} getTitle={getTitle} onMarkRead={onMarkRead} />
       </div>
       <NotificationDropdownFooter ctaLabel={viewAllLabel} onViewAll={onViewAll} />

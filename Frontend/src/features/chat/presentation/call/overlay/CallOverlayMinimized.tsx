@@ -23,12 +23,12 @@ export function CallOverlayMinimized({
  onEndCall,
 }: CallOverlayMinimizedProps) {
  return (
-  <div className={cn('fixed bottom-24 right-4 z-50 w-48 h-64 bg-gray-900 rounded-xl overflow-hidden shadow-2xl border border-gray-700 flex flex-col group transition-all duration-300 hover:shadow-[0_0_20px_rgba(0,0,0,0.5)]')}>
-   <div className={cn('absolute top-2 right-2 z-10 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity')}>
+  <div className={cn('fixed bottom-24 right-4 z-50 w-48 h-64 bg-gray-900 rounded-xl overflow-hidden shadow-2xl border border-gray-700 flex flex-col group transition-all duration-300')}>
+   <div className={cn('absolute top-2 right-2 z-10 flex gap-2 tn-group-fade-in-overlay transition-opacity')}>
     <button
      type="button"
      onClick={onMaximize}
-     className={cn('p-1.5 bg-black/50 hover:bg-black/80 rounded-md backdrop-blur-md text-white transition-colors')}
+     className={cn('p-1.5 bg-black/50 rounded-md backdrop-blur-md text-white transition-colors')}
      title={maximizeLabel}
     >
      <svg xmlns="http://www.w3.org/2000/svg" className={cn('h-5 w-5')} viewBox="0 0 20 20" fill="currentColor">
@@ -38,7 +38,7 @@ export function CallOverlayMinimized({
     <button
      type="button"
      onClick={onEndCall}
-     className={cn('p-1.5 bg-red-600/80 hover:bg-red-600 rounded-md backdrop-blur-md text-white transition-colors')}
+     className={cn('p-1.5 bg-red-600/80 rounded-md backdrop-blur-md text-white transition-colors')}
      title={endCallLabel}
     >
      <svg className={cn('w-5 h-5 text-white')} fill="none" viewBox="0 0 24 24" stroke="currentColor">

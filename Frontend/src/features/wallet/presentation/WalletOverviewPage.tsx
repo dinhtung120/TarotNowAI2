@@ -14,7 +14,7 @@ export default function WalletOverviewPage() {
  const { t, locale, balance, ledger, isLoadingLedger, setPage, formatType } = useWalletOverviewPage();
 
  return (
-  <div className={cn('max-w-5xl mx-auto px-4 sm:px-6 pt-8 pb-32 font-sans relative')}>
+  <div className={cn('max-w-5xl mx-auto tn-page-x pt-8 pb-32 font-sans relative')}>
    <OverviewHeader
     tag={t('overview.tag')}
     title={t('overview.title')}

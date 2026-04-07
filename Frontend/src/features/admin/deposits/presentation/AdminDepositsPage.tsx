@@ -5,24 +5,25 @@ import { ActionConfirmModal } from "@/shared/components/ui";
 import { useAdminDeposits } from "@/features/admin/deposits/application/useAdminDeposits";
 import { AdminDepositsHeader, AdminDepositsSummary, AdminDepositsTable } from "./components";
 import { getAdminDepositsPageLabels } from "./useAdminDepositsPageLabels";
+import { cn } from "@/lib/utils";
 
 export default function AdminDepositsPage() {
  const vm = useAdminDeposits();
  const labels = getAdminDepositsPageLabels(vm.t, vm.page, vm.totalCount, vm.confirmModal.type);
  const modalIcon = vm.confirmModal.type === "approve"
-  ? <ThumbsUp className="w-8 h-8" />
-  : <ThumbsDown className="w-8 h-8" />;
+  ? <ThumbsUp className={cn("h-8", "w-8")} />
+  : <ThumbsDown className={cn("h-8", "w-8")} />;
  const modalIconClassName = vm.confirmModal.type === "approve"
-  ? "bg-[var(--success)]/10 border-[var(--success)]/20 text-[var(--success)]"
-  : "bg-[var(--danger)]/10 border-[var(--danger)]/20 text-[var(--danger)]";
+  ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+  : "bg-red-500/10 border-red-500/20 text-red-400";
 
  return (
-  <div className="space-y-8 pb-20 animate-in fade-in duration-700">
+  <div className={cn("space-y-8", "pb-20", "animate-in", "fade-in", "duration-700")}>
    <ActionConfirmModal
     open={vm.confirmModal.isOpen}
     onCancel={() => vm.setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
     onConfirm={vm.handleAction}
-    icon={<div className={`w-16 h-16 rounded-2xl flex items-center justify-center border shadow-inner ${modalIconClassName}`}>{modalIcon}</div>}
+    icon={<div className={cn("flex", "h-16", "w-16", "items-center", "justify-center", "rounded-2xl", "border", "shadow-inner", modalIconClassName)}>{modalIcon}</div>}
     title={labels.modal.title}
     description={labels.modal.description}
     cancelLabel={labels.modal.cancelLabel}

@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { Toaster } from "react-hot-toast";
+import { cn } from "@/lib/utils";
 import ThemeStylesheetManager from "@/shared/components/common/ThemeStylesheetManager";
 import { DEFAULT_THEME, getThemeStylesheetHref, isValidTheme, THEME_COOKIE_KEY, type ThemeId } from "@/shared/domain/theme";
 import "../globals.css";
@@ -30,7 +31,7 @@ export default async function RootLayout({ children, params }: Readonly<{ childr
  return (
   <html lang={locale} data-theme={initialTheme}>
    <head><link id="tn-theme-stylesheet" rel="stylesheet" href={getThemeStylesheetHref(initialTheme)} /></head>
-   <body className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased`}>
+   <body className={cn(geistSans.variable, geistMono.variable, playfair.variable, "antialiased")}>
     <ThemeStylesheetManager initialTheme={initialTheme} />
     <NextIntlClientProvider messages={messages}>
      {children}

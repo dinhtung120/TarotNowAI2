@@ -17,7 +17,7 @@ export default async function FeaturedReadersGrid() {
   }
 
   return (
-    <div className={cn("grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4")}>
+    <div className={cn("tn-grid-1-2-4-responsive gap-8")}>
       {readers.map((reader) => (
         <FeaturedReaderCard
           key={reader.userId}

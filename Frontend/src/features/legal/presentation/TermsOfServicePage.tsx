@@ -16,7 +16,7 @@ export default function TermsOfServicePage() {
  const t = useTranslations("Legal");
 
  return (
- <div className={cn("container mx-auto max-w-4xl px-4 pb-12 pt-20 md:pt-24")}>
+ <div className={cn("container mx-auto max-w-4xl px-4 pb-12 tn-pt-20-24-md")}>
  <h1 className={cn("text-4xl font-extrabold tn-text-primary mb-8 text-center drop-shadow-lg")}>
  {t("tos_title")}
  </h1>

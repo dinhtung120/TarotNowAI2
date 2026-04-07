@@ -20,7 +20,7 @@ export default function LeaderboardCurrentUserRankContent({
           : "border-indigo-500/20 bg-indigo-500/5 shadow-[0_0_20px_rgba(99,102,241,0.05)]",
       )}
     >
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center">
+      <div className={cn("flex", "h-8", "w-8", "shrink-0", "items-center", "justify-center")}>
         <span
           className={cn(
             "text-2xl font-black",
@@ -33,7 +33,7 @@ export default function LeaderboardCurrentUserRankContent({
 
       <LeaderboardCurrentUserIdentity currency={currency} userRank={userRank} />
 
-      <div className="shrink-0 text-right">
+      <div className={cn("shrink-0", "text-right")}>
         <div
           className={cn(
             "text-2xl font-black tabular-nums",
@@ -42,7 +42,7 @@ export default function LeaderboardCurrentUserRankContent({
         >
           {userRank.score.toLocaleString()}
         </div>
-        <div className="text-right text-[10px] font-black tracking-widest text-slate-500 uppercase">
+        <div className={cn("text-right", "text-xs", "font-black", "uppercase", "tracking-widest", "text-slate-500")}>
           TIÊU THỤ
         </div>
       </div>

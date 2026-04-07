@@ -14,7 +14,7 @@ export default function RegisterPasswordFields({ errors, register }: RegisterPas
   const t = useTranslations('Auth');
 
   return (
-    <div className={cn('grid grid-cols-1 gap-4 md:grid-cols-2')}>
+    <div className={cn('tn-grid-1-2-md gap-4')}>
       <Input
         label={t('register.password_label')}
         type="password"

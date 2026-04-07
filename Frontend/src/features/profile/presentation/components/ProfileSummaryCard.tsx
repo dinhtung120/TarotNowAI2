@@ -38,8 +38,8 @@ export function ProfileSummaryCard({
  }
 
  return (
-  <GlassCard className={cn('!p-6 sm:!p-8 overflow-hidden relative group')}>
-   <div className={cn('relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8')}>
+  <GlassCard className={cn('!p-6 overflow-hidden relative group')}>
+   <div className={cn('relative z-10 tn-profile-summary-row gap-8')}>
     <ProfileAvatarUploader
      avatarAlt={tCommon('avatar_alt')}
      avatarPreview={avatarPreview}

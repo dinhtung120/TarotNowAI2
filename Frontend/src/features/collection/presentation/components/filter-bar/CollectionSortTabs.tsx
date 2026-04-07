@@ -30,7 +30,7 @@ export default function CollectionSortTabs({
       <div className={cn("tn-text-muted mr-4 flex items-center gap-2")}>
         <Sparkles className={cn("h-3.5 w-3.5")} />
         <span
-          className={cn("text-[10px] font-black tracking-widest uppercase")}
+          className={cn("tn-text-10 font-black tracking-widest uppercase")}
         >
           {labels.sortLabel}
         </span>
@@ -41,7 +41,7 @@ export default function CollectionSortTabs({
           type="button"
           onClick={() => onSortChange(option.id)}
           className={cn(
-            "flex items-center gap-2 rounded-xl border px-4 py-1.5 text-[10px] font-black transition-all duration-300",
+            "flex items-center gap-2 rounded-xl border px-4 py-1.5 tn-text-10 font-black transition-all duration-300",
             sortBy === option.id
               ? "scale-105 border-[var(--warning)]/30 bg-[var(--warning)]/10 text-[var(--warning)] shadow-lg"
               : "tn-border-soft tn-surface hover:tn-border-strong hover:tn-text-secondary text-[var(--text-secondary)]",

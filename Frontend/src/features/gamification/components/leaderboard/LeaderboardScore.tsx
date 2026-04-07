@@ -14,7 +14,7 @@ export default function LeaderboardScore({
   const isTop3 = index < 3;
 
   return (
-    <div className="shrink-0 text-right">
+    <div className={cn("shrink-0", "text-right")}>
       <div
         className={cn(
           "text-xl font-black tabular-nums transition-all",
@@ -27,7 +27,7 @@ export default function LeaderboardScore({
       >
         {score.toLocaleString()}
       </div>
-      <div className="text-[10px] font-black tracking-widest text-slate-600 uppercase">
+      <div className={cn("tn-text-10", "font-black", "tracking-widest", "text-slate-600", "uppercase")}>
         {currency === "gold" ? "VÀNG" : "K.CƯƠNG"}
       </div>
     </div>

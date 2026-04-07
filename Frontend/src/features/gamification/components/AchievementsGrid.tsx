@@ -8,19 +8,20 @@ import { useLocalizedField } from "@/features/gamification/useLocalizedField";
 import GamificationDetailModal from "@/features/gamification/components/GamificationDetailModal";
 import { AchievementCard } from "@/features/gamification/components/achievement/AchievementCard";
 import { AchievementsHeader } from "@/features/gamification/components/achievement/AchievementsHeader";
+import { cn } from "@/lib/utils";
 
 export default function AchievementsGrid() {
  const t = useTranslations("Gamification");
  const { data, isLoading } = useAchievements();
  const { localize } = useLocalizedField();
  const [selectedAchievement, setSelectedAchievement] = useState<{ definition: AchievementDefinition; unlockedInfo?: UserAchievement } | null>(null);
- if (isLoading) return <div className="flex justify-center items-center py-12"><div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" /></div>;
+ if (isLoading) return <div className={cn("flex", "items-center", "justify-center", "py-12")}><div className={cn("h-10", "w-10", "animate-spin", "rounded-full", "border-4", "border-amber-500", "border-t-transparent")} /></div>;
  if (!data) return null;
 
  return (
-  <div className="space-y-6">
+  <div className={cn("space-y-6")}>
    <AchievementsHeader title={t("Achievements")} subtitle={t("UnlockedAmount", { count: data.unlockedList.length, total: data.definitions.length })} />
-   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+   <div className={cn("grid", "grid-cols-4", "gap-4")}>
     {data.definitions.map((definition: AchievementDefinition) => {
      const unlockedInfo = data.unlockedList.find((item: UserAchievement) => item.achievementCode === definition.code);
      if (definition.isHidden && !unlockedInfo) return null;

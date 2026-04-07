@@ -1,4 +1,5 @@
 import { Calendar, Clock, Globe } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface LeaderboardPeriodTabsProps {
  period: "daily" | "monthly" | "all";
@@ -6,13 +7,13 @@ interface LeaderboardPeriodTabsProps {
 }
 
 export function LeaderboardPeriodTabs({ period, onChange }: LeaderboardPeriodTabsProps) {
- const tabClassName = (tab: "daily" | "monthly" | "all") => period === tab ? "bg-slate-700 text-white shadow-sm" : "text-slate-500 hover:text-slate-300";
+ const tabClassName = (tab: "daily" | "monthly" | "all") => (period === tab ? cn("bg-slate-700", "text-white", "shadow-sm") : cn("text-slate-500"));
 
  return (
-  <div className="flex items-center gap-2 mb-8 p-1 bg-slate-900/40 rounded-xl w-fit">
-   <button type="button" onClick={() => onChange("daily")} className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all duration-200 ${tabClassName("daily")}`}><Clock className="w-3.5 h-3.5" />Ngày</button>
-   <button type="button" onClick={() => onChange("monthly")} className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all duration-200 ${tabClassName("monthly")}`}><Calendar className="w-3.5 h-3.5" />Tháng</button>
-   <button type="button" onClick={() => onChange("all")} className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all duration-200 ${tabClassName("all")}`}><Globe className="w-3.5 h-3.5" />Tất cả</button>
+  <div className={cn("mb-8", "flex", "w-fit", "items-center", "gap-2", "rounded-xl", "bg-slate-900/40", "p-1")}>
+   <button type="button" onClick={() => onChange("daily")} className={cn("flex", "items-center", "gap-2", "rounded-lg", "px-4", "py-1.5", "text-xs", "font-semibold", "uppercase", "tracking-wider", "transition-all", "duration-200", tabClassName("daily"))}><Clock className={cn("h-4", "w-4")} />Ngày</button>
+   <button type="button" onClick={() => onChange("monthly")} className={cn("flex", "items-center", "gap-2", "rounded-lg", "px-4", "py-1.5", "text-xs", "font-semibold", "uppercase", "tracking-wider", "transition-all", "duration-200", tabClassName("monthly"))}><Calendar className={cn("h-4", "w-4")} />Tháng</button>
+   <button type="button" onClick={() => onChange("all")} className={cn("flex", "items-center", "gap-2", "rounded-lg", "px-4", "py-1.5", "text-xs", "font-semibold", "uppercase", "tracking-wider", "transition-all", "duration-200", tabClassName("all"))}><Globe className={cn("h-4", "w-4")} />Tất cả</button>
   </div>
  );
 }

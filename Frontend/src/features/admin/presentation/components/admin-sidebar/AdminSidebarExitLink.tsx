@@ -16,14 +16,14 @@ export function AdminSidebarExitLink({
  onClose,
 }: AdminSidebarExitLinkProps) {
  return (
-  <div className={cn('border-t border-[var(--border-subtle)] shrink-0', isDropdown ? 'p-4' : 'p-6 sm:p-8')}>
+  <div className={cn('border-t tn-border-soft shrink-0', isDropdown ? 'p-4' : 'tn-admin-sidebar-brand-pad')}>
    <Link
     href="/"
     onClick={onClose}
-    className={cn('flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-[var(--bg-elevated)] border border-[var(--border-subtle)] hover:bg-[var(--danger)]/10 hover:border-[var(--danger)]/20 hover:text-[var(--danger)] transition-all group')}
+    className={cn('tn-admin-exit-link flex items-center justify-center gap-3 px-6 py-4 rounded-2xl tn-bg-elevated border tn-border-soft transition-all group')}
    >
-    <LogOut className={cn('w-5 h-5 text-[var(--text-secondary)] group-hover:text-[var(--danger)] transition-colors')} />
-    <span className={cn('text-[10px] font-black uppercase tracking-widest')}>{label}</span>
+    <LogOut className={cn('tn-group-text-danger w-5 h-5 tn-text-secondary transition-colors')} />
+    <span className={cn('tn-text-10 font-black uppercase tracking-widest')}>{label}</span>
    </Link>
   </div>
  );

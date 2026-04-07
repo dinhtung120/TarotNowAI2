@@ -18,32 +18,32 @@ export default function StepPagination({
  onPrev,
  onNext,
  currentLabel,
- className = 'px-8 py-6 tn-surface-soft flex flex-col md:flex-row md:items-center justify-between gap-4 border-t tn-border-soft',
+ className,
 }: StepPaginationProps) {
  return (
-  <div className={className}>
+  <div className={cn('tn-step-pagination-layout px-8 py-6 tn-surface-soft justify-between gap-4 border-t tn-border-soft', className)}>
    {summary ? (
-    <div className={cn("text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] text-left")}>{summary}</div>
+    <div className={cn("tn-text-10 font-black uppercase tracking-widest tn-text-tertiary text-left")}>{summary}</div>
    ) : null}
    <div className={cn("flex items-center gap-3")}>
     <button
      type="button"
      onClick={onPrev}
      disabled={!canPrev}
-     className={cn("p-2.5 min-h-11 min-w-11 rounded-xl tn-panel hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-md")}
+     className={cn("p-2.5 min-h-11 min-w-11 rounded-xl tn-panel tn-pagination-btn transition-all")}
     >
-     <ChevronLeft className={cn("w-4 h-4 text-[var(--text-secondary)]")} />
+     <ChevronLeft className={cn("w-4 h-4 tn-text-secondary")} />
     </button>
     {currentLabel ? (
-     <span className={cn("text-xs font-black text-[var(--purple-accent)] italic mx-2")}>{currentLabel}</span>
+     <span className={cn("text-xs font-black tn-text-accent italic mx-2")}>{currentLabel}</span>
     ) : null}
     <button
      type="button"
      onClick={onNext}
      disabled={!canNext}
-     className={cn("p-2.5 min-h-11 min-w-11 rounded-xl tn-panel hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-md")}
+     className={cn("p-2.5 min-h-11 min-w-11 rounded-xl tn-panel tn-pagination-btn transition-all")}
     >
-     <ChevronRight className={cn("w-4 h-4 text-[var(--text-secondary)]")} />
+     <ChevronRight className={cn("w-4 h-4 tn-text-secondary")} />
     </button>
    </div>
   </div>

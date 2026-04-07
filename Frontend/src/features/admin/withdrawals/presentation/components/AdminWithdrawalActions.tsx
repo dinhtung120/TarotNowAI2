@@ -26,7 +26,7 @@ export function AdminWithdrawalActions({
  value,
 }: AdminWithdrawalActionsProps) {
  return (
-  <div className={cn('flex flex-col md:flex-row items-center gap-4 pt-2 border-t tn-border-soft')}>
+  <div className={cn('tn-flex-col-row-md items-center gap-4 pt-2 border-t tn-border-soft')}>
    <Input
     leftIcon={<User className={cn('w-4 h-4')} />}
     placeholder={notePlaceholder}
@@ -34,12 +34,12 @@ export function AdminWithdrawalActions({
     onChange={(event) => onChangeNote(event.target.value)}
     className={cn('flex-1 w-full text-xs font-black uppercase tracking-widest tn-text-primary shadow-inner tn-panel-soft')}
    />
-   <div className={cn('flex items-center gap-3 w-full md:w-auto shrink-0')}>
-    <Button variant="primary" onClick={onApprove} disabled={disabled} className={cn('flex-1 md:flex-none py-3 shadow-md bg-[var(--success)] tn-text-primary hover:bg-[var(--success)] hover:brightness-110')}>
+   <div className={cn('flex items-center gap-3 w-full tn-w-full-auto-md shrink-0')}>
+    <Button variant="primary" onClick={onApprove} disabled={disabled} className={cn('tn-flex-1-none-sm py-3 shadow-md tn-bg-success tn-text-primary tn-hover-brightness-110')}>
      {disabled ? <Loader2 className={cn('w-4 h-4 animate-spin')} /> : <CheckCircle2 className={cn('w-4 h-4')} />}
      {approveLabel}
     </Button>
-    <Button variant="danger" onClick={onReject} disabled={disabled} className={cn('flex-1 md:flex-none py-3 shadow-md')}>
+    <Button variant="danger" onClick={onReject} disabled={disabled} className={cn('tn-flex-1-none-sm py-3 shadow-md')}>
      {disabled ? <Loader2 className={cn('w-4 h-4 animate-spin')} /> : <XCircle className={cn('w-4 h-4')} />}
      {rejectLabel}
     </Button>

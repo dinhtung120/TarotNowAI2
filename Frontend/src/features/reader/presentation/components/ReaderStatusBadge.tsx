@@ -10,24 +10,24 @@ export function ReaderStatusBadge({ status, t }: ReaderStatusBadgeProps) {
  const normalized = normalizeReaderStatus(status);
  if (normalized === "online") {
   return (
-   <div className={cn("inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--success)]/10 border border-[var(--success)]/20 shadow-[0_0_15px_var(--c-16-185-129-10)]")}>
-    <div className={cn("w-2 h-2 rounded-full bg-[var(--success)] animate-pulse shadow-[0_0_8px_currentColor]")} />
-    <span className={cn("text-[10px] font-black uppercase tracking-widest text-[var(--success)]")}>{t("profile.status.online")}</span>
+   <div className={cn("inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full tn-bg-success-10 border tn-border-success-20")}>
+    <div className={cn("w-2 h-2 rounded-full tn-bg-success animate-pulse")} />
+    <span className={cn("tn-text-10 font-black uppercase tracking-widest tn-text-success")}>{t("profile.status.online")}</span>
    </div>
   );
  }
  if (normalized === "busy") {
   return (
-   <div className={cn("inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--warning)]/10 border border-[var(--warning)]/20 shadow-[0_0_15px_var(--c-245-158-11-10)]")}>
-    <div className={cn("w-2 h-2 rounded-full bg-[var(--warning)] shadow-[0_0_8px_currentColor]")} />
-    <span className={cn("text-[10px] font-black uppercase tracking-widest text-[var(--warning)]")}>{t("profile.status.busy")}</span>
+   <div className={cn("inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full tn-bg-warning-10 border tn-border-warning-20")}>
+    <div className={cn("w-2 h-2 rounded-full tn-bg-warning")} />
+    <span className={cn("tn-text-10 font-black uppercase tracking-widest tn-text-warning")}>{t("profile.status.busy")}</span>
    </div>
   );
  }
  return (
   <div className={cn("inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full tn-surface-strong border tn-border")}>
-   <div className={cn("w-2 h-2 rounded-full bg-[var(--text-muted)]")} />
-   <span className={cn("text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]")}>{t("profile.status.offline")}</span>
+   <div className={cn("w-2 h-2 rounded-full tn-bg-muted")} />
+   <span className={cn("tn-text-10 font-black uppercase tracking-widest tn-text-secondary")}>{t("profile.status.offline")}</span>
   </div>
  );
 }

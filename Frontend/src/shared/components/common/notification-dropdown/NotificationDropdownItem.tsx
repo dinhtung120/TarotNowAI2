@@ -27,20 +27,20 @@ export const NotificationDropdownItem = memo(function NotificationDropdownItem({
    className={cn(
     'group flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors',
     !item.isRead
-     ? 'bg-[var(--purple-accent)]/5 hover:bg-[var(--purple-accent)]/10 border-l-[3px] border-l-[var(--purple-accent)]'
-     : 'bg-transparent hover:bg-[var(--bg-surface-hover)] opacity-80 border-l-[3px] border-l-transparent',
+     ? 'tn-notification-item-unread'
+     : 'tn-notification-item-read',
    )}
   >
-   <div className={cn('w-8 h-8 rounded-full bg-[var(--bg-glass)] flex items-center justify-center shrink-0 border border-[var(--border-subtle)] group-hover:border-[var(--border-default)] transition-colors')}>
+   <div className={cn('w-8 h-8 rounded-full tn-bg-glass flex items-center justify-center shrink-0 border tn-border-soft transition-colors', item.isRead ? 'tn-notification-item-icon-read' : '')}>
     <Icon className={cn('w-4 h-4', vm.typeConfig.colorClass)} />
    </div>
    <div className={cn('flex-1 min-w-0')}>
-    <p className={cn('text-[13px] leading-tight line-clamp-2', !item.isRead ? 'font-bold text-[var(--text-ink)]' : 'font-medium text-[var(--text-secondary)]')}>
+    <p className={cn('tn-text-13 leading-tight line-clamp-2', !item.isRead ? 'font-bold tn-text-ink' : 'font-medium tn-text-secondary')}>
      {title}
     </p>
-    <p className={cn('mt-1 text-[11px] font-medium text-[var(--purple-muted)]')}>{timeLabel}</p>
+    <p className={cn('mt-1 tn-text-11 font-medium tn-text-accent-soft')}>{timeLabel}</p>
    </div>
-   {!item.isRead ? <div className={cn('w-2 h-2 rounded-full bg-[var(--danger)] shrink-0 self-center')} /> : null}
+   {!item.isRead ? <div className={cn('w-2 h-2 rounded-full tn-bg-danger shrink-0 self-center')} /> : null}
   </div>
  );
 });

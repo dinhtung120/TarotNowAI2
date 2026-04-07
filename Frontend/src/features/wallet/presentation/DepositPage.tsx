@@ -18,7 +18,7 @@ export default function DepositPage() {
       )}
     >
       <DepositHeader {...vm.headerLabels} />
-      <div className={cn("grid grid-cols-1 gap-10 lg:grid-cols-12")}>
+      <div className={cn("tn-grid-cols-1-12-lg gap-10")}>
         <DepositPageLeftColumn
           balance={vm.balance}
           locale={vm.locale}

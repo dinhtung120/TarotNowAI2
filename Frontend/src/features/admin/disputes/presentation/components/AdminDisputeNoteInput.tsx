@@ -19,7 +19,7 @@ export function AdminDisputeNoteInput({
    onChange={(event) => onChange(event.target.value)}
    rows={2}
    placeholder={placeholder}
-   className={cn('w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm text-[var(--text-primary)]')}
+   className={cn('w-full rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-sm tn-text-primary')}
   />
  );
 }

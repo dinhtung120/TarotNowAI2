@@ -13,9 +13,9 @@ interface StepItem {
 }
 
 const ICON_CLASS_BY_COLOR: Record<StepColor, string> = {
-  purple: 'text-[var(--purple-accent)]',
-  amber: 'text-[var(--warning)]',
-  emerald: 'text-[var(--success)]',
+  purple: 'tn-text-accent',
+  amber: 'tn-text-warning',
+  emerald: 'tn-text-success',
 };
 
 export default function ReaderApplyStepsGrid() {
@@ -27,12 +27,12 @@ export default function ReaderApplyStepsGrid() {
   ];
 
   return (
-    <div className={cn('grid grid-cols-1 gap-4 md:grid-cols-3')}>
+    <div className={cn('tn-grid-1-3-md gap-4')}>
       {steps.map((step) => (
         <div key={step.title} className={cn('space-y-2 rounded-2xl bg-white/5 p-5 text-center')}>
           <step.icon className={cn('mx-auto h-6 w-6', ICON_CLASS_BY_COLOR[step.color])} />
-          <div className={cn('text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]')}>{step.title}</div>
-          <p className={cn('text-[10px] text-[var(--text-muted)]')}>{step.description}</p>
+          <div className={cn('tn-text-10 font-black uppercase tracking-widest tn-text-secondary')}>{step.title}</div>
+          <p className={cn('tn-text-10 tn-text-muted')}>{step.description}</p>
         </div>
       ))}
     </div>

@@ -1,4 +1,5 @@
 import { RefreshCcw } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface VerifyEmailResendButtonProps {
  isResending: boolean;
@@ -10,8 +11,30 @@ interface VerifyEmailResendButtonProps {
 
 export function VerifyEmailResendButton({ isResending, resendTimer, resendLabel, resendWithTimerLabel, onResend }: VerifyEmailResendButtonProps) {
  return (
-  <button type="button" onClick={onResend} disabled={resendTimer > 0 || isResending} className="text-[10px] font-black uppercase tracking-widest tn-text-muted hover:tn-text-primary transition-all flex items-center justify-center gap-2 mx-auto disabled:opacity-50 disabled:cursor-not-allowed group min-h-11 px-3 rounded-xl hover:tn-surface-soft">
-   <RefreshCcw className={`w-3.5 h-3.5 ${isResending ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-500"}`} />
+  <button
+   type="button"
+   onClick={onResend}
+   disabled={resendTimer > 0 || isResending}
+   className={cn(
+    "mx-auto",
+    "flex",
+    "min-h-11",
+    "items-center",
+    "justify-center",
+    "gap-2",
+    "rounded-xl",
+    "px-3",
+    "text-xs",
+    "font-black",
+    "uppercase",
+    "tracking-widest",
+    "transition-all",
+    "tn-text-muted",
+    "disabled:cursor-not-allowed",
+    "disabled:opacity-50",
+   )}
+  >
+   <RefreshCcw className={cn("h-4", "w-4", isResending ? "animate-spin" : "transition-transform", "duration-500")} />
    {resendTimer > 0 ? resendWithTimerLabel(resendTimer) : resendLabel}
   </button>
  );

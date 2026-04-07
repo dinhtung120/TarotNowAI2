@@ -19,22 +19,22 @@ export function AdminDisputeMetaGrid({
  readerLabel,
 }: AdminDisputeMetaGridProps) {
  return (
-  <div className={cn('grid grid-cols-1 md:grid-cols-4 gap-3 text-xs')}>
+  <div className={cn('tn-grid-cols-1-4-md gap-3 text-xs')}>
    <div>
-    <div className={cn('text-[var(--text-tertiary)] uppercase tracking-widest text-[10px]')}>{itemIdLabel}</div>
-    <div className={cn('font-mono text-[var(--text-secondary)] break-all')}>{item.id}</div>
+    <div className={cn('tn-text-tertiary uppercase tracking-widest tn-text-10')}>{itemIdLabel}</div>
+    <div className={cn('font-mono tn-text-secondary break-all')}>{item.id}</div>
    </div>
    <div>
-    <div className={cn('text-[var(--text-tertiary)] uppercase tracking-widest text-[10px]')}>{amountLabel}</div>
-    <div className={cn('font-bold text-[var(--warning)]')}>{item.amountDiamond} 💎</div>
+    <div className={cn('tn-text-tertiary uppercase tracking-widest tn-text-10')}>{amountLabel}</div>
+    <div className={cn('font-bold tn-text-warning')}>{item.amountDiamond} 💎</div>
    </div>
    <div>
-    <div className={cn('text-[var(--text-tertiary)] uppercase tracking-widest text-[10px]')}>{payerLabel}</div>
-    <div className={cn('font-mono text-[var(--text-secondary)] break-all')}>{item.payerId}</div>
+    <div className={cn('tn-text-tertiary uppercase tracking-widest tn-text-10')}>{payerLabel}</div>
+    <div className={cn('font-mono tn-text-secondary break-all')}>{item.payerId}</div>
    </div>
    <div>
-    <div className={cn('text-[var(--text-tertiary)] uppercase tracking-widest text-[10px]')}>{readerLabel}</div>
-    <div className={cn('font-mono text-[var(--text-secondary)] break-all')}>{item.receiverId}</div>
+    <div className={cn('tn-text-tertiary uppercase tracking-widest tn-text-10')}>{readerLabel}</div>
+    <div className={cn('font-mono tn-text-secondary break-all')}>{item.receiverId}</div>
    </div>
   </div>
  );

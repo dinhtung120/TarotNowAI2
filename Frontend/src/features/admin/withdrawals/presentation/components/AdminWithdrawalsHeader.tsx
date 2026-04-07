@@ -16,10 +16,10 @@ export function AdminWithdrawalsHeader({
  title,
 }: AdminWithdrawalsHeaderProps) {
  return (
-  <div className={cn('flex flex-col md:flex-row md:items-end justify-between gap-6')}>
+  <div className={cn('flex flex-col tn-md-flex-row tn-md-items-end justify-between gap-6')}>
    <SectionHeader
     tag={tag}
-    tagIcon={<Sparkles className={cn('w-3 h-3 text-[var(--success)]')} />}
+    tagIcon={<Sparkles className={cn('w-3 h-3 tn-text-success')} />}
     title={title}
     subtitle={subtitle}
     className={cn('mb-0 text-left items-start')}

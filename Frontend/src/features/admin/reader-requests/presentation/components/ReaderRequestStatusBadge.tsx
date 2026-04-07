@@ -16,7 +16,7 @@ export function ReaderRequestStatusBadge({
 }: ReaderRequestStatusBadgeProps) {
  if (status === 'pending') {
   return (
-   <span className={cn('inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--warning)]/10 text-[var(--warning)] text-[9px] font-black uppercase tracking-widest border border-[var(--warning)]/20 shadow-inner')}>
+   <span className={cn('inline-flex items-center gap-1.5 px-3 py-1 rounded-full tn-badge-warning tn-text-9 font-black uppercase tracking-widest border shadow-inner')}>
     <Clock className={cn('w-3 h-3')} />
     {labels.pending}
    </span>
@@ -25,7 +25,7 @@ export function ReaderRequestStatusBadge({
 
  if (status === 'approved') {
   return (
-   <span className={cn('inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--success)]/10 text-[var(--success)] text-[9px] font-black uppercase tracking-widest border border-[var(--success)]/20 shadow-inner')}>
+   <span className={cn('inline-flex items-center gap-1.5 px-3 py-1 rounded-full tn-badge-success tn-text-9 font-black uppercase tracking-widest border shadow-inner')}>
     <CheckCircle2 className={cn('w-3 h-3')} />
     {labels.approved}
    </span>
@@ -34,7 +34,7 @@ export function ReaderRequestStatusBadge({
 
  if (status === 'rejected') {
   return (
-   <span className={cn('inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--danger)]/10 text-[var(--danger)] text-[9px] font-black uppercase tracking-widest border border-[var(--danger)]/20 shadow-inner')}>
+   <span className={cn('inline-flex items-center gap-1.5 px-3 py-1 rounded-full tn-badge-danger tn-text-9 font-black uppercase tracking-widest border shadow-inner')}>
     <XCircle className={cn('w-3 h-3')} />
     {labels.rejected}
    </span>

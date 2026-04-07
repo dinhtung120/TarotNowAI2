@@ -15,7 +15,7 @@ export function AdminDisputeSplitInput({
 }: AdminDisputeSplitInputProps) {
  return (
   <div className={cn('flex items-center gap-2')}>
-   <span className={cn('text-xs text-[var(--text-secondary)]')}>{label}</span>
+   <span className={cn('text-xs tn-text-secondary')}>{label}</span>
    <input
     type="number"
     min={1}
@@ -26,7 +26,7 @@ export function AdminDisputeSplitInput({
      if (Number.isFinite(value) == false) return;
      onChange(Math.max(1, Math.min(99, value)));
     }}
-    className={cn('w-24 rounded-lg bg-white/5 border border-white/10 px-2 py-1 text-xs text-[var(--text-primary)]')}
+    className={cn('w-24 rounded-lg bg-white/5 border border-white/10 px-2 py-1 text-xs tn-text-primary')}
    />
   </div>
  );

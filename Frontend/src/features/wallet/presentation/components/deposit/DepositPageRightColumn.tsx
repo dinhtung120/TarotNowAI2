@@ -32,7 +32,7 @@ interface DepositPageRightColumnProps {
 
 export function DepositPageRightColumn(props: DepositPageRightColumnProps) {
  return (
-  <div className={cn('lg:col-span-5 space-y-6')}>
+  <div className={cn('tn-col-span-5-lg space-y-6')}>
    <DepositSummaryCard
     locale={props.locale}
     amountVnd={props.amountVnd}

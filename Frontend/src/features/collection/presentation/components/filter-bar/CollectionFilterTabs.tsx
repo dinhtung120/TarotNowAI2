@@ -37,7 +37,7 @@ export default function CollectionFilterTabs({
       <div className={cn("tn-text-muted mr-4 flex items-center gap-2")}>
         <Filter className={cn("h-3.5 w-3.5")} />
         <span
-          className={cn("text-[10px] font-black tracking-widest uppercase")}
+          className={cn("tn-text-10 font-black tracking-widest uppercase")}
         >
           {labels.filtersLabel}
         </span>

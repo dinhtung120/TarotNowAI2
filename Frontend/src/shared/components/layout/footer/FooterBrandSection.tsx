@@ -1,5 +1,6 @@
 import ThemeSwitcher from "@/shared/components/common/ThemeSwitcher";
 import LanguageSwitcher from "@/shared/components/common/LanguageSwitcher";
+import { cn } from "@/lib/utils";
 
 interface FooterBrandSectionProps {
  tagline: string;
@@ -7,21 +8,21 @@ interface FooterBrandSectionProps {
 
 export function FooterBrandSection({ tagline }: FooterBrandSectionProps) {
  return (
-  <div className="relative w-full max-w-6xl">
-   <div className="relative min-h-14 hidden sm:block">
-    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1 text-center">
-     <span className="text-2xl font-black italic tracking-tighter lunar-metallic-text">TarotNow AI</span>
-     <p className="text-[9px] text-[var(--text-secondary)] font-black uppercase tracking-[0.4em]">{tagline}</p>
+  <div className={cn("relative", "w-full", "max-w-6xl")}>
+   <div className={cn("relative", "tn-show-sm", "min-h-14")}>
+    <div className={cn("absolute", "left-1/2", "top-1/2", "flex", "-translate-x-1/2", "-translate-y-1/2", "flex-col", "items-center", "gap-1", "text-center")}>
+     <span className={cn("lunar-metallic-text", "text-2xl", "font-black", "italic", "tracking-tighter")}>TarotNow AI</span>
+     <p className={cn("tn-footer-tagline", "tn-text-secondary")}>{tagline}</p>
     </div>
-    <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-2">
+    <div className={cn("absolute", "right-0", "top-1/2", "flex", "-translate-y-1/2", "items-center", "gap-2")}>
      <ThemeSwitcher />
      <LanguageSwitcher />
     </div>
    </div>
-   <div className="sm:hidden flex flex-col items-center gap-3 text-center">
-    <span className="text-2xl font-black italic tracking-tighter lunar-metallic-text">TarotNow AI</span>
-    <p className="text-[9px] text-[var(--text-secondary)] font-black uppercase tracking-[0.4em]">{tagline}</p>
-    <div className="flex items-center gap-2">
+   <div className={cn("tn-hide-sm", "flex-col", "items-center", "gap-3", "text-center")}>
+    <span className={cn("lunar-metallic-text", "text-2xl", "font-black", "italic", "tracking-tighter")}>TarotNow AI</span>
+    <p className={cn("tn-footer-tagline", "tn-text-secondary")}>{tagline}</p>
+    <div className={cn("flex", "items-center", "gap-2")}>
      <ThemeSwitcher />
      <LanguageSwitcher />
     </div>

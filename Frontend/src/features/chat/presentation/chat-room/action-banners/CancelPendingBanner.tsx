@@ -16,7 +16,7 @@ export default function CancelPendingBanner({
         "flex items-center justify-between gap-3 border-b border-white/10 bg-white/5 px-4 py-2",
       )}
     >
-      <p className={cn("text-xs text-[var(--text-secondary)]")}>
+      <p className={cn("text-xs tn-text-secondary")}>
         Bạn có thể hủy cuộc trò chuyện pending nếu chưa muốn tiếp tục.
       </p>
       <button

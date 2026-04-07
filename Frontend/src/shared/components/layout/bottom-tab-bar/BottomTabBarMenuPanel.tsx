@@ -57,7 +57,7 @@ export default function BottomTabBarMenuPanel({
          isSubActive ? 'text-[var(--purple-accent)]' : 'text-[var(--text-muted)]',
         )}
        />
-       <span className={cn('text-[13px] tracking-wide', isSubActive ? 'font-black' : 'font-semibold')}>
+       <span className={cn('tn-text-13 tracking-wide', isSubActive ? 'font-black' : 'font-semibold')}>
         {tNav(sub.labelKey)}
        </span>
       </Link>

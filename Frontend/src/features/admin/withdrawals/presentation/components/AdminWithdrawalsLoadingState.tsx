@@ -13,8 +13,8 @@ export function AdminWithdrawalsLoadingState({
  return (
   <div className={cn('flex items-center justify-center py-20')}>
    <div className={cn('flex flex-col items-center justify-center space-y-4')}>
-    <Loader2 className={cn('w-8 h-8 animate-spin text-[var(--success)]')} />
-    <span className={cn('text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]')}>{label}</span>
+    <Loader2 className={cn('w-8 h-8 animate-spin tn-text-success')} />
+    <span className={cn('tn-text-10 font-black uppercase tracking-widest tn-text-secondary')}>{label}</span>
    </div>
   </div>
  );

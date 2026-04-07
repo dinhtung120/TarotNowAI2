@@ -38,7 +38,7 @@ export default function SectionHeaderTextBlock({
       >
         {title}
         {titleMuted ? (
-          <span className={cn("text-[var(--text-secondary)]")}>
+          <span className={cn("tn-text-secondary")}>
             {" "}
             {titleMuted}
           </span>
@@ -47,7 +47,7 @@ export default function SectionHeaderTextBlock({
       {subtitle ? (
         <p
           className={cn(
-            "max-w-lg text-sm leading-relaxed font-medium text-[var(--text-secondary)]",
+            "max-w-lg text-sm leading-relaxed font-medium tn-text-secondary",
           )}
         >
           {subtitle}

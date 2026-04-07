@@ -18,10 +18,10 @@ export function HistoryDetailCardItem({
 }: HistoryDetailCardItemProps) {
  return (
   <div className={cn('group flex flex-col items-center gap-6')}>
-   <div className={cn('relative w-full aspect-[14/22] flex flex-col items-center group cursor-pointer transition-all duration-700 hover:-translate-y-2')}>
-    <div className={cn('w-full h-full tn-surface-strong rounded-xl flex items-center justify-center shadow-xl overflow-hidden relative border tn-border-soft group-hover:shadow-[0_10px_40px_var(--c-168-85-247-20)] transition-shadow')}>
-     <div className={cn('absolute inset-0 bg-gradient-to-tr from-[var(--purple-accent)]/20 to-transparent pointer-events-none')} />
-     <div className={cn('absolute inset-2 border border-[var(--purple-accent)]/10 rounded-lg pointer-events-none')} />
+   <div className={cn('tn-history-card-lift relative w-full tn-aspect-14-22 flex flex-col items-center group cursor-pointer transition-all duration-700')}>
+    <div className={cn('tn-history-card-shell w-full h-full tn-surface-strong rounded-xl flex items-center justify-center shadow-xl overflow-hidden relative border tn-border-soft transition-shadow')}>
+     <div className={cn('tn-history-card-overlay absolute inset-0 pointer-events-none')} />
+     <div className={cn('tn-history-card-inner-border absolute inset-2 rounded-lg pointer-events-none')} />
      {cardImageUrl ? (
       <Image
        src={cardImageUrl}
@@ -36,10 +36,10 @@ export function HistoryDetailCardItem({
      )}
     </div>
    </div>
-   <div className={cn('mt-4 text-center px-2 transition-all duration-500 group-hover:scale-105')}>
+   <div className={cn('tn-group-scale-105 mt-4 text-center px-2 transition-all duration-500')}>
     <h3 className={cn('text-sm font-bold tn-text-primary font-serif leading-tight px-2 mb-2')}>{cardName}</h3>
-    <p className={cn('text-[9px] font-black uppercase tracking-[0.25em] text-[var(--purple-accent)] mb-2')}>{essenceLabel}</p>
-    <p className={cn('text-[11px] font-medium text-[var(--text-secondary)] leading-relaxed italic line-clamp-2 hover:line-clamp-none transition-all')}>{cardMeaning}</p>
+    <p className={cn('tn-text-9 font-black uppercase tn-tracking-025 tn-text-accent mb-2')}>{essenceLabel}</p>
+    <p className={cn('tn-text-11 font-medium tn-text-secondary leading-relaxed italic line-clamp-2 transition-all')}>{cardMeaning}</p>
    </div>
   </div>
  );

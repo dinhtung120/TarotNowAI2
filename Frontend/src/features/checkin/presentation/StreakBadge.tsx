@@ -2,6 +2,7 @@
 
 import { useStreakStatus } from '@/features/checkin/application/hooks';
 import { Flame } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export default function StreakBadge() {
   
@@ -17,12 +18,23 @@ export default function StreakBadge() {
 
   return (
     <div
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl
-        border transition-all duration-300 cursor-default select-none min-h-9
-        ${isActive
-          ? 'bg-[var(--amber-50)] border-[var(--amber-accent)]/20 shadow-[0_0_12px_rgba(245,158,11,0.15)] hover:shadow-[0_0_18px_rgba(245,158,11,0.25)]'
-          : 'bg-[var(--bg-surface-hover)] border-[var(--border-subtle)]'
-        }`}
+      className={cn(
+        "inline-flex",
+        "min-h-9",
+        "cursor-default",
+        "select-none",
+        "items-center",
+        "gap-1.5",
+        "rounded-xl",
+        "border",
+        "px-2.5",
+        "py-1.5",
+        "transition-all",
+        "duration-300",
+        isActive
+          ? "border-amber-500/20 bg-amber-50 shadow-md"
+          : "border-slate-700 bg-slate-800/70",
+      )}
       title={isActive
         ? `Chuỗi ${streak} ngày rút bài liên tiếp`
         : 'Rút bài AI để bắt đầu chuỗi Streak!'
@@ -30,18 +42,17 @@ export default function StreakBadge() {
     >
       {}
       <Flame
-        className={`w-4 h-4 ${
-          isActive
-            ? 'text-[var(--amber-accent)] drop-shadow-[0_0_4px_rgba(245,158,11,0.6)]'
-            : 'text-[var(--text-muted)]'
-        } ${streak >= 7 ? 'animate-pulse' : ''}`}
+        className={cn(
+          "h-4",
+          "w-4",
+          isActive ? "text-amber-500" : "text-slate-400",
+          streak >= 7 ? "animate-pulse" : null,
+        )}
         fill={isActive ? 'var(--amber-accent)' : 'var(--text-muted)'}
       />
 
       {}
-      <span className={`text-[11px] font-black tracking-tight ${
-        isActive ? 'text-[var(--amber-accent)]' : 'text-[var(--text-muted)]'
-      }`}>
+      <span className={cn("text-xs", "font-black", "tracking-tight", isActive ? "text-amber-500" : "text-slate-400")}>
         {streak}
       </span>
     </div>

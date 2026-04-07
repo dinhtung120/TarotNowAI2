@@ -23,25 +23,25 @@ interface BadgeProps {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
- default: "bg-[var(--bg-elevated)] text-[var(--text-secondary)] border-[var(--border-default)]",
- purple: "bg-[var(--purple-50)] text-[var(--purple-muted)] border-[var(--border-default)]",
- amber: "bg-[color:var(--c-240-230-140-24)] text-[color:var(--c-hex-8c7a2f)] border-[color:var(--c-240-230-140-46)]",
- success: "bg-[var(--success-bg)] text-[var(--success)] border-[color:var(--c-138-184-154-42)]",
- error: "bg-[var(--error-bg)] text-[var(--error)] border-[color:var(--c-204-124-149-38)]",
- warning: "bg-[var(--warning-bg)] text-[color:var(--c-hex-9f8338)] border-[color:var(--c-215-190-125-42)]",
- info: "bg-[var(--info-bg)] text-[var(--info)] border-[color:var(--c-142-167-219-42)]",
+ default: "tn-bg-elevated tn-text-secondary tn-border",
+ purple: "tn-bg-purple-100 tn-text-accent-soft tn-border",
+ amber: "tn-bg-warning-10 tn-text-warning tn-border-warning-30",
+ success: "tn-bg-success-soft tn-text-success tn-border-success-30",
+ error: "tn-bg-danger-soft tn-text-danger tn-border-danger-50",
+ warning: "tn-bg-warning-soft tn-text-warning tn-border-warning-30",
+ info: "tn-bg-info-soft tn-text-info tn-border-info-20",
 };
 
 const sizeStyles: Record<BadgeSize, string> = {
- sm: "px-2 py-0.5 text-[9px]",
- md: "px-3 py-1 text-[10px]",
+ sm: "px-2 py-0.5 tn-text-9",
+ md: "px-3 py-1 tn-text-10",
 };
 
 function BadgeComponent({
  variant = "default",
  size = "sm",
  children,
- className = "",
+ className,
 }: BadgeProps) {
  return (
  <span

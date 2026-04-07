@@ -35,7 +35,7 @@ export default function Navbar({ onLogout }: NavbarProps = {}) {
   if (shouldHideNavbar(pathname)) return null;
 
   return (
-    <nav className={cn('fixed left-0 right-0 top-0 z-50 animate-in fade-in slide-in-from-top border-b border-[var(--border-subtle)] bg-[var(--bg-glass)] px-3 py-2.5 shadow-[0_8px_24px_var(--c-168-156-255-12)] duration-500 sm:px-4 md:px-6 md:py-3')}>
+    <nav className={cn('fixed left-0 right-0 top-0 z-50 animate-in fade-in slide-in-from-top border-b tn-border-soft tn-bg-glass tn-navbar-padding tn-navbar-shadow duration-500')}>
       <div className={cn('mx-auto flex max-w-7xl items-center justify-between')}>
         <NavbarBrandSection pathname={pathname} tNav={tNav} />
         <NavbarRightSection

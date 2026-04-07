@@ -1,6 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { cn } from "@/lib/utils";
 import { AiStreamFollowupComposer } from "./ai-stream/AiStreamFollowupComposer";
 import { AiStreamMessages } from "./ai-stream/AiStreamMessages";
 import { useAiStreamSession } from "./ai-stream/useAiStreamSession";
@@ -34,7 +35,7 @@ export default function AiInterpretationStream({ sessionId, onComplete, isReadyT
  if (!isReadyToShow) return <AiStreamNotReadyState waitingLabel={t("waiting_for_cards")} />;
 
  return (
-  <div className="w-full h-full flex flex-col relative animate-in fade-in duration-1000 px-0 md:px-2 overflow-hidden">
+  <div className={cn("w-full", "h-full", "flex", "flex-col", "relative", "animate-in", "fade-in", "duration-1000", "tn-px-0-2-md", "overflow-hidden")}>
    <AiStreamMessages
     messages={stream.messages}
     error={stream.error}

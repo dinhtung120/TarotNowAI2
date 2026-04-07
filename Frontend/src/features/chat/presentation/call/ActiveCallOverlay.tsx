@@ -8,36 +8,53 @@ import { useRemoteAudioPlayback } from '@/features/chat/presentation/call/hooks/
 import { cn } from '@/lib/utils';
 
 export const ActiveCallOverlay = () => {
-  const vm = useActiveCallOverlayState();
-  const durationLabel = useCallDuration({ isOpen: vm.isOpen, sessionId: vm.session?.id });
-  useAttachCallVideoStreams({
-    localStream: vm.localStream,
-    localVideoRef: vm.localVideoRef,
-    refreshKey: vm.isMinimized,
-    remoteStream: vm.remoteStream,
-    remoteVideoRef: vm.remoteVideoRef,
-  });
-  useRemoteAudioPlayback({ remoteAudioRef: vm.remoteAudioRef, remoteStream: vm.remoteStream });
+  const {
+    t,
+    session,
+    localStream,
+    remoteStream,
+    localVideoRef,
+    remoteVideoRef,
+    remoteAudioRef,
+    isOpen,
+    isVideo,
+    isMinimized,
+    handleEndCall,
+    minimize,
+    maximize,
+  } = useActiveCallOverlayState();
 
-  if (!vm.isOpen) return null;
+  const durationLabel = useCallDuration({ isOpen, sessionId: session?.id });
+
+  useAttachCallVideoStreams({
+    localStream,
+    localVideoRef,
+    refreshKey: isMinimized,
+    remoteStream,
+    remoteVideoRef,
+  });
+
+  useRemoteAudioPlayback({ remoteAudioRef, remoteStream });
+
+  if (!isOpen) return null;
 
   return (
     <>
-      <audio ref={vm.remoteAudioRef} autoPlay playsInline className={cn('sr-only')} />
+      <audio ref={remoteAudioRef} autoPlay playsInline className={cn('sr-only')} />
       <CallOverlayContent
-        activeTitle={vm.t('active_title')}
+        activeTitle={t('active_title')}
         durationLabel={durationLabel}
-        endCallLabel={vm.t('end_call')}
-        isMinimized={vm.isMinimized}
-        isVideo={vm.isVideo}
-        liveLabel={vm.t('live')}
-        localVideoRef={vm.localVideoRef}
-        maximizeLabel={vm.t('maximize')}
-        minimizeLabel={vm.t('minimize')}
-        remoteVideoRef={vm.remoteVideoRef}
-        onEndCall={vm.handleEndCall}
-        onMaximize={vm.maximize}
-        onMinimize={vm.minimize}
+        endCallLabel={t('end_call')}
+        isMinimized={isMinimized}
+        isVideo={isVideo}
+        liveLabel={t('live')}
+        localVideoRef={localVideoRef}
+        maximizeLabel={t('maximize')}
+        minimizeLabel={t('minimize')}
+        remoteVideoRef={remoteVideoRef}
+        onEndCall={handleEndCall}
+        onMaximize={maximize}
+        onMinimize={minimize}
       />
     </>
   );

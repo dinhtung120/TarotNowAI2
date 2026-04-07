@@ -5,6 +5,8 @@ import type { ActionResult } from '@/shared/domain/actionResult';
 type WalletBalanceFetcher = () => Promise<ActionResult<WalletBalance>>;
 type WalletStoreListener = () => void;
 type WalletStoreSelector<T> = (state: WalletState) => T;
+type WalletStateData = Pick<WalletState, 'balance' | 'isLoading' | 'error'>;
+type WalletStoreActions = Pick<WalletState, 'resetWallet' | 'fetchBalance' | 'setBalance'>;
 
 let walletBalanceFetcher: WalletBalanceFetcher | null = null;
 
@@ -23,7 +25,7 @@ interface WalletState {
 
 const walletListeners = new Set<WalletStoreListener>();
 
-const walletData: Pick<WalletState, 'balance' | 'isLoading' | 'error'> = {
+let walletData: WalletStateData = {
  balance: null,
  isLoading: false,
  error: null,
@@ -33,54 +35,89 @@ function notifyWalletListeners() {
  for (const listener of walletListeners) listener();
 }
 
-function getWalletState(): WalletState {
- return {
-  ...walletData,
-  resetWallet: () => {
-   walletData.balance = null;
-   walletData.isLoading = false;
-   walletData.error = null;
-   notifyWalletListeners();
-  },
-  fetchBalance: async () => {
-   if (walletData.isLoading) return;
+function createWalletSnapshot(data: WalletStateData, actions: WalletStoreActions): WalletState {
+ return { ...data, ...actions };
+}
 
-   walletData.isLoading = true;
-   walletData.error = null;
-   notifyWalletListeners();
+function isSameWalletData(nextData: WalletStateData) {
+ return (
+  walletData.balance === nextData.balance &&
+  walletData.isLoading === nextData.isLoading &&
+  walletData.error === nextData.error
+ );
+}
 
-   try {
-    const fetcher = walletBalanceFetcher;
-    if (!fetcher) {
-     walletData.error = 'Wallet balance fetcher is not configured';
-     walletData.isLoading = false;
-     notifyWalletListeners();
-     return;
-    }
+const walletActions: WalletStoreActions = {
+ resetWallet: () => {
+  updateWalletData({
+   balance: null,
+   isLoading: false,
+   error: null,
+  });
+ },
+ fetchBalance: async () => {
+  if (walletData.isLoading) return;
 
-    const result = await fetcher();
-    if (result.success && result.data) {
-     walletData.balance = result.data;
-     walletData.error = null;
-    } else {
-     walletData.balance = null;
-     walletData.error = result.error ?? 'Unknown error';
-    }
-   } catch (error: unknown) {
-    walletData.balance = null;
-    walletData.error = error instanceof Error ? error.message : 'Unknown error';
-   } finally {
-    walletData.isLoading = false;
-    notifyWalletListeners();
+  updateWalletData({
+   ...walletData,
+   isLoading: true,
+   error: null,
+  });
+
+  try {
+   const fetcher = walletBalanceFetcher;
+   if (!fetcher) {
+    updateWalletData({
+     ...walletData,
+     isLoading: false,
+     error: 'Wallet balance fetcher is not configured',
+    });
+    return;
    }
-  },
-  setBalance: (balance) => {
-   walletData.balance = balance;
-   walletData.isLoading = false;
-   walletData.error = null;
-   notifyWalletListeners();
-  },
- };
+
+   const result = await fetcher();
+   if (result.success && result.data) {
+    updateWalletData({
+     balance: result.data,
+     isLoading: false,
+     error: null,
+    });
+    return;
+   }
+
+   updateWalletData({
+    balance: null,
+    isLoading: false,
+    error: result.error ?? 'Unknown error',
+   });
+  } catch (error: unknown) {
+   updateWalletData({
+    balance: null,
+    isLoading: false,
+    error: error instanceof Error ? error.message : 'Unknown error',
+   });
+  }
+ },
+ setBalance: (balance) => {
+  updateWalletData({
+   balance,
+   isLoading: false,
+   error: null,
+  });
+ },
+};
+
+let walletSnapshot = createWalletSnapshot(walletData, walletActions);
+
+function updateWalletData(nextData: WalletStateData) {
+ if (isSameWalletData(nextData)) return;
+ walletData = nextData;
+ walletSnapshot = createWalletSnapshot(walletData, walletActions);
+ notifyWalletListeners();
+}
+
+function getWalletSnapshot() {
+ return walletSnapshot;
 }
 
 function subscribeWallet(listener: WalletStoreListener) {
@@ -94,13 +131,10 @@ type UseWalletStore = {
  getState: () => WalletState;
 };
 
-const identityWalletSelector = (state: WalletState) => state;
-
 export const useWalletStore = ((selector?: WalletStoreSelector<unknown>) =>
- useSyncExternalStore(
-  subscribeWallet,
-  () => (selector ? selector(getWalletState()) : identityWalletSelector(getWalletState())),
-  () => (selector ? selector(getWalletState()) : identityWalletSelector(getWalletState()))
- )) as UseWalletStore;
+ {
+  const snapshot = useSyncExternalStore(subscribeWallet, getWalletSnapshot, getWalletSnapshot);
+  return selector ? selector(snapshot) : snapshot;
+ }) as UseWalletStore;
 
-useWalletStore.getState = getWalletState;
+useWalletStore.getState = getWalletSnapshot;

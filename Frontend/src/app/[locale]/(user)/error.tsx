@@ -13,7 +13,7 @@ export default function UserSegmentError({ error, reset }: UserErrorProps) {
  useErrorBoundaryLogger('UserSegmentErrorBoundary', error);
 
  return (
-  <div className={cn("mx-auto flex min-h-[55vh] max-w-xl flex-col items-center justify-center gap-5 px-6 text-center")}>
+  <div className={cn("mx-auto flex tn-min-h-55vh max-w-xl flex-col items-center justify-center gap-5 px-6 text-center")}>
    <h2 className={cn("text-2xl font-bold tn-text-primary")}>Unable to load this page</h2>
    <p className={cn("tn-text-secondary")}>Please retry, or return to your home page.</p>
    <div className={cn("flex flex-wrap items-center justify-center gap-3")}>
@@ -26,7 +26,7 @@ export default function UserSegmentError({ error, reset }: UserErrorProps) {
     </button>
     <Link
      href="/"
-     className={cn("rounded-xl border px-4 py-2 text-sm font-semibold tn-border tn-text-secondary hover:tn-text-primary")}
+     className={cn("rounded-xl border px-4 py-2 text-sm font-semibold tn-border tn-text-secondary tn-hover-text-primary")}
     >
      Home
     </Link>

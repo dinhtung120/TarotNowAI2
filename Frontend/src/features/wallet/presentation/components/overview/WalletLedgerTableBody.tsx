@@ -31,7 +31,7 @@ export function WalletLedgerTableBody({
     isEmpty={!isLoading && items.length === 0}
     loadingLabel={labels.loading}
     emptyLabel={labels.empty}
-    loadingIcon={<Loader2 className={cn('w-8 h-8 animate-spin text-[var(--purple-accent)]')} />}
+    loadingIcon={<Loader2 className={cn('w-8 h-8 animate-spin tn-text-accent')} />}
     emptyIcon={<Wallet className={cn('w-12 h-12 tn-text-muted')} />}
    />
    {!isLoading

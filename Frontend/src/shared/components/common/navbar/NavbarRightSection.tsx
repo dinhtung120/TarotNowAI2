@@ -26,20 +26,20 @@ interface NavbarRightSectionProps {
 export default function NavbarRightSection({ avatarMenuItems, avatarMenuOpen, avatarMenuRef, isAuthenticated, mobileMenuOpen, tCommon, tNav, user, onCloseAvatarMenu, onLogout, onToggleAvatarMenu, onToggleMobileMenu }: NavbarRightSectionProps) {
   if (!isAuthenticated) {
     return (
-      <div className={cn('flex items-center gap-2 sm:gap-3')}>
-        <Link href="/login" className={cn('inline-flex min-h-11 items-center px-2 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:text-[var(--text-ink)] sm:text-sm')}>{tNav('login')}</Link>
-        <Link href="/register" className={cn('inline-flex min-h-11 items-center rounded-xl bg-gradient-to-r from-[var(--purple-gradient-from)] via-[var(--purple-gradient-via)] to-[var(--purple-gradient-to)] px-3 py-1.5 text-xs font-bold text-[var(--text-ink)] shadow-[var(--glow-purple-sm)] transition-all hover:brightness-105 sm:px-4 sm:py-2 sm:text-sm')}>{tNav('register')}</Link>
+      <div className={cn('flex items-center tn-gap-2-3-sm')}>
+        <Link href="/login" className={cn('inline-flex min-h-11 items-center px-2 text-xs font-medium tn-text-secondary transition-colors')}>{tNav('login')}</Link>
+        <Link href="/register" className={cn('inline-flex min-h-11 items-center rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-500 to-indigo-600 px-3 py-1.5 text-xs font-bold tn-text-ink shadow-lg transition-all')}>{tNav('register')}</Link>
       </div>
     );
   }
 
   return (
-    <div className={cn('flex items-center gap-2 sm:gap-3')}>
+    <div className={cn('flex items-center tn-gap-2-3-sm')}>
       <StreakBadge />
-      <div className={cn('hidden sm:block')}><WalletWidget /></div>
+      <div className={cn('tn-show-sm')}><WalletWidget /></div>
       <NotificationDropdown />
       <NavbarAvatarMenu user={user} menuItems={avatarMenuItems} open={avatarMenuOpen} avatarMenuRef={avatarMenuRef} tNav={tNav} onClose={onCloseAvatarMenu} onToggle={onToggleAvatarMenu} onLogout={onLogout} />
-      <button type="button" onClick={onToggleMobileMenu} className={cn('inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-xl p-2.5 text-[var(--text-secondary)] transition-colors hover:bg-[var(--purple-50)] hover:text-[var(--text-ink)] md:hidden')} aria-label={tCommon('menu')}>
+      <button type="button" onClick={onToggleMobileMenu} className={cn('tn-hide-md min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-xl p-2.5 tn-text-secondary transition-colors tn-hover-surface-soft tn-hover-text-primary')} aria-label={tCommon('menu')}>
         {mobileMenuOpen ? <X className={cn('h-5 w-5')} /> : <Menu className={cn('h-5 w-5')} />}
       </button>
     </div>

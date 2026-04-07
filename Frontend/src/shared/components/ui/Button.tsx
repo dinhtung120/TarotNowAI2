@@ -14,7 +14,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
 }
 
-const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ variant = 'primary', size = 'md', isLoading = false, leftIcon, rightIcon, fullWidth = false, disabled, children, className = '', type = 'button', ...props }, ref) => (
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ variant = 'primary', size = 'md', isLoading = false, leftIcon, rightIcon, fullWidth = false, disabled, children, className, type = 'button', ...props }, ref) => (
   <button
     ref={ref}
     type={type}

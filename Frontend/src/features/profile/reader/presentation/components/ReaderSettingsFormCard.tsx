@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { FormEvent } from 'react';
 import { BookOpen } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { GlassCard } from '@/shared/components/ui';
 import { cn } from '@/lib/utils';
@@ -43,7 +43,7 @@ type ReaderSettingsFormCardFormValues = z.infer<typeof readerSettingsFormCardSch
 
 export function ReaderSettingsFormCard(props: ReaderSettingsFormCardProps) {
  const { onChangeBio, onChangePrice, onChangeSpecialties, onSubmit } = props;
- const { handleSubmit, setValue, watch } = useForm<ReaderSettingsFormCardFormValues>({
+ const { handleSubmit, setValue, control } = useForm<ReaderSettingsFormCardFormValues>({
   resolver: zodResolver(readerSettingsFormCardSchema),
   defaultValues: {
    bio: props.bioValue,
@@ -52,9 +52,9 @@ export function ReaderSettingsFormCard(props: ReaderSettingsFormCardProps) {
   },
  });
 
- const watchedBio = watch('bio') ?? '';
- const watchedSpecialties = watch('specialties') ?? '';
- const watchedPrice = watch('price') ?? 50;
+ const watchedBio = useWatch({ control, name: 'bio' }) ?? '';
+ const watchedSpecialties = useWatch({ control, name: 'specialties' }) ?? '';
+ const watchedPrice = useWatch({ control, name: 'price' }) ?? 50;
 
  useEffect(() => {
   setValue('bio', props.bioValue, { shouldDirty: false, shouldValidate: false });
@@ -91,7 +91,7 @@ export function ReaderSettingsFormCard(props: ReaderSettingsFormCardProps) {
   <GlassCard className={cn('!p-8')}>
    <form onSubmit={submitWithValidation} className={cn('space-y-8')}>
     <h3 className={cn('text-lg font-black tn-text-primary italic tracking-tight mb-6 flex items-center gap-2.5')}>
-     <BookOpen className={cn('w-5 h-5 text-[var(--purple-accent)]')} />
+     <BookOpen className={cn('w-5 h-5 tn-text-accent')} />
      {props.title}
     </h3>
     <div className={cn('space-y-6')}>

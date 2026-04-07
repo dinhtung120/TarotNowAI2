@@ -27,14 +27,14 @@ export default function VoiceMessageBubble({
  });
 
  const bars = useMemo(() => generateStaticBars(audioUrl), [audioUrl]);
- const barColor = isMe ? 'bg-white/80' : 'bg-[var(--purple-accent)]';
- const barDimColor = isMe ? 'bg-white/30' : 'bg-[var(--purple-accent)]/30';
+ const barColor = isMe ? 'bg-white/80' : 'tn-bg-accent';
+ const barDimColor = isMe ? 'bg-white/30' : 'tn-bg-accent-20';
  const playBtnClass = isMe
-  ? 'bg-white/20 hover:bg-white/30 text-white'
-  : 'bg-[var(--purple-accent)]/20 hover:bg-[var(--purple-accent)]/30 text-[var(--purple-accent)]';
+  ? 'bg-white/20 text-white tn-voice-play-me-hover'
+  : 'tn-bg-accent-20 tn-text-accent tn-voice-play-other-hover';
 
  return (
-  <div className={cn('flex items-center gap-2.5 min-w-[180px] max-w-[280px]')}>
+  <div className={cn('flex items-center gap-2.5 tn-minw-180 tn-maxw-280')}>
    <button
     type="button"
     onClick={() => void togglePlay()}
@@ -44,7 +44,7 @@ export default function VoiceMessageBubble({
     {playing ? <Pause className={cn('w-4 h-4')} /> : <Play className={cn('w-4 h-4 ml-0.5')} />}
    </button>
 
-   <div className={cn('flex-1 flex items-center gap-[2px] h-7 min-w-0')}>
+   <div className={cn('tn-gap-0_5 flex-1 flex items-center h-7 min-w-0')}>
     {bars.map((level, index) => {
      const isPlayed = index / STATIC_BAR_COUNT <= progress;
      return (
@@ -57,7 +57,7 @@ export default function VoiceMessageBubble({
     })}
    </div>
 
-   <span className={cn('text-[11px] font-mono tabular-nums shrink-0', isMe ? 'text-white/70' : 'text-[var(--text-secondary)]')}>
+   <span className={cn('tn-text-11 font-mono tabular-nums shrink-0', isMe ? 'text-white/70' : 'tn-text-secondary')}>
     {formatDuration(displayDuration)}
    </span>
   </div>

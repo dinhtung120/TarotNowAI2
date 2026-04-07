@@ -1,4 +1,5 @@
 import { RefreshCw } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface AiStreamNotReadyStateProps {
  waitingLabel: string;
@@ -6,10 +7,10 @@ interface AiStreamNotReadyStateProps {
 
 export function AiStreamNotReadyState({ waitingLabel }: AiStreamNotReadyStateProps) {
  return (
-  <div className="w-full h-full flex flex-col relative animate-in fade-in duration-1000 px-0 md:px-2 overflow-hidden">
-   <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4 opacity-40">
-    <RefreshCw className="w-10 h-10 tn-text-muted animate-spin" />
-    <p className="tn-text-muted font-serif italic max-w-xs px-4">{waitingLabel}</p>
+  <div className={cn("relative", "flex", "h-full", "w-full", "flex-col", "overflow-hidden", "px-2", "animate-in", "fade-in", "duration-1000")}>
+   <div className={cn("flex-1", "flex", "flex-col", "items-center", "justify-center", "space-y-4", "px-4", "text-center", "opacity-40")}>
+    <RefreshCw className={cn("h-10", "w-10", "animate-spin", "tn-text-muted")} />
+    <p className={cn("max-w-xs", "font-serif", "italic", "tn-text-muted")}>{waitingLabel}</p>
    </div>
   </div>
  );

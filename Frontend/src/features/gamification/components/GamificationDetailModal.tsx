@@ -30,7 +30,7 @@ export default function GamificationDetailModal({ isOpen, onClose, type, questDa
 
  return (
   <Modal isOpen={isOpen} onClose={onClose} size="md">
-   <div className="relative overflow-hidden -m-6 p-8">
+   <div className={cn("relative", "overflow-hidden", "-m-6", "p-8")}>
     <div className={cn("absolute top-0 left-0 w-full h-32 opacity-20", view.isQuest ? "bg-gradient-to-b from-indigo-500 to-transparent" : "bg-gradient-to-b from-amber-500 to-transparent")} />
     <GamificationDetailHeader isQuest={view.isQuest} isCompleted={view.isCompleted} title={view.title} completedLabel={t("Completed")} pendingLabel={t("Pending")} />
     <GamificationDetailBody isQuest={view.isQuest} isAchievement={view.isAchievement} isTitle={view.isTitle} description={view.description} completionConditionsLabel={t("CompletionConditions")} descriptionLabel={t("SelectATitleToDisplay", { defaultMessage: "Description" })} howToUnlockLabel={t("HowToUnlock")} progressLabel={t("Progress")} rewardsLabel={t("Rewards")} unlockedAtLabel={t("UnlockedAt") || "Mở khoá vào"} current={view.current} target={view.target} isCompleted={view.isCompleted} questData={questData} unlockedInfo={achievementData?.unlockedInfo} titleGrantedAt={titleData?.grantedAt} rewardTypeLabel={(rewardType) => t(rewardType)} />

@@ -22,7 +22,7 @@ export default function ChatComposerInputRow({
         type="button"
         onClick={() => imageInputRef.current?.click()}
         disabled={!conversationExists || uploadingMedia}
-        className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-[var(--text-secondary)] hover:text-white disabled:opacity-50')}
+        className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl tn-chat-icon-btn')}
         title="Gửi ảnh"
       >
         {uploadingMedia ? <Loader2 className={cn('h-4 w-4 animate-spin')} /> : <ImageIcon className={cn('h-4 w-4')} />}
@@ -35,7 +35,7 @@ export default function ChatComposerInputRow({
         onKeyDown={onInputKeyDown}
         disabled={sending || !conversationExists}
         placeholder={inputPlaceholder}
-        className={cn('h-11 flex-1 rounded-xl border border-white/10 bg-white/5 px-3 text-sm text-white')}
+        className={cn('h-11 flex-1 rounded-xl tn-chat-input px-3 text-sm')}
       />
 
       <VoiceRecorderButton
@@ -47,7 +47,7 @@ export default function ChatComposerInputRow({
         type="button"
         onClick={() => void onSendTextMessage()}
         disabled={!newMessage.trim() || sending || !conversationExists}
-        className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--purple-accent)] text-white disabled:bg-white/10')}
+        className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl tn-chat-send-btn')}
       >
         {sending ? <Loader2 className={cn('h-4 w-4 animate-spin')} /> : <Send className={cn('h-4 w-4')} />}
       </button>

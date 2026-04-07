@@ -16,7 +16,7 @@ export function ReaderRequestsStates({
  if (loading) {
   return (
    <div className={cn('py-20 flex flex-col items-center justify-center space-y-4')}>
-    <Loader2 className={cn('w-8 h-8 text-[var(--purple-accent)] animate-spin')} />
+    <Loader2 className={cn('w-8 h-8 tn-text-accent animate-spin')} />
    </div>
   );
  }
@@ -25,9 +25,9 @@ export function ReaderRequestsStates({
   return (
    <GlassCard className={cn('py-20 flex flex-col items-center justify-center space-y-4 text-center')}>
     <div className={cn('w-16 h-16 rounded-full tn-surface flex items-center justify-center mb-2 shadow-inner')}>
-     <FileText className={cn('w-8 h-8 text-[var(--text-tertiary)]')} />
+     <FileText className={cn('w-8 h-8 tn-text-tertiary')} />
     </div>
-    <p className={cn('text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]')}>{emptyLabel}</p>
+    <p className={cn('tn-text-10 font-black uppercase tracking-widest tn-text-tertiary')}>{emptyLabel}</p>
    </GlassCard>
   );
  }

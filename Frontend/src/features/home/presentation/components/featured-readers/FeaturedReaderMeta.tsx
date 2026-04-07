@@ -15,12 +15,13 @@ export default function FeaturedReaderMeta({
         <Badge
           variant="default"
           size="sm"
-          className={cn("border-[var(--border-default)] bg-[var(--bg-glass)]")}
+          className={cn("tn-border tn-bg-glass")}
         >
           <Star
             className={cn(
-              "h-3 w-3 fill-[var(--amber-accent)] text-[var(--amber-accent)]",
+              "h-3 w-3 tn-text-warning",
             )}
+            fill="currentColor"
           />
           <span className={cn("tn-text-primary")}>
             {reader.avgRating.toFixed(1)}
@@ -30,14 +31,14 @@ export default function FeaturedReaderMeta({
       <div>
         <h3
           className={cn(
-            "truncate text-xl font-black tracking-tighter text-[var(--text-ink)] uppercase italic",
+            "truncate text-xl font-black tracking-tighter tn-text-ink uppercase italic",
           )}
         >
           {reader.displayName}
         </h3>
         <div
           className={cn(
-            "mt-1 line-clamp-1 text-[9px] font-black tracking-[0.2em] text-[var(--purple-accent)] uppercase",
+            "mt-1 line-clamp-1 tn-text-9 font-black tn-tracking-02 tn-text-accent uppercase",
           )}
         >
           {reader.specialties.join(" • ")}
@@ -45,18 +46,18 @@ export default function FeaturedReaderMeta({
       </div>
       <div
         className={cn(
-          "flex items-center justify-between border-t border-[var(--border-subtle)] pt-4",
+          "flex items-center justify-between border-t tn-border-soft pt-4",
         )}
       >
         <div className={cn("flex items-center gap-1.5")}>
-          <Gem className={cn("h-3.5 w-3.5 text-[var(--amber-accent)]")} />
-          <span className={cn("text-xs font-black text-[var(--text-ink)]")}>
+          <Gem className={cn("h-3.5 w-3.5 tn-text-warning")} />
+          <span className={cn("text-xs font-black tn-text-ink")}>
             {reader.diamondPerQuestion} 💎
           </span>
         </div>
         <div
           className={cn(
-            "text-[10px] font-black tracking-widest text-[var(--purple-accent)] uppercase transition-transform group-hover:translate-x-2",
+            "tn-text-10 font-black tracking-widest tn-text-accent uppercase tn-group-shift-x-2",
           )}
         >
           {profileCta}

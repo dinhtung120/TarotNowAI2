@@ -1,10 +1,9 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useCallStore } from '@/features/chat/application/call/useCallStore';
 import { useCallContext } from '@/features/chat/presentation/call/CallProvider';
-import { useCallDuration } from '@/features/chat/presentation/call/hooks/useCallDuration';
 
 const RESET_DELAY_MS = 1000;
 
@@ -19,13 +18,17 @@ export function useActiveCallOverlayState() {
 
   const isOpen = uiState === 'connected';
   const isVideo = session?.type === 'video';
-  const durationLabel = useCallDuration({ isOpen, sessionId: session?.id });
 
-  const handleEndCall = useCallback(() => {
-    if (session?.id) endCall(session.id, 'normal');
+  const handleEndCall = () => {
+    if (session?.id) {
+      void endCall(session.id, 'normal');
+    }
     useCallStore.getState().setEnded();
     window.setTimeout(() => useCallStore.getState().reset(), RESET_DELAY_MS);
-  }, [endCall, session?.id]);
+  };
+
+  const minimize = () => setIsMinimized(true);
+  const maximize = () => setIsMinimized(false);
 
   return {
     t,
@@ -38,9 +41,8 @@ export function useActiveCallOverlayState() {
     isOpen,
     isVideo,
     isMinimized,
-    durationLabel,
     handleEndCall,
-    minimize: () => setIsMinimized(true),
-    maximize: () => setIsMinimized(false),
+    minimize,
+    maximize,
   };
 }

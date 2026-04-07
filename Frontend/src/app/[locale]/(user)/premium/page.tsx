@@ -6,9 +6,9 @@ export default async function PremiumPage() {
   const t = await getTranslations('Subscription');
 
   return (
-    <div className={cn("max-w-6xl mx-auto py-12 px-4 sm:px-6 lg:px-8")}>
+    <div className={cn("max-w-6xl mx-auto py-12 tn-page-pad-4-6-8")}>
       <div className={cn("text-center mb-16")}>
-        <h1 className={cn("text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#F6D365] to-[#FDA085] mb-4")}>
+        <h1 className={cn("tn-text-4-5-md font-extrabold text-transparent bg-clip-text tn-premium-gold-gradient mb-4")}>
           {t('premiumTitle', { fallback: 'TarotNow Premium' })}
         </h1>
         <p className={cn("text-lg text-slate-400 max-w-2xl mx-auto")}>

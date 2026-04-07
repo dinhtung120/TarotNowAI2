@@ -3,6 +3,7 @@
 import LeaderboardCurrentUserEmpty from "@/features/gamification/components/leaderboard/LeaderboardCurrentUserEmpty";
 import LeaderboardCurrentUserRankContent from "@/features/gamification/components/leaderboard/LeaderboardCurrentUserRankContent";
 import type { LeaderboardEntry } from "../gamification.types";
+import { cn } from "@/lib/utils";
 
 interface LeaderboardCurrentUserCardProps {
   userRank: LeaderboardEntry | null;
@@ -18,14 +19,14 @@ export function LeaderboardCurrentUserCard({
   notOnLeaderboardLabel,
 }: LeaderboardCurrentUserCardProps) {
   return (
-    <div className="mt-8 border-t border-slate-700/50 pt-8">
-      <div className="mb-4 flex items-center justify-between px-2">
-        <h3 className="text-[11px] font-black tracking-[0.2em] text-slate-500 uppercase">
+    <div className={cn("mt-8", "border-t", "border-slate-700/50", "pt-8")}>
+      <div className={cn("mb-4", "flex", "items-center", "justify-between", "px-2")}>
+        <h3 className={cn("text-xs", "font-black", "uppercase", "tn-tracking-02", "text-slate-500")}>
           {yourRankLabel}
         </h3>
         {userRank && (
-          <span className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-500">
-            <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+          <span className={cn("flex", "items-center", "gap-1.5", "text-xs", "font-bold", "text-emerald-500")}>
+            <div className={cn("h-1.5", "w-1.5", "animate-pulse", "rounded-full", "bg-emerald-500")} />
             Live status
           </span>
         )}

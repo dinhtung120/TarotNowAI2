@@ -18,7 +18,7 @@ interface WalletBalanceCardsProps {
 
 export function WalletBalanceCards({ balance, locale, labels }: WalletBalanceCardsProps) {
  return (
-  <div className={cn('grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300')}>
+  <div className={cn('tn-grid-cols-1-2-md gap-8 mb-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300')}>
    <WalletAssetCard
     icon={Gem}
     iconColorClass="text-[var(--purple-accent)]"

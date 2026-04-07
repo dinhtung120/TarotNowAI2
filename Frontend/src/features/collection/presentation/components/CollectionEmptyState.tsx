@@ -10,7 +10,7 @@ interface CollectionEmptyStateProps {
 
 export function CollectionEmptyState({ title, description, cta }: CollectionEmptyStateProps) {
  return (
-  <div className={cn('text-center py-24 tn-surface-soft border tn-border-soft rounded-[3rem] animate-in fade-in duration-1000')}>
+  <div className={cn('text-center py-24 tn-surface-soft border tn-border-soft tn-rounded-3xl animate-in fade-in duration-1000')}>
    <div className={cn('w-16 h-16 tn-surface rounded-3xl flex items-center justify-center mx-auto mb-6')}>
     <LayoutGrid className={cn('w-8 h-8 tn-text-muted')} />
    </div>
@@ -18,7 +18,7 @@ export function CollectionEmptyState({ title, description, cta }: CollectionEmpt
    <p className={cn('tn-text-muted mb-8 text-sm font-medium')}>{description}</p>
    <Link
     href="/reading"
-    className={cn('group relative px-8 py-3 tn-surface-strong tn-text-ink rounded-full font-black text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-xl')}
+    className={cn('group relative px-8 py-3 tn-surface-strong tn-text-ink rounded-full font-black text-xs uppercase tracking-widest tn-hover-scale-105-active-95 shadow-xl')}
    >
     <span className={cn('flex items-center gap-2')}>
      {cta} <ChevronRight className={cn('w-4 h-4')} />

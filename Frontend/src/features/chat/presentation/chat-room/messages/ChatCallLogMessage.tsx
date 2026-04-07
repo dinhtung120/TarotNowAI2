@@ -41,8 +41,8 @@ export default function ChatCallLogMessage({
 
   return (
     <div className={cn('flex py-2', isMe ? 'justify-end' : 'justify-start')}>
-      <div className={bubbleClass}>
-        <div className={iconClass}>{icon}</div>
+      <div className={cn(bubbleClass)}>
+        <div className={cn(iconClass)}>{icon}</div>
 
         <div className={cn('flex flex-col')}>
           <span className={cn('text-sm font-medium text-white/90')}>

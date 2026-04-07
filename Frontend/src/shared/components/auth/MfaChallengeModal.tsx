@@ -23,7 +23,7 @@ export default function MfaChallengeModal({ isOpen, onClose, onSuccess, actionTi
   return (
     <div className={cn('fixed inset-0 z-50 flex items-center justify-center p-4 tn-overlay-strong animate-in fade-in duration-200')}>
       <div className={cn('relative w-full max-w-sm rounded-3xl border p-6 shadow-2xl tn-surface-strong tn-border animate-in zoom-in-95 duration-200')}>
-        <button type="button" onClick={handleClose} aria-label={tCommon('close')} className={cn('absolute right-4 top-4 rounded-full p-2 tn-text-muted transition-colors hover:tn-surface-strong hover:tn-text-primary')}><X className={cn('h-5 w-5')} /></button>
+        <button type="button" onClick={handleClose} aria-label={tCommon('close')} className={cn('absolute right-4 top-4 rounded-full p-2 tn-text-muted transition-colors tn-hover-surface-strong tn-hover-text-primary')}><X className={cn('h-5 w-5')} /></button>
         <MfaChallengeModalContent
           actionTitleText={actionTitle ?? t('mfa.action_default')}
           code={code}

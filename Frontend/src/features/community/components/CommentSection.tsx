@@ -43,7 +43,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
   });
 
   return (
-    <div className={cn("mt-4 pt-4 border-t border-[#2a2b3d]")}>
+    <div className={cn("mt-4 pt-4 border-t tn-border-soft")}>
       <CommentsList
         commentsPages={data?.pages}
         emptyLabel={t('comments.empty')}

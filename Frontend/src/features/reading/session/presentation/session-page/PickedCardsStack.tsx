@@ -16,8 +16,8 @@ export default function PickedCardsStack({
   onRemove,
 }: PickedCardsStackProps) {
   return (
-    <div className={cn("mb-6 flex w-full justify-center px-2 sm:justify-end")}>
-      <div className={cn("relative h-[180px] w-[90px]")}>
+    <div className={cn("mb-6 flex w-full tn-justify-center-end-sm px-2")}>
+      <div className={cn("relative tn-size-picked-card")}>
         <div
           ref={stackAnchorRef}
           className={cn(

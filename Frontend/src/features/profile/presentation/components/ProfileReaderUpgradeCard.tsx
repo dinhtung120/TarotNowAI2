@@ -22,13 +22,13 @@ export function ProfileReaderUpgradeCard({
   const openApply = () => router.push("/reader/apply");
 
   return (
-    <GlassCard className={cn("group relative overflow-hidden !p-6 sm:!p-8")}>
+    <GlassCard className={cn("group relative overflow-hidden !tn-pad-6-8-sm")}>
       <div
         className={cn(
           "pointer-events-none absolute top-0 right-0 p-6 opacity-5 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12",
         )}
       >
-        <Sparkles className={cn("h-32 w-32 text-[var(--purple-accent)]")} />
+        <Sparkles className={cn("h-32 w-32 tn-text-accent")} />
       </div>
       <div className={cn("relative z-10 space-y-5")}>
         <ProfileUpgradeHeader

@@ -22,7 +22,7 @@ export default function SessionQuestionCard({
       >
         {label}
       </p>
-      <p className={cn("text-lg italic sm:text-xl font-serif tn-text-primary")}>
+      <p className={cn("tn-text-lg-xl-sm italic font-serif tn-text-primary")}>
         &quot;{question}&quot;
       </p>
     </div>

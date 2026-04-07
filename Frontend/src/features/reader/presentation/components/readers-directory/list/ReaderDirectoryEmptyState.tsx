@@ -12,13 +12,13 @@ export default function ReaderDirectoryEmptyState({
   return (
     <GlassCard
       className={cn(
-        "flex h-[40vh] flex-col items-center justify-center space-y-4 border-dashed",
+        "flex tn-h-40vh flex-col items-center justify-center space-y-4 border-dashed",
       )}
     >
       <Users
-        className={cn("h-16 w-16 text-[var(--text-tertiary)] opacity-50")}
+        className={cn("h-16 w-16 tn-text-tertiary opacity-50")}
       />
-      <p className={cn("text-sm font-medium text-[var(--text-secondary)]")}>
+      <p className={cn("text-sm font-medium tn-text-secondary")}>
         {label}
       </p>
     </GlassCard>

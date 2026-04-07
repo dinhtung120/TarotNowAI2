@@ -32,7 +32,7 @@ export function ReaderDirectoryCard({
           "absolute top-0 right-0 p-4 opacity-[0.02] transition-all duration-700 group-hover:scale-110 group-hover:rotate-12 group-hover:opacity-[0.05]",
         )}
       >
-        <Sparkles className={cn("text-[var(--purple-accent)]")} size={120} />
+        <Sparkles className={cn("tn-text-accent")} size={120} />
       </div>
 
       <div className={cn("relative z-10 flex flex-grow flex-col space-y-5")}>

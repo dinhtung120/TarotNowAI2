@@ -133,5 +133,5 @@ export function usePresenceConnection() {
    connectionRef.current = null;
   };
   
- }, [isAuthenticated, queryClient]);
+ }, [isAuthenticated, token, queryClient]);
 }

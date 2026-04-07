@@ -20,8 +20,8 @@ export function AdminReadingsTableContent({ data, loading, getSpreadLabel }: Adm
    <tr>
     <td colSpan={5} className={cn('px-8 py-20 text-center')}>
      <div className={cn('flex flex-col items-center justify-center space-y-4')}>
-      <Loader2 className={cn('w-8 h-8 animate-spin text-[var(--purple-accent)] mx-auto')} />
-      <span className={cn('text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]')}>
+      <Loader2 className={cn('w-8 h-8 animate-spin tn-text-accent mx-auto')} />
+      <span className={cn('tn-text-10 font-black uppercase tracking-widest tn-text-secondary')}>
        {t('readings.states.loading')}
       </span>
      </div>
@@ -36,9 +36,9 @@ export function AdminReadingsTableContent({ data, loading, getSpreadLabel }: Adm
     <td colSpan={5} className={cn('px-8 py-20 text-center')}>
      <div className={cn('flex flex-col items-center justify-center space-y-4')}>
       <div className={cn('w-16 h-16 rounded-full tn-panel-soft flex items-center justify-center')}>
-       <History className={cn('w-8 h-8 text-[var(--text-tertiary)] opacity-50')} />
+       <History className={cn('w-8 h-8 tn-text-tertiary opacity-50')} />
       </div>
-      <span className={cn('text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]')}>
+      <span className={cn('tn-text-10 font-black uppercase tracking-widest tn-text-tertiary')}>
        {t('readings.states.empty')}
       </span>
      </div>

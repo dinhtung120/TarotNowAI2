@@ -11,7 +11,7 @@ interface AdminDashboardMidSectionProps {
 
 export function AdminDashboardMidSection({ onNavigate }: AdminDashboardMidSectionProps) {
  return (
-  <div className={cn('grid grid-cols-1 lg:grid-cols-3 gap-8')}>
+  <div className={cn('tn-grid-cols-1-3-lg gap-8')}>
    <AdminDashboardNoticePanel />
    <AdminDashboardShortcuts onNavigate={onNavigate} />
   </div>

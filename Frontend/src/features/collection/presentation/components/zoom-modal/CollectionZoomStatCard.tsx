@@ -27,7 +27,7 @@ export default function CollectionZoomStatCard({
       >
         {label}
       </span>
-      <span className={cn("text-2xl font-black md:text-3xl", valueClassName)}>
+      <span className={cn("tn-text-2-3-md font-black", valueClassName)}>
         {value}
       </span>
     </div>

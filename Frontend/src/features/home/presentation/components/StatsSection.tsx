@@ -8,9 +8,9 @@ export async function StatsSection() {
 
   return (
     <section
-      className={cn("relative mx-auto w-full max-w-6xl px-4 py-20 sm:px-6")}
+      className={cn("relative mx-auto w-full max-w-6xl py-20 tn-page-pad-4-6-8")}
     >
-      <div className={cn("grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-8")}>
+      <div className={cn("tn-grid-2-4-md tn-gap-4-8-md")}>
         <StatItem
           color="purple"
           icon={Zap}

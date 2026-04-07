@@ -25,14 +25,14 @@ export function AuthSuccessCard({
  iconWrapperClass,
 }: AuthSuccessCardProps) {
  return (
-  <div className={cn("min-h-dvh flex items-center justify-center bg-[var(--bg-void)] relative overflow-hidden font-sans px-4 py-10")}>
-   <div className={`absolute top-[20%] right-[30%] w-96 h-96 rounded-full filter blur-[120px] opacity-40 animate-pulse ${glowClass}`} />
-   <GlassCard className={cn("relative z-10 w-full max-w-md p-10 text-center animate-in zoom-in-95 duration-700")}>
-    <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 animate-pulse ${iconWrapperClass}`}>
+  <div className={cn("relative", "flex", "min-h-dvh", "items-center", "justify-center", "overflow-hidden", "bg-slate-950", "px-4", "py-10", "font-sans")}>
+   <div className={cn("absolute", "right-1/3", "top-1/4", "h-96", "w-96", "rounded-full", "opacity-40", "blur-3xl", "animate-pulse", glowClass)} />
+   <GlassCard className={cn("relative", "z-10", "w-full", "max-w-md", "animate-in", "zoom-in-95", "p-10", "text-center", "duration-700")}>
+    <div className={cn("mx-auto", "mb-6", "flex", "h-20", "w-20", "items-center", "justify-center", "rounded-2xl", "animate-pulse", iconWrapperClass)}>
      {icon}
     </div>
-    <h2 className={cn("text-3xl font-black italic tracking-tighter tn-text-primary mb-4 uppercase")}>{title}</h2>
-    <p className={cn("tn-text-secondary font-medium mb-8 leading-relaxed")}>{description}</p>
+    <h2 className={cn("mb-4", "text-3xl", "font-black", "uppercase", "italic", "tracking-tighter", "tn-text-primary")}>{title}</h2>
+    <p className={cn("mb-8", "leading-relaxed", "font-medium", "tn-text-secondary")}>{description}</p>
     <Link href={ctaHref} tabIndex={-1}>
      <Button variant="brand" size="lg" fullWidth>
       {ctaLabel}

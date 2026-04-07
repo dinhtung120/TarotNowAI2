@@ -18,7 +18,7 @@ export function AdminPromotionsMobileList({
  const t = useTranslations('Admin');
 
  return (
-  <div className={cn('md:hidden p-4 sm:p-6 space-y-3')}>
+  <div className={cn('tn-hide-md tn-p-4-6-sm space-y-3')}>
    {loading || promotions.length === 0 ? (
     <AdminPromotionsStateBlock loading={loading} />
    ) : (

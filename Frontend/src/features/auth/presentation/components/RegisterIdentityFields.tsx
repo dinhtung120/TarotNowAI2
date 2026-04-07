@@ -15,7 +15,7 @@ export default function RegisterIdentityFields({ errors, register }: RegisterIde
 
   return (
     <>
-      <div className={cn('grid grid-cols-1 gap-4 md:grid-cols-2')}>
+      <div className={cn('tn-grid-1-2-md gap-4')}>
         <Input
           label={t('register.email_label')}
           type="email"
@@ -33,7 +33,7 @@ export default function RegisterIdentityFields({ errors, register }: RegisterIde
           {...register('username')}
         />
       </div>
-      <div className={cn('grid grid-cols-1 gap-4 md:grid-cols-2')}>
+      <div className={cn('tn-grid-1-2-md gap-4')}>
         <Input
           label={t('register.display_name_label')}
           type="text"

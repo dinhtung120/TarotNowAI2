@@ -15,8 +15,8 @@ export function AdminPromotionsStateBlock({ loading }: AdminPromotionsStateBlock
   return (
    <div className={cn('py-16 text-center')}>
     <div className={cn('flex flex-col items-center justify-center space-y-4')}>
-     <Loader2 className={cn('w-8 h-8 animate-spin text-[var(--warning)]')} />
-     <span className={cn('text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]')}>
+     <Loader2 className={cn('w-8 h-8 animate-spin tn-text-warning')} />
+     <span className={cn('tn-text-10 font-black uppercase tracking-widest tn-text-secondary')}>
       {t('promotions.states.loading')}
      </span>
     </div>
@@ -28,9 +28,9 @@ export function AdminPromotionsStateBlock({ loading }: AdminPromotionsStateBlock
   <div className={cn('py-16 text-center')}>
    <div className={cn('flex flex-col items-center justify-center space-y-4')}>
     <div className={cn('w-16 h-16 rounded-full tn-panel-soft flex items-center justify-center')}>
-     <Ticket className={cn('w-8 h-8 text-[var(--text-tertiary)] opacity-50')} />
+     <Ticket className={cn('w-8 h-8 tn-text-tertiary opacity-50')} />
     </div>
-    <span className={cn('text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]')}>
+    <span className={cn('tn-text-10 font-black uppercase tracking-widest tn-text-tertiary')}>
      {t('promotions.states.empty')}
     </span>
    </div>

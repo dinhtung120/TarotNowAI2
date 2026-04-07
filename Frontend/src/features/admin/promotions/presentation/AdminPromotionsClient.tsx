@@ -5,6 +5,7 @@ import type { DepositPromotion } from "@/features/admin/application/actions/prom
 import { ActionConfirmModal } from "@/shared/components/ui";
 import { useAdminPromotions } from "@/features/admin/promotions/application/useAdminPromotions";
 import { AdminPromotionCreateForm, AdminPromotionsHeader, AdminPromotionsList } from "./components";
+import { cn } from "@/lib/utils";
 
 interface AdminPromotionsClientProps {
  initialPromotions: DepositPromotion[];
@@ -14,7 +15,7 @@ export default function AdminPromotionsClient({ initialPromotions }: AdminPromot
  const vm = useAdminPromotions(initialPromotions);
 
  return (
-  <div className="space-y-8 pb-20 animate-in fade-in duration-700">
+  <div className={cn("space-y-8", "pb-20", "animate-in", "fade-in", "duration-700")}>
    <AdminPromotionsHeader
     isCreating={vm.isCreating}
     onToggleCreate={() => vm.setIsCreating((prev) => !prev)}
@@ -42,7 +43,7 @@ export default function AdminPromotionsClient({ initialPromotions }: AdminPromot
     open={Boolean(vm.deleteId)}
     onCancel={() => vm.setDeleteId(null)}
     onConfirm={vm.handleDelete}
-    icon={<div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 text-[var(--danger)] shadow-inner"><AlertTriangle className="h-8 w-8" /></div>}
+    icon={<div className={cn("mx-auto", "flex", "h-16", "w-16", "items-center", "justify-center", "rounded-2xl", "border", "border-red-500/20", "bg-red-500/10", "text-red-400", "shadow-inner")}><AlertTriangle className={cn("h-8", "w-8")} /></div>}
     title={vm.t("promotions.delete_modal.title")}
     description={vm.t("promotions.delete_modal.desc")}
     cancelLabel={vm.t("promotions.delete_modal.keep")}

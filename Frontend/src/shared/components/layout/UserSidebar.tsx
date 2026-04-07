@@ -17,8 +17,8 @@ export default function UserSidebar() {
   const { isOpen, setIsOpen, sidebarRef } = useUserSidebarState();
 
   return (
-    <div ref={sidebarRef} className={cn('fixed left-4 top-[4.5rem] z-50 hidden md:block')}>
-      <button type="button" onClick={() => setIsOpen((value) => !value)} className={cn('flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-glass)]/60 text-[var(--text-secondary)] shadow-lg transition-all duration-300 hover:border-[var(--border-hover)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-ink)]')} aria-label="Toggle Sidebar Menu">
+    <div ref={sidebarRef} className={cn('fixed tn-user-sidebar-anchor z-50')}>
+      <button type="button" onClick={() => setIsOpen((value) => !value)} className={cn('flex h-10 w-10 items-center justify-center rounded-xl border tn-user-sidebar-toggle shadow-lg transition-all duration-300')} aria-label="Toggle Sidebar Menu">
         {isOpen ? <X className={cn('h-5 w-5 rotate-90 transition-transform duration-300')} /> : <Menu className={cn('h-5 w-5 transition-transform duration-300')} />}
       </button>
       <UserSidebarPanel activeHref={activeHref} isOpen={isOpen} tNav={tNav} tUserNav={tUserNav} onClose={() => setIsOpen(false)} />

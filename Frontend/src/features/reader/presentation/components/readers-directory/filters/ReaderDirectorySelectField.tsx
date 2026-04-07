@@ -16,7 +16,7 @@ export default function ReaderDirectorySelectField({
   onChange,
 }: ReaderDirectorySelectFieldProps) {
   return (
-    <div className={cn("relative shrink-0 md:w-48")}>
+    <div className={cn("relative shrink-0 tn-w-48-md")}>
       <select
         className={cn(
           "tn-field tn-field-accent tn-text-primary w-full cursor-pointer appearance-none rounded-xl px-4 py-3 pr-10 text-sm font-medium transition-all",

@@ -15,12 +15,12 @@ export function AdminLayoutMobileTopBar({
  onOpenMenu,
 }: AdminLayoutMobileTopBarProps) {
  return (
-  <div className={cn('lg:hidden sticky top-0 z-30 bg-[var(--bg-glass)]/95 backdrop-blur border-b border-[var(--border-subtle)] px-4 py-3 flex items-center justify-between')}>
-   <button type="button" onClick={onOpenMenu} className={cn('inline-flex items-center gap-2 px-3 py-2 rounded-xl tn-surface hover:tn-surface-strong tn-text-secondary hover:tn-text-primary transition-colors min-h-11')}>
+  <div className={cn('tn-lg-hidden sticky top-0 z-30 tn-mobile-topbar-shell backdrop-blur border-b tn-border-soft px-4 py-3 flex items-center justify-between')}>
+   <button type="button" onClick={onOpenMenu} className={cn('inline-flex items-center gap-2 px-3 py-2 rounded-xl tn-surface tn-text-secondary tn-mobile-topbar-trigger transition-colors min-h-11')}>
     <Menu className={cn('w-4 h-4')} />
-    <span className={cn('text-[10px] font-black uppercase tracking-widest')}>{sectionMain}</span>
+    <span className={cn('tn-text-10 font-black uppercase tracking-widest')}>{sectionMain}</span>
    </button>
-   <span className={cn('text-[11px] font-black uppercase tracking-widest tn-text-muted')}>{label}</span>
+   <span className={cn('tn-text-11 font-black uppercase tracking-widest tn-text-muted')}>{label}</span>
   </div>
  );
 }

@@ -39,23 +39,23 @@ export function ReaderRequestActions({
     className={cn('w-full text-xs font-black tracking-widest tn-text-primary shadow-inner tn-surface')}
    />
    <div className={cn('flex gap-4')}>
-    <Button
-     variant="secondary"
-     id={`approve-${requestId}`}
-     onClick={() => void onApprove()}
-     disabled={isProcessing}
-     className={cn('flex-1 py-4 bg-[var(--success)] tn-text-primary hover:bg-[var(--success)] hover:brightness-110 shadow-md')}
-    >
+   <Button
+    variant="secondary"
+    id={`approve-${requestId}`}
+    onClick={() => void onApprove()}
+    disabled={isProcessing}
+    className={cn('flex-1 py-4 tn-btn-success-solid shadow-md')}
+   >
      {isProcessing ? <Loader2 className={cn('w-4 h-4 animate-spin')} /> : <CheckCircle2 className={cn('w-4 h-4')} />}
      {approveLabel}
     </Button>
     <Button
-     variant="danger"
-     id={`reject-${requestId}`}
-     onClick={() => void onReject()}
-     disabled={isProcessing}
-     className={cn('flex-1 py-4 shadow-md bg-[var(--danger)]/20 border border-[var(--danger)]/30 text-[var(--danger)] hover:bg-[var(--danger)] hover:tn-text-primary')}
-    >
+    variant="danger"
+    id={`reject-${requestId}`}
+    onClick={() => void onReject()}
+    disabled={isProcessing}
+    className={cn('flex-1 py-4 shadow-md tn-btn-danger-soft border')}
+   >
      {isProcessing ? <Loader2 className={cn('w-4 h-4 animate-spin')} /> : <XCircle className={cn('w-4 h-4')} />}
      {rejectLabel}
     </Button>

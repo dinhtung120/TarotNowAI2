@@ -13,8 +13,8 @@ export function ReaderProfileBackButton({
  onBack,
 }: ReaderProfileBackButtonProps) {
  return (
-  <button type="button" onClick={onBack} className={cn('flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-[var(--text-secondary)] hover:tn-text-primary transition-colors group')}>
-   <ArrowLeft className={cn('w-4 h-4 text-[var(--purple-accent)] group-hover:-translate-x-1 transition-transform')} />
+  <button type="button" onClick={onBack} className={cn('flex items-center gap-2 tn-text-11 font-black uppercase tracking-widest tn-text-secondary tn-hover-text-primary transition-colors group')}>
+   <ArrowLeft className={cn('w-4 h-4 tn-wallet-back-icon tn-group-shift-left-1')} />
    <span>{label}</span>
   </button>
  );

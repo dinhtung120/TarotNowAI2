@@ -22,7 +22,7 @@ export default function ReadingSessionPage() {
   const { contentProps } = useReadingSessionPageState(sessionId);
 
   return (
-    <div className={cn('relative min-h-dvh overflow-x-hidden px-4 pb-0 pt-8 font-sans tn-text-primary md:px-6 md:pb-2 md:pt-8')}>
+    <div className={cn('relative min-h-dvh overflow-x-hidden tn-session-page-pad-md font-sans tn-text-primary')}>
       <AstralBackground variant="subtle" particleCount={8} />
       <ReadingSessionContent {...contentProps} AiInterpretationStream={AiInterpretationStream} />
     </div>

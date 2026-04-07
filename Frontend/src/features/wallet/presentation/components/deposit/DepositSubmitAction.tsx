@@ -32,7 +32,7 @@ export function DepositSubmitAction({
    >
     {submitting ? submittingLabel : submitLabel}
    </Button>
-   <p className={cn('text-[9px] font-black uppercase tracking-widest tn-text-muted text-center leading-relaxed')}>
+   <p className={cn('tn-text-9 font-black uppercase tracking-widest tn-text-muted text-center leading-relaxed')}>
     {securityNote}
    </p>
   </>

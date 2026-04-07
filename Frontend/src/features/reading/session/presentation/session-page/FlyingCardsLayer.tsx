@@ -12,7 +12,7 @@ export default function FlyingCardsLayer({
   if (flyingCards.length === 0) return null;
 
   return (
-    <div className={cn("pointer-events-none fixed inset-0 z-[60]")}>
+    <div className={cn("pointer-events-none fixed inset-0 tn-z-60")}>
       {flyingCards.map((card) => (
         <div
           key={card.key}

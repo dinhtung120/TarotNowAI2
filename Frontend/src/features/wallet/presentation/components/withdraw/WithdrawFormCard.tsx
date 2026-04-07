@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import type { FormEvent } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { GlassCard } from "@/shared/components/ui";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,7 @@ export function WithdrawFormCard(props: WithdrawFormCardProps) {
     onBankNameChange,
     onSubmit,
   } = props;
-  const { handleSubmit, setValue, watch } = useForm<WithdrawFormCardFormValues>({
+  const { handleSubmit, setValue, control } = useForm<WithdrawFormCardFormValues>({
     resolver: zodResolver(withdrawFormCardSchema),
     defaultValues: {
       amount: props.amount,
@@ -46,10 +46,10 @@ export function WithdrawFormCard(props: WithdrawFormCardProps) {
     },
   });
 
-  const watchedAmount = watch("amount") ?? "";
-  const watchedBankName = watch("bankName") ?? "";
-  const watchedAccountName = watch("accountName") ?? "";
-  const watchedAccountNumber = watch("accountNumber") ?? "";
+  const watchedAmount = useWatch({ control, name: "amount" }) ?? "";
+  const watchedBankName = useWatch({ control, name: "bankName" }) ?? "";
+  const watchedAccountName = useWatch({ control, name: "accountName" }) ?? "";
+  const watchedAccountNumber = useWatch({ control, name: "accountNumber" }) ?? "";
 
   useEffect(() => {
     setValue("amount", props.amount, { shouldDirty: false, shouldValidate: false });

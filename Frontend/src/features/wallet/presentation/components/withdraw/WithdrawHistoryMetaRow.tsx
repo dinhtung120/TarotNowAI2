@@ -15,7 +15,7 @@ export function WithdrawHistoryMetaRow({
  createdAt,
 }: WithdrawHistoryMetaRowProps) {
  return (
-  <div className={cn('flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[10px] text-[var(--text-tertiary)] font-medium')}>
+  <div className={cn('tn-flex-col-row-sm tn-items-center-sm justify-between gap-3 tn-text-10 tn-text-tertiary font-medium')}>
    <div className={cn('flex items-center gap-1.5 uppercase tracking-widest break-all')}>
     <Building2 className={cn('w-3 h-3 tn-text-muted')} />
     {bankName} • {bankAccountNumber}

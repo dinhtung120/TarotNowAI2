@@ -52,10 +52,10 @@ export default function AdminDisputesPage() {
  };
 
  return (
-  <div className={cn('max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-6')}>
+  <div className={cn('max-w-6xl mx-auto tn-admin-page-pad py-10 space-y-6')}>
    <SectionHeader
     tag={t('disputes.header.tag')}
-    tagIcon={<Scale className={cn('w-3 h-3 text-[var(--danger)]')} />}
+    tagIcon={<Scale className={cn('w-3 h-3 tn-text-danger')} />}
     title={t('disputes.header.title')}
     subtitle={t('disputes.header.subtitle')}
     className={cn('mb-0')}

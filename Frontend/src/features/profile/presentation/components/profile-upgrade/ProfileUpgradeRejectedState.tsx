@@ -22,7 +22,7 @@ export default function ProfileUpgradeRejectedState({
         )}
       >
         <div className={cn("flex items-center gap-2")}>
-          <XCircle className={cn("h-4 w-4 text-[var(--danger)]")} />
+          <XCircle className={cn("h-4 w-4 tn-text-danger")} />
           <span
             className={cn(
               "text-[10px] font-black tracking-widest text-[var(--danger)] uppercase",

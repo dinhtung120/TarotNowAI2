@@ -20,9 +20,9 @@ export function AdminPromotionCreateFields({
  const t = useTranslations('Admin');
 
  return (
-  <div className={cn('grid grid-cols-1 md:grid-cols-2 gap-8')}>
+  <div className={cn('tn-grid-cols-1-2-md gap-8')}>
    <div className={cn('space-y-3 text-left')}>
-    <label className={cn('text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]')}>
+    <label className={cn('tn-text-10 font-black uppercase tracking-widest tn-text-secondary')}>
      {t('promotions.create.min_amount_label')}
     </label>
     <div className={cn('relative')}>
@@ -33,16 +33,16 @@ export function AdminPromotionCreateFields({
       value={minAmount}
       onChange={(event) => onMinAmountChange(Number(event.target.value))}
       placeholder={t('promotions.create.min_amount_placeholder')}
-      className={cn('w-full tn-field rounded-2xl pl-12 pr-4 py-4 text-xs font-black tn-text-primary tn-field-warning transition-all placeholder:text-[var(--text-tertiary)] shadow-inner')}
+      className={cn('w-full tn-field rounded-2xl pl-12 pr-4 py-4 text-xs font-black tn-text-primary tn-field-warning tn-placeholder shadow-inner')}
      />
      <div className={cn('absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none')}>
-      <span className={cn('text-sm font-black text-[var(--text-secondary)]')}>₫</span>
+      <span className={cn('text-sm font-black tn-text-secondary')}>₫</span>
      </div>
     </div>
    </div>
 
    <div className={cn('space-y-3 text-left')}>
-    <label className={cn('text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]')}>
+    <label className={cn('tn-text-10 font-black uppercase tracking-widest tn-text-secondary')}>
      {t('promotions.create.bonus_label')}
     </label>
     <div className={cn('relative')}>
@@ -53,10 +53,10 @@ export function AdminPromotionCreateFields({
       value={bonusGold}
       onChange={(event) => onBonusGoldChange(Number(event.target.value))}
       placeholder={t('promotions.create.bonus_placeholder')}
-      className={cn('w-full tn-field rounded-2xl pl-12 pr-4 py-4 text-xs font-black tn-text-primary tn-field-warning transition-all placeholder:text-[var(--text-tertiary)] shadow-inner')}
+      className={cn('w-full tn-field rounded-2xl pl-12 pr-4 py-4 text-xs font-black tn-text-primary tn-field-warning tn-placeholder shadow-inner')}
      />
      <div className={cn('absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none')}>
-      <Coins className={cn('w-4 h-4 text-[var(--warning)]')} />
+      <Coins className={cn('w-4 h-4 tn-text-warning')} />
      </div>
     </div>
    </div>

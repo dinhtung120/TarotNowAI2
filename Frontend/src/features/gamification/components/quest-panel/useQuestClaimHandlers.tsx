@@ -3,6 +3,7 @@
 import { Gift } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
 import { useWalletStore } from "@/store/walletStore";
 import { useClaimQuestReward } from "@/features/gamification/useGamification";
 
@@ -24,7 +25,35 @@ export function useQuestClaimHandlers({ t }: UseQuestClaimHandlersParams) {
  };
 
  const handleClaim = (questCode: string, periodKey: string) => {
-  claimMutation.mutate({ questCode, periodKey }, { onSuccess: (result) => { if (!result.success) return; queryClient.invalidateQueries({ queryKey: ["wallet", "balance"] }); queryClient.invalidateQueries({ queryKey: ["gamification", "quests"] }); useWalletStore.getState().fetchBalance(); toast.success(<div className="flex items-center gap-2"><Gift className="text-yellow-400 w-5 h-5" /><span>{t("ClaimedSuccessfully", { amount: result.rewardAmount, type: result.rewardType })}</span></div>, { style: { borderRadius: "16px", background: "rgba(30, 41, 59, 0.9)", color: "#fff", border: "1px solid rgba(255, 255, 255, 0.1)", backdropFilter: "blur(10px)" } }); }, onError: (error: unknown) => toast.error(getClaimErrorMessage(error)) });
+  claimMutation.mutate(
+   { questCode, periodKey },
+   {
+    onSuccess: (result) => {
+     if (!result.success) return;
+
+     queryClient.invalidateQueries({ queryKey: ["wallet", "balance"] });
+     queryClient.invalidateQueries({ queryKey: ["gamification", "quests"] });
+     useWalletStore.getState().fetchBalance();
+
+     toast.success(
+      <div className={cn("flex", "items-center", "gap-2")}>
+       <Gift className={cn("w-5", "h-5", "text-yellow-400")} />
+       <span>{t("ClaimedSuccessfully", { amount: result.rewardAmount, type: result.rewardType })}</span>
+      </div>,
+      {
+       style: {
+        borderRadius: "16px",
+        background: "rgba(30, 41, 59, 0.9)",
+        color: "#fff",
+        border: "1px solid rgba(255, 255, 255, 0.1)",
+        backdropFilter: "blur(10px)",
+       },
+      },
+     );
+    },
+    onError: (error: unknown) => toast.error(getClaimErrorMessage(error)),
+   },
+  );
  };
 
  return { claimMutation, handleClaim };

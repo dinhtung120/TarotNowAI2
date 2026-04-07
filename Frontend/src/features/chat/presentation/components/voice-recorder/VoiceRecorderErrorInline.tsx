@@ -9,13 +9,13 @@ interface VoiceRecorderErrorInlineProps {
 export default function VoiceRecorderErrorInline({ errorMessage, onDismiss }: VoiceRecorderErrorInlineProps) {
   return (
     <div className={cn('flex items-center gap-2')}>
-      <span className={cn('max-w-[200px] truncate text-[11px] text-[var(--danger)]')} title={errorMessage ?? ''}>
+      <span className={cn('tn-maxw-200 truncate tn-text-11 tn-text-danger')} title={errorMessage ?? ''}>
         {errorMessage}
       </span>
       <button
         type="button"
         onClick={onDismiss}
-        className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[var(--danger)]/30 bg-[var(--danger)]/20 text-[var(--danger)]')}
+        className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border tn-voice-error-btn')}
         title="Đóng lỗi"
       >
         <X className={cn('h-4 w-4')} />

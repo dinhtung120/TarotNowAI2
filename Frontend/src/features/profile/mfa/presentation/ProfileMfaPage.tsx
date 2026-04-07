@@ -32,10 +32,10 @@ export default function MfaSetupPage() {
  }
 
  return (
-  <div className={cn('max-w-2xl mx-auto px-4 sm:px-6 pt-8 pb-32 space-y-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000')}>
+  <div className={cn('max-w-2xl mx-auto tn-page-x pt-8 pb-32 space-y-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000')}>
    <SectionHeader
     tag={t('mfa.tag')}
-    tagIcon={<Shield className={cn('w-3 h-3 text-[var(--success)]')} />}
+    tagIcon={<Shield className={cn('w-3 h-3 tn-text-success')} />}
     title={t('mfa.title')}
     subtitle={t('mfa.subtitle')}
    />

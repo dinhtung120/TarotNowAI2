@@ -20,14 +20,14 @@ export default function ReaderDirectoryCardStats({
         )}
       >
         <Star
-          className={cn("h-3.5 w-3.5 text-[var(--warning)]")}
+          className={cn("h-3.5 w-3.5 tn-text-warning")}
           fill="currentColor"
         />
         <span className={cn("tn-text-primary text-xs font-black")}>
           {reader.avgRating > 0 ? reader.avgRating.toFixed(1) : "--"}
         </span>
         <span
-          className={cn("text-[10px] font-bold text-[var(--text-tertiary)]")}
+          className={cn("tn-text-10 font-bold tn-text-tertiary")}
         >
           ({reader.totalReviews})
         </span>
@@ -35,13 +35,13 @@ export default function ReaderDirectoryCardStats({
 
       <div
         className={cn(
-          "flex items-center gap-1.5 rounded-lg border border-[var(--purple-accent)]/20 bg-[var(--purple-accent)]/10 px-2.5 py-1.5",
+          "flex items-center gap-1.5 rounded-lg border tn-border-accent-20 tn-bg-accent-10 px-2.5 py-1.5",
         )}
       >
-        <Gem className={cn("h-3.5 w-3.5 text-[var(--purple-accent)]")} />
+        <Gem className={cn("h-3.5 w-3.5 tn-text-accent")} />
         <span
           className={cn(
-            "text-[10px] font-black tracking-widest text-[var(--purple-accent)] uppercase",
+            "tn-text-10 font-black tracking-widest tn-text-accent uppercase",
           )}
         >
           {reader.diamondPerQuestion} {labels.perQuestionSuffix}

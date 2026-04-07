@@ -3,21 +3,21 @@ import type { ConversationDto } from '@/features/chat/application/actions';
 export function statusLabel(status: string) {
  switch (status) {
   case 'pending':
-   return { text: 'Pending', className: 'bg-white/10 text-[var(--text-secondary)] border-white/15' };
+   return { text: 'Pending', className: 'bg-white/10 tn-text-secondary border-white/15' };
   case 'awaiting_acceptance':
-   return { text: 'Awaiting', className: 'bg-[var(--warning)]/15 text-[var(--warning)] border-[var(--warning)]/30' };
+   return { text: 'Awaiting', className: 'tn-bg-warning-10 tn-text-warning tn-border-warning-30' };
   case 'ongoing':
-   return { text: 'Ongoing', className: 'bg-[var(--success)]/15 text-[var(--success)] border-[var(--success)]/30' };
+   return { text: 'Ongoing', className: 'tn-bg-success-10 tn-text-success tn-border-success-30' };
   case 'disputed':
-   return { text: 'Disputed', className: 'bg-[var(--danger)]/15 text-[var(--danger)] border-[var(--danger)]/30' };
+   return { text: 'Disputed', className: 'tn-bg-danger-soft tn-text-danger tn-border-danger' };
   case 'completed':
-   return { text: 'Completed', className: 'bg-[var(--info)]/15 text-[var(--info)] border-[var(--info)]/30' };
+   return { text: 'Completed', className: 'tn-bg-info-10 tn-text-info tn-border-info-20' };
   case 'cancelled':
-   return { text: 'Cancelled', className: 'bg-white/10 text-[var(--text-secondary)] border-white/15' };
+   return { text: 'Cancelled', className: 'bg-white/10 tn-text-secondary border-white/15' };
   case 'expired':
-   return { text: 'Expired', className: 'bg-[var(--warning)]/15 text-[var(--warning)] border-[var(--warning)]/30' };
+   return { text: 'Expired', className: 'tn-bg-warning-10 tn-text-warning tn-border-warning-30' };
   default:
-   return { text: status, className: 'bg-white/10 text-[var(--text-secondary)] border-white/15' };
+   return { text: status, className: 'bg-white/10 tn-text-secondary border-white/15' };
  }
 }
 

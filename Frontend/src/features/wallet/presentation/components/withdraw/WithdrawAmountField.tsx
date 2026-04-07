@@ -16,11 +16,11 @@ export function WithdrawAmountField({
 }: WithdrawAmountFieldProps) {
  return (
   <div className={cn('space-y-4')}>
-   <label className={cn('text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] block')}>
+   <label className={cn('tn-text-10 font-black uppercase tn-tracking-02 tn-text-secondary block')}>
     {label}
    </label>
    <div className={cn('relative')}>
-    <Diamond className={cn('absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--warning)]')} />
+    <Diamond className={cn('absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 tn-text-warning')} />
     <input
      type="number"
      value={value}

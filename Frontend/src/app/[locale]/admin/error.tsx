@@ -12,7 +12,7 @@ export default function AdminError({ error, reset }: AdminErrorProps) {
  useErrorBoundaryLogger('AdminErrorBoundary', error);
 
  return (
-  <div className={cn("flex min-h-[50vh] flex-col items-center justify-center gap-4 px-4 text-center")}>
+  <div className={cn("flex tn-minh-50vh flex-col items-center justify-center gap-4 px-4 text-center")}>
    <h2 className={cn("text-xl font-bold tn-text-primary")}>Admin page failed to load</h2>
    <p className={cn("tn-text-secondary")}>Try reloading this section.</p>
    <button

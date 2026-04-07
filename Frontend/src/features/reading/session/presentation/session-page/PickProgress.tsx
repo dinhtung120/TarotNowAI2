@@ -24,7 +24,7 @@ export default function PickProgress({
     <div className={cn("mb-4 text-center")}>
       <h2
         className={cn(
-          "mb-2 text-xl font-medium text-[var(--purple-accent)] drop-shadow-[0_0_10px_var(--c-168-85-247-50)] sm:text-2xl",
+          "mb-2 text-xl font-medium tn-text-accent drop-shadow-md",
         )}
       >
         {pickedCount < cardsToDraw ? promptText : doneText}
@@ -37,10 +37,10 @@ export default function PickProgress({
           type="button"
           onClick={onRandomSelect}
           className={cn(
-            "group relative z-50 mt-4 flex min-h-11 items-center gap-2 rounded-full border border-[var(--purple-accent)]/50 px-6 py-2.5 text-xs font-bold text-[var(--purple-accent)] shadow-[0_0_20px_var(--c-168-85-247-20)] transition-all hover:border-[var(--purple-accent)] hover:bg-[var(--purple-accent)]/60 hover:tn-text-primary active:scale-95 tn-surface-strong",
+            "group relative z-50 mt-4 flex min-h-11 items-center gap-2 rounded-full border tn-border-accent-50 px-6 py-2.5 text-xs font-bold tn-text-accent tn-shadow-glow-accent-15 transition-all tn-surface-strong",
           )}
         >
-          <Dices className={cn("h-4 w-4 transition-transform group-hover:rotate-12")} />
+          <Dices className={cn("h-4 w-4 transition-transform tn-group-rotate-12")} />
           {randomText}
         </button>
       )}

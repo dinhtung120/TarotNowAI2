@@ -20,7 +20,7 @@ export default function ReaderDecisionBanner({
     <div
       className={cn("space-y-2 border-b border-white/10 bg-white/5 px-4 py-3")}
     >
-      <p className={cn("text-xs text-[var(--text-secondary)]")}>
+      <p className={cn("text-xs tn-text-secondary")}>
         Yêu cầu đang chờ phản hồi. Reader cần chọn Accept hoặc Reject.
       </p>
       <div className={cn("flex gap-2")}>

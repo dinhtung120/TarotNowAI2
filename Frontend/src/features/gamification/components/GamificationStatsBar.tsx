@@ -7,6 +7,7 @@ import type { TitleDefinition } from "@/features/gamification/gamification.types
 import { useAchievements, useTitles } from "@/features/gamification/useGamification";
 import { useLocalizedField } from "@/features/gamification/useLocalizedField";
 import { StatsMetricCard } from "@/features/gamification/components/stats/StatsMetricCard";
+import { cn } from "@/lib/utils";
 
 export default function GamificationStatsBar() {
  const t = useTranslations("Gamification");
@@ -23,7 +24,7 @@ export default function GamificationStatsBar() {
  const achievementsTotal = achievementsData?.definitions?.length || 0;
 
  return (
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 relative z-10">
+  <div className={cn("tn-grid-cols-2-4-md", "gap-4", "mb-8", "relative", "z-10")}>
    <StatsMetricCard borderClassName="border-purple-500/30 shadow-purple-500/10" iconClassName="bg-purple-500/20 text-purple-400" icon={Zap} label={`${t("Level")} & EXP`} value={`Lv.${level}`} detail={`${exp} EXP`} progressPercent={exp % 100} />
    <StatsMetricCard borderClassName="border-blue-500/30 shadow-blue-500/10" iconClassName="bg-blue-500/20 text-blue-400" icon={Medal} label={t("TotalTitles")} value={isLoadingTitles ? "..." : `${titlesOwned} / ${titlesTotal}`} detail={`${t("ActiveTitle")}: ${activeTitle ? localize(activeTitle.nameVi, activeTitle.nameEn) : t("NoTitleYet")}`} progressPercent={titlesTotal > 0 ? (titlesOwned / titlesTotal) * 100 : 0} />
    <StatsMetricCard borderClassName="border-amber-500/30 shadow-amber-500/10" iconClassName="bg-amber-500/20 text-amber-500" icon={Trophy} label={t("TotalAchievements")} value={isLoadingAchievements ? "..." : `${achievementsOwned} / ${achievementsTotal}`} progressPercent={achievementsTotal > 0 ? (achievementsOwned / achievementsTotal) * 100 : 0} />

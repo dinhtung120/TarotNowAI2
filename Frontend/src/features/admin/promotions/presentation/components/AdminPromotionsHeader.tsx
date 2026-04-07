@@ -14,10 +14,10 @@ export function AdminPromotionsHeader({ isCreating, onToggleCreate }: AdminPromo
  const t = useTranslations('Admin');
 
  return (
-  <div className={cn('flex flex-col md:flex-row md:items-end justify-between gap-6')}>
+  <div className={cn('flex flex-col tn-md-flex-row tn-md-items-end justify-between gap-6')}>
    <SectionHeader
     tag={t('promotions.header.tag')}
-    tagIcon={<Ticket className={cn('w-3 h-3 text-[var(--warning)]')} />}
+    tagIcon={<Ticket className={cn('w-3 h-3 tn-text-warning')} />}
     title={t('promotions.header.title')}
     subtitle={t('promotions.header.subtitle')}
     className={cn('mb-0 text-left items-start')}
@@ -28,7 +28,7 @@ export function AdminPromotionsHeader({ isCreating, onToggleCreate }: AdminPromo
     className={cn(
      'shrink-0',
      !isCreating &&
-      'bg-[var(--warning)] tn-text-ink hover:bg-[var(--warning)] hover:brightness-110 shadow-[0_0_20px_var(--c-245-158-11-20)]'
+      'tn-btn-warning-solid'
     )}
    >
     {isCreating ? <X className={cn('w-4 h-4')} /> : <PlusCircle className={cn('w-4 h-4')} />}

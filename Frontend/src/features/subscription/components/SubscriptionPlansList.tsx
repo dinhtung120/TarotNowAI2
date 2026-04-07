@@ -15,7 +15,7 @@ export const SubscriptionPlansList = () => {
   
   if (isLoading) {
     return (
-      <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse")}>
+      <div className={cn("tn-grid-1-2-3-responsive gap-6 animate-pulse")}>
         {[1, 2, 3].map(i => (
           <div key={i} className={cn("h-96 bg-slate-800/40 rounded-2xl border border-slate-700/30")}></div>
         ))}
@@ -35,7 +35,7 @@ export const SubscriptionPlansList = () => {
 
   
   return (
-    <div className={cn("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6")}>
+    <div className={cn("tn-grid-1-2-3-responsive gap-6")}>
       {plans.map(plan => (
         <SubscriptionPlanCard key={plan.id} plan={plan} />
       ))}

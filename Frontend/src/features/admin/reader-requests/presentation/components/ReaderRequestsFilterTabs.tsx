@@ -25,10 +25,10 @@ export function ReaderRequestsFilterTabs({
   <FilterTabs
    value={value}
    options={[
-    { value: 'pending', label: pendingLabel, icon: <Clock className={cn('w-4 h-4')} />, activeClassName: 'bg-[var(--warning)]/10 border border-[var(--warning)]/30 text-[var(--warning)] shadow-md' },
-    { value: 'approved', label: approvedLabel, icon: <CheckCircle2 className={cn('w-4 h-4')} />, activeClassName: 'bg-[var(--success)]/10 border border-[var(--success)]/30 text-[var(--success)] shadow-md' },
-    { value: 'rejected', label: rejectedLabel, icon: <XCircle className={cn('w-4 h-4')} />, activeClassName: 'bg-[var(--danger)]/10 border border-[var(--danger)]/30 text-[var(--danger)] shadow-md' },
-    { value: '', label: allLabel, icon: <Filter className={cn('w-4 h-4')} />, activeClassName: 'bg-[var(--purple-accent)]/10 border border-[var(--purple-accent)]/30 text-[var(--purple-accent)] shadow-md' },
+    { value: 'pending', label: pendingLabel, icon: <Clock className={cn('w-4 h-4')} />, activeClassName: 'tn-bg-warning-10 border tn-border-warning-30 tn-text-warning shadow-md' },
+    { value: 'approved', label: approvedLabel, icon: <CheckCircle2 className={cn('w-4 h-4')} />, activeClassName: 'tn-bg-success-10 border tn-border-success-30 tn-text-success shadow-md' },
+    { value: 'rejected', label: rejectedLabel, icon: <XCircle className={cn('w-4 h-4')} />, activeClassName: 'tn-bg-danger-soft border tn-border-danger tn-text-danger shadow-md' },
+    { value: '', label: allLabel, icon: <Filter className={cn('w-4 h-4')} />, activeClassName: 'tn-bg-accent-10 border tn-border-accent-30 tn-text-accent shadow-md' },
    ]}
    onChange={onChange}
   />

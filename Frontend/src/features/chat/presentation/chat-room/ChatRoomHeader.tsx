@@ -21,12 +21,12 @@ export default function ChatRoomHeader({
     <>
       <div
         className={cn(
-          "flex items-center justify-between gap-3 border-b border-white/10 bg-[#0a0a0a]/40 px-4 py-3 backdrop-blur-md",
+          "flex items-center justify-between gap-3 border-b border-white/10 tn-chat-header-shell px-4 py-3 backdrop-blur-md",
         )}
       >
         <div className={cn("flex min-w-0 items-center gap-3")}>
           <button
-            className={cn("rounded-lg p-2 hover:bg-white/10 md:hidden")}
+            className={cn("rounded-lg p-2 tn-chat-load-more-btn tn-hide-md")}
             type="button"
             onClick={onBack}
           >
@@ -55,7 +55,7 @@ export default function ChatRoomHeader({
       {headerWarning && (
         <div
           className={cn(
-            "border-b border-[var(--warning)]/20 bg-[var(--warning)]/10 px-4 py-2 text-xs text-[var(--warning)]",
+            "border-b tn-chat-warning-banner px-4 py-2 text-xs",
           )}
         >
           {warningText}

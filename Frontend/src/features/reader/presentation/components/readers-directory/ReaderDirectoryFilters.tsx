@@ -19,8 +19,8 @@ interface ReaderDirectoryFiltersProps {
 
 export function ReaderDirectoryFilters(props: ReaderDirectoryFiltersProps) {
   return (
-    <GlassCard className={cn("!p-4 shadow-2xl md:sticky md:top-24 md:z-30")}>
-      <div className={cn("flex flex-col gap-4 md:flex-row")}>
+    <GlassCard className={cn("!p-4 tn-reader-filters-shell")}>
+      <div className={cn("tn-reader-filters-row")}>
         <ReaderDirectorySearchInput
           placeholder={props.searchPlaceholder}
           value={props.searchInput}

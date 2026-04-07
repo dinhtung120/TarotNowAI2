@@ -29,24 +29,24 @@ function LoadingSpinnerComponent({
  size = "md",
  message,
  fullPage = false,
- className = "",
+ className,
 }: LoadingSpinnerProps) {
  return (
  <div
  className={cn(
  "flex flex-col items-center justify-center gap-4",
- fullPage ? "min-h-[60vh]" : "py-12",
+ fullPage ? "tn-min-h-60vh" : "py-12",
  className,
  )}
  >
  {}
  <Loader2
- className={`${sizeMap[size]} animate-spin text-[var(--purple-accent)]`}
+ className={cn(sizeMap[size], "animate-spin", "tn-text-accent")}
  />
 
  {}
  {message && (
- <span className={cn("text-[10px] font-black uppercase tracking-widest tn-text-muted")}>
+ <span className={cn("tn-text-10 font-black uppercase tracking-widest tn-text-muted")}>
  {message}
  </span>
  )}

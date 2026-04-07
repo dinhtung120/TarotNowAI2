@@ -12,7 +12,7 @@ interface AdminReadingsFilterFieldProps {
 export function AdminReadingsFilterField({ label, icon: Icon, containerClassName, children }: AdminReadingsFilterFieldProps) {
  return (
   <div className={cn(containerClassName, "space-y-3 text-left")}>
-   <label className={cn("text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)] flex items-center gap-2")}>
+   <label className={cn("tn-text-10 font-black uppercase tracking-widest tn-text-secondary flex items-center gap-2")}>
     <Icon className={cn("w-3.5 h-3.5")} />
     {label}
    </label>

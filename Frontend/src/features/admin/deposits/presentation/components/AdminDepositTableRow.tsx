@@ -19,7 +19,7 @@ interface AdminDepositTableRowProps {
 
 export function AdminDepositTableRow({ locale, order, processingId, labels, onApprove, onReject }: AdminDepositTableRowProps) {
  return (
-  <tr className={cn("group/row hover:tn-surface transition-colors")}>
+  <tr className={cn("group-row tn-hover-surface-strong transition-colors")}>
    <AdminDepositUserCell username={order.username} userId={order.userId} systemUserLabel={labels.systemUser} userIdPrefixLabel={labels.userIdPrefix} />
    <AdminDepositAmountCell locale={locale} amountVnd={order.amountVnd} />
    <AdminDepositAssetsCell locale={locale} diamondAmount={order.diamondAmount} />

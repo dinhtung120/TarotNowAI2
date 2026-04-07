@@ -16,11 +16,11 @@ export function AdminUserBalanceCell({
  return (
   <td className={cn('px-8 py-5')}>
    <div className={cn('space-y-1')}>
-    <div className={cn('flex items-center gap-2 text-[11px] font-black tn-text-primary italic')}>
-     <Gem className={cn('w-3 h-3 text-[var(--purple-accent)]')} />
+    <div className={cn('flex items-center gap-2 tn-text-11 font-black tn-text-primary italic')}>
+     <Gem className={cn('w-3 h-3 tn-text-accent')} />
      {user.diamondBalance.toLocaleString(locale)}
     </div>
-    <div className={cn('flex items-center gap-2 text-[10px] font-bold text-[var(--warning)] italic')}>
+    <div className={cn('flex items-center gap-2 tn-text-10 font-bold tn-text-warning italic')}>
      <Coins className={cn('w-3 h-3')} />
      {user.goldBalance.toLocaleString(locale)}
     </div>

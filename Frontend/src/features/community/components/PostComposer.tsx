@@ -76,11 +76,11 @@ export const PostComposer: React.FC<PostComposerProps> = ({ currentVisibilityTab
   });
 
   return (
-    <div className={cn("bg-[#1a1b26] rounded-xl p-4 shadow-lg border border-[#2a2b3d] mb-6")}>
+    <div className={cn("tn-community-card rounded-xl p-4 shadow-lg border mb-6")}>
       <form onSubmit={onSubmit}>
         <textarea
           {...register('content')}
-          className={cn("w-full bg-[#0f0f16] text-gray-200 border border-[#2a2b3d] rounded-lg p-3 resize-none focus:outline-none focus:ring-2 focus:ring-[#8a2be2] transition-colors min-h-[100px]")}
+          className={cn("w-full tn-community-input border rounded-lg p-3 resize-none transition-colors tn-minh-100")}
           placeholder={t('composer.placeholder')}
           disabled={createPost.isPending}
         />

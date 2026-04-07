@@ -58,7 +58,7 @@ export default function ReaderSettingsPage({ embedded = false }: ReaderSettingsP
  }
 
  return (
-  <div className={cn('max-w-3xl mx-auto px-4 sm:px-6 pt-8 pb-32 space-y-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000')}>
+  <div className={cn('max-w-3xl mx-auto tn-page-x pt-8 pb-32 space-y-10 w-full animate-in fade-in slide-in-from-bottom-8 duration-1000')}>
    <ReaderSettingsHeader tag={t('reader.tag')} title={t('reader.title')} subtitle={t('reader.subtitle')} />
    {content}
   </div>

@@ -13,7 +13,7 @@ interface UserSidebarMenuGroupProps {
 export default function UserSidebarMenuGroup({ activeHref, group, tNav, tUserNav, onClose }: UserSidebarMenuGroupProps) {
   return (
     <div>
-      <span className={cn('mb-2 block px-4 text-[9px] font-black uppercase tracking-[0.3em] text-[var(--text-muted)]')}>{tUserNav(group.labelKey)}</span>
+      <span className={cn('mb-2 block px-4 tn-text-9 font-black uppercase tn-tracking-03 tn-text-muted')}>{tUserNav(group.labelKey)}</span>
       <div className={cn('space-y-1')}>
         {group.items.map((item) => (
           <UserSidebarMenuItem key={item.href} item={item} active={item.href === activeHref} label={tNav(item.labelKey)} onClick={onClose} />

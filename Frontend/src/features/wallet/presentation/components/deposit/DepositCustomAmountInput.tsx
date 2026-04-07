@@ -19,7 +19,7 @@ export function DepositCustomAmountInput({
 }: DepositCustomAmountInputProps) {
  return (
   <div className={cn('pt-2 space-y-2')}>
-   <label className={cn('text-[10px] font-black uppercase tracking-widest tn-text-muted')}>{label}</label>
+   <label className={cn('tn-text-10 font-black uppercase tracking-widest tn-text-muted')}>{label}</label>
    <input
     type="number"
     value={value}

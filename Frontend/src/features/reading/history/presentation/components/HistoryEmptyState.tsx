@@ -14,9 +14,9 @@ export function HistoryEmptyState({ title, description, cta }: HistoryEmptyState
 
  return (
   <GlassCard className={cn('text-center py-24 animate-in fade-in duration-1000')}>
-   <Bot className={cn('w-16 h-16 text-[var(--text-tertiary)] mx-auto mb-6')} />
-   <h3 className={cn('text-xl font-bold text-[var(--text-primary)] mb-2 tracking-tight')}>{title}</h3>
-   <p className={cn('text-[var(--text-secondary)] mb-8 max-w-sm mx-auto')}>{description}</p>
+   <Bot className={cn('w-16 h-16 tn-text-tertiary mx-auto mb-6')} />
+   <h3 className={cn('text-xl font-bold tn-text-primary mb-2 tracking-tight')}>{title}</h3>
+   <p className={cn('tn-text-secondary mb-8 max-w-sm mx-auto')}>{description}</p>
    <Button variant="brand" onClick={() => router.push('/reading')}>
     {cta}
    </Button>

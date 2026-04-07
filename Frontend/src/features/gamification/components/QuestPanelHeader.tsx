@@ -11,7 +11,7 @@ interface QuestPanelHeaderProps {
 
 export function QuestPanelHeader({ questType, setQuestType, t }: QuestPanelHeaderProps) {
   return (
-    <div className={cn("flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6")}>
+    <div className={cn("tn-flex-col-row-sm tn-items-center-sm justify-between gap-4 mb-6")}>
       <div className={cn("flex items-center gap-3")}>
         <div className={cn("p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/30")}>
           <Trophy className={cn("w-6 h-6 text-white")} />
@@ -28,22 +28,22 @@ export function QuestPanelHeader({ questType, setQuestType, t }: QuestPanelHeade
         <button
           type="button"
           onClick={() => setQuestType('daily')}
-          className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+          className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", 
             questType === 'daily'
               ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-          }`}
+              : 'text-slate-400'
+          )}
         >
           {t('DailyQuests')}
         </button>
         <button
           type="button"
           onClick={() => setQuestType('weekly')}
-          className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+          className={cn("px-4 py-2 rounded-lg text-sm font-bold transition-all", 
             questType === 'weekly'
               ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md'
-              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-          }`}
+              : 'text-slate-400'
+          )}
         >
           {t('WeeklyQuests')}
         </button>

@@ -9,7 +9,7 @@ interface AdminDepositAmountCellProps {
 export function AdminDepositAmountCell({ locale, amountVnd }: AdminDepositAmountCellProps) {
  return (
   <td className={cn("px-8 py-5")}>
-   <div className={cn("text-[11px] font-black tn-text-primary uppercase tracking-tighter")}>
+   <div className={cn("tn-text-11 font-black tn-text-primary uppercase tracking-tighter")}>
     {formatCurrency(amountVnd, locale)}
    </div>
   </td>

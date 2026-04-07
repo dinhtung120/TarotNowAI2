@@ -21,7 +21,7 @@ export function HistorySessionsGrid({
  const router = useRouter();
 
  return (
-  <div className={cn('grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200')}>
+  <div className={cn('tn-grid-cols-1-2-md gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200')}>
    {items.map((session) => (
     <HistorySessionCard
      key={session.id}

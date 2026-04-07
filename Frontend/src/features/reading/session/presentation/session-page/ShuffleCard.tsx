@@ -40,7 +40,7 @@ export default function ShuffleCard({ path }: ShuffleCardProps) {
             "tn-overlay-soft flex h-24 w-16 items-center justify-center rounded border border-[var(--purple-accent)]/30",
           )}
         >
-          <Sparkles className={cn("h-6 w-6 text-[var(--purple-accent)]/60")} />
+          <Sparkles className={cn("h-6 w-6 tn-text-accent-60")} />
         </div>
       </div>
       <div

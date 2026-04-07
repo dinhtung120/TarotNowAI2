@@ -18,13 +18,13 @@ export default function RegisterPage() {
   if (success) {
     return (
       <AuthSuccessCard
-        icon={<Mail className={cn('h-10 w-10 text-[var(--success)]')} />}
+        icon={<Mail className={cn('h-10 w-10 tn-text-success')} />}
         title={t('register.success_title')}
         description={t('register.success_desc')}
         ctaHref="/verify-email"
         ctaLabel={t('register.success_cta')}
-        glowClass="bg-[var(--success-bg)]"
-        iconWrapperClass="bg-[var(--success-bg)] shadow-[0_0_30px_var(--success)]"
+        glowClass="tn-bg-success-soft"
+        iconWrapperClass="tn-auth-success-icon-wrapper-success"
       />
     );
   }
@@ -48,9 +48,9 @@ export default function RegisterPage() {
           {t('register.cta')}
         </Button>
       </form>
-      <p className={cn('mt-8 text-center text-sm font-medium text-[var(--text-muted)]')}>
+      <p className={cn('mt-8 text-center text-sm font-medium tn-text-muted')}>
         {t('register.footer_prompt')}{' '}
-        <Link href="/login" className={cn('inline-flex min-h-11 items-center px-1 font-bold text-[var(--purple-accent)] transition-colors hover:text-[var(--text-primary)]')}>
+        <Link href="/login" className={cn('inline-flex min-h-11 items-center px-1 font-bold tn-text-accent tn-hover-text-primary transition-colors')}>
           {t('register.footer_link')}
         </Link>
       </p>

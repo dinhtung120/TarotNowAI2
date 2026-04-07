@@ -14,9 +14,7 @@ export function AdminGamificationTabs({ activeTab, onChange }: AdminGamification
       <button
         type="button"
         onClick={() => onChange('quests')}
-        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
-          activeTab === 'quests' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'
-        }`}
+        className={cn("flex", "items-center", "gap-2", "rounded-xl", "px-6", "py-2.5", "text-sm", "font-bold", "transition-all", activeTab === "quests" ? "bg-indigo-600 text-white shadow-lg" : "text-slate-400")}
       >
         <Trophy className={cn("w-4 h-4")} />
         Nhiệm Vụ
@@ -24,9 +22,7 @@ export function AdminGamificationTabs({ activeTab, onChange }: AdminGamification
       <button
         type="button"
         onClick={() => onChange('achievements')}
-        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
-          activeTab === 'achievements' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'
-        }`}
+        className={cn("flex", "items-center", "gap-2", "rounded-xl", "px-6", "py-2.5", "text-sm", "font-bold", "transition-all", activeTab === "achievements" ? "bg-indigo-600 text-white shadow-lg" : "text-slate-400")}
       >
         <Medal className={cn("w-4 h-4")} />
         Thành Tựu
@@ -34,9 +30,7 @@ export function AdminGamificationTabs({ activeTab, onChange }: AdminGamification
       <button
         type="button"
         onClick={() => onChange('titles')}
-        className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
-          activeTab === 'titles' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'
-        }`}
+        className={cn("flex", "items-center", "gap-2", "rounded-xl", "px-6", "py-2.5", "text-sm", "font-bold", "transition-all", activeTab === "titles" ? "bg-indigo-600 text-white shadow-lg" : "text-slate-400")}
       >
         <Crown className={cn("w-4 h-4")} />
         Danh Hiệu

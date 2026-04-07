@@ -27,16 +27,16 @@ export function PostComposerActions({
  return (
   <div className={cn('flex justify-between items-center mt-3')}>
    <div className={cn('flex items-center gap-4')}>
-    <select {...visibilityField} className={cn('bg-[#0f0f16] text-gray-400 text-sm border-none focus:ring-0 rounded-md py-1 px-2 cursor-pointer')} disabled={isPending}>
+    <select {...visibilityField} className={cn('tn-surface tn-text-secondary text-sm border-none outline-none rounded-md py-1 px-2 cursor-pointer')} disabled={isPending}>
      <option value="public">{t('composer.visibility_public')}</option>
      <option value="private">{t('composer.visibility_private')}</option>
     </select>
-    <button type="button" disabled={isUploading} onClick={() => fileInputRef.current?.click()} className={cn('text-[#8a2be2] hover:text-[#ff00ff] transition-colors p-2 rounded-full hover:bg-[#8a2be2]/10')} title={t('composer.attach_image')}>
+    <button type="button" disabled={isUploading} onClick={() => fileInputRef.current?.click()} className={cn('tn-text-accent tn-hover-text-primary transition-colors p-2 rounded-full tn-hover-surface-soft')} title={t('composer.attach_image')}>
      {isUploading ? <Loader2 className={cn('w-5 h-5 animate-spin')} /> : <ImageIcon className={cn('w-5 h-5')} />}
     </button>
     <input type="file" accept="image/*" className={cn('hidden')} ref={fileInputRef} onChange={onChangeImage} />
    </div>
-   <button type="submit" disabled={isPending || (!content.trim() && !isUploading)} className={cn('bg-gradient-to-r from-[#8a2be2] to-[#4b0082] text-white px-6 py-2 rounded-lg font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity')}>
+   <button type="submit" disabled={isPending || (!content.trim() && !isUploading)} className={cn('bg-gradient-to-r from-violet-600 to-indigo-900 text-white px-6 py-2 rounded-lg font-medium transition-opacity tn-disabled-dim')}>
     {isPending ? t('composer.posting') : t('composer.submit')}
    </button>
   </div>

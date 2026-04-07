@@ -28,8 +28,8 @@ interface AdminWithdrawalCardProps {
 
 export function AdminWithdrawalCard(props: AdminWithdrawalCardProps) {
  return (
-  <GlassCard className={cn('space-y-6 group hover:tn-border transition-all')}>
-   <div className={cn('flex flex-col md:flex-row md:items-center justify-between gap-4')}>
+  <GlassCard className={cn('space-y-6 group tn-hover-border transition-all')}>
+   <div className={cn('flex flex-col tn-md-flex-row tn-md-items-center justify-between gap-4')}>
     <AdminWithdrawalAmountInfo amountDiamond={props.item.amountDiamond} grossLabel={props.grossLabel} grossVnd={props.formatVnd(props.item.amountVnd)} feeLabel={props.feeLabel} feeVnd={props.formatVnd(props.item.feeVnd)} netLabel={props.netLabel} netVnd={props.formatVnd(props.item.netAmountVnd)} />
     <AdminWithdrawalMetaInfo createdAt={props.item.createdAt} idLabel={props.idLabel} locale={props.locale} />
    </div>

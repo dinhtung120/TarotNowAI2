@@ -25,8 +25,8 @@ export function WithdrawHistorySection({
 }: WithdrawHistorySectionProps) {
  return (
   <div className={cn('space-y-6 pt-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-400')}>
-   <h2 className={cn('text-[11px] font-black tn-text-primary uppercase tracking-[0.3em] flex items-center gap-3')}>
-    <Clock className={cn('w-4 h-4 text-[var(--text-secondary)]')} />
+   <h2 className={cn('tn-text-11 font-black tn-text-primary uppercase tn-tracking-03 flex items-center gap-3')}>
+    <Clock className={cn('w-4 h-4 tn-text-secondary')} />
     {title}
    </h2>
    <GlassCard className={cn('!p-0 overflow-hidden tn-border-soft')}>
@@ -36,7 +36,7 @@ export function WithdrawHistorySection({
      </div>
     ) : null}
     {!loadingHistory && history.length === 0 ? (
-      <div className={cn('text-[var(--text-secondary)] text-[11px] font-medium uppercase tracking-widest text-center py-12')}>
+      <div className={cn('tn-text-secondary tn-text-11 font-medium uppercase tracking-widest text-center py-12')}>
        {emptyLabel}
       </div>
      ) : null}

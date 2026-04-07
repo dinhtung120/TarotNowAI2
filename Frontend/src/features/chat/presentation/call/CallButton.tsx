@@ -35,7 +35,7 @@ export const CallButton = ({ conversationId }: CallButtonProps) => {
         type="button"
         onClick={handleStartAudio} 
         disabled={!connected}
-        className={cn("p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 text-indigo-400 hover:text-indigo-300")}
+        className={cn("p-2 rounded-full tn-call-btn")}
         title={t('start_audio')}
       >
         <svg className={cn("w-5 h-5")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -47,7 +47,7 @@ export const CallButton = ({ conversationId }: CallButtonProps) => {
         type="button"
         onClick={handleStartVideo}
         disabled={!connected}
-        className={cn("p-2 rounded-full hover:bg-white/10 transition-colors disabled:opacity-50 text-indigo-400 hover:text-indigo-300")}
+        className={cn("p-2 rounded-full tn-call-btn")}
         title={t('start_video')}
       >
         <svg className={cn("w-5 h-5")} fill="none" viewBox="0 0 24 24" stroke="currentColor">

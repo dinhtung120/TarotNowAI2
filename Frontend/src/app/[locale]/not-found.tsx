@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 
 export default function LocaleNotFound() {
  return (
-  <div className={cn("mx-auto flex min-h-[60vh] max-w-2xl flex-col items-center justify-center gap-6 px-6 text-center")}>
+  <div className={cn("mx-auto flex tn-minh-60vh max-w-2xl flex-col items-center justify-center gap-6 px-6 text-center")}>
    <h1 className={cn("text-4xl font-black tracking-tight tn-text-primary")}>404</h1>
    <p className={cn("tn-text-secondary")}>This page does not exist or may have been moved.</p>
    <Link

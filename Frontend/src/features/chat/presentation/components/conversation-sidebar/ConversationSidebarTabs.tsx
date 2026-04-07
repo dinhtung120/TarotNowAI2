@@ -8,19 +8,19 @@ interface ConversationSidebarTabsProps {
 
 function tabClass(active: boolean) {
  return cn(
-  'whitespace-nowrap px-3 py-1.5 rounded-full text-xs border transition-all',
+  'whitespace-nowrap rounded-full border px-3 py-1.5 text-xs transition-all',
   active
-   ? 'bg-[var(--purple-accent)]/20 border-[var(--purple-accent)]/40 text-white'
-   : 'bg-white/5 border-white/10 text-[var(--text-secondary)] hover:bg-white/10',
+   ? 'border-violet-500/40 bg-violet-500/20 text-white'
+   : 'border-white/10 bg-white/5 text-slate-300',
  );
 }
 
 export function ConversationSidebarTabs({ tab, setTab }: ConversationSidebarTabsProps) {
  return (
   <div className={cn('flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide')}>
-   <button type="button" onClick={() => setTab('active')} className={tabClass(tab === 'active')}>Đang chat</button>
-   <button type="button" onClick={() => setTab('pending')} className={tabClass(tab === 'pending')}>Pending</button>
-   <button type="button" onClick={() => setTab('completed')} className={tabClass(tab === 'completed')}>Đã hoàn thành</button>
+   <button type="button" onClick={() => setTab('active')} className={cn(tabClass(tab === 'active'))}>Đang chat</button>
+   <button type="button" onClick={() => setTab('pending')} className={cn(tabClass(tab === 'pending'))}>Pending</button>
+   <button type="button" onClick={() => setTab('completed')} className={cn(tabClass(tab === 'completed'))}>Đã hoàn thành</button>
   </div>
  );
 }

@@ -15,16 +15,16 @@ export function AdminDepositStatusBadge({
  labels,
 }: AdminDepositStatusBadgeProps) {
  const icon = status === 'Success'
-  ? <CheckCircle2 className={cn('w-3 h-3 text-[var(--success)]')} />
+  ? <CheckCircle2 className={cn('w-3 h-3 tn-text-success')} />
   : status === 'Failed'
-  ? <XCircle className={cn('w-3 h-3 text-[var(--danger)]')} />
-  : <Clock className={cn('w-3 h-3 text-[var(--warning)]')} />;
+  ? <XCircle className={cn('w-3 h-3 tn-text-danger')} />
+  : <Clock className={cn('w-3 h-3 tn-text-warning')} />;
 
- const className = status === 'Success'
-  ? 'bg-[var(--success)]/10 border-[var(--success)]/20 text-[var(--success)] shadow-inner'
+ const statusClass = status === 'Success'
+  ? 'tn-bg-success-10 tn-border-success-20 tn-text-success shadow-inner'
   : status === 'Failed'
-  ? 'bg-[var(--danger)]/10 border-[var(--danger)]/20 text-[var(--danger)] shadow-inner'
-  : 'bg-[var(--warning)]/10 border-[var(--warning)]/20 text-[var(--warning)] shadow-inner';
+  ? 'tn-bg-danger-soft tn-border-danger tn-text-danger shadow-inner'
+  : 'tn-bg-warning-10 tn-border-warning-20 tn-text-warning shadow-inner';
 
  const label = status === 'Success'
   ? labels.success
@@ -33,7 +33,7 @@ export function AdminDepositStatusBadge({
   : labels.pending;
 
  return (
-  <div className={cn('inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border', className)}>
+  <div className={cn('inline-flex items-center gap-2 px-3 py-1.5 rounded-xl tn-text-9 font-black uppercase tracking-widest border', statusClass)}>
    {icon}
    {label}
   </div>

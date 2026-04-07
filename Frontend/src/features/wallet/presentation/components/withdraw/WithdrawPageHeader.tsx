@@ -23,14 +23,14 @@ export function WithdrawPageHeader({
    <button
     type="button"
     onClick={() => router.push('/wallet')}
-    className={cn('group flex items-center gap-2 text-[var(--text-secondary)] hover:tn-text-primary transition-colors text-[10px] font-black uppercase tracking-[0.2em] mb-8 w-fit min-h-11 px-2 rounded-xl hover:tn-surface-soft')}
+    className={cn('group flex items-center gap-2 tn-wallet-back-link tn-text-10 font-black uppercase tn-tracking-02 mb-8 w-fit min-h-11 px-2 rounded-xl')}
    >
-    <ArrowLeft className={cn('w-3.5 h-3.5 transition-transform group-hover:-translate-x-1')} />
+    <ArrowLeft className={cn('w-3.5 h-3.5 tn-wallet-back-icon')} />
     {backLabel}
    </button>
    <SectionHeader
     tag={tag}
-    tagIcon={<Sparkles className={cn('w-3 h-3 text-[var(--success)]')} />}
+    tagIcon={<Sparkles className={cn('w-3 h-3 tn-text-success')} />}
     title={title}
     subtitle={subtitle}
     className={cn('animate-in fade-in slide-in-from-bottom-4 duration-1000')}

@@ -5,7 +5,7 @@ import type { FormEvent } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Sparkles } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { GlassCard } from '@/shared/components/ui';
 import { cn } from '@/lib/utils';
@@ -29,7 +29,7 @@ export function AdminPromotionCreateForm({
  onSubmit,
 }: AdminPromotionCreateFormProps) {
  const t = useTranslations('Admin');
- const { handleSubmit, watch, setValue } = useForm<AdminPromotionCreateFormValues>({
+ const { handleSubmit, control, setValue } = useForm<AdminPromotionCreateFormValues>({
   resolver: zodResolver(adminPromotionCreateFormSchema),
   defaultValues: {
    minAmount,
@@ -37,8 +37,8 @@ export function AdminPromotionCreateForm({
   },
  });
 
- const watchedMinAmount = watch('minAmount') ?? 0;
- const watchedBonusGold = watch('bonusGold') ?? 0;
+ const watchedMinAmount = useWatch({ control, name: 'minAmount' }) ?? 0;
+ const watchedBonusGold = useWatch({ control, name: 'bonusGold' }) ?? 0;
 
  useEffect(() => {
   setValue('minAmount', minAmount, { shouldDirty: false, shouldValidate: false });
@@ -65,11 +65,11 @@ export function AdminPromotionCreateForm({
 
  return (
   <div className={cn('animate-in fade-in slide-in-from-top-4 duration-500')}>
-   <GlassCard className={cn('relative overflow-hidden group hover:border-[var(--warning)]/30 transition-all !p-8')}>
-    <div className={cn('absolute top-0 right-0 p-16 bg-[var(--warning)]/10 blur-[100px] rounded-full')} />
+   <GlassCard className={cn('relative overflow-hidden group tn-hover-border-warning-30 transition-all !p-8')}>
+    <div className={cn('absolute top-0 right-0 p-16 tn-warning-glow-orb rounded-full')} />
     <form onSubmit={submitWithValidation} className={cn('relative z-10 space-y-8')}>
      <div className={cn('flex items-center gap-3 border-b tn-border-soft pb-4')}>
-      <Sparkles className={cn('w-5 h-5 text-[var(--warning)]')} />
+      <Sparkles className={cn('w-5 h-5 tn-text-warning')} />
       <h2 className={cn('text-sm font-black tn-text-primary uppercase tracking-widest drop-shadow-sm')}>
        {t('promotions.create.title')}
       </h2>

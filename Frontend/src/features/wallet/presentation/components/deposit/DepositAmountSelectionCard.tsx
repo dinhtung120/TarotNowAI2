@@ -30,7 +30,7 @@ export function DepositAmountSelectionCard({
           "flex items-center gap-2 text-sm font-black uppercase tracking-widest tn-text-primary",
         )}
       >
-        <Sparkles className={cn("w-4 h-4 text-[var(--warning)]")} />
+        <Sparkles className={cn("w-4 h-4 tn-text-warning")} />
         {title}
       </h3>
       <DepositPresetGrid

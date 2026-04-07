@@ -11,14 +11,14 @@ export default function ReportModalSuccessView({ onClose }: ReportModalSuccessVi
   const t = useTranslations('Chat');
   const tCommon = useTranslations('Common');
 
-  return (
-    <ReportModalShell onClose={onClose} panelClassName={cn('space-y-4 p-10 text-center')}>
-      <CheckCircle2 className={cn('mx-auto h-12 w-12 text-[var(--success)]')} />
-      <h3 className={cn('text-lg font-black uppercase italic text-[var(--text-primary)]')}>{t('report.success_title')}</h3>
-      <p className={cn('text-xs text-[var(--text-muted)]')}>{t('report.success_desc')}</p>
-      <button type="button" onClick={onClose} className={cn('rounded-xl bg-[var(--purple-accent)] px-6 py-2 text-xs font-bold uppercase tracking-widest text-white transition-all hover:brightness-110')}>
-        {tCommon('close')}
-      </button>
-    </ReportModalShell>
+ return (
+  <ReportModalShell onClose={onClose} panelClassName={cn('space-y-4 p-10 text-center')}>
+   <CheckCircle2 className={cn('mx-auto h-12 w-12 tn-text-success')} />
+   <h3 className={cn('text-lg font-black uppercase italic tn-text-primary')}>{t('report.success_title')}</h3>
+   <p className={cn('text-xs tn-text-muted')}>{t('report.success_desc')}</p>
+   <button type="button" onClick={onClose} className={cn('rounded-xl tn-bg-accent px-6 py-2 text-xs font-bold uppercase tracking-widest text-white transition-all tn-hover-brightness-110')}>
+    {tCommon('close')}
+   </button>
+  </ReportModalShell>
   );
 }

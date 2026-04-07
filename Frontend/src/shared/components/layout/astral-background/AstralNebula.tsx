@@ -18,7 +18,7 @@ export function AstralNebula({ variant, tone }: AstralNebulaProps) {
   <>
    <div className={cn(purpleBlobClass, "animate-drift astral-heavy")} style={{ backgroundColor: tone.purple }} />
    <div className={cn(mintBlobClass, "animate-drift-reverse astral-heavy")} style={{ backgroundColor: tone.mint }} />
-   {variant !== "subtle" ? <div className={cn("absolute -bottom-1/4 left-1/3 w-[60vw] h-[60vw] blur-[130px] rounded-full animate-slow-pulse motion-reduce:animate-none astral-heavy")} style={{ backgroundColor: tone.moon }} /> : null}
+   {variant !== "subtle" ? <div className={cn("absolute -bottom-1/4 left-1/3 tn-size-60vw tn-blur-130 rounded-full animate-slow-pulse motion-reduce:animate-none astral-heavy")} style={{ backgroundColor: tone.moon }} /> : null}
   </>
  );
 }

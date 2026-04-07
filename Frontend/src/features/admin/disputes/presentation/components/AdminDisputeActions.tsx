@@ -25,7 +25,7 @@ export function AdminDisputeActions({
 }: AdminDisputeActionsProps) {
  const spinner = isProcessing ? <Loader2 className={cn('w-4 h-4 animate-spin')} /> : null;
  return (
-  <div className={cn('flex flex-col sm:flex-row gap-3')}>
+  <div className={cn('tn-flex-col-row-sm gap-3')}>
    <Button variant="primary" disabled={isProcessing} onClick={onRelease} className={cn('flex-1')}>
     {spinner}
     {releaseLabel}

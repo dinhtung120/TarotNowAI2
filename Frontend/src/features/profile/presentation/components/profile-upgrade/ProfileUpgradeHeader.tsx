@@ -17,7 +17,7 @@ export default function ProfileUpgradeHeader({
           "flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--purple-accent)]/20 bg-gradient-to-br from-[var(--purple-accent)]/20 to-[var(--warning)]/10 shadow-xl",
         )}
       >
-        <Sparkles className={cn("h-6 w-6 text-[var(--purple-accent)]")} />
+        <Sparkles className={cn("h-6 w-6 tn-text-accent")} />
       </div>
       <div>
         <h3

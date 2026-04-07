@@ -17,11 +17,11 @@ export default function ModalHeader({ description, showCloseButton, title, onClo
   return (
     <div className={cn('flex items-start justify-between p-6 pb-0')}>
       <div className={cn('space-y-1')}>
-        {title ? <h2 className={cn('text-lg font-black tracking-tight text-[var(--text-ink)]')}>{title}</h2> : null}
-        {description ? <p className={cn('text-sm font-medium text-[var(--text-secondary)]')}>{description}</p> : null}
+        {title ? <h2 className={cn('text-lg font-black tracking-tight tn-text-ink')}>{title}</h2> : null}
+        {description ? <p className={cn('text-sm font-medium tn-text-secondary')}>{description}</p> : null}
       </div>
       {showCloseButton ? (
-        <button type="button" onClick={onClose} className={cn('cursor-pointer rounded-xl p-2 text-[var(--text-secondary)] transition-colors hover:bg-[var(--purple-50)] hover:text-[var(--text-primary)]')} aria-label={t('close_modal')}>
+        <button type="button" onClick={onClose} className={cn('cursor-pointer rounded-xl p-2 tn-modal-close-btn transition-colors')} aria-label={t('close_modal')}>
           <X className={cn('h-5 w-5')} />
         </button>
       ) : null}

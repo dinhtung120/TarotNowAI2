@@ -26,8 +26,8 @@ export default function TableStates({
    <tr>
     <td colSpan={colSpan} className={cn("py-24 text-center")}>
      <div className={cn("flex flex-col items-center justify-center space-y-4")}>
-      {loadingIcon ?? <Loader2 className={cn("w-8 h-8 animate-spin text-[var(--purple-accent)]")} />}
-      <span className={cn("text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]")}>
+      {loadingIcon ?? <Loader2 className={cn("w-8 h-8 animate-spin tn-text-accent")} />}
+      <span className={cn("tn-text-10 font-black uppercase tracking-widest tn-text-secondary")}>
        {loadingLabel}
       </span>
      </div>
@@ -42,7 +42,7 @@ export default function TableStates({
     <td colSpan={colSpan} className={cn("py-24 text-center")}>
      <div className={cn("flex flex-col items-center justify-center space-y-4")}>
       {emptyIcon}
-      <span className={cn("text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]")}>
+      <span className={cn("tn-text-10 font-black uppercase tracking-widest tn-text-tertiary")}>
        {emptyLabel}
       </span>
      </div>

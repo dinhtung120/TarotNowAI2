@@ -18,9 +18,9 @@ export function HistoryDetailStates({
 
  if (isLoading) {
   return (
-   <div className={cn('grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 animate-pulse')}>
+   <div className={cn('tn-history-detail-skeleton-grid gap-6 animate-pulse')}>
     {[1, 2, 3, 4, 5].map((index) => (
-     <div key={`history-detail-skeleton-${index}`} className={cn('aspect-[14/22] tn-surface rounded-[2.5rem] border tn-border-soft')} />
+     <div key={`history-detail-skeleton-${index}`} className={cn('tn-aspect-14-22 tn-surface tn-rounded-2_5xl border tn-border-soft')} />
     ))}
    </div>
   );
@@ -28,9 +28,9 @@ export function HistoryDetailStates({
 
  if (error) {
   return (
-   <div className={cn('bg-[var(--danger-bg)] border border-[var(--danger)] p-12 rounded-[3rem] text-center max-w-2xl mx-auto')}>
-    <AlertCircle className={cn('w-12 h-12 text-[var(--danger)] mx-auto mb-4 opacity-80')} />
-    <p className={cn('text-[var(--danger)] font-bold mb-8 italic')}>{error}</p>
+   <div className={cn('tn-bg-danger-soft border tn-border-danger p-12 tn-rounded-3xl text-center max-w-2xl mx-auto')}>
+    <AlertCircle className={cn('w-12 h-12 tn-text-danger mx-auto mb-4 opacity-80')} />
+    <p className={cn('tn-text-danger font-bold mb-8 italic')}>{error}</p>
     <Button variant="primary" onClick={() => router.push('/reading/history')}>
      {backLabel}
     </Button>

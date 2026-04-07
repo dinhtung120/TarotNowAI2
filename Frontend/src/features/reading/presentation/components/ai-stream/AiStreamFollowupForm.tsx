@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { FormEvent } from "react";
 import { RefreshCw, Send } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { AiStreamFollowupBadge } from "./AiStreamFollowupBadge";
@@ -27,14 +27,14 @@ const aiStreamFollowupFormSchema = z.object({
 type AiStreamFollowupFormValues = z.infer<typeof aiStreamFollowupFormSchema>;
 
 export function AiStreamFollowupForm({ isStreaming, isSendingFollowup, followupText, freeSlotsRemaining, placeholder, hint, freeBadgeText, paidBadgeText, onFollowupTextChange, onSubmit }: AiStreamFollowupFormProps) {
- const { handleSubmit, setValue, watch } = useForm<AiStreamFollowupFormValues>({
+ const { handleSubmit, setValue, control } = useForm<AiStreamFollowupFormValues>({
   resolver: zodResolver(aiStreamFollowupFormSchema),
   defaultValues: {
    followupText,
   },
  });
 
- const watchedFollowupText = watch("followupText") ?? "";
+ const watchedFollowupText = useWatch({ control, name: "followupText" }) ?? "";
 
  useEffect(() => {
   setValue("followupText", followupText, { shouldDirty: false, shouldValidate: false });
@@ -69,17 +69,17 @@ export function AiStreamFollowupForm({ isStreaming, isSendingFollowup, followupT
      }
      disabled={isStreaming || isSendingFollowup}
      placeholder={placeholder}
-     className={cn("w-full tn-field tn-field-accent border-[var(--purple-accent)]/30 tn-text-primary rounded-2xl px-6 py-4 pr-16 disabled:opacity-50 font-serif")}
+     className={cn("w-full tn-field tn-field-accent tn-text-primary rounded-2xl px-6 py-4 pr-16 tn-disabled-opacity-50 font-serif")}
     />
     <button
      type="submit"
      disabled={!watchedFollowupText.trim() || isStreaming || isSendingFollowup}
-     className={cn("absolute right-2 top-2 bottom-2 aspect-square bg-[var(--purple-accent)] hover:bg-[var(--purple-accent)] disabled:tn-surface-strong disabled:tn-text-muted tn-text-primary rounded-xl flex items-center justify-center transition-colors")}
+     className={cn("absolute right-2 top-2 bottom-2 aspect-square tn-ai-followup-submit rounded-xl flex items-center justify-center transition-colors")}
     >
      {isSendingFollowup ? <RefreshCw className={cn("w-5 h-5 animate-spin")} /> : <Send className={cn("w-5 h-5")} />}
     </button>
    </div>
-   <p className={cn("text-center text-[10px] tn-text-muted mt-2 font-mono uppercase tracking-wider")}>{hint}</p>
+   <p className={cn("text-center tn-text-10 tn-text-muted mt-2 font-mono uppercase tracking-wider")}>{hint}</p>
   </form>
  );
 }

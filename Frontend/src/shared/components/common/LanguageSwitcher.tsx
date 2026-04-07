@@ -24,7 +24,7 @@ export default function LanguageSwitcher() {
 
   return (
     <div ref={containerRef} className={cn('relative')}>
-      <button type="button" onClick={() => setIsOpen((prev) => !prev)} className={cn('tn-panel inline-flex min-h-11 items-center gap-2 rounded-xl px-3 py-2 text-xs font-black uppercase tracking-[0.18em] tn-text-primary transition-all hover:tn-surface-strong')} aria-label={t('current_aria', { language: getLocaleLabel(activeLocale.id) })} aria-haspopup="listbox" aria-expanded={isOpen}>
+      <button type="button" onClick={() => setIsOpen((prev) => !prev)} className={cn('tn-panel inline-flex min-h-11 items-center gap-2 rounded-xl px-3 py-2 text-xs font-black uppercase tn-tracking-018 tn-text-primary transition-all tn-hover-surface-strong')} aria-label={t('current_aria', { language: getLocaleLabel(activeLocale.id) })} aria-haspopup="listbox" aria-expanded={isOpen}>
         <span className={cn('text-base leading-none')} aria-hidden="true">{activeLocale.flag}</span>
         <ChevronDown className={cn('h-3.5 w-3.5 transition-transform', isOpen ? 'rotate-180' : '')} />
       </button>

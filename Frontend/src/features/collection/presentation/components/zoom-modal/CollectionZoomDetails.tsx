@@ -27,19 +27,19 @@ export default function CollectionZoomDetails({
     <div className={cn("relative z-10 flex flex-1 flex-col justify-center")}>
       <h2
         className={cn(
-          "tn-text-primary mb-4 text-3xl font-black tracking-tight italic md:text-4xl lg:text-5xl",
+          "tn-text-primary mb-4 tn-text-3-4-5-responsive font-black tracking-tight italic",
         )}
       >
         {title}
       </h2>
       <div
         className={cn(
-          "mx-auto mb-6 h-1 w-16 rounded-full bg-[var(--warning)]/40 md:mx-0",
+          "tn-mx-auto-0-md mb-6 h-1 w-16 rounded-full tn-bg-warning-40",
         )}
       />
       <p
         className={cn(
-          "tn-text-muted border-l-2 border-transparent py-2 text-sm leading-relaxed font-medium italic md:border-[var(--warning)]/20 md:pl-4 md:text-base",
+          "tn-text-muted tn-zoom-meaning text-sm leading-relaxed font-medium italic",
         )}
       >
         {isOwned ? cardMeaning : lockedMeaning}
@@ -49,14 +49,14 @@ export default function CollectionZoomDetails({
       )}
       <div
         className={cn(
-          "mt-10 flex justify-center pt-4 md:mt-auto md:justify-start",
+          "tn-mt-10-auto-md flex tn-justify-center-start-md pt-4",
         )}
       >
         <button
           type="button"
           onClick={onClose}
           className={cn(
-            "tn-surface-strong tn-text-ink rounded-full px-10 py-3.5 text-[10px] font-black tracking-widest uppercase shadow-xl transition-all hover:scale-105 active:scale-95 md:text-xs",
+            "tn-surface-strong tn-text-ink rounded-full px-10 py-3.5 tn-text-10-12-md font-black tracking-widest uppercase shadow-xl transition-all",
           )}
         >
           {closeLabel}

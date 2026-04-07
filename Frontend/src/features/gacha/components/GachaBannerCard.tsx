@@ -22,7 +22,7 @@ export function GachaBannerCard({ banner, onSpin, isSpinning, currentPity, hardP
 
   return (
     <GlassCard variant="interactive" padding="none" className={cn('w-full max-w-md bg-stone-900 border-stone-800 text-stone-100 overflow-hidden relative group flex flex-col')}>
-      <div className={cn('absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-purple-900/10 to-transparent opacity-50 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none')} />
+      <div className={cn('absolute inset-0 bg-gradient-to-br from-indigo-900/20 via-purple-900/10 to-transparent tn-group-opacity-50-100 pointer-events-none')} />
       <GachaBannerHeader
         description={vm.description}
         name={vm.name}

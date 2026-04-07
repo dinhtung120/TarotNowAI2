@@ -14,7 +14,7 @@ export default function ProfileUpgradeApplyState({
 }: ProfileUpgradeApplyStateProps) {
   return (
     <>
-      <p className={cn("text-sm leading-relaxed text-[var(--text-secondary)]")}>
+      <p className={cn("text-sm leading-relaxed tn-text-secondary")}>
         {description}
       </p>
       <button

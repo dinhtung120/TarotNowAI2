@@ -21,7 +21,7 @@ export function ReaderRequestCard({
  const isSelected = selectedRequestId === request.id;
 
  return (
-  <GlassCard className={cn('space-y-6 group hover:border-[var(--purple-accent)]/30 transition-all !p-8')}>
+  <GlassCard className={cn('space-y-6 group tn-hover-border-accent-30 transition-all !p-8')}>
    <ReaderRequestMeta
     labels={{
      statusPending: labels.statusPending,

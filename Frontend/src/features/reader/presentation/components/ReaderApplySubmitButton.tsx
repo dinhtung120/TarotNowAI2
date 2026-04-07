@@ -15,7 +15,7 @@ export default function ReaderApplySubmitButton({ disabled, submitting }: Reader
       id="reader-submit-btn"
       type="submit"
       disabled={disabled}
-      className={cn('group relative w-full overflow-hidden rounded-2xl bg-[var(--purple-accent)] p-5 text-center text-sm font-black uppercase tracking-widest text-white shadow-xl transition-all duration-300 disabled:cursor-not-allowed disabled:bg-[var(--text-disabled)]')}
+      className={cn('group relative w-full overflow-hidden rounded-2xl tn-bg-accent p-5 text-center text-sm font-black uppercase tracking-widest text-white shadow-xl transition-all duration-300 tn-disabled-not-allowed tn-disabled-bg-disabled')}
     >
       {submitting ? (
         <span className={cn('flex items-center justify-center gap-3')}>

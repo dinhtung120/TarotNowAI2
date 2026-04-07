@@ -5,6 +5,7 @@ import type { QuestWithProgress, UserAchievement } from "@/features/gamification
 import { QuestProgressSection } from "@/features/gamification/components/gamification-detail/QuestProgressSection";
 import { QuestRewardsSection } from "@/features/gamification/components/gamification-detail/QuestRewardsSection";
 import { UnlockedInfoSection } from "@/features/gamification/components/gamification-detail/UnlockedInfoSection";
+import { cn } from "@/lib/utils";
 
 interface GamificationDetailBodyProps {
  isQuest: boolean;
@@ -28,10 +29,13 @@ interface GamificationDetailBodyProps {
 
 export function GamificationDetailBody({ isQuest, isAchievement, isTitle, description, completionConditionsLabel, descriptionLabel, howToUnlockLabel, progressLabel, rewardsLabel, unlockedAtLabel, current, target, isCompleted, questData, unlockedInfo, titleGrantedAt, rewardTypeLabel }: GamificationDetailBodyProps) {
  return (
-  <div className="space-y-6 relative z-10">
-   <section className="bg-slate-900/40 rounded-2xl p-5 border border-slate-700/50">
-    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2"><Clock className="w-3.5 h-3.5" />{isQuest ? completionConditionsLabel : isTitle ? descriptionLabel : howToUnlockLabel}</h3>
-    <p className="text-slate-200 text-sm leading-relaxed font-medium">{description}</p>
+  <div className={cn("relative", "z-10", "space-y-6")}>
+   <section className={cn("rounded-2xl", "border", "border-slate-700/50", "bg-slate-900/40", "p-5")}>
+    <h3 className={cn("mb-3", "flex", "items-center", "gap-2", "text-xs", "font-bold", "uppercase", "tracking-widest", "text-slate-400")}>
+     <Clock className={cn("h-4", "w-4")} />
+     {isQuest ? completionConditionsLabel : isTitle ? descriptionLabel : howToUnlockLabel}
+    </h3>
+    <p className={cn("text-sm", "font-medium", "leading-relaxed", "text-slate-200")}>{description}</p>
     {isQuest ? <QuestProgressSection current={current} target={target} isCompleted={isCompleted} progressLabel={progressLabel} /> : null}
    </section>
    {isQuest && questData ? <QuestRewardsSection questData={questData} rewardsLabel={rewardsLabel} rewardTypeLabel={rewardTypeLabel} /> : null}

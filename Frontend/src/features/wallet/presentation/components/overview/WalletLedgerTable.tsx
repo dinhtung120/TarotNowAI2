@@ -31,13 +31,13 @@ export function WalletLedgerTable({
  return (
   <GlassCard className={cn('!p-0 overflow-hidden')}>
    <div className={cn('overflow-x-auto custom-scrollbar')}>
-    <table className={cn('w-full text-left min-w-[600px]')}>
+    <table className={cn('w-full text-left tn-minw-600')}>
      <thead>
       <tr className={cn('border-b tn-border-soft tn-overlay-soft')}>
-       <th className={cn('px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]')}>{labels.tableTime}</th>
-       <th className={cn('px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]')}>{labels.tableAsset}</th>
-       <th className={cn('px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]')}>{labels.tableAction}</th>
-       <th className={cn('px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-right')}>{labels.tableAmount}</th>
+       <th className={cn('px-6 py-5 tn-text-overline tn-text-tertiary')}>{labels.tableTime}</th>
+       <th className={cn('px-6 py-5 tn-text-overline tn-text-tertiary')}>{labels.tableAsset}</th>
+       <th className={cn('px-6 py-5 tn-text-overline tn-text-tertiary')}>{labels.tableAction}</th>
+       <th className={cn('px-6 py-5 tn-text-overline tn-text-tertiary text-right')}>{labels.tableAmount}</th>
       </tr>
      </thead>
      <WalletLedgerTableBody

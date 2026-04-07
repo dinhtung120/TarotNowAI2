@@ -8,11 +8,11 @@ export default function ProfileSettingsFieldsGrid({
   t,
 }: ProfileSettingsFieldsGridProps) {
   return (
-    <div className={cn("grid grid-cols-1 gap-6 md:grid-cols-2")}>
+    <div className={cn("tn-grid-cols-1-2-md gap-6")}>
       <div className={cn("space-y-2")}>
         <label
           className={cn(
-            "ml-1 flex items-center gap-2 text-[10px] font-black tracking-widest text-[var(--text-secondary)] uppercase",
+            "ml-1 flex items-center gap-2 tn-text-10 font-black tracking-widest tn-text-secondary uppercase",
           )}
         >
           <User className={cn("h-3.5 w-3.5")} />
@@ -29,7 +29,7 @@ export default function ProfileSettingsFieldsGrid({
         {errors.displayName ? (
           <p
             className={cn(
-              "ml-1 text-[10px] font-bold text-[var(--danger)] italic",
+              "ml-1 tn-text-10 font-bold tn-text-danger italic",
             )}
           >
             {errors.displayName.message}
@@ -39,7 +39,7 @@ export default function ProfileSettingsFieldsGrid({
       <div className={cn("space-y-2")}>
         <label
           className={cn(
-            "ml-1 flex items-center gap-2 text-[10px] font-black tracking-widest text-[var(--text-secondary)] uppercase",
+            "ml-1 flex items-center gap-2 tn-text-10 font-black tracking-widest tn-text-secondary uppercase",
           )}
         >
           <Calendar className={cn("h-3.5 w-3.5")} />
@@ -55,7 +55,7 @@ export default function ProfileSettingsFieldsGrid({
         {errors.dateOfBirth ? (
           <p
             className={cn(
-              "ml-1 text-[10px] font-bold text-[var(--danger)] italic",
+              "ml-1 tn-text-10 font-bold tn-text-danger italic",
             )}
           >
             {errors.dateOfBirth.message}

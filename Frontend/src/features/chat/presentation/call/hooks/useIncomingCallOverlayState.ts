@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useCallStore } from '@/features/chat/application/call/useCallStore';
 import { useCallContext } from '@/features/chat/presentation/call/CallProvider';
@@ -21,25 +21,24 @@ export function useIncomingCallOverlayState() {
     localVideoRef.current.srcObject = localStream;
   }, [localStream, isOpen]);
 
-  const declineCall = useCallback(() => {
+  const declineCall = () => {
     if (!session?.id) return;
     void respondCall(session.id, false);
-  }, [respondCall, session?.id]);
+  };
 
-  const acceptCall = useCallback(() => {
+  const acceptCall = () => {
     if (!session?.id) return;
     void respondCall(session.id, true);
-  }, [respondCall, session?.id]);
+  };
 
-  const cancelCall = useCallback(() => {
-    if (session?.id)
-    {
+  const cancelCall = () => {
+    if (session?.id) {
       void endCall(session.id, 'cancelled');
       return;
     }
 
     setEndedLocalState();
-  }, [endCall, session?.id, setEndedLocalState]);
+  };
 
   return {
     t,

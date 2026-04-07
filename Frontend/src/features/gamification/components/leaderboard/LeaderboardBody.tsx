@@ -1,6 +1,7 @@
 import { TrendingUp } from "lucide-react";
 import type { LeaderboardResult } from "@/features/gamification/gamification.types";
 import { LeaderboardEntryRow } from "@/features/gamification/components/LeaderboardEntryRow";
+import { cn } from "@/lib/utils";
 
 interface LeaderboardBodyProps {
  currency: "gold" | "diamond";
@@ -11,11 +12,25 @@ interface LeaderboardBodyProps {
 }
 
 export function LeaderboardBody({ currency, data, isLoading, noDataLabel, noTitleLabel }: LeaderboardBodyProps) {
- if (isLoading) return <div className="py-20 flex justify-center"><div className={`w-10 h-10 border-4 border-t-transparent rounded-full animate-spin ${currency === "gold" ? "border-emerald-500" : "border-indigo-500"}`} /></div>;
- if (!data || data.entries.length === 0) return <div className="text-center py-20 bg-slate-900/30 rounded-3xl border border-slate-800/50 border-dashed"><TrendingUp className="w-16 h-16 text-slate-700 mx-auto mb-4 opacity-30" /><p className="text-slate-500 font-medium">{noDataLabel}</p></div>;
+ if (isLoading) {
+  return (
+   <div className={cn("flex", "justify-center", "py-20")}>
+    <div className={cn("h-10", "w-10", "animate-spin", "rounded-full", "border-4", "border-t-transparent", currency === "gold" ? "border-emerald-500" : "border-indigo-500")} />
+   </div>
+  );
+ }
+
+ if (!data || data.entries.length === 0) {
+  return (
+   <div className={cn("rounded-3xl", "border", "border-dashed", "border-slate-800/50", "bg-slate-900/30", "py-20", "text-center")}>
+    <TrendingUp className={cn("mx-auto", "mb-4", "h-16", "w-16", "text-slate-700", "opacity-30")} />
+    <p className={cn("font-medium", "text-slate-500")}>{noDataLabel}</p>
+   </div>
+  );
+ }
 
  return (
-  <div className="space-y-3 min-h-[400px]">
+  <div className={cn("min-h-96", "space-y-3")}>
    {data.entries.map((entry, index) => <LeaderboardEntryRow key={entry.userId} entry={entry} index={index} currency={currency} noTitleLabel={noTitleLabel} />)}
   </div>
  );
