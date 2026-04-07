@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getHistorySessionsAction, type HistorySessionsResponse } from '@/features/reading/application/actions/history';
 
 interface UseHistorySessionsPageParams {
@@ -21,6 +21,11 @@ export function useHistorySessionsPage({
  const [filterType, setFilterType] = useState('all');
  const [filterDate, setFilterDate] = useState('');
  const pageSize = 10;
+ const onUnauthorizedRef = useRef(onUnauthorized);
+
+ useEffect(() => {
+  onUnauthorizedRef.current = onUnauthorized;
+ }, [onUnauthorized]);
 
  useEffect(() => {
   setCurrentPage(1);
@@ -39,7 +44,7 @@ export function useHistorySessionsPage({
     const result = await getHistorySessionsAction(currentPage, pageSize, filterType, filterDate);
     if (result.error) {
      if (result.error === 'unauthorized') {
-      onUnauthorized();
+      onUnauthorizedRef.current();
       return;
      }
 
@@ -58,7 +63,7 @@ export function useHistorySessionsPage({
   };
 
   void fetchHistory();
- }, [currentPage, filterDate, filterType, isAuthenticated, networkErrorMessage, onUnauthorized]);
+ }, [currentPage, filterDate, filterType, isAuthenticated, networkErrorMessage]);
 
  const goToPrevPage = () => {
   if (currentPage > 1) {

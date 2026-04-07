@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { useRouter } from "@/i18n/routing";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
@@ -15,12 +16,15 @@ export default function HistoryPage() {
  const tApi = useTranslations("ApiErrors");
  const locale = useLocale();
  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+ const handleUnauthorized = useCallback(() => {
+  router.push("/login");
+ }, [router]);
  useAuthGuard(isAuthenticated);
 
  const state = useHistorySessionsPage({
   isAuthenticated,
   networkErrorMessage: tApi("network_error"),
-  onUnauthorized: () => router.push("/login"),
+  onUnauthorized: handleUnauthorized,
  });
 
  const hasItems = !state.isLoading && Boolean(state.historyData?.items.length);

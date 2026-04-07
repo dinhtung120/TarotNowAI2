@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { getHistoryDetailAction, type HistoryDetailResponse } from '@/features/reading/application/actions/history';
 
 interface UseHistoryDetailPageParams {
@@ -19,6 +19,11 @@ export function useHistoryDetailPage({
  const [detail, setDetail] = useState<HistoryDetailResponse | null>(null);
  const [isLoading, setIsLoading] = useState(true);
  const [error, setError] = useState<string | null>(null);
+ const onUnauthorizedRef = useRef(onUnauthorized);
+
+ useEffect(() => {
+  onUnauthorizedRef.current = onUnauthorized;
+ }, [onUnauthorized]);
 
  useEffect(() => {
   if (!isAuthenticated) {
@@ -33,7 +38,7 @@ export function useHistoryDetailPage({
     const result = await getHistoryDetailAction(sessionId);
     if (result.error) {
      if (result.error === 'unauthorized') {
-      onUnauthorized();
+      onUnauthorizedRef.current();
       return;
      }
 
@@ -52,7 +57,7 @@ export function useHistoryDetailPage({
   };
 
   void fetchDetail();
- }, [isAuthenticated, networkErrorMessage, onUnauthorized, sessionId]);
+ }, [isAuthenticated, networkErrorMessage, sessionId]);
 
  const parsedCards = useMemo<number[]>(() => {
   if (!detail?.cardsDrawn) {

@@ -25,11 +25,11 @@ export default async function Footer() {
  ];
 
  return (
-  <footer className={cn("relative", "z-10", "border-t", "border-slate-700/40", "bg-gradient-to-b", "from-stone-200/80", "to-stone-100/90", "py-14")}>
-   <div className={cn("mx-auto", "flex", "max-w-7xl", "flex-col", "items-center", "gap-6", "px-6")}>
+  <footer className={cn("tn-footer-shell")}>
+   <div className={cn("tn-footer-container")}>
     <FooterBrandSection tagline={t("tagline")} />
-    <FooterLinksRow items={navLinks} className={cn("flex", "flex-wrap", "justify-center", "gap-6", "text-xs", "font-black", "uppercase", "tn-tracking-02", "text-slate-600")} linkClassName={cn("inline-flex", "min-h-11", "items-center", "px-1", "transition-colors")} />
-    <FooterLinksRow items={legalLinks} className={cn("flex", "flex-wrap", "justify-center", "gap-4", "text-xs", "font-bold", "uppercase", "tracking-widest", "text-slate-500")} linkClassName={cn("inline-flex", "min-h-11", "items-center", "px-1", "transition-colors")} />
+    <FooterLinksRow items={navLinks} className={cn("tn-footer-nav-row")} linkClassName={cn("tn-footer-nav-link")} />
+    <FooterLinksRow items={legalLinks} className={cn("tn-footer-legal-row")} linkClassName={cn("tn-footer-legal-link")} />
     <FooterSocialRow items={socialItems} copyright={t("copyright", { year: "2026" })} />
    </div>
   </footer>

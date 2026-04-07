@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/routing";
 import { useLocale, useTranslations } from "next-intl";
@@ -18,13 +19,16 @@ export default function HistoryDetailPage() {
  const locale = useLocale();
  const sessionId = String(params.id ?? "");
  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+ const handleUnauthorized = useCallback(() => {
+  router.push("/login");
+ }, [router]);
  useAuthGuard(isAuthenticated);
 
  const state = useHistoryDetailPage({
   isAuthenticated,
   sessionId,
   networkErrorMessage: tApi("network_error"),
-  onUnauthorized: () => router.push("/login"),
+  onUnauthorized: handleUnauthorized,
  });
 
  const detail = state.detail;
