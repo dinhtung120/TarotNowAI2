@@ -1,20 +1,4 @@
-/*
- * FILE: ProcessWithdrawalCommandHandlerTests.cs
- * MỤC ĐÍCH: Unit test cho handler Admin xử lý yêu cầu rút tiền (approve/reject).
- *
- *   CÁC TEST CASE (5 scenarios):
- *   1. Handle_Approve_UpdatesStatusAndAuditTrail:
- *      → Approve → status=approved + AdminId + AdminNote + ProcessedAt
- *   2. Handle_Reject_RefundsDiamondAndUpdatesStatus:
- *      → Reject → status=rejected + CreditAsync refund Diamond
- *   3. Handle_RequestNotFound_ThrowsNotFoundException: requestId sai → 404
- *   4. Handle_InvalidAction_ThrowsBadRequest: action != approve/reject → 400
- *   5. Handle_AlreadyProcessed_ThrowsBadRequest: double-process → 400
- *   6. Handle_AdminMfaInvalid_ThrowsBadRequest: Admin MFA sai → 400
- *
- *   BẢO MẬT: Admin BẮT BUỘC MFA cho process withdrawal (BR Phase 2.5)
- *   AUDIT: AdminId, AdminNote, ProcessedAt để truy vết
- */
+
 
 using Moq;
 using TarotNow.Application.Exceptions;
@@ -25,9 +9,6 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Withdrawal;
 
-/// <summary>
-/// Test process withdrawal: approve/reject, MFA, double-process guard, refund.
-/// </summary>
 public class ProcessWithdrawalCommandHandlerTests
 {
     private readonly Mock<IWithdrawalRepository> _mockWithdrawalRepo;
@@ -47,7 +28,7 @@ public class ProcessWithdrawalCommandHandlerTests
             _mockUserRepo.Object, _mockMfaService.Object);
     }
 
-    /* Helper: tạo Admin hợp lệ (MFA bật) */
+    
     private User CreateValidAdmin()
     {
         var userType = typeof(User);
@@ -57,7 +38,7 @@ public class ProcessWithdrawalCommandHandlerTests
         return admin;
     }
 
-    /* Helper: tạo WithdrawalRequest pending */
+    
     private WithdrawalRequest CreatePendingRequest(Guid requestId)
     {
         var reqType = typeof(WithdrawalRequest);
@@ -69,8 +50,7 @@ public class ProcessWithdrawalCommandHandlerTests
         return req;
     }
 
-    /// <summary>Approve → audit trail (AdminId, Note, ProcessedAt).</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_Approve_UpdatesStatusAndAuditTrail()
     {
         var command = new ProcessWithdrawalCommand { RequestId = Guid.NewGuid(), AdminId = Guid.NewGuid(), Action = "approve", MfaCode = "123", AdminNote = "ok" };
@@ -90,8 +70,7 @@ public class ProcessWithdrawalCommandHandlerTests
         _mockWalletRepo.Verify(x => x.CreditAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), null, null, default), Times.Never);
     }
 
-    /// <summary>Reject → refund Diamond + audit trail.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_Reject_RefundsDiamondAndUpdatesStatus()
     {
         var command = new ProcessWithdrawalCommand { RequestId = Guid.NewGuid(), AdminId = Guid.NewGuid(), Action = "reject", MfaCode = "123", AdminNote = "fraud" };
@@ -109,8 +88,7 @@ public class ProcessWithdrawalCommandHandlerTests
         _mockWalletRepo.Verify(x => x.CreditAsync(request.UserId, "diamond", "withdrawal_refund", 100, "withdrawal_request", request.Id.ToString(), It.IsAny<string>(), null, $"wd_refund_{request.Id}", default), Times.Once);
     }
 
-    /// <summary>RequestId sai → NotFoundException.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_RequestNotFound_ThrowsNotFoundException()
     {
         var command = new ProcessWithdrawalCommand { RequestId = Guid.NewGuid(), AdminId = Guid.NewGuid(), Action = "approve", MfaCode = "123" };
@@ -118,16 +96,14 @@ public class ProcessWithdrawalCommandHandlerTests
         await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-    /// <summary>Action không hợp lệ → BadRequest.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_InvalidAction_ThrowsBadRequest()
     {
         var command = new ProcessWithdrawalCommand { RequestId = Guid.NewGuid(), AdminId = Guid.NewGuid(), Action = "delete", MfaCode = "123" };
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-    /// <summary>Double-process (đã approved) → BadRequest.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_AlreadyProcessed_ThrowsBadRequest()
     {
         var command = new ProcessWithdrawalCommand { RequestId = Guid.NewGuid(), AdminId = Guid.NewGuid(), Action = "approve", MfaCode = "123" };
@@ -143,8 +119,7 @@ public class ProcessWithdrawalCommandHandlerTests
         Assert.Contains("approved", ex.Message);
     }
 
-    /// <summary>Admin MFA sai → BadRequest.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_AdminMfaInvalid_ThrowsBadRequest()
     {
         var command = new ProcessWithdrawalCommand { RequestId = Guid.NewGuid(), AdminId = Guid.NewGuid(), Action = "approve", MfaCode = "wrong" };

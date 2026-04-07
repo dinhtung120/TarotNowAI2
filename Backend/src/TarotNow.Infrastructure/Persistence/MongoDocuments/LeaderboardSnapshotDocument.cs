@@ -1,17 +1,10 @@
-/*
- * FILE: LeaderboardSnapshotDocument.cs
- * MỤC ĐÍCH: Lưu trữ bảng xếp hạng đã chốt sổ của các kỳ trước.
- *   - Giúp UI lấy lịch sử BXH cũ rất nhanh mà không cần tính toán lại.
- */
+
 
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace TarotNow.Infrastructure.Persistence.MongoDocuments;
 
-/// <summary>
-/// Kết quả xếp hạng chốt sổ (Snapshot) lưu lịch sử các kỳ. (Bảng leaderboard_snapshots).
-/// </summary>
 public class LeaderboardSnapshotDocument
 {
     [BsonId]

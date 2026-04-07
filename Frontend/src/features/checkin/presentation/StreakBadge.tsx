@@ -4,10 +4,10 @@ import { useStreakStatus } from '@/features/checkin/application/hooks';
 import { Flame } from 'lucide-react';
 
 export default function StreakBadge() {
-  /* Lấy dữ liệu streak từ server qua React Query */
+  
   const { data: streakData, isLoading } = useStreakStatus();
 
-  /* Không hiện gì nếu đang loading hoặc chưa có data */
+  
   if (isLoading || !streakData) {
     return null;
   }
@@ -28,7 +28,7 @@ export default function StreakBadge() {
         : 'Rút bài AI để bắt đầu chuỗi Streak!'
       }
     >
-      {/* Ngọn lửa: rực nếu active, xám nếu chưa có streak */}
+      {}
       <Flame
         className={`w-4 h-4 ${
           isActive
@@ -38,7 +38,7 @@ export default function StreakBadge() {
         fill={isActive ? 'var(--amber-accent)' : 'var(--text-muted)'}
       />
 
-      {/* Con số Streak */}
+      {}
       <span className={`text-[11px] font-black tracking-tight ${
         isActive ? 'text-[var(--amber-accent)]' : 'text-[var(--text-muted)]'
       }`}>

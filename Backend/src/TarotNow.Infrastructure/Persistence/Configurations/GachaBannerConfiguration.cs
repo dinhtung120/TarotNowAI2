@@ -1,9 +1,4 @@
-/*
- * ===================================================================
- * FILE: GachaBannerConfiguration.cs
- * NAMESPACE: TarotNow.Infrastructure.Persistence.Configurations
- * ===================================================================
- */
+
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

@@ -26,7 +26,7 @@ export default function RoutePrefetcher() {
       });
     }, 2000);
 
-    /* Cleanup timer khi unmount — tránh memory leak trong StrictMode double-mount */
+    
     return () => window.clearTimeout(timer);
   }, [router]);
 

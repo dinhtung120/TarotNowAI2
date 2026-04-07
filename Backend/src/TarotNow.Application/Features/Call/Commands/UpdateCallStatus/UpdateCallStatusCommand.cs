@@ -5,9 +5,6 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Call.Commands.UpdateCallStatus;
 
-/// <summary>
-/// Command cập nhật trạng thái call session theo cơ chế atomic compare-and-set.
-/// </summary>
 public class UpdateCallStatusCommand : IRequest<bool>
 {
     public string CallSessionId { get; set; } = string.Empty;
@@ -18,9 +15,6 @@ public class UpdateCallStatusCommand : IRequest<bool>
     public string? EndReason { get; set; }
 }
 
-/// <summary>
-/// Handler cập nhật trạng thái call session.
-/// </summary>
 public class UpdateCallStatusCommandHandler : IRequestHandler<UpdateCallStatusCommand, bool>
 {
     private readonly ICallSessionRepository _callSessionRepository;

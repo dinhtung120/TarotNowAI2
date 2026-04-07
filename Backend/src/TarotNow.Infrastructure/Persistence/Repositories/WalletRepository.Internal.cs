@@ -52,11 +52,7 @@ public partial class WalletRepository
             idempotencyKey);
     }
 
-    /// <summary>
-    /// Ghi nhận điểm chi tiêu vào Bảng Xếp Hạng Gamification.
-    /// Hàm này được dùng chung cho cả Debit trực tiếp và các giao dịch Escrow (Consume/Release).
-    /// </summary>
-    private async Task TrackSpendingToLeaderboardAsync(
+        private async Task TrackSpendingToLeaderboardAsync(
         Guid userId, 
         string currency, 
         long amount, 
@@ -76,10 +72,7 @@ public partial class WalletRepository
             var dailyKey = PeriodKeyHelper.GetPeriodKey("daily");
             var monthlyKey = PeriodKeyHelper.GetPeriodKey("monthly");
 
-            /*
-             * [GAMIFICATION-LOG]: Xác nhận việc ghi công chi tiêu.
-             * Log này xuất hiện nghĩa là giao dịch Ví đã thành công và đang cập nhật BXH.
-             */
+            
             _logger.LogInformation("[Gamification] Gửi {Amount} {Currency} lên BXH (User: {UserId}, Track: {Track}, Daily: {DailyKey})", 
                 amount, normalizedCurrency, userId, track, dailyKey);
 
@@ -89,7 +82,7 @@ public partial class WalletRepository
         }
         catch (Exception ex)
         {
-            // Tránh làm gián đoạn giao dịch ví chính nếu Gamification gặp lỗi
+            
             _logger.LogError(ex, "[Gamification] Lỗi khi cập nhật bảng xếp hạng cho User {UserId}", userId);
         }
     }

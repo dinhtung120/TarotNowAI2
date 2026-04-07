@@ -30,11 +30,7 @@ public partial class StreamReadingCommandHandler
 
         if (cost > 0)
         {
-            /*
-             * FUTURE-1 FIX: IdempotencyKey sau khi sửa phải XÁC ĐỊNH để chống trừ đúp khi retry.
-             * Dùng sessionId + followUpCount là đủ độc nhất vì mỗi session + mỗi lượt followup là duy nhất.
-             * Bỏ DateTime.UtcNow.Ticks và GetHashCode vì chúng không deterministic.
-             */
+            
             var consumeResult = await _entitlementService.ConsumeAsync(
                 new EntitlementConsumeRequest(
                     request.UserId,

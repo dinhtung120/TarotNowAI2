@@ -1,12 +1,4 @@
-/*
- * ===================================================================
- * FILE: UpdateReaderStatusCommandHandler.cs
- * NAMESPACE: TarotNow.Application.Features.Reader.Commands.UpdateReaderStatus
- * ===================================================================
- * MỤC ĐÍCH:
- *   Áp Dụng lệnh gạt công tắc Online/Offline ở Database.
- * ===================================================================
- */
+
 
 using MediatR;
 using System.Threading;
@@ -28,24 +20,24 @@ public class UpdateReaderStatusCommandHandler : IRequestHandler<UpdateReaderStat
 
     public async Task<bool> Handle(UpdateReaderStatusCommand request, CancellationToken cancellationToken)
     {
-        // 1. Dựng Hàng Rào Phòng Thủ (Validation):
-        // Nếu Frontend truyền bậy chữ "DangDiChoi" vào, ta Búng Tay văng Lỗi Error 400.
+        
+        
         if (!ReaderOnlineStatus.TryNormalize(request.Status, out var normalizedStatus))
             throw new BadRequestException($"Trạng thái '{request.Status}' không hợp lệ. Chỉ chấp nhận: offline, busy.");
             
-        // Đảm bảo Reader không chủ động set Online qua API - Online được kích hoạt tự động qua PresenceHub
+        
         if (normalizedStatus == ReaderOnlineStatus.Online)
             throw new BadRequestException("Trạng thái 'online' được cập nhật tự động khi kết nối. Truyền 'busy' hoặc 'offline' để đổi trạng thái thủ công.");
 
-        // 2. Tra Lý Lịch: Thầy Bói này có Hồ Sơ Môn Phái (Profile) không?
+        
         var profile = await _readerProfileRepository.GetByUserIdAsync(
             request.UserId.ToString(), cancellationToken)
             ?? throw new NotFoundException("Không tìm thấy hồ sơ Reader.");
 
-        // 3. Phép Dịch Chuyển Ký Tự.
+        
         profile.Status = normalizedStatus;
         
-        // 4. Lãnh Ấn Lưu.
+        
         await _readerProfileRepository.UpdateAsync(profile, cancellationToken);
 
         return true;

@@ -1,16 +1,4 @@
-/*
- * FILE: GetReadingHistoryQueryHandlerTests.cs
- * MỤC ĐÍCH: Unit test cho query handler lấy lịch sử đọc bài Tarot (phân trang).
- *
- *   CÁC TEST CASE:
- *   1. Handle_ShouldReturnPaginatedHistory_WhenSessionsExist:
- *      → Có sessions → trả paginated list (Page, PageSize, TotalCount, TotalPages)
- *      → Verify mapping: IsCompleted đúng, order đúng
- *   2. Handle_ShouldReturnEmptyList_WhenNoSessionsExist:
- *      → Không có sessions → trả list rỗng, TotalCount=0
- *
- *   PAGINATION: Page/PageSize pattern chuẩn cho mobile + web
- */
+
 
 using FluentAssertions;
 using Moq;
@@ -21,9 +9,6 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.History.Queries;
 
-/// <summary>
-/// Test reading history: pagination, mapping IsCompleted, empty list.
-/// </summary>
 public class GetReadingHistoryQueryHandlerTests
 {
     private readonly Mock<IReadingSessionRepository> _mockSessionRepository;
@@ -35,10 +20,7 @@ public class GetReadingHistoryQueryHandlerTests
         _handler = new GetReadingHistoryQueryHandler(_mockSessionRepository.Object);
     }
 
-    /// <summary>
-    /// Có sessions → trả paginated list + mapping IsCompleted đúng.
-    /// </summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ShouldReturnPaginatedHistory_WhenSessionsExist()
     {
         var userId = Guid.NewGuid();
@@ -66,8 +48,7 @@ public class GetReadingHistoryQueryHandlerTests
         result.Items.Last().IsCompleted.Should().BeFalse();
     }
 
-    /// <summary>Không có sessions → list rỗng, TotalCount=0.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ShouldReturnEmptyList_WhenNoSessionsExist()
     {
         var userId = Guid.NewGuid();

@@ -1,9 +1,9 @@
-/* Theme variables for astral-premium. */
+
 
 :root,
 :root[data-theme="astral-premium"],
 body[data-theme="astral-premium"] {
-  /* --- BACKGROUNDS & SURFACES --- */
+  
   --bg-void: #000000;
   --bg-surface: #04050a;
   --bg-elevated: #0a0c14;
@@ -31,20 +31,20 @@ body[data-theme="astral-premium"] {
   --selection-bg: rgba(107, 99, 184, 0.28);
   --selection-text: var(--text-ink);
 
-  /* Focus rings */
+  
   --ring-accent: rgba(107, 99, 184, 0.22);
   --ring-success: rgba(60, 111, 123, 0.24);
   --ring-warning: rgba(141, 125, 99, 0.22);
   --ring-danger: rgba(156, 111, 132, 0.22);
   --ring-input: rgba(166, 173, 207, 0.2);
 
-  /* --- BORDERS --- */
+  
   --border-subtle: rgba(107, 99, 184, 0.14);
   --border-default: rgba(107, 99, 184, 0.26);
   --border-hover: rgba(49, 77, 104, 0.4);
   --border-focus: rgba(166, 173, 207, 0.48);
 
-  /* --- BRAND --- */
+  
   --purple-50: rgba(107, 99, 184, 0.1);
   --purple-100: rgba(107, 99, 184, 0.14);
   --purple-200: rgba(107, 99, 184, 0.24);
@@ -62,7 +62,7 @@ body[data-theme="astral-premium"] {
   --amber-50: rgba(141, 125, 99, 0.16);
   --holo-silver: #a6adcf;
 
-  /* --- STATUS --- */
+  
   --success: #3c6f7b;
   --success-bg: rgba(60, 111, 123, 0.18);
   --error: #9c6f84;
@@ -72,7 +72,7 @@ body[data-theme="astral-premium"] {
   --info: #7a87b7;
   --info-bg: rgba(122, 135, 183, 0.16);
 
-  /* --- EXTRACTED COLOR TOKENS (OVERRIDES) --- */
+  
   --c-hex-b89c4f: #8d7d63;
   --c-hex-9f8338: #7f7057;
   --c-hex-8f7bb4: #6b63b8;
@@ -142,7 +142,7 @@ body[data-theme="astral-premium"] {
 
   --c-59-130-246-60: rgba(122, 135, 183, 0.6);
 
-  /* --- NEBULA --- */
+  
   --nebula-purple-subtle: rgba(85, 78, 142, 0.1);
   --nebula-purple-default: rgba(85, 78, 142, 0.16);
   --nebula-purple-intense: rgba(85, 78, 142, 0.24);
@@ -153,7 +153,7 @@ body[data-theme="astral-premium"] {
   --nebula-moon-default: rgba(141, 125, 99, 0.14);
   --nebula-moon-intense: rgba(141, 125, 99, 0.2);
 
-  /* --- TEXT --- */
+  
   --text-primary: #e6dfd5;
   --text-secondary: #b8bdd4;
   --text-muted: #8087a6;
@@ -165,7 +165,7 @@ body[data-theme="astral-premium"] {
   --danger-bg: rgba(156, 111, 132, 0.14);
   --accent: #8d7d63;
 
-  /* --- SHADOWS & GLOWS --- */
+  
   --shadow-card: 0 16px 36px rgba(0, 0, 0, 0.72);
   --shadow-elevated: 0 24px 56px rgba(0, 0, 0, 0.84);
   --glow-purple-sm: 0 0 24px rgba(107, 99, 184, 0.12);

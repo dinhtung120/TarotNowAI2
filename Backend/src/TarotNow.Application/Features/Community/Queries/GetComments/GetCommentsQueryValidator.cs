@@ -2,9 +2,6 @@ using FluentValidation;
 
 namespace TarotNow.Application.Features.Community.Queries.GetComments;
 
-/// <summary>
-/// FluentValidation rules for listing comments of a post.
-/// </summary>
 public sealed class GetCommentsQueryValidator : AbstractValidator<GetCommentsQuery>
 {
     public GetCommentsQueryValidator()

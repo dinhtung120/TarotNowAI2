@@ -42,23 +42,17 @@ async function authFetch<T>(path: string, options: RequestInit = {}): Promise<T>
 }
 
 export const gachaApi = {
-  /**
-   * Get all active banners
-   */
+  
   async getBanners(): Promise<GachaBannerDto[]> {
     return authFetch('/v1/gacha/banners')
   },
 
-  /**
-   * Get odds for a specific banner
-   */
+  
   async getBannerOdds(bannerCode: string): Promise<GachaBannerOddsDto> {
     return authFetch(`/v1/gacha/banners/${bannerCode}/odds`)
   },
 
-  /**
-   * Get user gacha history
-   */
+  
   async getHistory(limit: number = 50): Promise<GachaHistoryItemDto[]> {
     return authFetch(`/v1/gacha/history?limit=${limit}`)
   },

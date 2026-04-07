@@ -1,12 +1,4 @@
-/*
- * ===================================================================
- * FILE: UpdateProfileCommandHandler.cs
- * NAMESPACE: TarotNow.Application.Features.Profile.Commands.UpdateProfile
- * ===================================================================
- * MỤC ĐÍCH:
- *   Gắn thông tin thay đổi vào Object User và Save đè xuống Database.
- * ===================================================================
- */
+
 
 using MediatR;
 using System.Threading;
@@ -34,14 +26,14 @@ public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand,
         var user = await _userRepository.GetByIdAsync(request.UserId)
             ?? throw new NotFoundException($"User with Id {request.UserId} not found.");
 
-        // Nhờ Model Domain (Entities.User) cung cấp sẵn hàm Update Đóng Gói (Encapsulation).
-        // Thay vì viết user.DisplayName = request.DisplayName (vi phạm quy tắc đóng gói DDD).
+        
+        
         user.UpdateProfile(request.DisplayName, request.AvatarUrl, request.DateOfBirth);
 
-        // Lưu bản ghi thay mới Postgres
+        
         await _userRepository.UpdateAsync(user);
 
-        // Đồng bộ hoá Name & Avatar sang Mongo Reader Profile
+        
         var readerProfile = await _readerProfileRepository.GetByUserIdAsync(user.Id.ToString(), cancellationToken);
         if (readerProfile != null)
         {

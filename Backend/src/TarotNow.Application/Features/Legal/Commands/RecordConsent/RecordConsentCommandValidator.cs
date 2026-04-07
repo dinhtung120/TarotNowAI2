@@ -1,12 +1,4 @@
-/*
- * ===================================================================
- * FILE: RecordConsentCommandValidator.cs
- * NAMESPACE: TarotNow.Application.Features.Legal.Commands.RecordConsent
- * ===================================================================
- * MỤC ĐÍCH:
- *   Người gác cổng rà soát Giấy Tờ Pháp Lý Đầu Vào. Chặn rác dữ liệu.
- * ===================================================================
- */
+
 
 using FluentValidation;
 
@@ -21,7 +13,7 @@ public class RecordConsentCommandValidator : AbstractValidator<RecordConsentComm
 
         RuleFor(x => x.DocumentType)
             .NotEmpty().WithMessage("DocumentType is required.")
-            // CHỈ CHẤP NHẬN BẤM ĐỒNG Ý CHO 3 LOẠI VĂN BẢN DUY NHẤT. Truyền lụi vào là Chặn!
+            
             .Must(type => type == "TOS" || type == "PrivacyPolicy" || type == "AiDisclaimer")
             .WithMessage("DocumentType must be TOS, PrivacyPolicy, or AiDisclaimer.");
 

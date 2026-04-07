@@ -17,11 +17,7 @@ public partial class ListConversationsQueryHandler
         var refs = conversations.Select(item => item.Id).ToList();
         var activeSessions = await _financeRepo.GetSessionsByConversationRefsAsync(refs, cancellationToken);
         
-        /*
-         * CHÚ Ý: ToLookup thay vì ToDictionary để tránh lỗi crash 500 nếu một cuộc hội thoại
-         * lỡ có nhiều hơn 1 phiên tài chính (ví dụ do lỗi data hoặc các phiên cũ).
-         * Chúng ta sẽ lấy phiên MỚI NHẤT (dựa vào UpdatedAt/CreatedAt) để hiển thị.
-         */
+        
         var sessionMap = activeSessions
             .OrderByDescending(s => s.UpdatedAt ?? s.CreatedAt)
             .GroupBy(s => s.ConversationRef)
@@ -63,7 +59,7 @@ public partial class ListConversationsQueryHandler
                 
             if (_presenceTracker.IsOnline(profile.UserId))
             {
-                // Chỉ overlay "online" nếu DB đang là "offline". Nếu đang là "busy" thì tôn trọng "busy"
+                
                 if (string.Equals(status, ReaderOnlineStatus.Offline, StringComparison.OrdinalIgnoreCase))
                 {
                     status = ReaderOnlineStatus.Online;

@@ -1,15 +1,4 @@
-/*
- * ===================================================================
- * FILE: ToggleReactionCommand.cs
- * NAMESPACE: TarotNow.Application.Features.Community.Commands.ToggleReaction
- * ===================================================================
- * MỤC ĐÍCH:
- *   Xử lý logic thả cảm xúc (Like/Love/Haha...) cho một bài viết.
- *   - Nếu chưa react: Thêm mới.
- *   - Nếu đã react cùng loại: Hủy react.
- *   - Nếu đã react nhưng khác loại: Đổi react.
- * ===================================================================
- */
+
 
 using MediatR;
 using TarotNow.Application.Common;
@@ -40,11 +29,11 @@ public class ToggleReactionCommandHandler : IRequestHandler<ToggleReactionComman
 
     public async Task<bool> Handle(ToggleReactionCommand request, CancellationToken cancellationToken)
     {
-        // 1. Validate Reaction Type
+        
         if (!CommunityModuleConstants.SupportedReactionTypes.Contains(request.ReactionType))
             throw new BadRequestException("Loại biểu cảm không hợp lệ.");
 
-        // 2. Validate Post
+        
         var post = await _postRepo.GetByIdAsync(request.PostId, cancellationToken);
         if (post == null || post.IsDeleted)
             throw new NotFoundException("Bài viết không tồn tại hoặc đã bị xoá.");
@@ -53,7 +42,7 @@ public class ToggleReactionCommandHandler : IRequestHandler<ToggleReactionComman
         if (post.Visibility == PostVisibility.Private && post.AuthorId != userIdStr)
             throw new ForbiddenException("Bạn không có quyền tương tác với bài viết riêng tư này.");
 
-        // 3. Xử lý Logic Toggle
+        
         var existingReaction = await _reactionRepo.GetAsync(request.PostId, userIdStr, cancellationToken);
 
         if (existingReaction == null)
@@ -65,10 +54,10 @@ public class ToggleReactionCommandHandler : IRequestHandler<ToggleReactionComman
         return await HandleCaseSwapReactionAsync(request, existingReaction.Type, userIdStr, cancellationToken);
     }
 
-    // TODO: [TECH-DEBT] Wrap AddOrIgnoreAsync + IncrementReactionCountAsync
-    // trong MongoDB Session Transaction để chống race condition khi
-    // 2 request đồng thời gửi đến. Unique Index chặn được duplicate insert,
-    // nhưng counter có thể bị lệch nếu 1 insert bị reject mà Inc đã chạy.
+    
+    
+    
+    
     private async Task<bool> HandleCaseAddNewReactionAsync(ToggleReactionCommand request, string userIdStr, CancellationToken cancellationToken)
     {
         var newReaction = new CommunityReactionDto

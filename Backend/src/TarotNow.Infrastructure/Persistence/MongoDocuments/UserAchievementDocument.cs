@@ -1,17 +1,10 @@
-/*
- * FILE: UserAchievementDocument.cs
- * MỤC ĐÍCH: Lưu trữ thành tựu mà từng user đã đạt được.
- *   - Idempotency: Unique Index (UserId, AchievementCode) để đảm bảo 1 user chỉ đạt achievement 1 lần.
- */
+
 
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace TarotNow.Infrastructure.Persistence.MongoDocuments;
 
-/// <summary>
-/// Ghi nhận 1 Achievement đã được mở khóa bởi 1 User. (Bảng user_achievements).
-/// </summary>
 public class UserAchievementDocument
 {
     [BsonId]

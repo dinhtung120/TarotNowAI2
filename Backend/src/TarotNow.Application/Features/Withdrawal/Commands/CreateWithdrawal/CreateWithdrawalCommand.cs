@@ -6,20 +6,6 @@ using TarotNow.Domain.Entities;
 
 namespace TarotNow.Application.Features.Withdrawal.Commands.CreateWithdrawal;
 
-/// <summary>
-/// Command: Reader tạo yêu cầu rút tiền.
-///
-/// Guards (BE-1.2):
-/// → Min 50 Diamond
-/// → Max 1 request/ngày (business_date_utc)
-/// → Reader status phải là "approved" (KYC đạt)
-/// → Số dư khả dụng đủ (diamond_balance >= amount)
-///
-/// Fee (BE-1.3):
-/// → 10% tính bằng VND → net = gross - fee
-/// → Quy đổi: 1 Diamond = 1000 VND
-/// → Debit diamond ngay khi tạo request (đóng băng tiền)
-/// </summary>
 public class CreateWithdrawalCommand : IRequest<Guid>
 {
     public Guid UserId { get; set; }
@@ -27,7 +13,7 @@ public class CreateWithdrawalCommand : IRequest<Guid>
     public string BankName { get; set; } = string.Empty;
     public string BankAccountName { get; set; } = string.Empty;
     public string BankAccountNumber { get; set; } = string.Empty;
-    public string MfaCode { get; set; } = string.Empty; // Mã TOTP từ app MFA
+    public string MfaCode { get; set; } = string.Empty; 
 }
 
 public partial class CreateWithdrawalCommandHandler : IRequestHandler<CreateWithdrawalCommand, Guid>

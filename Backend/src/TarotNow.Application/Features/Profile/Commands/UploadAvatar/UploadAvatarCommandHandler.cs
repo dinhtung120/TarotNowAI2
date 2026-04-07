@@ -35,29 +35,29 @@ public class UploadAvatarCommandHandler : IRequestHandler<UploadAvatarCommand, s
             throw new ValidationException("Dữ liệu ảnh không hợp lệ hoặc rỗng.");
         }
 
-        // Validate Content Type
+        
         if (!request.ContentType.StartsWith("image/"))
         {
             throw new ValidationException("Định dạng file không được hỗ trợ. Chỉ nhận file ảnh.");
         }
 
-        // Nén và resize ảnh
+        
         using var compressedStream = await _imageProcessingService.CompressAsync(request.ImageStream, maxDimension: 512, quality: 80, cancellationToken);
         
-        // File luôn được encode sang WebP, do đó phải ép đổi đuôi file để StaticFiles nhận diện MIME type chính xác
+        
         var newFileName = System.IO.Path.ChangeExtension(request.FileName, ".webp");
         
-        // Lưu file ảnh avatar
+        
         var relativeUrl = await _fileStorageService.SaveFileAsync(compressedStream, newFileName, "avatars", cancellationToken);
 
-        // Lưu giữ avatar URL cũ để xóa sau khi lưu DB thành công
+        
         var oldAvatarUrl = user.AvatarUrl;
 
-        // Cập nhật URL mới vào DB. Giữ nguyên displayName và dateOfBirth.
+        
         user.UpdateProfile(user.DisplayName, relativeUrl, user.DateOfBirth);
         await _userRepository.UpdateAsync(user);
 
-        // Đồng bộ hóa sang MongoDB (hiển thị ảnh trên Danh bạ /vi/readers) nếu user đóng vai trò Reader
+        
         var readerProfile = await _readerProfileRepository.GetByUserIdAsync(user.Id.ToString(), cancellationToken);
         if (readerProfile != null)
         {
@@ -65,7 +65,7 @@ public class UploadAvatarCommandHandler : IRequestHandler<UploadAvatarCommand, s
             await _readerProfileRepository.UpdateAsync(readerProfile, cancellationToken);
         }
 
-        // Xóa ảnh cũ (nếu là local file, không phải URL bên ngoài)
+        
         if (!string.IsNullOrEmpty(oldAvatarUrl) && !oldAvatarUrl.StartsWith("http", System.StringComparison.OrdinalIgnoreCase))
         {
             await _fileStorageService.DeleteFileAsync(oldAvatarUrl, cancellationToken);

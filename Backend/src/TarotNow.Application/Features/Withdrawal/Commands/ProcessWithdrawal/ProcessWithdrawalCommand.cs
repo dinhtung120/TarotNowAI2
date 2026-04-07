@@ -4,20 +4,11 @@ using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Withdrawal.Commands.ProcessWithdrawal;
 
-/// <summary>
-/// Command: Admin approve hoặc reject yêu cầu rút tiền.
-///
-/// Approve → status = approved (→ paid khi chuyển khoản xong, tùy flow).
-/// Reject → status = rejected + refund diamond cho reader.
-///
-/// Audit trail: admin_id, admin_note, processed_at.
-/// </summary>
 public class ProcessWithdrawalCommand : IRequest<bool>
 {
     public Guid RequestId { get; set; }
     public Guid AdminId { get; set; }
-    /// <summary>"approve" | "reject"</summary>
-    public string Action { get; set; } = string.Empty;
+        public string Action { get; set; } = string.Empty;
     public string? AdminNote { get; set; }
     public string MfaCode { get; set; } = string.Empty;
 }
@@ -52,7 +43,7 @@ public class ProcessWithdrawalCommandHandler : IRequestHandler<ProcessWithdrawal
         var admin = await _userRepo.GetByIdAsync(req.AdminId, ct)
             ?? throw new NotFoundException("Không tìm thấy admin.");
 
-        // Guard: Admin phải có MFA và code đúng
+        
         if (!admin.MfaEnabled || string.IsNullOrEmpty(admin.MfaSecretEncrypted))
             throw new BadRequestException("Admin phải cấu hình MFA trước khi thực hiện hành động này.");
 
@@ -67,12 +58,12 @@ public class ProcessWithdrawalCommandHandler : IRequestHandler<ProcessWithdrawal
 
         if (req.Action == "approve")
         {
-            // Approve — diamond đã debit khi tạo request, chỉ cần đổi status
+            
             request.Status = "approved";
         }
         else
         {
-            // Reject → refund diamond cho reader
+            
             await _walletRepo.CreditAsync(
                 request.UserId, "diamond", "withdrawal_refund", request.AmountDiamond,
                 referenceSource: "withdrawal_request",
@@ -84,7 +75,7 @@ public class ProcessWithdrawalCommandHandler : IRequestHandler<ProcessWithdrawal
             request.Status = "rejected";
         }
 
-        // Audit trail
+        
         request.AdminId = req.AdminId;
         request.AdminNote = req.AdminNote;
         request.ProcessedAt = now;

@@ -1,9 +1,5 @@
 namespace TarotNow.Domain.Events;
 
-/// <summary>
-/// Sự kiện Domain: Cuộc trò chuyện đã được cập nhật trạng thái hoặc thông tin quan trọng.
-/// Dùng để kích hoạt các side-effect như gửi tin nhắn SignalR báo cho Frontend reload.
-/// </summary>
 public class ConversationUpdatedDomainEvent : IDomainEvent
 {
     public string ConversationId { get; }

@@ -30,7 +30,7 @@ public partial class WalletRepository
                 _dbContext.Set<WalletTransaction>().AddRange(entries.PayerEntry, entries.ReceiverEntry);
                 await _dbContext.SaveChangesAsync(cancellationToken);
 
-                // -- Gamification: Ghi nhận điểm cho người trả tiền khi hoàn tất giải ngân --
+                
                 await TrackSpendingToLeaderboardAsync(request.PayerId, CurrencyType.Diamond, request.Amount, cancellationToken);
             }, cancellationToken);
         }

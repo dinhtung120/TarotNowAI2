@@ -1,23 +1,4 @@
-/*
- * FILE: SendMessageCommandHandlerTests.cs
- * MỤC ĐÍCH: Unit test cho handler gửi tin nhắn trong cuộc hội thoại.
- *
- *   CÁC TEST CASE (7 scenarios):
- *   1. Handle_InvalidType_ThrowsBadRequest: loại tin nhắn sai → 400
- *   2. Handle_EmptyText_ThrowsBadRequest: nội dung trống → 400
- *   3. Handle_NotAMember_ThrowsBadRequest: User không thuộc conversation → 400
- *   4. Handle_ValidMessage_PersistsMessageAndUpdatesUnreadCount:
- *      → Happy path: lưu message + Pending→Active + tăng UnreadCountReader
- *   5. Handle_ConversationNotFound_ThrowsNotFoundException: ConversationId sai → 404
- *   6. Handle_CompletedConversation_ThrowsBadRequest: Conversation đã kết thúc → 400
- *   7. Handle_ReaderSendsMessage_UserUnreadCountIncreases:
- *      → Reader gửi → tăng UnreadCountUser (KHÔNG phải UnreadCountReader)
- *
- *   LOGIC QUAN TRỌNG:
- *   → Phân biệt sender = User hay Reader → tăng đúng unread counter
- *   → Tin nhắn đầu tiên chuyển Pending → Active (auto-activate)
- *   → Conversation Completed/Cancelled/Disputed → không cho gửi tin mới
- */
+
 
 using Moq;
 using TarotNow.Application.Exceptions;
@@ -30,9 +11,6 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Chat;
 
-/// <summary>
-/// Test send message: validation, auto-activate, unread counter logic (User vs Reader).
-/// </summary>
 public class SendMessageCommandHandlerTests
 {
     private readonly Mock<IConversationRepository> _mockConvRepo;
@@ -74,24 +52,21 @@ public class SendMessageCommandHandlerTests
             _mockWalletPushService.Object);
     }
 
-    /// <summary>Loại tin nhắn không hợp lệ → BadRequest.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_InvalidType_ThrowsBadRequest()
     {
         var command = new SendMessageCommand { Type = "invalid_type", Content = "a" };
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-    /// <summary>Nội dung trống → BadRequest.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_EmptyText_ThrowsBadRequest()
     {
         var command = new SendMessageCommand { Type = ChatMessageType.Text, Content = "" };
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-    /// <summary>User không thuộc conversation → BadRequest.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_NotAMember_ThrowsBadRequest()
     {
         var command = new SendMessageCommand { Type = ChatMessageType.Text, Content = "a", ConversationId = "c1", SenderId = Guid.NewGuid() };
@@ -102,10 +77,7 @@ public class SendMessageCommandHandlerTests
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-    /// <summary>
-    /// Happy path: lưu message + Pending→Active + tăng UnreadCountReader.
-    /// </summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ValidMessage_PersistsMessageAndUpdatesUnreadCount()
     {
         var senderIdStr = Guid.NewGuid().ToString();
@@ -134,8 +106,8 @@ public class SendMessageCommandHandlerTests
         Assert.NotNull(result);
         Assert.Equal(ChatMessageType.Text, result.Type);
         Assert.Equal("Hello", result.Content);
-        Assert.Equal(ConversationStatus.AwaitingAcceptance, conv.Status); // Pending → AwaitingAcceptance
-        Assert.Equal(1, conv.UnreadCountReader); // User gửi → Reader chưa đọc
+        Assert.Equal(ConversationStatus.AwaitingAcceptance, conv.Status); 
+        Assert.Equal(1, conv.UnreadCountReader); 
 
         _mockMsgRepo.Verify(x => x.AddAsync(It.IsAny<ChatMessageDto>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
         _mockConvRepo.Verify(x => x.UpdateAsync(conv, default), Times.Once);
@@ -152,8 +124,7 @@ public class SendMessageCommandHandlerTests
             Times.Once);
     }
 
-    /// <summary>ConversationId sai → NotFoundException.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ConversationNotFound_ThrowsNotFoundException()
     {
         var command = new SendMessageCommand
@@ -166,10 +137,7 @@ public class SendMessageCommandHandlerTests
         await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-    /// <summary>
-    /// Conversation đã kết thúc → BadRequest (không cho gửi tin vào evidence).
-    /// </summary>
-    [Fact]
+        [Fact]
     public async Task Handle_CompletedConversation_ThrowsBadRequest()
     {
         var senderId = Guid.NewGuid();
@@ -182,7 +150,7 @@ public class SendMessageCommandHandlerTests
         {
             Id = "c1", UserId = senderId.ToString(),
             ReaderId = Guid.NewGuid().ToString(),
-            Status = ConversationStatus.Completed // Kết thúc
+            Status = ConversationStatus.Completed 
         };
         _mockConvRepo.Setup(x => x.GetByIdAsync("c1", default)).ReturnsAsync(conv);
 
@@ -191,11 +159,7 @@ public class SendMessageCommandHandlerTests
         _mockMsgRepo.Verify(x => x.AddAsync(It.IsAny<ChatMessageDto>(), default), Times.Never);
     }
 
-    /// <summary>
-    /// Reader gửi tin → increment UnreadCountUser (KHÔNG PHẢI UnreadCountReader).
-    /// Bug tiềm ẩn: nhầm counter → reader tự thấy badge của chính mình.
-    /// </summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ReaderSendsMessage_UserUnreadCountIncreases()
     {
         var userIdStr = Guid.NewGuid().ToString();
@@ -203,7 +167,7 @@ public class SendMessageCommandHandlerTests
         var command = new SendMessageCommand
         {
             Type = ChatMessageType.Text, Content = "Reader reply",
-            ConversationId = "c1", SenderId = Guid.Parse(readerIdStr) // Reader gửi
+            ConversationId = "c1", SenderId = Guid.Parse(readerIdStr) 
         };
         var conv = new ConversationDto
         {
@@ -215,14 +179,11 @@ public class SendMessageCommandHandlerTests
 
         await _handler.Handle(command, CancellationToken.None);
 
-        Assert.Equal(1, conv.UnreadCountUser);   // Reader gửi → User chưa đọc
-        Assert.Equal(0, conv.UnreadCountReader);  // Reader gửi → giữ nguyên
+        Assert.Equal(1, conv.UnreadCountUser);   
+        Assert.Equal(0, conv.UnreadCountReader);  
     }
 
-    /// <summary>
-    /// Image message có URL hợp lệ sẽ tự fallback payload và được lưu.
-    /// </summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ImageMessageWithUrl_FallbackPayloadAccepted()
     {
         var senderId = Guid.NewGuid();
@@ -249,10 +210,7 @@ public class SendMessageCommandHandlerTests
         Assert.Equal("image/png", result.MediaPayload!.MimeType);
     }
 
-    /// <summary>
-    /// Voice message duration vượt giới hạn sẽ bị chặn.
-    /// </summary>
-    [Fact]
+        [Fact]
     public async Task Handle_VoiceMessageDurationTooLong_ThrowsBadRequest()
     {
         var senderId = Guid.NewGuid();
@@ -281,10 +239,7 @@ public class SendMessageCommandHandlerTests
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-    /// <summary>
-    /// Image AVIF được phép gửi theo media spec mới.
-    /// </summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ImageMessageAvif_IsAccepted()
     {
         var senderId = Guid.NewGuid();
@@ -311,10 +266,7 @@ public class SendMessageCommandHandlerTests
         Assert.Equal("image/avif", result.MediaPayload!.MimeType);
     }
 
-    /// <summary>
-    /// Voice mime chứa codec suffix vẫn được normalize và chấp nhận.
-    /// </summary>
-    [Fact]
+        [Fact]
     public async Task Handle_VoiceMessageWithCodecSuffix_IsAccepted()
     {
         var senderId = Guid.NewGuid();

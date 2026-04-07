@@ -1,13 +1,4 @@
-/*
- * ===================================================================
- * FILE: SubscriptionExpiredEventHandler.cs
- * NAMESPACE: TarotNow.Application.DomainEvents
- * ===================================================================
- * MỤC ĐÍCH:
- *   Gắn Nghe Tiếng Báo Thức Hỏng Gói Của Job Nền.
- *   Xóa Bức Tường Cache UI Để App Tắt Không Tím Nút Hiện (Dẹp Nút Dịch Vụ Đặc Quyền Free Khỏi Mắt User Ngay).
- * ===================================================================
- */
+
 
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,7 +21,7 @@ public class SubscriptionExpiredEventHandler : INotificationHandler<Subscription
     public async Task Handle(SubscriptionExpiredNotification notification, CancellationToken cancellationToken)
     {
         var ev = notification.DomainEvent;
-        // Nổ Quỹ Cache Số Dư Đặc Sủng Liên Quan Client Màn Hình Đọc Do Sập Ngày.
+        
         var cacheKey = $"entitlement_balance:{ev.UserId}";
         await _cacheService.RemoveAsync(cacheKey);
     }

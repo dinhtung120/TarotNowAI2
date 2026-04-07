@@ -16,7 +16,7 @@ export const CheckinButton = ({ isCheckedIn }: CheckinButtonProps) => {
     if (isCheckedIn || isPending) return;
     
     setAnimating(true);
-    setTimeout(() => setAnimating(false), 1500); // Tắt class hiệu ứng sau 1.5s
+    setTimeout(() => setAnimating(false), 1500); 
     
     performCheckIn(undefined, {
       onError: (err: unknown) => console.error("Điểm danh lỗi tẹo:", err),

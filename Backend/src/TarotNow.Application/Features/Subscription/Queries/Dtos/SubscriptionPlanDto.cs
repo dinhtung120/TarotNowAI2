@@ -1,12 +1,4 @@
-/*
- * ===================================================================
- * FILE: SubscriptionPlanDto.cs
- * ===================================================================
- * MỤC ĐÍCH:
- *   DTO trả về thông tin gói đăng ký cho Frontend hiển thị.
- *   Description là nullable vì Admin có thể không điền mô tả.
- * ===================================================================
- */
+
 
 using System;
 using System.Collections.Generic;

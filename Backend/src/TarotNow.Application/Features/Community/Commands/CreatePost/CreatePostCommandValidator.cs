@@ -3,9 +3,6 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Community.Commands.CreatePost;
 
-/// <summary>
-/// FluentValidation rules for creating a community post.
-/// </summary>
 public sealed class CreatePostCommandValidator : AbstractValidator<CreatePostCommand>
 {
     public CreatePostCommandValidator()

@@ -19,20 +19,14 @@ public sealed class AdminReaderRequestsController : ControllerBase
         _mediator = mediator;
     }
 
-    /// <summary>
-    /// Returns reader registration requests for admin moderation queue.
-    /// </summary>
-    [HttpGet("reader-requests")]
+        [HttpGet("reader-requests")]
     public async Task<IActionResult> ListReaderRequests([FromQuery] TarotNow.Application.Features.Admin.Queries.ListReaderRequests.ListReaderRequestsQuery query)
     {
         var result = await _mediator.Send(query);
         return Ok(result);
     }
 
-    /// <summary>
-    /// Approves or rejects a reader request and records admin note.
-    /// </summary>
-    [HttpPatch("reader-requests/process")]
+        [HttpPatch("reader-requests/process")]
     public async Task<IActionResult> ProcessReaderRequest([FromBody] ProcessReaderRequestBody body)
     {
         if (!User.TryGetUserId(out var adminId))

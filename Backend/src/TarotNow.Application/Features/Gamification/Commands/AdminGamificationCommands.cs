@@ -6,7 +6,7 @@ using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Gamification.Commands;
 
-// === QUEST COMMANDS ===
+
 public record UpsertQuestDefinitionCommand(QuestDefinitionDto Quest) : IRequest<bool>;
 public record DeleteQuestDefinitionCommand(string Code) : IRequest<bool>;
 
@@ -34,7 +34,7 @@ public class AdminQuestCommandHandler :
     }
 }
 
-// === ACHIEVEMENT COMMANDS ===
+
 public record UpsertAchievementDefinitionCommand(AchievementDefinitionDto Achievement) : IRequest<bool>;
 public record DeleteAchievementDefinitionCommand(string Code) : IRequest<bool>;
 
@@ -62,7 +62,7 @@ public class AdminAchievementCommandHandler :
     }
 }
 
-// === TITLE COMMANDS ===
+
 public record UpsertTitleDefinitionCommand(TitleDefinitionDto Title) : IRequest<bool>;
 public record DeleteTitleDefinitionCommand(string Code) : IRequest<bool>;
 

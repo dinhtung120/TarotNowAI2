@@ -193,7 +193,7 @@
   backface-visibility: hidden;
 }
 
-/* Speed up page enter animations to improve route transition responsiveness. */
+
 .animate-in {
   animation-duration: 260ms !important;
   animation-delay: 0ms !important;
@@ -212,10 +212,7 @@
   }
 }
 
-/*
- * Mobile landscape guard:
- * On touch devices in landscape, reduce expensive effects to avoid UI stalls.
- */
+
 @media (hover: none) and (pointer: coarse) and (orientation: landscape) {
   .astral-heavy {
     display: none !important;

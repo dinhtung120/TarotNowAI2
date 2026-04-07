@@ -1,14 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace TarotNow.Infrastructure.Migrations
 {
-    /// <inheritdoc />
-    public partial class AddUserActiveTitleRef : Migration
+        public partial class AddUserActiveTitleRef : Migration
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
+                protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
                 name: "active_title_ref",
@@ -17,8 +15,7 @@ namespace TarotNow.Infrastructure.Migrations
                 nullable: true);
         }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
+                protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
                 name: "active_title_ref",

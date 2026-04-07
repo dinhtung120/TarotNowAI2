@@ -42,7 +42,7 @@ export async function compressAvatarImage(file: File): Promise<File> {
 
     if (!blob) {
       throw new Error('Không thể nén ảnh.');
-    } // Nén tối đa để kích thước < 2MB (BE limit 10MB raw)
+    } 
 
     const newFileName = `avatar_${Date.now()}.${fileExtension}`;
     return new File([blob], newFileName, { type: mimeType });

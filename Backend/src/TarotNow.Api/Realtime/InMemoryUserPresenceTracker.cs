@@ -42,8 +42,8 @@ public class InMemoryUserPresenceTracker : IUserPresenceTracker
             }
         }
         
-        // Ngay cả khi disconnect, chúng ta vẫn record heartbeat một lần cuối
-        // để bắt đầu đếm ngược timeout 15 phút
+        
+        
         RecordHeartbeat(userId);
     }
 
@@ -54,16 +54,16 @@ public class InMemoryUserPresenceTracker : IUserPresenceTracker
             return false;
         }
 
-        // Ưu tiên 1: Đang có connection mở
+        
         if (_connectionsByUser.TryGetValue(userId, out var userConnections) && !userConnections.IsEmpty)
         {
             return true;
         }
         
-        // Ưu tiên 2: Không có connection nhưng vẫn nằm trong khoảng timeout 15 phút
+        
         if (_lastActivity.TryGetValue(userId, out var lastActivityTime))
         {
-            // Timeout mặc định là 15 phút. Nếu vẫn trong khoảng thời gian này, coi như vẫn online
+            
             return (DateTime.UtcNow - lastActivityTime).TotalMinutes <= 15;
         }
 
@@ -92,7 +92,7 @@ public class InMemoryUserPresenceTracker : IUserPresenceTracker
     {
         var cutoffTime = DateTime.UtcNow - timeout;
         
-        // Chỉ quét những user KHÔNG có connection nào đang mở VÀ lần cuối heartbeat đã quá timeout
+        
         return _lastActivity
             .Where(kvp => kvp.Value <= cutoffTime && 
                           (!_connectionsByUser.TryGetValue(kvp.Key, out var userConnections) || userConnections.IsEmpty))

@@ -8,9 +8,6 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Call;
 
-/// <summary>
-/// Unit Tests kiểm tra chức năng InitiateCallCommandHandler.
-/// </summary>
 public class InitiateCallCommandHandlerTests
 {
     private readonly Mock<ICallSessionRepository> _mockCallRepo;
@@ -27,7 +24,7 @@ public class InitiateCallCommandHandlerTests
     [Fact]
     public async Task Handle_ValidRequest_CreatesRequestedSession()
     {
-        // Thông tin test
+        
         var conversationId = "conv-123";
         var initiatorId = Guid.NewGuid();
         var conv = new ConversationDto { Id = conversationId, Status = "ongoing", UserId = initiatorId.ToString() };
@@ -51,7 +48,7 @@ public class InitiateCallCommandHandlerTests
     {
         var conversationId = "conv-123";
         var initiatorId = Guid.NewGuid();
-        // Trạng thái đã pending không cho phép gọi
+        
         var conv = new ConversationDto { Id = conversationId, Status = "pending", UserId = initiatorId.ToString() };
 
         _mockConvRepo.Setup(r => r.GetByIdAsync(conversationId, default)).ReturnsAsync(conv);

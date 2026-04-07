@@ -89,7 +89,7 @@ public class MongoAchievementRepository : IAchievementRepository
         }
         catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
         {
-            // Idempotency: Ignore duplicate key errors if user already unlocked this achievement
+            
         }
     }
 

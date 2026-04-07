@@ -1,17 +1,10 @@
-/*
- * FILE: UserTitleDocument.cs
- * MỤC ĐÍCH: Lưu trữ danh sách các danh hiệu mà user đang sở hữu.
- *   - Idempotency: Unique Index (UserId, TitleCode).
- */
+
 
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace TarotNow.Infrastructure.Persistence.MongoDocuments;
 
-/// <summary>
-/// Ghi nhận 1 Title được sở hữu bởi 1 User. (Bảng user_titles).
-/// </summary>
 public class UserTitleDocument
 {
     [BsonId]

@@ -1,12 +1,4 @@
-/*
- * ===================================================================
- * FILE: SubscriptionController.cs
- * NAMESPACE: TarotNow.Api.Controllers
- * ===================================================================
- * MỤC ĐÍCH:
- *   Giao diện API RESTful dành cho Mobile / Web Gọi Chức Năng Đăng Ký Gói.
- * ===================================================================
- */
+
 
 using System;
 using System.Threading;
@@ -34,11 +26,8 @@ public class SubscriptionController : ControllerBase
         _mediator = mediator;
     }
 
-    /// <summary>
-    /// Tạo Gói Đăng Ký Mới (Chỉ Admin).
-    /// </summary>
-    [HttpPost("plans")]
-    [Authorize(Policy = "AdminOnly")] // Giả thiết đã có policy AdminOnly
+        [HttpPost("plans")]
+    [Authorize(Policy = "AdminOnly")] 
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Guid))]
     public async Task<IActionResult> CreatePlan(
         [FromBody] CreateSubscriptionPlanCommand command,
@@ -48,19 +37,16 @@ public class SubscriptionController : ControllerBase
         return Created($"/api/subscriptions/plans/{planId}", planId);
     }
 
-    /// <summary>
-    /// Người dùng Mua Gói (Dùng Kim Cương).
-    /// </summary>
-    [HttpPost("subscribe")]
+        [HttpPost("subscribe")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Guid))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Subscribe(
         [FromBody] SubscribeRequest request,
         CancellationToken cancellationToken)
     {
-        // Lấy User từ Claims Token (Extension method giả thiết)
-        // var userId = User.GetUserId();
-        // Tạm parse từ JWT - Nếu có helper thì dùng, ở đây parse claim sub.
+        
+        
+        
         var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userIdStr, out var userId))
             return Unauthorized();
@@ -71,10 +57,7 @@ public class SubscriptionController : ControllerBase
         return Ok(new { SubscriptionId = subId });
     }
 
-    /// <summary>
-    /// Lấy danh sách các Gói nạp đang mở bán.
-    /// </summary>
-    [HttpGet("plans")]
+        [HttpGet("plans")]
     [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(System.Collections.Generic.List<TarotNow.Application.Features.Subscription.Queries.Dtos.SubscriptionPlanDto>))]
     public async Task<IActionResult> GetPlans(CancellationToken cancellationToken)
@@ -83,10 +66,7 @@ public class SubscriptionController : ControllerBase
         return Ok(plans);
     }
 
-    /// <summary>
-    /// Lấy số dư các thẻ/quyền lợi còn lại của tôi.
-    /// </summary>
-    [HttpGet("me/entitlements")]
+        [HttpGet("me/entitlements")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(System.Collections.Generic.List<TarotNow.Application.Interfaces.EntitlementBalanceDto>))]
     public async Task<IActionResult> GetMyEntitlements(CancellationToken cancellationToken)
     {

@@ -1,9 +1,4 @@
-/*
- * ===================================================================
- * FILE: GachaRepository.cs
- * NAMESPACE: TarotNow.Infrastructure.Persistence.Repositories
- * ===================================================================
- */
+
 
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -51,7 +46,7 @@ public class GachaRepository : IGachaRepository
 
     public async Task<int> GetUserPityCountAsync(Guid userId, Guid bannerId, CancellationToken ct)
     {
-        // Lấy lần ra Legendary gần nhất
+        
         var lastLegendaryLog = await _dbContext.GachaRewardLogs
             .Where(l => l.UserId == userId && l.BannerId == bannerId && l.Rarity == GachaRarity.Legendary)
             .OrderByDescending(l => l.CreatedAt)
@@ -62,7 +57,7 @@ public class GachaRepository : IGachaRepository
 
         if (lastLegendaryLog != null)
         {
-            // Chỉ đếm những lần quay sau lần ra Legendary gần nhất
+            
             query = query.Where(l => l.CreatedAt > lastLegendaryLog.CreatedAt);
         }
 

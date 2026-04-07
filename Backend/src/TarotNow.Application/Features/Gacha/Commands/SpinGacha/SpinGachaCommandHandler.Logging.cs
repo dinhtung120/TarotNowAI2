@@ -51,7 +51,7 @@ public partial class SpinGachaCommandHandler
         }
         catch
         {
-            // Mongo analytics is best effort; SQL log is source of truth.
+            
         }
     }
 

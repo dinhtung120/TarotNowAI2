@@ -1,15 +1,13 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace TarotNow.Infrastructure.Migrations
 {
-    /// <inheritdoc />
-    public partial class AddStreakColumnsToUsers : Migration
+        public partial class AddStreakColumnsToUsers : Migration
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
+                protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<int>(
                 name: "current_streak",
@@ -32,8 +30,7 @@ namespace TarotNow.Infrastructure.Migrations
                 defaultValue: 0);
         }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
+                protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
                 name: "current_streak",

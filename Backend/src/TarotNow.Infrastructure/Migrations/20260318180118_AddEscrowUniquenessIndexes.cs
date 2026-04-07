@@ -1,14 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace TarotNow.Infrastructure.Migrations
 {
-    /// <inheritdoc />
-    public partial class AddEscrowUniquenessIndexes : Migration
+        public partial class AddEscrowUniquenessIndexes : Migration
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
+                protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateIndex(
                 name: "ix_chat_question_items_idempotency_key",
@@ -24,8 +22,7 @@ namespace TarotNow.Infrastructure.Migrations
                 unique: true);
         }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
+                protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(
                 name: "ix_chat_question_items_idempotency_key",

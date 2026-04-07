@@ -1,27 +1,4 @@
-<!--
-  FILE: TarotNow.Api.IntegrationTests.csproj
-  MỤC ĐÍCH: Cấu hình project Integration Tests — test API end-to-end qua HTTP pipeline.
 
-  TARGET: .NET 9.0 (cùng version với application)
-  IsPackable=false: đây là test project, KHÔNG publish thành NuGet package.
-
-  CÁC THƯ VIỆN:
-  1. TEST FRAMEWORK:
-     - xunit: framework test chính (Fact, Theory, Collection)
-     - xunit.runner.visualstudio: runner cho Visual Studio / JetBrains Rider
-     - Microsoft.NET.Test.Sdk: SDK cho dotnet test command
-
-  2. INTEGRATION TEST:
-     - Microsoft.AspNetCore.Mvc.Testing: WebApplicationFactory — tạo TestServer in-process
-     - Testcontainers.PostgreSql: Docker container PostgreSQL cho test
-     - Testcontainers.MongoDb: Docker container MongoDB cho test
-
-  3. CODE COVERAGE:
-     - coverlet.collector: thu thập code coverage metrics
-
-  PROJECT REFERENCE:
-     - TarotNow.Api: truy cập Program class + controllers để tạo TestServer
--->
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -32,28 +9,28 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Code coverage collector -->
+    
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
-    <!-- WebApplicationFactory: tạo TestServer in-process cho integration tests -->
+    
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.2" />
-    <!-- Test SDK: hỗ trợ dotnet test command -->
+    
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
-    <!-- Docker container PostgreSQL cho test (thay vì InMemory DB) -->
+    
     <PackageReference Include="Testcontainers.MongoDb" Version="4.10.0" />
-    <!-- Docker container MongoDB cho test -->
+    
     <PackageReference Include="Testcontainers.PostgreSql" Version="4.10.0" />
-    <!-- xUnit: test framework (Fact, Theory, Assert) -->
+    
     <PackageReference Include="xunit" Version="2.9.2" />
-    <!-- xUnit runner cho IDE (Visual Studio, Rider) -->
+    
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
 
-  <!-- Global using cho xUnit -->
+  
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 
-  <!-- Reference tới API project (để access Program class + controllers) -->
+  
   <ItemGroup>
     <ProjectReference Include="..\..\src\TarotNow.Api\TarotNow.Api.csproj" />
   </ItemGroup>

@@ -19,10 +19,7 @@ public sealed class AdminWithdrawalsController : ControllerBase
         _mediator = mediator;
     }
 
-    /// <summary>
-    /// Returns pending withdrawal requests for admin queue.
-    /// </summary>
-    [HttpGet("withdrawals/queue")]
+        [HttpGet("withdrawals/queue")]
     public async Task<IActionResult> WithdrawalQueue([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var query = new TarotNow.Application.Features.Withdrawal.Queries.ListWithdrawals.ListWithdrawalsQuery
@@ -36,10 +33,7 @@ public sealed class AdminWithdrawalsController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Processes a withdrawal request with admin MFA verification.
-    /// </summary>
-    [HttpPost("withdrawals/process")]
+        [HttpPost("withdrawals/process")]
     public async Task<IActionResult> ProcessWithdrawal([FromBody] ProcessWithdrawalBody body)
     {
         if (!User.TryGetUserId(out var adminId))

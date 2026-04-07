@@ -6,10 +6,7 @@ namespace TarotNow.Api.Hubs;
 
 public partial class CallHub
 {
-    /// <summary>
-    /// Bắt đầu một cuộc gọi mới vào conversation.
-    /// </summary>
-    public async Task InitiateCall(string conversationId, string callType)
+        public async Task InitiateCall(string conversationId, string callType)
     {
         if (!TryGetUserGuid(out var userId))
         {
@@ -30,10 +27,7 @@ public partial class CallHub
         await ExecuteInitiateCallAsync(conversationId, callType, userId);
     }
 
-    /// <summary>
-    /// Phản hồi đồng ý hoặc từ chối một cuộc gọi đến.
-    /// </summary>
-    public async Task RespondCall(string callSessionId, bool accept)
+        public async Task RespondCall(string callSessionId, bool accept)
     {
         if (!TryGetUserGuid(out var userId))
         {

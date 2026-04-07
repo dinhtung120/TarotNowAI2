@@ -1,11 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- 
-    ===================================================================
-    FILE: TarotNow.Application.csproj
-    MỤC ĐÍCH: File cấu hình Dự Án cho tầng Application.
-    Tầng này chứa Rules, Use Cases, CQRS MediatR của Hệ Thống.
-    =================================================================== 
-  -->
+  
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>

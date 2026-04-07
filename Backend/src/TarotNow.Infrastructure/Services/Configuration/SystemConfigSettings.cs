@@ -22,8 +22,8 @@ public sealed class SystemConfigSettings : ISystemConfigSettings
         InFlightAiCap = ResolvePositiveInt(config.InFlightAiCap, fallback: 3);
         ReadingRateLimitSeconds = ResolvePositiveInt(config.ReadingRateLimitSeconds, fallback: 30);
         
-        DailyCheckinGold = 5; // Default hardcoded for now or fetch from config
-        StreakFreezeWindowHours = 24; // Default
+        DailyCheckinGold = 5; 
+        StreakFreezeWindowHours = 24; 
     }
 
     public long Spread3GoldCost { get; }

@@ -19,7 +19,7 @@ export default async function UserSegmentLayout({ children }: UserSegmentLayoutP
   return (
     <AppQueryProvider>
       <AppAuthSessionManager />
-      {/* 2. Truyền dữ liệu xuống Client Loader để mồi cache tức thì */}
+      {}
       <MetadataInitialLoader initialMetadata={initialMetadata} />
       <WalletStoreBridge />
       <AppNavbar />

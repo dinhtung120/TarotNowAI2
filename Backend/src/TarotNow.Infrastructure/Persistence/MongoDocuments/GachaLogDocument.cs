@@ -1,9 +1,4 @@
-/*
- * ===================================================================
- * FILE: GachaLogDocument.cs
- * NAMESPACE: TarotNow.Infrastructure.Persistence.MongoDocuments
- * ===================================================================
- */
+
 
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;

@@ -6,10 +6,6 @@ using System.Threading.Tasks;
 
 namespace TarotNow.Infrastructure.Services;
 
-/// <summary>
-/// Đại nội tổng quản lo việc Cộng hoặc Đứt chuỗi đăng nhập.
-/// Tách rời khỏi Handler để dùng chung được ở nhiều nơi nếu Phase sau mọc thêm nguồn nhận rút bài (VD: Friend Chain).
-/// </summary>
 public class StreakService : IStreakService
 {
     private readonly IUserRepository _userRepository;

@@ -52,14 +52,14 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
             return context.Processed;
         }
 
-        // Streak increment phải chạy NGOÀI transaction scope
-        // vì ProcessCompletionAsync đã dùng DbContext trong transaction,
-        // nếu streak update cũng nằm trong đó sẽ bị conflict/double-save.
+        
+        
+        
         if (request.FinalStatus == AiStreamFinalStatuses.Completed)
         {
             await _streakService.IncrementStreakOnValidDrawAsync(request.UserId, cancellationToken);
             
-            // --- GAMIFICATION PHASE 5.3 ---
+            
             await _gamificationService.OnReadingCompletedAsync(request.UserId, cancellationToken);
         }
 

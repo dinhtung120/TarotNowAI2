@@ -7,13 +7,13 @@ import { cn } from "@/lib/utils";
 type SpinnerSize = "sm" | "md" | "lg";
 
 interface LoadingSpinnerProps {
- /** Kích thước spinner. Mặc định: "md" */
+ 
  size?: SpinnerSize;
 
- /** Text hiển thị dưới spinner (tùy chọn) */
+ 
  message?: string;
 
- /** Chiếm full height container (center spinner giữa trang) */
+ 
  fullPage?: boolean;
 
  className?: string;
@@ -39,12 +39,12 @@ function LoadingSpinnerComponent({
  className,
  )}
  >
- {/* Spinner icon — màu tím brand, xoay vô hạn */}
+ {}
  <Loader2
  className={`${sizeMap[size]} animate-spin text-[var(--purple-accent)]`}
  />
 
- {/* Optional loading message — style label nhỏ uppercase */}
+ {}
  {message && (
  <span className={cn("text-[10px] font-black uppercase tracking-widest tn-text-muted")}>
  {message}

@@ -46,7 +46,7 @@ public sealed partial class ChatModerationWorker : BackgroundService
                 }
                 catch (ObjectDisposedException) when (stoppingToken.IsCancellationRequested)
                 {
-                    // Shutdown phase
+                    
                 }
                 catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
                 {
@@ -83,10 +83,10 @@ public sealed partial class ChatModerationWorker : BackgroundService
         var reportRepo = scope.ServiceProvider.GetRequiredService<IReportRepository>();
         var chatMessageRepo = scope.ServiceProvider.GetRequiredService<IChatMessageRepository>();
         
-        // 1. Gắn thẻ MongoDB Field isFlagged: true trực tiếp trên tin nhắn
+        
         await chatMessageRepo.UpdateFlagAsync(payload.MessageId, true, cancellationToken);
         
-        // 2. Tạo báo cáo cho Admin
+        
         var report = BuildAutoModerationReport(payload, matchedKeyword);
         await reportRepo.AddAsync(report, cancellationToken);
 

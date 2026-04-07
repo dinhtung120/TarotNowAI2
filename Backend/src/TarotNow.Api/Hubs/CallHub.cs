@@ -8,10 +8,6 @@ using System.Security.Claims;
 
 namespace TarotNow.Api.Hubs;
 
-/// <summary>
-/// Hub quản lý kết nối và WebRTC Signaling cho các cuộc gọi Voice/Video.
-/// WebRTC P2P trao đổi thông tin (SDP, ICE Candidates) thông qua Hub này.
-/// </summary>
 [Authorize(Policy = ApiAuthorizationPolicies.AuthenticatedUser)]
 public partial class CallHub : Hub
 {
@@ -32,31 +28,19 @@ public partial class CallHub : Hub
         _chatHubContext = chatHubContext;
     }
 
-    /// <summary>
-    /// Helper: Lấy userId từ JWT claim.
-    /// </summary>
-    protected string GetUserId()
+        protected string GetUserId()
     {
         return Context.User?.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
     }
 
-    /// <summary>
-    /// Helper: Lấy User Guid an toàn.
-    /// </summary>
-    protected bool TryGetUserGuid(out Guid userId)
+        protected bool TryGetUserGuid(out Guid userId)
     {
         return Guid.TryParse(GetUserId(), out userId);
     }
 
-    /// <summary>
-    /// Helper: Lấy tên group theo Conversation ID để broadcast trong group kín (User &amp; Reader).
-    /// </summary>
-    protected string ConversationGroup(string conversationId) => $"conversation:{conversationId}";
+        protected string ConversationGroup(string conversationId) => $"conversation:{conversationId}";
 
-    /// <summary>
-    /// Báo lỗi tới client cụ thể.
-    /// </summary>
-    protected async Task SendClientErrorAsync(string errorKey, string message)
+        protected async Task SendClientErrorAsync(string errorKey, string message)
     {
         await Clients.Caller.SendAsync("call.error", new { errorKey, message });
     }

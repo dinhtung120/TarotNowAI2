@@ -6,9 +6,6 @@ using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Api.Services;
 
-/// <summary>
-/// Background Service quét định kỳ (mỗi 60s) để dọn dẹp các user đã mất kết nối quá 15 phút.
-/// </summary>
 public class PresenceTimeoutBackgroundService : BackgroundService
 {
     private readonly ILogger<PresenceTimeoutBackgroundService> _logger;
@@ -16,10 +13,10 @@ public class PresenceTimeoutBackgroundService : BackgroundService
     private readonly IHubContext<PresenceHub> _hubContext;
     private readonly IServiceScopeFactory _scopeFactory;
 
-    // Timeout 15 phút theo yêu cầu
+    
     private readonly TimeSpan _timeoutPeriod = TimeSpan.FromMinutes(15);
     
-    // Quét mỗi 60 giây
+    
     private readonly TimeSpan _scanInterval = TimeSpan.FromSeconds(60);
 
     public PresenceTimeoutBackgroundService(
@@ -49,14 +46,14 @@ public class PresenceTimeoutBackgroundService : BackgroundService
                 }
                 catch (ObjectDisposedException) when (stoppingToken.IsCancellationRequested)
                 {
-                    // Shutdown phase
+                    
                 }
                 catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
                 {
                     _logger.LogError(ex, "[PresenceTimeout] Error occurred while processing timeouts.");
                 }
 
-                // Đợi đến chu kỳ quét tiếp theo
+                
                 await Task.Delay(_scanInterval, stoppingToken);
             }
         }
@@ -82,19 +79,19 @@ public class PresenceTimeoutBackgroundService : BackgroundService
 
         foreach (var userId in timedOutUsers)
         {
-            // 1. Xóa khỏi In-Memory Tracker
+            
             _presenceTracker.RemoveUser(userId);
 
-            // 2. Broadcast sự kiện Offline cho tất cả client đang online
+            
             await _hubContext.Clients.All.SendAsync("UserStatusChanged", userId, "offline", cancellationToken);
         }
 
-        // 3. Nếu user đó là Reader, cần cập nhật DB (Online -> Offline)
-        // Vì BackgroundService là Singleton, ta cần tạo Scope để resolve mảng Scoped Services (Repository)
+        
+        
         using var scope = _scopeFactory.CreateScope();
         var profileRepo = scope.ServiceProvider.GetRequiredService<IReaderProfileRepository>();
 
-        // Cập nhật Database cho Reader
+        
         await UpdateReaderProfilesToOfflineAsync(profileRepo, timedOutUsers, cancellationToken);
     }
 
@@ -109,9 +106,9 @@ public class PresenceTimeoutBackgroundService : BackgroundService
             
             foreach (var profile in profiles)
             {
-                // Chỉ cập nhật nếu trạng thái hiện tại đang là Online.
-                // Nếu Reader đang "Busy" (Busy) thì KHÔNG tự động chuyển sang Offline,
-                // tôn trọng lựa chọn thủ công của Reader.
+                
+                
+                
                 if (string.Equals(profile.Status, ApiReaderStatusConstants.Online, StringComparison.OrdinalIgnoreCase))
                 {
                     profile.Status = ApiReaderStatusConstants.Offline;

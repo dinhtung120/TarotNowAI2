@@ -1,12 +1,4 @@
-/*
- * ===================================================================
- * FILE: UserConfiguration.cs
- * NAMESPACE: TarotNow.Infrastructure.Persistence.Configurations
- * ===================================================================
- * MỤC ĐÍCH:
- *   Ánh Xạ Thiết Lập Bảng Cốt Lõi `users`. Bảng Này Rất Phức Tạp Vì Gánh Cả Sinh Mệnh Bệnh Án Financial Của Hệ Thống (Owned Entity UserWallet Cắm Vào Đây Luôn).
- * ===================================================================
- */
+
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -14,10 +6,6 @@ using TarotNow.Domain.Entities;
 
 namespace TarotNow.Infrastructure.Persistence.Configurations;
 
-/// <summary>
-/// Trái Tim Gắn Kết User Với Database PostgreSQL Bằng Kiểu Xây FluentAPI.
-/// Dịch Theo Cấu Trúc Khác Của C# Sang DB Bằng Tay Tránh Tuột Nhầm Dây.
-/// </summary>
 public class UserConfiguration : IEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> builder)

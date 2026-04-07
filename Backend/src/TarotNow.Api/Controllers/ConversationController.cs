@@ -62,7 +62,7 @@ public partial class ConversationController : ControllerBase
         }
         catch
         {
-            // Best-effort realtime broadcast.
+            
         }
     }
 }

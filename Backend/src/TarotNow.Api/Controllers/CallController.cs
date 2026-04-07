@@ -21,10 +21,7 @@ public class CallController : ControllerBase
         _mediator = mediator;
     }
 
-    /// <summary>
-    /// Lấy lịch sử cuộc gọi có phân trang trong một cuộc trò chuyện.
-    /// </summary>
-    [HttpGet]
+        [HttpGet]
     [EnableRateLimiting("call-history")]
     public async Task<IActionResult> GetCallHistory(
         [FromRoute] string conversationId, 
@@ -52,7 +49,7 @@ public class CallController : ControllerBase
         });
     }
 
-    // Ghi chú: getActive (như plan) đã không còn cần thiết bằng API rời rạc vì SignalR hub khi join group 
-    // đã có sẵn mechanism load trạng thái hoặc ta có thể quản lý lifecycle bằng Client Cache (Zustand).
-    // Có thể bổ sung sau nếu FE cần re-sync.
+    
+    
+    
 }

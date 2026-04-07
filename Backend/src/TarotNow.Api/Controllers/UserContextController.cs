@@ -8,9 +8,6 @@ using TarotNow.Application.Features.UserContext.Queries.GetInitialMetadata;
 
 namespace TarotNow.Api.Controllers;
 
-/// <summary>
-/// Controller cung cấp các endpoint về ngữ cảnh người dùng, gộp các yêu cầu metadata để tối ưu hóa hiệu suất.
-/// </summary>
 [Route(ApiRoutes.UserContext)]
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
@@ -23,12 +20,7 @@ public class UserContextController : ControllerBase
         _mediator = mediator;
     }
 
-    /// <summary>
-    /// ENDPOINT: GET /api/v1/user-context/metadata
-    /// MỤC ĐÍCH: Lấy toàn bộ metadata cần thiết cho Dashboard (Wallet, Streak, Notifications, Chat) trong 1 request.
-    /// Giúp tránh tình trạng "bão request" khi load trang.
-    /// </summary>
-    [HttpGet("metadata")]
+        [HttpGet("metadata")]
     [Authorize]
     public async Task<IActionResult> GetInitialMetadata()
     {

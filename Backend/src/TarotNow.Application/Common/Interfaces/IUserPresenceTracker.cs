@@ -11,7 +11,7 @@ public interface IUserPresenceTracker
 
     bool IsOnline(string userId);
     
-    // MỚI: Thiết lập và lấy thông tin timeout
+    
     void RecordHeartbeat(string userId);
     
     DateTime? GetLastActivity(string userId);

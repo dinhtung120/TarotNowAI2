@@ -33,31 +33,31 @@ public class GetStreakStatusQueryHandler : IRequestHandler<GetStreakStatusQuery,
         var todayDate = DateOnly.FromDateTime(DateTime.UtcNow);
         var todayString = todayDate.ToString("yyyy-MM-dd");
 
-        // 1. Phán Xử Coi Đã Điểm Danh Chưa
+        
         var isCheckedIn = await _checkinRepository.HasCheckedInAsync(user.Id.ToString(), todayString, cancellationToken);
 
-        // 2. Chẩn Đoán Lỗi Lầm Có Làm Gãy Cửa Không
+        
         var isBroken = false;
         long freezeWindowRemainingSeconds = 0;
         bool canBuyFreeze = false;
 
-        // Nếu PreBreakStreak > 0, tức là đã bị gãy
+        
         if (user.PreBreakStreak > 0)
         {
             isBroken = true;
 
-            // Xác định thời gian hết hạn của gói cứu cánh (Cửa sổ 24h tính từ ngay lúc ngày nứt vỡ)
-            // Cửa sổ: LastStreakDate + 2 ngày (VD: rút ngày 05, bỏ lỡ 06, vậy ngày 07 là ngày phát hiện đứt -> cửa sổ kết thúc cuối ngày 07 / đầu 08) 
-            // Ta cho mua cứu trong vòng đúng {StreakFreezeWindowHours} tiếng kề từ đầu ngày "break".
             
-            // Ngày phát hiện gãy vỡ = LastStreakDate.AddDays(2) nếu nó lớn hơn today
+            
+            
+            
+            
             var dateBeforeBreak = user.LastStreakDate ?? todayDate.AddDays(-2); 
             var breakDiscoveryDate = dateBeforeBreak.AddDays(2); 
             
-            // Nếu ngày phát hiện đứt vẫn loanh quanh hôm nay thì cửa sổ cứu còn hoạt động
+            
             if (breakDiscoveryDate == todayDate)
             {
-                // Cho nó mua cứu. Window tính từ đầu ngày BreakDiscovery + 24h (Tức là cuối ngày BreakDiscovery)
+                
                 var windowEnd = breakDiscoveryDate.ToDateTime(new TimeOnly(0, 0)).AddHours(_settings.StreakFreezeWindowHours);
                 var now = DateTime.UtcNow;
 

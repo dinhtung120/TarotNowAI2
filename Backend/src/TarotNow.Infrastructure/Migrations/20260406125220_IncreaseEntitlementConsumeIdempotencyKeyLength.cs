@@ -1,14 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace TarotNow.Infrastructure.Migrations
 {
-    /// <inheritdoc />
-    public partial class IncreaseEntitlementConsumeIdempotencyKeyLength : Migration
+        public partial class IncreaseEntitlementConsumeIdempotencyKeyLength : Migration
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
+                protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<string>(
                 name: "idempotency_key",
@@ -21,8 +19,7 @@ namespace TarotNow.Infrastructure.Migrations
                 oldMaxLength: 100);
         }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
+                protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<string>(
                 name: "idempotency_key",

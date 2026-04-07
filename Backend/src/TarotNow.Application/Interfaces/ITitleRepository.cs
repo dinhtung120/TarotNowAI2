@@ -14,7 +14,7 @@ public interface ITitleRepository
     Task<bool> OwnsTitleAsync(Guid userId, string titleCode, CancellationToken ct);
     Task GrantTitleAsync(Guid userId, string titleCode, CancellationToken ct);
     
-    // Admin CRUD
+    
     Task UpsertTitleDefinitionAsync(TitleDefinitionDto title, CancellationToken ct);
     Task DeleteTitleDefinitionAsync(string titleCode, CancellationToken ct);
 }

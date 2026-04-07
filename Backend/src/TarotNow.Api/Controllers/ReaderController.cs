@@ -7,9 +7,6 @@ using TarotNow.Application.Common.Interfaces;
 
 namespace TarotNow.Api.Controllers;
 
-/// <summary>
-/// API quản lý hồ sơ, trạng thái và quy trình đăng ký Reader.
-/// </summary>
 [Route(ApiRoutes.Reader)]
 [ApiController]
 [ApiVersion(ApiVersions.V1)]

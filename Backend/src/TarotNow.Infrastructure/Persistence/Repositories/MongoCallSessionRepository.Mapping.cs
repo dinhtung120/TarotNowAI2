@@ -4,9 +4,6 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
-/// <summary>
-/// Mapping layer nội bộ giữa DTO và Document cho CallSession.
-/// </summary>
 public static class CallSessionDocumentMapper
 {
     public static CallSessionDocument ToDocument(CallSessionDto dto)
@@ -29,8 +26,8 @@ public static class CallSessionDocumentMapper
 
     public static CallSessionDto ToDto(CallSessionDocument doc)
     {
-        // FIX #12: Ưu tiên đọc duration_seconds đã lưu trong DB.
-        // Fallback tính từ (EndedAt - StartedAt) nếu field chưa có (data cũ).
+        
+        
         int? duration = doc.DurationSeconds;
         if (!duration.HasValue && doc.StartedAt.HasValue && doc.EndedAt.HasValue)
         {

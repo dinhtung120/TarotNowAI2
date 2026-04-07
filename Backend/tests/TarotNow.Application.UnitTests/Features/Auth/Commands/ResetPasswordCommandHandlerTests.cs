@@ -1,19 +1,4 @@
-/*
- * FILE: ResetPasswordCommandHandlerTests.cs
- * MỤC ĐÍCH: Unit test cho handler đặt lại mật khẩu (Reset Password via OTP).
- *
- *   CÁC TEST CASE:
- *   1. Handle_ShouldThrowException_WhenUserDoesNotExist:
- *      → Email không tồn tại → INVALID_OTP (chống dò email — CÙNG error code)
- *   2. Handle_ShouldThrowException_WhenOtpIsInvalid:
- *      → OTP sai/hết hạn/đã dùng → INVALID_OTP
- *   3. Handle_ShouldUpdatePasswordAndRevokeTokens_WhenOtpIsValid:
- *      → OTP hợp lệ → hash password mới + revoke TẤT CẢ refresh tokens (logout everywhere)
- *
- *   BẢO MẬT:
- *   → Revoke ALL refresh tokens sau khi đổi password → force re-login mọi thiết bị
- *   → OTP đánh dấu IsUsed=true → không thể tái sử dụng
- */
+
 
 using Moq;
 using TarotNow.Application.Features.Auth.Commands.ResetPassword;
@@ -24,9 +9,6 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
-/// <summary>
-/// Test reset password: OTP validation, password hash update, session revocation.
-/// </summary>
 public class ResetPasswordCommandHandlerTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock;
@@ -48,8 +30,7 @@ public class ResetPasswordCommandHandlerTests
         );
     }
 
-    /// <summary>User không tồn tại → INVALID_OTP (chống dò email).</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ShouldThrowException_WhenUserDoesNotExist()
     {
         var command = new ResetPasswordCommand { Email = "notfound@example.com", OtpCode = "123456", NewPassword = "NewPassword123!" };
@@ -60,8 +41,7 @@ public class ResetPasswordCommandHandlerTests
         Assert.Equal("INVALID_OTP", ex.ErrorCode);
     }
 
-    /// <summary>OTP sai hoặc hết hạn → INVALID_OTP.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ShouldThrowException_WhenOtpIsInvalid()
     {
         var command = new ResetPasswordCommand { Email = "found@example.com", OtpCode = "wrongOtp", NewPassword = "NewPassword123!" };
@@ -70,17 +50,13 @@ public class ResetPasswordCommandHandlerTests
         _userRepositoryMock.Setup(r => r.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
                            .ReturnsAsync(user);
         _emailOtpRepositoryMock.Setup(r => r.GetLatestActiveOtpAsync(user.Id, OtpType.ResetPassword, It.IsAny<CancellationToken>()))
-                               .ReturnsAsync((EmailOtp?)null); // Không có OTP hợp lệ
+                               .ReturnsAsync((EmailOtp?)null); 
 
         var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Equal("INVALID_OTP", ex.ErrorCode);
     }
 
-    /// <summary>
-    /// Happy path: OTP hợp lệ → password mới được hash + lưu.
-    /// Verify: OTP đánh IsUsed=true, revoke ALL refresh tokens (logout everywhere).
-    /// </summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ShouldUpdatePasswordAndRevokeTokens_WhenOtpIsValid()
     {
         var command = new ResetPasswordCommand { Email = "found@example.com", OtpCode = "123456", NewPassword = "NewPassword123!" };
@@ -96,11 +72,11 @@ public class ResetPasswordCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         Assert.True(result);
-        Assert.True(validOtp.IsUsed); // OTP đã dùng
-        Assert.Equal("newHash", user.PasswordHash); // Password mới
+        Assert.True(validOtp.IsUsed); 
+        Assert.Equal("newHash", user.PasswordHash); 
         
         _emailOtpRepositoryMock.Verify(r => r.UpdateAsync(validOtp, It.IsAny<CancellationToken>()), Times.Once);
         _userRepositoryMock.Verify(r => r.UpdateAsync(It.Is<User>(u => u.PasswordHash == "newHash"), It.IsAny<CancellationToken>()), Times.Once);
-        _refreshTokenRepositoryMock.Verify(r => r.RevokeAllByUserIdAsync(user.Id, It.IsAny<CancellationToken>()), Times.Once); // Logout everywhere
+        _refreshTokenRepositoryMock.Verify(r => r.RevokeAllByUserIdAsync(user.Id, It.IsAny<CancellationToken>()), Times.Once); 
     }
 }

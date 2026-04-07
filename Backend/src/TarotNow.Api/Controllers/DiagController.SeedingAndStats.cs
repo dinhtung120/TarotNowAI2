@@ -5,11 +5,7 @@ namespace TarotNow.Api.Controllers;
 
 public partial class DiagController
 {
-    /// <summary>
-    /// ENDPOINT: POST /api/v1/Diag/seed-admin
-    /// MỤC ĐÍCH: Tạo hoặc cập nhật tài khoản Super Admin.
-    /// </summary>
-    [HttpPost("seed-admin")]
+        [HttpPost("seed-admin")]
     public async Task<IActionResult> SeedAdmin()
     {
         var guard = RejectIfNotDevelopment();
@@ -43,11 +39,7 @@ public partial class DiagController
         }
     }
 
-    /// <summary>
-    /// ENDPOINT: POST /api/v1/Diag/seed-gamification
-    /// MỤC ĐÍCH: Nạp dữ liệu init (quests, achievements, titles) cho Gamification.
-    /// </summary>
-    [HttpPost("seed-gamification")]
+        [HttpPost("seed-gamification")]
     public async Task<IActionResult> SeedGamification()
     {
         var guard = RejectIfNotDevelopment();
@@ -68,11 +60,7 @@ public partial class DiagController
         }
     }
 
-    /// <summary>
-    /// ENDPOINT: GET /api/v1/Diag/stats
-    /// MỤC ĐÍCH: Xem thống kê dữ liệu MongoDB để kiểm tra hệ thống.
-    /// </summary>
-    [HttpGet("stats")]
+        [HttpGet("stats")]
     public async Task<IActionResult> GetStats()
     {
         var guard = RejectIfNotDevelopment();

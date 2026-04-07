@@ -17,20 +17,14 @@ public sealed class AdminDepositsController : ControllerBase
         _mediator = mediator;
     }
 
-    /// <summary>
-    /// Returns paginated deposit requests for admin backoffice.
-    /// </summary>
-    [HttpGet("deposits")]
+        [HttpGet("deposits")]
     public async Task<IActionResult> ListDeposits([FromQuery] TarotNow.Application.Features.Admin.Queries.ListDeposits.ListDepositsQuery query)
     {
         var result = await _mediator.Send(query);
         return Ok(result);
     }
 
-    /// <summary>
-    /// Processes a deposit order by approving or rejecting the request.
-    /// </summary>
-    [HttpPatch("deposits/process")]
+        [HttpPatch("deposits/process")]
     public async Task<IActionResult> ProcessDeposit([FromBody] TarotNow.Application.Features.Admin.Commands.ProcessDeposit.ProcessDepositCommand command)
     {
         var result = await _mediator.Send(command);

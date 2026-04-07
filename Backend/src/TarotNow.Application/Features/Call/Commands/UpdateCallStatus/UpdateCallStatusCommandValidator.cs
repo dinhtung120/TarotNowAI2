@@ -2,9 +2,6 @@ using FluentValidation;
 
 namespace TarotNow.Application.Features.Call.Commands.UpdateCallStatus;
 
-/// <summary>
-/// FluentValidation rules for atomic call status updates.
-/// </summary>
 public sealed class UpdateCallStatusCommandValidator : AbstractValidator<UpdateCallStatusCommand>
 {
     private static readonly string[] AllowedStatuses = ["requested", "accepted", "rejected", "ended"];

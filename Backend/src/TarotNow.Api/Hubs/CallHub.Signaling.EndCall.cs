@@ -8,10 +8,7 @@ namespace TarotNow.Api.Hubs;
 
 public partial class CallHub
 {
-    /// <summary>
-    /// Kết thúc cuộc gọi đang diễn ra hoặc huỷ cuộc gọi đang chờ.
-    /// </summary>
-    public async Task EndCall(string callSessionId, string reason = "normal")
+        public async Task EndCall(string callSessionId, string reason = "normal")
     {
         if (!TryGetUserGuid(out var userId))
         {

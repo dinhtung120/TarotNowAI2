@@ -17,7 +17,7 @@ public partial class SendMessageCommandHandler
             return FirstMessageFreezeResult.None;
         }
 
-        // FIX: Bỏ qua giam tiền nếu người dùng gọi Call và hệ thống cắm trả tin nhắn Log
+        
         if (messageType == ChatMessageType.CallLog)
         {
             return FirstMessageFreezeResult.None;

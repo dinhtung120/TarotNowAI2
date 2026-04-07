@@ -1,18 +1,4 @@
-/*
- * FILE: MfaChallengeCommandHandlerTests.cs
- * MỤC ĐÍCH: Unit test cho handler xác thực MFA challenge (TOTP hoặc Backup Code).
- *
- *   CÁC TEST CASE:
- *   1. Handle_TotpValid_ReturnsTrueWithoutUpdatingBackupCodes:
- *      → TOTP đúng → trả true, KHÔNG consume backup code
- *   2. Handle_BackupCodeValid_ConsumesBackupCodeAndUpdatesUser:
- *      → TOTP sai nhưng backup code đúng → consume code (xóa khỏi list) + update user
- *   3. Handle_BackupCodeInvalid_ThrowsBadRequest:
- *      → Cả TOTP và backup code đều sai → BadRequest
- *
- *   FLOW: Kiểm tra TOTP trước → nếu sai → fallback sang backup code
- *   → Backup code dùng SHA256 hash, 1 lần dùng
- */
+
 
 using System.Security.Cryptography;
 using System.Text;
@@ -26,9 +12,6 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Mfa;
 
-/// <summary>
-/// Test MFA challenge: TOTP verification, backup code fallback + consumption.
-/// </summary>
 public class MfaChallengeCommandHandlerTests
 {
     private readonly Mock<IUserRepository> _mockUserRepo;
@@ -42,8 +25,7 @@ public class MfaChallengeCommandHandlerTests
         _handler = new MfaChallengeCommandHandler(_mockUserRepo.Object, _mockMfaService.Object);
     }
 
-    /// <summary>TOTP đúng → trả true, backup codes giữ nguyên.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_TotpValid_ReturnsTrueWithoutUpdatingBackupCodes()
     {
         var userId = Guid.NewGuid();
@@ -60,12 +42,11 @@ public class MfaChallengeCommandHandlerTests
         var result = await _handler.Handle(new MfaChallengeCommand { UserId = userId, Code = "654321" }, CancellationToken.None);
 
         Assert.True(result);
-        Assert.Equal(originalBackupCodes, user.MfaBackupCodesHashJson); // Giữ nguyên
+        Assert.Equal(originalBackupCodes, user.MfaBackupCodesHashJson); 
         _mockUserRepo.Verify(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    /// <summary>TOTP sai + backup code đúng → consume code (xóa khỏi list).</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_BackupCodeValid_ConsumesBackupCodeAndUpdatesUser()
     {
         var userId = Guid.NewGuid();
@@ -76,19 +57,18 @@ public class MfaChallengeCommandHandlerTests
 
         _mockUserRepo.Setup(x => x.GetByIdAsync(userId, default)).ReturnsAsync(user);
         _mockMfaService.Setup(x => x.DecryptSecret("encrypted-secret")).Returns("plain-secret");
-        _mockMfaService.Setup(x => x.VerifyCode("plain-secret", "12345678")).Returns(false); // TOTP sai
+        _mockMfaService.Setup(x => x.VerifyCode("plain-secret", "12345678")).Returns(false); 
 
         var result = await _handler.Handle(new MfaChallengeCommand { UserId = userId, Code = "12345678" }, CancellationToken.None);
 
         Assert.True(result);
         var remaining = JsonSerializer.Deserialize<List<string>>(user.MfaBackupCodesHashJson ?? "[]");
         Assert.NotNull(remaining);
-        Assert.Empty(remaining); // Code đã bị consume
+        Assert.Empty(remaining); 
         _mockUserRepo.Verify(x => x.UpdateAsync(user, default), Times.Once);
     }
 
-    /// <summary>Cả TOTP và backup code đều sai → BadRequest.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_BackupCodeInvalid_ThrowsBadRequest()
     {
         var userId = Guid.NewGuid();
@@ -105,7 +85,7 @@ public class MfaChallengeCommandHandlerTests
             _handler.Handle(new MfaChallengeCommand { UserId = userId, Code = "00000000" }, CancellationToken.None));
     }
 
-    /* Helper: tạo User với Id và status Active */
+    
     private static User CreateUser(Guid userId)
     {
         var user = new User(email: $"user-{userId:N}@mail.test", username: $"user_{userId:N}",
@@ -116,7 +96,7 @@ public class MfaChallengeCommandHandlerTests
         return user;
     }
 
-    /* Helper: hash backup code bằng SHA256 (giống production) */
+    
     private static string HashBackupCode(string code)
     {
         var normalized = code.Trim();

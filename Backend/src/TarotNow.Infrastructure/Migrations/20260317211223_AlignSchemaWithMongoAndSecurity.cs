@@ -1,15 +1,13 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace TarotNow.Infrastructure.Migrations
 {
-    /// <inheritdoc />
-    public partial class AlignSchemaWithMongoAndSecurity : Migration
+        public partial class AlignSchemaWithMongoAndSecurity : Migration
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
+                protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
                 name: "reading_sessions");
@@ -142,8 +140,7 @@ namespace TarotNow.Infrastructure.Migrations
                 column: "finance_session_id");
         }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
+                protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
                 name: "chat_question_items");

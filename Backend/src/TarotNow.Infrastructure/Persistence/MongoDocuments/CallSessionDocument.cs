@@ -3,11 +3,6 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace TarotNow.Infrastructure.Persistence.MongoDocuments;
 
-/// <summary>
-/// MongoDB Document lưu trữ siêu dữ liệu một cuộc gọi (metadata-only). 
-/// Collection "call_sessions".
-/// Schema theo phase 4.2 specs.
-/// </summary>
 public class CallSessionDocument
 {
     [BsonId]
@@ -22,7 +17,7 @@ public class CallSessionDocument
     public string InitiatorId { get; set; } = string.Empty;
 
     [BsonElement("type")]
-    public string Type { get; set; } = "audio"; // "audio" | "video"
+    public string Type { get; set; } = "audio"; 
 
     [BsonElement("status")]
     public string Status { get; set; } = "requested"; 
@@ -36,11 +31,7 @@ public class CallSessionDocument
     [BsonElement("ended_at")]
     public DateTime? EndedAt { get; set; }
 
-    /// <summary>
-    /// FIX #12: Thời lượng cuộc gọi tính bằng giây.
-    /// Được tính tự động = (EndedAt - StartedAt).TotalSeconds khi kết thúc cuộc gọi.
-    /// </summary>
-    [BsonElement("duration_seconds")]
+        [BsonElement("duration_seconds")]
     public int? DurationSeconds { get; set; }
 
     [BsonElement("created_at")]

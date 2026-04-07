@@ -7,10 +7,7 @@ namespace TarotNow.Api.Controllers;
 
 public partial class ConversationController
 {
-    /// <summary>
-    /// Gửi yêu cầu hoàn thành conversation.
-    /// </summary>
-    [HttpPost("{id}/complete/request")]
+        [HttpPost("{id}/complete/request")]
     public async Task<IActionResult> RequestComplete(string id)
     {
         if (TryGetUserId(out var requesterId) == false)
@@ -28,10 +25,7 @@ public partial class ConversationController
         return Ok(result);
     }
 
-    /// <summary>
-    /// Phản hồi yêu cầu hoàn thành conversation.
-    /// </summary>
-    [HttpPost("{id}/complete/respond")]
+        [HttpPost("{id}/complete/respond")]
     public async Task<IActionResult> RespondComplete(string id, [FromBody] ConversationCompleteRespondBody body)
     {
         if (TryGetUserId(out var requesterId) == false)

@@ -1,17 +1,4 @@
-/*
- * FILE: GetReadingDetailQueryHandlerTests.cs
- * MỤC ĐÍCH: Unit test cho query handler lấy chi tiết phiên đọc bài Tarot.
- *
- *   CÁC TEST CASE:
- *   1. Handle_ShouldReturnSessionDetails_WhenSessionExistsAndBelongsToUser:
- *      → Session tồn tại + đúng userId → trả details + AiInteractions
- *   2. Handle_ShouldThrowUnauthorizedAccessException_WhenSessionBelongsToAnotherUser:
- *      → Session của người khác → UnauthorizedAccessException (ownership check)
- *   3. Handle_ShouldReturnNull_WhenSessionDoesNotExist:
- *      → Session không tồn tại → trả null
- *
- *   BẢO MẬT: Ownership check — User chỉ xem được session của chính mình
- */
+
 
 using FluentAssertions;
 using Moq;
@@ -22,9 +9,6 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.History.Queries;
 
-/// <summary>
-/// Test reading detail: ownership check, AiInteraction mapping, null handling.
-/// </summary>
 public class GetReadingDetailQueryHandlerTests
 {
     private readonly Mock<IReadingSessionRepository> _mockSessionRepository;
@@ -36,10 +20,7 @@ public class GetReadingDetailQueryHandlerTests
         _handler = new GetReadingDetailQueryHandler(_mockSessionRepository.Object);
     }
 
-    /// <summary>
-    /// Session tồn tại + đúng userId → trả chi tiết + AiInteractions.
-    /// </summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ShouldReturnSessionDetails_WhenSessionExistsAndBelongsToUser()
     {
         var userId = Guid.NewGuid();
@@ -73,8 +54,7 @@ public class GetReadingDetailQueryHandlerTests
         }
     }
 
-    /// <summary>Session của người khác → UnauthorizedAccessException.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ShouldThrowUnauthorizedAccessException_WhenSessionBelongsToAnotherUser()
     {
         var userId = Guid.NewGuid();
@@ -89,8 +69,7 @@ public class GetReadingDetailQueryHandlerTests
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _handler.Handle(query, CancellationToken.None));
     }
 
-    /// <summary>Session không tồn tại → trả null.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ShouldReturnNull_WhenSessionDoesNotExist()
     {
         var userId = Guid.NewGuid();

@@ -18,7 +18,7 @@ export const useSubscriptionPlans = () => {
       if (!res.success) throw new Error(res.error);
       return res.data;
     },
-    staleTime: 5 * 60 * 1000, // 5 phút cache
+    staleTime: 5 * 60 * 1000, 
   });
 };
 
@@ -36,7 +36,7 @@ export const useMyEntitlements = () => {
 export const useSubscribe = () => {
   const queryClient = useQueryClient();
 
-  /* Lấy hàm fetchBalance từ Zustand store để refetch wallet sau khi mua */
+  
   const fetchWalletBalance = useWalletStore((state) => state.fetchBalance);
 
   return useMutation({
@@ -46,9 +46,9 @@ export const useSubscribe = () => {
       return res.data;
     },
     onSuccess: () => {
-      /* Invalidate cache entitlements để UI cập nhật ngay quyền lợi mới mua */
+      
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.entitlements() });
-      /* Refetch wallet vì đã trừ Diamond — Navbar cần hiển thị số dư mới */
+      
       fetchWalletBalance();
     },
   });

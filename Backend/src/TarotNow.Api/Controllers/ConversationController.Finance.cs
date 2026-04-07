@@ -9,10 +9,7 @@ namespace TarotNow.Api.Controllers;
 
 public partial class ConversationController
 {
-    /// <summary>
-    /// Reader tạo yêu cầu cộng tiền trong conversation.
-    /// </summary>
-    [HttpPost("{id}/add-money/request")]
+        [HttpPost("{id}/add-money/request")]
     [Authorize(Roles = "tarot_reader")]
     public async Task<IActionResult> RequestAddMoney(string id, [FromBody] ConversationAddMoneyRequestBody body)
     {
@@ -34,10 +31,7 @@ public partial class ConversationController
         return Ok(result);
     }
 
-    /// <summary>
-    /// User phản hồi yêu cầu cộng tiền trong conversation.
-    /// </summary>
-    [HttpPost("{id}/add-money/respond")]
+        [HttpPost("{id}/add-money/respond")]
     public async Task<IActionResult> RespondAddMoney(string id, [FromBody] ConversationAddMoneyRespondBody body)
     {
         if (TryGetUserId(out var userId) == false)
@@ -58,10 +52,7 @@ public partial class ConversationController
         return Ok(result);
     }
 
-    /// <summary>
-    /// Mở tranh chấp cho conversation.
-    /// </summary>
-    [HttpPost("{id}/dispute")]
+        [HttpPost("{id}/dispute")]
     public async Task<IActionResult> OpenDispute(string id, [FromBody] ConversationDisputeBody body)
     {
         if (TryGetUserId(out var userId) == false)

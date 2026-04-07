@@ -87,7 +87,7 @@ public class MongoTitleRepository : ITitleRepository
         }
         catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
         {
-            // Idempotency: Ignore duplicate key error if user already owns this title
+            
         }
     }
 

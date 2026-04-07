@@ -27,7 +27,7 @@ public static partial class DependencyInjection
         services.AddScoped<IMediaProcessorService, MediaProcessorService>();
         services.AddScoped<IEntitlementService, EntitlementService>();
         
-        // Avatar / Image services
+        
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<IImageProcessingService, ImageSharpProcessingService>();
 

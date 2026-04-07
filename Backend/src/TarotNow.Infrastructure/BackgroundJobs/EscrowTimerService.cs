@@ -32,7 +32,7 @@ public partial class EscrowTimerService : BackgroundService
                 }
                 catch (ObjectDisposedException) when (stoppingToken.IsCancellationRequested)
                 {
-                    // Ignore expected disposal during shutdown
+                    
                 }
                 catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
                 {

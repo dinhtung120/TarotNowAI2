@@ -25,10 +25,7 @@ public sealed class AuthSessionController : ControllerBase
         _cookieService = cookieService;
     }
 
-    /// <summary>
-    /// Authenticates user credentials and issues access/refresh tokens.
-    /// </summary>
-    [HttpPost("login")]
+        [HttpPost("login")]
     [EnableRateLimiting("login")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AuthResponse))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -43,10 +40,7 @@ public sealed class AuthSessionController : ControllerBase
         return Ok(result.Response);
     }
 
-    /// <summary>
-    /// Rotates access and refresh tokens using refresh token cookie.
-    /// </summary>
-    [HttpPost("refresh")]
+        [HttpPost("refresh")]
     [EnableRateLimiting("auth-session")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AuthResponse))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -73,10 +67,7 @@ public sealed class AuthSessionController : ControllerBase
         return Ok(result.Response);
     }
 
-    /// <summary>
-    /// Revokes current session token or all sessions for authenticated user.
-    /// </summary>
-    [HttpPost("logout")]
+        [HttpPost("logout")]
     [EnableRateLimiting("auth-session")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Logout([FromQuery] bool revokeAll = false)

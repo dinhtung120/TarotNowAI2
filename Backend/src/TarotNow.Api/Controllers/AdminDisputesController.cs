@@ -21,20 +21,14 @@ public sealed class AdminDisputesController : ControllerBase
         _mediator = mediator;
     }
 
-    /// <summary>
-    /// Lấy danh sách tranh chấp cho trang quản trị.
-    /// </summary>
-    [HttpGet]
+        [HttpGet]
     public async Task<IActionResult> List([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var result = await _mediator.Send(new ListDisputesQuery { Page = page, PageSize = pageSize });
         return Ok(result);
     }
 
-    /// <summary>
-    /// Resolve một tranh chấp bởi admin.
-    /// </summary>
-    [HttpPost("{id:guid}/resolve")]
+        [HttpPost("{id:guid}/resolve")]
     public async Task<IActionResult> Resolve(Guid id, [FromBody] AdminResolveDisputeBody body)
     {
         if (!User.TryGetUserId(out var adminId))

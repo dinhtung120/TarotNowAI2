@@ -1,19 +1,4 @@
-/*
- * FILE: InitReadingSessionCommandHandlerTests.cs
- * MỤC ĐÍCH: Unit test cho handler khởi tạo phiên đọc bài Tarot (Init Reading Session).
- *
- *   CÁC TEST CASE:
- *   1. Handle_Daily1Card_ShouldThrowBadRequest_IfAlreadyDrawnToday:
- *      → Daily1Card miễn phí → chỉ 1 lần/ngày → nếu đã bốc → 400
- *   2. Handle_ValidRequest_ShouldReturnSessionResultAndDeductGold:
- *      → Spread3Cards (50 Gold) → tạo session + deduct currency
- *
- *   PRICING (từ config):
- *   → Daily1Card: miễn phí (0 Gold, 0 Diamond)
- *   → Spread3Cards: 50 Gold
- *   → Spread5Cards: 100 Gold
- *   → Spread10Cards: 50 Diamond
- */
+
 
 using FluentAssertions;
 using Moq;
@@ -25,9 +10,6 @@ using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.UnitTests.Reading;
 
-/// <summary>
-/// Test init reading session: daily card limit, pricing deduction.
-/// </summary>
 public class InitReadingSessionCommandHandlerTests
 {
     private readonly Mock<IReadingSessionRepository> _repoMock;
@@ -46,7 +28,7 @@ public class InitReadingSessionCommandHandlerTests
         _rngMock = new Mock<IRngService>();
         _systemConfigSettingsMock = new Mock<ISystemConfigSettings>();
         _entitlementServiceMock = new Mock<IEntitlementService>();
-        // Cấu hình giá từ config (giống production)
+        
         _systemConfigSettingsMock.SetupGet(x => x.Spread3GoldCost).Returns(50);
         _systemConfigSettingsMock.SetupGet(x => x.Spread5GoldCost).Returns(100);
         _systemConfigSettingsMock.SetupGet(x => x.Spread10DiamondCost).Returns(50);
@@ -61,8 +43,7 @@ public class InitReadingSessionCommandHandlerTests
             _rngMock.Object, _systemConfigSettingsMock.Object, _entitlementServiceMock.Object);
     }
 
-    /// <summary>Daily1Card đã bốc hôm nay → BadRequest (max 1 lần/ngày).</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_Daily1Card_ShouldThrowBadRequest_IfAlreadyDrawnToday()
     {
         var request = new InitReadingSessionCommand { UserId = Guid.NewGuid(), SpreadType = SpreadType.Daily1Card };
@@ -77,8 +58,7 @@ public class InitReadingSessionCommandHandlerTests
             .WithMessage("You have already drawn your free daily card today. Please try other spreads.");
     }
 
-    /// <summary>Spread3Cards → deduct 50 Gold, trả session result.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ValidRequest_ShouldReturnSessionResultAndDeductGold()
     {
         var request = new InitReadingSessionCommand { UserId = Guid.NewGuid(), SpreadType = SpreadType.Spread3Cards };

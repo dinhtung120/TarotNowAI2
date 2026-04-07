@@ -6,7 +6,7 @@ import { CommunityPost, ReactionType } from '../types';
 
 interface UseToggleReactionProps {
   postId: string;
-  visibility?: string; // Dùng để xác định queryKey của Feed hiện hành
+  visibility?: string; 
 }
 
 interface FeedResponse {
@@ -47,7 +47,7 @@ export const useToggleReaction = ({ postId, visibility }: UseToggleReactionProps
           pages: old.pages.map((page) => ({
             ...page,
             data: page.data.map((post: CommunityPost) => {
-              if (post.id !== postId) return post; // Không phải con mình không rớ
+              if (post.id !== postId) return post; 
 
               const newReactionsCount = { ...post.reactionsCount };
               let currentReaction = post.viewerReaction;

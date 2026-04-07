@@ -7,7 +7,7 @@ using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Gamification.Queries;
 
-// === QUEST QUERIES ===
+
 public record GetAllQuestsAdminQuery : IRequest<List<QuestDefinitionDto>>;
 
 public class GetAllQuestsAdminQueryHandler : IRequestHandler<GetAllQuestsAdminQuery, List<QuestDefinitionDto>>
@@ -25,7 +25,7 @@ public class GetAllQuestsAdminQueryHandler : IRequestHandler<GetAllQuestsAdminQu
     }
 }
 
-// === ACHIEVEMENT QUERIES ===
+
 public record GetAllAchievementsAdminQuery : IRequest<List<AchievementDefinitionDto>>;
 
 public class GetAllAchievementsAdminQueryHandler : IRequestHandler<GetAllAchievementsAdminQuery, List<AchievementDefinitionDto>>
@@ -43,7 +43,7 @@ public class GetAllAchievementsAdminQueryHandler : IRequestHandler<GetAllAchieve
     }
 }
 
-// === TITLE QUERIES ===
+
 public record GetAllTitlesAdminQuery : IRequest<List<TitleDefinitionDto>>;
 
 public class GetAllTitlesAdminQueryHandler : IRequestHandler<GetAllTitlesAdminQuery, List<TitleDefinitionDto>>

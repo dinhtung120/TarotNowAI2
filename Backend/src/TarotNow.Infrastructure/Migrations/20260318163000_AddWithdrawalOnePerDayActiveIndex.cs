@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using TarotNow.Infrastructure.Persistence;
 
@@ -6,13 +6,11 @@ using TarotNow.Infrastructure.Persistence;
 
 namespace TarotNow.Infrastructure.Migrations
 {
-    /// <inheritdoc />
-    [DbContext(typeof(ApplicationDbContext))]
+        [DbContext(typeof(ApplicationDbContext))]
     [Migration("20260318163000_AddWithdrawalOnePerDayActiveIndex")]
     public partial class AddWithdrawalOnePerDayActiveIndex : Migration
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
+                protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateIndex(
                 name: "ix_withdrawal_one_per_day_active",
@@ -22,8 +20,7 @@ namespace TarotNow.Infrastructure.Migrations
                 filter: "status in ('pending','approved')");
         }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
+                protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(
                 name: "ix_withdrawal_one_per_day_active",

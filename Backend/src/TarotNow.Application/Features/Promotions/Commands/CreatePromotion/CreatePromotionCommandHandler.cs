@@ -1,12 +1,4 @@
-/*
- * ===================================================================
- * FILE: CreatePromotionCommandHandler.cs
- * NAMESPACE: TarotNow.Application.Features.Promotions.Commands.CreatePromotion
- * ===================================================================
- * MỤC ĐÍCH:
- *   Nơi thực thi Lệnh Tạo Event Khuyến Mãi do Admin bấm nút trên Dashboard.
- * ===================================================================
- */
+
 
 using MediatR;
 using System.Threading;
@@ -27,10 +19,10 @@ public class CreatePromotionCommandHandler : IRequestHandler<CreatePromotionComm
 
     public async Task<bool> Handle(CreatePromotionCommand request, CancellationToken cancellationToken)
     {
-        // Khởi tạo một Gói Khuyến Mãi Mới từ bản vẽ Domain.
+        
         var promotion = new DepositPromotion(request.MinAmountVnd, request.BonusDiamond, request.IsActive);
         
-        // Quăng rổ vào Database.
+        
         await _promotionRepository.AddAsync(promotion, cancellationToken);
         
         return true;

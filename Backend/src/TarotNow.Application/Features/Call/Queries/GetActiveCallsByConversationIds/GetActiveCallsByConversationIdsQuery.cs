@@ -4,17 +4,11 @@ using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Call.Queries.GetActiveCallsByConversationIds;
 
-/// <summary>
-/// Query lấy danh sách call active theo tập conversation ids.
-/// </summary>
 public class GetActiveCallsByConversationIdsQuery : IRequest<IReadOnlyList<CallSessionDto>>
 {
     public IReadOnlyCollection<string> ConversationIds { get; set; } = Array.Empty<string>();
 }
 
-/// <summary>
-/// Handler đọc active calls từ call session repository.
-/// </summary>
 public class GetActiveCallsByConversationIdsQueryHandler
     : IRequestHandler<GetActiveCallsByConversationIdsQuery, IReadOnlyList<CallSessionDto>>
 {

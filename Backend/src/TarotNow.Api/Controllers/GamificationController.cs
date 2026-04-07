@@ -23,16 +23,14 @@ public class GamificationController : ControllerBase
 
     private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-    /// <summary>Lấy danh sách nhiệm vụ đang hoạt động theo loại chu kỳ.</summary>
-    [HttpGet("quests")]
+        [HttpGet("quests")]
     public async Task<IActionResult> GetActiveQuests([FromQuery] string type = "daily")
     {
         var result = await _mediator.Send(new GetActiveQuestsQuery(GetUserId(), type));
         return Ok(result);
     }
 
-    /// <summary>Nhận thưởng của một nhiệm vụ đã hoàn thành.</summary>
-    [HttpPost("quests/{questCode}/claim")]
+        [HttpPost("quests/{questCode}/claim")]
     public async Task<IActionResult> ClaimQuestReward(string questCode, [FromBody] ClaimQuestRewardRequest request)
     {
         var result = await _mediator.Send(new ClaimQuestRewardCommand(GetUserId(), questCode, request.PeriodKey));
@@ -41,24 +39,21 @@ public class GamificationController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>Lấy danh sách thành tựu và trạng thái mở khóa của người dùng.</summary>
-    [HttpGet("achievements")]
+        [HttpGet("achievements")]
     public async Task<IActionResult> GetAchievements()
     {
         var result = await _mediator.Send(new GetUserAchievementsQuery(GetUserId()));
         return Ok(result);
     }
 
-    /// <summary>Lấy danh sách danh hiệu đã sở hữu và danh hiệu đang kích hoạt.</summary>
-    [HttpGet("titles")]
+        [HttpGet("titles")]
     public async Task<IActionResult> GetTitles()
     {
         var result = await _mediator.Send(new GetUserTitlesQuery(GetUserId()));
         return Ok(result);
     }
 
-    /// <summary>Đặt danh hiệu đang hiển thị của người dùng.</summary>
-    [HttpPost("titles/active")]
+        [HttpPost("titles/active")]
     public async Task<IActionResult> SetActiveTitle([FromBody] SetActiveTitleRequest request)
     {
         var success = await _mediator.Send(new SetActiveTitleCommand(GetUserId(), request.TitleCode));
@@ -66,8 +61,7 @@ public class GamificationController : ControllerBase
         return Ok(new { message = "Cập nhật danh hiệu thành công." });
     }
 
-    /// <summary>Lấy bảng xếp hạng theo track và period.</summary>
-    [HttpGet("leaderboard")]
+        [HttpGet("leaderboard")]
     public async Task<IActionResult> GetLeaderboard([FromQuery] string track = "daily_rank_score", [FromQuery] string? periodKey = null)
     {
         var result = await _mediator.Send(new GetLeaderboardQuery(GetUserId(), track, periodKey));

@@ -69,7 +69,7 @@ public partial class MongoDbContext
     public IMongoCollection<CallSessionDocument> CallSessions
         => _database.GetCollection<CallSessionDocument>("call_sessions");
 
-    // === Gamification Phase 5.3 ===
+    
     public IMongoCollection<QuestDefinitionDocument> Quests
         => _database.GetCollection<QuestDefinitionDocument>("quests");
 
@@ -94,7 +94,7 @@ public partial class MongoDbContext
     public IMongoCollection<LeaderboardSnapshotDocument> LeaderboardSnapshots
         => _database.GetCollection<LeaderboardSnapshotDocument>("leaderboard_snapshots");
 
-    // === Gacha Phase 5.6 ===
+    
     public IMongoCollection<GachaLogDocument> GachaLogs
         => _database.GetCollection<GachaLogDocument>("gacha_logs");
 }

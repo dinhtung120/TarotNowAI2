@@ -10,10 +10,7 @@ namespace TarotNow.Api.Controllers;
 
 public partial class ConversationController
 {
-    /// <summary>
-    /// Lấy lịch sử tin nhắn trong conversation.
-    /// </summary>
-    [HttpGet("{id}/messages")]
+        [HttpGet("{id}/messages")]
     public async Task<IActionResult> Messages(
         string id,
         [FromQuery] string? cursor = null,
@@ -35,10 +32,7 @@ public partial class ConversationController
         return Ok(result);
     }
 
-    /// <summary>
-    /// Gửi tin nhắn vào conversation.
-    /// </summary>
-    [HttpPost("{id}/messages")]
+        [HttpPost("{id}/messages")]
     public async Task<IActionResult> SendMessage(string id, [FromBody] ConversationSendMessageBody body)
     {
         if (TryGetUserId(out var userId) == false)
@@ -74,7 +68,7 @@ public partial class ConversationController
         }
         catch
         {
-            // Best-effort realtime broadcast.
+            
         }
     }
 
@@ -97,7 +91,7 @@ public partial class ConversationController
         }
         catch
         {
-            // Best-effort async moderation: do not fail request when queue is unavailable.
+            
         }
     }
 }

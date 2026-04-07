@@ -1,12 +1,4 @@
-/*
- * ===================================================================
- * FILE: CreatePostCommand.cs
- * NAMESPACE: TarotNow.Application.Features.Community.Commands.CreatePost
- * ===================================================================
- * MỤC ĐÍCH:
- *   Xử lý logic tạo bài viết cộng đồng mới.
- * ===================================================================
- */
+
 
 using MediatR;
 using TarotNow.Application.Common;
@@ -41,7 +33,7 @@ public class CreatePostCommandHandler : IRequestHandler<CreatePostCommand, Commu
 
     public async Task<CommunityPostDto> Handle(CreatePostCommand request, CancellationToken cancellationToken)
     {
-        // 1. Validate Business Logic
+        
         if (string.IsNullOrWhiteSpace(request.Content) || request.Content.Length > 5000)
             throw new BadRequestException("Nội dung bài viết không được trống và tối đa 5000 ký tự.");
 
@@ -49,12 +41,12 @@ public class CreatePostCommandHandler : IRequestHandler<CreatePostCommand, Commu
         if (!validVisibilities.Contains(request.Visibility))
             throw new BadRequestException("Quyền riêng tư không hợp lệ.");
 
-        // 2. Fetch User để lấy Name/Avatar (Denormalization)
+        
         var user = await _userRepo.GetByIdAsync(request.AuthorId, cancellationToken);
         if (user == null)
             throw new NotFoundException("User không tồn tại.");
 
-        // 3. Khởi tạo DTO
+        
         var newPost = new CommunityPostDto
         {
             AuthorId = request.AuthorId.ToString(),
@@ -68,10 +60,10 @@ public class CreatePostCommandHandler : IRequestHandler<CreatePostCommand, Commu
             IsDeleted = false
         };
 
-        // 4. Update Database
+        
         var result = await _postRepo.CreateAsync(newPost, cancellationToken);
 
-        // 5. Trigger Gamification
+        
         await _gamificationService.OnPostCreatedAsync(request.AuthorId, cancellationToken);
 
         return result;

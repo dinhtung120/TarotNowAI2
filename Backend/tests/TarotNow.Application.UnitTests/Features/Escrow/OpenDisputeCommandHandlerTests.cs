@@ -24,8 +24,7 @@ public class OpenDisputeCommandHandlerTests
         _handler = new OpenDisputeCommandHandler(_mockFinanceRepo.Object, _mockTransactionCoordinator.Object);
     }
 
-    /// <summary>Không phải participant → BadRequest.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_NotParticipant_ThrowsBadRequest()
     {
         var command = new OpenDisputeCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid() };
@@ -39,8 +38,7 @@ public class OpenDisputeCommandHandlerTests
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-    /// <summary>Item không ở trạng thái Accepted → BadRequest.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_NotAccepted_ThrowsBadRequest()
     {
         var command = new OpenDisputeCommand
@@ -58,8 +56,7 @@ public class OpenDisputeCommandHandlerTests
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-    /// <summary>Lý do ngắn → BadRequest.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ShortReason_ThrowsBadRequest()
     {
         var command = new OpenDisputeCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid(), Reason = "short" };
@@ -72,8 +69,7 @@ public class OpenDisputeCommandHandlerTests
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-    /// <summary>Happy path từ payer: item→Disputed, session→disputed.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ValidRequest_FromPayer_UpdatesStatus()
     {
         var command = new OpenDisputeCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid(), Reason = "Valid dispute reason" };
@@ -96,8 +92,7 @@ public class OpenDisputeCommandHandlerTests
         Assert.True(item.DisputeWindowEnd > item.DisputeWindowStart);
     }
 
-    /// <summary>Happy path từ receiver cũng được mở dispute.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ValidRequest_FromReceiver_UpdatesStatus()
     {
         var receiverId = Guid.NewGuid();
@@ -123,8 +118,7 @@ public class OpenDisputeCommandHandlerTests
         Assert.True(item.DisputeWindowEnd > item.DisputeWindowStart);
     }
 
-    /// <summary>ItemId sai → NotFoundException.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ItemNotFound_ThrowsNotFoundException()
     {
         var command = new OpenDisputeCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid() };
@@ -132,8 +126,7 @@ public class OpenDisputeCommandHandlerTests
         await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-    /// <summary>Idempotent: đã disputed thì không ghi lại lần 2.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_AlreadyDisputed_IsIdempotent()
     {
         var command = new OpenDisputeCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid(), Reason = "Lý do tranh chấp hợp lệ" };

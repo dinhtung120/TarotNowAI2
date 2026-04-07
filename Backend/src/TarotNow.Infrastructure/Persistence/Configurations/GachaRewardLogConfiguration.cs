@@ -1,9 +1,4 @@
-/*
- * ===================================================================
- * FILE: GachaRewardLogConfiguration.cs
- * NAMESPACE: TarotNow.Infrastructure.Persistence.Configurations
- * ===================================================================
- */
+
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -40,7 +35,7 @@ public class GachaRewardLogConfiguration : IEntityTypeConfiguration<GachaRewardL
 
         builder.HasIndex(x => new { x.UserId, x.CreatedAt }).IsDescending(false, true);
         
-        // Cụm Index tối ưu đếm Pity (Count) theo Rarity Legendary và Filter CreatedAt cực mượt.
+        
         builder.HasIndex(x => new { x.UserId, x.BannerId, x.Rarity, x.CreatedAt });
     }
 }

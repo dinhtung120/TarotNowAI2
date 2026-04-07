@@ -4,20 +4,20 @@ import { memo, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 type BadgeVariant =
- | "default" /* Zinc — neutral, mặc định */
- | "purple" /* Tím — brand color, premium */
- | "amber" /* Vàng — gold, diamond */
- | "success" /* Xanh — approved, online, completed */
- | "error" /* Đỏ — rejected, offline, failed */
- | "warning" /* Cam — pending, expiring */
- | "info"; /* Cyan — informational */
+ | "default" 
+ | "purple" 
+ | "amber" 
+ | "success" 
+ | "error" 
+ | "warning" 
+ | "info"; 
 
 type BadgeSize = "sm" | "md";
 
 interface BadgeProps {
  variant?: BadgeVariant;
  size?: BadgeSize;
- /** Nội dung badge — text hoặc icon + text */
+ 
  children: ReactNode;
  className?: string;
 }

@@ -8,21 +8,17 @@ import type { IStreakStatusResult } from "@/features/checkin/types/checkin.types
 import type { ListConversationsResult } from "@/features/chat/application/actions";
 import type { NotificationListResponse } from "@/features/notifications/application/actions/types";
 
-/**
- * Interface đồng bộ với Backend UserMetadataDto.
- */
+
 export interface UserMetadataDto {
   wallet: WalletBalance;
   streak: IStreakStatusResult;
   unreadNotificationCount: number;
-  recentNotifications: NotificationListResponse; // Mới thêm: Top 10 thông báo
+  recentNotifications: NotificationListResponse; 
   unreadChatCount: number;
   activeConversations: ListConversationsResult;
 }
 
-/**
- * Server Action: Lấy toàn bộ Metadata cần thiết cho Dashboard/Navbar.
- */
+
 export async function getInitialMetadata(): Promise<ActionResult<UserMetadataDto>> {
   const token = await getServerAccessToken();
   if (!token) return actionFail("Unauthorized");

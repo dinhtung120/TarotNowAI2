@@ -10,7 +10,7 @@ export type CollectionSortOrder = 'id' | 'level' | 'atk' | 'def';
 
 export function useCollectionPage() {
   const [activeFilter, setActiveFilter] = useState<CollectionFilter>('all');
-  const [sortBy, setSortBy] = useState<CollectionSortOrder>('level'); // Default to level (Gacha style)
+  const [sortBy, setSortBy] = useState<CollectionSortOrder>('level'); 
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
 
  const { data, isLoading, isFetching } = useQuery({

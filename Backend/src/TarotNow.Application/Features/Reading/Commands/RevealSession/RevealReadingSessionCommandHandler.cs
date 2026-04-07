@@ -1,13 +1,4 @@
-/*
- * ===================================================================
- * FILE: RevealReadingSessionCommandHandler.cs
- * NAMESPACE: TarotNow.Application.Features.Reading.Commands.RevealSession
- * ===================================================================
- * MỤC ĐÍCH:
- *   Trái Tim Của Tính Năng Gieo Quẻ Tarot: Thuật Toán Xào Bài (Shuffle), 
- *   Phân Phối Kinh Nghiệm (Gamification EXP), Mở Khoá Bộ Sưu Tập (Collection).
- * ===================================================================
- */
+
 
 using System.Text.Json;
 using MediatR;
@@ -29,7 +20,7 @@ public partial class RevealReadingSessionCommandHandler : IRequestHandler<Reveal
     private readonly IUserRepository _userRepository; 
     private readonly IRngService _rngService;
 
-    // Quy định: 1 lá bài bốc được = Cày lòi ra 1 EXP cho Tướng Lĩnh User và 1 EXP cho Điểm Thông Thạo Lá Bài Đó.
+    
     private const long EXP_PER_CARD = 1; 
 
     public RevealReadingSessionCommandHandler(

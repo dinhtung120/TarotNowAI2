@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
+
 import { useTranslations } from "next-intl";
 
 interface PostCardContentProps {

@@ -7,10 +7,7 @@ namespace TarotNow.Api.Controllers;
 
 public partial class ReaderController
 {
-    /// <summary>
-    /// Lấy hồ sơ công khai của một Reader theo user id.
-    /// </summary>
-    [HttpGet("profile/{userId}")]
+        [HttpGet("profile/{userId}")]
     public async Task<IActionResult> GetProfile(string userId)
     {
         var profile = await _mediator.Send(new GetReaderProfileQuery { UserId = userId });
@@ -26,10 +23,7 @@ public partial class ReaderController
         return Ok(profile);
     }
 
-    /// <summary>
-    /// Lấy danh sách Reader công khai với bộ lọc và phân trang.
-    /// </summary>
-    [HttpGet(ApiRoutes.ReadersAbsolute)]
+        [HttpGet(ApiRoutes.ReadersAbsolute)]
     public async Task<IActionResult> ListReaders([FromQuery] ListReadersQuery query)
     {
         var result = await _mediator.Send(query);

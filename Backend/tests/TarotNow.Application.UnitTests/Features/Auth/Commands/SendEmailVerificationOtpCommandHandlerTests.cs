@@ -1,19 +1,4 @@
-/*
- * FILE: SendEmailVerificationOtpCommandHandlerTests.cs
- * MỤC ĐÍCH: Unit test cho handler gửi OTP xác thực email khi đăng ký.
- *
- *   CÁC TEST CASE:
- *   1. Handle_ShouldReturnTrue_WhenUserDoesNotExist:
- *      → Email không tồn tại → vẫn trả true (chống email enumeration)
- *   2. Handle_ShouldReturnTrue_WhenUserIsAlreadyActive:
- *      → User đã Active (đã verify) → trả true, KHÔNG gửi OTP (tránh spam)
- *   3. Handle_ShouldGenerateOtpAndSendEmail_WhenUserIsPending:
- *      → User Pending → tạo OTP (type=VerifyEmail) + gửi email
- *
- *   LOGIC:
- *   → Chỉ gửi OTP khi User tồn tại VÀ status=Pending
- *   → Mọi trường hợp khác đều trả true (chống enumeration + không spam)
- */
+
 
 using Moq;
 using TarotNow.Application.Features.Auth.Commands.SendEmailVerificationOtp;
@@ -23,9 +8,6 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
-/// <summary>
-/// Test send verification OTP: chống enumeration, chỉ gửi khi Pending.
-/// </summary>
 public class SendEmailVerificationOtpCommandHandlerTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock;
@@ -44,8 +26,7 @@ public class SendEmailVerificationOtpCommandHandlerTests
         );
     }
 
-    /// <summary>Email không tồn tại → trả true (chống dò email).</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ShouldReturnTrue_WhenUserDoesNotExist()
     {
         var command = new SendEmailVerificationOtpCommand { Email = "notfound@example.com" };
@@ -58,8 +39,7 @@ public class SendEmailVerificationOtpCommandHandlerTests
         _emailOtpRepositoryMock.Verify(r => r.AddAsync(It.IsAny<EmailOtp>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    /// <summary>User đã Active → trả true, KHÔNG gửi OTP (đã verify rồi).</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ShouldReturnTrue_WhenUserIsAlreadyActive()
     {
         var command = new SendEmailVerificationOtpCommand { Email = "active@example.com" };
@@ -75,8 +55,7 @@ public class SendEmailVerificationOtpCommandHandlerTests
         _emailOtpRepositoryMock.Verify(r => r.AddAsync(It.IsAny<EmailOtp>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    /// <summary>User Pending → tạo OTP (VerifyEmail) + gửi email.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ShouldGenerateOtpAndSendEmail_WhenUserIsPending()
     {
         var command = new SendEmailVerificationOtpCommand { Email = "pending@example.com" };

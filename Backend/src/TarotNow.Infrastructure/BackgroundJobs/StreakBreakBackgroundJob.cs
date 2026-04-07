@@ -10,11 +10,6 @@ using System.Threading.Tasks;
 
 namespace TarotNow.Infrastructure.BackgroundJobs;
 
-/// <summary>
-/// Thằng đao phủ thầm lặng cầm dao chặt những cánh tay Streak lười biếng.
-/// Quét định kỳ để ép gãy streak với những người dùng nhắp nhả không vào rút bài,
-/// nhằm kịp thời hiện trạng thái vỡ cho UI để gạ bán Streak Freeze.
-/// </summary>
 public class StreakBreakBackgroundJob : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
@@ -40,14 +35,14 @@ public class StreakBreakBackgroundJob : BackgroundService
                 }
                 catch (ObjectDisposedException) when (stoppingToken.IsCancellationRequested)
                 {
-                    // Shutdown phase
+                    
                 }
                 catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
                 {
                     _logger.LogError(ex, "[StreakBreakBackgroundJob] Ngã ngựa lúc xử tử Steak.");
                 }
 
-                // Quét 1 giờ 1 lần. Job này không cần phải realtime khắt khe từng giây. 
+                
                 await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
             }
         }
@@ -67,8 +62,8 @@ public class StreakBreakBackgroundJob : BackgroundService
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
         var yesterday = today.AddDays(-1);
 
-        // Những ông nhõi nào đang có chuỗi (CurrentStreak > 0)
-        // Mà có LastStreakDate nhỏ hơn Hôm Qua thì tức là đã trễ nhịp 1 nhát nguyên ngày. Đứt!
+        
+        
         var lazyUsersIds = await dbContext.Users
             .Where(u => u.CurrentStreak > 0 && u.LastStreakDate.HasValue && u.LastStreakDate.Value < yesterday)
             .Select(u => u.Id)
@@ -79,11 +74,11 @@ public class StreakBreakBackgroundJob : BackgroundService
 
         _logger.LogInformation("[StreakBreakBackgroundJob] Tiết mục chặt chuỗi của {Count} người lười.", lazyUsersIds.Count);
 
-        // Băm nhuyễn batch SQL hoặc foreach update tuỳ độ to của App. Đang làm foreach cho gọn.
+        
         int processed = 0;
         foreach (var userId in lazyUsersIds)
         {
-            // Tránh quá tải CPU DB nên cho nghỉ tý (Nhường đường cho Chat)
+            
             if (processed++ % 100 == 0)
             {
                 await Task.Delay(100, stoppingToken); 
@@ -92,7 +87,7 @@ public class StreakBreakBackgroundJob : BackgroundService
             var user = await dbContext.Users.FindAsync(new object[] { userId }, stoppingToken);
             if (user != null && user.CurrentStreak > 0 && user.LastStreakDate.HasValue && user.LastStreakDate.Value < yesterday)
             {
-                // Hành hình
+                
                 user.BreakStreak();
                 await dbContext.SaveChangesAsync(stoppingToken);
             }

@@ -1,22 +1,4 @@
-/*
- * FILE: CreateWithdrawalCommandHandlerTests.cs
- * MỤC ĐÍCH: Unit test cho handler tạo yêu cầu rút tiền (Withdrawal Request).
- *
- *   CÁC TEST CASE (8 scenarios):
- *   1. Handle_LessThan50Diamond_ThrowsBadRequest: số lượng < 50 → 400
- *   2. Handle_KycNotApproved_ThrowsBadRequest: chưa approve KYC → 400
- *   3. Handle_SecondRequestSameDay_ThrowsBadRequest: đã rút hôm nay → 400 (1 lần/ngày)
- *   4. Handle_ValidRequest_DebitsDiamondAndSavesRequest:
- *      → Debit Diamond + tính fee 10% + lưu request pending
- *   5. Handle_UserNotFound_ThrowsNotFoundException: userId sai → 404
- *   6. Handle_MfaNotEnabled_ThrowsBadRequest: chưa bật MFA → 400
- *   7. Handle_InvalidMfaCode_ThrowsBadRequest: TOTP code sai → 400
- *   8. Handle_InsufficientBalance_ThrowsBadRequest: số dư không đủ → 400
- *   9. Handle_EmptyBankInfo_ThrowsBadRequest: thông tin ngân hàng trống → 400
- *
- *   FEE: NetAmountVnd = (amount * 1000) - 10%, FeeVnd = 10%
- *   BẢO MẬT: MFA bắt buộc trước khi rút tiền (BR Phase 2.5)
- */
+
 
 using Moq;
 using TarotNow.Application.Exceptions;
@@ -27,9 +9,6 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Withdrawal;
 
-/// <summary>
-/// Test create withdrawal: MFA, KYC, balance, fee calculation, daily limit.
-/// </summary>
 public class CreateWithdrawalCommandHandlerTests
 {
     private readonly Mock<IWithdrawalRepository> _mockWithdrawalRepo;
@@ -54,7 +33,7 @@ public class CreateWithdrawalCommandHandlerTests
             _mockUserRepo.Object, _mockMfaService.Object, _mockTransactionCoordinator.Object);
     }
 
-    /* Helper: tạo Reader hợp lệ (MFA bật, KYC approved, balance 100) */
+    
     private User CreateValidReader()
     {
         var userType = typeof(User);
@@ -69,8 +48,7 @@ public class CreateWithdrawalCommandHandlerTests
         return user;
     }
 
-    /// <summary>Số lượng < 50 → BadRequest (tối thiểu 50 Diamond).</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_LessThan50Diamond_ThrowsBadRequest()
     {
         var userId = Guid.NewGuid();
@@ -83,8 +61,7 @@ public class CreateWithdrawalCommandHandlerTests
         Assert.Contains("tối thiểu là 50", ex.Message);
     }
 
-    /// <summary>KYC chưa approved → BadRequest.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_KycNotApproved_ThrowsBadRequest()
     {
         var userId = Guid.NewGuid();
@@ -98,8 +75,7 @@ public class CreateWithdrawalCommandHandlerTests
         Assert.Contains("KYC", ex.Message);
     }
 
-    /// <summary>Đã rút hôm nay → BadRequest (1 lần/ngày).</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_SecondRequestSameDay_ThrowsBadRequest()
     {
         var userId = Guid.NewGuid();
@@ -113,10 +89,7 @@ public class CreateWithdrawalCommandHandlerTests
         Assert.Contains("hôm nay", ex.Message);
     }
 
-    /// <summary>
-    /// Happy path: Debit 100 Diamond, NetAmountVnd=90000, FeeVnd=10000.
-    /// </summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ValidRequest_DebitsDiamondAndSavesRequest()
     {
         var userId = Guid.NewGuid();
@@ -138,8 +111,7 @@ public class CreateWithdrawalCommandHandlerTests
         _mockWithdrawalRepo.Verify(x => x.AddAsync(It.Is<WithdrawalRequest>(r => r.UserId == userId && r.AmountDiamond == 100 && r.NetAmountVnd == 90000 && r.FeeVnd == 10000 && r.Status == "pending"), default), Times.Once);
     }
 
-    /// <summary>UserId sai → NotFoundException.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_UserNotFound_ThrowsNotFoundException()
     {
         var command = new CreateWithdrawalCommand { UserId = Guid.NewGuid(), AmountDiamond = 50, MfaCode = "123" };
@@ -147,8 +119,7 @@ public class CreateWithdrawalCommandHandlerTests
         await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-    /// <summary>MFA chưa bật → BadRequest (bắt buộc cho withdrawal).</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_MfaNotEnabled_ThrowsBadRequest()
     {
         var userId = Guid.NewGuid();
@@ -160,8 +131,7 @@ public class CreateWithdrawalCommandHandlerTests
         Assert.Contains("MFA", ex.Message);
     }
 
-    /// <summary>TOTP code sai → BadRequest.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_InvalidMfaCode_ThrowsBadRequest()
     {
         var userId = Guid.NewGuid();
@@ -174,8 +144,7 @@ public class CreateWithdrawalCommandHandlerTests
         Assert.Contains("MFA", ex.Message);
     }
 
-    /// <summary>Số dư không đủ → BadRequest.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_InsufficientBalance_ThrowsBadRequest()
     {
         var userId = Guid.NewGuid();
@@ -189,8 +158,7 @@ public class CreateWithdrawalCommandHandlerTests
         Assert.Contains("Số dư", ex.Message);
     }
 
-    /// <summary>Thông tin ngân hàng trống → BadRequest.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_EmptyBankInfo_ThrowsBadRequest()
     {
         var userId = Guid.NewGuid();

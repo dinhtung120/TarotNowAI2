@@ -1,17 +1,4 @@
-/*
- * ===================================================================
- * FILE: EntitlementService.cs
- * NAMESPACE: TarotNow.Infrastructure.Services
- * ===================================================================
- * MỤC ĐÍCH:
- *   Bộ Máy Trọng Tài (Orchestrator) Điều Phối Giao Chăn Lệnh Đốt Và Đọc Số Dư Quyền Lợi.
- *   
- *   KIẾN TRÚC CAO CẤP:
- *   - Nó Không tự Đẩy SQL trực tiếp -> Nó Rót Lệnh Qua ISubscriptionRepository.
- *   - Nó Ôm Khóa Giao Dịch (ITransactionCoordinator) Để Bọc Atomic Lệnh Đốt (Tránh Trừ Khống Lệnh Database).
- *   - Nó Sẽ Phải Xài Redis (ICacheService) Để Tối Ưu Nhanh Read Lúc Chỉ Cần Ngía Hỏi Dư Bao Nhiêu.
- * ===================================================================
- */
+
 
 using System;
 using System.Collections.Generic;
@@ -30,7 +17,7 @@ public partial class EntitlementService : IEntitlementService
     private readonly ITransactionCoordinator _transactionCoordinator;
     private readonly ICacheService _cacheService;
     private readonly ILogger<EntitlementService> _logger;
-    private readonly IDomainEventPublisher _domainEventPublisher; // Để Bắn Sự Kiện Domain Ra Xa (RabbitMQ/Cache Nhận)
+    private readonly IDomainEventPublisher _domainEventPublisher; 
 
     public EntitlementService(
         ISubscriptionRepository repository,
@@ -46,9 +33,9 @@ public partial class EntitlementService : IEntitlementService
         _domainEventPublisher = domainEventPublisher;
     }
 
-    // ==========================================
-    // 2. NGHIỆP VỤ LẤY SỔ SỐ DƯ
-    // ==========================================
+    
+    
+    
     public async Task<EntitlementBalanceDto> GetBalanceAsync(
         Guid userId, 
         string entitlementKey, 
@@ -63,7 +50,7 @@ public partial class EntitlementService : IEntitlementService
         Guid userId, 
         CancellationToken ct)
     {
-        // [1] Xem Redis Đã Trả Nón Rồi Chưa Mới Nửa Tiếng?
+        
         var cacheKey = $"entitlement_balance:{userId}";
         var cachedData = await _cacheService.GetAsync<string>(cacheKey);
         
@@ -73,11 +60,11 @@ public partial class EntitlementService : IEntitlementService
             if (cachedList != null) return cachedList;
         }
 
-        // [2] Ồ DB Nghỉ Mát Kéo Lại Data 
+        
         var todayUtc = DateOnly.FromDateTime(DateTime.UtcNow);
         var balances = await _repository.GetBalanceSummaryAsync(userId, todayUtc, ct);
 
-        // Lưu Cache
+        
         await _cacheService.SetAsync(cacheKey, JsonSerializer.Serialize(balances), TimeSpan.FromMinutes(10));
         return balances;
     }

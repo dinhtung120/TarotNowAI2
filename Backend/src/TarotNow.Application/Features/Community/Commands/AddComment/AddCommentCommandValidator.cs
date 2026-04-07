@@ -2,9 +2,6 @@ using FluentValidation;
 
 namespace TarotNow.Application.Features.Community.Commands.AddComment;
 
-/// <summary>
-/// FluentValidation rules for adding a community comment.
-/// </summary>
 public sealed class AddCommentCommandValidator : AbstractValidator<AddCommentCommand>
 {
     public AddCommentCommandValidator()

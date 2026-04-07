@@ -1,9 +1,4 @@
-/*
- * ===================================================================
- * FILE: MongoDbContext.Indexes.Gacha.cs
- * NAMESPACE: TarotNow.Infrastructure.Persistence
- * ===================================================================
- */
+
 
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
@@ -26,7 +21,7 @@ public partial class MongoDbContext
             var indexModel = new CreateIndexModel<GachaLogDocument>(indexKeysDefinition, new CreateIndexOptions { Background = true });
             logsCollection.Indexes.CreateOne(indexModel);
 
-            // TTL Index 30 Days
+            
             var ttlIndexKeys = Builders<GachaLogDocument>.IndexKeys.Ascending(x => x.CreatedAt);
             var ttlOptions = new CreateIndexOptions { ExpireAfter = TimeSpan.FromDays(30), Background = true };
             var ttlIndexModel = new CreateIndexModel<GachaLogDocument>(ttlIndexKeys, ttlOptions);
@@ -37,7 +32,7 @@ public partial class MongoDbContext
             }
             catch (MongoCommandException ex) when (ex.CodeName == "IndexOptionsConflict")
             {
-                // Nếu IndexOptions (ví dụ ExpireAfter) bị thay đổi so với DB cũ, cần Drop và tạo lại
+                
                 logsCollection.Indexes.DropOne("created_at_1");
                 logsCollection.Indexes.CreateOne(ttlIndexModel);
             }

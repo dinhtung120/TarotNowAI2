@@ -1,9 +1,4 @@
-/*
- * ===================================================================
- * FILE: GachaLogRepository.cs
- * NAMESPACE: TarotNow.Infrastructure.Persistence.Repositories
- * ===================================================================
- */
+
 
 using MongoDB.Driver;
 using System;

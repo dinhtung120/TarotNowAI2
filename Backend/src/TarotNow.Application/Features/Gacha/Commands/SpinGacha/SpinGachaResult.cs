@@ -5,7 +5,7 @@ public class SpinGachaResult
     public bool Success { get; set; }
     public bool IsIdempotentReplay { get; set; }
     
-    // Pity properties sau khi quay xong
+    
     public int CurrentPityCount { get; set; }
     public int HardPityThreshold { get; set; }
     public bool WasPityTriggered { get; set; }

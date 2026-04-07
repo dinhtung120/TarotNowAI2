@@ -1,124 +1,46 @@
-/*
- * ===================================================================
- * FILE: ChatDtos.cs
- * NAMESPACE: TarotNow.Application.Common
- * ===================================================================
- * MỤC ĐÍCH TỔNG QUAN:
- *   Tập hợp các DTO (Data Transfer Object) cho tính năng CHAT.
- *   DTO là "bản sao nhẹ" của dữ liệu, dùng để TRUYỀN TẢI giữa các layer.
- *
- * TẠI SAO DÙNG DTO THAY VÌ DOCUMENT GỐC?
- *   - MongoDB lưu dữ liệu dạng Document (MongoDocuments/)
- *   - Application layer KHÔNG ĐƯỢC biết về MongoDB (Clean Architecture)
- *   - DTO nằm ở Application layer → mọi layer đều dùng được
- *   - Repository (Infrastructure) chuyển đổi Document ↔ DTO
- *   
- *   Ví dụ: ConversationDocument (MongoDB) → ConversationDto (Application) → JSON (API)
- *
- * CÁC DTO TRONG FILE NÀY:
- *   1. ConversationDto: Cuộc trò chuyện
- *   2. ChatMessageDto: Tin nhắn trong cuộc trò chuyện
- *   3. PaymentPayloadDto: Thông tin thanh toán đính kèm tin nhắn
- *   4. ReportDto: Báo cáo vi phạm
- * ===================================================================
- */
+
 
 namespace TarotNow.Application.Common;
 
-/// <summary>
-/// DTO đại diện cho MỘT CUỘC TRÒ CHUYỆN (conversation) giữa user và reader.
-///
-/// Map từ MongoDB collection "conversations" (theo schema §7 trong blueprint).
-/// Repository (Infrastructure layer) chịu trách nhiệm map ConversationDocument ↔ ConversationDto.
-/// </summary>
 public class ConversationDto
 {
-    /// <summary>
-    /// ID duy nhất của conversation - MongoDB ObjectId dạng string.
-    /// Ví dụ: "507f1f77bcf86cd799439011"
-    /// MongoDB tự tạo ID này khi insert document.
-    /// </summary>
-    public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = string.Empty;
 
-    /// <summary>
-    /// UUID của USER (người dùng/người trả tiền) trong cuộc trò chuyện.
-    /// Map đến bảng users.id trong PostgreSQL.
-    /// Dùng string thay vì Guid vì MongoDB lưu dạng string.
-    /// </summary>
-    public string UserId { get; set; } = string.Empty;
+        public string UserId { get; set; } = string.Empty;
 
-    /// <summary>
-    /// UUID của READER (người đọc bài/người nhận tiền) trong cuộc trò chuyện.
-    /// </summary>
-    public string ReaderId { get; set; } = string.Empty;
+        public string ReaderId { get; set; } = string.Empty;
 
-    // --- CÁC TRƯỜNG BỔ SUNG ĐỂ HIỂN THỊ TÊN/AVATAR TRÊN GIAO DIỆN (Bơm dữ liệu từ Users table) ---
+    
     public string? UserName { get; set; }
     public string? UserAvatar { get; set; }
     public string? ReaderName { get; set; }
     public string? ReaderAvatar { get; set; }
     public string? ReaderStatus { get; set; }
     
-    // --- ESCROW INFO (Thêm vào để phục vụ hiển thị ngoài Inbox) ---
+    
     public long EscrowTotalFrozen { get; set; }
     public string? EscrowStatus { get; set; }
-    // --------------------------------------------------------------------------
+    
 
-    /// <summary>
-    /// Trạng thái cuộc trò chuyện:
-    ///   - "pending": đang chờ reader chấp nhận
-    ///   - "active": đang hoạt động (2 bên đang chat)
-    ///   - "completed": đã hoàn thành (kết thúc bình thường)
-    ///   - "cancelled": đã hủy (một bên hủy trước khi bắt đầu)
-    ///   - "disputed": đang tranh chấp (cần admin can thiệp)
-    /// </summary>
-    public string Status { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Thời điểm tin nhắn cuối cùng được gửi.
-    /// Dùng để SẮP XẾP inbox → conversation có tin mới nhất hiện đầu tiên.
-    /// Nullable vì conversation mới tạo có thể chưa có tin nhắn.
-    /// </summary>
-    public DateTime? LastMessageAt { get; set; }
+        public DateTime? LastMessageAt { get; set; }
 
-    /// <summary>Preview ngắn của tin nhắn cuối cùng để hiển thị inbox.</summary>
-    public string? LastMessagePreview { get; set; }
+        public string? LastMessagePreview { get; set; }
 
-    /// <summary>
-    /// Thời hạn chờ reader phản hồi.
-    /// Nếu hết hạn mà reader chưa phản hồi → tự động hủy conversation.
-    /// Nullable vì không phải tất cả conversation đều có deadline.
-    /// </summary>
-    public DateTime? OfferExpiresAt { get; set; }
+        public DateTime? OfferExpiresAt { get; set; }
 
-    /// <summary>
-    /// SLA phản hồi của reader sau khi đã accept phiên. Giá trị hợp lệ: 6 | 12 | 24 (giờ).
-    /// </summary>
-    public int SlaHours { get; set; } = 12;
+        public int SlaHours { get; set; } = 12;
 
-    /// <summary>
-    /// Trạng thái xác nhận hoàn tất từ 2 phía.
-    /// </summary>
-    public ConversationConfirmDto? Confirm { get; set; }
+        public ConversationConfirmDto? Confirm { get; set; }
 
-    /// <summary>
-    /// Số tin nhắn chưa đọc CỦA USER.
-    /// Hiển thị badge đỏ "3" trên icon conversation trong inbox.
-    /// Reset về 0 khi user mở conversation (MarkRead).
-    /// </summary>
-    public int UnreadCountUser { get; set; }
+        public int UnreadCountUser { get; set; }
 
-    /// <summary>
-    /// Số tin nhắn chưa đọc CỦA READER.
-    /// Tương tự UnreadCountUser nhưng cho phía reader.
-    /// </summary>
-    public int UnreadCountReader { get; set; }
+        public int UnreadCountReader { get; set; }
 
-    /// <summary>Thời điểm tạo conversation.</summary>
-    public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
 
-    /// <summary>Thời điểm cập nhật cuối cùng.</summary>
-    public DateTime? UpdatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
 }
 
 public class ConversationConfirmDto
@@ -134,197 +56,86 @@ public class ConversationConfirmDto
     public DateTime? AutoResolveAt { get; set; }
 }
 
-/// <summary>
-/// DTO đại diện cho MỘT TIN NHẮN CHAT.
-///
-/// Map từ MongoDB collection "chat_messages" (schema §8).
-/// Mỗi tin nhắn thuộc về 1 conversation.
-/// </summary>
 public class ChatMessageDto
 {
-    /// <summary>MongoDB ObjectId string của tin nhắn.</summary>
-    public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = string.Empty;
 
-    /// <summary>ObjectId string của conversation chứa tin nhắn này.</summary>
-    public string ConversationId { get; set; } = string.Empty;
+        public string ConversationId { get; set; } = string.Empty;
 
-    /// <summary>UUID của người gửi tin nhắn.</summary>
-    public string SenderId { get; set; } = string.Empty;
+        public string SenderId { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Loại tin nhắn:
-    ///   - "text": văn bản thường
-    ///   - "system": tin nhắn hệ thống (tự động tạo, VD: "User đã join")
-    ///   - "card_share": chia sẻ lá bài tarot
-    ///   - "payment_offer": đề nghị thanh toán (kèm PaymentPayload)
-    ///   - "payment_accepted": đề nghị đã được chấp nhận
-    ///   - "payment_rejected": đề nghị bị từ chối
-    /// </summary>
-    public string Type { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
 
-    /// <summary>Nội dung tin nhắn (text, markdown, hoặc JSON serialized).</summary>
-    public string Content { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Thông tin thanh toán đính kèm (chỉ có khi Type = "payment_offer").
-    /// Nullable vì đa số tin nhắn là text thường, không có payment.
-    /// </summary>
-    public PaymentPayloadDto? PaymentPayload { get; set; }
+        public PaymentPayloadDto? PaymentPayload { get; set; }
 
-    /// <summary>
-    /// Metadata media cho tin nhắn image/voice.
-    /// </summary>
-    public MediaPayloadDto? MediaPayload { get; set; }
+        public MediaPayloadDto? MediaPayload { get; set; }
 
-    /// <summary>
-    /// Thông tin lịch sử cuộc gọi đính kèm (chỉ có khi Type = "call_log").
-    /// Giải quyết nợ kỹ thuật phải serialze JSON vào trường Content.
-    /// </summary>
-    public CallSessionDto? CallPayload { get; set; }
+        public CallSessionDto? CallPayload { get; set; }
 
-    /// <summary>
-    /// Đã đọc hay chưa.
-    /// true = người nhận đã mở và đọc tin nhắn.
-    /// Dùng cho tính năng "tick xanh" (read receipt) giống WhatsApp.
-    /// </summary>
-    public bool IsRead { get; set; }
+        public bool IsRead { get; set; }
 
-    /// <summary>Thời điểm gửi tin nhắn (UTC).</summary>
-    public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
 
-    /// <summary>
-    /// Cờ đánh dấu tin nhắn vi phạm tiêu chuẩn cộng đồng (Auto Moderation).
-    /// </summary>
-    public bool IsFlagged { get; set; }
+        public bool IsFlagged { get; set; }
 }
 
-/// <summary>
-/// DTO chứa thông tin thanh toán đính kèm trong tin nhắn "payment_offer".
-/// Khi reader muốn thu phí → tạo tin nhắn type "payment_offer" kèm payload này.
-/// User xem tin nhắn → accept hoặc reject offer.
-/// </summary>
 public class PaymentPayloadDto
 {
-    /// <summary>Số diamond mà reader đề xuất cho câu hỏi/dịch vụ.</summary>
-    public long AmountDiamond { get; set; }
+        public long AmountDiamond { get; set; }
 
-    /// <summary>
-    /// Lời nhắn mô tả của Reader khi tạo đề xuất thanh toán.
-    /// Ví dụ: "Thanh toán cho lá bài thứ 2", "Giải mã lá The Tower"...
-    /// Nullable vì không bắt buộc phải nhập.
-    /// </summary>
-    public string? Description { get; set; }
+        public string? Description { get; set; }
 
-    /// <summary>
-    /// ID của đề xuất - dùng để accept/reject.
-    /// Nullable vì có thể chưa được gán (trong một số flow).
-    /// </summary>
-    public string? ProposalId { get; set; }
+        public string? ProposalId { get; set; }
 
-    /// <summary>
-    /// Hạn chót để user chấp nhận đề xuất.
-    /// Sau thời gian này → đề xuất tự hết hạn, user phải yêu cầu mới.
-    /// </summary>
-    public DateTime? ExpiresAt { get; set; }
+        public DateTime? ExpiresAt { get; set; }
 }
 
-/// <summary>
-/// DTO đại diện cho MỘT BÁO CÁO VI PHẠM (Report).
-///
-/// Map từ MongoDB collection "reports" (schema §10).
-/// User tạo report → Admin xem xét → Xử lý (cảnh cáo/khóa/hoàn tiền).
-/// </summary>
 public class ReportDto
 {
-    /// <summary>MongoDB ObjectId string.</summary>
-    public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = string.Empty;
 
-    /// <summary>UUID người gửi báo cáo.</summary>
-    public string ReporterId { get; set; } = string.Empty;
+        public string ReporterId { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Loại đối tượng bị báo cáo:
-    ///   - "message": tin nhắn vi phạm
-    ///   - "conversation": cuộc trò chuyện vi phạm
-    ///   - "user": người dùng vi phạm
-    /// </summary>
-    public string TargetType { get; set; } = string.Empty;
+        public string TargetType { get; set; } = string.Empty;
 
-    /// <summary>ID của đối tượng bị báo cáo.</summary>
-    public string TargetId { get; set; } = string.Empty;
+        public string TargetId { get; set; } = string.Empty;
 
-    /// <summary>ObjectId conversation liên quan (tùy chọn, giúp admin xem ngữ cảnh).</summary>
-    public string? ConversationRef { get; set; }
+        public string? ConversationRef { get; set; }
 
-    /// <summary>Lý do báo cáo do user nhập.</summary>
-    public string Reason { get; set; } = string.Empty;
+        public string Reason { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Trạng thái xử lý báo cáo:
-    ///   - "pending": chờ xử lý
-    ///   - "processing": đang xem xét
-    ///   - "resolved": đã xử lý xong
-    ///   - "rejected": báo cáo bị từ chối (không vi phạm)
-    /// </summary>
-    public string Status { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Kết quả xử lý (sau khi admin quyết định):
-    ///   - "warn": cảnh cáo
-    ///   - "freeze": khóa tài khoản
-    ///   - "refund": hoàn tiền cho user
-    ///   - "no_action": không xử lý (không vi phạm)
-    /// </summary>
-    public string? Result { get; set; }
+        public string? Result { get; set; }
 
-    /// <summary>Ghi chú của admin khi xử lý.</summary>
-    public string? AdminNote { get; set; }
+        public string? AdminNote { get; set; }
 
-    /// <summary>Thời điểm tạo báo cáo.</summary>
-    public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
 }
 
-/// <summary>
-/// DTO biểu diễn metadata một cuộc gọi thoại/video.
-/// Lưu ý: Chỉ chứa metadata (trạng thái, thời gian) - KHÔNG lưu nội dung media.
-/// </summary>
 public class CallSessionDto
 {
-    /// <summary>MongoDB ObjectId dạng string.</summary>
-    public string Id { get; set; } = string.Empty;
+        public string Id { get; set; } = string.Empty;
 
-    /// <summary>ID của cuộc trò chuyện (Conversation) diễn ra cuộc gọi này.</summary>
-    public string ConversationId { get; set; } = string.Empty;
+        public string ConversationId { get; set; } = string.Empty;
 
-    /// <summary>UUID của người bấm nút "Gọi" (Initiator).</summary>
-    public string InitiatorId { get; set; } = string.Empty;
+        public string InitiatorId { get; set; } = string.Empty;
 
-    /// <summary>Loại cuộc gọi (Audio hoặc Video).</summary>
-    public TarotNow.Domain.Enums.CallType Type { get; set; }
+        public TarotNow.Domain.Enums.CallType Type { get; set; }
 
-    /// <summary>Trạng thái hiện tại của cuộc gọi.</summary>
-    public TarotNow.Domain.Enums.CallSessionStatus Status { get; set; }
+        public TarotNow.Domain.Enums.CallSessionStatus Status { get; set; }
 
-    /// <summary>Thời điểm có người bấm chấp nhận cuộc gọi.</summary>
-    public DateTime? StartedAt { get; set; }
+        public DateTime? StartedAt { get; set; }
 
-    /// <summary>Thời điểm cuộc gọi kết thúc.</summary>
-    public DateTime? EndedAt { get; set; }
+        public DateTime? EndedAt { get; set; }
 
-    /// <summary>
-    /// Lý do kết thúc cuộc gọi:
-    /// - "normal": Một trong hai bên bấm kết thúc.
-    /// - "timeout": Hết 60s không có người nghe.
-    /// - "cancelled": Người gọi tự hủy trước khi đối phương nghe máy.
-    /// </summary>
-    public string? EndReason { get; set; }
+        public string? EndReason { get; set; }
 
-    /// <summary>Thời lượng cuộc gọi (giây). Chỉ được tính ra khi cuộc gọi kết thúc.</summary>
-    public int? DurationSeconds { get; set; }
+        public int? DurationSeconds { get; set; }
 
-    /// <summary>Thời điểm tạo record.</summary>
-    public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; }
 
-    /// <summary>Thời điểm cập nhật record cuối cùng.</summary>
-    public DateTime UpdatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
 }

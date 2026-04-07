@@ -37,7 +37,7 @@ export function usePresenceConnection() {
     .withUrl(hubUrl, { 
 			accessTokenFactory: () => useAuthStore.getState().token ?? '',
     })
-    .withAutomaticReconnect([0, 2000, 5000, 10000, 30000]) // Auto reconnect như ChatHub
+    .withAutomaticReconnect([0, 2000, 5000, 10000, 30000]) 
     .configureLogging(signalR.LogLevel.Warning)
     .build();
    hubConnection.serverTimeoutInMilliseconds = 120000;
@@ -62,9 +62,7 @@ export function usePresenceConnection() {
     logger.info('[PresenceRealtimeSync]', 'conversation.updated received. Invalidating inbox queries...');
     invalidateInbox();
    });
-   /*
-    * GAMIFICATION PUSH: Lắng nghe event từ GamificationPushService
-    */
+   
    hubConnection.on('gamification.quest_completed', () => {
     logger.info('[PresenceRealtimeSync]', 'gamification.quest_completed received');
     void queryClient.invalidateQueries({ queryKey: ['gamification', 'quests'] });
@@ -134,6 +132,6 @@ export function usePresenceConnection() {
    }
    connectionRef.current = null;
   };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  
  }, [isAuthenticated, queryClient]);
 }

@@ -1,18 +1,4 @@
-/*
- * FILE: ForgotPasswordCommandHandlerTests.cs
- * MỤC ĐÍCH: Unit test cho handler quên mật khẩu (Forgot Password).
- *
- *   CÁC TEST CASE:
- *   1. Handle_ShouldReturnTrue_WhenUserDoesNotExist:
- *      → Email không tồn tại → vẫn trả true (CHỐNG DÒ TÌM EMAIL)
- *      → KHÔNG tạo OTP, KHÔNG gửi email → nhưng response giống hệt khi thành công
- *   2. Handle_ShouldGenerateOtpAndSendEmail_WhenUserExists:
- *      → Email tồn tại → tạo OTP (type=ResetPassword) + gửi email
- *
- *   BẢO MẬT QUAN TRỌNG:
- *   → Chống email enumeration: kẻ tấn công thử nhiều email → nếu trả false = email không tồn tại
- *   → Giải pháp: LUÔN trả true bất kể email có hay không → kẻ tấn công không biết
- */
+
 
 using Moq;
 using TarotNow.Application.Features.Auth.Commands.ForgotPassword;
@@ -22,9 +8,6 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
-/// <summary>
-/// Test forgot password: chống email enumeration + OTP generation.
-/// </summary>
 public class ForgotPasswordCommandHandlerTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock;
@@ -45,11 +28,7 @@ public class ForgotPasswordCommandHandlerTests
         );
     }
 
-    /// <summary>
-    /// Email KHÔNG tồn tại → vẫn trả true (chống dò tìm email).
-    /// KHÔNG tạo OTP, KHÔNG gửi email → nhưng response giống khi thành công.
-    /// </summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ShouldReturnTrue_WhenUserDoesNotExist()
     {
         var command = new ForgotPasswordCommand { Email = "notfound@example.com" };
@@ -58,14 +37,11 @@ public class ForgotPasswordCommandHandlerTests
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
-        Assert.True(result); // Luôn true → chống enumeration
+        Assert.True(result); 
         _emailOtpRepositoryMock.Verify(r => r.AddAsync(It.IsAny<EmailOtp>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    /// <summary>
-    /// Email tồn tại → tạo OTP (type=ResetPassword) + gửi email cho User.
-    /// </summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ShouldGenerateOtpAndSendEmail_WhenUserExists()
     {
         var command = new ForgotPasswordCommand { Email = "found@example.com" };
@@ -78,12 +54,12 @@ public class ForgotPasswordCommandHandlerTests
 
         Assert.True(result);
         
-        // Verify: OTP tạo đúng type
+        
         _emailOtpRepositoryMock.Verify(r => r.AddAsync(
             It.Is<EmailOtp>(otp => otp.UserId == user.Id && otp.Type == OtpType.ResetPassword), 
             It.IsAny<CancellationToken>()), Times.Once);
 
-        // Verify: email gửi đúng địa chỉ
+        
         _emailSenderMock.Verify(s => s.SendEmailAsync(
             command.Email, 
             It.IsAny<string>(), 

@@ -1,13 +1,4 @@
-/*
- * ===================================================================
- * FILE: EntitlementConsumeConfiguration.cs
- * NAMESPACE: TarotNow.Infrastructure.Persistence.Configurations
- * ===================================================================
- * MỤC ĐÍCH:
- *   Bảng ghi nhận Lịch sử Đốt quyền Lợi ("Sổ cái"). 
- *   Thiết kế chuẩn Append-Only, đảm bảo không ai đớp được quyền mà không rơi lại dấu vết.
- * ===================================================================
- */
+
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -35,26 +26,26 @@ public class EntitlementConsumeConfiguration : IEntityTypeConfiguration<Entitlem
 
         builder.Property(x => x.IdempotencyKey)
             .IsRequired()
-            .HasMaxLength(255); // Tăng từ 100 lên 255 để tránh lỗi 500 khi sinh mã Idempotency dài cho vé miễn phí.
+            .HasMaxLength(255); 
 
-        // Map Foreign Keys
+        
         builder.HasOne(x => x.Bucket)
             .WithMany()
             .HasForeignKey(x => x.BucketId)
-            .OnDelete(DeleteBehavior.Restrict); // Cấm Xóa Rổ Khi Đã Có Ghi Vết Trong Này (Bảo Lãnh Dữ Liệu Ledger)
+            .OnDelete(DeleteBehavior.Restrict); 
 
         builder.HasOne(x => x.User)
             .WithMany()
             .HasForeignKey(x => x.UserId)
-            .OnDelete(DeleteBehavior.Cascade); // Mất Khách thì Mất Hết.
+            .OnDelete(DeleteBehavior.Cascade); 
 
-        // ==== CÁC CHỈ MỤC INDEX ====
-        // 1. NGĂN CHẶN CHẮC CHẮN NẠP TRÙNG LẦN 2 TỪ MOBILE BẤM LOẠN
+        
+        
         builder.HasIndex(x => x.IdempotencyKey)
             .IsUnique()
             .HasDatabaseName("IX_entitlement_consumes_idempotency_key");
             
-        // 2. Chăm sóc Admin Report Truy Sổ - Liệt kê Khách vừa đốt Trái Bài nào
+        
         builder.HasIndex(x => new { x.UserId, x.ConsumedAt })
             .HasDatabaseName("IX_entitlement_consumes_user_time");
     }

@@ -1,9 +1,4 @@
-/*
- * ===================================================================
- * FILE: ToggleReactionCommandHandlerTests.cs
- * NAMESPACE: TarotNow.Application.UnitTests.Features.Community.Commands
- * ===================================================================
- */
+
 
 using Moq;
 using TarotNow.Application.Common;

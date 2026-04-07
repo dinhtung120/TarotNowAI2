@@ -1,6 +1,6 @@
 
 export interface QuestRewardItem {
-  type: string; // 'Gold', 'Diamond', 'Title'
+  type: string; 
   amount: number;
   titleCode?: string;
 }

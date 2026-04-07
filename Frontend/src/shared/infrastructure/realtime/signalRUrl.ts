@@ -11,7 +11,7 @@ function resolveBackendOrigin(): string {
 
   try {
     const url = new URL(raw.trim());
-    return url.origin; // Ví dụ: 'http://localhost:5037'
+    return url.origin; 
   } catch {
     return DEFAULT_BACKEND_ORIGIN;
   }

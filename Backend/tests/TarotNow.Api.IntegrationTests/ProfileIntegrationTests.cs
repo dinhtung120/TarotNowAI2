@@ -1,21 +1,4 @@
-/*
- * FILE: ProfileIntegrationTests.cs
- * MỤC ĐÍCH: Integration test kiểm tra luồng cập nhật + lấy profile end-to-end.
- *
- *   QUY TẮC KINH DOANH:
- *   → Khi User cập nhật DateOfBirth → hệ thống tự tính:
- *     - Zodiac (cung hoàng đạo): dựa trên tháng + ngày sinh
- *     - Numerology (thần số học): cộng tất cả chữ số ngày sinh → rút gọn về 1 chữ số
- *   → Ví dụ: 15/07/1995 → Cancer (Cự Giải), Numerology = 1+5+0+7+1+9+9+5 = 37 → 3+7 = 10 → 1+0 = 1
- *
- *   TEST CASE:
- *   UpdateProfile_ShouldComputeZodiacAndNumerology_Correctly:
- *   1. Seed User
- *   2. PATCH /api/v1/profile: cập nhật DisplayName + DateOfBirth + AvatarUrl
- *   3. GET /api/v1/profile: verify Zodiac="Cancer (Cự Giải)", Numerology=1
- *
- *   KIỂM TRA: domain logic tính Zodiac + Numerology là đúng.
- */
+
 
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,9 +12,6 @@ using Xunit;
 
 namespace TarotNow.Api.IntegrationTests;
 
-/// <summary>
-/// Test profile: update → auto-compute Zodiac + Numerology → verify.
-/// </summary>
 [Collection("IntegrationTests")]
 public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory<Program>>
 {
@@ -45,15 +25,10 @@ public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory
         _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(TestAuthHandler.AuthenticationScheme);
     }
 
-    /// <summary>
-    /// Cập nhật profile → hệ thống tự tính Zodiac + Numerology.
-    /// Input: DateOfBirth = 15/07/1995
-    /// Expected: Zodiac = "Cancer (Cự Giải)", Numerology = 1
-    /// </summary>
-    [Fact]
+        [Fact]
     public async Task UpdateProfile_ShouldComputeZodiacAndNumerology_Correctly()
     {
-        // Seed User
+        
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         
@@ -73,7 +48,7 @@ public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory
             await db.SaveChangesAsync();
         }
 
-        // Cập nhật profile: ngày sinh 15/07/1995 → Cancer, Numerology = 1
+        
         var updateRequest = new UpdateProfileRequest
         {
             DisplayName = "Test Name",
@@ -84,7 +59,7 @@ public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory
         var patchResponse = await _client.PatchAsJsonAsync("/api/v1/profile", updateRequest);
         patchResponse.EnsureSuccessStatusCode();
 
-        // GET profile → verify computed fields
+        
         var getResponse = await _client.GetAsync("/api/v1/profile");
         getResponse.EnsureSuccessStatusCode();
 
@@ -94,21 +69,17 @@ public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory
         Assert.Equal("Test Name", profile!.DisplayName);
         Assert.Equal("http://example.com/avatar.png", profile.AvatarUrl);
         
-        // Zodiac: July 15 → Cancer (Cự Giải)
+        
         Assert.Equal("Cancer (Cự Giải)", profile.Zodiac);
 
-        // Numerology: 1+5+0+7+1+9+9+5 = 37 → 3+7 = 10 → 1+0 = 1
+        
         Assert.Equal(1, profile.Numerology);
     }
 
-    /// <summary>
-    /// Upload avatar: gửi file ảnh → server nén + lưu → trả về đường dẫn.
-    /// Expected: AvatarUrl trả về bắt đầu bằng /uploads/avatars/
-    /// </summary>
-    [Fact]
+        [Fact]
     public async Task UploadAvatar_ShouldCompressAndSaveFile()
     {
-        // 1. Tạo file ảnh giả lập (1 pixel jpeg data)
+        
         var imageBytes = Convert.FromBase64String("/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=");
         using var stream = new MemoryStream(imageBytes);
         var content = new MultipartFormDataContent();
@@ -116,20 +87,20 @@ public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory
         streamContent.Headers.Add("Content-Type", "image/jpeg");
         content.Add(streamContent, "file", "test.jpg");
 
-        // 2. Gửi file lên endpoint mới
+        
         var response = await _client.PostAsync("/api/v1/profile/avatar", content);
         response.EnsureSuccessStatusCode();
 
-        // 3. Đọc kết quả
+        
         var resultText = await response.Content.ReadAsStringAsync();
         Assert.Contains("success\":true", resultText);
         Assert.Contains("avatarUrl\":\"/uploads/avatars/", resultText);
 
-        // Lấy avatarUrl để GET và verify
+        
         using var jsonDoc = System.Text.Json.JsonDocument.Parse(resultText);
         var avatarUrl = jsonDoc.RootElement.GetProperty("avatarUrl").GetString();
 
-        // 4. Kiểm tra xem file có được gán vào profile không
+        
         var getResponse = await _client.GetAsync("/api/v1/profile");
         getResponse.EnsureSuccessStatusCode();
         var profile = await getResponse.Content.ReadFromJsonAsync<Application.Features.Profile.Queries.GetProfile.ProfileResponse>();

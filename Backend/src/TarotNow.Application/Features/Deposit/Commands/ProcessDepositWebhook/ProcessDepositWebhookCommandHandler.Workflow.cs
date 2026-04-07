@@ -71,7 +71,7 @@ public partial class ProcessDepositWebhookCommandHandler
 
         order.MarkAsSuccess(request.PayloadData.TransactionId, request.PayloadData.FxSnapshot);
 
-        // [Real-time Push] Báo cho Frontend biết số dư ví đã tăng để tự do lấy lại balance
+        
         await _walletPushService.PushBalanceChangedAsync(order.UserId, cancellationToken);
     }
 }

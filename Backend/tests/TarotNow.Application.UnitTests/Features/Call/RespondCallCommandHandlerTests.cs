@@ -8,9 +8,6 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Call;
 
-/// <summary>
-/// Unit Tests kiểm tra chức năng RespondCallCommandHandler.
-/// </summary>
 public class RespondCallCommandHandlerTests
 {
     private readonly Mock<ICallSessionRepository> _mockCallRepo;

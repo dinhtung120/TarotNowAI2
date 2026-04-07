@@ -24,7 +24,7 @@ export function useNotificationDropdown() {
       return result.success ? result.data ?? null : null;
     },
     enabled: isAuthenticated,
-    staleTime: 1000 * 60, // 1 minute
+    staleTime: 1000 * 60, 
   });
 
   const { data: unreadCount = 0 } = useQuery<number>({
@@ -34,7 +34,7 @@ export function useNotificationDropdown() {
       return result.success ? result.data ?? 0 : 0;
     },
     enabled: isAuthenticated,
-    staleTime: 1000 * 30, // 30 giây stale time — chỉ refetch khi cache bị invalidate
+    staleTime: 1000 * 30, 
   });
 
   const markReadMutation = useMutation({

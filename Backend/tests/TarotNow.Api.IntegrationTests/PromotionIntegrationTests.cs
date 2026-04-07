@@ -1,21 +1,4 @@
-/*
- * FILE: PromotionIntegrationTests.cs
- * MỤC ĐÍCH: Integration test kiểm tra luồng khuyến mãi nạp tiền end-to-end.
- *
- *   QUY TẮC KINH DOANH:
- *   → Admin tạo promotion: nạp ≥ MinAmountVnd → tặng thêm BonusDiamond
- *   → Khi User tạo DepositOrder ≥ MinAmountVnd → auto-apply promotion
- *   → Diamond nhận = base + bonus (nếu có promotion active)
- *
- *   TEST CASE:
- *   DepositOrder_ShouldAutoApply_ActivePromotion_If_Met:
- *   1. Seed Admin user
- *   2. Admin tạo promotion: nạp ≥ 100k VNĐ → +20 Diamond bonus
- *   3. User tạo deposit order 100k VNĐ → VNPay gateway
- *   4. Assert: order có DiamondAmount = base + 20 bonus
- *
- *   KIỂM TRA: promotion auto-apply logic + admin CRUD.
- */
+
 
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,9 +12,6 @@ using Xunit;
 
 namespace TarotNow.Api.IntegrationTests;
 
-/// <summary>
-/// Test promotion: Admin tạo → User nạp tiền → auto-apply bonus Diamond.
-/// </summary>
 [Collection("IntegrationTests")]
 public class PromotionIntegrationTests : IClassFixture<CustomWebApplicationFactory<Program>>
 {
@@ -43,11 +23,10 @@ public class PromotionIntegrationTests : IClassFixture<CustomWebApplicationFacto
         _factory = factory;
         _client = factory.CreateClient();
         _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(TestAuthHandler.AuthenticationScheme);
-        _client.DefaultRequestHeaders.Add("X-Test-Role", "admin"); // Admin role cho CRUD promotion
+        _client.DefaultRequestHeaders.Add("X-Test-Role", "admin"); 
     }
 
-    /// <summary>Helper: seed Admin user vào DB.</summary>
-    private async Task SeedUserAsync(Guid userId)
+        private async Task SeedUserAsync(Guid userId)
     {
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -70,17 +49,13 @@ public class PromotionIntegrationTests : IClassFixture<CustomWebApplicationFacto
         }
     }
 
-    /// <summary>
-    /// Admin tạo promotion → User nạp 100k → auto-apply +20 Diamond bonus.
-    /// Verify: DepositOrder có bonus Diamond (DiamondAmount > base amount).
-    /// </summary>
-    [Fact]
+        [Fact]
     public async Task DepositOrder_ShouldAutoApply_ActivePromotion_If_Met()
     {
         var userId = Guid.Parse("00000000-0000-0000-0000-000000000001"); 
         await SeedUserAsync(userId);
 
-        // Admin tạo promotion: nạp ≥ 100k → +20 Diamond
+        
         var createPromoRequest = new 
         {
             MinAmountVnd = 100000,
@@ -91,7 +66,7 @@ public class PromotionIntegrationTests : IClassFixture<CustomWebApplicationFacto
         var promoResponse = await _client.PostAsJsonAsync("/api/v1/admin/promotions", createPromoRequest);
         promoResponse.EnsureSuccessStatusCode();
 
-        // User tạo deposit order 100k VNĐ → phải auto-apply promotion
+        
         var createDepositRequest = new 
         {
             AmountVnd = 100000,
@@ -100,7 +75,7 @@ public class PromotionIntegrationTests : IClassFixture<CustomWebApplicationFacto
         var depositRes = await _client.PostAsJsonAsync("/api/v1/deposits/orders", createDepositRequest);
         depositRes.EnsureSuccessStatusCode();
 
-        // Verify: order có DiamondAmount bao gồm bonus
+        
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         
@@ -109,7 +84,7 @@ public class PromotionIntegrationTests : IClassFixture<CustomWebApplicationFacto
         Assert.NotNull(latestOrder);
         Assert.Equal(100000, latestOrder!.AmountVnd);
         
-        // Log Diamond amount để kiểm tra manual (quy đổi phụ thuộc business formula)
+        
         Console.WriteLine($"Diamond Applied: {latestOrder.DiamondAmount}");
     }
 }

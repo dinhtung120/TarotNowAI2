@@ -1,13 +1,4 @@
-/*
- * ===================================================================
- * FILE: CommunityReactionRepository.cs
- * NAMESPACE: TarotNow.Infrastructure.Persistence.Repositories
- * ===================================================================
- * MỤC ĐÍCH:
- *   Triển khai ICommunityReactionRepository.
- *   Xử lý lưu các biểu cảm vào Collection community_reactions.
- * ===================================================================
- */
+
 
 using MongoDB.Driver;
 using TarotNow.Application.Common;
@@ -27,8 +18,8 @@ public class CommunityReactionRepository : ICommunityReactionRepository
 
     public async Task<bool> AddOrIgnoreAsync(CommunityReactionDto reaction, CancellationToken cancellationToken = default)
     {
-        // Điểm Cốt Lõi: Dùng Uppert với setOnInsert
-        // Nếu đã ghép cặp (PostId, UserId) thì kệ nó, bỏ qua. Nếu chưa có thì Insert.
+        
+        
         var filter = Builders<CommunityReactionDocument>.Filter.And(
             Builders<CommunityReactionDocument>.Filter.Eq(x => x.PostId, reaction.PostId),
             Builders<CommunityReactionDocument>.Filter.Eq(x => x.UserId, reaction.UserId)
@@ -44,8 +35,8 @@ public class CommunityReactionRepository : ICommunityReactionRepository
 
         var result = await _context.CommunityReactions.UpdateOneAsync(filter, update, options, cancellationToken);
         
-        // UpsertedId != null tức là Insert thành công.
-        // MatchedCount > 0 tức là đã tồn tại, không insert thêm.
+        
+        
         return result.UpsertedId != null;
     }
 
@@ -88,7 +79,7 @@ public class CommunityReactionRepository : ICommunityReactionRepository
         );
 
         var update = Builders<CommunityReactionDocument>.Update
-            .Set(x => x.Type, newType); // Cập nhật loại
+            .Set(x => x.Type, newType); 
 
         var result = await _context.CommunityReactions.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
         return result.ModifiedCount > 0;
@@ -104,7 +95,7 @@ public class CommunityReactionRepository : ICommunityReactionRepository
             Builders<CommunityReactionDocument>.Filter.In(x => x.PostId, postIdsList)
         );
 
-        // Project lấy đúng 2 cột PostId và Type cho nhẹ query
+        
         var projection = Builders<CommunityReactionDocument>.Projection
             .Include(x => x.PostId)
             .Include(x => x.Type);
@@ -114,7 +105,7 @@ public class CommunityReactionRepository : ICommunityReactionRepository
             .Project<CommunityReactionDocument>(projection)
             .ToListAsync(cancellationToken);
 
-        // Chuyển thành Dictionary
+        
         return docs.ToDictionary(k => k.PostId, v => v.Type);
     }
 }

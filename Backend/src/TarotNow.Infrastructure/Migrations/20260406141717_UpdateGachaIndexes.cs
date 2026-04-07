@@ -1,14 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace TarotNow.Infrastructure.Migrations
 {
-    /// <inheritdoc />
-    public partial class UpdateGachaIndexes : Migration
+        public partial class UpdateGachaIndexes : Migration
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
+                protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(
                 name: "ix_gacha_reward_logs_user_id_banner_id_created_at",
@@ -20,8 +18,7 @@ namespace TarotNow.Infrastructure.Migrations
                 columns: new[] { "user_id", "banner_id", "rarity", "created_at" });
         }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
+                protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(
                 name: "ix_gacha_reward_logs_user_id_banner_id_rarity_created_at",

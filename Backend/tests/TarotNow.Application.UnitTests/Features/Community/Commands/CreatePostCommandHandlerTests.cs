@@ -1,9 +1,4 @@
-/*
- * ===================================================================
- * FILE: CreatePostCommandHandlerTests.cs
- * NAMESPACE: TarotNow.Application.UnitTests.Features.Community.Commands
- * ===================================================================
- */
+
 
 using FluentAssertions;
 using Moq;
@@ -37,7 +32,7 @@ public class CreatePostCommandHandlerTests
     [Fact]
     public async Task Handle_ValidRequest_CreatesPostSuccessfully()
     {
-        // Arrange
+        
         var request = new CreatePostCommand
         {
             AuthorId = Guid.NewGuid(),
@@ -56,10 +51,10 @@ public class CreatePostCommandHandlerTests
                 return p;
             });
 
-        // Act
+        
         var result = await _handler.Handle(request, CancellationToken.None);
 
-        // Assert
+        
         result.Should().NotBeNull();
         result.Id.Should().Be("new_id");
         result.AuthorDisplayName.Should().Be("Alice");
@@ -71,31 +66,31 @@ public class CreatePostCommandHandlerTests
     [Fact]
     public async Task Handle_EmptyContent_ThrowsBadRequestException()
     {
-        // Arrange
+        
         var request = new CreatePostCommand { AuthorId = Guid.NewGuid(), Content = "" };
 
-        // Act & Assert
+        
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(request, CancellationToken.None));
     }
 
     [Fact]
     public async Task Handle_InvalidVisibility_ThrowsBadRequestException()
     {
-        // Arrange
+        
         var request = new CreatePostCommand { AuthorId = Guid.NewGuid(), Content = "Hello", Visibility = "invalid" };
 
-        // Act & Assert
+        
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(request, CancellationToken.None));
     }
 
     [Fact]
     public async Task Handle_UserNotFound_ThrowsNotFoundException()
     {
-        // Arrange
+        
         var request = new CreatePostCommand { AuthorId = Guid.NewGuid(), Content = "Hello", Visibility = PostVisibility.Public };
         _userRepoMock.Setup(x => x.GetByIdAsync(request.AuthorId, default)).ReturnsAsync((TarotNow.Domain.Entities.User?)null);
 
-        // Act & Assert
+        
         await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(request, CancellationToken.None));
     }
 }

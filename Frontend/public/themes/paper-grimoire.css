@@ -1,9 +1,9 @@
-/* Theme variables for paper-grimoire. */
+
 
 :root,
 :root[data-theme="paper-grimoire"],
 body[data-theme="paper-grimoire"] {
-  /* --- BACKGROUNDS & SURFACES --- */
+  
   --bg-void: #f8f1e9;
   --bg-surface: #fff9f4;
   --bg-elevated: #fffdf9;
@@ -18,34 +18,34 @@ body[data-theme="paper-grimoire"] {
   --overlay-base: rgba(61, 49, 80, 0.2);
   --overlay-strong: rgba(61, 49, 80, 0.34);
 
-  /* App backdrop (body background) */
+  
   --app-bg:
     radial-gradient(115% 85% at 10% -10%, rgba(215, 189, 226, 0.46) 0%, transparent 52%),
     radial-gradient(85% 65% at 88% 2%, rgba(178, 232, 214, 0.44) 0%, transparent 50%),
     radial-gradient(120% 95% at 50% 105%, rgba(255, 250, 205, 0.4) 0%, transparent 58%),
     linear-gradient(180deg, #f8f1e9 0%, #f7f2f8 44%, #eff8f4 100%);
 
-  /* UI chrome */
+  
   --scrollbar-thumb: rgba(168, 156, 255, 0.34);
   --scrollbar-thumb-hover: rgba(138, 184, 154, 0.5);
   --scrollbar-track: transparent;
   --selection-bg: rgba(168, 156, 255, 0.38);
   --selection-text: var(--text-ink);
 
-  /* Focus rings */
+  
   --ring-accent: rgba(168, 156, 255, 0.22);
   --ring-success: rgba(138, 184, 154, 0.22);
   --ring-warning: rgba(215, 190, 125, 0.22);
   --ring-danger: rgba(204, 124, 149, 0.22);
   --ring-input: rgba(168, 156, 255, 0.24);
 
-  /* --- BORDERS --- */
+  
   --border-subtle: rgba(168, 156, 255, 0.2);
   --border-default: rgba(168, 156, 255, 0.34);
   --border-hover: rgba(138, 184, 154, 0.42);
   --border-focus: rgba(168, 156, 255, 0.64);
 
-  /* --- BRAND: LUNAR PURPLE --- */
+  
   --purple-50: rgba(215, 189, 226, 0.22);
   --purple-100: rgba(168, 156, 255, 0.24);
   --purple-200: rgba(168, 156, 255, 0.4);
@@ -56,7 +56,7 @@ body[data-theme="paper-grimoire"] {
   --purple-gradient-via: #a89cff;
   --purple-gradient-to: #b2e8d6;
 
-  /* --- BOTANICAL / HEALING ACCENTS --- */
+  
   --mint-accent: #b2e8d6;
   --forest-accent: #8ab89a;
   --amber-accent: #f0e68c;
@@ -64,7 +64,7 @@ body[data-theme="paper-grimoire"] {
   --amber-50: rgba(240, 230, 140, 0.22);
   --holo-silver: #e0e0ff;
 
-  /* --- STATUS --- */
+  
   --success: #7baa8c;
   --success-bg: rgba(138, 184, 154, 0.2);
   --error: #cc7c95;
@@ -74,7 +74,7 @@ body[data-theme="paper-grimoire"] {
   --info: #8ea7db;
   --info-bg: rgba(142, 167, 219, 0.2);
 
-  /* --- EXTRACTED COLOR TOKENS (NO HEX/RGBA IN TSX) --- */
+  
   --c-hex-b89c4f: #b89c4f;
   --c-hex-9f8338: #9f8338;
   --c-hex-8f7bb4: #8f7bb4;
@@ -162,7 +162,7 @@ body[data-theme="paper-grimoire"] {
   --nebula-moon-default: rgba(240, 230, 140, 0.16);
   --nebula-moon-intense: rgba(240, 230, 140, 0.26);
 
-  /* --- TEXT --- */
+  
   --text-primary: #3d3150;
   --text-secondary: #6f6282;
   --text-muted: #9a90ab;
@@ -174,7 +174,7 @@ body[data-theme="paper-grimoire"] {
   --danger-bg: rgba(204, 124, 149, 0.16);
   --accent: #f0e68c;
 
-  /* --- SHADOWS & GLOWS --- */
+  
   --shadow-card: 0 14px 32px rgba(168, 156, 255, 0.16);
   --shadow-elevated: 0 22px 52px rgba(168, 156, 255, 0.22);
   --glow-purple-sm: 0 0 24px rgba(168, 156, 255, 0.24);
@@ -191,19 +191,19 @@ body[data-theme="paper-grimoire"] {
     rgba(178, 232, 214, 0.25) 75%
   );
 
-  /* --- BORDER RADIUS --- */
+  
   --radius-sm: 12px;
   --radius-md: 16px;
   --radius-lg: 24px;
   --radius-xl: 40px;
 
-  /* --- TRANSITIONS --- */
+  
   --transition-fast: 150ms ease;
   --transition-base: 300ms ease;
   --transition-slow: 500ms ease;
   --transition-glacial: 700ms ease;
 
-  /* --- VISUAL TRAITS (theme personality) --- */
+  
   --theme-border-style: solid;
   --theme-border-width: 1px;
   --theme-panel-shadow: var(--shadow-card);
@@ -212,7 +212,7 @@ body[data-theme="paper-grimoire"] {
   --theme-starfield-size: 24px 24px, 30px 30px, 18px 18px, 100% 100%;
   --theme-motion-scale: 1;
 
-  /* Gradients (reused by utility classes) */
+  
   --grad-lunar: linear-gradient(
     135deg,
     rgba(215, 189, 226, 0.84),

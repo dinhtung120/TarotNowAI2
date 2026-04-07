@@ -1,8 +1,5 @@
 namespace TarotNow.Application.Interfaces;
 
-/// <summary>
-/// Service chẩn đoán nội bộ dùng cho endpoint dev-only.
-/// </summary>
 public interface IDiagnosticsService
 {
     Task<SeedAdminResult> SeedAdminAsync(CancellationToken cancellationToken = default);

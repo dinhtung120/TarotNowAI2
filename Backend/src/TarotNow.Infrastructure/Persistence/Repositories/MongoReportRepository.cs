@@ -1,14 +1,4 @@
-/*
- * FILE: MongoReportRepository.cs
- * MỤC ĐÍCH: Repository quản lý báo cáo vi phạm từ MongoDB (collection "reports").
- *
- *   CÁC CHỨC NĂNG:
- *   → AddAsync: tạo báo cáo mới (User báo cáo vi phạm)
- *   → GetPaginatedAsync: phân trang cho Admin xử lý queue báo cáo
- *
- *   MAPPING: DTO ↔ Document thủ công.
- *   Lưu ý: ReportTarget (nested object) được flatten khi map sang DTO (TargetType, TargetId).
- */
+
 
 using MongoDB.Driver;
 using TarotNow.Application.Common;
@@ -17,9 +7,6 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
-/// <summary>
-/// Implement IReportRepository — đọc/ghi báo cáo vi phạm từ MongoDB.
-/// </summary>
 public partial class MongoReportRepository : IReportRepository
 {
     private readonly MongoDbContext _context;
@@ -29,8 +16,7 @@ public partial class MongoReportRepository : IReportRepository
         _context = context;
     }
 
-    /// <summary>Tạo báo cáo mới, gán ObjectId vừa sinh về DTO.</summary>
-    public async Task AddAsync(ReportDto report, CancellationToken cancellationToken = default)
+        public async Task AddAsync(ReportDto report, CancellationToken cancellationToken = default)
     {
         var doc = ToDocument(report);
         await _context.Reports.InsertOneAsync(doc, cancellationToken: cancellationToken);
@@ -47,12 +33,7 @@ public partial class MongoReportRepository : IReportRepository
         return doc == null ? null : ToDto(doc);
     }
 
-    /// <summary>
-    /// Phân trang cho Admin báo cáo queue.
-    /// Hỗ trợ filter theo status: "pending" (chờ xử lý), "processing", "resolved", "rejected".
-    /// Sắp xếp: mới nhất trước — Admin cần xem báo cáo gần đây ưu tiên.
-    /// </summary>
-    public async Task<(IEnumerable<ReportDto> Items, long TotalCount)> GetPaginatedAsync(
+        public async Task<(IEnumerable<ReportDto> Items, long TotalCount)> GetPaginatedAsync(
         int page, int pageSize, string? statusFilter = null, string? targetType = null,
         CancellationToken cancellationToken = default)
     {
@@ -62,7 +43,7 @@ public partial class MongoReportRepository : IReportRepository
         var filterBuilder = Builders<ReportDocument>.Filter;
         var filter = filterBuilder.Eq(r => r.IsDeleted, false);
 
-        // Filter theo status nếu có
+        
         if (!string.IsNullOrEmpty(statusFilter))
             filter = filterBuilder.And(filter, filterBuilder.Eq(r => r.Status, statusFilter));
 

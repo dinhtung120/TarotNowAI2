@@ -3,10 +3,6 @@ using TarotNow.Application.Features.Gamification.Commands;
 
 namespace TarotNow.Application.Features.Gamification.Validators;
 
-/// <summary>
-/// Trạm Kiểm Soát Dữ Liệu Quest (Quest Validation).
-/// Đảm bảo Admin không tạo Quest rỗng, Target âm hoặc thiếu phần thưởng.
-/// </summary>
 public class UpsertQuestDefinitionValidator : AbstractValidator<UpsertQuestDefinitionCommand>
 {
     public UpsertQuestDefinitionValidator()
@@ -18,9 +14,6 @@ public class UpsertQuestDefinitionValidator : AbstractValidator<UpsertQuestDefin
     }
 }
 
-/// <summary>
-/// Trạm Kiểm Soát Dữ LiệuAchievement.
-/// </summary>
 public class UpsertAchievementDefinitionValidator : AbstractValidator<UpsertAchievementDefinitionCommand>
 {
     public UpsertAchievementDefinitionValidator()
@@ -30,9 +23,6 @@ public class UpsertAchievementDefinitionValidator : AbstractValidator<UpsertAchi
     }
 }
 
-/// <summary>
-/// Trạm Kiểm Soát Dữ Liệu Title.
-/// </summary>
 public class UpsertTitleDefinitionValidator : AbstractValidator<UpsertTitleDefinitionCommand>
 {
     public UpsertTitleDefinitionValidator()

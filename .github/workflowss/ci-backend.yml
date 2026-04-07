@@ -1,23 +1,23 @@
-# =============================================================================
-# TarotNow – CI Backend Pipeline (GitHub Actions)
-# =============================================================================
-# Mục đích: Tự động build, test, và kiểm tra chất lượng code backend (.NET)
-# mỗi khi có push hoặc PR vào các branch chính.
-#
-# Pipeline flow:
-#   1. Checkout code
-#   2. Setup .NET SDK
-#   3. Cache NuGet packages (tăng tốc build)
-#   4. Restore dependencies
-#   5. Build (fail-fast nếu compile error)
-#   6. Run unit tests
-#   7. Upload test results artifact
-# =============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 name: CI Backend (.NET)
 
-# Trigger: chạy khi push/PR vào main hoặc develop,
-# và chỉ khi có thay đổi trong thư mục Backend/
+
+
 on:
   push:
     branches: [main, develop]
@@ -30,37 +30,37 @@ on:
       - 'Backend/**'
       - '.github/workflows/ci-backend.yml'
 
-# Đảm bảo chỉ 1 pipeline chạy cho cùng 1 branch tại 1 thời điểm
-# Nếu có push mới, cancel pipeline cũ (tiết kiệm resource)
+
+
 concurrency:
   group: ci-backend-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build-and-test:
-    # Chạy trên Ubuntu latest – phù hợp cho .NET cross-platform
+
     runs-on: ubuntu-latest
 
-    # Đặt working directory mặc định là Backend/ để không cần cd liên tục
+
     defaults:
       run:
         working-directory: Backend
 
     steps:
-      # Bước 1: Checkout source code
+
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Bước 2: Setup .NET 9 SDK
-      # Chọn .NET 9 vì là bản stable mới nhất (tài liệu ghi .NET 10 nhưng chưa release)
+
+
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
-      # Bước 3: Cache NuGet packages
-      # Tăng tốc pipeline bằng cách cache packages đã download
-      # Cache key dựa trên hash của tất cả .csproj files – khi packages thay đổi, cache mới
+
+
+
       - name: Cache NuGet packages
         uses: actions/cache@v4
         with:
@@ -69,27 +69,27 @@ jobs:
           restore-keys: |
             nuget-${{ runner.os }}-
 
-      # Bước 4: Restore NuGet dependencies
-      # --locked-mode đảm bảo packages match exact version trong lock file (nếu có)
+
+
       - name: Restore dependencies
         run: dotnet restore
 
-      # Bước 5: Build solution
-      # --no-restore: đã restore ở bước trước, không cần chạy lại
-      # Fail-fast: nếu compile error → pipeline fail ngay tại bước này
+
+
+
       - name: Build
         run: dotnet build --no-restore --configuration Release
 
-      # Bước 6: Run unit tests
-      # --no-build: đã build ở bước trước
-      # --logger trx: xuất kết quả dạng TRX để upload artifact
-      # --results-directory: lưu kết quả test vào thư mục riêng
+
+
+
+
       - name: Run tests
         run: dotnet test --no-build --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./test-results
 
-      # Bước 7: Upload test results
-      # Lưu kết quả test như artifact để review sau – KHÔNG mất khi pipeline kết thúc
-      # always(): upload cả khi test fail để debug
+
+
+
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()

@@ -7,9 +7,6 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Call;
 
-/// <summary>
-/// Unit Tests kiểm tra chức năng GetCallHistoryQueryHandler.
-/// </summary>
 public class GetCallHistoryQueryHandlerTests
 {
     private readonly Mock<ICallSessionRepository> _mockCallRepo;

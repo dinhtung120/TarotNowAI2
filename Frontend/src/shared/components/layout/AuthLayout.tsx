@@ -5,13 +5,13 @@ import { Link } from "@/i18n/routing";
 import { cn } from '@/lib/utils';
 
 interface AuthLayoutProps {
- /** Tiêu đề chính (ví dụ: "Welcome Back", "Create Account") */
+ 
  title: string;
 
- /** Mô tả phụ dưới title */
+ 
  subtitle?: string;
 
- /** Form content */
+ 
  children: ReactNode;
 }
 
@@ -22,17 +22,13 @@ export default function AuthLayout({
 }: AuthLayoutProps) {
 return (
  <div className={cn("min-h-dvh flex items-center justify-center bg-[var(--bg-void)] relative overflow-hidden font-sans px-4 py-10")}>
- {/* === DECORATIVE ORBS ===
- 2 blob gradient lớn, blur mạnh, tạo ambient light.
- : hòa trộn ánh sáng, không che nội dung. */}
+ {}
  <div className={cn("absolute top-[-12%] left-[-12%] w-96 h-96 bg-[color:var(--c-215-189-226-62)] rounded-full filter blur-[120px] opacity-70 animate-slow-pulse")} />
  <div className={cn("absolute bottom-[-12%] right-[-12%] w-96 h-96 bg-[color:var(--c-178-232-214-58)] rounded-full filter blur-[120px] opacity-70 animate-slow-pulse")} />
 
- {/* === CONTENT CARD ===
- Glassmorphism card chứa toàn bộ form.
- max-w-md: tối ưu cho form fields, không quá rộng. */}
+ {}
  <div className={cn("relative z-10 w-full max-w-md p-6 sm:p-8 bg-[var(--bg-glass)] border border-[var(--border-default)] shadow-[var(--shadow-elevated)] rounded-3xl ")}>
- {/* Logo link về Home */}
+ {}
  <div className={cn("text-center mb-3")}>
  <Link
  href="/"
@@ -42,7 +38,7 @@ return (
  </Link>
  </div>
 
- {/* Title + Subtitle */}
+ {}
  <div className={cn("text-center mb-8")}>
  <h1 className={cn("text-3xl font-extrabold text-[var(--text-ink)] tracking-tight mb-2")}>
  {title}
@@ -54,7 +50,7 @@ return (
  )}
  </div>
 
- {/* Form Content — do page truyền vào */}
+ {}
  {children}
  </div>
  </div>

@@ -13,10 +13,7 @@ namespace TarotNow.Api.Controllers;
 
 public partial class CommunityController
 {
-    /// <summary>
-    /// Tạo bài viết cộng đồng mới cho người dùng hiện tại.
-    /// </summary>
-    [HttpPost("posts")]
+        [HttpPost("posts")]
     [EnableRateLimiting("community-write")]
     public async Task<IActionResult> CreatePost([FromBody] CreatePostBody body)
     {
@@ -30,10 +27,7 @@ public partial class CommunityController
         return CreatedAtAction(nameof(GetPostDetail), new { id = result.Id }, result);
     }
 
-    /// <summary>
-    /// Upload ảnh cho nội dung bài viết cộng đồng.
-    /// </summary>
-    [HttpPost("images")]
+        [HttpPost("images")]
     [RequestSizeLimit(10 * 1024 * 1024)]
     [EnableRateLimiting("community-write")]
     public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
@@ -54,10 +48,7 @@ public partial class CommunityController
         return Ok(new { success = true, url });
     }
 
-    /// <summary>
-    /// Lấy danh sách bài viết cộng đồng theo bộ lọc và phân trang.
-    /// </summary>
-    [HttpGet("posts")]
+        [HttpGet("posts")]
     public async Task<IActionResult> GetFeed(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
@@ -76,10 +67,7 @@ public partial class CommunityController
         return Ok(new { success = true, data = items, metadata = new { totalCount = total, page, pageSize } });
     }
 
-    /// <summary>
-    /// Lấy chi tiết một bài viết cộng đồng theo định danh.
-    /// </summary>
-    [HttpGet("posts/{id}")]
+        [HttpGet("posts/{id}")]
     public async Task<IActionResult> GetPostDetail(string id)
     {
         var post = await _mediator.Send(new GetPostDetailQuery
@@ -91,10 +79,7 @@ public partial class CommunityController
         return Ok(post);
     }
 
-    /// <summary>
-    /// Cập nhật nội dung bài viết cộng đồng do chính người dùng tạo.
-    /// </summary>
-    [HttpPut("posts/{id}")]
+        [HttpPut("posts/{id}")]
     [EnableRateLimiting("community-write")]
     public async Task<IActionResult> UpdatePost(string id, [FromBody] UpdatePostBody body)
     {
@@ -108,10 +93,7 @@ public partial class CommunityController
         return NoContent();
     }
 
-    /// <summary>
-    /// Xóa mềm bài viết cộng đồng theo quyền tác giả hoặc quản trị.
-    /// </summary>
-    [HttpDelete("posts/{id}")]
+        [HttpDelete("posts/{id}")]
     [EnableRateLimiting("community-write")]
     public async Task<IActionResult> DeletePost(string id)
     {

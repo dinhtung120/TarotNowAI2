@@ -1,19 +1,4 @@
-/*
- * ===================================================================
- * FILE: SendMessageCommandHandler.cs
- * NAMESPACE: TarotNow.Application.Features.Chat.Commands.SendMessage
- * ===================================================================
- * MỤC ĐÍCH:
- *   Handler xử lý Cốt Lõi Hệ Thống Gửi Tin.
- * 
- * PHÂN CHIA TRÁCH NHIỆM (CLEAN ARCHITECTURE):
- *   Handler này CHỈ LƯU VÀO DATABASE (Cập nhật MongoDB).
- *   Tại sao ở đây Không xài lệnh SignalR.Clients.All.SendAsync() bắn đi liền?
- *   => Vì làm thế sẽ phá vỡ quy tắc SOLID. Handler Command không nên phụ thuộc 
- *   vào Tầng Transport (SignalR/WebSocket). SignalR Hub sẽ gọi Handler này, 
- *   lấy kết quả Data, rồi TỰ SIGNALR Hub mới lo việc Broadcast (phát sóng).
- * ===================================================================
- */
+
 
 using MediatR;
 using TarotNow.Application.Common;
@@ -21,9 +6,6 @@ using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Chat.Commands.SendMessage;
 
-/// <summary>
-/// Xử lý logic nghiệp vụ ghi lưu Tin nhắn, đẩy đếm số chấm đỏ UnreadCount.
-/// </summary>
 public partial class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, ChatMessageDto>
 {
     private readonly IConversationRepository _conversationRepo;
@@ -96,7 +78,7 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
 
         await _conversationRepo.UpdateAsync(conversation, cancellationToken);
 
-        // Báo Front-end refetch số dư ví nếu lệnh đóng băng kim cương vừa chạy
+        
         if (firstMessageFreeze.IsTriggered)
         {
             await _walletPushService.PushBalanceChangedAsync(request.SenderId, cancellationToken);

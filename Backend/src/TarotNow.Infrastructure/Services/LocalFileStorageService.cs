@@ -19,13 +19,7 @@ public class LocalFileStorageService : IFileStorageService
         _logger = logger;
     }
 
-    /// <summary>
-    /// Lấy đường dẫn gốc để lưu file tĩnh.
-    /// Luôn dùng ContentRootPath/wwwroot thay vì WebRootPath,
-    /// vì khi chạy dotnet run, WebRootPath trỏ tới bin/Debug/net*/wwwroot/ (thư mục trống),
-    /// trong khi UseStaticFiles đã cấu hình PhysicalFileProvider trỏ tới ContentRootPath/wwwroot/uploads.
-    /// </summary>
-    private string GetStorageRoot()
+        private string GetStorageRoot()
     {
         return Path.Combine(_env.ContentRootPath, "wwwroot");
     }
@@ -79,7 +73,7 @@ public class LocalFileStorageService : IFileStorageService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Lỗi khi xóa file {RelativePath}", relativePath);
-            // Không throw exception khi xóa lỗi để không ngắt luồng user, chỉ log
+            
         }
 
         return Task.CompletedTask;

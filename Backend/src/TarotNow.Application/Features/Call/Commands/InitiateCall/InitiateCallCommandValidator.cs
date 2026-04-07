@@ -2,9 +2,6 @@ using FluentValidation;
 
 namespace TarotNow.Application.Features.Call.Commands.InitiateCall;
 
-/// <summary>
-/// FluentValidation rules for initiating a call.
-/// </summary>
 public sealed class InitiateCallCommandValidator : AbstractValidator<InitiateCallCommand>
 {
     public InitiateCallCommandValidator()

@@ -23,12 +23,9 @@ public class MarkAllNotificationsReadCommandHandler : IRequestHandler<MarkAllNot
     {
         _logger.LogInformation("Marking all notifications as read for User {UserId}", request.UserId);
 
-        /* 
-         * Gọi lệnh repository: Set { IsRead = true } cho TẤT CẢ các records của UserId
-         * Return bool indicating whether anything was actually modified
-         */
+        
         var success = await _notificationRepository.MarkAllAsReadAsync(request.UserId, cancellationToken);
         
-        return success; // True nếu có ít nhất 1 thông báo bị thay đổi
+        return success; 
     }
 }

@@ -1,21 +1,9 @@
-/*
- * ===================================================================
- * FILE: GachaRewardLog.cs
- * NAMESPACE: TarotNow.Domain.Entities
- * ===================================================================
- * MỤC ĐÍCH:
- *   Dấu tích Kế Toán Đỏ Lấy Hàng Gacha — Record chống gian lận Postgres.
- * ===================================================================
- */
+
 
 using System;
 
 namespace TarotNow.Domain.Entities;
 
-/// <summary>
-/// Biên bản không thể tẩy xóa báo chứng khách đập đá hất tài chính vào Banner, rơi mảnh nào ghi hết ra.
-/// IdempotencyKey ở đây chặn lũ clone HTTP Request chập nháy.
-/// </summary>
 public class GachaRewardLog
 {
     public Guid Id { get; private set; }
@@ -33,7 +21,7 @@ public class GachaRewardLog
     public int PityCountAtSpin { get; private set; }
     public bool WasPityTriggered { get; private set; }
     
-    // Dải hạt tinh khôi RNG Seed lôi ra để chứng minh "tao ko can thiệp số".
+    
     public string? RngSeed { get; private set; }
     public string IdempotencyKey { get; private set; } = string.Empty;
     
@@ -59,10 +47,7 @@ public class GachaRewardLog
         CreatedAt = DateTime.UtcNow;
     }
 
-    /// <summary>
-    /// Đẻ biên bản Kế toán tay
-    /// </summary>
-    public static GachaRewardLog Create(GachaRewardLogCreateRequest request)
+        public static GachaRewardLog Create(GachaRewardLogCreateRequest request)
     {
         return new GachaRewardLog(request);
     }

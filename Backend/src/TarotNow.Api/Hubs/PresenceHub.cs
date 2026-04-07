@@ -5,10 +5,6 @@ using TarotNow.Application.Common.Interfaces;
 
 namespace TarotNow.Api.Hubs;
 
-/// <summary>
-/// Hub riêng biệt chuyên quản lý trạng thái Online/Offline/Heartbeat của người dùng.
-/// Việc tách rời khỏi ChatHub giúp theo dõi presence ngay cả khi user ở trang khác không phải Chat.
-/// </summary>
 [Authorize]
 public class PresenceHub : Hub
 {
@@ -31,15 +27,10 @@ public class PresenceHub : Hub
         {
             _presenceTracker.MarkConnected(userId, Context.ConnectionId);
 
-            /*
-             * Thêm connection vào group "user:{userId}" để cho phép
-             * INotificationPushService gửi event tới đúng user.
-             * Một user có thể có nhiều connections (nhiều tabs/devices)
-             * → tất cả đều nhận được event khi push vào group.
-             */
+            
             await Groups.AddToGroupAsync(Context.ConnectionId, $"user:{userId}");
             
-            // Broadcast event cho client biết user vừa online
+            
             await Clients.All.SendAsync("UserStatusChanged", userId, "online");
         }
 
@@ -59,7 +50,7 @@ public class PresenceHub : Hub
         {
             _presenceTracker.MarkDisconnected(userId, Context.ConnectionId);
 
-            /* Rời group khi disconnect để tránh push vào connection đã chết */
+            
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"user:{userId}");
         }
 
@@ -71,10 +62,7 @@ public class PresenceHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
-    /// <summary>
-    /// Client gọi hàm này định kỳ (VD: mỗi 5 phút) để đánh dấu là mình vẫn đang mờ app/web
-    /// </summary>
-    public Task Heartbeat()
+        public Task Heartbeat()
     {
         var userId = GetUserId();
 

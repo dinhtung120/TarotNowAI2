@@ -1,12 +1,4 @@
-/*
- * ===================================================================
- * FILE: UpdatePostCommand.cs
- * NAMESPACE: TarotNow.Application.Features.Community.Commands.UpdatePost
- * ===================================================================
- * MỤC ĐÍCH:
- *   Cập nhật (sửa) nội dung bài viết cộng đồng (Chỉ Author mới được sửa).
- * ===================================================================
- */
+
 
 using MediatR;
 using TarotNow.Application.Exceptions;
@@ -39,7 +31,7 @@ public class UpdatePostCommandHandler : IRequestHandler<UpdatePostCommand, bool>
         if (existingPost == null || existingPost.IsDeleted)
             throw new NotFoundException("Không tìm thấy bài viết hoặc bài viết đã bị xoá.");
 
-        // Quyền lực tối thượng: Chỉ chủ nhân văn bản mới được phép múa bút sửa đổi
+        
         if (existingPost.AuthorId != request.AuthorId.ToString())
             throw new ForbiddenException("Bạn không có quyền sửa bài viết này.");
 

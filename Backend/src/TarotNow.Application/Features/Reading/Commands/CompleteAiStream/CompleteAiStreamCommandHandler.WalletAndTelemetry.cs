@@ -56,7 +56,7 @@ public partial class CompleteAiStreamCommandHandler
         }
         catch
         {
-            // Ignore telemetry failures. Business transaction is already committed.
+            
         }
     }
 

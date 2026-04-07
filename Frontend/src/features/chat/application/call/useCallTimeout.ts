@@ -3,9 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useCallStore } from './useCallStore';
 
-/**
- * Đếm thời gian tự động huỷ cuộc gọi nếu chuông kêu quá timeout (60 giây)
- */
+
 export function useCallTimeout(endCallCallback: (sessionID: string, reason: string) => void) {
   const { uiState, session, isCaller, reset } = useCallStore();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);

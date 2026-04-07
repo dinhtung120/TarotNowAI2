@@ -4,14 +4,9 @@ using TarotNow.Domain.Entities;
 
 namespace TarotNow.Application.Features.Withdrawal.Queries.ListWithdrawals;
 
-/// <summary>
-/// Query: Lấy danh sách yêu cầu rút tiền.
-/// Dùng cho cả reader (my-list) và admin (pending queue).
-/// </summary>
 public class ListWithdrawalsQuery : IRequest<List<WithdrawalResult>>
 {
-    /// <summary>Nếu có → lấy theo user. Nếu null → admin lấy pending.</summary>
-    public Guid? UserId { get; set; }
+        public Guid? UserId { get; set; }
     public bool PendingOnly { get; set; }
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 20;

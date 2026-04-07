@@ -3,9 +3,6 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace TarotNow.Infrastructure.Persistence.MongoDocuments;
 
-/// <summary>
-/// Tài liệu (Document) đại diện cho một bình luận trong bài viết cộng đồng.
-/// </summary>
 public class CommunityCommentDocument
 {
     [BsonId]

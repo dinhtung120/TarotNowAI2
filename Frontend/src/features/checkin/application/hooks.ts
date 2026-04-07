@@ -29,7 +29,7 @@ export const useStreakStatus = (enabled: boolean = true) => {
       if (message.includes('401') || message.includes('Unauthorized')) {
         return false;
       }
-      return failureCount < 2; // Vẫn cho phép thử lại 2 lần với các lỗi network khác.
+      return failureCount < 2; 
     },
 
     staleTime: 60 * 1000,

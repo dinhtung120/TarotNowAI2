@@ -1,7 +1,4 @@
-/*
- * GLOBALS.CSS — Base utilities, components and motion primitives.
- * Theme token blocks were moved to /public/themes/<theme>.css and are loaded dynamically.
- */
+
 
 @import "tailwindcss";
 @import "./styles/base.css";

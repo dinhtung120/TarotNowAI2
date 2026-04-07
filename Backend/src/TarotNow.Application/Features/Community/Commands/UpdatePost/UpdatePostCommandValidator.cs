@@ -2,9 +2,6 @@ using FluentValidation;
 
 namespace TarotNow.Application.Features.Community.Commands.UpdatePost;
 
-/// <summary>
-/// FluentValidation rules for updating a community post.
-/// </summary>
 public sealed class UpdatePostCommandValidator : AbstractValidator<UpdatePostCommand>
 {
     public UpdatePostCommandValidator()

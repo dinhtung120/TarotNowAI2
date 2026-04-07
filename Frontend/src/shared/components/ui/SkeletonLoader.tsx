@@ -5,13 +5,13 @@ import { cn } from "@/lib/utils";
 type SkeletonType = "text" | "card" | "avatar" | "row";
 
 interface SkeletonLoaderProps {
- /** Loại skeleton. Mặc định: "text" */
+ 
  type?: SkeletonType;
 
- /** Số lượng skeleton items. Mặc định: 1 */
+ 
  count?: number;
 
- /** Custom className cho sizing */
+ 
  className?: string;
 }
 
@@ -38,13 +38,13 @@ export default function SkeletonLoader({
  <div
  key={`skeleton-${type}-${i}`}
  className={cn(
- /* Base styling theo type */
+ 
  typeStyles[type],
- /* Text type: width ngẫu nhiên. Các type khác: full width */
+ 
  type === "text" ? randomTextWidth(i) : "w-full",
- /* Shimmer animation — gradient chạy ngang (đã định nghĩa ở globals.css) */
+ 
  "animate-shimmer",
- /* Fallback background nếu shimmer chưa load */
+ 
  "tn-surface",
  )}
  />

@@ -1,40 +1,40 @@
-// =============================================================================
-// TarotWeb – Seed: cards_catalog (78 lá bài Tarot)
-// =============================================================================
-// Mục đích: Chèn dữ liệu tĩnh 78 lá bài Tarot vào collection cards_catalog.
-//   - 22 lá Major Arcana (_id: 1-22)
-//   - 56 lá Minor Arcana (_id: 23-78) gồm 4 bộ: Wands, Cups, Swords, Pentacles
-//
-// Cách chạy:
-//   mongosh mongodb://localhost:27017/tarotweb < database/mongodb/seed_cards.js
-//
-// Idempotent: Dùng insertMany với ordered:false. Nếu chạy lại, lá trùng _id sẽ
-// bị bỏ qua (duplicate key error) nhưng các lá mới (nếu có) vẫn được chèn.
-//
-// Schema mỗi lá bài:
-//   _id: Int32 (1-78) – ID cố định
-//   code: string – Mã ổn định (vd: the_fool, ace_of_wands)
-//   name: {vi, en, zh} – Tên đa ngôn ngữ
-//   arcana: "major" | "minor"
-//   suit: null (Major) | "wands" | "cups" | "swords" | "pentacles"
-//   number: Int32 – Số thứ tự trong bộ
-//   element: "fire" | "water" | "air" | "earth"
-//   meanings: { upright: {keywords[], description}, reversed: {keywords[], description} }
-//   created_at, updated_at: ISODate
-// =============================================================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 (function () {
   "use strict";
 
-  // Biến thời gian hiện tại để gán cho created_at và updated_at
+  
   const now = new Date();
 
-  // =========================================================================
-  // MAJOR ARCANA (22 lá, _id: 1-22)
-  // =========================================================================
-  // Major Arcana đại diện cho các bài học lớn trong cuộc sống, hành trình tâm linh.
-  // Không thuộc bộ (suit) nào → suit: null.
-  // Element được gán theo truyền thống Tarot phổ biến nhất.
+  
+  
+  
+  
+  
+  
   const majorArcana = [
     {
       _id: 0, code: "the_fool", number: 0, element: "air",
@@ -214,7 +214,7 @@
     }
   ];
 
-  // Gán thuộc tính chung cho Major Arcana: arcana, suit, timestamps
+  
   majorArcana.forEach(function (card) {
     card.arcana = "major";
     card.suit = null;
@@ -222,18 +222,18 @@
     card.updated_at = now;
   });
 
-  // =========================================================================
-  // MINOR ARCANA (56 lá, _id: 22-77)
-  // =========================================================================
-  // Minor Arcana chia thành 4 bộ (suits), mỗi bộ 14 lá (Ace-10, Page, Knight, Queen, King).
-  // Mỗi bộ tương ứng với một nguyên tố (element) và khía cạnh cuộc sống khác nhau.
+  
+  
+  
+  
+  
 
-  // Cấu hình 4 bộ bài Minor Arcana
-  // startId: _id bắt đầu cho bộ đó trong database
+  
+  
   const suits = [
     {
       suit: "wands", element: "fire", startId: 22,
-      // Wands (Gậy) – Nguyên tố Lửa: hành động, sáng tạo, ý chí, năng lượng
+      
       names: [
         { vi: "Át Gậy", en: "Ace of Wands", zh: "权杖王牌" },
         { vi: "Hai Gậy", en: "Two of Wands", zh: "权杖二" },
@@ -269,7 +269,7 @@
     },
     {
       suit: "cups", element: "water", startId: 36,
-      // Cups (Cốc) – Nguyên tố Nước: cảm xúc, tình yêu, mối quan hệ, trực giác
+      
       names: [
         { vi: "Át Cốc", en: "Ace of Cups", zh: "圣杯王牌" },
         { vi: "Hai Cốc", en: "Two of Cups", zh: "圣杯二" },
@@ -305,7 +305,7 @@
     },
     {
       suit: "swords", element: "air", startId: 50,
-      // Swords (Kiếm) – Nguyên tố Gió: tư duy, giao tiếp, xung đột, sự thật
+      
       names: [
         { vi: "Át Kiếm", en: "Ace of Swords", zh: "宝剑王牌" },
         { vi: "Hai Kiếm", en: "Two of Swords", zh: "宝剑二" },
@@ -341,7 +341,7 @@
     },
     {
       suit: "pentacles", element: "earth", startId: 64,
-      // Pentacles (Tiền) – Nguyên tố Đất: vật chất, tài chính, sức khỏe, công việc
+      
       names: [
         { vi: "Át Tiền", en: "Ace of Pentacles", zh: "金币王牌" },
         { vi: "Hai Tiền", en: "Two of Pentacles", zh: "金币二" },
@@ -377,13 +377,13 @@
     }
   ];
 
-  // =========================================================================
-  // Tạo danh sách 56 lá Minor Arcana từ cấu hình suits
-  // =========================================================================
+  
+  
+  
   const minorArcana = [];
 
-  // Hàm helper: tạo code từ tên tiếng Anh
-  // Ví dụ: "Ace of Wands" → "ace_of_wands", "Page of Cups" → "page_of_cups"
+  
+  
   function toCode(enName) {
     return enName.toLowerCase().replace(/ /g, "_");
   }
@@ -396,7 +396,7 @@
         name: suitConfig.names[i],
         arcana: "minor",
         suit: suitConfig.suit,
-        number: i + 1,         // Ace=1, Two=2, ..., King=14
+        number: i + 1,         
         element: suitConfig.element,
         meanings: suitConfig.meanings[i],
         created_at: now,
@@ -405,11 +405,11 @@
     }
   });
 
-  // =========================================================================
-  // Mapping code lá bài -> filename ảnh thực tế trong Frontend/public/img
-  // =========================================================================
-  // Lưu ý: Không map theo _id + 1 vì thứ tự ảnh hiện tại không trùng thứ tự suit trong seed.
-  // Map theo code ổn định để đảm bảo đúng lá bài.
+  
+  
+  
+  
+  
   const CARD_IMAGE_FILENAME_BY_CODE = {
     "the_fool": "01_The_Fool_50_20260325_181348.avif",
     "the_magician": "02_The_Magician_50_20260325_181348.avif",
@@ -491,9 +491,9 @@
     "king_of_pentacles": "50_King_of_Pentacles_50_20260325_181419.avif"
   };
 
-  // =========================================================================
-  // Gộp 22 Major + 56 Minor = 78 lá bài
-  // =========================================================================
+  
+  
+  
   const allCards = majorArcana.concat(minorArcana).map(function (card) {
     var filename = CARD_IMAGE_FILENAME_BY_CODE[card.code];
     if (filename) {
@@ -502,22 +502,22 @@
     return card;
   });
 
-  // Kiểm tra: đảm bảo đúng 78 lá
+  
   if (allCards.length !== 78) {
     print("ERROR: Expected 78 cards but got " + allCards.length);
     quit(1);
   }
 
-  // =========================================================================
-  // Insert vào collection cards_catalog
-  // =========================================================================
-  // ordered: false → nếu lá nào trùng _id (đã tồn tại) thì bỏ qua, không dừng
-  // Cách này đảm bảo idempotent: chạy lại không lỗi
+  
+  
+  
+  
+  
   try {
     var result = db.cards_catalog.insertMany(allCards, { ordered: false });
     print("Inserted " + result.insertedIds.length + " cards successfully.");
   } catch (e) {
-    // Nếu có duplicate key errors (do chạy lại), vẫn in số lá đã insert
+    
     if (e.writeErrors) {
       var duplicates = e.writeErrors.filter(function (err) { return err.code === 11000; });
       print("Skipped " + duplicates.length + " duplicate cards (already exist).");
@@ -527,7 +527,7 @@
     }
   }
 
-  // Backfill image_url cho dữ liệu đã tồn tại từ trước (trường hợp chạy seed nhiều lần)
+  
   var bulkOps = allCards.map(function (card) {
     return {
       updateOne: {
@@ -548,7 +548,7 @@
     ", Modified: " + backfillResult.modifiedCount
   );
 
-  // Verify: đếm tổng số lá trong collection
+  
   var count = db.cards_catalog.countDocuments();
   print("Total cards in cards_catalog: " + count);
   if (count !== 78) {

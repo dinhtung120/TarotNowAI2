@@ -27,9 +27,7 @@ export default function UserLayout({ children }: UserLayoutProps) {
         </main>
       </div>
 
-      {/* Bottom Navigation Bar (Mobile only).
- Nằm dưới cùng màn hình trên điện thoại.
- */}
+      {}
       <BottomTabBar />
     </div>
   );

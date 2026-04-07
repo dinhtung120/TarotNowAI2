@@ -1,8 +1,5 @@
 namespace TarotNow.Api.Constants;
 
-/// <summary>
-/// Reader presence states used by API/presentation layer.
-/// </summary>
 public static class ApiReaderStatusConstants
 {
     public const string Online = "online";

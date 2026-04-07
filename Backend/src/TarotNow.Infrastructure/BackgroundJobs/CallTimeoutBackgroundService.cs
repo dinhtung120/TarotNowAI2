@@ -34,7 +34,7 @@ public partial class CallTimeoutBackgroundService : BackgroundService
                 }
                 catch (ObjectDisposedException) when (stoppingToken.IsCancellationRequested)
                 {
-                    // Ignore expected disposal during shutdown
+                    
                 }
                 catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
                 {

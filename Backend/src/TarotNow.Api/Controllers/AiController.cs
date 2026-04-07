@@ -27,10 +27,7 @@ public partial class AiController : ControllerBase
         _featureManager = featureManager;
     }
 
-    /// <summary>
-    /// Streams AI response for an existing reading session using Server-Sent Events.
-    /// </summary>
-    [HttpGet("{sessionId}/stream")]
+        [HttpGet("{sessionId}/stream")]
     public async Task StreamReading(
         string sessionId,
         [FromQuery] string? followUpQuestion,

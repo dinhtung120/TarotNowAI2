@@ -1,12 +1,4 @@
-/*
- * ===================================================================
- * FILE: GetPostDetailQuery.cs
- * NAMESPACE: TarotNow.Application.Features.Community.Queries.GetPostDetail
- * ===================================================================
- * MỤC ĐÍCH:
- *   Lấy chi tiết 1 bài viết cộng đồng trọn vẹn, kèm Reaction của Viewer.
- * ===================================================================
- */
+
 
 using MediatR;
 using AutoMapper;

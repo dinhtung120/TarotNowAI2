@@ -23,7 +23,7 @@ public class ImageSharpProcessingService : IImageProcessingService
     {
         try
         {
-            // Reset position if it's not at the beginning
+            
             if (input.CanSeek && input.Position > 0)
             {
                 input.Position = 0;
@@ -40,7 +40,7 @@ public class ImageSharpProcessingService : IImageProcessingService
                 image.Mutate(x => x.Resize(targetWidth, targetHeight, KnownResamplers.Lanczos3));
             }
 
-            // Bỏ đi meta data EXIF cho bảo mật
+            
             image.Metadata.ExifProfile = null;
             image.Metadata.XmpProfile = null;
             image.Metadata.IptcProfile = null;

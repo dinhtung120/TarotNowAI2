@@ -1,12 +1,4 @@
-/*
- * ===================================================================
- * FILE: GetModerationQueueQuery.cs
- * NAMESPACE: TarotNow.Application.Features.Community.Queries.GetModerationQueue
- * ===================================================================
- * MỤC ĐÍCH:
- *   Lấy danh sách các báo cáo vi phạm ở trạng thái Pending dành cho Admin xemét.
- * ===================================================================
- */
+
 
 using MediatR;
 using TarotNow.Application.Common;
@@ -35,7 +27,7 @@ public class GetModerationQueueQueryHandler : IRequestHandler<GetModerationQueue
         var page = request.Page < 1 ? 1 : request.Page;
         var pageSize = request.PageSize <= 0 ? 20 : Math.Min(request.PageSize, 100);
 
-        // Chỉ lấy report target = "post" cho moderation queue community.
+        
         return await _reportRepo.GetPaginatedAsync(
             page,
             pageSize,

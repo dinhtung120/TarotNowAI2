@@ -39,7 +39,7 @@ public partial class SendMessageCommandHandler
 
     private static void ValidateConversationForSend(ConversationDto conversation, string senderId, string messageType)
     {
-        // Tin nhắn hệ thống và nhật ký cuộc gọi không bị ràng buộc
+        
         if (messageType == ChatMessageType.System || messageType == ChatMessageType.CallLog)
             return;
 

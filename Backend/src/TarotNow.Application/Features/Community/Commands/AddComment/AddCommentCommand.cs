@@ -43,7 +43,7 @@ public class AddCommentCommandHandler : IRequestHandler<AddCommentCommand, Commu
         var post = await _postRepo.GetByIdAsync(request.PostId, cancellationToken)
             ?? throw new NotFoundException($"Không tìm thấy bài viết ID {request.PostId}.");
 
-        // CRITICAL FIX: Chặn bình luận vào bài Private của người khác
+        
         if (post.Visibility == PostVisibility.Private 
             && post.AuthorId != request.AuthorId.ToString())
         {
@@ -65,7 +65,7 @@ public class AddCommentCommandHandler : IRequestHandler<AddCommentCommand, Commu
 
         var createdComment = await _commentRepo.AddCommentAsync(commentDto, cancellationToken);
 
-        // Tăng số lượng bình luận của bài viết
+        
         await _postRepo.IncrementCommentsCountAsync(request.PostId, 1, cancellationToken);
 
         return createdComment;

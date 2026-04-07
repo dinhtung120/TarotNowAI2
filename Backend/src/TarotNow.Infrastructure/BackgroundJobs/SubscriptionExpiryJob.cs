@@ -1,17 +1,4 @@
-/*
- * ===================================================================
- * FILE: SubscriptionExpiryJob.cs
- * NAMESPACE: TarotNow.Infrastructure.BackgroundJobs
- * ===================================================================
- * MỤC ĐÍCH:
- *   Thằng Giám Thị Canh Giờ Trảm Hết Hồ Sơ Quá Hạn Cụt Kì Sống (Background Service Cắt Tiết Gói Active Hết Hạn).
- *   
- *   CHI TIẾT:
- *   - Lấy `Subscriptions WHERE Status="active" AND EndDate <= NOW`.
- *   - Sút vào trạng thái `Expired`.
- *   - Bắn Domain Event báo còi báo thức ra để Handler ngoài kia Tắt Cache Người Dùng Báo Đỏ Mobile Nạp Lại Thêm Đi.
- * ===================================================================
- */
+
 
 using System;
 using System.Threading;
@@ -50,14 +37,14 @@ public class SubscriptionExpiryJob : BackgroundService
                 }
                 catch (ObjectDisposedException) when (stoppingToken.IsCancellationRequested)
                 {
-                    // Graceful exit
+                    
                 }
                 catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
                 {
                     _logger.LogError(ex, "Lỗi Nghiêm Trọng Xảy Ra Khi Lấy Đồ Quá Hạn Máy Chém.");
                 }
 
-                // Dạo Quanh Phố Trảm 1 Tiếng Một Lần Đi Tuần Nhé.
+                
                 await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
             }
         }
@@ -84,10 +71,10 @@ public class SubscriptionExpiryJob : BackgroundService
         {
             try
             {
-                // Đóng Đập Xả (Kéo Lại Cờ Enum Expired).
+                
                 sub.Expire();
                 
-                // Mở Loa Gào Ra Domain Events Báo Mọi Người Xông Vào Xóa Cache Đít UI Chữ Vàng Cầm Đỏ.
+                
                 await domainEventPublisher.PublishAsync(new SubscriptionExpiredDomainEvent(sub.UserId, sub.Id), cancellationToken);
             }
             catch (Exception itemEx)
@@ -96,7 +83,7 @@ public class SubscriptionExpiryJob : BackgroundService
             }
         }
 
-        // Dội Ụp Lưu Trút Đống Nhãn Active Sang Expired.
+        
         await repo.SaveChangesAsync(cancellationToken);
         
         _logger.LogInformation("Tìm Vào Sát Cửa Tử {Count} Hồ Sơ Đăng Ký Đã Hết Giờ Linh Thiêng Phù Hộ (Gắn Expired).", expiredSubs.Count);

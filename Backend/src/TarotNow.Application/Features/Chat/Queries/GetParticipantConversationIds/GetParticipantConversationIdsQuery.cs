@@ -3,9 +3,6 @@ using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Chat.Queries.GetParticipantConversationIds;
 
-/// <summary>
-/// Query lấy danh sách conversation ids theo participant và status filter.
-/// </summary>
 public class GetParticipantConversationIdsQuery : IRequest<IReadOnlyList<string>>
 {
     public string ParticipantId { get; set; } = string.Empty;
@@ -13,9 +10,6 @@ public class GetParticipantConversationIdsQuery : IRequest<IReadOnlyList<string>
     public IReadOnlyCollection<string>? Statuses { get; set; }
 }
 
-/// <summary>
-/// Handler trả về các conversation ids mà participant đang tham gia.
-/// </summary>
 public class GetParticipantConversationIdsQueryHandler
     : IRequestHandler<GetParticipantConversationIdsQuery, IReadOnlyList<string>>
 {

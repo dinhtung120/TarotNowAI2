@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 export const StreakDisplay = ({ streak, isBroken }: { streak: number; isBroken: boolean }) => {
   return (
     <div className={cn("flex items-center gap-2")}>
-      {/* Icon Ngọn Lửa, đổi rực lửa nếu còn streak, tắt lửa (xám) nếu mất streak */}
+      {}
       <div
         className={`w-10 h-10 flex items-center justify-center rounded-full shadow-inner ${
           isBroken ? 'bg-gray-700/50 grayscale' : 'bg-orange-500/20 shadow-orange-500/30'

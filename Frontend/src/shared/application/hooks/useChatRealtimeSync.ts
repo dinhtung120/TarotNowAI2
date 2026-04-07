@@ -44,7 +44,7 @@ export function useChatRealtimeSync() {
       invalidateTimeout = setTimeout(() => {
         void queryClient.invalidateQueries({ queryKey: ['chat', 'inbox'] });
         void queryClient.invalidateQueries({ queryKey: ['chat', 'unread-badge'] });
-      }, 1000); // Debounce 1 giây để gộp các event liên tiếp
+      }, 1000); 
     };
 
     const init = async () => {

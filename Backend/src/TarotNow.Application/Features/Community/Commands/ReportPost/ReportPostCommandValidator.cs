@@ -3,9 +3,6 @@ using TarotNow.Application.Features.Community;
 
 namespace TarotNow.Application.Features.Community.Commands.ReportPost;
 
-/// <summary>
-/// FluentValidation rules for reporting a community post.
-/// </summary>
 public sealed class ReportPostCommandValidator : AbstractValidator<ReportPostCommand>
 {
     public ReportPostCommandValidator()

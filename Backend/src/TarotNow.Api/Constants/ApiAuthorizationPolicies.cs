@@ -3,9 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace TarotNow.Api.Constants;
 
-/// <summary>
-/// Authorization policy names used by API endpoints and hubs.
-/// </summary>
 public static class ApiAuthorizationPolicies
 {
     public const string AuthenticatedUser = "authenticated_user";

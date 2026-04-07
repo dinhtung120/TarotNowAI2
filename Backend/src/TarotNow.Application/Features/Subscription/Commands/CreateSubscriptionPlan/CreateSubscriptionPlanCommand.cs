@@ -1,12 +1,4 @@
-/*
- * ===================================================================
- * FILE: CreateSubscriptionPlanCommand.cs
- * NAMESPACE: TarotNow.Application.Features.Subscription.Commands.CreateSubscriptionPlan
- * ===================================================================
- * MỤC ĐÍCH:
- *   Lệnh dành riêng cho Quản Trị Viên (Admin) để tạo ra các gói bán hàng kỳ hạn mới.
- * ===================================================================
- */
+
 
 using System;
 using MediatR;

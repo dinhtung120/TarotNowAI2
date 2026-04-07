@@ -18,10 +18,7 @@ public sealed class AuthRegistrationController : ControllerBase
         _mediator = mediator;
     }
 
-    /// <summary>
-    /// Registers a new user account and returns the created identifier.
-    /// </summary>
-    [HttpPost("register")]
+        [HttpPost("register")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(RegisterResponse))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
@@ -38,10 +35,7 @@ public sealed class AuthRegistrationController : ControllerBase
         return CreatedAtAction("GetProfile", "Profile", null, response);
     }
 
-    /// <summary>
-    /// Sends email verification OTP for pending account activation.
-    /// </summary>
-    [HttpPost("send-verification-email")]
+        [HttpPost("send-verification-email")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> SendVerificationEmail([FromBody] SendEmailVerificationOtpCommand command)
     {
@@ -49,10 +43,7 @@ public sealed class AuthRegistrationController : ControllerBase
         return Ok(new { message = "If the email is valid and unverified, an OTP has been sent." });
     }
 
-    /// <summary>
-    /// Verifies email ownership using OTP code.
-    /// </summary>
-    [HttpPost("verify-email")]
+        [HttpPost("verify-email")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailCommand command)

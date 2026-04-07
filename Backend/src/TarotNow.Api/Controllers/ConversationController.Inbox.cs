@@ -9,10 +9,7 @@ namespace TarotNow.Api.Controllers;
 
 public partial class ConversationController
 {
-    /// <summary>
-    /// Tạo mới hoặc mở lại conversation active theo cặp user-reader.
-    /// </summary>
-    [HttpPost]
+        [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateConversationBody body)
     {
         if (!TryGetUserId(out var userId))
@@ -30,10 +27,7 @@ public partial class ConversationController
         return Ok(result);
     }
 
-    /// <summary>
-    /// Lấy danh sách conversation (inbox) theo tab active/completed/all.
-    /// </summary>
-    [HttpGet]
+        [HttpGet]
     public async Task<IActionResult> List(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
@@ -55,10 +49,7 @@ public partial class ConversationController
         return Ok(result);
     }
 
-    /// <summary>
-    /// Lấy tổng số tin nhắn chưa đọc của người dùng hiện tại (cho badge thông báo).
-    /// </summary>
-    [HttpGet("unread-total")]
+        [HttpGet("unread-total")]
     public async Task<IActionResult> GetUnreadTotal()
     {
         if (!TryGetUserId(out var userId))
@@ -74,10 +65,7 @@ public partial class ConversationController
         return Ok(result);
     }
 
-    /// <summary>
-    /// User hủy/xóa cuộc trò chuyện pending trước khi gửi câu hỏi đầu tiên.
-    /// </summary>
-    [HttpPost("{id}/cancel")]
+        [HttpPost("{id}/cancel")]
     public async Task<IActionResult> CancelPending(string id)
     {
         if (!TryGetUserId(out var userId))

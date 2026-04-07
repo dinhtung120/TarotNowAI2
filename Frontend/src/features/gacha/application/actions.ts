@@ -59,9 +59,7 @@ export async function getGachaOdds(bannerCode: string): Promise<ActionResult<Gac
   }
 }
 
-/**
- * Lấy lịch sử quay gacha của người dùng hiện tại.
- */
+
 export async function getGachaHistory(limit: number = 50): Promise<ActionResult<GachaHistoryItemDto[]>> {
   const accessToken = await getServerAccessToken();
   if (!accessToken) return actionFail('Unauthorized');
@@ -85,9 +83,7 @@ export async function getGachaHistory(limit: number = 50): Promise<ActionResult<
   }
 }
 
-/**
- * Thực hiện quay gacha. Sử dụng Idempotency Key để chống lặp yêu cầu khi mạng lỗi.
- */
+
 export async function spinGacha(data: SpinGachaRequestDto): Promise<ActionResult<SpinGachaResult>> {
   const accessToken = await getServerAccessToken();
   if (!accessToken) return actionFail('Unauthorized');

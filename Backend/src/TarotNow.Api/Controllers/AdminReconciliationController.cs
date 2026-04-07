@@ -18,10 +18,7 @@ public sealed class AdminReconciliationController : ControllerBase
         _mediator = mediator;
     }
 
-    /// <summary>
-    /// Returns detected wallet ledger mismatches for reconciliation.
-    /// </summary>
-    [HttpGet("reconciliation/wallet")]
+        [HttpGet("reconciliation/wallet")]
     public async Task<IActionResult> GetWalletMismatches()
     {
         var result = await _mediator.Send(new GetLedgerMismatchQuery());

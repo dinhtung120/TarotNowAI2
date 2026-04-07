@@ -2,9 +2,6 @@ using FluentValidation;
 
 namespace TarotNow.Application.Features.Call.Commands.EndCall;
 
-/// <summary>
-/// FluentValidation rules for ending a call.
-/// </summary>
 public sealed class EndCallCommandValidator : AbstractValidator<EndCallCommand>
 {
     private static readonly string[] AllowedReasons = ["normal", "timeout", "cancelled", "disconnected", "timeout_server"];

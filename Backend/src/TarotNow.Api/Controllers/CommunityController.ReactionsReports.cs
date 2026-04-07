@@ -8,10 +8,7 @@ namespace TarotNow.Api.Controllers;
 
 public partial class CommunityController
 {
-    /// <summary>
-    /// Bật hoặc tắt reaction của người dùng trên bài viết.
-    /// </summary>
-    [HttpPost("posts/{id}/reactions")]
+        [HttpPost("posts/{id}/reactions")]
     [EnableRateLimiting("community-write")]
     public async Task<IActionResult> ToggleReaction(string id, [FromBody] ToggleReactionBody body)
     {
@@ -25,10 +22,7 @@ public partial class CommunityController
         return Ok(new { success = true });
     }
 
-    /// <summary>
-    /// Tạo báo cáo vi phạm cho một bài viết cộng đồng.
-    /// </summary>
-    [HttpPost("posts/{id}/reports")]
+        [HttpPost("posts/{id}/reports")]
     [EnableRateLimiting("community-write")]
     public async Task<IActionResult> ReportPost(string id, [FromBody] ReportPostBody body)
     {

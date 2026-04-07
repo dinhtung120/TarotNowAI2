@@ -1,13 +1,4 @@
-/*
- * ===================================================================
- * FILE: ReportPostCommand.cs
- * NAMESPACE: TarotNow.Application.Features.Community.Commands.ReportPost
- * ===================================================================
- * MỤC ĐÍCH:
- *   Tạo một báo cáo vi phạm đối với bài viết cộng đồng (Post).
- *   Sử dụng chung cơ sở hạ tầng của IReportRepository.
- * ===================================================================
- */
+
 
 using MediatR;
 using TarotNow.Application.Common;
@@ -39,7 +30,7 @@ public class ReportPostCommandHandler : IRequestHandler<ReportPostCommand, Repor
 
     public async Task<ReportDto> Handle(ReportPostCommand request, CancellationToken cancellationToken)
     {
-        // 1. Validate
+        
         var post = await _postRepo.GetByIdAsync(request.PostId, cancellationToken);
         if (post == null || post.IsDeleted)
             throw new NotFoundException("Bài viết không tồn tại hoặc đã bị xoá.");
@@ -57,11 +48,11 @@ public class ReportPostCommandHandler : IRequestHandler<ReportPostCommand, Repor
         if (string.IsNullOrWhiteSpace(request.Description) || request.Description.Length < 10)
             throw new BadRequestException("Mô tả vi phạm phải có ít nhất 10 ký tự.");
 
-        // 2. Tạo biên bản Tố cáo
+        
         var report = new ReportDto
         {
             ReporterId = request.ReporterId.ToString(),
-            TargetType = "post", // Target là "post" để tách biệt với "message", "conversation"
+            TargetType = "post", 
             TargetId = request.PostId,
             Reason = $"[{request.ReasonCode}] {request.Description}",
             Status = PostReportStatus.Pending,

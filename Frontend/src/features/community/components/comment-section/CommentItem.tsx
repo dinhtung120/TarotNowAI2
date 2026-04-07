@@ -12,7 +12,7 @@ export function CommentItem({ comment }: CommentItemProps) {
   <div className={cn('flex gap-3')}>
    <div className={cn('w-8 h-8 shrink-0 rounded-full bg-[#1a1b26] border border-[#2a2b3d] overflow-hidden flex items-center justify-center')}>
     {comment.authorAvatarUrl ? (
-     // eslint-disable-next-line @next/next/no-img-element
+     
      <img src={comment.authorAvatarUrl} alt={comment.authorDisplayName} className={cn('w-full h-full object-cover')} />
     ) : (
      <span className={cn('text-[#8a2be2] font-semibold text-xs')}>{comment.authorDisplayName.charAt(0).toUpperCase()}</span>

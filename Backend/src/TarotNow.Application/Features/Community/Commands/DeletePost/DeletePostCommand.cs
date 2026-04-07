@@ -1,13 +1,4 @@
-/*
- * ===================================================================
- * FILE: DeletePostCommand.cs
- * NAMESPACE: TarotNow.Application.Features.Community.Commands.DeletePost
- * ===================================================================
- * MỤC ĐÍCH:
- *   Xoá mềm bài viết cộng đồng.
- *   Author tự xoá hoặc Admin can thiệp xoá.
- * ===================================================================
- */
+
 
 using MediatR;
 using TarotNow.Application.Exceptions;
@@ -38,7 +29,7 @@ public class DeletePostCommandHandler : IRequestHandler<DeletePostCommand, bool>
         if (existingPost == null || existingPost.IsDeleted)
             throw new NotFoundException("Không tìm thấy bài viết hoặc bài viết đã bị xoá.");
 
-        // Rule: Author hoặc Admin mới được xóa
+        
         bool isAuthor = existingPost.AuthorId == request.RequesterId.ToString();
         bool isAdmin = request.RequesterRole == UserRole.Admin;
 

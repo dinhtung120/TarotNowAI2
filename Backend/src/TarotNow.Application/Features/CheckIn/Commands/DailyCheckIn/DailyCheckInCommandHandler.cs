@@ -32,16 +32,16 @@ public class DailyCheckInCommandHandler : IRequestHandler<DailyCheckInCommand, D
 
     public async Task<DailyCheckInResult> Handle(DailyCheckInCommand request, CancellationToken cancellationToken)
     {
-        // 1. Tải Hộ Khẩu User
+        
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user == null)
             throw new NotFoundException($"User {request.UserId} not found");
 
-        // 2. Chốt Lịch Kế Toán (Business Date).
-        // Lấy DateOnly từ giờ UTC hiện tại.
+        
+        
         var todayString = DateOnly.FromDateTime(DateTime.UtcNow).ToString("yyyy-MM-dd");
 
-        // 3. Kiểm sổ xem hôm nay bấm chưa. (Idempotent: Ngăn user bấm nhiều lần ăn gian).
+        
         var isCheckedIn = await _checkinRepository.HasCheckedInAsync(request.UserId.ToString(), todayString, cancellationToken);
         if (isCheckedIn)
         {
@@ -54,11 +54,11 @@ public class DailyCheckInCommandHandler : IRequestHandler<DailyCheckInCommand, D
             };
         }
 
-        // 4. Nếu chưa bấm thì phát Vàng.
+        
         var goldAmount = _settings.DailyCheckinGold;
 
-        // Bơm tiền trực tiếp vô ví 
-        // Bắt IdempotentKey từ ví để lỡ sụp nguồn thì không cộng đôi.
+        
+        
         await _walletRepository.CreditAsync(
             userId: user.Id,
             currency: CurrencyType.Gold,
@@ -68,16 +68,16 @@ public class DailyCheckInCommandHandler : IRequestHandler<DailyCheckInCommand, D
             idempotencyKey: $"checkin_{user.Id}_{todayString}",
             cancellationToken: cancellationToken);
 
-        // 5. Thắp Hương Trữ Lịch Sử Nhận (Gọi vào Repo để Repo tự tạo Document).
+        
         await _checkinRepository.InsertAsync(user.Id.ToString(), todayString, goldAmount, cancellationToken);
 
-        // (Tuỳ chọn: Nếu push notification ví đã lên tiền thì IWalletRepository tự bắn hoặc PushSvc bắn).
         
-        // --- GAMIFICATION PHASE 5.3 ---
-        // Báo cho Gamification biết user vừa điểm danh để chạy Nhiệm Vụ (Quest) & Leaderboard.
+        
+        
+        
         await _gamificationService.OnCheckInAsync(user.Id, user.CurrentStreak, cancellationToken);
 
-        // 6. Trả Kết Quả Về Vinh Quang
+        
         return new DailyCheckInResult
         {
             GoldRewarded = goldAmount,

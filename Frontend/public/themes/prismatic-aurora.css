@@ -1,9 +1,9 @@
-/* Theme variables for prismatic-aurora. */
+
 
 :root,
 :root[data-theme="prismatic-aurora"],
 body[data-theme="prismatic-aurora"] {
-  /* --- BACKGROUNDS & SURFACES --- */
+  
   --bg-void: #0f1221;
   --bg-surface: #12121a;
   --bg-elevated: #1e1e2a;
@@ -31,20 +31,20 @@ body[data-theme="prismatic-aurora"] {
   --selection-bg: rgba(138, 107, 191, 0.28);
   --selection-text: var(--text-ink);
 
-  /* Focus rings */
+  
   --ring-accent: rgba(138, 107, 191, 0.24);
   --ring-success: rgba(58, 95, 90, 0.24);
   --ring-warning: rgba(191, 175, 122, 0.22);
   --ring-danger: rgba(204, 124, 149, 0.22);
   --ring-input: rgba(168, 168, 194, 0.2);
 
-  /* --- BORDERS --- */
+  
   --border-subtle: rgba(138, 107, 191, 0.18);
   --border-default: rgba(138, 107, 191, 0.3);
   --border-hover: rgba(58, 95, 90, 0.42);
   --border-focus: rgba(168, 168, 194, 0.5);
 
-  /* --- BRAND --- */
+  
   --purple-50: rgba(106, 76, 147, 0.14);
   --purple-100: rgba(138, 107, 191, 0.16);
   --purple-200: rgba(138, 107, 191, 0.28);
@@ -62,7 +62,7 @@ body[data-theme="prismatic-aurora"] {
   --amber-50: rgba(191, 175, 122, 0.18);
   --holo-silver: #a8a8c2;
 
-  /* --- STATUS --- */
+  
   --success: #3a5f5a;
   --success-bg: rgba(58, 95, 90, 0.18);
   --error: #cc7c95;
@@ -72,7 +72,7 @@ body[data-theme="prismatic-aurora"] {
   --info: #a8a8c2;
   --info-bg: rgba(168, 168, 194, 0.14);
 
-  /* --- EXTRACTED COLOR TOKENS (OVERRIDES) --- */
+  
   --c-hex-b89c4f: #bfaf7a;
   --c-hex-9f8338: #bfaf7a;
   --c-hex-8f7bb4: #8a6bbf;
@@ -139,7 +139,7 @@ body[data-theme="prismatic-aurora"] {
 
   --c-59-130-246-60: rgba(168, 168, 194, 0.6);
 
-  /* --- NEBULA --- */
+  
   --nebula-purple-subtle: rgba(106, 76, 147, 0.1);
   --nebula-purple-default: rgba(106, 76, 147, 0.16);
   --nebula-purple-intense: rgba(106, 76, 147, 0.22);
@@ -150,7 +150,7 @@ body[data-theme="prismatic-aurora"] {
   --nebula-moon-default: rgba(191, 175, 122, 0.12);
   --nebula-moon-intense: rgba(191, 175, 122, 0.18);
 
-  /* --- TEXT --- */
+  
   --text-primary: #ede7e3;
   --text-secondary: #c0c0d0;
   --text-muted: #8f8fa3;
@@ -162,7 +162,7 @@ body[data-theme="prismatic-aurora"] {
   --danger-bg: rgba(204, 124, 149, 0.14);
   --accent: #bfaf7a;
 
-  /* --- SHADOWS & GLOWS --- */
+  
   --shadow-card: 0 14px 32px rgba(0, 0, 0, 0.55);
   --shadow-elevated: 0 22px 52px rgba(0, 0, 0, 0.72);
   --glow-purple-sm: 0 0 24px rgba(138, 107, 191, 0.12);

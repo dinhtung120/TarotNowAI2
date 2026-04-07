@@ -3,9 +3,6 @@ using TarotNow.Application.Features.Community;
 
 namespace TarotNow.Application.Features.Community.Commands.ToggleReaction;
 
-/// <summary>
-/// FluentValidation rules for toggling a post reaction.
-/// </summary>
 public sealed class ToggleReactionCommandValidator : AbstractValidator<ToggleReactionCommand>
 {
     public ToggleReactionCommandValidator()

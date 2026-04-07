@@ -4,13 +4,11 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace TarotNow.Infrastructure.Migrations
 {
-    /// <inheritdoc />
-    public partial class SeedInitialSubscriptionPlans : Migration
+        public partial class SeedInitialSubscriptionPlans : Migration
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
+                protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Seed Weekly Premium Plan
+            
             migrationBuilder.Sql(@"
                 INSERT INTO subscription_plans (id, name, description, price_diamond, duration_days, entitlements_json, is_active, display_order, created_at)
                 VALUES (
@@ -30,7 +28,7 @@ namespace TarotNow.Infrastructure.Migrations
                 );
             ");
 
-            // Seed Monthly Premium Plan
+            
             migrationBuilder.Sql(@"
                 INSERT INTO subscription_plans (id, name, description, price_diamond, duration_days, entitlements_json, is_active, display_order, created_at)
                 VALUES (
@@ -52,8 +50,7 @@ namespace TarotNow.Infrastructure.Migrations
             ");
         }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
+                protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql("DELETE FROM subscription_plans WHERE id IN ('d1b11111-1111-1111-1111-111111111111', 'd1b22222-2222-2222-2222-222222222222');");
         }

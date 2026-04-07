@@ -1,12 +1,4 @@
-/*
- * ===================================================================
- * FILE: CommunityRequests.cs
- * NAMESPACE: TarotNow.Api.Contracts.Requests
- * ===================================================================
- * MỤC ĐÍCH:
- *   Định nghĩa các payload (body) cho các API của Community.
- * ===================================================================
- */
+
 
 using System.ComponentModel.DataAnnotations;
 

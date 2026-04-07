@@ -48,8 +48,7 @@ public partial class User
 
     public int PreBreakStreak { get; private set; } = 0;
 
-    /// <summary>Danh hiệu hiện tại đang được User chọn để hiển thị (từ Gamification Phase).</summary>
-    public string? ActiveTitleRef { get; private set; }
+        public string? ActiveTitleRef { get; private set; }
 
     public ICollection<UserConsent> Consents { get; private set; } = new List<UserConsent>();
 
@@ -80,11 +79,7 @@ public partial class User
         CreatedAt = DateTime.UtcNow;
     }
 
-    /// <summary>
-    /// Thay đổi danh hiệu (Title) đang hiển thị của User. 
-    /// Gamification Service sẽ kiểm tra quyền sở hữu (ownership) trước khi gọi hàm này.
-    /// </summary>
-    public void SetActiveTitle(string? titleRef)
+        public void SetActiveTitle(string? titleRef)
     {
         ActiveTitleRef = titleRef;
         UpdatedAt = DateTime.UtcNow;

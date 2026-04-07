@@ -12,10 +12,7 @@ namespace TarotNow.Api.Controllers;
 
 public partial class ReaderController
 {
-    /// <summary>
-    /// Gửi đơn đăng ký trở thành Reader cho người dùng hiện tại.
-    /// </summary>
-    [HttpPost("apply")]
+        [HttpPost("apply")]
     [Authorize]
     public async Task<IActionResult> Apply([FromBody] SubmitReaderRequestBody body)
     {
@@ -39,10 +36,7 @@ public partial class ReaderController
                 detail: "Không thể gửi đơn.");
     }
 
-    /// <summary>
-    /// Lấy trạng thái đơn đăng ký Reader của người dùng hiện tại.
-    /// </summary>
-    [HttpGet("my-request")]
+        [HttpGet("my-request")]
     [Authorize]
     public async Task<IActionResult> GetMyRequest()
     {
@@ -55,10 +49,7 @@ public partial class ReaderController
         return Ok(result);
     }
 
-    /// <summary>
-    /// Cập nhật thông tin hồ sơ Reader của tài khoản hiện tại.
-    /// </summary>
-    [HttpPatch("profile")]
+        [HttpPatch("profile")]
     [Authorize(Roles = ApiRoleConstants.TarotReader)]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateReaderProfileBody body)
     {
@@ -85,10 +76,7 @@ public partial class ReaderController
                 detail: "Không thể cập nhật hồ sơ reader.");
     }
 
-    /// <summary>
-    /// Cập nhật trạng thái hoạt động thủ công của Reader (busy hoặc offline).
-    /// </summary>
-    [HttpPatch("status")]
+        [HttpPatch("status")]
     [Authorize(Roles = ApiRoleConstants.TarotReader)]
     public async Task<IActionResult> UpdateStatus([FromBody] UpdateReaderStatusBody body)
     {

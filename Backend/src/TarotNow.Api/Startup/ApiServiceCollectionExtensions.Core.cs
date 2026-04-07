@@ -14,11 +14,7 @@ public static partial class ApiServiceCollectionExtensions
         services.AddControllers()
             .AddJsonOptions(options =>
             {
-                /* FIX #24: Dùng CamelCase naming policy cho Enum serialization.
-                 * JsonStringEnumConverter() mặc định serialize PascalCase: Audio → "Audio", Video → "Video".
-                 * Frontend TypeScript expect lowercase: 'audio', 'video'.
-                 * CamelCase policy chuyển thành: Audio → "audio", Video → "video".
-                 * Nếu thiếu điều này, session.type === 'video' luôn FALSE → không bật camera. */
+                
                 options.JsonSerializerOptions.Converters.Add(
                     new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
             });

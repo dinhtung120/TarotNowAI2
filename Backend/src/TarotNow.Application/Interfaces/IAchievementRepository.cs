@@ -8,13 +8,13 @@ namespace TarotNow.Application.Interfaces;
 
 public interface IAchievementRepository
 {
-    // === Achievement Definitions (Admin CRUD) ===
+    
     Task<List<AchievementDefinitionDto>> GetAllAchievementsAsync(CancellationToken ct);
     Task<AchievementDefinitionDto?> GetByCodeAsync(string achievementCode, CancellationToken ct);
     Task UpsertAchievementDefinitionAsync(AchievementDefinitionDto achievement, CancellationToken ct);
     Task DeleteAchievementDefinitionAsync(string achievementCode, CancellationToken ct);
     
-    // === User Achievements ===
+    
     Task<List<UserAchievementDto>> GetUserAchievementsAsync(Guid userId, CancellationToken ct);
     Task<bool> HasUnlockedAsync(Guid userId, string achievementCode, CancellationToken ct);
     Task UnlockAsync(Guid userId, string achievementCode, CancellationToken ct);

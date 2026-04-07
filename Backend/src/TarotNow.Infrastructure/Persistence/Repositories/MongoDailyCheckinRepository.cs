@@ -36,21 +36,21 @@ public class MongoDailyCheckinRepository : IDailyCheckinRepository
             CreatedAt = System.DateTime.UtcNow
         };
 
-        // Safe insert để nếu trùng index unique thì kệ nó lẳng lặng nuốt lỗi hoặc ném ra Application Exception tuỳ business
+        
         try
         {
             await _context.DailyCheckins.InsertOneAsync(document, cancellationToken: cancellationToken);
         }
         catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
         {
-            // Trùng khoá = Thằng này bấm 2 lần cùng một ngày. Xoè kèo.
+            
             throw new System.InvalidOperationException("Hôm nay bạn đã điểm danh rồi, đừng cố bấm nữa.");
         }
     }
 
     public async Task<int> GetCheckinCountAsync(string userId, int recentDays, CancellationToken cancellationToken = default)
     {
-        // Tìm 7 ngày đổ lại
+        
         var minDate = System.DateOnly.FromDateTime(System.DateTime.UtcNow.AddDays(-recentDays)).ToString("yyyy-MM-dd");
 
         var filter = Builders<DailyCheckinDocument>.Filter.And(

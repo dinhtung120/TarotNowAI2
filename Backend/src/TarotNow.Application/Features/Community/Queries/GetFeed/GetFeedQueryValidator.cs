@@ -3,9 +3,6 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Community.Queries.GetFeed;
 
-/// <summary>
-/// FluentValidation rules for loading community feed.
-/// </summary>
 public sealed class GetFeedQueryValidator : AbstractValidator<GetFeedQuery>
 {
     public GetFeedQueryValidator()

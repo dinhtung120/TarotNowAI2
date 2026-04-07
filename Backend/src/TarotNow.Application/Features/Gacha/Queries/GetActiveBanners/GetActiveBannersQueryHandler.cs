@@ -27,8 +27,8 @@ public class GetActiveBannersQueryHandler : IRequestHandler<GetActiveBannersQuer
         
         if (banners.Count == 0)
         {
-            // Debug: Check if ANY banners exist at all
-            // Note: This is just for debugging purposes
+            
+            
         }
         
         var result = new List<GachaBannerDto>();

@@ -1,13 +1,4 @@
-/*
- * ===================================================================
- * FILE: ListReadersQueryHandler.cs
- * NAMESPACE: TarotNow.Application.Features.Reader.Queries.ListReaders
- * ===================================================================
- * MỤC ĐÍCH:
- *   Đại Lý Gom Hàng, Cầm danh sách Tiêu Chí Dò của Khách đi vào Kho MongoDB (Repository)
- *   rồi Rinh Ra Danh Sách Các Thầy Bói thỏa tiêu chí.
- * ===================================================================
- */
+
 
 using MediatR;
 using TarotNow.Application.Interfaces;
@@ -37,8 +28,8 @@ public class ListReadersQueryHandler : IRequestHandler<ListReadersQuery, ListRea
             request.SearchTerm,
             cancellationToken);
 
-        // Enrichment: Bổ sung AvatarUrl từ PostgreSQL cho các Reader chưa có avatar trong MongoDB.
-        // Trường hợp này xảy ra khi user upload avatar TRƯỚC khi tính năng đồng bộ Mongo được triển khai.
+        
+        
         var profileList = profiles.ToList();
         var needsEnrichment = profileList
             .Where(p => string.IsNullOrEmpty(p.AvatarUrl) && !string.IsNullOrEmpty(p.UserId))

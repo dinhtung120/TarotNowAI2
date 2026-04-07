@@ -5,9 +5,6 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Community.Commands.ResolvePostReport;
 
-/// <summary>
-/// Command xử lý report bài viết bởi admin.
-/// </summary>
 public class ResolvePostReportCommand : IRequest<bool>
 {
     public string ReportId { get; set; } = string.Empty;
@@ -16,9 +13,6 @@ public class ResolvePostReportCommand : IRequest<bool>
     public string? AdminNote { get; set; }
 }
 
-/// <summary>
-/// Handler cập nhật trạng thái report và áp dụng hậu quả moderation lên post nếu cần.
-/// </summary>
 public class ResolvePostReportCommandHandler : IRequestHandler<ResolvePostReportCommand, bool>
 {
     private readonly ICommunityPostRepository _postRepository;

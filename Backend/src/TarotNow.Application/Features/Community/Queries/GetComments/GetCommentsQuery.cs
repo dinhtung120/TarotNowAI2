@@ -33,7 +33,7 @@ public class GetCommentsQueryHandler : IRequestHandler<GetCommentsQuery, (IEnume
         if (request.Page < 1) request.Page = 1;
         if (request.PageSize < 1 || request.PageSize > 50) request.PageSize = 50;
 
-        // HIGH FIX #5: Kiểm tra quyền xem bình luận bài Private
+        
         var post = await _postRepo.GetByIdAsync(request.PostId, cancellationToken);
         if (post == null || post.IsDeleted)
             throw new NotFoundException("Bài viết không tồn tại.");

@@ -1,15 +1,4 @@
-/*
- * FILE: MongoChatMessageRepository.cs
- * MỤC ĐÍCH: Repository quản lý tin nhắn chat từ MongoDB (collection "chat_messages").
- *
- *   CÁC CHỨC NĂNG:
- *   → AddAsync: gửi tin nhắn mới (map DTO → Document → InsertOne)
- *   → GetByConversationIdPaginatedAsync: lấy tin nhắn theo cuộc hội thoại (phân trang)
- *   → MarkAsReadAsync: đánh dấu đã đọc tất cả tin của người khác gửi
- *
- *   MAPPING: DTO (Application) ↔ Document (Infrastructure) — 2 chiều.
- *   Application layer chỉ biết ChatMessageDto, không biết MongoDB Document.
- */
+
 
 using MongoDB.Driver;
 using TarotNow.Application.Common;
@@ -18,9 +7,6 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
-/// <summary>
-/// Implement IChatMessageRepository — đọc/ghi tin nhắn chat từ MongoDB.
-/// </summary>
 public partial class MongoChatMessageRepository : IChatMessageRepository
 {
     private readonly MongoDbContext _context;
@@ -40,32 +26,20 @@ public partial class MongoChatMessageRepository : IChatMessageRepository
         return doc == null ? null : ToDto(doc);
     }
 
-    /// <summary>
-    /// Gửi tin nhắn mới: map DTO → Document, insert vào MongoDB, gán ID mới về DTO.
-    /// Sau khi insert, MongoDB tự sinh ObjectId → gán ngược lại vào message.Id
-    /// để caller (Command handler) biết ID tin nhắn vừa tạo.
-    /// </summary>
-    public async Task AddAsync(ChatMessageDto message, CancellationToken cancellationToken = default)
+        public async Task AddAsync(ChatMessageDto message, CancellationToken cancellationToken = default)
     {
         var doc = ToDocument(message);
         await _context.ChatMessages.InsertOneAsync(doc, cancellationToken: cancellationToken);
-        message.Id = doc.Id; // Gán ObjectId vừa sinh ngược về DTO
+        message.Id = doc.Id; 
     }
 
-    /// <summary>
-    /// Đánh dấu ĐÃ ĐỌC tất cả tin nhắn của NGƯỜI KHÁC gửi trong cuộc hội thoại.
-    /// readerId = ID người đang đọc → cập nhật tin có sender_id ≠ readerId (tin của đối phương).
-    /// Chỉ cập nhật tin chưa đọc (IsRead = false) và chưa xóa (IsDeleted = false).
-    /// UpdateManyAsync: cập nhật hàng loạt trong 1 lần gọi (hiệu quả hơn loop từng tin).
-    /// Trả về: số tin đã được mark (để cập nhật unread_count trên conversation).
-    /// </summary>
-    public async Task<long> MarkAsReadAsync(string conversationId, string readerId, CancellationToken cancellationToken = default)
+        public async Task<long> MarkAsReadAsync(string conversationId, string readerId, CancellationToken cancellationToken = default)
     {
         var filter = Builders<ChatMessageDocument>.Filter.And(
             Builders<ChatMessageDocument>.Filter.Eq(m => m.ConversationId, conversationId),
-            Builders<ChatMessageDocument>.Filter.Ne(m => m.SenderId, readerId), // Tin của đối phương
-            Builders<ChatMessageDocument>.Filter.Eq(m => m.IsRead, false),      // Chưa đọc
-            Builders<ChatMessageDocument>.Filter.Eq(m => m.IsDeleted, false));   // Chưa xóa
+            Builders<ChatMessageDocument>.Filter.Ne(m => m.SenderId, readerId), 
+            Builders<ChatMessageDocument>.Filter.Eq(m => m.IsRead, false),      
+            Builders<ChatMessageDocument>.Filter.Eq(m => m.IsDeleted, false));   
 
         var update = Builders<ChatMessageDocument>.Update
             .Set(m => m.IsRead, true)
@@ -75,11 +49,7 @@ public partial class MongoChatMessageRepository : IChatMessageRepository
         return result.ModifiedCount;
     }
 
-    /// <summary>
-    /// Cập nhật cờ IsFlagged cho một Message khi vi phạm (Auto Moderation).
-    /// Gắn nhãn để phân loại tin nhắn đen.
-    /// </summary>
-    public async Task UpdateFlagAsync(string messageId, bool isFlagged, CancellationToken cancellationToken = default)
+        public async Task UpdateFlagAsync(string messageId, bool isFlagged, CancellationToken cancellationToken = default)
     {
         var filter = Builders<ChatMessageDocument>.Filter.Eq(m => m.Id, messageId);
         var update = Builders<ChatMessageDocument>.Update
@@ -102,7 +72,7 @@ public partial class MongoChatMessageRepository : IChatMessageRepository
                 Builders<ChatMessageDocument>.Sort.Descending(m => m.ConversationId),
                 Builders<ChatMessageDocument>.Sort.Descending(m => m.CreatedAt)))
             .Group(m => m.ConversationId, g => g.First())
-            .Project(m => m); // First() returns the Document
+            .Project(m => m); 
 
         var docs = await _context.ChatMessages.Aggregate(pipeline, cancellationToken: cancellationToken).ToListAsync(cancellationToken);
         return docs.Select(ToDto);

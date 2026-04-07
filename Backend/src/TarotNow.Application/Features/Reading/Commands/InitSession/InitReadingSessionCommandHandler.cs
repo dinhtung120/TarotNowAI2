@@ -1,13 +1,4 @@
-/*
- * ===================================================================
- * FILE: InitReadingSessionCommandHandler.cs
- * NAMESPACE: TarotNow.Application.Features.Reading.Commands.InitSession
- * ===================================================================
- * MỤC ĐÍCH:
- *   Thi Hành Xét Duyệt Yêu Cầu, Check Giá Tiền Xem Bảng Niêm Yết,
- *   Và Trừ Ngay Tiền Tại Lỗ nếu Thu Phí Trước Khi Mở Phòng Khấn.
- * ===================================================================
- */
+
 
 using MediatR;
 using TarotNow.Application.Exceptions;

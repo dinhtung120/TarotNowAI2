@@ -1,17 +1,4 @@
-/*
- * FILE: UpdateReaderProfileCommandHandlerTests.cs
- * MỤC ĐÍCH: Unit test cho handler cập nhật hồ sơ công khai Reader.
- *
- *   CÁC TEST CASE (4 scenarios):
- *   1. Handle_ProfileNotFound_ThrowsNotFoundException: chưa approved → 404
- *   2. Handle_InvalidPricing_ThrowsBadRequestException: giá ≤ 0 → 400 ([Theory] 0, -1, -100)
- *   3. Handle_PartialUpdate_OnlyUpdatesProvidedFields:
- *      → Chỉ gửi BioVi + DiamondPerQuestion → BioEn/BioZh/Specialties giữ nguyên
- *   4. Handle_FullUpdate_UpdatesAllFields: gửi tất cả → tất cả fields đổi
- *
- *   PATTERN: Partial update (PATCH semantic) → chỉ fields non-null được cập nhật
- *   → Tránh race condition khi 2 tab cùng edit profile
- */
+
 
 using Moq;
 using TarotNow.Application.Exceptions;
@@ -22,9 +9,6 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Reader;
 
-/// <summary>
-/// Test update reader profile: partial update, pricing validation, i18n fields.
-/// </summary>
 public class UpdateReaderProfileCommandHandlerTests
 {
     private readonly Mock<IReaderProfileRepository> _mockProfileRepo;
@@ -36,8 +20,7 @@ public class UpdateReaderProfileCommandHandlerTests
         _handler = new UpdateReaderProfileCommandHandler(_mockProfileRepo.Object);
     }
 
-    /// <summary>Profile chưa tồn tại (chưa approved) → NotFoundException.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_ProfileNotFound_ThrowsNotFoundException()
     {
         var command = new UpdateReaderProfileCommand { UserId = Guid.NewGuid() };
@@ -47,8 +30,7 @@ public class UpdateReaderProfileCommandHandlerTests
         Assert.Contains("Không tìm thấy hồ sơ Reader", ex.Message);
     }
 
-    /// <summary>Giá ≤ 0 → BadRequest (business invariant).</summary>
-    [Theory]
+        [Theory]
     [InlineData(0)]
     [InlineData(-1)]
     [InlineData(-100)]
@@ -63,11 +45,7 @@ public class UpdateReaderProfileCommandHandlerTests
         Assert.Contains("lớn hơn 0", ex.Message);
     }
 
-    /// <summary>
-    /// Partial update: chỉ BioVi + DiamondPerQuestion đổi.
-    /// BioEn, BioZh, Specialties giữ nguyên (PATCH semantic).
-    /// </summary>
-    [Fact]
+        [Fact]
     public async Task Handle_PartialUpdate_OnlyUpdatesProvidedFields()
     {
         var userId = Guid.NewGuid();
@@ -84,13 +62,12 @@ public class UpdateReaderProfileCommandHandlerTests
         Assert.True(result);
         Assert.Equal("Bio mới tiếng Việt", existingProfile.BioVi);
         Assert.Equal(75, existingProfile.DiamondPerQuestion);
-        Assert.Equal("Old English Bio", existingProfile.BioEn); // Giữ nguyên
-        Assert.Equal("旧中文简介", existingProfile.BioZh); // Giữ nguyên
+        Assert.Equal("Old English Bio", existingProfile.BioEn); 
+        Assert.Equal("旧中文简介", existingProfile.BioZh); 
         _mockProfileRepo.Verify(x => x.UpdateAsync(existingProfile, default), Times.Once);
     }
 
-    /// <summary>Full update: tất cả fields đổi.</summary>
-    [Fact]
+        [Fact]
     public async Task Handle_FullUpdate_UpdatesAllFields()
     {
         var userId = Guid.NewGuid();

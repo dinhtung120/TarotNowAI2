@@ -8,10 +8,7 @@ namespace TarotNow.Api.Controllers;
 
 public partial class ConversationController
 {
-    /// <summary>
-    /// Reader chấp nhận conversation đang chờ.
-    /// </summary>
-    [HttpPost("{id}/accept")]
+        [HttpPost("{id}/accept")]
     [Authorize(Roles = "tarot_reader")]
     public async Task<IActionResult> AcceptConversation(string id)
     {
@@ -30,10 +27,7 @@ public partial class ConversationController
         return Ok(result);
     }
 
-    /// <summary>
-    /// Reader từ chối conversation đang chờ.
-    /// </summary>
-    [HttpPost("{id}/reject")]
+        [HttpPost("{id}/reject")]
     [Authorize(Roles = "tarot_reader")]
     public async Task<IActionResult> RejectConversation(string id, [FromBody] ConversationRejectBody body)
     {

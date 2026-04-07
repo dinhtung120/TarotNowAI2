@@ -2,9 +2,6 @@ using FluentValidation;
 
 namespace TarotNow.Application.Features.Call.Queries.GetCallHistory;
 
-/// <summary>
-/// FluentValidation rules for call history queries.
-/// </summary>
 public sealed class GetCallHistoryQueryValidator : AbstractValidator<GetCallHistoryQuery>
 {
     public GetCallHistoryQueryValidator()

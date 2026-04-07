@@ -6,9 +6,6 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Call.Commands.EndCall;
 
-/// <summary>
-/// Handler xử lý kết thúc một cuộc gọi đang diễn ra hoặc đang chờ.
-/// </summary>
 public class EndCallCommandHandler : IRequestHandler<EndCallCommand, CallSessionDto>
 {
     private readonly ICallSessionRepository _callSessionRepository;
@@ -32,10 +29,10 @@ public class EndCallCommandHandler : IRequestHandler<EndCallCommand, CallSession
         var updated = await _callSessionRepository.UpdateStatusAsync(
             session.Id,
             CallSessionStatus.Ended,
-            startedAt: null, // Không can thiệp ghi đè field này
+            startedAt: null, 
             endedAt: endedAt,
             endReason: request.Reason,
-            expectedPreviousStatus: session.Status, // FIX #17: Guard status
+            expectedPreviousStatus: session.Status, 
             ct: cancellationToken);
 
         if (!updated)

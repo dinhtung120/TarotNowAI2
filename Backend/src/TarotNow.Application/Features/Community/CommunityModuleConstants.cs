@@ -2,9 +2,6 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Community;
 
-/// <summary>
-/// Centralized constants for Community feature to avoid magic strings across handlers.
-/// </summary>
 public static class CommunityModuleConstants
 {
     public static readonly string[] SupportedReactionTypes =

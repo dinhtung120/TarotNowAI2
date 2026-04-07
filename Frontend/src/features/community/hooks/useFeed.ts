@@ -21,7 +21,7 @@ export const useFeed = (visibility?: string) => {
       if (!res.success) throw new Error(res.error);
       return res.data as FeedResponse;
     },
-    initialPageParam: 1, // Đã fix đúng cú pháp React Query v5 syntax
+    initialPageParam: 1, 
     getNextPageParam: (lastPage) => {
       const { page, pageSize, totalCount } = lastPage.metadata;
       const hasMore = page * pageSize < totalCount;

@@ -1,13 +1,4 @@
-/*
- * ===================================================================
- * FILE: ChatQuestionItemConfiguration.cs
- * NAMESPACE: TarotNow.Infrastructure.Persistence.Configurations
- * ===================================================================
- * MỤC ĐÍCH:
- *   Fluent API cấu hình Bảng Giam Tiền Chat Câu Hỏi Phụ (PostgreSQL).
- *   Đảm bảo Index Quét Nhanh Tránh Refund Trùng, Giữ Giao Dịch Không Thủng Ví.
- * ===================================================================
- */
+
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -15,9 +6,6 @@ using TarotNow.Domain.Entities;
 
 namespace TarotNow.Infrastructure.Persistence.Configurations;
 
-/// <summary>
-/// Quyền Lực DB Xoạc Bảng Câu Hỏi (ChatQuestionItem) Lên SQL Bằng Fluent API.
-/// </summary>
 public class ChatQuestionItemConfiguration : IEntityTypeConfiguration<ChatQuestionItem>
 {
     public void Configure(EntityTypeBuilder<ChatQuestionItem> builder)

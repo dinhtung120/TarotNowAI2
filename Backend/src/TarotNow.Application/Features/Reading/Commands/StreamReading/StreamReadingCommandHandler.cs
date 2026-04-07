@@ -60,7 +60,7 @@ public partial class StreamReadingCommandHandler : IRequestHandler<StreamReading
         var prompts = StreamReadingPromptFactory.Build(session, request.FollowupQuestion, request.Language);
         var stream = _aiProvider.StreamChatAsync(prompts.SystemPrompt, prompts.UserPrompt, cancellationToken);
 
-        // Báo cho FE biết số dư (Kim Cương Mềm) đã bị trừ / đóng băng
+        
         await _walletPushService.PushBalanceChangedAsync(request.UserId, cancellationToken);
 
         return new StreamReadingResult

@@ -26,7 +26,7 @@ public partial class OpenAiProvider
         }
         catch
         {
-            // Telemetry must not break request flow.
+            
         }
     }
 }

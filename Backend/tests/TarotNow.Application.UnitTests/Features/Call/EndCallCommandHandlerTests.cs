@@ -8,9 +8,6 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Call;
 
-/// <summary>
-/// Unit Tests kiểm tra chức năng EndCallCommandHandler.
-/// </summary>
 public class EndCallCommandHandlerTests
 {
     private readonly Mock<ICallSessionRepository> _mockCallRepo;
@@ -85,7 +82,7 @@ public class EndCallCommandHandlerTests
 
         var command = new EndCallCommand { CallSessionId = callId, UserId = calleeId, Reason = "normal" };
         
-        // Người dùng callee phải Respond Reject chứ không EndCall
+        
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
 }

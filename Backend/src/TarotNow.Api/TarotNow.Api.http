@@ -3,4 +3,3 @@
 GET {{TarotNow.Api_HostAddress}}/weatherforecast/
 Accept: application/json
 
-###
