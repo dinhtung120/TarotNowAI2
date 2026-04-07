@@ -1,85 +1,57 @@
-'use client';
+"use client";
 
-import { Mail, Lock, KeyRound, CheckCircle2 } from 'lucide-react';
-import AuthLayout from '@/shared/components/layout/AuthLayout';
-import { Input, Button } from '@/shared/components/ui';
-import { useResetPasswordPage } from '@/features/auth/application/useResetPasswordPage';
-import { AuthErrorBanner } from '@/features/auth/presentation/components/AuthErrorBanner';
-import { AuthSuccessCard } from '@/features/auth/presentation/components/AuthSuccessCard';
+import { CheckCircle2 } from "lucide-react";
+import { useResetPasswordPage } from "@/features/auth/application/useResetPasswordPage";
+import { AuthErrorBanner } from "@/features/auth/presentation/components/AuthErrorBanner";
+import { AuthSuccessCard } from "@/features/auth/presentation/components/AuthSuccessCard";
+import ResetPasswordForm from "@/features/auth/presentation/components/ResetPasswordForm";
+import AuthLayout from "@/shared/components/layout/AuthLayout";
 
 export default function ResetPasswordPage() {
- const {
-  t,
-  errorMsg,
-  success,
-  register,
-  handleSubmit,
-  errors,
-  isSubmitting,
-  onSubmit,
- } = useResetPasswordPage();
+  const {
+    t,
+    errorMsg,
+    success,
+    register,
+    handleSubmit,
+    errors,
+    isSubmitting,
+    onSubmit,
+  } = useResetPasswordPage();
 
- if (success) {
+  if (success) {
+    return (
+      <AuthSuccessCard
+        ctaHref="/login"
+        ctaLabel={t("reset.success_cta")}
+        description={t("reset.success_desc")}
+        glowClass="bg-[var(--success-bg)]"
+        icon={<CheckCircle2 className="h-10 w-10 text-[var(--success)]" />}
+        iconWrapperClass="bg-[var(--success-bg)] shadow-[0_0_30px_var(--success)]"
+        title={t("reset.success_title")}
+      />
+    );
+  }
+
   return (
-   <AuthSuccessCard
-    icon={<CheckCircle2 className="w-10 h-10 text-[var(--success)]" />}
-    title={t('reset.success_title')}
-    description={t('reset.success_desc')}
-    ctaHref="/login"
-    ctaLabel={t('reset.success_cta')}
-    glowClass="bg-[var(--success-bg)]"
-    iconWrapperClass="bg-[var(--success-bg)] shadow-[0_0_30px_var(--success)]"
-   />
+    <AuthLayout subtitle={t("reset.subtitle")} title={t("reset.title")}>
+      <AuthErrorBanner message={errorMsg} />
+      <ResetPasswordForm
+        errors={errors}
+        handleSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+        labels={{
+          emailLabel: t("reset.email_label"),
+          emailPlaceholder: t("reset.email_placeholder"),
+          otpLabel: t("reset.otp_label"),
+          otpPlaceholder: t("reset.otp_placeholder"),
+          passwordLabel: t("reset.password_label"),
+          passwordPlaceholder: t("reset.password_placeholder"),
+          cta: t("reset.cta"),
+        }}
+        register={register}
+        onSubmit={onSubmit}
+      />
+    </AuthLayout>
   );
- }
-
- return (
-  <AuthLayout title={t('reset.title')} subtitle={t('reset.subtitle')}>
-   <AuthErrorBanner message={errorMsg} />
-
-   <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-    <Input
-     label={t('reset.email_label')}
-     type="email"
-     leftIcon={<Mail className="w-5 h-5" />}
-     placeholder={t('reset.email_placeholder')}
-     error={errors.email?.message}
-     {...register('email')}
-    />
-
-    <Input
-     label={t('reset.otp_label')}
-     type="text"
-     leftIcon={<KeyRound className="w-5 h-5" />}
-     placeholder={t('reset.otp_placeholder')}
-     maxLength={6}
-     error={errors.otpCode?.message}
-     {...register('otpCode')}
-     className="text-center font-bold tracking-widest text-lg"
-    />
-
-    <Input
-     label={t('reset.password_label')}
-     type="password"
-     leftIcon={<Lock className="w-5 h-5" />}
-     placeholder={t('reset.password_placeholder')}
-     error={errors.newPassword?.message}
-     {...register('newPassword')}
-    />
-
-    <div className="pt-2">
-     <Button
-      type="submit"
-      variant="brand"
-      size="lg"
-      fullWidth
-      isLoading={isSubmitting}
-      rightIcon={!isSubmitting && <Lock className="w-4 h-4 ml-2" />}
-     >
-      {t('reset.cta')}
-     </Button>
-    </div>
-   </form>
-  </AuthLayout>
- );
 }

@@ -1,10 +1,11 @@
 'use client';
 
 import React from 'react';
+import { cn } from '@/lib/utils';
 
 export const StreakDisplay = ({ streak, isBroken }: { streak: number; isBroken: boolean }) => {
   return (
-    <div className="flex items-center gap-2">
+    <div className={cn("flex items-center gap-2")}>
       {/* Icon Ngọn Lửa, đổi rực lửa nếu còn streak, tắt lửa (xám) nếu mất streak */}
       <div
         className={`w-10 h-10 flex items-center justify-center rounded-full shadow-inner ${
@@ -25,11 +26,11 @@ export const StreakDisplay = ({ streak, isBroken }: { streak: number; isBroken: 
         </svg>
       </div>
 
-      <div className="flex flex-col">
+      <div className={cn("flex flex-col")}>
         <span className={`text-xl font-bold font-space ${isBroken ? 'text-gray-400' : 'text-orange-400'}`}>
           {streak} Ngày
         </span>
-        <span className="text-xs text-gray-400 font-inter">
+        <span className={cn("text-xs text-gray-400 font-inter")}>
           {isBroken ? 'Đứt chuỗi' : 'Chuỗi đăng nhập'}
         </span>
       </div>

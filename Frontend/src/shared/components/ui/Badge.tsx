@@ -1,19 +1,7 @@
-/*
- * ===================================================================
- * COMPONENT: Badge
- * BỐI CẢNH (CONTEXT):
- *   Nhãn trạng thái (Status Label) nhỏ gọn dùng chung cho toàn bộ ứng dụng.
- * 
- * TÍNH NĂNG CHÍNH:
- *   - Hiển thị linh hoạt nhiều loại dữ liệu: Trạng thái (Pending, Success), 
- *     Phân quyền (Admin, Reader), Tiền tệ (Gold, Diamond).
- *   - Cung cấp sẵn 7 Variants (màu sắc) và 2 Sizes (kích cỡ) chuẩn Design System,
- *     rút gọn code thay vì phải viết class Tailwind thủ công ở khắp mọi trang.
- * ===================================================================
- */
+
 
 import { memo, type ReactNode } from "react";
-import { cn } from "@/shared/utils/cn";
+import { cn } from "@/lib/utils";
 
 type BadgeVariant =
  | "default" /* Zinc — neutral, mặc định */
@@ -34,18 +22,6 @@ interface BadgeProps {
  className?: string;
 }
 
-/**
- * Map variant → colours.
- * Mỗi variant có:
- * - Background mờ (opacity 10-15%)
- * - Text color tương ứng
- * - Border color nhẹ (opacity 20-30%)
- *
- * Tại sao không dùng Tailwind class trực tiếp (bg-[var(--success)]/10)?
- * → Đóng gói tất cả vào component → page code ngắn hơn, dễ đọc hơn.
- * → <Badge variant="success">Online</Badge> thay vì
- * <span className="bg-[var(--success)]/10 text-[var(--success)] border border-[var(--success)]/20...">
- */
 const variantStyles: Record<BadgeVariant, string> = {
  default: "bg-[var(--bg-elevated)] text-[var(--text-secondary)] border-[var(--border-default)]",
  purple: "bg-[var(--purple-50)] text-[var(--purple-muted)] border-[var(--border-default)]",

@@ -6,7 +6,6 @@ import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 
-
 export async function verifyMfa(code: string): Promise<ActionResult<undefined>> {
  const tApi = await getTranslations('ApiErrors');
  const accessToken = await getServerAccessToken();

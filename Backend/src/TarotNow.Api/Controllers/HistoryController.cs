@@ -133,7 +133,14 @@ public class HistoryController : ControllerBase
         var result = await _mediator.Send(query);
 
         // Nếu không tìm thấy → 404 Not Found (session không tồn tại hoặc không thuộc về user)
-        if (result == null) return NotFound(new { message = "Reading session not found." });
+        if (result == null)
+        {
+            return Problem(
+                statusCode: StatusCodes.Status404NotFound,
+                title: "Reading session not found",
+                detail: "Reading session not found.");
+        }
+
         return Ok(result);
     }
 

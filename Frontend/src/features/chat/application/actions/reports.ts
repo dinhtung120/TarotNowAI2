@@ -5,7 +5,6 @@ import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 
-
 export async function sendReport(data: {
  targetType: string;
  targetId: string;

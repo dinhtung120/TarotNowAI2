@@ -44,7 +44,12 @@ public sealed class AdminUsersController : ControllerBase
     public async Task<IActionResult> ToggleUserLock([FromBody] TarotNow.Application.Features.Admin.Commands.ToggleUserLock.ToggleUserLockCommand command)
     {
         var success = await _mediator.Send(command);
-        return success ? Ok() : BadRequest();
+        return success
+            ? Ok()
+            : Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Cannot update user lock state",
+                detail: "Không thể cập nhật trạng thái khóa tài khoản.");
     }
 
     /// <summary>
@@ -61,7 +66,12 @@ public sealed class AdminUsersController : ControllerBase
         }
 
         var result = await _mediator.Send(command);
-        return result ? Ok(new { success = true }) : BadRequest(new { msg = "Không thể cập nhật User." });
+        return result
+            ? Ok(new { success = true })
+            : Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Cannot update user",
+                detail: "Không thể cập nhật User.");
     }
 
     /// <summary>
@@ -76,6 +86,11 @@ public sealed class AdminUsersController : ControllerBase
         }
 
         var result = await _mediator.Send(command);
-        return result ? Ok(new { success = true }) : BadRequest(new { msg = "Không thể cộng tiền cho người dùng này." });
+        return result
+            ? Ok(new { success = true })
+            : Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Cannot add user balance",
+                detail: "Không thể cộng tiền cho người dùng này.");
     }
 }

@@ -168,14 +168,20 @@ public class DepositController : ControllerBase
         {
             // JSON không hợp lệ (bị hỏng, sai format) → ghi log cảnh báo
             _logger.LogWarning(ex, "Invalid webhook JSON payload.");
-            return BadRequest(new { msg = "Invalid JSON payload" });
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Invalid webhook payload",
+                detail: "Invalid JSON payload");
         }
 
         // Kiểm tra payload sau khi parse có null không
         if (payloadData == null)
         {
             _logger.LogWarning("Webhook payload is null after deserialization.");
-            return BadRequest(new { msg = "Invalid JSON payload" });
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Invalid webhook payload",
+                detail: "Invalid JSON payload");
         }
 
         // ========================================
@@ -202,6 +208,11 @@ public class DepositController : ControllerBase
 
         // Trả OK cho VNPay biết đã nhận thành công
         // VNPay sẽ gọi lại nếu nhận được lỗi (retry mechanism)
-        return result ? Ok(new { success = true }) : BadRequest();
+        return result
+            ? Ok(new { success = true })
+            : Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Cannot process deposit webhook",
+                detail: "Không thể xử lý webhook nạp tiền.");
     }
 }

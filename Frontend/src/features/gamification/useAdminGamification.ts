@@ -29,7 +29,6 @@ async function adminFetch(path: string, options: RequestInit = {}) {
 export function useAdminGamification() {
   const queryClient = useQueryClient();
 
-  // === QUETS MUTATIONS ===
   const upsertQuest = useMutation({
     mutationFn: (quest: QuestDefinition) => 
       adminFetch('/quests', { method: 'POST', body: JSON.stringify(quest) }),
@@ -50,7 +49,6 @@ export function useAdminGamification() {
     onError: (err: Error) => toast.error(`Lỗi: ${err.message}`),
   });
 
-  // === ACHIEVEMENT MUTATIONS ===
   const upsertAchievement = useMutation({
     mutationFn: (ach: AchievementDefinition) =>
       adminFetch('/achievements', { method: 'POST', body: JSON.stringify(ach) }),
@@ -71,7 +69,6 @@ export function useAdminGamification() {
     onError: (err: Error) => toast.error(`Lỗi: ${err.message}`),
   });
 
-  // === TITLE MUTATIONS ===
   const upsertTitle = useMutation({
     mutationFn: (title: TitleDefinition) =>
       adminFetch('/titles', { method: 'POST', body: JSON.stringify(title) }),

@@ -23,13 +23,10 @@ export const CallProvider = ({ children }: { children: React.ReactNode }) => {
     connected 
   } = useCallSignaling();
 
-  // Đăng ký WebRTC (Listen Offer/Answer & ICE Candidates)
   useWebRTC({ sendOffer, sendAnswer, sendIceCandidate });
 
-  // Hook đo timeout 60s
   useCallTimeout(endCall);
 
-  // Expose các SignalR action qua context để các nút (CallButton, EndCallButton) gọi
   return (
     <CallContext.Provider value={{ initiateCall, respondCall, endCall, connected }}>
       {children}

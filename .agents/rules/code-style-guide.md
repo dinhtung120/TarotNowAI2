@@ -66,11 +66,11 @@ Global Antigravity Rules – TarotNow Project
 
 14. Component Separation (Single Responsibility Principle)
     Each component must have only one responsibility.
-    Large components (> 70 lines) must be broken down into smaller sub-components.
+    Large components (> 60 lines) must be broken down into smaller sub-components.
     Components should only handle UI rendering; all business logic must stay in custom hooks.
 
 15. Component File Size Limit
-    No component file may exceed 150 lines of code (ideally keep under 120 lines).
+    No component file may exceed 120 lines of code (ideally keep under 100 lines).
     If a file grows larger, it must be immediately split into smaller components.
 
 16. Mandatory Best Practices

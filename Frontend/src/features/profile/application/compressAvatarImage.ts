@@ -9,7 +9,6 @@ export async function compressAvatarImage(file: File): Promise<File> {
       image.src = objectUrl;
     });
 
-    // Resize ảnh xuống tối đa 1024px
     const maxDimension = 1024;
     const ratio = Math.min(1, maxDimension / Math.max(image.width, image.height));
     const targetWidth = Math.max(1, Math.round(image.width * ratio));
@@ -25,7 +24,6 @@ export async function compressAvatarImage(file: File): Promise<File> {
 
     context.drawImage(image, 0, 0, targetWidth, targetHeight);
 
-    // Thử nén AVIF trước, nếu lỗi thì fallback sang WebP, cuối cùng là JPEG
     let blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/avif', 0.8));
     let mimeType = 'image/avif';
     let fileExtension = 'avif';
@@ -46,7 +44,6 @@ export async function compressAvatarImage(file: File): Promise<File> {
       throw new Error('Không thể nén ảnh.');
     } // Nén tối đa để kích thước < 2MB (BE limit 10MB raw)
 
-    // Tạo lại object File từ Blob
     const newFileName = `avatar_${Date.now()}.${fileExtension}`;
     return new File([blob], newFileName, { type: mimeType });
   } finally {

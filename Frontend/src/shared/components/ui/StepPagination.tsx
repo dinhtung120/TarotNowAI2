@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface StepPaginationProps {
  summary?: string;
@@ -22,25 +23,25 @@ export default function StepPagination({
  return (
   <div className={className}>
    {summary ? (
-    <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] text-left">{summary}</div>
+    <div className={cn("text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] text-left")}>{summary}</div>
    ) : null}
-   <div className="flex items-center gap-3">
+   <div className={cn("flex items-center gap-3")}>
     <button
      onClick={onPrev}
      disabled={!canPrev}
-     className="p-2.5 min-h-11 min-w-11 rounded-xl tn-panel hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-md"
+     className={cn("p-2.5 min-h-11 min-w-11 rounded-xl tn-panel hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-md")}
     >
-     <ChevronLeft className="w-4 h-4 text-[var(--text-secondary)]" />
+     <ChevronLeft className={cn("w-4 h-4 text-[var(--text-secondary)]")} />
     </button>
     {currentLabel ? (
-     <span className="text-xs font-black text-[var(--purple-accent)] italic mx-2">{currentLabel}</span>
+     <span className={cn("text-xs font-black text-[var(--purple-accent)] italic mx-2")}>{currentLabel}</span>
     ) : null}
     <button
      onClick={onNext}
      disabled={!canNext}
-     className="p-2.5 min-h-11 min-w-11 rounded-xl tn-panel hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-md"
+     className={cn("p-2.5 min-h-11 min-w-11 rounded-xl tn-panel hover:tn-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:shadow-md")}
     >
-     <ChevronRight className="w-4 h-4 text-[var(--text-secondary)]" />
+     <ChevronRight className={cn("w-4 h-4 text-[var(--text-secondary)]")} />
     </button>
    </div>
   </div>

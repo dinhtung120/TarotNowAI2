@@ -44,7 +44,7 @@ namespace TarotNow.Api.Controllers;
 [Route(ApiRoutes.Controller)]
 [Authorize(Roles = "admin")]
 [ApiExplorerSettings(IgnoreApi = true)] // Ẩn khỏi Swagger - endpoint bí mật
-public class DiagController : ControllerBase
+public partial class DiagController : ControllerBase
 {
     private readonly IDiagnosticsService _diagnosticsService;
     private readonly IWebHostEnvironment _environment;
@@ -91,114 +91,4 @@ public class DiagController : ControllerBase
         return Ok(new { message = "Wipe endpoint is disabled by default." });
     }
 
-    /// <summary>
-    /// ENDPOINT: POST /api/v1/Diag/seed-admin
-    /// MỤC ĐÍCH: Tạo hoặc cập nhật tài khoản Super Admin.
-    ///
-    /// KHI NÀO DÙNG?
-    ///   - Lần đầu setup hệ thống (database mới, chưa có admin nào)
-    ///   - Quên mật khẩu admin (dùng endpoint này để reset)
-    ///   - Chuyển quyền admin sang email khác
-    ///
-    /// CÁCH CẤU HÌNH:
-    ///   Thêm vào appsettings.Development.json:
-    ///   {
-    ///     "Diagnostics": {
-    ///       "SeedAdmin": {
-    ///         "Email": "admin@tarot.com",
-    ///         "Username": "superadmin",
-    ///         "Password": "StrongP@ssw0rd123"
-    ///       }
-    ///     }
-    ///   }
-    /// </summary>
-    [HttpPost("seed-admin")]
-    public async Task<IActionResult> SeedAdmin()
-    {
-        // Guard: chỉ cho phép trong Development
-        var guard = RejectIfNotDevelopment();
-        if (guard != null) return guard;
-
-        try 
-        {
-            var result = await _diagnosticsService.SeedAdminAsync(HttpContext.RequestAborted);
-            if (result.Status == SeedAdminStatus.InvalidConfiguration)
-            {
-                return BadRequest(new
-                {
-                    message = result.Message
-                });
-            }
-
-            return Ok(new { 
-                Message = result.Message, 
-                Email = result.Email, 
-                Username = result.Username
-                // KHÔNG trả về password hay hash → bảo mật
-            });
-        }
-        catch (Exception ex)
-        {
-            // Ghi log lỗi và trả 500
-            _logger.LogError(ex, "Failed to seed admin account");
-            return StatusCode(500, new { message = "Failed to seed admin account." });
-        }
-    }
-
-    /// <summary>
-    /// ENDPOINT: POST /api/v1/Diag/seed-gamification
-    /// MỤC ĐÍCH: Nạp dữ liệu init (quests, achievements, titles) cho Gamification Phase.
-    /// </summary>
-    [HttpPost("seed-gamification")]
-    public async Task<IActionResult> SeedGamification()
-    {
-        var guard = RejectIfNotDevelopment();
-        if (guard != null) return guard;
-
-        try
-        {
-            await _diagnosticsService.SeedGamificationDataAsync(HttpContext.RequestAborted);
-            return Ok(new { message = "Gamification data seeded successfully." });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to seed gamification data");
-            return StatusCode(500, new { message = "Failed to seed gamification data." });
-        }
-    }
-
-    /// <summary>
-    /// ENDPOINT: GET /api/v1/Diag/stats
-    /// MỤC ĐÍCH: Xem thống kê dữ liệu MongoDB để kiểm tra hệ thống hoạt động đúng.
-    ///
-    /// THÔNG TIN TRẢ VỀ:
-    ///   - Tổng số reading sessions trong MongoDB
-    ///   - Số sessions của một test user cụ thể
-    ///   - 5 document mẫu (sample) để kiểm tra cấu trúc dữ liệu
-    ///   
-    /// </summary>
-    [HttpGet("stats")]
-    public async Task<IActionResult> GetStats()
-    {
-        // Guard: chỉ cho phép trong Development
-        var guard = RejectIfNotDevelopment();
-        if (guard != null) return guard;
-
-        try
-        {
-            var stats = await _diagnosticsService.GetStatsAsync(HttpContext.RequestAborted);
-
-            // Trả về thống kê
-            return Ok(new { 
-                stats.TotalSessionsInMongo,
-                stats.TestUserSessions,
-                stats.SampleDataRaw
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to fetch diagnostics stats");
-            return StatusCode(500, new { message = "Failed to fetch diagnostics stats." });
-        }
-    }
 }

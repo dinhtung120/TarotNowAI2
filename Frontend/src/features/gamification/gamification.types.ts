@@ -1,5 +1,3 @@
-// types
-// DTOs matching backend
 
 export interface QuestRewardItem {
   type: string; // 'Gold', 'Diamond', 'Title'

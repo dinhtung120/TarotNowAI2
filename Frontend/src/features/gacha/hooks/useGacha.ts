@@ -1,7 +1,4 @@
-/**
- * /src/features/gacha/hooks/useGacha.ts
- * React Query hooks for Gacha feature
- */
+
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { SpinGachaRequestDto } from '../gacha.types'
@@ -65,11 +62,8 @@ export function useSpinGacha() {
       return result.data;
     },
     onSuccess: () => {
-      // Invalidate history to fetch new pulls
       queryClient.invalidateQueries({ queryKey: ['gacha', 'history'] })
-      // Invalidate wallet balance for Query cache
       queryClient.invalidateQueries({ queryKey: ['wallet'] })
-      // Directly trigger store fetch for immediate feedback across the app
       useWalletStore.getState().fetchBalance();
     },
   })

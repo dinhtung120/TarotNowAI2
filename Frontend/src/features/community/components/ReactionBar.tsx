@@ -1,15 +1,9 @@
-/*
- * ===================================================================
- * FILE: ReactionBar.tsx
- * ===================================================================
- * MỤC ĐÍCH:
- *   Thanh công cụ để chọn Emoji Reaction.
- * ===================================================================
- */
+
 
 import React from 'react';
 import { ReactionType } from '../types';
 import { useToggleReaction } from '../hooks/useToggleReaction';
+import { cn } from '@/lib/utils';
 
 interface ReactionBarProps {
   postId: string;
@@ -39,14 +33,11 @@ export const ReactionBar: React.FC<ReactionBarProps> = ({
   };
 
   return (
-    <div className="flex flex-wrap gap-2 pt-3 border-t border-[#2a2b3d]">
+    <div className={cn("flex flex-wrap gap-2 pt-3 border-t border-[#2a2b3d]")}>
       {(Object.entries(REACTIONS_MAP) as [ReactionType, string][]).map(([type, emoji]) => {
         const count = reactionsCount[type] || 0;
         const isActive = viewerReaction === type;
 
-        // Chỉ ưu tiên hiện nếu nó có người bấm, TRỪ khi viewerReaction đang tick vào nó. (Để UI gọn).
-        // Tuy nhiên thường Reaction bar sẽ giấu icon, khi hover mới hiện popover. 
-        // Trong MVP Phase 4.1 này, ta in thẳng nút ra với opacity để đơn giản.
         return (
           <button
             key={type}
@@ -58,7 +49,7 @@ export const ReactionBar: React.FC<ReactionBarProps> = ({
                 : 'bg-transparent text-gray-400 hover:bg-[#2a2b3d] border border-transparent'}
             `}
           >
-            <span className="text-sm">{emoji}</span>
+            <span className={cn("text-sm")}>{emoji}</span>
             {count > 0 && <span>{count}</span>}
           </button>
         );

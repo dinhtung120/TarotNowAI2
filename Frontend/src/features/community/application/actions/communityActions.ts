@@ -1,199 +1,130 @@
 'use server';
-
+import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
-import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import { logger } from '@/shared/infrastructure/logging/logger';
-import { CommunityPost, CreatePostPayload, ReportPostPayload, ToggleReactionPayload } from '../../types';
+import { CommunityPost, CreatePostPayload, ReportPostPayload, ToggleReactionPayload, type CommunityComment } from '../../types';
 
-interface FeedResponse {
-  data: CommunityPost[];
-  metadata: {
-    totalCount: number;
-    page: number;
-    pageSize: number;
-  };
+interface FeedResponse { data: CommunityPost[]; metadata: { totalCount: number; page: number; pageSize: number } }
+interface CommentsResponse { items: CommunityComment[]; totalCount: number; page: number; pageSize: number; totalPages: number }
+
+const UNAUTHORIZED = 'Unauthorized';
+const FAIL_UPLOAD_IMAGE = 'Failed to upload image';
+const FAIL_GET_FEED = 'Failed to get feed';
+const FAIL_CREATE_POST = 'Failed to create post';
+const FAIL_DELETE_POST = 'Failed to delete post';
+const FAIL_TOGGLE_REACTION = 'Failed to toggle reaction';
+const FAIL_REPORT_POST = 'Failed to report post';
+const FAIL_ADD_COMMENT = 'Failed to add comment';
+const FAIL_GET_COMMENTS = 'Failed to fetch comments';
+
+async function withToken<T>(work: (token: string) => Promise<ActionResult<T>>): Promise<ActionResult<T>> {
+ const token = await getServerAccessToken();
+ if (!token) return actionFail(UNAUTHORIZED);
+ return work(token);
 }
 
 export async function uploadPostImageAction(formData: FormData): Promise<ActionResult<{ url: string }>> {
-  const token = await getServerAccessToken();
-  if (!token) return actionFail('Unauthorized');
-
+ return withToken(async (token) => {
   try {
-    const result = await serverHttpRequest<{ url: string }>('/community/images', {
-      method: 'POST',
-      token,
-      formData,
-      fallbackErrorMessage: 'Failed to upload image'
-    });
-
-    if (!result.ok) return actionFail(result.error || 'Failed to upload image');
-    return actionOk(result.data as { url: string });
+   const result = await serverHttpRequest<{ url: string }>('/community/images', { method: 'POST', token, formData, fallbackErrorMessage: FAIL_UPLOAD_IMAGE });
+   if (!result.ok) return actionFail(result.error || FAIL_UPLOAD_IMAGE);
+   return actionOk(result.data);
   } catch (error) {
-    logger.error('uploadPostImageAction error', error);
-    return actionFail('Failed to upload image');
+   logger.error('uploadPostImageAction error', error);
+   return actionFail(FAIL_UPLOAD_IMAGE);
   }
+ });
 }
 
-export async function getFeedAction(
-  page = 1,
-  pageSize = 10,
-  visibility?: string
-): Promise<ActionResult<FeedResponse>> {
-  const token = await getServerAccessToken();
-  if (!token) return actionFail('Unauthorized');
-
+export async function getFeedAction(page = 1, pageSize = 10, visibility?: string): Promise<ActionResult<FeedResponse>> {
+ return withToken(async (token) => {
   try {
-    const params = new URLSearchParams({
-      page: page.toString(),
-      pageSize: pageSize.toString(),
-    });
-    if (visibility) params.append('visibility', visibility);
-
-    const result = await serverHttpRequest<FeedResponse>(`/community/posts?${params.toString()}`, {
-      method: 'GET',
-      token,
-      fallbackErrorMessage: 'Failed to get feed'
-    });
-
-    if (!result.ok) {
-      if (result.status === 404) return actionOk({ data: [], metadata: { totalCount: 0, page, pageSize } });
-      return actionFail(result.error || 'Failed to get feed');
-    }
-    return actionOk(result.data as FeedResponse);
+   const params = new URLSearchParams({ page: page.toString(), pageSize: pageSize.toString() });
+   if (visibility) params.append('visibility', visibility);
+   const result = await serverHttpRequest<FeedResponse>(`/community/posts?${params.toString()}`, { method: 'GET', token, fallbackErrorMessage: FAIL_GET_FEED });
+   if (!result.ok) return result.status === 404 ? actionOk({ data: [], metadata: { totalCount: 0, page, pageSize } }) : actionFail(result.error || FAIL_GET_FEED);
+   return actionOk(result.data);
   } catch (error) {
-    logger.error('getFeedAction error', error);
-    return actionFail('Failed to get feed');
+   logger.error('getFeedAction error', error);
+   return actionFail(FAIL_GET_FEED);
   }
+ });
 }
 
 export async function createPostAction(payload: CreatePostPayload): Promise<ActionResult<CommunityPost>> {
-  const token = await getServerAccessToken();
-  if (!token) return actionFail('Unauthorized');
-
+ return withToken(async (token) => {
   try {
-    const result = await serverHttpRequest<CommunityPost>('/community/posts', {
-      method: 'POST',
-      token,
-      json: payload,
-      fallbackErrorMessage: 'Failed to create post'
-    });
-
-    if (!result.ok) return actionFail(result.error || 'Failed to create post');
-    return actionOk(result.data as CommunityPost);
+   const result = await serverHttpRequest<CommunityPost>('/community/posts', { method: 'POST', token, json: payload, fallbackErrorMessage: FAIL_CREATE_POST });
+   if (!result.ok) return actionFail(result.error || FAIL_CREATE_POST);
+   return actionOk(result.data);
   } catch (error) {
-    logger.error('createPostAction error', error);
-    return actionFail('Failed to create post');
+   logger.error('createPostAction error', error);
+   return actionFail(FAIL_CREATE_POST);
   }
+ });
 }
 
 export async function deletePostAction(postId: string): Promise<ActionResult<void>> {
-  const token = await getServerAccessToken();
-  if (!token) return actionFail('Unauthorized');
-
+ return withToken(async (token) => {
   try {
-    const result = await serverHttpRequest<void>(`/community/posts/${postId}`, {
-      method: 'DELETE',
-      token,
-      fallbackErrorMessage: 'Failed to delete post'
-    });
-
-    if (!result.ok) return actionFail(result.error || 'Failed to delete post');
-    return actionOk(undefined as void);
+   const result = await serverHttpRequest<void>(`/community/posts/${postId}`, { method: 'DELETE', token, fallbackErrorMessage: FAIL_DELETE_POST });
+   if (!result.ok) return actionFail(result.error || FAIL_DELETE_POST);
+   return actionOk(undefined as void);
   } catch (error) {
-    logger.error('deletePostAction error', error);
-    return actionFail('Failed to delete post');
+   logger.error('deletePostAction error', error);
+   return actionFail(FAIL_DELETE_POST);
   }
+ });
 }
 
-export async function toggleReactionAction(postId: string, payload: ToggleReactionPayload): Promise<ActionResult<{success: boolean}>> {
-  const token = await getServerAccessToken();
-  if (!token) return actionFail('Unauthorized');
-
+export async function toggleReactionAction(postId: string, payload: ToggleReactionPayload): Promise<ActionResult<{ success: boolean }>> {
+ return withToken(async (token) => {
   try {
-    const result = await serverHttpRequest<{success: boolean}>(`/community/posts/${postId}/reactions`, {
-      method: 'POST',
-      token,
-      json: payload,
-      fallbackErrorMessage: 'Failed to toggle reaction'
-    });
-
-    if (!result.ok) return actionFail(result.error || 'Failed to toggle reaction');
-    return actionOk(result.data as {success: boolean});
+   const result = await serverHttpRequest<{ success: boolean }>(`/community/posts/${postId}/reactions`, { method: 'POST', token, json: payload, fallbackErrorMessage: FAIL_TOGGLE_REACTION });
+   if (!result.ok) return actionFail(result.error || FAIL_TOGGLE_REACTION);
+   return actionOk(result.data);
   } catch (error) {
-    logger.error('toggleReactionAction error', error);
-    return actionFail('Failed to toggle reaction');
+   logger.error('toggleReactionAction error', error);
+   return actionFail(FAIL_TOGGLE_REACTION);
   }
+ });
 }
 
-export async function reportPostAction(postId: string, payload: ReportPostPayload): Promise<ActionResult<{success: boolean; reportId: string}>> {
-  const token = await getServerAccessToken();
-  if (!token) return actionFail('Unauthorized');
-
+export async function reportPostAction(postId: string, payload: ReportPostPayload): Promise<ActionResult<{ success: boolean; reportId: string }>> {
+ return withToken(async (token) => {
   try {
-    const result = await serverHttpRequest<{success: boolean; reportId: string}>(`/community/posts/${postId}/reports`, {
-      method: 'POST',
-      token,
-      json: payload,
-      fallbackErrorMessage: 'Failed to report post'
-    });
-
-    if (!result.ok) return actionFail(result.error || 'Failed to report post');
-    return actionOk(result.data as {success: boolean; reportId: string});
+   const result = await serverHttpRequest<{ success: boolean; reportId: string }>(`/community/posts/${postId}/reports`, { method: 'POST', token, json: payload, fallbackErrorMessage: FAIL_REPORT_POST });
+   if (!result.ok) return actionFail(result.error || FAIL_REPORT_POST);
+   return actionOk(result.data);
   } catch (error) {
-    logger.error('reportPostAction error', error);
-    return actionFail('Failed to report post');
+   logger.error('reportPostAction error', error);
+   return actionFail(FAIL_REPORT_POST);
   }
+ });
 }
 
-export async function addCommentAction(postId: string, content: string): Promise<ActionResult<import('../../types').CommunityComment>> {
-  const token = await getServerAccessToken();
-  if (!token) return actionFail('Unauthorized');
-
+export async function addCommentAction(postId: string, content: string): Promise<ActionResult<CommunityComment>> {
+ return withToken(async (token) => {
   try {
-    const result = await serverHttpRequest<import('../../types').CommunityComment>(`/community/posts/${postId}/comments`, {
-      method: 'POST',
-      token,
-      json: { content },
-      fallbackErrorMessage: 'Failed to add comment'
-    });
-
-    if (!result.ok) return actionFail(result.error || 'Failed to add comment');
-    return actionOk(result.data as import('../../types').CommunityComment);
+   const result = await serverHttpRequest<CommunityComment>(`/community/posts/${postId}/comments`, { method: 'POST', token, json: { content }, fallbackErrorMessage: FAIL_ADD_COMMENT });
+   if (!result.ok) return actionFail(result.error || FAIL_ADD_COMMENT);
+   return actionOk(result.data);
   } catch (error) {
-    logger.error('addCommentAction error', error);
-    return actionFail('Failed to add comment');
+   logger.error('addCommentAction error', error);
+   return actionFail(FAIL_ADD_COMMENT);
   }
+ });
 }
 
-export async function getCommentsAction(
-  postId: string,
-  page = 1,
-  pageSize = 10
-): Promise<ActionResult<{ items: import('../../types').CommunityComment[]; totalCount: number; hasNextPage: boolean }>> {
-  const token = await getServerAccessToken();
-  try {
-    const result = await serverHttpRequest<{
-      items: import('../../types').CommunityComment[];
-      totalCount: number;
-      page: number;
-      pageSize: number;
-      totalPages: number;
-    }>(`/community/posts/${postId}/comments?page=${page}&pageSize=${pageSize}`, {
-      method: 'GET',
-      token: token || undefined,
-      fallbackErrorMessage: 'Failed to fetch comments'
-    });
-
-    if (!result.ok) return actionFail(result.error || 'Failed to fetch comments');
-    
-    return actionOk({
-      items: result.data?.items || [],
-      totalCount: result.data?.totalCount || 0,
-      hasNextPage: page < (result.data?.totalPages || 0)
-    });
-  } catch (error) {
-    logger.error('getCommentsAction error', error);
-    return actionFail('Failed to fetch comments');
-  }
+export async function getCommentsAction(postId: string, page = 1, pageSize = 10): Promise<ActionResult<{ items: CommunityComment[]; totalCount: number; hasNextPage: boolean }>> {
+ const token = await getServerAccessToken();
+ try {
+  const result = await serverHttpRequest<CommentsResponse>(`/community/posts/${postId}/comments?page=${page}&pageSize=${pageSize}`, { method: 'GET', token: token || undefined, fallbackErrorMessage: FAIL_GET_COMMENTS });
+  if (!result.ok) return actionFail(result.error || FAIL_GET_COMMENTS);
+  return actionOk({ items: result.data?.items || [], totalCount: result.data?.totalCount || 0, hasNextPage: page < (result.data?.totalPages || 0) });
+ } catch (error) {
+  logger.error('getCommentsAction error', error);
+  return actionFail(FAIL_GET_COMMENTS);
+ }
 }

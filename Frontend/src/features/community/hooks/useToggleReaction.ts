@@ -1,13 +1,4 @@
-/*
- * ===================================================================
- * FILE: useToggleReaction.ts
- * ===================================================================
- * MỤC ĐÍCH:
- *   Hook thả cảm xúc vào bài viết. 
- *   Áp dụng Optimistic Update: Thấy phản hồi ngay lập tức trên UI trước 
- *   khi Backend báo thành công. Cực kỳ mượt mà.
- * ===================================================================
- */
+
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toggleReactionAction } from '../application/actions/communityActions';
@@ -18,8 +9,23 @@ interface UseToggleReactionProps {
   visibility?: string; // Dùng để xác định queryKey của Feed hiện hành
 }
 
+interface FeedResponse {
+  data: CommunityPost[];
+  metadata: {
+    totalCount: number;
+    page: number;
+    pageSize: number;
+  };
+}
+
+interface FeedPagesState {
+  pages: FeedResponse[];
+  pageParams: unknown[];
+}
+
 export const useToggleReaction = ({ postId, visibility }: UseToggleReactionProps) => {
   const queryClient = useQueryClient();
+  const queryKey = ['community', 'feed', visibility] as const;
 
   return useMutation({
     mutationFn: async (type: ReactionType) => {
@@ -28,22 +34,17 @@ export const useToggleReaction = ({ postId, visibility }: UseToggleReactionProps
       return res.data;
     },
     
-    // Cập nhật giao diện tự tin (Optimistic Updates) trước khi mạng kịp chạy xong
     onMutate: async (reactionType) => {
-      // Hủy mọi request đang chờ để khỏi bị đè khi sửa tay
-      await queryClient.cancelQueries({ queryKey: ['community', 'feed', visibility] });
+      await queryClient.cancelQueries({ queryKey });
 
-      // Lưu lại cái cũ đề phòng Backend trả lỗi thì Rollback
-      const previousFeed = queryClient.getQueryData(['community', 'feed', visibility]);
+      const previousFeed = queryClient.getQueryData<FeedPagesState>(queryKey);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      queryClient.setQueryData(['community', 'feed', visibility], (old: any) => {
+      queryClient.setQueryData<FeedPagesState>(queryKey, (old) => {
         if (!old) return old;
 
         return {
           ...old,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          pages: old.pages.map((page: any) => ({
+          pages: old.pages.map((page) => ({
             ...page,
             data: page.data.map((post: CommunityPost) => {
               if (post.id !== postId) return post; // Không phải con mình không rớ
@@ -51,18 +52,13 @@ export const useToggleReaction = ({ postId, visibility }: UseToggleReactionProps
               const newReactionsCount = { ...post.reactionsCount };
               let currentReaction = post.viewerReaction;
 
-              // Logic cập nhật state nháp:
               if (currentReaction === reactionType) {
-                // Hủy React do ấn trùng
                 currentReaction = null;
                 newReactionsCount[reactionType] = Math.max(0, (newReactionsCount[reactionType] || 0) - 1);
               } else {
-                // Đổi React hoặc Thêm Mới
                 if (currentReaction) {
-                    // Trừ cái cũ
                     newReactionsCount[currentReaction] = Math.max(0, (newReactionsCount[currentReaction] || 0) - 1);
                 }
-                // Cộng cái mới
                 currentReaction = reactionType;
                 newReactionsCount[reactionType] = (newReactionsCount[reactionType] || 0) + 1;
               }
@@ -80,15 +76,12 @@ export const useToggleReaction = ({ postId, visibility }: UseToggleReactionProps
       return { previousFeed };
     },
     
-    // Dù lỗi hay thành công thì cũng cập nhật lại Data Thật
-    onError: (err, newReaction, context) => {
+    onError: (_error, _newReaction, context) => {
       if (context?.previousFeed) {
-        queryClient.setQueryData(['community', 'feed', visibility], context.previousFeed);
+        queryClient.setQueryData(queryKey, context.previousFeed);
       }
     },
     onSettled: () => {
-      // Trigger update ngầm dù sao đi nữa (Eventual Consistency)
-      // queryClient.invalidateQueries({ queryKey: ['community', 'feed', visibility] });
     },
   });
 };

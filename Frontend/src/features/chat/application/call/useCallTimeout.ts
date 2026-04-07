@@ -16,13 +16,10 @@ export function useCallTimeout(endCallCallback: (sessionID: string, reason: stri
 
   useEffect(() => {
     if (uiState === 'ringing' || uiState === 'incoming') {
-      // Timeout chờ chuông (mặc định 60s, có thể override bằng NEXT_PUBLIC_CALL_RING_TIMEOUT_SECONDS)
       timeoutRef.current = setTimeout(() => {
         if (isCaller && session?.id) {
-          // Người gọi chủ động báo huỷ do timeout
           endCallCallback(session.id, 'timeout');
         } else {
-          // Người nhận tự tắt giao diện
           reset();
         }
       }, timeoutMs);

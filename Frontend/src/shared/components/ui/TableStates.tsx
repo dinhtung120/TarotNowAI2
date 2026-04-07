@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface TableStatesProps {
  colSpan: number;
@@ -23,10 +24,10 @@ export default function TableStates({
  if (isLoading) {
   return (
    <tr>
-    <td colSpan={colSpan} className="py-24 text-center">
-     <div className="flex flex-col items-center justify-center space-y-4">
-      {loadingIcon ?? <Loader2 className="w-8 h-8 animate-spin text-[var(--purple-accent)]" />}
-      <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
+    <td colSpan={colSpan} className={cn("py-24 text-center")}>
+     <div className={cn("flex flex-col items-center justify-center space-y-4")}>
+      {loadingIcon ?? <Loader2 className={cn("w-8 h-8 animate-spin text-[var(--purple-accent)]")} />}
+      <span className={cn("text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]")}>
        {loadingLabel}
       </span>
      </div>
@@ -38,10 +39,10 @@ export default function TableStates({
  if (isEmpty) {
   return (
    <tr>
-    <td colSpan={colSpan} className="py-24 text-center">
-     <div className="flex flex-col items-center justify-center space-y-4">
+    <td colSpan={colSpan} className={cn("py-24 text-center")}>
+     <div className={cn("flex flex-col items-center justify-center space-y-4")}>
       {emptyIcon}
-      <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">
+      <span className={cn("text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]")}>
        {emptyLabel}
       </span>
      </div>

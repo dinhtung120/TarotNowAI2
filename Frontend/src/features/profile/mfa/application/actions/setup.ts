@@ -7,7 +7,6 @@ import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import type { MfaSetupResult } from './types';
 
-
 export async function setupMfa(): Promise<ActionResult<MfaSetupResult>> {
  const tApi = await getTranslations('ApiErrors');
  const accessToken = await getServerAccessToken();

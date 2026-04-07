@@ -47,6 +47,11 @@ public sealed class AdminReaderRequestsController : ControllerBase
         };
 
         var result = await _mediator.Send(command);
-        return result ? Ok(new { success = true }) : BadRequest(new { msg = "Không thể xử lý đơn xin Reader." });
+        return result
+            ? Ok(new { success = true })
+            : Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Cannot process reader request",
+                detail: "Không thể xử lý đơn xin Reader.");
     }
 }

@@ -1,235 +1,63 @@
 'use client';
 
-import {
- Coins,
- Gem,
- ArrowUpRight,
- ArrowDownLeft,
- Clock,
- Search,
- Activity,
- Plus,
- Sparkles,
- Loader2,
- Wallet,
-} from 'lucide-react';
-import { useRouter } from '@/i18n/routing';
-import { SectionHeader, Button, GlassCard, Pagination, TableStates } from '@/shared/components/ui';
-import { formatDate, formatTime } from '@/shared/utils/format/formatDateTime';
 import { useWalletOverviewPage } from '@/features/wallet/application/useWalletOverviewPage';
-import { EntitlementsWidget } from './components/EntitlementsWidget';
+import { EntitlementsWidget } from '@/features/wallet/presentation/components/EntitlementsWidget';
+import {
+ OverviewHeader,
+ WalletBalanceCards,
+ WalletLedgerTable,
+ WalletLedgerToolbar,
+} from '@/features/wallet/presentation/components/overview';
+import { cn } from '@/lib/utils';
 
 export default function WalletOverviewPage() {
- const router = useRouter();
- const {
-  t,
-  locale,
-  balance,
-  ledger,
-  isLoadingLedger,
-  setPage,
-  formatType,
- } = useWalletOverviewPage();
+ const { t, locale, balance, ledger, isLoadingLedger, setPage, formatType } = useWalletOverviewPage();
 
  return (
-  <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 pb-32 font-sans relative">
-   <SectionHeader
+  <div className={cn('max-w-5xl mx-auto px-4 sm:px-6 pt-8 pb-32 font-sans relative')}>
+   <OverviewHeader
     tag={t('overview.tag')}
-    tagIcon={<Sparkles className="w-3 h-3" />}
     title={t('overview.title')}
     subtitle={t('overview.subtitle')}
-    action={
-     <Button
-      variant="primary"
-      onClick={() => router.push('/wallet/deposit')}
-      className="w-full sm:w-auto shadow-2xl"
-     >
-      <Plus className="w-4 h-4 mr-2" />
-      {t('overview.deposit_cta')}
-     </Button>
-    }
-    className="mb-12 animate-in fade-in slide-in-from-bottom-4 duration-1000"
+    depositCta={t('overview.deposit_cta')}
    />
 
-   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
-    <GlassCard className="relative group overflow-hidden !p-6 sm:!p-10 flex flex-col justify-between min-h-[13.5rem] sm:min-h-[16rem]">
-     <div className="absolute inset-0 bg-gradient-to-br from-[var(--purple-accent)]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-     <div className="absolute top-0 right-0 p-8 opacity-5 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12 pointer-events-none">
-      <Gem className="w-40 h-40 text-[var(--purple-accent)]" />
-     </div>
-     <div className="flex items-center gap-4 relative z-10">
-      <div className="w-14 h-14 rounded-2xl bg-[var(--purple-accent)]/10 flex items-center justify-center border border-[var(--purple-accent)]/20 shadow-xl">
-       <Gem className="w-7 h-7 text-[var(--purple-accent)]" />
-      </div>
-      <div>
-       <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
-        {t('overview.diamond_label')}
-       </div>
-       <div className="text-xs font-bold tn-text-primary">{t('overview.diamond_desc')}</div>
-      </div>
-     </div>
-
-     <div className="space-y-1 relative z-10 mt-8">
-      <div className="text-4xl sm:text-5xl md:text-6xl font-black tn-text-primary italic tracking-tighter transition-transform duration-700 group-hover:translate-x-2">
-       {balance?.diamondBalance.toLocaleString(locale) ?? '...'}
-      </div>
-      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] group-hover:text-[var(--text-secondary)] transition-colors">
-       <Activity className="w-3.5 h-3.5" />
-       {t('overview.frozen_label', {
-        amount: (balance?.frozenDiamondBalance ?? 0).toLocaleString(locale),
-       })}
-      </div>
-     </div>
-    </GlassCard>
-
-    <GlassCard className="relative group overflow-hidden !p-6 sm:!p-10 flex flex-col justify-between min-h-[13.5rem] sm:min-h-[16rem]">
-     <div className="absolute inset-0 bg-gradient-to-br from-[var(--warning)]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-     <div className="absolute top-0 right-0 p-8 opacity-5 transition-transform duration-700 group-hover:scale-110 group-hover:rotate-12 pointer-events-none">
-      <Coins className="w-40 h-40 text-[var(--warning)]" />
-     </div>
-
-     <div className="flex items-center gap-4 relative z-10">
-      <div className="w-14 h-14 rounded-2xl bg-[var(--warning)]/10 flex items-center justify-center border border-[var(--warning)]/20 shadow-xl">
-       <Coins className="w-7 h-7 text-[var(--warning)]" />
-      </div>
-      <div>
-       <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
-        {t('overview.gold_label')}
-       </div>
-       <div className="text-xs font-bold tn-text-primary">{t('overview.gold_desc')}</div>
-      </div>
-     </div>
-
-     <div className="space-y-1 relative z-10 mt-8">
-      <div className="text-4xl sm:text-5xl md:text-6xl font-black tn-text-primary italic tracking-tighter transition-transform duration-700 group-hover:translate-x-2">
-       {balance?.goldBalance.toLocaleString(locale) ?? '...'}
-      </div>
-      <div className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] group-hover:text-[var(--text-secondary)] transition-colors">
-       {t('overview.gold_note')}
-      </div>
-     </div>
-    </GlassCard>
-   </div>
+   <WalletBalanceCards
+    balance={balance}
+    locale={locale}
+    labels={{
+     diamondLabel: t('overview.diamond_label'),
+     diamondDesc: t('overview.diamond_desc'),
+     frozenLabel: (amount) => t('overview.frozen_label', { amount }),
+     goldLabel: t('overview.gold_label'),
+     goldDesc: t('overview.gold_desc'),
+     goldNote: t('overview.gold_note'),
+    }}
+   />
 
    <EntitlementsWidget />
 
-   <div className="animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500">
-    <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-     <h2 className="text-xl md:text-2xl font-black tn-text-primary uppercase italic tracking-tighter flex items-center gap-3">
-      <Clock className="w-5 h-5 text-[var(--purple-accent)]" />
-      {t('overview.ledger_title')}
-     </h2>
-     <div className="flex items-center gap-2 px-4 py-2 border tn-border focus-within:border-[var(--purple-accent)]/50 transition-all duration-300 rounded-xl tn-overlay min-h-11">
-      <Search className="w-4 h-4 tn-text-muted" />
-      <input
-       type="text"
-       placeholder={t('overview.search_placeholder')}
-       className="bg-transparent border-none text-[10px] font-black uppercase tracking-widest tn-text-primary w-full sm:w-48 placeholder:tn-text-muted min-h-11 py-2"
-      />
-     </div>
-    </div>
-
-    <GlassCard className="!p-0 overflow-hidden">
-     <div className="overflow-x-auto custom-scrollbar">
-      <table className="w-full text-left min-w-[600px]">
-       <thead>
-        <tr className="border-b tn-border-soft tn-overlay-soft">
-         <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
-          {t('overview.table_time')}
-         </th>
-         <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
-          {t('overview.table_asset')}
-         </th>
-         <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
-          {t('overview.table_action')}
-         </th>
-         <th className="px-6 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)] text-right">
-          {t('overview.table_amount')}
-         </th>
-       </tr>
-      </thead>
-      <tbody className="divide-y divide-white/5">
-        <TableStates
-         colSpan={4}
-         isLoading={isLoadingLedger}
-         isEmpty={!isLoadingLedger && (ledger?.items.length ?? 0) === 0}
-         loadingLabel={t('overview.ledger_loading')}
-         emptyLabel={t('overview.ledger_empty')}
-         loadingIcon={<Loader2 className="w-8 h-8 animate-spin text-[var(--purple-accent)]" />}
-         emptyIcon={<Wallet className="w-12 h-12 tn-text-muted" />}
-        />
-        {!isLoadingLedger && (ledger?.items.length ?? 0) > 0 && (
-         ledger?.items.map((tx) => {
-          const isPositive = tx.amount > 0;
-          return (
-           <tr key={tx.id} className="hover:tn-surface transition-colors group">
-            <td className="px-6 py-5">
-             <div className="text-[11px] font-bold text-[var(--text-primary)]">
-              {formatDate(tx.createdAt, locale)}
-             </div>
-             <div className="text-[10px] font-medium text-[var(--text-secondary)] mt-0.5">
-              {formatTime(tx.createdAt, locale, { hour: '2-digit', minute: '2-digit' })}
-             </div>
-            </td>
-            <td className="px-6 py-5">
-             <div className="flex items-center gap-2">
-              {tx.currency.toLowerCase() === 'diamond' ? (
-               <Gem className="w-4 h-4 text-[var(--purple-accent)]" />
-              ) : (
-               <Coins className="w-4 h-4 text-[var(--warning)]" />
-              )}
-              <span className="text-[10px] font-black uppercase tracking-widest tn-text-primary">{tx.currency}</span>
-             </div>
-            </td>
-            <td className="px-6 py-5 max-w-[200px]">
-             <div className="text-[11px] font-black tn-text-primary uppercase tracking-tighter truncate">
-              {formatType(tx.type)}
-             </div>
-             {tx.description && (
-              <div
-               className="text-[10px] text-[var(--text-tertiary)] font-medium truncate mt-0.5"
-               title={tx.description}
-              >
-               {tx.description}
-              </div>
-             )}
-            </td>
-            <td className="px-6 py-5 text-right">
-             <div
-              className={`flex items-center justify-end gap-1 font-black text-sm md:text-base italic ${
-               isPositive ? 'text-[var(--success)]' : 'tn-text-secondary'
-              }`}
-             >
-              {isPositive ? '+' : ''}
-              {tx.amount.toLocaleString(locale)}
-              {isPositive ? (
-               <ArrowUpRight className="w-4 h-4" />
-              ) : (
-               <ArrowDownLeft className="w-4 h-4 opacity-50 tn-text-muted" />
-              )}
-             </div>
-             <div className="text-[9px] font-black uppercase tracking-widest text-[var(--text-secondary)] mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              {t('overview.balance_after', { amount: tx.balanceAfter.toLocaleString(locale) })}
-             </div>
-            </td>
-          </tr>
-         );
-        })
-        )}
-      </tbody>
-     </table>
-     </div>
-
-     {ledger && (
-      <Pagination
-       currentPage={ledger.pageIndex}
-       totalPages={ledger.totalPages}
-       onPageChange={setPage}
-       isLoading={isLoadingLedger}
-       className="tn-overlay-soft"
-      />
-     )}
-    </GlassCard>
+   <div className={cn('animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500')}>
+    <WalletLedgerToolbar
+     title={t('overview.ledger_title')}
+     placeholder={t('overview.search_placeholder')}
+    />
+    <WalletLedgerTable
+     locale={locale}
+     ledger={ledger}
+     isLoading={isLoadingLedger}
+     formatType={formatType}
+     onPageChange={setPage}
+     labels={{
+      tableTime: t('overview.table_time'),
+      tableAsset: t('overview.table_asset'),
+      tableAction: t('overview.table_action'),
+      tableAmount: t('overview.table_amount'),
+      ledgerLoading: t('overview.ledger_loading'),
+      ledgerEmpty: t('overview.ledger_empty'),
+      balanceAfter: (amount) => t('overview.balance_after', { amount }),
+     }}
+    />
    </div>
   </div>
  );

@@ -1,0 +1,20 @@
+import { Link } from '@/i18n/routing';
+import { NavbarDesktopLinks } from '@/shared/components/common/navbar/NavbarDesktopLinks';
+import { NAV_LINKS } from '@/shared/components/common/navbar/config';
+import { cn } from '@/lib/utils';
+
+interface NavbarBrandSectionProps {
+  pathname: string;
+  tNav: (key: string) => string;
+}
+
+export default function NavbarBrandSection({ pathname, tNav }: NavbarBrandSectionProps) {
+  return (
+    <div className={cn('flex items-center gap-3 sm:gap-6')}>
+      <Link href="/" className={cn('inline-flex min-h-11 items-center px-1 text-lg font-black italic tracking-tighter lunar-metallic-text sm:text-xl')}>
+        TarotNow AI
+      </Link>
+      <NavbarDesktopLinks links={NAV_LINKS} pathname={pathname} tNav={tNav} />
+    </div>
+  );
+}

@@ -7,7 +7,6 @@ import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import type { AdminHistoryPaginatedResponse, AdminHistorySessionItem } from './types';
 
-
 export async function getAllHistorySessionsAdminAction(params: {
  page: number;
  pageSize: number;

@@ -7,17 +7,12 @@ import { useAuthStore } from '@/store/authStore';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { getSignalRHubUrl } from '@/shared/infrastructure/realtime/signalRUrl';
 
-/**
- * Hook đồng bộ hóa trạng thái Chat Realtime thông qua SignalR.
- * Lắng nghe các sự kiện conversation.updated để làm mới (invalidate) cache.
- */
 export function useChatRealtimeSync() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const token = useAuthStore((state) => state.token);
   const connectionRef = useRef<HubConnection | null>(null);
   const queryClient = useQueryClient();
   
-  // Thời điểm ứng dụng bắt đầu - dùng để cooldown chặn invalidate dồn dập lúc load.
   const appStartTimeRef = useRef(Date.now());
 
   useEffect(() => {
@@ -39,12 +34,8 @@ export function useChatRealtimeSync() {
     let hubConnection: HubConnection | null = null;
     let invalidateTimeout: NodeJS.Timeout | null = null;
 
-    /**
-     * Hàm làm mới cache cho danh sách hội thoại và badge số tin nhắn chưa đọc.
-     * TỐI ƯU: Thêm cơ chế Cooldown 3 giây đầu để tránh "bão request" khi mồi nạp dữ liệu Metadata.
-     */
+    
     const invalidateChatQueries = () => {
-      // Nếu vừa mới vào trang (trong 3 giây đầu), ta đã có dữ liệu từ MetadataBatch, không cần xóa cache.
       if (Date.now() - appStartTimeRef.current < 3000) {
         return;
       }

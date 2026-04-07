@@ -1,0 +1,69 @@
+import Image from 'next/image';
+import { Gem, Loader2, MessageCircle, Star, X } from 'lucide-react';
+import { Button } from '@/shared/components/ui';
+import type { ReaderProfile } from '@/features/reader/application/actions';
+import { cn } from '@/lib/utils';
+import { ReaderStatusIndicator } from './ReaderStatusIndicator';
+
+interface ReaderDetailModalProps {
+ reader: ReaderProfile | null;
+ bio: string;
+ isStartingConversation: boolean;
+ onClose: () => void;
+ onStartConversation: () => Promise<void>;
+ labels: {
+  readerFallback: string;
+  perQuestionSuffix: string;
+  startConversationCta: string;
+  statusOnline: string;
+  statusBusy: string;
+  statusOffline: string;
+ };
+}
+
+export function ReaderDetailModal({
+ reader,
+ bio,
+ isStartingConversation,
+ onClose,
+ onStartConversation,
+ labels,
+}: ReaderDetailModalProps) {
+ if (!reader) return null;
+
+ return (
+  <div className={cn('fixed inset-0 z-[100] flex items-center justify-center p-6 md:p-12 animate-in fade-in duration-500')}>
+   <div className={cn('absolute inset-0 tn-overlay-strong')} onClick={onClose} />
+   <div className={cn('relative z-10 max-w-3xl w-full tn-panel rounded-[2.5rem] p-6 sm:p-8 md:p-10 shadow-[0_30px_100px_var(--c-0-0-0-80)] animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 overflow-hidden')}>
+    <div className={cn('absolute top-4 right-4')}>
+     <button type="button" onClick={onClose} className={cn('w-9 h-9 rounded-xl tn-surface border tn-border-soft flex items-center justify-center hover:tn-surface-strong')}>
+      <X className={cn('w-4 h-4')} />
+     </button>
+     </div>
+    <div className={cn('space-y-6')}>
+     <div className={cn('flex items-center gap-4')}>
+      <div className={cn('w-16 h-16 rounded-full tn-surface-strong border-2 tn-border flex items-center justify-center text-xl font-black tn-text-primary overflow-hidden relative')}>
+       {reader.avatarUrl ? <Image src={reader.avatarUrl} alt={reader.displayName} fill sizes="64px" unoptimized className={cn('w-full h-full object-cover bg-white')} /> : reader.displayName?.charAt(0)?.toUpperCase() || '?'}
+      </div>
+      <div className={cn('min-w-0')}>
+       <h3 className={cn('text-2xl font-black italic tracking-tight line-clamp-1')}>{reader.displayName || labels.readerFallback}</h3>
+       <div className={cn('mt-1')}><ReaderStatusIndicator status={reader.status} labels={{ online: labels.statusOnline, busy: labels.statusBusy, offline: labels.statusOffline }} /></div>
+      </div>
+     </div>
+     <p className={cn('text-sm text-[var(--text-secondary)] leading-relaxed')}>{bio}</p>
+     <div className={cn('flex flex-wrap items-center gap-3')}>
+      <div className={cn('flex items-center gap-1.5 tn-surface px-3 py-1.5 rounded-lg border tn-border-soft')}><Star className={cn('w-3.5 h-3.5 text-[var(--warning)]')} fill="currentColor" /><span className={cn('text-xs font-black tn-text-primary')}>{reader.avgRating > 0 ? reader.avgRating.toFixed(1) : '--'}</span><span className={cn('text-[10px] text-[var(--text-tertiary)] font-bold')}>({reader.totalReviews})</span></div>
+      <div className={cn('flex items-center gap-1.5 bg-[var(--purple-accent)]/10 px-3 py-1.5 rounded-lg border border-[var(--purple-accent)]/20')}><Gem className={cn('w-3.5 h-3.5 text-[var(--purple-accent)]')} /><span className={cn('text-[10px] font-black uppercase tracking-widest text-[var(--purple-accent)]')}>{reader.diamondPerQuestion} {labels.perQuestionSuffix}</span></div>
+     </div>
+     {reader.specialties.length > 0 ? <div className={cn('flex flex-wrap gap-2')}>{reader.specialties.map((spec) => <span key={spec} className={cn('px-3 py-1 rounded-lg tn-surface text-[var(--text-secondary)] text-[10px] font-black uppercase tracking-wider border tn-border')}>{spec}</span>)}</div> : null}
+     <div className={cn('pt-4 border-t tn-border-soft flex justify-end')}>
+      <Button onClick={onStartConversation} disabled={isStartingConversation} className={cn('px-6 py-3')}>
+       {isStartingConversation ? <Loader2 className={cn('w-4 h-4 animate-spin mr-2')} /> : <MessageCircle className={cn('w-4 h-4 mr-2')} />}
+       {labels.startConversationCta}
+      </Button>
+     </div>
+    </div>
+   </div>
+  </div>
+ );
+}

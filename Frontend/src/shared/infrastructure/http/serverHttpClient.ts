@@ -70,7 +70,6 @@ export async function serverHttpRequest<T>(
   const { token, headers: rawHeaders, json, formData, fallbackErrorMessage, ...rest } = options;
   const resolvedCache = rest.cache ?? (hasNextRevalidate(rest.next) ? undefined : 'no-store');
   
-  // Xác định body: ưu tiên formData nếu có, sau đó đến json
   let body: BodyInit | undefined;
   if (formData !== undefined) {
     body = formData;

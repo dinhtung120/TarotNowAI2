@@ -5,7 +5,7 @@ import { serverHttpRequest } from "@/shared/infrastructure/http/serverHttpClient
 import { actionFail, actionOk, type ActionResult } from "@/shared/domain/actionResult";
 import type { WalletBalance } from "@/features/wallet/domain/types";
 import type { IStreakStatusResult } from "@/features/checkin/types/checkin.types";
-import type { ListConversationsResult } from "@/features/chat/application/actions/conversations";
+import type { ListConversationsResult } from "@/features/chat/application/actions";
 import type { NotificationListResponse } from "@/features/notifications/application/actions/types";
 
 /**

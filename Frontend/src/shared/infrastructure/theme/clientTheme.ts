@@ -24,7 +24,6 @@ function persistTheme(themeId: ThemeId): void {
  try {
   window.localStorage.setItem(THEME_STORAGE_KEY, themeId);
  } catch {
-  // Ignore storage failures (private mode / restricted environments).
  }
 
  const isSecureContext = window.location.protocol === 'https:';

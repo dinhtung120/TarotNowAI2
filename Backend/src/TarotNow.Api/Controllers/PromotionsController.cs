@@ -76,7 +76,12 @@ public class PromotionsController : ControllerBase
     public async Task<IActionResult> CreatePromotion([FromBody] CreatePromotionCommand command)
     {
         var success = await Mediator.Send(command);
-        return success ? Ok() : BadRequest();
+        return success
+            ? Ok()
+            : Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Cannot create promotion",
+                detail: "Không thể tạo chương trình khuyến mãi.");
     }
 
     /// <summary>
@@ -101,7 +106,12 @@ public class PromotionsController : ControllerBase
             IsActive = request.IsActive          // Trạng thái bật/tắt
         };
         var success = await Mediator.Send(command);
-        return success ? Ok() : BadRequest();
+        return success
+            ? Ok()
+            : Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Cannot update promotion",
+                detail: "Không thể cập nhật chương trình khuyến mãi.");
     }
 
     /// <summary>
@@ -118,7 +128,14 @@ public class PromotionsController : ControllerBase
     public async Task<IActionResult> DeletePromotion([FromRoute] Guid id)
     {
         var success = await Mediator.Send(new DeletePromotionCommand { Id = id });
-        if (!success) return BadRequest(new { message = "Xóa khuyến mãi thất bại." });
+        if (!success)
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Cannot delete promotion",
+                detail: "Xóa khuyến mãi thất bại.");
+        }
+
         return Ok();
     }
 }

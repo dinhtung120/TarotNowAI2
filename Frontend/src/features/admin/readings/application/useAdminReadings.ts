@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import { useLocale, useTranslations } from 'next-intl';
 import { getAllHistorySessionsAdminAction } from '@/features/reading/public';
 
-interface AdminReading {
+export interface AdminReading {
  id: string;
  userId: string;
  username: string;
@@ -16,7 +16,7 @@ interface AdminReading {
  createdAt: string;
 }
 
-interface PaginatedResponse {
+export interface PaginatedResponse {
  page: number;
  pageSize: number;
  totalPages: number;

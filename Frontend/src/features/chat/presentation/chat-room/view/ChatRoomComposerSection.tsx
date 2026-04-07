@@ -1,0 +1,39 @@
+import ChatComposer from "@/features/chat/presentation/chat-room/ChatComposer";
+import type { ChatRoomViewProps } from "@/features/chat/presentation/chat-room/ChatRoomView.types";
+
+export default function ChatRoomComposerSection(props: ChatRoomViewProps) {
+  return (
+    <ChatComposer
+      actionMenuRef={props.actionMenuRef}
+      awaitingCompleteResponse={props.awaitingCompleteResponse}
+      canShowInput={props.canShowInput}
+      canStartNewSession={props.canStartNewSession}
+      canUseActionMenu={props.canUseActionMenu}
+      conversationExists={Boolean(props.conversation)}
+      imageInputRef={props.imageInputRef}
+      inputPlaceholder={props.inputPlaceholder}
+      inputRef={props.inputRef}
+      isReadOnly={props.isReadOnly}
+      isUserRole={props.isUserRole}
+      newMessage={props.newMessage}
+      processingAction={props.processingAction}
+      readOnlyHint={props.readOnlyHint}
+      requestingAddMoney={props.requestingAddMoney}
+      sending={props.sending}
+      showActionMenu={props.showActionMenu}
+      startingNewSession={props.startingNewSession}
+      uploadingMedia={props.uploadingMedia}
+      VoiceRecorderButton={props.VoiceRecorderButton}
+      setShowActionMenu={props.onSetShowActionMenu}
+      onImageInputChange={props.onImageInputChange}
+      onInputChange={props.onInputChange}
+      onInputKeyDown={props.onInputKeyDown}
+      onOpenDispute={() => props.onSetShowDisputeModal(true)}
+      onOpenPaymentOffer={() => props.onSetShowPaymentOffer(true)}
+      onRequestComplete={props.onRequestComplete}
+      onSendTextMessage={props.onSendTextMessage}
+      onStartNewSession={props.onStartNewSession}
+      onVoiceRecordingComplete={props.onVoiceRecordingComplete}
+    />
+  );
+}

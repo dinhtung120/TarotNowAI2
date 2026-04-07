@@ -12,7 +12,6 @@ function safeSet(storage: Storage, key: string, value: string): void {
  try {
   storage.setItem(key, value);
  } catch {
-  // Ignore storage write failures (private mode/quota exceeded)
  }
 }
 
@@ -20,7 +19,6 @@ function safeRemove(storage: Storage, key: string): void {
  try {
   storage.removeItem(key);
  } catch {
-  // Ignore storage remove failures
  }
 }
 

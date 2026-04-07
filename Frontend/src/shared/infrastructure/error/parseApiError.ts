@@ -25,14 +25,12 @@ export async function parseApiError(
     const message = pickErrorMessage(data);
     if (message) return message;
   } catch {
-    // Ignore JSON parse errors and continue with text parsing.
   }
 
   try {
     const text = await response.text();
     if (text.trim()) return text;
   } catch {
-    // Ignore text parsing errors and use fallback.
   }
 
   return fallbackMessage;

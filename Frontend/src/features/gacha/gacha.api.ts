@@ -1,7 +1,4 @@
-/**
- * /src/features/gacha/gacha.api.ts
- * API Service for Gacha calls
- */
+
 
 import { useAuthStore } from '@/store/authStore';
 import type { 
@@ -37,7 +34,6 @@ async function authFetch<T>(path: string, options: RequestInit = {}): Promise<T>
     throw new Error(message);
   }
 
-  // Handle 204 No Content
   if (res.status === 204) {
       return {} as T;
   }
@@ -67,10 +63,7 @@ export const gachaApi = {
     return authFetch(`/v1/gacha/history?limit=${limit}`)
   },
 
-  /**
-   * Spin a gacha banner
-   * Creates an idempotency key automatically to prevent double-spends on network glitch
-   */
+  
   async spin(data: SpinGachaRequestDto): Promise<SpinGachaResult> {
     const idempotencyKey = uuidv4()
     return authFetch('/v1/gacha/spin', {

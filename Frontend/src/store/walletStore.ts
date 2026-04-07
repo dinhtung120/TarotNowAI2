@@ -1,17 +1,4 @@
-/*
- * ===================================================================
- * COMPONENT/FILE: Cửa hàng Trạng thái Ví (walletStore.ts)
- * BỐI CẢNH (CONTEXT):
- *   Store quản lý trạng thái số dư Ví điện tử (Gold, Diamond) của User bằng Zustand.
- * 
- * TÍNH NĂNG CHÍNH:
- *   - Là nguồn dữ liệu duy nhất (Single Source of Truth) để các Component (như WalletWidget) 
- *     lấy số dư ra hiển thị tức thì.
- *   - Cung cấp hàm `fetchBalance` để tự gọi Server Action `getWalletBalance` và 
- *     cập nhật số dư vào State, kèm theo Loading flag.
- *   - Cung cấp hàm `setBalance` để gập nhật số dư trực tiếp từ Metadata tổng hợp.
- * ===================================================================
- */
+
 import { create } from 'zustand';
 import { WalletBalance } from '@/features/wallet/domain/types';
 import type { ActionResult } from '@/shared/domain/actionResult';

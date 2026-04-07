@@ -1,25 +1,5 @@
 'use server';
 
-/*
- * ===================================================================
- * FILE: actions.ts
- * BỐI CẢNH (CONTEXT):
- *   Server Actions cho tính năng Gacha.
- *   Tuân thủ kiến trúc Clean Architecture của dự án TarotNow.
- * 
- * TÍNH NĂNG CHÍNH:
- *   - Lấy danh sách Banner đang hoạt động.
- *   - Lấy tỷ lệ (Odds) của Banner.
- *   - Lấy lịch sử quay của User.
- *   - Thực hiện quay Gacha (Spin).
- * 
- * TẠI SAO DÙNG SERVER ACTIONS?
- *   - Bảo mật hơn: Token (accessToken) được lấy trực tiếp từ HttpOnly Cookie ở phía Server.
- *   - Tránh lỗi Hydration: Fetch dữ liệu ngay tại Server trước khi render Component.
- *   - Đồng bộ kiến trúc: Giống với các tính năng Wallet và Gamification khác.
- * ===================================================================
- */
-
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
@@ -33,10 +13,6 @@ import type {
 } from '../gacha.types';
 import { v4 as uuidv4 } from 'uuid';
 
-/**
- * Lấy danh sách các Banner đang mở hiển thị cho người dùng.
- * Tương ứng với endpoint GET /api/v1/gacha/banners
- */
 export async function getGachaBanners(): Promise<ActionResult<GachaBannerDto[]>> {
   const accessToken = await getServerAccessToken();
   if (!accessToken) return actionFail('Unauthorized');
@@ -60,10 +36,6 @@ export async function getGachaBanners(): Promise<ActionResult<GachaBannerDto[]>>
   }
 }
 
-/**
- * Lấy danh sách tỷ lệ vật phẩm của một banner cụ thể.
- * Tương ứng với endpoint GET /api/v1/gacha/banners/{bannerCode}/odds
- */
 export async function getGachaOdds(bannerCode: string): Promise<ActionResult<GachaBannerOddsDto>> {
   const accessToken = await getServerAccessToken();
   if (!accessToken) return actionFail('Unauthorized');

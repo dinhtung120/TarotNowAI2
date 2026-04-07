@@ -28,8 +28,6 @@ export async function getStreakStatus(): Promise<ActionResult<IStreakStatusResul
 
     if (!result.ok) {
       if (result.status === 401) {
-        // Lỗi 401 thường là do hết hạn session, ta chỉ ghi Warning thay vì Error 
-        // để tránh gây nhiễu log hệ thống (Noise).
         logger.warn('[CheckinAction] getStreakStatus: Session expired or invalid', { status: 401 });
       } else {
         logger.error('[CheckinAction] getStreakStatus', result.error, { status: result.status });

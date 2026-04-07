@@ -7,7 +7,6 @@ import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import type { UserProfile } from '@/features/auth/domain/types';
 
-
 export interface ProfileDto extends UserProfile {
  avatarUrl: string | null;
  dateOfBirth: string;

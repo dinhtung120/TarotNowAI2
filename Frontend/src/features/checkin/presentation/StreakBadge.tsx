@@ -1,22 +1,5 @@
 'use client';
 
-/*
- * ===================================================================
- * COMPONENT: StreakBadge
- * ===================================================================
- * MỤC ĐÍCH:
- *   Widget nhỏ gọn hiển thị số ngày Streak liên tục trên Navbar.
- *   Streak tăng tự động khi user rút bài AI thành công (backend xử lý).
- *   Component này chỉ đọc và hiển thị, KHÔNG có nút bấm nào cả.
- *
- * THIẾT KẾ:
- *   - Ngọn lửa 🔥 + số ngày, nhỏ gọn nằm cạnh WalletWidget.
- *   - Nếu streak = 0 hoặc chưa đăng nhập → ẩn hoàn toàn.
- *   - Nếu streak > 0 → hiện badge nhỏ với hiệu ứng glow cam.
- *   - Tooltip giải thích ngắn khi hover.
- * ===================================================================
- */
-
 import { useStreakStatus } from '@/features/checkin/application/hooks';
 import { Flame } from 'lucide-react';
 

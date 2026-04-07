@@ -33,7 +33,10 @@ public partial class ReaderController
 
         return result
             ? Ok(new { success = true, message = "Đơn đã được gửi thành công. Vui lòng chờ admin duyệt." })
-            : BadRequest(new { message = "Không thể gửi đơn." });
+            : Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Cannot submit reader request",
+                detail: "Không thể gửi đơn.");
     }
 
     /// <summary>
@@ -74,7 +77,12 @@ public partial class ReaderController
             Specialties = body.Specialties
         });
 
-        return result ? Ok(new { success = true }) : BadRequest();
+        return result
+            ? Ok(new { success = true })
+            : Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Cannot update reader profile",
+                detail: "Không thể cập nhật hồ sơ reader.");
     }
 
     /// <summary>
@@ -95,6 +103,11 @@ public partial class ReaderController
             Status = body.Status
         });
 
-        return result ? Ok(new { success = true }) : BadRequest();
+        return result
+            ? Ok(new { success = true })
+            : Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Cannot update reader status",
+                detail: "Không thể cập nhật trạng thái reader.");
     }
 }

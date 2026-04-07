@@ -7,14 +7,6 @@ import { useWalletStore } from '@/store/walletStore';
 import { getInitialMetadata } from '@/shared/application/actions/metadata';
 import { CHECKIN_QUERY_KEYS } from '@/features/checkin/application/hooks';
 
-/**
- * Hook gộp (Batching) để nạp Metadata ban đầu cho User.
- * 
- * CHIẾN LƯỢC TỐI ƯU HÓA (Phase 4):
- * 1. Metadata được Hydra từ Server thông qua MetadataInitialLoader (SSR).
- * 2. Gộp thêm danh sách Thông báo (RecentNotifications) để triệt tiêu request lẻ.
- * 3. Hook này là Fallback: Chỉ chạy nếu cache TRỐNG.
- */
 export function useInitialMetadata() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const queryClient = useQueryClient();
@@ -24,7 +16,6 @@ export function useInitialMetadata() {
   useEffect(() => {
     if (!isAuthenticated || hasFetchedRef.current) return;
 
-    // Kiểm tra cache (tránh gọi trùng lặp sau khi SSR Hydration)
     const existingStreak = queryClient.getQueryData(CHECKIN_QUERY_KEYS.streakStatus);
     if (existingStreak) {
       console.log('[useInitialMetadata] Cache already primed. Skipping fetch.');
@@ -47,17 +38,13 @@ export function useInitialMetadata() {
             activeConversations 
           } = result.data;
 
-          // 1. Mồi Ví (Zustand)
           setBalance(wallet);
 
-          // 2. Mồi Streak
           queryClient.setQueryData(CHECKIN_QUERY_KEYS.streakStatus, streak);
 
-          // 3. Mồi Thông báo (Count + List)
           queryClient.setQueryData(['notifications', 'unread-count'], unreadNotificationCount);
           queryClient.setQueryData(['notifications', 'dropdown'], recentNotifications);
 
-          // 4. Mồi Chat (Badge + Inbox)
           queryClient.setQueryData(['chat', 'unread-badge'], unreadChatCount);
           queryClient.setQueryData(['chat', 'inbox', 'active'], activeConversations);
           

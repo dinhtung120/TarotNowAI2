@@ -34,6 +34,11 @@ public sealed class AdminDepositsController : ControllerBase
     public async Task<IActionResult> ProcessDeposit([FromBody] TarotNow.Application.Features.Admin.Commands.ProcessDeposit.ProcessDepositCommand command)
     {
         var result = await _mediator.Send(command);
-        return result ? Ok(new { success = true }) : BadRequest(new { msg = "Không thể xử lý đơn nạp tiền này." });
+        return result
+            ? Ok(new { success = true })
+            : Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Cannot process deposit order",
+                detail: "Không thể xử lý đơn nạp tiền này.");
     }
 }

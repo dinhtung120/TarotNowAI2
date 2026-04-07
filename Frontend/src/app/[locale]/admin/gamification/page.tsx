@@ -12,7 +12,6 @@ export async function generateMetadata() {
 export default async function AdminGamificationPage() {
   const token = await getServerAccessToken();
   
-  // Batch fetch data on server
   const [questsRes, achievementsRes, titlesRes] = await Promise.all([
     serverHttpRequest<QuestDefinition[]>('/admin/gamification/quests', { token, next: { revalidate: 0 } }),
     serverHttpRequest<AchievementDefinition[]>('/admin/gamification/achievements', { token, next: { revalidate: 0 } }),

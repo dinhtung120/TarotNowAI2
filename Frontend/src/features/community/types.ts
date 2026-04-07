@@ -1,12 +1,4 @@
-/*
- * ===================================================================
- * FILE: types.ts
- * ===================================================================
- * MỤC ĐÍCH:
- *   Định nghĩa các interface cho dữ liệu gửi trả về từ Backend đối với 
- *   tính năng Cộng Đồng (Community).
- * ===================================================================
- */
+
 
 export type PostVisibility = 'public' | 'private';
 
@@ -25,7 +17,6 @@ export interface CommunityPost {
   isDeleted: boolean;
   createdAt: string;
   updatedAt: string | null;
-  // Cờ báo hiệu viewer hiện tại đã react loại gì chưa (nếu có null là chưa)
   viewerReaction: ReactionType | null;
 }
 

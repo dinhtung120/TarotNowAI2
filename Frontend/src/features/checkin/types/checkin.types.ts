@@ -1,13 +1,4 @@
-/*
- * ===================================================================
- * FILE: checkin.types.ts
- * NAMESPACE: features/checkin/types
- * ===================================================================
- * MỤC ĐÍCH:
- *   Định nghĩa các interface cho DTO trả về từ API CheckIn, Streak.
- *   Dùng để map data chặt chẽ (strictly typed) trong React & TanStack Query.
- * ===================================================================
- */
+
 
 export interface IDailyCheckInResult {
   goldRewarded: number;

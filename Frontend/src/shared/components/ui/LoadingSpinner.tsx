@@ -1,19 +1,8 @@
-/*
- * ===================================================================
- * COMPONENT: LoadingSpinner
- * BỐI CẢNH (CONTEXT):
- *   Biểu tượng vòng xoay (Spinner) báo hiệu ứng dụng đang xử lý dữ liệu.
- * 
- * TÍNH NĂNG CHÍNH:
- *   - Đồng bộ hiệu ứng loading trên toàn App thay vì dùng `<Loader2>` rải rác.
- *   - Có thể cấu hình Kích cỡ (Size), đính kèm Dòng chữ chú thích (Message) 
- *     hoặc chiếm toàn bộ chiều cao màn hình (Full Page) khi đang chặn tương tác.
- * ===================================================================
- */
+
 
 import { Loader2 } from "lucide-react";
 import { memo } from "react";
-import { cn } from "@/shared/utils/cn";
+import { cn } from "@/lib/utils";
 
 type SpinnerSize = "sm" | "md" | "lg";
 
@@ -57,7 +46,7 @@ function LoadingSpinnerComponent({
 
  {/* Optional loading message — style label nhỏ uppercase */}
  {message && (
- <span className="text-[10px] font-black uppercase tracking-widest tn-text-muted">
+ <span className={cn("text-[10px] font-black uppercase tracking-widest tn-text-muted")}>
  {message}
  </span>
  )}

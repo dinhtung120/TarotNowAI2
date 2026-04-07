@@ -1,7 +1,4 @@
-/**
- * /src/features/gacha/gacha.types.ts
- * Type definitions for Gacha feature
- */
+
 
 export interface GachaBannerItemDto {
   rarity: string;

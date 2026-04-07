@@ -1,7 +1,7 @@
 'use client';
 
 import { Award, Trophy } from 'lucide-react';
-import { cn } from '@/shared/utils/cn';
+import { cn } from '@/lib/utils';
 
 interface GamificationDetailHeaderProps {
   isQuest: boolean;
@@ -19,7 +19,7 @@ export function GamificationDetailHeader({
   pendingLabel,
 }: GamificationDetailHeaderProps) {
   return (
-    <div className="relative flex flex-col items-center text-center mb-8">
+    <div className={cn("relative flex flex-col items-center text-center mb-8")}>
       <div
         className={cn(
           'w-20 h-20 rounded-3xl flex items-center justify-center mb-4 transition-transform duration-500 hover:scale-110 shadow-2xl',
@@ -29,10 +29,10 @@ export function GamificationDetailHeader({
           !isCompleted && 'grayscale opacity-50',
         )}
       >
-        {isQuest ? <Trophy className="w-10 h-10 text-white" /> : <Award className="w-10 h-10 text-white" />}
+        {isQuest ? <Trophy className={cn("w-10 h-10 text-white")} /> : <Award className={cn("w-10 h-10 text-white")} />}
       </div>
 
-      <h2 className="text-2xl font-black text-slate-100 mb-2 tracking-tight">{title}</h2>
+      <h2 className={cn("text-2xl font-black text-slate-100 mb-2 tracking-tight")}>{title}</h2>
       <div
         className={cn(
           'px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border',

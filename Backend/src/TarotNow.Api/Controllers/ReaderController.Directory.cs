@@ -16,7 +16,10 @@ public partial class ReaderController
         var profile = await _mediator.Send(new GetReaderProfileQuery { UserId = userId });
         if (profile == null)
         {
-            return NotFound(new { message = "Không tìm thấy hồ sơ Reader." });
+            return Problem(
+                statusCode: StatusCodes.Status404NotFound,
+                title: "Reader profile not found",
+                detail: "Không tìm thấy hồ sơ Reader.");
         }
 
         ApplyPresenceStatus(profile);

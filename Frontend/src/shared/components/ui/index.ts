@@ -1,15 +1,4 @@
-/*
- * ===================================================================
- * COMPONENT/FILE: UI Barrel Export (index.ts)
- * BỐI CẢNH (CONTEXT):
- *   Tập hợp phân phối (Barrel) cho toàn bộ UI Components tĩnh của ứng dụng.
- * 
- * TÍNH NĂNG CHÍNH:
- *   - Gom nhóm các UI Components (Button, Input, Modal, v.v.) vào một đầu mối import duy nhất.
- *   - Giúp các file khác khai báo import gọn gàng: `import { Button, Input } from "@/shared/components/ui"` 
- *     thay vì phải import lẻ từng file.
- * ===================================================================
- */
+
 
 export { default as Button } from "./Button";
 export { default as Input } from "./Input";

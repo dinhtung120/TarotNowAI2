@@ -22,7 +22,6 @@ export function useClaimQuestReward() {
     mutationFn: ({ questCode, periodKey }: { questCode: string; periodKey: string }) =>
       gamificationApi.claimQuestReward(questCode, periodKey),
     onSuccess: () => {
-      // Invalidate both quests to show claimed state and wallet to update balance
       queryClient.invalidateQueries({ queryKey: gamificationKeys.quests('daily') });
       queryClient.invalidateQueries({ queryKey: ['wallet'] });
     },

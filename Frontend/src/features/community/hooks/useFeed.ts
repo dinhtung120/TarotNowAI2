@@ -1,12 +1,4 @@
-/*
- * ===================================================================
- * FILE: useFeed.ts
- * ===================================================================
- * MỤC ĐÍCH:
- *   Hook dùng React Query (useInfiniteQuery) để cuộn vô tận (Infinite Scroll)
- *   danh sách các bài Post trên Feed.
- * ===================================================================
- */
+
 
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getFeedAction } from '../application/actions/communityActions';

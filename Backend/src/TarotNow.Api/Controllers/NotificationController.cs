@@ -162,7 +162,10 @@ public class NotificationController : ControllerBase
             /* false = không tìm thấy notification hoặc không phải của user.
              * Trả 404 thay vì 403 → không tiết lộ notification có tồn tại hay không
              * → chống thông tin rò rỉ (information disclosure). */
-            return NotFound(new { message = "Notification not found." });
+            return Problem(
+                statusCode: StatusCodes.Status404NotFound,
+                title: "Notification not found",
+                detail: "Notification not found.");
         }
 
         return Ok(new { message = "Notification marked as read." });

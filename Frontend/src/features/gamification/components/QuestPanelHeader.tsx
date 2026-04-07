@@ -1,6 +1,7 @@
 'use client';
 
 import { Trophy } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface QuestPanelHeaderProps {
   questType: 'daily' | 'weekly';
@@ -10,20 +11,20 @@ interface QuestPanelHeaderProps {
 
 export function QuestPanelHeader({ questType, setQuestType, t }: QuestPanelHeaderProps) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-      <div className="flex items-center gap-3">
-        <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/30">
-          <Trophy className="w-6 h-6 text-white" />
+    <div className={cn("flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6")}>
+      <div className={cn("flex items-center gap-3")}>
+        <div className={cn("p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/30")}>
+          <Trophy className={cn("w-6 h-6 text-white")} />
         </div>
         <div>
-          <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-100 to-purple-200">
+          <h2 className={cn("text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-100 to-purple-200")}>
             {questType === 'daily' ? t('DailyQuests') : t('WeeklyQuests')}
           </h2>
-          <p className="text-sm text-indigo-200/70">{t('CompleteThemBeforeMidnight')}</p>
+          <p className={cn("text-sm text-indigo-200/70")}>{t('CompleteThemBeforeMidnight')}</p>
         </div>
       </div>
 
-      <div className="flex bg-slate-900/50 p-1 rounded-xl border border-slate-700/50">
+      <div className={cn("flex bg-slate-900/50 p-1 rounded-xl border border-slate-700/50")}>
         <button
           onClick={() => setQuestType('daily')}
           className={`px-4 py-2 rounded-lg text-sm font-bold transition-all ${

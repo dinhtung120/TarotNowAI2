@@ -1,165 +1,37 @@
-"use client";
+'use client';
 
-/*
- * ===================================================================
- * COMPONENT: Modal
- * BỐI CẢNH (CONTEXT):
- *   Hộp thoại nổi (Dialog/Popup) dùng chung cho các tác vụ cần sự tập trung 
- *   hoặc đòi hỏi xác nhận (Ví dụ: MFA, Báo cáo, Confirm Xóa).
- * 
- * TÍNH NĂNG CHÍNH:
- *   - Sử dụng `createPortal` để render Modal lên thẳng `document.body` nhằm 
- *     tránh bị che khuất bởi `z-index` hay `overflow: hidden` của component cha.
- *   - Hỗ trợ đóng Modal mượt mà bằng phím `ESC` hoặc click ra ngoài Overlay.
- *   - Tự động khóa cuộn trang (Lock body scroll) khi Modal đang mở.
- * ===================================================================
- */
+import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
+import ModalHeader from '@/shared/components/ui/modal/ModalHeader';
+import { useModalLifecycle } from '@/shared/components/ui/modal/useModalLifecycle';
+import { cn } from '@/lib/utils';
 
-import { useEffect, useCallback, type ReactNode } from "react";
-import { createPortal } from "react-dom";
-import { X } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { cn } from "@/shared/utils/cn";
-
-type ModalSize = "sm" | "md" | "lg";
+type ModalSize = 'sm' | 'md' | 'lg';
 
 interface ModalProps {
- /** Trạng thái cùng/mở modal */
- isOpen: boolean;
-
- /** Callback khi đóng modal (ESC, click outside, nút X) */
- onClose: () => void;
-
- /** Tiêu đề modal (hiển thị ở header) */
- title?: string;
-
- /** Mô tả ngắn dưới tiêu đề */
- description?: string;
-
- /** Kích thước max-width. Mặc định: "md" */
- size?: ModalSize;
-
- /** Nội dung bên trong modal */
- children: ReactNode;
-
- /** Có hiển thị nút X đóng không? Mặc định: true */
- showCloseButton?: boolean;
+  children: ReactNode;
+  description?: string;
+  isOpen: boolean;
+  showCloseButton?: boolean;
+  size?: ModalSize;
+  title?: string;
+  onClose: () => void;
 }
 
-const sizeStyles: Record<ModalSize, string> = {
- sm: "max-w-md",
- md: "max-w-lg",
- lg: "max-w-2xl",
-};
+const sizeStyles: Record<ModalSize, string> = { sm: 'max-w-md', md: 'max-w-lg', lg: 'max-w-2xl' };
 
-export default function Modal({
- isOpen,
- onClose,
- title,
- description,
- size = "md",
- children,
- showCloseButton = true,
-}: ModalProps) {
- const t = useTranslations("Common");
+export default function Modal({ children, description, isOpen, onClose, title, size = 'md', showCloseButton = true }: ModalProps) {
+  useModalLifecycle({ isOpen, onClose });
+  if (!isOpen) return null;
 
- /**
- * Xử lý phím ESC để đóng modal.
- *
- * Tại sao dùng useCallback + useEffect thay vì onKeyDown trên div?
- * → onKeyDown chỉ hoạt động khi div đã focused.
- * → document.addEventListener luôn bắt được, dù focus ở đâu.
- * → useCallback tránh tạo function mới mỗi render → cleanup đúng listener.
- */
- const handleEsc = useCallback(
- (e: KeyboardEvent) => {
- if (e.key === "Escape") onClose();
- },
- [onClose],
- );
-
- useEffect(() => {
- if (isOpen) {
- document.addEventListener("keydown", handleEsc);
- /* Lock body scroll khi modal mở — tránh scroll content phía sau */
- document.body.style.overflow = "hidden";
- }
-
- return () => {
- document.removeEventListener("keydown", handleEsc);
- document.body.style.overflow = "";
- };
- }, [isOpen, handleEsc]);
-
- /* Không render gì nếu modal đóng */
- if (!isOpen) return null;
-
- /**
- * createPortal render content vào document.body.
- * → Overlay luôn full-screen, không bị parent layout ảnh hưởng.
- */
- return createPortal(
- <div
- className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
- role="dialog"
- aria-modal="true"
- aria-label={title}
- >
- {/* === OVERLAY ===
- Click vào overlay (vùng tối) → đóng modal.
- không dùng blur để giữ phong cách non-glass. */}
- <div
- className="absolute inset-0 bg-[color:var(--c-70-53-105-28)] animate-in fade-in duration-200"
- onClick={onClose}
- />
-
- {/* === CONTENT CARD ===
- animate-in + zoom-in-95: card xuất hiện với hiệu ứng scale nhẹ.
- bg-surface (không dùng glass) vì modal cần contrast rõ với nền. */}
- <div
- className={cn(
- "relative z-10 w-full",
- sizeStyles[size],
- "bg-[var(--bg-elevated)]",
- "border border-[var(--border-default)]",
- "rounded-3xl",
- "shadow-[var(--shadow-elevated)] ring-1 ring-[color:var(--c-224-224-255-60)]",
- "animate-in fade-in zoom-in-95 duration-300",
- )}
- >
- {/* === HEADER (nếu có title) === */}
- {(title || showCloseButton) && (
- <div className="flex items-start justify-between p-6 pb-0">
- <div className="space-y-1">
- {title && (
- <h2 className="text-lg font-black text-[var(--text-ink)] tracking-tight">
- {title}
- </h2>
- )}
- {description && (
- <p className="text-sm text-[var(--text-secondary)] font-medium">
- {description}
- </p>
- )}
- </div>
-
- {/* Nút đóng X — luôn ở góc phải trên */}
- {showCloseButton && (
-	 <button
-	 onClick={onClose}
-	 className="p-2 rounded-xl hover:bg-[var(--purple-50)] transition-colors text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
-	 aria-label={t("close_modal")}
-	 >
- <X className="w-5 h-5" />
- </button>
- )}
- </div>
- )}
-
- {/* === BODY === */}
- <div className="p-6">{children}</div>
- </div>
- </div>,
- document.body,
- );
+  return createPortal(
+    <div className={cn('fixed inset-0 z-[9999] flex items-center justify-center p-4')} role="dialog" aria-modal="true" aria-label={title}>
+      <div className={cn('absolute inset-0 animate-in fade-in bg-[color:var(--c-70-53-105-28)] duration-200')} onClick={onClose} />
+      <div className={cn('relative z-10 w-full rounded-3xl border border-[var(--border-default)] bg-[var(--bg-elevated)] shadow-[var(--shadow-elevated)] ring-1 ring-[color:var(--c-224-224-255-60)] animate-in fade-in zoom-in-95 duration-300', sizeStyles[size])}>
+        <ModalHeader title={title} description={description} showCloseButton={showCloseButton} onClose={onClose} />
+        <div className={cn('p-6')}>{children}</div>
+      </div>
+    </div>,
+    document.body,
+  );
 }

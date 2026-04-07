@@ -116,7 +116,12 @@ public class ProfileController : ControllerBase
         var success = await Mediator.Send(command);
 
         // Trả kết quả: thành công hoặc thất bại
-        return success ? Ok(new { success = true }) : BadRequest();
+        return success
+            ? Ok(new { success = true })
+            : Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Cannot update profile",
+                detail: "Không thể cập nhật hồ sơ người dùng.");
     }
 
     /// <summary>
@@ -135,7 +140,10 @@ public class ProfileController : ControllerBase
             return Unauthorized();
 
         if (file == null || file.Length == 0)
-            return BadRequest(new { success = false, message = "File ảnh không được để trống." });
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Invalid avatar file",
+                detail: "File ảnh không được để trống.");
 
         using var stream = file.OpenReadStream();
         

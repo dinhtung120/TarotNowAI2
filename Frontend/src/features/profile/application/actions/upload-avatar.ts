@@ -15,7 +15,6 @@ export async function uploadAvatarAction(formData: FormData): Promise<ActionResu
       return actionFail(tApi('unauthorized'));
     }
 
-    // Gửi multipart form data
     const result = await serverHttpRequest<{ avatarUrl: string }>('/profile/avatar', {
       method: 'POST',
       token,

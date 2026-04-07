@@ -11,7 +11,6 @@ interface CallState {
   conversationId: string | null;
   isCaller: boolean;
   
-  // Actions
   setIncomingCall: (session: CallSessionDto) => void;
   setOutgoingCall: (conversationId: string, type: CallType) => void;
   setConnected: (session: CallSessionDto) => void;
@@ -39,7 +38,6 @@ export const useCallStore = create<CallState>((set) => ({
     void type;
     return set({
       uiState: 'ringing',
-      // Chúng ta fake tạm session cho đến khi Backend trả về session id qua SignalR
       session: null,
       conversationId,
       isCaller: true
@@ -52,7 +50,6 @@ export const useCallStore = create<CallState>((set) => ({
   }),
   
   setEnded: () => set(state => {
-    // Dừng tất cả stream
     if (state.localStream) {
       state.localStream.getTracks().forEach(track => track.stop());
     }

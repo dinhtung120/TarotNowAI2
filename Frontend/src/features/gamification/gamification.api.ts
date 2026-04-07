@@ -1,17 +1,4 @@
-/*
- * ===================================================================
- * FILE: gamification.api.ts
- * BỐI CẢNH (CONTEXT):
- *   Lớp API client-side cho module Gamification.
- *   Sử dụng native fetch + token từ authStore để gọi trực tiếp Backend API.
- *
- * TẠI SAO KHÔNG DÙNG AXIOS?
- *   Dự án TarotNow không bundle axios ở client-side. Toàn bộ server actions
- *   dùng `serverHttpRequest`. Ở client-side (React Query hooks), ta dùng
- *   native fetch kết hợp token từ Zustand authStore — nhẹ hơn và không cần
- *   thêm dependency.
- * ===================================================================
- */
+
 
 import { useAuthStore } from '@/store/authStore';
 import type {
@@ -22,13 +9,6 @@ import type {
   LeaderboardResult,
 } from './gamification.types';
 
-/**
- * Hàm tiện ích tạo authenticated fetch request tới Backend API.
- * Tự động gắn Bearer token từ authStore và parse JSON response.
- *
- * Nếu response không ok (4xx, 5xx), ném Error kèm message từ server
- * để React Query có thể bắt và hiển thị cho user.
- */
 async function authFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   /* Lấy token mới nhất từ Zustand store — đảm bảo luôn dùng token hiện hành
      kể cả khi token vừa được refresh bởi interceptor */
@@ -65,23 +45,13 @@ async function authFetch<T>(path: string, options: RequestInit = {}): Promise<T>
   return (await res.json()) as T;
 }
 
-/**
- * Object chứa tất cả các hàm gọi API Gamification.
- * Được inject vào React Query hooks qua `queryFn` / `mutationFn`.
- */
 export const gamificationApi = {
-  /**
-   * Lấy danh sách nhiệm vụ (quests) kèm tiến độ hiện tại của user.
-   * @param type - Loại nhiệm vụ: 'daily' | 'weekly' | 'monthly'
-   */
+  
   getQuests: async (type: string = 'daily'): Promise<QuestWithProgress[]> => {
     return authFetch<QuestWithProgress[]>(`/gamification/quests?type=${type}`);
   },
 
-  /**
-   * Nhận thưởng cho nhiệm vụ đã hoàn thành.
-   * Backend sẽ kiểm tra idempotency để tránh claim trùng.
-   */
+  
   claimQuestReward: async (questCode: string, periodKey: string): Promise<ClaimQuestRewardResult> => {
     return authFetch<ClaimQuestRewardResult>(`/gamification/quests/${questCode}/claim`, {
       method: 'POST',
@@ -103,10 +73,7 @@ export const gamificationApi = {
     return authFetch<UserTitlesData>('/gamification/titles');
   },
 
-  /**
-   * Đặt danh hiệu active hiển thị trên profile.
-   * Truyền chuỗi rỗng '' để bỏ danh hiệu.
-   */
+  
   setActiveTitle: async (titleCode: string): Promise<void> => {
     return authFetch<void>('/gamification/titles/active', {
       method: 'POST',
@@ -123,11 +90,7 @@ export const gamificationApi = {
     });
   },
 
-  /**
-   * Lấy bảng xếp hạng theo track và period.
-   * @param track - Loại: 'daily_rank_score' | 'weekly_rank_score' | ...
-   * @param periodKey - Khoá chu kỳ: '2026-04-06' cho daily, '2026-W14' cho weekly
-   */
+  
   getLeaderboard: async (track: string = 'daily_rank_score', periodKey?: string): Promise<LeaderboardResult> => {
     let url = `/gamification/leaderboard?track=${track}`;
     if (periodKey) url += `&periodKey=${periodKey}`;

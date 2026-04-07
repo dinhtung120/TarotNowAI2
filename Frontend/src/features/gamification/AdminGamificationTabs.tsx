@@ -1,6 +1,7 @@
 'use client';
 
 import { Crown, Medal, Trophy } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface AdminGamificationTabsProps {
   activeTab: 'quests' | 'achievements' | 'titles';
@@ -9,14 +10,14 @@ interface AdminGamificationTabsProps {
 
 export function AdminGamificationTabs({ activeTab, onChange }: AdminGamificationTabsProps) {
   return (
-    <nav className="flex gap-2 p-1 bg-slate-900/50 rounded-2xl border border-slate-800 w-fit">
+    <nav className={cn("flex gap-2 p-1 bg-slate-900/50 rounded-2xl border border-slate-800 w-fit")}>
       <button
         onClick={() => onChange('quests')}
         className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
           activeTab === 'quests' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'
         }`}
       >
-        <Trophy className="w-4 h-4" />
+        <Trophy className={cn("w-4 h-4")} />
         Nhiệm Vụ
       </button>
       <button
@@ -25,7 +26,7 @@ export function AdminGamificationTabs({ activeTab, onChange }: AdminGamification
           activeTab === 'achievements' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'
         }`}
       >
-        <Medal className="w-4 h-4" />
+        <Medal className={cn("w-4 h-4")} />
         Thành Tựu
       </button>
       <button
@@ -34,7 +35,7 @@ export function AdminGamificationTabs({ activeTab, onChange }: AdminGamification
           activeTab === 'titles' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-200'
         }`}
       >
-        <Crown className="w-4 h-4" />
+        <Crown className={cn("w-4 h-4")} />
         Danh Hiệu
       </button>
     </nav>

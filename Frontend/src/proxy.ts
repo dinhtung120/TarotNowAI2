@@ -3,7 +3,6 @@ import createMiddleware from 'next-intl/middleware';
 import { routing } from './i18n/routing';
 import { resolveApiOrigin } from '@/shared/infrastructure/http/apiUrl';
 
-// Khởi tạo middleware của next-intl
 const intlMiddleware = createMiddleware(routing);
 const localeSet = new Set(routing.locales);
 const apiOrigin = resolveApiOrigin(process.env.NEXT_PUBLIC_API_URL);
@@ -88,7 +87,6 @@ const buildContentSecurityPolicy = (nonce: string): string => {
    * blob: – VoiceMessageBubble convert data URL → Blob URL để phát audio
    * data: – fallback nếu dùng data URL trực tiếp (base64 audio) */
   "media-src 'self' blob: data:",
-  // Tailwind/runtime style injection still needs inline styles.
   "style-src 'self' 'unsafe-inline'",
   `script-src ${toSpaceDelimited(scriptSources)}`,
   `connect-src 'self' ${apiOrigin} ${wsApiOrigin}`.trim(),
@@ -106,21 +104,6 @@ const withResponseCsp = (response: NextResponse, csp: string): NextResponse => {
  return response;
 };
 
-/*
- * ===================================================================
- * COMPONENT/FILE: Proxy (proxy.ts)
- * BỐI CẢNH (CONTEXT):
- *   Đóng vai trò như một Middleware luồng chặn (Edge Runtime) trước khi Request 
- *   vào các Component.
- * 
- * TÍNH NĂNG CHÍNH:
- *   - Tích hợp Middleware Đa ngôn ngữ (`intlMiddleware`) xử lý Routing URL (Ví dụ: /vn/home).
- *   - Chặn các đường dẫn Yêu cầu Đăng nhập (`PROTECTED_PREFIXES`) và chuyển hướng (Redirect) 
- *     về trang Login nếu phát hiện thiếu `accessToken` cookie.
- *   - Middleware này chỉ đóng vai trò UX guard ở tầng Edge.
- *     Authorization thực tế (đặc biệt role admin) vẫn do Backend/API xác thực chữ ký JWT.
- * ===================================================================
- */
 export default async function proxy(request: NextRequest) {
  const { pathname } = request.nextUrl;
  const locale = resolveLocale(pathname);
@@ -141,11 +124,9 @@ export default async function proxy(request: NextRequest) {
   }
  }
 
- // Nếu hợp lệ hoặc không phải admin route, tiếp tục xử lý i18n
  return withResponseCsp(intlMiddleware(requestWithCsp), csp);
 }
 
 export const config = {
- // Matcher cho các đường dẫn cần xử lý i18n và auth
  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)']
 };

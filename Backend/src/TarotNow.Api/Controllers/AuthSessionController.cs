@@ -47,6 +47,7 @@ public sealed class AuthSessionController : ControllerBase
     /// Rotates access and refresh tokens using refresh token cookie.
     /// </summary>
     [HttpPost("refresh")]
+    [EnableRateLimiting("auth-session")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AuthResponse))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> RefreshTokens()
@@ -54,7 +55,10 @@ public sealed class AuthSessionController : ControllerBase
         var refreshToken = Request.Cookies["refreshToken"];
         if (string.IsNullOrEmpty(refreshToken))
         {
-            return Unauthorized(new { message = "Refresh token is missing." });
+            return Problem(
+                statusCode: StatusCodes.Status401Unauthorized,
+                title: "Missing refresh token",
+                detail: "Refresh token is missing.");
         }
 
         var command = new RefreshTokenCommand
@@ -73,6 +77,7 @@ public sealed class AuthSessionController : ControllerBase
     /// Revokes current session token or all sessions for authenticated user.
     /// </summary>
     [HttpPost("logout")]
+    [EnableRateLimiting("auth-session")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Logout([FromQuery] bool revokeAll = false)
     {
@@ -88,14 +93,20 @@ public sealed class AuthSessionController : ControllerBase
         {
             if (!User.TryGetUserId(out var userId))
             {
-                return Unauthorized(new { message = "Must be authenticated to revoke all sessions." });
+                return Problem(
+                    statusCode: StatusCodes.Status401Unauthorized,
+                    title: "Authentication required",
+                    detail: "Must be authenticated to revoke all sessions.");
             }
 
             command.UserId = userId;
         }
         else if (string.IsNullOrEmpty(command.Token))
         {
-            return BadRequest(new { message = "No refresh token provided." });
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Missing refresh token",
+                detail: "No refresh token provided.");
         }
 
         await _mediator.Send(command);

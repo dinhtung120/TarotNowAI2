@@ -21,6 +21,7 @@ public static partial class ApiServiceCollectionExtensions
     private static void ConfigureRateLimitPolicies(RateLimiterOptions options)
     {
         AddFixedWindowPolicy(options, "login", ResolveClientIp, permitLimit: 5, TimeSpan.FromSeconds(60));
+        AddFixedWindowPolicy(options, "auth-session", ResolveAuthenticatedPartitionKey, permitLimit: 20, TimeSpan.FromMinutes(1));
         AddFixedWindowPolicy(options, "community-write", ResolveAuthenticatedPartitionKey, permitLimit: 30, TimeSpan.FromMinutes(1));
         AddFixedWindowPolicy(options, "call-history", ResolveAuthenticatedPartitionKey, permitLimit: 60, TimeSpan.FromMinutes(1));
     }
