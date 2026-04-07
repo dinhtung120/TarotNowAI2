@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
 import { Link } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
+import { useErrorBoundaryLogger } from '@/shared/application/hooks/useErrorBoundaryLogger';
 
 interface LocaleErrorProps {
  error: Error & { digest?: string };
@@ -10,9 +10,7 @@ interface LocaleErrorProps {
 }
 
 export default function LocaleError({ error, reset }: LocaleErrorProps) {
- useEffect(() => {
-  console.error('[LocaleErrorBoundary]', error);
- }, [error]);
+ useErrorBoundaryLogger('LocaleErrorBoundary', error);
 
  return (
   <div className={cn("mx-auto flex min-h-[60vh] max-w-2xl flex-col items-center justify-center gap-6 px-6 text-center")}>

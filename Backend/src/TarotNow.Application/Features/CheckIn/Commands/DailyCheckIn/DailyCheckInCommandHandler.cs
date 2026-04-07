@@ -10,6 +10,9 @@ namespace TarotNow.Application.Features.CheckIn.Commands.DailyCheckIn;
 
 public class DailyCheckInCommandHandler : IRequestHandler<DailyCheckInCommand, DailyCheckInResult>
 {
+    private const string DateFormat = "yyyy-MM-dd";
+    private const string CheckinIdempotencyPrefix = "checkin_";
+
     private readonly IUserRepository _userRepository;
     private readonly IDailyCheckinRepository _checkinRepository;
     private readonly IWalletRepository _walletRepository;
@@ -32,58 +35,63 @@ public class DailyCheckInCommandHandler : IRequestHandler<DailyCheckInCommand, D
 
     public async Task<DailyCheckInResult> Handle(DailyCheckInCommand request, CancellationToken cancellationToken)
     {
-        
         var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken);
         if (user == null)
             throw new NotFoundException($"User {request.UserId} not found");
 
-        
-        
-        var todayString = DateOnly.FromDateTime(DateTime.UtcNow).ToString("yyyy-MM-dd");
-
-        
+        var todayString = DateOnly.FromDateTime(DateTime.UtcNow).ToString(DateFormat);
         var isCheckedIn = await _checkinRepository.HasCheckedInAsync(request.UserId.ToString(), todayString, cancellationToken);
         if (isCheckedIn)
         {
-            return new DailyCheckInResult
-            {
-                GoldRewarded = 0,
-                IsAlreadyCheckedIn = true,
-                BusinessDate = todayString,
-                CurrentStreak = user.CurrentStreak
-            };
+            return BuildAlreadyCheckedInResult(todayString, user.CurrentStreak);
         }
 
-        
         var goldAmount = _settings.DailyCheckinGold;
+        await CreditCheckInRewardAsync(user.Id, todayString, goldAmount, cancellationToken);
+        await _checkinRepository.InsertAsync(user.Id.ToString(), todayString, goldAmount, cancellationToken);
+        await _gamificationService.OnCheckInAsync(user.Id, user.CurrentStreak, cancellationToken);
 
-        
-        
+        return BuildCheckedInResult(todayString, user.CurrentStreak, goldAmount);
+    }
+
+    private async Task CreditCheckInRewardAsync(
+        Guid userId,
+        string businessDate,
+        long goldAmount,
+        CancellationToken cancellationToken)
+    {
         await _walletRepository.CreditAsync(
-            userId: user.Id,
+            userId: userId,
             currency: CurrencyType.Gold,
             type: TransactionType.DailyCheckin,
             amount: goldAmount,
-            description: $"Daily Check-in Reward for {todayString}",
-            idempotencyKey: $"checkin_{user.Id}_{todayString}",
+            description: $"Daily Check-in Reward for {businessDate}",
+            idempotencyKey: $"{CheckinIdempotencyPrefix}{userId}_{businessDate}",
             cancellationToken: cancellationToken);
+    }
 
-        
-        await _checkinRepository.InsertAsync(user.Id.ToString(), todayString, goldAmount, cancellationToken);
+    private static DailyCheckInResult BuildAlreadyCheckedInResult(string businessDate, int currentStreak)
+    {
+        return new DailyCheckInResult
+        {
+            GoldRewarded = 0,
+            IsAlreadyCheckedIn = true,
+            BusinessDate = businessDate,
+            CurrentStreak = currentStreak
+        };
+    }
 
-        
-        
-        
-        
-        await _gamificationService.OnCheckInAsync(user.Id, user.CurrentStreak, cancellationToken);
-
-        
+    private static DailyCheckInResult BuildCheckedInResult(
+        string businessDate,
+        int currentStreak,
+        long goldAmount)
+    {
         return new DailyCheckInResult
         {
             GoldRewarded = goldAmount,
             IsAlreadyCheckedIn = false,
-            BusinessDate = todayString,
-            CurrentStreak = user.CurrentStreak
+            BusinessDate = businessDate,
+            CurrentStreak = currentStreak
         };
     }
 }

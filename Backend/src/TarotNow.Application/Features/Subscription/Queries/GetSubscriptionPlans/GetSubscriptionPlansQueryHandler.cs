@@ -13,6 +13,8 @@ namespace TarotNow.Application.Features.Subscription.Queries.GetSubscriptionPlan
 
 public class GetSubscriptionPlansQueryHandler : IRequestHandler<GetSubscriptionPlansQuery, List<SubscriptionPlanDto>>
 {
+    private static readonly Dictionary<string, int> EmptyEntitlements = [];
+
     private readonly ISubscriptionRepository _subscriptionRepository;
 
     public GetSubscriptionPlansQueryHandler(ISubscriptionRepository subscriptionRepository)
@@ -23,48 +25,63 @@ public class GetSubscriptionPlansQueryHandler : IRequestHandler<GetSubscriptionP
     public async Task<List<SubscriptionPlanDto>> Handle(GetSubscriptionPlansQuery request, CancellationToken cancellationToken)
     {
         var plans = await _subscriptionRepository.GetActivePlansAsync(cancellationToken);
+        return plans.Select(MapPlanToDto).ToList();
+    }
 
-        return plans.Select(p => {
-            
-            var entDict = new Dictionary<string, int>();
-            try
+    private SubscriptionPlanDto MapPlanToDto(dynamic plan)
+    {
+        return new SubscriptionPlanDto(
+            plan.Id,
+            plan.Name,
+            plan.Description,
+            plan.PriceDiamond,
+            plan.DurationDays,
+            plan.IsActive,
+            ParseEntitlements(plan.EntitlementsJson),
+            plan.CreatedAt);
+    }
+
+    private static Dictionary<string, int> ParseEntitlements(string? entitlementsJson)
+    {
+        if (string.IsNullOrWhiteSpace(entitlementsJson))
+        {
+            return [];
+        }
+
+        return ParseListFormat(entitlementsJson) ?? ParseDictionaryFormat(entitlementsJson) ?? [];
+    }
+
+    private static Dictionary<string, int>? ParseListFormat(string entitlementsJson)
+    {
+        try
+        {
+            var configList = System.Text.Json.JsonSerializer.Deserialize<List<EntitlementConfigDto>>(entitlementsJson);
+            if (configList == null || configList.Count == 0) return null;
+
+            var entitlements = new Dictionary<string, int>();
+            foreach (var config in configList)
             {
-                if (!string.IsNullOrWhiteSpace(p.EntitlementsJson))
-                {
-                    
-                    var configList = System.Text.Json.JsonSerializer.Deserialize<List<EntitlementConfigDto>>(p.EntitlementsJson);
-                    if (configList != null && configList.Count > 0)
-                    {
-                        foreach (var cfg in configList)
-                        {
-                            if (!string.IsNullOrEmpty(cfg.key))
-                                entDict[cfg.key] = cfg.dailyQuota;
-                        }
-                    }
-                    else
-                    {
-                        
-                        entDict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, int>>(p.EntitlementsJson) 
-                                  ?? new Dictionary<string, int>();
-                    }
-                }
-            }
-            catch
-            {
-                
-                entDict = new Dictionary<string, int>();
+                if (string.IsNullOrEmpty(config.key)) continue;
+                entitlements[config.key] = config.dailyQuota;
             }
 
-            return new SubscriptionPlanDto(
-                p.Id,
-                p.Name,
-                p.Description,
-                p.PriceDiamond,
-                p.DurationDays,
-                p.IsActive,
-                entDict,
-                p.CreatedAt
-            );
-        }).ToList();
+            return entitlements;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static Dictionary<string, int>? ParseDictionaryFormat(string entitlementsJson)
+    {
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, int>>(entitlementsJson);
+        }
+        catch
+        {
+            return EmptyEntitlements;
+        }
     }
 }

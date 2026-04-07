@@ -1,16 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
-import { getWalletBalance } from "@/features/wallet/application/actions";
-import { setWalletBalanceFetcher } from "@/store/walletStore";
+import { useWalletStoreBridge } from "@/features/wallet/presentation/components/useWalletStoreBridge";
 
 export default function WalletStoreBridge() {
- useEffect(() => {
-  setWalletBalanceFetcher(getWalletBalance);
-  return () => {
-   setWalletBalanceFetcher();
-  };
- }, []);
+ useWalletStoreBridge();
 
  return null;
 }

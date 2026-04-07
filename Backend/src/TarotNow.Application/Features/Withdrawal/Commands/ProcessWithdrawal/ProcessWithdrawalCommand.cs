@@ -8,13 +8,22 @@ public class ProcessWithdrawalCommand : IRequest<bool>
 {
     public Guid RequestId { get; set; }
     public Guid AdminId { get; set; }
-        public string Action { get; set; } = string.Empty;
+    public string Action { get; set; } = string.Empty;
     public string? AdminNote { get; set; }
     public string MfaCode { get; set; } = string.Empty;
 }
 
 public class ProcessWithdrawalCommandHandler : IRequestHandler<ProcessWithdrawalCommand, bool>
 {
+    private const string ApproveAction = "approve";
+    private const string RejectAction = "reject";
+    private const string PendingStatus = "pending";
+    private const string ApprovedStatus = "approved";
+    private const string RejectedStatus = "rejected";
+    private const string DiamondCurrency = "diamond";
+    private const string WithdrawalRefundTransactionType = "withdrawal_refund";
+    private const string WithdrawalReferenceSource = "withdrawal_request";
+
     private readonly IWithdrawalRepository _withdrawalRepo;
     private readonly IWalletRepository _walletRepo;
     private readonly IUserRepository _userRepo;
@@ -34,8 +43,7 @@ public class ProcessWithdrawalCommandHandler : IRequestHandler<ProcessWithdrawal
 
     public async Task<bool> Handle(ProcessWithdrawalCommand req, CancellationToken ct)
     {
-        if (req.Action != "approve" && req.Action != "reject")
-            throw new BadRequestException("Action phải là 'approve' hoặc 'reject'.");
+        ValidateAction(req.Action);
 
         var request = await _withdrawalRepo.GetByIdAsync(req.RequestId, ct)
             ?? throw new NotFoundException("Không tìm thấy yêu cầu rút tiền.");
@@ -51,38 +59,56 @@ public class ProcessWithdrawalCommandHandler : IRequestHandler<ProcessWithdrawal
         if (!_mfaService.VerifyCode(decSecret, req.MfaCode))
             throw new BadRequestException("Mã xác thực MFA của admin bị sai hoặc hết hạn.");
 
-        if (request.Status != "pending")
+        if (request.Status != PendingStatus)
             throw new BadRequestException($"Yêu cầu ở trạng thái '{request.Status}', không thể xử lý.");
 
-        var now = DateTime.UtcNow;
+        await ProcessByActionAsync(req, request, ct);
+        SetAuditFields(req, request);
+        await PersistWithdrawalAsync(request, ct);
+        return true;
+    }
 
-        if (req.Action == "approve")
+    private static void ValidateAction(string action)
+    {
+        if (action == ApproveAction || action == RejectAction) return;
+        throw new BadRequestException("Action phải là 'approve' hoặc 'reject'.");
+    }
+
+    private async Task ProcessByActionAsync(
+        ProcessWithdrawalCommand req,
+        dynamic request,
+        CancellationToken cancellationToken)
+    {
+        if (req.Action == ApproveAction)
         {
-            
-            request.Status = "approved";
-        }
-        else
-        {
-            
-            await _walletRepo.CreditAsync(
-                request.UserId, "diamond", "withdrawal_refund", request.AmountDiamond,
-                referenceSource: "withdrawal_request",
-                referenceId: request.Id.ToString(),
-                description: $"Refund {request.AmountDiamond}💎 — yêu cầu rút tiền bị từ chối",
-                idempotencyKey: $"wd_refund_{request.Id}",
-                cancellationToken: ct);
-
-            request.Status = "rejected";
+            request.Status = ApprovedStatus;
+            return;
         }
 
-        
+        await _walletRepo.CreditAsync(
+            request.UserId,
+            DiamondCurrency,
+            WithdrawalRefundTransactionType,
+            request.AmountDiamond,
+            referenceSource: WithdrawalReferenceSource,
+            referenceId: request.Id.ToString(),
+            description: $"Refund {request.AmountDiamond}💎 — yêu cầu rút tiền bị từ chối",
+            idempotencyKey: $"wd_refund_{request.Id}",
+            cancellationToken: cancellationToken);
+
+        request.Status = RejectedStatus;
+    }
+
+    private static void SetAuditFields(ProcessWithdrawalCommand req, dynamic request)
+    {
         request.AdminId = req.AdminId;
         request.AdminNote = req.AdminNote;
-        request.ProcessedAt = now;
+        request.ProcessedAt = DateTime.UtcNow;
+    }
 
-        await _withdrawalRepo.UpdateAsync(request, ct);
-        await _withdrawalRepo.SaveChangesAsync(ct);
-
-        return true;
+    private async Task PersistWithdrawalAsync(dynamic request, CancellationToken cancellationToken)
+    {
+        await _withdrawalRepo.UpdateAsync(request, cancellationToken);
+        await _withdrawalRepo.SaveChangesAsync(cancellationToken);
     }
 }

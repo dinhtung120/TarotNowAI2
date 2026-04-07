@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
 import { Link } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
+import { useErrorBoundaryLogger } from '@/shared/application/hooks/useErrorBoundaryLogger';
 
 interface UserErrorProps {
  error: Error & { digest?: string };
@@ -10,9 +10,7 @@ interface UserErrorProps {
 }
 
 export default function UserSegmentError({ error, reset }: UserErrorProps) {
- useEffect(() => {
-  console.error('[UserSegmentErrorBoundary]', error);
- }, [error]);
+ useErrorBoundaryLogger('UserSegmentErrorBoundary', error);
 
  return (
   <div className={cn("mx-auto flex min-h-[55vh] max-w-xl flex-col items-center justify-center gap-5 px-6 text-center")}>

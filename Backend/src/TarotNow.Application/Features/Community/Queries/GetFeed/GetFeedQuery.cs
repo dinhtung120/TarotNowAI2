@@ -18,6 +18,10 @@ public class GetFeedQuery : IRequest<(IEnumerable<CommunityPostFeedItemDto> Item
 
 public class GetFeedQueryHandler : IRequestHandler<GetFeedQuery, (IEnumerable<CommunityPostFeedItemDto> Items, long TotalCount)>
 {
+    private const int MinPage = 1;
+    private const int MinPageSize = 1;
+    private const int MaxPageSize = 50;
+
     private readonly ICommunityPostRepository _postRepo;
     private readonly ICommunityReactionRepository _reactionRepo;
     private readonly IMapper _mapper;
@@ -34,38 +38,47 @@ public class GetFeedQueryHandler : IRequestHandler<GetFeedQuery, (IEnumerable<Co
 
     public async Task<(IEnumerable<CommunityPostFeedItemDto> Items, long TotalCount)> Handle(GetFeedQuery request, CancellationToken cancellationToken)
     {
-        
-        if (request.Page < 1) request.Page = 1;
-        if (request.PageSize < 1 || request.PageSize > 50) request.PageSize = 50;
+        NormalizePaging(request);
 
-        
         var (posts, total) = await _postRepo.GetFeedAsync(
-            request.Page, 
-            request.PageSize, 
+            request.Page,
+            request.PageSize,
             request.ViewerId.ToString(),
-            request.AuthorFilter, 
-            request.VisibilityFilter, 
+            request.AuthorFilter,
+            request.VisibilityFilter,
             cancellationToken);
 
         if (!posts.Any())
             return (Enumerable.Empty<CommunityPostFeedItemDto>(), total);
 
         var postIds = posts.Select(p => p.Id).ToList();
-
-        
         var userReactions = await _reactionRepo.GetUserReactionsForPostsAsync(
-            request.ViewerId.ToString(), 
-            postIds, 
+            request.ViewerId.ToString(),
+            postIds,
             cancellationToken);
 
-        
-        var feedItems = posts.Select(p =>
+        var feedItems = MapFeedItems(posts, userReactions);
+        return (feedItems, total);
+    }
+
+    private static void NormalizePaging(GetFeedQuery request)
+    {
+        if (request.Page < MinPage) request.Page = MinPage;
+        if (request.PageSize < MinPageSize || request.PageSize > MaxPageSize) request.PageSize = MaxPageSize;
+    }
+
+    private IEnumerable<CommunityPostFeedItemDto> MapFeedItems(
+        IEnumerable<CommunityPostDto> posts,
+        IReadOnlyDictionary<string, string> userReactions)
+    {
+        return posts.Select(post =>
         {
-            var mapped = _mapper.Map<CommunityPostFeedItemDto>(p);
-            mapped.ViewerReaction = userReactions.GetValueOrDefault(p.Id);
+            var mapped = _mapper.Map<CommunityPostFeedItemDto>(post);
+            var postId = post.Id;
+            mapped.ViewerReaction = userReactions.ContainsKey(postId)
+                ? userReactions[postId]
+                : null;
             return mapped;
         });
-
-        return (feedItems, total);
     }
 }

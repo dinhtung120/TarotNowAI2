@@ -1,17 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { useStreakStatus } from "../application/hooks";
 import CheckinFreezeButton from "./CheckinFreezeButton";
 import { CheckinButton } from "./CheckinButton";
 import { StreakDisplay } from "./StreakDisplay";
 import { StreakFreezeModal } from "./StreakFreezeModal";
+import { useCheckinStreakCardState } from "./hooks/useCheckinStreakCardState";
 
 export const CheckinStreakCard = () => {
-  const { data: streakData, isLoading } = useStreakStatus();
-  const [isFreezeModalOpen, setIsFreezeModalOpen] = useState(false);
+  const vm = useCheckinStreakCardState();
 
-  if (isLoading || !streakData) {
+  if (vm.isLoading || !vm.streakData) {
     return (
       <div className="h-28 w-full animate-pulse rounded-2xl border border-slate-700/50 bg-slate-800/50" />
     );
@@ -24,19 +22,19 @@ export const CheckinStreakCard = () => {
 
         <div className="flex flex-col gap-2">
           <StreakDisplay
-            isBroken={streakData.isStreakBroken}
-            streak={streakData.currentStreak}
+            isBroken={vm.streakData.isStreakBroken}
+            streak={vm.streakData.currentStreak}
           />
-          {streakData.canBuyFreeze && (
+          {vm.streakData.canBuyFreeze && (
             <CheckinFreezeButton
-              preBreakStreak={streakData.preBreakStreak}
-              onClick={() => setIsFreezeModalOpen(true)}
+              preBreakStreak={vm.streakData.preBreakStreak}
+              onClick={vm.openFreezeModal}
             />
           )}
         </div>
 
         <div className="z-10 flex w-full flex-col gap-1.5 sm:max-w-xs">
-          <CheckinButton isCheckedIn={streakData.todayCheckedIn} />
+          <CheckinButton isCheckedIn={vm.streakData.todayCheckedIn} />
           <p className="font-inter text-center text-[10px] text-slate-500">
             Rút bài AI để tăng lửa Streak hàng ngày.
           </p>
@@ -44,11 +42,11 @@ export const CheckinStreakCard = () => {
       </div>
 
       <StreakFreezeModal
-        freezePrice={streakData.freezePrice}
-        isOpen={isFreezeModalOpen}
-        preBreakStreak={streakData.preBreakStreak}
-        remainingSeconds={streakData.freezeWindowRemainingSeconds}
-        onClose={() => setIsFreezeModalOpen(false)}
+        freezePrice={vm.streakData.freezePrice}
+        isOpen={vm.isFreezeModalOpen}
+        preBreakStreak={vm.streakData.preBreakStreak}
+        remainingSeconds={vm.streakData.freezeWindowRemainingSeconds}
+        onClose={vm.closeFreezeModal}
       />
     </>
   );

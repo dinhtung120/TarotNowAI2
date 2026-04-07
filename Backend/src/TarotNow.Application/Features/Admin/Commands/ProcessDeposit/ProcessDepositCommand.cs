@@ -11,15 +11,22 @@ namespace TarotNow.Application.Features.Admin.Commands.ProcessDeposit;
 
 public class ProcessDepositCommand : IRequest<bool>
 {
-        public Guid DepositId { get; set; }
+    public Guid DepositId { get; set; }
 
-        public string Action { get; set; } = "approve";
+    public string Action { get; set; } = ApproveAction;
+    public string? TransactionId { get; set; }
 
-        public string? TransactionId { get; set; }
+    internal const string ApproveAction = "approve";
+    internal const string RejectAction = "reject";
 }
 
 public class ProcessDepositCommandHandler : IRequestHandler<ProcessDepositCommand, bool>
 {
+    private const string PendingStatus = "Pending";
+    private const string DepositReferenceSource = "DepositOrder";
+    private const string ManualApprovalNote = "Admin Manual Approval";
+    private const string InvalidActionMessage = "Action phải là 'approve' hoặc 'reject'.";
+
     private readonly IDepositOrderRepository _depositOrderRepository;
     private readonly IWalletRepository _walletRepository;
 
@@ -33,54 +40,56 @@ public class ProcessDepositCommandHandler : IRequestHandler<ProcessDepositComman
 
     public async Task<bool> Handle(ProcessDepositCommand request, CancellationToken cancellationToken)
     {
-        
         var order = await _depositOrderRepository.GetByIdAsync(request.DepositId, cancellationToken);
+        if (order == null || order.Status != PendingStatus) return false;
 
-        
-        if (order == null || order.Status != "Pending") return false;
-
-        var action = request.Action?.Trim().ToLowerInvariant();
-        if (action != "approve" && action != "reject")
-        {
-            throw new BadRequestException("Action phải là 'approve' hoặc 'reject'.");
-        }
-
-        
+        var action = ValidateAndNormalizeAction(request.Action);
         var txnId = ResolveTransactionId(request.TransactionId, action);
 
-        if (action == "approve")
+        if (action == ProcessDepositCommand.ApproveAction)
         {
-            
-
-            
-            await _walletRepository.CreditAsync(
-                userId: order.UserId,
-                currency: CurrencyType.Diamond,
-                type: TransactionType.Deposit,
-                amount: order.DiamondAmount,            
-                referenceSource: "DepositOrder",
-                referenceId: order.Id.ToString(),
-                description: $"Approved deposit order {order.Id} (+{order.DiamondAmount} Diamond)",
-                idempotencyKey: $"deposit_approve_{order.Id}", 
-                cancellationToken: cancellationToken
-            );
-
-            
-            order.MarkAsSuccess(txnId, "Admin Manual Approval");
-        }
-        else
-        {
-            
-            order.MarkAsFailed(txnId);
+            await ApproveOrderAsync(order, txnId, cancellationToken);
+            await _depositOrderRepository.UpdateAsync(order, cancellationToken);
+            return true;
         }
 
-        
+        order.MarkAsFailed(txnId);
         await _depositOrderRepository.UpdateAsync(order, cancellationToken);
-
         return true;
     }
 
-        private static string ResolveTransactionId(string? requestedTransactionId, string action)
+    private static string ValidateAndNormalizeAction(string? action)
+    {
+        var normalizedAction = action?.Trim().ToLowerInvariant();
+        if (normalizedAction == ProcessDepositCommand.ApproveAction ||
+            normalizedAction == ProcessDepositCommand.RejectAction)
+        {
+            return normalizedAction;
+        }
+
+        throw new BadRequestException(InvalidActionMessage);
+    }
+
+    private async Task ApproveOrderAsync(
+        Domain.Entities.DepositOrder order,
+        string transactionId,
+        CancellationToken cancellationToken)
+    {
+        await _walletRepository.CreditAsync(
+            userId: order.UserId,
+            currency: CurrencyType.Diamond,
+            type: TransactionType.Deposit,
+            amount: order.DiamondAmount,
+            referenceSource: DepositReferenceSource,
+            referenceId: order.Id.ToString(),
+            description: $"Approved deposit order {order.Id} (+{order.DiamondAmount} Diamond)",
+            idempotencyKey: $"deposit_approve_{order.Id}",
+            cancellationToken: cancellationToken);
+
+        order.MarkAsSuccess(transactionId, ManualApprovalNote);
+    }
+
+    private static string ResolveTransactionId(string? requestedTransactionId, string action)
     {
         if (!string.IsNullOrWhiteSpace(requestedTransactionId))
         {

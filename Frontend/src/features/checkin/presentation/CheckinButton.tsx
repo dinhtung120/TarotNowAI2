@@ -1,27 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useDailyCheckIn } from '../application/hooks';
+import React from 'react';
 import { cn } from '@/lib/utils';
+import { useCheckinButtonState } from './hooks/useCheckinButtonState';
 
 interface CheckinButtonProps {
   isCheckedIn: boolean;
 }
 
 export const CheckinButton = ({ isCheckedIn }: CheckinButtonProps) => {
-  const { mutate: performCheckIn, isPending } = useDailyCheckIn();
-  const [animating, setAnimating] = useState(false);
-
-  const handleClick = () => {
-    if (isCheckedIn || isPending) return;
-    
-    setAnimating(true);
-    setTimeout(() => setAnimating(false), 1500); 
-    
-    performCheckIn(undefined, {
-      onError: (err: unknown) => console.error("Điểm danh lỗi tẹo:", err),
-    });
-  };
+  const vm = useCheckinButtonState({ isCheckedIn });
 
   if (isCheckedIn) {
     return (
@@ -39,13 +27,13 @@ export const CheckinButton = ({ isCheckedIn }: CheckinButtonProps) => {
 
   return (
     <button
-      onClick={handleClick}
-      disabled={isPending}
-      className={`relative overflow-hidden w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-amber-950 rounded-xl font-bold font-inter shadow-[0_0_15px_rgba(251,191,36,0.3)] hover:shadow-[0_0_25px_rgba(251,191,36,0.5)] transition-all flex items-center justify-center gap-2 group ${animating ? 'scale-95' : 'hover:-translate-y-0.5'}`}
+      onClick={vm.handleClick}
+      disabled={vm.isPending}
+      className={`relative overflow-hidden w-full py-3 px-4 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-amber-950 rounded-xl font-bold font-inter shadow-[0_0_15px_rgba(251,191,36,0.3)] hover:shadow-[0_0_25px_rgba(251,191,36,0.5)] transition-all flex items-center justify-center gap-2 group ${vm.animating ? 'scale-95' : 'hover:-translate-y-0.5'}`}
     >
-      <div className={`absolute inset-0 bg-white/30 skew-x-12 -translate-x-full ${animating ? 'animate-[shimmer_0.8s_ease-out]' : 'group-hover:animate-[shimmer_1s_ease-out]'}`} />
+      <div className={`absolute inset-0 bg-white/30 skew-x-12 -translate-x-full ${vm.animating ? 'animate-[shimmer_0.8s_ease-out]' : 'group-hover:animate-[shimmer_1s_ease-out]'}`} />
       
-      {isPending ? (
+      {vm.isPending ? (
         <span className={cn("animate-pulse")}>Đang Lượm...</span>
       ) : (
         <>

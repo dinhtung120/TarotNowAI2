@@ -11,6 +11,12 @@ namespace TarotNow.Application.Features.UserContext.Queries.GetInitialMetadata;
 
 public class GetInitialMetadataQueryHandler : IRequestHandler<GetInitialMetadataQuery, UserMetadataDto>
 {
+    private const int NotificationsPage = 1;
+    private const int NotificationsPageSize = 10;
+    private const int ActiveConversationsPage = 1;
+    private const int ActiveConversationsPageSize = 100;
+    private const string ActiveConversationTab = "active";
+
     private readonly IMediator _mediator;
     private readonly INotificationRepository _notificationRepository;
     private readonly IConversationRepository _conversationRepository;
@@ -30,48 +36,57 @@ public class GetInitialMetadataQueryHandler : IRequestHandler<GetInitialMetadata
         var userId = request.UserId;
         var userIdString = userId.ToString();
 
-        
-        
-        
         var wallet = await _mediator.Send(new GetWalletBalanceQuery(userId), cancellationToken);
         var streak = await _mediator.Send(new GetStreakStatusQuery { UserId = userId }, cancellationToken);
 
-        
-        var unreadNotificationTask = _notificationRepository.CountUnreadAsync(userId, cancellationToken);
-        var unreadChatTask = _conversationRepository.GetTotalUnreadCountAsync(userIdString, cancellationToken);
-        
-        
-        var recentNotificationsTask = _mediator.Send(new GetNotificationsQuery 
-        { 
-            UserId = userId, 
-            Page = 1, 
-            PageSize = 10 
-        }, cancellationToken);
-
-        
-        var activeConversationsTask = _mediator.Send(new ListConversationsQuery
-        {
-            UserId = userId,
-            Tab = "active",
-            Page = 1,
-            PageSize = 100
-        }, cancellationToken);
-
+        var metadataTasks = BuildMetadataTasks(userId, userIdString, cancellationToken);
         await Task.WhenAll(
-            unreadNotificationTask, 
-            unreadChatTask, 
-            recentNotificationsTask, 
-            activeConversationsTask);
+            metadataTasks.UnreadNotificationTask,
+            metadataTasks.UnreadChatTask,
+            metadataTasks.RecentNotificationsTask,
+            metadataTasks.ActiveConversationsTask);
 
-        
         return new UserMetadataDto
         {
             Wallet = wallet,
             Streak = streak,
-            UnreadNotificationCount = (int)await unreadNotificationTask,
-            RecentNotifications = await recentNotificationsTask,
-            UnreadChatCount = await unreadChatTask,
-            ActiveConversations = await activeConversationsTask
+            UnreadNotificationCount = (int)await metadataTasks.UnreadNotificationTask,
+            RecentNotifications = await metadataTasks.RecentNotificationsTask,
+            UnreadChatCount = await metadataTasks.UnreadChatTask,
+            ActiveConversations = await metadataTasks.ActiveConversationsTask
         };
     }
+
+    private MetadataTasks BuildMetadataTasks(
+        Guid userId,
+        string userIdString,
+        CancellationToken cancellationToken)
+    {
+        return new MetadataTasks(
+            UnreadNotificationTask: _notificationRepository.CountUnreadAsync(userId, cancellationToken),
+            UnreadChatTask: _conversationRepository.GetTotalUnreadCountAsync(userIdString, cancellationToken),
+            RecentNotificationsTask: _mediator.Send(
+                new GetNotificationsQuery
+                {
+                    UserId = userId,
+                    Page = NotificationsPage,
+                    PageSize = NotificationsPageSize
+                },
+                cancellationToken),
+            ActiveConversationsTask: _mediator.Send(
+                new ListConversationsQuery
+                {
+                    UserId = userId,
+                    Tab = ActiveConversationTab,
+                    Page = ActiveConversationsPage,
+                    PageSize = ActiveConversationsPageSize
+                },
+                cancellationToken));
+    }
+
+    private readonly record struct MetadataTasks(
+        Task<long> UnreadNotificationTask,
+        Task<int> UnreadChatTask,
+        Task<NotificationListResponse> RecentNotificationsTask,
+        Task<ListConversationsResult> ActiveConversationsTask);
 }

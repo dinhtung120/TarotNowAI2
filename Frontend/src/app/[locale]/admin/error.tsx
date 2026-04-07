@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { useErrorBoundaryLogger } from '@/shared/application/hooks/useErrorBoundaryLogger';
 
 interface AdminErrorProps {
  error: Error & { digest?: string };
@@ -9,9 +9,7 @@ interface AdminErrorProps {
 }
 
 export default function AdminError({ error, reset }: AdminErrorProps) {
- useEffect(() => {
-  console.error('[AdminErrorBoundary]', error);
- }, [error]);
+ useErrorBoundaryLogger('AdminErrorBoundary', error);
 
  return (
   <div className={cn("flex min-h-[50vh] flex-col items-center justify-center gap-4 px-4 text-center")}>

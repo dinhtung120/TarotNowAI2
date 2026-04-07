@@ -1,17 +1,9 @@
 'use client';
 
-import { memo, useState } from 'react';
-import { Bell, Flame, Info, Star, Wallet, Zap } from 'lucide-react';
+import { memo } from 'react';
 import { cn } from '@/lib/utils';
 import type { NotificationItem } from '@/features/notifications/application/actions';
-
-const typeIconMap: Record<string, { icon: typeof Bell; colorClass: string }> = {
- system: { icon: Info, colorClass: 'text-blue-400' },
- quest: { icon: Star, colorClass: 'text-purple-400' },
- streak: { icon: Flame, colorClass: 'text-orange-400' },
- escrow: { icon: Wallet, colorClass: 'text-emerald-400' },
- payment: { icon: Zap, colorClass: 'text-yellow-400' },
-};
+import { useNotificationDropdownItem } from '@/shared/components/common/notification-dropdown/useNotificationDropdownItem';
 
 interface NotificationDropdownItemProps {
  item: NotificationItem;
@@ -26,21 +18,12 @@ export const NotificationDropdownItem = memo(function NotificationDropdownItem({
  timeLabel,
  onMarkRead,
 }: NotificationDropdownItemProps) {
- const typeConfig = typeIconMap[item.type] ?? typeIconMap.system;
- const Icon = typeConfig.icon;
- const [isMarking, setIsMarking] = useState(false);
-
- const handleClick = async () => {
-  if (!item.isRead && !isMarking) {
-   setIsMarking(true);
-   await onMarkRead(item.id);
-   setIsMarking(false);
-  }
- };
+ const vm = useNotificationDropdownItem({ item, onMarkRead });
+ const Icon = vm.typeConfig.icon;
 
  return (
   <div
-   onClick={() => void handleClick()}
+   onClick={() => void vm.handleClick()}
    className={cn(
     'group flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors',
     !item.isRead
@@ -49,7 +32,7 @@ export const NotificationDropdownItem = memo(function NotificationDropdownItem({
    )}
   >
    <div className={cn('w-8 h-8 rounded-full bg-[var(--bg-glass)] flex items-center justify-center shrink-0 border border-[var(--border-subtle)] group-hover:border-[var(--border-default)] transition-colors')}>
-    <Icon className={cn('w-4 h-4', typeConfig.colorClass)} />
+    <Icon className={cn('w-4 h-4', vm.typeConfig.colorClass)} />
    </div>
    <div className={cn('flex-1 min-w-0')}>
     <p className={cn('text-[13px] leading-tight line-clamp-2', !item.isRead ? 'font-bold text-[var(--text-ink)]' : 'font-medium text-[var(--text-secondary)]')}>
