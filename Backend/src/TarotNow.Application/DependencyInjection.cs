@@ -5,9 +5,9 @@ using AutoMapper;
 using FluentValidation;             
 using MediatR;                      
 using Microsoft.Extensions.DependencyInjection; 
+using TarotNow.Application.Common.Services;
 using TarotNow.Application.Interfaces;
 using TarotNow.Application.Services;
-using TarotNow.Domain.Services;
 
 namespace TarotNow.Application;
 

@@ -1,8 +1,4 @@
-
-
-using System;
-
-namespace TarotNow.Domain.Helpers;
+namespace TarotNow.Application.Common.Helpers;
 
 public static class ProfileHelper
 {
@@ -24,7 +20,7 @@ public static class ProfileHelper
         (1222, Capricorn)
     ];
 
-        public static string CalculateZodiac(DateTime dob)
+    public static string CalculateZodiac(DateTime dob)
     {
         var dayCode = dob.Month * 100 + dob.Day;
 
@@ -40,38 +36,35 @@ public static class ProfileHelper
         return Capricorn;
     }
 
-        public static int CalculateNumerology(DateTime dob)
+    public static int CalculateNumerology(DateTime dob)
     {
-        
-        string dateString = dob.ToString("yyyyMMdd");
-        int sum = 0;
+        var dateString = dob.ToString("yyyyMMdd");
+        var sum = 0;
 
-        foreach (char c in dateString)
+        foreach (var c in dateString)
         {
             if (char.IsDigit(c))
             {
-                
                 sum += c - '0';
             }
         }
 
-        
         return ReduceToSingleDigitOrMaster(sum);
     }
 
-        private static int ReduceToSingleDigitOrMaster(int number)
+    private static int ReduceToSingleDigitOrMaster(int number)
     {
-        
         while (number > 9 && number != 11 && number != 22 && number != 33)
         {
-            int tempSum = 0;
-            int n = number;
+            var tempSum = 0;
+            var n = number;
+
             while (n > 0)
             {
-                
                 tempSum += n % 10;
                 n /= 10;
             }
+
             number = tempSum;
         }
 

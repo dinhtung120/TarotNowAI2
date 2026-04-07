@@ -3,7 +3,7 @@
 using MediatR;
 using System.Threading;
 using System.Threading.Tasks;
-using TarotNow.Domain.Constants;
+using TarotNow.Application.Common.Constants;
 using TarotNow.Domain.Entities;
 using TarotNow.Application.Interfaces;
 

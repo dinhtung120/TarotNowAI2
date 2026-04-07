@@ -1,4 +1,4 @@
-using TarotNow.Domain.Constants;
+using TarotNow.Application.Common.Constants;
 using TarotNow.Domain.Entities;
 
 namespace TarotNow.Application.Features.Withdrawal.Commands.CreateWithdrawal;

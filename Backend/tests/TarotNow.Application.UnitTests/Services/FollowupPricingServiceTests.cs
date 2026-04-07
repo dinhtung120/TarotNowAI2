@@ -1,6 +1,6 @@
-using TarotNow.Domain.Services;
+using TarotNow.Application.Common.Services;
 
-namespace TarotNow.Domain.UnitTests.Services;
+namespace TarotNow.Application.UnitTests.Services;
 
 public class FollowupPricingServiceTests
 {

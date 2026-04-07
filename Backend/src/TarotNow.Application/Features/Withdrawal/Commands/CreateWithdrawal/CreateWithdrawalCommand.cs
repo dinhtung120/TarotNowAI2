@@ -1,7 +1,6 @@
 using MediatR;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
-using TarotNow.Domain.Constants;
 using TarotNow.Domain.Entities;
 
 namespace TarotNow.Application.Features.Withdrawal.Commands.CreateWithdrawal;

@@ -1,9 +1,9 @@
 using MediatR;
+using TarotNow.Application.Common.Services;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
-using TarotNow.Domain.Services;
 
 namespace TarotNow.Application.Features.Reading.Commands.StreamReading;
 
