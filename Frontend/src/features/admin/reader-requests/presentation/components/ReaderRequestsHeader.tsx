@@ -25,7 +25,7 @@ export function ReaderRequestsHeader({
     subtitle={labels.subtitle}
     className={cn('mb-0 text-left items-start')}
    />
-   <div className={cn('flex items-center gap-4 tn-panel tn-rounded-2rem p-2 pr-4 shadow-inner min-w-max')}>
+   <div className={cn('flex w-full items-center justify-center gap-4 p-2 pr-4 shadow-inner tn-panel tn-rounded-2rem sm:w-auto sm:justify-start')}>
     <div className={cn('w-10 h-10 rounded-xl tn-bg-accent-10 flex items-center justify-center border tn-border-accent-20 shadow-inner')}>
      <Users className={cn('w-4 h-4 tn-text-accent')} />
     </div>

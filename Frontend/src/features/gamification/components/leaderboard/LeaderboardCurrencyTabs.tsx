@@ -17,9 +17,9 @@ export function LeaderboardCurrencyTabs({ currency, goldLabel, diamondLabel, onC
    : cn("text-slate-400");
 
  return (
-  <div className={cn("flex", "rounded-2xl", "border", "border-slate-700/50", "bg-slate-900/60", "p-1.5", "backdrop-blur-md")}>
-   <button type="button" onClick={() => onChange("gold")} className={cn("flex", "items-center", "gap-2", "rounded-xl", "px-6", "py-2.5", "text-sm", "font-bold", "transition-all", "duration-300", tabClassName("gold"))}><Coins className={cn("h-4", "w-4")} />{goldLabel}</button>
-   <button type="button" onClick={() => onChange("diamond")} className={cn("flex", "items-center", "gap-2", "rounded-xl", "px-6", "py-2.5", "text-sm", "font-bold", "transition-all", "duration-300", tabClassName("diamond"))}><Diamond className={cn("h-4", "w-4")} />{diamondLabel}</button>
+  <div className={cn("flex", "w-full", "rounded-2xl", "border", "border-slate-700/50", "bg-slate-900/60", "p-1.5", "backdrop-blur-md", "sm:w-auto")}>
+   <button type="button" onClick={() => onChange("gold")} className={cn("flex", "min-h-11", "flex-1", "items-center", "justify-center", "gap-2", "rounded-xl", "px-3", "py-2.5", "text-xs", "font-bold", "transition-all", "duration-300", "sm:flex-none", "sm:px-6", "sm:text-sm", tabClassName("gold"))}><Coins className={cn("h-4", "w-4")} />{goldLabel}</button>
+   <button type="button" onClick={() => onChange("diamond")} className={cn("flex", "min-h-11", "flex-1", "items-center", "justify-center", "gap-2", "rounded-xl", "px-3", "py-2.5", "text-xs", "font-bold", "transition-all", "duration-300", "sm:flex-none", "sm:px-6", "sm:text-sm", tabClassName("diamond"))}><Diamond className={cn("h-4", "w-4")} />{diamondLabel}</button>
   </div>
  );
 }

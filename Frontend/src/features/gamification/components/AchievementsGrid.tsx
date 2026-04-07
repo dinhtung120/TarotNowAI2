@@ -21,7 +21,7 @@ export default function AchievementsGrid() {
  return (
   <div className={cn("space-y-6")}>
    <AchievementsHeader title={t("Achievements")} subtitle={t("UnlockedAmount", { count: data.unlockedList.length, total: data.definitions.length })} />
-   <div className={cn("grid", "grid-cols-4", "gap-4")}>
+   <div className={cn("grid", "grid-cols-1", "gap-4", "sm:grid-cols-2", "lg:grid-cols-3", "xl:grid-cols-4")}>
     {data.definitions.map((definition: AchievementDefinition) => {
      const unlockedInfo = data.unlockedList.find((item: UserAchievement) => item.achievementCode === definition.code);
      if (definition.isHidden && !unlockedInfo) return null;

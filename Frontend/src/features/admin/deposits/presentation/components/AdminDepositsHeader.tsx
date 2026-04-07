@@ -31,8 +31,8 @@ export function AdminDepositsHeader({
     subtitle={labels.subtitle}
     className={cn('mb-0 text-left items-start')}
    />
-   <div className={cn('flex items-center gap-4 tn-panel tn-rounded-2rem p-3 px-6 shadow-inner shrink-0')}>
-    <div className={cn('flex items-center gap-2')}>
+   <div className={cn('flex w-full flex-col gap-3 p-3 shadow-inner tn-panel tn-rounded-2rem sm:w-auto sm:flex-row sm:items-center sm:gap-4 sm:px-6')}>
+    <div className={cn('flex items-center gap-2 self-start sm:self-auto')}>
      <Filter className={cn('w-4 h-4 tn-text-secondary')} />
      <span className={cn('tn-text-overline tn-text-secondary')}>{labels.filterLabel}:</span>
     </div>
@@ -44,8 +44,8 @@ export function AdminDepositsHeader({
       { value: 'Success', label: labels.success, activeClassName: 'tn-bg-accent tn-text-ink shadow-md' },
       { value: 'Failed', label: labels.failed, activeClassName: 'tn-bg-accent tn-text-ink shadow-md' },
      ]}
-     containerClassName="flex gap-2"
-     buttonClassName="px-4 py-2.5 min-h-11 rounded-xl tn-text-overline transition-all"
+     containerClassName="flex flex-wrap gap-2"
+     buttonClassName="px-3 py-2.5 min-h-11 rounded-xl tn-text-overline transition-all sm:px-4"
      inactiveClassName="tn-surface tn-text-tertiary tn-hover-surface-strong tn-hover-text-primary"
      onChange={onStatusFilterChange}
     />

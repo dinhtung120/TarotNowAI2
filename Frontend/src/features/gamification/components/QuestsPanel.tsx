@@ -24,7 +24,7 @@ export default function QuestsPanel() {
  return (
   <div className={cn("space-y-6")}>
    <QuestPanelHeader questType={questType} setQuestType={setQuestType} t={t} />
-   <div className={cn("grid", "grid-cols-2", "gap-4")}>{quests.map((quest: QuestWithProgress) => <QuestCard key={quest.definition.code} quest={quest} isClaimPending={claimMutation.isPending} localize={localize} t={t} onOpen={setSelectedQuest} onClaim={handleClaim} />)}</div>
+   <div className={cn("grid", "grid-cols-1", "gap-4", "md:grid-cols-2")}>{quests.map((quest: QuestWithProgress) => <QuestCard key={quest.definition.code} quest={quest} isClaimPending={claimMutation.isPending} localize={localize} t={t} onOpen={setSelectedQuest} onClaim={handleClaim} />)}</div>
    <GamificationDetailModal isOpen={Boolean(selectedQuest)} onClose={() => setSelectedQuest(null)} type="quest" questData={selectedQuest || undefined} onClaim={handleClaim} isClaiming={claimMutation.isPending} />
   </div>
  );

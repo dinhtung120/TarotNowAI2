@@ -22,12 +22,12 @@ export function GachaMultiResultLayout({
  renderRewardIcon,
 }: GachaMultiResultLayoutProps) {
  return (
-  <div className={cn('rounded-2xl p-4 flex flex-col items-center justify-center relative border backdrop-blur-md animate-in zoom-in-75 duration-300 group', glowClass, borderClass, 'w-full tn-aspect-4-5')}>
+  <div className={cn('relative flex w-full flex-col items-center justify-center rounded-2xl border p-2.5 backdrop-blur-md animate-in zoom-in-75 duration-300 group sm:p-4', glowClass, borderClass, 'tn-aspect-4-5')}>
    <div className={cn('absolute top-2 right-2')}>
-    <span className={cn('tn-text-2xs font-black uppercase px-2 py-0.5 rounded-full border bg-black/50', rarityStyle.text, rarityStyle.border)}>{rarityInitial}</span>
+    <span className={cn('rounded-full border bg-black/50 px-1.5 py-0.5 text-[7px] font-black uppercase sm:px-2 sm:text-[8px]', rarityStyle.text, rarityStyle.border)}>{rarityInitial}</span>
    </div>
-   {renderRewardIcon('w-16 h-16 mb-4 transition-transform duration-500')}
-   <h3 className={cn('text-center tn-text-overline font-bold uppercase tracking-tight line-clamp-1', rarityStyle.text)}>{name}</h3>
+   {renderRewardIcon('mb-2 h-10 w-10 transition-transform duration-500 sm:mb-4 sm:h-16 sm:w-16')}
+   <h3 className={cn('line-clamp-1 text-center text-[9px] font-bold uppercase tracking-tight sm:tn-text-overline', rarityStyle.text)}>{name}</h3>
   </div>
  );
 }

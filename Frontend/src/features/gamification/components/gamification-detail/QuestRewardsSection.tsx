@@ -17,7 +17,7 @@ export function QuestRewardsSection({ questData, rewardsLabel, rewardTypeLabel }
     <Gift className={cn("h-4", "w-4")} />
     {rewardsLabel}
    </h3>
-   <div className={cn("grid", "grid-cols-2", "gap-3")}>
+   <div className={cn("grid", "grid-cols-1", "gap-3", "sm:grid-cols-2")}>
     {questData.definition.rewards.map((reward, index) => (
      <div
       key={`${reward.type}-${reward.amount}-${index}`}

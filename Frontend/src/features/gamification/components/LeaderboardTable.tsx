@@ -20,9 +20,9 @@ export default function LeaderboardTable() {
  const cardClassName = currency === "gold" ? "bg-gradient-to-br from-emerald-400 to-teal-600 shadow-emerald-500/30" : "bg-gradient-to-br from-indigo-400 to-blue-600 shadow-indigo-500/30";
 
  return (
-  <div className={cn("relative", "overflow-hidden", "rounded-3xl", "border", "border-slate-700/50", "bg-slate-800/40", "p-6", "shadow-2xl", "backdrop-blur-xl")}>
+  <div className={cn("relative", "overflow-hidden", "rounded-3xl", "border", "border-slate-700/50", "bg-slate-800/40", "p-4", "shadow-2xl", "backdrop-blur-xl", "sm:p-6")}>
    <div className={cn("pointer-events-none", "absolute", "-right-24", "-top-24", "h-64", "w-64", "opacity-20", "blur-3xl", "transition-colors", "duration-700", glowClassName)} />
-   <div className={cn("relative", "z-10", "mb-8", "flex", "flex-row", "items-center", "justify-between", "gap-6")}>
+   <div className={cn("relative", "z-10", "mb-6", "flex", "flex-col", "items-start", "gap-4", "sm:mb-8", "sm:flex-row", "sm:items-center", "sm:justify-between", "sm:gap-6")}>
     <div className={cn("flex", "items-center", "gap-3")}>
      <div className={cn("rounded-2xl", "p-3", "shadow-lg", "transition-all", "duration-500", cardClassName)}>
       <BarChart3 className={cn("h-6", "w-6", "text-white")} />
@@ -32,7 +32,9 @@ export default function LeaderboardTable() {
       <p className={cn("text-sm", "text-slate-400")}>{currency === "gold" ? "Đại phú hào tích cực" : "TarotNow VIP Rankings"}</p>
      </div>
     </div>
-    <LeaderboardCurrencyTabs currency={currency} goldLabel={t("Gold")} diamondLabel={t("Diamond")} onChange={setCurrency} />
+    <div className={cn("w-full sm:w-auto")}>
+     <LeaderboardCurrencyTabs currency={currency} goldLabel={t("Gold")} diamondLabel={t("Diamond")} onChange={setCurrency} />
+    </div>
    </div>
    <LeaderboardPeriodTabs period={period} onChange={setPeriod} />
    <LeaderboardBody currency={currency} data={data} isLoading={isLoading} noDataLabel={t("NoLeaderboardData")} noTitleLabel={t("NoTitleYet")} />

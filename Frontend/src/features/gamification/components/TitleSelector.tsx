@@ -30,7 +30,7 @@ export default function TitleSelector() {
  return (
   <div className={cn("space-y-6")}>
    <TitleSelectorHeader title={t("YourTitles", { defaultMessage: "Danh hiệu" })} subtitle={t("UnlockedAmount", { count: data.unlockedList.length, total: data.definitions.length })} />
-   <div className={cn("grid", "grid-cols-4", "gap-4", "pb-6")}>
+   <div className={cn("grid", "grid-cols-1", "gap-4", "pb-6", "sm:grid-cols-2", "lg:grid-cols-3", "xl:grid-cols-4")}>
     <NoTitleCard isNoTitleActive={!data.activeTitleCode} noTitleLabel={t("NoTitle")} hintLabel={t("EarnTitleHint")} onClick={() => handleEquipTitle("")} />
     {data.definitions.map((title: TitleDefinition) => { const unlockedInfo = data.unlockedList.find((item: UserTitle) => item.titleCode === title.code); const isOwned = Boolean(unlockedInfo); const isActive = isOwned && title.code === data.activeTitleCode; return <TitleCard key={title.code} title={title} isOwned={isOwned} isActive={isActive} localize={localize} hiddenLabel={t("HiddenAchievement", { defaultMessage: "Chưa mở khoá" })} onClick={() => setSelectedTitle({ definition: title, isOwned, isActive, grantedAt: unlockedInfo?.grantedAt })} />; })}
    </div>
