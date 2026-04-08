@@ -27,20 +27,34 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
+        /*
+         * Lấy tên của Request để đưa vào log. 
+         * Việc sử dụng typeof(TRequest).Name giúp xác định rõ loại command hoặc query nào đang được xử lý.
+         */
         var requestName = typeof(TRequest).Name;
-        _logger.LogInformation("[MediatR] Handling request {RequestName}", requestName);
+
+        /*
+         * Ghi log khi bắt đầu xử lý request. 
+         * Theo yêu cầu của người dùng, chúng ta chỉ giữ lại 1 dòng log này và loại bỏ tiền tố [MediatR]
+         * để log hiển thị gọn gàng nhất trên console.
+         */
+        _logger.LogInformation("Handling request {RequestName}", requestName);
 
         try
         {
-            var response = await next();
-            // Nhánh thành công: ghi log hoàn tất để đo luồng xử lý theo từng request type.
-            _logger.LogInformation("[MediatR] Handled request {RequestName}", requestName);
-            return response;
+            /*
+             * Gọi handler tiếp theo trong pipeline. 
+             * Kết quả được trả về trực tiếp, bỏ qua bước log hoàn tất để tiết kiệm không gian log.
+             */
+            return await next();
         }
         catch (Exception ex)
         {
-            // Nhánh lỗi: log lỗi chi tiết nhưng vẫn ném lại để các lớp xử lý lỗi chuẩn phía trên tiếp nhận.
-            _logger.LogError(ex, "[MediatR] Request {RequestName} failed", requestName);
+            /*
+             * Khi có lỗi, chúng ta vẫn log thông tin lỗi nhưng loại bỏ tiền tố [MediatR] 
+             * để đảm bảo tính nhất quán với log thành công.
+             */
+            _logger.LogError(ex, "Request {RequestName} failed", requestName);
             throw;
         }
     }
