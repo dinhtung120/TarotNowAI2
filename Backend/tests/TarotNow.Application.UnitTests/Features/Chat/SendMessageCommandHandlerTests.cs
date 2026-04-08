@@ -30,6 +30,8 @@ public class SendMessageCommandHandlerTests
     private readonly Mock<IMediaProcessorService> _mockMediaProcessorService;
     // Mock wallet push service cho side-effect realtime.
     private readonly Mock<IWalletPushService> _mockWalletPushService;
+    // Mock domain event publisher để phát event email/thông báo.
+    private readonly Mock<IDomainEventPublisher> _mockDomainEventPublisher;
     // Handler cần kiểm thử.
     private readonly SendMessageCommandHandler _handler;
 
@@ -54,6 +56,7 @@ public class SendMessageCommandHandlerTests
             .ReturnsAsync((byte[] data, string ext, CancellationToken _) => (data, "audio/webm"));
 
         _mockWalletPushService = new Mock<IWalletPushService>();
+        _mockDomainEventPublisher = new Mock<IDomainEventPublisher>();
 
         _handler = new SendMessageCommandHandler(
             _mockConvRepo.Object,
@@ -63,7 +66,8 @@ public class SendMessageCommandHandlerTests
             _mockReaderProfileRepo.Object,
             _mockTransactionCoordinator.Object,
             _mockMediaProcessorService.Object,
-            _mockWalletPushService.Object);
+            _mockWalletPushService.Object,
+            _mockDomainEventPublisher.Object);
     }
 
     /// <summary>

@@ -3,8 +3,6 @@ import { getTranslations } from 'next-intl/server';
 import AdminLayoutShell, {
  type AdminLayoutLabels,
 } from '@/features/admin/presentation/components/AdminLayoutShell';
-import AppAuthSessionManager from '@/features/auth/presentation/components/AppAuthSessionManager';
-import AppQueryProvider from '@/shared/components/common/AppQueryProvider';
 
 interface AdminLayoutProps {
  children: ReactNode;
@@ -31,9 +29,6 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
  };
 
  return (
-  <AppQueryProvider>
-   <AppAuthSessionManager />
-   <AdminLayoutShell labels={labels}>{children}</AdminLayoutShell>
-  </AppQueryProvider>
+  <AdminLayoutShell labels={labels}>{children}</AdminLayoutShell>
  );
 }

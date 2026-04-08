@@ -25,7 +25,9 @@ public sealed class MediatRDomainEventPublisher : IDomainEventPublisher
             [typeof(SubscriptionExpiredDomainEvent)] = domainEvent =>
                 new SubscriptionExpiredNotification((SubscriptionExpiredDomainEvent)domainEvent),
             [typeof(EntitlementConsumedDomainEvent)] = domainEvent =>
-                new EntitlementConsumedNotification((EntitlementConsumedDomainEvent)domainEvent)
+                new EntitlementConsumedNotification((EntitlementConsumedDomainEvent)domainEvent),
+            [typeof(ChatOfferReceivedDomainEvent)] = domainEvent =>
+                new ChatOfferReceivedNotification((ChatOfferReceivedDomainEvent)domainEvent)
         };
 
     // Mediator dùng để dispatch notification đến các handler đã đăng ký.

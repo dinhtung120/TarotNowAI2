@@ -74,7 +74,7 @@ public class CreateWithdrawalCommandHandlerTests
         _mockUserRepo.Setup(x => x.GetByIdAsync(userId, default)).ReturnsAsync(user);
         _mockMfaService.Setup(x => x.DecryptSecret(It.IsAny<string>())).Returns("secret");
         _mockMfaService.Setup(x => x.VerifyCode("secret", It.IsAny<string>())).Returns(true);
-        var command = new CreateWithdrawalCommand { UserId = userId, AmountDiamond = 49, MfaCode = "123" };
+        var command = new CreateWithdrawalCommand { UserId = userId, AmountDiamond = 49, MfaCode = "123", IdempotencyKey = "test_key" };
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Contains("tối thiểu là 50", ex.Message);
     }
@@ -92,7 +92,7 @@ public class CreateWithdrawalCommandHandlerTests
         _mockUserRepo.Setup(x => x.GetByIdAsync(userId, default)).ReturnsAsync(user);
         _mockMfaService.Setup(x => x.DecryptSecret(It.IsAny<string>())).Returns("secret");
         _mockMfaService.Setup(x => x.VerifyCode("secret", It.IsAny<string>())).Returns(true);
-        var command = new CreateWithdrawalCommand { UserId = userId, AmountDiamond = 50, MfaCode = "123" };
+        var command = new CreateWithdrawalCommand { UserId = userId, AmountDiamond = 50, MfaCode = "123", IdempotencyKey = "test_key" };
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Contains("KYC", ex.Message);
     }
@@ -110,7 +110,7 @@ public class CreateWithdrawalCommandHandlerTests
         _mockMfaService.Setup(x => x.DecryptSecret(It.IsAny<string>())).Returns("secret");
         _mockMfaService.Setup(x => x.VerifyCode("secret", It.IsAny<string>())).Returns(true);
         _mockWithdrawalRepo.Setup(x => x.HasPendingRequestTodayAsync(userId, It.IsAny<DateOnly>(), default)).ReturnsAsync(true);
-        var command = new CreateWithdrawalCommand { UserId = userId, AmountDiamond = 50, MfaCode = "123" };
+        var command = new CreateWithdrawalCommand { UserId = userId, AmountDiamond = 50, MfaCode = "123", IdempotencyKey = "test_key" };
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Contains("hôm nay", ex.Message);
     }
@@ -132,13 +132,13 @@ public class CreateWithdrawalCommandHandlerTests
         _mockWithdrawalRepo.Setup(x => x.AddAsync(It.IsAny<WithdrawalRequest>(), default))
             .Callback<WithdrawalRequest, CancellationToken>((r, c) => typeof(WithdrawalRequest).GetProperty("Id")!.SetValue(r, expectedId))
             .Returns(Task.CompletedTask);
-        var command = new CreateWithdrawalCommand { UserId = userId, AmountDiamond = 100, MfaCode = "123", BankName = "VCB", BankAccountName = "Name", BankAccountNumber = "12345" };
+        var command = new CreateWithdrawalCommand { UserId = userId, AmountDiamond = 100, MfaCode = "123", BankName = "VCB", BankAccountName = "Name", BankAccountNumber = "12345", IdempotencyKey = "test_key" };
 
         // Thực thi handler và xác nhận debit + persist request đúng dữ liệu.
         var result = await _handler.Handle(command, CancellationToken.None);
 
         Assert.Equal(expectedId, result);
-        _mockWalletRepo.Verify(x => x.DebitAsync(userId, "diamond", "withdrawal", 100, "withdrawal_request", null, It.IsAny<string>(), null, null, default), Times.Once);
+        _mockWalletRepo.Verify(x => x.DebitAsync(userId, "diamond", "withdrawal", 100, "withdrawal_request", It.IsAny<string>(), It.IsAny<string>(), null, "withdrawal_test_key", default), Times.Once);
         _mockWithdrawalRepo.Verify(x => x.AddAsync(It.Is<WithdrawalRequest>(r => r.UserId == userId && r.AmountDiamond == 100 && r.NetAmountVnd == 90000 && r.FeeVnd == 10000 && r.Status == "pending"), default), Times.Once);
     }
 
@@ -149,7 +149,7 @@ public class CreateWithdrawalCommandHandlerTests
     [Fact]
     public async Task Handle_UserNotFound_ThrowsNotFoundException()
     {
-        var command = new CreateWithdrawalCommand { UserId = Guid.NewGuid(), AmountDiamond = 50, MfaCode = "123" };
+        var command = new CreateWithdrawalCommand { UserId = Guid.NewGuid(), AmountDiamond = 50, MfaCode = "123", IdempotencyKey = "test_key" };
         _mockUserRepo.Setup(x => x.GetByIdAsync(command.UserId, default)).ReturnsAsync((User)null!);
         await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
     }
@@ -165,7 +165,7 @@ public class CreateWithdrawalCommandHandlerTests
         var user = CreateValidReader();
         user.GetType().GetProperty("MfaEnabled")!.SetValue(user, false);
         _mockUserRepo.Setup(x => x.GetByIdAsync(userId, default)).ReturnsAsync(user);
-        var command = new CreateWithdrawalCommand { UserId = userId, AmountDiamond = 50, MfaCode = "123" };
+        var command = new CreateWithdrawalCommand { UserId = userId, AmountDiamond = 50, MfaCode = "123", IdempotencyKey = "test_key" };
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Contains("MFA", ex.Message);
     }
@@ -182,7 +182,7 @@ public class CreateWithdrawalCommandHandlerTests
         _mockUserRepo.Setup(x => x.GetByIdAsync(userId, default)).ReturnsAsync(user);
         _mockMfaService.Setup(x => x.DecryptSecret(It.IsAny<string>())).Returns("secret");
         _mockMfaService.Setup(x => x.VerifyCode("secret", "wrong_code")).Returns(false);
-        var command = new CreateWithdrawalCommand { UserId = userId, AmountDiamond = 50, MfaCode = "wrong_code" };
+        var command = new CreateWithdrawalCommand { UserId = userId, AmountDiamond = 50, MfaCode = "wrong_code", IdempotencyKey = "test_key" };
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Contains("MFA", ex.Message);
     }
@@ -200,7 +200,7 @@ public class CreateWithdrawalCommandHandlerTests
         _mockUserRepo.Setup(x => x.GetByIdAsync(userId, default)).ReturnsAsync(user);
         _mockMfaService.Setup(x => x.DecryptSecret(It.IsAny<string>())).Returns("secret");
         _mockMfaService.Setup(x => x.VerifyCode("secret", It.IsAny<string>())).Returns(true);
-        var command = new CreateWithdrawalCommand { UserId = userId, AmountDiamond = 100, MfaCode = "123" };
+        var command = new CreateWithdrawalCommand { UserId = userId, AmountDiamond = 100, MfaCode = "123", IdempotencyKey = "test_key" };
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Contains("Số dư", ex.Message);
     }
@@ -218,7 +218,7 @@ public class CreateWithdrawalCommandHandlerTests
         _mockMfaService.Setup(x => x.DecryptSecret(It.IsAny<string>())).Returns("secret");
         _mockMfaService.Setup(x => x.VerifyCode("secret", "123")).Returns(true);
         _mockWithdrawalRepo.Setup(x => x.HasPendingRequestTodayAsync(userId, It.IsAny<DateOnly>(), default)).ReturnsAsync(false);
-        var command = new CreateWithdrawalCommand { UserId = userId, AmountDiamond = 50, MfaCode = "123", BankName = "", BankAccountName = "Name", BankAccountNumber = "12345" };
+        var command = new CreateWithdrawalCommand { UserId = userId, AmountDiamond = 50, MfaCode = "123", BankName = "", BankAccountName = "Name", BankAccountNumber = "12345", IdempotencyKey = "test_key" };
         var ex = await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
         Assert.Contains("ngân hàng", ex.Message);
     }

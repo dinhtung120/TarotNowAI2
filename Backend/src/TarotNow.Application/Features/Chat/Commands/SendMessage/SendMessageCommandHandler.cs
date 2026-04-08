@@ -17,6 +17,7 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
     private readonly ITransactionCoordinator _transactionCoordinator;
     private readonly IMediaProcessorService _mediaProcessor;
     private readonly IWalletPushService _walletPushService;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler gửi tin nhắn.
@@ -30,7 +31,8 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
         IReaderProfileRepository readerProfileRepo,
         ITransactionCoordinator transactionCoordinator,
         IMediaProcessorService mediaProcessor,
-        IWalletPushService walletPushService)
+        IWalletPushService walletPushService,
+        IDomainEventPublisher domainEventPublisher)
     {
         _conversationRepo = conversationRepo;
         _messageRepo = messageRepo;
@@ -40,6 +42,7 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
         _transactionCoordinator = transactionCoordinator;
         _mediaProcessor = mediaProcessor;
         _walletPushService = walletPushService;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>
@@ -95,6 +98,19 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
         {
             // Khi có freeze, đẩy cập nhật số dư realtime để user thấy thay đổi ngay.
             await _walletPushService.PushBalanceChangedAsync(request.SenderId, cancellationToken);
+            
+            // Chuyển string ReaderId thành Guid an toàn hoặc bỏ qua luồng event nếu sai định dạng.
+            if (Guid.TryParse(conversation.ReaderId, out var readerGuid))
+            {
+                // Phát DomainEvent thông báo Reader cần phê duyệt câu hỏi (ngầm định kích hoạt email)
+                await _domainEventPublisher.PublishAsync(new Domain.Events.ChatOfferReceivedDomainEvent
+                {
+                    ConversationId = conversation.Id,
+                    ReaderId = readerGuid,
+                    UserId = request.SenderId,
+                    OfferExpiresAtUtc = firstMessageFreeze.OfferExpiresAtUtc!.Value
+                }, cancellationToken);
+            }
         }
 
         return message;

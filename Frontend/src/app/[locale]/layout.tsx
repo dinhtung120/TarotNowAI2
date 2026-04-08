@@ -7,6 +7,8 @@ import { Toaster } from "react-hot-toast";
 import { cn } from "@/lib/utils";
 import ThemeStylesheetManager from "@/shared/components/common/ThemeStylesheetManager";
 import { DEFAULT_THEME, getThemeStylesheetHref, isValidTheme, THEME_COOKIE_KEY, type ThemeId } from "@/shared/domain/theme";
+import AppAuthSessionManager from "@/features/auth/presentation/components/AppAuthSessionManager";
+import AppQueryProvider from "@/shared/components/common/AppQueryProvider";
 import "../globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"], display: "swap" });
@@ -34,8 +36,11 @@ export default async function RootLayout({ children, params }: Readonly<{ childr
    <body className={cn(geistSans.variable, geistMono.variable, playfair.variable, "antialiased")}>
     <ThemeStylesheetManager initialTheme={initialTheme} />
     <NextIntlClientProvider messages={messages}>
-     {children}
-     <Toaster position="top-right" />
+     <AppQueryProvider>
+      <AppAuthSessionManager />
+      {children}
+      <Toaster position="top-right" />
+     </AppQueryProvider>
     </NextIntlClientProvider>
    </body>
   </html>
