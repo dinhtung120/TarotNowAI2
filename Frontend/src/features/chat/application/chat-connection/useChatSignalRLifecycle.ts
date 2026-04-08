@@ -77,6 +77,12 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
   resetForConversation(getCachedConversation(queryClient, conversationId));
   setTypingUserId(null);
 
+  const onVisibilityChange = () => {
+   if (document.visibilityState === 'visible' && conversationId) {
+    void markReadRef.current();
+   }
+  };
+
   const init = async () => {
    try {
     hubConnection = await createHubConnection();
@@ -85,7 +91,21 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
     
     // Đăng ký các sự kiện nhận tin nhắn và trạng thái realtime
     hubConnection.on('message.created', (message: ChatMessageDto) => {
-     if (message.conversationId === conversationId) appendMessage(message);
+     /*
+      * Step: Xử lý khi có tin nhắn mới đến.
+      * Logic: 
+      * 1. Thêm tin nhắn vào danh sách hiện tại để hiển thị ngay lập tức (Realtime UI).
+      * 2. Nếu tab trình duyệt đang hiển thị (Visible/Focused), tự động đánh dấu đã đọc (Mark Read) 
+      *    để Server reset bộ đếm tin nhắn chưa đọc và các thiết bị khác đồng bộ theo.
+      */
+     if (message.conversationId === conversationId) {
+      appendMessage(message);
+      
+      // Nếu người dùng đang nhìn màn hình chat, đánh dấu đã đọc ngay.
+      if (document.visibilityState === 'visible') {
+       void markReadRef.current();
+      }
+     }
     });
     
     hubConnection.on('message.read', (payload: { userId: string; conversationId: string }) => {
@@ -117,6 +137,13 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
       if (res.success && res.data?.conversation) setConversation(res.data.conversation);
      });
     });
+
+    /*
+     * Step: Xử lý sự kiện thay đổi trạng thái hiển thị của tab trình duyệt.
+     * Logic: Khi người dùng chuyển sang tab khác rồi quay lại tab này (trạng thái 'visible'),
+     * chúng ta cần thực hiện đánh dấu toàn bộ tin nhắn là đã đọc vì người dùng đã quay trở lại phòng chat.
+     */
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
     hubConnection.on('Error', (error: string) => logger.warn('[Chat] Hub error', error, { conversationId }));
     
@@ -158,6 +185,10 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
   return () => {
    cancelled = true;
    initializingRef.current = false;
+   
+   // Gỡ bỏ trình lắng nghe sự kiện visibilitychange để tránh rò rỉ bộ nhớ (memory leak).
+   document.removeEventListener('visibilitychange', onVisibilityChange);
+
    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
    if (!hubConnection) return;
    
