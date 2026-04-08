@@ -64,28 +64,38 @@ export function useChatHistoryState({
   loadInitialRef.current = loadInitial;
  }, [loadInitial]);
 
+ const loadingMoreRef = useRef(false);
+
  const loadMore = useCallback(async () => {
-  if (!conversationId || !nextCursor || loadingMore) return;
+  if (!conversationId || !nextCursor || loadingMoreRef.current) return;
+
+  loadingMoreRef.current = true;
   setLoadingMore(true);
-  const result = await listMessages(conversationId, {
-   cursor: nextCursor,
-   limit: CHAT_PAGE_SIZE,
-  });
-  if (result.success && result.data) {
-   const older = [...result.data.messages].reverse();
-   setMessages((prev) => {
-    const combined = [...older, ...prev];
-    const ids = new Set<string>();
-    return combined.filter((item) => {
-     if (ids.has(item.id)) return false;
-     ids.add(item.id);
-     return true;
-    });
+
+  try {
+   const result = await listMessages(conversationId, {
+    cursor: nextCursor,
+    limit: CHAT_PAGE_SIZE,
    });
-   setNextCursor(result.data.nextCursor ?? null);
+
+   if (result.success && result.data) {
+    const older = [...result.data.messages].reverse();
+    setMessages((prev) => {
+     const combined = [...older, ...prev];
+     const ids = new Set<string>();
+     return combined.filter((item) => {
+      if (ids.has(item.id)) return false;
+      ids.add(item.id);
+      return true;
+     });
+    });
+    setNextCursor(result.data.nextCursor ?? null);
+   }
+  } finally {
+   setLoadingMore(false);
+   loadingMoreRef.current = false;
   }
-  setLoadingMore(false);
- }, [conversationId, loadingMore, nextCursor]);
+ }, [conversationId, nextCursor]);
 
  const resetForConversation = useCallback((cachedConversation: ConversationDto | null) => {
   setMessages([]);

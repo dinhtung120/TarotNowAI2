@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
+import { useEffect, useRef, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import {
  HubConnectionState,
  type HubConnection,
@@ -57,86 +57,118 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
   setTypingUserId, setMessages, setConversation, resetForConversation, appendMessage,
  } = options;
 
+ const initializingRef = useRef(false);
+
  useEffect(() => {
-  if (!conversationId || !token) {
-   resetForConversation(null);
-   setConnected(false);
-   setLoading(false);
+  // Chỉ khởi tạo khi có đủ thông tin và không đang trong quá trình khởi tạo khác cho cùng conversation
+  if (!conversationId || !token || initializingRef.current) {
+   if (!conversationId || !token) {
+    resetForConversation(null);
+    setConnected(false);
+    setLoading(false);
+   }
    return;
   }
 
   let cancelled = false;
   let hubConnection: HubConnection | null = null;
+  initializingRef.current = true;
+  
   resetForConversation(getCachedConversation(queryClient, conversationId));
   setTypingUserId(null);
 
   const init = async () => {
-   hubConnection = await createHubConnection();
-   hubConnection.serverTimeoutInMilliseconds = 120000;
-   hubConnection.on('message.created', (message: ChatMessageDto) => {
-    if (message.conversationId === conversationId) appendMessage(message);
-   });
-   hubConnection.on('message.read', (payload: { userId: string; conversationId: string }) => {
-    if (payload.conversationId !== conversationId || payload.userId === currentUserId) return;
-    setMessages((prev) =>
-     prev.map((item) =>
-      item.senderId === currentUserId ? { ...item, isRead: true } : item
-     )
-    );
-   });
-   hubConnection.on('typing.started', (payload: { userId: string; conversationId: string }) => {
-    if (payload.conversationId !== conversationId || payload.userId === currentUserId) return;
-    setTypingUserId(payload.userId);
-    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-    typingTimeoutRef.current = setTimeout(() => setTypingUserId(null), 2500);
-   });
-   hubConnection.on('typing.stopped', (payload: { userId: string; conversationId: string }) => {
-    if (payload.conversationId !== conversationId || payload.userId === currentUserId) return;
-    setTypingUserId(null);
-   });
-   hubConnection.on('conversation.updated', (payload: { conversationId: string; type?: string }) => {
-    if (payload.conversationId !== conversationId || payload.type === 'message_created') return;
-    if (Date.now() - lastInitialLoadTimeRef.current < 2000) return;
-    void listMessages(conversationId, { limit: 1 }).then((res) => {
-     if (res.success && res.data?.conversation) setConversation(res.data.conversation);
-    });
-   });
-   hubConnection.on('Error', (error: string) => logger.warn('[Chat] Hub error', error, { conversationId }));
-   hubConnection.onreconnecting(() => setConnected(false));
-   hubConnection.onreconnected(() => {
-    if (cancelled) return;
-    setConnected(true);
-    void hubConnection?.invoke('JoinConversation', conversationId);
-    void markReadRef.current();
-   });
-   hubConnection.onclose(() => setConnected(false));
-
    try {
+    hubConnection = await createHubConnection();
+    // Cấu hình timeout dài hơn để tránh bị ngắt kết nối do mạng chập chờn
+    hubConnection.serverTimeoutInMilliseconds = 120000;
+    
+    // Đăng ký các sự kiện nhận tin nhắn và trạng thái realtime
+    hubConnection.on('message.created', (message: ChatMessageDto) => {
+     if (message.conversationId === conversationId) appendMessage(message);
+    });
+    
+    hubConnection.on('message.read', (payload: { userId: string; conversationId: string }) => {
+     if (payload.conversationId !== conversationId || payload.userId === currentUserId) return;
+     setMessages((prev) =>
+      prev.map((item) =>
+       item.senderId === currentUserId ? { ...item, isRead: true } : item
+      )
+     );
+    });
+
+    hubConnection.on('typing.started', (payload: { userId: string; conversationId: string }) => {
+     if (payload.conversationId !== conversationId || payload.userId === currentUserId) return;
+     setTypingUserId(payload.userId);
+     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+     typingTimeoutRef.current = setTimeout(() => setTypingUserId(null), 2500);
+    });
+
+    hubConnection.on('typing.stopped', (payload: { userId: string; conversationId: string }) => {
+     if (payload.conversationId !== conversationId || payload.userId === currentUserId) return;
+     setTypingUserId(null);
+    });
+
+    hubConnection.on('conversation.updated', (payload: { conversationId: string; type?: string }) => {
+     if (payload.conversationId !== conversationId || payload.type === 'message_created') return;
+     // Debounce việc fetch lại dữ liệu khi có cập nhật status conversation
+     if (Date.now() - lastInitialLoadTimeRef.current < 2000) return;
+     void listMessages(conversationId, { limit: 1 }).then((res) => {
+      if (res.success && res.data?.conversation) setConversation(res.data.conversation);
+     });
+    });
+
+    hubConnection.on('Error', (error: string) => logger.warn('[Chat] Hub error', error, { conversationId }));
+    
+    hubConnection.onreconnecting(() => setConnected(false));
+    hubConnection.onreconnected(() => {
+     if (cancelled) return;
+     setConnected(true);
+     void hubConnection?.invoke('JoinConversation', conversationId);
+     void markReadRef.current();
+    });
+    hubConnection.onclose(() => setConnected(false));
+
     await hubConnection.start();
+    
     if (cancelled) return;
+    
     connectionRef.current = hubConnection;
     setConnected(true);
+    
+    // Join group và đồng bộ dữ liệu ban đầu
     await hubConnection.invoke('JoinConversation', conversationId);
     await loadInitialRef.current(false);
     await markReadRef.current();
    } catch (error) {
-    logger.warn('[Chat] Connection failed', error, { conversationId });
-    await loadInitialRef.current(false);
+    if (!cancelled) {
+     logger.warn('[Chat] Connection failed', error, { conversationId });
+     // Fallback tải dữ liệu qua REST nếu SignalR thất bại
+     await loadInitialRef.current(false);
+    }
+   } finally {
+    if (!cancelled) {
+     initializingRef.current = false;
+    }
    }
   };
 
   void init();
+
   return () => {
    cancelled = true;
+   initializingRef.current = false;
    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
    if (!hubConnection) return;
+   
    if (hubConnection.state === HubConnectionState.Connected) {
     void hubConnection.invoke('LeaveConversation', conversationId).catch(() => undefined);
    }
+   
    if ([HubConnectionState.Connected, HubConnectionState.Reconnecting, HubConnectionState.Disconnecting].includes(hubConnection.state)) {
     void hubConnection.stop().catch(() => undefined);
    }
    connectionRef.current = null;
   };
- }, [appendMessage, connectionRef, conversationId, currentUserId, lastInitialLoadTimeRef, loadInitialRef, markReadRef, queryClient, resetForConversation, setConnected, setConversation, setLoading, setMessages, setTypingUserId, token, typingTimeoutRef]);
+ }, [conversationId, token, currentUserId]);
 }

@@ -36,6 +36,8 @@ public static partial class ApiServiceCollectionExtensions
         AddFixedWindowPolicy(options, "community-write", ResolveAuthenticatedPartitionKey, permitLimit: 30, TimeSpan.FromMinutes(1));
         // Rule cho lịch sử cuộc gọi cần ngưỡng cao hơn do polling thường xuyên.
         AddFixedWindowPolicy(options, "call-history", ResolveAuthenticatedPartitionKey, permitLimit: 60, TimeSpan.FromMinutes(1));
+        // Rule chuẩn cho các thao tác chat (inbox, tin nhắn) để chịu tải tốt hơn khi có SignalR reconnect/polling.
+        AddFixedWindowPolicy(options, "chat-standard", ResolveAuthenticatedPartitionKey, permitLimit: 60, TimeSpan.FromMinutes(1));
     }
 
     /// <summary>

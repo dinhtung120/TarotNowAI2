@@ -18,7 +18,7 @@ public partial class ConversationController
     /// <param name="body">Payload tạo hội thoại.</param>
     /// <returns>Thông tin hội thoại vừa tạo hoặc unauthorized khi thiếu user id.</returns>
     [HttpPost]
-    [EnableRateLimiting("auth-session")]
+    [EnableRateLimiting("chat-standard")]
     public async Task<IActionResult> Create([FromBody] CreateConversationBody body)
     {
         if (!TryGetUserId(out var userId))
@@ -46,7 +46,7 @@ public partial class ConversationController
     /// <param name="tab">Tab lọc trạng thái hội thoại.</param>
     /// <returns>Danh sách hội thoại theo điều kiện truy vấn.</returns>
     [HttpGet]
-    [EnableRateLimiting("auth-session")]
+    [EnableRateLimiting("chat-standard")]
     public async Task<IActionResult> List(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
@@ -74,7 +74,7 @@ public partial class ConversationController
     /// </summary>
     /// <returns>Tổng số chưa đọc hoặc unauthorized khi thiếu user id.</returns>
     [HttpGet("unread-total")]
-    [EnableRateLimiting("auth-session")]
+    [EnableRateLimiting("chat-standard")]
     public async Task<IActionResult> GetUnreadTotal()
     {
         if (!TryGetUserId(out var userId))
@@ -98,7 +98,7 @@ public partial class ConversationController
     /// <param name="id">Id hội thoại cần hủy.</param>
     /// <returns>Kết quả hủy hội thoại hoặc unauthorized khi thiếu user id.</returns>
     [HttpPost("{id}/cancel")]
-    [EnableRateLimiting("auth-session")]
+    [EnableRateLimiting("chat-standard")]
     public async Task<IActionResult> CancelPending(string id)
     {
         if (!TryGetUserId(out var userId))

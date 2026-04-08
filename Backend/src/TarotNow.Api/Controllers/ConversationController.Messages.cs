@@ -21,7 +21,7 @@ public partial class ConversationController
     /// <param name="limit">Giới hạn số tin nhắn trả về.</param>
     /// <returns>Danh sách tin nhắn theo cursor.</returns>
     [HttpGet("{id}/messages")]
-    [EnableRateLimiting("auth-session")]
+    [EnableRateLimiting("chat-standard")]
     public async Task<IActionResult> Messages(
         string id,
         [FromQuery] string? cursor = null,
