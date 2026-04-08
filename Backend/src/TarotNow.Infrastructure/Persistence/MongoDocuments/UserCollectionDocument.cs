@@ -5,84 +5,112 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace TarotNow.Infrastructure.Persistence.MongoDocuments;
 
+// Document thẻ bài người dùng sở hữu trong bộ sưu tập.
 public class UserCollectionDocument
 {
-        [BsonId]
+    // ObjectId của bản ghi collection.
+    [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
 
-        [BsonElement("user_id")]
+    // User sở hữu thẻ bài.
+    [BsonElement("user_id")]
     public string UserId { get; set; } = string.Empty;
 
-        [BsonElement("card_id")]
+    // Id card trong catalog.
+    [BsonElement("card_id")]
     public int CardId { get; set; }
 
-        [BsonElement("level")]
+    // Cấp hiện tại của card.
+    [BsonElement("level")]
     public int Level { get; set; } = 1;
 
-        [BsonElement("exp")]
+    // Điểm kinh nghiệm hiện có của card.
+    [BsonElement("exp")]
     public long Exp { get; set; } = 0;
 
-        [BsonElement("ascension_tier")]
+    // Bậc ascension của card.
+    [BsonElement("ascension_tier")]
     public int AscensionTier { get; set; } = 0;
 
-        [BsonElement("stats")]
+    // Thống kê số lần rút upright/reversed.
+    [BsonElement("stats")]
     public DrawStats Stats { get; set; } = new();
 
-        [BsonElement("customization")]
+    // Tùy biến giao diện của card (nếu có).
+    [BsonElement("customization")]
     [BsonIgnoreIfNull]
     public CardCustomization? Customization { get; set; }
 
-        [BsonElement("atk")]
+    // Chỉ số tấn công đã tính sau nâng cấp.
+    [BsonElement("atk")]
     public int Atk { get; set; } = 10;
 
-        [BsonElement("def")]
+    // Chỉ số phòng thủ đã tính sau nâng cấp.
+    [BsonElement("def")]
     public int Def { get; set; } = 10;
 
-        [BsonElement("stat_history")]
+    // Lịch sử roll chỉ số để audit progression.
+    [BsonElement("stat_history")]
     [BsonIgnoreIfNull]
     public List<StatRollRecord>? StatHistory { get; set; }
 
-        [BsonElement("is_deleted")]
+    // Soft-delete flag của bản ghi collection.
+    [BsonElement("is_deleted")]
     public bool IsDeleted { get; set; } = false;
 
+    // Mốc xóa mềm.
     [BsonElement("deleted_at")]
     [BsonIgnoreIfNull]
     public DateTime? DeletedAt { get; set; }
 
-        [BsonElement("created_at")]
+    // Thời điểm tạo bản ghi.
+    [BsonElement("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [BsonElement("updated_at")]
+    // Thời điểm cập nhật gần nhất.
+    [BsonElement("updated_at")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        [BsonElement("last_drawn_at")]
+    // Lần gần nhất card được rút trong session.
+    [BsonElement("last_drawn_at")]
     public DateTime LastDrawnAt { get; set; } = DateTime.UtcNow;
 }
 
+// Thống kê tần suất card xuất hiện.
 public class DrawStats
 {
-        [BsonElement("times_drawn_upright")] public int TimesDrawnUpright { get; set; }
-        [BsonElement("times_drawn_reversed")] public int TimesDrawnReversed { get; set; }
+    // Số lần card xuất hiện ở trạng thái upright.
+    [BsonElement("times_drawn_upright")] public int TimesDrawnUpright { get; set; }
+    // Số lần card xuất hiện ở trạng thái reversed.
+    [BsonElement("times_drawn_reversed")] public int TimesDrawnReversed { get; set; }
 }
 
+// Cấu hình tùy biến hiển thị card.
 public class CardCustomization
 {
-        [BsonElement("signature_name")][BsonIgnoreIfNull] public string? SignatureName { get; set; }
-        [BsonElement("active_skin_id")][BsonIgnoreIfNull] public string? ActiveSkinId { get; set; }
+    // Tên ký hiệu cá nhân hiển thị trên card.
+    [BsonElement("signature_name")][BsonIgnoreIfNull] public string? SignatureName { get; set; }
+    // Skin đang được áp dụng cho card.
+    [BsonElement("active_skin_id")][BsonIgnoreIfNull] public string? ActiveSkinId { get; set; }
 }
 
+// Bản ghi lịch sử roll chỉ số theo từng cấp.
 public class StatRollRecord
 {
-    [BsonElement("level")] 
+    // Cấp card tại thời điểm roll.
+    [BsonElement("level")]
     public int Level { get; set; }
-    
-    [BsonElement("atk_bonus")] 
+
+    // Điểm cộng attack nhận được.
+    [BsonElement("atk_bonus")]
     public int AtkBonus { get; set; }
-    
-    [BsonElement("def_bonus")] 
+
+    // Điểm cộng defense nhận được.
+    [BsonElement("def_bonus")]
     public int DefBonus { get; set; }
-    
-    [BsonElement("rolled_at")] 
+
+    // Mốc thời gian roll.
+    [BsonElement("rolled_at")]
     public DateTime RolledAt { get; set; }
 }

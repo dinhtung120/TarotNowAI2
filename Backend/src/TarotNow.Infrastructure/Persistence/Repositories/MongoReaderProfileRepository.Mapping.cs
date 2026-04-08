@@ -4,8 +4,13 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
+// Partial mapper chuyển đổi ReaderProfile DTO/document.
 public partial class MongoReaderProfileRepository
 {
+    /// <summary>
+    /// Map ReaderProfileDto sang document Mongo.
+    /// Luồng xử lý: chuẩn hóa id/status, ánh xạ nested pricing/bio/stats và giữ timestamp từ DTO.
+    /// </summary>
     private static ReaderProfileDocument ToDocument(ReaderProfileDto dto)
     {
         return new ReaderProfileDocument
@@ -33,6 +38,10 @@ public partial class MongoReaderProfileRepository
         };
     }
 
+    /// <summary>
+    /// Map ReaderProfileDocument sang DTO.
+    /// Luồng xử lý: chuẩn hóa status và ánh xạ đầy đủ dữ liệu hiển thị directory.
+    /// </summary>
     private static ReaderProfileDto ToDto(ReaderProfileDocument doc)
     {
         return new ReaderProfileDto

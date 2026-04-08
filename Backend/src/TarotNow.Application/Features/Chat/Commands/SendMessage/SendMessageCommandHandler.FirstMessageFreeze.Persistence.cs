@@ -4,6 +4,10 @@ namespace TarotNow.Application.Features.Chat.Commands.SendMessage;
 
 public partial class SendMessageCommandHandler
 {
+    /// <summary>
+    /// Tạo question item pending đại diện cho khoản freeze câu hỏi chính.
+    /// Luồng xử lý: map context freeze vào ChatQuestionItem và lưu vào kho dữ liệu tài chính.
+    /// </summary>
     private async Task AddPendingMainQuestionAsync(
         Guid sessionId,
         string conversationId,
@@ -27,6 +31,10 @@ public partial class SendMessageCommandHandler
         }, cancellationToken);
     }
 
+    /// <summary>
+    /// Cập nhật tổng số dư frozen của session sau khi thêm item pending.
+    /// Luồng xử lý: cộng dồn TotalFrozen, giữ trạng thái pending, rồi persist session và save changes.
+    /// </summary>
     private async Task UpdatePendingSessionFrozenAmountAsync(
         Domain.Entities.ChatFinanceSession session,
         long amountDiamond,
@@ -37,6 +45,7 @@ public partial class SendMessageCommandHandler
         session.UpdatedAt = DateTime.UtcNow;
 
         await _financeRepo.UpdateSessionAsync(session, cancellationToken);
+        // Lưu ngay để số dư frozen nhất quán với item vừa tạo.
         await _financeRepo.SaveChangesAsync(cancellationToken);
     }
 }

@@ -1,23 +1,28 @@
-using TarotNow.Application.Features.CheckIn.Queries.GetStreakStatus;
-using TarotNow.Application.Features.Wallet.Queries;
 using TarotNow.Application.Features.Chat.Queries.ListConversations;
+using TarotNow.Application.Features.CheckIn.Queries.GetStreakStatus;
 using TarotNow.Application.Features.Notification.Queries.GetNotifications;
-using System;
-using System.Collections.Generic;
+using TarotNow.Application.Features.Wallet.Queries;
 
 namespace TarotNow.Application.Features.UserContext.Queries.GetInitialMetadata;
 
+// DTO tổng hợp metadata khởi tạo cho client sau đăng nhập.
 public class UserMetadataDto
 {
-        public WalletBalanceDto Wallet { get; set; } = null!;
+    // Thông tin số dư ví hiện tại của user.
+    public WalletBalanceDto Wallet { get; set; } = null!;
 
-        public StreakStatusResult Streak { get; set; } = null!;
+    // Trạng thái streak check-in hiện tại.
+    public StreakStatusResult Streak { get; set; } = null!;
 
-        public int UnreadNotificationCount { get; set; }
+    // Tổng số thông báo chưa đọc.
+    public int UnreadNotificationCount { get; set; }
 
-        public NotificationListResponse RecentNotifications { get; set; } = null!;
+    // Danh sách thông báo gần đây theo phân trang mặc định.
+    public NotificationListResponse RecentNotifications { get; set; } = null!;
 
-        public int UnreadChatCount { get; set; }
+    // Tổng số tin nhắn chat chưa đọc.
+    public int UnreadChatCount { get; set; }
 
-        public ListConversationsResult ActiveConversations { get; set; } = null!;
+    // Danh sách hội thoại active để hiển thị nhanh ở trang chính.
+    public ListConversationsResult ActiveConversations { get; set; } = null!;
 }

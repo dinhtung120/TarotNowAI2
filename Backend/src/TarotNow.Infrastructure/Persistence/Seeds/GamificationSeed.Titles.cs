@@ -3,8 +3,13 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Seeds;
 
+// Partial seed title definitions.
 public static partial class GamificationSeed
 {
+    /// <summary>
+    /// Seed/upsert title definitions mặc định.
+    /// Luồng xử lý: duyệt từng title seed và upsert theo code.
+    /// </summary>
     private static async Task SeedTitleDefinitionsAsync(MongoDbContext context)
     {
         foreach (var title in BuildInitialTitles())
@@ -16,9 +21,14 @@ public static partial class GamificationSeed
                 .Set(x => x.Rarity, title.Rarity);
 
             await context.Titles.UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = true });
+            // Upsert theo code giúp cập nhật tên/rarity mà không tạo bản ghi trùng.
         }
     }
 
+    /// <summary>
+    /// Tạo danh sách title khởi tạo.
+    /// Luồng xử lý: trả về tập title đa cấp độ hiếm phục vụ reward hệ gamification.
+    /// </summary>
     private static List<TitleDefinitionDocument> BuildInitialTitles()
     {
         return new List<TitleDefinitionDocument>

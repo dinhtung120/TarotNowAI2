@@ -1,13 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Framework mục tiêu cho test project tầng Domain. -->
     <TargetFramework>net9.0</TargetFramework>
+    <!-- Bật implicit usings để giảm boilerplate trong test. -->
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Bật nullable để bắt lỗi null sớm ở compile-time. -->
     <Nullable>enable</Nullable>
+    <!-- Test project không đóng gói NuGet. -->
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Bộ package tối thiểu cho chạy và thu thập coverage unit test. -->
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageReference Include="xunit" Version="2.9.2" />
@@ -15,10 +20,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Global using cho Xunit. -->
     <Using Include="Xunit" />
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Tham chiếu project Domain để test trực tiếp entity/value object. -->
     <ProjectReference Include="..\..\src\TarotNow.Domain\TarotNow.Domain.csproj" />
   </ItemGroup>
 

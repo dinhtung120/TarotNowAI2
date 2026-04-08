@@ -7,15 +7,25 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
+// Repository chính xử lý message chat trên MongoDB.
 public partial class MongoChatMessageRepository : IChatMessageRepository
 {
+    // Mongo context truy cập collection chat_messages.
     private readonly MongoDbContext _context;
 
+    /// <summary>
+    /// Khởi tạo repository chat message.
+    /// Luồng xử lý: nhận MongoDbContext từ DI để thao tác dữ liệu hội thoại.
+    /// </summary>
     public MongoChatMessageRepository(MongoDbContext context)
     {
         _context = context;
     }
 
+    /// <summary>
+    /// Lấy message theo id nếu chưa bị xóa mềm.
+    /// Luồng xử lý: filter id + is_deleted=false, map document sang DTO khi tồn tại.
+    /// </summary>
     public async Task<ChatMessageDto?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
     {
         var filter = Builders<ChatMessageDocument>.Filter.And(
@@ -26,20 +36,30 @@ public partial class MongoChatMessageRepository : IChatMessageRepository
         return doc == null ? null : ToDto(doc);
     }
 
-        public async Task AddAsync(ChatMessageDto message, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Thêm mới message vào hội thoại.
+    /// Luồng xử lý: map DTO sang document, insert Mongo và cập nhật lại id cho DTO đầu vào.
+    /// </summary>
+    public async Task AddAsync(ChatMessageDto message, CancellationToken cancellationToken = default)
     {
         var doc = ToDocument(message);
         await _context.ChatMessages.InsertOneAsync(doc, cancellationToken: cancellationToken);
-        message.Id = doc.Id; 
+        message.Id = doc.Id;
+        // Đồng bộ id phát sinh để các bước push realtime dùng cùng message id.
     }
 
-        public async Task<long> MarkAsReadAsync(string conversationId, string readerId, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Đánh dấu đã đọc cho toàn bộ message phù hợp trong hội thoại.
+    /// Luồng xử lý: chỉ update message không phải do reader hiện tại gửi, chưa đọc và chưa xóa.
+    /// </summary>
+    public async Task<long> MarkAsReadAsync(string conversationId, string readerId, CancellationToken cancellationToken = default)
     {
         var filter = Builders<ChatMessageDocument>.Filter.And(
             Builders<ChatMessageDocument>.Filter.Eq(m => m.ConversationId, conversationId),
-            Builders<ChatMessageDocument>.Filter.Ne(m => m.SenderId, readerId), 
-            Builders<ChatMessageDocument>.Filter.Eq(m => m.IsRead, false),      
-            Builders<ChatMessageDocument>.Filter.Eq(m => m.IsDeleted, false));   
+            Builders<ChatMessageDocument>.Filter.Ne(m => m.SenderId, readerId),
+            Builders<ChatMessageDocument>.Filter.Eq(m => m.IsRead, false),
+            Builders<ChatMessageDocument>.Filter.Eq(m => m.IsDeleted, false));
+        // Business rule: không đánh dấu đã đọc các message do chính actor gửi.
 
         var update = Builders<ChatMessageDocument>.Update
             .Set(m => m.IsRead, true)
@@ -49,7 +69,11 @@ public partial class MongoChatMessageRepository : IChatMessageRepository
         return result.ModifiedCount;
     }
 
-        public async Task UpdateFlagAsync(string messageId, bool isFlagged, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Cập nhật cờ moderation cho message.
+    /// Luồng xử lý: set IsFlagged và updated_at theo messageId.
+    /// </summary>
+    public async Task UpdateFlagAsync(string messageId, bool isFlagged, CancellationToken cancellationToken = default)
     {
         var filter = Builders<ChatMessageDocument>.Filter.Eq(m => m.Id, messageId);
         var update = Builders<ChatMessageDocument>.Update
@@ -59,10 +83,15 @@ public partial class MongoChatMessageRepository : IChatMessageRepository
         await _context.ChatMessages.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
     }
 
+    /// <summary>
+    /// Lấy message mới nhất của từng conversation trong một danh sách conversationIds.
+    /// Luồng xử lý: dùng aggregate match-sort-group-first để lấy latest message mỗi hội thoại.
+    /// </summary>
     public async Task<IEnumerable<ChatMessageDto>> GetLatestMessagesAsync(IEnumerable<string> conversationIds, CancellationToken cancellationToken = default)
     {
         var ids = conversationIds.ToList();
         if (ids.Count == 0) return Enumerable.Empty<ChatMessageDto>();
+        // Edge case input rỗng thì trả rỗng ngay để tránh chạy aggregate không cần thiết.
 
         var pipeline = new EmptyPipelineDefinition<ChatMessageDocument>()
             .Match(Builders<ChatMessageDocument>.Filter.And(
@@ -72,7 +101,8 @@ public partial class MongoChatMessageRepository : IChatMessageRepository
                 Builders<ChatMessageDocument>.Sort.Descending(m => m.ConversationId),
                 Builders<ChatMessageDocument>.Sort.Descending(m => m.CreatedAt)))
             .Group(m => m.ConversationId, g => g.First())
-            .Project(m => m); 
+            .Project(m => m);
+        // Group + First sau sort giúp lấy chính xác message mới nhất từng conversation.
 
         var docs = await _context.ChatMessages.Aggregate(pipeline, cancellationToken: cancellationToken).ToListAsync(cancellationToken);
         return docs.Select(ToDto);

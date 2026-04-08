@@ -4,8 +4,13 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
+// Partial xử lý mutation quỹ escrow (freeze/refund/consume...).
 public partial class WalletRepository
 {
+    /// <summary>
+    /// Thực thi mutation escrow trong transaction với idempotency.
+    /// Luồng xử lý: chuẩn hóa idempotency key, chạy ApplyEscrowMutationAsync và bắt unique violation để coi là đã xử lý.
+    /// </summary>
     private async Task ExecuteEscrowMutationAsync(
         EscrowMutationRequest request,
         Action<User, long> applyMutation,
@@ -22,9 +27,14 @@ public partial class WalletRepository
         catch (DbUpdateException exception) when (IsIdempotencyUniqueViolation(exception, normalizedIdempotencyKey))
         {
             LogIdempotencyAlreadyHandled(exception, request.OperationName, request.UserId, normalizedIdempotencyKey);
+            // Trùng idempotency key là trạng thái hợp lệ do retry request từ client/job.
         }
     }
 
+    /// <summary>
+    /// Áp dụng mutation escrow và ghi ledger.
+    /// Luồng xử lý: kiểm tra idempotency trước/sau lock user, mutate balance, ghi ledger, rồi track spending nếu là EscrowRelease.
+    /// </summary>
     private async Task ApplyEscrowMutationAsync(
         EscrowMutationRequest request,
         string? normalizedIdempotencyKey,
@@ -34,6 +44,7 @@ public partial class WalletRepository
         if (await TryHandleIdempotentAsync(normalizedIdempotencyKey, cancellationToken)) return;
         var user = await GetUserForUpdateAsync(request.UserId, "user", cancellationToken);
         if (await TryHandleIdempotentAsync(normalizedIdempotencyKey, cancellationToken)) return;
+        // Double-check sau lock để tránh ghi ledger trùng trong race-condition.
 
         var balanceBefore = user.DiamondBalance;
         applyMutation(user, request.Amount);
@@ -53,9 +64,12 @@ public partial class WalletRepository
 
         _dbContext.Set<WalletTransaction>().Add(ledgerEntry);
         await _dbContext.SaveChangesAsync(cancellationToken);
+        // Persist mutation và ledger trong cùng transaction để đảm bảo tính toàn vẹn tài chính.
+
         if (request.TransactionType == TransactionType.EscrowRelease)
         {
             await TrackSpendingToLeaderboardAsync(request.UserId, CurrencyType.Diamond, request.Amount, cancellationToken);
+            // Chỉ release được xem là chi tiêu thực tế, refund/freeze không cộng leaderboard.
         }
     }
 }

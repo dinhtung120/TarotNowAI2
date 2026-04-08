@@ -2,8 +2,13 @@ using TarotNow.Application.Common;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
+// Partial thao tác credit ví.
 public partial class WalletRepository
 {
+    /// <summary>
+    /// Credit ví và bỏ qua kết quả chi tiết.
+    /// Luồng xử lý: chuyển tiếp sang CreditWithResultAsync để dùng chung logic idempotency.
+    /// </summary>
     public Task CreditAsync(
         Guid userId,
         string currency,
@@ -27,6 +32,10 @@ public partial class WalletRepository
             idempotencyKey,
             cancellationToken);
 
+    /// <summary>
+    /// Credit ví và trả về kết quả xử lý idempotency.
+    /// Luồng xử lý: dựng BalanceChangeRequest với IsDebit=false rồi thực thi qua ExecuteBalanceChangeAsync.
+    /// </summary>
     public Task<WalletOperationResult> CreditWithResultAsync(
         Guid userId,
         string currency,
@@ -53,5 +62,6 @@ public partial class WalletRepository
             idempotencyKey);
 
         return ExecuteBalanceChangeAsync(request, cancellationToken);
+        // Tập trung toàn bộ kiểm soát transaction/idempotency ở một luồng xử lý thống nhất.
     }
 }

@@ -5,8 +5,13 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
+// Partial xử lý tiến độ quest của người dùng.
 public partial class MongoQuestRepository
 {
+    /// <summary>
+    /// Lấy progress của một quest cụ thể.
+    /// Luồng xử lý: filter theo userId-questCode-periodKey và map DTO nếu có.
+    /// </summary>
     public async Task<QuestProgressDto?> GetProgressAsync(Guid userId, string questCode, string periodKey, CancellationToken ct)
     {
         var filter = Builders<QuestProgressDocument>.Filter.Eq(p => p.UserId, userId)
@@ -17,14 +22,24 @@ public partial class MongoQuestRepository
         return doc != null ? MapProgress(doc) : null;
     }
 
+    /// <summary>
+    /// Lấy toàn bộ progress của user trong một period.
+    /// Luồng xử lý: lọc theo user và periodKey, trả danh sách progress đã map DTO.
+    /// </summary>
     public async Task<List<QuestProgressDto>> GetAllProgressAsync(Guid userId, string questType, string periodKey, CancellationToken ct)
     {
         var filter = Builders<QuestProgressDocument>.Filter.Eq(p => p.UserId, userId)
                    & Builders<QuestProgressDocument>.Filter.Eq(p => p.PeriodKey, periodKey);
+        // questType hiện không lọc ở tầng này vì progress chỉ lưu quest_code + period; mapping questType xử lý ở layer cao hơn.
+
         var docs = await _context.QuestProgress.Find(filter).ToListAsync(ct);
         return docs.Select(MapProgress).ToList();
     }
 
+    /// <summary>
+    /// Upsert và tăng tiến độ quest.
+    /// Luồng xử lý: increment CurrentProgress, set defaults khi insert mới và cập nhật timestamp.
+    /// </summary>
     public async Task UpsertProgressAsync(QuestProgressUpsertRequest request, CancellationToken ct)
     {
         var filter = Builders<QuestProgressDocument>.Filter.Eq(p => p.UserId, request.UserId)
@@ -37,10 +52,15 @@ public partial class MongoQuestRepository
             .SetOnInsert(p => p.IsClaimed, false)
             .Set(p => p.UpdatedAt, DateTime.UtcNow)
             .SetOnInsert(p => p.CreatedAt, DateTime.UtcNow);
+        // Dùng Inc để bảo đảm cộng dồn tiến độ an toàn khi có nhiều sự kiện đồng thời.
 
         await _context.QuestProgress.UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = true }, ct);
     }
 
+    /// <summary>
+    /// Đánh dấu quest progress đã claim.
+    /// Luồng xử lý: set cờ IsClaimed, thời điểm ClaimedAt và UpdatedAt.
+    /// </summary>
     public async Task MarkClaimedAsync(Guid userId, string questCode, string periodKey, CancellationToken ct)
     {
         var filter = Builders<QuestProgressDocument>.Filter.Eq(p => p.UserId, userId)

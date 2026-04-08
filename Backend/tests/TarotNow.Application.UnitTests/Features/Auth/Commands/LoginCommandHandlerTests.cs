@@ -9,15 +9,26 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
+// Unit test cho handler đăng nhập và phát hành token.
 public class LoginCommandHandlerTests
 {
+    // Mock user repository để kiểm soát luồng tìm user.
     private readonly Mock<IUserRepository> _userRepositoryMock;
+    // Mock password hasher để mô phỏng đúng/sai mật khẩu.
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
+    // Mock token service để xác nhận token được tạo đúng.
     private readonly Mock<ITokenService> _tokenServiceMock;
+    // Mock settings JWT để cố định expiry trong test.
     private readonly Mock<IJwtTokenSettings> _jwtTokenSettingsMock;
+    // Mock refresh token repo để kiểm tra persistence refresh token.
     private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock;
+    // Handler cần kiểm thử.
     private readonly LoginCommandHandler _handler;
 
+    /// <summary>
+    /// Khởi tạo fixture cho LoginCommandHandler.
+    /// Luồng thiết lập expiry mặc định giúp assert kết quả ổn định giữa các lần chạy.
+    /// </summary>
     public LoginCommandHandlerTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
@@ -36,7 +47,11 @@ public class LoginCommandHandlerTests
         );
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận user không tồn tại trả lỗi INVALID_CREDENTIALS.
+    /// Luồng này tránh lộ thông tin tồn tại tài khoản qua thông điệp đăng nhập.
+    /// </summary>
+    [Fact]
     public async Task Handle_ShouldThrowException_WhenUserNotFound()
     {
         var command = new LoginCommand { EmailOrUsername = "notfound@example.com", Password = "Password123" };
@@ -47,7 +62,11 @@ public class LoginCommandHandlerTests
         Assert.Equal("INVALID_CREDENTIALS", ex.ErrorCode);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận mật khẩu sai trả lỗi INVALID_CREDENTIALS.
+    /// Luồng này kiểm tra nhánh verify hash thất bại.
+    /// </summary>
+    [Fact]
     public async Task Handle_ShouldThrowException_WhenPasswordIsWrong()
     {
         var command = new LoginCommand { EmailOrUsername = "testuser", Password = "WrongPassword" };
@@ -61,12 +80,16 @@ public class LoginCommandHandlerTests
         Assert.Equal("INVALID_CREDENTIALS", ex.ErrorCode);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận user chưa active bị chặn với mã lỗi USER_PENDING.
+    /// Luồng này bảo vệ business rule không cho đăng nhập tài khoản chưa kích hoạt.
+    /// </summary>
+    [Fact]
     public async Task Handle_ShouldThrowException_WhenUserStatusIsPending()
     {
         var command = new LoginCommand { EmailOrUsername = "test@example.com", Password = "Password123" };
         var user = new User("test@example.com", "testuser", "correctHash", "Test User", new DateTime(2000, 1, 1), true);
-        
+        // Không gọi Activate() để mô phỏng trạng thái pending.
 
         _userRepositoryMock.Setup(r => r.GetByEmailAsync(command.EmailOrUsername, It.IsAny<CancellationToken>()))
                            .ReturnsAsync(user);
@@ -76,17 +99,21 @@ public class LoginCommandHandlerTests
         Assert.Equal("USER_PENDING", ex.ErrorCode);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận đăng nhập hợp lệ trả access token + refresh token và lưu refresh token.
+    /// Luồng này kiểm tra cả dữ liệu response và side-effect lưu token.
+    /// </summary>
+    [Fact]
     public async Task Handle_ShouldReturnAuthResponseAndRefreshToken_WhenValid()
     {
-        var command = new LoginCommand 
-        { 
-            EmailOrUsername = "activeuser", 
+        var command = new LoginCommand
+        {
+            EmailOrUsername = "activeuser",
             Password = "Password123",
-            ClientIpAddress = "127.0.0.1" 
+            ClientIpAddress = "127.0.0.1"
         };
         var user = new User("test@example.com", "activeuser", "correctHash", "Test User", new DateTime(2000, 1, 1), true);
-        user.Activate(); 
+        user.Activate();
 
         _userRepositoryMock.Setup(r => r.GetByUsernameAsync(command.EmailOrUsername, It.IsAny<CancellationToken>()))
                            .ReturnsAsync(user);
@@ -94,6 +121,7 @@ public class LoginCommandHandlerTests
         _tokenServiceMock.Setup(t => t.GenerateAccessToken(user)).Returns("mocked_jwt");
         _tokenServiceMock.Setup(t => t.GenerateRefreshToken()).Returns("mocked_refresh_token");
 
+        // Thực thi đăng nhập thành công và lấy tuple response + refresh token.
         var (response, refreshToken) = await _handler.Handle(command, CancellationToken.None);
 
         Assert.NotNull(response);
@@ -101,9 +129,9 @@ public class LoginCommandHandlerTests
         Assert.Equal("mocked_refresh_token", refreshToken);
         Assert.Equal(user.Id, response.User.Id);
 
-        
-        _refreshTokenRepositoryMock.Verify(r => r.AddAsync(It.Is<RefreshToken>(rt => 
-            rt.MatchesToken("mocked_refresh_token") && 
+        // Kiểm tra refresh token được lưu với token value, userId và client IP đúng.
+        _refreshTokenRepositoryMock.Verify(r => r.AddAsync(It.Is<RefreshToken>(rt =>
+            rt.MatchesToken("mocked_refresh_token") &&
             rt.UserId == user.Id &&
             rt.CreatedByIp == "127.0.0.1"
         ), It.IsAny<CancellationToken>()), Times.Once);

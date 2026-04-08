@@ -1,3 +1,6 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using TarotNow.Application.Exceptions;
 using TarotNow.Domain.Entities;
 
@@ -5,42 +8,61 @@ namespace TarotNow.Application.Features.Reading.Commands.StreamReading;
 
 public partial class StreamReadingCommandHandler
 {
-    private async Task<ReadingSession> ValidateSessionAsync(StreamReadingCommand request, CancellationToken cancellationToken)
+    /// <summary>
+    /// Kiểm tra session hợp lệ trước khi stream.
+    /// Luồng xử lý: tải session theo id, xác thực quyền sở hữu user và bảo đảm session đã reveal bài.
+    /// </summary>
+    private async Task<ReadingSession> ValidateSessionAsync(
+        StreamReadingCommand request,
+        CancellationToken cancellationToken)
     {
         var session = await _readingRepo.GetByIdAsync(request.ReadingSessionId, cancellationToken);
-        if (session == null)
+        if (session is null)
         {
+            // Edge case: session không tồn tại thì không thể stream.
             throw new NotFoundException("Reading session not found");
         }
 
         if (session.UserId != request.UserId.ToString())
         {
+            // Chặn truy cập stream chéo session của user khác.
             throw new UnauthorizedAccessException("Session not found or access denied");
         }
 
         if (!session.IsCompleted)
         {
+            // Business rule: phải reveal cards trước mới được gọi AI diễn giải.
             throw new BadRequestException("Cannot stream AI interpretation before revealing cards");
         }
 
         return session;
     }
 
+    /// <summary>
+    /// Kiểm tra quota AI theo ngày và số request đang chạy.
+    /// Luồng xử lý: chặn khi vượt quota ngày hoặc vượt ngưỡng in-flight để bảo vệ tài nguyên hệ thống.
+    /// </summary>
     private async Task EnsureQuotaAsync(Guid userId, CancellationToken cancellationToken)
     {
         var dailyCount = await _aiRequestRepo.GetDailyAiRequestCountAsync(userId, cancellationToken);
         if (dailyCount >= _dailyAiQuota)
         {
+            // Chặn vượt quota ngày để kiểm soát chi phí và công bằng tài nguyên.
             throw new BadRequestException("Daily AI request quota exceeded");
         }
 
         var activeCount = await _aiRequestRepo.GetActiveAiRequestCountAsync(userId, cancellationToken);
         if (activeCount >= _inFlightAiCap)
         {
+            // Chặn quá nhiều request đồng thời để tránh quá tải và race completion khó kiểm soát.
             throw new BadRequestException("Too many in-flight AI requests");
         }
     }
 
+    /// <summary>
+    /// Kiểm tra rate limit giữa các lần yêu cầu stream.
+    /// Luồng xử lý: dùng cache key theo user để áp cửa sổ thời gian; không đạt điều kiện thì trả BadRequest.
+    /// </summary>
     private async Task EnsureRateLimitAsync(Guid userId, CancellationToken cancellationToken)
     {
         var rateLimitKey = $"ratelimit:{userId}:ai_interpret";
@@ -48,9 +70,11 @@ public partial class StreamReadingCommandHandler
         var isAllowed = await _cacheService.CheckRateLimitAsync(rateLimitKey, rateLimit, cancellationToken);
         if (isAllowed)
         {
+            // Trong giới hạn cho phép thì tiếp tục xử lý stream.
             return;
         }
 
+        // Vượt ngưỡng rate-limit thì buộc đợi để giảm spam request AI.
         throw new BadRequestException($"Vui lòng đợi {_readingRateLimitSeconds} giây giữa các lần yêu cầu AI giải bài.");
     }
 }

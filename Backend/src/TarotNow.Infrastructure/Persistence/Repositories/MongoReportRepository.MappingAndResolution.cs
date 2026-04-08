@@ -4,8 +4,13 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
+// Partial xử lý resolve report và mapping DTO/document.
 public partial class MongoReportRepository
 {
+    /// <summary>
+    /// Resolve một report.
+    /// Luồng xử lý: chỉ update report chưa xóa mềm, set trạng thái/kết quả/metadata xử lý và trả true khi có thay đổi.
+    /// </summary>
     public async Task<bool> ResolveAsync(
         string reportId,
         string status,
@@ -28,8 +33,13 @@ public partial class MongoReportRepository
 
         var outcome = await _context.Reports.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
         return outcome.ModifiedCount > 0;
+        // ModifiedCount phản ánh chính xác report có được resolve thành công hay không.
     }
 
+    /// <summary>
+    /// Map ReportDto sang document Mongo.
+    /// Luồng xử lý: chuẩn hóa id và gom target type/id vào nested object ReportTarget.
+    /// </summary>
     private static ReportDocument ToDocument(ReportDto dto)
     {
         return new ReportDocument
@@ -46,6 +56,10 @@ public partial class MongoReportRepository
         };
     }
 
+    /// <summary>
+    /// Map ReportDocument sang DTO.
+    /// Luồng xử lý: tách dữ liệu target nested về các field phẳng trong DTO.
+    /// </summary>
     private static ReportDto ToDto(ReportDocument doc)
     {
         return new ReportDto

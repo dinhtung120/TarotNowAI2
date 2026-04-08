@@ -1,28 +1,39 @@
-
-
 using MediatR;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Notification.Queries.GetNotifications;
 
+// Query lấy danh sách notification theo bộ lọc và phân trang.
 public class GetNotificationsQuery : IRequest<NotificationListResponse>
 {
-        public Guid UserId { get; set; }
+    // Định danh user cần lấy danh sách thông báo.
+    public Guid UserId { get; set; }
 
-        public bool? IsRead { get; set; }
+    // Bộ lọc trạng thái đọc; null nghĩa là lấy cả đã đọc và chưa đọc.
+    public bool? IsRead { get; set; }
 
-        public int Page { get; set; } = 1;
+    // Trang hiện tại.
+    public int Page { get; set; } = 1;
 
-        public int PageSize { get; set; } = 20;
+    // Kích thước trang.
+    public int PageSize { get; set; } = 20;
 }
 
+// DTO danh sách notification kèm metadata phân trang.
 public class NotificationListResponse
 {
-        public IEnumerable<NotificationDto> Items { get; set; } = Enumerable.Empty<NotificationDto>();
+    // Danh sách thông báo của trang hiện tại.
+    public IEnumerable<NotificationDto> Items { get; set; } = Enumerable.Empty<NotificationDto>();
 
-        public long TotalCount { get; set; }
+    // Tổng số bản ghi khớp bộ lọc.
+    public long TotalCount { get; set; }
 
-        public int Page { get; set; }
+    // Trang hiện tại.
+    public int Page { get; set; }
 
-        public int PageSize { get; set; }
+    // Kích thước trang.
+    public int PageSize { get; set; }
 }

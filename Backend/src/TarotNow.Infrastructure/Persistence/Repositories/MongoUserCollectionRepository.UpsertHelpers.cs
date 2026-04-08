@@ -5,8 +5,13 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
+// Partial helper dựng filter/update pipeline cho upsert user collection.
 public partial class MongoUserCollectionRepository
 {
+    /// <summary>
+    /// Dựng filter theo cặp user-card.
+    /// Luồng xử lý: chuẩn hóa userId về string và kết hợp với cardId để định danh bản ghi duy nhất.
+    /// </summary>
     private static FilterDefinition<UserCollectionDocument> BuildUserCardFilter(Guid userId, int cardId)
     {
         var userIdString = userId.ToString();
@@ -14,6 +19,10 @@ public partial class MongoUserCollectionRepository
                & Builders<UserCollectionDocument>.Filter.Eq(u => u.CardId, cardId);
     }
 
+    /// <summary>
+    /// Dựng pipeline update cho thao tác upsert card.
+    /// Luồng xử lý: xây biểu thức level động, tạo $set document và bọc thành PipelineUpdateDefinition.
+    /// </summary>
     private static PipelineUpdateDefinition<UserCollectionDocument> BuildUpsertUpdate(
         Guid userId,
         int cardId,
@@ -29,6 +38,10 @@ public partial class MongoUserCollectionRepository
         return new PipelineUpdateDefinition<UserCollectionDocument>(pipeline);
     }
 
+    /// <summary>
+    /// Tạo document $set cho pipeline upsert.
+    /// Luồng xử lý: cập nhật metadata thời gian, cộng exp, tăng draw stats và tính level mới.
+    /// </summary>
     private static BsonDocument BuildSetDocument(
         string userId,
         int cardId,
@@ -60,6 +73,10 @@ public partial class MongoUserCollectionRepository
         };
     }
 
+    /// <summary>
+    /// Tạo biểu thức tính level theo tổng số lần draw.
+    /// Luồng xử lý: level = 1 + floor(total_draws / 5) theo rule progression hiện tại.
+    /// </summary>
     private static BsonDocument BuildLevelExpression()
     {
         return new BsonDocument("$add", new BsonArray
@@ -69,6 +86,10 @@ public partial class MongoUserCollectionRepository
         });
     }
 
+    /// <summary>
+    /// Tạo biểu thức tổng số lần draw.
+    /// Luồng xử lý: cộng upright + reversed và cộng thêm lượt draw hiện tại trong cùng pipeline.
+    /// </summary>
     private static BsonDocument BuildTotalDrawsExpression()
     {
         return new BsonDocument("$add", new BsonArray
@@ -79,6 +100,10 @@ public partial class MongoUserCollectionRepository
         });
     }
 
+    /// <summary>
+    /// Map document user collection sang aggregate domain.
+    /// Luồng xử lý: chuẩn hóa dữ liệu an toàn (level/exp/copies), sau đó rehydrate từ snapshot.
+    /// </summary>
     private static UserCollection MapToEntity(UserCollectionDocument doc)
     {
         Guid.TryParse(doc.UserId, out var userId);
@@ -88,7 +113,6 @@ public partial class MongoUserCollectionRepository
         var exp = Math.Max(doc.Exp, 0);
         var lastDrawnAt = doc.LastDrawnAt == default ? doc.UpdatedAt : doc.LastDrawnAt;
 
-        
         return UserCollection.Rehydrate(new UserCollectionSnapshot
         {
             UserId = userId,
@@ -97,8 +121,9 @@ public partial class MongoUserCollectionRepository
             Copies = copies,
             ExpGained = exp,
             LastDrawnAt = lastDrawnAt,
-            Atk = doc.Atk, 
-            Def = doc.Def  
+            Atk = doc.Atk,
+            Def = doc.Def
         });
+        // Fallback copies>=1 tránh vi phạm invariant domain khi dữ liệu cũ thiếu stats.
     }
 }

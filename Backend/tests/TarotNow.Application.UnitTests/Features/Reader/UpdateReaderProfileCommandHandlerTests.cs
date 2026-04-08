@@ -9,18 +9,29 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Reader;
 
+// Unit test cho handler cập nhật hồ sơ Reader.
 public class UpdateReaderProfileCommandHandlerTests
 {
+    // Mock profile repo để điều khiển dữ liệu hồ sơ reader hiện có.
     private readonly Mock<IReaderProfileRepository> _mockProfileRepo;
+    // Handler cần kiểm thử.
     private readonly UpdateReaderProfileCommandHandler _handler;
 
+    /// <summary>
+    /// Khởi tạo fixture cho UpdateReaderProfileCommandHandler.
+    /// Luồng dùng mock repository để cô lập logic cập nhật từng trường.
+    /// </summary>
     public UpdateReaderProfileCommandHandlerTests()
     {
         _mockProfileRepo = new Mock<IReaderProfileRepository>();
         _handler = new UpdateReaderProfileCommandHandler(_mockProfileRepo.Object);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận profile không tồn tại trả NotFoundException.
+    /// Luồng này chặn cập nhật trên hồ sơ reader không hợp lệ.
+    /// </summary>
+    [Fact]
     public async Task Handle_ProfileNotFound_ThrowsNotFoundException()
     {
         var command = new UpdateReaderProfileCommand { UserId = Guid.NewGuid() };
@@ -30,7 +41,11 @@ public class UpdateReaderProfileCommandHandlerTests
         Assert.Contains("Không tìm thấy hồ sơ Reader", ex.Message);
     }
 
-        [Theory]
+    /// <summary>
+    /// Xác nhận giá DiamondPerQuestion không hợp lệ bị từ chối.
+    /// Luồng này bảo vệ business rule giá hỏi phải lớn hơn 0.
+    /// </summary>
+    [Theory]
     [InlineData(0)]
     [InlineData(-1)]
     [InlineData(-100)]
@@ -45,7 +60,11 @@ public class UpdateReaderProfileCommandHandlerTests
         Assert.Contains("lớn hơn 0", ex.Message);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận cập nhật một phần chỉ thay đổi các trường được cung cấp.
+    /// Luồng này kiểm tra không ghi đè nhầm các trường không truyền trong request.
+    /// </summary>
+    [Fact]
     public async Task Handle_PartialUpdate_OnlyUpdatesProvidedFields()
     {
         var userId = Guid.NewGuid();
@@ -62,12 +81,16 @@ public class UpdateReaderProfileCommandHandlerTests
         Assert.True(result);
         Assert.Equal("Bio mới tiếng Việt", existingProfile.BioVi);
         Assert.Equal(75, existingProfile.DiamondPerQuestion);
-        Assert.Equal("Old English Bio", existingProfile.BioEn); 
-        Assert.Equal("旧中文简介", existingProfile.BioZh); 
+        Assert.Equal("Old English Bio", existingProfile.BioEn);
+        Assert.Equal("旧中文简介", existingProfile.BioZh);
         _mockProfileRepo.Verify(x => x.UpdateAsync(existingProfile, default), Times.Once);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận full update cập nhật đầy đủ các trường hồ sơ.
+    /// Luồng này kiểm tra mapping toàn bộ bio, pricing và specialties.
+    /// </summary>
+    [Fact]
     public async Task Handle_FullUpdate_UpdatesAllFields()
     {
         var userId = Guid.NewGuid();

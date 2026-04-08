@@ -4,8 +4,13 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
+// Partial xử lý release escrow chi tiết.
 public partial class WalletRepository
 {
+    /// <summary>
+    /// Thực thi release escrow trong transaction.
+    /// Luồng xử lý: kiểm tra idempotency, khóa payer/receiver, áp dụng release + ghi 2 ledger entries, rồi track spending.
+    /// </summary>
     private async Task ExecuteReleaseAsync(ReleaseRequest request, CancellationToken cancellationToken)
     {
         var normalizedIdempotencyKey = NormalizeIdempotencyKey(request.IdempotencyKey);
@@ -17,6 +22,7 @@ public partial class WalletRepository
                 if (await TryHandleIdempotentAsync(normalizedIdempotencyKey, cancellationToken))
                 {
                     return;
+                    // Request đã xử lý trước đó nên thoát sớm theo nguyên tắc idempotent.
                 }
 
                 var payer = await GetUserForUpdateAsync(request.PayerId, "payer", cancellationToken);
@@ -24,13 +30,14 @@ public partial class WalletRepository
                 if (await TryHandleIdempotentAsync(normalizedIdempotencyKey, cancellationToken))
                 {
                     return;
+                    // Double-check sau lock để chặn race giữa các tiến trình release đồng thời.
                 }
 
                 var entries = ApplyReleaseAndCreateEntries(request, normalizedIdempotencyKey, payer, receiver);
                 _dbContext.Set<WalletTransaction>().AddRange(entries.PayerEntry, entries.ReceiverEntry);
                 await _dbContext.SaveChangesAsync(cancellationToken);
+                // Ghi đồng thời cả hai ledger entries để đảm bảo cân bằng bút toán.
 
-                
                 await TrackSpendingToLeaderboardAsync(request.PayerId, CurrencyType.Diamond, request.Amount, cancellationToken);
             }, cancellationToken);
         }
@@ -40,6 +47,10 @@ public partial class WalletRepository
         }
     }
 
+    /// <summary>
+    /// Áp dụng thay đổi số dư khi release và tạo hai ledger entries tương ứng.
+    /// Luồng xử lý: trừ frozen từ payer, cộng diamond cho receiver và dựng entry cho từng bên.
+    /// </summary>
     private static (WalletTransaction PayerEntry, WalletTransaction ReceiverEntry) ApplyReleaseAndCreateEntries(
         ReleaseRequest request,
         string? normalizedIdempotencyKey,
@@ -79,10 +90,15 @@ public partial class WalletRepository
             request.Description,
             request.MetadataJson,
             BuildReceiverIdempotencyKey(normalizedIdempotencyKey)));
+        // Receiver entry dùng idempotency key hậu tố riêng để không đụng unique key với payer entry.
 
         return (payerEntry, receiverEntry);
     }
 
+    /// <summary>
+    /// Tạo idempotency key cho ledger của receiver.
+    /// Luồng xử lý: thêm hậu tố _receiver khi key gốc tồn tại.
+    /// </summary>
     private static string? BuildReceiverIdempotencyKey(string? idempotencyKey)
         => idempotencyKey == null ? null : $"{idempotencyKey}_receiver";
 }

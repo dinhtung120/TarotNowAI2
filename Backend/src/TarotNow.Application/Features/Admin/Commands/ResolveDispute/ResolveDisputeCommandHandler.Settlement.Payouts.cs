@@ -5,12 +5,17 @@ namespace TarotNow.Application.Features.Admin.Commands.ResolveDispute;
 
 public partial class ResolveDisputeCommandHandler
 {
+    /// <summary>
+    /// Thực hiện nhánh release: giải ngân cho reader và thu phí nền tảng.
+    /// Luồng xử lý: tính fee/net, release net cho reader, consume fee nếu có, cập nhật trạng thái item.
+    /// </summary>
     private async Task ReleaseToReaderAsync(
         Guid adminId,
         ChatQuestionItem item,
         string auditMetadata,
         CancellationToken cancellationToken)
     {
+        // Rule phí: thu 10% làm tròn lên để đảm bảo phí nền tảng không bị hụt do số lẻ.
         var fee = (long)Math.Ceiling(item.AmountDiamond * 0.10);
         var readerAmount = item.AmountDiamond - fee;
 
@@ -27,6 +32,7 @@ public partial class ResolveDisputeCommandHandler
 
         if (fee > 0)
         {
+            // Chỉ thu phí khi fee dương để tránh bút toán consume 0 vô nghĩa.
             await _walletRepo.ConsumeAsync(
                 item.PayerId,
                 fee,
@@ -38,10 +44,15 @@ public partial class ResolveDisputeCommandHandler
                 cancellationToken: cancellationToken);
         }
 
+        // Đổi state item sau khi bút toán release/fee hoàn tất.
         item.Status = QuestionItemStatus.Released;
         item.ReleasedAt = DateTime.UtcNow;
     }
 
+    /// <summary>
+    /// Thực hiện nhánh refund: hoàn toàn bộ số tiền về người dùng trả phí.
+    /// Luồng xử lý: gọi refund với metadata audit và cập nhật trạng thái item thành Refunded.
+    /// </summary>
     private async Task RefundToUserAsync(
         Guid adminId,
         ChatQuestionItem item,
@@ -58,8 +69,8 @@ public partial class ResolveDisputeCommandHandler
             idempotencyKey: $"settle_refund_{item.Id}",
             cancellationToken: cancellationToken);
 
+        // Đổi state item sau khi hoàn tiền thành công.
         item.Status = QuestionItemStatus.Refunded;
         item.RefundedAt = DateTime.UtcNow;
     }
-
 }

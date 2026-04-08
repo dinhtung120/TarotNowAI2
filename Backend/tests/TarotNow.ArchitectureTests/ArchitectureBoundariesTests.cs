@@ -4,8 +4,13 @@ using FluentAssertions;
 
 namespace TarotNow.ArchitectureTests;
 
+// Bộ test kiến trúc kiểm soát ranh giới phụ thuộc giữa các layer.
 public class ArchitectureBoundariesTests
 {
+    /// <summary>
+    /// Xác nhận hướng tham chiếu project tuân thủ Clean Architecture.
+    /// Luồng đọc ProjectReference của từng csproj và so sánh với dependency direction cho phép.
+    /// </summary>
     [Fact]
     public void ProjectReferences_ShouldFollowCleanArchitectureDirection()
     {
@@ -31,6 +36,10 @@ public class ArchitectureBoundariesTests
             });
     }
 
+    /// <summary>
+    /// Xác nhận Application layer không thêm phụ thuộc cấm vào hạ tầng/web framework.
+    /// Luồng quét pattern `using` bị cấm trong toàn bộ source Application.
+    /// </summary>
     [Fact]
     public void ApplicationLayer_ShouldNotIntroduceForbiddenDependencies()
     {
@@ -51,6 +60,10 @@ public class ArchitectureBoundariesTests
         violations.Should().BeEmpty("Application layer must not depend on infrastructure/web namespaces");
     }
 
+    /// <summary>
+    /// Xác nhận Application không dùng lại mô hình DomainException cũ.
+    /// Luồng này enforce chuẩn hóa lỗi business về Application.BusinessRuleException.
+    /// </summary>
     [Fact]
     public void ApplicationLayer_ShouldNotUseDomainExceptionType()
     {
@@ -67,6 +80,10 @@ public class ArchitectureBoundariesTests
         violations.Should().BeEmpty("Sprint 5 standardizes business-rule errors to Application.BusinessRuleException");
     }
 
+    /// <summary>
+    /// Xác nhận Domain layer không còn class DomainException legacy.
+    /// Luồng này ngăn tái xuất hiện dual exception model ở Domain.
+    /// </summary>
     [Fact]
     public void DomainLayer_ShouldNotContainLegacyDomainExceptionType()
     {
@@ -82,6 +99,10 @@ public class ArchitectureBoundariesTests
         violations.Should().BeEmpty("Sprint 7 removes legacy DomainException to avoid dual exception models");
     }
 
+    /// <summary>
+    /// Xác nhận Domain layer không thêm phụ thuộc cấm từ application/infrastructure/framework.
+    /// Luồng này giữ Domain thuần và độc lập framework.
+    /// </summary>
     [Fact]
     public void DomainLayer_ShouldNotIntroduceForbiddenDependencies()
     {
@@ -103,6 +124,10 @@ public class ArchitectureBoundariesTests
         violations.Should().BeEmpty("Domain layer must stay isolated from application/infrastructure frameworks");
     }
 
+    /// <summary>
+    /// Xác nhận Domain không thêm annotation persistence ngoài allowlist.
+    /// Luồng này enforce mapping ORM phải nằm ở Infrastructure, không nằm trong Domain model.
+    /// </summary>
     [Fact]
     public void Domain_ShouldNotIntroduceNewPersistenceAttributesOutsideCurrentAllowlist()
     {
@@ -123,6 +148,10 @@ public class ArchitectureBoundariesTests
             "Sprint 3 removes persistence annotations from Domain; new mapping must stay in Infrastructure");
     }
 
+    /// <summary>
+    /// Xác nhận API không thêm phụ thuộc trực tiếp DB/repository ngoài allowlist.
+    /// Luồng này giữ controller/hub ở boundary presentation thay vì truy cập hạ tầng trực tiếp.
+    /// </summary>
     [Fact]
     public void Api_ShouldNotIntroduceNewDirectDbOrRepositoryDependenciesOutsideAllowlist()
     {
@@ -147,6 +176,10 @@ public class ArchitectureBoundariesTests
             "Sprint 0 allows current exceptions while preventing new direct dependencies");
     }
 
+    /// <summary>
+    /// Xác nhận API không dùng trực tiếp concrete OpenAiProvider ngoài allowlist.
+    /// Luồng này chuẩn bị cho mục tiêu phụ thuộc abstraction provider.
+    /// </summary>
     [Fact]
     public void Api_ShouldNotIntroduceNewConcreteOpenAiProviderUsageOutsideAllowlist()
     {
@@ -167,6 +200,10 @@ public class ArchitectureBoundariesTests
             "Sprint 0 keeps current concrete provider dependency explicit until Sprint 2 removes it");
     }
 
+    /// <summary>
+    /// Xác nhận API layer không phụ thuộc trực tiếp namespace Domain.
+    /// Luồng này bảo vệ boundary API -> Application thay vì API -> Domain.
+    /// </summary>
     [Fact]
     public void ApiLayer_ShouldNotIntroduceDomainNamespaceDependencies()
     {
@@ -183,6 +220,10 @@ public class ArchitectureBoundariesTests
         violations.Should().BeEmpty("API should stay at the presentation/application boundary without direct Domain namespace usage");
     }
 
+    /// <summary>
+    /// Xác nhận API layer không log AI telemetry trực tiếp.
+    /// Luồng này enforce telemetry được xử lý ở Application handler thay vì controller/hub.
+    /// </summary>
     [Fact]
     public void ApiLayer_ShouldNotLogAiTelemetryDirectly()
     {
@@ -202,6 +243,10 @@ public class ArchitectureBoundariesTests
         violations.Should().BeEmpty("Sprint 8 moves AI telemetry logging from API controllers into Application handlers");
     }
 
+    /// <summary>
+    /// Tìm danh sách file chứa bất kỳ pattern cấm nào.
+    /// Luồng quét toàn bộ `*.cs` trong root và trả path tương đối cho báo cáo.
+    /// </summary>
     private static string[] FindFilesMatchingPatterns(string root, IEnumerable<string> patterns)
     {
         var regexes = patterns.Select(pattern => new Regex(pattern, RegexOptions.Compiled)).ToArray();
@@ -218,6 +263,10 @@ public class ArchitectureBoundariesTests
             .ToArray();
     }
 
+    /// <summary>
+    /// Đọc danh sách ProjectReference từ file csproj.
+    /// Luồng chuẩn hóa path để so sánh deterministic giữa các môi trường OS.
+    /// </summary>
     private static string[] GetProjectReferences(string csprojPath)
     {
         var document = XDocument.Load(csprojPath);
@@ -231,11 +280,19 @@ public class ArchitectureBoundariesTests
             .ToArray();
     }
 
+    /// <summary>
+    /// Chuẩn hóa dấu phân cách đường dẫn sang `/`.
+    /// Luồng này tránh sai khác do khác hệ điều hành khi assert.
+    /// </summary>
     private static string NormalizePath(string path)
     {
         return path.Replace('\\', '/');
     }
 
+    /// <summary>
+    /// Tìm thư mục gốc Backend từ thư mục output của test.
+    /// Luồng đi ngược parent folders đến khi thấy đủ solution/src/tests.
+    /// </summary>
     private static string FindBackendRoot()
     {
         var current = new DirectoryInfo(AppContext.BaseDirectory);
@@ -257,6 +314,10 @@ public class ArchitectureBoundariesTests
         throw new DirectoryNotFoundException("Cannot locate Backend root from test output directory.");
     }
 
+    /// <summary>
+    /// Chuyển full path sang đường dẫn tương đối theo Backend root.
+    /// Luồng này chuẩn hóa output violation dễ đọc và so sánh.
+    /// </summary>
     private static string ToBackendRelativePath(string backendRoot, string fullPath)
     {
         return Path.GetRelativePath(backendRoot, fullPath).Replace('\\', '/');

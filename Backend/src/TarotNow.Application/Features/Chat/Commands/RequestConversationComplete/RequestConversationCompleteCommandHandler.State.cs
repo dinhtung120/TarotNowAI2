@@ -6,6 +6,7 @@ namespace TarotNow.Application.Features.Chat.Commands.RequestConversationComplet
 
 public partial class RequestConversationCompleteCommandHandler
 {
+    // Gói context để các bước xử lý dùng chung dữ liệu đã validate, tránh đọc DB lặp lại.
     private readonly record struct RequestContext(
         ConversationDto Conversation,
         string RequesterId,
@@ -15,6 +16,10 @@ public partial class RequestConversationCompleteCommandHandler
         DateTime? ResponderConfirmedAt,
         DateTime Now);
 
+    /// <summary>
+    /// Dựng context xử lý từ command đầu vào và trạng thái conversation hiện tại.
+    /// Luồng xử lý: tải conversation, kiểm tra quyền tham gia và trạng thái hợp lệ, rồi xác định vai trò requester cùng các mốc confirm liên quan.
+    /// </summary>
     private async Task<RequestContext> BuildContextAsync(
         RequestConversationCompleteCommand request,
         CancellationToken cancellationToken)
@@ -25,15 +30,18 @@ public partial class RequestConversationCompleteCommandHandler
         var requesterId = request.RequesterId.ToString();
         if (conversation.UserId != requesterId && conversation.ReaderId != requesterId)
         {
+            // Business rule: chỉ participant thuộc conversation mới được yêu cầu hoàn thành.
             throw new BadRequestException("Bạn không thuộc cuộc trò chuyện này.");
         }
 
         if (conversation.Status != ConversationStatus.Ongoing)
         {
+            // Chỉ cho phép thao tác complete khi conversation đang Ongoing.
             throw new BadRequestException($"Không thể yêu cầu hoàn thành ở trạng thái '{conversation.Status}'.");
         }
 
         var now = DateTime.UtcNow;
+        // Khởi tạo confirm object nếu thiếu để tránh null-reference ở các bước cập nhật mốc thời gian.
         conversation.Confirm ??= new ConversationConfirmDto();
 
         var isUserRequester = conversation.UserId == requesterId;
@@ -51,6 +59,10 @@ public partial class RequestConversationCompleteCommandHandler
             now);
     }
 
+    /// <summary>
+    /// Kiểm tra requester đã xác nhận trước đó nhưng phía còn lại chưa xác nhận hay chưa.
+    /// Luồng xử lý: dựa vào hai mốc confirm trong context để quyết định bỏ qua side-effect lặp.
+    /// </summary>
     private static bool IsAlreadyConfirmedByRequester(RequestContext context)
     {
         return context.RequesterConfirmedAt != null && context.ResponderConfirmedAt == null;

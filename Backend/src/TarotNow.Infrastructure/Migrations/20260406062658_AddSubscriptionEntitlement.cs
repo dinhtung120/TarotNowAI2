@@ -5,9 +5,14 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace TarotNow.Infrastructure.Migrations
 {
-        public partial class AddSubscriptionEntitlement : Migration
+    // Migration tạo schema subscription và entitlement buckets/consume logs.
+    public partial class AddSubscriptionEntitlement : Migration
     {
-                protected override void Up(MigrationBuilder migrationBuilder)
+        /// <summary>
+        /// Áp dụng thay đổi schema theo hướng nâng cấp.
+        /// Luồng xử lý: tạo bảng subscription, entitlement mapping/buckets/consume và các index liên quan.
+        /// </summary>
+        protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
                 name: "entitlement_mapping_rules",
@@ -196,7 +201,11 @@ namespace TarotNow.Infrastructure.Migrations
                 columns: new[] { "user_id", "status" });
         }
 
-                protected override void Down(MigrationBuilder migrationBuilder)
+        /// <summary>
+        /// Hoàn tác thay đổi schema của migration này khi rollback.
+        /// Luồng xử lý: xóa các bảng entitlement/subscription đã tạo trong Up theo thứ tự phụ thuộc.
+        /// </summary>
+        protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
                 name: "entitlement_consumes");

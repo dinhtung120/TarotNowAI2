@@ -8,12 +8,20 @@ using TarotNow.Infrastructure.Options;
 
 namespace TarotNow.Infrastructure.Services;
 
+// Email sender gửi mail thật qua SMTP.
 public sealed class SmtpEmailSender : IEmailSender
 {
+    // Logger theo dõi trạng thái gửi mail.
     private readonly ILogger<SmtpEmailSender> _logger;
+    // SMTP client abstraction để dễ mock trong test.
     private readonly ISmtpClient _smtpClient;
+    // Cấu hình SMTP nạp từ appsettings.
     private readonly SmtpOptions _options;
 
+    /// <summary>
+    /// Khởi tạo SMTP email sender.
+    /// Luồng inject client và options giúp gửi mail linh hoạt theo từng môi trường.
+    /// </summary>
     public SmtpEmailSender(
         IOptions<SmtpOptions> options,
         ILogger<SmtpEmailSender> logger,
@@ -24,12 +32,17 @@ public sealed class SmtpEmailSender : IEmailSender
         _smtpClient = smtpClient;
     }
 
+    /// <summary>
+    /// Gửi email plaintext tới người nhận chỉ định.
+    /// Luồng validate cấu hình, kết nối SMTP, xác thực rồi gửi và ngắt kết nối an toàn.
+    /// </summary>
     public async Task SendEmailAsync(string to, string subject, string body, CancellationToken cancellationToken = default)
     {
         var smtpConfig = ValidateConfiguration();
 
         try
         {
+            // Dựng message chuẩn MIME để đảm bảo tương thích máy chủ mail phổ biến.
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(smtpConfig.SenderName, smtpConfig.SenderEmail));
             message.To.Add(MailboxAddress.Parse(to));
@@ -38,11 +51,13 @@ public sealed class SmtpEmailSender : IEmailSender
 
             if (!_smtpClient.IsConnected)
             {
+                // Chỉ kết nối khi cần để tránh mở kết nối dư thừa.
                 await _smtpClient.ConnectAsync(smtpConfig.Host, smtpConfig.Port, SecureSocketOptions.StartTls, cancellationToken);
             }
 
             if (!_smtpClient.IsAuthenticated)
             {
+                // Xác thực SMTP trước khi gửi để tránh bị relay deny.
                 await _smtpClient.AuthenticateAsync(smtpConfig.Username, smtpConfig.Password, cancellationToken);
             }
 
@@ -57,6 +72,10 @@ public sealed class SmtpEmailSender : IEmailSender
         }
     }
 
+    /// <summary>
+    /// Kiểm tra và chuẩn hóa cấu hình SMTP từ options.
+    /// Luồng fail-fast khi mật khẩu placeholder để tránh gửi lỗi âm thầm ở production.
+    /// </summary>
     private SmtpConfig ValidateConfiguration()
     {
         if (string.IsNullOrWhiteSpace(_options.Password) ||
@@ -71,9 +90,11 @@ public sealed class SmtpEmailSender : IEmailSender
         var senderName = string.IsNullOrWhiteSpace(_options.SenderName) ? "TarotNow Security" : _options.SenderName.Trim();
         var username = _options.Username?.Trim() ?? string.Empty;
         var password = _options.Password;
+        // Trả config đã chuẩn hóa để luồng gửi mail dùng thống nhất.
         return new SmtpConfig(host, port, username, password, senderEmail, senderName);
     }
 
+    // Bản ghi cấu hình SMTP đã chuẩn hóa cho một lần gửi email.
     private sealed record SmtpConfig(
         string Host,
         int Port,

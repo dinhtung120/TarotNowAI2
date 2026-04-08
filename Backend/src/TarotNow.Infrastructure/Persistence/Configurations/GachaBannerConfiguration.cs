@@ -6,8 +6,13 @@ using TarotNow.Domain.Entities;
 
 namespace TarotNow.Infrastructure.Persistence.Configurations;
 
+// Cấu hình EF mapping cho entity GachaBanner.
 public class GachaBannerConfiguration : IEntityTypeConfiguration<GachaBanner>
 {
+    /// <summary>
+    /// Cấu hình mapping bảng gacha_banners.
+    /// Luồng xử lý: map metadata banner, index code/is_active và quan hệ one-to-many với items.
+    /// </summary>
     public void Configure(EntityTypeBuilder<GachaBanner> builder)
     {
         builder.ToTable("gacha_banners");
@@ -24,19 +29,21 @@ public class GachaBannerConfiguration : IEntityTypeConfiguration<GachaBanner>
 
         builder.Property(x => x.CostDiamond).IsRequired();
         builder.Property(x => x.OddsVersion).IsRequired().HasMaxLength(32);
-        
+
         builder.Property(x => x.EffectiveFrom).IsRequired();
         builder.Property(x => x.EffectiveTo);
-        
+
         builder.Property(x => x.PityEnabled).IsRequired();
         builder.Property(x => x.HardPityCount).IsRequired();
         builder.Property(x => x.IsActive).IsRequired();
 
         builder.HasIndex(x => x.IsActive);
+        // Index trạng thái active hỗ trợ truy vấn nhanh danh sách banner đang mở.
 
         builder.HasMany(x => x.Items)
                .WithOne(x => x.Banner)
                .HasForeignKey(x => x.BannerId)
                .OnDelete(DeleteBehavior.Cascade);
+        // Xóa banner sẽ xóa toàn bộ item thuộc banner để giữ toàn vẹn dữ liệu.
     }
 }

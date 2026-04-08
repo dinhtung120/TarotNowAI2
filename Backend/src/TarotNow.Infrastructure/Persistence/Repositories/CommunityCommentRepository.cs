@@ -6,15 +6,25 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
+// Repository thao tác comment cộng đồng trên MongoDB.
 public class CommunityCommentRepository : ICommunityCommentRepository
 {
+    // Mongo context truy cập collection community_comments.
     private readonly MongoDbContext _context;
 
+    /// <summary>
+    /// Khởi tạo repository comment cộng đồng.
+    /// Luồng xử lý: nhận MongoDbContext qua DI để dùng chung cấu hình collection/index hiện tại.
+    /// </summary>
     public CommunityCommentRepository(MongoDbContext context)
     {
         _context = context;
     }
 
+    /// <summary>
+    /// Thêm mới comment vào bài viết cộng đồng.
+    /// Luồng xử lý: map DTO sang document, insert Mongo, sau đó trả DTO kèm id vừa phát sinh.
+    /// </summary>
     public async Task<CommunityCommentDto> AddCommentAsync(CommunityCommentDto comment, CancellationToken cancellationToken = default)
     {
         var doc = new CommunityCommentDocument
@@ -30,13 +40,19 @@ public class CommunityCommentRepository : ICommunityCommentRepository
 
         await _context.CommunityComments.InsertOneAsync(doc, new InsertOneOptions(), cancellationToken);
         comment.Id = doc.Id;
+        // Gán ngược id Mongo để lớp trên có thể trả về client ngay trong cùng request.
         return comment;
     }
 
+    /// <summary>
+    /// Lấy danh sách comment theo bài viết có phân trang.
+    /// Luồng xử lý: lọc theo post + chưa xóa, đếm tổng, lấy page theo created_at desc rồi map sang DTO.
+    /// </summary>
     public async Task<(IEnumerable<CommunityCommentDto> Items, long TotalCount)> GetByPostIdAsync(string postId, int page, int pageSize, CancellationToken cancellationToken = default)
     {
-        var filter = Builders<CommunityCommentDocument>.Filter.Eq(x => x.PostId, postId) 
+        var filter = Builders<CommunityCommentDocument>.Filter.Eq(x => x.PostId, postId)
                    & Builders<CommunityCommentDocument>.Filter.Eq(x => x.IsDeleted, false);
+        // Luôn loại comment soft-delete để nhất quán với feed cộng đồng.
 
         var total = await _context.CommunityComments.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
 
@@ -60,15 +76,20 @@ public class CommunityCommentRepository : ICommunityCommentRepository
         return (dtos, total);
     }
 
+    /// <summary>
+    /// Lấy một comment theo id.
+    /// Luồng xử lý: validate định dạng ObjectId, query document và map DTO nếu tồn tại.
+    /// </summary>
     public async Task<CommunityCommentDto?> GetByIdAsync(string commentId, CancellationToken cancellationToken = default)
     {
-        if (!ObjectId.TryParse(commentId, out var objId)) return null;
+        if (!ObjectId.TryParse(commentId, out _)) return null;
+        // Edge case: id không đúng chuẩn ObjectId thì trả null ngay để tránh query vô nghĩa.
 
         var filter = Builders<CommunityCommentDocument>.Filter.Eq(x => x.Id, commentId);
         var doc = await _context.CommunityComments.Find(filter).FirstOrDefaultAsync(cancellationToken);
 
         if (doc == null) return null;
-        
+
         return new CommunityCommentDto
         {
             Id = doc.Id,
@@ -81,6 +102,10 @@ public class CommunityCommentRepository : ICommunityCommentRepository
         };
     }
 
+    /// <summary>
+    /// Xóa mềm comment.
+    /// Luồng xử lý: set cờ is_deleted và metadata deleted_at/deleted_by, trả về true nếu có bản ghi được cập nhật.
+    /// </summary>
     public async Task<bool> SoftDeleteAsync(string commentId, string deletedBy, CancellationToken cancellationToken = default)
     {
         var filter = Builders<CommunityCommentDocument>.Filter.Eq(x => x.Id, commentId);
@@ -91,5 +116,6 @@ public class CommunityCommentRepository : ICommunityCommentRepository
 
         var result = await _context.CommunityComments.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
         return result.ModifiedCount > 0;
+        // Chỉ báo thành công khi Mongo thực sự cập nhật được bản ghi đích.
     }
 }

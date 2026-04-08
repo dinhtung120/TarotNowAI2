@@ -6,66 +6,88 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 [BsonIgnoreExtraElements]
+// Document danh mục lá bài tarot chuẩn hệ thống.
 public class CardCatalogDocument
 {
-        [BsonId]
+    // Khóa số nguyên ổn định để map với dữ liệu card nội bộ.
+    [BsonId]
     public int Id { get; set; }
 
-        [BsonElement("code")]
+    // Mã card duy nhất dùng cho index và lookup nghiệp vụ.
+    [BsonElement("code")]
     public string Code { get; set; } = string.Empty;
 
-        [BsonElement("name")]
+    // Tên hiển thị đa ngôn ngữ của lá bài.
+    [BsonElement("name")]
     public LocalizedName Name { get; set; } = new();
 
-        [BsonElement("arcana")]
+    // Nhóm arcana (major/minor).
+    [BsonElement("arcana")]
     public string Arcana { get; set; } = string.Empty;
 
-        [BsonElement("suit")]
+    // Suit của minor arcana, null với major arcana.
+    [BsonElement("suit")]
     [BsonIgnoreIfNull]
     public string? Suit { get; set; }
 
-        [BsonElement("number")]
+    // Số thứ tự trong bộ bài.
+    [BsonElement("number")]
     public int Number { get; set; }
 
-        [BsonElement("element")]
+    // Thuộc tính nguyên tố dùng cho bộ lọc/diễn giải.
+    [BsonElement("element")]
     public string Element { get; set; } = string.Empty;
 
-        [BsonElement("image_url")]
+    // Ảnh minh họa card.
+    [BsonElement("image_url")]
     [BsonIgnoreIfNull]
     public string? ImageUrl { get; set; }
 
-        [BsonElement("meanings")]
+    // Ý nghĩa upright/reversed phục vụ đọc bài.
+    [BsonElement("meanings")]
     public CardMeanings Meanings { get; set; } = new();
 
-        [BsonElement("created_at")]
+    // Thời điểm tạo bản ghi card.
+    [BsonElement("created_at")]
     public DateTime CreatedAt { get; set; }
 
-        [BsonElement("updated_at")]
+    // Thời điểm cập nhật bản ghi card.
+    [BsonElement("updated_at")]
     public DateTime UpdatedAt { get; set; }
 }
 
 [BsonIgnoreExtraElements]
+// Tên card theo từng locale hỗ trợ.
 public class LocalizedName
 {
-        [BsonElement("vi")] public string Vi { get; set; } = string.Empty;
+    // Tên tiếng Việt.
+    [BsonElement("vi")] public string Vi { get; set; } = string.Empty;
 
-        [BsonElement("en")] public string En { get; set; } = string.Empty;
+    // Tên tiếng Anh.
+    [BsonElement("en")] public string En { get; set; } = string.Empty;
 
-        [BsonElement("zh")] public string Zh { get; set; } = string.Empty;
+    // Tên tiếng Trung.
+    [BsonElement("zh")] public string Zh { get; set; } = string.Empty;
 }
 
 [BsonIgnoreExtraElements]
+// Cặp ý nghĩa thuận/ngược của card.
 public class CardMeanings
 {
-        [BsonElement("upright")] public MeaningDetail Upright { get; set; } = new();
+    // Ý nghĩa khi lá bài ở trạng thái upright.
+    [BsonElement("upright")] public MeaningDetail Upright { get; set; } = new();
 
-        [BsonElement("reversed")] public MeaningDetail Reversed { get; set; } = new();
+    // Ý nghĩa khi lá bài ở trạng thái reversed.
+    [BsonElement("reversed")] public MeaningDetail Reversed { get; set; } = new();
 }
 
 [BsonIgnoreExtraElements]
+// Chi tiết diễn giải một trạng thái card.
 public class MeaningDetail
 {
-        [BsonElement("keywords")] public List<string> Keywords { get; set; } = new();
+    // Từ khóa ngắn gọn dùng cho UI/tagging.
+    [BsonElement("keywords")] public List<string> Keywords { get; set; } = new();
 
-        [BsonElement("description")] public string Description { get; set; } = string.Empty;
+    // Mô tả diễn giải đầy đủ.
+    [BsonElement("description")] public string Description { get; set; } = string.Empty;
 }

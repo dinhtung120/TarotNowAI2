@@ -10,20 +10,28 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Escrow;
 
+// Unit test cho handler thêm câu hỏi trả phí trong phiên chat finance.
 public class AddQuestionCommandHandlerTests
 {
-    
+    // Mock finance repo để điều khiển session/item và kiểm tra persistence.
     private readonly Mock<IChatFinanceRepository> _mockFinanceRepo;
+    // Mock wallet repo để xác minh thao tác freeze diamond.
     private readonly Mock<IWalletRepository> _mockWalletRepo;
+    // Mock transaction coordinator để chạy action theo transactional flow.
     private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
+    // Handler cần kiểm thử.
     private readonly AddQuestionCommandHandler _handler;
 
+    /// <summary>
+    /// Khởi tạo fixture cho AddQuestionCommandHandler.
+    /// Luồng cấu hình transaction coordinator chạy inline để test deterministic.
+    /// </summary>
     public AddQuestionCommandHandlerTests()
     {
         _mockFinanceRepo = new Mock<IChatFinanceRepository>();
         _mockWalletRepo = new Mock<IWalletRepository>();
         _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
-        
+
         _mockTransactionCoordinator
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
             .Returns((Func<CancellationToken, Task> action, CancellationToken ct) => action(ct));
@@ -33,7 +41,11 @@ public class AddQuestionCommandHandlerTests
             _mockTransactionCoordinator.Object);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận idempotency key đã tồn tại sẽ trả item hiện có và không freeze ví lần nữa.
+    /// Luồng này bảo vệ tính idempotent khi client retry request.
+    /// </summary>
+    [Fact]
     public async Task Handle_ExistingIdempotencyKey_ReturnsExistingId_NoFreeze()
     {
         var command = new AddQuestionCommand { IdempotencyKey = "addq_key_123" };
@@ -44,6 +56,7 @@ public class AddQuestionCommandHandlerTests
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
+        // Đảm bảo không gọi freeze lần hai khi gặp request trùng idempotency key.
         Assert.Equal(existingItem.Id, result);
         _mockWalletRepo.Verify(x => x.FreezeAsync(
             It.IsAny<Guid>(), It.IsAny<long>(),
@@ -51,7 +64,11 @@ public class AddQuestionCommandHandlerTests
             It.IsAny<string>(), It.IsAny<string>(), default), Times.Never);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận session không tồn tại trả NotFoundException.
+    /// Luồng này ngăn tạo item tài chính mồ côi.
+    /// </summary>
+    [Fact]
     public async Task Handle_SessionNotFound_ThrowsNotFoundException()
     {
         var command = new AddQuestionCommand { ConversationRef = "non_existent_conv", IdempotencyKey = "new_key" };
@@ -64,11 +81,15 @@ public class AddQuestionCommandHandlerTests
         await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận user không phải chủ session bị từ chối.
+    /// Luồng này bảo vệ quyền thao tác tài chính theo chủ phiên.
+    /// </summary>
+    [Fact]
     public async Task Handle_NotSessionOwner_ThrowsBadRequestException()
     {
         var command = new AddQuestionCommand { UserId = Guid.NewGuid(), ConversationRef = "conv_ref", IdempotencyKey = "new_key" };
-        var session = new ChatFinanceSession { UserId = Guid.NewGuid(), Status = "active" }; 
+        var session = new ChatFinanceSession { UserId = Guid.NewGuid(), Status = "active" };
 
         _mockFinanceRepo.Setup(x => x.GetItemByIdempotencyKeyAsync("new_key", default)).ReturnsAsync((ChatQuestionItem)null!);
         _mockFinanceRepo.Setup(x => x.GetSessionByConversationRefAsync("conv_ref", default)).ReturnsAsync(session);
@@ -77,7 +98,11 @@ public class AddQuestionCommandHandlerTests
         Assert.Contains("không phải chủ phiên", ex.Message);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận session đã kết thúc không cho thêm câu hỏi.
+    /// Luồng này bảo vệ business rule đóng phiên tài chính.
+    /// </summary>
+    [Fact]
     public async Task Handle_SessionEnded_ThrowsBadRequestException()
     {
         var userId = Guid.NewGuid();
@@ -91,7 +116,11 @@ public class AddQuestionCommandHandlerTests
         Assert.Contains("không thể thêm câu hỏi", ex.Message);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận request hợp lệ sẽ freeze diamond, tạo item và cập nhật tổng frozen của session.
+    /// Luồng này kiểm tra đầy đủ side-effect tài chính trong transaction.
+    /// </summary>
+    [Fact]
     public async Task Handle_ValidRequest_FreezesDiamond_CreatesItem_UpdatesSession()
     {
         var userId = Guid.NewGuid();
@@ -116,6 +145,7 @@ public class AddQuestionCommandHandlerTests
             .Callback<ChatQuestionItem, CancellationToken>((item, _) => item.Id = createdItemId)
             .Returns(Task.CompletedTask);
 
+        // Thực thi handler và kiểm tra các side-effect freeze + persistence.
         var result = await _handler.Handle(command, CancellationToken.None);
 
         Assert.Equal(createdItemId, result);
@@ -128,7 +158,7 @@ public class AddQuestionCommandHandlerTests
                 i.AmountDiamond == 50 && i.Status == QuestionItemStatus.Accepted &&
                 i.IdempotencyKey == "addq_key_456"), default), Times.Once);
 
-        
+        // Tổng frozen phải tăng đúng số diamond vừa thêm.
         Assert.Equal(150, session.TotalFrozen);
         _mockFinanceRepo.Verify(x => x.UpdateSessionAsync(session, default), Times.Once);
         _mockFinanceRepo.Verify(x => x.SaveChangesAsync(default), Times.Once);

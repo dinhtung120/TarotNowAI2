@@ -6,6 +6,16 @@ namespace TarotNow.Api.Controllers;
 
 public partial class AiController
 {
+    /// <summary>
+    /// Khởi tạo stream AI từ command tầng ứng dụng.
+    /// Luồng xử lý: gửi command, ánh xạ exception thành HTTP status + SSE message phù hợp.
+    /// </summary>
+    /// <param name="userId">Id người dùng yêu cầu stream.</param>
+    /// <param name="sessionId">Id reading session.</param>
+    /// <param name="followUpQuestion">Câu hỏi follow-up tùy chọn.</param>
+    /// <param name="language">Ngôn ngữ phản hồi mong muốn.</param>
+    /// <param name="cancellationToken">Token hủy request.</param>
+    /// <returns>Thông tin stream nếu khởi tạo thành công; ngược lại trả <c>null</c>.</returns>
     private async Task<StreamReadingResult?> TryStartStreamAsync(
         Guid userId,
         string sessionId,
@@ -15,6 +25,7 @@ public partial class AiController
     {
         try
         {
+            // Dùng fallback "vi" để tránh null language gây phân nhánh không cần thiết ở handler.
             return await _mediator.Send(new StreamReadingCommand
             {
                 UserId = userId,
@@ -25,18 +36,21 @@ public partial class AiController
         }
         catch (BadRequestException ex)
         {
+            // Nhóm lỗi validation/business input được phản hồi 400 để client tự chỉnh request.
             Response.StatusCode = StatusCodes.Status400BadRequest;
             await WriteServerEventAsync(ex.Message, cancellationToken);
             return null;
         }
         catch (NotFoundException ex)
         {
+            // Session không tồn tại hoặc không truy cập được được ánh xạ về 404 nhất quán.
             Response.StatusCode = StatusCodes.Status404NotFound;
             await WriteServerEventAsync(ex.Message, cancellationToken);
             return null;
         }
         catch (Exception ex)
         {
+            // Lỗi hạ tầng không mong đợi được log cảnh báo và trả thông điệp an toàn cho client.
             _logger.LogWarning(ex, "Failed to initialize AI stream for session {SessionId}.", sessionId);
             Response.StatusCode = StatusCodes.Status500InternalServerError;
             await WriteServerEventAsync("Unable to start AI stream. Please try again later.", cancellationToken);
@@ -44,6 +58,10 @@ public partial class AiController
         }
     }
 
+    /// <summary>
+    /// Thiết lập header chuẩn cho response SSE.
+    /// </summary>
+    /// <param name="response">HTTP response cần cấu hình.</param>
     private static void ConfigureSseHeaders(HttpResponse response)
     {
         response.Headers.Append("Content-Type", "text/event-stream");
@@ -51,6 +69,15 @@ public partial class AiController
         response.Headers.Append("Connection", "keep-alive");
     }
 
+    /// <summary>
+    /// Thực thi vòng stream và finalize trạng thái AI request.
+    /// Luồng xử lý: stream chunk, gửi DONE, hoàn tất thành công; nếu lỗi thì đi nhánh cancel/failure tương ứng.
+    /// </summary>
+    /// <param name="result">Kết quả khởi tạo stream.</param>
+    /// <param name="userId">Id người dùng.</param>
+    /// <param name="sessionId">Id phiên reading.</param>
+    /// <param name="followUpQuestion">Câu hỏi follow-up tùy chọn.</param>
+    /// <param name="requestToken">Token hủy request từ kết nối hiện tại.</param>
     private async Task StreamAndFinalizeAsync(
         StreamReadingResult result,
         Guid userId,
@@ -58,6 +85,7 @@ public partial class AiController
         string? followUpQuestion,
         CancellationToken requestToken)
     {
+        // State gom toàn bộ thông tin runtime để đồng bộ giữa các bước finalize.
         var state = new StreamExecutionState();
         var completionContext = new StreamCompletionContext(
             result.AiRequestId,
@@ -67,6 +95,7 @@ public partial class AiController
 
         try
         {
+            // Luồng thành công chuẩn: stream dữ liệu -> gửi DONE -> ghi nhận completion trạng thái Completed.
             await WriteStreamAsync(result.Stream, state, requestToken);
             await WriteDoneEventAsync(requestToken);
 
@@ -82,10 +111,12 @@ public partial class AiController
         }
         catch (OperationCanceledException ex)
         {
+            // Tách riêng nhánh cancel để phân biệt client disconnect và upstream timeout.
             await HandleCanceledStreamAsync(ex, completionContext, requestToken);
         }
         catch (Exception ex)
         {
+            // Mọi lỗi runtime còn lại đi chung nhánh failed để đảm bảo luôn finalize trạng thái request.
             await HandleFailedStreamAsync(ex, completionContext, CancellationToken.None);
         }
     }

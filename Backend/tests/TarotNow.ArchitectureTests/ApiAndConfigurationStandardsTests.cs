@@ -6,8 +6,13 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace TarotNow.ArchitectureTests;
 
+// Bộ test kiến trúc kiểm soát chuẩn API và cấu hình hệ thống.
 public class ApiAndConfigurationStandardsTests
 {
+    /// <summary>
+    /// Xác nhận mọi API controller khai báo metadata version rõ ràng.
+    /// Luồng quét toàn bộ controller, lọc class có ApiController và kiểm tra có ApiVersion/ApiVersionNeutral.
+    /// </summary>
     [Fact]
     public void ApiControllers_ShouldDeclareApiVersionMetadata()
     {
@@ -15,6 +20,7 @@ public class ApiAndConfigurationStandardsTests
         var controllerFiles = Directory.GetFiles(Path.Combine(backendRoot, "src", "TarotNow.Api", "Controllers"), "*.cs", SearchOption.TopDirectoryOnly);
         var violations = new List<string>();
 
+        // Duyệt từng file controller để parse syntax tree và kiểm tra attribute class.
         foreach (var file in controllerFiles)
         {
             var tree = CSharpSyntaxTree.ParseText(File.ReadAllText(file));
@@ -27,6 +33,7 @@ public class ApiAndConfigurationStandardsTests
                 var isApiController = attributes.Any(attribute => attribute.Name.ToString().EndsWith("ApiController", StringComparison.Ordinal));
                 if (!isApiController)
                 {
+                    // Bỏ qua class không phải API controller.
                     continue;
                 }
 
@@ -44,6 +51,10 @@ public class ApiAndConfigurationStandardsTests
         violations.Should().BeEmpty("all API controllers must declare explicit API version metadata.");
     }
 
+    /// <summary>
+    /// Xác nhận API layer không hardcode route literal `/api/v1` trong attribute.
+    /// Luồng dùng regex quét toàn bộ file API để bắt magic string route version cứng.
+    /// </summary>
     [Fact]
     public void ApiLayer_ShouldNotHardcodeV1RouteLiteralsInAttributes()
     {
@@ -61,6 +72,10 @@ public class ApiAndConfigurationStandardsTests
         violations.Should().BeEmpty("API attributes must use versioned constants/templates instead of hardcoded /api/v1 literals.");
     }
 
+    /// <summary>
+    /// Xác nhận Infrastructure service không dùng IConfiguration trực tiếp ngoài allowlist.
+    /// Luồng này ép các service runtime đọc cấu hình qua Options pattern typed.
+    /// </summary>
     [Fact]
     public void InfrastructureServices_ShouldUseOptionsPatternInsteadOfIConfiguration()
     {
@@ -88,6 +103,10 @@ public class ApiAndConfigurationStandardsTests
         violations.Should().BeEmpty("runtime services/repositories should bind strongly-typed options and avoid IConfiguration directly.");
     }
 
+    /// <summary>
+    /// Xác nhận không khởi tạo SmtpClient trực tiếp ngoài composition root.
+    /// Luồng này bảo vệ nguyên tắc tạo client qua DI để dễ test và kiểm soát lifecycle.
+    /// </summary>
     [Fact]
     public void Infrastructure_ShouldNotInstantiateSmtpClientDirectlyOutsideCompositionRoot()
     {
@@ -103,6 +122,10 @@ public class ApiAndConfigurationStandardsTests
         violations.Should().BeEmpty("SmtpClient should be created by DI container, not with new() inside services.");
     }
 
+    /// <summary>
+    /// Xác nhận API layer dùng hằng số feature flag thay vì chuỗi cứng.
+    /// Luồng regex phát hiện các lời gọi `IsEnabledAsync(\"...\")` ngoài file hằng.
+    /// </summary>
     [Fact]
     public void ApiLayer_ShouldUseFeatureFlagConstants()
     {
@@ -121,6 +144,10 @@ public class ApiAndConfigurationStandardsTests
         violations.Should().BeEmpty("feature flag keys should come from constants to avoid magic strings.");
     }
 
+    /// <summary>
+    /// Xác nhận mọi HTTP action có XML summary comment cho OpenAPI.
+    /// Luồng parse syntax tree từng controller và kiểm tra documentation trivia ở method có Http* attribute.
+    /// </summary>
     [Fact]
     public void ApiHttpActions_ShouldHaveXmlSummaryComments()
     {
@@ -142,6 +169,7 @@ public class ApiAndConfigurationStandardsTests
 
                 if (!hasHttpAttribute)
                 {
+                    // Chỉ enforce tài liệu cho HTTP action methods.
                     continue;
                 }
 
@@ -156,12 +184,17 @@ public class ApiAndConfigurationStandardsTests
         violations.Should().BeEmpty("each public HTTP endpoint should expose XML summary comments for OpenAPI documentation.");
     }
 
+    /// <summary>
+    /// Kiểm tra một method có thẻ `<summary>` trong XML documentation hay không.
+    /// Luồng này dùng Roslyn trivia để đọc comment tài liệu tại compile-time.
+    /// </summary>
     private static bool HasSummaryDocumentation(MethodDeclarationSyntax method)
     {
         var docs = method.GetLeadingTrivia()
             .Select(trivia => trivia.GetStructure())
             .OfType<DocumentationCommentTriviaSyntax>();
 
+        // Duyệt từng khối doc comment để tìm phần tử summary.
         foreach (var doc in docs)
         {
             var elements = doc.Content.OfType<XmlElementSyntax>();
@@ -174,10 +207,15 @@ public class ApiAndConfigurationStandardsTests
         return false;
     }
 
+    /// <summary>
+    /// Tìm thư mục gốc Backend từ thư mục output test hiện tại.
+    /// Luồng đi ngược cây thư mục đến khi thấy đồng thời solution, src và tests.
+    /// </summary>
     private static string FindBackendRoot()
     {
         var current = new DirectoryInfo(AppContext.BaseDirectory);
 
+        // Đi ngược lên parent directories để định vị root độc lập môi trường chạy.
         while (current is not null)
         {
             var hasSolution = File.Exists(Path.Combine(current.FullName, "TarotNow.slnx"));
@@ -195,6 +233,10 @@ public class ApiAndConfigurationStandardsTests
         throw new DirectoryNotFoundException("Cannot locate Backend root from test output directory.");
     }
 
+    /// <summary>
+    /// Chuẩn hóa đường dẫn về dạng tương đối từ Backend root.
+    /// Luồng này giúp output violation nhất quán và dễ đọc trên CI.
+    /// </summary>
     private static string ToBackendRelativePath(string backendRoot, string fullPath)
     {
         return Path.GetRelativePath(backendRoot, fullPath).Replace('\\', '/');

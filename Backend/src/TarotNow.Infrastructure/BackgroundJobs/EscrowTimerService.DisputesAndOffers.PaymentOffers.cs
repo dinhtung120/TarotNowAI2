@@ -6,6 +6,10 @@ namespace TarotNow.Infrastructure.BackgroundJobs;
 
 public partial class EscrowTimerService
 {
+    /// <summary>
+    /// Xử lý các payment offer add-money đã hết hạn 24h.
+    /// Luồng xử lý: lấy offer pending quá hạn, xử lý từng offer và bắt lỗi cục bộ theo item.
+    /// </summary>
     private async Task ProcessExpiredAddMoneyOffers(
         RefundDependencies dependencies,
         CancellationToken cancellationToken)
@@ -24,10 +28,15 @@ public partial class EscrowTimerService
             catch (Exception ex)
             {
                 _logger.LogError(ex, "[EscrowTimer] Expired add-money offer handling failed: {OfferId}", offer.Id);
+                // Không dừng toàn job khi một offer gặp lỗi.
             }
         }
     }
 
+    /// <summary>
+    /// Hủy một add-money offer đã hết hạn và phát sinh các system/payment reject message liên quan.
+    /// Luồng xử lý: kiểm tra conversation còn ongoing, tránh xử lý trùng, tạo message reject + system, cập nhật timestamp.
+    /// </summary>
     private static async Task ProcessExpiredAddMoneyOfferAsync(
         RefundDependencies dependencies,
         ChatMessageDto offer,
@@ -36,6 +45,7 @@ public partial class EscrowTimerService
         var conversation = await dependencies.ConversationRepository.GetByIdAsync(offer.ConversationId, cancellationToken);
         if (conversation == null || conversation.Status != ConversationStatus.Ongoing)
         {
+            // Chỉ xử lý offer trong conversation còn ongoing để tránh ghi trạng thái sai ngữ cảnh.
             return;
         }
 
@@ -45,6 +55,7 @@ public partial class EscrowTimerService
             cancellationToken);
         if (alreadyHandled)
         {
+            // Edge case: offer đã có phản hồi accept/reject thì không auto-reject nữa.
             return;
         }
 
@@ -60,6 +71,7 @@ public partial class EscrowTimerService
             IsRead = false,
             CreatedAt = now
         }, cancellationToken);
+        // Tạo payment reject tự động với note timeout_24h để hệ thống phía client hiểu lý do.
 
         await dependencies.MessageRepository.AddAsync(new ChatMessageDto
         {
@@ -70,6 +82,7 @@ public partial class EscrowTimerService
             IsRead = false,
             CreatedAt = now
         }, cancellationToken);
+        // Gửi thêm system message để giải thích rõ offer đã tự hủy do quá hạn.
 
         conversation.LastMessageAt = now;
         conversation.UpdatedAt = now;

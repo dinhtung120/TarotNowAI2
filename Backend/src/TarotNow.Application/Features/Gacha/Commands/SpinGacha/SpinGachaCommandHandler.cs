@@ -3,6 +3,7 @@ using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Gacha.Commands.SpinGacha;
 
+// Handler điều phối toàn bộ luồng quay gacha.
 public partial class SpinGachaCommandHandler : IRequestHandler<SpinGachaCommand, SpinGachaResult>
 {
     private readonly IGachaRepository _gachaRepository;
@@ -11,6 +12,10 @@ public partial class SpinGachaCommandHandler : IRequestHandler<SpinGachaCommand,
     private readonly ITitleRepository _titleRepository;
     private readonly IRngService _rngService;
 
+    /// <summary>
+    /// Khởi tạo handler spin gacha.
+    /// Luồng xử lý: nhận repository gacha/log/wallet/title và rng service để thực hiện đầy đủ workflow quay.
+    /// </summary>
     public SpinGachaCommandHandler(
         IGachaRepository gachaRepository,
         IGachaLogRepository gachaLogRepository,
@@ -25,6 +30,10 @@ public partial class SpinGachaCommandHandler : IRequestHandler<SpinGachaCommand,
         _rngService = rngService;
     }
 
+    /// <summary>
+    /// Xử lý command quay gacha.
+    /// Luồng xử lý: thử replay theo idempotency, chuẩn bị context quay, trừ chi phí, thực thi batch spin, cộng thưởng và dựng kết quả.
+    /// </summary>
     public async Task<SpinGachaResult> Handle(SpinGachaCommand request, CancellationToken cancellationToken)
     {
         var replayResult = await HandleIdempotentReplayAsync(
@@ -34,13 +43,16 @@ public partial class SpinGachaCommandHandler : IRequestHandler<SpinGachaCommand,
 
         if (replayResult != null)
         {
+            // Request trùng idempotency key: trả kết quả replay để đảm bảo tính lặp an toàn.
             return replayResult;
         }
 
         var context = await PrepareSpinContextAsync(request, cancellationToken);
+        // Trừ phí quay trước để đảm bảo đủ số dư và thứ tự nghiệp vụ tài chính.
         await DebitSpinCostAsync(request, context, cancellationToken);
 
         var spinState = await ExecuteSpinBatchAsync(request, context, cancellationToken);
+        // Cộng phần thưởng sau khi batch spin hoàn tất.
         await CreditRewardsAsync(request, spinState, cancellationToken);
 
         return BuildSpinResult(context.Banner.HardPityCount, spinState);

@@ -1,13 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Framework mục tiêu cho integration test tầng Infrastructure. -->
     <TargetFramework>net9.0</TargetFramework>
+    <!-- Bật implicit usings để giảm boilerplate. -->
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Bật nullable để tăng độ an toàn kiểu tham chiếu. -->
     <Nullable>enable</Nullable>
+    <!-- Test project không đóng gói NuGet. -->
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Bộ package test + testcontainers cho môi trường tích hợp. -->
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageReference Include="Testcontainers.MongoDb" Version="4.10.0" />
@@ -17,10 +22,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Global using cho Xunit. -->
     <Using Include="Xunit" />
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Tham chiếu project Infrastructure để test trực tiếp service/security implementation. -->
     <ProjectReference Include="..\..\src\TarotNow.Infrastructure\TarotNow.Infrastructure.csproj" />
   </ItemGroup>
 

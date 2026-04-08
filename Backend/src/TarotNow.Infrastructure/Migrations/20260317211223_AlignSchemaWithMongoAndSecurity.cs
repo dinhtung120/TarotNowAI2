@@ -5,9 +5,14 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace TarotNow.Infrastructure.Migrations
 {
-        public partial class AlignSchemaWithMongoAndSecurity : Migration
+    // Migration căn chỉnh schema theo kiến trúc Mongo mới và bổ sung cột bảo mật.
+    public partial class AlignSchemaWithMongoAndSecurity : Migration
     {
-                protected override void Up(MigrationBuilder migrationBuilder)
+        /// <summary>
+        /// Áp dụng thay đổi schema theo hướng nâng cấp.
+        /// Luồng xử lý: drop bảng không còn dùng, thêm cột bảo mật và tạo các bảng tài chính/rút tiền mới.
+        /// </summary>
+        protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
                 name: "reading_sessions");
@@ -140,7 +145,11 @@ namespace TarotNow.Infrastructure.Migrations
                 column: "finance_session_id");
         }
 
-                protected override void Down(MigrationBuilder migrationBuilder)
+        /// <summary>
+        /// Hoàn tác thay đổi schema của migration này khi rollback.
+        /// Luồng xử lý: xóa đối tượng tạo mới và phục hồi trạng thái schema trước migration.
+        /// </summary>
+        protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
                 name: "chat_question_items");

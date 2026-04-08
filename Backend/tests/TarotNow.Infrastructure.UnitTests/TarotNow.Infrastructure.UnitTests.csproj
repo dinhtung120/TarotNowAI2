@@ -1,13 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Framework mục tiêu cho unit test tầng Infrastructure. -->
     <TargetFramework>net9.0</TargetFramework>
+    <!-- Bật implicit usings để giảm code lặp. -->
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Bật nullable để tăng chất lượng mã test. -->
     <Nullable>enable</Nullable>
+    <!-- Test project không đóng gói NuGet. -->
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Bộ package unit test: assertions, mocking và test runner. -->
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="FluentAssertions" Version="8.8.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
@@ -17,10 +22,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Global using cho Xunit. -->
     <Using Include="Xunit" />
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Tham chiếu Infrastructure + Domain để test implementation và entity liên quan. -->
     <ProjectReference Include="..\..\src\TarotNow.Infrastructure\TarotNow.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\TarotNow.Domain\TarotNow.Domain.csproj" />
   </ItemGroup>

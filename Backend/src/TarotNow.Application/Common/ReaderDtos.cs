@@ -1,57 +1,81 @@
-
-
 namespace TarotNow.Application.Common;
 
+// DTO đơn yêu cầu trở thành reader.
 public class ReaderRequestDto
 {
-        public string Id { get; set; } = string.Empty;
+    // Định danh đơn yêu cầu.
+    public string Id { get; set; } = string.Empty;
 
-        public string UserId { get; set; } = string.Empty;
+    // Định danh người dùng gửi yêu cầu.
+    public string UserId { get; set; } = string.Empty;
 
-        public string Status { get; set; } = string.Empty;
+    // Trạng thái xử lý yêu cầu.
+    public string Status { get; set; } = string.Empty;
 
-        public string IntroText { get; set; } = string.Empty;
+    // Nội dung giới thiệu năng lực của ứng viên.
+    public string IntroText { get; set; } = string.Empty;
 
-        public List<string> ProofDocuments { get; set; } = new();
+    // Danh sách tài liệu minh chứng đi kèm.
+    public List<string> ProofDocuments { get; set; } = new();
 
-        public string? AdminNote { get; set; }
+    // Ghi chú phản hồi từ quản trị viên.
+    public string? AdminNote { get; set; }
 
-        public string? ReviewedBy { get; set; }
+    // Định danh quản trị viên đã review.
+    public string? ReviewedBy { get; set; }
 
-        public DateTime? ReviewedAt { get; set; }
+    // Thời điểm yêu cầu được review.
+    public DateTime? ReviewedAt { get; set; }
 
-        public DateTime CreatedAt { get; set; }
+    // Thời điểm tạo yêu cầu.
+    public DateTime CreatedAt { get; set; }
 
-        public DateTime? UpdatedAt { get; set; }
+    // Thời điểm cập nhật yêu cầu gần nhất.
+    public DateTime? UpdatedAt { get; set; }
 }
 
+// DTO hồ sơ reader phục vụ hiển thị danh bạ và profile.
 public class ReaderProfileDto
 {
-        public string Id { get; set; } = string.Empty;
+    // Định danh hồ sơ reader.
+    public string Id { get; set; } = string.Empty;
 
-        public string UserId { get; set; } = string.Empty;
+    // Định danh user sở hữu hồ sơ.
+    public string UserId { get; set; } = string.Empty;
 
-        public string Status { get; set; } = string.Empty;
+    // Trạng thái hoạt động của reader.
+    public string Status { get; set; } = string.Empty;
 
-        public long DiamondPerQuestion { get; set; }
+    // Đơn giá kim cương cho mỗi câu hỏi.
+    public long DiamondPerQuestion { get; set; }
 
-        public string BioVi { get; set; } = string.Empty;
+    // Tiểu sử tiếng Việt.
+    public string BioVi { get; set; } = string.Empty;
 
-        public string BioEn { get; set; } = string.Empty;
+    // Tiểu sử tiếng Anh.
+    public string BioEn { get; set; } = string.Empty;
 
-        public string BioZh { get; set; } = string.Empty;
+    // Tiểu sử tiếng Trung.
+    public string BioZh { get; set; } = string.Empty;
 
-        public List<string> Specialties { get; set; } = new();
+    // Danh sách chuyên môn/năng lực của reader.
+    public List<string> Specialties { get; set; } = new();
 
-        public double AvgRating { get; set; }
+    // Điểm đánh giá trung bình.
+    public double AvgRating { get; set; }
 
-        public int TotalReviews { get; set; }
+    // Tổng số lượt đánh giá.
+    public int TotalReviews { get; set; }
 
-        public string DisplayName { get; set; } = string.Empty;
+    // Tên hiển thị reader.
+    public string DisplayName { get; set; } = string.Empty;
 
-        public string? AvatarUrl { get; set; }
+    // URL ảnh đại diện reader.
+    public string? AvatarUrl { get; set; }
 
-        public DateTime CreatedAt { get; set; }
+    // Thời điểm tạo hồ sơ reader.
+    public DateTime CreatedAt { get; set; }
 
-        public DateTime? UpdatedAt { get; set; }
+    // Thời điểm cập nhật hồ sơ reader gần nhất.
+    public DateTime? UpdatedAt { get; set; }
 }

@@ -7,26 +7,40 @@ using Xunit;
 
 namespace TarotNow.Infrastructure.IntegrationTests.Security;
 
+// Integration test cho Argon2idPasswordHasher.
 public class Argon2idPasswordHasherTests
 {
+    // Hasher thật với policy cố định để kiểm tra hành vi băm/xác minh.
     private readonly Argon2idPasswordHasher _hasher;
 
+    /// <summary>
+    /// Khởi tạo fixture hasher với policy mặc định.
+    /// Luồng này đảm bảo các test chạy trên cùng cấu hình Argon2id.
+    /// </summary>
     public Argon2idPasswordHasherTests()
     {
         _hasher = new Argon2idPasswordHasher(CreateOptions(memoryKb: 19456, iterations: 2, parallelism: 1));
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận HashPassword trả về chuỗi hash hợp lệ khác plain password.
+    /// Luồng này kiểm tra đầu ra băm không rỗng và không lộ mật khẩu gốc.
+    /// </summary>
+    [Fact]
     public void HashPassword_ShouldReturnNonEmptyString()
     {
         var password = "SecurePassword123!";
         var hash = _hasher.HashPassword(password);
 
         Assert.False(string.IsNullOrWhiteSpace(hash));
-        Assert.NotEqual(password, hash); 
+        Assert.NotEqual(password, hash);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận VerifyPassword trả true cho mật khẩu đúng.
+    /// Luồng này kiểm tra khả năng xác minh round-trip hash.
+    /// </summary>
+    [Fact]
     public void VerifyPassword_ShouldReturnTrue_ForCorrectPassword()
     {
         var password = "SecurePassword123!";
@@ -37,7 +51,11 @@ public class Argon2idPasswordHasherTests
         Assert.True(result);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận VerifyPassword trả false cho mật khẩu sai.
+    /// Luồng này bảo vệ nhánh xác thực thất bại.
+    /// </summary>
+    [Fact]
     public void VerifyPassword_ShouldReturnFalse_ForIncorrectPassword()
     {
         var password = "SecurePassword123!";
@@ -46,9 +64,13 @@ public class Argon2idPasswordHasherTests
 
         var result = _hasher.VerifyPassword(hash, incorrectPassword);
 
-        Assert.False(result); 
+        Assert.False(result);
     }
 
+    /// <summary>
+    /// Xác nhận hash chứa policy Argon2 đã cấu hình.
+    /// Luồng này đảm bảo tham số memory/time/parallelism được áp dụng đúng.
+    /// </summary>
     [Fact]
     public void HashPassword_ShouldUseConfiguredArgon2Policy()
     {
@@ -60,6 +82,10 @@ public class Argon2idPasswordHasherTests
         Assert.Contains("p=1", hash);
     }
 
+    /// <summary>
+    /// Xác nhận NeedsRehash nhận diện đúng khi policy được nâng cấp.
+    /// Luồng này kiểm tra backward compatibility giữa hash cũ và policy mới.
+    /// </summary>
     [Fact]
     public void NeedsRehash_ShouldReturnTrue_WhenPolicyChanges()
     {
@@ -71,6 +97,10 @@ public class Argon2idPasswordHasherTests
         Assert.True(strongerHasher.NeedsRehash(hash));
     }
 
+    /// <summary>
+    /// Tạo options Argon2 theo tham số đầu vào.
+    /// Luồng helper này chuẩn hóa setup cấu hình cho các test policy khác nhau.
+    /// </summary>
     private static IOptions<Argon2Options> CreateOptions(int memoryKb, int iterations, int parallelism)
     {
         var options = new Argon2Options

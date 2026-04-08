@@ -1,19 +1,20 @@
-
-
-using System.Reflection;            
-using AutoMapper;
-using FluentValidation;             
-using MediatR;                      
-using Microsoft.Extensions.DependencyInjection; 
+using System.Reflection;
+using FluentValidation;
+using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using TarotNow.Application.Common.Services;
 using TarotNow.Application.Interfaces;
 using TarotNow.Application.Services;
 
 namespace TarotNow.Application;
 
-
+// Điểm vào đăng ký dependency cho tầng Application.
 public static class DependencyInjection
 {
+    /// <summary>
+    /// Đăng ký toàn bộ service MediatR, validation/mapping và domain services của Application.
+    /// Luồng xử lý: lần lượt đăng ký MediatR, validator+mapper, rồi các service nghiệp vụ bổ sung.
+    /// </summary>
     public static IServiceCollection AddApplicationServices(
         this IServiceCollection services,
         params Assembly[] additionalAssemblies)
@@ -25,6 +26,10 @@ public static class DependencyInjection
         return services;
     }
 
+    /// <summary>
+    /// Đăng ký MediatR handlers và pipeline behaviors cho assembly hiện tại và assembly bổ sung.
+    /// Luồng xử lý: đăng ký assembly chính, thêm assembly phụ, rồi cấu hình behavior theo thứ tự.
+    /// </summary>
     private static void RegisterMediatR(IServiceCollection services, Assembly[] additionalAssemblies)
     {
         services.AddMediatR(cfg =>
@@ -35,28 +40,49 @@ public static class DependencyInjection
         });
     }
 
+    /// <summary>
+    /// Đăng ký handlers từ các assembly được truyền thêm.
+    /// Luồng xử lý: duyệt từng assembly và gọi RegisterServicesFromAssembly tương ứng.
+    /// </summary>
     private static void RegisterAdditionalAssemblies(MediatRServiceConfiguration cfg, IEnumerable<Assembly> additionalAssemblies)
     {
         foreach (var assembly in additionalAssemblies)
         {
+            // Bổ sung handler từ module ngoài Application khi cần mở rộng theo plugin/module.
             cfg.RegisterServicesFromAssembly(assembly);
         }
     }
 
+    /// <summary>
+    /// Đăng ký chuỗi pipeline behaviors cho MediatR.
+    /// Luồng xử lý: thêm logging, performance, validation, caching theo thứ tự thực thi mong muốn.
+    /// </summary>
     private static void RegisterPipelineBehaviors(MediatRServiceConfiguration cfg)
     {
+        // Logging đặt đầu để ghi nhận toàn bộ request kể cả khi fail ở behavior sau.
         cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(Behaviors.LoggingBehavior<,>));
+        // Performance đo thời gian sau khi logging đã mở context request.
         cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(Behaviors.PerformanceBehavior<,>));
+        // Validation trước caching để chặn dữ liệu sai ngay từ đầu.
         cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(Behaviors.ValidationBehavior<,>));
+        // Caching ở cuối để cache kết quả đã qua toàn bộ kiểm tra nghiệp vụ.
         cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(Behaviors.CachingBehavior<,>));
     }
 
+    /// <summary>
+    /// Đăng ký FluentValidation và AutoMapper cho assembly hiện tại.
+    /// Luồng xử lý: scan validator trước, sau đó scan profile mapping.
+    /// </summary>
     private static void RegisterValidationAndMapping(IServiceCollection services)
     {
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
         services.AddAutoMapper(Assembly.GetExecutingAssembly());
     }
 
+    /// <summary>
+    /// Đăng ký các domain service dùng trong luồng nghiệp vụ Application.
+    /// Luồng xử lý: cấu hình vòng đời phù hợp cho settlement service và pricing service.
+    /// </summary>
     private static void RegisterDomainServices(IServiceCollection services)
     {
         services.AddScoped<IEscrowSettlementService, EscrowSettlementService>();

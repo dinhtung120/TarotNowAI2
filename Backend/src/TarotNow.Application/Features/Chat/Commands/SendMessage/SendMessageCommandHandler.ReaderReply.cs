@@ -6,6 +6,10 @@ namespace TarotNow.Application.Features.Chat.Commands.SendMessage;
 
 public partial class SendMessageCommandHandler
 {
+    /// <summary>
+    /// Thử đánh dấu item Accepted đã có phản hồi từ Reader.
+    /// Luồng xử lý: bỏ qua khi không đúng điều kiện, ngược lại chạy transaction để cập nhật repliedAt/autoReleaseAt cho các item liên quan.
+    /// </summary>
     private async Task TryMarkReaderRepliedAsync(
         ConversationDto conversation,
         string senderId,
@@ -14,6 +18,7 @@ public partial class SendMessageCommandHandler
     {
         if (ShouldSkipReaderReplyMark(conversation, senderId, messageType))
         {
+            // Không đạt điều kiện phản hồi hợp lệ thì không tác động item tài chính.
             return;
         }
 
@@ -22,6 +27,10 @@ public partial class SendMessageCommandHandler
             cancellationToken);
     }
 
+    /// <summary>
+    /// Kiểm tra có cần bỏ qua đánh dấu reader replied hay không.
+    /// Luồng xử lý: chỉ cho phép khi conversation Ongoing, sender là Reader và loại message là tín hiệu phản hồi thực tế.
+    /// </summary>
     private static bool ShouldSkipReaderReplyMark(
         ConversationDto conversation,
         string senderId,
@@ -32,6 +41,10 @@ public partial class SendMessageCommandHandler
                || IsReaderReplySignalMessageType(messageType) == false;
     }
 
+    /// <summary>
+    /// Đánh dấu các item Accepted chưa replied thành đã replied.
+    /// Luồng xử lý: tải session/items, lọc candidate chưa replied, cập nhật repliedAt + autoReleaseAt rồi lưu.
+    /// </summary>
     private async Task MarkAcceptedItemsAsRepliedAsync(
         string conversationId,
         CancellationToken cancellationToken)
@@ -39,6 +52,7 @@ public partial class SendMessageCommandHandler
         var session = await _financeRepo.GetSessionByConversationRefAsync(conversationId, cancellationToken);
         if (session == null)
         {
+            // Edge case: conversation chưa có finance session.
             return;
         }
 
@@ -49,21 +63,28 @@ public partial class SendMessageCommandHandler
 
         if (candidates.Count == 0)
         {
+            // Không có item cần cập nhật thì thoát sớm để tránh ghi DB thừa.
             return;
         }
 
         var now = DateTime.UtcNow;
         foreach (var item in candidates)
         {
+            // Sau khi Reader phản hồi, bắt đầu cửa sổ auto-release cho item đã accepted.
             item.RepliedAt = now;
             item.AutoReleaseAt = now.AddHours(24);
             item.UpdatedAt = now;
             await _financeRepo.UpdateItemAsync(item, cancellationToken);
         }
 
+        // Persist batch cập nhật replied cho toàn bộ candidate.
         await _financeRepo.SaveChangesAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Kiểm tra loại message có được xem là tín hiệu Reader đã trả lời hay không.
+    /// Luồng xử lý: chỉ chấp nhận các loại message thể hiện nội dung trả lời thực tế.
+    /// </summary>
     private static bool IsReaderReplySignalMessageType(string type)
     {
         return type is ChatMessageType.Text

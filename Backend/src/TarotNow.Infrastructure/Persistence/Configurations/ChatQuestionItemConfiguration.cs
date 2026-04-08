@@ -6,8 +6,13 @@ using TarotNow.Domain.Entities;
 
 namespace TarotNow.Infrastructure.Persistence.Configurations;
 
+// Cấu hình EF mapping cho entity ChatQuestionItem.
 public class ChatQuestionItemConfiguration : IEntityTypeConfiguration<ChatQuestionItem>
 {
+    /// <summary>
+    /// Cấu hình mapping tổng thể cho chat_question_items.
+    /// Luồng xử lý: set table/key và tách cấu hình core columns, timing columns, relationship, indexes.
+    /// </summary>
     public void Configure(EntityTypeBuilder<ChatQuestionItem> builder)
     {
         builder.ToTable("chat_question_items");
@@ -18,6 +23,10 @@ public class ChatQuestionItemConfiguration : IEntityTypeConfiguration<ChatQuesti
         ConfigureIndexes(builder);
     }
 
+    /// <summary>
+    /// Cấu hình các cột nghiệp vụ cốt lõi của item.
+    /// Luồng xử lý: map id, khóa liên kết, trạng thái, số tiền và idempotency key.
+    /// </summary>
     private static void ConfigureCoreColumns(EntityTypeBuilder<ChatQuestionItem> builder)
     {
         builder.Property(x => x.Id).HasColumnName("id");
@@ -32,6 +41,10 @@ public class ChatQuestionItemConfiguration : IEntityTypeConfiguration<ChatQuesti
         builder.Property(x => x.IdempotencyKey).HasColumnName("idempotency_key");
     }
 
+    /// <summary>
+    /// Cấu hình các cột mốc thời gian của vòng đời item.
+    /// Luồng xử lý: map toàn bộ các timestamp offer/accept/reply/release/refund/dispute.
+    /// </summary>
     private static void ConfigureTimingColumns(EntityTypeBuilder<ChatQuestionItem> builder)
     {
         builder.Property(x => x.OfferExpiresAt).HasColumnName("offer_expires_at");
@@ -49,6 +62,10 @@ public class ChatQuestionItemConfiguration : IEntityTypeConfiguration<ChatQuesti
         builder.Property(x => x.UpdatedAt).HasColumnName("updated_at");
     }
 
+    /// <summary>
+    /// Cấu hình quan hệ item -> finance session.
+    /// Luồng xử lý: thiết lập one-to-many, foreign key bắt buộc và cascade delete.
+    /// </summary>
     private static void ConfigureRelationship(EntityTypeBuilder<ChatQuestionItem> builder)
     {
         builder.HasOne(x => x.FinanceSession)
@@ -59,6 +76,10 @@ public class ChatQuestionItemConfiguration : IEntityTypeConfiguration<ChatQuesti
             .HasConstraintName("fk_chat_question_items_chat_finance_sessions_finance_session_id");
     }
 
+    /// <summary>
+    /// Cấu hình index phục vụ truy vấn và chống ghi trùng idempotency.
+    /// Luồng xử lý: tạo index finance_session_id và unique index idempotency_key có filter not null.
+    /// </summary>
     private static void ConfigureIndexes(EntityTypeBuilder<ChatQuestionItem> builder)
     {
         builder.HasIndex(x => x.FinanceSessionId)

@@ -7,39 +7,51 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
+// Repository chính quản lý bộ sưu tập thẻ bài của user.
 public partial class MongoUserCollectionRepository : IUserCollectionRepository
 {
+    // Mongo context truy cập collection user_collections.
     private readonly MongoDbContext _mongoContext;
+    // RNG service dùng cho roll chỉ số khi level up.
     private readonly IRngService _rngService;
 
+    /// <summary>
+    /// Khởi tạo repository user collection.
+    /// Luồng xử lý: nhận MongoDbContext và RNG service từ DI.
+    /// </summary>
     public MongoUserCollectionRepository(MongoDbContext mongoContext, IRngService rngService)
     {
         _mongoContext = mongoContext;
         _rngService = rngService;
     }
 
-        public async Task UpsertCardAsync(Guid userId, int cardId, long expToGain, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Upsert thẻ bài cho user khi draw/nhận exp.
+    /// Luồng xử lý: lấy level trước upsert, chạy pipeline upsert, rồi áp dụng random stats nếu có level tăng.
+    /// </summary>
+    public async Task UpsertCardAsync(Guid userId, int cardId, long expToGain, CancellationToken cancellationToken = default)
     {
         var now = DateTime.UtcNow;
         var filter = BuildUserCardFilter(userId, cardId);
 
-        
         var existingDoc = await _mongoContext.UserCollections.Find(filter).FirstOrDefaultAsync(cancellationToken);
         int docBeforeUpsertLevel = existingDoc?.Level ?? 0;
+        // Cần snapshot level trước để xác định chính xác số cấp vừa tăng sau upsert.
 
         var update = BuildUpsertUpdate(userId, cardId, expToGain, now);
 
         var (updateResult, newDoc) = await UpsertAndGetDocAsync(filter, update, cancellationToken);
-        
-        
-        
-        
         if (updateResult.IsAcknowledged && newDoc != null && newDoc.Level > docBeforeUpsertLevel)
         {
             await ApplyRandomStatsOnLevelUpAsync(newDoc, docBeforeUpsertLevel, cancellationToken);
+            // Chỉ roll stats khi level thực sự tăng để tránh cộng chỉ số sai.
         }
     }
 
+    /// <summary>
+    /// Thực thi upsert và đọc lại document mới nhất.
+    /// Luồng xử lý: UpdateOneAsync IsUpsert=true rồi query lại theo cùng filter.
+    /// </summary>
     private async Task<(UpdateResult, UserCollectionDocument?)> UpsertAndGetDocAsync(
         FilterDefinition<UserCollectionDocument> filter,
         PipelineUpdateDefinition<UserCollectionDocument> update,
@@ -55,23 +67,26 @@ public partial class MongoUserCollectionRepository : IUserCollectionRepository
         return (result, newDoc);
     }
 
+    /// <summary>
+    /// Áp dụng roll chỉ số ngẫu nhiên cho các cấp mới vừa đạt.
+    /// Luồng xử lý: duyệt từng level mới, tính bonus atk/def, lưu lịch sử roll và cập nhật cộng dồn vào document.
+    /// </summary>
     private async Task ApplyRandomStatsOnLevelUpAsync(UserCollectionDocument doc, int oldLevel, CancellationToken ct)
     {
         int levelsGained = doc.Level - oldLevel;
         if (levelsGained <= 0) return;
+        // Edge case: không tăng cấp thì không thực hiện roll.
 
         int totalAtkBonus = 0;
         int totalDefBonus = 0;
         var rollRecords = new List<StatRollRecord>();
 
-        
         for (int pLevel = oldLevel + 1; pLevel <= doc.Level; pLevel++)
         {
             var (min, max) = UserCollection.GetStatBonusRange(pLevel);
-            
-            
-            
-            int atkBonus = Random.Shared.Next(min, max + 1); 
+            // Mỗi cấp có range bonus riêng theo rule domain progression.
+
+            int atkBonus = Random.Shared.Next(min, max + 1);
             int defBonus = Random.Shared.Next(min, max + 1);
 
             totalAtkBonus += atkBonus;
@@ -86,7 +101,6 @@ public partial class MongoUserCollectionRepository : IUserCollectionRepository
             });
         }
 
-        
         var filter = Builders<UserCollectionDocument>.Filter.Eq(u => u.Id, doc.Id);
         var update = Builders<UserCollectionDocument>.Update
             .Inc(u => u.Atk, totalAtkBonus)
@@ -102,18 +116,22 @@ public partial class MongoUserCollectionRepository : IUserCollectionRepository
         }
 
         await _mongoContext.UserCollections.UpdateOneAsync(filter, update, cancellationToken: ct);
+        // Cập nhật atomically để giữ đồng bộ giữa chỉ số hiện tại và lịch sử roll.
     }
 
-        public async Task<IEnumerable<UserCollection>> GetUserCollectionAsync(Guid userId, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Lấy bộ sưu tập thẻ của user.
+    /// Luồng xử lý: lọc theo userId + chưa xóa, sort level giảm dần và map sang aggregate domain.
+    /// </summary>
+    public async Task<IEnumerable<UserCollection>> GetUserCollectionAsync(Guid userId, CancellationToken cancellationToken = default)
     {
         var userIdStr = userId.ToString();
 
         var docs = await _mongoContext.UserCollections
             .Find(u => u.UserId == userIdStr && !u.IsDeleted)
-            .SortByDescending(u => u.Level) 
+            .SortByDescending(u => u.Level)
             .ToListAsync(cancellationToken);
 
         return docs.Select(MapToEntity);
     }
-
 }

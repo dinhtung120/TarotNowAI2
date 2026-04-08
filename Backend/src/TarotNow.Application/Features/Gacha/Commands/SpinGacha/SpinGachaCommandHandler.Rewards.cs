@@ -6,6 +6,10 @@ namespace TarotNow.Application.Features.Gacha.Commands.SpinGacha;
 
 public partial class SpinGachaCommandHandler
 {
+    /// <summary>
+    /// Áp dụng phần thưởng của một item vừa quay được vào batch state hoặc hệ thống danh hiệu.
+    /// Luồng xử lý: reward type gold/diamond thì cộng dồn amount; reward type title thì grant title ngay cho user.
+    /// </summary>
     private async Task ApplyRewardAsync(
         Guid userId,
         GachaBannerItem selectedItem,
@@ -14,22 +18,29 @@ public partial class SpinGachaCommandHandler
     {
         if (selectedItem.RewardType == GachaRewardType.Gold)
         {
+            // Cộng dồn vàng để credit một lần sau batch.
             state.TotalGoldReward += ParseRewardAmount(selectedItem.RewardValue);
             return;
         }
 
         if (selectedItem.RewardType == GachaRewardType.Diamond)
         {
+            // Cộng dồn kim cương thưởng để credit một lần sau batch.
             state.TotalDiamondReward += ParseRewardAmount(selectedItem.RewardValue);
             return;
         }
 
         if (selectedItem.RewardType == GachaRewardType.Title)
         {
+            // Title là phần thưởng phi tiền tệ nên grant ngay theo từng lượt.
             await _titleRepository.GrantTitleAsync(userId, selectedItem.RewardValue, cancellationToken);
         }
     }
 
+    /// <summary>
+    /// Parse reward amount từ chuỗi cấu hình item.
+    /// Luồng xử lý: parse long thành công thì trả giá trị; nếu không parse được thì ném lỗi cấu hình reward.
+    /// </summary>
     private static long ParseRewardAmount(string rewardValue)
     {
         if (long.TryParse(rewardValue, out var amount))
@@ -40,6 +51,10 @@ public partial class SpinGachaCommandHandler
         throw new BadRequestException($"Invalid gacha reward amount: {rewardValue}");
     }
 
+    /// <summary>
+    /// Map entity banner item sang DTO kết quả lượt quay.
+    /// Luồng xử lý: sao chép rarity/reward/value và metadata hiển thị.
+    /// </summary>
     private static SpinGachaItemResult ToSpinItemResult(GachaBannerItem item)
     {
         return new SpinGachaItemResult

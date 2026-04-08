@@ -4,9 +4,14 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace TarotNow.Infrastructure.Migrations
 {
-        public partial class IncreaseEntitlementConsumeIdempotencyKeyLength : Migration
+    // Migration tăng độ dài idempotency_key của entitlement_consumes để tránh truncate key dài.
+    public partial class IncreaseEntitlementConsumeIdempotencyKeyLength : Migration
     {
-                protected override void Up(MigrationBuilder migrationBuilder)
+        /// <summary>
+        /// Áp dụng thay đổi schema theo hướng nâng cấp.
+        /// Luồng xử lý: tăng max length idempotency_key từ 100 lên 255 ký tự.
+        /// </summary>
+        protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<string>(
                 name: "idempotency_key",
@@ -19,7 +24,11 @@ namespace TarotNow.Infrastructure.Migrations
                 oldMaxLength: 100);
         }
 
-                protected override void Down(MigrationBuilder migrationBuilder)
+        /// <summary>
+        /// Hoàn tác thay đổi schema của migration này khi rollback.
+        /// Luồng xử lý: trả max length idempotency_key về 100 ký tự như trước.
+        /// </summary>
+        protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<string>(
                 name: "idempotency_key",

@@ -1,14 +1,18 @@
 
-
 namespace TarotNow.Domain.Enums;
 
+// Tập hằng trạng thái xử lý report bài viết.
 public static class PostReportStatus
 {
-        public const string Pending = "pending";
+    // Mới tạo, chưa xử lý.
+    public const string Pending = "pending";
 
-        public const string Processing = "processing";
+    // Đang được đội moderation xử lý.
+    public const string Processing = "processing";
 
-        public const string Resolved = "resolved";
+    // Đã xử lý xong.
+    public const string Resolved = "resolved";
 
-        public const string Rejected = "rejected";
+    // Bị từ chối report.
+    public const string Rejected = "rejected";
 }

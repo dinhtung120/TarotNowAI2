@@ -5,8 +5,13 @@ namespace TarotNow.Application.Features.Chat.Commands.RequestConversationComplet
 
 public partial class RequestConversationCompleteCommandHandler
 {
+    // Mô tả dữ liệu đầu vào để ghi system message theo đúng loại/nội dung/thời điểm.
     private readonly record struct SystemMessageSpec(string Type, string Content, DateTime? CreatedAt);
 
+    /// <summary>
+    /// Hủy đề nghị cộng thêm tiền đang chờ duyệt khi bắt đầu luồng yêu cầu hoàn thành.
+    /// Luồng xử lý: tìm offer pending gần nhất, nếu có thì ghi message từ chối offer rồi ghi thêm message giải thích lý do hủy.
+    /// </summary>
     private async Task<DateTime?> CancelPendingAddMoneyOfferAsync(
         ConversationDto conversation,
         string actorId,
@@ -18,6 +23,7 @@ public partial class RequestConversationCompleteCommandHandler
 
         if (pendingOffer == null)
         {
+            // Không có offer pending thì không cần phát sinh system message hủy.
             return null;
         }
 
@@ -38,6 +44,10 @@ public partial class RequestConversationCompleteCommandHandler
             cancellationToken);
     }
 
+    /// <summary>
+    /// Thêm một system message vào conversation và trả về mốc thời gian đã ghi.
+    /// Luồng xử lý: map dữ liệu từ spec sang DTO, lưu vào repository, rồi trả CreatedAt để đồng bộ timeline.
+    /// </summary>
     private async Task<DateTime> AddSystemMessageAsync(
         ConversationDto conversation,
         string senderId,
@@ -55,6 +65,7 @@ public partial class RequestConversationCompleteCommandHandler
         };
 
         await _chatMessageRepository.AddAsync(message, cancellationToken);
+        // Trả lại CreatedAt thực tế để các bước sau cập nhật LastMessageAt chính xác.
         return message.CreatedAt;
     }
 }

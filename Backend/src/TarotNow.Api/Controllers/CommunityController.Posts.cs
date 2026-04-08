@@ -13,10 +13,17 @@ namespace TarotNow.Api.Controllers;
 
 public partial class CommunityController
 {
-        [HttpPost("posts")]
+    /// <summary>
+    /// Tạo bài viết cộng đồng mới.
+    /// Luồng xử lý: lấy user hiện tại làm author, gửi command tạo post, trả CreatedAtAction.
+    /// </summary>
+    /// <param name="body">Payload tạo bài viết.</param>
+    /// <returns>Post vừa tạo với HTTP 201.</returns>
+    [HttpPost("posts")]
     [EnableRateLimiting("community-write")]
     public async Task<IActionResult> CreatePost([FromBody] CreatePostBody body)
     {
+        // Mapping rõ ràng từ DTO sang command để handler tập trung xử lý rule nghiệp vụ.
         var result = await _mediator.Send(new CreatePostCommand
         {
             AuthorId = GetRequiredUserId(),
@@ -27,16 +34,24 @@ public partial class CommunityController
         return CreatedAtAction(nameof(GetPostDetail), new { id = result.Id }, result);
     }
 
-        [HttpPost("images")]
+    /// <summary>
+    /// Upload ảnh dùng trong bài viết cộng đồng.
+    /// Luồng xử lý: kiểm tra file đầu vào, mở stream đọc, gửi command upload và trả URL ảnh.
+    /// </summary>
+    /// <param name="file">File ảnh upload từ multipart form.</param>
+    /// <returns>URL ảnh sau khi upload thành công.</returns>
+    [HttpPost("images")]
     [RequestSizeLimit(10 * 1024 * 1024)]
     [EnableRateLimiting("community-write")]
     public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
     {
         if (file == null || file.Length == 0)
         {
+            // Edge case file rỗng: chặn sớm để tránh tốn tài nguyên xử lý media.
             throw new BadRequestException("File rỗng.");
         }
 
+        // Dùng stream để xử lý file theo kiểu streaming, tránh giữ toàn bộ file trên bộ nhớ.
         using var stream = file.OpenReadStream();
         var url = await _mediator.Send(new UploadPostImageCommand
         {
@@ -48,13 +63,23 @@ public partial class CommunityController
         return Ok(new { success = true, url });
     }
 
-        [HttpGet("posts")]
+    /// <summary>
+    /// Lấy feed bài viết cộng đồng có phân trang và bộ lọc.
+    /// Luồng xử lý: gửi query với ngữ cảnh viewer hiện tại để backend áp dụng rule hiển thị.
+    /// </summary>
+    /// <param name="page">Trang hiện tại.</param>
+    /// <param name="pageSize">Số mục mỗi trang.</param>
+    /// <param name="authorId">Bộ lọc tác giả tùy chọn.</param>
+    /// <param name="visibility">Bộ lọc mức hiển thị tùy chọn.</param>
+    /// <returns>Dữ liệu feed và metadata phân trang.</returns>
+    [HttpGet("posts")]
     public async Task<IActionResult> GetFeed(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] string? authorId = null,
         [FromQuery] string? visibility = null)
     {
+        // ViewerId được truyền xuống để handler xử lý đúng quyền xem theo visibility.
         var (items, total) = await _mediator.Send(new GetFeedQuery
         {
             ViewerId = GetRequiredUserId(),
@@ -67,7 +92,12 @@ public partial class CommunityController
         return Ok(new { success = true, data = items, metadata = new { totalCount = total, page, pageSize } });
     }
 
-        [HttpGet("posts/{id}")]
+    /// <summary>
+    /// Lấy chi tiết một bài viết cộng đồng.
+    /// </summary>
+    /// <param name="id">Id bài viết.</param>
+    /// <returns>Thông tin chi tiết bài viết.</returns>
+    [HttpGet("posts/{id}")]
     public async Task<IActionResult> GetPostDetail(string id)
     {
         var post = await _mediator.Send(new GetPostDetailQuery
@@ -79,7 +109,14 @@ public partial class CommunityController
         return Ok(post);
     }
 
-        [HttpPut("posts/{id}")]
+    /// <summary>
+    /// Cập nhật nội dung một bài viết.
+    /// Luồng xử lý: gắn author hiện tại để handler xác thực quyền sửa bài.
+    /// </summary>
+    /// <param name="id">Id bài viết cần cập nhật.</param>
+    /// <param name="body">Nội dung cập nhật.</param>
+    /// <returns>HTTP 204 khi cập nhật thành công.</returns>
+    [HttpPut("posts/{id}")]
     [EnableRateLimiting("community-write")]
     public async Task<IActionResult> UpdatePost(string id, [FromBody] UpdatePostBody body)
     {
@@ -93,10 +130,17 @@ public partial class CommunityController
         return NoContent();
     }
 
-        [HttpDelete("posts/{id}")]
+    /// <summary>
+    /// Xóa một bài viết cộng đồng.
+    /// Luồng xử lý: lấy role hiện tại, gửi command xóa để handler áp dụng đúng rule quyền xóa.
+    /// </summary>
+    /// <param name="id">Id bài viết cần xóa.</param>
+    /// <returns>HTTP 204 khi xóa thành công.</returns>
+    [HttpDelete("posts/{id}")]
     [EnableRateLimiting("community-write")]
     public async Task<IActionResult> DeletePost(string id)
     {
+        // Role được gửi xuống để hỗ trợ nhánh quyền admin/moderator khác với author thường.
         var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? string.Empty;
         await _mediator.Send(new DeletePostCommand
         {

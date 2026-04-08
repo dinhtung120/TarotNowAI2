@@ -7,24 +7,38 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
+// Repository quản lý yêu cầu đăng ký reader trên Mongo.
 public class MongoReaderRequestRepository : IReaderRequestRepository
 {
+    // Mongo context truy cập collection reader_requests.
     private readonly MongoDbContext _context;
 
+    /// <summary>
+    /// Khởi tạo repository reader request.
+    /// Luồng xử lý: nhận MongoDbContext từ DI để thao tác dữ liệu yêu cầu.
+    /// </summary>
     public MongoReaderRequestRepository(MongoDbContext context)
     {
         _context = context;
     }
 
-        public async Task AddAsync(ReaderRequestDto request, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Thêm mới yêu cầu đăng ký reader.
+    /// Luồng xử lý: map DTO sang document, insert Mongo và gán id phát sinh lại cho DTO.
+    /// </summary>
+    public async Task AddAsync(ReaderRequestDto request, CancellationToken cancellationToken = default)
     {
         var doc = ToDocument(request);
         await _context.ReaderRequests.InsertOneAsync(doc, cancellationToken: cancellationToken);
-        
         request.Id = doc.Id;
+        // Giữ đồng bộ id để caller phản hồi lại client chính xác.
     }
 
-        public async Task<ReaderRequestDto?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Lấy yêu cầu theo id nếu chưa bị xóa mềm.
+    /// Luồng xử lý: filter id + is_deleted=false rồi map DTO.
+    /// </summary>
+    public async Task<ReaderRequestDto?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
     {
         var filter = Builders<ReaderRequestDocument>.Filter.And(
             Builders<ReaderRequestDocument>.Filter.Eq(r => r.Id, id),
@@ -35,7 +49,11 @@ public class MongoReaderRequestRepository : IReaderRequestRepository
         return doc == null ? null : ToDto(doc);
     }
 
-        public async Task<ReaderRequestDto?> GetLatestByUserIdAsync(string userId, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Lấy yêu cầu mới nhất của một user.
+    /// Luồng xử lý: filter theo userId + chưa xóa, sort created_at desc và lấy bản ghi đầu.
+    /// </summary>
+    public async Task<ReaderRequestDto?> GetLatestByUserIdAsync(string userId, CancellationToken cancellationToken = default)
     {
         var filter = Builders<ReaderRequestDocument>.Filter.And(
             Builders<ReaderRequestDocument>.Filter.Eq(r => r.UserId, userId),
@@ -50,12 +68,17 @@ public class MongoReaderRequestRepository : IReaderRequestRepository
         return doc == null ? null : ToDto(doc);
     }
 
-        public async Task<(IEnumerable<ReaderRequestDto> Requests, long TotalCount)> GetPaginatedAsync(
+    /// <summary>
+    /// Lấy danh sách yêu cầu reader có phân trang và lọc trạng thái.
+    /// Luồng xử lý: chuẩn hóa page/pageSize, filter is_deleted=false + status tùy chọn, đếm tổng rồi trả trang mới nhất trước.
+    /// </summary>
+    public async Task<(IEnumerable<ReaderRequestDto> Requests, long TotalCount)> GetPaginatedAsync(
         int page, int pageSize, string? statusFilter = null,
         CancellationToken cancellationToken = default)
     {
         var normalizedPage = page < 1 ? 1 : page;
         var normalizedPageSize = pageSize <= 0 ? 20 : Math.Min(pageSize, 200);
+        // Chặn page size lớn để tránh tải nặng cho dashboard admin.
 
         var filterBuilder = Builders<ReaderRequestDocument>.Filter;
         var filter = filterBuilder.Eq(r => r.IsDeleted, false);
@@ -63,6 +86,7 @@ public class MongoReaderRequestRepository : IReaderRequestRepository
         if (!string.IsNullOrEmpty(statusFilter))
         {
             filter = filterBuilder.And(filter, filterBuilder.Eq(r => r.Status, statusFilter));
+            // Chỉ lọc status khi caller truyền giá trị cụ thể.
         }
 
         var totalCount = await _context.ReaderRequests.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
@@ -77,7 +101,11 @@ public class MongoReaderRequestRepository : IReaderRequestRepository
         return (docs.Select(ToDto), totalCount);
     }
 
-        public async Task UpdateAsync(ReaderRequestDto request, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Cập nhật yêu cầu reader.
+    /// Luồng xử lý: replace document theo id sau khi gán UpdatedAt hiện tại.
+    /// </summary>
+    public async Task UpdateAsync(ReaderRequestDto request, CancellationToken cancellationToken = default)
     {
         var doc = ToDocument(request);
         doc.UpdatedAt = DateTime.UtcNow;
@@ -85,9 +113,11 @@ public class MongoReaderRequestRepository : IReaderRequestRepository
         await _context.ReaderRequests.ReplaceOneAsync(filter, doc, cancellationToken: cancellationToken);
     }
 
-    
-
-        private static ReaderRequestDocument ToDocument(ReaderRequestDto dto)
+    /// <summary>
+    /// Map ReaderRequestDto sang document Mongo.
+    /// Luồng xử lý: chuẩn hóa id và copy đầy đủ metadata xét duyệt.
+    /// </summary>
+    private static ReaderRequestDocument ToDocument(ReaderRequestDto dto)
     {
         return new ReaderRequestDocument
         {
@@ -104,7 +134,11 @@ public class MongoReaderRequestRepository : IReaderRequestRepository
         };
     }
 
-        private static ReaderRequestDto ToDto(ReaderRequestDocument doc)
+    /// <summary>
+    /// Map ReaderRequestDocument sang DTO.
+    /// Luồng xử lý: chuyển đổi trực tiếp dữ liệu phục vụ API quản lý yêu cầu reader.
+    /// </summary>
+    private static ReaderRequestDto ToDto(ReaderRequestDocument doc)
     {
         return new ReaderRequestDto
         {

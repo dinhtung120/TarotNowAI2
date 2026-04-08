@@ -5,9 +5,14 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace TarotNow.Infrastructure.Migrations
 {
-        public partial class ResetSchema : Migration
+    // Migration khởi tạo lại schema nền cho các bảng cốt lõi của hệ thống.
+    public partial class ResetSchema : Migration
     {
-                protected override void Up(MigrationBuilder migrationBuilder)
+        /// <summary>
+        /// Áp dụng thay đổi schema theo hướng nâng cấp.
+        /// Luồng xử lý: tạo mới bảng, khóa, index và ràng buộc cần thiết cho phiên bản schema này.
+        /// </summary>
+        protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
                 name: "deposit_promotions",
@@ -342,7 +347,11 @@ namespace TarotNow.Infrastructure.Migrations
                 unique: true);
         }
 
-                protected override void Down(MigrationBuilder migrationBuilder)
+        /// <summary>
+        /// Hoàn tác thay đổi schema của migration này khi rollback.
+        /// Luồng xử lý: xóa các đối tượng đã tạo ở Up theo thứ tự an toàn quan hệ phụ thuộc.
+        /// </summary>
+        protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
                 name: "ai_requests");

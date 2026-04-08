@@ -5,52 +5,67 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace TarotNow.Infrastructure.Persistence.MongoDocuments;
 
+// Document bài viết cộng đồng.
 public class CommunityPostDocument
 {
-        [BsonId]
+    // ObjectId của bài viết.
+    [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = string.Empty;
 
-        [BsonElement("author_id")]
+    // User tác giả bài viết.
+    [BsonElement("author_id")]
     public string AuthorId { get; set; } = string.Empty;
 
-        [BsonElement("author_display_name")]
+    // Tên hiển thị snapshot của tác giả khi đăng bài.
+    [BsonElement("author_display_name")]
     public string AuthorDisplayName { get; set; } = string.Empty;
 
-        [BsonElement("author_avatar_url")]
+    // Avatar snapshot để hiển thị feed nhanh.
+    [BsonElement("author_avatar_url")]
     [BsonIgnoreIfNull]
     public string? AuthorAvatarUrl { get; set; }
 
-        [BsonElement("content")]
+    // Nội dung bài viết.
+    [BsonElement("content")]
     public string Content { get; set; } = string.Empty;
 
-        [BsonElement("visibility")]
+    // Quyền hiển thị bài (public/private...).
+    [BsonElement("visibility")]
     public string Visibility { get; set; } = string.Empty;
 
-        [BsonElement("reactions_count")]
+    // Số lượng reaction theo từng loại để render tức thì.
+    [BsonElement("reactions_count")]
     public Dictionary<string, int> ReactionsCount { get; set; } = new();
 
-        [BsonElement("total_reactions")]
+    // Tổng số reaction của bài.
+    [BsonElement("total_reactions")]
     public int TotalReactions { get; set; } = 0;
 
-        [BsonElement("comments_count")]
+    // Tổng số bình luận của bài.
+    [BsonElement("comments_count")]
     public int CommentsCount { get; set; } = 0;
 
-        [BsonElement("is_deleted")]
+    // Soft-delete flag cho bài viết.
+    [BsonElement("is_deleted")]
     public bool IsDeleted { get; set; } = false;
 
-        [BsonElement("deleted_at")]
+    // Mốc thời gian bài bị xóa mềm.
+    [BsonElement("deleted_at")]
     [BsonIgnoreIfNull]
     public DateTime? DeletedAt { get; set; }
 
-        [BsonElement("deleted_by")]
+    // Tác nhân thực hiện xóa.
+    [BsonElement("deleted_by")]
     [BsonIgnoreIfNull]
     public string? DeletedBy { get; set; }
 
-        [BsonElement("created_at")]
+    // Thời điểm tạo bài viết.
+    [BsonElement("created_at")]
     public DateTime CreatedAt { get; set; }
 
-        [BsonElement("updated_at")]
+    // Thời điểm cập nhật gần nhất.
+    [BsonElement("updated_at")]
     [BsonIgnoreIfNull]
     public DateTime? UpdatedAt { get; set; }
 }

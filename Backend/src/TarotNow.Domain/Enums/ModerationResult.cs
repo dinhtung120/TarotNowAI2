@@ -1,14 +1,18 @@
 
-
 namespace TarotNow.Domain.Enums;
 
+// Tập hằng kết quả xử lý moderation cho nội dung cộng đồng.
 public static class ModerationResult
 {
-        public const string Warn = "warn";
+    // Cảnh báo người dùng vi phạm.
+    public const string Warn = "warn";
 
-        public const string RemovePost = "remove_post";
+    // Gỡ bài viết vi phạm.
+    public const string RemovePost = "remove_post";
 
-        public const string FreezeAccount = "freeze";
+    // Đóng băng tài khoản vi phạm.
+    public const string FreezeAccount = "freeze";
 
-        public const string NoAction = "no_action";
+    // Không áp dụng hành động xử lý.
+    public const string NoAction = "no_action";
 }

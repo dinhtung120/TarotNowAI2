@@ -4,9 +4,14 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace TarotNow.Infrastructure.Migrations
 {
-        public partial class UpdateGachaIndexes : Migration
+    // Migration cập nhật cấu trúc index gacha_reward_logs để tối ưu truy vấn theo rarity.
+    public partial class UpdateGachaIndexes : Migration
     {
-                protected override void Up(MigrationBuilder migrationBuilder)
+        /// <summary>
+        /// Áp dụng thay đổi schema theo hướng nâng cấp.
+        /// Luồng xử lý: thay index user+banner+created_at bằng index user+banner+rarity+created_at.
+        /// </summary>
+        protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(
                 name: "ix_gacha_reward_logs_user_id_banner_id_created_at",
@@ -18,7 +23,11 @@ namespace TarotNow.Infrastructure.Migrations
                 columns: new[] { "user_id", "banner_id", "rarity", "created_at" });
         }
 
-                protected override void Down(MigrationBuilder migrationBuilder)
+        /// <summary>
+        /// Hoàn tác thay đổi schema của migration này khi rollback.
+        /// Luồng xử lý: khôi phục index cũ user+banner+created_at.
+        /// </summary>
+        protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(
                 name: "ix_gacha_reward_logs_user_id_banner_id_rarity_created_at",

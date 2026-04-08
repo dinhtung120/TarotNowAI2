@@ -1,13 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Framework mục tiêu cho project kiến trúc test. -->
     <TargetFramework>net9.0</TargetFramework>
+    <!-- Bật implicit usings để giảm boilerplate. -->
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Bật nullable để nâng chất lượng mã test. -->
     <Nullable>enable</Nullable>
+    <!-- Test project không đóng gói NuGet. -->
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Bộ package kiểm thử kiến trúc: Roslyn + assertions + test runner. -->
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="FluentAssertions" Version="8.8.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
@@ -17,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Global using cho Xunit. -->
     <Using Include="Xunit" />
   </ItemGroup>
 

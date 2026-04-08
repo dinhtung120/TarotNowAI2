@@ -4,12 +4,17 @@ namespace TarotNow.Application.Features.Admin.Commands.ResolveDispute;
 
 public partial class ResolveDisputeCommandHandler
 {
+    /// <summary>
+    /// Chuyển phần tiền net cho reader trong nhánh split.
+    /// Luồng xử lý: bỏ qua nếu net <= 0, ngược lại gọi release ví với metadata/idempotency chuẩn.
+    /// </summary>
     private async Task ReleaseSplitToReaderAsync(
         SplitTransferContext context,
         CancellationToken cancellationToken)
     {
         if (context.Split.ReaderNet <= 0)
         {
+            // Edge case phần reader net bằng 0: không tạo bút toán release.
             return;
         }
 
@@ -25,12 +30,17 @@ public partial class ResolveDisputeCommandHandler
             cancellationToken: cancellationToken);
     }
 
+    /// <summary>
+    /// Thu phí nền tảng từ phần chia cho reader trong nhánh split.
+    /// Luồng xử lý: bỏ qua khi fee <= 0, ngược lại tạo bút toán consume phí.
+    /// </summary>
     private async Task ConsumeSplitFeeAsync(
         SplitTransferContext context,
         CancellationToken cancellationToken)
     {
         if (context.Split.Fee <= 0)
         {
+            // Edge case fee bằng 0: không phát sinh bút toán consume.
             return;
         }
 
@@ -45,12 +55,17 @@ public partial class ResolveDisputeCommandHandler
             cancellationToken: cancellationToken);
     }
 
+    /// <summary>
+    /// Hoàn phần còn lại về user trong nhánh split.
+    /// Luồng xử lý: bỏ qua khi refund amount <= 0, ngược lại tạo bút toán refund.
+    /// </summary>
     private async Task RefundSplitToUserAsync(
         SplitTransferContext context,
         CancellationToken cancellationToken)
     {
         if (context.Split.RefundAmount <= 0)
         {
+            // Edge case không còn phần refund: bỏ qua bước hoàn tiền.
             return;
         }
 

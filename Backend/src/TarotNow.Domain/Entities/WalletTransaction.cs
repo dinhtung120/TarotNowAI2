@@ -1,48 +1,61 @@
 
-
 using System;
 
 namespace TarotNow.Domain.Entities;
 
+// Entity bút toán ví để lưu vết thay đổi số dư và metadata đối soát cho từng giao dịch.
 public class WalletTransaction
 {
-    
+    // Định danh bút toán.
     public Guid Id { get; private set; }
-    
+
+    // Người dùng sở hữu bút toán.
     public Guid UserId { get; private set; }
-    
-    
+
+    // Loại tiền của bút toán.
     public string Currency { get; private set; } = string.Empty;
-    
+
+    // Loại nghiệp vụ giao dịch.
     public string Type { get; private set; } = string.Empty;
-    
-    
+
+    // Giá trị biến động số dư.
     public long Amount { get; private set; }
-    
-    
+
+    // Số dư trước khi ghi bút toán.
     public long BalanceBefore { get; private set; }
-    
+
+    // Số dư sau khi ghi bút toán.
     public long BalanceAfter { get; private set; }
-    
-    
+
+    // Nguồn nghiệp vụ phát sinh bút toán.
     public string? ReferenceSource { get; private set; }
-    
+
+    // Định danh bản ghi nguồn nghiệp vụ.
     public string? ReferenceId { get; private set; }
-    
-    
+
+    // Mô tả bút toán.
     public string? Description { get; private set; }
-    
+
+    // Metadata mở rộng ở dạng JSON.
     public string? MetadataJson { get; private set; }
-    
-    
+
+    // Khóa idempotency của bút toán.
     public string? IdempotencyKey { get; private set; }
-    
-    
+
+    // Thời điểm tạo bút toán.
     public DateTime CreatedAt { get; private set; }
 
-    protected WalletTransaction() { } 
+    /// <summary>
+    /// Constructor rỗng cho ORM materialization.
+    /// Luồng xử lý: để EF khôi phục entity từ dữ liệu đã lưu.
+    /// </summary>
+    protected WalletTransaction() { }
 
-        private WalletTransaction(Guid userId, string currency, string type, long amount, long balanceBefore, long balanceAfter, string? referenceSource, string? referenceId, string? description, string? metadataJson, string? idempotencyKey)
+    /// <summary>
+    /// Constructor nội bộ tạo bút toán với đầy đủ dữ liệu đối soát.
+    /// Luồng xử lý: gán snapshot số dư trước/sau cùng metadata nguồn và mốc tạo.
+    /// </summary>
+    private WalletTransaction(Guid userId, string currency, string type, long amount, long balanceBefore, long balanceAfter, string? referenceSource, string? referenceId, string? description, string? metadataJson, string? idempotencyKey)
     {
         Id = Guid.NewGuid();
         UserId = userId;
@@ -59,7 +72,11 @@ public class WalletTransaction
         CreatedAt = DateTime.UtcNow;
     }
 
-        public static WalletTransaction Create(WalletTransactionCreateRequest request)
+    /// <summary>
+    /// Factory tạo bút toán ví từ request chuẩn hóa.
+    /// Luồng xử lý: chuyển từng trường từ request vào constructor nội bộ và trả entity hoàn chỉnh.
+    /// </summary>
+    public static WalletTransaction Create(WalletTransactionCreateRequest request)
     {
         return new WalletTransaction(
             request.UserId,
@@ -76,17 +93,39 @@ public class WalletTransaction
     }
 }
 
+// Request tạo bút toán ví, gom toàn bộ dữ liệu đầu vào phục vụ ghi ledger.
 public sealed class WalletTransactionCreateRequest
 {
+    // Người dùng sở hữu bút toán.
     public Guid UserId { get; init; }
+
+    // Loại tiền.
     public string Currency { get; init; } = string.Empty;
+
+    // Loại giao dịch.
     public string Type { get; init; } = string.Empty;
+
+    // Giá trị biến động.
     public long Amount { get; init; }
+
+    // Số dư trước giao dịch.
     public long BalanceBefore { get; init; }
+
+    // Số dư sau giao dịch.
     public long BalanceAfter { get; init; }
+
+    // Nguồn nghiệp vụ.
     public string? ReferenceSource { get; init; }
+
+    // Mã tham chiếu nguồn.
     public string? ReferenceId { get; init; }
+
+    // Mô tả giao dịch.
     public string? Description { get; init; }
+
+    // Metadata mở rộng.
     public string? MetadataJson { get; init; }
+
+    // Khóa idempotency.
     public string? IdempotencyKey { get; init; }
 }

@@ -3,8 +3,13 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
+// Partial mapper chuyển đổi payload media giữa DTO và document.
 public partial class MongoChatMessageRepository
 {
+    /// <summary>
+    /// Map payload media DTO sang document Mongo.
+    /// Luồng xử lý: trả null khi payload rỗng, ngược lại copy toàn bộ metadata media.
+    /// </summary>
     private static ChatMediaPayload? MapMediaPayloadToDocument(MediaPayloadDto? payload)
     {
         if (payload == null)
@@ -26,6 +31,10 @@ public partial class MongoChatMessageRepository
         };
     }
 
+    /// <summary>
+    /// Map payload media document sang DTO.
+    /// Luồng xử lý: trả null khi không có media_payload để tránh sinh object rỗng giả.
+    /// </summary>
     private static MediaPayloadDto? MapMediaPayloadToDto(ChatMediaPayload? payload)
     {
         if (payload == null)

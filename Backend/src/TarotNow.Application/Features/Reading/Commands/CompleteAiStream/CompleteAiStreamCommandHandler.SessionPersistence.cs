@@ -1,9 +1,17 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using TarotNow.Domain.Entities;
 
 namespace TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
 
 public partial class CompleteAiStreamCommandHandler
 {
+    /// <summary>
+    /// Cập nhật nội dung ReadingSession theo kết quả AI stream.
+    /// Luồng xử lý: chỉ chạy khi completed + có full response, tải session hiện tại, build snapshot mới và persist.
+    /// </summary>
     private async Task UpdateReadingSessionContentAsync(
         CompleteAiStreamCommand request,
         AiRequest record,
@@ -11,19 +19,26 @@ public partial class CompleteAiStreamCommandHandler
     {
         if (request.FinalStatus != AiStreamFinalStatuses.Completed || string.IsNullOrWhiteSpace(request.FullResponse))
         {
+            // Chỉ cập nhật nội dung phiên đọc khi stream hoàn tất thành công và có kết quả đầy đủ.
             return;
         }
 
         var session = await _readingRepo.GetByIdAsync(record.ReadingSessionRef, cancellationToken);
-        if (session == null)
+        if (session is null)
         {
+            // Edge case: session đã bị xóa/không tồn tại, bỏ qua cập nhật nội dung để tránh fail completion.
             return;
         }
 
         var updatedSession = BuildUpdatedSession(session, request);
         await _readingRepo.UpdateAsync(updatedSession, cancellationToken);
+        // Persist phiên đọc đã được merge summary/followup mới.
     }
 
+    /// <summary>
+    /// Dựng session mới từ session hiện tại và dữ liệu stream hoàn tất.
+    /// Luồng xử lý: nếu đã có summary thì append follow-up; nếu chưa có thì set full response làm summary đầu tiên.
+    /// </summary>
     private static ReadingSession BuildUpdatedSession(
         ReadingSession session,
         CompleteAiStreamCommand request)
@@ -38,13 +53,19 @@ public partial class CompleteAiStreamCommandHandler
                     : request.FollowupQuestion,
                 Answer = request.FullResponse!
             });
+            // Session đã có summary chính thì câu trả lời mới được ghi như follow-up để giữ timeline hội thoại.
 
             return RehydrateSession(session, session.AiSummary, newFollowups);
         }
 
+        // Session chưa có summary thì dùng full response hiện tại làm summary khởi tạo.
         return RehydrateSession(session, request.FullResponse!, session.Followups);
     }
 
+    /// <summary>
+    /// Rehydrate session từ snapshot mới.
+    /// Luồng xử lý: sao chép toàn bộ trường bất biến và thay phần nội dung cần cập nhật (AiSummary/Followups).
+    /// </summary>
     private static ReadingSession RehydrateSession(
         ReadingSession session,
         string aiSummary,

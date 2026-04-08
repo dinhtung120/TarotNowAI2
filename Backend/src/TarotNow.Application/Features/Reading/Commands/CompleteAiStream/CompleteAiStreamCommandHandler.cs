@@ -1,9 +1,11 @@
 using MediatR;
+using System.Threading;
+using System.Threading.Tasks;
 using TarotNow.Application.Interfaces;
-using TarotNow.Domain.Entities;
 
 namespace TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
 
+// Handler điều phối luồng chốt AI stream: transaction, settlement, session update, telemetry và gamification.
 public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAiStreamCommand, bool>
 {
     private readonly IAiRequestRepository _aiRequestRepo;
@@ -15,6 +17,10 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
     private readonly IStreakService _streakService;
     private readonly IGamificationService _gamificationService;
 
+    /// <summary>
+    /// Khởi tạo handler complete AI stream.
+    /// Luồng xử lý: nhận đầy đủ repository/service để thực hiện chốt request theo giao dịch và phát sinh side-effects sau commit.
+    /// </summary>
     public CompleteAiStreamCommandHandler(
         IAiRequestRepository aiRequestRepo,
         IWalletRepository walletRepo,
@@ -35,10 +41,15 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
         _gamificationService = gamificationService;
     }
 
+    /// <summary>
+    /// Xử lý command hoàn tất AI stream.
+    /// Luồng xử lý: validate status, chạy completion trong transaction, sau đó xử lý side-effects ngoài transaction như streak/gamification/telemetry.
+    /// </summary>
     public async Task<bool> Handle(CompleteAiStreamCommand request, CancellationToken cancellationToken)
     {
         if (!AiStreamFinalStatuses.IsSupported(request.FinalStatus))
         {
+            // Chặn trạng thái không thuộc whitelist để tránh chốt billing bằng trạng thái không xác định.
             return false;
         }
 
@@ -46,37 +57,43 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
         await _transactionCoordinator.ExecuteAsync(
             transactionCt => ProcessCompletionAsync(request, context, transactionCt),
             cancellationToken);
+        // Bọc các thao tác trạng thái/billing chính trong transaction để đảm bảo tính nhất quán dữ liệu.
 
         if (!context.Processed || string.IsNullOrWhiteSpace(context.RequestId))
         {
+            // Edge case: record không tồn tại hoặc không được xử lý thì trả trạng thái thực tế, không phát sinh side-effect thêm.
             return context.Processed;
         }
 
-        
-        
-        
         if (request.FinalStatus == AiStreamFinalStatuses.Completed)
         {
             await _streakService.IncrementStreakOnValidDrawAsync(request.UserId, cancellationToken);
-            
-            
             await _gamificationService.OnReadingCompletedAsync(request.UserId, cancellationToken);
+            // Chỉ cộng streak/gamification khi hoàn tất thành công để tránh thưởng sai cho phiên lỗi/refund.
         }
 
         await LogTelemetrySafeAsync(request, context);
+        // Ghi telemetry sau completion để quan sát vận hành; lỗi telemetry không làm fail nghiệp vụ chính.
+
         return true;
     }
 
+    // Context truyền giữa các bước trong transaction và hậu xử lý.
     private sealed class CompletionContext
     {
+        // Cờ cho biết request đã được xử lý thành công trong transaction hay chưa.
         public bool Processed { get; set; }
 
+        // Mã request dùng cho telemetry.
         public string? RequestId { get; set; }
 
+        // Mã session liên quan request dùng cho telemetry.
         public string? SessionRef { get; set; }
 
+        // Trạng thái telemetry tổng hợp (completed/failed).
         public string TelemetryStatus { get; set; } = "failed";
 
+        // Mã lỗi telemetry khi thất bại (nếu có).
         public string? TelemetryErrorCode { get; set; }
     }
 }

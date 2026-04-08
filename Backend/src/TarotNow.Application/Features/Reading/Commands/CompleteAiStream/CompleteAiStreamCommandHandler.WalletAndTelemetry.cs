@@ -1,11 +1,18 @@
-using TarotNow.Domain.Entities;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Entities;
 using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
 
 public partial class CompleteAiStreamCommandHandler
 {
+    /// <summary>
+    /// Tiêu thụ escrow đã giữ cho AI request.
+    /// Luồng xử lý: gọi wallet consume với idempotency key cố định theo request id để tránh double-charge khi retry.
+    /// </summary>
     private Task ConsumeEscrowAsync(
         Guid userId,
         AiRequest record,
@@ -22,6 +29,10 @@ public partial class CompleteAiStreamCommandHandler
             cancellationToken: cancellationToken);
     }
 
+    /// <summary>
+    /// Hoàn trả escrow cho AI request.
+    /// Luồng xử lý: gọi wallet refund với idempotency key cố định để đảm bảo retry không hoàn tiền trùng.
+    /// </summary>
     private Task RefundEscrowAsync(
         Guid userId,
         AiRequest record,
@@ -38,6 +49,10 @@ public partial class CompleteAiStreamCommandHandler
             cancellationToken: cancellationToken);
     }
 
+    /// <summary>
+    /// Ghi telemetry completion theo cơ chế best-effort.
+    /// Luồng xử lý: gửi log request sang provider log; nếu lỗi thì nuốt ngoại lệ để không ảnh hưởng luồng nghiệp vụ chính.
+    /// </summary>
     private async Task LogTelemetrySafeAsync(CompleteAiStreamCommand request, CompletionContext context)
     {
         try
@@ -56,10 +71,14 @@ public partial class CompleteAiStreamCommandHandler
         }
         catch
         {
-            
+            // Telemetry lỗi không được làm fail completion vì đây là luồng quan sát, không phải nghiệp vụ cốt lõi.
         }
     }
 
+    /// <summary>
+    /// Phát domain event hoàn tất billing cho reading.
+    /// Luồng xử lý: chỉ phát event khi có charge thực tế để downstream xử lý analytics/reward không bị nhiễu.
+    /// </summary>
     private Task PublishReadingBillingEventAsync(
         CompleteAiStreamCommand request,
         AiRequest record,
@@ -68,24 +87,32 @@ public partial class CompleteAiStreamCommandHandler
     {
         if (record.ChargeDiamond <= 0)
         {
+            // Không có phí thì bỏ qua event billing để tránh tạo bản ghi downstream không cần thiết.
             return Task.CompletedTask;
         }
 
-        return _domainEventPublisher.PublishAsync(new ReadingBillingCompletedDomainEvent
-        {
-            UserId = request.UserId,
-            AiRequestId = record.Id,
-            ReadingSessionRef = record.ReadingSessionRef ?? string.Empty,
-            ChargeDiamond = record.ChargeDiamond,
-            FinalStatus = request.FinalStatus,
-            WasRefunded = wasRefunded
-        }, cancellationToken);
+        return _domainEventPublisher.PublishAsync(
+            new ReadingBillingCompletedDomainEvent
+            {
+                UserId = request.UserId,
+                AiRequestId = record.Id,
+                ReadingSessionRef = record.ReadingSessionRef ?? string.Empty,
+                ChargeDiamond = record.ChargeDiamond,
+                FinalStatus = request.FinalStatus,
+                WasRefunded = wasRefunded
+            },
+            cancellationToken);
     }
 
+    /// <summary>
+    /// Chuẩn hóa finish reason để lưu vào bản ghi request.
+    /// Luồng xử lý: trim chuỗi lỗi và cắt ngắn tối đa 50 ký tự để tránh phình dữ liệu không kiểm soát.
+    /// </summary>
     private static string? NormalizeFinishReason(string? finishReason)
     {
         if (string.IsNullOrWhiteSpace(finishReason))
         {
+            // Edge case: lỗi rỗng/trắng thì chuẩn hóa về null.
             return null;
         }
 

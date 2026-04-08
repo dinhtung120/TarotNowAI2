@@ -6,6 +6,10 @@ namespace TarotNow.Application.Features.Escrow.Commands.AddQuestion;
 
 public partial class AddQuestionCommandHandler
 {
+    /// <summary>
+    /// Validate và chuẩn hóa idempotency key cho luồng add-question.
+    /// Luồng xử lý: trim key, chặn rỗng và giới hạn độ dài 128 ký tự.
+    /// </summary>
     private static string ValidateIdempotencyKey(string? idempotencyKey)
     {
         var normalized = idempotencyKey?.Trim();
@@ -22,6 +26,10 @@ public partial class AddQuestionCommandHandler
         return normalized;
     }
 
+    /// <summary>
+    /// Thực thi workflow add-question trong transaction.
+    /// Luồng xử lý: tải session hợp lệ, freeze kim cương, tạo question item, cập nhật tổng frozen của session và lưu thay đổi.
+    /// </summary>
     private async Task<Guid> ExecuteAddQuestionAsync(
         AddQuestionCommand request,
         string idempotencyKey,
@@ -37,6 +45,7 @@ public partial class AddQuestionCommandHandler
             var item = BuildAddQuestionItem(request, session.ReaderId, session.Id, idempotencyKey);
             await _financeRepo.AddItemAsync(item, transactionCt);
 
+            // Cập nhật tổng frozen sau khi thêm item mới để session phản ánh đúng số dư đang giữ.
             session.TotalFrozen += request.AmountDiamond;
             await _financeRepo.UpdateSessionAsync(session, transactionCt);
             await _financeRepo.SaveChangesAsync(transactionCt);
@@ -46,6 +55,10 @@ public partial class AddQuestionCommandHandler
         return createdItemId;
     }
 
+    /// <summary>
+    /// Tải session và validate quyền/thuộc tính cho thao tác add-question.
+    /// Luồng xử lý: lấy session theo conversation ref, kiểm tra owner user và trạng thái session cho phép.
+    /// </summary>
     private async Task<ChatFinanceSession> LoadValidatedSessionAsync(
         AddQuestionCommand request,
         CancellationToken cancellationToken)
@@ -55,17 +68,23 @@ public partial class AddQuestionCommandHandler
 
         if (session.UserId != request.UserId)
         {
+            // Chỉ chủ session (payer) mới được thêm câu hỏi phát sinh.
             throw new BadRequestException("Bạn không phải chủ phiên.");
         }
 
         if (session.Status != "active" && session.Status != "pending")
         {
+            // Session đã kết thúc/không hợp lệ thì không nhận thêm câu hỏi.
             throw new BadRequestException("Phiên đã kết thúc, không thể thêm câu hỏi.");
         }
 
         return session;
     }
 
+    /// <summary>
+    /// Freeze số kim cương cho câu hỏi phát sinh.
+    /// Luồng xử lý: gọi wallet freeze với reference/idempotency theo key đã chuẩn hóa.
+    /// </summary>
     private async Task FreezeQuestionAmountAsync(
         AddQuestionCommand request,
         string idempotencyKey,
@@ -81,6 +100,10 @@ public partial class AddQuestionCommandHandler
             cancellationToken: cancellationToken);
     }
 
+    /// <summary>
+    /// Dựng entity ChatQuestionItem cho thao tác add-question.
+    /// Luồng xử lý: map dữ liệu request, gán trạng thái Accepted và thiết lập các mốc thời gian xử lý/autorefund.
+    /// </summary>
     private static ChatQuestionItem BuildAddQuestionItem(
         AddQuestionCommand request,
         Guid readerId,

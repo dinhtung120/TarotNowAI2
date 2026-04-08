@@ -6,8 +6,13 @@ using TarotNow.Domain.Entities;
 
 namespace TarotNow.Infrastructure.Persistence.Configurations;
 
+// Cấu hình EF mapping cho entity WithdrawalRequest.
 public sealed class WithdrawalRequestConfiguration : IEntityTypeConfiguration<WithdrawalRequest>
 {
+    /// <summary>
+    /// Cấu hình mapping tổng thể bảng withdrawal_requests.
+    /// Luồng xử lý: gán table/key, tách cấu hình cột nghiệp vụ và index one-per-day cho request đang mở.
+    /// </summary>
     public void Configure(EntityTypeBuilder<WithdrawalRequest> builder)
     {
         builder.ToTable("withdrawal_requests");
@@ -16,6 +21,10 @@ public sealed class WithdrawalRequestConfiguration : IEntityTypeConfiguration<Wi
         ConfigureIndexes(builder);
     }
 
+    /// <summary>
+    /// Cấu hình toàn bộ cột dữ liệu rút tiền.
+    /// Luồng xử lý: map field định danh, thông tin ngân hàng, trạng thái xử lý admin và mốc thời gian.
+    /// </summary>
     private static void ConfigureColumns(EntityTypeBuilder<WithdrawalRequest> builder)
     {
         builder.Property(x => x.Id).HasColumnName("id");
@@ -36,11 +45,16 @@ public sealed class WithdrawalRequestConfiguration : IEntityTypeConfiguration<Wi
         builder.Property(x => x.UpdatedAt).HasColumnName("updated_at");
     }
 
+    /// <summary>
+    /// Cấu hình index phục vụ kiểm soát nghiệp vụ rút tiền theo ngày.
+    /// Luồng xử lý: tạo unique filtered index chỉ áp dụng cho trạng thái pending/approved để chặn nhiều lệnh mở cùng ngày.
+    /// </summary>
     private static void ConfigureIndexes(EntityTypeBuilder<WithdrawalRequest> builder)
     {
         builder.HasIndex(x => new { x.UserId, x.BusinessDateUtc })
             .HasDatabaseName("ix_withdrawal_one_per_day_active")
             .IsUnique()
             .HasFilter("status in ('pending','approved')");
+        // Khi request đã rejected/completed thì không khóa ngày business, user có thể tạo yêu cầu mới hợp lệ.
     }
 }

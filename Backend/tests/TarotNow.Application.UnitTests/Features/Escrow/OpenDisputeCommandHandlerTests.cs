@@ -8,12 +8,20 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Escrow;
 
+// Unit test cho handler mở tranh chấp item escrow.
 public class OpenDisputeCommandHandlerTests
 {
+    // Mock finance repo để điều khiển item/session và kiểm tra cập nhật trạng thái.
     private readonly Mock<IChatFinanceRepository> _mockFinanceRepo;
+    // Mock transaction coordinator để thực thi action transactional ngay trong test.
     private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
+    // Handler cần kiểm thử.
     private readonly OpenDisputeCommandHandler _handler;
 
+    /// <summary>
+    /// Khởi tạo fixture cho OpenDisputeCommandHandler.
+    /// Luồng setup transaction coordinator inline giúp test deterministic.
+    /// </summary>
     public OpenDisputeCommandHandlerTests()
     {
         _mockFinanceRepo = new Mock<IChatFinanceRepository>();
@@ -24,7 +32,11 @@ public class OpenDisputeCommandHandlerTests
         _handler = new OpenDisputeCommandHandler(_mockFinanceRepo.Object, _mockTransactionCoordinator.Object);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận user không phải payer/receiver của item sẽ bị từ chối.
+    /// Luồng này bảo vệ quyền mở tranh chấp theo participant thực tế.
+    /// </summary>
+    [Fact]
     public async Task Handle_NotParticipant_ThrowsBadRequest()
     {
         var command = new OpenDisputeCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid() };
@@ -38,7 +50,11 @@ public class OpenDisputeCommandHandlerTests
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận item không ở trạng thái Accepted không thể mở tranh chấp.
+    /// Luồng này bảo vệ state machine của question item.
+    /// </summary>
+    [Fact]
     public async Task Handle_NotAccepted_ThrowsBadRequest()
     {
         var command = new OpenDisputeCommand
@@ -56,7 +72,11 @@ public class OpenDisputeCommandHandlerTests
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận lý do tranh chấp quá ngắn bị từ chối.
+    /// Luồng này đảm bảo dispute reason đủ thông tin cho vận hành xử lý.
+    /// </summary>
+    [Fact]
     public async Task Handle_ShortReason_ThrowsBadRequest()
     {
         var command = new OpenDisputeCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid(), Reason = "short" };
@@ -69,7 +89,11 @@ public class OpenDisputeCommandHandlerTests
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận payer mở tranh chấp hợp lệ sẽ chuyển item sang Disputed và session sang disputed.
+    /// Luồng này kiểm tra dispute window được thiết lập hợp lệ.
+    /// </summary>
+    [Fact]
     public async Task Handle_ValidRequest_FromPayer_UpdatesStatus()
     {
         var command = new OpenDisputeCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid(), Reason = "Valid dispute reason" };
@@ -83,6 +107,7 @@ public class OpenDisputeCommandHandlerTests
         _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default)).ReturnsAsync(item);
         _mockFinanceRepo.Setup(x => x.GetSessionForUpdateAsync(item.FinanceSessionId, default)).ReturnsAsync(session);
 
+        // Thực thi handler và xác minh toàn bộ state transition kỳ vọng.
         var result = await _handler.Handle(command, CancellationToken.None);
         Assert.True(result);
         Assert.Equal(QuestionItemStatus.Disputed, item.Status);
@@ -92,7 +117,11 @@ public class OpenDisputeCommandHandlerTests
         Assert.True(item.DisputeWindowEnd > item.DisputeWindowStart);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận receiver cũng có thể mở tranh chấp hợp lệ.
+    /// Luồng này đảm bảo hai phía participant đều được phép dispute.
+    /// </summary>
+    [Fact]
     public async Task Handle_ValidRequest_FromReceiver_UpdatesStatus()
     {
         var receiverId = Guid.NewGuid();
@@ -109,6 +138,7 @@ public class OpenDisputeCommandHandlerTests
         _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(command.ItemId, default)).ReturnsAsync(item);
         _mockFinanceRepo.Setup(x => x.GetSessionForUpdateAsync(item.FinanceSessionId, default)).ReturnsAsync(session);
 
+        // Thực thi handler và xác nhận item/session cùng chuyển đúng trạng thái.
         var result = await _handler.Handle(command, CancellationToken.None);
         Assert.True(result);
         Assert.Equal(QuestionItemStatus.Disputed, item.Status);
@@ -118,7 +148,11 @@ public class OpenDisputeCommandHandlerTests
         Assert.True(item.DisputeWindowEnd > item.DisputeWindowStart);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận item không tồn tại trả NotFoundException.
+    /// Luồng này chặn thao tác dispute trên dữ liệu không hợp lệ.
+    /// </summary>
+    [Fact]
     public async Task Handle_ItemNotFound_ThrowsNotFoundException()
     {
         var command = new OpenDisputeCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid() };
@@ -126,7 +160,11 @@ public class OpenDisputeCommandHandlerTests
         await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận item đã Disputed được xử lý idempotent.
+    /// Luồng này không update/save thêm để tránh side-effect lặp.
+    /// </summary>
+    [Fact]
     public async Task Handle_AlreadyDisputed_IsIdempotent()
     {
         var command = new OpenDisputeCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid(), Reason = "Lý do tranh chấp hợp lệ" };

@@ -3,11 +3,17 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Seeds;
 
+// Partial seed quest definitions.
 public static partial class GamificationSeed
 {
+    /// <summary>
+    /// Seed/upsert quest definitions mặc định.
+    /// Luồng xử lý: xóa quest legacy cần loại bỏ, sau đó upsert danh sách quest mới theo code.
+    /// </summary>
     private static async Task SeedQuestDefinitionsAsync(MongoDbContext context)
     {
         await context.Quests.DeleteManyAsync(x => x.Code == "daily_checkin");
+        // Dọn quest mã cũ để tránh trùng nghĩa khi đổi cấu trúc quest mới.
 
         foreach (var quest in BuildInitialQuests())
         {
@@ -24,9 +30,14 @@ public static partial class GamificationSeed
                 .Set(x => x.IsActive, true);
 
             await context.Quests.UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = true });
+            // Upsert theo code giúp seed idempotent qua nhiều lần chạy.
         }
     }
 
+    /// <summary>
+    /// Tạo danh sách quest mặc định.
+    /// Luồng xử lý: trả về tập quest daily/weekly/community dùng cho bootstrap hệ thống.
+    /// </summary>
     private static List<QuestDefinitionDocument> BuildInitialQuests() =>
         new()
         {

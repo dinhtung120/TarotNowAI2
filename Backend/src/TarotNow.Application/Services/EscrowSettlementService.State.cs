@@ -4,8 +4,13 @@ using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Services;
 
+// Phần helper trạng thái cho settlement escrow để gom các thao tác cập nhật/emit event dùng chung.
 public sealed partial class EscrowSettlementService
 {
+    /// <summary>
+    /// Tạo mô tả giao dịch release/fee để thống nhất log ví và dễ đối soát vận hành.
+    /// Luồng xử lý: phân nhánh theo isAutoRelease rồi trả cặp mô tả cho bút toán release và platform fee.
+    /// </summary>
     private static (string ReleaseDescription, string FeeDescription) BuildDescriptions(
         bool isAutoRelease,
         long readerAmount,
@@ -13,12 +18,18 @@ public sealed partial class EscrowSettlementService
     {
         if (isAutoRelease)
         {
+            // Nhánh auto-release dùng wording riêng để phân biệt với thao tác xác nhận thủ công.
             return ($"Auto-release {readerAmount}💎 (fee {fee}💎)", $"Platform fee auto 10% = {fee}💎");
         }
 
+        // Nhánh manual release giữ mô tả nghiệp vụ rõ ràng cho luồng xác nhận bởi người dùng.
         return ($"Release {readerAmount}💎 (fee {fee}💎) cho reader", $"Platform fee 10% = {fee}💎");
     }
 
+    /// <summary>
+    /// Áp trạng thái Released cho item để đóng escrow và mở cửa sổ khiếu nại hậu giao dịch.
+    /// Luồng xử lý: ghi các mốc thời gian release/dispute và chỉ set ConfirmedAt cho luồng không tự động.
+    /// </summary>
     private static void ApplyReleasedState(ChatQuestionItem item, bool isAutoRelease)
     {
         var now = DateTime.UtcNow;
@@ -27,25 +38,37 @@ public sealed partial class EscrowSettlementService
         item.DisputeWindowStart = now;
         item.DisputeWindowEnd = now.AddHours(24);
         item.AutoReleaseAt = null;
+        // Đồng bộ state item sang Released và mở dispute window 24 giờ theo rule hậu kiểm.
 
         if (isAutoRelease == false)
         {
             item.ConfirmedAt = now;
+            // Luồng xác nhận thủ công cần lưu mốc ConfirmedAt để truy vết hành động xác nhận.
         }
     }
 
+    /// <summary>
+    /// Giảm tổng tiền đang đóng băng của finance session sau khi release thành công.
+    /// Luồng xử lý: lấy session theo chế độ update, bỏ qua khi không tồn tại, rồi trừ frozen với chặn âm.
+    /// </summary>
     private async Task DecreaseSessionFrozenAsync(ChatQuestionItem item, CancellationToken cancellationToken)
     {
         var session = await _financeRepository.GetSessionForUpdateAsync(item.FinanceSessionId, cancellationToken);
         if (session == null)
         {
+            // Edge case: session đã bị xóa/không còn tồn tại, bỏ qua để tránh ném lỗi nền.
             return;
         }
 
         session.TotalFrozen = Math.Max(0, session.TotalFrozen - item.AmountDiamond);
+        // Chặn âm để đảm bảo tổng frozen luôn hợp lệ trong trường hợp dữ liệu biên.
         await _financeRepository.UpdateSessionAsync(session, cancellationToken);
     }
 
+    /// <summary>
+    /// Phát domain event escrow released để các subscriber xử lý side-effect liên quan.
+    /// Luồng xử lý: dựng payload sự kiện từ item đã settle và publish qua domain event publisher.
+    /// </summary>
     private Task PublishReleasedEventAsync(
         ChatQuestionItem item,
         long releasedAmountDiamond,

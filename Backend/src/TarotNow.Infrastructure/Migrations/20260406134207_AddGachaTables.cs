@@ -5,9 +5,14 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace TarotNow.Infrastructure.Migrations
 {
-        public partial class AddGachaTables : Migration
+    // Migration tạo các bảng gacha (banner, item, reward log) và index liên quan.
+    public partial class AddGachaTables : Migration
     {
-                protected override void Up(MigrationBuilder migrationBuilder)
+        /// <summary>
+        /// Áp dụng thay đổi schema theo hướng nâng cấp.
+        /// Luồng xử lý: tạo bảng gacha chính, bảng item/log và các index truy vấn/idempotency.
+        /// </summary>
+        protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
                 name: "gacha_banners",
@@ -118,7 +123,11 @@ namespace TarotNow.Infrastructure.Migrations
                 descending: new[] { false, true });
         }
 
-                protected override void Down(MigrationBuilder migrationBuilder)
+        /// <summary>
+        /// Hoàn tác thay đổi schema của migration này khi rollback.
+        /// Luồng xử lý: xóa các bảng gacha đã tạo theo thứ tự phụ thuộc.
+        /// </summary>
+        protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
                 name: "gacha_banner_items");

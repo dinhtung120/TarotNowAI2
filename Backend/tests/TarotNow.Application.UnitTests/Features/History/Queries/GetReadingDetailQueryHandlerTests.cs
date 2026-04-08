@@ -9,18 +9,29 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.History.Queries;
 
+// Unit test cho query lấy chi tiết phiên xem bài.
 public class GetReadingDetailQueryHandlerTests
 {
+    // Mock reading session repo để điều khiển dữ liệu session + AI requests.
     private readonly Mock<IReadingSessionRepository> _mockSessionRepository;
+    // Handler cần kiểm thử.
     private readonly GetReadingDetailQueryHandler _handler;
 
+    /// <summary>
+    /// Khởi tạo fixture cho GetReadingDetailQueryHandler.
+    /// Luồng dùng mock repository để cô lập mapping chi tiết lịch sử.
+    /// </summary>
     public GetReadingDetailQueryHandlerTests()
     {
         _mockSessionRepository = new Mock<IReadingSessionRepository>();
         _handler = new GetReadingDetailQueryHandler(_mockSessionRepository.Object);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận session tồn tại và thuộc user sẽ trả đầy đủ chi tiết.
+    /// Luồng kiểm tra mapping cards, completion state và danh sách AI interactions.
+    /// </summary>
+    [Fact]
     public async Task Handle_ShouldReturnSessionDetails_WhenSessionExistsAndBelongsToUser()
     {
         var userId = Guid.NewGuid();
@@ -39,22 +50,28 @@ public class GetReadingDetailQueryHandlerTests
         _mockSessionRepository.Setup(r => r.GetSessionWithAiRequestsAsync(sessionId, default))
             .ReturnsAsync(((ReadingSession, IEnumerable<AiRequest>)?)(session, aiRequests));
 
+        // Gọi handler và assert các trường quan trọng của response.
         var result = await _handler.Handle(query, CancellationToken.None);
 
         result.Should().NotBeNull();
         result.Id.Should().Be(sessionId);
         result.CardsDrawn.Should().Be("[1, 2, 3]");
         result.IsCompleted.Should().BeTrue();
-        
+
+        // Chỉ assert chi tiết interaction khi danh sách có dữ liệu.
         if (result.AiInteractions.Any())
         {
-             result.AiInteractions.Should().HaveCount(2);
-             result.AiInteractions.First().ChargeDiamond.Should().Be(0);
-             result.AiInteractions.Last().ChargeDiamond.Should().Be(2);
+            result.AiInteractions.Should().HaveCount(2);
+            result.AiInteractions.First().ChargeDiamond.Should().Be(0);
+            result.AiInteractions.Last().ChargeDiamond.Should().Be(2);
         }
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận truy cập session của user khác sẽ bị chặn.
+    /// Luồng này bảo vệ quyền riêng tư lịch sử xem bài.
+    /// </summary>
+    [Fact]
     public async Task Handle_ShouldThrowUnauthorizedAccessException_WhenSessionBelongsToAnotherUser()
     {
         var userId = Guid.NewGuid();
@@ -69,7 +86,11 @@ public class GetReadingDetailQueryHandlerTests
         await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _handler.Handle(query, CancellationToken.None));
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận session không tồn tại trả về null.
+    /// Luồng này giữ contract truy vấn detail khi không tìm thấy dữ liệu.
+    /// </summary>
+    [Fact]
     public async Task Handle_ShouldReturnNull_WhenSessionDoesNotExist()
     {
         var userId = Guid.NewGuid();

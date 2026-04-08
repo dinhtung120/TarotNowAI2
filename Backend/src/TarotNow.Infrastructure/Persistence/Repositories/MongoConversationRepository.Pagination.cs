@@ -4,8 +4,13 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
+// Partial xử lý phân trang conversation theo participant.
 public partial class MongoConversationRepository
 {
+    /// <summary>
+    /// Lấy conversation theo user id có phân trang.
+    /// Luồng xử lý: dựng filter participant phía user và chuyển sang hàm phân trang dùng chung.
+    /// </summary>
     public Task<(IEnumerable<ConversationDto> Items, long TotalCount)> GetByUserIdPaginatedAsync(
         string userId,
         int page,
@@ -20,6 +25,10 @@ public partial class MongoConversationRepository
         return GetPaginatedInternal(filter, page, pageSize, cancellationToken);
     }
 
+    /// <summary>
+    /// Lấy conversation theo reader id có phân trang.
+    /// Luồng xử lý: dựng filter participant phía reader và dùng chung luồng phân trang.
+    /// </summary>
     public Task<(IEnumerable<ConversationDto> Items, long TotalCount)> GetByReaderIdPaginatedAsync(
         string readerId,
         int page,
@@ -34,6 +43,10 @@ public partial class MongoConversationRepository
         return GetPaginatedInternal(filter, page, pageSize, cancellationToken);
     }
 
+    /// <summary>
+    /// Lấy conversation theo participant bất kỳ (user hoặc reader).
+    /// Luồng xử lý: filter OR hai vai trò participant rồi gọi hàm phân trang nội bộ.
+    /// </summary>
     public Task<(IEnumerable<ConversationDto> Items, long TotalCount)> GetByParticipantIdPaginatedAsync(
         string participantId,
         int page,
@@ -50,6 +63,10 @@ public partial class MongoConversationRepository
         return GetPaginatedInternal(filter, page, pageSize, cancellationToken);
     }
 
+    /// <summary>
+    /// Dựng filter participant + trạng thái cho conversation.
+    /// Luồng xử lý: luôn lọc is_deleted=false và thêm điều kiện status khi caller truyền danh sách trạng thái.
+    /// </summary>
     private static FilterDefinition<ConversationDocument> BuildParticipantFilter(
         FilterDefinition<ConversationDocument> participantFilter,
         IReadOnlyCollection<string>? statuses)
@@ -63,11 +80,16 @@ public partial class MongoConversationRepository
         if (statuses != null && statuses.Count > 0)
         {
             filters.Add(Builders<ConversationDocument>.Filter.In(c => c.Status, statuses));
+            // Chỉ áp filter status khi có dữ liệu, tránh ràng buộc rỗng gây loại hết bản ghi.
         }
 
         return Builders<ConversationDocument>.Filter.And(filters);
     }
 
+    /// <summary>
+    /// Thực hiện truy vấn conversation phân trang dùng chung.
+    /// Luồng xử lý: chuẩn hóa tham số page/pageSize, đếm tổng và lấy danh sách theo last_message_at desc.
+    /// </summary>
     private async Task<(IEnumerable<ConversationDto> Items, long TotalCount)> GetPaginatedInternal(
         FilterDefinition<ConversationDocument> filter,
         int page,
@@ -76,6 +98,7 @@ public partial class MongoConversationRepository
     {
         var normalizedPage = page < 1 ? 1 : page;
         var normalizedPageSize = pageSize <= 0 ? 20 : Math.Min(pageSize, 200);
+        // Page size có trần để đảm bảo API inbox không bị truy vấn quá nặng.
 
         var totalCount = await _context.Conversations.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
 

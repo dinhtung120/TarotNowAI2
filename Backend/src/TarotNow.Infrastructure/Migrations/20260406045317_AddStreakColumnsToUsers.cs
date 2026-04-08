@@ -5,9 +5,14 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace TarotNow.Infrastructure.Migrations
 {
-        public partial class AddStreakColumnsToUsers : Migration
+    // Migration bổ sung các cột streak vào bảng users.
+    public partial class AddStreakColumnsToUsers : Migration
     {
-                protected override void Up(MigrationBuilder migrationBuilder)
+        /// <summary>
+        /// Áp dụng thay đổi schema theo hướng nâng cấp.
+        /// Luồng xử lý: thêm current_streak, last_streak_date và pre_break_streak vào users.
+        /// </summary>
+        protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<int>(
                 name: "current_streak",
@@ -30,7 +35,11 @@ namespace TarotNow.Infrastructure.Migrations
                 defaultValue: 0);
         }
 
-                protected override void Down(MigrationBuilder migrationBuilder)
+        /// <summary>
+        /// Hoàn tác thay đổi schema của migration này khi rollback.
+        /// Luồng xử lý: xóa các cột streak đã thêm ở bước Up.
+        /// </summary>
+        protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
                 name: "current_streak",

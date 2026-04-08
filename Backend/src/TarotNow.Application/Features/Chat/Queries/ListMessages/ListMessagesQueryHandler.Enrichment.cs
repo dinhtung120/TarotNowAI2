@@ -5,6 +5,10 @@ namespace TarotNow.Application.Features.Chat.Queries.ListMessages;
 
 public partial class ListMessagesQueryHandler
 {
+    /// <summary>
+    /// Enrich profile của user và reader cho conversation.
+    /// Luồng xử lý: thu thập Guid participant hợp lệ, tải user map theo lô, rồi gán display name/avatar vào conversation.
+    /// </summary>
     private async Task EnrichParticipantProfilesAsync(
         ConversationDto conversation,
         CancellationToken cancellationToken)
@@ -22,6 +26,7 @@ public partial class ListMessagesQueryHandler
 
         if (userIds.Count == 0)
         {
+            // Edge case: participant id không parse được Guid nên không thể enrich profile.
             return;
         }
 
@@ -39,6 +44,10 @@ public partial class ListMessagesQueryHandler
         }
     }
 
+    /// <summary>
+    /// Enrich trạng thái reader và thông tin escrow của conversation.
+    /// Luồng xử lý: tải reader profile để xác định status online/offline, sau đó tải finance session để gán frozen/status.
+    /// </summary>
     private async Task EnrichReaderStatusAndEscrowAsync(
         ConversationDto conversation,
         CancellationToken cancellationToken)
@@ -51,15 +60,18 @@ public partial class ListMessagesQueryHandler
             {
                 if (string.Equals(status, ReaderOnlineStatus.Offline, StringComparison.OrdinalIgnoreCase))
                 {
+                    // Ưu tiên trạng thái realtime online khi presence tracker xác nhận đang kết nối.
                     status = ReaderOnlineStatus.Online;
                 }
             }
+
             conversation.ReaderStatus = status;
         }
 
         var session = await _financeRepository.GetSessionByConversationRefAsync(conversation.Id, cancellationToken);
         if (session != null)
         {
+            // Đồng bộ số dư frozen và trạng thái escrow để client hiển thị ngay trên màn hình chat.
             conversation.EscrowTotalFrozen = session.TotalFrozen;
             conversation.EscrowStatus = session.Status;
         }

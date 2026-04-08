@@ -6,8 +6,13 @@ using TarotNow.Domain.Entities;
 
 namespace TarotNow.Infrastructure.Persistence.Configurations;
 
+// Cấu hình EF mapping cho entity ChatFinanceSession.
 public class ChatFinanceSessionConfiguration : IEntityTypeConfiguration<ChatFinanceSession>
 {
+    /// <summary>
+    /// Cấu hình mapping bảng chat_finance_sessions.
+    /// Luồng xử lý: map key/cột chính và tạo unique index cho conversation_ref.
+    /// </summary>
     public void Configure(EntityTypeBuilder<ChatFinanceSession> builder)
     {
         builder.ToTable("chat_finance_sessions");
@@ -40,9 +45,9 @@ public class ChatFinanceSessionConfiguration : IEntityTypeConfiguration<ChatFina
         builder.Property(x => x.UpdatedAt)
             .HasColumnName("updated_at");
 
-        
         builder.HasIndex(x => x.ConversationRef)
             .HasDatabaseName("ix_chat_finance_sessions_conversation_ref")
             .IsUnique();
+        // Bảo đảm mỗi conversation chỉ có một finance session để tránh duplicate session.
     }
 }

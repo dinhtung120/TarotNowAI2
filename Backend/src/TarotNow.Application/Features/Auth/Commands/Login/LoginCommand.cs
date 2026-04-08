@@ -5,12 +5,16 @@ using MediatR;
 
 namespace TarotNow.Application.Features.Auth.Commands.Login;
 
+// Command đăng nhập bằng email hoặc username.
 public class LoginCommand : IRequest<(AuthResponse Response, string RefreshToken)>
 {
-        public string EmailOrUsername { get; set; } = string.Empty;
+    // Định danh đăng nhập đầu vào (email hoặc username).
+    public string EmailOrUsername { get; set; } = string.Empty;
 
-        public string Password { get; set; } = string.Empty;
+    // Mật khẩu thô để xác thực.
+    public string Password { get; set; } = string.Empty;
 
-        [JsonIgnore]
+    // IP client lấy từ tầng API để lưu lịch sử refresh token.
+    [JsonIgnore]
     public string ClientIpAddress { get; set; } = string.Empty;
 }

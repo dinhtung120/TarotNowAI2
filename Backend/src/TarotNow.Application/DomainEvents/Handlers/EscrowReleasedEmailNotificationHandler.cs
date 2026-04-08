@@ -5,12 +5,17 @@ using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.DomainEvents.Handlers;
 
+// Gửi email cho cả payer và receiver khi escrow được giải ngân.
 public sealed class EscrowReleasedEmailNotificationHandler : INotificationHandler<EscrowReleasedNotification>
 {
     private readonly IUserRepository _userRepository;
     private readonly IEmailSender _emailSender;
     private readonly ILogger<EscrowReleasedEmailNotificationHandler> _logger;
 
+    /// <summary>
+    /// Khởi tạo handler email giải ngân escrow.
+    /// Luồng xử lý: nhận repository để tải thông tin người nhận/người trả và email sender để gửi thông báo.
+    /// </summary>
     public EscrowReleasedEmailNotificationHandler(
         IUserRepository userRepository,
         IEmailSender emailSender,
@@ -21,16 +26,25 @@ public sealed class EscrowReleasedEmailNotificationHandler : INotificationHandle
         _logger = logger;
     }
 
+    /// <summary>
+    /// Xử lý notification giải ngân và gửi email cho hai vai trò liên quan.
+    /// Luồng xử lý: tải receiver/payer theo id rồi gửi từng email theo mẫu nội dung riêng.
+    /// </summary>
     public async Task Handle(EscrowReleasedNotification notification, CancellationToken cancellationToken)
     {
-        var ev = notification.DomainEvent;
-        var receiver = await _userRepository.GetByIdAsync(ev.ReceiverId, cancellationToken);
-        var payer = await _userRepository.GetByIdAsync(ev.PayerId, cancellationToken);
+        var domainEvent = notification.DomainEvent;
+        var receiver = await _userRepository.GetByIdAsync(domainEvent.ReceiverId, cancellationToken);
+        var payer = await _userRepository.GetByIdAsync(domainEvent.PayerId, cancellationToken);
 
-        await SendReceiverEmailAsync(receiver, ev, cancellationToken);
-        await SendPayerEmailAsync(payer, ev, cancellationToken);
+        // Tách hai luồng gửi để đảm bảo template phù hợp từng đối tượng nghiệp vụ.
+        await SendReceiverEmailAsync(receiver, domainEvent, cancellationToken);
+        await SendPayerEmailAsync(payer, domainEvent, cancellationToken);
     }
 
+    /// <summary>
+    /// Gửi email cho reader nhận tiền giải ngân.
+    /// Luồng xử lý: kiểm tra email hợp lệ, dựng nội dung breakdown khoản tiền, rồi gửi an toàn.
+    /// </summary>
     private async Task SendReceiverEmailAsync(
         Domain.Entities.User? receiver,
         Domain.Events.EscrowReleasedDomainEvent ev,
@@ -38,6 +52,7 @@ public sealed class EscrowReleasedEmailNotificationHandler : INotificationHandle
     {
         if (receiver == null || string.IsNullOrWhiteSpace(receiver.Email))
         {
+            // Edge case thiếu thông tin người nhận: bỏ qua gửi để tránh lỗi null/email rỗng.
             return;
         }
 
@@ -56,6 +71,10 @@ public sealed class EscrowReleasedEmailNotificationHandler : INotificationHandle
         await SendEmailSafelyAsync(receiver.Email, subject, body, "Reader", cancellationToken);
     }
 
+    /// <summary>
+    /// Gửi email cho user trả phí xác nhận phiên chat đã tất toán.
+    /// Luồng xử lý: kiểm tra email hợp lệ, dựng nội dung xác nhận chuyển escrow, rồi gửi an toàn.
+    /// </summary>
     private async Task SendPayerEmailAsync(
         Domain.Entities.User? payer,
         Domain.Events.EscrowReleasedDomainEvent ev,
@@ -63,6 +82,7 @@ public sealed class EscrowReleasedEmailNotificationHandler : INotificationHandle
     {
         if (payer == null || string.IsNullOrWhiteSpace(payer.Email))
         {
+            // Edge case không có email người trả: dừng nhánh gửi tương ứng.
             return;
         }
 
@@ -76,6 +96,10 @@ public sealed class EscrowReleasedEmailNotificationHandler : INotificationHandle
         await SendEmailSafelyAsync(payer.Email, subject, body, "User", cancellationToken);
     }
 
+    /// <summary>
+    /// Thực hiện gửi email với cơ chế bắt lỗi cục bộ.
+    /// Luồng xử lý: thử gửi qua IEmailSender, nếu lỗi thì log để vận hành theo dõi.
+    /// </summary>
     private async Task SendEmailSafelyAsync(
         string email,
         string subject,
@@ -89,6 +113,7 @@ public sealed class EscrowReleasedEmailNotificationHandler : INotificationHandle
         }
         catch (Exception ex)
         {
+            // Không ném lại exception để tránh làm fail domain event chain vì lỗi kênh thông báo.
             _logger.LogError(ex, "[EscrowReleasedEmail] Lỗi gửi email {Audience} {Email}", audience, email);
         }
     }

@@ -1,3 +1,5 @@
+using System.Threading;
+using System.Threading.Tasks;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
@@ -6,6 +8,10 @@ namespace TarotNow.Application.Features.Reading.Commands.InitSession;
 
 public partial class InitReadingSessionCommandHandler
 {
+    /// <summary>
+    /// Dựng entity ReadingSession ban đầu từ request.
+    /// Luồng xử lý: map dữ liệu đầu vào và pricing đã resolve sang constructor session để chuyển cho orchestrator.
+    /// </summary>
     private static ReadingSession BuildSession(
         InitReadingSessionCommand request,
         string currencyUsed,
@@ -19,6 +25,10 @@ public partial class InitReadingSessionCommandHandler
             amountCharged);
     }
 
+    /// <summary>
+    /// Bắt đầu phiên reading thông qua orchestrator.
+    /// Luồng xử lý: gọi StartPaidSession với session + chi phí, kiểm tra kết quả success và ném lỗi khi khởi tạo thất bại.
+    /// </summary>
     private async Task StartSessionAsync(
         InitReadingSessionCommand request,
         ReadingSession session,
@@ -36,6 +46,10 @@ public partial class InitReadingSessionCommandHandler
             },
             cancellationToken);
 
-        if (!success) throw new BadRequestException("Failed to start session. Please try again.");
+        if (!success)
+        {
+            // Edge case: orchestrator không mở được phiên (ví không đủ hoặc lỗi nghiệp vụ khác).
+            throw new BadRequestException("Failed to start session. Please try again.");
+        }
     }
 }

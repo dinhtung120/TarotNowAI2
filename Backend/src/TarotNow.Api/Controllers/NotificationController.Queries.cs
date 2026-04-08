@@ -7,6 +7,14 @@ namespace TarotNow.Api.Controllers;
 
 public partial class NotificationController
 {
+    /// <summary>
+    /// Lấy danh sách thông báo của người dùng theo phân trang.
+    /// Luồng xử lý: xác thực user id, gửi query với bộ lọc isRead tùy chọn.
+    /// </summary>
+    /// <param name="page">Trang hiện tại.</param>
+    /// <param name="pageSize">Số thông báo mỗi trang.</param>
+    /// <param name="isRead">Bộ lọc trạng thái đã đọc/chưa đọc.</param>
+    /// <returns>Danh sách thông báo theo điều kiện truy vấn.</returns>
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(NotificationListResponse))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -17,6 +25,7 @@ public partial class NotificationController
     {
         if (!User.TryGetUserId(out var userId))
         {
+            // Chặn truy vấn thông báo khi không có danh tính người dùng hợp lệ.
             return this.UnauthorizedProblem();
         }
 
@@ -32,6 +41,10 @@ public partial class NotificationController
         return Ok(result);
     }
 
+    /// <summary>
+    /// Lấy tổng số thông báo chưa đọc.
+    /// </summary>
+    /// <returns>Số lượng thông báo chưa đọc của người dùng hiện tại.</returns>
     [HttpGet("unread-count")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -39,6 +52,7 @@ public partial class NotificationController
     {
         if (!User.TryGetUserId(out var userId))
         {
+            // Chặn truy vấn unread count khi user chưa xác thực.
             return this.UnauthorizedProblem();
         }
 

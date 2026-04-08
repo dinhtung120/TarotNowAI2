@@ -5,8 +5,13 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
+// Partial truy vấn đọc chi tiết reading session.
 public partial class MongoReadingSessionRepository
 {
+    /// <summary>
+    /// Lấy reading session theo id.
+    /// Luồng xử lý: query Mongo theo BuildIdFilter và map sang domain entity nếu có.
+    /// </summary>
     public async Task<ReadingSession?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
     {
         var doc = await _mongoContext.ReadingSessions
@@ -16,10 +21,15 @@ public partial class MongoReadingSessionRepository
         return doc == null ? null : MapToEntity(doc);
     }
 
+    /// <summary>
+    /// Kiểm tra user đã rút daily card trong ngày hay chưa.
+    /// Luồng xử lý: xác định khoảng [startOfDay, endOfDay) UTC và đếm sessions spread Daily1Card trong khoảng.
+    /// </summary>
     public async Task<bool> HasDrawnDailyCardAsync(Guid userId, DateTime utcNow, CancellationToken cancellationToken = default)
     {
         var startOfDay = utcNow.Date;
         var endOfDay = startOfDay.AddDays(1);
+        // Dùng cận trái đóng, cận phải mở để tránh overlap giữa các ngày.
 
         var count = await _mongoContext.ReadingSessions.CountDocumentsAsync(
             r => r.UserId == userId.ToString()
@@ -31,6 +41,10 @@ public partial class MongoReadingSessionRepository
         return count > 0;
     }
 
+    /// <summary>
+    /// Lấy session kèm danh sách AI requests liên quan.
+    /// Luồng xử lý: lấy session từ Mongo, nếu tồn tại thì truy vấn AiRequests từ PostgreSQL theo sessionId.
+    /// </summary>
     public async Task<(ReadingSession ReadingSession, IEnumerable<AiRequest> AiRequests)?> GetSessionWithAiRequestsAsync(
         string sessionId,
         CancellationToken cancellationToken = default)
@@ -39,12 +53,14 @@ public partial class MongoReadingSessionRepository
         if (session == null)
         {
             return null;
+            // Edge case: session không tồn tại thì không truy vấn phụ AI requests.
         }
 
         var aiRequests = _pgContext.AiRequests
             .Where(a => a.ReadingSessionRef == sessionId)
             .OrderBy(a => a.CreatedAt)
             .AsEnumerable();
+        // Giữ thứ tự thời gian để tái dựng timeline stream/follow-up chính xác.
 
         return (session, aiRequests);
     }

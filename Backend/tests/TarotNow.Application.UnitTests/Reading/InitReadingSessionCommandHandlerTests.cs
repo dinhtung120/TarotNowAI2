@@ -10,16 +10,28 @@ using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.UnitTests.Reading;
 
+// Unit test cho handler khởi tạo phiên xem bài.
 public class InitReadingSessionCommandHandlerTests
 {
+    // Mock reading session repo để kiểm soát kiểm tra daily card.
     private readonly Mock<IReadingSessionRepository> _repoMock;
+    // Mock orchestrator để kiểm tra luồng trừ phí/tạo session trả phí.
     private readonly Mock<IReadingSessionOrchestrator> _orchestratorMock;
+    // Mock user repo để lấy dữ liệu user.
     private readonly Mock<IUserRepository> _userRepoMock;
+    // Mock RNG service cho các nhánh cần random.
     private readonly Mock<IRngService> _rngMock;
+    // Mock config settings để cố định giá spread.
     private readonly Mock<ISystemConfigSettings> _systemConfigSettingsMock;
+    // Mock entitlement service để mô phỏng consume entitlement.
     private readonly Mock<IEntitlementService> _entitlementServiceMock;
+    // Handler cần kiểm thử.
     private readonly InitReadingSessionCommandHandler _handler;
 
+    /// <summary>
+    /// Khởi tạo fixture cho InitReadingSessionCommandHandler.
+    /// Luồng setup giá spread và entitlement mặc định giúp test ổn định theo policy hiện tại.
+    /// </summary>
     public InitReadingSessionCommandHandlerTests()
     {
         _repoMock = new Mock<IReadingSessionRepository>();
@@ -43,7 +55,11 @@ public class InitReadingSessionCommandHandlerTests
             _rngMock.Object, _systemConfigSettingsMock.Object, _entitlementServiceMock.Object);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận daily card đã rút trong ngày sẽ bị từ chối.
+    /// Luồng này bảo vệ rule chỉ một lượt Daily1Card miễn phí mỗi ngày.
+    /// </summary>
+    [Fact]
     public async Task Handle_Daily1Card_ShouldThrowBadRequest_IfAlreadyDrawnToday()
     {
         var request = new InitReadingSessionCommand { UserId = Guid.NewGuid(), SpreadType = SpreadType.Daily1Card };
@@ -53,12 +69,17 @@ public class InitReadingSessionCommandHandlerTests
         _userRepoMock.Setup(x => x.GetByIdAsync(request.UserId, It.IsAny<CancellationToken>())).ReturnsAsync(user);
         _repoMock.Setup(x => x.HasDrawnDailyCardAsync(request.UserId, It.IsAny<DateTime>(), CancellationToken.None)).ReturnsAsync(true);
 
+        // Kỳ vọng ném BadRequest với thông điệp hướng dẫn chọn spread khác.
         Func<Task> act = async () => await _handler.Handle(request, CancellationToken.None);
         await act.Should().ThrowAsync<BadRequestException>()
             .WithMessage("You have already drawn your free daily card today. Please try other spreads.");
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận request hợp lệ tạo session và áp đúng chi phí spread.
+    /// Luồng này kiểm tra handler truyền payload đúng cho orchestrator.
+    /// </summary>
+    [Fact]
     public async Task Handle_ValidRequest_ShouldReturnSessionResultAndDeductGold()
     {
         var request = new InitReadingSessionCommand { UserId = Guid.NewGuid(), SpreadType = SpreadType.Spread3Cards };
@@ -75,6 +96,7 @@ public class InitReadingSessionCommandHandlerTests
             CancellationToken.None))
             .ReturnsAsync((true, string.Empty));
 
+        // Thực thi handler và kiểm tra cost/sessionId trong kết quả trả về.
         var result = await _handler.Handle(request, CancellationToken.None);
 
         result.Should().NotBeNull();

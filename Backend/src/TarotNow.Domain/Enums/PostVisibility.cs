@@ -1,12 +1,15 @@
 
-
 namespace TarotNow.Domain.Enums;
 
+// Tập hằng mức độ hiển thị của bài viết cộng đồng.
 public static class PostVisibility
 {
-        public const string Public = "public";
+    // Công khai cho mọi người.
+    public const string Public = "public";
 
-        public const string FriendsOnly = "friends_only";
+    // Chỉ bạn bè có thể xem.
+    public const string FriendsOnly = "friends_only";
 
-        public const string Private = "private";
+    // Chỉ chủ bài viết xem được.
+    public const string Private = "private";
 }

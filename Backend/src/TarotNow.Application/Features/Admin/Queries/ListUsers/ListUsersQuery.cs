@@ -1,49 +1,65 @@
-
-
 using MediatR;
-using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace TarotNow.Application.Features.Admin.Queries.ListUsers;
 
+// Query phân trang danh sách người dùng cho admin.
 public class ListUsersQuery : IRequest<ListUsersResponse>
 {
-        public int Page { get; set; } = 1;
+    // Trang hiện tại (1-based).
+    public int Page { get; set; } = 1;
 
-        public int PageSize { get; set; } = 20;
+    // Kích thước trang.
+    public int PageSize { get; set; } = 20;
 
-        public string? SearchTerm { get; set; }
+    // Từ khóa tìm kiếm theo email/tên hiển thị (tùy triển khai repository).
+    public string? SearchTerm { get; set; }
 }
 
+// Kết quả trả về cho truy vấn danh sách user.
 public class ListUsersResponse
 {
-        public IEnumerable<UserDto> Users { get; set; } = new List<UserDto>();
+    // Danh sách user của trang hiện tại.
+    public IEnumerable<UserDto> Users { get; set; } = new List<UserDto>();
 
-        public int TotalCount { get; set; }
+    // Tổng số user theo bộ lọc.
+    public int TotalCount { get; set; }
 }
 
+// DTO hiển thị user trong danh sách quản trị.
 public class UserDto
 {
-        public System.Guid Id { get; set; }
+    // Định danh user.
+    public Guid Id { get; set; }
 
-        public string Email { get; set; } = string.Empty;
+    // Email user.
+    public string Email { get; set; } = string.Empty;
 
-        public string DisplayName { get; set; } = string.Empty;
+    // Tên hiển thị user.
+    public string DisplayName { get; set; } = string.Empty;
 
-        public string Status { get; set; } = string.Empty;
+    // Trạng thái tài khoản.
+    public string Status { get; set; } = string.Empty;
 
-        public string Role { get; set; } = string.Empty;
-    
-        [System.Text.Json.Serialization.JsonPropertyName("level")]
+    // Vai trò tài khoản.
+    public string Role { get; set; } = string.Empty;
+
+    // Cấp độ hiện tại của user.
+    [JsonPropertyName("level")]
     public int Level { get; set; }
-    
-        [System.Text.Json.Serialization.JsonPropertyName("exp")]
+
+    // Điểm kinh nghiệm hiện tại.
+    [JsonPropertyName("exp")]
     public long Exp { get; set; }
-    
-        [System.Text.Json.Serialization.JsonPropertyName("goldBalance")]
+
+    // Số dư vàng.
+    [JsonPropertyName("goldBalance")]
     public long GoldBalance { get; set; }
-    
-        [System.Text.Json.Serialization.JsonPropertyName("diamondBalance")]
+
+    // Số dư kim cương.
+    [JsonPropertyName("diamondBalance")]
     public long DiamondBalance { get; set; }
-    
-        public System.DateTime CreatedAt { get; set; }
+
+    // Thời điểm tạo tài khoản.
+    public DateTime CreatedAt { get; set; }
 }

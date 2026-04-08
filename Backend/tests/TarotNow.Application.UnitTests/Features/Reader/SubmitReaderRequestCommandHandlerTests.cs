@@ -12,12 +12,20 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Reader;
 
+// Unit test cho handler gửi đơn đăng ký Reader.
 public class SubmitReaderRequestCommandHandlerTests
 {
+    // Mock user repo để kiểm soát trạng thái user/role.
     private readonly Mock<IUserRepository> _mockUserRepo;
+    // Mock reader request repo để kiểm soát đơn gần nhất và thao tác tạo mới.
     private readonly Mock<IReaderRequestRepository> _mockReaderReqRepo;
+    // Handler cần kiểm thử.
     private readonly SubmitReaderRequestCommandHandler _handler;
 
+    /// <summary>
+    /// Khởi tạo fixture cho SubmitReaderRequestCommandHandler.
+    /// Luồng dùng mock repos để cô lập validation rule của đăng ký Reader.
+    /// </summary>
     public SubmitReaderRequestCommandHandlerTests()
     {
         _mockUserRepo = new Mock<IUserRepository>();
@@ -25,7 +33,11 @@ public class SubmitReaderRequestCommandHandlerTests
         _handler = new SubmitReaderRequestCommandHandler(_mockUserRepo.Object, _mockReaderReqRepo.Object);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận user không tồn tại trả NotFoundException.
+    /// Luồng này ngăn tạo request reader cho user không hợp lệ.
+    /// </summary>
+    [Fact]
     public async Task Handle_UserNotFound_ThrowsNotFoundException()
     {
         var command = new SubmitReaderRequestCommand { UserId = Guid.NewGuid() };
@@ -33,7 +45,11 @@ public class SubmitReaderRequestCommandHandlerTests
         await Assert.ThrowsAsync<NotFoundException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận user inactive/banned bị từ chối đăng ký Reader.
+    /// Luồng này bảo vệ rule yêu cầu tài khoản phải active.
+    /// </summary>
+    [Fact]
     public async Task Handle_UserInactive_ThrowsBadRequestException()
     {
         var command = new SubmitReaderRequestCommand { UserId = Guid.NewGuid() };
@@ -44,7 +60,11 @@ public class SubmitReaderRequestCommandHandlerTests
         Assert.Contains("Tài khoản chưa được kích hoạt hoặc đã bị khóa", ex.Message);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận user đã có role đặc biệt không được đăng ký Reader.
+    /// Luồng này tránh trùng vai trò và sai quy trình duyệt.
+    /// </summary>
+    [Fact]
     public async Task Handle_UserAlreadyHasRole_ThrowsBadRequestException()
     {
         var command = new SubmitReaderRequestCommand { UserId = Guid.NewGuid() };
@@ -55,7 +75,11 @@ public class SubmitReaderRequestCommandHandlerTests
         Assert.Contains("Bạn đã có vai trò đặc biệt, không cần đăng ký Reader", ex.Message);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận user có đơn pending hiện tại không được nộp thêm đơn mới.
+    /// Luồng này bảo vệ idempotency nghiệp vụ theo trạng thái đơn gần nhất.
+    /// </summary>
+    [Fact]
     public async Task Handle_UserHasPendingRequest_ThrowsBadRequestException()
     {
         var command = new SubmitReaderRequestCommand { UserId = Guid.NewGuid() };
@@ -68,7 +92,11 @@ public class SubmitReaderRequestCommandHandlerTests
         Assert.Contains("Bạn đã có đơn đang chờ", ex.Message);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận request hợp lệ tạo ReaderRequest mới trạng thái Pending.
+    /// Luồng này kiểm tra AddAsync nhận đúng UserId và status mặc định.
+    /// </summary>
+    [Fact]
     public async Task Handle_ValidRequest_CreatesReaderRequestDto()
     {
         var command = new SubmitReaderRequestCommand { UserId = Guid.NewGuid(), IntroText = "Hello" };
@@ -81,19 +109,27 @@ public class SubmitReaderRequestCommandHandlerTests
         _mockReaderReqRepo.Verify(x => x.AddAsync(It.Is<ReaderRequestDto>(r => r.UserId == command.UserId.ToString() && r.Status == ReaderApprovalStatus.Pending), It.IsAny<CancellationToken>()), Times.Once);
     }
 
-    
+    /// <summary>
+    /// Tạo user test theo trạng thái và role yêu cầu.
+    /// Luồng helper này giảm lặp setup entity cho nhiều test case.
+    /// </summary>
     private static User CreateUser(Guid id, string status, string role)
     {
         var type = typeof(User);
         var constructor = type.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).FirstOrDefault();
         var user = (User)constructor!.Invoke(null);
+        // Gán trực tiếp thuộc tính cốt lõi để mô phỏng user ở các trạng thái khác nhau.
         type.GetProperty("Id")?.SetValue(user, id);
         type.GetProperty("Status")?.SetValue(user, status);
         type.GetProperty("Role")?.SetValue(user, role);
         return user;
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận đơn bị reject trước đó được phép nộp lại.
+    /// Luồng này đảm bảo rule re-submit hợp lệ sau khi bị từ chối.
+    /// </summary>
+    [Fact]
     public async Task Handle_PreviouslyRejected_AllowsReSubmit()
     {
         var command = new SubmitReaderRequestCommand { UserId = Guid.NewGuid(), IntroText = "Try again" };

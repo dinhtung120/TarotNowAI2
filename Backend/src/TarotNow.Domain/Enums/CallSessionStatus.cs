@@ -2,17 +2,22 @@ using System.ComponentModel;
 
 namespace TarotNow.Domain.Enums;
 
+// Enum trạng thái phiên gọi để đồng bộ lifecycle cuộc gọi audio/video.
 public enum CallSessionStatus
 {
-        [Description("requested")]
+    // Phiên gọi vừa được yêu cầu.
+    [Description("requested")]
     Requested = 0,
 
-        [Description("accepted")]
+    // Phiên gọi đã được chấp nhận.
+    [Description("accepted")]
     Accepted = 1,
 
-        [Description("rejected")]
+    // Phiên gọi đã bị từ chối.
+    [Description("rejected")]
     Rejected = 2,
 
-        [Description("ended")]
+    // Phiên gọi đã kết thúc.
+    [Description("ended")]
     Ended = 3
 }

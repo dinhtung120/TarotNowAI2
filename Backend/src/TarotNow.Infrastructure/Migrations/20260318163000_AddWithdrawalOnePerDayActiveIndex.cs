@@ -6,11 +6,16 @@ using TarotNow.Infrastructure.Persistence;
 
 namespace TarotNow.Infrastructure.Migrations
 {
-        [DbContext(typeof(ApplicationDbContext))]
+    [DbContext(typeof(ApplicationDbContext))]
     [Migration("20260318163000_AddWithdrawalOnePerDayActiveIndex")]
+    // Migration thêm unique index giới hạn mỗi user một yêu cầu rút active mỗi ngày.
     public partial class AddWithdrawalOnePerDayActiveIndex : Migration
     {
-                protected override void Up(MigrationBuilder migrationBuilder)
+        /// <summary>
+        /// Áp dụng thay đổi schema theo hướng nâng cấp.
+        /// Luồng xử lý: tạo unique index có filter trạng thái pending/approved để chặn gửi trùng theo ngày.
+        /// </summary>
+        protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateIndex(
                 name: "ix_withdrawal_one_per_day_active",
@@ -20,7 +25,11 @@ namespace TarotNow.Infrastructure.Migrations
                 filter: "status in ('pending','approved')");
         }
 
-                protected override void Down(MigrationBuilder migrationBuilder)
+        /// <summary>
+        /// Hoàn tác thay đổi schema của migration này khi rollback.
+        /// Luồng xử lý: xóa index giới hạn one-per-day đã tạo trong Up.
+        /// </summary>
+        protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(
                 name: "ix_withdrawal_one_per_day_active",

@@ -8,12 +8,20 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Call;
 
+// Unit test cho handler phản hồi cuộc gọi (accept/reject).
 public class RespondCallCommandHandlerTests
 {
+    // Mock call repo để điều khiển trạng thái call session trước/sau phản hồi.
     private readonly Mock<ICallSessionRepository> _mockCallRepo;
+    // Mock conversation repo để xác minh quyền responder.
     private readonly Mock<IConversationRepository> _mockConvRepo;
+    // Handler cần kiểm thử.
     private readonly RespondCallCommandHandler _handler;
 
+    /// <summary>
+    /// Khởi tạo fixture cho RespondCallCommandHandler.
+    /// Luồng dùng mock repositories để cô lập logic phản hồi cuộc gọi.
+    /// </summary>
     public RespondCallCommandHandlerTests()
     {
         _mockCallRepo = new Mock<ICallSessionRepository>();
@@ -21,27 +29,32 @@ public class RespondCallCommandHandlerTests
         _handler = new RespondCallCommandHandler(_mockCallRepo.Object, _mockConvRepo.Object);
     }
 
+    /// <summary>
+    /// Xác nhận nhánh accept chuyển trạng thái sang Accepted và set StartedAt.
+    /// Luồng kiểm tra UpdateStatusAsync được gọi với startedAt khác null.
+    /// </summary>
     [Fact]
     public async Task Handle_AcceptCall_StatusAccepted_StartedAtSet()
     {
         var callId = "call-1";
         var responderId = Guid.NewGuid();
         var initiatorId = Guid.NewGuid();
-        
-        var callSession = new CallSessionDto 
-        { 
-            Id = callId, 
-            ConversationId = "conv-1", 
+
+        var callSession = new CallSessionDto
+        {
+            Id = callId,
+            ConversationId = "conv-1",
             Status = CallSessionStatus.Requested,
             InitiatorId = initiatorId.ToString()
         };
-        var conv = new ConversationDto 
-        { 
-            Id = "conv-1", 
-            UserId = responderId.ToString(), 
-            ReaderId = initiatorId.ToString() 
+        var conv = new ConversationDto
+        {
+            Id = "conv-1",
+            UserId = responderId.ToString(),
+            ReaderId = initiatorId.ToString()
         };
 
+        // Setup sequence để giả lập call session sau update được đọc lại ở trạng thái Accepted.
         _mockCallRepo.SetupSequence(r => r.GetByIdAsync(callId, default))
             .ReturnsAsync(callSession)
             .ReturnsAsync(new CallSessionDto
@@ -61,6 +74,7 @@ public class RespondCallCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
+        // Gọi handler accept call và xác minh call repo được gọi đúng tham số.
         var command = new RespondCallCommand { CallSessionId = callId, ResponderId = responderId, Accept = true };
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -75,6 +89,10 @@ public class RespondCallCommandHandlerTests
         Assert.Equal(CallSessionStatus.Accepted, result.Status);
     }
 
+    /// <summary>
+    /// Xác nhận call không ở Requested thì không cho phản hồi.
+    /// Luồng này bảo vệ state machine của call session.
+    /// </summary>
     [Fact]
     public async Task Handle_NotRequested_ThrowsBadRequest()
     {
@@ -87,6 +105,10 @@ public class RespondCallCommandHandlerTests
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
+    /// <summary>
+    /// Xác nhận initiator không được tự phản hồi cuộc gọi của chính mình.
+    /// Luồng này kiểm tra rule phân tách vai trò caller và responder.
+    /// </summary>
     [Fact]
     public async Task Handle_InitiatorCantRespond_ThrowsBadRequest()
     {

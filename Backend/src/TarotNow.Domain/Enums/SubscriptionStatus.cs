@@ -1,12 +1,15 @@
 
-
 namespace TarotNow.Domain.Enums;
 
+// Tập hằng trạng thái vòng đời subscription người dùng.
 public static class SubscriptionStatus
 {
-        public const string Active = "active";
+    // Subscription đang hiệu lực.
+    public const string Active = "active";
 
-        public const string Expired = "expired";
+    // Subscription đã hết hạn.
+    public const string Expired = "expired";
 
-        public const string Cancelled = "cancelled";
+    // Subscription đã bị hủy.
+    public const string Cancelled = "cancelled";
 }

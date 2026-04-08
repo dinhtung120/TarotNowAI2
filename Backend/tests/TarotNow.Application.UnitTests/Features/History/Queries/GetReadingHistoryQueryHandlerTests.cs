@@ -9,18 +9,29 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.History.Queries;
 
+// Unit test cho query lấy lịch sử xem bài phân trang.
 public class GetReadingHistoryQueryHandlerTests
 {
+    // Mock reading session repo để điều khiển dữ liệu phân trang.
     private readonly Mock<IReadingSessionRepository> _mockSessionRepository;
+    // Handler cần kiểm thử.
     private readonly GetReadingHistoryQueryHandler _handler;
 
+    /// <summary>
+    /// Khởi tạo fixture cho GetReadingHistoryQueryHandler.
+    /// Luồng dùng mock repository để cô lập logic phân trang/mapping.
+    /// </summary>
     public GetReadingHistoryQueryHandlerTests()
     {
         _mockSessionRepository = new Mock<IReadingSessionRepository>();
         _handler = new GetReadingHistoryQueryHandler(_mockSessionRepository.Object);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận có dữ liệu sẽ trả lịch sử phân trang đúng tổng số bản ghi.
+    /// Luồng này kiểm tra mapping trạng thái completed theo session data.
+    /// </summary>
+    [Fact]
     public async Task Handle_ShouldReturnPaginatedHistory_WhenSessionsExist()
     {
         var userId = Guid.NewGuid();
@@ -36,6 +47,7 @@ public class GetReadingHistoryQueryHandlerTests
         _mockSessionRepository.Setup(r => r.GetSessionsByUserIdAsync(userId, 1, 10, default))
             .ReturnsAsync(((IEnumerable<ReadingSession>)sessions, 2));
 
+        // Gọi handler và assert metadata phân trang cùng danh sách item.
         var result = await _handler.Handle(query, CancellationToken.None);
 
         result.Should().NotBeNull();
@@ -48,7 +60,11 @@ public class GetReadingHistoryQueryHandlerTests
         result.Items.Last().IsCompleted.Should().BeFalse();
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận không có dữ liệu sẽ trả danh sách rỗng hợp lệ.
+    /// Luồng này đảm bảo contract response không trả null ở thuộc tính Items.
+    /// </summary>
+    [Fact]
     public async Task Handle_ShouldReturnEmptyList_WhenNoSessionsExist()
     {
         var userId = Guid.NewGuid();

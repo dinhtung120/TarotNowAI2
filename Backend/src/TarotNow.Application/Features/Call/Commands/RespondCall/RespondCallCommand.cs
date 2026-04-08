@@ -3,11 +3,15 @@ using TarotNow.Application.Common;
 
 namespace TarotNow.Application.Features.Call.Commands.RespondCall;
 
+// Command phản hồi cuộc gọi đang ở trạng thái requested.
 public class RespondCallCommand : IRequest<CallSessionDto>
 {
-        public string CallSessionId { get; set; } = string.Empty;
+    // Định danh phiên gọi cần phản hồi.
+    public string CallSessionId { get; set; } = string.Empty;
 
-        public Guid ResponderId { get; set; }
+    // Định danh người phản hồi cuộc gọi.
+    public Guid ResponderId { get; set; }
 
-        public bool Accept { get; set; }
+    // Cờ true để nhận cuộc gọi, false để từ chối.
+    public bool Accept { get; set; }
 }

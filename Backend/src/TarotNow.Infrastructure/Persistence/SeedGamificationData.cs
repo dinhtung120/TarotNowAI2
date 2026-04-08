@@ -6,8 +6,13 @@ using MongoDB.Driver;
 
 namespace TarotNow.Infrastructure.Persistence;
 
+// Seed dữ liệu gamification cơ bản cho môi trường mới.
 public static class SeedGamificationData
 {
+    /// <summary>
+    /// Seed toàn bộ dữ liệu gamification nền tảng.
+    /// Luồng xử lý: seed quests trước, sau đó achievements và titles.
+    /// </summary>
     public static async Task SeedAsync(MongoDbContext context)
     {
         await SeedQuestsAsync(context);
@@ -15,9 +20,15 @@ public static class SeedGamificationData
         await SeedTitlesAsync(context);
     }
 
+    /// <summary>
+    /// Seed quest definitions mặc định.
+    /// Luồng xử lý: nếu đã có dữ liệu quest thì bỏ qua; ngược lại insert batch quest khởi tạo.
+    /// </summary>
     private static async Task SeedQuestsAsync(MongoDbContext context)
     {
         if (await context.Quests.CountDocumentsAsync(_ => true) > 0) return;
+        // Tránh seed trùng dữ liệu khi deploy/restart nhiều lần.
+
         await context.Quests.InsertManyAsync(new List<QuestDefinitionDocument>
         {
             new()
@@ -43,9 +54,14 @@ public static class SeedGamificationData
         });
     }
 
+    /// <summary>
+    /// Seed achievement definitions mặc định.
+    /// Luồng xử lý: chỉ insert khi collection achievements đang rỗng.
+    /// </summary>
     private static async Task SeedAchievementsAsync(MongoDbContext context)
     {
         if (await context.Achievements.CountDocumentsAsync(_ => true) > 0) return;
+
         await context.Achievements.InsertManyAsync(new List<AchievementDefinitionDocument>
         {
             new()
@@ -59,9 +75,14 @@ public static class SeedGamificationData
         });
     }
 
+    /// <summary>
+    /// Seed title definitions mặc định.
+    /// Luồng xử lý: insert title khởi tạo nếu collection titles chưa có dữ liệu.
+    /// </summary>
     private static async Task SeedTitlesAsync(MongoDbContext context)
     {
         if (await context.Titles.CountDocumentsAsync(_ => true) > 0) return;
+
         await context.Titles.InsertManyAsync(new List<TitleDefinitionDocument>
         {
             new()

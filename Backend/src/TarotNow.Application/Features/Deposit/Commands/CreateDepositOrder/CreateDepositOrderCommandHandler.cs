@@ -10,17 +10,26 @@ using TarotNow.Domain.Entities;
 
 namespace TarotNow.Application.Features.Deposit.Commands.CreateDepositOrder;
 
+// Handler tạo deposit order và áp dụng promotion đang hoạt động.
 public class CreateDepositOrderCommandHandler : IRequestHandler<CreateDepositOrderCommand, CreateDepositOrderResponse>
 {
     private readonly IDepositOrderRepository _depositOrderRepository;
     private readonly IDepositPromotionRepository _promotionRepository;
 
+    /// <summary>
+    /// Khởi tạo handler create deposit order.
+    /// Luồng xử lý: nhận repository đơn nạp và promotion để xử lý idempotency + tính kim cương thưởng.
+    /// </summary>
     public CreateDepositOrderCommandHandler(IDepositOrderRepository depositOrderRepository, IDepositPromotionRepository promotionRepository)
     {
         _depositOrderRepository = depositOrderRepository;
         _promotionRepository = promotionRepository;
     }
 
+    /// <summary>
+    /// Xử lý command tạo đơn nạp tiền.
+    /// Luồng xử lý: chuẩn hóa idempotency key, kiểm tra đơn đã tồn tại theo transaction token, tính base diamond + bonus promotion, tạo order mới và lưu repository.
+    /// </summary>
     public async Task<CreateDepositOrderResponse> Handle(CreateDepositOrderCommand request, CancellationToken cancellationToken)
     {
         var normalizedIdempotencyKey = NormalizeIdempotencyKey(request.IdempotencyKey);
@@ -28,6 +37,7 @@ public class CreateDepositOrderCommandHandler : IRequestHandler<CreateDepositOrd
         var existingOrder = await _depositOrderRepository.GetByTransactionIdAsync(clientTransactionToken, cancellationToken);
         if (existingOrder != null)
         {
+            // Idempotency: nếu client gửi lại cùng key thì trả đơn đã tạo trước đó.
             return BuildResponse(existingOrder);
         }
 
@@ -39,6 +49,7 @@ public class CreateDepositOrderCommandHandler : IRequestHandler<CreateDepositOrd
         {
             if (request.AmountVnd >= promo.MinAmountVnd)
             {
+                // Lấy bonus đầu tiên thỏa ngưỡng vì danh sách promotion đã được sắp theo ưu tiên.
                 bonusDiamond = promo.BonusDiamond;
                 break;
             }
@@ -52,6 +63,10 @@ public class CreateDepositOrderCommandHandler : IRequestHandler<CreateDepositOrd
         return BuildResponse(order);
     }
 
+    /// <summary>
+    /// Chuẩn hóa và validate idempotency key của request.
+    /// Luồng xử lý: trim chuỗi, chặn giá trị rỗng và giới hạn tối đa 128 ký tự.
+    /// </summary>
     private static string NormalizeIdempotencyKey(string? idempotencyKey)
     {
         var normalized = idempotencyKey?.Trim();
@@ -68,6 +83,10 @@ public class CreateDepositOrderCommandHandler : IRequestHandler<CreateDepositOrd
         return normalized;
     }
 
+    /// <summary>
+    /// Dựng client transaction token ổn định từ user id + idempotency key.
+    /// Luồng xử lý: băm SHA-256 chuỗi đầu vào, lấy prefix hash và ghép thành token chuẩn lưu trong order.
+    /// </summary>
     private static string BuildClientTransactionToken(Guid userId, string normalizedIdempotencyKey)
     {
         var input = $"{userId:N}:{normalizedIdempotencyKey}";
@@ -76,6 +95,10 @@ public class CreateDepositOrderCommandHandler : IRequestHandler<CreateDepositOrd
         return $"client_{userId:N}_{hashPrefix}";
     }
 
+    /// <summary>
+    /// Map entity DepositOrder sang response DTO.
+    /// Luồng xử lý: trả về order id, amount VND và diamond amount.
+    /// </summary>
     private static CreateDepositOrderResponse BuildResponse(DepositOrder order)
     {
         return new CreateDepositOrderResponse

@@ -10,16 +10,24 @@ namespace TarotNow.Api.Controllers;
 
 public partial class ConversationController
 {
-        [HttpPost("{id}/accept")]
+    /// <summary>
+    /// Reader chấp nhận hội thoại chờ xử lý.
+    /// Luồng xử lý: xác thực reader, gửi command accept, broadcast cập nhật trạng thái.
+    /// </summary>
+    /// <param name="id">Id hội thoại cần chấp nhận.</param>
+    /// <returns>Kết quả accept conversation hoặc unauthorized khi thiếu reader id.</returns>
+    [HttpPost("{id}/accept")]
     [Authorize(Roles = "tarot_reader")]
     [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> AcceptConversation(string id)
     {
         if (TryGetUserId(out var readerId) == false)
         {
+            // Chặn thao tác accept khi không xác định được danh tính reader.
             return this.UnauthorizedProblem();
         }
 
+        // Mapping command rõ ràng để handler xác thực quyền và trạng thái hội thoại.
         var result = await Mediator.Send(new AcceptConversationCommand
         {
             ConversationId = id,
@@ -30,13 +38,21 @@ public partial class ConversationController
         return Ok(result);
     }
 
-        [HttpPost("{id}/reject")]
+    /// <summary>
+    /// Reader từ chối hội thoại chờ xử lý.
+    /// Luồng xử lý: xác thực reader, gửi command reject kèm lý do, broadcast trạng thái mới.
+    /// </summary>
+    /// <param name="id">Id hội thoại cần từ chối.</param>
+    /// <param name="body">Payload lý do từ chối.</param>
+    /// <returns>Kết quả reject conversation hoặc unauthorized khi thiếu reader id.</returns>
+    [HttpPost("{id}/reject")]
     [Authorize(Roles = "tarot_reader")]
     [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> RejectConversation(string id, [FromBody] ConversationRejectBody body)
     {
         if (TryGetUserId(out var readerId) == false)
         {
+            // Chặn thao tác reject khi chủ thể không hợp lệ để đảm bảo audit đúng người thực hiện.
             return this.UnauthorizedProblem();
         }
 

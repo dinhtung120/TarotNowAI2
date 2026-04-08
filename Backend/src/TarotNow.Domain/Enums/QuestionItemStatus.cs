@@ -1,19 +1,28 @@
 
-
 namespace TarotNow.Domain.Enums;
 
+// Tập hằng trạng thái vòng đời item câu hỏi có ràng buộc escrow.
 public static class QuestionItemStatus
 {
-        public const string Pending = "pending";
+    // Item đang chờ xử lý ban đầu.
+    public const string Pending = "pending";
 
-        public const string Accepted = "accepted";
+    // Item đã được chấp nhận.
+    public const string Accepted = "accepted";
 
-        public const string Released = "released";
+    // Tiền của item đã được giải ngân.
+    public const string Released = "released";
 
-        public const string Refunded = "refunded";
+    // Item đã hoàn tiền cho người trả.
+    public const string Refunded = "refunded";
 
-        public const string Disputed = "disputed";
+    // Item đang trong trạng thái tranh chấp.
+    public const string Disputed = "disputed";
 
-        public static bool IsValid(string s) =>
+    /// <summary>
+    /// Kiểm tra status item có nằm trong tập trạng thái hợp lệ của hệ thống hay không.
+    /// Luồng xử lý: so khớp chuỗi đầu vào với toàn bộ hằng trạng thái đã định nghĩa.
+    /// </summary>
+    public static bool IsValid(string s) =>
         s is Pending or Accepted or Released or Refunded or Disputed;
 }

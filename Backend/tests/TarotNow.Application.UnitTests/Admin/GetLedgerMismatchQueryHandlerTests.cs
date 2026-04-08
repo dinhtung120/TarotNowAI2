@@ -9,18 +9,29 @@ using FluentAssertions;
 
 namespace TarotNow.Application.UnitTests.Admin;
 
+// Unit test cho query lấy danh sách lệch số dư ví và ledger.
 public class GetLedgerMismatchQueryHandlerTests
 {
+    // Mock repository admin để kiểm soát dữ liệu mismatch trả về.
     private readonly Mock<IAdminRepository> _mockAdminRepository;
+    // Handler cần kiểm thử.
     private readonly GetLedgerMismatchQueryHandler _handler;
 
+    /// <summary>
+    /// Khởi tạo test fixture cho handler GetLedgerMismatch.
+    /// Luồng dùng mock repository để cô lập handler khỏi tầng persistence.
+    /// </summary>
     public GetLedgerMismatchQueryHandlerTests()
     {
         _mockAdminRepository = new Mock<IAdminRepository>();
         _handler = new GetLedgerMismatchQueryHandler(_mockAdminRepository.Object);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận handler trả đúng danh sách khi repository có mismatch.
+    /// Luồng setup một record mẫu rồi assert dữ liệu mapping đầu ra.
+    /// </summary>
+    [Fact]
     public async Task Handle_WhenMismatchesExist_ReturnsMismatchList()
     {
         var query = new GetLedgerMismatchQuery();
@@ -31,6 +42,7 @@ public class GetLedgerMismatchQueryHandlerTests
 
         _mockAdminRepository.Setup(r => r.GetLedgerMismatchesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(mismatches);
 
+        // Thực thi handler và kiểm tra số lượng/nội dung mismatch.
         var result = await _handler.Handle(query, CancellationToken.None);
 
         result.Should().NotBeNull();
@@ -39,7 +51,11 @@ public class GetLedgerMismatchQueryHandlerTests
         result.First().LedgerGoldBalance.Should().Be(90);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận handler trả danh sách rỗng khi repository không có mismatch.
+    /// Luồng này đảm bảo handler không phát sinh null khi không có dữ liệu.
+    /// </summary>
+    [Fact]
     public async Task Handle_WhenNoMismatches_ReturnsEmptyList()
     {
         var query = new GetLedgerMismatchQuery();
@@ -48,6 +64,7 @@ public class GetLedgerMismatchQueryHandlerTests
         _mockAdminRepository.Setup(r => r.GetLedgerMismatchesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(emptyList);
 
+        // Thực thi handler và xác nhận contract trả về list rỗng hợp lệ.
         var result = await _handler.Handle(query, CancellationToken.None);
 
         result.Should().NotBeNull();

@@ -4,6 +4,7 @@ using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Admin.Commands.ResolveDispute;
 
+// Handler điều phối toàn bộ luồng xử lý tranh chấp question item.
 public partial class ResolveDisputeCommandHandler : IRequestHandler<ResolveDisputeCommand, bool>
 {
     private readonly IChatFinanceRepository _financeRepo;
@@ -13,6 +14,10 @@ public partial class ResolveDisputeCommandHandler : IRequestHandler<ResolveDispu
     private readonly IConversationRepository _conversationRepository;
     private readonly IChatMessageRepository _chatMessageRepository;
 
+    /// <summary>
+    /// Khởi tạo handler resolve dispute.
+    /// Luồng xử lý: nhận các repository tài chính/chat và transaction coordinator để xử lý atomically.
+    /// </summary>
     public ResolveDisputeCommandHandler(
         IChatFinanceRepository financeRepo,
         IWalletRepository walletRepo,
@@ -29,11 +34,16 @@ public partial class ResolveDisputeCommandHandler : IRequestHandler<ResolveDispu
         _chatMessageRepository = chatMessageRepository;
     }
 
+    /// <summary>
+    /// Xử lý command resolve dispute theo action release/refund/split.
+    /// Luồng xử lý: validate action và split percent, dựng audit metadata, chạy toàn bộ settlement trong transaction.
+    /// </summary>
     public async Task<bool> Handle(ResolveDisputeCommand request, CancellationToken cancellationToken)
     {
         var action = request.Action?.Trim().ToLowerInvariant();
         if (action != "release" && action != "refund" && action != "split")
         {
+            // Rule business: chỉ hỗ trợ ba action settle dispute đã định nghĩa.
             throw new BadRequestException("Action phải là 'release', 'refund' hoặc 'split'.");
         }
 
@@ -41,12 +51,15 @@ public partial class ResolveDisputeCommandHandler : IRequestHandler<ResolveDispu
         {
             if (request.SplitPercentToReader is null or <= 0 or >= 100)
             {
+                // Rule split: phần cho reader phải nằm trong khoảng mở (0,100).
                 throw new BadRequestException("SplitPercentToReader phải nằm trong khoảng 1-99.");
             }
         }
 
+        // Metadata audit đi kèm mọi giao dịch để thuận tiện truy vết quyết định xử lý của admin.
         var auditMetadata = BuildResolveAuditMetadata(request.AdminId, action, request.AdminNote);
 
+        // Bọc toàn bộ settlement trong transaction để tránh trạng thái nửa chừng khi phát sinh lỗi.
         await _transactionCoordinator.ExecuteAsync(
             transactionCt => ResolveDisputeAsync(request, action, auditMetadata, transactionCt),
             cancellationToken);

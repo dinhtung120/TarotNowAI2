@@ -12,18 +12,32 @@ namespace TarotNow.Api.Controllers;
 [Route(ApiRoutes.Admin)]
 [Authorize(Roles = "admin")]
 [EnableRateLimiting("auth-session")]
+// API quản trị rút tiền.
+// Luồng chính: lấy hàng chờ withdrawal và xử lý duyệt/từ chối yêu cầu.
 public sealed class AdminWithdrawalsController : ControllerBase
 {
     private readonly IMediator _mediator;
 
+    /// <summary>
+    /// Khởi tạo controller quản trị rút tiền.
+    /// </summary>
+    /// <param name="mediator">MediatR điều phối query/command.</param>
     public AdminWithdrawalsController(IMediator mediator)
     {
         _mediator = mediator;
     }
 
-        [HttpGet("withdrawals/queue")]
+    /// <summary>
+    /// Lấy hàng chờ yêu cầu rút tiền đang pending.
+    /// Luồng xử lý: dựng query với cờ pending và tham số phân trang từ request.
+    /// </summary>
+    /// <param name="page">Trang hiện tại.</param>
+    /// <param name="pageSize">Số mục mỗi trang.</param>
+    /// <returns>Danh sách yêu cầu rút tiền đang chờ xử lý.</returns>
+    [HttpGet("withdrawals/queue")]
     public async Task<IActionResult> WithdrawalQueue([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
+        // Cố định PendingOnly để endpoint này chỉ phục vụ màn hình queue cần hành động.
         var query = new TarotNow.Application.Features.Withdrawal.Queries.ListWithdrawals.ListWithdrawalsQuery
         {
             PendingOnly = true,
@@ -35,12 +49,22 @@ public sealed class AdminWithdrawalsController : ControllerBase
         return Ok(result);
     }
 
-        [HttpPost("withdrawals/process")]
+    /// <summary>
+    /// Xử lý một yêu cầu rút tiền từ hàng chờ.
+    /// Luồng xử lý: xác thực admin id, ánh xạ payload sang command, thực thi nghiệp vụ.
+    /// </summary>
+    /// <param name="body">Payload xử lý withdrawal.</param>
+    /// <returns>Kết quả thành công kèm action đã áp dụng.</returns>
+    [HttpPost("withdrawals/process")]
     public async Task<IActionResult> ProcessWithdrawal([FromBody] ProcessWithdrawalBody body)
     {
         if (!User.TryGetUserId(out var adminId))
+        {
+            // Chặn request không có danh tính admin để không phát sinh thao tác tài chính không truy vết.
             return this.UnauthorizedProblem();
+        }
 
+        // Mapping đầy đủ body sang command để handler kiểm soát MFA và rule duyệt/từ chối.
         var command = new TarotNow.Application.Features.Withdrawal.Commands.ProcessWithdrawal.ProcessWithdrawalCommand
         {
             RequestId = body.WithdrawalId,

@@ -11,13 +11,21 @@ namespace TarotNow.Api.Controllers;
 
 public partial class ConversationController
 {
-        [HttpPost("{id}/add-money/request")]
+    /// <summary>
+    /// Reader gửi đề nghị nạp thêm kim cương trong hội thoại.
+    /// Luồng xử lý: xác thực reader, gửi command request add-money, broadcast cập nhật.
+    /// </summary>
+    /// <param name="id">Id hội thoại.</param>
+    /// <param name="body">Payload đề nghị nạp thêm.</param>
+    /// <returns>Kết quả request add-money hoặc unauthorized khi thiếu reader id.</returns>
+    [HttpPost("{id}/add-money/request")]
     [Authorize(Roles = "tarot_reader")]
     [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> RequestAddMoney(string id, [FromBody] ConversationAddMoneyRequestBody body)
     {
         if (TryGetUserId(out var readerId) == false)
         {
+            // Chặn thao tác tài chính khi không xác định được reader hợp lệ.
             return this.UnauthorizedProblem();
         }
 
@@ -34,12 +42,20 @@ public partial class ConversationController
         return Ok(result);
     }
 
-        [HttpPost("{id}/add-money/respond")]
+    /// <summary>
+    /// Người dùng phản hồi đề nghị nạp thêm kim cương.
+    /// Luồng xử lý: xác thực user, gửi command phản hồi, broadcast trạng thái cập nhật.
+    /// </summary>
+    /// <param name="id">Id hội thoại.</param>
+    /// <param name="body">Payload phản hồi đề nghị nạp thêm.</param>
+    /// <returns>Kết quả phản hồi add-money hoặc unauthorized khi thiếu user id.</returns>
+    [HttpPost("{id}/add-money/respond")]
     [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> RespondAddMoney(string id, [FromBody] ConversationAddMoneyRespondBody body)
     {
         if (TryGetUserId(out var userId) == false)
         {
+            // Chặn phản hồi tài chính từ chủ thể chưa xác thực.
             return this.UnauthorizedProblem();
         }
 
@@ -56,12 +72,20 @@ public partial class ConversationController
         return Ok(result);
     }
 
-        [HttpPost("{id}/dispute")]
+    /// <summary>
+    /// Mở tranh chấp trong ngữ cảnh hội thoại.
+    /// Luồng xử lý: xác thực user, gửi command dispute, broadcast trạng thái tranh chấp.
+    /// </summary>
+    /// <param name="id">Id hội thoại.</param>
+    /// <param name="body">Payload lý do tranh chấp.</param>
+    /// <returns>Kết quả mở dispute hoặc unauthorized khi thiếu user id.</returns>
+    [HttpPost("{id}/dispute")]
     [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> OpenDispute(string id, [FromBody] ConversationDisputeBody body)
     {
         if (TryGetUserId(out var userId) == false)
         {
+            // Chặn tạo dispute nếu không có user id hợp lệ để tránh bản ghi mồ côi.
             return this.UnauthorizedProblem();
         }
 

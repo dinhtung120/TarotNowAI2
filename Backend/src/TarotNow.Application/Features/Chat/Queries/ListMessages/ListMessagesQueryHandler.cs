@@ -1,10 +1,11 @@
 using MediatR;
 using TarotNow.Application.Common;
-using TarotNow.Application.Interfaces;
 using TarotNow.Application.Common.Interfaces;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Chat.Queries.ListMessages;
 
+// Handler lấy danh sách message theo cursor và enrich metadata conversation.
 public partial class ListMessagesQueryHandler : IRequestHandler<ListMessagesQuery, ListMessagesResult>
 {
     private readonly IConversationRepository _conversationRepo;
@@ -14,6 +15,10 @@ public partial class ListMessagesQueryHandler : IRequestHandler<ListMessagesQuer
     private readonly IChatFinanceRepository _financeRepository;
     private readonly IUserPresenceTracker _presenceTracker;
 
+    /// <summary>
+    /// Khởi tạo handler list messages.
+    /// Luồng xử lý: nhận repository message/conversation/user/reader/finance và presence tracker để trả dữ liệu tin nhắn đầy đủ ngữ cảnh.
+    /// </summary>
     public ListMessagesQueryHandler(
         IConversationRepository conversationRepo,
         IChatMessageRepository messageRepo,
@@ -30,6 +35,10 @@ public partial class ListMessagesQueryHandler : IRequestHandler<ListMessagesQuer
         _presenceTracker = presenceTracker;
     }
 
+    /// <summary>
+    /// Xử lý query lấy message theo cursor.
+    /// Luồng xử lý: kiểm tra quyền truy cập conversation, lấy page message, enrich profile + reader status + escrow, rồi trả kết quả.
+    /// </summary>
     public async Task<ListMessagesResult> Handle(ListMessagesQuery request, CancellationToken cancellationToken)
     {
         var conversation = await LoadAuthorizedConversationAsync(request, cancellationToken);
@@ -39,6 +48,7 @@ public partial class ListMessagesQueryHandler : IRequestHandler<ListMessagesQuer
             request.Limit,
             cancellationToken);
 
+        // Enrich conversation để client không cần gọi thêm API phụ trợ.
         await EnrichParticipantProfilesAsync(conversation, cancellationToken);
         await EnrichReaderStatusAndEscrowAsync(conversation, cancellationToken);
 

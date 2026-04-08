@@ -4,12 +4,17 @@ namespace TarotNow.Infrastructure.Services.Ai;
 
 public partial class OpenAiProvider
 {
+    /// <summary>
+    /// Ghi log metadata của request AI để phục vụ quan sát vận hành và đối soát chi phí.
+    /// Luồng này không được phép làm hỏng luồng chính nên lỗi log sẽ bị nuốt có chủ đích.
+    /// </summary>
     public async Task LogRequestAsync(
         AiProviderRequestLog logEntry,
         CancellationToken cancellationToken = default)
     {
         try
         {
+            // Map DTO log để lưu nhất quán schema telemetry của provider.
             await _logRepo.CreateAsync(new AiProviderLogCreateDto
             {
                 UserId = logEntry.UserId,
@@ -26,7 +31,7 @@ public partial class OpenAiProvider
         }
         catch
         {
-            
+            // Chủ động bỏ qua lỗi telemetry để không ảnh hưởng nghiệp vụ trả lời AI cho người dùng.
         }
     }
 }

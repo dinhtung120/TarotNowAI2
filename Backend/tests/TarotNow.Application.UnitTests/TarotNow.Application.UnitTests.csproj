@@ -1,13 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Framework mục tiêu cho project unit test tầng Application. -->
     <TargetFramework>net9.0</TargetFramework>
+    <!-- Bật implicit usings để giảm khai báo using lặp. -->
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Bật nullable để phát hiện sớm lỗi null trong test code. -->
     <Nullable>enable</Nullable>
+    <!-- Test project không đóng gói thành NuGet. -->
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Bộ thư viện test: runner, assertions và mocking. -->
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
     <PackageReference Include="FluentAssertions" Version="8.8.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
@@ -17,10 +22,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Global using cho Xunit để giảm boilerplate. -->
     <Using Include="Xunit" />
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Tham chiếu project Application để test trực tiếp handler/service. -->
     <ProjectReference Include="..\..\src\TarotNow.Application\TarotNow.Application.csproj" />
   </ItemGroup>
 

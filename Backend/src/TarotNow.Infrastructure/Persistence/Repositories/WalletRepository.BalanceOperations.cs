@@ -7,8 +7,13 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
+// Partial xử lý thay đổi số dư ví (credit/debit) có idempotency.
 public partial class WalletRepository
 {
+    /// <summary>
+    /// Thực thi một thao tác thay đổi số dư với cơ chế transaction + idempotency.
+    /// Luồng xử lý: chuẩn hóa idempotency key, chạy mutation trong transaction và bắt unique violation để coi là đã xử lý trước đó.
+    /// </summary>
     private async Task<WalletOperationResult> ExecuteBalanceChangeAsync(
         BalanceChangeRequest request,
         CancellationToken cancellationToken)
@@ -27,11 +32,16 @@ public partial class WalletRepository
         {
             LogIdempotencyAlreadyHandled(exception, request.OperationName, request.UserId, normalizedIdempotencyKey);
             alreadyHandled = true;
+            // Unique violation tại ledger idempotency index nghĩa là request đã được xử lý trước đó.
         }
 
         return alreadyHandled ? WalletOperationResult.AlreadyHandledResult : WalletOperationResult.ExecutedResult;
     }
 
+    /// <summary>
+    /// Áp dụng mutation số dư nếu chưa xử lý idempotent.
+    /// Luồng xử lý: kiểm tra idempotency trước/sau khóa user, mutate balance, ghi ledger và track leaderboard khi là debit.
+    /// </summary>
     private async Task<bool> TryApplyBalanceChangeAsync(
         BalanceChangeRequest request,
         string? normalizedIdempotencyKey,
@@ -40,12 +50,14 @@ public partial class WalletRepository
         if (await TryHandleIdempotentAsync(normalizedIdempotencyKey, cancellationToken))
         {
             return true;
+            // Request đã có ledger theo idempotency key nên bỏ qua toàn bộ mutation.
         }
 
         var user = await GetUserForUpdateAsync(request.UserId, "user", cancellationToken);
         if (await TryHandleIdempotentAsync(normalizedIdempotencyKey, cancellationToken))
         {
             return true;
+            // Double-check sau FOR UPDATE để chặn race-condition giữa các request song song.
         }
 
         var balanceBefore = ResolveBalance(user, request.Currency);
@@ -67,30 +79,44 @@ public partial class WalletRepository
 
         _dbContext.Set<WalletTransaction>().Add(ledgerEntry);
         await _dbContext.SaveChangesAsync(cancellationToken);
+        // Lưu ledger cùng transaction để bảo đảm audit trail luôn đồng bộ với số dư.
 
-        
         if (request.IsDebit)
         {
             await TrackSpendingToLeaderboardAsync(request.UserId, request.Currency, request.Amount, cancellationToken);
+            // Chỉ debit được tính là spending cho bảng xếp hạng chi tiêu.
         }
 
         return false;
     }
 
+    /// <summary>
+    /// Áp dụng mutation số dư trên aggregate User.
+    /// Luồng xử lý: debit gọi user.Debit, còn lại gọi user.Credit theo currency/type.
+    /// </summary>
     private static void ApplyBalanceMutation(User user, BalanceChangeRequest request)
     {
         if (request.IsDebit)
         {
             user.Debit(request.Currency, request.Amount);
             return;
+            // Nhánh debit dừng sớm để tránh rơi vào credit branch.
         }
 
         user.Credit(request.Currency, request.Amount, request.Type);
     }
 
+    /// <summary>
+    /// Tính amount ghi vào ledger.
+    /// Luồng xử lý: debit ghi âm, credit ghi dương.
+    /// </summary>
     private static long ResolveLedgerAmount(BalanceChangeRequest request)
         => request.IsDebit ? -request.Amount : request.Amount;
 
+    /// <summary>
+    /// Lấy số dư hiện tại theo currency.
+    /// Luồng xử lý: gold trả GoldBalance, còn lại trả DiamondBalance.
+    /// </summary>
     private static long ResolveBalance(User user, string currency)
         => currency == CurrencyType.Gold ? user.GoldBalance : user.DiamondBalance;
 }

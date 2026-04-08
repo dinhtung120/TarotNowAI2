@@ -2,31 +2,46 @@ using System.Text.Json;
 
 namespace TarotNow.Application.Common.Services;
 
+// Tính toán số lượt follow-up miễn phí và chi phí follow-up theo độ mạnh bộ bài.
 public class FollowupPricingService
 {
+    // Bậc giá follow-up trả phí theo thứ tự lượt hỏi sau phần miễn phí.
     private static readonly int[] PriceTiers = [1, 2, 4, 8, 16];
 
+    // Giới hạn cứng số lượt follow-up cho một phiên rút bài.
     public const int MaxFollowupsAllowed = 5;
 
+    /// <summary>
+    /// Mô phỏng card level từ card id để áp dụng rule tính giá follow-up.
+    /// Luồng xử lý: kiểm tra card id hợp lệ, map nhóm major arcana, còn lại map theo modulo.
+    /// </summary>
     public int GetMockCardLevel(int cardId)
     {
         if (cardId < 0 || cardId > 77)
         {
+            // Edge case id ngoài bộ 78 lá: fallback level thấp nhất để không làm vỡ luồng tính phí.
             return 1;
         }
 
         if (cardId <= 21)
         {
+            // Nhóm major arcana được ưu tiên level cao hơn theo thứ tự xuất hiện.
             return 10 + cardId;
         }
 
+        // Nhóm minor arcana: quy đổi level tuần hoàn theo 14 lá mỗi bộ.
         return (cardId % 14) + 1;
     }
 
+    /// <summary>
+    /// Tính số lượt follow-up miễn phí dựa trên bộ bài đã rút.
+    /// Luồng xử lý: parse JSON card id, lấy level cao nhất, đối chiếu ngưỡng để trả số lượt free.
+    /// </summary>
     public int CalculateFreeSlotsAllowed(string cardsDrawnJson)
     {
         if (string.IsNullOrWhiteSpace(cardsDrawnJson))
         {
+            // Edge case thiếu dữ liệu bộ bài: không cấp lượt miễn phí.
             return 0;
         }
 
@@ -35,6 +50,7 @@ public class FollowupPricingService
             var cardIds = JsonSerializer.Deserialize<int[]>(cardsDrawnJson) ?? Array.Empty<int>();
             if (cardIds.Length == 0)
             {
+                // Edge case JSON hợp lệ nhưng rỗng: không có cơ sở tính ưu đãi.
                 return 0;
             }
 
@@ -42,16 +58,19 @@ public class FollowupPricingService
 
             if (highestLevel >= 16)
             {
+                // Rule business: bộ bài cấp rất cao được 3 lượt follow-up miễn phí.
                 return 3;
             }
 
             if (highestLevel >= 11)
             {
+                // Rule business: cấp trung cao được 2 lượt miễn phí.
                 return 2;
             }
 
             if (highestLevel >= 6)
             {
+                // Rule business: cấp cơ bản đủ điều kiện 1 lượt miễn phí.
                 return 1;
             }
 
@@ -59,29 +78,38 @@ public class FollowupPricingService
         }
         catch
         {
+            // JSON sai định dạng: fail-safe về 0 để tránh cấp quyền lợi sai.
             return 0;
         }
     }
 
+    /// <summary>
+    /// Tính giá lượt follow-up kế tiếp dựa trên số lượt đã dùng và số lượt miễn phí.
+    /// Luồng xử lý: chặn vượt giới hạn, trừ phần miễn phí, map sang tier giá và clamp chỉ số tier.
+    /// </summary>
     public int CalculateNextFollowupCost(string cardsDrawnJson, int currentFollowupCount)
     {
         if (currentFollowupCount >= MaxFollowupsAllowed)
         {
+            // Rule chặn cứng để bảo vệ cân bằng kinh tế và giới hạn phiên đọc bài.
             throw new InvalidOperationException($"Đã đạt giới hạn tối đa {MaxFollowupsAllowed} câu hỏi phụ cho phiên rút bài này.");
         }
 
         var freeSlots = CalculateFreeSlotsAllowed(cardsDrawnJson);
         if (currentFollowupCount < freeSlots)
         {
+            // Nhánh còn trong quota miễn phí: không tính phí lượt kế tiếp.
             return 0;
         }
 
         var paidTierIndex = currentFollowupCount - freeSlots;
         if (paidTierIndex >= PriceTiers.Length)
         {
+            // Edge case vượt số bậc giá khai báo: giữ mức giá trần cuối mảng.
             paidTierIndex = PriceTiers.Length - 1;
         }
 
+        // Trả chi phí theo bậc tương ứng sau khi trừ phần miễn phí.
         return PriceTiers[paidTierIndex];
     }
 }

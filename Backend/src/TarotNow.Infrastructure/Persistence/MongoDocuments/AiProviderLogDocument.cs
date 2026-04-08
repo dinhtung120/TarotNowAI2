@@ -5,58 +5,75 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace TarotNow.Infrastructure.Persistence.MongoDocuments;
 
+// Document log telemetry khi gọi AI provider.
 public class AiProviderLogDocument
 {
-        [BsonId]
+    // ObjectId của log record.
+    [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
 
-        [BsonElement("user_id")]
+    // User phát sinh request AI.
+    [BsonElement("user_id")]
     public string UserId { get; set; } = string.Empty;
 
-        [BsonElement("reading_ref")]
+    // Tham chiếu phiên đọc bài liên quan (nếu có).
+    [BsonElement("reading_ref")]
     [BsonIgnoreIfNull]
     public string? ReadingRef { get; set; }
 
-        [BsonElement("ai_request_ref")]
+    // Tham chiếu request AI nội bộ để truy vết xuyên hệ thống.
+    [BsonElement("ai_request_ref")]
     [BsonIgnoreIfNull]
     public string? AiRequestRef { get; set; }
 
-        [BsonElement("model")]
+    // Tên model AI thực tế được sử dụng.
+    [BsonElement("model")]
     public string Model { get; set; } = string.Empty;
 
-        [BsonElement("tokens")]
+    // Thống kê token vào/ra phục vụ billing và giám sát chi phí.
+    [BsonElement("tokens")]
     public TokenUsage Tokens { get; set; } = new();
 
-        [BsonElement("latency_ms")]
+    // Độ trễ xử lý tính bằng milliseconds.
+    [BsonElement("latency_ms")]
     public int LatencyMs { get; set; }
 
-        [BsonElement("prompt_version")]
+    // Phiên bản prompt template áp dụng tại thời điểm gọi.
+    [BsonElement("prompt_version")]
     [BsonIgnoreIfNull]
     public string? PromptVersion { get; set; }
 
-        [BsonElement("policy_version")]
+    // Phiên bản policy/moderation đang áp dụng.
+    [BsonElement("policy_version")]
     [BsonIgnoreIfNull]
     public string? PolicyVersion { get; set; }
 
-        [BsonElement("status")]
+    // Trạng thái vòng đời request (requested/succeeded/failed...).
+    [BsonElement("status")]
     public string Status { get; set; } = "requested";
 
-        [BsonElement("error_code")]
+    // Mã lỗi chuẩn hóa khi request thất bại.
+    [BsonElement("error_code")]
     [BsonIgnoreIfNull]
     public string? ErrorCode { get; set; }
 
-        [BsonElement("trace_id")]
+    // Trace id để nối log giữa API, worker và provider.
+    [BsonElement("trace_id")]
     [BsonIgnoreIfNull]
     public string? TraceId { get; set; }
 
-        [BsonElement("created_at")]
+    // Thời điểm ghi log.
+    [BsonElement("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
+// Payload token usage lồng trong log AI.
 public class TokenUsage
 {
-        [BsonElement("in")] public int InputTokens { get; set; }
+    // Số token đầu vào.
+    [BsonElement("in")] public int InputTokens { get; set; }
 
-        [BsonElement("out")] public int OutputTokens { get; set; }
+    // Số token đầu ra.
+    [BsonElement("out")] public int OutputTokens { get; set; }
 }

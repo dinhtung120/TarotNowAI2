@@ -3,8 +3,13 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Seeds;
 
+// Partial seed achievement definitions.
 public static partial class GamificationSeed
 {
+    /// <summary>
+    /// Seed/upsert danh sách achievement mặc định.
+    /// Luồng xử lý: duyệt từng achievement khởi tạo và upsert theo code.
+    /// </summary>
     private static async Task SeedAchievementDefinitionsAsync(MongoDbContext context)
     {
         foreach (var achievement in BuildInitialAchievements())
@@ -18,9 +23,14 @@ public static partial class GamificationSeed
                 .Set(x => x.GrantsTitleCode, achievement.GrantsTitleCode);
 
             await context.Achievements.UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = true });
+            // Upsert giúp seed có thể chạy lặp mà không tạo bản ghi trùng.
         }
     }
 
+    /// <summary>
+    /// Khởi tạo danh sách achievement seed ban đầu.
+    /// Luồng xử lý: trả về tập dữ liệu tĩnh dùng cho seed.
+    /// </summary>
     private static List<AchievementDefinitionDocument> BuildInitialAchievements()
     {
         return new List<AchievementDefinitionDocument>

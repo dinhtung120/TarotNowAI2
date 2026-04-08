@@ -4,8 +4,13 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
+// Partial xử lý claim quest và mapping DTO/document.
 public partial class MongoQuestRepository
 {
+    /// <summary>
+    /// Đánh dấu quest đã claim theo cơ chế an toàn một lần.
+    /// Luồng xử lý: chỉ update khi IsClaimed=false, set claimed timestamps và trả true nếu cập nhật thành công.
+    /// </summary>
     public async Task<bool> TryMarkClaimedAsync(Guid userId, string questCode, string periodKey, CancellationToken ct)
     {
         var filter = Builders<QuestProgressDocument>.Filter.Eq(p => p.UserId, userId)
@@ -20,8 +25,13 @@ public partial class MongoQuestRepository
 
         var result = await _context.QuestProgress.UpdateOneAsync(filter, update, cancellationToken: ct);
         return result.ModifiedCount > 0;
+        // ModifiedCount=0 nghĩa là quest đã được claim trước đó hoặc không tồn tại record.
     }
 
+    /// <summary>
+    /// Hoàn tác trạng thái đã claim của quest progress.
+    /// Luồng xử lý: reset IsClaimed/ClaimedAt và cập nhật UpdatedAt phục vụ rollback nghiệp vụ.
+    /// </summary>
     public async Task RevertClaimedAsync(Guid userId, string questCode, string periodKey, CancellationToken ct)
     {
         var filter = Builders<QuestProgressDocument>.Filter.Eq(p => p.UserId, userId)
@@ -36,6 +46,10 @@ public partial class MongoQuestRepository
         await _context.QuestProgress.UpdateOneAsync(filter, update, cancellationToken: ct);
     }
 
+    /// <summary>
+    /// Map quest definition document sang DTO.
+    /// Luồng xử lý: ánh xạ đầy đủ metadata quest và danh sách rewards.
+    /// </summary>
     private static QuestDefinitionDto MapDefinition(QuestDefinitionDocument doc)
     {
         return new QuestDefinitionDto
@@ -55,6 +69,10 @@ public partial class MongoQuestRepository
         };
     }
 
+    /// <summary>
+    /// Map quest progress document sang DTO.
+    /// Luồng xử lý: chuyển định danh user về string và giữ trạng thái claim hiện tại.
+    /// </summary>
     private static QuestProgressDto MapProgress(QuestProgressDocument doc)
     {
         return new QuestProgressDto

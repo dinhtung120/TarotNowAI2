@@ -4,8 +4,13 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
+// Mapper chuyển đổi giữa CallSessionDto và CallSessionDocument.
 public static class CallSessionDocumentMapper
 {
+    /// <summary>
+    /// Map DTO sang document Mongo để lưu trữ.
+    /// Luồng xử lý: chuẩn hóa id, ánh xạ enum sang chuỗi và gán timestamp mặc định khi thiếu dữ liệu.
+    /// </summary>
     public static CallSessionDocument ToDocument(CallSessionDto dto)
     {
         return new CallSessionDocument
@@ -24,14 +29,17 @@ public static class CallSessionDocumentMapper
         };
     }
 
+    /// <summary>
+    /// Map document Mongo sang DTO dùng ở tầng Application.
+    /// Luồng xử lý: fallback tính duration từ started/ended nếu document chưa có duration_seconds.
+    /// </summary>
     public static CallSessionDto ToDto(CallSessionDocument doc)
     {
-        
-        
         int? duration = doc.DurationSeconds;
         if (!duration.HasValue && doc.StartedAt.HasValue && doc.EndedAt.HasValue)
         {
             duration = (int)(doc.EndedAt.Value - doc.StartedAt.Value).TotalSeconds;
+            // Edge case dữ liệu cũ chưa có DurationSeconds, tính lại để không mất thông tin hiển thị.
         }
 
         return new CallSessionDto
@@ -50,6 +58,10 @@ public static class CallSessionDocumentMapper
         };
     }
 
+    /// <summary>
+    /// Ánh xạ enum trạng thái cuộc gọi sang chuỗi lưu Mongo.
+    /// Luồng xử lý: dùng switch để cố định giá trị canonical, fallback requested khi gặp trạng thái lạ.
+    /// </summary>
     public static string MapStatus(CallSessionStatus status)
     {
         return status switch
@@ -62,6 +74,10 @@ public static class CallSessionDocumentMapper
         };
     }
 
+    /// <summary>
+    /// Parse chuỗi trạng thái từ Mongo về enum.
+    /// Luồng xử lý: ánh xạ các giá trị hợp lệ, fallback Requested để đảm bảo backward compatibility.
+    /// </summary>
     public static CallSessionStatus ParseStatus(string status)
     {
         return status switch

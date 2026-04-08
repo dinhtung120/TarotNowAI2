@@ -7,17 +7,26 @@ namespace TarotNow.Infrastructure.BackgroundJobs;
 
 public partial class EscrowTimerService : BackgroundService
 {
+    // Khoảng thời gian giữa các lần quét timer escrow.
     private static readonly TimeSpan ScanInterval = TimeSpan.FromHours(1);
 
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<EscrowTimerService> _logger;
 
+    /// <summary>
+    /// Khởi tạo EscrowTimer background service.
+    /// Luồng xử lý: nhận scope factory để resolve dependency scoped theo từng vòng quét và logger vận hành.
+    /// </summary>
     public EscrowTimerService(IServiceScopeFactory scopeFactory, ILogger<EscrowTimerService> logger)
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
     }
 
+    /// <summary>
+    /// Vòng lặp chạy nền của escrow timer.
+    /// Luồng xử lý: gọi ProcessTimers định kỳ theo ScanInterval, bắt lỗi cục bộ và xử lý shutdown graceful.
+    /// </summary>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogDebug("[EscrowTimer] Service started.");
@@ -32,11 +41,12 @@ public partial class EscrowTimerService : BackgroundService
                 }
                 catch (ObjectDisposedException) when (stoppingToken.IsCancellationRequested)
                 {
-                    
+                    // Bỏ qua lỗi dispose khi host đang shutdown.
                 }
                 catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
                 {
                     _logger.LogError(ex, "[EscrowTimer] Unhandled error in timer loop.");
+                    // Bắt lỗi để job tiếp tục vòng quét sau thay vì dừng hẳn.
                 }
 
                 await Task.Delay(ScanInterval, stoppingToken);
@@ -54,6 +64,10 @@ public partial class EscrowTimerService : BackgroundService
         _logger.LogDebug("[EscrowTimer] Service stopped.");
     }
 
+    /// <summary>
+    /// Thực thi toàn bộ pipeline timer escrow trong một vòng quét.
+    /// Luồng xử lý: resolve dependencies scoped, dựng RefundDependencies, rồi chạy tuần tự các tác vụ timeout/refund/release.
+    /// </summary>
     private async Task ProcessTimers(CancellationToken cancellationToken)
     {
         using var scope = _scopeFactory.CreateScope();
@@ -79,8 +93,10 @@ public partial class EscrowTimerService : BackgroundService
         await ProcessCompletionTimeouts(refundDependencies, escrowSettlementService, cancellationToken);
         await ProcessDisputeAutoResolutions(refundDependencies, escrowSettlementService, cancellationToken);
         await ProcessExpiredAddMoneyOffers(refundDependencies, cancellationToken);
+        // Chạy tuần tự để giảm xung đột state giữa các nhánh cùng thao tác trên session/item.
     }
 
+    // Gói dependency dùng chung cho các nhánh xử lý escrow để giảm số tham số truyền lặp.
     private readonly record struct RefundDependencies(
         IChatFinanceRepository FinanceRepository,
         IWalletRepository WalletRepository,

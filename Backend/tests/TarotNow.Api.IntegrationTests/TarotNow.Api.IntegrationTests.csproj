@@ -2,35 +2,33 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Framework mục tiêu cho test project tích hợp API. -->
     <TargetFramework>net9.0</TargetFramework>
+    <!-- Bật implicit usings để giảm using lặp trong test file. -->
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Bật nullable để bắt lỗi null ngay ở compile-time. -->
     <Nullable>enable</Nullable>
+    <!-- Test project không đóng gói NuGet. -->
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
-    
+    <!-- Bộ package phục vụ test runner, coverage và testcontainers. -->
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
-    
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.2" />
-    
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
-    
     <PackageReference Include="Testcontainers.MongoDb" Version="4.10.0" />
-    
     <PackageReference Include="Testcontainers.PostgreSql" Version="4.10.0" />
-    
     <PackageReference Include="xunit" Version="2.9.2" />
-    
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
 
-  
+  <!-- Global using để giảm khai báo Xunit lặp lại. -->
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 
-  
+  <!-- Tham chiếu project API để chạy integration tests trên host thật. -->
   <ItemGroup>
     <ProjectReference Include="..\..\src\TarotNow.Api\TarotNow.Api.csproj" />
   </ItemGroup>

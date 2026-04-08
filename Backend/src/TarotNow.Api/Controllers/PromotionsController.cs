@@ -19,26 +19,44 @@ namespace TarotNow.Api.Controllers;
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
 [Authorize(Roles = "admin")] 
+// API quản trị khuyến mãi.
+// Luồng chính: liệt kê, tạo, cập nhật và xóa chương trình khuyến mãi.
 public class PromotionsController : ControllerBase
 {
     private readonly IMediator Mediator;
 
+    /// <summary>
+    /// Khởi tạo controller quản trị khuyến mãi.
+    /// </summary>
+    /// <param name="mediator">MediatR điều phối command/query khuyến mãi.</param>
     public PromotionsController(IMediator mediator)
     {
         Mediator = mediator;
     }
 
-        [HttpGet]
+    /// <summary>
+    /// Lấy danh sách khuyến mãi.
+    /// </summary>
+    /// <param name="onlyActive">Bộ lọc chỉ lấy khuyến mãi đang hoạt động.</param>
+    /// <returns>Danh sách chương trình khuyến mãi.</returns>
+    [HttpGet]
     public async Task<IActionResult> ListPromotions([FromQuery] bool onlyActive = false)
     {
         var result = await Mediator.Send(new ListPromotionsQuery { OnlyActive = onlyActive });
         return Ok(result);
     }
 
-        [HttpPost]
+    /// <summary>
+    /// Tạo mới chương trình khuyến mãi.
+    /// Luồng xử lý: dispatch command tạo, rẽ nhánh lỗi khi không đạt rule nghiệp vụ.
+    /// </summary>
+    /// <param name="command">Command tạo promotion.</param>
+    /// <returns>Kết quả tạo khuyến mãi.</returns>
+    [HttpPost]
     public async Task<IActionResult> CreatePromotion([FromBody] CreatePromotionCommand command)
     {
         var success = await Mediator.Send(command);
+        // Tách nhánh lỗi để dashboard admin nhận thông điệp nghiệp vụ rõ ràng.
         return success
             ? Ok()
             : Problem(
@@ -47,10 +65,17 @@ public class PromotionsController : ControllerBase
                 detail: "Không thể tạo chương trình khuyến mãi.");
     }
 
-        [HttpPut("{id}")]
+    /// <summary>
+    /// Cập nhật chương trình khuyến mãi theo id.
+    /// Luồng xử lý: map DTO sang command cập nhật, dispatch và trả nhánh kết quả tương ứng.
+    /// </summary>
+    /// <param name="id">Id promotion cần cập nhật.</param>
+    /// <param name="request">Payload dữ liệu cập nhật.</param>
+    /// <returns>Kết quả cập nhật khuyến mãi.</returns>
+    [HttpPut("{id}")]
     public async Task<IActionResult> UpdatePromotion(Guid id, [FromBody] UpdatePromotionRequest request)
     {
-        
+        // Map tường minh để tránh sai lệch giữa route id và dữ liệu cập nhật.
         var command = new UpdatePromotionCommand
         {
             Id = id,                            
@@ -67,12 +92,18 @@ public class PromotionsController : ControllerBase
                 detail: "Không thể cập nhật chương trình khuyến mãi.");
     }
 
-        [HttpDelete("{id}")]
+    /// <summary>
+    /// Xóa một chương trình khuyến mãi.
+    /// </summary>
+    /// <param name="id">Id promotion cần xóa.</param>
+    /// <returns>Kết quả xóa khuyến mãi.</returns>
+    [HttpDelete("{id}")]
     public async Task<IActionResult> DeletePromotion([FromRoute] Guid id)
     {
         var success = await Mediator.Send(new DeletePromotionCommand { Id = id });
         if (!success)
         {
+            // Trả lỗi nghiệp vụ khi không thể xóa (ví dụ promotion đang bị ràng buộc).
             return Problem(
                 statusCode: StatusCodes.Status400BadRequest,
                 title: "Cannot delete promotion",

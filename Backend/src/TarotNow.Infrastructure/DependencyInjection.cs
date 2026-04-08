@@ -7,6 +7,10 @@ namespace TarotNow.Infrastructure;
 
 public static partial class DependencyInjection
 {
+    /// <summary>
+    /// Entry point đăng ký toàn bộ hạ tầng Infrastructure cho ứng dụng.
+    /// Luồng xử lý: cấu hình options, persistence, repositories, external services, cache, auth và background jobs.
+    /// </summary>
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
         ConfigureOptions(services, configuration);
@@ -19,6 +23,10 @@ public static partial class DependencyInjection
         return services;
     }
 
+    /// <summary>
+    /// Bind toàn bộ options hạ tầng từ cấu hình ứng dụng.
+    /// Luồng xử lý: ánh xạ từng section cấu hình vào options class tương ứng để DI sử dụng typed options.
+    /// </summary>
     private static void ConfigureOptions(IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
@@ -34,6 +42,10 @@ public static partial class DependencyInjection
         services.Configure<ChatModerationOptions>(configuration.GetSection("ChatModeration"));
     }
 
+    /// <summary>
+    /// Đăng ký các background jobs khởi tạo/snapshot chạy ở tầng infrastructure.
+    /// Luồng xử lý: thêm hosted services cho leaderboard snapshot và các seed service khởi động.
+    /// </summary>
     private static void AddBackgroundJobs(IServiceCollection services)
     {
         services.AddHostedService<LeaderboardSnapshotJob>();

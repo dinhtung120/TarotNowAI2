@@ -5,6 +5,10 @@ namespace TarotNow.Application.Features.Chat.Commands.RespondConversationComplet
 
 public partial class RespondConversationCompleteCommandHandler
 {
+    /// <summary>
+    /// Xử lý nhánh từ chối yêu cầu hoàn thành.
+    /// Luồng xử lý: ghi system message từ chối, xóa trạng thái confirm pending, cập nhật conversation và trả kết quả rejected.
+    /// </summary>
     private async Task<ConversationCompleteRespondResult> RejectCompletionRequestAsync(
         ResponseContext context,
         CancellationToken cancellationToken)
@@ -19,6 +23,7 @@ public partial class RespondConversationCompleteCommandHandler
         context.Conversation.Confirm = null;
         context.Conversation.UpdatedAt = rejectAt;
         context.Conversation.LastMessageAt = rejectAt;
+        // Reset trạng thái confirm để conversation quay lại luồng ongoing bình thường.
         await _conversationRepository.UpdateAsync(context.Conversation, cancellationToken);
 
         return new ConversationCompleteRespondResult
@@ -28,6 +33,10 @@ public partial class RespondConversationCompleteCommandHandler
         };
     }
 
+    /// <summary>
+    /// Dựng nội dung message khi yêu cầu hoàn thành bị từ chối.
+    /// Luồng xử lý: phân biệt thông điệp theo phía đã gửi yêu cầu ban đầu để người nhận hiểu ngữ cảnh.
+    /// </summary>
     private static string BuildRejectMessage(ConversationDto conversation)
     {
         return conversation.Confirm?.RequestedBy == conversation.ReaderId

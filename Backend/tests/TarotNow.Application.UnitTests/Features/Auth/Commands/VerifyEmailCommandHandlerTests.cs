@@ -9,12 +9,20 @@ using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
+// Unit test cho handler xác thực email bằng OTP.
 public class VerifyEmailCommandHandlerTests
 {
+    // Mock user repo để điều khiển trạng thái user trước/sau verify.
     private readonly Mock<IUserRepository> _userRepositoryMock;
+    // Mock OTP repo để mô phỏng OTP hợp lệ/không hợp lệ.
     private readonly Mock<IEmailOtpRepository> _emailOtpRepositoryMock;
+    // Handler cần kiểm thử.
     private readonly VerifyEmailCommandHandler _handler;
 
+    /// <summary>
+    /// Khởi tạo fixture cho VerifyEmailCommandHandler.
+    /// Luồng tiêm mock dependencies giúp kiểm thử độc lập khỏi DB và SMTP.
+    /// </summary>
     public VerifyEmailCommandHandlerTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
@@ -25,7 +33,11 @@ public class VerifyEmailCommandHandlerTests
         );
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận user không tồn tại trả lỗi INVALID_OTP.
+    /// Luồng này đảm bảo endpoint không lộ thông tin tài khoản.
+    /// </summary>
+    [Fact]
     public async Task Handle_ShouldThrowException_WhenUserDoesNotExist()
     {
         var command = new VerifyEmailCommand { Email = "notfound@example.com", OtpCode = "123456" };
@@ -36,12 +48,16 @@ public class VerifyEmailCommandHandlerTests
         Assert.Equal("INVALID_OTP", ex.ErrorCode);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận user đã active không thể verify lại email.
+    /// Luồng này bảo vệ trạng thái đã xác thực khỏi thao tác dư thừa.
+    /// </summary>
+    [Fact]
     public async Task Handle_ShouldThrowException_WhenUserAlreadyActive()
     {
         var command = new VerifyEmailCommand { Email = "active@example.com", OtpCode = "123456" };
         var user = new User("active@example.com", "active", "hash", "DisplayName", new DateTime(2000, 1, 1), true);
-        user.Activate(); 
+        user.Activate();
 
         _userRepositoryMock.Setup(r => r.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
                            .ReturnsAsync(user);
@@ -50,7 +66,11 @@ public class VerifyEmailCommandHandlerTests
         Assert.Equal("EMAIL_ALREADY_VERIFIED", ex.ErrorCode);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận OTP sai/hết hạn trả lỗi INVALID_OTP.
+    /// Luồng này kiểm tra nhánh repository không tìm thấy OTP active.
+    /// </summary>
+    [Fact]
     public async Task Handle_ShouldThrowException_WhenOtpIsInvalidOrExpired()
     {
         var command = new VerifyEmailCommand { Email = "pending@example.com", OtpCode = "999999" };
@@ -65,7 +85,11 @@ public class VerifyEmailCommandHandlerTests
         Assert.Equal("INVALID_OTP", ex.ErrorCode);
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận OTP hợp lệ sẽ kích hoạt user và đánh dấu OTP đã dùng.
+    /// Luồng này kiểm tra cả kết quả trả về lẫn side-effect cập nhật persistence.
+    /// </summary>
+    [Fact]
     public async Task Handle_ShouldVerifyEmailAndActivateUser_WhenOtpIsValid()
     {
         var command = new VerifyEmailCommand { Email = "pending@example.com", OtpCode = "123456" };
@@ -80,9 +104,10 @@ public class VerifyEmailCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         Assert.True(result);
-        Assert.True(validOtp.IsUsed); 
-        Assert.Equal(UserStatus.Active, user.Status); 
-        
+        Assert.True(validOtp.IsUsed);
+        Assert.Equal(UserStatus.Active, user.Status);
+
+        // Xác nhận OTP và user đều được cập nhật đúng một lần.
         _emailOtpRepositoryMock.Verify(r => r.UpdateAsync(validOtp, It.IsAny<CancellationToken>()), Times.Once);
         _userRepositoryMock.Verify(r => r.UpdateAsync(user, It.IsAny<CancellationToken>()), Times.Once);
     }

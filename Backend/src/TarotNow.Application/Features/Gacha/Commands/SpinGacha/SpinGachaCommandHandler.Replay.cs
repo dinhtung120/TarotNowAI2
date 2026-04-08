@@ -5,6 +5,10 @@ namespace TarotNow.Application.Features.Gacha.Commands.SpinGacha;
 
 public partial class SpinGachaCommandHandler
 {
+    /// <summary>
+    /// Thử trả kết quả replay theo idempotency key.
+    /// Luồng xử lý: tìm log lượt đầu theo key, nếu có thì nạp toàn bộ log theo count, map item replay và dựng kết quả idempotent.
+    /// </summary>
     private async Task<SpinGachaResult?> HandleIdempotentReplayAsync(
         string baseKey,
         int count,
@@ -20,6 +24,7 @@ public partial class SpinGachaCommandHandler
         }
 
         var allLogs = await LoadReplayLogsAsync(baseKey, count, firstLogs, cancellationToken);
+        // Dùng banner items để bổ sung metadata hiển thị cho reward replay.
         var bannerItems = await _gachaRepository.GetBannerItemsAsync(allLogs[0].BannerId, cancellationToken);
 
         var replayItems = allLogs
@@ -29,6 +34,10 @@ public partial class SpinGachaCommandHandler
         return BuildReplayResult(allLogs, replayItems);
     }
 
+    /// <summary>
+    /// Nạp danh sách reward log cho replay theo từng spin index.
+    /// Luồng xử lý: duyệt từ 0..count-1 và gom log theo idempotency key con; fallback về firstLogs nếu không tìm thấy log theo index.
+    /// </summary>
     private async Task<List<GachaRewardLog>> LoadReplayLogsAsync(
         string baseKey,
         int count,
@@ -48,9 +57,14 @@ public partial class SpinGachaCommandHandler
             }
         }
 
+        // Fallback firstLogs để vẫn trả kết quả replay khi dữ liệu index không đầy đủ.
         return allLogs.Any() ? allLogs : firstLogs;
     }
 
+    /// <summary>
+    /// Map reward log replay sang item kết quả trả cho API.
+    /// Luồng xử lý: tra banner item theo BannerItemId để điền tên/icon hiển thị, fallback rỗng khi item không còn tồn tại.
+    /// </summary>
     private static SpinGachaItemResult BuildReplayItemResult(
         GachaRewardLog log,
         List<GachaBannerItem> bannerItems)
@@ -67,6 +81,10 @@ public partial class SpinGachaCommandHandler
         };
     }
 
+    /// <summary>
+    /// Dựng kết quả replay cho toàn bộ batch.
+    /// Luồng xử lý: lấy log mới nhất để xác định pity hiện tại, tổng hợp cờ pity và gắn danh sách item replay.
+    /// </summary>
     private static SpinGachaResult BuildReplayResult(
         List<GachaRewardLog> allLogs,
         List<SpinGachaItemResult> replayItems)

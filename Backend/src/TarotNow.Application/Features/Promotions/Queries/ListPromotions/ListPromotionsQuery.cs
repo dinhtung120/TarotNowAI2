@@ -1,25 +1,31 @@
-
-
 using MediatR;
 using System;
 using System.Collections.Generic;
 
 namespace TarotNow.Application.Features.Promotions.Queries.ListPromotions;
 
+// Query lấy danh sách promotion để hiển thị quản trị.
 public class ListPromotionsQuery : IRequest<IEnumerable<PromotionResponse>>
 {
-        public bool OnlyActive { get; set; }
+    // Cờ lọc chỉ lấy promotion đang active.
+    public bool OnlyActive { get; set; }
 }
 
+// DTO thông tin promotion trả về cho client.
 public class PromotionResponse
 {
+    // Định danh promotion.
     public Guid Id { get; set; }
-    
-        public long MinAmountVnd { get; set; }
-    
-        public long BonusDiamond { get; set; }
-    
+
+    // Ngưỡng nạp tối thiểu (VND).
+    public long MinAmountVnd { get; set; }
+
+    // Số kim cương thưởng.
+    public long BonusDiamond { get; set; }
+
+    // Trạng thái active/inactive.
     public bool IsActive { get; set; }
-    
-        public DateTime CreatedAt { get; set; }
+
+    // Thời điểm tạo promotion.
+    public DateTime CreatedAt { get; set; }
 }

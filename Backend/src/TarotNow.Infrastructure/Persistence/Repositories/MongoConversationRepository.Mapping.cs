@@ -3,8 +3,13 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
+// Partial mapper chuyển đổi Conversation DTO/document.
 public partial class MongoConversationRepository
 {
+    /// <summary>
+    /// Map ConversationDto sang document Mongo.
+    /// Luồng xử lý: chuẩn hóa id, map confirm nested object và đồng bộ unread counters.
+    /// </summary>
     private static ConversationDocument ToDocument(ConversationDto dto)
     {
         return new ConversationDocument
@@ -32,6 +37,10 @@ public partial class MongoConversationRepository
         };
     }
 
+    /// <summary>
+    /// Map document Mongo sang ConversationDto.
+    /// Luồng xử lý: ánh xạ thông tin participant/status và fallback unread_count về 0 khi dữ liệu cũ thiếu trường.
+    /// </summary>
     private static ConversationDto ToDto(ConversationDocument doc)
     {
         return new ConversationDto
@@ -55,6 +64,7 @@ public partial class MongoConversationRepository
             SlaHours = doc.SlaHours,
             UnreadCountUser = doc.UnreadCount?.User ?? 0,
             UnreadCountReader = doc.UnreadCount?.Reader ?? 0,
+            // Edge case: document cũ không có unread_count thì dùng 0 để tránh null propagation.
             CreatedAt = doc.CreatedAt,
             UpdatedAt = doc.UpdatedAt
         };

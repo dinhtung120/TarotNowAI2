@@ -6,16 +6,31 @@ using TarotNow.Domain.Entities;
 
 namespace TarotNow.Infrastructure.Persistence.Configurations;
 
+// Cấu hình EF mapping cho entity AiRequest.
 public class AiRequestConfiguration : IEntityTypeConfiguration<AiRequest>
 {
+    // Tên bảng lưu AiRequest.
     private const string TableName = "ai_requests";
+
+    // Trạng thái mặc định khi tạo mới request.
     private const string DefaultStatus = "requested";
+
+    // Tên index idempotency key.
     private const string IdempotencyIndexName = "idx_ai_requests_idempotency";
+
+    // Tên index reading session ref.
     private const string ReadingIndexName = "idx_ai_requests_reading";
+
+    // Tên index status + created_at.
     private const string StatusIndexName = "idx_ai_requests_status";
+
+    // Filter index cho idempotency key khác null.
     private const string IdempotencyFilter = "idempotency_key IS NOT NULL";
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Cấu hình mapping tổng thể cho AiRequest.
+    /// Luồng xử lý: set table/key rồi tách cấu hình cột và index sang helper methods.
+    /// </summary>
     public void Configure(EntityTypeBuilder<AiRequest> builder)
     {
         builder.ToTable(TableName);
@@ -25,6 +40,10 @@ public class AiRequestConfiguration : IEntityTypeConfiguration<AiRequest>
         ConfigureIndexes(builder);
     }
 
+    /// <summary>
+    /// Cấu hình chi tiết cột của bảng ai_requests.
+    /// Luồng xử lý: map column names, kiểu bắt buộc, max length và default values theo domain.
+    /// </summary>
     private static void ConfigureColumns(EntityTypeBuilder<AiRequest> builder)
     {
         builder.Property(x => x.UserId).HasColumnName("user_id");
@@ -57,6 +76,10 @@ public class AiRequestConfiguration : IEntityTypeConfiguration<AiRequest>
         builder.Property(x => x.UpdatedAt).HasColumnName("updated_at");
     }
 
+    /// <summary>
+    /// Cấu hình index phục vụ truy vấn và bảo đảm idempotency.
+    /// Luồng xử lý: tạo unique index idempotency có filter, cùng index reading ref và status+created.
+    /// </summary>
     private static void ConfigureIndexes(EntityTypeBuilder<AiRequest> builder)
     {
         builder.HasIndex(x => x.IdempotencyKey)

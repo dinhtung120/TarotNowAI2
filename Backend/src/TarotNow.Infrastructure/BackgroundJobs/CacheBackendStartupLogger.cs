@@ -8,12 +8,17 @@ using System.Threading.Tasks;
 
 namespace TarotNow.Infrastructure.BackgroundJobs;
 
+// Hosted service ghi log backend cache lúc khởi động để vận hành biết hệ thống đang dùng Redis hay fallback memory.
 public sealed class CacheBackendStartupLogger : IHostedService
 {
     private readonly CacheBackendState _cacheBackendState;
     private readonly ILogger<CacheBackendStartupLogger> _logger;
 
-        public CacheBackendStartupLogger(
+    /// <summary>
+    /// Khởi tạo logger trạng thái cache backend bằng state đã detect và logger hạ tầng.
+    /// Luồng xử lý: nhận dependency qua DI để dùng trong StartAsync.
+    /// </summary>
+    public CacheBackendStartupLogger(
         CacheBackendState cacheBackendState,
         ILogger<CacheBackendStartupLogger> logger)
     {
@@ -21,21 +26,29 @@ public sealed class CacheBackendStartupLogger : IHostedService
         _logger = logger;
     }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+    /// <summary>
+    /// Ghi log backend cache tại thời điểm service start để cảnh báo mức độ nhất quán của rate limit/quota.
+    /// Luồng xử lý: kiểm tra cờ UsesRedis, log debug khi Redis sẵn sàng hoặc warning khi fallback memory.
+    /// </summary>
+    public Task StartAsync(CancellationToken cancellationToken)
     {
         if (_cacheBackendState.UsesRedis)
         {
-            
+            // Nhánh chuẩn: Redis khả dụng nên cache phân tán hoạt động đầy đủ.
             _logger.LogDebug("Cache backend initialized with Redis.");
         }
         else
         {
-            
+            // Edge case quan trọng: fallback memory làm giảm tính nhất quán trong môi trường nhiều instance.
             _logger.LogWarning("Redis unavailable at startup. Falling back to in-memory cache; distributed rate limiting/quota consistency is reduced.");
         }
 
         return Task.CompletedTask;
     }
 
-        public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    /// <summary>
+    /// Dừng hosted service logger.
+    /// Luồng xử lý: không giữ tài nguyên nên trả CompletedTask ngay.
+    /// </summary>
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }

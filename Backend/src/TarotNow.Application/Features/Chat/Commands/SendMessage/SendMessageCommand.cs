@@ -5,19 +5,27 @@ using TarotNow.Application.Common;
 
 namespace TarotNow.Application.Features.Chat.Commands.SendMessage;
 
+// Command gửi tin nhắn trong conversation với nhiều loại payload.
 public class SendMessageCommand : IRequest<ChatMessageDto>
 {
-        public string ConversationId { get; set; } = string.Empty;
+    // Định danh conversation đích.
+    public string ConversationId { get; set; } = string.Empty;
 
-        public Guid SenderId { get; set; }
+    // Định danh người gửi.
+    public Guid SenderId { get; set; }
 
-        public string Type { get; set; } = "text";
+    // Loại tin nhắn (text/image/voice/system/call...).
+    public string Type { get; set; } = "text";
 
-        public string Content { get; set; } = string.Empty;
+    // Nội dung chính của tin nhắn.
+    public string Content { get; set; } = string.Empty;
 
-        public PaymentPayloadDto? PaymentPayload { get; set; }
+    // Payload thanh toán khi dùng message loại payment.
+    public PaymentPayloadDto? PaymentPayload { get; set; }
 
-        public MediaPayloadDto? MediaPayload { get; set; }
+    // Payload media khi message là image/voice.
+    public MediaPayloadDto? MediaPayload { get; set; }
 
-        public CallSessionDto? CallPayload { get; set; }
+    // Payload cuộc gọi cho message log/call signaling.
+    public CallSessionDto? CallPayload { get; set; }
 }

@@ -13,13 +13,20 @@ namespace TarotNow.Api.Controllers;
 
 public partial class ReaderController
 {
-        [HttpPost("apply")]
+    /// <summary>
+    /// Gửi đơn đăng ký trở thành reader.
+    /// Luồng xử lý: xác thực user, gửi command submit request, rẽ nhánh success/failure.
+    /// </summary>
+    /// <param name="body">Payload nội dung đơn đăng ký.</param>
+    /// <returns>Kết quả gửi đơn đăng ký reader.</returns>
+    [HttpPost("apply")]
     [Authorize]
     [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> Apply([FromBody] SubmitReaderRequestBody body)
     {
         if (!User.TryGetUserId(out var userId))
         {
+            // Chặn gửi đơn khi không có user id hợp lệ.
             return this.UnauthorizedProblem();
         }
 
@@ -30,6 +37,7 @@ public partial class ReaderController
             ProofDocuments = body.ProofDocuments ?? []
         });
 
+        // Tách nhánh lỗi nghiệp vụ để client hiển thị đúng thông điệp cho người dùng.
         return result
             ? Ok(new { success = true, message = "Đơn đã được gửi thành công. Vui lòng chờ admin duyệt." })
             : Problem(
@@ -38,13 +46,18 @@ public partial class ReaderController
                 detail: "Không thể gửi đơn.");
     }
 
-        [HttpGet("my-request")]
+    /// <summary>
+    /// Lấy trạng thái đơn đăng ký reader của chính người dùng hiện tại.
+    /// </summary>
+    /// <returns>Thông tin đơn đăng ký hiện tại hoặc unauthorized khi thiếu user id.</returns>
+    [HttpGet("my-request")]
     [Authorize]
     [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> GetMyRequest()
     {
         if (!User.TryGetUserId(out var userId))
         {
+            // Chặn truy vấn đơn cá nhân khi không xác thực.
             return this.UnauthorizedProblem();
         }
 
@@ -52,13 +65,20 @@ public partial class ReaderController
         return Ok(result);
     }
 
-        [HttpPatch("profile")]
+    /// <summary>
+    /// Cập nhật hồ sơ reader đã được duyệt.
+    /// Luồng xử lý: xác thực reader, map payload sang command, rẽ nhánh kết quả.
+    /// </summary>
+    /// <param name="body">Payload cập nhật hồ sơ reader.</param>
+    /// <returns>Kết quả cập nhật hồ sơ reader.</returns>
+    [HttpPatch("profile")]
     [Authorize(Roles = ApiRoleConstants.TarotReader)]
     [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateReaderProfileBody body)
     {
         if (!User.TryGetUserId(out var userId))
         {
+            // Chặn cập nhật hồ sơ reader khi danh tính không hợp lệ.
             return this.UnauthorizedProblem();
         }
 
@@ -72,6 +92,7 @@ public partial class ReaderController
             Specialties = body.Specialties
         });
 
+        // Trả lỗi business khi cập nhật thất bại để client hiển thị thông báo phù hợp.
         return result
             ? Ok(new { success = true })
             : Problem(
@@ -80,13 +101,20 @@ public partial class ReaderController
                 detail: "Không thể cập nhật hồ sơ reader.");
     }
 
-        [HttpPatch("status")]
+    /// <summary>
+    /// Cập nhật trạng thái hoạt động của reader.
+    /// Luồng xử lý: xác thực reader, gửi command cập nhật status, trả nhánh kết quả tương ứng.
+    /// </summary>
+    /// <param name="body">Payload trạng thái reader mới.</param>
+    /// <returns>Kết quả cập nhật trạng thái reader.</returns>
+    [HttpPatch("status")]
     [Authorize(Roles = ApiRoleConstants.TarotReader)]
     [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> UpdateStatus([FromBody] UpdateReaderStatusBody body)
     {
         if (!User.TryGetUserId(out var userId))
         {
+            // Chặn cập nhật status khi không xác định được chủ thể reader.
             return this.UnauthorizedProblem();
         }
 
@@ -96,6 +124,7 @@ public partial class ReaderController
             Status = body.Status
         });
 
+        // Tách nhánh lỗi để phản ánh rõ thất bại cập nhật trạng thái.
         return result
             ? Ok(new { success = true })
             : Problem(

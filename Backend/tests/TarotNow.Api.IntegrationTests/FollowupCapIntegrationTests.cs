@@ -13,16 +13,26 @@ using Xunit;
 namespace TarotNow.Api.IntegrationTests;
 
 [Collection("Testcontainers")]
+// Kiểm thử giới hạn số câu follow-up của luồng streaming AI.
 public class FollowupCapIntegrationTests : IClassFixture<CustomWebApplicationFactory<Program>>
 {
+    // Factory tích hợp dùng để tạo client và service scope.
     private readonly CustomWebApplicationFactory<Program> _factory;
 
+    /// <summary>
+    /// Khởi tạo test class follow-up cap.
+    /// Luồng dùng chung factory để đồng nhất dữ liệu và cấu hình test.
+    /// </summary>
     public FollowupCapIntegrationTests(CustomWebApplicationFactory<Program> factory)
     {
         _factory = factory;
     }
 
-        [Fact]
+    /// <summary>
+    /// Xác nhận endpoint stream từ chối khi đã chạm trần follow-up.
+    /// Luồng seed sẵn 6 request completed rồi gọi follow-up mới và kỳ vọng thất bại.
+    /// </summary>
+    [Fact]
     public async Task StreamEndpoint_ShouldReject_WhenFollowUpCapIsReached()
     {
         var client = _factory.CreateClient();
@@ -32,7 +42,7 @@ public class FollowupCapIntegrationTests : IClassFixture<CustomWebApplicationFac
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var readingRepo = scope.ServiceProvider.GetRequiredService<IReadingSessionRepository>();
 
-        
+        // Seed user nếu chưa có để test luôn có dữ liệu hợp lệ.
         var userId = Guid.Parse("00000000-0000-0000-0000-000000000002");
         if (!db.Users.Any(u => u.Id == userId))
         {
@@ -50,14 +60,14 @@ public class FollowupCapIntegrationTests : IClassFixture<CustomWebApplicationFac
             await db.SaveChangesAsync();
         }
 
-        
+        // Tạo phiên reading nền để gắn follow-up requests.
         var sessionId = Guid.NewGuid();
         var session = new ReadingSession(userId.ToString(), SpreadType.Daily1Card.ToString());
         typeof(ReadingSession).GetProperty("Id")?.SetValue(session, sessionId.ToString());
         session.CompleteSession("[12]");
         await readingRepo.CreateAsync(session);
 
-        
+        // Seed vượt ngưỡng cap (6 bản ghi) để ép endpoint vào nhánh từ chối.
         for (int i = 0; i <= 5; i++)
         {
             var request = new AiRequest
@@ -74,14 +84,14 @@ public class FollowupCapIntegrationTests : IClassFixture<CustomWebApplicationFac
         }
         await db.SaveChangesAsync();
 
-        
+        // Gọi follow-up mới với query param để kiểm tra enforcement của cap.
         var requestUrl = $"/api/v1/sessions/{sessionId}/stream?followupQuestion=Should+Fail";
         var requestMsg = new HttpRequestMessage(HttpMethod.Get, requestUrl);
         requestMsg.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
 
         var response = await client.SendAsync(requestMsg, HttpCompletionOption.ResponseHeadersRead);
 
-        
+        // Kỳ vọng request bị từ chối do đã đạt hard cap.
         Assert.False(response.IsSuccessStatusCode, "Because the hard cap of 5 follow ups has been reached");
     }
 }

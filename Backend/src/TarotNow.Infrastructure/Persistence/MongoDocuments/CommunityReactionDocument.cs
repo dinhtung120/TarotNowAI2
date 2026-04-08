@@ -5,22 +5,28 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace TarotNow.Infrastructure.Persistence.MongoDocuments;
 
+// Document reaction của người dùng trên bài viết cộng đồng.
 public class CommunityReactionDocument
 {
-        [BsonId]
+    // ObjectId của reaction.
+    [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = string.Empty;
 
-        [BsonElement("post_id")]
+    // Bài viết được react.
+    [BsonElement("post_id")]
     [BsonRepresentation(BsonType.ObjectId)]
     public string PostId { get; set; } = string.Empty;
 
-        [BsonElement("user_id")]
+    // User thực hiện reaction.
+    [BsonElement("user_id")]
     public string UserId { get; set; } = string.Empty;
 
-        [BsonElement("type")]
+    // Loại reaction (like/love...).
+    [BsonElement("type")]
     public string Type { get; set; } = string.Empty;
 
-        [BsonElement("created_at")]
+    // Thời điểm tạo reaction.
+    [BsonElement("created_at")]
     public DateTime CreatedAt { get; set; }
 }
