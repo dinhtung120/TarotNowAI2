@@ -107,6 +107,7 @@
       "decline": "Decline",
       "cancel": "Cancel call",
       "end_call": "End call",
+      "live": "Live",
       "minimize": "Minimize for chat",
       "maximize": "Maximize"
     }

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Reflection;
+using Microsoft.AspNetCore.HttpOverrides;
 using TarotNow.Api.Constants;
 using TarotNow.Api.Middlewares;
 using TarotNow.Api.Realtime;
@@ -17,8 +18,18 @@ public static partial class ApiServiceCollectionExtensions
     /// Đăng ký các service nền tảng cần cho API runtime.
     /// Luồng xử lý: gắn exception handling, application/infrastructure, realtime services, authorization policies và SignalR.
     /// </summary>
+    /// </summary>
     private static void AddPlatformServices(IServiceCollection services, IConfiguration configuration)
     {
+        // Cấu hình để nhận diện đúng giao thức (HTTPS) và địa chỉ IP khi chạy sau Proxy (Nginx, Docker).
+        services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            // Trong môi trường container/proxy, chúng ta thường tin tưởng các dải mạng nội bộ.
+            options.KnownNetworks.Clear();
+            options.KnownProxies.Clear();
+        });
+
         // Gắn global exception handler để mọi lỗi chưa bắt được chuẩn hóa về ProblemDetails.
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
@@ -31,6 +42,7 @@ public static partial class ApiServiceCollectionExtensions
         services.AddScoped<Application.Interfaces.INotificationPushService, SignalRNotificationPushService>();
         services.AddScoped<Application.Interfaces.IWalletPushService, SignalRWalletPushService>();
         services.AddScoped<Application.Interfaces.IChatPushService, SignalRChatPushService>();
+        services.AddScoped<Application.Interfaces.ICallRealtimePushService, SignalRCallRealtimePushService>();
         services.AddAuthorization(options =>
         {
             // Định nghĩa policy tập trung để controller tái sử dụng và tránh lệch rule quyền.

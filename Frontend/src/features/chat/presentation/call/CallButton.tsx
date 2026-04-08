@@ -2,9 +2,12 @@
 
 import React from 'react';
 import { useTranslations } from 'next-intl';
+import toast from 'react-hot-toast';
 import { useCallStore } from '../../application/call/useCallStore';
 import { useCallContext } from './CallProvider';
 import { cn } from '@/lib/utils';
+import { logger } from '@/shared/infrastructure/logging/logger';
+import { CallApiError } from '../../application/call/callApi';
 
 interface CallButtonProps {
   conversationId: string;
@@ -12,21 +15,39 @@ interface CallButtonProps {
 
 export const CallButton = ({ conversationId }: CallButtonProps) => {
   const { connected, initiateCall } = useCallContext();
-  const { setOutgoingCall, uiState } = useCallStore();
+  const { uiState } = useCallStore();
   const t = useTranslations('Chat.call');
 
   const handleStartAudio = async () => {
     if (!conversationId || typeof conversationId !== 'string') return;
-    if (uiState !== 'idle' && uiState !== 'ended') return;
-    setOutgoingCall(conversationId, 'audio');
-    await initiateCall(conversationId, 'audio');
+    if (!connected) {
+      toast.error('Mất kết nối thời gian thực (SignalR). Vui lòng kiểm tra chứng chỉ SSL.');
+      return;
+    }
+    if (uiState !== 'idle' && uiState !== 'ended' && uiState !== 'failed') return;
+    try {
+      await initiateCall(conversationId, 'audio');
+    } catch (error) {
+      logger.warn('Call.UI', 'Unable to start audio call.', { error });
+      toast.error(resolveStartCallErrorMessage(error));
+      useCallStore.getState().reset();
+    }
   };
 
   const handleStartVideo = async () => {
     if (!conversationId || typeof conversationId !== 'string') return;
-    if (uiState !== 'idle' && uiState !== 'ended') return;
-    setOutgoingCall(conversationId, 'video');
-    await initiateCall(conversationId, 'video');
+    if (!connected) {
+      toast.error('Mất kết nối thời gian thực (SignalR). Vui lòng kiểm tra chứng chỉ SSL.');
+      return;
+    }
+    if (uiState !== 'idle' && uiState !== 'ended' && uiState !== 'failed') return;
+    try {
+      await initiateCall(conversationId, 'video');
+    } catch (error) {
+      logger.warn('Call.UI', 'Unable to start video call.', { error });
+      toast.error(resolveStartCallErrorMessage(error));
+      useCallStore.getState().reset();
+    }
   };
 
   return (
@@ -34,8 +55,7 @@ export const CallButton = ({ conversationId }: CallButtonProps) => {
       <button 
         type="button"
         onClick={handleStartAudio} 
-        disabled={!connected}
-        className={cn("p-2 rounded-full tn-call-btn")}
+        className={cn("p-2 rounded-full tn-call-btn", !connected && "opacity-50")}
         title={t('start_audio')}
       >
         <svg className={cn("w-5 h-5")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -46,8 +66,7 @@ export const CallButton = ({ conversationId }: CallButtonProps) => {
       <button 
         type="button"
         onClick={handleStartVideo}
-        disabled={!connected}
-        className={cn("p-2 rounded-full tn-call-btn")}
+        className={cn("p-2 rounded-full tn-call-btn", !connected && "opacity-50")}
         title={t('start_video')}
       >
         <svg className={cn("w-5 h-5")} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -57,3 +76,15 @@ export const CallButton = ({ conversationId }: CallButtonProps) => {
     </div>
   );
 };
+
+function resolveStartCallErrorMessage(error: unknown): string {
+  if (error instanceof CallApiError) {
+    return error.message;
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return 'Không thể bắt đầu cuộc gọi. Vui lòng thử lại.';
+}

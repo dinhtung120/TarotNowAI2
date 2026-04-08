@@ -36,6 +36,8 @@ export function usePresenceConnection() {
    hubConnection = new signalR.HubConnectionBuilder()
     .withUrl(hubUrl, { 
 			accessTokenFactory: () => useAuthStore.getState().token ?? '',
+      skipNegotiation: true, // Bỏ qua bước thương lượng
+      transport: signalR.HttpTransportType.WebSockets, // Ép sử dụng WebSocket
     })
     .withAutomaticReconnect([0, 2000, 5000, 10000, 30000]) 
     .configureLogging(signalR.LogLevel.Warning)

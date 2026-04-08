@@ -4,6 +4,7 @@ using MailKit.Net.Smtp;
 using TarotNow.Infrastructure.Security;
 using TarotNow.Infrastructure.Services;
 using TarotNow.Infrastructure.Services.Ai;
+using TarotNow.Infrastructure.Services.CallV2;
 using TarotNow.Infrastructure.Services.Configuration;
 
 namespace TarotNow.Infrastructure;
@@ -30,6 +31,10 @@ public static partial class DependencyInjection
         services.AddScoped<IDiagnosticsService, DiagnosticsService>();
         services.AddScoped<IMediaProcessorService, MediaProcessorService>();
         services.AddScoped<IEntitlementService, EntitlementService>();
+        services.AddScoped<ICallV2Service, CallV2Service>();
+        services.AddScoped<ICallV2MaintenanceService, CallV2MaintenanceService>();
+        services.AddSingleton<LiveKitTokenFactory>();
+        services.AddHttpClient<ILiveKitRoomGateway, LiveKitRoomGateway>();
 
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<IImageProcessingService, ImageSharpProcessingService>();

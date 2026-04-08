@@ -21,9 +21,11 @@ export interface MediaPayloadDto {
 }
 
 export interface ChatMessageDto {
- id: string; conversationId: string; senderId: string; type: string; content: string;
- paymentPayload?: { amountDiamond: number; proposalId?: string; expiresAt?: string; description?: string } | null;
- mediaPayload?: MediaPayloadDto | null; isRead: boolean; createdAt: string
+  id: string; conversationId: string; senderId: string; type: string; content: string;
+  paymentPayload?: { amountDiamond: number; proposalId?: string; expiresAt?: string; description?: string } | null;
+  mediaPayload?: MediaPayloadDto | null;
+  callPayload?: any | null;
+  isRead: boolean; createdAt: string
 }
 
 export interface ListConversationsResult { conversations: ConversationDto[]; totalCount: number; currentUserId: string }

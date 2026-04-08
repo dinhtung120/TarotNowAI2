@@ -29,6 +29,9 @@ public static class ApiApplicationBuilderExtensions
     /// </summary>
     public static WebApplication UseApiPipeline(this WebApplication app)
     {
+        // Phải gọi UseForwardedHeaders trước các middleware khác để các middleware sau nhận diện đúng Protocol/IP.
+        app.UseForwardedHeaders();
+
         // Giữ thứ tự middleware cố định để tránh regression do thay đổi pipeline ngầm.
         ConfigureErrorAndRequestMiddlewares(app);
         ConfigureSwagger(app);

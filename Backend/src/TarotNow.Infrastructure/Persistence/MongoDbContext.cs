@@ -92,6 +92,10 @@ public partial class MongoDbContext
     public IMongoCollection<CallSessionDocument> CallSessions
         => _database.GetCollection<CallSessionDocument>("call_sessions");
 
+    // Collection phiên gọi LiveKit thế hệ mới.
+    public IMongoCollection<CallSessionV2Document> CallSessionsV2
+        => _database.GetCollection<CallSessionV2Document>("call_sessions_v2");
+
     // Collection định nghĩa quest.
     public IMongoCollection<QuestDefinitionDocument> Quests
         => _database.GetCollection<QuestDefinitionDocument>("quests");

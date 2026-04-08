@@ -28,7 +28,7 @@ export default function ChatMessageListItem({
     const callData = parseCallLogPayload(message);
     return (
       <ChatCallLogMessage
-        callType={callData.CallType ?? callData.callType ?? 'audio'}
+        callType={callData.type ?? callData.CallType ?? callData.callType ?? 'audio'}
         durationSeconds={callData.DurationSeconds ?? callData.durationSeconds ?? 0}
         isMe={isMe}
         reason={callData.Reason ?? callData.reason ?? ''}

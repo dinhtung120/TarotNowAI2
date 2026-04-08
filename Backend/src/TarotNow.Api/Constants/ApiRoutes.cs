@@ -66,6 +66,12 @@ public static class ApiRoutes
     // Nhóm route lịch sử và thao tác cuộc gọi.
     public const string Calls = Prefix + "/calls";
 
+    // Nhóm route realtime webhook.
+    public const string Realtime = Prefix + "/realtime";
+
+    // Endpoint webhook LiveKit để đồng bộ sự kiện room/participant.
+    public const string LiveKitWebhook = Realtime + "/livekit/webhook";
+
     // Nhóm route check-in hằng ngày.
     public const string CheckIn = Prefix + "/checkin";
 

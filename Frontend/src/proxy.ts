@@ -11,6 +11,7 @@ const wsApiOrigin = apiOrigin.startsWith('https://')
  : apiOrigin.startsWith('http://')
   ? `ws://${apiOrigin.slice('http://'.length)}`
   : '';
+const liveKitOrigins = resolveLiveKitOrigins(process.env.NEXT_PUBLIC_LIVEKIT_URL);
 
 const resolveLocale = (pathname: string) => {
  const maybeLocale = pathname.split('/')[1];
@@ -70,11 +71,46 @@ const toSpaceDelimited = (parts: string[]): string => {
  return output;
 };
 
+function toWsOrigin(origin: string): string | null {
+ if (origin.startsWith('https://')) return `wss://${origin.slice('https://'.length)}`;
+ if (origin.startsWith('http://')) return `ws://${origin.slice('http://'.length)}`;
+ if (origin.startsWith('wss://') || origin.startsWith('ws://')) return origin;
+ return null;
+}
+
+function resolveLiveKitOrigins(raw: string | undefined): string[] {
+ const values = new Set<string>();
+ if (raw && raw.trim()) {
+  try {
+   const input = raw.trim();
+   const normalized = input.startsWith('ws://') || input.startsWith('wss://')
+    ? input.replace(/^ws/, 'http')
+    : input;
+   const url = new URL(normalized);
+   values.add(url.origin);
+   const wsOrigin = toWsOrigin(url.origin);
+   if (wsOrigin) values.add(wsOrigin);
+  } catch {
+   // ignore invalid env value; fallback below vẫn cho phép wss scheme
+  }
+ }
+
+ return Array.from(values);
+}
+
 const buildContentSecurityPolicy = (nonce: string): string => {
  const scriptSources = ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'"];
  if (process.env.NODE_ENV !== 'production') {
   scriptSources.push("'unsafe-eval'");
  }
+
+ const connectSources = [
+  "'self'",
+  apiOrigin,
+  wsApiOrigin,
+  ...liveKitOrigins,
+  'wss:',
+ ];
 
  return [
   "default-src 'self'",
@@ -86,7 +122,7 @@ const buildContentSecurityPolicy = (nonce: string): string => {
   "media-src 'self' blob: data:",
   "style-src 'self' 'unsafe-inline'",
   `script-src ${toSpaceDelimited(scriptSources)}`,
-  `connect-src 'self' ${apiOrigin} ${wsApiOrigin}`.trim(),
+  `connect-src ${toSpaceDelimited(connectSources.filter(Boolean))}`.trim(),
  ].join('; ');
 };
 

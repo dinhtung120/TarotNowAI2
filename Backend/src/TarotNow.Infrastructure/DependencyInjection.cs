@@ -40,6 +40,8 @@ public static partial class DependencyInjection
         services.Configure<LegalSettingsOptions>(configuration.GetSection("LegalSettings"));
         services.Configure<DiagnosticsOptions>(configuration.GetSection("Diagnostics"));
         services.Configure<ChatModerationOptions>(configuration.GetSection("ChatModeration"));
+        services.Configure<LiveKitOptions>(configuration.GetSection("LiveKit"));
+        services.Configure<CallV2Options>(configuration.GetSection("CallV2"));
     }
 
     /// <summary>

@@ -13,6 +13,11 @@ export function isSystemMessage(message: ChatMessageDto) {
 }
 
 export function parseCallLogPayload(message: ChatMessageDto): CallLogPayload {
+  // Ưu tiên sử dụng dữ liệu từ callPayload nếu có (tránh phải parse JSON dư thừa)
+  if (message.callPayload) {
+    return message.callPayload as CallLogPayload;
+  }
+
   try {
     const parsed = JSON.parse(message.content) as unknown;
     if (parsed && typeof parsed === 'object') {

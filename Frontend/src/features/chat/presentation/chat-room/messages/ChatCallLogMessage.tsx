@@ -14,14 +14,14 @@ export default function ChatCallLogMessage({
   isMe,
   reason,
 }: ChatCallLogMessageProps) {
-  const isMissed = durationSeconds === 0;
+  const isMissed = durationSeconds <= 0;
   const icon = callType === 'video'
     ? isMissed
       ? <VideoOff className={cn('h-4 w-4')} />
       : <Video className={cn('h-4 w-4')} />
     : isMissed
       ? <PhoneOff className={cn('h-4 w-4')} />
-      : <Phone className={cn('h-4 w-4')} />;
+      : <Phone className={cn('h-4 w-4 text-emerald-400')} />;
 
   const bubbleClass = cn(
     'flex max-w-[75%] items-center gap-3 rounded-2xl border px-4 py-2.5 shadow-sm transition-all hover:brightness-110',
@@ -32,7 +32,7 @@ export default function ChatCallLogMessage({
 
   const iconClass = cn(
     'rounded-full p-2',
-    isMissed ? 'bg-white/20 text-red-300' : 'bg-white/20 text-emerald-300',
+    isMissed ? 'bg-white/10 text-red-300' : 'bg-emerald-500/20 text-emerald-300',
   );
 
   const metaText = isMissed
@@ -40,7 +40,7 @@ export default function ChatCallLogMessage({
     : `${Math.floor(durationSeconds / 60).toString().padStart(2, '0')}:${(durationSeconds % 60).toString().padStart(2, '0')}`;
 
   return (
-    <div className={cn('flex py-2', isMe ? 'justify-end' : 'justify-start')}>
+    <div className={cn('flex py-1', isMe ? 'justify-end' : 'justify-start')}>
       <div className={cn(bubbleClass)}>
         <div className={cn(iconClass)}>{icon}</div>
 
@@ -51,7 +51,7 @@ export default function ChatCallLogMessage({
           <span
             className={cn(
               'text-[11px] font-mono',
-              isMissed ? 'text-red-200' : 'text-white/75',
+              isMissed ? 'text-red-200' : 'text-emerald-300/90 font-bold',
             )}
           >
             {metaText}

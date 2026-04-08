@@ -5,4 +5,5 @@ export interface CallLogPayload {
   callType?: string;
   Reason?: string;
   reason?: string;
+  type?: string;
 }

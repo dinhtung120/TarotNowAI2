@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useCallStore } from '@/features/chat/application/call/useCallStore';
 import { useCallContext } from '@/features/chat/presentation/call/CallProvider';
+import { logger } from '@/shared/infrastructure/logging/logger';
 
 const RESET_DELAY_MS = 1000;
 
@@ -20,8 +21,11 @@ export function useActiveCallOverlayState() {
   const isVideo = session?.type === 'video';
 
   const handleEndCall = () => {
+    useCallStore.getState().setEnding();
     if (session?.id) {
-      void endCall(session.id, 'normal');
+      void endCall(session.id, 'normal').catch((error) => {
+        logger.warn('Call.UI', 'Unable to end call.', { error });
+      });
     }
     useCallStore.getState().setEnded();
     window.setTimeout(() => useCallStore.getState().reset(), RESET_DELAY_MS);
