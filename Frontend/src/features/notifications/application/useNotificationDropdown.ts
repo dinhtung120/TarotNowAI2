@@ -34,7 +34,9 @@ export function useNotificationDropdown() {
       return result.success ? result.data ?? 0 : 0;
     },
     enabled: isAuthenticated,
-    staleTime: 1000 * 30, 
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const markReadMutation = useMutation({
