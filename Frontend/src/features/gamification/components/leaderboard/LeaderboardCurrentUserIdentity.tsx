@@ -1,6 +1,7 @@
 import Image from "next/image";
 import type { LeaderboardEntry } from "@/features/gamification/gamification.types";
 import { cn } from "@/lib/utils";
+import { resolveAvatarUrl } from "@/shared/infrastructure/http/assetUrl";
 
 interface LeaderboardCurrentUserIdentityProps {
   userRank: LeaderboardEntry;
@@ -11,6 +12,8 @@ export default function LeaderboardCurrentUserIdentity({
   userRank,
   currency,
 }: LeaderboardCurrentUserIdentityProps) {
+  const avatarSrc = resolveAvatarUrl(userRank.avatar);
+
   return (
     <>
       <div
@@ -21,13 +24,13 @@ export default function LeaderboardCurrentUserIdentity({
             : "border-indigo-500/40",
         )}
       >
-        {userRank.avatar ? (
+        {avatarSrc ? (
           <Image
             alt={userRank.displayName}
             className={cn("object-cover")}
             fill
             sizes="56px"
-            src={userRank.avatar}
+            src={avatarSrc}
           />
         ) : (
           <div className={cn("flex", "h-full", "w-full", "items-center", "justify-center", "text-xl", "font-black", "text-slate-500")}>

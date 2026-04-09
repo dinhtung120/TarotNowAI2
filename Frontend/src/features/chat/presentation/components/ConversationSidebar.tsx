@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Loader2, MessageSquareText } from 'lucide-react';
@@ -14,15 +13,9 @@ export default function ConversationSidebar() {
   const params = useParams();
   const currentId = params.id as string | undefined;
 
-
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   const { tab, setTab, conversations, loading, currentUserId, nowTs } = useChatInboxPage('active');
 
-  const effectivelyLoading = loading || !mounted;
+  const effectivelyLoading = loading;
 
   return (
     <div className={cn('flex flex-col h-full overflow-hidden gap-3 tn-p-3-4-md')}>

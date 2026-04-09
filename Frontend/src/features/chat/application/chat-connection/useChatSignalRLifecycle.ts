@@ -201,5 +201,22 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
    }
    connectionRef.current = null;
   };
- }, [conversationId, token, currentUserId]);
+ }, [
+  appendMessage,
+  connectionRef,
+  conversationId,
+  currentUserId,
+  lastInitialLoadTimeRef,
+  loadInitialRef,
+  markReadRef,
+  queryClient,
+  resetForConversation,
+  setConnected,
+  setConversation,
+  setLoading,
+  setMessages,
+  setTypingUserId,
+  token,
+  typingTimeoutRef,
+ ]);
 }

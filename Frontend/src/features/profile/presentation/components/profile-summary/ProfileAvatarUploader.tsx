@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Camera, Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ProfileAvatarSpinner } from './ProfileAvatarSpinner';
+import { resolveAvatarUrl } from '@/shared/infrastructure/http/assetUrl';
 
 interface ProfileAvatarUploaderProps {
  avatarAlt: string;
@@ -25,12 +26,14 @@ export function ProfileAvatarUploader({
  onAvatarSelect,
  uploadLabel,
 }: ProfileAvatarUploaderProps) {
+ const avatarSrc = resolveAvatarUrl(avatarPreview);
+
  return (
   <div className={cn('relative w-28 h-28 shrink-0 group cursor-pointer')}>
    <input type="file" accept="image/jpeg,image/png,image/webp" onChange={onAvatarSelect} disabled={avatarUploading || isSubmitting} className={cn('tn-disabled-dim absolute inset-0 w-full h-full opacity-0 z-50 cursor-pointer')} title={uploadLabel} />
    <div className={cn('tn-profile-avatar-glow absolute rounded-full transition-all duration-700 opacity-70')} />
    <div className={cn('w-full h-full rounded-full border-2 tn-border overflow-hidden relative z-10 shadow-2xl tn-surface tn-group-border-accent-50 transition-colors')}>
-    <Image src={avatarPreview || `https://ui-avatars.com/api/?background=111&color=fff&name=${encodeURIComponent(displayName)}`} alt={avatarAlt} fill sizes="112px" unoptimized className={cn('tn-group-scale-110 object-cover transition-transform duration-1000', avatarUploading && 'opacity-50 blur-sm')} />
+    <Image src={avatarSrc || `https://ui-avatars.com/api/?background=111&color=fff&name=${encodeURIComponent(displayName)}`} alt={avatarAlt} fill sizes="112px" unoptimized className={cn('tn-group-scale-110 object-cover transition-transform duration-1000', avatarUploading && 'opacity-50 blur-sm')} />
     <div className={cn('tn-group-fade-in-overlay absolute inset-0 bg-black/40 flex flex-col justify-center items-center transition-opacity duration-300')}>
      {avatarUploading ? <ProfileAvatarSpinner /> : <><Camera className={cn('w-6 h-6 text-white mb-1')} /><span className={cn('tn-text-2xs font-bold text-white uppercase tracking-wider')}>{uploadLabel}</span></>}
     </div>

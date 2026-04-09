@@ -3,18 +3,21 @@
 import Image from 'next/image';
 import type { CommunityComment } from '@/features/community/types';
 import { cn } from '@/lib/utils';
+import { resolveAvatarUrl } from '@/shared/infrastructure/http/assetUrl';
 
 interface CommentItemProps {
  comment: CommunityComment;
 }
 
 export function CommentItem({ comment }: CommentItemProps) {
+ const avatarSrc = resolveAvatarUrl(comment.authorAvatarUrl);
+
  return (
   <div className={cn('flex gap-3')}>
    <div className={cn('relative w-8 h-8 shrink-0 rounded-full bg-slate-900 border border-slate-700 overflow-hidden flex items-center justify-center')}>
-    {comment.authorAvatarUrl ? (
+    {avatarSrc ? (
      <Image
-      src={comment.authorAvatarUrl}
+      src={avatarSrc}
       alt={comment.authorDisplayName}
       fill
       sizes="32px"

@@ -3,6 +3,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import type { CommunityPost } from "@/features/community/types";
 import { cn } from "@/lib/utils";
+import { resolveAvatarUrl } from "@/shared/infrastructure/http/assetUrl";
 
 interface PostCardHeaderProps {
  post: CommunityPost;
@@ -13,15 +14,16 @@ interface PostCardHeaderProps {
 
 export function PostCardHeader({ post, dateText, timeText, onReportClick }: PostCardHeaderProps) {
  const t = useTranslations("Community");
+ const avatarSrc = resolveAvatarUrl(post.authorAvatarUrl);
 
  return (
   <div className={cn("mb-4", "flex", "items-start", "justify-between")}>
    <div className={cn("flex", "items-center", "gap-3")}>
     <div className={cn("h-10", "w-10", "rounded-full", "bg-gradient-to-tr", "from-violet-600", "to-fuchsia-500", "p-0.5")}>
      <div className={cn("relative", "flex", "h-full", "w-full", "items-center", "justify-center", "overflow-hidden", "rounded-full", "bg-zinc-950")}>
-      {post.authorAvatarUrl ? (
+      {avatarSrc ? (
        <Image
-        src={post.authorAvatarUrl}
+        src={avatarSrc}
         alt={post.authorDisplayName}
         fill
         sizes="40px"

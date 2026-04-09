@@ -4,6 +4,7 @@ import { Button } from '@/shared/components/ui';
 import type { ReaderProfile } from '@/features/reader/application/actions';
 import { cn } from '@/lib/utils';
 import { ReaderStatusIndicator } from './ReaderStatusIndicator';
+import { resolveAvatarUrl } from '@/shared/infrastructure/http/assetUrl';
 
 interface ReaderDetailModalProps {
  reader: ReaderProfile | null;
@@ -30,6 +31,7 @@ export function ReaderDetailModal({
  labels,
 }: ReaderDetailModalProps) {
  if (!reader) return null;
+ const avatarSrc = resolveAvatarUrl(reader.avatarUrl);
 
  return (
   <div className={cn('tn-reader-modal-root fixed inset-0 flex items-center justify-center animate-in fade-in duration-500')}>
@@ -43,7 +45,7 @@ export function ReaderDetailModal({
     <div className={cn('space-y-6')}>
      <div className={cn('flex items-center gap-4')}>
       <div className={cn('w-16 h-16 rounded-full tn-surface-strong border-2 tn-border flex items-center justify-center text-xl font-black tn-text-primary overflow-hidden relative')}>
-       {reader.avatarUrl ? <Image src={reader.avatarUrl} alt={reader.displayName} fill sizes="64px" unoptimized className={cn('w-full h-full object-cover bg-white')} /> : reader.displayName?.charAt(0)?.toUpperCase() || '?'}
+       {avatarSrc ? <Image src={avatarSrc} alt={reader.displayName} fill sizes="64px" unoptimized className={cn('w-full h-full object-cover bg-white')} /> : reader.displayName?.charAt(0)?.toUpperCase() || '?'}
       </div>
       <div className={cn('min-w-0')}>
        <h3 className={cn('text-2xl font-black italic tracking-tight line-clamp-1')}>{reader.displayName || labels.readerFallback}</h3>

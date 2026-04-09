@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { resolveAvatarUrl } from "@/shared/infrastructure/http/assetUrl";
 
 interface ReaderDirectoryCardAvatarProps {
   avatarUrl?: string | null;
@@ -10,6 +11,8 @@ export default function ReaderDirectoryCardAvatar({
   avatarUrl,
   displayName,
 }: ReaderDirectoryCardAvatarProps) {
+  const avatarSrc = resolveAvatarUrl(avatarUrl);
+
   return (
     <div className={cn("relative h-14 w-14 shrink-0")}>
       <div
@@ -22,13 +25,13 @@ export default function ReaderDirectoryCardAvatar({
           "tn-border tn-text-primary relative z-10 flex h-full w-full items-center justify-center overflow-hidden rounded-full border-2 bg-white/5 text-xl font-black",
         )}
       >
-        {avatarUrl ? (
+        {avatarSrc ? (
           <Image
             alt={displayName}
             className={cn("h-full w-full object-cover")}
             fill
             sizes="56px"
-            src={avatarUrl}
+            src={avatarSrc}
             unoptimized
           />
         ) : (

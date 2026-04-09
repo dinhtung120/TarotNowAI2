@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { resolveAvatarUrl } from "@/shared/infrastructure/http/assetUrl";
 
 interface FeaturedReaderAvatarProps {
   avatarUrl?: string | null;
@@ -10,10 +11,12 @@ export default function FeaturedReaderAvatar({
   avatarUrl,
   displayName,
 }: FeaturedReaderAvatarProps) {
-  if (avatarUrl) {
+  const avatarSrc = resolveAvatarUrl(avatarUrl);
+
+  if (avatarSrc) {
     return (
       <Image
-        src={avatarUrl}
+        src={avatarSrc}
         alt={displayName}
         fill
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"

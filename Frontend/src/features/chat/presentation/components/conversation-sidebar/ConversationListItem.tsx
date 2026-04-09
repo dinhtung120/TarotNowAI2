@@ -3,6 +3,7 @@ import { useRouter } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
 import type { ConversationDto } from '@/features/chat/application/actions';
 import { formatAgo, getOther, previewText, statusLabel } from './utils';
+import { resolveAvatarUrl } from '@/shared/infrastructure/http/assetUrl';
 
 interface ConversationListItemProps {
  conversation: ConversationDto;
@@ -14,6 +15,7 @@ interface ConversationListItemProps {
 export function ConversationListItem({ conversation, currentId, currentUserId, nowTs }: ConversationListItemProps) {
  const router = useRouter();
  const other = getOther(conversation, currentUserId);
+ const avatarSrc = resolveAvatarUrl(other.avatar);
  const status = statusLabel(conversation.status);
  const active = conversation.id === currentId;
 
@@ -25,7 +27,7 @@ export function ConversationListItem({ conversation, currentId, currentUserId, n
   >
    <div className={cn('flex items-center gap-3')}>
     <div className={cn('relative flex-shrink-0')}>
-     {other.avatar ? <Image src={other.avatar} alt={other.name} width={44} height={44} unoptimized className={cn('w-11 h-11 rounded-full object-cover border border-white/10')} /> : <div className={cn('w-11 h-11 rounded-full tn-bg-accent-20 flex items-center justify-center text-sm font-bold border border-white/10')}>{other.name.charAt(0)}</div>}
+     {avatarSrc ? <Image src={avatarSrc} alt={other.name} width={44} height={44} unoptimized className={cn('w-11 h-11 rounded-full object-cover border border-white/10')} /> : <div className={cn('w-11 h-11 rounded-full tn-bg-accent-20 flex items-center justify-center text-sm font-bold border border-white/10')}>{other.name.charAt(0)}</div>}
      {other.unread > 0 ? <div className={cn('absolute -top-1 -right-1 w-5 h-5 rounded-full tn-bg-danger text-white tn-text-10 flex items-center justify-center border-2 tn-border-chat-bg font-bold')}>{other.unread > 9 ? '9+' : other.unread}</div> : null}
     </div>
     <div className={cn('min-w-0 flex-1')}>
