@@ -17,6 +17,13 @@ public static partial class DependencyInjection
     {
         services.AddMemoryCache();
         var redisConnectionString = configuration.GetConnectionString("Redis");
+        var redisInstanceName = configuration["Redis:InstanceName"]?.Trim();
+
+        if (!string.IsNullOrWhiteSpace(redisConnectionString) && string.IsNullOrWhiteSpace(redisInstanceName))
+        {
+            throw new InvalidOperationException("Missing required configuration Redis:InstanceName (env: REDIS__INSTANCENAME).");
+        }
+
         var redisMultiplexer = !string.IsNullOrWhiteSpace(redisConnectionString)
             ? TryCreateRedisMultiplexer(redisConnectionString)
             : null;
@@ -27,7 +34,7 @@ public static partial class DependencyInjection
             services.AddStackExchangeRedisCache(options =>
             {
                 options.Configuration = redisConnectionString!;
-                options.InstanceName = "TarotNow:";
+                options.InstanceName = redisInstanceName!;
             });
 
             services.AddSingleton<IConnectionMultiplexer>(redisMultiplexer);

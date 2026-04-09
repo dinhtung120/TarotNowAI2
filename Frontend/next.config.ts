@@ -6,7 +6,7 @@ import { resolveApiOrigin } from './src/shared/infrastructure/http/apiUrl';
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 const apiOrigin = resolveApiOrigin(process.env.NEXT_PUBLIC_API_URL);
 const frontendOrigin = resolveFrontendOrigin(process.env.NEXT_PUBLIC_BASE_URL);
-const frontendHosts = resolveFrontendHosts(frontendOrigin.hostname);
+const frontendHosts = resolveFrontendHosts(frontendOrigin.hostname, process.env.NEXT_ALLOWED_DEV_HOSTS);
 const serverActionAllowedOrigins = resolveServerActionAllowedOrigins(frontendOrigin, frontendHosts);
 
 function resolveFrontendOrigin(value: string | undefined): URL {
@@ -22,8 +22,12 @@ function resolveFrontendOrigin(value: string | undefined): URL {
  }
 }
 
-function resolveFrontendHosts(primaryHost: string): string[] {
- const hosts = new Set<string>([primaryHost, 'localhost', '127.0.0.1']);
+function resolveFrontendHosts(primaryHost: string, rawExtraHosts: string | undefined): string[] {
+ const hosts = new Set<string>([primaryHost]);
+ for (const host of parseExtraHosts(rawExtraHosts)) {
+  hosts.add(host);
+ }
+
  const interfaces = os.networkInterfaces();
 
  for (const addresses of Object.values(interfaces)) {
@@ -36,6 +40,14 @@ function resolveFrontendHosts(primaryHost: string): string[] {
  }
 
  return Array.from(hosts);
+}
+
+function parseExtraHosts(rawExtraHosts: string | undefined): string[] {
+ if (!rawExtraHosts) return [];
+ return rawExtraHosts
+  .split(',')
+  .map(value => value.trim())
+  .filter(value => value.length > 0);
 }
 
 function resolveServerActionAllowedOrigins(origin: URL, hosts: string[]): string[] {

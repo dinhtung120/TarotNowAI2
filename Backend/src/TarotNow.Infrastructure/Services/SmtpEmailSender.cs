@@ -84,11 +84,36 @@ public sealed class SmtpEmailSender : IEmailSender
             throw new InvalidOperationException("Smtp:Password is missing or still a placeholder.");
         }
 
-        var host = string.IsNullOrWhiteSpace(_options.Host) ? "smtp.gmail.com" : _options.Host.Trim();
-        var port = _options.Port > 0 ? _options.Port : 587;
-        var senderEmail = string.IsNullOrWhiteSpace(_options.SenderEmail) ? "no-reply@tarotnow.vn" : _options.SenderEmail.Trim();
-        var senderName = string.IsNullOrWhiteSpace(_options.SenderName) ? "TarotNow Security" : _options.SenderName.Trim();
-        var username = _options.Username?.Trim() ?? string.Empty;
+        var host = _options.Host?.Trim();
+        if (string.IsNullOrWhiteSpace(host))
+        {
+            throw new InvalidOperationException("Smtp:Host is missing.");
+        }
+
+        if (_options.Port <= 0)
+        {
+            throw new InvalidOperationException("Smtp:Port is missing or invalid.");
+        }
+
+        var senderEmail = _options.SenderEmail?.Trim();
+        if (string.IsNullOrWhiteSpace(senderEmail))
+        {
+            throw new InvalidOperationException("Smtp:SenderEmail is missing.");
+        }
+
+        var senderName = _options.SenderName?.Trim();
+        if (string.IsNullOrWhiteSpace(senderName))
+        {
+            throw new InvalidOperationException("Smtp:SenderName is missing.");
+        }
+
+        var username = _options.Username?.Trim();
+        if (string.IsNullOrWhiteSpace(username))
+        {
+            throw new InvalidOperationException("Smtp:Username is missing.");
+        }
+
+        var port = _options.Port;
         var password = _options.Password;
         // Trả config đã chuẩn hóa để luồng gửi mail dùng thống nhất.
         return new SmtpConfig(host, port, username, password, senderEmail, senderName);
