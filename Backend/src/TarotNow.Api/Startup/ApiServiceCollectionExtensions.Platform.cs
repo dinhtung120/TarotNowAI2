@@ -48,7 +48,7 @@ public static partial class ApiServiceCollectionExtensions
     {
         var signalRBuilder = services.AddSignalR(options =>
         {
-            // Giới hạn cao hơn mặc định để hỗ trợ payload media metadata lớn trong chat/call.
+            // Giới hạn cao hơn mặc định để hỗ trợ payload media metadata lớn trong chat.
             options.MaximumReceiveMessageSize = 10 * 1024 * 1024;
         }).AddJsonProtocol(options =>
         {

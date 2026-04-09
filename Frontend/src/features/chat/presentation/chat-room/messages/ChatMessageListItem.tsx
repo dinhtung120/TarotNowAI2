@@ -1,11 +1,10 @@
-import ChatCallLogMessage from '@/features/chat/presentation/chat-room/messages/ChatCallLogMessage';
 import ChatImageMessage from '@/features/chat/presentation/chat-room/messages/ChatImageMessage';
 import ChatPaymentOfferMessage from '@/features/chat/presentation/chat-room/messages/ChatPaymentOfferMessage';
 import ChatSystemMessage from '@/features/chat/presentation/chat-room/messages/ChatSystemMessage';
 import ChatTextMessage from '@/features/chat/presentation/chat-room/messages/ChatTextMessage';
 import ChatVoiceMessage from '@/features/chat/presentation/chat-room/messages/ChatVoiceMessage';
 import type { ChatMessageListItemProps } from '@/features/chat/presentation/chat-room/chatRoomUi.types';
-import { isSystemMessage, parseCallLogPayload } from '@/features/chat/presentation/chat-room/messages/messageHelpers';
+import { isSystemMessage } from '@/features/chat/presentation/chat-room/messages/messageHelpers';
 
 export default function ChatMessageListItem({
   currentUserId,
@@ -22,18 +21,6 @@ export default function ChatMessageListItem({
 
   if (isSystemMessage(message)) {
     return <ChatSystemMessage content={message.content} />;
-  }
-
-  if (message.type === 'call_log') {
-    const callData = parseCallLogPayload(message);
-    return (
-      <ChatCallLogMessage
-        callType={callData.CallType ?? callData.callType ?? 'audio'}
-        durationSeconds={callData.DurationSeconds ?? callData.durationSeconds ?? 0}
-        isMe={isMe}
-        reason={callData.Reason ?? callData.reason ?? ''}
-      />
-    );
   }
 
   if (message.type === 'payment_offer') {

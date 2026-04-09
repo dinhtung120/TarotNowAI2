@@ -94,13 +94,12 @@ public static partial class DependencyInjection
 
     /// <summary>
     /// Kiểm tra path có phải endpoint hub realtime hay không.
-    /// Luồng xử lý: đối chiếu path với các segment chat/presence/call hub.
+    /// Luồng xử lý: đối chiếu path với các segment chat/presence hub.
     /// </summary>
     private static bool IsHubEndpoint(PathString path)
     {
         return path.StartsWithSegments(ApiPathConstants.ChatHub)
-            || path.StartsWithSegments(ApiPathConstants.PresenceHub)
-            || path.StartsWithSegments(ApiPathConstants.CallHub);
+            || path.StartsWithSegments(ApiPathConstants.PresenceHub);
     }
 
     /// <summary>

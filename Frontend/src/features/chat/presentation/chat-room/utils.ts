@@ -3,15 +3,6 @@ import type { ChatMessageDto } from '@/features/chat/application/actions';
 
 export type OfferResponseMap = Record<string, 'accept' | 'reject'>;
 
-export type CallLogPayload = {
-  DurationSeconds?: number;
-  durationSeconds?: number;
-  CallType?: string;
-  callType?: string;
-  Reason?: string;
-  reason?: string;
-};
-
 export function parseOfferResponseMap(messages: ChatMessageDto[]): OfferResponseMap {
   const map: OfferResponseMap = {};
   for (const message of messages) {

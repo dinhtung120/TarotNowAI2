@@ -236,26 +236,6 @@
   db.community_reactions.createIndex({ post_id: 1, user_id: 1, type: 1 }, { unique: true });
   db.community_reactions.createIndex({ user_id: 1, created_at: -1 });
 
-  try {
-    db.createCollection("call_sessions", {
-      validator: {
-        $jsonSchema: {
-          bsonType: "object",
-          properties: {
-            status: { enum: ["requested", "accepted", "rejected", "ended"] }
-          }
-        }
-      },
-      validationLevel: "moderate",
-      validationAction: "warn"
-    });
-  } catch (e) {
-    if (e.code !== 48) throw e;
-  }
-  db.call_sessions.createIndex({ conversation_id: 1, created_at: -1 });
-  db.call_sessions.createIndex({ status: 1, conversation_id: 1 });  
-
-  
   db.createCollection("share_claims");
   db.share_claims.createIndex({ user_id: 1, created_at: -1 });
   db.share_claims.createIndex({ status: 1, created_at: -1 });

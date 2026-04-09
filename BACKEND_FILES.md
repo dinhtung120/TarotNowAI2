@@ -2,10 +2,12 @@
 
 _Generated from `git ls-files Backend`_
 
+- `Backend/.env.example`
+- `Backend/BE_HARDCODED_TUNABLE_VALUES.md`
 - `Backend/Directory.Build.props`
 - `Backend/TarotNow.slnx`
+- `Backend/cookies.txt`
 - `Backend/src/TarotNow.Api/Constants/ApiAuthorizationPolicies.cs`
-- `Backend/src/TarotNow.Api/Constants/ApiMessageTypes.cs`
 - `Backend/src/TarotNow.Api/Constants/ApiReaderStatusConstants.cs`
 - `Backend/src/TarotNow.Api/Constants/ApiRoleConstants.cs`
 - `Backend/src/TarotNow.Api/Constants/ApiRoutes.cs`
@@ -42,7 +44,6 @@ _Generated from `git ls-files Backend`_
 - `Backend/src/TarotNow.Api/Controllers/AuthPasswordController.cs`
 - `Backend/src/TarotNow.Api/Controllers/AuthRegistrationController.cs`
 - `Backend/src/TarotNow.Api/Controllers/AuthSessionController.cs`
-- `Backend/src/TarotNow.Api/Controllers/CallController.cs`
 - `Backend/src/TarotNow.Api/Controllers/CheckInController.cs`
 - `Backend/src/TarotNow.Api/Controllers/CommunityController.Comments.cs`
 - `Backend/src/TarotNow.Api/Controllers/CommunityController.Posts.cs`
@@ -82,15 +83,6 @@ _Generated from `git ls-files Backend`_
 - `Backend/src/TarotNow.Api/Extensions/ClaimsPrincipalExtensions.cs`
 - `Backend/src/TarotNow.Api/Extensions/ControllerProblemDetailsExtensions.cs`
 - `Backend/src/TarotNow.Api/GlobalUsings.cs`
-- `Backend/src/TarotNow.Api/Hubs/CallHub.ConnectionLifecycle.CallLog.cs`
-- `Backend/src/TarotNow.Api/Hubs/CallHub.ConnectionLifecycle.Disconnect.cs`
-- `Backend/src/TarotNow.Api/Hubs/CallHub.ConnectionLifecycle.cs`
-- `Backend/src/TarotNow.Api/Hubs/CallHub.ConnectionState.cs`
-- `Backend/src/TarotNow.Api/Hubs/CallHub.Signaling.EndCall.cs`
-- `Backend/src/TarotNow.Api/Hubs/CallHub.Signaling.InitiateRespond.cs`
-- `Backend/src/TarotNow.Api/Hubs/CallHub.Signaling.RateLimit.cs`
-- `Backend/src/TarotNow.Api/Hubs/CallHub.WebRTC.cs`
-- `Backend/src/TarotNow.Api/Hubs/CallHub.cs`
 - `Backend/src/TarotNow.Api/Hubs/ChatHub.ConnectionLifecycle.cs`
 - `Backend/src/TarotNow.Api/Hubs/ChatHub.ConversationGroups.Helpers.cs`
 - `Backend/src/TarotNow.Api/Hubs/ChatHub.ConversationGroups.cs`
@@ -127,9 +119,10 @@ _Generated from `git ls-files Backend`_
 - `Backend/src/TarotNow.Api/Startup/EnvLoader.cs`
 - `Backend/src/TarotNow.Api/TarotNow.Api.csproj`
 - `Backend/src/TarotNow.Api/TarotNow.Api.http`
-- `Backend/src/TarotNow.Api/appsettings.Development.json`
 - `Backend/src/TarotNow.Api/appsettings.json`
+- `Backend/src/TarotNow.Api/wwwroot/test.txt`
 - `Backend/src/TarotNow.Api/wwwroot/uploads/avatars/13c860088f274a28ae6c433df2c9c8e5.webp`
+- `Backend/src/TarotNow.Api/wwwroot/uploads/avatars/18fc10d5efae436eb83dd5efaf4bad19.webp`
 - `Backend/src/TarotNow.Api/wwwroot/uploads/avatars/6309d5f27f8a4eb5adfd89135293645e.webp`
 - `Backend/src/TarotNow.Api/wwwroot/uploads/avatars/906d34bd07f746478f53535e19491522.webp`
 - `Backend/src/TarotNow.Api/wwwroot/uploads/avatars/c099a21f6ca3420cb9e6ebd6c6c7086b.webp`
@@ -158,11 +151,11 @@ _Generated from `git ls-files Backend`_
 - `Backend/src/TarotNow.Application/Common/WalletOperationResult.cs`
 - `Backend/src/TarotNow.Application/DependencyInjection.cs`
 - `Backend/src/TarotNow.Application/DomainEvents/EntitlementConsumedEventHandler.cs`
-- `Backend/src/TarotNow.Application/DomainEvents/Handlers/EscrowRefundedEmailNotificationHandler.cs`
+- `Backend/src/TarotNow.Application/DomainEvents/Handlers/ChatOfferReceivedEmailNotificationHandler.cs`
 - `Backend/src/TarotNow.Application/DomainEvents/Handlers/EscrowRefundedInAppNotificationHandler.cs`
-- `Backend/src/TarotNow.Application/DomainEvents/Handlers/EscrowReleasedEmailNotificationHandler.cs`
 - `Backend/src/TarotNow.Application/DomainEvents/Handlers/EscrowReleasedInAppNotificationHandler.cs`
 - `Backend/src/TarotNow.Application/DomainEvents/Handlers/FinancialDomainEventLoggingHandlers.cs`
+- `Backend/src/TarotNow.Application/DomainEvents/Notifications/ChatOfferReceivedNotification.cs`
 - `Backend/src/TarotNow.Application/DomainEvents/Notifications/ConversationUpdatedNotification.cs`
 - `Backend/src/TarotNow.Application/DomainEvents/Notifications/EntitlementConsumedNotification.cs`
 - `Backend/src/TarotNow.Application/DomainEvents/Notifications/EscrowRefundedNotification.cs`
@@ -242,21 +235,6 @@ _Generated from `git ls-files Backend`_
 - `Backend/src/TarotNow.Application/Features/Auth/Commands/VerifyEmail/VerifyEmailCommand.cs`
 - `Backend/src/TarotNow.Application/Features/Auth/Commands/VerifyEmail/VerifyEmailCommandHandler.cs`
 - `Backend/src/TarotNow.Application/Features/Auth/Commands/VerifyEmail/VerifyEmailCommandValidator.cs`
-- `Backend/src/TarotNow.Application/Features/Call/Commands/EndCall/EndCallCommand.cs`
-- `Backend/src/TarotNow.Application/Features/Call/Commands/EndCall/EndCallCommandHandler.cs`
-- `Backend/src/TarotNow.Application/Features/Call/Commands/EndCall/EndCallCommandValidator.cs`
-- `Backend/src/TarotNow.Application/Features/Call/Commands/InitiateCall/InitiateCallCommand.cs`
-- `Backend/src/TarotNow.Application/Features/Call/Commands/InitiateCall/InitiateCallCommandHandler.cs`
-- `Backend/src/TarotNow.Application/Features/Call/Commands/InitiateCall/InitiateCallCommandValidator.cs`
-- `Backend/src/TarotNow.Application/Features/Call/Commands/RespondCall/RespondCallCommand.cs`
-- `Backend/src/TarotNow.Application/Features/Call/Commands/RespondCall/RespondCallCommandHandler.cs`
-- `Backend/src/TarotNow.Application/Features/Call/Commands/RespondCall/RespondCallCommandValidator.cs`
-- `Backend/src/TarotNow.Application/Features/Call/Commands/UpdateCallStatus/UpdateCallStatusCommand.cs`
-- `Backend/src/TarotNow.Application/Features/Call/Commands/UpdateCallStatus/UpdateCallStatusCommandValidator.cs`
-- `Backend/src/TarotNow.Application/Features/Call/Queries/GetActiveCallsByConversationIds/GetActiveCallsByConversationIdsQuery.cs`
-- `Backend/src/TarotNow.Application/Features/Call/Queries/GetCallHistory/GetCallHistoryQuery.cs`
-- `Backend/src/TarotNow.Application/Features/Call/Queries/GetCallHistory/GetCallHistoryQueryHandler.cs`
-- `Backend/src/TarotNow.Application/Features/Call/Queries/GetCallHistory/GetCallHistoryQueryValidator.cs`
 - `Backend/src/TarotNow.Application/Features/Chat/Commands/AcceptConversation/AcceptConversationCommand.cs`
 - `Backend/src/TarotNow.Application/Features/Chat/Commands/AcceptConversation/AcceptConversationCommandHandler.Helpers.cs`
 - `Backend/src/TarotNow.Application/Features/Chat/Commands/AcceptConversation/AcceptConversationCommandHandler.Workflow.cs`
@@ -322,7 +300,6 @@ _Generated from `git ls-files Backend`_
 - `Backend/src/TarotNow.Application/Features/Chat/Queries/GetParticipantConversationIds/GetParticipantConversationIdsQueryValidator.cs`
 - `Backend/src/TarotNow.Application/Features/Chat/Queries/GetUnreadTotal/GetUnreadTotalQuery.cs`
 - `Backend/src/TarotNow.Application/Features/Chat/Queries/ListConversations/ListConversationsQuery.cs`
-- `Backend/src/TarotNow.Application/Features/Chat/Queries/ListConversations/ListConversationsQueryHandler.Enrichment.Messages.CallPreview.cs`
 - `Backend/src/TarotNow.Application/Features/Chat/Queries/ListConversations/ListConversationsQueryHandler.Enrichment.Messages.cs`
 - `Backend/src/TarotNow.Application/Features/Chat/Queries/ListConversations/ListConversationsQueryHandler.Enrichment.Profiles.cs`
 - `Backend/src/TarotNow.Application/Features/Chat/Queries/ListConversations/ListConversationsQueryHandler.Enrichment.ReaderEscrow.cs`
@@ -542,7 +519,6 @@ _Generated from `git ls-files Backend`_
 - `Backend/src/TarotNow.Application/Interfaces/IAiProviderLogRepository.cs`
 - `Backend/src/TarotNow.Application/Interfaces/IAiRequestRepository.cs`
 - `Backend/src/TarotNow.Application/Interfaces/ICacheService.cs`
-- `Backend/src/TarotNow.Application/Interfaces/ICallSessionRepository.cs`
 - `Backend/src/TarotNow.Application/Interfaces/ICardsCatalogRepository.cs`
 - `Backend/src/TarotNow.Application/Interfaces/IChatFinanceRepository.cs`
 - `Backend/src/TarotNow.Application/Interfaces/IChatMessageRepository.cs`
@@ -627,8 +603,6 @@ _Generated from `git ls-files Backend`_
 - `Backend/src/TarotNow.Domain/Entities/WalletTransaction.cs`
 - `Backend/src/TarotNow.Domain/Entities/WithdrawalRequest.cs`
 - `Backend/src/TarotNow.Domain/Enums/AiRequestStatus.cs`
-- `Backend/src/TarotNow.Domain/Enums/CallSessionStatus.cs`
-- `Backend/src/TarotNow.Domain/Enums/CallType.cs`
 - `Backend/src/TarotNow.Domain/Enums/ChatMessageType.cs`
 - `Backend/src/TarotNow.Domain/Enums/ConversationStatus.cs`
 - `Backend/src/TarotNow.Domain/Enums/CurrencyType.cs`
@@ -652,6 +626,7 @@ _Generated from `git ls-files Backend`_
 - `Backend/src/TarotNow.Domain/Enums/UserRole.cs`
 - `Backend/src/TarotNow.Domain/Enums/UserStatus.cs`
 - `Backend/src/TarotNow.Domain/Events/AchievementUnlockedDomainEvent.cs`
+- `Backend/src/TarotNow.Domain/Events/ChatOfferReceivedDomainEvent.cs`
 - `Backend/src/TarotNow.Domain/Events/ConversationUpdatedDomainEvent.cs`
 - `Backend/src/TarotNow.Domain/Events/EntitlementConsumedDomainEvent.cs`
 - `Backend/src/TarotNow.Domain/Events/EscrowRefundedDomainEvent.cs`
@@ -663,8 +638,6 @@ _Generated from `git ls-files Backend`_
 - `Backend/src/TarotNow.Domain/Events/SubscriptionExpiredDomainEvent.cs`
 - `Backend/src/TarotNow.Domain/TarotNow.Domain.csproj`
 - `Backend/src/TarotNow.Infrastructure/BackgroundJobs/CacheBackendStartupLogger.cs`
-- `Backend/src/TarotNow.Infrastructure/BackgroundJobs/CallTimeoutBackgroundService.TimeoutHandling.cs`
-- `Backend/src/TarotNow.Infrastructure/BackgroundJobs/CallTimeoutBackgroundService.cs`
 - `Backend/src/TarotNow.Infrastructure/BackgroundJobs/ChatModerationQueue.cs`
 - `Backend/src/TarotNow.Infrastructure/BackgroundJobs/ChatModerationWorker.Helpers.cs`
 - `Backend/src/TarotNow.Infrastructure/BackgroundJobs/ChatModerationWorker.cs`
@@ -750,7 +723,6 @@ _Generated from `git ls-files Backend`_
 - `Backend/src/TarotNow.Infrastructure/Persistence/Configurations/UserSubscriptionConfiguration.cs`
 - `Backend/src/TarotNow.Infrastructure/Persistence/Configurations/WalletTransactionConfiguration.cs`
 - `Backend/src/TarotNow.Infrastructure/Persistence/Configurations/WithdrawalRequestConfiguration.cs`
-- `Backend/src/TarotNow.Infrastructure/Persistence/MongoDbContext.Indexes.Call.cs`
 - `Backend/src/TarotNow.Infrastructure/Persistence/MongoDbContext.Indexes.Chat.cs`
 - `Backend/src/TarotNow.Infrastructure/Persistence/MongoDbContext.Indexes.Checkin.cs`
 - `Backend/src/TarotNow.Infrastructure/Persistence/MongoDbContext.Indexes.Community.cs`
@@ -763,7 +735,6 @@ _Generated from `git ls-files Backend`_
 - `Backend/src/TarotNow.Infrastructure/Persistence/MongoDbContext.cs`
 - `Backend/src/TarotNow.Infrastructure/Persistence/MongoDocuments/AchievementDefinitionDocument.cs`
 - `Backend/src/TarotNow.Infrastructure/Persistence/MongoDocuments/AiProviderLogDocument.cs`
-- `Backend/src/TarotNow.Infrastructure/Persistence/MongoDocuments/CallSessionDocument.cs`
 - `Backend/src/TarotNow.Infrastructure/Persistence/MongoDocuments/CardCatalogDocument.cs`
 - `Backend/src/TarotNow.Infrastructure/Persistence/MongoDocuments/ChatMessageDocument.Media.cs`
 - `Backend/src/TarotNow.Infrastructure/Persistence/MongoDocuments/ChatMessageDocument.cs`
@@ -801,10 +772,6 @@ _Generated from `git ls-files Backend`_
 - `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/LedgerRepository.cs`
 - `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/MongoAchievementRepository.cs`
 - `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/MongoAiProviderLogRepository.cs`
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/MongoCallSessionRepository.Duration.cs`
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/MongoCallSessionRepository.Mapping.cs`
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/MongoCallSessionRepository.StatusAndPaging.cs`
-- `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/MongoCallSessionRepository.cs`
 - `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/MongoCardsCatalogRepository.cs`
 - `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/MongoChatMessageRepository.Mapping.Media.cs`
 - `Backend/src/TarotNow.Infrastructure/Persistence/Repositories/MongoChatMessageRepository.Mapping.cs`
@@ -927,10 +894,6 @@ _Generated from `git ls-files Backend`_
 - `Backend/tests/TarotNow.Application.UnitTests/Features/Auth/Commands/ResetPasswordCommandHandlerTests.cs`
 - `Backend/tests/TarotNow.Application.UnitTests/Features/Auth/Commands/SendEmailVerificationOtpCommandHandlerTests.cs`
 - `Backend/tests/TarotNow.Application.UnitTests/Features/Auth/Commands/VerifyEmailCommandHandlerTests.cs`
-- `Backend/tests/TarotNow.Application.UnitTests/Features/Call/EndCallCommandHandlerTests.cs`
-- `Backend/tests/TarotNow.Application.UnitTests/Features/Call/GetCallHistoryQueryHandlerTests.cs`
-- `Backend/tests/TarotNow.Application.UnitTests/Features/Call/InitiateCallCommandHandlerTests.cs`
-- `Backend/tests/TarotNow.Application.UnitTests/Features/Call/RespondCallCommandHandlerTests.cs`
 - `Backend/tests/TarotNow.Application.UnitTests/Features/Chat/CreateConversationCommandHandlerTests.cs`
 - `Backend/tests/TarotNow.Application.UnitTests/Features/Chat/CreateReportCommandHandlerTests.cs`
 - `Backend/tests/TarotNow.Application.UnitTests/Features/Chat/MarkMessagesReadCommandHandlerTests.cs`

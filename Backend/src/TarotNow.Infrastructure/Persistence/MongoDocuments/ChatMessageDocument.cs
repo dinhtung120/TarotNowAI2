@@ -23,7 +23,7 @@ public partial class ChatMessageDocument
     [BsonElement("sender_id")]
     public string SenderId { get; set; } = string.Empty;
 
-    // Loại tin nhắn (text/media/payment/call...).
+    // Loại tin nhắn (text/media/payment...).
     [BsonElement("type")]
     public string Type { get; set; } = string.Empty;
 
@@ -60,10 +60,6 @@ public partial class ChatMessageDocument
     [BsonElement("is_flagged")]
     public bool IsFlagged { get; set; }
 
-    // Payload cuộc gọi khi message là sự kiện call.
-    [BsonElement("call_payload")]
-    [BsonIgnoreIfNull]
-    public ChatCallPayload? CallPayload { get; set; }
 }
 
 [BsonIgnoreExtraElements]
@@ -81,25 +77,4 @@ public class ChatPaymentPayload
     // Mốc hết hạn đề xuất thanh toán.
     [BsonElement("expires_at")]
     public DateTime? ExpiresAt { get; set; }
-}
-
-[BsonIgnoreExtraElements]
-// Payload sự kiện cuộc gọi gửi trong luồng chat.
-public class ChatCallPayload
-{
-    // Id phiên gọi liên quan.
-    [BsonElement("session_id")]
-    public string SessionId { get; set; } = string.Empty;
-
-    // Loại cuộc gọi (audio/video).
-    [BsonElement("call_type")]
-    public string CallType { get; set; } = string.Empty;
-
-    // Lý do kết thúc cuộc gọi.
-    [BsonElement("end_reason")]
-    public string? EndReason { get; set; }
-
-    // Thời lượng gọi theo giây.
-    [BsonElement("duration_seconds")]
-    public int DurationSeconds { get; set; }
 }

@@ -88,10 +88,6 @@ public partial class MongoDbContext
     public IMongoCollection<CommunityCommentDocument> CommunityComments
         => _database.GetCollection<CommunityCommentDocument>("community_comments");
 
-    // Collection phiên gọi thời gian thực.
-    public IMongoCollection<CallSessionDocument> CallSessions
-        => _database.GetCollection<CallSessionDocument>("call_sessions");
-
     // Collection định nghĩa quest.
     public IMongoCollection<QuestDefinitionDocument> Quests
         => _database.GetCollection<QuestDefinitionDocument>("quests");

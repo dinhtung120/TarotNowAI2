@@ -1,5 +1,4 @@
 import { ArrowLeft } from "lucide-react";
-import { CallButton } from "@/features/chat/presentation/call";
 import type { ChatRoomHeaderProps } from "@/features/chat/presentation/chat-room/chatRoomUi.types";
 import ChatHeaderAvatar from "@/features/chat/presentation/chat-room/header/ChatHeaderAvatar";
 import ChatHeaderEscrowBadge from "@/features/chat/presentation/chat-room/header/ChatHeaderEscrowBadge";
@@ -43,9 +42,6 @@ export default function ChatRoomHeader({
         </div>
 
         <div className={cn("flex items-center gap-2")}>
-          {conversation?.status === "ongoing" && (
-            <CallButton conversationId={conversation.id} />
-          )}
           <ChatHeaderEscrowBadge
             escrowTotalFrozen={conversation?.escrowTotalFrozen}
           />

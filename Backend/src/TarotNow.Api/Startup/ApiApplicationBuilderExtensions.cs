@@ -152,13 +152,12 @@ public static class ApiApplicationBuilderExtensions
     }
 
     /// <summary>
-    /// Map các SignalR hub endpoint dùng cho chat, presence và call.
+    /// Map các SignalR hub endpoint dùng cho chat và presence.
     /// Luồng xử lý: đăng ký từng hub vào route tương ứng để client kết nối realtime đúng kênh.
     /// </summary>
     private static void MapRealtimeEndpoints(WebApplication app)
     {
         app.MapHub<ChatHub>("/" + ApiRoutes.ChatHub);
         app.MapHub<PresenceHub>(PresenceHubPath);
-        app.MapHub<CallHub>("/" + ApiRoutes.CallHub);
     }
 }

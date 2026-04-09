@@ -37,9 +37,6 @@ public static class ChatMessageType
     // Sự kiện hệ thống mở tranh chấp.
     public const string SystemDispute = "system_dispute";
 
-    // Bản ghi nhật ký cuộc gọi.
-    public const string CallLog = "call_log";
-
     /// <summary>
     /// Kiểm tra loại tin nhắn có thuộc danh sách được hệ thống hỗ trợ hay không.
     /// Luồng xử lý: so khớp giá trị đầu vào với tập hằng đã định nghĩa và trả kết quả bool.
@@ -49,7 +46,6 @@ public static class ChatMessageType
         // Dùng pattern matching để kiểm tra nhanh và tránh sai lệch chuỗi loại tin nhắn.
         return type is Text or System or CardShare or Image or Voice
             or PaymentOffer or PaymentAccept or PaymentReject
-            or SystemRefund or SystemRelease or SystemDispute
-            or CallLog;
+            or SystemRefund or SystemRelease or SystemDispute;
     }
 }

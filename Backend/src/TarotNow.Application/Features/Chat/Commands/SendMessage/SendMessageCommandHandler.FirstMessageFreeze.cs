@@ -22,12 +22,6 @@ public partial class SendMessageCommandHandler
             return FirstMessageFreezeResult.None;
         }
 
-        if (messageType == ChatMessageType.CallLog)
-        {
-            // Call-log kỹ thuật không đại diện cho câu hỏi chính nên không freeze.
-            return FirstMessageFreezeResult.None;
-        }
-
         var ids = ParseConversationParticipants(conversation);
         var readerProfile = await _readerProfileRepo.GetByUserIdAsync(conversation.ReaderId, cancellationToken)
             ?? throw new NotFoundException("Không tìm thấy hồ sơ Reader.");

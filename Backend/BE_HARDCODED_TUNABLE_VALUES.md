@@ -161,19 +161,11 @@ Scope: `Backend/src`
 | `5 per 60s` | Login endpoint rate limit | `Backend/src/TarotNow.Api/Startup/ApiServiceCollectionExtensions.RateLimit.cs:32` |
 | `20 per 1m` | Auth-session endpoint rate limit | `Backend/src/TarotNow.Api/Startup/ApiServiceCollectionExtensions.RateLimit.cs:34` |
 | `30 per 1m` | Community write rate limit | `Backend/src/TarotNow.Api/Startup/ApiServiceCollectionExtensions.RateLimit.cs:36` |
-| `60 per 1m` | Call history rate limit | `Backend/src/TarotNow.Api/Startup/ApiServiceCollectionExtensions.RateLimit.cs:38` |
 | `0` | Rate limiter queue limit | `Backend/src/TarotNow.Api/Startup/ApiServiceCollectionExtensions.RateLimit.cs:61` |
 | `>=1s` | Retry-after minimum seconds | `Backend/src/TarotNow.Api/Startup/ApiServiceCollectionExtensions.RateLimit.cs:75` |
-| `5s` | CallHub initiate signal rate gate | `Backend/src/TarotNow.Api/Hubs/CallHub.Signaling.InitiateRespond.cs:26` |
-| `2s` | CallHub respond signal rate gate | `Backend/src/TarotNow.Api/Hubs/CallHub.Signaling.InitiateRespond.cs:55` |
-| `2s` | CallHub end-call signal rate gate | `Backend/src/TarotNow.Api/Hubs/CallHub.Signaling.EndCall.cs:28` |
-| `12s` | Disconnect grace period | `Backend/src/TarotNow.Api/Hubs/CallHub.ConnectionState.cs:10` |
-| `2m` | Conversation access cache TTL | `Backend/src/TarotNow.Api/Hubs/CallHub.WebRTC.cs:10` |
 | `15m` | Presence timeout threshold | `Backend/src/TarotNow.Infrastructure/Presence/PresenceTimeoutBackgroundService.cs:18` |
 | `60s` | Presence timeout scan interval | `Backend/src/TarotNow.Infrastructure/Presence/PresenceTimeoutBackgroundService.cs:21` |
 | `15m` | In-memory online fallback threshold | `Backend/src/TarotNow.Infrastructure/Presence/InMemoryUserPresenceTracker.cs:86` |
-| `30s` | Call timeout check interval | `Backend/src/TarotNow.Infrastructure/Call/CallTimeoutBackgroundService.cs:14` |
-| `60s` | Call timeout threshold | `Backend/src/TarotNow.Infrastructure/Call/CallTimeoutBackgroundService.cs:15` |
 | `1h` | Escrow timer scan interval | `Backend/src/TarotNow.Infrastructure/BackgroundJobs/EscrowTimerService.cs:11` |
 | `1m` | Leaderboard snapshot startup delay | `Backend/src/TarotNow.Infrastructure/BackgroundJobs/LeaderboardSnapshotJob.cs:36` |
 | `00:05..00:15 UTC` | Leaderboard snapshot run window | `Backend/src/TarotNow.Infrastructure/BackgroundJobs/LeaderboardSnapshotJob.cs:45` |
@@ -192,7 +184,6 @@ Scope: `Backend/src`
 | Value | Meaning | Location |
 |---|---|---|
 | `30 days` | TTL for gacha logs | `Backend/src/TarotNow.Infrastructure/Persistence/MongoDbContext.Indexes.Gacha.cs:31` |
-| `90 days` | TTL for call sessions | `Backend/src/TarotNow.Infrastructure/Persistence/MongoDbContext.Indexes.Call.cs:114` |
 | `90 days` | TTL for checkin records | `Backend/src/TarotNow.Infrastructure/Persistence/MongoDbContext.Indexes.Checkin.cs:23` |
 | `90 days` | TTL for AI provider logs | `Backend/src/TarotNow.Infrastructure/Persistence/MongoDbContext.Indexes.Core.cs:84` |
 | `30 days` | TTL for notifications | `Backend/src/TarotNow.Infrastructure/Persistence/MongoDbContext.Indexes.Core.cs:101` |
@@ -206,7 +197,6 @@ Scope: `Backend/src`
 | `page=1, pageSize=10, max=50` | Feed query defaults and cap | `Backend/src/TarotNow.Application/Features/Community/Queries/GetFeed/GetFeedQuery.cs:33` |
 | `page=1, pageSize=10, max=50` | Comments query defaults and cap | `Backend/src/TarotNow.Application/Features/Community/Queries/GetComments/GetCommentsQuery.cs:56` |
 | `page=1, pageSize=20, max=100` | Moderation queue defaults and cap | `Backend/src/TarotNow.Application/Features/Moderation/Queries/GetModerationQueue/GetModerationQueueQuery.cs:44` |
-| `max=50, fallback=20, page>=1` | Call history pagination constraints | `Backend/src/TarotNow.Application/Features/Calls/Queries/GetCallHistory/GetCallHistoryQueryHandler.cs:33` |
 | `default=50, max=200` | Participant conversation ids limit | `Backend/src/TarotNow.Application/Features/Conversations/Queries/GetParticipantConversationIds/GetParticipantConversationIdsQuery.cs:49` |
 | `10` | Initial metadata notifications page size | `Backend/src/TarotNow.Application/Features/User/Queries/GetInitialMetadata/GetInitialMetadataQueryHandler.cs:20` |
 | `100` | Initial metadata active conversations page size | `Backend/src/TarotNow.Application/Features/User/Queries/GetInitialMetadata/GetInitialMetadataQueryHandler.cs:26` |

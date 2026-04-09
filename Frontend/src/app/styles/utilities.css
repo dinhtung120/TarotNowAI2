@@ -3252,20 +3252,6 @@
   border-right-color: var(--border-subtle);
 }
 
-.tn-call-btn {
-  color: rgb(129 140 248);
-  transition: color var(--transition-fast), background-color var(--transition-fast);
-}
-
-.tn-call-btn:hover {
-  background-color: color-mix(in srgb, white 10%, transparent);
-  color: rgb(165 180 252);
-}
-
-.tn-call-btn:disabled {
-  opacity: 0.5;
-}
-
 .tn-streak-freeze-skip-btn:hover {
   background-color: rgb(51 65 85);
 }

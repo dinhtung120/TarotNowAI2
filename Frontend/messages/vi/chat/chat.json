@@ -94,21 +94,6 @@
       "complete_all_hint": "Bấm để xác nhận hài lòng và chuyển toàn bộ tiền cho Reader.",
       "complete_all_success": "Đã hoàn thành và giải ngân toàn bộ.",
       "error_release_all": "Có lỗi khi hoàn thành toàn bộ. Vui lòng thử lại."
-    },
-    "call": {
-      "audio": "Cuộc gọi Thoại",
-      "video": "Cuộc gọi Video",
-      "incoming": "Cuộc gọi đến...",
-      "calling": "Đang gọi...",
-      "active_title": "Cuộc Sẻ Chia",
-      "start_audio": "Khởi đầu Cuộc gọi Thoại",
-      "start_video": "Tiến hành Cuộc gọi Video",
-      "accept": "Đồng ý",
-      "decline": "Từ chối",
-      "cancel": "Hủy cuộc gọi",
-      "end_call": "Kết thúc cuộc gọi",
-      "minimize": "Thu nhỏ để chat",
-      "maximize": "Phóng to"
     }
   }
 }

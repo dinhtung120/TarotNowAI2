@@ -33,9 +33,6 @@ public static class ApiRoutes
     // Nhóm route hội thoại người dùng và reader.
     public const string Conversations = Prefix + "/conversations";
 
-    // Route thao tác cuộc gọi trong một hội thoại cụ thể.
-    public const string ConversationCalls = Conversations + "/{conversationId}/calls";
-
     // Nhóm route tính năng cộng đồng.
     public const string Community = Prefix + "/community";
 
@@ -59,12 +56,6 @@ public static class ApiRoutes
 
     // Nhóm route rút tiền.
     public const string Withdrawal = Prefix + "/withdrawal";
-
-    // Endpoint SignalR cho cuộc gọi realtime.
-    public const string CallHub = Prefix + "/call";
-
-    // Nhóm route lịch sử và thao tác cuộc gọi.
-    public const string Calls = Prefix + "/calls";
 
     // Nhóm route check-in hằng ngày.
     public const string CheckIn = Prefix + "/checkin";

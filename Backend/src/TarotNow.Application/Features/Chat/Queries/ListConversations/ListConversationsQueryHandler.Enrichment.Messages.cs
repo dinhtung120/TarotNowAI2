@@ -42,15 +42,10 @@ public partial class ListConversationsQueryHandler
 
     /// <summary>
     /// Dựng preview text cho một message.
-    /// Luồng xử lý: call-log đi qua formatter riêng; các loại khác chuyển content về chuỗi preview chuẩn hóa.
+    /// Luồng xử lý: chuyển message content về chuỗi preview chuẩn hóa theo loại message.
     /// </summary>
     private static string BuildPreview(ChatMessageDto message)
     {
-        if (message.Type == ChatMessageType.CallLog)
-        {
-            return BuildCallPreview(message);
-        }
-
         var content = ResolveMessageContent(message);
         return ToNormalizedPreview(content);
     }

@@ -64,7 +64,6 @@
 | `leaderboard_snapshots` | Snapshot BXH |
 | `community_posts` | Bài cộng đồng (Phase 4) |
 | `community_reactions` | Like/share (Phase 4) |
-| `call_sessions` | Metadata gọi thoại/video (Phase 4) |
 | `share_claims` | H5 fix: Claims chia sẻ + anti-abuse pipeline |
 
 ## 3. Sơ đồ quan hệ chính (Mermaid ER)

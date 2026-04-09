@@ -54,13 +54,13 @@ public partial class SendMessageCommandHandler
 
     /// <summary>
     /// Kiểm tra trạng thái conversation có cho phép gửi message loại hiện tại hay không.
-    /// Luồng xử lý: cho phép system/call-log đi qua, còn lại áp dụng rule trạng thái terminal/pending/awaiting acceptance.
+    /// Luồng xử lý: cho phép system message đi qua, còn lại áp dụng rule trạng thái terminal/pending/awaiting acceptance.
     /// </summary>
     private static void ValidateConversationForSend(ConversationDto conversation, string senderId, string messageType)
     {
-        if (messageType == ChatMessageType.System || messageType == ChatMessageType.CallLog)
+        if (messageType == ChatMessageType.System)
         {
-            // System và call-log là message kỹ thuật, không chặn theo flow chat thông thường.
+            // System message là message kỹ thuật, không chặn theo flow chat thông thường.
             return;
         }
 
@@ -116,7 +116,6 @@ public partial class SendMessageCommandHandler
             Content = request.Content,
             PaymentPayload = request.PaymentPayload,
             MediaPayload = request.MediaPayload,
-            CallPayload = request.CallPayload,
             IsRead = false,
             CreatedAt = DateTime.UtcNow
         };

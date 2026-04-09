@@ -536,25 +536,7 @@
 
 ---
 
-## 28. call_sessions (Phase 4)
-
-**Mục đích:** Metadata gọi thoại/video với Reader. Luồng: requested → accepted/rejected → ended.
-
-| Field | Type | Mục đích / Ghi chú |
-|-------|------|--------------------|
-| _id | ObjectId | |
-| conversation_id | ObjectId | conversations._id |
-| initiator_id | string | UUID |
-| type | string | audio \| video |
-| status | string | requested \| accepted \| rejected \| ended |
-| started_at, ended_at | ISODate | |
-| created_at, updated_at | ISODate | |
-
-**Index:** `(conversation_id, created_at desc)`, `(status, conversation_id)` – filter active calls
-
----
-
-## 29. share_claims (H5 fix – Anti-abuse pipeline cho share rewards)
+## 28. share_claims (H5 fix – Anti-abuse pipeline cho share rewards)
 
 **Mục đích:** Lưu claims chia sẻ để xác minh và chống abuse. Pipeline: submitted → verified/rejected. Tích hợp device fingerprint, IP velocity, risk score.
 

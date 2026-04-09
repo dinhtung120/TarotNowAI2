@@ -94,21 +94,6 @@
       "complete_all_hint": "Tap here to confirm satisfaction and release full payment to the reader.",
       "complete_all_success": "All accepted items were released successfully.",
       "error_release_all": "Failed to complete all releases. Please try again."
-    },
-    "call": {
-      "audio": "Audio Call",
-      "video": "Video Call",
-      "incoming": "Incoming call...",
-      "calling": "Calling...",
-      "active_title": "Connecting",
-      "start_audio": "Start Audio Call",
-      "start_video": "Start Video Call",
-      "accept": "Accept",
-      "decline": "Decline",
-      "cancel": "Cancel call",
-      "end_call": "End call",
-      "minimize": "Minimize for chat",
-      "maximize": "Maximize"
     }
   }
 }

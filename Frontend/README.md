@@ -18,20 +18,6 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## WebRTC Call Quality
-
-Voice/video calls now support optional TURN configuration from environment variables:
-
-```bash
-NEXT_PUBLIC_TURN_URLS=turn:turn.example.com:3478,turns:turn.example.com:5349
-NEXT_PUBLIC_TURN_USERNAME=your-turn-username
-NEXT_PUBLIC_TURN_CREDENTIAL=your-turn-password
-NEXT_PUBLIC_CALL_REMOTE_GAIN=2.2
-```
-
-If TURN variables are not provided, the app falls back to STUN-only mode.
-`NEXT_PUBLIC_CALL_REMOTE_GAIN` boosts incoming call audio in the browser (clamped 1.0 -> 4.0).
-
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More

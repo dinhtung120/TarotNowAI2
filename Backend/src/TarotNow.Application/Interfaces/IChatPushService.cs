@@ -17,9 +17,4 @@ public interface IChatPushService
     /// </summary>
     Task BroadcastConversationUpdatedAsync(string conversationId, string updateType, CancellationToken ct = default);
 
-    /// <summary>
-    /// Phát sự kiện kết thúc cuộc gọi để client đóng màn hình call đúng thời điểm.
-    /// Luồng xử lý: broadcast session và reason kết thúc đến toàn bộ thành viên cuộc hội thoại.
-    /// </summary>
-    Task BroadcastCallEndedAsync(string conversationId, CallSessionDto session, string reason, CancellationToken ct = default);
 }

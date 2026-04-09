@@ -64,7 +64,6 @@ public static partial class DependencyInjection
         services.AddScoped<IConversationRepository, MongoConversationRepository>();
         services.AddScoped<IChatMessageRepository, MongoChatMessageRepository>();
         services.AddScoped<IReportRepository, MongoReportRepository>();
-        services.AddScoped<ICallSessionRepository, MongoCallSessionRepository>();
         services.AddScoped<IDailyCheckinRepository, MongoDailyCheckinRepository>();
         services.AddScoped<IStreakService, StreakService>();
     }
@@ -110,13 +109,12 @@ public static partial class DependencyInjection
 
     /// <summary>
     /// Đăng ký các hosted worker chạy nền.
-    /// Luồng xử lý: thêm hosted service cho escrow/moderation/call-timeout/streak/entitlement/subscription jobs.
+    /// Luồng xử lý: thêm hosted service cho escrow/moderation/streak/entitlement/subscription jobs.
     /// </summary>
     private static void AddHostedWorkers(IServiceCollection services)
     {
         services.AddHostedService<EscrowTimerService>();
         services.AddHostedService<ChatModerationWorker>();
-        services.AddHostedService<CallTimeoutBackgroundService>();
         services.AddHostedService<StreakBreakBackgroundJob>();
         services.AddHostedService<EntitlementDailyResetJob>();
         services.AddHostedService<SubscriptionExpiryJob>();

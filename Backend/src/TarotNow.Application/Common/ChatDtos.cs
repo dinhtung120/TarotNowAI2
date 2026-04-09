@@ -83,7 +83,7 @@ public class ConversationConfirmDto
     public DateTime? AutoResolveAt { get; set; }
 }
 
-// DTO tin nhắn chat thống nhất cho các loại nội dung text/media/payment/call.
+// DTO tin nhắn chat thống nhất cho các loại nội dung text/media/payment.
 public class ChatMessageDto
 {
     // Định danh tin nhắn.
@@ -106,9 +106,6 @@ public class ChatMessageDto
 
     // Payload media nếu đây là tin nhắn media.
     public MediaPayloadDto? MediaPayload { get; set; }
-
-    // Payload phiên gọi nếu đây là tin nhắn call.
-    public CallSessionDto? CallPayload { get; set; }
 
     // Cờ đánh dấu tin đã đọc.
     public bool IsRead { get; set; }
@@ -168,41 +165,4 @@ public class ReportDto
 
     // Thời điểm tạo báo cáo.
     public DateTime CreatedAt { get; set; }
-}
-
-// DTO phiên gọi phát sinh trong hội thoại.
-public class CallSessionDto
-{
-    // Định danh phiên gọi.
-    public string Id { get; set; } = string.Empty;
-
-    // Định danh hội thoại gắn với phiên gọi.
-    public string ConversationId { get; set; } = string.Empty;
-
-    // Định danh chủ thể khởi tạo cuộc gọi.
-    public string InitiatorId { get; set; } = string.Empty;
-
-    // Loại cuộc gọi (audio/video).
-    public TarotNow.Domain.Enums.CallType Type { get; set; }
-
-    // Trạng thái vòng đời phiên gọi.
-    public TarotNow.Domain.Enums.CallSessionStatus Status { get; set; }
-
-    // Thời điểm bắt đầu cuộc gọi.
-    public DateTime? StartedAt { get; set; }
-
-    // Thời điểm kết thúc cuộc gọi.
-    public DateTime? EndedAt { get; set; }
-
-    // Lý do kết thúc cuộc gọi.
-    public string? EndReason { get; set; }
-
-    // Thời lượng cuộc gọi theo giây.
-    public int? DurationSeconds { get; set; }
-
-    // Thời điểm tạo bản ghi phiên gọi.
-    public DateTime CreatedAt { get; set; }
-
-    // Thời điểm cập nhật bản ghi phiên gọi gần nhất.
-    public DateTime UpdatedAt { get; set; }
 }

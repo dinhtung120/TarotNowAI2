@@ -2,11 +2,12 @@
 
 _Generated from `git ls-files Frontend`_
 
+- `Frontend/.env.example`
 - `Frontend/.github/workflows/playwright.yml`
 - `Frontend/.gitignore`
 - `Frontend/.next-log`
 - `Frontend/.prettierrc`
-- `Frontend/clean-test.log`
+- `Frontend/README.md`
 - `Frontend/eslint.config.mjs`
 - `Frontend/messages/en/admin/admin.json`
 - `Frontend/messages/en/auth/auth.json`
@@ -212,6 +213,7 @@ _Generated from `git ls-files Frontend`_
 - `Frontend/scripts/fix-use-directives-order.mjs`
 - `Frontend/scripts/strip-long-block-comments.mjs`
 - `Frontend/scripts/strip-standalone-line-comments.mjs`
+- `Frontend/src/README.md`
 - `Frontend/src/app/[locale]/(auth)/forgot-password/page.tsx`
 - `Frontend/src/app/[locale]/(auth)/loading.tsx`
 - `Frontend/src/app/[locale]/(auth)/login/page.tsx`
@@ -453,12 +455,6 @@ _Generated from `git ls-files Frontend`_
 - `Frontend/src/features/chat/application/actions/conversations.types.ts`
 - `Frontend/src/features/chat/application/actions/index.ts`
 - `Frontend/src/features/chat/application/actions/reports.ts`
-- `Frontend/src/features/chat/application/call/useCallSignaling.ts`
-- `Frontend/src/features/chat/application/call/useCallStore.ts`
-- `Frontend/src/features/chat/application/call/useCallTimeout.ts`
-- `Frontend/src/features/chat/application/call/useWebRTC.ts`
-- `Frontend/src/features/chat/application/call/useWebRTCSignalEvents.ts`
-- `Frontend/src/features/chat/application/call/webrtcHelpers.ts`
 - `Frontend/src/features/chat/application/chat-connection/useChatHistoryState.ts`
 - `Frontend/src/features/chat/application/chat-connection/useChatSendActions.ts`
 - `Frontend/src/features/chat/application/chat-connection/useChatSignalRLifecycle.ts`
@@ -468,24 +464,10 @@ _Generated from `git ls-files Frontend`_
 - `Frontend/src/features/chat/application/usePaymentOfferActions.ts`
 - `Frontend/src/features/chat/application/useVoiceRecorder.ts`
 - `Frontend/src/features/chat/application/voiceRecorderHelpers.ts`
-- `Frontend/src/features/chat/domain/callTypes.ts`
 - `Frontend/src/features/chat/domain/mergeMessages.ts`
 - `Frontend/src/features/chat/index.ts`
 - `Frontend/src/features/chat/presentation/ChatInboxPage.tsx`
 - `Frontend/src/features/chat/presentation/ChatRoomPage.tsx`
-- `Frontend/src/features/chat/presentation/call/ActiveCallOverlay.tsx`
-- `Frontend/src/features/chat/presentation/call/CallButton.tsx`
-- `Frontend/src/features/chat/presentation/call/CallOverlayContent.tsx`
-- `Frontend/src/features/chat/presentation/call/CallProvider.tsx`
-- `Frontend/src/features/chat/presentation/call/IncomingCallOverlay.tsx`
-- `Frontend/src/features/chat/presentation/call/hooks/useActiveCallOverlayState.ts`
-- `Frontend/src/features/chat/presentation/call/hooks/useAttachCallVideoStreams.ts`
-- `Frontend/src/features/chat/presentation/call/hooks/useCallDuration.ts`
-- `Frontend/src/features/chat/presentation/call/hooks/useIncomingCallOverlayState.ts`
-- `Frontend/src/features/chat/presentation/call/hooks/useRemoteAudioPlayback.ts`
-- `Frontend/src/features/chat/presentation/call/index.ts`
-- `Frontend/src/features/chat/presentation/call/overlay/CallOverlayFullscreen.tsx`
-- `Frontend/src/features/chat/presentation/call/overlay/CallOverlayMinimized.tsx`
 - `Frontend/src/features/chat/presentation/chat-room/ChatActionMenu.tsx`
 - `Frontend/src/features/chat/presentation/chat-room/ChatCompleteResponseBar.tsx`
 - `Frontend/src/features/chat/presentation/chat-room/ChatComposer.tsx`
@@ -507,7 +489,6 @@ _Generated from `git ls-files Frontend`_
 - `Frontend/src/features/chat/presentation/chat-room/header/ChatHeaderEscrowBadge.tsx`
 - `Frontend/src/features/chat/presentation/chat-room/header/ChatHeaderIdentity.tsx`
 - `Frontend/src/features/chat/presentation/chat-room/mediaPayload.ts`
-- `Frontend/src/features/chat/presentation/chat-room/messages/ChatCallLogMessage.tsx`
 - `Frontend/src/features/chat/presentation/chat-room/messages/ChatImageMessage.tsx`
 - `Frontend/src/features/chat/presentation/chat-room/messages/ChatMessageListItem.tsx`
 - `Frontend/src/features/chat/presentation/chat-room/messages/ChatMessagesPanel.tsx`
@@ -516,7 +497,6 @@ _Generated from `git ls-files Frontend`_
 - `Frontend/src/features/chat/presentation/chat-room/messages/ChatTextMessage.tsx`
 - `Frontend/src/features/chat/presentation/chat-room/messages/ChatVoiceMessage.tsx`
 - `Frontend/src/features/chat/presentation/chat-room/messages/messageHelpers.ts`
-- `Frontend/src/features/chat/presentation/chat-room/messages/types.ts`
 - `Frontend/src/features/chat/presentation/chat-room/modals/DisputeModalActions.tsx`
 - `Frontend/src/features/chat/presentation/chat-room/useChatRoomConversationActions.ts`
 - `Frontend/src/features/chat/presentation/chat-room/useChatRoomDerivedFlags.ts`
@@ -1128,6 +1108,8 @@ _Generated from `git ls-files Frontend`_
 - `Frontend/src/shared/infrastructure/auth/serverAuth.ts`
 - `Frontend/src/shared/infrastructure/error/parseApiError.ts`
 - `Frontend/src/shared/infrastructure/http/apiUrl.ts`
+- `Frontend/src/shared/infrastructure/http/assetUrl.test.ts`
+- `Frontend/src/shared/infrastructure/http/assetUrl.ts`
 - `Frontend/src/shared/infrastructure/http/serverHttpClient.ts`
 - `Frontend/src/shared/infrastructure/logging/logger.ts`
 - `Frontend/src/shared/infrastructure/realtime/signalRUrl.ts`
@@ -1142,8 +1124,6 @@ _Generated from `git ls-files Frontend`_
 - `Frontend/src/store/walletStore.test.ts`
 - `Frontend/src/store/walletStore.ts`
 - `Frontend/src/test/setup.ts`
-- `Frontend/test.log`
-- `Frontend/tests/call-webrtc.spec.ts`
 - `Frontend/tests/example.spec.ts`
 - `Frontend/tests/helpers/viewportMetrics.ts`
 - `Frontend/tests/helpers/viewportQaData.ts`

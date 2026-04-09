@@ -5,20 +5,18 @@ using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Api.Realtime;
 
-// Triển khai push sự kiện chat/call qua SignalR để đồng bộ trạng thái hội thoại theo thời gian thực.
+// Triển khai push sự kiện chat qua SignalR để đồng bộ trạng thái hội thoại theo thời gian thực.
 public class SignalRChatPushService : IChatPushService
 {
     private readonly IHubContext<ChatHub> _chatHubContext;
-    private readonly IHubContext<CallHub> _callHubContext;
 
     /// <summary>
-    /// Khởi tạo dịch vụ push sự kiện chat và call.
-    /// Luồng xử lý: nhận 2 hub context tách biệt để gửi đúng loại sự kiện realtime.
+    /// Khởi tạo dịch vụ push sự kiện chat.
+    /// Luồng xử lý: nhận chat hub context để gửi đúng kênh realtime theo conversation.
     /// </summary>
-    public SignalRChatPushService(IHubContext<ChatHub> chatHubContext, IHubContext<CallHub> callHubContext)
+    public SignalRChatPushService(IHubContext<ChatHub> chatHubContext)
     {
         _chatHubContext = chatHubContext;
-        _callHubContext = callHubContext;
     }
 
     /// <summary>
@@ -45,17 +43,4 @@ public class SignalRChatPushService : IChatPushService
         }, ct);
     }
 
-    /// <summary>
-    /// Phát tín hiệu kết thúc cuộc gọi cho các kết nối trong cùng hội thoại.
-    /// Luồng xử lý: gửi event `call.ended` kèm session và reason để client đóng UI đúng trạng thái.
-    /// </summary>
-    public async Task BroadcastCallEndedAsync(string conversationId, CallSessionDto session, string reason, CancellationToken ct = default)
-    {
-        await _callHubContext.Clients.Group($"conversation:{conversationId}").SendAsync("call.ended", new
-        {
-            // Payload tách session/reason để client xử lý hiển thị và hậu kiểm độc lập.
-            session = session,
-            reason = reason
-        }, ct);
-    }
 }

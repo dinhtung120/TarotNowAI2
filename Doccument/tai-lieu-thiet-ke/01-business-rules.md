@@ -114,15 +114,11 @@ Tiền tố ID tài liệu (Doc ID prefix): `BR-*`
 
 ---
 
-### Phase 4: Cộng đồng + gọi thoại/video (Community + Voice/Video)
+### Phase 4: Cộng đồng (Community)
 
 **4.1** Cộng đồng (Community)
 - Tính năng cộng đồng (forum/feed/chủ đề theo tài liệu).
 - Kiểm duyệt nội dung cộng đồng.
-
-**4.2** Gọi thoại/video (Voice/Video call)
-- Siêu dữ liệu (metadata) cho cuộc gọi.
-- Luồng xử lý (flow) gọi thoại/video.
 
 ---
 
@@ -162,7 +158,7 @@ Tiền tố ID tài liệu (Doc ID prefix): `BR-*`
 
 - **Cốt lõi trước/sát mobile:** Auth, Ví, Reading AI (1/3/5/10 cards + streaming), Chat escrow, Nạp tiền cơ bản, Pháp lý.
 - **Sau Phase 3 (mobile):** Thuê bao, Event pack, Ascension, Gacha, Leaderboard/Quest/Achievement, Retention loops, Monetization orchestration.
-- **Không cốt lõi (Phase 4+):** Cộng đồng, Gọi thoại/video (metadata), Thưởng chia sẻ nâng cao.
+- **Không cốt lõi (Phase 4+):** Cộng đồng, Thưởng chia sẻ nâng cao.
 
 ---
 
@@ -211,7 +207,7 @@ Tiền tố ID tài liệu (Doc ID prefix): `BR-*`
 - Phase 1: Trải bài Tarot + phát luồng AI (1/3/5/10 cards + streaming).
 - Phase 2: Reader listing + chat 1-1 + ký quỹ cốt lõi (escrow core).
 - Phase 3: Ứng dụng di động (mobile app) — ưu tiên đạt nhanh.
-- Phase 4: Cộng đồng (Community) + gọi thoại/video (metadata + flow).
+- Phase 4: Cộng đồng (Community).
 - Phase 5+: Vòng lặp giữ chân (retention loops), điều phối kiếm tiền (monetization orchestration), Ascension/Gacha/leaderboard, gia cố nền tảng.
 
 10. Gói điều phối tăng trưởng (Growth orchestration pack):

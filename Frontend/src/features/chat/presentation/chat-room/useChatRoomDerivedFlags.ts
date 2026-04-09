@@ -13,8 +13,7 @@ interface UseChatRoomDerivedFlagsParams {
 
 const isUserVisibleMessage = (message: ChatMessageDto, currentUserId: string) =>
   message.senderId === currentUserId
-  && message.type !== 'system'
-  && message.type !== 'call_log';
+  && message.type !== 'system';
 
 export function useChatRoomDerivedFlags({
   conversation,

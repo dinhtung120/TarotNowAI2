@@ -15,6 +15,4 @@ internal static class ApiPathConstants
     // Prefix endpoint phiên đọc bài.
     public const string Sessions = Prefix + "/sessions";
 
-    // Endpoint hub cuộc gọi realtime.
-    public const string CallHub = Prefix + "/call";
 }

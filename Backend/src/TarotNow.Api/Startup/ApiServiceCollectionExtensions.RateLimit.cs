@@ -24,7 +24,7 @@ public static partial class ApiServiceCollectionExtensions
 
     /// <summary>
     /// Khai báo danh sách policy rate limit theo từng luồng nghiệp vụ.
-    /// Luồng xử lý: cấu hình fixed-window cho login, auth-session, community-write và call-history.
+    /// Luồng xử lý: cấu hình fixed-window cho login, auth-session, community-write và chat-standard.
     /// </summary>
     private static void ConfigureRateLimitPolicies(RateLimiterOptions options)
     {
@@ -34,8 +34,6 @@ public static partial class ApiServiceCollectionExtensions
         AddFixedWindowPolicy(options, "auth-session", ResolveAuthenticatedPartitionKey, permitLimit: 20, TimeSpan.FromMinutes(1));
         // Rule bảo vệ endpoint ghi community khỏi spam nội dung.
         AddFixedWindowPolicy(options, "community-write", ResolveAuthenticatedPartitionKey, permitLimit: 30, TimeSpan.FromMinutes(1));
-        // Rule cho lịch sử cuộc gọi cần ngưỡng cao hơn do polling thường xuyên.
-        AddFixedWindowPolicy(options, "call-history", ResolveAuthenticatedPartitionKey, permitLimit: 60, TimeSpan.FromMinutes(1));
         // Rule chuẩn cho các thao tác chat (inbox, tin nhắn) để chịu tải tốt hơn khi có SignalR reconnect/polling.
         AddFixedWindowPolicy(options, "chat-standard", ResolveAuthenticatedPartitionKey, permitLimit: 120, TimeSpan.FromMinutes(1));
     }
