@@ -29,7 +29,7 @@ describe('legal actions', () => {
  });
 
  it('returns unauthorized when recordConsent has no access token', async () => {
-  mockedGetServerAccessToken.mockResolvedValue(null);
+  mockedGetServerAccessToken.mockResolvedValue(undefined);
 
   const result = await recordConsent('tos', 'v1');
 

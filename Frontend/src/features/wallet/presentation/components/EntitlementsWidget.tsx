@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { useTranslations } from 'next-intl';
 import { GlassCard } from '@/shared/components/ui';
 import { Sparkles, Crown } from 'lucide-react';

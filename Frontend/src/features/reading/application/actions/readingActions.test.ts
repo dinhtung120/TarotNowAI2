@@ -32,7 +32,9 @@ const mockedLoggerError = vi.mocked(logger.error);
 describe('reading actions', () => {
  beforeEach(() => {
   vi.clearAllMocks();
-  mockedGetTranslations.mockResolvedValue((key: string) => `t:${key}`);
+  mockedGetTranslations.mockResolvedValue(
+   ((key: string) => `t:${key}`) as unknown as Awaited<ReturnType<typeof getTranslations>>,
+  );
  });
 
  it('returns unauthorized when initReadingSession has no token', async () => {

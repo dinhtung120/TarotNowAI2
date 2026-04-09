@@ -1,6 +1,5 @@
 
 
-import React from 'react';
 import { FeedPage } from '@/features/community/components/FeedPage';
 import { cn } from '@/lib/utils';
 

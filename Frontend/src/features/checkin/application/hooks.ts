@@ -1,9 +1,7 @@
 
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getStreakStatus, performDailyCheckIn, purchaseStreakFreeze } from './actions';
-import { IPurchaseStreakFreezeCommand } from '../types/checkin.types';
-import { useWalletStore } from '@/store/walletStore';
+import { useQuery } from '@tanstack/react-query';
+import { getStreakStatus } from './actions';
 import { useAuthStore } from '@/store/authStore';
 
 export const CHECKIN_QUERY_KEYS = {
@@ -35,47 +33,5 @@ export const useStreakStatus = (enabled: boolean = true) => {
     staleTime: Infinity,
 
     refetchOnWindowFocus: false,
-  });
-};
-
-export const useDailyCheckIn = () => {
-  const queryClient = useQueryClient();
-  const fetchBalance = useWalletStore((state) => state.fetchBalance);
-
-  return useMutation({
-    mutationFn: async () => {
-      const result = await performDailyCheckIn();
-      if (!result.success || !result.data) {
-        throw new Error(result.error || 'Check-in failed');
-      }
-      return result.data;
-    },
-    onSuccess: (data) => {
-      if (!data.isAlreadyCheckedIn) {
-        fetchBalance();
-        queryClient.invalidateQueries({ queryKey: CHECKIN_QUERY_KEYS.streakStatus });
-      }
-    },
-  });
-};
-
-export const usePurchaseFreeze = () => {
-  const queryClient = useQueryClient();
-  const fetchBalance = useWalletStore((state) => state.fetchBalance);
-
-  return useMutation({
-    mutationFn: async (payload: IPurchaseStreakFreezeCommand) => {
-      const result = await purchaseStreakFreeze(payload);
-      if (!result.success || !result.data) {
-        throw new Error(result.error || 'Freeze purchase failed');
-      }
-      return result.data;
-    },
-    onSuccess: (data) => {
-      if (data.success) {
-        fetchBalance();
-        queryClient.invalidateQueries({ queryKey: CHECKIN_QUERY_KEYS.streakStatus });
-      }
-    },
   });
 };

@@ -71,7 +71,7 @@ const listJsonFilesRecursively = async (directoryPath: string): Promise<string[]
  return files.flat().sort((a, b) => a.localeCompare(b));
 };
 
-export const loadModularMessages = async (locale: AppLocale): Promise<MessageDictionary> => {
+const loadModularMessages = async (locale: AppLocale): Promise<MessageDictionary> => {
  const localeDirectory = path.join(MODULAR_MESSAGES_ROOT, locale);
  const messageFiles = await listJsonFilesRecursively(localeDirectory);
 
