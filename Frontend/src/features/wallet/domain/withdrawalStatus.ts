@@ -1,9 +1,9 @@
-export interface WithdrawalStatusBadge {
+interface WithdrawalStatusBadge {
  text: string;
  className: string;
 }
 
-export interface WithdrawalStatusLabels {
+interface WithdrawalStatusLabels {
  pending: string;
  approved: string;
  rejected: string;

@@ -3,4 +3,4 @@ export { AdminDashboardHeader } from './AdminDashboardHeader';
 export { AdminDashboardStatsGrid } from './AdminDashboardStatsGrid';
 export { AdminDashboardMidSection } from './AdminDashboardMidSection';
 export { AdminDashboardInsights } from './AdminDashboardInsights';
-export type { AdminRoute, AdminStatCard } from './types';
+export type { AdminStatCard } from './types';

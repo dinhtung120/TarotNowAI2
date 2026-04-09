@@ -1,6 +1,6 @@
 import * as z from 'zod';
 
-export type AuthTranslator = (
+type AuthTranslator = (
  key: string,
  values?: Record<string, string | number | Date>
 ) => string;

@@ -9,7 +9,7 @@ import {
   spinGacha 
 } from '../application/actions'
 
-export const GACHA_QUERY_KEYS = {
+const GACHA_QUERY_KEYS = {
   banners: ['gacha', 'banners'] as const,
   odds: (bannerCode: string) => ['gacha', 'odds', bannerCode] as const,
   history: (limit: number) => ['gacha', 'history', limit] as const,
@@ -68,4 +68,3 @@ export function useSpinGacha() {
     },
   })
 }
-

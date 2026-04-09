@@ -6,10 +6,3 @@ export interface IndexPaginatedList<T> {
  hasPreviousPage: boolean;
  hasNextPage: boolean;
 }
-
-export interface OffsetPaginatedList<T> {
- items: T[];
- page: number;
- pageSize: number;
- totalCount: number;
-}

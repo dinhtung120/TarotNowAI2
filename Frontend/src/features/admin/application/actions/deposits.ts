@@ -16,7 +16,7 @@ export interface AdminDepositOrder {
  createdAt: string;
 }
 
-export interface ListDepositsResponse {
+interface ListDepositsResponse {
  deposits: AdminDepositOrder[];
  totalCount: number;
 }

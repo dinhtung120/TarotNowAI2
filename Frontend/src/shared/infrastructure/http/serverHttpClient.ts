@@ -1,23 +1,23 @@
 import { apiUrl } from '@/shared/infrastructure/http/apiUrl';
 import { parseApiError } from '@/shared/infrastructure/error/parseApiError';
 
-export interface ServerHttpResultOk<T> {
+interface ServerHttpResultOk<T> {
   ok: true;
   status: number;
   headers: Headers;
   data: T;
 }
 
-export interface ServerHttpResultErr {
+interface ServerHttpResultErr {
   ok: false;
   status: number;
   headers: Headers;
   error: string;
 }
 
-export type ServerHttpResult<T> = ServerHttpResultOk<T> | ServerHttpResultErr;
+type ServerHttpResult<T> = ServerHttpResultOk<T> | ServerHttpResultErr;
 
-export interface ServerHttpRequestOptions extends Omit<RequestInit, 'body' | 'headers'> {
+interface ServerHttpRequestOptions extends Omit<RequestInit, 'body' | 'headers'> {
   token?: string;
   headers?: HeadersInit;
   json?: unknown;

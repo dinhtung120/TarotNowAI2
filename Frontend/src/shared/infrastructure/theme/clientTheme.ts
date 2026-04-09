@@ -43,7 +43,7 @@ function ensureThemeStylesheetLink(): HTMLLinkElement {
  return link;
 }
 
-export function syncThemeStylesheet(themeId: ThemeId): void {
+function syncThemeStylesheet(themeId: ThemeId): void {
  const link = ensureThemeStylesheetLink();
  const nextHref = getThemeStylesheetHref(themeId);
  if (link.getAttribute('href') !== nextHref) {

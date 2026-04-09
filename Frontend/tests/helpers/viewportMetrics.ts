@@ -1,4 +1,4 @@
-export type PageMetrics = {
+type PageMetrics = {
  title: string;
  viewportWidth: number;
  documentWidth: number;

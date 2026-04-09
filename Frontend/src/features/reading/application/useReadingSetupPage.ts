@@ -10,7 +10,7 @@ import { initReadingSession } from '@/features/reading/application/actions';
 import { useWalletStore } from '@/store/walletStore';
 import { setSessionStorageItem } from '@/shared/infrastructure/storage/browserStorage';
 
-export interface ReadingSetupFormData {
+interface ReadingSetupFormData {
  question?: string;
 }
 

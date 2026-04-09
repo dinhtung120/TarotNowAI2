@@ -15,7 +15,7 @@ import { getAvatarMenuItems, NAV_LINKS, shouldHideNavbar } from '@/shared/compon
 import { useNavbarLogout } from '@/shared/components/common/navbar/useNavbarLogout';
 import { cn } from '@/lib/utils';
 
-export interface NavbarProps {
+interface NavbarProps {
   onLogout?: () => Promise<unknown> | unknown;
 }
 

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
-export interface FilterTabOption {
+interface FilterTabOption {
  value: string;
  label: string;
  icon?: ReactNode;

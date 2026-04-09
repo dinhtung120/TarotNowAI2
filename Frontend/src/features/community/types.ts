@@ -38,8 +38,3 @@ export interface CreatePostPayload {
 export interface ToggleReactionPayload {
   type: ReactionType;
 }
-
-export interface ReportPostPayload {
-  reasonCode: string;
-  description: string;
-}

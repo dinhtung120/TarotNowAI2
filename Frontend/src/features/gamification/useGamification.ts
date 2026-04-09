@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { gamificationApi } from './gamification.api';
 
-export const gamificationKeys = {
+const gamificationKeys = {
   all: ['gamification'] as const,
   quests: (type: string) => [...gamificationKeys.all, 'quests', type] as const,
   achievements: () => [...gamificationKeys.all, 'achievements'] as const,
@@ -49,16 +49,6 @@ export function useSetActiveTitle() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: gamificationKeys.titles() });
       queryClient.invalidateQueries({ queryKey: ['profile'] }); 
-    },
-  });
-}
-
-export function useGrantSandboxTitles() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: () => gamificationApi.grantSandboxTitles(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: gamificationKeys.titles() });
     },
   });
 }

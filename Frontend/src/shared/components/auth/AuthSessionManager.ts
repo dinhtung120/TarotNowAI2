@@ -23,7 +23,7 @@ function isTokenExpiringSoon(token: string | null, thresholdSeconds: number = 60
         return true;
     }
 }
-export interface AuthSessionManagerProps {
+interface AuthSessionManagerProps {
     logout: () => Promise<unknown> | unknown;
     refreshAccessToken: () => Promise<ActionResult<{ accessToken: string }>>;
 }

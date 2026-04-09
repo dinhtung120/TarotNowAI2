@@ -7,7 +7,7 @@ export interface TarotCardMeta {
 
 export const TAROT_CARD_COUNT = 78;
 
-export function tarotSuitKeyFromId(id: number): TarotSuitKey {
+function tarotSuitKeyFromId(id: number): TarotSuitKey {
  if (id <= 21) return 'major';
  if (id <= 35) return 'wands';
  if (id <= 49) return 'cups';

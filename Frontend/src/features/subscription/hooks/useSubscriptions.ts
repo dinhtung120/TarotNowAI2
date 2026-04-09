@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getSubscriptionPlansAction, getMyEntitlementsAction, subscribeToPlanAction } from '../application/actions';
 import { useWalletStore } from '@/store/walletStore';
 
-export const subscriptionKeys = {
+const subscriptionKeys = {
   all: ['subscriptions'] as const,
   plans: () => [...subscriptionKeys.all, 'plans'] as const,
   entitlements: () => [...subscriptionKeys.all, 'entitlements'] as const,

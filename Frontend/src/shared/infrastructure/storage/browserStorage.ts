@@ -52,8 +52,3 @@ export function setSessionStorageItem(key: string, value: string): void {
  if (!isBrowser()) return;
  safeSet(window.sessionStorage, key, value);
 }
-
-export function removeSessionStorageItem(key: string): void {
- if (!isBrowser()) return;
- safeRemove(window.sessionStorage, key);
-}

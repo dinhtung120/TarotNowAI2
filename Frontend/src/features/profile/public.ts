@@ -1,1 +1,1 @@
-export { getProfileAction, updateProfileAction } from "./application/actions";
+export { getProfileAction } from "./application/actions";

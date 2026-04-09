@@ -4,7 +4,7 @@ import path from 'node:path';
 import { routing } from './routing';
 
 type AppLocale = (typeof routing.locales)[number];
-export type MessageDictionary = Record<string, unknown>;
+type MessageDictionary = Record<string, unknown>;
 
 const MODULAR_MESSAGES_ROOT = path.join(process.cwd(), 'messages');
 

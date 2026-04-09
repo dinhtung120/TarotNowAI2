@@ -14,14 +14,14 @@
  type LucideIcon,
 } from 'lucide-react';
 
-export interface UserSidebarMenuItem {
+interface UserSidebarMenuItem {
  labelKey: string;
  href: string;
  icon: LucideIcon;
  badge?: number;
 }
 
-export interface UserSidebarMenuGroup {
+interface UserSidebarMenuGroup {
  id: string;
  labelKey: string;
  items: UserSidebarMenuItem[];
@@ -65,7 +65,7 @@ export const userSidebarMenuGroups: UserSidebarMenuGroup[] = [
  },
 ];
 
-export function matchesUserSidebarPath(pathname: string, href: string): boolean {
+function matchesUserSidebarPath(pathname: string, href: string): boolean {
  if (href === '/') return pathname === '/';
  return pathname === href || pathname.startsWith(`${href}/`);
 }

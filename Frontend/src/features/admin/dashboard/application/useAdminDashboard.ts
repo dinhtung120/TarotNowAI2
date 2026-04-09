@@ -5,7 +5,7 @@ import { listUsers, listDeposits } from '@/features/admin/application/actions';
 import { listPromotions } from '@/features/admin/application/actions/promotion';
 import { getAllHistorySessionsAdminAction } from '@/features/reading/public';
 
-export interface AdminStats {
+interface AdminStats {
   users: number;
   deposits: number;
   promotions: number;

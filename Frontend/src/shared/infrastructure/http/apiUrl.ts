@@ -1,7 +1,7 @@
 const API_VERSION_PATH = '/api/v1';
 const API_BASE_URL_ENV_NAME = 'NEXT_PUBLIC_API_URL';
 
-export function resolveApiBaseUrl(value: string | undefined): string {
+function resolveApiBaseUrl(value: string | undefined): string {
  return normalizeApiBaseUrl(requireEnvValue(value, API_BASE_URL_ENV_NAME));
 }
 
@@ -42,13 +42,6 @@ export const API_ORIGIN = resolveApiOrigin(rawApiBaseUrl);
 
 export function apiUrl(path: string): string {
  const base = API_BASE_URL.replace(/\/+$/, '');
- if (!path) return base;
- if (/^https?:\/\//i.test(path)) return path;
- return `${base}${path.startsWith('/') ? path : `/${path}`}`;
-}
-
-export function apiOriginUrl(path: string): string {
- const base = API_ORIGIN.replace(/\/+$/, '');
  if (!path) return base;
  if (/^https?:\/\//i.test(path)) return path;
  return `${base}${path.startsWith('/') ? path : `/${path}`}`;

@@ -3,7 +3,7 @@ import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionR
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
-import { CommunityPost, CreatePostPayload, ReportPostPayload, ToggleReactionPayload, type CommunityComment } from '../../types';
+import { CommunityPost, CreatePostPayload, ToggleReactionPayload, type CommunityComment } from '../../types';
 
 interface FeedResponse { data: CommunityPost[]; metadata: { totalCount: number; page: number; pageSize: number } }
 interface CommentsResponse { items: CommunityComment[]; totalCount: number; page: number; pageSize: number; totalPages: number }
@@ -12,9 +12,7 @@ const UNAUTHORIZED = 'Unauthorized';
 const FAIL_UPLOAD_IMAGE = 'Failed to upload image';
 const FAIL_GET_FEED = 'Failed to get feed';
 const FAIL_CREATE_POST = 'Failed to create post';
-const FAIL_DELETE_POST = 'Failed to delete post';
 const FAIL_TOGGLE_REACTION = 'Failed to toggle reaction';
-const FAIL_REPORT_POST = 'Failed to report post';
 const FAIL_ADD_COMMENT = 'Failed to add comment';
 const FAIL_GET_COMMENTS = 'Failed to fetch comments';
 
@@ -65,19 +63,6 @@ export async function createPostAction(payload: CreatePostPayload): Promise<Acti
  });
 }
 
-export async function deletePostAction(postId: string): Promise<ActionResult<void>> {
- return withToken(async (token) => {
-  try {
-   const result = await serverHttpRequest<void>(`/community/posts/${postId}`, { method: 'DELETE', token, fallbackErrorMessage: FAIL_DELETE_POST });
-   if (!result.ok) return actionFail(result.error || FAIL_DELETE_POST);
-   return actionOk(undefined as void);
-  } catch (error) {
-   logger.error('deletePostAction error', error);
-   return actionFail(FAIL_DELETE_POST);
-  }
- });
-}
-
 export async function toggleReactionAction(postId: string, payload: ToggleReactionPayload): Promise<ActionResult<{ success: boolean }>> {
  return withToken(async (token) => {
   try {
@@ -87,19 +72,6 @@ export async function toggleReactionAction(postId: string, payload: ToggleReacti
   } catch (error) {
    logger.error('toggleReactionAction error', error);
    return actionFail(FAIL_TOGGLE_REACTION);
-  }
- });
-}
-
-export async function reportPostAction(postId: string, payload: ReportPostPayload): Promise<ActionResult<{ success: boolean; reportId: string }>> {
- return withToken(async (token) => {
-  try {
-   const result = await serverHttpRequest<{ success: boolean; reportId: string }>(`/community/posts/${postId}/reports`, { method: 'POST', token, json: payload, fallbackErrorMessage: FAIL_REPORT_POST });
-   if (!result.ok) return actionFail(result.error || FAIL_REPORT_POST);
-   return actionOk(result.data);
-  } catch (error) {
-   logger.error('reportPostAction error', error);
-   return actionFail(FAIL_REPORT_POST);
   }
  });
 }

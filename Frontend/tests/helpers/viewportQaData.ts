@@ -1,9 +1,9 @@
-export type RouteItem = {
+type RouteItem = {
  name: string;
  path: string;
 };
 
-export type ViewportItem = {
+type ViewportItem = {
  name: string;
  width: number;
  height: number;

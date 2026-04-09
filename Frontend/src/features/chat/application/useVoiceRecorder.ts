@@ -10,7 +10,7 @@ import {
  stopMediaStream,
 } from '@/features/chat/application/voiceRecorderHelpers';
 export interface VoiceRecordingResult { blob: Blob; durationMs: number; }
-export type RecordingState = 'idle' | 'requesting' | 'recording' | 'error';
+type RecordingState = 'idle' | 'requesting' | 'recording' | 'error';
 export function useVoiceRecorder() {
  const [recordingState, setRecordingState] = useState<RecordingState>('idle');
  const [elapsedMs, setElapsedMs] = useState(0);

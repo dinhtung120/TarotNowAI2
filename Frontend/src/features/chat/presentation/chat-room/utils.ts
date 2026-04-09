@@ -1,7 +1,7 @@
 import { normalizeReaderStatus } from '@/features/reader/domain/readerStatus';
 import type { ChatMessageDto } from '@/features/chat/application/actions';
 
-export type OfferResponseMap = Record<string, 'accept' | 'reject'>;
+type OfferResponseMap = Record<string, 'accept' | 'reject'>;
 
 export function parseOfferResponseMap(messages: ChatMessageDto[]): OfferResponseMap {
   const map: OfferResponseMap = {};

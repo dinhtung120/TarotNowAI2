@@ -8,5 +8,5 @@ export const routing = defineRouting({
  defaultLocale: 'vi'
 });
 
-export const { Link, redirect, usePathname, useRouter } =
+export const { Link, usePathname, useRouter } =
  createNavigation(routing);

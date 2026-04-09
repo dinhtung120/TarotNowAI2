@@ -17,7 +17,7 @@ export interface AdminReaderRequest {
  createdAt: string;
 }
 
-export interface ListReaderRequestsResponse {
+interface ListReaderRequestsResponse {
  requests: AdminReaderRequest[];
  totalCount: number;
 }

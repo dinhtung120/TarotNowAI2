@@ -5,15 +5,12 @@ import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient
 import { logger } from '@/shared/infrastructure/logging/logger';
 
 export interface AdminUserItem { id: string; email: string; username: string; displayName: string; status: string; role: string; level: number; exp: number; goldBalance: number; diamondBalance: number; createdAt: string }
-export interface ListUsersResponse { users: AdminUserItem[]; totalCount: number }
-export interface PaginatedResult<T> { items: T[]; totalCount: number; page: number; pageSize: number }
+interface ListUsersResponse { users: AdminUserItem[]; totalCount: number }
 export interface UpdateUserParams { role: string; status: string; diamondBalance: number; goldBalance: number }
 export interface CreateUserParams { email: string; username: string; displayName: string; password: string; role: string }
 
 const UNAUTHORIZED = 'Unauthorized';
 const FAIL_LIST_USERS = 'Failed to list users';
-const FAIL_TOGGLE_LOCK = 'Failed to toggle user lock';
-const FAIL_ADD_BALANCE = 'Failed to add user balance';
 const FAIL_UPDATE_USER = 'Failed to update user';
 const FAIL_CREATE_USER = 'Failed to create user';
 
@@ -40,40 +37,6 @@ export async function listUsers(page = 1, pageSize = 20, searchTerm = ''): Promi
   } catch (error) {
    logger.error('[AdminAction] listUsers', error, { page, pageSize, searchTerm });
    return actionFail(FAIL_LIST_USERS);
-  }
- });
-}
-
-export async function toggleUserLock(userId: string, isLocked: boolean): Promise<ActionResult<undefined>> {
- return withAdminToken(async (token) => {
-  try {
-   const json = { userId, UserId: userId, isLocked, IsLocked: isLocked };
-   const result = await serverHttpRequest<unknown>('/admin/users/lock', { method: 'PATCH', token, json, fallbackErrorMessage: FAIL_TOGGLE_LOCK });
-   if (!result.ok) {
-    logger.error('[AdminAction] toggleUserLock', result.error, { status: result.status, userId, isLocked });
-    return actionFail(result.error || FAIL_TOGGLE_LOCK);
-   }
-   return actionOk();
-  } catch (error) {
-   logger.error('[AdminAction] toggleUserLock', error, { userId, isLocked });
-   return actionFail(FAIL_TOGGLE_LOCK);
-  }
- });
-}
-
-export async function addUserBalance(userId: string, currency: string, amount: number, reason?: string): Promise<ActionResult<undefined>> {
- return withAdminToken(async (token) => {
-  try {
-   const json = { userId, UserId: userId, currency, Currency: currency, amount, Amount: amount, reason, Reason: reason };
-   const result = await serverHttpRequest<unknown>('/admin/users/add-balance', { method: 'POST', token, json, fallbackErrorMessage: FAIL_ADD_BALANCE });
-   if (!result.ok) {
-    logger.error('[AdminAction] addUserBalance', result.error, { status: result.status, userId, currency, amount });
-    return actionFail(result.error || FAIL_ADD_BALANCE);
-   }
-   return actionOk();
-  } catch (error) {
-   logger.error('[AdminAction] addUserBalance', error, { userId, currency, amount });
-   return actionFail(FAIL_ADD_BALANCE);
   }
  });
 }

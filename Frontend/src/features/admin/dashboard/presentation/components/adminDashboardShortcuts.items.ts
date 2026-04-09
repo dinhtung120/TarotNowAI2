@@ -2,7 +2,7 @@ import { CreditCard, History, ShieldCheck, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { AdminRoute } from "./types";
 
-export interface AdminShortcutItem {
+interface AdminShortcutItem {
   borderHoverClass: string;
   href: AdminRoute;
   icon: LucideIcon;

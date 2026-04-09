@@ -8,7 +8,7 @@ export interface ReaderProfile {
  id: string; userId: string; status: string; diamondPerQuestion: number; bioVi: string; bioEn: string; bioZh: string;
  specialties: string[]; avgRating: number; totalReviews: number; displayName: string; avatarUrl?: string | null; createdAt: string; updatedAt?: string | null
 }
-export interface ListReadersResponse { readers: ReaderProfile[]; totalCount: number }
+interface ListReadersResponse { readers: ReaderProfile[]; totalCount: number }
 
 type ReaderApi = { readers?: ReaderProfile[]; Readers?: ReaderProfile[]; totalCount?: number; TotalCount?: number };
 type ReaderSource = Record<string, unknown>;
