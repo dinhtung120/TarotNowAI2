@@ -14,11 +14,20 @@ public static partial class DependencyInjection
     /// </summary>
     private static void AddPersistence(IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("PostgreSQL")));
+        var postgreSqlConnectionString = configuration.GetConnectionString("PostgreSQL");
+        if (string.IsNullOrWhiteSpace(postgreSqlConnectionString))
+        {
+            throw new InvalidOperationException("Missing required configuration ConnectionStrings:PostgreSQL (env: CONNECTIONSTRINGS__POSTGRESQL).");
+        }
 
-        var mongoConnectionString = configuration.GetConnectionString("MongoDB")
-            ?? "mongodb://localhost:27017/tarotweb";
+        services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseNpgsql(postgreSqlConnectionString));
+
+        var mongoConnectionString = configuration.GetConnectionString("MongoDB");
+        if (string.IsNullOrWhiteSpace(mongoConnectionString))
+        {
+            throw new InvalidOperationException("Missing required configuration ConnectionStrings:MongoDB (env: CONNECTIONSTRINGS__MONGODB).");
+        }
 
         services.AddSingleton<IMongoClient>(_ => new MongoClient(mongoConnectionString));
         services.AddSingleton<IMongoDatabase>(sp =>

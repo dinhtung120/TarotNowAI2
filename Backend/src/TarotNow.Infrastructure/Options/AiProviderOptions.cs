@@ -7,10 +7,10 @@ public sealed class AiProviderOptions
     public string ApiKey { get; set; } = string.Empty;
 
     // Base URL endpoint gọi API AI.
-    public string BaseUrl { get; set; } = "https://api.openai.com/v1/";
+    public string BaseUrl { get; set; } = string.Empty;
 
     // Model mặc định dùng cho yêu cầu AI.
-    public string Model { get; set; } = "gpt-4o-mini";
+    public string Model { get; set; } = string.Empty;
 
     // Timeout request AI (giây).
     public int TimeoutSeconds { get; set; } = 30;

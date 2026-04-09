@@ -1,6 +1,7 @@
 
 
 import { useAuthStore } from '@/store/authStore';
+import { API_BASE_URL } from '@/shared/infrastructure/http/apiUrl';
 import type {
   QuestWithProgress,
   ClaimQuestRewardResult,
@@ -14,8 +15,7 @@ async function authFetch<T>(path: string, options: RequestInit = {}): Promise<T>
   const token = useAuthStore.getState().token;
 
   
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5037/api';
-  const url = `${baseUrl}${path}`;
+  const url = `${API_BASE_URL}${path}`;
 
   const res = await fetch(url, {
     ...options,

@@ -1,9 +1,8 @@
-const DEFAULT_API_ORIGIN = 'http://127.0.0.1:5037';
 const API_VERSION_PATH = '/api/v1';
+const API_BASE_URL_ENV_NAME = 'NEXT_PUBLIC_API_URL';
 
 export function resolveApiBaseUrl(value: string | undefined): string {
- const rawValue = value ?? `${DEFAULT_API_ORIGIN}${API_VERSION_PATH}`;
- return normalizeApiBaseUrl(rawValue);
+ return normalizeApiBaseUrl(requireEnvValue(value, API_BASE_URL_ENV_NAME));
 }
 
 export function resolveApiOrigin(value: string | undefined): string {
@@ -12,10 +11,22 @@ export function resolveApiOrigin(value: string | undefined): string {
 
 function normalizeApiBaseUrl(value: string): string {
  const trimmed = value.trim().replace(/\/+$/, '');
- if (!trimmed) return `${DEFAULT_API_ORIGIN}${API_VERSION_PATH}`;
+ if (!trimmed) {
+  throw new Error(`${API_BASE_URL_ENV_NAME} must not be empty.`);
+ }
 
  if (trimmed.endsWith(API_VERSION_PATH)) return trimmed;
+ if (trimmed.endsWith('/api')) return `${trimmed}/v1`;
  return `${trimmed}${API_VERSION_PATH}`;
+}
+
+function requireEnvValue(value: string | undefined, envName: string): string {
+ const trimmed = value?.trim();
+ if (!trimmed) {
+  throw new Error(`Missing required environment variable ${envName}. Configure it in Frontend/.env.local.`);
+ }
+
+ return trimmed;
 }
 
 function apiOriginFromBase(baseUrl: string): string {
@@ -24,8 +35,7 @@ function apiOriginFromBase(baseUrl: string): string {
  return trimmed;
 }
 
-const rawApiBaseUrl =
- process.env.NEXT_PUBLIC_API_URL ?? `${DEFAULT_API_ORIGIN}${API_VERSION_PATH}`;
+const rawApiBaseUrl = requireEnvValue(process.env.NEXT_PUBLIC_API_URL, API_BASE_URL_ENV_NAME);
 
 export const API_BASE_URL = resolveApiBaseUrl(rawApiBaseUrl);
 export const API_ORIGIN = resolveApiOrigin(rawApiBaseUrl);

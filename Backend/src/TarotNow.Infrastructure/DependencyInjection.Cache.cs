@@ -16,16 +16,17 @@ public static partial class DependencyInjection
     private static void AddRedisCaching(IServiceCollection services, IConfiguration configuration)
     {
         services.AddMemoryCache();
-        var redisConnectionString = configuration.GetConnectionString("Redis") ?? "localhost:6379";
-
-        var redisMultiplexer = TryCreateRedisMultiplexer(redisConnectionString);
+        var redisConnectionString = configuration.GetConnectionString("Redis");
+        var redisMultiplexer = !string.IsNullOrWhiteSpace(redisConnectionString)
+            ? TryCreateRedisMultiplexer(redisConnectionString)
+            : null;
         var usesRedisCache = redisMultiplexer != null;
 
         if (redisMultiplexer != null)
         {
             services.AddStackExchangeRedisCache(options =>
             {
-                options.Configuration = redisConnectionString;
+                options.Configuration = redisConnectionString!;
                 options.InstanceName = "TarotNow:";
             });
 

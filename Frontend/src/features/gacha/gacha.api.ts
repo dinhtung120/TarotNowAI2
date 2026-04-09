@@ -1,6 +1,7 @@
 
 
 import { useAuthStore } from '@/store/authStore';
+import { API_BASE_URL } from '@/shared/infrastructure/http/apiUrl';
 import type { 
   GachaBannerDto, 
   GachaBannerOddsDto, 
@@ -12,8 +13,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 async function authFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = useAuthStore.getState().token;
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5037/api';
-  const url = `${baseUrl}${path}`;
+  const url = `${API_BASE_URL}${path}`;
 
   const res = await fetch(url, {
     ...options,
@@ -44,23 +44,23 @@ async function authFetch<T>(path: string, options: RequestInit = {}): Promise<T>
 export const gachaApi = {
   
   async getBanners(): Promise<GachaBannerDto[]> {
-    return authFetch('/v1/gacha/banners')
+    return authFetch('/gacha/banners')
   },
 
   
   async getBannerOdds(bannerCode: string): Promise<GachaBannerOddsDto> {
-    return authFetch(`/v1/gacha/banners/${bannerCode}/odds`)
+    return authFetch(`/gacha/banners/${bannerCode}/odds`)
   },
 
   
   async getHistory(limit: number = 50): Promise<GachaHistoryItemDto[]> {
-    return authFetch(`/v1/gacha/history?limit=${limit}`)
+    return authFetch(`/gacha/history?limit=${limit}`)
   },
 
   
   async spin(data: SpinGachaRequestDto): Promise<SpinGachaResult> {
     const idempotencyKey = uuidv4()
-    return authFetch('/v1/gacha/spin', {
+    return authFetch('/gacha/spin', {
       method: 'POST',
       body: JSON.stringify(data),
       headers: {

@@ -39,7 +39,10 @@ Backend/src/
 ```bash
 # 1. Clone & config
 cp .env.example .env
-# Chỉnh sửa .env với giá trị thật
+cp Backend/.env.example Backend/.env
+cp Frontend/.env.example Frontend/.env.local
+# Chỉnh sửa Backend/.env và Frontend/.env.local với giá trị thật
+# Thiếu biến bắt buộc -> ứng dụng sẽ fail-fast khi khởi động/build
 
 # 2. Database
 psql -h localhost -U postgres -d tarotweb -f database/postgresql/schema.sql
@@ -56,13 +59,21 @@ npm install
 npm run dev
 ```
 
+### Quy ước file cấu hình
+
+| File | Subsystem | Mục đích |
+|------|-----------|----------|
+| `.env` | Docker Compose (root) | Chỉ cấp biến cho `docker-compose.yml` |
+| `Backend/.env` | Backend API | Secrets và runtime config của ASP.NET Core |
+| `Frontend/.env.local` | Frontend Next.js | URL API và biến môi trường frontend |
+
 ### Verify
 ```bash
 # Health check
-curl http://localhost:5000/api/v1/health
+curl http://localhost:5037/api/v1/health
 
 # Swagger UI
-open http://localhost:5000/swagger
+open http://localhost:5037/swagger
 
 # Frontend
 open http://localhost:3000

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
 import { routing } from './i18n/routing';
-import { resolveApiOrigin } from '@/shared/infrastructure/http/apiUrl';
+import { API_ORIGIN } from '@/shared/infrastructure/http/apiUrl';
 
 const intlMiddleware = createMiddleware(routing);
 const localeSet = new Set(routing.locales);
-const apiOrigin = resolveApiOrigin(process.env.NEXT_PUBLIC_API_URL);
+const apiOrigin = API_ORIGIN;
 const wsApiOrigin = apiOrigin.startsWith('https://')
  ? `wss://${apiOrigin.slice('https://'.length)}`
  : apiOrigin.startsWith('http://')

@@ -3,9 +3,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
+import { API_BASE_URL } from '@/shared/infrastructure/http/apiUrl';
 import type { QuestDefinition, AchievementDefinition, TitleDefinition } from './gamification.types';
 
-const ADMIN_API_BASE = `${process.env.NEXT_PUBLIC_API_URL}/v1/admin/gamification`;
+const ADMIN_API_BASE = `${API_BASE_URL}/admin/gamification`;
 
 async function adminFetch(path: string, options: RequestInit = {}) {
   const token = useAuthStore.getState().token;

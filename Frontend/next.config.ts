@@ -10,12 +10,15 @@ const frontendHosts = resolveFrontendHosts(frontendOrigin.hostname);
 const serverActionAllowedOrigins = resolveServerActionAllowedOrigins(frontendOrigin, frontendHosts);
 
 function resolveFrontendOrigin(value: string | undefined): URL {
- const fallback = 'http://localhost:3000';
- const raw = value?.trim() || fallback;
+ const raw = value?.trim();
+ if (!raw) {
+  throw new Error('Missing required environment variable NEXT_PUBLIC_BASE_URL.');
+ }
+
  try {
   return new URL(raw);
  } catch {
-  return new URL(fallback);
+  throw new Error('NEXT_PUBLIC_BASE_URL is not a valid absolute URL.');
  }
 }
 

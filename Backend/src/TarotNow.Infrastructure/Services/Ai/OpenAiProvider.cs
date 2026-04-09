@@ -43,12 +43,18 @@ public partial class OpenAiProvider : IAiProvider
         // Đọc cấu hình provider và fail-fast nếu thiếu API key bắt buộc.
         var providerOptions = options.Value;
         var apiKey = providerOptions.ApiKey
-                     ?? throw new ArgumentNullException("AiProvider:ApiKey is missing in AppSettings.json");
+                     ?? throw new ArgumentNullException("AiProvider:ApiKey is missing.");
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            throw new InvalidOperationException("AiProvider:ApiKey is missing.");
+        }
 
-        // Dùng model cấu hình khi hợp lệ, fallback về model mặc định an toàn.
-        _modelName = providerOptions.Model?.Trim() is { Length: > 0 } configuredModel
-            ? configuredModel
-            : "gpt-4o-mini";
+        var modelName = providerOptions.Model?.Trim();
+        if (string.IsNullOrWhiteSpace(modelName))
+        {
+            throw new InvalidOperationException("AiProvider:Model is missing.");
+        }
+        _modelName = modelName;
 
         // Giới hạn retry ở giá trị không âm để tránh cấu hình âm gây hành vi bất định.
         _maxRetries = providerOptions.MaxRetries >= 0 ? providerOptions.MaxRetries : 2;
@@ -58,12 +64,16 @@ public partial class OpenAiProvider : IAiProvider
         var baseUrl = providerOptions.BaseUrl?.Trim();
         if (string.IsNullOrWhiteSpace(baseUrl))
         {
-            // Fallback endpoint chính thức khi cấu hình trống.
-            baseUrl = "https://api.openai.com/v1/";
+            throw new InvalidOperationException("AiProvider:BaseUrl is missing.");
+        }
+
+        if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var parsedBaseUrl))
+        {
+            throw new InvalidOperationException("AiProvider:BaseUrl must be a valid absolute URI.");
         }
 
         // Cấu hình HttpClient một lần ở constructor để các request sau tái sử dụng nhất quán.
-        _httpClient.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
+        _httpClient.BaseAddress = parsedBaseUrl;
         _httpClient.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
     }

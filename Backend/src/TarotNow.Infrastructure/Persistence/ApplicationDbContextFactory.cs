@@ -30,9 +30,11 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
             .Build();
 
         var connectionString = configuration.GetConnectionString("PostgreSQL")
-            ?? configuration["ConnectionStrings:PostgreSQL"]
-            ?? "Host=localhost;Port=5432;Database=tarotnow;Username=postgres;Password=postgres";
-        // Fallback chuỗi kết nối mặc định để tooling vẫn chạy được khi thiếu cấu hình cục bộ.
+            ?? configuration["ConnectionStrings:PostgreSQL"];
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException("Missing required configuration ConnectionStrings:PostgreSQL (env: CONNECTIONSTRINGS__POSTGRESQL).");
+        }
 
         var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
         optionsBuilder.UseNpgsql(connectionString, options =>
