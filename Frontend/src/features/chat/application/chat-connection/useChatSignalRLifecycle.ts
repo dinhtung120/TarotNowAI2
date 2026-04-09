@@ -101,8 +101,8 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
      if (message.conversationId === conversationId) {
       appendMessage(message);
       
-      // Nếu người dùng đang nhìn màn hình chat, đánh dấu đã đọc ngay.
-      if (document.visibilityState === 'visible') {
+      // Nếu người dùng đang nhìn màn hình chat và message đến từ đối phương, đánh dấu đã đọc ngay.
+      if (document.visibilityState === 'visible' && message.senderId !== currentUserId) {
        void markReadRef.current();
       }
      }
@@ -130,7 +130,9 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
     });
 
     hubConnection.on('conversation.updated', (payload: { conversationId: string; type?: string }) => {
-     if (payload.conversationId !== conversationId || payload.type === 'message_created') return;
+     if (payload.conversationId !== conversationId) return;
+     // Các sự kiện này không làm thay đổi trạng thái room cần refetch lại conversation.
+     if (payload.type === 'message_created' || payload.type === 'member_joined' || payload.type === 'message_read') return;
      // Debounce việc fetch lại dữ liệu khi có cập nhật status conversation
      if (Date.now() - lastInitialLoadTimeRef.current < 2000) return;
      void listMessages(conversationId, { limit: 1 }).then((res) => {

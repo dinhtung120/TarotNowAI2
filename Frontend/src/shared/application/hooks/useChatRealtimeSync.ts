@@ -7,7 +7,12 @@ import { useAuthStore } from '@/store/authStore';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { getSignalRHubUrl } from '@/shared/infrastructure/realtime/signalRUrl';
 
-export function useChatRealtimeSync() {
+interface UseChatRealtimeSyncOptions {
+  enabled?: boolean;
+}
+
+export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
+  const enabled = options.enabled ?? true;
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const token = useAuthStore((state) => state.token);
   const connectionRef = useRef<HubConnection | null>(null);
@@ -16,7 +21,7 @@ export function useChatRealtimeSync() {
   const appStartTimeRef = useRef(Date.now());
 
   useEffect(() => {
-    if (!isAuthenticated || !token) {
+    if (!enabled || !isAuthenticated || !token) {
       const existing = connectionRef.current;
       if (
         existing &&
@@ -94,5 +99,5 @@ export function useChatRealtimeSync() {
       }
       connectionRef.current = null;
     };
-  }, [isAuthenticated, queryClient, token]);
+  }, [enabled, isAuthenticated, queryClient, token]);
 }

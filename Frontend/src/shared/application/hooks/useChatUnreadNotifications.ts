@@ -10,6 +10,10 @@ interface ChatUnreadResult {
  loading: boolean;
 }
 
+interface UseChatUnreadNotificationsOptions {
+ enabled?: boolean;
+}
+
 function maybeNotifyBrowser(diff: number, unreadCount: number) {
  if (typeof window === 'undefined' || typeof Notification === 'undefined') {
   return;
@@ -49,13 +53,14 @@ function maybeNotifyBrowser(diff: number, unreadCount: number) {
  }
 }
 
-export function useChatUnreadNotifications(): ChatUnreadResult {
+export function useChatUnreadNotifications(options: UseChatUnreadNotificationsOptions = {}): ChatUnreadResult {
+ const enabled = options.enabled ?? true;
  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
  const previousUnreadRef = useRef<number | null>(null);
 
  const { data, isLoading } = useQuery({
   queryKey: ['chat', 'unread-badge'],
-  enabled: isAuthenticated,
+  enabled: isAuthenticated && enabled,
   queryFn: async () => {
    const result = await getUnreadConversationCount();
    if (result.success && result.data) {
