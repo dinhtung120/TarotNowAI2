@@ -2,9 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState, type Dispatch, type RefObject, type SetStateAction } from 'react';
 import type { HubConnection } from '@microsoft/signalr';
+import { useQueryClient } from '@tanstack/react-query';
 import {
  sendConversationMessage,
  type ChatMessageDto,
+ type ListConversationsResult,
  type MediaPayloadDto,
 } from '@/features/chat/application/actions';
 import { appendUniqueMessage } from '@/features/chat/domain/mergeMessages';
@@ -25,18 +27,47 @@ export function useChatSendActions({
  inputRef,
  setMessages,
 }: UseChatSendActionsOptions) {
+ const queryClient = useQueryClient();
  const [newMessage, setNewMessage] = useState('');
  const [sending, setSending] = useState(false);
  const markReadRef = useRef<() => Promise<void>>(async () => {});
+
+ const syncInboxUnreadAfterRead = useCallback(() => {
+  if (!conversationId) return;
+
+  queryClient.setQueriesData<ListConversationsResult>(
+   { queryKey: ['chat', 'inbox'] },
+   (previous) => {
+    if (!previous?.conversations?.length || !previous.currentUserId) return previous;
+
+    let changed = false;
+    const conversations = previous.conversations.map((conversation) => {
+      if (conversation.id !== conversationId) return conversation;
+
+      const isUserRole = conversation.userId === previous.currentUserId;
+      const unreadField = isUserRole ? 'unreadCountUser' : 'unreadCountReader';
+      if (conversation[unreadField] === 0) return conversation;
+
+      changed = true;
+      return { ...conversation, [unreadField]: 0 };
+    });
+
+    return changed ? { ...previous, conversations } : previous;
+   }
+  );
+
+  void queryClient.invalidateQueries({ queryKey: ['chat', 'unread-badge'] });
+ }, [conversationId, queryClient]);
 
  const markRead = useCallback(async () => {
   if (!connectionRef.current || !conversationId) return;
   try {
    await connectionRef.current.invoke('MarkRead', conversationId);
+   syncInboxUnreadAfterRead();
   } catch (error) {
    logger.warn('[Chat] markRead failed', error, { conversationId });
   }
- }, [connectionRef, conversationId]);
+ }, [connectionRef, conversationId, syncInboxUnreadAfterRead]);
  useEffect(() => {
   markReadRef.current = markRead;
  }, [markRead, markReadRef]);

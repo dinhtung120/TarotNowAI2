@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { usePathname } from '@/i18n/routing';
 import { getUnreadConversationCount } from '@/features/chat/application/actions';
 import { useAuthStore } from '@/store/authStore';
 
@@ -55,8 +56,10 @@ function maybeNotifyBrowser(diff: number, unreadCount: number) {
 
 export function useChatUnreadNotifications(options: UseChatUnreadNotificationsOptions = {}): ChatUnreadResult {
  const enabled = options.enabled ?? true;
+ const pathname = usePathname();
  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
  const previousUnreadRef = useRef<number | null>(null);
+ const isChatRoute = /(^|\/)chat(\/|$)/.test(pathname);
 
  const { data, isLoading } = useQuery({
   queryKey: ['chat', 'unread-badge'],
@@ -77,6 +80,11 @@ export function useChatUnreadNotifications(options: UseChatUnreadNotificationsOp
  const unreadCount = data ?? 0;
 
  useEffect(() => {
+  if (!enabled || isChatRoute) {
+   previousUnreadRef.current = unreadCount;
+   return;
+  }
+
   const previous = previousUnreadRef.current;
   if (previous === null) {
    previousUnreadRef.current = unreadCount;
@@ -88,7 +96,7 @@ export function useChatUnreadNotifications(options: UseChatUnreadNotificationsOp
   }
 
   previousUnreadRef.current = unreadCount;
- }, [unreadCount]);
+ }, [enabled, isChatRoute, unreadCount]);
 
  return {
   unreadCount,

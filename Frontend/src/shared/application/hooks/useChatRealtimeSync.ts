@@ -11,6 +11,11 @@ interface UseChatRealtimeSyncOptions {
   enabled?: boolean;
 }
 
+interface ConversationUpdatedPayload {
+  conversationId?: string;
+  type?: string;
+}
+
 export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
   const enabled = options.enabled ?? true;
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -40,7 +45,7 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
     let invalidateTimeout: NodeJS.Timeout | null = null;
 
     
-    const invalidateChatQueries = () => {
+    const invalidateInboxQueries = () => {
       if (Date.now() - appStartTimeRef.current < 3000) {
         return;
       }
@@ -48,6 +53,16 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
       if (invalidateTimeout) clearTimeout(invalidateTimeout);
       invalidateTimeout = setTimeout(() => {
         void queryClient.invalidateQueries({ queryKey: ['chat', 'inbox'] });
+      }, 1000); 
+    };
+
+    const invalidateUnreadBadge = () => {
+      if (Date.now() - appStartTimeRef.current < 3000) {
+        return;
+      }
+
+      if (invalidateTimeout) clearTimeout(invalidateTimeout);
+      invalidateTimeout = setTimeout(() => {
         void queryClient.invalidateQueries({ queryKey: ['chat', 'unread-badge'] });
       }, 1000); 
     };
@@ -64,8 +79,13 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
 
       hubConnection.serverTimeoutInMilliseconds = 120000;
 
-      hubConnection.on('conversation.updated', () => invalidateChatQueries());
-      hubConnection.on('message.read', () => invalidateChatQueries());
+      hubConnection.on('conversation.updated', (payload: ConversationUpdatedPayload) => {
+        invalidateInboxQueries();
+        // Chỉ cập nhật unread badge khi có tin nhắn mới để tránh refetch nhiễu.
+        if (payload?.type === 'message_created') {
+          invalidateUnreadBadge();
+        }
+      });
       hubConnection.on('Error', (error: string) => {
         logger.error('[ChatRealtimeSync] hub error', error);
       });
