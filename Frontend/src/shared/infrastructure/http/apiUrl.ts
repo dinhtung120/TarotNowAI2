@@ -38,22 +38,28 @@ function apiOriginFromBase(baseUrl: string): string {
 // Chọn URL API phù hợp: 
 // - Trên Browser: Bắt buộc dùng NEXT_PUBLIC_API_URL (URL công khai).
 // - Trên Server: Ưu tiên dùng INTERNAL_API_URL (IP Private) để tối ưu tốc độ và tránh lỗi DNS nội bộ.
-const isServer = typeof window === 'undefined';
-const effectiveApiUrl = isServer 
-  ? (process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL) 
-  : process.env.NEXT_PUBLIC_API_URL;
+function getEffectiveRawUrl(): string | undefined {
+  const isServer = typeof window === 'undefined';
+  return isServer 
+    ? (process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL) 
+    : process.env.NEXT_PUBLIC_API_URL;
+}
 
-const rawApiBaseUrl = requireEnvValue(
-  effectiveApiUrl, 
-  isServer ? 'INTERNAL_API_URL hoặc NEXT_PUBLIC_API_URL' : API_BASE_URL_ENV_NAME
-);
+export function getApiBaseUrl(): string {
+  return resolveApiBaseUrl(getEffectiveRawUrl());
+}
 
-export const API_BASE_URL = resolveApiBaseUrl(rawApiBaseUrl);
-export const API_ORIGIN = resolveApiOrigin(rawApiBaseUrl);
+export function getApiOrigin(): string {
+  return resolveApiOrigin(getEffectiveRawUrl());
+}
 
+/**
+ * Tạo URL API đầy đủ từ path.
+ * Luôn tính toán tại Runtime để đảm bảo lấy đúng INTERNAL_API_URL trên Server.
+ */
 export function apiUrl(path: string): string {
- const base = API_BASE_URL.replace(/\/+$/, '');
- if (!path) return base;
- if (/^https?:\/\//i.test(path)) return path;
- return `${base}${path.startsWith('/') ? path : `/${path}`}`;
+  const base = getApiBaseUrl().replace(/\/+$/, '');
+  if (!path) return base;
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${base}${path.startsWith('/') ? path : `/${path}`}`;
 }

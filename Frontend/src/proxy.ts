@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
 import { routing } from './i18n/routing';
-import { API_ORIGIN } from '@/shared/infrastructure/http/apiUrl';
+import { getApiOrigin } from '@/shared/infrastructure/http/apiUrl';
 
 const intlMiddleware = createMiddleware(routing);
 const localeSet = new Set(routing.locales);
-const apiOrigin = API_ORIGIN;
-const wsApiOrigin = apiOrigin.startsWith('https://')
- ? `wss://${apiOrigin.slice('https://'.length)}`
- : apiOrigin.startsWith('http://')
-  ? `ws://${apiOrigin.slice('http://'.length)}`
-  : '';
+
 
 const resolveLocale = (pathname: string) => {
  const maybeLocale = pathname.split('/')[1];
@@ -71,23 +66,30 @@ const toSpaceDelimited = (parts: string[]): string => {
 };
 
 const buildContentSecurityPolicy = (nonce: string): string => {
- const scriptSources = ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'"];
- if (process.env.NODE_ENV !== 'production') {
-  scriptSources.push("'unsafe-eval'");
- }
+  const apiOrigin = getApiOrigin();
+  const wsApiOrigin = apiOrigin.startsWith('https://')
+    ? `wss://${apiOrigin.slice('https://'.length)}`
+    : apiOrigin.startsWith('http://')
+      ? `ws://${apiOrigin.slice('http://'.length)}`
+      : '';
 
- return [
-  "default-src 'self'",
-  "base-uri 'self'",
-  "frame-ancestors 'none'",
-  "form-action 'self'",
-  "img-src 'self' data: blob: https:",
-  "font-src 'self' data: https:",
-  "media-src 'self' blob: data:",
-  "style-src 'self' 'unsafe-inline'",
-  `script-src ${toSpaceDelimited(scriptSources)}`,
-  `connect-src 'self' ${apiOrigin} ${wsApiOrigin}`.trim(),
- ].join('; ');
+  const scriptSources = ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'"];
+  if (process.env.NODE_ENV !== 'production') {
+    scriptSources.push("'unsafe-eval'");
+  }
+
+  return [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "frame-ancestors 'none'",
+    "form-action 'self'",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data: https:",
+    "media-src 'self' blob: data:",
+    "style-src 'self' 'unsafe-inline'",
+    `script-src ${toSpaceDelimited(scriptSources)}`,
+    `connect-src 'self' ${apiOrigin} ${wsApiOrigin}`.trim(),
+  ].join('; ');
 };
 
 const withRequestCsp = (request: NextRequest, csp: string): NextRequest => {
