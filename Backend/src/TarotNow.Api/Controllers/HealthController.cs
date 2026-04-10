@@ -1,8 +1,8 @@
 
-
 using Microsoft.AspNetCore.Authorization; 
 using Microsoft.AspNetCore.Mvc;           
 using TarotNow.Api.Extensions;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Api.Controllers;
 
@@ -17,16 +17,22 @@ public class HealthController : ControllerBase
     
     private readonly ILogger<HealthController> _logger;
     private readonly IWebHostEnvironment _environment;
+    private readonly IReadinessService _readinessService;
 
     /// <summary>
     /// Khởi tạo controller health check.
     /// </summary>
     /// <param name="logger">Logger phục vụ quan sát truy cập health endpoint.</param>
     /// <param name="environment">Thông tin môi trường chạy hiện tại.</param>
-    public HealthController(ILogger<HealthController> logger, IWebHostEnvironment environment)
+    /// <param name="readinessService">Service kiểm tra readiness dependencies.</param>
+    public HealthController(
+        ILogger<HealthController> logger,
+        IWebHostEnvironment environment,
+        IReadinessService readinessService)
     {
         _logger = logger;
         _environment = environment;
+        _readinessService = readinessService;
     }
 
     /// <summary>
@@ -37,6 +43,17 @@ public class HealthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public IActionResult Get()
     {
+        return Live();
+    }
+
+    /// <summary>
+    /// Trả trạng thái sống (liveness) của API process.
+    /// </summary>
+    /// <returns>Payload liveness ổn định cho load balancer.</returns>
+    [HttpGet("live")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public IActionResult Live()
+    {
         
         _logger.LogInformation("Health check endpoint was called.");
 
@@ -46,6 +63,33 @@ public class HealthController : ControllerBase
             Timestamp = DateTime.UtcNow,     
             Version = "1.0"                  
         });
+    }
+
+    /// <summary>
+    /// Trả trạng thái sẵn sàng (readiness) dựa trên kết nối dependency chính.
+    /// Luồng xử lý: kiểm tra PostgreSQL, MongoDB và Redis rồi trả 200/503 tương ứng.
+    /// </summary>
+    [HttpGet("ready")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> Ready(CancellationToken cancellationToken)
+    {
+        var checks = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+
+        var readiness = await _readinessService.CheckAsync(cancellationToken);
+        checks["postgresql"] = new { status = readiness.PostgreSqlReady ? "Healthy" : "Unhealthy" };
+        checks["mongodb"] = new { status = readiness.MongoDbReady ? "Healthy" : "Unhealthy" };
+        checks["redis"] = new { status = readiness.RedisReady ? "Healthy" : "Unhealthy" };
+
+        var allReady = readiness.PostgreSqlReady && readiness.MongoDbReady && readiness.RedisReady;
+        var payload = new
+        {
+            Status = allReady ? "Ready" : "NotReady",
+            Timestamp = DateTime.UtcNow,
+            Checks = checks
+        };
+
+        return allReady ? Ok(payload) : StatusCode(StatusCodes.Status503ServiceUnavailable, payload);
     }
 
     /// <summary>

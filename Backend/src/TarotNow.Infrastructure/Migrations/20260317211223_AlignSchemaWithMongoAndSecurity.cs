@@ -132,12 +132,8 @@ namespace TarotNow.Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateIndex(
-                name: "ix_wallet_transactions_idempotency_key",
-                table: "wallet_transactions",
-                column: "idempotency_key",
-                unique: true,
-                filter: "idempotency_key IS NOT NULL");
+            migrationBuilder.Sql(
+                "CREATE UNIQUE INDEX IF NOT EXISTS ix_wallet_transactions_idempotency_key ON wallet_transactions (idempotency_key) WHERE idempotency_key IS NOT NULL;");
 
             migrationBuilder.CreateIndex(
                 name: "ix_chat_question_items_finance_session_id",
@@ -160,9 +156,7 @@ namespace TarotNow.Infrastructure.Migrations
             migrationBuilder.DropTable(
                 name: "chat_finance_sessions");
 
-            migrationBuilder.DropIndex(
-                name: "ix_wallet_transactions_idempotency_key",
-                table: "wallet_transactions");
+            migrationBuilder.Sql("DROP INDEX IF EXISTS ix_wallet_transactions_idempotency_key;");
 
             migrationBuilder.DropColumn(
                 name: "mfa_backup_codes_hash_json",

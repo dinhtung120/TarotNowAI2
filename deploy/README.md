@@ -1,0 +1,72 @@
+# Production Deployment (EC2 + Docker Compose)
+
+## 1) Prepare environment file
+
+```bash
+cp deploy/.env.prod.example deploy/.env.prod
+```
+
+Update all required secrets in `deploy/.env.prod`.
+
+## 2) Start data services and bootstrap DB (first deployment only)
+
+```bash
+./deploy/scripts/bootstrap-db.sh deploy/.env.prod docker-compose.prod.yml
+```
+
+Script này sẽ:
+- chạy Postgres/Mongo/Redis nền,
+- apply EF Core migrations bằng service `backend-migrate` (`dotnet TarotNow.Api.dll --migrate`),
+- seed PostgreSQL config và seed Mongo cards.
+
+## 3) Build and start application stack
+
+```bash
+docker compose --env-file deploy/.env.prod -f docker-compose.prod.yml up -d --build backend frontend reverse-proxy
+```
+
+## 4) Smoke test
+
+```bash
+./deploy/scripts/smoke.sh http://localhost
+```
+
+## 5) Failure/scale/rollback drills (pre go-live)
+
+```bash
+# Gate 5: failure scenarios
+./deploy/scripts/failure-drills.sh http://localhost deploy/.env.prod docker-compose.prod.yml
+
+# Gate 6: scale scenarios (example 2 backend + 2 frontend replicas)
+./deploy/scripts/scale-drill.sh http://localhost deploy/.env.prod docker-compose.prod.yml 2 2
+
+# Gate 7: rollback scenario (supports both arg orders, this is the recommended one)
+./deploy/scripts/rollback-drill.sh deploy/.env.prod docker-compose.prod.yml http://localhost
+```
+
+## 6) Backup and restore
+
+```bash
+ENV_FILE=deploy/.env.prod ./deploy/scripts/backup-db.sh
+ENV_FILE=deploy/.env.prod ./deploy/scripts/restore-db.sh backups/<timestamp>
+```
+
+## 7) Rollback runbook
+
+1. Keep the previous image tags available locally or in registry.
+2. Update image tag in `docker-compose.prod.yml` (or your env-driven tag file) back to previous version.
+3. Run:
+
+```bash
+docker compose --env-file deploy/.env.prod -f docker-compose.prod.yml pull
+docker compose --env-file deploy/.env.prod -f docker-compose.prod.yml up -d
+./deploy/scripts/smoke.sh http://localhost
+```
+
+If schema changes are backward-incompatible, restore from latest backup before switching traffic.
+
+## Notes
+
+- `FORWARDED_NETWORK_0` nên trùng với `PRIVATE_NETWORK_SUBNET` để backend trust đúng reverse-proxy trong Docker network.
+- Nếu deploy sau ALB TLS termination, Nginx đã preserve `X-Forwarded-Proto` để backend không bị redirect-loop.
+- Nếu local FE từng dùng `NODE_TLS_REJECT_UNAUTHORIZED=0`, cần gỡ trước khi build production.

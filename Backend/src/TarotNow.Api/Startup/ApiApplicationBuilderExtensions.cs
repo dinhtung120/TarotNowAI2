@@ -2,6 +2,7 @@ using TarotNow.Api.Hubs;
 using TarotNow.Api.Middlewares;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.AspNetCore.HttpOverrides;
 
 namespace TarotNow.Api.Startup;
 
@@ -30,6 +31,7 @@ public static class ApiApplicationBuilderExtensions
     public static WebApplication UseApiPipeline(this WebApplication app)
     {
         // Giữ thứ tự middleware cố định để tránh regression do thay đổi pipeline ngầm.
+        ConfigureForwardedHeaders(app);
         ConfigureErrorAndRequestMiddlewares(app);
         ConfigureSwagger(app);
         ConfigureHttps(app);
@@ -39,6 +41,20 @@ public static class ApiApplicationBuilderExtensions
         app.MapControllers();
 
         return app;
+    }
+
+    /// <summary>
+    /// Bật forwarded headers khi chạy sau reverse proxy đáng tin cậy.
+    /// Luồng xử lý: kiểm tra cờ cấu hình rồi gọi middleware để chuẩn hóa scheme/ip trước các middleware khác.
+    /// </summary>
+    private static void ConfigureForwardedHeaders(WebApplication app)
+    {
+        if (!app.Configuration.GetValue<bool>("ForwardedHeaders:Enabled"))
+        {
+            return;
+        }
+
+        app.UseForwardedHeaders();
     }
 
     /// <summary>
@@ -83,8 +99,10 @@ public static class ApiApplicationBuilderExtensions
             return;
         }
 
-        // Môi trường ngoài dev bắt buộc chuyển hướng sang HTTPS để đảm bảo an toàn truyền tải.
-        app.UseHttpsRedirection();
+        // Bỏ redirect cho health endpoint nội bộ để container healthcheck HTTP không bị false-negative.
+        app.UseWhen(
+            context => !context.Request.Path.StartsWithSegments("/api/v1/health", StringComparison.OrdinalIgnoreCase),
+            branch => branch.UseHttpsRedirection());
     }
 
     /// <summary>
@@ -114,7 +132,11 @@ public static class ApiApplicationBuilderExtensions
     /// </summary>
     private static string EnsureUploadsDirectory(WebApplication app)
     {
-        var uploadsPath = Path.Combine(app.Environment.ContentRootPath, WebRootFolderName, UploadsFolderName);
+        var configuredStorageRoot = app.Configuration["FileStorage:RootPath"]?.Trim();
+        var storageRoot = string.IsNullOrWhiteSpace(configuredStorageRoot)
+            ? Path.Combine(app.Environment.ContentRootPath, WebRootFolderName)
+            : configuredStorageRoot;
+        var uploadsPath = Path.Combine(storageRoot, UploadsFolderName);
         if (Directory.Exists(uploadsPath))
         {
             // Nhánh đã tồn tại: tái sử dụng trực tiếp để tránh thao tác I/O dư thừa.

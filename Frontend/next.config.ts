@@ -1,7 +1,11 @@
 import createNextIntlPlugin from 'next-intl/plugin';
 import os from 'node:os';
+import type { NextConfig } from 'next';
 import { resolveApiOrigin } from './src/shared/infrastructure/http/apiUrl';
 
+if (process.env.NODE_ENV === 'production' && process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0') {
+ throw new Error('NODE_TLS_REJECT_UNAUTHORIZED=0 is not allowed in production.');
+}
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 const apiOrigin = resolveApiOrigin(process.env.NEXT_PUBLIC_API_URL);
@@ -65,7 +69,8 @@ function resolveServerActionAllowedOrigins(origin: URL, hosts: string[]): string
 }
 
 
-const nextConfig = {
+const nextConfig: NextConfig = {
+ output: 'standalone',
   allowedDevOrigins: frontendHosts,
  poweredByHeader: false,
  async rewrites() {

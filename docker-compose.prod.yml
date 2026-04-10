@@ -1,0 +1,254 @@
+name: tarotnow-prod
+
+services:
+  reverse-proxy:
+    image: nginx:1.27-alpine
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    ports:
+      - "${PUBLIC_HTTP_PORT:-80}:80"
+    volumes:
+      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./deploy/nginx/conf.d:/etc/nginx/conf.d:ro
+      - tarotnow_nginx_logs:/var/log/nginx
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1/nginx-health > /dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - public
+      - private
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?NEXT_PUBLIC_API_URL is required}
+        NEXT_PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?PUBLIC_BASE_URL is required}
+        NEXTAUTH_URL: ${PUBLIC_BASE_URL:?PUBLIC_BASE_URL is required}
+    image: ${FRONTEND_IMAGE:-tarotnow/frontend:prod}
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?PUBLIC_BASE_URL is required}
+      NEXTAUTH_URL: ${PUBLIC_BASE_URL:?PUBLIC_BASE_URL is required}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?NEXT_PUBLIC_API_URL is required}
+      NEXT_ALLOWED_DEV_HOSTS: ${NEXT_ALLOWED_DEV_HOSTS:-}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000 > /dev/null || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    networks:
+      - private
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: Backend/Dockerfile
+    image: ${BACKEND_IMAGE:-tarotnow/backend:prod}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment: &backend_environment
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://0.0.0.0:5037
+      ASPNETCORE_HTTPS_PORT: 443
+      ALLOWEDHOSTS: "*"
+
+      CONNECTIONSTRINGS__POSTGRESQL: Host=postgres;Port=5432;Database=${POSTGRES_DB:?POSTGRES_DB is required};Username=${POSTGRES_USER:?POSTGRES_USER is required};Password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      CONNECTIONSTRINGS__MONGODB: mongodb://mongodb:27017/${MONGO_DB:-tarotweb}
+      CONNECTIONSTRINGS__REDIS: redis:6379
+      REDIS__INSTANCENAME: ${REDIS_INSTANCE_NAME:-TarotNow:}
+
+      JWT__SECRETKEY: ${JWT_SECRETKEY:?JWT_SECRETKEY is required}
+      JWT__ISSUER: ${JWT_ISSUER:-TarotNowAI}
+      JWT__AUDIENCE: ${JWT_AUDIENCE:-TarotNowAIUsers}
+      JWT__EXPIRYMINUTES: ${JWT_EXPIRYMINUTES:-60}
+      JWT__REFRESHEXPIRYDAYS: ${JWT_REFRESHEXPIRYDAYS:-7}
+
+      CORS__ALLOWEDORIGINS__0: ${PUBLIC_BASE_URL:?PUBLIC_BASE_URL is required}
+
+      PAYMENTGATEWAY__WEBHOOKSECRET: ${PAYMENT_WEBHOOK_SECRET:?PAYMENT_WEBHOOK_SECRET is required}
+      SECURITY__MFAENCRYPTIONKEY: ${MFA_ENCRYPTION_KEY:?MFA_ENCRYPTION_KEY is required}
+
+      SMTP__HOST: ${SMTP_HOST:?SMTP_HOST is required}
+      SMTP__PORT: ${SMTP_PORT:-587}
+      SMTP__USERNAME: ${SMTP_USERNAME:?SMTP_USERNAME is required}
+      SMTP__PASSWORD: ${SMTP_PASSWORD:?SMTP_PASSWORD is required}
+      SMTP__SENDEREMAIL: ${SMTP_SENDER_EMAIL:?SMTP_SENDER_EMAIL is required}
+      SMTP__SENDERNAME: ${SMTP_SENDER_NAME:-TarotNow Security}
+
+      AIPROVIDER__APIKEY: ${AI_API_KEY:?AI_API_KEY is required}
+      AIPROVIDER__BASEURL: ${AI_BASE_URL:?AI_BASE_URL is required}
+      AIPROVIDER__MODEL: ${AI_MODEL:?AI_MODEL is required}
+      AIPROVIDER__TIMEOUTSECONDS: ${AI_TIMEOUT_SECONDS:-30}
+      AIPROVIDER__MAXRETRIES: ${AI_MAX_RETRIES:-2}
+
+      FORWARDEDHEADERS__ENABLED: "true"
+      FORWARDEDHEADERS__KNOWNNETWORKS__0: ${FORWARDED_NETWORK_0:?FORWARDED_NETWORK_0 is required}
+      # Tùy chọn nếu cần trust thêm một proxy IP cụ thể
+      # FORWARDEDHEADERS__KNOWNPROXIES__0: 10.0.1.10
+
+      FILESTORAGE__ROOTPATH: /app/wwwroot/uploads
+    volumes:
+      - tarotnow_shared_storage:/app/wwwroot/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:5037/api/v1/health/ready > /dev/null || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    networks:
+      - private
+    restart: unless-stopped
+
+  backend-migrate:
+    build:
+      context: .
+      dockerfile: Backend/Dockerfile
+    image: ${BACKEND_IMAGE:-tarotnow/backend:prod}
+    profiles: ["bootstrap"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: ["dotnet", "TarotNow.Api.dll", "--migrate"]
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      CONNECTIONSTRINGS__POSTGRESQL: Host=postgres;Port=5432;Database=${POSTGRES_DB:?POSTGRES_DB is required};Username=${POSTGRES_USER:?POSTGRES_USER is required};Password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    networks:
+      - private
+    restart: "no"
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+    volumes:
+      - tarotnow_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:?POSTGRES_USER is required} -d ${POSTGRES_DB:?POSTGRES_DB is required}"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 15s
+    networks:
+      - private
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:7-jammy
+    command: ["mongod", "--quiet"]
+    environment:
+      MONGO_DB: ${MONGO_DB:-tarotweb}
+    volumes:
+      - tarotnow_mongo_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.runCommand({ ping: 1 }).ok' | grep 1 > /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 15s
+    networks:
+      - private
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - tarotnow_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 8
+      start_period: 10s
+    networks:
+      - private
+    restart: unless-stopped
+
+  postgres-bootstrap:
+    image: postgres:17-alpine
+    profiles: ["bootstrap"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend-migrate:
+        condition: service_completed_successfully
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+    volumes:
+      - ./database/postgresql:/bootstrap:ro
+    command:
+      - /bin/sh
+      - -c
+      - |
+        if [ "$$(psql -h postgres -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -tAc "SELECT to_regclass('public.user_exp_levels') IS NOT NULL")" = "t" ]; then
+          psql -h postgres -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -v ON_ERROR_STOP=1 -f /bootstrap/seed_exp_levels.sql
+        else
+          echo "[postgres-bootstrap] skip seed_exp_levels.sql because table user_exp_levels is missing"
+        fi \
+        && if [ "$$(psql -h postgres -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -tAc "SELECT to_regclass('public.system_configs') IS NOT NULL")" = "t" ]; then
+          psql -h postgres -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -v ON_ERROR_STOP=1 -f /bootstrap/seed_system_configs.sql
+        else
+          echo "[postgres-bootstrap] skip seed_system_configs.sql because table system_configs is missing"
+        fi
+    networks:
+      - private
+    restart: "no"
+
+  mongo-bootstrap:
+    image: mongo:7-jammy
+    profiles: ["bootstrap"]
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      MONGO_DB: ${MONGO_DB:-tarotweb}
+    volumes:
+      - ./database/mongodb:/bootstrap:ro
+    command:
+      - /bin/sh
+      - -c
+      - |
+        if [ "$$(mongosh --quiet "mongodb://mongodb:27017/$$MONGO_DB" --eval "db.getCollectionInfos({name:'cards_catalog'}).length")" = "0" ]; then
+          mongosh "mongodb://mongodb:27017/$$MONGO_DB" /bootstrap/init.js
+        else
+          echo "[mongo-bootstrap] cards_catalog already exists, skipping init.js"
+        fi \
+        && mongosh "mongodb://mongodb:27017/$$MONGO_DB" /bootstrap/seed_cards.js
+    networks:
+      - private
+    restart: "no"
+
+volumes:
+  tarotnow_postgres_data:
+  tarotnow_mongo_data:
+  tarotnow_redis_data:
+  tarotnow_shared_storage:
+  tarotnow_nginx_logs:
+
+networks:
+  public:
+  private:
+    internal: true
+    ipam:
+      config:
+        - subnet: ${PRIVATE_NETWORK_SUBNET:-172.30.0.0/24}

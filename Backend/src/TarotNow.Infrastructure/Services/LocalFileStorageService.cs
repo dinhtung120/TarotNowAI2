@@ -4,7 +4,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using TarotNow.Application.Interfaces;
+using TarotNow.Infrastructure.Options;
 
 namespace TarotNow.Infrastructure.Services;
 
@@ -15,15 +17,21 @@ public class LocalFileStorageService : IFileStorageService
     private readonly IWebHostEnvironment _env;
     // Logger theo dõi thao tác lưu/xóa file.
     private readonly ILogger<LocalFileStorageService> _logger;
+    // Cấu hình root path tùy chọn cho shared storage (NFS/EFS...).
+    private readonly FileStorageOptions _options;
 
     /// <summary>
     /// Khởi tạo service lưu trữ file local.
     /// Luồng inject môi trường và logger để thao tác filesystem có thể truy vết.
     /// </summary>
-    public LocalFileStorageService(IWebHostEnvironment env, ILogger<LocalFileStorageService> logger)
+    public LocalFileStorageService(
+        IWebHostEnvironment env,
+        ILogger<LocalFileStorageService> logger,
+        IOptions<FileStorageOptions> options)
     {
         _env = env;
         _logger = logger;
+        _options = options.Value;
     }
 
     /// <summary>
@@ -32,6 +40,11 @@ public class LocalFileStorageService : IFileStorageService
     /// </summary>
     private string GetStorageRoot()
     {
+        if (!string.IsNullOrWhiteSpace(_options.RootPath))
+        {
+            return _options.RootPath;
+        }
+
         return Path.Combine(_env.ContentRootPath, "wwwroot");
     }
 

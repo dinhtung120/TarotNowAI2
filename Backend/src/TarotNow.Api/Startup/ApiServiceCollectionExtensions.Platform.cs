@@ -8,6 +8,9 @@ using TarotNow.Api.Services;
 using TarotNow.Application;
 using TarotNow.Application.Common.Interfaces;
 using TarotNow.Infrastructure;
+using TarotNow.Infrastructure.Services;
+using Microsoft.AspNetCore.HttpOverrides;
+using System.Net;
 
 namespace TarotNow.Api.Startup;
 
@@ -25,8 +28,24 @@ public static partial class ApiServiceCollectionExtensions
         services.AddApplicationServices(Assembly.GetExecutingAssembly());
         services.AddInfrastructureServices(configuration);
         services.AddApiObservability(configuration);
+        ConfigureForwardedHeaders(services, configuration);
         services.AddScoped<IRefreshTokenCookieService, RefreshTokenCookieService>();
-        services.AddSingleton<IUserPresenceTracker, InMemoryUserPresenceTracker>();
+        services.AddSingleton<IUserPresenceTracker>(serviceProvider =>
+        {
+            var cacheBackendState = serviceProvider.GetService<CacheBackendState>();
+            if (cacheBackendState?.UsesRedis == true)
+            {
+                var multiplexer = serviceProvider.GetService<StackExchange.Redis.IConnectionMultiplexer>();
+                if (multiplexer is not null)
+                {
+                    var logger = serviceProvider
+                        .GetRequiredService<ILogger<RedisUserPresenceTracker>>();
+                    return new RedisUserPresenceTracker(multiplexer, logger);
+                }
+            }
+
+            return new InMemoryUserPresenceTracker();
+        });
         services.AddHostedService<PresenceTimeoutBackgroundService>();
         services.AddScoped<Application.Interfaces.INotificationPushService, SignalRNotificationPushService>();
         services.AddScoped<Application.Interfaces.IWalletPushService, SignalRWalletPushService>();
@@ -38,6 +57,81 @@ public static partial class ApiServiceCollectionExtensions
             options.AddPolicy(ApiAuthorizationPolicies.AdminOnly, ApiAuthorizationPolicies.RequireAdminOnly);
         });
         ConfigureSignalR(services, configuration.GetConnectionString("Redis"));
+    }
+
+    /// <summary>
+    /// Cấu hình trusted proxy cho forwarded headers.
+    /// Luồng xử lý: chỉ bật khi có cờ enable, parse known proxies/networks và fail-fast nếu không có danh sách tin cậy.
+    /// </summary>
+    private static void ConfigureForwardedHeaders(IServiceCollection services, IConfiguration configuration)
+    {
+        var enabled = configuration.GetValue<bool>("ForwardedHeaders:Enabled");
+        if (!enabled)
+        {
+            return;
+        }
+
+        var knownProxies = configuration.GetSection("ForwardedHeaders:KnownProxies")
+            .Get<string[]>()?
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value.Trim())
+            .ToArray() ?? Array.Empty<string>();
+
+        var knownNetworks = configuration.GetSection("ForwardedHeaders:KnownNetworks")
+            .Get<string[]>()?
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value.Trim())
+            .ToArray() ?? Array.Empty<string>();
+
+        if (knownProxies.Length == 0 && knownNetworks.Length == 0)
+        {
+            throw new InvalidOperationException(
+                "ForwardedHeaders is enabled but no trusted proxy/network is configured. Set ForwardedHeaders:KnownProxies or ForwardedHeaders:KnownNetworks.");
+        }
+
+        services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            options.ForwardLimit = 2;
+            options.RequireHeaderSymmetry = false;
+            options.KnownNetworks.Clear();
+            options.KnownProxies.Clear();
+
+            foreach (var proxy in knownProxies)
+            {
+                if (IPAddress.TryParse(proxy, out var parsedProxy))
+                {
+                    options.KnownProxies.Add(parsedProxy);
+                }
+            }
+
+            foreach (var network in knownNetworks)
+            {
+                var parts = network.Split('/', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length != 2)
+                {
+                    continue;
+                }
+
+                if (!IPAddress.TryParse(parts[0], out var prefix))
+                {
+                    continue;
+                }
+
+                if (!int.TryParse(parts[1], out var prefixLength))
+                {
+                    continue;
+                }
+
+                options.KnownNetworks.Add(new Microsoft.AspNetCore.HttpOverrides.IPNetwork(prefix, prefixLength));
+            }
+
+            if (options.KnownNetworks.Count == 0 && options.KnownProxies.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    "ForwardedHeaders enabled but no valid trusted proxies/networks were parsed.");
+            }
+        });
     }
 
     /// <summary>

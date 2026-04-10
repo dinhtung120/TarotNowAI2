@@ -85,7 +85,8 @@ public class PromotionIntegrationTests : IClassFixture<CustomWebApplicationFacto
         var createDepositRequest = new
         {
             AmountVnd = 100000,
-            Gateway = "VNPay"
+            Gateway = "VNPay",
+            IdempotencyKey = $"promo-test-{Guid.NewGuid():N}"
         };
         var depositRes = await _client.PostAsJsonAsync("/api/v1/deposits/orders", createDepositRequest);
         depositRes.EnsureSuccessStatusCode();

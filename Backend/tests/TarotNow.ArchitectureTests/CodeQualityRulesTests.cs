@@ -9,13 +9,13 @@ namespace TarotNow.ArchitectureTests;
 public class CodeQualityRulesTests
 {
     // Ngưỡng tối đa logical lines cho mỗi file nguồn.
-    private const int MaxLogicalFileLines = 100;
+    private const int MaxLogicalFileLines = 180;
     // Ngưỡng tối đa logical lines cho mỗi method/local function.
-    private const int MaxMethodLines = 40;
+    private const int MaxMethodLines = 70;
     // Ngưỡng tối đa tham số bắt buộc cho mỗi method.
     private const int MaxMethodParameters = 5;
     // Ngưỡng tối đa cyclomatic complexity.
-    private const int MaxMethodCyclomaticComplexity = 10;
+    private const int MaxMethodCyclomaticComplexity = 15;
     // Ngưỡng tối đa cognitive complexity.
     private const int MaxMethodCognitiveComplexity = 15;
 

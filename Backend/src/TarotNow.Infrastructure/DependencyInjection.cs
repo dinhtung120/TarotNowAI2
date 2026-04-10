@@ -40,6 +40,7 @@ public static partial class DependencyInjection
         services.Configure<LegalSettingsOptions>(configuration.GetSection("LegalSettings"));
         services.Configure<DiagnosticsOptions>(configuration.GetSection("Diagnostics"));
         services.Configure<ChatModerationOptions>(configuration.GetSection("ChatModeration"));
+        services.Configure<FileStorageOptions>(configuration.GetSection("FileStorage"));
     }
 
     /// <summary>

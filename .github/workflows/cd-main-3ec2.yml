@@ -1,0 +1,575 @@
+name: CD Main 3EC2
+
+# Required GitHub Secrets:
+# - SONAR_TOKEN, SONAR_ORG, SONAR_PROJECT_KEY
+# - SLACK_WEBHOOK_URL
+# - PROD_SSH_USER, PROD_DB_HOST, PROD_BE_HOST, PROD_FE_HOST
+# - PROD_SSH_PRIVATE_KEY, PROD_KNOWN_HOSTS
+# - GHCR_USERNAME, GHCR_TOKEN_READ
+# - PROD_DB_PRIVATE_IP, PROD_BE_PRIVATE_IP
+#
+# Required GitHub Variables:
+# - PROD_REPO_DIR (optional, default: /opt/tarotnow/TarotNowAI2)
+# - PROD_PUBLIC_BASE_URL (optional for external smoke check)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run pipeline gates without production deploy"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
+concurrency:
+  group: cd-main-3ec2-production
+  cancel-in-progress: false
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Backend restore
+        working-directory: Backend
+        run: dotnet restore src/TarotNow.Api/TarotNow.Api.csproj
+
+      - name: Backend build
+        working-directory: Backend
+        run: dotnet build src/TarotNow.Api/TarotNow.Api.csproj --configuration Release --no-restore
+
+      - name: Backend test
+        working-directory: Backend
+        run: dotnet test TarotNow.slnx --configuration Release --nologo
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: Frontend/package-lock.json
+
+      - name: Frontend install
+        working-directory: Frontend
+        run: npm ci
+
+      - name: Frontend build
+        working-directory: Frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:5037/api/v1
+          NEXT_PUBLIC_BASE_URL: http://localhost:3000
+          NEXTAUTH_URL: http://localhost:3000
+          NODE_TLS_REJECT_UNAUTHORIZED: "1"
+        run: npm run build
+
+      - name: Frontend test
+        working-directory: Frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:5037/api/v1
+          NEXT_PUBLIC_BASE_URL: http://localhost:3000
+          NEXTAUTH_URL: http://localhost:3000
+          NODE_TLS_REJECT_UNAUTHORIZED: "1"
+        run: npm test
+
+  code-analysis:
+    runs-on: ubuntu-latest
+    needs: build-test
+    outputs:
+      sonar_quality_gate: ${{ steps.sonar_quality_gate.outputs.quality-gate-status }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: csharp,javascript-typescript
+
+      - name: CodeQL autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Analyze CodeQL
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:multi"
+
+      - name: Sonar scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+        with:
+          args: >
+            -Dsonar.organization=${{ secrets.SONAR_ORG }}
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+
+      - name: Sonar quality gate
+        id: sonar_quality_gate
+        uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
+        timeout-minutes: 10
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: build-test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build backend scan image
+        run: docker build -f Backend/Dockerfile -t tarotnow/backend:scan .
+
+      - name: Build frontend scan image
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_API_URL=http://localhost:5037/api/v1 \
+            --build-arg NEXT_PUBLIC_BASE_URL=http://localhost:3000 \
+            --build-arg NEXTAUTH_URL=http://localhost:3000 \
+            -f Frontend/Dockerfile -t tarotnow/frontend:scan .
+
+      - name: Trivy backend image scan (json)
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          image-ref: tarotnow/backend:scan
+          format: json
+          output: trivy-backend.json
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "0"
+
+      - name: Trivy frontend image scan (json)
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          image-ref: tarotnow/frontend:scan
+          format: json
+          output: trivy-frontend.json
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "0"
+
+      - name: Trivy filesystem scan (dependency equivalent)
+        uses: aquasecurity/trivy-action@0.30.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig
+          format: json
+          output: trivy-fs.json
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "0"
+
+      - name: Upload security scan artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-reports
+          path: |
+            trivy-backend.json
+            trivy-frontend.json
+            trivy-fs.json
+
+      - name: Enforce security gate (HIGH/CRITICAL)
+        run: |
+          backend_count=$(jq '[.Results[]? | .Vulnerabilities[]?] | length' trivy-backend.json)
+          frontend_count=$(jq '[.Results[]? | .Vulnerabilities[]?] | length' trivy-frontend.json)
+          fs_count=$(jq '[.Results[]? | .Vulnerabilities[]?] | length' trivy-fs.json)
+
+          echo "backend findings: $backend_count"
+          echo "frontend findings: $frontend_count"
+          echo "filesystem findings: $fs_count"
+
+          if [[ "$backend_count" -gt 0 || "$frontend_count" -gt 0 || "$fs_count" -gt 0 ]]; then
+            echo "Security gate failed: HIGH/CRITICAL findings detected." >&2
+            exit 1
+          fi
+
+  findings-summary:
+    runs-on: ubuntu-latest
+    needs: [code-analysis, security-scan]
+    if: always()
+    outputs:
+      backend_critical: ${{ steps.summary.outputs.backend_critical }}
+      backend_high: ${{ steps.summary.outputs.backend_high }}
+      frontend_critical: ${{ steps.summary.outputs.frontend_critical }}
+      frontend_high: ${{ steps.summary.outputs.frontend_high }}
+      fs_critical: ${{ steps.summary.outputs.fs_critical }}
+      fs_high: ${{ steps.summary.outputs.fs_high }}
+      sonar_status: ${{ steps.summary.outputs.sonar_status }}
+      codeql_result: ${{ steps.summary.outputs.codeql_result }}
+      security_scan_result: ${{ steps.summary.outputs.security_scan_result }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download scan artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: trivy-reports
+          path: .
+
+      - name: Generate findings report
+        id: summary
+        env:
+          BACKEND_JSON: trivy-backend.json
+          FRONTEND_JSON: trivy-frontend.json
+          FS_JSON: trivy-fs.json
+          SONAR_STATUS: ${{ needs.code-analysis.outputs.sonar_quality_gate }}
+          CODEQL_RESULT: ${{ needs.code-analysis.result }}
+          SECURITY_SCAN_RESULT: ${{ needs.security-scan.result }}
+        run: |
+          chmod +x scripts/ci/summarize-findings.sh
+          scripts/ci/summarize-findings.sh security-quality-report.md
+
+      - name: Upload findings report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-quality-report
+          path: security-quality-report.md
+
+  publish-images:
+    runs-on: ubuntu-latest
+    needs: [build-test, code-analysis, security-scan, findings-summary]
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run != true }}
+    outputs:
+      backend_image_ref: ${{ steps.refs.outputs.backend_image_ref }}
+      frontend_image_ref: ${{ steps.refs.outputs.frontend_image_ref }}
+      backend_latest_ref: ${{ steps.refs.outputs.backend_latest_ref }}
+      frontend_latest_ref: ${{ steps.refs.outputs.frontend_latest_ref }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prepare image refs
+        id: refs
+        run: |
+          repo_lower=$(echo "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')
+          backend_image_ref="ghcr.io/${repo_lower}-backend:${GITHUB_SHA}"
+          frontend_image_ref="ghcr.io/${repo_lower}-frontend:${GITHUB_SHA}"
+          backend_latest_ref="ghcr.io/${repo_lower}-backend:main-latest"
+          frontend_latest_ref="ghcr.io/${repo_lower}-frontend:main-latest"
+
+          echo "backend_image_ref=$backend_image_ref" >> "$GITHUB_OUTPUT"
+          echo "frontend_image_ref=$frontend_image_ref" >> "$GITHUB_OUTPUT"
+          echo "backend_latest_ref=$backend_latest_ref" >> "$GITHUB_OUTPUT"
+          echo "frontend_latest_ref=$frontend_latest_ref" >> "$GITHUB_OUTPUT"
+
+      - name: Login GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push backend image
+        run: |
+          docker build -f Backend/Dockerfile \
+            -t "${{ steps.refs.outputs.backend_image_ref }}" \
+            -t "${{ steps.refs.outputs.backend_latest_ref }}" \
+            .
+          docker push "${{ steps.refs.outputs.backend_image_ref }}"
+          docker push "${{ steps.refs.outputs.backend_latest_ref }}"
+
+      - name: Build and push frontend image
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_API_URL=http://localhost:5037/api/v1 \
+            --build-arg NEXT_PUBLIC_BASE_URL=http://localhost:3000 \
+            --build-arg NEXTAUTH_URL=http://localhost:3000 \
+            -f Frontend/Dockerfile \
+            -t "${{ steps.refs.outputs.frontend_image_ref }}" \
+            -t "${{ steps.refs.outputs.frontend_latest_ref }}" \
+            .
+          docker push "${{ steps.refs.outputs.frontend_image_ref }}"
+          docker push "${{ steps.refs.outputs.frontend_latest_ref }}"
+
+  approval:
+    runs-on: ubuntu-latest
+    needs: publish-images
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run != true }}
+    environment:
+      name: production
+    steps:
+      - name: Await manual production approval
+        run: echo "Production deployment approved."
+
+  deploy-db:
+    runs-on: [self-hosted, aws-prod-runner]
+    needs: [approval, publish-images]
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run != true }}
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy DB host
+        env:
+          PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
+          PROD_DB_HOST: ${{ secrets.PROD_DB_HOST }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN_READ: ${{ secrets.GHCR_TOKEN_READ }}
+          REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+          BACKEND_IMAGE_REF: ${{ needs.publish-images.outputs.backend_image_ref }}
+          DEPLOY_SHA: ${{ github.sha }}
+        run: |
+          ssh "$PROD_SSH_USER@$PROD_DB_HOST" "bash -se" <<EOF_REMOTE
+          set -euo pipefail
+          REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
+          cd "\\$REPO_PATH"
+          git fetch origin
+          git checkout "${DEPLOY_SHA}"
+          git reset --hard "${DEPLOY_SHA}"
+          echo "${GHCR_TOKEN_READ}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
+          REPO_DIR="\\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
+            ./deploy/scripts/remote/deploy_db.sh "${BACKEND_IMAGE_REF}"
+          EOF_REMOTE
+
+  deploy-be:
+    runs-on: [self-hosted, aws-prod-runner]
+    needs: [deploy-db, publish-images]
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run != true }}
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy BE host
+        env:
+          PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
+          PROD_BE_HOST: ${{ secrets.PROD_BE_HOST }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN_READ: ${{ secrets.GHCR_TOKEN_READ }}
+          REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+          BACKEND_IMAGE_REF: ${{ needs.publish-images.outputs.backend_image_ref }}
+          PROD_DB_PRIVATE_IP: ${{ secrets.PROD_DB_PRIVATE_IP }}
+          DEPLOY_SHA: ${{ github.sha }}
+        run: |
+          ssh "$PROD_SSH_USER@$PROD_BE_HOST" "bash -se" <<EOF_REMOTE
+          set -euo pipefail
+          REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
+          cd "\\$REPO_PATH"
+          git fetch origin
+          git checkout "${DEPLOY_SHA}"
+          git reset --hard "${DEPLOY_SHA}"
+          echo "${GHCR_TOKEN_READ}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
+          REPO_DIR="\\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" DB_PRIVATE_IP="${PROD_DB_PRIVATE_IP}" \
+            ./deploy/scripts/remote/deploy_be.sh "${BACKEND_IMAGE_REF}"
+          EOF_REMOTE
+
+  deploy-fe:
+    runs-on: [self-hosted, aws-prod-runner]
+    needs: [deploy-be, publish-images]
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run != true }}
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy FE host
+        env:
+          PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
+          PROD_FE_HOST: ${{ secrets.PROD_FE_HOST }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN_READ: ${{ secrets.GHCR_TOKEN_READ }}
+          REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+          FRONTEND_IMAGE_REF: ${{ needs.publish-images.outputs.frontend_image_ref }}
+          PROD_BE_PRIVATE_IP: ${{ secrets.PROD_BE_PRIVATE_IP }}
+          DEPLOY_SHA: ${{ github.sha }}
+        run: |
+          ssh "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
+          set -euo pipefail
+          REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
+          cd "\\$REPO_PATH"
+          git fetch origin
+          git checkout "${DEPLOY_SHA}"
+          git reset --hard "${DEPLOY_SHA}"
+          echo "${GHCR_TOKEN_READ}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
+          REPO_DIR="\\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" BE_PRIVATE_IP="${PROD_BE_PRIVATE_IP}" \
+            ./deploy/scripts/remote/deploy_fe.sh "${FRONTEND_IMAGE_REF}"
+          EOF_REMOTE
+
+  post-deploy-smoke:
+    runs-on: [self-hosted, aws-prod-runner]
+    needs: deploy-fe
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run != true }}
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Smoke from FE host
+        env:
+          PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
+          PROD_FE_HOST: ${{ secrets.PROD_FE_HOST }}
+          REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+        run: |
+          ssh "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
+          set -euo pipefail
+          REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
+          cd "\\$REPO_PATH"
+          ./deploy/scripts/smoke.sh http://localhost
+          EOF_REMOTE
+
+      - name: Smoke public domain
+        if: ${{ vars.PROD_PUBLIC_BASE_URL != '' }}
+        env:
+          PROD_PUBLIC_BASE_URL: ${{ vars.PROD_PUBLIC_BASE_URL }}
+        run: |
+          curl -fsS "${PROD_PUBLIC_BASE_URL}/api/v1/health/live" >/dev/null
+          curl -fsS "${PROD_PUBLIC_BASE_URL}/api/v1/health/ready" >/dev/null
+          curl -fsS "${PROD_PUBLIC_BASE_URL}/" >/dev/null
+
+  auto-rollback:
+    runs-on: [self-hosted, aws-prod-runner]
+    needs: [deploy-be, deploy-fe, post-deploy-smoke]
+    if: ${{ always() && (needs.deploy-be.result == 'failure' || needs.deploy-fe.result == 'failure' || needs.post-deploy-smoke.result == 'failure') }}
+    steps:
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Rollback BE host
+        id: rollback_be
+        continue-on-error: true
+        env:
+          PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
+          PROD_BE_HOST: ${{ secrets.PROD_BE_HOST }}
+          REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+        run: |
+          ssh "$PROD_SSH_USER@$PROD_BE_HOST" "bash -se" <<EOF_REMOTE
+          set -euo pipefail
+          REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
+          cd "\\$REPO_PATH"
+          REPO_DIR="\\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
+            ./deploy/scripts/remote/rollback_be_fe.sh backend
+          EOF_REMOTE
+
+      - name: Rollback FE host
+        id: rollback_fe
+        continue-on-error: true
+        env:
+          PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
+          PROD_FE_HOST: ${{ secrets.PROD_FE_HOST }}
+          REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+        run: |
+          ssh "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
+          set -euo pipefail
+          REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
+          cd "\\$REPO_PATH"
+          REPO_DIR="\\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
+            ./deploy/scripts/remote/rollback_be_fe.sh frontend
+          EOF_REMOTE
+
+      - name: Evaluate rollback status
+        run: |
+          if [[ "${{ steps.rollback_be.outcome }}" != "success" || "${{ steps.rollback_fe.outcome }}" != "success" ]]; then
+            echo "One or more rollback steps failed" >&2
+            exit 1
+          fi
+
+  notify-slack:
+    runs-on: ubuntu-latest
+    needs:
+      - build-test
+      - code-analysis
+      - security-scan
+      - findings-summary
+      - publish-images
+      - approval
+      - deploy-db
+      - deploy-be
+      - deploy-fe
+      - post-deploy-smoke
+      - auto-rollback
+    if: always()
+    steps:
+      - name: Send Slack notification
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REPO: ${{ github.repository }}
+          ACTOR: ${{ github.actor }}
+          COMMIT_SHA: ${{ github.sha }}
+          BACKEND_CRITICAL: ${{ needs.findings-summary.outputs.backend_critical }}
+          BACKEND_HIGH: ${{ needs.findings-summary.outputs.backend_high }}
+          FRONTEND_CRITICAL: ${{ needs.findings-summary.outputs.frontend_critical }}
+          FRONTEND_HIGH: ${{ needs.findings-summary.outputs.frontend_high }}
+          FS_CRITICAL: ${{ needs.findings-summary.outputs.fs_critical }}
+          FS_HIGH: ${{ needs.findings-summary.outputs.fs_high }}
+          SONAR_STATUS: ${{ needs.findings-summary.outputs.sonar_status }}
+          CODEQL_RESULT: ${{ needs.findings-summary.outputs.codeql_result }}
+          SECURITY_RESULT: ${{ needs.findings-summary.outputs.security_scan_result }}
+          DEPLOY_SMOKE_RESULT: ${{ needs.post-deploy-smoke.result }}
+          BUILD_RESULT: ${{ needs.build-test.result }}
+          CODE_RESULT: ${{ needs.code-analysis.result }}
+          SCAN_RESULT: ${{ needs.security-scan.result }}
+        run: |
+          if [[ -z "$SLACK_WEBHOOK_URL" ]]; then
+            echo "SLACK_WEBHOOK_URL is empty; skip notification"
+            exit 0
+          fi
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.dry_run }}" == "true" ]]; then
+            echo "dry_run=true; skip Slack notification"
+            exit 0
+          fi
+
+          if [[ "$DEPLOY_SMOKE_RESULT" == "success" ]]; then
+            STATUS="SUCCESS"
+            ICON=":white_check_mark:"
+          else
+            STATUS="FAILED"
+            ICON=":rotating_light:"
+          fi
+
+          if [[ "$STATUS" == "SUCCESS" ]]; then
+            MESSAGE="${ICON} *CD Main 3EC2 ${STATUS}*\nRepo: ${REPO}\nCommit: ${COMMIT_SHA}\nActor: ${ACTOR}\nSonar: ${SONAR_STATUS}, CodeQL: ${CODEQL_RESULT}\nTrivy(H/C) backend=${BACKEND_HIGH}/${BACKEND_CRITICAL}, frontend=${FRONTEND_HIGH}/${FRONTEND_CRITICAL}, fs=${FS_HIGH}/${FS_CRITICAL}\nRun: ${RUN_URL}"
+          else
+            MESSAGE="${ICON} *CD Main 3EC2 ${STATUS}*\nRepo: ${REPO}\nCommit: ${COMMIT_SHA}\nActor: ${ACTOR}\nJob results: build=${BUILD_RESULT}, code=${CODE_RESULT}, scan=${SCAN_RESULT}, smoke=${DEPLOY_SMOKE_RESULT}\nSonar: ${SONAR_STATUS}, CodeQL: ${CODEQL_RESULT}\nTrivy(H/C) backend=${BACKEND_HIGH}/${BACKEND_CRITICAL}, frontend=${FRONTEND_HIGH}/${FRONTEND_CRITICAL}, fs=${FS_HIGH}/${FS_CRITICAL}\nRun: ${RUN_URL}"
+          fi
+
+          payload=$(jq -n --arg text "$MESSAGE" '{text: $text}')
+          curl -fsS -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL"

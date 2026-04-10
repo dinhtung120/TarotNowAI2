@@ -79,6 +79,23 @@ open http://localhost:5037/swagger
 open http://localhost:3000
 ```
 
+## Production (EC2 + Docker Compose)
+```bash
+# 1) Chuẩn bị biến môi trường production
+cp deploy/.env.prod.example deploy/.env.prod
+
+# 2) Bootstrap DB lần đầu (start data services + bootstrap scripts)
+./deploy/scripts/bootstrap-db.sh deploy/.env.prod docker-compose.prod.yml
+
+# 3) Build + khởi chạy app stack production
+docker compose --env-file deploy/.env.prod -f docker-compose.prod.yml up -d --build backend frontend reverse-proxy
+
+# 4) Smoke test
+./deploy/scripts/smoke.sh http://localhost
+```
+
+Chi tiết vận hành backup/restore/rollback xem `deploy/README.md`.
+
 ## Tài liệu
 Xem thêm trong thư mục `Doccument/` và `docs/`.
 
