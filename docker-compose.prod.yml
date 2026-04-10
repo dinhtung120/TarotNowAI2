@@ -46,6 +46,8 @@ services:
       timeout: 5s
       retries: 6
       start_period: 30s
+    ports:
+      - "3000:3000"
     networks:
       - private
     restart: unless-stopped
@@ -111,6 +113,8 @@ services:
       timeout: 5s
       retries: 6
       start_period: 30s
+    ports:
+      - "5037:5037"
     networks:
       - private
     restart: unless-stopped
@@ -146,6 +150,8 @@ services:
       timeout: 5s
       retries: 8
       start_period: 15s
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
     networks:
       - private
     restart: unless-stopped
@@ -163,6 +169,8 @@ services:
       timeout: 5s
       retries: 8
       start_period: 15s
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
     networks:
       - private
     restart: unless-stopped
@@ -178,6 +186,8 @@ services:
       timeout: 3s
       retries: 8
       start_period: 10s
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
     networks:
       - private
     restart: unless-stopped
@@ -248,7 +258,6 @@ volumes:
 networks:
   public:
   private:
-    internal: true
     ipam:
       config:
         - subnet: ${PRIVATE_NETWORK_SUBNET:-172.30.0.0/24}
