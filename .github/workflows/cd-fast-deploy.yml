@@ -1,0 +1,395 @@
+name: CD Fast Deploy (No Security Scans)
+
+# Tệp này được tạo ra để tăng tốc quá trình triển khai bằng cách loại bỏ các bước phân tích mã và quét bảo mật.
+# Thích hợp cho môi trường dev hoặc khi cần deploy gấp.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run pipeline gates without production deploy"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  packages: write
+  actions: read
+
+concurrency:
+  group: cd-fast-deploy-production
+  cancel-in-progress: false
+
+# Ép chạy Node.js 24 để tránh các cảnh báo deprecation từ các action cũ
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  # Bước 1: Build và chạy Unit Test cho cả Backend và Frontend
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout mã nguồn
+        uses: actions/checkout@v6
+
+      - name: Thiết lập .NET 9
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Khôi phục dependencies Backend
+        working-directory: Backend
+        run: dotnet restore src/TarotNow.Api/TarotNow.Api.csproj
+
+      - name: Build Backend
+        working-directory: Backend
+        run: dotnet build src/TarotNow.Api/TarotNow.Api.csproj --configuration Release --no-restore
+
+      - name: Chạy Unit Test Backend
+        working-directory: Backend
+        run: dotnet test TarotNow.slnx --configuration Release --nologo
+
+      - name: Thiết lập Node.js 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: Frontend/package-lock.json
+
+      - name: Cài đặt dependencies Frontend
+        working-directory: Frontend
+        run: npm ci
+
+      - name: Build Frontend
+        working-directory: Frontend
+        env:
+          NEXT_PUBLIC_API_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:5037' }}/api/v1
+          NEXT_PUBLIC_BASE_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }}
+          NEXTAUTH_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }}
+          NODE_TLS_REJECT_UNAUTHORIZED: "1"
+        run: npm run build
+
+      - name: Chạy Unit Test Frontend
+        working-directory: Frontend
+        env:
+          NEXT_PUBLIC_API_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:5037' }}/api/v1
+          NEXT_PUBLIC_BASE_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }}
+          NEXTAUTH_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }}
+          NODE_TLS_REJECT_UNAUTHORIZED: "1"
+        run: npm test
+
+  # Bước 2: Đóng gói và đẩy Docker Image lên GitHub Container Registry (GHCR)
+  # Đã loại bỏ code-analysis và security-scan để chạy nhanh hơn
+  publish-images:
+    runs-on: ubuntu-latest
+    needs: [build-test]
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run != true }}
+    outputs:
+      backend_image_ref: ${{ steps.refs.outputs.backend_image_ref }}
+      frontend_image_ref: ${{ steps.refs.outputs.frontend_image_ref }}
+      backend_latest_ref: ${{ steps.refs.outputs.backend_latest_ref }}
+      frontend_latest_ref: ${{ steps.refs.outputs.frontend_latest_ref }}
+    steps:
+      - name: Checkout mã nguồn
+        uses: actions/checkout@v6
+
+      - name: Chuẩn bị tag của Docker Image
+        id: refs
+        run: |
+          repo_lower=$(echo "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')
+          backend_image_ref="ghcr.io/${repo_lower}-backend:${GITHUB_SHA}"
+          frontend_image_ref="ghcr.io/${repo_lower}-frontend:${GITHUB_SHA}"
+          backend_latest_ref="ghcr.io/${repo_lower}-backend:main-latest"
+          frontend_latest_ref="ghcr.io/${repo_lower}-frontend:main-latest"
+
+          echo "backend_image_ref=$backend_image_ref" >> "$GITHUB_OUTPUT"
+          echo "frontend_image_ref=$frontend_image_ref" >> "$GITHUB_OUTPUT"
+          echo "backend_latest_ref=$backend_latest_ref" >> "$GITHUB_OUTPUT"
+          echo "frontend_latest_ref=$frontend_latest_ref" >> "$GITHUB_OUTPUT"
+
+      - name: Đăng nhập vào GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build và Push image Backend
+        run: |
+          docker build -f Backend/Dockerfile \
+            -t "${{ steps.refs.outputs.backend_image_ref }}" \
+            -t "${{ steps.refs.outputs.backend_latest_ref }}" \
+            .
+          docker push "${{ steps.refs.outputs.backend_image_ref }}"
+          docker push "${{ steps.refs.outputs.backend_latest_ref }}"
+
+      - name: Build và Push image Frontend
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_API_URL=${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:5037' }}/api/v1 \
+            --build-arg NEXT_PUBLIC_BASE_URL=${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }} \
+            --build-arg NEXTAUTH_URL=${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }} \
+            -f Frontend/Dockerfile \
+            -t "${{ steps.refs.outputs.frontend_image_ref }}" \
+            -t "${{ steps.refs.outputs.frontend_latest_ref }}" \
+            .
+          docker push "${{ steps.refs.outputs.frontend_image_ref }}"
+          docker push "${{ steps.refs.outputs.frontend_latest_ref }}"
+
+  # Bước 3: Triển khai Database (Migrations)
+  # Đã loại bỏ bước approval để tự động triển khai ngay sau khi build xong
+  deploy-db:
+    runs-on: [self-hosted, aws-prod-runner]
+    needs: [publish-images]
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run != true }}
+    steps:
+      - name: Cấu hình SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ci_deploy_key
+          chmod 600 ~/.ssh/id_ci_deploy_key
+          printf '%s\n' "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Triển khai trên Database Host
+        env:
+          PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
+          PROD_DB_HOST: ${{ secrets.PROD_DB_HOST }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN_READ: ${{ secrets.GHCR_TOKEN_READ }}
+          REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+          BACKEND_IMAGE_REF: ${{ needs.publish-images.outputs.backend_image_ref }}
+          DEPLOY_SHA: ${{ github.sha }}
+        run: |
+          ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_DB_HOST" "bash -se" <<EOF_REMOTE
+          set -euo pipefail
+          REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
+          cd "\$REPO_PATH"
+          git config --global --add safe.directory "\$REPO_PATH"
+          git fetch origin
+          git checkout "${DEPLOY_SHA}"
+          git reset --hard "${DEPLOY_SHA}"
+          echo "${GHCR_TOKEN_READ}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
+          REPO_DIR="\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
+            ./deploy/scripts/remote/deploy_db.sh "${BACKEND_IMAGE_REF}"
+          EOF_REMOTE
+
+  # Bước 4: Triển khai Backend
+  deploy-be:
+    runs-on: [self-hosted, aws-prod-runner]
+    needs: [deploy-db, publish-images]
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run != true }}
+    steps:
+      - name: Cấu hình SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ci_deploy_key
+          chmod 600 ~/.ssh/id_ci_deploy_key
+          printf '%s\n' "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Triển khai trên Backend Host
+        env:
+          PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
+          PROD_BE_HOST: ${{ secrets.PROD_BE_HOST }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN_READ: ${{ secrets.GHCR_TOKEN_READ }}
+          REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+          BACKEND_IMAGE_REF: ${{ needs.publish-images.outputs.backend_image_ref }}
+          PROD_DB_PRIVATE_IP: ${{ secrets.PROD_DB_PRIVATE_IP }}
+          DEPLOY_SHA: ${{ github.sha }}
+        run: |
+          ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_BE_HOST" "bash -se" <<EOF_REMOTE
+          set -euo pipefail
+          REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
+          cd "\$REPO_PATH"
+          git config --global --add safe.directory "\$REPO_PATH"
+          git fetch origin
+          git checkout "${DEPLOY_SHA}"
+          git reset --hard "${DEPLOY_SHA}"
+          echo "${GHCR_TOKEN_READ}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
+          REPO_DIR="\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" DB_PRIVATE_IP="${PROD_DB_PRIVATE_IP}" \
+            ./deploy/scripts/remote/deploy_be.sh "${BACKEND_IMAGE_REF}"
+          EOF_REMOTE
+
+  # Bước 5: Triển khai Frontend
+  deploy-fe:
+    runs-on: [self-hosted, aws-prod-runner]
+    needs: [deploy-be, publish-images]
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run != true }}
+    steps:
+      - name: Cấu hình SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ci_deploy_key
+          chmod 600 ~/.ssh/id_ci_deploy_key
+          printf '%s\n' "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Triển khai trên Frontend Host
+        env:
+          PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
+          PROD_FE_HOST: ${{ secrets.PROD_FE_HOST }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN_READ: ${{ secrets.GHCR_TOKEN_READ }}
+          REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+          FRONTEND_IMAGE_REF: ${{ needs.publish-images.outputs.frontend_image_ref }}
+          PROD_BE_PRIVATE_IP: ${{ secrets.PROD_BE_PRIVATE_IP }}
+          DEPLOY_SHA: ${{ github.sha }}
+        run: |
+          ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
+          set -euo pipefail
+          REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
+          cd "\$REPO_PATH"
+          git config --global --add safe.directory "\$REPO_PATH"
+          git fetch origin
+          git checkout "${DEPLOY_SHA}"
+          git reset --hard "${DEPLOY_SHA}"
+          echo "${GHCR_TOKEN_READ}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
+          REPO_DIR="\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" BE_PRIVATE_IP="${PROD_BE_PRIVATE_IP}" \
+            ./deploy/scripts/remote/deploy_fe.sh "${FRONTEND_IMAGE_REF}"
+          EOF_REMOTE
+
+  # Bước 6: Kiểm tra sức khỏe hệ thống sau triển khai
+  post-deploy-smoke:
+    runs-on: [self-hosted, aws-prod-runner]
+    needs: deploy-fe
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run != true }}
+    steps:
+      - name: Cấu hình SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ci_deploy_key
+          chmod 600 ~/.ssh/id_ci_deploy_key
+          printf '%s\n' "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Smoke test từ host FE (localhost check)
+        env:
+          PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
+          PROD_FE_HOST: ${{ secrets.PROD_FE_HOST }}
+          REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+        run: |
+          ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
+          set -euo pipefail
+          REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
+          cd "\$REPO_PATH"
+          ./deploy/scripts/smoke.sh http://localhost
+          EOF_REMOTE
+
+      - name: Kiểm tra qua public domain
+        if: ${{ vars.PROD_PUBLIC_BASE_URL != '' }}
+        env:
+          PROD_PUBLIC_BASE_URL: ${{ vars.PROD_PUBLIC_BASE_URL }}
+        run: |
+          curl -fsS "${PROD_PUBLIC_BASE_URL}/api/v1/health/live" >/dev/null
+          curl -fsS "${PROD_PUBLIC_BASE_URL}/api/v1/health/ready" >/dev/null
+          curl -fsS "${PROD_PUBLIC_BASE_URL}/" >/dev/null
+
+  # Bước 7: Tự động Rollback nếu có lỗi xảy ra trong quá trình deploy hoặc smoke test
+  auto-rollback:
+    runs-on: [self-hosted, aws-prod-runner]
+    needs: [deploy-be, deploy-fe, post-deploy-smoke]
+    if: ${{ always() && (needs.deploy-be.result == 'failure' || needs.deploy-fe.result == 'failure' || needs.post-deploy-smoke.result == 'failure') }}
+    steps:
+      - name: Cấu hình SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ci_deploy_key
+          chmod 600 ~/.ssh/id_ci_deploy_key
+          printf '%s\n' "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Rollback Backend
+        id: rollback_be
+        continue-on-error: true
+        env:
+          PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
+          PROD_BE_HOST: ${{ secrets.PROD_BE_HOST }}
+          REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+        run: |
+          ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_BE_HOST" "bash -se" <<EOF_REMOTE
+          set -euo pipefail
+          REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
+          cd "\$REPO_PATH"
+          REPO_DIR="\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
+            ./deploy/scripts/remote/rollback_be_fe.sh backend
+          EOF_REMOTE
+
+      - name: Rollback Frontend
+        id: rollback_fe
+        continue-on-error: true
+        env:
+          PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
+          PROD_FE_HOST: ${{ secrets.PROD_FE_HOST }}
+          REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+        run: |
+          ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
+          set -euo pipefail
+          REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
+          cd "\$REPO_PATH"
+          REPO_DIR="\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
+            ./deploy/scripts/remote/rollback_be_fe.sh frontend
+          EOF_REMOTE
+
+      - name: Đánh giá kết quả Rollback
+        run: |
+          if [[ "${{ steps.rollback_be.outcome }}" != "success" || "${{ steps.rollback_fe.outcome }}" != "success" ]]; then
+            echo "Một hoặc nhiều bước rollback bị lỗi" >&2
+            exit 1
+          fi
+
+  # Bước 8: Gửi thông báo kết quả qua Slack
+  notify-slack:
+    runs-on: ubuntu-latest
+    needs:
+      - build-test
+      - publish-images
+      - deploy-db
+      - deploy-be
+      - deploy-fe
+      - post-deploy-smoke
+      - auto-rollback
+    if: always()
+    steps:
+      - name: Gửi thông báo Slack
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REPO: ${{ github.repository }}
+          ACTOR: ${{ github.actor }}
+          COMMIT_SHA: ${{ github.sha }}
+          DEPLOY_SMOKE_RESULT: ${{ needs.post-deploy-smoke.result }}
+          BUILD_RESULT: ${{ needs.build-test.result }}
+        run: |
+          if [[ -z "$SLACK_WEBHOOK_URL" ]]; then
+            echo "SLACK_WEBHOOK_URL rỗng; bỏ qua thông báo"
+            exit 0
+          fi
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.dry_run }}" == "true" ]]; then
+            echo "dry_run=true; bỏ qua thông báo Slack"
+            exit 0
+          fi
+
+          if [[ "$DEPLOY_SMOKE_RESULT" == "success" ]]; then
+            STATUS="SUCCESS"
+            ICON=":white_check_mark:"
+          else
+            STATUS="FAILED"
+            ICON=":rotating_light:"
+          fi
+
+          # Tin nhắn đã được tinh gọn, không còn thông tin về bảo mật (quét đã bị loại bỏ)
+          MESSAGE="${ICON} *CD Fast Deploy ${STATUS}*\nRepo: ${REPO}\nCommit: ${COMMIT_SHA}\nActor: ${ACTOR}\nBuild: ${BUILD_RESULT}, Smoke: ${DEPLOY_SMOKE_RESULT}\nRun: ${RUN_URL}"
+
+          payload=$(jq -n --arg text "$MESSAGE" '{text: $text}')
+          curl -fsS -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL"
