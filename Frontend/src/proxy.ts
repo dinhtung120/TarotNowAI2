@@ -63,8 +63,8 @@ const buildContentSecurityPolicy = (): string => {
     "font-src 'self' data: https:",
     "media-src 'self' blob: data:",
     "style-src 'self' 'unsafe-inline'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Giản lược để tránh lỗi Hydration do Nonce thay đổi
-    `connect-src 'self' ${apiOrigin} ${wsApiOrigin}`.trim(),
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com",
+    `connect-src 'self' ${apiOrigin} ${wsApiOrigin} https://cloudflareinsights.com`.trim(),
   ];
 
   return cspParts.join('; ');
