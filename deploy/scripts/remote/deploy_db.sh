@@ -33,4 +33,7 @@ BACKEND_IMAGE="$BACKEND_IMAGE_REF" USE_PREBUILT_IMAGES=true \
 echo "[deploy-db] verifying DB containers"
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" ps postgres mongodb redis
 
+echo "[deploy-db] cleaning up old images"
+docker image prune -f
+
 echo "[deploy-db] done"

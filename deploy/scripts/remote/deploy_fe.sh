@@ -68,4 +68,7 @@ if [[ -f "$CURRENT_FILE" ]]; then
 fi
 echo "$FRONTEND_IMAGE_REF" > "$CURRENT_FILE"
 
+echo "[deploy-fe] cleaning up old images"
+docker image prune -f
+
 echo "[deploy-fe] done"

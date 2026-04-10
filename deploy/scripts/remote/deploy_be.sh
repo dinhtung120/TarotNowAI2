@@ -74,4 +74,7 @@ if [[ -f "$CURRENT_FILE" ]]; then
 fi
 echo "$BACKEND_IMAGE_REF" > "$CURRENT_FILE"
 
+echo "[deploy-be] cleaning up old images"
+docker image prune -f
+
 echo "[deploy-be] done"
