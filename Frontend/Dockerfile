@@ -35,9 +35,9 @@ RUN apt-get update \
 RUN if ! getent group app > /dev/null; then groupadd --gid 10001 app; fi \
     && if ! id -u app > /dev/null 2>&1; then useradd --uid 10001 --gid app --create-home --home-dir /home/app --shell /usr/sbin/nologin app; fi
 
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder --chown=app:app /app/public ./public
+COPY --from=builder --chown=app:app /app/.next/standalone ./
+COPY --from=builder --chown=app:app /app/.next/static ./.next/static
 
 USER app
 
