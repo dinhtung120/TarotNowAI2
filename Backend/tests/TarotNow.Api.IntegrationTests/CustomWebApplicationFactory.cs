@@ -1,5 +1,3 @@
-
-
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,12 +27,59 @@ public class CustomWebApplicationFactory<TProgram>
     private readonly MongoDbContainer _mongoContainer = new MongoDbBuilder("mongo:7.0-jammy")
         .Build();
 
+    // Đồng bộ việc start containers để tránh race-condition khi nhiều test class khởi tạo host.
+    private readonly SemaphoreSlim _containerStartLock = new(1, 1);
+    // Đánh dấu trạng thái containers đã sẵn sàng cho host test.
+    private volatile bool _containersStarted;
+
+    // Lưu trạng thái env trước khi factory ghi đè để có thể khôi phục khi dispose.
+    private readonly Dictionary<string, string?> _previousEnvironmentValues = new();
+    // Root path tạm cho file upload trong integration tests (mỗi factory một thư mục riêng).
+    private readonly string _testStorageRoot = Path.Combine(
+        Path.GetTempPath(),
+        $"tarotnow-integration-uploads-{Guid.NewGuid():N}");
+
+    // Bộ env tối thiểu giúp startup pass fail-fast validation trong CI khi không có Backend/.env.
+    private static readonly IReadOnlyDictionary<string, string> RequiredEnvironmentDefaults =
+        new Dictionary<string, string>
+        {
+            ["CONNECTIONSTRINGS__POSTGRESQL"] = "Host=localhost;Port=5432;Database=tarotweb_test;Username=postgres;Password=postgres_test_password",
+            ["CONNECTIONSTRINGS__MONGODB"] = "mongodb://localhost:27017/tarotweb_test",
+            ["JWT__SECRETKEY"] = "TarotNow_Test_JwtSecret_1234567890_ABCDEFG",
+            ["JWT__ISSUER"] = "TarotNowAI-Test",
+            ["JWT__AUDIENCE"] = "TarotNowAI-Users-Test",
+            ["PAYMENTGATEWAY__WEBHOOKSECRET"] = "TarotNow_Test_WebhookSecret_2026",
+            ["SECURITY__MFAENCRYPTIONKEY"] = "TarotNow_Test_MfaEncryption_2026",
+            ["SMTP__HOST"] = "smtp.test.local",
+            ["SMTP__PORT"] = "2525",
+            ["SMTP__USERNAME"] = "smtp-test-user",
+            ["SMTP__PASSWORD"] = "TarotNow_Test_SmtpPassword_2026",
+            ["SMTP__SENDEREMAIL"] = "noreply@test.local",
+            ["SMTP__SENDERNAME"] = "TarotNow Test",
+            ["AIPROVIDER__APIKEY"] = "tarotnow-test-ai-key",
+            ["AIPROVIDER__BASEURL"] = "https://api.openai.com/v1/",
+            ["AIPROVIDER__MODEL"] = "gpt-4.1-mini",
+            ["AIPROVIDER__TIMEOUTSECONDS"] = "30",
+            ["AIPROVIDER__MAXRETRIES"] = "0"
+        };
+
+    /// <summary>
+    /// Khởi tạo factory và bơm env defaults cho test process.
+    /// Luồng này giúp test không phụ thuộc file Backend/.env trên máy CI.
+    /// </summary>
+    public CustomWebApplicationFactory()
+    {
+        ApplyMissingEnvironmentDefaults();
+        Directory.CreateDirectory(_testStorageRoot);
+    }
+
     /// <summary>
     /// Tùy biến host test: inject connection string container, auth giả lập và các service thay thế.
     /// Luồng này giúp test chạy độc lập môi trường local thật và tái lập được.
     /// </summary>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        EnsureContainersStarted();
         var postgresConnectionString = _dbContainer.GetConnectionString();
         var mongoConnectionString = _mongoContainer.GetConnectionString();
 
@@ -45,8 +90,23 @@ public class CustomWebApplicationFactory<TProgram>
             {
                 ["ConnectionStrings:PostgreSQL"] = postgresConnectionString,
                 ["ConnectionStrings:MongoDB"] = mongoConnectionString,
+                ["Jwt:SecretKey"] = "TarotNow_Test_JwtSecret_1234567890_ABCDEFG",
+                ["Jwt:Issuer"] = "TarotNowAI-Test",
+                ["Jwt:Audience"] = "TarotNowAI-Users-Test",
                 ["PaymentGateway:WebhookSecret"] = "TarotNow_Test_WebhookSecret_2026",
                 ["Security:MfaEncryptionKey"] = "TarotNow_Test_MfaEncryption_2026",
+                ["Smtp:Host"] = "smtp.test.local",
+                ["Smtp:Port"] = "2525",
+                ["Smtp:Username"] = "smtp-test-user",
+                ["Smtp:Password"] = "TarotNow_Test_SmtpPassword_2026",
+                ["Smtp:SenderEmail"] = "noreply@test.local",
+                ["Smtp:SenderName"] = "TarotNow Test",
+                ["AiProvider:ApiKey"] = "tarotnow-test-ai-key",
+                ["AiProvider:BaseUrl"] = "https://api.openai.com/v1/",
+                ["AiProvider:Model"] = "gpt-4.1-mini",
+                ["AiProvider:TimeoutSeconds"] = "30",
+                ["AiProvider:MaxRetries"] = "0",
+                ["FileStorage:RootPath"] = _testStorageRoot,
                 ["SystemConfig:DailyAiQuota"] = "3",
                 ["SystemConfig:InFlightAiCap"] = "3",
                 ["SystemConfig:ReadingRateLimitSeconds"] = "1"
@@ -100,9 +160,8 @@ public class CustomWebApplicationFactory<TProgram>
     /// </summary>
     public async Task InitializeAsync()
     {
-        // Khởi chạy đồng thời hai container dữ liệu cho test.
-        await _dbContainer.StartAsync();
-        await _mongoContainer.StartAsync();
+        // Đảm bảo containers đã start một lần duy nhất trước khi chạy setup DB.
+        await EnsureContainersStartedAsync();
 
         // Bật extension `unaccent` để tương thích các truy vấn đã dùng trong ứng dụng.
         using (var rawConn = new Npgsql.NpgsqlConnection(_dbContainer.GetConnectionString()))
@@ -174,5 +233,93 @@ public class CustomWebApplicationFactory<TProgram>
     {
         await _dbContainer.DisposeAsync().AsTask();
         await _mongoContainer.DisposeAsync().AsTask();
+        TryCleanupTestStorage();
+        RestoreEnvironmentDefaults();
+    }
+
+    /// <summary>
+    /// Start containers một lần duy nhất theo cơ chế lock để tránh chạy trùng khi host init song song.
+    /// </summary>
+    private async Task EnsureContainersStartedAsync()
+    {
+        if (_containersStarted)
+        {
+            return;
+        }
+
+        await _containerStartLock.WaitAsync();
+        try
+        {
+            if (_containersStarted)
+            {
+                return;
+            }
+
+            await _dbContainer.StartAsync();
+            await _mongoContainer.StartAsync();
+            _containersStarted = true;
+        }
+        finally
+        {
+            _containerStartLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// Wrapper đồng bộ cho ConfigureWebHost, vì API này không hỗ trợ async.
+    /// </summary>
+    private void EnsureContainersStarted()
+    {
+        EnsureContainersStartedAsync().GetAwaiter().GetResult();
+    }
+
+    /// <summary>
+    /// Chỉ ghi đè các env đang thiếu để không phá cấu hình custom của developer.
+    /// </summary>
+    private void ApplyMissingEnvironmentDefaults()
+    {
+        foreach (var entry in RequiredEnvironmentDefaults)
+        {
+            var currentValue = Environment.GetEnvironmentVariable(entry.Key);
+            if (!string.IsNullOrWhiteSpace(currentValue))
+            {
+                continue;
+            }
+
+            _previousEnvironmentValues[entry.Key] = currentValue;
+            Environment.SetEnvironmentVariable(entry.Key, entry.Value);
+        }
+    }
+
+    /// <summary>
+    /// Khôi phục env về trạng thái ban đầu sau khi test kết thúc.
+    /// </summary>
+    private void RestoreEnvironmentDefaults()
+    {
+        foreach (var entry in _previousEnvironmentValues)
+        {
+            Environment.SetEnvironmentVariable(entry.Key, entry.Value);
+        }
+
+        _previousEnvironmentValues.Clear();
+    }
+
+    /// <summary>
+    /// Dọn thư mục upload tạm của integration tests.
+    /// Luồng best-effort để tránh test fail chỉ vì lỗi dọn dẹp sau cùng.
+    /// </summary>
+    private void TryCleanupTestStorage()
+    {
+        try
+        {
+            if (Directory.Exists(_testStorageRoot))
+            {
+                Directory.Delete(_testStorageRoot, recursive: true);
+            }
+        }
+        catch
+        {
+            // Ignore cleanup failure.
+        }
     }
 }
