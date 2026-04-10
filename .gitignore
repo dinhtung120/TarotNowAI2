@@ -62,6 +62,7 @@ yarn-error.log*
 ## Chỉ commit .env.example (template không có giá trị thật)
 .env
 .env.local
+.env.prod
 .env.development.local
 .env.test.local
 .env.production.local
