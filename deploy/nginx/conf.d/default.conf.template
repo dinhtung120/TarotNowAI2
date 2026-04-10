@@ -15,8 +15,11 @@ server {
   resolver_timeout 5s;
 
   client_max_body_size 20m;
-  set $backend_upstream http://backend:5037;
-  set $frontend_upstream http://frontend:3000;
+
+  # Sử dụng biến môi trường được Nginx Docker image tự động thay thế (envsubst)
+  # Default fallback if env vars are missing
+  set $backend_upstream ${BACKEND_UPSTREAM_URL};
+  set $frontend_upstream ${FRONTEND_UPSTREAM_URL};
 
   location = /nginx-health {
     access_log off;

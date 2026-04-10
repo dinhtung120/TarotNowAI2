@@ -15,7 +15,7 @@ FRONTEND_IMAGE_REF="$1"
 REPO_DIR="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
 ENV_FILE="${ENV_FILE:-deploy/.env.prod}"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
-NGINX_DEFAULT_CONF="${NGINX_DEFAULT_CONF:-deploy/nginx/conf.d/default.conf}"
+NGINX_DEFAULT_TEMPLATE="${NGINX_DEFAULT_TEMPLATE:-deploy/nginx/conf.d/default.conf.template}"
 STATE_DIR="${STATE_DIR:-/opt/tarotnow/release-state}"
 CURRENT_FILE="$STATE_DIR/frontend_current_image"
 PREVIOUS_FILE="$STATE_DIR/frontend_previous_image"
@@ -32,18 +32,15 @@ if [[ ! -f "$COMPOSE_FILE" ]]; then
   exit 1
 fi
 
-if [[ ! -f "$NGINX_DEFAULT_CONF" ]]; then
-  echo "[deploy-fe] nginx conf not found: $NGINX_DEFAULT_CONF" >&2
+if [[ ! -f "$NGINX_DEFAULT_TEMPLATE" ]]; then
+  echo "[deploy-fe] nginx template not found: $NGINX_DEFAULT_TEMPLATE" >&2
   exit 1
 fi
 
 echo "[deploy-fe] pulling frontend image: $FRONTEND_IMAGE_REF"
 docker pull "$FRONTEND_IMAGE_REF"
 
-echo "[deploy-fe] updating nginx backend upstream to BE_PRIVATE_IP=$BE_PRIVATE_IP"
-cp "$NGINX_DEFAULT_CONF" "${NGINX_DEFAULT_CONF}.bak"
-sed -E -i '' "s|set \$backend_upstream http://[^;]+;|set \$backend_upstream http://${BE_PRIVATE_IP}:5037;|" "$NGINX_DEFAULT_CONF" 2>/dev/null \
-  || sed -E -i "s|set \$backend_upstream http://[^;]+;|set \$backend_upstream http://${BE_PRIVATE_IP}:5037;|" "$NGINX_DEFAULT_CONF"
+export BE_PRIVATE_IP
 
 export FRONTEND_IMAGE="$FRONTEND_IMAGE_REF"
 
