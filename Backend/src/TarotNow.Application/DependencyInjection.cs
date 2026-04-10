@@ -76,7 +76,7 @@ public static class DependencyInjection
     private static void RegisterValidationAndMapping(IServiceCollection services)
     {
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
-        services.AddAutoMapper(Assembly.GetExecutingAssembly());
+        services.AddAutoMapper(cfg => { }, Assembly.GetExecutingAssembly());
     }
 
     /// <summary>
