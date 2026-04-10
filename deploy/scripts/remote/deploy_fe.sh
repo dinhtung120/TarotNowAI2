@@ -69,6 +69,6 @@ fi
 echo "$FRONTEND_IMAGE_REF" > "$CURRENT_FILE"
 
 echo "[deploy-fe] cleaning up old images"
-docker image prune -f
+docker system prune -a -f --volumes
 
 echo "[deploy-fe] done"

@@ -75,6 +75,6 @@ fi
 echo "$BACKEND_IMAGE_REF" > "$CURRENT_FILE"
 
 echo "[deploy-be] cleaning up old images"
-docker image prune -f
+docker system prune -a -f --volumes
 
 echo "[deploy-be] done"
