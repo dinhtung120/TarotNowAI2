@@ -380,6 +380,7 @@ jobs:
           REPO_DIR="\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
           BE_PRIVATE_IP="${BE_PRIVATE_IP}" DB_PRIVATE_IP="${DB_PRIVATE_IP}" \
           PUBLIC_BASE_URL="${PUBLIC_BASE_URL}" NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
+          FORWARDED_NETWORK_0="${FORWARDED_NETWORK_0}" \
             ./deploy/scripts/remote/deploy_db.sh "${BACKEND_IMAGE_REF}"
           EOF_REMOTE
 
@@ -427,6 +428,7 @@ jobs:
           REPO_DIR="\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
           BE_PRIVATE_IP="${BE_PRIVATE_IP}" DB_PRIVATE_IP="${DB_PRIVATE_IP}" \
           PUBLIC_BASE_URL="${PUBLIC_BASE_URL}" NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
+          FORWARDED_NETWORK_0="${FORWARDED_NETWORK_0}" \
             ./deploy/scripts/remote/deploy_be.sh "${BACKEND_IMAGE_REF}"
           EOF_REMOTE
 
@@ -474,6 +476,7 @@ jobs:
           REPO_DIR="\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
           BE_PRIVATE_IP="${BE_PRIVATE_IP}" DB_PRIVATE_IP="${DB_PRIVATE_IP}" \
           PUBLIC_BASE_URL="${PUBLIC_BASE_URL}" NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
+          FORWARDED_NETWORK_0="${FORWARDED_NETWORK_0}" \
             ./deploy/scripts/remote/deploy_fe.sh "${FRONTEND_IMAGE_REF}"
           EOF_REMOTE
 
