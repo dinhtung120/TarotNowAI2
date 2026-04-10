@@ -18,6 +18,14 @@ function normalizeApiBaseUrl(value: string | undefined, envName: string): string
 }
 
 /**
+ * Hàm hỗ trợ cho next.config.ts và các script build-time.
+ */
+export function resolveApiOrigin(value: string | undefined): string {
+  const base = normalizeApiBaseUrl(value || '', API_BASE_URL_ENV_NAME);
+  return apiOriginFromBase(base);
+}
+
+/**
  * Lấy Origin từ Base URL (xóa phần /api/v1).
  */
 function apiOriginFromBase(baseUrl: string): string {
