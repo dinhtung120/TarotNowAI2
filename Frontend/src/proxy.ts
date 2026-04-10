@@ -6,79 +6,55 @@ import { getPublicApiOrigin } from '@/shared/infrastructure/http/apiUrl';
 const intlMiddleware = createMiddleware(routing);
 const localeSet = new Set(routing.locales);
 
-
 const resolveLocale = (pathname: string) => {
- const maybeLocale = pathname.split('/')[1];
- if (maybeLocale && localeSet.has(maybeLocale as (typeof routing.locales)[number])) {
- return maybeLocale;
- }
-
- return routing.defaultLocale;
+  const maybeLocale = pathname.split('/')[1];
+  if (maybeLocale && localeSet.has(maybeLocale as (typeof routing.locales)[number])) {
+    return maybeLocale;
+  }
+  return routing.defaultLocale;
 };
 
 const stripLocalePrefix = (pathname: string): string => {
- const maybeLocale = pathname.split("/")[1];
- if (maybeLocale && localeSet.has(maybeLocale as (typeof routing.locales)[number])) {
-  const rest = pathname.split("/").slice(2).join("/");
-  return `/${rest}`.replace(/\/+$/, "") || "/";
- }
- return pathname.replace(/\/+$/, "") || "/";
+  const maybeLocale = pathname.split("/")[1];
+  if (maybeLocale && localeSet.has(maybeLocale as (typeof routing.locales)[number])) {
+    const rest = pathname.split("/").slice(2).join("/");
+    return `/${rest}`.replace(/\/+$/, "") || "/";
+  }
+  return pathname.replace(/\/+$/, "") || "/";
 };
 
 const matchesPrefix = (pathname: string, prefix: string) =>
- pathname === prefix || pathname.startsWith(`${prefix}/`);
+  pathname === prefix || pathname.startsWith(`${prefix}/`);
 
 const PROTECTED_PREFIXES = [
- "/profile",
- "/wallet",
- "/chat",
- "/collection",
- "/reading",
- "/reader", 
- "/admin",
+  "/profile",
+  "/wallet",
+  "/chat",
+  "/collection",
+  "/reading",
+  "/reader", 
+  "/admin",
 ];
 
-const clearAuthCookies = (response: NextResponse) => {
- response.cookies.delete("accessToken");
- response.cookies.delete("refreshToken");
+const clearAuthCookies = (response: NextResponse | Response) => {
+  // Using generic way to ensure delete works
+  if ('cookies' in response) {
+    response.cookies.delete("accessToken");
+    response.cookies.delete("refreshToken");
+  }
 };
 
-const NONCE_CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-const NONCE_LENGTH = 24;
-
-const createNonce = (): string => {
- const bytes = crypto.getRandomValues(new Uint8Array(NONCE_LENGTH));
- let nonce = '';
-
- for (const byte of bytes) {
-  nonce += NONCE_CHARSET[byte % NONCE_CHARSET.length];
- }
-
- return nonce;
-};
-
-const toSpaceDelimited = (parts: string[]): string => {
- let output = '';
- for (const part of parts) {
-  output = output ? `${output} ${part}` : part;
- }
- return output;
-};
-
-const buildContentSecurityPolicy = (nonce: string): string => {
-  const apiOrigin = getPublicApiOrigin();
+const buildContentSecurityPolicy = (): string => {
+  const apiOrigin = getPublicApiOrigin().replace(/\/+$/, '');
+  
+  // websocket origin
   const wsApiOrigin = apiOrigin.startsWith('https://')
     ? `wss://${apiOrigin.slice('https://'.length)}`
     : apiOrigin.startsWith('http://')
       ? `ws://${apiOrigin.slice('http://'.length)}`
       : '';
 
-  const scriptSources = ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'"];
-  if (process.env.NODE_ENV !== 'production') {
-    scriptSources.push("'unsafe-eval'");
-  }
-
-  return [
+  const cspParts = [
     "default-src 'self'",
     "base-uri 'self'",
     "frame-ancestors 'none'",
@@ -87,45 +63,38 @@ const buildContentSecurityPolicy = (nonce: string): string => {
     "font-src 'self' data: https:",
     "media-src 'self' blob: data:",
     "style-src 'self' 'unsafe-inline'",
-    `script-src ${toSpaceDelimited(scriptSources)}`,
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Giản lược để tránh lỗi Hydration do Nonce thay đổi
     `connect-src 'self' ${apiOrigin} ${wsApiOrigin}`.trim(),
-  ].join('; ');
+  ];
+
+  return cspParts.join('; ');
 };
 
-const withRequestCsp = (request: NextRequest, csp: string): NextRequest => {
- const requestHeaders = new Headers(request.headers);
- requestHeaders.set('content-security-policy', csp);
- return new NextRequest(request, { headers: requestHeaders });
-};
-
-const withResponseCsp = (response: NextResponse, csp: string): NextResponse => {
- response.headers.set('Content-Security-Policy', csp);
- return response;
+const withResponseCsp = (response: NextResponse): NextResponse => {
+  const csp = buildContentSecurityPolicy();
+  response.headers.set('Content-Security-Policy', csp);
+  return response;
 };
 
 export default async function proxy(request: NextRequest) {
- const { pathname } = request.nextUrl;
- const locale = resolveLocale(pathname);
- const pathWithoutLocale = stripLocalePrefix(pathname);
- const csp = buildContentSecurityPolicy(createNonce());
- const requestWithCsp = withRequestCsp(request, csp);
+  const { pathname } = request.nextUrl;
+  const locale = resolveLocale(pathname);
+  const pathWithoutLocale = stripLocalePrefix(pathname);
 
- const isProtectedRoute = PROTECTED_PREFIXES.some((p) => matchesPrefix(pathWithoutLocale, p));
+  const isProtectedRoute = PROTECTED_PREFIXES.some((p) => matchesPrefix(pathWithoutLocale, p));
+  const token = request.cookies.get("accessToken")?.value;
 
- const token = request.cookies.get("accessToken")?.value;
-
- if (isProtectedRoute) {
-  if (!token) {
-   const loginUrl = new URL(`/${locale}/login`, request.url);
-   const response = NextResponse.redirect(loginUrl);
-   clearAuthCookies(response);
-   return withResponseCsp(response, csp);
+  if (isProtectedRoute && !token) {
+    const loginUrl = new URL(`/${locale}/login`, request.url);
+    const response = NextResponse.redirect(loginUrl);
+    clearAuthCookies(response);
+    return withResponseCsp(response);
   }
- }
 
- return withResponseCsp(intlMiddleware(requestWithCsp), csp);
+  const response = intlMiddleware(request);
+  return withResponseCsp(response);
 }
 
 export const config = {
- matcher: ['/((?!api|_next|_vercel|.*\\..*).*)']
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)']
 };

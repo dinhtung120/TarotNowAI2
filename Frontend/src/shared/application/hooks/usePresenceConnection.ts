@@ -38,7 +38,7 @@ export function usePresenceConnection() {
 			accessTokenFactory: () => useAuthStore.getState().token ?? '',
     })
     .withAutomaticReconnect([0, 2000, 5000, 10000, 30000]) 
-    .configureLogging(signalR.LogLevel.Warning)
+    .configureLogging(signalR.LogLevel.Debug)
     .build();
    hubConnection.serverTimeoutInMilliseconds = 120000;
    hubConnection.on('UserStatusChanged', (userId: string) => {
