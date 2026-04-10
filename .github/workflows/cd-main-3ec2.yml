@@ -363,12 +363,12 @@ jobs:
           ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_DB_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
           REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
-          cd "\\$REPO_PATH"
+          cd "\$REPO_PATH"
           git fetch origin
           git checkout "${DEPLOY_SHA}"
           git reset --hard "${DEPLOY_SHA}"
           echo "${GHCR_TOKEN_READ}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
-          REPO_DIR="\\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
+          REPO_DIR="\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
             ./deploy/scripts/remote/deploy_db.sh "${BACKEND_IMAGE_REF}"
           EOF_REMOTE
 
@@ -400,12 +400,12 @@ jobs:
           ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_BE_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
           REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
-          cd "\\$REPO_PATH"
+          cd "\$REPO_PATH"
           git fetch origin
           git checkout "${DEPLOY_SHA}"
           git reset --hard "${DEPLOY_SHA}"
           echo "${GHCR_TOKEN_READ}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
-          REPO_DIR="\\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" DB_PRIVATE_IP="${PROD_DB_PRIVATE_IP}" \
+          REPO_DIR="\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" DB_PRIVATE_IP="${PROD_DB_PRIVATE_IP}" \
             ./deploy/scripts/remote/deploy_be.sh "${BACKEND_IMAGE_REF}"
           EOF_REMOTE
 
@@ -437,12 +437,12 @@ jobs:
           ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
           REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
-          cd "\\$REPO_PATH"
+          cd "\$REPO_PATH"
           git fetch origin
           git checkout "${DEPLOY_SHA}"
           git reset --hard "${DEPLOY_SHA}"
           echo "${GHCR_TOKEN_READ}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
-          REPO_DIR="\\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" BE_PRIVATE_IP="${PROD_BE_PRIVATE_IP}" \
+          REPO_DIR="\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" BE_PRIVATE_IP="${PROD_BE_PRIVATE_IP}" \
             ./deploy/scripts/remote/deploy_fe.sh "${FRONTEND_IMAGE_REF}"
           EOF_REMOTE
 
@@ -469,7 +469,7 @@ jobs:
           ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
           REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
-          cd "\\$REPO_PATH"
+          cd "\$REPO_PATH"
           ./deploy/scripts/smoke.sh http://localhost
           EOF_REMOTE
 
@@ -507,8 +507,8 @@ jobs:
           ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_BE_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
           REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
-          cd "\\$REPO_PATH"
-          REPO_DIR="\\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
+          cd "\$REPO_PATH"
+          REPO_DIR="\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
             ./deploy/scripts/remote/rollback_be_fe.sh backend
           EOF_REMOTE
 
@@ -523,8 +523,8 @@ jobs:
           ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
           REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
-          cd "\\$REPO_PATH"
-          REPO_DIR="\\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
+          cd "\$REPO_PATH"
+          REPO_DIR="\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
             ./deploy/scripts/remote/rollback_be_fe.sh frontend
           EOF_REMOTE
 
