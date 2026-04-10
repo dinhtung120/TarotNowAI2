@@ -28,7 +28,8 @@ ENV PORT=3000
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends wget ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 
 RUN if ! getent group app > /dev/null; then groupadd --gid 10001 app; fi \
     && if ! id -u app > /dev/null 2>&1; then useradd --uid 10001 --gid app --create-home --home-dir /home/app --shell /usr/sbin/nologin app; fi
