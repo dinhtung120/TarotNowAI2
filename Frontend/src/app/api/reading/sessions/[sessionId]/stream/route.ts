@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { apiUrl } from '@/shared/infrastructure/http/apiUrl';
+import { internalApiUrl } from '@/shared/infrastructure/http/apiUrl';
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 
 const SESSION_ID_PATTERN = /^[A-Za-z0-9-]+$/;
@@ -69,7 +69,7 @@ export async function GET(
   return new Response('Invalid session id', { status: 400 });
  }
 
- const upstreamUrl = new URL(apiUrl(`/sessions/${encodeURIComponent(sessionId)}/stream`));
+ const upstreamUrl = new URL(internalApiUrl(`/sessions/${encodeURIComponent(sessionId)}/stream`));
  const language = getSafeLanguage(request.nextUrl.searchParams.get('language'));
  const followupQuestion = getSafeFollowupQuestion(
   request.nextUrl.searchParams.get('followupQuestion')

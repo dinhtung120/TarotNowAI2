@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
 import { routing } from './i18n/routing';
-import { getApiOrigin } from '@/shared/infrastructure/http/apiUrl';
+import { getPublicApiOrigin } from '@/shared/infrastructure/http/apiUrl';
 
 const intlMiddleware = createMiddleware(routing);
 const localeSet = new Set(routing.locales);
@@ -66,7 +66,7 @@ const toSpaceDelimited = (parts: string[]): string => {
 };
 
 const buildContentSecurityPolicy = (nonce: string): string => {
-  const apiOrigin = getApiOrigin();
+  const apiOrigin = getPublicApiOrigin();
   const wsApiOrigin = apiOrigin.startsWith('https://')
     ? `wss://${apiOrigin.slice('https://'.length)}`
     : apiOrigin.startsWith('http://')

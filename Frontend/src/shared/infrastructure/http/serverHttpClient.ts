@@ -1,4 +1,4 @@
-import { apiUrl } from '@/shared/infrastructure/http/apiUrl';
+import { internalApiUrl } from '@/shared/infrastructure/http/apiUrl';
 import { parseApiError } from '@/shared/infrastructure/error/parseApiError';
 
 interface ServerHttpResultOk<T> {
@@ -77,7 +77,7 @@ export async function serverHttpRequest<T>(
     body = JSON.stringify(json);
   }
 
-  const response = await fetch(apiUrl(path), {
+  const response = await fetch(internalApiUrl(path), {
     ...rest,
     ...(resolvedCache ? { cache: resolvedCache } : {}),
     headers: buildHeaders(token, rawHeaders, json !== undefined),
