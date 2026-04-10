@@ -167,8 +167,10 @@ jobs:
           # Bổ sung các biến thiếu để tránh lỗi interpolation của docker-compose
           BE_PRIVATE_IP: ${{ secrets.PROD_BE_PRIVATE_IP }}
           DB_PRIVATE_IP: ${{ secrets.PROD_DB_PRIVATE_IP }}
-          PUBLIC_BASE_URL: ${{ vars.PROD_PUBLIC_BASE_URL }}
+          PUBLIC_BASE_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }}
           NEXT_PUBLIC_API_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:5037' }}/api/v1
+          # Bổ sung các biến môi trường cần thiết khác cho docker-compose
+          FORWARDED_NETWORK_0: "172.30.0.0/16"
         run: |
           ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_DB_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
@@ -213,8 +215,10 @@ jobs:
           # Bổ sung các biến thiếu để tránh lỗi interpolation của docker-compose
           BE_PRIVATE_IP: ${{ secrets.PROD_BE_PRIVATE_IP }}
           DB_PRIVATE_IP: ${{ secrets.PROD_DB_PRIVATE_IP }}
-          PUBLIC_BASE_URL: ${{ vars.PROD_PUBLIC_BASE_URL }}
+          PUBLIC_BASE_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }}
           NEXT_PUBLIC_API_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:5037' }}/api/v1
+          # Bổ sung các biến môi trường cần thiết khác cho docker-compose
+          FORWARDED_NETWORK_0: "172.30.0.0/16"
         run: |
           ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_BE_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
@@ -259,8 +263,10 @@ jobs:
           # Bổ sung các biến thiếu để tránh lỗi interpolation của docker-compose
           BE_PRIVATE_IP: ${{ secrets.PROD_BE_PRIVATE_IP }}
           DB_PRIVATE_IP: ${{ secrets.PROD_DB_PRIVATE_IP }}
-          PUBLIC_BASE_URL: ${{ vars.PROD_PUBLIC_BASE_URL }}
+          PUBLIC_BASE_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }}
           NEXT_PUBLIC_API_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:5037' }}/api/v1
+          # Bổ sung các biến môi trường cần thiết khác cho docker-compose
+          FORWARDED_NETWORK_0: "172.30.0.0/16"
         run: |
           ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
