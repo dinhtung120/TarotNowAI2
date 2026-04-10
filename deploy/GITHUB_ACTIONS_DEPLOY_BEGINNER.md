@@ -213,20 +213,20 @@ Vào:
 
 | Tên | Dùng để làm gì | Ví dụ | Lấy ở đâu | Sai thì lỗi gì |
 |---|---|---|---|---|
-| `` | Token gọi SonarCloud scan/gate | `sqp_xxx...` | SonarCloud account token | Job `code-analysis` fail auth |
-| `` | Tên Sonar organization | `my-org` | SonarCloud org key | Sonar scan fail `organization not found` |
-| `` | Project key Sonar | `my-org_tarotnow` | SonarCloud project settings | Gate fail hoặc không map project |
-| `` | Gửi thông báo pipeline | `https://hooks.slack.com/services/...` | Slack Incoming Webhook | Không có alert success/fail |
-| `` | User SSH vào 3 host | `ubuntu` | User Linux trên EC2 | SSH fail `Permission denied` |
-| `` | Địa chỉ SSH host DB | `54.x.x.x` hoặc hostname | Public IP/hostname DB | `deploy-db` không SSH được |
-| `` | Địa chỉ SSH host BE | `18.x.x.x` | Public IP/hostname BE | `deploy-be` fail |
-| `` | Địa chỉ SSH host FE | `3.x.x.x` | Public IP/hostname FE | `deploy-fe` fail |
-| `` | Private key SSH để CI vào host | nội dung key PEM | Key pair dùng cho EC2 | SSH fail ngay bước đầu |
-| `` | Host key chống MITM khi SSH | output `ssh-keyscan -H ...` | Tự sinh từ lệnh ssh-keyscan | `Host key verification failed` |
-| `` | User pull image từ GHCR trên host | `github_username` | Tài khoản/pat owner | `docker login ghcr.io` fail |
-| `` | Token read package GHCR trên host | `ghp_xxx...` | GitHub PAT có `read:packages` | Host không pull được image |
-| `` | Private IP host DB cho BE kết nối | `10.0.3.21` | EC2 DB private IP | BE `health/ready` fail DB |
-| `` | Private IP host BE cho FE/nginx upstream | `10.0.2.18` | EC2 BE private IP | FE deploy pass nhưng smoke fail |
+| `SONAR_TOKEN` | Token gọi SonarCloud scan/gate | `sqp_xxx...` | SonarCloud account token | Job `code-analysis` fail auth |
+| `SONAR_ORG` | Tên Sonar organization | `my-org` | SonarCloud org key | Sonar scan fail `organization not found` |
+| `SONAR_PROJECT_KEY` | Project key Sonar | `my-org_tarotnow` | SonarCloud project settings | Gate fail hoặc không map project |
+| `SLACK_WEBHOOK_URL` | Gửi thông báo pipeline | `https://hooks.slack.com/services/...` | Slack Incoming Webhook | Không có alert success/fail |
+| `PROD_SSH_USER` | User SSH vào 3 host | `ubuntu` | User Linux trên EC2 | SSH fail `Permission denied` |
+| `PROD_DB_HOST` | Địa chỉ SSH host DB | `54.x.x.x` hoặc hostname | Public IP/hostname DB | `deploy-db` không SSH được |
+| `PROD_BE_HOST` | Địa chỉ SSH host BE | `18.x.x.x` | Public IP/hostname BE | `deploy-be` fail |
+| `PROD_FE_HOST` | Địa chỉ SSH host FE | `3.x.x.x` | Public IP/hostname FE | `deploy-fe` fail |
+| `PROD_SSH_PRIVATE_KEY` | Private key SSH để CI vào host | nội dung key PEM | Key pair dùng cho EC2 | SSH fail ngay bước đầu |
+| `PROD_KNOWN_HOSTS` | Host key chống MITM khi SSH | output `ssh-keyscan -H ...` | Tự sinh từ lệnh ssh-keyscan | `Host key verification failed` |
+| `GHCR_USERNAME` | User pull image từ GHCR trên host | `github_username` | Tài khoản/pat owner | `docker login ghcr.io` fail |
+| `GHCR_TOKEN_READ` | Token read package GHCR trên host | `ghp_xxx...` | GitHub PAT có `read:packages` | Host không pull được image |
+| `PROD_DB_PRIVATE_IP` | Private IP host DB cho BE kết nối | `10.0.3.21` | EC2 DB private IP | BE `health/ready` fail DB |
+| `PROD_BE_PRIVATE_IP` | Private IP host BE cho FE/nginx upstream | `10.0.2.18` | EC2 BE private IP | FE deploy pass nhưng smoke fail |
 
 ## 6.2 Variables
 

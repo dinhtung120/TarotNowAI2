@@ -31,9 +31,6 @@ public class CustomWebApplicationFactory<TProgram>
     private readonly SemaphoreSlim _containerStartLock = new(1, 1);
     // Đánh dấu trạng thái containers đã sẵn sàng cho host test.
     private volatile bool _containersStarted;
-
-    // Lưu trạng thái env trước khi factory ghi đè để có thể khôi phục khi dispose.
-    private readonly Dictionary<string, string?> _previousEnvironmentValues = new();
     // Root path tạm cho file upload trong integration tests (mỗi factory một thư mục riêng).
     private readonly string _testStorageRoot = Path.Combine(
         Path.GetTempPath(),
@@ -60,7 +57,8 @@ public class CustomWebApplicationFactory<TProgram>
             ["AIPROVIDER__BASEURL"] = "https://api.openai.com/v1/",
             ["AIPROVIDER__MODEL"] = "gpt-4.1-mini",
             ["AIPROVIDER__TIMEOUTSECONDS"] = "30",
-            ["AIPROVIDER__MAXRETRIES"] = "0"
+            ["AIPROVIDER__MAXRETRIES"] = "0",
+            ["CORS__ALLOWEDORIGINS__0"] = "http://localhost:3000"
         };
 
     /// <summary>
@@ -106,6 +104,7 @@ public class CustomWebApplicationFactory<TProgram>
                 ["AiProvider:Model"] = "gpt-4.1-mini",
                 ["AiProvider:TimeoutSeconds"] = "30",
                 ["AiProvider:MaxRetries"] = "0",
+                ["Cors:AllowedOrigins:0"] = "http://localhost:3000",
                 ["FileStorage:RootPath"] = _testStorageRoot,
                 ["SystemConfig:DailyAiQuota"] = "3",
                 ["SystemConfig:InFlightAiCap"] = "3",
@@ -234,7 +233,6 @@ public class CustomWebApplicationFactory<TProgram>
         await _dbContainer.DisposeAsync().AsTask();
         await _mongoContainer.DisposeAsync().AsTask();
         TryCleanupTestStorage();
-        RestoreEnvironmentDefaults();
     }
 
     /// <summary>
@@ -286,22 +284,8 @@ public class CustomWebApplicationFactory<TProgram>
                 continue;
             }
 
-            _previousEnvironmentValues[entry.Key] = currentValue;
             Environment.SetEnvironmentVariable(entry.Key, entry.Value);
         }
-    }
-
-    /// <summary>
-    /// Khôi phục env về trạng thái ban đầu sau khi test kết thúc.
-    /// </summary>
-    private void RestoreEnvironmentDefaults()
-    {
-        foreach (var entry in _previousEnvironmentValues)
-        {
-            Environment.SetEnvironmentVariable(entry.Key, entry.Value);
-        }
-
-        _previousEnvironmentValues.Clear();
     }
 
     /// <summary>
