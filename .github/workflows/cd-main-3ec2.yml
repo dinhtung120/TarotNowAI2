@@ -76,18 +76,18 @@ jobs:
       - name: Frontend build
         working-directory: Frontend
         env:
-          NEXT_PUBLIC_API_URL: http://localhost:5037/api/v1
-          NEXT_PUBLIC_BASE_URL: http://localhost:3000
-          NEXTAUTH_URL: http://localhost:3000
+          NEXT_PUBLIC_API_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:5037' }}/api/v1
+          NEXT_PUBLIC_BASE_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }}
+          NEXTAUTH_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }}
           NODE_TLS_REJECT_UNAUTHORIZED: "1"
         run: npm run build
 
       - name: Frontend test
         working-directory: Frontend
         env:
-          NEXT_PUBLIC_API_URL: http://localhost:5037/api/v1
-          NEXT_PUBLIC_BASE_URL: http://localhost:3000
-          NEXTAUTH_URL: http://localhost:3000
+          NEXT_PUBLIC_API_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:5037' }}/api/v1
+          NEXT_PUBLIC_BASE_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }}
+          NEXTAUTH_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }}
           NODE_TLS_REJECT_UNAUTHORIZED: "1"
         run: npm test
 
@@ -162,9 +162,9 @@ jobs:
       - name: Build frontend scan image
         run: |
           docker build \
-            --build-arg NEXT_PUBLIC_API_URL=http://localhost:5037/api/v1 \
-            --build-arg NEXT_PUBLIC_BASE_URL=http://localhost:3000 \
-            --build-arg NEXTAUTH_URL=http://localhost:3000 \
+            --build-arg NEXT_PUBLIC_API_URL=${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:5037' }}/api/v1 \
+            --build-arg NEXT_PUBLIC_BASE_URL=${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }} \
+            --build-arg NEXTAUTH_URL=${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }} \
             -f Frontend/Dockerfile -t tarotnow/frontend:scan .
 
       - name: Trivy backend image scan (json)
@@ -316,9 +316,9 @@ jobs:
       - name: Build and push frontend image
         run: |
           docker build \
-            --build-arg NEXT_PUBLIC_API_URL=http://localhost:5037/api/v1 \
-            --build-arg NEXT_PUBLIC_BASE_URL=http://localhost:3000 \
-            --build-arg NEXTAUTH_URL=http://localhost:3000 \
+            --build-arg NEXT_PUBLIC_API_URL=${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:5037' }}/api/v1 \
+            --build-arg NEXT_PUBLIC_BASE_URL=${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }} \
+            --build-arg NEXTAUTH_URL=${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }} \
             -f Frontend/Dockerfile \
             -t "${{ steps.refs.outputs.frontend_image_ref }}" \
             -t "${{ steps.refs.outputs.frontend_latest_ref }}" \

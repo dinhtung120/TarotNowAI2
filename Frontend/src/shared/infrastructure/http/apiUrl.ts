@@ -35,7 +35,18 @@ function apiOriginFromBase(baseUrl: string): string {
  return trimmed;
 }
 
-const rawApiBaseUrl = requireEnvValue(process.env.NEXT_PUBLIC_API_URL, API_BASE_URL_ENV_NAME);
+// Chọn URL API phù hợp: 
+// - Trên Browser: Bắt buộc dùng NEXT_PUBLIC_API_URL (URL công khai).
+// - Trên Server: Ưu tiên dùng INTERNAL_API_URL (IP Private) để tối ưu tốc độ và tránh lỗi DNS nội bộ.
+const isServer = typeof window === 'undefined';
+const effectiveApiUrl = isServer 
+  ? (process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL) 
+  : process.env.NEXT_PUBLIC_API_URL;
+
+const rawApiBaseUrl = requireEnvValue(
+  effectiveApiUrl, 
+  isServer ? 'INTERNAL_API_URL hoặc NEXT_PUBLIC_API_URL' : API_BASE_URL_ENV_NAME
+);
 
 export const API_BASE_URL = resolveApiBaseUrl(rawApiBaseUrl);
 export const API_ORIGIN = resolveApiOrigin(rawApiBaseUrl);
