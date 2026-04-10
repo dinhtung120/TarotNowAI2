@@ -345,8 +345,8 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ci_deploy_key
+          chmod 600 ~/.ssh/id_ci_deploy_key
           printf '%s\n' "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
@@ -360,7 +360,7 @@ jobs:
           BACKEND_IMAGE_REF: ${{ needs.publish-images.outputs.backend_image_ref }}
           DEPLOY_SHA: ${{ github.sha }}
         run: |
-          ssh "$PROD_SSH_USER@$PROD_DB_HOST" "bash -se" <<EOF_REMOTE
+          ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_DB_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
           REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
           cd "\\$REPO_PATH"
@@ -381,8 +381,8 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ci_deploy_key
+          chmod 600 ~/.ssh/id_ci_deploy_key
           printf '%s\n' "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
@@ -397,7 +397,7 @@ jobs:
           PROD_DB_PRIVATE_IP: ${{ secrets.PROD_DB_PRIVATE_IP }}
           DEPLOY_SHA: ${{ github.sha }}
         run: |
-          ssh "$PROD_SSH_USER@$PROD_BE_HOST" "bash -se" <<EOF_REMOTE
+          ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_BE_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
           REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
           cd "\\$REPO_PATH"
@@ -418,8 +418,8 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ci_deploy_key
+          chmod 600 ~/.ssh/id_ci_deploy_key
           printf '%s\n' "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
@@ -434,7 +434,7 @@ jobs:
           PROD_BE_PRIVATE_IP: ${{ secrets.PROD_BE_PRIVATE_IP }}
           DEPLOY_SHA: ${{ github.sha }}
         run: |
-          ssh "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
+          ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
           REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
           cd "\\$REPO_PATH"
@@ -455,8 +455,8 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ci_deploy_key
+          chmod 600 ~/.ssh/id_ci_deploy_key
           printf '%s\n' "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
@@ -466,7 +466,7 @@ jobs:
           PROD_FE_HOST: ${{ secrets.PROD_FE_HOST }}
           REPO_DIR: ${{ vars.PROD_REPO_DIR }}
         run: |
-          ssh "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
+          ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
           REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
           cd "\\$REPO_PATH"
@@ -491,8 +491,8 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ci_deploy_key
+          chmod 600 ~/.ssh/id_ci_deploy_key
           printf '%s\n' "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
@@ -504,7 +504,7 @@ jobs:
           PROD_BE_HOST: ${{ secrets.PROD_BE_HOST }}
           REPO_DIR: ${{ vars.PROD_REPO_DIR }}
         run: |
-          ssh "$PROD_SSH_USER@$PROD_BE_HOST" "bash -se" <<EOF_REMOTE
+          ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_BE_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
           REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
           cd "\\$REPO_PATH"
@@ -520,7 +520,7 @@ jobs:
           PROD_FE_HOST: ${{ secrets.PROD_FE_HOST }}
           REPO_DIR: ${{ vars.PROD_REPO_DIR }}
         run: |
-          ssh "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
+          ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
           REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
           cd "\\$REPO_PATH"
