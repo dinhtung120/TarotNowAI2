@@ -92,9 +92,17 @@ export default async function proxy(request: NextRequest) {
   }
 
   const response = intlMiddleware(request);
-  return withResponseCsp(response);
+  
+  // Chỉ gán CSP cho các trang HTML để tránh lỗi reload trang khi fetch data ngầm (RSC)
+  const contentType = response.headers.get('content-type');
+  if (contentType?.includes('text/html')) {
+    return withResponseCsp(response);
+  }
+
+  return response;
 }
 
 export const config = {
-  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)']
+  // Bỏ qua tất cả các đường dẫn nội bộ và tệp tĩnh để tránh reload trang
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)']
 };
