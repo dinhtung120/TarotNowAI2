@@ -78,6 +78,21 @@ const withResponseCsp = (response: NextResponse): NextResponse => {
 
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // 1. Bypass hoàn toàn các request nội bộ của Next.js để tránh vỡ SPA
+  // Bao gồm: _next/static, _next/image, favicon, và các file có phần mở rộng (static assets)
+  // Đặc biệt: Kiểm tra các header đặc thù của Next.js App Router (RSC, Prefetch)
+  const isNextInternal = 
+    pathname.startsWith('/_next') || 
+    pathname.includes('/api/') ||
+    pathname.includes('.') ||
+    request.headers.has('x-nextjs-data') ||
+    request.headers.get('purpose') === 'prefetch';
+
+  if (isNextInternal) {
+    return NextResponse.next();
+  }
+
   const locale = resolveLocale(pathname);
   const pathWithoutLocale = stripLocalePrefix(pathname);
 
@@ -93,7 +108,8 @@ export default async function proxy(request: NextRequest) {
 
   const response = intlMiddleware(request);
   
-  // Chỉ gán CSP cho các trang HTML để tránh lỗi reload trang khi fetch data ngầm (RSC)
+  // 2. Chỉ gán CSP cho các trang HTML thực thụ
+  // Tránh gán CSP vào các RSC payload (React Server Components) gây ra lỗi reload trang ngầm
   const contentType = response.headers.get('content-type');
   if (contentType?.includes('text/html')) {
     return withResponseCsp(response);
@@ -103,6 +119,16 @@ export default async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  // Bỏ qua tất cả các đường dẫn nội bộ và tệp tĩnh để tránh reload trang
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)']
+  // Matcher tối ưu: Chỉ chạy middleware cho các route thực tế, bỏ qua file tĩnh và api
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public files with extensions (svg, png, etc.)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)',
+  ],
 };

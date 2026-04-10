@@ -71,6 +71,7 @@ function resolveServerActionAllowedOrigins(origin: URL, hosts: string[]): string
 
 const nextConfig: NextConfig = {
  output: 'standalone',
+ trailingSlash: false,
   allowedDevOrigins: frontendHosts,
  poweredByHeader: false,
  async rewrites() {
