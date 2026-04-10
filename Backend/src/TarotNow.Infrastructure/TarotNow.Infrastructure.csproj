@@ -29,7 +29,7 @@
     <PackageReference Include="NeoSolve.ImageSharp.AVIF" Version="1.3.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.3" />
     <PackageReference Include="Otp.NET" Version="1.4.1" />
-    <PackageReference Include="MailKit" Version="4.4.0" />
+    <PackageReference Include="MailKit" Version="4.15.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
   </ItemGroup>
 

@@ -16,6 +16,7 @@ RUN dotnet publish Backend/src/TarotNow.Api/TarotNow.Api.csproj -c Release -o /a
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0-bookworm-slim AS runtime
 RUN apt-get update \
+    && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends ffmpeg ca-certificates wget \
     && rm -rf /var/lib/apt/lists/*
 

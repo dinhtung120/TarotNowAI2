@@ -33,7 +33,10 @@ concurrency:
   group: cd-main-3ec2-production
   cancel-in-progress: false
 
-# Tất cả actions đã native Node.js 24, không cần FORCE_JAVASCRIPT_ACTIONS_TO_NODE24
+# Một số action phụ thuộc (transitive) vẫn target Node.js 20
+# → giữ env này để ép chạy Node.js 24, tránh deprecation warning
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build-test:
@@ -93,6 +96,16 @@ jobs:
     needs: build-test
     outputs:
       sonar_quality_gate: ${{ steps.sonar_quality_gate.outputs.quality-gate-status }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # C# cần build để CodeQL phân tích → autobuild
+          - language: csharp
+            build-mode: autobuild
+          # JavaScript/TypeScript không cần build → none
+          - language: javascript-typescript
+            build-mode: none
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -102,27 +115,33 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
-          languages: csharp,javascript-typescript
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
 
+      # Chỉ chạy autobuild khi build-mode là autobuild (cho csharp)
       - name: CodeQL autobuild
+        if: matrix.build-mode == 'autobuild'
         uses: github/codeql-action/autobuild@v4
 
       - name: Analyze CodeQL
         uses: github/codeql-action/analyze@v4
         with:
-          category: "/language:multi"
+          category: "/language:${{ matrix.language }}"
 
+      # Sonar scan chỉ chạy 1 lần (ở matrix entry đầu tiên - csharp)
       - name: Sonar scan
-        uses: SonarSource/sonarqube-scan-action@v5
+        if: matrix.language == 'csharp'
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
         with:
           args: >
-            -Dsonar.organization=${{ secrets.SONAR_ORG }}
-            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
+            "-Dsonar.organization=${{ secrets.SONAR_ORG }}"
+            "-Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}"
 
       - name: Sonar quality gate
+        if: matrix.language == 'csharp'
         id: sonar_quality_gate
         uses: SonarSource/sonarqube-quality-gate-action@v1.2.0
         timeout-minutes: 10
@@ -226,7 +245,7 @@ jobs:
 
       - name: Download scan artifacts
         if: needs.security-scan.result == 'success' || needs.security-scan.result == 'failure'
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           name: trivy-reports
