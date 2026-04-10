@@ -1,5 +1,6 @@
 'use client';
 
+import { useLocale } from 'next-intl';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/store/authStore';
@@ -11,8 +12,9 @@ import type { UserMetadataDto } from '@/shared/application/actions/metadata';
 let metadataFetchInFlight = false;
 let metadataFetchCompleted = false;
 
-async function getInitialMetadataClient(): Promise<ActionResult<UserMetadataDto>> {
-  const response = await fetch('/api/user-context/metadata', {
+async function getInitialMetadataClient(locale: string): Promise<ActionResult<UserMetadataDto>> {
+  const url = `/${locale}/api/user-context/metadata`;
+  const response = await fetch(url, {
     method: 'GET',
     credentials: 'include',
     cache: 'no-store',
@@ -21,6 +23,7 @@ async function getInitialMetadataClient(): Promise<ActionResult<UserMetadataDto>
 }
 
 export function useInitialMetadata() {
+  const locale = useLocale();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const queryClient = useQueryClient();
   const setBalance = useWalletStore((state) => state.setBalance);
@@ -46,7 +49,7 @@ export function useInitialMetadata() {
     async function fetchMetadata() {
       metadataFetchInFlight = true;
       try {
-        const result = await getInitialMetadataClient();
+        const result = await getInitialMetadataClient(locale);
         
         if (result.success && result.data) {
           const { 

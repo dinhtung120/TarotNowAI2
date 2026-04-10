@@ -68,7 +68,7 @@ export function useAiStreamSession({
    isFollowup ? [...prev, { id: messageId, role: 'ai', content: '', isStreaming: true }] : [{ id: messageId, role: 'ai', content: '', isStreaming: true }]
   );
 
-  const baseUrl = `/api/reading/sessions/${sessionId}/stream?language=${encodeURIComponent(locale)}`;
+  const baseUrl = `/${locale}/api/reading/sessions/${sessionId}/stream?language=${encodeURIComponent(locale)}`;
   const finalUrl = customPrompt ? `${baseUrl}&followupQuestion=${encodeURIComponent(customPrompt)}` : baseUrl;
   eventSourceRef.current = new EventSource(finalUrl);
 
