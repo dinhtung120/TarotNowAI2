@@ -99,6 +99,13 @@ public static class ApiApplicationBuilderExtensions
             return;
         }
 
+        // Kiểm tra xem có bật chuyển hướng HTTPS từ cấu hình không.
+        // Mặc định là true nếu không cấu hình, nhưng có thể tắt qua env: SECURITY__HTTPSREDIRECTIONENABLED
+        if (!app.Configuration.GetValue<bool>("Security:HttpsRedirectionEnabled", true))
+        {
+            return;
+        }
+
         // Bỏ redirect cho health endpoint nội bộ để container healthcheck HTTP không bị false-negative.
         app.UseWhen(
             context => !context.Request.Path.StartsWithSegments("/api/v1/health", StringComparison.OrdinalIgnoreCase),
