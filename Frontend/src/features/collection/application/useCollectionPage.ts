@@ -10,7 +10,13 @@ export type CollectionSortOrder = 'id' | 'level' | 'atk' | 'def';
 
 export function useCollectionPage() {
   const [activeFilter, setActiveFilter] = useState<CollectionFilter>('all');
-  const [sortBy, setSortBy] = useState<CollectionSortOrder>('level'); 
+  /* 
+   * Trạng thái sortBy lưu trữ tiêu chí sắp xếp hiện tại của bộ sưu tập.
+   * Mặc định được thiết lập là 'id' để hiển thị các lá bài theo thứ tự số thứ tự gốc trong bộ bài Tarot.
+   * Trước đó giá trị này là 'level', nhưng đã được thay đổi theo yêu cầu người dùng
+   * để tạo ra cái nhìn nhất quán hơn khi bắt đầu vào trang.
+   */
+  const [sortBy, setSortBy] = useState<CollectionSortOrder>('id'); 
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
 
  const { data, isLoading, isFetching } = useQuery({

@@ -56,29 +56,48 @@ export function ReaderSettingsFormCard(props: ReaderSettingsFormCardProps) {
  const watchedSpecialties = useWatch({ control, name: 'specialties' }) ?? '';
  const watchedPrice = useWatch({ control, name: 'price' }) ?? 50;
 
- useEffect(() => {
-  setValue('bio', props.bioValue, { shouldDirty: false, shouldValidate: false });
- }, [props.bioValue, setValue]);
+  /* 
+   * Đồng bộ hóa từ prop vào form: chỉ thực hiện nếu giá trị prop khác với giá trị hiện tại trong form.
+   * Việc kiểm tra này giúp ngăn chặn vòng lặp cập nhật vô hạn.
+   */
+  useEffect(() => {
+    if (watchedBio !== props.bioValue) {
+      setValue('bio', props.bioValue, { shouldDirty: false, shouldValidate: false });
+    }
+  }, [props.bioValue, setValue, watchedBio]);
 
- useEffect(() => {
-  setValue('specialties', props.specialtiesValue, { shouldDirty: false, shouldValidate: false });
- }, [props.specialtiesValue, setValue]);
+  useEffect(() => {
+    if (watchedSpecialties !== props.specialtiesValue) {
+      setValue('specialties', props.specialtiesValue, { shouldDirty: false, shouldValidate: false });
+    }
+  }, [props.specialtiesValue, setValue, watchedSpecialties]);
 
- useEffect(() => {
-  setValue('price', props.priceValue, { shouldDirty: false, shouldValidate: false });
- }, [props.priceValue, setValue]);
+  useEffect(() => {
+    if (watchedPrice !== props.priceValue) {
+      setValue('price', props.priceValue, { shouldDirty: false, shouldValidate: false });
+    }
+  }, [props.priceValue, setValue, watchedPrice]);
 
- useEffect(() => {
-  onChangeBio(watchedBio);
- }, [onChangeBio, watchedBio]);
+  /* 
+   * Đồng bộ hóa từ form ra ngoài: chỉ thực hiện nếu giá trị form khác với giá trị trong prop.
+   */
+  useEffect(() => {
+    if (watchedBio !== props.bioValue) {
+      onChangeBio(watchedBio);
+    }
+  }, [onChangeBio, watchedBio, props.bioValue]);
 
- useEffect(() => {
-  onChangeSpecialties(watchedSpecialties);
- }, [onChangeSpecialties, watchedSpecialties]);
+  useEffect(() => {
+    if (watchedSpecialties !== props.specialtiesValue) {
+      onChangeSpecialties(watchedSpecialties);
+    }
+  }, [onChangeSpecialties, watchedSpecialties, props.specialtiesValue]);
 
- useEffect(() => {
-  onChangePrice(watchedPrice);
- }, [onChangePrice, watchedPrice]);
+  useEffect(() => {
+    if (watchedPrice !== props.priceValue) {
+      onChangePrice(watchedPrice);
+    }
+  }, [onChangePrice, watchedPrice, props.priceValue]);
 
  const submitWithValidation = handleSubmit(() => {
   onSubmit({

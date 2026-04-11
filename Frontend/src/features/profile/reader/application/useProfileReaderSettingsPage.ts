@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from '@/i18n/routing';
 import { useAuthStore } from '@/store/authStore';
@@ -89,48 +89,73 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
   () => draft ?? toDraft(profileQuery.data),
   [draft, profileQuery.data]
  );
- const updateDraft = (updater: (current: ReaderSettingsDraft) => ReaderSettingsDraft) => {
-  setDraft((prev) => updater(prev ?? toDraft(profileQuery.data)));
- };
- const setBioVi = (value: string) => {
-  updateDraft((current) => ({ ...current, bioVi: value }));
- };
- const setDiamondPerQuestion = (value: number) => {
-  updateDraft((current) => ({ ...current, diamondPerQuestion: value }));
- };
- const setSpecialtiesStr = (value: string) => {
-  updateDraft((current) => ({ ...current, specialtiesStr: value }));
- };
- const handleSave = async (event: FormEvent) => {
-  event.preventDefault();
-  const specArray = effectiveValues.specialtiesStr
-   .split(',')
-   .map((item) => item.trim())
-   .filter((item) => item.length > 0);
-  const result = await saveMutation.mutateAsync({
-   bioVi: effectiveValues.bioVi,
-   diamondPerQuestion: effectiveValues.diamondPerQuestion,
-   specialties: specArray,
-  });
-  if (result.success) {
-   toast.success(t('reader.toast_save_success'), { style: SUCCESS_TOAST_STYLE });
-   setDraft(null);
-  } else {
-   toast.error(t('reader.toast_save_fail'), { style: DANGER_TOAST_STYLE });
-  }
- };
- const handleStatusChange = async (newStatus: ReaderStatus) => {
-  const previousStatus = effectiveValues.status;
-  updateDraft((current) => ({ ...current, status: newStatus }));
-  const result = await statusMutation.mutateAsync(newStatus);
-  if (result.success) {
-   await queryClient.invalidateQueries({ queryKey: ['reader-profile-settings', user?.id] });
-   toast.success(t('reader.toast_status_updated'), { style: SUCCESS_TOAST_STYLE });
-  } else {
-   updateDraft((current) => ({ ...current, status: previousStatus }));
-   toast.error(t('reader.toast_status_update_fail'), { style: DANGER_TOAST_STYLE });
-  }
- };
+  /* 
+   * Hàm updateDraft được memoize để tránh việc tạo ra hàm mới khi render.
+   * Nó phụ thuộc vào dữ liệu profile hiện tại từ query.
+   */
+  const updateDraft = useCallback((updater: (current: ReaderSettingsDraft) => ReaderSettingsDraft) => {
+    setDraft((prev) => updater(prev ?? toDraft(profileQuery.data)));
+  }, [profileQuery.data]);
+
+  /* 
+   * Các hàm setter cho từng trường thông tin được memoize bằng useCallback.
+   * Việc này cực kỳ quan trọng để tránh vòng lặp re-render với các component con 
+   * sử dụng các hàm này trong useEffect.
+   */
+  const setBioVi = useCallback((value: string) => {
+    updateDraft((current) => ({ ...current, bioVi: value }));
+  }, [updateDraft]);
+
+  const setDiamondPerQuestion = useCallback((value: number) => {
+    updateDraft((current) => ({ ...current, diamondPerQuestion: value }));
+  }, [updateDraft]);
+
+  const setSpecialtiesStr = useCallback((value: string) => {
+    updateDraft((current) => ({ ...current, specialtiesStr: value }));
+  }, [updateDraft]);
+  /* 
+   * handleSave thực hiện việc lưu toàn bộ thông tin Draft lên server.
+   * Được memoize để tránh thay đổi tham chiếu hàm.
+   */
+  const handleSave = useCallback(async (event: FormEvent) => {
+    event.preventDefault();
+    const specArray = effectiveValues.specialtiesStr
+      .split(',')
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
+    
+    const result = await saveMutation.mutateAsync({
+      bioVi: effectiveValues.bioVi,
+      diamondPerQuestion: effectiveValues.diamondPerQuestion,
+      specialties: specArray,
+    });
+    
+    if (result.success) {
+      toast.success(t('reader.toast_save_success'), { style: SUCCESS_TOAST_STYLE });
+      setDraft(null);
+    } else {
+      toast.error(t('reader.toast_save_fail'), { style: DANGER_TOAST_STYLE });
+    }
+  }, [effectiveValues, saveMutation, t]);
+
+  /* 
+   * handleStatusChange thực hiện việc thay đổi trạng thái hoạt động của Reader.
+   * Có cơ chế rollback nếu cập nhật thất bại.
+   */
+  const handleStatusChange = useCallback(async (newStatus: ReaderStatus) => {
+    const previousStatus = effectiveValues.status;
+    updateDraft((current) => ({ ...current, status: newStatus }));
+    
+    const result = await statusMutation.mutateAsync(newStatus);
+    
+    if (result.success) {
+      await queryClient.invalidateQueries({ queryKey: ['reader-profile-settings', user?.id] });
+      toast.success(t('reader.toast_status_updated'), { style: SUCCESS_TOAST_STYLE });
+    } else {
+      updateDraft((current) => ({ ...current, status: previousStatus }));
+      toast.error(t('reader.toast_status_update_fail'), { style: DANGER_TOAST_STYLE });
+    }
+  }, [effectiveValues.status, updateDraft, statusMutation, queryClient, user?.id, t]);
  return {
   loading: profileQuery.isLoading || profileQuery.isFetching,
   saving: saveMutation.isPending || statusMutation.isPending,
