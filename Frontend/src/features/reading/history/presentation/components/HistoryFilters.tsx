@@ -31,8 +31,8 @@ export function HistoryFilters({
      className={cn('appearance-none tn-field tn-field-accent rounded-xl px-4 py-2.5 pr-10 tn-text-11 font-black uppercase tracking-widest tn-text-secondary cursor-pointer min-h-11')}
     >
      <option value="all" className={cn('tn-surface')}>{labels.all}</option>
-     <option value="Daily1Card" className={cn('tn-surface')}>{labels.daily}</option>
-     <option value="PastPresentFuture" className={cn('tn-surface')}>{labels.spread3}</option>
+     <option value="daily_1" className={cn('tn-surface')}>{labels.daily}</option>
+     <option value="spread_3" className={cn('tn-surface')}>{labels.spread3}</option>
      <option value="spread_5" className={cn('tn-surface')}>{labels.spread5}</option>
      <option value="spread_10" className={cn('tn-surface')}>{labels.spread10}</option>
     </select>

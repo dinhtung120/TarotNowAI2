@@ -14,6 +14,12 @@ public class GetReadingHistoryQuery : IRequest<GetReadingHistoryResponse>
 
     // Kích thước trang.
     public int PageSize { get; set; } = 10;
+
+    // Loại trải bài cần lọc (tùy chọn).
+    public string? SpreadType { get; set; }
+
+    // Ngày trải bài cần lọc (tùy chọn).
+    public DateTime? Date { get; set; }
 }
 
 // DTO kết quả lịch sử reading theo phân trang.
@@ -75,6 +81,8 @@ public class GetReadingHistoryQueryHandler : IRequestHandler<GetReadingHistoryQu
             request.UserId,
             request.Page,
             request.PageSize,
+            request.SpreadType,
+            request.Date,
             cancellationToken);
 
         var dtos = items.Select(s => new ReadingSessionDto

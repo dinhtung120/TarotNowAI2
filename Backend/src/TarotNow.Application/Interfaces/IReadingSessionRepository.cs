@@ -36,11 +36,16 @@ public interface IReadingSessionRepository
     Task<bool> HasDrawnDailyCardAsync(Guid userId, DateTime utcNow, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Lấy lịch sử phiên đọc bài của người dùng có phân trang.
-    /// Luồng xử lý: lọc theo userId, áp page/pageSize và trả items cùng tổng số.
+    /// Lấy lịch sử phiên đọc bài của người dùng có phân trang và bộ lọc.
+    /// Luồng xử lý: lọc theo userId, spreadType, date, áp page/pageSize và trả items cùng tổng số.
     /// </summary>
     Task<(IEnumerable<ReadingSession> Items, int TotalCount)> GetSessionsByUserIdAsync(
-        Guid userId, int page, int pageSize, CancellationToken cancellationToken = default);
+        Guid userId, 
+        int page, 
+        int pageSize, 
+        string? spreadType = null,
+        DateTime? date = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Lấy phiên đọc bài kèm các AI request liên quan để tra cứu luồng sinh nội dung.

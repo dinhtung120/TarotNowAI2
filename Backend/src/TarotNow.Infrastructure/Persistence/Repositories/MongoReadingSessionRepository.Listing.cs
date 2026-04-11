@@ -15,14 +15,32 @@ public partial class MongoReadingSessionRepository
         Guid userId,
         int page,
         int pageSize,
+        string? spreadType = null,
+        DateTime? date = null,
         CancellationToken cancellationToken = default)
     {
         var normalizedPage = page < 1 ? 1 : page;
         var normalizedPageSize = pageSize <= 0 ? 10 : Math.Min(pageSize, 200);
         // Mặc định 10 bản ghi phù hợp màn history người dùng.
 
-        var filter = Builders<ReadingSessionDocument>.Filter.Eq(r => r.UserId, userId.ToString())
-            & Builders<ReadingSessionDocument>.Filter.Eq(r => r.IsDeleted, false);
+        var builder = Builders<ReadingSessionDocument>.Filter;
+        var filter = builder.Eq(r => r.UserId, userId.ToString())
+            & builder.Eq(r => r.IsDeleted, false);
+
+        // Lọc theo loại trải bài nếu có yêu cầu (khác 'all').
+        if (!string.IsNullOrWhiteSpace(spreadType) && spreadType != "all")
+        {
+            filter &= builder.Eq(r => r.SpreadType, spreadType);
+        }
+
+        // Lọc theo ngày trải bài nếu có yêu cầu. 
+        // Logic: Lấy toàn bộ bản ghi từ 00:00:00 đến 23:59:59 của ngày được chọn.
+        if (date.HasValue)
+        {
+            var dayStart = date.Value.Date;
+            var dayEnd = dayStart.AddDays(1).AddTicks(-1);
+            filter &= builder.Gte(r => r.CreatedAt, dayStart) & builder.Lte(r => r.CreatedAt, dayEnd);
+        }
 
         var totalCount = await _mongoContext.ReadingSessions.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
         var docs = await QueryPagedAsync(filter, normalizedPage, normalizedPageSize, cancellationToken);

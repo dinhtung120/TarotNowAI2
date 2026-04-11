@@ -38,11 +38,17 @@ public class HistoryController : ControllerBase
     /// </summary>
     /// <param name="page">Trang hiện tại.</param>
     /// <param name="pageSize">Số bản ghi mỗi trang.</param>
+    /// <param name="spreadType">Lọc theo loại trải bài (tùy chọn).</param>
+    /// <param name="date">Lọc theo ngày trải bài (tùy chọn).</param>
     /// <returns>Dữ liệu lịch sử reading session.</returns>
     [HttpGet("sessions")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GetReadingHistoryResponse))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetSessions([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetSessions(
+        [FromQuery] int page = 1, 
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? spreadType = null,
+        [FromQuery] DateTime? date = null)
     {
         var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (!Guid.TryParse(userIdStr, out var userId))
@@ -58,7 +64,10 @@ public class HistoryController : ControllerBase
             Page = page > 0 ? page : 1,
 
             // Giới hạn page size để bảo vệ hiệu năng endpoint.
-            PageSize = pageSize is > 0 and <= 50 ? pageSize : 10
+            PageSize = pageSize is > 0 and <= 50 ? pageSize : 10,
+            
+            SpreadType = spreadType,
+            Date = date
         };
 
         var result = await _mediator.Send(query);
