@@ -116,7 +116,12 @@ const nextConfig: NextConfig = {
   experimental: {
    serverActions: {
     allowedOrigins: serverActionAllowedOrigins,
-    bodySizeLimit: 10485760, 
+    bodySizeLimit: 10485760,
+   },
+   // Next 16 mặc định dynamic:0 — mọi refetch RSC; prod RTT cao làm loading.tsx lộ rõ. 60s giữ client router cache.
+   staleTimes: {
+    dynamic: 60,
+    static: 300,
    },
   },
 };
