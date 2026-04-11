@@ -35,9 +35,8 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
         var user = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
         if (user == null)
         {
-            // Ném lỗi NotFound để thông báo cho người dùng email không có trong hệ thống
-            // Lưu ý: Điều này có thể gây lộ thông tin account (email enumeration) nhưng đáp ứng yêu cầu trải nghiệm.
-            throw new TarotNow.Application.Exceptions.NotFoundException("Email không tồn tại trong hệ thống.");
+            // Trả true ngay cả khi email không tồn tại để tránh lộ thông tin account (email enumeration).
+            return true;
         }
 
         // Sinh OTP 6 chữ số ngẫu nhiên cho luồng reset password.

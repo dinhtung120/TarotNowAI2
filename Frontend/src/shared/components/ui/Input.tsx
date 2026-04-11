@@ -17,7 +17,7 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, CombinedProps>(
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setIsValueEmpty(e.target.value === '');
-    if (onChange) onChange(e);
+    if (onChange) (onChange as any)(e);
   };
 
   // Logic: Chỉ hiển thị viền đỏ nếu có lỗi và ô KHÔNG trống

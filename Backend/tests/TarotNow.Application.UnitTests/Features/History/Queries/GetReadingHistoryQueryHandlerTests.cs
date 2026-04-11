@@ -6,6 +6,7 @@ using TarotNow.Application.Features.History.Queries.GetReadingHistory;
 using TarotNow.Domain.Entities;
 using TarotNow.Application.Interfaces;
 using Xunit;
+using System.Threading;
 
 namespace TarotNow.Application.UnitTests.Features.History.Queries;
 
@@ -44,7 +45,7 @@ public class GetReadingHistoryQueryHandlerTests
         var session2 = new ReadingSession(userId.ToString(), "Daily1Card");
         var sessions = new List<ReadingSession> { session1, session2 };
 
-        _mockSessionRepository.Setup(r => r.GetSessionsByUserIdAsync(userId, 1, 10, default))
+        _mockSessionRepository.Setup(r => r.GetSessionsByUserIdAsync(userId, 1, 10, It.IsAny<string?>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(((IEnumerable<ReadingSession>)sessions, 2));
 
         // Gọi handler và assert metadata phân trang cùng danh sách item.
@@ -70,7 +71,7 @@ public class GetReadingHistoryQueryHandlerTests
         var userId = Guid.NewGuid();
         var query = new GetReadingHistoryQuery { UserId = userId, Page = 1, PageSize = 10 };
 
-        _mockSessionRepository.Setup(r => r.GetSessionsByUserIdAsync(userId, 1, 10, default))
+        _mockSessionRepository.Setup(r => r.GetSessionsByUserIdAsync(userId, 1, 10, It.IsAny<string?>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(((IEnumerable<ReadingSession>)new List<ReadingSession>(), 0));
 
         var result = await _handler.Handle(query, CancellationToken.None);
