@@ -16,15 +16,17 @@ export default function ForgotPasswordPage() {
     success,
     register,
     handleSubmit,
+    getValues,
     errors,
     isSubmitting,
     onSubmit,
   } = useForgotPasswordPage();
 
   if (success) {
+    const email = getValues("email");
     return (
       <AuthSuccessCard
-        ctaHref="/reset-password"
+        ctaHref={`/reset-password?email=${encodeURIComponent(email || "")}`}
         ctaLabel={t("forgot.success_cta")}
         description={t("forgot.success_desc")}
         glowClass="bg-sky-500/20"

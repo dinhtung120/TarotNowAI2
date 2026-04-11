@@ -20,9 +20,12 @@ export function useForgotPasswordPage() {
  const {
   register,
   handleSubmit,
+  getValues,
   formState: { errors, isSubmitting },
  } = useForm<ForgotPasswordFormValues>({
   resolver: zodResolver(forgotPasswordSchema),
+  mode: 'onBlur',
+  reValidateMode: 'onBlur',
  });
 
  const onSubmit = async (data: ForgotPasswordFormValues) => {
@@ -47,6 +50,7 @@ export function useForgotPasswordPage() {
   success,
   register,
   handleSubmit,
+  getValues,
   errors,
   isSubmitting,
   onSubmit,
