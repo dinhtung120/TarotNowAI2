@@ -6,6 +6,7 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
   hint?: string;
   label?: string;
   leftIcon?: ReactNode;
+  rightElement?: ReactNode;
 }
 
 export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
@@ -15,6 +16,7 @@ export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElemen
   isTextarea: true;
   label?: string;
   leftIcon?: ReactNode;
+  rightElement?: ReactNode;
 }
 
 export type CombinedProps = (InputProps & { isTextarea?: false }) | TextareaProps;

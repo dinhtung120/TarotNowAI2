@@ -7,63 +7,76 @@ import { useTranslations } from 'next-intl';
 import { registerAction, resendVerificationEmailAction } from '@/features/auth/application/actions';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import {
- createRegisterSchema,
- type RegisterFormValues,
+  createRegisterSchema,
+  type RegisterFormValues,
 } from '@/features/auth/domain/schemas';
 
+/**
+ * Hook quản lý logic cho trang Đăng ký
+ * Sử dụng react-hook-form kết hợp với zod để validation
+ */
 export function useRegisterPage() {
- const t = useTranslations('Auth');
- const [errorMsg, setErrorMsg] = useState('');
- const [success, setSuccess] = useState(false);
+  const t = useTranslations('Auth');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [success, setSuccess] = useState(false);
 
- const registerSchema = useMemo(() => createRegisterSchema(t), [t]);
+  // Tạo schema validation dựa trên ngôn ngữ hiện tại
+  const registerSchema = useMemo(() => createRegisterSchema(t), [t]);
 
- const {
-  register,
-  handleSubmit,
-  formState: { errors, isSubmitting },
- } = useForm<RegisterFormValues>({
-  resolver: zodResolver(registerSchema),
- });
+  // Khởi tạo form với các phương thức cần thiết
+  const methods = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onBlur',
+  });
 
- const onSubmit = async (data: RegisterFormValues) => {
-  setErrorMsg('');
+  const {
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = methods;
 
-  try {
-   const submitData = {
-    email: data.email,
-    username: data.username,
-    password: data.password,
-    displayName: data.displayName,
-    dateOfBirth: data.dateOfBirth,
-    hasConsented: data.hasConsented,
-   };
+  /**
+   * Xử lý gửi form đăng ký
+   */
+  const onSubmit = async (data: RegisterFormValues) => {
+    setErrorMsg('');
 
-   const result = await registerAction(submitData);
-   if (result.error) {
-    setErrorMsg(result.error);
-    return;
-   }
+    try {
+      const submitData = {
+        email: data.email,
+        username: data.username,
+        password: data.password,
+        displayName: data.displayName,
+        dateOfBirth: data.dateOfBirth,
+        hasConsented: data.hasConsented,
+      };
 
-   if (result.success) {
-    setSuccess(true);
-    void resendVerificationEmailAction(data.email).catch((error) => {
-     logger.error('[Auth] resendVerificationEmailAction', error, { email: data.email });
-    });
-   }
-  } catch {
-   setErrorMsg(t('register.error_unexpected'));
-  }
- };
+      const result = await registerAction(submitData);
+      if (result.error) {
+        setErrorMsg(result.error);
+        return;
+      }
 
- return {
-  t,
-  errorMsg,
-  success,
-  register,
-  handleSubmit,
-  errors,
-  isSubmitting,
-  onSubmit,
- };
+      if (result.success) {
+        setSuccess(true);
+        // Tự động gửi email xác thực sau khi đăng ký thành công
+        void resendVerificationEmailAction(data.email).catch((error) => {
+          logger.error('[Auth] resendVerificationEmailAction', error, { email: data.email });
+        });
+      }
+    } catch {
+      setErrorMsg(t('register.error_unexpected'));
+    }
+  };
+
+  return {
+    t,
+    errorMsg,
+    success,
+    methods, // Trả về toàn bộ object của useForm để dùng với FormProvider
+    handleSubmit,
+    errors,
+    isSubmitting,
+    onSubmit,
+  };
 }

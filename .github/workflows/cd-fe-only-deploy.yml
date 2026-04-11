@@ -4,6 +4,11 @@
 name: CD Frontend Only
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "Frontend/**"
+      - ".github/workflows/cd-fe-only-deploy.yml"
   workflow_dispatch:
     inputs:
       dry_run:

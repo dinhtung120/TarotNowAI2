@@ -50,34 +50,51 @@ export function createLoginSchema(t: AuthTranslator) {
 }
 
 export function createRegisterSchema(t: AuthTranslator) {
- return z
-  .object({
-   email: z.string().email(t('validation.email_invalid')),
-   username: z
-    .string()
-    .min(3, t('validation.username_min'))
-    .regex(USERNAME_REGEX, t('validation.username_pattern')),
-   password: z
-    .string()
-    .min(8, t('validation.password_min'))
-    .regex(PASSWORD_COMPLEXITY_REGEX, t('validation.password_complexity')),
-   confirmPassword: z.string(),
-   displayName: z.string().min(1, t('validation.display_name_required')),
-   dateOfBirth: z.string().refine(
-    (date) => {
-     const age = (Date.now() - new Date(date).getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-     return age >= 16;
-    },
-    t('validation.age_minimum')
-   ),
-   hasConsented: z.boolean().refine((value) => value === true, {
-    message: t('validation.must_accept_terms'),
-   }),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-   message: t('validation.passwords_no_match'),
-   path: ['confirmPassword'],
-  });
+  return z
+    .object({
+      email: z.string().email(t('validation.email_invalid')).max(100),
+      username: z
+        .string()
+        .min(3, t('validation.username_min'))
+        .max(32)
+        .regex(USERNAME_REGEX, t('validation.username_pattern')),
+      password: z
+        .string()
+        .min(8, t('validation.password_min'))
+        .max(100)
+        .regex(PASSWORD_COMPLEXITY_REGEX, t('validation.password_complexity')),
+      confirmPassword: z.string().max(100),
+      displayName: z.string().min(1, t('validation.display_name_required')).max(50),
+      dateOfBirth: z.string().refine(
+        (date) => {
+          if (!date) return false;
+          const d = new Date(date);
+          if (isNaN(d.getTime())) return false;
+
+          // Kiểm tra xem ngày có thực sự tồn tại không (Ví dụ tránh 31/02)
+          const parts = date.split('-');
+          if (parts.length !== 3) return false;
+          const y = parseInt(parts[0], 10);
+          const m = parseInt(parts[1], 10);
+          const day = parseInt(parts[2], 10);
+          
+          if (d.getUTCFullYear() !== y || (d.getUTCMonth() + 1) !== m || d.getUTCDate() !== day) {
+            return false;
+          }
+
+          const age = (Date.now() - d.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+          return age >= 16;
+        },
+        t('validation.age_minimum')
+      ),
+      hasConsented: z.boolean().refine((value) => value === true, {
+        message: t('validation.must_accept_terms'),
+      }),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t('validation.passwords_no_match'),
+      path: ['confirmPassword'],
+    });
 }
 
 export function createVerifyEmailSchema(t: AuthTranslator) {
