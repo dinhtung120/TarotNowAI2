@@ -44,6 +44,48 @@ const clearAuthCookies = (response: NextResponse | Response) => {
   }
 };
 
+const hasFileExtension = (pathname: string): boolean => {
+  const lastSegment = pathname.split('/').pop() ?? '';
+  return lastSegment.includes('.');
+};
+
+const isApiPath = (pathname: string): boolean =>
+  pathname.startsWith('/api/') || /^\/[a-z]{2}(?:-[A-Z]{2})?\/api(?:\/|$)/.test(pathname);
+
+const isPrefetchRequest = (request: NextRequest): boolean => {
+  const purposeHeader = request.headers.get('purpose') ?? request.headers.get('sec-purpose') ?? '';
+  return purposeHeader.includes('prefetch') || request.headers.has('next-router-prefetch');
+};
+
+const isFlightRequest = (request: NextRequest): boolean => {
+  const accept = request.headers.get('accept') ?? '';
+  return (
+    request.nextUrl.searchParams.has('_rsc') ||
+    request.headers.has('rsc') ||
+    request.headers.has('next-router-state-tree') ||
+    request.headers.has('x-nextjs-data') ||
+    accept.includes('text/x-component')
+  );
+};
+
+const shouldBypassProxy = (request: NextRequest): boolean => {
+  const { pathname } = request.nextUrl;
+  return (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/_vercel') ||
+    pathname === '/favicon.ico' ||
+    isApiPath(pathname) ||
+    hasFileExtension(pathname) ||
+    isPrefetchRequest(request) ||
+    isFlightRequest(request)
+  );
+};
+
+const isDocumentRequest = (request: NextRequest): boolean => {
+  const accept = request.headers.get('accept') ?? '';
+  return accept.includes('text/html') && !isFlightRequest(request) && !isPrefetchRequest(request);
+};
+
 const buildContentSecurityPolicy = (): string => {
   const apiOrigin = getPublicApiOrigin().replace(/\/+$/, '');
   
@@ -79,17 +121,9 @@ const withResponseCsp = (response: NextResponse): NextResponse => {
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Bypass hoàn toàn các request nội bộ của Next.js để tránh vỡ SPA
-  // Bao gồm: _next/static, _next/image, favicon, và các file có phần mở rộng (static assets)
-  // Đặc biệt: Kiểm tra các header đặc thù của Next.js App Router (RSC, Prefetch)
-  const isNextInternal = 
-    pathname.startsWith('/_next') || 
-    pathname.includes('/api/') ||
-    pathname.includes('.') ||
-    request.headers.has('x-nextjs-data') ||
-    request.headers.get('purpose') === 'prefetch';
-
-  if (isNextInternal) {
+  // Không can thiệp vào luồng nội bộ của App Router (RSC/prefetch/static/api),
+  // nếu không Next có thể fallback sang hard navigation.
+  if (shouldBypassProxy(request)) {
     return NextResponse.next();
   }
 
@@ -97,7 +131,7 @@ export default async function proxy(request: NextRequest) {
   const pathWithoutLocale = stripLocalePrefix(pathname);
 
   const isProtectedRoute = PROTECTED_PREFIXES.some((p) => matchesPrefix(pathWithoutLocale, p));
-  const token = request.cookies.get("accessToken")?.value;
+  const token = isProtectedRoute ? request.cookies.get("accessToken")?.value : undefined;
 
   if (isProtectedRoute && !token) {
     const loginUrl = new URL(`/${locale}/login`, request.url);
@@ -108,10 +142,8 @@ export default async function proxy(request: NextRequest) {
 
   const response = intlMiddleware(request);
   
-  // 2. Chỉ gán CSP cho các trang HTML thực thụ
-  // Tránh gán CSP vào các RSC payload (React Server Components) gây ra lỗi reload trang ngầm
-  const contentType = response.headers.get('content-type');
-  if (contentType?.includes('text/html')) {
+  // Chỉ gán CSP cho request tài liệu HTML; không chạm vào flight/prefetch payload.
+  if (isDocumentRequest(request)) {
     return withResponseCsp(response);
   }
 
@@ -129,6 +161,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public files with extensions (svg, png, etc.)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)',
+    '/((?!api|_next|_vercel|favicon.ico|.*\\..*).*)',
   ],
 };
