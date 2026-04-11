@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { CHECKIN_QUERY_KEYS } from '@/features/checkin/application/hooks';
+import { checkinQueryKeys } from '@/features/checkin/domain/checkinQueryKeys';
 import type { StreamMessage } from './types';
 
 interface UseAiStreamSessionOptions {
@@ -83,7 +83,7 @@ export function useAiStreamSession({
      if (last && last.role === 'ai') last.isStreaming = false;
      return next;
     });
-    queryClient.invalidateQueries({ queryKey: CHECKIN_QUERY_KEYS.streakStatus });
+    queryClient.invalidateQueries({ queryKey: checkinQueryKeys.streakStatus });
     if (onComplete && !isFollowup) onComplete();
     return;
    }

@@ -1,1 +1,13 @@
-export { default } from '@/features/profile/presentation/ProfilePage';
+import ProfilePage from '@/features/profile/presentation/ProfilePage';
+import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
+import { prefetchProfilePage } from '@/shared/server/prefetch/runners';
+
+export default async function ProfileRoutePage() {
+ const state = await dehydrateAppQueries(prefetchProfilePage);
+
+ return (
+  <AppQueryHydrationBoundary state={state}>
+   <ProfilePage />
+  </AppQueryHydrationBoundary>
+ );
+}

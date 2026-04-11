@@ -1,10 +1,18 @@
+import dynamic from "next/dynamic";
 import { getTranslations } from "next-intl/server";
-import AchievementsGrid from "@/features/gamification/components/AchievementsGrid";
-import GamificationStatsBar from "@/features/gamification/components/GamificationStatsBar";
-import QuestsPanel from "@/features/gamification/components/QuestsPanel";
-import TitleSelector from "@/features/gamification/components/TitleSelector";
 import { Gamepad2 } from "lucide-react";
+
+const GamificationStatsBar = dynamic(() =>
+ import("@/features/gamification/components/GamificationStatsBar").then((m) => m.default)
+);
+const QuestsPanel = dynamic(() => import("@/features/gamification/components/QuestsPanel").then((m) => m.default));
+const TitleSelector = dynamic(() => import("@/features/gamification/components/TitleSelector").then((m) => m.default));
+const AchievementsGrid = dynamic(() =>
+ import("@/features/gamification/components/AchievementsGrid").then((m) => m.default)
+);
 import { cn } from "@/lib/utils";
+import { AppQueryHydrationBoundary, dehydrateAppQueries } from "@/shared/server/prefetch/appQueryDehydrate";
+import { prefetchGamificationHubPage } from "@/shared/server/prefetch/runners";
 import { generateGamificationMetadata } from "./metadata";
 
 export { generateGamificationMetadata as generateMetadata };
@@ -89,44 +97,47 @@ const pageClasses = {
 
 export default async function GamificationPage() {
   const t = await getTranslations("Gamification");
+  const state = await dehydrateAppQueries(prefetchGamificationHubPage);
 
   return (
-    <div className={cn(pageClasses.root)}>
-      <div className={cn(pageClasses.glowTop)} />
-      <div className={cn(pageClasses.glowLeft)} />
-      <div className={cn(pageClasses.glowRight)} />
+    <AppQueryHydrationBoundary state={state}>
+      <div className={cn(pageClasses.root)}>
+        <div className={cn(pageClasses.glowTop)} />
+        <div className={cn(pageClasses.glowLeft)} />
+        <div className={cn(pageClasses.glowRight)} />
 
-      <main className={cn(pageClasses.main)}>
-        <header className={cn(pageClasses.header)}>
-          <div className={cn(pageClasses.iconWrap)}>
-            <Gamepad2 className={cn("h-10", "w-10", "text-white")} />
+        <main className={cn(pageClasses.main)}>
+          <header className={cn(pageClasses.header)}>
+            <div className={cn(pageClasses.iconWrap)}>
+              <Gamepad2 className={cn("h-10", "w-10", "text-white")} />
+            </div>
+            <div>
+              <h1 className={cn(pageClasses.title)}>
+                {t("GamificationMetaTitle")}
+              </h1>
+              <p className={cn(pageClasses.desc)}>
+                {t("GamificationMetaDesc")}
+              </p>
+            </div>
+          </header>
+
+          <GamificationStatsBar />
+
+          <div className={cn(pageClasses.contentLayout)}>
+            <section className={cn(pageClasses.sectionCard)}>
+              <QuestsPanel />
+            </section>
+
+            <section>
+              <TitleSelector />
+            </section>
+
+            <section className={cn(pageClasses.sectionCard)}>
+              <AchievementsGrid />
+            </section>
           </div>
-          <div>
-            <h1 className={cn(pageClasses.title)}>
-              {t("GamificationMetaTitle")}
-            </h1>
-            <p className={cn(pageClasses.desc)}>
-              {t("GamificationMetaDesc")}
-            </p>
-          </div>
-        </header>
-
-        <GamificationStatsBar />
-
-        <div className={cn(pageClasses.contentLayout)}>
-          <section className={cn(pageClasses.sectionCard)}>
-            <QuestsPanel />
-          </section>
-
-          <section>
-            <TitleSelector />
-          </section>
-
-          <section className={cn(pageClasses.sectionCard)}>
-            <AchievementsGrid />
-          </section>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </AppQueryHydrationBoundary>
   );
 }

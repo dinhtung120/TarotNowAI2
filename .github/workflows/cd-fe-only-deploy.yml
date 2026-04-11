@@ -1,0 +1,253 @@
+# Chỉ build, đẩy image và triển khai Frontend (không chạm Backend / DB / migration).
+# Dùng khi chỉ thay đổi FE hoặc muốn deploy FE nhanh; bật thủ công qua workflow_dispatch.
+
+name: CD Frontend Only
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Chỉ build/test và build image, không deploy production"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  packages: write
+  actions: read
+
+concurrency:
+  group: cd-fe-only-deploy-production
+  cancel-in-progress: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build-test-fe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout mã nguồn
+        uses: actions/checkout@v6
+
+      - name: Thiết lập Node.js 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: Frontend/package-lock.json
+
+      - name: Cài đặt dependencies Frontend
+        working-directory: Frontend
+        run: npm ci
+
+      - name: Build Frontend
+        working-directory: Frontend
+        env:
+          NEXT_PUBLIC_API_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:5037' }}/api/v1
+          NEXT_PUBLIC_BASE_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }}
+          NEXTAUTH_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }}
+          NODE_TLS_REJECT_UNAUTHORIZED: "1"
+        run: npm run build
+
+      - name: Chạy Unit Test Frontend
+        working-directory: Frontend
+        env:
+          NEXT_PUBLIC_API_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:5037' }}/api/v1
+          NEXT_PUBLIC_BASE_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }}
+          NEXTAUTH_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }}
+          NODE_TLS_REJECT_UNAUTHORIZED: "1"
+        run: npm test
+
+  publish-frontend-image:
+    runs-on: ubuntu-latest
+    needs: [build-test-fe]
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run != true }}
+    outputs:
+      frontend_image_ref: ${{ steps.refs.outputs.frontend_image_ref }}
+      frontend_latest_ref: ${{ steps.refs.outputs.frontend_latest_ref }}
+    steps:
+      - name: Checkout mã nguồn
+        uses: actions/checkout@v6
+
+      - name: Chuẩn bị tag Docker image Frontend
+        id: refs
+        run: |
+          repo_lower=$(echo "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')
+          frontend_image_ref="ghcr.io/${repo_lower}-frontend:${GITHUB_SHA}"
+          frontend_latest_ref="ghcr.io/${repo_lower}-frontend:main-latest"
+          echo "frontend_image_ref=$frontend_image_ref" >> "$GITHUB_OUTPUT"
+          echo "frontend_latest_ref=$frontend_latest_ref" >> "$GITHUB_OUTPUT"
+
+      - name: Đăng nhập vào GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build và Push image Frontend
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_API_URL=${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:5037' }}/api/v1 \
+            --build-arg NEXT_PUBLIC_BASE_URL=${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }} \
+            --build-arg NEXTAUTH_URL=${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }} \
+            -f Frontend/Dockerfile \
+            -t "${{ steps.refs.outputs.frontend_image_ref }}" \
+            -t "${{ steps.refs.outputs.frontend_latest_ref }}" \
+            .
+          docker push "${{ steps.refs.outputs.frontend_image_ref }}"
+          docker push "${{ steps.refs.outputs.frontend_latest_ref }}"
+
+  deploy-fe:
+    runs-on: [self-hosted, aws-prod-runner]
+    needs: [publish-frontend-image]
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run != true }}
+    steps:
+      - name: Cấu hình SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ci_deploy_key
+          chmod 600 ~/.ssh/id_ci_deploy_key
+          printf '%s\n' "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Triển khai trên Frontend Host
+        env:
+          PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
+          PROD_FE_HOST: ${{ secrets.PROD_FE_HOST }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN_READ: ${{ secrets.GHCR_TOKEN_READ }}
+          REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+          FRONTEND_IMAGE_REF: ${{ needs.publish-frontend-image.outputs.frontend_image_ref }}
+          DEPLOY_SHA: ${{ github.sha }}
+          BE_PRIVATE_IP: ${{ secrets.PROD_BE_PRIVATE_IP }}
+          DB_PRIVATE_IP: ${{ secrets.PROD_DB_PRIVATE_IP }}
+          PUBLIC_BASE_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }}
+          NEXT_PUBLIC_API_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:5037' }}/api/v1
+          FORWARDED_NETWORK_0: "172.30.0.0/16"
+        run: |
+          ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
+          set -euo pipefail
+          REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
+          cd "\$REPO_PATH"
+          git config --global --add safe.directory "\$REPO_PATH"
+          git fetch origin
+          git checkout "${DEPLOY_SHA}"
+          git reset --hard "${DEPLOY_SHA}"
+          echo "${GHCR_TOKEN_READ}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
+          REPO_DIR="\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
+          BE_PRIVATE_IP="${BE_PRIVATE_IP}" DB_PRIVATE_IP="${DB_PRIVATE_IP}" \
+          PUBLIC_BASE_URL="${PUBLIC_BASE_URL}" NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
+          FORWARDED_NETWORK_0="${FORWARDED_NETWORK_0}" \
+            ./deploy/scripts/remote/deploy_fe.sh "${FRONTEND_IMAGE_REF}"
+          EOF_REMOTE
+
+  post-deploy-smoke:
+    runs-on: [self-hosted, aws-prod-runner]
+    needs: deploy-fe
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run != true }}
+    steps:
+      - name: Cấu hình SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ci_deploy_key
+          chmod 600 ~/.ssh/id_ci_deploy_key
+          printf '%s\n' "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Smoke test từ host FE (localhost check)
+        env:
+          PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
+          PROD_FE_HOST: ${{ secrets.PROD_FE_HOST }}
+          REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+        run: |
+          ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
+          set -euo pipefail
+          REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
+          cd "\$REPO_PATH"
+          ./deploy/scripts/smoke.sh http://localhost
+          EOF_REMOTE
+
+      - name: Kiểm tra qua public domain
+        if: ${{ vars.PROD_PUBLIC_BASE_URL != '' }}
+        env:
+          PROD_PUBLIC_BASE_URL: ${{ vars.PROD_PUBLIC_BASE_URL }}
+        run: |
+          curl -fsS "${PROD_PUBLIC_BASE_URL}/api/v1/health/live" >/dev/null
+          curl -fsS "${PROD_PUBLIC_BASE_URL}/api/v1/health/ready" >/dev/null
+          curl -fsS "${PROD_PUBLIC_BASE_URL}/" >/dev/null
+
+  auto-rollback-fe:
+    runs-on: [self-hosted, aws-prod-runner]
+    needs: [deploy-fe, post-deploy-smoke]
+    if: ${{ always() && (needs.deploy-fe.result == 'failure' || needs.post-deploy-smoke.result == 'failure') }}
+    steps:
+      - name: Cấu hình SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.PROD_SSH_PRIVATE_KEY }}" > ~/.ssh/id_ci_deploy_key
+          chmod 600 ~/.ssh/id_ci_deploy_key
+          printf '%s\n' "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Rollback Frontend
+        env:
+          PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
+          PROD_FE_HOST: ${{ secrets.PROD_FE_HOST }}
+          REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+        run: |
+          ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
+          set -euo pipefail
+          REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
+          cd "\$REPO_PATH"
+          REPO_DIR="\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
+            ./deploy/scripts/remote/rollback_be_fe.sh frontend
+          EOF_REMOTE
+
+  notify-slack:
+    runs-on: ubuntu-latest
+    needs:
+      - build-test-fe
+      - publish-frontend-image
+      - deploy-fe
+      - post-deploy-smoke
+      - auto-rollback-fe
+    if: always()
+    steps:
+      - name: Gửi thông báo Slack
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REPO: ${{ github.repository }}
+          ACTOR: ${{ github.actor }}
+          COMMIT_SHA: ${{ github.sha }}
+          DEPLOY_SMOKE_RESULT: ${{ needs.post-deploy-smoke.result }}
+          BUILD_RESULT: ${{ needs.build-test-fe.result }}
+        run: |
+          if [[ -z "$SLACK_WEBHOOK_URL" ]]; then
+            echo "SLACK_WEBHOOK_URL rỗng; bỏ qua thông báo"
+            exit 0
+          fi
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.dry_run }}" == "true" ]]; then
+            echo "dry_run=true; bỏ qua thông báo Slack"
+            exit 0
+          fi
+
+          if [[ "$DEPLOY_SMOKE_RESULT" == "success" ]]; then
+            STATUS="SUCCESS"
+            ICON=":white_check_mark:"
+          else
+            STATUS="FAILED"
+            ICON=":rotating_light:"
+          fi
+
+          MESSAGE="${ICON} *CD Frontend Only ${STATUS}*\nRepo: ${REPO}\nCommit: ${COMMIT_SHA}\nActor: ${ACTOR}\nBuild FE: ${BUILD_RESULT}, Smoke: ${DEPLOY_SMOKE_RESULT}\nRun: ${RUN_URL}"
+
+          payload=$(jq -n --arg text "$MESSAGE" '{text: $text}')
+          curl -fsS -X POST -H 'Content-type: application/json' --data "$payload" "$SLACK_WEBHOOK_URL"

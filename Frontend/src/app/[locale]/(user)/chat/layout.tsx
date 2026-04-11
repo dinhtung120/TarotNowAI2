@@ -1,36 +1,13 @@
-'use client';
+import ChatSegmentShell from '@/features/chat/presentation/ChatSegmentShell';
+import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
+import { prefetchChatInboxShell } from '@/shared/server/prefetch/runners';
 
-import { usePathname } from 'next/navigation';
-import ConversationSidebar from '@/features/chat/presentation/components/ConversationSidebar';
-import { cn } from '@/lib/utils';
+export default async function ChatSegmentLayout({ children }: { children: React.ReactNode }) {
+ const state = await dehydrateAppQueries(prefetchChatInboxShell);
 
-export default function ChatLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-
-  const isChatRoom = pathname.split('/').filter(Boolean).length > 2;
-
-  return (
-    <div className={cn("flex", "h-full", "w-full", "overflow-hidden", "bg-black/40", "backdrop-blur-sm")}>
-      <aside className={cn(
-        isChatRoom ? "hidden md:flex" : "flex",
-        "w-full md:w-80 lg:w-96",
-        "shrink-0",
-        "flex-col",
-        "border-r",
-        "border-white/10"
-      )}>
-        <ConversationSidebar />
-      </aside>
-
-      <main className={cn(
-        isChatRoom ? "flex" : "hidden md:flex",
-        "relative",
-        "min-w-0",
-        "flex-1",
-        "flex-col"
-      )}>
-        {children}
-      </main>
-    </div>
-  );
+ return (
+  <AppQueryHydrationBoundary state={state}>
+   <ChatSegmentShell>{children}</ChatSegmentShell>
+  </AppQueryHydrationBoundary>
+ );
 }

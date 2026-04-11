@@ -1,7 +1,10 @@
 import createNextIntlPlugin from 'next-intl/plugin';
+import bundleAnalyzer from '@next/bundle-analyzer';
 import os from 'node:os';
 import type { NextConfig } from 'next';
 import { resolveApiOrigin } from './src/shared/infrastructure/http/apiUrl';
+
+const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === 'true' });
 
 if (process.env.NODE_ENV === 'production' && process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0') {
  throw new Error('NODE_TLS_REJECT_UNAUTHORIZED=0 is not allowed in production.');
@@ -118,13 +121,13 @@ const nextConfig: NextConfig = {
     allowedOrigins: serverActionAllowedOrigins,
     bodySizeLimit: 10485760,
    },
-   // Next 16 mặc định dynamic:0 — mọi refetch RSC; prod RTT cao làm loading.tsx lộ rõ. 60s giữ client router cache.
+   // Next 16 mặc định dynamic:0 → mỗi chuyển trang refetch RSC; RTT production ~hàng trăm ms làm cảm giác “chậm 1s”.
    staleTimes: {
-    dynamic: 60,
-    static: 300,
+    dynamic: 300,
+    static: 600,
    },
   },
 };
 
 
-export default withNextIntl(nextConfig);
+export default withBundleAnalyzer(withNextIntl(nextConfig));

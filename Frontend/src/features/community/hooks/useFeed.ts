@@ -2,24 +2,17 @@
 
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getFeedAction } from '../application/actions/communityActions';
-import { CommunityPost } from '../types';
+import type { CommunityFeedResponse } from '../types';
 
-export interface FeedResponse {
-  data: CommunityPost[];
-  metadata: {
-    totalCount: number;
-    page: number;
-    pageSize: number;
-  };
-}
+export type { CommunityFeedResponse as FeedResponse };
 
 export const useFeed = (visibility?: string) => {
-  return useInfiniteQuery<FeedResponse, Error>({
+  return useInfiniteQuery<CommunityFeedResponse, Error>({
     queryKey: ['community', 'feed', visibility],
     queryFn: async ({ pageParam = 1 }) => {
       const res = await getFeedAction(pageParam as number, 10, visibility);
       if (!res.success) throw new Error(res.error);
-      return res.data as FeedResponse;
+      return res.data as CommunityFeedResponse;
     },
     initialPageParam: 1, 
     getNextPageParam: (lastPage) => {

@@ -2,24 +2,15 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toggleReactionAction } from '../application/actions/communityActions';
-import { CommunityPost, ReactionType } from '../types';
+import { type CommunityFeedResponse, type CommunityPost, ReactionType } from '../types';
 
 interface UseToggleReactionProps {
   postId: string;
   visibility?: string; 
 }
 
-interface FeedResponse {
-  data: CommunityPost[];
-  metadata: {
-    totalCount: number;
-    page: number;
-    pageSize: number;
-  };
-}
-
 interface FeedPagesState {
-  pages: FeedResponse[];
+  pages: CommunityFeedResponse[];
   pageParams: unknown[];
 }
 

@@ -1,21 +1,10 @@
 'use client';
 
-import { QueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { createAppQueryClient } from '@/shared/lib/appQueryClient';
 
 export function useAppQueryClient() {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: 30_000,
-            refetchOnWindowFocus: false,
-            retry: 1,
-          },
-        },
-      })
-  );
+ const [queryClient] = useState(() => createAppQueryClient());
 
-  return queryClient;
+ return queryClient;
 }

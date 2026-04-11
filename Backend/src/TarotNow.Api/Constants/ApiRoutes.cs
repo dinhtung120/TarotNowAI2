@@ -63,6 +63,12 @@ public static class ApiRoutes
     // Nhóm route lấy ngữ cảnh người dùng hiện tại.
     public const string UserContext = Prefix + "/user-context";
 
+    // Gộp dữ liệu nhẹ cho navbar / snapshot "me".
+    public const string Me = Prefix + "/me";
+
+    // Trang chủ marketing (snapshot công khai).
+    public const string Home = Prefix + "/home";
+
     // Nhóm route gói subscription.
     public const string Subscriptions = Prefix + "/subscriptions";
 

@@ -1,6 +1,6 @@
 import { Bot } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
 import type { HistoryDetailResponse } from '@/features/reading/application/actions/history';
+import { LazyMarkdown } from '@/shared/components/LazyMarkdown';
 import { cn } from '@/lib/utils';
 
 interface HistoryDetailAiSummaryProps {
@@ -33,7 +33,7 @@ export function HistoryDetailAiSummary({
      </h3>
      {detail.aiSummary ? (
       <div className={cn('prose prose-purple max-w-none prose-p:leading-relaxed prose-p:tn-text-secondary prose-headings:font-serif prose-headings:tn-text-warning prose-strong:tn-text-accent prose-strong:font-bold prose-em:tn-text-secondary prose-em:italic prose-li:tn-text-secondary text-left')}>
-       <ReactMarkdown>{detail.aiSummary}</ReactMarkdown>
+       <LazyMarkdown>{detail.aiSummary}</LazyMarkdown>
        {detail.followups?.map((followup) => (
         <div key={`${followup.question}-${followup.answer.slice(0, 24)}`} className={cn('mt-6 space-y-4')}>
          <div className={cn('flex justify-end')}>
@@ -43,7 +43,7 @@ export function HistoryDetailAiSummary({
          </div>
          <div className={cn('flex justify-start')}>
           <div className={cn('tn-bg-accent-10 border tn-border-accent-20 px-5 py-4 rounded-3xl rounded-tl-none tn-maxw-85p')}>
-           <ReactMarkdown>{followup.answer}</ReactMarkdown>
+           <LazyMarkdown>{followup.answer}</LazyMarkdown>
           </div>
          </div>
         </div>

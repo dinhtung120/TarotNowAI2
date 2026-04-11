@@ -1,12 +1,12 @@
 import React from "react";
 import type { InfiniteData } from "@tanstack/react-query";
-import type { FeedResponse } from "@/features/community/hooks/useFeed";
+import type { CommunityFeedResponse } from "@/features/community/types";
 import { cn } from "@/lib/utils";
 import { PostCard } from "./PostCard";
 
 interface FeedPostsSectionProps {
  activeVisibility: string;
- data: InfiniteData<FeedResponse> | undefined;
+ data: InfiniteData<CommunityFeedResponse> | undefined;
  hasNextPage: boolean;
  isFetchingNextPage: boolean;
  labels: {

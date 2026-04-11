@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { CHECKIN_QUERY_KEYS } from '@/features/checkin/application/hooks';
+import { checkinQueryKeys } from '@/features/checkin/domain/checkinQueryKeys';
 import type { UserMetadataDto } from '@/shared/application/actions/metadata';
 import { useInitialMetadata } from '@/shared/application/hooks/useInitialMetadata';
 import { useWalletStore } from '@/store/walletStore';
@@ -29,7 +29,7 @@ export function useMetadataInitialLoader({ initialMetadata }: UseMetadataInitial
     } = initialMetadata;
 
     setBalance(wallet);
-    queryClient.setQueryData(CHECKIN_QUERY_KEYS.streakStatus, streak);
+    queryClient.setQueryData(checkinQueryKeys.streakStatus, streak);
     queryClient.setQueryData(['notifications', 'unread-count'], unreadNotificationCount);
     queryClient.setQueryData(['notifications', 'dropdown'], recentNotifications);
     queryClient.setQueryData(['chat', 'unread-badge'], unreadChatCount);

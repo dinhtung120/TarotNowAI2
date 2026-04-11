@@ -38,3 +38,13 @@ export interface CreatePostPayload {
 export interface ToggleReactionPayload {
   type: ReactionType;
 }
+
+/** Một trang feed (API + infinite query). */
+export interface CommunityFeedResponse {
+  data: CommunityPost[];
+  metadata: {
+    totalCount: number;
+    page: number;
+    pageSize: number;
+  };
+}

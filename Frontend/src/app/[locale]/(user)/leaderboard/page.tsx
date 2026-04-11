@@ -2,6 +2,8 @@ import { getTranslations } from "next-intl/server";
 import LeaderboardTable from "@/features/gamification/components/LeaderboardTable";
 import { BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AppQueryHydrationBoundary, dehydrateAppQueries } from "@/shared/server/prefetch/appQueryDehydrate";
+import { prefetchLeaderboardPage } from "@/shared/server/prefetch/runners";
 import { generateLeaderboardMetadata } from "./metadata";
 
 // Export generateMetadata để Next.js sử dụng cho SEO
@@ -79,33 +81,35 @@ const pageClasses = {
 // Hiển thị vị trí xếp hạng của người dùng dựa trên cấu trúc đã có
 export default async function LeaderboardPage() {
   const t = await getTranslations("Gamification");
+  const state = await dehydrateAppQueries(prefetchLeaderboardPage);
 
   return (
-    <div className={cn(pageClasses.root)}>
-      <div className={cn(pageClasses.glowTop)} />
-      <div className={cn(pageClasses.glowLeft)} />
-      <div className={cn(pageClasses.glowRight)} />
+    <AppQueryHydrationBoundary state={state}>
+      <div className={cn(pageClasses.root)}>
+        <div className={cn(pageClasses.glowTop)} />
+        <div className={cn(pageClasses.glowLeft)} />
+        <div className={cn(pageClasses.glowRight)} />
 
-      <main className={cn(pageClasses.main)}>
-        <header className={cn(pageClasses.header)}>
-          <div className={cn(pageClasses.iconWrap)}>
-            <BarChart3 className={cn("h-10", "w-10", "text-white")} />
-          </div>
-          <div>
-            <h1 className={cn(pageClasses.title)}>
-              {t("LeaderboardMetaTitle")}
-            </h1>
-            <p className={cn(pageClasses.desc)}>
-              {t("LeaderboardMetaDesc")}
-            </p>
-          </div>
-        </header>
+        <main className={cn(pageClasses.main)}>
+          <header className={cn(pageClasses.header)}>
+            <div className={cn(pageClasses.iconWrap)}>
+              <BarChart3 className={cn("h-10", "w-10", "text-white")} />
+            </div>
+            <div>
+              <h1 className={cn(pageClasses.title)}>
+                {t("LeaderboardMetaTitle")}
+              </h1>
+              <p className={cn(pageClasses.desc)}>
+                {t("LeaderboardMetaDesc")}
+              </p>
+            </div>
+          </header>
 
-        {/* Sử dụng component LeaderboardTable đã có, thiết kế full-width cho layout mới */}
-        <section>
-          <LeaderboardTable />
-        </section>
-      </main>
-    </div>
+          <section>
+            <LeaderboardTable />
+          </section>
+        </main>
+      </div>
+    </AppQueryHydrationBoundary>
   );
 }

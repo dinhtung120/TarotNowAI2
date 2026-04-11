@@ -4,7 +4,7 @@ import path from 'node:path';
 import { routing } from './routing';
 
 type AppLocale = (typeof routing.locales)[number];
-type MessageDictionary = Record<string, unknown>;
+export type MessageDictionary = Record<string, unknown>;
 
 const MODULAR_MESSAGES_ROOT = path.join(process.cwd(), 'messages');
 
@@ -90,4 +90,23 @@ const loadModularMessages = async (locale: AppLocale): Promise<MessageDictionary
  return mergedMessages;
 };
 
-export const loadLocaleMessages = loadModularMessages;
+const localeMessagesPromiseCache = new Map<AppLocale, Promise<MessageDictionary>>();
+
+/**
+ * Production: cache promise đọc JSON i18n — mỗi RSC request trước đây đọc lại toàn bộ file từ disk.
+ * Dev/test: không cache để sửa messages không cần restart.
+ */
+export const loadLocaleMessages = (locale: AppLocale): Promise<MessageDictionary> => {
+ if (process.env.NODE_ENV !== 'production') {
+  return loadModularMessages(locale);
+ }
+
+ const cached = localeMessagesPromiseCache.get(locale);
+ if (cached) {
+  return cached;
+ }
+
+ const pending = loadModularMessages(locale);
+ localeMessagesPromiseCache.set(locale, pending);
+ return pending;
+};

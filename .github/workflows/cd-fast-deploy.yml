@@ -1,4 +1,4 @@
-name: CD Fast Deploy (No Security Scans)
+name: CD Fast Deploy
 
 # Tệp này được tạo ra để tăng tốc quá trình triển khai bằng cách loại bỏ các bước phân tích mã và quét bảo mật.
 # Thích hợp cho môi trường dev hoặc khi cần deploy gấp.

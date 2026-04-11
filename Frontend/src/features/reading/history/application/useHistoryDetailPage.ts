@@ -1,7 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { getHistoryDetailAction, type HistoryDetailResponse } from '@/features/reading/application/actions/history';
+import { useEffect, useMemo, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import {
+ getHistoryDetailAction,
+ type HistoryDetailResponse,
+} from '@/features/reading/application/actions/history';
+import { historyDetailQueryKey } from '@/features/reading/history/domain/historyQueryKeys';
 
 interface UseHistoryDetailPageParams {
  isAuthenticated: boolean;
@@ -16,48 +21,34 @@ export function useHistoryDetailPage({
  networkErrorMessage,
  onUnauthorized,
 }: UseHistoryDetailPageParams) {
- const [detail, setDetail] = useState<HistoryDetailResponse | null>(null);
- const [isLoading, setIsLoading] = useState(true);
- const [error, setError] = useState<string | null>(null);
  const onUnauthorizedRef = useRef(onUnauthorized);
 
  useEffect(() => {
   onUnauthorizedRef.current = onUnauthorized;
  }, [onUnauthorized]);
 
- useEffect(() => {
-  if (!isAuthenticated) {
-   return;
-  }
-
-  const fetchDetail = async () => {
-   setIsLoading(true);
-   setError(null);
-
-   try {
-    const result = await getHistoryDetailAction(sessionId);
-    if (result.error) {
-     if (result.error === 'unauthorized') {
-      onUnauthorizedRef.current();
-      return;
-     }
-
-     setError(result.error);
-     return;
-    }
-
-    if (result.success && result.data) {
-     setDetail(result.data);
-    }
-   } catch {
-    setError(networkErrorMessage);
-   } finally {
-    setIsLoading(false);
+ const query = useQuery<HistoryDetailResponse, Error>({
+  queryKey: historyDetailQueryKey(sessionId),
+  enabled: isAuthenticated && Boolean(sessionId),
+  queryFn: async () => {
+   const result = await getHistoryDetailAction(sessionId);
+   if (result.success && result.data) {
+    return result.data;
    }
-  };
+   if (result.error === 'unauthorized') {
+    onUnauthorizedRef.current();
+    throw new Error('unauthorized');
+   }
+   throw new Error(result.error || networkErrorMessage);
+  },
+ });
 
-  void fetchDetail();
- }, [isAuthenticated, networkErrorMessage, sessionId]);
+ const detail = query.data ?? null;
+ const isLoading = query.isPending || (query.isFetching && !query.data);
+ const error =
+  query.isError && query.error?.message !== 'unauthorized'
+   ? query.error.message || networkErrorMessage
+   : null;
 
  const parsedCards = useMemo<number[]>(() => {
   if (!detail?.cardsDrawn) {

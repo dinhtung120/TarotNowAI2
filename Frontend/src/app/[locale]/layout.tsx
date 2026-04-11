@@ -11,9 +11,27 @@ import AppAuthSessionManager from "@/features/auth/presentation/components/AppAu
 import AppQueryProvider from "@/shared/components/common/AppQueryProvider";
 import "../globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"], display: "swap" });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"], display: "swap" });
-const playfair = Playfair_Display({ variable: "--font-playfair", subsets: ["latin"], display: "swap" });
+const geistSans = Geist({
+ variable: "--font-geist-sans",
+ subsets: ["latin", "latin-ext"],
+ display: "swap",
+ preload: true,
+ adjustFontFallback: true,
+});
+const geistMono = Geist_Mono({
+ variable: "--font-geist-mono",
+ subsets: ["latin", "latin-ext"],
+ display: "swap",
+ preload: false,
+ adjustFontFallback: true,
+});
+const playfair = Playfair_Display({
+ variable: "--font-playfair",
+ subsets: ["latin", "latin-ext", "vietnamese"],
+ display: "swap",
+ preload: false,
+ adjustFontFallback: true,
+});
 
 export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };
 

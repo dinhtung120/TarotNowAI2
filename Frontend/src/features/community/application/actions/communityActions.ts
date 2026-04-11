@@ -3,9 +3,13 @@ import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionR
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
-import { CommunityPost, CreatePostPayload, ToggleReactionPayload, type CommunityComment } from '../../types';
-
-interface FeedResponse { data: CommunityPost[]; metadata: { totalCount: number; page: number; pageSize: number } }
+import {
+ CommunityPost,
+ CreatePostPayload,
+ ToggleReactionPayload,
+ type CommunityComment,
+ type CommunityFeedResponse,
+} from '../../types';
 interface CommentsResponse { items: CommunityComment[]; totalCount: number; page: number; pageSize: number; totalPages: number }
 
 const UNAUTHORIZED = 'Unauthorized';
@@ -35,12 +39,19 @@ export async function uploadPostImageAction(formData: FormData): Promise<ActionR
  });
 }
 
-export async function getFeedAction(page = 1, pageSize = 10, visibility?: string): Promise<ActionResult<FeedResponse>> {
+export async function getFeedAction(
+ page = 1,
+ pageSize = 10,
+ visibility?: string
+): Promise<ActionResult<CommunityFeedResponse>> {
  return withToken(async (token) => {
   try {
    const params = new URLSearchParams({ page: page.toString(), pageSize: pageSize.toString() });
    if (visibility) params.append('visibility', visibility);
-   const result = await serverHttpRequest<FeedResponse>(`/community/posts?${params.toString()}`, { method: 'GET', token, fallbackErrorMessage: FAIL_GET_FEED });
+   const result = await serverHttpRequest<CommunityFeedResponse>(
+    `/community/posts?${params.toString()}`,
+    { method: 'GET', token, fallbackErrorMessage: FAIL_GET_FEED }
+   );
    if (!result.ok) return result.status === 404 ? actionOk({ data: [], metadata: { totalCount: 0, page, pageSize } }) : actionFail(result.error || FAIL_GET_FEED);
    return actionOk(result.data);
   } catch (error) {

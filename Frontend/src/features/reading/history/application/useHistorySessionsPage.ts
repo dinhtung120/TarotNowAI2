@@ -1,7 +1,15 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { getHistorySessionsAction, type HistorySessionsResponse } from '@/features/reading/application/actions/history';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import {
+ getHistorySessionsAction,
+ type HistorySessionsResponse,
+} from '@/features/reading/application/actions/history';
+import {
+ HISTORY_PAGE_SIZE,
+ historySessionsListQueryKey,
+} from '@/features/reading/history/domain/historyQueryKeys';
 
 interface UseHistorySessionsPageParams {
  isAuthenticated: boolean;
@@ -14,13 +22,9 @@ export function useHistorySessionsPage({
  networkErrorMessage,
  onUnauthorized,
 }: UseHistorySessionsPageParams) {
- const [historyData, setHistoryData] = useState<HistorySessionsResponse | null>(null);
- const [isLoading, setIsLoading] = useState(true);
- const [error, setError] = useState<string | null>(null);
  const [currentPage, setCurrentPage] = useState(1);
  const [filterType, setFilterType] = useState('all');
  const [filterDate, setFilterDate] = useState('');
- const pageSize = 10;
  const onUnauthorizedRef = useRef(onUnauthorized);
 
  useEffect(() => {
@@ -31,39 +35,34 @@ export function useHistorySessionsPage({
   setCurrentPage(1);
  }, [filterDate, filterType]);
 
- useEffect(() => {
-  if (!isAuthenticated) {
-   return;
-  }
-
-  const fetchHistory = async () => {
-   setIsLoading(true);
-   setError(null);
-
-   try {
-    const result = await getHistorySessionsAction(currentPage, pageSize, filterType, filterDate);
-    if (result.error) {
-     if (result.error === 'unauthorized') {
-      onUnauthorizedRef.current();
-      return;
-     }
-
-     setError(result.error);
-     return;
-    }
-
-    if (result.success && result.data) {
-     setHistoryData(result.data);
-    }
-   } catch {
-    setError(networkErrorMessage);
-   } finally {
-    setIsLoading(false);
+ const query = useQuery<HistorySessionsResponse, Error>({
+  queryKey: historySessionsListQueryKey(currentPage, filterType, filterDate),
+  enabled: isAuthenticated,
+  placeholderData: keepPreviousData,
+  queryFn: async () => {
+   const result = await getHistorySessionsAction(
+    currentPage,
+    HISTORY_PAGE_SIZE,
+    filterType,
+    filterDate
+   );
+   if (result.success && result.data) {
+    return result.data;
    }
-  };
+   if (result.error === 'unauthorized') {
+    onUnauthorizedRef.current();
+    throw new Error('unauthorized');
+   }
+   throw new Error(result.error || networkErrorMessage);
+  },
+ });
 
-  void fetchHistory();
- }, [currentPage, filterDate, filterType, isAuthenticated, networkErrorMessage]);
+ const historyData = query.data ?? null;
+ const isLoading = query.isPending || (query.isFetching && !query.data);
+ const error =
+  query.isError && query.error?.message !== 'unauthorized'
+   ? query.error.message || networkErrorMessage
+   : null;
 
  const goToPrevPage = () => {
   if (currentPage > 1) {

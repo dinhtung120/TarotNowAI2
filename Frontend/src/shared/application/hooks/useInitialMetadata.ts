@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { useWalletStore } from '@/store/walletStore';
-import { CHECKIN_QUERY_KEYS } from '@/features/checkin/application/hooks';
+import { checkinQueryKeys } from '@/features/checkin/domain/checkinQueryKeys';
 import type { ActionResult } from '@/shared/domain/actionResult';
 import type { UserMetadataDto } from '@/shared/application/actions/metadata';
 
@@ -39,7 +39,7 @@ export function useInitialMetadata() {
 
     if (hasFetchedRef.current || metadataFetchInFlight || metadataFetchCompleted) return;
 
-    const existingStreak = queryClient.getQueryData(CHECKIN_QUERY_KEYS.streakStatus);
+    const existingStreak = queryClient.getQueryData(checkinQueryKeys.streakStatus);
     if (existingStreak) {
       hasFetchedRef.current = true;
       metadataFetchCompleted = true;
@@ -63,7 +63,7 @@ export function useInitialMetadata() {
 
           setBalance(wallet);
 
-          queryClient.setQueryData(CHECKIN_QUERY_KEYS.streakStatus, streak);
+          queryClient.setQueryData(checkinQueryKeys.streakStatus, streak);
 
           queryClient.setQueryData(['notifications', 'unread-count'], unreadNotificationCount);
           queryClient.setQueryData(['notifications', 'dropdown'], recentNotifications);

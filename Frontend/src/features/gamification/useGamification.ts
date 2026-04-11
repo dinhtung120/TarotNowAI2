@@ -1,18 +1,20 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { gamificationApi } from './gamification.api';
+import {
+  claimGamificationQuestRewardServer,
+  fetchGamificationAchievements,
+  fetchGamificationLeaderboard,
+  fetchGamificationQuests,
+  fetchGamificationTitles,
+  setGamificationActiveTitleServer,
+} from '@/features/gamification/application/gamificationServerActions';
+import { gamificationKeys } from '@/features/gamification/gamificationQueryKeys';
 
-const gamificationKeys = {
-  all: ['gamification'] as const,
-  quests: (type: string) => [...gamificationKeys.all, 'quests', type] as const,
-  achievements: () => [...gamificationKeys.all, 'achievements'] as const,
-  titles: () => [...gamificationKeys.all, 'titles'] as const,
-  leaderboard: (track: string, periodKey?: string) => [...gamificationKeys.all, 'leaderboard', track, periodKey] as const,
-};
+export { gamificationKeys };
 
 export function useQuests(type: string = 'daily') {
   return useQuery({
     queryKey: gamificationKeys.quests(type),
-    queryFn: () => gamificationApi.getQuests(type),
+    queryFn: () => fetchGamificationQuests(type),
   });
 }
 
@@ -20,9 +22,10 @@ export function useClaimQuestReward() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ questCode, periodKey }: { questCode: string; periodKey: string }) =>
-      gamificationApi.claimQuestReward(questCode, periodKey),
+      claimGamificationQuestRewardServer(questCode, periodKey),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: gamificationKeys.quests('daily') });
+      queryClient.invalidateQueries({ queryKey: gamificationKeys.quests('weekly') });
       queryClient.invalidateQueries({ queryKey: ['wallet'] });
     },
   });
@@ -31,21 +34,21 @@ export function useClaimQuestReward() {
 export function useAchievements() {
   return useQuery({
     queryKey: gamificationKeys.achievements(),
-    queryFn: () => gamificationApi.getAchievements(),
+    queryFn: () => fetchGamificationAchievements(),
   });
 }
 
 export function useTitles() {
   return useQuery({
     queryKey: gamificationKeys.titles(),
-    queryFn: () => gamificationApi.getTitles(),
+    queryFn: () => fetchGamificationTitles(),
   });
 }
 
 export function useSetActiveTitle() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (titleCode: string) => gamificationApi.setActiveTitle(titleCode),
+    mutationFn: (titleCode: string) => setGamificationActiveTitleServer(titleCode),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: gamificationKeys.titles() });
       queryClient.invalidateQueries({ queryKey: ['profile'] }); 
@@ -56,6 +59,6 @@ export function useSetActiveTitle() {
 export function useLeaderboard(track: string = 'daily_rank_score', periodKey?: string) {
   return useQuery({
     queryKey: gamificationKeys.leaderboard(track, periodKey),
-    queryFn: () => gamificationApi.getLeaderboard(track, periodKey),
+    queryFn: () => fetchGamificationLeaderboard(track, periodKey),
   });
 }

@@ -1,7 +1,11 @@
+import dynamic from 'next/dynamic';
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
-import AdminGamificationClient from '@/features/gamification/AdminGamificationClient';
 import type { QuestDefinition, AchievementDefinition, TitleDefinition } from '@/features/gamification/gamification.types';
+
+const AdminGamificationClient = dynamic(() =>
+ import('@/features/gamification/AdminGamificationClient').then((m) => m.default)
+);
 
 export async function generateMetadata() {
   return {
@@ -23,7 +27,7 @@ export default async function AdminGamificationPage() {
   const titles = titlesRes.ok ? titlesRes.data || [] : [];
 
   return (
-    <AdminGamificationClient 
+    <AdminGamificationClient
       initialQuests={quests}
       initialAchievements={achievements}
       initialTitles={titles}

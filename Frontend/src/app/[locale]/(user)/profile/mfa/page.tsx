@@ -1,1 +1,13 @@
-export { default } from '@/features/profile/mfa/presentation/ProfileMfaPage';
+import ProfileMfaPage from '@/features/profile/mfa/presentation/ProfileMfaPage';
+import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
+import { prefetchProfileMfaPage } from '@/shared/server/prefetch/runners';
+
+export default async function ProfileMfaRoutePage() {
+ const state = await dehydrateAppQueries(prefetchProfileMfaPage);
+
+ return (
+  <AppQueryHydrationBoundary state={state}>
+   <ProfileMfaPage />
+  </AppQueryHydrationBoundary>
+ );
+}
