@@ -3,7 +3,6 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using FFMpegCore;
-using NeoSolve.ImageSharp.AVIF;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Webp;
 using SixLabors.ImageSharp.Processing;
@@ -16,10 +15,6 @@ public class MediaProcessorService : IMediaProcessorService
 {
     // Giới hạn kích thước ảnh mặc định (chat/media) để giảm băng thông.
     private const int MaxImageWidth = 2048;
-    // CQLevel cho encoder NeoSolve AVIF (cân bằng dung lượng/chất lượng).
-    private const int AvifCQLevel = 28;
-    // MIME type chuẩn cho ảnh AVIF/WebP và voice Opus/WebM fallback.
-    private const string AvifMimeType = "image/avif";
     private const string WebpMimeType = "image/webp";
     private const string OpusMimeType = "audio/opus";
     private const string WebmMimeType = "audio/webm";
@@ -117,20 +112,6 @@ public class MediaProcessorService : IMediaProcessorService
         }));
     }
 
-    /// <summary>
-    /// Lưu ảnh sang AVIF nếu encoder khả dụng, ngược lại fallback WebP.
-    /// Luồng kiểm tra type động để tương thích môi trường thiếu package AVIF.
-    /// </summary>
-    private static async Task<(byte[] Data, string MimeType)> SaveAsAvifOrWebpAsync(
-        Image image,
-        MemoryStream outStream,
-        CancellationToken cancellationToken)
-    {
-        outStream.SetLength(0);
-        var encoder = new AVIFEncoder { CQLevel = AvifCQLevel };
-        await image.SaveAsync(outStream, encoder, cancellationToken);
-        return (outStream.ToArray(), AvifMimeType);
-    }
 
     /// <summary>
     /// Lưu ảnh sang WebP như định dạng dự phòng phổ biến.
