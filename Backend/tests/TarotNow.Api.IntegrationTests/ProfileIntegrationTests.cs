@@ -109,9 +109,22 @@ public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory
         // Kiểm tra payload response có thông tin upload thành công.
         var resultText = await response.Content.ReadAsStringAsync();
         Assert.Contains("success\":true", resultText);
-        // Với R2, avatarUrl sẽ là URL đầy đủ bắt đầu bằng http, publicId khớp với key prefix avatars/
-        Assert.Contains("avatarUrl\":\"http", resultText);
-        Assert.Contains("publicId\":\"avatars/", resultText);
+
+        using var scope = _factory.Services.CreateScope();
+        var storageOptions = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<TarotNow.Infrastructure.Options.ObjectStorageOptions>>().Value;
+
+        if (storageOptions.Provider == "R2")
+        {
+            // Với R2, avatarUrl sẽ là URL đầy đủ bắt đầu bằng http, publicId khớp với key prefix avatars/
+            Assert.Contains("avatarUrl\":\"http", resultText);
+            Assert.Contains("publicId\":\"avatars/", resultText);
+        }
+        else
+        {
+            // Với Local (dùng cho CI hoặc Fallback), avatarUrl là đường dẫn tương đối, publicId chứa thư mục uploads
+            Assert.Contains("avatarUrl\":\"/uploads/avatars/", resultText);
+            Assert.Contains("publicId\":\"uploads/avatars/", resultText);
+        }
 
         // Parse avatarUrl để đối chiếu với dữ liệu profile sau khi lưu.
         using var jsonDoc = System.Text.Json.JsonDocument.Parse(resultText);

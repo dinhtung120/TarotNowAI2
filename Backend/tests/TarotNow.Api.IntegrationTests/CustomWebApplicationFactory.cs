@@ -106,7 +106,7 @@ public class CustomWebApplicationFactory<TProgram>
                 ["AiProvider:MaxRetries"] = "0",
                 ["Cors:AllowedOrigins:0"] = "http://localhost:3000",
                 ["FileStorage:RootPath"] = _testStorageRoot,
-                ["ObjectStorage:Provider"] = "R2",
+                ["ObjectStorage:Provider"] = string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("R2_ACCESS_KEY_ID")) ? "Local" : "R2",
                 ["ObjectStorage:R2:AccountId"] = Environment.GetEnvironmentVariable("R2_ACCOUNT_ID"),
                 ["ObjectStorage:R2:AccessKeyId"] = Environment.GetEnvironmentVariable("R2_ACCESS_KEY_ID"),
                 ["ObjectStorage:R2:SecretAccessKey"] = Environment.GetEnvironmentVariable("R2_SECRET_ACCESS_KEY"),
