@@ -47,22 +47,13 @@ public class MediaProcessorService : IMediaProcessorService
         ResizeImageIfNeeded(image, maxEdgePixels);
 
         using var outStream = new MemoryStream();
-        try
-        {
-            /**
-             * ƯU TIÊN WEBP:
-             * Sử dụng WebP làm định dạng mặc định vì nó có sự cân bằng tốt giữa chất lượng và tốc độ nén.
-             * Quan trọng: WebP encoder của ImageSharp chạy thuần C#, không phụ thuộc các thư viện native
-             * hệ thống như AVIF, tránh được các lỗi "shared library missing" và giúp xử lý nhanh hơn (~500ms).
-             */
-            return await SaveAsWebpAsync(image, outStream, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            // Fallback sang AVIF hoặc các định dạng khác nếu có hỗ trợ trong tương lai,
-            // hoặc trả về chính dữ liệu WebP nếu lỗi xảy ra sau khi nén.
-            return await SaveAsAvifOrWebpAsync(image, outStream, cancellationToken);
-        }
+        /**
+         * CHỈ SỬ DỤNG WEBP:
+         * Đã loại bỏ hoàn toàn AVIF do thiếu thư viện native hệ thống trong Docker.
+         * WebP của ImageSharp là giải pháp tối ưu nhất: chạy thuần C#, không gây lỗi logic,
+         * chất lượng nén rất tốt và thời gian xử lý cực nhanh (vài trăm ms).
+         */
+        return await SaveAsWebpAsync(image, outStream, cancellationToken);
     }
 
     /// <summary>

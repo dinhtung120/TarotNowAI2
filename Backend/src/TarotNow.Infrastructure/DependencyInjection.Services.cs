@@ -18,7 +18,7 @@ public static partial class DependencyInjection
     /// </summary>
     private static void AddUserImageStorage(IServiceCollection services)
     {
-        ImageSharpAvifInitializer.EnsureConfigured();
+        // ImageSharpAvifInitializer.EnsureConfigured(); // Tạm tắt do thiếu thư viện native trong Docker gây chậm/lỗi.
         services.AddSingleton<IVirusScanService, NoOpVirusScanService>();
         services.AddSingleton(sp =>
         {
