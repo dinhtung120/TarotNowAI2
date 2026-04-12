@@ -2260,13 +2260,26 @@
 }
 
 .tn-ai-stream-markdown strong {
-  color: var(--purple-accent);
+  color: var(--text-primary);
   font-weight: 700;
 }
 
-.tn-ai-stream-markdown em,
-.tn-ai-stream-markdown li {
+.tn-ai-stream-markdown em {
   color: var(--text-secondary);
+  font-style: italic;
+}
+
+.tn-ai-stream-markdown li {
+  color: var(--purple-accent);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.tn-ai-stream-markdown li p,
+.tn-ai-stream-markdown li strong {
+  color: var(--text-secondary);
+  font-weight: 400;
+  display: inline;
 }
 
 .tn-ai-stream-markdown h1,
@@ -2274,7 +2287,9 @@
 .tn-ai-stream-markdown h3,
 .tn-ai-stream-markdown h4 {
   font-family: var(--font-playfair-display), serif;
-  color: var(--warning);
+  color: var(--purple-accent);
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
 }
 
 .tn-profile-avatar-glow {

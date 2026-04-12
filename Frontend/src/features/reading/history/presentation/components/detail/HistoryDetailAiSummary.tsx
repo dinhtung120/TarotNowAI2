@@ -32,7 +32,7 @@ export function HistoryDetailAiSummary({
       {labels.title}
      </h3>
      {detail.aiSummary ? (
-      <div className={cn('prose prose-purple max-w-none prose-p:leading-relaxed prose-p:tn-text-secondary prose-headings:font-serif prose-headings:tn-text-warning prose-strong:tn-text-accent prose-strong:font-bold prose-em:tn-text-secondary prose-em:italic prose-li:tn-text-secondary text-left')}>
+      <div className={cn('prose prose-purple max-w-none prose-p:leading-relaxed prose-p:tn-text-secondary prose-headings:font-serif prose-headings:tn-text-accent prose-strong:tn-text-primary prose-strong:font-bold prose-em:tn-text-secondary prose-em:italic prose-li:tn-text-accent prose-li:font-semibold text-left')}>
        <LazyMarkdown>{detail.aiSummary}</LazyMarkdown>
        {detail.followups?.map((followup) => (
         <div key={`${followup.question}-${followup.answer.slice(0, 24)}`} className={cn('mt-6 space-y-4')}>
