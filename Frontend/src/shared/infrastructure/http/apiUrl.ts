@@ -26,6 +26,22 @@ export function resolveApiOrigin(value: string | undefined): string {
 }
 
 /**
+ * Origin backend cho Next.js rewrites (uploads, chat, presence) khi chạy trong Docker.
+ * Dùng INTERNAL_API_URL để tránh proxy ra URL công khai (hairpin / ECONNRESET qua Cloudflare).
+ */
+export function resolveRewriteBackendOrigin(): string {
+  const internal = process.env.INTERNAL_API_URL?.trim();
+  if (internal) {
+    try {
+      return new URL(internal).origin;
+    } catch {
+      /* fallback public */
+    }
+  }
+  return resolveApiOrigin(process.env.NEXT_PUBLIC_API_URL);
+}
+
+/**
  * Lấy Origin từ Base URL (xóa phần /api/v1).
  */
 function apiOriginFromBase(baseUrl: string): string {

@@ -44,6 +44,29 @@ server {
     return 200 'ok';
   }
 
+  # Chặn scanner tìm .env / .git — không forward sang Next (tránh 200 + HTML giả “file”)
+  location ~* ^/\.env {
+    access_log off;
+    return 404;
+  }
+  location ^~ /.git/ {
+    access_log off;
+    return 404;
+  }
+
+  # Ảnh upload tĩnh: vào thẳng backend, không qua Next (tránh hairpin khi Next proxy ra URL public)
+  location ^~ /uploads/ {
+    proxy_set_header Host $request_host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $forwarded_proto;
+    proxy_set_header X-Forwarded-Host $forwarded_host;
+    proxy_set_header X-Forwarded-Port $forwarded_port;
+    proxy_pass ${BACKEND_UPSTREAM_URL};
+    add_header Cache-Control "public, max-age=86400, must-revalidate";
+    access_log off;
+  }
+
   # ── Next.js static assets (_next/static) ──
   # File này chứa hash trong tên (immutable) → cache vĩnh viễn (1 năm)
   # Ví dụ: /_next/static/chunks/app-abc123.js

@@ -2,7 +2,7 @@ import createNextIntlPlugin from 'next-intl/plugin';
 import bundleAnalyzer from '@next/bundle-analyzer';
 import os from 'node:os';
 import type { NextConfig } from 'next';
-import { resolveApiOrigin } from './src/shared/infrastructure/http/apiUrl';
+import { resolveApiOrigin, resolveRewriteBackendOrigin } from './src/shared/infrastructure/http/apiUrl';
 
 const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === 'true' });
 
@@ -12,6 +12,7 @@ if (process.env.NODE_ENV === 'production' && process.env.NODE_TLS_REJECT_UNAUTHO
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 const apiOrigin = resolveApiOrigin(process.env.NEXT_PUBLIC_API_URL);
+const rewriteBackendOrigin = resolveRewriteBackendOrigin();
 const frontendOrigin = resolveFrontendOrigin(
  process.env.NEXT_PUBLIC_BASE_URL ?? process.env.PUBLIC_BASE_URL,
 );
@@ -115,23 +116,23 @@ const nextConfig: NextConfig = {
   return [
    {
     source: '/api/v1/chat',
-    destination: `${apiOrigin}/api/v1/chat`,
+    destination: `${rewriteBackendOrigin}/api/v1/chat`,
    },
    {
     source: '/api/v1/chat/:path*',
-    destination: `${apiOrigin}/api/v1/chat/:path*`,
+    destination: `${rewriteBackendOrigin}/api/v1/chat/:path*`,
    },
    {
     source: '/api/v1/presence',
-    destination: `${apiOrigin}/api/v1/presence`,
+    destination: `${rewriteBackendOrigin}/api/v1/presence`,
    },
    {
     source: '/api/v1/presence/:path*',
-    destination: `${apiOrigin}/api/v1/presence/:path*`,
+    destination: `${rewriteBackendOrigin}/api/v1/presence/:path*`,
    },
    {
     source: '/uploads/:path*',
-    destination: `${apiOrigin}/uploads/:path*`,
+    destination: `${rewriteBackendOrigin}/uploads/:path*`,
    },
   ];
  },
