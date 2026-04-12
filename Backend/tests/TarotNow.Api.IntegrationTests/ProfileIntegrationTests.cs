@@ -109,8 +109,9 @@ public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory
         // Kiểm tra payload response có thông tin upload thành công.
         var resultText = await response.Content.ReadAsStringAsync();
         Assert.Contains("success\":true", resultText);
-        Assert.Contains("avatarUrl\":\"/uploads/avatars/", resultText);
-        Assert.Contains("publicId\":\"uploads/avatars/", resultText);
+        // Với R2, avatarUrl sẽ là URL đầy đủ bắt đầu bằng http, publicId khớp với key prefix avatars/
+        Assert.Contains("avatarUrl\":\"http", resultText);
+        Assert.Contains("publicId\":\"avatars/", resultText);
 
         // Parse avatarUrl để đối chiếu với dữ liệu profile sau khi lưu.
         using var jsonDoc = System.Text.Json.JsonDocument.Parse(resultText);
