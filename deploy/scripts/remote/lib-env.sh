@@ -6,7 +6,7 @@ materialize_root_env_from_ci() {
   if [[ -z "${PROD_DOTENV_B64:-}" ]]; then
     return 0
   fi
-  if ! printf '%s' "$PROD_DOTENV_B64" | base64 -d >"$env_file" 2>/dev/null; then
+  if ! printf '%s' "$PROD_DOTENV_B64" | tr -d '\n\r' | base64 -d >"$env_file" 2>/dev/null; then
     echo "[env] PROD_DOTENV_B64: giải mã base64 thất bại (kỳ vọng: base64 của file .env UTF-8)" >&2
     return 1
   fi

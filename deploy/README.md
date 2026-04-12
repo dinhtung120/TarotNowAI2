@@ -8,7 +8,20 @@ cp .env.example .env
 
 Update all required secrets in `.env`.
 
-**Lưu ý:** `.env` không nằm trong git. Trên server production, tạo file một lần (`cp .env.example .env` rồi sửa), hoặc trong GitHub Actions đặt secret **`PROD_DOTENV_B64`** = chuỗi base64 của toàn bộ file `.env` (UTF-8), ví dụ: `base64 -w0 < .env` (Linux) / `base64 -i .env` (macOS). Workflow deploy sẽ ghi `REPO_ROOT/.env` trước khi chạy `deploy_db` / `deploy_be` / `deploy_fe`.
+**Lưu ý:** `.env` không nằm trong git. Mỗi máy deploy (DB / BE / FE) cần file tại **`${PROD_REPO_DIR:-/opt/tarotnow/TarotNowAI2}/.env`**.
+
+### GitHub Actions (khuyến nghị)
+
+1. Vào **Repository → Settings → Secrets and variables → Actions → New repository secret**.
+2. Tên: **`PROD_DOTENV_B64`** (đúng chữ hoa, gạch dưới).
+3. Giá trị: **một dòng** base64 của file `.env` production (UTF-8, không BOM):
+   - **Linux:** `base64 -w0 < .env` (hoặc `base64 < .env | tr -d '\n'`)
+   - **macOS:** `base64 -i .env | tr -d '\n'`
+4. Dán toàn bộ chuỗi vào ô Value (có thể rất dài).
+
+Workflow gọi `deploy/scripts/ci/ensure-remote-root-env.sh`: giải mã trên runner, **`scp`** lên đúng host trước bước SSH deploy — không phụ thuộc truyền biến qua heredoc (tránh lỗi khi secret rỗng hoặc chuỗi quá dài).
+
+Nếu **không** dùng secret: tạo `.env` thủ công trên **từng** host (`cp .env.example .env` rồi chỉnh). Bước ensure sẽ kiểm tra file tồn tại; nếu thiếu cả hai → job fail ngay với thông báo rõ.
 
 ## 2) Start data services and bootstrap DB (first deployment only)
 

@@ -110,6 +110,10 @@ jobs:
     needs: [publish-frontend-image]
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.dry_run != true }}
     steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
       - name: Cấu hình SSH
         run: |
           mkdir -p ~/.ssh
@@ -118,6 +122,16 @@ jobs:
           chmod 600 ~/.ssh/id_ci_deploy_key
           printf '%s\n' "${{ secrets.PROD_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
+
+      - name: Đảm bảo .env trên FE host
+        env:
+          PROD_DOTENV_B64: ${{ secrets.PROD_DOTENV_B64 }}
+          PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
+          PROD_FE_HOST: ${{ secrets.PROD_FE_HOST }}
+          REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+        run: |
+          REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
+          bash deploy/scripts/ci/ensure-remote-root-env.sh ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER" "$PROD_FE_HOST" "$REPO_PATH"
 
       - name: Triển khai trên Frontend Host
         env:
@@ -133,7 +147,6 @@ jobs:
           PUBLIC_BASE_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }}
           NEXT_PUBLIC_API_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:5037' }}/api/v1
           FORWARDED_NETWORK_0: "172.30.0.0/16"
-          PROD_DOTENV_B64: ${{ secrets.PROD_DOTENV_B64 }}
         run: |
           ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
@@ -144,7 +157,6 @@ jobs:
           git checkout "${DEPLOY_SHA}"
           git reset --hard "${DEPLOY_SHA}"
           echo "${GHCR_TOKEN_READ}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
-          export PROD_DOTENV_B64="${PROD_DOTENV_B64}"
           REPO_DIR="\$REPO_PATH" ENV_FILE=".env" COMPOSE_FILE="docker-compose.prod.yml" \
           BE_PRIVATE_IP="${BE_PRIVATE_IP}" DB_PRIVATE_IP="${DB_PRIVATE_IP}" \
           PUBLIC_BASE_URL="${PUBLIC_BASE_URL}" NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
