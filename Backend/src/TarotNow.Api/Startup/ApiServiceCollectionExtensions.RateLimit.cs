@@ -31,11 +31,13 @@ public static partial class ApiServiceCollectionExtensions
         // Rule bảo vệ brute-force cho đăng nhập theo IP.
         AddFixedWindowPolicy(options, "login", ResolveClientIp, permitLimit: 5, TimeSpan.FromSeconds(60));
         // Rule theo user đã xác thực để hạn chế spam gọi endpoint auth/session.
-        AddFixedWindowPolicy(options, "auth-session", ResolveAuthenticatedPartitionKey, permitLimit: 20, TimeSpan.FromMinutes(1));
+        // Nâng cao giới hạn (100 req/phút) để tránh chặn nhầm khi Load Profile/Navbar/Wallet đồng thời.
+        AddFixedWindowPolicy(options, "auth-session", ResolveAuthenticatedPartitionKey, permitLimit: 100, TimeSpan.FromMinutes(1));
         // Rule bảo vệ endpoint ghi community khỏi spam nội dung.
-        AddFixedWindowPolicy(options, "community-write", ResolveAuthenticatedPartitionKey, permitLimit: 30, TimeSpan.FromMinutes(1));
+        // Tăng lên 60 req/phút để hỗ trợ upload nhiều ảnh hoặc tương tác nhanh.
+        AddFixedWindowPolicy(options, "community-write", ResolveAuthenticatedPartitionKey, permitLimit: 60, TimeSpan.FromMinutes(1));
         // Rule chuẩn cho các thao tác chat (inbox, tin nhắn) để chịu tải tốt hơn khi có SignalR reconnect/polling.
-        AddFixedWindowPolicy(options, "chat-standard", ResolveAuthenticatedPartitionKey, permitLimit: 120, TimeSpan.FromMinutes(1));
+        AddFixedWindowPolicy(options, "chat-standard", ResolveAuthenticatedPartitionKey, permitLimit: 200, TimeSpan.FromMinutes(1));
     }
 
     /// <summary>
