@@ -134,6 +134,10 @@ const nextConfig: NextConfig = {
     source: '/uploads/:path*',
     destination: `${rewriteBackendOrigin}/uploads/:path*`,
    },
+   {
+    source: '/api/v1/:path*',
+    destination: `${rewriteBackendOrigin}/api/v1/:path*`,
+   },
   ];
  },
  async headers() {

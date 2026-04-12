@@ -13,26 +13,20 @@ import { useAuthStore } from '@/store/authStore';
 function resolveClientMultipartUrl(pathFromV1Root: string): string {
   const rel = pathFromV1Root.startsWith('/') ? pathFromV1Root : `/${pathFromV1Root}`;
 
-  let publicBase: string;
-  try {
-    publicBase = getPublicApiBaseUrl().replace(/\/+$/, '');
-  } catch {
+  // Trong môi trường trình duyệt: Luôn dùng đường dẫn tương đối (Relative Path).
+  // Next.js Proxy (rewrites) sẽ xử lý việc chuyển tiếp sang Backend.
+  // Điều này khắc phục lỗi kết nối trên Mobile khi test Local (localhost vs IP).
+  if (typeof window !== 'undefined') {
     return browserApiPath(rel);
   }
 
-  if (typeof window !== 'undefined') {
-    try {
-      const apiOrigin = new URL(publicBase).origin;
-      if (apiOrigin === window.location.origin) {
-        return browserApiPath(rel);
-      }
-    } catch {
-      /* dùng URL đầy đủ */
-    }
+  // Fallback cho Server-side (nếu có dùng helper này ở server)
+  try {
+    const publicBase = getPublicApiBaseUrl().replace(/\/+$/, '');
     return `${publicBase}${rel}`;
+  } catch {
+    return browserApiPath(rel);
   }
-
-  return browserApiPath(rel);
 }
 
 export type ClientMultipartResult<T> = { ok: true; data: T } | { ok: false; error: string; status: number };

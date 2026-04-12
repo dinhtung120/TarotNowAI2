@@ -4,6 +4,8 @@ export const USER_IMAGE_ALLOWED_MIME_TYPES = [
   'image/png',
   'image/webp',
   'image/gif',
+  'image/heic',
+  'image/heif',
 ] as const;
 
 export type UserImageAllowedMime = (typeof USER_IMAGE_ALLOWED_MIME_TYPES)[number];
