@@ -32,6 +32,9 @@ REPO_DIR="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
 ENV_FILE="${ENV_FILE:-.env}"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
 NGINX_DEFAULT_TEMPLATE="${NGINX_DEFAULT_TEMPLATE:-deploy/nginx/conf.d/default.conf.template}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib-env.sh
+source "$SCRIPT_DIR/lib-env.sh"
 
 # Thư mục lưu trữ trạng thái release (image hiện tại và trước đó)
 # Dùng cho rollback nhanh khi cần quay về version cũ
@@ -59,9 +62,12 @@ read_env_file_value() {
 
 cd "$REPO_DIR"
 
+materialize_root_env_from_ci "$ENV_FILE" || exit 1
+
 # ── Kiểm tra file cần thiết tồn tại ──
 if [[ ! -f "$ENV_FILE" ]]; then
-  echo "[deploy-fe] env file not found: $ENV_FILE" >&2
+  echo "[deploy-fe] env file not found: $REPO_DIR/$ENV_FILE" >&2
+  echo "[deploy-fe] Tạo thủ công: cp .env.example .env && chỉnh secrets, hoặc đặt GitHub secret PROD_DOTENV_B64 (base64 của .env)." >&2
   exit 1
 fi
 

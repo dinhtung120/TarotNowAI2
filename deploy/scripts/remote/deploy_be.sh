@@ -19,11 +19,17 @@ OVERRIDE_FILE="${OVERRIDE_FILE:-deploy/.generated.backend.override.yml}"
 STATE_DIR="${STATE_DIR:-/opt/tarotnow/release-state}"
 CURRENT_FILE="$STATE_DIR/backend_current_image"
 PREVIOUS_FILE="$STATE_DIR/backend_previous_image"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib-env.sh
+source "$SCRIPT_DIR/lib-env.sh"
 
 cd "$REPO_DIR"
 
+materialize_root_env_from_ci "$ENV_FILE" || exit 1
+
 if [[ ! -f "$ENV_FILE" ]]; then
-  echo "[deploy-be] env file not found: $ENV_FILE" >&2
+  echo "[deploy-be] env file not found: $REPO_DIR/$ENV_FILE" >&2
+  echo "[deploy-be] Tạo thủ công: cp .env.example .env && chỉnh secrets, hoặc đặt GitHub secret PROD_DOTENV_B64 (base64 của .env)." >&2
   exit 1
 fi
 

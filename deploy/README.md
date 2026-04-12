@@ -8,6 +8,8 @@ cp .env.example .env
 
 Update all required secrets in `.env`.
 
+**Lưu ý:** `.env` không nằm trong git. Trên server production, tạo file một lần (`cp .env.example .env` rồi sửa), hoặc trong GitHub Actions đặt secret **`PROD_DOTENV_B64`** = chuỗi base64 của toàn bộ file `.env` (UTF-8), ví dụ: `base64 -w0 < .env` (Linux) / `base64 -i .env` (macOS). Workflow deploy sẽ ghi `REPO_ROOT/.env` trước khi chạy `deploy_db` / `deploy_be` / `deploy_fe`.
+
 ## 2) Start data services and bootstrap DB (first deployment only)
 
 ```bash
