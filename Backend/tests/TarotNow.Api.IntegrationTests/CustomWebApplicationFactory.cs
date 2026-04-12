@@ -88,6 +88,8 @@ public class CustomWebApplicationFactory<TProgram>
             {
                 ["ConnectionStrings:PostgreSQL"] = postgresConnectionString,
                 ["ConnectionStrings:MongoDB"] = mongoConnectionString,
+                ["ConnectionStrings:Redis"] = "",
+                ["Redis:InstanceName"] = "TarotNowIntegrationTest:",
                 ["Jwt:SecretKey"] = "TarotNow_Test_JwtSecret_1234567890_ABCDEFG",
                 ["Jwt:Issuer"] = "TarotNowAI-Test",
                 ["Jwt:Audience"] = "TarotNowAI-Users-Test",
