@@ -65,6 +65,7 @@ public static class EnvLoader
         CopyEnvIfTargetMissing("AI_MAX_RETRIES", "AIPROVIDER__MAXRETRIES");
 
         CopyEnvIfTargetMissing("PUBLIC_BASE_URL", "CORS__ALLOWEDORIGINS__0");
+        CopyEnvIfTargetMissing("NEXT_PUBLIC_BASE_URL", "CORS__ALLOWEDORIGINS__0");
 
         CopyEnvIfTargetMissing("REDIS_INSTANCE_NAME", "REDIS__INSTANCENAME");
 

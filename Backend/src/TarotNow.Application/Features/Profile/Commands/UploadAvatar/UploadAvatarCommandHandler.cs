@@ -51,25 +51,36 @@ public class UploadAvatarCommandHandler : IRequestHandler<UploadAvatarCommand, U
         try
         {
             user.ApplyManagedAvatar(pipelineResult.PublicUrl, pipelineResult.PublicId);
-            await _userRepository.UpdateAsync(user);
+            
+            // Song song hóa các lệnh cập nhật DB để tận dụng IO overlap.
+            var updateUserTask = _userRepository.UpdateAsync(user);
+            
+            var updateProfileTask = Task.Run(async () => {
+                var readerProfile = await _readerProfileRepository.GetByUserIdAsync(user.Id.ToString(), cancellationToken);
+                if (readerProfile is not null)
+                {
+                    readerProfile.AvatarUrl = pipelineResult.PublicUrl;
+                    await _readerProfileRepository.UpdateAsync(readerProfile, cancellationToken);
+                }
+            }, cancellationToken);
 
-            var readerProfile = await _readerProfileRepository.GetByUserIdAsync(user.Id.ToString(), cancellationToken);
-            if (readerProfile is not null)
-            {
-                readerProfile.AvatarUrl = pipelineResult.PublicUrl;
-                await _readerProfileRepository.UpdateAsync(readerProfile, cancellationToken);
-            }
+            await Task.WhenAll(updateUserTask, updateProfileTask);
 
+            // Chuyển việc xóa ảnh cũ sang chạy nền (fire-and-forget) để giảm latency.
             if (!string.IsNullOrEmpty(oldObjectKey))
             {
-                try
+                _ = Task.Run(async () =>
                 {
-                    await _objectStorage.DeleteAsync(oldObjectKey, cancellationToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Không xóa được avatar object cũ key={Key}", oldObjectKey);
-                }
+                    try
+                    {
+                        // Dùng CancellationToken.None vì đây là tác vụ nền độc lập với request hiện tại.
+                        await _objectStorage.DeleteAsync(oldObjectKey, CancellationToken.None);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Background Task: Không xóa được avatar object cũ key={Key}", oldObjectKey);
+                    }
+                });
             }
 
             return new UploadAvatarResult(pipelineResult.PublicUrl, pipelineResult.PublicId);

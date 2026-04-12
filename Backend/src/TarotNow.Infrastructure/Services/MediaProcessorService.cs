@@ -123,7 +123,11 @@ public class MediaProcessorService : IMediaProcessorService
         CancellationToken cancellationToken)
     {
         outStream.SetLength(0);
-        await image.SaveAsWebpAsync(outStream, new WebpEncoder { Quality = 82 }, cancellationToken);
+        await image.SaveAsWebpAsync(outStream, new WebpEncoder 
+        { 
+            Quality = 82,
+            Method = WebpEncodingMethod.Fastest 
+        }, cancellationToken);
         return (outStream.ToArray(), WebpMimeType);
     }
 

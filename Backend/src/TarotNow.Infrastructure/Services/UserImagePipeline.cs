@@ -98,7 +98,7 @@ public sealed class UserImagePipeline : IUserImagePipeline
     private static async Task<byte[]> ReadStreamWithLimitAsync(Stream stream, long maxBytes, CancellationToken ct)
     {
         await using var ms = new MemoryStream();
-        var buffer = new byte[8192];
+        var buffer = new byte[65536]; // Tăng lên 64KB để tối ưu I/O throughput.
         long total = 0;
         int read;
         while ((read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), ct)) > 0)
