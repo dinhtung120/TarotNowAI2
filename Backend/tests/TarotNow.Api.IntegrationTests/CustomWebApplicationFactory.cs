@@ -53,6 +53,8 @@ public class CustomWebApplicationFactory<TProgram>
             ["SMTP__PASSWORD"] = "TarotNow_Test_SmtpPassword_2026",
             ["SMTP__SENDEREMAIL"] = "noreply@test.local",
             ["SMTP__SENDERNAME"] = "TarotNow Test",
+            ["REDIS__INSTANCENAME"] = "TarotNowIntegrationTest:",
+            ["CONNECTIONSTRINGS__REDIS"] = "",
             ["AIPROVIDER__APIKEY"] = "tarotnow-test-ai-key",
             ["AIPROVIDER__BASEURL"] = "https://api.openai.com/v1/",
             ["AIPROVIDER__MODEL"] = "gpt-4.1-mini",
