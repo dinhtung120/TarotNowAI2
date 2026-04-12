@@ -2259,9 +2259,12 @@
   color: var(--text-secondary);
 }
 
+/* Loại bỏ định dạng in đậm và màu sắc đặc biệt cho thẻ strong trong nội dung AI. 
+   Việc này giúp văn bản mô tả đồng nhất, không bị ngắt quãng bởi các từ in đậm quá mức,
+   giảm mỏi mắt cho người dùng theo phản hồi. */
 .tn-ai-stream-markdown strong {
-  color: var(--text-primary);
-  font-weight: 700;
+  color: inherit;
+  font-weight: inherit;
 }
 
 .tn-ai-stream-markdown em {
