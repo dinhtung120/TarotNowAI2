@@ -1,7 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { compressAvatarImage } from '@/features/profile/application/compressAvatarImage';
 import { UserImageValidationError } from '@/shared/media/validateImageForUpload';
-import { uploadAvatarAction } from '@/features/profile/application/actions/upload-avatar';
+import { postFormDataToApiV1 } from '@/shared/infrastructure/http/clientMultipartUpload';
 
 interface UploadProfileAvatarArgs {
   file: File;
@@ -36,17 +36,23 @@ export async function uploadProfileAvatar({ file, profileQueryKey, queryClient, 
   const formData = new FormData();
   formData.append('file', compressedFile, compressedFile.name);
 
-  const result = await uploadAvatarAction(formData);
-  if (!result.success) {
+  const failMsg = t('avatar_upload_error') || 'Không thể tải ảnh lên';
+  const uploaded = await postFormDataToApiV1<{ avatarUrl?: string; AvatarUrl?: string }>('/profile/avatar', formData, {
+    fallbackErrorMessage: failMsg,
+    unauthorizedMessage: t('avatar_upload_error') || failMsg,
+  });
+
+  if (!uploaded.ok) {
     return {
       avatarUrl: null,
-      error: result.error,
+      error: uploaded.error,
       message: '',
       success: false,
     };
   }
 
-  const avatarUrl = result.data?.avatarUrl || null;
+  const raw = uploaded.data;
+  const avatarUrl = (typeof raw.avatarUrl === 'string' ? raw.avatarUrl : null) ?? (typeof raw.AvatarUrl === 'string' ? raw.AvatarUrl : null);
   await queryClient.invalidateQueries({ queryKey: profileQueryKey });
 
   return {

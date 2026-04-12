@@ -1,4 +1,6 @@
-const API_VERSION_PATH = '/api/v1';
+/** Tiền tố REST v1; dùng cho URL tương đối cùng origin (nginx → backend). */
+export const API_V1_PREFIX = '/api/v1';
+const API_VERSION_PATH = API_V1_PREFIX;
 const API_BASE_URL_ENV_NAME = 'NEXT_PUBLIC_API_URL';
 const INTERNAL_API_BASE_URL_ENV_NAME = 'INTERNAL_API_URL';
 
@@ -97,6 +99,14 @@ export function internalApiUrl(path: string): string {
   if (!path) return base;
   if (/^https?:\/\//i.test(path)) return path;
   return `${base}${path.startsWith('/') ? path : `/${path}`}`;
+}
+
+/**
+ * Đường dẫn API v1 trên cùng host với trang (ví dụ /api/v1/profile).
+ */
+export function browserApiPath(pathFromV1Root: string): string {
+  const rel = pathFromV1Root.startsWith('/') ? pathFromV1Root : `/${pathFromV1Root}`;
+  return `${API_V1_PREFIX}${rel}`;
 }
 
 // Giữ lại các export cũ để tránh lỗi compile, nhưng sẽ refactor dần.

@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { uploadPostImageAction } from '@/features/community/application/actions/communityActions';
+import { postFormDataToApiV1 } from '@/shared/infrastructure/http/clientMultipartUpload';
 import { useCreatePost } from '@/features/community/hooks/useCreatePost';
 import { PostVisibility } from '@/features/community/types';
 import { cn } from '@/lib/utils';
@@ -59,8 +59,10 @@ export const PostComposer: React.FC<PostComposerProps> = ({ currentVisibilityTab
 
       const formData = new FormData();
       formData.append('file', toSend, toSend.name);
-      const response = await uploadPostImageAction(formData);
-      if (response.success && response.data) {
+      const response = await postFormDataToApiV1<{ url?: string }>('/community/images', formData, {
+        fallbackErrorMessage: t('composer.upload_failed'),
+      });
+      if (response.ok && response.data.url) {
         const currentContent = watch('content') ?? '';
         setValue('content', `${currentContent}\n\n![post-image](${response.data.url})\n`, {
           shouldDirty: true,
@@ -68,7 +70,7 @@ export const PostComposer: React.FC<PostComposerProps> = ({ currentVisibilityTab
         });
         toast.success(t('composer.upload_success'));
       } else {
-        toast.error(response.error || t('composer.upload_failed'));
+        toast.error(!response.ok ? response.error : t('composer.upload_failed'));
       }
     } catch {
       toast.error(t('composer.upload_error'));

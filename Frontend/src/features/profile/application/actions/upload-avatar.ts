@@ -6,6 +6,7 @@ import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 
+/** Giữ cho tương thích; upload profile thực tế dùng client `postFormDataToApiV1` (tránh FormData qua Server Action). */
 export async function uploadAvatarAction(
   formData: FormData
 ): Promise<ActionResult<{ avatarUrl: string; publicId?: string }>> {
