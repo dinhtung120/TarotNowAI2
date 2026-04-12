@@ -10,6 +10,8 @@ import { uploadPostImageAction } from '@/features/community/application/actions/
 import { useCreatePost } from '@/features/community/hooks/useCreatePost';
 import { PostVisibility } from '@/features/community/types';
 import { cn } from '@/lib/utils';
+import { prepareUserImageForUpload, UserImageValidationError } from '@/shared/media';
+import { toast } from 'react-hot-toast';
 import { PostComposerActions } from './post-composer/PostComposerActions';
 
 interface PostComposerProps {
@@ -43,8 +45,20 @@ export const PostComposer: React.FC<PostComposerProps> = ({ currentVisibilityTab
     if (!file) return;
     setIsUploading(true);
     try {
+      let toSend: File;
+      try {
+        toSend = await prepareUserImageForUpload(file, 'community');
+      } catch (prepErr) {
+        const msg =
+          prepErr instanceof UserImageValidationError
+            ? prepErr.message
+            : t('composer.upload_error');
+        toast.error(msg);
+        return;
+      }
+
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', toSend, toSend.name);
       const response = await uploadPostImageAction(formData);
       if (response.success && response.data) {
         const currentContent = watch('content') ?? '';
@@ -52,11 +66,12 @@ export const PostComposer: React.FC<PostComposerProps> = ({ currentVisibilityTab
           shouldDirty: true,
           shouldValidate: true,
         });
+        toast.success(t('composer.upload_success'));
       } else {
-        alert(response.error || t('composer.upload_failed'));
+        toast.error(response.error || t('composer.upload_failed'));
       }
     } catch {
-      alert(t('composer.upload_error'));
+      toast.error(t('composer.upload_error'));
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';

@@ -377,7 +377,7 @@ jobs:
           git reset --hard "${DEPLOY_SHA}"
           echo "${GHCR_TOKEN_READ}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
           # Truyền các biến môi trường vào lệnh thực thi script
-          REPO_DIR="\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
+          REPO_DIR="\$REPO_PATH" ENV_FILE=".env" COMPOSE_FILE="docker-compose.prod.yml" \
           BE_PRIVATE_IP="${BE_PRIVATE_IP}" DB_PRIVATE_IP="${DB_PRIVATE_IP}" \
           PUBLIC_BASE_URL="${PUBLIC_BASE_URL}" NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
           FORWARDED_NETWORK_0="${FORWARDED_NETWORK_0}" \
@@ -425,7 +425,7 @@ jobs:
           git reset --hard "${DEPLOY_SHA}"
           echo "${GHCR_TOKEN_READ}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
           # Truyền các biến môi trường vào lệnh thực thi script
-          REPO_DIR="\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
+          REPO_DIR="\$REPO_PATH" ENV_FILE=".env" COMPOSE_FILE="docker-compose.prod.yml" \
           BE_PRIVATE_IP="${BE_PRIVATE_IP}" DB_PRIVATE_IP="${DB_PRIVATE_IP}" \
           PUBLIC_BASE_URL="${PUBLIC_BASE_URL}" NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
           FORWARDED_NETWORK_0="${FORWARDED_NETWORK_0}" \
@@ -473,7 +473,7 @@ jobs:
           git reset --hard "${DEPLOY_SHA}"
           echo "${GHCR_TOKEN_READ}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
           # Truyền các biến môi trường vào lệnh thực thi script
-          REPO_DIR="\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
+          REPO_DIR="\$REPO_PATH" ENV_FILE=".env" COMPOSE_FILE="docker-compose.prod.yml" \
           BE_PRIVATE_IP="${BE_PRIVATE_IP}" DB_PRIVATE_IP="${DB_PRIVATE_IP}" \
           PUBLIC_BASE_URL="${PUBLIC_BASE_URL}" NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
           FORWARDED_NETWORK_0="${FORWARDED_NETWORK_0}" \
@@ -542,7 +542,7 @@ jobs:
           set -euo pipefail
           REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
           cd "\$REPO_PATH"
-          REPO_DIR="\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
+          REPO_DIR="\$REPO_PATH" ENV_FILE=".env" COMPOSE_FILE="docker-compose.prod.yml" \
             ./deploy/scripts/remote/rollback_be_fe.sh backend
           EOF_REMOTE
 
@@ -558,7 +558,7 @@ jobs:
           set -euo pipefail
           REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
           cd "\$REPO_PATH"
-          REPO_DIR="\$REPO_PATH" ENV_FILE="deploy/.env.prod" COMPOSE_FILE="docker-compose.prod.yml" \
+          REPO_DIR="\$REPO_PATH" ENV_FILE=".env" COMPOSE_FILE="docker-compose.prod.yml" \
             ./deploy/scripts/remote/rollback_be_fe.sh frontend
           EOF_REMOTE
 

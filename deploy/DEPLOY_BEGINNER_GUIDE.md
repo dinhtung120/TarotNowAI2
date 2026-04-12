@@ -111,21 +111,21 @@ git clone <URL_REPO_CUA_BAN> TarotNowAI2
 cd TarotNowAI2
 ```
 
-## 5) Tạo file cấu hình production `.env.prod`
+## 5) Tạo file cấu hình production `.env`
 
 Trên mỗi máy:
 
 ```bash
-cp deploy/.env.prod.example deploy/.env.prod
+cp .env.example .env
 ```
 
 Mở file để sửa:
 
 ```bash
-nano deploy/.env.prod
+nano .env
 ```
 
-## 5.1 Giải thích toàn bộ biến trong `deploy/.env.prod.example`
+## 5.1 Giải thích toàn bộ biến trong `.env.example`
 
 | Biến | Ý nghĩa | Ví dụ cho mô hình 3 EC2 |
 |---|---|---|
@@ -161,7 +161,7 @@ nano deploy/.env.prod
 
 Lưu ý:
 - `FORWARDED_NETWORK_0` nên là CIDR của VPC chứa FE/BE (không dùng IP public).
-- Dùng cùng 1 nội dung `.env.prod` trên cả 3 máy để tránh lệch cấu hình.
+- Dùng cùng 1 nội dung `.env` trên cả 3 máy để tránh lệch cấu hình.
 - Tuyệt đối không commit file này lên git.
 
 ## 6) Deploy EC2-DB (Mongo/Postgres/Redis)
@@ -176,13 +176,13 @@ cd ~/TarotNowAI2
 Khởi tạo DB + migrate + seed:
 
 ```bash
-./deploy/scripts/bootstrap-db.sh deploy/.env.prod docker-compose.prod.yml
+./deploy/scripts/bootstrap-db.sh .env docker-compose.prod.yml
 ```
 
 Kiểm tra container:
 
 ```bash
-docker compose --env-file deploy/.env.prod -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml ps
 ```
 
 Lấy private IP của DB (dùng cho BE):
@@ -229,7 +229,6 @@ Chạy backend (không kéo theo DB local):
 
 ```bash
 docker compose \
-  --env-file deploy/.env.prod \
   -f docker-compose.prod.yml \
   -f deploy/docker-compose.3ec2.backend.override.yml \
   up -d --build --no-deps backend
@@ -245,7 +244,7 @@ curl -fsS http://localhost:5037/api/v1/health/ready
 Nếu `ready` trả lỗi, kiểm tra:
 
 ```bash
-docker compose --env-file deploy/.env.prod -f docker-compose.prod.yml logs --no-color backend
+docker compose -f docker-compose.prod.yml logs --no-color backend
 ```
 
 ## 8) Deploy EC2-FE (Frontend + Nginx reverse proxy)
@@ -282,7 +281,6 @@ Chạy FE + nginx (không kéo BE local):
 
 ```bash
 docker compose \
-  --env-file deploy/.env.prod \
   -f docker-compose.prod.yml \
   up -d --build --no-deps frontend reverse-proxy
 ```
@@ -343,20 +341,20 @@ Mô hình mặc định trên là HTTPS ở Cloudflare edge, nhưng đoạn Clou
 Trên FE:
 
 ```bash
-docker compose --env-file deploy/.env.prod -f docker-compose.prod.yml ps
-docker compose --env-file deploy/.env.prod -f docker-compose.prod.yml logs --no-color reverse-proxy frontend
+docker compose -f docker-compose.prod.yml ps
+docker compose -f docker-compose.prod.yml logs --no-color reverse-proxy frontend
 ```
 
 Trên BE:
 
 ```bash
-docker compose --env-file deploy/.env.prod -f docker-compose.prod.yml logs --no-color backend
+docker compose -f docker-compose.prod.yml logs --no-color backend
 ```
 
 Trên DB:
 
 ```bash
-docker compose --env-file deploy/.env.prod -f docker-compose.prod.yml logs --no-color postgres mongodb redis
+docker compose -f docker-compose.prod.yml logs --no-color postgres mongodb redis
 ```
 
 ## 10.2 Quy trình update phiên bản
@@ -373,14 +371,13 @@ git pull
 - DB (nếu có thay đổi DB):
 
 ```bash
-./deploy/scripts/bootstrap-db.sh deploy/.env.prod docker-compose.prod.yml
+./deploy/scripts/bootstrap-db.sh .env docker-compose.prod.yml
 ```
 
 - BE:
 
 ```bash
 docker compose \
-  --env-file deploy/.env.prod \
   -f docker-compose.prod.yml \
   -f deploy/docker-compose.3ec2.backend.override.yml \
   up -d --build --no-deps backend
@@ -389,7 +386,7 @@ docker compose \
 - FE:
 
 ```bash
-docker compose --env-file deploy/.env.prod -f docker-compose.prod.yml up -d --build --no-deps frontend reverse-proxy
+docker compose -f docker-compose.prod.yml up -d --build --no-deps frontend reverse-proxy
 ```
 
 ## 10.3 Backup/Restore (chạy trên DB host)
@@ -397,13 +394,13 @@ docker compose --env-file deploy/.env.prod -f docker-compose.prod.yml up -d --bu
 Backup:
 
 ```bash
-ENV_FILE=deploy/.env.prod ./deploy/scripts/backup-db.sh
+ENV_FILE=.env ./deploy/scripts/backup-db.sh
 ```
 
 Restore:
 
 ```bash
-ENV_FILE=deploy/.env.prod ./deploy/scripts/restore-db.sh backups/<timestamp>
+ENV_FILE=.env ./deploy/scripts/restore-db.sh backups/<timestamp>
 ```
 
 ## 10.4 Về các drill script
@@ -426,7 +423,7 @@ Với mô hình 3 EC2, bạn nên thực hiện drill thủ công theo từng l�
 - [ ] Đăng nhập/đọc dữ liệu/upload media hoạt động.
 - [ ] Đã chạy backup ít nhất 1 lần và thấy file backup.
 - [ ] Security Group không mở dư cổng DB ra internet.
-- [ ] File `.env.prod` không nằm trong git.
+- [ ] File `.env` không nằm trong git.
 
 ## 12) Checklist sau Go-live 24 giờ
 
@@ -450,17 +447,17 @@ Dấu hiệu:
 - `docker compose config` hoặc `up` báo: `... is required`.
 
 Nguyên nhân:
-- Thiếu biến trong `deploy/.env.prod` hoặc sai tên biến.
+- Thiếu biến trong `.env` hoặc sai tên biến.
 
 Cách xử lý:
 1. Mở file env:
    ```bash
-   nano deploy/.env.prod
+   nano .env
    ```
-2. Đối chiếu từng biến với `deploy/.env.prod.example`.
+2. Đối chiếu từng biến với `.env.example`.
 3. Lưu file và chạy lại:
    ```bash
-   docker compose --env-file deploy/.env.prod -f docker-compose.prod.yml config
+   docker compose -f docker-compose.prod.yml config
    ```
 
 Cách xác nhận đã hết:
@@ -478,7 +475,7 @@ Nguyên nhân:
 Cách xử lý:
 1. Trên BE kiểm tra log backend:
    ```bash
-   docker compose --env-file deploy/.env.prod -f docker-compose.prod.yml logs --no-color backend
+   docker compose -f docker-compose.prod.yml logs --no-color backend
    ```
 2. Kiểm tra lại file override BE có đúng IP DB.
 3. Kiểm tra SG của DB mở `5432/27017/6379` cho `sg-be`.
@@ -598,7 +595,7 @@ Cách xác nhận đã hết:
 
 ## 14) Bảo mật tối thiểu bắt buộc
 
-- Không commit `deploy/.env.prod` vào git.
+- Không commit `.env` vào git.
 - Chỉ dùng SSH key, không dùng password login.
 - Giới hạn inbound SSH theo IP cố định của bạn.
 - Không public cổng DB (`5432`, `27017`, `6379`).
@@ -612,7 +609,7 @@ Lưu ý giới hạn kiến trúc hiện tại:
 ## 15) File nào cần sửa trong mô hình 3 EC2
 
 Bắt buộc:
-- `deploy/.env.prod` (trên cả 3 máy).
+- `.env` (trên cả 3 máy).
 - `deploy/docker-compose.3ec2.backend.override.yml` (tạo mới trên BE).
 - `deploy/nginx/conf.d/default.conf` (trên FE, sửa `backend_upstream` trỏ BE private IP).
 

@@ -14,6 +14,14 @@ public interface IMediaProcessorService
     Task<(byte[] Data, string MimeType)> ProcessAndCompressImageAsync(byte[] imageBytes, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Nén ảnh với giới hạn cạnh dài tối đa (px) trước khi encode AVIF/WebP.
+    /// </summary>
+    Task<(byte[] Data, string MimeType)> ProcessAndCompressImageAsync(
+        byte[] imageBytes,
+        int maxEdgePixels,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Xử lý và nén voice để chuẩn hóa định dạng phát lại và giảm kích thước tệp.
     /// Luồng xử lý: nhận byte voice + extension, thực thi chuyển đổi cần thiết và trả dữ liệu/mime type đầu ra.
     /// </summary>

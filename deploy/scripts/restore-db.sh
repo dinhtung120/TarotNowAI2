@@ -8,7 +8,7 @@ fi
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 COMPOSE_FILE="${COMPOSE_FILE:-$ROOT_DIR/docker-compose.prod.yml}"
-ENV_FILE="${ENV_FILE:-$ROOT_DIR/deploy/.env.prod}"
+ENV_FILE="${ENV_FILE:-$ROOT_DIR/.env}"
 BACKUP_DIR="$1"
 
 POSTGRES_FILE="$BACKUP_DIR/postgres.sql"

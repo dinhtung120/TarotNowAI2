@@ -6,12 +6,12 @@ set -euo pipefail
 # 2) rollback-drill.sh ENV_FILE COMPOSE_FILE BASE_URL [BASE_TAG] [NEXT_TAG]
 if [[ "${1:-}" =~ ^https?:// ]]; then
   BASE_URL="${1:-http://localhost}"
-  ENV_FILE="${2:-deploy/.env.prod}"
+  ENV_FILE="${2:-.env}"
   COMPOSE_FILE="${3:-docker-compose.prod.yml}"
   BASE_TAG="${4:-drill-n}"
   NEXT_TAG="${5:-drill-n1}"
 else
-  ENV_FILE="${1:-deploy/.env.prod}"
+  ENV_FILE="${1:-.env}"
   COMPOSE_FILE="${2:-docker-compose.prod.yml}"
   BASE_URL="${3:-http://localhost}"
   BASE_TAG="${4:-drill-n}"

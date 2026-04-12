@@ -110,6 +110,7 @@ public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory
         var resultText = await response.Content.ReadAsStringAsync();
         Assert.Contains("success\":true", resultText);
         Assert.Contains("avatarUrl\":\"/uploads/avatars/", resultText);
+        Assert.Contains("publicId\":\"uploads/avatars/", resultText);
 
         // Parse avatarUrl để đối chiếu với dữ liệu profile sau khi lưu.
         using var jsonDoc = System.Text.Json.JsonDocument.Parse(resultText);

@@ -46,8 +46,24 @@ public partial class User
     public void UpdateProfile(string displayName, string? avatarUrl, DateTime dateOfBirth)
     {
         DisplayName = displayName;
+        if (!string.Equals(AvatarUrl, avatarUrl, StringComparison.Ordinal))
+        {
+            // Avatar thay đổi từ form profile (URL tùy ý) → không còn object R2 được quản lý server.
+            AvatarObjectKey = null;
+        }
+
         AvatarUrl = avatarUrl;
         DateOfBirth = dateOfBirth;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Gán avatar sau khi upload qua pipeline R2/local: lưu URL public và key để xóa object cũ.
+    /// </summary>
+    public void ApplyManagedAvatar(string publicUrl, string objectStorageKey)
+    {
+        AvatarUrl = publicUrl;
+        AvatarObjectKey = objectStorageKey;
         UpdatedAt = DateTime.UtcNow;
     }
 

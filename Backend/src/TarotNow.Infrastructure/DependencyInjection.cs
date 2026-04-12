@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using TarotNow.Application.Options;
 using TarotNow.Infrastructure.Options;
 using TarotNow.Infrastructure.BackgroundJobs;
 
@@ -41,6 +42,22 @@ public static partial class DependencyInjection
         services.Configure<DiagnosticsOptions>(configuration.GetSection("Diagnostics"));
         services.Configure<ChatModerationOptions>(configuration.GetSection("ChatModeration"));
         services.Configure<FileStorageOptions>(configuration.GetSection("FileStorage"));
+        services.AddOptions<ObjectStorageOptions>()
+            .Bind(configuration.GetSection("ObjectStorage"))
+            .Validate(o =>
+            {
+                if (!string.Equals(o.Provider, "R2", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                return !string.IsNullOrWhiteSpace(o.R2.AccountId)
+                       && !string.IsNullOrWhiteSpace(o.R2.AccessKeyId)
+                       && !string.IsNullOrWhiteSpace(o.R2.SecretAccessKey)
+                       && !string.IsNullOrWhiteSpace(o.R2.BucketName);
+            }, "Khi ObjectStorage:Provider=R2 cần đủ R2:AccountId, AccessKeyId, SecretAccessKey, BucketName.")
+            .ValidateOnStart();
+        services.Configure<MediaCdnOptions>(configuration.GetSection("MediaCdn"));
     }
 
     /// <summary>

@@ -3,7 +3,9 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using FFMpegCore;
+using NeoSolve.ImageSharp.AVIF;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Webp;
 using SixLabors.ImageSharp.Processing;
 using TarotNow.Application.Interfaces;
 
@@ -12,13 +14,10 @@ namespace TarotNow.Infrastructure.Services;
 // Service xử lý nén ảnh và chuyển đổi voice media cho chat/reading.
 public class MediaProcessorService : IMediaProcessorService
 {
-    // Giới hạn kích thước ảnh để giảm băng thông và chi phí lưu trữ.
+    // Giới hạn kích thước ảnh mặc định (chat/media) để giảm băng thông.
     private const int MaxImageWidth = 2048;
-    private const int MaxImageHeight = 2048;
-    // Mức chất lượng AVIF cân bằng giữa dung lượng và độ rõ.
-    private const int AvifQuality = 70;
-    // Type name động để tránh hard dependency khi encoder AVIF không có trong runtime.
-    private const string AvifEncoderTypeName = "SixLabors.ImageSharp.Formats.Avif.AvifEncoder, SixLabors.ImageSharp";
+    // CQLevel cho encoder NeoSolve AVIF (cân bằng dung lượng/chất lượng).
+    private const int AvifCQLevel = 28;
     // MIME type chuẩn cho ảnh AVIF/WebP và voice Opus/WebM fallback.
     private const string AvifMimeType = "image/avif";
     private const string WebpMimeType = "image/webp";
@@ -30,15 +29,22 @@ public class MediaProcessorService : IMediaProcessorService
     /// Xử lý và nén ảnh đầu vào sang AVIF hoặc WebP.
     /// Luồng xóa metadata, resize khi vượt ngưỡng rồi ưu tiên encode AVIF để tối ưu kích thước.
     /// </summary>
+    public Task<(byte[] Data, string MimeType)> ProcessAndCompressImageAsync(
+        byte[] imageBytes,
+        CancellationToken cancellationToken = default)
+        => ProcessAndCompressImageAsync(imageBytes, MaxImageWidth, cancellationToken);
+
+    /// <inheritdoc />
     public async Task<(byte[] Data, string MimeType)> ProcessAndCompressImageAsync(
         byte[] imageBytes,
+        int maxEdgePixels,
         CancellationToken cancellationToken = default)
     {
         using var inStream = new MemoryStream(imageBytes);
         using var image = await Image.LoadAsync(inStream, cancellationToken);
 
-        StripImageExif(image);
-        ResizeImageIfNeeded(image);
+        StripImageMetadata(image);
+        ResizeImageIfNeeded(image, maxEdgePixels);
 
         using var outStream = new MemoryStream();
         try
@@ -49,7 +55,7 @@ public class MediaProcessorService : IMediaProcessorService
         catch
         {
             // Edge case: AVIF lỗi hoặc không hỗ trợ thì fallback WebP để luôn có kết quả hợp lệ.
-            return await SaveAsWebpAsync(image, outStream, cancellationToken);
+            return await SaveAsWebpAsync(image, new MemoryStream(), cancellationToken);
         }
     }
 
@@ -92,23 +98,24 @@ public class MediaProcessorService : IMediaProcessorService
     /// Xóa EXIF khỏi ảnh để giảm kích thước và loại bỏ metadata nhạy cảm.
     /// Luồng chỉ thao tác khi profile tồn tại để tránh xử lý thừa.
     /// </summary>
-    private static void StripImageExif(Image image)
+    private static void StripImageMetadata(Image image)
     {
-        if (image.Metadata.ExifProfile == null) return;
         image.Metadata.ExifProfile = null;
+        image.Metadata.XmpProfile = null;
+        image.Metadata.IptcProfile = null;
     }
 
     /// <summary>
     /// Resize ảnh khi vượt kích thước tối đa cho phép.
     /// Luồng dùng ResizeMode.Max để giữ tỉ lệ và tránh biến dạng ảnh.
     /// </summary>
-    private static void ResizeImageIfNeeded(Image image)
+    private static void ResizeImageIfNeeded(Image image, int maxEdgePixels)
     {
-        if (image.Width <= MaxImageWidth && image.Height <= MaxImageHeight) return;
+        if (image.Width <= maxEdgePixels && image.Height <= maxEdgePixels) return;
 
         image.Mutate(operation => operation.Resize(new ResizeOptions
         {
-            Size = new Size(MaxImageWidth, MaxImageHeight),
+            Size = new Size(maxEdgePixels, maxEdgePixels),
             Mode = ResizeMode.Max
         }));
     }
@@ -122,15 +129,9 @@ public class MediaProcessorService : IMediaProcessorService
         MemoryStream outStream,
         CancellationToken cancellationToken)
     {
-        var encoderType = Type.GetType(AvifEncoderTypeName);
-        if (encoderType == null)
-        {
-            return await SaveAsWebpAsync(image, outStream, cancellationToken);
-        }
-
-        dynamic avifEncoder = Activator.CreateInstance(encoderType)!;
-        avifEncoder.Quality = AvifQuality;
-        await image.SaveAsync(outStream, avifEncoder, cancellationToken);
+        outStream.SetLength(0);
+        var encoder = new AVIFEncoder { CQLevel = AvifCQLevel };
+        await image.SaveAsync(outStream, encoder, cancellationToken);
         return (outStream.ToArray(), AvifMimeType);
     }
 
@@ -143,7 +144,8 @@ public class MediaProcessorService : IMediaProcessorService
         MemoryStream outStream,
         CancellationToken cancellationToken)
     {
-        await image.SaveAsWebpAsync(outStream, cancellationToken);
+        outStream.SetLength(0);
+        await image.SaveAsWebpAsync(outStream, new WebpEncoder { Quality = 82 }, cancellationToken);
         return (outStream.ToArray(), WebpMimeType);
     }
 

@@ -19,6 +19,7 @@
       "visibility_private": "🔒 Private",
       "attach_image": "Attach image",
       "upload_failed": "Image upload failed",
+      "upload_success": "Image added to your post",
       "upload_error": "Error while uploading image",
       "posting": "Posting...",
       "submit": "Post"

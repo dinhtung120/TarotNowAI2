@@ -53,14 +53,14 @@ public partial class CommunityController
 
         // Dùng stream để xử lý file theo kiểu streaming, tránh giữ toàn bộ file trên bộ nhớ.
         using var stream = file.OpenReadStream();
-        var url = await _mediator.Send(new UploadPostImageCommand
+        var upload = await _mediator.Send(new UploadPostImageCommand
         {
             ImageStream = stream,
             FileName = file.FileName,
             ContentType = file.ContentType
         });
 
-        return Ok(new { success = true, url });
+        return Ok(new { success = true, url = upload.Url, publicId = upload.PublicId });
     }
 
     /// <summary>

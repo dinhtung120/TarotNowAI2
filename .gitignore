@@ -59,10 +59,9 @@ yarn-error.log*
 
 # ---------- Environment & Secrets ----------
 ## File .env chứa secrets – KHÔNG BAO GIỜ commit lên repo
-## Chỉ commit .env.example (template không có giá trị thật)
+## Secrets: `.env` ở root — template committed: `.env.example`
 .env
 .env.local
-.env.prod
 .env.development.local
 .env.test.local
 .env.production.local

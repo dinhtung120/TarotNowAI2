@@ -1,92 +1,91 @@
 using MediatR;
-using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using TarotNow.Application.Common.UserImageUpload;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Profile.Commands.UploadAvatar;
 
-// Handler upload avatar, nén ảnh và đồng bộ URL mới vào hồ sơ người dùng.
-public class UploadAvatarCommandHandler : IRequestHandler<UploadAvatarCommand, string>
+// Handler upload avatar qua pipeline R2/local, đồng bộ URL + object key, xóa object cũ.
+public class UploadAvatarCommandHandler : IRequestHandler<UploadAvatarCommand, UploadAvatarResult>
 {
     private readonly IUserRepository _userRepository;
-    private readonly IFileStorageService _fileStorageService;
-    private readonly IImageProcessingService _imageProcessingService;
     private readonly IReaderProfileRepository _readerProfileRepository;
+    private readonly IUserImagePipeline _userImagePipeline;
+    private readonly IObjectStorageService _objectStorage;
+    private readonly ILogger<UploadAvatarCommandHandler> _logger;
 
-    /// <summary>
-    /// Khởi tạo handler upload avatar.
-    /// Luồng xử lý: nhận các service xử lý ảnh, lưu file và cập nhật dữ liệu user/reader profile.
-    /// </summary>
     public UploadAvatarCommandHandler(
         IUserRepository userRepository,
-        IFileStorageService fileStorageService,
-        IImageProcessingService imageProcessingService,
-        IReaderProfileRepository readerProfileRepository)
+        IReaderProfileRepository readerProfileRepository,
+        IUserImagePipeline userImagePipeline,
+        IObjectStorageService objectStorage,
+        ILogger<UploadAvatarCommandHandler> logger)
     {
         _userRepository = userRepository;
-        _fileStorageService = fileStorageService;
-        _imageProcessingService = imageProcessingService;
         _readerProfileRepository = readerProfileRepository;
+        _userImagePipeline = userImagePipeline;
+        _objectStorage = objectStorage;
+        _logger = logger;
     }
 
-    /// <summary>
-    /// Xử lý upload avatar mới cho user.
-    /// Luồng xử lý: validate input ảnh, nén và lưu file mới, cập nhật URL avatar cho user/reader profile, rồi dọn file cũ nếu cần.
-    /// </summary>
-    public async Task<string> Handle(UploadAvatarCommand request, CancellationToken cancellationToken)
+    public async Task<UploadAvatarResult> Handle(UploadAvatarCommand request, CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByIdAsync(request.UserId)
             ?? throw new NotFoundException($"User with Id {request.UserId} not found.");
 
-        if (request.ImageStream is null || request.ImageStream.Length == 0)
+        if (request.ImageStream is null)
         {
-            // Edge case: stream rỗng hoặc null thì không thể xử lý nén/lưu ảnh.
             throw new ValidationException("Dữ liệu ảnh không hợp lệ hoặc rỗng.");
         }
 
-        if (!request.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
-        {
-            // Chỉ cho phép MIME image/* để chặn upload file không phải ảnh.
-            throw new ValidationException("Định dạng file không được hỗ trợ. Chỉ nhận file ảnh.");
-        }
+        var oldObjectKey = user.AvatarObjectKey;
 
-        using var compressedStream = await _imageProcessingService.CompressAsync(
+        var pipelineResult = await _userImagePipeline.ProcessUploadAsync(
             request.ImageStream,
-            maxDimension: 512,
-            quality: 80,
+            request.FileName,
+            request.ContentType,
+            UserImageUploadKind.Avatar,
             cancellationToken);
-        // Chuẩn hóa kích thước/chất lượng để giảm dung lượng và đồng nhất hiển thị avatar.
 
-        var newFileName = Path.ChangeExtension(request.FileName, ".webp");
-        var relativeUrl = await _fileStorageService.SaveFileAsync(compressedStream, newFileName, "avatars", cancellationToken);
-        // Lưu ảnh đã nén dưới định dạng webp để tối ưu bandwidth khi client tải avatar.
-
-        var oldAvatarUrl = user.AvatarUrl;
-
-        user.UpdateProfile(user.DisplayName, relativeUrl, user.DateOfBirth);
-        await _userRepository.UpdateAsync(user);
-        // Đổi state avatar ở hồ sơ chính của user ngay sau khi lưu file thành công.
-
-        var readerProfile = await _readerProfileRepository.GetByUserIdAsync(user.Id.ToString(), cancellationToken);
-        if (readerProfile is not null)
+        try
         {
-            readerProfile.AvatarUrl = relativeUrl;
-            // Đồng bộ avatar cho reader profile để tránh lệch dữ liệu ở khu vực cộng đồng.
+            user.ApplyManagedAvatar(pipelineResult.PublicUrl, pipelineResult.PublicId);
+            await _userRepository.UpdateAsync(user);
 
-            await _readerProfileRepository.UpdateAsync(readerProfile, cancellationToken);
+            var readerProfile = await _readerProfileRepository.GetByUserIdAsync(user.Id.ToString(), cancellationToken);
+            if (readerProfile is not null)
+            {
+                readerProfile.AvatarUrl = pipelineResult.PublicUrl;
+                await _readerProfileRepository.UpdateAsync(readerProfile, cancellationToken);
+            }
+
+            if (!string.IsNullOrEmpty(oldObjectKey))
+            {
+                try
+                {
+                    await _objectStorage.DeleteAsync(oldObjectKey, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Không xóa được avatar object cũ key={Key}", oldObjectKey);
+                }
+            }
+
+            return new UploadAvatarResult(pipelineResult.PublicUrl, pipelineResult.PublicId);
         }
-        // Edge case: user không có reader profile thì bỏ qua đồng bộ phụ.
-
-        if (!string.IsNullOrEmpty(oldAvatarUrl) &&
-            !oldAvatarUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+        catch
         {
-            // Chỉ xóa file cũ nội bộ; URL tuyệt đối ngoài hệ thống thì không can thiệp.
-            await _fileStorageService.DeleteFileAsync(oldAvatarUrl, cancellationToken);
-        }
+            try
+            {
+                await _objectStorage.DeleteAsync(pipelineResult.PublicId, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Rollback: không xóa được object avatar mới key={Key}", pipelineResult.PublicId);
+            }
 
-        return relativeUrl;
+            throw;
+        }
     }
 }

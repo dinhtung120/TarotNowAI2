@@ -5,7 +5,7 @@ using System.IO;
 namespace TarotNow.Application.Features.Profile.Commands.UploadAvatar;
 
 // Command upload avatar mới cho người dùng.
-public class UploadAvatarCommand : IRequest<string>
+public class UploadAvatarCommand : IRequest<UploadAvatarResult>
 {
     // Định danh user cần cập nhật avatar.
     public Guid UserId { get; set; }

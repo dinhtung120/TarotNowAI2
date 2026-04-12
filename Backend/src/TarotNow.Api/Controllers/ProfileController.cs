@@ -129,8 +129,13 @@ public class ProfileController : ControllerBase
             ContentType = file.ContentType
         };
 
-        var relativeUrl = await Mediator.Send(command);
+        var uploadResult = await Mediator.Send(command);
 
-        return Ok(new { success = true, avatarUrl = relativeUrl });
+        return Ok(new
+        {
+            success = true,
+            avatarUrl = uploadResult.AvatarUrl,
+            publicId = uploadResult.PublicId,
+        });
     }
 }

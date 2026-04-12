@@ -3,15 +3,15 @@
 ## 1) Prepare environment file
 
 ```bash
-cp deploy/.env.prod.example deploy/.env.prod
+cp .env.example .env
 ```
 
-Update all required secrets in `deploy/.env.prod`.
+Update all required secrets in `.env`.
 
 ## 2) Start data services and bootstrap DB (first deployment only)
 
 ```bash
-./deploy/scripts/bootstrap-db.sh deploy/.env.prod docker-compose.prod.yml
+./deploy/scripts/bootstrap-db.sh .env docker-compose.prod.yml
 ```
 
 Script này sẽ:
@@ -22,7 +22,7 @@ Script này sẽ:
 ## 3) Build and start application stack
 
 ```bash
-docker compose --env-file deploy/.env.prod -f docker-compose.prod.yml up -d --build backend frontend reverse-proxy
+docker compose -f docker-compose.prod.yml up -d --build backend frontend reverse-proxy
 ```
 
 ## 4) Smoke test
@@ -35,20 +35,20 @@ docker compose --env-file deploy/.env.prod -f docker-compose.prod.yml up -d --bu
 
 ```bash
 # Gate 5: failure scenarios
-./deploy/scripts/failure-drills.sh http://localhost deploy/.env.prod docker-compose.prod.yml
+./deploy/scripts/failure-drills.sh http://localhost .env docker-compose.prod.yml
 
 # Gate 6: scale scenarios (example 2 backend + 2 frontend replicas)
-./deploy/scripts/scale-drill.sh http://localhost deploy/.env.prod docker-compose.prod.yml 2 2
+./deploy/scripts/scale-drill.sh http://localhost .env docker-compose.prod.yml 2 2
 
 # Gate 7: rollback scenario (supports both arg orders, this is the recommended one)
-./deploy/scripts/rollback-drill.sh deploy/.env.prod docker-compose.prod.yml http://localhost
+./deploy/scripts/rollback-drill.sh .env docker-compose.prod.yml http://localhost
 ```
 
 ## 6) Backup and restore
 
 ```bash
-ENV_FILE=deploy/.env.prod ./deploy/scripts/backup-db.sh
-ENV_FILE=deploy/.env.prod ./deploy/scripts/restore-db.sh backups/<timestamp>
+ENV_FILE=.env ./deploy/scripts/backup-db.sh
+ENV_FILE=.env ./deploy/scripts/restore-db.sh backups/<timestamp>
 ```
 
 ## 7) Rollback runbook
@@ -58,8 +58,8 @@ ENV_FILE=deploy/.env.prod ./deploy/scripts/restore-db.sh backups/<timestamp>
 3. Run:
 
 ```bash
-docker compose --env-file deploy/.env.prod -f docker-compose.prod.yml pull
-docker compose --env-file deploy/.env.prod -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
 ./deploy/scripts/smoke.sh http://localhost
 ```
 

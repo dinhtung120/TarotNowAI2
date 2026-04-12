@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ENV_FILE="${1:-deploy/.env.prod}"
+ENV_FILE="${1:-.env}"
 COMPOSE_FILE="${2:-docker-compose.prod.yml}"
 USE_PREBUILT_IMAGES="${USE_PREBUILT_IMAGES:-false}"
 

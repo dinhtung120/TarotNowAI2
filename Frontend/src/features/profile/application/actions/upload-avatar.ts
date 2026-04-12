@@ -6,7 +6,9 @@ import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 
-export async function uploadAvatarAction(formData: FormData): Promise<ActionResult<{ avatarUrl: string }>> {
+export async function uploadAvatarAction(
+  formData: FormData
+): Promise<ActionResult<{ avatarUrl: string; publicId?: string }>> {
   const tApi = await getTranslations('ApiErrors');
 
   try {
@@ -15,7 +17,7 @@ export async function uploadAvatarAction(formData: FormData): Promise<ActionResu
       return actionFail(tApi('unauthorized'));
     }
 
-    const result = await serverHttpRequest<{ avatarUrl: string }>('/profile/avatar', {
+    const result = await serverHttpRequest<{ avatarUrl: string; publicId?: string }>('/profile/avatar', {
       method: 'POST',
       token,
       formData,

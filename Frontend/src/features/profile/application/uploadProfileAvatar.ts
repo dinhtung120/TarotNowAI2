@@ -1,5 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { compressAvatarImage } from '@/features/profile/application/compressAvatarImage';
+import { UserImageValidationError } from '@/shared/media/validateImageForUpload';
 import { uploadAvatarAction } from '@/features/profile/application/actions/upload-avatar';
 
 interface UploadProfileAvatarArgs {
@@ -17,7 +18,21 @@ interface UploadProfileAvatarResult {
 }
 
 export async function uploadProfileAvatar({ file, profileQueryKey, queryClient, t }: UploadProfileAvatarArgs): Promise<UploadProfileAvatarResult> {
-  const compressedFile = await compressAvatarImage(file);
+  let compressedFile: File;
+  try {
+    compressedFile = await compressAvatarImage(file);
+  } catch (err) {
+    const message =
+      err instanceof UserImageValidationError
+        ? err.message
+        : t('avatar_upload_error') || 'Không thể xử lý ảnh.';
+    return {
+      avatarUrl: null,
+      error: message,
+      message: '',
+      success: false,
+    };
+  }
   const formData = new FormData();
   formData.append('file', compressedFile, compressedFile.name);
 

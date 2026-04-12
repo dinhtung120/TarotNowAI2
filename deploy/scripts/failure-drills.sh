@@ -2,7 +2,7 @@
 set -euo pipefail
 
 BASE_URL="${1:-http://localhost}"
-ENV_FILE="${2:-deploy/.env.prod}"
+ENV_FILE="${2:-.env}"
 COMPOSE_FILE="${3:-docker-compose.prod.yml}"
 
 compose_args=(-f "$COMPOSE_FILE")

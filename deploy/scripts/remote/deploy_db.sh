@@ -8,7 +8,7 @@ fi
 
 BACKEND_IMAGE_REF="$1"
 REPO_DIR="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
-ENV_FILE="${ENV_FILE:-deploy/.env.prod}"
+ENV_FILE="${ENV_FILE:-.env}"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
 
 cd "$REPO_DIR"

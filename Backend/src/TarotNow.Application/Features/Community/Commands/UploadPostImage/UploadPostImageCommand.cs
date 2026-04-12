@@ -4,7 +4,7 @@ using System.IO;
 namespace TarotNow.Application.Features.Community.Commands.UploadPostImage;
 
 // Command upload ảnh cho bài viết community.
-public class UploadPostImageCommand : IRequest<string>
+public class UploadPostImageCommand : IRequest<UploadPostImageResult>
 {
     // Stream ảnh đầu vào.
     public required Stream ImageStream { get; set; }

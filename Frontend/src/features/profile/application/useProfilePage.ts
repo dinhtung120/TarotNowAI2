@@ -12,6 +12,7 @@ import { getMyReaderRequest, type MyReaderRequest } from '@/features/reader/publ
 import { useRouter } from '@/i18n/routing';
 import { useAuthGuard } from '@/shared/application/hooks/useAuthGuard';
 import { useAuthStore } from '@/store/authStore';
+import { toast } from 'react-hot-toast';
 
 interface ProfileFormValues {
   dateOfBirth: string;
@@ -105,25 +106,25 @@ export function useProfilePage() {
     event.target.value = '';
     if (!file) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-      setErrorMsg(t('validation.avatar_file_too_large') || 'Ảnh quá lớn (tối đa 10MB)');
-      return;
-    }
-
     setAvatarUploading(true);
     setErrorMsg('');
     try {
       const uploadResult = await uploadProfileAvatar({ file, profileQueryKey, queryClient, t });
       if (!uploadResult.success) {
-        setErrorMsg(uploadResult.error);
+        const err = uploadResult.error || t('avatar_upload_error') || 'Không thể tải ảnh lên';
+        setErrorMsg(err);
+        toast.error(err);
         return;
       }
 
       setAvatarPreview(uploadResult.avatarUrl);
       setSuccessMsg(uploadResult.message);
+      toast.success(uploadResult.message);
       useAuthStore.getState().updateUser({ avatarUrl: uploadResult.avatarUrl });
     } catch {
-      setErrorMsg(t('avatar_upload_error') || 'Không thể tải ảnh lên');
+      const err = t('avatar_upload_error') || 'Không thể tải ảnh lên';
+      setErrorMsg(err);
+      toast.error(err);
     } finally {
       setAvatarUploading(false);
     }

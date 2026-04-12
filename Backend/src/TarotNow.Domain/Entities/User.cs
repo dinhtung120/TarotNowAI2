@@ -23,6 +23,9 @@ public partial class User
     // Ảnh đại diện.
     public string? AvatarUrl { get; private set; }
 
+    // Key object trên R2 (hoặc đường dẫn tương đương khi dùng local storage) để xóa khi đổi avatar.
+    public string? AvatarObjectKey { get; private set; }
+
     // Ngày sinh.
     public DateTime DateOfBirth { get; private set; }
 

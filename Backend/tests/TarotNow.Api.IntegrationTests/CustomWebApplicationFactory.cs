@@ -36,7 +36,7 @@ public class CustomWebApplicationFactory<TProgram>
         Path.GetTempPath(),
         $"tarotnow-integration-uploads-{Guid.NewGuid():N}");
 
-    // Bộ env tối thiểu giúp startup pass fail-fast validation trong CI khi không có Backend/.env.
+    // Bộ env tối thiểu giúp startup pass fail-fast validation trong CI khi không có .env ở root.
     private static readonly IReadOnlyDictionary<string, string> RequiredEnvironmentDefaults =
         new Dictionary<string, string>
         {
@@ -63,7 +63,7 @@ public class CustomWebApplicationFactory<TProgram>
 
     /// <summary>
     /// Khởi tạo factory và bơm env defaults cho test process.
-    /// Luồng này giúp test không phụ thuộc file Backend/.env trên máy CI.
+    /// Luồng này giúp test không phụ thuộc file .env ở root trên máy CI.
     /// </summary>
     public CustomWebApplicationFactory()
     {

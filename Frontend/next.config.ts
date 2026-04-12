@@ -12,14 +12,18 @@ if (process.env.NODE_ENV === 'production' && process.env.NODE_TLS_REJECT_UNAUTHO
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 const apiOrigin = resolveApiOrigin(process.env.NEXT_PUBLIC_API_URL);
-const frontendOrigin = resolveFrontendOrigin(process.env.NEXT_PUBLIC_BASE_URL);
+const frontendOrigin = resolveFrontendOrigin(
+ process.env.NEXT_PUBLIC_BASE_URL ?? process.env.PUBLIC_BASE_URL,
+);
 const frontendHosts = resolveFrontendHosts(frontendOrigin.hostname, process.env.NEXT_ALLOWED_DEV_HOSTS);
 const serverActionAllowedOrigins = resolveServerActionAllowedOrigins(frontendOrigin, frontendHosts);
 
 function resolveFrontendOrigin(value: string | undefined): URL {
  const raw = value?.trim();
  if (!raw) {
-  throw new Error('Missing required environment variable NEXT_PUBLIC_BASE_URL.');
+  throw new Error(
+   'Missing required environment variable NEXT_PUBLIC_BASE_URL (or PUBLIC_BASE_URL for the same value as docker-compose.prod).',
+  );
  }
 
  try {
@@ -71,12 +75,42 @@ function resolveServerActionAllowedOrigins(origin: URL, hosts: string[]): string
  return Array.from(values);
 }
 
+/** Cho phép next/image tải ảnh từ CDN/R2 (bước 4 deploy). */
+function buildImageRemotePatterns(): NonNullable<NextConfig['images']>['remotePatterns'] {
+ const patterns: NonNullable<NonNullable<NextConfig['images']>['remotePatterns']> = [];
+ const seen = new Set<string>();
+
+ for (const raw of [process.env.NEXT_PUBLIC_MEDIA_CDN_URL, process.env.NEXT_PUBLIC_R2_PUBLIC_URL]) {
+  const value = raw?.trim();
+  if (!value) continue;
+
+  try {
+   const parsed = new URL(value);
+   const protocol = parsed.protocol === 'http:' ? 'http' : 'https';
+   const key = `${protocol}://${parsed.hostname}`;
+   if (seen.has(key)) continue;
+   seen.add(key);
+   patterns.push({
+    protocol,
+    hostname: parsed.hostname,
+    pathname: '/**',
+   });
+  } catch {
+   // bỏ qua URL không hợp lệ
+  }
+ }
+
+ return patterns.length > 0 ? patterns : undefined;
+}
+
+const imageRemotePatterns = buildImageRemotePatterns();
 
 const nextConfig: NextConfig = {
  output: 'standalone',
  trailingSlash: false,
   allowedDevOrigins: frontendHosts,
  poweredByHeader: false,
+ ...(imageRemotePatterns ? { images: { remotePatterns: imageRemotePatterns } } : {}),
  async rewrites() {
   return [
    {

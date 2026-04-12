@@ -45,6 +45,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
     private static void ConfigureProfileColumns(EntityTypeBuilder<User> builder)
     {
         builder.Property(u => u.DisplayName).HasMaxLength(100);
+        builder.Property(u => u.AvatarUrl).HasColumnName("avatar_url").HasColumnType("text");
+        builder.Property(u => u.AvatarObjectKey)
+            .HasColumnName("avatar_object_key")
+            .HasMaxLength(512)
+            .HasColumnType("character varying(512)");
         builder.Property(u => u.DateOfBirth).IsRequired();
         builder.Property(u => u.Role).HasMaxLength(20);
         builder.Property(u => u.ReaderStatus).HasMaxLength(20);

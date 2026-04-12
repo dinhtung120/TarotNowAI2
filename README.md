@@ -37,12 +37,13 @@ Backend/src/
 
 ### Setup
 ```bash
-# 1. Clone & config
+# 1. Clone & config (một file: .env — dev DB compose + BE + FE + production Compose)
 cp .env.example .env
-cp Backend/.env.example Backend/.env
-cp Frontend/.env.example Frontend/.env.local
-# Chỉnh sửa Backend/.env và Frontend/.env.local với giá trị thật
+# Chỉnh .env: dev local đặt PUBLIC_BASE_URL / NEXT_PUBLIC_* trỏ localhost; thêm BE_PRIVATE_IP=backend nếu dùng docker-compose.prod trên một máy.
 # Thiếu biến bắt buộc -> ứng dụng sẽ fail-fast khi khởi động/build
+
+# (Tuỳ chọn) Chỉ Postgres/Mongo/Redis bằng Docker — `.env` ở root được Compose tự đọc:
+#   docker compose -f docker-compose.yml up -d
 
 # 2. Database
 psql -h localhost -U postgres -d tarotweb -f database/postgresql/schema.sql
@@ -63,9 +64,7 @@ npm run dev
 
 | File | Subsystem | Mục đích |
 |------|-----------|----------|
-| `.env` | Docker Compose (root) | Chỉ cấp biến cho `docker-compose.yml` |
-| `Backend/.env` | Backend API | Secrets và runtime config của ASP.NET Core |
-| `Frontend/.env.local` | Frontend Next.js | URL API và biến môi trường frontend |
+| `.env` | Backend + Frontend + cả hai file Compose | Một nguồn ở root: DB dev, secrets, URL… — Docker Compose **tự đọc** khi chạy trong repo; BE/FE cũng đọc cùng file (không commit) |
 
 ### Verify
 ```bash
@@ -82,13 +81,13 @@ open http://localhost:3000
 ## Production (EC2 + Docker Compose)
 ```bash
 # 1) Chuẩn bị biến môi trường production
-cp deploy/.env.prod.example deploy/.env.prod
+cp .env.example .env
 
 # 2) Bootstrap DB lần đầu (start data services + bootstrap scripts)
-./deploy/scripts/bootstrap-db.sh deploy/.env.prod docker-compose.prod.yml
+./deploy/scripts/bootstrap-db.sh .env docker-compose.prod.yml
 
 # 3) Build + khởi chạy app stack production
-docker compose --env-file deploy/.env.prod -f docker-compose.prod.yml up -d --build backend frontend reverse-proxy
+docker compose -f docker-compose.prod.yml up -d --build backend frontend reverse-proxy
 
 # 4) Smoke test
 ./deploy/scripts/smoke.sh http://localhost

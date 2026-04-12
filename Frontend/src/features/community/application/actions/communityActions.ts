@@ -26,10 +26,12 @@ async function withToken<T>(work: (token: string) => Promise<ActionResult<T>>): 
  return work(token);
 }
 
-export async function uploadPostImageAction(formData: FormData): Promise<ActionResult<{ url: string }>> {
+export async function uploadPostImageAction(
+ formData: FormData
+): Promise<ActionResult<{ url: string; publicId?: string }>> {
  return withToken(async (token) => {
   try {
-   const result = await serverHttpRequest<{ url: string }>('/community/images', { method: 'POST', token, formData, fallbackErrorMessage: FAIL_UPLOAD_IMAGE });
+   const result = await serverHttpRequest<{ url: string; publicId?: string }>('/community/images', { method: 'POST', token, formData, fallbackErrorMessage: FAIL_UPLOAD_IMAGE });
    if (!result.ok) return actionFail(result.error || FAIL_UPLOAD_IMAGE);
    return actionOk(result.data);
   } catch (error) {
