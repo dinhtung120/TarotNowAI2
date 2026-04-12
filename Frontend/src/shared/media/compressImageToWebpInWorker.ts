@@ -43,45 +43,72 @@ async function compressImageToWebpMainThread(file: File, options: WebpCompressOp
 }
 
 /**
- * Nén ảnh sang WebP trong Web Worker (fallback main thread nếu Worker lỗi).
+ * Nén ảnh sang WebP trong Web Worker (fallback main thread nếu Worker lỗi hoặc không được hỗ trợ).
+ * Lý do chọn hướng tiếp cận này: xử lý nén ảnh là tác vụ tốn CPU, thực hiện trong Worker sẽ giải phóng luồng chính,
+ * giúp giao diện (UI) vẫn mượt mà, không bị khựng (lag) khi đang xử lý ảnh lớn.
  */
 export async function compressImageToWebpInWorker(file: File, options: WebpCompressOptions): Promise<File> {
+  // Thực hiện validate cơ bản trước khi nén để tránh xử lý các file không phải ảnh hoặc quá lớn.
   validateImageForUpload(file);
 
-  const WorkerCtor = typeof Worker !== 'undefined' ? Worker : undefined;
-  if (!WorkerCtor) {
+  // Kiểm tra xem trình duyệt có hỗ trợ Web Worker không (SSR hoặc trình duyệt quá cũ).
+  if (typeof Worker === 'undefined') {
     return compressImageToWebpMainThread(file, options);
   }
 
   const id = crypto.randomUUID();
+  let worker: Worker | null = null;
 
   try {
-    const worker = new WorkerCtor(new URL('./workers/imageWebpCompress.worker.ts', import.meta.url));
+    /**
+     * KHỞI TẠO WORKER:
+     * Sử dụng cú pháp `new Worker(new URL(...))` trực tiếp để Next.js/Webpack nhận diện chính xác.
+     * Lưu ý: Không dùng biến trung gian cho hàm dựng Worker vì trình đóng gói sẽ không thể 'static analysis'
+     * để biên dịch file .ts sang .js, dẫn đến lỗi 404 trong môi trường production.
+     */
+    worker = new Worker(new URL('./workers/imageWebpCompress.worker.ts', import.meta.url));
     const buf = await file.arrayBuffer();
 
     const outBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+      if (!worker) return reject(new Error('Sự cố khởi tạo bộ nén.'));
+
+      // Xử lý khi nhận được kết quả nén từ Worker.
       const onMsg = (ev: MessageEvent) => {
         const d = ev.data as { id?: string; buffer?: ArrayBuffer; error?: string };
-        if (d?.id !== id) {
-          return;
-        }
+        if (d?.id !== id) return;
 
-        worker.removeEventListener('message', onMsg);
-        worker.terminate();
+        cleanup();
         if (d.error) {
           reject(new Error(d.error));
-          return;
+        } else if (!d.buffer) {
+          reject(new Error('Dữ liệu nén rỗng.'));
+        } else {
+          resolve(d.buffer);
         }
+      };
 
-        if (!d.buffer) {
-          reject(new Error('Worker trả dữ liệu rỗng.'));
-          return;
-        }
+      /**
+       * XỬ LÝ LỖI WORKER (QUAN TRỌNG):
+       * Nếu Worker không thể tải (ví dụ lỗi 404 mạng) hoặc gặp lỗi runtime nghiêm trọng, 
+       * sự kiện 'error' sẽ kích hoạt. Chúng ta reject ngay để luồng chính thực hiện fallback,
+       * tránh tình trạng giao diện bị treo vô hạn trong trạng thái "Đang tải lên".
+       */
+      const onErr = (err: ErrorEvent) => {
+        cleanup();
+        reject(err);
+      };
 
-        resolve(d.buffer);
+      // Dọn dẹp tài nguyên sau khi hoàn tất hoặc gặp lỗi để tránh rò rỉ bộ nhớ (memory leak).
+      const cleanup = () => {
+        worker?.removeEventListener('message', onMsg);
+        worker?.removeEventListener('error', onErr);
+        worker?.terminate();
       };
 
       worker.addEventListener('message', onMsg);
+      worker.addEventListener('error', onErr);
+
+      // Gửi dữ liệu thô (ArrayBuffer) sang Worker theo dạng Transferable để tối ưu hiệu năng (nút copy/move pointer).
       worker.postMessage(
         {
           id,
@@ -95,7 +122,14 @@ export async function compressImageToWebpInWorker(file: File, options: WebpCompr
     });
 
     return new File([outBuffer], `upload_${Date.now()}.webp`, { type: 'image/webp' });
-  } catch {
+  } catch (error) {
+    /**
+     * CƠ CHẾ DỰ PHÒNG (FALLBACK):
+     * Mọi lỗi xảy ra (Worker 404, lỗi logic trong Worker, trình duyệt chặn Worker...) đều được bắt tại đây.
+     * Hệ thống sẽ tự động chuyển sang nén ảnh bằng luồng chính để đảm bảo người dùng vẫn upload được ảnh.
+     */
+    console.warn('WebWorker compression failed, falling back to main thread:', error);
+    worker?.terminate();
     return compressImageToWebpMainThread(file, options);
   }
 }
