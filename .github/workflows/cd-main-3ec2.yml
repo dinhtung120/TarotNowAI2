@@ -7,10 +7,11 @@ name: CD Main 3EC2
 # - PROD_SSH_PRIVATE_KEY, PROD_KNOWN_HOSTS
 # - GHCR_USERNAME, GHCR_TOKEN_READ
 # - PROD_DB_PRIVATE_IP, PROD_BE_PRIVATE_IP
-# - PROD_DOTENV_B64 — bắt buộc trừ khi mỗi host đã có ${PROD_REPO_DIR}/.env (xem deploy/README.md; CI scp từ secret này)
+# - PROD_DOTENV_B64 hoặc PROD_DOTENV_PLAIN — bắt buộc một trong hai trừ khi mỗi host đã có file env (xem deploy/README.md)
 #
 # Required GitHub Variables:
 # - PROD_REPO_DIR (optional, default: /opt/tarotnow/TarotNowAI2)
+# - PROD_ENV_FILE (optional, default: .env) — ví dụ .env.prod nếu trên EC2 dùng tên đó
 # - PROD_PUBLIC_BASE_URL (optional for external smoke check)
 
 on:
@@ -358,9 +359,11 @@ jobs:
       - name: Ensure .env on DB host (PROD_DOTENV_B64 hoặc file có sẵn)
         env:
           PROD_DOTENV_B64: ${{ secrets.PROD_DOTENV_B64 }}
+          PROD_DOTENV_PLAIN: ${{ secrets.PROD_DOTENV_PLAIN }}
           PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
           PROD_DB_HOST: ${{ secrets.PROD_DB_HOST }}
           REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+          PROD_ENV_FILE: ${{ vars.PROD_ENV_FILE || '.env' }}
         run: |
           REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
           bash deploy/scripts/ci/ensure-remote-root-env.sh ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER" "$PROD_DB_HOST" "$REPO_PATH"
@@ -381,6 +384,7 @@ jobs:
           NEXT_PUBLIC_API_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:5037' }}/api/v1
           # Bổ sung các biến môi trường cần thiết khác cho docker-compose
           FORWARDED_NETWORK_0: "172.30.0.0/16"
+          PROD_ENV_FILE: ${{ vars.PROD_ENV_FILE || '.env' }}
         run: |
           ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_DB_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
@@ -391,7 +395,7 @@ jobs:
           git checkout "${DEPLOY_SHA}"
           git reset --hard "${DEPLOY_SHA}"
           echo "${GHCR_TOKEN_READ}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
-          REPO_DIR="\$REPO_PATH" ENV_FILE=".env" COMPOSE_FILE="docker-compose.prod.yml" \
+          REPO_DIR="\$REPO_PATH" ENV_FILE="${PROD_ENV_FILE}" COMPOSE_FILE="docker-compose.prod.yml" \
           BE_PRIVATE_IP="${BE_PRIVATE_IP}" DB_PRIVATE_IP="${DB_PRIVATE_IP}" \
           PUBLIC_BASE_URL="${PUBLIC_BASE_URL}" NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
           FORWARDED_NETWORK_0="${FORWARDED_NETWORK_0}" \
@@ -419,9 +423,11 @@ jobs:
       - name: Ensure .env on BE host (PROD_DOTENV_B64 hoặc file có sẵn)
         env:
           PROD_DOTENV_B64: ${{ secrets.PROD_DOTENV_B64 }}
+          PROD_DOTENV_PLAIN: ${{ secrets.PROD_DOTENV_PLAIN }}
           PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
           PROD_BE_HOST: ${{ secrets.PROD_BE_HOST }}
           REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+          PROD_ENV_FILE: ${{ vars.PROD_ENV_FILE || '.env' }}
         run: |
           REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
           bash deploy/scripts/ci/ensure-remote-root-env.sh ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER" "$PROD_BE_HOST" "$REPO_PATH"
@@ -442,6 +448,7 @@ jobs:
           NEXT_PUBLIC_API_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:5037' }}/api/v1
           # Bổ sung các biến môi trường cần thiết khác cho docker-compose
           FORWARDED_NETWORK_0: "172.30.0.0/16"
+          PROD_ENV_FILE: ${{ vars.PROD_ENV_FILE || '.env' }}
         run: |
           ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_BE_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
@@ -452,7 +459,7 @@ jobs:
           git checkout "${DEPLOY_SHA}"
           git reset --hard "${DEPLOY_SHA}"
           echo "${GHCR_TOKEN_READ}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
-          REPO_DIR="\$REPO_PATH" ENV_FILE=".env" COMPOSE_FILE="docker-compose.prod.yml" \
+          REPO_DIR="\$REPO_PATH" ENV_FILE="${PROD_ENV_FILE}" COMPOSE_FILE="docker-compose.prod.yml" \
           BE_PRIVATE_IP="${BE_PRIVATE_IP}" DB_PRIVATE_IP="${DB_PRIVATE_IP}" \
           PUBLIC_BASE_URL="${PUBLIC_BASE_URL}" NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
           FORWARDED_NETWORK_0="${FORWARDED_NETWORK_0}" \
@@ -480,9 +487,11 @@ jobs:
       - name: Ensure .env on FE host (PROD_DOTENV_B64 hoặc file có sẵn)
         env:
           PROD_DOTENV_B64: ${{ secrets.PROD_DOTENV_B64 }}
+          PROD_DOTENV_PLAIN: ${{ secrets.PROD_DOTENV_PLAIN }}
           PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
           PROD_FE_HOST: ${{ secrets.PROD_FE_HOST }}
           REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+          PROD_ENV_FILE: ${{ vars.PROD_ENV_FILE || '.env' }}
         run: |
           REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
           bash deploy/scripts/ci/ensure-remote-root-env.sh ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER" "$PROD_FE_HOST" "$REPO_PATH"
@@ -503,6 +512,7 @@ jobs:
           NEXT_PUBLIC_API_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:5037' }}/api/v1
           # Bổ sung các biến môi trường cần thiết khác cho docker-compose
           FORWARDED_NETWORK_0: "172.30.0.0/16"
+          PROD_ENV_FILE: ${{ vars.PROD_ENV_FILE || '.env' }}
         run: |
           ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
@@ -513,7 +523,7 @@ jobs:
           git checkout "${DEPLOY_SHA}"
           git reset --hard "${DEPLOY_SHA}"
           echo "${GHCR_TOKEN_READ}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
-          REPO_DIR="\$REPO_PATH" ENV_FILE=".env" COMPOSE_FILE="docker-compose.prod.yml" \
+          REPO_DIR="\$REPO_PATH" ENV_FILE="${PROD_ENV_FILE}" COMPOSE_FILE="docker-compose.prod.yml" \
           BE_PRIVATE_IP="${BE_PRIVATE_IP}" DB_PRIVATE_IP="${DB_PRIVATE_IP}" \
           PUBLIC_BASE_URL="${PUBLIC_BASE_URL}" NEXT_PUBLIC_API_URL="${NEXT_PUBLIC_API_URL}" \
           FORWARDED_NETWORK_0="${FORWARDED_NETWORK_0}" \
@@ -577,12 +587,13 @@ jobs:
           PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
           PROD_BE_HOST: ${{ secrets.PROD_BE_HOST }}
           REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+          PROD_ENV_FILE: ${{ vars.PROD_ENV_FILE || '.env' }}
         run: |
           ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_BE_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
           REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
           cd "\$REPO_PATH"
-          REPO_DIR="\$REPO_PATH" ENV_FILE=".env" COMPOSE_FILE="docker-compose.prod.yml" \
+          REPO_DIR="\$REPO_PATH" ENV_FILE="${PROD_ENV_FILE}" COMPOSE_FILE="docker-compose.prod.yml" \
             ./deploy/scripts/remote/rollback_be_fe.sh backend
           EOF_REMOTE
 
@@ -593,12 +604,13 @@ jobs:
           PROD_SSH_USER: ${{ secrets.PROD_SSH_USER }}
           PROD_FE_HOST: ${{ secrets.PROD_FE_HOST }}
           REPO_DIR: ${{ vars.PROD_REPO_DIR }}
+          PROD_ENV_FILE: ${{ vars.PROD_ENV_FILE || '.env' }}
         run: |
           ssh -i ~/.ssh/id_ci_deploy_key "$PROD_SSH_USER@$PROD_FE_HOST" "bash -se" <<EOF_REMOTE
           set -euo pipefail
           REPO_PATH="${REPO_DIR:-/opt/tarotnow/TarotNowAI2}"
           cd "\$REPO_PATH"
-          REPO_DIR="\$REPO_PATH" ENV_FILE=".env" COMPOSE_FILE="docker-compose.prod.yml" \
+          REPO_DIR="\$REPO_PATH" ENV_FILE="${PROD_ENV_FILE}" COMPOSE_FILE="docker-compose.prod.yml" \
             ./deploy/scripts/remote/rollback_be_fe.sh frontend
           EOF_REMOTE
 
