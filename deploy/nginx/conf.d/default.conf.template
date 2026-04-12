@@ -35,6 +35,8 @@ server {
 
   # Giới hạn body size để tránh upload quá lớn gây out-of-memory
   client_max_body_size 20m;
+  # Tăng buffer size để xử lý upload ảnh (thường < 1MB) hoàn toàn trên RAM, tránh ghi file tạm xuống disk.
+  client_body_buffer_size 2m;
 
   # ── Nginx health endpoint ──
   # Endpoint riêng để deploy script kiểm tra nginx alive

@@ -39,8 +39,6 @@ public class UploadAvatarCommandHandler : IRequestHandler<UploadAvatarCommand, U
             throw new ValidationException("Dữ liệu ảnh không hợp lệ hoặc rỗng.");
         }
 
-        var oldObjectKey = user.AvatarObjectKey;
-
         var pipelineResult = await _userImagePipeline.ProcessUploadAsync(
             request.ImageStream,
             request.FileName,
