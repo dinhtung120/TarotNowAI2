@@ -4,7 +4,6 @@ import { type ReactNode } from "react";
 import UserSidebar from "./UserSidebar";
 import BottomTabBar from "./BottomTabBar";
 import AstralBackground from "./AstralBackground";
-import RoutePrefetcher from "./RoutePrefetcher";
 import { cn } from '@/lib/utils';
 
 interface UserLayoutProps {
@@ -14,7 +13,6 @@ interface UserLayoutProps {
 export default function UserLayout({ children }: UserLayoutProps) {
   return (
     <div className={cn("flex h-dvh flex-col tn-user-layout-shell overflow-hidden relative")}>
-      <RoutePrefetcher />
       <AstralBackground variant="subtle" particleCount={6} />
       {}
       <div className={cn("flex flex-1 min-h-0 tn-user-layout-content overflow-hidden")}>

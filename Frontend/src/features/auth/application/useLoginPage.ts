@@ -55,11 +55,6 @@ export function useLoginPage() {
   setValue('rememberMe', shouldRemember);
  }, [queryEmail, initialIdentity, setValue]);
 
- useEffect(() => {
-  router.prefetch('/');
-  router.prefetch('/reading');
- }, [router]);
-
  const onSubmit = async (data: LoginFormValues) => {
   setErrorMsg('');
 
