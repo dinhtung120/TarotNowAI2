@@ -17,7 +17,7 @@ public class SendEmailVerificationOtpCommandHandler : IRequestHandler<SendEmailV
 
     /// <summary>
     /// Khởi tạo handler gửi OTP verify email.
-    /// Luồng xử lý: nhận user repo, OTP repo và email sender để tạo/gửi mã xác thực.
+    /// Luồng xử lý: nhận user repo, OTP repo, transaction coordinator và domain event publisher để enqueue email OTP.
     /// </summary>
     public SendEmailVerificationOtpCommandHandler(
         IUserRepository userRepository,

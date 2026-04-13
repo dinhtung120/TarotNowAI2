@@ -73,6 +73,76 @@ public sealed class EventDrivenArchitectureRulesTests
         violations.Should().BeEmpty("Realtime broadcast from controllers is forbidden; use domain event handlers + Redis bridge.");
     }
 
+    /// <summary>
+    /// Xác nhận hubs không broadcast trực tiếp các event đã migrate qua Redis bridge.
+    /// </summary>
+    [Fact]
+    public void Hubs_ShouldNotBroadcastMigratedRealtimeEventsDirectly()
+    {
+        var backendRoot = FindBackendRoot();
+        var hubsRoot = Path.Combine(backendRoot, "src", "TarotNow.Api", "Hubs");
+        var forbiddenEventNames = new[]
+        {
+            "notification.new",
+            "wallet.balance_changed",
+            "message.created",
+            "conversation.updated",
+            "chat.unread_changed",
+            "gacha.result",
+            "gamification.quest_completed",
+            "gamification.achievement_unlocked",
+            "gamification.card_level_up"
+        };
+
+        var escaped = forbiddenEventNames.Select(Regex.Escape);
+        var pattern = new Regex($@"SendAsync\(\s*""({string.Join("|", escaped)})""", RegexOptions.Compiled);
+        var violations = Directory
+            .GetFiles(hubsRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(path =>
+            {
+                var text = File.ReadAllText(path);
+                return pattern.IsMatch(text);
+            })
+            .Select(path => ToBackendRelativePath(backendRoot, path))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty("Migrated realtime events must be published to Redis and forwarded by the bridge, not sent directly from hubs.");
+    }
+
+    /// <summary>
+    /// Xác nhận command wallet mutation luôn kèm publish MoneyChangedDomainEvent trong cùng module command.
+    /// </summary>
+    [Fact]
+    public void WalletMutationCommands_ShouldPublishMoneyChangedDomainEvent()
+    {
+        var backendRoot = FindBackendRoot();
+        var featuresRoot = Path.Combine(backendRoot, "src", "TarotNow.Application", "Features");
+        var commandFiles = Directory
+            .GetFiles(featuresRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(path => path.Contains("/Commands/", StringComparison.Ordinal))
+            .ToArray();
+
+        var mutationRegex = new Regex(@"\b_wallet(?:Repo|Repository)\.(CreditAsync|DebitAsync|FreezeAsync|RefundAsync|ConsumeAsync|ReleaseAsync)\s*\(", RegexOptions.Compiled);
+        var eventRegex = new Regex(@"MoneyChangedDomainEvent", RegexOptions.Compiled);
+
+        var groupedByDirectory = commandFiles
+            .GroupBy(path => Path.GetDirectoryName(path) ?? string.Empty, StringComparer.Ordinal)
+            .Where(group => group.Any(path => mutationRegex.IsMatch(File.ReadAllText(path))))
+            .Select(group => new
+            {
+                Directory = group.Key,
+                HasMoneyChangedPublish = group.Any(path => eventRegex.IsMatch(File.ReadAllText(path)))
+            })
+            .Where(group => !group.HasMoneyChangedPublish)
+            .Select(group => ToBackendRelativePath(backendRoot, group.Directory))
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
+
+        groupedByDirectory.Should().BeEmpty("Wallet mutations in commands must publish MoneyChangedDomainEvent for realtime and downstream consistency.");
+    }
+
     private static string FindBackendRoot()
     {
         var current = new DirectoryInfo(AppContext.BaseDirectory);

@@ -15,7 +15,7 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
 
     /// <summary>
     /// Khởi tạo handler forgot password.
-    /// Luồng xử lý: nhận user repo, OTP repo và email sender để tạo OTP và gửi email.
+    /// Luồng xử lý: nhận user repo, OTP repo, transaction coordinator và domain event publisher để enqueue email OTP.
     /// </summary>
     public ForgotPasswordCommandHandler(
         IUserRepository userRepository,

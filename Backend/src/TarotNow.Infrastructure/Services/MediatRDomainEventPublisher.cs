@@ -24,7 +24,7 @@ public sealed class MediatRDomainEventPublisher : IDomainEventPublisher
     }
 
     /// <summary>
-    /// Ghi domain event vào outbox trong cùng DbContext transaction.
+    /// Enqueue domain event vào outbox trong transaction hiện hành.
     /// </summary>
     public async Task PublishAsync(IDomainEvent domainEvent, CancellationToken cancellationToken = default)
     {
@@ -56,7 +56,6 @@ public sealed class MediatRDomainEventPublisher : IDomainEventPublisher
             LockOwner = null
         };
 
-        _dbContext.OutboxMessages.Add(outboxMessage);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.OutboxMessages.AddAsync(outboxMessage, cancellationToken);
     }
 }

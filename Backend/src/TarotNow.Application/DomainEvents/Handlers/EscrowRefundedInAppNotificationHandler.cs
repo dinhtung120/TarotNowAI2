@@ -28,8 +28,8 @@ public sealed class EscrowRefundedInAppNotificationHandler
     }
 
     /// <summary>
-    /// Xử lý notification hoàn tiền và phát đầy đủ tín hiệu cho client.
-    /// Luồng xử lý: dựng DTO thông báo, lưu DB, push notification realtime, rồi push tín hiệu đổi số dư ví.
+    /// Xử lý notification hoàn tiền và phát thông báo realtime cho client.
+    /// Luồng xử lý: dựng DTO thông báo, lưu DB rồi push notification realtime.
     /// </summary>
     protected override async Task HandleDomainEventAsync(
         EscrowRefundedDomainEvent domainEvent,
@@ -59,7 +59,7 @@ public sealed class EscrowRefundedInAppNotificationHandler
         // Bước 2: publish notification mới để UI cập nhật tức thời.
         await _redisPublisher.PublishAsync(
             RealtimeChannelNames.Notifications,
-            "notification.new",
+            RealtimeEventNames.NotificationNew,
             new
             {
                 userId = dto.UserId.ToString(),
@@ -70,12 +70,6 @@ public sealed class EscrowRefundedInAppNotificationHandler
                 dto.Type,
                 createdAt = DateTime.UtcNow
             },
-            cancellationToken);
-        // Bước 3: publish tín hiệu ví để client chủ động reload số dư.
-        await _redisPublisher.PublishAsync(
-            RealtimeChannelNames.Wallet,
-            "wallet.balance_changed",
-            new { userId = domainEvent.UserId.ToString() },
             cancellationToken);
     }
 }

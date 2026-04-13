@@ -5,6 +5,7 @@ using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Withdrawal.Commands.CreateWithdrawal;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
+using TarotNow.Domain.Events;
 using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Withdrawal;
@@ -22,6 +23,8 @@ public class CreateWithdrawalCommandHandlerTests
     private readonly Mock<IMfaService> _mockMfaService;
     // Mock transaction coordinator để chạy transactional flow inline.
     private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
+    // Mock publisher để xác nhận emit MoneyChangedDomainEvent.
+    private readonly Mock<IDomainEventPublisher> _mockDomainEventPublisher;
     // Handler cần kiểm thử.
     private readonly CreateWithdrawalCommandHandler _handler;
 
@@ -36,12 +39,13 @@ public class CreateWithdrawalCommandHandlerTests
         _mockUserRepo = new Mock<IUserRepository>();
         _mockMfaService = new Mock<IMfaService>();
         _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
+        _mockDomainEventPublisher = new Mock<IDomainEventPublisher>();
         _mockTransactionCoordinator
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
             .Returns((Func<CancellationToken, Task> action, CancellationToken ct) => action(ct));
         _handler = new CreateWithdrawalCommandHandler(
             _mockWithdrawalRepo.Object, _mockWalletRepo.Object,
-            _mockUserRepo.Object, _mockMfaService.Object, _mockTransactionCoordinator.Object);
+            _mockUserRepo.Object, _mockMfaService.Object, _mockTransactionCoordinator.Object, _mockDomainEventPublisher.Object);
     }
 
     /// <summary>
@@ -139,6 +143,9 @@ public class CreateWithdrawalCommandHandlerTests
 
         Assert.Equal(expectedId, result);
         _mockWalletRepo.Verify(x => x.DebitAsync(userId, "diamond", "withdrawal", 100, "withdrawal_request", It.IsAny<string>(), It.IsAny<string>(), null, "withdrawal_test_key", default), Times.Once);
+        _mockDomainEventPublisher.Verify(
+            x => x.PublishAsync(It.IsAny<MoneyChangedDomainEvent>(), It.IsAny<CancellationToken>()),
+            Times.Once);
         _mockWithdrawalRepo.Verify(x => x.AddAsync(It.Is<WithdrawalRequest>(r => r.UserId == userId && r.AmountDiamond == 100 && r.NetAmountVnd == 90000 && r.FeeVnd == 10000 && r.Status == "pending"), default), Times.Once);
     }
 

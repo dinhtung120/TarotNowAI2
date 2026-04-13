@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using TarotNow.Application.Features.Subscription.Commands.Subscribe;
 using TarotNow.Application.Features.Subscription.Queries.Dtos;
 using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Entities;
 
 namespace TarotNow.Application.Features.Subscription.Queries.GetSubscriptionPlans;
 
@@ -41,7 +42,7 @@ public class GetSubscriptionPlansQueryHandler : IRequestHandler<GetSubscriptionP
     /// Map dữ liệu plan động từ persistence sang DTO chuẩn.
     /// Luồng xử lý: ánh xạ field cơ bản và parse entitlements JSON sang dictionary key/quota.
     /// </summary>
-    private SubscriptionPlanDto MapPlanToDto(dynamic plan)
+    private static SubscriptionPlanDto MapPlanToDto(SubscriptionPlan plan)
     {
         return new SubscriptionPlanDto(
             plan.Id,

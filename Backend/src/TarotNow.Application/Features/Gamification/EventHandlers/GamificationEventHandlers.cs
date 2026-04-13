@@ -41,7 +41,7 @@ public class AchievementUnlockedDomainEventHandler
 {
     private readonly IGamificationPushService _pushService;
     private readonly IAchievementRepository _achievementRepository;
-    private readonly ITitleRepository _titleRepository;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler achievement unlocked domain event.
@@ -49,13 +49,13 @@ public class AchievementUnlockedDomainEventHandler
     public AchievementUnlockedDomainEventHandler(
         IGamificationPushService pushService,
         IAchievementRepository achievementRepository,
-        ITitleRepository titleRepository,
+        IDomainEventPublisher domainEventPublisher,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
         _pushService = pushService;
         _achievementRepository = achievementRepository;
-        _titleRepository = titleRepository;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>
@@ -74,7 +74,14 @@ public class AchievementUnlockedDomainEventHandler
 
         if (string.IsNullOrWhiteSpace(definition.GrantsTitleCode) == false)
         {
-            await _titleRepository.GrantTitleAsync(domainEvent.UserId, definition.GrantsTitleCode, cancellationToken);
+            await _domainEventPublisher.PublishAsync(
+                new TitleGrantedDomainEvent
+                {
+                    UserId = domainEvent.UserId,
+                    TitleCode = definition.GrantsTitleCode,
+                    Source = $"achievement:{domainEvent.AchievementCode}"
+                },
+                cancellationToken);
         }
 
         await _pushService.PushAchievementUnlockedAsync(

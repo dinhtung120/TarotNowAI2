@@ -33,6 +33,7 @@ public partial class AddQuestionCommandHandler : IRequestHandler<AddQuestionComm
     private readonly IChatFinanceRepository _financeRepo;
     private readonly IWalletRepository _walletRepo;
     private readonly ITransactionCoordinator _transactionCoordinator;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler add question.
@@ -41,11 +42,13 @@ public partial class AddQuestionCommandHandler : IRequestHandler<AddQuestionComm
     public AddQuestionCommandHandler(
         IChatFinanceRepository financeRepo,
         IWalletRepository walletRepo,
-        ITransactionCoordinator transactionCoordinator)
+        ITransactionCoordinator transactionCoordinator,
+        IDomainEventPublisher domainEventPublisher)
     {
         _financeRepo = financeRepo;
         _walletRepo = walletRepo;
         _transactionCoordinator = transactionCoordinator;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>

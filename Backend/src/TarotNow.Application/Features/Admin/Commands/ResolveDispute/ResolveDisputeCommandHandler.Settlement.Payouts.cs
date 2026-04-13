@@ -29,6 +29,18 @@ public partial class ResolveDisputeCommandHandler
             metadataJson: auditMetadata,
             idempotencyKey: $"settle_release_{item.Id}",
             cancellationToken: cancellationToken);
+        await PublishMoneyChangedAsync(
+            item.ReceiverId,
+            readerAmount,
+            TransactionType.EscrowRelease,
+            item.Id,
+            cancellationToken);
+        await PublishMoneyChangedAsync(
+            item.PayerId,
+            0,
+            TransactionType.EscrowRelease,
+            item.Id,
+            cancellationToken);
 
         if (fee > 0)
         {
@@ -68,6 +80,12 @@ public partial class ResolveDisputeCommandHandler
             metadataJson: auditMetadata,
             idempotencyKey: $"settle_refund_{item.Id}",
             cancellationToken: cancellationToken);
+        await PublishMoneyChangedAsync(
+            item.PayerId,
+            item.AmountDiamond,
+            TransactionType.EscrowRefund,
+            item.Id,
+            cancellationToken);
 
         // Đổi state item sau khi hoàn tiền thành công.
         item.Status = QuestionItemStatus.Refunded;

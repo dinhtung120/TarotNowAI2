@@ -16,7 +16,7 @@ public partial class WalletRepository : IWalletRepository
 
     /// <summary>
     /// Khởi tạo WalletRepository.
-    /// Luồng xử lý: nhận các dependency bắt buộc cho transaction tài chính và side-effect leaderboard.
+    /// Luồng xử lý: nhận các dependency bắt buộc cho transaction tài chính và audit logging.
     /// </summary>
     public WalletRepository(
         ApplicationDbContext dbContext,

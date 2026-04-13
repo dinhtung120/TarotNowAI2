@@ -12,7 +12,6 @@ public partial class ClaimQuestRewardCommandHandler : IRequestHandler<ClaimQuest
 {
     private readonly IQuestRepository _questRepo;
     private readonly IWalletRepository _walletRepo;
-    private readonly ITitleRepository _titleRepo;
     private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
@@ -22,12 +21,10 @@ public partial class ClaimQuestRewardCommandHandler : IRequestHandler<ClaimQuest
     public ClaimQuestRewardCommandHandler(
         IQuestRepository questRepo,
         IWalletRepository walletRepo,
-        ITitleRepository titleRepo,
         IDomainEventPublisher domainEventPublisher)
     {
         _questRepo = questRepo;
         _walletRepo = walletRepo;
-        _titleRepo = titleRepo;
         _domainEventPublisher = domainEventPublisher;
     }
 

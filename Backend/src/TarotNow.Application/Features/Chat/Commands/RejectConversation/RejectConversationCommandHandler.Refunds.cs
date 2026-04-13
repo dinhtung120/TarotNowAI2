@@ -1,6 +1,7 @@
 using System.Linq;
 using TarotNow.Application.Common;
 using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Chat.Commands.RejectConversation;
 
@@ -72,6 +73,16 @@ public partial class RejectConversationCommandHandler
                 description: $"Reader reject refund {item.AmountDiamond}💎",
                 idempotencyKey: $"settle_refund_{item.Id}",
                 cancellationToken: cancellationToken);
+            await _domainEventPublisher.PublishAsync(
+                new MoneyChangedDomainEvent
+                {
+                    UserId = item.PayerId,
+                    Currency = CurrencyType.Diamond,
+                    ChangeType = TransactionType.EscrowRefund,
+                    DeltaAmount = item.AmountDiamond,
+                    ReferenceId = item.Id.ToString()
+                },
+                cancellationToken);
 
             // Cập nhật state item sau khi refund thành công.
             item.Status = QuestionItemStatus.Refunded;

@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Entities;
 
 namespace TarotNow.Application.Features.Legal.Queries.CheckConsent;
 
@@ -64,7 +65,7 @@ public class CheckConsentQueryHandler : IRequestHandler<CheckConsentQuery, Check
     /// </summary>
     private static CheckConsentResponse BuildResponse(
         IReadOnlyDictionary<string, string> requiredDocs,
-        IEnumerable<dynamic> userConsents)
+        IEnumerable<UserConsent> userConsents)
     {
         var response = new CheckConsentResponse();
 

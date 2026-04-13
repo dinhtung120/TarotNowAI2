@@ -1,6 +1,7 @@
 using TarotNow.Application.Exceptions;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Escrow.Commands.AddQuestion;
 
@@ -41,6 +42,16 @@ public partial class AddQuestionCommandHandler
         {
             var session = await LoadValidatedSessionAsync(request, transactionCt);
             await FreezeQuestionAmountAsync(request, idempotencyKey, transactionCt);
+            await _domainEventPublisher.PublishAsync(
+                new MoneyChangedDomainEvent
+                {
+                    UserId = request.UserId,
+                    Currency = CurrencyType.Diamond,
+                    ChangeType = TransactionType.EscrowFreeze,
+                    DeltaAmount = -request.AmountDiamond,
+                    ReferenceId = idempotencyKey
+                },
+                transactionCt);
 
             var item = BuildAddQuestionItem(request, session.ReaderId, session.Id, idempotencyKey);
             await _financeRepo.AddItemAsync(item, transactionCt);

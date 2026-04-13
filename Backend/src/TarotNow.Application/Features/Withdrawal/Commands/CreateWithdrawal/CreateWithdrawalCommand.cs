@@ -43,6 +43,7 @@ public partial class CreateWithdrawalCommandHandler : IRequestHandler<CreateWith
     private readonly IUserRepository _userRepo;
     private readonly IMfaService _mfaService;
     private readonly ITransactionCoordinator _transactionCoordinator;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler tạo withdrawal request.
@@ -53,13 +54,15 @@ public partial class CreateWithdrawalCommandHandler : IRequestHandler<CreateWith
         IWalletRepository walletRepo,
         IUserRepository userRepo,
         IMfaService mfaService,
-        ITransactionCoordinator transactionCoordinator)
+        ITransactionCoordinator transactionCoordinator,
+        IDomainEventPublisher domainEventPublisher)
     {
         _withdrawalRepo = withdrawalRepo;
         _walletRepo = walletRepo;
         _userRepo = userRepo;
         _mfaService = mfaService;
         _transactionCoordinator = transactionCoordinator;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>

@@ -59,6 +59,16 @@ public partial class ClaimQuestRewardCommandHandler
             description: $"Quest reward for {request.QuestCode}",
             idempotencyKey: BuildRewardIdempotencyKey(request, reward, index),
             cancellationToken: cancellationToken);
+        await _domainEventPublisher.PublishAsync(
+            new MoneyChangedDomainEvent
+            {
+                UserId = request.UserId,
+                Currency = currency,
+                ChangeType = TransactionType.QuestReward,
+                DeltaAmount = reward.Amount,
+                ReferenceId = $"{request.QuestCode}:{request.PeriodKey}:{index}"
+            },
+            cancellationToken);
     }
 
     /// <summary>
@@ -69,7 +79,14 @@ public partial class ClaimQuestRewardCommandHandler
     {
         if (!string.IsNullOrWhiteSpace(titleCode))
         {
-            await _titleRepo.GrantTitleAsync(userId, titleCode, cancellationToken);
+            await _domainEventPublisher.PublishAsync(
+                new TitleGrantedDomainEvent
+                {
+                    UserId = userId,
+                    TitleCode = titleCode,
+                    Source = "quest_reward"
+                },
+                cancellationToken);
         }
     }
 

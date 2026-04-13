@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using TarotNow.Application.Exceptions;
+using TarotNow.Application.Common.Realtime;
 using TarotNow.Application.Features.Chat.Commands.MarkMessagesRead;
 
 namespace TarotNow.Api.Hubs;
@@ -66,8 +67,9 @@ public partial class ChatHub
             readAt = DateTime.UtcNow
         };
 
-        var groupKey = ConversationGroup(conversationId);
-        // Phát sự kiện message.read để các client đồng bộ trạng thái đã đọc theo thời gian thực.
-        await Clients.Group(groupKey).SendAsync("message.read", payload);
+        await _redisPublisher.PublishAsync(
+            RealtimeChannelNames.Chat,
+            RealtimeEventNames.ChatMessageRead,
+            payload);
     }
 }

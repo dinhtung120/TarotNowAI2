@@ -1,6 +1,7 @@
 using TarotNow.Application.Exceptions;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Gacha.Commands.SpinGacha;
 
@@ -43,7 +44,15 @@ public partial class SpinGachaCommandHandler
         SpinExecutionContext context,
         CancellationToken cancellationToken)
     {
-        return _walletRepository.DebitAsync(
+        return DebitSpinCostCoreAsync(request, context, cancellationToken);
+    }
+
+    private async Task DebitSpinCostCoreAsync(
+        SpinGachaCommand request,
+        SpinExecutionContext context,
+        CancellationToken cancellationToken)
+    {
+        await _walletRepository.DebitAsync(
             userId: request.UserId,
             currency: CurrencyType.Diamond,
             type: TransactionType.GachaCost,
@@ -51,6 +60,16 @@ public partial class SpinGachaCommandHandler
             description: $"Spin Gacha {context.Banner.Code} x{request.Count}",
             idempotencyKey: $"gacha_debit_{request.IdempotencyKey}",
             cancellationToken: cancellationToken);
+        await _domainEventPublisher.PublishAsync(
+            new MoneyChangedDomainEvent
+            {
+                UserId = request.UserId,
+                Currency = CurrencyType.Diamond,
+                ChangeType = TransactionType.GachaCost,
+                DeltaAmount = -context.TotalCostDiamond,
+                ReferenceId = request.IdempotencyKey
+            },
+            cancellationToken);
     }
 
     /// <summary>
@@ -94,7 +113,17 @@ public partial class SpinGachaCommandHandler
             return Task.CompletedTask;
         }
 
-        return _walletRepository.CreditAsync(
+        return CreditRewardCoreAsync(request, currency, amount, suffix, cancellationToken);
+    }
+
+    private async Task CreditRewardCoreAsync(
+        SpinGachaCommand request,
+        string currency,
+        long amount,
+        string suffix,
+        CancellationToken cancellationToken)
+    {
+        await _walletRepository.CreditAsync(
             userId: request.UserId,
             currency: currency,
             type: TransactionType.GachaReward,
@@ -102,6 +131,16 @@ public partial class SpinGachaCommandHandler
             description: $"Gacha {currency} Rewards x{request.Count}",
             idempotencyKey: $"gacha_credit_{suffix}_{request.IdempotencyKey}",
             cancellationToken: cancellationToken);
+        await _domainEventPublisher.PublishAsync(
+            new MoneyChangedDomainEvent
+            {
+                UserId = request.UserId,
+                Currency = currency,
+                ChangeType = TransactionType.GachaReward,
+                DeltaAmount = amount,
+                ReferenceId = request.IdempotencyKey
+            },
+            cancellationToken);
     }
 
     /// <summary>

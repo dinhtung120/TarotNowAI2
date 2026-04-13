@@ -28,6 +28,16 @@ public partial class SubscribeCommandHandler
         var user = await GetExistingUserAsync(request.UserId, ct);
         await EnsureNoSamePlanActiveAsync(request.UserId, request.PlanId, ct);
         await ChargeSubscriptionAsync(user.Id, plan, request.IdempotencyKey, ct);
+        await _domainEventPublisher.PublishAsync(
+            new MoneyChangedDomainEvent
+            {
+                UserId = user.Id,
+                Currency = CurrencyType.Diamond,
+                ChangeType = TransactionType.Subscription,
+                DeltaAmount = -plan.PriceDiamond,
+                ReferenceId = plan.Id.ToString()
+            },
+            ct);
         // Chuỗi check + charge phải hoàn tất trước khi tạo subscription để tránh cấp quyền khi chưa thanh toán thành công.
 
         var now = DateTime.UtcNow;

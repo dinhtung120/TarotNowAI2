@@ -10,15 +10,20 @@ public partial class UpdateUserCommandHandler : IRequestHandler<UpdateUserComman
 {
     private readonly IUserRepository _userRepository;
     private readonly IWalletRepository _walletRepository;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler update user.
     /// Luồng xử lý: nhận user repository để cập nhật hồ sơ và wallet repository để điều chỉnh số dư.
     /// </summary>
-    public UpdateUserCommandHandler(IUserRepository userRepository, IWalletRepository walletRepository)
+    public UpdateUserCommandHandler(
+        IUserRepository userRepository,
+        IWalletRepository walletRepository,
+        IDomainEventPublisher domainEventPublisher)
     {
         _userRepository = userRepository;
         _walletRepository = walletRepository;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>

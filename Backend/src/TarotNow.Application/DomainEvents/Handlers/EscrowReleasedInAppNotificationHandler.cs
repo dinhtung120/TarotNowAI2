@@ -29,7 +29,7 @@ public sealed class EscrowReleasedInAppNotificationHandler
 
     /// <summary>
     /// Xử lý notification giải ngân và phát đầy đủ thông báo liên quan.
-    /// Luồng xử lý: dựng dto cho payer/receiver, lưu + push từng dto, rồi push cập nhật ví cho cả hai bên.
+    /// Luồng xử lý: dựng dto cho payer/receiver rồi lưu + push từng dto.
     /// </summary>
     protected override async Task HandleDomainEventAsync(
         EscrowReleasedDomainEvent domainEvent,
@@ -39,12 +39,8 @@ public sealed class EscrowReleasedInAppNotificationHandler
         var payerDto = BuildPayerNotification(domainEvent);
         var receiverDto = BuildReceiverNotification(domainEvent);
 
-        // Ghi hai notification tách biệt để nội dung đúng theo từng vai trò.
         await PersistAndPublishRealtimeNotificationAsync(payerDto, cancellationToken);
         await PersistAndPublishRealtimeNotificationAsync(receiverDto, cancellationToken);
-        // Đồng bộ tín hiệu thay đổi số dư ví cho cả bên trả và bên nhận qua Redis.
-        await PublishWalletChangedAsync(domainEvent.PayerId, cancellationToken);
-        await PublishWalletChangedAsync(domainEvent.ReceiverId, cancellationToken);
     }
 
     /// <summary>
@@ -56,7 +52,7 @@ public sealed class EscrowReleasedInAppNotificationHandler
         await _notificationRepository.CreateAsync(dto, cancellationToken);
         await _redisPublisher.PublishAsync(
             RealtimeChannelNames.Notifications,
-            "notification.new",
+            RealtimeEventNames.NotificationNew,
             new
             {
                 userId = dto.UserId.ToString(),
@@ -67,18 +63,6 @@ public sealed class EscrowReleasedInAppNotificationHandler
                 dto.Type,
                 createdAt = DateTime.UtcNow
             },
-            cancellationToken);
-    }
-
-    /// <summary>
-    /// Publish sự kiện thay đổi số dư ví cho user liên quan giao dịch.
-    /// </summary>
-    private Task PublishWalletChangedAsync(Guid userId, CancellationToken cancellationToken)
-    {
-        return _redisPublisher.PublishAsync(
-            RealtimeChannelNames.Wallet,
-            "wallet.balance_changed",
-            new { userId = userId.ToString() },
             cancellationToken);
     }
 

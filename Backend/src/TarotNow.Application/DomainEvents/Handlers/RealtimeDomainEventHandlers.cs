@@ -33,7 +33,7 @@ public sealed class MoneyChangedRealtimeHandler
     {
         return _redisPublisher.PublishAsync(
             RealtimeChannelNames.Wallet,
-            "wallet.balance_changed",
+            RealtimeEventNames.WalletBalanceChanged,
             new
             {
                 userId = domainEvent.UserId.ToString(),
@@ -82,7 +82,7 @@ public sealed class ConversationUpdatedRealtimeHandler
 
         await _redisPublisher.PublishAsync(
             RealtimeChannelNames.Chat,
-            "conversation.updated",
+            RealtimeEventNames.ConversationUpdated,
             new
             {
                 conversationId = domainEvent.ConversationId,
@@ -131,7 +131,7 @@ public sealed class ChatMessageCreatedRealtimeHandler
 
         await _redisPublisher.PublishAsync(
             RealtimeChannelNames.Chat,
-            "message.created",
+            RealtimeEventNames.ChatMessageCreated,
             new
             {
                 conversationId = domainEvent.ConversationId,
@@ -168,7 +168,7 @@ public sealed class UnreadCountChangedRealtimeHandler
     {
         return _redisPublisher.PublishAsync(
             RealtimeChannelNames.Chat,
-            "chat.unread_changed",
+            RealtimeEventNames.ChatUnreadChanged,
             new
             {
                 conversationId = domainEvent.ConversationId,
@@ -207,7 +207,7 @@ public sealed class GachaSpunRealtimeHandler
     {
         return _redisPublisher.PublishAsync(
             RealtimeChannelNames.Gacha,
-            "gacha.result",
+            RealtimeEventNames.GachaResult,
             new
             {
                 userId = domainEvent.UserId.ToString(),

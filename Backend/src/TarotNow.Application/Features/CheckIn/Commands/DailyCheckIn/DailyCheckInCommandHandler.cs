@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.CheckIn.Commands.DailyCheckIn;
 
@@ -65,6 +66,16 @@ public class DailyCheckInCommandHandler : IRequestHandler<DailyCheckInCommand, D
         var goldAmount = _settings.DailyCheckinGold;
         // Luồng check-in thành công: cộng vàng, ghi bản ghi check-in và kích hoạt gamification.
         await CreditCheckInRewardAsync(user.Id, todayString, goldAmount, cancellationToken);
+        await _domainEventPublisher.PublishAsync(
+            new MoneyChangedDomainEvent
+            {
+                UserId = user.Id,
+                Currency = CurrencyType.Gold,
+                ChangeType = TransactionType.DailyCheckin,
+                DeltaAmount = goldAmount,
+                ReferenceId = $"{CheckinIdempotencyPrefix}{user.Id}_{todayString}"
+            },
+            cancellationToken);
         await _checkinRepository.InsertAsync(user.Id.ToString(), todayString, goldAmount, cancellationToken);
         await _domainEventPublisher.PublishAsync(
             new TarotNow.Domain.Events.DailyCheckInCompletedDomainEvent

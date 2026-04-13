@@ -19,13 +19,13 @@ export function TermsOfServiceContent() {
         <p>Dịch vụ của chúng tôi cung cấp các kiến giải Tarot dựa trên trí tuệ nhân tạo (AI). Bạn cần hiểu rõ rằng:</p>
         <ul className={cn("list-disc pl-5 mt-2 space-y-2")}>
           <li>
-            <span className="font-semibold tn-text-primary">Tính chất tham khảo:</span> Kết quả giải bài chỉ mang tính chất chiêm nghiệm, tham khảo và giải trí.
+            <span className={cn("font-semibold tn-text-primary")}>Tính chất tham khảo:</span> Kết quả giải bài chỉ mang tính chất chiêm nghiệm, tham khảo và giải trí.
           </li>
           <li>
-            <span className="font-semibold tn-text-primary">Không thay thế chuyên gia:</span> AI không phải là chuyên gia và không thể cung cấp những lời khuyên chính xác về Y tế, Pháp lý hoặc Tài chính.
+            <span className={cn("font-semibold tn-text-primary")}>Không thay thế chuyên gia:</span> AI không phải là chuyên gia và không thể cung cấp những lời khuyên chính xác về Y tế, Pháp lý hoặc Tài chính.
           </li>
           <li>
-            <span className="font-semibold tn-text-primary">Trách nhiệm cá nhân:</span> TarotNow không chịu trách nhiệm về bất kỳ quyết định, hành động nào của người dùng dựa trên các thông tin từ hệ thống.
+            <span className={cn("font-semibold tn-text-primary")}>Trách nhiệm cá nhân:</span> TarotNow không chịu trách nhiệm về bất kỳ quyết định, hành động nào của người dùng dựa trên các thông tin từ hệ thống.
           </li>
         </ul>
       </section>
@@ -64,9 +64,9 @@ export function PrivacyPolicyContent() {
         <h3 className={cn("text-base font-bold tn-text-primary mb-2")}>1. Thu thập dữ liệu</h3>
         <p>Chúng tôi chỉ thu thập các thông tin cần thiết để vận hành và cải thiện dịch vụ:</p>
         <ul className={cn("list-disc pl-5 mt-2 space-y-2")}>
-          <li><span className="font-semibold tn-text-primary">Thông tin cơ bản:</span> Email và Tên hiển thị khi bạn đăng ký.</li>
-          <li><span className="font-semibold tn-text-primary">Dữ liệu trải bài:</span> Các câu hỏi và lá bài bạn nhận được để AI phân tích và lưu trữ lịch sử cho bạn.</li>
-          <li><span className="font-semibold tn-text-primary">Hành vi sử dụng:</span> Cách bạn tương tác với AI để chúng tôi tối ưu hóa trải nghiệm.</li>
+          <li><span className={cn("font-semibold tn-text-primary")}>Thông tin cơ bản:</span> Email và Tên hiển thị khi bạn đăng ký.</li>
+          <li><span className={cn("font-semibold tn-text-primary")}>Dữ liệu trải bài:</span> Các câu hỏi và lá bài bạn nhận được để AI phân tích và lưu trữ lịch sử cho bạn.</li>
+          <li><span className={cn("font-semibold tn-text-primary")}>Hành vi sử dụng:</span> Cách bạn tương tác với AI để chúng tôi tối ưu hóa trải nghiệm.</li>
         </ul>
       </section>
 

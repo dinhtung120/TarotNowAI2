@@ -5,6 +5,8 @@ using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Withdrawal.Commands.ProcessWithdrawal;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
+using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Withdrawal;
@@ -20,6 +22,8 @@ public class ProcessWithdrawalCommandHandlerTests
     private readonly Mock<IUserRepository> _mockUserRepo;
     // Mock MFA service để xác thực admin.
     private readonly Mock<IMfaService> _mockMfaService;
+    // Mock publisher để xác nhận phát domain event khi refund.
+    private readonly Mock<IDomainEventPublisher> _mockDomainEventPublisher;
     // Handler cần kiểm thử.
     private readonly ProcessWithdrawalCommandHandler _handler;
 
@@ -33,9 +37,10 @@ public class ProcessWithdrawalCommandHandlerTests
         _mockWalletRepo = new Mock<IWalletRepository>();
         _mockUserRepo = new Mock<IUserRepository>();
         _mockMfaService = new Mock<IMfaService>();
+        _mockDomainEventPublisher = new Mock<IDomainEventPublisher>();
         _handler = new ProcessWithdrawalCommandHandler(
             _mockWithdrawalRepo.Object, _mockWalletRepo.Object,
-            _mockUserRepo.Object, _mockMfaService.Object);
+            _mockUserRepo.Object, _mockMfaService.Object, _mockDomainEventPublisher.Object);
     }
 
     /// <summary>
@@ -89,6 +94,9 @@ public class ProcessWithdrawalCommandHandlerTests
         Assert.Equal(command.AdminId, request.AdminId);
         Assert.NotNull(request.ProcessedAt);
         _mockWalletRepo.Verify(x => x.CreditAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<long>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), null, null, default), Times.Never);
+        _mockDomainEventPublisher.Verify(
+            x => x.PublishAsync(It.IsAny<MoneyChangedDomainEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     /// <summary>
@@ -111,7 +119,16 @@ public class ProcessWithdrawalCommandHandlerTests
 
         Assert.True(result);
         Assert.Equal("rejected", request.Status);
-        _mockWalletRepo.Verify(x => x.CreditAsync(request.UserId, "diamond", "withdrawal_refund", 100, "withdrawal_request", request.Id.ToString(), It.IsAny<string>(), null, $"wd_refund_{request.Id}", default), Times.Once);
+        _mockWalletRepo.Verify(x => x.CreditAsync(request.UserId, CurrencyType.Diamond, TransactionType.WithdrawalRefund, 100, "withdrawal_request", request.Id.ToString(), It.IsAny<string>(), null, $"wd_refund_{request.Id}", default), Times.Once);
+        _mockDomainEventPublisher.Verify(
+            x => x.PublishAsync(
+                It.Is<MoneyChangedDomainEvent>(eventData =>
+                    eventData.UserId == request.UserId
+                    && eventData.Currency == CurrencyType.Diamond
+                    && eventData.ChangeType == TransactionType.WithdrawalRefund
+                    && eventData.DeltaAmount == request.AmountDiamond),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     /// <summary>

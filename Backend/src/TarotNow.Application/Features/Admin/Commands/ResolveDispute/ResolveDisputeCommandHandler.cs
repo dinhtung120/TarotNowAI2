@@ -13,6 +13,7 @@ public partial class ResolveDisputeCommandHandler : IRequestHandler<ResolveDispu
     private readonly ITransactionCoordinator _transactionCoordinator;
     private readonly IConversationRepository _conversationRepository;
     private readonly IChatMessageRepository _chatMessageRepository;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler resolve dispute.
@@ -24,7 +25,8 @@ public partial class ResolveDisputeCommandHandler : IRequestHandler<ResolveDispu
         IReaderProfileRepository readerProfileRepository,
         ITransactionCoordinator transactionCoordinator,
         IConversationRepository conversationRepository,
-        IChatMessageRepository chatMessageRepository)
+        IChatMessageRepository chatMessageRepository,
+        IDomainEventPublisher domainEventPublisher)
     {
         _financeRepo = financeRepo;
         _walletRepo = walletRepo;
@@ -32,6 +34,7 @@ public partial class ResolveDisputeCommandHandler : IRequestHandler<ResolveDispu
         _transactionCoordinator = transactionCoordinator;
         _conversationRepository = conversationRepository;
         _chatMessageRepository = chatMessageRepository;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>

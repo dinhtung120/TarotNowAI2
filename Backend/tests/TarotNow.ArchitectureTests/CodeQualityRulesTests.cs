@@ -11,7 +11,7 @@ public class CodeQualityRulesTests
     // Ngưỡng tối đa logical lines cho mỗi file nguồn.
     private const int MaxLogicalFileLines = 180;
     // Ngưỡng tối đa logical lines cho mỗi method/local function.
-    private const int MaxMethodLines = 70;
+    private const int MaxMethodLines = 50;
     // Ngưỡng tối đa tham số bắt buộc cho mỗi method.
     private const int MaxMethodParameters = 5;
     // Ngưỡng tối đa cyclomatic complexity.

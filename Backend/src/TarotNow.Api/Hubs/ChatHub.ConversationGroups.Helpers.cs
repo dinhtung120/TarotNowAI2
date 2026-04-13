@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
+using TarotNow.Application.Common.Realtime;
 using TarotNow.Application.Features.Chat.Queries.ValidateConversationAccess;
 
 namespace TarotNow.Api.Hubs;
@@ -61,15 +62,16 @@ public partial class ChatHub
     private async Task BroadcastConversationJoinedAsync(string conversationId, Guid userGuid)
     {
         var now = DateTime.UtcNow;
-        var groupKey = ConversationGroup(conversationId);
-
-        await Clients.Group(groupKey).SendAsync("conversation.updated", new
-        {
-            conversationId,
-            type = "member_joined",
-            userId = userGuid,
-            at = now
-        });
+        await _redisPublisher.PublishAsync(
+            RealtimeChannelNames.Chat,
+            RealtimeEventNames.ConversationUpdated,
+            new
+            {
+                conversationId,
+                type = "member_joined",
+                userId = userGuid,
+                at = now
+            });
     }
 
     /// <summary>

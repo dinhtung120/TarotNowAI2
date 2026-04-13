@@ -6,6 +6,7 @@ using TarotNow.Application.Features.Escrow.Commands.AddQuestion;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Escrow;
@@ -19,6 +20,8 @@ public class AddQuestionCommandHandlerTests
     private readonly Mock<IWalletRepository> _mockWalletRepo;
     // Mock transaction coordinator để chạy action theo transactional flow.
     private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
+    // Mock publisher để xác nhận emit MoneyChangedDomainEvent.
+    private readonly Mock<IDomainEventPublisher> _mockDomainEventPublisher;
     // Handler cần kiểm thử.
     private readonly AddQuestionCommandHandler _handler;
 
@@ -31,6 +34,7 @@ public class AddQuestionCommandHandlerTests
         _mockFinanceRepo = new Mock<IChatFinanceRepository>();
         _mockWalletRepo = new Mock<IWalletRepository>();
         _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
+        _mockDomainEventPublisher = new Mock<IDomainEventPublisher>();
 
         _mockTransactionCoordinator
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
@@ -38,7 +42,7 @@ public class AddQuestionCommandHandlerTests
 
         _handler = new AddQuestionCommandHandler(
             _mockFinanceRepo.Object, _mockWalletRepo.Object,
-            _mockTransactionCoordinator.Object);
+            _mockTransactionCoordinator.Object, _mockDomainEventPublisher.Object);
     }
 
     /// <summary>
@@ -162,5 +166,8 @@ public class AddQuestionCommandHandlerTests
         Assert.Equal(150, session.TotalFrozen);
         _mockFinanceRepo.Verify(x => x.UpdateSessionAsync(session, default), Times.Once);
         _mockFinanceRepo.Verify(x => x.SaveChangesAsync(default), Times.Once);
+        _mockDomainEventPublisher.Verify(
+            x => x.PublishAsync(It.IsAny<MoneyChangedDomainEvent>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }

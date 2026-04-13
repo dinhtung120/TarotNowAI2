@@ -1,4 +1,5 @@
 using TarotNow.Domain.Entities;
+using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Admin.Commands.ResolveDispute;
 
@@ -28,6 +29,18 @@ public partial class ResolveDisputeCommandHandler
             metadataJson: context.AuditMetadata,
             idempotencyKey: $"settle_release_{context.Item.Id}",
             cancellationToken: cancellationToken);
+        await PublishMoneyChangedAsync(
+            context.Item.ReceiverId,
+            context.Split.ReaderNet,
+            TransactionType.EscrowRelease,
+            context.Item.Id,
+            cancellationToken);
+        await PublishMoneyChangedAsync(
+            context.Item.PayerId,
+            0,
+            TransactionType.EscrowRelease,
+            context.Item.Id,
+            cancellationToken);
     }
 
     /// <summary>
@@ -78,5 +91,11 @@ public partial class ResolveDisputeCommandHandler
             metadataJson: context.AuditMetadata,
             idempotencyKey: $"settle_refund_{context.Item.Id}",
             cancellationToken: cancellationToken);
+        await PublishMoneyChangedAsync(
+            context.Item.PayerId,
+            context.Split.RefundAmount,
+            TransactionType.EscrowRefund,
+            context.Item.Id,
+            cancellationToken);
     }
 }

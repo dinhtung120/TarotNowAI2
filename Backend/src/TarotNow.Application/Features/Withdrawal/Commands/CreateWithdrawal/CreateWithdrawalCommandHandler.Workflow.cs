@@ -5,6 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using TarotNow.Application.Common.Constants;
 using TarotNow.Domain.Entities;
+using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Withdrawal.Commands.CreateWithdrawal;
 
@@ -57,7 +59,7 @@ public partial class CreateWithdrawalCommandHandler
 
                 await _walletRepo.DebitAsync(
                     request.UserId,
-                    "diamond",
+                    CurrencyType.Diamond,
                     "withdrawal",
                     request.AmountDiamond,
                     referenceSource: "withdrawal_request",
@@ -65,6 +67,16 @@ public partial class CreateWithdrawalCommandHandler
                     description: $"Rút {request.AmountDiamond}💎 (= {plan.NetAmountVnd:N0} VND sau phí 10%)",
                     idempotencyKey: $"withdrawal_{normalizedIdempotencyKey}",
                     cancellationToken: transactionCt);
+                await _domainEventPublisher.PublishAsync(
+                    new MoneyChangedDomainEvent
+                    {
+                        UserId = request.UserId,
+                        Currency = CurrencyType.Diamond,
+                        ChangeType = TransactionType.Withdrawal,
+                        DeltaAmount = -request.AmountDiamond,
+                        ReferenceId = withdrawalRequestId.ToString()
+                    },
+                    transactionCt);
                 // Trừ ví trước khi tạo request để đảm bảo số dư luôn phản ánh trạng thái giữ tiền cho giao dịch rút.
 
                 await ValidateDailyLimitAsync(request.UserId, today, transactionCt);

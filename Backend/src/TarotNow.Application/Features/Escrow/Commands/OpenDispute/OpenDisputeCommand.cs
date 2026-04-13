@@ -3,6 +3,7 @@
 using MediatR;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Escrow.Commands.OpenDispute;
@@ -93,7 +94,7 @@ public class OpenDisputeCommandHandler : IRequestHandler<OpenDisputeCommand, boo
     /// Kiểm tra user có quyền mở tranh chấp cho item hay không.
     /// Luồng xử lý: chỉ cho phép payer hoặc receiver của item mở tranh chấp.
     /// </summary>
-    private static void EnsureUserCanOpenDispute(dynamic item, Guid userId)
+    private static void EnsureUserCanOpenDispute(ChatQuestionItem item, Guid userId)
     {
         if (item.PayerId == userId || item.ReceiverId == userId)
         {
@@ -135,7 +136,7 @@ public class OpenDisputeCommandHandler : IRequestHandler<OpenDisputeCommand, boo
     /// Cập nhật trạng thái session sang disputed.
     /// Luồng xử lý: gán status mới và persist session qua repository.
     /// </summary>
-    private async Task UpdateSessionStatusAsync(dynamic session, CancellationToken cancellationToken)
+    private async Task UpdateSessionStatusAsync(ChatFinanceSession session, CancellationToken cancellationToken)
     {
         session.Status = SessionDisputedStatus;
         await _financeRepo.UpdateSessionAsync(session, cancellationToken);

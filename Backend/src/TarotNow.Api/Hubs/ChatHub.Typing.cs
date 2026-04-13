@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
+using TarotNow.Application.Common.Realtime;
 
 namespace TarotNow.Api.Hubs;
 
@@ -17,13 +18,15 @@ public partial class ChatHub
             return;
         }
 
-        // Gửi typing.started để các participant hiển thị trạng thái đang nhập.
-        await Clients.Group(ConversationGroup(conversationId)).SendAsync("typing.started", new
-        {
-            conversationId,
-            userId = userGuid,
-            at = DateTime.UtcNow
-        });
+        await _redisPublisher.PublishAsync(
+            RealtimeChannelNames.Chat,
+            RealtimeEventNames.TypingStarted,
+            new
+            {
+                conversationId,
+                userId = userGuid,
+                at = DateTime.UtcNow
+            });
     }
 
     /// <summary>
@@ -39,12 +42,14 @@ public partial class ChatHub
             return;
         }
 
-        // Gửi typing.stopped để client tắt indicator nhập liệu.
-        await Clients.Group(ConversationGroup(conversationId)).SendAsync("typing.stopped", new
-        {
-            conversationId,
-            userId = userGuid,
-            at = DateTime.UtcNow
-        });
+        await _redisPublisher.PublishAsync(
+            RealtimeChannelNames.Chat,
+            RealtimeEventNames.TypingStopped,
+            new
+            {
+                conversationId,
+                userId = userGuid,
+                at = DateTime.UtcNow
+            });
     }
 }

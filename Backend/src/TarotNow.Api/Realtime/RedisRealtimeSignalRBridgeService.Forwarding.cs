@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
+using TarotNow.Application.Common.Realtime;
 
 namespace TarotNow.Api.Realtime;
 
@@ -7,7 +8,7 @@ public sealed partial class RedisRealtimeSignalRBridgeService
 {
     private async Task ForwardChatEventAsync(string eventName, JsonElement payload)
     {
-        if (eventName == "message.created")
+        if (eventName == RealtimeEventNames.ChatMessageCreated)
         {
             var conversationId = GetStringProperty(payload, "conversationId");
             if (string.IsNullOrWhiteSpace(conversationId))
@@ -20,15 +21,23 @@ public sealed partial class RedisRealtimeSignalRBridgeService
             return;
         }
 
-        if (eventName == "conversation.updated")
+        if (eventName == RealtimeEventNames.ConversationUpdated)
         {
             await ForwardConversationUpdatedAsync(payload);
             return;
         }
 
-        if (eventName == "chat.unread_changed")
+        if (eventName == RealtimeEventNames.ChatUnreadChanged)
         {
             await ForwardUnreadChangedAsync(payload);
+            return;
+        }
+
+        if (eventName == RealtimeEventNames.ChatMessageRead
+            || eventName == RealtimeEventNames.TypingStarted
+            || eventName == RealtimeEventNames.TypingStopped)
+        {
+            await ForwardConversationGroupEventAsync(eventName, payload);
         }
     }
 
@@ -51,12 +60,14 @@ public sealed partial class RedisRealtimeSignalRBridgeService
             return;
         }
 
-        await _chatHubContext.Clients.Group($"conversation:{conversationId}").SendAsync("conversation.updated", payload);
+        await _chatHubContext.Clients.Group($"conversation:{conversationId}")
+            .SendAsync(RealtimeEventNames.ConversationUpdated, payload);
 
         var groups = GetUserGroups(payload);
         if (groups.Length > 0)
         {
-            await _presenceHubContext.Clients.Groups(groups).SendAsync("conversation.updated", payload);
+            await _presenceHubContext.Clients.Groups(groups)
+                .SendAsync(RealtimeEventNames.ConversationUpdated, payload);
         }
     }
 
@@ -72,14 +83,28 @@ public sealed partial class RedisRealtimeSignalRBridgeService
 
         if (string.IsNullOrWhiteSpace(conversationId) == false)
         {
-            await _chatHubContext.Clients.Group($"conversation:{conversationId}").SendAsync("conversation.updated", unreadPayload);
+            await _chatHubContext.Clients.Group($"conversation:{conversationId}")
+                .SendAsync(RealtimeEventNames.ConversationUpdated, unreadPayload);
         }
 
         var groups = GetUserGroups(payload);
         if (groups.Length > 0)
         {
-            await _presenceHubContext.Clients.Groups(groups).SendAsync("conversation.updated", unreadPayload);
+            await _presenceHubContext.Clients.Groups(groups)
+                .SendAsync(RealtimeEventNames.ConversationUpdated, unreadPayload);
         }
+    }
+
+    private async Task ForwardConversationGroupEventAsync(string eventName, JsonElement payload)
+    {
+        var conversationId = GetStringProperty(payload, "conversationId");
+        if (string.IsNullOrWhiteSpace(conversationId))
+        {
+            return;
+        }
+
+        await _chatHubContext.Clients.Group($"conversation:{conversationId}")
+            .SendAsync(eventName, payload);
     }
 
     private static string[] GetUserGroups(JsonElement payload)

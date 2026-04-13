@@ -80,17 +80,8 @@ public static partial class ApiServiceCollectionExtensions
             return;
         }
 
-        var knownProxies = configuration.GetSection("ForwardedHeaders:KnownProxies")
-            .Get<string[]>()?
-            .Where(value => !string.IsNullOrWhiteSpace(value))
-            .Select(value => value.Trim())
-            .ToArray() ?? Array.Empty<string>();
-
-        var knownNetworks = configuration.GetSection("ForwardedHeaders:KnownNetworks")
-            .Get<string[]>()?
-            .Where(value => !string.IsNullOrWhiteSpace(value))
-            .Select(value => value.Trim())
-            .ToArray() ?? Array.Empty<string>();
+        var knownProxies = ReadTrustedForwardedHeaderEntries(configuration, "ForwardedHeaders:KnownProxies");
+        var knownNetworks = ReadTrustedForwardedHeaderEntries(configuration, "ForwardedHeaders:KnownNetworks");
 
         if (knownProxies.Length == 0 && knownNetworks.Length == 0)
         {
@@ -105,35 +96,8 @@ public static partial class ApiServiceCollectionExtensions
             options.RequireHeaderSymmetry = false;
             options.KnownNetworks.Clear();
             options.KnownProxies.Clear();
-
-            foreach (var proxy in knownProxies)
-            {
-                if (IPAddress.TryParse(proxy, out var parsedProxy))
-                {
-                    options.KnownProxies.Add(parsedProxy);
-                }
-            }
-
-            foreach (var network in knownNetworks)
-            {
-                var parts = network.Split('/', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length != 2)
-                {
-                    continue;
-                }
-
-                if (!IPAddress.TryParse(parts[0], out var prefix))
-                {
-                    continue;
-                }
-
-                if (!int.TryParse(parts[1], out var prefixLength))
-                {
-                    continue;
-                }
-
-                options.KnownNetworks.Add(new Microsoft.AspNetCore.HttpOverrides.IPNetwork(prefix, prefixLength));
-            }
+            AddKnownProxies(options, knownProxies);
+            AddKnownNetworks(options, knownNetworks);
 
             if (options.KnownNetworks.Count == 0 && options.KnownProxies.Count == 0)
             {
@@ -141,6 +105,61 @@ public static partial class ApiServiceCollectionExtensions
                     "ForwardedHeaders enabled but no valid trusted proxies/networks were parsed.");
             }
         });
+    }
+
+    private static string[] ReadTrustedForwardedHeaderEntries(IConfiguration configuration, string sectionName)
+    {
+        return configuration.GetSection(sectionName)
+            .Get<string[]>()?
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value.Trim())
+            .ToArray() ?? Array.Empty<string>();
+    }
+
+    private static void AddKnownProxies(ForwardedHeadersOptions options, IEnumerable<string> knownProxies)
+    {
+        foreach (var proxy in knownProxies)
+        {
+            if (IPAddress.TryParse(proxy, out var parsedProxy))
+            {
+                options.KnownProxies.Add(parsedProxy);
+            }
+        }
+    }
+
+    private static void AddKnownNetworks(ForwardedHeadersOptions options, IEnumerable<string> knownNetworks)
+    {
+        foreach (var network in knownNetworks)
+        {
+            var parsedNetwork = TryParseNetwork(network);
+            if (parsedNetwork is null)
+            {
+                continue;
+            }
+
+            options.KnownNetworks.Add(parsedNetwork);
+        }
+    }
+
+    private static Microsoft.AspNetCore.HttpOverrides.IPNetwork? TryParseNetwork(string network)
+    {
+        var parts = network.Split('/', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length != 2)
+        {
+            return null;
+        }
+
+        if (!IPAddress.TryParse(parts[0], out var prefix))
+        {
+            return null;
+        }
+
+        if (!int.TryParse(parts[1], out var prefixLength))
+        {
+            return null;
+        }
+
+        return new Microsoft.AspNetCore.HttpOverrides.IPNetwork(prefix, prefixLength);
     }
 
     /// <summary>

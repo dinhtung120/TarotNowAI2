@@ -42,6 +42,7 @@ public class TransactionCoordinator : ITransactionCoordinator
                 .BeginTransactionAsync(System.Data.IsolationLevel.ReadCommitted, cancellationToken);
 
             await action(cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             // Commit chỉ khi action hoàn tất, lỗi sẽ rollback theo cơ chế transaction.
         });

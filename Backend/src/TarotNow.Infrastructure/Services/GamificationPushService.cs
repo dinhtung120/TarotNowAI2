@@ -29,7 +29,7 @@ public class GamificationPushService : IGamificationPushService
     {
         await _redisPublisher.PublishAsync(
             RealtimeChannelNames.Gamification,
-            "gamification.quest_completed",
+            RealtimeEventNames.GamificationQuestCompleted,
             new { userId = userId.ToString(), questCode, rewardSummary },
             ct);
     }
@@ -42,7 +42,7 @@ public class GamificationPushService : IGamificationPushService
     {
         await _redisPublisher.PublishAsync(
             RealtimeChannelNames.Gamification,
-            "gamification.achievement_unlocked",
+            RealtimeEventNames.GamificationAchievementUnlocked,
             new { userId = userId.ToString(), achievementCode, grantedTitle },
             ct);
     }
@@ -55,7 +55,7 @@ public class GamificationPushService : IGamificationPushService
     {
         await _redisPublisher.PublishAsync(
             RealtimeChannelNames.Gamification,
-            "gamification.card_level_up",
+            RealtimeEventNames.GamificationCardLevelUp,
             new
             {
                 userId = payload.UserId.ToString(),

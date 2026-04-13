@@ -61,6 +61,9 @@ public static class TransactionType
     // Rút tiền từ ví.
     public const string Withdrawal = "withdrawal";
 
+    // Hoàn tiền yêu cầu rút bị từ chối.
+    public const string WithdrawalRefund = "withdrawal_refund";
+
     // Mua gói subscription.
     public const string Subscription = "subscription";
 

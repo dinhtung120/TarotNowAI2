@@ -1,10 +1,13 @@
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Admin.Commands.UpdateUser;
 
 public partial class UpdateUserCommandHandler
 {
+    private const string AdminReferenceSource = "Admin_Update_User";
+
     /// <summary>
     /// Cập nhật vai trò và trạng thái khóa của user theo command.
     /// Luồng xử lý: chuẩn hóa role/status, cập nhật role nếu thay đổi, xử lý nhánh lock/unlock tương ứng.
@@ -77,37 +80,81 @@ public partial class UpdateUserCommandHandler
 
         var isCredit = delta > 0;
         var amount = Math.Abs(delta);
-        var direction = isCredit ? "credit" : "debit";
-        // Tạo idempotency key theo currency + direction để chống ghi trùng cho từng nhánh điều chỉnh.
-        var operationKey = $"admin_update_{currency[..1].ToLowerInvariant()}_{direction}_{idempotencyKey}";
-        var description = $"Admin adjusted {currency.ToLowerInvariant()} balance ({delta:+#;-#;0})";
+        var operationKey = BuildOperationKey(currency, isCredit, idempotencyKey);
+        var adjustment = new BalanceAdjustmentContext(
+            userId,
+            currency,
+            amount,
+            isCredit,
+            idempotencyKey,
+            operationKey,
+            $"Admin adjusted {currency.ToLowerInvariant()} balance ({delta:+#;-#;0})");
+        await ApplyBalanceChangeAsync(adjustment, cancellationToken);
+        await PublishMoneyChangedAsync(userId, currency, isCredit ? amount : -amount, operationKey, cancellationToken);
+    }
 
-        if (isCredit)
+    private async Task ApplyBalanceChangeAsync(
+        BalanceAdjustmentContext adjustment,
+        CancellationToken cancellationToken)
+    {
+        if (adjustment.IsCredit)
         {
-            // Nhánh tăng số dư: ghi giao dịch credit từ nguồn admin update.
             await _walletRepository.CreditAsync(
-                userId: userId,
-                currency: currency,
+                userId: adjustment.UserId,
+                currency: adjustment.Currency,
                 type: TransactionType.AdminTopup,
-                amount: amount,
-                referenceSource: "Admin_Update_User",
-                referenceId: idempotencyKey,
-                description: description,
-                idempotencyKey: operationKey,
+                amount: adjustment.Amount,
+                referenceSource: AdminReferenceSource,
+                referenceId: adjustment.ReferenceId,
+                description: adjustment.Description,
+                idempotencyKey: adjustment.OperationKey,
                 cancellationToken: cancellationToken);
             return;
         }
 
-        // Nhánh giảm số dư: ghi giao dịch debit với cùng quy ước metadata/idempotency.
         await _walletRepository.DebitAsync(
-            userId: userId,
-            currency: currency,
+            userId: adjustment.UserId,
+            currency: adjustment.Currency,
             type: TransactionType.AdminTopup,
-            amount: amount,
-            referenceSource: "Admin_Update_User",
-            referenceId: idempotencyKey,
-            description: description,
-            idempotencyKey: operationKey,
+            amount: adjustment.Amount,
+            referenceSource: AdminReferenceSource,
+            referenceId: adjustment.ReferenceId,
+            description: adjustment.Description,
+            idempotencyKey: adjustment.OperationKey,
             cancellationToken: cancellationToken);
     }
+
+    private Task PublishMoneyChangedAsync(
+        Guid userId,
+        string currency,
+        long deltaAmount,
+        string referenceId,
+        CancellationToken cancellationToken)
+    {
+        return _domainEventPublisher.PublishAsync(
+            new MoneyChangedDomainEvent
+            {
+                UserId = userId,
+                Currency = currency,
+                ChangeType = TransactionType.AdminTopup,
+                DeltaAmount = deltaAmount,
+                ReferenceId = referenceId
+            },
+            cancellationToken);
+    }
+
+    private static string BuildOperationKey(string currency, bool isCredit, string idempotencyKey)
+    {
+        var direction = isCredit ? "credit" : "debit";
+        return $"admin_update_{currency[..1].ToLowerInvariant()}_{direction}_{idempotencyKey}";
+    }
+
+    private sealed record BalanceAdjustmentContext(
+        Guid UserId,
+        string Currency,
+        long Amount,
+        bool IsCredit,
+        string ReferenceId,
+        string OperationKey,
+        string Description);
 }

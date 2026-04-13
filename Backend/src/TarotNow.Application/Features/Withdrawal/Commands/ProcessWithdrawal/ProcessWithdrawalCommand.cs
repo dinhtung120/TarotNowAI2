@@ -4,6 +4,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Entities;
+using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Withdrawal.Commands.ProcessWithdrawal;
 
@@ -44,12 +47,6 @@ public class ProcessWithdrawalCommandHandler : IRequestHandler<ProcessWithdrawal
     // Trạng thái rejected của withdrawal request.
     private const string RejectedStatus = "rejected";
 
-    // Currency dùng cho nghiệp vụ refund khi reject.
-    private const string DiamondCurrency = "diamond";
-
-    // Loại giao dịch ví khi hoàn trả rút tiền bị từ chối.
-    private const string WithdrawalRefundTransactionType = "withdrawal_refund";
-
     // Reference source chung cho giao dịch liên quan withdrawal request.
     private const string WithdrawalReferenceSource = "withdrawal_request";
 
@@ -57,6 +54,7 @@ public class ProcessWithdrawalCommandHandler : IRequestHandler<ProcessWithdrawal
     private readonly IWalletRepository _walletRepo;
     private readonly IUserRepository _userRepo;
     private readonly IMfaService _mfaService;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler xử lý withdrawal.
@@ -66,12 +64,14 @@ public class ProcessWithdrawalCommandHandler : IRequestHandler<ProcessWithdrawal
         IWithdrawalRepository withdrawalRepo,
         IWalletRepository walletRepo,
         IUserRepository userRepo,
-        IMfaService mfaService)
+        IMfaService mfaService,
+        IDomainEventPublisher domainEventPublisher)
     {
         _withdrawalRepo = withdrawalRepo;
         _walletRepo = walletRepo;
         _userRepo = userRepo;
         _mfaService = mfaService;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>
@@ -135,7 +135,7 @@ public class ProcessWithdrawalCommandHandler : IRequestHandler<ProcessWithdrawal
     /// </summary>
     private async Task ProcessByActionAsync(
         ProcessWithdrawalCommand requestCommand,
-        dynamic request,
+        WithdrawalRequest request,
         CancellationToken cancellationToken)
     {
         if (requestCommand.Action == ApproveAction)
@@ -147,14 +147,24 @@ public class ProcessWithdrawalCommandHandler : IRequestHandler<ProcessWithdrawal
 
         await _walletRepo.CreditAsync(
             request.UserId,
-            DiamondCurrency,
-            WithdrawalRefundTransactionType,
+            CurrencyType.Diamond,
+            TransactionType.WithdrawalRefund,
             request.AmountDiamond,
             referenceSource: WithdrawalReferenceSource,
             referenceId: request.Id.ToString(),
             description: $"Refund {request.AmountDiamond}💎 — yêu cầu rút tiền bị từ chối",
             idempotencyKey: $"wd_refund_{request.Id}",
             cancellationToken: cancellationToken);
+        await _domainEventPublisher.PublishAsync(
+            new MoneyChangedDomainEvent
+            {
+                UserId = request.UserId,
+                Currency = CurrencyType.Diamond,
+                ChangeType = TransactionType.WithdrawalRefund,
+                DeltaAmount = request.AmountDiamond,
+                ReferenceId = request.Id.ToString()
+            },
+            cancellationToken);
         // Từ chối yêu cầu thì hoàn trả toàn bộ diamond đã giữ khi tạo request rút.
 
         request.Status = RejectedStatus;
@@ -164,7 +174,7 @@ public class ProcessWithdrawalCommandHandler : IRequestHandler<ProcessWithdrawal
     /// Gắn thông tin audit khi xử lý request.
     /// Luồng xử lý: lưu admin id, ghi chú và thời điểm xử lý để phục vụ đối soát.
     /// </summary>
-    private static void SetAuditFields(ProcessWithdrawalCommand requestCommand, dynamic request)
+    private static void SetAuditFields(ProcessWithdrawalCommand requestCommand, WithdrawalRequest request)
     {
         request.AdminId = requestCommand.AdminId;
         request.AdminNote = requestCommand.AdminNote;
@@ -175,7 +185,7 @@ public class ProcessWithdrawalCommandHandler : IRequestHandler<ProcessWithdrawal
     /// Lưu trạng thái request sau xử lý.
     /// Luồng xử lý: update entity và save changes xuống persistence.
     /// </summary>
-    private async Task PersistWithdrawalAsync(dynamic request, CancellationToken cancellationToken)
+    private async Task PersistWithdrawalAsync(WithdrawalRequest request, CancellationToken cancellationToken)
     {
         await _withdrawalRepo.UpdateAsync(request, cancellationToken);
         await _withdrawalRepo.SaveChangesAsync(cancellationToken);
