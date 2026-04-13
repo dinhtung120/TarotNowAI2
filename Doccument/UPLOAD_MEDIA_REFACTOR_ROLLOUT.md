@@ -96,3 +96,34 @@ Lỗi thực tế không phải do BE presign (presign trả `200`), mà do CSP 
 - Allowed Origins: domain frontend thật (`https://www.tarotnow.xyz`, staging, local)
 - Allowed Headers: `content-type,x-amz-date,x-amz-content-sha256,authorization,origin`
 - Expose Headers: `etag,x-amz-request-id`
+
+### 9.1 Mẫu CORS khuyến nghị cho production hiện tại
+```json
+[
+  {
+    "AllowedOrigins": [
+      "https://tarotnow.xyz",
+      "https://www.tarotnow.xyz"
+    ],
+    "AllowedMethods": [
+      "PUT",
+      "GET",
+      "HEAD"
+    ],
+    "AllowedHeaders": [
+      "content-type",
+      "authorization",
+      "x-amz-date",
+      "x-amz-content-sha256",
+      "origin"
+    ],
+    "ExposeHeaders": [
+      "etag",
+      "x-amz-request-id"
+    ],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
+
+Nếu `OPTIONS` preflight trả `403` từ `*.r2.cloudflarestorage.com` thì bucket CORS chưa đúng origin hiện tại.

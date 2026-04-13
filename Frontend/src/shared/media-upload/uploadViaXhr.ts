@@ -15,6 +15,8 @@ export async function uploadToPresignedUrlViaXhr({
   timeoutMs = 60_000,
   uploadUrl,
 }: UploadViaXhrParams): Promise<void> {
+  const isR2Upload = uploadUrl.includes('.r2.cloudflarestorage.com/');
+
   await new Promise<void>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     let completed = false;
@@ -60,7 +62,14 @@ export async function uploadToPresignedUrlViaXhr({
       finish(() => resolve());
     };
 
-    xhr.onerror = () => fail('Không thể upload media lên R2.');
+    xhr.onerror = () => {
+      if (isR2Upload && xhr.status === 0) {
+        fail('Upload bị chặn bởi CORS của R2. Vui lòng cấu hình Allowed Origins/Headers cho domain hiện tại.');
+        return;
+      }
+
+      fail('Không thể upload media lên R2.');
+    };
     xhr.ontimeout = () => fail('Upload media bị timeout.');
     xhr.onabort = () => fail('Upload media đã bị hủy.');
 

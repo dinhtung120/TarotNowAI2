@@ -8,6 +8,8 @@ export const IMAGE_COMPRESSION_DEFAULTS = {
   maxSizeMB: 1,
   maxWidthOrHeight: 2048,
   useWebWorker: true,
+  // Tự host script worker để tránh fallback CDN (bị chặn bởi CSP production).
+  libURL: '/vendor/browser-image-compression.js',
 } as const;
 
 export const DEFAULT_UPLOAD_RETRY_ATTEMPTS = 3;

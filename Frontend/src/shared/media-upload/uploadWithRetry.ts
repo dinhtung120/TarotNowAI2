@@ -52,5 +52,9 @@ function shouldRetryUpload(error: unknown): boolean {
     return false;
   }
 
+  if (error.message.includes('CORS của R2')) {
+    return false;
+  }
+
   return true;
 }
