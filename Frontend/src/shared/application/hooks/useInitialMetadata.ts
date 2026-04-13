@@ -83,5 +83,5 @@ export function useInitialMetadata() {
     }
 
     void fetchMetadata();
-  }, [isAuthenticated, queryClient, setBalance]);
+  }, [isAuthenticated, locale, queryClient, setBalance]);
 }

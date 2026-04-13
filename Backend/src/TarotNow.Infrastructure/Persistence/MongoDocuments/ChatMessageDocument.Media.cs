@@ -18,6 +18,11 @@ public class ChatMediaPayload
     [BsonElement("url")]
     public string Url { get; set; } = string.Empty;
 
+    // Object key lưu trên R2.
+    [BsonElement("object_key")]
+    [BsonIgnoreIfNull]
+    public string? ObjectKey { get; set; }
+
     // MIME type của media.
     [BsonElement("mime_type")]
     public string? MimeType { get; set; }

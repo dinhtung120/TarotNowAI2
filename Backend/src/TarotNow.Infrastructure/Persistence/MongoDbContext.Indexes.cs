@@ -13,6 +13,7 @@ public partial class MongoDbContext
         EnsureReaderCollectionIndexes();
         EnsureChatCollectionIndexes();
         EnsureCommunityIndexes();
+        EnsureMediaUploadIndexes();
         EnsureCheckinIndexes();
         EnsureGamificationIndexes();
         EnsureGachaIndexes();

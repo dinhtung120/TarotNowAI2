@@ -20,6 +20,8 @@ public class CreatePostCommandHandlerTests
     private readonly Mock<IUserRepository> _userRepoMock;
     // Mock gamification service để kiểm tra side-effect cộng điểm.
     private readonly Mock<IGamificationService> _gamificationServiceMock;
+    // Mock media attachment service để map ảnh markdown theo context draft.
+    private readonly Mock<ICommunityMediaAttachmentService> _communityMediaAttachmentServiceMock;
     // Handler cần kiểm thử.
     private readonly CreatePostCommandHandler _handler;
 
@@ -32,10 +34,25 @@ public class CreatePostCommandHandlerTests
         _postRepoMock = new Mock<ICommunityPostRepository>();
         _userRepoMock = new Mock<IUserRepository>();
         _gamificationServiceMock = new Mock<IGamificationService>();
+        _communityMediaAttachmentServiceMock = new Mock<ICommunityMediaAttachmentService>();
         _gamificationServiceMock
             .Setup(x => x.OnPostCreatedAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
-        _handler = new CreatePostCommandHandler(_postRepoMock.Object, _userRepoMock.Object, _gamificationServiceMock.Object);
+        _communityMediaAttachmentServiceMock
+            .Setup(x => x.AttachForNewEntityAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        _handler = new CreatePostCommandHandler(
+            _postRepoMock.Object,
+            _userRepoMock.Object,
+            _gamificationServiceMock.Object,
+            _communityMediaAttachmentServiceMock.Object);
     }
 
     /// <summary>
@@ -72,6 +89,15 @@ public class CreatePostCommandHandlerTests
         result.Content.Should().Be("Hello World!");
         result.Visibility.Should().Be(PostVisibility.Public);
         _gamificationServiceMock.Verify(x => x.OnPostCreatedAsync(request.AuthorId, It.IsAny<CancellationToken>()), Times.Once);
+        _communityMediaAttachmentServiceMock.Verify(
+            x => x.AttachForNewEntityAsync(
+                request.AuthorId,
+                "post",
+                request.ContextDraftId,
+                result.Id,
+                result.Content,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     /// <summary>

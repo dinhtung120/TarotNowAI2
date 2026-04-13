@@ -31,10 +31,6 @@ public class CustomWebApplicationFactory<TProgram>
     private readonly SemaphoreSlim _containerStartLock = new(1, 1);
     // Đánh dấu trạng thái containers đã sẵn sàng cho host test.
     private volatile bool _containersStarted;
-    // Root path tạm cho file upload trong integration tests (mỗi factory một thư mục riêng).
-    private readonly string _testStorageRoot = Path.Combine(
-        Path.GetTempPath(),
-        $"tarotnow-integration-uploads-{Guid.NewGuid():N}");
 
     // Bộ env tối thiểu giúp startup pass fail-fast validation trong CI khi không có .env ở root.
     private static readonly IReadOnlyDictionary<string, string> RequiredEnvironmentDefaults =
@@ -70,7 +66,6 @@ public class CustomWebApplicationFactory<TProgram>
     public CustomWebApplicationFactory()
     {
         ApplyMissingEnvironmentDefaults();
-        Directory.CreateDirectory(_testStorageRoot);
     }
 
     /// <summary>
@@ -109,17 +104,17 @@ public class CustomWebApplicationFactory<TProgram>
                 ["AiProvider:TimeoutSeconds"] = "30",
                 ["AiProvider:MaxRetries"] = "0",
                 ["Cors:AllowedOrigins:0"] = "http://localhost:3000",
-                ["FileStorage:RootPath"] = _testStorageRoot,
-                ["ObjectStorage:Provider"] = string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("R2_ACCESS_KEY_ID")) ? "Local" : "R2",
-                ["ObjectStorage:R2:AccountId"] = Environment.GetEnvironmentVariable("R2_ACCOUNT_ID"),
-                ["ObjectStorage:R2:AccessKeyId"] = Environment.GetEnvironmentVariable("R2_ACCESS_KEY_ID"),
-                ["ObjectStorage:R2:SecretAccessKey"] = Environment.GetEnvironmentVariable("R2_SECRET_ACCESS_KEY"),
-                ["ObjectStorage:R2:BucketName"] = Environment.GetEnvironmentVariable("R2_BUCKET_NAME"),
-                ["ObjectStorage:R2:PublicBaseUrl"] = Environment.GetEnvironmentVariable("R2_PUBLIC_BASE_URL"),
-                ["ObjectStorage:MaxConcurrentUploads"] = "4",
+                ["ObjectStorage:Provider"] = "R2",
+                ["ObjectStorage:R2:AccountId"] = Environment.GetEnvironmentVariable("R2_ACCOUNT_ID") ?? "integration-account",
+                ["ObjectStorage:R2:AccessKeyId"] = Environment.GetEnvironmentVariable("R2_ACCESS_KEY_ID") ?? "integration-access-key",
+                ["ObjectStorage:R2:SecretAccessKey"] = Environment.GetEnvironmentVariable("R2_SECRET_ACCESS_KEY") ?? "integration-secret-key",
+                ["ObjectStorage:R2:BucketName"] = Environment.GetEnvironmentVariable("R2_BUCKET_NAME") ?? "integration-bucket",
+                ["ObjectStorage:R2:PublicBaseUrl"] = Environment.GetEnvironmentVariable("R2_PUBLIC_BASE_URL") ?? "https://media.test.local",
                 ["ObjectStorage:MaxUploadBytes"] = "10485760",
-                ["ObjectStorage:AvatarMaxEdgePixels"] = "512",
-                ["ObjectStorage:CommunityImageMaxEdgePixels"] = "1024",
+                ["ObjectStorage:PresignExpiryMinutes"] = "10",
+                ["ObjectStorage:CommunityOrphanTtlHours"] = "24",
+                ["ObjectStorage:CleanupBatchSize"] = "200",
+                ["ObjectStorage:CleanupIntervalMinutes"] = "10",
                 ["SystemConfig:DailyAiQuota"] = "3",
                 ["SystemConfig:InFlightAiCap"] = "3",
                 ["SystemConfig:ReadingRateLimitSeconds"] = "1"
@@ -246,7 +241,6 @@ public class CustomWebApplicationFactory<TProgram>
     {
         await _dbContainer.DisposeAsync().AsTask();
         await _mongoContainer.DisposeAsync().AsTask();
-        TryCleanupTestStorage();
     }
 
     /// <summary>
@@ -302,22 +296,4 @@ public class CustomWebApplicationFactory<TProgram>
         }
     }
 
-    /// <summary>
-    /// Dọn thư mục upload tạm của integration tests.
-    /// Luồng best-effort để tránh test fail chỉ vì lỗi dọn dẹp sau cùng.
-    /// </summary>
-    private void TryCleanupTestStorage()
-    {
-        try
-        {
-            if (Directory.Exists(_testStorageRoot))
-            {
-                Directory.Delete(_testStorageRoot, recursive: true);
-            }
-        }
-        catch
-        {
-            // Ignore cleanup failure.
-        }
-    }
 }

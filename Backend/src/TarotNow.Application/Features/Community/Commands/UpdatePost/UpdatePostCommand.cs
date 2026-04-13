@@ -23,14 +23,18 @@ public class UpdatePostCommand : IRequest<bool>
 public class UpdatePostCommandHandler : IRequestHandler<UpdatePostCommand, bool>
 {
     private readonly ICommunityPostRepository _postRepo;
+    private readonly ICommunityMediaAttachmentService _communityMediaAttachmentService;
 
     /// <summary>
     /// Khởi tạo handler update post.
     /// Luồng xử lý: nhận post repository để kiểm tra quyền sở hữu và cập nhật nội dung.
     /// </summary>
-    public UpdatePostCommandHandler(ICommunityPostRepository postRepo)
+    public UpdatePostCommandHandler(
+        ICommunityPostRepository postRepo,
+        ICommunityMediaAttachmentService communityMediaAttachmentService)
     {
         _postRepo = postRepo;
+        _communityMediaAttachmentService = communityMediaAttachmentService;
     }
 
     /// <summary>
@@ -58,6 +62,20 @@ public class UpdatePostCommandHandler : IRequestHandler<UpdatePostCommand, bool>
             throw new ForbiddenException("Bạn không có quyền sửa bài viết này.");
         }
 
-        return await _postRepo.UpdateContentAsync(request.PostId, request.Content.Trim(), cancellationToken);
+        var normalizedContent = request.Content.Trim();
+        var updated = await _postRepo.UpdateContentAsync(request.PostId, normalizedContent, cancellationToken);
+        if (!updated)
+        {
+            return false;
+        }
+
+        await _communityMediaAttachmentService.ReconcileForExistingEntityAsync(
+            request.AuthorId,
+            "post",
+            request.PostId,
+            normalizedContent,
+            cancellationToken);
+
+        return true;
     }
 }

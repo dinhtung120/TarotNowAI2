@@ -32,7 +32,13 @@ export interface CommunityComment {
 
 export interface CreatePostPayload {
   content: string;
+  contextDraftId?: string;
   visibility: PostVisibility;
+}
+
+export interface AddCommentPayload {
+  content: string;
+  contextDraftId?: string;
 }
 
 export interface ToggleReactionPayload {

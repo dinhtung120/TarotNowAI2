@@ -1,6 +1,7 @@
 "use client";
 
-import { Lock, Mail } from "lucide-react";
+import { useState } from "react";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { useLoginPage } from "@/features/auth/application/useLoginPage";
 import { AuthErrorBanner } from "@/features/auth/presentation/components/AuthErrorBanner";
@@ -9,8 +10,19 @@ import { cn } from "@/lib/utils";
 import AuthLayout from "@/shared/components/layout/AuthLayout";
 import { Button, Input } from "@/shared/components/ui";
 
+/*
+ * Component LoginPage
+ * 
+ * Mục đích: Quản lý giao diện đăng nhập.
+ * Chức năng: Cho phép người dùng nhập thông tin và đăng nhập, hỗ trợ ẩn/hiện mật khẩu.
+ * 
+ * Tại sao chọn cách này: Đưa trực tiếp logic ẩn/hiện vào page giúp mã nguồn tập trung, 
+ * dễ theo dõi cho các chức năng đơn giản như thay đổi kiểu hiển thị input.
+ */
 export default function LoginPage() {
   const vm = useLoginPage();
+  // Trạng thái cục bộ để kiểm soát việc hiển thị mật khẩu (password vs text)
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <AuthLayout title={vm.t("login.title")} subtitle={vm.t("login.subtitle")}>
@@ -24,12 +36,27 @@ export default function LoginPage() {
           {...vm.register("emailOrUsername")}
         />
         <div className={cn("space-y-1")}>
+          {/* 
+            Trường nhập mật khẩu tích hợp nút ẩn/hiện. 
+            - type: thay đổi dựa trên showPassword.
+            - rightElement: chứa nút bấm chuyển đổi biểu tượng con mắt.
+          */}
           <Input
             label={vm.t("login.password_label")}
-            type="password"
+            type={showPassword ? "text" : "password"}
             leftIcon={<Lock className={cn("h-5", "w-5")} />}
             placeholder={vm.t("login.password_placeholder")}
             error={vm.errors.password?.message}
+            rightElement={
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className={cn("tn-text-secondary hover:tn-text-primary transition-colors focus:outline-none")}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className={cn("h-5", "w-5")} /> : <Eye className={cn("h-5", "w-5")} />}
+              </button>
+            }
             {...vm.register("password")}
           />
           <div className={cn("flex", "items-center", "justify-between")}>

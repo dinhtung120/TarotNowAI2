@@ -4,6 +4,7 @@ import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import {
+ AddCommentPayload,
  CommunityPost,
  CreatePostPayload,
  ToggleReactionPayload,
@@ -13,7 +14,6 @@ import {
 interface CommentsResponse { items: CommunityComment[]; totalCount: number; page: number; pageSize: number; totalPages: number }
 
 const UNAUTHORIZED = 'Unauthorized';
-const FAIL_UPLOAD_IMAGE = 'Failed to upload image';
 const FAIL_GET_FEED = 'Failed to get feed';
 const FAIL_CREATE_POST = 'Failed to create post';
 const FAIL_TOGGLE_REACTION = 'Failed to toggle reaction';
@@ -24,21 +24,6 @@ async function withToken<T>(work: (token: string) => Promise<ActionResult<T>>): 
  const token = await getServerAccessToken();
  if (!token) return actionFail(UNAUTHORIZED);
  return work(token);
-}
-
-export async function uploadPostImageAction(
- formData: FormData
-): Promise<ActionResult<{ url: string; publicId?: string }>> {
- return withToken(async (token) => {
-  try {
-   const result = await serverHttpRequest<{ url: string; publicId?: string }>('/community/images', { method: 'POST', token, formData, fallbackErrorMessage: FAIL_UPLOAD_IMAGE });
-   if (!result.ok) return actionFail(result.error || FAIL_UPLOAD_IMAGE);
-   return actionOk(result.data);
-  } catch (error) {
-   logger.error('uploadPostImageAction error', error);
-   return actionFail(FAIL_UPLOAD_IMAGE);
-  }
- });
 }
 
 export async function getFeedAction(
@@ -89,10 +74,10 @@ export async function toggleReactionAction(postId: string, payload: ToggleReacti
  });
 }
 
-export async function addCommentAction(postId: string, content: string): Promise<ActionResult<CommunityComment>> {
+export async function addCommentAction(postId: string, payload: AddCommentPayload): Promise<ActionResult<CommunityComment>> {
  return withToken(async (token) => {
   try {
-   const result = await serverHttpRequest<CommunityComment>(`/community/posts/${postId}/comments`, { method: 'POST', token, json: { content }, fallbackErrorMessage: FAIL_ADD_COMMENT });
+   const result = await serverHttpRequest<CommunityComment>(`/community/posts/${postId}/comments`, { method: 'POST', token, json: payload, fallbackErrorMessage: FAIL_ADD_COMMENT });
    if (!result.ok) return actionFail(result.error || FAIL_ADD_COMMENT);
    return actionOk(result.data);
   } catch (error) {

@@ -5,7 +5,6 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 using System.Net.Http.Json;
 using TarotNow.Api.Contracts;
-using TarotNow.Application.Interfaces;
 using TarotNow.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
@@ -59,6 +58,11 @@ public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory
             await db.SaveChangesAsync();
         }
 
+        // Chuẩn bị avatar hiện tại để xác nhận PATCH profile không được ghi đè avatar trực tiếp.
+        var existingUser = await db.Users.FirstAsync(u => u.Id == userId);
+        existingUser.ApplyManagedAvatar("https://media.example.com/avatars/original.webp", "avatars/original.webp");
+        await db.SaveChangesAsync();
+
         // Chuẩn bị payload cập nhật có DOB để hệ thống tính Zodiac/Numerology.
         var updateRequest = new UpdateProfileRequest
         {
@@ -78,7 +82,7 @@ public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory
 
         Assert.NotNull(profile);
         Assert.Equal("Test Name", profile!.DisplayName);
-        Assert.Equal("http://example.com/avatar.png", profile.AvatarUrl);
+        Assert.Equal("https://media.example.com/avatars/original.webp", profile.AvatarUrl);
 
         // DOB 15/07 kỳ vọng thuộc cung Cự Giải theo rule hiện tại.
         Assert.Equal("Cancer (Cự Giải)", profile.Zodiac);
@@ -88,47 +92,41 @@ public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory
     }
 
     /// <summary>
-    /// Xác nhận upload avatar được nén/lưu và phản ánh lại trong profile.
-    /// Luồng upload ảnh giả lập, đọc URL trả về, rồi GET profile để đối chiếu.
+    /// Xác nhận upload avatar theo luồng mới presign + confirm và phản ánh lại trong profile.
     /// </summary>
     [Fact]
-    public async Task UploadAvatar_ShouldCompressAndSaveFile()
+    public async Task UploadAvatar_ShouldPresignThenConfirmAndUpdateProfile()
     {
-        // Dùng ảnh mẫu cực nhỏ dạng base64 để test upload nhanh và ổn định.
-        var imageBytes = Convert.FromBase64String("/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAP//////////////////////////////////////////////////////////////////////////////////////wgALCAABAAEBAREA/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxA=");
-        using var stream = new MemoryStream(imageBytes);
-        var content = new MultipartFormDataContent();
-        var streamContent = new StreamContent(stream);
-        streamContent.Headers.Add("Content-Type", "image/jpeg");
-        content.Add(streamContent, "file", "test.jpg");
+        await EnsureTestUserAsync();
 
-        // Gọi endpoint upload avatar.
-        var response = await _client.PostAsync("/api/v1/profile/avatar", content);
-        response.EnsureSuccessStatusCode();
-
-        // Kiểm tra payload response có thông tin upload thành công.
-        var resultText = await response.Content.ReadAsStringAsync();
-        Assert.Contains("success\":true", resultText);
-
-        using var scope = _factory.Services.CreateScope();
-        var storageOptions = scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<TarotNow.Infrastructure.Options.ObjectStorageOptions>>().Value;
-
-        if (storageOptions.Provider == "R2")
+        var presignResponse = await _client.PostAsJsonAsync("/api/v1/profile/avatar/presign", new
         {
-            // Với R2, avatarUrl sẽ là URL đầy đủ bắt đầu bằng http, publicId khớp với key prefix avatars/
-            Assert.Contains("avatarUrl\":\"http", resultText);
-            Assert.Contains("publicId\":\"avatars/", resultText);
-        }
-        else
-        {
-            // Với Local (dùng cho CI hoặc Fallback), avatarUrl là đường dẫn tương đối, publicId chứa thư mục uploads
-            Assert.Contains("avatarUrl\":\"/uploads/avatars/", resultText);
-            Assert.Contains("publicId\":\"uploads/avatars/", resultText);
-        }
+            contentType = "image/webp",
+            sizeBytes = 120_000L,
+        });
+        presignResponse.EnsureSuccessStatusCode();
+        var presignPayload = await presignResponse.Content.ReadFromJsonAsync<PresignedUploadResponsePayload>();
 
-        // Parse avatarUrl để đối chiếu với dữ liệu profile sau khi lưu.
-        using var jsonDoc = System.Text.Json.JsonDocument.Parse(resultText);
-        var avatarUrl = jsonDoc.RootElement.GetProperty("avatarUrl").GetString();
+        Assert.NotNull(presignPayload);
+        Assert.StartsWith("avatars/", presignPayload!.ObjectKey);
+        Assert.EndsWith("/" + presignPayload.ObjectKey, presignPayload.PublicUrl);
+        Assert.StartsWith("http", presignPayload.PublicUrl);
+        Assert.False(string.IsNullOrWhiteSpace(presignPayload.UploadUrl));
+        Assert.False(string.IsNullOrWhiteSpace(presignPayload.UploadToken));
+
+        var confirmResponse = await _client.PostAsJsonAsync("/api/v1/profile/avatar/confirm", new
+        {
+            objectKey = presignPayload.ObjectKey,
+            publicUrl = presignPayload.PublicUrl,
+            uploadToken = presignPayload.UploadToken,
+        });
+        confirmResponse.EnsureSuccessStatusCode();
+        var confirmPayload = await confirmResponse.Content.ReadFromJsonAsync<AvatarConfirmResponsePayload>();
+
+        Assert.NotNull(confirmPayload);
+        Assert.True(confirmPayload!.Success);
+        Assert.Equal(presignPayload.PublicUrl, confirmPayload.AvatarUrl);
+        Assert.Equal(presignPayload.ObjectKey, confirmPayload.ObjectKey);
 
         // Đọc profile và xác nhận avatar đã được cập nhật đúng URL mới.
         var getResponse = await _client.GetAsync("/api/v1/profile");
@@ -136,6 +134,44 @@ public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory
         var profile = await getResponse.Content.ReadFromJsonAsync<Application.Features.Profile.Queries.GetProfile.ProfileResponse>();
 
         Assert.NotNull(profile);
-        Assert.Equal(avatarUrl, profile!.AvatarUrl);
+        Assert.Equal(presignPayload.PublicUrl, profile!.AvatarUrl);
+    }
+
+    private async Task EnsureTestUserAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var userId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        if (await db.Users.AnyAsync(x => x.Id == userId))
+        {
+            return;
+        }
+
+        var user = new TarotNow.Domain.Entities.User(
+            email: "profile@tarotnow.com",
+            username: "profileuser",
+            passwordHash: "hash",
+            displayName: "Seed User",
+            dateOfBirth: new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            hasConsented: true);
+        typeof(TarotNow.Domain.Entities.User).GetProperty("Id")?.SetValue(user, userId);
+        user.Activate();
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+    }
+
+    private sealed class PresignedUploadResponsePayload
+    {
+        public string UploadUrl { get; set; } = string.Empty;
+        public string ObjectKey { get; set; } = string.Empty;
+        public string PublicUrl { get; set; } = string.Empty;
+        public string UploadToken { get; set; } = string.Empty;
+    }
+
+    private sealed class AvatarConfirmResponsePayload
+    {
+        public bool Success { get; set; }
+        public string AvatarUrl { get; set; } = string.Empty;
+        public string ObjectKey { get; set; } = string.Empty;
     }
 }

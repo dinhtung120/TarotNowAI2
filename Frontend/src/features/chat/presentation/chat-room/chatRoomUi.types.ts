@@ -57,6 +57,8 @@ export interface ChatComposerInputRowProps {
   newMessage: string;
   sending: boolean;
   uploadingMedia: boolean;
+  uploadPercent: number;
+  uploadingMediaLabel: string;
   VoiceRecorderButton: ComponentType<{
     disabled?: boolean;
     onRecordingComplete: (result: VoiceRecordingResult) => void;

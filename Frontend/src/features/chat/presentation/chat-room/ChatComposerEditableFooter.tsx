@@ -18,7 +18,9 @@ export default function ChatComposerEditableFooter({
   requestingAddMoney,
   sending,
   showActionMenu,
+  uploadPercent,
   uploadingMedia,
+  uploadingMediaLabel,
   VoiceRecorderButton,
   setShowActionMenu,
   onImageInputChange,
@@ -40,7 +42,9 @@ export default function ChatComposerEditableFooter({
           inputRef={inputRef}
           newMessage={newMessage}
           sending={sending}
+          uploadPercent={uploadPercent}
           uploadingMedia={uploadingMedia}
+          uploadingMediaLabel={uploadingMediaLabel}
           VoiceRecorderButton={VoiceRecorderButton}
           onInputChange={onInputChange}
           onInputKeyDown={onInputKeyDown}

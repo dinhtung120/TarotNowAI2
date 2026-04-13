@@ -1,11 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Contracts.Requests;
-using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Community.Commands.CreatePost;
 using TarotNow.Application.Features.Community.Commands.DeletePost;
 using TarotNow.Application.Features.Community.Commands.UpdatePost;
-using TarotNow.Application.Features.Community.Commands.UploadPostImage;
 using TarotNow.Application.Features.Community.Queries.GetFeed;
 using TarotNow.Application.Features.Community.Queries.GetPostDetail;
 
@@ -28,39 +26,11 @@ public partial class CommunityController
         {
             AuthorId = GetRequiredUserId(),
             Content = body.Content,
-            Visibility = body.Visibility
+            Visibility = body.Visibility,
+            ContextDraftId = body.ContextDraftId
         });
 
         return CreatedAtAction(nameof(GetPostDetail), new { id = result.Id }, result);
-    }
-
-    /// <summary>
-    /// Upload ảnh dùng trong bài viết cộng đồng.
-    /// Luồng xử lý: kiểm tra file đầu vào, mở stream đọc, gửi command upload và trả URL ảnh.
-    /// </summary>
-    /// <param name="file">File ảnh upload từ multipart form.</param>
-    /// <returns>URL ảnh sau khi upload thành công.</returns>
-    [HttpPost("images")]
-    [RequestSizeLimit(10 * 1024 * 1024)]
-    [EnableRateLimiting("community-write")]
-    public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
-    {
-        if (file == null || file.Length == 0)
-        {
-            // Edge case file rỗng: chặn sớm để tránh tốn tài nguyên xử lý media.
-            throw new BadRequestException("File rỗng.");
-        }
-
-        // Dùng stream để xử lý file theo kiểu streaming, tránh giữ toàn bộ file trên bộ nhớ.
-        using var stream = file.OpenReadStream();
-        var upload = await _mediator.Send(new UploadPostImageCommand
-        {
-            ImageStream = stream,
-            FileName = file.FileName,
-            ContentType = file.ContentType
-        });
-
-        return Ok(new { success = true, url = upload.Url, publicId = upload.PublicId });
     }
 
     /// <summary>

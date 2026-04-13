@@ -44,6 +44,8 @@ export interface ChatRoomViewProps {
   startingNewSession: boolean;
   title: string;
   uploadingMedia: boolean;
+  uploadPercent: number;
+  uploadingMediaLabel: string;
   warningText: string;
   PaymentOfferModal: ComponentType<{
     onClose: () => void;

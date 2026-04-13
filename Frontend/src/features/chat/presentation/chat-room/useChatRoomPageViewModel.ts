@@ -92,6 +92,8 @@ export function useChatRoomPageViewModel({
       startingNewSession: state.conversationActions.startingNewSession,
       title: t('room.title'),
       uploadingMedia: state.inputMedia.uploadingMedia,
+      uploadPercent: state.inputMedia.uploadPercent,
+      uploadingMediaLabel: t('room.uploading_media', { percent: state.inputMedia.uploadPercent }),
       warningText:
         '⚠️ Reader đang không hoạt động. Thời gian phản hồi có thể lâu hơn SLA cam kết.',
       PaymentOfferModal,

@@ -24,6 +24,7 @@ export function useChatRoomInputMediaActions({
   handleSendTextMessage,
 }: UseChatRoomInputMediaActionsParams) {
   const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [uploadPercent, setUploadPercent] = useState(0);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const typingStopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -79,12 +80,18 @@ export function useChatRoomInputMediaActions({
       try {
         validateRawImageFile(file);
         setUploadingMedia(true);
-        const payload = await buildImageMediaPayload(file);
+        setUploadPercent(0);
+        const payload = await buildImageMediaPayload({
+          conversationId: conversation.id,
+          file,
+          onProgress: setUploadPercent,
+        });
         await sendMedia('image', payload, 'Không thể gửi ảnh.');
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'Không thể gửi ảnh.');
       } finally {
         setUploadingMedia(false);
+        setUploadPercent(0);
       }
     },
     [conversation, sendMedia],
@@ -96,12 +103,19 @@ export function useChatRoomInputMediaActions({
 
       try {
         setUploadingMedia(true);
-        const payload = await buildVoiceMediaPayloadFromBlob(result.blob, result.durationMs);
+        setUploadPercent(0);
+        const payload = await buildVoiceMediaPayloadFromBlob({
+          blob: result.blob,
+          conversationId: conversation.id,
+          durationMs: result.durationMs,
+          onProgress: setUploadPercent,
+        });
         await sendMedia('voice', payload, 'Không thể gửi tin nhắn thoại.');
       } catch (error) {
         toast.error(error instanceof Error ? error.message : 'Không thể gửi tin nhắn thoại.');
       } finally {
         setUploadingMedia(false);
+        setUploadPercent(0);
       }
     },
     [conversation, sendMedia],
@@ -114,6 +128,7 @@ export function useChatRoomInputMediaActions({
     onInputKeyDown,
     onVoiceRecordingComplete,
     scrollRef,
+    uploadPercent,
     uploadingMedia,
   };
 }

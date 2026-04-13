@@ -97,6 +97,8 @@ Chi tiết vận hành backup/restore/rollback xem `deploy/README.md`.
 
 ## Tài liệu
 Xem thêm trong thư mục `Doccument/` và `docs/`.
+- Luồng upload media mới (R2 direct upload + CORS/security): `Doccument/R2_DIRECT_UPLOAD_GUIDE.md`.
+- Checklist rollout refactor upload media (.env + GitHub Actions): `Doccument/UPLOAD_MEDIA_REFACTOR_ROLLOUT.md`.
 
 ## License
 Private – All rights reserved.

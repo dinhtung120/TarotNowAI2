@@ -12,9 +12,6 @@ public class UpdateProfileCommand : IRequest<bool>
     // Tên hiển thị mới của user.
     public string DisplayName { get; set; } = string.Empty;
 
-    // URL ảnh đại diện mới (tùy chọn).
-    public string? AvatarUrl { get; set; }
-
     // Ngày sinh dùng cho hồ sơ và các tính toán metadata (zodiac/numerology).
     public DateTime DateOfBirth { get; set; }
 }

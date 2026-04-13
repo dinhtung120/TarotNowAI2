@@ -23,5 +23,9 @@ public sealed class AddCommentCommandValidator : AbstractValidator<AddCommentCom
         RuleFor(x => x.Content)
             .NotEmpty()
             .MaximumLength(1000);
+
+        // Draft id cho phép rỗng khi comment không đính kèm ảnh.
+        RuleFor(x => x.ContextDraftId)
+            .MaximumLength(128);
     }
 }

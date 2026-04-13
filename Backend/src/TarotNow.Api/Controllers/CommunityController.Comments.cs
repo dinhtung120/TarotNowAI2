@@ -25,7 +25,8 @@ public partial class CommunityController
         {
             PostId = postId,
             AuthorId = GetRequiredUserId(),
-            Content = body.Content
+            Content = body.Content,
+            ContextDraftId = body.ContextDraftId
         });
 
         return Ok(result);

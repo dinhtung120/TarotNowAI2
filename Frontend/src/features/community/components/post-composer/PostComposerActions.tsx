@@ -31,12 +31,12 @@ export function PostComposerActions({
      <option value="public">{t('composer.visibility_public')}</option>
      <option value="private">{t('composer.visibility_private')}</option>
     </select>
-    <button type="button" disabled={isUploading} onClick={() => fileInputRef.current?.click()} className={cn('tn-text-accent tn-hover-text-primary transition-colors p-2 rounded-full tn-hover-surface-soft')} title={t('composer.attach_image')}>
+    <button type="button" disabled={isUploading || isPending} onClick={() => fileInputRef.current?.click()} className={cn('tn-text-accent tn-hover-text-primary transition-colors p-2 rounded-full tn-hover-surface-soft')} title={t('composer.attach_image')}>
      {isUploading ? <Loader2 className={cn('w-5 h-5 animate-spin')} /> : <ImageIcon className={cn('w-5 h-5')} />}
     </button>
     <input type="file" accept="image/*" className={cn('hidden')} ref={fileInputRef} onChange={onChangeImage} />
    </div>
-   <button type="submit" disabled={isPending || (!content.trim() && !isUploading)} className={cn('bg-gradient-to-r from-violet-600 to-indigo-900 text-white px-6 py-2 rounded-lg font-medium transition-opacity tn-disabled-dim')}>
+   <button type="submit" disabled={isPending || isUploading || !content.trim()} className={cn('bg-gradient-to-r from-violet-600 to-indigo-900 text-white px-6 py-2 rounded-lg font-medium transition-opacity tn-disabled-dim')}>
     {isPending ? t('composer.posting') : t('composer.submit')}
    </button>
   </div>

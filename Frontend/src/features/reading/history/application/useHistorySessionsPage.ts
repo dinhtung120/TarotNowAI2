@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
  getHistorySessionsAction,
@@ -30,10 +30,6 @@ export function useHistorySessionsPage({
  useEffect(() => {
   onUnauthorizedRef.current = onUnauthorized;
  }, [onUnauthorized]);
-
- useEffect(() => {
-  setCurrentPage(1);
- }, [filterDate, filterType]);
 
  const query = useQuery<HistorySessionsResponse, Error>({
   queryKey: historySessionsListQueryKey(currentPage, filterType, filterDate),
@@ -76,6 +72,16 @@ export function useHistorySessionsPage({
   }
  };
 
+ const updateFilterType = useCallback((nextType: string) => {
+  setCurrentPage(1);
+  setFilterType(nextType);
+ }, []);
+
+ const updateFilterDate = useCallback((nextDate: string) => {
+  setCurrentPage(1);
+  setFilterDate(nextDate);
+ }, []);
+
  return {
   historyData,
   isLoading,
@@ -83,8 +89,8 @@ export function useHistorySessionsPage({
   currentPage,
   filterType,
   filterDate,
-  setFilterType,
-  setFilterDate,
+  setFilterType: updateFilterType,
+  setFilterDate: updateFilterDate,
   goToPrevPage,
   goToNextPage,
  };

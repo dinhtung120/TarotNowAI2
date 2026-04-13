@@ -6,6 +6,13 @@ public class MediaPayloadDto
     // URL truy cập file media.
     public string Url { get; set; } = string.Empty;
 
+    // Object key lưu trên R2 (dùng để đối chiếu bảo mật và cleanup).
+    public string? ObjectKey { get; set; }
+
+    // Upload token one-time do endpoint presign cấp.
+    // Chỉ dùng để validate/consume, không persist vào DB.
+    public string? UploadToken { get; set; }
+
     // MIME type để client render đúng loại media.
     public string? MimeType { get; set; }
 

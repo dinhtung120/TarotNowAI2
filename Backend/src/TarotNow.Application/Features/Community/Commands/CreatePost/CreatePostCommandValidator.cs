@@ -25,5 +25,9 @@ public sealed class CreatePostCommandValidator : AbstractValidator<CreatePostCom
         RuleFor(x => x.Visibility)
             .Must(v => v is PostVisibility.Public or PostVisibility.Private)
             .WithMessage("Visibility must be either 'public' or 'private'.");
+
+        // Draft id chỉ dùng để map asset upload, cho phép rỗng khi post không đính kèm ảnh.
+        RuleFor(x => x.ContextDraftId)
+            .MaximumLength(128);
     }
 }

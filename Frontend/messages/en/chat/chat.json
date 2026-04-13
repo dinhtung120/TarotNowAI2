@@ -31,6 +31,7 @@
       "loading": "Synchronizing...",
       "empty": "Connection is open. Send your first message.",
       "input_placeholder": "Send your message...",
+      "uploading_media": "Uploading media... {percent}%",
       "payment_offer": "💎 Payment offer",
       "payment_accept": "✅ Accepted",
       "payment_reject": "❌ Declined",

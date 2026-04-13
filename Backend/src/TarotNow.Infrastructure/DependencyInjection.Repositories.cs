@@ -64,6 +64,8 @@ public static partial class DependencyInjection
         services.AddScoped<IConversationRepository, MongoConversationRepository>();
         services.AddScoped<IChatMessageRepository, MongoChatMessageRepository>();
         services.AddScoped<IReportRepository, MongoReportRepository>();
+        services.AddScoped<IUploadSessionRepository, UploadSessionRepository>();
+        services.AddScoped<ICommunityMediaAssetRepository, CommunityMediaAssetRepository>();
         services.AddScoped<IDailyCheckinRepository, MongoDailyCheckinRepository>();
         services.AddScoped<IStreakService, StreakService>();
     }
@@ -118,5 +120,6 @@ public static partial class DependencyInjection
         services.AddHostedService<StreakBreakBackgroundJob>();
         services.AddHostedService<EntitlementDailyResetJob>();
         services.AddHostedService<SubscriptionExpiryJob>();
+        services.AddHostedService<MediaUploadCleanupJob>();
     }
 }

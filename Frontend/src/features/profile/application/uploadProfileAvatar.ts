@@ -1,10 +1,15 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { compressAvatarImage } from '@/features/profile/application/compressAvatarImage';
-import { UserImageValidationError } from '@/shared/media/validateImageForUpload';
-import { postFormDataToApiV1 } from '@/shared/infrastructure/http/clientMultipartUpload';
+import {
+  compressImageForDirectUpload,
+  confirmAvatarUpload,
+  ImageUploadValidationError,
+  presignAvatarUpload,
+  uploadToR2WithRetry,
+} from '@/shared/media-upload';
 
 interface UploadProfileAvatarArgs {
   file: File;
+  onProgress?: (percent: number) => void;
   profileQueryKey: readonly string[];
   queryClient: QueryClient;
   t: (key: string) => string;
@@ -17,13 +22,21 @@ interface UploadProfileAvatarResult {
   success: boolean;
 }
 
-export async function uploadProfileAvatar({ file, profileQueryKey, queryClient, t }: UploadProfileAvatarArgs): Promise<UploadProfileAvatarResult> {
+export async function uploadProfileAvatar({
+  file,
+  onProgress,
+  profileQueryKey,
+  queryClient,
+  t,
+}: UploadProfileAvatarArgs): Promise<UploadProfileAvatarResult> {
+  const failMsg = t('avatar_upload_error') || 'Không thể tải ảnh lên';
   let compressedFile: File;
+
   try {
-    compressedFile = await compressAvatarImage(file);
+    compressedFile = await compressImageForDirectUpload(file);
   } catch (err) {
     const message =
-      err instanceof UserImageValidationError
+      err instanceof ImageUploadValidationError
         ? err.message
         : t('avatar_upload_error') || 'Không thể xử lý ảnh.';
     return {
@@ -33,30 +46,55 @@ export async function uploadProfileAvatar({ file, profileQueryKey, queryClient, 
       success: false,
     };
   }
-  const formData = new FormData();
-  formData.append('file', compressedFile, compressedFile.name);
 
-  const failMsg = t('avatar_upload_error') || 'Không thể tải ảnh lên';
-  const uploaded = await postFormDataToApiV1<{ avatarUrl?: string; AvatarUrl?: string }>('/profile/avatar', formData, {
-    fallbackErrorMessage: failMsg,
-    unauthorizedMessage: t('avatar_upload_error') || failMsg,
-  });
-
-  if (!uploaded.ok) {
+  const presigned = await presignAvatarUpload(compressedFile.size);
+  if (!presigned.ok) {
     return {
       avatarUrl: null,
-      error: uploaded.error,
+      error: presigned.error || failMsg,
       message: '',
       success: false,
     };
   }
 
-  const raw = uploaded.data;
-  const avatarUrl = (typeof raw.avatarUrl === 'string' ? raw.avatarUrl : null) ?? (typeof raw.AvatarUrl === 'string' ? raw.AvatarUrl : null);
+  onProgress?.(5);
+
+  try {
+    await uploadToR2WithRetry({
+      uploadUrl: presigned.data.uploadUrl,
+      file: compressedFile,
+      contentType: compressedFile.type,
+      onProgress,
+    });
+  } catch (error) {
+    return {
+      avatarUrl: null,
+      error: error instanceof Error ? error.message : failMsg,
+      message: '',
+      success: false,
+    };
+  }
+
+  const confirmed = await confirmAvatarUpload({
+    objectKey: presigned.data.objectKey,
+    publicUrl: presigned.data.publicUrl,
+    uploadToken: presigned.data.uploadToken,
+  });
+
+  if (!confirmed.ok) {
+    return {
+      avatarUrl: null,
+      error: confirmed.error || failMsg,
+      message: '',
+      success: false,
+    };
+  }
+
   await queryClient.invalidateQueries({ queryKey: profileQueryKey });
+  onProgress?.(100);
 
   return {
-    avatarUrl,
+    avatarUrl: confirmed.data.avatarUrl,
     error: '',
     message: t('avatar_upload_success') || 'Đã cập nhật ảnh đại diện',
     success: true,

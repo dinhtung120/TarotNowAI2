@@ -88,6 +88,14 @@ public partial class MongoDbContext
     public IMongoCollection<CommunityCommentDocument> CommunityComments
         => _database.GetCollection<CommunityCommentDocument>("community_comments");
 
+    // Collection session upload tạm cho token one-time.
+    public IMongoCollection<UploadSessionDocument> UploadSessions
+        => _database.GetCollection<UploadSessionDocument>("upload_sessions");
+
+    // Collection asset ảnh cộng đồng để track uploaded/attached/orphaned/deleted.
+    public IMongoCollection<CommunityMediaAssetDocument> CommunityMediaAssets
+        => _database.GetCollection<CommunityMediaAssetDocument>("community_media_assets");
+
     // Collection định nghĩa quest.
     public IMongoCollection<QuestDefinitionDocument> Quests
         => _database.GetCollection<QuestDefinitionDocument>("quests");

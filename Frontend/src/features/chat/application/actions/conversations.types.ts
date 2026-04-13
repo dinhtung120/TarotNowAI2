@@ -16,7 +16,7 @@ export interface ConversationDto {
 }
 
 export interface MediaPayloadDto {
- url: string; mimeType?: string | null; sizeBytes?: number | null; durationMs?: number | null; width?: number | null; height?: number | null;
+ url: string; objectKey?: string | null; uploadToken?: string | null; mimeType?: string | null; sizeBytes?: number | null; durationMs?: number | null; width?: number | null; height?: number | null;
  thumbnailUrl?: string | null; description?: string | null; processingStatus?: string | null
 }
 

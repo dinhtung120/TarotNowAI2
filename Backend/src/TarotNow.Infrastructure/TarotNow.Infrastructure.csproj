@@ -13,7 +13,6 @@
   <ItemGroup>
     <!-- Bộ thư viện hạ tầng: EF Core, Redis, Mongo, media, bảo mật và email. -->
     <PackageReference Include="EFCore.NamingConventions" Version="9.0.0" />
-    <PackageReference Include="FFMpegCore" Version="5.4.0" />
     <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.2" />
@@ -27,11 +26,9 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.3" />
     <PackageReference Include="AWSSDK.S3" Version="4.0.12" />
     <PackageReference Include="MongoDB.Driver" Version="3.7.0" />
-    <PackageReference Include="NeoSolve.ImageSharp.AVIF" Version="1.3.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.3" />
     <PackageReference Include="Otp.NET" Version="1.4.1" />
     <PackageReference Include="MailKit" Version="4.15.1" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
   </ItemGroup>
 
   <!-- Tham chiếu các project lõi để dùng domain + application contracts. -->

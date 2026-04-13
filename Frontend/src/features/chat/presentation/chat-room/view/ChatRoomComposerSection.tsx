@@ -22,7 +22,9 @@ export default function ChatRoomComposerSection(props: ChatRoomViewProps) {
       sending={props.sending}
       showActionMenu={props.showActionMenu}
       startingNewSession={props.startingNewSession}
+      uploadPercent={props.uploadPercent}
       uploadingMedia={props.uploadingMedia}
+      uploadingMediaLabel={props.uploadingMediaLabel}
       VoiceRecorderButton={props.VoiceRecorderButton}
       setShowActionMenu={props.onSetShowActionMenu}
       onImageInputChange={props.onImageInputChange}

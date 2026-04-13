@@ -30,5 +30,18 @@ public class SendMessageCommandValidator : AbstractValidator<SendMessageCommand>
         RuleFor(x => x.Content)
             .NotEmpty()
             .When(x => x.Type == ChatMessageType.Text);
+
+        RuleFor(x => x.MediaPayload)
+            .NotNull()
+            .When(x => x.Type is ChatMessageType.Image or ChatMessageType.Voice)
+            .WithMessage("MediaPayload là bắt buộc với tin nhắn image/voice.");
+
+        RuleFor(x => x.MediaPayload!.UploadToken)
+            .NotEmpty()
+            .When(x => x.Type is ChatMessageType.Image or ChatMessageType.Voice);
+
+        RuleFor(x => x.MediaPayload!.ObjectKey)
+            .NotEmpty()
+            .When(x => x.Type is ChatMessageType.Image or ChatMessageType.Voice);
     }
 }

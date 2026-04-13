@@ -6,7 +6,7 @@ public class UpdateProfileRequest
     // Tên hiển thị mới của người dùng.
     public string DisplayName { get; set; } = string.Empty;
 
-    // URL ảnh đại diện đã được upload/chuẩn hóa.
+    // DEPRECATED: Avatar được cập nhật qua /api/v1/profile/avatar/confirm; field này giữ lại chỉ để tương thích ngược.
     public string? AvatarUrl { get; set; }
 
     // Ngày sinh phục vụ xác minh độ tuổi và cá nhân hóa.

@@ -85,6 +85,8 @@ jobs:
           NEXT_PUBLIC_API_URL: http://localhost:5037/api/v1
           NEXT_PUBLIC_BASE_URL: http://localhost:3000
           NEXTAUTH_URL: http://localhost:3000
+          NEXT_PUBLIC_MEDIA_CDN_URL: https://img.example.com
+          NEXT_PUBLIC_R2_PUBLIC_URL: https://media.example.com
           NODE_TLS_REJECT_UNAUTHORIZED: "1"
 
       - name: Test
@@ -93,6 +95,8 @@ jobs:
           NEXT_PUBLIC_API_URL: http://localhost:5037/api/v1
           NEXT_PUBLIC_BASE_URL: http://localhost:3000
           NEXTAUTH_URL: http://localhost:3000
+          NEXT_PUBLIC_MEDIA_CDN_URL: https://img.example.com
+          NEXT_PUBLIC_R2_PUBLIC_URL: https://media.example.com
           NODE_TLS_REJECT_UNAUTHORIZED: "1"
 
   docker-build-and-scan:
@@ -113,6 +117,8 @@ jobs:
             --build-arg NEXT_PUBLIC_API_URL=http://localhost:5037/api/v1 \
             --build-arg NEXT_PUBLIC_BASE_URL=http://localhost:3000 \
             --build-arg NEXTAUTH_URL=http://localhost:3000 \
+            --build-arg NEXT_PUBLIC_MEDIA_CDN_URL=https://img.example.com \
+            --build-arg NEXT_PUBLIC_R2_PUBLIC_URL=https://media.example.com \
             -f Frontend/Dockerfile -t tarotnow/frontend:ci .
 
       - name: Trivy scan backend image
@@ -176,7 +182,14 @@ jobs:
             echo 'AI_TIMEOUT_SECONDS=30'
             echo 'AI_MAX_RETRIES=2'
             echo 'FORWARDED_NETWORK_0=172.30.0.0/24'
-            echo 'OBJECTSTORAGE_PROVIDER=Local'
+            echo 'OBJECTSTORAGE_PROVIDER=R2'
+            echo 'R2_ACCOUNT_ID=ci-account'
+            echo 'R2_ACCESS_KEY_ID=ci-access-key'
+            echo 'R2_SECRET_ACCESS_KEY=ci-secret-key'
+            echo 'R2_BUCKET_NAME=ci-bucket'
+            echo 'R2_PUBLIC_BASE_URL=https://media.example.com'
+            echo 'NEXT_PUBLIC_MEDIA_CDN_URL=https://img.example.com'
+            echo 'NEXT_PUBLIC_R2_PUBLIC_URL=https://media.example.com'
           } > "$CI_ENV_FILE"
 
       - name: Bootstrap databases
@@ -246,7 +259,14 @@ jobs:
             echo 'AI_TIMEOUT_SECONDS=30'
             echo 'AI_MAX_RETRIES=2'
             echo 'FORWARDED_NETWORK_0=172.30.0.0/24'
-            echo 'OBJECTSTORAGE_PROVIDER=Local'
+            echo 'OBJECTSTORAGE_PROVIDER=R2'
+            echo 'R2_ACCOUNT_ID=ci-account'
+            echo 'R2_ACCESS_KEY_ID=ci-access-key'
+            echo 'R2_SECRET_ACCESS_KEY=ci-secret-key'
+            echo 'R2_BUCKET_NAME=ci-bucket'
+            echo 'R2_PUBLIC_BASE_URL=https://media.example.com'
+            echo 'NEXT_PUBLIC_MEDIA_CDN_URL=https://img.example.com'
+            echo 'NEXT_PUBLIC_R2_PUBLIC_URL=https://media.example.com'
           } > "$CI_ENV_FILE"
 
       - name: Rollback drill gate

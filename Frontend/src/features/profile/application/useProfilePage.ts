@@ -29,6 +29,7 @@ export function useProfilePage() {
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarUploadProgress, setAvatarUploadProgress] = useState(0);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const profileQueryKey = ['profile', 'me'] as const;
   const isAdmin = user?.role === 'admin';
@@ -106,27 +107,45 @@ export function useProfilePage() {
     event.target.value = '';
     if (!file) return;
 
+    const previousAvatarPreview = avatarPreview;
+    const optimisticPreview = URL.createObjectURL(file);
+
+    setAvatarPreview(optimisticPreview);
+    setAvatarUploadProgress(0);
     setAvatarUploading(true);
     setErrorMsg('');
     try {
-      const uploadResult = await uploadProfileAvatar({ file, profileQueryKey, queryClient, t });
+      const uploadResult = await uploadProfileAvatar({
+        file,
+        profileQueryKey,
+        queryClient,
+        t,
+        onProgress: setAvatarUploadProgress,
+      });
+
       if (!uploadResult.success) {
         const err = uploadResult.error || t('avatar_upload_error') || 'Không thể tải ảnh lên';
+        setAvatarPreview(previousAvatarPreview);
         setErrorMsg(err);
         toast.error(err);
+        revokeObjectUrlIfNeeded(optimisticPreview);
         return;
       }
 
       setAvatarPreview(uploadResult.avatarUrl);
+      revokeObjectUrlIfNeeded(optimisticPreview);
       setSuccessMsg(uploadResult.message);
       toast.success(uploadResult.message);
       useAuthStore.getState().updateUser({ avatarUrl: uploadResult.avatarUrl });
     } catch {
+      setAvatarPreview(previousAvatarPreview);
       const err = t('avatar_upload_error') || 'Không thể tải ảnh lên';
       setErrorMsg(err);
       toast.error(err);
+      revokeObjectUrlIfNeeded(optimisticPreview);
     } finally {
       setAvatarUploading(false);
+      setAvatarUploadProgress(0);
     }
   };
 
@@ -139,6 +158,14 @@ export function useProfilePage() {
     readerRequest: readerRequestQuery.data ?? null,
     readerRequestLoading: readerRequestQuery.isLoading || readerRequestQuery.isFetching,
     register, handleSubmit, errors, isSubmitting, onSubmit,
-    avatarPreview, avatarUploading, handleAvatarSelect,
+    avatarPreview, avatarUploadProgress, avatarUploading, handleAvatarSelect,
   };
+}
+
+function revokeObjectUrlIfNeeded(value: string | null) {
+  if (!value || !value.startsWith('blob:')) {
+    return;
+  }
+
+  URL.revokeObjectURL(value);
 }

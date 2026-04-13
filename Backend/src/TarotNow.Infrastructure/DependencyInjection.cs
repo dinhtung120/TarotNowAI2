@@ -46,16 +46,13 @@ public static partial class DependencyInjection
             .Bind(configuration.GetSection("ObjectStorage"))
             .Validate(o =>
             {
-                if (!string.Equals(o.Provider, "R2", StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-
-                return !string.IsNullOrWhiteSpace(o.R2.AccountId)
+                return string.Equals(o.Provider, "R2", StringComparison.OrdinalIgnoreCase)
+                       && !string.IsNullOrWhiteSpace(o.R2.AccountId)
                        && !string.IsNullOrWhiteSpace(o.R2.AccessKeyId)
                        && !string.IsNullOrWhiteSpace(o.R2.SecretAccessKey)
-                       && !string.IsNullOrWhiteSpace(o.R2.BucketName);
-            }, "Khi ObjectStorage:Provider=R2 cần đủ R2:AccountId, AccessKeyId, SecretAccessKey, BucketName.")
+                       && !string.IsNullOrWhiteSpace(o.R2.BucketName)
+                       && !string.IsNullOrWhiteSpace(o.R2.PublicBaseUrl);
+            }, "ObjectStorage R2 chưa đủ cấu hình bắt buộc (AccountId, AccessKeyId, SecretAccessKey, BucketName, PublicBaseUrl).")
             .ValidateOnStart();
         services.Configure<MediaCdnOptions>(configuration.GetSection("MediaCdn"));
     }

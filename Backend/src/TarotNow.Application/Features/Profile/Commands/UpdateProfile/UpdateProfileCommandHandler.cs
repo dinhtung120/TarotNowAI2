@@ -26,14 +26,15 @@ public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand,
 
     /// <summary>
     /// Xử lý command cập nhật profile.
-    /// Luồng xử lý: cập nhật entity user chính, lưu thay đổi, rồi đồng bộ display/avatar cho reader profile nếu user là reader.
+    /// Luồng xử lý: cập nhật displayName + dateOfBirth của user, giữ avatar hiện tại và đồng bộ reader profile nếu có.
     /// </summary>
     public async Task<bool> Handle(UpdateProfileCommand request, CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByIdAsync(request.UserId)
             ?? throw new NotFoundException($"User with Id {request.UserId} not found.");
 
-        user.UpdateProfile(request.DisplayName, request.AvatarUrl, request.DateOfBirth);
+        // Avatar chỉ được cập nhật qua luồng presign/confirm chuyên biệt để bảo toàn objectKey + cleanup.
+        user.UpdateProfile(request.DisplayName, user.AvatarUrl, request.DateOfBirth);
         // Áp dụng business rule cập nhật hồ sơ qua domain method để giữ invariant của entity User.
 
         await _userRepository.UpdateAsync(user);
@@ -43,7 +44,7 @@ public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand,
         if (readerProfile is not null)
         {
             readerProfile.DisplayName = request.DisplayName;
-            readerProfile.AvatarUrl = request.AvatarUrl;
+            readerProfile.AvatarUrl = user.AvatarUrl;
             // Đồng bộ dữ liệu hiển thị cho reader profile để tránh lệch tên/avatar giữa hai nguồn dữ liệu.
 
             await _readerProfileRepository.UpdateAsync(readerProfile, cancellationToken);

@@ -15,7 +15,7 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
     private readonly IWalletRepository _walletRepo;
     private readonly IReaderProfileRepository _readerProfileRepo;
     private readonly ITransactionCoordinator _transactionCoordinator;
-    private readonly IMediaProcessorService _mediaProcessor;
+    private readonly IUploadSessionRepository _uploadSessionRepository;
     private readonly IWalletPushService _walletPushService;
     private readonly IDomainEventPublisher _domainEventPublisher;
 
@@ -30,7 +30,7 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
         IWalletRepository walletRepo,
         IReaderProfileRepository readerProfileRepo,
         ITransactionCoordinator transactionCoordinator,
-        IMediaProcessorService mediaProcessor,
+        IUploadSessionRepository uploadSessionRepository,
         IWalletPushService walletPushService,
         IDomainEventPublisher domainEventPublisher)
     {
@@ -40,7 +40,7 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
         _walletRepo = walletRepo;
         _readerProfileRepo = readerProfileRepo;
         _transactionCoordinator = transactionCoordinator;
-        _mediaProcessor = mediaProcessor;
+        _uploadSessionRepository = uploadSessionRepository;
         _walletPushService = walletPushService;
         _domainEventPublisher = domainEventPublisher;
     }
@@ -52,13 +52,12 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
     public async Task<ChatMessageDto> Handle(SendMessageCommand request, CancellationToken cancellationToken)
     {
         ValidateRequest(request);
-        // Nén/chuyển đổi media data-uri trước khi lưu để tối ưu kích thước payload.
-        await ProcessMediaRequestAsync(request, cancellationToken);
         var conversation = await LoadConversationAsync(request, cancellationToken);
         var senderId = request.SenderId.ToString();
 
         ValidateSender(conversation, senderId);
         ValidateConversationForSend(conversation, senderId, request.Type);
+        await ValidateAndConsumeMediaUploadSessionAsync(request, conversation, cancellationToken);
 
         // Chỉ trigger freeze khi là tin nhắn đầu tiên của user ở trạng thái Pending.
         var firstMessageFreeze = await TryFreezeMainQuestionOnFirstUserMessageAsync(

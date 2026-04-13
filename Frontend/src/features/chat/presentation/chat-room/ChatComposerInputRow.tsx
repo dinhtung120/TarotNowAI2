@@ -10,6 +10,7 @@ export default function ChatComposerInputRow({
   newMessage,
   sending,
   uploadingMedia,
+  uploadingMediaLabel,
   VoiceRecorderButton,
   onInputChange,
   onInputKeyDown,
@@ -17,7 +18,7 @@ export default function ChatComposerInputRow({
   onVoiceRecordingComplete,
 }: ChatComposerInputRowProps) {
   return (
-    <div className={cn('flex gap-2')}>
+    <div className={cn('relative flex gap-2')}>
       <button
         type="button"
         onClick={() => imageInputRef.current?.click()}
@@ -46,11 +47,12 @@ export default function ChatComposerInputRow({
       <button
         type="button"
         onClick={() => void onSendTextMessage()}
-        disabled={!newMessage.trim() || sending || !conversationExists}
+        disabled={!newMessage.trim() || sending || uploadingMedia || !conversationExists}
         className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl tn-chat-send-btn')}
       >
         {sending ? <Loader2 className={cn('h-4 w-4 animate-spin')} /> : <Send className={cn('h-4 w-4')} />}
       </button>
+      {uploadingMedia ? <span className={cn('absolute -bottom-5 left-1 text-[11px] text-slate-400')}>{uploadingMediaLabel}</span> : null}
     </div>
   );
 }

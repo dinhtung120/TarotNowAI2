@@ -2,7 +2,7 @@ import createNextIntlPlugin from 'next-intl/plugin';
 import bundleAnalyzer from '@next/bundle-analyzer';
 import os from 'node:os';
 import type { NextConfig } from 'next';
-import { resolveApiOrigin, resolveRewriteBackendOrigin } from './src/shared/infrastructure/http/apiUrl';
+import { resolveRewriteBackendOrigin } from './src/shared/infrastructure/http/apiUrl';
 
 const withBundleAnalyzer = bundleAnalyzer({ enabled: process.env.ANALYZE === 'true' });
 
@@ -11,7 +11,6 @@ if (process.env.NODE_ENV === 'production' && process.env.NODE_TLS_REJECT_UNAUTHO
 }
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
-const apiOrigin = resolveApiOrigin(process.env.NEXT_PUBLIC_API_URL);
 const rewriteBackendOrigin = resolveRewriteBackendOrigin();
 const frontendOrigin = resolveFrontendOrigin(
  process.env.NEXT_PUBLIC_BASE_URL ?? process.env.PUBLIC_BASE_URL,

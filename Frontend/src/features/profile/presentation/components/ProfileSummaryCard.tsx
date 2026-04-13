@@ -14,6 +14,7 @@ interface ProfileSummaryCardProps {
  router: ProfilePageState['router'];
  profileData: ProfilePageState['profileData'];
  avatarPreview: ProfilePageState['avatarPreview'];
+ avatarUploadProgress: ProfilePageState['avatarUploadProgress'];
  avatarUploading: ProfilePageState['avatarUploading'];
  isSubmitting: ProfilePageState['isSubmitting'];
  isAdmin: boolean;
@@ -27,6 +28,7 @@ export function ProfileSummaryCard({
  router,
  profileData,
  avatarPreview,
+ avatarUploadProgress,
  avatarUploading,
  isSubmitting,
  isAdmin,
@@ -43,6 +45,7 @@ export function ProfileSummaryCard({
     <ProfileAvatarUploader
      avatarAlt={tCommon('avatar_alt')}
      avatarPreview={avatarPreview}
+     avatarUploadProgress={avatarUploadProgress}
      avatarUploading={avatarUploading}
      displayName={profileData.displayName}
      isSubmitting={isSubmitting}

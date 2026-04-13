@@ -21,6 +21,7 @@
       "upload_failed": "Upload ảnh thất bại",
       "upload_success": "Đã thêm ảnh vào bài viết",
       "upload_error": "Lỗi khi tải ảnh lên",
+      "uploading_progress": "Đang tải ảnh... {percent}%",
       "posting": "Đang đăng...",
       "submit": "Đăng Bài"
     },
@@ -35,7 +36,9 @@
       "loading_more": "Đang tải...",
       "empty": "Chưa có bình luận nào. Hãy là người đầu tiên!",
       "placeholder": "Viết bình luận...",
-      "login_required": "Vui lòng đăng nhập để bình luận"
+      "login_required": "Vui lòng đăng nhập để bình luận",
+      "attach_image": "Đính kèm ảnh",
+      "uploading_progress": "Đang tải ảnh... {percent}%"
     }
   }
 }

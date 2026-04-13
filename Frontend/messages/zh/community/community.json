@@ -21,6 +21,7 @@
       "upload_failed": "图片上传失败",
       "upload_success": "图片已插入正文",
       "upload_error": "上传图片时出错",
+      "uploading_progress": "正在上传图片... {percent}%",
       "posting": "发布中...",
       "submit": "发布"
     },
@@ -35,7 +36,9 @@
       "loading_more": "加载中...",
       "empty": "还没有评论，来当第一个吧！",
       "placeholder": "写下评论...",
-      "login_required": "请先登录后再评论"
+      "login_required": "请先登录后再评论",
+      "attach_image": "添加图片",
+      "uploading_progress": "正在上传图片... {percent}%"
     }
   }
 }

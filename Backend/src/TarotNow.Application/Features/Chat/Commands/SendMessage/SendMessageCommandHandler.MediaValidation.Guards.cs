@@ -1,4 +1,5 @@
 using TarotNow.Application.Common;
+using TarotNow.Application.Common.MediaUpload;
 using TarotNow.Application.Exceptions;
 
 namespace TarotNow.Application.Features.Chat.Commands.SendMessage;
@@ -28,20 +29,30 @@ public partial class SendMessageCommandHandler
 
     /// <summary>
     /// Kiểm tra giới hạn kích thước và thời lượng media.
-    /// Luồng xử lý: áp dụng trần 50MB cho mọi media; với voice bắt buộc duration trong ngưỡng 1ms-600000ms.
+    /// Luồng xử lý: bắt buộc size hợp lệ, áp trần riêng cho image/voice và kiểm tra duration voice.
     /// </summary>
     private static void EnsureMediaLimits(string type, MediaPayloadDto payload)
     {
-        if (payload.SizeBytes is > 52_428_800)
+        if (payload.SizeBytes is null or <= 0)
         {
-            // Giới hạn dung lượng để tránh upload quá lớn ảnh hưởng hiệu năng hệ thống.
-            throw new BadRequestException("Kích thước media vượt quá 50MB.");
+            throw new BadRequestException("Media size không hợp lệ.");
+        }
+
+        if (string.Equals(type, "image", StringComparison.OrdinalIgnoreCase)
+            && payload.SizeBytes > MediaUploadConstants.MaxImageUploadBytes)
+        {
+            throw new BadRequestException("Kích thước image vượt quá 10MB.");
+        }
+
+        if (string.Equals(type, "voice", StringComparison.OrdinalIgnoreCase)
+            && payload.SizeBytes > MediaUploadConstants.MaxVoiceUploadBytes)
+        {
+            throw new BadRequestException("Kích thước voice vượt quá 5MB.");
         }
 
         if (string.Equals(type, "voice", StringComparison.OrdinalIgnoreCase)
             && payload.DurationMs is <= 0 or > 600_000)
         {
-            // Business rule: voice phải có thời lượng hợp lệ để client/player xử lý đúng.
             throw new BadRequestException("Thời lượng voice phải trong khoảng 1ms đến 600000ms.");
         }
     }

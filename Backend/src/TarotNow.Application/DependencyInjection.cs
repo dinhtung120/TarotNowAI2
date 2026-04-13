@@ -86,6 +86,7 @@ public static class DependencyInjection
     private static void RegisterDomainServices(IServiceCollection services)
     {
         services.AddScoped<IEscrowSettlementService, EscrowSettlementService>();
+        services.AddScoped<ICommunityMediaAttachmentService, CommunityMediaAttachmentService>();
         services.AddTransient<FollowupPricingService>();
     }
 }

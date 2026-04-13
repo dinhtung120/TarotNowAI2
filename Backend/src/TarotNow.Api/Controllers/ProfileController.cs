@@ -1,90 +1,71 @@
-
-
-using MediatR;                 
-using Microsoft.AspNetCore.Authorization; 
-using Microsoft.AspNetCore.Mvc; 
-using Microsoft.AspNetCore.RateLimiting;
-using System;
-using System.Threading.Tasks;
-
-using TarotNow.Api.Contracts; 
-using TarotNow.Api.Extensions;
-using TarotNow.Application.Features.Profile.Commands.UpdateProfile; 
-using TarotNow.Application.Features.Profile.Commands.UploadAvatar;  
-using TarotNow.Application.Features.Profile.Queries.GetProfile;     
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using TarotNow.Api.Contracts;
+using TarotNow.Api.Contracts.Requests;
+using TarotNow.Api.Extensions;
+using TarotNow.Application.Features.Profile.Commands.ConfirmAvatarUpload;
+using TarotNow.Application.Features.Profile.Commands.PresignAvatarUpload;
+using TarotNow.Application.Features.Profile.Commands.UpdateProfile;
+using TarotNow.Application.Features.Profile.Queries.GetProfile;
 
 namespace TarotNow.Api.Controllers;
-
 
 [Route(ApiRoutes.Profile)]
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
 [EnableRateLimiting("auth-session")]
 // API hồ sơ người dùng.
-// Luồng chính: lấy hồ sơ, cập nhật thông tin và upload avatar.
+// Luồng chính: lấy hồ sơ, cập nhật thông tin và quản lý avatar qua presign + confirm.
 public class ProfileController : ControllerBase
 {
-    private readonly IMediator Mediator;
+    private readonly IMediator _mediator;
 
     /// <summary>
     /// Khởi tạo controller hồ sơ người dùng.
     /// </summary>
-    /// <param name="mediator">MediatR điều phối query/command profile.</param>
     public ProfileController(IMediator mediator)
     {
-        Mediator = mediator;
+        _mediator = mediator;
     }
 
     /// <summary>
     /// Lấy thông tin hồ sơ của người dùng hiện tại.
     /// </summary>
-    /// <returns>Dữ liệu hồ sơ người dùng hoặc unauthorized khi thiếu user id.</returns>
     [HttpGet]
-    [Authorize] 
+    [Authorize]
     public async Task<IActionResult> GetProfile()
     {
         if (!User.TryGetUserId(out var userId))
         {
-            // Chặn truy vấn hồ sơ khi không xác định được danh tính người dùng.
             return this.UnauthorizedProblem();
         }
 
-        // Dựng query profile theo user id hiện tại để tránh lộ dữ liệu chéo tài khoản.
-        var query = new GetProfileQuery { UserId = userId };
-
-        var result = await Mediator.Send(query);
+        var result = await _mediator.Send(new GetProfileQuery { UserId = userId });
         return Ok(result);
     }
 
     /// <summary>
     /// Cập nhật thông tin hồ sơ người dùng.
-    /// Luồng xử lý: xác thực user, map DTO sang command cập nhật, rẽ nhánh kết quả thành công/thất bại.
     /// </summary>
-    /// <param name="request">Payload dữ liệu hồ sơ cần cập nhật.</param>
-    /// <returns>Kết quả cập nhật hồ sơ.</returns>
     [HttpPatch]
-    [Authorize] 
+    [Authorize]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
     {
         if (!User.TryGetUserId(out var userId))
         {
-            // Chặn cập nhật hồ sơ khi không có user id hợp lệ.
             return this.UnauthorizedProblem();
         }
 
-        // Mapping rõ ràng để tầng ứng dụng xử lý validation/profile policy tập trung.
-        var command = new UpdateProfileCommand
+        var success = await _mediator.Send(new UpdateProfileCommand
         {
-            UserId = userId,                    
-            DisplayName = request.DisplayName,  
-            AvatarUrl = request.AvatarUrl,      
-            DateOfBirth = request.DateOfBirth    
-        };
+            UserId = userId,
+            DisplayName = request.DisplayName,
+            DateOfBirth = request.DateOfBirth,
+        });
 
-        var success = await Mediator.Send(command);
-
-        // Tách response lỗi để client biết cập nhật thất bại do rule nghiệp vụ.
         return success
             ? Ok(new { success = true })
             : Problem(
@@ -94,48 +75,57 @@ public class ProfileController : ControllerBase
     }
 
     /// <summary>
-    /// Upload ảnh đại diện mới.
-    /// Luồng xử lý: xác thực user, kiểm tra file hợp lệ, gửi command xử lý ảnh và trả URL tương đối.
+    /// Sinh presigned URL upload avatar trực tiếp lên R2.
     /// </summary>
-    /// <param name="file">File ảnh đại diện upload lên.</param>
-    /// <returns>URL avatar sau khi xử lý thành công.</returns>
-    [HttpPost("avatar")]
-    [Authorize] 
-    [RequestSizeLimit(10 * 1024 * 1024)] 
-    public async Task<IActionResult> UploadAvatar(IFormFile file)
+    [HttpPost("avatar/presign")]
+    [Authorize]
+    public async Task<IActionResult> PresignAvatar([FromBody] AvatarPresignRequest body)
     {
         if (!User.TryGetUserId(out var userId))
         {
-            // Chặn upload avatar khi chưa xác thực danh tính user.
             return this.UnauthorizedProblem();
         }
 
-        if (file == null || file.Length == 0)
-        {
-            // Edge case file rỗng: trả lỗi rõ ràng để client chọn lại ảnh hợp lệ.
-            return Problem(
-                statusCode: StatusCodes.Status400BadRequest,
-                title: "Invalid avatar file",
-                detail: "File ảnh không được để trống.");
-        }
-
-        // Dùng stream để xử lý file trực tiếp, tránh đọc toàn bộ file vào bộ nhớ.
-        using var stream = file.OpenReadStream();
-        var command = new UploadAvatarCommand
+        var result = await _mediator.Send(new PresignAvatarUploadCommand
         {
             UserId = userId,
-            ImageStream = stream,
-            FileName = file.FileName,
-            ContentType = file.ContentType
-        };
+            ContentType = body.ContentType,
+            SizeBytes = body.SizeBytes,
+        });
 
-        var uploadResult = await Mediator.Send(command);
+        return Ok(new PresignedUploadResponse(
+            result.UploadUrl,
+            result.ObjectKey,
+            result.PublicUrl,
+            result.UploadToken,
+            result.ExpiresAtUtc));
+    }
+
+    /// <summary>
+    /// Xác nhận avatar upload thành công và cập nhật DB.
+    /// </summary>
+    [HttpPost("avatar/confirm")]
+    [Authorize]
+    public async Task<IActionResult> ConfirmAvatar([FromBody] AvatarConfirmRequest body)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return this.UnauthorizedProblem();
+        }
+
+        var result = await _mediator.Send(new ConfirmAvatarUploadCommand
+        {
+            UserId = userId,
+            ObjectKey = body.ObjectKey,
+            PublicUrl = body.PublicUrl,
+            UploadToken = body.UploadToken,
+        });
 
         return Ok(new
         {
             success = true,
-            avatarUrl = uploadResult.AvatarUrl,
-            publicId = uploadResult.PublicId,
+            avatarUrl = result.AvatarUrl,
+            objectKey = result.ObjectKey,
         });
     }
 }

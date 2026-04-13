@@ -20,6 +20,7 @@ public partial class MongoChatMessageRepository
         return new ChatMediaPayload
         {
             Url = payload.Url,
+            ObjectKey = payload.ObjectKey,
             MimeType = payload.MimeType,
             SizeBytes = payload.SizeBytes,
             DurationMs = payload.DurationMs,
@@ -45,6 +46,7 @@ public partial class MongoChatMessageRepository
         return new MediaPayloadDto
         {
             Url = payload.Url,
+            ObjectKey = payload.ObjectKey,
             MimeType = payload.MimeType,
             SizeBytes = payload.SizeBytes,
             DurationMs = payload.DurationMs,

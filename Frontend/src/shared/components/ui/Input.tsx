@@ -4,7 +4,7 @@ import { forwardRef, useState, type Ref } from 'react';
 import InputFieldMeta from '@/shared/components/ui/input/InputFieldMeta';
 import { getTextareaDomProps } from '@/shared/components/ui/input/getTextareaDomProps';
 import { baseInputStyles } from '@/shared/components/ui/input/inputStyles';
-import type { CombinedProps, InputProps } from '@/shared/components/ui/input/input.types';
+import type { CombinedProps, InputProps, TextareaProps } from '@/shared/components/ui/input/input.types';
 import { cn } from '@/lib/utils';
 
 const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, CombinedProps>(({ label, error, hint, leftIcon, rightElement, fullWidth = true, className, onChange, ...rest }, ref) => {
@@ -15,9 +15,20 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, CombinedProps>(
   // Theo dõi giá trị để ẩn/hiện lỗi khi ô trống theo yêu cầu
   const [isValueEmpty, setIsValueEmpty] = useState(true);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setIsValueEmpty(e.target.value === '');
-    if (onChange) (onChange as any)(e);
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setIsValueEmpty(event.target.value === '');
+    if (!onChange || isTextarea) return;
+
+    const inputChangeHandler = onChange as InputProps['onChange'] | undefined;
+    inputChangeHandler?.(event);
+  };
+
+  const handleTextareaChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setIsValueEmpty(event.target.value === '');
+    if (!onChange || !isTextarea) return;
+
+    const textareaChangeHandler = onChange as TextareaProps['onChange'] | undefined;
+    textareaChangeHandler?.(event);
   };
 
   // Logic: Chỉ hiển thị viền đỏ nếu có lỗi và ô KHÔNG trống
@@ -37,14 +48,14 @@ const Input = forwardRef<HTMLInputElement | HTMLTextAreaElement, CombinedProps>(
             ref={textareaRef}
             className={cn(baseInputStyles, 'tn-minh-80 resize-none', leftIcon ? 'pl-11' : '', rightElement ? 'pr-11' : '', showUIError ? 'tn-border-danger-50 tn-field-danger' : '', className)}
             {...getTextareaDomProps(rest as CombinedProps)}
-            onChange={handleChange}
+            onChange={handleTextareaChange}
           />
         ) : (
           <input
             ref={inputRef}
             className={cn(baseInputStyles, leftIcon ? 'pl-11' : '', rightElement ? 'pr-11' : '', showUIError ? 'tn-border-danger-50 tn-field-danger' : '', className)}
             {...(rest as InputProps)}
-            onChange={handleChange}
+            onChange={handleInputChange}
           />
         )}
       </div>

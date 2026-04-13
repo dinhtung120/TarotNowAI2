@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
  getHistoryDetailAction,
@@ -50,21 +50,7 @@ export function useHistoryDetailPage({
    ? query.error.message || networkErrorMessage
    : null;
 
- const parsedCards = useMemo<number[]>(() => {
-  if (!detail?.cardsDrawn) {
-   return [];
-  }
-
-  try {
-   const parsed = JSON.parse(detail.cardsDrawn) as unknown;
-   if (!Array.isArray(parsed)) {
-    return [];
-   }
-   return parsed.filter((item): item is number => typeof item === 'number');
-  } catch {
-   return [];
-  }
- }, [detail?.cardsDrawn]);
+ const parsedCards = parseCardsDrawn(detail?.cardsDrawn);
 
  return {
   detail,
@@ -72,4 +58,21 @@ export function useHistoryDetailPage({
   error,
   parsedCards,
  };
+}
+
+function parseCardsDrawn(rawValue?: string | null): number[] {
+ if (!rawValue) {
+  return [];
+ }
+
+ try {
+  const parsed = JSON.parse(rawValue) as unknown;
+  if (!Array.isArray(parsed)) {
+   return [];
+  }
+
+  return parsed.filter((item): item is number => typeof item === 'number');
+ } catch {
+  return [];
+ }
 }

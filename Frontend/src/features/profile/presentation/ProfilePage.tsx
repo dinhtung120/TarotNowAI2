@@ -35,6 +35,7 @@ export default function ProfilePage() {
           router={state.router}
           profileData={state.profileData}
           avatarPreview={state.avatarPreview}
+          avatarUploadProgress={state.avatarUploadProgress}
           avatarUploading={state.avatarUploading}
           isSubmitting={state.isSubmitting}
           isAdmin={isAdmin}

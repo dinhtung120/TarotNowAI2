@@ -1,5 +1,6 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCommentsAction, addCommentAction } from '../application/actions/communityActions';
+import type { AddCommentPayload } from '@/features/community/types';
 
 export function useComments(postId: string) {
   const query = useInfiniteQuery({
@@ -22,8 +23,8 @@ export function useAddComment(postId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (content: string) => {
-      const res = await addCommentAction(postId, content);
+    mutationFn: async (payload: AddCommentPayload) => {
+      const res = await addCommentAction(postId, payload);
       if (!res.success) throw new Error(res.error);
       return res.data;
     },

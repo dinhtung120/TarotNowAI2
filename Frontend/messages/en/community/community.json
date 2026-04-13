@@ -21,6 +21,7 @@
       "upload_failed": "Image upload failed",
       "upload_success": "Image added to your post",
       "upload_error": "Error while uploading image",
+      "uploading_progress": "Uploading image... {percent}%",
       "posting": "Posting...",
       "submit": "Post"
     },
@@ -35,7 +36,9 @@
       "loading_more": "Loading...",
       "empty": "No comments yet. Be the first one!",
       "placeholder": "Write a comment...",
-      "login_required": "Please sign in to comment"
+      "login_required": "Please sign in to comment",
+      "attach_image": "Attach image",
+      "uploading_progress": "Uploading image... {percent}%"
     }
   }
 }

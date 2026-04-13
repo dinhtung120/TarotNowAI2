@@ -15,6 +15,10 @@ public class CreatePostBody
     // Mức hiển thị bài viết để áp dụng đúng rule quyền xem.
     [Required]
     public string Visibility { get; set; } = string.Empty;
+
+    // Draft id để map asset upload trước khi post thật được tạo.
+    [MaxLength(128)]
+    public string? ContextDraftId { get; set; }
 }
 
 // Payload cập nhật nội dung bài viết.

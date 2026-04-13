@@ -20,6 +20,9 @@ public class AddCommentCommand : IRequest<CommunityCommentDto>
 
     // Nội dung bình luận.
     public required string Content { get; set; }
+
+    // Draft id để map asset upload trước khi comment thật được tạo.
+    public string? ContextDraftId { get; set; }
 }
 
 // Handler xử lý thêm bình luận cho community post.
@@ -28,6 +31,7 @@ public class AddCommentCommandHandler : IRequestHandler<AddCommentCommand, Commu
     private readonly ICommunityPostRepository _postRepo;
     private readonly ICommunityCommentRepository _commentRepo;
     private readonly IUserRepository _userRepo;
+    private readonly ICommunityMediaAttachmentService _communityMediaAttachmentService;
 
     /// <summary>
     /// Khởi tạo handler add comment.
@@ -36,11 +40,13 @@ public class AddCommentCommandHandler : IRequestHandler<AddCommentCommand, Commu
     public AddCommentCommandHandler(
         ICommunityPostRepository postRepo,
         ICommunityCommentRepository commentRepo,
-        IUserRepository userRepo)
+        IUserRepository userRepo,
+        ICommunityMediaAttachmentService communityMediaAttachmentService)
     {
         _postRepo = postRepo;
         _commentRepo = commentRepo;
         _userRepo = userRepo;
+        _communityMediaAttachmentService = communityMediaAttachmentService;
     }
 
     /// <summary>
@@ -88,6 +94,13 @@ public class AddCommentCommandHandler : IRequestHandler<AddCommentCommand, Commu
 
         // Cập nhật bộ đếm bình luận sau khi tạo comment thành công.
         await _postRepo.IncrementCommentsCountAsync(request.PostId, 1, cancellationToken);
+        await _communityMediaAttachmentService.AttachForNewEntityAsync(
+            request.AuthorId,
+            "comment",
+            request.ContextDraftId,
+            createdComment.Id,
+            createdComment.Content,
+            cancellationToken);
 
         return createdComment;
     }

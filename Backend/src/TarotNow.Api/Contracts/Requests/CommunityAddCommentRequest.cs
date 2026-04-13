@@ -5,4 +5,7 @@ public class CommunityAddCommentRequest
 {
     // Nội dung bình luận người dùng gửi lên.
     public required string Content { get; set; }
+
+    // Draft id để map asset upload trước khi comment thật được tạo.
+    public string? ContextDraftId { get; set; }
 }

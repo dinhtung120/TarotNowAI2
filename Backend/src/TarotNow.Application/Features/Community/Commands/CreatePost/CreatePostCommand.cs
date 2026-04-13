@@ -19,6 +19,9 @@ public class CreatePostCommand : IRequest<CommunityPostDto>
 
     // Mức hiển thị của bài viết (public/private).
     public string Visibility { get; set; } = PostVisibility.Public;
+
+    // Draft id để map asset upload trước khi post thật được tạo.
+    public string? ContextDraftId { get; set; }
 }
 
 // Handler xử lý tạo community post.
@@ -27,6 +30,7 @@ public class CreatePostCommandHandler : IRequestHandler<CreatePostCommand, Commu
     private readonly ICommunityPostRepository _postRepo;
     private readonly IUserRepository _userRepo;
     private readonly IGamificationService _gamificationService;
+    private readonly ICommunityMediaAttachmentService _communityMediaAttachmentService;
 
     /// <summary>
     /// Khởi tạo handler create post.
@@ -35,11 +39,13 @@ public class CreatePostCommandHandler : IRequestHandler<CreatePostCommand, Commu
     public CreatePostCommandHandler(
         ICommunityPostRepository postRepo,
         IUserRepository userRepo,
-        IGamificationService gamificationService)
+        IGamificationService gamificationService,
+        ICommunityMediaAttachmentService communityMediaAttachmentService)
     {
         _postRepo = postRepo;
         _userRepo = userRepo;
         _gamificationService = gamificationService;
+        _communityMediaAttachmentService = communityMediaAttachmentService;
     }
 
     /// <summary>
@@ -86,6 +92,13 @@ public class CreatePostCommandHandler : IRequestHandler<CreatePostCommand, Commu
 
         // Cập nhật gamification sau khi tạo post thành công.
         await _gamificationService.OnPostCreatedAsync(request.AuthorId, cancellationToken);
+        await _communityMediaAttachmentService.AttachForNewEntityAsync(
+            request.AuthorId,
+            "post",
+            request.ContextDraftId,
+            result.Id,
+            result.Content,
+            cancellationToken);
 
         return result;
     }
