@@ -149,10 +149,41 @@ const shouldBypassMiddleware = (request: NextRequest): boolean => {
 /* ------------------------------------------------------------------ */
 
 /**
+ * Đọc danh sách connect-src bổ sung từ env (cách nhau bởi dấu phẩy).
+ * Ví dụ: NEXT_PUBLIC_CSP_CONNECT_SRC_EXTRA=https://foo.example.com,https://bar.example.com
+ */
+const resolveExtraConnectSrc = (): string[] => {
+  const raw = process.env.NEXT_PUBLIC_CSP_CONNECT_SRC_EXTRA?.trim();
+  if (!raw) {
+    return [];
+  }
+
+  return raw
+    .split(',')
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0);
+};
+
+/**
+ * Origin R2 upload dùng cho connect-src.
+ * Nếu không khai báo explicit, fallback wildcard cho mọi account R2 endpoint.
+ */
+const resolveR2UploadConnectSrc = (): string => {
+  const explicitOrigin = process.env.NEXT_PUBLIC_R2_UPLOAD_ORIGIN?.trim();
+  if (explicitOrigin) {
+    return explicitOrigin;
+  }
+
+  return 'https://*.r2.cloudflarestorage.com';
+};
+
+/**
  * Xây dựng chuỗi Content-Security-Policy dựa trên cấu hình API origin.
  * CSP giúp chống XSS bằng cách giới hạn nguồn tài nguyên mà browser được phép tải.
  *
- * connect-src bao gồm cả http(s) và ws(s) để hỗ trợ SignalR WebSocket connections.
+ * connect-src bao gồm cả http(s), ws(s) và endpoint R2 upload để hỗ trợ:
+ * - SignalR WebSocket connections
+ * - Direct upload qua presigned URL.
  */
 const buildContentSecurityPolicy = (): string => {
   const apiOrigin = getPublicApiOrigin().replace(/\/+$/, '');
@@ -164,6 +195,18 @@ const buildContentSecurityPolicy = (): string => {
       ? `ws://${apiOrigin.slice('http://'.length)}`
       : '';
 
+  const connectSrcSet = new Set<string>([
+    "'self'",
+    apiOrigin,
+    wsApiOrigin,
+    'https://cloudflareinsights.com',
+    // Presigned PUT URL của Cloudflare R2 dùng host dạng <account>.r2.cloudflarestorage.com.
+    resolveR2UploadConnectSrc(),
+    ...resolveExtraConnectSrc(),
+  ]);
+
+  const connectSrc = Array.from(connectSrcSet).filter((value) => value.length > 0).join(' ');
+
   const cspParts = [
     "default-src 'self'",
     "base-uri 'self'",
@@ -174,7 +217,8 @@ const buildContentSecurityPolicy = (): string => {
     "media-src 'self' blob: data:",
     "style-src 'self' 'unsafe-inline'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com",
-    `connect-src 'self' ${apiOrigin} ${wsApiOrigin} https://cloudflareinsights.com`.trim(),
+    "worker-src 'self' blob:",
+    `connect-src ${connectSrc}`,
   ];
 
   return cspParts.join('; ');

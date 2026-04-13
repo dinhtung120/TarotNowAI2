@@ -15,6 +15,7 @@ name: CD Main 3EC2
 # - PROD_PUBLIC_BASE_URL (optional for external smoke check)
 # - PROD_MEDIA_CDN_URL (optional, build-time FE image domain whitelist)
 # - PROD_R2_PUBLIC_URL (optional, build-time FE image domain whitelist)
+# - PROD_R2_UPLOAD_ORIGIN (optional, CSP connect-src explicit R2 upload endpoint)
 
 on:
   push:
@@ -85,6 +86,7 @@ jobs:
           NEXTAUTH_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }}
           NEXT_PUBLIC_MEDIA_CDN_URL: ${{ vars.PROD_MEDIA_CDN_URL || '' }}
           NEXT_PUBLIC_R2_PUBLIC_URL: ${{ vars.PROD_R2_PUBLIC_URL || '' }}
+          NEXT_PUBLIC_R2_UPLOAD_ORIGIN: ${{ vars.PROD_R2_UPLOAD_ORIGIN || '' }}
           NODE_TLS_REJECT_UNAUTHORIZED: "1"
         run: npm run build
 
@@ -96,6 +98,7 @@ jobs:
           NEXTAUTH_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }}
           NEXT_PUBLIC_MEDIA_CDN_URL: ${{ vars.PROD_MEDIA_CDN_URL || '' }}
           NEXT_PUBLIC_R2_PUBLIC_URL: ${{ vars.PROD_R2_PUBLIC_URL || '' }}
+          NEXT_PUBLIC_R2_UPLOAD_ORIGIN: ${{ vars.PROD_R2_UPLOAD_ORIGIN || '' }}
           NODE_TLS_REJECT_UNAUTHORIZED: "1"
         run: npm test
 
@@ -175,6 +178,7 @@ jobs:
             --build-arg NEXTAUTH_URL=${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }} \
             --build-arg NEXT_PUBLIC_MEDIA_CDN_URL=${{ vars.PROD_MEDIA_CDN_URL || '' }} \
             --build-arg NEXT_PUBLIC_R2_PUBLIC_URL=${{ vars.PROD_R2_PUBLIC_URL || '' }} \
+            --build-arg NEXT_PUBLIC_R2_UPLOAD_ORIGIN=${{ vars.PROD_R2_UPLOAD_ORIGIN || '' }} \
             -f Frontend/Dockerfile -t tarotnow/frontend:scan .
 
       - name: Trivy backend image scan (json)
@@ -331,6 +335,7 @@ jobs:
             --build-arg NEXTAUTH_URL=${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:3000' }} \
             --build-arg NEXT_PUBLIC_MEDIA_CDN_URL=${{ vars.PROD_MEDIA_CDN_URL || '' }} \
             --build-arg NEXT_PUBLIC_R2_PUBLIC_URL=${{ vars.PROD_R2_PUBLIC_URL || '' }} \
+            --build-arg NEXT_PUBLIC_R2_UPLOAD_ORIGIN=${{ vars.PROD_R2_UPLOAD_ORIGIN || '' }} \
             -f Frontend/Dockerfile \
             -t "${{ steps.refs.outputs.frontend_image_ref }}" \
             -t "${{ steps.refs.outputs.frontend_latest_ref }}" \

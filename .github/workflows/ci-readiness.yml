@@ -87,6 +87,7 @@ jobs:
           NEXTAUTH_URL: http://localhost:3000
           NEXT_PUBLIC_MEDIA_CDN_URL: https://img.example.com
           NEXT_PUBLIC_R2_PUBLIC_URL: https://media.example.com
+          NEXT_PUBLIC_R2_UPLOAD_ORIGIN: https://example-account.r2.cloudflarestorage.com
           NODE_TLS_REJECT_UNAUTHORIZED: "1"
 
       - name: Test
@@ -97,6 +98,7 @@ jobs:
           NEXTAUTH_URL: http://localhost:3000
           NEXT_PUBLIC_MEDIA_CDN_URL: https://img.example.com
           NEXT_PUBLIC_R2_PUBLIC_URL: https://media.example.com
+          NEXT_PUBLIC_R2_UPLOAD_ORIGIN: https://example-account.r2.cloudflarestorage.com
           NODE_TLS_REJECT_UNAUTHORIZED: "1"
 
   docker-build-and-scan:
@@ -119,6 +121,7 @@ jobs:
             --build-arg NEXTAUTH_URL=http://localhost:3000 \
             --build-arg NEXT_PUBLIC_MEDIA_CDN_URL=https://img.example.com \
             --build-arg NEXT_PUBLIC_R2_PUBLIC_URL=https://media.example.com \
+            --build-arg NEXT_PUBLIC_R2_UPLOAD_ORIGIN=https://example-account.r2.cloudflarestorage.com \
             -f Frontend/Dockerfile -t tarotnow/frontend:ci .
 
       - name: Trivy scan backend image
@@ -190,6 +193,7 @@ jobs:
             echo 'R2_PUBLIC_BASE_URL=https://media.example.com'
             echo 'NEXT_PUBLIC_MEDIA_CDN_URL=https://img.example.com'
             echo 'NEXT_PUBLIC_R2_PUBLIC_URL=https://media.example.com'
+            echo 'NEXT_PUBLIC_R2_UPLOAD_ORIGIN=https://example-account.r2.cloudflarestorage.com'
           } > "$CI_ENV_FILE"
 
       - name: Bootstrap databases
@@ -267,6 +271,7 @@ jobs:
             echo 'R2_PUBLIC_BASE_URL=https://media.example.com'
             echo 'NEXT_PUBLIC_MEDIA_CDN_URL=https://img.example.com'
             echo 'NEXT_PUBLIC_R2_PUBLIC_URL=https://media.example.com'
+            echo 'NEXT_PUBLIC_R2_UPLOAD_ORIGIN=https://example-account.r2.cloudflarestorage.com'
           } > "$CI_ENV_FILE"
 
       - name: Rollback drill gate
