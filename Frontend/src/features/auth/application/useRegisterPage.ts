@@ -4,8 +4,8 @@ import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
-import { registerAction, resendVerificationEmailAction } from '@/features/auth/application/actions';
-import { logger } from '@/shared/infrastructure/logging/logger';
+import { useRouter } from '@/i18n/routing';
+import { registerAction } from '@/features/auth/application/actions';
 import {
   createRegisterSchema,
   type RegisterFormValues,
@@ -17,8 +17,8 @@ import {
  */
 export function useRegisterPage() {
   const t = useTranslations('Auth');
+  const router = useRouter();
   const [errorMsg, setErrorMsg] = useState('');
-  const [success, setSuccess] = useState(false);
 
   // Tạo schema validation dựa trên ngôn ngữ hiện tại
   const registerSchema = useMemo(() => createRegisterSchema(t), [t]);
@@ -58,11 +58,8 @@ export function useRegisterPage() {
       }
 
       if (result.success) {
-        setSuccess(true);
-        // Tự động gửi email xác thực sau khi đăng ký thành công
-        void resendVerificationEmailAction(data.email).catch((error) => {
-          logger.error('[Auth] resendVerificationEmailAction', error, { email: data.email });
-        });
+        const encodedEmail = encodeURIComponent(data.email.trim());
+        router.replace(`/verify-email?email=${encodedEmail}`);
       }
     } catch {
       setErrorMsg(t('register.error_unexpected'));
@@ -72,7 +69,6 @@ export function useRegisterPage() {
   return {
     t,
     errorMsg,
-    success,
     methods, // Trả về toàn bộ object của useForm để dùng với FormProvider
     handleSubmit,
     errors,

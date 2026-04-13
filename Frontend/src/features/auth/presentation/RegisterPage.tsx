@@ -1,11 +1,10 @@
 'use client';
 
 import { FormProvider } from 'react-hook-form';
-import { Mail, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { useRegisterPage } from '@/features/auth/application/useRegisterPage';
 import { AuthErrorBanner } from '@/features/auth/presentation/components/AuthErrorBanner';
-import { AuthSuccessCard } from '@/features/auth/presentation/components/AuthSuccessCard';
 import RegisterConsentField from '@/features/auth/presentation/components/RegisterConsentField';
 import RegisterIdentityFields from '@/features/auth/presentation/components/RegisterIdentityFields';
 import RegisterPasswordFields from '@/features/auth/presentation/components/RegisterPasswordFields';
@@ -14,21 +13,7 @@ import { Button } from '@/shared/components/ui';
 import { cn } from '@/lib/utils';
 
 export default function RegisterPage() {
-  const { t, errorMsg, success, methods, handleSubmit, errors, isSubmitting, onSubmit } = useRegisterPage();
-
-  if (success) {
-    return (
-      <AuthSuccessCard
-        icon={<Mail className={cn('h-10 w-10 tn-text-success')} />}
-        title={t('register.success_title')}
-        description={t('register.success_desc')}
-        ctaHref="/verify-email"
-        ctaLabel={t('register.success_cta')}
-        glowClass="tn-bg-success-soft"
-        iconWrapperClass="tn-auth-success-icon-wrapper-success"
-      />
-    );
-  }
+  const { t, errorMsg, methods, handleSubmit, errors, isSubmitting, onSubmit } = useRegisterPage();
 
   return (
     <AuthLayout title={t('register.title')} subtitle={t('register.subtitle')}>

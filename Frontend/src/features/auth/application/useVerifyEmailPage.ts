@@ -4,8 +4,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { useRouter } from '@/i18n/routing';
 import { resendVerificationEmailAction, verifyEmailAction } from '@/features/auth/application/actions';
+import { resolveVerifyEmailPrefill, isValidAuthFlowEmail } from '@/features/auth/application/authFlowEmail';
 import {
  createVerifyEmailSchema,
  type VerifyEmailFormValues,
@@ -13,23 +16,36 @@ import {
 
 export function useVerifyEmailPage() {
  const t = useTranslations('Auth');
+ const router = useRouter();
+ const searchParams = useSearchParams();
  const [errorMsg, setErrorMsg] = useState('');
- const [success, setSuccess] = useState(false);
  const [resendTimer, setResendTimer] = useState(0);
  const [isResending, setIsResending] = useState(false);
 
+ const prefill = useMemo(
+  () => resolveVerifyEmailPrefill(searchParams.get('email')),
+  [searchParams]
+ );
  const verifySchema = useMemo(() => createVerifyEmailSchema(t), [t]);
 
  const {
   register,
   handleSubmit,
   control,
+  setValue,
   formState: { errors, isSubmitting },
  } = useForm<VerifyEmailFormValues>({
   resolver: zodResolver(verifySchema),
+  defaultValues: {
+   email: prefill.email,
+  },
  });
 
  const emailWatch = useWatch({ control, name: 'email' });
+
+ useEffect(() => {
+  setValue('email', prefill.email);
+ }, [prefill.email, setValue]);
 
  useEffect(() => {
   if (resendTimer <= 0) return;
@@ -44,14 +60,15 @@ export function useVerifyEmailPage() {
  }, [resendTimer]);
 
  const handleResendOtp = async () => {
-  if (!emailWatch || !emailWatch.includes('@')) {
+  const normalizedEmail = emailWatch?.trim() ?? '';
+  if (!isValidAuthFlowEmail(normalizedEmail)) {
    toast.error(t('verify.toast_invalid_email'));
    return;
   }
 
   setIsResending(true);
   try {
-   const result = await resendVerificationEmailAction(emailWatch);
+   const result = await resendVerificationEmailAction(normalizedEmail);
    if (result.success) {
     toast.success(t('verify.toast_resent_success'));
     setResendTimer(60);
@@ -77,7 +94,8 @@ export function useVerifyEmailPage() {
    }
 
    if (result.success) {
-    setSuccess(true);
+    const encodedEmail = encodeURIComponent(data.email.trim());
+    router.replace(`/login?email=${encodedEmail}`);
    }
   } catch {
    setErrorMsg(t('verify.error_unexpected'));
@@ -87,7 +105,7 @@ export function useVerifyEmailPage() {
  return {
   t,
   errorMsg,
-  success,
+  isEmailReadonly: prefill.isReadonly,
   resendTimer,
   isResending,
   register,

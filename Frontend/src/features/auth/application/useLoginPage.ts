@@ -3,10 +3,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { loginAction } from '@/features/auth/application/actions';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from '@/i18n/routing';
+import { resolveLoginIdentityPrefill } from '@/features/auth/application/authFlowEmail';
 import {
  getLocalStorageItem,
  removeLocalStorageItem,
@@ -17,10 +19,16 @@ import { createLoginSchema, type LoginFormValues } from '@/features/auth/domain/
 export function useLoginPage() {
  const t = useTranslations('Auth');
  const router = useRouter();
+ const searchParams = useSearchParams();
  const setAuth = useAuthStore((state) => state.setAuth);
 
  const [errorMsg, setErrorMsg] = useState('');
  const [isRedirecting, setIsRedirecting] = useState(false);
+ const queryEmail = searchParams.get('email');
+ const initialIdentity = useMemo(
+  () => resolveLoginIdentityPrefill(queryEmail, null),
+  [queryEmail]
+ );
 
  const loginSchema = useMemo(() => createLoginSchema(t), [t]);
 
@@ -32,17 +40,20 @@ export function useLoginPage() {
  } = useForm<LoginFormValues>({
   resolver: zodResolver(loginSchema),
   defaultValues: {
+   emailOrUsername: initialIdentity,
    rememberMe: false,
   },
  });
 
  useEffect(() => {
-  const savedEmail = getLocalStorageItem('tarot_remembered_email');
-  if (!savedEmail) return;
+  const rememberedIdentity = getLocalStorageItem('tarot_remembered_email');
+  const prefilledIdentity = resolveLoginIdentityPrefill(queryEmail, rememberedIdentity);
+  if (!prefilledIdentity) return;
 
-  setValue('emailOrUsername', savedEmail);
-  setValue('rememberMe', true);
- }, [setValue]);
+  setValue('emailOrUsername', prefilledIdentity);
+  const shouldRemember = !initialIdentity && !!rememberedIdentity;
+  setValue('rememberMe', shouldRemember);
+ }, [queryEmail, initialIdentity, setValue]);
 
  useEffect(() => {
   router.prefetch('/');

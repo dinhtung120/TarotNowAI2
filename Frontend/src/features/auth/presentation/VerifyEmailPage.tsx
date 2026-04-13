@@ -3,7 +3,6 @@
 import { CheckCircle2, KeyRound, Mail } from "lucide-react";
 import { useVerifyEmailPage } from "@/features/auth/application/useVerifyEmailPage";
 import { AuthErrorBanner } from "@/features/auth/presentation/components/AuthErrorBanner";
-import { AuthSuccessCard } from "@/features/auth/presentation/components/AuthSuccessCard";
 import { VerifyEmailResendButton } from "@/features/auth/presentation/components/VerifyEmailResendButton";
 import { cn } from "@/lib/utils";
 import AuthLayout from "@/shared/components/layout/AuthLayout";
@@ -11,20 +10,6 @@ import { Button, Input } from "@/shared/components/ui";
 
 export default function VerifyEmailPage() {
  const vm = useVerifyEmailPage();
-
- if (vm.success) {
-  return (
-   <AuthSuccessCard
-    icon={<CheckCircle2 className={cn("h-10", "w-10", "text-emerald-400")} />}
-    title={vm.t("verify.success_title")}
-    description={vm.t("verify.success_desc")}
-    ctaHref="/login"
-    ctaLabel={vm.t("verify.success_cta")}
-    glowClass="bg-emerald-500/20"
-    iconWrapperClass="bg-emerald-500/20 shadow-lg"
-   />
-  );
- }
 
  return (
   <AuthLayout title={vm.t("verify.title")} subtitle={vm.t("verify.subtitle")}>
@@ -36,6 +21,7 @@ export default function VerifyEmailPage() {
      leftIcon={<Mail className={cn("h-5", "w-5")} />}
      placeholder={vm.t("verify.email_placeholder")}
      error={vm.errors.email?.message}
+     readOnly={vm.isEmailReadonly}
      {...vm.register("email")}
     />
     <Input

@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using TarotNow.Application.Features.Auth.Commands.Register;
 using TarotNow.Application.Features.Auth.Commands.SendEmailVerificationOtp;
 using TarotNow.Application.Features.Auth.Commands.VerifyEmail;
@@ -16,14 +17,19 @@ namespace TarotNow.Api.Controllers;
 public sealed class AuthRegistrationController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ILogger<AuthRegistrationController> _logger;
 
     /// <summary>
     /// Khởi tạo controller đăng ký.
     /// </summary>
     /// <param name="mediator">MediatR điều phối command xác thực/đăng ký.</param>
-    public AuthRegistrationController(IMediator mediator)
+    /// <param name="logger">Logger ghi nhận lỗi gửi OTP hậu đăng ký.</param>
+    public AuthRegistrationController(
+        IMediator mediator,
+        ILogger<AuthRegistrationController> logger)
     {
         _mediator = mediator;
+        _logger = logger;
     }
 
     /// <summary>
@@ -39,6 +45,16 @@ public sealed class AuthRegistrationController : ControllerBase
     public async Task<IActionResult> Register([FromBody] RegisterCommand command)
     {
         var userId = await _mediator.Send(command);
+
+        try
+        {
+            await _mediator.Send(new SendEmailVerificationOtpCommand { Email = command.Email });
+        }
+        catch (Exception ex)
+        {
+            // Không fail luồng đăng ký nếu SMTP/provider lỗi tạm thời.
+            _logger.LogWarning(ex, "Failed to send verification OTP after registration for {Email}.", command.Email);
+        }
 
         var response = new RegisterResponse
         {
