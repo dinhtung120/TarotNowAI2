@@ -13,21 +13,13 @@ public partial class GamificationService
     /// </summary>
     public async Task OnReadingCompletedAsync(Guid userId, CancellationToken ct)
     {
-        try
-        {
-            var activeQuests = await GetCachedQuestsAsync(ct);
-            await ApplyQuestProgressAsync(
-                userId,
-                new QuestProgressApplyRequest(activeQuests, "ReadingCompleted", 1, false),
-                ct);
-            await IncrementRankScoresAsync(userId, dailyPoints: 10, monthlyPoints: 10, lifetimePoints: 10, ct);
-            await CheckAndUnlockAchievementsAsync(userId, ct);
-        }
-        catch (Exception ex)
-        {
-            // Không để lỗi side-effect gamification làm fail nghiệp vụ đọc bài chính.
-            _logger.LogError(ex, "Gamification error OnReadingCompleted for user {UserId}", userId);
-        }
+        var activeQuests = await GetCachedQuestsAsync(ct);
+        await ApplyQuestProgressAsync(
+            userId,
+            new QuestProgressApplyRequest(activeQuests, "ReadingCompleted", 1, false),
+            ct);
+        await IncrementRankScoresAsync(userId, dailyPoints: 10, monthlyPoints: 10, lifetimePoints: 10, ct);
+        await CheckAndUnlockAchievementsAsync(userId, ct);
     }
 
     /// <summary>
@@ -48,8 +40,7 @@ public partial class GamificationService
             // Chỉ unlock khi rule nghiệp vụ cho phép để bảo toàn logic tiến trình.
             if (!ShouldUnlockAchievement(definition.Code)) continue;
             await _achievementRepo.UnlockAsync(userId, definition.Code, ct);
-            // Push ngay sau unlock để client hiển thị phần thưởng tức thời.
-            await _pushService.PushAchievementUnlockedAsync(userId, definition.Code, definition.GrantsTitleCode, ct);
+            await _domainEventPublisher.PublishAsync(new Domain.Events.AchievementUnlockedDomainEvent(userId, definition.Code), ct);
         }
     }
 

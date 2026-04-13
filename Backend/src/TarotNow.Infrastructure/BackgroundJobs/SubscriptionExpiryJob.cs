@@ -67,13 +67,14 @@ public class SubscriptionExpiryJob : BackgroundService
 
     /// <summary>
     /// Xử lý batch subscription đã quá hạn tại thời điểm hiện tại.
-    /// Luồng xử lý: lấy danh sách quá hạn, expire từng subscription, publish event, rồi commit SaveChanges.
+    /// Luồng xử lý: lấy danh sách quá hạn và xử lý trong một transaction thống nhất để tránh lệch state/event.
     /// </summary>
     private async Task ProcessExpirationsAsync(CancellationToken cancellationToken)
     {
         using var scope = _serviceProvider.CreateScope();
         var repo = scope.ServiceProvider.GetRequiredService<ISubscriptionRepository>();
         var domainEventPublisher = scope.ServiceProvider.GetRequiredService<IDomainEventPublisher>();
+        var transactionCoordinator = scope.ServiceProvider.GetRequiredService<ITransactionCoordinator>();
 
         var cutoff = DateTime.UtcNow;
 
@@ -84,25 +85,24 @@ public class SubscriptionExpiryJob : BackgroundService
             return;
         }
 
-        foreach (var sub in expiredSubs)
-        {
-            try
+        await transactionCoordinator.ExecuteAsync(
+            async transactionCt =>
             {
-                sub.Expire();
-                // Đổi state domain sang Expired theo rule lifecycle subscription.
+                foreach (var sub in expiredSubs)
+                {
+                    sub.Expire();
+                    // Đổi state domain sang Expired theo rule lifecycle subscription.
 
-                await domainEventPublisher.PublishAsync(new SubscriptionExpiredDomainEvent(sub.UserId, sub.Id), cancellationToken);
-                // Publish event để các subscriber thu hồi entitlement/hậu xử lý đồng bộ.
-            }
-            catch (Exception itemEx)
-            {
-                _logger.LogError(itemEx, "Lôi Ngang Mắc Xương Tại Gói {SubId} Của Khách {UserId}. Tạm Qua Trảm Đứa Sau Mất Lệ.", sub.Id, sub.UserId);
-                // Bỏ qua item lỗi để vẫn xử lý các subscription còn lại trong cùng batch.
-            }
-        }
+                    await domainEventPublisher.PublishAsync(
+                        new SubscriptionExpiredDomainEvent(sub.UserId, sub.Id),
+                        transactionCt);
+                    // Publish event để các subscriber thu hồi entitlement/hậu xử lý đồng bộ.
+                }
 
-        await repo.SaveChangesAsync(cancellationToken);
-        // Commit một lần sau batch để giảm số transaction ghi lặp.
+                await repo.SaveChangesAsync(transactionCt);
+                // Commit một lần sau batch để giảm số transaction ghi lặp.
+            },
+            cancellationToken);
 
         _logger.LogInformation("Tìm Vào Sát Cửa Tử {Count} Hồ Sơ Đăng Ký Đã Hết Giờ Linh Thiêng Phù Hộ (Gắn Expired).", expiredSubs.Count);
     }

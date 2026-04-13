@@ -13,7 +13,7 @@ public partial class ConversationController
 {
     /// <summary>
     /// Reader gửi đề nghị nạp thêm kim cương trong hội thoại.
-    /// Luồng xử lý: xác thực reader, gửi command request add-money, broadcast cập nhật.
+    /// Luồng xử lý: xác thực reader, gửi command request add-money.
     /// </summary>
     /// <param name="id">Id hội thoại.</param>
     /// <param name="body">Payload đề nghị nạp thêm.</param>
@@ -38,13 +38,12 @@ public partial class ConversationController
             IdempotencyKey = body.IdempotencyKey
         });
 
-        await TryBroadcastConversationUpdatedAsync(id, "add_money_requested");
         return Ok(result);
     }
 
     /// <summary>
     /// Người dùng phản hồi đề nghị nạp thêm kim cương.
-    /// Luồng xử lý: xác thực user, gửi command phản hồi, broadcast trạng thái cập nhật.
+    /// Luồng xử lý: xác thực user, gửi command phản hồi.
     /// </summary>
     /// <param name="id">Id hội thoại.</param>
     /// <param name="body">Payload phản hồi đề nghị nạp thêm.</param>
@@ -68,13 +67,12 @@ public partial class ConversationController
             RejectReason = body.RejectReason
         });
 
-        await TryBroadcastConversationUpdatedAsync(id, "add_money_responded");
         return Ok(result);
     }
 
     /// <summary>
     /// Mở tranh chấp trong ngữ cảnh hội thoại.
-    /// Luồng xử lý: xác thực user, gửi command dispute, broadcast trạng thái tranh chấp.
+    /// Luồng xử lý: xác thực user, gửi command dispute.
     /// </summary>
     /// <param name="id">Id hội thoại.</param>
     /// <param name="body">Payload lý do tranh chấp.</param>
@@ -97,7 +95,6 @@ public partial class ConversationController
             Reason = body.Reason
         });
 
-        await TryBroadcastConversationUpdatedAsync(id, "disputed");
         return Ok(result);
     }
 }

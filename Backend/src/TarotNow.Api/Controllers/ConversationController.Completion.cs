@@ -11,7 +11,7 @@ public partial class ConversationController
 {
     /// <summary>
     /// Gửi yêu cầu hoàn tất hội thoại.
-    /// Luồng xử lý: xác thực requester, gửi command request complete, broadcast cập nhật trạng thái.
+    /// Luồng xử lý: xác thực requester, gửi command request complete.
     /// </summary>
     /// <param name="id">Id hội thoại.</param>
     /// <returns>Kết quả request complete hoặc unauthorized khi thiếu user id.</returns>
@@ -31,13 +31,12 @@ public partial class ConversationController
             RequesterId = requesterId
         });
 
-        await TryBroadcastConversationUpdatedAsync(id, "complete_requested");
         return Ok(result);
     }
 
     /// <summary>
     /// Phản hồi yêu cầu hoàn tất hội thoại.
-    /// Luồng xử lý: xác thực requester, gửi command phản hồi accept/reject, broadcast trạng thái mới.
+    /// Luồng xử lý: xác thực requester, gửi command phản hồi accept/reject.
     /// </summary>
     /// <param name="id">Id hội thoại.</param>
     /// <param name="body">Payload quyết định phản hồi hoàn tất.</param>
@@ -59,7 +58,6 @@ public partial class ConversationController
             Accept = body.Accept
         });
 
-        await TryBroadcastConversationUpdatedAsync(id, "complete_responded");
         return Ok(result);
     }
 }

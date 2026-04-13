@@ -20,6 +20,7 @@ public class PurchaseStreakFreezeCommandHandler : IRequestHandler<PurchaseStreak
     private readonly IUserRepository _userRepository;
     private readonly IWalletRepository _walletRepository;
     private readonly ISystemConfigSettings _settings;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler purchase streak freeze.
@@ -28,11 +29,13 @@ public class PurchaseStreakFreezeCommandHandler : IRequestHandler<PurchaseStreak
     public PurchaseStreakFreezeCommandHandler(
         IUserRepository userRepository,
         IWalletRepository walletRepository,
-        ISystemConfigSettings settings)
+        ISystemConfigSettings settings,
+        IDomainEventPublisher domainEventPublisher)
     {
         _userRepository = userRepository;
         _walletRepository = walletRepository;
         _settings = settings;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>
@@ -57,6 +60,17 @@ public class PurchaseStreakFreezeCommandHandler : IRequestHandler<PurchaseStreak
         var priceDiamond = user.CalculateFreezePrice();
         // Trừ kim cương trước khi cập nhật state user để đảm bảo tính nhất quán tài chính.
         await DebitDiamondAsync(user, priceDiamond, idempotencyKey, cancellationToken);
+        await _domainEventPublisher.PublishAsync(
+            new Domain.Events.MoneyChangedDomainEvent
+            {
+                UserId = user.Id,
+                Currency = CurrencyType.Diamond,
+                ChangeType = TransactionType.StreakFreezeCost,
+                DeltaAmount = -priceDiamond,
+                ReferenceId = idempotencyKey
+            },
+            cancellationToken);
+
         user.RestoreStreak();
         // Lưu thay đổi streak sau khi giao dịch ví thành công.
         await _userRepository.UpdateAsync(user, cancellationToken);

@@ -45,19 +45,11 @@ public class StreakService : IStreakService
             return;
         }
 
-        try
-        {
-            // Áp dụng nhánh tăng/đứt streak theo ngày streak gần nhất của user.
-            ApplyStreakTransition(user, userId, today);
-            await _userRepository.UpdateAsync(user, cancellationToken);
-            _logger.LogInformation("[StreakService] ✅ Save Streak thành công cho User {UserId}. CurrentStreak={Streak}, LastDate={Date}.",
-                userId, user.CurrentStreak, user.LastStreakDate);
-        }
-        catch (Exception ex)
-        {
-            // Nuốt lỗi có log để không làm fail nghiệp vụ chính gọi vào streak.
-            _logger.LogError(ex, "[StreakService] Lỗi tèo khi tăng Streak cho User {UserId}.", userId);
-        }
+        // Áp dụng nhánh tăng/đứt streak theo ngày streak gần nhất của user.
+        ApplyStreakTransition(user, userId, today);
+        await _userRepository.UpdateAsync(user, cancellationToken);
+        _logger.LogInformation("[StreakService] ✅ Save Streak thành công cho User {UserId}. CurrentStreak={Streak}, LastDate={Date}.",
+            userId, user.CurrentStreak, user.LastStreakDate);
     }
 
     /// <summary>

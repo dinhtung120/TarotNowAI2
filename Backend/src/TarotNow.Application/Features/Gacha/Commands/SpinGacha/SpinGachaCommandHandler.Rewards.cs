@@ -32,8 +32,14 @@ public partial class SpinGachaCommandHandler
 
         if (selectedItem.RewardType == GachaRewardType.Title)
         {
-            // Title là phần thưởng phi tiền tệ nên grant ngay theo từng lượt.
-            await _titleRepository.GrantTitleAsync(userId, selectedItem.RewardValue, cancellationToken);
+            await _domainEventPublisher.PublishAsync(
+                new TarotNow.Domain.Events.TitleGrantedDomainEvent
+                {
+                    UserId = userId,
+                    TitleCode = selectedItem.RewardValue,
+                    Source = "gacha"
+                },
+                cancellationToken);
         }
     }
 

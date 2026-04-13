@@ -13,8 +13,6 @@ public partial class WalletRepository : IWalletRepository
     private readonly ApplicationDbContext _dbContext;
     // Logger phục vụ audit và chẩn đoán lỗi.
     private readonly ILogger<WalletRepository> _logger;
-    // Repository leaderboard để cộng điểm chi tiêu sau mutation hợp lệ.
-    private readonly ILeaderboardRepository _lbRepo;
 
     /// <summary>
     /// Khởi tạo WalletRepository.
@@ -22,12 +20,10 @@ public partial class WalletRepository : IWalletRepository
     /// </summary>
     public WalletRepository(
         ApplicationDbContext dbContext,
-        ILogger<WalletRepository> logger,
-        ILeaderboardRepository lbRepo)
+        ILogger<WalletRepository> logger)
     {
         _dbContext = dbContext;
         _logger = logger;
-        _lbRepo = lbRepo;
     }
 
     /// <summary>

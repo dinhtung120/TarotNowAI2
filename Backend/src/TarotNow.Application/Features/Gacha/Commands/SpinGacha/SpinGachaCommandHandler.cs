@@ -9,8 +9,8 @@ public partial class SpinGachaCommandHandler : IRequestHandler<SpinGachaCommand,
     private readonly IGachaRepository _gachaRepository;
     private readonly IGachaLogRepository _gachaLogRepository;
     private readonly IWalletRepository _walletRepository;
-    private readonly ITitleRepository _titleRepository;
     private readonly IRngService _rngService;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler spin gacha.
@@ -20,14 +20,14 @@ public partial class SpinGachaCommandHandler : IRequestHandler<SpinGachaCommand,
         IGachaRepository gachaRepository,
         IGachaLogRepository gachaLogRepository,
         IWalletRepository walletRepository,
-        ITitleRepository titleRepository,
-        IRngService rngService)
+        IRngService rngService,
+        IDomainEventPublisher domainEventPublisher)
     {
         _gachaRepository = gachaRepository;
         _gachaLogRepository = gachaLogRepository;
         _walletRepository = walletRepository;
-        _titleRepository = titleRepository;
         _rngService = rngService;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>
@@ -54,6 +54,15 @@ public partial class SpinGachaCommandHandler : IRequestHandler<SpinGachaCommand,
         var spinState = await ExecuteSpinBatchAsync(request, context, cancellationToken);
         // Cộng phần thưởng sau khi batch spin hoàn tất.
         await CreditRewardsAsync(request, spinState, cancellationToken);
+        await _domainEventPublisher.PublishAsync(
+            new Domain.Events.GachaSpunDomainEvent
+            {
+                UserId = request.UserId,
+                BannerCode = request.BannerCode,
+                SpinCount = request.Count,
+                WasPityTriggered = spinState.AnyPityTriggered
+            },
+            cancellationToken);
 
         return BuildSpinResult(context.Banner.HardPityCount, spinState);
     }

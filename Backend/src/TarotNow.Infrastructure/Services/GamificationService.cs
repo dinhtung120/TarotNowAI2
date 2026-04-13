@@ -13,8 +13,8 @@ public partial class GamificationService : IGamificationService
     private readonly IAchievementRepository _achievementRepo;
     // Repository leaderboard phục vụ cộng điểm xếp hạng.
     private readonly ILeaderboardRepository _leaderboardRepo;
-    // Service push thông báo realtime khi có thành tựu/quest.
-    private readonly IGamificationPushService _pushService;
+    // Publisher dùng để phát domain event hậu xử lý gamification.
+    private readonly IDomainEventPublisher _domainEventPublisher;
     // Cache memory để giảm tần suất đọc danh sách quest định nghĩa.
     private readonly IMemoryCache _cache;
     // Logger cho truy vết lỗi trong luồng gamification.
@@ -28,14 +28,14 @@ public partial class GamificationService : IGamificationService
         IQuestRepository questRepo,
         IAchievementRepository achievementRepo,
         ILeaderboardRepository leaderboardRepo,
-        IGamificationPushService pushService,
+        IDomainEventPublisher domainEventPublisher,
         IMemoryCache cache,
         ILogger<GamificationService> logger)
     {
         _questRepo = questRepo;
         _achievementRepo = achievementRepo;
         _leaderboardRepo = leaderboardRepo;
-        _pushService = pushService;
+        _domainEventPublisher = domainEventPublisher;
         _cache = cache;
         _logger = logger;
     }

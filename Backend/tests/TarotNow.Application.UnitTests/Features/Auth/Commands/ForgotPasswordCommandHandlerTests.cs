@@ -5,6 +5,7 @@ using TarotNow.Application.Features.Auth.Commands.ForgotPassword;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
@@ -15,8 +16,10 @@ public class ForgotPasswordCommandHandlerTests
     private readonly Mock<IUserRepository> _userRepositoryMock;
     // Mock OTP repo để xác nhận có/không tạo OTP reset.
     private readonly Mock<IEmailOtpRepository> _emailOtpRepositoryMock;
-    // Mock email sender để kiểm tra gửi mail.
-    private readonly Mock<IEmailSender> _emailSenderMock;
+    // Mock domain event publisher để kiểm tra enqueue outbox event.
+    private readonly Mock<IDomainEventPublisher> _domainEventPublisherMock;
+    // Mock transaction coordinator để mô phỏng transaction boundary trong unit test.
+    private readonly Mock<ITransactionCoordinator> _transactionCoordinatorMock;
     // Handler cần kiểm thử.
     private readonly ForgotPasswordCommandHandler _handler;
 
@@ -28,12 +31,17 @@ public class ForgotPasswordCommandHandlerTests
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _emailOtpRepositoryMock = new Mock<IEmailOtpRepository>();
-        _emailSenderMock = new Mock<IEmailSender>();
+        _domainEventPublisherMock = new Mock<IDomainEventPublisher>();
+        _transactionCoordinatorMock = new Mock<ITransactionCoordinator>();
+        _transactionCoordinatorMock
+            .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
+            .Returns<Func<CancellationToken, Task>, CancellationToken>((action, ct) => action(ct));
 
         _handler = new ForgotPasswordCommandHandler(
             _userRepositoryMock.Object,
             _emailOtpRepositoryMock.Object,
-            _emailSenderMock.Object
+            _domainEventPublisherMock.Object,
+            _transactionCoordinatorMock.Object
         );
     }
 
@@ -52,11 +60,14 @@ public class ForgotPasswordCommandHandlerTests
 
         Assert.True(result);
         _emailOtpRepositoryMock.Verify(r => r.AddAsync(It.IsAny<EmailOtp>(), It.IsAny<CancellationToken>()), Times.Never);
+        _domainEventPublisherMock.Verify(
+            r => r.PublishAsync(It.IsAny<EmailOtpIssuedDomainEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     /// <summary>
-    /// Xác nhận khi user tồn tại, handler tạo OTP reset password và gửi email.
-    /// Luồng này đảm bảo side-effect OTP + email xảy ra đúng một lần.
+    /// Xác nhận khi user tồn tại, handler tạo OTP reset password và publish domain event gửi email.
+    /// Luồng này đảm bảo side-effect OTP + outbox event xảy ra đúng một lần.
     /// </summary>
     [Fact]
     public async Task Handle_ShouldGenerateOtpAndSendEmail_WhenUserExists()
@@ -76,11 +87,9 @@ public class ForgotPasswordCommandHandlerTests
             It.Is<EmailOtp>(otp => otp.UserId == user.Id && otp.Type == OtpType.ResetPassword),
             It.IsAny<CancellationToken>()), Times.Once);
 
-        // Xác nhận handler gọi send email sau khi tạo OTP.
-        _emailSenderMock.Verify(s => s.SendEmailAsync(
-            command.Email,
-            It.IsAny<string>(),
-            It.IsAny<string>(),
+        // Xác nhận handler publish EmailOtpIssuedDomainEvent sau khi tạo OTP.
+        _domainEventPublisherMock.Verify(s => s.PublishAsync(
+            It.Is<EmailOtpIssuedDomainEvent>(x => x.Email == command.Email && x.UserId == user.Id),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 }

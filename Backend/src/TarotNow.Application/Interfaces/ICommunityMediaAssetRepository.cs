@@ -16,35 +16,21 @@ public interface ICommunityMediaAssetRepository
     /// Gắn asset uploaded theo context draft vào entity đã tạo.
     /// </summary>
     Task AttachDraftAssetsAsync(
-        Guid ownerUserId,
-        string contextType,
-        string contextDraftId,
-        string contextEntityId,
-        IReadOnlyCollection<string> objectKeys,
-        DateTime attachedAtUtc,
+        AttachDraftCommunityAssetsRequest request,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gắn asset theo object key vào entity hiện tại (dùng cho edit flow).
     /// </summary>
     Task AttachByObjectKeysAsync(
-        Guid ownerUserId,
-        string contextType,
-        string contextEntityId,
-        IReadOnlyCollection<string> objectKeys,
-        DateTime attachedAtUtc,
+        AttachCommunityAssetsByObjectKeysRequest request,
         CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Reconcile danh sách asset attached và chuyển key bị bỏ ra orphaned.
     /// </summary>
     Task ReconcileAttachedAssetsAsync(
-        Guid ownerUserId,
-        string contextType,
-        string contextEntityId,
-        IReadOnlyCollection<string> activeObjectKeys,
-        DateTime reconciledAtUtc,
-        DateTime orphanExpiresAtUtc,
+        ReconcileCommunityAssetsRequest request,
         CancellationToken cancellationToken = default);
 
     /// <summary>

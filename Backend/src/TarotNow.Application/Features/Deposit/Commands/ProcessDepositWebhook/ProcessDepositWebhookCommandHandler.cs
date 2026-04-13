@@ -17,7 +17,7 @@ public partial class ProcessDepositWebhookCommandHandler : IRequestHandler<Proce
     private readonly IDepositOrderRepository _depositOrderRepository;
     private readonly IWalletRepository _walletRepository;
     private readonly ITransactionCoordinator _transactionCoordinator;
-    private readonly IWalletPushService _walletPushService;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler process deposit webhook.
@@ -28,13 +28,13 @@ public partial class ProcessDepositWebhookCommandHandler : IRequestHandler<Proce
         IDepositOrderRepository depositOrderRepository,
         IWalletRepository walletRepository,
         ITransactionCoordinator transactionCoordinator,
-        IWalletPushService walletPushService)
+        IDomainEventPublisher domainEventPublisher)
     {
         _paymentGatewayService = paymentGatewayService;
         _depositOrderRepository = depositOrderRepository;
         _walletRepository = walletRepository;
         _transactionCoordinator = transactionCoordinator;
-        _walletPushService = walletPushService;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>

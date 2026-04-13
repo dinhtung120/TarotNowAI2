@@ -37,6 +37,7 @@ public class ProcessDepositCommandHandler : IRequestHandler<ProcessDepositComman
 
     private readonly IDepositOrderRepository _depositOrderRepository;
     private readonly IWalletRepository _walletRepository;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler process deposit.
@@ -44,10 +45,12 @@ public class ProcessDepositCommandHandler : IRequestHandler<ProcessDepositComman
     /// </summary>
     public ProcessDepositCommandHandler(
         IDepositOrderRepository depositOrderRepository,
-        IWalletRepository walletRepository)
+        IWalletRepository walletRepository,
+        IDomainEventPublisher domainEventPublisher)
     {
         _depositOrderRepository = depositOrderRepository;
         _walletRepository = walletRepository;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>
@@ -116,6 +119,17 @@ public class ProcessDepositCommandHandler : IRequestHandler<ProcessDepositComman
             description: $"Approved deposit order {order.Id} (+{order.DiamondAmount} Diamond)",
             idempotencyKey: $"deposit_approve_{order.Id}",
             cancellationToken: cancellationToken);
+
+        await _domainEventPublisher.PublishAsync(
+            new Domain.Events.MoneyChangedDomainEvent
+            {
+                UserId = order.UserId,
+                Currency = CurrencyType.Diamond,
+                ChangeType = TransactionType.Deposit,
+                DeltaAmount = order.DiamondAmount,
+                ReferenceId = transactionId
+            },
+            cancellationToken);
 
         // Đổi state order sang success sau khi credit thành công để đảm bảo tính nhất quán tài chính.
         order.MarkAsSuccess(transactionId, ManualApprovalNote);

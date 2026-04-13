@@ -1,15 +1,17 @@
-using MediatR;
-using TarotNow.Application.DomainEvents.Notifications;
+using TarotNow.Application.Common.DomainEvents;
+using TarotNow.Application.Common.Realtime;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.DomainEvents.Handlers;
 
 // Tạo và phát thông báo in-app cho cả payer/receiver khi giao dịch escrow được giải ngân.
-public sealed class EscrowReleasedInAppNotificationHandler : INotificationHandler<EscrowReleasedNotification>
+public sealed class EscrowReleasedInAppNotificationHandler
+    : IdempotentDomainEventNotificationHandler<EscrowReleasedDomainEvent>
 {
     private readonly INotificationRepository _notificationRepository;
-    private readonly INotificationPushService _pushService;
-    private readonly IWalletPushService _walletPushService;
+    private readonly IRedisPublisher _redisPublisher;
 
     /// <summary>
     /// Khởi tạo handler thông báo in-app khi escrow release.
@@ -17,49 +19,67 @@ public sealed class EscrowReleasedInAppNotificationHandler : INotificationHandle
     /// </summary>
     public EscrowReleasedInAppNotificationHandler(
         INotificationRepository notificationRepository,
-        INotificationPushService pushService,
-        IWalletPushService walletPushService)
+        IRedisPublisher redisPublisher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _notificationRepository = notificationRepository;
-        _pushService = pushService;
-        _walletPushService = walletPushService;
+        _redisPublisher = redisPublisher;
     }
 
     /// <summary>
     /// Xử lý notification giải ngân và phát đầy đủ thông báo liên quan.
     /// Luồng xử lý: dựng dto cho payer/receiver, lưu + push từng dto, rồi push cập nhật ví cho cả hai bên.
     /// </summary>
-    public async Task Handle(EscrowReleasedNotification notification, CancellationToken cancellationToken)
+    protected override async Task HandleDomainEventAsync(
+        EscrowReleasedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
     {
-        var domainEvent = notification.DomainEvent;
         var payerDto = BuildPayerNotification(domainEvent);
         var receiverDto = BuildReceiverNotification(domainEvent);
 
-        // Ghi và push hai notification tách biệt để nội dung đúng theo từng vai trò.
-        await PersistAndPushAsync(payerDto, cancellationToken);
-        await PersistAndPushAsync(receiverDto, cancellationToken);
-        // Đồng bộ tín hiệu thay đổi số dư ví cho cả bên trả và bên nhận.
-        await PushWalletUpdatesAsync(domainEvent.PayerId, domainEvent.ReceiverId, cancellationToken);
+        // Ghi hai notification tách biệt để nội dung đúng theo từng vai trò.
+        await PersistAndPublishRealtimeNotificationAsync(payerDto, cancellationToken);
+        await PersistAndPublishRealtimeNotificationAsync(receiverDto, cancellationToken);
+        // Đồng bộ tín hiệu thay đổi số dư ví cho cả bên trả và bên nhận qua Redis.
+        await PublishWalletChangedAsync(domainEvent.PayerId, cancellationToken);
+        await PublishWalletChangedAsync(domainEvent.ReceiverId, cancellationToken);
     }
 
     /// <summary>
-    /// Lưu notification vào kho dữ liệu rồi push realtime cho người dùng đích.
-    /// Luồng xử lý: persist trước để đảm bảo lịch sử, sau đó gửi push event mới.
+    /// Lưu notification vào kho dữ liệu rồi publish realtime cho người dùng đích.
+    /// Luồng xử lý: persist trước để đảm bảo lịch sử, sau đó publish event qua Redis.
     /// </summary>
-    private async Task PersistAndPushAsync(NotificationCreateDto dto, CancellationToken cancellationToken)
+    private async Task PersistAndPublishRealtimeNotificationAsync(NotificationCreateDto dto, CancellationToken cancellationToken)
     {
         await _notificationRepository.CreateAsync(dto, cancellationToken);
-        await _pushService.PushNewNotificationAsync(dto, cancellationToken);
+        await _redisPublisher.PublishAsync(
+            RealtimeChannelNames.Notifications,
+            "notification.new",
+            new
+            {
+                userId = dto.UserId.ToString(),
+                dto.TitleVi,
+                dto.TitleEn,
+                dto.BodyVi,
+                dto.BodyEn,
+                dto.Type,
+                createdAt = DateTime.UtcNow
+            },
+            cancellationToken);
     }
 
     /// <summary>
-    /// Push sự kiện thay đổi số dư ví cho hai user liên quan giao dịch.
-    /// Luồng xử lý: gọi wallet push lần lượt cho payer và receiver.
+    /// Publish sự kiện thay đổi số dư ví cho user liên quan giao dịch.
     /// </summary>
-    private async Task PushWalletUpdatesAsync(Guid payerId, Guid receiverId, CancellationToken cancellationToken)
+    private Task PublishWalletChangedAsync(Guid userId, CancellationToken cancellationToken)
     {
-        await _walletPushService.PushBalanceChangedAsync(payerId, cancellationToken);
-        await _walletPushService.PushBalanceChangedAsync(receiverId, cancellationToken);
+        return _redisPublisher.PublishAsync(
+            RealtimeChannelNames.Wallet,
+            "wallet.balance_changed",
+            new { userId = userId.ToString() },
+            cancellationToken);
     }
 
     /// <summary>

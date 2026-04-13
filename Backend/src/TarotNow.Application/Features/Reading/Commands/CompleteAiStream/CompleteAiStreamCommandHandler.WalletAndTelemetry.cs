@@ -79,7 +79,7 @@ public partial class CompleteAiStreamCommandHandler
     /// Phát domain event hoàn tất billing cho reading.
     /// Luồng xử lý: chỉ phát event khi có charge thực tế để downstream xử lý analytics/reward không bị nhiễu.
     /// </summary>
-    private Task PublishReadingBillingEventAsync(
+    private async Task PublishReadingBillingEventAsync(
         CompleteAiStreamCommand request,
         AiRequest record,
         bool wasRefunded,
@@ -88,10 +88,25 @@ public partial class CompleteAiStreamCommandHandler
         if (record.ChargeDiamond <= 0)
         {
             // Không có phí thì bỏ qua event billing để tránh tạo bản ghi downstream không cần thiết.
-            return Task.CompletedTask;
+            return;
         }
 
-        return _domainEventPublisher.PublishAsync(
+        var deltaAmount = wasRefunded ? record.ChargeDiamond : -record.ChargeDiamond;
+        var changeType = wasRefunded
+            ? TarotNow.Domain.Enums.TransactionType.EscrowRefund
+            : TarotNow.Domain.Enums.TransactionType.EscrowRelease;
+        await _domainEventPublisher.PublishAsync(
+            new MoneyChangedDomainEvent
+            {
+                UserId = request.UserId,
+                Currency = TarotNow.Domain.Enums.CurrencyType.Diamond,
+                ChangeType = changeType,
+                DeltaAmount = deltaAmount,
+                ReferenceId = record.Id.ToString()
+            },
+            cancellationToken);
+
+        await _domainEventPublisher.PublishAsync(
             new ReadingBillingCompletedDomainEvent
             {
                 UserId = request.UserId,

@@ -2,6 +2,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using TarotNow.Domain.Entities;
+using TarotNow.Infrastructure.Persistence.Outbox;
 using TarotNow.Infrastructure.Persistence.Configurations;
 
 namespace TarotNow.Infrastructure.Persistence;
@@ -82,6 +83,12 @@ public partial class ApplicationDbContext : DbContext
 
     // DbSet bảng gacha_reward_logs.
     public DbSet<GachaRewardLog> GachaRewardLogs { get; set; } = null!;
+
+    // DbSet bảng outbox_messages.
+    public DbSet<OutboxMessage> OutboxMessages { get; set; } = null!;
+
+    // DbSet bảng outbox_handler_states.
+    public DbSet<OutboxHandlerState> OutboxHandlerStates { get; set; } = null!;
 
     /// <summary>
     /// Xây dựng model mapping cho DbContext.

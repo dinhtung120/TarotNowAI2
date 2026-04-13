@@ -43,30 +43,33 @@ public sealed class CommunityMediaAttachmentService : ICommunityMediaAttachmentS
         if (!string.IsNullOrWhiteSpace(contextDraftId))
         {
             await _assetRepository.AttachDraftAssetsAsync(
-                ownerUserId,
-                contextType,
-                contextDraftId.Trim(),
-                contextEntityId,
-                objectKeys,
-                nowUtc,
+                new AttachDraftCommunityAssetsRequest(
+                    ownerUserId,
+                    contextType,
+                    contextDraftId.Trim(),
+                    contextEntityId,
+                    objectKeys,
+                    nowUtc),
                 cancellationToken);
         }
 
         await _assetRepository.AttachByObjectKeysAsync(
-            ownerUserId,
-            contextType,
-            contextEntityId,
-            objectKeys,
-            nowUtc,
+            new AttachCommunityAssetsByObjectKeysRequest(
+                ownerUserId,
+                contextType,
+                contextEntityId,
+                objectKeys,
+                nowUtc),
             cancellationToken);
 
         await _assetRepository.ReconcileAttachedAssetsAsync(
-            ownerUserId,
-            contextType,
-            contextEntityId,
-            objectKeys,
-            nowUtc,
-            nowUtc.Add(MediaUploadConstants.CommunityOrphanTtl),
+            new ReconcileCommunityAssetsRequest(
+                ownerUserId,
+                contextType,
+                contextEntityId,
+                objectKeys,
+                nowUtc,
+                nowUtc.Add(MediaUploadConstants.CommunityOrphanTtl)),
             cancellationToken);
     }
 
@@ -85,21 +88,23 @@ public sealed class CommunityMediaAttachmentService : ICommunityMediaAttachmentS
         if (objectKeys.Count > 0)
         {
             await _assetRepository.AttachByObjectKeysAsync(
+                new AttachCommunityAssetsByObjectKeysRequest(
+                    ownerUserId,
+                    contextType,
+                    contextEntityId,
+                    objectKeys,
+                    nowUtc),
+                cancellationToken);
+        }
+
+        await _assetRepository.ReconcileAttachedAssetsAsync(
+            new ReconcileCommunityAssetsRequest(
                 ownerUserId,
                 contextType,
                 contextEntityId,
                 objectKeys,
                 nowUtc,
-                cancellationToken);
-        }
-
-        await _assetRepository.ReconcileAttachedAssetsAsync(
-            ownerUserId,
-            contextType,
-            contextEntityId,
-            objectKeys,
-            nowUtc,
-            nowUtc.Add(MediaUploadConstants.CommunityOrphanTtl),
+                nowUtc.Add(MediaUploadConstants.CommunityOrphanTtl)),
             cancellationToken);
     }
 

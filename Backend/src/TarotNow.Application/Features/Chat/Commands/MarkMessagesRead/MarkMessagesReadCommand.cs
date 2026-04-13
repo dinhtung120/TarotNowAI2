@@ -21,6 +21,7 @@ public class MarkMessagesReadCommandHandler : IRequestHandler<MarkMessagesReadCo
 {
     private readonly IConversationRepository _conversationRepo;
     private readonly IChatMessageRepository _messageRepo;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler mark messages read.
@@ -28,10 +29,12 @@ public class MarkMessagesReadCommandHandler : IRequestHandler<MarkMessagesReadCo
     /// </summary>
     public MarkMessagesReadCommandHandler(
         IConversationRepository conversationRepo,
-        IChatMessageRepository messageRepo)
+        IChatMessageRepository messageRepo,
+        IDomainEventPublisher domainEventPublisher)
     {
         _conversationRepo = conversationRepo;
         _messageRepo = messageRepo;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>
@@ -65,6 +68,21 @@ public class MarkMessagesReadCommandHandler : IRequestHandler<MarkMessagesReadCo
         }
 
         await _conversationRepo.UpdateAsync(conversation, cancellationToken);
+        var occurredAtUtc = DateTime.UtcNow;
+
+        await _domainEventPublisher.PublishAsync(
+            new Domain.Events.UnreadCountChangedDomainEvent
+            {
+                ConversationId = conversation.Id,
+                UserId = conversation.UserId,
+                ReaderId = conversation.ReaderId,
+                OccurredAtUtc = occurredAtUtc
+            },
+            cancellationToken);
+
+        await _domainEventPublisher.PublishAsync(
+            new Domain.Events.ConversationUpdatedDomainEvent(conversation.Id, "message_read", occurredAtUtc),
+            cancellationToken);
 
         return true;
     }

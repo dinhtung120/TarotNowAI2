@@ -3,6 +3,7 @@ using TarotNow.Application.Common;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Chat.Commands.MarkMessagesRead;
 using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Events;
 using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Chat;
@@ -14,6 +15,8 @@ public class MarkMessagesReadCommandHandlerTests
     private readonly Mock<IConversationRepository> _mockConvRepo;
     // Mock message repo để xác nhận gọi mark-as-read.
     private readonly Mock<IChatMessageRepository> _mockMsgRepo;
+    // Mock domain event publisher để xác nhận enqueue outbox events.
+    private readonly Mock<IDomainEventPublisher> _mockDomainEventPublisher;
     // Handler cần kiểm thử.
     private readonly MarkMessagesReadCommandHandler _handler;
 
@@ -25,7 +28,11 @@ public class MarkMessagesReadCommandHandlerTests
     {
         _mockConvRepo = new Mock<IConversationRepository>();
         _mockMsgRepo = new Mock<IChatMessageRepository>();
-        _handler = new MarkMessagesReadCommandHandler(_mockConvRepo.Object, _mockMsgRepo.Object);
+        _mockDomainEventPublisher = new Mock<IDomainEventPublisher>();
+        _handler = new MarkMessagesReadCommandHandler(
+            _mockConvRepo.Object,
+            _mockMsgRepo.Object,
+            _mockDomainEventPublisher.Object);
     }
 
     /// <summary>
@@ -62,6 +69,12 @@ public class MarkMessagesReadCommandHandlerTests
         Assert.Equal(0, conv.UnreadCountReader);
         _mockMsgRepo.Verify(x => x.MarkAsReadAsync("c1", readerIdStr, default), Times.Once);
         _mockConvRepo.Verify(x => x.UpdateAsync(conv, default), Times.Once);
+        _mockDomainEventPublisher.Verify(
+            x => x.PublishAsync(It.IsAny<UnreadCountChangedDomainEvent>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+        _mockDomainEventPublisher.Verify(
+            x => x.PublishAsync(It.IsAny<ConversationUpdatedDomainEvent>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     /// <summary>

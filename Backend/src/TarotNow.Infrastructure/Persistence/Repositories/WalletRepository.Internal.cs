@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using TarotNow.Application.Helpers;
 using TarotNow.Domain.Entities;
-using TarotNow.Domain.Enums;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
@@ -69,44 +67,4 @@ public partial class WalletRepository
             idempotencyKey);
     }
 
-    /// <summary>
-    /// Cập nhật leaderboard chi tiêu khi phát sinh debit/release hợp lệ.
-    /// Luồng xử lý: validate amount/currency, xác định track và tăng điểm cho daily/monthly/all.
-    /// </summary>
-    private async Task TrackSpendingToLeaderboardAsync(
-        Guid userId,
-        string currency,
-        long amount,
-        CancellationToken ct)
-    {
-        if (amount <= 0) return;
-        // Edge case: amount không dương thì không có chi tiêu thực tế để cộng điểm.
-
-        var normalizedCurrency = currency?.Trim().ToLowerInvariant();
-        if (normalizedCurrency != CurrencyType.Gold && normalizedCurrency != CurrencyType.Diamond)
-        {
-            return;
-            // Chỉ track hai currency được định nghĩa trong leaderboard chi tiêu.
-        }
-
-        try
-        {
-            var track = normalizedCurrency == CurrencyType.Gold ? "spent_gold" : "spent_diamond";
-            var dailyKey = PeriodKeyHelper.GetPeriodKey("daily");
-            var monthlyKey = PeriodKeyHelper.GetPeriodKey("monthly");
-
-            _logger.LogInformation("[Gamification] Gửi {Amount} {Currency} lên BXH (User: {UserId}, Track: {Track}, Daily: {DailyKey})",
-                amount, normalizedCurrency, userId, track, dailyKey);
-            // Log rõ track và period để hỗ trợ debug chênh lệch điểm leaderboard.
-
-            await _lbRepo.IncrementScoreAsync(userId, track, dailyKey, amount, ct);
-            await _lbRepo.IncrementScoreAsync(userId, track, monthlyKey, amount, ct);
-            await _lbRepo.IncrementScoreAsync(userId, track, "all", amount, ct);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "[Gamification] Lỗi khi cập nhật bảng xếp hạng cho User {UserId}", userId);
-            // Không throw lại để không làm fail luồng tài chính chính vì lỗi side-effect leaderboard.
-        }
-    }
 }

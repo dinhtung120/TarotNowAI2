@@ -20,7 +20,6 @@ public class SendMessageCommandHandlerTests
     private readonly Mock<IReaderProfileRepository> _mockReaderProfileRepo;
     private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
     private readonly Mock<IUploadSessionRepository> _mockUploadSessionRepository;
-    private readonly Mock<IWalletPushService> _mockWalletPushService;
     private readonly Mock<IDomainEventPublisher> _mockDomainEventPublisher;
     private readonly SendMessageCommandHandler _handler;
 
@@ -36,7 +35,6 @@ public class SendMessageCommandHandlerTests
         _mockReaderProfileRepo = new Mock<IReaderProfileRepository>();
         _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
         _mockUploadSessionRepository = new Mock<IUploadSessionRepository>();
-        _mockWalletPushService = new Mock<IWalletPushService>();
         _mockDomainEventPublisher = new Mock<IDomainEventPublisher>();
 
         _mockTransactionCoordinator
@@ -51,7 +49,6 @@ public class SendMessageCommandHandlerTests
             _mockReaderProfileRepo.Object,
             _mockTransactionCoordinator.Object,
             _mockUploadSessionRepository.Object,
-            _mockWalletPushService.Object,
             _mockDomainEventPublisher.Object);
     }
 

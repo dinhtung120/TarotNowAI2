@@ -1,17 +1,19 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MediatR;
 using Microsoft.Extensions.Logging;
-using TarotNow.Application.DomainEvents.Notifications;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.DomainEvents.Handlers;
 
 /// <summary>
 /// Gửi email cho reader khi có yêu cầu tư vấn mới cần duyệt.
 /// </summary>
-public sealed class ChatOfferReceivedEmailNotificationHandler : INotificationHandler<ChatOfferReceivedNotification>
+public sealed class ChatOfferReceivedEmailNotificationHandler
+    : IdempotentDomainEventNotificationHandler<ChatOfferReceivedDomainEvent>
 {
     private readonly IUserRepository _userRepository;
     private readonly IEmailSender _emailSender;
@@ -24,7 +26,9 @@ public sealed class ChatOfferReceivedEmailNotificationHandler : INotificationHan
     public ChatOfferReceivedEmailNotificationHandler(
         IUserRepository userRepository,
         IEmailSender emailSender,
-        ILogger<ChatOfferReceivedEmailNotificationHandler> logger)
+        ILogger<ChatOfferReceivedEmailNotificationHandler> logger,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _userRepository = userRepository;
         _emailSender = emailSender;
@@ -35,9 +39,11 @@ public sealed class ChatOfferReceivedEmailNotificationHandler : INotificationHan
     /// Xử lý sự kiện nhận thông điệp đầu tiên từ User và gửi email cho Reader tương ứng.
     /// Luồng xử lý: tải dữ liệu User và Reader; dựng nội dung nhắc nhở thời hạn trả lời (SLA) và gửi qua kênh email.
     /// </summary>
-    public async Task Handle(ChatOfferReceivedNotification notification, CancellationToken cancellationToken)
+    protected override async Task HandleDomainEventAsync(
+        ChatOfferReceivedDomainEvent ev,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
     {
-        var ev = notification.DomainEvent;
         var reader = await _userRepository.GetByIdAsync(ev.ReaderId, cancellationToken);
         var user = await _userRepository.GetByIdAsync(ev.UserId, cancellationToken);
 
@@ -57,15 +63,7 @@ public sealed class ChatOfferReceivedEmailNotificationHandler : INotificationHan
             <p>Trân trọng cảm ơn,</p>
             """;
 
-        try
-        {
-            await _emailSender.SendEmailAsync(reader.Email, subject, body, cancellationToken);
-            _logger.LogInformation("[ChatOfferReceivedEmail] Đã gửi thông báo cho Reader {Email}", reader.Email);
-        }
-        catch (Exception ex)
-        {
-            // Bắt và log lỗi để khoanh vùng sự cố email mà không làm đổ vỡ Flow Event của MediatR
-            _logger.LogError(ex, "[ChatOfferReceivedEmail] Lỗi khi báo cho Reader {Email}", reader.Email);
-        }
+        await _emailSender.SendEmailAsync(reader.Email, subject, body, cancellationToken);
+        _logger.LogInformation("[ChatOfferReceivedEmail] Đã gửi thông báo cho Reader {Email}", reader.Email);
     }
 }

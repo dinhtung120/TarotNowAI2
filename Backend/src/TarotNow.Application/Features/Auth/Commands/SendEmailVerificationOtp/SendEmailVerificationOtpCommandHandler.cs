@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Auth.Commands.SendEmailVerificationOtp;
 
@@ -11,7 +12,8 @@ public class SendEmailVerificationOtpCommandHandler : IRequestHandler<SendEmailV
 {
     private readonly IUserRepository _userRepository;
     private readonly IEmailOtpRepository _emailOtpRepository;
-    private readonly IEmailSender _emailSender;
+    private readonly IDomainEventPublisher _domainEventPublisher;
+    private readonly ITransactionCoordinator _transactionCoordinator;
 
     /// <summary>
     /// Khởi tạo handler gửi OTP verify email.
@@ -20,11 +22,13 @@ public class SendEmailVerificationOtpCommandHandler : IRequestHandler<SendEmailV
     public SendEmailVerificationOtpCommandHandler(
         IUserRepository userRepository,
         IEmailOtpRepository emailOtpRepository,
-        IEmailSender emailSender)
+        IDomainEventPublisher domainEventPublisher,
+        ITransactionCoordinator transactionCoordinator)
     {
         _userRepository = userRepository;
         _emailOtpRepository = emailOtpRepository;
-        _emailSender = emailSender;
+        _domainEventPublisher = domainEventPublisher;
+        _transactionCoordinator = transactionCoordinator;
     }
 
     /// <summary>
@@ -55,12 +59,26 @@ public class SendEmailVerificationOtpCommandHandler : IRequestHandler<SendEmailV
             type: OtpType.VerifyEmail,
             expiryMinutes: 15);
 
-        // Persist OTP trước để đảm bảo mã gửi đi luôn có bản ghi hợp lệ.
-        await _emailOtpRepository.AddAsync(otpEntity, cancellationToken);
-
         var subject = "TarotNow - Validate your target email address";
         var body = $"Hello {user.Username},\n\nYour Verification Code is: {otpCode}\n\nThis code will expire in 15 minutes. Please do not share this code.";
-        await _emailSender.SendEmailAsync(user.Email, subject, body, cancellationToken);
+        await _transactionCoordinator.ExecuteAsync(
+            async transactionCt =>
+            {
+                // Persist OTP trước để đảm bảo mã gửi đi luôn có bản ghi hợp lệ.
+                await _emailOtpRepository.AddAsync(otpEntity, transactionCt);
+
+                await _domainEventPublisher.PublishAsync(
+                    new EmailOtpIssuedDomainEvent
+                    {
+                        UserId = user.Id,
+                        Email = user.Email,
+                        Subject = subject,
+                        Body = body,
+                        Purpose = OtpType.VerifyEmail
+                    },
+                    transactionCt);
+            },
+            cancellationToken);
 
         return true;
     }

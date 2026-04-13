@@ -6,8 +6,8 @@ namespace TarotNow.Application.Interfaces;
 public interface IDomainEventPublisher
 {
     /// <summary>
-    /// Phát một domain event ra pipeline xử lý để kích hoạt các side-effect liên quan.
-    /// Luồng xử lý: nhận event đã phát sinh từ domain và dispatch tới các handler đăng ký.
+    /// Ghi một domain event vào transactional outbox để xử lý bất đồng bộ.
+    /// Luồng xử lý: yêu cầu transaction đang mở để business write và outbox enqueue được commit atomically.
     /// </summary>
     Task PublishAsync(IDomainEvent domainEvent, CancellationToken cancellationToken = default);
 }

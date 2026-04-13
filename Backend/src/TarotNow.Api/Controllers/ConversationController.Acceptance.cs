@@ -12,7 +12,7 @@ public partial class ConversationController
 {
     /// <summary>
     /// Reader chấp nhận hội thoại chờ xử lý.
-    /// Luồng xử lý: xác thực reader, gửi command accept, broadcast cập nhật trạng thái.
+    /// Luồng xử lý: xác thực reader, gửi command accept.
     /// </summary>
     /// <param name="id">Id hội thoại cần chấp nhận.</param>
     /// <returns>Kết quả accept conversation hoặc unauthorized khi thiếu reader id.</returns>
@@ -34,13 +34,12 @@ public partial class ConversationController
             ReaderId = readerId
         });
 
-        await TryBroadcastConversationUpdatedAsync(id, "accepted");
         return Ok(result);
     }
 
     /// <summary>
     /// Reader từ chối hội thoại chờ xử lý.
-    /// Luồng xử lý: xác thực reader, gửi command reject kèm lý do, broadcast trạng thái mới.
+    /// Luồng xử lý: xác thực reader, gửi command reject kèm lý do.
     /// </summary>
     /// <param name="id">Id hội thoại cần từ chối.</param>
     /// <param name="body">Payload lý do từ chối.</param>
@@ -63,7 +62,6 @@ public partial class ConversationController
             Reason = body.Reason
         });
 
-        await TryBroadcastConversationUpdatedAsync(id, "rejected");
         return Ok(result);
     }
 }

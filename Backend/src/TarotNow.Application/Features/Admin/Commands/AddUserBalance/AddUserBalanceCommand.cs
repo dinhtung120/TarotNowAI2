@@ -38,15 +38,20 @@ public class AddUserBalanceCommandHandler : IRequestHandler<AddUserBalanceComman
 
     private readonly IWalletRepository _walletRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler cộng số dư cho admin.
     /// Luồng xử lý: nhận repository user để kiểm tra tồn tại và wallet repository để thực thi credit.
     /// </summary>
-    public AddUserBalanceCommandHandler(IWalletRepository walletRepository, IUserRepository userRepository)
+    public AddUserBalanceCommandHandler(
+        IWalletRepository walletRepository,
+        IUserRepository userRepository,
+        IDomainEventPublisher domainEventPublisher)
     {
         _walletRepository = walletRepository;
         _userRepository = userRepository;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>
@@ -67,6 +72,17 @@ public class AddUserBalanceCommandHandler : IRequestHandler<AddUserBalanceComman
 
         // Chỉ thực thi credit khi toàn bộ rule đầu vào hợp lệ để tránh side-effect không mong muốn.
         await CreditUserAsync(request, normalizedCurrency, idempotencyKey, cancellationToken);
+        await _domainEventPublisher.PublishAsync(
+            new Domain.Events.MoneyChangedDomainEvent
+            {
+                UserId = request.UserId,
+                Currency = normalizedCurrency,
+                ChangeType = TransactionType.AdminTopup,
+                DeltaAmount = request.Amount,
+                ReferenceId = idempotencyKey
+            },
+            cancellationToken);
+
         return true;
     }
 

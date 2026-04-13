@@ -66,10 +66,5 @@ public partial class WalletRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
         // Persist mutation và ledger trong cùng transaction để đảm bảo tính toàn vẹn tài chính.
 
-        if (request.TransactionType == TransactionType.EscrowRelease)
-        {
-            await TrackSpendingToLeaderboardAsync(request.UserId, CurrencyType.Diamond, request.Amount, cancellationToken);
-            // Chỉ release được xem là chi tiêu thực tế, refund/freeze không cộng leaderboard.
-        }
     }
 }

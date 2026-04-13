@@ -1,103 +1,86 @@
-using MediatR;
-using System.Threading;
-using System.Threading.Tasks;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Gamification.EventHandlers;
 
-// Notification bọc domain event khi quest hoàn thành.
-public class QuestCompletedNotification : INotification
-{
-    // Domain event quest completed gốc.
-    public QuestCompletedDomainEvent DomainEvent { get; }
-
-    /// <summary>
-    /// Khởi tạo notification quest completed.
-    /// Luồng xử lý: gói domain event vào notification để MediatR dispatch.
-    /// </summary>
-    public QuestCompletedNotification(QuestCompletedDomainEvent domainEvent) => DomainEvent = domainEvent;
-}
-
-// Notification bọc domain event khi achievement được mở khóa.
-public class AchievementUnlockedNotification : INotification
-{
-    // Domain event achievement unlocked gốc.
-    public AchievementUnlockedDomainEvent DomainEvent { get; }
-
-    /// <summary>
-    /// Khởi tạo notification achievement unlocked.
-    /// Luồng xử lý: gói domain event vào notification để MediatR dispatch.
-    /// </summary>
-    public AchievementUnlockedNotification(AchievementUnlockedDomainEvent domainEvent) => DomainEvent = domainEvent;
-}
-
 // Handler push thông báo khi quest hoàn thành.
-public class QuestCompletedDomainEventHandler : INotificationHandler<QuestCompletedNotification>
+public class QuestCompletedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<QuestCompletedDomainEvent>
 {
     private readonly IGamificationPushService _pushService;
 
     /// <summary>
-    /// Khởi tạo handler quest completed notification.
-    /// Luồng xử lý: nhận push service để gửi realtime/in-app notification.
+    /// Khởi tạo handler quest completed domain event.
     /// </summary>
-    public QuestCompletedDomainEventHandler(IGamificationPushService pushService)
+    public QuestCompletedDomainEventHandler(
+        IGamificationPushService pushService,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _pushService = pushService;
     }
 
     /// <summary>
-    /// Xử lý notification quest completed.
-    /// Luồng xử lý: dựng summary phần thưởng rồi push thông báo hoàn thành quest cho user.
+    /// Xử lý domain event quest completed.
     /// </summary>
-    public async Task Handle(QuestCompletedNotification notification, CancellationToken cancellationToken)
+    protected override async Task HandleDomainEventAsync(
+        QuestCompletedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
     {
-        string summary = $"{notification.DomainEvent.RewardAmount} {notification.DomainEvent.RewardType}";
-        await _pushService.PushQuestCompletedAsync(notification.DomainEvent.UserId, notification.DomainEvent.QuestCode, summary, cancellationToken);
+        var summary = $"{domainEvent.RewardAmount} {domainEvent.RewardType}";
+        await _pushService.PushQuestCompletedAsync(domainEvent.UserId, domainEvent.QuestCode, summary, cancellationToken);
     }
 }
 
 // Handler xử lý khi achievement được mở khóa.
-public class AchievementUnlockedDomainEventHandler : INotificationHandler<AchievementUnlockedNotification>
+public class AchievementUnlockedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<AchievementUnlockedDomainEvent>
 {
     private readonly IGamificationPushService _pushService;
-    private readonly IAchievementRepository _achRepo;
-    private readonly ITitleRepository _titleRepo;
+    private readonly IAchievementRepository _achievementRepository;
+    private readonly ITitleRepository _titleRepository;
 
     /// <summary>
-    /// Khởi tạo handler achievement unlocked notification.
-    /// Luồng xử lý: nhận push service và repository achievement/title để cấp title thưởng và đẩy thông báo.
+    /// Khởi tạo handler achievement unlocked domain event.
     /// </summary>
     public AchievementUnlockedDomainEventHandler(
         IGamificationPushService pushService,
-        IAchievementRepository achRepo,
-        ITitleRepository titleRepo)
+        IAchievementRepository achievementRepository,
+        ITitleRepository titleRepository,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _pushService = pushService;
-        _achRepo = achRepo;
-        _titleRepo = titleRepo;
+        _achievementRepository = achievementRepository;
+        _titleRepository = titleRepository;
     }
 
     /// <summary>
-    /// Xử lý notification achievement unlocked.
-    /// Luồng xử lý: tải định nghĩa achievement, cấp title nếu có GrantsTitleCode, rồi push thông báo mở khóa achievement.
+    /// Xử lý domain event achievement unlocked.
     /// </summary>
-    public async Task Handle(AchievementUnlockedNotification notification, CancellationToken cancellationToken)
+    protected override async Task HandleDomainEventAsync(
+        AchievementUnlockedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
     {
-        var ev = notification.DomainEvent;
-        var def = await _achRepo.GetByCodeAsync(ev.AchievementCode, cancellationToken);
-        if (def == null)
+        var definition = await _achievementRepository.GetByCodeAsync(domainEvent.AchievementCode, cancellationToken);
+        if (definition == null)
         {
-            // Edge case: không còn định nghĩa achievement tương ứng.
             return;
         }
 
-        if (!string.IsNullOrEmpty(def.GrantsTitleCode))
+        if (string.IsNullOrWhiteSpace(definition.GrantsTitleCode) == false)
         {
-            // Cấp title thưởng đi kèm achievement nếu cấu hình có.
-            await _titleRepo.GrantTitleAsync(ev.UserId, def.GrantsTitleCode, cancellationToken);
+            await _titleRepository.GrantTitleAsync(domainEvent.UserId, definition.GrantsTitleCode, cancellationToken);
         }
 
-        await _pushService.PushAchievementUnlockedAsync(ev.UserId, ev.AchievementCode, def.GrantsTitleCode, cancellationToken);
+        await _pushService.PushAchievementUnlockedAsync(
+            domainEvent.UserId,
+            domainEvent.AchievementCode,
+            definition.GrantsTitleCode,
+            cancellationToken);
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Common.Realtime;
 using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Infrastructure.Services;
@@ -8,16 +9,16 @@ namespace TarotNow.Infrastructure.Services;
 // Service đẩy sự kiện gamification ra kênh notification realtime.
 public class GamificationPushService : IGamificationPushService
 {
-    // Cổng push event dùng chung cho nhiều loại thông báo hệ thống.
-    private readonly INotificationPushService _pushService;
+    // Redis publisher dùng để phát realtime event theo chuẩn hybrid.
+    private readonly IRedisPublisher _redisPublisher;
 
     /// <summary>
     /// Khởi tạo service push gamification.
     /// Luồng inject abstraction giúp thay backend push mà không đổi logic nghiệp vụ.
     /// </summary>
-    public GamificationPushService(INotificationPushService pushService)
+    public GamificationPushService(IRedisPublisher redisPublisher)
     {
-        _pushService = pushService;
+        _redisPublisher = redisPublisher;
     }
 
     /// <summary>
@@ -26,10 +27,10 @@ public class GamificationPushService : IGamificationPushService
     /// </summary>
     public async Task PushQuestCompletedAsync(Guid userId, string questCode, string rewardSummary, CancellationToken ct)
     {
-        await _pushService.SendEventAsync(
-            userId.ToString(),
+        await _redisPublisher.PublishAsync(
+            RealtimeChannelNames.Gamification,
             "gamification.quest_completed",
-            new { questCode, rewardSummary },
+            new { userId = userId.ToString(), questCode, rewardSummary },
             ct);
     }
 
@@ -39,10 +40,10 @@ public class GamificationPushService : IGamificationPushService
     /// </summary>
     public async Task PushAchievementUnlockedAsync(Guid userId, string achievementCode, string? grantedTitle, CancellationToken ct)
     {
-        await _pushService.SendEventAsync(
-            userId.ToString(),
+        await _redisPublisher.PublishAsync(
+            RealtimeChannelNames.Gamification,
             "gamification.achievement_unlocked",
-            new { achievementCode, grantedTitle },
+            new { userId = userId.ToString(), achievementCode, grantedTitle },
             ct);
     }
 
@@ -52,10 +53,17 @@ public class GamificationPushService : IGamificationPushService
     /// </summary>
     public async Task PushCardLevelUpAsync(CardLevelUpPushPayload payload, CancellationToken ct)
     {
-        await _pushService.SendEventAsync(
-            payload.UserId.ToString(),
+        await _redisPublisher.PublishAsync(
+            RealtimeChannelNames.Gamification,
             "gamification.card_level_up",
-            new { payload.CardId, payload.NewLevel, payload.AtkBonus, payload.DefBonus },
+            new
+            {
+                userId = payload.UserId.ToString(),
+                payload.CardId,
+                payload.NewLevel,
+                payload.AtkBonus,
+                payload.DefBonus
+            },
             ct);
     }
 }

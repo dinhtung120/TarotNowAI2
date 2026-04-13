@@ -69,9 +69,5 @@ public partial class ChatHub
         var groupKey = ConversationGroup(conversationId);
         // Phát sự kiện message.read để các client đồng bộ trạng thái đã đọc theo thời gian thực.
         await Clients.Group(groupKey).SendAsync("message.read", payload);
-        await BroadcastConversationUpdatedToParticipantsAsync(
-            conversationId,
-            "message_read",
-            DateTime.UtcNow);
     }
 }

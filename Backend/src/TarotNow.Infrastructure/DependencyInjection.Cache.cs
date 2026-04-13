@@ -1,8 +1,10 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using TarotNow.Application.Interfaces;
 using TarotNow.Infrastructure.BackgroundJobs;
+using TarotNow.Infrastructure.Messaging.Redis;
 using TarotNow.Infrastructure.Services;
 
 namespace TarotNow.Infrastructure;
@@ -45,6 +47,18 @@ public static partial class DependencyInjection
             services.AddDistributedMemoryCache();
             // Fallback: vẫn chạy được nhưng nhất quán kém hơn trong môi trường nhiều node.
         }
+
+        services.AddSingleton<IRedisPublisher>(serviceProvider =>
+        {
+            var multiplexer = serviceProvider.GetService<IConnectionMultiplexer>();
+            if (multiplexer == null)
+            {
+                return new NoOpRedisPublisher();
+            }
+
+            var logger = serviceProvider.GetRequiredService<ILogger<RedisPublisher>>();
+            return new RedisPublisher(multiplexer, logger);
+        });
 
         services.AddSingleton(new CacheBackendState(usesRedisCache));
         services.AddHostedService<CacheBackendStartupLogger>();

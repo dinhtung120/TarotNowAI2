@@ -1,68 +1,62 @@
-using MediatR;
-using TarotNow.Application.DomainEvents.Notifications;
+using System.Text.Json;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Events;
+using TarotNow.Infrastructure.Persistence;
+using TarotNow.Infrastructure.Persistence.Outbox;
 
 namespace TarotNow.Infrastructure.Services;
 
-// Publisher chuyển DomainEvent sang MediatR notification để phát đi toàn hệ thống.
+/// <summary>
+/// Publisher ghi domain event vào transactional outbox trên PostgreSQL.
+/// </summary>
 public sealed class MediatRDomainEventPublisher : IDomainEventPublisher
 {
-    // Bản đồ ánh xạ từng loại domain event sang notification tương ứng.
-    private static readonly IReadOnlyDictionary<Type, Func<IDomainEvent, INotification>> NotificationFactories =
-        new Dictionary<Type, Func<IDomainEvent, INotification>>
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+    private readonly ApplicationDbContext _dbContext;
+
+    /// <summary>
+    /// Khởi tạo outbox domain event publisher.
+    /// </summary>
+    public MediatRDomainEventPublisher(ApplicationDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
+    /// <summary>
+    /// Ghi domain event vào outbox trong cùng DbContext transaction.
+    /// </summary>
+    public async Task PublishAsync(IDomainEvent domainEvent, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(domainEvent);
+        if (_dbContext.Database.CurrentTransaction == null)
         {
-            [typeof(EscrowReleasedDomainEvent)] = domainEvent =>
-                new EscrowReleasedNotification((EscrowReleasedDomainEvent)domainEvent),
-            [typeof(EscrowRefundedDomainEvent)] = domainEvent =>
-                new EscrowRefundedNotification((EscrowRefundedDomainEvent)domainEvent),
-            [typeof(ReadingBillingCompletedDomainEvent)] = domainEvent =>
-                new ReadingBillingCompletedNotification((ReadingBillingCompletedDomainEvent)domainEvent),
-            [typeof(ConversationUpdatedDomainEvent)] = domainEvent =>
-                new ConversationUpdatedNotification((ConversationUpdatedDomainEvent)domainEvent),
-            [typeof(SubscriptionActivatedDomainEvent)] = domainEvent =>
-                new SubscriptionActivatedNotification((SubscriptionActivatedDomainEvent)domainEvent),
-            [typeof(SubscriptionExpiredDomainEvent)] = domainEvent =>
-                new SubscriptionExpiredNotification((SubscriptionExpiredDomainEvent)domainEvent),
-            [typeof(EntitlementConsumedDomainEvent)] = domainEvent =>
-                new EntitlementConsumedNotification((EntitlementConsumedDomainEvent)domainEvent),
-            [typeof(ChatOfferReceivedDomainEvent)] = domainEvent =>
-                new ChatOfferReceivedNotification((ChatOfferReceivedDomainEvent)domainEvent)
+            throw new InvalidOperationException(
+                "Domain events must be published inside an active transaction to guarantee atomic outbox writes.");
+        }
+
+        var eventType = domainEvent.GetType().FullName;
+        if (string.IsNullOrWhiteSpace(eventType))
+        {
+            throw new InvalidOperationException($"Cannot resolve event type name for {domainEvent.GetType().Name}.");
+        }
+
+        var now = DateTime.UtcNow;
+        var outboxMessage = new OutboxMessage
+        {
+            Id = Guid.NewGuid(),
+            EventType = eventType,
+            PayloadJson = JsonSerializer.Serialize(domainEvent, domainEvent.GetType(), JsonOptions),
+            OccurredAtUtc = domainEvent.OccurredAtUtc,
+            Status = OutboxMessageStatus.Pending,
+            AttemptCount = 0,
+            NextAttemptAtUtc = now,
+            CreatedAtUtc = now,
+            LockedAtUtc = null,
+            LockOwner = null
         };
 
-    // Mediator dùng để dispatch notification đến các handler đã đăng ký.
-    private readonly IMediator _mediator;
-
-    /// <summary>
-    /// Khởi tạo publisher với mediator của ứng dụng.
-    /// Luồng này tách trách nhiệm publish event khỏi logic nghiệp vụ domain.
-    /// </summary>
-    public MediatRDomainEventPublisher(IMediator mediator)
-    {
-        _mediator = mediator;
-    }
-
-    /// <summary>
-    /// Publish domain event nếu có mapping notification phù hợp.
-    /// Luồng bỏ qua event chưa map để tránh ném lỗi không cần thiết trong runtime.
-    /// </summary>
-    public Task PublishAsync(IDomainEvent domainEvent, CancellationToken cancellationToken = default)
-    {
-        var notification = MapNotification(domainEvent);
-        return notification == null
-            // Event chưa đăng ký mapping thì coi như no-op có chủ đích.
-            ? Task.CompletedTask
-            : _mediator.Publish(notification, cancellationToken);
-    }
-
-    /// <summary>
-    /// Ánh xạ domain event sang notification cụ thể.
-    /// Luồng lookup dictionary giúp mở rộng mapping dễ và hạn chế switch cồng kềnh.
-    /// </summary>
-    private static INotification? MapNotification(IDomainEvent domainEvent)
-    {
-        return NotificationFactories.TryGetValue(domainEvent.GetType(), out var factory)
-            ? factory(domainEvent)
-            : null;
+        _dbContext.OutboxMessages.Add(outboxMessage);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

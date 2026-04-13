@@ -37,8 +37,6 @@ public partial class WalletRepository
                 _dbContext.Set<WalletTransaction>().AddRange(entries.PayerEntry, entries.ReceiverEntry);
                 await _dbContext.SaveChangesAsync(cancellationToken);
                 // Ghi đồng thời cả hai ledger entries để đảm bảo cân bằng bút toán.
-
-                await TrackSpendingToLeaderboardAsync(request.PayerId, CurrencyType.Diamond, request.Amount, cancellationToken);
             }, cancellationToken);
         }
         catch (DbUpdateException exception) when (IsIdempotencyUniqueViolation(exception, normalizedIdempotencyKey))

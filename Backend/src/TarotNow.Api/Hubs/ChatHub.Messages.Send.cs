@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.SignalR;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Chat.Commands.SendMessage;
 
@@ -27,7 +26,7 @@ public partial class ChatHub
 
     /// <summary>
     /// Thực thi nghiệp vụ gửi message và các side effects realtime.
-    /// Luồng xử lý: dựng command, gắn payload đặc biệt, gửi message, broadcast event, queue moderation.
+    /// Luồng xử lý: dựng command, gắn payload đặc biệt, gửi message và queue moderation.
     /// </summary>
     /// <param name="conversationId">Id conversation đích.</param>
     /// <param name="content">Nội dung message.</param>
@@ -46,15 +45,6 @@ public partial class ChatHub
             TryAttachSpecialPayload(command, content);
 
             var message = await _mediator.Send(command);
-            var groupKey = ConversationGroup(conversationId);
-
-            // Broadcast message.created cho mọi connection trong conversation.
-            await Clients.Group(groupKey).SendAsync("message.created", message);
-            await BroadcastConversationUpdatedToParticipantsAsync(
-                conversationId,
-                "message_created",
-                message.CreatedAt);
-
             await TryQueueModerationAsync(message);
         }
         catch (BadRequestException ex)

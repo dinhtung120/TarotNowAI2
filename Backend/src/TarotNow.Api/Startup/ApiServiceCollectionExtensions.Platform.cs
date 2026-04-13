@@ -47,9 +47,18 @@ public static partial class ApiServiceCollectionExtensions
             return new InMemoryUserPresenceTracker();
         });
         services.AddHostedService<PresenceTimeoutBackgroundService>();
-        services.AddScoped<Application.Interfaces.INotificationPushService, SignalRNotificationPushService>();
-        services.AddScoped<Application.Interfaces.IWalletPushService, SignalRWalletPushService>();
-        services.AddScoped<Application.Interfaces.IChatPushService, SignalRChatPushService>();
+        services.AddSingleton<IRealtimeBridgeSource>(serviceProvider =>
+        {
+            var multiplexer = serviceProvider.GetService<StackExchange.Redis.IConnectionMultiplexer>();
+            if (multiplexer is null)
+            {
+                return new NoOpRealtimeBridgeSource();
+            }
+
+            var logger = serviceProvider.GetRequiredService<ILogger<RedisRealtimeBridgeSource>>();
+            return new RedisRealtimeBridgeSource(multiplexer, logger);
+        });
+        services.AddHostedService<RedisRealtimeSignalRBridgeService>();
         services.AddAuthorization(options =>
         {
             // Định nghĩa policy tập trung để controller tái sử dụng và tránh lệch rule quyền.

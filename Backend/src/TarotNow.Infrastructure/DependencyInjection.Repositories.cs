@@ -1,7 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using TarotNow.Application.Interfaces;
 using TarotNow.Infrastructure.BackgroundJobs;
+using TarotNow.Infrastructure.BackgroundJobs.Outbox;
 using TarotNow.Infrastructure.Persistence;
+using TarotNow.Infrastructure.Persistence.Outbox;
 using TarotNow.Infrastructure.Persistence.Repositories;
 using TarotNow.Infrastructure.Repositories;
 using TarotNow.Infrastructure.Services;
@@ -45,6 +47,8 @@ public static partial class DependencyInjection
         services.AddScoped<IDepositPromotionRepository, DepositPromotionRepository>();
         services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
         services.AddScoped<ITransactionCoordinator, TransactionCoordinator>();
+        services.AddScoped<IOutboxMonitoringRepository, OutboxMonitoringRepository>();
+        services.AddScoped<IOutboxBatchProcessor, OutboxBatchProcessor>();
     }
 
     /// <summary>
@@ -121,5 +125,6 @@ public static partial class DependencyInjection
         services.AddHostedService<EntitlementDailyResetJob>();
         services.AddHostedService<SubscriptionExpiryJob>();
         services.AddHostedService<MediaUploadCleanupJob>();
+        services.AddHostedService<OutboxProcessorWorker>();
     }
 }

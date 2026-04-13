@@ -77,6 +77,12 @@ export function usePresenceConnection() {
     logger.info('[PresenceRealtimeSync]', 'gamification.card_level_up received');
     void queryClient.invalidateQueries({ queryKey: ['collection'] });
    });
+   hubConnection.on('gacha.result', () => {
+    logger.info('[PresenceRealtimeSync]', 'gacha.result received');
+    void queryClient.invalidateQueries({ queryKey: ['gacha', 'history'] });
+    void queryClient.invalidateQueries({ queryKey: ['collection'] });
+    void useWalletStore.getState().fetchBalance();
+   });
    hubConnection.on('Error', (error: string) => {
     logger.error('[PresenceRealtimeSync] hub error', error);
    });

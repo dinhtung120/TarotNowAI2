@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TarotNow.Application.Common;
-using TarotNow.Application.Helpers;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 
@@ -80,12 +79,6 @@ public partial class WalletRepository
         _dbContext.Set<WalletTransaction>().Add(ledgerEntry);
         await _dbContext.SaveChangesAsync(cancellationToken);
         // Lưu ledger cùng transaction để bảo đảm audit trail luôn đồng bộ với số dư.
-
-        if (request.IsDebit)
-        {
-            await TrackSpendingToLeaderboardAsync(request.UserId, request.Currency, request.Amount, cancellationToken);
-            // Chỉ debit được tính là spending cho bảng xếp hạng chi tiêu.
-        }
 
         return false;
     }

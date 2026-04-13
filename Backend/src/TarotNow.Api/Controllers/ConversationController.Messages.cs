@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.AspNetCore.SignalR;
 using TarotNow.Api.Contracts.Requests;
 using TarotNow.Api.Extensions;
 using TarotNow.Application.Common;
@@ -46,7 +45,7 @@ public partial class ConversationController
 
     /// <summary>
     /// Gửi tin nhắn mới vào hội thoại.
-    /// Luồng xử lý: xác thực sender, gửi command tạo message, broadcast realtime và xếp hàng moderation.
+    /// Luồng xử lý: xác thực sender, gửi command tạo message và xếp hàng moderation.
     /// </summary>
     /// <param name="id">Id hội thoại đích.</param>
     /// <param name="body">Payload tin nhắn gửi lên.</param>
@@ -71,36 +70,9 @@ public partial class ConversationController
             MediaPayload = body.MediaPayload
         });
 
-        // Broadcast message mới để cập nhật UI realtime cho các participant.
-        await TryBroadcastMessageCreatedAsync(id, result);
-        // Broadcast conversation.updated để danh sách inbox đồng bộ preview/message state.
-        await TryBroadcastConversationUpdatedAsync(id, "message_created");
         // Đưa moderation vào hàng đợi không chặn đường đi chính của gửi tin nhắn.
         await TryQueueModerationAsync(result);
         return Ok(result);
-    }
-
-    /// <summary>
-    /// Thử broadcast sự kiện tạo message mới qua SignalR.
-    /// </summary>
-    /// <param name="conversationId">Id hội thoại.</param>
-    /// <param name="message">Tin nhắn vừa tạo.</param>
-    private async Task TryBroadcastMessageCreatedAsync(string conversationId, ChatMessageDto message)
-    {
-        if (string.IsNullOrWhiteSpace(conversationId))
-        {
-            // Edge case id rỗng: bỏ qua broadcast để tránh gửi event không định danh.
-            return;
-        }
-
-        try
-        {
-            await ChatHubContext.Clients.Group(ConversationGroup(conversationId)).SendAsync("message.created", message);
-        }
-        catch
-        {
-            // Broadcast lỗi không được làm hỏng API gửi tin nhắn nên được nuốt có chủ đích.
-        }
     }
 
     /// <summary>

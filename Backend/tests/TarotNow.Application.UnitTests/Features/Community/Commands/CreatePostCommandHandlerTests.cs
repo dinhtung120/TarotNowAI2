@@ -7,6 +7,7 @@ using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Community.Commands.CreatePost;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Community.Commands;
@@ -18,8 +19,8 @@ public class CreatePostCommandHandlerTests
     private readonly Mock<ICommunityPostRepository> _postRepoMock;
     // Mock user repo để kiểm tra tác giả tồn tại.
     private readonly Mock<IUserRepository> _userRepoMock;
-    // Mock gamification service để kiểm tra side-effect cộng điểm.
-    private readonly Mock<IGamificationService> _gamificationServiceMock;
+    // Mock domain event publisher để kiểm tra enqueue outbox events.
+    private readonly Mock<IDomainEventPublisher> _domainEventPublisherMock;
     // Mock media attachment service để map ảnh markdown theo context draft.
     private readonly Mock<ICommunityMediaAttachmentService> _communityMediaAttachmentServiceMock;
     // Handler cần kiểm thử.
@@ -33,11 +34,8 @@ public class CreatePostCommandHandlerTests
     {
         _postRepoMock = new Mock<ICommunityPostRepository>();
         _userRepoMock = new Mock<IUserRepository>();
-        _gamificationServiceMock = new Mock<IGamificationService>();
+        _domainEventPublisherMock = new Mock<IDomainEventPublisher>();
         _communityMediaAttachmentServiceMock = new Mock<ICommunityMediaAttachmentService>();
-        _gamificationServiceMock
-            .Setup(x => x.OnPostCreatedAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
         _communityMediaAttachmentServiceMock
             .Setup(x => x.AttachForNewEntityAsync(
                 It.IsAny<Guid>(),
@@ -51,12 +49,12 @@ public class CreatePostCommandHandlerTests
         _handler = new CreatePostCommandHandler(
             _postRepoMock.Object,
             _userRepoMock.Object,
-            _gamificationServiceMock.Object,
+            _domainEventPublisherMock.Object,
             _communityMediaAttachmentServiceMock.Object);
     }
 
     /// <summary>
-    /// Xác nhận request hợp lệ sẽ tạo post thành công và gọi gamification.
+    /// Xác nhận request hợp lệ sẽ tạo post thành công và publish domain event.
     /// Luồng kiểm tra dữ liệu post đầu ra được map đúng từ request + user.
     /// </summary>
     [Fact]
@@ -88,7 +86,11 @@ public class CreatePostCommandHandlerTests
         result.AuthorDisplayName.Should().Be("Alice");
         result.Content.Should().Be("Hello World!");
         result.Visibility.Should().Be(PostVisibility.Public);
-        _gamificationServiceMock.Verify(x => x.OnPostCreatedAsync(request.AuthorId, It.IsAny<CancellationToken>()), Times.Once);
+        _domainEventPublisherMock.Verify(
+            x => x.PublishAsync(
+                It.Is<CommunityPostCreatedDomainEvent>(e => e.AuthorId == request.AuthorId && e.PostId == "new_id"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
         _communityMediaAttachmentServiceMock.Verify(
             x => x.AttachForNewEntityAsync(
                 request.AuthorId,

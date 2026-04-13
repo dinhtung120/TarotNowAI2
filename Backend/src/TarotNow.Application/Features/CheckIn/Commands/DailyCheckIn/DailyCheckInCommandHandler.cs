@@ -21,7 +21,7 @@ public class DailyCheckInCommandHandler : IRequestHandler<DailyCheckInCommand, D
     private readonly IDailyCheckinRepository _checkinRepository;
     private readonly IWalletRepository _walletRepository;
     private readonly ISystemConfigSettings _settings;
-    private readonly IGamificationService _gamificationService;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler daily check-in.
@@ -32,13 +32,13 @@ public class DailyCheckInCommandHandler : IRequestHandler<DailyCheckInCommand, D
         IDailyCheckinRepository checkinRepository,
         IWalletRepository walletRepository,
         ISystemConfigSettings settings,
-        IGamificationService gamificationService)
+        IDomainEventPublisher domainEventPublisher)
     {
         _userRepository = userRepository;
         _checkinRepository = checkinRepository;
         _walletRepository = walletRepository;
         _settings = settings;
-        _gamificationService = gamificationService;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>
@@ -66,7 +66,15 @@ public class DailyCheckInCommandHandler : IRequestHandler<DailyCheckInCommand, D
         // Luồng check-in thành công: cộng vàng, ghi bản ghi check-in và kích hoạt gamification.
         await CreditCheckInRewardAsync(user.Id, todayString, goldAmount, cancellationToken);
         await _checkinRepository.InsertAsync(user.Id.ToString(), todayString, goldAmount, cancellationToken);
-        await _gamificationService.OnCheckInAsync(user.Id, user.CurrentStreak, cancellationToken);
+        await _domainEventPublisher.PublishAsync(
+            new TarotNow.Domain.Events.DailyCheckInCompletedDomainEvent
+            {
+                UserId = user.Id,
+                CurrentStreak = user.CurrentStreak,
+                BusinessDate = todayString,
+                GoldRewarded = goldAmount
+            },
+            cancellationToken);
 
         return BuildCheckedInResult(todayString, user.CurrentStreak, goldAmount);
     }

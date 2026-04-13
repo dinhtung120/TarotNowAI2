@@ -29,7 +29,7 @@ public class CreatePostCommandHandler : IRequestHandler<CreatePostCommand, Commu
 {
     private readonly ICommunityPostRepository _postRepo;
     private readonly IUserRepository _userRepo;
-    private readonly IGamificationService _gamificationService;
+    private readonly IDomainEventPublisher _domainEventPublisher;
     private readonly ICommunityMediaAttachmentService _communityMediaAttachmentService;
 
     /// <summary>
@@ -39,12 +39,12 @@ public class CreatePostCommandHandler : IRequestHandler<CreatePostCommand, Commu
     public CreatePostCommandHandler(
         ICommunityPostRepository postRepo,
         IUserRepository userRepo,
-        IGamificationService gamificationService,
+        IDomainEventPublisher domainEventPublisher,
         ICommunityMediaAttachmentService communityMediaAttachmentService)
     {
         _postRepo = postRepo;
         _userRepo = userRepo;
-        _gamificationService = gamificationService;
+        _domainEventPublisher = domainEventPublisher;
         _communityMediaAttachmentService = communityMediaAttachmentService;
     }
 
@@ -90,8 +90,14 @@ public class CreatePostCommandHandler : IRequestHandler<CreatePostCommand, Commu
         // Lưu post mới trước để đảm bảo có dữ liệu nguồn cho các bước tiếp theo.
         var result = await _postRepo.CreateAsync(newPost, cancellationToken);
 
-        // Cập nhật gamification sau khi tạo post thành công.
-        await _gamificationService.OnPostCreatedAsync(request.AuthorId, cancellationToken);
+        await _domainEventPublisher.PublishAsync(
+            new Domain.Events.CommunityPostCreatedDomainEvent
+            {
+                AuthorId = request.AuthorId,
+                PostId = result.Id
+            },
+            cancellationToken);
+
         await _communityMediaAttachmentService.AttachForNewEntityAsync(
             request.AuthorId,
             "post",

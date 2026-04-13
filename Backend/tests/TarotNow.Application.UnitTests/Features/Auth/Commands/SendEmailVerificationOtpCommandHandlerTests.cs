@@ -5,6 +5,7 @@ using TarotNow.Application.Features.Auth.Commands.SendEmailVerificationOtp;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
@@ -15,8 +16,10 @@ public class SendEmailVerificationOtpCommandHandlerTests
     private readonly Mock<IUserRepository> _userRepositoryMock;
     // Mock OTP repo để xác nhận có/không tạo OTP verify email.
     private readonly Mock<IEmailOtpRepository> _emailOtpRepositoryMock;
-    // Mock email sender để kiểm tra hành vi gửi mail.
-    private readonly Mock<IEmailSender> _emailSenderMock;
+    // Mock domain event publisher để kiểm tra enqueue outbox event.
+    private readonly Mock<IDomainEventPublisher> _domainEventPublisherMock;
+    // Mock transaction coordinator để mô phỏng ranh giới transaction.
+    private readonly Mock<ITransactionCoordinator> _transactionCoordinatorMock;
     // Handler cần kiểm thử.
     private readonly SendEmailVerificationOtpCommandHandler _handler;
 
@@ -28,10 +31,17 @@ public class SendEmailVerificationOtpCommandHandlerTests
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _emailOtpRepositoryMock = new Mock<IEmailOtpRepository>();
-        _emailSenderMock = new Mock<IEmailSender>();
+        _domainEventPublisherMock = new Mock<IDomainEventPublisher>();
+        _transactionCoordinatorMock = new Mock<ITransactionCoordinator>();
+        _transactionCoordinatorMock
+            .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
+            .Returns<Func<CancellationToken, Task>, CancellationToken>((action, ct) => action(ct));
 
         _handler = new SendEmailVerificationOtpCommandHandler(
-            _userRepositoryMock.Object, _emailOtpRepositoryMock.Object, _emailSenderMock.Object
+            _userRepositoryMock.Object,
+            _emailOtpRepositoryMock.Object,
+            _domainEventPublisherMock.Object,
+            _transactionCoordinatorMock.Object
         );
     }
 
@@ -50,6 +60,9 @@ public class SendEmailVerificationOtpCommandHandlerTests
 
         Assert.True(result);
         _emailOtpRepositoryMock.Verify(r => r.AddAsync(It.IsAny<EmailOtp>(), It.IsAny<CancellationToken>()), Times.Never);
+        _domainEventPublisherMock.Verify(
+            r => r.PublishAsync(It.IsAny<EmailOtpIssuedDomainEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     /// <summary>
@@ -70,11 +83,14 @@ public class SendEmailVerificationOtpCommandHandlerTests
 
         Assert.True(result);
         _emailOtpRepositoryMock.Verify(r => r.AddAsync(It.IsAny<EmailOtp>(), It.IsAny<CancellationToken>()), Times.Never);
+        _domainEventPublisherMock.Verify(
+            r => r.PublishAsync(It.IsAny<EmailOtpIssuedDomainEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     /// <summary>
-    /// Xác nhận user pending sẽ được tạo OTP verify email và gửi mail.
-    /// Luồng này đảm bảo side-effect OTP + email thực thi đúng một lần.
+    /// Xác nhận user pending sẽ được tạo OTP verify email và publish domain event gửi mail.
+    /// Luồng này đảm bảo side-effect OTP + outbox event thực thi đúng một lần.
     /// </summary>
     [Fact]
     public async Task Handle_ShouldGenerateOtpAndSendEmail_WhenUserIsPending()
@@ -91,9 +107,9 @@ public class SendEmailVerificationOtpCommandHandlerTests
         _emailOtpRepositoryMock.Verify(r => r.AddAsync(
             It.Is<EmailOtp>(otp => otp.UserId == pendingUser.Id && otp.Type == OtpType.VerifyEmail),
             It.IsAny<CancellationToken>()), Times.Once);
-        // Gửi email xác thực sau khi tạo OTP để người dùng hoàn tất kích hoạt tài khoản.
-        _emailSenderMock.Verify(s => s.SendEmailAsync(
-            command.Email, It.IsAny<string>(), It.IsAny<string>(),
+        // Publish event email xác thực sau khi tạo OTP để worker xử lý gửi mail.
+        _domainEventPublisherMock.Verify(s => s.PublishAsync(
+            It.Is<EmailOtpIssuedDomainEvent>(x => x.Email == command.Email && x.UserId == pendingUser.Id),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 }

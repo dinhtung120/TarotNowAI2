@@ -90,7 +90,15 @@ public partial class ProcessDepositWebhookCommandHandler
 
         order.MarkAsSuccess(request.PayloadData.TransactionId, request.PayloadData.FxSnapshot);
 
-        // Đẩy sự kiện số dư để client thấy kim cương tăng ngay.
-        await _walletPushService.PushBalanceChangedAsync(order.UserId, cancellationToken);
+        await _domainEventPublisher.PublishAsync(
+            new TarotNow.Domain.Events.MoneyChangedDomainEvent
+            {
+                UserId = order.UserId,
+                Currency = TarotNow.Domain.Enums.CurrencyType.Diamond,
+                ChangeType = TarotNow.Domain.Enums.TransactionType.Deposit,
+                DeltaAmount = order.DiamondAmount,
+                ReferenceId = request.PayloadData.TransactionId
+            },
+            cancellationToken);
     }
 }

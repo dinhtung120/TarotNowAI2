@@ -11,21 +11,13 @@ public partial class GamificationService
     /// </summary>
     public async Task OnCheckInAsync(Guid userId, int currentStreak, CancellationToken ct)
     {
-        try
-        {
-            var activeQuests = await GetCachedQuestsAsync(ct);
-            await ApplyQuestProgressAsync(
-                userId,
-                new QuestProgressApplyRequest(activeQuests, "daily_checkin", 1, false),
-                ct);
-            await ApplyStreakMilestoneProgressAsync(userId, activeQuests, currentStreak, ct);
-            await IncrementRankScoresAsync(userId, dailyPoints: 5, monthlyPoints: 5, lifetimePoints: 5, ct);
-        }
-        catch (Exception ex)
-        {
-            // Không ném lại để tránh lỗi gamification làm hỏng luồng check-in chính.
-            _logger.LogError(ex, "Gamification error OnCheckIn for user {UserId}", userId);
-        }
+        var activeQuests = await GetCachedQuestsAsync(ct);
+        await ApplyQuestProgressAsync(
+            userId,
+            new QuestProgressApplyRequest(activeQuests, "daily_checkin", 1, false),
+            ct);
+        await ApplyStreakMilestoneProgressAsync(userId, activeQuests, currentStreak, ct);
+        await IncrementRankScoresAsync(userId, dailyPoints: 5, monthlyPoints: 5, lifetimePoints: 5, ct);
     }
 
     /// <summary>
@@ -36,20 +28,12 @@ public partial class GamificationService
     {
         // Log thông tin vào mức Information để hỗ trợ truy vết hoạt động cộng đồng.
         _logger.LogInformation("[Gamification] Xử lý sự kiện PostCreated cho User: {UserId}", userId);
-        try
-        {
-            var activeQuests = await GetCachedQuestsAsync(ct);
-            await ApplyQuestProgressAsync(
-                userId,
-                new QuestProgressApplyRequest(activeQuests, "PostCreated", 1, false),
-                ct);
-            await IncrementRankScoresAsync(userId, dailyPoints: 2, monthlyPoints: 0, lifetimePoints: 0, ct);
-        }
-        catch (Exception ex)
-        {
-            // Nuốt lỗi có log vì gamification là side-effect, không được chặn nghiệp vụ post chính.
-            _logger.LogError(ex, "Gamification error OnPostCreated for user {UserId}", userId);
-        }
+        var activeQuests = await GetCachedQuestsAsync(ct);
+        await ApplyQuestProgressAsync(
+            userId,
+            new QuestProgressApplyRequest(activeQuests, "PostCreated", 1, false),
+            ct);
+        await IncrementRankScoresAsync(userId, dailyPoints: 2, monthlyPoints: 0, lifetimePoints: 0, ct);
     }
 
     /// <summary>

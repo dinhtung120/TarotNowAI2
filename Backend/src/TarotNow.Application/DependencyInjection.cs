@@ -65,6 +65,8 @@ public static class DependencyInjection
         cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(Behaviors.PerformanceBehavior<,>));
         // Validation trước caching để chặn dữ liệu sai ngay từ đầu.
         cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(Behaviors.ValidationBehavior<,>));
+        // Transaction bao bọc command để bảo đảm business write và outbox commit cùng ranh giới.
+        cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(Behaviors.CommandTransactionBehavior<,>));
         // Caching ở cuối để cache kết quả đã qua toàn bộ kiểm tra nghiệp vụ.
         cfg.AddBehavior(typeof(IPipelineBehavior<,>), typeof(Behaviors.CachingBehavior<,>));
     }

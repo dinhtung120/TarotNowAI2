@@ -47,85 +47,71 @@ public sealed class CommunityMediaAssetRepository : ICommunityMediaAssetReposito
 
     /// <inheritdoc />
     public Task AttachDraftAssetsAsync(
-        Guid ownerUserId,
-        string contextType,
-        string contextDraftId,
-        string contextEntityId,
-        IReadOnlyCollection<string> objectKeys,
-        DateTime attachedAtUtc,
+        AttachDraftCommunityAssetsRequest request,
         CancellationToken cancellationToken = default)
     {
-        if (objectKeys.Count == 0)
+        if (request.ObjectKeys.Count == 0)
         {
             return Task.CompletedTask;
         }
 
-        var filter = Builders<CommunityMediaAssetDocument>.Filter.Eq(x => x.OwnerUserId, ownerUserId.ToString())
-                     & Builders<CommunityMediaAssetDocument>.Filter.Eq(x => x.ContextType, contextType)
-                     & Builders<CommunityMediaAssetDocument>.Filter.Eq(x => x.ContextDraftId, contextDraftId)
-                     & Builders<CommunityMediaAssetDocument>.Filter.In(x => x.ObjectKey, objectKeys)
+        var filter = Builders<CommunityMediaAssetDocument>.Filter.Eq(x => x.OwnerUserId, request.OwnerUserId.ToString())
+                     & Builders<CommunityMediaAssetDocument>.Filter.Eq(x => x.ContextType, request.ContextType)
+                     & Builders<CommunityMediaAssetDocument>.Filter.Eq(x => x.ContextDraftId, request.ContextDraftId)
+                     & Builders<CommunityMediaAssetDocument>.Filter.In(x => x.ObjectKey, request.ObjectKeys)
                      & Builders<CommunityMediaAssetDocument>.Filter.In(x => x.Status, new[]
                      {
                          MediaUploadConstants.AssetStatusUploaded,
                          MediaUploadConstants.AssetStatusOrphaned,
                      });
 
-        var update = BuildAttachUpdate(contextEntityId, attachedAtUtc);
+        var update = BuildAttachUpdate(request.ContextEntityId, request.AttachedAtUtc);
         return _context.CommunityMediaAssets.UpdateManyAsync(filter, update, cancellationToken: cancellationToken);
     }
 
     /// <inheritdoc />
     public Task AttachByObjectKeysAsync(
-        Guid ownerUserId,
-        string contextType,
-        string contextEntityId,
-        IReadOnlyCollection<string> objectKeys,
-        DateTime attachedAtUtc,
+        AttachCommunityAssetsByObjectKeysRequest request,
         CancellationToken cancellationToken = default)
     {
-        if (objectKeys.Count == 0)
+        if (request.ObjectKeys.Count == 0)
         {
             return Task.CompletedTask;
         }
 
-        var filter = Builders<CommunityMediaAssetDocument>.Filter.Eq(x => x.OwnerUserId, ownerUserId.ToString())
-                     & Builders<CommunityMediaAssetDocument>.Filter.Eq(x => x.ContextType, contextType)
-                     & Builders<CommunityMediaAssetDocument>.Filter.In(x => x.ObjectKey, objectKeys)
+        var filter = Builders<CommunityMediaAssetDocument>.Filter.Eq(x => x.OwnerUserId, request.OwnerUserId.ToString())
+                     & Builders<CommunityMediaAssetDocument>.Filter.Eq(x => x.ContextType, request.ContextType)
+                     & Builders<CommunityMediaAssetDocument>.Filter.In(x => x.ObjectKey, request.ObjectKeys)
                      & Builders<CommunityMediaAssetDocument>.Filter.In(x => x.Status, new[]
                      {
                          MediaUploadConstants.AssetStatusUploaded,
                          MediaUploadConstants.AssetStatusOrphaned,
                      });
 
-        var update = BuildAttachUpdate(contextEntityId, attachedAtUtc);
+        var update = BuildAttachUpdate(request.ContextEntityId, request.AttachedAtUtc);
         return _context.CommunityMediaAssets.UpdateManyAsync(filter, update, cancellationToken: cancellationToken);
     }
 
     /// <inheritdoc />
     public Task ReconcileAttachedAssetsAsync(
-        Guid ownerUserId,
-        string contextType,
-        string contextEntityId,
-        IReadOnlyCollection<string> activeObjectKeys,
-        DateTime reconciledAtUtc,
-        DateTime orphanExpiresAtUtc,
+        ReconcileCommunityAssetsRequest request,
         CancellationToken cancellationToken = default)
     {
-        var filter = Builders<CommunityMediaAssetDocument>.Filter.Eq(x => x.OwnerUserId, ownerUserId.ToString())
-                     & Builders<CommunityMediaAssetDocument>.Filter.Eq(x => x.ContextType, contextType)
-                     & Builders<CommunityMediaAssetDocument>.Filter.Eq(x => x.ContextEntityId, contextEntityId)
+        var filter = Builders<CommunityMediaAssetDocument>.Filter.Eq(x => x.OwnerUserId, request.OwnerUserId.ToString())
+                     & Builders<CommunityMediaAssetDocument>.Filter.Eq(x => x.ContextType, request.ContextType)
+                     & Builders<CommunityMediaAssetDocument>.Filter.Eq(x => x.ContextEntityId, request.ContextEntityId)
                      & Builders<CommunityMediaAssetDocument>.Filter.Eq(x => x.Status, MediaUploadConstants.AssetStatusAttached);
 
-        if (activeObjectKeys.Count > 0)
+        if (request.ActiveObjectKeys.Count > 0)
         {
-            filter &= Builders<CommunityMediaAssetDocument>.Filter.Nin(x => x.ObjectKey, activeObjectKeys);
+            filter &= Builders<CommunityMediaAssetDocument>.Filter.Nin(x => x.ObjectKey, request.ActiveObjectKeys);
         }
 
         var update = Builders<CommunityMediaAssetDocument>.Update
             .Set(x => x.Status, MediaUploadConstants.AssetStatusOrphaned)
-            .Set(x => x.OrphanedAtUtc, reconciledAtUtc)
-            .Set(x => x.UpdatedAtUtc, reconciledAtUtc)
-            .Set(x => x.ExpiresAtUtc, orphanExpiresAtUtc);
+            .Set(x => x.OrphanedAtUtc, request.ReconciledAtUtc)
+            .Set(x => x.UpdatedAtUtc, request.ReconciledAtUtc)
+            .Set(x => x.ExpiresAtUtc, request.OrphanExpiresAtUtc);
 
         return _context.CommunityMediaAssets.UpdateManyAsync(filter, update, cancellationToken: cancellationToken);
     }

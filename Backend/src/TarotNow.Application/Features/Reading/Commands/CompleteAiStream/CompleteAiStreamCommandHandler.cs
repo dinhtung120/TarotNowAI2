@@ -14,8 +14,6 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
     private readonly IAiProvider _aiProvider;
     private readonly IReadingSessionRepository _readingRepo;
     private readonly IDomainEventPublisher _domainEventPublisher;
-    private readonly IStreakService _streakService;
-    private readonly IGamificationService _gamificationService;
 
     /// <summary>
     /// Khởi tạo handler complete AI stream.
@@ -27,9 +25,7 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
         ITransactionCoordinator transactionCoordinator,
         IAiProvider aiProvider,
         IReadingSessionRepository readingRepo,
-        IDomainEventPublisher domainEventPublisher,
-        IStreakService streakService,
-        IGamificationService gamificationService)
+        IDomainEventPublisher domainEventPublisher)
     {
         _aiRequestRepo = aiRequestRepo;
         _walletRepo = walletRepo;
@@ -37,8 +33,6 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
         _aiProvider = aiProvider;
         _readingRepo = readingRepo;
         _domainEventPublisher = domainEventPublisher;
-        _streakService = streakService;
-        _gamificationService = gamificationService;
     }
 
     /// <summary>
@@ -67,9 +61,13 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
 
         if (request.FinalStatus == AiStreamFinalStatuses.Completed)
         {
-            await _streakService.IncrementStreakOnValidDrawAsync(request.UserId, cancellationToken);
-            await _gamificationService.OnReadingCompletedAsync(request.UserId, cancellationToken);
-            // Chỉ cộng streak/gamification khi hoàn tất thành công để tránh thưởng sai cho phiên lỗi/refund.
+            await _domainEventPublisher.PublishAsync(
+                new Domain.Events.ReadingCompletedDomainEvent
+                {
+                    UserId = request.UserId
+                },
+                cancellationToken);
+            // Chỉ publish event hoàn tất khi stream completed để handler hậu xử lý streak/gamification chạy đúng ngữ cảnh.
         }
 
         await LogTelemetrySafeAsync(request, context);

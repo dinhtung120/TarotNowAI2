@@ -1,15 +1,17 @@
-using MediatR;
-using TarotNow.Application.DomainEvents.Notifications;
+using TarotNow.Application.Common.DomainEvents;
+using TarotNow.Application.Common.Realtime;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.DomainEvents.Handlers;
 
 // Tạo thông báo in-app và push realtime khi escrow hoàn tiền cho người dùng.
-public sealed class EscrowRefundedInAppNotificationHandler : INotificationHandler<EscrowRefundedNotification>
+public sealed class EscrowRefundedInAppNotificationHandler
+    : IdempotentDomainEventNotificationHandler<EscrowRefundedDomainEvent>
 {
     private readonly INotificationRepository _notificationRepository;
-    private readonly INotificationPushService _pushService;
-    private readonly IWalletPushService _walletPushService;
+    private readonly IRedisPublisher _redisPublisher;
 
     /// <summary>
     /// Khởi tạo handler thông báo hoàn tiền in-app.
@@ -17,21 +19,23 @@ public sealed class EscrowRefundedInAppNotificationHandler : INotificationHandle
     /// </summary>
     public EscrowRefundedInAppNotificationHandler(
         INotificationRepository notificationRepository,
-        INotificationPushService pushService,
-        IWalletPushService walletPushService)
+        IRedisPublisher redisPublisher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _notificationRepository = notificationRepository;
-        _pushService = pushService;
-        _walletPushService = walletPushService;
+        _redisPublisher = redisPublisher;
     }
 
     /// <summary>
     /// Xử lý notification hoàn tiền và phát đầy đủ tín hiệu cho client.
     /// Luồng xử lý: dựng DTO thông báo, lưu DB, push notification realtime, rồi push tín hiệu đổi số dư ví.
     /// </summary>
-    public async Task Handle(EscrowRefundedNotification notification, CancellationToken cancellationToken)
+    protected override async Task HandleDomainEventAsync(
+        EscrowRefundedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
     {
-        var domainEvent = notification.DomainEvent;
         // Đóng gói metadata item/source để client có thể mở chi tiết giao dịch hoàn tiền.
         var dto = new NotificationCreateDto
         {
@@ -52,9 +56,26 @@ public sealed class EscrowRefundedInAppNotificationHandler : INotificationHandle
 
         // Bước 1: lưu notification vào kho dữ liệu để truy vết lịch sử.
         await _notificationRepository.CreateAsync(dto, cancellationToken);
-        // Bước 2: push notification mới để UI cập nhật tức thời.
-        await _pushService.PushNewNotificationAsync(dto, cancellationToken);
-        // Bước 3: push tín hiệu ví để client chủ động reload số dư.
-        await _walletPushService.PushBalanceChangedAsync(domainEvent.UserId, cancellationToken);
+        // Bước 2: publish notification mới để UI cập nhật tức thời.
+        await _redisPublisher.PublishAsync(
+            RealtimeChannelNames.Notifications,
+            "notification.new",
+            new
+            {
+                userId = dto.UserId.ToString(),
+                dto.TitleVi,
+                dto.TitleEn,
+                dto.BodyVi,
+                dto.BodyEn,
+                dto.Type,
+                createdAt = DateTime.UtcNow
+            },
+            cancellationToken);
+        // Bước 3: publish tín hiệu ví để client chủ động reload số dư.
+        await _redisPublisher.PublishAsync(
+            RealtimeChannelNames.Wallet,
+            "wallet.balance_changed",
+            new { userId = domainEvent.UserId.ToString() },
+            cancellationToken);
     }
 }

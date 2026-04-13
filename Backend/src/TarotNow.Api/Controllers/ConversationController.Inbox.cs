@@ -93,7 +93,7 @@ public partial class ConversationController
 
     /// <summary>
     /// Hủy hội thoại đang ở trạng thái pending.
-    /// Luồng xử lý: xác thực requester, gửi command cancel, broadcast cập nhật realtime.
+    /// Luồng xử lý: xác thực requester, gửi command cancel.
     /// </summary>
     /// <param name="id">Id hội thoại cần hủy.</param>
     /// <returns>Kết quả hủy hội thoại hoặc unauthorized khi thiếu user id.</returns>
@@ -113,7 +113,6 @@ public partial class ConversationController
             RequesterId = userId
         });
 
-        await TryBroadcastConversationUpdatedAsync(id, "cancelled");
         return Ok(result);
     }
 }

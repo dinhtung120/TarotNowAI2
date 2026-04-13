@@ -16,6 +16,8 @@ public class ProcessDepositCommandHandlerTests
     private readonly Mock<IDepositOrderRepository> _mockDepositOrderRepository;
     // Mock wallet repository để kiểm tra side-effect cộng kim cương.
     private readonly Mock<IWalletRepository> _mockWalletRepository;
+    // Mock domain event publisher để xác nhận có publish MoneyChanged event.
+    private readonly Mock<IDomainEventPublisher> _mockDomainEventPublisher;
     // Handler cần kiểm thử.
     private readonly ProcessDepositCommandHandler _handler;
 
@@ -27,7 +29,11 @@ public class ProcessDepositCommandHandlerTests
     {
         _mockDepositOrderRepository = new Mock<IDepositOrderRepository>();
         _mockWalletRepository = new Mock<IWalletRepository>();
-        _handler = new ProcessDepositCommandHandler(_mockDepositOrderRepository.Object, _mockWalletRepository.Object);
+        _mockDomainEventPublisher = new Mock<IDomainEventPublisher>();
+        _handler = new ProcessDepositCommandHandler(
+            _mockDepositOrderRepository.Object,
+            _mockWalletRepository.Object,
+            _mockDomainEventPublisher.Object);
     }
 
     /// <summary>
@@ -73,6 +79,9 @@ public class ProcessDepositCommandHandlerTests
             order.DiamondAmount, "DepositOrder", order.Id.ToString(),
             It.IsAny<string>(), null, $"deposit_approve_{order.Id}",
             It.IsAny<CancellationToken>()), Times.Once);
+        _mockDomainEventPublisher.Verify(x => x.PublishAsync(
+            It.IsAny<TarotNow.Domain.Events.MoneyChangedDomainEvent>(),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     /// <summary>
@@ -106,6 +115,9 @@ public class ProcessDepositCommandHandlerTests
 
         Assert.Equal("Success", order.Status);
         Assert.Equal("TXN-123", order.TransactionId);
+        _mockDomainEventPublisher.Verify(x => x.PublishAsync(
+            It.IsAny<TarotNow.Domain.Events.MoneyChangedDomainEvent>(),
+            It.IsAny<CancellationToken>()), Times.Once);
     }
 
     /// <summary>
@@ -139,6 +151,9 @@ public class ProcessDepositCommandHandlerTests
             It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(),
             It.IsAny<long>(), It.IsAny<string>(), It.IsAny<string>(),
             It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        _mockDomainEventPublisher.Verify(x => x.PublishAsync(
+            It.IsAny<TarotNow.Domain.Events.MoneyChangedDomainEvent>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 }

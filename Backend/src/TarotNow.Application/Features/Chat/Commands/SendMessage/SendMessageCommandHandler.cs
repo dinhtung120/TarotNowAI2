@@ -16,7 +16,6 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
     private readonly IReaderProfileRepository _readerProfileRepo;
     private readonly ITransactionCoordinator _transactionCoordinator;
     private readonly IUploadSessionRepository _uploadSessionRepository;
-    private readonly IWalletPushService _walletPushService;
     private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
@@ -31,7 +30,6 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
         IReaderProfileRepository readerProfileRepo,
         ITransactionCoordinator transactionCoordinator,
         IUploadSessionRepository uploadSessionRepository,
-        IWalletPushService walletPushService,
         IDomainEventPublisher domainEventPublisher)
     {
         _conversationRepo = conversationRepo;
@@ -41,7 +39,6 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
         _readerProfileRepo = readerProfileRepo;
         _transactionCoordinator = transactionCoordinator;
         _uploadSessionRepository = uploadSessionRepository;
-        _walletPushService = walletPushService;
         _domainEventPublisher = domainEventPublisher;
     }
 
@@ -92,12 +89,29 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
         }
 
         await _conversationRepo.UpdateAsync(conversation, cancellationToken);
+        await PublishFreezeEventsAsync(request.SenderId, conversation, firstMessageFreeze, cancellationToken);
+        await PublishRealtimeEventsAsync(conversation, message, cancellationToken);
 
+        return message;
+    }
+
+    private async Task PublishFreezeEventsAsync(
+        Guid senderId,
+        ConversationDto conversation,
+        FirstMessageFreezeResult firstMessageFreeze,
+        CancellationToken cancellationToken)
+    {
         if (firstMessageFreeze.IsTriggered)
         {
-            // Khi có freeze, đẩy cập nhật số dư realtime để user thấy thay đổi ngay.
-            await _walletPushService.PushBalanceChangedAsync(request.SenderId, cancellationToken);
-            
+            await _domainEventPublisher.PublishAsync(new Domain.Events.MoneyChangedDomainEvent
+            {
+                UserId = senderId,
+                Currency = Domain.Enums.CurrencyType.Diamond,
+                ChangeType = Domain.Enums.TransactionType.EscrowFreeze,
+                DeltaAmount = -firstMessageFreeze.AmountDiamond,
+                ReferenceId = conversation.Id
+            }, cancellationToken);
+
             // Chuyển string ReaderId thành Guid an toàn hoặc bỏ qua luồng event nếu sai định dạng.
             if (Guid.TryParse(conversation.ReaderId, out var readerGuid))
             {
@@ -106,13 +120,41 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
                 {
                     ConversationId = conversation.Id,
                     ReaderId = readerGuid,
-                    UserId = request.SenderId,
+                    UserId = senderId,
                     OfferExpiresAtUtc = firstMessageFreeze.OfferExpiresAtUtc!.Value
                 }, cancellationToken);
             }
         }
-
-        return message;
     }
 
+    private async Task PublishRealtimeEventsAsync(
+        ConversationDto conversation,
+        ChatMessageDto message,
+        CancellationToken cancellationToken)
+    {
+        await _domainEventPublisher.PublishAsync(
+            new Domain.Events.ChatMessageCreatedDomainEvent
+            {
+                ConversationId = conversation.Id,
+                MessageId = message.Id,
+                SenderId = message.SenderId,
+                MessageType = message.Type,
+                OccurredAtUtc = message.CreatedAt
+            },
+            cancellationToken);
+
+        await _domainEventPublisher.PublishAsync(
+            new Domain.Events.ConversationUpdatedDomainEvent(conversation.Id, "message_created", message.CreatedAt),
+            cancellationToken);
+
+        await _domainEventPublisher.PublishAsync(
+            new Domain.Events.UnreadCountChangedDomainEvent
+            {
+                ConversationId = conversation.Id,
+                UserId = conversation.UserId,
+                ReaderId = conversation.ReaderId,
+                OccurredAtUtc = message.CreatedAt
+            },
+            cancellationToken);
+    }
 }

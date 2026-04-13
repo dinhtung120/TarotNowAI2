@@ -10,7 +10,8 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
 {
     private readonly IUserRepository _userRepository;
     private readonly IEmailOtpRepository _emailOtpRepository;
-    private readonly IEmailSender _emailSender;
+    private readonly IDomainEventPublisher _domainEventPublisher;
+    private readonly ITransactionCoordinator _transactionCoordinator;
 
     /// <summary>
     /// Khởi tạo handler forgot password.
@@ -19,11 +20,13 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
     public ForgotPasswordCommandHandler(
         IUserRepository userRepository,
         IEmailOtpRepository emailOtpRepository,
-        IEmailSender emailSender)
+        IDomainEventPublisher domainEventPublisher,
+        ITransactionCoordinator transactionCoordinator)
     {
         _userRepository = userRepository;
         _emailOtpRepository = emailOtpRepository;
-        _emailSender = emailSender;
+        _domainEventPublisher = domainEventPublisher;
+        _transactionCoordinator = transactionCoordinator;
     }
 
     /// <summary>
@@ -48,14 +51,26 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
             type: OtpType.ResetPassword,
             expiryMinutes: 15);
 
-        // Lưu OTP trước khi gửi email để bảo đảm mã trong email luôn có bản ghi hợp lệ.
-        await _emailOtpRepository.AddAsync(otpEntity, cancellationToken);
-
         var subject = "TarotNow - Reset Your Password";
         var body = $"Hello {user.Username},\n\nWe received a request to reset your password. Your reset OTP code is: {otpCode}\n\nThis code will expire in 15 minutes. If you did not request this change, please safely ignore this email.";
+        await _transactionCoordinator.ExecuteAsync(
+            async transactionCt =>
+            {
+                // Lưu OTP trước khi gửi email để bảo đảm mã trong email luôn có bản ghi hợp lệ.
+                await _emailOtpRepository.AddAsync(otpEntity, transactionCt);
 
-        // Gửi OTP đến email đã đăng ký để hoàn tất bước xác thực reset.
-        await _emailSender.SendEmailAsync(user.Email, subject, body, cancellationToken);
+                await _domainEventPublisher.PublishAsync(
+                    new TarotNow.Domain.Events.EmailOtpIssuedDomainEvent
+                    {
+                        UserId = user.Id,
+                        Email = user.Email,
+                        Subject = subject,
+                        Body = body,
+                        Purpose = OtpType.ResetPassword
+                    },
+                    transactionCt);
+            },
+            cancellationToken);
 
         return true;
     }

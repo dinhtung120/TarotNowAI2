@@ -18,8 +18,8 @@ public partial class StreamReadingCommandHandler : IRequestHandler<StreamReading
     private readonly int _dailyAiQuota;
     private readonly int _inFlightAiCap;
     private readonly int _readingRateLimitSeconds;
-    private readonly IWalletPushService _walletPushService;
     private readonly IEntitlementService _entitlementService;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler stream reading.
@@ -33,8 +33,8 @@ public partial class StreamReadingCommandHandler : IRequestHandler<StreamReading
         ICacheService cacheService,
         FollowupPricingService pricingService,
         ISystemConfigSettings systemConfigSettings,
-        IWalletPushService walletPushService,
-        IEntitlementService entitlementService)
+        IEntitlementService entitlementService,
+        IDomainEventPublisher domainEventPublisher)
     {
         _readingRepo = readingRepo;
         _aiRequestRepo = aiRequestRepo;
@@ -45,8 +45,8 @@ public partial class StreamReadingCommandHandler : IRequestHandler<StreamReading
         _dailyAiQuota = systemConfigSettings.DailyAiQuota;
         _inFlightAiCap = systemConfigSettings.InFlightAiCap;
         _readingRateLimitSeconds = systemConfigSettings.ReadingRateLimitSeconds;
-        _walletPushService = walletPushService;
         _entitlementService = entitlementService;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>
@@ -69,8 +69,17 @@ public partial class StreamReadingCommandHandler : IRequestHandler<StreamReading
         var prompts = StreamReadingPromptFactory.Build(session, request.FollowupQuestion, request.Language);
         var stream = _aiProvider.StreamChatAsync(prompts.SystemPrompt, prompts.UserPrompt, cancellationToken);
 
-        await _walletPushService.PushBalanceChangedAsync(request.UserId, cancellationToken);
-        // Chủ động push số dư mới để UI phản ánh thay đổi escrow ngay khi bắt đầu stream.
+        await _domainEventPublisher.PublishAsync(
+            new Domain.Events.MoneyChangedDomainEvent
+            {
+                UserId = request.UserId,
+                Currency = Domain.Enums.CurrencyType.Diamond,
+                ChangeType = Domain.Enums.TransactionType.EscrowFreeze,
+                DeltaAmount = -calculatedCost,
+                ReferenceId = aiRequest.Id.ToString()
+            },
+            cancellationToken);
+        // Sau khi freeze escrow, publish event để luồng realtime xử lý cập nhật ví.
 
         return new StreamReadingResult
         {
