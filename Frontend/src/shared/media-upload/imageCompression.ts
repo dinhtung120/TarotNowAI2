@@ -1,6 +1,8 @@
 import imageCompression from 'browser-image-compression';
 import {
-  IMAGE_COMPRESSION_DEFAULTS,
+  IMAGE_COMPRESSION_BASE_OPTIONS,
+  IMAGE_COMPRESSION_STEPS,
+  IMAGE_COMPRESSION_TARGET_BYTES,
   IMAGE_UPLOAD_CONTENT_TYPE,
   IMAGE_UPLOAD_MAX_BYTES,
 } from '@/shared/media-upload/constants';
@@ -29,16 +31,19 @@ export function validateImageForDirectUpload(file: File): void {
 export async function compressImageForDirectUpload(file: File): Promise<File> {
   validateImageForDirectUpload(file);
 
-  const compressed = await imageCompression(file, IMAGE_COMPRESSION_DEFAULTS);
-  const outFile = new File([compressed], toWebpFileName(file.name), {
-    type: IMAGE_UPLOAD_CONTENT_TYPE,
-  });
+  let currentFile = file;
+  for (const step of IMAGE_COMPRESSION_STEPS) {
+    currentFile = await compressByStep(currentFile, file.name, step);
+    if (currentFile.size <= IMAGE_COMPRESSION_TARGET_BYTES) {
+      break;
+    }
+  }
 
-  if (outFile.size <= 0 || outFile.size > IMAGE_UPLOAD_MAX_BYTES) {
+  if (currentFile.size <= 0 || currentFile.size > IMAGE_UPLOAD_MAX_BYTES) {
     throw new ImageUploadValidationError('Ảnh sau nén không hợp lệ (tối đa 10MB).');
   }
 
-  return outFile;
+  return currentFile;
 }
 
 export async function getImageDimensions(file: Blob): Promise<{ height: number; width: number }> {
@@ -66,4 +71,19 @@ function toWebpFileName(fileName: string): string {
   const withoutExtension = trimmed.replace(/\.[^.]+$/, '');
   const safeBaseName = withoutExtension || 'upload';
   return `${safeBaseName}.webp`;
+}
+
+async function compressByStep(
+  file: File,
+  originalFileName: string,
+  step: (typeof IMAGE_COMPRESSION_STEPS)[number],
+): Promise<File> {
+  const compressed = await imageCompression(file, {
+    ...IMAGE_COMPRESSION_BASE_OPTIONS,
+    ...step,
+  });
+
+  return new File([compressed], toWebpFileName(originalFileName), {
+    type: IMAGE_UPLOAD_CONTENT_TYPE,
+  });
 }
