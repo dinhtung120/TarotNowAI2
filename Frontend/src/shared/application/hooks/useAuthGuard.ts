@@ -2,15 +2,43 @@
 
 import { useEffect } from 'react';
 import { useRouter } from '@/i18n/routing';
-import { useAuthStore } from '@/store/authStore';
+import { AUTH_ERROR } from '@/shared/domain/authErrors';
 
 export function useAuthGuard(isAuthenticated: boolean, redirectTo = '/login'): void {
  const router = useRouter();
- const hasHydrated = useAuthStore((state) => state._hasHydrated);
 
  useEffect(() => {
-  if (hasHydrated && !isAuthenticated) {
-   router.push(redirectTo);
+  if (isAuthenticated) {
+   return;
   }
- }, [isAuthenticated, hasHydrated, redirectTo, router]);
+
+  let cancelled = false;
+  const verifySession = async () => {
+   try {
+    const response = await fetch('/api/auth/session', {
+     method: 'GET',
+     credentials: 'include',
+     cache: 'no-store',
+    });
+
+    if (!response.ok) {
+     if (!cancelled) router.push(redirectTo);
+     return;
+    }
+
+    const payload = (await response.json()) as { authenticated?: boolean; error?: string };
+    const shouldRedirect = !payload.authenticated || payload.error === AUTH_ERROR.UNAUTHORIZED;
+    if (!cancelled && shouldRedirect) {
+     router.push(redirectTo);
+    }
+   } catch {
+    if (!cancelled) router.push(redirectTo);
+   }
+  };
+
+  void verifySession();
+  return () => {
+   cancelled = true;
+  };
+ }, [isAuthenticated, redirectTo, router]);
 }

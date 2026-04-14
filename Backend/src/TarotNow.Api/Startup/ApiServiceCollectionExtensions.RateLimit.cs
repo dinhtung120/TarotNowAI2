@@ -3,6 +3,8 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.RateLimiting;
+using TarotNow.Api.Constants;
+using TarotNow.Application.Common.Constants;
 
 namespace TarotNow.Api.Startup;
 
@@ -30,9 +32,12 @@ public static partial class ApiServiceCollectionExtensions
     {
         // Rule bảo vệ brute-force cho đăng nhập theo IP.
         AddFixedWindowPolicy(options, "login", ResolveClientIp, permitLimit: 5, TimeSpan.FromSeconds(60));
+        AddFixedWindowPolicy(options, "auth-login", ResolveClientIp, permitLimit: 5, TimeSpan.FromSeconds(60));
         // Rule theo user đã xác thực để hạn chế spam gọi endpoint auth/session.
         // Nâng cao giới hạn (100 req/phút) để tránh chặn nhầm khi Load Profile/Navbar/Wallet đồng thời.
         AddFixedWindowPolicy(options, "auth-session", ResolveAuthenticatedPartitionKey, permitLimit: 100, TimeSpan.FromMinutes(1));
+        AddFixedWindowPolicy(options, "auth-refresh", ResolveAuthenticatedPartitionKey, permitLimit: 30, TimeSpan.FromMinutes(1));
+        AddFixedWindowPolicy(options, "auth-refresh-token-family", ResolveRefreshFamilyKey, permitLimit: 10, TimeSpan.FromMinutes(1));
         // Rule bảo vệ endpoint ghi community khỏi spam nội dung.
         // Tăng lên 60 req/phút để hỗ trợ upload nhiều ảnh hoặc tương tác nhanh.
         AddFixedWindowPolicy(options, "community-write", ResolveAuthenticatedPartitionKey, permitLimit: 60, TimeSpan.FromMinutes(1));
@@ -86,6 +91,7 @@ public static partial class ApiServiceCollectionExtensions
             Type = "https://datatracker.ietf.org/doc/html/rfc6585#section-4",
             Detail = "Too many requests. Please try again later."
         };
+        problem.Extensions["errorCode"] = AuthErrorCodes.RateLimited;
 
         return new ValueTask(context.HttpContext.Response.WriteAsJsonAsync(problem, cancellationToken: token));
     }
@@ -126,6 +132,24 @@ public static partial class ApiServiceCollectionExtensions
         }
 
         // Nhánh anonymous: fallback theo IP để vẫn chặn được traffic bất thường trước bước auth.
+        return $"ip:{ResolveClientIp(httpContext)}";
+    }
+
+    /// <summary>
+    /// Resolve partition key theo refresh token để giới hạn traffic theo token family.
+    /// </summary>
+    private static string ResolveRefreshFamilyKey(HttpContext httpContext)
+    {
+        if (httpContext.Request.Cookies.TryGetValue(AuthCookieNames.RefreshToken, out var refreshToken)
+            && string.IsNullOrWhiteSpace(refreshToken) == false)
+        {
+            var hash = Convert.ToHexString(
+                System.Security.Cryptography.SHA256.HashData(
+                    System.Text.Encoding.UTF8.GetBytes(refreshToken.Trim())))
+                .ToLowerInvariant();
+            return $"refresh:{hash[..16]}";
+        }
+
         return $"ip:{ResolveClientIp(httpContext)}";
     }
 }

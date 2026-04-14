@@ -10,6 +10,7 @@ import {
  HISTORY_PAGE_SIZE,
  historySessionsListQueryKey,
 } from '@/features/reading/history/domain/historyQueryKeys';
+import { AUTH_ERROR, isUnauthorizedError } from '@/shared/domain/authErrors';
 
 interface UseHistorySessionsPageParams {
  isAuthenticated: boolean;
@@ -45,9 +46,9 @@ export function useHistorySessionsPage({
    if (result.success && result.data) {
     return result.data;
    }
-   if (result.error === 'unauthorized') {
+   if (isUnauthorizedError(result.error)) {
     onUnauthorizedRef.current();
-    throw new Error('unauthorized');
+    throw new Error(AUTH_ERROR.UNAUTHORIZED);
    }
    throw new Error(result.error || networkErrorMessage);
   },
@@ -55,10 +56,9 @@ export function useHistorySessionsPage({
 
  const historyData = query.data ?? null;
  const isLoading = query.isPending || (query.isFetching && !query.data);
- const error =
-  query.isError && query.error?.message !== 'unauthorized'
-   ? query.error.message || networkErrorMessage
-   : null;
+ const error = query.isError && query.error?.message !== AUTH_ERROR.UNAUTHORIZED
+  ? query.error.message || networkErrorMessage
+  : null;
 
  const goToPrevPage = () => {
   if (currentPage > 1) {

@@ -4,6 +4,7 @@ import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
+import { AUTH_ERROR } from "@/shared/domain/authErrors";
 
 export interface AdminReaderRequest {
  id: string;
@@ -28,7 +29,7 @@ export async function listReaderRequests(
  statusFilter = ''
 ): Promise<ActionResult<ListReaderRequestsResponse>> {
  const accessToken = await getServerAccessToken();
- if (!accessToken) return actionFail('Unauthorized');
+ if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
 
  try {
   const query = new URLSearchParams({
@@ -75,7 +76,7 @@ export async function processReaderRequest(
  adminNote?: string
 ): Promise<ActionResult<undefined>> {
  const accessToken = await getServerAccessToken();
- if (!accessToken) return actionFail('Unauthorized');
+ if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
 
  try {
   const result = await serverHttpRequest<unknown>('/admin/reader-requests/process', {

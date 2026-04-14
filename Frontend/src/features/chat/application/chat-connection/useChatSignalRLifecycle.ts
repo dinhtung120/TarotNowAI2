@@ -10,12 +10,10 @@ import type { QueryClient } from '@tanstack/react-query';
 import type { ChatMessageDto, ConversationDto } from '@/features/chat/application/actions';
 import { listMessages } from '@/features/chat/application/actions';
 import { logger } from '@/shared/infrastructure/logging/logger';
-import { useAuthStore } from '@/store/authStore';
 import { createSignalRLogger, getCachedConversation } from './utils';
 
 interface UseChatSignalRLifecycleOptions {
  conversationId?: string | null;
- token?: string | null;
  currentUserId: string;
  queryClient: QueryClient;
  connectionRef: MutableRefObject<HubConnection | null>;
@@ -43,7 +41,7 @@ async function createHubConnection() {
  });
  return new signalR.HubConnectionBuilder()
   .withUrl(getSignalRHubUrl('/api/v1/chat'), {
-   accessTokenFactory: () => useAuthStore.getState().token ?? '',
+   withCredentials: true,
   })
   .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
   .configureLogging(customLogger)
@@ -52,7 +50,7 @@ async function createHubConnection() {
 
 export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions) {
  const {
-  conversationId, token, currentUserId, queryClient, connectionRef, typingTimeoutRef,
+  conversationId, currentUserId, queryClient, connectionRef, typingTimeoutRef,
   lastInitialLoadTimeRef, loadInitialRef, markReadRef, setConnected, setLoading,
   setTypingUserId, setMessages, setConversation, resetForConversation, appendMessage,
  } = options;
@@ -61,8 +59,8 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
 
  useEffect(() => {
   // Chỉ khởi tạo khi có đủ thông tin và không đang trong quá trình khởi tạo khác cho cùng conversation
-  if (!conversationId || !token || initializingRef.current) {
-   if (!conversationId || !token) {
+  if (!conversationId || initializingRef.current) {
+   if (!conversationId) {
     resetForConversation(null);
     setConnected(false);
     setLoading(false);
@@ -218,7 +216,6 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
   setLoading,
   setMessages,
   setTypingUserId,
-  token,
   typingTimeoutRef,
  ]);
 }

@@ -4,6 +4,7 @@ import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
+import { AUTH_ERROR } from "@/shared/domain/authErrors";
 
 export interface AdminDepositOrder {
  id: string;
@@ -27,7 +28,7 @@ export async function listDeposits(
  status = ''
 ): Promise<ActionResult<ListDepositsResponse>> {
  const accessToken = await getServerAccessToken();
- if (!accessToken) return actionFail('Unauthorized');
+ if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
 
  try {
   const query = new URLSearchParams({
@@ -76,7 +77,7 @@ export async function processDeposit(
  try {
   const accessToken = await getServerAccessToken();
   if (!accessToken) {
-   return actionFail('Unauthorized');
+   return actionFail(AUTH_ERROR.UNAUTHORIZED);
   }
 
   const normalizedTransactionId = transactionId?.trim();

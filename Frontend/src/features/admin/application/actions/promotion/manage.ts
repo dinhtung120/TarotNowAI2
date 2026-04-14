@@ -4,13 +4,14 @@ import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
+import { AUTH_ERROR } from "@/shared/domain/authErrors";
 
 export async function createPromotion(
  minAmountVnd: number,
  bonusDiamond: number
 ): Promise<ActionResult<undefined>> {
  const accessToken = await getServerAccessToken();
- if (!accessToken) return actionFail('Unauthorized');
+ if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
 
  try {
   const result = await serverHttpRequest<unknown>('/admin/promotions', {
@@ -41,7 +42,7 @@ export async function updatePromotion(
  data: { minAmountVnd: number; bonusDiamond: number; isActive: boolean }
 ): Promise<ActionResult<undefined>> {
  const accessToken = await getServerAccessToken();
- if (!accessToken) return actionFail('Unauthorized');
+ if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
 
  try {
   const result = await serverHttpRequest<unknown>(`/admin/promotions/${id}`, {
@@ -68,7 +69,7 @@ export async function updatePromotion(
 
 export async function deletePromotion(id: string): Promise<ActionResult<undefined>> {
  const accessToken = await getServerAccessToken();
- if (!accessToken) return actionFail('Unauthorized');
+ if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
 
  try {
   const result = await serverHttpRequest<unknown>(`/admin/promotions/${id}`, {

@@ -5,27 +5,29 @@ import { useTranslations } from 'next-intl';
 import { usePathname, useRouter } from '@/i18n/routing';
 import { useAuthStore } from '@/store/authStore';
 import type { ActionResult } from '@/shared/domain/actionResult';
+import type { UserProfile } from '@/features/auth/domain/types';
 const REFRESH_INTERVAL_MS = 40 * 60 * 1000;
 const MIN_REFRESH_THROTTLE_MS = 20 * 60 * 1000;
 let globalLastRefreshAt = 0;
-function isTokenExpiringSoon(token: string | null, thresholdSeconds: number = 600): boolean {
-    if (!token) return true;
+
+async function hasServerSession(): Promise<boolean> {
     try {
-        const payloadBase64 = token.split('.')[1];
-        if (!payloadBase64) return true;
-        const decodedJson = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
-        const payload = JSON.parse(decodedJson);
-        const exp = payload.exp;
-        if (!exp) return true;
-        const nowInSeconds = Math.floor(Date.now() / 1000);
-        return exp - nowInSeconds < thresholdSeconds;
+        const response = await fetch('/api/auth/session', {
+            method: 'GET',
+            credentials: 'include',
+            cache: 'no-store',
+        });
+        if (!response.ok) return false;
+        const payload = (await response.json()) as { authenticated?: boolean };
+        return Boolean(payload.authenticated);
     } catch {
-        return true;
+        return false;
     }
 }
+
 interface AuthSessionManagerProps {
     logout: () => Promise<unknown> | unknown;
-    refreshAccessToken: () => Promise<ActionResult<{ accessToken: string }>>;
+    refreshAccessToken: () => Promise<ActionResult<{ user: UserProfile; expiresInSeconds: number }>>;
 }
 export default function AuthSessionManager({
     logout,
@@ -36,7 +38,7 @@ export default function AuthSessionManager({
     const tApi = useTranslations('ApiErrors');
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
     const clearAuth = useAuthStore((s) => s.clearAuth);
-    const syncAuth = useAuthStore((s) => s.syncAuth);
+    const setSession = useAuthStore((s) => s.setSession);
     const logoutInProgressRef = useRef(false);
     const refreshInProgressRef = useRef(false);
     const pathnameRef = useRef(pathname);
@@ -72,21 +74,14 @@ export default function AuthSessionManager({
             if (refreshInProgressRef.current || logoutInProgressRef.current) return;
             const now = Date.now();
             if (now - globalLastRefreshAt < MIN_REFRESH_THROTTLE_MS) return;
-            const currentToken = useAuthStore.getState().token;
-            if (!isTokenExpiringSoon(currentToken, 600) && !showToastOnFailure) {
-              return;
-            }
             refreshInProgressRef.current = true;
             globalLastRefreshAt = Date.now();
             try {
                 const result = await refreshAccessToken();
                 if (!result.success) {
                     await runLogout(showToastOnFailure);
-                } else if (result.data?.accessToken) {
-                    const currentUser = useAuthStore.getState().user;
-                    if (currentUser) {
-                        useAuthStore.getState().setAuth(currentUser, result.data.accessToken);
-                    }
+                } else if (result.data?.user) {
+                    setSession(result.data.user);
                 }
             } catch {
                 await runLogout(showToastOnFailure);
@@ -94,20 +89,28 @@ export default function AuthSessionManager({
                 refreshInProgressRef.current = false;
             }
         },
-        [refreshAccessToken, runLogout]
+        [refreshAccessToken, runLogout, setSession]
     );
     useEffect(() => {
-        syncAuth();
-        const handleStorage = (event: StorageEvent) => {
-            if (event.key === 'tarot-now-auth') {
-                syncAuth();
+        let cancelled = false;
+        const bootstrapSession = async () => {
+            const authenticated = await hasServerSession();
+            if (cancelled) return;
+            if (authenticated) {
+                await tryRefresh(false);
+                return;
+            }
+
+            if (useAuthStore.getState().isAuthenticated) {
+                clearAuth();
             }
         };
-        window.addEventListener('storage', handleStorage);
+
+        void bootstrapSession();
         return () => {
-            window.removeEventListener('storage', handleStorage);
+            cancelled = true;
         };
-    }, [syncAuth]);
+    }, [clearAuth, tryRefresh]);
     useEffect(() => {
         if (!isAuthenticated) return;
         void tryRefresh(false);

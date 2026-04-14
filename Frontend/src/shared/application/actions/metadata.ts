@@ -7,6 +7,7 @@ import type { WalletBalance } from "@/features/wallet/domain/types";
 import type { IStreakStatusResult } from "@/features/checkin/types/checkin.types";
 import type { ListConversationsResult } from "@/features/chat/application/actions";
 import type { NotificationListResponse } from "@/features/notifications/application/actions/types";
+import { AUTH_ERROR } from "@/shared/domain/authErrors";
 
 
 export interface UserMetadataDto {
@@ -21,7 +22,7 @@ export interface UserMetadataDto {
 
 export async function getInitialMetadata(): Promise<ActionResult<UserMetadataDto>> {
   const token = await getServerAccessToken();
-  if (!token) return actionFail("Unauthorized");
+  if (!token) return actionFail(AUTH_ERROR.UNAUTHORIZED);
 
   try {
     const result = await serverHttpRequest<UserMetadataDto>("/user-context/metadata", {

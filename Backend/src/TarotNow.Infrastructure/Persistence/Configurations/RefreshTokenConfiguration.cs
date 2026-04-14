@@ -27,10 +27,29 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
         // Đảm bảo mỗi token chỉ xuất hiện một lần trong hệ thống.
 
         builder.Property(rt => rt.CreatedByIp)
-            .HasMaxLength(45);
+            .HasMaxLength(64);
+
+        builder.Property(rt => rt.CreatedDeviceId)
+            .HasMaxLength(128);
+
+        builder.Property(rt => rt.CreatedUserAgentHash)
+            .HasMaxLength(128);
+
+        builder.Property(rt => rt.RevocationReason)
+            .HasMaxLength(64);
+
+        builder.Property(rt => rt.LastRotateIdempotencyKey)
+            .HasMaxLength(128);
 
         builder.Property(rt => rt.CreatedAt)
             .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+        builder.HasIndex(rt => rt.SessionId);
+        builder.HasIndex(rt => rt.FamilyId);
+        builder.HasIndex(rt => new { rt.FamilyId, rt.ParentTokenId });
+        builder.HasIndex(rt => rt.ParentTokenId);
+        builder.HasIndex(rt => rt.ReplacedByTokenId);
+        builder.HasIndex(rt => rt.UsedAtUtc);
 
         builder.HasOne(rt => rt.User)
                .WithMany()

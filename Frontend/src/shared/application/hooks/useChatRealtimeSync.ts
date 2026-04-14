@@ -19,14 +19,13 @@ interface ConversationUpdatedPayload {
 export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
   const enabled = options.enabled ?? true;
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const token = useAuthStore((state) => state.token);
   const connectionRef = useRef<HubConnection | null>(null);
   const queryClient = useQueryClient();
   
   const appStartTimeRef = useRef(Date.now());
 
   useEffect(() => {
-    if (!enabled || !isAuthenticated || !token) {
+    if (!enabled || !isAuthenticated) {
       const existing = connectionRef.current;
       if (
         existing &&
@@ -72,7 +71,7 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
       logger.info('[ChatRealtimeSync]', `Connecting to: ${getSignalRHubUrl('/api/v1/chat')}`);
       hubConnection = new signalR.HubConnectionBuilder()
         .withUrl(getSignalRHubUrl('/api/v1/chat'), { 
-          accessTokenFactory: () => useAuthStore.getState().token ?? '',
+          withCredentials: true,
         })
         .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
         .configureLogging(signalR.LogLevel.Debug)
@@ -120,5 +119,5 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
       }
       connectionRef.current = null;
     };
-  }, [enabled, isAuthenticated, queryClient, token]);
+  }, [enabled, isAuthenticated, queryClient]);
 }

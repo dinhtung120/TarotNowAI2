@@ -9,8 +9,8 @@ public class AuthResponse
     // Loại token trả về (mặc định Bearer).
     public string TokenType { get; set; } = "Bearer";
 
-    // Thời gian hết hạn access token theo phút/giây tùy contract hiện tại.
-    public int ExpiresIn { get; set; }
+    // Thời gian hết hạn access token tính bằng giây.
+    public int ExpiresInSeconds { get; set; }
 
     // Hồ sơ người dùng rút gọn để client hydrate session.
     public UserProfileDto User { get; set; } = new();

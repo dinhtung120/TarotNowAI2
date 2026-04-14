@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
+import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { getWalletBalance } from '@/features/wallet/application/actions/balance';
 import { createDepositOrder } from '@/features/wallet/application/actions/deposit/user-orders';
 
@@ -33,7 +34,7 @@ describe('wallet actions', () => {
 
   const result = await getWalletBalance();
 
-  expect(result).toEqual({ success: false, error: 'Unauthorized' });
+  expect(result).toEqual({ success: false, error: AUTH_ERROR.UNAUTHORIZED });
   expect(mockedServerHttpRequest).not.toHaveBeenCalled();
  });
 

@@ -20,12 +20,11 @@ function shouldStopConnection(connection: HubConnection | null) {
 
 export function usePresenceConnection() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const token = useAuthStore((state) => state.token);
   const connectionRef = useRef<HubConnection | null>(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!isAuthenticated || !token) {
+    if (!isAuthenticated) {
       const existing = connectionRef.current;
       if (existing && shouldStopConnection(existing)) {
         void existing.stop().catch(() => undefined);
@@ -46,7 +45,7 @@ export function usePresenceConnection() {
       logger.info('[PresenceRealtimeSync]', `Connecting to: ${hubUrl}`);
 
       hubConnection = new signalR.HubConnectionBuilder()
-        .withUrl(hubUrl, { accessTokenFactory: () => useAuthStore.getState().token ?? '' })
+        .withUrl(hubUrl, { withCredentials: true })
         .withAutomaticReconnect(reconnectSchedule)
         .configureLogging(signalR.LogLevel.Debug)
         .build();
@@ -85,5 +84,5 @@ export function usePresenceConnection() {
 
       connectionRef.current = null;
     };
-  }, [isAuthenticated, token, queryClient]);
+  }, [isAuthenticated, queryClient]);
 }

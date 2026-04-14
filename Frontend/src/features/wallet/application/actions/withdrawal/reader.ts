@@ -6,6 +6,7 @@ import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import type { WithdrawalResult } from './types';
+import { AUTH_ERROR } from "@/shared/domain/authErrors";
 
 export async function createWithdrawal(data: {
  amountDiamond: number;
@@ -47,7 +48,7 @@ export async function listMyWithdrawals(
  pageSize = 20
 ): Promise<ActionResult<WithdrawalResult[]>> {
  const accessToken = await getServerAccessToken();
- if (!accessToken) return actionFail('Unauthorized');
+ if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
 
  try {
   const result = await serverHttpRequest<WithdrawalResult[]>(

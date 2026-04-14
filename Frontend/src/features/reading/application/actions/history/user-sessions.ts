@@ -5,6 +5,7 @@ import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
+import { AUTH_ERROR } from "@/shared/domain/authErrors";
 
 export interface HistorySessionDto {
  id: string;
@@ -58,7 +59,7 @@ export async function getHistorySessionsAction(
  try {
   const token = await getServerAccessToken();
   if (!token) {
-   return actionFail('unauthorized');
+   return actionFail(AUTH_ERROR.UNAUTHORIZED);
   }
 
   let query = `page=${page}&pageSize=${pageSize}`;
@@ -73,7 +74,7 @@ export async function getHistorySessionsAction(
 
   if (!result.ok) {
    if (result.status === 401) {
-    return actionFail('unauthorized');
+    return actionFail(AUTH_ERROR.UNAUTHORIZED);
    }
    logger.error('HistoryAction.getHistorySessionsAction', result.error, {
     status: result.status,
@@ -103,7 +104,7 @@ export async function getHistoryDetailAction(sessionId: string): Promise<ActionR
  try {
   const token = await getServerAccessToken();
   if (!token) {
-   return actionFail('unauthorized');
+   return actionFail(AUTH_ERROR.UNAUTHORIZED);
   }
 
   const result = await serverHttpRequest<HistoryDetailResponse>(`/history/sessions/${sessionId}`, {
@@ -114,7 +115,7 @@ export async function getHistoryDetailAction(sessionId: string): Promise<ActionR
 
   if (!result.ok) {
    if (result.status === 401) {
-    return actionFail('unauthorized');
+    return actionFail(AUTH_ERROR.UNAUTHORIZED);
    }
    if (result.status === 404) {
     return actionFail(tApi('not_found'));

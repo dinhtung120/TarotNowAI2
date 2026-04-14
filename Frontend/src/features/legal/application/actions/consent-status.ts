@@ -5,13 +5,14 @@ import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import type { ConsentStatus } from './types';
+import { AUTH_ERROR } from "@/shared/domain/authErrors";
 
 export async function checkConsentStatus(
  documentType?: string,
  version?: string
 ): Promise<ActionResult<ConsentStatus[]>> {
  const accessToken = await getServerAccessToken();
- if (!accessToken) return actionFail('Unauthorized');
+ if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
 
  try {
   const params = new URLSearchParams();

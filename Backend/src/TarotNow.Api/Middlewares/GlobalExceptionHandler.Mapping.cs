@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Exceptions;
 
 namespace TarotNow.Api.Middlewares;
@@ -130,14 +131,37 @@ public partial class GlobalExceptionHandler
     /// </summary>
     private static ProblemDetails CreateBusinessRuleProblem(BusinessRuleException exception)
     {
+        var status = ResolveBusinessRuleStatusCode(exception.ErrorCode);
+        var title = status == StatusCodes.Status429TooManyRequests
+            ? "Too Many Requests"
+            : status == StatusCodes.Status401Unauthorized
+                ? "Unauthorized"
+                : "Domain Rule Violation";
         var problemDetails = CreateClientProblem(
-            StatusCodes.Status422UnprocessableEntity,
-            "Domain Rule Violation",
-            "https://datatracker.ietf.org/doc/html/rfc4918#section-11.2",
+            status,
+            title,
+            status == StatusCodes.Status429TooManyRequests
+                ? "https://datatracker.ietf.org/doc/html/rfc6585#section-4"
+                : status == StatusCodes.Status401Unauthorized
+                    ? "https://datatracker.ietf.org/doc/html/rfc7235#section-3.1"
+                    : "https://datatracker.ietf.org/doc/html/rfc4918#section-11.2",
             exception.Message);
 
         // Mã lỗi domain giúp client xử lý chính xác hơn thay vì chỉ dựa vào message tự do.
         problemDetails.Extensions["errorCode"] = exception.ErrorCode;
         return problemDetails;
+    }
+
+    private static int ResolveBusinessRuleStatusCode(string? errorCode)
+    {
+        return errorCode switch
+        {
+            AuthErrorCodes.Unauthorized => StatusCodes.Status401Unauthorized,
+            AuthErrorCodes.TokenExpired => StatusCodes.Status401Unauthorized,
+            AuthErrorCodes.TokenReplay => StatusCodes.Status401Unauthorized,
+            AuthErrorCodes.UserBlocked => StatusCodes.Status401Unauthorized,
+            AuthErrorCodes.RateLimited => StatusCodes.Status429TooManyRequests,
+            _ => StatusCodes.Status422UnprocessableEntity
+        };
     }
 }

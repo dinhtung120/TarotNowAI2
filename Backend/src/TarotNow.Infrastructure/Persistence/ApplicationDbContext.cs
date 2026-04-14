@@ -33,6 +33,9 @@ public partial class ApplicationDbContext : DbContext
     // DbSet bảng refresh_tokens.
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
 
+    // DbSet bảng auth_sessions.
+    public DbSet<AuthSession> AuthSessions { get; set; } = null!;
+
     // DbSet bảng email_otps.
     public DbSet<EmailOtp> EmailOtps { get; set; }
 

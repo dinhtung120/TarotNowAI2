@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getStreakStatus } from './actions';
 import { checkinQueryKeys } from '@/features/checkin/domain/checkinQueryKeys';
 import { useAuthStore } from '@/store/authStore';
+import { AUTH_ERROR } from '@/shared/domain/authErrors';
 
 export const useStreakStatus = (enabled: boolean = true) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -21,7 +22,7 @@ export const useStreakStatus = (enabled: boolean = true) => {
 
     retry: (failureCount, error) => {
       const message = error instanceof Error ? error.message : '';
-      if (message.includes('401') || message.includes('Unauthorized')) {
+      if (message.includes('401') || message.includes(AUTH_ERROR.UNAUTHORIZED)) {
         return false;
       }
       return failureCount < 2;

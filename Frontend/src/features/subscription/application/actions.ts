@@ -5,6 +5,7 @@ import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import { SubscriptionPlan, EntitlementBalance, SubscribeRequest, SubscribeResponse } from '../types';
+import { AUTH_ERROR } from "@/shared/domain/authErrors";
 
 export async function getSubscriptionPlansAction(): Promise<ActionResult<SubscriptionPlan[]>> {
   try {
@@ -26,7 +27,7 @@ export async function getSubscriptionPlansAction(): Promise<ActionResult<Subscri
 export async function getMyEntitlementsAction(): Promise<ActionResult<EntitlementBalance[]>> {
   try {
     const token = await getServerAccessToken();
-    if (!token) return actionFail('Unauthorized');
+    if (!token) return actionFail(AUTH_ERROR.UNAUTHORIZED);
 
     const result = await serverHttpRequest<EntitlementBalance[]>('/subscriptions/me/entitlements', {
       method: 'GET',
@@ -34,7 +35,7 @@ export async function getMyEntitlementsAction(): Promise<ActionResult<Entitlemen
     });
 
     if (!result.ok) {
-      if (result.status === 401) return actionFail('Unauthorized');
+      if (result.status === 401) return actionFail(AUTH_ERROR.UNAUTHORIZED);
       return actionFail(result.error || 'Failed to fetch entitlements');
     }
 
@@ -48,7 +49,7 @@ export async function getMyEntitlementsAction(): Promise<ActionResult<Entitlemen
 export async function subscribeToPlanAction(request: SubscribeRequest): Promise<ActionResult<SubscribeResponse>> {
   try {
     const token = await getServerAccessToken();
-    if (!token) return actionFail('Unauthorized');
+    if (!token) return actionFail(AUTH_ERROR.UNAUTHORIZED);
 
     const result = await serverHttpRequest<SubscribeResponse>('/subscriptions/subscribe', {
       method: 'POST',

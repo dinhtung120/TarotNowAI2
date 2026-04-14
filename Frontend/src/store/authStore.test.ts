@@ -16,10 +16,8 @@ const TEST_USER: UserProfile = {
 
 describe('authStore snapshot stability', () => {
  beforeEach(() => {
-  window.localStorage.clear();
   const state = useAuthStore.getState();
   state.clearAuth();
-  state.setHasHydrated(false);
  });
 
  it('keeps a cached snapshot reference when state does not change', () => {
@@ -30,7 +28,7 @@ describe('authStore snapshot stability', () => {
 
  it('replaces snapshot reference only when state changes', () => {
   const before = useAuthStore.getState();
-  before.setAuth(TEST_USER, 'token-1');
+  before.setAuth(TEST_USER);
 
   const after = useAuthStore.getState();
   expect(after).not.toBe(before);

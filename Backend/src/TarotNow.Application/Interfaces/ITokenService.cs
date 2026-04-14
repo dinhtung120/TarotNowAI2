@@ -7,10 +7,9 @@ namespace TarotNow.Application.Interfaces;
 public interface ITokenService
 {
     /// <summary>
-    /// Sinh access token cho người dùng sau khi xác thực thành công.
-    /// Luồng xử lý: đọc thông tin user, đóng gói claims cần thiết và trả JWT ngắn hạn.
+    /// Sinh access token gắn session id và trả metadata để theo dõi security.
     /// </summary>
-    string GenerateAccessToken(User user);
+    string GenerateAccessToken(User user, Guid sessionId, out DateTime expiresAtUtc, out string jti);
 
     /// <summary>
     /// Sinh refresh token ngẫu nhiên để gia hạn phiên đăng nhập an toàn.

@@ -5,6 +5,7 @@ import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import type { NotificationListResponse } from './types';
+import { AUTH_ERROR } from "@/shared/domain/authErrors";
 
 export async function getNotifications(
  page = 1,
@@ -12,7 +13,7 @@ export async function getNotifications(
  isRead?: boolean
 ): Promise<ActionResult<NotificationListResponse>> {
  const accessToken = await getServerAccessToken();
- if (!accessToken) return actionFail('Unauthorized');
+ if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
 
  try {
   const params = new URLSearchParams({

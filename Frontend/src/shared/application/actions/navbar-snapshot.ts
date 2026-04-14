@@ -5,6 +5,7 @@ import type { NotificationListResponse } from '@/features/notifications/applicat
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { AUTH_ERROR } from "@/shared/domain/authErrors";
 
 export interface NavbarSnapshotDto {
  unreadNotificationCount: number;
@@ -16,7 +17,7 @@ export interface NavbarSnapshotDto {
 export async function getNavbarSnapshotAction(): Promise<ActionResult<NavbarSnapshotDto>> {
  const token = await getServerAccessToken();
  if (!token) {
-  return actionFail('Unauthorized');
+  return actionFail(AUTH_ERROR.UNAUTHORIZED);
  }
 
  try {

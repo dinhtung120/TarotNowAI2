@@ -5,6 +5,7 @@ import type { WalletBalance } from '@/features/wallet/domain/types';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { AUTH_ERROR } from "@/shared/domain/authErrors";
 
 export interface ReadingSetupSnapshotDto {
  wallet: WalletBalance;
@@ -14,7 +15,7 @@ export interface ReadingSetupSnapshotDto {
 export async function getReadingSetupSnapshotAction(): Promise<ActionResult<ReadingSetupSnapshotDto>> {
  const token = await getServerAccessToken();
  if (!token) {
-  return actionFail('Unauthorized');
+  return actionFail(AUTH_ERROR.UNAUTHORIZED);
  }
 
  try {

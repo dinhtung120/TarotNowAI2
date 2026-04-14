@@ -25,17 +25,16 @@ public class JwtTokenService : ITokenService
         _jwtOptions = options.Value;
     }
 
-    /// <summary>
-    /// Tạo access token cho người dùng sau khi đăng nhập hợp lệ.
-    /// Luồng dựng claim chuẩn, ký token bằng HMAC-SHA256 và gắn thời hạn hết hạn theo cấu hình.
-    /// </summary>
-    public string GenerateAccessToken(User user)
+    /// <inheritdoc />
+    public string GenerateAccessToken(User user, Guid sessionId, out DateTime expiresAtUtc, out string jti)
     {
         // Validate cấu hình bắt buộc sớm để fail-fast thay vì tạo token thiếu thông tin bảo mật.
         var secretKey = _jwtOptions.SecretKey ?? throw new InvalidOperationException("Jwt:SecretKey is missing.");
         var issuer = _jwtOptions.Issuer ?? throw new InvalidOperationException("Jwt:Issuer is missing.");
         var audience = _jwtOptions.Audience ?? throw new InvalidOperationException("Jwt:Audience is missing.");
         var expirationMinutes = ResolveAccessTokenExpiryMinutes();
+        expiresAtUtc = DateTime.UtcNow.AddMinutes(expirationMinutes);
+        jti = Guid.NewGuid().ToString("N");
 
         // Tạo thông tin ký số để bảo đảm token không bị giả mạo.
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
@@ -49,7 +48,8 @@ public class JwtTokenService : ITokenService
             new Claim("username", user.Username),
             new Claim("status", user.Status.ToString()),
             new Claim(ClaimTypes.Role, user.Role),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new Claim(JwtRegisteredClaimNames.Jti, jti),
+            new Claim("sid", sessionId.ToString())
         };
 
         // Tạo JWT đã ký để client dùng cho các API yêu cầu xác thực.
@@ -57,7 +57,7 @@ public class JwtTokenService : ITokenService
             issuer: issuer,
             audience: audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(expirationMinutes),
+            expires: expiresAtUtc,
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);

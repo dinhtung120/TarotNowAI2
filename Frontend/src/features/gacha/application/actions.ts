@@ -4,18 +4,19 @@ import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
-import type { 
-  GachaBannerDto, 
-  GachaBannerOddsDto, 
-  GachaHistoryItemDto, 
-  SpinGachaRequestDto, 
-  SpinGachaResult 
+import { AUTH_ERROR } from '@/shared/domain/authErrors';
+import type {
+ GachaBannerDto,
+ GachaBannerOddsDto,
+ GachaHistoryItemDto,
+ SpinGachaRequestDto,
+ SpinGachaResult,
 } from '../gacha.types';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function getGachaBanners(): Promise<ActionResult<GachaBannerDto[]>> {
   const accessToken = await getServerAccessToken();
-  if (!accessToken) return actionFail('Unauthorized');
+  if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
 
   try {
     const result = await serverHttpRequest<GachaBannerDto[]>('/gacha/banners', {
@@ -38,7 +39,7 @@ export async function getGachaBanners(): Promise<ActionResult<GachaBannerDto[]>>
 
 export async function getGachaOdds(bannerCode: string): Promise<ActionResult<GachaBannerOddsDto>> {
   const accessToken = await getServerAccessToken();
-  if (!accessToken) return actionFail('Unauthorized');
+  if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
 
   try {
     const result = await serverHttpRequest<GachaBannerOddsDto>(`/gacha/banners/${bannerCode}/odds`, {
@@ -62,7 +63,7 @@ export async function getGachaOdds(bannerCode: string): Promise<ActionResult<Gac
 
 export async function getGachaHistory(limit: number = 50): Promise<ActionResult<GachaHistoryItemDto[]>> {
   const accessToken = await getServerAccessToken();
-  if (!accessToken) return actionFail('Unauthorized');
+  if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
 
   try {
     const result = await serverHttpRequest<GachaHistoryItemDto[]>(`/gacha/history?limit=${limit}`, {
@@ -86,7 +87,7 @@ export async function getGachaHistory(limit: number = 50): Promise<ActionResult<
 
 export async function spinGacha(data: SpinGachaRequestDto): Promise<ActionResult<SpinGachaResult>> {
   const accessToken = await getServerAccessToken();
-  if (!accessToken) return actionFail('Unauthorized');
+  if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
 
   const idempotencyKey = uuidv4();
 

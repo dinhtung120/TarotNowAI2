@@ -1,9 +1,11 @@
 using System.Text;
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using TarotNow.Application.Interfaces;
 using TarotNow.Infrastructure.Constants;
 using TarotNow.Infrastructure.Options;
 
@@ -63,7 +65,8 @@ public static partial class DependencyInjection
 
         options.Events = new JwtBearerEvents
         {
-            OnMessageReceived = ResolveBearerTokenAsync
+            OnMessageReceived = ResolveBearerTokenAsync,
+            OnTokenValidated = ResolveTokenValidationAsync
         };
     }
 
@@ -77,16 +80,19 @@ public static partial class DependencyInjection
         var cookieToken = context.Request.Cookies["accessToken"];
         var path = context.HttpContext.Request.Path;
 
-        var isHubEndpoint = IsHubEndpoint(path);
-        if (isHubEndpoint && HasToken(cookieToken))
+        if (HasToken(cookieToken))
         {
             context.Token = cookieToken;
-            // Hub endpoint ưu tiên token trong cookie để tương thích client web thông thường.
+            // Ưu tiên access token qua cookie cho toàn bộ web endpoints để đồng bộ auth flow HttpOnly cookie.
         }
-        else if (HasToken(queryToken) && (isHubEndpoint || IsAiStreamEndpoint(path)))
+        else
         {
-            context.Token = queryToken;
-            // Fallback query token cho SignalR/client stream không gửi cookie thuận tiện.
+            var isHubEndpoint = IsHubEndpoint(path);
+            if (HasToken(queryToken) && (isHubEndpoint || IsAiStreamEndpoint(path)))
+            {
+                context.Token = queryToken;
+                // Fallback query token cho SignalR/client stream không gửi cookie thuận tiện.
+            }
         }
 
         return Task.CompletedTask;
@@ -120,6 +126,46 @@ public static partial class DependencyInjection
     private static bool HasToken(string? token)
     {
         return !string.IsNullOrWhiteSpace(token);
+    }
+
+    private static async Task ResolveTokenValidationAsync(TokenValidatedContext context)
+    {
+        var principal = context.Principal;
+        if (principal is null)
+        {
+            context.Fail("Missing token principal.");
+            return;
+        }
+
+        var cacheService = context.HttpContext.RequestServices.GetService<ICacheService>();
+        if (cacheService is null)
+        {
+            return;
+        }
+
+        var cancellationToken = context.HttpContext.RequestAborted;
+        var jti = principal.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+        if (HasToken(jti))
+        {
+            var isBlacklisted = await cacheService.GetAsync<string>($"auth:access-blacklist:{jti!.Trim()}", cancellationToken);
+            if (isBlacklisted is not null)
+            {
+                context.Fail("Access token has been revoked.");
+                return;
+            }
+        }
+
+        var sessionIdRaw = principal.FindFirst("sid")?.Value;
+        if (!Guid.TryParse(sessionIdRaw, out var sessionId) || sessionId == Guid.Empty)
+        {
+            return;
+        }
+
+        var isRevokedSession = await cacheService.GetAsync<string>($"auth:session-revoked:{sessionId}", cancellationToken);
+        if (isRevokedSession is not null)
+        {
+            context.Fail("Session has been revoked.");
+        }
     }
 
     /// <summary>

@@ -1,5 +1,6 @@
 'use server';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
+import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
@@ -9,7 +10,6 @@ interface ListUsersResponse { users: AdminUserItem[]; totalCount: number }
 export interface UpdateUserParams { role: string; status: string; diamondBalance: number; goldBalance: number }
 export interface CreateUserParams { email: string; username: string; displayName: string; password: string; role: string }
 
-const UNAUTHORIZED = 'Unauthorized';
 const FAIL_LIST_USERS = 'Failed to list users';
 const FAIL_UPDATE_USER = 'Failed to update user';
 const FAIL_CREATE_USER = 'Failed to create user';
@@ -18,7 +18,7 @@ type UsersListApi = { users?: AdminUserItem[]; Users?: AdminUserItem[]; totalCou
 
 async function withAdminToken<T>(work: (token: string) => Promise<ActionResult<T>>): Promise<ActionResult<T>> {
  const accessToken = await getServerAccessToken();
- if (!accessToken) return actionFail(UNAUTHORIZED);
+ if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
  return work(accessToken);
 }
 

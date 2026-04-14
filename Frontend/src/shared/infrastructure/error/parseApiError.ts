@@ -1,5 +1,10 @@
+import { AUTH_ERROR } from '@/shared/domain/authErrors';
+
 function pickErrorMessage(payload: unknown): string | undefined {
   if (!payload || typeof payload !== 'object') return undefined;
+
+  const errorCode = (payload as Record<string, unknown>).errorCode;
+  if (typeof errorCode === 'string' && errorCode.trim()) return errorCode;
 
   const candidates = ['message', 'error', 'detail', 'title'] as const;
   for (const key of candidates) {
@@ -20,6 +25,14 @@ export async function parseApiError(
   response: Response,
   fallbackMessage = `Request failed (${response.status})`
 ): Promise<string> {
+  if (response.status === 401) {
+    return AUTH_ERROR.UNAUTHORIZED;
+  }
+
+  if (response.status === 429) {
+    return AUTH_ERROR.RATE_LIMITED;
+  }
+
   try {
     const data = (await response.clone().json()) as unknown;
     const message = pickErrorMessage(data);

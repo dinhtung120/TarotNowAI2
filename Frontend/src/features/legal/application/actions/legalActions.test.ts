@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { recordConsent } from '@/features/legal/application/actions/record-consent';
 import { checkConsentStatus } from '@/features/legal/application/actions/consent-status';
+import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
@@ -33,7 +34,7 @@ describe('legal actions', () => {
 
   const result = await recordConsent('tos', 'v1');
 
-  expect(result).toEqual({ success: false, error: 'Unauthorized' });
+  expect(result).toEqual({ success: false, error: AUTH_ERROR.UNAUTHORIZED });
   expect(mockedServerHttpRequest).not.toHaveBeenCalled();
  });
 

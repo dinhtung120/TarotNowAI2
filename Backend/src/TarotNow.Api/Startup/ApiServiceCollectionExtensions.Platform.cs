@@ -29,7 +29,7 @@ public static partial class ApiServiceCollectionExtensions
         services.AddInfrastructureServices(configuration);
         services.AddApiObservability(configuration);
         ConfigureForwardedHeaders(services, configuration);
-        services.AddScoped<IRefreshTokenCookieService, RefreshTokenCookieService>();
+        services.AddScoped<IAuthCookieService, AuthCookieService>();
         services.AddSingleton<IUserPresenceTracker>(serviceProvider =>
         {
             var cacheBackendState = serviceProvider.GetService<CacheBackendState>();

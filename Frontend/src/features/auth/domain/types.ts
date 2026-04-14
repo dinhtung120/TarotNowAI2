@@ -12,6 +12,6 @@ export interface UserProfile {
 
 export interface AuthResponse {
  accessToken: string;
- expiresIn: number;
+ expiresInSeconds: number;
  user: UserProfile;
 }

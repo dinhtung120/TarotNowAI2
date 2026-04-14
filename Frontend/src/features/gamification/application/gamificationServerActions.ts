@@ -2,6 +2,7 @@
 
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import type {
  ClaimQuestRewardResult,
  LeaderboardResult,
@@ -13,7 +14,7 @@ import type {
 async function requireToken(): Promise<string> {
  const token = await getServerAccessToken();
  if (!token) {
-  throw new Error('Unauthorized');
+  throw new Error(AUTH_ERROR.UNAUTHORIZED);
  }
  return token;
 }

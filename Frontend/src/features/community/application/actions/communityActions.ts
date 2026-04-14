@@ -1,5 +1,6 @@
 'use server';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
+import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
@@ -13,7 +14,6 @@ import {
 } from '../../types';
 interface CommentsResponse { items: CommunityComment[]; totalCount: number; page: number; pageSize: number; totalPages: number }
 
-const UNAUTHORIZED = 'Unauthorized';
 const FAIL_GET_FEED = 'Failed to get feed';
 const FAIL_CREATE_POST = 'Failed to create post';
 const FAIL_TOGGLE_REACTION = 'Failed to toggle reaction';
@@ -22,7 +22,7 @@ const FAIL_GET_COMMENTS = 'Failed to fetch comments';
 
 async function withToken<T>(work: (token: string) => Promise<ActionResult<T>>): Promise<ActionResult<T>> {
  const token = await getServerAccessToken();
- if (!token) return actionFail(UNAUTHORIZED);
+ if (!token) return actionFail(AUTH_ERROR.UNAUTHORIZED);
  return work(token);
 }
 

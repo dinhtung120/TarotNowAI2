@@ -5,10 +5,11 @@ import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import type { WalletBalance } from '@/features/wallet/domain/types';
+import { AUTH_ERROR } from "@/shared/domain/authErrors";
 
 export async function getWalletBalance(): Promise<ActionResult<WalletBalance>> {
  const accessToken = await getServerAccessToken();
- if (!accessToken) return actionFail('Unauthorized');
+ if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
 
  try {
   const result = await serverHttpRequest<WalletBalance>('/Wallet/balance', {

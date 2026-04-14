@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { actionFail, actionOk } from '@/shared/domain/actionResult';
+import { AUTH_ERROR } from "@/shared/domain/authErrors";
 
 describe('actionResult helpers', () => {
  it('creates success result with data', () => {
@@ -15,10 +16,10 @@ describe('actionResult helpers', () => {
  });
 
  it('creates failure result', () => {
-  const result = actionFail('Unauthorized');
+  const result = actionFail(AUTH_ERROR.UNAUTHORIZED);
   expect(result.success).toBe(false);
   if (!result.success) {
-   expect(result.error).toBe('Unauthorized');
+   expect(result.error).toBe(AUTH_ERROR.UNAUTHORIZED);
   }
  });
 });

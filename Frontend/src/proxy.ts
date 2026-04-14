@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
 import { routing } from './i18n/routing';
+import { PROTECTED_PREFIXES } from '@/shared/config/authRoutes';
+import { AUTH_COOKIE, AUTH_HEADER, AUTH_SESSION } from '@/shared/infrastructure/auth/authConstants';
 import { getPublicApiOrigin } from '@/shared/infrastructure/http/apiUrl';
 
 /**
@@ -60,28 +62,93 @@ const matchesPrefix = (pathname: string, prefix: string): boolean =>
   pathname === prefix || pathname.startsWith(`${prefix}/`);
 
 /**
- * Danh sách các route yêu cầu authentication.
- * Nếu user chưa login (không có accessToken cookie), middleware sẽ redirect về trang login.
- */
-const PROTECTED_PREFIXES = [
-  '/profile',
-  '/wallet',
-  '/chat',
-  '/collection',
-  '/reading',
-  '/reader',
-  '/admin',
-];
-
-/**
  * Xóa cookies authentication khi redirect user chưa đăng nhập.
  * Đảm bảo không còn token rác trong browser sau khi bị kick ra khỏi protected route.
  */
 const clearAuthCookies = (response: NextResponse | Response): void => {
   if ('cookies' in response) {
-    response.cookies.delete('accessToken');
-    response.cookies.delete('refreshToken');
+    response.cookies.delete(AUTH_COOKIE.ACCESS);
+    response.cookies.delete(AUTH_COOKIE.REFRESH);
   }
+};
+
+/**
+ * Parse mốc hết hạn `exp` từ JWT access token.
+ */
+const parseJwtExpSeconds = (token: string | undefined): number | undefined => {
+  if (!token) return undefined;
+  const parts = token.split('.');
+  if (parts.length < 2 || !parts[1]) return undefined;
+
+  try {
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = `${base64}${'='.repeat((4 - (base64.length % 4)) % 4)}`;
+    const payload = JSON.parse(atob(padded)) as { exp?: number };
+    return typeof payload.exp === 'number' ? payload.exp : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * Khi token thiếu hoặc sắp hết hạn, middleware sẽ kích hoạt refresh.
+ */
+const shouldAttemptRefresh = (accessToken: string | undefined, refreshToken: string | undefined): boolean => {
+  if (!refreshToken) return false;
+  if (!accessToken) return true;
+
+  const exp = parseJwtExpSeconds(accessToken);
+  if (!exp) return true;
+  const now = Math.floor(Date.now() / 1000);
+  return exp - now <= AUTH_SESSION.ACCESS_REFRESH_THRESHOLD_SECONDS;
+};
+
+function getSetCookieHeaders(headers: Headers): string[] {
+  if (typeof headers.getSetCookie === 'function') {
+    return headers.getSetCookie();
+  }
+
+  const raw = headers.get('set-cookie');
+  if (!raw) return [];
+  return raw.split(/,\s*(?=[a-zA-Z_]+=)/);
+}
+
+/**
+ * Đồng bộ Set-Cookie từ response refresh vào response middleware.
+ */
+const appendRefreshCookies = (source: Headers, target: NextResponse): void => {
+  for (const cookie of getSetCookieHeaders(source)) {
+    if (cookie.trim().length > 0) {
+      target.headers.append('set-cookie', cookie);
+    }
+  }
+};
+
+const buildMiddlewareIdempotencyKey = (refreshToken: string | undefined): string => {
+  const tokenFingerprint = refreshToken && refreshToken.length > 16
+    ? refreshToken.slice(-16)
+    : 'anonymous';
+  const timeBucket = Math.floor(Date.now() / 30_000);
+  return `mw-refresh:${tokenFingerprint}:${timeBucket}`;
+};
+
+const refreshSessionViaInternalRoute = async (
+  request: NextRequest,
+  refreshToken: string | undefined,
+): Promise<Response> => {
+  const refreshUrl = new URL('/api/auth/refresh', request.url);
+  const forwardedDeviceId = request.headers.get(AUTH_HEADER.DEVICE_ID)
+    ?? request.cookies.get(AUTH_COOKIE.DEVICE)?.value
+    ?? '';
+  return fetch(refreshUrl, {
+    method: 'POST',
+    headers: {
+      Cookie: request.headers.get('cookie') ?? '',
+      [AUTH_HEADER.IDEMPOTENCY_KEY]: buildMiddlewareIdempotencyKey(refreshToken),
+      [AUTH_HEADER.DEVICE_ID]: forwardedDeviceId,
+    },
+    cache: 'no-store',
+  });
 };
 
 /* ------------------------------------------------------------------ */
@@ -273,13 +340,32 @@ export default async function proxy(request: NextRequest) {
   const pathWithoutLocale = stripLocalePrefix(pathname);
 
   const isProtectedRoute = PROTECTED_PREFIXES.some((p) => matchesPrefix(pathWithoutLocale, p));
-  const token = isProtectedRoute ? request.cookies.get('accessToken')?.value : undefined;
+  const accessToken = isProtectedRoute ? request.cookies.get(AUTH_COOKIE.ACCESS)?.value : undefined;
+  const refreshToken = isProtectedRoute ? request.cookies.get(AUTH_COOKIE.REFRESH)?.value : undefined;
 
-  if (isProtectedRoute && !token) {
+  if (isProtectedRoute && !accessToken && !refreshToken) {
     const loginUrl = new URL(`/${locale}/login`, request.url);
     const response = NextResponse.redirect(loginUrl);
     clearAuthCookies(response);
     return withResponseCsp(response);
+  }
+
+  if (isProtectedRoute && shouldAttemptRefresh(accessToken, refreshToken)) {
+    const refreshResponse = await refreshSessionViaInternalRoute(request, refreshToken);
+    if (!refreshResponse.ok) {
+      const loginUrl = new URL(`/${locale}/login`, request.url);
+      const response = NextResponse.redirect(loginUrl);
+      clearAuthCookies(response);
+      return withResponseCsp(response);
+    }
+
+    const response = intlMiddleware(request);
+    appendRefreshCookies(refreshResponse.headers, response);
+    if (isDocumentRequest(request)) {
+      return withResponseCsp(response);
+    }
+
+    return response;
   }
 
   /* ── Delegate cho next-intl middleware ── */

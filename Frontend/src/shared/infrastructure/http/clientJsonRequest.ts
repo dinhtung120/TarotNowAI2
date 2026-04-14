@@ -2,7 +2,7 @@
 
 import { parseApiError } from '@/shared/infrastructure/error/parseApiError';
 import { browserApiPath, getPublicApiBaseUrl } from '@/shared/infrastructure/http/apiUrl';
-import { useAuthStore } from '@/store/authStore';
+import { tryRefreshClientSide } from '@/shared/infrastructure/auth/refreshClient';
 
 function resolveClientApiUrl(pathFromV1Root: string): string {
   const rel = pathFromV1Root.startsWith('/') ? pathFromV1Root : `/${pathFromV1Root}`;
@@ -32,24 +32,29 @@ async function requestJsonToApiV1<TResponse, TRequest extends object>(
   payload: TRequest,
   options: ClientJsonOptions,
 ): Promise<ClientJsonResult<TResponse>> {
-  const token = useAuthStore.getState().token;
-  if (!token) {
-    return {
-      ok: false,
-      error: options.unauthorizedMessage ?? options.fallbackErrorMessage,
-      status: 401,
-    };
-  }
-
   const url = resolveClientApiUrl(pathFromV1Root);
-  const response = await fetch(url, {
+  const requestInit: RequestInit = {
     method: options.method ?? 'POST',
+    credentials: 'include',
     headers: {
-      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(payload),
-  });
+  };
+  let response = await fetch(url, requestInit);
+
+  if (response.status === 401) {
+    const refreshed = await tryRefreshClientSide();
+    if (!refreshed) {
+      return {
+        ok: false,
+        error: options.unauthorizedMessage ?? options.fallbackErrorMessage,
+        status: 401,
+      };
+    }
+
+    response = await fetch(url, requestInit);
+  }
 
   if (!response.ok) {
     const error = await parseApiError(response, options.fallbackErrorMessage);

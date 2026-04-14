@@ -37,6 +37,7 @@ import { getSubscriptionPlansAction, getMyEntitlementsAction } from '@/features/
 import { getLedger } from '@/features/wallet/application/actions';
 import { listMyWithdrawals } from '@/features/wallet/application/actions/withdrawal';
 import { listWithdrawalQueue } from '@/features/wallet/public';
+import { AUTH_ERROR, isUnauthorizedError } from '@/shared/domain/authErrors';
 
 const readersDirectoryQueryKey = ['readers', 1, 12, '', '', ''] as const;
 
@@ -364,12 +365,12 @@ export async function prefetchReadingHistoryListPage(qc: QueryClient): Promise<v
   await qc.prefetchQuery({
    queryKey: historySessionsListQueryKey(1, 'all', ''),
    queryFn: async () => {
-    const result = await getHistorySessionsAction(1, HISTORY_PAGE_SIZE, 'all', '');
-    if (result.success && result.data) {
-     return result.data;
-    }
-    if (result.error === 'unauthorized') {
-     throw new Error('Unauthorized');
+   const result = await getHistorySessionsAction(1, HISTORY_PAGE_SIZE, 'all', '');
+   if (result.success && result.data) {
+    return result.data;
+   }
+    if (isUnauthorizedError(result.error)) {
+     throw new Error(AUTH_ERROR.UNAUTHORIZED);
     }
     throw new Error(result.error || 'error');
    },
@@ -383,12 +384,12 @@ export async function prefetchReadingHistoryDetailPage(qc: QueryClient, sessionI
   await qc.prefetchQuery({
    queryKey: historyDetailQueryKey(sessionId),
    queryFn: async () => {
-    const result = await getHistoryDetailAction(sessionId);
-    if (result.success && result.data) {
-     return result.data;
-    }
-    if (result.error === 'unauthorized') {
-     throw new Error('Unauthorized');
+   const result = await getHistoryDetailAction(sessionId);
+   if (result.success && result.data) {
+    return result.data;
+   }
+    if (isUnauthorizedError(result.error)) {
+     throw new Error(AUTH_ERROR.UNAUTHORIZED);
     }
     throw new Error(result.error || 'error');
    },

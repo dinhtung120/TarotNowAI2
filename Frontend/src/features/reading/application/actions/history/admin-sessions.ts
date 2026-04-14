@@ -6,6 +6,7 @@ import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import type { AdminHistoryPaginatedResponse, AdminHistorySessionItem } from './types';
+import { AUTH_ERROR } from "@/shared/domain/authErrors";
 
 export async function getAllHistorySessionsAdminAction(params: {
  page: number;
@@ -20,7 +21,7 @@ export async function getAllHistorySessionsAdminAction(params: {
  try {
   const token = await getServerAccessToken();
   if (!token) {
-   return actionFail('unauthorized');
+   return actionFail(AUTH_ERROR.UNAUTHORIZED);
   }
 
   let query = `page=${params.page}&pageSize=${params.pageSize}`;
@@ -36,7 +37,7 @@ export async function getAllHistorySessionsAdminAction(params: {
   });
 
   if (!result.ok) {
-   if (result.status === 401) return actionFail('unauthorized');
+   if (result.status === 401) return actionFail(AUTH_ERROR.UNAUTHORIZED);
    if (result.status === 403) return actionFail(tApi('forbidden'));
    logger.error('HistoryAction.getAllHistorySessionsAdminAction', result.error, {
     status: result.status,

@@ -33,6 +33,7 @@ public static partial class DependencyInjection
     private static void AddCoreRepositories(IServiceCollection services)
     {
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IAuthSessionRepository, AuthSessionRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IEmailOtpRepository, EmailOtpRepository>();
         services.AddScoped<IWalletRepository, WalletRepository>();

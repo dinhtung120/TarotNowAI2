@@ -1,8 +1,12 @@
 
 
 using MediatR;
+using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Interfaces;
 using TarotNow.Application.Exceptions;
+using TarotNow.Domain.Entities;
+using TarotNow.Domain.Events;
+using RefreshTokenEntity = TarotNow.Domain.Entities.RefreshToken;
 
 namespace TarotNow.Application.Features.Auth.Commands.RevokeToken;
 
@@ -10,14 +14,21 @@ namespace TarotNow.Application.Features.Auth.Commands.RevokeToken;
 public class RevokeTokenCommandHandler : IRequestHandler<RevokeTokenCommand, bool>
 {
     private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IAuthSessionRepository _authSessionRepository;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler revoke token.
     /// Luồng xử lý: nhận refresh token repository để thao tác revoke theo token hoặc theo user.
     /// </summary>
-    public RevokeTokenCommandHandler(IRefreshTokenRepository refreshTokenRepository)
+    public RevokeTokenCommandHandler(
+        IRefreshTokenRepository refreshTokenRepository,
+        IAuthSessionRepository authSessionRepository,
+        IDomainEventPublisher domainEventPublisher)
     {
         _refreshTokenRepository = refreshTokenRepository;
+        _authSessionRepository = authSessionRepository;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>
@@ -28,37 +39,82 @@ public class RevokeTokenCommandHandler : IRequestHandler<RevokeTokenCommand, boo
     {
         if (request.RevokeAll && request.UserId.HasValue)
         {
-            // Nhánh revoke all: thu hồi toàn bộ phiên của user chỉ định.
-            await _refreshTokenRepository.RevokeAllByUserIdAsync(request.UserId.Value, cancellationToken);
+            await HandleRevokeAllAsync(request.UserId.Value, cancellationToken);
             return true;
         }
 
-        if (string.IsNullOrWhiteSpace(request.Token))
+        var tokenEntity = await LoadTokenToRevokeAsync(request.Token, cancellationToken);
+        if (tokenEntity is null)
         {
-            // Khi không revoke all thì token cụ thể là bắt buộc.
-            throw new BusinessRuleException("INVALID_TOKEN", "Token is required for revocation.");
-        }
-
-        var tokenEntity = await _refreshTokenRepository.GetByTokenAsync(request.Token, cancellationToken);
-        if (tokenEntity == null)
-        {
-            // Token không tồn tại: trả false để caller biết không có gì bị revoke.
             return false;
         }
 
-        if (!tokenEntity.MatchesToken(request.Token))
+        await RevokeSingleTokenAsync(tokenEntity, cancellationToken);
+        await PublishSingleLogoutEventAsync(tokenEntity, cancellationToken);
+        return true;
+    }
+
+    private async Task HandleRevokeAllAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        await _refreshTokenRepository.RevokeAllByUserIdAsync(userId, cancellationToken);
+        await _authSessionRepository.RevokeAllByUserAsync(userId, cancellationToken);
+
+        await _domainEventPublisher.PublishAsync(
+            new UserLoggedOutDomainEvent
+            {
+                UserId = userId,
+                RevokeAll = true,
+                Reason = RefreshRevocationReasons.ManualRevoke
+            },
+            cancellationToken);
+    }
+
+    private async Task<RefreshTokenEntity?> LoadTokenToRevokeAsync(string? rawToken, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(rawToken))
         {
-            // Edge case token entity không khớp raw token: coi như revoke thất bại an toàn.
-            return false;
+            throw new BusinessRuleException(AuthErrorCodes.Unauthorized, "Token is required for revocation.");
         }
 
+        var tokenEntity = await _refreshTokenRepository.GetByTokenAsync(rawToken, cancellationToken);
+        if (tokenEntity is null)
+        {
+            return null;
+        }
+
+        return tokenEntity.MatchesToken(rawToken) ? tokenEntity : null;
+    }
+
+    private async Task RevokeSingleTokenAsync(RefreshTokenEntity tokenEntity, CancellationToken cancellationToken)
+    {
         if (!tokenEntity.IsRevoked)
         {
-            // Chỉ revoke khi token chưa bị revoke để tránh ghi đè trạng thái không cần thiết.
-            tokenEntity.Revoke();
+            tokenEntity.Revoke(RefreshRevocationReasons.ManualRevoke);
             await _refreshTokenRepository.UpdateAsync(tokenEntity, cancellationToken);
         }
 
-        return true;
+        if (tokenEntity.SessionId == Guid.Empty)
+        {
+            return;
+        }
+
+        await _refreshTokenRepository.RevokeSessionAsync(
+            tokenEntity.SessionId,
+            RefreshRevocationReasons.ManualRevoke,
+            cancellationToken);
+        await _authSessionRepository.RevokeAsync(tokenEntity.SessionId, cancellationToken);
+    }
+
+    private async Task PublishSingleLogoutEventAsync(RefreshTokenEntity tokenEntity, CancellationToken cancellationToken)
+    {
+        await _domainEventPublisher.PublishAsync(
+            new UserLoggedOutDomainEvent
+            {
+                UserId = tokenEntity.UserId,
+                SessionId = tokenEntity.SessionId == Guid.Empty ? null : tokenEntity.SessionId,
+                RevokeAll = false,
+                Reason = RefreshRevocationReasons.ManualRevoke
+            },
+            cancellationToken);
     }
 }

@@ -1,0 +1,16 @@
+export const PROTECTED_PREFIXES = [
+ '/profile',
+ '/wallet',
+ '/chat',
+ '/collection',
+ '/reading',
+ '/reader',
+ '/readers',
+ '/gamification',
+ '/leaderboard',
+ '/gacha',
+ '/community',
+ '/premium',
+ '/notifications',
+ '/admin',
+] as const;

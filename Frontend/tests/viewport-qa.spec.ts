@@ -2,7 +2,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { test } from '@playwright/test';
 import {
- QA_AUTH_STATE,
  QA_JWT,
  QA_TOKEN_EXP,
  ROUTES,
@@ -30,10 +29,6 @@ test('viewport QA (mobile/tablet/desktop)', async ({ page }) => {
    sameSite: 'Lax',
   },
  ]);
-
- await page.addInitScript(([key, value]) => {
-  localStorage.setItem(key as string, value as string);
- }, ['tarot-now-auth', QA_AUTH_STATE]);
 
  for (const viewport of VIEWPORTS) {
   await page.setViewportSize({ width: viewport.width, height: viewport.height });

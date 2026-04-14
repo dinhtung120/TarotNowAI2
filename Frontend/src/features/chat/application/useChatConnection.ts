@@ -69,7 +69,6 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
 
  useChatSignalRLifecycle({
   conversationId,
-  token: authStore.token,
   currentUserId: authStore.user?.id ?? '',
   queryClient,
   connectionRef,

@@ -18,5 +18,17 @@ public class LoginCommandValidator : AbstractValidator<LoginCommand>
         // Password bắt buộc để thực hiện xác thực.
         RuleFor(x => x.Password)
             .NotEmpty().WithMessage("Password is required.");
+
+        RuleFor(x => x.ClientIpAddress)
+            .NotEmpty()
+            .MaximumLength(128);
+
+        RuleFor(x => x.DeviceId)
+            .NotEmpty()
+            .MaximumLength(128);
+
+        RuleFor(x => x.UserAgentHash)
+            .NotEmpty()
+            .MaximumLength(128);
     }
 }

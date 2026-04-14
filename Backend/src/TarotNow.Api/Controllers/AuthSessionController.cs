@@ -1,6 +1,9 @@
+using System.Security.Cryptography;
+using System.Text;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using TarotNow.Api.Constants;
 using TarotNow.Api.Extensions;
 using TarotNow.Api.Services;
 using TarotNow.Application.Features.Auth.Commands.Login;
@@ -12,96 +15,84 @@ namespace TarotNow.Api.Controllers;
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
 [Route(ApiRoutes.Auth)]
-// API quản lý phiên đăng nhập.
-// Luồng chính: login, refresh token và logout (một phiên hoặc toàn bộ phiên).
 public sealed class AuthSessionController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly IRefreshTokenCookieService _cookieService;
+    private readonly IAuthCookieService _authCookieService;
 
     /// <summary>
-    /// Khởi tạo controller phiên đăng nhập.
+    /// Khởi tạo auth session controller.
     /// </summary>
-    /// <param name="mediator">MediatR điều phối command auth.</param>
-    /// <param name="cookieService">Service dựng options cookie refresh token.</param>
-    public AuthSessionController(
-        IMediator mediator,
-        IRefreshTokenCookieService cookieService)
+    public AuthSessionController(IMediator mediator, IAuthCookieService authCookieService)
     {
         _mediator = mediator;
-        _cookieService = cookieService;
+        _authCookieService = authCookieService;
     }
 
     /// <summary>
-    /// Đăng nhập và cấp access token + refresh token.
-    /// Luồng xử lý: gắn IP client vào command, gọi login, lưu refresh token vào cookie an toàn.
+    /// Đăng nhập user và cấp access/refresh tokens.
     /// </summary>
-    /// <param name="command">Command đăng nhập.</param>
-    /// <returns>Auth response chứa access token và thông tin user.</returns>
     [HttpPost("login")]
-    [EnableRateLimiting("login")]
+    [EnableRateLimiting("auth-login")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AuthResponse))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
-    public async Task<IActionResult> Login([FromBody] LoginCommand command)
+    public async Task<IActionResult> Login([FromBody] LoginCommand command, CancellationToken cancellationToken)
     {
-        // Lưu IP nguồn để phục vụ audit phiên và phát hiện hành vi bất thường.
         command.ClientIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        command.DeviceId = ResolveDeviceId(Request.Headers[AuthHeaders.DeviceId].ToString());
+        command.UserAgentHash = HashValue(Request.Headers.UserAgent.ToString());
 
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command, cancellationToken);
 
-        // Đồng bộ refresh token vào cookie HttpOnly theo cấu hình hiện tại của request.
-        Response.Cookies.Append("refreshToken", result.RefreshToken, _cookieService.BuildOptions(Request));
+        _authCookieService.SetAccessToken(Request, Response, result.Response.AccessToken, result.Response.ExpiresInSeconds);
+        _authCookieService.SetRefreshToken(Request, Response, result.RefreshToken);
         return Ok(result.Response);
     }
 
     /// <summary>
-    /// Làm mới cặp token dựa trên refresh token trong cookie.
-    /// Luồng xử lý: đọc cookie, kiểm tra thiếu token, gọi command refresh, cập nhật cookie mới.
+    /// Refresh access token từ refresh token cookie.
     /// </summary>
-    /// <returns>Auth response mới hoặc lỗi 401 khi thiếu refresh token.</returns>
     [HttpPost("refresh")]
-    [EnableRateLimiting("auth-session")]
+    [EnableRateLimiting("auth-refresh-token-family")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AuthResponse))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> RefreshTokens()
+    public async Task<IActionResult> RefreshTokens(
+        [FromHeader(Name = AuthHeaders.IdempotencyKey)] string? idempotencyKey,
+        CancellationToken cancellationToken)
     {
-        var refreshToken = Request.Cookies["refreshToken"];
-        if (string.IsNullOrEmpty(refreshToken))
+        var refreshToken = Request.Cookies[AuthCookieNames.RefreshToken];
+        if (string.IsNullOrWhiteSpace(refreshToken))
         {
-            // Edge case thiếu cookie: từ chối sớm để không chạy logic refresh vô nghĩa.
-            return Problem(
-                statusCode: StatusCodes.Status401Unauthorized,
-                title: "Missing refresh token",
-                detail: "Refresh token is missing.");
+            _authCookieService.ClearAuthCookies(Request, Response);
+            return this.UnauthorizedProblem("Missing refresh token.");
         }
 
-        // Tạo command refresh với IP hiện tại để lưu dấu vết thay đổi phiên.
         var command = new RefreshTokenCommand
         {
             Token = refreshToken,
-            ClientIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown"
+            IdempotencyKey = string.IsNullOrWhiteSpace(idempotencyKey) ? Guid.NewGuid().ToString("N") : idempotencyKey,
+            ClientIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            DeviceId = ResolveDeviceId(Request.Headers[AuthHeaders.DeviceId].ToString()),
+            UserAgentHash = HashValue(Request.Headers.UserAgent.ToString())
         };
 
-        var result = await _mediator.Send(command);
+        var result = await _mediator.Send(command, cancellationToken);
 
-        // Ghi đè refresh token cũ bằng token mới để duy trì cơ chế rotating token.
-        Response.Cookies.Append("refreshToken", result.NewRefreshToken, _cookieService.BuildOptions(Request));
+        _authCookieService.SetAccessToken(Request, Response, result.Response.AccessToken, result.Response.ExpiresInSeconds);
+        _authCookieService.SetRefreshToken(Request, Response, result.NewRefreshToken);
         return Ok(result.Response);
     }
 
     /// <summary>
-    /// Đăng xuất phiên hiện tại hoặc toàn bộ phiên của người dùng.
-    /// Luồng xử lý: dựng command revoke, kiểm tra điều kiện revokeAll, xóa cookie sau khi revoke thành công.
+    /// Logout session hiện tại hoặc toàn bộ sessions.
     /// </summary>
-    /// <param name="revokeAll">Cờ yêu cầu thu hồi toàn bộ phiên.</param>
-    /// <returns>Thông báo đăng xuất thành công hoặc lỗi điều kiện đầu vào/quyền truy cập.</returns>
     [HttpPost("logout")]
-    [EnableRateLimiting("auth-session")]
+    [EnableRateLimiting("auth-refresh")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Logout([FromQuery] bool revokeAll = false)
+    public async Task<IActionResult> Logout([FromQuery] bool revokeAll = false, CancellationToken cancellationToken = default)
     {
-        var refreshToken = Request.Cookies["refreshToken"];
+        var refreshToken = Request.Cookies[AuthCookieNames.RefreshToken];
 
         var command = new RevokeTokenCommand
         {
@@ -113,28 +104,41 @@ public sealed class AuthSessionController : ControllerBase
         {
             if (!User.TryGetUserId(out var userId))
             {
-                // Rule bảo mật: chỉ user đã xác thực mới được thu hồi toàn bộ phiên của chính họ.
-                return Problem(
-                    statusCode: StatusCodes.Status401Unauthorized,
-                    title: "Authentication required",
-                detail: "Must be authenticated to revoke all sessions.");
+                _authCookieService.ClearAuthCookies(Request, Response);
+                return this.UnauthorizedProblem("Must be authenticated to revoke all sessions.");
             }
 
-            // Gắn UserId để backend revoke toàn bộ token theo chủ tài khoản.
             command.UserId = userId;
         }
-        else if (string.IsNullOrEmpty(command.Token))
+        else if (string.IsNullOrWhiteSpace(command.Token))
         {
-            // Nhánh revoke một phiên bắt buộc phải có refresh token hiện tại.
+            _authCookieService.ClearAuthCookies(Request, Response);
             return Problem(
                 statusCode: StatusCodes.Status400BadRequest,
                 title: "Missing refresh token",
                 detail: "No refresh token provided.");
         }
 
-        await _mediator.Send(command);
-        // Xóa cookie ở client sau khi revoke thành công để đồng bộ trạng thái phiên.
-        Response.Cookies.Delete("refreshToken", _cookieService.BuildOptions(Request));
+        await _mediator.Send(command, cancellationToken);
+        _authCookieService.ClearAuthCookies(Request, Response);
         return Ok(new { message = "Logged out successfully." });
+    }
+
+    private static string ResolveDeviceId(string? deviceId)
+    {
+        if (string.IsNullOrWhiteSpace(deviceId))
+        {
+            return "unknown-device";
+        }
+
+        var trimmed = deviceId.Trim();
+        return trimmed.Length <= 128 ? trimmed : trimmed[..128];
+    }
+
+    private static string HashValue(string? raw)
+    {
+        var normalized = string.IsNullOrWhiteSpace(raw) ? "unknown" : raw.Trim();
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
+        return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 }

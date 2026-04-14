@@ -9,7 +9,7 @@ test('redirects private route to login when no auth cookie', async ({ page }) =>
 test('reading stream proxy rejects when unauthenticated', async ({ request }) => {
   const baseURL = process.env.QA_BASE_URL || 'http://127.0.0.1:3100';
   const response = await request.get(
-    `${baseURL}/api/reading/sessions/00000000-0000-0000-0000-000000000000/stream`
+    `${baseURL}/vi/api/reading/sessions/00000000-0000-0000-0000-000000000000/stream`
   );
   expect(response.status()).toBe(401);
 });

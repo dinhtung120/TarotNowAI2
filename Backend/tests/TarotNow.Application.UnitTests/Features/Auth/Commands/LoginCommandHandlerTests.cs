@@ -1,6 +1,7 @@
 
 
 using Moq;
+using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Features.Auth.Commands.Login;
 using TarotNow.Application.Interfaces;
 using TarotNow.Application.Exceptions;
@@ -22,6 +23,9 @@ public class LoginCommandHandlerTests
     private readonly Mock<IJwtTokenSettings> _jwtTokenSettingsMock;
     // Mock refresh token repo để kiểm tra persistence refresh token.
     private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock;
+    private readonly Mock<IAuthSessionRepository> _authSessionRepositoryMock;
+    private readonly Mock<ICacheService> _cacheServiceMock;
+    private readonly Mock<IDomainEventPublisher> _domainEventPublisherMock;
     // Handler cần kiểm thử.
     private readonly LoginCommandHandler _handler;
 
@@ -36,14 +40,29 @@ public class LoginCommandHandlerTests
         _tokenServiceMock = new Mock<ITokenService>();
         _jwtTokenSettingsMock = new Mock<IJwtTokenSettings>();
         _refreshTokenRepositoryMock = new Mock<IRefreshTokenRepository>();
+        _authSessionRepositoryMock = new Mock<IAuthSessionRepository>();
+        _cacheServiceMock = new Mock<ICacheService>();
+        _domainEventPublisherMock = new Mock<IDomainEventPublisher>();
 
         _jwtTokenSettingsMock.SetupGet(x => x.RefreshTokenExpiryDays).Returns(7);
         _jwtTokenSettingsMock.SetupGet(x => x.AccessTokenExpiryMinutes).Returns(15);
+        _domainEventPublisherMock
+            .Setup(x => x.PublishAsync(It.IsAny<Domain.Events.IDomainEvent>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+        _cacheServiceMock
+            .Setup(x => x.GetAsync<long>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0L);
+        _cacheServiceMock
+            .Setup(x => x.RemoveAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         _handler = new LoginCommandHandler(
             _userRepositoryMock.Object, _passwordHasherMock.Object,
             _tokenServiceMock.Object, _jwtTokenSettingsMock.Object,
-            _refreshTokenRepositoryMock.Object
+            _refreshTokenRepositoryMock.Object,
+            _authSessionRepositoryMock.Object,
+            _cacheServiceMock.Object,
+            _domainEventPublisherMock.Object
         );
     }
 
@@ -59,7 +78,7 @@ public class LoginCommandHandlerTests
                            .ReturnsAsync((User?)null);
 
         var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _handler.Handle(command, CancellationToken.None));
-        Assert.Equal("INVALID_CREDENTIALS", ex.ErrorCode);
+        Assert.Equal(AuthErrorCodes.Unauthorized, ex.ErrorCode);
     }
 
     /// <summary>
@@ -77,7 +96,7 @@ public class LoginCommandHandlerTests
         _passwordHasherMock.Setup(h => h.VerifyPassword("correctHash", "WrongPassword")).Returns(false);
 
         var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _handler.Handle(command, CancellationToken.None));
-        Assert.Equal("INVALID_CREDENTIALS", ex.ErrorCode);
+        Assert.Equal(AuthErrorCodes.Unauthorized, ex.ErrorCode);
     }
 
     /// <summary>
@@ -96,7 +115,7 @@ public class LoginCommandHandlerTests
         _passwordHasherMock.Setup(h => h.VerifyPassword("correctHash", "Password123")).Returns(true);
 
         var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => _handler.Handle(command, CancellationToken.None));
-        Assert.Equal("USER_PENDING", ex.ErrorCode);
+        Assert.Equal(AuthErrorCodes.Unauthorized, ex.ErrorCode);
     }
 
     /// <summary>
@@ -110,19 +129,29 @@ public class LoginCommandHandlerTests
         {
             EmailOrUsername = "activeuser",
             Password = "Password123",
-            ClientIpAddress = "127.0.0.1"
+            ClientIpAddress = "127.0.0.1",
+            DeviceId = "device-1",
+            UserAgentHash = "ua-hash-1"
         };
         var user = new User("test@example.com", "activeuser", "correctHash", "Test User", new DateTime(2000, 1, 1), true);
         user.Activate();
+        var session = new AuthSession(user.Id, command.DeviceId, command.UserAgentHash, "ip-hash");
+        var accessTokenExpiresAt = DateTime.UtcNow.AddMinutes(15);
+        var accessTokenJti = "jti-1";
 
         _userRepositoryMock.Setup(r => r.GetByUsernameAsync(command.EmailOrUsername, It.IsAny<CancellationToken>()))
                            .ReturnsAsync(user);
         _passwordHasherMock.Setup(h => h.VerifyPassword("correctHash", "Password123")).Returns(true);
-        _tokenServiceMock.Setup(t => t.GenerateAccessToken(user)).Returns("mocked_jwt");
+        _authSessionRepositoryMock
+            .Setup(x => x.CreateAsync(user.Id, command.DeviceId, command.UserAgentHash, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(session);
+        _tokenServiceMock.Setup(t => t.GenerateAccessToken(user, session.Id, out accessTokenExpiresAt, out accessTokenJti)).Returns("mocked_jwt");
         _tokenServiceMock.Setup(t => t.GenerateRefreshToken()).Returns("mocked_refresh_token");
 
         // Thực thi đăng nhập thành công và lấy tuple response + refresh token.
-        var (response, refreshToken) = await _handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
+        var response = result.Response;
+        var refreshToken = result.RefreshToken;
 
         Assert.NotNull(response);
         Assert.Equal("mocked_jwt", response.AccessToken);
@@ -133,7 +162,8 @@ public class LoginCommandHandlerTests
         _refreshTokenRepositoryMock.Verify(r => r.AddAsync(It.Is<RefreshToken>(rt =>
             rt.MatchesToken("mocked_refresh_token") &&
             rt.UserId == user.Id &&
-            rt.CreatedByIp == "127.0.0.1"
+            rt.CreatedByIp == "127.0.0.1" &&
+            rt.SessionId == session.Id
         ), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

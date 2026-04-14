@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useLocale, useTranslations } from 'next-intl';
 import { getAllHistorySessionsAdminAction } from '@/features/reading/public';
+import { isUnauthorizedError } from '@/shared/domain/authErrors';
 
 export interface AdminReading {
  id: string;
@@ -50,7 +51,7 @@ export function useAdminReadings() {
     return result.data as PaginatedResponse;
    }
 
-   if (result.error === 'unauthorized') {
+   if (isUnauthorizedError(result.error)) {
     toast.error(t('readings.toast.unauthorized'));
    }
 

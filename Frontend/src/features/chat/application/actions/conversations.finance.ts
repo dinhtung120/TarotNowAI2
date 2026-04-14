@@ -4,8 +4,9 @@ import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import type { ListAdminDisputesResult } from './conversations.types';
+import { AUTH_ERROR } from "@/shared/domain/authErrors";
 
-function unauthorized<T>() { return actionFail('Unauthorized') as ActionResult<T>; }
+function unauthorized<T>() { return actionFail(AUTH_ERROR.UNAUTHORIZED) as ActionResult<T>; }
 
 export async function requestConversationAddMoney(
  conversationId: string,

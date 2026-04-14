@@ -4,12 +4,11 @@ import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
-import { 
-  IStreakStatusResult
-} from '../types/checkin.types';
+import { AUTH_ERROR } from '@/shared/domain/authErrors';
+import { IStreakStatusResult } from '../types/checkin.types';
 
 function unauthorized<T>() {
-  return actionFail('Unauthorized') as ActionResult<T>;
+  return actionFail(AUTH_ERROR.UNAUTHORIZED) as ActionResult<T>;
 }
 
 export async function getStreakStatus(): Promise<ActionResult<IStreakStatusResult>> {

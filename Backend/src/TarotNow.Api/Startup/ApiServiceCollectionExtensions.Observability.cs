@@ -38,6 +38,7 @@ public static partial class ApiServiceCollectionExtensions
             .WithTracing(tracing =>
             {
                 tracing
+                    .AddSource("TarotNow.Auth")
                     .AddAspNetCoreInstrumentation(options => options.RecordException = true)
                     .AddHttpClientInstrumentation();
 

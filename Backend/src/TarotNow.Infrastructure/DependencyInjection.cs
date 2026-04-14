@@ -31,6 +31,7 @@ public static partial class DependencyInjection
     private static void ConfigureOptions(IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
+        services.Configure<AuthSecurityOptions>(configuration.GetSection("AuthSecurity"));
         services.Configure<CorsOptions>(configuration.GetSection("Cors"));
         services.Configure<AiProviderOptions>(configuration.GetSection("AiProvider"));
         services.Configure<SystemConfigOptions>(configuration.GetSection("SystemConfig"));

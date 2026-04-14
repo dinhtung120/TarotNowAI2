@@ -9,6 +9,8 @@ import ThemeStylesheetManager from "@/shared/components/common/ThemeStylesheetMa
 import { DEFAULT_THEME, getThemeStylesheetHref, isValidTheme, THEME_COOKIE_KEY, type ThemeId } from "@/shared/domain/theme";
 import AppAuthSessionManager from "@/features/auth/presentation/components/AppAuthSessionManager";
 import AppQueryProvider from "@/shared/components/common/AppQueryProvider";
+import AuthBootstrap from "@/shared/components/auth/AuthBootstrap";
+import { getServerSessionSnapshot } from "@/shared/infrastructure/auth/serverAuth";
 import "../globals.css";
 
 const geistSans = Geist({
@@ -47,15 +49,17 @@ export default async function RootLayout({ children, params }: Readonly<{ childr
  const cookieStore = await cookies();
  const cookieTheme = cookieStore.get(THEME_COOKIE_KEY)?.value ?? null;
  const initialTheme: ThemeId = isValidTheme(cookieTheme) ? cookieTheme : DEFAULT_THEME;
+ const sessionSnapshot = await getServerSessionSnapshot();
 
  return (
   <html lang={locale} data-theme={initialTheme}>
    <head><link id="tn-theme-stylesheet" rel="stylesheet" href={getThemeStylesheetHref(initialTheme)} /></head>
    <body className={cn(geistSans.variable, geistMono.variable, playfair.variable, "antialiased")}>
     <ThemeStylesheetManager initialTheme={initialTheme} />
-    <NextIntlClientProvider messages={messages}>
-     <AppQueryProvider>
-      <AppAuthSessionManager />
+	    <NextIntlClientProvider messages={messages}>
+	     <AppQueryProvider>
+	      <AuthBootstrap initialUser={sessionSnapshot.user} />
+	      <AppAuthSessionManager />
       {children}
       <Toaster position="top-right" />
      </AppQueryProvider>

@@ -18,6 +18,18 @@ public class RefreshTokenCommandValidator : AbstractValidator<RefreshTokenComman
         // Client IP bắt buộc để lưu audit thông tin phiên.
         RuleFor(x => x.ClientIpAddress)
             .NotEmpty()
-            .MaximumLength(64);
+            .MaximumLength(128);
+
+        RuleFor(x => x.DeviceId)
+            .NotEmpty()
+            .MaximumLength(128);
+
+        RuleFor(x => x.UserAgentHash)
+            .NotEmpty()
+            .MaximumLength(128);
+
+        RuleFor(x => x.IdempotencyKey)
+            .NotEmpty()
+            .MaximumLength(128);
     }
 }
