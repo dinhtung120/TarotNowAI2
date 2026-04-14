@@ -34,7 +34,7 @@ public sealed class RefreshTokenCookieService : IRefreshTokenCookieService
         {
             HttpOnly = true,
             Secure = shouldUseSecureCookie,
-            SameSite = SameSiteMode.Strict,
+            SameSite = SameSiteMode.Lax,
             // Dùng root path để refresh token khả dụng cho toàn bộ API auth flow.
             Path = "/",
             Expires = DateTime.UtcNow.AddDays(expiryDays)

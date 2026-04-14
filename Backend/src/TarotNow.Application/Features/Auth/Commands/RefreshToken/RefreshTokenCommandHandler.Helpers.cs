@@ -43,7 +43,19 @@ public partial class RefreshTokenCommandHandler
             return;
         }
 
-        // Rule bảo mật: phát hiện reuse token revoked thì thu hồi toàn bộ phiên của user.
+        // Rule bảo mật: Để xử lý tranh chấp (race condition) từ client (ví dụ 2 request gửi cùng lúc),
+        // chúng ta cho phép một khoảng thời gian ân hạn (Grace Period) là 60 giây.
+        // Nếu token vừa bị thu hồi trong 60 giây, chỉ ném lỗi thông thường thay vì thu hồi TOÀN BỘ các phiên.
+        var gracePeriod = TimeSpan.FromSeconds(60);
+        if (token.RevokedAt.HasValue && DateTime.UtcNow - token.RevokedAt.Value < gracePeriod)
+        {
+            throw new BusinessRuleException(
+                "INVALID_TOKEN", 
+                "Refresh token has already been used recently. Please use the new token or refresh the page.");
+        }
+
+        // Nếu vượt quá khoảng ân hạn mà vẫn dùng lại token cũ -> Nghi ngờ bị tấn công (token reuse).
+        // Thu hồi toàn bộ phiên của user để đảm bảo an toàn tối đa.
         await _refreshTokenRepository.RevokeAllByUserIdAsync(token.UserId, cancellationToken);
         throw new BusinessRuleException(
             "TOKEN_COMPROMISED",

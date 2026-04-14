@@ -150,46 +150,64 @@ export async function logoutAction(): Promise<ActionResult<undefined>> {
   }
 }
 
+// Biến toàn cục để tránh việc thực hiện nhiều yêu cầu refresh token cùng lúc trong cùng một tiến trình server.
+// Điều này giúp giảm thiểu rủi ro tranh chấp (race condition) khi nhiều component cùng yêu cầu refresh.
+let refreshPromise: Promise<ActionResult<{ accessToken: string }>> | null = null;
+
 /**
  * Thực hiện làm mới accessToken sử dụng refreshToken.
  */
 export async function refreshAccessTokenAction(): Promise<ActionResult<{ accessToken: string }>> {
-  const tApi = await getTranslations('ApiErrors');
-  try {
-    const cookieStore = await cookies();
-    const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)?.value;
-
-    if (!refreshToken) {
-      return actionFail(tApi('unauthorized'));
-    }
-
-    const result = await serverHttpRequest<AuthResponse>('/auth/refresh', {
-      method: 'POST',
-      headers: {
-        Cookie: `${REFRESH_TOKEN_COOKIE}=${refreshToken}`,
-      },
-      fallbackErrorMessage: tApi('unauthorized'),
-    });
-
-    if (!result.ok) {
-      cookieStore.delete(ACCESS_TOKEN_COOKIE);
-      cookieStore.delete(REFRESH_TOKEN_COOKIE);
-      return actionFail(result.error || tApi('unauthorized'));
-    }
-
-    const accessToken = result.data.accessToken;
-    if (!accessToken) {
-      cookieStore.delete(ACCESS_TOKEN_COOKIE);
-      return actionFail(tApi('unauthorized'));
-    }
-
-    // Cập nhật lại accessToken cookie và đồng bộ lại refreshToken mới (nếu có)
-    await setAccessTokenCookie(accessToken, result.data.expiresIn);
-    await syncRefreshTokenCookie(result.headers);
-
-    return actionOk({ accessToken });
-  } catch (error) {
-    logger.error('[AuthAction] refreshAccessTokenAction', error);
-    return actionFail(tApi('network_error'));
+  if (refreshPromise) {
+    // Nếu đang có một yêu cầu refresh đang chạy, trả về luôn Promise đó để tránh gọi API trùng lặp.
+    return refreshPromise;
   }
+
+  const tApi = await getTranslations('ApiErrors');
+  
+  refreshPromise = (async () => {
+    try {
+      const cookieStore = await cookies();
+      const refreshToken = cookieStore.get(REFRESH_TOKEN_COOKIE)?.value;
+
+      if (!refreshToken) {
+        return actionFail(tApi('unauthorized'));
+      }
+
+      const result = await serverHttpRequest<AuthResponse>('/auth/refresh', {
+        method: 'POST',
+        headers: {
+          Cookie: `${REFRESH_TOKEN_COOKIE}=${refreshToken}`,
+        },
+        fallbackErrorMessage: tApi('unauthorized'),
+      });
+
+      if (!result.ok) {
+        // Nếu refresh thất bại, xóa hết cookie để đưa user về trạng thái logout sạch sẽ.
+        cookieStore.delete(ACCESS_TOKEN_COOKIE);
+        cookieStore.delete(REFRESH_TOKEN_COOKIE);
+        return actionFail(result.error || tApi('unauthorized'));
+      }
+
+      const accessToken = result.data.accessToken;
+      if (!accessToken) {
+        cookieStore.delete(ACCESS_TOKEN_COOKIE);
+        return actionFail(tApi('unauthorized'));
+      }
+
+      // Cập nhật lại accessToken cookie và đồng bộ lại refreshToken mới (nếu có)
+      await setAccessTokenCookie(accessToken, result.data.expiresIn);
+      await syncRefreshTokenCookie(result.headers);
+
+      return actionOk({ accessToken });
+    } catch (error) {
+      logger.error('[AuthAction] refreshAccessTokenAction', error);
+      return actionFail(tApi('network_error'));
+    } finally {
+      // Giải phóng khóa sau khi hoàn thành (dù thành công hay thất bại) để cho phép các lần refresh sau.
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
 }
