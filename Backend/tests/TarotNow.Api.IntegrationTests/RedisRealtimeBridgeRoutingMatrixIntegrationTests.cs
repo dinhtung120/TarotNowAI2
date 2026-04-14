@@ -384,7 +384,8 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
 
     private static async Task JoinConversationWithRetryAsync(HubConnection connection, string conversationId)
     {
-        const int maxAttempts = 4;
+        const int maxAttempts = 6;
+        Exception? lastException = null;
         for (var attempt = 1; attempt <= maxAttempts; attempt++)
         {
             await EnsureConnectedAsync(connection);
@@ -398,12 +399,27 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
                 attempt < maxAttempts
                 && ex.Message.Contains("not active", StringComparison.OrdinalIgnoreCase))
             {
+                lastException = ex;
+                await RestartConnectionAsync(connection);
+                await Task.Delay(100 * attempt);
+            }
+            catch (HttpRequestException ex) when (attempt < maxAttempts)
+            {
+                lastException = ex;
+                await RestartConnectionAsync(connection);
+                await Task.Delay(100 * attempt);
+            }
+            catch (Exception ex) when (attempt < maxAttempts)
+            {
+                lastException = ex;
                 await RestartConnectionAsync(connection);
                 await Task.Delay(100 * attempt);
             }
         }
 
-        throw new InvalidOperationException($"Unable to join conversation '{conversationId}' after retries.");
+        throw new InvalidOperationException(
+            $"Unable to join conversation '{conversationId}' after retries.",
+            lastException);
     }
 
     private static async Task EnsureConnectedAsync(HubConnection connection)

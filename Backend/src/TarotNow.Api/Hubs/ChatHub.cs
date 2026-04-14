@@ -68,8 +68,18 @@ public partial class ChatHub : Hub
     /// </summary>
     /// <param name="message">Thông điệp lỗi cần hiển thị cho client.</param>
     /// <returns>Tác vụ gửi sự kiện lỗi.</returns>
-    private Task SendClientErrorAsync(string message)
+    private async Task SendClientErrorAsync(string message)
     {
-        return Clients.Caller.SendAsync("Error", message);
+        try
+        {
+            await Clients.Caller.SendAsync("Error", message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(
+                ex,
+                "[ChatHub] Failed to send error payload to caller. Message={Message}",
+                message);
+        }
     }
 }

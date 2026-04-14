@@ -18,17 +18,29 @@ public partial class ChatHub
             return;
         }
 
-        var validationError = await ValidateJoinConversationAsync(conversationId, userGuid);
-        if (validationError != null)
+        try
         {
-            // Trả lỗi chi tiết cho client khi conversation không tồn tại hoặc không đủ quyền.
-            await SendClientErrorAsync(validationError);
-            return;
-        }
+            var validationError = await ValidateJoinConversationAsync(conversationId, userGuid);
+            if (validationError != null)
+            {
+                // Trả lỗi chi tiết cho client khi conversation không tồn tại hoặc không đủ quyền.
+                await SendClientErrorAsync(validationError);
+                return;
+            }
 
-        await AddConnectionToConversationGroupsAsync(conversationId);
-        await BroadcastConversationJoinedAsync(conversationId, userGuid);
-        LogConversationJoined(conversationId, userGuid);
+            await AddConnectionToConversationGroupsAsync(conversationId);
+            await BroadcastConversationJoinedAsync(conversationId, userGuid);
+            LogConversationJoined(conversationId, userGuid);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "[ChatHub] JoinConversation failed. ConversationId={ConversationId}, UserId={UserId}",
+                conversationId,
+                userGuid);
+            await SendClientErrorAsync("Unable to join conversation right now.");
+        }
     }
 
     /// <summary>
