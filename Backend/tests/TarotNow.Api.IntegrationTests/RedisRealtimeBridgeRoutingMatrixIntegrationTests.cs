@@ -15,6 +15,7 @@ using TarotNow.Application.Common.Realtime;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Enums;
 using TarotNow.Infrastructure.BackgroundJobs.Outbox;
+using TarotNow.Infrastructure.Messaging.Redis;
 
 namespace TarotNow.Api.IntegrationTests;
 
@@ -40,6 +41,8 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
             {
                 services.RemoveAll<IRealtimeBridgeSource>();
                 services.AddSingleton<IRealtimeBridgeSource>(_bridgeSource);
+                services.RemoveAll<IRedisPublisher>();
+                services.AddSingleton<IRedisPublisher, NoOpRedisPublisher>();
                 RemoveHostedService<OutboxProcessorWorker>(services);
             });
         });
