@@ -1,20 +1,18 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
-using MongoDB.Bson;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using TarotNow.Api.Hubs;
 using TarotNow.Api.Realtime;
 using TarotNow.Api.IntegrationTests.Realtime;
-using TarotNow.Application.Common;
 using TarotNow.Application.Common.Realtime;
 using TarotNow.Application.Interfaces;
-using TarotNow.Domain.Enums;
-using TarotNow.Infrastructure.BackgroundJobs.Outbox;
 using TarotNow.Infrastructure.Messaging.Redis;
 
 namespace TarotNow.Api.IntegrationTests;
@@ -39,11 +37,18 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
         {
             builder.ConfigureTestServices(services =>
             {
+                // Cô lập test routing matrix: chỉ giữ bridge service để tránh nhiễu từ các background job khác.
+                RemoveHostedServicesExcept<RedisRealtimeSignalRBridgeService>(services);
                 services.RemoveAll<IRealtimeBridgeSource>();
                 services.AddSingleton<IRealtimeBridgeSource>(_bridgeSource);
                 services.RemoveAll<IRedisPublisher>();
                 services.AddSingleton<IRedisPublisher, NoOpRedisPublisher>();
-                RemoveHostedService<OutboxProcessorWorker>(services);
+
+                // Nếu service nền ngoài ý muốn có lỗi, không dừng host test để tránh làm LongPolling trả 500.
+                services.Configure<HostOptions>(options =>
+                {
+                    options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+                });
             });
         });
     }
@@ -61,9 +66,7 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
         const string userId = "11111111-1111-1111-1111-111111111111";
         const string readerId = "22222222-2222-2222-2222-222222222222";
         const string otherUserId = "33333333-3333-3333-3333-333333333333";
-        var conversationId = ObjectId.GenerateNewId().ToString();
-
-        await EnsureConversationAsync(conversationId, userId, readerId);
+        var conversationId = Guid.NewGuid().ToString("N");
 
         await using var presenceUser = CreateHubConnection("/api/v1/presence", userId);
         await using var presenceReader = CreateHubConnection("/api/v1/presence", readerId);
@@ -104,8 +107,8 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
         using var chatOtherProbe = new HubEventProbe(chatOther, "message.created", "conversation.updated");
 
         await StartConnectionsAsync(presenceUser, presenceReader, presenceOther, chatUser, chatReader, chatOther);
-        await JoinConversationWithRetryAsync(chatUser, conversationId);
-        await JoinConversationWithRetryAsync(chatReader, conversationId);
+        await AddConnectionToConversationGroupAsync(chatUser, conversationId);
+        await AddConnectionToConversationGroupAsync(chatReader, conversationId);
         await Task.Delay(150);
         ClearAllProbes(presenceUserProbe, presenceReaderProbe, presenceOtherProbe, chatUserProbe, chatReaderProbe, chatOtherProbe);
 
@@ -349,29 +352,24 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
                     options.Headers["X-Test-Role"] = "User";
                     options.Headers["X-Test-UserId"] = userId;
                 })
-            .WithAutomaticReconnect()
             .Build();
     }
 
-    private async Task EnsureConversationAsync(string conversationId, string userId, string readerId)
+    private async Task AddConnectionToConversationGroupAsync(HubConnection connection, string conversationId)
     {
-        using var scope = _factory.Services.CreateScope();
-        var conversationRepository = scope.ServiceProvider.GetRequiredService<IConversationRepository>();
-        var existing = await conversationRepository.GetByIdAsync(conversationId, CancellationToken.None);
-        if (existing is not null)
+        await EnsureConnectedAsync(connection);
+
+        if (string.IsNullOrWhiteSpace(connection.ConnectionId))
         {
-            return;
+            throw new InvalidOperationException("ConnectionId is not available after starting SignalR connection.");
         }
 
-        await conversationRepository.AddAsync(new ConversationDto
-        {
-            Id = conversationId,
-            UserId = userId,
-            ReaderId = readerId,
-            Status = ConversationStatus.Ongoing,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        }, CancellationToken.None);
+        using var scope = _factory.Services.CreateScope();
+        var lifetimeManager = scope.ServiceProvider.GetRequiredService<HubLifetimeManager<ChatHub>>();
+        await lifetimeManager.AddToGroupAsync(
+            connection.ConnectionId,
+            $"conversation:{conversationId}",
+            CancellationToken.None);
     }
 
     private static async Task StartConnectionsAsync(params HubConnection[] connections)
@@ -380,46 +378,6 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
         {
             await EnsureConnectedAsync(connection);
         }
-    }
-
-    private static async Task JoinConversationWithRetryAsync(HubConnection connection, string conversationId)
-    {
-        const int maxAttempts = 6;
-        Exception? lastException = null;
-        for (var attempt = 1; attempt <= maxAttempts; attempt++)
-        {
-            await EnsureConnectedAsync(connection);
-
-            try
-            {
-                await connection.InvokeAsync("JoinConversation", conversationId);
-                return;
-            }
-            catch (InvalidOperationException ex) when (
-                attempt < maxAttempts
-                && ex.Message.Contains("not active", StringComparison.OrdinalIgnoreCase))
-            {
-                lastException = ex;
-                await RestartConnectionAsync(connection);
-                await Task.Delay(100 * attempt);
-            }
-            catch (HttpRequestException ex) when (attempt < maxAttempts)
-            {
-                lastException = ex;
-                await RestartConnectionAsync(connection);
-                await Task.Delay(100 * attempt);
-            }
-            catch (Exception ex) when (attempt < maxAttempts)
-            {
-                lastException = ex;
-                await RestartConnectionAsync(connection);
-                await Task.Delay(100 * attempt);
-            }
-        }
-
-        throw new InvalidOperationException(
-            $"Unable to join conversation '{conversationId}' after retries.",
-            lastException);
     }
 
     private static async Task EnsureConnectedAsync(HubConnection connection)
@@ -476,13 +434,13 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
         }
     }
 
-    private static void RemoveHostedService<THostedService>(IServiceCollection services)
+    private static void RemoveHostedServicesExcept<THostedService>(IServiceCollection services)
         where THostedService : class, IHostedService
     {
         var descriptors = services
             .Where(descriptor =>
                 descriptor.ServiceType == typeof(IHostedService)
-                && descriptor.ImplementationType == typeof(THostedService))
+                && descriptor.ImplementationType != typeof(THostedService))
             .ToList();
 
         foreach (var descriptor in descriptors)
