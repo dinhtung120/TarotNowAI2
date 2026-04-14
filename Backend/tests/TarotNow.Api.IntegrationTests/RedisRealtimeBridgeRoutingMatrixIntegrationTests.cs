@@ -104,8 +104,8 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
         using var chatOtherProbe = new HubEventProbe(chatOther, "message.created", "conversation.updated");
 
         await StartConnectionsAsync(presenceUser, presenceReader, presenceOther, chatUser, chatReader, chatOther);
-        await chatUser.InvokeAsync("JoinConversation", conversationId);
-        await chatReader.InvokeAsync("JoinConversation", conversationId);
+        await JoinConversationWithRetryAsync(chatUser, conversationId);
+        await JoinConversationWithRetryAsync(chatReader, conversationId);
         await Task.Delay(150);
         ClearAllProbes(presenceUserProbe, presenceReaderProbe, presenceOtherProbe, chatUserProbe, chatReaderProbe, chatOtherProbe);
 
@@ -349,6 +349,7 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
                     options.Headers["X-Test-Role"] = "User";
                     options.Headers["X-Test-UserId"] = userId;
                 })
+            .WithAutomaticReconnect()
             .Build();
     }
 
@@ -377,8 +378,78 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
     {
         foreach (var connection in connections)
         {
-            await connection.StartAsync();
+            await EnsureConnectedAsync(connection);
         }
+    }
+
+    private static async Task JoinConversationWithRetryAsync(HubConnection connection, string conversationId)
+    {
+        const int maxAttempts = 4;
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            await EnsureConnectedAsync(connection);
+
+            try
+            {
+                await connection.InvokeAsync("JoinConversation", conversationId);
+                return;
+            }
+            catch (InvalidOperationException ex) when (
+                attempt < maxAttempts
+                && ex.Message.Contains("not active", StringComparison.OrdinalIgnoreCase))
+            {
+                await RestartConnectionAsync(connection);
+                await Task.Delay(100 * attempt);
+            }
+        }
+
+        throw new InvalidOperationException($"Unable to join conversation '{conversationId}' after retries.");
+    }
+
+    private static async Task EnsureConnectedAsync(HubConnection connection)
+    {
+        if (connection.State == HubConnectionState.Connected)
+        {
+            return;
+        }
+
+        if (connection.State == HubConnectionState.Disconnected)
+        {
+            await connection.StartAsync();
+            return;
+        }
+
+        var deadline = DateTime.UtcNow.AddSeconds(3);
+        while (DateTime.UtcNow <= deadline)
+        {
+            if (connection.State == HubConnectionState.Connected)
+            {
+                return;
+            }
+
+            if (connection.State == HubConnectionState.Disconnected)
+            {
+                await connection.StartAsync();
+                return;
+            }
+
+            await Task.Delay(50);
+        }
+
+        if (connection.State != HubConnectionState.Connected)
+        {
+            await RestartConnectionAsync(connection);
+        }
+    }
+
+    private static async Task RestartConnectionAsync(HubConnection connection)
+    {
+        if (connection.State != HubConnectionState.Disconnected)
+        {
+            await connection.StopAsync();
+        }
+
+        await connection.StartAsync();
     }
 
     private static void ClearAllProbes(params HubEventProbe[] probes)
