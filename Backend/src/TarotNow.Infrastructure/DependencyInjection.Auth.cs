@@ -155,7 +155,7 @@ public static partial class DependencyInjection
             }
         }
 
-        var sessionIdRaw = principal.FindFirst("sid")?.Value;
+        var sessionIdRaw = principal.FindFirst(AuthClaimConstants.SessionId)?.Value;
         if (!Guid.TryParse(sessionIdRaw, out var sessionId) || sessionId == Guid.Empty)
         {
             return;

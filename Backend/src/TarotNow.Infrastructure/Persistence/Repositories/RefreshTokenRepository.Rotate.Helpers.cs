@@ -27,6 +27,11 @@ public sealed partial class RefreshTokenRepository
             context.Request.NewRawToken,
             nextToken.ExpiresAt,
             cancellationToken);
+        await CacheIdempotentResultAsync(
+            context.TokenIdempotencyCacheKey,
+            context.Request.NewRawToken,
+            nextToken.ExpiresAt,
+            cancellationToken);
         return RefreshRotateResult.Success(context.CurrentToken, nextToken, context.Request.NewRawToken);
     }
 
@@ -104,6 +109,11 @@ public sealed partial class RefreshTokenRepository
         return $"auth:refresh-idem:{sessionPart}:{idempotencyKey}";
     }
 
+    private static string BuildRefreshTokenIdempotencyKey(string tokenHash, string idempotencyKey)
+    {
+        return $"auth:refresh-idem-token:{tokenHash}:{idempotencyKey}";
+    }
+
     private sealed class RefreshRotateCacheItem
     {
         public string NewRefreshTokenRaw { get; set; } = string.Empty;
@@ -114,5 +124,6 @@ public sealed partial class RefreshTokenRepository
         RefreshRotateRequest Request,
         RefreshToken CurrentToken,
         string IdempotencyKey,
-        string IdempotencyCacheKey);
+        string IdempotencyCacheKey,
+        string TokenIdempotencyCacheKey);
 }

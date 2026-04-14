@@ -12,6 +12,16 @@ import {
  unauthorizedResponse,
 } from '@/app/api/auth/_shared';
 
+function shouldClearCookiesForRefreshFailure(status: number, error: string): boolean {
+ if (status === 401 || status === 403) {
+  return true;
+ }
+
+ return error === AUTH_ERROR.UNAUTHORIZED
+  || error === AUTH_ERROR.TOKEN_EXPIRED
+  || error === AUTH_ERROR.TOKEN_REPLAY;
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
  const refreshToken = request.cookies.get(AUTH_COOKIE.REFRESH)?.value;
  if (!refreshToken) {
@@ -34,7 +44,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  });
 
  if (!result.ok) {
-  return unauthorizedResponse(true);
+  if (shouldClearCookiesForRefreshFailure(result.status, result.error)) {
+   return unauthorizedResponse(true);
+  }
+
+  return NextResponse.json(
+   { success: false, error: result.error },
+   { status: result.status >= 500 ? 503 : result.status },
+  );
  }
 
  const accessToken = result.data.accessToken;
@@ -51,8 +68,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   { status: 200 },
  );
 
- setAccessCookie(response, request, accessToken, resolveAccessTtlSeconds(result.data));
- setRefreshCookieFromHeaders(response, request, result.headers);
- setDeviceCookie(response, request, deviceId);
+ setAccessCookie(response, accessToken, resolveAccessTtlSeconds(result.data));
+ setRefreshCookieFromHeaders(response, result.headers);
+ setDeviceCookie(response, deviceId);
  return response;
 }

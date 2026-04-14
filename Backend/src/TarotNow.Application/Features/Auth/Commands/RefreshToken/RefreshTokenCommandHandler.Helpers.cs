@@ -11,6 +11,30 @@ namespace TarotNow.Application.Features.Auth.Commands.RefreshToken;
 public partial class RefreshTokenCommandHandler
 {
     /// <summary>
+    /// Nâng cấp refresh token legacy chưa có session sang mô hình auth session theo thiết bị.
+    /// </summary>
+    private async Task EnsureLegacyTokenSessionBindingAsync(
+        RefreshTokenCommand request,
+        CancellationToken cancellationToken)
+    {
+        var token = await _refreshTokenRepository.GetByTokenAsync(request.Token, cancellationToken);
+        if (token is null || token.SessionId != Guid.Empty)
+        {
+            return;
+        }
+
+        var session = await _authSessionRepository.CreateAsync(
+            token.UserId,
+            request.DeviceId,
+            request.UserAgentHash,
+            HashValue(request.ClientIpAddress),
+            cancellationToken);
+
+        token.BindSession(session.Id);
+        await _refreshTokenRepository.UpdateAsync(token, cancellationToken);
+    }
+
+    /// <summary>
     /// Đảm bảo user còn hoạt động.
     /// </summary>
     private static User EnsureUserIsActive(User? user)
@@ -60,20 +84,34 @@ public partial class RefreshTokenCommandHandler
                 cancellationToken);
         }
 
-        if (token.SessionId != Guid.Empty)
+        var effectiveSessionId = token.SessionId;
+        if (effectiveSessionId == Guid.Empty)
+        {
+            var upgradedSession = await _authSessionRepository.CreateAsync(
+                token.UserId,
+                request.DeviceId,
+                request.UserAgentHash,
+                HashValue(request.ClientIpAddress),
+                cancellationToken);
+            token.BindSession(upgradedSession.Id);
+            await _refreshTokenRepository.UpdateAsync(token, cancellationToken);
+            effectiveSessionId = upgradedSession.Id;
+        }
+
+        if (effectiveSessionId != Guid.Empty)
         {
             await _refreshTokenRepository.RevokeSessionAsync(
-                token.SessionId,
+                effectiveSessionId,
                 RefreshRevocationReasons.ReplayDetected,
                 cancellationToken);
-            await _authSessionRepository.RevokeAsync(token.SessionId, cancellationToken);
+            await _authSessionRepository.RevokeAsync(effectiveSessionId, cancellationToken);
         }
 
         await _domainEventPublisher.PublishAsync(
             new RefreshTokenReplayDetectedDomainEvent
             {
                 UserId = token.UserId,
-                SessionId = token.SessionId,
+                SessionId = effectiveSessionId,
                 FamilyId = token.FamilyId,
                 SourceIpHash = HashValue(request.ClientIpAddress)
             },

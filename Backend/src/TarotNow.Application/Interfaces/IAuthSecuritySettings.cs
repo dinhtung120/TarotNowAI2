@@ -14,4 +14,9 @@ public interface IAuthSecuritySettings
     /// TTL cờ session revoked tính bằng giây.
     /// </summary>
     int SessionRevocationTtlSeconds { get; }
+
+    /// <summary>
+    /// TTL cache session snapshot (theo giây).
+    /// </summary>
+    int SessionCacheTtlSeconds { get; }
 }

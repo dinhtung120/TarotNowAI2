@@ -53,4 +53,14 @@ public interface ICacheService
     /// Đọc toàn bộ phần tử hiện có trong set theo key.
     /// </summary>
     Task<IReadOnlyCollection<string>> GetSetMembersAsync(string key, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Acquire distributed lock theo key với owner và thời gian lease.
+    /// </summary>
+    Task<bool> AcquireLockAsync(string key, string owner, TimeSpan leaseTime, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Release distributed lock nếu owner trùng khớp với lock hiện tại.
+    /// </summary>
+    Task<bool> ReleaseLockAsync(string key, string owner, CancellationToken cancellationToken = default);
 }

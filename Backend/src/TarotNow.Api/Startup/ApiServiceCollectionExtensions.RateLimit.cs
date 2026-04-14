@@ -39,7 +39,7 @@ public static partial class ApiServiceCollectionExtensions
         // Nâng cao giới hạn (100 req/phút) để tránh chặn nhầm khi Load Profile/Navbar/Wallet đồng thời.
         AddFixedWindowPolicy(options, "auth-session", ResolveAuthenticatedPartitionKey, permitLimit: 100, TimeSpan.FromMinutes(1));
         AddFixedWindowPolicy(options, "auth-refresh", ResolveRefreshPartitionKey, permitLimit: 30, TimeSpan.FromMinutes(1));
-        AddFixedWindowPolicy(options, "auth-refresh-token-family", ResolveRefreshPartitionKey, permitLimit: 10, TimeSpan.FromMinutes(1));
+        AddFixedWindowPolicy(options, "auth-logout", ResolveRefreshPartitionKey, permitLimit: 30, TimeSpan.FromMinutes(1));
         // Rule bảo vệ endpoint ghi community khỏi spam nội dung.
         // Tăng lên 60 req/phút để hỗ trợ upload nhiều ảnh hoặc tương tác nhanh.
         AddFixedWindowPolicy(options, "community-write", ResolveAuthenticatedPartitionKey, permitLimit: 60, TimeSpan.FromMinutes(1));
@@ -99,23 +99,11 @@ public static partial class ApiServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Resolve IP client ưu tiên từ `X-Forwarded-For` rồi fallback sang RemoteIpAddress.
-    /// Luồng xử lý: parse header proxy theo phần tử đầu tiên, nếu không có thì dùng IP kết nối trực tiếp.
+    /// Resolve IP client từ RemoteIpAddress đã được chuẩn hóa ở tầng ForwardedHeaders.
+    /// Luồng xử lý: không đọc trực tiếp X-Forwarded-For để tránh spoof header bypass limiter.
     /// </summary>
     private static string ResolveClientIp(HttpContext httpContext)
     {
-        var forwardedFor = httpContext.Request.Headers["X-Forwarded-For"].ToString();
-        if (!string.IsNullOrWhiteSpace(forwardedFor))
-        {
-            var first = forwardedFor.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .FirstOrDefault();
-            if (!string.IsNullOrWhiteSpace(first))
-            {
-                // Khi qua proxy/load balancer, phần tử đầu là IP client gốc theo quy ước X-Forwarded-For.
-                return first;
-            }
-        }
-
         // Edge case thiếu IP: dùng khóa "unknown" để vẫn partition được limiter.
         return httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
     }

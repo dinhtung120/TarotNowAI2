@@ -53,6 +53,7 @@ internal static class AuthEventCacheHelpers
         ICacheService cacheService,
         Guid userId,
         Guid sessionId,
+        TimeSpan ttl,
         CancellationToken cancellationToken)
     {
         if (sessionId == Guid.Empty)
@@ -63,7 +64,7 @@ internal static class AuthEventCacheHelpers
         await cacheService.AddToSetAsync(
             BuildUserSessionIndexKey(userId),
             sessionId.ToString("N"),
-            TimeSpan.FromDays(30),
+            ttl,
             cancellationToken);
     }
 

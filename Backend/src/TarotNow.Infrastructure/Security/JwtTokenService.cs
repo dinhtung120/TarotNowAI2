@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using TarotNow.Application.Interfaces;
+using TarotNow.Infrastructure.Constants;
 using TarotNow.Domain.Entities;
 using TarotNow.Infrastructure.Options;
 
@@ -48,7 +49,7 @@ public class JwtTokenService : ITokenService
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Role, user.Role),
             new Claim(JwtRegisteredClaimNames.Jti, jti),
-            new Claim("sid", sessionId.ToString())
+            new Claim(AuthClaimConstants.SessionId, sessionId.ToString())
         };
 
         // Tạo JWT đã ký để client dùng cho các API yêu cầu xác thực.

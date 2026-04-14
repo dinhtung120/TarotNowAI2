@@ -21,19 +21,43 @@ public sealed partial class RefreshTokenRepository
         var normalizedToken = request.RawToken.Trim();
         var tokenHash = RefreshToken.HashToken(normalizedToken);
         var lockKey = BuildRefreshLockKey(tokenHash);
+        var lockOwner = Guid.NewGuid().ToString("N");
+        var normalizedIdempotencyKey = NormalizeIdempotencyKey(request.IdempotencyKey);
+        var tokenIdempotencyCacheKey = BuildRefreshTokenIdempotencyKey(tokenHash, normalizedIdempotencyKey);
 
-        if (!await TryAcquireLockAsync(lockKey, cancellationToken))
+        if (!await TryAcquireLockAsync(lockKey, lockOwner, cancellationToken))
         {
+            var tokenCached = await _cacheService.GetAsync<RefreshRotateCacheItem>(tokenIdempotencyCacheKey, cancellationToken);
+            if (tokenCached is not null
+                && string.IsNullOrWhiteSpace(tokenCached.NewRefreshTokenRaw) == false
+                && tokenCached.NewTokenExpiresAtUtc > DateTime.MinValue)
+            {
+                var tokenSnapshot = await GetByTokenAsync(request.RawToken, cancellationToken);
+                if (tokenSnapshot is not null)
+                {
+                    return RefreshRotateResult.Idempotent(
+                        tokenSnapshot,
+                        tokenCached.NewRefreshTokenRaw,
+                        tokenCached.NewTokenExpiresAtUtc);
+                }
+            }
+
             return RefreshRotateResult.Locked();
         }
 
         try
         {
-            return await RotateWithTransactionAsync(request, normalizedToken, tokenHash, cancellationToken);
+            return await RotateWithTransactionAsync(
+                request,
+                normalizedToken,
+                tokenHash,
+                normalizedIdempotencyKey,
+                tokenIdempotencyCacheKey,
+                cancellationToken);
         }
         finally
         {
-            await _cacheService.RemoveAsync(lockKey, cancellationToken);
+            await _cacheService.ReleaseLockAsync(lockKey, lockOwner, cancellationToken);
         }
     }
 
@@ -43,16 +67,18 @@ public sealed partial class RefreshTokenRepository
             && string.IsNullOrWhiteSpace(request.NewRawToken) == false;
     }
 
-    private async Task<bool> TryAcquireLockAsync(string lockKey, CancellationToken cancellationToken)
+    private async Task<bool> TryAcquireLockAsync(string lockKey, string lockOwner, CancellationToken cancellationToken)
     {
         var lockWindow = TimeSpan.FromSeconds(Math.Max(3, _authSecurityOptions.RefreshLockSeconds));
-        return await _cacheService.CheckRateLimitAsync(lockKey, lockWindow, cancellationToken);
+        return await _cacheService.AcquireLockAsync(lockKey, lockOwner, lockWindow, cancellationToken);
     }
 
     private async Task<RefreshRotateResult> RotateWithTransactionAsync(
         RefreshRotateRequest request,
         string normalizedToken,
         string tokenHash,
+        string normalizedIdempotencyKey,
+        string tokenIdempotencyCacheKey,
         CancellationToken cancellationToken)
     {
         IDbContextTransaction? localTransaction = null;
@@ -70,12 +96,13 @@ public sealed partial class RefreshTokenRepository
                 return await FinalizeResultAsync(localTransaction, RefreshRotateResult.Invalid(), cancellationToken);
             }
 
-            var idempotencyKey = NormalizeIdempotencyKey(request.IdempotencyKey);
+            var idempotencyKey = normalizedIdempotencyKey;
             var idemCacheKey = BuildRefreshIdempotencyKey(current.SessionId, idempotencyKey);
             var earlyExit = await TryBuildEarlyExitResultAsync(
                 current,
                 idempotencyKey,
                 idemCacheKey,
+                tokenIdempotencyCacheKey,
                 cancellationToken);
 
             if (earlyExit is not null)
@@ -83,7 +110,12 @@ public sealed partial class RefreshTokenRepository
                 return await FinalizeResultAsync(localTransaction, earlyExit, cancellationToken);
             }
 
-            var persistContext = new RotatePersistContext(request, current, idempotencyKey, idemCacheKey);
+            var persistContext = new RotatePersistContext(
+                request,
+                current,
+                idempotencyKey,
+                idemCacheKey,
+                tokenIdempotencyCacheKey);
             return await RotateAndPersistAsync(persistContext, localTransaction, cancellationToken);
         }
         finally
@@ -99,9 +131,15 @@ public sealed partial class RefreshTokenRepository
         RefreshToken current,
         string idempotencyKey,
         string idemCacheKey,
+        string tokenIdempotencyCacheKey,
         CancellationToken cancellationToken)
     {
         var cached = await _cacheService.GetAsync<RefreshRotateCacheItem>(idemCacheKey, cancellationToken);
+        if (cached is null)
+        {
+            cached = await _cacheService.GetAsync<RefreshRotateCacheItem>(tokenIdempotencyCacheKey, cancellationToken);
+        }
+
         if (cached is not null
             && string.IsNullOrWhiteSpace(cached.NewRefreshTokenRaw) == false
             && cached.NewTokenExpiresAtUtc > DateTime.MinValue)

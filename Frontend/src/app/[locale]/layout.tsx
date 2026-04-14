@@ -10,6 +10,7 @@ import { DEFAULT_THEME, getThemeStylesheetHref, isValidTheme, THEME_COOKIE_KEY, 
 import AppAuthSessionManager from "@/features/auth/presentation/components/AppAuthSessionManager";
 import AppQueryProvider from "@/shared/components/common/AppQueryProvider";
 import AuthBootstrap from "@/shared/components/auth/AuthBootstrap";
+import { AUTH_COOKIE } from "@/shared/infrastructure/auth/authConstants";
 import { getServerSessionSnapshot } from "@/shared/infrastructure/auth/serverAuth";
 import "../globals.css";
 
@@ -49,7 +50,12 @@ export default async function RootLayout({ children, params }: Readonly<{ childr
  const cookieStore = await cookies();
  const cookieTheme = cookieStore.get(THEME_COOKIE_KEY)?.value ?? null;
  const initialTheme: ThemeId = isValidTheme(cookieTheme) ? cookieTheme : DEFAULT_THEME;
- const sessionSnapshot = await getServerSessionSnapshot();
+ const hasAuthCookies = Boolean(
+  cookieStore.get(AUTH_COOKIE.ACCESS)?.value || cookieStore.get(AUTH_COOKIE.REFRESH)?.value
+ );
+ const sessionSnapshot = hasAuthCookies
+  ? await getServerSessionSnapshot()
+  : { authenticated: false, user: null };
 
  return (
   <html lang={locale} data-theme={initialTheme}>

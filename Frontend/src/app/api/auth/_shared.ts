@@ -12,14 +12,14 @@ export function resolveAccessTtlSeconds(payload: { expiresInSeconds?: number }):
 
 function parseRefreshTokenFromSetCookie(headers: Headers): string | undefined {
  let cookieStrings: string[] = [];
- if (typeof headers.getSetCookie === 'function') {
-  cookieStrings = headers.getSetCookie();
- } else {
-  const raw = headers.get('set-cookie');
-  if (raw) {
-   cookieStrings = raw.split(/,\s*(?=[a-zA-Z_]+=)/);
+  if (typeof headers.getSetCookie === 'function') {
+   cookieStrings = headers.getSetCookie();
+  } else {
+   const raw = headers.get('set-cookie');
+   if (raw) {
+    cookieStrings = raw.split(/,\s*(?=[a-zA-Z_]+=)/);
+   }
   }
- }
 
  for (const cookieString of cookieStrings) {
   const firstPair = cookieString.trim().split(';')[0];
@@ -38,7 +38,82 @@ function parseRefreshTokenFromSetCookie(headers: Headers): string | undefined {
  return undefined;
 }
 
-export function setAccessCookie(response: NextResponse, request: NextRequest, accessToken: string, ttlSeconds: number): void {
+interface ParsedRefreshCookieMetadata {
+ value: string;
+ maxAgeSeconds?: number;
+}
+
+function parseRefreshCookieMetadata(headers: Headers): ParsedRefreshCookieMetadata | undefined {
+ const cookieStrings = typeof headers.getSetCookie === 'function'
+  ? headers.getSetCookie()
+  : (headers.get('set-cookie')?.split(/,\s*(?=[a-zA-Z_]+=)/) ?? []);
+
+ for (const cookieString of cookieStrings) {
+  const parts = cookieString
+   .split(';')
+   .map((segment) => segment.trim())
+   .filter((segment) => segment.length > 0);
+  if (parts.length === 0) {
+   continue;
+  }
+
+  const [namePart, ...attributeParts] = parts;
+  const separator = namePart.indexOf('=');
+  if (separator <= 0) {
+   continue;
+  }
+
+  const cookieName = namePart.substring(0, separator).trim();
+  const cookieValue = namePart.substring(separator + 1).trim();
+  if (cookieName !== AUTH_COOKIE.REFRESH || cookieValue.length === 0) {
+   continue;
+  }
+
+  const attributes = new Map<string, string>();
+  for (const attribute of attributeParts) {
+   const attributeSeparator = attribute.indexOf('=');
+   if (attributeSeparator <= 0) {
+    attributes.set(attribute.toLowerCase(), '');
+    continue;
+   }
+
+   const key = attribute.substring(0, attributeSeparator).trim().toLowerCase();
+   const value = attribute.substring(attributeSeparator + 1).trim();
+   attributes.set(key, value);
+  }
+
+  const maxAgeRaw = attributes.get('max-age');
+  if (maxAgeRaw && /^-?\\d+$/.test(maxAgeRaw)) {
+   const maxAgeParsed = Number.parseInt(maxAgeRaw, 10);
+   if (Number.isFinite(maxAgeParsed) && maxAgeParsed > 0) {
+    return {
+     value: cookieValue,
+     maxAgeSeconds: maxAgeParsed,
+    };
+   }
+  }
+
+  const expiresRaw = attributes.get('expires');
+  if (expiresRaw) {
+   const expiresDate = new Date(expiresRaw);
+   if (!Number.isNaN(expiresDate.getTime())) {
+    const remaining = Math.floor((expiresDate.getTime() - Date.now()) / 1000);
+    if (remaining > 0) {
+     return {
+      value: cookieValue,
+      maxAgeSeconds: remaining,
+     };
+    }
+   }
+  }
+
+  return { value: cookieValue };
+ }
+
+ return undefined;
+}
+
+export function setAccessCookie(response: NextResponse, accessToken: string, ttlSeconds: number): void {
  response.cookies.set({
   name: AUTH_COOKIE.ACCESS,
   value: accessToken,
@@ -50,8 +125,9 @@ export function setAccessCookie(response: NextResponse, request: NextRequest, ac
  });
 }
 
-export function setRefreshCookieFromHeaders(response: NextResponse, request: NextRequest, headers: Headers): void {
- const refreshToken = parseRefreshTokenFromSetCookie(headers);
+export function setRefreshCookieFromHeaders(response: NextResponse, headers: Headers): void {
+ const parsed = parseRefreshCookieMetadata(headers);
+ const refreshToken = parsed?.value ?? parseRefreshTokenFromSetCookie(headers);
  if (!refreshToken) {
   return;
  }
@@ -63,7 +139,7 @@ export function setRefreshCookieFromHeaders(response: NextResponse, request: Nex
   secure: true,
   sameSite: 'strict',
   path: '/',
-  maxAge: AUTH_SESSION.DEFAULT_REFRESH_TTL_SECONDS,
+  maxAge: Math.max(1, parsed?.maxAgeSeconds ?? AUTH_SESSION.DEFAULT_REFRESH_TTL_SECONDS),
  });
 }
 
@@ -81,7 +157,7 @@ export function resolveDeviceIdFromRequest(request: NextRequest): string {
  return crypto.randomUUID();
 }
 
-export function setDeviceCookie(response: NextResponse, request: NextRequest, deviceId: string): void {
+export function setDeviceCookie(response: NextResponse, deviceId: string): void {
  response.cookies.set({
   name: AUTH_COOKIE.DEVICE,
   value: deviceId,

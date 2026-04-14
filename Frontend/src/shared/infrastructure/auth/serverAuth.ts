@@ -5,14 +5,6 @@ import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
 
-function resolveAccessTtlSeconds(payload: Pick<AuthResponse, 'expiresInSeconds'>): number {
- if (typeof payload.expiresInSeconds === 'number' && payload.expiresInSeconds > 0) {
-  return payload.expiresInSeconds;
- }
-
- return AUTH_SESSION.DEFAULT_ACCESS_TTL_SECONDS;
-}
-
 function parseJwtExp(token: string | undefined): number | undefined {
  if (!token) {
   return undefined;
@@ -41,36 +33,6 @@ function isExpiringSoon(token: string | undefined): boolean {
  return exp - now <= AUTH_SESSION.ACCESS_REFRESH_THRESHOLD_SECONDS;
 }
 
-function parseRefreshTokenFromHeaders(headers: Headers): string | undefined {
- let cookieStrings: string[];
- if (typeof headers.getSetCookie === 'function') {
-  cookieStrings = headers.getSetCookie();
- } else {
-  const raw = headers.get('set-cookie');
-  if (!raw) {
-   return undefined;
-  }
-
-  cookieStrings = raw.split(/,\s*(?=[a-zA-Z_]+=)/);
- }
-
- for (const cookieString of cookieStrings) {
-  const firstPair = cookieString.trim().split(';')[0];
-  const separator = firstPair.indexOf('=');
-  if (separator <= 0) {
-   continue;
-  }
-
-  const name = firstPair.substring(0, separator).trim();
-  const value = firstPair.substring(separator + 1).trim();
-  if (name === AUTH_COOKIE.REFRESH && value.length > 0) {
-   return value;
-  }
- }
-
- return undefined;
-}
-
 async function refreshServerAccessToken(): Promise<string | undefined> {
  const cookieStore = await cookies();
  const requestHeaders = await headers();
@@ -80,9 +42,9 @@ async function refreshServerAccessToken(): Promise<string | undefined> {
  }
 
  const deviceId = cookieStore.get(AUTH_COOKIE.DEVICE)?.value ?? '';
- const tokenFingerprint = refreshToken.length > 16 ? refreshToken.slice(-16) : 'anonymous';
+ const deviceFingerprint = deviceId.length > 16 ? deviceId.slice(-16) : (deviceId || 'anonymous');
  const timeBucket = Math.floor(Date.now() / 30_000);
- const idempotencyKey = `srv-refresh:${tokenFingerprint}:${timeBucket}`;
+ const idempotencyKey = `srv-refresh:${deviceFingerprint}:${timeBucket}`;
 
  const result = await serverHttpRequest<AuthResponse>('/auth/refresh', {
   method: 'POST',
@@ -97,32 +59,7 @@ async function refreshServerAccessToken(): Promise<string | undefined> {
  });
 
  if (!result.ok || !result.data.accessToken) {
-  cookieStore.delete(AUTH_COOKIE.ACCESS);
-  cookieStore.delete(AUTH_COOKIE.REFRESH);
   return undefined;
- }
-
- cookieStore.set({
-  name: AUTH_COOKIE.ACCESS,
-  value: result.data.accessToken,
-  httpOnly: true,
-  secure: true,
-  sameSite: 'strict',
-  path: '/',
-  maxAge: Math.max(1, resolveAccessTtlSeconds(result.data)),
- });
-
- const newRefreshToken = parseRefreshTokenFromHeaders(result.headers);
- if (newRefreshToken) {
-  cookieStore.set({
-   name: AUTH_COOKIE.REFRESH,
-   value: newRefreshToken,
-   httpOnly: true,
-   secure: true,
-   sameSite: 'strict',
-   path: '/',
-   maxAge: AUTH_SESSION.DEFAULT_REFRESH_TTL_SECONDS,
-  });
  }
 
  return result.data.accessToken;

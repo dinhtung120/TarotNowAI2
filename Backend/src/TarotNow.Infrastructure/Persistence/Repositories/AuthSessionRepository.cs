@@ -43,9 +43,30 @@ public sealed class AuthSessionRepository : IAuthSessionRepository
         }
 
         var session = new AuthSession(userId, deviceId, userAgentHash, ipHash);
-        await _dbContext.AuthSessions.AddAsync(session, cancellationToken);
-        await _dbContext.SaveChangesAsync(cancellationToken);
-        return session;
+        try
+        {
+            await _dbContext.AuthSessions.AddAsync(session, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            return session;
+        }
+        catch (DbUpdateException)
+        {
+            var concurrent = await _dbContext.AuthSessions
+                .FirstOrDefaultAsync(
+                    x => x.UserId == userId
+                         && x.RevokedAtUtc == null
+                         && x.DeviceId == normalizedDeviceId,
+                    cancellationToken);
+            if (concurrent is null)
+            {
+                throw;
+            }
+
+            concurrent.Touch(ipHash, DateTime.UtcNow);
+            _dbContext.AuthSessions.Update(concurrent);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            return concurrent;
+        }
     }
 
     /// <inheritdoc />

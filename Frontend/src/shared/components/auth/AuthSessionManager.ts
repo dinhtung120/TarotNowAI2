@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { usePathname, useRouter } from '@/i18n/routing';
 import { useAuthStore } from '@/store/authStore';
 import type { ActionResult } from '@/shared/domain/actionResult';
+import { isTerminalAuthError } from '@/shared/domain/authErrors';
 import type { UserProfile } from '@/features/auth/domain/types';
 const REFRESH_INTERVAL_MS = 40 * 60 * 1000;
 const MIN_REFRESH_THROTTLE_MS = 20 * 60 * 1000;
@@ -79,12 +80,14 @@ export default function AuthSessionManager({
             try {
                 const result = await refreshAccessToken();
                 if (!result.success) {
-                    await runLogout(showToastOnFailure);
+                    if (isTerminalAuthError(result.error)) {
+                        await runLogout(showToastOnFailure);
+                    }
                 } else if (result.data?.user) {
                     setSession(result.data.user);
                 }
             } catch {
-                await runLogout(showToastOnFailure);
+                // Lỗi mạng/tạm thời khi refresh không nên cưỡng bức logout ngay.
             } finally {
                 refreshInProgressRef.current = false;
             }

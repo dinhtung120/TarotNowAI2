@@ -15,6 +15,7 @@ public sealed class TokenRefreshedDomainEventHandler
 {
     private static readonly ActivitySource ActivitySource = new("TarotNow.Auth");
     private readonly ICacheService _cacheService;
+    private readonly TimeSpan _sessionCacheTtl;
     private readonly ILogger<TokenRefreshedDomainEventHandler> _logger;
 
     /// <summary>
@@ -22,11 +23,13 @@ public sealed class TokenRefreshedDomainEventHandler
     /// </summary>
     public TokenRefreshedDomainEventHandler(
         ICacheService cacheService,
+        IAuthSecuritySettings authSecuritySettings,
         ILogger<TokenRefreshedDomainEventHandler> logger,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
         _cacheService = cacheService;
+        _sessionCacheTtl = TimeSpan.FromSeconds(Math.Max(60, authSecuritySettings.SessionCacheTtlSeconds));
         _logger = logger;
     }
 
@@ -52,8 +55,13 @@ public sealed class TokenRefreshedDomainEventHandler
 
         snapshot.LastSeenAtUtc = domainEvent.OccurredAtUtc;
         snapshot.LastAccessJti = domainEvent.AccessTokenJti;
-        await _cacheService.SetAsync(key, snapshot, TimeSpan.FromDays(30), cancellationToken);
-        await AuthEventCacheHelpers.AddSessionToUserIndexAsync(_cacheService, domainEvent.UserId, domainEvent.SessionId, cancellationToken);
+        await _cacheService.SetAsync(key, snapshot, _sessionCacheTtl, cancellationToken);
+        await AuthEventCacheHelpers.AddSessionToUserIndexAsync(
+            _cacheService,
+            domainEvent.UserId,
+            domainEvent.SessionId,
+            _sessionCacheTtl,
+            cancellationToken);
 
         _logger.LogInformation(
             "Auth refresh success. UserId={UserId} SessionId={SessionId} OldTokenId={OldTokenId} NewTokenId={NewTokenId} Jti={Jti} OutboxId={OutboxId}",

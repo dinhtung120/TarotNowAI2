@@ -88,7 +88,7 @@ public sealed class AuthSessionController : ControllerBase
     /// Logout session hiện tại hoặc toàn bộ sessions.
     /// </summary>
     [HttpPost("logout")]
-    [EnableRateLimiting("auth-refresh")]
+    [EnableRateLimiting("auth-logout")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Logout([FromQuery] bool revokeAll = false, CancellationToken cancellationToken = default)
     {

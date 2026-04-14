@@ -46,6 +46,10 @@ function resolveStatusFallback(status: number): string {
   return AUTH_ERROR.UNAUTHORIZED;
  }
 
+ if (status >= 500) {
+  return AUTH_ERROR.TEMPORARY_FAILURE;
+ }
+
  return AUTH_ERROR.UNAUTHORIZED;
 }
 

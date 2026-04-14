@@ -1,6 +1,4 @@
-using Microsoft.Extensions.Options;
 using TarotNow.Api.Constants;
-using TarotNow.Infrastructure.Options;
 
 namespace TarotNow.Api.Services;
 
@@ -9,14 +7,6 @@ namespace TarotNow.Api.Services;
 /// </summary>
 public sealed class AuthCookieService : IAuthCookieService
 {
-    /// <summary>
-    /// Khởi tạo auth cookie service.
-    /// </summary>
-    public AuthCookieService(IOptions<JwtOptions> jwtOptions)
-    {
-        _ = jwtOptions.Value;
-    }
-
     /// <inheritdoc />
     public void SetAccessToken(HttpRequest request, HttpResponse response, string accessToken, int expiresInSeconds)
     {

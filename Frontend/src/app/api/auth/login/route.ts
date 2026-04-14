@@ -61,8 +61,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   { status: 200 },
  );
 
- setAccessCookie(response, request, accessToken, resolveAccessTtlSeconds(result.data));
- setRefreshCookieFromHeaders(response, request, result.headers);
- setDeviceCookie(response, request, deviceId);
+ setAccessCookie(response, accessToken, resolveAccessTtlSeconds(result.data));
+ setRefreshCookieFromHeaders(response, result.headers);
+ setDeviceCookie(response, deviceId);
  return response;
 }

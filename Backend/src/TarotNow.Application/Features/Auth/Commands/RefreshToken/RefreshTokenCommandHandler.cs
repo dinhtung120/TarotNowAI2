@@ -3,8 +3,8 @@
 using MediatR;
 using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Features.Auth.Commands.Login;
-using TarotNow.Application.Interfaces;
 using TarotNow.Application.Exceptions;
+using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Events;
 using RefreshTokenEntity = TarotNow.Domain.Entities.RefreshToken;
 
@@ -13,6 +13,8 @@ namespace TarotNow.Application.Features.Auth.Commands.RefreshToken;
 // Handler chính cho luồng refresh token và rotate phiên đăng nhập.
 public partial class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, RefreshTokenResult>
 {
+    private const int MaxRotateLockRetries = 3;
+
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IAuthSessionRepository _authSessionRepository;
     private readonly ITokenService _tokenService;
@@ -43,6 +45,7 @@ public partial class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCo
     /// </summary>
     public async Task<RefreshTokenResult> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
     {
+        await EnsureLegacyTokenSessionBindingAsync(request, cancellationToken);
         var rotateResult = await RotateRefreshTokenAsync(request, cancellationToken);
         var currentToken = await ValidateRotationResultAsync(rotateResult, request, cancellationToken);
 
@@ -66,18 +69,29 @@ public partial class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCo
         RefreshTokenCommand request,
         CancellationToken cancellationToken)
     {
-        var rotateRequest = new RefreshRotateRequest
+        for (var attempt = 1; attempt <= MaxRotateLockRetries; attempt++)
         {
-            RawToken = request.Token,
-            NewRawToken = _tokenService.GenerateRefreshToken(),
-            NewExpiresAtUtc = DateTime.UtcNow.AddDays(_jwtTokenSettings.RefreshTokenExpiryDays),
-            IpAddress = request.ClientIpAddress,
-            DeviceId = request.DeviceId,
-            UserAgentHash = request.UserAgentHash,
-            IdempotencyKey = request.IdempotencyKey
-        };
+            var rotateRequest = new RefreshRotateRequest
+            {
+                RawToken = request.Token,
+                NewRawToken = _tokenService.GenerateRefreshToken(),
+                NewExpiresAtUtc = DateTime.UtcNow.AddDays(_jwtTokenSettings.RefreshTokenExpiryDays),
+                IpAddress = request.ClientIpAddress,
+                DeviceId = request.DeviceId,
+                UserAgentHash = request.UserAgentHash,
+                IdempotencyKey = request.IdempotencyKey
+            };
 
-        return await _refreshTokenRepository.RotateAsync(rotateRequest, cancellationToken);
+            var rotateResult = await _refreshTokenRepository.RotateAsync(rotateRequest, cancellationToken);
+            if (rotateResult.Status != RefreshRotateStatus.Locked || attempt == MaxRotateLockRetries)
+            {
+                return rotateResult;
+            }
+
+            await Task.Delay(TimeSpan.FromMilliseconds(40 * attempt), cancellationToken);
+        }
+
+        return RefreshRotateResult.Locked();
     }
 
     private async Task<RefreshTokenEntity> ValidateRotationResultAsync(
@@ -96,7 +110,14 @@ public partial class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCo
             throw new BusinessRuleException(AuthErrorCodes.TokenExpired, "Refresh token has expired. Please log in again.");
         }
 
-        if (rotateResult.Status == RefreshRotateStatus.InvalidToken || rotateResult.Status == RefreshRotateStatus.Locked)
+        if (rotateResult.Status == RefreshRotateStatus.Locked)
+        {
+            throw new BusinessRuleException(
+                AuthErrorCodes.RateLimited,
+                "Refresh token request is being processed. Please retry shortly.");
+        }
+
+        if (rotateResult.Status == RefreshRotateStatus.InvalidToken)
         {
             throw new BusinessRuleException(AuthErrorCodes.Unauthorized, "Refresh token is invalid.");
         }

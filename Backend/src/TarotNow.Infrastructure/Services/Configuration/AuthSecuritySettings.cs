@@ -21,6 +21,9 @@ public sealed class AuthSecuritySettings : IAuthSecuritySettings
         SessionRevocationTtlSeconds = value.SessionRevocationTtlSeconds > 0
             ? value.SessionRevocationTtlSeconds
             : 1800;
+        SessionCacheTtlSeconds = value.SessionCacheTtlSeconds > 0
+            ? value.SessionCacheTtlSeconds
+            : 30 * 24 * 60 * 60;
     }
 
     /// <inheritdoc />
@@ -28,4 +31,7 @@ public sealed class AuthSecuritySettings : IAuthSecuritySettings
 
     /// <inheritdoc />
     public int SessionRevocationTtlSeconds { get; }
+
+    /// <inheritdoc />
+    public int SessionCacheTtlSeconds { get; }
 }

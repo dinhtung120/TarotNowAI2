@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
 import { routing } from './i18n/routing';
 import { PROTECTED_PREFIXES } from '@/shared/config/authRoutes';
+import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { AUTH_COOKIE, AUTH_HEADER, AUTH_SESSION } from '@/shared/infrastructure/auth/authConstants';
 import { getPublicApiOrigin } from '@/shared/infrastructure/http/apiUrl';
 
@@ -149,6 +150,22 @@ const refreshSessionViaInternalRoute = async (
     },
     cache: 'no-store',
   });
+};
+
+const isAuthRefreshFailure = async (response: Response): Promise<boolean> => {
+ if (response.status === 401 || response.status === 403) {
+  return true;
+ }
+
+ try {
+  const payload = (await response.clone().json()) as { error?: string };
+  const error = payload.error;
+  return error === AUTH_ERROR.UNAUTHORIZED
+   || error === AUTH_ERROR.TOKEN_EXPIRED
+   || error === AUTH_ERROR.TOKEN_REPLAY;
+ } catch {
+  return false;
+ }
 };
 
 /* ------------------------------------------------------------------ */
@@ -353,10 +370,19 @@ export default async function proxy(request: NextRequest) {
   if (isProtectedRoute && shouldAttemptRefresh(accessToken, refreshToken)) {
     const refreshResponse = await refreshSessionViaInternalRoute(request);
     if (!refreshResponse.ok) {
-      const loginUrl = new URL(`/${locale}/login`, request.url);
-      const response = NextResponse.redirect(loginUrl);
-      clearAuthCookies(response);
-      return withResponseCsp(response);
+      if (await isAuthRefreshFailure(refreshResponse)) {
+        const loginUrl = new URL(`/${locale}/login`, request.url);
+        const response = NextResponse.redirect(loginUrl);
+        clearAuthCookies(response);
+        return withResponseCsp(response);
+      }
+
+      const response = intlMiddleware(request);
+      if (isDocumentRequest(request)) {
+        return withResponseCsp(response);
+      }
+
+      return response;
     }
 
     const response = intlMiddleware(request);

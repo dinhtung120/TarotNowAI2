@@ -15,6 +15,7 @@ public sealed class UserLoggedInDomainEventHandler
 {
     private static readonly ActivitySource ActivitySource = new("TarotNow.Auth");
     private readonly ICacheService _cacheService;
+    private readonly TimeSpan _sessionCacheTtl;
     private readonly ILogger<UserLoggedInDomainEventHandler> _logger;
 
     /// <summary>
@@ -22,11 +23,13 @@ public sealed class UserLoggedInDomainEventHandler
     /// </summary>
     public UserLoggedInDomainEventHandler(
         ICacheService cacheService,
+        IAuthSecuritySettings authSecuritySettings,
         ILogger<UserLoggedInDomainEventHandler> logger,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
         _cacheService = cacheService;
+        _sessionCacheTtl = TimeSpan.FromSeconds(Math.Max(60, authSecuritySettings.SessionCacheTtlSeconds));
         _logger = logger;
     }
 
@@ -44,9 +47,14 @@ public sealed class UserLoggedInDomainEventHandler
         await _cacheService.SetAsync(
             AuthEventCacheHelpers.BuildSessionKey(domainEvent.SessionId),
             BuildSessionSnapshot(domainEvent),
-            TimeSpan.FromDays(30),
+            _sessionCacheTtl,
             cancellationToken);
-        await AuthEventCacheHelpers.AddSessionToUserIndexAsync(_cacheService, domainEvent.UserId, domainEvent.SessionId, cancellationToken);
+        await AuthEventCacheHelpers.AddSessionToUserIndexAsync(
+            _cacheService,
+            domainEvent.UserId,
+            domainEvent.SessionId,
+            _sessionCacheTtl,
+            cancellationToken);
 
         _logger.LogInformation(
             "Auth login success. UserId={UserId} SessionId={SessionId} DeviceId={DeviceId} OutboxId={OutboxId}",

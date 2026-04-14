@@ -161,6 +161,23 @@ public class MockCacheService : ICacheService
     /// </summary>
     public Task<IReadOnlyCollection<string>> GetSetMembersAsync(string key, CancellationToken cancellationToken = default)
         => Task.FromResult<IReadOnlyCollection<string>>(Array.Empty<string>());
+
+    /// <summary>
+    /// Luôn acquire lock thành công trong test để không chặn luồng kiểm thử.
+    /// </summary>
+    public Task<bool> AcquireLockAsync(
+        string key,
+        string owner,
+        TimeSpan leaseTime,
+        CancellationToken cancellationToken = default) => Task.FromResult(true);
+
+    /// <summary>
+    /// Luôn release lock thành công trong test.
+    /// </summary>
+    public Task<bool> ReleaseLockAsync(
+        string key,
+        string owner,
+        CancellationToken cancellationToken = default) => Task.FromResult(true);
 }
 
 // Bộ integration tests cho endpoint stream AI và các nhánh quota/error liên quan.

@@ -24,4 +24,9 @@ public sealed class AuthSecurityOptions
     /// TTL cho cờ session bị revoke để chặn access token cũ theo sid.
     /// </summary>
     public int SessionRevocationTtlSeconds { get; set; } = 1800;
+
+    /// <summary>
+    /// TTL cache snapshot session active (Redis).
+    /// </summary>
+    public int SessionCacheTtlSeconds { get; set; } = 30 * 24 * 60 * 60;
 }
