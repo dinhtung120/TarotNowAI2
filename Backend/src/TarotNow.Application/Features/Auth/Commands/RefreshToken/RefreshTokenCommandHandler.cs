@@ -144,13 +144,16 @@ public partial class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCo
             cancellationToken);
     }
 
-    private static RefreshTokenResult BuildRefreshResult(AuthResponse response, RefreshRotateResult rotateResult)
+    private RefreshTokenResult BuildRefreshResult(AuthResponse response, RefreshRotateResult rotateResult)
     {
+        var refreshTokenExpiresAtUtc = rotateResult.NewTokenExpiresAtUtc
+            ?? DateTime.UtcNow.AddDays(_jwtTokenSettings.RefreshTokenExpiryDays);
         return new RefreshTokenResult
         {
             Response = response,
             NewRefreshToken = rotateResult.NewRawToken,
-            IsIdempotent = rotateResult.IsIdempotent
+            IsIdempotent = rotateResult.IsIdempotent,
+            RefreshTokenExpiresAtUtc = refreshTokenExpiresAtUtc
         };
     }
 }

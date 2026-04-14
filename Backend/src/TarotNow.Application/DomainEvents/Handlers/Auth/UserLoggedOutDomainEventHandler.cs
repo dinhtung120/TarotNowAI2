@@ -14,9 +14,9 @@ public sealed class UserLoggedOutDomainEventHandler
     : IdempotentDomainEventNotificationHandler<UserLoggedOutDomainEvent>
 {
     private static readonly ActivitySource ActivitySource = new("TarotNow.Auth");
-    private static readonly TimeSpan AccessBlacklistTtl = TimeSpan.FromMinutes(20);
-    private static readonly TimeSpan SessionRevokedTtl = TimeSpan.FromMinutes(30);
     private readonly ICacheService _cacheService;
+    private readonly TimeSpan _accessBlacklistTtl;
+    private readonly TimeSpan _sessionRevokedTtl;
     private readonly ILogger<UserLoggedOutDomainEventHandler> _logger;
 
     /// <summary>
@@ -24,11 +24,14 @@ public sealed class UserLoggedOutDomainEventHandler
     /// </summary>
     public UserLoggedOutDomainEventHandler(
         ICacheService cacheService,
+        IAuthSecuritySettings authSecuritySettings,
         ILogger<UserLoggedOutDomainEventHandler> logger,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
         _cacheService = cacheService;
+        _accessBlacklistTtl = TimeSpan.FromSeconds(Math.Max(60, authSecuritySettings.AccessTokenBlacklistTtlSeconds));
+        _sessionRevokedTtl = TimeSpan.FromSeconds(Math.Max(60, authSecuritySettings.SessionRevocationTtlSeconds));
         _logger = logger;
     }
 
@@ -45,10 +48,12 @@ public sealed class UserLoggedOutDomainEventHandler
 
         if (domainEvent.RevokeAll)
         {
-            var userSessions = await _cacheService.GetAsync<List<Guid>>(
+            var memberValues = await _cacheService.GetSetMembersAsync(
                 AuthEventCacheHelpers.BuildUserSessionIndexKey(domainEvent.UserId),
-                cancellationToken) ?? new List<Guid>();
-            foreach (var userSessionId in userSessions)
+                cancellationToken);
+            foreach (var userSessionId in memberValues
+                         .Select(static value => Guid.TryParse(value, out var parsed) ? parsed : Guid.Empty)
+                         .Where(static sessionId => sessionId != Guid.Empty))
             {
                 await MarkSessionRevokedAndBlacklistAsync(userSessionId, cancellationToken);
             }
@@ -81,14 +86,14 @@ public sealed class UserLoggedOutDomainEventHandler
             await AuthEventCacheHelpers.BlacklistAccessJtiAsync(
                 _cacheService,
                 snapshot.LastAccessJti,
-                AccessBlacklistTtl,
+                _accessBlacklistTtl,
                 cancellationToken);
         }
 
         await AuthEventCacheHelpers.MarkSessionRevokedAsync(
             _cacheService,
             sessionId,
-            SessionRevokedTtl,
+            _sessionRevokedTtl,
             cancellationToken);
         await _cacheService.RemoveAsync(AuthEventCacheHelpers.BuildSessionKey(sessionId), cancellationToken);
     }

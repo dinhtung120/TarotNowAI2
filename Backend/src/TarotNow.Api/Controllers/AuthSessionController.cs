@@ -40,13 +40,13 @@ public sealed class AuthSessionController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginCommand command, CancellationToken cancellationToken)
     {
         command.ClientIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-        command.DeviceId = ResolveDeviceId(Request.Headers[AuthHeaders.DeviceId].ToString());
-        command.UserAgentHash = HashValue(Request.Headers.UserAgent.ToString());
+        command.DeviceId = ResolveDeviceId(Request);
+        command.UserAgentHash = HashValue(ResolveUserAgent(Request));
 
         var result = await _mediator.Send(command, cancellationToken);
 
         _authCookieService.SetAccessToken(Request, Response, result.Response.AccessToken, result.Response.ExpiresInSeconds);
-        _authCookieService.SetRefreshToken(Request, Response, result.RefreshToken);
+        _authCookieService.SetRefreshToken(Request, Response, result.RefreshToken, result.RefreshTokenExpiresAtUtc);
         return Ok(result.Response);
     }
 
@@ -54,7 +54,7 @@ public sealed class AuthSessionController : ControllerBase
     /// Refresh access token từ refresh token cookie.
     /// </summary>
     [HttpPost("refresh")]
-    [EnableRateLimiting("auth-refresh-token-family")]
+    [EnableRateLimiting("auth-refresh")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AuthResponse))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> RefreshTokens(
@@ -73,14 +73,14 @@ public sealed class AuthSessionController : ControllerBase
             Token = refreshToken,
             IdempotencyKey = string.IsNullOrWhiteSpace(idempotencyKey) ? Guid.NewGuid().ToString("N") : idempotencyKey,
             ClientIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            DeviceId = ResolveDeviceId(Request.Headers[AuthHeaders.DeviceId].ToString()),
-            UserAgentHash = HashValue(Request.Headers.UserAgent.ToString())
+            DeviceId = ResolveDeviceId(Request),
+            UserAgentHash = HashValue(ResolveUserAgent(Request))
         };
 
         var result = await _mediator.Send(command, cancellationToken);
 
         _authCookieService.SetAccessToken(Request, Response, result.Response.AccessToken, result.Response.ExpiresInSeconds);
-        _authCookieService.SetRefreshToken(Request, Response, result.NewRefreshToken);
+        _authCookieService.SetRefreshToken(Request, Response, result.NewRefreshToken, result.RefreshTokenExpiresAtUtc);
         return Ok(result.Response);
     }
 
@@ -124,15 +124,45 @@ public sealed class AuthSessionController : ControllerBase
         return Ok(new { message = "Logged out successfully." });
     }
 
-    private static string ResolveDeviceId(string? deviceId)
+    private static string ResolveDeviceId(HttpRequest request)
     {
-        if (string.IsNullOrWhiteSpace(deviceId))
+        var headerValue = request.Headers[AuthHeaders.DeviceId].ToString();
+        if (TryNormalizeDeviceId(headerValue, out var normalizedFromHeader))
         {
-            return "unknown-device";
+            return normalizedFromHeader;
         }
 
-        var trimmed = deviceId.Trim();
-        return trimmed.Length <= 128 ? trimmed : trimmed[..128];
+        if (request.Cookies.TryGetValue(AuthCookieNames.DeviceId, out var cookieValue)
+            && TryNormalizeDeviceId(cookieValue, out var normalizedFromCookie))
+        {
+            return normalizedFromCookie;
+        }
+
+        // Fallback deterministic fingerprint để tránh gom mọi client vào một unknown-device.
+        var ip = request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown-ip";
+        var ua = request.Headers.UserAgent.ToString();
+        return $"fp-{HashValue($"{ip}|{ua}")}";
+    }
+
+    private static bool TryNormalizeDeviceId(string? raw, out string normalized)
+    {
+        normalized = string.Empty;
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return false;
+        }
+
+        var trimmed = raw.Trim();
+        normalized = trimmed.Length <= 128 ? trimmed : trimmed[..128];
+        return normalized.Length > 0;
+    }
+
+    private static string ResolveUserAgent(HttpRequest request)
+    {
+        var forwardedUserAgent = request.Headers[AuthHeaders.ForwardedUserAgent].ToString();
+        return string.IsNullOrWhiteSpace(forwardedUserAgent)
+            ? request.Headers.UserAgent.ToString()
+            : forwardedUserAgent;
     }
 
     private static string HashValue(string? raw)

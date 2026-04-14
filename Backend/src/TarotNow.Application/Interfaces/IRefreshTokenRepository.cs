@@ -113,6 +113,11 @@ public sealed class RefreshRotateResult
     public string NewRawToken { get; init; } = string.Empty;
 
     /// <summary>
+    /// Thời điểm hết hạn của refresh token mới (hoặc token idempotent trả lại).
+    /// </summary>
+    public DateTime? NewTokenExpiresAtUtc { get; init; }
+
+    /// <summary>
     /// Cờ idempotent hit.
     /// </summary>
     public bool IsIdempotent => Status == RefreshRotateStatus.Idempotent;
@@ -131,18 +136,20 @@ public sealed class RefreshRotateResult
             Status = RefreshRotateStatus.Success,
             CurrentToken = currentToken,
             NewToken = newToken,
-            NewRawToken = newRawToken
+            NewRawToken = newRawToken,
+            NewTokenExpiresAtUtc = newToken.ExpiresAt
         };
 
     /// <summary>
     /// Factory idempotent replay hợp lệ.
     /// </summary>
-    public static RefreshRotateResult Idempotent(RefreshToken currentToken, string newRawToken)
+    public static RefreshRotateResult Idempotent(RefreshToken currentToken, string newRawToken, DateTime newTokenExpiresAtUtc)
         => new()
         {
             Status = RefreshRotateStatus.Idempotent,
             CurrentToken = currentToken,
-            NewRawToken = newRawToken
+            NewRawToken = newRawToken,
+            NewTokenExpiresAtUtc = newTokenExpiresAtUtc
         };
 
     /// <summary>

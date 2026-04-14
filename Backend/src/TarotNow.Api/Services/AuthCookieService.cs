@@ -9,14 +9,12 @@ namespace TarotNow.Api.Services;
 /// </summary>
 public sealed class AuthCookieService : IAuthCookieService
 {
-    private readonly JwtOptions _jwtOptions;
-
     /// <summary>
     /// Khởi tạo auth cookie service.
     /// </summary>
     public AuthCookieService(IOptions<JwtOptions> jwtOptions)
     {
-        _jwtOptions = jwtOptions.Value;
+        _ = jwtOptions.Value;
     }
 
     /// <inheritdoc />
@@ -29,10 +27,10 @@ public sealed class AuthCookieService : IAuthCookieService
     }
 
     /// <inheritdoc />
-    public void SetRefreshToken(HttpRequest request, HttpResponse response, string refreshToken)
+    public void SetRefreshToken(HttpRequest request, HttpResponse response, string refreshToken, DateTime expiresAtUtc)
     {
-        var refreshExpiryDays = _jwtOptions.RefreshExpiryDays > 0 ? _jwtOptions.RefreshExpiryDays : 30;
-        var maxAgeSeconds = refreshExpiryDays * 24 * 60 * 60;
+        var remaining = expiresAtUtc - DateTime.UtcNow;
+        var maxAgeSeconds = Math.Max(1, (int)Math.Ceiling(remaining.TotalSeconds));
         response.Cookies.Append(
             AuthCookieNames.RefreshToken,
             refreshToken,

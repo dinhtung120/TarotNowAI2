@@ -22,7 +22,11 @@ public sealed partial class RefreshTokenRepository
             await localTransaction.CommitAsync(cancellationToken);
         }
 
-        await CacheIdempotentResultAsync(context.IdempotencyCacheKey, context.Request.NewRawToken, cancellationToken);
+        await CacheIdempotentResultAsync(
+            context.IdempotencyCacheKey,
+            context.Request.NewRawToken,
+            nextToken.ExpiresAt,
+            cancellationToken);
         return RefreshRotateResult.Success(context.CurrentToken, nextToken, context.Request.NewRawToken);
     }
 
@@ -51,10 +55,15 @@ public sealed partial class RefreshTokenRepository
     private async Task CacheIdempotentResultAsync(
         string idemCacheKey,
         string newRefreshTokenRaw,
+        DateTime newTokenExpiresAtUtc,
         CancellationToken cancellationToken)
     {
         var window = TimeSpan.FromSeconds(Math.Max(10, _authSecurityOptions.RefreshIdempotencyWindowSeconds));
-        var cacheItem = new RefreshRotateCacheItem { NewRefreshTokenRaw = newRefreshTokenRaw };
+        var cacheItem = new RefreshRotateCacheItem
+        {
+            NewRefreshTokenRaw = newRefreshTokenRaw,
+            NewTokenExpiresAtUtc = newTokenExpiresAtUtc
+        };
         await _cacheService.SetAsync(idemCacheKey, cacheItem, window, cancellationToken);
     }
 
@@ -98,6 +107,7 @@ public sealed partial class RefreshTokenRepository
     private sealed class RefreshRotateCacheItem
     {
         public string NewRefreshTokenRaw { get; set; } = string.Empty;
+        public DateTime NewTokenExpiresAtUtc { get; set; }
     }
 
     private sealed record RotatePersistContext(

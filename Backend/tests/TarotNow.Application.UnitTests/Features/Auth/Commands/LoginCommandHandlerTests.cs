@@ -24,7 +24,6 @@ public class LoginCommandHandlerTests
     // Mock refresh token repo để kiểm tra persistence refresh token.
     private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock;
     private readonly Mock<IAuthSessionRepository> _authSessionRepositoryMock;
-    private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly Mock<IDomainEventPublisher> _domainEventPublisherMock;
     // Handler cần kiểm thử.
     private readonly LoginCommandHandler _handler;
@@ -41,7 +40,6 @@ public class LoginCommandHandlerTests
         _jwtTokenSettingsMock = new Mock<IJwtTokenSettings>();
         _refreshTokenRepositoryMock = new Mock<IRefreshTokenRepository>();
         _authSessionRepositoryMock = new Mock<IAuthSessionRepository>();
-        _cacheServiceMock = new Mock<ICacheService>();
         _domainEventPublisherMock = new Mock<IDomainEventPublisher>();
 
         _jwtTokenSettingsMock.SetupGet(x => x.RefreshTokenExpiryDays).Returns(7);
@@ -49,19 +47,12 @@ public class LoginCommandHandlerTests
         _domainEventPublisherMock
             .Setup(x => x.PublishAsync(It.IsAny<Domain.Events.IDomainEvent>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
-        _cacheServiceMock
-            .Setup(x => x.GetAsync<long>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(0L);
-        _cacheServiceMock
-            .Setup(x => x.RemoveAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
 
         _handler = new LoginCommandHandler(
             _userRepositoryMock.Object, _passwordHasherMock.Object,
             _tokenServiceMock.Object, _jwtTokenSettingsMock.Object,
             _refreshTokenRepositoryMock.Object,
             _authSessionRepositoryMock.Object,
-            _cacheServiceMock.Object,
             _domainEventPublisherMock.Object
         );
     }

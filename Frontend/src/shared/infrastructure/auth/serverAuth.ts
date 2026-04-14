@@ -1,4 +1,4 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import type { AuthResponse, UserProfile } from '@/features/auth/domain/types';
 import { AUTH_COOKIE, AUTH_HEADER, AUTH_SESSION } from '@/shared/infrastructure/auth/authConstants';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
@@ -73,6 +73,7 @@ function parseRefreshTokenFromHeaders(headers: Headers): string | undefined {
 
 async function refreshServerAccessToken(): Promise<string | undefined> {
  const cookieStore = await cookies();
+ const requestHeaders = await headers();
  const refreshToken = cookieStore.get(AUTH_COOKIE.REFRESH)?.value;
  if (!refreshToken) {
   return undefined;
@@ -89,6 +90,7 @@ async function refreshServerAccessToken(): Promise<string | undefined> {
    Cookie: `${AUTH_COOKIE.REFRESH}=${refreshToken}`,
    [AUTH_HEADER.IDEMPOTENCY_KEY]: idempotencyKey,
    [AUTH_HEADER.DEVICE_ID]: deviceId,
+   [AUTH_HEADER.FORWARDED_USER_AGENT]: requestHeaders.get('user-agent') ?? '',
   },
   cache: 'no-store',
   fallbackErrorMessage: AUTH_ERROR.UNAUTHORIZED,

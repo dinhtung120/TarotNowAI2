@@ -13,7 +13,7 @@ public interface IAuthCookieService
     /// <summary>
     /// Set refresh token cookie.
     /// </summary>
-    void SetRefreshToken(HttpRequest request, HttpResponse response, string refreshToken);
+    void SetRefreshToken(HttpRequest request, HttpResponse response, string refreshToken, DateTime expiresAtUtc);
 
     /// <summary>
     /// Xóa toàn bộ auth cookies.

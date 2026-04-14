@@ -7,6 +7,7 @@ export const AUTH_COOKIE = {
 export const AUTH_HEADER = {
  IDEMPOTENCY_KEY: 'x-idempotency-key',
  DEVICE_ID: 'x-device-id',
+ FORWARDED_USER_AGENT: 'x-forwarded-user-agent',
 } as const;
 
 export const AUTH_SESSION = {

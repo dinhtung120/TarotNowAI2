@@ -124,17 +124,16 @@ const appendRefreshCookies = (source: Headers, target: NextResponse): void => {
   }
 };
 
-const buildMiddlewareIdempotencyKey = (refreshToken: string | undefined): string => {
-  const tokenFingerprint = refreshToken && refreshToken.length > 16
-    ? refreshToken.slice(-16)
-    : 'anonymous';
+const buildMiddlewareIdempotencyKey = (deviceId: string | undefined): string => {
+  const deviceFingerprint = deviceId && deviceId.length > 16
+    ? deviceId.slice(-16)
+    : deviceId || 'anonymous';
   const timeBucket = Math.floor(Date.now() / 30_000);
-  return `mw-refresh:${tokenFingerprint}:${timeBucket}`;
+  return `mw-refresh:${deviceFingerprint}:${timeBucket}`;
 };
 
 const refreshSessionViaInternalRoute = async (
   request: NextRequest,
-  refreshToken: string | undefined,
 ): Promise<Response> => {
   const refreshUrl = new URL('/api/auth/refresh', request.url);
   const forwardedDeviceId = request.headers.get(AUTH_HEADER.DEVICE_ID)
@@ -144,8 +143,9 @@ const refreshSessionViaInternalRoute = async (
     method: 'POST',
     headers: {
       Cookie: request.headers.get('cookie') ?? '',
-      [AUTH_HEADER.IDEMPOTENCY_KEY]: buildMiddlewareIdempotencyKey(refreshToken),
+      [AUTH_HEADER.IDEMPOTENCY_KEY]: buildMiddlewareIdempotencyKey(forwardedDeviceId),
       [AUTH_HEADER.DEVICE_ID]: forwardedDeviceId,
+      [AUTH_HEADER.FORWARDED_USER_AGENT]: request.headers.get('user-agent') ?? '',
     },
     cache: 'no-store',
   });
@@ -351,7 +351,7 @@ export default async function proxy(request: NextRequest) {
   }
 
   if (isProtectedRoute && shouldAttemptRefresh(accessToken, refreshToken)) {
-    const refreshResponse = await refreshSessionViaInternalRoute(request, refreshToken);
+    const refreshResponse = await refreshSessionViaInternalRoute(request);
     if (!refreshResponse.ok) {
       const loginUrl = new URL(`/${locale}/login`, request.url);
       const response = NextResponse.redirect(loginUrl);

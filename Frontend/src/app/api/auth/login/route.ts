@@ -28,11 +28,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   return NextResponse.json({ success: false, error: 'Invalid login payload.' }, { status: 400 });
  }
 
- const result = await serverHttpRequest<AuthResponse>('/auth/login', {
+  const result = await serverHttpRequest<AuthResponse>('/auth/login', {
   method: 'POST',
   json: payload,
   headers: {
    [AUTH_HEADER.DEVICE_ID]: deviceId,
+   [AUTH_HEADER.FORWARDED_USER_AGENT]: request.headers.get('user-agent') ?? '',
   },
   cache: 'no-store',
   fallbackErrorMessage: AUTH_ERROR.UNAUTHORIZED,

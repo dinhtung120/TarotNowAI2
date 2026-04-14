@@ -14,4 +14,9 @@ public static class AuthHeaders
     /// Header định danh thiết bị phía client gửi lên.
     /// </summary>
     public const string DeviceId = "x-device-id";
+
+    /// <summary>
+    /// Header chuyển tiếp user-agent gốc từ BFF/middleware.
+    /// </summary>
+    public const string ForwardedUserAgent = "x-forwarded-user-agent";
 }

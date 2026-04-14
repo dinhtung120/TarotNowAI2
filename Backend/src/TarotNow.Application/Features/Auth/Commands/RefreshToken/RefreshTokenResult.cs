@@ -21,4 +21,9 @@ public sealed class RefreshTokenResult
     /// Cờ idempotent response.
     /// </summary>
     public bool IsIdempotent { get; init; }
+
+    /// <summary>
+    /// Thời điểm hết hạn refresh token hiện tại đã cấp lại.
+    /// </summary>
+    public DateTime RefreshTokenExpiresAtUtc { get; init; }
 }

@@ -69,13 +69,13 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
     const init = async () => {
       const signalR = await import('@microsoft/signalr');
       logger.info('[ChatRealtimeSync]', `Connecting to: ${getSignalRHubUrl('/api/v1/chat')}`);
-      hubConnection = new signalR.HubConnectionBuilder()
-        .withUrl(getSignalRHubUrl('/api/v1/chat'), { 
-          withCredentials: true,
-        })
-        .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
-        .configureLogging(signalR.LogLevel.Debug)
-        .build();
+	      hubConnection = new signalR.HubConnectionBuilder()
+	        .withUrl(getSignalRHubUrl('/api/v1/chat'), { 
+	          withCredentials: true,
+	        })
+	        .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+	        .configureLogging(process.env.NODE_ENV === 'development' ? signalR.LogLevel.Debug : signalR.LogLevel.Warning)
+	        .build();
 
       hubConnection.serverTimeoutInMilliseconds = 120000;
 

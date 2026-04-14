@@ -14,4 +14,9 @@ public sealed class LoginResult
     /// Refresh token mới (raw) để set cookie.
     /// </summary>
     public string RefreshToken { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Thời điểm hết hạn của refresh token vừa phát hành.
+    /// </summary>
+    public DateTime RefreshTokenExpiresAtUtc { get; init; }
 }

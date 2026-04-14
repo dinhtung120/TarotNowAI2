@@ -102,9 +102,11 @@ public sealed partial class RefreshTokenRepository
         CancellationToken cancellationToken)
     {
         var cached = await _cacheService.GetAsync<RefreshRotateCacheItem>(idemCacheKey, cancellationToken);
-        if (cached is not null && string.IsNullOrWhiteSpace(cached.NewRefreshTokenRaw) == false)
+        if (cached is not null
+            && string.IsNullOrWhiteSpace(cached.NewRefreshTokenRaw) == false
+            && cached.NewTokenExpiresAtUtc > DateTime.MinValue)
         {
-            return RefreshRotateResult.Idempotent(current, cached.NewRefreshTokenRaw);
+            return RefreshRotateResult.Idempotent(current, cached.NewRefreshTokenRaw, cached.NewTokenExpiresAtUtc);
         }
 
         if (current.IsExpired)
@@ -127,23 +129,8 @@ public sealed partial class RefreshTokenRepository
 
     private bool IsLockContention(RefreshToken current, string idempotencyKey)
     {
-        if (current.ReplacedByTokenId is null)
-        {
-            return false;
-        }
-
-        if (string.Equals(current.LastRotateIdempotencyKey, idempotencyKey, StringComparison.Ordinal))
-        {
-            return true;
-        }
-
-        if (current.UsedAtUtc is null)
-        {
-            return false;
-        }
-
-        var contentionWindow = TimeSpan.FromSeconds(Math.Max(10, _authSecurityOptions.RefreshIdempotencyWindowSeconds));
-        return DateTime.UtcNow - current.UsedAtUtc.Value <= contentionWindow;
+        return current.ReplacedByTokenId is not null
+               && string.Equals(current.LastRotateIdempotencyKey, idempotencyKey, StringComparison.Ordinal);
     }
 
     private static async Task<RefreshRotateResult> FinalizeResultAsync(

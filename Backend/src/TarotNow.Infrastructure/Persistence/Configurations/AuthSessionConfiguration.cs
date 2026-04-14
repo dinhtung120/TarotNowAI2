@@ -38,7 +38,9 @@ public sealed class AuthSessionConfiguration : IEntityTypeConfiguration<AuthSess
             .HasColumnName("revoked_at_utc");
 
         builder.HasIndex(x => x.UserId);
-        builder.HasIndex(x => new { x.UserId, x.DeviceId });
+        builder.HasIndex(x => new { x.UserId, x.DeviceId })
+            .HasFilter("\"revoked_at_utc\" IS NULL")
+            .IsUnique();
         builder.HasIndex(x => x.RevokedAtUtc);
 
         builder.HasOne(x => x.User)

@@ -27,6 +27,21 @@ public sealed class AuthSessionRepository : IAuthSessionRepository
         string ipHash,
         CancellationToken cancellationToken = default)
     {
+        var normalizedDeviceId = NormalizeDeviceId(deviceId);
+        var existing = await _dbContext.AuthSessions
+            .FirstOrDefaultAsync(
+                x => x.UserId == userId
+                     && x.RevokedAtUtc == null
+                     && x.DeviceId == normalizedDeviceId,
+                cancellationToken);
+        if (existing is not null)
+        {
+            existing.Touch(ipHash, DateTime.UtcNow);
+            _dbContext.AuthSessions.Update(existing);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+            return existing;
+        }
+
         var session = new AuthSession(userId, deviceId, userAgentHash, ipHash);
         await _dbContext.AuthSessions.AddAsync(session, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
@@ -74,5 +89,17 @@ public sealed class AuthSessionRepository : IAuthSessionRepository
 
         _dbContext.AuthSessions.UpdateRange(sessions);
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static string NormalizeDeviceId(string deviceId)
+    {
+        var fallback = "unknown";
+        if (string.IsNullOrWhiteSpace(deviceId))
+        {
+            return fallback;
+        }
+
+        var trimmed = deviceId.Trim();
+        return trimmed.Length <= 128 ? trimmed : trimmed[..128];
     }
 }

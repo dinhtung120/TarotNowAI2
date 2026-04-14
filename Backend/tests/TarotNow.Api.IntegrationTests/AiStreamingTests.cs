@@ -145,6 +145,22 @@ public class MockCacheService : ICacheService
     /// Luồng deterministic hóa kết quả để assertion ổn định.
     /// </summary>
     public Task<long> IncrementAsync(string key, TimeSpan? expiration = null, CancellationToken cancellationToken = default) => Task.FromResult(1L);
+
+    /// <summary>
+    /// Bỏ qua thêm set member trong test.
+    /// </summary>
+    public Task AddToSetAsync(string key, string member, TimeSpan? expiration = null, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+    /// <summary>
+    /// Bỏ qua xóa set member trong test.
+    /// </summary>
+    public Task RemoveFromSetAsync(string key, string member, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+    /// <summary>
+    /// Trả set rỗng trong test.
+    /// </summary>
+    public Task<IReadOnlyCollection<string>> GetSetMembersAsync(string key, CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyCollection<string>>(Array.Empty<string>());
 }
 
 // Bộ integration tests cho endpoint stream AI và các nhánh quota/error liên quan.

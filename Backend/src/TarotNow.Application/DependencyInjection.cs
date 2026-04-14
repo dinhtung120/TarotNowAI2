@@ -3,6 +3,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using TarotNow.Application.Common.Services;
+using TarotNow.Application.Features.Auth.Commands.Login;
 using TarotNow.Application.Interfaces;
 using TarotNow.Application.Services;
 
@@ -87,6 +88,7 @@ public static class DependencyInjection
     /// </summary>
     private static void RegisterDomainServices(IServiceCollection services)
     {
+        services.AddScoped<IPipelineBehavior<LoginCommand, LoginResult>, LoginCommandThrottleBehavior>();
         services.AddScoped<IEscrowSettlementService, EscrowSettlementService>();
         services.AddScoped<ICommunityMediaAttachmentService, CommunityMediaAttachmentService>();
         services.AddTransient<FollowupPricingService>();

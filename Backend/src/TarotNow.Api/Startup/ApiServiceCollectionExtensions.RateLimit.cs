@@ -1,5 +1,7 @@
 using System.Globalization;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.RateLimiting;
@@ -36,8 +38,8 @@ public static partial class ApiServiceCollectionExtensions
         // Rule theo user đã xác thực để hạn chế spam gọi endpoint auth/session.
         // Nâng cao giới hạn (100 req/phút) để tránh chặn nhầm khi Load Profile/Navbar/Wallet đồng thời.
         AddFixedWindowPolicy(options, "auth-session", ResolveAuthenticatedPartitionKey, permitLimit: 100, TimeSpan.FromMinutes(1));
-        AddFixedWindowPolicy(options, "auth-refresh", ResolveAuthenticatedPartitionKey, permitLimit: 30, TimeSpan.FromMinutes(1));
-        AddFixedWindowPolicy(options, "auth-refresh-token-family", ResolveRefreshFamilyKey, permitLimit: 10, TimeSpan.FromMinutes(1));
+        AddFixedWindowPolicy(options, "auth-refresh", ResolveRefreshPartitionKey, permitLimit: 30, TimeSpan.FromMinutes(1));
+        AddFixedWindowPolicy(options, "auth-refresh-token-family", ResolveRefreshPartitionKey, permitLimit: 10, TimeSpan.FromMinutes(1));
         // Rule bảo vệ endpoint ghi community khỏi spam nội dung.
         // Tăng lên 60 req/phút để hỗ trợ upload nhiều ảnh hoặc tương tác nhanh.
         AddFixedWindowPolicy(options, "community-write", ResolveAuthenticatedPartitionKey, permitLimit: 60, TimeSpan.FromMinutes(1));
@@ -136,20 +138,38 @@ public static partial class ApiServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Resolve partition key theo refresh token để giới hạn traffic theo token family.
+    /// Resolve partition key cho refresh theo thứ tự ưu tiên:
+    /// x-device-id -> device cookie -> refresh token fingerprint -> IP.
     /// </summary>
-    private static string ResolveRefreshFamilyKey(HttpContext httpContext)
+    private static string ResolveRefreshPartitionKey(HttpContext httpContext)
     {
-        if (httpContext.Request.Cookies.TryGetValue(AuthCookieNames.RefreshToken, out var refreshToken)
-            && string.IsNullOrWhiteSpace(refreshToken) == false)
+        var deviceId = httpContext.Request.Headers[AuthHeaders.DeviceId].ToString();
+        if (string.IsNullOrWhiteSpace(deviceId)
+            && httpContext.Request.Cookies.TryGetValue(AuthCookieNames.DeviceId, out var deviceCookie))
         {
-            var hash = Convert.ToHexString(
-                System.Security.Cryptography.SHA256.HashData(
-                    System.Text.Encoding.UTF8.GetBytes(refreshToken.Trim())))
-                .ToLowerInvariant();
-            return $"refresh:{hash[..16]}";
+            deviceId = deviceCookie;
+        }
+
+        if (!string.IsNullOrWhiteSpace(deviceId))
+        {
+            return $"refresh-device:{HashPrefix(deviceId, 24)}";
+        }
+
+        if (httpContext.Request.Cookies.TryGetValue(AuthCookieNames.RefreshToken, out var refreshToken)
+            && !string.IsNullOrWhiteSpace(refreshToken))
+        {
+            return $"refresh-token:{HashPrefix(refreshToken, 16)}";
         }
 
         return $"ip:{ResolveClientIp(httpContext)}";
+    }
+
+    private static string HashPrefix(string raw, int length)
+    {
+        var normalized = raw.Trim();
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
+        var hash = Convert.ToHexString(bytes).ToLowerInvariant();
+        var max = Math.Clamp(length, 8, hash.Length);
+        return hash[..max];
     }
 }

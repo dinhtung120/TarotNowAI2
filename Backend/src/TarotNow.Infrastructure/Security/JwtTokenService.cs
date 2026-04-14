@@ -33,7 +33,8 @@ public class JwtTokenService : ITokenService
         var issuer = _jwtOptions.Issuer ?? throw new InvalidOperationException("Jwt:Issuer is missing.");
         var audience = _jwtOptions.Audience ?? throw new InvalidOperationException("Jwt:Audience is missing.");
         var expirationMinutes = ResolveAccessTokenExpiryMinutes();
-        expiresAtUtc = DateTime.UtcNow.AddMinutes(expirationMinutes);
+        var issuedAtUtc = DateTime.UtcNow;
+        expiresAtUtc = issuedAtUtc.AddMinutes(expirationMinutes);
         jti = Guid.NewGuid().ToString("N");
 
         // Tạo thông tin ký số để bảo đảm token không bị giả mạo.
@@ -44,9 +45,7 @@ public class JwtTokenService : ITokenService
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim("username", user.Username),
-            new Claim("status", user.Status.ToString()),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Role, user.Role),
             new Claim(JwtRegisteredClaimNames.Jti, jti),
             new Claim("sid", sessionId.ToString())
@@ -57,6 +56,7 @@ public class JwtTokenService : ITokenService
             issuer: issuer,
             audience: audience,
             claims: claims,
+            notBefore: issuedAtUtc,
             expires: expiresAtUtc,
             signingCredentials: credentials);
 

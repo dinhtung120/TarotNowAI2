@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AUTH_COOKIE, AUTH_SESSION } from '@/shared/infrastructure/auth/authConstants';
+import { AUTH_COOKIE, AUTH_HEADER, AUTH_SESSION } from '@/shared/infrastructure/auth/authConstants';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
 
 export function resolveAccessTtlSeconds(payload: { expiresInSeconds?: number }): number {
@@ -68,7 +68,7 @@ export function setRefreshCookieFromHeaders(response: NextResponse, request: Nex
 }
 
 export function resolveDeviceIdFromRequest(request: NextRequest): string {
- const fromHeader = request.headers.get('x-device-id');
+ const fromHeader = request.headers.get(AUTH_HEADER.DEVICE_ID);
  if (fromHeader && fromHeader.trim().length > 0) {
   return fromHeader.trim().slice(0, 128);
  }

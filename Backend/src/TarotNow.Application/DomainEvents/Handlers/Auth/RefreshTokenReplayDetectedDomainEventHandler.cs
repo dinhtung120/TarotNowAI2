@@ -14,9 +14,9 @@ public sealed class RefreshTokenReplayDetectedDomainEventHandler
     : IdempotentDomainEventNotificationHandler<RefreshTokenReplayDetectedDomainEvent>
 {
     private static readonly ActivitySource ActivitySource = new("TarotNow.Auth");
-    private static readonly TimeSpan AccessBlacklistTtl = TimeSpan.FromMinutes(20);
-    private static readonly TimeSpan SessionRevokedTtl = TimeSpan.FromMinutes(30);
     private readonly ICacheService _cacheService;
+    private readonly TimeSpan _accessBlacklistTtl;
+    private readonly TimeSpan _sessionRevokedTtl;
     private readonly ILogger<RefreshTokenReplayDetectedDomainEventHandler> _logger;
 
     /// <summary>
@@ -24,11 +24,14 @@ public sealed class RefreshTokenReplayDetectedDomainEventHandler
     /// </summary>
     public RefreshTokenReplayDetectedDomainEventHandler(
         ICacheService cacheService,
+        IAuthSecuritySettings authSecuritySettings,
         ILogger<RefreshTokenReplayDetectedDomainEventHandler> logger,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
         _cacheService = cacheService;
+        _accessBlacklistTtl = TimeSpan.FromSeconds(Math.Max(60, authSecuritySettings.AccessTokenBlacklistTtlSeconds));
+        _sessionRevokedTtl = TimeSpan.FromSeconds(Math.Max(60, authSecuritySettings.SessionRevocationTtlSeconds));
         _logger = logger;
     }
 
@@ -64,14 +67,14 @@ public sealed class RefreshTokenReplayDetectedDomainEventHandler
             await AuthEventCacheHelpers.BlacklistAccessJtiAsync(
                 _cacheService,
                 snapshot.LastAccessJti,
-                AccessBlacklistTtl,
+                _accessBlacklistTtl,
                 cancellationToken);
         }
 
         await AuthEventCacheHelpers.MarkSessionRevokedAsync(
             _cacheService,
             domainEvent.SessionId,
-            SessionRevokedTtl,
+            _sessionRevokedTtl,
             cancellationToken);
         await _cacheService.RemoveAsync(AuthEventCacheHelpers.BuildSessionKey(domainEvent.SessionId), cancellationToken);
 

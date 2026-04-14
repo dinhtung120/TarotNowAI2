@@ -44,11 +44,11 @@ export function usePresenceConnection() {
       const hubUrl = getSignalRHubUrl('/api/v1/presence');
       logger.info('[PresenceRealtimeSync]', `Connecting to: ${hubUrl}`);
 
-      hubConnection = new signalR.HubConnectionBuilder()
-        .withUrl(hubUrl, { withCredentials: true })
-        .withAutomaticReconnect(reconnectSchedule)
-        .configureLogging(signalR.LogLevel.Debug)
-        .build();
+	      hubConnection = new signalR.HubConnectionBuilder()
+	        .withUrl(hubUrl, { withCredentials: true })
+	        .withAutomaticReconnect(reconnectSchedule)
+	        .configureLogging(process.env.NODE_ENV === 'development' ? signalR.LogLevel.Debug : signalR.LogLevel.Warning)
+	        .build();
 
       hubConnection.serverTimeoutInMilliseconds = 120000;
       const registration = registerPresenceConnectionHandlers(hubConnection, queryClient);

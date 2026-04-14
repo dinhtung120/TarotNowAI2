@@ -55,15 +55,16 @@ internal static class AuthEventCacheHelpers
         Guid sessionId,
         CancellationToken cancellationToken)
     {
-        var key = BuildUserSessionIndexKey(userId);
-        var sessions = await cacheService.GetAsync<List<Guid>>(key, cancellationToken) ?? new List<Guid>();
-        if (sessions.Contains(sessionId))
+        if (sessionId == Guid.Empty)
         {
             return;
         }
 
-        sessions.Add(sessionId);
-        await cacheService.SetAsync(key, sessions, TimeSpan.FromDays(30), cancellationToken);
+        await cacheService.AddToSetAsync(
+            BuildUserSessionIndexKey(userId),
+            sessionId.ToString("N"),
+            TimeSpan.FromDays(30),
+            cancellationToken);
     }
 
     public static async Task RemoveSessionFromUserIndexAsync(
@@ -72,21 +73,15 @@ internal static class AuthEventCacheHelpers
         Guid sessionId,
         CancellationToken cancellationToken)
     {
-        var key = BuildUserSessionIndexKey(userId);
-        var sessions = await cacheService.GetAsync<List<Guid>>(key, cancellationToken);
-        if (sessions is null || sessions.Count == 0)
+        if (sessionId == Guid.Empty)
         {
             return;
         }
 
-        sessions.RemoveAll(x => x == sessionId);
-        if (sessions.Count == 0)
-        {
-            await cacheService.RemoveAsync(key, cancellationToken);
-            return;
-        }
-
-        await cacheService.SetAsync(key, sessions, TimeSpan.FromDays(30), cancellationToken);
+        await cacheService.RemoveFromSetAsync(
+            BuildUserSessionIndexKey(userId),
+            sessionId.ToString("N"),
+            cancellationToken);
     }
 
     public static string BuildUserSessionIndexKey(Guid userId) => $"auth:user-sessions:{userId}";

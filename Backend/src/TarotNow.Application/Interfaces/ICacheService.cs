@@ -38,4 +38,19 @@ public interface ICacheService
     /// Luồng xử lý: cộng dồn counter hiện tại, đồng thời thiết lập TTL nếu có expiration.
     /// </summary>
     Task<long> IncrementAsync(string key, TimeSpan? expiration = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Thêm một phần tử vào set theo key với TTL tùy chọn.
+    /// </summary>
+    Task AddToSetAsync(string key, string member, TimeSpan? expiration = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Xóa một phần tử khỏi set theo key.
+    /// </summary>
+    Task RemoveFromSetAsync(string key, string member, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Đọc toàn bộ phần tử hiện có trong set theo key.
+    /// </summary>
+    Task<IReadOnlyCollection<string>> GetSetMembersAsync(string key, CancellationToken cancellationToken = default);
 }

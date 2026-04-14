@@ -14,4 +14,9 @@ public static class AuthCookieNames
     /// Cookie chứa refresh token dùng cho rotation.
     /// </summary>
     public const string RefreshToken = "refreshToken";
+
+    /// <summary>
+    /// Cookie chứa định danh thiết bị do frontend tạo để hỗ trợ multi-device isolation.
+    /// </summary>
+    public const string DeviceId = "deviceId";
 }

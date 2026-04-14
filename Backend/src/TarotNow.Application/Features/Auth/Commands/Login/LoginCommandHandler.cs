@@ -19,7 +19,6 @@ public partial class LoginCommandHandler : IRequestHandler<LoginCommand, LoginRe
     private readonly IJwtTokenSettings _jwtTokenSettings;
     private readonly IAuthSessionRepository _authSessionRepository;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
-    private readonly ICacheService _cacheService;
     private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
@@ -33,7 +32,6 @@ public partial class LoginCommandHandler : IRequestHandler<LoginCommand, LoginRe
         IJwtTokenSettings jwtTokenSettings,
         IRefreshTokenRepository refreshTokenRepository,
         IAuthSessionRepository authSessionRepository,
-        ICacheService cacheService,
         IDomainEventPublisher domainEventPublisher)
     {
         _userRepository = userRepository;
@@ -42,7 +40,6 @@ public partial class LoginCommandHandler : IRequestHandler<LoginCommand, LoginRe
         _jwtTokenSettings = jwtTokenSettings;
         _refreshTokenRepository = refreshTokenRepository;
         _authSessionRepository = authSessionRepository;
-        _cacheService = cacheService;
         _domainEventPublisher = domainEventPublisher;
     }
 
@@ -52,8 +49,6 @@ public partial class LoginCommandHandler : IRequestHandler<LoginCommand, LoginRe
     /// </summary>
     public async Task<LoginResult> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        await EnsureLoginThrottleNotExceededAsync(request, cancellationToken);
-
         var user = await GetUserByIdentityAsync(request.EmailOrUsername, cancellationToken);
         if (user == null || !_passwordHasher.VerifyPassword(user.PasswordHash, request.Password))
         {
@@ -87,10 +82,8 @@ public partial class LoginCommandHandler : IRequestHandler<LoginCommand, LoginRe
 
         var accessToken = _tokenService.GenerateAccessToken(user, session.Id, out _, out var accessTokenJti);
         // Tạo refresh token mới gắn với IP client để phục vụ vòng đời phiên.
-        var refreshTokenString = await CreateRefreshTokenAsync(user, session.Id, request, cancellationToken);
+        var issuedRefreshToken = await CreateRefreshTokenAsync(user, session.Id, request, cancellationToken);
         var response = BuildAuthResponse(user, accessToken);
-
-        await ClearLoginFailureCountersAsync(request, cancellationToken);
 
         await _domainEventPublisher.PublishAsync(
             new UserLoggedInDomainEvent
@@ -107,7 +100,8 @@ public partial class LoginCommandHandler : IRequestHandler<LoginCommand, LoginRe
         return new LoginResult
         {
             Response = response,
-            RefreshToken = refreshTokenString
+            RefreshToken = issuedRefreshToken.RawToken,
+            RefreshTokenExpiresAtUtc = issuedRefreshToken.ExpiresAtUtc
         };
     }
 }

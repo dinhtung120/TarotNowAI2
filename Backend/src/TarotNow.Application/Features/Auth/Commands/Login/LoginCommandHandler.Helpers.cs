@@ -61,17 +61,18 @@ public partial class LoginCommandHandler
     /// Tạo refresh token mới và lưu vào repository.
     /// Luồng xử lý: sinh token ngẫu nhiên, tạo entity với hạn dùng, persist vào kho dữ liệu.
     /// </summary>
-    private async Task<string> CreateRefreshTokenAsync(
+    private async Task<IssuedRefreshToken> CreateRefreshTokenAsync(
         User user,
         Guid sessionId,
         LoginCommand command,
         CancellationToken cancellationToken)
     {
         var refreshTokenString = _tokenService.GenerateRefreshToken();
+        var expiresAtUtc = DateTime.UtcNow.AddDays(_jwtTokenSettings.RefreshTokenExpiryDays);
         var refreshTokenEntity = new RefreshTokenEntity(
             userId: user.Id,
             token: refreshTokenString,
-            expiresAt: DateTime.UtcNow.AddDays(_jwtTokenSettings.RefreshTokenExpiryDays),
+            expiresAt: expiresAtUtc,
             createdByIp: command.ClientIpAddress,
             sessionId: sessionId,
             familyId: Guid.NewGuid(),
@@ -81,7 +82,7 @@ public partial class LoginCommandHandler
 
         // Lưu refresh token để phục vụ revoke/rotate trong các vòng refresh kế tiếp.
         await _refreshTokenRepository.AddAsync(refreshTokenEntity, cancellationToken);
-        return refreshTokenString;
+        return new IssuedRefreshToken(refreshTokenString, expiresAtUtc);
     }
 
     /// <summary>
@@ -108,43 +109,12 @@ public partial class LoginCommandHandler
         };
     }
 
-    private async Task EnsureLoginThrottleNotExceededAsync(LoginCommand request, CancellationToken cancellationToken)
-    {
-        var identityHash = HashValue(request.EmailOrUsername);
-        var ipHash = HashValue(request.ClientIpAddress);
-        var identityCount = await _cacheService.GetAsync<long>(BuildLoginIdentityFailureKey(identityHash), cancellationToken);
-        if (identityCount >= AuthSecurityPolicyConstants.LoginIdentityFailureLimit)
-        {
-            throw new BusinessRuleException(AuthErrorCodes.RateLimited, "Too many failed login attempts. Please try again later.");
-        }
-
-        var ipCount = await _cacheService.GetAsync<long>(BuildLoginIpFailureKey(ipHash), cancellationToken);
-        if (ipCount >= AuthSecurityPolicyConstants.LoginIpFailureLimit)
-        {
-            throw new BusinessRuleException(AuthErrorCodes.RateLimited, "Too many failed login attempts. Please try again later.");
-        }
-    }
-
-    private async Task ClearLoginFailureCountersAsync(LoginCommand request, CancellationToken cancellationToken)
-    {
-        await _cacheService.RemoveAsync(BuildLoginIdentityFailureKey(HashValue(request.EmailOrUsername)), cancellationToken);
-        await _cacheService.RemoveAsync(BuildLoginIpFailureKey(HashValue(request.ClientIpAddress)), cancellationToken);
-    }
-
-    private static string BuildLoginIdentityFailureKey(string identityHash)
-    {
-        return $"auth:login-fail:identity:{identityHash}";
-    }
-
-    private static string BuildLoginIpFailureKey(string ipHash)
-    {
-        return $"auth:login-fail:ip:{ipHash}";
-    }
-
     private static string HashValue(string? raw)
     {
         var normalized = string.IsNullOrWhiteSpace(raw) ? "unknown" : raw.Trim();
         var bytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(normalized));
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }
+
+    private readonly record struct IssuedRefreshToken(string RawToken, DateTime ExpiresAtUtc);
 }
