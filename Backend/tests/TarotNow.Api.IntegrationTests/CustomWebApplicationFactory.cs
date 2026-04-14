@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
 using Testcontainers.MongoDb;
@@ -145,6 +146,11 @@ public class CustomWebApplicationFactory<TProgram>
             // Dùng in-memory cache và loại bỏ Redis thật để test ổn định hơn.
             services.AddDistributedMemoryCache();
             services.RemoveAll<StackExchange.Redis.IConnectionMultiplexer>();
+
+            // Ép buộc SignalR dùng in-memory lifetime manager, ngăn chặn việc sử dụng Redis backplane trong môi trường test.
+            // Điều này giải quyết triệt để lỗi kết nối Redis khi chạy trên CI.
+            services.RemoveAll(typeof(HubLifetimeManager<>));
+            services.AddSingleton(typeof(HubLifetimeManager<>), typeof(DefaultHubLifetimeManager<>));
 
             // Ghi đè Mongo client/database theo container để cô lập dữ liệu test.
             services.RemoveAll<MongoDB.Driver.IMongoClient>();
