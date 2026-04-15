@@ -1,26 +1,35 @@
 using MediatR;
-using System;
-using System.Collections.Generic;
 using TarotNow.Application.Features.Gacha.Dtos;
 
 namespace TarotNow.Application.Features.Gacha.Queries.GetGachaHistory;
 
-// Query lấy lịch sử quay gacha của user.
-public class GetGachaHistoryQuery : IRequest<List<GachaHistoryItemDto>>
+/// <summary>
+/// Query lấy lịch sử reward gacha của user.
+/// </summary>
+public sealed class GetGachaHistoryQuery : IRequest<GachaHistoryPageDto>
 {
-    // Định danh user cần lấy lịch sử.
-    public Guid UserId { get; set; }
-
-    // Số bản ghi tối đa trả về.
-    public int Limit { get; set; } = 50;
+    /// <summary>
+    /// Định danh user.
+    /// </summary>
+    public Guid UserId { get; init; }
 
     /// <summary>
-    /// Khởi tạo query lấy lịch sử gacha.
-    /// Luồng xử lý: gán UserId và Limit theo đầu vào.
+    /// Trang hiện tại (1-based).
     /// </summary>
-    public GetGachaHistoryQuery(Guid userId, int limit = 50)
+    public int Page { get; init; } = 1;
+
+    /// <summary>
+    /// Kích thước trang.
+    /// </summary>
+    public int PageSize { get; init; } = 20;
+
+    /// <summary>
+    /// Khởi tạo query.
+    /// </summary>
+    public GetGachaHistoryQuery(Guid userId, int page = 1, int pageSize = 20)
     {
         UserId = userId;
-        Limit = limit;
+        Page = page;
+        PageSize = pageSize;
     }
 }

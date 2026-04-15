@@ -78,14 +78,23 @@ public partial class ApplicationDbContext : DbContext
     // DbSet bảng withdrawal_requests.
     public DbSet<WithdrawalRequest> WithdrawalRequests { get; set; } = null!;
 
-    // DbSet bảng gacha_banners.
-    public DbSet<GachaBanner> GachaBanners { get; set; } = null!;
+    // DbSet bảng gacha_pools.
+    public DbSet<GachaPool> GachaPools { get; set; } = null!;
 
-    // DbSet bảng gacha_banner_items.
-    public DbSet<GachaBannerItem> GachaBannerItems { get; set; } = null!;
+    // DbSet bảng gacha_pool_reward_rates.
+    public DbSet<GachaPoolRewardRate> GachaPoolRewardRates { get; set; } = null!;
 
-    // DbSet bảng gacha_reward_logs.
-    public DbSet<GachaRewardLog> GachaRewardLogs { get; set; } = null!;
+    // DbSet bảng gacha_pull_operations.
+    public DbSet<GachaPullOperation> GachaPullOperations { get; set; } = null!;
+
+    // DbSet bảng gacha_pull_reward_logs.
+    public DbSet<GachaPullRewardLog> GachaPullRewardLogs { get; set; } = null!;
+
+    // DbSet bảng user_gacha_pities.
+    public DbSet<UserGachaPity> UserGachaPities { get; set; } = null!;
+
+    // DbSet bảng gacha_history_entries.
+    public DbSet<GachaHistoryEntry> GachaHistoryEntries { get; set; } = null!;
 
     // DbSet bảng item_definitions.
     public DbSet<ItemDefinition> ItemDefinitions { get; set; } = null!;

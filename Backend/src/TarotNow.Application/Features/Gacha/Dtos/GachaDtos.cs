@@ -1,95 +1,302 @@
 namespace TarotNow.Application.Features.Gacha.Dtos;
 
-// DTO thông tin banner gacha hiển thị cho client.
-public class GachaBannerDto
+/// <summary>
+/// DTO pool gacha hiển thị cho client.
+/// </summary>
+public sealed class GachaPoolDto
 {
-    // Mã banner.
-    public string Code { get; set; } = string.Empty;
+    /// <summary>
+    /// Mã pool.
+    /// </summary>
+    public string Code { get; init; } = string.Empty;
 
-    // Tên banner tiếng Việt.
-    public string NameVi { get; set; } = string.Empty;
+    /// <summary>
+    /// Loại pool.
+    /// </summary>
+    public string PoolType { get; init; } = string.Empty;
 
-    // Tên banner tiếng Anh.
-    public string NameEn { get; set; } = string.Empty;
+    /// <summary>
+    /// Tên tiếng Việt.
+    /// </summary>
+    public string NameVi { get; init; } = string.Empty;
 
-    // Mô tả banner tiếng Việt.
-    public string? DescriptionVi { get; set; }
+    /// <summary>
+    /// Tên tiếng Anh.
+    /// </summary>
+    public string NameEn { get; init; } = string.Empty;
 
-    // Mô tả banner tiếng Anh.
-    public string? DescriptionEn { get; set; }
+    /// <summary>
+    /// Tên tiếng Trung.
+    /// </summary>
+    public string NameZh { get; init; } = string.Empty;
 
-    // Chi phí mỗi lượt quay theo kim cương.
-    public long CostDiamond { get; set; }
+    /// <summary>
+    /// Mô tả tiếng Việt.
+    /// </summary>
+    public string DescriptionVi { get; init; } = string.Empty;
 
-    // Phiên bản cấu hình odds hiện tại của banner.
-    public string OddsVersion { get; set; } = string.Empty;
+    /// <summary>
+    /// Mô tả tiếng Anh.
+    /// </summary>
+    public string DescriptionEn { get; init; } = string.Empty;
 
-    // Pity count hiện tại của user với banner này.
-    public int UserCurrentPity { get; set; }
+    /// <summary>
+    /// Mô tả tiếng Trung.
+    /// </summary>
+    public string DescriptionZh { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Currency cost.
+    /// </summary>
+    public string CostCurrency { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Cost amount cho một lượt pull.
+    /// </summary>
+    public long CostAmount { get; init; }
+
+    /// <summary>
+    /// Odds version.
+    /// </summary>
+    public string OddsVersion { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Pity hiện tại của user.
+    /// </summary>
+    public int UserCurrentPity { get; init; }
+
+    /// <summary>
+    /// Bật/tắt pity.
+    /// </summary>
+    public bool PityEnabled { get; init; }
+
+    /// <summary>
+    /// Ngưỡng hard pity.
+    /// </summary>
+    public int HardPityCount { get; init; }
 }
 
-// DTO thông tin odds của một banner.
-public class GachaBannerOddsDto
+/// <summary>
+/// DTO odds của pool.
+/// </summary>
+public sealed class GachaPoolOddsDto
 {
-    // Mã banner.
-    public string BannerCode { get; set; } = string.Empty;
+    /// <summary>
+    /// Mã pool.
+    /// </summary>
+    public string PoolCode { get; init; } = string.Empty;
 
-    // Phiên bản odds đang áp dụng.
-    public string OddsVersion { get; set; } = string.Empty;
+    /// <summary>
+    /// Phiên bản odds.
+    /// </summary>
+    public string OddsVersion { get; init; } = string.Empty;
 
-    // Danh sách item trong bảng odds.
-    public System.Collections.Generic.List<GachaBannerItemDto> Items { get; set; } = new();
+    /// <summary>
+    /// Danh sách reward rates.
+    /// </summary>
+    public IReadOnlyList<GachaPoolRewardRateDto> Rewards { get; init; } = Array.Empty<GachaPoolRewardRateDto>();
 }
 
-// DTO mô tả một item trong bảng odds banner.
-public class GachaBannerItemDto
+/// <summary>
+/// DTO reward rate của pool.
+/// </summary>
+public sealed class GachaPoolRewardRateDto
 {
-    // Độ hiếm item.
-    public string Rarity { get; set; } = string.Empty;
+    /// <summary>
+    /// Loại reward.
+    /// </summary>
+    public string Kind { get; init; } = string.Empty;
 
-    // Loại phần thưởng.
-    public string RewardType { get; set; } = string.Empty;
+    /// <summary>
+    /// Độ hiếm.
+    /// </summary>
+    public string Rarity { get; init; } = string.Empty;
 
-    // Giá trị phần thưởng.
-    public string RewardValue { get; set; } = string.Empty;
+    /// <summary>
+    /// Currency nếu reward là tiền.
+    /// </summary>
+    public string? Currency { get; init; }
 
-    // Trọng số xác suất theo đơn vị basis points.
-    public int WeightBasisPoints { get; set; }
+    /// <summary>
+    /// Amount nếu reward là tiền.
+    /// </summary>
+    public long? Amount { get; init; }
 
-    // Tên hiển thị tiếng Việt.
-    public string DisplayNameVi { get; set; } = string.Empty;
+    /// <summary>
+    /// Item definition id nếu reward là item.
+    /// </summary>
+    public Guid? ItemDefinitionId { get; init; }
 
-    // Tên hiển thị tiếng Anh.
-    public string DisplayNameEn { get; set; } = string.Empty;
+    /// <summary>
+    /// Item code nếu reward là item.
+    /// </summary>
+    public string? ItemCode { get; init; }
 
-    // Icon hiển thị item (nếu có).
-    public string? DisplayIcon { get; set; }
+    /// <summary>
+    /// Số lượng item cấp ra.
+    /// </summary>
+    public int QuantityGranted { get; init; }
 
-    // Xác suất phần trăm quy đổi từ basis points để hiển thị UI.
-    public double ProbabilityPercent => WeightBasisPoints / 100.0;
+    /// <summary>
+    /// Xác suất basis points.
+    /// </summary>
+    public int ProbabilityBasisPoints { get; init; }
+
+    /// <summary>
+    /// Xác suất phần trăm.
+    /// </summary>
+    public double ProbabilityPercent { get; init; }
+
+    /// <summary>
+    /// Icon reward.
+    /// </summary>
+    public string? IconUrl { get; init; }
+
+    /// <summary>
+    /// Tên tiếng Việt.
+    /// </summary>
+    public string NameVi { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Tên tiếng Anh.
+    /// </summary>
+    public string NameEn { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Tên tiếng Trung.
+    /// </summary>
+    public string NameZh { get; init; } = string.Empty;
 }
 
-// DTO một bản ghi lịch sử quay gacha.
-public class GachaHistoryItemDto
+/// <summary>
+/// DTO phân trang lịch sử pull gacha.
+/// </summary>
+public sealed class GachaHistoryPageDto
 {
-    // Mã banner đã quay.
-    public string BannerCode { get; set; } = string.Empty;
+    /// <summary>
+    /// Trang hiện tại.
+    /// </summary>
+    public int Page { get; init; }
 
-    // Độ hiếm item nhận được.
-    public string Rarity { get; set; } = string.Empty;
+    /// <summary>
+    /// Kích thước trang.
+    /// </summary>
+    public int PageSize { get; init; }
 
-    // Loại phần thưởng nhận được.
-    public string RewardType { get; set; } = string.Empty;
+    /// <summary>
+    /// Tổng số bản ghi lịch sử.
+    /// </summary>
+    public int TotalCount { get; init; }
 
-    // Giá trị phần thưởng nhận được.
-    public string RewardValue { get; set; } = string.Empty;
+    /// <summary>
+    /// Danh sách lịch sử pull-level.
+    /// </summary>
+    public IReadOnlyList<GachaHistoryEntryDto> Items { get; init; } = Array.Empty<GachaHistoryEntryDto>();
+}
 
-    // Kim cương đã tiêu cho lượt quay.
-    public long SpentDiamond { get; set; }
+/// <summary>
+/// DTO lịch sử pull-level của gacha.
+/// </summary>
+public sealed class GachaHistoryEntryDto
+{
+    /// <summary>
+    /// Tham chiếu pull operation.
+    /// </summary>
+    public Guid PullOperationId { get; init; }
 
-    // Cờ cho biết lượt quay có kích hoạt pity hay không.
-    public bool WasPityTriggered { get; set; }
+    /// <summary>
+    /// Mã pool.
+    /// </summary>
+    public string PoolCode { get; init; } = string.Empty;
 
-    // Thời điểm tạo bản ghi lịch sử.
-    public System.DateTime CreatedAt { get; set; }
+    /// <summary>
+    /// Số lượt pull trong operation.
+    /// </summary>
+    public int PullCount { get; init; }
+
+    /// <summary>
+    /// Giá trị pity trước pull.
+    /// </summary>
+    public int PityBefore { get; init; }
+
+    /// <summary>
+    /// Giá trị pity sau pull.
+    /// </summary>
+    public int PityAfter { get; init; }
+
+    /// <summary>
+    /// Cờ reset pity trong operation.
+    /// </summary>
+    public bool WasPityReset { get; init; }
+
+    /// <summary>
+    /// Thời điểm pull UTC.
+    /// </summary>
+    public DateTime CreatedAtUtc { get; init; }
+
+    /// <summary>
+    /// Danh sách reward nhận được trong operation.
+    /// </summary>
+    public IReadOnlyList<GachaHistoryRewardDto> Rewards { get; init; } = Array.Empty<GachaHistoryRewardDto>();
+}
+
+/// <summary>
+/// DTO reward trong một lịch sử pull.
+/// </summary>
+public sealed class GachaHistoryRewardDto
+{
+    /// <summary>
+    /// Loại reward.
+    /// </summary>
+    public string Kind { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Độ hiếm reward.
+    /// </summary>
+    public string Rarity { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Currency nếu reward là tiền.
+    /// </summary>
+    public string? Currency { get; init; }
+
+    /// <summary>
+    /// Amount nếu reward là tiền.
+    /// </summary>
+    public long? Amount { get; init; }
+
+    /// <summary>
+    /// Item code nếu reward là item.
+    /// </summary>
+    public string? ItemCode { get; init; }
+
+    /// <summary>
+    /// Quantity cấp ra.
+    /// </summary>
+    public int QuantityGranted { get; init; }
+
+    /// <summary>
+    /// Icon reward.
+    /// </summary>
+    public string? IconUrl { get; init; }
+
+    /// <summary>
+    /// Tên tiếng Việt.
+    /// </summary>
+    public string NameVi { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Tên tiếng Anh.
+    /// </summary>
+    public string NameEn { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Tên tiếng Trung.
+    /// </summary>
+    public string NameZh { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Cờ reward do pity force.
+    /// </summary>
+    public bool IsHardPityReward { get; init; }
 }

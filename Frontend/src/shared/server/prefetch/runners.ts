@@ -16,8 +16,6 @@ import {
  fetchGamificationTitles,
 } from '@/features/gamification/application/gamificationServerActions';
 import { gamificationKeys } from '@/features/gamification/gamificationQueryKeys';
-import { getGachaBanners, getGachaHistory, getGachaOdds } from '@/features/gacha/application/actions';
-import type { GachaBannerDto } from '@/features/gacha/gacha.types';
 import { getNotifications } from '@/features/notifications/application/actions';
 import { getProfileAction } from '@/features/profile/application/actions/get-profile';
 import { getMfaStatus } from '@/features/profile/mfa/application/actions/status';
@@ -38,6 +36,13 @@ import { getLedger } from '@/features/wallet/application/actions';
 import { listMyWithdrawals } from '@/features/wallet/application/actions/withdrawal';
 import { listWithdrawalQueue } from '@/features/wallet/public';
 import { AUTH_ERROR, isUnauthorizedError } from '@/shared/domain/authErrors';
+import { gachaQueryKeys } from '@/shared/infrastructure/gacha/gachaConstants';
+import {
+ fetchGachaHistoryServer,
+ fetchGachaPoolOddsServer,
+ fetchGachaPoolsServer,
+} from '@/shared/infrastructure/gacha/gachaServerActions';
+import type { GachaPool } from '@/shared/infrastructure/gacha/gachaTypes';
 import { inventoryQueryKeys } from '@/shared/infrastructure/inventory/inventoryConstants';
 import { fetchInventoryServer } from '@/shared/infrastructure/inventory/inventoryServerActions';
 
@@ -100,12 +105,8 @@ async function profileMeQueryFn() {
  return result.success ? { profile: result.data ?? null, error: '' } : { profile: null, error: result.error };
 }
 
-async function gachaBannersQueryFn() {
- const result = await getGachaBanners();
- if (!result.success) {
-  throw new Error(result.error);
- }
- return result.data;
+async function gachaPoolsQueryFn() {
+ return fetchGachaPoolsServer();
 }
 
 export async function prefetchCollectionPage(qc: QueryClient): Promise<void> {
@@ -196,42 +197,39 @@ export async function prefetchNotificationsPage(qc: QueryClient): Promise<void> 
 
 export async function prefetchGachaPage(qc: QueryClient): Promise<void> {
  await qc.prefetchQuery({
-  queryKey: ['gacha', 'banners'],
-  queryFn: gachaBannersQueryFn,
+  queryKey: gachaQueryKeys.pools(),
+  queryFn: gachaPoolsQueryFn,
  });
 
  await swallowPrefetch(async () => {
-  const banners = qc.getQueryData<GachaBannerDto[]>(['gacha', 'banners']);
-  if (!banners?.length) {
+  const pools = qc.getQueryData<GachaPool[]>(gachaQueryKeys.pools());
+  if (!pools?.length) {
    return;
   }
-  const firstCode = banners[0].code;
-  await Promise.all([
-   swallowPrefetch(async () => {
-    await qc.prefetchQuery({
-     queryKey: ['gacha', 'odds', firstCode],
-     queryFn: async () => {
-      const result = await getGachaOdds(firstCode);
-      if (!result.success) {
-       throw new Error(result.error);
-      }
-      return result.data;
-     },
-    });
-   }),
-   swallowPrefetch(async () => {
-    await qc.prefetchQuery({
-     queryKey: ['gacha', 'history', 50],
-     queryFn: async () => {
-      const result = await getGachaHistory(50);
-      if (!result.success) {
-       throw new Error(result.error);
-      }
-      return result.data;
-     },
-    });
-   }),
-  ]);
+  const firstCode = pools[0].code;
+   await Promise.all([
+    swallowPrefetch(async () => {
+     await qc.prefetchQuery({
+      queryKey: gachaQueryKeys.poolOdds(firstCode),
+      queryFn: () => fetchGachaPoolOddsServer(firstCode),
+     });
+    }),
+    swallowPrefetch(async () => {
+     await qc.prefetchQuery({
+      queryKey: gachaQueryKeys.history(1, 6),
+      queryFn: () => fetchGachaHistoryServer(1, 6),
+     });
+    }),
+   ]);
+ });
+}
+
+export async function prefetchGachaHistoryPage(qc: QueryClient): Promise<void> {
+ await swallowPrefetch(async () => {
+  await qc.prefetchQuery({
+   queryKey: gachaQueryKeys.history(1, 20),
+   queryFn: () => fetchGachaHistoryServer(1, 20),
+  });
  });
 }
 

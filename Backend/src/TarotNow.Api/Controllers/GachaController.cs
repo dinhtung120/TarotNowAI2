@@ -1,129 +1,142 @@
-
-
+using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using System.ComponentModel.DataAnnotations;
-using System.Threading;
-using System.Threading.Tasks;
 using TarotNow.Api.Constants;
 using TarotNow.Api.Extensions;
-using TarotNow.Application.Features.Gacha.Commands.SpinGacha;
-using TarotNow.Application.Features.Gacha.Queries.GetActiveBanners;
-using TarotNow.Application.Features.Gacha.Queries.GetBannerOdds;
+using TarotNow.Application.Features.Gacha.Commands.PullGacha;
 using TarotNow.Application.Features.Gacha.Queries.GetGachaHistory;
+using TarotNow.Application.Features.Gacha.Queries.GetGachaPoolOdds;
+using TarotNow.Application.Features.Gacha.Queries.GetGachaPools;
 
 namespace TarotNow.Api.Controllers;
 
+/// <summary>
+/// API gacha theo mô hình pool/pull mới.
+/// </summary>
 [ApiController]
-[Authorize] 
+[Authorize]
 [ApiVersion(ApiVersions.V1)]
-[Produces("application/json")]
+[Route(ApiRoutes.Gacha)]
 [EnableRateLimiting("auth-session")]
-// API tính năng gacha.
-// Luồng chính: lấy banner/odds, xem lịch sử quay và thực hiện spin với idempotency key.
-public class GachaController : ControllerBase
+public sealed class GachaController : ControllerBase
 {
     private readonly IMediator _mediator;
 
     /// <summary>
-    /// Khởi tạo controller gacha.
+    /// Khởi tạo gacha controller.
     /// </summary>
-    /// <param name="mediator">MediatR điều phối query/command gacha.</param>
     public GachaController(IMediator mediator)
     {
         _mediator = mediator;
     }
 
     /// <summary>
-    /// Lấy danh sách banner đang hoạt động.
+    /// Lấy danh sách pool gacha active.
     /// </summary>
-    /// <param name="ct">Token hủy request.</param>
-    /// <returns>Danh sách banner có thể quay ở thời điểm hiện tại.</returns>
-    [HttpGet(ApiRoutes.Gacha + "/banners")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetBanners(CancellationToken ct)
+    [HttpGet(GachaRoutes.Pools)]
+    public async Task<IActionResult> GetPools(CancellationToken cancellationToken)
     {
-        // UserId là tùy chọn để backend có thể cá nhân hóa dữ liệu banner khi cần.
         var userId = User.GetUserIdOrNull();
-        var result = await _mediator.Send(new GetActiveBannersQuery { UserId = userId }, ct);
+        var result = await _mediator.Send(new GetGachaPoolsQuery { UserId = userId }, cancellationToken);
         return Ok(result);
     }
 
     /// <summary>
-    /// Lấy bảng tỉ lệ quay của một banner.
+    /// Lấy odds của pool theo mã pool.
     /// </summary>
-    /// <param name="bannerCode">Mã banner cần xem odds.</param>
-    /// <param name="ct">Token hủy request.</param>
-    /// <returns>Thông tin odds của banner.</returns>
-    [HttpGet(ApiRoutes.Gacha + "/banners/{bannerCode}/odds")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetBannerOdds([FromRoute] string bannerCode, CancellationToken ct)
+    [HttpGet(GachaRoutes.PoolOdds)]
+    public async Task<IActionResult> GetPoolOdds([FromRoute] string poolCode, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetBannerOddsQuery(bannerCode), ct);
+        var result = await _mediator.Send(new GetGachaPoolOddsQuery(poolCode), cancellationToken);
         return Ok(result);
     }
 
     /// <summary>
-    /// Lấy lịch sử quay gacha của người dùng hiện tại.
+    /// Lấy lịch sử pull của người dùng hiện tại.
     /// </summary>
-    /// <param name="limit">Giới hạn số bản ghi trả về.</param>
-    /// <param name="ct">Token hủy request.</param>
-    /// <returns>Lịch sử quay gacha theo giới hạn.</returns>
-    [HttpGet(ApiRoutes.Gacha + "/history")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetGachaHistory([FromQuery] int limit = 50, CancellationToken ct = default)
+    [HttpGet(GachaRoutes.History)]
+    public async Task<IActionResult> GetHistory(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default)
     {
-        // Bắt buộc user đã xác thực để bảo vệ lịch sử quay cá nhân.
-        var userId = User.GetUserIdOrNull() ?? throw new System.UnauthorizedAccessException();
-        var result = await _mediator.Send(new GetGachaHistoryQuery(userId, limit), ct);
-        return Ok(result);
-    }
-
-    /// <summary>
-    /// Thực hiện quay gacha.
-    /// Luồng xử lý: xác thực user, dựng command từ request + idempotency key, dispatch spin.
-    /// </summary>
-    /// <param name="idempotencyKey">Khóa chống quay trùng khi client retry.</param>
-    /// <param name="request">Payload quay gacha.</param>
-    /// <param name="ct">Token hủy request.</param>
-    /// <returns>Kết quả quay gacha.</returns>
-    [HttpPost(ApiRoutes.Gacha + "/spin")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Spin(
-        [FromHeader(Name = "X-Idempotency-Key")][Required] string idempotencyKey,
-        [FromBody] SpinGachaRequestDto request,
-        CancellationToken ct)
-    {
-        // Giao dịch quay gacha bắt buộc có user id hợp lệ để hạch toán ví chính xác.
-        var userId = User.GetUserIdOrNull() ?? throw new System.UnauthorizedAccessException();
-
-        // Mapping đầy đủ request sang command để handler áp dụng rule chi phí và random.
-        var command = new SpinGachaCommand
+        var userId = User.GetUserIdOrNull();
+        if (!userId.HasValue)
         {
-            UserId = userId,
-            BannerCode = request.BannerCode,
+            return this.UnauthorizedProblem();
+        }
+
+        var result = await _mediator.Send(new GetGachaHistoryQuery(userId.Value, page, pageSize), cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Thực hiện pull gacha.
+    /// </summary>
+    [HttpPost(GachaRoutes.Pull)]
+    public async Task<IActionResult> Pull(
+        [FromHeader(Name = AuthHeaders.IdempotencyKey)] string? headerIdempotencyKey,
+        [FromBody] PullGachaRequest request,
+        CancellationToken cancellationToken)
+    {
+        var userId = User.GetUserIdOrNull();
+        if (!userId.HasValue)
+        {
+            return this.UnauthorizedProblem();
+        }
+
+        var idempotencyKey = ResolveIdempotencyKey(headerIdempotencyKey, request.IdempotencyKey);
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Bad request",
+                detail: "Missing idempotency key.");
+        }
+
+        var command = new PullGachaCommand
+        {
+            UserId = userId.Value,
+            PoolCode = request.PoolCode,
+            Count = request.Count,
             IdempotencyKey = idempotencyKey,
-            Count = request.Count
         };
 
-        var result = await _mediator.Send(command, ct);
+        var result = await _mediator.Send(command, cancellationToken);
         return Ok(result);
+    }
+
+    private static string ResolveIdempotencyKey(string? headerValue, string? bodyValue)
+    {
+        if (string.IsNullOrWhiteSpace(headerValue) == false)
+        {
+            return headerValue.Trim();
+        }
+
+        return bodyValue?.Trim() ?? string.Empty;
     }
 }
 
-// Payload yêu cầu quay gacha.
-public class SpinGachaRequestDto
+/// <summary>
+/// Payload pull gacha từ client.
+/// </summary>
+public sealed class PullGachaRequest
 {
-    // Mã banner mục tiêu cần quay.
-    [Required]
-    public string BannerCode { get; set; } = string.Empty;
+    /// <summary>
+    /// Mã pool cần pull.
+    /// </summary>
+    public string PoolCode { get; set; } = string.Empty;
 
-    // Số lượt quay trong một request, bị chặn để bảo vệ tài nguyên và rule kinh tế.
-    [Range(1, 10)]
+    /// <summary>
+    /// Số lượt pull trong request.
+    /// </summary>
     public int Count { get; set; } = 1;
+
+    /// <summary>
+    /// Idempotency key fallback nếu không gửi qua header.
+    /// </summary>
+    public string? IdempotencyKey { get; set; }
 }

@@ -45,6 +45,7 @@ export const userSidebarMenuGroups: UserSidebarMenuGroup[] = [
    { labelKey: 'gamification', href: '/gamification', icon: Gamepad2 },
    { labelKey: 'leaderboard', href: '/leaderboard', icon: BarChart3 },
    { labelKey: 'gacha', href: '/gacha', icon: Gift },
+   { labelKey: 'gachaHistory', href: '/gacha/history', icon: History },
   ],
  },
  {

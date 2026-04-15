@@ -1,34 +1,96 @@
-
-
 using MediatR;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using TarotNow.Application.Features.Gacha.Dtos;
 using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Gacha.Queries.GetGachaHistory;
 
-// Handler truy vấn lịch sử quay gacha.
-public class GetGachaHistoryQueryHandler : IRequestHandler<GetGachaHistoryQuery, List<GachaHistoryItemDto>>
+/// <summary>
+/// Handler truy vấn lịch sử gacha.
+/// </summary>
+public sealed class GetGachaHistoryQueryHandler : IRequestHandler<GetGachaHistoryQuery, GachaHistoryPageDto>
 {
-    private readonly IGachaLogRepository _gachaLogRepository;
+    private readonly IGachaPoolRepository _gachaPoolRepository;
 
     /// <summary>
-    /// Khởi tạo handler get gacha history.
-    /// Luồng xử lý: nhận gacha log repository để đọc lịch sử quay theo user.
+    /// Khởi tạo handler.
     /// </summary>
-    public GetGachaHistoryQueryHandler(IGachaLogRepository gachaLogRepository)
+    public GetGachaHistoryQueryHandler(IGachaPoolRepository gachaPoolRepository)
     {
-        _gachaLogRepository = gachaLogRepository;
+        _gachaPoolRepository = gachaPoolRepository;
     }
 
     /// <summary>
-    /// Xử lý query lấy lịch sử quay.
-    /// Luồng xử lý: truy vấn log theo UserId và Limit rồi trả danh sách DTO trực tiếp.
+    /// Xử lý query lịch sử gacha.
     /// </summary>
-    public async Task<List<GachaHistoryItemDto>> Handle(GetGachaHistoryQuery request, CancellationToken cancellationToken)
+    public async Task<GachaHistoryPageDto> Handle(GetGachaHistoryQuery request, CancellationToken cancellationToken)
     {
-        return await _gachaLogRepository.GetUserLogsAsync(request.UserId, request.Limit, cancellationToken);
+        var normalizedPage = Math.Max(1, request.Page);
+        var normalizedPageSize = Math.Clamp(request.PageSize, 1, 100);
+        var historyPage = await _gachaPoolRepository.GetUserPullHistoryAsync(
+            request.UserId,
+            normalizedPage,
+            normalizedPageSize,
+            cancellationToken);
+        if (historyPage.Items.Count == 0)
+        {
+            return new GachaHistoryPageDto
+            {
+                Page = historyPage.Page,
+                PageSize = historyPage.PageSize,
+                TotalCount = historyPage.TotalCount,
+                Items = Array.Empty<GachaHistoryEntryDto>(),
+            };
+        }
+
+        var operationIds = historyPage.Items.Select(x => x.PullOperationId).ToArray();
+        var rewardLogs = await _gachaPoolRepository.GetRewardLogsByOperationIdsAsync(operationIds, cancellationToken);
+        var rewardsByOperation = rewardLogs
+            .GroupBy(x => x.PullOperationId)
+            .ToDictionary(
+                x => x.Key,
+                x => (IReadOnlyList<GachaHistoryRewardDto>)x
+                    .OrderBy(y => y.CreatedAtUtc)
+                    .Select(MapHistoryReward)
+                    .ToList());
+
+        var items = historyPage.Items.Select(entry => new GachaHistoryEntryDto
+        {
+            PullOperationId = entry.PullOperationId,
+            PoolCode = entry.PoolCode,
+            PullCount = entry.PullCount,
+            PityBefore = entry.PityBefore,
+            PityAfter = entry.PityAfter,
+            WasPityReset = entry.WasPityReset,
+            CreatedAtUtc = entry.CreatedAtUtc,
+            Rewards = rewardsByOperation.TryGetValue(entry.PullOperationId, out var rewards)
+                ? rewards
+                : Array.Empty<GachaHistoryRewardDto>(),
+        }).ToList();
+
+        return new GachaHistoryPageDto
+        {
+            Page = historyPage.Page,
+            PageSize = historyPage.PageSize,
+            TotalCount = historyPage.TotalCount,
+            Items = items,
+        };
+    }
+
+    private static GachaHistoryRewardDto MapHistoryReward(Domain.Entities.GachaPullRewardLog rewardLog)
+    {
+        return new GachaHistoryRewardDto
+        {
+            Kind = rewardLog.RewardKind,
+            Rarity = rewardLog.Rarity,
+            Currency = rewardLog.Currency,
+            Amount = rewardLog.Amount,
+            ItemCode = rewardLog.ItemCode,
+            QuantityGranted = rewardLog.QuantityGranted,
+            IconUrl = rewardLog.IconUrl,
+            NameVi = rewardLog.NameVi,
+            NameEn = rewardLog.NameEn,
+            NameZh = rewardLog.NameZh,
+            IsHardPityReward = rewardLog.IsHardPityReward,
+        };
     }
 }

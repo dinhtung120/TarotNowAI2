@@ -3,6 +3,7 @@ using TarotNow.Application.Common.Realtime;
 using TarotNow.Application.Interfaces;
 using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Events;
+using TarotNow.Domain.Events.Gacha;
 
 namespace TarotNow.Application.DomainEvents.Handlers;
 
@@ -183,15 +184,15 @@ public sealed class UnreadCountChangedRealtimeHandler
 /// <summary>
 /// Handler publish realtime gacha.result event.
 /// </summary>
-public sealed class GachaSpunRealtimeHandler
-    : IdempotentDomainEventNotificationHandler<GachaSpunDomainEvent>
+public sealed class GachaPullCompletedRealtimeHandler
+    : IdempotentDomainEventNotificationHandler<GachaPullCompletedDomainEvent>
 {
     private readonly IRedisPublisher _redisPublisher;
 
     /// <summary>
-    /// Khởi tạo handler gacha spun realtime.
+    /// Khởi tạo handler gacha pull completed realtime.
     /// </summary>
-    public GachaSpunRealtimeHandler(
+    public GachaPullCompletedRealtimeHandler(
         IRedisPublisher redisPublisher,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
@@ -201,7 +202,7 @@ public sealed class GachaSpunRealtimeHandler
 
     /// <inheritdoc />
     protected override Task HandleDomainEventAsync(
-        GachaSpunDomainEvent domainEvent,
+        GachaPullCompletedDomainEvent domainEvent,
         Guid? outboxMessageId,
         CancellationToken cancellationToken)
     {
@@ -211,8 +212,8 @@ public sealed class GachaSpunRealtimeHandler
             new
             {
                 userId = domainEvent.UserId.ToString(),
-                bannerCode = domainEvent.BannerCode,
-                spinCount = domainEvent.SpinCount,
+                poolCode = domainEvent.PoolCode,
+                pullCount = domainEvent.PullCount,
                 wasPityTriggered = domainEvent.WasPityTriggered,
                 at = domainEvent.OccurredAtUtc
             },

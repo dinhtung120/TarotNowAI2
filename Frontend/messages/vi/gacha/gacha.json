@@ -3,6 +3,8 @@
     "lang": "vi",
     "title": "Vòng Quay May Mắn",
     "subtitle": "Thử vận may và nhận những phần thưởng độc quyền!",
+    "pull1x": "Rút 1x",
+    "pulling": "Đang rút...",
     "pityProgress": "Tiến trình Tích lũy (Pity)",
     "guaranteedLegendary": "Chắc chắn nhận quà Huyền thoại khi đầy thanh",
     "spinning": "Đang quay...",
@@ -19,6 +21,21 @@
     "awesome": "Tuyệt vời!",
     "noActiveBanners": "Hiện tại không có vòng quay nào mở. Vui lòng quay lại sau!",
     "historyTitle": "Lịch sử quay thưởng",
-    "emptyHistory": "Bạn chưa thực hiện lượt quay nào."
+    "emptyHistory": "Bạn chưa thực hiện lượt quay nào.",
+    "viewAllHistory": "Xem toàn bộ",
+    "historyPageTitle": "Lịch sử Gacha",
+    "historyPageSubtitle": "Theo dõi toàn bộ pull operation và phần thưởng nhận được.",
+    "historyPityReset": "Đã reset pity trong lượt này",
+    "historyPityStayed": "Pity tiếp tục tích lũy",
+    "historyPityResetShort": "Reset pity",
+    "historyPityStayedShort": "Tăng pity",
+    "historyPullCount": "Số lượt pull",
+    "historyPrev": "Trang trước",
+    "historyNext": "Trang sau",
+    "historyPageIndicator": "Trang {page}/{totalPages}",
+    "pullResultTitle": "Kết quả rút gacha",
+    "rareDropAnimation": "Hiệu ứng rơi đồ hiếm",
+    "close": "Đóng",
+    "emptyOdds": "Pool hiện chưa có reward khả dụng."
   }
 }

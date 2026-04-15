@@ -5,7 +5,7 @@ public partial class MongoDbContext
 {
     /// <summary>
     /// Điều phối tạo index cho mọi nhóm dữ liệu Mongo.
-    /// Luồng xử lý: chạy lần lượt core, reader, chat, community, check-in, gamification và gacha.
+    /// Luồng xử lý: chạy lần lượt core, reader, chat, community, check-in và gamification.
     /// </summary>
     private void EnsureIndexes()
     {
@@ -16,6 +16,5 @@ public partial class MongoDbContext
         EnsureMediaUploadIndexes();
         EnsureCheckinIndexes();
         EnsureGamificationIndexes();
-        EnsureGachaIndexes();
     }
 }

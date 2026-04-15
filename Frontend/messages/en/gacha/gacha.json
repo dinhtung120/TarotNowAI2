@@ -3,6 +3,8 @@
     "lang": "en",
     "title": "Gacha",
     "subtitle": "Test your luck and win exclusive rewards!",
+    "pull1x": "Pull 1x",
+    "pulling": "Pulling...",
     "pityProgress": "Pity Progress",
     "guaranteedLegendary": "Guaranteed Legendary at maximum pity",
     "spinning": "Spinning...",
@@ -19,6 +21,21 @@
     "awesome": "Awesome!",
     "noActiveBanners": "There are no active banners at the moment. Please come back later!",
     "historyTitle": "Gacha History",
-    "emptyHistory": "You haven't made any spins yet."
+    "emptyHistory": "You haven't made any spins yet.",
+    "viewAllHistory": "View all",
+    "historyPageTitle": "Gacha History",
+    "historyPageSubtitle": "Track every pull operation and all rewards.",
+    "historyPityReset": "Pity was reset in this pull",
+    "historyPityStayed": "Pity continues to accumulate",
+    "historyPityResetShort": "Pity reset",
+    "historyPityStayedShort": "Pity up",
+    "historyPullCount": "Pull count",
+    "historyPrev": "Previous",
+    "historyNext": "Next",
+    "historyPageIndicator": "Page {page}/{totalPages}",
+    "pullResultTitle": "Gacha Pull Result",
+    "rareDropAnimation": "Rare drop animation",
+    "close": "Close",
+    "emptyOdds": "No rewards are available for this pool."
   }
 }

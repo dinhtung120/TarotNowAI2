@@ -95,12 +95,11 @@ public static partial class DependencyInjection
 
     /// <summary>
     /// Đăng ký repository nhóm gacha.
-    /// Luồng xử lý: bind repository banner/quay thưởng và log gacha.
+    /// Luồng xử lý: bind repository pool/reward/pull operation của gacha mới.
     /// </summary>
     private static void AddGachaRepositories(IServiceCollection services)
     {
-        services.AddScoped<IGachaRepository, GachaRepository>();
-        services.AddScoped<IGachaLogRepository, GachaLogRepository>();
+        services.AddScoped<IGachaPoolRepository, GachaPoolRepository>();
     }
 
     /// <summary>

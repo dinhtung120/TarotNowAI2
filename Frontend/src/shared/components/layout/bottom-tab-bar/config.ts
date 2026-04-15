@@ -56,6 +56,7 @@ export const bottomTabs: BottomTabGroup[] = [
    { labelKey: 'gamification', href: '/gamification', icon: Gamepad2, matchPrefixes: ['/gamification'] },
    { labelKey: 'leaderboard', href: '/leaderboard', icon: BarChart3, matchPrefixes: ['/leaderboard'] },
    { labelKey: 'gacha', href: '/gacha', icon: Gift, matchPrefixes: ['/gacha'] },
+   { labelKey: 'gachaHistory', href: '/gacha/history', icon: History, matchPrefixes: ['/gacha/history'] },
   ],
  },
  {

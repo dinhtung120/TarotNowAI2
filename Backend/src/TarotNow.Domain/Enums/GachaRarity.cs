@@ -15,4 +15,22 @@ public static class GachaRarity
 
     // Độ hiếm huyền thoại.
     public const string Legendary = "Legendary";
+
+    // Độ hiếm thần thoại.
+    public const string Mythic = "Mythic";
+
+    /// <summary>
+    /// Kiểm tra rarity có thuộc nhóm hiếm từ Epic trở lên hay không.
+    /// </summary>
+    public static bool IsAtLeastEpic(string rarity)
+    {
+        if (string.IsNullOrWhiteSpace(rarity))
+        {
+            return false;
+        }
+
+        return string.Equals(rarity, Epic, StringComparison.OrdinalIgnoreCase)
+               || string.Equals(rarity, Legendary, StringComparison.OrdinalIgnoreCase)
+               || string.Equals(rarity, Mythic, StringComparison.OrdinalIgnoreCase);
+    }
 }
