@@ -56,6 +56,7 @@ public class RevokeTokenCommandHandler : IRequestHandler<RevokeTokenCommand, boo
 
     private async Task HandleRevokeAllAsync(Guid userId, CancellationToken cancellationToken)
     {
+        var activeSessionIds = await _authSessionRepository.GetActiveSessionIdsByUserAsync(userId, cancellationToken);
         await _refreshTokenRepository.RevokeAllByUserIdAsync(userId, cancellationToken);
         await _authSessionRepository.RevokeAllByUserAsync(userId, cancellationToken);
 
@@ -64,6 +65,7 @@ public class RevokeTokenCommandHandler : IRequestHandler<RevokeTokenCommand, boo
             {
                 UserId = userId,
                 RevokeAll = true,
+                SessionIds = activeSessionIds,
                 Reason = RefreshRevocationReasons.ManualRevoke
             },
             cancellationToken);

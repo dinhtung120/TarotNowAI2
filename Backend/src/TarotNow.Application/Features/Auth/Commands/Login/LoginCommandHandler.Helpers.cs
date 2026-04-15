@@ -103,15 +103,26 @@ public partial class LoginCommandHandler
     {
         return new LoginFailedDomainEvent
         {
-            IdentityHash = HashValue(request.EmailOrUsername),
-            IpHash = HashValue(request.ClientIpAddress),
+            IdentityHash = HashIdentity(request.EmailOrUsername),
+            IpHash = HashIpAddress(request.ClientIpAddress),
             ReasonCode = reasonCode
         };
     }
 
-    private static string HashValue(string? raw)
+    private static string HashIdentity(string? identity)
     {
-        var normalized = string.IsNullOrWhiteSpace(raw) ? "unknown" : raw.Trim();
+        var normalized = string.IsNullOrWhiteSpace(identity)
+            ? "unknown"
+            : identity.Trim().ToLowerInvariant();
+        var bytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(normalized));
+        return Convert.ToHexString(bytes).ToLowerInvariant();
+    }
+
+    private static string HashIpAddress(string? ipAddress)
+    {
+        var normalized = string.IsNullOrWhiteSpace(ipAddress)
+            ? "unknown"
+            : ipAddress.Trim();
         var bytes = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(normalized));
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }

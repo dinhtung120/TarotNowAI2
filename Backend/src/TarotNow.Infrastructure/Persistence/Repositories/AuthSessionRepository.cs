@@ -112,6 +112,17 @@ public sealed class AuthSessionRepository : IAuthSessionRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    /// <inheritdoc />
+    public async Task<IReadOnlyCollection<Guid>> GetActiveSessionIdsByUserAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.AuthSessions
+            .Where(x => x.UserId == userId && x.RevokedAtUtc == null)
+            .Select(x => x.Id)
+            .ToListAsync(cancellationToken);
+    }
+
     private static string NormalizeDeviceId(string deviceId)
     {
         var fallback = "unknown";

@@ -146,6 +146,64 @@ namespace TarotNow.Infrastructure.Migrations
                     b.ToTable("ai_requests", (string)null);
                 });
 
+            modelBuilder.Entity("TarotNow.Domain.Entities.AuthSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("DeviceId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("device_id");
+
+                    b.Property<DateTime?>("RevokedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at_utc");
+
+                    b.Property<DateTime>("LastSeenAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_seen_at_utc");
+
+                    b.Property<string>("LastIpHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("last_ip_hash");
+
+                    b.Property<string>("UserAgentHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("user_agent_hash");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_auth_sessions");
+
+                    b.HasIndex("RevokedAtUtc")
+                        .HasDatabaseName("ix_auth_sessions_revoked_at_utc");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_auth_sessions_user_id");
+
+                    b.HasIndex("UserId", "DeviceId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_auth_sessions_user_id_device_id")
+                        .HasFilter("\"revoked_at_utc\" IS NULL");
+
+                    b.ToTable("auth_sessions", (string)null);
+                });
+
             modelBuilder.Entity("TarotNow.Domain.Entities.ChatFinanceSession", b =>
                 {
                     b.Property<Guid>("Id")
@@ -794,23 +852,67 @@ namespace TarotNow.Infrastructure.Migrations
 
                     b.Property<string>("CreatedByIp")
                         .IsRequired()
-                        .HasMaxLength(45)
-                        .HasColumnType("character varying(45)")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
                         .HasColumnName("created_by_ip");
+
+                    b.Property<string>("CreatedDeviceId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("created_device_id");
+
+                    b.Property<string>("CreatedUserAgentHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("created_user_agent_hash");
 
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expires_at");
 
+                    b.Property<Guid>("FamilyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("family_id");
+
+                    b.Property<string>("LastRotateIdempotencyKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("last_rotate_idempotency_key");
+
+                    b.Property<Guid?>("ParentTokenId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("parent_token_id");
+
+                    b.Property<Guid?>("ReplacedByTokenId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("replaced_by_token_id");
+
                     b.Property<DateTime?>("RevokedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("revoked_at");
+
+                    b.Property<string>("RevocationReason")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("revocation_reason");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("session_id");
 
                     b.Property<string>("Token")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
                         .HasColumnName("token");
+
+                    b.Property<DateTime?>("UsedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("used_at_utc");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
@@ -819,9 +921,27 @@ namespace TarotNow.Infrastructure.Migrations
                     b.HasKey("Id")
                         .HasName("pk_refresh_tokens");
 
+                    b.HasIndex("FamilyId")
+                        .HasDatabaseName("ix_refresh_tokens_family_id");
+
+                    b.HasIndex("FamilyId", "ParentTokenId")
+                        .HasDatabaseName("ix_refresh_tokens_family_id_parent_token_id");
+
+                    b.HasIndex("ParentTokenId")
+                        .HasDatabaseName("ix_refresh_tokens_parent_token_id");
+
+                    b.HasIndex("ReplacedByTokenId")
+                        .HasDatabaseName("ix_refresh_tokens_replaced_by_token_id");
+
+                    b.HasIndex("SessionId")
+                        .HasDatabaseName("ix_refresh_tokens_session_id");
+
                     b.HasIndex("Token")
                         .IsUnique()
                         .HasDatabaseName("ix_refresh_tokens_token");
+
+                    b.HasIndex("UsedAtUtc")
+                        .HasDatabaseName("ix_refresh_tokens_used_at_utc");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_refresh_tokens_user_id");
@@ -1448,6 +1568,18 @@ namespace TarotNow.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_ai_requests_users_user_id");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TarotNow.Domain.Entities.AuthSession", b =>
+                {
+                    b.HasOne("TarotNow.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_auth_sessions_users_user_id");
 
                     b.Navigation("User");
                 });

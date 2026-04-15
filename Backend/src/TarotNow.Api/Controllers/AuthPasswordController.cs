@@ -9,7 +9,7 @@ namespace TarotNow.Api.Controllers;
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
 [Route(ApiRoutes.Auth)]
-[EnableRateLimiting("login")]
+[EnableRateLimiting("auth-login")]
 // API xử lý luồng quên mật khẩu và đặt lại mật khẩu.
 // Luồng chính: gửi OTP reset và xác nhận đổi mật khẩu bằng mã hợp lệ.
 public sealed class AuthPasswordController : ControllerBase

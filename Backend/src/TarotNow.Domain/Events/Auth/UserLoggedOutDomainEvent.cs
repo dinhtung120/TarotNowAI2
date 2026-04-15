@@ -21,6 +21,11 @@ public sealed class UserLoggedOutDomainEvent : IDomainEvent
     public bool RevokeAll { get; init; }
 
     /// <summary>
+    /// Danh sách session đã bị revoke khi logout all.
+    /// </summary>
+    public IReadOnlyCollection<Guid> SessionIds { get; init; } = Array.Empty<Guid>();
+
+    /// <summary>
     /// Lý do revoke.
     /// </summary>
     public string Reason { get; init; } = string.Empty;

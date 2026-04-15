@@ -50,10 +50,8 @@ export default async function RootLayout({ children, params }: Readonly<{ childr
  const cookieStore = await cookies();
  const cookieTheme = cookieStore.get(THEME_COOKIE_KEY)?.value ?? null;
  const initialTheme: ThemeId = isValidTheme(cookieTheme) ? cookieTheme : DEFAULT_THEME;
- const hasAuthCookies = Boolean(
-  cookieStore.get(AUTH_COOKIE.ACCESS)?.value || cookieStore.get(AUTH_COOKIE.REFRESH)?.value
- );
- const sessionSnapshot = hasAuthCookies
+ const hasAccessCookie = Boolean(cookieStore.get(AUTH_COOKIE.ACCESS)?.value);
+ const sessionSnapshot = hasAccessCookie
   ? await getServerSessionSnapshot()
   : { authenticated: false, user: null };
 

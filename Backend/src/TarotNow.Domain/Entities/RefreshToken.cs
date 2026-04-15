@@ -97,7 +97,7 @@ public class RefreshToken
     /// <summary>
     /// Token đã quá hạn.
     /// </summary>
-    public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
+    public bool IsExpired => IsExpiredAt(DateTime.UtcNow);
 
     /// <summary>
     /// Token đã bị revoke.
@@ -108,6 +108,11 @@ public class RefreshToken
     /// Token còn hoạt động (chưa used/chưa revoked/chưa expired).
     /// </summary>
     public bool IsActive => UsedAtUtc is null && RevokedAt is null && !IsExpired;
+
+    /// <summary>
+    /// Kiểm tra token đã quá hạn tại mốc thời gian chỉ định.
+    /// </summary>
+    public bool IsExpiredAt(DateTime nowUtc) => nowUtc >= ExpiresAt;
 
     /// <summary>
     /// Constructor rỗng cho EF.

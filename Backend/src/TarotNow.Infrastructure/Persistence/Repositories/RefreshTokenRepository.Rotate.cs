@@ -13,6 +13,11 @@ public sealed partial class RefreshTokenRepository
         RefreshRotateRequest request,
         CancellationToken cancellationToken = default)
     {
+        if (_authSecurityOptions.RequireRedisForRefreshConsistency && !_cacheBackendState.UsesRedis)
+        {
+            return RefreshRotateResult.Locked();
+        }
+
         if (!IsValidRotateRequest(request))
         {
             return RefreshRotateResult.Invalid();

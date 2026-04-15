@@ -29,4 +29,9 @@ public sealed class AuthSecurityOptions
     /// TTL cache snapshot session active (Redis).
     /// </summary>
     public int SessionCacheTtlSeconds { get; set; } = 30 * 24 * 60 * 60;
+
+    /// <summary>
+    /// Bật fail-closed cho refresh rotation khi Redis không sẵn sàng.
+    /// </summary>
+    public bool RequireRedisForRefreshConsistency { get; set; } = false;
 }

@@ -48,12 +48,16 @@ public sealed class UserLoggedOutDomainEventHandler
 
         if (domainEvent.RevokeAll)
         {
-            var memberValues = await _cacheService.GetSetMembersAsync(
+            var cachedSessionMembers = await _cacheService.GetSetMembersAsync(
                 AuthEventCacheHelpers.BuildUserSessionIndexKey(domainEvent.UserId),
                 cancellationToken);
-            foreach (var userSessionId in memberValues
+            var sessionIdsFromCache = cachedSessionMembers
                          .Select(static value => Guid.TryParse(value, out var parsed) ? parsed : Guid.Empty)
-                         .Where(static sessionId => sessionId != Guid.Empty))
+                         .Where(static sessionId => sessionId != Guid.Empty);
+            var sessionIds = domainEvent.SessionIds
+                .Concat(sessionIdsFromCache)
+                .Distinct();
+            foreach (var userSessionId in sessionIds)
             {
                 await MarkSessionRevokedAndBlacklistAsync(userSessionId, cancellationToken);
             }

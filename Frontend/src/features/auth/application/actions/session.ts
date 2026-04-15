@@ -88,7 +88,7 @@ export async function loginAction(data: {
    expiresInSeconds: payload.expiresInSeconds,
   });
  } catch {
-  return actionFail(AUTH_ERROR.UNAUTHORIZED);
+  return actionFail(AUTH_ERROR.TEMPORARY_FAILURE);
  }
 }
 
@@ -106,7 +106,7 @@ export async function logoutAction(): Promise<ActionResult<undefined>> {
 
   return actionOk();
  } catch {
-  return actionFail(AUTH_ERROR.UNAUTHORIZED);
+  return actionFail(AUTH_ERROR.TEMPORARY_FAILURE);
  }
 }
 
@@ -134,12 +134,12 @@ export async function refreshAccessTokenAction(): Promise<ActionResult<RefreshAc
     return actionFail(resolveAuthError(payload, resolveStatusFallback(response.status)));
    }
 
-   return actionOk({
-    user: payload.user,
-    expiresInSeconds: payload.expiresInSeconds,
-   });
+  return actionOk({
+   user: payload.user,
+   expiresInSeconds: payload.expiresInSeconds,
+  });
   } catch {
-   return actionFail(AUTH_ERROR.UNAUTHORIZED);
+   return actionFail(AUTH_ERROR.TEMPORARY_FAILURE);
   } finally {
    refreshPromise = null;
   }

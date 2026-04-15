@@ -13,52 +13,43 @@ function createUnsignedJwt(expSeconds: number): string {
  return `${header}.${payload}.`;
 }
 
-function buildAuthCookieHeader(): string {
+function buildForgedCookieHeader(): string {
  const exp = Math.floor(Date.now() / 1000) + 10 * 60;
  const accessToken = createUnsignedJwt(exp);
- const refreshToken = `e2e-refresh-${Date.now()}`;
+ const refreshToken = `forged-refresh-${Date.now()}`;
  return `${AUTH_COOKIE.ACCESS}=${accessToken}; ${AUTH_COOKIE.REFRESH}=${refreshToken}`;
 }
 
-async function requestProtected(
+async function requestPath(
  path: string,
- cookieHeader: string,
  request: APIRequestContext,
+ cookieHeader?: string,
 ): Promise<APIResponse> {
  return request.get(`${BASE_URL}${path}`, {
-  headers: {
-   Cookie: cookieHeader,
-  },
+  headers: cookieHeader ? { Cookie: cookieHeader } : undefined,
   maxRedirects: 0,
  });
 }
 
-function assertNotRedirectedToLogin(response: APIResponse): void {
+function expectRedirectToLogin(response: APIResponse): void {
  const status = response.status();
  const location = response.headers()['location'] ?? '';
- const isRedirect = [301, 302, 303, 307, 308].includes(status);
-
- if (isRedirect) {
-  expect(location).not.toContain('/vi/login');
- }
+ expect([301, 302, 303, 307, 308]).toContain(status);
+ expect(location).toContain('/vi/login');
 }
 
-test.describe('auth session middleware', () => {
- test('F5 on protected route with valid access cookie does not force login redirect', async ({ request }) => {
-  const cookieHeader = buildAuthCookieHeader();
-  const firstLoad = await requestProtected('/vi/profile', cookieHeader, request);
-  const secondLoad = await requestProtected('/vi/profile', cookieHeader, request);
+test.describe('auth middleware hardening', () => {
+ test('forged access/refresh cookies are redirected to login on protected route', async ({ request }) => {
+  const cookieHeader = buildForgedCookieHeader();
+  const firstLoad = await requestPath('/vi/profile', request, cookieHeader);
+  const secondLoad = await requestPath('/vi/profile', request, cookieHeader);
 
-  assertNotRedirectedToLogin(firstLoad);
-  assertNotRedirectedToLogin(secondLoad);
+  expectRedirectToLogin(firstLoad);
+  expectRedirectToLogin(secondLoad);
  });
 
- test('navigating protected links keeps URL when auth cookies exist', async ({ request }) => {
-  const cookieHeader = buildAuthCookieHeader();
-  const chatLoad = await requestProtected('/vi/chat', cookieHeader, request);
-  const walletLoad = await requestProtected('/vi/wallet', cookieHeader, request);
-
-  assertNotRedirectedToLogin(chatLoad);
-  assertNotRedirectedToLogin(walletLoad);
+ test('anonymous requests are redirected to login on protected route', async ({ request }) => {
+  const response = await requestPath('/vi/wallet', request);
+  expectRedirectToLogin(response);
  });
 });

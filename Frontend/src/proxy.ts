@@ -152,7 +152,23 @@ const refreshSessionViaInternalRoute = async (
   });
 };
 
-const isAuthRefreshFailure = async (response: Response): Promise<boolean> => {
+const validateSessionViaInternalRoute = async (request: NextRequest): Promise<Response> => {
+ const sessionUrl = new URL('/api/auth/session', request.url);
+ const forwardedDeviceId = request.headers.get(AUTH_HEADER.DEVICE_ID)
+  ?? request.cookies.get(AUTH_COOKIE.DEVICE)?.value
+  ?? '';
+ return fetch(sessionUrl, {
+  method: 'GET',
+  headers: {
+   Cookie: request.headers.get('cookie') ?? '',
+   [AUTH_HEADER.DEVICE_ID]: forwardedDeviceId,
+   [AUTH_HEADER.FORWARDED_USER_AGENT]: request.headers.get('user-agent') ?? '',
+  },
+  cache: 'no-store',
+ });
+};
+
+const isTerminalAuthFailure = async (response: Response): Promise<boolean> => {
  if (response.status === 401 || response.status === 403) {
   return true;
  }
@@ -360,7 +376,7 @@ export default async function proxy(request: NextRequest) {
   const accessToken = isProtectedRoute ? request.cookies.get(AUTH_COOKIE.ACCESS)?.value : undefined;
   const refreshToken = isProtectedRoute ? request.cookies.get(AUTH_COOKIE.REFRESH)?.value : undefined;
 
-  if (isProtectedRoute && !accessToken && !refreshToken) {
+  if (isProtectedRoute && !refreshToken) {
     const loginUrl = new URL(`/${locale}/login`, request.url);
     const response = NextResponse.redirect(loginUrl);
     clearAuthCookies(response);
@@ -370,7 +386,7 @@ export default async function proxy(request: NextRequest) {
   if (isProtectedRoute && shouldAttemptRefresh(accessToken, refreshToken)) {
     const refreshResponse = await refreshSessionViaInternalRoute(request);
     if (!refreshResponse.ok) {
-      if (await isAuthRefreshFailure(refreshResponse)) {
+      if (await isTerminalAuthFailure(refreshResponse)) {
         const loginUrl = new URL(`/${locale}/login`, request.url);
         const response = NextResponse.redirect(loginUrl);
         clearAuthCookies(response);
@@ -387,6 +403,33 @@ export default async function proxy(request: NextRequest) {
 
     const response = intlMiddleware(request);
     appendRefreshCookies(refreshResponse.headers, response);
+    if (isDocumentRequest(request)) {
+      return withResponseCsp(response);
+    }
+
+    return response;
+  }
+
+  if (isProtectedRoute && accessToken) {
+    const sessionResponse = await validateSessionViaInternalRoute(request);
+    if (!sessionResponse.ok) {
+      if (await isTerminalAuthFailure(sessionResponse)) {
+        const loginUrl = new URL(`/${locale}/login`, request.url);
+        const response = NextResponse.redirect(loginUrl);
+        clearAuthCookies(response);
+        return withResponseCsp(response);
+      }
+
+      const response = intlMiddleware(request);
+      if (isDocumentRequest(request)) {
+        return withResponseCsp(response);
+      }
+
+      return response;
+    }
+
+    const response = intlMiddleware(request);
+    appendRefreshCookies(sessionResponse.headers, response);
     if (isDocumentRequest(request)) {
       return withResponseCsp(response);
     }

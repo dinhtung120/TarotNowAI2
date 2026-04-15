@@ -11,18 +11,45 @@ const REFRESH_INTERVAL_MS = 40 * 60 * 1000;
 const MIN_REFRESH_THROTTLE_MS = 20 * 60 * 1000;
 let globalLastRefreshAt = 0;
 
-async function hasServerSession(): Promise<boolean> {
+interface ServerSessionState {
+ authenticated: boolean;
+ user: UserProfile | null;
+ terminalFailure: boolean;
+}
+
+async function getServerSessionState(): Promise<ServerSessionState> {
     try {
         const response = await fetch('/api/auth/session', {
             method: 'GET',
             credentials: 'include',
             cache: 'no-store',
         });
-        if (!response.ok) return false;
-        const payload = (await response.json()) as { authenticated?: boolean };
-        return Boolean(payload.authenticated);
+        let payload: { authenticated?: boolean; user?: UserProfile; error?: string } | null = null;
+        try {
+            payload = (await response.json()) as { authenticated?: boolean; user?: UserProfile; error?: string };
+        } catch {
+            payload = null;
+        }
+
+        if (!response.ok) {
+            return {
+                authenticated: false,
+                user: null,
+                terminalFailure: isTerminalAuthError(payload?.error) || response.status === 401 || response.status === 403,
+            };
+        }
+
+        return {
+            authenticated: Boolean(payload?.authenticated),
+            user: payload?.user ?? null,
+            terminalFailure: false,
+        };
     } catch {
-        return false;
+        return {
+            authenticated: false,
+            user: null,
+            terminalFailure: false,
+        };
     }
 }
 
@@ -97,14 +124,14 @@ export default function AuthSessionManager({
     useEffect(() => {
         let cancelled = false;
         const bootstrapSession = async () => {
-            const authenticated = await hasServerSession();
+            const sessionState = await getServerSessionState();
             if (cancelled) return;
-            if (authenticated) {
-                await tryRefresh(false);
+            if (sessionState.authenticated && sessionState.user) {
+                setSession(sessionState.user);
                 return;
             }
 
-            if (useAuthStore.getState().isAuthenticated) {
+            if (sessionState.terminalFailure && useAuthStore.getState().isAuthenticated) {
                 clearAuth();
             }
         };
@@ -113,7 +140,7 @@ export default function AuthSessionManager({
         return () => {
             cancelled = true;
         };
-    }, [clearAuth, tryRefresh]);
+    }, [clearAuth, setSession]);
     useEffect(() => {
         if (!isAuthenticated) return;
         void tryRefresh(false);

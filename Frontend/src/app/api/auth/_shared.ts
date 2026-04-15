@@ -83,7 +83,7 @@ function parseRefreshCookieMetadata(headers: Headers): ParsedRefreshCookieMetada
   }
 
   const maxAgeRaw = attributes.get('max-age');
-  if (maxAgeRaw && /^-?\\d+$/.test(maxAgeRaw)) {
+  if (maxAgeRaw && /^-?\d+$/.test(maxAgeRaw)) {
    const maxAgeParsed = Number.parseInt(maxAgeRaw, 10);
    if (Number.isFinite(maxAgeParsed) && maxAgeParsed > 0) {
     return {
@@ -125,11 +125,11 @@ export function setAccessCookie(response: NextResponse, accessToken: string, ttl
  });
 }
 
-export function setRefreshCookieFromHeaders(response: NextResponse, headers: Headers): void {
+export function setRefreshCookieFromHeaders(response: NextResponse, headers: Headers): boolean {
  const parsed = parseRefreshCookieMetadata(headers);
  const refreshToken = parsed?.value ?? parseRefreshTokenFromSetCookie(headers);
  if (!refreshToken) {
-  return;
+  return false;
  }
 
  response.cookies.set({
@@ -141,6 +141,7 @@ export function setRefreshCookieFromHeaders(response: NextResponse, headers: Hea
   path: '/',
   maxAge: Math.max(1, parsed?.maxAgeSeconds ?? AUTH_SESSION.DEFAULT_REFRESH_TTL_SECONDS),
  });
+ return true;
 }
 
 export function resolveDeviceIdFromRequest(request: NextRequest): string {

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using TarotNow.Application.Common.Constants;
 
 namespace TarotNow.Api.Extensions;
 
@@ -14,10 +15,15 @@ public static class ControllerProblemDetailsExtensions
     /// <returns>IActionResult dạng ProblemDetails với mã 401.</returns>
     public static IActionResult UnauthorizedProblem(this ControllerBase controller, string? detail = null)
     {
-        return controller.Problem(
-            statusCode: StatusCodes.Status401Unauthorized,
-            title: "Unauthorized",
-            detail: detail ?? "Yêu cầu xác thực hợp lệ.");
+        var problem = new ProblemDetails
+        {
+            Status = StatusCodes.Status401Unauthorized,
+            Title = "Unauthorized",
+            Type = "https://tools.ietf.org/html/rfc9110#section-15.5.2",
+            Detail = detail ?? "Yêu cầu xác thực hợp lệ."
+        };
+        problem.Extensions["errorCode"] = AuthErrorCodes.Unauthorized;
+        return new ObjectResult(problem) { StatusCode = StatusCodes.Status401Unauthorized };
     }
 
     /// <summary>

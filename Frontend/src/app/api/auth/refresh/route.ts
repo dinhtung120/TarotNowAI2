@@ -69,7 +69,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  );
 
  setAccessCookie(response, accessToken, resolveAccessTtlSeconds(result.data));
- setRefreshCookieFromHeaders(response, result.headers);
+ const refreshCookieSet = setRefreshCookieFromHeaders(response, result.headers);
+ if (!refreshCookieSet) {
+  return unauthorizedResponse(true);
+ }
  setDeviceCookie(response, deviceId);
  return response;
 }

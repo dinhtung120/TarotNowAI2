@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Infrastructure.Options;
+using TarotNow.Infrastructure.Services;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
@@ -14,6 +15,7 @@ public sealed partial class RefreshTokenRepository : IRefreshTokenRepository
     private readonly ApplicationDbContext _dbContext;
     private readonly ICacheService _cacheService;
     private readonly AuthSecurityOptions _authSecurityOptions;
+    private readonly CacheBackendState _cacheBackendState;
 
     /// <summary>
     /// Khởi tạo refresh token repository.
@@ -21,11 +23,13 @@ public sealed partial class RefreshTokenRepository : IRefreshTokenRepository
     public RefreshTokenRepository(
         ApplicationDbContext dbContext,
         ICacheService cacheService,
-        IOptions<AuthSecurityOptions> authSecurityOptions)
+        IOptions<AuthSecurityOptions> authSecurityOptions,
+        CacheBackendState cacheBackendState)
     {
         _dbContext = dbContext;
         _cacheService = cacheService;
         _authSecurityOptions = authSecurityOptions.Value;
+        _cacheBackendState = cacheBackendState;
     }
 
     /// <inheritdoc />

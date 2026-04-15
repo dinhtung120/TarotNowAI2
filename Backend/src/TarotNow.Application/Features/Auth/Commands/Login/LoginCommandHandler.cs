@@ -72,7 +72,7 @@ public partial class LoginCommandHandler : IRequestHandler<LoginCommand, LoginRe
         // Nâng cấp hash mật khẩu ngầm khi thuật toán/hash parameters đã thay đổi.
         await RehashPasswordIfNeededAsync(user, request.Password, cancellationToken);
 
-        var ipHash = HashValue(request.ClientIpAddress);
+        var ipHash = HashIpAddress(request.ClientIpAddress);
         var session = await _authSessionRepository.CreateAsync(
             user.Id,
             request.DeviceId,

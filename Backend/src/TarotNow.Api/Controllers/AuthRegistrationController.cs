@@ -11,7 +11,7 @@ namespace TarotNow.Api.Controllers;
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
 [Route(ApiRoutes.Auth)]
-[EnableRateLimiting("login")]
+[EnableRateLimiting("auth-login")]
 // API xử lý đăng ký và xác minh email tài khoản mới.
 // Luồng chính: đăng ký user, gửi OTP xác minh và xác nhận kích hoạt tài khoản.
 public sealed class AuthRegistrationController : ControllerBase

@@ -33,7 +33,6 @@ public static partial class ApiServiceCollectionExtensions
     private static void ConfigureRateLimitPolicies(RateLimiterOptions options)
     {
         // Rule bảo vệ brute-force cho đăng nhập theo IP.
-        AddFixedWindowPolicy(options, "login", ResolveClientIp, permitLimit: 5, TimeSpan.FromSeconds(60));
         AddFixedWindowPolicy(options, "auth-login", ResolveClientIp, permitLimit: 5, TimeSpan.FromSeconds(60));
         // Rule theo user đã xác thực để hạn chế spam gọi endpoint auth/session.
         // Nâng cao giới hạn (100 req/phút) để tránh chặn nhầm khi Load Profile/Navbar/Wallet đồng thời.

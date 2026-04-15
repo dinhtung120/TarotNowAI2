@@ -31,4 +31,9 @@ public interface IAuthSessionRepository
     /// Thu hồi toàn bộ session của user.
     /// </summary>
     Task RevokeAllByUserAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Lấy danh sách session id đang active của user.
+    /// </summary>
+    Task<IReadOnlyCollection<Guid>> GetActiveSessionIdsByUserAsync(Guid userId, CancellationToken cancellationToken = default);
 }
