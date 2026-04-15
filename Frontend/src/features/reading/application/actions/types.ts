@@ -12,8 +12,15 @@ export interface InitReadingResponse {
 
 export interface RevealReadingRequest {
  sessionId: string;
+ language?: "vi" | "en" | "zh";
+}
+
+export interface RevealedReadingCard {
+ cardId: number;
+ position: number;
+ orientation: "upright" | "reversed";
 }
 
 export interface RevealReadingResponse {
- cards: number[];
+ cards: RevealedReadingCard[];
 }

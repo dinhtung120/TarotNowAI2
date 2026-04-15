@@ -1,66 +1,57 @@
 using MediatR;
-using System.Linq;
-using System.Text.Json;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Reading.Commands.RevealSession;
 
-// Handler thực thi luồng reveal bài cho một reading session.
+// Handler reveal reading session theo Rule 0: chỉ publish domain event.
 public partial class RevealReadingSessionCommandHandler : IRequestHandler<RevealReadingSessionCommand, RevealReadingSessionResult>
 {
-    private readonly IReadingSessionRepository _readingRepo;
-    private readonly IUserCollectionRepository _collectionRepo;
-    private readonly IUserRepository _userRepository;
-    private readonly IRngService _rngService;
-
-    // Hệ số exp mặc định cho mỗi lá bài.
-    private const long ExpPerCard = 1;
+    private readonly IInlineDomainEventDispatcher _inlineDomainEventDispatcher;
 
     /// <summary>
     /// Khởi tạo handler reveal reading session.
-    /// Luồng xử lý: nhận các repository/service để xác thực session, rút bài ngẫu nhiên, cập nhật collection/exp và lưu trạng thái phiên.
+    /// Luồng xử lý: nhận inline dispatcher để phát domain event reveal-requested.
     /// </summary>
     public RevealReadingSessionCommandHandler(
-        IReadingSessionRepository readingRepo,
-        IUserCollectionRepository collectionRepo,
-        IUserRepository userRepository,
-        IRngService rngService)
+        IInlineDomainEventDispatcher inlineDomainEventDispatcher)
     {
-        _readingRepo = readingRepo;
-        _collectionRepo = collectionRepo;
-        _userRepository = userRepository;
-        _rngService = rngService;
+        _inlineDomainEventDispatcher = inlineDomainEventDispatcher;
     }
 
     /// <summary>
     /// Xử lý command reveal session.
-    /// Luồng xử lý: kiểm tra session hợp lệ, trộn bộ bài và rút theo spread, cập nhật collection/exp, đánh dấu session completed và trả danh sách lá đã rút.
+    /// Luồng xử lý: chỉ publish domain event reveal-requested và trả snapshot từ event sau khi handler hoàn tất.
     /// </summary>
     public async Task<RevealReadingSessionResult> Handle(
         RevealReadingSessionCommand request,
         CancellationToken cancellationToken)
     {
-        var session = await GetSessionForRevealAsync(request, cancellationToken);
-        var shuffledDeck = _rngService.ShuffleDeck(78);
-        var cardsToDraw = ResolveCardsToDraw(session.SpreadType);
-        var drawnCards = shuffledDeck.Take(cardsToDraw).ToArray();
-        var expToGrant = ResolveExpToGrant(session) * ExpPerCard;
-        // Xác định số lá rút và exp theo loại spread/currency trước khi ghi dữ liệu người dùng.
+        var domainEvent = new ReadingSessionRevealRequestedDomainEvent
+        {
+            UserId = request.UserId,
+            SessionId = request.SessionId,
+            Language = NormalizeLanguage(request.Language)
+        };
 
-        await UpdateCollectionAsync(request.UserId, drawnCards, expToGrant, cancellationToken);
-        await ApplyUserExpAsync(request.UserId, drawnCards.Length * expToGrant, cancellationToken);
-        // Cập nhật side-effects sở hữu thẻ và kinh nghiệm để đồng bộ tiến trình người chơi.
-
-        var cardsJson = JsonSerializer.Serialize(drawnCards);
-        session.CompleteSession(cardsJson);
-        await _readingRepo.UpdateAsync(session, cancellationToken);
-        // Đổi trạng thái session sang completed và lưu danh sách lá đã rút để phục vụ các bước AI tiếp theo.
+        await _inlineDomainEventDispatcher.PublishAsync(domainEvent, cancellationToken);
 
         return new RevealReadingSessionResult
         {
-            Cards = drawnCards
+            Cards = domainEvent.RevealedCards.ToArray()
+        };
+    }
+
+    private static string NormalizeLanguage(string? language)
+    {
+        return language?.Trim().ToLowerInvariant() switch
+        {
+            "en" => "en",
+            "zh" => "zh",
+            _ => "vi"
         };
     }
 }

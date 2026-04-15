@@ -44,9 +44,16 @@ export function useCardsCatalog() {
   return card.nameEn || undefined;
  };
 
- const getCardMeaning = (cardId: number): string | undefined => {
+ const getCardMeaning = (
+  cardId: number,
+  orientation: 'upright' | 'reversed' = 'upright',
+ ): string | undefined => {
   const card = getCard(cardId);
   if (!card) return undefined;
+
+  if (orientation === 'reversed') {
+   return card.reversedDescription || card.uprightDescription || undefined;
+  }
 
   return card.uprightDescription || undefined;
  };

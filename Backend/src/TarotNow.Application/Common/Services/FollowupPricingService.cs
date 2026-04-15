@@ -1,4 +1,4 @@
-using System.Text.Json;
+using TarotNow.Domain.Entities;
 
 namespace TarotNow.Application.Common.Services;
 
@@ -47,7 +47,7 @@ public class FollowupPricingService
 
         try
         {
-            var cardIds = JsonSerializer.Deserialize<int[]>(cardsDrawnJson) ?? Array.Empty<int>();
+            var cardIds = ReadingDrawnCardCodec.ExtractCardIds(cardsDrawnJson);
             if (cardIds.Length == 0)
             {
                 // Edge case JSON hợp lệ nhưng rỗng: không có cơ sở tính ưu đãi.

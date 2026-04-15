@@ -1,5 +1,6 @@
 import type { ComponentType, MutableRefObject } from "react";
 import type { FlyingCard, ShufflePath } from "@/features/reading/session/presentation/session-page/types";
+import type { RevealedReadingCard } from "@/features/reading/application/actions/types";
 
 export interface ReadingSessionTextBundle {
   aiFooterNote: string;
@@ -27,14 +28,17 @@ export interface ReadingSessionTextBundle {
 export interface ReadingSessionContentProps {
   activeDeckRows: number[][];
   allCardsFlipped: boolean;
-  cards: number[];
+  cards: RevealedReadingCard[];
   cardsToDraw: number;
   deckCardWidth: string;
   error: string;
   flippedIndex: number;
   flyingCards: FlyingCard[];
   getCardImageUrl: (cardId: number) => string | undefined;
-  getCardMeaning: (cardId: number) => string | null | undefined;
+  getCardMeaning: (
+    cardId: number,
+    orientation?: "upright" | "reversed",
+  ) => string | null | undefined;
   getCardName: (cardId: number) => string | null | undefined;
   handleChangeCard: () => void;
   handleRandomSelect: () => void;
@@ -56,7 +60,7 @@ export interface ReadingSessionContentProps {
   texts: ReadingSessionTextBundle;
   AiInterpretationStream: ComponentType<{
     sessionId: string;
-    cards?: number[];
+    cards?: RevealedReadingCard[];
     isReadyToShow?: boolean;
   }>;
 }

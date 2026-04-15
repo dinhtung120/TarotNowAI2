@@ -20,7 +20,9 @@ public partial class MongoReadingSessionRepository
             UserId = session.UserId,
             SpreadType = session.SpreadType,
             Question = session.Question,
-            AiStatus = session.IsCompleted ? "completed" : "pending",
+            AiStatus = session.IsCompleted
+                ? (string.IsNullOrWhiteSpace(session.AiSummary) ? "revealed" : "completed")
+                : "pending",
             CreatedAt = session.CreatedAt,
             UpdatedAt = DateTime.UtcNow
         };
@@ -57,7 +59,7 @@ public partial class MongoReadingSessionRepository
         {
             update = update
                 .Set(r => r.DrawnCards, ParseDrawnCards(session.CardsDrawn))
-                .Set(r => r.AiStatus, "completed");
+                .Set(r => r.AiStatus, string.IsNullOrWhiteSpace(session.AiSummary) ? "revealed" : "completed");
             // Khi complete phải đồng bộ cả dữ liệu bài rút và trạng thái AI.
         }
 

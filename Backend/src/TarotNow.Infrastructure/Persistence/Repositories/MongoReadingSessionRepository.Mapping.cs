@@ -1,4 +1,5 @@
 using TarotNow.Domain.Entities;
+using TarotNow.Domain.Enums;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
@@ -12,17 +13,17 @@ public partial class MongoReadingSessionRepository
     /// </summary>
     private static ReadingSession MapToEntity(ReadingSessionDocument doc)
     {
-        var isCompleted = string.Equals(doc.AiStatus, "completed", StringComparison.OrdinalIgnoreCase);
-        // Trạng thái completed dựa trên ai_status để đồng bộ với nguồn dữ liệu Mongo.
-
-        var cardsJson = doc.DrawnCards != null && doc.DrawnCards.Count > 0
-            ? System.Text.Json.JsonSerializer.Serialize(
-                doc.DrawnCards
-                    .OrderBy(c => c.Position)
-                    .Select(c => c.CardId)
-                    .ToArray())
-            : null;
-        // Giữ thứ tự theo position trước khi serialize để snapshot domain ổn định.
+        var revealedCards = doc.DrawnCards?
+            .OrderBy(c => c.Position)
+            .Select(c => new ReadingDrawnCard
+            {
+                CardId = c.CardId,
+                Position = c.Position,
+                Orientation = c.IsReversed ? CardOrientation.Reversed : CardOrientation.Upright
+            })
+            .ToArray() ?? Array.Empty<ReadingDrawnCard>();
+        var isCompleted = revealedCards.Length > 0;
+        var cardsJson = isCompleted ? ReadingDrawnCardCodec.Serialize(revealedCards) : null;
 
         var followups = doc.Followups?.Select(f => new ReadingFollowup
         {

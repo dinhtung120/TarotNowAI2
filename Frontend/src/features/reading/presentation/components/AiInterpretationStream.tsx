@@ -6,10 +6,11 @@ import { AiStreamFollowupComposer } from "./ai-stream/AiStreamFollowupComposer";
 import { AiStreamMessages } from "./ai-stream/AiStreamMessages";
 import { useAiStreamSession } from "./ai-stream/useAiStreamSession";
 import { AiStreamNotReadyState } from "./AiStreamNotReadyState";
+import type { RevealedReadingCard } from "@/features/reading/application/actions/types";
 
 interface AiInterpretationStreamProps {
  sessionId: string;
- cards?: number[];
+ cards?: RevealedReadingCard[];
  onComplete?: () => void;
  isReadyToShow?: boolean;
 }

@@ -1,6 +1,7 @@
 using MongoDB.Bson;
 using MongoDB.Driver;
 using TarotNow.Domain.Entities;
+using TarotNow.Domain.Enums;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
@@ -27,11 +28,12 @@ public partial class MongoUserCollectionRepository
         Guid userId,
         int cardId,
         long expToGain,
+        string orientation,
         DateTime now)
     {
         var userIdString = userId.ToString();
         var levelExpression = BuildLevelExpression();
-        var setDocument = BuildSetDocument(userIdString, cardId, expToGain, now, levelExpression);
+        var setDocument = BuildSetDocument(userIdString, cardId, expToGain, orientation, now, levelExpression);
         var pipeline = PipelineDefinition<UserCollectionDocument, UserCollectionDocument>.Create(
             new[] { new BsonDocument("$set", setDocument) });
 
@@ -46,9 +48,14 @@ public partial class MongoUserCollectionRepository
         string userId,
         int cardId,
         long expToGain,
+        string orientation,
         DateTime now,
         BsonDocument levelExpression)
     {
+        var drawnStatField = orientation == CardOrientation.Reversed
+            ? "stats.times_drawn_reversed"
+            : "stats.times_drawn_upright";
+
         return new BsonDocument
         {
             { "user_id", userId },
@@ -63,9 +70,9 @@ public partial class MongoUserCollectionRepository
                     expToGain
                 })
             },
-            { "stats.times_drawn_upright", new BsonDocument("$add", new BsonArray
+            { drawnStatField, new BsonDocument("$add", new BsonArray
                 {
-                    new BsonDocument("$ifNull", new BsonArray { "$stats.times_drawn_upright", 0 }),
+                    new BsonDocument("$ifNull", new BsonArray { $"${drawnStatField}", 0 }),
                     1
                 })
             },

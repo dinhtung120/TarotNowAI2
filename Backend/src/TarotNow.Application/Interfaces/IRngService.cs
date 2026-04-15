@@ -11,6 +11,11 @@ public interface IRngService
     int[] ShuffleDeck(int deckSize = 78);
 
     /// <summary>
+    /// Sinh cờ bool ngẫu nhiên bằng nguồn CSPRNG.
+    /// </summary>
+    bool NextBoolean();
+
+    /// <summary>
     /// Chọn một phần tử theo trọng số để phục vụ quay gacha có xác suất cấu hình.
     /// Luồng xử lý: tính tổng trọng số từ items, bốc mẫu ngẫu nhiên, trả item trúng kèm seed audit.
     /// </summary>

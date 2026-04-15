@@ -1,5 +1,6 @@
 using MediatR;
 using System;
+using TarotNow.Domain.Entities;
 
 namespace TarotNow.Application.Features.Reading.Commands.RevealSession;
 
@@ -11,11 +12,14 @@ public class RevealReadingSessionCommand : IRequest<RevealReadingSessionResult>
 
     // Định danh session cần mở bài.
     public string SessionId { get; set; } = string.Empty;
+
+    // Ngôn ngữ ưu tiên dùng cho luồng precompute AI hậu reveal.
+    public string Language { get; set; } = "vi";
 }
 
 // DTO kết quả reveal gồm danh sách lá bài đã rút.
 public class RevealReadingSessionResult
 {
-    // Mảng id lá bài đã rút theo spread.
-    public int[] Cards { get; set; } = Array.Empty<int>();
+    // Danh sách lá đã rút kèm vị trí và orientation.
+    public ReadingDrawnCard[] Cards { get; set; } = Array.Empty<ReadingDrawnCard>();
 }

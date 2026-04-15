@@ -35,6 +35,14 @@ public class RngService : IRngService
     }
 
     /// <summary>
+    /// Sinh cờ bool ngẫu nhiên bằng CSPRNG.
+    /// </summary>
+    public bool NextBoolean()
+    {
+        return RandomNumberGenerator.GetInt32(2) == 1;
+    }
+
+    /// <summary>
     /// Chọn một item theo trọng số basis points.
     /// Luồng validate dữ liệu đầu vào, sinh entropy audit seed, rồi quét tích lũy trọng số để chọn kết quả.
     /// </summary>

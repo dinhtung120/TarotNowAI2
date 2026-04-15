@@ -18,5 +18,9 @@ public class RevealReadingSessionCommandValidator : AbstractValidator<RevealRead
         RuleFor(x => x.SessionId)
             .NotEmpty();
         // SessionId bắt buộc để truy xuất chính xác phiên reading cần reveal.
+
+        RuleFor(x => x.Language)
+            .Must(language => string.IsNullOrWhiteSpace(language) || language is "vi" or "en" or "zh")
+            .WithMessage("Language must be one of: vi, en, zh.");
     }
 }

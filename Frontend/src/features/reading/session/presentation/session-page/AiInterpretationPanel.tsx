@@ -1,16 +1,17 @@
 import { Suspense, type ComponentType } from "react";
 import { RefreshCw, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { RevealedReadingCard } from "@/features/reading/application/actions/types";
 
 interface AiInterpretationPanelProps {
  allCardsFlipped: boolean;
- cards: number[];
+ cards: RevealedReadingCard[];
  footerNote: string;
  liveLabel: string;
  sessionId: string;
  subtitle: string;
  title: string;
- AiInterpretationStream: ComponentType<{ sessionId: string; cards?: number[]; isReadyToShow?: boolean }>;
+ AiInterpretationStream: ComponentType<{ sessionId: string; cards?: RevealedReadingCard[]; isReadyToShow?: boolean }>;
 }
 
 export default function AiInterpretationPanel({ allCardsFlipped, cards, footerNote, liveLabel, sessionId, subtitle, title, AiInterpretationStream }: AiInterpretationPanelProps) {

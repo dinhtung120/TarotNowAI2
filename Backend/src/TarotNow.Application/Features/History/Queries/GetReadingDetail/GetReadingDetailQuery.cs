@@ -1,5 +1,6 @@
 using MediatR;
 using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Entities;
 
 namespace TarotNow.Application.Features.History.Queries.GetReadingDetail;
 
@@ -25,6 +26,9 @@ public class GetReadingDetailResponse
     // Chuỗi cards đã rút (nếu có).
     public string? CardsDrawn { get; set; }
 
+    // Danh sách cards đã rút kèm orientation.
+    public IEnumerable<DrawnCardDto> DrawnCards { get; set; } = new List<DrawnCardDto>();
+
     // Cờ session đã hoàn thành hay chưa.
     public bool IsCompleted { get; set; }
 
@@ -42,6 +46,19 @@ public class GetReadingDetailResponse
 
     // Danh sách tương tác AI theo timeline.
     public IEnumerable<AiRequestDto> AiInteractions { get; set; } = new List<AiRequestDto>();
+}
+
+// DTO một lá đã rút trong phiên đọc.
+public class DrawnCardDto
+{
+    // Id lá bài trong bộ 78 lá.
+    public int CardId { get; set; }
+
+    // Vị trí của lá trong spread.
+    public int Position { get; set; }
+
+    // Orientation của lá (upright/reversed).
+    public string Orientation { get; set; } = string.Empty;
 }
 
 // DTO follow-up trong reading session.
@@ -115,6 +132,14 @@ public class GetReadingDetailQueryHandler : IRequestHandler<GetReadingDetailQuer
             Id = session.Value.ReadingSession.Id,
             SpreadType = session.Value.ReadingSession.SpreadType,
             CardsDrawn = session.Value.ReadingSession.CardsDrawn,
+            DrawnCards = ReadingDrawnCardCodec.Parse(session.Value.ReadingSession.CardsDrawn)
+                .Select(card => new DrawnCardDto
+                {
+                    CardId = card.CardId,
+                    Position = card.Position,
+                    Orientation = card.Orientation
+                })
+                .ToList(),
             IsCompleted = session.Value.ReadingSession.IsCompleted,
             CreatedAt = session.Value.ReadingSession.CreatedAt,
             CompletedAt = session.Value.ReadingSession.CompletedAt,

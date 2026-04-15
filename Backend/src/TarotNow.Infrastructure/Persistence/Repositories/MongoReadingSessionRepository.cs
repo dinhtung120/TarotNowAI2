@@ -2,6 +2,7 @@ using MongoDB.Bson;
 using MongoDB.Driver;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
+using TarotNow.Domain.Enums;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
@@ -42,16 +43,13 @@ public partial class MongoReadingSessionRepository : IReadingSessionRepository
     /// </summary>
     private static List<DrawnCard> ParseDrawnCards(string? cardsDrawnJson)
     {
-        var cardIds = System.Text.Json.JsonSerializer.Deserialize<int[]>(cardsDrawnJson ?? "[]")
-            ?? Array.Empty<int>();
-        // Khi JSON null/sai định dạng nhẹ, fallback mảng rỗng để giữ luồng xử lý ổn định.
-
-        return cardIds
-            .Select((cardId, idx) => new DrawnCard
+        var cards = ReadingDrawnCardCodec.Parse(cardsDrawnJson);
+        return cards
+            .Select(card => new DrawnCard
             {
-                CardId = cardId,
-                Position = idx,
-                IsReversed = false
+                CardId = card.CardId,
+                Position = card.Position,
+                IsReversed = card.Orientation == CardOrientation.Reversed
             })
             .ToList();
     }

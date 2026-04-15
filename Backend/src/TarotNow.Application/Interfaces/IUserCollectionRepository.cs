@@ -1,6 +1,7 @@
 
 
 using TarotNow.Domain.Entities;
+using TarotNow.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -17,7 +18,12 @@ public interface IUserCollectionRepository
     /// Tạo mới hoặc cập nhật thẻ trong bộ sưu tập khi người dùng nhận thêm kinh nghiệm.
     /// Luồng xử lý: định vị thẻ theo userId/cardId, cộng expToGain và lưu trạng thái mới.
     /// </summary>
-    Task UpsertCardAsync(Guid userId, int cardId, long expToGain, CancellationToken cancellationToken = default);
+    Task UpsertCardAsync(
+        Guid userId,
+        int cardId,
+        long expToGain,
+        string orientation = CardOrientation.Upright,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Lấy toàn bộ bộ sưu tập của người dùng để hiển thị kho thẻ hiện có.

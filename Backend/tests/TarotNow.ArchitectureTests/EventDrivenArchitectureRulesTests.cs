@@ -143,6 +143,55 @@ public sealed class EventDrivenArchitectureRulesTests
         groupedByDirectory.Should().BeEmpty("Wallet mutations in commands must publish MoneyChangedDomainEvent for realtime and downstream consistency.");
     }
 
+    /// <summary>
+    /// Xác nhận command handlers của module Reading chỉ publish domain event.
+    /// </summary>
+    [Fact]
+    public void ReadingCommandHandlers_ShouldNotInjectBusinessSideEffectDependencies()
+    {
+        var backendRoot = FindBackendRoot();
+        var targetRoots = new[]
+        {
+            Path.Combine(
+                backendRoot,
+                "src",
+                "TarotNow.Application",
+                "Features",
+                "Reading",
+                "Commands",
+                "InitSession"),
+            Path.Combine(
+                backendRoot,
+                "src",
+                "TarotNow.Application",
+                "Features",
+                "Reading",
+                "Commands",
+                "RevealSession")
+        };
+        var forbiddenPatterns = new[]
+        {
+            @"\bIReadingSessionRepository\b",
+            @"\bIWalletRepository\b",
+            @"\bIUserRepository\b",
+            @"\bIUserCollectionRepository\b",
+            @"\bIReadingSessionOrchestrator\b",
+            @"\bIAiProvider\b",
+            @"\bIRngService\b"
+        };
+
+        var regexes = forbiddenPatterns.Select(pattern => new Regex(pattern, RegexOptions.Compiled)).ToArray();
+        var violations = targetRoots
+            .SelectMany(root => Directory.GetFiles(root, "*.cs", SearchOption.AllDirectories))
+            .Where(path => path.Contains("CommandHandler", StringComparison.Ordinal))
+            .Where(path => regexes.Any(regex => regex.IsMatch(File.ReadAllText(path))))
+            .Select(path => ToBackendRelativePath(backendRoot, path))
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty("Reading command handlers must only publish domain events and delegate side-effects to event handlers.");
+    }
+
     private static string FindBackendRoot()
     {
         var current = new DirectoryInfo(AppContext.BaseDirectory);

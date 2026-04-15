@@ -2,57 +2,48 @@ using MediatR;
 using System.Threading;
 using System.Threading.Tasks;
 using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Reading.Commands.InitSession;
 
-// Handler điều phối khởi tạo phiên reading: kiểm tra user, tính pricing, dựng session và bắt đầu phiên trả phí.
+// Handler khởi tạo reading session theo Rule 0: chỉ publish domain event.
 public partial class InitReadingSessionCommandHandler : IRequestHandler<InitReadingSessionCommand, InitReadingSessionResult>
 {
-    private readonly IReadingSessionRepository _readingRepo;
-    private readonly IReadingSessionOrchestrator _readingSessionOrchestrator;
-    private readonly IUserRepository _userRepo;
-    private readonly IRngService _rngService;
-    private readonly ISystemConfigSettings _systemConfigSettings;
+    private readonly IInlineDomainEventDispatcher _inlineDomainEventDispatcher;
 
     /// <summary>
     /// Khởi tạo handler init reading session.
-    /// Luồng xử lý: nhận các repository/service cần thiết để validate user, resolve giá và mở phiên đọc.
+    /// Luồng xử lý: nhận inline dispatcher để phát domain event và để handler chuyên trách xử lý side-effects.
     /// </summary>
     public InitReadingSessionCommandHandler(
-        IReadingSessionRepository readingRepo,
-        IReadingSessionOrchestrator readingSessionOrchestrator,
-        IUserRepository userRepo,
-        IRngService rngService,
-        ISystemConfigSettings systemConfigSettings)
+        IInlineDomainEventDispatcher inlineDomainEventDispatcher)
     {
-        _readingRepo = readingRepo;
-        _readingSessionOrchestrator = readingSessionOrchestrator;
-        _userRepo = userRepo;
-        _rngService = rngService;
-        _systemConfigSettings = systemConfigSettings;
+        _inlineDomainEventDispatcher = inlineDomainEventDispatcher;
     }
 
     /// <summary>
     /// Xử lý command khởi tạo reading session.
-    /// Luồng xử lý: xác thực user tồn tại, resolve pricing theo spread/currency, khởi tạo session và gọi orchestrator mở phiên.
+    /// Luồng xử lý: chỉ publish domain event init-requested và trả dữ liệu đã được handler xử lý.
     /// </summary>
     public async Task<InitReadingSessionResult> Handle(
         InitReadingSessionCommand request,
         CancellationToken cancellationToken)
     {
-        await EnsureUserExistsAsync(request.UserId, cancellationToken);
-        // Chặn mở phiên cho user không hợp lệ trước khi phát sinh xử lý thanh toán.
+        var domainEvent = new ReadingSessionInitRequestedDomainEvent
+        {
+            UserId = request.UserId,
+            SpreadType = request.SpreadType,
+            Question = request.Question,
+            Currency = request.Currency
+        };
 
-        var pricing = await ResolvePricingAsync(request, cancellationToken);
-        var session = BuildSession(request, pricing.CurrencyUsed, pricing.AmountCharged);
-        await StartSessionAsync(request, session, pricing, cancellationToken);
-        // Chỉ trả kết quả sau khi orchestrator xác nhận mở phiên thành công.
+        await _inlineDomainEventDispatcher.PublishAsync(domainEvent, cancellationToken);
 
         return new InitReadingSessionResult
         {
-            SessionId = session.Id,
-            CostGold = pricing.CostGold,
-            CostDiamond = pricing.CostDiamond
+            SessionId = domainEvent.SessionId,
+            CostGold = domainEvent.CostGold,
+            CostDiamond = domainEvent.CostDiamond
         };
     }
 }

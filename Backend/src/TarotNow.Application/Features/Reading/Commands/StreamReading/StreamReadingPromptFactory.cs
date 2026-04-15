@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using TarotNow.Domain.Entities;
+using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Reading.Commands.StreamReading;
 
@@ -80,12 +80,13 @@ You give highly accurate and deeply personalized readings.
     /// </summary>
     private static string BuildDrawnCardsContext(string? cardsDrawn)
     {
-        var cardIds = JsonSerializer.Deserialize<List<int>>(cardsDrawn ?? "[]") ?? [];
+        var cards = ReadingDrawnCardCodec.Parse(cardsDrawn);
         // Edge case: dữ liệu cardsDrawn trống/null thì fallback danh sách rỗng an toàn.
 
         return string.Join(
             ", ",
-            cardIds.Select((cardId, index) => $"[Position {index + 1}: {ResolveCardName(cardId)}]"));
+            cards.Select(card =>
+                $"[Position {card.Position + 1}: {ResolveCardName(card.CardId)} ({ResolveOrientationLabel(card.Orientation)})]"));
     }
 
     /// <summary>
@@ -97,5 +98,10 @@ You give highly accurate and deeply personalized readings.
         return cardId >= 0 && cardId < CardNames.Length
             ? CardNames[cardId]
             : "Unknown Card";
+    }
+
+    private static string ResolveOrientationLabel(string orientation)
+    {
+        return orientation == CardOrientation.Reversed ? "Reversed" : "Upright";
     }
 }

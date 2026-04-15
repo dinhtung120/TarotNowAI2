@@ -66,17 +66,20 @@ public partial class StreamReadingCommandHandler : IRequestHandler<StreamReading
         var prompts = StreamReadingPromptFactory.Build(session, request.FollowupQuestion, request.Language);
         var stream = _aiProvider.StreamChatAsync(prompts.SystemPrompt, prompts.UserPrompt, cancellationToken);
 
-        await _domainEventPublisher.PublishAsync(
-            new Domain.Events.MoneyChangedDomainEvent
-            {
-                UserId = request.UserId,
-                Currency = Domain.Enums.CurrencyType.Diamond,
-                ChangeType = Domain.Enums.TransactionType.EscrowFreeze,
-                DeltaAmount = -calculatedCost,
-                ReferenceId = aiRequest.Id.ToString()
-            },
-            cancellationToken);
-        // Sau khi freeze escrow, publish event để luồng realtime xử lý cập nhật ví.
+        if (calculatedCost > 0)
+        {
+            await _domainEventPublisher.PublishAsync(
+                new Domain.Events.MoneyChangedDomainEvent
+                {
+                    UserId = request.UserId,
+                    Currency = Domain.Enums.CurrencyType.Diamond,
+                    ChangeType = Domain.Enums.TransactionType.EscrowFreeze,
+                    DeltaAmount = -calculatedCost,
+                    ReferenceId = aiRequest.Id.ToString()
+                },
+                cancellationToken);
+            // Sau khi freeze escrow, publish event để luồng realtime xử lý cập nhật ví.
+        }
 
         return new StreamReadingResult
         {

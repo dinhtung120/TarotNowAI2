@@ -3,6 +3,7 @@
 using MongoDB.Driver;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
+using TarotNow.Domain.Enums;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
@@ -29,16 +30,22 @@ public partial class MongoUserCollectionRepository : IUserCollectionRepository
     /// Upsert thẻ bài cho user khi draw/nhận exp.
     /// Luồng xử lý: lấy level trước upsert, chạy pipeline upsert, rồi áp dụng random stats nếu có level tăng.
     /// </summary>
-    public async Task UpsertCardAsync(Guid userId, int cardId, long expToGain, CancellationToken cancellationToken = default)
+    public async Task UpsertCardAsync(
+        Guid userId,
+        int cardId,
+        long expToGain,
+        string orientation = CardOrientation.Upright,
+        CancellationToken cancellationToken = default)
     {
         var now = DateTime.UtcNow;
         var filter = BuildUserCardFilter(userId, cardId);
+        var normalizedOrientation = ReadingDrawnCardCodec.NormalizeOrientation(orientation);
 
         var existingDoc = await _mongoContext.UserCollections.Find(filter).FirstOrDefaultAsync(cancellationToken);
         int docBeforeUpsertLevel = existingDoc?.Level ?? 0;
         // Cần snapshot level trước để xác định chính xác số cấp vừa tăng sau upsert.
 
-        var update = BuildUpsertUpdate(userId, cardId, expToGain, now);
+        var update = BuildUpsertUpdate(userId, cardId, expToGain, normalizedOrientation, now);
 
         var (updateResult, newDoc) = await UpsertAndGetDocAsync(filter, update, cancellationToken);
         if (updateResult.IsAcknowledged && newDoc != null && newDoc.Level > docBeforeUpsertLevel)
