@@ -66,7 +66,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   return unauthorizedResponse();
  }
 
- const session = await getServerSessionSnapshot({ allowRefresh: false });
+ let session: Awaited<ReturnType<typeof getServerSessionSnapshot>>;
+ try {
+  session = await getServerSessionSnapshot({ allowRefresh: false });
+ } catch {
+  return NextResponse.json(
+   {
+    success: false,
+    authenticated: false,
+    error: AUTH_ERROR.TEMPORARY_FAILURE,
+   } satisfies SessionResponsePayload,
+   { status: 503 },
+  );
+ }
  if (session.authenticated && session.user) {
   return NextResponse.json(
    {
@@ -82,7 +94,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   return unauthorizedResponse(true);
  }
 
- const refreshResponse = await refreshSessionViaInternalRoute(request);
+ let refreshResponse: Response;
+ try {
+  refreshResponse = await refreshSessionViaInternalRoute(request);
+ } catch {
+  return NextResponse.json(
+   {
+    success: false,
+    authenticated: false,
+    error: AUTH_ERROR.TEMPORARY_FAILURE,
+   } satisfies SessionResponsePayload,
+   { status: 503 },
+  );
+ }
  if (!refreshResponse.ok) {
   const error = await resolveAuthError(refreshResponse);
   if (refreshResponse.status === 401

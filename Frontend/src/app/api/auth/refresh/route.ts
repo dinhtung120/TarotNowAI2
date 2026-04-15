@@ -32,17 +32,25 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  const idempotencyKey = request.headers.get(AUTH_HEADER.IDEMPOTENCY_KEY) ?? crypto.randomUUID();
  const deviceId = resolveDeviceIdFromRequest(request);
 
-  const result = await serverHttpRequest<AuthResponse>('/auth/refresh', {
-  method: 'POST',
-  headers: {
-   Cookie: `${AUTH_COOKIE.REFRESH}=${refreshToken}`,
-   [AUTH_HEADER.IDEMPOTENCY_KEY]: idempotencyKey,
-   [AUTH_HEADER.DEVICE_ID]: deviceId,
-   [AUTH_HEADER.FORWARDED_USER_AGENT]: request.headers.get('user-agent') ?? '',
-  },
-  cache: 'no-store',
-  fallbackErrorMessage: AUTH_ERROR.UNAUTHORIZED,
- });
+ let result: Awaited<ReturnType<typeof serverHttpRequest<AuthResponse>>>;
+ try {
+  result = await serverHttpRequest<AuthResponse>('/auth/refresh', {
+   method: 'POST',
+   headers: {
+    Cookie: `${AUTH_COOKIE.REFRESH}=${refreshToken}`,
+    [AUTH_HEADER.IDEMPOTENCY_KEY]: idempotencyKey,
+    [AUTH_HEADER.DEVICE_ID]: deviceId,
+    [AUTH_HEADER.FORWARDED_USER_AGENT]: request.headers.get('user-agent') ?? '',
+   },
+   cache: 'no-store',
+   fallbackErrorMessage: AUTH_ERROR.UNAUTHORIZED,
+  });
+ } catch {
+  return NextResponse.json(
+   { success: false, error: AUTH_ERROR.TEMPORARY_FAILURE },
+   { status: 503 },
+  );
+ }
 
  if (!result.ok) {
   if (shouldClearCookiesForRefreshFailure(result.status, result.error)) {

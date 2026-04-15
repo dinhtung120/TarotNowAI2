@@ -375,6 +375,13 @@ export default async function proxy(request: NextRequest) {
   const isProtectedRoute = PROTECTED_PREFIXES.some((p) => matchesPrefix(pathWithoutLocale, p));
   const accessToken = isProtectedRoute ? request.cookies.get(AUTH_COOKIE.ACCESS)?.value : undefined;
   const refreshToken = isProtectedRoute ? request.cookies.get(AUTH_COOKIE.REFRESH)?.value : undefined;
+  const intlResponseWithOptionalCsp = (): NextResponse => {
+    const response = intlMiddleware(request);
+    if (isDocumentRequest(request)) {
+      return withResponseCsp(response);
+    }
+    return response;
+  };
 
   if (isProtectedRoute && !accessToken && !refreshToken) {
     const loginUrl = new URL(`/${locale}/login`, request.url);
@@ -384,7 +391,12 @@ export default async function proxy(request: NextRequest) {
   }
 
   if (isProtectedRoute && shouldAttemptRefresh(accessToken, refreshToken)) {
-    const refreshResponse = await refreshSessionViaInternalRoute(request);
+    let refreshResponse: Response;
+    try {
+      refreshResponse = await refreshSessionViaInternalRoute(request);
+    } catch {
+      return intlResponseWithOptionalCsp();
+    }
     if (!refreshResponse.ok) {
       if (await isTerminalAuthFailure(refreshResponse)) {
         const loginUrl = new URL(`/${locale}/login`, request.url);
@@ -393,12 +405,7 @@ export default async function proxy(request: NextRequest) {
         return withResponseCsp(response);
       }
 
-      const response = intlMiddleware(request);
-      if (isDocumentRequest(request)) {
-        return withResponseCsp(response);
-      }
-
-      return response;
+      return intlResponseWithOptionalCsp();
     }
 
     const response = intlMiddleware(request);
@@ -411,7 +418,12 @@ export default async function proxy(request: NextRequest) {
   }
 
   if (isProtectedRoute && accessToken && isDocumentRequest(request)) {
-    const sessionResponse = await validateSessionViaInternalRoute(request);
+    let sessionResponse: Response;
+    try {
+      sessionResponse = await validateSessionViaInternalRoute(request);
+    } catch {
+      return intlResponseWithOptionalCsp();
+    }
     if (!sessionResponse.ok) {
       if (await isTerminalAuthFailure(sessionResponse)) {
         const loginUrl = new URL(`/${locale}/login`, request.url);
@@ -420,12 +432,7 @@ export default async function proxy(request: NextRequest) {
         return withResponseCsp(response);
       }
 
-      const response = intlMiddleware(request);
-      if (isDocumentRequest(request)) {
-        return withResponseCsp(response);
-      }
-
-      return response;
+      return intlResponseWithOptionalCsp();
     }
 
     const response = intlMiddleware(request);
