@@ -198,7 +198,7 @@ namespace TarotNow.Infrastructure.Migrations
 
                     b.HasIndex("UserId", "DeviceId")
                         .IsUnique()
-                        .HasDatabaseName("ix_auth_sessions_user_id_device_id")
+                        .HasDatabaseName("ix_auth_sessions_user_id_device_id_active")
                         .HasFilter("\"revoked_at_utc\" IS NULL");
 
                     b.ToTable("auth_sessions", (string)null);

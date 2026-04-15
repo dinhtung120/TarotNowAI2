@@ -33,5 +33,5 @@ public sealed class AuthSecurityOptions
     /// <summary>
     /// Bật fail-closed cho refresh rotation khi Redis không sẵn sàng.
     /// </summary>
-    public bool RequireRedisForRefreshConsistency { get; set; } = false;
+    public bool RequireRedisForRefreshConsistency { get; set; } = true;
 }

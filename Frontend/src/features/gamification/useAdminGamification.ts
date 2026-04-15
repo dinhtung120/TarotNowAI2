@@ -3,6 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { getApiBaseUrl } from '@/shared/infrastructure/http/apiUrl';
+import { parseApiError } from '@/shared/infrastructure/error/parseApiError';
 import type { QuestDefinition, AchievementDefinition, TitleDefinition } from './gamification.types';
 
 
@@ -19,8 +20,8 @@ async function adminFetch(path: string, options: RequestInit = {}) {
   });
 
   if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: 'Admin API error' }));
-    throw new Error(error.message || 'Error occurred');
+    const error = await parseApiError(res, 'Admin API error');
+    throw new Error(error);
   }
 
   return res.json().catch(() => null);

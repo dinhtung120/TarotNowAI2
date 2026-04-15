@@ -38,6 +38,7 @@ public static partial class ApiServiceCollectionExtensions
         // Nâng cao giới hạn (100 req/phút) để tránh chặn nhầm khi Load Profile/Navbar/Wallet đồng thời.
         AddFixedWindowPolicy(options, "auth-session", ResolveAuthenticatedPartitionKey, permitLimit: 100, TimeSpan.FromMinutes(1));
         AddFixedWindowPolicy(options, "auth-refresh", ResolveRefreshPartitionKey, permitLimit: 30, TimeSpan.FromMinutes(1));
+        AddFixedWindowPolicy(options, "auth-refresh-token-family", ResolveRefreshFamilyKey, permitLimit: 10, TimeSpan.FromMinutes(1));
         AddFixedWindowPolicy(options, "auth-logout", ResolveRefreshPartitionKey, permitLimit: 30, TimeSpan.FromMinutes(1));
         // Rule bảo vệ endpoint ghi community khỏi spam nội dung.
         // Tăng lên 60 req/phút để hỗ trợ upload nhiều ảnh hoặc tương tác nhanh.
@@ -126,10 +127,21 @@ public static partial class ApiServiceCollectionExtensions
 
     /// <summary>
     /// Resolve partition key cho refresh theo thứ tự ưu tiên:
-    /// x-device-id -> device cookie -> refresh token fingerprint -> IP.
+    /// refresh token fingerprint -> user claim -> device -> IP.
     /// </summary>
     private static string ResolveRefreshPartitionKey(HttpContext httpContext)
     {
+        if (TryResolveRefreshTokenPartition(httpContext, out var refreshTokenPartition))
+        {
+            return refreshTokenPartition;
+        }
+
+        var authenticatedPartition = ResolveAuthenticatedPartitionOrDefault(httpContext);
+        if (!string.IsNullOrWhiteSpace(authenticatedPartition))
+        {
+            return authenticatedPartition;
+        }
+
         var deviceId = httpContext.Request.Headers[AuthHeaders.DeviceId].ToString();
         if (string.IsNullOrWhiteSpace(deviceId)
             && httpContext.Request.Cookies.TryGetValue(AuthCookieNames.DeviceId, out var deviceCookie))
@@ -142,13 +154,62 @@ public static partial class ApiServiceCollectionExtensions
             return $"refresh-device:{HashPrefix(deviceId, 24)}";
         }
 
-        if (httpContext.Request.Cookies.TryGetValue(AuthCookieNames.RefreshToken, out var refreshToken)
-            && !string.IsNullOrWhiteSpace(refreshToken))
+        return $"ip:{ResolveClientIp(httpContext)}";
+    }
+
+    /// <summary>
+    /// Resolve partition key theo token-family proxy (token fingerprint trước, fallback user/device/ip).
+    /// </summary>
+    private static string ResolveRefreshFamilyKey(HttpContext httpContext)
+    {
+        if (TryResolveRefreshTokenPartition(httpContext, out var refreshTokenPartition))
         {
-            return $"refresh-token:{HashPrefix(refreshToken, 16)}";
+            return $"refresh-family:{refreshTokenPartition}";
         }
 
-        return $"ip:{ResolveClientIp(httpContext)}";
+        var authenticatedPartition = ResolveAuthenticatedPartitionOrDefault(httpContext);
+        if (!string.IsNullOrWhiteSpace(authenticatedPartition))
+        {
+            return $"refresh-family:{authenticatedPartition}";
+        }
+
+        var deviceId = httpContext.Request.Headers[AuthHeaders.DeviceId].ToString();
+        if (string.IsNullOrWhiteSpace(deviceId)
+            && httpContext.Request.Cookies.TryGetValue(AuthCookieNames.DeviceId, out var deviceCookie))
+        {
+            deviceId = deviceCookie;
+        }
+
+        if (!string.IsNullOrWhiteSpace(deviceId))
+        {
+            return $"refresh-family:device:{HashPrefix(deviceId, 24)}";
+        }
+
+        return $"refresh-family:ip:{ResolveClientIp(httpContext)}";
+    }
+
+    private static bool TryResolveRefreshTokenPartition(HttpContext httpContext, out string partition)
+    {
+        partition = string.Empty;
+        if (!httpContext.Request.Cookies.TryGetValue(AuthCookieNames.RefreshToken, out var refreshToken)
+            || string.IsNullOrWhiteSpace(refreshToken))
+        {
+            return false;
+        }
+
+        partition = $"refresh-token:{HashPrefix(refreshToken, 16)}";
+        return true;
+    }
+
+    private static string? ResolveAuthenticatedPartitionOrDefault(HttpContext httpContext)
+    {
+        var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return null;
+        }
+
+        return $"user:{userId}";
     }
 
     private static string HashPrefix(string raw, int length)

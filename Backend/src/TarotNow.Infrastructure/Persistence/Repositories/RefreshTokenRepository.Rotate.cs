@@ -52,13 +52,13 @@ public sealed partial class RefreshTokenRepository
 
         try
         {
-            return await RotateWithTransactionAsync(
+            var transactionContext = new RotateTransactionContext(
                 request,
                 normalizedToken,
                 tokenHash,
                 normalizedIdempotencyKey,
-                tokenIdempotencyCacheKey,
-                cancellationToken);
+                tokenIdempotencyCacheKey);
+            return await RotateWithTransactionAsync(transactionContext, cancellationToken);
         }
         finally
         {
@@ -79,11 +79,7 @@ public sealed partial class RefreshTokenRepository
     }
 
     private async Task<RefreshRotateResult> RotateWithTransactionAsync(
-        RefreshRotateRequest request,
-        string normalizedToken,
-        string tokenHash,
-        string normalizedIdempotencyKey,
-        string tokenIdempotencyCacheKey,
+        RotateTransactionContext context,
         CancellationToken cancellationToken)
     {
         IDbContextTransaction? localTransaction = null;
@@ -95,19 +91,19 @@ public sealed partial class RefreshTokenRepository
 
         try
         {
-            var current = await LoadForUpdateAsync(normalizedToken, tokenHash, cancellationToken);
+            var current = await LoadForUpdateAsync(context.NormalizedToken, context.TokenHash, cancellationToken);
             if (current is null)
             {
                 return await FinalizeResultAsync(localTransaction, RefreshRotateResult.Invalid(), cancellationToken);
             }
 
-            var idempotencyKey = normalizedIdempotencyKey;
+            var idempotencyKey = context.NormalizedIdempotencyKey;
             var idemCacheKey = BuildRefreshIdempotencyKey(current.SessionId, idempotencyKey);
             var earlyExit = await TryBuildEarlyExitResultAsync(
                 current,
                 idempotencyKey,
                 idemCacheKey,
-                tokenIdempotencyCacheKey,
+                context.TokenIdempotencyCacheKey,
                 cancellationToken);
 
             if (earlyExit is not null)
@@ -116,11 +112,11 @@ public sealed partial class RefreshTokenRepository
             }
 
             var persistContext = new RotatePersistContext(
-                request,
+                context.Request,
                 current,
                 idempotencyKey,
                 idemCacheKey,
-                tokenIdempotencyCacheKey);
+                context.TokenIdempotencyCacheKey);
             return await RotateAndPersistAsync(persistContext, localTransaction, cancellationToken);
         }
         finally
@@ -188,4 +184,11 @@ public sealed partial class RefreshTokenRepository
 
         return result;
     }
+
+    private readonly record struct RotateTransactionContext(
+        RefreshRotateRequest Request,
+        string NormalizedToken,
+        string TokenHash,
+        string NormalizedIdempotencyKey,
+        string TokenIdempotencyCacheKey);
 }

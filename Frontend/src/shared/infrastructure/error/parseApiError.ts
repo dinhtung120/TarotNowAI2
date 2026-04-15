@@ -25,19 +25,19 @@ export async function parseApiError(
   response: Response,
   fallbackMessage = `Request failed (${response.status})`
 ): Promise<string> {
+  try {
+    const data = (await response.clone().json()) as unknown;
+    const payloadMessage = pickErrorMessage(data);
+    if (payloadMessage) return payloadMessage;
+  } catch {
+  }
+
   if (response.status === 401) {
     return AUTH_ERROR.UNAUTHORIZED;
   }
 
   if (response.status === 429) {
     return AUTH_ERROR.RATE_LIMITED;
-  }
-
-  try {
-    const data = (await response.clone().json()) as unknown;
-    const message = pickErrorMessage(data);
-    if (message) return message;
-  } catch {
   }
 
   try {

@@ -4,9 +4,22 @@ import { AUTH_HEADER } from '@/shared/infrastructure/auth/authConstants';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { clearAuthCookies, resolveDeviceIdFromRequest } from '@/app/api/auth/_shared';
 
+interface LogoutPayload {
+ revokeAll?: boolean;
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
- const deviceId = resolveDeviceIdFromRequest(request);
- const result = await serverHttpRequest<Record<string, unknown>>('/auth/logout', {
+ let payload: LogoutPayload = {};
+ try {
+  payload = (await request.json()) as LogoutPayload;
+ } catch {
+ payload = {};
+}
+
+const revokeAll = payload.revokeAll === true;
+ const logoutPath = revokeAll ? '/auth/logout?revokeAll=true' : '/auth/logout';
+const deviceId = resolveDeviceIdFromRequest(request);
+ const result = await serverHttpRequest<Record<string, unknown>>(logoutPath, {
   method: 'POST',
   headers: {
    Cookie: request.headers.get('cookie') ?? '',

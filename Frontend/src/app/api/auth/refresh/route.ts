@@ -4,6 +4,7 @@ import { AUTH_COOKIE, AUTH_HEADER } from '@/shared/infrastructure/auth/authConst
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import {
+ clearAuthCookies,
  resolveAccessTtlSeconds,
  resolveDeviceIdFromRequest,
  setAccessCookie,
@@ -45,7 +46,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
  if (!result.ok) {
   if (shouldClearCookiesForRefreshFailure(result.status, result.error)) {
-   return unauthorizedResponse(true);
+   const response = NextResponse.json(
+    { success: false, error: result.error || AUTH_ERROR.UNAUTHORIZED },
+    { status: 401 },
+   );
+   clearAuthCookies(response);
+   return response;
   }
 
   return NextResponse.json(

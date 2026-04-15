@@ -138,14 +138,11 @@ public static partial class DependencyInjection
         }
 
         var cacheService = context.HttpContext.RequestServices.GetService<ICacheService>();
-        if (cacheService is null)
-        {
-            return;
-        }
+        var authSessionRepository = context.HttpContext.RequestServices.GetService<IAuthSessionRepository>();
 
         var cancellationToken = context.HttpContext.RequestAborted;
         var jti = principal.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
-        if (HasToken(jti))
+        if (cacheService is not null && HasToken(jti))
         {
             var isBlacklisted = await cacheService.GetAsync<string>($"auth:access-blacklist:{jti!.Trim()}", cancellationToken);
             if (isBlacklisted is not null)
@@ -161,8 +158,23 @@ public static partial class DependencyInjection
             return;
         }
 
-        var isRevokedSession = await cacheService.GetAsync<string>($"auth:session-revoked:{sessionId}", cancellationToken);
-        if (isRevokedSession is not null)
+        if (cacheService is not null)
+        {
+            var isRevokedSession = await cacheService.GetAsync<string>($"auth:session-revoked:{sessionId}", cancellationToken);
+            if (isRevokedSession is not null)
+            {
+                context.Fail("Session has been revoked.");
+                return;
+            }
+        }
+
+        if (authSessionRepository is null)
+        {
+            return;
+        }
+
+        var activeSession = await authSessionRepository.GetActiveAsync(sessionId, cancellationToken);
+        if (activeSession is null)
         {
             context.Fail("Session has been revoked.");
         }

@@ -1,12 +1,5 @@
-
-
 using MediatR;
-using TarotNow.Application.Common.Constants;
-using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
-using TarotNow.Domain.Entities;
-using TarotNow.Domain.Enums;
-using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Auth.Commands.Login;
 
@@ -49,59 +42,8 @@ public partial class LoginCommandHandler : IRequestHandler<LoginCommand, LoginRe
     /// </summary>
     public async Task<LoginResult> Handle(LoginCommand request, CancellationToken cancellationToken)
     {
-        var user = await GetUserByIdentityAsync(request.EmailOrUsername, cancellationToken);
-        if (user == null || !_passwordHasher.VerifyPassword(user.PasswordHash, request.Password))
-        {
-            await _domainEventPublisher.PublishAsync(
-                BuildLoginFailedEvent(request, AuthErrorCodes.Unauthorized),
-                cancellationToken);
-            throw new BusinessRuleException(AuthErrorCodes.Unauthorized, "Invalid email/username or password.");
-        }
-
-        try
-        {
-            EnsureUserCanLogin(user);
-        }
-        catch (BusinessRuleException ex)
-        {
-            await _domainEventPublisher.PublishAsync(
-                BuildLoginFailedEvent(request, ex.ErrorCode),
-                cancellationToken);
-            throw;
-        }
-        // Nâng cấp hash mật khẩu ngầm khi thuật toán/hash parameters đã thay đổi.
-        await RehashPasswordIfNeededAsync(user, request.Password, cancellationToken);
-
-        var ipHash = HashIpAddress(request.ClientIpAddress);
-        var session = await _authSessionRepository.CreateAsync(
-            user.Id,
-            request.DeviceId,
-            request.UserAgentHash,
-            ipHash,
-            cancellationToken);
-
-        var accessToken = _tokenService.GenerateAccessToken(user, session.Id, out _, out var accessTokenJti);
-        // Tạo refresh token mới gắn với IP client để phục vụ vòng đời phiên.
-        var issuedRefreshToken = await CreateRefreshTokenAsync(user, session.Id, request, cancellationToken);
-        var response = BuildAuthResponse(user, accessToken);
-
-        await _domainEventPublisher.PublishAsync(
-            new UserLoggedInDomainEvent
-            {
-                UserId = user.Id,
-                SessionId = session.Id,
-                DeviceId = request.DeviceId,
-                UserAgentHash = request.UserAgentHash,
-                IpHash = ipHash,
-                AccessTokenJti = accessTokenJti
-            },
-            cancellationToken);
-
-        return new LoginResult
-        {
-            Response = response,
-            RefreshToken = issuedRefreshToken.RawToken,
-            RefreshTokenExpiresAtUtc = issuedRefreshToken.ExpiresAtUtc
-        };
+        var user = await ValidateCredentialsAsync(request, cancellationToken);
+        var sessionContext = await CreateSessionContextAsync(user, request, cancellationToken);
+        return await IssueLoginResultAsync(user, request, sessionContext, cancellationToken);
     }
 }

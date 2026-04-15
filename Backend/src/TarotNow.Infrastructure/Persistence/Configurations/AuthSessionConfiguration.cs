@@ -39,6 +39,7 @@ public sealed class AuthSessionConfiguration : IEntityTypeConfiguration<AuthSess
 
         builder.HasIndex(x => x.UserId);
         builder.HasIndex(x => new { x.UserId, x.DeviceId })
+            .HasDatabaseName("ix_auth_sessions_user_id_device_id_active")
             .HasFilter("\"revoked_at_utc\" IS NULL")
             .IsUnique();
         builder.HasIndex(x => x.RevokedAtUtc);

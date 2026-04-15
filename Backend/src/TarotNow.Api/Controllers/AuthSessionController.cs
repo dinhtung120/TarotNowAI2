@@ -17,6 +17,7 @@ namespace TarotNow.Api.Controllers;
 [Route(ApiRoutes.Auth)]
 public sealed class AuthSessionController : ControllerBase
 {
+    private const string LogoutSuccessMessage = "Logged out successfully.";
     private readonly IMediator _mediator;
     private readonly IAuthCookieService _authCookieService;
 
@@ -54,7 +55,7 @@ public sealed class AuthSessionController : ControllerBase
     /// Refresh access token từ refresh token cookie.
     /// </summary>
     [HttpPost("refresh")]
-    [EnableRateLimiting("auth-refresh")]
+    [EnableRateLimiting("auth-refresh-token-family")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AuthResponse))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> RefreshTokens(
@@ -113,15 +114,12 @@ public sealed class AuthSessionController : ControllerBase
         else if (string.IsNullOrWhiteSpace(command.Token))
         {
             _authCookieService.ClearAuthCookies(Request, Response);
-            return Problem(
-                statusCode: StatusCodes.Status400BadRequest,
-                title: "Missing refresh token",
-                detail: "No refresh token provided.");
+            return this.UnauthorizedProblem("Missing refresh token.");
         }
 
         await _mediator.Send(command, cancellationToken);
         _authCookieService.ClearAuthCookies(Request, Response);
-        return Ok(new { message = "Logged out successfully." });
+        return Ok(new { success = true, message = LogoutSuccessMessage });
     }
 
     private static string ResolveDeviceId(HttpRequest request)

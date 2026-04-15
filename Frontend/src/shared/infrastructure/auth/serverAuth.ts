@@ -1,6 +1,6 @@
-import { cookies } from 'next/headers';
-import type { UserProfile } from '@/features/auth/domain/types';
-import { AUTH_COOKIE, AUTH_SESSION } from '@/shared/infrastructure/auth/authConstants';
+import { cookies, headers } from 'next/headers';
+import type { AuthResponse, UserProfile } from '@/features/auth/domain/types';
+import { AUTH_COOKIE, AUTH_HEADER, AUTH_SESSION } from '@/shared/infrastructure/auth/authConstants';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 
@@ -22,7 +22,7 @@ function parseJwtExp(token: string | undefined): number | undefined {
  }
 }
 
-function isExpired(token: string | undefined): boolean {
+function isExpiringSoon(token: string | undefined): boolean {
  const exp = parseJwtExp(token);
  if (!exp) {
   return true;
@@ -32,18 +32,85 @@ function isExpired(token: string | undefined): boolean {
  return exp <= now + Math.max(0, AUTH_SESSION.ACCESS_REFRESH_THRESHOLD_SECONDS);
 }
 
-export async function getServerAccessToken(): Promise<string | undefined> {
+async function getValidAccessTokenFromCookie(): Promise<string | undefined> {
  const cookieStore = await cookies();
  const accessToken = cookieStore.get(AUTH_COOKIE.ACCESS)?.value;
- if (!accessToken) {
+ if (!accessToken || isExpiringSoon(accessToken)) {
   return undefined;
  }
 
- return isExpired(accessToken) ? undefined : accessToken;
+ return accessToken;
 }
 
-export async function getServerAccessTokenOrRefresh(): Promise<string | undefined> {
- return getServerAccessToken();
+function normalizeHeaderValue(value: string | null | undefined): string {
+ if (!value) {
+  return '';
+ }
+
+ const trimmed = value.trim();
+ return trimmed.length > 0 ? trimmed : '';
+}
+
+async function refreshServerAccessToken(
+ refreshToken: string,
+ deviceId: string,
+ userAgent: string,
+): Promise<string | undefined> {
+ const result = await serverHttpRequest<AuthResponse>('/auth/refresh', {
+  method: 'POST',
+  headers: {
+   Cookie: `${AUTH_COOKIE.REFRESH}=${refreshToken}`,
+   [AUTH_HEADER.IDEMPOTENCY_KEY]: crypto.randomUUID(),
+   [AUTH_HEADER.DEVICE_ID]: deviceId,
+   [AUTH_HEADER.FORWARDED_USER_AGENT]: userAgent,
+  },
+  cache: 'no-store',
+  fallbackErrorMessage: AUTH_ERROR.UNAUTHORIZED,
+ });
+ if (!result.ok) {
+  return undefined;
+ }
+
+ const nextAccessToken = result.data.accessToken;
+ if (!nextAccessToken || isExpiringSoon(nextAccessToken)) {
+  return undefined;
+ }
+
+ return nextAccessToken;
+}
+
+interface ServerAuthTokenOptions {
+ allowRefresh?: boolean;
+}
+
+export async function getServerAccessTokenOrRefresh(
+ options: ServerAuthTokenOptions = {},
+): Promise<string | undefined> {
+ const accessToken = await getValidAccessTokenFromCookie();
+ if (accessToken) {
+  return accessToken;
+ }
+
+ if (options.allowRefresh === false) {
+  return undefined;
+ }
+
+ const cookieStore = await cookies();
+ const refreshToken = cookieStore.get(AUTH_COOKIE.REFRESH)?.value;
+ if (!refreshToken) {
+  return undefined;
+ }
+
+ const headerStore = await headers();
+ const forwardedDeviceId = normalizeHeaderValue(headerStore.get(AUTH_HEADER.DEVICE_ID));
+ const cookieDeviceId = normalizeHeaderValue(cookieStore.get(AUTH_COOKIE.DEVICE)?.value);
+ const resolvedDeviceId = cookieDeviceId || forwardedDeviceId || 'server-auth';
+ const userAgent = normalizeHeaderValue(headerStore.get('user-agent'));
+ return refreshServerAccessToken(refreshToken, resolvedDeviceId, userAgent);
+}
+
+export async function getServerAccessToken(): Promise<string | undefined> {
+ return getServerAccessTokenOrRefresh();
 }
 
 export interface ServerSessionSnapshot {
@@ -51,8 +118,14 @@ export interface ServerSessionSnapshot {
  user: UserProfile | null;
 }
 
-export async function getServerSessionSnapshot(): Promise<ServerSessionSnapshot> {
- const accessToken = await getServerAccessToken();
+interface ServerSessionOptions {
+ allowRefresh?: boolean;
+}
+
+export async function getServerSessionSnapshot(
+ options: ServerSessionOptions = {},
+): Promise<ServerSessionSnapshot> {
+ const accessToken = await getServerAccessTokenOrRefresh(options);
  if (!accessToken) {
   return { authenticated: false, user: null };
  }

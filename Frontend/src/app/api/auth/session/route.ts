@@ -66,7 +66,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   return unauthorizedResponse();
  }
 
- const session = await getServerSessionSnapshot();
+ const session = await getServerSessionSnapshot({ allowRefresh: false });
  if (session.authenticated && session.user) {
   return NextResponse.json(
    {

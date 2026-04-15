@@ -25,7 +25,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  try {
   payload = (await request.json()) as LoginRequestBody;
  } catch {
-  return NextResponse.json({ success: false, error: 'Invalid login payload.' }, { status: 400 });
+  return NextResponse.json({ success: false, error: AUTH_ERROR.TEMPORARY_FAILURE }, { status: 400 });
  }
 
   const result = await serverHttpRequest<AuthResponse>('/auth/login', {

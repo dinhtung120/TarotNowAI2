@@ -376,7 +376,7 @@ export default async function proxy(request: NextRequest) {
   const accessToken = isProtectedRoute ? request.cookies.get(AUTH_COOKIE.ACCESS)?.value : undefined;
   const refreshToken = isProtectedRoute ? request.cookies.get(AUTH_COOKIE.REFRESH)?.value : undefined;
 
-  if (isProtectedRoute && !refreshToken) {
+  if (isProtectedRoute && !accessToken && !refreshToken) {
     const loginUrl = new URL(`/${locale}/login`, request.url);
     const response = NextResponse.redirect(loginUrl);
     clearAuthCookies(response);
@@ -410,7 +410,7 @@ export default async function proxy(request: NextRequest) {
     return response;
   }
 
-  if (isProtectedRoute && accessToken) {
+  if (isProtectedRoute && accessToken && isDocumentRequest(request)) {
     const sessionResponse = await validateSessionViaInternalRoute(request);
     if (!sessionResponse.ok) {
       if (await isTerminalAuthFailure(sessionResponse)) {

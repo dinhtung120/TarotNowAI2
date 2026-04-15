@@ -10,6 +10,86 @@ namespace TarotNow.Application.Features.Auth.Commands.Login;
 
 public partial class LoginCommandHandler
 {
+    private async Task<User> ValidateCredentialsAsync(
+        LoginCommand request,
+        CancellationToken cancellationToken)
+    {
+        var user = await GetUserByIdentityAsync(request.EmailOrUsername, cancellationToken);
+        if (user == null || !_passwordHasher.VerifyPassword(user.PasswordHash, request.Password))
+        {
+            await _domainEventPublisher.PublishAsync(
+                BuildLoginFailedEvent(request, AuthErrorCodes.Unauthorized),
+                cancellationToken);
+            throw new BusinessRuleException(AuthErrorCodes.Unauthorized, "Invalid email/username or password.");
+        }
+
+        try
+        {
+            EnsureUserCanLogin(user);
+        }
+        catch (BusinessRuleException ex)
+        {
+            await _domainEventPublisher.PublishAsync(
+                BuildLoginFailedEvent(request, ex.ErrorCode),
+                cancellationToken);
+            throw;
+        }
+
+        await RehashPasswordIfNeededAsync(user, request.Password, cancellationToken);
+        return user;
+    }
+
+    private async Task<LoginSessionContext> CreateSessionContextAsync(
+        User user,
+        LoginCommand command,
+        CancellationToken cancellationToken)
+    {
+        var ipHash = HashIpAddress(command.ClientIpAddress);
+        var session = await _authSessionRepository.CreateAsync(
+            user.Id,
+            command.DeviceId,
+            command.UserAgentHash,
+            ipHash,
+            cancellationToken);
+
+        await _refreshTokenRepository.RevokeSessionAsync(
+            session.Id,
+            RefreshRevocationReasons.ManualRevoke,
+            cancellationToken);
+
+        return new LoginSessionContext(session.Id, ipHash);
+    }
+
+    private async Task<LoginResult> IssueLoginResultAsync(
+        User user,
+        LoginCommand request,
+        LoginSessionContext sessionContext,
+        CancellationToken cancellationToken)
+    {
+        var accessToken = _tokenService.GenerateAccessToken(user, sessionContext.SessionId, out _, out var accessTokenJti);
+        var issuedRefreshToken = await CreateRefreshTokenAsync(user, sessionContext.SessionId, request, cancellationToken);
+        var response = BuildAuthResponse(user, accessToken);
+
+        await _domainEventPublisher.PublishAsync(
+            new UserLoggedInDomainEvent
+            {
+                UserId = user.Id,
+                SessionId = sessionContext.SessionId,
+                DeviceId = request.DeviceId,
+                UserAgentHash = request.UserAgentHash,
+                IpHash = sessionContext.IpHash,
+                AccessTokenJti = accessTokenJti
+            },
+            cancellationToken);
+
+        return new LoginResult
+        {
+            Response = response,
+            RefreshToken = issuedRefreshToken.RawToken,
+            RefreshTokenExpiresAtUtc = issuedRefreshToken.ExpiresAtUtc
+        };
+    }
+
     /// <summary>
     /// Tìm user theo identity đầu vào (email hoặc username).
     /// Luồng xử lý: phân nhánh theo ký tự '@' để gọi repository tương ứng.
@@ -128,4 +208,5 @@ public partial class LoginCommandHandler
     }
 
     private readonly record struct IssuedRefreshToken(string RawToken, DateTime ExpiresAtUtc);
+    private readonly record struct LoginSessionContext(Guid SessionId, string IpHash);
 }

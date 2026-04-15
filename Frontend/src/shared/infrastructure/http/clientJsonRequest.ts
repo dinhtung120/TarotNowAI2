@@ -25,6 +25,17 @@ interface ClientJsonOptions {
   fallbackErrorMessage: string;
   unauthorizedMessage?: string;
   method?: 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  timeoutMs?: number;
+}
+
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutHandle);
+  }
 }
 
 async function requestJsonToApiV1<TResponse, TRequest extends object>(
@@ -33,6 +44,7 @@ async function requestJsonToApiV1<TResponse, TRequest extends object>(
   options: ClientJsonOptions,
 ): Promise<ClientJsonResult<TResponse>> {
   const url = resolveClientApiUrl(pathFromV1Root);
+  const timeoutMs = Math.max(1_000, options.timeoutMs ?? 15_000);
   const requestInit: RequestInit = {
     method: options.method ?? 'POST',
     credentials: 'include',
@@ -41,7 +53,12 @@ async function requestJsonToApiV1<TResponse, TRequest extends object>(
     },
     body: JSON.stringify(payload),
   };
-  let response = await fetch(url, requestInit);
+  let response: Response;
+  try {
+    response = await fetchWithTimeout(url, requestInit, timeoutMs);
+  } catch {
+    return { ok: false, error: options.fallbackErrorMessage, status: 503 };
+  }
 
   if (response.status === 401) {
     const refreshed = await tryRefreshClientSide();
@@ -53,7 +70,11 @@ async function requestJsonToApiV1<TResponse, TRequest extends object>(
       };
     }
 
-    response = await fetch(url, requestInit);
+    try {
+      response = await fetchWithTimeout(url, requestInit, timeoutMs);
+    } catch {
+      return { ok: false, error: options.fallbackErrorMessage, status: 503 };
+    }
   }
 
   if (!response.ok) {
