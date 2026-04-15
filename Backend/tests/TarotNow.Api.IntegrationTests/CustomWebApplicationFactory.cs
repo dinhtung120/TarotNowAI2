@@ -118,7 +118,9 @@ public class CustomWebApplicationFactory<TProgram>
                 ["ObjectStorage:CleanupIntervalMinutes"] = "10",
                 ["SystemConfig:DailyAiQuota"] = "3",
                 ["SystemConfig:InFlightAiCap"] = "3",
-                ["SystemConfig:ReadingRateLimitSeconds"] = "1"
+                ["SystemConfig:ReadingRateLimitSeconds"] = "1",
+                // Integration tests use EnsureCreated(); skip startup migration guard here.
+                ["Database:RequireUpToDateSchema"] = "false"
             });
         });
 
