@@ -1,4 +1,6 @@
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using TarotNow.Infrastructure.Persistence;
 
 #nullable disable
 
@@ -7,6 +9,8 @@ namespace TarotNow.Infrastructure.Migrations;
 /// <summary>
 /// Backfill auth_sessions cho refresh tokens legacy chưa có session_id để hoàn tất migration zero-downtime.
 /// </summary>
+[DbContext(typeof(ApplicationDbContext))]
+[Migration("20260415020000_BackfillLegacyRefreshTokenSessions")]
 public partial class BackfillLegacyRefreshTokenSessions : Migration
 {
     private const string EmptySessionId = "00000000-0000-0000-0000-000000000000";
@@ -85,4 +89,3 @@ public partial class BackfillLegacyRefreshTokenSessions : Migration
         // Additive migration: không rollback dữ liệu đã backfill để tránh mất liên kết session.
     }
 }
-

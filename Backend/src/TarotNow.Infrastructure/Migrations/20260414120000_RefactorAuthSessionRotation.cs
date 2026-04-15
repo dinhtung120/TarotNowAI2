@@ -1,11 +1,15 @@
 using System;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using TarotNow.Infrastructure.Persistence;
 
 #nullable disable
 
 namespace TarotNow.Infrastructure.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20260414120000_RefactorAuthSessionRotation")]
     public partial class RefactorAuthSessionRotation : Migration
     {
         /// <inheritdoc />

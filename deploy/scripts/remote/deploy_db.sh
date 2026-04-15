@@ -44,6 +44,11 @@ schema_ok="$(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T po
 schema_ok="$(echo "$schema_ok" | tr -d '[:space:]')"
 if [[ "$schema_ok" != "t" ]]; then
   echo "[deploy-db] schema validation failed: table public.auth_sessions is missing" >&2
+  echo "[deploy-db] backend-migrate logs (last 200 lines):" >&2
+  docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" logs --no-color --tail=200 backend-migrate >&2 || true
+  echo "[deploy-db] applied migrations in __ef_migrations_history:" >&2
+  docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T postgres sh -lc \
+    "psql -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -c \"SELECT migration_id FROM __ef_migrations_history ORDER BY migration_id\"" >&2 || true
   exit 1
 fi
 

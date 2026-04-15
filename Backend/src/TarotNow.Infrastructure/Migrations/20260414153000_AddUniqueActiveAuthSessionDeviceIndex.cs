@@ -1,10 +1,14 @@
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using TarotNow.Infrastructure.Persistence;
 
 #nullable disable
 
 namespace TarotNow.Infrastructure.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20260414153000_AddUniqueActiveAuthSessionDeviceIndex")]
     public partial class AddUniqueActiveAuthSessionDeviceIndex : Migration
     {
         /// <inheritdoc />
