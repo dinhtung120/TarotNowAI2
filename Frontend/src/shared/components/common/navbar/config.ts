@@ -1,4 +1,4 @@
-import { Crown, History, Home, ShieldCheck, Sparkles, User, Users, Wallet } from "lucide-react";
+import { History, Home, ShieldCheck, Sparkles, User, Users, Wallet } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface NavbarNavItem {
@@ -20,7 +20,6 @@ export const NAV_LINKS: NavbarNavItem[] = [
  { labelKey: "home", href: "/", icon: Home },
  { labelKey: "readings", href: "/reading", icon: Sparkles },
  { labelKey: "readers", href: "/readers", icon: Users },
- { labelKey: "premium", href: "/premium", icon: Crown },
 ];
 
 export function getAvatarMenuItems(isAdmin: boolean): NavbarNavItem[] {

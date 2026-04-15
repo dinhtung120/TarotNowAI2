@@ -1,7 +1,6 @@
 'use client';
 
 import { useWalletOverviewPage } from '@/features/wallet/application/useWalletOverviewPage';
-import { EntitlementsWidget } from '@/features/wallet/presentation/components/EntitlementsWidget';
 import {
  OverviewHeader,
  WalletBalanceCards,
@@ -32,10 +31,8 @@ export default function WalletOverviewPage() {
      goldLabel: t('overview.gold_label'),
      goldDesc: t('overview.gold_desc'),
      goldNote: t('overview.gold_note'),
-    }}
-   />
-
-   <EntitlementsWidget />
+   }}
+  />
 
    <div className={cn('animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500')}>
     <WalletLedgerToolbar

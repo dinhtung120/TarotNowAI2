@@ -18,7 +18,6 @@ public partial class StreamReadingCommandHandler : IRequestHandler<StreamReading
     private readonly int _dailyAiQuota;
     private readonly int _inFlightAiCap;
     private readonly int _readingRateLimitSeconds;
-    private readonly IEntitlementService _entitlementService;
     private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
@@ -33,7 +32,6 @@ public partial class StreamReadingCommandHandler : IRequestHandler<StreamReading
         ICacheService cacheService,
         FollowupPricingService pricingService,
         ISystemConfigSettings systemConfigSettings,
-        IEntitlementService entitlementService,
         IDomainEventPublisher domainEventPublisher)
     {
         _readingRepo = readingRepo;
@@ -45,7 +43,6 @@ public partial class StreamReadingCommandHandler : IRequestHandler<StreamReading
         _dailyAiQuota = systemConfigSettings.DailyAiQuota;
         _inFlightAiCap = systemConfigSettings.InFlightAiCap;
         _readingRateLimitSeconds = systemConfigSettings.ReadingRateLimitSeconds;
-        _entitlementService = entitlementService;
         _domainEventPublisher = domainEventPublisher;
     }
 

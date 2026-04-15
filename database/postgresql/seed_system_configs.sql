@@ -69,11 +69,6 @@ ON CONFLICT (key) DO NOTHING;
 
 
 INSERT INTO system_configs (key, value, description)
-VALUES ('ai_daily_quota_premium', '10', 'Quota AI reading/ngày cho user Premium. Mặc định 10.')
-ON CONFLICT (key) DO NOTHING;
-
-
-INSERT INTO system_configs (key, value, description)
 VALUES ('reading_cost_daily_1_gold', '0', 'Chi phí Gold cho bài 1 lá hàng ngày. Mặc định 0 (miễn phí).')
 ON CONFLICT (key) DO NOTHING;
 
@@ -156,6 +151,5 @@ ON CONFLICT (key) DO NOTHING;
 INSERT INTO system_configs (key, value, description)
 VALUES ('streak_freeze_enabled', 'true', 'Cho phép mua Streak Freeze. Mặc định true.')
 ON CONFLICT (key) DO NOTHING;
-
 
 

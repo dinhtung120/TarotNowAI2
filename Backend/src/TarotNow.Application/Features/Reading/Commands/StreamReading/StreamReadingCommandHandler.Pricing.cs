@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TarotNow.Application.Exceptions;
-using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 
@@ -12,7 +11,7 @@ public partial class StreamReadingCommandHandler
 {
     /// <summary>
     /// Tính chi phí cho lần stream hiện tại.
-    /// Luồng xử lý: initial reading miễn phí, follow-up tính theo pricing service, sau đó thử consume entitlement miễn phí ngày.
+    /// Luồng xử lý: initial reading miễn phí, follow-up tính theo pricing service.
     /// </summary>
     private async Task<long> CalculateCostAsync(
         StreamReadingCommand request,
@@ -39,25 +38,6 @@ public partial class StreamReadingCommandHandler
         {
             // Quy đổi lỗi tính phí thành BadRequest để trả thông điệp nghiệp vụ nhất quán cho client.
             throw new BadRequestException(ex.Message);
-        }
-
-        if (cost > 0)
-        {
-            var consumeResult = await _entitlementService.ConsumeAsync(
-                new EntitlementConsumeRequest(
-                    request.UserId,
-                    EntitlementKey.FreeAiStreamDaily,
-                    "StreamReadingFollowup",
-                    session.Id,
-                    $"ai_stream_ent_{request.UserId:N}_{session.Id}_{followUpCount + 1}"),
-                cancellationToken);
-            // Thử dùng quyền miễn phí hằng ngày trước khi trừ ví để tối ưu trải nghiệm người dùng.
-
-            if (consumeResult.Success)
-            {
-                // Consume entitlement thành công thì phí follow-up được giảm về 0.
-                cost = 0;
-            }
         }
 
         return cost;

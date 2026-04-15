@@ -12,7 +12,6 @@ const PROTECTED_ROUTES = [
  '/vi/wallet',
  '/vi/readers',
  '/vi/community',
- '/vi/premium',
  '/vi/notifications',
  '/vi/reader/apply',
  '/vi/admin',

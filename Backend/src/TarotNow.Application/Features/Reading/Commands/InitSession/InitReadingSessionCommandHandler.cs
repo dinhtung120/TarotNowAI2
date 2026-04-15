@@ -13,31 +13,28 @@ public partial class InitReadingSessionCommandHandler : IRequestHandler<InitRead
     private readonly IUserRepository _userRepo;
     private readonly IRngService _rngService;
     private readonly ISystemConfigSettings _systemConfigSettings;
-    private readonly IEntitlementService _entitlementService;
 
     /// <summary>
     /// Khởi tạo handler init reading session.
-    /// Luồng xử lý: nhận các repository/service cần thiết để validate user, resolve giá, consume entitlement và mở phiên đọc.
+    /// Luồng xử lý: nhận các repository/service cần thiết để validate user, resolve giá và mở phiên đọc.
     /// </summary>
     public InitReadingSessionCommandHandler(
         IReadingSessionRepository readingRepo,
         IReadingSessionOrchestrator readingSessionOrchestrator,
         IUserRepository userRepo,
         IRngService rngService,
-        ISystemConfigSettings systemConfigSettings,
-        IEntitlementService entitlementService)
+        ISystemConfigSettings systemConfigSettings)
     {
         _readingRepo = readingRepo;
         _readingSessionOrchestrator = readingSessionOrchestrator;
         _userRepo = userRepo;
         _rngService = rngService;
         _systemConfigSettings = systemConfigSettings;
-        _entitlementService = entitlementService;
     }
 
     /// <summary>
     /// Xử lý command khởi tạo reading session.
-    /// Luồng xử lý: xác thực user tồn tại, resolve pricing theo spread/currency/entitlement, khởi tạo session và gọi orchestrator mở phiên.
+    /// Luồng xử lý: xác thực user tồn tại, resolve pricing theo spread/currency, khởi tạo session và gọi orchestrator mở phiên.
     /// </summary>
     public async Task<InitReadingSessionResult> Handle(
         InitReadingSessionCommand request,

@@ -23,8 +23,6 @@ public class InitReadingSessionCommandHandlerTests
     private readonly Mock<IRngService> _rngMock;
     // Mock config settings để cố định giá spread.
     private readonly Mock<ISystemConfigSettings> _systemConfigSettingsMock;
-    // Mock entitlement service để mô phỏng consume entitlement.
-    private readonly Mock<IEntitlementService> _entitlementServiceMock;
     // Handler cần kiểm thử.
     private readonly InitReadingSessionCommandHandler _handler;
 
@@ -39,20 +37,13 @@ public class InitReadingSessionCommandHandlerTests
         _userRepoMock = new Mock<IUserRepository>();
         _rngMock = new Mock<IRngService>();
         _systemConfigSettingsMock = new Mock<ISystemConfigSettings>();
-        _entitlementServiceMock = new Mock<IEntitlementService>();
-        
         _systemConfigSettingsMock.SetupGet(x => x.Spread3GoldCost).Returns(50);
         _systemConfigSettingsMock.SetupGet(x => x.Spread5GoldCost).Returns(100);
         _systemConfigSettingsMock.SetupGet(x => x.Spread10DiamondCost).Returns(50);
 
-        _entitlementServiceMock.Setup(x => x.ConsumeAsync(
-            It.IsAny<EntitlementConsumeRequest>(),
-            It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new EntitlementConsumeResult(false, "No entitlement"));
-
         _handler = new InitReadingSessionCommandHandler(
             _repoMock.Object, _orchestratorMock.Object, _userRepoMock.Object,
-            _rngMock.Object, _systemConfigSettingsMock.Object, _entitlementServiceMock.Object);
+            _rngMock.Object, _systemConfigSettingsMock.Object);
     }
 
     /// <summary>

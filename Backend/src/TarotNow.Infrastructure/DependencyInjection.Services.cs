@@ -34,7 +34,6 @@ public static partial class DependencyInjection
         services.AddSingleton<IPaymentGatewayService, HmacPaymentGatewayService>();
         services.AddScoped<IDiagnosticsService, DiagnosticsService>();
         services.AddScoped<IReadinessService, ReadinessService>();
-        services.AddScoped<IEntitlementService, EntitlementService>();
 
         // R2-only strict upload adapter (presign + delete + URL mapping).
         services.AddScoped<IR2UploadService, R2UploadService>();

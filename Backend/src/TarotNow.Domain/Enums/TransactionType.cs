@@ -43,9 +43,6 @@ public static class TransactionType
     // Thưởng referral chung.
     public const string ReferralReward = "referral_reward";
 
-    // Hoàn tiền giao dịch subscription.
-    public const string SubscriptionRefund = "subscription_refund";
-
     // Admin nạp thủ công cho tài khoản.
     public const string AdminTopup = "admin_topup";
 
@@ -63,9 +60,6 @@ public static class TransactionType
 
     // Hoàn tiền yêu cầu rút bị từ chối.
     public const string WithdrawalRefund = "withdrawal_refund";
-
-    // Mua gói subscription.
-    public const string Subscription = "subscription";
 
     // Trừ phí câu hỏi follow-up.
     public const string FollowupCost = "followup_cost";

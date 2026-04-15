@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TarotNow.Application.Exceptions;
-using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 
@@ -33,7 +32,7 @@ public partial class InitReadingSessionCommandHandler
 
     /// <summary>
     /// Resolve pricing cuối cùng cho phiên reading.
-    /// Luồng xử lý: chuẩn hóa currency, kiểm tra giới hạn daily, lấy base price theo spread, thử consume entitlement miễn phí và trả pricing kết quả.
+    /// Luồng xử lý: chuẩn hóa currency, kiểm tra giới hạn daily, lấy base price theo spread và trả pricing kết quả.
     /// </summary>
     private async Task<SessionPricing> ResolvePricingAsync(
         InitReadingSessionCommand request,
@@ -44,14 +43,6 @@ public partial class InitReadingSessionCommandHandler
         // Khóa logic daily-card trước khi tính phí để chặn mở phiên vượt giới hạn miễn phí trong ngày.
 
         var (costGold, costDiamond) = ResolveBasePricing(request.SpreadType, currency);
-        var entitlementKey = ResolveEntitlementKey(request.SpreadType);
-        var usedEntitlement = await TryUseEntitlementAsync(request, entitlementKey, cancellationToken);
-        if (usedEntitlement)
-        {
-            // Nếu consume entitlement thành công thì phiên hiện tại được miễn phí hoàn toàn.
-            (costGold, costDiamond) = (0, 0);
-        }
-
         var amountCharged = costGold > 0 ? costGold : costDiamond;
         return new SessionPricing(costGold, costDiamond, currency, amountCharged);
     }
@@ -78,51 +69,6 @@ public partial class InitReadingSessionCommandHandler
                 _systemConfigSettings.Spread10DiamondCost),
             _ => (0L, 0L)
         };
-    }
-
-    /// <summary>
-    /// Resolve entitlement key tương ứng cho spread.
-    /// Luồng xử lý: map spread type sang key entitlement miễn phí theo ngày; spread không hỗ trợ trả null.
-    /// </summary>
-    private static string? ResolveEntitlementKey(string spreadType)
-    {
-        return spreadType switch
-        {
-            SpreadType.Spread3Cards => EntitlementKey.FreeSpread3Daily,
-            SpreadType.Spread5Cards => EntitlementKey.FreeSpread5Daily,
-            SpreadType.Spread10Cards => EntitlementKey.FreeSpread5Daily,
-            _ => null
-        };
-    }
-
-    /// <summary>
-    /// Thử consume entitlement miễn phí cho phiên reading.
-    /// Luồng xử lý: bỏ qua khi không có entitlement key, tạo idempotency key theo user/spread/ngày và gọi entitlement service.
-    /// </summary>
-    private async Task<bool> TryUseEntitlementAsync(
-        InitReadingSessionCommand request,
-        string? entitlementKey,
-        CancellationToken cancellationToken)
-    {
-        if (string.IsNullOrWhiteSpace(entitlementKey))
-        {
-            // Spread không có entitlement tương ứng thì không thực hiện consume.
-            return false;
-        }
-
-        var dateStr = DateTime.UtcNow.ToString("yyyyMMdd");
-        var idempotencyKey = $"ir_{request.UserId:N}_{request.SpreadType}_{dateStr}_{Guid.NewGuid():N}";
-        var consumeResult = await _entitlementService.ConsumeAsync(
-            new EntitlementConsumeRequest(
-                request.UserId,
-                entitlementKey,
-                "InitReadingSession",
-                request.SpreadType.ToString(),
-                idempotencyKey),
-            cancellationToken);
-        // Consume entitlement theo idempotency key để giảm rủi ro cấp quyền trùng khi retry request.
-
-        return consumeResult.Success;
     }
 
     /// <summary>

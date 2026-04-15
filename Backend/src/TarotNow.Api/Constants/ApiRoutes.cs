@@ -69,9 +69,6 @@ public static class ApiRoutes
     // Trang chủ marketing (snapshot công khai).
     public const string Home = Prefix + "/home";
 
-    // Nhóm route gói subscription.
-    public const string Subscriptions = Prefix + "/subscriptions";
-
     // Nhóm route gamification phía người dùng.
     public const string Gamification = Prefix + "/gamification";
 

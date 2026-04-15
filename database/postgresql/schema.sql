@@ -1131,7 +1131,6 @@ INSERT INTO system_configs (key, value, description) VALUES
     ('min_withdrawal_diamond',   '50',   'Diamond tối thiểu để rút'),
     ('ai_error_timeout_seconds', '30',   'Timeout AI (giây)'),
     ('ai_daily_quota_free',      '3',    'Số request AI/ngày (Free tier)'),
-    ('ai_daily_quota_premium',   '30',   'Số request AI/ngày (Premium)'),
     ('share_reward_gold',        '2',    'Vàng thưởng mỗi lần share MXH'),
     
     ('ai_max_retry_per_request', '1',    'Số lần retry tối đa mỗi AI request (BR-14)'),

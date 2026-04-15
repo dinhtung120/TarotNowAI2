@@ -25,7 +25,6 @@ const EXPECTED_TOP_LEVEL_KEYS = [
  'Readers',
  'ReadingSession',
  'ReadingSetup',
- 'Subscription',
  'Tarot',
  'UserNav',
  'Wallet',

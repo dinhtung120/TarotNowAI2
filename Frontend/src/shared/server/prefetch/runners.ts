@@ -31,7 +31,6 @@ import {
 } from '@/features/reading/history/domain/historyQueryKeys';
 import { listReaders, getMyReaderRequest, getReaderProfile } from '@/features/reader/application/actions';
 import { getAllHistorySessionsAdminAction } from '@/features/reading/public';
-import { getSubscriptionPlansAction, getMyEntitlementsAction } from '@/features/subscription/application/actions';
 import { getLedger } from '@/features/wallet/application/actions';
 import { listMyWithdrawals } from '@/features/wallet/application/actions/withdrawal';
 import { listWithdrawalQueue } from '@/features/wallet/public';
@@ -251,32 +250,6 @@ export async function prefetchDepositPage(qc: QueryClient): Promise<void> {
    return result.success && result.data ? result.data : [];
   },
  });
-}
-
-export async function prefetchPremiumPage(qc: QueryClient): Promise<void> {
- await Promise.all([
-  qc.prefetchQuery({
-   queryKey: ['subscriptions', 'plans'],
-   queryFn: async () => {
-    const res = await getSubscriptionPlansAction();
-    if (!res.success) {
-     throw new Error(res.error);
-    }
-    return res.data;
-   },
-   staleTime: 5 * 60 * 1000,
-  }),
-  qc.prefetchQuery({
-   queryKey: ['subscriptions', 'entitlements'],
-   queryFn: async () => {
-    const res = await getMyEntitlementsAction();
-    if (!res.success) {
-     throw new Error(res.error);
-    }
-    return res.data;
-   },
-  }),
- ]);
 }
 
 export async function prefetchAdminDashboardPage(qc: QueryClient): Promise<void> {

@@ -60,21 +60,6 @@ public partial class ApplicationDbContext : DbContext
     // DbSet bảng chat_question_items.
     public DbSet<ChatQuestionItem> ChatQuestionItems { get; set; } = null!;
 
-    // DbSet bảng subscription_plans.
-    public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; } = null!;
-
-    // DbSet bảng user_subscriptions.
-    public DbSet<UserSubscription> UserSubscriptions { get; set; } = null!;
-
-    // DbSet bảng subscription_entitlement_buckets.
-    public DbSet<SubscriptionEntitlementBucket> SubscriptionEntitlementBuckets { get; set; } = null!;
-
-    // DbSet bảng entitlement_consumes.
-    public DbSet<EntitlementConsume> EntitlementConsumes { get; set; } = null!;
-
-    // DbSet bảng entitlement_mapping_rules.
-    public DbSet<EntitlementMappingRule> EntitlementMappingRules { get; set; } = null!;
-
     // DbSet bảng withdrawal_requests.
     public DbSet<WithdrawalRequest> WithdrawalRequests { get; set; } = null!;
 

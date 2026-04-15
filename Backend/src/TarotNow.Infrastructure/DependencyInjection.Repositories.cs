@@ -27,7 +27,7 @@ public static partial class DependencyInjection
     }
 
     /// <summary>
-    /// Đăng ký repository lõi dùng cho auth, wallet, consent, deposit và subscription.
+    /// Đăng ký repository lõi dùng cho auth, wallet, consent và deposit.
     /// Luồng xử lý: bind interface -> implementation dạng scoped theo request scope.
     /// </summary>
     private static void AddCoreRepositories(IServiceCollection services)
@@ -46,7 +46,6 @@ public static partial class DependencyInjection
         services.AddScoped<IUserConsentRepository, UserConsentRepository>();
         services.AddScoped<IDepositOrderRepository, DepositOrderRepository>();
         services.AddScoped<IDepositPromotionRepository, DepositPromotionRepository>();
-        services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
         services.AddScoped<IItemDefinitionRepository, ItemDefinitionRepository>();
         services.AddScoped<IUserItemRepository, UserItemRepository>();
         services.AddScoped<IFreeDrawCreditRepository, FreeDrawCreditRepository>();
@@ -119,15 +118,13 @@ public static partial class DependencyInjection
 
     /// <summary>
     /// Đăng ký các hosted worker chạy nền.
-    /// Luồng xử lý: thêm hosted service cho escrow/moderation/streak/entitlement/subscription jobs.
+    /// Luồng xử lý: thêm hosted service cho escrow/moderation/streak/media/outbox jobs.
     /// </summary>
     private static void AddHostedWorkers(IServiceCollection services)
     {
         services.AddHostedService<EscrowTimerService>();
         services.AddHostedService<ChatModerationWorker>();
         services.AddHostedService<StreakBreakBackgroundJob>();
-        services.AddHostedService<EntitlementDailyResetJob>();
-        services.AddHostedService<SubscriptionExpiryJob>();
         services.AddHostedService<MediaUploadCleanupJob>();
         services.AddHostedService<OutboxProcessorWorker>();
     }

@@ -11,7 +11,6 @@ export const PROTECTED_PREFIXES = [
  '/gacha',
  '/inventory',
  '/community',
- '/premium',
  '/notifications',
  '/admin',
 ] as const;
