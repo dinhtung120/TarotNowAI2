@@ -10,6 +10,7 @@ export interface ReadingSessionTextBundle {
   backLabel: string;
   changeCardText: string;
   meaningLabel: string;
+  reversedLabel: string;
   modalDescription: string;
   modalRevealText: string;
   modalRevealingText: string;
@@ -23,6 +24,7 @@ export interface ReadingSessionTextBundle {
   shuffleSubtitle: string;
   shuffleTitle: string;
   title: string;
+  uprightLabel: string;
 }
 
 export interface ReadingSessionContentProps {

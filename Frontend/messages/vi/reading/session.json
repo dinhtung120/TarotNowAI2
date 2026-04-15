@@ -26,7 +26,9 @@
       "change_card": "Đổi lá bài khác"
     },
     "cards": {
-      "meaning_label": "Ý nghĩa"
+      "meaning_label": "Ý nghĩa",
+      "orientation_upright": "Thuận",
+      "orientation_reversed": "Ngược"
     },
     "ai": {
       "subtitle": "AI Divine Stream • {id}",

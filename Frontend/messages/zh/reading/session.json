@@ -26,7 +26,9 @@
       "change_card": "更换一张牌"
     },
     "cards": {
-      "meaning_label": "含义"
+      "meaning_label": "含义",
+      "orientation_upright": "正位",
+      "orientation_reversed": "逆位"
     },
     "ai": {
       "subtitle": "AI Divine Stream • {id}",

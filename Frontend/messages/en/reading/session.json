@@ -26,7 +26,9 @@
       "change_card": "Change a card"
     },
     "cards": {
-      "meaning_label": "Meaning"
+      "meaning_label": "Meaning",
+      "orientation_upright": "Upright",
+      "orientation_reversed": "Reversed"
     },
     "ai": {
       "subtitle": "AI Divine Stream • {id}",

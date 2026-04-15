@@ -1,12 +1,18 @@
 import RevealedCardItem from "@/features/reading/session/presentation/session-page/RevealedCardItem";
+import type { RevealedReadingCard } from "@/features/reading/application/actions/types";
 import { cn } from "@/lib/utils";
 
 interface RevealedCardsGridProps {
-  cards: number[];
+  cards: RevealedReadingCard[];
   flippedIndex: number;
   meaningLabel: string;
+  uprightLabel: string;
+  reversedLabel: string;
   getCardImageUrl: (cardId: number) => string | undefined;
-  getCardMeaning: (cardId: number) => string | null | undefined;
+  getCardMeaning: (
+    cardId: number,
+    orientation?: "upright" | "reversed",
+  ) => string | null | undefined;
   getCardName: (cardId: number) => string | null | undefined;
 }
 
@@ -14,6 +20,8 @@ export default function RevealedCardsGrid({
   cards,
   flippedIndex,
   meaningLabel,
+  uprightLabel,
+  reversedLabel,
   getCardImageUrl,
   getCardMeaning,
   getCardName,
@@ -22,16 +30,20 @@ export default function RevealedCardsGrid({
 
   return (
     <div className={cn("tn-revealed-grid perspective-1000")}>
-      {cards.map((cardId, index) => (
+      {cards.map((card, index) => (
         <RevealedCardItem
-          key={`revealed-card-${cardId}`}
-          cardId={cardId}
-          cardImageUrl={getCardImageUrl(cardId)}
-          cardMeaning={getCardMeaning(cardId) ?? ""}
-          cardName={getCardName(cardId) ?? `Card ${cardId + 1}`}
+          key={`revealed-card-${card.cardId}-${card.position}`}
+          cardId={card.cardId}
+          cardImageUrl={getCardImageUrl(card.cardId)}
+          cardMeaning={getCardMeaning(card.cardId, card.orientation) ?? ""}
+          cardName={getCardName(card.cardId) ?? `Card ${card.cardId + 1}`}
           index={index}
           isFlipped={flippedIndex >= index}
           meaningLabel={meaningLabel}
+          orientation={card.orientation}
+          orientationLabel={
+            card.orientation === "reversed" ? reversedLabel : uprightLabel
+          }
         />
       ))}
     </div>

@@ -57,6 +57,7 @@ export function useReadingSessionPageState(sessionId: string): UseReadingSession
       backLabel: t('header.back_to_setup'),
       changeCardText: t('modal.change_card'),
       meaningLabel: t('cards.meaning_label'),
+      reversedLabel: t('cards.orientation_reversed'),
       modalDescription: t('modal.desc'),
       modalRevealText: t('modal.reveal'),
       modalRevealingText: t('modal.revealing'),
@@ -70,6 +71,7 @@ export function useReadingSessionPageState(sessionId: string): UseReadingSession
       shuffleSubtitle: t('shuffle.cleansing'),
       shuffleTitle: t('shuffle.connecting_title'),
       title: t('header.title'),
+      uprightLabel: t('cards.orientation_upright'),
     }),
     [cardsToDraw, pickedCards.length, sessionId, sessionShort, t, tAi],
   );

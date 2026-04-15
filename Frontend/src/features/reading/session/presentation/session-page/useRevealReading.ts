@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { revealReadingSession } from "@/features/reading/application/actions";
 import { FLIP_CARD_DELAY_MS } from "@/features/reading/session/presentation/session-page/constants";
+import type { RevealedReadingCard } from "@/features/reading/application/actions/types";
 
 interface UseRevealReadingArgs {
   sessionId: string;
@@ -13,7 +14,7 @@ export function useRevealReading({
   revealFailedMessage,
   onProfileRefresh,
 }: UseRevealReadingArgs) {
-  const [cards, setCards] = useState<number[]>([]);
+  const [cards, setCards] = useState<RevealedReadingCard[]>([]);
   const [error, setError] = useState("");
   const [flippedIndex, setFlippedIndex] = useState(-1);
   const [isRevealing, setIsRevealing] = useState(false);
