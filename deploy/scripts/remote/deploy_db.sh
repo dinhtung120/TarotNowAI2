@@ -39,6 +39,14 @@ BACKEND_IMAGE="$BACKEND_IMAGE_REF" USE_PREBUILT_IMAGES=true \
 echo "[deploy-db] verifying DB containers"
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" ps postgres mongodb redis
 
+echo "[deploy-db] validating critical auth schema"
+schema_ok="$(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T postgres sh -lc "psql -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -tAc \"SELECT to_regclass('public.auth_sessions') IS NOT NULL\"")"
+schema_ok="$(echo "$schema_ok" | tr -d '[:space:]')"
+if [[ "$schema_ok" != "t" ]]; then
+  echo "[deploy-db] schema validation failed: table public.auth_sessions is missing" >&2
+  exit 1
+fi
+
 echo "[deploy-db] cleaning up old images"
 docker system prune -a -f
 

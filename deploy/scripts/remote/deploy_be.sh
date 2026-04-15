@@ -55,6 +55,9 @@ YAML
 
 export BACKEND_IMAGE="$BACKEND_IMAGE_REF"
 
+echo "[deploy-be] running schema migration guard (--migrate) with backend image"
+docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" -f "$OVERRIDE_FILE" run --rm --no-deps backend --migrate
+
 echo "[deploy-be] deploying backend container"
 docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" -f "$OVERRIDE_FILE" up -d --no-deps backend
 

@@ -12,7 +12,7 @@ namespace TarotNow.Infrastructure.Services;
 // Service kiểm tra readiness dependency để presentation layer không truy cập DB trực tiếp.
 public sealed class ReadinessService : IReadinessService
 {
-    private static readonly string[] RequiredPostgreSqlTables = ["users", "user_subscriptions", "gacha_banners"];
+    private static readonly string[] RequiredPostgreSqlTables = ["users", "user_subscriptions", "gacha_banners", "auth_sessions", "refresh_tokens"];
     private static readonly string[] RequiredMongoCollections = ["cards_catalog", "quests", "achievements", "titles"];
 
     private readonly ApplicationDbContext _dbContext;
@@ -61,7 +61,7 @@ public sealed class ReadinessService : IReadinessService
                         SELECT COUNT(*)
                         FROM information_schema.tables
                         WHERE table_schema = 'public'
-                          AND table_name IN ('users', 'user_subscriptions', 'gacha_banners')
+                          AND table_name IN ('users', 'user_subscriptions', 'gacha_banners', 'auth_sessions', 'refresh_tokens')
                         """;
 
             await using var connection = _dbContext.Database.GetDbConnection();
