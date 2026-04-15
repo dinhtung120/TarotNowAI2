@@ -3,8 +3,9 @@
     "groups": {
       "main": "Chính",
       "tarot": "Tarot",
-      "social": "Xã Hội",
-      "account": "Tài Khoản"
+      "social": "Xã hội",
+      "game": "Game",
+      "account": "Tài khoản"
     }
   }
 }
