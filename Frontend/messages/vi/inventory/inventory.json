@@ -1,0 +1,12 @@
+{
+  "Inventory": {
+    "title": "Kho Đồ Tarot",
+    "subtitle": "Sử dụng vật phẩm để nâng cấp thẻ và tăng lợi thế xem bài.",
+    "loading": "Đang tải kho đồ...",
+    "empty": "Bạn chưa sở hữu vật phẩm nào.",
+    "useNow": "Sử Dụng",
+    "selectCard": "Chọn thẻ bài mục tiêu",
+    "quantity": "Số lượng",
+    "effectValue": "Giá trị hiệu ứng"
+  }
+}

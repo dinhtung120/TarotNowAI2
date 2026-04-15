@@ -81,6 +81,9 @@ public static class ApiRoutes
     // Nhóm route gacha.
     public const string Gacha = Prefix + "/gacha";
 
+    // Nhóm route kho đồ tarot.
+    public const string Inventory = Prefix + "/inventory";
+
     // Route tuyệt đối cho danh mục reader, dùng khi cần leading slash rõ ràng.
     public const string ReadersAbsolute = "/" + Prefix + "/readers";
 }

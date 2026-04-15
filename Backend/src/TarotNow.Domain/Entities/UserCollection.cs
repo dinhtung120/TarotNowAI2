@@ -99,6 +99,66 @@ public class UserCollection
     }
 
     /// <summary>
+    /// Cộng thêm EXP trực tiếp cho thẻ từ item enhancer.
+    /// Luồng xử lý: validate giá trị đầu vào dương, cộng vào ExpGained và cập nhật mốc UpdatedAt logic.
+    /// </summary>
+    public void AddExp(long expAmount)
+    {
+        if (expAmount <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(expAmount), "expAmount must be > 0.");
+        }
+
+        ExpGained += expAmount;
+        LastDrawnAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Cộng chỉ số tấn công trực tiếp từ item booster.
+    /// Luồng xử lý: chặn giá trị âm hoặc 0 rồi tăng Atk hiện tại.
+    /// </summary>
+    public void IncreaseAttack(int amount)
+    {
+        if (amount <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(amount), "amount must be > 0.");
+        }
+
+        Atk += amount;
+        LastDrawnAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Cộng chỉ số phòng thủ trực tiếp từ item booster.
+    /// Luồng xử lý: chặn giá trị âm hoặc 0 rồi tăng Def hiện tại.
+    /// </summary>
+    public void IncreaseDefense(int amount)
+    {
+        if (amount <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(amount), "amount must be > 0.");
+        }
+
+        Def += amount;
+        LastDrawnAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Nâng cấp level trực tiếp khi item upgrade thành công.
+    /// Luồng xử lý: tăng level thêm một đơn vị và áp dụng bonus chỉ số theo range của cấp mới.
+    /// </summary>
+    public (int atkBonus, int defBonus) ApplyLevelUpgrade()
+    {
+        Level += 1;
+        var (min, max) = GetStatBonusRange(Level);
+        var atkBonus = Random.Shared.Next(min, max + 1);
+        var defBonus = Random.Shared.Next(min, max + 1);
+        ApplyLevelUpStats(atkBonus, defBonus);
+        LastDrawnAt = DateTime.UtcNow;
+        return (atkBonus, defBonus);
+    }
+
+    /// <summary>
     /// Trả khoảng bonus chỉ số hợp lệ theo cấp mới của thẻ.
     /// Luồng xử lý: giữ min cố định và tăng max tuyến tính theo newLevel.
     /// </summary>

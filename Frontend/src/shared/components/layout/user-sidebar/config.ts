@@ -6,6 +6,7 @@
  History,
  Home,
  LayoutGrid,
+ Package,
  MessageSquare,
  Sparkles,
  User,
@@ -39,6 +40,7 @@ export const userSidebarMenuGroups: UserSidebarMenuGroup[] = [
   items: [
    { labelKey: 'readings', href: '/reading', icon: Sparkles },
    { labelKey: 'collection', href: '/collection', icon: LayoutGrid },
+   { labelKey: 'inventory', href: '/inventory', icon: Package },
    { labelKey: 'history', href: '/reading/history', icon: History },
    { labelKey: 'gamification', href: '/gamification', icon: Gamepad2 },
    { labelKey: 'leaderboard', href: '/leaderboard', icon: BarChart3 },

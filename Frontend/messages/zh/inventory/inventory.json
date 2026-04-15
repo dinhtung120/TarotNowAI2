@@ -1,0 +1,12 @@
+{
+  "Inventory": {
+    "title": "塔罗宝库",
+    "subtitle": "使用道具强化卡牌并提升占卜表现。",
+    "loading": "正在加载宝库...",
+    "empty": "你目前还没有任何道具。",
+    "useNow": "立即使用",
+    "selectCard": "选择目标卡牌",
+    "quantity": "数量",
+    "effectValue": "效果值"
+  }
+}

@@ -38,6 +38,8 @@ import { getLedger } from '@/features/wallet/application/actions';
 import { listMyWithdrawals } from '@/features/wallet/application/actions/withdrawal';
 import { listWithdrawalQueue } from '@/features/wallet/public';
 import { AUTH_ERROR, isUnauthorizedError } from '@/shared/domain/authErrors';
+import { inventoryQueryKeys } from '@/shared/infrastructure/inventory/inventoryConstants';
+import { fetchInventoryServer } from '@/shared/infrastructure/inventory/inventoryServerActions';
 
 const readersDirectoryQueryKey = ['readers', 1, 12, '', '', ''] as const;
 
@@ -111,6 +113,15 @@ export async function prefetchCollectionPage(qc: QueryClient): Promise<void> {
   qc.prefetchQuery({ queryKey: ['collection', 'user'], queryFn: getUserCollection }),
   qc.prefetchQuery({ queryKey: ['reading', 'cards-catalog'], queryFn: getCardsCatalogAction }),
  ]);
+}
+
+export async function prefetchInventoryPage(qc: QueryClient): Promise<void> {
+ await swallowPrefetch(async () => {
+  await qc.prefetchQuery({
+   queryKey: inventoryQueryKeys.mine(),
+   queryFn: fetchInventoryServer,
+  });
+ });
 }
 
 /** Gộp ví + catalog bài (GET /me/reading-setup-snapshot) → hydrate cache catalog cho session sau. */

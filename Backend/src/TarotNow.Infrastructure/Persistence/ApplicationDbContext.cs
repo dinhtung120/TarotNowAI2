@@ -87,6 +87,15 @@ public partial class ApplicationDbContext : DbContext
     // DbSet bảng gacha_reward_logs.
     public DbSet<GachaRewardLog> GachaRewardLogs { get; set; } = null!;
 
+    // DbSet bảng item_definitions.
+    public DbSet<ItemDefinition> ItemDefinitions { get; set; } = null!;
+
+    // DbSet bảng user_items.
+    public DbSet<UserItem> UserItems { get; set; } = null!;
+
+    // DbSet bảng inventory_item_use_operations.
+    public DbSet<InventoryItemUseOperation> InventoryItemUseOperations { get; set; } = null!;
+
     // DbSet bảng outbox_messages.
     public DbSet<OutboxMessage> OutboxMessages { get; set; } = null!;
 

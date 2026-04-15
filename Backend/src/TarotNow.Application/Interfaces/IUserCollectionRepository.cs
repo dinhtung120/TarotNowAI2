@@ -22,4 +22,80 @@ public interface IUserCollectionRepository
     /// Luồng xử lý: lọc theo userId và trả danh sách UserCollection tương ứng.
     /// </summary>
     Task<IEnumerable<UserCollection>> GetUserCollectionAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Kiểm tra user có sở hữu lá bài hay chưa.
+    /// Luồng xử lý: lọc theo userId/cardId và trả cờ tồn tại.
+    /// </summary>
+    Task<bool> ExistsAsync(Guid userId, int cardId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Áp enhancement lên lá bài trong bộ sưu tập.
+    /// Luồng xử lý: xác định kiểu enhancement, cập nhật chỉ số tương ứng và trả delta kết quả.
+    /// </summary>
+    Task<CardEnhancementApplyResult> ApplyEnhancementAsync(
+        CardEnhancementApplyRequest request,
+        CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Request áp dụng enhancement cho một lá bài.
+/// </summary>
+public sealed class CardEnhancementApplyRequest
+{
+    /// <summary>
+    /// Người dùng sở hữu lá bài.
+    /// </summary>
+    public Guid UserId { get; init; }
+
+    /// <summary>
+    /// Id lá bài mục tiêu.
+    /// </summary>
+    public int CardId { get; init; }
+
+    /// <summary>
+    /// Kiểu enhancement cần áp dụng.
+    /// </summary>
+    public string EnhancementType { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Giá trị hiệu ứng tăng thêm.
+    /// </summary>
+    public int EffectValue { get; init; }
+
+    /// <summary>
+    /// Tỉ lệ thành công (0-100) cho item có xác suất.
+    /// </summary>
+    public decimal SuccessRatePercent { get; init; }
+}
+
+/// <summary>
+/// Kết quả áp dụng enhancement cho card.
+/// </summary>
+public sealed class CardEnhancementApplyResult
+{
+    /// <summary>
+    /// Cờ cho biết xử lý có thành công.
+    /// </summary>
+    public bool Succeeded { get; init; }
+
+    /// <summary>
+    /// Delta EXP được cộng.
+    /// </summary>
+    public int ExpDelta { get; init; }
+
+    /// <summary>
+    /// Delta Attack được cộng.
+    /// </summary>
+    public int AttackDelta { get; init; }
+
+    /// <summary>
+    /// Delta Defense được cộng.
+    /// </summary>
+    public int DefenseDelta { get; init; }
+
+    /// <summary>
+    /// Cờ cho biết level upgrade thành công.
+    /// </summary>
+    public bool LevelUpgraded { get; init; }
 }

@@ -1,0 +1,12 @@
+{
+  "Inventory": {
+    "title": "Tarot Vault",
+    "subtitle": "Use items to enhance cards and improve reading performance.",
+    "loading": "Loading inventory...",
+    "empty": "You do not own any items yet.",
+    "useNow": "Use Now",
+    "selectCard": "Select target card",
+    "quantity": "Quantity",
+    "effectValue": "Effect value"
+  }
+}

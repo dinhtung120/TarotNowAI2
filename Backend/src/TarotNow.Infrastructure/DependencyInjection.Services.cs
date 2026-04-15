@@ -28,6 +28,7 @@ public static partial class DependencyInjection
         services.AddScoped<ISmtpClient, SmtpClient>();
         services.AddScoped<IEmailSender, SmtpEmailSender>();
         services.AddScoped<IDomainEventPublisher, MediatRDomainEventPublisher>();
+        services.AddScoped<IInlineDomainEventDispatcher, InlineMediatRDomainEventDispatcher>();
         services.AddScoped<IEventHandlerIdempotencyService, OutboxHandlerIdempotencyService>();
         services.AddSingleton<IRngService, RngService>();
         services.AddSingleton<IPaymentGatewayService, HmacPaymentGatewayService>();
