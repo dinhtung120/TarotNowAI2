@@ -6,6 +6,7 @@
     "pull1x": "抽取 1次",
     "pulling": "抽取中...",
     "pityProgress": "保底进度",
+    "pityRuleHint": "未掉落 Epic 及以上道具时保底会累积；掉落 Epic/Legendary/Mythic 后保底会重置。",
     "guaranteedLegendary": "达到保底必定获得传说奖励",
     "spinning": "抽取中...",
     "spin1x": "抽取 1次",

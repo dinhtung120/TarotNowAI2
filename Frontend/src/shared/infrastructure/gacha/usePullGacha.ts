@@ -1,15 +1,14 @@
 'use client';
 
-import { useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useWalletStore } from '@/store/walletStore';
 import { parseApiError } from '@/shared/infrastructure/error/parseApiError';
 import {
- GACHA_API_ROUTES,
- GACHA_IDEMPOTENCY_HEADER,
- gachaQueryKeys,
+  GACHA_API_ROUTES,
+  GACHA_IDEMPOTENCY_HEADER,
+  gachaQueryKeys,
 } from '@/shared/infrastructure/gacha/gachaConstants';
-import type { PullGachaPayload, PullGachaResult } from '@/shared/infrastructure/gacha/gachaTypes';
+import type { GachaPool, PullGachaPayload, PullGachaResult } from '@/shared/infrastructure/gacha/gachaTypes';
 
 function createIdempotencyKey(): string {
  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -17,10 +16,6 @@ function createIdempotencyKey(): string {
  }
 
  return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
-}
-
-function buildIntentKey(payload: PullGachaPayload): string {
- return `${payload.poolCode.trim().toLowerCase()}:${payload.count}`;
 }
 
 async function sendPullRequest(payload: PullGachaPayload, idempotencyKey: string): Promise<PullGachaResult> {
@@ -44,20 +39,26 @@ async function sendPullRequest(payload: PullGachaPayload, idempotencyKey: string
 
 export function usePullGacha() {
  const queryClient = useQueryClient();
- const pendingIntentMapRef = useRef<Map<string, string>>(new Map());
 
  return useMutation({
-  mutationFn: async (payload: PullGachaPayload) => {
-   const intentKey = buildIntentKey(payload);
-   const activeIdempotencyKey = payload.idempotencyKey
-    || pendingIntentMapRef.current.get(intentKey)
-    || createIdempotencyKey();
-
-   pendingIntentMapRef.current.set(intentKey, activeIdempotencyKey);
+  mutationFn: (payload: PullGachaPayload) => {
+   const activeIdempotencyKey = payload.idempotencyKey || createIdempotencyKey();
    return sendPullRequest(payload, activeIdempotencyKey);
   },
-  onSuccess: async (_, variables) => {
-   pendingIntentMapRef.current.delete(buildIntentKey(variables));
+  onSuccess: async (result, variables) => {
+   queryClient.setQueryData<GachaPool[] | undefined>(gachaQueryKeys.pools(), (currentPools) => {
+    if (!currentPools?.length) {
+     return currentPools;
+    }
+
+    const normalizedPoolCode = variables.poolCode.trim().toLowerCase();
+    return currentPools.map((pool) => (
+     pool.code === normalizedPoolCode
+      ? { ...pool, userCurrentPity: result.currentPityCount }
+      : pool
+    ));
+   });
+
    await Promise.all([
     queryClient.invalidateQueries({ queryKey: gachaQueryKeys.pools() }),
     queryClient.invalidateQueries({ queryKey: [...gachaQueryKeys.all, 'history'] }),

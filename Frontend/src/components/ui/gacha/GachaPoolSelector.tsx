@@ -9,6 +9,7 @@ interface GachaPoolSelectorLabels {
  pull: string;
  pulling: string;
  pity: string;
+ pityRuleHint: string;
 }
 
 interface GachaPoolSelectorProps {
@@ -66,8 +67,9 @@ function GachaPoolSelectorComponent({
        <p className={cn('mt-1 text-xs text-slate-600 dark:text-slate-300')}>{localizePoolDescription(pool, locale)}</p>
        <div className={cn('mt-3 flex items-center justify-between text-xs text-slate-700 dark:text-slate-200')}>
         <span>{`${pool.costAmount} ${pool.costCurrency.toUpperCase()}`}</span>
-        <span>{`${labels.pity}: ${pool.userCurrentPity}/${pool.hardPityCount}`}</span>
+       <span>{`${labels.pity}: ${pool.userCurrentPity}/${pool.hardPityCount}`}</span>
        </div>
+       <p className={cn('mt-2 text-xs text-slate-500 dark:text-slate-300')}>{labels.pityRuleHint}</p>
       </button>
       {isSelected ? (
        <Button className={cn('mt-3 w-full')} onClick={onPull} isLoading={isPulling} aria-label={labels.pull}>

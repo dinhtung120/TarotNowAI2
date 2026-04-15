@@ -21,10 +21,14 @@ function normalizeRarity(rarity: string): string {
   return rarity.trim().toLowerCase();
 }
 
+function normalizeKind(kind: string): string {
+  return kind.trim().toLowerCase();
+}
+
 export function useRareDropLottie(rewards: PullGachaReward[]) {
   const animationUrl = useMemo(() => {
     const rareItemRarity = rewards
-      .filter((reward) => reward.kind === gachaRewardKinds.item)
+      .filter((reward) => normalizeKind(reward.kind) === gachaRewardKinds.item)
       .map((reward) => normalizeRarity(reward.rarity))
       .filter((rarity) => rarity in rarityPriority)
       .sort((left, right) => rarityPriority[right] - rarityPriority[left])[0];
@@ -47,5 +51,8 @@ export function useRareDropLottie(rewards: PullGachaReward[]) {
     staleTime: 300_000,
   });
 
-  return { animationData: animationQuery.data ?? null };
+  return {
+    animationData: animationQuery.data ?? null,
+    hasRareDrop: Boolean(animationUrl),
+  };
 }

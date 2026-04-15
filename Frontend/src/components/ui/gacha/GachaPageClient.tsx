@@ -61,7 +61,7 @@ export default function GachaPageClient() {
         locale={locale}
         selectedPoolCode={activePoolCode}
         isPulling={pullMutation.isPending}
-        labels={{ pull: t('pull1x'), pulling: t('pulling'), pity: t('pityProgress') }}
+        labels={{ pull: t('pull1x'), pulling: t('pulling'), pity: t('pityProgress'), pityRuleHint: t('pityRuleHint') }}
         onSelectPool={setSelectedPoolCode}
         onPull={onPull}
       />
