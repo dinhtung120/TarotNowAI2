@@ -1,0 +1,154 @@
+using MediatR;
+using Microsoft.Extensions.Logging;
+using TarotNow.Application.Common.DomainEvents;
+using TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
+using TarotNow.Application.Features.Reading.Commands.StreamReading;
+using TarotNow.Application.Interfaces.DomainEvents;
+using TarotNow.Domain.Events;
+
+namespace TarotNow.Application.DomainEvents.Handlers;
+
+/// <summary>
+/// Handler hậu reveal để precompute AI ở nền.
+/// </summary>
+public sealed class ReadingSessionRevealedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<ReadingSessionRevealedDomainEvent>
+{
+    private readonly IMediator _mediator;
+    private readonly ILogger<ReadingSessionRevealedDomainEventHandler> _logger;
+
+    /// <summary>
+    /// Khởi tạo handler session-revealed.
+    /// </summary>
+    public ReadingSessionRevealedDomainEventHandler(
+        IMediator mediator,
+        ILogger<ReadingSessionRevealedDomainEventHandler> logger,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
+    {
+        _mediator = mediator;
+        _logger = logger;
+    }
+
+    /// <inheritdoc />
+    protected override async Task HandleDomainEventAsync(
+        ReadingSessionRevealedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        var streamResult = await TryStartPrecomputeAsync(domainEvent, cancellationToken);
+        if (streamResult is null)
+        {
+            return;
+        }
+
+        var streamState = await ConsumeStreamAsync(streamResult, domainEvent, cancellationToken);
+        await CompleteStreamAsync(streamResult, streamState, domainEvent, cancellationToken);
+    }
+
+    private async Task<StreamReadingResult?> TryStartPrecomputeAsync(
+        ReadingSessionRevealedDomainEvent domainEvent,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await _mediator.Send(
+                new StreamReadingCommand
+                {
+                    UserId = domainEvent.UserId,
+                    ReadingSessionId = domainEvent.SessionId,
+                    FollowupQuestion = null,
+                    Language = NormalizeLanguage(domainEvent.Language)
+                },
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Failed to start background AI precompute. SessionId={SessionId} UserId={UserId}",
+                domainEvent.SessionId,
+                domainEvent.UserId);
+            return null;
+        }
+    }
+
+    private async Task<PrecomputeStreamState> ConsumeStreamAsync(
+        StreamReadingResult streamResult,
+        ReadingSessionRevealedDomainEvent domainEvent,
+        CancellationToken cancellationToken)
+    {
+        var state = new PrecomputeStreamState();
+
+        try
+        {
+            await foreach (var chunk in streamResult.Stream.WithCancellation(cancellationToken))
+            {
+                state.FirstTokenAt ??= DateTimeOffset.UtcNow;
+                state.FullResponse.Append(chunk);
+                state.OutputTokens++;
+            }
+        }
+        catch (Exception ex)
+        {
+            state.FinalStatus = state.FirstTokenAt.HasValue
+                ? AiStreamFinalStatuses.FailedAfterFirstToken
+                : AiStreamFinalStatuses.FailedBeforeFirstToken;
+            state.ErrorMessage = ex.Message;
+
+            _logger.LogWarning(
+                ex,
+                "Background AI precompute stream failed. SessionId={SessionId} UserId={UserId}",
+                domainEvent.SessionId,
+                domainEvent.UserId);
+        }
+
+        return state;
+    }
+
+    private Task CompleteStreamAsync(
+        StreamReadingResult streamResult,
+        PrecomputeStreamState state,
+        ReadingSessionRevealedDomainEvent domainEvent,
+        CancellationToken cancellationToken)
+    {
+        return _mediator.Send(
+            new CompleteAiStreamCommand
+            {
+                AiRequestId = streamResult.AiRequestId,
+                UserId = domainEvent.UserId,
+                FinalStatus = state.FinalStatus,
+                ErrorMessage = state.ErrorMessage,
+                IsClientDisconnect = false,
+                FirstTokenAt = state.FirstTokenAt,
+                OutputTokens = state.OutputTokens,
+                LatencyMs = 0,
+                FullResponse = state.FullResponse.ToString(),
+                FollowupQuestion = null
+            },
+            cancellationToken);
+    }
+
+    private static string NormalizeLanguage(string? language)
+    {
+        return language?.Trim().ToLowerInvariant() switch
+        {
+            "en" => "en",
+            "zh" => "zh",
+            _ => "vi"
+        };
+    }
+
+    private sealed class PrecomputeStreamState
+    {
+        public DateTimeOffset? FirstTokenAt { get; set; }
+
+        public int OutputTokens { get; set; }
+
+        public string FinalStatus { get; set; } = AiStreamFinalStatuses.Completed;
+
+        public string? ErrorMessage { get; set; }
+
+        public System.Text.StringBuilder FullResponse { get; } = new();
+    }
+}

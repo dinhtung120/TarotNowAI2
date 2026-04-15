@@ -31,9 +31,14 @@ public partial class MongoUserCollectionRepository
         string orientation,
         DateTime now)
     {
-        var userIdString = userId.ToString();
+        var context = new UpsertSetDocumentContext(
+            userId.ToString(),
+            cardId,
+            expToGain,
+            orientation,
+            now);
         var levelExpression = BuildLevelExpression();
-        var setDocument = BuildSetDocument(userIdString, cardId, expToGain, orientation, now, levelExpression);
+        var setDocument = BuildSetDocument(context, levelExpression);
         var pipeline = PipelineDefinition<UserCollectionDocument, UserCollectionDocument>.Create(
             new[] { new BsonDocument("$set", setDocument) });
 
@@ -45,29 +50,25 @@ public partial class MongoUserCollectionRepository
     /// Luồng xử lý: cập nhật metadata thời gian, cộng exp, tăng draw stats và tính level mới.
     /// </summary>
     private static BsonDocument BuildSetDocument(
-        string userId,
-        int cardId,
-        long expToGain,
-        string orientation,
-        DateTime now,
+        UpsertSetDocumentContext context,
         BsonDocument levelExpression)
     {
-        var drawnStatField = orientation == CardOrientation.Reversed
+        var drawnStatField = context.Orientation == CardOrientation.Reversed
             ? "stats.times_drawn_reversed"
             : "stats.times_drawn_upright";
 
         return new BsonDocument
         {
-            { "user_id", userId },
-            { "card_id", cardId },
+            { "user_id", context.UserId },
+            { "card_id", context.CardId },
             { "is_deleted", false },
-            { "created_at", new BsonDocument("$ifNull", new BsonArray { "$created_at", now }) },
-            { "updated_at", now },
-            { "last_drawn_at", now },
+            { "created_at", new BsonDocument("$ifNull", new BsonArray { "$created_at", context.Now }) },
+            { "updated_at", context.Now },
+            { "last_drawn_at", context.Now },
             { "exp", new BsonDocument("$add", new BsonArray
                 {
                     new BsonDocument("$ifNull", new BsonArray { "$exp", 0 }),
-                    expToGain
+                    context.ExpToGain
                 })
             },
             { drawnStatField, new BsonDocument("$add", new BsonArray
@@ -79,6 +80,13 @@ public partial class MongoUserCollectionRepository
             { "level", levelExpression }
         };
     }
+
+    private readonly record struct UpsertSetDocumentContext(
+        string UserId,
+        int CardId,
+        long ExpToGain,
+        string Orientation,
+        DateTime Now);
 
     /// <summary>
     /// Tạo biểu thức tính level theo tổng số lần draw.
