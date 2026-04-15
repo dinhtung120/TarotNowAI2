@@ -13,26 +13,37 @@ namespace TarotNow.Application.DomainEvents.Handlers;
 public sealed class LuckAppliedDomainEventHandler
     : IdempotentDomainEventNotificationHandler<LuckAppliedDomainEvent>
 {
+    private static readonly TimeSpan LuckDuration = TimeSpan.FromHours(24);
+
+    private readonly IInventoryLuckEffectRepository _inventoryLuckEffectRepository;
     private readonly INotificationRepository _notificationRepository;
 
     /// <summary>
     /// Khởi tạo handler LuckAppliedDomainEvent.
     /// </summary>
     public LuckAppliedDomainEventHandler(
+        IInventoryLuckEffectRepository inventoryLuckEffectRepository,
         INotificationRepository notificationRepository,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
+        _inventoryLuckEffectRepository = inventoryLuckEffectRepository;
         _notificationRepository = notificationRepository;
     }
 
     /// <inheritdoc />
-    protected override Task HandleDomainEventAsync(
+    protected override async Task HandleDomainEventAsync(
         LuckAppliedDomainEvent domainEvent,
         Guid? outboxMessageId,
         CancellationToken cancellationToken)
     {
-        return _notificationRepository.CreateAsync(
+        await _inventoryLuckEffectRepository.ApplyLuckAsync(
+            domainEvent.UserId,
+            domainEvent.LuckValue,
+            domainEvent.SourceItemCode,
+            LuckDuration,
+            cancellationToken);
+        await _notificationRepository.CreateAsync(
             new NotificationCreateDto
             {
                 UserId = domainEvent.UserId,

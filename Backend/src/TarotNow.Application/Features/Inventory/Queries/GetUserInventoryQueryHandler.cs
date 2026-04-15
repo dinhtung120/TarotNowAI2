@@ -1,5 +1,7 @@
 using MediatR;
+using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Interfaces;
+using TarotNow.Domain.ValueObjects;
 
 namespace TarotNow.Application.Features.Inventory.Queries;
 
@@ -26,7 +28,6 @@ public sealed class GetUserInventoryQueryHandler : IRequestHandler<GetUserInvent
         var views = await _userItemRepository.GetUserInventoryAsync(request.UserId, cancellationToken);
 
         var items = views
-            .OrderByDescending(x => x.AcquiredAtUtc)
             .Select(x => new UserInventoryItemDto
             {
                 ItemDefinitionId = x.ItemDefinitionId,
@@ -46,6 +47,9 @@ public sealed class GetUserInventoryQueryHandler : IRequestHandler<GetUserInvent
                 DescriptionZh = x.DescriptionZh,
                 IconUrl = x.IconUrl,
                 Quantity = x.Quantity,
+                CanUse = ResolveCanUse(x),
+                RequiresTargetCard = RequiresTargetCard(x),
+                BlockedReason = ResolveBlockedReason(x),
                 AcquiredAtUtc = x.AcquiredAtUtc,
             })
             .ToArray();
@@ -54,5 +58,27 @@ public sealed class GetUserInventoryQueryHandler : IRequestHandler<GetUserInvent
         {
             Items = items,
         };
+    }
+
+    private static bool ResolveCanUse(UserInventoryItemView view)
+    {
+        if (view.IsConsumable == false)
+        {
+            return true;
+        }
+
+        return view.Quantity > 0;
+    }
+
+    private static bool RequiresTargetCard(UserInventoryItemView view)
+    {
+        return string.Equals(view.ItemType, ItemType.CardEnhancer, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string? ResolveBlockedReason(UserInventoryItemView view)
+    {
+        return ResolveCanUse(view)
+            ? null
+            : InventoryErrorCodes.ItemOutOfStock;
     }
 }

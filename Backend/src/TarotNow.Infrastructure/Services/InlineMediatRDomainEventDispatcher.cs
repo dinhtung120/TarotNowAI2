@@ -1,4 +1,5 @@
 using MediatR;
+using System.Collections.Concurrent;
 using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Events;
@@ -10,6 +11,8 @@ namespace TarotNow.Infrastructure.Services;
 /// </summary>
 public sealed class InlineMediatRDomainEventDispatcher : IInlineDomainEventDispatcher
 {
+    private static readonly ConcurrentDictionary<Type, Func<IDomainEvent, INotification>> NotificationFactoryCache = new();
+
     private readonly IMediator _mediator;
 
     /// <summary>
@@ -26,13 +29,29 @@ public sealed class InlineMediatRDomainEventDispatcher : IInlineDomainEventDispa
         ArgumentNullException.ThrowIfNull(domainEvent);
 
         var eventType = domainEvent.GetType();
+        var notificationFactory = NotificationFactoryCache.GetOrAdd(eventType, CreateNotificationFactory);
+        var notification = notificationFactory(domainEvent);
+        return _mediator.Publish(notification, cancellationToken);
+    }
+
+    private static Func<IDomainEvent, INotification> CreateNotificationFactory(Type eventType)
+    {
         var notificationType = typeof(DomainEventNotification<>).MakeGenericType(eventType);
-        var notification = Activator.CreateInstance(notificationType, domainEvent, null) as INotification;
-        if (notification is null)
+        var constructor = notificationType.GetConstructor(new[] { eventType, typeof(Guid?) });
+        if (constructor is null)
         {
-            throw new InvalidOperationException($"Cannot create DomainEventNotification for {eventType.FullName}.");
+            throw new InvalidOperationException($"Cannot find DomainEventNotification constructor for {eventType.FullName}.");
         }
 
-        return _mediator.Publish(notification, cancellationToken);
+        return domainEvent =>
+        {
+            var notification = constructor.Invoke(new object?[] { domainEvent, null }) as INotification;
+            if (notification is null)
+            {
+                throw new InvalidOperationException($"Cannot create DomainEventNotification for {eventType.FullName}.");
+            }
+
+            return notification;
+        };
     }
 }

@@ -109,6 +109,21 @@ public sealed class UserInventoryItemDto
     public int Quantity { get; init; }
 
     /// <summary>
+    /// Cờ cho biết item đang có thể sử dụng ngay.
+    /// </summary>
+    public bool CanUse { get; init; }
+
+    /// <summary>
+    /// Cờ cho biết item yêu cầu chọn card mục tiêu.
+    /// </summary>
+    public bool RequiresTargetCard { get; init; }
+
+    /// <summary>
+    /// Mã lý do không thể dùng (nếu có).
+    /// </summary>
+    public string? BlockedReason { get; init; }
+
+    /// <summary>
     /// Mốc nhận item đầu tiên.
     /// </summary>
     public DateTime AcquiredAtUtc { get; init; }

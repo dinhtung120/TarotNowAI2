@@ -24,6 +24,7 @@ public sealed class ItemDefinitionRepository : IItemDefinitionRepository
     {
         var normalizedCode = code.Trim().ToLowerInvariant();
         return _dbContext.Set<ItemDefinition>()
+            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Code == normalizedCode, cancellationToken);
     }
 
@@ -31,6 +32,7 @@ public sealed class ItemDefinitionRepository : IItemDefinitionRepository
     public Task<ItemDefinition?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return _dbContext.Set<ItemDefinition>()
+            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     }
 

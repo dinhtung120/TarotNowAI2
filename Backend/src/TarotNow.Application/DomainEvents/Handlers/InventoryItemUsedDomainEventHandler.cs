@@ -46,23 +46,27 @@ public sealed partial class ItemUsedDomainEventHandler
         CancellationToken cancellationToken)
     {
         var definition = await GetActiveDefinitionAsync(domainEvent.ItemCode, cancellationToken);
-        var userItem = await GetOwnedItemAsync(domainEvent.UserId, definition.Id, cancellationToken);
-        EnsureQuantityIfConsumable(definition, userItem);
         var targetCardId = await ResolveTargetCardIdAsync(domainEvent, definition.Type, cancellationToken);
 
-        var registered = await _userItemRepository.TryRegisterUseOperationAsync(
-            new InventoryItemUseOperation(
-                domainEvent.UserId,
-                domainEvent.IdempotencyKey,
-                definition.Code,
-                targetCardId),
+        var consumeResult = await _userItemRepository.TryConsumeWithIdempotencyAsync(
+            new InventoryItemConsumeRequest
+            {
+                UserId = domainEvent.UserId,
+                ItemDefinitionId = definition.Id,
+                ItemCode = definition.Code,
+                TargetCardId = targetCardId,
+                IdempotencyKey = domainEvent.IdempotencyKey,
+                IsConsumable = definition.IsConsumable,
+                ConsumeQuantity = MinimumEffectValue,
+            },
             cancellationToken);
-        if (registered == false)
+        if (consumeResult == InventoryItemConsumeResult.AlreadyProcessed)
         {
+            domainEvent.IsIdempotentReplay = true;
             return;
         }
 
-        await ConsumeQuantityIfNeededAsync(definition, userItem, cancellationToken);
+        EnsureConsumeSucceeded(consumeResult);
         await DispatchItemEffectAsync(domainEvent.UserId, definition, targetCardId, cancellationToken);
     }
 
@@ -77,23 +81,24 @@ public sealed partial class ItemUsedDomainEventHandler
         return definition;
     }
 
-    private async Task<UserItem> GetOwnedItemAsync(Guid userId, Guid itemDefinitionId, CancellationToken cancellationToken)
+    private static void EnsureConsumeSucceeded(InventoryItemConsumeResult consumeResult)
     {
-        var userItem = await _userItemRepository.GetByUserAndItemDefinitionIdAsync(userId, itemDefinitionId, cancellationToken);
-        if (userItem is null)
+        if (consumeResult == InventoryItemConsumeResult.Consumed)
+        {
+            return;
+        }
+
+        if (consumeResult == InventoryItemConsumeResult.ItemNotOwned)
         {
             throw new BusinessRuleException(InventoryErrorCodes.ItemNotOwned, "User does not own this item.");
         }
 
-        return userItem;
-    }
-
-    private static void EnsureQuantityIfConsumable(ItemDefinition definition, UserItem userItem)
-    {
-        if (definition.IsConsumable && userItem.Quantity <= 0)
+        if (consumeResult == InventoryItemConsumeResult.OutOfStock)
         {
             throw new BusinessRuleException(InventoryErrorCodes.ItemOutOfStock, "Item quantity is not enough.");
         }
+
+        throw new BusinessRuleException(InventoryErrorCodes.UnsupportedItemType, "Inventory consume result is unsupported.");
     }
 
     private async Task<int?> ResolveTargetCardIdAsync(
@@ -125,20 +130,6 @@ public sealed partial class ItemUsedDomainEventHandler
         }
 
         return domainEvent.TargetCardId.Value;
-    }
-
-    private async Task ConsumeQuantityIfNeededAsync(
-        ItemDefinition definition,
-        UserItem userItem,
-        CancellationToken cancellationToken)
-    {
-        if (definition.IsConsumable == false)
-        {
-            return;
-        }
-
-        userItem.DecreaseQuantity(MinimumEffectValue);
-        await _userItemRepository.UpdateAsync(userItem, cancellationToken);
     }
 
 }

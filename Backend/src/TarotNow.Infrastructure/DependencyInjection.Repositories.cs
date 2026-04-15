@@ -49,6 +49,8 @@ public static partial class DependencyInjection
         services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
         services.AddScoped<IItemDefinitionRepository, ItemDefinitionRepository>();
         services.AddScoped<IUserItemRepository, UserItemRepository>();
+        services.AddScoped<IFreeDrawCreditRepository, FreeDrawCreditRepository>();
+        services.AddScoped<IInventoryLuckEffectRepository, InventoryLuckEffectRepository>();
         services.AddScoped<ITransactionCoordinator, TransactionCoordinator>();
         services.AddScoped<IOutboxMonitoringRepository, OutboxMonitoringRepository>();
         services.AddScoped<IOutboxBatchProcessor, OutboxBatchProcessor>();

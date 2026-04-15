@@ -143,7 +143,8 @@ public class ItemDefinition
         IconUrl = NormalizeOptional(iconUrl, 500);
         IsConsumable = isConsumable;
         IsPermanent = isPermanent;
-        EffectValue = effectValue;
+        EnsureExactlyOneOwnershipMode(IsConsumable, IsPermanent);
+        EffectValue = EnsurePositive(effectValue, nameof(effectValue));
         SuccessRatePercent = EnsureRange(successRatePercent, 0m, 100m, nameof(successRatePercent));
         IsActive = isActive;
         CreatedAtUtc = DateTime.UtcNow;
@@ -208,5 +209,23 @@ public class ItemDefinition
         }
 
         return value;
+    }
+
+    private static int EnsurePositive(int value, string paramName)
+    {
+        if (value <= 0)
+        {
+            throw new ArgumentOutOfRangeException(paramName, "Value must be greater than zero.");
+        }
+
+        return value;
+    }
+
+    private static void EnsureExactlyOneOwnershipMode(bool isConsumable, bool isPermanent)
+    {
+        if (isConsumable == isPermanent)
+        {
+            throw new ArgumentException("Item must be either consumable or permanent.");
+        }
     }
 }

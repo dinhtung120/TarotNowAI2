@@ -14,7 +14,20 @@ public sealed class ItemDefinitionConfiguration : IEntityTypeConfiguration<ItemD
     /// </summary>
     public void Configure(EntityTypeBuilder<ItemDefinition> builder)
     {
-        builder.ToTable("item_definitions");
+        builder.ToTable(
+            "item_definitions",
+            tableBuilder =>
+            {
+                tableBuilder.HasCheckConstraint(
+                    "ck_item_definitions_effect_value_positive",
+                    "\"effect_value\" > 0");
+                tableBuilder.HasCheckConstraint(
+                    "ck_item_definitions_success_rate_percent",
+                    "\"success_rate_percent\" >= 0 AND \"success_rate_percent\" <= 100");
+                tableBuilder.HasCheckConstraint(
+                    "ck_item_definitions_consumable_permanent_xor",
+                    "\"is_consumable\" <> \"is_permanent\"");
+            });
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Code).HasMaxLength(64).IsRequired();

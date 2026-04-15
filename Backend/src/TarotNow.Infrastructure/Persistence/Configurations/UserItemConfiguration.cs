@@ -14,7 +14,9 @@ public sealed class UserItemConfiguration : IEntityTypeConfiguration<UserItem>
     /// </summary>
     public void Configure(EntityTypeBuilder<UserItem> builder)
     {
-        builder.ToTable("user_items");
+        builder.ToTable(
+            "user_items",
+            tableBuilder => tableBuilder.HasCheckConstraint("ck_user_items_quantity_non_negative", "\"quantity\" >= 0"));
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.UserId).IsRequired();

@@ -8,7 +8,7 @@ namespace TarotNow.Infrastructure.Persistence.Repositories;
 /// <summary>
 /// Repository quản lý item người dùng sở hữu và idempotency thao tác dùng item.
 /// </summary>
-public sealed class UserItemRepository : IUserItemRepository
+public sealed partial class UserItemRepository : IUserItemRepository
 {
     private const string UseOperationUniqueConstraint = "ix_inventory_item_use_operations_user_id_idempotency_key";
 
@@ -76,7 +76,15 @@ public sealed class UserItemRepository : IUserItemRepository
     public async Task UpdateAsync(UserItem userItem, CancellationToken cancellationToken = default)
     {
         _dbContext.Set<UserItem>().Update(userItem);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            throw new InvalidOperationException("User item was updated concurrently.", exception);
+        }
     }
 
     /// <inheritdoc />
@@ -84,37 +92,6 @@ public sealed class UserItemRepository : IUserItemRepository
     {
         await _dbContext.Set<UserItem>().AddAsync(userItem, cancellationToken);
         await _dbContext.SaveChangesAsync(cancellationToken);
-    }
-
-    /// <inheritdoc />
-    public Task<bool> HasProcessedUseOperationAsync(
-        Guid userId,
-        string idempotencyKey,
-        CancellationToken cancellationToken = default)
-    {
-        var normalizedKey = idempotencyKey.Trim();
-        return _dbContext.Set<InventoryItemUseOperation>()
-            .AsNoTracking()
-            .AnyAsync(x => x.UserId == userId && x.IdempotencyKey == normalizedKey, cancellationToken);
-    }
-
-    /// <inheritdoc />
-    public async Task<bool> TryRegisterUseOperationAsync(
-        InventoryItemUseOperation operation,
-        CancellationToken cancellationToken = default)
-    {
-        _dbContext.Set<InventoryItemUseOperation>().Add(operation);
-
-        try
-        {
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            return true;
-        }
-        catch (DbUpdateException exception) when (IsUniqueUseOperationViolation(exception))
-        {
-            _dbContext.Entry(operation).State = EntityState.Detached;
-            return false;
-        }
     }
 
     private static bool IsUniqueUseOperationViolation(DbUpdateException exception)

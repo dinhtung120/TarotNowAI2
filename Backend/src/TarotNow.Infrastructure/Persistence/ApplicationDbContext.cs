@@ -96,6 +96,12 @@ public partial class ApplicationDbContext : DbContext
     // DbSet bảng inventory_item_use_operations.
     public DbSet<InventoryItemUseOperation> InventoryItemUseOperations { get; set; } = null!;
 
+    // DbSet bảng free_draw_credits.
+    public DbSet<FreeDrawCredit> FreeDrawCredits { get; set; } = null!;
+
+    // DbSet bảng inventory_luck_effects.
+    public DbSet<InventoryLuckEffect> InventoryLuckEffects { get; set; } = null!;
+
     // DbSet bảng outbox_messages.
     public DbSet<OutboxMessage> OutboxMessages { get; set; } = null!;
 

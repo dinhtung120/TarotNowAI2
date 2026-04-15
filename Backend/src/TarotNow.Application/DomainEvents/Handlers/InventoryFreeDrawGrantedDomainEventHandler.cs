@@ -13,26 +13,30 @@ namespace TarotNow.Application.DomainEvents.Handlers;
 public sealed class FreeDrawGrantedDomainEventHandler
     : IdempotentDomainEventNotificationHandler<FreeDrawGrantedDomainEvent>
 {
+    private readonly IFreeDrawCreditRepository _freeDrawCreditRepository;
     private readonly INotificationRepository _notificationRepository;
 
     /// <summary>
     /// Khởi tạo handler FreeDrawGrantedDomainEvent.
     /// </summary>
     public FreeDrawGrantedDomainEventHandler(
+        IFreeDrawCreditRepository freeDrawCreditRepository,
         INotificationRepository notificationRepository,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
+        _freeDrawCreditRepository = freeDrawCreditRepository;
         _notificationRepository = notificationRepository;
     }
 
     /// <inheritdoc />
-    protected override Task HandleDomainEventAsync(
+    protected override async Task HandleDomainEventAsync(
         FreeDrawGrantedDomainEvent domainEvent,
         Guid? outboxMessageId,
         CancellationToken cancellationToken)
     {
-        return _notificationRepository.CreateAsync(
+        await _freeDrawCreditRepository.AddCreditsAsync(domainEvent.UserId, domainEvent.GrantedCount, cancellationToken);
+        await _notificationRepository.CreateAsync(
             new NotificationCreateDto
             {
                 UserId = domainEvent.UserId,

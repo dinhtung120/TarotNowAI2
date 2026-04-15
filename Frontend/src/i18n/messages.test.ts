@@ -14,6 +14,7 @@ const EXPECTED_TOP_LEVEL_KEYS = [
  'Gamification',
  'History',
  'Index',
+ 'Inventory',
  'LanguageSwitcher',
  'Legal',
  'Navigation',

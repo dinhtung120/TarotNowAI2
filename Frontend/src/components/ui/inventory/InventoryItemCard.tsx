@@ -3,7 +3,7 @@
 import { memo } from 'react';
 import { Package2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { InventoryItem } from '@/shared/infrastructure/inventory/inventoryTypes';
+import type { InventoryItem, InventoryRarity } from '@/shared/infrastructure/inventory/inventoryTypes';
 
 interface InventoryItemCardProps {
  item: InventoryItem;
@@ -11,13 +11,17 @@ interface InventoryItemCardProps {
  onSelect: (item: InventoryItem) => void;
 }
 
-const rarityClasses: Record<string, string> = {
+const rarityClasses: Record<InventoryRarity, string> = {
  common: 'border-slate-300/70 bg-slate-100/70 dark:border-slate-700 dark:bg-slate-900/30',
  uncommon: 'border-emerald-300/80 bg-emerald-50/70 dark:border-emerald-700 dark:bg-emerald-900/20',
  rare: 'border-sky-300/80 bg-sky-50/70 dark:border-sky-700 dark:bg-sky-900/20',
  epic: 'border-fuchsia-300/80 bg-fuchsia-50/70 dark:border-fuchsia-700 dark:bg-fuchsia-900/20',
  legendary: 'border-amber-300/80 bg-amber-50/70 dark:border-amber-700 dark:bg-amber-900/20',
 };
+
+function isKnownRarity(rarity: string): rarity is InventoryRarity {
+ return rarity in rarityClasses;
+}
 
 function getLocalizedText(item: InventoryItem, locale: string) {
  if (locale === 'en') return { name: item.nameEn, description: item.descriptionEn };
@@ -27,7 +31,7 @@ function getLocalizedText(item: InventoryItem, locale: string) {
 
 function InventoryItemCardComponent({ item, locale, onSelect }: InventoryItemCardProps) {
  const text = getLocalizedText(item, locale);
- const rarityClass = rarityClasses[item.rarity] || rarityClasses.common;
+ const rarityClass = isKnownRarity(item.rarity) ? rarityClasses[item.rarity] : rarityClasses.common;
 
  return (
   <button

@@ -9,6 +9,7 @@ export const PROTECTED_PREFIXES = [
  '/gamification',
  '/leaderboard',
  '/gacha',
+ '/inventory',
  '/community',
  '/premium',
  '/notifications',

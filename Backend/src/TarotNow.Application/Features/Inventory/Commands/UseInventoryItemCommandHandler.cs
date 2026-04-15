@@ -30,15 +30,13 @@ public sealed class UseInventoryItemCommandHandler : IRequestHandler<UseInventor
         var normalizedIdempotencyKey = NormalizeIdempotencyKey(request.IdempotencyKey);
         EnsureTargetCardIdIfProvided(request.TargetCardId);
 
-        await _inlineDomainEventDispatcher.PublishAsync(
-            BuildItemUsedEvent(
-                request.UserId,
-                normalizedItemCode,
-                request.TargetCardId,
-                normalizedIdempotencyKey),
-            cancellationToken);
-
-        return BuildAcceptedResult(normalizedItemCode, request.TargetCardId);
+        var domainEvent = BuildItemUsedEvent(
+            request.UserId,
+            normalizedItemCode,
+            request.TargetCardId,
+            normalizedIdempotencyKey);
+        await _inlineDomainEventDispatcher.PublishAsync(domainEvent, cancellationToken);
+        return BuildResult(domainEvent);
     }
 
     private static ItemUsedDomainEvent BuildItemUsedEvent(
@@ -56,14 +54,16 @@ public sealed class UseInventoryItemCommandHandler : IRequestHandler<UseInventor
         };
     }
 
-    private static UseInventoryItemResult BuildAcceptedResult(string normalizedItemCode, int? targetCardId)
+    private static UseInventoryItemResult BuildResult(ItemUsedDomainEvent domainEvent)
     {
         return new UseInventoryItemResult
         {
-            ItemCode = normalizedItemCode,
-            TargetCardId = targetCardId,
-            IsIdempotentReplay = false,
-            Message = InventoryCommandMessages.Accepted,
+            ItemCode = domainEvent.ItemCode,
+            TargetCardId = domainEvent.TargetCardId,
+            IsIdempotentReplay = domainEvent.IsIdempotentReplay,
+            Message = domainEvent.IsIdempotentReplay
+                ? InventoryCommandMessages.Replayed
+                : InventoryCommandMessages.Accepted,
         };
     }
 

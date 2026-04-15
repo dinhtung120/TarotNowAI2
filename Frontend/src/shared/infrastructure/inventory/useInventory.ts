@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { parseApiError } from '@/shared/infrastructure/error/parseApiError';
 import { INVENTORY_API_ROUTE, inventoryQueryKeys } from '@/shared/infrastructure/inventory/inventoryConstants';
 import type { InventoryResponse } from '@/shared/infrastructure/inventory/inventoryTypes';
 
@@ -12,14 +13,7 @@ async function fetchInventory(): Promise<InventoryResponse> {
  });
 
  if (!response.ok) {
-  let message = 'Failed to load inventory.';
-  try {
-   const payload = (await response.json()) as { detail?: string; error?: string };
-   message = payload.detail || payload.error || message;
-  } catch {
-   // Ignore parse failure and keep fallback message.
-  }
-
+  const message = await parseApiError(response, 'Failed to load inventory.');
   throw new Error(message);
  }
 

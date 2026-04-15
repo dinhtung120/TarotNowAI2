@@ -1,6 +1,8 @@
 'use client';
 
+import { useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { parseApiError } from '@/shared/infrastructure/error/parseApiError';
 import {
  INVENTORY_API_ROUTE,
  INVENTORY_IDEMPOTENCY_HEADER,
@@ -19,8 +21,16 @@ function createIdempotencyKey(): string {
  return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
-async function useItemRequest(payload: UseInventoryItemPayload): Promise<UseInventoryItemResponse> {
- const idempotencyKey = payload.idempotencyKey || createIdempotencyKey();
+function normalizeIntentKey(payload: UseInventoryItemPayload): string {
+ const normalizedCode = payload.itemCode.trim().toLowerCase();
+ const targetCard = payload.targetCardId ?? 'none';
+ return `${normalizedCode}:${targetCard}`;
+}
+
+async function sendUseItemRequest(
+ payload: UseInventoryItemPayload,
+ idempotencyKey: string,
+): Promise<UseInventoryItemResponse> {
  const response = await fetch(INVENTORY_API_ROUTE, {
   method: 'POST',
   credentials: 'include',
@@ -36,14 +46,7 @@ async function useItemRequest(payload: UseInventoryItemPayload): Promise<UseInve
  });
 
  if (!response.ok) {
-  let message = 'Failed to use item.';
-  try {
-   const payloadJson = (await response.json()) as { detail?: string; error?: string };
-   message = payloadJson.detail || payloadJson.error || message;
-  } catch {
-   // Ignore parse failure and keep fallback message.
-  }
-
+  const message = await parseApiError(response, 'Failed to use item.');
   throw new Error(message);
  }
 
@@ -52,10 +55,21 @@ async function useItemRequest(payload: UseInventoryItemPayload): Promise<UseInve
 
 export function useUseItem() {
  const queryClient = useQueryClient();
+ const pendingIntentKeysRef = useRef<Map<string, string>>(new Map());
 
  return useMutation({
-  mutationFn: useItemRequest,
-  onSuccess: async () => {
+  mutationFn: async (payload: UseInventoryItemPayload) => {
+   const intentKey = normalizeIntentKey(payload);
+   const currentIdempotencyKey = payload.idempotencyKey
+    || pendingIntentKeysRef.current.get(intentKey)
+    || createIdempotencyKey();
+
+   pendingIntentKeysRef.current.set(intentKey, currentIdempotencyKey);
+   return sendUseItemRequest(payload, currentIdempotencyKey);
+  },
+  onSuccess: async (_, variables) => {
+   const intentKey = normalizeIntentKey(variables);
+   pendingIntentKeysRef.current.delete(intentKey);
    await queryClient.invalidateQueries({ queryKey: inventoryQueryKeys.mine() });
   },
  });

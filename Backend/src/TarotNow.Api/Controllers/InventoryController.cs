@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Constants;
+using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.Inventory.Commands;
 using TarotNow.Application.Features.Inventory.Queries;
 
@@ -36,7 +37,12 @@ public sealed class InventoryController : ControllerBase
     [HttpGet(InventoryRoutes.GetMyInventory)]
     public async Task<IActionResult> GetMyInventory(CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetUserInventoryQuery(GetCurrentUserId()), cancellationToken);
+        if (!TryGetCurrentUserId(out var userId))
+        {
+            return this.UnauthorizedProblem();
+        }
+
+        var result = await _mediator.Send(new GetUserInventoryQuery(userId), cancellationToken);
         return Ok(result);
     }
 
@@ -46,15 +52,23 @@ public sealed class InventoryController : ControllerBase
     [HttpPost(InventoryRoutes.UseItem)]
     public async Task<IActionResult> UseItem([FromBody] UseInventoryItemRequest request, CancellationToken cancellationToken)
     {
+        if (!TryGetCurrentUserId(out var userId))
+        {
+            return this.UnauthorizedProblem();
+        }
+
         var idempotencyKey = ResolveIdempotencyKey(request.IdempotencyKey);
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
-            return Problem(statusCode: 400, detail: "Missing idempotency key.");
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Bad request",
+                detail: "Missing idempotency key.");
         }
 
         var command = new UseInventoryItemCommand
         {
-            UserId = GetCurrentUserId(),
+            UserId = userId,
             ItemCode = request.ItemCode,
             TargetCardId = request.TargetCardId,
             IdempotencyKey = idempotencyKey,
@@ -64,10 +78,10 @@ public sealed class InventoryController : ControllerBase
         return Ok(result);
     }
 
-    private Guid GetCurrentUserId()
+    private bool TryGetCurrentUserId(out Guid userId)
     {
         var claim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        return Guid.Parse(claim!);
+        return Guid.TryParse(claim, out userId);
     }
 
     private string ResolveIdempotencyKey(string? bodyKey)

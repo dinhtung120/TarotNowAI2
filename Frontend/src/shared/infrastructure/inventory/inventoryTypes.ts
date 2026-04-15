@@ -1,9 +1,11 @@
+export type InventoryRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+
 export interface InventoryItem {
  itemDefinitionId: string;
  itemCode: string;
  itemType: string;
  enhancementType?: string | null;
- rarity: string;
+ rarity: InventoryRarity | string;
  isConsumable: boolean;
  isPermanent: boolean;
  effectValue: number;
@@ -16,6 +18,9 @@ export interface InventoryItem {
  descriptionZh: string;
  iconUrl?: string | null;
  quantity: number;
+ canUse: boolean;
+ requiresTargetCard: boolean;
+ blockedReason?: string | null;
  acquiredAtUtc: string;
 }
 

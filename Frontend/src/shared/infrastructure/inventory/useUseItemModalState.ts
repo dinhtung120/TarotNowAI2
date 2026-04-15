@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { inventoryItemTypes } from '@/shared/infrastructure/inventory/inventoryConstants';
 import type { InventoryItem } from '@/shared/infrastructure/inventory/inventoryTypes';
 
@@ -32,10 +32,26 @@ export function useUseItemModalState({
  item,
  locale,
 }: UseUseItemModalStateParams): UseUseItemModalStateResult {
- const [selectedCardId, setSelectedCardId] = useState<number | ''>('');
+ const itemKey = item?.itemDefinitionId ?? '';
+ const [selectionState, setSelectionState] = useState<{
+  itemKey: string;
+  selectedCardId: number | '';
+ }>({
+  itemKey: '',
+  selectedCardId: '',
+ });
+
+ const selectedCardId = selectionState.itemKey === itemKey ? selectionState.selectedCardId : '';
+ const setSelectedCardId = useCallback((value: number | '') => {
+  setSelectionState({
+   itemKey,
+   selectedCardId: value,
+  });
+ }, [itemKey]);
+
  const text = useMemo(() => (item ? resolveLocalizedText(item, locale) : null), [item, locale]);
  const needCard = item?.itemType === inventoryItemTypes.cardEnhancer;
- const canSubmit = !!item && (!needCard || selectedCardId !== '');
+ const canSubmit = !!item && item.canUse && (!needCard || selectedCardId !== '');
 
  return {
   selectedCardId,

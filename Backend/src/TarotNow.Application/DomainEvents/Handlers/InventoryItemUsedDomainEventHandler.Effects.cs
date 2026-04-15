@@ -30,7 +30,7 @@ public sealed partial class ItemUsedDomainEventHandler
 
         if (string.Equals(definition.Type, ItemType.ConsumableSpecial, StringComparison.OrdinalIgnoreCase))
         {
-            await PublishLuckIfNeededAsync(userId, definition, cancellationToken);
+            await DispatchConsumableSpecialAsync(userId, definition, cancellationToken);
             return;
         }
 
@@ -107,20 +107,31 @@ public sealed partial class ItemUsedDomainEventHandler
             cancellationToken);
     }
 
-    private Task PublishLuckIfNeededAsync(Guid userId, ItemDefinition definition, CancellationToken cancellationToken)
+    private Task DispatchConsumableSpecialAsync(Guid userId, ItemDefinition definition, CancellationToken cancellationToken)
     {
-        if (string.Equals(definition.EnhancementType, EnhancementType.Luck, StringComparison.OrdinalIgnoreCase) == false)
+        if (string.Equals(definition.EnhancementType, EnhancementType.Luck, StringComparison.OrdinalIgnoreCase))
         {
-            return Task.CompletedTask;
+            return _inlineDomainEventDispatcher.PublishAsync(
+                new LuckAppliedDomainEvent
+                {
+                    UserId = userId,
+                    LuckValue = definition.EffectValue,
+                    SourceItemCode = definition.Code,
+                },
+                cancellationToken);
         }
 
-        return _inlineDomainEventDispatcher.PublishAsync(
-            new LuckAppliedDomainEvent
-            {
-                UserId = userId,
-                LuckValue = definition.EffectValue,
-                SourceItemCode = definition.Code,
-            },
-            cancellationToken);
+        if (string.Equals(definition.Code, InventoryItemCodes.MysteryCardPack, StringComparison.OrdinalIgnoreCase))
+        {
+            return _inlineDomainEventDispatcher.PublishAsync(
+                new MysteryPackOpenedDomainEvent
+                {
+                    UserId = userId,
+                    SourceItemCode = definition.Code,
+                },
+                cancellationToken);
+        }
+
+        throw new BusinessRuleException(InventoryErrorCodes.UnsupportedItemType, "Consumable special item is not supported.");
     }
 }

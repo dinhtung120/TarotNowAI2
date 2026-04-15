@@ -29,4 +29,9 @@ public sealed class ItemUsedDomainEvent : IDomainEvent
     /// Mốc phát sinh sự kiện theo UTC.
     /// </summary>
     public DateTime OccurredAtUtc { get; init; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// Cờ cho biết đây là replay theo idempotency key đã xử lý trước đó.
+    /// </summary>
+    public bool IsIdempotentReplay { get; set; }
 }

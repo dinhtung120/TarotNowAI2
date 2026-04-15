@@ -1,44 +1,61 @@
-
 using System;
 
 namespace TarotNow.Domain.Entities;
 
-// Entity bộ sưu tập thẻ của người dùng để theo dõi bản sao, cấp độ và chỉ số chiến đấu.
+/// <summary>
+/// Entity bộ sưu tập thẻ của người dùng để theo dõi bản sao, cấp độ và chỉ số chiến đấu.
+/// </summary>
 public class UserCollection
 {
-    // Chủ sở hữu thẻ.
+    /// <summary>
+    /// Chủ sở hữu thẻ.
+    /// </summary>
     public Guid UserId { get; private set; }
 
-    // Định danh lá bài.
+    /// <summary>
+    /// Định danh lá bài.
+    /// </summary>
     public int CardId { get; private set; }
 
-    // Cấp độ hiện tại của thẻ.
+    /// <summary>
+    /// Cấp độ hiện tại của thẻ.
+    /// </summary>
     public int Level { get; private set; }
 
-    // Số bản sao đã sở hữu.
+    /// <summary>
+    /// Số bản sao đã sở hữu.
+    /// </summary>
     public int Copies { get; private set; }
 
-    // Tổng EXP cộng dồn cho thẻ.
+    /// <summary>
+    /// Tổng EXP cộng dồn cho thẻ.
+    /// </summary>
     public long ExpGained { get; private set; }
 
-    // Thời điểm gần nhất người dùng rút được thẻ này.
+    /// <summary>
+    /// Thời điểm gần nhất người dùng rút được thẻ này.
+    /// </summary>
     public DateTime LastDrawnAt { get; private set; }
 
-    // Chỉ số tấn công của thẻ.
+    /// <summary>
+    /// Chỉ số tấn công của thẻ.
+    /// </summary>
     public int Atk { get; private set; }
 
-    // Chỉ số phòng thủ của thẻ.
+    /// <summary>
+    /// Chỉ số phòng thủ của thẻ.
+    /// </summary>
     public int Def { get; private set; }
 
     /// <summary>
     /// Constructor rỗng cho ORM materialization.
-    /// Luồng xử lý: để EF khôi phục entity từ dữ liệu lưu trữ.
     /// </summary>
-    protected UserCollection() { }
+    protected UserCollection()
+    {
+    }
 
     /// <summary>
     /// Khởi tạo thẻ mới trong bộ sưu tập với chỉ số và cấp mặc định.
-    /// Luồng xử lý: gán user/card, set level/copies ban đầu và thiết lập chỉ số nền.
     /// </summary>
     public UserCollection(Guid userId, int cardId)
     {
@@ -54,7 +71,6 @@ public class UserCollection
 
     /// <summary>
     /// Khôi phục UserCollection từ snapshot để tái tạo đúng state đã lưu.
-    /// Luồng xử lý: tạo entity nền rồi gán lại toàn bộ thuộc tính từ snapshot.
     /// </summary>
     public static UserCollection Rehydrate(UserCollectionSnapshot snapshot)
     {
@@ -65,42 +81,36 @@ public class UserCollection
             ExpGained = snapshot.ExpGained,
             LastDrawnAt = snapshot.LastDrawnAt,
             Atk = snapshot.Atk,
-            Def = snapshot.Def
+            Def = snapshot.Def,
         };
     }
 
     /// <summary>
     /// Thêm một bản sao thẻ và cộng EXP tương ứng sau mỗi lần rút trúng.
-    /// Luồng xử lý: tăng copies/exp, cập nhật LastDrawnAt và tăng level mỗi mốc 5 bản sao.
     /// </summary>
     public void AddCopy(long expToGain)
     {
         Copies += 1;
         ExpGained += expToGain;
         LastDrawnAt = DateTime.UtcNow;
-        // Cập nhật state chính của thẻ ngay sau khi nhận thêm bản sao.
 
         if (Copies % 5 == 0)
         {
             Level += 1;
-            // Business rule: cứ mỗi 5 bản sao thì tăng 1 cấp thẻ.
         }
     }
 
     /// <summary>
     /// Áp chỉ số thưởng khi thẻ lên cấp.
-    /// Luồng xử lý: cộng trực tiếp atkBonus/defBonus vào chỉ số hiện tại.
     /// </summary>
     public void ApplyLevelUpStats(int atkBonus, int defBonus)
     {
         Atk += atkBonus;
         Def += defBonus;
-        // Đồng bộ chỉ số chiến đấu sau khi hoàn tất xử lý level-up.
     }
 
     /// <summary>
     /// Cộng thêm EXP trực tiếp cho thẻ từ item enhancer.
-    /// Luồng xử lý: validate giá trị đầu vào dương, cộng vào ExpGained và cập nhật mốc UpdatedAt logic.
     /// </summary>
     public void AddExp(long expAmount)
     {
@@ -115,7 +125,6 @@ public class UserCollection
 
     /// <summary>
     /// Cộng chỉ số tấn công trực tiếp từ item booster.
-    /// Luồng xử lý: chặn giá trị âm hoặc 0 rồi tăng Atk hiện tại.
     /// </summary>
     public void IncreaseAttack(int amount)
     {
@@ -130,7 +139,6 @@ public class UserCollection
 
     /// <summary>
     /// Cộng chỉ số phòng thủ trực tiếp từ item booster.
-    /// Luồng xử lý: chặn giá trị âm hoặc 0 rồi tăng Def hiện tại.
     /// </summary>
     public void IncreaseDefense(int amount)
     {
@@ -144,23 +152,27 @@ public class UserCollection
     }
 
     /// <summary>
-    /// Nâng cấp level trực tiếp khi item upgrade thành công.
-    /// Luồng xử lý: tăng level thêm một đơn vị và áp dụng bonus chỉ số theo range của cấp mới.
+    /// Nâng cấp cấp độ thẻ khi có bonus được tính ở tầng hạ tầng.
     /// </summary>
-    public (int atkBonus, int defBonus) ApplyLevelUpgrade()
+    public void ApplyLevelUpgrade(int atkBonus, int defBonus)
     {
+        if (atkBonus <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(atkBonus), "atkBonus must be > 0.");
+        }
+
+        if (defBonus <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(defBonus), "defBonus must be > 0.");
+        }
+
         Level += 1;
-        var (min, max) = GetStatBonusRange(Level);
-        var atkBonus = Random.Shared.Next(min, max + 1);
-        var defBonus = Random.Shared.Next(min, max + 1);
         ApplyLevelUpStats(atkBonus, defBonus);
         LastDrawnAt = DateTime.UtcNow;
-        return (atkBonus, defBonus);
     }
 
     /// <summary>
     /// Trả khoảng bonus chỉ số hợp lệ theo cấp mới của thẻ.
-    /// Luồng xử lý: giữ min cố định và tăng max tuyến tính theo newLevel.
     /// </summary>
     public static (int min, int max) GetStatBonusRange(int newLevel)
     {
@@ -168,30 +180,48 @@ public class UserCollection
     }
 }
 
-// Snapshot bộ sưu tập thẻ để rehydrate domain entity.
+/// <summary>
+/// Snapshot bộ sưu tập thẻ để rehydrate domain entity.
+/// </summary>
 public sealed class UserCollectionSnapshot
 {
-    // Định danh người dùng.
+    /// <summary>
+    /// Định danh người dùng.
+    /// </summary>
     public Guid UserId { get; init; }
 
-    // Định danh thẻ.
+    /// <summary>
+    /// Định danh thẻ.
+    /// </summary>
     public int CardId { get; init; }
 
-    // Cấp độ hiện tại.
+    /// <summary>
+    /// Cấp độ hiện tại.
+    /// </summary>
     public int Level { get; init; }
 
-    // Số bản sao hiện có.
+    /// <summary>
+    /// Số bản sao hiện có.
+    /// </summary>
     public int Copies { get; init; }
 
-    // EXP tích lũy.
+    /// <summary>
+    /// EXP tích lũy.
+    /// </summary>
     public long ExpGained { get; init; }
 
-    // Thời điểm rút gần nhất.
+    /// <summary>
+    /// Thời điểm rút gần nhất.
+    /// </summary>
     public DateTime LastDrawnAt { get; init; }
 
-    // Chỉ số tấn công.
+    /// <summary>
+    /// Chỉ số tấn công.
+    /// </summary>
     public int Atk { get; init; }
 
-    // Chỉ số phòng thủ.
+    /// <summary>
+    /// Chỉ số phòng thủ.
+    /// </summary>
     public int Def { get; init; }
 }

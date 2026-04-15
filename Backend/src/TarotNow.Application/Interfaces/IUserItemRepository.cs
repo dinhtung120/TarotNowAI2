@@ -33,19 +33,87 @@ public interface IUserItemRepository
     Task AddAsync(UserItem userItem, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Kiểm tra idempotency key đã được xử lý chưa.
+    /// Thử consume item kèm đăng ký idempotency operation một cách an toàn cho concurrent requests.
     /// </summary>
-    Task<bool> HasProcessedUseOperationAsync(
-        Guid userId,
-        string idempotencyKey,
+    Task<InventoryItemConsumeResult> TryConsumeWithIdempotencyAsync(
+        InventoryItemConsumeRequest request,
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Đăng ký thao tác dùng item theo idempotency key.
+    /// Cấp thêm item theo item code cho người dùng.
     /// </summary>
-    Task<bool> TryRegisterUseOperationAsync(
-        InventoryItemUseOperation operation,
+    Task GrantItemByCodeAsync(
+        Guid userId,
+        string itemCode,
+        int quantity,
         CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Request consume item với thông tin cần cho kiểm tra idempotency.
+/// </summary>
+public sealed class InventoryItemConsumeRequest
+{
+    /// <summary>
+    /// Định danh user thực hiện consume.
+    /// </summary>
+    public Guid UserId { get; init; }
+
+    /// <summary>
+    /// Định danh item definition cần consume.
+    /// </summary>
+    public Guid ItemDefinitionId { get; init; }
+
+    /// <summary>
+    /// Mã item dùng để lưu operation log.
+    /// </summary>
+    public string ItemCode { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Card mục tiêu nếu có.
+    /// </summary>
+    public int? TargetCardId { get; init; }
+
+    /// <summary>
+    /// Idempotency key của thao tác.
+    /// </summary>
+    public string IdempotencyKey { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Cờ cho biết item cần consume quantity.
+    /// </summary>
+    public bool IsConsumable { get; init; }
+
+    /// <summary>
+    /// Số lượng consume mỗi lần.
+    /// </summary>
+    public int ConsumeQuantity { get; init; }
+}
+
+/// <summary>
+/// Kết quả consume item theo trạng thái nghiệp vụ.
+/// </summary>
+public enum InventoryItemConsumeResult
+{
+    /// <summary>
+    /// Consume thành công.
+    /// </summary>
+    Consumed = 0,
+
+    /// <summary>
+    /// Idempotency key đã xử lý trước đó.
+    /// </summary>
+    AlreadyProcessed = 1,
+
+    /// <summary>
+    /// User không sở hữu item.
+    /// </summary>
+    ItemNotOwned = 2,
+
+    /// <summary>
+    /// Item sở hữu nhưng không đủ quantity để consume.
+    /// </summary>
+    OutOfStock = 3,
 }
 
 /// <summary>

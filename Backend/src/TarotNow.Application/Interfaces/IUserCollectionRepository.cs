@@ -8,7 +8,9 @@ using System.Threading.Tasks;
 
 namespace TarotNow.Application.Interfaces;
 
-// Contract bộ sưu tập lá bài người dùng để quản lý tiến trình sở hữu và tăng cấp thẻ.
+/// <summary>
+/// Contract bộ sưu tập lá bài người dùng để quản lý tiến trình sở hữu và tăng cấp thẻ.
+/// </summary>
 public interface IUserCollectionRepository
 {
     /// <summary>

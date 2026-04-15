@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using MongoDB.Driver;
 using TarotNow.Application.Interfaces;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
@@ -128,59 +127,4 @@ public partial class MongoUserCollectionRepository
         };
     }
 
-    private async Task<CardEnhancementApplyResult> ApplyLevelUpgradeEnhancementAsync(
-        FilterDefinition<UserCollectionDocument> filter,
-        CancellationToken cancellationToken,
-        decimal successRatePercent)
-    {
-        var rate = Math.Clamp(successRatePercent, 0m, 100m);
-        var rolled = RandomNumberGenerator.GetInt32(0, 10000) / 100m;
-        if (rolled > rate)
-        {
-            return new CardEnhancementApplyResult
-            {
-                Succeeded = true,
-                ExpDelta = 0,
-                AttackDelta = 0,
-                DefenseDelta = 0,
-                LevelUpgraded = false,
-            };
-        }
-
-        var document = await _mongoContext.UserCollections.Find(filter).FirstOrDefaultAsync(cancellationToken);
-        if (document is null)
-        {
-            throw new InvalidOperationException("Target card was not found in collection.");
-        }
-
-        var newLevel = Math.Max(1, document.Level + 1);
-        var (minBonus, maxBonus) = TarotNow.Domain.Entities.UserCollection.GetStatBonusRange(newLevel);
-        var atkBonus = RandomNumberGenerator.GetInt32(minBonus, maxBonus + 1);
-        var defBonus = RandomNumberGenerator.GetInt32(minBonus, maxBonus + 1);
-
-        var update = Builders<UserCollectionDocument>.Update
-            .Set(x => x.Level, newLevel)
-            .Inc(x => x.Atk, atkBonus)
-            .Inc(x => x.Def, defBonus)
-            .Set(x => x.UpdatedAt, DateTime.UtcNow)
-            .Set(x => x.LastDrawnAt, DateTime.UtcNow)
-            .Push(x => x.StatHistory, new StatRollRecord
-            {
-                Level = newLevel,
-                AtkBonus = atkBonus,
-                DefBonus = defBonus,
-                RolledAt = DateTime.UtcNow,
-            });
-
-        await _mongoContext.UserCollections.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
-
-        return new CardEnhancementApplyResult
-        {
-            Succeeded = true,
-            ExpDelta = 0,
-            AttackDelta = atkBonus,
-            DefenseDelta = defBonus,
-            LevelUpgraded = true,
-        };
-    }
 }
