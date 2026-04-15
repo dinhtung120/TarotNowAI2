@@ -29,7 +29,7 @@ const EXPECTED_TOP_LEVEL_KEYS = [
  'Tarot',
  'UserNav',
  'Wallet',
- 'gacha',
+ 'Gacha',
 ].sort();
 
 describe('mergeMessages', () => {

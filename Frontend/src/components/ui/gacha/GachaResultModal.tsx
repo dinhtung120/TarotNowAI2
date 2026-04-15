@@ -38,8 +38,8 @@ function rewardSummary(reward: PullGachaReward): string {
 }
 
 function GachaResultModalComponent({ isOpen, locale, result, labels, onClose }: GachaResultModalProps) {
+  const { animationData } = useRareDropLottie(result?.rewards ?? []);
   if (!result) return null;
-  const { animationData } = useRareDropLottie(result.rewards);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={labels.title} description={result.poolCode}>

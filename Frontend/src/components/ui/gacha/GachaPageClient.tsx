@@ -18,8 +18,8 @@ function localizeText(value: { nameVi: string; nameEn: string; nameZh: string },
 }
 
 export default function GachaPageClient() {
- const locale = useLocale();
- const t = useTranslations('gacha.gacha');
+  const locale = useLocale();
+ const t = useTranslations('Gacha');
  const [selectedPoolCode, setSelectedPoolCode] = useState('');
  const [resultModalData, setResultModalData] = useState<PullGachaResult | null>(null);
  const [isResultOpen, setIsResultOpen] = useState(false);

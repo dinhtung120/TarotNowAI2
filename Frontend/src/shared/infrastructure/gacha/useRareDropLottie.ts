@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import type { PullGachaReward } from '@/shared/infrastructure/gacha/gachaTypes';
 import { gachaRewardKinds } from '@/shared/infrastructure/gacha/gachaConstants';
 
@@ -31,35 +32,20 @@ export function useRareDropLottie(rewards: PullGachaReward[]) {
     return rareItemRarity ? rarityLottieMap[rareItemRarity] : '';
   }, [rewards]);
 
-  const [animationData, setAnimationData] = useState<object | null>(null);
+  const animationQuery = useQuery({
+    queryKey: ['gacha', 'lottie', animationUrl],
+    queryFn: async () => {
+      const response = await fetch(animationUrl, { cache: 'no-store' });
+      if (!response.ok) {
+        return null;
+      }
 
-  useEffect(() => {
-    let isMounted = true;
-    if (!animationUrl) {
-      setAnimationData(null);
-      return () => {
-        isMounted = false;
-      };
-    }
+      return (await response.json()) as object;
+    },
+    enabled: Boolean(animationUrl),
+    retry: false,
+    staleTime: 300_000,
+  });
 
-    fetch(animationUrl, { cache: 'no-store' })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((payload) => {
-        if (isMounted) {
-          setAnimationData(payload);
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setAnimationData(null);
-        }
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [animationUrl]);
-
-  return { animationData };
+  return { animationData: animationQuery.data ?? null };
 }
-

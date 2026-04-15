@@ -11,7 +11,7 @@ const DEFAULT_PAGE_SIZE = 20;
 
 export default function GachaHistoryPageClient() {
   const locale = useLocale();
-  const t = useTranslations('gacha.gacha');
+  const t = useTranslations('Gacha');
   const [page, setPage] = useState(1);
   const historyQuery = useGachaHistory({ page, pageSize: DEFAULT_PAGE_SIZE });
 
@@ -58,4 +58,3 @@ export default function GachaHistoryPageClient() {
     </div>
   );
 }
-
