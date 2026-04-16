@@ -1,15 +1,23 @@
 'use client';
 
-import { memo } from 'react';
-import { Coins, Gem, Package } from 'lucide-react';
-import Image from 'next/image';
+/* 
+ * Import các thành phần hỗ trợ UI và hiệu ứng.
+ * - useEffect: Quản lý vòng đời và chuyển cảnh tự động của modal.
+ * - Lottie: Hiển thị các hoạt họa mở thưởng sinh động.
+ * - GachaResultItem: Thành phần hiển thị phần thưởng đã được tinh chỉnh.
+ */
+import { memo, useEffect, useState } from 'react';
 import Lottie from 'lottie-react';
 import Modal from '@/shared/components/ui/Modal';
 import Button from '@/shared/components/ui/Button';
 import { cn } from '@/lib/utils';
-import type { PullGachaResult, PullGachaReward } from '@/shared/infrastructure/gacha/gachaTypes';
+import type { PullGachaResult } from '@/shared/infrastructure/gacha/gachaTypes';
 import { useRareDropLottie } from '@/shared/infrastructure/gacha/useRareDropLottie';
+import { GachaResultItem } from '@/components/ui/gacha/GachaResultItem';
 
+/**
+ * Định nghĩa các nhãn ngôn ngữ.
+ */
 interface GachaResultModalLabels {
   title: string;
   pityTriggered: string;
@@ -17,6 +25,9 @@ interface GachaResultModalLabels {
   rareDropAnimation: string;
 }
 
+/**
+ * Props của thành phần GachaResultModal.
+ */
 interface GachaResultModalProps {
   isOpen: boolean;
   locale: string;
@@ -25,94 +36,146 @@ interface GachaResultModalProps {
   onClose: () => void;
 }
 
-function localizeRewardName(reward: PullGachaReward, locale: string): string {
-  if (locale === 'en') return reward.nameEn;
-  if (locale === 'zh') return reward.nameZh;
-  return reward.nameVi;
-}
-
-function rewardSummary(reward: PullGachaReward): string {
-  if (reward.currency) {
-    return `${reward.amount ?? 0} ${reward.currency.toUpperCase()}`;
-  }
-
-  return `x${reward.quantityGranted}`;
-}
-
-function RewardIcon({ reward, locale }: { reward: PullGachaReward; locale: string }) {
-  if (reward.iconUrl) {
-    return (
-      <Image
-        src={reward.iconUrl}
-        alt={localizeRewardName(reward, locale)}
-        width={48}
-        height={48}
-        unoptimized
-        className={cn('h-12 w-12 rounded-lg object-cover')}
-      />
-    );
-  }
-
-  if (reward.currency?.toLowerCase() === 'gold') {
-    return <Coins className={cn('h-6 w-6 text-amber-500')} aria-hidden="true" />;
-  }
-
-  if (reward.currency?.toLowerCase() === 'diamond') {
-    return <Gem className={cn('h-6 w-6 text-cyan-500')} aria-hidden="true" />;
-  }
-
-  return <Package className={cn('h-6 w-6 text-violet-500')} aria-hidden="true" />;
-}
-
+/**
+ * GachaResultModal - Thành phần trung tâm của trải nghiệm mở thưởng Gacha.
+ * Cung cấp quy trình "Mở quà" hồi hộp với hiệu ứng ánh sáng và chuyển cảnh mượt mà.
+ */
 function GachaResultModalComponent({ isOpen, locale, result, labels, onClose }: GachaResultModalProps) {
+  
+  /* Trạng thái hiển thị: REVEALING (Đang mở) hoặc SHOW_RESULT (Hiển thị kết quả) */
+  const [stage, setStage] = useState<'REVEALING' | 'SHOW_RESULT'>('REVEALING');
+  
+  /* Lấy dữ liệu hoạt họa Lottie dựa trên phẩm cấp cao nhất của kết quả */
   const { animationData, hasRareDrop } = useRareDropLottie(result?.rewards ?? []);
+
+  /* Reset trạng thái về REVEALING mỗi khi modal được mở lại */
+  useEffect(() => {
+    if (isOpen) {
+      setStage('REVEALING');
+      
+      /* Tự động chuyển sang trạng thái kết quả sau khi hoạt họa mở được hiển thị xong (~2.5 giây) */
+      const timer = setTimeout(() => {
+        setStage('SHOW_RESULT');
+      }, 2800);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   if (!result) return null;
 
+  /* Xác định xem có vật phẩm cực hiếm (Legendary/Mythic) để kích hoạt hiệu ứng đặc biệt không */
+  const isUltraRare = result.rewards.some(r => 
+    String(r.rarity).toLowerCase().includes('5') || 
+    String(r.rarity).toLowerCase().includes('legendary') ||
+    String(r.rarity).toLowerCase().includes('mythic')
+  );
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={labels.title} description={result.poolCode}>
-      <div className={cn('space-y-4')}>
-        {animationData ? (
-          <div className={cn('rounded-xl border border-fuchsia-300/50 bg-fuchsia-50/60 p-2 dark:border-fuchsia-700/60 dark:bg-fuchsia-950/30')}>
-            <p className={cn('mb-2 text-center text-xs font-semibold uppercase tracking-wide text-fuchsia-700 dark:text-fuchsia-200')}>
-              {labels.rareDropAnimation}
-            </p>
-            <Lottie animationData={animationData} loop autoplay className={cn('mx-auto h-40 w-40')} />
-          </div>
-        ) : null}
-        {hasRareDrop && !animationData ? (
-          <div className={cn('rounded-xl border border-fuchsia-300/50 bg-fuchsia-50/60 p-4 dark:border-fuchsia-700/60 dark:bg-fuchsia-950/30')}>
-            <p className={cn('text-center text-xs font-semibold uppercase tracking-wide text-fuchsia-700 dark:text-fuchsia-200')}>
-              {labels.rareDropAnimation}
-            </p>
-            <div className={cn('mx-auto mt-3 h-3 w-32 rounded-full bg-gradient-to-r from-fuchsia-400 via-amber-300 to-cyan-400 animate-pulse')} />
-          </div>
-        ) : null}
-        {result.wasPityTriggered ? (
-          <p className={cn('rounded-lg bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-800 dark:bg-amber-900/40 dark:text-amber-200')}>{labels.pityTriggered}</p>
-        ) : null}
-        <div className={cn('grid grid-cols-1 gap-3 sm:grid-cols-2')}>
-          {result.rewards.map((reward, index) => (
-            <article
-              key={`${reward.kind}_${reward.itemCode ?? reward.currency ?? index}`}
-              className={cn('rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-900')}
-            >
-              <div className={cn('flex items-start gap-3')}>
-                <div className={cn('flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800')}>
-                  <RewardIcon reward={reward} locale={locale} />
+    <Modal 
+      isOpen={isOpen} 
+      onClose={onClose} 
+      title="" // Không hiển thị tiêu đề modal mặc định để tùy biến giao diện mở thưởng
+      size={stage === 'REVEALING' ? 'sm' : 'lg'}
+      className={cn(
+        'transition-all duration-700',
+        isUltraRare && stage === 'REVEALING' ? 'animate-[shake_0.5s_infinite_0.5s]' : ''
+      )}
+    >
+      <div className="relative min-h-[300px] flex flex-col items-center justify-center py-6">
+        
+        {/* --- Giai đoạn 1: REVEALING (Hoạt họa mở thưởng) --- */}
+        {stage === 'REVEALING' && (
+          <div className="flex flex-col items-center justify-center space-y-6 animate-in fade-in duration-500">
+            {/* Hiệu ứng hào quang nền */}
+            <div className={cn(
+              'absolute inset-0 -z-10 bg-gradient-to-b from-transparent to-transparent opacity-20 blur-[120px]',
+              isUltraRare ? 'from-amber-500' : 'from-purple-500'
+            )} />
+            
+            <div className="relative h-64 w-64">
+              {animationData ? (
+                <Lottie 
+                  animationData={animationData} 
+                  loop={false} 
+                  autoplay 
+                  className="h-full w-full" 
+                />
+              ) : (
+                /* Fallback nếu không có Lottie: Hiển thị vòng sáng nhấp nháy */
+                <div className="flex h-64 w-64 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-500/20 via-amber-500/20 to-purple-500/20 animate-pulse">
+                   <span className="lunar-metallic-text text-6xl font-black">✦</span>
                 </div>
-                <div className={cn('min-w-0')}>
-                  <p className={cn('truncate text-sm font-semibold text-slate-900 dark:text-slate-100')}>{localizeRewardName(reward, locale)}</p>
-                  <p className={cn('mt-1 text-xs uppercase text-slate-500 dark:text-slate-300')}>{reward.rarity}</p>
-                  <p className={cn('mt-2 text-sm text-slate-700 dark:text-slate-200')}>{rewardSummary(reward)}</p>
+              )}
+            </div>
+            <p className="lunar-metallic-text text-sm font-black uppercase tracking-[0.3em] animate-pulse">
+              Đang khai mở vận mệnh...
+            </p>
+          </div>
+        )}
+
+        {/* --- Giai đoạn 2: SHOW_RESULT (Hiển thị danh sách phần thưởng) --- */}
+        {stage === 'SHOW_RESULT' && (
+          <div className="w-full space-y-8 animate-in fade-in zoom-in-95 duration-700">
+            {/* Tiêu đề kết quả Metallic */}
+            <div className="text-center space-y-2">
+              <h2 className="lunar-metallic-text text-2xl font-black uppercase tracking-[0.2em]">
+                {labels.title}
+              </h2>
+              <p className="tn-text-secondary text-[10px] font-black uppercase tracking-widest opacity-60">
+                {result.poolCode}
+              </p>
+            </div>
+
+            {/* Thông báo Pity nếu có */}
+            {result.wasPityTriggered && (
+              <div className="mx-auto max-w-xs animate-bounce">
+                <div className="rounded-full bg-amber-500/10 border border-amber-500/30 px-4 py-1.5 text-center">
+                   <span className="text-amber-400 text-[10px] font-black uppercase tracking-widest">
+                    {labels.pityTriggered}
+                   </span>
                 </div>
               </div>
-            </article>
-          ))}
-        </div>
-        <Button className={cn('w-full')} onClick={onClose}>
-          {labels.close}
-        </Button>
+            )}
+
+            {/* Danh sách lưới các phần thưởng đã mở được */}
+            <div className={cn(
+              'grid grid-cols-1 gap-4 overflow-y-auto max-h-[50vh] px-2 custom-scrollbar',
+              result.rewards.length > 1 ? 'sm:grid-cols-2' : ''
+            )}>
+              {result.rewards.map((reward, index) => (
+                <GachaResultItem 
+                  key={`${reward.itemCode}_${index}`} 
+                  reward={reward} 
+                  locale={locale} 
+                />
+              ))}
+            </div>
+
+            {/* Nút bấm đóng và hoàn tất */}
+            <div className="pt-4">
+              <Button 
+                variant="brand" 
+                size="lg" 
+                fullWidth 
+                onClick={onClose}
+                className="shadow-[0_0_20px_rgba(16,185,129,0.2)]"
+              >
+                {labels.close}
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Animation Shake definition cho CSS Inline (nếu cần, nhưng tốt nhất nên dùng trong globals.css) */}
+      <style jsx>{`
+        @keyframes shake {
+          0%, 100% { transform: translate(0, 0); }
+          10%, 30%, 50%, 70%, 90% { transform: translate(-2px, -2px); }
+          20%, 40%, 60%, 80% { transform: translate(2px, 2px); }
+        }
+      `}</style>
     </Modal>
   );
 }

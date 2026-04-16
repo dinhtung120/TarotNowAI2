@@ -1,58 +1,94 @@
 'use client';
 
+/* 
+ * Import các hooks tuần tự để quản lý trạng thái fetch hoạt họa Lottie.
+ * - useMemo: Tính toán độ hiếm cao nhất từ danh sách phần thưởng.
+ * - useQuery: Thực hiện tải file JSON hoạt họa một cách bất đồng bộ.
+ */
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { PullGachaReward } from '@/shared/infrastructure/gacha/gachaTypes';
-import { gachaRewardKinds } from '@/shared/infrastructure/gacha/gachaConstants';
 
-const rarityPriority: Record<string, number> = {
-  mythic: 3,
-  legendary: 2,
-  epic: 1,
+/**
+ * Bản đồ ưu tiên và ánh xạ độ hiếm.
+ * Hỗ trợ cả định dạng chuỗi (Legendary) và định dạng số (5 sao) thường thấy từ Backend.
+ */
+const rarityMap: Record<string, { priority: number; key: string }> = {
+  'mythic':    { priority: 4, key: 'mythic' },
+  'legendary': { priority: 3, key: 'legendary' },
+  '5':         { priority: 3, key: 'legendary' }, // 5 sao tương đương Legendary
+  'epic':      { priority: 2, key: 'epic' },
+  '4':         { priority: 2, key: 'epic' },      // 4 sao tương đương Epic
+  'rare':      { priority: 1, key: 'rare' },
+  '3':         { priority: 1, key: 'rare' },
 };
 
-const rarityLottieMap: Record<string, string> = {
+/**
+ * Đường dẫn mẫu đến các tệp hoạt họa Lottie trong thư mục public.
+ */
+const rarityLottiePaths: Record<string, string> = {
   mythic: '/lottie/mythic-drop.json',
   legendary: '/lottie/legendary-drop.json',
   epic: '/lottie/epic-drop.json',
 };
 
-function normalizeRarity(rarity: string): string {
-  return rarity.trim().toLowerCase();
+/**
+ * Chuẩn hóa giá trị độ hiếm để đảm bảo so sánh chính xác.
+ */
+function normalizeValue(val: string | number | undefined | null): string {
+  if (val === undefined || val === null) return '';
+  return String(val).trim().toLowerCase();
 }
 
-function normalizeKind(kind: string): string {
-  return kind.trim().toLowerCase();
-}
-
+/**
+ * useRareDropLottie - Hook tùy chỉnh để xác định và tải hoạt họa mở thưởng 
+ * dựa trên vật phẩm hiếm nhất trong kết quả quay Gacha.
+ */
 export function useRareDropLottie(rewards: PullGachaReward[]) {
+  
+  /* Xác định URL của hoạt họa phù hợp nhất */
   const animationUrl = useMemo(() => {
-    const rareItemRarity = rewards
-      .filter((reward) => normalizeKind(reward.kind) === gachaRewardKinds.item)
-      .map((reward) => normalizeRarity(reward.rarity))
-      .filter((rarity) => rarity in rarityPriority)
-      .sort((left, right) => rarityPriority[right] - rarityPriority[left])[0];
+    if (!rewards.length) return '';
 
-    return rareItemRarity ? rarityLottieMap[rareItemRarity] : '';
+    /* Tìm kiếm độ hiếm cao nhất dựa trên bản đồ ưu tiên */
+    let highestRarityKey = '';
+    let highestPriority = -1;
+
+    for (const reward of rewards) {
+      const normalizedRarity = normalizeValue(reward.rarity);
+      const config = rarityMap[normalizedRarity];
+      
+      if (config && config.priority > highestPriority) {
+        highestPriority = config.priority;
+        highestRarityKey = config.key;
+      }
+    }
+
+    return highestRarityKey ? rarityLottiePaths[highestRarityKey] : '';
   }, [rewards]);
 
+  /* Thực hiện tải dữ liệu JSON của hoạt họa Lottie */
   const animationQuery = useQuery({
     queryKey: ['gacha', 'lottie', animationUrl],
     queryFn: async () => {
-      const response = await fetch(animationUrl, { cache: 'no-store' });
-      if (!response.ok) {
+      if (!animationUrl) return null;
+      
+      try {
+        const response = await fetch(animationUrl, { cache: 'force-cache' });
+        if (!response.ok) return null;
+        return (await response.json()) as object;
+      } catch (err) {
+        console.error('Lỗi khi tải Lottie animation:', err);
         return null;
       }
-
-      return (await response.json()) as object;
     },
     enabled: Boolean(animationUrl),
-    retry: false,
-    staleTime: 300_000,
+    staleTime: 1000 * 60 * 30, // Lưu trữ trong cache 30 phút để tái sử dụng
   });
 
   return {
     animationData: animationQuery.data ?? null,
     hasRareDrop: Boolean(animationUrl),
+    isLoading: animationQuery.isLoading
   };
 }
