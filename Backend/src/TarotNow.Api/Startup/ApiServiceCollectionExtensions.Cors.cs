@@ -12,7 +12,7 @@ public static class CorsServiceCollectionExtensions
     public static IServiceCollection AddConfiguredCors(
         this IServiceCollection services,
         IConfiguration configuration,
-        IHostEnvironment _)
+        IHostEnvironment environment)
     {
         var rawOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()?
             .Where(origin => !string.IsNullOrWhiteSpace(origin))
