@@ -33,14 +33,14 @@ namespace TarotNow.Infrastructure.Migrations
         {
             mb.Sql($"UPDATE item_definitions SET icon_url = '{url}' WHERE code = '{code}';");
             // Đồng thời cập nhật luôn trong bảng reward rates nếu item này đã được link
-            mb.Sql($"UPDATE gacha_pool_reward_rates SET icon_url = '{url}' WHERE item_id IN (SELECT id FROM item_definitions WHERE code = '{code}');");
+            mb.Sql($"UPDATE gacha_pool_reward_rates SET icon_url = '{url}' WHERE item_definition_id IN (SELECT id FROM item_definitions WHERE code = '{code}');");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql("UPDATE item_definitions SET icon_url = NULL WHERE code IN ('exp_booster', 'power_booster', 'defense_booster', 'level_upgrader', 'free_draw_ticket', 'daily_fortune_scroll', 'mystery_card_pack', 'rare_title_lucky_star');");
-            migrationBuilder.Sql("UPDATE gacha_pool_reward_rates SET icon_url = NULL WHERE currency IN ('gold', 'diamond') OR item_id IN (SELECT id FROM item_definitions WHERE code IN ('exp_booster', 'power_booster', 'defense_booster', 'level_upgrader', 'free_draw_ticket', 'daily_fortune_scroll', 'mystery_card_pack', 'rare_title_lucky_star'));");
+            migrationBuilder.Sql("UPDATE gacha_pool_reward_rates SET icon_url = NULL WHERE currency IN ('gold', 'diamond') OR item_definition_id IN (SELECT id FROM item_definitions WHERE code IN ('exp_booster', 'power_booster', 'defense_booster', 'level_upgrader', 'free_draw_ticket', 'daily_fortune_scroll', 'mystery_card_pack', 'rare_title_lucky_star'));");
         }
     }
 }
