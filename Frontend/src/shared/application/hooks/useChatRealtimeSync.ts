@@ -16,6 +16,22 @@ interface ConversationUpdatedPayload {
   type?: string;
 }
 
+const UNAUTHORIZED_COOLDOWN_MS = 60_000;
+let unauthorizedRetryBlockedUntil = 0;
+
+function isUnauthorizedNegotiationError(error: unknown): boolean {
+ if (!error) {
+  return false;
+ }
+
+ const text = typeof error === 'string'
+  ? error
+  : error instanceof Error
+   ? error.message
+   : JSON.stringify(error);
+ return text.includes('401') || /unauthorized/i.test(text);
+}
+
 export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
   const enabled = options.enabled ?? true;
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -36,6 +52,10 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
         void existing.stop().catch(() => undefined);
       }
       connectionRef.current = null;
+      return;
+    }
+
+    if (Date.now() < unauthorizedRetryBlockedUntil) {
       return;
     }
 
@@ -100,6 +120,9 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
         }
         connectionRef.current = hubConnection;
       } catch (error) {
+        if (isUnauthorizedNegotiationError(error)) {
+          unauthorizedRetryBlockedUntil = Date.now() + UNAUTHORIZED_COOLDOWN_MS;
+        }
         logger.error('[ChatRealtimeSync] connect failed', error);
       }
     };

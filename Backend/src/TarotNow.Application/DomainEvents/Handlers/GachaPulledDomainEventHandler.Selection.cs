@@ -20,15 +20,15 @@ public sealed partial class GachaPulledDomainEventHandler
             ? rates
                 .Where(x =>
                     string.Equals(x.RewardKind, GachaRewardTypes.Item, StringComparison.Ordinal)
-                    && GachaRarity.IsAtLeastEpic(x.Rarity))
+                    && GachaRarity.IsAtLeastLegendary(x.Rarity))
                 .ToList()
             : rates.ToList();
 
-        if (candidateRates.Count == 0)
+        if (candidateRates.Count == 0 && isPityForced)
         {
             throw new BusinessRuleException(
                 GachaErrorCodes.InvalidPoolConfiguration,
-                "Hard pity is enabled but pool has no item reward with rarity Epic or higher.");
+                "Hard pity is enabled but pool has no item reward with rarity Legendary or Mythic.");
         }
 
         if (candidateRates.Count == 1)

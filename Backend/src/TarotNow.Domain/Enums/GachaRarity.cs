@@ -33,4 +33,19 @@ public static class GachaRarity
                || string.Equals(rarity, Legendary, StringComparison.OrdinalIgnoreCase)
                || string.Equals(rarity, Mythic, StringComparison.OrdinalIgnoreCase);
     }
+
+    /// <summary>
+    /// Kiểm tra rarity có thuộc nhóm cực hiếm (Legendary/Mythic) hay không.
+    /// Sử dụng cho logic Hard Pity mới.
+    /// </summary>
+    public static bool IsAtLeastLegendary(string rarity)
+    {
+        if (string.IsNullOrWhiteSpace(rarity))
+        {
+            return false;
+        }
+
+        return string.Equals(rarity, Legendary, StringComparison.OrdinalIgnoreCase)
+               || string.Equals(rarity, Mythic, StringComparison.OrdinalIgnoreCase);
+    }
 }

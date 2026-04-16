@@ -5,6 +5,8 @@ const blockedExactPaths = new Set([
  '/wallet/withdraw',
  '/gacha/history',
  '/profile/mfa',
+ '/readers/[id]',
+ '/reading/history/[id]',
 ]);
 const blockedRegexPatterns = [
  /^\/readers\/[^/]+$/,
@@ -15,10 +17,12 @@ const ROUTE_CHANGE_DELAY_MS = 500;
 
 let prefetchReadyAt = 0;
 let lastMarkedPathname = '';
+let gateOpenTimerId: number | null = null;
 
 const pendingPrefetches = new Map<string, number>();
 const inFlightPrefetches = new Set<string>();
 const lastPrefetchTimestamps = new Map<string, number>();
+const gateListeners = new Set<() => void>();
 
 function normalizePathname(pathname: string): string {
  const basePath = pathname.split('#')[0]?.split('?')[0] ?? pathname;
@@ -48,6 +52,31 @@ function clearPendingPrefetches(): void {
  pendingPrefetches.clear();
 }
 
+function notifyGateListeners(): void {
+ for (const listener of gateListeners) {
+  listener();
+ }
+}
+
+function scheduleGateOpenNotification(): void {
+ if (typeof window === 'undefined') {
+  return;
+ }
+
+ if (gateOpenTimerId !== null) {
+  clearTimeout(gateOpenTimerId);
+ }
+
+ const delayMs = Math.max(0, prefetchReadyAt - Date.now());
+ gateOpenTimerId = window.setTimeout(() => {
+  gateOpenTimerId = null;
+  notifyGateListeners();
+ }, delayMs);
+
+ // Báo ngay trạng thái "gate đang đóng/mở" cho subscriber để cập nhật prefetch prop.
+ notifyGateListeners();
+}
+
 function syncRouteChangeGateFromBrowserPath(): void {
  if (typeof window === 'undefined') {
   return;
@@ -61,6 +90,7 @@ function syncRouteChangeGateFromBrowserPath(): void {
  lastMarkedPathname = browserPathname;
  prefetchReadyAt = Date.now() + ROUTE_CHANGE_DELAY_MS;
  clearPendingPrefetches();
+ scheduleGateOpenNotification();
 }
 
 /**
@@ -94,6 +124,25 @@ export function markRouteChanged(pathname: string): void {
 
  // Hủy các tác vụ queue cũ để tránh chạy nhầm prefetch của route trước.
  clearPendingPrefetches();
+ scheduleGateOpenNotification();
+}
+
+/**
+ * Kiểm tra prefetch gate đã mở hay chưa (>= readyAt).
+ */
+export function isPrefetchGateOpen(): boolean {
+ syncRouteChangeGateFromBrowserPath();
+ return Date.now() >= prefetchReadyAt;
+}
+
+/**
+ * Đăng ký listener để nhận cập nhật gate open/close.
+ */
+export function subscribePrefetchGate(listener: () => void): () => void {
+ gateListeners.add(listener);
+ return () => {
+  gateListeners.delete(listener);
+ };
 }
 
 /**

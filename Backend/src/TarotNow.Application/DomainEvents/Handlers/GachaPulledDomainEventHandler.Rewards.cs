@@ -126,7 +126,7 @@ public sealed partial class GachaPulledDomainEventHandler
     private static bool IsRareItemReward(GachaPoolRewardRate selectedRate)
     {
         return string.Equals(selectedRate.RewardKind, GachaRewardTypes.Item, StringComparison.Ordinal)
-               && GachaRarity.IsAtLeastEpic(selectedRate.Rarity);
+               && GachaRarity.IsAtLeastLegendary(selectedRate.Rarity);
     }
 
     private static void ApplyPityState(UserGachaPity userPity, bool isRareItemReward)

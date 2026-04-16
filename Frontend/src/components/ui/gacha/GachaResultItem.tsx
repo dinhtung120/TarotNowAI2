@@ -91,7 +91,7 @@ function GachaResultItemComponent({ reward, locale }: GachaResultItemProps) {
         </h4>
         <div className="flex items-center gap-2">
           <span className={cn('text-[10px] font-black uppercase tracking-widest', config.text)}>
-            {reward.rarity} Star
+            {reward.rarity}
           </span>
           <span className="h-1 w-1 rounded-full bg-white/20" />
           <span className="tn-text-secondary text-[11px] font-bold">

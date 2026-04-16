@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
 import { usePathname, useRouter } from '@/i18n/routing';
@@ -90,5 +90,5 @@ export function useOptimizedNavigation() {
   }, options?.useViewTransition ?? true);
  }, [prefetch, router]);
 
- return { prefetch, push, replace };
+ return useMemo(() => ({ prefetch, push, replace }), [prefetch, push, replace]);
 }

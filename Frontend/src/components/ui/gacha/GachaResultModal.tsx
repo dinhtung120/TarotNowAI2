@@ -53,10 +53,10 @@ function GachaResultModalComponent({ isOpen, locale, result, labels, onClose }: 
     if (isOpen) {
       setStage('REVEALING');
       
-      /* Tự động chuyển sang trạng thái kết quả sau khi hoạt họa mở được hiển thị xong (~2.5 giây) */
+      /* Tự động chuyển sang trạng thái kết quả sau khi hoạt họa mở được hiển thị xong (~1.5 giây) */
       const timer = setTimeout(() => {
         setStage('SHOW_RESULT');
-      }, 2800);
+      }, 1500);
       
       return () => clearTimeout(timer);
     }
@@ -64,7 +64,7 @@ function GachaResultModalComponent({ isOpen, locale, result, labels, onClose }: 
 
   if (!result) return null;
 
-  /* Xác định xem có vật phẩm cực hiếm (Legendary/Mythic) để kích hoạt hiệu ứng đặc biệt không */
+  /* Xác định xem có vật phẩm cực hiếm (Legendary/Mythic) để xử lý logic (nếu cần) không */
   const isUltraRare = result.rewards.some(r => 
     String(r.rarity).toLowerCase().includes('5') || 
     String(r.rarity).toLowerCase().includes('legendary') ||
@@ -78,8 +78,7 @@ function GachaResultModalComponent({ isOpen, locale, result, labels, onClose }: 
       title="" // Không hiển thị tiêu đề modal mặc định để tùy biến giao diện mở thưởng
       size={stage === 'REVEALING' ? 'sm' : 'lg'}
       className={cn(
-        'transition-all duration-700',
-        isUltraRare && stage === 'REVEALING' ? 'animate-[shake_0.5s_infinite_0.5s]' : ''
+        'transition-all duration-700'
       )}
     >
       <div className="relative min-h-[300px] flex flex-col items-center justify-center py-6">
