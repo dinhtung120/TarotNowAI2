@@ -123,15 +123,23 @@ function InventoryItemCardComponent({ item, locale, onSelect }: InventoryItemCar
             
             {/* Professional Icon Box */}
             <div className={cn(
-              'flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border tn-border-soft',
+              'flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border tn-border-soft overflow-hidden',
               'bg-gradient-to-br from-white/[0.05] to-transparent shadow-xl transition-all duration-500 group-hover:scale-110 group-hover:shadow-violet-500/10',
               item.rarity === 'legendary' ? 'border-amber-500/30' : 
               item.rarity === 'epic' ? 'border-purple-500/30' : ''
             )}>
-              <div className="relative">
-                <Package2 className={cn('h-6 w-6 opacity-40 transition-opacity group-hover:opacity-80')} />
+              <div className="relative h-full w-full flex items-center justify-center">
+                {item.iconUrl ? (
+                  <img 
+                    src={item.iconUrl} 
+                    alt={text.name}
+                    className="h-9 w-9 object-contain transition-transform duration-500 group-hover:scale-110"
+                  />
+                ) : (
+                  <Package2 className={cn('h-6 w-6 opacity-40 transition-opacity group-hover:opacity-80')} />
+                )}
                 {item.rarity === 'legendary' && (
-                  <div className="absolute -right-2 -top-2 flex h-4 w-4 animate-bounce items-center justify-center">
+                  <div className="absolute -right-1 -top-1 flex h-4 w-4 animate-bounce items-center justify-center">
                     <div className="h-1.5 w-1.5 rounded-full bg-amber-400 blur-[1px]" />
                   </div>
                 )}

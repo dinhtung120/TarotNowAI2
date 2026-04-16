@@ -84,23 +84,22 @@ export default function UseItemModal({
       size="md"
     >
       <div className={cn('space-y-6 py-2')}>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-          <UseItemStats
-            quantityLabel={labels.quantity}
-            quantity={item.quantity}
-          />
-          {item.isConsumable && !result ? (
-            <UseItemQuantitySelector
-              label={labels.quantity}
-              value={safeQuantity}
-              max={item.quantity}
-              onChange={(nextQuantity) => {
-                setQuantity(Math.max(1, Math.min(nextQuantity, maxQuantity)));
-              }}
-              disabled={isPending}
-            />
-          ) : null}
-        </div>
+        {!result ? (
+          <div className="animate-in fade-in slide-in-from-top-2 duration-500">
+            {item.isConsumable && (
+              <UseItemQuantitySelector
+                label={labels.quantity}
+                value={safeQuantity}
+                max={item.quantity}
+                totalQuantity={item.quantity}
+                onChange={(nextQuantity) => {
+                  setQuantity(Math.max(1, Math.min(nextQuantity, maxQuantity)));
+                }}
+                disabled={isPending}
+              />
+            )}
+          </div>
+        ) : null}
 
         {needCard ? (
           <>
