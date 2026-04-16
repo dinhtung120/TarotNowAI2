@@ -85,6 +85,16 @@ public sealed class UseInventoryItemEffectSummary
     public int? CardId { get; init; }
 
     /// <summary>
+    /// Giá trị trước khi áp dụng (cho vật phẩm không phải Card).
+    /// </summary>
+    public decimal? BeforeValue { get; init; }
+
+    /// <summary>
+    /// Giá trị sau khi áp dụng (cho vật phẩm không phải Card).
+    /// </summary>
+    public decimal? AfterValue { get; init; }
+
+    /// <summary>
     /// Snapshot trước khi áp dụng.
     /// </summary>
     public UseInventoryCardStatSnapshot? Before { get; init; }
