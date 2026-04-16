@@ -2,6 +2,7 @@ import type { InventoryItem, UseInventoryItemResponse } from '@/shared/infrastru
 import type { CardOption } from '@/components/ui/inventory/UseItemCardSelector';
 
 export interface UseItemModalLabels {
+  title: string;
   useNow: string;
   selectCard: string;
   quantity: string;
@@ -21,5 +22,5 @@ export interface UseItemModalProps {
   labels: UseItemModalLabels;
   isPending: boolean;
   onClose: () => void;
-  onUse: (payload: { itemCode: string; targetCardId?: number }) => Promise<UseInventoryItemResponse>;
+  onUse: (payload: { itemCode: string; quantity: number; targetCardId?: number }) => Promise<UseInventoryItemResponse>;
 }
