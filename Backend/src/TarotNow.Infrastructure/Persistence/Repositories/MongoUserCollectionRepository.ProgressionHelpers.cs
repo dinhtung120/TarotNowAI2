@@ -26,6 +26,12 @@ public partial class MongoUserCollectionRepository
         document.StatHistory ??= new List<StatRollRecord>();
         document.IsDeleted = false;
         RecalculateTotalStats(document);
+        
+        // [Self-Healing] Kiểm tra và tự động nâng cấp nếu đã tích đủ EXP nhưng chưa được xử lý.
+        while (CanLevelUp(document))
+        {
+            LevelUpDocument(document, DateTime.UtcNow);
+        }
     }
 
     /// <summary>

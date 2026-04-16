@@ -14,10 +14,10 @@ export default function CollectionZoomStatCard({
   wrapperClassName,
 }: CollectionZoomStatCardProps) {
   return (
-    <div className={cn("rounded-2xl border p-4 text-center", wrapperClassName)}>
+    <div className={cn("rounded-xl border p-2.5 text-center transition-all hover:shadow-md md:p-3.5", wrapperClassName)}>
       <span
         className={cn(
-          "mb-1 block text-[10px] font-black tracking-widest uppercase md:text-xs",
+          "mb-0.5 block text-[9px] font-black tracking-widest uppercase md:text-[10px]",
           wrapperClassName.includes("red-500") && "text-red-500/70",
           wrapperClassName.includes("blue-500") && "text-blue-500/70",
           !wrapperClassName.includes("red-500") &&
@@ -27,7 +27,7 @@ export default function CollectionZoomStatCard({
       >
         {label}
       </span>
-      <span className={cn("tn-text-2-3-md font-black", valueClassName)}>
+      <span className={cn("tn-text-1-2-md font-black italic", valueClassName)}>
         {value}
       </span>
     </div>

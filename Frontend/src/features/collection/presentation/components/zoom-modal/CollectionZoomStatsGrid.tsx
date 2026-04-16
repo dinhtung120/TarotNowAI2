@@ -1,15 +1,12 @@
 import type { UserCollectionDto } from '@/features/collection/application/actions';
 import CollectionZoomStatCard from '@/features/collection/presentation/components/zoom-modal/CollectionZoomStatCard';
-import { cn } from '@/lib/utils';
+import { cn, formatCardStat } from '@/lib/utils';
 
 interface CollectionZoomStatsGridProps {
   labels: { copiesLabel: string; levelLabel: string };
   userCard: UserCollectionDto;
 }
 
-function formatStat(value: number): string {
-  return value.toFixed(2);
-}
 
 export default function CollectionZoomStatsGrid({
   labels,
@@ -17,19 +14,13 @@ export default function CollectionZoomStatsGrid({
 }: CollectionZoomStatsGridProps) {
   const expValue = userCard.expToNextLevel <= 0
     ? 'MAX'
-    : `${formatStat(userCard.currentExp)} / ${formatStat(userCard.expToNextLevel)}`;
+    : `${formatCardStat(userCard.currentExp)} / ${formatCardStat(userCard.expToNextLevel)}`;
 
   const stats = [
     {
       label: labels.levelLabel,
       value: userCard.level,
       valueClassName: 'text-[var(--warning)]',
-      wrapperClassName: 'tn-panel tn-border-soft',
-    },
-    {
-      label: labels.copiesLabel,
-      value: userCard.copies,
-      valueClassName: 'tn-text-primary',
       wrapperClassName: 'tn-panel tn-border-soft',
     },
     {
@@ -40,14 +31,14 @@ export default function CollectionZoomStatsGrid({
     },
     {
       label: 'ATK',
-      value: `${formatStat(userCard.totalAtk)} (${formatStat(userCard.baseAtk)} + ${formatStat(userCard.bonusAtkPercent)}%)`,
+      value: `${formatCardStat(userCard.totalAtk)} (${formatCardStat(userCard.baseAtk)} + ${formatCardStat(userCard.bonusAtkPercent)}%)`,
       valueClassName:
         'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.5)]',
       wrapperClassName: 'tn-panel border-red-500/20 bg-red-500/5',
     },
     {
       label: 'DEF',
-      value: `${formatStat(userCard.totalDef)} (${formatStat(userCard.baseDef)} + ${formatStat(userCard.bonusDefPercent)}%)`,
+      value: `${formatCardStat(userCard.totalDef)} (${formatCardStat(userCard.baseDef)} + ${formatCardStat(userCard.bonusDefPercent)}%)`,
       valueClassName:
         'text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]',
       wrapperClassName: 'tn-panel border-blue-500/20 bg-blue-500/5',
@@ -57,7 +48,7 @@ export default function CollectionZoomStatsGrid({
   return (
     <div
       className={cn(
-        'mx-auto mt-8 grid grid-cols-1 gap-4 md:mx-0 md:mt-10 md:grid-cols-2',
+        'mx-auto mt-6 grid grid-cols-1 gap-3 md:mx-0 md:mt-8 md:grid-cols-2 lg:gap-4',
       )}
     >
       {stats.map((stat) => (
