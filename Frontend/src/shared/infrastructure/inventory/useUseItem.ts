@@ -28,31 +28,66 @@ function normalizeIntentKey(payload: UseInventoryItemPayload): string {
   return `${normalizedCode}:${targetCard}:${quantity}`;
 }
 
+function normalizeUseItemResponse(data: any): UseInventoryItemResponse {
+  if (!data) return data;
+
+  const normalizeSnapshot = (s: any) => s ? ({
+    level: s.level ?? s.Level ?? 0,
+    currentExp: s.currentExp ?? s.CurrentExp ?? 0,
+    expToNextLevel: s.expToNextLevel ?? s.ExpToNextLevel ?? 0,
+    baseAtk: s.baseAtk ?? s.BaseAtk ?? 0,
+    baseDef: s.baseDef ?? s.BaseDef ?? 0,
+    bonusAtkPercent: s.bonusAtkPercent ?? s.BonusAtkPercent ?? 0,
+    bonusDefPercent: s.bonusDefPercent ?? s.BonusDefPercent ?? 0,
+    totalAtk: s.totalAtk ?? s.TotalAtk ?? 0,
+    totalDef: s.totalDef ?? s.TotalDef ?? 0,
+  }) : undefined;
+
+  const normalizeSummary = (s: any) => ({
+    effectType: s.effectType ?? s.EffectType ?? '',
+    rolledValue: s.rolledValue ?? s.RolledValue ?? 0,
+    cardId: s.cardId ?? s.CardId,
+    beforeValue: s.beforeValue ?? s.BeforeValue,
+    afterValue: s.afterValue ?? s.AfterValue,
+    before: normalizeSnapshot(s.before ?? s.Before),
+    after: normalizeSnapshot(s.after ?? s.After),
+  });
+
+  return {
+    itemCode: data.itemCode ?? data.ItemCode ?? '',
+    targetCardId: data.targetCardId ?? data.TargetCardId,
+    isIdempotentReplay: data.isIdempotentReplay ?? data.IsIdempotentReplay ?? false,
+    message: data.message ?? data.Message ?? '',
+    effectSummaries: (data.effectSummaries ?? data.EffectSummaries ?? []).map(normalizeSummary),
+  };
+}
+
 async function sendUseItemRequest(
- payload: UseInventoryItemPayload,
- idempotencyKey: string,
+  payload: UseInventoryItemPayload,
+  idempotencyKey: string,
 ): Promise<UseInventoryItemResponse> {
- const response = await fetch(INVENTORY_API_ROUTE, {
-  method: 'POST',
-  credentials: 'include',
-  headers: {
-   'Content-Type': 'application/json',
-   [INVENTORY_IDEMPOTENCY_HEADER]: idempotencyKey,
-  },
-  body: JSON.stringify({
-   itemCode: payload.itemCode,
-   quantity: payload.quantity,
-   targetCardId: payload.targetCardId,
-   idempotencyKey,
-  }),
- });
+  const response = await fetch(INVENTORY_API_ROUTE, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      [INVENTORY_IDEMPOTENCY_HEADER]: idempotencyKey,
+    },
+    body: JSON.stringify({
+      itemCode: payload.itemCode,
+      quantity: payload.quantity,
+      targetCardId: payload.targetCardId,
+      idempotencyKey,
+    }),
+  });
 
- if (!response.ok) {
-  const message = await parseApiError(response, 'Failed to use item.');
-  throw new Error(message);
- }
+  if (!response.ok) {
+    const message = await parseApiError(response, 'Failed to use item.');
+    throw new Error(message);
+  }
 
- return (await response.json()) as UseInventoryItemResponse;
+  const rawData = await response.json();
+  return normalizeUseItemResponse(rawData);
 }
 
 export function useUseItem() {
