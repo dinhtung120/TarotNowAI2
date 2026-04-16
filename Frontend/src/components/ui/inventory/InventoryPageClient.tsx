@@ -67,8 +67,8 @@ export default function InventoryPageClient() {
           Lưới vật phẩm (Inventory Grid):
           Hiển thị danh sách các vật phẩm dưới dạng các Interactive Glass Cards.
       */}
-      <div className="relative">
-        <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-purple-500/5 blur-[100px]" />
+      <div className={cn('relative')}>
+        <div className={cn('absolute -right-20 -top-20 h-64 w-64 rounded-full bg-purple-500/5 blur-3xl')} />
         <InventoryGrid
           items={inventoryQuery.data?.items ?? []}
           locale={locale}

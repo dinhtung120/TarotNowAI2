@@ -6,7 +6,7 @@
  * - Lottie: Hiển thị các hoạt họa mở thưởng sinh động.
  * - GachaResultItem: Thành phần hiển thị phần thưởng đã được tinh chỉnh.
  */
-import { memo, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useState } from 'react';
 import Lottie from 'lottie-react';
 import Modal from '@/shared/components/ui/Modal';
 import Button from '@/shared/components/ui/Button';
@@ -46,21 +46,25 @@ function GachaResultModalComponent({ isOpen, locale, result, labels, onClose }: 
   const [stage, setStage] = useState<'REVEALING' | 'SHOW_RESULT'>('REVEALING');
   
   /* Lấy dữ liệu hoạt họa Lottie dựa trên phẩm cấp cao nhất của kết quả */
-  const { animationData, hasRareDrop } = useRareDropLottie(result?.rewards ?? []);
+  const { animationData } = useRareDropLottie(result?.rewards ?? []);
 
-  /* Reset trạng thái về REVEALING mỗi khi modal được mở lại */
+  const handleClose = useCallback(() => {
+    setStage('REVEALING');
+    onClose();
+  }, [onClose]);
+
+  /* Tự động chuyển sang trạng thái kết quả sau khi hoạt họa mở được hiển thị xong (~1.5 giây) */
   useEffect(() => {
-    if (isOpen) {
-      setStage('REVEALING');
-      
-      /* Tự động chuyển sang trạng thái kết quả sau khi hoạt họa mở được hiển thị xong (~1.5 giây) */
-      const timer = setTimeout(() => {
-        setStage('SHOW_RESULT');
-      }, 1500);
-      
-      return () => clearTimeout(timer);
+    if (!isOpen || stage !== 'REVEALING') {
+      return;
     }
-  }, [isOpen]);
+
+    const timer = setTimeout(() => {
+      setStage('SHOW_RESULT');
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [isOpen, stage]);
 
   if (!result) return null;
 
@@ -74,7 +78,7 @@ function GachaResultModalComponent({ isOpen, locale, result, labels, onClose }: 
   return (
     <Modal 
       isOpen={isOpen} 
-      onClose={onClose} 
+      onClose={handleClose} 
       title="" // Không hiển thị tiêu đề modal mặc định để tùy biến giao diện mở thưởng
       size={stage === 'REVEALING' ? 'sm' : 'lg'}
       className={cn(
@@ -157,7 +161,7 @@ function GachaResultModalComponent({ isOpen, locale, result, labels, onClose }: 
                 variant="brand" 
                 size="lg" 
                 fullWidth 
-                onClick={onClose}
+                onClick={handleClose}
                 className="shadow-[0_0_20px_rgba(16,185,129,0.2)]"
               >
                 {labels.close}

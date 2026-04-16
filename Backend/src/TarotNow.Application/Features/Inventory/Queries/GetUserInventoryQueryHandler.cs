@@ -28,6 +28,7 @@ public sealed class GetUserInventoryQueryHandler : IRequestHandler<GetUserInvent
         var views = await _userItemRepository.GetUserInventoryAsync(request.UserId, cancellationToken);
 
         var items = views
+            .Where(x => x.Quantity > 0)
             .Select(x => new UserInventoryItemDto
             {
                 ItemDefinitionId = x.ItemDefinitionId,

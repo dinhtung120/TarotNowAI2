@@ -23,17 +23,17 @@ public sealed class CardEnhancedDomainEvent : IDomainEvent
     /// <summary>
     /// Delta EXP áp dụng.
     /// </summary>
-    public int ExpDelta { get; init; }
+    public decimal ExpDelta { get; init; }
 
     /// <summary>
     /// Delta Attack áp dụng.
     /// </summary>
-    public int AttackDelta { get; init; }
+    public decimal AttackDelta { get; init; }
 
     /// <summary>
     /// Delta Defense áp dụng.
     /// </summary>
-    public int DefenseDelta { get; init; }
+    public decimal DefenseDelta { get; init; }
 
     /// <summary>
     /// Cờ cho biết item level upgrader có thành công hay không.

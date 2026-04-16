@@ -1,3 +1,4 @@
+using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Exceptions;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
@@ -13,15 +14,44 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
     private async Task ChargeReadingAsync(Guid userId, ReadingSession session, CancellationToken cancellationToken)
     {
         var amount = Math.Max(session.AmountCharged, 0);
-        var currency = NormalizeCurrency(session.CurrencyUsed);
+        if (await TryConsumeFreeDrawAsync(userId, session, cancellationToken))
+        {
+            return;
+        }
+
         if (amount <= 0)
         {
             return;
         }
 
-        var changeType = currency == CurrencyType.Gold
-            ? TransactionType.ReadingCostGold
-            : TransactionType.ReadingCostDiamond;
+        await DebitReadingCostAsync(userId, session, amount, cancellationToken);
+    }
+
+    private async Task<bool> TryConsumeFreeDrawAsync(
+        Guid userId,
+        ReadingSession session,
+        CancellationToken cancellationToken)
+    {
+        var freeDrawSpreadCardCount = InventoryBusinessConstants.ResolveFreeDrawSpreadCardCount(session.SpreadType);
+        if (freeDrawSpreadCardCount is null)
+        {
+            return false;
+        }
+
+        return await _freeDrawCreditRepository.TryConsumeAsync(
+            userId,
+            freeDrawSpreadCardCount.Value,
+            cancellationToken);
+    }
+
+    private async Task DebitReadingCostAsync(
+        Guid userId,
+        ReadingSession session,
+        long amount,
+        CancellationToken cancellationToken)
+    {
+        var currency = NormalizeCurrency(session.CurrencyUsed);
+        var changeType = ResolveReadingCostTransactionType(currency);
 
         try
         {
@@ -59,6 +89,13 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
         }
     }
 
+    private static string ResolveReadingCostTransactionType(string currency)
+    {
+        return currency == CurrencyType.Gold
+            ? TransactionType.ReadingCostGold
+            : TransactionType.ReadingCostDiamond;
+    }
+
     private async Task UpdateCollectionAndUserExpAsync(
         Guid userId,
         ReadingSession session,
@@ -82,7 +119,7 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
             return;
         }
 
-        user.AddExp(revealedCards.Count * expToGrantPerCard);
+        user.AddExp((long)(revealedCards.Count * expToGrantPerCard));
         await _userRepository.UpdateAsync(user, cancellationToken);
     }
 
@@ -93,13 +130,13 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
             : CurrencyType.Gold;
     }
 
-    private static long ResolveExpToGrant(ReadingSession session)
+    private static decimal ResolveExpToGrant(ReadingSession session)
     {
         var usesDiamond = string.Equals(
             session.CurrencyUsed,
             CurrencyType.Diamond,
             StringComparison.OrdinalIgnoreCase);
 
-        return session.SpreadType != SpreadType.Daily1Card && usesDiamond ? 2 : 1;
+        return session.SpreadType != SpreadType.Daily1Card && usesDiamond ? 2m : 1m;
     }
 }

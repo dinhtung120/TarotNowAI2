@@ -2,7 +2,6 @@ using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
-using TarotNow.Domain.Events;
 using TarotNow.Domain.Events.Inventory;
 using TarotNow.Domain.ValueObjects;
 
@@ -30,17 +29,21 @@ public sealed partial class ItemUsedDomainEventHandler
 
         if (string.Equals(definition.Type, ItemType.ConsumableSpecial, StringComparison.OrdinalIgnoreCase))
         {
-            await DispatchConsumableSpecialAsync(userId, definition, cancellationToken);
-            return;
+            throw new BusinessRuleException(InventoryErrorCodes.UnsupportedItemType, "Consumable special item is not supported.");
         }
 
         if (string.Equals(definition.Type, ItemType.RareTitle, StringComparison.OrdinalIgnoreCase))
         {
+            if (string.Equals(definition.Code, InventoryItemCodes.RareTitleLuckyStar, StringComparison.OrdinalIgnoreCase) == false)
+            {
+                throw new BusinessRuleException(InventoryErrorCodes.UnsupportedItemType, "Rare title item is not supported.");
+            }
+
             await _inlineDomainEventDispatcher.PublishAsync(
-                new TitleGrantedDomainEvent
+                new LuckyStarTitleUsedDomainEvent
                 {
                     UserId = userId,
-                    TitleCode = definition.Code,
+                    SourceItemCode = definition.Code,
                 },
                 cancellationToken);
             return;
@@ -102,36 +105,21 @@ public sealed partial class ItemUsedDomainEventHandler
             {
                 UserId = userId,
                 GrantedCount = Math.Max(MinimumEffectValue, definition.EffectValue),
+                SpreadCardCount = ResolveFreeDrawSpreadCardCount(definition.Code),
                 SourceItemCode = definition.Code,
             },
             cancellationToken);
     }
 
-    private Task DispatchConsumableSpecialAsync(Guid userId, ItemDefinition definition, CancellationToken cancellationToken)
+    private static int ResolveFreeDrawSpreadCardCount(string itemCode)
     {
-        if (string.Equals(definition.EnhancementType, EnhancementType.Luck, StringComparison.OrdinalIgnoreCase))
+        var normalizedItemCode = itemCode.Trim().ToLowerInvariant();
+        var spreadCardCount = InventoryBusinessConstants.ResolveTicketSpreadCardCount(normalizedItemCode);
+        if (spreadCardCount is not null)
         {
-            return _inlineDomainEventDispatcher.PublishAsync(
-                new LuckAppliedDomainEvent
-                {
-                    UserId = userId,
-                    LuckValue = definition.EffectValue,
-                    SourceItemCode = definition.Code,
-                },
-                cancellationToken);
+            return spreadCardCount.Value;
         }
 
-        if (string.Equals(definition.Code, InventoryItemCodes.MysteryCardPack, StringComparison.OrdinalIgnoreCase))
-        {
-            return _inlineDomainEventDispatcher.PublishAsync(
-                new MysteryPackOpenedDomainEvent
-                {
-                    UserId = userId,
-                    SourceItemCode = definition.Code,
-                },
-                cancellationToken);
-        }
-
-        throw new BusinessRuleException(InventoryErrorCodes.UnsupportedItemType, "Consumable special item is not supported.");
+        throw new BusinessRuleException(InventoryErrorCodes.UnsupportedItemType, "Free draw ticket item is not supported.");
     }
 }

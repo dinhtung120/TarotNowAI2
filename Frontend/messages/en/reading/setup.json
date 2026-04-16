@@ -22,6 +22,11 @@
     "exp_bonus": "+{amount} EXP/Card",
     "select_currency": "Payment energy type",
     "currency_gold": "Gold",
-    "currency_diamond": "Diamond"
+    "currency_diamond": "Diamond",
+    "cost_free_ticket": "Free ({count} ticket(s) for {spread} cards)",
+    "free_draw_title": "Available free reading tickets",
+    "free_draw_spread_3": "3-card tickets",
+    "free_draw_spread_5": "5-card tickets",
+    "free_draw_spread_10": "10-card tickets"
   }
 }

@@ -1,9 +1,12 @@
 using Moq;
+using TarotNow.Application.Common;
 using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.DomainEvents.Handlers;
 using TarotNow.Application.Interfaces;
 using TarotNow.Application.Interfaces.DomainEvents;
+using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 using TarotNow.Domain.Events.Inventory;
 
 namespace TarotNow.Application.UnitTests.Features.Inventory.DomainEvents;
@@ -27,7 +30,8 @@ public class InventoryRewardEventHandlersTests
         {
             UserId = Guid.NewGuid(),
             GrantedCount = 2,
-            SourceItemCode = InventoryItemCodes.FreeDrawTicket,
+            SpreadCardCount = 5,
+            SourceItemCode = InventoryItemCodes.FreeDrawTicket5,
         };
 
         var handler = new FreeDrawGrantedDomainEventHandler(
@@ -38,7 +42,11 @@ public class InventoryRewardEventHandlersTests
         await handler.Handle(new DomainEventNotification<FreeDrawGrantedDomainEvent>(domainEvent), CancellationToken.None);
 
         freeDrawCreditRepositoryMock.Verify(
-            x => x.AddCreditsAsync(domainEvent.UserId, domainEvent.GrantedCount, It.IsAny<CancellationToken>()),
+            x => x.AddCreditsAsync(
+                domainEvent.UserId,
+                domainEvent.SpreadCardCount,
+                domainEvent.GrantedCount,
+                It.IsAny<CancellationToken>()),
             Times.Once);
         notificationRepositoryMock.Verify(
             x => x.CreateAsync(
@@ -48,85 +56,115 @@ public class InventoryRewardEventHandlersTests
     }
 
     /// <summary>
-    /// Xác nhận handler luck sẽ persist trạng thái hiệu ứng trước khi gửi notification.
+    /// Xác nhận Lucky Star chưa sở hữu title sẽ publish TitleGrantedDomainEvent.
     /// </summary>
     [Fact]
-    public async Task LuckAppliedHandler_ShouldPersistLuckEffectAndCreateNotification()
+    public async Task LuckyStarHandler_ShouldPublishTitleGranted_WhenUserDoesNotOwnTitle()
     {
-        var luckRepositoryMock = new Mock<IInventoryLuckEffectRepository>();
-        var notificationRepositoryMock = new Mock<INotificationRepository>();
-        var domainEvent = new LuckAppliedDomainEvent
+        var titleRepositoryMock = new Mock<ITitleRepository>();
+        var walletRepositoryMock = new Mock<IWalletRepository>();
+        var domainEventPublisherMock = new Mock<IDomainEventPublisher>();
+        var domainEvent = new LuckyStarTitleUsedDomainEvent
         {
             UserId = Guid.NewGuid(),
-            LuckValue = 10,
-            SourceItemCode = InventoryItemCodes.DailyFortuneScroll,
+            SourceItemCode = InventoryItemCodes.RareTitleLuckyStar,
         };
 
-        var handler = new LuckAppliedDomainEventHandler(
-            luckRepositoryMock.Object,
-            notificationRepositoryMock.Object,
+        titleRepositoryMock
+            .Setup(x => x.OwnsTitleAsync(domainEvent.UserId, InventoryBusinessConstants.LuckyStarTitleCode, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        var handler = new LuckyStarTitleUsedDomainEventHandler(
+            titleRepositoryMock.Object,
+            walletRepositoryMock.Object,
+            domainEventPublisherMock.Object,
             _idempotencyServiceMock.Object);
 
-        await handler.Handle(new DomainEventNotification<LuckAppliedDomainEvent>(domainEvent), CancellationToken.None);
+        await handler.Handle(new DomainEventNotification<LuckyStarTitleUsedDomainEvent>(domainEvent), CancellationToken.None);
 
-        luckRepositoryMock.Verify(
-            x => x.ApplyLuckAsync(
-                domainEvent.UserId,
-                domainEvent.LuckValue,
-                domainEvent.SourceItemCode,
-                It.Is<TimeSpan>(duration => duration > TimeSpan.Zero),
+        domainEventPublisherMock.Verify(
+            x => x.PublishAsync(
+                It.Is<TitleGrantedDomainEvent>(e =>
+                    e.UserId == domainEvent.UserId
+                    && e.TitleCode == InventoryBusinessConstants.LuckyStarTitleCode
+                    && e.Source == domainEvent.SourceItemCode),
                 It.IsAny<CancellationToken>()),
             Times.Once);
-        notificationRepositoryMock.Verify(
-            x => x.CreateAsync(
-                It.Is<NotificationCreateDto>(n => n.Type == InventoryNotificationTypes.LuckApplied),
+        walletRepositoryMock.Verify(
+            x => x.CreditWithResultAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<string>(),
+                It.IsAny<string>(),
+                It.IsAny<long>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()),
-            Times.Once);
+            Times.Never);
     }
 
     /// <summary>
-    /// Xác nhận mystery pack handler cấp đúng reward được RNG chọn và gửi notification.
+    /// Xác nhận Lucky Star đã có title sẽ credit vàng và publish MoneyChangedDomainEvent.
     /// </summary>
     [Fact]
-    public async Task MysteryPackOpenedHandler_ShouldGrantRewardAndNotify()
+    public async Task LuckyStarHandler_ShouldCreditGold_WhenUserAlreadyOwnsTitle()
     {
-        var rngServiceMock = new Mock<IRngService>();
-        var userItemRepositoryMock = new Mock<IUserItemRepository>();
-        var notificationRepositoryMock = new Mock<INotificationRepository>();
-        var selectedRewardId = new Guid("0aa0f7b7-7c01-4b58-96d8-690cb1f65011");
-
-        rngServiceMock
-            .Setup(x => x.WeightedSelect(It.IsAny<IEnumerable<WeightedItem>>(), It.IsAny<string?>()))
-            .Returns(new GachaRngResult
-            {
-                SelectedItemId = selectedRewardId,
-                RngSeed = "seed",
-            });
-
-        var domainEvent = new MysteryPackOpenedDomainEvent
+        var titleRepositoryMock = new Mock<ITitleRepository>();
+        var walletRepositoryMock = new Mock<IWalletRepository>();
+        var domainEventPublisherMock = new Mock<IDomainEventPublisher>();
+        var domainEvent = new LuckyStarTitleUsedDomainEvent
         {
             UserId = Guid.NewGuid(),
-            SourceItemCode = InventoryItemCodes.MysteryCardPack,
+            SourceItemCode = InventoryItemCodes.RareTitleLuckyStar,
         };
 
-        var handler = new MysteryPackOpenedDomainEventHandler(
-            rngServiceMock.Object,
-            userItemRepositoryMock.Object,
-            notificationRepositoryMock.Object,
+        titleRepositoryMock
+            .Setup(x => x.OwnsTitleAsync(domainEvent.UserId, InventoryBusinessConstants.LuckyStarTitleCode, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        walletRepositoryMock
+            .Setup(x => x.CreditWithResultAsync(
+                domainEvent.UserId,
+                CurrencyType.Gold,
+                TransactionType.InventoryReward,
+                InventoryBusinessConstants.LuckyStarOwnedTitleGoldReward,
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(WalletOperationResult.ExecutedResult);
+
+        var handler = new LuckyStarTitleUsedDomainEventHandler(
+            titleRepositoryMock.Object,
+            walletRepositoryMock.Object,
+            domainEventPublisherMock.Object,
             _idempotencyServiceMock.Object);
 
-        await handler.Handle(new DomainEventNotification<MysteryPackOpenedDomainEvent>(domainEvent), CancellationToken.None);
+        await handler.Handle(new DomainEventNotification<LuckyStarTitleUsedDomainEvent>(domainEvent), CancellationToken.None);
 
-        userItemRepositoryMock.Verify(
-            x => x.GrantItemByCodeAsync(
+        walletRepositoryMock.Verify(
+            x => x.CreditWithResultAsync(
                 domainEvent.UserId,
-                InventoryItemCodes.ExpBooster,
-                1,
+                CurrencyType.Gold,
+                TransactionType.InventoryReward,
+                InventoryBusinessConstants.LuckyStarOwnedTitleGoldReward,
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
-        notificationRepositoryMock.Verify(
-            x => x.CreateAsync(
-                It.Is<NotificationCreateDto>(n => n.Type == InventoryNotificationTypes.MysteryPackOpened),
+        domainEventPublisherMock.Verify(
+            x => x.PublishAsync(
+                It.Is<MoneyChangedDomainEvent>(e =>
+                    e.UserId == domainEvent.UserId
+                    && e.Currency == CurrencyType.Gold
+                    && e.ChangeType == TransactionType.InventoryReward
+                    && e.DeltaAmount == InventoryBusinessConstants.LuckyStarOwnedTitleGoldReward),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }

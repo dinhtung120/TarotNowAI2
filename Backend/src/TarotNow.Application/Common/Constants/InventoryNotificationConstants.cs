@@ -49,17 +49,17 @@ public static class InventoryNotificationTemplates
     /// <summary>
     /// Template body tiếng Việt cho free draw.
     /// </summary>
-    public const string FreeDrawBodyVi = "Đã nhận {0} lượt miễn phí từ vật phẩm {1}.";
+    public const string FreeDrawBodyVi = "Đã nhận {0} lượt miễn phí cho spread {2} lá từ vật phẩm {1}.";
 
     /// <summary>
     /// Template body tiếng Anh cho free draw.
     /// </summary>
-    public const string FreeDrawBodyEn = "Granted {0} free draw(s) from item {1}.";
+    public const string FreeDrawBodyEn = "Granted {0} free draw(s) for {2}-card spread from item {1}.";
 
     /// <summary>
     /// Template body tiếng Trung cho free draw.
     /// </summary>
-    public const string FreeDrawBodyZh = "已从道具 {1} 获得 {0} 次免费占卜。";
+    public const string FreeDrawBodyZh = "已从道具 {1} 获得 {0} 次 {2} 张牌免费占卜。";
 
     /// <summary>
     /// Tiêu đề tiếng Việt cho hiệu ứng may mắn.

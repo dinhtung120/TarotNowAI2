@@ -33,7 +33,7 @@ public partial class MongoUserCollectionRepository : IUserCollectionRepository
     public async Task UpsertCardAsync(
         Guid userId,
         int cardId,
-        long expToGain,
+        decimal expToGain,
         string orientation = CardOrientation.Upright,
         CancellationToken cancellationToken = default)
     {
@@ -84,8 +84,8 @@ public partial class MongoUserCollectionRepository : IUserCollectionRepository
         if (levelsGained <= 0) return;
         // Edge case: không tăng cấp thì không thực hiện roll.
 
-        int totalAtkBonus = 0;
-        int totalDefBonus = 0;
+        decimal totalAtkBonus = 0m;
+        decimal totalDefBonus = 0m;
         var rollRecords = new List<StatRollRecord>();
 
         for (int pLevel = oldLevel + 1; pLevel <= doc.Level; pLevel++)
@@ -93,8 +93,8 @@ public partial class MongoUserCollectionRepository : IUserCollectionRepository
             var (min, max) = UserCollection.GetStatBonusRange(pLevel);
             // Mỗi cấp có range bonus riêng theo rule domain progression.
 
-            int atkBonus = Random.Shared.Next(min, max + 1);
-            int defBonus = Random.Shared.Next(min, max + 1);
+            var atkBonus = (decimal)Random.Shared.Next(min, max + 1);
+            var defBonus = (decimal)Random.Shared.Next(min, max + 1);
 
             totalAtkBonus += atkBonus;
             totalDefBonus += defBonus;

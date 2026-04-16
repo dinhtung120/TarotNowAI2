@@ -35,7 +35,11 @@ public sealed class FreeDrawGrantedDomainEventHandler
         Guid? outboxMessageId,
         CancellationToken cancellationToken)
     {
-        await _freeDrawCreditRepository.AddCreditsAsync(domainEvent.UserId, domainEvent.GrantedCount, cancellationToken);
+        await _freeDrawCreditRepository.AddCreditsAsync(
+            domainEvent.UserId,
+            domainEvent.SpreadCardCount,
+            domainEvent.GrantedCount,
+            cancellationToken);
         await _notificationRepository.CreateAsync(
             new NotificationCreateDto
             {
@@ -48,17 +52,20 @@ public sealed class FreeDrawGrantedDomainEventHandler
                     CultureInfo.InvariantCulture,
                     InventoryNotificationTemplates.FreeDrawBodyVi,
                     domainEvent.GrantedCount,
-                    domainEvent.SourceItemCode),
+                    domainEvent.SourceItemCode,
+                    domainEvent.SpreadCardCount),
                 BodyEn = string.Format(
                     CultureInfo.InvariantCulture,
                     InventoryNotificationTemplates.FreeDrawBodyEn,
                     domainEvent.GrantedCount,
-                    domainEvent.SourceItemCode),
+                    domainEvent.SourceItemCode,
+                    domainEvent.SpreadCardCount),
                 BodyZh = string.Format(
                     CultureInfo.InvariantCulture,
                     InventoryNotificationTemplates.FreeDrawBodyZh,
                     domainEvent.GrantedCount,
-                    domainEvent.SourceItemCode),
+                    domainEvent.SourceItemCode,
+                    domainEvent.SpreadCardCount),
             },
             cancellationToken);
     }

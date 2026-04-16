@@ -16,6 +16,11 @@ public sealed class FreeDrawGrantedDomainEvent : IDomainEvent
     public int GrantedCount { get; init; }
 
     /// <summary>
+    /// Nhóm spread card count được cấp quota (3/5/10).
+    /// </summary>
+    public int SpreadCardCount { get; init; }
+
+    /// <summary>
     /// Mã item nguồn tạo quyền lợi.
     /// </summary>
     public string SourceItemCode { get; init; } = string.Empty;

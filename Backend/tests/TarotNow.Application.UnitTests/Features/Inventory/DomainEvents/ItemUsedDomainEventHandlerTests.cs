@@ -30,7 +30,7 @@ public class ItemUsedDomainEventHandlerTests
     public async Task Handle_ShouldMarkReplayAndSkipEffect_WhenConsumeResultAlreadyProcessed()
     {
         var definition = BuildItemDefinition(
-            code: InventoryItemCodes.FreeDrawTicket,
+            code: InventoryItemCodes.FreeDrawTicket3,
             itemType: ItemType.ReadingBooster,
             enhancementType: EnhancementType.FreeDraw);
         var domainEvent = new ItemUsedDomainEvent
@@ -63,7 +63,7 @@ public class ItemUsedDomainEventHandlerTests
     public async Task Handle_ShouldThrowBusinessRule_WhenConsumeResultOutOfStock()
     {
         var definition = BuildItemDefinition(
-            code: InventoryItemCodes.FreeDrawTicket,
+            code: InventoryItemCodes.FreeDrawTicket3,
             itemType: ItemType.ReadingBooster,
             enhancementType: EnhancementType.FreeDraw);
         var domainEvent = new ItemUsedDomainEvent
@@ -88,20 +88,20 @@ public class ItemUsedDomainEventHandlerTests
     }
 
     /// <summary>
-    /// Xác nhận mystery card pack sẽ publish event mở pack để xử lý reward.
+    /// Xác nhận item danh hiệu Lucky Star sẽ publish event chuyên biệt để xử lý grant title/reward.
     /// </summary>
     [Fact]
-    public async Task Handle_ShouldPublishMysteryPackEvent_WhenUsingMysteryCardPack()
+    public async Task Handle_ShouldPublishLuckyStarEvent_WhenUsingLuckyStarTitleItem()
     {
         var definition = BuildItemDefinition(
-            code: InventoryItemCodes.MysteryCardPack,
-            itemType: ItemType.ConsumableSpecial,
+            code: InventoryItemCodes.RareTitleLuckyStar,
+            itemType: ItemType.RareTitle,
             enhancementType: null);
         var domainEvent = new ItemUsedDomainEvent
         {
             UserId = Guid.NewGuid(),
             ItemCode = definition.Code,
-            IdempotencyKey = "mystery-open",
+            IdempotencyKey = "lucky-star",
         };
 
         _itemDefinitionRepositoryMock
@@ -119,9 +119,9 @@ public class ItemUsedDomainEventHandlerTests
 
         _inlineDispatcherMock.Verify(
             x => x.PublishAsync(
-                It.Is<MysteryPackOpenedDomainEvent>(e =>
+                It.Is<LuckyStarTitleUsedDomainEvent>(e =>
                     e.UserId == domainEvent.UserId
-                    && e.SourceItemCode == InventoryItemCodes.MysteryCardPack),
+                    && e.SourceItemCode == InventoryItemCodes.RareTitleLuckyStar),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }

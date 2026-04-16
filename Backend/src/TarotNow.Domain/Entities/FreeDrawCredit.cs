@@ -16,6 +16,11 @@ public sealed class FreeDrawCredit
     public Guid UserId { get; private set; }
 
     /// <summary>
+    /// Loại spread card count mà credit áp dụng (3/5/10).
+    /// </summary>
+    public int SpreadCardCount { get; private set; }
+
+    /// <summary>
     /// Số lượt free draw còn khả dụng.
     /// </summary>
     public int AvailableCount { get; private set; }
@@ -40,11 +45,16 @@ public sealed class FreeDrawCredit
     /// <summary>
     /// Khởi tạo credit mới cho user.
     /// </summary>
-    public FreeDrawCredit(Guid userId, int initialCount)
+    public FreeDrawCredit(Guid userId, int spreadCardCount, int initialCount)
     {
         if (userId == Guid.Empty)
         {
             throw new ArgumentException("UserId is required.", nameof(userId));
+        }
+
+        if (spreadCardCount is not (3 or 5 or 10))
+        {
+            throw new ArgumentOutOfRangeException(nameof(spreadCardCount), "Spread card count must be one of 3, 5, 10.");
         }
 
         if (initialCount <= 0)
@@ -54,6 +64,7 @@ public sealed class FreeDrawCredit
 
         Id = Guid.NewGuid();
         UserId = userId;
+        SpreadCardCount = spreadCardCount;
         AvailableCount = initialCount;
         CreatedAtUtc = DateTime.UtcNow;
         UpdatedAtUtc = CreatedAtUtc;
@@ -71,5 +82,20 @@ public sealed class FreeDrawCredit
 
         AvailableCount += count;
         UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Tiêu thụ một lượt free draw nếu còn số dư.
+    /// </summary>
+    public bool TryConsumeOne()
+    {
+        if (AvailableCount <= 0)
+        {
+            return false;
+        }
+
+        AvailableCount -= 1;
+        UpdatedAtUtc = DateTime.UtcNow;
+        return true;
     }
 }

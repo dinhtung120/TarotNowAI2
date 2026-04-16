@@ -20,23 +20,20 @@ public sealed class FreeDrawCreditRepository : IFreeDrawCreditRepository
     }
 
     /// <inheritdoc />
-    public async Task AddCreditsAsync(Guid userId, int creditCount, CancellationToken cancellationToken = default)
+    public async Task AddCreditsAsync(
+        Guid userId,
+        int spreadCardCount,
+        int creditCount,
+        CancellationToken cancellationToken = default)
     {
-        if (userId == Guid.Empty)
-        {
-            throw new ArgumentException("UserId is required.", nameof(userId));
-        }
-
-        if (creditCount <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(creditCount), "Credit count must be greater than zero.");
-        }
-
+        ValidateAddCreditsInput(userId, spreadCardCount, creditCount);
         var credit = await _dbContext.Set<FreeDrawCredit>()
-            .FirstOrDefaultAsync(x => x.UserId == userId, cancellationToken);
+            .FirstOrDefaultAsync(
+                x => x.UserId == userId && x.SpreadCardCount == spreadCardCount,
+                cancellationToken);
         if (credit is null)
         {
-            credit = new FreeDrawCredit(userId, creditCount);
+            credit = new FreeDrawCredit(userId, spreadCardCount, creditCount);
             await _dbContext.Set<FreeDrawCredit>().AddAsync(credit, cancellationToken);
         }
         else
@@ -46,5 +43,74 @@ public sealed class FreeDrawCreditRepository : IFreeDrawCreditRepository
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> TryConsumeAsync(Guid userId, int spreadCardCount, CancellationToken cancellationToken = default)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("UserId is required.", nameof(userId));
+        }
+
+        if (spreadCardCount is not (3 or 5 or 10))
+        {
+            throw new ArgumentOutOfRangeException(nameof(spreadCardCount), "Spread card count must be one of 3, 5, 10.");
+        }
+
+        var nowUtc = DateTime.UtcNow;
+        var affectedRows = await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+             UPDATE free_draw_credits
+             SET available_count = available_count - 1,
+                 updated_at_utc = {nowUtc}
+             WHERE user_id = {userId}
+               AND spread_card_count = {spreadCardCount}
+               AND available_count > 0;
+             """,
+            cancellationToken);
+        return affectedRows > 0;
+    }
+
+    /// <inheritdoc />
+    public async Task<FreeDrawCreditSummary> GetSummaryAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("UserId is required.", nameof(userId));
+        }
+
+        var items = await _dbContext.Set<FreeDrawCredit>()
+            .AsNoTracking()
+            .Where(x => x.UserId == userId && x.AvailableCount > 0)
+            .ToListAsync(cancellationToken);
+
+        var spread3 = items.FirstOrDefault(x => x.SpreadCardCount == 3)?.AvailableCount ?? 0;
+        var spread5 = items.FirstOrDefault(x => x.SpreadCardCount == 5)?.AvailableCount ?? 0;
+        var spread10 = items.FirstOrDefault(x => x.SpreadCardCount == 10)?.AvailableCount ?? 0;
+        return new FreeDrawCreditSummary
+        {
+            Spread3Count = spread3,
+            Spread5Count = spread5,
+            Spread10Count = spread10,
+        };
+    }
+
+    private static void ValidateAddCreditsInput(Guid userId, int spreadCardCount, int creditCount)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("UserId is required.", nameof(userId));
+        }
+
+        if (spreadCardCount is not (3 or 5 or 10))
+        {
+            throw new ArgumentOutOfRangeException(nameof(spreadCardCount), "Spread card count must be one of 3, 5, 10.");
+        }
+
+        if (creditCount <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(creditCount), "Credit count must be greater than zero.");
+        }
     }
 }

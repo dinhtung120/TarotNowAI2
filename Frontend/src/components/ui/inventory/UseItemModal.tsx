@@ -81,7 +81,7 @@ export default function UseItemModal({
 
         {/* 2. Nếu vật phẩm cần tác động lên một lá bài cụ thể, hiển thị bộ chọn */}
         {needCard && (
-          <div className="animate-in fade-in slide-in-from-top-2 duration-500">
+          <div className={cn('animate-in fade-in slide-in-from-top-2 duration-500')}>
             <UseItemCardSelector
               label={labels.selectCard}
               value={selectedCardId}

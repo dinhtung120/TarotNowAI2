@@ -21,7 +21,7 @@ public class UserCollectionDto
     public int Level { get; set; }
 
     // Tổng exp đã tích lũy cho lá bài.
-    public long ExpGained { get; set; }
+    public decimal ExpGained { get; set; }
 
     // Thời điểm gần nhất lá bài được rút.
     public DateTime LastDrawnAt { get; set; }
@@ -30,8 +30,8 @@ public class UserCollectionDto
     public int Copies { get; set; }
 
     // Chỉ số tấn công của lá bài.
-    public int Atk { get; set; }
+    public decimal Atk { get; set; }
 
     // Chỉ số phòng thủ của lá bài.
-    public int Def { get; set; }
+    public decimal Def { get; set; }
 }

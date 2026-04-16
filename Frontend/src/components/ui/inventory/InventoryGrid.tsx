@@ -30,8 +30,8 @@ export default function InventoryGrid({ items, locale, emptyLabel, onSelect }: I
       <div className={cn(
         'flex flex-col items-center justify-center rounded-3xl border border-dashed tn-border-soft bg-white/[0.01] px-6 py-20 text-center'
       )}>
-        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-slate-500/10">
-          <span className="text-3xl opacity-30">✧</span>
+        <div className={cn('mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-slate-500/10')}>
+          <span className={cn('text-3xl opacity-30')}>✧</span>
         </div>
         <p className={cn('tn-text-muted text-base font-medium italic opacity-60')}>
           {emptyLabel}

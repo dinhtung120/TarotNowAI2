@@ -4,7 +4,12 @@ import { useEffect, useRef } from "react";
 import { Compass, Sparkles } from "lucide-react";
 import { useReadingSetupPage } from "@/features/reading/application/useReadingSetupPage";
 import { Input, SectionHeader } from "@/shared/components/ui";
-import { ReadingCurrencySelector, ReadingSetupSubmitAction, ReadingSpreadsGrid } from "@/features/reading/presentation/components/reading-setup";
+import {
+ ReadingCurrencySelector,
+ ReadingFreeDrawQuotaSummary,
+ ReadingSetupSubmitAction,
+ ReadingSpreadsGrid,
+} from "@/features/reading/presentation/components/reading-setup";
 import { cn } from "@/lib/utils";
 
 /**
@@ -57,6 +62,16 @@ export default function ReadingSetupPage() {
 
 			{/* Hiển thị thông báo lỗi nếu khởi tạo không thành công */}
 			{vm.initError ? <div className={cn("mb-8", "rounded-xl", "border", "border-red-500/20", "bg-red-500/10", "p-4", "text-sm", "text-red-400")}>{vm.initError}</div> : null}
+
+			<ReadingFreeDrawQuotaSummary
+				title={vm.t("free_draw_title")}
+				spread3Label={vm.t("free_draw_spread_3")}
+				spread5Label={vm.t("free_draw_spread_5")}
+				spread10Label={vm.t("free_draw_spread_10")}
+				spread3Value={vm.freeDrawQuotas.spread3}
+				spread5Value={vm.freeDrawQuotas.spread5}
+				spread10Value={vm.freeDrawQuotas.spread10}
+			/>
 
 			{/* Bộ chọn loại tiền tệ thanh toán (Vàng/Kim cương) */}
 			<ReadingCurrencySelector selectedCurrency={vm.selectedCurrency} labels={{ title: vm.t("select_currency"), gold: vm.t("currency_gold"), diamond: vm.t("currency_diamond") }} onSelectCurrency={vm.setSelectedCurrency} />

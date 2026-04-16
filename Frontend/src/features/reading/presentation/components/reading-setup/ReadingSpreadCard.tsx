@@ -27,6 +27,7 @@ export function ReadingSpreadCard({
 }: ReadingSpreadCardProps) {
  const isSelected = selectedSpreadId === spread.id;
  const isFree = spread.id === 'daily_1';
+ const hasFreeTicket = spread.id !== 'daily_1' && spread.freeDrawCount > 0;
  const showExpBonus = spread.exp > 1;
 
   return (
@@ -41,7 +42,7 @@ export function ReadingSpreadCard({
      {renderSpreadIcon(spread.icon)}
     </div>
     <div className={cn('flex flex-col items-end gap-2')}>
-     <span className={cn('px-3 py-1 rounded-full tn-text-overline border transition-colors', isFree ? 'tn-bg-success-soft tn-text-success tn-border-success' : selectedCurrency === 'diamond' ? 'tn-bg-info-soft tn-text-info tn-border-info tn-shadow-glow-info-soft' : 'tn-bg-warning-soft tn-text-warning tn-border-warning')}>{spread.cost}</span>
+     <span className={cn('px-3 py-1 rounded-full tn-text-overline border transition-colors', isFree || hasFreeTicket ? 'tn-bg-success-soft tn-text-success tn-border-success' : selectedCurrency === 'diamond' ? 'tn-bg-info-soft tn-text-info tn-border-info tn-shadow-glow-info-soft' : 'tn-bg-warning-soft tn-text-warning tn-border-warning')}>{spread.cost}</span>
      <span className={cn('px-2 py-0.5 rounded-lg tn-text-2xs font-black uppercase tracking-tighter border animate-pulse', showExpBonus ? 'tn-bg-accent tn-text-ink border-transparent tn-shadow-glow-accent-soft' : 'tn-surface tn-text-tertiary tn-border-soft')}>{expBonusLabel(spread.exp)}</span>
     </div>
    </div>

@@ -27,7 +27,7 @@ public partial class MongoUserCollectionRepository
     private static PipelineUpdateDefinition<UserCollectionDocument> BuildUpsertUpdate(
         Guid userId,
         int cardId,
-        long expToGain,
+        decimal expToGain,
         string orientation,
         DateTime now)
     {
@@ -67,7 +67,7 @@ public partial class MongoUserCollectionRepository
             { "last_drawn_at", context.Now },
             { "exp", new BsonDocument("$add", new BsonArray
                 {
-                    new BsonDocument("$ifNull", new BsonArray { "$exp", 0 }),
+                    new BsonDocument("$ifNull", new BsonArray { "$exp", 0m }),
                     context.ExpToGain
                 })
             },
@@ -84,7 +84,7 @@ public partial class MongoUserCollectionRepository
     private readonly record struct UpsertSetDocumentContext(
         string UserId,
         int CardId,
-        long ExpToGain,
+        decimal ExpToGain,
         string Orientation,
         DateTime Now);
 
@@ -125,7 +125,7 @@ public partial class MongoUserCollectionRepository
         var totalDraws = doc.Stats.TimesDrawnUpright + doc.Stats.TimesDrawnReversed;
         var copies = Math.Max(totalDraws, 1);
         var level = Math.Max(doc.Level, 1);
-        var exp = Math.Max(doc.Exp, 0);
+        var exp = Math.Max(doc.Exp, 0m);
         var lastDrawnAt = doc.LastDrawnAt == default ? doc.UpdatedAt : doc.LastDrawnAt;
 
         return UserCollection.Rehydrate(new UserCollectionSnapshot

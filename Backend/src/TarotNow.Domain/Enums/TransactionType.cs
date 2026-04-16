@@ -70,6 +70,9 @@ public static class TransactionType
     // Nhận thưởng từ gacha.
     public const string GachaReward = "gacha_reward";
 
+    // Thưởng vàng từ sử dụng item inventory.
+    public const string InventoryReward = "inventory_reward";
+
     // Đóng băng tiền vào escrow.
     public const string EscrowFreeze = "escrow_freeze";
 

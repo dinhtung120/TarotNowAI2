@@ -90,9 +90,9 @@ public static partial class GachaSeed
             RewardTemplate.CurrencyReward(GachaRarity.Common, 2300, GoldCurrency, 250),
             RewardTemplate.Item(GachaRarity.Rare, 1800, InventoryItemCodes.ExpBooster),
             RewardTemplate.Item(GachaRarity.Rare, 1200, InventoryItemCodes.DefenseBooster),
-            RewardTemplate.Item(GachaRarity.Epic, 700, InventoryItemCodes.FreeDrawTicket),
-            RewardTemplate.Item(GachaRarity.Epic, 300, InventoryItemCodes.DailyFortuneScroll),
-            RewardTemplate.Item(GachaRarity.Legendary, 150, InventoryItemCodes.MysteryCardPack),
+            RewardTemplate.Item(GachaRarity.Epic, 700, InventoryItemCodes.FreeDrawTicket3),
+            RewardTemplate.Item(GachaRarity.Epic, 300, InventoryItemCodes.FreeDrawTicket5),
+            RewardTemplate.Item(GachaRarity.Legendary, 150, InventoryItemCodes.FreeDrawTicket10),
             RewardTemplate.Item(GachaRarity.Legendary, 50, InventoryItemCodes.RareTitleLuckyStar),
         ];
     }
@@ -104,11 +104,11 @@ public static partial class GachaSeed
             RewardTemplate.CurrencyReward(GachaRarity.Common, 1800, GoldCurrency, 1000),
             RewardTemplate.CurrencyReward(GachaRarity.Rare, 1700, DiamondCurrency, 20),
             RewardTemplate.Item(GachaRarity.Rare, 1400, InventoryItemCodes.PowerBooster),
-            RewardTemplate.Item(GachaRarity.Epic, 1200, InventoryItemCodes.LevelUpgrader),
-            RewardTemplate.Item(GachaRarity.Epic, 1200, InventoryItemCodes.FreeDrawTicket),
-            RewardTemplate.Item(GachaRarity.Legendary, 1500, InventoryItemCodes.MysteryCardPack),
-            RewardTemplate.Item(GachaRarity.Legendary, 700, InventoryItemCodes.RareTitleLuckyStar),
-            RewardTemplate.Item(GachaRarity.Rare, 500, InventoryItemCodes.ExpBooster),
+            RewardTemplate.Item(GachaRarity.Epic, 1200, InventoryItemCodes.DefenseBooster),
+            RewardTemplate.Item(GachaRarity.Epic, 1200, InventoryItemCodes.ExpBooster),
+            RewardTemplate.Item(GachaRarity.Epic, 900, InventoryItemCodes.FreeDrawTicket5),
+            RewardTemplate.Item(GachaRarity.Legendary, 800, InventoryItemCodes.FreeDrawTicket10),
+            RewardTemplate.Item(GachaRarity.Legendary, 1000, InventoryItemCodes.RareTitleLuckyStar),
         ];
     }
 
@@ -117,12 +117,12 @@ public static partial class GachaSeed
         return
         [
             RewardTemplate.CurrencyReward(GachaRarity.Rare, 1200, DiamondCurrency, 50),
-            RewardTemplate.Item(GachaRarity.Epic, 1800, InventoryItemCodes.LevelUpgrader),
-            RewardTemplate.Item(GachaRarity.Legendary, 2800, InventoryItemCodes.MysteryCardPack),
-            RewardTemplate.Item(GachaRarity.Legendary, 900, InventoryItemCodes.RareTitleLuckyStar),
+            RewardTemplate.Item(GachaRarity.Legendary, 1800, InventoryItemCodes.FreeDrawTicket10),
+            RewardTemplate.Item(GachaRarity.Legendary, 2500, InventoryItemCodes.RareTitleLuckyStar),
             RewardTemplate.Item(GachaRarity.Epic, 1100, InventoryItemCodes.PowerBooster),
             RewardTemplate.Item(GachaRarity.Epic, 1100, InventoryItemCodes.DefenseBooster),
             RewardTemplate.Item(GachaRarity.Epic, 1100, InventoryItemCodes.ExpBooster),
+            RewardTemplate.Item(GachaRarity.Epic, 1200, InventoryItemCodes.FreeDrawTicket5),
         ];
     }
 }

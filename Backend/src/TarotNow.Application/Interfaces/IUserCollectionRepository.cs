@@ -21,7 +21,7 @@ public interface IUserCollectionRepository
     Task UpsertCardAsync(
         Guid userId,
         int cardId,
-        long expToGain,
+        decimal expToGain,
         string orientation = CardOrientation.Upright,
         CancellationToken cancellationToken = default);
 
@@ -69,7 +69,7 @@ public sealed class CardEnhancementApplyRequest
     /// <summary>
     /// Giá trị hiệu ứng tăng thêm.
     /// </summary>
-    public int EffectValue { get; init; }
+    public decimal EffectValue { get; init; }
 
     /// <summary>
     /// Tỉ lệ thành công (0-100) cho item có xác suất.
@@ -90,17 +90,17 @@ public sealed class CardEnhancementApplyResult
     /// <summary>
     /// Delta EXP được cộng.
     /// </summary>
-    public int ExpDelta { get; init; }
+    public decimal ExpDelta { get; init; }
 
     /// <summary>
     /// Delta Attack được cộng.
     /// </summary>
-    public int AttackDelta { get; init; }
+    public decimal AttackDelta { get; init; }
 
     /// <summary>
     /// Delta Defense được cộng.
     /// </summary>
-    public int DefenseDelta { get; init; }
+    public decimal DefenseDelta { get; init; }
 
     /// <summary>
     /// Cờ cho biết level upgrade thành công.

@@ -10,6 +10,11 @@ import { AUTH_ERROR } from "@/shared/domain/authErrors";
 export interface ReadingSetupSnapshotDto {
  wallet: WalletBalance;
  cardsCatalog: CardCatalogItemDto[];
+ freeDrawQuotas: {
+  spread3: number;
+  spread5: number;
+  spread10: number;
+ };
 }
 
 export async function getReadingSetupSnapshotAction(): Promise<ActionResult<ReadingSetupSnapshotDto>> {
@@ -30,7 +35,7 @@ export async function getReadingSetupSnapshotAction(): Promise<ActionResult<Read
   }
 
   const data = result.data;
-  if (!data?.wallet || !Array.isArray(data.cardsCatalog)) {
+  if (!data?.wallet || !Array.isArray(data.cardsCatalog) || !data.freeDrawQuotas) {
    return actionFail('Invalid reading setup snapshot');
   }
 

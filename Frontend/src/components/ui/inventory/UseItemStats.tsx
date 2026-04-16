@@ -32,7 +32,7 @@ export default function UseItemStats({
           Hiển thị số lượng hiện có: 
           Sử dụng GlassCard variant 'default' với padding sm để tiết kiệm không gian.
       */}
-      <GlassCard variant="default" padding="sm" className="bg-white/[0.03]">
+      <GlassCard variant="default" padding="sm" className={cn('bg-white/[0.03]')}>
         <p className={cn('tn-text-muted text-[10px] font-black uppercase tracking-widest mb-1 opacity-60')}>
           {quantityLabel}
         </p>
@@ -42,7 +42,7 @@ export default function UseItemStats({
       </GlassCard>
       
       {/* Hiển thị giá trị hiệu ứng của vật phẩm */}
-      <GlassCard variant="default" padding="sm" className="bg-white/[0.03]">
+      <GlassCard variant="default" padding="sm" className={cn('bg-white/[0.03]')}>
         <p className={cn('tn-text-muted text-[10px] font-black uppercase tracking-widest mb-1 opacity-60')}>
           {effectValueLabel}
         </p>

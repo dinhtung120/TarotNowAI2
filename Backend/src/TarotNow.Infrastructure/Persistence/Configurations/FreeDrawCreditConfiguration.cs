@@ -16,15 +16,23 @@ public sealed class FreeDrawCreditConfiguration : IEntityTypeConfiguration<FreeD
     {
         builder.ToTable(
             "free_draw_credits",
-            tableBuilder => tableBuilder.HasCheckConstraint("ck_free_draw_credits_available_count", "\"available_count\" >= 0"));
+            tableBuilder =>
+            {
+                tableBuilder.HasCheckConstraint("ck_free_draw_credits_available_count", "\"available_count\" >= 0");
+                tableBuilder.HasCheckConstraint(
+                    "ck_free_draw_credits_spread_card_count_valid",
+                    "\"spread_card_count\" IN (3,5,10)");
+            });
 
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.UserId).IsRequired();
+        builder.Property(x => x.SpreadCardCount).IsRequired();
         builder.Property(x => x.AvailableCount).IsRequired();
         builder.Property(x => x.CreatedAtUtc).IsRequired();
         builder.Property(x => x.UpdatedAtUtc).IsRequired();
 
-        builder.HasIndex(x => x.UserId).IsUnique();
+        builder.HasIndex(x => new { x.UserId, x.SpreadCardCount }).IsUnique();
+        builder.HasIndex(x => x.UserId);
     }
 }

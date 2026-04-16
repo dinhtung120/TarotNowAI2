@@ -18,9 +18,9 @@ public sealed class MysteryPackOpenedDomainEventHandler
         new(new Guid("0aa0f7b7-7c01-4b58-96d8-690cb1f65011"), InventoryItemCodes.ExpBooster, 1, 3000),
         new(new Guid("0aa0f7b7-7c01-4b58-96d8-690cb1f65022"), InventoryItemCodes.PowerBooster, 1, 2200),
         new(new Guid("0aa0f7b7-7c01-4b58-96d8-690cb1f65033"), InventoryItemCodes.DefenseBooster, 1, 2200),
-        new(new Guid("0aa0f7b7-7c01-4b58-96d8-690cb1f65044"), InventoryItemCodes.LevelUpgrader, 1, 900),
-        new(new Guid("0aa0f7b7-7c01-4b58-96d8-690cb1f65055"), InventoryItemCodes.FreeDrawTicket, 1, 1200),
-        new(new Guid("0aa0f7b7-7c01-4b58-96d8-690cb1f65066"), InventoryItemCodes.DailyFortuneScroll, 1, 500),
+        new(new Guid("0aa0f7b7-7c01-4b58-96d8-690cb1f65055"), InventoryItemCodes.FreeDrawTicket3, 1, 1200),
+        new(new Guid("0aa0f7b7-7c01-4b58-96d8-690cb1f65066"), InventoryItemCodes.FreeDrawTicket5, 1, 900),
+        new(new Guid("0aa0f7b7-7c01-4b58-96d8-690cb1f65077"), InventoryItemCodes.FreeDrawTicket10, 1, 500),
     ];
 
     private readonly IRngService _rngService;

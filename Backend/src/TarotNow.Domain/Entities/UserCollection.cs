@@ -30,7 +30,7 @@ public class UserCollection
     /// <summary>
     /// Tổng EXP cộng dồn cho thẻ.
     /// </summary>
-    public long ExpGained { get; private set; }
+    public decimal ExpGained { get; private set; }
 
     /// <summary>
     /// Thời điểm gần nhất người dùng rút được thẻ này.
@@ -40,12 +40,12 @@ public class UserCollection
     /// <summary>
     /// Chỉ số tấn công của thẻ.
     /// </summary>
-    public int Atk { get; private set; }
+    public decimal Atk { get; private set; }
 
     /// <summary>
     /// Chỉ số phòng thủ của thẻ.
     /// </summary>
-    public int Def { get; private set; }
+    public decimal Def { get; private set; }
 
     /// <summary>
     /// Constructor rỗng cho ORM materialization.
@@ -63,10 +63,10 @@ public class UserCollection
         CardId = cardId;
         Level = 1;
         Copies = 1;
-        ExpGained = 0;
+        ExpGained = 0m;
         LastDrawnAt = DateTime.UtcNow;
-        Atk = 10;
-        Def = 10;
+        Atk = 10m;
+        Def = 10m;
     }
 
     /// <summary>
@@ -88,10 +88,10 @@ public class UserCollection
     /// <summary>
     /// Thêm một bản sao thẻ và cộng EXP tương ứng sau mỗi lần rút trúng.
     /// </summary>
-    public void AddCopy(long expToGain)
+    public void AddCopy(decimal expToGain)
     {
         Copies += 1;
-        ExpGained += expToGain;
+        ExpGained = Round2(ExpGained + expToGain);
         LastDrawnAt = DateTime.UtcNow;
 
         if (Copies % 5 == 0)
@@ -103,65 +103,65 @@ public class UserCollection
     /// <summary>
     /// Áp chỉ số thưởng khi thẻ lên cấp.
     /// </summary>
-    public void ApplyLevelUpStats(int atkBonus, int defBonus)
+    public void ApplyLevelUpStats(decimal atkBonus, decimal defBonus)
     {
-        Atk += atkBonus;
-        Def += defBonus;
+        Atk = Round2(Atk + atkBonus);
+        Def = Round2(Def + defBonus);
     }
 
     /// <summary>
     /// Cộng thêm EXP trực tiếp cho thẻ từ item enhancer.
     /// </summary>
-    public void AddExp(long expAmount)
+    public void AddExp(decimal expAmount)
     {
-        if (expAmount <= 0)
+        if (expAmount <= 0m)
         {
             throw new ArgumentOutOfRangeException(nameof(expAmount), "expAmount must be > 0.");
         }
 
-        ExpGained += expAmount;
+        ExpGained = Round2(ExpGained + expAmount);
         LastDrawnAt = DateTime.UtcNow;
     }
 
     /// <summary>
     /// Cộng chỉ số tấn công trực tiếp từ item booster.
     /// </summary>
-    public void IncreaseAttack(int amount)
+    public void IncreaseAttack(decimal amount)
     {
-        if (amount <= 0)
+        if (amount <= 0m)
         {
             throw new ArgumentOutOfRangeException(nameof(amount), "amount must be > 0.");
         }
 
-        Atk += amount;
+        Atk = Round2(Atk + amount);
         LastDrawnAt = DateTime.UtcNow;
     }
 
     /// <summary>
     /// Cộng chỉ số phòng thủ trực tiếp từ item booster.
     /// </summary>
-    public void IncreaseDefense(int amount)
+    public void IncreaseDefense(decimal amount)
     {
-        if (amount <= 0)
+        if (amount <= 0m)
         {
             throw new ArgumentOutOfRangeException(nameof(amount), "amount must be > 0.");
         }
 
-        Def += amount;
+        Def = Round2(Def + amount);
         LastDrawnAt = DateTime.UtcNow;
     }
 
     /// <summary>
     /// Nâng cấp cấp độ thẻ khi có bonus được tính ở tầng hạ tầng.
     /// </summary>
-    public void ApplyLevelUpgrade(int atkBonus, int defBonus)
+    public void ApplyLevelUpgrade(decimal atkBonus, decimal defBonus)
     {
-        if (atkBonus <= 0)
+        if (atkBonus <= 0m)
         {
             throw new ArgumentOutOfRangeException(nameof(atkBonus), "atkBonus must be > 0.");
         }
 
-        if (defBonus <= 0)
+        if (defBonus <= 0m)
         {
             throw new ArgumentOutOfRangeException(nameof(defBonus), "defBonus must be > 0.");
         }
@@ -177,6 +177,11 @@ public class UserCollection
     public static (int min, int max) GetStatBonusRange(int newLevel)
     {
         return (10, newLevel * 10);
+    }
+
+    private static decimal Round2(decimal value)
+    {
+        return Math.Round(value, 2, MidpointRounding.AwayFromZero);
     }
 }
 
@@ -208,7 +213,7 @@ public sealed class UserCollectionSnapshot
     /// <summary>
     /// EXP tích lũy.
     /// </summary>
-    public long ExpGained { get; init; }
+    public decimal ExpGained { get; init; }
 
     /// <summary>
     /// Thời điểm rút gần nhất.
@@ -218,10 +223,10 @@ public sealed class UserCollectionSnapshot
     /// <summary>
     /// Chỉ số tấn công.
     /// </summary>
-    public int Atk { get; init; }
+    public decimal Atk { get; init; }
 
     /// <summary>
     /// Chỉ số phòng thủ.
     /// </summary>
-    public int Def { get; init; }
+    public decimal Def { get; init; }
 }

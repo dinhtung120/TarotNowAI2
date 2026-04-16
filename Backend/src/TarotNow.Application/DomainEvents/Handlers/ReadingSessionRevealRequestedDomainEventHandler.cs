@@ -15,12 +15,13 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
     : IdempotentDomainEventNotificationHandler<ReadingSessionRevealRequestedDomainEvent>
 {
     private const int TarotDeckSize = 78;
-    private const long ExpPerCard = 1;
+    private const decimal ExpPerCard = 1m;
 
     private readonly IReadingSessionRepository _readingSessionRepository;
     private readonly IUserCollectionRepository _userCollectionRepository;
     private readonly IUserRepository _userRepository;
     private readonly IWalletRepository _walletRepository;
+    private readonly IFreeDrawCreditRepository _freeDrawCreditRepository;
     private readonly IRngService _rngService;
     private readonly IDomainEventPublisher _domainEventPublisher;
 
@@ -32,6 +33,7 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
         IUserCollectionRepository userCollectionRepository,
         IUserRepository userRepository,
         IWalletRepository walletRepository,
+        IFreeDrawCreditRepository freeDrawCreditRepository,
         IRngService rngService,
         IDomainEventPublisher domainEventPublisher,
         IEventHandlerIdempotencyService idempotencyService)
@@ -41,6 +43,7 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
         _userCollectionRepository = userCollectionRepository;
         _userRepository = userRepository;
         _walletRepository = walletRepository;
+        _freeDrawCreditRepository = freeDrawCreditRepository;
         _rngService = rngService;
         _domainEventPublisher = domainEventPublisher;
     }

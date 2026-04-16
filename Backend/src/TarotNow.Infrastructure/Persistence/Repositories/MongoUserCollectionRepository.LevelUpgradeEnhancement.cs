@@ -20,9 +20,9 @@ public partial class MongoUserCollectionRepository
             return new CardEnhancementApplyResult
             {
                 Succeeded = true,
-                ExpDelta = 0,
-                AttackDelta = 0,
-                DefenseDelta = 0,
+                ExpDelta = 0m,
+                AttackDelta = 0m,
+                DefenseDelta = 0m,
                 LevelUpgraded = false,
             };
         }
@@ -35,7 +35,7 @@ public partial class MongoUserCollectionRepository
         return new CardEnhancementApplyResult
         {
             Succeeded = true,
-            ExpDelta = 0,
+            ExpDelta = 0m,
             AttackDelta = upgradeRoll.atkBonus,
             DefenseDelta = upgradeRoll.defBonus,
             LevelUpgraded = true,
@@ -62,19 +62,19 @@ public partial class MongoUserCollectionRepository
         return document;
     }
 
-    private static (int newLevel, int atkBonus, int defBonus) RollStatBonusesForUpgrade(int currentLevel)
+    private static (int newLevel, decimal atkBonus, decimal defBonus) RollStatBonusesForUpgrade(int currentLevel)
     {
         var newLevel = Math.Max(1, currentLevel + 1);
         var (minBonus, maxBonus) = TarotNow.Domain.Entities.UserCollection.GetStatBonusRange(newLevel);
-        var atkBonus = RandomNumberGenerator.GetInt32(minBonus, maxBonus + 1);
-        var defBonus = RandomNumberGenerator.GetInt32(minBonus, maxBonus + 1);
+        var atkBonus = (decimal)RandomNumberGenerator.GetInt32(minBonus, maxBonus + 1);
+        var defBonus = (decimal)RandomNumberGenerator.GetInt32(minBonus, maxBonus + 1);
         return (newLevel, atkBonus, defBonus);
     }
 
     private static UpdateDefinition<UserCollectionDocument> BuildLevelUpgradeUpdate(
         int newLevel,
-        int atkBonus,
-        int defBonus)
+        decimal atkBonus,
+        decimal defBonus)
     {
         var nowUtc = DateTime.UtcNow;
         return Builders<UserCollectionDocument>.Update

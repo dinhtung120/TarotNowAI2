@@ -24,6 +24,10 @@ export function useInventory() {
  return useQuery({
   queryKey: inventoryQueryKeys.mine(),
   queryFn: fetchInventory,
+  select: (response: InventoryResponse) => ({
+   ...response,
+   items: response.items.filter((item) => item.quantity > 0),
+  }),
   staleTime: 20_000,
  });
 }

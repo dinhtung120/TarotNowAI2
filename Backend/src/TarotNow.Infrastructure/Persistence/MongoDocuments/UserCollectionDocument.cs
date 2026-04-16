@@ -27,7 +27,8 @@ public class UserCollectionDocument
 
     // Điểm kinh nghiệm hiện có của card.
     [BsonElement("exp")]
-    public long Exp { get; set; } = 0;
+    [BsonRepresentation(BsonType.Decimal128)]
+    public decimal Exp { get; set; } = 0m;
 
     // Bậc ascension của card.
     [BsonElement("ascension_tier")]
@@ -44,11 +45,13 @@ public class UserCollectionDocument
 
     // Chỉ số tấn công đã tính sau nâng cấp.
     [BsonElement("atk")]
-    public int Atk { get; set; } = 10;
+    [BsonRepresentation(BsonType.Decimal128)]
+    public decimal Atk { get; set; } = 10m;
 
     // Chỉ số phòng thủ đã tính sau nâng cấp.
     [BsonElement("def")]
-    public int Def { get; set; } = 10;
+    [BsonRepresentation(BsonType.Decimal128)]
+    public decimal Def { get; set; } = 10m;
 
     // Lịch sử roll chỉ số để audit progression.
     [BsonElement("stat_history")]
@@ -104,11 +107,13 @@ public class StatRollRecord
 
     // Điểm cộng attack nhận được.
     [BsonElement("atk_bonus")]
-    public int AtkBonus { get; set; }
+    [BsonRepresentation(BsonType.Decimal128)]
+    public decimal AtkBonus { get; set; }
 
     // Điểm cộng defense nhận được.
     [BsonElement("def_bonus")]
-    public int DefBonus { get; set; }
+    [BsonRepresentation(BsonType.Decimal128)]
+    public decimal DefBonus { get; set; }
 
     // Mốc thời gian roll.
     [BsonElement("rolled_at")]

@@ -21,24 +21,19 @@ public static class InventoryItemCodes
     public const string DefenseBooster = "defense_booster";
 
     /// <summary>
-    /// Item nâng cấp level có xác suất.
+    /// Vé miễn phí một lượt xem bài 3 lá.
     /// </summary>
-    public const string LevelUpgrader = "level_upgrader";
+    public const string FreeDrawTicket3 = "free_draw_ticket_3";
 
     /// <summary>
-    /// Vé miễn phí một lượt xem bài.
+    /// Vé miễn phí một lượt xem bài 5 lá.
     /// </summary>
-    public const string FreeDrawTicket = "free_draw_ticket";
+    public const string FreeDrawTicket5 = "free_draw_ticket_5";
 
     /// <summary>
-    /// Cuộn tiên tri hằng ngày.
+    /// Vé miễn phí một lượt xem bài 10 lá.
     /// </summary>
-    public const string DailyFortuneScroll = "daily_fortune_scroll";
-
-    /// <summary>
-    /// Gói bài bí ẩn.
-    /// </summary>
-    public const string MysteryCardPack = "mystery_card_pack";
+    public const string FreeDrawTicket10 = "free_draw_ticket_10";
 
     /// <summary>
     /// Danh hiệu hiếm ví dụ.

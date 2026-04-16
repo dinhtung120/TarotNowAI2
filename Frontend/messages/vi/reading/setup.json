@@ -22,6 +22,11 @@
     "exp_bonus": "+{amount} EXP/Lá",
     "select_currency": "Loại năng lượng thanh toán",
     "currency_gold": "Vàng (Gold)",
-    "currency_diamond": "Kim cương (Diamond)"
+    "currency_diamond": "Kim cương (Diamond)",
+    "cost_free_ticket": "Miễn phí ({count} vé {spread} lá)",
+    "free_draw_title": "Lượt xem bài miễn phí hiện có",
+    "free_draw_spread_3": "Vé 3 lá",
+    "free_draw_spread_5": "Vé 5 lá",
+    "free_draw_spread_10": "Vé 10 lá"
   }
 }

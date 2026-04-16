@@ -42,9 +42,9 @@ public sealed partial class UserItemRepository : IUserItemRepository
     {
         return await _dbContext.Set<UserItem>()
             .AsNoTracking()
-            .Where(x => x.UserId == userId)
+            .Where(x => x.UserId == userId && x.Quantity > 0)
             .Join(
-                _dbContext.Set<ItemDefinition>().AsNoTracking(),
+                _dbContext.Set<ItemDefinition>().AsNoTracking().Where(x => x.IsActive),
                 userItem => userItem.ItemDefinitionId,
                 definition => definition.Id,
                 (userItem, definition) => new UserInventoryItemView
