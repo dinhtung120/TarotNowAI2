@@ -80,7 +80,7 @@ function buildRows(summary: UseInventoryItemEffectSummary) {
   return rows;
 }
 
-export default function UseItemResultPanel({ effectSummaries, labels, onDone }: UseItemResultPanelProps) {
+export default function UseItemResultPanel({ effectSummaries, labels, onDone, onUseAgain }: UseItemResultPanelProps) {
   return (
     <div className={cn('flex flex-col gap-5')}>
       <div className={cn('max-h-[320px] overflow-y-auto pr-1 tn-scrollbar-thin space-y-4')}>
