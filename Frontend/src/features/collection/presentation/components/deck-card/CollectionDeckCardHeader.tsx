@@ -1,12 +1,8 @@
 import type { UserCollectionDto } from '@/features/collection/application/actions';
-import { cn } from '@/lib/utils';
+import { cn, formatCardStat } from '@/lib/utils';
 
 interface CollectionDeckCardHeaderProps {
   userCard: UserCollectionDto | null;
-}
-
-function formatExpValue(value: number): string {
-  return Number.isFinite(value) ? value.toFixed(2) : '0.00';
 }
 
 export default function CollectionDeckCardHeader({
@@ -29,7 +25,7 @@ export default function CollectionDeckCardHeader({
       >
         <span>Lv. {userCard.level}</span>
         <span className={cn('tn-text-warning')}>
-          {expToNext <= 0 ? 'MAX' : `${formatExpValue(currentExp)} / ${formatExpValue(expToNext)}`}
+          {expToNext <= 0 ? 'MAX' : `${formatCardStat(currentExp)} / ${formatCardStat(expToNext)}`}
         </span>
       </div>
       <div className={cn('tn-surface h-1 w-full overflow-hidden rounded-full')}>

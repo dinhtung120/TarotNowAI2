@@ -1,6 +1,6 @@
 import { Lock } from "lucide-react";
 import type { UserCollectionDto } from "@/features/collection/application/actions";
-import { cn } from "@/lib/utils";
+import { cn, formatCardStat } from "@/lib/utils";
 
 interface CollectionDeckCardFooterProps {
   isOwned: boolean;
@@ -34,14 +34,14 @@ export default function CollectionDeckCardFooter({
           "flex-1 rounded-lg border border-red-500/20 bg-red-500/10 py-1 text-red-400 shadow-inner shadow-red-500/10",
         )}
       >
-        ⚔️ {(userCard.totalAtk ?? userCard.atk ?? 0).toFixed(2)}
+        ⚔️ {formatCardStat(userCard.totalAtk ?? userCard.atk ?? 0)}
       </div>
       <div
         className={cn(
           "flex-1 rounded-lg border border-blue-500/20 bg-blue-500/10 py-1 text-blue-400 shadow-inner shadow-blue-500/10",
         )}
       >
-        🛡️ {(userCard.totalDef ?? userCard.def ?? 0).toFixed(2)}
+        🛡️ {formatCardStat(userCard.totalDef ?? userCard.def ?? 0)}
       </div>
     </div>
   );

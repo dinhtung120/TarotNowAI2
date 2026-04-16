@@ -9,7 +9,8 @@
  */
 import { memo } from 'react';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
+import { cn, formatCardStat } from '@/lib/utils';
+
 import { gachaRewardKinds } from '@/shared/infrastructure/gacha/gachaConstants';
 import type { GachaPoolRewardRate } from '@/shared/infrastructure/gacha/gachaTypes';
 import Badge from '@/shared/components/ui/Badge';
@@ -114,7 +115,7 @@ function GachaRewardPreviewComponent({ rewards, locale, emptyLabel }: GachaRewar
             <div className={cn('pl-4 text-right')}>
               <div className={cn('flex flex-col')}>
                 <p className={cn('text-sm font-black tracking-tight', isRare ? 'tn-text-warning' : 'tn-text-primary')}>
-                  {reward.probabilityPercent.toFixed(2)}%
+                  {formatCardStat(reward.probabilityPercent)}%
                 </p>
                 <p className={cn('tn-text-muted text-[9px] font-bold uppercase tracking-[0.1em] opacity-50')}>
                   Xác suất

@@ -1,7 +1,8 @@
 'use client';
 
-import { cn } from '@/lib/utils';
+import { cn, formatCardStat } from '@/lib/utils';
 import type { UseInventoryItemEffectSummary, UseInventoryCardStatSnapshot } from '@/shared/infrastructure/inventory/inventoryTypes';
+
 
 interface UseItemResultPanelLabels {
   effectType: string;
@@ -17,7 +18,7 @@ interface UseItemResultPanelProps {
 }
 
 function formatValue(effectSummary: UseInventoryItemEffectSummary): string {
-  const value = Number(effectSummary.rolledValue ?? 0).toFixed(2);
+  const value = formatCardStat(effectSummary.rolledValue ?? 0);
   if (effectSummary.effectType === 'power' || effectSummary.effectType === 'defense') {
     return `+${value}%`;
   }
@@ -49,9 +50,7 @@ function resolveEffectTypeLabel(effectType: string): string {
   return effectType.toUpperCase();
 }
 
-function formatStat(value: number): string {
-  return Number.isFinite(value) ? value.toFixed(2) : '0.00';
-}
+
 
 function buildRows(before?: UseInventoryCardStatSnapshot | null, after?: UseInventoryCardStatSnapshot | null) {
   if (!before || !after) {
@@ -62,11 +61,11 @@ function buildRows(before?: UseInventoryCardStatSnapshot | null, after?: UseInve
     { label: 'Level', before: `${before.level}`, after: `${after.level}` },
     {
       label: 'EXP',
-      before: `${formatStat(before.currentExp)} / ${formatStat(before.expToNextLevel)}`,
-      after: `${formatStat(after.currentExp)} / ${formatStat(after.expToNextLevel)}`,
+      before: `${formatCardStat(before.currentExp)} / ${formatCardStat(before.expToNextLevel)}`,
+      after: `${formatCardStat(after.currentExp)} / ${formatCardStat(after.expToNextLevel)}`,
     },
-    { label: 'ATK', before: formatStat(before.totalAtk), after: formatStat(after.totalAtk) },
-    { label: 'DEF', before: formatStat(before.totalDef), after: formatStat(after.totalDef) },
+    { label: 'ATK', before: formatCardStat(before.totalAtk), after: formatCardStat(after.totalAtk) },
+    { label: 'DEF', before: formatCardStat(before.totalDef), after: formatCardStat(after.totalDef) },
   ];
 }
 

@@ -1,16 +1,12 @@
 'use client';
 
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
+import { cn, formatCardStat } from '@/lib/utils';
 import type { CardOption } from '@/components/ui/inventory/UseItemCardSelector';
 
 interface UseItemCardPreviewProps {
   card: CardOption | null;
   label: string;
-}
-
-function formatStat(value: number): string {
-  return Number.isFinite(value) ? value.toFixed(2) : '0.00';
 }
 
 export default function UseItemCardPreview({ card, label }: UseItemCardPreviewProps) {
@@ -35,7 +31,7 @@ export default function UseItemCardPreview({ card, label }: UseItemCardPreviewPr
           <p className={cn('truncate text-sm font-bold tn-text-primary')}>{card.name}</p>
           {card.stats ? (
             <p className={cn('text-xs tn-text-muted')}>
-              Lv {card.stats.level} · ATK {formatStat(card.stats.totalAtk)} · DEF {formatStat(card.stats.totalDef)} · EXP {formatStat(card.stats.currentExp)} / {formatStat(card.stats.expToNextLevel)}
+              Lv {card.stats.level} · ATK {formatCardStat(card.stats.totalAtk)} · DEF {formatCardStat(card.stats.totalDef)} · EXP {formatCardStat(card.stats.currentExp)} / {formatCardStat(card.stats.expToNextLevel)}
             </p>
           ) : null}
         </div>
