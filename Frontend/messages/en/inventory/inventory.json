@@ -12,6 +12,7 @@
     "effectType": "Buff type",
     "rolledValue": "Rolled value",
     "beforeAfter": "Before / After",
-    "done": "Done"
+    "done": "Done",
+    "useAgain": "Use Again"
   }
 }

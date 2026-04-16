@@ -12,6 +12,7 @@
     "effectType": "增益类型",
     "rolledValue": "增益数值",
     "beforeAfter": "使用前 / 使用后",
-    "done": "完成"
+    "done": "完成",
+    "useAgain": "再次使用"
   }
 }

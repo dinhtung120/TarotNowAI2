@@ -12,6 +12,7 @@
     "effectType": "Loại buff",
     "rolledValue": "Giá trị tăng",
     "beforeAfter": "Trước / Sau",
-    "done": "Hoàn tất"
+    "done": "Hoàn tất",
+    "useAgain": "Sử dụng tiếp"
   }
 }

@@ -105,20 +105,24 @@ public sealed class UseInventoryItemRequest
     /// <summary>
     /// Mã item cần sử dụng.
     /// </summary>
+    [System.Text.Json.Serialization.JsonPropertyName("itemCode")]
     public string ItemCode { get; set; } = string.Empty;
 
     /// <summary>
     /// Card mục tiêu nếu item yêu cầu.
     /// </summary>
+    [System.Text.Json.Serialization.JsonPropertyName("targetCardId")]
     public int? TargetCardId { get; set; }
 
     /// <summary>
     /// Số lượng muốn sử dụng (tối đa 10).
     /// </summary>
+    [System.Text.Json.Serialization.JsonPropertyName("quantity")]
     public int Quantity { get; set; } = 1;
 
     /// <summary>
     /// Idempotency key (fallback khi không gửi qua header).
     /// </summary>
+    [System.Text.Json.Serialization.JsonPropertyName("idempotencyKey")]
     public string? IdempotencyKey { get; set; }
 }

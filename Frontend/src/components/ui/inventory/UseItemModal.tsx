@@ -57,6 +57,13 @@ export default function UseItemModal({
 
   const handleUseAgain = () => {
     setResult(null);
+    if (item) {
+      void handleUseItem({
+        itemCode: item.itemCode,
+        quantity,
+        targetCardId: selectedCardId === '' ? undefined : selectedCardId
+      });
+    }
   };
 
   return (
