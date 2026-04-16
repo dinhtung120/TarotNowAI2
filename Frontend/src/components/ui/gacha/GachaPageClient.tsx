@@ -2,9 +2,9 @@
 
 /* 
  * Import các hooks và thư viện cốt lõi.
- * - useCallback: Tối ưu hóa hàm xử lý sự kiện quay gacha.
- * - useMemo: Quản lý và xử lý lỗi từ nhiều nguồn dữ liệu.
- * - useState: Quản lý Pool được chọn và trạng thái Modal kết quả.
+ * - useCallback: Tối ưu hóa hàm xử lý sự kiện quay gacha để tránh render lại không cần thiết.
+ * - useMemo: Quản lý và xử lý lỗi từ nhiều nguồn dữ liệu API tập trung.
+ * - useState: Quản lý trạng thái Pool được chọn và hiển thị kết quả.
  */
 import { useCallback, useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
@@ -21,14 +21,14 @@ import GachaRewardPreview from '@/components/ui/gacha/GachaRewardPreview';
 import GachaResultModal from '@/components/ui/gacha/GachaResultModal';
 
 /* 
- * Import hạ tầng dữ liệu Gacha.
+ * Import hạ tầng dữ liệu và Mutation xử lý Gacha.
  */
 import { useGacha } from '@/shared/infrastructure/gacha/useGacha';
 import { usePullGacha } from '@/shared/infrastructure/gacha/usePullGacha';
 import type { PullGachaResult } from '@/shared/infrastructure/gacha/gachaTypes';
 
 /**
- * Hàm hỗ trợ bản địa hóa văn bản dựa trên ngôn ngữ người dùng.
+ * Hàm hỗ trợ bản địa hóa văn bản dựa trên ngôn ngữ người dùng (VI/EN/ZH).
  */
 function localizeText(value: { nameVi: string; nameEn: string; nameZh: string }, locale: string): string {
   if (locale === 'en') return value.nameEn;
@@ -37,7 +37,8 @@ function localizeText(value: { nameVi: string; nameEn: string; nameZh: string },
 }
 
 /**
- * GachaPageClient - Thành phần chính điều khiển trải nghiệm quay Gacha.
+ * GachaPageClient - Thành phần chính điều khiển logic trang Quay thưởng (Gacha).
+ * Phiên bản cập nhật hỗ trợ quay 10 lượt và quy tắc Pity dành riêng cho vật phẩm Legendary/Mythic.
  */
 export default function GachaPageClient() {
   const locale = useLocale();
@@ -46,25 +47,22 @@ export default function GachaPageClient() {
   /* Quản lý Pool người dùng đang chủ động chọn */
   const [selectedPoolCode, setSelectedPoolCode] = useState('');
   
-  /* Quản lý dữ liệu kết quả sau khi quay để hiển thị lên Modal */
+  /* Quản lý dữ liệu kết quả sau khi quay (thưởng nhận được) để hiển thị lên Modal */
   const [resultModalData, setResultModalData] = useState<PullGachaResult | null>(null);
   const [isResultOpen, setIsResultOpen] = useState(false);
 
   /* 
-   * Lấy toàn bộ dữ liệu cần thiết cho trang Gacha: 
-   * - Danh sách Pools.
-   * - Tỷ lệ rơi (Odds) của Pool đang chọn.
-   * - Xem trước lịch sử (History Preview).
+   * Truy vấn toàn bộ dữ liệu cần thiết: Danh sách Pool, Tỷ lệ rơi, và Lịch sử preview.
    */
   const { poolsQuery, poolOddsQuery, historyPreviewQuery, resolvedPoolCode } = useGacha({
     selectedPoolCode,
     historyPreviewSize: 6,
   });
 
-  /* Hook thực hiện hành động quay Gacha (Mutation) */
+  /* Hook thực hiện hành động quay Gacha (POST request lên Server) */
   const pullMutation = usePullGacha();
   
-  /* Xác định Pool Code đang hoạt động (ưu tiên pool người dùng chọn, nếu không lấy pool mặc định từ hệ thống) */
+  /* Pool đang được chọn (ưu tiên pool người dùng nhấn, fallback về pool mặc định) */
   const activePoolCode = selectedPoolCode || resolvedPoolCode;
 
   const pools = poolsQuery.data ?? [];
@@ -72,22 +70,23 @@ export default function GachaPageClient() {
   const historyItems = historyPreviewQuery.data?.items ?? [];
 
   /**
-   * onPull - Xử lý sự kiện khi người dùng nhấn nút Quay.
-   * Sử dụng mutateAsync để đợi kết quả trước khi mở Modal hiển thị.
+   * onPull - Xử lý sự kiện quay Gacha.
+   * @param count - Số lượt quay người dùng chọn (1 hoặc 10). 
+   * Khi quay 10 lượt, hệ thống sẽ tự động áp dụng mức giá ưu đãi ở phía Selector.
    */
-  const onPull = useCallback(async () => {
+  const onPull = useCallback(async (count: number = 1) => {
     if (!activePoolCode) return;
     try {
-      const result = await pullMutation.mutateAsync({ poolCode: activePoolCode, count: 1 });
+      const result = await pullMutation.mutateAsync({ poolCode: activePoolCode, count });
       setResultModalData(result);
       setIsResultOpen(true);
     } catch (error) {
-      console.error('Lỗi khi thực hiện quay gacha:', error);
+      console.error('Lỗi khi thực hiện hành động quay:', error);
     }
   }, [activePoolCode, pullMutation]);
 
   /**
-   * queryError - Tập hợp lỗi từ các API Query để hiển thị tập trung.
+   * queryError - Tổng hợp các lỗi từ các API Query để thông báo cho người dùng.
    */
   const queryError = useMemo(() => {
     const candidates = [poolsQuery.error, poolOddsQuery.error, historyPreviewQuery.error];
@@ -98,8 +97,7 @@ export default function GachaPageClient() {
     <div className={cn('mx-auto w-full max-w-6xl space-y-10 px-4 pb-24 pt-28 sm:px-6')}>
       
       {/* 
-          Phần Header trang chủ Gacha.
-          Sử dụng hiệu ứng Metallic cho tiêu đề chính để tạo điểm nhấn Magic.
+          Tiêu đề trang Gacha: Sử dụng font chữ Metallic tạo cảm giác huyền bí.
       */}
       <header className={cn('space-y-3')}>
         <h1 className={cn('lunar-metallic-text text-3xl font-black uppercase tracking-[0.2em] sm:text-5xl')}>
@@ -110,17 +108,17 @@ export default function GachaPageClient() {
         </p>
       </header>
 
-      {/* Hiển thị lỗi hệ thống nếu có thông qua một thông báo tinh tế */}
+      {/* Hiển thị thông báo lỗi hệ thống nếu việc truy xuất dữ liệu thất bại */}
       {queryError ? (
         <div className={cn('rounded-2xl border border-red-500/20 bg-red-500/5 px-6 py-4 text-sm tn-text-danger')}>
-          <p className="font-bold uppercase tracking-widest mb-1">Thông báo hệ thống:</p>
+          <p className="font-bold uppercase tracking-widest mb-1">Hệ thống ghi nhận lỗi:</p>
           {queryError.message}
         </div>
       ) : null}
 
       {/* 
-          GachaPoolSelector: Khu vực chọn Pool và thực hiện hành động quay.
-          Đây là trung tâm tương tác của trang.
+          GachaPoolSelector: Khu vực chọn Pool và thực hiện lệnh Pull.
+          Đã được cập nhật để bổ sung nút quay 10x và dấu "!" giải thích Pity.
       */}
       <section className="relative">
         <div className="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-emerald-500/5 blur-[100px]" />
@@ -133,7 +131,7 @@ export default function GachaPageClient() {
             pull: t('pull1x'), 
             pulling: t('pulling'), 
             pity: t('pityProgress'), 
-            pityRuleHint: t('pityRuleHint') 
+            pityRuleHint: '' // Không hiển thị dòng chữ mô tả Pity cũ theo yêu cầu người dùng
           }}
           onSelectPool={setSelectedPoolCode}
           onPull={onPull}
@@ -141,8 +139,7 @@ export default function GachaPageClient() {
       </section>
 
       {/* 
-          Khu vực hiển thị tỷ lệ rơi (Odds).
-          Bao bọc trong GlassCard để tạo sự phân cấp giao diện.
+          Khu vực hiển thị tỷ lệ rơi (Odds Preview).
       */}
       <GlassCard variant="default" padding="lg" className="space-y-6">
         <SectionHeader 
@@ -157,8 +154,8 @@ export default function GachaPageClient() {
       </GlassCard>
 
       {/* 
-          Khu vực hiển thị lịch sử quay gần đây.
-          Cung cấp cái nhìn nhanh về các kết quả mà người dùng đã nhận được.
+          Lịch sử rút thưởng gần đây (Recent History).
+          Tại đây, chúng tôi đã loại bỏ dòng trạng thái Reset Pity để giao diện gọn gàng hơn.
       */}
       <section className={cn('space-y-6')}>
         <div className={cn('flex items-center justify-between gap-4')}>
@@ -200,10 +197,7 @@ export default function GachaPageClient() {
                         <span className="opacity-70">{item.poolCode}</span>
                         <span className="h-1 w-1 rounded-full bg-current opacity-30" />
                         <span>{item.pullCount}x</span>
-                        <span className="h-1 w-1 rounded-full bg-current opacity-30" />
-                        <span className={cn(item.wasPityReset ? 'tn-text-warning' : '')}>
-                            {item.wasPityReset ? t('historyPityResetShort') : t('historyPityStayedShort')}
-                        </span>
+                        {/* Reset Pity được loại bỏ tại đây để đơn giản hóa giao diện */}
                     </div>
                 </div>
               </GlassCard>
@@ -212,7 +206,7 @@ export default function GachaPageClient() {
         </div>
       </section>
 
-      {/* Modal hiển thị kết quả quay - Được tích hợp sẵn các hiệu ứng hoạt họa */}
+      {/* Modal hiển thị khi có phần thưởng rơi ra */}
       <GachaResultModal
         isOpen={isResultOpen}
         locale={locale}

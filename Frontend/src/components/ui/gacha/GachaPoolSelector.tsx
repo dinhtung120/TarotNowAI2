@@ -1,13 +1,12 @@
 'use client';
 
 /* 
- * Import các thành phần hỗ trợ tối ưu hiệu năng và giao diện.
- * - memo: Đảm bảo thành phần chỉ render lại khi props thay đổi thực sự.
- * - GlassCard: Thành phần chủ đạo tạo hiệu ứng kính mờ.
- * - Badge: Hiển thị thông tin trạng thái và giá cả.
- * - Button: Nút bấm thực hiện hành động chính.
+ * Import các hooks và thành phần UI cần thiết.
+ * - useState: Quản lý trạng thái hiển thị thông báo ghi chú Pity.
+ * - Info: Icon dấu chấm hỏi/thông tin từ thư viện lucide-react.
  */
-import { memo } from 'react';
+import { memo, useState } from 'react';
+import { Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Button from '@/shared/components/ui/Button';
 import GlassCard from '@/shared/components/ui/GlassCard';
@@ -15,7 +14,7 @@ import Badge from '@/shared/components/ui/Badge';
 import type { GachaPool } from '@/shared/infrastructure/gacha/gachaTypes';
 
 /**
- * Định nghĩa các nhãn ngôn ngữ cho bộ chọn Pool.
+ * Định nghĩa các nhãn ngôn ngữ.
  */
 interface GachaPoolSelectorLabels {
   pull: string;
@@ -25,7 +24,8 @@ interface GachaPoolSelectorLabels {
 }
 
 /**
- * Props cho thành phần GachaPoolSelector.
+ * Thuộc tính của thành phần GachaPoolSelector.
+ * Lưu ý: onPull giờ đây nhận tham số 'count' (số lượt quay).
  */
 interface GachaPoolSelectorProps {
   pools: GachaPool[];
@@ -34,11 +34,11 @@ interface GachaPoolSelectorProps {
   isPulling: boolean;
   labels: GachaPoolSelectorLabels;
   onSelectPool: (poolCode: string) => void;
-  onPull: () => void;
+  onPull: (count: number) => void;
 }
 
 /**
- * Các hàm hỗ trợ bản địa hóa tên và mô tả Pool.
+ * Các hàm hỗ trợ bản địa hóa.
  */
 function localizePoolName(pool: GachaPool, locale: string): string {
   if (locale === 'en') return pool.nameEn;
@@ -53,8 +53,7 @@ function localizePoolDescription(pool: GachaPool, locale: string): string {
 }
 
 /**
- * GachaPoolSelectorComponent - Cho phép người dùng chọn các chiến dịch quay gacha (Pools) khác nhau.
- * Mỗi Pool được hiển thị dưới dạng một Interactive Glass Card.
+ * GachaPoolSelectorComponent - Cho phép người dùng chọn Pool và thực hiện lệnh Pull 1x hoặc 10x.
  */
 function GachaPoolSelectorComponent({
   pools,
@@ -65,10 +64,17 @@ function GachaPoolSelectorComponent({
   onSelectPool,
   onPull,
 }: GachaPoolSelectorProps) {
+  /* State lưu trữ việc có đang hiển thị ghi chú Pity hay không */
+  const [showPityNote, setShowPityNote] = useState<string | null>(null);
+
   return (
     <div className={cn('grid grid-cols-1 gap-6 lg:grid-cols-3')}>
       {pools.map((pool) => {
         const isSelected = selectedPoolCode === pool.code;
+        const poolName = localizePoolName(pool, locale);
+        
+        /* Tính toán giá quay 10 lần với ưu đãi giảm giá 10% (x10 * 0.9 = x9) */
+        const cost10x = Math.floor(pool.costAmount * 10 * 0.9);
         
         return (
           <GlassCard
@@ -81,40 +87,63 @@ function GachaPoolSelectorComponent({
               isSelected ? 'ring-2 ring-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.1)]' : 'tn-panel-soft'
             )}
           >
-            {/* 
-                Header của thẻ Pool: Tên Pool và Badge chi phí.
-            */}
+            {/* Header: Tên và Chi phí cơ bản */}
             <div className={cn('flex flex-col px-6 pt-6')}>
               <div className="mb-2 flex items-center justify-between gap-2">
                 <h3 className={cn('text-lg font-black tracking-tight tn-text-primary')}>
-                  {localizePoolName(pool, locale)}
+                  {poolName}
                 </h3>
                 <Badge variant={isSelected ? 'success' : 'default'} size="sm">
                   {`${pool.costAmount} ${pool.costCurrency.toUpperCase()}`}
                 </Badge>
               </div>
-              
-              {/* Mô tả Pool: Cung cấp thông tin chi tiết về nội dung của Pool */}
               <p className={cn('tn-text-secondary text-xs font-medium leading-relaxed line-clamp-2 mb-4')}>
                 {localizePoolDescription(pool, locale)}
               </p>
             </div>
 
-            {/* 
-                Phần hiển thị Pity (Tiến trình bảo hiểm):
-                Sử dụng các thanh tiến trình mini hoặc chỉ số để thông báo cho người dùng.
-            */}
+            {/* Phần hiển thị Pity và Nút quay */}
             <div className={cn('mt-auto bg-white/[0.03] p-6 pt-4 border-t tn-border-soft')}>
               <div className="mb-3 flex items-center justify-between">
-                <span className={cn('tn-text-muted text-[10px] font-black uppercase tracking-widest')}>
-                  {labels.pity}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className={cn('tn-text-muted text-[10px] font-black uppercase tracking-widest')}>
+                    {labels.pity}
+                  </span>
+                  
+                  {/* 
+                      Dấu "!" (Info icon) dùng để hiển thị ghi chú Pity.
+                      Người dùng click vào để xem quy tắc chắc chắn rơi Legendary/Mythic.
+                  */}
+                  <button 
+                    type="button"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setShowPityNote(showPityNote === pool.code ? null : pool.code);
+                    }}
+                    className={cn(
+                        'flex h-4 w-4 items-center justify-center rounded-full transition-colors',
+                        showPityNote === pool.code ? 'bg-emerald-500/20 text-emerald-400' : 'tn-text-muted hover:tn-text-primary'
+                    )}
+                  >
+                    <Info size={12} strokeWidth={3} />
+                  </button>
+                </div>
+                
                 <span className={cn('font-bold text-sm', isSelected ? 'tn-text-success' : 'tn-text-primary')}>
                   {pool.userCurrentPity} / {pool.hardPityCount}
                 </span>
               </div>
+
+              {/* Ghi chú Pity hiển thị linh hoạt khi người dùng nhấn dấu ! */}
+              {showPityNote === pool.code && (
+                <div className="animate-in fade-in slide-in-from-top-1 duration-300 mb-4 rounded-xl bg-emerald-500/10 p-3 border border-emerald-500/20">
+                  <p className="tn-text-success text-[10px] font-bold leading-relaxed">
+                    Khi đầy tiến trình chắc chắn rớt item Legendary/Mythic. 
+                    Nhận vật phẩm Legendary/Mythic sẽ đặt lại tiến trình này.
+                  </p>
+                </div>
+              )}
               
-              {/* Thanh tiến trình Pity trực quan */}
               <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-slate-900/50">
                 <div 
                   className={cn(
@@ -125,29 +154,50 @@ function GachaPoolSelectorComponent({
                 />
               </div>
 
-              {/* Lời nhắc/Gợi ý về luật Pity */}
-              <p className={cn('mb-4 tn-text-muted text-[10px] font-medium italic opacity-60')}>
-                {labels.pityRuleHint}
-              </p>
-
               {/* 
-                  Nút Quay: Chỉ hiển thị khi Pool đang được chọn.
-                  Sử dụng variant 'brand' để thu hút sự chú ý.
+                  Khu vực Nút Quay: Đã cập nhật hỗ trợ Quay 1x và Quay 10x.
+                  Hiển thị giá tiền trực tiếp trên nút để người dùng dễ quan sát.
               */}
               {isSelected && (
-                <Button 
-                  variant="brand" 
-                  size="md"
-                  fullWidth
-                  className="animate-in fade-in zoom-in duration-300"
-                  onClick={(e) => {
-                    e.stopPropagation(); // Ngăn chặn trigger chọn pool lại
-                    onPull();
-                  }} 
-                  isLoading={isPulling}
-                >
-                  {isPulling ? labels.pulling : labels.pull}
-                </Button>
+                <div className="grid grid-cols-2 gap-3 animate-in fade-in zoom-in duration-300">
+                  {/* Nút Quay 1 lần */}
+                  <Button 
+                    variant="secondary" 
+                    size="md"
+                    className="flex flex-col gap-0 min-h-[54px]"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onPull(1);
+                    }} 
+                    isLoading={isPulling}
+                  >
+                    <span className="text-[11px]">{t('pull1x')}</span>
+                    <span className="text-[9px] opacity-60 font-bold uppercase tracking-widest mt-0.5">
+                      {pool.costAmount} {pool.costCurrency}
+                    </span>
+                  </Button>
+
+                  {/* Nút Quay 10 lần với ưu đãi giảm giá 10% */}
+                  <Button 
+                    variant="brand" 
+                    size="md"
+                    className="flex flex-col gap-0 min-h-[54px] relative overflow-hidden"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onPull(10);
+                    }} 
+                    isLoading={isPulling}
+                  >
+                    <span className="text-[11px]">Quay 10 Lần</span>
+                    <span className="text-[9px] opacity-90 font-bold uppercase tracking-widest mt-0.5">
+                      {cost10x} {pool.costCurrency}
+                    </span>
+                    {/* Badge giảm giá nhỏ để kích thích người dùng */}
+                    <div className="absolute -right-5 -top-1 rotate-45 bg-amber-400 px-5 py-0.5 shadow-lg">
+                        <span className="text-[8px] font-black text-black">-10%</span>
+                    </div>
+                  </Button>
+                </div>
               )}
             </div>
           </GlassCard>
