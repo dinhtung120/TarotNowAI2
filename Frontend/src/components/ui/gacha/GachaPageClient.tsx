@@ -129,6 +129,7 @@ export default function GachaPageClient() {
           isPulling={pullMutation.isPending}
           labels={{ 
             pull: t('pull1x'), 
+            pull10x: t('pull10x'),
             pulling: t('pulling'), 
             pity: t('pityProgress'), 
             pityRuleHint: '' // Không hiển thị dòng chữ mô tả Pity cũ theo yêu cầu người dùng

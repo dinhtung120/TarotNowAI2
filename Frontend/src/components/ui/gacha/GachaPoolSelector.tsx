@@ -18,6 +18,7 @@ import type { GachaPool } from '@/shared/infrastructure/gacha/gachaTypes';
  */
 interface GachaPoolSelectorLabels {
   pull: string;
+  pull10x: string;
   pulling: string;
   pity: string;
   pityRuleHint: string;
@@ -171,7 +172,7 @@ function GachaPoolSelectorComponent({
                     }} 
                     isLoading={isPulling}
                   >
-                    <span className="text-[11px]">{t('pull1x')}</span>
+                    <span className="text-[11px]">{labels.pull}</span>
                     <span className="text-[9px] opacity-60 font-bold uppercase tracking-widest mt-0.5">
                       {pool.costAmount} {pool.costCurrency}
                     </span>
@@ -188,7 +189,7 @@ function GachaPoolSelectorComponent({
                     }} 
                     isLoading={isPulling}
                   >
-                    <span className="text-[11px]">Quay 10 Lần</span>
+                    <span className="text-[11px]">{labels.pull10x}</span>
                     <span className="text-[9px] opacity-90 font-bold uppercase tracking-widest mt-0.5">
                       {cost10x} {pool.costCurrency}
                     </span>
