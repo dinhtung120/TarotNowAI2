@@ -1,66 +1,148 @@
 'use client';
 
+/* 
+ * Import các thành phần và hooks cần thiết.
+ * - memo: Tối ưu hóa render danh sách vật phẩm lớn.
+ * - Package2: Icon mặc định cho vật phẩm.
+ * - GlassCard: Thành phần chủ đạo tạo hiệu ứng kính.
+ * - Badge: Hiển thị độ hiếm và số lượng.
+ */
 import { memo } from 'react';
 import { Package2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { InventoryItem, InventoryRarity } from '@/shared/infrastructure/inventory/inventoryTypes';
+import GlassCard from '@/shared/components/ui/GlassCard';
+import Badge from '@/shared/components/ui/Badge';
 
+/**
+ * Thuộc tính của thành phần InventoryItemCard.
+ */
 interface InventoryItemCardProps {
- item: InventoryItem;
- locale: string;
- onSelect: (item: InventoryItem) => void;
+  item: InventoryItem;
+  locale: string;
+  onSelect: (item: InventoryItem) => void;
 }
 
-const rarityClasses: Record<InventoryRarity, string> = {
- common: 'border-slate-300/70 bg-slate-100/70 dark:border-slate-700 dark:bg-slate-900/30',
- uncommon: 'border-emerald-300/80 bg-emerald-50/70 dark:border-emerald-700 dark:bg-emerald-900/20',
- rare: 'border-sky-300/80 bg-sky-50/70 dark:border-sky-700 dark:bg-sky-900/20',
- epic: 'border-fuchsia-300/80 bg-fuchsia-50/70 dark:border-fuchsia-700 dark:bg-fuchsia-900/20',
- legendary: 'border-amber-300/80 bg-amber-50/70 dark:border-amber-700 dark:bg-amber-900/20',
+/**
+ * Bản đồ ánh xạ độ hiếm sang các màu sắc đặc trưng của hệ thống.
+ * Giúp người dùng nhận diện giá trị vật phẩm ngay từ cái nhìn đầu tiên.
+ */
+const rarityConfig: Record<InventoryRarity, { 
+    badgeVariant: 'amber' | 'purple' | 'info' | 'success' | 'default',
+    glowClass: string,
+    label: string
+}> = {
+  common: { 
+    badgeVariant: 'default', 
+    glowClass: 'tn-border-soft', 
+    label: 'Phổ thông' 
+  },
+  uncommon: { 
+    badgeVariant: 'success', 
+    glowClass: 'border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.05)]', 
+    label: 'Bất thường' 
+  },
+  rare: { 
+    badgeVariant: 'info', 
+    glowClass: 'border-sky-500/20 shadow-[0_0_15px_rgba(14,165,233,0.05)]', 
+    label: 'Hiếm' 
+  },
+  epic: { 
+    badgeVariant: 'purple', 
+    glowClass: 'border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.05)]', 
+    label: 'Sử thi' 
+  },
+  legendary: { 
+    badgeVariant: 'amber', 
+    glowClass: 'border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.05)]', 
+    label: 'Huyền thoại' 
+  },
 };
 
+/**
+ * Kiểm tra xem độ hiếm có nằm trong danh sách đã cấu hình hay không.
+ */
 function isKnownRarity(rarity: string): rarity is InventoryRarity {
- return rarity in rarityClasses;
+  return rarity in rarityConfig;
 }
 
+/**
+ * Lấy văn bản đã bản địa hóa cho vật phẩm.
+ */
 function getLocalizedText(item: InventoryItem, locale: string) {
- if (locale === 'en') return { name: item.nameEn, description: item.descriptionEn };
- if (locale === 'zh') return { name: item.nameZh, description: item.descriptionZh };
- return { name: item.nameVi, description: item.descriptionVi };
+  if (locale === 'en') return { name: item.nameEn, description: item.descriptionEn };
+  if (locale === 'zh') return { name: item.nameZh, description: item.descriptionZh };
+  return { name: item.nameVi, description: item.descriptionVi };
 }
 
+/**
+ * InventoryItemCard - Thành phần hiển thị một vật phẩm trong kho đồ.
+ * Thiết kế theo dạng thẻ kính tương tác cao cấp.
+ */
 function InventoryItemCardComponent({ item, locale, onSelect }: InventoryItemCardProps) {
- const text = getLocalizedText(item, locale);
- const rarityClass = isKnownRarity(item.rarity) ? rarityClasses[item.rarity] : rarityClasses.common;
+  const text = getLocalizedText(item, locale);
+  const config = isKnownRarity(item.rarity) ? rarityConfig[item.rarity] : rarityConfig.common;
 
- return (
-  <button
-   type="button"
-   onClick={() => onSelect(item)}
-   className={cn(
-    'group flex w-full flex-col gap-3 rounded-2xl border p-4 text-left transition-all duration-200',
-    'hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500',
-    rarityClass,
-   )}
-   aria-label={text.name}
-  >
-   <div className={cn('flex items-start justify-between gap-3')}>
-    <div className={cn('min-w-0')}>
-     <p className={cn('truncate text-sm font-semibold text-slate-900 dark:text-slate-100')}>{text.name}</p>
-     <p className={cn('line-clamp-2 text-xs text-slate-600 dark:text-slate-300')}>{text.description}</p>
-    </div>
-    <div className={cn('rounded-lg border border-slate-200 bg-white/70 p-2 dark:border-slate-700 dark:bg-slate-900/50')}>
-     <Package2 className={cn('h-4 w-4 text-slate-700 dark:text-slate-200')} />
-    </div>
-   </div>
-   <div className={cn('flex items-center justify-between text-xs')}>
-    <span className={cn('rounded-md bg-black/5 px-2 py-1 font-medium uppercase tracking-wide text-slate-700 dark:bg-white/10 dark:text-slate-200')}>
-     {item.rarity}
-    </span>
-    <span className={cn('font-semibold text-slate-800 dark:text-slate-100')}>x{item.quantity}</span>
-   </div>
-  </button>
- );
+  return (
+    <GlassCard
+      variant="interactive"
+      padding="none"
+      onClick={() => onSelect(item)}
+      className={cn(
+        'group relative flex flex-col transition-all duration-500 overflow-hidden',
+        config.glowClass,
+        'bg-white/[0.02] hover:bg-white/[0.05]'
+      )}
+    >
+      {/* 
+          Phần nội dung chính của vật phẩm:
+          Bao gồm Tên, Mô tả và Icon đại diện.
+      */}
+      <div className="p-5">
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div className="min-w-0 space-y-1">
+            <h3 className={cn('truncate text-base font-black tracking-tight tn-text-primary group-hover:tn-text-accent transition-colors')}>
+              {text.name}
+            </h3>
+            <p className={cn('line-clamp-2 text-xs font-medium tn-text-secondary opacity-70 leading-relaxed')}>
+              {text.description}
+            </p>
+          </div>
+          
+          {/* Icon vật phẩm: Được đặt trong một box kính nhỏ */}
+          <div className={cn(
+            'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border tn-border-soft bg-white/[0.03] transition-transform duration-500 group-hover:scale-110',
+            item.rarity === 'legendary' ? 'border-amber-500/30' : 
+            item.rarity === 'epic' ? 'border-purple-500/30' : ''
+          )}>
+            <Package2 className={cn('h-5 w-5 opacity-60')} />
+          </div>
+        </div>
+
+        {/* 
+            Phân bổ thông tin bổ sung:
+            Độ hiếm dưới dạng Badge và số lượng vật phẩm hiện có.
+        */}
+        <div className="flex items-center justify-between">
+          <Badge variant={config.badgeVariant} size="sm" className="font-black uppercase tracking-[0.05em]">
+            {config.label}
+          </Badge>
+          
+          <div className="flex items-center gap-1.5">
+            <span className={cn('tn-text-muted text-[10px] font-black uppercase tracking-widest opacity-50')}>
+              Số lượng:
+            </span>
+            <span className={cn('text-sm font-black tn-text-primary')}>
+              x{item.quantity}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      {/* Hiệu ứng trang trí light-beam khi hover */}
+      <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-current to-transparent opacity-0 transition-opacity group-hover:opacity-20" />
+    </GlassCard>
+  );
 }
 
 const InventoryItemCard = memo(InventoryItemCardComponent);
