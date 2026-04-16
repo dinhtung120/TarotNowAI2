@@ -36,6 +36,7 @@ import {
  inventoryQueryKeys,
 } from '@/shared/infrastructure/inventory/inventoryConstants';
 import { fetchInventoryServer } from '@/shared/infrastructure/inventory/inventoryServerActions';
+import { isPrefetchBlocked } from '@/shared/infrastructure/navigation/prefetchPolicy';
 
 interface RouteQuerySpec {
  queryKey: readonly unknown[];
@@ -306,6 +307,10 @@ function buildRouteQuerySpecs(pathname: string): RouteQuerySpec[] {
 export async function prefetchRouteQueries(queryClient: QueryClient, href: string): Promise<void> {
  const pathname = normalizeNavigationPath(href);
  if (!pathname.startsWith('/')) {
+  return;
+ }
+
+ if (isPrefetchBlocked(pathname)) {
   return;
  }
 
