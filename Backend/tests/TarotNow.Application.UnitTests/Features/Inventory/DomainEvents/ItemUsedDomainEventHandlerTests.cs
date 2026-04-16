@@ -21,6 +21,7 @@ public class ItemUsedDomainEventHandlerTests
     private readonly Mock<IUserItemRepository> _userItemRepositoryMock = new();
     private readonly Mock<IUserCollectionRepository> _userCollectionRepositoryMock = new();
     private readonly Mock<IInlineDomainEventDispatcher> _inlineDispatcherMock = new();
+    private readonly Mock<IFreeDrawCreditRepository> _freeDrawCreditRepositoryMock = new();
     private readonly Mock<IEventHandlerIdempotencyService> _idempotencyServiceMock = new();
 
     /// <summary>
@@ -133,6 +134,7 @@ public class ItemUsedDomainEventHandlerTests
             _userItemRepositoryMock.Object,
             _userCollectionRepositoryMock.Object,
             _inlineDispatcherMock.Object,
+            _freeDrawCreditRepositoryMock.Object,
             _idempotencyServiceMock.Object);
     }
 
