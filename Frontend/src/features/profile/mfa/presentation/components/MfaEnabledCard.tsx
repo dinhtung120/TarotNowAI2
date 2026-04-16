@@ -1,5 +1,5 @@
 import { ArrowRight, ShieldCheck } from "lucide-react";
-import { Link } from "@/i18n/routing";
+import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
 import { Button, GlassCard } from "@/shared/components/ui";
 import { cn } from "@/lib/utils";
 

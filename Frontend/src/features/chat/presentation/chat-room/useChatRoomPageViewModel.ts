@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/routing';
 import { useChatRoomPageState } from '@/features/chat/presentation/chat-room/useChatRoomPageState';
 import type { ChatRoomViewProps } from '@/features/chat/presentation/chat-room/ChatRoomView.types';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 
 interface UseChatRoomPageViewModelParams extends Pick<
   ChatRoomViewProps,
@@ -19,7 +19,7 @@ export function useChatRoomPageViewModel({
   VoiceRecorderButton,
 }: UseChatRoomPageViewModelParams) {
   const params = useParams();
-  const router = useRouter();
+  const navigation = useOptimizedNavigation();
   const locale = useLocale();
   const t = useTranslations('Chat');
 
@@ -28,7 +28,7 @@ export function useChatRoomPageViewModel({
 
   const state = useChatRoomPageState({
     conversationId,
-    pushRoute: router.push,
+    pushRoute: navigation.push,
   });
 
   const {
@@ -101,7 +101,7 @@ export function useChatRoomPageViewModel({
       VoiceRecorderButton,
       onAcceptConversation: state.conversationActions.handleAcceptConversation,
       onAcceptOffer: state.paymentOffers.handleAcceptOffer,
-      onBack: () => router.push('/chat'),
+      onBack: () => navigation.push('/chat'),
       onCancelPending: state.conversationActions.handleCancelPending,
       onCloseDisputeModal: () => setShowDisputeModal(false),
       onClosePaymentOffer: () => setShowPaymentOffer(false),

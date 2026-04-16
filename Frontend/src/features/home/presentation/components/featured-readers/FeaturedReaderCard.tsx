@@ -1,4 +1,4 @@
-import { Link } from "@/i18n/routing";
+import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
 import { normalizeReaderStatus } from "@/features/reader/domain/readerStatus";
 import FeaturedReaderAvatar from "@/features/home/presentation/components/featured-readers/FeaturedReaderAvatar";
 import FeaturedReaderMeta from "@/features/home/presentation/components/featured-readers/FeaturedReaderMeta";

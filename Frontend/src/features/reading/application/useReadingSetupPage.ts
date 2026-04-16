@@ -1,12 +1,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useRouter } from '@/i18n/routing';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useTranslations } from 'next-intl';
 import { initReadingSession } from '@/features/reading/application/actions';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 import { useWalletStore } from '@/store/walletStore';
 import { setSessionStorageItem } from '@/shared/infrastructure/storage/browserStorage';
 
@@ -31,7 +31,7 @@ const CARDS_TO_DRAW_MAP: Record<string, number> = {
 };
 
 export function useReadingSetupPage() {
- const router = useRouter();
+ const navigation = useOptimizedNavigation();
  const t = useTranslations('ReadingSetup');
  const fetchBalance = useWalletStore((state) => state.fetchBalance);
 
@@ -118,7 +118,7 @@ export function useReadingSetupPage() {
   }
 
   setSessionStorageItem(`cardsToDraw_${response.data.sessionId}`, cardsToDraw.toString());
-  router.push(`/reading/session/${response.data.sessionId}`);
+  navigation.push(`/reading/session/${response.data.sessionId}`);
  };
 
  return {

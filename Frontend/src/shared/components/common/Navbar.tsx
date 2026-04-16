@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useTranslations } from 'next-intl';
-import { usePathname, useRouter } from '@/i18n/routing';
+import { usePathname } from '@/i18n/routing';
 import { useAuthStore } from '@/store/authStore';
 import { useNavbarMenuState } from '@/shared/application/hooks/useNavbarMenuState';
 import { useChatRealtimeSync } from '@/shared/application/hooks/useChatRealtimeSync';
@@ -13,6 +13,7 @@ import { NavbarMobileMenu } from '@/shared/components/common/navbar/NavbarMobile
 import NavbarRightSection from '@/shared/components/common/navbar/NavbarRightSection';
 import { getAvatarMenuItems, NAV_LINKS, shouldHideNavbar } from '@/shared/components/common/navbar/config';
 import { useNavbarLogout } from '@/shared/components/common/navbar/useNavbarLogout';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 import { cn } from '@/lib/utils';
 
 interface NavbarProps {
@@ -20,7 +21,7 @@ interface NavbarProps {
 }
 
 export default function Navbar({ onLogout }: NavbarProps = {}) {
-  const router = useRouter();
+  const navigation = useOptimizedNavigation();
   const pathname = usePathname();
   const tNav = useTranslations('Navigation');
   const tCommon = useTranslations('Common');
@@ -33,7 +34,11 @@ export default function Navbar({ onLogout }: NavbarProps = {}) {
   useChatRealtimeSync({ enabled: enableGlobalChatSync });
 
   const avatarMenuItems = useMemo(() => getAvatarMenuItems(user?.role === 'admin'), [user?.role]);
-  const handleLogout = useNavbarLogout({ closeAvatarMenu, onLogout, router });
+  const handleLogout = useNavbarLogout({
+   closeAvatarMenu,
+   navigateToLogin: () => navigation.push('/login'),
+   onLogout,
+  });
   if (shouldHideNavbar(pathname)) return null;
 
   return (

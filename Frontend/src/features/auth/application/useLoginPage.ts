@@ -7,8 +7,8 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { loginAction } from '@/features/auth/application/actions';
 import { useAuthStore } from '@/store/authStore';
-import { useRouter } from '@/i18n/routing';
 import { resolveLoginIdentityPrefill } from '@/features/auth/application/authFlowEmail';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 import {
  getLocalStorageItem,
  removeLocalStorageItem,
@@ -18,7 +18,7 @@ import { createLoginSchema, type LoginFormValues } from '@/features/auth/domain/
 
 export function useLoginPage() {
  const t = useTranslations('Auth');
- const router = useRouter();
+ const navigation = useOptimizedNavigation();
  const searchParams = useSearchParams();
  const setAuth = useAuthStore((state) => state.setAuth);
 
@@ -74,7 +74,7 @@ export function useLoginPage() {
    if (result.data) {
     setAuth(result.data.user);
     setIsRedirecting(true);
-    router.replace('/');
+    navigation.replace('/');
    }
   } catch {
    setErrorMsg(t('login.error_unexpected'));

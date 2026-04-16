@@ -1,5 +1,5 @@
 import { Menu, X } from 'lucide-react';
-import { Link } from '@/i18n/routing';
+import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
 import StreakBadge from '@/features/checkin/presentation/StreakBadge';
 import NotificationDropdown from '@/shared/components/common/NotificationDropdown';
 import WalletWidget from '@/shared/components/common/WalletWidget';
@@ -27,8 +27,8 @@ export default function NavbarRightSection({ avatarMenuItems, avatarMenuOpen, av
   if (!isAuthenticated) {
     return (
       <div className={cn('flex items-center tn-gap-2-3-sm')}>
-        <Link href="/login" prefetch={false} className={cn('inline-flex min-h-11 items-center px-2 text-xs font-medium tn-text-secondary transition-colors')}>{tNav('login')}</Link>
-        <Link href="/register" prefetch={false} className={cn('inline-flex min-h-11 items-center rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-500 to-indigo-600 px-3 py-1.5 text-xs font-bold tn-text-ink shadow-lg transition-all')}>{tNav('register')}</Link>
+        <Link href="/login" className={cn('inline-flex min-h-11 items-center px-2 text-xs font-medium tn-text-secondary transition-colors')}>{tNav('login')}</Link>
+        <Link href="/register" className={cn('inline-flex min-h-11 items-center rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-500 to-indigo-600 px-3 py-1.5 text-xs font-bold tn-text-ink shadow-lg transition-all')}>{tNav('register')}</Link>
       </div>
     );
   }

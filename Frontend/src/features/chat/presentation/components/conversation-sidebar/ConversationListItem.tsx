@@ -1,9 +1,9 @@
 import Image from 'next/image';
-import { useRouter } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
 import type { ConversationDto } from '@/features/chat/application/actions';
 import { formatAgo, getOther, previewText, statusLabel } from './utils';
 import { resolveAvatarUrl } from '@/shared/infrastructure/http/assetUrl';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 
 interface ConversationListItemProps {
  conversation: ConversationDto;
@@ -13,7 +13,7 @@ interface ConversationListItemProps {
 }
 
 export function ConversationListItem({ conversation, currentId, currentUserId, nowTs }: ConversationListItemProps) {
- const router = useRouter();
+ const navigation = useOptimizedNavigation();
  const other = getOther(conversation, currentUserId);
  const avatarSrc = resolveAvatarUrl(other.avatar);
  const status = statusLabel(conversation.status);
@@ -22,7 +22,7 @@ export function ConversationListItem({ conversation, currentId, currentUserId, n
  return (
   <button
    type="button"
-   onClick={() => router.push(`/chat/${conversation.id}`)}
+   onClick={() => navigation.push(`/chat/${conversation.id}`)}
    className={cn('w-full rounded-xl px-3 py-3 border text-left transition-all duration-200 group', active ? 'tn-bg-accent-20 tn-border-accent-30 tn-shadow-glow-accent-15' : 'bg-white/5 border-white/10 tn-conversation-item-hover')}
   >
    <div className={cn('flex items-center gap-3')}>

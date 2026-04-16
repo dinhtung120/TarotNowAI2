@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from '@/i18n/routing';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 
 export function useAuthGuard(isAuthenticated: boolean, redirectTo = '/login'): void {
- const router = useRouter();
+ const navigation = useOptimizedNavigation();
 
  useEffect(() => {
   if (isAuthenticated) {
@@ -22,17 +22,17 @@ export function useAuthGuard(isAuthenticated: boolean, redirectTo = '/login'): v
     });
 
     if (!response.ok) {
-     if (!cancelled) router.push(redirectTo);
+     if (!cancelled) navigation.push(redirectTo);
      return;
     }
 
     const payload = (await response.json()) as { authenticated?: boolean; error?: string };
     const shouldRedirect = !payload.authenticated || payload.error === AUTH_ERROR.UNAUTHORIZED;
     if (!cancelled && shouldRedirect) {
-     router.push(redirectTo);
+     navigation.push(redirectTo);
     }
    } catch {
-    if (!cancelled) router.push(redirectTo);
+    if (!cancelled) navigation.push(redirectTo);
    }
   };
 
@@ -40,5 +40,5 @@ export function useAuthGuard(isAuthenticated: boolean, redirectTo = '/login'): v
   return () => {
    cancelled = true;
   };
- }, [isAuthenticated, redirectTo, router]);
+ }, [isAuthenticated, navigation, redirectTo]);
 }

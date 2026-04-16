@@ -1,5 +1,5 @@
 import { AlertCircle } from 'lucide-react';
-import { useRouter } from '@/i18n/routing';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 import { Button } from '@/shared/components/ui';
 import { cn } from '@/lib/utils';
 
@@ -14,7 +14,7 @@ export function HistoryDetailStates({
  error,
  backLabel,
 }: HistoryDetailStatesProps) {
- const router = useRouter();
+ const navigation = useOptimizedNavigation();
 
  if (isLoading) {
   return (
@@ -31,7 +31,7 @@ export function HistoryDetailStates({
    <div className={cn('tn-bg-danger-soft border tn-border-danger p-12 tn-rounded-3xl text-center max-w-2xl mx-auto')}>
     <AlertCircle className={cn('w-12 h-12 tn-text-danger mx-auto mb-4 opacity-80')} />
     <p className={cn('tn-text-danger font-bold mb-8 italic')}>{error}</p>
-    <Button variant="primary" onClick={() => router.push('/reading/history')}>
+    <Button variant="primary" onClick={() => navigation.push('/reading/history')}>
      {backLabel}
     </Button>
    </div>

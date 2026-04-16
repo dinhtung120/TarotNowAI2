@@ -1,9 +1,9 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { useRouter } from '@/i18n/routing';
 import { createConversation } from '@/features/chat/public';
 import type { ReaderProfile } from '@/features/reader/application/actions';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 import toast from 'react-hot-toast';
 
 interface UseReaderConversationModalOptions {
@@ -21,7 +21,7 @@ interface UseReaderConversationModalResult {
 export function useReaderConversationModal(
  options: UseReaderConversationModalOptions,
 ): UseReaderConversationModalResult {
- const router = useRouter();
+ const navigation = useOptimizedNavigation();
  const [selectedReader, setSelectedReader] = useState<ReaderProfile | null>(null);
  const [isStartingConversation, setIsStartingConversation] = useState(false);
 
@@ -47,11 +47,11 @@ export function useReaderConversationModal(
    }
 
    closeReader();
-   router.push(`/chat/${result.data.id}`);
+   navigation.push(`/chat/${result.data.id}`);
   } finally {
    setIsStartingConversation(false);
   }
- }, [closeReader, options.createConversationErrorMessage, router, selectedReader]);
+ }, [closeReader, navigation, options.createConversationErrorMessage, selectedReader]);
 
  return {
   selectedReader,

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
-import { Link } from "@/i18n/routing";
+import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
 import { useLoginPage } from "@/features/auth/application/useLoginPage";
 import { AuthErrorBanner } from "@/features/auth/presentation/components/AuthErrorBanner";
 import { LoginRememberField } from "@/features/auth/presentation/components/LoginRememberField";

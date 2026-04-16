@@ -1,4 +1,4 @@
-import { Link } from '@/i18n/routing';
+import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
 import { NavbarDesktopLinks } from '@/shared/components/common/navbar/NavbarDesktopLinks';
 import { NAV_LINKS } from '@/shared/components/common/navbar/config';
 import { cn } from '@/lib/utils';

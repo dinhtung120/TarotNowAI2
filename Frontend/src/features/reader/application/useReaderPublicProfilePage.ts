@@ -2,16 +2,16 @@
 
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
-import { useRouter } from '@/i18n/routing';
 import toast from 'react-hot-toast';
 import { getReaderProfile, type ReaderProfile } from '@/features/reader/application/actions';
 import { createConversation } from '@/features/chat/public';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 
 export function useReaderPublicProfilePage(t: TranslateFn) {
   const params = useParams();
-  const router = useRouter();
+  const navigation = useOptimizedNavigation();
   const userId = params.id as string;
 
  const { data: profile, isLoading, isFetching } = useQuery<ReaderProfile | null>({
@@ -27,7 +27,7 @@ export function useReaderPublicProfilePage(t: TranslateFn) {
   mutationFn: async () => createConversation(userId),
   onSuccess: (result) => {
    if (result.success && result.data?.id) {
-    router.push(`/chat/${result.data.id}`);
+    navigation.push(`/chat/${result.data.id}`);
     return;
    }
 
@@ -39,7 +39,7 @@ export function useReaderPublicProfilePage(t: TranslateFn) {
  });
 
   return {
-    router,
+    navigation,
     profile,
   loading: isLoading || isFetching,
   startingChat: startChatMutation.isPending,

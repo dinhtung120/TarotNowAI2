@@ -1,7 +1,7 @@
 import { ArrowLeft, Calendar, Clock, Sparkles } from 'lucide-react';
 import type { HistoryDetailResponse } from '@/features/reading/application/actions/history';
-import { useRouter } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 
 interface HistoryDetailHeaderProps {
  locale: string;
@@ -23,12 +23,12 @@ export function HistoryDetailHeader({
  spreadName,
  labels,
 }: HistoryDetailHeaderProps) {
- const router = useRouter();
+ const navigation = useOptimizedNavigation();
 
  return (
   <div className={cn('tn-flex-col-row-md tn-items-end-md justify-between gap-8 tn-mb-12-16-sm animate-in fade-in slide-in-from-bottom-4 duration-700')}>
    <div className={cn('flex flex-col gap-6')}>
-    <button type="button" onClick={() => router.push('/reading/history')} className={cn('group flex items-center gap-2 tn-text-secondary tn-hover-text-primary transition-all w-fit min-h-11 px-2 rounded-xl tn-hover-surface-soft')}>
+    <button type="button" onClick={() => navigation.push('/reading/history')} className={cn('group flex items-center gap-2 tn-text-secondary tn-hover-text-primary transition-all w-fit min-h-11 px-2 rounded-xl tn-hover-surface-soft')}>
      <div className={cn('w-8 h-8 rounded-full tn-surface flex items-center justify-center transition-all')}>
       <ArrowLeft className={cn('w-4 h-4')} />
      </div>

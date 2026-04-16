@@ -6,9 +6,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/routing';
 import { resendVerificationEmailAction, verifyEmailAction } from '@/features/auth/application/actions';
 import { resolveVerifyEmailPrefill, isValidAuthFlowEmail } from '@/features/auth/application/authFlowEmail';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 import {
  createVerifyEmailSchema,
  type VerifyEmailFormValues,
@@ -16,7 +16,7 @@ import {
 
 export function useVerifyEmailPage() {
  const t = useTranslations('Auth');
- const router = useRouter();
+ const navigation = useOptimizedNavigation();
  const searchParams = useSearchParams();
  const [errorMsg, setErrorMsg] = useState('');
  const [resendTimer, setResendTimer] = useState(0);
@@ -95,7 +95,7 @@ export function useVerifyEmailPage() {
 
    if (result.success) {
     const encodedEmail = encodeURIComponent(data.email.trim());
-    router.replace(`/login?email=${encodedEmail}`);
+    navigation.replace(`/login?email=${encodedEmail}`);
    }
   } catch {
    setErrorMsg(t('verify.error_unexpected'));

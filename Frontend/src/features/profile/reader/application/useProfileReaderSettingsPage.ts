@@ -1,7 +1,6 @@
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from '@/i18n/routing';
 import { useAuthStore } from '@/store/authStore';
 import {
  getReaderProfile,
@@ -10,6 +9,7 @@ import {
 } from '@/features/reader/public';
 import type { ReaderProfile } from '@/features/reader/application/actions';
 import { normalizeReaderStatus, type ReaderStatus } from '@/features/reader/domain/readerStatus';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 import toast from 'react-hot-toast';
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 interface ReaderSettingsDraft {
@@ -42,7 +42,7 @@ function toDraft(profile: ReaderProfile | null | undefined): ReaderSettingsDraft
  };
 }
 export function useProfileReaderSettingsPage(t: TranslateFn) {
- const router = useRouter();
+ const navigation = useOptimizedNavigation();
  const queryClient = useQueryClient();
  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
  const user = useAuthStore((state) => state.user);
@@ -66,15 +66,15 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
  });
  useEffect(() => {
   if (!isAuthenticated || !user) {
-   router.push('/login');
+   navigation.push('/login');
    return;
   }
   if (!isTarotReader && !redirectShownRef.current) {
    redirectShownRef.current = true;
    toast.error(t('reader.toast_not_found'), { style: NEUTRAL_TOAST_STYLE });
-   router.push('/profile');
+   navigation.push('/profile');
   }
- }, [isAuthenticated, isTarotReader, router, t, user]);
+ }, [isAuthenticated, isTarotReader, navigation, t, user]);
  useEffect(() => {
   if (!isAuthenticated || !user || !isTarotReader) return;
   if (profileQuery.isLoading) return;
@@ -82,9 +82,9 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
   if (!profile && !redirectShownRef.current) {
    redirectShownRef.current = true;
    toast.error(t('reader.toast_not_found'), { style: NEUTRAL_TOAST_STYLE });
-   router.push('/profile');
+   navigation.push('/profile');
   }
- }, [isAuthenticated, isTarotReader, profileQuery.data, profileQuery.isLoading, router, t, user]);
+ }, [isAuthenticated, isTarotReader, navigation, profileQuery.data, profileQuery.isLoading, t, user]);
  const effectiveValues = useMemo(
   () => draft ?? toDraft(profileQuery.data),
   [draft, profileQuery.data]

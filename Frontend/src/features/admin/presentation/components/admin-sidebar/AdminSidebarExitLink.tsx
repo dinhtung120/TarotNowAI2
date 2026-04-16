@@ -1,7 +1,7 @@
 'use client';
 
 import { LogOut } from 'lucide-react';
-import { Link } from '@/i18n/routing';
+import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
 import { cn } from '@/lib/utils';
 
 interface AdminSidebarExitLinkProps {

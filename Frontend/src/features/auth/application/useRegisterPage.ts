@@ -4,8 +4,8 @@ import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/routing';
 import { registerAction } from '@/features/auth/application/actions';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 import {
   createRegisterSchema,
   type RegisterFormValues,
@@ -17,7 +17,7 @@ import {
  */
 export function useRegisterPage() {
   const t = useTranslations('Auth');
-  const router = useRouter();
+  const navigation = useOptimizedNavigation();
   const [errorMsg, setErrorMsg] = useState('');
 
   // Tạo schema validation dựa trên ngôn ngữ hiện tại
@@ -59,7 +59,7 @@ export function useRegisterPage() {
 
       if (result.success) {
         const encodedEmail = encodeURIComponent(data.email.trim());
-        router.replace(`/verify-email?email=${encodedEmail}`);
+        navigation.replace(`/verify-email?email=${encodedEmail}`);
       }
     } catch {
       setErrorMsg(t('register.error_unexpected'));

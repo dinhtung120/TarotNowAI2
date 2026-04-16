@@ -1,5 +1,5 @@
 import { ArrowLeft, Zap } from 'lucide-react';
-import { useRouter } from '@/i18n/routing';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 import { SectionHeader } from '@/shared/components/ui';
 import { cn } from '@/lib/utils';
 
@@ -11,13 +11,13 @@ interface DepositHeaderProps {
 }
 
 export function DepositHeader({ backLabel, tag, title, subtitle }: DepositHeaderProps) {
- const router = useRouter();
+ const navigation = useOptimizedNavigation();
 
  return (
   <>
-   <button
+    <button
     type="button"
-    onClick={() => router.push('/wallet')}
+    onClick={() => navigation.push('/wallet')}
     className={cn('group flex items-center gap-2 tn-wallet-back-link tn-text-10 font-black uppercase tn-tracking-02 w-fit min-h-11 px-2 rounded-xl')}
    >
     <ArrowLeft className={cn('w-3.5 h-3.5 tn-wallet-back-icon')} />

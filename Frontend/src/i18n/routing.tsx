@@ -19,7 +19,7 @@ export const Link = forwardRef<HTMLAnchorElement, IntlLinkProps>(function LinkWi
  ref
 ) {
  const { prefetch, ...rest } = props;
- return <IntlLink ref={ref} prefetch={prefetch ?? false} {...rest} />;
+ return <IntlLink ref={ref} prefetch={prefetch ?? true} {...rest} />;
 });
 
 export { usePathname, useRouter, redirect, permanentRedirect, getPathname };

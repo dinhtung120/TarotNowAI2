@@ -2,8 +2,8 @@
 
 import { CreditCard, Gift, History, Users } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/routing';
 import { useAdminDashboard } from '@/features/admin/dashboard/application/useAdminDashboard';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 import {
  AdminDashboardHeader,
  AdminDashboardInsights,
@@ -15,7 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 
 export default function AdminDashboardPage() {
- const router = useRouter();
+ const navigation = useOptimizedNavigation();
  const t = useTranslations('Admin');
  const locale = useLocale();
  const { stats, loading } = useAdminDashboard();
@@ -37,9 +37,9 @@ export default function AdminDashboardPage() {
    <AdminDashboardStatsGrid
     cards={statCards}
     locale={locale}
-    onNavigate={(href) => router.push(href)}
+    onNavigate={(href) => navigation.push(href)}
    />
-   <AdminDashboardMidSection onNavigate={(href) => router.push(href)} />
+   <AdminDashboardMidSection onNavigate={(href) => navigation.push(href)} />
    <AdminDashboardInsights
     deposits={stats.deposits}
     readings={stats.readings}

@@ -1,24 +1,24 @@
 "use client";
 
 import { useCallback } from "react";
-import { useRouter } from "@/i18n/routing";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useHistorySessionsPage } from "@/features/reading/history/application/useHistorySessionsPage";
 import { useAuthGuard } from "@/shared/application/hooks/useAuthGuard";
+import { useOptimizedNavigation } from "@/shared/infrastructure/navigation/useOptimizedNavigation";
 import { useAuthStore } from "@/store/authStore";
 import { HistoryEmptyState, HistoryErrorBanner, HistoryLoadingGrid, HistoryPaginationDock, HistoryPageHeader, HistorySessionsGrid } from "./components";
 import { resolveSpreadName } from "./spreadLabels";
 
 export default function HistoryPage() {
- const router = useRouter();
+ const navigation = useOptimizedNavigation();
  const t = useTranslations("History");
  const tApi = useTranslations("ApiErrors");
  const locale = useLocale();
  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
  const handleUnauthorized = useCallback(() => {
-  router.push("/login");
- }, [router]);
+  navigation.push("/login");
+ }, [navigation]);
  useAuthGuard(isAuthenticated);
 
  const state = useHistorySessionsPage({

@@ -2,11 +2,12 @@
 import { useCallback, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslations } from 'next-intl';
-import { usePathname, useRouter } from '@/i18n/routing';
+import { usePathname } from '@/i18n/routing';
 import { useAuthStore } from '@/store/authStore';
 import type { ActionResult } from '@/shared/domain/actionResult';
 import { isTerminalAuthError } from '@/shared/domain/authErrors';
 import type { UserProfile } from '@/features/auth/domain/types';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 const REFRESH_INTERVAL_MS = 40 * 60 * 1000;
 const MIN_REFRESH_THROTTLE_MS = 20 * 60 * 1000;
 let globalLastRefreshAt = 0;
@@ -61,7 +62,7 @@ export default function AuthSessionManager({
     logout,
     refreshAccessToken,
 }: AuthSessionManagerProps) {
-    const router = useRouter();
+    const navigation = useOptimizedNavigation();
     const pathname = usePathname();
     const tApi = useTranslations('ApiErrors');
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -92,10 +93,10 @@ export default function AuthSessionManager({
                 toast.error(tApiRef.current('unauthorized'));
             }
             if (!pathnameRef.current.includes('/login')) {
-                router.push('/login');
+                navigation.push('/login');
             }
         },
-        [clearAuth, logout, router]
+        [clearAuth, logout, navigation]
     );
     const tryRefresh = useCallback(
         async (showToastOnFailure = false) => {

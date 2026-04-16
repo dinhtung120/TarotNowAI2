@@ -1,6 +1,6 @@
-import { useRouter } from '@/i18n/routing';
 import type { HistorySessionDto } from '@/features/reading/application/actions/history';
 import { cn } from '@/lib/utils';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 import { HistorySessionCard } from './HistorySessionCard';
 
 interface HistorySessionsGridProps {
@@ -18,7 +18,7 @@ export function HistorySessionsGrid({
  completedLabel,
  interruptedLabel,
 }: HistorySessionsGridProps) {
- const router = useRouter();
+ const navigation = useOptimizedNavigation();
 
  return (
   <div className={cn('tn-grid-cols-1-2-md gap-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200')}>
@@ -30,7 +30,7 @@ export function HistorySessionsGrid({
      spreadName={getSpreadName(session.spreadType)}
      completedLabel={completedLabel}
      interruptedLabel={interruptedLabel}
-     onOpenSession={(id) => router.push(`/reading/history/${id}`)}
+     onOpenSession={(id) => navigation.push(`/reading/history/${id}`)}
     />
    ))}
   </div>

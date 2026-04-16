@@ -1,5 +1,5 @@
 import { Plus, Sparkles } from 'lucide-react';
-import { useRouter } from '@/i18n/routing';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 import { Button, SectionHeader } from '@/shared/components/ui';
 import { cn } from '@/lib/utils';
 
@@ -11,7 +11,7 @@ interface OverviewHeaderProps {
 }
 
 export function OverviewHeader({ tag, title, subtitle, depositCta }: OverviewHeaderProps) {
- const router = useRouter();
+ const navigation = useOptimizedNavigation();
 
  return (
   <SectionHeader
@@ -22,7 +22,7 @@ export function OverviewHeader({ tag, title, subtitle, depositCta }: OverviewHea
    action={
     <Button
      variant="primary"
-     onClick={() => router.push('/wallet/deposit')}
+     onClick={() => navigation.push('/wallet/deposit')}
      className={cn('tn-w-full-auto-sm shadow-2xl')}
     >
      <Plus className={cn('w-4 h-4 mr-2')} />

@@ -1,6 +1,5 @@
 import { useCallback, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/routing';
 import { getProfileAction } from '@/features/profile/public';
 import { generateShufflePaths } from '@/features/reading/session/presentation/session-page/utils';
 import type { ReadingSessionContentProps } from '@/features/reading/session/presentation/session-page/ReadingSessionContent.types';
@@ -8,6 +7,7 @@ import { useDeckSelection } from '@/features/reading/session/presentation/sessio
 import { useRevealReading } from '@/features/reading/session/presentation/session-page/useRevealReading';
 import { useSessionSetup } from '@/features/reading/session/presentation/session-page/useSessionSetup';
 import { useCardsCatalog } from '@/shared/application/hooks/useCardsCatalog';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 import { useAuthStore } from '@/store/authStore';
 
 interface UseReadingSessionPageStateResult {
@@ -15,7 +15,7 @@ interface UseReadingSessionPageStateResult {
 }
 
 export function useReadingSessionPageState(sessionId: string): UseReadingSessionPageStateResult {
-  const router = useRouter();
+  const navigation = useOptimizedNavigation();
   const sessionShort = sessionId.split('-')[0] ?? '';
   const t = useTranslations('ReadingSession');
   const tAi = useTranslations('AiInterpretation');
@@ -95,7 +95,7 @@ export function useReadingSessionPageState(sessionId: string): UseReadingSession
       horizontalOverlapFactor: deckSelection.horizontalOverlapFactor,
       isRevealing,
       isShuffling: deckSelection.isShuffling,
-      onBack: () => router.push('/reading'),
+      onBack: () => navigation.push('/reading'),
       onPickCard: deckSelection.addPickedCard,
       onRemovePickedCard: deckSelection.removePickedCard,
       pickedCardSet: deckSelection.pickedCardSet,

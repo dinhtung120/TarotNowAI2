@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Link } from '@/i18n/routing';
+import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
 import { cn } from '@/lib/utils';
 import GachaPoolSelector from '@/components/ui/gacha/GachaPoolSelector';
 import GachaRewardPreview from '@/components/ui/gacha/GachaRewardPreview';

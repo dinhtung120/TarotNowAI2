@@ -1,6 +1,7 @@
 'use client';
 
 import type { useProfilePage } from '@/features/profile/application/useProfilePage';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 import { GlassCard } from '@/shared/components/ui';
 import { cn } from '@/lib/utils';
 import { ProfileAvatarUploader } from './profile-summary/ProfileAvatarUploader';
@@ -25,7 +26,6 @@ interface ProfileSummaryCardProps {
 export function ProfileSummaryCard({
  t,
  tCommon,
- router,
  profileData,
  avatarPreview,
  avatarUploadProgress,
@@ -35,6 +35,8 @@ export function ProfileSummaryCard({
  isTarotReader,
  handleAvatarSelect,
 }: ProfileSummaryCardProps) {
+ const navigation = useOptimizedNavigation();
+
  if (!profileData) {
   return null;
  }
@@ -61,7 +63,7 @@ export function ProfileSummaryCard({
      levelValue={String(profileData.level)}
      numerologyLabel={t('numerology')}
      numerologyValue={String(profileData.numerology)}
-     onOpenAdminPortal={() => router.push('/admin/users')}
+     onOpenAdminPortal={() => navigation.push('/admin/users')}
      username={profileData.username}
      zodiacLabel={t('zodiac')}
      zodiacValue={profileData.zodiac}

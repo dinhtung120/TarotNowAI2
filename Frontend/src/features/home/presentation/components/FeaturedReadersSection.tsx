@@ -1,4 +1,4 @@
-import { Link } from "@/i18n/routing";
+import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
 import { ArrowUpRight } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";

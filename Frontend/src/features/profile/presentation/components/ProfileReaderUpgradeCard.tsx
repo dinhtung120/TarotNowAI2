@@ -6,20 +6,22 @@ import ProfileUpgradeHeader from "@/features/profile/presentation/components/pro
 import ProfileUpgradePendingState from "@/features/profile/presentation/components/profile-upgrade/ProfileUpgradePendingState";
 import ProfileUpgradeRejectedState from "@/features/profile/presentation/components/profile-upgrade/ProfileUpgradeRejectedState";
 import type { ProfileReaderUpgradeCardProps } from "@/features/profile/presentation/components/profile-upgrade/types";
+import { useOptimizedNavigation } from "@/shared/infrastructure/navigation/useOptimizedNavigation";
 import { cn } from "@/lib/utils";
 import { GlassCard } from "@/shared/components/ui";
 
 export function ProfileReaderUpgradeCard({
   t,
-  router,
   readerRequest,
   readerRequestLoading,
   isAdmin,
   isTarotReader,
 }: ProfileReaderUpgradeCardProps) {
+  const navigation = useOptimizedNavigation();
+
   if (isAdmin || isTarotReader || readerRequestLoading) return null;
 
-  const openApply = () => router.push("/reader/apply");
+  const openApply = () => navigation.push("/reader/apply");
 
   return (
     <GlassCard className={cn("group relative overflow-hidden !tn-pad-6-8-sm")}>

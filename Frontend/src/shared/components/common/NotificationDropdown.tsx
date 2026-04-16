@@ -1,8 +1,8 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
-import { useRouter } from '@/i18n/routing';
 import { useNotificationDropdown } from '@/features/notifications/application/useNotificationDropdown';
+import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 import NotificationBellButton from '@/shared/components/common/notification-dropdown/NotificationBellButton';
 import NotificationDropdownPanel from '@/shared/components/common/notification-dropdown/NotificationDropdownPanel';
 import { useNotificationDropdownState } from '@/shared/components/common/notification-dropdown/useNotificationDropdownState';
@@ -12,7 +12,7 @@ export default function NotificationDropdown() {
   const t = useTranslations('Notifications');
   const tCommon = useTranslations('Common');
   const locale = useLocale();
-  const router = useRouter();
+  const navigation = useOptimizedNavigation();
   const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotificationDropdown();
   const { bellButtonRef, close, dropdownRef, getTitle, handleMarkAllRead, isMarkingAll, isOpen, toggleOpen } = useNotificationDropdownState({ locale, markAllAsRead });
 
@@ -34,7 +34,7 @@ export default function NotificationDropdown() {
           onMarkAllRead={handleMarkAllRead}
           onViewAll={() => {
             close();
-            router.push('/notifications');
+            navigation.push('/notifications');
           }}
         />
       ) : null}

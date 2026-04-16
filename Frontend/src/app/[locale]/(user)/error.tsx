@@ -1,6 +1,6 @@
 'use client';
 
-import { Link } from '@/i18n/routing';
+import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
 import { cn } from '@/lib/utils';
 import { useErrorBoundaryLogger } from '@/shared/application/hooks/useErrorBoundaryLogger';
 
