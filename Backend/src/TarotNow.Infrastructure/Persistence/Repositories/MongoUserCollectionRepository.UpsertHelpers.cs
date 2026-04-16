@@ -1,4 +1,3 @@
-using MongoDB.Bson;
 using MongoDB.Driver;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
@@ -6,12 +5,13 @@ using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
-// Partial helper dựng filter/update pipeline cho upsert user collection.
+/// <summary>
+/// Partial helper dựng filter/update và map user collection.
+/// </summary>
 public partial class MongoUserCollectionRepository
 {
     /// <summary>
     /// Dựng filter theo cặp user-card.
-    /// Luồng xử lý: chuẩn hóa userId về string và kết hợp với cardId để định danh bản ghi duy nhất.
     /// </summary>
     private static FilterDefinition<UserCollectionDocument> BuildUserCardFilter(Guid userId, int cardId)
     {
@@ -21,124 +21,83 @@ public partial class MongoUserCollectionRepository
     }
 
     /// <summary>
-    /// Dựng pipeline update cho thao tác upsert card.
-    /// Luồng xử lý: xây biểu thức level động, tạo $set document và bọc thành PipelineUpdateDefinition.
+    /// Dựng filter version theo UpdatedAt để tránh lost update.
     /// </summary>
-    private static PipelineUpdateDefinition<UserCollectionDocument> BuildUpsertUpdate(
-        Guid userId,
-        int cardId,
-        decimal expToGain,
-        string orientation,
-        DateTime now)
+    private static FilterDefinition<UserCollectionDocument> BuildVersionedFilter(
+        FilterDefinition<UserCollectionDocument> baseFilter,
+        DateTime previousUpdatedAt)
     {
-        var context = new UpsertSetDocumentContext(
-            userId.ToString(),
-            cardId,
-            expToGain,
-            orientation,
-            now);
-        var levelExpression = BuildLevelExpression();
-        var setDocument = BuildSetDocument(context, levelExpression);
-        var pipeline = PipelineDefinition<UserCollectionDocument, UserCollectionDocument>.Create(
-            new[] { new BsonDocument("$set", setDocument) });
-
-        return new PipelineUpdateDefinition<UserCollectionDocument>(pipeline);
+        return Builders<UserCollectionDocument>.Filter.And(
+            baseFilter,
+            Builders<UserCollectionDocument>.Filter.Eq(x => x.UpdatedAt, previousUpdatedAt));
     }
 
     /// <summary>
-    /// Tạo document $set cho pipeline upsert.
-    /// Luồng xử lý: cập nhật metadata thời gian, cộng exp, tăng draw stats và tính level mới.
+    /// Tạo baseline document cho card mới.
     /// </summary>
-    private static BsonDocument BuildSetDocument(
-        UpsertSetDocumentContext context,
-        BsonDocument levelExpression)
+    private static UserCollectionDocument CreateBaselineDocument(Guid userId, int cardId, DateTime nowUtc)
     {
-        var drawnStatField = context.Orientation == CardOrientation.Reversed
-            ? "stats.times_drawn_reversed"
-            : "stats.times_drawn_upright";
-
-        return new BsonDocument
+        return new UserCollectionDocument
         {
-            { "user_id", context.UserId },
-            { "card_id", context.CardId },
-            { "is_deleted", false },
-            { "created_at", new BsonDocument("$ifNull", new BsonArray { "$created_at", context.Now }) },
-            { "updated_at", context.Now },
-            { "last_drawn_at", context.Now },
-            { "exp", new BsonDocument("$add", new BsonArray
-                {
-                    new BsonDocument("$ifNull", new BsonArray { "$exp", 0m }),
-                    context.ExpToGain
-                })
-            },
-            { drawnStatField, new BsonDocument("$add", new BsonArray
-                {
-                    new BsonDocument("$ifNull", new BsonArray { $"${drawnStatField}", 0 }),
-                    1
-                })
-            },
-            { "level", levelExpression }
+            UserId = userId.ToString(),
+            CardId = cardId,
+            Level = 1,
+            Exp = 0m,
+            ExpToNextLevel = UserCollection.ResolveExpToNextLevel(1),
+            BaseAtk = UserCollection.DefaultBaseAtk,
+            BaseDef = UserCollection.DefaultBaseDef,
+            BonusAtkPercent = 0m,
+            BonusDefPercent = 0m,
+            Atk = UserCollection.DefaultBaseAtk,
+            Def = UserCollection.DefaultBaseDef,
+            Stats = new DrawStats(),
+            StatHistory = new List<StatRollRecord>(),
+            IsDeleted = false,
+            CreatedAt = nowUtc,
+            UpdatedAt = nowUtc,
+            LastDrawnAt = nowUtc,
         };
     }
 
-    private readonly record struct UpsertSetDocumentContext(
-        string UserId,
-        int CardId,
-        decimal ExpToGain,
-        string Orientation,
-        DateTime Now);
-
     /// <summary>
-    /// Tạo biểu thức tính level theo tổng số lần draw.
-    /// Luồng xử lý: level = 1 + floor(total_draws / 5) theo rule progression hiện tại.
+    /// Tăng số lần bốc của card theo orientation.
     /// </summary>
-    private static BsonDocument BuildLevelExpression()
+    private static void IncreaseDrawCount(UserCollectionDocument document, string orientation)
     {
-        return new BsonDocument("$add", new BsonArray
+        if (string.Equals(orientation, CardOrientation.Reversed, StringComparison.OrdinalIgnoreCase))
         {
-            1,
-            new BsonDocument("$floor", new BsonDocument("$divide", new BsonArray { BuildTotalDrawsExpression(), 5 }))
-        });
-    }
+            document.Stats.TimesDrawnReversed += 1;
+            return;
+        }
 
-    /// <summary>
-    /// Tạo biểu thức tổng số lần draw.
-    /// Luồng xử lý: cộng upright + reversed và cộng thêm lượt draw hiện tại trong cùng pipeline.
-    /// </summary>
-    private static BsonDocument BuildTotalDrawsExpression()
-    {
-        return new BsonDocument("$add", new BsonArray
-        {
-            new BsonDocument("$ifNull", new BsonArray { "$stats.times_drawn_upright", 0 }),
-            new BsonDocument("$ifNull", new BsonArray { "$stats.times_drawn_reversed", 0 }),
-            1
-        });
+        document.Stats.TimesDrawnUpright += 1;
     }
 
     /// <summary>
     /// Map document user collection sang aggregate domain.
-    /// Luồng xử lý: chuẩn hóa dữ liệu an toàn (level/exp/copies), sau đó rehydrate từ snapshot.
     /// </summary>
     private static UserCollection MapToEntity(UserCollectionDocument doc)
     {
         Guid.TryParse(doc.UserId, out var userId);
-        var totalDraws = doc.Stats.TimesDrawnUpright + doc.Stats.TimesDrawnReversed;
+        NormalizeAndHydrateLegacyFields(doc);
+
+        var totalDraws = (doc.Stats?.TimesDrawnUpright ?? 0) + (doc.Stats?.TimesDrawnReversed ?? 0);
         var copies = Math.Max(totalDraws, 1);
-        var level = Math.Max(doc.Level, 1);
-        var exp = Math.Max(doc.Exp, 0m);
         var lastDrawnAt = doc.LastDrawnAt == default ? doc.UpdatedAt : doc.LastDrawnAt;
 
         return UserCollection.Rehydrate(new UserCollectionSnapshot
         {
             UserId = userId,
             CardId = doc.CardId,
-            Level = level,
+            Level = doc.Level,
             Copies = copies,
-            ExpGained = exp,
+            CurrentExp = doc.Exp,
+            ExpToNextLevel = doc.ExpToNextLevel,
+            BaseAtk = doc.BaseAtk,
+            BaseDef = doc.BaseDef,
+            BonusAtkPercent = doc.BonusAtkPercent,
+            BonusDefPercent = doc.BonusDefPercent,
             LastDrawnAt = lastDrawnAt,
-            Atk = doc.Atk,
-            Def = doc.Def
         });
-        // Fallback copies>=1 tránh vi phạm invariant domain khi dữ liệu cũ thiếu stats.
     }
 }

@@ -37,22 +37,41 @@ export function useOwnedInventoryCards(locale: string): UseOwnedInventoryCardsRe
   staleTime: 20_000,
  });
 
- const ownedCardIds = useMemo(() => {
-  const collection = collectionQuery.data?.success && collectionQuery.data.data
-   ? collectionQuery.data.data
-   : [];
-  return new Set(collection.map((card) => card.cardId));
+ const collection = useMemo(() => {
+  if (!collectionQuery.data?.success || !collectionQuery.data.data) {
+   return [];
+  }
+
+  return collectionQuery.data.data;
  }, [collectionQuery.data]);
+
+ const collectionMap = useMemo(
+  () => new Map(collection.map((card) => [card.cardId, card])),
+  [collection],
+ );
 
  const cardOptions = useMemo<CardOption[]>(
   () => cardsCatalog.cards
-   .filter((card) => ownedCardIds.has(card.id))
-   .map((card) => ({
-    id: card.id,
-    name: resolveCardName(locale, card),
-   }))
+   .filter((card) => collectionMap.has(card.id))
+   .map((card) => {
+    const userCard = collectionMap.get(card.id);
+     return {
+      id: card.id,
+      name: resolveCardName(locale, card),
+      imageUrl: card.imageUrl ?? undefined,
+      stats: userCard
+       ? {
+        level: userCard.level,
+        currentExp: userCard.currentExp,
+        expToNextLevel: userCard.expToNextLevel,
+        totalAtk: userCard.totalAtk,
+        totalDef: userCard.totalDef,
+       }
+      : undefined,
+    };
+   })
    .sort((left, right) => left.id - right.id),
-  [cardsCatalog.cards, locale, ownedCardIds],
+  [cardsCatalog.cards, collectionMap, locale],
  );
 
  const collectionError = resolveCollectionError(collectionQuery.data);

@@ -7,6 +7,11 @@
     "useNow": "Sử Dụng",
     "selectCard": "Chọn thẻ bài mục tiêu",
     "quantity": "Số lượng",
-    "effectValue": "Giá trị hiệu ứng"
+    "effectValue": "Giá trị hiệu ứng",
+    "selectedCard": "Thẻ bài đã chọn",
+    "effectType": "Loại buff",
+    "rolledValue": "Giá trị tăng",
+    "beforeAfter": "Trước / Sau",
+    "done": "Hoàn tất"
   }
 }

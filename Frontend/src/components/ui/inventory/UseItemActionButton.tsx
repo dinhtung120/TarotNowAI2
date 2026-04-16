@@ -4,6 +4,7 @@
  * Import thành phần Button dùng chung.
  */
 import Button from '@/shared/components/ui/Button';
+import { cn } from '@/lib/utils';
 
 /**
  * Props cho thành phần UseItemActionButton.
@@ -30,7 +31,7 @@ export default function UseItemActionButton({
   onUse,
 }: UseItemActionButtonProps) {
   return (
-    <div className="pt-4">
+    <div className={cn('pt-4')}>
       <Button
         type="button"
         variant="brand"

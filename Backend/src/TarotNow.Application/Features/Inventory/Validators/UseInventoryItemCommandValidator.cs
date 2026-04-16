@@ -25,7 +25,7 @@ public sealed class UseInventoryItemCommandValidator : AbstractValidator<UseInve
             .MaximumLength(128);
 
         RuleFor(x => x.TargetCardId)
-            .GreaterThan(0)
+            .GreaterThanOrEqualTo(0)
             .When(x => x.TargetCardId.HasValue);
     }
 }

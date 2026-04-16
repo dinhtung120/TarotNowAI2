@@ -7,6 +7,11 @@
     "useNow": "立即使用",
     "selectCard": "选择目标卡牌",
     "quantity": "数量",
-    "effectValue": "效果值"
+    "effectValue": "效果值",
+    "selectedCard": "已选卡牌",
+    "effectType": "增益类型",
+    "rolledValue": "增益数值",
+    "beforeAfter": "使用前 / 使用后",
+    "done": "完成"
   }
 }

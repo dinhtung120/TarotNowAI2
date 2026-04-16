@@ -67,7 +67,11 @@ public sealed partial class ItemUsedDomainEventHandler
         }
 
         EnsureConsumeSucceeded(consumeResult);
-        await DispatchItemEffectAsync(domainEvent.UserId, definition, targetCardId, cancellationToken);
+        domainEvent.EffectSummary = await DispatchItemEffectAsync(
+            domainEvent.UserId,
+            definition,
+            targetCardId,
+            cancellationToken);
     }
 
     private async Task<ItemDefinition> GetActiveDefinitionAsync(string itemCode, CancellationToken cancellationToken)
@@ -111,11 +115,11 @@ public sealed partial class ItemUsedDomainEventHandler
             return null;
         }
 
-        if (domainEvent.TargetCardId is null || domainEvent.TargetCardId <= 0)
+        if (domainEvent.TargetCardId is null || domainEvent.TargetCardId < 0)
         {
             throw new BusinessRuleException(
                 InventoryErrorCodes.TargetCardRequired,
-                "This item requires a target card.");
+                "This item requires a valid target card.");
         }
 
         var cardOwned = await _userCollectionRepository.ExistsAsync(

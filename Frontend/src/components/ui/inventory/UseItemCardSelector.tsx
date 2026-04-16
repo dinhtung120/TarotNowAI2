@@ -1,9 +1,14 @@
 'use client';
 
-/* 
- * Import các thành phần hỗ trợ UI.
- */
 import { cn } from '@/lib/utils';
+
+interface CardOptionStats {
+  level: number;
+  currentExp: number;
+  expToNextLevel: number;
+  totalAtk: number;
+  totalDef: number;
+}
 
 /**
  * Interface cho các tùy chọn card mục tiêu.
@@ -11,11 +16,10 @@ import { cn } from '@/lib/utils';
 export interface CardOption {
   id: number;
   name: string;
+  imageUrl?: string;
+  stats?: CardOptionStats;
 }
 
-/**
- * Props của thành phần UseItemCardSelector.
- */
 interface UseItemCardSelectorProps {
   label: string;
   value: number | '';
@@ -23,10 +27,6 @@ interface UseItemCardSelectorProps {
   onChange: (value: number | '') => void;
 }
 
-/**
- * UseItemCardSelector - Thành phần cho phép người dùng chọn lá bài mục tiêu để sử dụng vật phẩm.
- * Sử dụng các class 'tn-field' để đồng bộ với thiết kế Input của hệ thống.
- */
 export default function UseItemCardSelector({
   label,
   value,
@@ -34,27 +34,23 @@ export default function UseItemCardSelector({
   onChange,
 }: UseItemCardSelectorProps) {
   return (
-    <div className="flex flex-col gap-2.5">
-      {/* Nhãn mô tả mục tiêu */}
-      <span className={cn('tn-text-muted text-[10px] font-black uppercase tracking-widest pl-1')}>
+    <div className={cn('flex flex-col gap-2.5')}>
+      <span className={cn('tn-text-muted pl-1 text-[10px] font-black tracking-widest uppercase')}>
         {label}
       </span>
-      
-      {/* 
-          Ô chọn (Select): 
-          Áp dụng 'tn-field' và 'tn-field-accent' để tạo hiệu ứng khi focus cực kỳ bắt mắt.
-      */}
       <select
         value={value}
         onChange={(event) => onChange(event.target.value ? Number(event.target.value) : '')}
         className={cn(
-          'tn-field tn-field-accent w-full rounded-2xl px-4 py-3 text-sm font-bold transition-all',
-          'cursor-pointer hover:bg-white/[0.04]'
+          'tn-field tn-field-accent w-full cursor-pointer rounded-2xl px-4 py-3 text-sm font-bold transition-all',
+          'hover:bg-white/[0.04]',
         )}
       >
-        <option value="" className="bg-[var(--bg-surface)]">--- Chọn lá bài mục tiêu ---</option>
+        <option value="" className={cn('bg-[var(--bg-surface)]')}>
+          --- Chọn lá bài mục tiêu ---
+        </option>
         {cardOptions.map((card) => (
-          <option key={card.id} value={card.id} className="bg-[var(--bg-surface)]">
+          <option key={card.id} value={card.id} className={cn('bg-[var(--bg-surface)]')}>
             {card.name}
           </option>
         ))}

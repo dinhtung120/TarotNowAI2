@@ -9,7 +9,7 @@ namespace TarotNow.Application.DomainEvents.Handlers;
 
 public sealed partial class ItemUsedDomainEventHandler
 {
-    private async Task DispatchItemEffectAsync(
+    private async Task<InventoryItemEffectSummary?> DispatchItemEffectAsync(
         Guid userId,
         ItemDefinition definition,
         int? targetCardId,
@@ -17,14 +17,12 @@ public sealed partial class ItemUsedDomainEventHandler
     {
         if (string.Equals(definition.Type, ItemType.CardEnhancer, StringComparison.OrdinalIgnoreCase))
         {
-            await HandleCardEnhancerAsync(userId, definition, targetCardId, cancellationToken);
-            return;
+            return await HandleCardEnhancerAsync(userId, definition, targetCardId, cancellationToken);
         }
 
         if (string.Equals(definition.Type, ItemType.ReadingBooster, StringComparison.OrdinalIgnoreCase))
         {
-            await PublishFreeDrawGrantedAsync(userId, definition, cancellationToken);
-            return;
+            return await PublishFreeDrawGrantedAsync(userId, definition, cancellationToken);
         }
 
         if (string.Equals(definition.Type, ItemType.ConsumableSpecial, StringComparison.OrdinalIgnoreCase))
@@ -46,13 +44,21 @@ public sealed partial class ItemUsedDomainEventHandler
                     SourceItemCode = definition.Code,
                 },
                 cancellationToken);
-            return;
+
+            return new InventoryItemEffectSummary
+            {
+                EffectType = definition.Type,
+                RolledValue = 0m,
+                CardId = null,
+                Before = null,
+                After = null,
+            };
         }
 
         throw new BusinessRuleException(InventoryErrorCodes.UnsupportedItemType, "Item type is not supported.");
     }
 
-    private async Task HandleCardEnhancerAsync(
+    private async Task<InventoryItemEffectSummary> HandleCardEnhancerAsync(
         Guid userId,
         ItemDefinition definition,
         int? targetCardId,
@@ -93,22 +99,59 @@ public sealed partial class ItemUsedDomainEventHandler
                 SourceItemCode = definition.Code,
             },
             cancellationToken);
+
+        return new InventoryItemEffectSummary
+        {
+            EffectType = enhancementType,
+            RolledValue = applyResult.RolledValue,
+            CardId = targetCardId,
+            Before = MapCardSnapshot(applyResult.BeforeStats),
+            After = MapCardSnapshot(applyResult.AfterStats),
+        };
     }
 
-    private Task PublishFreeDrawGrantedAsync(
+    private async Task<InventoryItemEffectSummary> PublishFreeDrawGrantedAsync(
         Guid userId,
         ItemDefinition definition,
         CancellationToken cancellationToken)
     {
-        return _inlineDomainEventDispatcher.PublishAsync(
+        var grantedCount = Math.Max(MinimumEffectValue, definition.EffectValue);
+        var spreadCardCount = ResolveFreeDrawSpreadCardCount(definition.Code);
+
+        await _inlineDomainEventDispatcher.PublishAsync(
             new FreeDrawGrantedDomainEvent
             {
                 UserId = userId,
-                GrantedCount = Math.Max(MinimumEffectValue, definition.EffectValue),
-                SpreadCardCount = ResolveFreeDrawSpreadCardCount(definition.Code),
+                GrantedCount = grantedCount,
+                SpreadCardCount = spreadCardCount,
                 SourceItemCode = definition.Code,
             },
             cancellationToken);
+
+        return new InventoryItemEffectSummary
+        {
+            EffectType = EnhancementType.FreeDraw,
+            RolledValue = grantedCount,
+            CardId = null,
+            Before = null,
+            After = null,
+        };
+    }
+
+    private static InventoryCardStatSnapshot MapCardSnapshot(CardEnhancementStatSnapshot snapshot)
+    {
+        return new InventoryCardStatSnapshot
+        {
+            Level = snapshot.Level,
+            CurrentExp = snapshot.CurrentExp,
+            ExpToNextLevel = snapshot.ExpToNextLevel,
+            BaseAtk = snapshot.BaseAtk,
+            BaseDef = snapshot.BaseDef,
+            BonusAtkPercent = snapshot.BonusAtkPercent,
+            BonusDefPercent = snapshot.BonusDefPercent,
+            TotalAtk = snapshot.TotalAtk,
+            TotalDef = snapshot.TotalDef,
+        };
     }
 
     private static int ResolveFreeDrawSpreadCardCount(string itemCode)

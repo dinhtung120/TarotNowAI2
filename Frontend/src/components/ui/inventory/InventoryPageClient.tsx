@@ -93,15 +93,20 @@ export default function InventoryPageClient() {
             selectCard: t('selectCard'),
             quantity: t('quantity'),
             effectValue: t('effectValue'),
+            selectedCard: t('selectedCard'),
+            effectType: t('effectType'),
+            rolledValue: t('rolledValue'),
+            beforeAfter: t('beforeAfter'),
+            done: t('done'),
           }}
           isPending={useItemMutation.isPending}
           onClose={() => setSelectedItem(null)}
           onUse={async (payload) => {
             try {
-              await useItemMutation.mutateAsync(payload);
-              setSelectedItem(null);
+              return await useItemMutation.mutateAsync(payload);
             } catch (error) {
               console.error('Lỗi khi sử dụng vật phẩm:', error);
+              throw error;
             }
           }}
         />

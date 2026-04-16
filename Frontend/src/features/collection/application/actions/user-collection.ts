@@ -10,9 +10,17 @@ export interface UserCollectionDto {
  cardId: number;
  level: number;
  copies: number;
+ currentExp: number;
+ expToNextLevel: number;
+ baseAtk: number;
+ baseDef: number;
+ bonusAtkPercent: number;
+ bonusDefPercent: number;
+ totalAtk: number;
+ totalDef: number;
+ atk: number;
+ def: number;
  expGained: number;
- atk?: number;
- def?: number;
  lastDrawnAt: string;
 }
 
@@ -36,6 +44,7 @@ export async function getUserCollection(): Promise<ActionResult<UserCollectionDt
    if (result.status === 401) {
     return actionFail(t('unauthorized'));
    }
+
    logger.error('CollectionAction.getUserCollection', result.error, { status: result.status });
    return actionFail(result.error || t('unknown_error'));
   }

@@ -13,7 +13,6 @@ public partial class MongoUserCollectionRepository
 {
     private const int PercentageBranchOneUpper = 70;
     private const int PercentageBranchTwoUpper = 95;
-    private const decimal MinimumStatDelta = 0.01m;
 
     private const int ExpBranchOneUpper = 60;
     private const int ExpBranchTwoUpper = 85;
@@ -38,9 +37,9 @@ public partial class MongoUserCollectionRepository
             throw new ArgumentException("UserId is required.", nameof(request));
         }
 
-        if (request.CardId <= 0)
+        if (request.CardId < 0)
         {
-            throw new ArgumentException("CardId must be positive.", nameof(request));
+            throw new ArgumentException("CardId must be greater than or equal to 0.", nameof(request));
         }
 
         var filter = BuildUserCardFilter(request.UserId, request.CardId);
@@ -56,101 +55,116 @@ public partial class MongoUserCollectionRepository
         };
     }
 
-    private async Task<CardEnhancementApplyResult> ApplyExpEnhancementAsync(
+    private Task<CardEnhancementApplyResult> ApplyExpEnhancementAsync(
         FilterDefinition<UserCollectionDocument> filter,
         CancellationToken cancellationToken)
     {
-        var delta = RollExpDelta();
-        var update = Builders<UserCollectionDocument>.Update
-            .Inc(x => x.Exp, delta)
-            .Set(x => x.UpdatedAt, DateTime.UtcNow)
-            .Set(x => x.LastDrawnAt, DateTime.UtcNow);
-
-        var result = await _mongoContext.UserCollections.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
-        if (result.MatchedCount == 0)
-        {
-            throw new InvalidOperationException("Target card was not found in collection.");
-        }
-
-        return new CardEnhancementApplyResult
-        {
-            Succeeded = true,
-            ExpDelta = delta,
-            AttackDelta = 0,
-            DefenseDelta = 0,
-            LevelUpgraded = false,
-        };
-    }
-
-    private async Task<CardEnhancementApplyResult> ApplyPowerEnhancementAsync(
-        FilterDefinition<UserCollectionDocument> filter,
-        CancellationToken cancellationToken)
-    {
-        return await ApplyPercentStatEnhancementAsync(
+        return ApplyMutationWithRetryAsync(
             filter,
-            isAttack: true,
+            (document, nowUtc) =>
+            {
+                var before = BuildStatSnapshot(document);
+                var expDelta = RollExpDelta();
+                ApplyExpAndProgression(document, expDelta, nowUtc);
+                var after = BuildStatSnapshot(document);
+
+                return new CardEnhancementApplyResult
+                {
+                    Succeeded = true,
+                    ExpDelta = expDelta,
+                    AttackDelta = Round2(after.TotalAtk - before.TotalAtk),
+                    DefenseDelta = Round2(after.TotalDef - before.TotalDef),
+                    RolledValue = expDelta,
+                    LevelUpgraded = after.Level > before.Level,
+                    BeforeStats = before,
+                    AfterStats = after,
+                };
+            },
             cancellationToken);
     }
 
-    private async Task<CardEnhancementApplyResult> ApplyDefenseEnhancementAsync(
+    private Task<CardEnhancementApplyResult> ApplyPowerEnhancementAsync(
         FilterDefinition<UserCollectionDocument> filter,
         CancellationToken cancellationToken)
     {
-        return await ApplyPercentStatEnhancementAsync(
-            filter,
-            isAttack: false,
-            cancellationToken);
+        return ApplyPercentStatEnhancementAsync(filter, isAttack: true, cancellationToken);
     }
 
-    private async Task<CardEnhancementApplyResult> ApplyPercentStatEnhancementAsync(
+    private Task<CardEnhancementApplyResult> ApplyDefenseEnhancementAsync(
+        FilterDefinition<UserCollectionDocument> filter,
+        CancellationToken cancellationToken)
+    {
+        return ApplyPercentStatEnhancementAsync(filter, isAttack: false, cancellationToken);
+    }
+
+    private Task<CardEnhancementApplyResult> ApplyPercentStatEnhancementAsync(
         FilterDefinition<UserCollectionDocument> filter,
         bool isAttack,
         CancellationToken cancellationToken)
     {
-        var document = await _mongoContext.UserCollections.Find(filter).FirstOrDefaultAsync(cancellationToken);
-        if (document is null)
+        return ApplyMutationWithRetryAsync(
+            filter,
+            (document, nowUtc) =>
+            {
+                var before = BuildStatSnapshot(document);
+                var percentDelta = RollStatPercent();
+
+                if (isAttack)
+                {
+                    document.BonusAtkPercent = Round2(document.BonusAtkPercent + percentDelta);
+                }
+                else
+                {
+                    document.BonusDefPercent = Round2(document.BonusDefPercent + percentDelta);
+                }
+
+                RecalculateTotalStats(document);
+                document.LastDrawnAt = nowUtc;
+                document.UpdatedAt = nowUtc;
+
+                var after = BuildStatSnapshot(document);
+                return new CardEnhancementApplyResult
+                {
+                    Succeeded = true,
+                    ExpDelta = 0m,
+                    AttackDelta = Round2(after.TotalAtk - before.TotalAtk),
+                    DefenseDelta = Round2(after.TotalDef - before.TotalDef),
+                    RolledValue = percentDelta,
+                    LevelUpgraded = false,
+                    BeforeStats = before,
+                    AfterStats = after,
+                };
+            },
+            cancellationToken);
+    }
+
+    private async Task<CardEnhancementApplyResult> ApplyMutationWithRetryAsync(
+        FilterDefinition<UserCollectionDocument> filter,
+        Func<UserCollectionDocument, DateTime, CardEnhancementApplyResult> mutation,
+        CancellationToken cancellationToken)
+    {
+        for (var attempt = 0; attempt < MaxOptimisticRetries; attempt++)
         {
-            throw new InvalidOperationException("Target card was not found in collection.");
+            var existingDocument = await _mongoContext.UserCollections.Find(filter).FirstOrDefaultAsync(cancellationToken);
+            if (existingDocument is null)
+            {
+                throw new InvalidOperationException("Target card was not found in collection.");
+            }
+
+            NormalizeAndHydrateLegacyFields(existingDocument);
+            var updatedDocument = CloneDocument(existingDocument);
+            var result = mutation(updatedDocument, DateTime.UtcNow);
+            var replaceResult = await _mongoContext.UserCollections.ReplaceOneAsync(
+                BuildVersionedFilter(filter, existingDocument.UpdatedAt),
+                updatedDocument,
+                cancellationToken: cancellationToken);
+            if (replaceResult.ModifiedCount > 0)
+            {
+                return result;
+            }
         }
 
-        var percent = RollStatPercent();
-        var baseValue = isAttack ? document.Atk : document.Def;
-        var delta = CalculatePercentDelta(baseValue, percent);
-
-        var nowUtc = DateTime.UtcNow;
-        var valueFilter = isAttack
-            ? Builders<UserCollectionDocument>.Filter.And(
-                filter,
-                Builders<UserCollectionDocument>.Filter.Eq(x => x.Atk, document.Atk))
-            : Builders<UserCollectionDocument>.Filter.And(
-                filter,
-                Builders<UserCollectionDocument>.Filter.Eq(x => x.Def, document.Def));
-        var update = isAttack
-            ? Builders<UserCollectionDocument>.Update
-                .Inc(x => x.Atk, delta)
-                .Set(x => x.UpdatedAt, nowUtc)
-                .Set(x => x.LastDrawnAt, nowUtc)
-            : Builders<UserCollectionDocument>.Update
-                .Inc(x => x.Def, delta)
-                .Set(x => x.UpdatedAt, nowUtc)
-                .Set(x => x.LastDrawnAt, nowUtc);
-        var result = await _mongoContext.UserCollections.UpdateOneAsync(
-            valueFilter,
-            update,
-            cancellationToken: cancellationToken);
-        if (result.ModifiedCount == 0)
-        {
-            throw new InvalidOperationException("Target card was updated concurrently. Please retry.");
-        }
-
-        return new CardEnhancementApplyResult
-        {
-            Succeeded = true,
-            ExpDelta = 0m,
-            AttackDelta = isAttack ? delta : 0m,
-            DefenseDelta = isAttack ? 0m : delta,
-            LevelUpgraded = false,
-        };
+        throw new InvalidOperationException("Target card was updated concurrently. Please retry.");
     }
 
     private static decimal RollExpDelta()
@@ -188,12 +202,5 @@ public partial class MongoUserCollectionRepository
         }
 
         return RandomNumberGenerator.GetInt32(7, 11);
-    }
-
-    private static decimal CalculatePercentDelta(decimal baseValue, decimal percent)
-    {
-        var rawDelta = baseValue * percent / 100m;
-        var roundedDelta = Math.Round(rawDelta, 2, MidpointRounding.AwayFromZero);
-        return roundedDelta < MinimumStatDelta ? MinimumStatDelta : roundedDelta;
     }
 }

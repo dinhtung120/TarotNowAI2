@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 interface CollectionZoomStatCardProps {
   label: string;
-  value: number;
+  value: number | string;
   valueClassName: string;
   wrapperClassName: string;
 }

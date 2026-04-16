@@ -71,6 +71,12 @@ export function useUseItem() {
    const intentKey = normalizeIntentKey(variables);
    pendingIntentKeysRef.current.delete(intentKey);
    await queryClient.invalidateQueries({ queryKey: inventoryQueryKeys.mine() });
+   await queryClient.invalidateQueries({ queryKey: ['collection', 'user'] });
+   await queryClient.invalidateQueries({ queryKey: ['me', 'reading-setup-snapshot'] });
+  },
+  onError: (_, variables) => {
+   const intentKey = normalizeIntentKey(variables);
+   pendingIntentKeysRef.current.delete(intentKey);
   },
  });
 }

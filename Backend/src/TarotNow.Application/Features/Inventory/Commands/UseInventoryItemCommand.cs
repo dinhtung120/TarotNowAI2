@@ -52,4 +52,91 @@ public sealed class UseInventoryItemResult
     /// Thông điệp kết quả ở mức command.
     /// </summary>
     public string Message { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Tóm tắt hiệu ứng áp dụng nếu có.
+    /// </summary>
+    public UseInventoryItemEffectSummary? EffectSummary { get; init; }
+}
+
+/// <summary>
+/// Tóm tắt hiệu ứng item trả về API.
+/// </summary>
+public sealed class UseInventoryItemEffectSummary
+{
+    /// <summary>
+    /// Loại hiệu ứng đã áp dụng.
+    /// </summary>
+    public string EffectType { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Giá trị roll thực tế (% hoặc EXP hoặc số vé).
+    /// </summary>
+    public decimal RolledValue { get; init; }
+
+    /// <summary>
+    /// Card mục tiêu nếu có.
+    /// </summary>
+    public int? CardId { get; init; }
+
+    /// <summary>
+    /// Snapshot trước khi áp dụng.
+    /// </summary>
+    public UseInventoryCardStatSnapshot? Before { get; init; }
+
+    /// <summary>
+    /// Snapshot sau khi áp dụng.
+    /// </summary>
+    public UseInventoryCardStatSnapshot? After { get; init; }
+}
+
+/// <summary>
+/// Snapshot chỉ số card trước/sau.
+/// </summary>
+public sealed class UseInventoryCardStatSnapshot
+{
+    /// <summary>
+    /// Level card.
+    /// </summary>
+    public int Level { get; init; }
+
+    /// <summary>
+    /// EXP hiện tại.
+    /// </summary>
+    public decimal CurrentExp { get; init; }
+
+    /// <summary>
+    /// EXP cần để lên level kế tiếp.
+    /// </summary>
+    public decimal ExpToNextLevel { get; init; }
+
+    /// <summary>
+    /// Base ATK.
+    /// </summary>
+    public decimal BaseAtk { get; init; }
+
+    /// <summary>
+    /// Base DEF.
+    /// </summary>
+    public decimal BaseDef { get; init; }
+
+    /// <summary>
+    /// Bonus % ATK.
+    /// </summary>
+    public decimal BonusAtkPercent { get; init; }
+
+    /// <summary>
+    /// Bonus % DEF.
+    /// </summary>
+    public decimal BonusDefPercent { get; init; }
+
+    /// <summary>
+    /// Tổng ATK.
+    /// </summary>
+    public decimal TotalAtk { get; init; }
+
+    /// <summary>
+    /// Tổng DEF.
+    /// </summary>
+    public decimal TotalDef { get; init; }
 }

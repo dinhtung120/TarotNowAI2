@@ -1,20 +1,17 @@
 using MediatR;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Reading.Queries.GetCollection;
 
-// Handler truy vấn bộ sưu tập thẻ của user.
-public class GetUserCollectionQueryHandler : IRequestHandler<GetUserCollectionQuery, List<UserCollectionDto>>
+/// <summary>
+/// Handler truy vấn bộ sưu tập thẻ của user.
+/// </summary>
+public sealed class GetUserCollectionQueryHandler : IRequestHandler<GetUserCollectionQuery, List<UserCollectionDto>>
 {
     private readonly IUserCollectionRepository _collectionRepo;
 
     /// <summary>
     /// Khởi tạo handler lấy user collection.
-    /// Luồng xử lý: nhận repository collection để tải dữ liệu thẻ người dùng.
     /// </summary>
     public GetUserCollectionQueryHandler(IUserCollectionRepository collectionRepo)
     {
@@ -23,7 +20,6 @@ public class GetUserCollectionQueryHandler : IRequestHandler<GetUserCollectionQu
 
     /// <summary>
     /// Xử lý query lấy collection.
-    /// Luồng xử lý: tải collection theo user id và map sang DTO trả về cho client.
     /// </summary>
     public async Task<List<UserCollectionDto>> Handle(GetUserCollectionQuery request, CancellationToken cancellationToken)
     {
@@ -34,10 +30,18 @@ public class GetUserCollectionQueryHandler : IRequestHandler<GetUserCollectionQu
             CardId = collection.CardId,
             Level = collection.Level,
             Copies = collection.Copies,
-            ExpGained = collection.ExpGained,
+            CurrentExp = collection.CurrentExp,
+            ExpToNextLevel = collection.ExpToNextLevel,
             LastDrawnAt = collection.LastDrawnAt,
-            Atk = collection.Atk,
-            Def = collection.Def
+            BaseAtk = collection.BaseAtk,
+            BaseDef = collection.BaseDef,
+            BonusAtkPercent = collection.BonusAtkPercent,
+            BonusDefPercent = collection.BonusDefPercent,
+            TotalAtk = collection.TotalAtk,
+            TotalDef = collection.TotalDef,
+            Atk = collection.TotalAtk,
+            Def = collection.TotalDef,
+            ExpGained = collection.CurrentExp,
         }).ToList();
     }
 }

@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using MongoDB.Driver;
 using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Entities;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
@@ -10,35 +11,102 @@ namespace TarotNow.Infrastructure.Persistence.Repositories;
 /// </summary>
 public partial class MongoUserCollectionRepository
 {
-    private async Task<CardEnhancementApplyResult> ApplyLevelUpgradeEnhancementAsync(
+    private Task<CardEnhancementApplyResult> ApplyLevelUpgradeEnhancementAsync(
         FilterDefinition<UserCollectionDocument> filter,
         CancellationToken cancellationToken,
         decimal successRatePercent)
     {
-        if (RollLevelUpgrade(successRatePercent) == false)
+        return ApplyMutationWithRetryAsync(
+            filter,
+            (document, nowUtc) => BuildLevelUpgradeResult(document, nowUtc, successRatePercent),
+            cancellationToken);
+    }
+
+    private static CardEnhancementApplyResult BuildLevelUpgradeResult(
+        UserCollectionDocument document,
+        DateTime nowUtc,
+        decimal successRatePercent)
+    {
+        var before = BuildStatSnapshot(document);
+        if (CanUpgradeLevel(document, successRatePercent) == false)
         {
-            return new CardEnhancementApplyResult
-            {
-                Succeeded = true,
-                ExpDelta = 0m,
-                AttackDelta = 0m,
-                DefenseDelta = 0m,
-                LevelUpgraded = false,
-            };
+            return BuildNoUpgradeResult(document, nowUtc, before);
         }
 
-        var document = await GetExistingUserCollectionAsync(filter, cancellationToken);
-        var upgradeRoll = RollStatBonusesForUpgrade(document.Level);
-        var update = BuildLevelUpgradeUpdate(upgradeRoll.newLevel, upgradeRoll.atkBonus, upgradeRoll.defBonus);
-        await EnsureLevelUpgradeUpdatedAsync(filter, document.Level, update, cancellationToken);
+        var (atkBonus, defBonus) = ApplyLevelUpgrade(document, nowUtc);
+        var after = BuildStatSnapshot(document);
+        return BuildUpgradeResult(before, after, atkBonus, defBonus);
+    }
+
+    private static bool CanUpgradeLevel(UserCollectionDocument document, decimal successRatePercent)
+    {
+        return document.Level < UserCollection.MaxLevel && RollLevelUpgrade(successRatePercent);
+    }
+
+    private static CardEnhancementApplyResult BuildNoUpgradeResult(
+        UserCollectionDocument document,
+        DateTime nowUtc,
+        CardEnhancementStatSnapshot before)
+    {
+        document.UpdatedAt = nowUtc;
+        document.LastDrawnAt = nowUtc;
+        var after = BuildStatSnapshot(document);
 
         return new CardEnhancementApplyResult
         {
             Succeeded = true,
             ExpDelta = 0m,
-            AttackDelta = upgradeRoll.atkBonus,
-            DefenseDelta = upgradeRoll.defBonus,
+            AttackDelta = 0m,
+            DefenseDelta = 0m,
+            RolledValue = 0m,
+            LevelUpgraded = false,
+            BeforeStats = before,
+            AfterStats = after,
+        };
+    }
+
+    private static (decimal atkBonus, decimal defBonus) ApplyLevelUpgrade(UserCollectionDocument document, DateTime nowUtc)
+    {
+        var targetLevel = Math.Clamp(document.Level + 1, 1, UserCollection.MaxLevel);
+        var (minBonus, maxBonus) = UserCollection.GetStatBonusRange(targetLevel);
+        var atkBonus = RandomNumberGenerator.GetInt32(minBonus, maxBonus + 1);
+        var defBonus = RandomNumberGenerator.GetInt32(minBonus, maxBonus + 1);
+
+        document.Level = targetLevel;
+        document.BaseAtk = Round2(document.BaseAtk + atkBonus);
+        document.BaseDef = Round2(document.BaseDef + defBonus);
+        document.ExpToNextLevel = UserCollection.ResolveExpToNextLevel(document.Level);
+        document.StatHistory ??= new List<StatRollRecord>();
+        document.StatHistory.Add(new StatRollRecord
+        {
+            Level = document.Level,
+            AtkBonus = atkBonus,
+            DefBonus = defBonus,
+            RolledAt = nowUtc,
+        });
+
+        RecalculateTotalStats(document);
+        document.UpdatedAt = nowUtc;
+        document.LastDrawnAt = nowUtc;
+        return (atkBonus, defBonus);
+    }
+
+    private static CardEnhancementApplyResult BuildUpgradeResult(
+        CardEnhancementStatSnapshot before,
+        CardEnhancementStatSnapshot after,
+        decimal atkBonus,
+        decimal defBonus)
+    {
+        return new CardEnhancementApplyResult
+        {
+            Succeeded = true,
+            ExpDelta = 0m,
+            AttackDelta = Round2(after.TotalAtk - before.TotalAtk),
+            DefenseDelta = Round2(after.TotalDef - before.TotalDef),
+            RolledValue = Round2(atkBonus + defBonus),
             LevelUpgraded = true,
+            BeforeStats = before,
+            AfterStats = after,
         };
     }
 
@@ -47,67 +115,5 @@ public partial class MongoUserCollectionRepository
         var rate = Math.Clamp(successRatePercent, 0m, 100m);
         var rolled = RandomNumberGenerator.GetInt32(0, 10000) / 100m;
         return rolled <= rate;
-    }
-
-    private async Task<UserCollectionDocument> GetExistingUserCollectionAsync(
-        FilterDefinition<UserCollectionDocument> filter,
-        CancellationToken cancellationToken)
-    {
-        var document = await _mongoContext.UserCollections.Find(filter).FirstOrDefaultAsync(cancellationToken);
-        if (document is null)
-        {
-            throw new InvalidOperationException("Target card was not found in collection.");
-        }
-
-        return document;
-    }
-
-    private static (int newLevel, decimal atkBonus, decimal defBonus) RollStatBonusesForUpgrade(int currentLevel)
-    {
-        var newLevel = Math.Max(1, currentLevel + 1);
-        var (minBonus, maxBonus) = TarotNow.Domain.Entities.UserCollection.GetStatBonusRange(newLevel);
-        var atkBonus = (decimal)RandomNumberGenerator.GetInt32(minBonus, maxBonus + 1);
-        var defBonus = (decimal)RandomNumberGenerator.GetInt32(minBonus, maxBonus + 1);
-        return (newLevel, atkBonus, defBonus);
-    }
-
-    private static UpdateDefinition<UserCollectionDocument> BuildLevelUpgradeUpdate(
-        int newLevel,
-        decimal atkBonus,
-        decimal defBonus)
-    {
-        var nowUtc = DateTime.UtcNow;
-        return Builders<UserCollectionDocument>.Update
-            .Set(x => x.Level, newLevel)
-            .Inc(x => x.Atk, atkBonus)
-            .Inc(x => x.Def, defBonus)
-            .Set(x => x.UpdatedAt, nowUtc)
-            .Set(x => x.LastDrawnAt, nowUtc)
-            .Push(x => x.StatHistory, new StatRollRecord
-            {
-                Level = newLevel,
-                AtkBonus = atkBonus,
-                DefBonus = defBonus,
-                RolledAt = nowUtc,
-            });
-    }
-
-    private async Task EnsureLevelUpgradeUpdatedAsync(
-        FilterDefinition<UserCollectionDocument> filter,
-        int currentLevel,
-        UpdateDefinition<UserCollectionDocument> update,
-        CancellationToken cancellationToken)
-    {
-        var versionedFilter = Builders<UserCollectionDocument>.Filter.And(
-            filter,
-            Builders<UserCollectionDocument>.Filter.Eq(x => x.Level, currentLevel));
-        var updateResult = await _mongoContext.UserCollections.UpdateOneAsync(
-            versionedFilter,
-            update,
-            cancellationToken: cancellationToken);
-        if (updateResult.ModifiedCount == 0)
-        {
-            throw new InvalidOperationException("Target card was updated concurrently. Please retry.");
-        }
     }
 }

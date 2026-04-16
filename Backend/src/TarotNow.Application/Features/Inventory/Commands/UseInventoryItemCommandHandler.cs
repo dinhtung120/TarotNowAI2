@@ -64,6 +64,45 @@ public sealed class UseInventoryItemCommandHandler : IRequestHandler<UseInventor
             Message = domainEvent.IsIdempotentReplay
                 ? InventoryCommandMessages.Replayed
                 : InventoryCommandMessages.Accepted,
+            EffectSummary = MapEffectSummary(domainEvent.EffectSummary),
+        };
+    }
+
+    private static UseInventoryItemEffectSummary? MapEffectSummary(InventoryItemEffectSummary? effectSummary)
+    {
+        if (effectSummary is null)
+        {
+            return null;
+        }
+
+        return new UseInventoryItemEffectSummary
+        {
+            EffectType = effectSummary.EffectType,
+            RolledValue = effectSummary.RolledValue,
+            CardId = effectSummary.CardId,
+            Before = MapCardSnapshot(effectSummary.Before),
+            After = MapCardSnapshot(effectSummary.After),
+        };
+    }
+
+    private static UseInventoryCardStatSnapshot? MapCardSnapshot(InventoryCardStatSnapshot? snapshot)
+    {
+        if (snapshot is null)
+        {
+            return null;
+        }
+
+        return new UseInventoryCardStatSnapshot
+        {
+            Level = snapshot.Level,
+            CurrentExp = snapshot.CurrentExp,
+            ExpToNextLevel = snapshot.ExpToNextLevel,
+            BaseAtk = snapshot.BaseAtk,
+            BaseDef = snapshot.BaseDef,
+            BonusAtkPercent = snapshot.BonusAtkPercent,
+            BonusDefPercent = snapshot.BonusDefPercent,
+            TotalAtk = snapshot.TotalAtk,
+            TotalDef = snapshot.TotalDef,
         };
     }
 
@@ -89,11 +128,11 @@ public sealed class UseInventoryItemCommandHandler : IRequestHandler<UseInventor
 
     private static void EnsureTargetCardIdIfProvided(int? targetCardId)
     {
-        if (targetCardId is not null && targetCardId <= 0)
+        if (targetCardId is not null && targetCardId < 0)
         {
             throw new BusinessRuleException(
                 InventoryErrorCodes.TargetCardRequired,
-                "Target card id must be a positive number.");
+                "Target card id must be greater than or equal to 0.");
         }
     }
 }
