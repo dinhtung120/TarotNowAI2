@@ -22,33 +22,22 @@ interface UseItemStatsProps {
  */
 export default function UseItemStats({
   quantityLabel,
-  effectValueLabel,
   quantity,
-  effectValue,
-}: UseItemStatsProps) {
+}: Pick<UseItemStatsProps, 'quantityLabel' | 'quantity'>) {
   return (
-    <div className={cn('grid grid-cols-2 gap-4 text-sm')}>
-      <div className={cn('relative overflow-hidden rounded-2xl border tn-border-soft bg-white/[0.02] p-4 transition-all hover:bg-white/[0.04]')}>
-        <div className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center opacity-10">
+    <div className={cn('flex')}>
+      <div className={cn(
+        'relative overflow-hidden rounded-xl border tn-border-soft bg-white/[0.02] px-3 py-2 transition-all hover:bg-white/[0.04]',
+        'min-w-[120px]'
+      )}>
+        <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center opacity-5">
           <div className="h-full w-full rounded-full bg-violet-500 blur-xl" />
         </div>
-        <p className={cn('tn-text-muted text-[10px] font-black uppercase tracking-[0.2em] mb-2 opacity-40')}>
+        <p className={cn('tn-text-muted text-[9px] font-black uppercase tracking-[0.1em] mb-0.5 opacity-30')}>
           {quantityLabel}
         </p>
-        <p className={cn('tn-text-primary font-black text-2xl tracking-tighter')}>
+        <p className={cn('tn-text-primary font-black text-lg tracking-tighter')}>
           x{quantity}
-        </p>
-      </div>
-      
-      <div className={cn('relative overflow-hidden rounded-2xl border tn-border-soft bg-white/[0.02] p-4 transition-all hover:bg-white/[0.04]')}>
-        <div className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center opacity-10">
-          <div className="h-full w-full rounded-full bg-fuchsia-500 blur-xl" />
-        </div>
-        <p className={cn('tn-text-muted text-[10px] font-black uppercase tracking-[0.2em] mb-2 opacity-40')}>
-          {effectValueLabel}
-        </p>
-        <p className={cn('tn-text-accent font-black text-2xl tracking-tighter')}>
-          {effectValue}
         </p>
       </div>
     </div>

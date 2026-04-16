@@ -13,8 +13,9 @@ interface UseItemResultPanelLabels {
 
 interface UseItemResultPanelProps {
   effectSummaries: UseInventoryItemEffectSummary[];
-  labels: UseItemResultPanelLabels;
+  labels: UseItemResultPanelLabels & { useAgain: string };
   onDone: () => void;
+  onUseAgain: () => void;
 }
 
 function formatValue(effectSummary: UseInventoryItemEffectSummary): string {
@@ -134,18 +135,32 @@ export default function UseItemResultPanel({ effectSummaries, labels, onDone }: 
         })}
       </div>
 
-      <button
-        type="button"
-        onClick={onDone}
-        className={cn(
-          'group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-emerald-500/10 py-4 transition-all hover:bg-emerald-500/20 active:scale-95'
-        )}
-      >
-        <div className="absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent transition-transform duration-1000 group-hover:translate-x-[100%]" />
-        <span className={cn('text-sm font-black uppercase tracking-[0.2em] text-emerald-400')}>
-          {labels.done}
-        </span>
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onDone}
+          className={cn(
+            'flex-1 flex items-center justify-center rounded-2xl bg-white/[0.03] border tn-border-soft py-4 transition-all hover:bg-white/[0.08] active:scale-95'
+          )}
+        >
+          <span className={cn('text-sm font-black uppercase tracking-[0.2em] tn-text-muted')}>
+            {labels.done}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={onUseAgain}
+          className={cn(
+            'flex-[1.5] group relative flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-emerald-500/10 py-4 transition-all hover:bg-emerald-500/20 active:scale-95'
+          )}
+        >
+          <div className="absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-emerald-500/10 to-transparent transition-transform duration-1000 group-hover:translate-x-[100%]" />
+          <span className={cn('text-sm font-black uppercase tracking-[0.2em] text-emerald-400')}>
+            {labels.useAgain}
+          </span>
+        </button>
+      </div>
     </div>
   );
 }

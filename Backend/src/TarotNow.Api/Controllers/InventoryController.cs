@@ -70,6 +70,7 @@ public sealed class InventoryController : ControllerBase
         {
             UserId = userId,
             ItemCode = request.ItemCode,
+            Quantity = Math.Clamp(request.Quantity, 1, 10),
             TargetCardId = request.TargetCardId,
             IdempotencyKey = idempotencyKey,
         };
@@ -110,6 +111,11 @@ public sealed class UseInventoryItemRequest
     /// Card mục tiêu nếu item yêu cầu.
     /// </summary>
     public int? TargetCardId { get; set; }
+
+    /// <summary>
+    /// Số lượng muốn sử dụng (tối đa 10).
+    /// </summary>
+    public int Quantity { get; set; } = 1;
 
     /// <summary>
     /// Idempotency key (fallback khi không gửi qua header).

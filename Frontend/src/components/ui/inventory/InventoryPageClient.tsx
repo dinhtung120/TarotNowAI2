@@ -100,6 +100,7 @@ export default function InventoryPageClient() {
             rolledValue: t('rolledValue'),
             beforeAfter: t('beforeAfter'),
             done: t('done'),
+            useAgain: t('useAgain') || 'Sử dụng tiếp',
             title: t('useItemTitle') || 'Sử dụng vật phẩm'
           }}
           isPending={useItemMutation.isPending}

@@ -12,6 +12,7 @@ export interface UseItemModalLabels {
   rolledValue: string;
   beforeAfter: string;
   done: string;
+  useAgain: string;
 }
 
 export interface UseItemModalProps {

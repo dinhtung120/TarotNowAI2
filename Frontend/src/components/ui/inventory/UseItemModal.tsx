@@ -55,6 +55,10 @@ export default function UseItemModal({
     onClose();
   };
 
+  const handleUseAgain = () => {
+    setResult(null);
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -67,9 +71,7 @@ export default function UseItemModal({
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
           <UseItemStats
             quantityLabel={labels.quantity}
-            effectValueLabel={labels.effectValue}
             quantity={item.quantity}
-            effectValue={item.effectValue}
           />
           {item.isConsumable && !result ? (
             <UseItemQuantitySelector
@@ -102,8 +104,10 @@ export default function UseItemModal({
               rolledValue: labels.rolledValue,
               beforeAfter: labels.beforeAfter,
               done: labels.done,
+              useAgain: labels.useAgain,
             }}
             onDone={handleDone}
+            onUseAgain={handleUseAgain}
           />
         ) : (
           <UseItemActionButton
