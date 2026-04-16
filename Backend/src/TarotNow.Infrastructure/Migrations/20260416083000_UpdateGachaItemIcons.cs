@@ -1,10 +1,14 @@
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using TarotNow.Infrastructure.Persistence;
 
 #nullable disable
 
 namespace TarotNow.Infrastructure.Migrations
 {
     /// <inheritdoc />
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20260416083000_UpdateGachaItemIcons")]
     public partial class UpdateGachaItemIcons : Migration
     {
         /// <inheritdoc />
