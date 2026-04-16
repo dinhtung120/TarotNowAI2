@@ -84,55 +84,69 @@ export default function UseItemResultPanel({ effectSummaries, labels, onDone, on
   return (
     <div className={cn('flex flex-col gap-5')}>
       <div className={cn('max-h-[320px] overflow-y-auto pr-1 tn-scrollbar-thin space-y-4')}>
-        {effectSummaries.map((summary, index) => {
-          const rows = buildRows(summary);
-          return (
-            <section 
-              key={index} 
-              className={cn(
-                'relative overflow-hidden space-y-3 rounded-2xl border tn-border-soft bg-white/[0.03] p-4',
-                'animate-in fade-in slide-in-from-bottom-2 duration-500'
-              )}
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <div className="absolute -left-1 -top-1 h-2 w-2 rounded-full bg-emerald-500 blur-[1px] opacity-40" />
-              
-              <div className={cn('flex items-center justify-between')}>
-                <div className="flex items-center gap-2">
-                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10 text-[10px] font-black text-emerald-400">
-                    {index + 1}
-                  </div>
-                  <span className={cn('text-[10px] font-black uppercase tracking-[0.2em] tn-text-muted opacity-40')}>
-                    {resolveEffectTypeLabel(summary.effectType)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-black uppercase tracking-widest tn-text-muted opacity-40">Rolled:</span>
-                  <span className="text-sm font-black text-emerald-400">{formatValue(summary)}</span>
-                </div>
-              </div>
-
-              {rows.length > 0 ? (
-                <div className={cn('space-y-2 rounded-xl border border-white/5 bg-black/20 p-3')}>
-                  <div className="grid grid-cols-3 gap-2 border-b border-white/5 pb-1 mb-1">
-                     <span className="text-[8px] font-black uppercase tracking-widest tn-text-muted opacity-30">Stat</span>
-                     <span className="text-right text-[8px] font-black uppercase tracking-widest tn-text-muted opacity-30">Before</span>
-                     <span className="text-right text-[8px] font-black uppercase tracking-widest tn-text-muted opacity-30">After</span>
-                  </div>
-                  {rows.map((row) => (
-                    <div key={row.label} className={cn('grid grid-cols-3 gap-2 text-xs')}>
-                      <span className={cn('font-bold tn-text-secondary')}>{row.label}</span>
-                      <span className={cn('text-right text-[11px] font-medium tn-text-muted line-through opacity-40')}>{row.before}</span>
-                      <span className={cn('text-right font-black tn-text-primary text-emerald-300')}>
-                        {row.after}
-                      </span>
+        {effectSummaries.length > 0 ? (
+          effectSummaries.map((summary, index) => {
+            const rows = buildRows(summary);
+            return (
+              <section 
+                key={index} 
+                className={cn(
+                  'relative overflow-hidden space-y-3 rounded-2xl border tn-border-soft bg-white/[0.03] p-4',
+                  'animate-in fade-in slide-in-from-bottom-2 duration-500'
+                )}
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                <div className="absolute -left-1 -top-1 h-2 w-2 rounded-full bg-emerald-500 blur-[1px] opacity-40" />
+                
+                <div className={cn('flex items-center justify-between')}>
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10 text-[10px] font-black text-emerald-400">
+                      {index + 1}
                     </div>
-                  ))}
+                    <span className={cn('text-[10px] font-black uppercase tracking-[0.2em] tn-text-muted opacity-40')}>
+                      {resolveEffectTypeLabel(summary.effectType)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-black uppercase tracking-widest tn-text-muted opacity-40">Rolled:</span>
+                    <span className="text-sm font-black text-emerald-400">{formatValue(summary)}</span>
+                  </div>
                 </div>
-              ) : null}
-            </section>
-          );
-        })}
+
+                {rows.length > 0 ? (
+                  <div className={cn('space-y-2 rounded-xl border border-white/5 bg-black/20 p-3')}>
+                    <div className="grid grid-cols-3 gap-2 border-b border-white/5 pb-1 mb-1">
+                       <span className="text-[8px] font-black uppercase tracking-widest tn-text-muted opacity-30">Stat</span>
+                       <span className="text-right text-[8px] font-black uppercase tracking-widest tn-text-muted opacity-30">Before</span>
+                       <span className="text-right text-[8px] font-black uppercase tracking-widest tn-text-muted opacity-30">After</span>
+                    </div>
+                    {rows.map((row) => (
+                      <div key={row.label} className={cn('grid grid-cols-3 gap-2 text-xs')}>
+                        <span className={cn('font-bold tn-text-secondary')}>{row.label}</span>
+                        <span className={cn('text-right text-[11px] font-medium tn-text-muted line-through opacity-40')}>{row.before}</span>
+                        <span className={cn('text-right font-black tn-text-primary text-emerald-300')}>
+                          {row.after}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </section>
+            );
+          })
+        ) : (
+          <div className={cn('flex flex-col items-center justify-center py-10 text-center space-y-3')}>
+            <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
+              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-black tn-text-primary uppercase tracking-wider">Xử lý hoàn tất</p>
+              <p className="text-[10px] tn-text-muted opacity-60 max-w-[200px] font-medium">
+                Vật phẩm đã được sử dụng thành công. Không có thay đổi chỉ số hiển thị thêm.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-3">

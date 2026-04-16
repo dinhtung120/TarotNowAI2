@@ -114,9 +114,9 @@ export default function UseItemModal({
           </>
         ) : null}
 
-        {result?.effectSummaries && result.effectSummaries.length > 0 ? (
+        {result ? (
           <UseItemResultPanel
-            effectSummaries={result.effectSummaries}
+            effectSummaries={result.effectSummaries ?? []}
             labels={{
               effectType: labels.effectType,
               rolledValue: labels.rolledValue,
