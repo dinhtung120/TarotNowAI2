@@ -37,11 +37,11 @@ export default function UseItemActionButton({
       <Button
         type="button"
         variant="brand"
-        size="xl"
+        size="lg"
         fullWidth
         isLoading={isPending}
         disabled={!canSubmit}
-        className={cn('rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-violet-500/20')}
+        className={cn('rounded-2xl py-4 font-black uppercase tracking-widest shadow-lg shadow-violet-500/20')}
         onClick={() => onUse({ 
           itemCode, 
           quantity,
