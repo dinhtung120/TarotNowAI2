@@ -9,12 +9,13 @@ import UseItemCardSelector from '@/components/ui/inventory/UseItemCardSelector';
 import UseItemStats from '@/components/ui/inventory/UseItemStats';
 import UseItemCardPreview from '@/components/ui/inventory/UseItemCardPreview';
 import UseItemResultPanel from '@/components/ui/inventory/UseItemResultPanel';
+import UseItemQuantitySelector from '@/components/ui/inventory/UseItemQuantitySelector';
 import type { UseItemModalProps } from '@/components/ui/inventory/UseItemModal.types';
 import type { UseInventoryItemResponse } from '@/shared/infrastructure/inventory/inventoryTypes';
 
 export default function UseItemModal({
   isOpen,
-  item,
+  item: initialItem,
   locale,
   cardOptions,
   labels,
@@ -22,6 +23,9 @@ export default function UseItemModal({
   onClose,
   onUse,
 }: UseItemModalProps) {
+  // Giữ một bản copy của item để tránh bị mất dữ liệu khi inventory refresh
+  const [item] = useState(initialItem);
+  const [quantity, setQuantity] = useState(1);
   const [result, setResult] = useState<UseInventoryItemResponse | null>(null);
   const { selectedCardId, setSelectedCardId, text, needCard, canSubmit } = useUseItemModalState({
     item,
@@ -37,7 +41,7 @@ export default function UseItemModal({
     return null;
   }
 
-  const handleUseItem = async (payload: { itemCode: string; targetCardId?: number }) => {
+  const handleUseItem = async (payload: { itemCode: string; quantity: number; targetCardId?: number }) => {
     try {
       const response = await onUse(payload);
       setResult(response);
@@ -60,12 +64,24 @@ export default function UseItemModal({
       size="md"
     >
       <div className={cn('space-y-6 py-2')}>
-        <UseItemStats
-          quantityLabel={labels.quantity}
-          effectValueLabel={labels.effectValue}
-          quantity={item.quantity}
-          effectValue={item.effectValue}
-        />
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <UseItemStats
+            quantityLabel={labels.quantity}
+            effectValueLabel={labels.effectValue}
+            quantity={item.quantity}
+            effectValue={item.effectValue}
+          />
+          {item.isConsumable && !result ? (
+            <UseItemQuantitySelector
+              label={labels.quantity}
+              value={quantity}
+              max={item.quantity}
+              onChange={setQuantity}
+              disabled={isPending}
+            />
+          ) : null}
+        </div>
+
         {needCard ? (
           <>
             <UseItemCardSelector
@@ -77,9 +93,10 @@ export default function UseItemModal({
             <UseItemCardPreview card={selectedCard} label={labels.selectedCard} />
           </>
         ) : null}
-        {result?.effectSummary ? (
+
+        {result?.effectSummaries && result.effectSummaries.length > 0 ? (
           <UseItemResultPanel
-            effectSummary={result.effectSummary}
+            effectSummaries={result.effectSummaries}
             labels={{
               effectType: labels.effectType,
               rolledValue: labels.rolledValue,
@@ -91,6 +108,7 @@ export default function UseItemModal({
         ) : (
           <UseItemActionButton
             itemCode={item.itemCode}
+            quantity={quantity}
             selectedCardId={selectedCardId}
             canSubmit={canSubmit}
             isPending={isPending}

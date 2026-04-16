@@ -18,6 +18,11 @@ public sealed record UseInventoryItemCommand : IRequest<UseInventoryItemResult>
     public string ItemCode { get; init; } = string.Empty;
 
     /// <summary>
+    /// Số lượng item muốn sử dụng một lúc (tối đa 10).
+    /// </summary>
+    public int Quantity { get; init; } = 1;
+
+    /// <summary>
     /// Lá bài mục tiêu nếu item là card enhancer.
     /// </summary>
     public int? TargetCardId { get; init; }
@@ -54,9 +59,9 @@ public sealed class UseInventoryItemResult
     public string Message { get; init; } = string.Empty;
 
     /// <summary>
-    /// Tóm tắt hiệu ứng áp dụng nếu có.
+    /// Danh sách tóm tắt hiệu ứng áp dụng.
     /// </summary>
-    public UseInventoryItemEffectSummary? EffectSummary { get; init; }
+    public List<UseInventoryItemEffectSummary> EffectSummaries { get; init; } = new();
 }
 
 /// <summary>

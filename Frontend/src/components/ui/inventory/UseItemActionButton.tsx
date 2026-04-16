@@ -11,11 +11,12 @@ import { cn } from '@/lib/utils';
  */
 interface UseItemActionButtonProps {
   itemCode: string;
+  quantity: number;
   selectedCardId: number | '';
   canSubmit: boolean;
   isPending: boolean;
   useNowLabel: string;
-  onUse: (payload: { itemCode: string; targetCardId?: number }) => void;
+  onUse: (payload: { itemCode: string; quantity: number; targetCardId?: number }) => void;
 }
 
 /**
@@ -24,6 +25,7 @@ interface UseItemActionButtonProps {
  */
 export default function UseItemActionButton({
   itemCode,
+  quantity,
   selectedCardId,
   canSubmit,
   isPending,
@@ -35,11 +37,16 @@ export default function UseItemActionButton({
       <Button
         type="button"
         variant="brand"
-        size="lg"
+        size="xl"
         fullWidth
         isLoading={isPending}
         disabled={!canSubmit}
-        onClick={() => onUse({ itemCode, targetCardId: selectedCardId === '' ? undefined : selectedCardId })}
+        className={cn('rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-violet-500/20')}
+        onClick={() => onUse({ 
+          itemCode, 
+          quantity,
+          targetCardId: selectedCardId === '' ? undefined : selectedCardId 
+        })}
       >
         {useNowLabel}
       </Button>

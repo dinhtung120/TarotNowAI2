@@ -118,6 +118,10 @@ public sealed partial class ItemUsedDomainEventHandler
         var grantedCount = Math.Max(MinimumEffectValue, definition.EffectValue);
         var spreadCardCount = ResolveFreeDrawSpreadCardCount(definition.Code);
 
+        // Lấy snapshot trước khi cấp credit.
+        var summaryBefore = await _freeDrawCreditRepository.GetSummaryAsync(userId, cancellationToken);
+        var beforeValue = ResolveSpreadCount(summaryBefore, spreadCardCount);
+
         await _inlineDomainEventDispatcher.PublishAsync(
             new FreeDrawGrantedDomainEvent
             {
@@ -128,13 +132,30 @@ public sealed partial class ItemUsedDomainEventHandler
             },
             cancellationToken);
 
+        // Lấy snapshot sau khi cấp credit.
+        var summaryAfter = await _freeDrawCreditRepository.GetSummaryAsync(userId, cancellationToken);
+        var afterValue = ResolveSpreadCount(summaryAfter, spreadCardCount);
+
         return new InventoryItemEffectSummary
         {
             EffectType = EnhancementType.FreeDraw,
             RolledValue = grantedCount,
             CardId = null,
+            BeforeValue = (decimal)beforeValue,
+            AfterValue = (decimal)afterValue,
             Before = null,
             After = null,
+        };
+    }
+
+    private static int ResolveSpreadCount(FreeDrawCreditSummary summary, int spreadCardCount)
+    {
+        return spreadCardCount switch
+        {
+            3 => summary.Spread3Count,
+            5 => summary.Spread5Count,
+            10 => summary.Spread10Count,
+            _ => 0
         };
     }
 

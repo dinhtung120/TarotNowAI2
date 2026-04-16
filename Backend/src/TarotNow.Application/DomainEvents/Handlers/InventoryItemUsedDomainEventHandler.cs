@@ -21,6 +21,7 @@ public sealed partial class ItemUsedDomainEventHandler
     private readonly IUserItemRepository _userItemRepository;
     private readonly IUserCollectionRepository _userCollectionRepository;
     private readonly IInlineDomainEventDispatcher _inlineDomainEventDispatcher;
+    private readonly IFreeDrawCreditRepository _freeDrawCreditRepository;
 
     /// <summary>
     /// Khởi tạo handler ItemUsedDomainEvent.
@@ -30,6 +31,7 @@ public sealed partial class ItemUsedDomainEventHandler
         IUserItemRepository userItemRepository,
         IUserCollectionRepository userCollectionRepository,
         IInlineDomainEventDispatcher inlineDomainEventDispatcher,
+        IFreeDrawCreditRepository freeDrawCreditRepository,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
@@ -37,6 +39,7 @@ public sealed partial class ItemUsedDomainEventHandler
         _userItemRepository = userItemRepository;
         _userCollectionRepository = userCollectionRepository;
         _inlineDomainEventDispatcher = inlineDomainEventDispatcher;
+        _freeDrawCreditRepository = freeDrawCreditRepository;
     }
 
     /// <inheritdoc />
@@ -48,6 +51,9 @@ public sealed partial class ItemUsedDomainEventHandler
         var definition = await GetActiveDefinitionAsync(domainEvent.ItemCode, cancellationToken);
         var targetCardId = await ResolveTargetCardIdAsync(domainEvent, definition.Type, cancellationToken);
 
+        // Giới hạn tối đa 10 item mỗi lần dùng để đảm bảo an toàn hệ thống.
+        var quantityToUse = Math.Clamp(domainEvent.Quantity, 1, 10);
+
         var consumeResult = await _userItemRepository.TryConsumeWithIdempotencyAsync(
             new InventoryItemConsumeRequest
             {
@@ -57,7 +63,7 @@ public sealed partial class ItemUsedDomainEventHandler
                 TargetCardId = targetCardId,
                 IdempotencyKey = domainEvent.IdempotencyKey,
                 IsConsumable = definition.IsConsumable,
-                ConsumeQuantity = MinimumEffectValue,
+                ConsumeQuantity = quantityToUse,
             },
             cancellationToken);
         if (consumeResult == InventoryItemConsumeResult.AlreadyProcessed)
@@ -67,11 +73,22 @@ public sealed partial class ItemUsedDomainEventHandler
         }
 
         EnsureConsumeSucceeded(consumeResult);
-        domainEvent.EffectSummary = await DispatchItemEffectAsync(
-            domainEvent.UserId,
-            definition,
-            targetCardId,
-            cancellationToken);
+
+        // Áp dụng hiệu ứng lặp lại theo số lượng đã chọn.
+        var summaries = new List<InventoryItemEffectSummary>();
+        for (int i = 0; i < quantityToUse; i++)
+        {
+            var summary = await DispatchItemEffectAsync(
+                domainEvent.UserId,
+                definition,
+                targetCardId,
+                cancellationToken);
+            if (summary != null)
+            {
+                summaries.Add(summary);
+            }
+        }
+        domainEvent.EffectSummaries = summaries;
     }
 
     private async Task<ItemDefinition> GetActiveDefinitionAsync(string itemCode, CancellationToken cancellationToken)

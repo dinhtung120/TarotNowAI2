@@ -11,6 +11,11 @@ public sealed class ItemUsedDomainEvent : IDomainEvent
     public Guid UserId { get; init; }
 
     /// <summary>
+    /// Số lượng item đang được sử dụng.
+    /// </summary>
+    public int Quantity { get; init; } = 1;
+
+    /// <summary>
     /// Mã item đang được sử dụng.
     /// </summary>
     public string ItemCode { get; init; } = string.Empty;
@@ -36,9 +41,9 @@ public sealed class ItemUsedDomainEvent : IDomainEvent
     public bool IsIdempotentReplay { get; set; }
 
     /// <summary>
-    /// Snapshot kết quả áp dụng item để trả về command response.
+    /// Danh sách tóm tắt hiệu ứng áp dụng để trả về command response.
     /// </summary>
-    public InventoryItemEffectSummary? EffectSummary { get; set; }
+    public List<InventoryItemEffectSummary> EffectSummaries { get; set; } = new();
 }
 
 /// <summary>
@@ -62,7 +67,17 @@ public sealed class InventoryItemEffectSummary
     public int? CardId { get; init; }
 
     /// <summary>
-    /// Snapshot trước khi áp dụng.
+    /// Giá trị đặc thù trước khi áp dụng (ví dụ: số lượt xem bài miễn phí).
+    /// </summary>
+    public decimal? BeforeValue { get; init; }
+
+    /// <summary>
+    /// Giá trị đặc thù sau khi áp dụng.
+    /// </summary>
+    public decimal? AfterValue { get; init; }
+
+    /// <summary>
+    /// Snapshot trước khi áp dụng (cho các vật phẩm tăng chỉ số card).
     /// </summary>
     public InventoryCardStatSnapshot? Before { get; init; }
 

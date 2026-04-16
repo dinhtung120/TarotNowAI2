@@ -84,64 +84,90 @@ function InventoryItemCardComponent({ item, locale, onSelect }: InventoryItemCar
   const config = isKnownRarity(item.rarity) ? rarityConfig[item.rarity] : rarityConfig.common;
 
   return (
-    <GlassCard
-      variant="interactive"
-      padding="none"
-      onClick={() => onSelect(item)}
-      className={cn(
-        'group relative flex flex-col transition-all duration-500 overflow-hidden',
-        config.glowClass,
-        'bg-white/[0.02] hover:bg-white/[0.05]'
-      )}
-    >
-      {/* 
-          Phần nội dung chính của vật phẩm:
-          Bao gồm Tên, Mô tả và Icon đại diện.
-      */}
-      <div className="p-5">
-        <div className="flex items-start justify-between gap-4 mb-4">
-          <div className="min-w-0 space-y-1">
-            <h3 className={cn('truncate text-base font-black tracking-tight tn-text-primary group-hover:tn-text-accent transition-colors')}>
-              {text.name}
-            </h3>
-            <p className={cn('line-clamp-2 text-xs font-medium tn-text-secondary opacity-70 leading-relaxed')}>
-              {text.description}
-            </p>
-          </div>
-          
-          {/* Icon vật phẩm: Được đặt trong một box kính nhỏ */}
-          <div className={cn(
-            'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border tn-border-soft bg-white/[0.03] transition-transform duration-500 group-hover:scale-110',
-            item.rarity === 'legendary' ? 'border-amber-500/30' : 
-            item.rarity === 'epic' ? 'border-purple-500/30' : ''
-          )}>
-            <Package2 className={cn('h-5 w-5 opacity-60')} />
-          </div>
-        </div>
+    <div className="group relative">
+      {/* Glow Effect Layer */}
+      <div className={cn(
+        'absolute -inset-0.5 rounded-[2rem] opacity-0 blur-xl transition-opacity duration-700 group-hover:opacity-40',
+        item.rarity === 'legendary' ? 'bg-amber-500' :
+        item.rarity === 'epic' ? 'bg-purple-500' :
+        item.rarity === 'rare' ? 'bg-sky-500' :
+        item.rarity === 'uncommon' ? 'bg-emerald-500' : 'bg-slate-500'
+      )} />
 
-        {/* 
-            Phân bổ thông tin bổ sung:
-            Độ hiếm dưới dạng Badge và số lượng vật phẩm hiện có.
-        */}
-        <div className="flex items-center justify-between">
-          <Badge variant={config.badgeVariant} size="sm" className="font-black uppercase tracking-[0.05em]">
-            {config.label}
-          </Badge>
-          
-          <div className="flex items-center gap-1.5">
-            <span className={cn('tn-text-muted text-[10px] font-black uppercase tracking-widest opacity-50')}>
-              Số lượng:
-            </span>
-            <span className={cn('text-sm font-black tn-text-primary')}>
-              x{item.quantity}
-            </span>
+      <GlassCard
+        variant="interactive"
+        padding="none"
+        onClick={() => onSelect(item)}
+        className={cn(
+          'relative flex flex-col overflow-hidden rounded-[1.8rem] border-t border-white/10 transition-all duration-500',
+          config.glowClass,
+          'bg-[#0a0a0c]/80 hover:bg-[#121216]/90'
+        )}
+      >
+        {/* Shimmer effect on hover */}
+        <div className="absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-white/[0.03] to-transparent transition-transform duration-1000 group-hover:translate-x-[100%]" />
+
+        <div className="p-6">
+          <div className="flex items-start justify-between gap-4 mb-6">
+            <div className="min-w-0 flex-1 space-y-2">
+              <h3 className={cn(
+                'truncate text-lg font-black tracking-tight tn-text-primary transition-colors duration-500',
+                'group-hover:lunar-metallic-text'
+              )}>
+                {text.name}
+              </h3>
+              <p className={cn('line-clamp-2 text-xs font-medium tn-text-secondary leading-relaxed opacity-60')}>
+                {text.description}
+              </p>
+            </div>
+            
+            {/* Professional Icon Box */}
+            <div className={cn(
+              'flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border tn-border-soft',
+              'bg-gradient-to-br from-white/[0.05] to-transparent shadow-xl transition-all duration-500 group-hover:scale-110 group-hover:shadow-violet-500/10',
+              item.rarity === 'legendary' ? 'border-amber-500/30' : 
+              item.rarity === 'epic' ? 'border-purple-500/30' : ''
+            )}>
+              <div className="relative">
+                <Package2 className={cn('h-6 w-6 opacity-40 transition-opacity group-hover:opacity-80')} />
+                {item.rarity === 'legendary' && (
+                  <div className="absolute -right-2 -top-2 flex h-4 w-4 animate-bounce items-center justify-center">
+                    <div className="h-1.5 w-1.5 rounded-full bg-amber-400 blur-[1px]" />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between border-t tn-border-soft pt-4">
+            <Badge 
+              variant={config.badgeVariant} 
+              size="sm" 
+              className="px-3 py-1 font-black uppercase tracking-[0.1em] text-[9px] border-none shadow-sm"
+            >
+              {config.label}
+            </Badge>
+            
+            <div className="flex items-center gap-2">
+              <span className={cn('tn-text-muted text-[10px] font-black uppercase tracking-[0.15em] opacity-40')}>
+                Owned:
+              </span>
+              <div className="flex h-7 min-w-[32px] items-center justify-center rounded-lg bg-white/[0.03] px-2 border tn-border-soft">
+                <span className={cn('text-sm font-black tn-text-primary')}>
+                  x{item.quantity}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-      
-      {/* Hiệu ứng trang trí light-beam khi hover */}
-      <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-current to-transparent opacity-0 transition-opacity group-hover:opacity-20" />
-    </GlassCard>
+        
+        {/* Bottom light beam */}
+        <div className={cn(
+          'absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-current to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-30',
+          item.rarity === 'legendary' ? 'text-amber-500' : 'text-violet-500'
+        )} />
+      </GlassCard>
+    </div>
   );
 }
 

@@ -33,6 +33,7 @@ public sealed class UseInventoryItemCommandHandler : IRequestHandler<UseInventor
         var domainEvent = BuildItemUsedEvent(
             request.UserId,
             normalizedItemCode,
+            request.Quantity,
             request.TargetCardId,
             normalizedIdempotencyKey);
         await _inlineDomainEventDispatcher.PublishAsync(domainEvent, cancellationToken);
@@ -42,6 +43,7 @@ public sealed class UseInventoryItemCommandHandler : IRequestHandler<UseInventor
     private static ItemUsedDomainEvent BuildItemUsedEvent(
         Guid userId,
         string itemCode,
+        int quantity,
         int? targetCardId,
         string normalizedIdempotencyKey)
     {
@@ -49,6 +51,7 @@ public sealed class UseInventoryItemCommandHandler : IRequestHandler<UseInventor
         {
             UserId = userId,
             ItemCode = itemCode,
+            Quantity = quantity,
             TargetCardId = targetCardId,
             IdempotencyKey = normalizedIdempotencyKey,
         };
@@ -64,7 +67,7 @@ public sealed class UseInventoryItemCommandHandler : IRequestHandler<UseInventor
             Message = domainEvent.IsIdempotentReplay
                 ? InventoryCommandMessages.Replayed
                 : InventoryCommandMessages.Accepted,
-            EffectSummary = MapEffectSummary(domainEvent.EffectSummary),
+            EffectSummaries = domainEvent.EffectSummaries.Select(MapEffectSummary).Where(x => x != null).Cast<UseInventoryItemEffectSummary>().ToList(),
         };
     }
 
@@ -80,6 +83,8 @@ public sealed class UseInventoryItemCommandHandler : IRequestHandler<UseInventor
             EffectType = effectSummary.EffectType,
             RolledValue = effectSummary.RolledValue,
             CardId = effectSummary.CardId,
+            BeforeValue = effectSummary.BeforeValue,
+            AfterValue = effectSummary.AfterValue,
             Before = MapCardSnapshot(effectSummary.Before),
             After = MapCardSnapshot(effectSummary.After),
         };

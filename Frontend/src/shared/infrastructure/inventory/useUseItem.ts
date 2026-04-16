@@ -22,9 +22,10 @@ function createIdempotencyKey(): string {
 }
 
 function normalizeIntentKey(payload: UseInventoryItemPayload): string {
- const normalizedCode = payload.itemCode.trim().toLowerCase();
- const targetCard = payload.targetCardId ?? 'none';
- return `${normalizedCode}:${targetCard}`;
+  const normalizedCode = payload.itemCode.trim().toLowerCase();
+  const targetCard = payload.targetCardId ?? 'none';
+  const quantity = payload.quantity;
+  return `${normalizedCode}:${targetCard}:${quantity}`;
 }
 
 async function sendUseItemRequest(
@@ -40,6 +41,7 @@ async function sendUseItemRequest(
   },
   body: JSON.stringify({
    itemCode: payload.itemCode,
+   quantity: payload.quantity,
    targetCardId: payload.targetCardId,
    idempotencyKey,
   }),

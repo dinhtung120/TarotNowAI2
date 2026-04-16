@@ -30,6 +30,7 @@ export interface InventoryResponse {
 
 export interface UseInventoryItemPayload {
  itemCode: string;
+ quantity: number;
  targetCardId?: number;
  idempotencyKey?: string;
 }
@@ -50,6 +51,8 @@ export interface UseInventoryItemEffectSummary {
  effectType: string;
  rolledValue: number;
  cardId?: number | null;
+ beforeValue?: number | null;
+ afterValue?: number | null;
  before?: UseInventoryCardStatSnapshot | null;
  after?: UseInventoryCardStatSnapshot | null;
 }
@@ -59,5 +62,5 @@ export interface UseInventoryItemResponse {
  targetCardId?: number;
  isIdempotentReplay: boolean;
  message: string;
- effectSummary?: UseInventoryItemEffectSummary | null;
+ effectSummaries: UseInventoryItemEffectSummary[];
 }

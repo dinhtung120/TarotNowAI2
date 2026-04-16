@@ -21,29 +21,44 @@ interface InventoryPageHeroProps {
  */
 export default function InventoryPageHero({ title, subtitle }: InventoryPageHeroProps) {
   return (
-    <div className={cn('mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6')}>
+    <div className={cn('relative mb-12 flex flex-col items-center gap-6 text-center sm:flex-row sm:text-left')}>
       {/* 
-          Container bao quanh Icon: Sử dụng hiệu ứng panel mờ (tn-panel-soft)
-          để tạo sự chuyên nghiệp cho phần đồ họa.
+          Icon Container với hiệu ứng Glassmorphism và Glow 
       */}
-      <div className={cn('flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border tn-border-soft bg-white/[0.03] shadow-inner')}>
-        <PackageSearch className={cn('h-7 w-7 tn-text-primary opacity-80')} />
+      <div className={cn(
+        'group relative flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl border tn-border-soft',
+        'bg-white/[0.03] shadow-[0_0_20px_rgba(139,92,246,0.1)] transition-all duration-700 hover:scale-110 hover:tn-border-accent'
+      )}>
+        <div className={cn('absolute inset-0 rounded-3xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 opacity-0 transition-opacity duration-700 group-hover:opacity-100')} />
+        <PackageSearch className={cn('relative h-10 w-10 tn-text-primary transition-colors duration-500 group-hover:tn-text-accent')} />
+        
+        {/* Decorative elements */}
+        <div className={cn('absolute -right-1 -top-1 h-3 w-3 rounded-full bg-violet-400 blur-[2px] animate-pulse')} />
+        <div className={cn('absolute -bottom-1 -left-1 h-2 w-2 rounded-full bg-fuchsia-400 blur-[1px] animate-pulse delay-75')} />
       </div>
       
-      <div className="space-y-1">
+      <div className="flex flex-col gap-2">
         {/* 
-            Tiêu đề trang: Áp dụng 'lunar-metallic-text' để tạo hiệu ứng chữ kim loại.
-            Sử dụng font black và uppercase để tăng độ mạnh mẽ và quyền lực cho Kho đồ.
+            Tiêu đề Lunar Metallic 
         */}
-        <h1 className={cn('lunar-metallic-text text-3xl font-black uppercase tracking-[0.2em] sm:text-4xl')}>
+        <h1 className={cn(
+          'lunar-metallic-text text-4xl font-black uppercase tracking-[0.15em] sm:text-5xl lg:text-6xl',
+          'drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]'
+        )}>
           {title}
         </h1>
         
-        {/* Phụ đề: Sử dụng 'tn-text-secondary' để cung cấp thông tin mô tả nhẹ nhàng */}
-        <p className={cn('tn-text-secondary text-sm font-medium tracking-wide opacity-70')}>
-          {subtitle}
-        </p>
+        <div className="flex items-center gap-3">
+          <div className="h-[1px] w-8 bg-gradient-to-r from-transparent via-violet-500 to-transparent sm:w-12" />
+          <p className={cn('tn-text-secondary text-sm font-bold tracking-widest uppercase opacity-60')}>
+            {subtitle}
+          </p>
+          <div className="h-[1px] w-8 bg-gradient-to-r from-transparent via-fuchsia-500 to-transparent sm:w-12" />
+        </div>
       </div>
+
+      {/* Background glow behind hero */}
+      <div className={cn('absolute -left-20 -top-20 -z-10 h-64 w-64 rounded-full bg-violet-600/10 blur-[100px]')} />
     </div>
   );
 }
