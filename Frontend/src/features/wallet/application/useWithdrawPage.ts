@@ -5,8 +5,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createWithdrawal, listMyWithdrawals, type WithdrawalResult } from '@/features/wallet/application/actions/withdrawal';
 import { useLocale, useTranslations } from 'next-intl';
 import { getWithdrawalStatusBadge } from '@/features/wallet/domain/withdrawalStatus';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 
-const HISTORY_QUERY_KEY = ['wallet', 'withdrawals', 'mine'] as const;
+const HISTORY_QUERY_KEY = userStateQueryKeys.wallet.withdrawalsMine();
 
 export function useWithdrawPage() {
  const t = useTranslations('Wallet');

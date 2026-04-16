@@ -8,6 +8,7 @@ import {
   verifyMfa,
   type MfaSetupResult,
 } from '@/features/profile/mfa/application/actions';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 
@@ -40,7 +41,7 @@ export function useProfileMfaPage(t: TranslateFn) {
     qrColors.dark && qrColors.light ? { color: qrColors } : {};
 
  const statusQuery = useQuery({
- queryKey: ['profile', 'mfa-status'],
+ queryKey: userStateQueryKeys.profile.mfaStatus(),
   queryFn: async () => {
    const result = await getMfaStatus();
    return result.success ? result.data ?? false : false;

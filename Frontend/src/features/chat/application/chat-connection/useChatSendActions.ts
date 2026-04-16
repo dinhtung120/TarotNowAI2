@@ -11,6 +11,7 @@ import {
 } from '@/features/chat/application/actions';
 import { appendUniqueMessage } from '@/features/chat/domain/mergeMessages';
 import { logger } from '@/shared/infrastructure/logging/logger';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 
 interface UseChatSendActionsOptions {
  conversationId?: string | null;
@@ -36,7 +37,7 @@ export function useChatSendActions({
   if (!conversationId) return;
 
   queryClient.setQueriesData<ListConversationsResult>(
-   { queryKey: ['chat', 'inbox'] },
+   { queryKey: userStateQueryKeys.chat.inboxRoot() },
    (previous) => {
     if (!previous?.conversations?.length || !previous.currentUserId) return previous;
 
@@ -56,7 +57,7 @@ export function useChatSendActions({
    }
   );
 
-  void queryClient.invalidateQueries({ queryKey: ['chat', 'unread-badge'] });
+  void queryClient.invalidateQueries({ queryKey: userStateQueryKeys.chat.unreadBadge() });
  }, [conversationId, queryClient]);
 
  const markRead = useCallback(async () => {

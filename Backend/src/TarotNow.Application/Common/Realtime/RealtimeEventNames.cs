@@ -64,4 +64,24 @@ public static class RealtimeEventNames
     /// Sự kiện thăng cấp thẻ bài.
     /// </summary>
     public const string GamificationCardLevelUp = "gamification.card_level_up";
+
+    /// <summary>
+    /// Sự kiện inventory thay đổi.
+    /// </summary>
+    public const string InventoryChanged = "inventory.changed";
+
+    /// <summary>
+    /// Sự kiện free-draw quota thay đổi.
+    /// </summary>
+    public const string ReadingQuotaChanged = "reading.quota_changed";
+
+    /// <summary>
+    /// Sự kiện profile thay đổi.
+    /// </summary>
+    public const string ProfileChanged = "profile.changed";
+
+    /// <summary>
+    /// Sự kiện title thay đổi.
+    /// </summary>
+    public const string TitleChanged = "title.changed";
 }

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getLedger } from '@/features/wallet/application/actions';
 import type { WalletPaginatedList, WalletTransaction } from '@/features/wallet/domain/types';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { useWalletStore } from '@/store/walletStore';
 import { useLocale, useTranslations } from 'next-intl';
 
@@ -16,7 +17,7 @@ export function useWalletOverviewPage() {
  const [page, setPage] = useState(1);
 
  useQuery({
-  queryKey: ['wallet', 'balance'],
+  queryKey: userStateQueryKeys.wallet.balance(),
   queryFn: async () => {
    await fetchBalance();
    return true;
@@ -26,7 +27,7 @@ export function useWalletOverviewPage() {
  const { data: ledger, isFetching: isLoadingLedger } = useQuery<
   WalletPaginatedList<WalletTransaction> | null
  >({
-  queryKey: ['wallet', 'ledger', page],
+  queryKey: userStateQueryKeys.wallet.ledger(page),
   queryFn: async () => {
    const result = await getLedger(page, 10);
    return result.success && result.data ? result.data : null;

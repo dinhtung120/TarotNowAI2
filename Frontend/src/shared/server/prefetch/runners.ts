@@ -43,6 +43,7 @@ import {
 } from '@/shared/infrastructure/gacha/gachaServerActions';
 import type { GachaPool } from '@/shared/infrastructure/gacha/gachaTypes';
 import { inventoryQueryKeys } from '@/shared/infrastructure/inventory/inventoryConstants';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { fetchInventoryServer } from '@/shared/infrastructure/inventory/inventoryServerActions';
 
 const readersDirectoryQueryKey = ['readers', 1, 12, '', '', ''] as const;
@@ -110,8 +111,8 @@ async function gachaPoolsQueryFn() {
 
 export async function prefetchCollectionPage(qc: QueryClient): Promise<void> {
  await Promise.all([
-  qc.prefetchQuery({ queryKey: ['collection', 'user'], queryFn: getUserCollection }),
-  qc.prefetchQuery({ queryKey: ['reading', 'cards-catalog'], queryFn: getCardsCatalogAction }),
+  qc.prefetchQuery({ queryKey: userStateQueryKeys.collection.mine(), queryFn: getUserCollection }),
+  qc.prefetchQuery({ queryKey: userStateQueryKeys.reading.cardsCatalog(), queryFn: getCardsCatalogAction }),
  ]);
 }
 
@@ -128,14 +129,14 @@ export async function prefetchInventoryPage(qc: QueryClient): Promise<void> {
 export async function prefetchReadingSetupPage(qc: QueryClient): Promise<void> {
  await swallowPrefetch(async () => {
   await qc.prefetchQuery({
-   queryKey: ['me', 'reading-setup-snapshot'],
+   queryKey: userStateQueryKeys.reading.setupSnapshot(),
    queryFn: async () => {
     const result = await getReadingSetupSnapshotAction();
     if (!result.success || !result.data) {
      throw new Error(result.error || 'reading-setup-snapshot');
     }
     const { cardsCatalog } = result.data;
-    qc.setQueryData(['reading', 'cards-catalog'], actionOk(cardsCatalog));
+    qc.setQueryData(userStateQueryKeys.reading.cardsCatalog(), actionOk(cardsCatalog));
     return result.data;
    },
    staleTime: 60_000,
@@ -152,7 +153,7 @@ export async function prefetchReadersDirectoryPage(qc: QueryClient): Promise<voi
 
 export async function prefetchWalletOverviewPage(qc: QueryClient): Promise<void> {
  await qc.prefetchQuery({
-  queryKey: ['wallet', 'ledger', 1],
+  queryKey: userStateQueryKeys.wallet.ledger(1),
   queryFn: async () => {
    const result = await getLedger(1, 10);
    return result.success && result.data ? result.data : null;
@@ -162,7 +163,7 @@ export async function prefetchWalletOverviewPage(qc: QueryClient): Promise<void>
 
 export async function prefetchChatInboxShell(qc: QueryClient): Promise<void> {
  await qc.prefetchQuery({
-  queryKey: ['chat', 'inbox', 'active'],
+  queryKey: userStateQueryKeys.chat.inboxActive(),
   queryFn: chatInboxActiveQueryFn,
   staleTime: 30_000,
  });
@@ -171,11 +172,11 @@ export async function prefetchChatInboxShell(qc: QueryClient): Promise<void> {
 export async function prefetchProfilePage(qc: QueryClient): Promise<void> {
  await Promise.all([
   qc.prefetchQuery({
-   queryKey: ['profile', 'me'],
+   queryKey: userStateQueryKeys.profile.me(),
    queryFn: profileMeQueryFn,
   }),
   qc.prefetchQuery({
-   queryKey: ['reader', 'my-request'],
+   queryKey: userStateQueryKeys.reader.myRequest(),
    queryFn: async () => {
     const result = await getMyReaderRequest();
     return result.success ? result.data ?? null : null;
@@ -234,7 +235,7 @@ export async function prefetchGachaHistoryPage(qc: QueryClient): Promise<void> {
 
 export async function prefetchReaderApplyPage(qc: QueryClient): Promise<void> {
  await qc.prefetchQuery({
-  queryKey: ['reader', 'my-request'],
+  queryKey: userStateQueryKeys.reader.myRequest(),
   queryFn: async () => {
    const result = await getMyReaderRequest();
    return result.success ? result.data ?? null : null;
@@ -244,7 +245,7 @@ export async function prefetchReaderApplyPage(qc: QueryClient): Promise<void> {
 
 export async function prefetchDepositPage(qc: QueryClient): Promise<void> {
  await qc.prefetchQuery({
-  queryKey: ['wallet', 'deposit-promotions'],
+  queryKey: userStateQueryKeys.wallet.depositPromotions(),
   queryFn: async () => {
    const result = await listPromotions(true);
    return result.success && result.data ? result.data : [];
@@ -289,7 +290,7 @@ export async function prefetchAdminDashboardPage(qc: QueryClient): Promise<void>
 
 export async function prefetchWithdrawPage(qc: QueryClient): Promise<void> {
  await qc.prefetchQuery({
-  queryKey: ['wallet', 'withdrawals', 'mine'],
+  queryKey: userStateQueryKeys.wallet.withdrawalsMine(),
   queryFn: async () => {
    const result = await listMyWithdrawals();
    return result.success && result.data ? result.data : [];
@@ -299,7 +300,7 @@ export async function prefetchWithdrawPage(qc: QueryClient): Promise<void> {
 
 export async function prefetchProfileMfaPage(qc: QueryClient): Promise<void> {
  await qc.prefetchQuery({
-  queryKey: ['profile', 'mfa-status'],
+  queryKey: userStateQueryKeys.profile.mfaStatus(),
   queryFn: async () => {
    const result = await getMfaStatus();
    return result.success ? result.data ?? false : false;
@@ -320,10 +321,10 @@ export async function prefetchUserSegmentShell(qc: QueryClient): Promise<void> {
      throw new Error(result.error || 'navbar-snapshot');
     }
     const d = result.data;
-    qc.setQueryData(['notifications', 'unread-count'], d.unreadNotificationCount);
-    qc.setQueryData(['chat', 'unread-badge'], d.unreadChatCount);
+    qc.setQueryData(userStateQueryKeys.notifications.unreadCount(), d.unreadNotificationCount);
+    qc.setQueryData(userStateQueryKeys.chat.unreadBadge(), d.unreadChatCount);
     qc.setQueryData(checkinQueryKeys.streakStatus, d.streak);
-    qc.setQueryData(['notifications', 'dropdown'], d.dropdownPreview);
+    qc.setQueryData(userStateQueryKeys.notifications.dropdown(), d.dropdownPreview);
     return d;
    },
    staleTime: 60_000,
@@ -334,7 +335,7 @@ export async function prefetchUserSegmentShell(qc: QueryClient): Promise<void> {
 export async function prefetchReaderPublicProfilePage(qc: QueryClient, readerId: string): Promise<void> {
  if (!readerId) return;
  await qc.prefetchQuery({
-  queryKey: ['reader-profile', readerId],
+  queryKey: userStateQueryKeys.reader.profile(readerId),
   queryFn: async () => {
    const result = await getReaderProfile(readerId);
    return result.success ? result.data ?? null : null;

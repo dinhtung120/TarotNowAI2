@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getUserCollection } from '@/features/collection/application/actions';
 import { useCardsCatalog } from '@/shared/application/hooks/useCardsCatalog';
 import type { CardOption } from '@/components/ui/inventory/UseItemCardSelector';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 
 function resolveCardName(
  locale: string,
@@ -32,7 +33,7 @@ interface UseOwnedInventoryCardsResult {
 export function useOwnedInventoryCards(locale: string): UseOwnedInventoryCardsResult {
  const cardsCatalog = useCardsCatalog();
  const collectionQuery = useQuery({
-  queryKey: ['collection', 'user'],
+  queryKey: userStateQueryKeys.collection.mine(),
   queryFn: getUserCollection,
   staleTime: 20_000,
  });

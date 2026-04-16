@@ -14,6 +14,7 @@ import {
 import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 import { useWalletStore } from '@/store/walletStore';
 import { setSessionStorageItem } from '@/shared/infrastructure/storage/browserStorage';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 
 interface ReadingSetupFormData {
  question?: string;
@@ -42,7 +43,7 @@ export function useReadingSetupPage() {
  const t = useTranslations('ReadingSetup');
  const fetchBalance = useWalletStore((state) => state.fetchBalance);
  const readingSetupSnapshotQuery = useQuery({
-  queryKey: ['me', 'reading-setup-snapshot'],
+  queryKey: userStateQueryKeys.reading.setupSnapshot(),
   queryFn: async (): Promise<ReadingSetupSnapshotDto> => {
    const result = await getReadingSetupSnapshotAction();
    if (!result.success || !result.data) {
@@ -51,7 +52,7 @@ export function useReadingSetupPage() {
 
    return result.data;
   },
-  staleTime: 60_000,
+  staleTime: 10_000,
  });
  const freeDrawQuotas = readingSetupSnapshotQuery.data?.freeDrawQuotas ?? {
   spread3: 0,

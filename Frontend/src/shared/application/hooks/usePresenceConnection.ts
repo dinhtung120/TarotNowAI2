@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { getSignalRHubUrl } from '@/shared/infrastructure/realtime/signalRUrl';
+import { ensureRealtimeSession } from '@/shared/infrastructure/realtime/realtimeSessionGuard';
 import { registerPresenceConnectionHandlers } from './usePresenceConnection.registration';
 
 const reconnectSchedule = [0, 2000, 5000, 10000, 30000];
@@ -40,6 +41,11 @@ export function usePresenceConnection() {
     let disposeRegistration: () => void = () => {};
 
     const init = async () => {
+      const hasValidSession = await ensureRealtimeSession();
+      if (!hasValidSession || cancelled) {
+        return;
+      }
+
       const signalR = await import('@microsoft/signalr');
       const hubUrl = getSignalRHubUrl('/api/v1/presence');
       logger.info('[PresenceRealtimeSync]', `Connecting to: ${hubUrl}`);

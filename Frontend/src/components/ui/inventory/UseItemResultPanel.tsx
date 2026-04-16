@@ -1,7 +1,7 @@
 'use client';
 
 import { cn, formatCardStat } from '@/lib/utils';
-import type { UseInventoryItemEffectSummary, UseInventoryCardStatSnapshot } from '@/shared/infrastructure/inventory/inventoryTypes';
+import type { UseInventoryItemEffectSummary } from '@/shared/infrastructure/inventory/inventoryTypes';
 
 
 interface UseItemResultPanelLabels {

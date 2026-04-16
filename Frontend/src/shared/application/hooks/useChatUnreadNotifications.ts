@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { usePathname } from '@/i18n/routing';
 import { getUnreadConversationCount } from '@/features/chat/application/actions';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { useAuthStore } from '@/store/authStore';
 
 interface ChatUnreadResult {
@@ -62,7 +63,7 @@ export function useChatUnreadNotifications(options: UseChatUnreadNotificationsOp
  const isChatRoute = /(^|\/)chat(\/|$)/.test(pathname);
 
  const { data, isLoading } = useQuery({
-  queryKey: ['chat', 'unread-badge'],
+  queryKey: userStateQueryKeys.chat.unreadBadge(),
   enabled: isAuthenticated && enabled,
   queryFn: async () => {
    const result = await getUnreadConversationCount();
@@ -71,10 +72,10 @@ export function useChatUnreadNotifications(options: UseChatUnreadNotificationsOp
    }
    return 0;
   },
-  staleTime: Infinity,
-  refetchOnWindowFocus: false,
-  refetchOnReconnect: false,
-  refetchOnMount: false,
+  staleTime: 15_000,
+  refetchOnWindowFocus: true,
+  refetchOnReconnect: true,
+  refetchOnMount: true,
  });
 
  const unreadCount = data ?? 0;

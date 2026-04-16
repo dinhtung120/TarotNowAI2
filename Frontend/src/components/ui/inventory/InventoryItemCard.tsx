@@ -9,6 +9,7 @@
  */
 import { memo } from 'react';
 import { Package2 } from 'lucide-react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import type { InventoryItem, InventoryRarity } from '@/shared/infrastructure/inventory/inventoryTypes';
 import GlassCard from '@/shared/components/ui/GlassCard';
@@ -130,10 +131,13 @@ function InventoryItemCardComponent({ item, locale, onSelect }: InventoryItemCar
             )}>
               <div className="relative h-full w-full flex items-center justify-center">
                 {item.iconUrl ? (
-                  <img 
+                  <Image
                     src={item.iconUrl} 
                     alt={text.name}
-                    className="h-9 w-9 object-contain transition-transform duration-500 group-hover:scale-110"
+                    width={36}
+                    height={36}
+                    unoptimized
+                    className={cn('h-9 w-9 object-contain transition-transform duration-500 group-hover:scale-110')}
                   />
                 ) : (
                   <Package2 className={cn('h-6 w-6 opacity-40 transition-opacity group-hover:opacity-80')} />

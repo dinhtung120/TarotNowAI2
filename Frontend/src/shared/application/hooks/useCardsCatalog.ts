@@ -6,10 +6,11 @@ import {
  getCardsCatalogAction,
  type CardCatalogItemDto,
 } from '@/features/reading/application/actions/cards-catalog';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 
 export function useCardsCatalog() {
  const { data, isLoading, isFetching } = useQuery({
-  queryKey: ['reading', 'cards-catalog'],
+  queryKey: userStateQueryKeys.reading.cardsCatalog(),
   queryFn: getCardsCatalogAction,
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60 * 12,

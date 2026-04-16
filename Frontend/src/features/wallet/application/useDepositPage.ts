@@ -17,6 +17,7 @@ import {
  MIN_DEPOSIT_AMOUNT_VND,
  PRESET_DEPOSIT_AMOUNTS_VND,
 } from '@/features/wallet/domain/constants';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 
 export function useDepositPage() {
  const t = useTranslations('Wallet');
@@ -33,7 +34,7 @@ export function useDepositPage() {
  const [error, setError] = useState<string | null>(null);
 
  useQuery({
-  queryKey: ['wallet', 'balance'],
+  queryKey: userStateQueryKeys.wallet.balance(),
   queryFn: async () => {
    await fetchBalance();
    return true;
@@ -43,7 +44,7 @@ export function useDepositPage() {
  const { data: promotions, isLoading: loadingPromos, isFetching: refetchingPromos } = useQuery<
   DepositPromotion[]
  >({
-  queryKey: ['wallet', 'deposit-promotions'],
+  queryKey: userStateQueryKeys.wallet.depositPromotions(),
   queryFn: async () => {
    const result = await listPromotions(true);
    return result.success && result.data ? result.data : [];

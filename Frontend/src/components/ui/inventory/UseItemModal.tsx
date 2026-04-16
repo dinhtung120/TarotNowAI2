@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils';
 import { useUseItemModalState } from '@/shared/infrastructure/inventory/useUseItemModalState';
 import UseItemActionButton from '@/components/ui/inventory/UseItemActionButton';
 import UseItemCardSelector from '@/components/ui/inventory/UseItemCardSelector';
-import UseItemStats from '@/components/ui/inventory/UseItemStats';
 import UseItemCardPreview from '@/components/ui/inventory/UseItemCardPreview';
 import UseItemResultPanel from '@/components/ui/inventory/UseItemResultPanel';
 import UseItemQuantitySelector from '@/components/ui/inventory/UseItemQuantitySelector';

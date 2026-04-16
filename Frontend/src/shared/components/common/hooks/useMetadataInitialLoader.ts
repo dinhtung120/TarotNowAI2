@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { checkinQueryKeys } from '@/features/checkin/domain/checkinQueryKeys';
 import type { UserMetadataDto } from '@/shared/application/actions/metadata';
 import { useInitialMetadata } from '@/shared/application/hooks/useInitialMetadata';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { useWalletStore } from '@/store/walletStore';
 
 interface UseMetadataInitialLoaderArgs {
@@ -30,10 +31,10 @@ export function useMetadataInitialLoader({ initialMetadata }: UseMetadataInitial
 
     setBalance(wallet);
     queryClient.setQueryData(checkinQueryKeys.streakStatus, streak);
-    queryClient.setQueryData(['notifications', 'unread-count'], unreadNotificationCount);
-    queryClient.setQueryData(['notifications', 'dropdown'], recentNotifications);
-    queryClient.setQueryData(['chat', 'unread-badge'], unreadChatCount);
-    queryClient.setQueryData(['chat', 'inbox', 'active'], activeConversations);
+    queryClient.setQueryData(userStateQueryKeys.notifications.unreadCount(), unreadNotificationCount);
+    queryClient.setQueryData(userStateQueryKeys.notifications.dropdown(), recentNotifications);
+    queryClient.setQueryData(userStateQueryKeys.chat.unreadBadge(), unreadChatCount);
+    queryClient.setQueryData(userStateQueryKeys.chat.inboxActive(), activeConversations);
     isHydrated.current = true;
   }, [initialMetadata, queryClient, setBalance]);
 

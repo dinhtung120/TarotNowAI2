@@ -8,6 +8,7 @@ import {
   setGamificationActiveTitleServer,
 } from '@/features/gamification/application/gamificationServerActions';
 import { gamificationKeys } from '@/features/gamification/gamificationQueryKeys';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 
 export { gamificationKeys };
 
@@ -26,7 +27,7 @@ export function useClaimQuestReward() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: gamificationKeys.quests('daily') });
       queryClient.invalidateQueries({ queryKey: gamificationKeys.quests('weekly') });
-      queryClient.invalidateQueries({ queryKey: ['wallet'] });
+      queryClient.invalidateQueries({ queryKey: userStateQueryKeys.wallet.all });
     },
   });
 }
@@ -51,7 +52,7 @@ export function useSetActiveTitle() {
     mutationFn: (titleCode: string) => setGamificationActiveTitleServer(titleCode),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: gamificationKeys.titles() });
-      queryClient.invalidateQueries({ queryKey: ['profile'] }); 
+      queryClient.invalidateQueries({ queryKey: userStateQueryKeys.profile.me() });
     },
   });
 }

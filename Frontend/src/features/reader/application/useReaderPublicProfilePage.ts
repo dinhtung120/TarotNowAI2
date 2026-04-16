@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { getReaderProfile, type ReaderProfile } from '@/features/reader/application/actions';
 import { createConversation } from '@/features/chat/public';
 import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 
@@ -15,7 +16,7 @@ export function useReaderPublicProfilePage(t: TranslateFn) {
   const userId = params.id as string;
 
  const { data: profile, isLoading, isFetching } = useQuery<ReaderProfile | null>({
-  queryKey: ['reader-profile', userId],
+  queryKey: userStateQueryKeys.reader.profile(userId),
   queryFn: async () => {
    const result = await getReaderProfile(userId);
    return result.success ? result.data ?? null : null;

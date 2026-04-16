@@ -5,7 +5,9 @@ import { HubConnectionState, type HubConnection } from '@microsoft/signalr';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
 import { logger } from '@/shared/infrastructure/logging/logger';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { getSignalRHubUrl } from '@/shared/infrastructure/realtime/signalRUrl';
+import { ensureRealtimeSession } from '@/shared/infrastructure/realtime/realtimeSessionGuard';
 
 interface UseChatRealtimeSyncOptions {
   enabled?: boolean;
@@ -61,7 +63,8 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
 
     let cancelled = false;
     let hubConnection: HubConnection | null = null;
-    let invalidateTimeout: NodeJS.Timeout | null = null;
+    let inboxInvalidateTimeout: NodeJS.Timeout | null = null;
+    let unreadInvalidateTimeout: NodeJS.Timeout | null = null;
 
     
     const invalidateInboxQueries = () => {
@@ -69,9 +72,9 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
         return;
       }
 
-      if (invalidateTimeout) clearTimeout(invalidateTimeout);
-      invalidateTimeout = setTimeout(() => {
-        void queryClient.invalidateQueries({ queryKey: ['chat', 'inbox'] });
+      if (inboxInvalidateTimeout) clearTimeout(inboxInvalidateTimeout);
+      inboxInvalidateTimeout = setTimeout(() => {
+        void queryClient.invalidateQueries({ queryKey: userStateQueryKeys.chat.inboxRoot() });
       }, 1000); 
     };
 
@@ -80,13 +83,18 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
         return;
       }
 
-      if (invalidateTimeout) clearTimeout(invalidateTimeout);
-      invalidateTimeout = setTimeout(() => {
-        void queryClient.invalidateQueries({ queryKey: ['chat', 'unread-badge'] });
+      if (unreadInvalidateTimeout) clearTimeout(unreadInvalidateTimeout);
+      unreadInvalidateTimeout = setTimeout(() => {
+        void queryClient.invalidateQueries({ queryKey: userStateQueryKeys.chat.unreadBadge() });
       }, 1000); 
     };
 
     const init = async () => {
+      const hasValidSession = await ensureRealtimeSession();
+      if (!hasValidSession || cancelled) {
+        return;
+      }
+
       const signalR = await import('@microsoft/signalr');
       logger.info('[ChatRealtimeSync]', `Connecting to: ${getSignalRHubUrl('/api/v1/chat')}`);
 	      hubConnection = new signalR.HubConnectionBuilder()
@@ -131,7 +139,8 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
 
     return () => {
       cancelled = true;
-      if (invalidateTimeout) clearTimeout(invalidateTimeout);
+      if (inboxInvalidateTimeout) clearTimeout(inboxInvalidateTimeout);
+      if (unreadInvalidateTimeout) clearTimeout(unreadInvalidateTimeout);
       if (
         hubConnection &&
         (hubConnection.state === HubConnectionState.Connected

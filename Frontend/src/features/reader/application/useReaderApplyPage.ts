@@ -7,6 +7,7 @@ import {
   getMyReaderRequest,
   type MyReaderRequest,
 } from '@/features/reader/application/actions';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 
@@ -16,7 +17,7 @@ export function useReaderApplyPage(t: TranslateFn) {
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
 
- const statusQueryKey = ['reader', 'my-request'] as const;
+ const statusQueryKey = userStateQueryKeys.reader.myRequest();
  const { data: existingRequest, isLoading, isFetching } = useQuery<MyReaderRequest | null>({
   queryKey: statusQueryKey,
   queryFn: async () => {

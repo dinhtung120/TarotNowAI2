@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getUserCollection, type UserCollectionDto } from '@/features/collection/application/actions';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { TAROT_CARD_COUNT, TAROT_DECK } from '@/shared/domain/tarotData';
 
 export type CollectionFilter = 'all' | 'owned' | 'unowned';
@@ -20,7 +21,7 @@ export function useCollectionPage() {
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
 
  const { data, isLoading, isFetching } = useQuery({
-  queryKey: ['collection', 'user'],
+  queryKey: userStateQueryKeys.collection.mine(),
   queryFn: getUserCollection,
  });
 

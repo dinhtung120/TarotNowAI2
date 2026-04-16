@@ -35,6 +35,7 @@ import {
 import {
  inventoryQueryKeys,
 } from '@/shared/infrastructure/inventory/inventoryConstants';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { fetchInventoryServer } from '@/shared/infrastructure/inventory/inventoryServerActions';
 import { isPrefetchBlocked } from '@/shared/infrastructure/navigation/prefetchPolicy';
 
@@ -81,7 +82,7 @@ function buildRouteQuerySpecs(pathname: string): RouteQuerySpec[] {
 
  if (startsWithSegment(pathname, '/wallet')) {
   specs.push({
-   queryKey: ['wallet', 'ledger', 1],
+   queryKey: userStateQueryKeys.wallet.ledger(1),
    queryFn: async () => {
     const result = await getLedger(1, 10);
     return result.success && result.data ? result.data : null;
@@ -92,7 +93,7 @@ function buildRouteQuerySpecs(pathname: string): RouteQuerySpec[] {
 
  if (pathname === '/wallet/deposit') {
   specs.push({
-   queryKey: ['wallet', 'deposit-promotions'],
+   queryKey: userStateQueryKeys.wallet.depositPromotions(),
    queryFn: async () => {
     const result = await listPromotions(true);
     return result.success && result.data ? result.data : [];
@@ -103,7 +104,7 @@ function buildRouteQuerySpecs(pathname: string): RouteQuerySpec[] {
 
  if (pathname === '/wallet/withdraw') {
   specs.push({
-   queryKey: ['wallet', 'withdrawals', 'mine'],
+   queryKey: userStateQueryKeys.wallet.withdrawalsMine(),
    queryFn: async () => {
     const result = await listMyWithdrawals();
     return result.success && result.data ? result.data : [];
@@ -115,7 +116,7 @@ function buildRouteQuerySpecs(pathname: string): RouteQuerySpec[] {
  if (startsWithSegment(pathname, '/notifications')) {
   specs.push(
    {
-    queryKey: ['notifications', 'dropdown'],
+    queryKey: userStateQueryKeys.notifications.dropdown(),
     queryFn: async () => {
      const result = await getNotifications(1, 10);
      return result.success ? result.data ?? null : null;
@@ -123,7 +124,7 @@ function buildRouteQuerySpecs(pathname: string): RouteQuerySpec[] {
     staleTime: 60_000,
    },
    {
-    queryKey: ['notifications', 'unread-count'],
+    queryKey: userStateQueryKeys.notifications.unreadCount(),
     queryFn: async () => {
      const result = await getUnreadNotificationCount();
      return result.success ? result.data ?? 0 : 0;
@@ -136,7 +137,7 @@ function buildRouteQuerySpecs(pathname: string): RouteQuerySpec[] {
  if (startsWithSegment(pathname, '/chat')) {
   specs.push(
    {
-    queryKey: ['chat', 'inbox', 'active'],
+    queryKey: userStateQueryKeys.chat.inboxActive(),
     queryFn: async () => {
      const result = await listConversations('active', 1, 100);
      if (result.success && result.data) {
@@ -147,7 +148,7 @@ function buildRouteQuerySpecs(pathname: string): RouteQuerySpec[] {
     staleTime: 30_000,
    },
    {
-    queryKey: ['chat', 'unread-badge'],
+    queryKey: userStateQueryKeys.chat.unreadBadge(),
     queryFn: async () => {
      const result = await getUnreadConversationCount();
      return result.success && result.data ? result.data.count : 0;
@@ -175,7 +176,7 @@ function buildRouteQuerySpecs(pathname: string): RouteQuerySpec[] {
  if (readerProfileMatch?.[1]) {
   const readerId = decodeURIComponent(readerProfileMatch[1]);
   specs.push({
-   queryKey: ['reader-profile', readerId],
+   queryKey: userStateQueryKeys.reader.profile(readerId),
    queryFn: async () => {
     const result = await getReaderProfile(readerId);
     return result.success ? result.data ?? null : null;
@@ -187,7 +188,7 @@ function buildRouteQuerySpecs(pathname: string): RouteQuerySpec[] {
  if (pathname === '/profile') {
   specs.push(
    {
-    queryKey: ['profile', 'me'],
+    queryKey: userStateQueryKeys.profile.me(),
     queryFn: async () => {
      const result = await getProfileAction();
      return result.success
@@ -197,7 +198,7 @@ function buildRouteQuerySpecs(pathname: string): RouteQuerySpec[] {
     staleTime: 30_000,
    },
    {
-    queryKey: ['reader', 'my-request'],
+    queryKey: userStateQueryKeys.reader.myRequest(),
     queryFn: async () => {
      const result = await getMyReaderRequest();
      return result.success ? result.data ?? null : null;
@@ -209,7 +210,7 @@ function buildRouteQuerySpecs(pathname: string): RouteQuerySpec[] {
 
  if (pathname === '/profile/mfa') {
   specs.push({
-   queryKey: ['profile', 'mfa-status'],
+   queryKey: userStateQueryKeys.profile.mfaStatus(),
    queryFn: async () => {
     const result = await getMfaStatus();
     return result.success ? result.data ?? false : false;
@@ -220,7 +221,7 @@ function buildRouteQuerySpecs(pathname: string): RouteQuerySpec[] {
 
  if (pathname === '/reading') {
   specs.push({
-   queryKey: ['me', 'reading-setup-snapshot'],
+   queryKey: userStateQueryKeys.reading.setupSnapshot(),
    queryFn: async () => {
     const result = await getReadingSetupSnapshotAction();
     if (!result.success || !result.data) {
@@ -265,12 +266,12 @@ function buildRouteQuerySpecs(pathname: string): RouteQuerySpec[] {
  if (pathname === '/collection') {
   specs.push(
    {
-    queryKey: ['collection', 'user'],
+    queryKey: userStateQueryKeys.collection.mine(),
     queryFn: async () => getUserCollection(),
     staleTime: 60_000,
    },
    {
-    queryKey: ['reading', 'cards-catalog'],
+    queryKey: userStateQueryKeys.reading.cardsCatalog(),
     queryFn: async () => getCardsCatalogAction(),
     staleTime: 60_000,
    },

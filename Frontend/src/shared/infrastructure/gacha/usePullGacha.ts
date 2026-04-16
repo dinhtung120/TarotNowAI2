@@ -9,6 +9,7 @@ import {
   gachaQueryKeys,
 } from '@/shared/infrastructure/gacha/gachaConstants';
 import type { GachaPool, PullGachaPayload, PullGachaResult } from '@/shared/infrastructure/gacha/gachaTypes';
+import { invalidateUserStateQueries } from '@/shared/infrastructure/query/invalidateUserStateQueries';
 
 function createIdempotencyKey(): string {
  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -59,12 +60,17 @@ export function usePullGacha() {
     ));
    });
 
-   await Promise.all([
-    queryClient.invalidateQueries({ queryKey: gachaQueryKeys.pools() }),
-    queryClient.invalidateQueries({ queryKey: [...gachaQueryKeys.all, 'history'] }),
-    queryClient.invalidateQueries({ queryKey: ['wallet'] }),
+   await invalidateUserStateQueries(queryClient, [
+    'gacha',
+    'wallet',
+    'inventory',
+    'collection',
+    'readingSetup',
+    'gamification',
+    'profile',
+    'notifications',
    ]);
-   useWalletStore.getState().fetchBalance();
+   void useWalletStore.getState().fetchBalance();
   },
  });
 }

@@ -18,7 +18,8 @@ public sealed partial class RedisRealtimeSignalRBridgeService : BackgroundServic
         RealtimeChannelNames.Wallet,
         RealtimeChannelNames.Chat,
         RealtimeChannelNames.Gacha,
-        RealtimeChannelNames.Gamification
+        RealtimeChannelNames.Gamification,
+        RealtimeChannelNames.UserState
     };
 
     private readonly IRealtimeBridgeSource _realtimeBridgeSource;
@@ -100,7 +101,9 @@ public sealed partial class RedisRealtimeSignalRBridgeService : BackgroundServic
                 return;
             }
 
-            if (channel == RealtimeChannelNames.Gacha || channel == RealtimeChannelNames.Gamification)
+            if (channel == RealtimeChannelNames.Gacha
+                || channel == RealtimeChannelNames.Gamification
+                || channel == RealtimeChannelNames.UserState)
             {
                 await ForwardPresenceEventAsync(envelope.EventName, envelope.Payload);
             }

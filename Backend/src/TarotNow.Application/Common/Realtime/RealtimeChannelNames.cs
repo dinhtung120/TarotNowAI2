@@ -29,4 +29,9 @@ public static class RealtimeChannelNames
     /// Kênh gamification realtime.
     /// </summary>
     public const string Gamification = "realtime:gamification";
+
+    /// <summary>
+    /// Kênh đồng bộ trạng thái người dùng (inventory/profile/quota/title).
+    /// </summary>
+    public const string UserState = "realtime:user-state";
 }

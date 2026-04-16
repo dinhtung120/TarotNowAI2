@@ -11,6 +11,7 @@ import { uploadProfileAvatar } from '@/features/profile/application/uploadProfil
 import { getMyReaderRequest, type MyReaderRequest } from '@/features/reader/public';
 import { useRouter } from '@/i18n/routing';
 import { useAuthGuard } from '@/shared/application/hooks/useAuthGuard';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'react-hot-toast';
 
@@ -31,7 +32,7 @@ export function useProfilePage() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarUploadProgress, setAvatarUploadProgress] = useState(0);
   const [avatarUploading, setAvatarUploading] = useState(false);
-  const profileQueryKey = ['profile', 'me'] as const;
+  const profileQueryKey = userStateQueryKeys.profile.me();
   const isAdmin = user?.role === 'admin';
   const isTarotReader = user?.role === 'tarot_reader';
 
@@ -71,7 +72,7 @@ export function useProfilePage() {
   }, [profileQuery.data, setValue]);
 
   const readerRequestQuery = useQuery<MyReaderRequest | null>({
-    queryKey: ['reader', 'my-request'],
+    queryKey: userStateQueryKeys.reader.myRequest(),
     enabled: isAuthenticated && !!user && !isTarotReader && !isAdmin,
     queryFn: async () => {
       const result = await getMyReaderRequest();

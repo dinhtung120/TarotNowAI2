@@ -4,7 +4,6 @@
  * Import các thành phần hỗ trợ UI.
  */
 import { cn } from '@/lib/utils';
-import GlassCard from '@/shared/components/ui/GlassCard';
 
 /**
  * Props của thành phần UseItemStats.

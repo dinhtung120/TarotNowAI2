@@ -1,9 +1,11 @@
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+
 export const INVENTORY_API_ROUTE = '/api/inventory';
 export const INVENTORY_IDEMPOTENCY_HEADER = 'x-idempotency-key';
 
 export const inventoryQueryKeys = {
- all: ['inventory'] as const,
- mine: () => [...inventoryQueryKeys.all, 'mine'] as const,
+ all: userStateQueryKeys.inventory.all,
+ mine: userStateQueryKeys.inventory.mine,
 };
 
 export const inventoryItemTypes = {

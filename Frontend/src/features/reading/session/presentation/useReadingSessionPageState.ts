@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { getProfileAction } from '@/features/profile/public';
 import { generateShufflePaths } from '@/features/reading/session/presentation/session-page/utils';
@@ -8,6 +9,7 @@ import { useRevealReading } from '@/features/reading/session/presentation/sessio
 import { useSessionSetup } from '@/features/reading/session/presentation/session-page/useSessionSetup';
 import { useCardsCatalog } from '@/shared/application/hooks/useCardsCatalog';
 import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
+import { invalidateUserStateQueries } from '@/shared/infrastructure/query/invalidateUserStateQueries';
 import { useAuthStore } from '@/store/authStore';
 
 interface UseReadingSessionPageStateResult {
@@ -15,6 +17,7 @@ interface UseReadingSessionPageStateResult {
 }
 
 export function useReadingSessionPageState(sessionId: string): UseReadingSessionPageStateResult {
+  const queryClient = useQueryClient();
   const navigation = useOptimizedNavigation();
   const sessionShort = sessionId.split('-')[0] ?? '';
   const t = useTranslations('ReadingSession');
@@ -26,8 +29,21 @@ export function useReadingSessionPageState(sessionId: string): UseReadingSession
 
   const refreshProfile = useCallback(async () => {
     const profileResponse = await getProfileAction();
-    if (profileResponse.success && profileResponse.data) updateUser(profileResponse.data);
-  }, [updateUser]);
+    if (profileResponse.success && profileResponse.data) {
+      updateUser(profileResponse.data);
+    }
+
+    await invalidateUserStateQueries(queryClient, [
+      'wallet',
+      'inventory',
+      'collection',
+      'readingSetup',
+      'readingHistory',
+      'profile',
+      'gamification',
+      'notifications',
+    ]);
+  }, [queryClient, updateUser]);
 
   const { allCardsFlipped, cards, error, flippedIndex, isRevealing, revealCards } = useRevealReading({
     sessionId,

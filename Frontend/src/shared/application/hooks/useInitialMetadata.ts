@@ -8,6 +8,7 @@ import { useWalletStore } from '@/store/walletStore';
 import { checkinQueryKeys } from '@/features/checkin/domain/checkinQueryKeys';
 import type { ActionResult } from '@/shared/domain/actionResult';
 import type { UserMetadataDto } from '@/shared/application/actions/metadata';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 
 let metadataFetchInFlight = false;
 let metadataFetchCompleted = false;
@@ -65,11 +66,11 @@ export function useInitialMetadata() {
 
           queryClient.setQueryData(checkinQueryKeys.streakStatus, streak);
 
-          queryClient.setQueryData(['notifications', 'unread-count'], unreadNotificationCount);
-          queryClient.setQueryData(['notifications', 'dropdown'], recentNotifications);
+          queryClient.setQueryData(userStateQueryKeys.notifications.unreadCount(), unreadNotificationCount);
+          queryClient.setQueryData(userStateQueryKeys.notifications.dropdown(), recentNotifications);
 
-          queryClient.setQueryData(['chat', 'unread-badge'], unreadChatCount);
-          queryClient.setQueryData(['chat', 'inbox', 'active'], activeConversations);
+          queryClient.setQueryData(userStateQueryKeys.chat.unreadBadge(), unreadChatCount);
+          queryClient.setQueryData(userStateQueryKeys.chat.inboxActive(), activeConversations);
           
           hasFetchedRef.current = true;
           metadataFetchCompleted = true;
