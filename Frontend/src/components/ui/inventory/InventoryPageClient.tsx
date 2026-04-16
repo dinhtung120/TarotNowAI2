@@ -32,7 +32,7 @@ export default function InventoryPageClient() {
   const t = useTranslations('Inventory');
   
   /* Quản lý trạng thái vật phẩm đang được chọn để sử dụng */
-  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [selectedItemCode, setSelectedItemCode] = useState<string | null>(null);
   
   /* Lấy dữ liệu kho đồ tổng quát */
   const inventoryQuery = useInventory();
@@ -42,6 +42,10 @@ export default function InventoryPageClient() {
   
   /* Hook thực thi hành động sử dụng vật phẩm */
   const useItemMutation = useUseItem();
+  const inventoryItems = inventoryQuery.data?.items ?? [];
+  const selectedItem = selectedItemCode
+    ? (inventoryItems.find((item) => item.itemCode === selectedItemCode) ?? null)
+    : null;
 
   return (
     <div className={cn('relative mx-auto w-full max-w-7xl px-4 pb-24 pt-32 sm:px-6 lg:px-8')}>
@@ -72,10 +76,10 @@ export default function InventoryPageClient() {
       <div className={cn('relative min-h-[400px]')}>
         <div className={cn('absolute -right-20 -top-20 -z-10 h-64 w-64 rounded-full bg-purple-500/5 blur-3xl')} />
         <InventoryGrid
-          items={inventoryQuery.data?.items ?? []}
+          items={inventoryItems}
           locale={locale}
           emptyLabel={t('empty')}
-          onSelect={(item) => setSelectedItem(item)}
+          onSelect={(item: InventoryItem) => setSelectedItemCode(item.itemCode)}
         />
       </div>
 
@@ -85,7 +89,7 @@ export default function InventoryPageClient() {
       */}
       {selectedItem ? (
         <UseItemModal
-          key={selectedItem.itemDefinitionId}
+          key={`${selectedItem.itemCode}-${selectedItem.quantity}`}
           isOpen={!!selectedItem}
           item={selectedItem}
           locale={locale}
@@ -104,7 +108,7 @@ export default function InventoryPageClient() {
             title: t('useItemTitle') || 'Sử dụng vật phẩm'
           }}
           isPending={useItemMutation.isPending}
-          onClose={() => setSelectedItem(null)}
+          onClose={() => setSelectedItemCode(null)}
           onUse={async (payload) => {
             try {
               return await useItemMutation.mutateAsync(payload);

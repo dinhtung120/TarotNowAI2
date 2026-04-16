@@ -15,7 +15,7 @@ import type { UseInventoryItemResponse } from '@/shared/infrastructure/inventory
 
 export default function UseItemModal({
   isOpen,
-  item: initialItem,
+  item,
   locale,
   cardOptions,
   labels,
@@ -23,8 +23,6 @@ export default function UseItemModal({
   onClose,
   onUse,
 }: UseItemModalProps) {
-  // Giữ một bản copy của item để tránh bị mất dữ liệu khi inventory refresh
-  const [item] = useState(initialItem);
   const [quantity, setQuantity] = useState(1);
   const [result, setResult] = useState<UseInventoryItemResponse | null>(null);
   const { selectedCardId, setSelectedCardId, text, needCard, canSubmit } = useUseItemModalState({
@@ -41,9 +39,15 @@ export default function UseItemModal({
     return null;
   }
 
+  const maxQuantity = Math.max(1, Math.min(10, item.quantity));
+  const safeQuantity = Math.max(1, Math.min(quantity, maxQuantity));
+
   const handleUseItem = async (payload: { itemCode: string; quantity: number; targetCardId?: number }) => {
     try {
-      const response = await onUse(payload);
+      const response = await onUse({
+        ...payload,
+        quantity: Math.max(1, Math.min(payload.quantity, maxQuantity)),
+      });
       setResult(response);
     } catch (error) {
       console.error('Failed to use inventory item', error);
@@ -57,13 +61,18 @@ export default function UseItemModal({
 
   const handleUseAgain = () => {
     setResult(null);
-    if (item) {
-      void handleUseItem({
-        itemCode: item.itemCode,
-        quantity,
-        targetCardId: selectedCardId === '' ? undefined : selectedCardId
-      });
+    if (!item.canUse || item.quantity <= 0) {
+      return;
     }
+
+    const nextQuantity = safeQuantity;
+    setQuantity(nextQuantity);
+
+    void handleUseItem({
+      itemCode: item.itemCode,
+      quantity: nextQuantity,
+      targetCardId: selectedCardId === '' ? undefined : selectedCardId
+    });
   };
 
   return (
@@ -83,9 +92,11 @@ export default function UseItemModal({
           {item.isConsumable && !result ? (
             <UseItemQuantitySelector
               label={labels.quantity}
-              value={quantity}
+              value={safeQuantity}
               max={item.quantity}
-              onChange={setQuantity}
+              onChange={(nextQuantity) => {
+                setQuantity(Math.max(1, Math.min(nextQuantity, maxQuantity)));
+              }}
               disabled={isPending}
             />
           ) : null}
@@ -119,7 +130,7 @@ export default function UseItemModal({
         ) : (
           <UseItemActionButton
             itemCode={item.itemCode}
-            quantity={quantity}
+            quantity={safeQuantity}
             selectedCardId={selectedCardId}
             canSubmit={canSubmit}
             isPending={isPending}

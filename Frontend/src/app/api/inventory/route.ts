@@ -61,6 +61,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   return buildProblemResponse(400, 'Invalid request payload.');
  }
 
+ if (!payload.itemCode || payload.itemCode.trim().length === 0) {
+  return buildProblemResponse(400, 'Item code is required.');
+ }
+
+ const quantity = Number.isFinite(payload.quantity)
+  ? Math.max(1, Math.min(10, Math.trunc(payload.quantity)))
+  : 1;
+
  const idempotencyKey = request.headers.get(INVENTORY_IDEMPOTENCY_HEADER) || payload.idempotencyKey || '';
  if (!idempotencyKey) {
   return buildProblemResponse(400, 'Missing idempotency key.');
@@ -71,6 +79,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   token,
   json: {
    itemCode: payload.itemCode,
+   quantity,
    targetCardId: payload.targetCardId,
    idempotencyKey,
   },
