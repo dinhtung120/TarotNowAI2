@@ -1,19 +1,18 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useWalletStore } from '@/store/walletStore';
 import { parseApiError } from '@/shared/infrastructure/error/parseApiError';
 import {
   GACHA_API_ROUTES,
   GACHA_IDEMPOTENCY_HEADER,
   gachaQueryKeys,
 } from '@/shared/infrastructure/gacha/gachaConstants';
+import { markLocalGachaCacheSynced } from '@/shared/infrastructure/gacha/gachaRealtimeDedup';
 import type { GachaPool, PullGachaPayload, PullGachaResult } from '@/shared/infrastructure/gacha/gachaTypes';
-import { invalidateUserStateQueries } from '@/shared/infrastructure/query/invalidateUserStateQueries';
 import { inventoryQueryKeys } from '@/shared/infrastructure/inventory/inventoryConstants';
 import type { InventoryResponse } from '@/shared/infrastructure/inventory/inventoryTypes';
 
-const CACHE_SYNC_DELAY_MS = 0;
+const GACHA_HISTORY_QUERY_KEY = [...gachaQueryKeys.all, 'history'] as const;
 
 function updateInventoryCacheFromGachaResult(
  queryClient: ReturnType<typeof useQueryClient>,
@@ -113,16 +112,8 @@ export function usePullGacha() {
    });
 
    updateInventoryCacheFromGachaResult(queryClient, result);
-
-   window.setTimeout(() => {
-    void invalidateUserStateQueries(queryClient, [
-     'gacha',
-     'wallet',
-     'inventory',
-     'collection',
-    ]);
-    void useWalletStore.getState().fetchBalance();
-   }, CACHE_SYNC_DELAY_MS);
+   markLocalGachaCacheSynced();
+   void queryClient.invalidateQueries({ queryKey: GACHA_HISTORY_QUERY_KEY });
   },
  });
 }

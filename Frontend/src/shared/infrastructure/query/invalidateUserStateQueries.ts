@@ -3,6 +3,8 @@ import { gamificationKeys } from '@/features/gamification/gamificationQueryKeys'
 import { gachaQueryKeys } from '@/shared/infrastructure/gacha/gachaConstants';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 
+const GACHA_HISTORY_QUERY_KEY = [...gachaQueryKeys.all, 'history'] as const;
+
 export type UserStateInvalidationDomain =
  | 'wallet'
  | 'inventory'
@@ -65,7 +67,8 @@ export async function invalidateUserStateQueries(
  }
 
  if (uniqueDomains.has('gacha')) {
-  tasks.push(queryClient.invalidateQueries({ queryKey: gachaQueryKeys.all }).then(() => undefined));
+  tasks.push(queryClient.invalidateQueries({ queryKey: gachaQueryKeys.pools() }).then(() => undefined));
+  tasks.push(queryClient.invalidateQueries({ queryKey: GACHA_HISTORY_QUERY_KEY }).then(() => undefined));
  }
 
  if (uniqueDomains.has('gamification')) {
@@ -74,4 +77,3 @@ export async function invalidateUserStateQueries(
 
  await Promise.all(tasks);
 }
-
