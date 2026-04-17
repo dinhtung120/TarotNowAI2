@@ -21,18 +21,19 @@ export function CollectionZoomModal({
   return (
     <div
       className={cn(
-        "animate-in fade-in fixed inset-0 z-[100] flex items-center justify-center p-4 pt-24 pb-28 duration-500 md:p-12",
+        "animate-in fade-in fixed inset-0 z-[100] flex flex-col duration-500",
       )}
     >
       <div
         className={cn("tn-overlay-strong absolute inset-0")}
         onClick={onClose}
       />
-      <div
-        className={cn(
-          "tn-panel animate-in zoom-in-95 slide-in-from-bottom-10 relative z-10 flex w-full max-w-4xl flex-col items-center gap-8 overflow-y-auto max-h-full rounded-[3rem] p-6 text-center shadow-[0_30px_100px_var(--c-0-0-0-80)] duration-500 md:flex-row md:items-stretch md:gap-12 md:p-12 md:text-left",
-        )}
-      >
+      <div className={cn("relative z-10 flex-1 overflow-y-auto custom-scrollbar flex flex-col p-4 pt-24 pb-28 md:p-12")}>
+        <div
+          className={cn(
+            "tn-panel m-auto animate-in zoom-in-95 slide-in-from-bottom-10 relative z-10 flex w-full max-w-4xl flex-col items-center gap-8 rounded-[3rem] p-6 text-center shadow-[0_30px_100px_var(--c-0-0-0-80)] duration-500 md:flex-row md:items-stretch md:gap-12 md:p-12 md:text-left",
+          )}
+        >
         <div
           className={cn(
             "absolute -top-24 -left-24 h-64 w-64 rounded-full bg-[var(--purple-accent)]/[0.08] blur-[100px]",
@@ -64,6 +65,7 @@ export function CollectionZoomModal({
           userCard={userCard}
           onClose={onClose}
         />
+      </div>
       </div>
     </div>
   );
