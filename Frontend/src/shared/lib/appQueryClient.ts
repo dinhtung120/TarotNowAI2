@@ -6,9 +6,9 @@ export function createAppQueryClient(): QueryClient {
    queries: {
     staleTime: 15_000,
     gcTime: 10 * 60 * 1000,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: false,
     refetchOnReconnect: true,
-    refetchOnMount: true,
+    refetchOnMount: false,
     retry: 1,
    },
   },

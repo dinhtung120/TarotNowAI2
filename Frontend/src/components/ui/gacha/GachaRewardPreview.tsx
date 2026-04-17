@@ -87,6 +87,7 @@ function GachaRewardPreviewComponent({ rewards, locale, emptyLabel }: GachaRewar
                     alt={localizeRewardName(reward, locale)}
                     fill
                     sizes="48px"
+                    unoptimized
                     className={cn('object-cover p-1')}
                   />
                 ) : (

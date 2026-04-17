@@ -117,6 +117,10 @@ const buildContentSecurityPolicy = (): string => {
   `connect-src ${connectSrc}`,
  ];
 
+ if (process.env.NODE_ENV === 'production') {
+  cspParts.push('upgrade-insecure-requests');
+ }
+
  return cspParts.join('; ');
 };
 

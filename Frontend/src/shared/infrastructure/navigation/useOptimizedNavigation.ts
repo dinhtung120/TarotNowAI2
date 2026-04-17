@@ -1,10 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
-import { usePathname, useRouter } from '@/i18n/routing';
-import { isPrefetchBlocked, markRouteChanged, schedulePrefetch, shouldRunPrefetch } from '@/shared/infrastructure/navigation/prefetchPolicy';
+import { useRouter } from '@/i18n/routing';
+import { isPrefetchBlocked, schedulePrefetch, shouldRunPrefetch } from '@/shared/infrastructure/navigation/prefetchPolicy';
 import { normalizeNavigationPath, prefetchRouteQueries } from '@/shared/infrastructure/navigation/routeQueryPrefetch';
 
 interface OptimizedNavigateOptions {
@@ -39,15 +39,7 @@ function runWithViewTransition(callback: () => void, enabled: boolean): void {
 export function useOptimizedNavigation() {
  const router = useRouter();
  const queryClient = useQueryClient();
- const pathname = usePathname();
  const locale = useLocale();
-
- useEffect(() => {
-  if (!pathname) {
-   return;
-  }
-  markRouteChanged(pathname);
- }, [pathname]);
 
  const prefetch = useCallback((href: string) => {
   const normalizedHref = normalizeNavigationPath(href);

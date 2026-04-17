@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { AUTH_ERROR } from '@/shared/domain/authErrors';
+import { getClientSessionSnapshot } from '@/shared/infrastructure/auth/clientSessionSnapshot';
 import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 
 export function useAuthGuard(isAuthenticated: boolean, redirectTo = '/login'): void {
@@ -14,25 +14,10 @@ export function useAuthGuard(isAuthenticated: boolean, redirectTo = '/login'): v
 
   let cancelled = false;
   const verifySession = async () => {
-   try {
-    const response = await fetch('/api/auth/session', {
-     method: 'GET',
-     credentials: 'include',
-     cache: 'no-store',
-    });
-
-    if (!response.ok) {
-     if (!cancelled) navigation.push(redirectTo);
-     return;
-    }
-
-    const payload = (await response.json()) as { authenticated?: boolean; error?: string };
-    const shouldRedirect = !payload.authenticated || payload.error === AUTH_ERROR.UNAUTHORIZED;
-    if (!cancelled && shouldRedirect) {
-     navigation.push(redirectTo);
-    }
-   } catch {
-    if (!cancelled) navigation.push(redirectTo);
+   const sessionSnapshot = await getClientSessionSnapshot({ maxAgeMs: 2_000 });
+   const shouldRedirect = !sessionSnapshot.authenticated;
+   if (!cancelled && shouldRedirect) {
+    navigation.push(redirectTo);
    }
   };
 

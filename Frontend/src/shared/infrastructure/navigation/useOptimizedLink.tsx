@@ -1,18 +1,11 @@
 'use client';
 
-import { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
+import { forwardRef, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
 import type { ComponentPropsWithoutRef, FocusEvent, MouseEvent } from 'react';
-import { Link as IntlLink, usePathname, useRouter } from '@/i18n/routing';
-import {
- isPrefetchBlocked,
- isPrefetchGateOpen,
- markRouteChanged,
- schedulePrefetch,
- shouldRunPrefetch,
- subscribePrefetchGate,
-} from '@/shared/infrastructure/navigation/prefetchPolicy';
+import { Link as IntlLink, useRouter } from '@/i18n/routing';
+import { isPrefetchBlocked, schedulePrefetch, shouldRunPrefetch } from '@/shared/infrastructure/navigation/prefetchPolicy';
 import { normalizeNavigationPath, prefetchRouteQueries } from '@/shared/infrastructure/navigation/routeQueryPrefetch';
 
 type IntlLinkProps = ComponentPropsWithoutRef<typeof IntlLink>;
@@ -44,8 +37,6 @@ export const OptimizedLink = forwardRef<HTMLAnchorElement, OptimizedLinkProps>(f
  const queryClient = useQueryClient();
  const router = useRouter();
  const locale = useLocale();
- const pathname = usePathname();
- const [isGateOpen, setIsGateOpen] = useState<boolean>(false);
  const rawHref = useMemo(() => resolveHrefPath(href), [href]);
 
  const normalizedHref = useMemo(() => {
@@ -57,17 +48,7 @@ export const OptimizedLink = forwardRef<HTMLAnchorElement, OptimizedLinkProps>(f
   return normalizedPath.startsWith('/') ? normalizedPath : null;
  }, [rawHref]);
 
- useEffect(() => subscribePrefetchGate(() => setIsGateOpen(isPrefetchGateOpen())), []);
-
- useEffect(() => {
-  if (!pathname) {
-   return;
-  }
-  markRouteChanged(pathname);
- }, [pathname]);
-
  const isBlockedPath = normalizedHref ? isPrefetchBlocked(normalizedHref) : true;
- const shouldPrefetchRoute = Boolean(normalizedHref) && !isBlockedPath && (prefetch ?? true) && isGateOpen;
  const canPrefetchQueries = Boolean(normalizedHref) && !isBlockedPath && prefetchQueries;
  const canPrefetchRouteOnIntent = Boolean(rawHref) && !isBlockedPath && (prefetch ?? true);
  const routeTaskKey = normalizedHref ? `route:${locale}:${normalizedHref}` : '';
@@ -121,7 +102,7 @@ export const OptimizedLink = forwardRef<HTMLAnchorElement, OptimizedLinkProps>(f
   <IntlLink
    ref={ref}
    href={href}
-   prefetch={shouldPrefetchRoute}
+   prefetch={false}
    onFocus={handleFocus}
    onMouseEnter={handleMouseEnter}
    {...rest}

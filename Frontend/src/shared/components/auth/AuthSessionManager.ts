@@ -7,52 +7,11 @@ import { useAuthStore } from '@/store/authStore';
 import type { ActionResult } from '@/shared/domain/actionResult';
 import { isTerminalAuthError } from '@/shared/domain/authErrors';
 import type { UserProfile } from '@/features/auth/domain/types';
+import { getClientSessionSnapshot, invalidateClientSessionSnapshot } from '@/shared/infrastructure/auth/clientSessionSnapshot';
 import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 const REFRESH_INTERVAL_MS = 40 * 60 * 1000;
 const MIN_REFRESH_THROTTLE_MS = 20 * 60 * 1000;
 let globalLastRefreshAt = 0;
-
-interface ServerSessionState {
- authenticated: boolean;
- user: UserProfile | null;
- terminalFailure: boolean;
-}
-
-async function getServerSessionState(): Promise<ServerSessionState> {
-    try {
-        const response = await fetch('/api/auth/session', {
-            method: 'GET',
-            credentials: 'include',
-            cache: 'no-store',
-        });
-        let payload: { authenticated?: boolean; user?: UserProfile; error?: string } | null = null;
-        try {
-            payload = (await response.json()) as { authenticated?: boolean; user?: UserProfile; error?: string };
-        } catch {
-            payload = null;
-        }
-
-        if (!response.ok) {
-            return {
-                authenticated: false,
-                user: null,
-                terminalFailure: isTerminalAuthError(payload?.error) || response.status === 401 || response.status === 403,
-            };
-        }
-
-        return {
-            authenticated: Boolean(payload?.authenticated),
-            user: payload?.user ?? null,
-            terminalFailure: false,
-        };
-    } catch {
-        return {
-            authenticated: false,
-            user: null,
-            terminalFailure: false,
-        };
-    }
-}
 
 interface AuthSessionManagerProps {
     logout: () => Promise<unknown> | unknown;
@@ -86,6 +45,7 @@ export default function AuthSessionManager({
                 await logout();
             } catch {
             } finally {
+                invalidateClientSessionSnapshot();
                 clearAuth();
                 logoutInProgressRef.current = false;
             }
@@ -112,6 +72,7 @@ export default function AuthSessionManager({
                         await runLogout(showToastOnFailure);
                     }
                 } else if (result.data?.user) {
+                    invalidateClientSessionSnapshot();
                     setSession(result.data.user);
                 }
             } catch {
@@ -125,7 +86,7 @@ export default function AuthSessionManager({
     useEffect(() => {
         let cancelled = false;
         const bootstrapSession = async () => {
-            const sessionState = await getServerSessionState();
+            const sessionState = await getClientSessionSnapshot({ maxAgeMs: 2_000 });
             if (cancelled) return;
             if (sessionState.authenticated && sessionState.user) {
                 setSession(sessionState.user);
