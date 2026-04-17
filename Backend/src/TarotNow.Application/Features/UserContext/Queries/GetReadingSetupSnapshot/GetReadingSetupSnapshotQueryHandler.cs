@@ -22,16 +22,14 @@ public class GetReadingSetupSnapshotQueryHandler : IRequestHandler<GetReadingSet
 
     public async Task<ReadingSetupSnapshotDto> Handle(GetReadingSetupSnapshotQuery request, CancellationToken cancellationToken)
     {
-        var walletTask = _mediator.Send(new GetWalletBalanceQuery(request.UserId), cancellationToken);
-        var catalogTask = _mediator.Send(new GetCardsCatalogQuery(), cancellationToken);
-        var freeDrawTask = _freeDrawCreditRepository.GetSummaryAsync(request.UserId, cancellationToken);
-        await Task.WhenAll(walletTask, catalogTask, freeDrawTask);
-        var freeDrawSummary = await freeDrawTask;
+        var wallet = await _mediator.Send(new GetWalletBalanceQuery(request.UserId), cancellationToken);
+        var catalog = await _mediator.Send(new GetCardsCatalogQuery(), cancellationToken);
+        var freeDrawSummary = await _freeDrawCreditRepository.GetSummaryAsync(request.UserId, cancellationToken);
 
         return new ReadingSetupSnapshotDto
         {
-            Wallet = await walletTask,
-            CardsCatalog = await catalogTask,
+            Wallet = wallet,
+            CardsCatalog = catalog,
             FreeDrawQuotas = new ReadingFreeDrawQuotaDto
             {
                 Spread3 = freeDrawSummary.Spread3Count,

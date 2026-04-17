@@ -31,10 +31,10 @@ public class GetNavbarSnapshotQueryHandler : IRequestHandler<GetNavbarSnapshotQu
         var userId = request.UserId;
         var userIdString = userId.ToString();
 
-        var unreadNotifTask = _notificationRepository.CountUnreadAsync(userId, cancellationToken);
-        var unreadChatTask = _conversationRepository.GetTotalUnreadCountAsync(userIdString, cancellationToken);
-        var streakTask = _mediator.Send(new GetStreakStatusQuery { UserId = userId }, cancellationToken);
-        var dropdownTask = _mediator.Send(
+        var unreadNotifCount = await _notificationRepository.CountUnreadAsync(userId, cancellationToken);
+        var unreadChatCount = await _conversationRepository.GetTotalUnreadCountAsync(userIdString, cancellationToken);
+        var streakInfo = await _mediator.Send(new GetStreakStatusQuery { UserId = userId }, cancellationToken);
+        var dropdownPreview = await _mediator.Send(
             new GetNotificationsQuery
             {
                 UserId = userId,
@@ -43,14 +43,12 @@ public class GetNavbarSnapshotQueryHandler : IRequestHandler<GetNavbarSnapshotQu
             },
             cancellationToken);
 
-        await Task.WhenAll(unreadNotifTask, unreadChatTask, streakTask, dropdownTask);
-
         return new NavbarSnapshotDto
         {
-            UnreadNotificationCount = (int)await unreadNotifTask,
-            UnreadChatCount = await unreadChatTask,
-            Streak = await streakTask,
-            DropdownPreview = await dropdownTask
+            UnreadNotificationCount = (int)unreadNotifCount,
+            UnreadChatCount = unreadChatCount,
+            Streak = streakInfo,
+            DropdownPreview = dropdownPreview
         };
     }
 }
