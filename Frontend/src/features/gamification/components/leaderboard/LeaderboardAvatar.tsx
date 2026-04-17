@@ -22,6 +22,7 @@ export default function LeaderboardAvatar({
           fill
           sizes="48px"
           src={avatarSrc}
+          unoptimized
         />
       ) : (
         <div className={cn("flex", "h-full", "w-full", "items-center", "justify-center", "text-lg", "font-bold", "text-slate-500")}>

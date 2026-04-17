@@ -25,7 +25,7 @@ export default function LeaderboardScore({
               : "text-slate-500 group-hover:text-slate-300",
         )}
       >
-        {score.toLocaleString()}
+        {score.toLocaleString('en-US')}
       </div>
       <div className={cn("tn-text-10", "font-black", "tracking-widest", "text-slate-600", "uppercase")}>
         {currency === "gold" ? "VÀNG" : "K.CƯƠNG"}

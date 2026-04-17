@@ -40,7 +40,7 @@ export default function LeaderboardCurrentUserRankContent({
             currency === "gold" ? "text-emerald-400" : "text-indigo-400",
           )}
         >
-          {userRank.score.toLocaleString()}
+          {userRank.score.toLocaleString('en-US')}
         </div>
         <div className={cn("text-right", "text-xs", "font-black", "uppercase", "tracking-widest", "text-slate-500")}>
           TIÊU THỤ
