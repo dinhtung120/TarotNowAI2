@@ -34,9 +34,9 @@ export function ReaderDetailModal({
  const avatarSrc = resolveAvatarUrl(reader.avatarUrl);
 
  return (
-  <div className={cn('tn-reader-modal-root fixed inset-0 flex items-center justify-center animate-in fade-in duration-500')}>
+  <div className={cn('tn-reader-modal-root fixed inset-0 flex items-center justify-center p-4 pt-24 pb-28 md:p-8 animate-in fade-in duration-500 z-[100]')}>
    <div className={cn('absolute inset-0 tn-overlay-strong')} onClick={onClose} />
-    <div className={cn('tn-reader-modal-panel relative z-10 max-w-2xl w-full tn-panel animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 flex flex-col max-h-[90vh] sm:max-h-[85vh] overflow-hidden m-4')}>
+    <div className={cn('tn-reader-modal-panel relative z-10 max-w-2xl w-full tn-panel animate-in zoom-in-95 slide-in-from-bottom-10 duration-500 flex flex-col max-h-[100%] overflow-hidden')}>
      <div className={cn('absolute top-4 right-4 z-20')}>
       <button type="button" onClick={onClose} className={cn('w-9 h-9 rounded-xl tn-surface border tn-border-soft flex items-center justify-center tn-hover-surface-strong shadow-sm')}>
        <X className={cn('w-4 h-4')} />

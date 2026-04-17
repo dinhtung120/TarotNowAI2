@@ -58,7 +58,7 @@ export default function InventoryPageClient() {
     : null;
 
   return (
-    <div className={cn('relative mx-auto w-full max-w-7xl px-4 pb-24 pt-32 sm:px-6 lg:px-8')}>
+    <div className={cn('relative mx-auto w-full max-w-7xl px-4 pb-24 pt-32 sm:px-6 lg:px-8 overflow-x-hidden')}>
       {/* Decorative Background Elements */}
       <div className="pointer-events-none absolute left-0 top-0 -z-10 h-[500px] w-full bg-[radial-gradient(circle_at_50%_0%,rgba(139,92,246,0.08),transparent_70%)]" />
       <div className="pointer-events-none absolute right-0 top-1/2 -z-10 h-[300px] w-[300px] rounded-full bg-violet-600/5 blur-[120px]" />

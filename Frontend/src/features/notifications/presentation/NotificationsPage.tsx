@@ -20,7 +20,7 @@ export default function NotificationsPage() {
  const { handleMarkRead } = useNotificationMarkRead({ markAsRead });
 
  return (
-  <div className={cn('space-y-8 max-w-3xl mx-auto')}>
+  <div className={cn('space-y-8 max-w-3xl mx-auto px-4 sm:px-6 pt-24 pb-28')}>
    <SectionHeader tag={t('tag')} title={t('title')} subtitle={t('subtitle')} />
 
    <NotificationFilters
