@@ -29,17 +29,17 @@ export function CollectionZoomModal({
   return (
     <div
       className={cn(
-        "animate-in fade-in fixed inset-0 z-[100] flex flex-col duration-500",
+        "animate-in fade-in fixed inset-0 z-[100] overflow-y-auto custom-scrollbar duration-500",
       )}
     >
       <div
-        className={cn("tn-overlay-strong absolute inset-0")}
+        className={cn("tn-overlay-strong fixed inset-0 touch-none")}
         onClick={onClose}
       />
-      <div className={cn("relative z-10 flex-1 overflow-y-auto custom-scrollbar flex flex-col p-4 pt-24 pb-28 md:p-12")}>
+      <div className={cn("relative z-10 flex min-h-full w-full flex-col items-center justify-center p-4 pt-24 pb-28 md:p-12 pointer-events-none")}>
         <div
           className={cn(
-            "tn-panel m-auto animate-in overflow-hidden zoom-in-95 slide-in-from-bottom-10 relative z-10 flex w-full max-w-4xl flex-col items-center gap-8 rounded-[3rem] p-6 text-center shadow-[0_30px_100px_var(--c-0-0-0-80)] duration-500 md:flex-row md:items-stretch md:gap-12 md:p-12 md:text-left",
+            "tn-panel animate-in overflow-hidden zoom-in-95 slide-in-from-bottom-10 relative z-10 flex w-full max-w-4xl flex-col items-center gap-8 rounded-[3rem] p-6 text-center shadow-[0_30px_100px_var(--c-0-0-0-80)] duration-500 md:flex-row md:items-stretch md:gap-12 md:p-12 md:text-left pointer-events-auto",
           )}
         >
         <div

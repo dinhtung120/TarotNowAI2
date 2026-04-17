@@ -35,9 +35,9 @@ export default function Modal({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className={cn('fixed inset-0 tn-z-9999 flex flex-col pointer-events-none')} role="dialog" aria-modal="true" aria-label={title}>
-      <div className={cn('absolute inset-0 animate-in fade-in tn-modal-backdrop duration-200 pointer-events-auto')} onClick={onClose} />
-      <div className={cn('relative z-10 flex-1 overflow-y-auto custom-scrollbar flex flex-col p-4 pt-24 pb-28 md:p-8 pointer-events-auto')}>
+    <div className={cn('fixed inset-0 tn-z-9999 overflow-y-auto custom-scrollbar flex flex-col pointer-events-none')} role="dialog" aria-modal="true" aria-label={title}>
+      <div className={cn('fixed inset-0 animate-in fade-in tn-modal-backdrop duration-200 pointer-events-auto touch-none')} onClick={onClose} />
+      <div className={cn('relative z-10 flex min-h-full w-full flex-col p-4 pt-24 pb-28 md:p-8 pointer-events-auto')}>
         <div className={cn(
           'relative m-auto w-full flex flex-col rounded-3xl tn-modal-shell animate-in fade-in zoom-in-95 duration-300', 
           sizeStyles[size],
