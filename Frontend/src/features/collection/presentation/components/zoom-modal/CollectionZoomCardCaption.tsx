@@ -26,7 +26,7 @@ export default function CollectionZoomCardCaption({
       </span>
       <h3
         className={cn(
-          "tn-text-primary text-xl leading-tight font-black tracking-tighter italic drop-shadow-lg",
+          "tn-text-primary text-xl leading-tight font-black tracking-tighter italic",
         )}
       >
         {isOwned ? cardName || unknownCardLabel : unknownCardLabel}

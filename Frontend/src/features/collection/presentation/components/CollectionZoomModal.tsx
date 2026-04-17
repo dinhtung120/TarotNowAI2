@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import CollectionZoomCardVisual from "@/features/collection/presentation/components/zoom-modal/CollectionZoomCardVisual";
 import CollectionZoomDetails from "@/features/collection/presentation/components/zoom-modal/CollectionZoomDetails";
 import type { CollectionZoomModalProps } from "@/features/collection/presentation/components/zoom-modal/types";
@@ -13,6 +14,13 @@ export function CollectionZoomModal({
   userCard,
   onClose,
 }: CollectionZoomModalProps) {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   if (!cardData) return null;
 
   const isOwned = Boolean(userCard);

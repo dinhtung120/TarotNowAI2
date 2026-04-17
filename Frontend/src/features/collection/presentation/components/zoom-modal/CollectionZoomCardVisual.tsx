@@ -23,7 +23,7 @@ export default function CollectionZoomCardVisual({
   return (
     <div
       className={cn(
-        "relative mb-2 aspect-[14/22] w-52 flex-shrink-0 rounded-[2.5rem] transition-transform duration-700 hover:scale-[1.02] sm:w-64 md:mb-0 md:w-80",
+        "relative mb-2 aspect-[14/24] w-52 flex-shrink-0 rounded-[2.5rem] transition-transform duration-700 hover:scale-[1.02] sm:w-64 md:mb-0 md:w-80",
         isOwned
           ? "shadow-[0_0_50px_var(--c-251-191-36-15)]"
           : "opacity-50 grayscale",
@@ -32,7 +32,7 @@ export default function CollectionZoomCardVisual({
       <div className={cn("flex h-full flex-col")}>
         <div
           className={cn(
-            "relative mb-4 flex flex-1 items-center justify-center overflow-hidden rounded-[2.5rem] shadow-inner",
+            "relative flex flex-1 items-center justify-center overflow-hidden rounded-[2.5rem]",
           )}
         >
           <CollectionZoomCardImage
