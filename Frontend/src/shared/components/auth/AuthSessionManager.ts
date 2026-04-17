@@ -105,7 +105,6 @@ export default function AuthSessionManager({
     }, [clearAuth, setSession]);
     useEffect(() => {
         if (!isAuthenticated) return;
-        void tryRefresh(false);
         const intervalId = window.setInterval(() => {
             void tryRefresh(false);
         }, REFRESH_INTERVAL_MS);

@@ -19,13 +19,18 @@ function shouldStopConnection(connection: HubConnection | null) {
   );
 }
 
-export function usePresenceConnection() {
+interface UsePresenceConnectionOptions {
+  enabled?: boolean;
+}
+
+export function usePresenceConnection(options: UsePresenceConnectionOptions = {}) {
+  const enabled = options.enabled ?? true;
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const connectionRef = useRef<HubConnection | null>(null);
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!enabled || !isAuthenticated) {
       const existing = connectionRef.current;
       if (existing && shouldStopConnection(existing)) {
         void existing.stop().catch(() => undefined);
@@ -90,5 +95,5 @@ export function usePresenceConnection() {
 
       connectionRef.current = null;
     };
-  }, [isAuthenticated, queryClient]);
+  }, [enabled, isAuthenticated, queryClient]);
 }

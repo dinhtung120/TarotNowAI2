@@ -14,6 +14,7 @@ interface NavbarRightSectionProps {
   avatarMenuRef: React.RefObject<HTMLDivElement | null>;
   isAuthenticated: boolean;
   mobileMenuOpen: boolean;
+  notificationsEnabled: boolean;
   tCommon: (key: string) => string;
   tNav: (key: string) => string;
   user: UserProfile | null;
@@ -23,7 +24,7 @@ interface NavbarRightSectionProps {
   onToggleMobileMenu: () => void;
 }
 
-export default function NavbarRightSection({ avatarMenuItems, avatarMenuOpen, avatarMenuRef, isAuthenticated, mobileMenuOpen, tCommon, tNav, user, onCloseAvatarMenu, onLogout, onToggleAvatarMenu, onToggleMobileMenu }: NavbarRightSectionProps) {
+export default function NavbarRightSection({ avatarMenuItems, avatarMenuOpen, avatarMenuRef, isAuthenticated, mobileMenuOpen, notificationsEnabled, tCommon, tNav, user, onCloseAvatarMenu, onLogout, onToggleAvatarMenu, onToggleMobileMenu }: NavbarRightSectionProps) {
   if (!isAuthenticated) {
     return (
       <div className={cn('flex items-center tn-gap-2-3-sm')}>
@@ -37,7 +38,7 @@ export default function NavbarRightSection({ avatarMenuItems, avatarMenuOpen, av
     <div className={cn('flex items-center tn-gap-2-3-sm')}>
       <StreakBadge />
       <div className={cn('tn-show-sm')}><WalletWidget /></div>
-      <NotificationDropdown />
+      <NotificationDropdown enabled={notificationsEnabled} />
       <NavbarAvatarMenu user={user} menuItems={avatarMenuItems} open={avatarMenuOpen} avatarMenuRef={avatarMenuRef} tNav={tNav} onClose={onCloseAvatarMenu} onToggle={onToggleAvatarMenu} onLogout={onLogout} />
       <button type="button" onClick={onToggleMobileMenu} className={cn('tn-hide-md min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-xl p-2.5 tn-text-secondary transition-colors tn-hover-surface-soft tn-hover-text-primary')} aria-label={tCommon('menu')}>
         {mobileMenuOpen ? <X className={cn('h-5 w-5')} /> : <Menu className={cn('h-5 w-5')} />}

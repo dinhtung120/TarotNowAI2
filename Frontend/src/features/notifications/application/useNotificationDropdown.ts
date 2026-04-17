@@ -10,7 +10,12 @@ import {
 } from '@/features/notifications/application/actions';
 import { getUnreadNotificationCount } from '@/features/notifications/application/actions/unread-count';
 
-export function useNotificationDropdown() {
+interface UseNotificationDropdownOptions {
+  enabled?: boolean;
+}
+
+export function useNotificationDropdown(options: UseNotificationDropdownOptions = {}) {
+  const enabled = options.enabled ?? true;
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const queryClient = useQueryClient();
 
@@ -23,7 +28,7 @@ export function useNotificationDropdown() {
       const result = await getNotifications(1, 10);
       return result.success ? result.data ?? null : null;
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && enabled,
     staleTime: 1000 * 60, 
   });
 
@@ -33,7 +38,7 @@ export function useNotificationDropdown() {
       const result = await getUnreadNotificationCount();
       return result.success ? result.data ?? 0 : 0;
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && enabled,
     staleTime: Infinity,
     refetchOnWindowFocus: false,
     refetchOnMount: false,

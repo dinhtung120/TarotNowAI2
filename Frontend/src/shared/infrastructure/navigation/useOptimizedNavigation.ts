@@ -3,7 +3,7 @@
 import { useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
-import { useRouter } from '@/i18n/routing';
+import { usePathname, useRouter } from '@/i18n/routing';
 import { isPrefetchBlocked, schedulePrefetch, shouldRunPrefetch } from '@/shared/infrastructure/navigation/prefetchPolicy';
 import { normalizeNavigationPath, prefetchRouteQueries } from '@/shared/infrastructure/navigation/routeQueryPrefetch';
 
@@ -40,10 +40,12 @@ export function useOptimizedNavigation() {
  const router = useRouter();
  const queryClient = useQueryClient();
  const locale = useLocale();
+ const pathname = usePathname();
+ const normalizedCurrentPath = useMemo(() => normalizeNavigationPath(pathname), [pathname]);
 
  const prefetch = useCallback((href: string) => {
   const normalizedHref = normalizeNavigationPath(href);
-  if (!normalizedHref.startsWith('/') || isPrefetchBlocked(normalizedHref)) {
+  if (!normalizedHref.startsWith('/') || normalizedHref === normalizedCurrentPath || isPrefetchBlocked(normalizedHref)) {
    return;
   }
 
@@ -64,7 +66,7 @@ export function useOptimizedNavigation() {
     await prefetchRouteQueries(queryClient, normalizedHref);
    });
   }
- }, [locale, queryClient, router]);
+ }, [locale, normalizedCurrentPath, queryClient, router]);
 
  const push = useCallback((href: string, options?: OptimizedNavigateOptions) => {
   prefetch(href);

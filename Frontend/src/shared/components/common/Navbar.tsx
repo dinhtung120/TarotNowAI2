@@ -27,8 +27,10 @@ export default function Navbar({ onLogout }: NavbarProps = {}) {
   const tCommon = useTranslations('Common');
   const { user, isAuthenticated } = useAuthStore(useShallow((state) => ({ user: state.user, isAuthenticated: state.isAuthenticated })));
   const { avatarMenuOpen, mobileMenuOpen, avatarMenuRef, closeAvatarMenu, toggleAvatarMenu, toggleMobileMenu } = useNavbarMenuState(pathname);
+  const isHomePath = pathname === '/';
   const isChatRoomPath = /\/chat\/[^/]+/.test(pathname);
-  const enableGlobalChatSync = !isChatRoomPath;
+  const enableGlobalChatSync = !isHomePath && !isChatRoomPath;
+  const enableNotificationSync = !isHomePath;
 
   useChatUnreadNotifications({ enabled: enableGlobalChatSync });
   useChatRealtimeSync({ enabled: enableGlobalChatSync });
@@ -51,6 +53,7 @@ export default function Navbar({ onLogout }: NavbarProps = {}) {
           avatarMenuRef={avatarMenuRef}
           isAuthenticated={isAuthenticated}
           mobileMenuOpen={mobileMenuOpen}
+          notificationsEnabled={enableNotificationSync}
           tCommon={tCommon}
           tNav={tNav}
           user={user}

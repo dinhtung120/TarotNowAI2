@@ -4,7 +4,7 @@ import { forwardRef, useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
 import type { ComponentPropsWithoutRef, FocusEvent, MouseEvent } from 'react';
-import { Link as IntlLink, useRouter } from '@/i18n/routing';
+import { Link as IntlLink, usePathname, useRouter } from '@/i18n/routing';
 import { isPrefetchBlocked, schedulePrefetch, shouldRunPrefetch } from '@/shared/infrastructure/navigation/prefetchPolicy';
 import { normalizeNavigationPath, prefetchRouteQueries } from '@/shared/infrastructure/navigation/routeQueryPrefetch';
 
@@ -36,8 +36,10 @@ export const OptimizedLink = forwardRef<HTMLAnchorElement, OptimizedLinkProps>(f
 ) {
  const queryClient = useQueryClient();
  const router = useRouter();
+ const pathname = usePathname();
  const locale = useLocale();
  const rawHref = useMemo(() => resolveHrefPath(href), [href]);
+ const normalizedCurrentPath = useMemo(() => normalizeNavigationPath(pathname), [pathname]);
 
  const normalizedHref = useMemo(() => {
   const hrefPath = rawHref;
@@ -49,8 +51,9 @@ export const OptimizedLink = forwardRef<HTMLAnchorElement, OptimizedLinkProps>(f
  }, [rawHref]);
 
  const isBlockedPath = normalizedHref ? isPrefetchBlocked(normalizedHref) : true;
- const canPrefetchQueries = Boolean(normalizedHref) && !isBlockedPath && prefetchQueries;
- const canPrefetchRouteOnIntent = Boolean(rawHref) && !isBlockedPath && (prefetch ?? true);
+ const isSameRoute = Boolean(normalizedHref) && normalizedHref === normalizedCurrentPath;
+ const canPrefetchQueries = Boolean(normalizedHref) && !isBlockedPath && !isSameRoute && prefetchQueries;
+ const canPrefetchRouteOnIntent = Boolean(rawHref) && !isBlockedPath && !isSameRoute && (prefetch ?? true);
  const routeTaskKey = normalizedHref ? `route:${locale}:${normalizedHref}` : '';
  const queryTaskKey = normalizedHref ? `query:${locale}:${normalizedHref}` : '';
 

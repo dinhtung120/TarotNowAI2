@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactNode } from 'react';
+import { usePathname } from '@/i18n/routing';
 import { usePresenceConnection } from '@/shared/application/hooks/usePresenceConnection';
 
 interface PresenceProviderProps {
@@ -8,7 +9,9 @@ interface PresenceProviderProps {
 }
 
 export default function PresenceProvider({ children }: PresenceProviderProps) {
- usePresenceConnection();
+ const pathname = usePathname();
+ const enableRealtime = pathname !== '/';
+ usePresenceConnection({ enabled: enableRealtime });
 
  return <>{children}</>;
 }

@@ -8,12 +8,16 @@ import NotificationDropdownPanel from '@/shared/components/common/notification-d
 import { useNotificationDropdownState } from '@/shared/components/common/notification-dropdown/useNotificationDropdownState';
 import { cn } from '@/lib/utils';
 
-export default function NotificationDropdown() {
+interface NotificationDropdownProps {
+  enabled?: boolean;
+}
+
+export default function NotificationDropdown({ enabled = true }: NotificationDropdownProps) {
   const t = useTranslations('Notifications');
   const tCommon = useTranslations('Common');
   const locale = useLocale();
   const navigation = useOptimizedNavigation();
-  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotificationDropdown();
+  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotificationDropdown({ enabled });
   const { bellButtonRef, close, dropdownRef, getTitle, handleMarkAllRead, isMarkingAll, isOpen, toggleOpen } = useNotificationDropdownState({ locale, markAllAsRead });
 
   return (
