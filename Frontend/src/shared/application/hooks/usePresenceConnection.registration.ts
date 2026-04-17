@@ -3,6 +3,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import { useWalletStore } from '@/store/walletStore';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { shouldSkipRealtimeGachaInvalidation } from '@/shared/infrastructure/gacha/gachaRealtimeDedup';
+import { shouldSkipRealtimeInventoryInvalidation } from '@/shared/infrastructure/inventory/inventoryRealtimeDedup';
 import {
   invalidateUserStateQueries,
   type UserStateInvalidationDomain,
@@ -27,6 +28,59 @@ const DOMAIN_INVALIDATION_COOLDOWN_MS: Record<UserStateInvalidationDomain, numbe
   gacha: 1_000,
   gamification: 1_000,
 };
+
+interface WalletBalanceChangedPayload {
+ currency?: string;
+ deltaAmount?: number | string;
+}
+
+function toNumber(value: number | string | undefined): number | null {
+ if (typeof value === 'number' && Number.isFinite(value)) {
+  return value;
+ }
+
+ if (typeof value === 'string') {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+ }
+
+ return null;
+}
+
+function applyWalletDelta(payload?: WalletBalanceChangedPayload): boolean {
+ const deltaAmount = toNumber(payload?.deltaAmount);
+ if (deltaAmount === null || deltaAmount === 0) {
+  return false;
+ }
+
+ const normalizedCurrency = payload?.currency?.trim().toLowerCase();
+ if (!normalizedCurrency) {
+  return false;
+ }
+
+ const store = useWalletStore.getState();
+ if (!store.balance) {
+  return false;
+ }
+
+ if (normalizedCurrency === 'gold') {
+  store.setBalance({
+   ...store.balance,
+   goldBalance: Math.max(0, store.balance.goldBalance + deltaAmount),
+  });
+  return true;
+ }
+
+ if (normalizedCurrency === 'diamond') {
+  store.setBalance({
+   ...store.balance,
+   diamondBalance: Math.max(0, store.balance.diamondBalance + deltaAmount),
+  });
+  return true;
+ }
+
+ return false;
+}
 
 export function registerPresenceConnectionHandlers(hubConnection: HubConnection, queryClient: QueryClient) {
   let inboxInvalidateTimeout: NodeJS.Timeout | null = null;
@@ -120,10 +174,12 @@ export function registerPresenceConnectionHandlers(hubConnection: HubConnection,
     queueInvalidation(['notifications']);
   });
 
-  hubConnection.on('wallet.balance_changed', () => {
+  hubConnection.on('wallet.balance_changed', (payload?: WalletBalanceChangedPayload) => {
     logger.info('[PresenceRealtimeSync]', 'wallet.balance_changed received. Queue wallet sync...');
     queueInvalidation(['wallet']);
-    scheduleWalletRefresh();
+    if (!applyWalletDelta(payload)) {
+      scheduleWalletRefresh();
+    }
   });
 
   hubConnection.on('conversation.updated', () => {
@@ -155,6 +211,10 @@ export function registerPresenceConnectionHandlers(hubConnection: HubConnection,
     itemCode?: string;
     enhancementType?: string;
   }) => {
+    if (shouldSkipRealtimeInventoryInvalidation()) {
+      return;
+    }
+
     const domains: UserStateInvalidationDomain[] = ['inventory'];
     if (payload?.enhancementType) {
       domains.push('collection');

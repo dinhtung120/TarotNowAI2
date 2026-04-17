@@ -11,6 +11,7 @@ interface PullPayload {
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+ const routeStartAt = performance.now();
  const tokenOrResponse = await requireServerAccessToken();
  if (tokenOrResponse instanceof NextResponse) {
   return tokenOrResponse;
@@ -32,6 +33,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  const count = Number.isFinite(payload.count) ? payload.count : 1;
  const normalizedCount = Math.max(1, Math.min(Math.floor(count), 10));
 
+ const upstreamStartAt = performance.now();
  const result = await serverHttpRequest<PullGachaResult>('/gacha/pull', {
   method: 'POST',
   token: tokenOrResponse,
@@ -45,10 +47,18 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   },
   fallbackErrorMessage: 'Failed to pull gacha.',
  });
+ const upstreamDurationMs = Math.round(performance.now() - upstreamStartAt);
+ const totalDurationMs = Math.round(performance.now() - routeStartAt);
 
  if (!result.ok) {
-  return buildProblemResponse(result.status, result.error);
+  const response = buildProblemResponse(result.status, result.error);
+  response.headers.set('x-gacha-upstream-duration-ms', String(upstreamDurationMs));
+  response.headers.set('x-gacha-total-duration-ms', String(totalDurationMs));
+  return response;
  }
 
- return NextResponse.json(result.data, { status: 200 });
+ const response = NextResponse.json(result.data, { status: 200 });
+ response.headers.set('x-gacha-upstream-duration-ms', String(upstreamDurationMs));
+ response.headers.set('x-gacha-total-duration-ms', String(totalDurationMs));
+ return response;
 }

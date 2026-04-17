@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { parseApiError } from '@/shared/infrastructure/error/parseApiError';
 import { useWalletStore } from '@/store/walletStore';
+import { markLocalInventoryCacheSynced } from '@/shared/infrastructure/inventory/inventoryRealtimeDedup';
 import {
  INVENTORY_API_ROUTE,
  INVENTORY_IDEMPOTENCY_HEADER,
@@ -391,11 +392,13 @@ export function useUseItem() {
     || createIdempotencyKey();
 
    pendingIntentKeysRef.current.set(intentKey, currentIdempotencyKey);
+   markLocalInventoryCacheSynced();
    return sendUseItemRequest(payload, currentIdempotencyKey);
   },
   onSuccess: (result, variables, context) => {
    const intentKey = context?.intentKey ?? normalizeIntentKey(variables);
    pendingIntentKeysRef.current.delete(intentKey);
+   markLocalInventoryCacheSynced();
    patchReadingSetupSnapshot(queryClient, result);
    patchCollectionCache(queryClient, result);
 

@@ -1,4 +1,4 @@
-const LOCAL_GACHA_SYNC_SUPPRESSION_MS = 1_500;
+const LOCAL_GACHA_SYNC_SUPPRESSION_MS = 12_000;
 
 let lastLocalGachaSyncAt = 0;
 

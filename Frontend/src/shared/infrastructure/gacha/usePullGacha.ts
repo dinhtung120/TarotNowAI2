@@ -95,6 +95,7 @@ export function usePullGacha() {
  return useMutation({
   mutationFn: (payload: PullGachaPayload) => {
    const activeIdempotencyKey = payload.idempotencyKey || createIdempotencyKey();
+   markLocalGachaCacheSynced();
    return sendPullRequest(payload, activeIdempotencyKey);
   },
   onSuccess: (result, variables) => {
