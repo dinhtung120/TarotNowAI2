@@ -103,42 +103,42 @@ export function useReadingSetupPage() {
     id: 'spread_3',
     name: t('spread_3_name'),
     desc: t('spread_3_desc'),
-    cost: freeDrawQuotas.spread3 > 0
+    cost: selectedCurrency === 'gold' && freeDrawQuotas.spread3 > 0
      ? t('cost_free_ticket', { count: freeDrawQuotas.spread3, spread: 3 })
      : selectedCurrency === 'diamond'
       ? t('cost_diamond', { amount: 5 })
       : t('cost_gold', { amount: 50 }),
     exp: selectedCurrency === 'diamond' ? 2 : 1,
-    freeDrawCount: freeDrawQuotas.spread3,
-    usesFreeDraw: freeDrawQuotas.spread3 > 0,
+    freeDrawCount: selectedCurrency === 'gold' ? freeDrawQuotas.spread3 : 0,
+    usesFreeDraw: selectedCurrency === 'gold' && freeDrawQuotas.spread3 > 0,
     icon: 'flame',
    },
    {
     id: 'spread_5',
     name: t('spread_5_name'),
     desc: t('spread_5_desc'),
-    cost: freeDrawQuotas.spread5 > 0
+    cost: selectedCurrency === 'gold' && freeDrawQuotas.spread5 > 0
      ? t('cost_free_ticket', { count: freeDrawQuotas.spread5, spread: 5 })
      : selectedCurrency === 'diamond'
       ? t('cost_diamond', { amount: 10 })
       : t('cost_gold', { amount: 100 }),
     exp: selectedCurrency === 'diamond' ? 2 : 1,
-    freeDrawCount: freeDrawQuotas.spread5,
-    usesFreeDraw: freeDrawQuotas.spread5 > 0,
+    freeDrawCount: selectedCurrency === 'gold' ? freeDrawQuotas.spread5 : 0,
+    usesFreeDraw: selectedCurrency === 'gold' && freeDrawQuotas.spread5 > 0,
     icon: 'shield',
    },
    {
     id: 'spread_10',
     name: t('spread_10_name'),
     desc: t('spread_10_desc'),
-    cost: freeDrawQuotas.spread10 > 0
+    cost: selectedCurrency === 'gold' && freeDrawQuotas.spread10 > 0
      ? t('cost_free_ticket', { count: freeDrawQuotas.spread10, spread: 10 })
      : selectedCurrency === 'gold'
       ? t('cost_gold', { amount: 500 })
       : t('cost_diamond', { amount: 50 }),
     exp: selectedCurrency === 'diamond' ? 2 : 1,
-    freeDrawCount: freeDrawQuotas.spread10,
-    usesFreeDraw: freeDrawQuotas.spread10 > 0,
+    freeDrawCount: selectedCurrency === 'gold' ? freeDrawQuotas.spread10 : 0,
+    usesFreeDraw: selectedCurrency === 'gold' && freeDrawQuotas.spread10 > 0,
     icon: 'moon',
    },
   ],
