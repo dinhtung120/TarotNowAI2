@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { usePathname } from '@/i18n/routing';
-import { getUnreadConversationCount } from '@/features/chat/application/actions';
+import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { useAuthStore } from '@/store/authStore';
 
@@ -66,11 +66,17 @@ export function useChatUnreadNotifications(options: UseChatUnreadNotificationsOp
   queryKey: userStateQueryKeys.chat.unreadBadge(),
   enabled: isAuthenticated && enabled,
   queryFn: async () => {
-   const result = await getUnreadConversationCount();
-   if (result.success && result.data) {
-    return result.data.count;
-   }
-   return 0;
+   const response = await fetchJsonOrThrow<{ count: number }>(
+    '/api/chat/unread-count',
+    {
+     method: 'GET',
+     credentials: 'include',
+     cache: 'no-store',
+    },
+    'Failed to get unread chat count.',
+    8_000,
+   );
+   return response.count ?? 0;
   },
   staleTime: 15_000,
   refetchOnWindowFocus: true,

@@ -23,7 +23,11 @@ interface ServerHttpRequestOptions extends Omit<RequestInit, 'body' | 'headers'>
   json?: unknown;
   formData?: FormData;
   fallbackErrorMessage?: string;
+  timeoutMs?: number;
 }
+
+const DEFAULT_SERVER_TIMEOUT_MS = 8_000;
+const MIN_SERVER_TIMEOUT_MS = 1_000;
 
 function buildHeaders(
   token?: string,
@@ -63,12 +67,43 @@ async function parseResponseBody<T>(response: Response): Promise<T> {
   return (await response.text()) as T;
 }
 
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutHandle);
+  }
+}
+
+function resolveTimeout(timeoutMs: number | undefined): number {
+  if (!timeoutMs || !Number.isFinite(timeoutMs)) {
+    return DEFAULT_SERVER_TIMEOUT_MS;
+  }
+
+  return Math.max(MIN_SERVER_TIMEOUT_MS, Math.floor(timeoutMs));
+}
+
+function isAbortError(error: unknown): boolean {
+  if (error instanceof DOMException) {
+    return error.name === 'AbortError';
+  }
+
+  if (error instanceof Error) {
+    return error.name === 'AbortError';
+  }
+
+  return false;
+}
+
 export async function serverHttpRequest<T>(
   path: string,
   options: ServerHttpRequestOptions = {}
 ): Promise<ServerHttpResult<T>> {
-  const { token, headers: rawHeaders, json, formData, fallbackErrorMessage, ...rest } = options;
+  const { token, headers: rawHeaders, json, formData, fallbackErrorMessage, timeoutMs, ...rest } = options;
   const resolvedCache = rest.cache ?? (hasNextRevalidate(rest.next) ? undefined : 'no-store');
+  const resolvedTimeoutMs = resolveTimeout(timeoutMs);
   
   let body: BodyInit | undefined;
   if (formData !== undefined) {
@@ -77,12 +112,35 @@ export async function serverHttpRequest<T>(
     body = JSON.stringify(json);
   }
 
-  const response = await fetch(internalApiUrl(path), {
-    ...rest,
-    ...(resolvedCache ? { cache: resolvedCache } : {}),
-    headers: buildHeaders(token, rawHeaders, json !== undefined),
-    body,
-  });
+  let response: Response;
+  try {
+    response = await fetchWithTimeout(
+      internalApiUrl(path),
+      {
+        ...rest,
+        ...(resolvedCache ? { cache: resolvedCache } : {}),
+        headers: buildHeaders(token, rawHeaders, json !== undefined),
+        body,
+      },
+      resolvedTimeoutMs,
+    );
+  } catch (error) {
+    if (isAbortError(error)) {
+      return {
+        ok: false,
+        status: 504,
+        headers: new Headers(),
+        error: fallbackErrorMessage ?? 'Upstream request timed out.',
+      };
+    }
+
+    return {
+      ok: false,
+      status: 503,
+      headers: new Headers(),
+      error: fallbackErrorMessage ?? 'Upstream request failed.',
+    };
+  }
 
   if (!response.ok) {
     const error = await parseApiError(response, fallbackErrorMessage);

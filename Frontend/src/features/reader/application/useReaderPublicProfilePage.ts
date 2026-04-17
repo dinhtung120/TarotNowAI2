@@ -3,8 +3,9 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { getReaderProfile, type ReaderProfile } from '@/features/reader/application/actions';
+import type { ReaderProfile } from '@/features/reader/application/actions';
 import { createConversation } from '@/features/chat/public';
+import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
 import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 
@@ -17,11 +18,17 @@ export function useReaderPublicProfilePage(t: TranslateFn) {
 
  const { data: profile, isLoading, isFetching } = useQuery<ReaderProfile | null>({
   queryKey: userStateQueryKeys.reader.profile(userId),
-  queryFn: async () => {
-   const result = await getReaderProfile(userId);
-   return result.success ? result.data ?? null : null;
-  },
- enabled: Boolean(userId),
+  queryFn: () => fetchJsonOrThrow<ReaderProfile>(
+   `/api/readers/${encodeURIComponent(userId)}`,
+   {
+    method: 'GET',
+    credentials: 'include',
+    cache: 'no-store',
+   },
+   'Failed to load reader profile.',
+   8_000,
+  ),
+  enabled: Boolean(userId),
  });
 
  const startChatMutation = useMutation({

@@ -2,8 +2,8 @@
 
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { parseApiError } from '@/shared/infrastructure/error/parseApiError';
 import { GACHA_API_ROUTES, gachaQueryKeys } from '@/shared/infrastructure/gacha/gachaConstants';
+import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
 import type { GachaHistoryPage, GachaPool, GachaPoolOdds } from '@/shared/infrastructure/gacha/gachaTypes';
 
 interface UseGachaArgs {
@@ -12,26 +12,31 @@ interface UseGachaArgs {
 }
 
 async function fetchPools(): Promise<GachaPool[]> {
-  const response = await fetch(GACHA_API_ROUTES.pools, { method: 'GET', credentials: 'include', cache: 'no-store' });
-  if (!response.ok) throw new Error(await parseApiError(response, 'Failed to load gacha pools.'));
-  return (await response.json()) as GachaPool[];
+  return fetchJsonOrThrow<GachaPool[]>(
+    GACHA_API_ROUTES.pools,
+    { method: 'GET', credentials: 'include', cache: 'no-store' },
+    'Failed to load gacha pools.',
+    8_000,
+  );
 }
 
 async function fetchPoolOdds(poolCode: string): Promise<GachaPoolOdds> {
-  const response = await fetch(GACHA_API_ROUTES.poolOdds(poolCode), { method: 'GET', credentials: 'include', cache: 'no-store' });
-  if (!response.ok) throw new Error(await parseApiError(response, 'Failed to load gacha odds.'));
-  return (await response.json()) as GachaPoolOdds;
+  return fetchJsonOrThrow<GachaPoolOdds>(
+    GACHA_API_ROUTES.poolOdds(poolCode),
+    { method: 'GET', credentials: 'include', cache: 'no-store' },
+    'Failed to load gacha odds.',
+    8_000,
+  );
 }
 
 async function fetchHistoryPreview(pageSize: number): Promise<GachaHistoryPage> {
   const query = new URLSearchParams({ page: '1', pageSize: String(pageSize) });
-  const response = await fetch(`${GACHA_API_ROUTES.history}?${query.toString()}`, {
-    method: 'GET',
-    credentials: 'include',
-    cache: 'no-store',
-  });
-  if (!response.ok) throw new Error(await parseApiError(response, 'Failed to load gacha history.'));
-  return (await response.json()) as GachaHistoryPage;
+  return fetchJsonOrThrow<GachaHistoryPage>(
+    `${GACHA_API_ROUTES.history}?${query.toString()}`,
+    { method: 'GET', credentials: 'include', cache: 'no-store' },
+    'Failed to load gacha history.',
+    8_000,
+  );
 }
 
 export function useGacha({ selectedPoolCode, historyPreviewSize = 6 }: UseGachaArgs = {}) {

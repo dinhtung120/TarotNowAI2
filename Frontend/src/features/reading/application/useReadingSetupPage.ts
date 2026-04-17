@@ -6,11 +6,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
-import { initReadingSession } from '@/features/reading/application/actions';
+import type { InitReadingResponse } from '@/features/reading/application/actions/types';
 import {
- getReadingSetupSnapshotAction,
  type ReadingSetupSnapshotDto,
 } from '@/shared/application/actions/reading-setup-snapshot';
+import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
 import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 import { useWalletStore } from '@/store/walletStore';
 import { setSessionStorageItem } from '@/shared/infrastructure/storage/browserStorage';
@@ -38,20 +38,25 @@ const CARDS_TO_DRAW_MAP: Record<string, number> = {
  spread_10: 10,
 };
 
+const READING_SETUP_TIMEOUT_MS = 8_000;
+const READING_INIT_TIMEOUT_MS = 12_000;
+
 export function useReadingSetupPage() {
  const navigation = useOptimizedNavigation();
  const t = useTranslations('ReadingSetup');
  const fetchBalance = useWalletStore((state) => state.fetchBalance);
  const readingSetupSnapshotQuery = useQuery({
   queryKey: userStateQueryKeys.reading.setupSnapshot(),
-  queryFn: async (): Promise<ReadingSetupSnapshotDto> => {
-   const result = await getReadingSetupSnapshotAction();
-   if (!result.success || !result.data) {
-    throw new Error(result.error || 'Failed to load reading setup snapshot');
-   }
-
-   return result.data;
-  },
+  queryFn: () => fetchJsonOrThrow<ReadingSetupSnapshotDto>(
+   '/api/reading/setup-snapshot',
+   {
+    method: 'GET',
+    credentials: 'include',
+    cache: 'no-store',
+   },
+   'Failed to load reading setup snapshot',
+   READING_SETUP_TIMEOUT_MS,
+  ),
   staleTime: 10_000,
  });
  const freeDrawQuotas = readingSetupSnapshotQuery.data?.freeDrawQuotas ?? {
@@ -143,14 +148,27 @@ export function useReadingSetupPage() {
   setIsInitializing(true);
   setInitError('');
 
-  const response = await initReadingSession({
-   spreadType: selectedSpread,
-   question: data.question,
-   currency: selectedCurrency,
-  });
-
- if (!response.success || !response.data) {
-   setInitError(response.error || t('error_init_failed'));
+  let response: InitReadingResponse;
+  try {
+   response = await fetchJsonOrThrow<InitReadingResponse>(
+    '/api/reading/init',
+    {
+     method: 'POST',
+     credentials: 'include',
+     headers: {
+      'Content-Type': 'application/json',
+     },
+     body: JSON.stringify({
+      spreadType: selectedSpread,
+      question: data.question,
+      currency: selectedCurrency,
+     }),
+    },
+    t('error_init_failed'),
+    READING_INIT_TIMEOUT_MS,
+   );
+  } catch (error) {
+   setInitError(error instanceof Error ? error.message : t('error_init_failed'));
    setIsInitializing(false);
    return;
   }
@@ -159,11 +177,11 @@ export function useReadingSetupPage() {
   const cardsToDraw = CARDS_TO_DRAW_MAP[selectedSpread] || 1;
 
   if (data.question) {
-   setSessionStorageItem(`question_${response.data.sessionId}`, data.question);
+   setSessionStorageItem(`question_${response.sessionId}`, data.question);
   }
 
-  setSessionStorageItem(`cardsToDraw_${response.data.sessionId}`, cardsToDraw.toString());
-  navigation.push(`/reading/session/${response.data.sessionId}`);
+  setSessionStorageItem(`cardsToDraw_${response.sessionId}`, cardsToDraw.toString());
+  navigation.push(`/reading/session/${response.sessionId}`);
  };
 
  return {

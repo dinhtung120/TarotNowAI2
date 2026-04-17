@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getLedger } from '@/features/wallet/application/actions';
 import type { WalletPaginatedList, WalletTransaction } from '@/features/wallet/domain/types';
+import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { useWalletStore } from '@/store/walletStore';
 import { useLocale, useTranslations } from 'next-intl';
+
+const WALLET_BALANCE_SYNC_QUERY_KEY = ['wallet', 'balance-sync'] as const;
 
 export function useWalletOverviewPage() {
  const t = useTranslations('Wallet');
@@ -17,7 +19,7 @@ export function useWalletOverviewPage() {
  const [page, setPage] = useState(1);
 
  useQuery({
-  queryKey: userStateQueryKeys.wallet.balance(),
+  queryKey: WALLET_BALANCE_SYNC_QUERY_KEY,
   queryFn: async () => {
    await fetchBalance();
    return true;
@@ -28,10 +30,16 @@ export function useWalletOverviewPage() {
   WalletPaginatedList<WalletTransaction> | null
  >({
   queryKey: userStateQueryKeys.wallet.ledger(page),
-  queryFn: async () => {
-   const result = await getLedger(page, 10);
-   return result.success && result.data ? result.data : null;
-  },
+  queryFn: async () => fetchJsonOrThrow<WalletPaginatedList<WalletTransaction>>(
+   `/api/wallet/ledger?page=${page}&limit=10`,
+   {
+    method: 'GET',
+    credentials: 'include',
+    cache: 'no-store',
+   },
+   'Failed to load wallet ledger.',
+   8_000,
+  ),
  });
 
  const formatType = (typeStr: string) => typeStr.replace(/([A-Z])/g, ' $1').trim();

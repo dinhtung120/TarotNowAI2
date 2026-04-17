@@ -1,8 +1,8 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { parseApiError } from '@/shared/infrastructure/error/parseApiError';
 import { GACHA_API_ROUTES, gachaQueryKeys } from '@/shared/infrastructure/gacha/gachaConstants';
+import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
 import type { GachaHistoryPage } from '@/shared/infrastructure/gacha/gachaTypes';
 
 interface UseGachaHistoryArgs {
@@ -12,13 +12,16 @@ interface UseGachaHistoryArgs {
 
 async function fetchHistory(page: number, pageSize: number): Promise<GachaHistoryPage> {
   const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
-  const response = await fetch(`${GACHA_API_ROUTES.history}?${query.toString()}`, {
-    method: 'GET',
-    credentials: 'include',
-    cache: 'no-store',
-  });
-  if (!response.ok) throw new Error(await parseApiError(response, 'Failed to load gacha history.'));
-  return (await response.json()) as GachaHistoryPage;
+  return fetchJsonOrThrow<GachaHistoryPage>(
+    `${GACHA_API_ROUTES.history}?${query.toString()}`,
+    {
+      method: 'GET',
+      credentials: 'include',
+      cache: 'no-store',
+    },
+    'Failed to load gacha history.',
+    8_000,
+  );
 }
 
 export function useGachaHistory({ page, pageSize }: UseGachaHistoryArgs) {
@@ -31,4 +34,3 @@ export function useGachaHistory({ page, pageSize }: UseGachaHistoryArgs) {
     staleTime: 10_000,
   });
 }
-

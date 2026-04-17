@@ -2,8 +2,8 @@
 
 import { useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { parseApiError } from '@/shared/infrastructure/error/parseApiError';
 import { useWalletStore } from '@/store/walletStore';
+import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
 import { markLocalInventoryCacheSynced } from '@/shared/infrastructure/inventory/inventoryRealtimeDedup';
 import {
  INVENTORY_API_ROUTE,
@@ -22,8 +22,6 @@ import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQuery
 import type { ActionResult } from '@/shared/domain/actionResult';
 import type { UserCollectionDto } from '@/features/collection/application/actions';
 import type { ReadingSetupSnapshotDto } from '@/shared/application/actions/reading-setup-snapshot';
-
-const CACHE_SYNC_DELAY_MS = 0;
 
 function createIdempotencyKey(): string {
  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -328,27 +326,26 @@ async function sendUseItemRequest(
   payload: UseInventoryItemPayload,
   idempotencyKey: string,
 ): Promise<UseInventoryItemResponse> {
-  const response = await fetch(INVENTORY_API_ROUTE, {
+  const rawData = await fetchJsonOrThrow<unknown>(
+   INVENTORY_API_ROUTE,
+   {
     method: 'POST',
     credentials: 'include',
     headers: {
-      'Content-Type': 'application/json',
-      [INVENTORY_IDEMPOTENCY_HEADER]: idempotencyKey,
+     'Content-Type': 'application/json',
+     [INVENTORY_IDEMPOTENCY_HEADER]: idempotencyKey,
     },
     body: JSON.stringify({
-      itemCode: payload.itemCode,
-      quantity: payload.quantity,
-      targetCardId: payload.targetCardId,
-      idempotencyKey,
+     itemCode: payload.itemCode,
+     quantity: payload.quantity,
+     targetCardId: payload.targetCardId,
+     idempotencyKey,
     }),
-  });
+   },
+   'Failed to use item.',
+   10_000,
+  );
 
-  if (!response.ok) {
-    const message = await parseApiError(response, 'Failed to use item.');
-    throw new Error(message);
-  }
-
-  const rawData = await response.json();
   return normalizeUseItemResponse(rawData);
 }
 
@@ -403,12 +400,15 @@ export function useUseItem() {
    patchCollectionCache(queryClient, result);
 
    const domains = resolveInvalidationDomains(result);
-   window.setTimeout(() => {
-    void invalidateUserStateQueries(queryClient, domains);
-    if (domains.includes('wallet')) {
-     void useWalletStore.getState().fetchBalance();
-    }
-   }, CACHE_SYNC_DELAY_MS);
+   const nonInventoryDomains = domains.filter((domain) => domain !== 'inventory');
+   void queryClient.invalidateQueries({ queryKey: inventoryQueryKeys.mine(), refetchType: 'none' });
+   if (nonInventoryDomains.length > 0) {
+    void invalidateUserStateQueries(queryClient, nonInventoryDomains);
+   }
+
+   if (domains.includes('wallet')) {
+    void useWalletStore.getState().fetchBalance();
+   }
   },
   onError: (_, variables, context) => {
    const intentKey = context?.intentKey ?? normalizeIntentKey(variables);

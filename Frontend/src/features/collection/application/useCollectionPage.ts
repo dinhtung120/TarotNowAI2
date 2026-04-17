@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getUserCollection, type UserCollectionDto } from '@/features/collection/application/actions';
+import type { UserCollectionDto } from '@/features/collection/application/actions';
+import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { TAROT_CARD_COUNT, TAROT_DECK } from '@/shared/domain/tarotData';
 
@@ -20,18 +21,27 @@ export function useCollectionPage() {
   const [sortBy, setSortBy] = useState<CollectionSortOrder>('id'); 
   const [selectedCardId, setSelectedCardId] = useState<number | null>(null);
 
- const { data, isLoading, isFetching } = useQuery({
+ const { data, error: queryError, isLoading, isFetching } = useQuery({
   queryKey: userStateQueryKeys.collection.mine(),
-  queryFn: getUserCollection,
+  queryFn: () => fetchJsonOrThrow<UserCollectionDto[]>(
+   '/api/collection',
+   {
+    method: 'GET',
+    credentials: 'include',
+    cache: 'no-store',
+   },
+   'Failed to load collection.',
+   8_000,
+  ),
  });
 
  const collection = useMemo<UserCollectionDto[]>(
-  () => (data?.success && data.data ? data.data : []),
+  () => data ?? [],
   [data]
  );
  const error = useMemo(
-  () => (data && !data.success ? data.error || 'Failed to load collection' : ''),
-  [data]
+  () => (queryError instanceof Error ? queryError.message : ''),
+  [queryError]
  );
  const loading = isLoading || isFetching;
 

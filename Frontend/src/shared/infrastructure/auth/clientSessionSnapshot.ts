@@ -2,6 +2,7 @@
 
 import type { UserProfile } from '@/features/auth/domain/types';
 import { isTerminalAuthError } from '@/shared/domain/authErrors';
+import { fetchWithTimeout } from '@/shared/infrastructure/http/clientFetch';
 
 interface SessionPayload {
  authenticated?: boolean;
@@ -26,6 +27,7 @@ interface GetClientSessionSnapshotOptions {
 }
 
 const DEFAULT_SNAPSHOT_TTL_MS = 2_000;
+const SESSION_FETCH_TIMEOUT_MS = 6_000;
 
 let sessionCache: SessionCacheState | null = null;
 let sessionInFlight: Promise<ClientSessionSnapshot> | null = null;
@@ -40,11 +42,15 @@ function resolveTerminalFailure(response: Response, payload: SessionPayload | nu
 
 async function fetchClientSessionSnapshot(): Promise<ClientSessionSnapshot> {
  try {
-  const response = await fetch('/api/auth/session', {
-   method: 'GET',
-   credentials: 'include',
-   cache: 'no-store',
-  });
+  const response = await fetchWithTimeout(
+   '/api/auth/session',
+   {
+    method: 'GET',
+    credentials: 'include',
+    cache: 'no-store',
+   },
+   SESSION_FETCH_TIMEOUT_MS,
+  );
 
   let payload: SessionPayload | null = null;
   try {

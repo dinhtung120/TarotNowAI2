@@ -14,6 +14,7 @@ import NavbarRightSection from '@/shared/components/common/navbar/NavbarRightSec
 import { getAvatarMenuItems, NAV_LINKS, shouldHideNavbar } from '@/shared/components/common/navbar/config';
 import { useNavbarLogout } from '@/shared/components/common/navbar/useNavbarLogout';
 import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
+import { isHomePath, normalizePathname } from '@/shared/infrastructure/navigation/normalizePathname';
 import { cn } from '@/lib/utils';
 
 interface NavbarProps {
@@ -27,10 +28,11 @@ export default function Navbar({ onLogout }: NavbarProps = {}) {
   const tCommon = useTranslations('Common');
   const { user, isAuthenticated } = useAuthStore(useShallow((state) => ({ user: state.user, isAuthenticated: state.isAuthenticated })));
   const { avatarMenuOpen, mobileMenuOpen, avatarMenuRef, closeAvatarMenu, toggleAvatarMenu, toggleMobileMenu } = useNavbarMenuState(pathname);
-  const isHomePath = pathname === '/';
-  const isChatRoomPath = /\/chat\/[^/]+/.test(pathname);
-  const enableGlobalChatSync = !isHomePath && !isChatRoomPath;
-  const enableNotificationSync = !isHomePath;
+  const normalizedPath = normalizePathname(pathname);
+  const onHomePath = isHomePath(pathname);
+  const isChatRoomPath = /\/chat\/[^/]+/.test(normalizedPath);
+  const enableGlobalChatSync = !onHomePath && !isChatRoomPath;
+  const enableNotificationSync = !onHomePath;
 
   useChatUnreadNotifications({ enabled: enableGlobalChatSync });
   useChatRealtimeSync({ enabled: enableGlobalChatSync });

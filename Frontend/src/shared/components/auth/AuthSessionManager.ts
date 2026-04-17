@@ -9,6 +9,7 @@ import { isTerminalAuthError } from '@/shared/domain/authErrors';
 import type { UserProfile } from '@/features/auth/domain/types';
 import { getClientSessionSnapshot, invalidateClientSessionSnapshot } from '@/shared/infrastructure/auth/clientSessionSnapshot';
 import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
+import { normalizePathname } from '@/shared/infrastructure/navigation/normalizePathname';
 const REFRESH_INTERVAL_MS = 40 * 60 * 1000;
 const MIN_REFRESH_THROTTLE_MS = 20 * 60 * 1000;
 let globalLastRefreshAt = 0;
@@ -52,7 +53,8 @@ export default function AuthSessionManager({
             if (showToast) {
                 toast.error(tApiRef.current('unauthorized'));
             }
-            if (!pathnameRef.current.includes('/login')) {
+            const normalizedPath = normalizePathname(pathnameRef.current);
+            if (!normalizedPath.includes('/login')) {
                 navigation.push('/login');
             }
         },

@@ -3,21 +3,30 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
- getCardsCatalogAction,
  type CardCatalogItemDto,
 } from '@/features/reading/application/actions/cards-catalog';
+import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 
 export function useCardsCatalog() {
- const { data, isLoading, isFetching } = useQuery({
+ const { data, error: queryError, isLoading, isFetching } = useQuery({
   queryKey: userStateQueryKeys.reading.cardsCatalog(),
-  queryFn: getCardsCatalogAction,
+  queryFn: () => fetchJsonOrThrow<CardCatalogItemDto[]>(
+   '/api/reading/cards-catalog',
+   {
+    method: 'GET',
+    credentials: 'include',
+    cache: 'no-store',
+   },
+   'Failed to load cards catalog.',
+   8_000,
+  ),
   staleTime: Infinity,
   gcTime: 1000 * 60 * 60 * 12,
  });
 
  const cards = useMemo<CardCatalogItemDto[]>(
-  () => (data?.success && data.data ? data.data : []),
+  () => data ?? [],
   [data]
  );
 
@@ -26,8 +35,8 @@ export function useCardsCatalog() {
  }, [cards]);
 
  const error = useMemo(
-  () => (data && !data.success ? data.error || 'Failed to load cards catalog' : ''),
-  [data]
+  () => (queryError instanceof Error ? queryError.message : ''),
+  [queryError]
  );
 
  const loading = isLoading || isFetching;

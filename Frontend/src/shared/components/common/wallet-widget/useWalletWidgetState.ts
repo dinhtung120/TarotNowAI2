@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { usePathname } from "@/i18n/routing";
 import { useAuthStore } from "@/store/authStore";
 import { useWalletStore } from "@/store/walletStore";
+import { isHomePath } from "@/shared/infrastructure/navigation/normalizePathname";
 
 export function useWalletWidgetState() {
    const t = useTranslations("Wallet");
@@ -17,7 +18,7 @@ export function useWalletWidgetState() {
    const isLoading = useWalletStore((state) => state.isLoading);
 
    const lastFetchedUserId = useRef<string | null>(null);
-   const shouldFetchOnCurrentRoute = pathname !== "/";
+   const shouldFetchOnCurrentRoute = !isHomePath(pathname);
 
    useEffect(() => {
       const store = useWalletStore.getState();

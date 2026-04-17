@@ -103,12 +103,12 @@ const buildContentSecurityPolicy = (): string => {
   .filter((value) => value.length > 0)
   .join(' ');
 
- const cspParts = [
+  const cspParts = [
   "default-src 'self'",
   "base-uri 'self'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  "img-src 'self' data: blob: https:",
+  "img-src 'self' data: blob: https: http:",
   "font-src 'self' data: https:",
   "media-src 'self' blob: data:",
   "style-src 'self' 'unsafe-inline'",

@@ -1,18 +1,27 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { parseApiError } from '@/shared/infrastructure/error/parseApiError';
 import {
   GACHA_API_ROUTES,
   GACHA_IDEMPOTENCY_HEADER,
   gachaQueryKeys,
 } from '@/shared/infrastructure/gacha/gachaConstants';
 import { markLocalGachaCacheSynced } from '@/shared/infrastructure/gacha/gachaRealtimeDedup';
-import type { GachaPool, PullGachaPayload, PullGachaResult } from '@/shared/infrastructure/gacha/gachaTypes';
+import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
+import type {
+ GachaHistoryEntry,
+ GachaHistoryPage,
+ GachaHistoryReward,
+ GachaPool,
+ PullGachaPayload,
+ PullGachaResult,
+ PullGachaReward,
+} from '@/shared/infrastructure/gacha/gachaTypes';
 import { inventoryQueryKeys } from '@/shared/infrastructure/inventory/inventoryConstants';
 import type { InventoryResponse } from '@/shared/infrastructure/inventory/inventoryTypes';
 
 const GACHA_HISTORY_QUERY_KEY = [...gachaQueryKeys.all, 'history'] as const;
+const GACHA_PULL_TIMEOUT_MS = 12_000;
 
 function updateInventoryCacheFromGachaResult(
  queryClient: ReturnType<typeof useQueryClient>,
@@ -70,23 +79,79 @@ function createIdempotencyKey(): string {
  return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
-async function sendPullRequest(payload: PullGachaPayload, idempotencyKey: string): Promise<PullGachaResult> {
- const response = await fetch(GACHA_API_ROUTES.pull, {
-  method: 'POST',
-  credentials: 'include',
-  headers: {
-   'Content-Type': 'application/json',
-   [GACHA_IDEMPOTENCY_HEADER]: idempotencyKey,
-  },
-  body: JSON.stringify({
-   poolCode: payload.poolCode,
-   count: payload.count,
-   idempotencyKey,
-  }),
- });
+function toHistoryReward(reward: PullGachaReward, wasPityTriggered: boolean): GachaHistoryReward {
+ return {
+  kind: reward.kind,
+  rarity: reward.rarity,
+  currency: reward.currency ?? null,
+  amount: reward.amount ?? null,
+  itemCode: reward.itemCode ?? null,
+  quantityGranted: reward.quantityGranted,
+  iconUrl: reward.iconUrl ?? null,
+  nameVi: reward.nameVi,
+  nameEn: reward.nameEn,
+  nameZh: reward.nameZh,
+  isHardPityReward: wasPityTriggered,
+ };
+}
 
- if (!response.ok) throw new Error(await parseApiError(response, 'Failed to pull gacha.'));
- return (await response.json()) as PullGachaResult;
+function createOptimisticHistoryEntry(result: PullGachaResult, pullCount: number): GachaHistoryEntry {
+ const pullOperationId = `local_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+ const pityAfter = Math.max(0, result.currentPityCount);
+ const pityBefore = Math.max(0, pityAfter - Math.max(1, pullCount));
+ const rewards = result.rewards.map((reward) => toHistoryReward(reward, result.wasPityTriggered));
+
+ return {
+  pullOperationId,
+  poolCode: result.poolCode,
+  pullCount: Math.max(1, pullCount),
+  pityBefore,
+  pityAfter,
+  wasPityReset: result.wasPityTriggered,
+  createdAtUtc: new Date().toISOString(),
+  rewards,
+ };
+}
+
+function patchHistoryCaches(
+ queryClient: ReturnType<typeof useQueryClient>,
+ result: PullGachaResult,
+ pullCount: number,
+): void {
+ const optimisticEntry = createOptimisticHistoryEntry(result, pullCount);
+ queryClient.setQueriesData<GachaHistoryPage>({ queryKey: GACHA_HISTORY_QUERY_KEY }, (currentPage) => {
+  if (!currentPage || currentPage.page !== 1) {
+   return currentPage;
+  }
+
+  const nextItems = [optimisticEntry, ...currentPage.items];
+  return {
+   ...currentPage,
+   totalCount: currentPage.totalCount + 1,
+   items: nextItems.slice(0, currentPage.pageSize),
+  };
+ });
+}
+
+async function sendPullRequest(payload: PullGachaPayload, idempotencyKey: string): Promise<PullGachaResult> {
+ return fetchJsonOrThrow<PullGachaResult>(
+  GACHA_API_ROUTES.pull,
+  {
+   method: 'POST',
+   credentials: 'include',
+   headers: {
+    'Content-Type': 'application/json',
+    [GACHA_IDEMPOTENCY_HEADER]: idempotencyKey,
+   },
+   body: JSON.stringify({
+    poolCode: payload.poolCode,
+    count: payload.count,
+    idempotencyKey,
+   }),
+  },
+  'Failed to pull gacha.',
+  GACHA_PULL_TIMEOUT_MS,
+ );
 }
 
 export function usePullGacha() {
@@ -110,11 +175,12 @@ export function usePullGacha() {
       ? { ...pool, userCurrentPity: result.currentPityCount }
      : pool
     ));
-   });
+  });
 
+   patchHistoryCaches(queryClient, result, variables.count);
    updateInventoryCacheFromGachaResult(queryClient, result);
    markLocalGachaCacheSynced();
-   void queryClient.invalidateQueries({ queryKey: GACHA_HISTORY_QUERY_KEY });
+   void queryClient.invalidateQueries({ queryKey: GACHA_HISTORY_QUERY_KEY, refetchType: 'none' });
   },
  });
 }
