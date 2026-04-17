@@ -14,9 +14,14 @@ import {
  isLegalPath,
  normalizePathname,
 } from '@/shared/infrastructure/navigation/normalizePathname';
+import { PROTECTED_PREFIXES } from '@/shared/config/authRoutes';
 const REFRESH_INTERVAL_MS = 40 * 60 * 1000;
 const MIN_REFRESH_THROTTLE_MS = 20 * 60 * 1000;
 let globalLastRefreshAt = 0;
+
+function isProtectedPath(pathname: string): boolean {
+ return PROTECTED_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
 
 interface AuthSessionManagerProps {
     logout: () => Promise<unknown> | unknown;
@@ -98,7 +103,7 @@ export default function AuthSessionManager({
 
             const currentPath = normalizePathname(pathnameRef.current);
             const shouldSkipBootstrap = !useAuthStore.getState().isAuthenticated
-             && (isAuthlessPath(currentPath) || isLegalPath(currentPath));
+             && (!isProtectedPath(currentPath) || isAuthlessPath(currentPath) || isLegalPath(currentPath));
             if (shouldSkipBootstrap) {
                 return;
             }

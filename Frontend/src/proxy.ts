@@ -7,6 +7,8 @@ import { getPublicApiOrigin } from '@/shared/infrastructure/http/apiUrl';
 
 const intlMiddleware = createMiddleware(routing);
 const localeSet = new Set(routing.locales);
+const ROLE_CLAIM_KEY = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
+const DEFAULT_REDIRECT_AFTER_ROLE_GUARD = '/profile';
 
 const resolveLocale = (pathname: string): string => {
  const maybeLocale = pathname.split('/')[1];
@@ -48,6 +50,71 @@ const isDocumentRequest = (request: NextRequest): boolean => {
   || request.nextUrl.searchParams.has('_rsc')
   || accept.includes('text/x-component');
  return accept.includes('text/html') && !hasRscMarker;
+};
+
+const decodeJwtPayload = (token: string | undefined): Record<string, unknown> | null => {
+ if (!token) {
+  return null;
+ }
+
+ const parts = token.split('.');
+ if (parts.length < 2 || !parts[1]) {
+  return null;
+ }
+
+ const normalized = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+ const padded = `${normalized}${'='.repeat((4 - (normalized.length % 4)) % 4)}`;
+ try {
+  return JSON.parse(atob(padded)) as Record<string, unknown>;
+ } catch {
+  return null;
+ }
+};
+
+const resolveRoleFromAccessToken = (token: string | undefined): string => {
+ const payload = decodeJwtPayload(token);
+ if (!payload) {
+  return '';
+ }
+
+ const directRole = payload.role;
+ if (typeof directRole === 'string' && directRole.trim().length > 0) {
+  return directRole.trim();
+ }
+
+ const claimRole = payload[ROLE_CLAIM_KEY];
+ if (typeof claimRole === 'string' && claimRole.trim().length > 0) {
+  return claimRole.trim();
+ }
+
+ if (Array.isArray(claimRole)) {
+  const firstRole = claimRole.find((value) => typeof value === 'string' && value.trim().length > 0);
+  return typeof firstRole === 'string' ? firstRole : '';
+ }
+
+ return '';
+};
+
+const resolveRoleGuardRedirect = (
+ request: NextRequest,
+ locale: string,
+ pathWithoutLocale: string,
+): NextResponse | null => {
+ const accessToken = request.cookies.get(AUTH_COOKIE.ACCESS)?.value;
+ const role = resolveRoleFromAccessToken(accessToken).toLowerCase();
+ if (!role) {
+  return null;
+ }
+
+ if (matchesPrefix(pathWithoutLocale, '/profile/reader') && role !== 'tarot_reader') {
+  return NextResponse.redirect(new URL(`/${locale}${DEFAULT_REDIRECT_AFTER_ROLE_GUARD}`, request.url));
+ }
+
+ if (matchesPrefix(pathWithoutLocale, '/admin') && role !== 'admin') {
+  return NextResponse.redirect(new URL(`/${locale}${DEFAULT_REDIRECT_AFTER_ROLE_GUARD}`, request.url));
+ }
+
+ return null;
 };
 
 const shouldBypassMiddleware = (request: NextRequest): boolean => {
@@ -145,6 +212,13 @@ export default function proxy(request: NextRequest) {
  const isProtectedRoute = PROTECTED_PREFIXES.some((prefix) => matchesPrefix(pathWithoutLocale, prefix));
  const accessToken = isProtectedRoute ? request.cookies.get(AUTH_COOKIE.ACCESS)?.value : undefined;
  const refreshToken = isProtectedRoute ? request.cookies.get(AUTH_COOKIE.REFRESH)?.value : undefined;
+
+ if (isDocumentRequest(request)) {
+  const roleGuardRedirect = resolveRoleGuardRedirect(request, locale, pathWithoutLocale);
+  if (roleGuardRedirect) {
+   return withResponseCsp(roleGuardRedirect);
+  }
+ }
 
  if (isProtectedRoute && !accessToken && !refreshToken) {
   const loginUrl = new URL(`/${locale}/login`, request.url);
