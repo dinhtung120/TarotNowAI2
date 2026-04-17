@@ -4,6 +4,7 @@
     "title": "Gacha",
     "subtitle": "Test your luck and win exclusive rewards!",
     "pull1x": "Pull 1x",
+    "pull10x": "Pull 10x",
     "pulling": "Pulling...",
     "pityProgress": "Pity Progress",
     "pityRuleHint": "Pity increases when no Epic+ item drops, and resets on Epic/Legendary/Mythic item drops.",

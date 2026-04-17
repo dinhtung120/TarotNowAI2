@@ -4,6 +4,7 @@
     "title": "抽奖",
     "subtitle": "测试你的运气，赢取专属奖励！",
     "pull1x": "抽取 1次",
+    "pull10x": "抽取 10次",
     "pulling": "抽取中...",
     "pityProgress": "保底进度",
     "pityRuleHint": "未掉落 Epic 及以上道具时保底会累积；掉落 Epic/Legendary/Mythic 后保底会重置。",

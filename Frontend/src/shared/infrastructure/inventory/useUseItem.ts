@@ -17,6 +17,12 @@ import type {
  UseInventoryItemResponse,
 } from '@/shared/infrastructure/inventory/inventoryTypes';
 import { invalidateUserStateQueries } from '@/shared/infrastructure/query/invalidateUserStateQueries';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import type { ActionResult } from '@/shared/domain/actionResult';
+import type { UserCollectionDto } from '@/features/collection/application/actions';
+import type { ReadingSetupSnapshotDto } from '@/shared/application/actions/reading-setup-snapshot';
+
+const CACHE_SYNC_DELAY_MS = 0;
 
 function createIdempotencyKey(): string {
  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -87,6 +93,150 @@ interface UseItemResponsePayload {
 interface UseItemMutationContext {
  intentKey: string;
  previousInventory: InventoryResponse | undefined;
+}
+
+function isCardEnhancementSummary(summary: UseInventoryItemEffectSummary): boolean {
+ return Boolean(summary.cardId) && Boolean(summary.after);
+}
+
+function isFreeDrawSummary(summary: UseInventoryItemEffectSummary): boolean {
+ return summary.effectType.trim().toLowerCase() === 'free_draw'
+  && typeof summary.afterValue === 'number';
+}
+
+function resolveSpreadCardCountFromItemCode(itemCode: string): 3 | 5 | 10 | null {
+ const normalizedCode = itemCode.trim().toLowerCase();
+ if (normalizedCode.includes('free_draw_ticket_3')) {
+  return 3;
+ }
+
+ if (normalizedCode.includes('free_draw_ticket_5')) {
+  return 5;
+ }
+
+ if (normalizedCode.includes('free_draw_ticket_10')) {
+  return 10;
+ }
+
+ return null;
+}
+
+function patchReadingSetupSnapshot(
+ queryClient: ReturnType<typeof useQueryClient>,
+ result: UseInventoryItemResponse,
+): void {
+ const spreadCardCount = resolveSpreadCardCountFromItemCode(result.itemCode);
+ if (!spreadCardCount) {
+  return;
+ }
+
+ const freeDrawSummary = result.effectSummaries.find((summary) => isFreeDrawSummary(summary));
+ const afterValue = freeDrawSummary?.afterValue;
+ if (typeof afterValue !== 'number') {
+  return;
+ }
+
+ queryClient.setQueryData<ReadingSetupSnapshotDto | undefined>(
+  userStateQueryKeys.reading.setupSnapshot(),
+  (currentSnapshot) => {
+   if (!currentSnapshot) {
+    return currentSnapshot;
+   }
+
+   if (spreadCardCount === 3) {
+    return {
+      ...currentSnapshot,
+      freeDrawQuotas: {
+       ...currentSnapshot.freeDrawQuotas,
+       spread3: afterValue,
+      },
+     };
+   }
+
+   if (spreadCardCount === 5) {
+    return {
+      ...currentSnapshot,
+      freeDrawQuotas: {
+       ...currentSnapshot.freeDrawQuotas,
+       spread5: afterValue,
+      },
+     };
+   }
+
+   return {
+     ...currentSnapshot,
+     freeDrawQuotas: {
+      ...currentSnapshot.freeDrawQuotas,
+      spread10: afterValue,
+     },
+    };
+  },
+ );
+}
+
+function patchCollectionCache(
+ queryClient: ReturnType<typeof useQueryClient>,
+ result: UseInventoryItemResponse,
+): void {
+ const enhancementSummary = result.effectSummaries.find((summary) => isCardEnhancementSummary(summary));
+ if (!enhancementSummary?.cardId || !enhancementSummary.after) {
+  return;
+ }
+
+ queryClient.setQueryData<ActionResult<UserCollectionDto[]> | undefined>(
+  userStateQueryKeys.collection.mine(),
+  (currentCollectionResult) => {
+   if (!currentCollectionResult?.success || !currentCollectionResult.data?.length) {
+    return currentCollectionResult;
+   }
+
+   const updatedCollection = currentCollectionResult.data.map((card) => {
+    if (card.cardId !== enhancementSummary.cardId) {
+     return card;
+    }
+
+    const nextStats = enhancementSummary.after as UseInventoryCardStatSnapshot;
+    return {
+     ...card,
+     level: nextStats.level,
+     currentExp: nextStats.currentExp,
+     expToNextLevel: nextStats.expToNextLevel,
+     baseAtk: nextStats.baseAtk,
+     baseDef: nextStats.baseDef,
+     bonusAtkPercent: nextStats.bonusAtkPercent,
+     bonusDefPercent: nextStats.bonusDefPercent,
+     totalAtk: nextStats.totalAtk,
+     totalDef: nextStats.totalDef,
+     atk: nextStats.totalAtk,
+     def: nextStats.totalDef,
+    };
+   });
+
+   return {
+    ...currentCollectionResult,
+    data: updatedCollection,
+   };
+  },
+ );
+}
+
+function resolveInvalidationDomains(result: UseInventoryItemResponse) {
+ const domains: Array<Parameters<typeof invalidateUserStateQueries>[1][number]> = ['inventory'];
+ const normalizedItemCode = result.itemCode.trim().toLowerCase();
+
+ if (result.effectSummaries.some((summary) => isCardEnhancementSummary(summary))) {
+  domains.push('collection');
+ }
+
+ if (result.effectSummaries.some((summary) => isFreeDrawSummary(summary))) {
+  domains.push('readingSetup');
+ }
+
+ if (normalizedItemCode === 'rare_title_lucky_star') {
+  domains.push('profile', 'gamification', 'wallet');
+ }
+
+ return domains;
 }
 
 function toNumber(value: unknown): number {
@@ -243,19 +393,19 @@ export function useUseItem() {
    pendingIntentKeysRef.current.set(intentKey, currentIdempotencyKey);
    return sendUseItemRequest(payload, currentIdempotencyKey);
   },
-  onSuccess: async (_, variables, context) => {
+  onSuccess: (result, variables, context) => {
    const intentKey = context?.intentKey ?? normalizeIntentKey(variables);
    pendingIntentKeysRef.current.delete(intentKey);
-   await invalidateUserStateQueries(queryClient, [
-    'inventory',
-    'collection',
-    'readingSetup',
-    'wallet',
-    'gamification',
-    'profile',
-    'notifications',
-   ]);
-   void useWalletStore.getState().fetchBalance();
+   patchReadingSetupSnapshot(queryClient, result);
+   patchCollectionCache(queryClient, result);
+
+   const domains = resolveInvalidationDomains(result);
+   window.setTimeout(() => {
+    void invalidateUserStateQueries(queryClient, domains);
+    if (domains.includes('wallet')) {
+     void useWalletStore.getState().fetchBalance();
+    }
+   }, CACHE_SYNC_DELAY_MS);
   },
   onError: (_, variables, context) => {
    const intentKey = context?.intentKey ?? normalizeIntentKey(variables);

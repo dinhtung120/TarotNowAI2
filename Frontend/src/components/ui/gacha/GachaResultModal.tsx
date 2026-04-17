@@ -15,6 +15,9 @@ import type { PullGachaResult } from '@/shared/infrastructure/gacha/gachaTypes';
 import { useRareDropLottie } from '@/shared/infrastructure/gacha/useRareDropLottie';
 import { GachaResultItem } from '@/components/ui/gacha/GachaResultItem';
 
+const REVEAL_DELAY_MS = 650;
+const REDUCED_MOTION_REVEAL_DELAY_MS = 150;
+
 /**
  * Định nghĩa các nhãn ngôn ngữ.
  */
@@ -59,9 +62,13 @@ function GachaResultModalComponent({ isOpen, locale, result, labels, onClose }: 
       return;
     }
 
+    const revealDelay = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ? REDUCED_MOTION_REVEAL_DELAY_MS
+      : REVEAL_DELAY_MS;
+
     const timer = setTimeout(() => {
       setStage('SHOW_RESULT');
-    }, 1500);
+    }, revealDelay);
 
     return () => clearTimeout(timer);
   }, [isOpen, stage]);

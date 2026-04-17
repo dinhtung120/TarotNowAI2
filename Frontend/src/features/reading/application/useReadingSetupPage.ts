@@ -149,13 +149,13 @@ export function useReadingSetupPage() {
    currency: selectedCurrency,
   });
 
-  if (!response.success || !response.data) {
+ if (!response.success || !response.data) {
    setInitError(response.error || t('error_init_failed'));
    setIsInitializing(false);
    return;
   }
 
-  await fetchBalance();
+  void fetchBalance();
   const cardsToDraw = CARDS_TO_DRAW_MAP[selectedSpread] || 1;
 
   if (data.question) {
