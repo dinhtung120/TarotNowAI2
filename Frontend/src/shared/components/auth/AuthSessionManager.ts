@@ -9,7 +9,11 @@ import { isTerminalAuthError } from '@/shared/domain/authErrors';
 import type { UserProfile } from '@/features/auth/domain/types';
 import { getClientSessionSnapshot, invalidateClientSessionSnapshot } from '@/shared/infrastructure/auth/clientSessionSnapshot';
 import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
-import { normalizePathname } from '@/shared/infrastructure/navigation/normalizePathname';
+import {
+ isAuthlessPath,
+ isLegalPath,
+ normalizePathname,
+} from '@/shared/infrastructure/navigation/normalizePathname';
 const REFRESH_INTERVAL_MS = 40 * 60 * 1000;
 const MIN_REFRESH_THROTTLE_MS = 20 * 60 * 1000;
 let globalLastRefreshAt = 0;
@@ -88,10 +92,26 @@ export default function AuthSessionManager({
     useEffect(() => {
         let cancelled = false;
         const bootstrapSession = async () => {
-            const sessionState = await getClientSessionSnapshot({ maxAgeMs: 2_000 });
+            if (useAuthStore.getState().isAuthenticated) {
+                return;
+            }
+
+            const currentPath = normalizePathname(pathnameRef.current);
+            const shouldSkipBootstrap = !useAuthStore.getState().isAuthenticated
+             && (isAuthlessPath(currentPath) || isLegalPath(currentPath));
+            if (shouldSkipBootstrap) {
+                return;
+            }
+
+            const sessionState = await getClientSessionSnapshot({
+                maxAgeMs: 10_000,
+                mode: 'full',
+            });
             if (cancelled) return;
             if (sessionState.authenticated && sessionState.user) {
                 setSession(sessionState.user);
+                // Tránh focus-trigger refresh ngay sau bootstrap (request thừa lúc first paint).
+                globalLastRefreshAt = Date.now();
                 return;
             }
 
@@ -100,9 +120,12 @@ export default function AuthSessionManager({
             }
         };
 
-        void bootstrapSession();
+        const bootstrapTimerId = window.setTimeout(() => {
+            void bootstrapSession();
+        }, 120);
         return () => {
             cancelled = true;
+            window.clearTimeout(bootstrapTimerId);
         };
     }, [clearAuth, setSession]);
     useEffect(() => {

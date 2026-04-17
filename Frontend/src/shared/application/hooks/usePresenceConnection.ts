@@ -10,6 +10,10 @@ import { ensureRealtimeSession } from '@/shared/infrastructure/realtime/realtime
 import { registerPresenceConnectionHandlers } from './usePresenceConnection.registration';
 
 const reconnectSchedule = [0, 2000, 5000, 10000, 30000];
+const NEGOTIATION_TIMEOUT_MS = 8_000;
+const NEGOTIATION_COOLDOWN_MS = 45_000;
+
+let reconnectBlockedUntil = 0;
 
 function shouldStopConnection(connection: HubConnection | null) {
   return !!connection && (
@@ -17,6 +21,44 @@ function shouldStopConnection(connection: HubConnection | null) {
     || connection.state === HubConnectionState.Reconnecting
     || connection.state === HubConnectionState.Disconnecting
   );
+}
+
+function isUnauthorizedNegotiationError(error: unknown): boolean {
+ if (!error) {
+  return false;
+ }
+
+ const text = typeof error === 'string'
+  ? error
+  : error instanceof Error
+   ? error.message
+   : JSON.stringify(error);
+ return text.includes('401') || /unauthorized/i.test(text);
+}
+
+function createTimeoutError(timeoutMs: number): Error {
+ return new Error(`Presence negotiation timeout after ${timeoutMs}ms.`);
+}
+
+async function startConnectionWithTimeout(
+ connection: HubConnection,
+ timeoutMs: number,
+): Promise<void> {
+ let timeoutId: NodeJS.Timeout | null = null;
+ try {
+  await Promise.race([
+   connection.start(),
+   new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+     reject(createTimeoutError(timeoutMs));
+    }, timeoutMs);
+   }),
+  ]);
+ } finally {
+  if (timeoutId) {
+   clearTimeout(timeoutId);
+  }
+ }
 }
 
 interface UsePresenceConnectionOptions {
@@ -37,6 +79,10 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
       }
 
       connectionRef.current = null;
+      return;
+    }
+
+    if (Date.now() < reconnectBlockedUntil) {
       return;
     }
 
@@ -66,7 +112,7 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
       disposeRegistration = registration.dispose;
 
       try {
-        await hubConnection.start();
+        await startConnectionWithTimeout(hubConnection, NEGOTIATION_TIMEOUT_MS);
         if (cancelled) {
           if (hubConnection.state !== HubConnectionState.Disconnected) {
             await hubConnection.stop().catch(() => undefined);
@@ -78,6 +124,13 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
         connectionRef.current = hubConnection;
         heartbeatInterval = registration.startHeartbeat();
       } catch (error) {
+        if (isUnauthorizedNegotiationError(error) || error instanceof Error) {
+          reconnectBlockedUntil = Date.now() + NEGOTIATION_COOLDOWN_MS;
+        }
+
+        if (hubConnection && hubConnection.state !== HubConnectionState.Disconnected) {
+          await hubConnection.stop().catch(() => undefined);
+        }
         logger.error('[PresenceRealtimeSync] connect failed', error);
       }
     };

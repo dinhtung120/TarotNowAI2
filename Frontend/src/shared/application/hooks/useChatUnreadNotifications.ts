@@ -79,9 +79,10 @@ export function useChatUnreadNotifications(options: UseChatUnreadNotificationsOp
    return response.count ?? 0;
   },
   staleTime: 15_000,
-  refetchOnWindowFocus: true,
+  // Realtime event sẽ invalidate query key, tránh refetch mỗi lần focus/mount.
+  refetchOnWindowFocus: false,
   refetchOnReconnect: true,
-  refetchOnMount: true,
+  refetchOnMount: false,
  });
 
  const unreadCount = data ?? 0;

@@ -1,4 +1,4 @@
-const LOCAL_INVENTORY_SYNC_SUPPRESSION_MS = 8_000;
+const LOCAL_INVENTORY_SYNC_SUPPRESSION_MS = 30_000;
 
 let lastLocalInventorySyncAt = 0;
 

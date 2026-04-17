@@ -33,12 +33,13 @@ export default function InventoryPageClient() {
   
   /* Quản lý trạng thái vật phẩm đang được chọn để sử dụng */
   const [selectedItemSnapshot, setSelectedItemSnapshot] = useState<InventoryItem | null>(null);
+  const shouldLoadOwnedCards = selectedItemSnapshot !== null;
   
   /* Lấy dữ liệu kho đồ tổng quát */
   const inventoryQuery = useInventory();
   
   /* Lấy dữ liệu các lá bài người dùng đang sở hữu */
-  const ownedCards = useOwnedInventoryCards(locale);
+  const ownedCards = useOwnedInventoryCards(locale, { enabled: shouldLoadOwnedCards });
   
   /* Hook thực thi hành động sử dụng vật phẩm */
   const useItemMutation = useUseItem();

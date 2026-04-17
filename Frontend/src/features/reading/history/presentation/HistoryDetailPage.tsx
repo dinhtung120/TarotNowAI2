@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useHistoryDetailPage } from "@/features/reading/history/application/useHistoryDetailPage";
-import { useAuthGuard } from "@/shared/application/hooks/useAuthGuard";
 import { useOptimizedNavigation } from "@/shared/infrastructure/navigation/useOptimizedNavigation";
 import { useAuthStore } from "@/store/authStore";
 import { HistoryDetailAiSummary, HistoryDetailCardsGrid, HistoryDetailHeader, HistoryDetailStates } from "./components/detail";
@@ -22,7 +21,6 @@ export default function HistoryDetailPage() {
  const handleUnauthorized = useCallback(() => {
   navigation.push("/login");
  }, [navigation]);
- useAuthGuard(isAuthenticated);
 
  const state = useHistoryDetailPage({
   isAuthenticated,

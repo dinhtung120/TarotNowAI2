@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { UserProfile } from '@/features/auth/domain/types';
 import { AUTH_ERROR, isTerminalAuthError } from '@/shared/domain/authErrors';
 import { AUTH_COOKIE, AUTH_HEADER } from '@/shared/infrastructure/auth/authConstants';
-import { getServerSessionSnapshot } from '@/shared/infrastructure/auth/serverAuth';
+import {
+ getServerAccessTokenOrRefresh,
+ getServerSessionSnapshot,
+} from '@/shared/infrastructure/auth/serverAuth';
 import { unauthorizedResponse } from '@/app/api/auth/_shared';
 
 interface SessionResponsePayload {
@@ -11,6 +14,13 @@ interface SessionResponsePayload {
  user?: UserProfile;
  error?: string;
 }
+
+const SESSION_MODE = {
+ FULL: 'full',
+ LITE: 'lite',
+} as const;
+
+type SessionMode = (typeof SESSION_MODE)[keyof typeof SESSION_MODE];
 
 function getSetCookieHeaders(headers: Headers): string[] {
  if (typeof headers.getSetCookie === 'function') {
@@ -59,54 +69,48 @@ function resolveTransientStatus(status: number): number {
  return status >= 500 ? 503 : status;
 }
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
- const accessToken = request.cookies.get(AUTH_COOKIE.ACCESS)?.value;
- const refreshToken = request.cookies.get(AUTH_COOKIE.REFRESH)?.value;
- if (!accessToken && !refreshToken) {
-  return unauthorizedResponse();
+function resolveSessionMode(request: NextRequest): SessionMode {
+ const rawMode = request.nextUrl.searchParams.get('mode');
+ if (rawMode === SESSION_MODE.LITE) {
+  return SESSION_MODE.LITE;
  }
 
- let session: Awaited<ReturnType<typeof getServerSessionSnapshot>>;
- try {
-  session = await getServerSessionSnapshot({ allowRefresh: false });
- } catch {
-  return NextResponse.json(
-   {
-    success: false,
-    authenticated: false,
-    error: AUTH_ERROR.TEMPORARY_FAILURE,
-   } satisfies SessionResponsePayload,
-   { status: 503 },
-  );
- }
- if (session.authenticated && session.user) {
-  return NextResponse.json(
-   {
-    success: true,
-    authenticated: true,
-    user: session.user,
-   } satisfies SessionResponsePayload,
-   { status: 200 },
-  );
- }
+ return SESSION_MODE.FULL;
+}
 
- if (!refreshToken) {
-  return unauthorizedResponse(true);
- }
+function createSuccessResponse(user?: UserProfile): NextResponse {
+ return NextResponse.json(
+  {
+   success: true,
+   authenticated: true,
+   user,
+  } satisfies SessionResponsePayload,
+  { status: 200 },
+ );
+}
 
+function createTemporaryFailureResponse(): NextResponse {
+ return NextResponse.json(
+  {
+   success: false,
+   authenticated: false,
+   error: AUTH_ERROR.TEMPORARY_FAILURE,
+  } satisfies SessionResponsePayload,
+  { status: 503 },
+ );
+}
+
+async function refreshSessionAndBuildResponse(
+ request: NextRequest,
+ mode: SessionMode,
+): Promise<NextResponse> {
  let refreshResponse: Response;
  try {
   refreshResponse = await refreshSessionViaInternalRoute(request);
  } catch {
-  return NextResponse.json(
-   {
-    success: false,
-    authenticated: false,
-    error: AUTH_ERROR.TEMPORARY_FAILURE,
-   } satisfies SessionResponsePayload,
-   { status: 503 },
-  );
+  return createTemporaryFailureResponse();
  }
+
  if (!refreshResponse.ok) {
   const error = await resolveAuthError(refreshResponse);
   if (refreshResponse.status === 401
@@ -132,18 +136,57 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   return unauthorizedResponse(true);
  }
 
- if (!refreshPayload.success || !refreshPayload.user) {
+ if (!refreshPayload.success) {
   return unauthorizedResponse(true);
  }
 
- const response = NextResponse.json(
-  {
-   success: true,
-   authenticated: true,
-   user: refreshPayload.user,
-  } satisfies SessionResponsePayload,
-  { status: 200 },
- );
+ if (mode === SESSION_MODE.FULL && !refreshPayload.user) {
+  return unauthorizedResponse(true);
+ }
+
+ const response = createSuccessResponse(mode === SESSION_MODE.FULL ? refreshPayload.user : undefined);
  appendSetCookies(refreshResponse.headers, response);
  return response;
+}
+
+export async function GET(request: NextRequest): Promise<NextResponse> {
+ const mode = resolveSessionMode(request);
+ const accessToken = request.cookies.get(AUTH_COOKIE.ACCESS)?.value;
+ const refreshToken = request.cookies.get(AUTH_COOKIE.REFRESH)?.value;
+ if (!accessToken && !refreshToken) {
+  return unauthorizedResponse();
+ }
+
+ if (mode === SESSION_MODE.LITE) {
+  try {
+   const validAccessToken = await getServerAccessTokenOrRefresh({ allowRefresh: false });
+   if (validAccessToken) {
+    return createSuccessResponse();
+   }
+  } catch {
+   return createTemporaryFailureResponse();
+  }
+
+  if (!refreshToken) {
+   return unauthorizedResponse(true);
+  }
+
+  return refreshSessionAndBuildResponse(request, mode);
+ }
+
+ let session: Awaited<ReturnType<typeof getServerSessionSnapshot>>;
+ try {
+  session = await getServerSessionSnapshot({ allowRefresh: false });
+ } catch {
+  return createTemporaryFailureResponse();
+ }
+ if (session.authenticated && session.user) {
+  return createSuccessResponse(session.user);
+ }
+
+ if (!refreshToken) {
+  return unauthorizedResponse(true);
+ }
+
+ return refreshSessionAndBuildResponse(request, mode);
 }

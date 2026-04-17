@@ -23,10 +23,19 @@ interface UseOwnedInventoryCardsResult {
  error?: string;
 }
 
-export function useOwnedInventoryCards(locale: string): UseOwnedInventoryCardsResult {
- const cardsCatalog = useCardsCatalog();
+interface UseOwnedInventoryCardsOptions {
+ enabled?: boolean;
+}
+
+export function useOwnedInventoryCards(
+ locale: string,
+ options: UseOwnedInventoryCardsOptions = {},
+): UseOwnedInventoryCardsResult {
+ const enabled = options.enabled ?? true;
+ const cardsCatalog = useCardsCatalog({ enabled });
  const collectionQuery = useQuery({
   queryKey: userStateQueryKeys.collection.mine(),
+  enabled,
   queryFn: () => fetchJsonOrThrow<UserCollectionDto[]>(
    '/api/collection',
    {
@@ -78,7 +87,7 @@ export function useOwnedInventoryCards(locale: string): UseOwnedInventoryCardsRe
 
  return {
   cardOptions,
-  isLoading: cardsCatalog.isLoading || collectionQuery.isLoading || collectionQuery.isFetching,
+  isLoading: enabled && (cardsCatalog.isLoading || collectionQuery.isLoading || collectionQuery.isFetching),
   error: errorMessage,
  };
 }

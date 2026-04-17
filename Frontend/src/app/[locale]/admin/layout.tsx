@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import AdminLayoutShell, {
  type AdminLayoutLabels,
@@ -10,14 +11,27 @@ import { getServerSessionSnapshot } from '@/shared/infrastructure/auth/serverAut
 
 interface AdminLayoutProps {
  children: ReactNode;
+ params: Promise<{ locale: string }>;
 }
 
-export default async function AdminLayout({ children }: AdminLayoutProps) {
+export default async function AdminLayout({ children, params }: AdminLayoutProps) {
+ const { locale } = await params;
  const cookieStore = await cookies();
- const hasAccessToken = Boolean(cookieStore.get(AUTH_COOKIE.ACCESS)?.value);
- const sessionSnapshot = hasAccessToken
-  ? await getServerSessionSnapshot({ allowRefresh: false })
-  : { authenticated: false, user: null };
+ const hasAuthCookie = Boolean(
+  cookieStore.get(AUTH_COOKIE.ACCESS)?.value || cookieStore.get(AUTH_COOKIE.REFRESH)?.value,
+ );
+ if (!hasAuthCookie) {
+  redirect(`/${locale}/login`);
+ }
+
+ const sessionSnapshot = await getServerSessionSnapshot({ allowRefresh: true });
+ if (!sessionSnapshot.authenticated || !sessionSnapshot.user) {
+  redirect(`/${locale}/login`);
+ }
+ if (sessionSnapshot.user.role !== 'admin') {
+  redirect(`/${locale}`);
+ }
+
  const t = await getTranslations('Admin');
 
  const labels: AdminLayoutLabels = {

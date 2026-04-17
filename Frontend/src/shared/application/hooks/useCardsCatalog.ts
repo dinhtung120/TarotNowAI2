@@ -8,9 +8,15 @@ import {
 import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 
-export function useCardsCatalog() {
+interface UseCardsCatalogOptions {
+ enabled?: boolean;
+}
+
+export function useCardsCatalog(options: UseCardsCatalogOptions = {}) {
+ const enabled = options.enabled ?? true;
  const { data, error: queryError, isLoading, isFetching } = useQuery({
   queryKey: userStateQueryKeys.reading.cardsCatalog(),
+  enabled,
   queryFn: () => fetchJsonOrThrow<CardCatalogItemDto[]>(
    '/api/reading/cards-catalog',
    {
@@ -39,7 +45,7 @@ export function useCardsCatalog() {
   [queryError]
  );
 
- const loading = isLoading || isFetching;
+ const loading = enabled && (isLoading || isFetching);
 
  const getCard = (cardId: number) => cardsById.get(cardId);
 

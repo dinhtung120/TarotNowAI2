@@ -4,7 +4,6 @@ import { useCallback } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useHistorySessionsPage } from "@/features/reading/history/application/useHistorySessionsPage";
-import { useAuthGuard } from "@/shared/application/hooks/useAuthGuard";
 import { useOptimizedNavigation } from "@/shared/infrastructure/navigation/useOptimizedNavigation";
 import { useAuthStore } from "@/store/authStore";
 import { HistoryEmptyState, HistoryErrorBanner, HistoryLoadingGrid, HistoryPaginationDock, HistoryPageHeader, HistorySessionsGrid } from "./components";
@@ -19,7 +18,6 @@ export default function HistoryPage() {
  const handleUnauthorized = useCallback(() => {
   navigation.push("/login");
  }, [navigation]);
- useAuthGuard(isAuthenticated);
 
  const state = useHistorySessionsPage({
   isAuthenticated,

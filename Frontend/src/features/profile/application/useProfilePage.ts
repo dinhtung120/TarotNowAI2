@@ -10,7 +10,6 @@ import { getProfileAction, updateProfileAction, type ProfileDto } from '@/featur
 import { uploadProfileAvatar } from '@/features/profile/application/uploadProfileAvatar';
 import { getMyReaderRequest, type MyReaderRequest } from '@/features/reader/public';
 import { useRouter } from '@/i18n/routing';
-import { useAuthGuard } from '@/shared/application/hooks/useAuthGuard';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'react-hot-toast';
@@ -44,8 +43,6 @@ export function useProfilePage() {
   const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
   });
-
-  useAuthGuard(isAuthenticated);
 
   const profileQuery = useQuery<{ profile: ProfileDto | null; error: string }>({
     queryKey: profileQueryKey,

@@ -14,7 +14,10 @@ export function useAuthGuard(isAuthenticated: boolean, redirectTo = '/login'): v
 
   let cancelled = false;
   const verifySession = async () => {
-   const sessionSnapshot = await getClientSessionSnapshot({ maxAgeMs: 2_000 });
+   const sessionSnapshot = await getClientSessionSnapshot({
+    maxAgeMs: 10_000,
+    mode: 'lite',
+   });
    const shouldRedirect = !sessionSnapshot.authenticated;
    if (!cancelled && shouldRedirect) {
     navigation.push(redirectTo);

@@ -1,5 +1,6 @@
 import { Suspense, type ReactNode } from 'react';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import AppNavbar from '@/features/auth/presentation/components/AppNavbar';
 import WalletStoreBridge from '@/features/wallet/presentation/components/WalletStoreBridge';
 import AuthBootstrap from '@/shared/components/auth/AuthBootstrap';
@@ -13,14 +14,24 @@ import { prefetchUserSegmentShell } from '@/shared/server/prefetch/runners';
 
 interface UserSegmentLayoutProps {
  children: ReactNode;
+ params: Promise<{ locale: string }>;
 }
 
-export default async function UserSegmentLayout({ children }: UserSegmentLayoutProps) {
+export default async function UserSegmentLayout({ children, params }: UserSegmentLayoutProps) {
+ const { locale } = await params;
  const cookieStore = await cookies();
- const hasAccessToken = Boolean(cookieStore.get(AUTH_COOKIE.ACCESS)?.value);
- const sessionSnapshot = hasAccessToken
-  ? await getServerSessionSnapshot({ allowRefresh: false })
-  : { authenticated: false, user: null };
+ const hasAuthCookie = Boolean(
+  cookieStore.get(AUTH_COOKIE.ACCESS)?.value || cookieStore.get(AUTH_COOKIE.REFRESH)?.value,
+ );
+ if (!hasAuthCookie) {
+  redirect(`/${locale}/login`);
+ }
+
+ const sessionSnapshot = await getServerSessionSnapshot({ allowRefresh: true });
+ if (!sessionSnapshot.authenticated || !sessionSnapshot.user) {
+  redirect(`/${locale}/login`);
+ }
+
  const state = await dehydrateAppQueries(prefetchUserSegmentShell);
 
  return (

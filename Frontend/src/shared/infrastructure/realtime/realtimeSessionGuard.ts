@@ -7,7 +7,10 @@ import { useAuthStore } from '@/store/authStore';
  * Guard SignalR startup with the latest cookie-backed session state.
  */
 export async function ensureRealtimeSession(): Promise<boolean> {
- const sessionSnapshot = await getClientSessionSnapshot({ maxAgeMs: 2_000 });
+ const sessionSnapshot = await getClientSessionSnapshot({
+  maxAgeMs: 10_000,
+  mode: 'lite',
+ });
  if (sessionSnapshot.terminalFailure) {
   useAuthStore.getState().clearAuth();
  }

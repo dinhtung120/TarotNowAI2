@@ -19,6 +19,7 @@ interface ConversationUpdatedPayload {
 }
 
 const UNAUTHORIZED_COOLDOWN_MS = 60_000;
+const NEGOTIATION_TIMEOUT_MS = 8_000;
 let unauthorizedRetryBlockedUntil = 0;
 
 function isUnauthorizedNegotiationError(error: unknown): boolean {
@@ -32,6 +33,31 @@ function isUnauthorizedNegotiationError(error: unknown): boolean {
    ? error.message
    : JSON.stringify(error);
  return text.includes('401') || /unauthorized/i.test(text);
+}
+
+function createTimeoutError(timeoutMs: number): Error {
+ return new Error(`Chat negotiation timeout after ${timeoutMs}ms.`);
+}
+
+async function startConnectionWithTimeout(
+ connection: HubConnection,
+ timeoutMs: number,
+): Promise<void> {
+ let timeoutId: NodeJS.Timeout | null = null;
+ try {
+  await Promise.race([
+   connection.start(),
+   new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+     reject(createTimeoutError(timeoutMs));
+    }, timeoutMs);
+   }),
+  ]);
+ } finally {
+  if (timeoutId) {
+   clearTimeout(timeoutId);
+  }
+ }
 }
 
 export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
@@ -119,7 +145,7 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
       });
 
       try {
-        await hubConnection.start();
+        await startConnectionWithTimeout(hubConnection, NEGOTIATION_TIMEOUT_MS);
         if (cancelled) {
           if (hubConnection.state !== HubConnectionState.Disconnected) {
             await hubConnection.stop().catch(() => undefined);
@@ -130,6 +156,11 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
       } catch (error) {
         if (isUnauthorizedNegotiationError(error)) {
           unauthorizedRetryBlockedUntil = Date.now() + UNAUTHORIZED_COOLDOWN_MS;
+        } else if (error instanceof Error) {
+          unauthorizedRetryBlockedUntil = Date.now() + Math.floor(UNAUTHORIZED_COOLDOWN_MS / 2);
+        }
+        if (hubConnection && hubConnection.state !== HubConnectionState.Disconnected) {
+          await hubConnection.stop().catch(() => undefined);
         }
         logger.error('[ChatRealtimeSync] connect failed', error);
       }
