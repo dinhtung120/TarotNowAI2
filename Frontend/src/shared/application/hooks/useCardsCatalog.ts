@@ -32,7 +32,7 @@ export function useCardsCatalog(options: UseCardsCatalogOptions = {}) {
  });
 
  const cards = useMemo<CardCatalogItemDto[]>(
-  () => data ?? [],
+  () => (Array.isArray(data) ? data : []),
   [data]
  );
 

@@ -36,7 +36,7 @@ export function useCollectionPage() {
  });
 
  const collection = useMemo<UserCollectionDto[]>(
-  () => data ?? [],
+  () => (Array.isArray(data) ? data : []),
   [data]
  );
  const error = useMemo(

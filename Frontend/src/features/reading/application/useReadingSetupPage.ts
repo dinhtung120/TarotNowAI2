@@ -47,12 +47,13 @@ export function useReadingSetupPage() {
  const fetchBalance = useWalletStore((state) => state.fetchBalance);
  const readingSetupSnapshotQuery = useQuery({
   queryKey: userStateQueryKeys.reading.setupSnapshot(),
-  queryFn: () => fetchJsonOrThrow<ReadingSetupSnapshotDto>(
+  queryFn: ({ signal }) => fetchJsonOrThrow<ReadingSetupSnapshotDto>(
    '/api/reading/setup-snapshot',
    {
     method: 'GET',
     credentials: 'include',
     cache: 'no-store',
+    signal,
    },
    'Failed to load reading setup snapshot',
    READING_SETUP_TIMEOUT_MS,

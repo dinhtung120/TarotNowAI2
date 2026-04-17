@@ -50,7 +50,7 @@ export function useOwnedInventoryCards(
  });
 
  const collection = useMemo(
-  () => collectionQuery.data ?? [],
+  () => (Array.isArray(collectionQuery.data) ? collectionQuery.data : []),
   [collectionQuery.data],
  );
  const collectionMap = useMemo(

@@ -30,6 +30,8 @@ import type { InventoryItem } from '@/shared/infrastructure/inventory/inventoryT
 export default function InventoryPageClient() {
   const locale = useLocale();
   const t = useTranslations('Inventory');
+  const useAgainLabel = t.has('useAgain') ? t('useAgain') : 'Sử dụng tiếp';
+  const useItemTitleLabel = t.has('useItemTitle') ? t('useItemTitle') : 'Sử dụng vật phẩm';
   
   /* Quản lý trạng thái vật phẩm đang được chọn để sử dụng */
   const [selectedItemSnapshot, setSelectedItemSnapshot] = useState<InventoryItem | null>(null);
@@ -112,8 +114,8 @@ export default function InventoryPageClient() {
             rolledValue: t('rolledValue'),
             beforeAfter: t('beforeAfter'),
             done: t('done'),
-            useAgain: t('useAgain') || 'Sử dụng tiếp',
-            title: t('useItemTitle') || 'Sử dụng vật phẩm'
+            useAgain: useAgainLabel,
+            title: useItemTitleLabel,
           }}
           isPending={useItemMutation.isPending}
           onClose={() => setSelectedItemSnapshot(null)}

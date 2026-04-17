@@ -6,7 +6,6 @@ import type { CommunityFeedResponse } from '@/features/community/types';
 import { getUserCollection } from '@/features/collection/application/actions';
 import { getNavbarSnapshotAction } from '@/shared/application/actions/navbar-snapshot';
 import { getReadingSetupSnapshotAction } from '@/shared/application/actions/reading-setup-snapshot';
-import { actionOk } from '@/shared/domain/actionResult';
 import { checkinQueryKeys } from '@/features/checkin/domain/checkinQueryKeys';
 import { listAdminDisputes, listConversations } from '@/features/chat/application/actions';
 import {
@@ -111,8 +110,20 @@ async function gachaPoolsQueryFn() {
 
 export async function prefetchCollectionPage(qc: QueryClient): Promise<void> {
  await Promise.all([
-  qc.prefetchQuery({ queryKey: userStateQueryKeys.collection.mine(), queryFn: getUserCollection }),
-  qc.prefetchQuery({ queryKey: userStateQueryKeys.reading.cardsCatalog(), queryFn: getCardsCatalogAction }),
+  qc.prefetchQuery({
+   queryKey: userStateQueryKeys.collection.mine(),
+   queryFn: async () => {
+    const result = await getUserCollection();
+    return result.success && Array.isArray(result.data) ? result.data : [];
+   },
+  }),
+  qc.prefetchQuery({
+   queryKey: userStateQueryKeys.reading.cardsCatalog(),
+   queryFn: async () => {
+    const result = await getCardsCatalogAction();
+    return result.success && Array.isArray(result.data) ? result.data : [];
+   },
+  }),
  ]);
 }
 
@@ -136,7 +147,10 @@ export async function prefetchReadingSetupPage(qc: QueryClient): Promise<void> {
      throw new Error(result.error || 'reading-setup-snapshot');
     }
     const { cardsCatalog } = result.data;
-    qc.setQueryData(userStateQueryKeys.reading.cardsCatalog(), actionOk(cardsCatalog));
+    qc.setQueryData(
+     userStateQueryKeys.reading.cardsCatalog(),
+     Array.isArray(cardsCatalog) ? cardsCatalog : [],
+    );
     return result.data;
    },
    staleTime: 60_000,

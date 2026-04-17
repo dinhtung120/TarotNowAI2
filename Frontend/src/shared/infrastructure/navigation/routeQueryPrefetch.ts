@@ -5,6 +5,7 @@ import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
 import { inventoryQueryKeys } from '@/shared/infrastructure/inventory/inventoryConstants';
 import { isPrefetchBlocked } from '@/shared/infrastructure/navigation/prefetchPolicy';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { useAuthStore } from '@/store/authStore';
 
 interface RouteQuerySpec {
  queryKey: readonly unknown[];
@@ -58,6 +59,13 @@ export function normalizeNavigationPath(href: string): string {
 }
 
 function buildRouteQuerySpecs(pathname: string): RouteQuerySpec[] {
+ const authState = useAuthStore.getState();
+ const isAuthenticated = authState.isAuthenticated;
+ const normalizedRole = authState.user?.role?.trim().toLowerCase() ?? '';
+ if (!isAuthenticated) {
+  return [];
+ }
+
  if (pathname === '/inventory') {
   return [
    {
@@ -79,6 +87,10 @@ function buildRouteQuerySpecs(pathname: string): RouteQuerySpec[] {
  }
 
  if (pathname === '/reading') {
+  if (normalizedRole === 'admin') {
+   return [];
+  }
+
   return [
    {
     queryKey: userStateQueryKeys.reading.setupSnapshot(),

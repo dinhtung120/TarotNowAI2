@@ -43,6 +43,7 @@ function localizeText(value: { nameVi: string; nameEn: string; nameZh: string },
 export default function GachaPageClient() {
   const locale = useLocale();
   const t = useTranslations('Gacha');
+  const pull10xLabel = t.has('pull10x') ? t('pull10x') : 'Rút 10x';
   
   /* Quản lý Pool người dùng đang chủ động chọn */
   const [selectedPoolCode, setSelectedPoolCode] = useState('');
@@ -129,7 +130,7 @@ export default function GachaPageClient() {
           isPulling={pullMutation.isPending}
           labels={{ 
             pull: t('pull1x'), 
-            pull10x: t('pull10x'),
+            pull10x: pull10xLabel,
             pulling: t('pulling'), 
             pity: t('pityProgress'), 
             pityRuleHint: '' // Không hiển thị dòng chữ mô tả Pity cũ theo yêu cầu người dùng
