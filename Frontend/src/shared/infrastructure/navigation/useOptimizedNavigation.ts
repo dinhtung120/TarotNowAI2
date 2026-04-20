@@ -84,5 +84,9 @@ export function useOptimizedNavigation() {
   }, options?.useViewTransition ?? true);
  }, [prefetch, router]);
 
- return useMemo(() => ({ prefetch, push, replace }), [prefetch, push, replace]);
+ const refresh = useCallback(() => {
+  router.refresh();
+ }, [router]);
+
+ return useMemo(() => ({ prefetch, push, replace, refresh }), [prefetch, push, replace, refresh]);
 }
