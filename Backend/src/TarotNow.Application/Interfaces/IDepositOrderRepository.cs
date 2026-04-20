@@ -50,6 +50,16 @@ public interface IDepositOrderRepository
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Lấy lịch sử nạp theo user có phân trang.
+    /// </summary>
+    Task<(IReadOnlyCollection<DepositOrder> Orders, int TotalCount)> GetPaginatedByUserAsync(
+        Guid userId,
+        int page,
+        int pageSize,
+        string? status,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Tạo lệnh nạp mới.
     /// </summary>
     Task AddAsync(DepositOrder order, CancellationToken cancellationToken = default);

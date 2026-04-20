@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using TarotNow.Api.Contracts;
 using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.Deposit.Commands.CreateDepositOrder;
+using TarotNow.Application.Features.Deposit.Commands.ReconcileMyDepositOrder;
 using TarotNow.Application.Features.Deposit.Queries.GetMyDepositOrder;
+using TarotNow.Application.Features.Deposit.Queries.ListMyDepositOrders;
 using TarotNow.Application.Features.Deposit.Queries.ListDepositPackages;
 
 namespace TarotNow.Api.Controllers;
@@ -58,6 +60,34 @@ public partial class DepositController
     }
 
     /// <summary>
+    /// Lấy lịch sử nạp của user hiện tại.
+    /// </summary>
+    [HttpGet("orders")]
+    [Authorize]
+    public async Task<IActionResult> ListMyOrders(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? status = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return this.UnauthorizedProblem();
+        }
+
+        var query = new ListMyDepositOrdersQuery
+        {
+            UserId = userId,
+            Page = page,
+            PageSize = pageSize,
+            Status = status
+        };
+
+        var response = await _mediator.Send(query, cancellationToken);
+        return Ok(response);
+    }
+
+    /// <summary>
     /// Lấy trạng thái đơn nạp của chính người dùng hiện tại.
     /// </summary>
     [HttpGet("orders/{orderId:guid}")]
@@ -79,6 +109,30 @@ public partial class DepositController
 
         var response = await _mediator.Send(query, cancellationToken);
         return Ok(response);
+    }
+
+    /// <summary>
+    /// Reconcile trạng thái đơn nạp theo dữ liệu PayOS khi webhook bị trễ hoặc miss callback.
+    /// </summary>
+    [HttpPost("orders/{orderId:guid}/reconcile")]
+    [Authorize]
+    public async Task<IActionResult> ReconcileMyOrder(
+        [FromRoute] Guid orderId,
+        CancellationToken cancellationToken)
+    {
+        if (!User.TryGetUserId(out var userId))
+        {
+            return this.UnauthorizedProblem();
+        }
+
+        var command = new ReconcileMyDepositOrderCommand
+        {
+            UserId = userId,
+            OrderId = orderId
+        };
+
+        var handled = await _mediator.Send(command, cancellationToken);
+        return Ok(new { handled });
     }
 
     private string ResolveIdempotencyKey(CreateDepositOrderRequest request)

@@ -48,7 +48,20 @@ if [[ "$schema_ok" != "t" ]]; then
   docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" logs --no-color --tail=200 backend-migrate >&2 || true
   echo "[deploy-db] applied migrations in __ef_migrations_history:" >&2
   docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T postgres sh -lc \
-    "psql -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -c \"SELECT migration_id FROM __ef_migrations_history ORDER BY migration_id\"" >&2 || true
+    "psql -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -c \"SELECT \\\"MigrationId\\\" FROM __ef_migrations_history ORDER BY \\\"MigrationId\\\"\"" >&2 || true
+  exit 1
+fi
+
+echo "[deploy-db] validating deposit payos schema"
+deposit_schema_ok="$(docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T postgres sh -lc "psql -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -tAc \"SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='deposit_orders' AND column_name='payos_order_code')\"")"
+deposit_schema_ok="$(echo "$deposit_schema_ok" | tr -d '[:space:]')"
+if [[ "$deposit_schema_ok" != "t" ]]; then
+  echo "[deploy-db] schema validation failed: column public.deposit_orders.payos_order_code is missing" >&2
+  echo "[deploy-db] backend-migrate logs (last 200 lines):" >&2
+  docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" logs --no-color --tail=200 backend-migrate >&2 || true
+  echo "[deploy-db] applied migrations in __ef_migrations_history:" >&2
+  docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" exec -T postgres sh -lc \
+    "psql -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -c \"SELECT \\\"MigrationId\\\" FROM __ef_migrations_history ORDER BY \\\"MigrationId\\\"\"" >&2 || true
   exit 1
 fi
 

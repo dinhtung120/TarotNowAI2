@@ -74,6 +74,11 @@ public sealed class DepositWebhookReceivedDomainEventHandler
             return Task.FromResult(false);
         }
 
+        if (!order.WalletGrantedAtUtc.HasValue)
+        {
+            return Task.FromResult(false);
+        }
+
         domainEvent.Handled = true;
         return Task.FromResult(true);
     }

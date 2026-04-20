@@ -7,6 +7,9 @@ namespace TarotNow.Infrastructure.Services;
 
 public sealed partial class PayOsGateway
 {
+    private const string PayOsStatusCancelled = "CANCELLED";
+    private const string PayOsStatusExpired = "EXPIRED";
+
     private List<ItemData> BuildPaymentItems(IReadOnlyList<PayOsPaymentItem> requestItems)
     {
         if (requestItems.Count == 0)
@@ -137,5 +140,51 @@ public sealed partial class PayOsGateway
         }
 
         return parsed.ToUniversalTime();
+    }
+
+    private static Transaction? ResolveLatestTransaction(IReadOnlyCollection<Transaction>? transactions)
+    {
+        if (transactions == null || transactions.Count == 0)
+        {
+            return null;
+        }
+
+        Transaction? latest = null;
+        DateTime? latestAtUtc = null;
+
+        foreach (var transaction in transactions)
+        {
+            var transactionAtUtc = ParsePayOsDateTime(transaction.transactionDateTime);
+            if (transactionAtUtc == null)
+            {
+                latest ??= transaction;
+                continue;
+            }
+
+            if (latestAtUtc == null || transactionAtUtc > latestAtUtc)
+            {
+                latest = transaction;
+                latestAtUtc = transactionAtUtc;
+            }
+        }
+
+        return latest;
+    }
+
+    private static string? ResolvePaymentLinkFailureReason(PaymentLinkInformation paymentInfo)
+    {
+        if (string.Equals(paymentInfo.status, PayOsStatusCancelled, StringComparison.OrdinalIgnoreCase))
+        {
+            return string.IsNullOrWhiteSpace(paymentInfo.cancellationReason)
+                ? PayOsStatusCancelled
+                : paymentInfo.cancellationReason;
+        }
+
+        if (string.Equals(paymentInfo.status, PayOsStatusExpired, StringComparison.OrdinalIgnoreCase))
+        {
+            return PayOsStatusExpired;
+        }
+
+        return null;
     }
 }

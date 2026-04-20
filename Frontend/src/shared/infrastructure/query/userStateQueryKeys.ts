@@ -8,6 +8,8 @@ export const userStateQueryKeys = {
   depositPackages: () => [...userStateQueryKeys.wallet.all, 'deposit-packages'] as const,
   depositOrder: (orderId: string | null) =>
    [...userStateQueryKeys.wallet.all, 'deposit-order', orderId ?? 'none'] as const,
+  depositOrderHistory: (page: number, pageSize: number, status: string) =>
+   [...userStateQueryKeys.wallet.all, 'deposit-order-history', page, pageSize, status] as const,
  },
  inventory: {
   all: ['inventory'] as const,

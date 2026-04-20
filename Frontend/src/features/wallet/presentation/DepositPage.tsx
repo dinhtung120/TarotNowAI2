@@ -1,6 +1,7 @@
 'use client';
 
 import { memo } from 'react';
+import { Link } from '@/i18n/routing';
 import { DepositPackagePicker } from '@/features/wallet/presentation/components/deposit/DepositPackagePicker';
 import { DepositPaymentPanel } from '@/features/wallet/presentation/components/deposit/DepositPaymentPanel';
 import { useDepositPageViewModel } from '@/features/wallet/presentation/useDepositPageViewModel';
@@ -15,6 +16,13 @@ const DepositPage = memo(function DepositPage() {
     <p className={cn('tn-text-overline tn-text-secondary')}>{vm.labels.tag}</p>
     <h1 className={cn('mt-2 text-2xl font-black tn-text-primary md:text-4xl')}>{vm.labels.title}</h1>
     <p className={cn('mt-2 max-w-3xl text-sm tn-text-secondary')}>{vm.labels.subtitle}</p>
+    <Link
+      href={{ pathname: '/wallet/deposit/history' }}
+      locale={vm.locale}
+      className={cn('mt-4 inline-flex min-h-11 items-center rounded-xl border tn-border-soft px-3 py-2 text-xs font-black uppercase tracking-wider tn-text-secondary hover:tn-text-primary')}
+    >
+      {vm.labels.historyCta}
+    </Link>
    </div>
 
    <div className={cn('mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_1fr]')}>

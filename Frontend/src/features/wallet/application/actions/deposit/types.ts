@@ -41,3 +41,25 @@ export interface MyDepositOrderResponse {
  processedAt?: string | null;
  expiresAtUtc?: string | null;
 }
+
+export interface MyDepositOrderHistoryItemResponse {
+ orderId: string;
+ status: DepositOrderStatus;
+ packageCode: string;
+ amountVnd: number;
+ baseDiamondAmount: number;
+ totalDiamondAmount: number;
+ bonusGoldAmount: number;
+ transactionId?: string | null;
+ failureReason?: string | null;
+ createdAt: string;
+ processedAt?: string | null;
+}
+
+export interface MyDepositOrderHistoryResponse {
+ items: MyDepositOrderHistoryItemResponse[];
+ totalCount: number;
+ page: number;
+ pageSize: number;
+ totalPages: number;
+}

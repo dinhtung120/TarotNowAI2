@@ -36,6 +36,7 @@
       "package_bonus": "+{amount} Gold khuyến mãi",
       "create_order": "Tạo đơn PayOS",
       "creating": "Đang tạo đơn...",
+      "history_cta": "Xem lịch sử nạp",
       "payment_title": "Thanh toán",
       "open_checkout": "Mở trang thanh toán",
       "qr_title": "QR thanh toán",
@@ -58,7 +59,28 @@
         "create_failed": "Không thể tạo đơn nạp tiền.",
         "fetch_order_failed": "Không thể cập nhật trạng thái đơn hàng."
       },
-      "notes": "Mọi thay đổi số dư được xử lý idempotent theo event và webhook PayOS."
+      "notes": "Mọi thay đổi số dư được xử lý idempotent theo event và webhook PayOS.",
+      "history": {
+        "tag": "Lịch sử giao dịch nạp",
+        "title": "Lịch sử nạp tiền",
+        "subtitle": "Theo dõi toàn bộ đơn nạp của bạn và trạng thái xử lý thanh toán theo thời gian thực.",
+        "back_to_deposit": "Quay lại trang nạp",
+        "filter_all": "Tất cả",
+        "filter_pending": "Chờ xử lý",
+        "filter_success": "Thành công",
+        "filter_failed": "Thất bại",
+        "loading": "Đang tải lịch sử nạp...",
+        "empty": "Bạn chưa có giao dịch nạp nào.",
+        "amount": "Số tiền",
+        "diamond": "Diamond",
+        "bonus_gold": "Gold thưởng",
+        "transaction": "Mã giao dịch",
+        "failure_reason": "Lý do lỗi",
+        "reconcile": "Đồng bộ trạng thái",
+        "prev": "Trang trước",
+        "next": "Trang sau",
+        "page_indicator": "Trang {page}/{totalPages}"
+      }
     },
     "withdraw": {
       "back_to_wallet": "Quay lại kho báu",

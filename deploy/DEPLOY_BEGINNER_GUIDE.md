@@ -170,6 +170,8 @@ Lưu ý:
 - `FORWARDED_NETWORK_0` nên là CIDR của VPC chứa FE/BE (không dùng IP public).
 - Dùng cùng 1 nội dung `.env` trên cả 3 máy để tránh lệch cấu hình.
 - Tuyệt đối không commit file này lên git.
+- Webhook PayOS phải trỏ chính xác tới endpoint backend: `https://<domain>/api/v1/deposits/webhook/payos`.
+- Nếu dùng cả `www` và non-`www`, nên cấu hình webhook theo canonical domain để tránh callback lệch host.
 
 ## 6) Deploy EC2-DB (Mongo/Postgres/Redis)
 

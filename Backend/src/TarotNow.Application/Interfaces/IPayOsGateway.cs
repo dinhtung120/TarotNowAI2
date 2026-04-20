@@ -18,6 +18,13 @@ public interface IPayOsGateway
     Task<PayOsVerifiedWebhookData> VerifyWebhookAsync(
         string rawPayload,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Lấy trạng thái payment link theo order code để reconcile khi webhook bị trễ/mất.
+    /// </summary>
+    Task<PayOsPaymentLinkInformation> GetPaymentLinkInformationAsync(
+        long orderCode,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -157,4 +164,45 @@ public sealed class PayOsVerifiedWebhookData
     /// Thời điểm giao dịch trong webhook (UTC nếu parse được).
     /// </summary>
     public DateTime? TransactionAtUtc { get; init; }
+}
+
+/// <summary>
+/// Snapshot trạng thái payment link lấy trực tiếp từ PayOS.
+/// </summary>
+public sealed class PayOsPaymentLinkInformation
+{
+    /// <summary>
+    /// Order code của payment link.
+    /// </summary>
+    public long OrderCode { get; init; }
+
+    /// <summary>
+    /// Tổng số tiền của payment link (VND).
+    /// </summary>
+    public long Amount { get; init; }
+
+    /// <summary>
+    /// Số tiền đã thanh toán.
+    /// </summary>
+    public long AmountPaid { get; init; }
+
+    /// <summary>
+    /// Trạng thái payment link theo PayOS (PAID/PENDING/CANCELLED/EXPIRED...).
+    /// </summary>
+    public string PaymentStatus { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Reference giao dịch gần nhất (nếu có).
+    /// </summary>
+    public string? LatestReference { get; init; }
+
+    /// <summary>
+    /// Thời điểm giao dịch gần nhất theo UTC (nếu parse được).
+    /// </summary>
+    public DateTime? LatestTransactionAtUtc { get; init; }
+
+    /// <summary>
+    /// Lý do hủy/thất bại theo PayOS (nếu có).
+    /// </summary>
+    public string? FailureReason { get; init; }
 }

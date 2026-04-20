@@ -36,6 +36,7 @@
       "package_bonus": "+{amount} promo Gold",
       "create_order": "Create PayOS order",
       "creating": "Creating order...",
+      "history_cta": "View top-up history",
       "payment_title": "Payment",
       "open_checkout": "Open checkout",
       "qr_title": "Payment QR",
@@ -58,7 +59,28 @@
         "create_failed": "Unable to create top-up order.",
         "fetch_order_failed": "Unable to refresh order status."
       },
-      "notes": "All wallet changes are idempotent and event-driven."
+      "notes": "All wallet changes are idempotent and event-driven.",
+      "history": {
+        "tag": "Top-up transaction history",
+        "title": "Top-up history",
+        "subtitle": "Track all your top-up orders and payment processing status in real time.",
+        "back_to_deposit": "Back to top-up",
+        "filter_all": "All",
+        "filter_pending": "Pending",
+        "filter_success": "Success",
+        "filter_failed": "Failed",
+        "loading": "Loading top-up history...",
+        "empty": "No top-up orders yet.",
+        "amount": "Amount",
+        "diamond": "Diamond",
+        "bonus_gold": "Bonus Gold",
+        "transaction": "Transaction ID",
+        "failure_reason": "Failure reason",
+        "reconcile": "Sync status",
+        "prev": "Previous",
+        "next": "Next",
+        "page_indicator": "Page {page}/{totalPages}"
+      }
     },
     "withdraw": {
       "back_to_wallet": "Back to vault",

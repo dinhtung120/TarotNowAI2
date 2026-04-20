@@ -101,8 +101,8 @@ public class DepositOrderRepository : IDepositOrderRepository
         string? status,
         CancellationToken cancellationToken = default)
     {
-        var normalizedPage = page < 1 ? 1 : page;
-        var normalizedPageSize = pageSize <= 0 ? 20 : Math.Min(pageSize, 200);
+        var normalizedPage = NormalizePage(page);
+        var normalizedPageSize = NormalizePageSize(pageSize, 200, 20);
 
         var query = _context.DepositOrders.AsQueryable();
 
@@ -123,6 +123,36 @@ public class DepositOrderRepository : IDepositOrderRepository
     }
 
     /// <summary>
+    /// Lấy danh sách đơn nạp của một user theo phân trang.
+    /// </summary>
+    public async Task<(IReadOnlyCollection<DepositOrder> Orders, int TotalCount)> GetPaginatedByUserAsync(
+        Guid userId,
+        int page,
+        int pageSize,
+        string? status,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedPage = NormalizePage(page);
+        var normalizedPageSize = NormalizePageSize(pageSize, 50, 10);
+        var query = _context.DepositOrders.Where(order => order.UserId == userId);
+
+        if (!string.IsNullOrWhiteSpace(status))
+        {
+            var normalizedStatus = status.Trim();
+            query = query.Where(order => order.Status == normalizedStatus);
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var orders = await query
+            .OrderByDescending(order => order.CreatedAt)
+            .Skip((normalizedPage - 1) * normalizedPageSize)
+            .Take(normalizedPageSize)
+            .ToArrayAsync(cancellationToken);
+
+        return (orders, totalCount);
+    }
+
+    /// <summary>
     /// Thêm mới đơn nạp.
     /// </summary>
     public async Task AddAsync(DepositOrder order, CancellationToken cancellationToken = default)
@@ -138,5 +168,20 @@ public class DepositOrderRepository : IDepositOrderRepository
     {
         _context.DepositOrders.Update(order);
         await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    private static int NormalizePage(int page)
+    {
+        return page < 1 ? 1 : page;
+    }
+
+    private static int NormalizePageSize(int pageSize, int maxPageSize, int defaultPageSize)
+    {
+        if (pageSize <= 0)
+        {
+            return defaultPageSize;
+        }
+
+        return Math.Min(pageSize, maxPageSize);
     }
 }

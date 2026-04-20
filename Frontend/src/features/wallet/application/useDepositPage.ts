@@ -7,6 +7,7 @@ import {
  createDepositOrder,
  getMyDepositOrder,
  listDepositPackages,
+ reconcileDepositOrder,
  type CreateDepositOrderResponse,
  type MyDepositOrderResponse,
 } from '@/features/wallet/application/actions/deposit';
@@ -60,8 +61,10 @@ export function useDepositPage() {
  const orderQuery = useQuery({
   queryKey: userStateQueryKeys.wallet.depositOrder(orderId),
   enabled: Boolean(orderId),
-  queryFn: async () => {
-   if (!orderId) return null;
+ queryFn: async () => {
+  if (!orderId) return null;
+
+   await reconcileDepositOrder(orderId);
    const result = await getMyDepositOrder(orderId);
    if (!result.success || !result.data) {
     throw new Error(result.error || 'Failed to get deposit order');
@@ -71,7 +74,7 @@ export function useDepositPage() {
   },
   refetchInterval: (query) => {
    const data = query.state.data as MyDepositOrderResponse | null | undefined;
-   return data?.status === 'pending' ? 3000 : false;
+   return data?.status === 'pending' ? 10_000 : false;
   },
  });
 

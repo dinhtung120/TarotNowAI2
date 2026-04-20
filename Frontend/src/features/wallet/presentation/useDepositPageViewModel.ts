@@ -26,6 +26,7 @@ export function useDepositPageViewModel() {
    packageBonus: (amount: number) => state.t('deposit.package_bonus', { amount }),
    createOrder: state.t('deposit.create_order'),
    creating: state.t('deposit.creating'),
+   historyCta: state.t('deposit.history_cta'),
    notes: state.t('deposit.notes'),
    paymentTitle: state.t('deposit.payment_title'),
    openCheckout: state.t('deposit.open_checkout'),

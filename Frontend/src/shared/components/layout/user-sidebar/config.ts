@@ -65,6 +65,7 @@ export const userSidebarMenuGroups: UserSidebarMenuGroup[] = [
       { labelKey: "profile", href: "/profile", icon: User },
       { labelKey: "wallet", href: "/wallet", icon: Wallet },
       { labelKey: "deposit", href: "/wallet/deposit", icon: CreditCard },
+      { labelKey: "depositHistory", href: "/wallet/deposit/history", icon: History },
       { labelKey: "notifications", href: "/notifications", icon: Bell },
     ],
   },

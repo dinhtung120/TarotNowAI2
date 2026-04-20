@@ -125,4 +125,37 @@ public sealed partial class PayOsGateway : IPayOsGateway
         });
     }
 
+    /// <inheritdoc />
+    public async Task<PayOsPaymentLinkInformation> GetPaymentLinkInformationAsync(
+        long orderCode,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (orderCode <= 0)
+        {
+            throw new BadRequestException("Invalid PayOS order code.");
+        }
+
+        try
+        {
+            var paymentInfo = await _payOs.getPaymentLinkInformation(orderCode);
+            var latestTransaction = ResolveLatestTransaction(paymentInfo.transactions);
+
+            return new PayOsPaymentLinkInformation
+            {
+                OrderCode = paymentInfo.orderCode,
+                Amount = paymentInfo.amount,
+                AmountPaid = paymentInfo.amountPaid,
+                PaymentStatus = paymentInfo.status ?? string.Empty,
+                LatestReference = latestTransaction?.reference,
+                LatestTransactionAtUtc = ParsePayOsDateTime(latestTransaction?.transactionDateTime),
+                FailureReason = ResolvePaymentLinkFailureReason(paymentInfo)
+            };
+        }
+        catch (PayOSError ex)
+        {
+            throw new BadRequestException($"PayOS get payment link information failed: {ex.Message}");
+        }
+    }
+
 }

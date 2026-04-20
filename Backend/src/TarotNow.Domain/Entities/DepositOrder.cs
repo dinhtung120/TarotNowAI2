@@ -127,9 +127,9 @@ public class DepositOrder
             return;
         }
 
-        if (Status == DepositOrderStatus.Failed)
+        if (Status == DepositOrderStatus.Failed && WalletGrantedAtUtc.HasValue)
         {
-            throw new InvalidOperationException("Cannot mark a failed order as success.");
+            throw new InvalidOperationException("Cannot recover a failed order after wallet grant.");
         }
 
         Status = DepositOrderStatus.Success;
