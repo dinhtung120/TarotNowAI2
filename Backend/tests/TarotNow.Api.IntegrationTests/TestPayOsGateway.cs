@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
@@ -16,7 +17,12 @@ namespace TarotNow.Api.IntegrationTests;
 public sealed class TestPayOsGateway : IPayOsGateway
 {
     private const string SuccessCode = "00";
+    private const string StatusPending = "PENDING";
+    private const string StatusPaid = "PAID";
+    private const string StatusCancelled = "CANCELLED";
+
     private readonly PayOS _payOs;
+    private readonly ConcurrentDictionary<long, TestPaymentLinkState> _paymentLinks = new();
 
     /// <summary>
     /// Khởi tạo test gateway từ cấu hình PayOS.
@@ -40,6 +46,14 @@ public sealed class TestPayOsGateway : IPayOsGateway
         var expiresAt = request.ExpiredAtUnix.HasValue
             ? DateTimeOffset.FromUnixTimeSeconds(request.ExpiredAtUnix.Value).UtcDateTime
             : (DateTime?)null;
+
+        UpsertPaymentLinkState(
+            orderCode: request.OrderCode,
+            amount: request.Amount,
+            paymentStatus: StatusPending,
+            reference: null,
+            transactionAtUtc: null,
+            failureReason: null);
 
         return Task.FromResult(new PayOsCreatePaymentLinkResult
         {
@@ -90,19 +104,101 @@ public sealed class TestPayOsGateway : IPayOsGateway
             throw new UnauthorizedAccessException(ex.Message);
         }
 
+        var transactionAtUtc = ParseTransactionTime(verified.transactionDateTime);
+        var isSuccess = webhook.success
+                        && string.Equals(verified.code, SuccessCode, StringComparison.OrdinalIgnoreCase)
+                        && string.Equals(webhook.code, SuccessCode, StringComparison.OrdinalIgnoreCase);
+        var failureReason = isSuccess || string.IsNullOrWhiteSpace(verified.desc)
+            ? null
+            : verified.desc.Trim();
+
+        UpsertPaymentLinkState(
+            orderCode: verified.orderCode,
+            amount: verified.amount,
+            paymentStatus: isSuccess ? StatusPaid : StatusCancelled,
+            reference: verified.reference,
+            transactionAtUtc: transactionAtUtc,
+            failureReason: failureReason);
+
         return Task.FromResult(new PayOsVerifiedWebhookData
         {
             OrderCode = verified.orderCode,
             Amount = verified.amount,
-            IsSuccess = webhook.success
-                        && string.Equals(verified.code, SuccessCode, StringComparison.OrdinalIgnoreCase)
-                        && string.Equals(webhook.code, SuccessCode, StringComparison.OrdinalIgnoreCase),
+            IsSuccess = isSuccess,
             Reference = verified.reference ?? string.Empty,
             PaymentLinkId = verified.paymentLinkId ?? string.Empty,
             GatewayCode = verified.code ?? string.Empty,
-            FailureReason = string.IsNullOrWhiteSpace(verified.desc) ? null : verified.desc.Trim(),
-            TransactionAtUtc = ParseTransactionTime(verified.transactionDateTime)
+            FailureReason = failureReason,
+            TransactionAtUtc = transactionAtUtc
         });
+    }
+
+    /// <inheritdoc />
+    public Task<PayOsPaymentLinkInformation> GetPaymentLinkInformationAsync(
+        long orderCode,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (orderCode <= 0)
+        {
+            throw new BadRequestException("Invalid PayOS order code.");
+        }
+
+        if (!_paymentLinks.TryGetValue(orderCode, out var state))
+        {
+            throw new BadRequestException("PayOS get payment link information failed: order not found in test gateway.");
+        }
+
+        return Task.FromResult(new PayOsPaymentLinkInformation
+        {
+            OrderCode = state.OrderCode,
+            Amount = state.Amount,
+            AmountPaid = string.Equals(state.PaymentStatus, StatusPaid, StringComparison.OrdinalIgnoreCase)
+                ? state.Amount
+                : 0,
+            PaymentStatus = state.PaymentStatus,
+            LatestReference = state.Reference,
+            LatestTransactionAtUtc = state.TransactionAtUtc,
+            FailureReason = state.FailureReason
+        });
+    }
+
+    private void UpsertPaymentLinkState(
+        long orderCode,
+        long amount,
+        string paymentStatus,
+        string? reference,
+        DateTime? transactionAtUtc,
+        string? failureReason)
+    {
+        _paymentLinks.AddOrUpdate(
+            orderCode,
+            _ => new TestPaymentLinkState
+            {
+                OrderCode = orderCode,
+                Amount = amount,
+                PaymentStatus = paymentStatus,
+                Reference = NormalizeOptional(reference),
+                TransactionAtUtc = transactionAtUtc,
+                FailureReason = NormalizeOptional(failureReason)
+            },
+            (_, existing) =>
+            {
+                existing.OrderCode = orderCode;
+                existing.Amount = amount;
+                existing.PaymentStatus = paymentStatus;
+                existing.Reference = NormalizeOptional(reference);
+                existing.TransactionAtUtc = transactionAtUtc;
+                existing.FailureReason = NormalizeOptional(failureReason);
+                return existing;
+            });
+    }
+
+    private static string? NormalizeOptional(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? null
+            : value.Trim();
     }
 
     private static DateTime? ParseTransactionTime(string? value)
@@ -123,5 +219,20 @@ public sealed class TestPayOsGateway : IPayOsGateway
         }
 
         return parsed.ToUniversalTime();
+    }
+
+    private sealed class TestPaymentLinkState
+    {
+        public long OrderCode { get; set; }
+
+        public long Amount { get; set; }
+
+        public string PaymentStatus { get; set; } = StatusPending;
+
+        public string? Reference { get; set; }
+
+        public DateTime? TransactionAtUtc { get; set; }
+
+        public string? FailureReason { get; set; }
     }
 }

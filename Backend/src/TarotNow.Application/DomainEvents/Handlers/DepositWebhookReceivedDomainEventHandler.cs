@@ -51,7 +51,7 @@ public sealed class DepositWebhookReceivedDomainEventHandler
         }
 
         ValidateWebhookAmount(order, verifiedData.Amount);
-        if (await TryHandleAlreadyProcessedOrderAsync(domainEvent, order))
+        if (await TryHandleAlreadyProcessedOrderAsync(domainEvent, order, verifiedData))
         {
             return;
         }
@@ -67,11 +67,18 @@ public sealed class DepositWebhookReceivedDomainEventHandler
 
     private static Task<bool> TryHandleAlreadyProcessedOrderAsync(
         DepositWebhookReceivedDomainEvent domainEvent,
-        DepositOrder order)
+        DepositOrder order,
+        PayOsVerifiedWebhookData verifiedData)
     {
         if (order.Status != DepositOrderStatus.Success)
         {
             return Task.FromResult(false);
+        }
+
+        if (!verifiedData.IsSuccess)
+        {
+            domainEvent.Handled = true;
+            return Task.FromResult(true);
         }
 
         if (!order.WalletGrantedAtUtc.HasValue)

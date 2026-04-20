@@ -95,6 +95,98 @@ public class DepositWebhookIntegrationTests : IClassFixture<CustomWebApplication
         Assert.Equal(25, updatedUser.GoldBalance);
     }
 
+    /// <summary>
+    /// Callback failed đến trễ không được ghi đè đơn đã success.
+    /// </summary>
+    [Fact]
+    public async Task PayOsWebhook_ShouldIgnoreFailedCallback_WhenOrderAlreadySuccessful()
+    {
+        var client = _factory.CreateClient();
+        var orderCode = 920_003L;
+        const string successReference = "REF-SUCCESS-ORIGINAL";
+
+        var user = await SeedUserAsync("webhook-ignore-failed");
+        var order = await SeedDepositOrderAsync(
+            userId: user.Id,
+            orderCode: orderCode,
+            amountVnd: 50_000,
+            baseDiamond: 500,
+            bonusGold: 25);
+        await MarkOrderSuccessWithoutWalletGrantAsync(order.Id, successReference);
+
+        var rawPayload = BuildWebhookPayload(
+            orderCode: orderCode,
+            amount: order.AmountVnd,
+            paymentLinkId: order.PayOsPaymentLinkId,
+            reference: "REF-LATE-FAILED",
+            isSuccess: false);
+
+        var response = await client.PostAsync(
+            "/api/v1/deposits/webhook/payos",
+            new StringContent(rawPayload, Encoding.UTF8, "application/json"));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var updatedOrder = await db.DepositOrders.FindAsync(order.Id);
+        var updatedUser = await db.Users.FindAsync(user.Id);
+
+        Assert.NotNull(updatedOrder);
+        Assert.NotNull(updatedUser);
+        Assert.Equal(DepositOrderStatus.Success, updatedOrder!.Status);
+        Assert.Equal(successReference, updatedOrder.TransactionId);
+        Assert.Null(updatedOrder.FailureReason);
+        Assert.Null(updatedOrder.WalletGrantedAtUtc);
+        Assert.Equal(0, updatedUser!.DiamondBalance);
+        Assert.Equal(0, updatedUser.GoldBalance);
+    }
+
+    /// <summary>
+    /// Callback success lặp lại phải tự heal trường hợp order success nhưng chưa cấp ví.
+    /// </summary>
+    [Fact]
+    public async Task PayOsWebhook_ShouldReplayWalletCredit_WhenOrderSuccessButWalletNotGranted()
+    {
+        var client = _factory.CreateClient();
+        var orderCode = 920_004L;
+        const string successReference = "REF-REPLAY-SUCCESS";
+
+        var user = await SeedUserAsync("webhook-replay-success");
+        var order = await SeedDepositOrderAsync(
+            userId: user.Id,
+            orderCode: orderCode,
+            amountVnd: 100_000,
+            baseDiamond: 1_000,
+            bonusGold: 50);
+        await MarkOrderSuccessWithoutWalletGrantAsync(order.Id, successReference);
+
+        var rawPayload = BuildWebhookPayload(
+            orderCode: orderCode,
+            amount: order.AmountVnd,
+            paymentLinkId: order.PayOsPaymentLinkId,
+            reference: successReference,
+            isSuccess: true);
+
+        var response = await client.PostAsync(
+            "/api/v1/deposits/webhook/payos",
+            new StringContent(rawPayload, Encoding.UTF8, "application/json"));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var updatedOrder = await db.DepositOrders.FindAsync(order.Id);
+        var updatedUser = await db.Users.FindAsync(user.Id);
+
+        Assert.NotNull(updatedOrder);
+        Assert.NotNull(updatedUser);
+        Assert.Equal(DepositOrderStatus.Success, updatedOrder!.Status);
+        Assert.NotNull(updatedOrder.WalletGrantedAtUtc);
+        Assert.Equal(1_000, updatedUser!.DiamondBalance);
+        Assert.Equal(50, updatedUser.GoldBalance);
+    }
+
     private async Task<User> SeedUserAsync(string suffix)
     {
         using var scope = _factory.Services.CreateScope();
@@ -139,6 +231,18 @@ public class DepositWebhookIntegrationTests : IClassFixture<CustomWebApplication
         db.DepositOrders.Add(order);
         await db.SaveChangesAsync();
         return order;
+    }
+
+    private async Task MarkOrderSuccessWithoutWalletGrantAsync(Guid orderId, string transactionReference)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var order = await db.DepositOrders.FindAsync(orderId);
+        Assert.NotNull(order);
+
+        order!.MarkAsSuccess(transactionReference, DateTime.UtcNow);
+        db.DepositOrders.Update(order);
+        await db.SaveChangesAsync();
     }
 
     private static string BuildWebhookPayload(
