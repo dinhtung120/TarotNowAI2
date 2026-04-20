@@ -145,6 +145,13 @@ nano .env
 | `JWT_EXPIRYMINUTES` | Hạn access token | `60` |
 | `JWT_REFRESHEXPIRYDAYS` | Hạn refresh token | `7` |
 | `PAYMENT_WEBHOOK_SECRET` | Secret xác thực webhook thanh toán | chuỗi mạnh |
+| `PAYOS_CLIENT_ID` | Client ID từ PayOS merchant | UUID/chuỗi PayOS |
+| `PAYOS_API_KEY` | API key gọi create payment link | key từ [my.payos.vn](https://my.payos.vn) |
+| `PAYOS_CHECKSUM_KEY` | Checksum key verify webhook/signature | key từ [my.payos.vn](https://my.payos.vn) |
+| `PAYOS_PARTNER_CODE` | Partner code (nếu tài khoản yêu cầu) | để trống hoặc giá trị PayOS cung cấp |
+| `PAYOS_RETURN_URL` | URL frontend nhận kết quả thanh toán thành công | `https://app.example.com/vi/wallet/deposit?payment=return` |
+| `PAYOS_CANCEL_URL` | URL frontend khi người dùng hủy thanh toán | `https://app.example.com/vi/wallet/deposit?payment=cancel` |
+| `DEPOSIT_LINK_EXPIRY_MINUTES` | Thời gian hết hạn payment link | `15` |
 | `MFA_ENCRYPTION_KEY` | Key mã hóa MFA | chuỗi mạnh |
 | `SMTP_HOST` | SMTP host | `smtp.gmail.com` |
 | `SMTP_PORT` | SMTP port | `587` |
