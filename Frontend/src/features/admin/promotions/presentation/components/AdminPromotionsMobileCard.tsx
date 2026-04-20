@@ -39,7 +39,7 @@ export function AdminPromotionsMobileCard({
    <div className={cn('flex items-center justify-between gap-3')}>
     <div className={cn('tn-text-10 font-black uppercase tracking-widest tn-text-tertiary')}>{rewardLabel}</div>
     <div className={cn('flex items-center gap-2 text-sm font-black tn-text-warning italic drop-shadow-sm')}>
-     <Coins className={cn('w-4 h-4')} />+{promotion.bonusDiamond.toLocaleString(locale)}
+     <Coins className={cn('w-4 h-4')} />+{promotion.bonusGold.toLocaleString(locale)}
     </div>
    </div>
    <div className={cn('flex items-center gap-2')}>

@@ -1,10 +1,8 @@
-
-
-using System;
+using TarotNow.Domain.Enums;
 
 namespace TarotNow.Domain.Entities;
 
-// Entity lệnh nạp tiền để quản lý vòng đời giao dịch từ lúc tạo đến khi chốt kết quả.
+// Entity lệnh nạp tiền quản lý vòng đời giao dịch PayOS và cấp ví hậu thanh toán.
 public class DepositOrder
 {
     // Định danh lệnh nạp.
@@ -13,112 +11,208 @@ public class DepositOrder
     // Người dùng sở hữu lệnh nạp.
     public Guid UserId { get; private set; }
 
+    // Mã gói nạp người dùng đã chọn.
+    public string PackageCode { get; private set; } = string.Empty;
+
     // Số tiền nạp theo VND.
     public long AmountVnd { get; private set; }
 
-    // Số Diamond quy đổi từ lệnh nạp.
+    // Số Diamond cơ bản theo gói.
+    public long BaseDiamondAmount { get; private set; }
+
+    // Số Gold khuyến mãi theo campaign tại thời điểm tạo order.
+    public long BonusGoldAmount { get; private set; }
+
+    // Tổng Diamond được cộng cho order.
     public long DiamondAmount { get; private set; }
 
     // Trạng thái xử lý lệnh nạp.
-    public string Status { get; private set; } = string.Empty;
+    public string Status { get; private set; } = DepositOrderStatus.Pending;
 
-    // Mã giao dịch từ cổng thanh toán hoặc token client.
+    // Khóa idempotency phía client để chống tạo lệnh trùng.
+    public string ClientRequestKey { get; private set; } = string.Empty;
+
+    // Order code dùng khi gọi PayOS.
+    public long PayOsOrderCode { get; private set; }
+
+    // Định danh payment link từ PayOS.
+    public string PayOsPaymentLinkId { get; private set; } = string.Empty;
+
+    // URL checkout PayOS.
+    public string CheckoutUrl { get; private set; } = string.Empty;
+
+    // Chuỗi dữ liệu QR từ PayOS.
+    public string QrCode { get; private set; } = string.Empty;
+
+    // Transaction/reference từ webhook PayOS.
     public string? TransactionId { get; private set; }
 
-    // Snapshot tỷ giá phục vụ đối soát tại thời điểm xử lý.
-    public string? FxSnapshot { get; private set; }
+    // Lý do thất bại của lệnh nạp.
+    public string? FailureReason { get; private set; }
 
-    // Thời điểm tạo lệnh nạp.
+    // Thời điểm payment link hết hạn.
+    public DateTime? ExpiresAtUtc { get; private set; }
+
+    // Thời điểm tạo lệnh.
     public DateTime CreatedAt { get; private set; }
 
-    // Thời điểm lệnh được xử lý thành công/thất bại.
+    // Thời điểm cập nhật gần nhất.
+    public DateTime UpdatedAt { get; private set; }
+
+    // Thời điểm webhook chốt trạng thái thành công/thất bại.
     public DateTime? ProcessedAt { get; private set; }
+
+    // Thời điểm đã cấp ví thành công (diamond/gold).
+    public DateTime? WalletGrantedAtUtc { get; private set; }
 
     // Navigation tới người dùng.
     public User User { get; private set; } = null!;
 
     /// <summary>
     /// Constructor rỗng cho ORM materialization.
-    /// Luồng xử lý: để EF khởi tạo entity từ dữ liệu lưu trữ.
     /// </summary>
     protected DepositOrder() { }
 
     /// <summary>
-    /// Khởi tạo lệnh nạp mới với trạng thái Pending trước khi gửi sang cổng thanh toán.
-    /// Luồng xử lý: sinh id, gán dữ liệu đầu vào, đặt trạng thái ban đầu và mốc thời gian tạo.
+    /// Khởi tạo lệnh nạp mới với trạng thái pending.
     /// </summary>
-    public DepositOrder(Guid userId, long amountVnd, long diamondAmount)
+    public DepositOrder(
+        Guid userId,
+        string packageCode,
+        long amountVnd,
+        long baseDiamondAmount,
+        long bonusGoldAmount,
+        string clientRequestKey,
+        long payOsOrderCode,
+        string payOsPaymentLinkId,
+        string checkoutUrl,
+        string qrCode,
+        DateTime? expiresAtUtc)
     {
+        ValidateMoney(amountVnd, baseDiamondAmount, bonusGoldAmount);
+        ValidateRequiredString(packageCode, nameof(packageCode));
+        ValidateRequiredString(clientRequestKey, nameof(clientRequestKey));
+        ValidateRequiredString(payOsPaymentLinkId, nameof(payOsPaymentLinkId));
+        ValidateRequiredString(checkoutUrl, nameof(checkoutUrl));
+        ValidateRequiredString(qrCode, nameof(qrCode));
+
         Id = Guid.NewGuid();
         UserId = userId;
+        PackageCode = packageCode.Trim();
         AmountVnd = amountVnd;
-        DiamondAmount = diamondAmount;
-        Status = "Pending";
+        BaseDiamondAmount = baseDiamondAmount;
+        BonusGoldAmount = bonusGoldAmount;
+        DiamondAmount = baseDiamondAmount;
+        ClientRequestKey = clientRequestKey.Trim();
+        PayOsOrderCode = payOsOrderCode;
+        PayOsPaymentLinkId = payOsPaymentLinkId.Trim();
+        CheckoutUrl = checkoutUrl.Trim();
+        QrCode = qrCode.Trim();
+        ExpiresAtUtc = expiresAtUtc;
+        Status = DepositOrderStatus.Pending;
         CreatedAt = DateTime.UtcNow;
+        UpdatedAt = CreatedAt;
     }
 
     /// <summary>
-    /// Đánh dấu lệnh nạp thành công sau khi nhận xác nhận hợp lệ từ cổng thanh toán.
-    /// Luồng xử lý: chặn trạng thái Success lặp, cập nhật status/transaction và mốc processed.
+    /// Đánh dấu lệnh nạp thành công sau khi webhook PayOS hợp lệ.
     /// </summary>
-    public void MarkAsSuccess(string transactionId, string? fxSnapshot = null)
+    public void MarkAsSuccess(string transactionId, DateTime? processedAtUtc = null)
     {
-        if (Status == "Success")
+        ValidateRequiredString(transactionId, nameof(transactionId));
+
+        if (Status == DepositOrderStatus.Success)
         {
-            // Edge case: callback lặp cho giao dịch đã success, chặn để bảo vệ tính idempotent của domain.
-            throw new InvalidOperationException("This order is already marked as success.");
+            EnsureTransactionConsistency(transactionId);
+            return;
         }
 
-        Status = "Success";
-        TransactionId = transactionId;
-        FxSnapshot = fxSnapshot;
-        ProcessedAt = DateTime.UtcNow;
-        // Chốt trạng thái thành công và khóa thông tin đối soát tại thời điểm xử lý.
+        if (Status == DepositOrderStatus.Failed)
+        {
+            throw new InvalidOperationException("Cannot mark a failed order as success.");
+        }
+
+        Status = DepositOrderStatus.Success;
+        TransactionId = transactionId.Trim();
+        FailureReason = null;
+        ProcessedAt = processedAtUtc ?? DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     /// <summary>
-    /// Đánh dấu lệnh nạp thất bại khi cổng thanh toán trả kết quả không thành công.
-    /// Luồng xử lý: chặn hạ trạng thái từ Success, sau đó ghi trạng thái Failed và transaction liên quan.
+    /// Đánh dấu lệnh nạp thất bại khi webhook trả trạng thái không thành công.
     /// </summary>
-    public void MarkAsFailed(string transactionId)
+    public void MarkAsFailed(string? reason, string? transactionId = null, DateTime? processedAtUtc = null)
     {
-        if (Status == "Success")
+        if (Status == DepositOrderStatus.Success)
         {
-            // Business rule: giao dịch đã success không được phép chuyển ngược về failed.
             throw new InvalidOperationException("Cannot fail a successful order.");
         }
 
-        Status = "Failed";
-        TransactionId = transactionId;
-        ProcessedAt = DateTime.UtcNow;
-        // Cập nhật trạng thái failed để job đối soát và UI đọc đúng kết quả cuối cùng.
+        Status = DepositOrderStatus.Failed;
+        FailureReason = NormalizeOptional(reason);
+        TransactionId = NormalizeOptional(transactionId);
+        ProcessedAt = processedAtUtc ?? DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     /// <summary>
-    /// Gán transaction token phía client cho lệnh pending để liên kết trước khi callback về.
-    /// Luồng xử lý: validate token đầu vào, kiểm tra trạng thái pending/chưa có token, rồi lưu token đã chuẩn hóa.
+    /// Đánh dấu lệnh đã cấp ví để chống credit lặp.
     /// </summary>
-    public void SetClientTransactionToken(string transactionToken)
+    public void MarkWalletGranted(DateTime? grantedAtUtc = null)
     {
-        if (string.IsNullOrWhiteSpace(transactionToken))
+        if (WalletGrantedAtUtc.HasValue)
         {
-            // Edge case: token rỗng gây mất khả năng đối soát callback nên chặn ngay ở domain.
-            throw new ArgumentException("Transaction token is required.", nameof(transactionToken));
+            return;
         }
 
-        if (Status != "Pending")
+        WalletGrantedAtUtc = grantedAtUtc ?? DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    private static void ValidateMoney(long amountVnd, long baseDiamondAmount, long bonusGoldAmount)
+    {
+        if (amountVnd <= 0)
         {
-            // Business rule: chỉ cho phép gán token trong giai đoạn pending để tránh ghi đè hậu xử lý.
-            throw new InvalidOperationException("Client transaction token can only be set on pending order.");
+            throw new ArgumentOutOfRangeException(nameof(amountVnd), "AmountVnd must be greater than zero.");
         }
 
-        if (!string.IsNullOrWhiteSpace(TransactionId))
+        if (baseDiamondAmount <= 0)
         {
-            // Chặn gán lại token để giữ idempotency khi client gửi request lặp.
-            throw new InvalidOperationException("Transaction token is already set.");
+            throw new ArgumentOutOfRangeException(nameof(baseDiamondAmount), "BaseDiamondAmount must be greater than zero.");
         }
 
-        TransactionId = transactionToken.Trim();
-        // Chuẩn hóa token bằng Trim để thống nhất giá trị lưu trữ và so khớp callback.
+        if (bonusGoldAmount < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(bonusGoldAmount), "BonusGoldAmount cannot be negative.");
+        }
+    }
+
+    private static void ValidateRequiredString(string? value, string parameterName)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            throw new ArgumentException($"{parameterName} is required.", parameterName);
+        }
+    }
+
+    private static string? NormalizeOptional(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? null
+            : value.Trim();
+    }
+
+    private void EnsureTransactionConsistency(string transactionId)
+    {
+        if (string.IsNullOrWhiteSpace(TransactionId))
+        {
+            return;
+        }
+
+        if (!string.Equals(TransactionId, transactionId.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Processed order transaction id mismatch.");
+        }
     }
 }

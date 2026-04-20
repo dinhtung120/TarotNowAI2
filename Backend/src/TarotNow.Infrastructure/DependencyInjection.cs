@@ -35,6 +35,8 @@ public static partial class DependencyInjection
         services.Configure<CorsOptions>(configuration.GetSection("Cors"));
         services.Configure<AiProviderOptions>(configuration.GetSection("AiProvider"));
         services.Configure<SystemConfigOptions>(configuration.GetSection("SystemConfig"));
+        services.Configure<DepositOptions>(configuration.GetSection("Deposit"));
+        services.Configure<PayOsOptions>(configuration.GetSection("PayOS"));
         services.Configure<PaymentGatewayOptions>(configuration.GetSection("PaymentGateway"));
         services.Configure<Argon2Options>(configuration.GetSection("Argon2"));
         services.Configure<SecurityOptions>(configuration.GetSection("Security"));

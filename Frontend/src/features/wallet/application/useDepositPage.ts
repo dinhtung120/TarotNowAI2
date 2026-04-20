@@ -1,23 +1,19 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import {
- createDepositOrder,
- type CreateDepositOrderResponse,
-} from '@/features/wallet/application/actions/deposit';
-import {
- listPromotions,
- type DepositPromotion,
-} from '@/features/admin/public';
-import { useWalletStore } from '@/store/walletStore';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import {
- EXCHANGE_RATE_VND_PER_DIAMOND,
- MIN_DEPOSIT_AMOUNT_VND,
- PRESET_DEPOSIT_AMOUNTS_VND,
-} from '@/features/wallet/domain/constants';
+ createDepositOrder,
+ getMyDepositOrder,
+ listDepositPackages,
+ type CreateDepositOrderResponse,
+ type MyDepositOrderResponse,
+} from '@/features/wallet/application/actions/deposit';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { useWalletStore } from '@/store/walletStore';
+
+type DepositOrderView = MyDepositOrderResponse;
 
 export function useDepositPage() {
  const t = useTranslations('Wallet');
@@ -25,13 +21,10 @@ export function useDepositPage() {
  const balance = useWalletStore((state) => state.balance);
  const fetchBalance = useWalletStore((state) => state.fetchBalance);
 
- const [isCustom, setIsCustom] = useState(false);
- const [selectedAmount, setSelectedAmount] = useState<number>(PRESET_DEPOSIT_AMOUNTS_VND[1]);
- const [customAmount, setCustomAmount] = useState('');
-
- const [submitting, setSubmitting] = useState(false);
- const [order, setOrder] = useState<CreateDepositOrderResponse | null>(null);
- const [error, setError] = useState<string | null>(null);
+ const [selectedPackageCode, setSelectedPackageCode] = useState<string>('');
+ const [createError, setCreateError] = useState<string | null>(null);
+ const [createdOrder, setCreatedOrder] = useState<CreateDepositOrderResponse | null>(null);
+ const [orderId, setOrderId] = useState<string | null>(null);
 
  useQuery({
   queryKey: userStateQueryKeys.wallet.balance(),
@@ -41,106 +34,127 @@ export function useDepositPage() {
   },
  });
 
- const { data: promotions, isLoading: loadingPromos, isFetching: refetchingPromos } = useQuery<
-  DepositPromotion[]
- >({
-  queryKey: userStateQueryKeys.wallet.depositPromotions(),
+ const packagesQuery = useQuery({
+  queryKey: userStateQueryKeys.wallet.depositPackages(),
   queryFn: async () => {
-   const result = await listPromotions(true);
+   const result = await listDepositPackages();
    return result.success && result.data ? result.data : [];
   },
  });
 
- const amountVnd = isCustom ? parseInt(customAmount, 10) || 0 : selectedAmount;
- const isValid = amountVnd >= MIN_DEPOSIT_AMOUNT_VND;
- const baseDiamond = Math.floor(amountVnd / EXCHANGE_RATE_VND_PER_DIAMOND);
+ const effectiveSelectedPackageCode = useMemo(() => {
+  return selectedPackageCode || packagesQuery.data?.[0]?.code || '';
+ }, [packagesQuery.data, selectedPackageCode]);
 
- const bestPromotion = useMemo(() => {
-  if (loadingPromos || refetchingPromos) return null;
+ const selectedPackage = useMemo(() => {
+  return (packagesQuery.data ?? []).find((item) => item.code === effectiveSelectedPackageCode) ?? null;
+ }, [effectiveSelectedPackageCode, packagesQuery.data]);
 
-  return (
-   (promotions ?? [])
-    .filter((item) => item.isActive && item.minAmountVnd <= amountVnd)
-    .sort((a, b) => b.bonusDiamond - a.bonusDiamond)[0] ?? null
-  );
- }, [amountVnd, loadingPromos, promotions, refetchingPromos]);
+ const createOrderMutation = useMutation({
+  mutationFn: async (packageCode: string) => {
+   const idempotencyKey = buildIdempotencyKey(packageCode);
+   return createDepositOrder(packageCode, idempotencyKey);
+  },
+ });
 
- const bonusGold = bestPromotion?.bonusDiamond ?? 0;
+ const orderQuery = useQuery({
+  queryKey: userStateQueryKeys.wallet.depositOrder(orderId),
+  enabled: Boolean(orderId),
+  queryFn: async () => {
+   if (!orderId) return null;
+   const result = await getMyDepositOrder(orderId);
+   if (!result.success || !result.data) {
+    throw new Error(result.error || 'Failed to get deposit order');
+   }
 
- const resetOrderState = () => {
-  setOrder(null);
-  setError(null);
- };
+   return result.data;
+  },
+  refetchInterval: (query) => {
+   const data = query.state.data as MyDepositOrderResponse | null | undefined;
+   return data?.status === 'pending' ? 3000 : false;
+  },
+ });
 
- const handleSelectPreset = (value: number) => {
-  setSelectedAmount(value);
-  setIsCustom(false);
-  setCustomAmount('');
-  resetOrderState();
- };
+ useEffect(() => {
+  if (orderQuery.data?.status !== 'success') return;
+  void fetchBalance();
+ }, [fetchBalance, orderQuery.data?.status]);
 
- const handleDeposit = async () => {
-  if (!isValid) {
-   setError(t('deposit.error_min_amount'));
+ const handleCreateOrder = useCallback(async () => {
+  if (!selectedPackage) {
+   setCreateError(t('deposit.errors.package_required'));
    return;
   }
 
-  if (submitting) return;
+  setCreateError(null);
+  setCreatedOrder(null);
+  setOrderId(null);
 
-  setSubmitting(true);
-  setError(null);
-  setOrder(null);
-
-  try {
-   const result = await createDepositOrder(amountVnd);
-   if (!result.success || !result.data) {
-    setError(result.error || t('deposit.error_create_failed'));
-    return;
-   }
-   const orderData = result.data;
-
-   setOrder(orderData);
-   if (orderData.paymentUrl) {
-    window.setTimeout(() => {
-     window.open(orderData.paymentUrl, '_blank');
-    }, 800);
-   }
-  } catch {
-   setError(t('deposit.error_generic'));
-  } finally {
-   setSubmitting(false);
+  const result = await createOrderMutation.mutateAsync(selectedPackage.code);
+  if (!result.success || !result.data) {
+   setCreateError(result.error || t('deposit.errors.create_failed'));
+   return;
   }
- };
 
- const promoForPreset = (value: number) =>
-  (promotions ?? [])
-   .filter((item) => item.isActive && item.minAmountVnd <= value)
-   .sort((a, b) => b.bonusDiamond - a.bonusDiamond)[0] ?? null;
+  setCreatedOrder(result.data);
+  setOrderId(result.data.orderId);
+ }, [createOrderMutation, selectedPackage, t]);
+
+ const activeOrder = useMemo<DepositOrderView | null>(() => {
+  if (orderQuery.data) return orderQuery.data;
+  if (!createdOrder) return null;
+  return toOrderView(createdOrder, effectiveSelectedPackageCode);
+ }, [createdOrder, effectiveSelectedPackageCode, orderQuery.data]);
+
+ const resolvedCreateError = useMemo(() => {
+  if (createError) return createError;
+  if (orderQuery.error) return t('deposit.errors.fetch_order_failed');
+  return null;
+ }, [createError, orderQuery.error, t]);
 
  return {
   t,
   locale,
   balance,
-  isCustom,
-  setIsCustom,
-  selectedAmount,
-  customAmount,
-  setCustomAmount,
-  promotions: promotions ?? [],
-  loadingPromos: loadingPromos || refetchingPromos,
-  submitting,
-  order,
-  error,
-  amountVnd,
-  isValid,
-  baseDiamond,
-  bonusGold,
-  presetAmounts: PRESET_DEPOSIT_AMOUNTS_VND,
-  exchangeRate: EXCHANGE_RATE_VND_PER_DIAMOND,
-  minAmount: MIN_DEPOSIT_AMOUNT_VND,
-  handleSelectPreset,
-  handleDeposit,
-  promoForPreset,
-  resetOrderState,
+  packages: packagesQuery.data ?? [],
+  loadingPackages: packagesQuery.isLoading,
+  selectedPackageCode: effectiveSelectedPackageCode,
+  setSelectedPackageCode,
+  selectedPackage,
+  createError: resolvedCreateError,
+  order: activeOrder,
+  creatingOrder: createOrderMutation.isPending,
+  pollingOrder: orderQuery.isFetching,
+  createOrder: handleCreateOrder,
  };
+}
+
+function toOrderView(
+ createdOrder: CreateDepositOrderResponse,
+ packageCode: string,
+): DepositOrderView {
+ return {
+  orderId: createdOrder.orderId,
+  status: createdOrder.status,
+  packageCode,
+  amountVnd: createdOrder.amountVnd,
+  baseDiamondAmount: createdOrder.baseDiamondAmount,
+  bonusGoldAmount: createdOrder.bonusGoldAmount,
+  totalDiamondAmount: createdOrder.totalDiamondAmount,
+  payOsOrderCode: createdOrder.payOsOrderCode,
+  checkoutUrl: createdOrder.checkoutUrl,
+  qrCode: createdOrder.qrCode,
+  paymentLinkId: createdOrder.paymentLinkId,
+  expiresAtUtc: createdOrder.expiresAtUtc ?? null,
+  transactionId: null,
+  failureReason: null,
+  processedAt: null,
+ };
+}
+
+function buildIdempotencyKey(packageCode: string): string {
+ const randomPart = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+  ? crypto.randomUUID()
+  : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+ return `topup-${packageCode}-${randomPart}`;
 }

@@ -40,20 +40,15 @@ public sealed class AdminDepositsController : ControllerBase
 
     /// <summary>
     /// Xử lý một đơn nạp tiền trong hàng chờ.
-    /// Luồng xử lý: dispatch command và rẽ nhánh phản hồi theo kết quả nghiệp vụ.
+    /// Luồng manual process đã bị vô hiệu hóa vì hệ thống chuyển sang webhook PayOS hoàn toàn tự động.
     /// </summary>
-    /// <param name="command">Command xử lý đơn nạp từ admin.</param>
-    /// <returns>Kết quả thành công hoặc lỗi nghiệp vụ khi không thể xử lý đơn.</returns>
+    /// <returns>410 Gone để buộc client dùng luồng webhook chính thống.</returns>
     [HttpPatch("deposits/process")]
-    public async Task<IActionResult> ProcessDeposit([FromBody] TarotNow.Application.Features.Admin.Commands.ProcessDeposit.ProcessDepositCommand command)
+    public IActionResult ProcessDeposit()
     {
-        var result = await _mediator.Send(command);
-        // Rẽ nhánh kết quả để chuẩn hóa response lỗi nghiệp vụ cho dashboard admin.
-        return result
-            ? Ok(new { success = true })
-            : Problem(
-                statusCode: StatusCodes.Status400BadRequest,
-                title: "Cannot process deposit order",
-                detail: "Không thể xử lý đơn nạp tiền này.");
+        return Problem(
+            statusCode: StatusCodes.Status410Gone,
+            title: "Manual deposit processing is disabled",
+            detail: "Deposit orders are processed automatically via PayOS webhooks.");
     }
 }

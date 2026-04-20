@@ -31,6 +31,7 @@ import {
 import { listReaders, getMyReaderRequest, getReaderProfile } from '@/features/reader/application/actions';
 import { getAllHistorySessionsAdminAction } from '@/features/reading/public';
 import { getLedger } from '@/features/wallet/application/actions';
+import { listDepositPackages } from '@/features/wallet/application/actions/deposit';
 import { listMyWithdrawals } from '@/features/wallet/application/actions/withdrawal';
 import { listWithdrawalQueue } from '@/features/wallet/public';
 import { AUTH_ERROR, isUnauthorizedError } from '@/shared/domain/authErrors';
@@ -259,9 +260,9 @@ export async function prefetchReaderApplyPage(qc: QueryClient): Promise<void> {
 
 export async function prefetchDepositPage(qc: QueryClient): Promise<void> {
  await qc.prefetchQuery({
-  queryKey: userStateQueryKeys.wallet.depositPromotions(),
+  queryKey: userStateQueryKeys.wallet.depositPackages(),
   queryFn: async () => {
-   const result = await listPromotions(true);
+   const result = await listDepositPackages();
    return result.success && result.data ? result.data : [];
   },
  });

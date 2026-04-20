@@ -8,7 +8,7 @@ import { AUTH_ERROR } from "@/shared/domain/authErrors";
 
 export async function createPromotion(
  minAmountVnd: number,
- bonusDiamond: number
+ bonusGold: number
 ): Promise<ActionResult<undefined>> {
  const accessToken = await getServerAccessToken();
  if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
@@ -17,7 +17,7 @@ export async function createPromotion(
   const result = await serverHttpRequest<unknown>('/admin/promotions', {
    method: 'POST',
    token: accessToken,
-   json: { minAmountVnd, bonusDiamond },
+   json: { minAmountVnd, bonusGold },
    fallbackErrorMessage: 'Failed to create promotion',
   });
 
@@ -25,21 +25,21 @@ export async function createPromotion(
    logger.error('PromotionAction.createPromotion', result.error, {
     status: result.status,
     minAmountVnd,
-    bonusDiamond,
+    bonusGold,
    });
    return actionFail(result.error || 'Failed to create promotion');
   }
 
-  return actionOk();
+ return actionOk();
  } catch (error) {
-  logger.error('PromotionAction.createPromotion', error, { minAmountVnd, bonusDiamond });
+  logger.error('PromotionAction.createPromotion', error, { minAmountVnd, bonusGold });
   return actionFail('Failed to create promotion');
  }
 }
 
 export async function updatePromotion(
  id: string,
- data: { minAmountVnd: number; bonusDiamond: number; isActive: boolean }
+ data: { minAmountVnd: number; bonusGold: number; isActive: boolean }
 ): Promise<ActionResult<undefined>> {
  const accessToken = await getServerAccessToken();
  if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);

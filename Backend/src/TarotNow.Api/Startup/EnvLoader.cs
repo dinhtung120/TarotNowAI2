@@ -49,6 +49,13 @@ public static class EnvLoader
         CopyEnvIfTargetMissing("JWT_REFRESHEXPIRYDAYS", "JWT__REFRESHEXPIRYDAYS");
 
         CopyEnvIfTargetMissing("PAYMENT_WEBHOOK_SECRET", "PAYMENTGATEWAY__WEBHOOKSECRET");
+        CopyEnvIfTargetMissing("PAYOS_CLIENT_ID", "PAYOS__CLIENTID");
+        CopyEnvIfTargetMissing("PAYOS_API_KEY", "PAYOS__APIKEY");
+        CopyEnvIfTargetMissing("PAYOS_CHECKSUM_KEY", "PAYOS__CHECKSUMKEY");
+        CopyEnvIfTargetMissing("PAYOS_PARTNER_CODE", "PAYOS__PARTNERCODE");
+        CopyEnvIfTargetMissing("PAYOS_RETURN_URL", "DEPOSIT__RETURNURL");
+        CopyEnvIfTargetMissing("PAYOS_CANCEL_URL", "DEPOSIT__CANCELURL");
+        CopyEnvIfTargetMissing("DEPOSIT_LINK_EXPIRY_MINUTES", "DEPOSIT__LINKEXPIRYMINUTES");
         CopyEnvIfTargetMissing("MFA_ENCRYPTION_KEY", "SECURITY__MFAENCRYPTIONKEY");
         CopyEnvIfTargetMissing("AUTH_COOKIE_DOMAIN", "AUTH__COOKIEDOMAIN");
 

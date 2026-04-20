@@ -76,19 +76,25 @@ describe('wallet actions', () => {
    headers: new Headers(),
    data: {
     orderId: 'order-001',
-    paymentUrl: 'https://pay.example/order-001',
+    status: 'pending',
     amountVnd: 100000,
-    diamondAmount: 100,
+    baseDiamondAmount: 1000,
+    bonusGoldAmount: 50,
+    totalDiamondAmount: 1000,
+    payOsOrderCode: 9123001,
+    checkoutUrl: 'https://pay.example/order-001',
+    qrCode: 'PAYOS_QR_001',
+    paymentLinkId: 'plink_001',
    },
   });
 
-  const result = await createDepositOrder(100000);
+  const result = await createDepositOrder('topup_100k', 'idem-key-001');
 
   expect(result.success).toBe(true);
   expect(mockedServerHttpRequest).toHaveBeenCalledWith('/deposits/orders', {
    method: 'POST',
    token: 'deposit-token',
-   json: { amountVnd: 100000 },
+   json: { packageCode: 'topup_100k', idempotencyKey: 'idem-key-001' },
    fallbackErrorMessage: 'Failed to create deposit order',
   });
  });
@@ -102,13 +108,13 @@ describe('wallet actions', () => {
    error: 'Create order failed',
   });
 
-  const result = await createDepositOrder(200000);
+  const result = await createDepositOrder('topup_200k', 'idem-key-002');
 
   expect(result).toEqual({ success: false, error: 'Create order failed' });
   expect(mockedLoggerError).toHaveBeenCalledWith(
    'DepositAction.createDepositOrder',
    'Create order failed',
-   { status: 500, amountVnd: 200000 },
+   { status: 500, packageCode: 'topup_200k' },
   );
  });
 });

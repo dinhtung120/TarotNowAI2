@@ -1,5 +1,3 @@
-
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TarotNow.Domain.Entities;
@@ -11,7 +9,6 @@ public class DepositPromotionConfiguration : IEntityTypeConfiguration<DepositPro
 {
     /// <summary>
     /// Cấu hình mapping bảng deposit_promotions.
-    /// Luồng xử lý: map bảng/key, cột ngưỡng thưởng và index min amount phục vụ tra cứu.
     /// </summary>
     public void Configure(EntityTypeBuilder<DepositPromotion> builder)
     {
@@ -20,15 +17,22 @@ public class DepositPromotionConfiguration : IEntityTypeConfiguration<DepositPro
         builder.HasKey(p => p.Id);
 
         builder.Property(p => p.MinAmountVnd)
+            .HasColumnName("min_amount_vnd")
             .IsRequired();
 
-        builder.Property(p => p.BonusDiamond)
+        builder.Property(p => p.BonusGold)
+            .HasColumnName("bonus_gold")
             .IsRequired();
 
         builder.Property(p => p.IsActive)
+            .HasColumnName("is_active")
             .IsRequired();
 
-        builder.HasIndex(p => p.MinAmountVnd);
-        // Index ngưỡng nạp giúp tìm promotion phù hợp nhanh hơn.
+        builder.Property(p => p.CreatedAt)
+            .HasColumnName("created_at")
+            .IsRequired();
+
+        builder.HasIndex(p => p.MinAmountVnd)
+            .HasDatabaseName("ix_deposit_promotions_min_amount_vnd");
     }
 }

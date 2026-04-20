@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using Xunit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using TarotNow.Application.Interfaces;
 using TarotNow.Infrastructure.Persistence;
 
 namespace TarotNow.Api.IntegrationTests;
@@ -43,6 +44,13 @@ public class CustomWebApplicationFactory<TProgram>
             ["JWT__ISSUER"] = "TarotNowAI-Test",
             ["JWT__AUDIENCE"] = "TarotNowAI-Users-Test",
             ["PAYMENTGATEWAY__WEBHOOKSECRET"] = "TarotNow_Test_WebhookSecret_2026",
+            ["PAYOS__CLIENTID"] = "payos-test-client-id",
+            ["PAYOS__APIKEY"] = "payos-test-api-key",
+            ["PAYOS__CHECKSUMKEY"] = "payos-test-checksum-key",
+            ["PAYOS__PARTNERCODE"] = "payos-test-partner",
+            ["DEPOSIT__RETURNURL"] = "http://localhost:3000/vi/wallet/deposit?payment=return",
+            ["DEPOSIT__CANCELURL"] = "http://localhost:3000/vi/wallet/deposit?payment=cancel",
+            ["DEPOSIT__LINKEXPIRYMINUTES"] = "15",
             ["SECURITY__MFAENCRYPTIONKEY"] = "TarotNow_Test_MfaEncryption_2026",
             ["SMTP__HOST"] = "smtp.test.local",
             ["SMTP__PORT"] = "2525",
@@ -92,6 +100,13 @@ public class CustomWebApplicationFactory<TProgram>
                 ["Jwt:Issuer"] = "TarotNowAI-Test",
                 ["Jwt:Audience"] = "TarotNowAI-Users-Test",
                 ["PaymentGateway:WebhookSecret"] = "TarotNow_Test_WebhookSecret_2026",
+                ["PayOS:ClientId"] = "payos-test-client-id",
+                ["PayOS:ApiKey"] = "payos-test-api-key",
+                ["PayOS:ChecksumKey"] = "payos-test-checksum-key",
+                ["PayOS:PartnerCode"] = "payos-test-partner",
+                ["Deposit:ReturnUrl"] = "http://localhost:3000/vi/wallet/deposit?payment=return",
+                ["Deposit:CancelUrl"] = "http://localhost:3000/vi/wallet/deposit?payment=cancel",
+                ["Deposit:LinkExpiryMinutes"] = "15",
                 ["Security:MfaEncryptionKey"] = "TarotNow_Test_MfaEncryption_2026",
                 ["Smtp:Host"] = "smtp.test.local",
                 ["Smtp:Port"] = "2525",
@@ -148,6 +163,8 @@ public class CustomWebApplicationFactory<TProgram>
             // Dùng in-memory cache và loại bỏ Redis thật để test ổn định hơn.
             services.AddDistributedMemoryCache();
             services.RemoveAll<StackExchange.Redis.IConnectionMultiplexer>();
+            services.RemoveAll<IPayOsGateway>();
+            services.AddSingleton<IPayOsGateway, TestPayOsGateway>();
 
             // Ép buộc SignalR dùng in-memory lifetime manager, ngăn chặn việc sử dụng Redis backplane trong môi trường test.
             // Điều này giải quyết triệt để lỗi kết nối Redis khi chạy trên CI.

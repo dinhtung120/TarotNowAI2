@@ -1,6 +1,4 @@
 using MediatR;
-using System;
-using System.Collections.Generic;
 
 namespace TarotNow.Application.Features.Promotions.Queries.ListPromotions;
 
@@ -20,8 +18,8 @@ public class PromotionResponse
     // Ngưỡng nạp tối thiểu (VND).
     public long MinAmountVnd { get; set; }
 
-    // Số kim cương thưởng.
-    public long BonusDiamond { get; set; }
+    // Số Gold thưởng.
+    public long BonusGold { get; set; }
 
     // Trạng thái active/inactive.
     public bool IsActive { get; set; }

@@ -14,21 +14,22 @@ export function AdminDepositStatusBadge({
  status,
  labels,
 }: AdminDepositStatusBadgeProps) {
- const icon = status === 'Success'
+ const normalized = status.toLowerCase();
+ const icon = normalized === 'success'
   ? <CheckCircle2 className={cn('w-3 h-3 tn-text-success')} />
-  : status === 'Failed'
+  : normalized === 'failed'
   ? <XCircle className={cn('w-3 h-3 tn-text-danger')} />
   : <Clock className={cn('w-3 h-3 tn-text-warning')} />;
 
- const statusClass = status === 'Success'
+ const statusClass = normalized === 'success'
   ? 'tn-bg-success-10 tn-border-success-20 tn-text-success shadow-inner'
-  : status === 'Failed'
+  : normalized === 'failed'
   ? 'tn-bg-danger-soft tn-border-danger tn-text-danger shadow-inner'
   : 'tn-bg-warning-10 tn-border-warning-20 tn-text-warning shadow-inner';
 
- const label = status === 'Success'
+ const label = normalized === 'success'
   ? labels.success
-  : status === 'Failed'
+  : normalized === 'failed'
   ? labels.failed
   : labels.pending;
 

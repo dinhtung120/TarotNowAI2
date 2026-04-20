@@ -32,6 +32,9 @@ public static partial class DependencyInjection
         services.AddScoped<IEventHandlerIdempotencyService, OutboxHandlerIdempotencyService>();
         services.AddSingleton<IRngService, RngService>();
         services.AddSingleton<IPaymentGatewayService, HmacPaymentGatewayService>();
+        services.AddSingleton<IDepositPackageCatalog, DepositPackageCatalog>();
+        services.AddSingleton<IDepositPayOsSettings, DepositPayOsSettings>();
+        services.AddSingleton<IPayOsGateway, PayOsGateway>();
         services.AddScoped<IDiagnosticsService, DiagnosticsService>();
         services.AddScoped<IReadinessService, ReadinessService>();
 

@@ -74,7 +74,7 @@ export function useAdminPromotions(initialPromotions: DepositPromotion[]) {
    const nextActive = !promotion.isActive;
    const result = await updatePromotionAction(promotion.id, {
     minAmountVnd: promotion.minAmountVnd,
-    bonusDiamond: promotion.bonusDiamond,
+    bonusGold: promotion.bonusGold,
     isActive: nextActive,
    });
    if (result.success) {

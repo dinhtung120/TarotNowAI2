@@ -374,6 +374,26 @@ namespace TarotNow.Infrastructure.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("amount_vnd");
 
+                    b.Property<long>("BaseDiamondAmount")
+                        .HasColumnType("bigint")
+                        .HasColumnName("base_diamond_amount");
+
+                    b.Property<long>("BonusGoldAmount")
+                        .HasColumnType("bigint")
+                        .HasColumnName("bonus_gold_amount");
+
+                    b.Property<string>("CheckoutUrl")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("checkout_url");
+
+                    b.Property<string>("ClientRequestKey")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("client_request_key");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -382,14 +402,40 @@ namespace TarotNow.Infrastructure.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("diamond_amount");
 
-                    b.Property<string>("FxSnapshot")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("fx_snapshot");
+                    b.Property<DateTime?>("ExpiresAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at_utc");
+
+                    b.Property<string>("FailureReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("failure_reason");
+
+                    b.Property<string>("PackageCode")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("package_code");
+
+                    b.Property<long>("PayOsOrderCode")
+                        .HasColumnType("bigint")
+                        .HasColumnName("payos_order_code");
+
+                    b.Property<string>("PayOsPaymentLinkId")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("payos_payment_link_id");
 
                     b.Property<DateTime?>("ProcessedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("processed_at");
+
+                    b.Property<string>("QrCode")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("qr_code");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -398,23 +444,35 @@ namespace TarotNow.Infrastructure.Migrations
                         .HasColumnName("status");
 
                     b.Property<string>("TransactionId")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("transaction_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
+                    b.Property<DateTime?>("WalletGrantedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("wallet_granted_at_utc");
+
                     b.HasKey("Id")
                         .HasName("pk_deposit_orders");
 
+                    b.HasIndex("ClientRequestKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_deposit_orders_client_request_key");
+
+                    b.HasIndex("PayOsOrderCode")
+                        .IsUnique()
+                        .HasDatabaseName("ix_deposit_orders_payos_order_code");
+
                     b.HasIndex("Status")
                         .HasDatabaseName("ix_deposit_orders_status");
-
-                    b.HasIndex("TransactionId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_deposit_orders_transaction_id");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_deposit_orders_user_id");
@@ -429,9 +487,9 @@ namespace TarotNow.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<long>("BonusDiamond")
+                    b.Property<long>("BonusGold")
                         .HasColumnType("bigint")
-                        .HasColumnName("bonus_diamond");
+                        .HasColumnName("bonus_gold");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")

@@ -5,6 +5,9 @@ export const userStateQueryKeys = {
   ledger: (page: number) => [...userStateQueryKeys.wallet.all, 'ledger', page] as const,
   withdrawalsMine: () => [...userStateQueryKeys.wallet.all, 'withdrawals', 'mine'] as const,
   depositPromotions: () => [...userStateQueryKeys.wallet.all, 'deposit-promotions'] as const,
+  depositPackages: () => [...userStateQueryKeys.wallet.all, 'deposit-packages'] as const,
+  depositOrder: (orderId: string | null) =>
+   [...userStateQueryKeys.wallet.all, 'deposit-order', orderId ?? 'none'] as const,
  },
  inventory: {
   all: ['inventory'] as const,
@@ -39,4 +42,3 @@ export const userStateQueryKeys = {
   unreadBadge: () => ['chat', 'unread-badge'] as const,
  },
 } as const;
-

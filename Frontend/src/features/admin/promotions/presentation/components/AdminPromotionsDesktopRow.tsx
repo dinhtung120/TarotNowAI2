@@ -38,8 +38,8 @@ export function AdminPromotionsDesktopRow({
     </div>
    </td>
    <td className={cn('px-8 py-6')}>
-    <div className={cn('flex items-center gap-2 text-sm font-black tn-text-warning italic drop-shadow-sm')}>
-     <Coins className={cn('w-4 h-4')} />+{promotion.bonusDiamond.toLocaleString(locale)}
+   <div className={cn('flex items-center gap-2 text-sm font-black tn-text-warning italic drop-shadow-sm')}>
+     <Coins className={cn('w-4 h-4')} />+{promotion.bonusGold.toLocaleString(locale)}
     </div>
    </td>
    <td className={cn('px-8 py-6 text-center')}>

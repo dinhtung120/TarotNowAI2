@@ -16,8 +16,8 @@ public class UpdateProfileRequest
 // Payload tạo đơn nạp tiền.
 public class CreateDepositOrderRequest
 {
-    // Số tiền nạp theo VND.
-    public long AmountVnd { get; set; }
+    // Mã gói nạp preset.
+    public string PackageCode { get; set; } = string.Empty;
 
     // Khóa idempotency để chống tạo trùng đơn nạp khi client retry.
     public string IdempotencyKey { get; set; } = string.Empty;
@@ -39,8 +39,8 @@ public class UpdatePromotionRequest
     // Ngưỡng nạp tối thiểu để kích hoạt khuyến mãi.
     public long MinAmountVnd { get; set; }
 
-    // Số kim cương thưởng khi đủ điều kiện.
-    public long BonusDiamond { get; set; }
+    // Số Gold thưởng khi đủ điều kiện.
+    public long BonusGold { get; set; }
 
     // Trạng thái bật/tắt khuyến mãi.
     public bool IsActive { get; set; }

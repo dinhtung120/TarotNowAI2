@@ -1,30 +1,25 @@
-
-
 using System.Net;
-using System.Net.Http.Json;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.TestHost;
+using Net.payOS.Utils;
+using Newtonsoft.Json.Linq;
 using TarotNow.Domain.Entities;
+using TarotNow.Domain.Enums;
 using TarotNow.Infrastructure.Persistence;
 using Xunit;
 
 namespace TarotNow.Api.IntegrationTests;
 
 [Collection("Testcontainers")]
-// Kiểm thử luồng webhook nạp tiền: xác minh chữ ký và idempotency.
+// Kiểm thử webhook PayOS: verify signature và idempotency credit ví.
 public class DepositWebhookIntegrationTests : IClassFixture<CustomWebApplicationFactory<Program>>
 {
-    // Secret test dùng để sinh chữ ký HMAC giống gateway.
-    private const string WebhookSecret = "TarotNow_Test_WebhookSecret_2026";
-    // Factory tạo HttpClient + service scope cho integration test.
+    private const string ChecksumKey = "payos-test-checksum-key";
     private readonly CustomWebApplicationFactory<Program> _factory;
 
     /// <summary>
-    /// Khởi tạo test class webhook với factory tích hợp.
-    /// Luồng dùng chung factory giúp mọi test chạy trên cùng hạ tầng container.
+    /// Khởi tạo fixture webhook tests.
     /// </summary>
     public DepositWebhookIntegrationTests(CustomWebApplicationFactory<Program> factory)
     {
@@ -32,109 +27,163 @@ public class DepositWebhookIntegrationTests : IClassFixture<CustomWebApplication
     }
 
     /// <summary>
-    /// Xác nhận webhook bị từ chối khi chữ ký không hợp lệ.
-    /// Luồng gửi payload đúng format nhưng signature giả để kỳ vọng 401.
+    /// Webhook chữ ký sai phải bị chặn.
     /// </summary>
     [Fact]
-    public async Task Webhook_ShouldReject_WhenSignatureIsInvalid()
+    public async Task PayOsWebhook_ShouldReject_WhenSignatureIsInvalid()
     {
         var client = _factory.CreateClient();
+        var rawPayload = BuildWebhookPayload(
+            orderCode: 920_001,
+            amount: 50_000,
+            paymentLinkId: "plink_920001",
+            reference: "REF-INVALID",
+            isSuccess: true,
+            signatureOverride: "invalid_signature");
 
-        var payload = new
-        {
-            OrderId = Guid.NewGuid().ToString(),
-            TransactionId = "TX-INVALID",
-            Amount = 10000,
-            Status = "SUCCESS"
-        };
-        var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-        // Gắn chữ ký sai để kiểm tra nhánh bảo mật signature validation.
-        client.DefaultRequestHeaders.Add("X-Webhook-Signature", "wrong_signature");
-
-        var response = await client.PostAsync("/api/v1/deposits/webhook/vnpay", content);
+        var response = await client.PostAsync(
+            "/api/v1/deposits/webhook/payos",
+            new StringContent(rawPayload, Encoding.UTF8, "application/json"));
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     /// <summary>
-    /// Xác nhận webhook áp dụng idempotency và chỉ credit một lần.
-    /// Luồng gọi cùng payload hai lần với cùng chữ ký rồi kiểm tra trạng thái order và số dư.
+    /// Webhook retry chỉ credit ví một lần.
     /// </summary>
     [Fact]
-    public async Task Webhook_ShouldApplyIdempotency_AndCreditOnce()
+    public async Task PayOsWebhook_ShouldBeIdempotent_AndCreditWalletOnce()
     {
         var client = _factory.CreateClient();
+        var orderCode = 920_002L;
 
-        // Seed user và deposit order nền để webhook có dữ liệu đích cần cập nhật.
+        var user = await SeedUserAsync("webhook-idempotency");
+        var order = await SeedDepositOrderAsync(
+            userId: user.Id,
+            orderCode: orderCode,
+            amountVnd: 50_000,
+            baseDiamond: 500,
+            bonusGold: 25);
+
+        var rawPayload = BuildWebhookPayload(
+            orderCode: orderCode,
+            amount: order.AmountVnd,
+            paymentLinkId: order.PayOsPaymentLinkId,
+            reference: "REF-IDEMP-001",
+            isSuccess: true);
+
+        var request1 = new StringContent(rawPayload, Encoding.UTF8, "application/json");
+        var request2 = new StringContent(rawPayload, Encoding.UTF8, "application/json");
+
+        var response1 = await client.PostAsync("/api/v1/deposits/webhook/payos", request1);
+        var response2 = await client.PostAsync("/api/v1/deposits/webhook/payos", request2);
+
+        Assert.Equal(HttpStatusCode.OK, response1.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response2.StatusCode);
+
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-        var userId = Guid.NewGuid();
-        var user = new TarotNow.Domain.Entities.User("testdep@test.com", "testdep", "hash", "DisplayName", DateTime.UtcNow, true);
-        typeof(User).GetProperty("Id")?.SetValue(user, userId);
-        db.Users.Add(user);
-
-        var orderId = Guid.NewGuid();
-        var depositOrder = new DepositOrder(userId, 50000, 5);
-        typeof(DepositOrder).GetProperty("Id")?.SetValue(depositOrder, orderId);
-        db.DepositOrders.Add(depositOrder);
-        await db.SaveChangesAsync();
-
-        // Tạo payload hợp lệ và chữ ký đúng theo secret test.
-        var payload = new
-        {
-            OrderId = orderId.ToString(),
-            TransactionId = "TX-IDEMP-001",
-            Amount = 50000,
-            Status = "SUCCESS"
-        };
-        var rawPayload = JsonSerializer.Serialize(payload);
-        var signature = ComputeSignature(rawPayload, WebhookSecret);
-
-        var content1 = new StringContent(rawPayload, Encoding.UTF8, "application/json");
-        var content2 = new StringContent(rawPayload, Encoding.UTF8, "application/json");
-
-        client.DefaultRequestHeaders.Add("X-Webhook-Signature", signature);
-
-        // Lần 1: xử lý thành công và cập nhật đơn nạp.
-        var res1 = await client.PostAsync("/api/v1/deposits/webhook/vnpay", content1);
-        if (!res1.IsSuccessStatusCode)
-        {
-            var err = await res1.Content.ReadAsStringAsync();
-            throw new Exception($"res1 failed: {res1.StatusCode} - {err}");
-        }
-
-        // Lần 2: cùng dữ liệu, hệ thống phải idempotent và không cộng thêm lần nữa.
-        var res2 = await client.PostAsync("/api/v1/deposits/webhook/vnpay", content2);
-        if (!res2.IsSuccessStatusCode)
-        {
-            var err = await res2.Content.ReadAsStringAsync();
-            throw new Exception($"res2 failed: {res2.StatusCode} - {err}");
-        }
-
-        // Đọc lại dữ liệu sau webhook để xác nhận trạng thái cuối cùng.
-        using var scope2 = _factory.Services.CreateScope();
-        var dbAfter = scope2.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-        var updatedOrder = await dbAfter.DepositOrders.FindAsync(orderId);
-        var updatedUser = await dbAfter.Users.FindAsync(userId);
+        var updatedOrder = await db.DepositOrders.FindAsync(order.Id);
+        var updatedUser = await db.Users.FindAsync(user.Id);
 
         Assert.NotNull(updatedOrder);
-        Assert.Equal("Success", updatedOrder.Status);
-
         Assert.NotNull(updatedUser);
-        // Kỳ vọng chỉ nhận bonus đúng một lần theo dữ liệu seed của đơn.
-        Assert.Equal(5, updatedUser.DiamondBalance);
+        Assert.Equal(DepositOrderStatus.Success, updatedOrder!.Status);
+        Assert.NotNull(updatedOrder.WalletGrantedAtUtc);
+        Assert.Equal(500, updatedUser!.DiamondBalance);
+        Assert.Equal(25, updatedUser.GoldBalance);
     }
 
-    /// <summary>
-    /// Tính chữ ký HMAC SHA256 cho payload webhook.
-    /// Luồng helper dùng để tạo dữ liệu test giống cách gateway ký request thật.
-    /// </summary>
-    private static string ComputeSignature(string payload, string secret)
+    private async Task<User> SeedUserAsync(string suffix)
     {
-        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
-        var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
-        return Convert.ToHexString(hash).ToLowerInvariant();
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var user = new User(
+            email: $"{suffix}@test.local",
+            username: suffix,
+            passwordHash: "hash",
+            displayName: "Webhook Test User",
+            dateOfBirth: new DateTime(1996, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            hasConsented: true);
+        user.Activate();
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+        return user;
+    }
+
+    private async Task<DepositOrder> SeedDepositOrderAsync(
+        Guid userId,
+        long orderCode,
+        long amountVnd,
+        long baseDiamond,
+        long bonusGold)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var order = new DepositOrder(
+            userId: userId,
+            packageCode: "topup_50k",
+            amountVnd: amountVnd,
+            baseDiamondAmount: baseDiamond,
+            bonusGoldAmount: bonusGold,
+            clientRequestKey: $"test-client-{orderCode}",
+            payOsOrderCode: orderCode,
+            payOsPaymentLinkId: $"plink_{orderCode}",
+            checkoutUrl: $"https://payos.test/checkout/{orderCode}",
+            qrCode: $"PAYOS_QR_{orderCode}",
+            expiresAtUtc: DateTime.UtcNow.AddMinutes(15));
+
+        db.DepositOrders.Add(order);
+        await db.SaveChangesAsync();
+        return order;
+    }
+
+    private static string BuildWebhookPayload(
+        long orderCode,
+        long amount,
+        string paymentLinkId,
+        string reference,
+        bool isSuccess,
+        string? signatureOverride = null)
+    {
+        var code = isSuccess ? "00" : "01";
+        var desc = isSuccess ? "success" : "failed";
+        var data = new
+        {
+            orderCode,
+            amount,
+            description = $"TOPUP {orderCode}",
+            accountNumber = "12345678",
+            reference,
+            transactionDateTime = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"),
+            currency = "VND",
+            paymentLinkId,
+            code,
+            desc,
+            counterAccountBankId = "9704",
+            counterAccountBankName = "TEST BANK",
+            counterAccountName = "TEST USER",
+            counterAccountNumber = "0123456789",
+            virtualAccountName = "TAROTNOW",
+            virtualAccountNumber = "987654321"
+        };
+
+        var dataJson = JObject.FromObject(data);
+        var signature = signatureOverride
+                        ?? SignatureControl.CreateSignatureFromObj(dataJson, ChecksumKey);
+
+        var webhook = new
+        {
+            code,
+            desc,
+            success = isSuccess,
+            data,
+            signature
+        };
+
+        return JsonSerializer.Serialize(webhook);
     }
 }
