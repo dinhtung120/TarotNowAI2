@@ -1,6 +1,4 @@
-using Microsoft.AspNetCore.SignalR;
 using TarotNow.Application.Exceptions;
-using TarotNow.Application.Common.Realtime;
 using TarotNow.Application.Features.Chat.Commands.MarkMessagesRead;
 
 namespace TarotNow.Api.Hubs;
@@ -59,17 +57,5 @@ public partial class ChatHub
             ConversationId = conversationId,
             ReaderId = userGuid
         });
-
-        var payload = new
-        {
-            userId = userGuid,
-            conversationId,
-            readAt = DateTime.UtcNow
-        };
-
-        await _redisPublisher.PublishAsync(
-            RealtimeChannelNames.Chat,
-            RealtimeEventNames.ChatMessageRead,
-            payload);
     }
 }

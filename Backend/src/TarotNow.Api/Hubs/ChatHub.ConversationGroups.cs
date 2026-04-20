@@ -29,7 +29,6 @@ public partial class ChatHub
             }
 
             await AddConnectionToConversationGroupsAsync(conversationId);
-            await BroadcastConversationJoinedAsync(conversationId, userGuid);
             LogConversationJoined(conversationId, userGuid);
         }
         catch (Exception ex)

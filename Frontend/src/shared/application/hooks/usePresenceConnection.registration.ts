@@ -34,6 +34,12 @@ interface WalletBalanceChangedPayload {
  deltaAmount?: number | string;
 }
 
+interface ConversationUpdatedPayload {
+ type?: string;
+}
+
+const CHAT_UNREAD_REFRESH_EVENT_TYPES = new Set(['message_created', 'message_read', 'unread_changed']);
+
 function toNumber(value: number | string | undefined): number | null {
  if (typeof value === 'number' && Number.isFinite(value)) {
   return value;
@@ -84,6 +90,7 @@ function applyWalletDelta(payload?: WalletBalanceChangedPayload): boolean {
 
 export function registerPresenceConnectionHandlers(hubConnection: HubConnection, queryClient: QueryClient) {
   let inboxInvalidateTimeout: NodeJS.Timeout | null = null;
+  let unreadInvalidateTimeout: NodeJS.Timeout | null = null;
   let invalidationBatchTimeout: NodeJS.Timeout | null = null;
   let walletRefreshTimeout: NodeJS.Timeout | null = null;
   const pendingInvalidationDomains = new Set<UserStateInvalidationDomain>();
@@ -163,7 +170,18 @@ export function registerPresenceConnectionHandlers(hubConnection: HubConnection,
     }, 1000);
   };
 
-  hubConnection.on('UserStatusChanged', (userId: string) => {
+  const invalidateUnreadBadge = () => {
+    if (unreadInvalidateTimeout) {
+      clearTimeout(unreadInvalidateTimeout);
+    }
+
+    unreadInvalidateTimeout = setTimeout(() => {
+      void queryClient.invalidateQueries({ queryKey: userStateQueryKeys.chat.unreadBadge() });
+    }, 1000);
+  };
+
+  hubConnection.on('UserStatusChanged', (userId: string, status?: string) => {
+    logger.info('[PresenceRealtimeSync]', 'UserStatusChanged received', { userId, status });
     void queryClient.invalidateQueries({ queryKey: userStateQueryKeys.reader.directoryRoot() });
     if (userId) {
       void queryClient.invalidateQueries({ queryKey: userStateQueryKeys.reader.profile(userId) });
@@ -182,9 +200,13 @@ export function registerPresenceConnectionHandlers(hubConnection: HubConnection,
     }
   });
 
-  hubConnection.on('conversation.updated', () => {
+  hubConnection.on('conversation.updated', (payload?: ConversationUpdatedPayload) => {
     logger.info('[PresenceRealtimeSync]', 'conversation.updated received. Invalidating inbox queries...');
     invalidateInbox();
+    const eventType = payload?.type?.trim().toLowerCase();
+    if (!eventType || CHAT_UNREAD_REFRESH_EVENT_TYPES.has(eventType)) {
+      invalidateUnreadBadge();
+    }
   });
 
   hubConnection.on('gamification.quest_completed', () => {
@@ -250,6 +272,22 @@ export function registerPresenceConnectionHandlers(hubConnection: HubConnection,
 
   hubConnection.onreconnected((connectionId) => {
     logger.info('[PresenceRealtimeSync] reconnected. new id:', connectionId || 'unknown');
+    queueInvalidation([
+      'wallet',
+      'inventory',
+      'collection',
+      'readingSetup',
+      'readingHistory',
+      'profile',
+      'readerRequest',
+      'notifications',
+      'chat',
+      'gacha',
+      'gamification',
+    ]);
+    invalidateInbox();
+    invalidateUnreadBadge();
+    scheduleWalletRefresh();
   });
 
   hubConnection.onclose((error) => {
@@ -262,6 +300,9 @@ export function registerPresenceConnectionHandlers(hubConnection: HubConnection,
     dispose: () => {
       if (inboxInvalidateTimeout) {
         clearTimeout(inboxInvalidateTimeout);
+      }
+      if (unreadInvalidateTimeout) {
+        clearTimeout(unreadInvalidateTimeout);
       }
       if (invalidationBatchTimeout) {
         clearTimeout(invalidationBatchTimeout);

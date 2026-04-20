@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.SignalR;
+using MediatR;
 using TarotNow.Api.Constants;
-using TarotNow.Api.Hubs;
 using TarotNow.Application.Common.Interfaces;
+using TarotNow.Application.Features.Presence.Commands.PublishUserStatusChanged;
 using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Api.Services;
@@ -11,7 +11,7 @@ public class PresenceTimeoutBackgroundService : BackgroundService
 {
     private readonly ILogger<PresenceTimeoutBackgroundService> _logger;
     private readonly IUserPresenceTracker _presenceTracker;
-    private readonly IHubContext<PresenceHub> _hubContext;
+    private readonly IMediator _mediator;
     private readonly IServiceScopeFactory _scopeFactory;
 
     // Sau 15 phút không heartbeat thì xem user đã timeout hiện diện.
@@ -27,12 +27,12 @@ public class PresenceTimeoutBackgroundService : BackgroundService
     public PresenceTimeoutBackgroundService(
         ILogger<PresenceTimeoutBackgroundService> logger,
         IUserPresenceTracker presenceTracker,
-        IHubContext<PresenceHub> hubContext,
+        IMediator mediator,
         IServiceScopeFactory scopeFactory)
     {
         _logger = logger;
         _presenceTracker = presenceTracker;
-        _hubContext = hubContext;
+        _mediator = mediator;
         _scopeFactory = scopeFactory;
     }
 
@@ -97,9 +97,7 @@ public class PresenceTimeoutBackgroundService : BackgroundService
         {
             // Bước 1: xóa trạng thái hiện diện khỏi tracker để lần kiểm tra online sau phản ánh đúng offline.
             _presenceTracker.RemoveUser(userId);
-
-            // Bước 2: phát sự kiện realtime để client cập nhật badge trạng thái ngay lập tức.
-            await _hubContext.Clients.All.SendAsync("UserStatusChanged", userId, "offline", cancellationToken);
+            await PublishOfflineStatusAsync(userId, cancellationToken);
         }
 
         // Tạo scope mới cho repository để tránh giữ DbContext ngoài vòng đời phù hợp.
@@ -108,6 +106,24 @@ public class PresenceTimeoutBackgroundService : BackgroundService
 
         // Bước 3: đồng bộ trạng thái reader online/offline trong DB cho các luồng truy vấn không qua SignalR.
         await UpdateReaderProfilesToOfflineAsync(profileRepo, timedOutUsers, cancellationToken);
+    }
+
+    private async Task PublishOfflineStatusAsync(string userId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _mediator.Send(
+                new PublishUserStatusChangedCommand
+                {
+                    UserId = userId,
+                    Status = "offline"
+                },
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "[PresenceTimeout] Failed to publish offline status for user {UserId}.", userId);
+        }
     }
 
     /// <summary>

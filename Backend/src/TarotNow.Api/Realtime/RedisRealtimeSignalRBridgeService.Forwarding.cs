@@ -43,6 +43,19 @@ public sealed partial class RedisRealtimeSignalRBridgeService
 
     private async Task ForwardPresenceEventAsync(string eventName, JsonElement payload)
     {
+        if (eventName == RealtimeEventNames.UserStatusChanged)
+        {
+            var broadcastUserId = GetStringProperty(payload, "userId");
+            if (string.IsNullOrWhiteSpace(broadcastUserId))
+            {
+                return;
+            }
+
+            var status = GetStringProperty(payload, "status") ?? "offline";
+            await _presenceHubContext.Clients.All.SendAsync(eventName, broadcastUserId, status);
+            return;
+        }
+
         var userId = GetStringProperty(payload, "userId");
         if (string.IsNullOrWhiteSpace(userId))
         {

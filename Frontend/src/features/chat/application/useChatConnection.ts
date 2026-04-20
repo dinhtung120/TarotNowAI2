@@ -8,6 +8,7 @@ import type { ConversationDto } from '@/features/chat/application/actions';
 import { useChatHistoryState } from '@/features/chat/application/chat-connection/useChatHistoryState';
 import { useChatSendActions } from '@/features/chat/application/chat-connection/useChatSendActions';
 import { useChatSignalRLifecycle } from '@/features/chat/application/chat-connection/useChatSignalRLifecycle';
+import { isSameParticipantId } from '@/features/chat/domain/participantId';
 
 interface UseChatConnectionOptions {
  conversationId?: string | null;
@@ -30,6 +31,8 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
  useEffect(() => {
   scrollToBottomRef.current = scrollToBottom;
  }, [scrollToBottom]);
+
+ const resolvedCurrentUserId = authStore.user?.id ?? '';
 
  const {
   messages,
@@ -69,7 +72,7 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
 
  useChatSignalRLifecycle({
   conversationId,
-  currentUserId: authStore.user?.id ?? '',
+  currentUserId: resolvedCurrentUserId,
   queryClient,
   connectionRef,
   typingTimeoutRef,
@@ -85,10 +88,10 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
   appendMessage,
  });
 
- const currentUserId = authStore.user?.id ?? '';
+ const currentUserId = resolvedCurrentUserId;
  const isUserRole = useMemo(() => {
   if (!conversation || !currentUserId) return null;
-  return conversation.userId === currentUserId;
+  return isSameParticipantId(conversation.userId, currentUserId);
  }, [conversation, currentUserId]);
  const otherName = useMemo(() => {
   if (!conversation || isUserRole === null) return '';
@@ -98,7 +101,7 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
   if (!conversation || isUserRole === null) return null;
   return isUserRole ? conversation.readerAvatar ?? null : conversation.userAvatar ?? null;
  }, [conversation, isUserRole]);
- const remoteTyping = typingUserId !== null && typingUserId !== currentUserId;
+ const remoteTyping = typingUserId !== null && !isSameParticipantId(typingUserId, currentUserId);
 
  return {
   messages,

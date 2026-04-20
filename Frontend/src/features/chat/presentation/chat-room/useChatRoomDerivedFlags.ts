@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { normalizeReaderStatus } from '@/features/reader/domain/readerStatus';
 import type { ChatMessageDto, ConversationDto } from '@/features/chat/application/actions';
+import { isSameParticipantId } from '@/features/chat/domain/participantId';
 import { parseOfferResponseMap, parseStatusLabel } from '@/features/chat/presentation/chat-room/utils';
 
 interface UseChatRoomDerivedFlagsParams {
@@ -12,7 +13,7 @@ interface UseChatRoomDerivedFlagsParams {
 }
 
 const isUserVisibleMessage = (message: ChatMessageDto, currentUserId: string) =>
-  message.senderId === currentUserId
+  isSameParticipantId(message.senderId, currentUserId)
   && message.type !== 'system';
 
 export function useChatRoomDerivedFlags({
@@ -72,12 +73,9 @@ export function useChatRoomDerivedFlags({
 
   const canUseActionMenu = useMemo(() => conversation?.status === 'ongoing', [conversation?.status]);
 
-  const awaitingCompleteResponse = useMemo(
-    () => conversation?.status === 'ongoing'
-      && Boolean(conversation.confirm?.requestedBy)
-      && conversation.confirm?.requestedBy !== currentUserId,
-    [conversation?.confirm?.requestedBy, conversation?.status, currentUserId],
-  );
+  const awaitingCompleteResponse = conversation?.status === 'ongoing'
+    && Boolean(conversation.confirm?.requestedBy)
+    && !isSameParticipantId(conversation.confirm?.requestedBy, currentUserId);
 
   const readOnlyHint = useMemo(() => {
     if (!conversation) return 'Cuộc trò chuyện đang ở chế độ chỉ đọc.';

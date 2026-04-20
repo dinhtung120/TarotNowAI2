@@ -8,6 +8,7 @@ import {
 } from '@microsoft/signalr';
 import type { QueryClient } from '@tanstack/react-query';
 import type { ChatMessageDto, ConversationDto } from '@/features/chat/application/actions';
+import { isSameParticipantId } from '@/features/chat/domain/participantId';
 import { listMessages } from '@/features/chat/application/actions';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { createSignalRLogger, getCachedConversation } from './utils';
@@ -100,30 +101,30 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
       appendMessage(message);
       
       // Nếu người dùng đang nhìn màn hình chat và message đến từ đối phương, đánh dấu đã đọc ngay.
-      if (document.visibilityState === 'visible' && message.senderId !== currentUserId) {
+      if (document.visibilityState === 'visible' && !isSameParticipantId(message.senderId, currentUserId)) {
        void markReadRef.current();
       }
      }
     });
     
     hubConnection.on('message.read', (payload: { userId: string; conversationId: string }) => {
-     if (payload.conversationId !== conversationId || payload.userId === currentUserId) return;
+     if (payload.conversationId !== conversationId || isSameParticipantId(payload.userId, currentUserId)) return;
      setMessages((prev) =>
       prev.map((item) =>
-       item.senderId === currentUserId ? { ...item, isRead: true } : item
+       isSameParticipantId(item.senderId, currentUserId) ? { ...item, isRead: true } : item
       )
      );
     });
 
     hubConnection.on('typing.started', (payload: { userId: string; conversationId: string }) => {
-     if (payload.conversationId !== conversationId || payload.userId === currentUserId) return;
+     if (payload.conversationId !== conversationId || isSameParticipantId(payload.userId, currentUserId)) return;
      setTypingUserId(payload.userId);
      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
      typingTimeoutRef.current = setTimeout(() => setTypingUserId(null), 2500);
     });
 
     hubConnection.on('typing.stopped', (payload: { userId: string; conversationId: string }) => {
-     if (payload.conversationId !== conversationId || payload.userId === currentUserId) return;
+     if (payload.conversationId !== conversationId || isSameParticipantId(payload.userId, currentUserId)) return;
      setTypingUserId(null);
     });
 
@@ -151,8 +152,11 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
     hubConnection.onreconnected(() => {
      if (cancelled) return;
      setConnected(true);
-     void hubConnection?.invoke('JoinConversation', conversationId);
-     void markReadRef.current();
+     void (async () => {
+      await hubConnection?.invoke('JoinConversation', conversationId);
+      await loadInitialRef.current(true);
+      await markReadRef.current();
+     })();
     });
     hubConnection.onclose(() => setConnected(false));
 

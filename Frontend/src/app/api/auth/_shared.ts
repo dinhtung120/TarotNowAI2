@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AUTH_COOKIE, AUTH_HEADER, AUTH_SESSION } from '@/shared/infrastructure/auth/authConstants';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
 
+const AUTH_COOKIE_DOMAIN = process.env.AUTH_COOKIE_DOMAIN?.trim() || undefined;
+
 export function resolveAccessTtlSeconds(payload: { expiresInSeconds?: number }): number {
  if (typeof payload.expiresInSeconds === 'number' && payload.expiresInSeconds > 0) {
   return payload.expiresInSeconds;
@@ -121,6 +123,7 @@ export function setAccessCookie(response: NextResponse, accessToken: string, ttl
   secure: true,
   sameSite: 'strict',
   path: '/',
+  ...(AUTH_COOKIE_DOMAIN ? { domain: AUTH_COOKIE_DOMAIN } : {}),
   maxAge: Math.max(1, ttlSeconds),
  });
 }
@@ -139,6 +142,7 @@ export function setRefreshCookieFromHeaders(response: NextResponse, headers: Hea
   secure: true,
   sameSite: 'strict',
   path: '/',
+  ...(AUTH_COOKIE_DOMAIN ? { domain: AUTH_COOKIE_DOMAIN } : {}),
   maxAge: Math.max(1, parsed?.maxAgeSeconds ?? AUTH_SESSION.DEFAULT_REFRESH_TTL_SECONDS),
  });
  return true;
@@ -166,13 +170,32 @@ export function setDeviceCookie(response: NextResponse, deviceId: string): void 
   secure: true,
   sameSite: 'strict',
   path: '/',
+  ...(AUTH_COOKIE_DOMAIN ? { domain: AUTH_COOKIE_DOMAIN } : {}),
   maxAge: 365 * 24 * 60 * 60,
  });
 }
 
 export function clearAuthCookies(response: NextResponse): void {
- response.cookies.delete(AUTH_COOKIE.ACCESS);
- response.cookies.delete(AUTH_COOKIE.REFRESH);
+ response.cookies.set({
+  name: AUTH_COOKIE.ACCESS,
+  value: '',
+  httpOnly: true,
+  secure: true,
+  sameSite: 'strict',
+  path: '/',
+  ...(AUTH_COOKIE_DOMAIN ? { domain: AUTH_COOKIE_DOMAIN } : {}),
+  maxAge: 0,
+ });
+ response.cookies.set({
+  name: AUTH_COOKIE.REFRESH,
+  value: '',
+  httpOnly: true,
+  secure: true,
+  sameSite: 'strict',
+  path: '/',
+  ...(AUTH_COOKIE_DOMAIN ? { domain: AUTH_COOKIE_DOMAIN } : {}),
+  maxAge: 0,
+ });
 }
 
 export function unauthorizedResponse(clearCookies = false): NextResponse {

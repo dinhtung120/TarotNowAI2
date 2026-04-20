@@ -95,3 +95,40 @@ public sealed class TitleGrantedRealtimeHandler
     }
 }
 
+/// <summary>
+/// Handler publish realtime UserStatusChanged cho presence.
+/// </summary>
+public sealed class UserStatusChangedRealtimeHandler
+    : IdempotentDomainEventNotificationHandler<UserStatusChangedDomainEvent>
+{
+    private readonly IRedisPublisher _redisPublisher;
+
+    /// <summary>
+    /// Khởi tạo handler user status changed realtime.
+    /// </summary>
+    public UserStatusChangedRealtimeHandler(
+        IRedisPublisher redisPublisher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
+    {
+        _redisPublisher = redisPublisher;
+    }
+
+    /// <inheritdoc />
+    protected override Task HandleDomainEventAsync(
+        UserStatusChangedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        return _redisPublisher.PublishAsync(
+            RealtimeChannelNames.UserState,
+            RealtimeEventNames.UserStatusChanged,
+            new
+            {
+                userId = domainEvent.UserId,
+                status = domainEvent.Status,
+                at = domainEvent.OccurredAtUtc
+            },
+            cancellationToken);
+    }
+}

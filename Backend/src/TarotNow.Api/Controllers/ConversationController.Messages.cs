@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Contracts.Requests;
 using TarotNow.Api.Extensions;
-using TarotNow.Application.Common;
-using TarotNow.Application.Features.Chat.Commands.QueueChatModeration;
 using TarotNow.Application.Features.Chat.Commands.SendMessage;
 using TarotNow.Application.Features.Chat.Queries.ListMessages;
 
@@ -70,36 +68,6 @@ public partial class ConversationController
             MediaPayload = body.MediaPayload
         });
 
-        // Đưa moderation vào hàng đợi không chặn đường đi chính của gửi tin nhắn.
-        await TryQueueModerationAsync(result);
         return Ok(result);
-    }
-
-    /// <summary>
-    /// Thử đẩy message vào hàng đợi moderation bất đồng bộ.
-    /// </summary>
-    /// <param name="message">Tin nhắn cần moderation.</param>
-    private async Task TryQueueModerationAsync(ChatMessageDto message)
-    {
-        try
-        {
-            // Đẩy payload moderation đầy đủ để worker có đủ ngữ cảnh kiểm duyệt.
-            await Mediator.Send(new QueueChatModerationCommand
-            {
-                Payload = new ChatModerationPayload
-                {
-                    MessageId = message.Id,
-                    ConversationId = message.ConversationId,
-                    SenderId = message.SenderId,
-                    Type = message.Type,
-                    Content = message.Content,
-                    CreatedAt = message.CreatedAt
-                }
-            });
-        }
-        catch
-        {
-            // Lỗi queue moderation không được chặn trải nghiệm gửi tin nhắn của người dùng.
-        }
     }
 }

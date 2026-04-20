@@ -84,6 +84,15 @@ public class MarkMessagesReadCommandHandler : IRequestHandler<MarkMessagesReadCo
             new Domain.Events.ConversationUpdatedDomainEvent(conversation.Id, "message_read", occurredAtUtc),
             cancellationToken);
 
+        await _domainEventPublisher.PublishAsync(
+            new Domain.Events.ChatMessageReadDomainEvent
+            {
+                ConversationId = conversation.Id,
+                UserId = readerId,
+                OccurredAtUtc = occurredAtUtc
+            },
+            cancellationToken);
+
         return true;
     }
 }

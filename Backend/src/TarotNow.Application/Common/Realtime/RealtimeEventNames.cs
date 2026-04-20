@@ -84,4 +84,9 @@ public static class RealtimeEventNames
     /// Sự kiện title thay đổi.
     /// </summary>
     public const string TitleChanged = "title.changed";
+
+    /// <summary>
+    /// Sự kiện thay đổi trạng thái hiện diện người dùng.
+    /// </summary>
+    public const string UserStatusChanged = "UserStatusChanged";
 }

@@ -156,5 +156,17 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
                 OccurredAtUtc = message.CreatedAt
             },
             cancellationToken);
+
+        await _domainEventPublisher.PublishAsync(
+            new Domain.Events.ChatModerationRequestedDomainEvent
+            {
+                MessageId = message.Id,
+                ConversationId = conversation.Id,
+                SenderId = message.SenderId,
+                MessageType = message.Type,
+                Content = message.Content,
+                CreatedAtUtc = message.CreatedAt
+            },
+            cancellationToken);
     }
 }

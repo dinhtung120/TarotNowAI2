@@ -105,18 +105,23 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
         using var chatUserProbe = new HubEventProbe(chatUser, "message.created", "conversation.updated");
         using var chatReaderProbe = new HubEventProbe(chatReader, "message.created", "conversation.updated");
         using var chatOtherProbe = new HubEventProbe(chatOther, "message.created", "conversation.updated");
+        using var presenceUserStatusProbe = new PresenceStatusProbe(presenceUser);
+        using var presenceReaderStatusProbe = new PresenceStatusProbe(presenceReader);
+        using var presenceOtherStatusProbe = new PresenceStatusProbe(presenceOther);
 
         await StartConnectionsAsync(presenceUser, presenceReader, presenceOther, chatUser, chatReader, chatOther);
         await AddConnectionToConversationGroupAsync(chatUser, conversationId);
         await AddConnectionToConversationGroupAsync(chatReader, conversationId);
         await Task.Delay(150);
         ClearAllProbes(presenceUserProbe, presenceReaderProbe, presenceOtherProbe, chatUserProbe, chatReaderProbe, chatOtherProbe);
+        ClearAllStatusProbes(presenceUserStatusProbe, presenceReaderStatusProbe, presenceOtherStatusProbe);
 
         await AssertNotificationRoutingAsync(userId, presenceUserProbe, presenceReaderProbe, presenceOtherProbe);
         await AssertWalletRoutingAsync(userId, presenceUserProbe, presenceReaderProbe, presenceOtherProbe);
         await AssertChatMessageCreatedRoutingAsync(conversationId, chatUserProbe, chatReaderProbe, chatOtherProbe);
         await AssertConversationUpdatedRoutingAsync(userId, readerId, conversationId, chatUserProbe, chatReaderProbe, chatOtherProbe, presenceUserProbe, presenceReaderProbe, presenceOtherProbe);
         await AssertUnreadChangedRoutingAsync(userId, readerId, conversationId, chatUserProbe, chatReaderProbe, chatOtherProbe, presenceUserProbe, presenceReaderProbe, presenceOtherProbe);
+        await AssertUserStatusChangedRoutingAsync(userId, "online", presenceUserStatusProbe, presenceReaderStatusProbe, presenceOtherStatusProbe);
         await AssertGamificationRoutingAsync(userId, presenceUserProbe, presenceReaderProbe, presenceOtherProbe);
         await AssertInvalidPayloadDroppedAsync(userId, readerId, presenceUserProbe, presenceReaderProbe, presenceOtherProbe, chatUserProbe, chatReaderProbe, chatOtherProbe);
     }
@@ -297,6 +302,31 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
         await presenceOtherProbe.AssertNoEventAsync("gamification.card_level_up", NegativeTimeout);
     }
 
+    private async Task AssertUserStatusChangedRoutingAsync(
+        string userId,
+        string status,
+        PresenceStatusProbe presenceUserStatusProbe,
+        PresenceStatusProbe presenceReaderStatusProbe,
+        PresenceStatusProbe presenceOtherStatusProbe)
+    {
+        await _bridgeSource.PublishEnvelopeAsync(
+            RealtimeChannelNames.UserState,
+            RealtimeEventNames.UserStatusChanged,
+            new
+            {
+                userId,
+                status
+            });
+
+        var userEvent = await presenceUserStatusProbe.WaitForAsync(PositiveTimeout);
+        var readerEvent = await presenceReaderStatusProbe.WaitForAsync(PositiveTimeout);
+        var otherEvent = await presenceOtherStatusProbe.WaitForAsync(PositiveTimeout);
+
+        Assert.Equal((userId, status), userEvent);
+        Assert.Equal((userId, status), readerEvent);
+        Assert.Equal((userId, status), otherEvent);
+    }
+
     private async Task AssertInvalidPayloadDroppedAsync(
         string userId,
         string readerId,
@@ -434,6 +464,14 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
         }
     }
 
+    private static void ClearAllStatusProbes(params PresenceStatusProbe[] probes)
+    {
+        foreach (var probe in probes)
+        {
+            probe.ClearAll();
+        }
+    }
+
     private static void RemoveHostedServicesExcept<THostedService>(IServiceCollection services)
         where THostedService : class, IHostedService
     {
@@ -527,6 +565,51 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
             }
 
             return queue.TryDequeue(out payload);
+        }
+    }
+
+    private sealed class PresenceStatusProbe : IDisposable
+    {
+        private readonly ConcurrentQueue<(string UserId, string Status)> _events = new();
+        private readonly IDisposable _subscription;
+
+        public PresenceStatusProbe(HubConnection connection)
+        {
+            _subscription = connection.On<string, string>(
+                RealtimeEventNames.UserStatusChanged,
+                (userId, status) =>
+                {
+                    _events.Enqueue((userId, status));
+                    return Task.CompletedTask;
+                });
+        }
+
+        public async Task<(string UserId, string Status)> WaitForAsync(TimeSpan timeout)
+        {
+            var start = DateTime.UtcNow;
+            while (DateTime.UtcNow - start < timeout)
+            {
+                if (_events.TryDequeue(out var payload))
+                {
+                    return payload;
+                }
+
+                await Task.Delay(25);
+            }
+
+            throw new TimeoutException($"Timed out waiting for SignalR event '{RealtimeEventNames.UserStatusChanged}'.");
+        }
+
+        public void ClearAll()
+        {
+            while (_events.TryDequeue(out _))
+            {
+            }
+        }
+
+        public void Dispose()
+        {
+            _subscription.Dispose();
         }
     }
 }

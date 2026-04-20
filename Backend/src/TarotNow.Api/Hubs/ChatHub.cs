@@ -2,9 +2,6 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using TarotNow.Api.Extensions;
-using TarotNow.Api.Realtime;
-using TarotNow.Application.Common.Realtime;
-using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Api.Hubs;
 
@@ -15,22 +12,18 @@ public partial class ChatHub : Hub
 {
     private readonly IMediator _mediator;
     private readonly ILogger<ChatHub> _logger;
-    private readonly IRedisPublisher _redisPublisher;
 
     /// <summary>
     /// Khởi tạo chat hub.
     /// </summary>
     /// <param name="mediator">MediatR điều phối nghiệp vụ chat.</param>
     /// <param name="logger">Logger phục vụ quan sát lỗi realtime.</param>
-    /// <param name="redisPublisher">Publisher Redis để phát sự kiện realtime qua bridge.</param>
     public ChatHub(
         IMediator mediator,
-        ILogger<ChatHub> logger,
-        IRedisPublisher redisPublisher)
+        ILogger<ChatHub> logger)
     {
         _mediator = mediator;
         _logger = logger;
-        _redisPublisher = redisPublisher;
     }
 
     /// <summary>

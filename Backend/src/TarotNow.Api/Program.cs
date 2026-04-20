@@ -48,7 +48,7 @@ builder.Host.UseSerilog((context, services, loggerConfiguration) =>
 // Đăng ký service presentation + CORS trước khi build app.
 builder.Services
     .AddApiPresentationServices(builder.Configuration)
-    .AddConfiguredCors(builder.Configuration, builder.Environment);
+    .AddConfiguredCors(builder.Configuration);
 
 var app = builder.Build();
 

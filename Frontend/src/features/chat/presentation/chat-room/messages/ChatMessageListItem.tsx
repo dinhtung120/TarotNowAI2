@@ -4,6 +4,7 @@ import ChatSystemMessage from '@/features/chat/presentation/chat-room/messages/C
 import ChatTextMessage from '@/features/chat/presentation/chat-room/messages/ChatTextMessage';
 import ChatVoiceMessage from '@/features/chat/presentation/chat-room/messages/ChatVoiceMessage';
 import type { ChatMessageListItemProps } from '@/features/chat/presentation/chat-room/chatRoomUi.types';
+import { isSameParticipantId } from '@/features/chat/domain/participantId';
 import { isSystemMessage } from '@/features/chat/presentation/chat-room/messages/messageHelpers';
 
 export default function ChatMessageListItem({
@@ -17,7 +18,7 @@ export default function ChatMessageListItem({
   onRejectOffer,
   VoiceMessageBubble,
 }: ChatMessageListItemProps) {
-  const isMe = message.senderId === currentUserId;
+  const isMe = isSameParticipantId(message.senderId, currentUserId);
 
   if (isSystemMessage(message)) {
     return <ChatSystemMessage content={message.content} />;

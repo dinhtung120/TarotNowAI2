@@ -50,6 +50,7 @@ public static class EnvLoader
 
         CopyEnvIfTargetMissing("PAYMENT_WEBHOOK_SECRET", "PAYMENTGATEWAY__WEBHOOKSECRET");
         CopyEnvIfTargetMissing("MFA_ENCRYPTION_KEY", "SECURITY__MFAENCRYPTIONKEY");
+        CopyEnvIfTargetMissing("AUTH_COOKIE_DOMAIN", "AUTH__COOKIEDOMAIN");
 
         CopyEnvIfTargetMissing("SMTP_HOST", "SMTP__HOST");
         CopyEnvIfTargetMissing("SMTP_PORT", "SMTP__PORT");

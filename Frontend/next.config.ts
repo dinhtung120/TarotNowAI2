@@ -15,6 +15,7 @@ const rewriteBackendOrigin = resolveRewriteBackendOrigin();
 const frontendOrigin = resolveFrontendOrigin(
  process.env.NEXT_PUBLIC_BASE_URL ?? process.env.PUBLIC_BASE_URL,
 );
+ensureCanonicalFrontendOrigin(frontendOrigin, process.env.NEXT_PUBLIC_CANONICAL_HOST);
 const frontendHosts = resolveFrontendHosts(frontendOrigin.hostname, process.env.NEXT_ALLOWED_DEV_HOSTS);
 const serverActionAllowedOrigins = resolveServerActionAllowedOrigins(frontendOrigin, frontendHosts);
 
@@ -30,6 +31,28 @@ function resolveFrontendOrigin(value: string | undefined): URL {
   return new URL(raw);
  } catch {
   throw new Error('NEXT_PUBLIC_BASE_URL is not a valid absolute URL.');
+ }
+}
+
+function ensureCanonicalFrontendOrigin(origin: URL, canonicalHostValue: string | undefined): void {
+ if (process.env.NODE_ENV !== 'production') {
+  return;
+ }
+
+ if (process.env.ENFORCE_CANONICAL_HOST?.trim().toLowerCase() !== 'true') {
+  return;
+ }
+
+ const canonicalHost = canonicalHostValue?.trim().toLowerCase();
+ if (!canonicalHost) {
+  return;
+ }
+
+ const configuredHost = origin.hostname.trim().toLowerCase();
+ if (configuredHost !== canonicalHost) {
+  throw new Error(
+   `NEXT_PUBLIC_BASE_URL host (${configuredHost}) must match NEXT_PUBLIC_CANONICAL_HOST (${canonicalHost}) in production.`,
+  );
  }
 }
 

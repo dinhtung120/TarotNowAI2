@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.SignalR;
-using TarotNow.Application.Common.Realtime;
+using TarotNow.Application.Exceptions;
+using TarotNow.Application.Features.Chat.Commands.PublishTypingState;
 
 namespace TarotNow.Api.Hubs;
 
@@ -18,15 +18,7 @@ public partial class ChatHub
             return;
         }
 
-        await _redisPublisher.PublishAsync(
-            RealtimeChannelNames.Chat,
-            RealtimeEventNames.TypingStarted,
-            new
-            {
-                conversationId,
-                userId = userGuid,
-                at = DateTime.UtcNow
-            });
+        await PublishTypingStateAsync(conversationId, userGuid, isTyping: true);
     }
 
     /// <summary>
@@ -42,14 +34,37 @@ public partial class ChatHub
             return;
         }
 
-        await _redisPublisher.PublishAsync(
-            RealtimeChannelNames.Chat,
-            RealtimeEventNames.TypingStopped,
-            new
+        await PublishTypingStateAsync(conversationId, userGuid, isTyping: false);
+    }
+
+    private async Task PublishTypingStateAsync(string conversationId, Guid userGuid, bool isTyping)
+    {
+        try
+        {
+            await _mediator.Send(new PublishTypingStateCommand
             {
-                conversationId,
-                userId = userGuid,
-                at = DateTime.UtcNow
+                ConversationId = conversationId,
+                UserId = userGuid,
+                IsTyping = isTyping
             });
+        }
+        catch (BadRequestException ex)
+        {
+            await SendClientErrorAsync(ex.Message);
+        }
+        catch (NotFoundException ex)
+        {
+            await SendClientErrorAsync(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "[ChatHub] Publish typing state failed. ConversationId={ConversationId}, UserId={UserId}, IsTyping={IsTyping}",
+                conversationId,
+                userGuid,
+                isTyping);
+            await SendClientErrorAsync("Unable to publish typing state right now.");
+        }
     }
 }

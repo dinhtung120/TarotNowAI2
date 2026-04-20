@@ -9,6 +9,22 @@ const intlMiddleware = createMiddleware(routing);
 const localeSet = new Set(routing.locales);
 const ROLE_CLAIM_KEY = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
 const DEFAULT_REDIRECT_AFTER_ROLE_GUARD = '/profile';
+const DEFAULT_CANONICAL_HOST = 'www.tarotnow.xyz';
+const CANONICAL_HOST = (process.env.NEXT_PUBLIC_CANONICAL_HOST?.trim().toLowerCase() || DEFAULT_CANONICAL_HOST);
+const AUTH_COOKIE_DOMAIN = process.env.AUTH_COOKIE_DOMAIN?.trim() || undefined;
+
+const resolveNonCanonicalHosts = (canonicalHost: string): Set<string> => {
+ const hosts = new Set<string>();
+ if (canonicalHost.startsWith('www.') && canonicalHost.length > 4) {
+  hosts.add(canonicalHost.slice(4));
+ }
+
+ // Tương thích ngược với policy domain hiện tại của TarotNow.
+ hosts.add('tarotnow.xyz');
+ return hosts;
+};
+
+const NON_CANONICAL_HOSTS = resolveNonCanonicalHosts(CANONICAL_HOST);
 
 const resolveLocale = (pathname: string): string => {
  const maybeLocale = pathname.split('/')[1];
@@ -31,8 +47,26 @@ const matchesPrefix = (pathname: string, prefix: string): boolean =>
  pathname === prefix || pathname.startsWith(`${prefix}/`);
 
 const clearAuthCookies = (response: NextResponse): void => {
- response.cookies.delete(AUTH_COOKIE.ACCESS);
- response.cookies.delete(AUTH_COOKIE.REFRESH);
+ response.cookies.set({
+  name: AUTH_COOKIE.ACCESS,
+  value: '',
+  httpOnly: true,
+  secure: true,
+  sameSite: 'strict',
+  path: '/',
+  ...(AUTH_COOKIE_DOMAIN ? { domain: AUTH_COOKIE_DOMAIN } : {}),
+  maxAge: 0,
+ });
+ response.cookies.set({
+  name: AUTH_COOKIE.REFRESH,
+  value: '',
+  httpOnly: true,
+  secure: true,
+  sameSite: 'strict',
+  path: '/',
+  ...(AUTH_COOKIE_DOMAIN ? { domain: AUTH_COOKIE_DOMAIN } : {}),
+  maxAge: 0,
+ });
 };
 
 const hasFileExtension = (pathname: string): boolean => {
@@ -128,6 +162,23 @@ const shouldBypassMiddleware = (request: NextRequest): boolean => {
  );
 };
 
+const shouldRedirectToCanonicalHost = (request: NextRequest): boolean => {
+ const hostname = request.nextUrl.hostname.toLowerCase();
+ if (hostname === CANONICAL_HOST) {
+  return false;
+ }
+
+ return NON_CANONICAL_HOSTS.has(hostname);
+};
+
+const createCanonicalRedirectResponse = (request: NextRequest): NextResponse => {
+ const redirectUrl = request.nextUrl.clone();
+ redirectUrl.hostname = CANONICAL_HOST;
+ redirectUrl.protocol = 'https:';
+ redirectUrl.port = '';
+ return NextResponse.redirect(redirectUrl, 301);
+};
+
 const resolveExtraConnectSrc = (): string[] => {
  const raw = process.env.NEXT_PUBLIC_CSP_CONNECT_SRC_EXTRA?.trim();
  if (!raw) {
@@ -201,6 +252,10 @@ const withResponseCsp = (response: NextResponse): NextResponse => {
  * Refresh/validate token được xử lý ở API layer và client session manager.
  */
 export default function proxy(request: NextRequest) {
+ if (shouldRedirectToCanonicalHost(request)) {
+  return createCanonicalRedirectResponse(request);
+ }
+
  if (shouldBypassMiddleware(request)) {
   return NextResponse.next();
  }

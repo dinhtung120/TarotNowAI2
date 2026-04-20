@@ -20,6 +20,8 @@ public static partial class DependencyInjection
         services.AddMemoryCache();
         var redisConnectionString = configuration.GetConnectionString("Redis");
         var redisInstanceName = configuration["Redis:InstanceName"]?.Trim();
+        var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? string.Empty;
+        var requiresRedis = string.Equals(environmentName, "Production", StringComparison.OrdinalIgnoreCase);
 
         if (!string.IsNullOrWhiteSpace(redisConnectionString) && string.IsNullOrWhiteSpace(redisInstanceName))
         {
@@ -29,6 +31,13 @@ public static partial class DependencyInjection
         var redisMultiplexer = !string.IsNullOrWhiteSpace(redisConnectionString)
             ? TryCreateRedisMultiplexer(redisConnectionString)
             : null;
+
+        if (requiresRedis && redisMultiplexer is null)
+        {
+            throw new InvalidOperationException(
+                "Redis is required in Production for realtime consistency. Check ConnectionStrings:Redis and Redis availability.");
+        }
+
         var usesRedisCache = redisMultiplexer != null;
 
         if (redisMultiplexer != null)

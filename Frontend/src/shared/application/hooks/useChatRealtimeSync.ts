@@ -20,7 +20,17 @@ interface ConversationUpdatedPayload {
 
 const UNAUTHORIZED_COOLDOWN_MS = 60_000;
 const NEGOTIATION_TIMEOUT_MS = 8_000;
+const UNREAD_BADGE_REFRESH_EVENT_TYPES = new Set(['message_created', 'message_read', 'unread_changed']);
 let unauthorizedRetryBlockedUntil = 0;
+
+function shouldRefreshUnreadBadge(payload?: ConversationUpdatedPayload): boolean {
+ const eventType = payload?.type?.trim().toLowerCase();
+ if (!eventType) {
+  return true;
+ }
+
+ return UNREAD_BADGE_REFRESH_EVENT_TYPES.has(eventType);
+}
 
 function isUnauthorizedNegotiationError(error: unknown): boolean {
  if (!error) {
@@ -135,13 +145,17 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
 
       hubConnection.on('conversation.updated', (payload: ConversationUpdatedPayload) => {
         invalidateInboxQueries();
-        // Chỉ cập nhật unread badge khi có tin nhắn mới để tránh refetch nhiễu.
-        if (payload?.type === 'message_created') {
+        // Giữ unread badge đồng bộ cho mọi sự kiện làm đổi trạng thái đọc/chưa đọc.
+        if (shouldRefreshUnreadBadge(payload)) {
           invalidateUnreadBadge();
         }
       });
       hubConnection.on('Error', (error: string) => {
         logger.error('[ChatRealtimeSync] hub error', error);
+      });
+      hubConnection.onreconnected(() => {
+        invalidateInboxQueries();
+        invalidateUnreadBadge();
       });
 
       try {

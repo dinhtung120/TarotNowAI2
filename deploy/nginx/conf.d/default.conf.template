@@ -25,7 +25,16 @@ map $http_x_forwarded_port $forwarded_port {
 
 server {
   listen 80;
-  server_name _;
+  server_name ${NON_CANONICAL_HOST};
+
+  # Canonical domain policy: luôn ép non-www sang www để tránh tách cookie/session/realtime theo host.
+  return 301 https://${CANONICAL_HOST}$request_uri;
+}
+
+server {
+  listen 80;
+  # Giữ '_' để healthcheck nội bộ (127.0.0.1) vẫn đi vào app server.
+  server_name ${CANONICAL_HOST} _;
 
   # Sử dụng Docker internal DNS resolver để resolve tên service container
   # valid=30s: cache DNS kết quả 30 giây, tránh query quá nhiều nhưng vẫn

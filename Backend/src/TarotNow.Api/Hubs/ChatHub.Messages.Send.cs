@@ -44,8 +44,7 @@ public partial class ChatHub
             // Gắn payload media/payment khi type đặc biệt để handler xử lý đúng rule.
             TryAttachSpecialPayload(command, content);
 
-            var message = await _mediator.Send(command);
-            await TryQueueModerationAsync(message);
+            await _mediator.Send(command);
         }
         catch (BadRequestException ex)
         {

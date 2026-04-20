@@ -1,7 +1,6 @@
 'use client';
 
 import { getClientSessionSnapshot } from '@/shared/infrastructure/auth/clientSessionSnapshot';
-import { useAuthStore } from '@/store/authStore';
 
 /**
  * Guard SignalR startup with the latest cookie-backed session state.
@@ -11,9 +10,6 @@ export async function ensureRealtimeSession(): Promise<boolean> {
   maxAgeMs: 10_000,
   mode: 'lite',
  });
- if (sessionSnapshot.terminalFailure) {
-  useAuthStore.getState().clearAuth();
- }
-
- return sessionSnapshot.authenticated;
+ // Không clear auth store tại đây để tránh làm UI "mất danh tính" tạm thời khi session endpoint lỗi tức thời.
+ return sessionSnapshot.authenticated && !sessionSnapshot.terminalFailure;
 }

@@ -1,25 +1,33 @@
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using TarotNow.Api.Extensions;
 using TarotNow.Application.Common.Interfaces;
+using TarotNow.Application.Features.Presence.Commands.PublishUserStatusChanged;
 
 namespace TarotNow.Api.Hubs;
 
 [Authorize]
 // SignalR hub theo dõi trạng thái presence người dùng.
-// Luồng chính: đánh dấu connected/disconnected, nhận heartbeat và broadcast thay đổi trạng thái.
+// Luồng chính: đánh dấu connected/disconnected, nhận heartbeat và phát domain event trạng thái hiện diện.
 public class PresenceHub : Hub
 {
+    private readonly IMediator _mediator;
     private readonly IUserPresenceTracker _presenceTracker;
     private readonly ILogger<PresenceHub> _logger;
 
     /// <summary>
     /// Khởi tạo presence hub.
     /// </summary>
+    /// <param name="mediator">MediatR điều phối publish presence domain events.</param>
     /// <param name="presenceTracker">Tracker lưu trạng thái online/offline và heartbeat.</param>
     /// <param name="logger">Logger phục vụ giám sát kết nối presence.</param>
-    public PresenceHub(IUserPresenceTracker presenceTracker, ILogger<PresenceHub> logger)
+    public PresenceHub(
+        IMediator mediator,
+        IUserPresenceTracker presenceTracker,
+        ILogger<PresenceHub> logger)
     {
+        _mediator = mediator;
         _presenceTracker = presenceTracker;
         _logger = logger;
     }
@@ -32,7 +40,7 @@ public class PresenceHub : Hub
 
     /// <summary>
     /// Xử lý khi kết nối presence được thiết lập.
-    /// Luồng xử lý: mark connected, join user-group, broadcast trạng thái online.
+    /// Luồng xử lý: mark connected, join user-group, publish trạng thái online.
     /// </summary>
     public override async Task OnConnectedAsync()
     {
@@ -40,14 +48,9 @@ public class PresenceHub : Hub
 
         if (!string.IsNullOrWhiteSpace(userId))
         {
-            // Ghi nhận kết nối mới để trạng thái online phản ánh đúng theo từng connection.
             _presenceTracker.MarkConnected(userId, Context.ConnectionId);
-
-            // Join user-group để hỗ trợ push theo user khi cần.
             await Groups.AddToGroupAsync(Context.ConnectionId, $"user:{userId}");
-
-            // Broadcast trạng thái online cho client theo dõi presence realtime.
-            await Clients.All.SendAsync("UserStatusChanged", userId, "online");
+            await PublishUserStatusChangedAsync(userId, "online");
         }
 
         _logger.LogDebug(
@@ -60,7 +63,7 @@ public class PresenceHub : Hub
 
     /// <summary>
     /// Xử lý khi kết nối presence bị ngắt.
-    /// Luồng xử lý: mark disconnected và rời user-group tương ứng.
+    /// Luồng xử lý: mark disconnected, rời user-group và publish trạng thái offline.
     /// </summary>
     /// <param name="exception">Exception ngắt kết nối nếu có.</param>
     public override async Task OnDisconnectedAsync(Exception? exception)
@@ -69,11 +72,9 @@ public class PresenceHub : Hub
 
         if (!string.IsNullOrWhiteSpace(userId))
         {
-            // Ghi nhận disconnect để tracker cập nhật trạng thái hiện diện chính xác.
             _presenceTracker.MarkDisconnected(userId, Context.ConnectionId);
-
-            // Gỡ connection khỏi user-group sau khi disconnect.
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"user:{userId}");
+            await PublishUserStatusChangedAsync(userId, "offline");
         }
 
         _logger.LogDebug(
@@ -94,11 +95,30 @@ public class PresenceHub : Hub
 
         if (!string.IsNullOrWhiteSpace(userId))
         {
-            // Cập nhật dấu mốc heartbeat để timeout service không đánh dấu offline sớm.
             _presenceTracker.RecordHeartbeat(userId);
             _logger.LogDebug("[PresenceHub] User {UserId} heartbeat received.", userId);
         }
 
         return Task.CompletedTask;
+    }
+
+    private async Task PublishUserStatusChangedAsync(string userId, string status)
+    {
+        try
+        {
+            await _mediator.Send(new PublishUserStatusChangedCommand
+            {
+                UserId = userId,
+                Status = status
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "[PresenceHub] Failed to publish user status changed. UserId={UserId}, Status={Status}",
+                userId,
+                status);
+        }
     }
 }

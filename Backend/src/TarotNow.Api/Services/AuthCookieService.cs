@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using TarotNow.Api.Constants;
 
 namespace TarotNow.Api.Services;
@@ -7,6 +8,17 @@ namespace TarotNow.Api.Services;
 /// </summary>
 public sealed class AuthCookieService : IAuthCookieService
 {
+    private readonly string? _cookieDomain;
+
+    /// <summary>
+    /// Khởi tạo policy cookie auth từ cấu hình runtime.
+    /// </summary>
+    public AuthCookieService(IConfiguration configuration)
+    {
+        var configuredDomain = configuration["Auth:CookieDomain"]?.Trim();
+        _cookieDomain = string.IsNullOrWhiteSpace(configuredDomain) ? null : configuredDomain;
+    }
+
     /// <inheritdoc />
     public void SetAccessToken(HttpRequest request, HttpResponse response, string accessToken, int expiresInSeconds)
     {
@@ -37,7 +49,7 @@ public sealed class AuthCookieService : IAuthCookieService
 
     private CookieOptions BuildBaseOptions(HttpRequest request, int maxAgeSeconds)
     {
-        return new CookieOptions
+        var options = new CookieOptions
         {
             HttpOnly = true,
             Secure = true,
@@ -45,5 +57,12 @@ public sealed class AuthCookieService : IAuthCookieService
             Path = "/",
             MaxAge = TimeSpan.FromSeconds(maxAgeSeconds)
         };
+
+        if (!string.IsNullOrWhiteSpace(_cookieDomain))
+        {
+            options.Domain = _cookieDomain;
+        }
+
+        return options;
     }
 }

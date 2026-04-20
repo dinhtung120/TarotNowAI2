@@ -1,4 +1,5 @@
 import type { ConversationDto } from '@/features/chat/application/actions';
+import { isSameParticipantId } from '@/features/chat/domain/participantId';
 
 export function statusLabel(status: string) {
  switch (status) {
@@ -33,7 +34,7 @@ export function formatAgo(nowTs: number, iso?: string | null) {
 }
 
 export function getOther(conversation: ConversationDto, currentUserId: string) {
- const isUser = conversation.userId === currentUserId;
+ const isUser = isSameParticipantId(conversation.userId, currentUserId);
  return {
   isUser,
   id: isUser ? conversation.readerId : conversation.userId,
