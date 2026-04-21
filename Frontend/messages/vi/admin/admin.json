@@ -370,7 +370,7 @@
       "header": {
         "tag": "Admin",
         "title": "Hàng đợi Chi trả",
-        "subtitle": "Duyệt hoặc từ chối yêu cầu rút tiền của Reader. Thứ tự FIFO."
+        "subtitle": "Duyệt hoặc từ chối yêu cầu rút tiền của Reader. Chuyển khoản thủ công sau khi duyệt."
       },
       "states": {
         "loading": "Đang tải danh sách...",
@@ -383,7 +383,7 @@
         "id_prefix": "ID: {id}..."
       },
       "input": {
-        "admin_note_placeholder": "GHI CHÚ ADMIN..."
+        "admin_note_placeholder": "LÝ DO TỪ CHỐI (BẮT BUỘC KHI TỪ CHỐI)..."
       },
       "actions": {
         "approve": "Phê duyệt",
@@ -391,11 +391,8 @@
       },
       "toast": {
         "success": "Xử lý yêu cầu thành công",
-        "failed": "Xử lý thất bại"
-      },
-      "mfa": {
-        "action_approve": "duyệt yêu cầu rút tiền",
-        "action_reject": "từ chối yêu cầu rút tiền"
+        "failed": "Xử lý thất bại",
+        "reject_note_required": "Vui lòng nhập lý do khi từ chối yêu cầu."
       }
     },
     "disputes": {

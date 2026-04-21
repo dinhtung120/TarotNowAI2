@@ -370,7 +370,7 @@
       "header": {
         "tag": "Admin",
         "title": "Payout queue",
-        "subtitle": "Approve or reject Reader withdrawal requests (FIFO)."
+        "subtitle": "Approve or reject Reader withdrawal requests. Manual bank transfer follows approval."
       },
       "states": {
         "loading": "Loading queue...",
@@ -383,7 +383,7 @@
         "id_prefix": "ID: {id}..."
       },
       "input": {
-        "admin_note_placeholder": "ADMIN NOTE..."
+        "admin_note_placeholder": "REJECTION REASON (REQUIRED ON REJECT)..."
       },
       "actions": {
         "approve": "Approve",
@@ -391,11 +391,8 @@
       },
       "toast": {
         "success": "Request processed successfully.",
-        "failed": "Processing failed."
-      },
-      "mfa": {
-        "action_approve": "approve this withdrawal request",
-        "action_reject": "reject this withdrawal request"
+        "failed": "Processing failed.",
+        "reject_note_required": "Please provide a rejection reason."
       }
     },
     "disputes": {

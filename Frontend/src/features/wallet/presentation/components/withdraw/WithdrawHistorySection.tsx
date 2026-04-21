@@ -11,6 +11,7 @@ interface WithdrawHistorySectionProps {
  title: string;
  emptyLabel: string;
  adminNotePrefix: string;
+ userNotePrefix: string;
  getStatusBadge: (status: string) => { text: string; className: string };
 }
 
@@ -21,6 +22,7 @@ export function WithdrawHistorySection({
  title,
  emptyLabel,
  adminNotePrefix,
+ userNotePrefix,
  getStatusBadge,
 }: WithdrawHistorySectionProps) {
  return (
@@ -47,6 +49,7 @@ export function WithdrawHistorySection({
        locale={locale}
        item={item}
        adminNotePrefix={adminNotePrefix}
+       userNotePrefix={userNotePrefix}
        getStatusBadge={getStatusBadge}
       />
      ))}

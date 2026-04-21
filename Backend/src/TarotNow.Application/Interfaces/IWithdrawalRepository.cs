@@ -18,10 +18,22 @@ public interface IWithdrawalRepository
     Task<WithdrawalRequest?> GetByIdAsync(Guid id, CancellationToken ct = default);
 
     /// <summary>
-    /// Kiểm tra người dùng đã có đơn rút pending trong ngày hay chưa để áp dụng giới hạn tần suất.
-    /// Luồng xử lý: lọc theo userId/businessDate và trả true khi đã tồn tại đơn chờ xử lý.
+    /// Lấy yêu cầu rút tiền theo id với lock FOR UPDATE.
+    /// Luồng xử lý: khóa hàng mục tiêu trong transaction hiện tại để tránh race-condition khi process.
     /// </summary>
-    Task<bool> HasPendingRequestTodayAsync(Guid userId, DateOnly businessDate, CancellationToken ct = default);
+    Task<WithdrawalRequest?> GetByIdForUpdateAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>
+    /// Kiểm tra user đã tạo yêu cầu rút trong tuần nghiệp vụ UTC hay chưa.
+    /// Luồng xử lý: lọc theo userId/businessWeekStartUtc và trả true khi đã tồn tại request bất kỳ trạng thái.
+    /// </summary>
+    Task<bool> HasAnyRequestInWeekAsync(Guid userId, DateOnly businessWeekStartUtc, CancellationToken ct = default);
+
+    /// <summary>
+    /// Lấy yêu cầu rút tiền theo process idempotency key.
+    /// Luồng xử lý: truy vấn key đã xử lý để hỗ trợ idempotent retry của admin process.
+    /// </summary>
+    Task<WithdrawalRequest?> GetByProcessIdempotencyKeyAsync(string processIdempotencyKey, CancellationToken ct = default);
 
     /// <summary>
     /// Lấy lịch sử yêu cầu rút tiền của người dùng có phân trang.

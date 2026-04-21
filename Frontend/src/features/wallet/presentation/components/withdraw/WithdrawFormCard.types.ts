@@ -10,6 +10,8 @@ export interface WithdrawFormCardLabels {
   accountNamePlaceholder: string;
   accountNumberLabel: string;
   accountNumberPlaceholder: string;
+  noteLabel: string;
+  notePlaceholder: string;
   successMessage: string;
   submittingLabel: string;
   submitLabel: string;
@@ -25,6 +27,7 @@ export interface WithdrawFormCardProps {
   bankName: string;
   accountName: string;
   accountNumber: string;
+  userNote: string;
   submitting: boolean;
   success: boolean;
   error: string | null;
@@ -33,5 +36,6 @@ export interface WithdrawFormCardProps {
   onBankNameChange: (value: string) => void;
   onAccountNameChange: (value: string) => void;
   onAccountNumberChange: (value: string) => void;
+  onUserNoteChange: (value: string) => void;
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
 }

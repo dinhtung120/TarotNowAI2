@@ -1,4 +1,5 @@
 using FluentValidation;
+using TarotNow.Application.Common.Constants;
 
 namespace TarotNow.Application.Features.Withdrawal.Commands.CreateWithdrawal;
 
@@ -7,7 +8,7 @@ public class CreateWithdrawalCommandValidator : AbstractValidator<CreateWithdraw
 {
     /// <summary>
     /// Khởi tạo rule validation cho dữ liệu rút tiền.
-    /// Luồng xử lý: kiểm tra định danh user, số diamond, idempotency key, thông tin ngân hàng và mã MFA.
+    /// Luồng xử lý: kiểm tra định danh user, số diamond, idempotency key, thông tin ngân hàng và ghi chú.
     /// </summary>
     public CreateWithdrawalCommandValidator()
     {
@@ -16,12 +17,12 @@ public class CreateWithdrawalCommandValidator : AbstractValidator<CreateWithdraw
         // UserId bắt buộc để xác định chủ yêu cầu rút.
 
         RuleFor(x => x.AmountDiamond)
-            .GreaterThan(0);
-        // Số lượng rút phải dương.
+            .GreaterThanOrEqualTo(WithdrawalPolicyConstants.MinimumWithdrawDiamond);
+        // Số lượng rút phải đạt mức tối thiểu.
 
         RuleFor(x => x.IdempotencyKey)
             .NotEmpty()
-            .MaximumLength(128);
+            .MaximumLength(WithdrawalPolicyConstants.IdempotencyKeyMaxLength);
         // Idempotency key bắt buộc và giới hạn độ dài để chống request trùng.
 
         RuleFor(x => x.BankName)
@@ -39,9 +40,9 @@ public class CreateWithdrawalCommandValidator : AbstractValidator<CreateWithdraw
             .MaximumLength(50);
         // Số tài khoản bắt buộc để chuyển khoản.
 
-        RuleFor(x => x.MfaCode)
-            .NotEmpty()
-            .Length(6, 64);
-        // Mã MFA bắt buộc để xác thực thao tác rút tiền.
+        RuleFor(x => x.UserNote)
+            .MaximumLength(WithdrawalPolicyConstants.NoteMaxLength)
+            .When(x => string.IsNullOrWhiteSpace(x.UserNote) == false);
+        // Ghi chú user là tùy chọn nhưng bị giới hạn độ dài.
     }
 }

@@ -7,6 +7,7 @@ interface WithdrawHistoryItemProps {
  locale: string;
  item: WithdrawalResult;
  adminNotePrefix: string;
+ userNotePrefix: string;
  getStatusBadge: (status: string) => { text: string; className: string };
 }
 
@@ -14,6 +15,7 @@ export function WithdrawHistoryItem({
  locale,
  item,
  adminNotePrefix,
+ userNotePrefix,
  getStatusBadge,
 }: WithdrawHistoryItemProps) {
  const badge = getStatusBadge(item.status);
@@ -37,6 +39,13 @@ export function WithdrawHistoryItem({
     bankAccountNumber={item.bankAccountNumber}
     createdAt={item.createdAt}
    />
+
+   {item.userNote ? (
+    <div className={cn('tn-text-10 tn-text-secondary tn-withdraw-note p-3 rounded-xl border mt-3 flex gap-2 w-full')}>
+     <span className={cn('font-bold opacity-70')}>{userNotePrefix}</span>
+     {item.userNote}
+    </div>
+   ) : null}
 
    {item.adminNote ? (
     <div className={cn('tn-text-10 tn-text-warning italic tn-withdraw-note p-3 rounded-xl border mt-3 flex gap-2 w-full')}>

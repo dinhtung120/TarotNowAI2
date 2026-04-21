@@ -89,10 +89,10 @@ public partial class GlobalExceptionHandler
             return false;
         }
 
-        if (IsWithdrawalDailyLimitViolation(dbUpdateException))
+        if (IsWithdrawalWeeklyLimitViolation(dbUpdateException))
         {
-            // Rule nghiệp vụ: mỗi ngày chỉ cho một yêu cầu rút còn hiệu lực.
-            problemDetails = CreateBadRequestProblem("Bạn đã có yêu cầu rút tiền hôm nay. Vui lòng thử lại ngày mai.");
+            // Rule nghiệp vụ: mỗi tuần UTC chỉ cho một yêu cầu rút tiền.
+            problemDetails = CreateBadRequestProblem("Bạn đã tạo yêu cầu rút tiền trong tuần này. Hệ thống reset vào thứ Hai 00:00 UTC.");
             return true;
         }
 

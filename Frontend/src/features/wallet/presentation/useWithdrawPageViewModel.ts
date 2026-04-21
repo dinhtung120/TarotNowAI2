@@ -16,6 +16,8 @@ export function useWithdrawPageViewModel() {
     accountNamePlaceholder: state.t("withdraw.account_name_placeholder"),
     accountNumberLabel: state.t("withdraw.account_number_label"),
     accountNumberPlaceholder: state.t("withdraw.account_number_placeholder"),
+    noteLabel: state.t("withdraw.note_label"),
+    notePlaceholder: state.t("withdraw.note_placeholder"),
     successMessage: state.t("withdraw.success_message"),
     submittingLabel: state.t("withdraw.submitting"),
     submitLabel: state.t("withdraw.submit"),
@@ -32,6 +34,7 @@ export function useWithdrawPageViewModel() {
     },
     historyLabels: {
       adminNotePrefix: state.t("withdraw.admin_note_prefix"),
+      userNotePrefix: state.t("withdraw.user_note_prefix"),
       emptyLabel: state.t("withdraw.history_empty"),
       title: state.t("withdraw.history_title"),
     },

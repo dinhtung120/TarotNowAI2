@@ -10,7 +10,7 @@ import {
 import { cn } from '@/lib/utils';
 
 export default function WalletOverviewPage() {
- const { t, locale, balance, ledger, isLoadingLedger, setPage, formatType } = useWalletOverviewPage();
+ const { t, locale, balance, canWithdraw, ledger, isLoadingLedger, setPage, formatType } = useWalletOverviewPage();
 
  return (
   <div className={cn('max-w-5xl mx-auto tn-page-x pt-8 pb-32 font-sans relative')}>
@@ -19,6 +19,8 @@ export default function WalletOverviewPage() {
     title={t('overview.title')}
     subtitle={t('overview.subtitle')}
     depositCta={t('overview.deposit_cta')}
+    withdrawCta={t('overview.withdraw_cta')}
+    canWithdraw={canWithdraw}
    />
 
    <WalletBalanceCards

@@ -1,6 +1,5 @@
 "use client";
 
-import MfaChallengeModal from "@/shared/components/auth/MfaChallengeModal";
 import {
   WithdrawFormCard,
   WithdrawHistorySection,
@@ -29,6 +28,7 @@ export default function WithdrawPage() {
         bankName={vm.bankName}
         accountName={vm.accountName}
         accountNumber={vm.accountNumber}
+        userNote={vm.userNote}
         submitting={vm.submitting}
         success={vm.success}
         error={vm.error}
@@ -37,6 +37,7 @@ export default function WithdrawPage() {
         onBankNameChange={vm.setBankName}
         onAccountNameChange={vm.setAccountName}
         onAccountNumberChange={vm.setAccountNumber}
+        onUserNoteChange={vm.setUserNote}
         onSubmit={vm.handleSubmit}
       />
       <WithdrawHistorySection
@@ -46,13 +47,6 @@ export default function WithdrawPage() {
         getStatusBadge={vm.getStatusBadge}
         {...vm.historyLabels}
       />
-      {vm.showMfa ? (
-        <MfaChallengeModal
-          isOpen={vm.showMfa}
-          onClose={() => vm.setShowMfa(false)}
-          onSuccess={(code) => void vm.handleMfaSuccess(code)}
-        />
-      ) : null}
     </div>
   );
 }

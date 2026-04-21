@@ -34,6 +34,7 @@ export function WithdrawFormCard(props: WithdrawFormCardProps) {
           accountName={vm.watchedAccountName}
           accountNumber={vm.watchedAccountNumber}
           bankName={vm.watchedBankName}
+          userNote={vm.watchedUserNote}
           labels={{
             bankLabel: props.labels.bankLabel,
             bankPlaceholder: props.labels.bankPlaceholder,
@@ -41,10 +42,13 @@ export function WithdrawFormCard(props: WithdrawFormCardProps) {
             accountNamePlaceholder: props.labels.accountNamePlaceholder,
             accountNumberLabel: props.labels.accountNumberLabel,
             accountNumberPlaceholder: props.labels.accountNumberPlaceholder,
+            noteLabel: props.labels.noteLabel,
+            notePlaceholder: props.labels.notePlaceholder,
           }}
           onAccountNameChange={vm.setAccountName}
           onAccountNumberChange={vm.setAccountNumber}
           onBankNameChange={vm.setBankName}
+          onUserNoteChange={vm.setUserNote}
         />
         <WithdrawSubmitSection
           amountNum={props.amountNum}

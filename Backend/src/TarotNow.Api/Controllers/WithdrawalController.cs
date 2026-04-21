@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 
 using TarotNow.Application.Features.Withdrawal.Commands.CreateWithdrawal;
-using TarotNow.Application.Features.Withdrawal.Commands.ProcessWithdrawal;
 using TarotNow.Application.Features.Withdrawal.Queries.ListWithdrawals;
+using TarotNow.Api.Constants;
 using TarotNow.Api.Contracts.Requests;
 using TarotNow.Api.Extensions;
 
@@ -55,16 +55,25 @@ public class WithdrawalController : ControllerBase
             return this.UnauthorizedProblem();
         }
 
-        // Mapping rõ ràng toàn bộ thông tin ngân hàng + MFA cho command xử lý.
+        var idempotencyKey = ResolveIdempotencyKey(body.IdempotencyKey);
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Invalid idempotency key",
+                detail: "Idempotency key is required.");
+        }
+
+        // Mapping rõ ràng toàn bộ thông tin ngân hàng + idempotency cho command xử lý.
         var command = new CreateWithdrawalCommand
         {
             UserId = userId.Value,                       
             AmountDiamond = body.AmountDiamond,           
-            IdempotencyKey = body.IdempotencyKey,
+            IdempotencyKey = idempotencyKey,
             BankName = body.BankName,                     
             BankAccountName = body.BankAccountName,       
             BankAccountNumber = body.BankAccountNumber,   
-            MfaCode = body.MfaCode                        
+            UserNote = body.UserNote
         };
 
         // Gọi command tạo yêu cầu và nhận request id để client theo dõi trạng thái.
@@ -98,5 +107,16 @@ public class WithdrawalController : ControllerBase
 
         var result = await _mediator.Send(query);
         return Ok(result);
+    }
+
+    private string ResolveIdempotencyKey(string? bodyKey)
+    {
+        if (Request.Headers.TryGetValue(AuthHeaders.IdempotencyKey, out var headerValue)
+            && string.IsNullOrWhiteSpace(headerValue) == false)
+        {
+            return headerValue.ToString().Trim();
+        }
+
+        return bodyKey?.Trim() ?? string.Empty;
     }
 }

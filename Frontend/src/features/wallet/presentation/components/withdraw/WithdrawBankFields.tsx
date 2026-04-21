@@ -6,6 +6,7 @@ interface WithdrawBankFieldsProps {
  bankName: string;
  accountName: string;
  accountNumber: string;
+ userNote: string;
  labels: {
   bankLabel: string;
   bankPlaceholder: string;
@@ -13,20 +14,25 @@ interface WithdrawBankFieldsProps {
   accountNamePlaceholder: string;
   accountNumberLabel: string;
   accountNumberPlaceholder: string;
+  noteLabel: string;
+  notePlaceholder: string;
  };
  onBankNameChange: (value: string) => void;
  onAccountNameChange: (value: string) => void;
  onAccountNumberChange: (value: string) => void;
+ onUserNoteChange: (value: string) => void;
 }
 
 export function WithdrawBankFields({
  bankName,
  accountName,
  accountNumber,
+ userNote,
  labels,
  onBankNameChange,
  onAccountNameChange,
  onAccountNumberChange,
+ onUserNoteChange,
 }: WithdrawBankFieldsProps) {
  return (
   <div className={cn('space-y-5 pt-4')}>
@@ -51,6 +57,19 @@ export function WithdrawBankFields({
     onChange={onAccountNumberChange}
     icon={CreditCard}
    />
+   <div className={cn('space-y-3')}>
+    <label className={cn('tn-text-10 font-black uppercase tn-tracking-02 tn-text-secondary block')}>
+     {labels.noteLabel}
+    </label>
+    <textarea
+     value={userNote}
+     onChange={(event) => onUserNoteChange(event.target.value)}
+     placeholder={labels.notePlaceholder}
+     rows={3}
+     maxLength={1000}
+     className={cn('w-full px-4 py-3 tn-field rounded-xl text-sm tn-text-primary placeholder:tn-text-muted tn-field-accent transition-all resize-y')}
+    />
+   </div>
   </div>
  );
 }

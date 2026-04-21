@@ -1,9 +1,6 @@
 using MediatR;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using TarotNow.Application.Interfaces;
-using TarotNow.Domain.Entities;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Withdrawal.Commands.CreateWithdrawal;
 
@@ -28,58 +25,45 @@ public class CreateWithdrawalCommand : IRequest<Guid>
     // Số tài khoản ngân hàng.
     public string BankAccountNumber { get; set; } = string.Empty;
 
-    // Mã MFA của user để xác thực thao tác rút.
-    public string MfaCode { get; set; } = string.Empty;
+    // Ghi chú từ user.
+    public string? UserNote { get; set; }
 }
 
-// Handler điều phối luồng tạo yêu cầu rút tiền.
-public partial class CreateWithdrawalCommandHandler : IRequestHandler<CreateWithdrawalCommand, Guid>
+// Handler tạo yêu cầu rút tiền theo Rule 0: chỉ publish domain event.
+public sealed class CreateWithdrawalCommandHandler : IRequestHandler<CreateWithdrawalCommand, Guid>
 {
-    // Kế hoạch quy đổi rút tiền từ diamond sang VND và phí.
-    private readonly record struct WithdrawalPlan(long AmountVnd, long FeeVnd, long NetAmountVnd);
-
-    private readonly IWithdrawalRepository _withdrawalRepo;
-    private readonly IWalletRepository _walletRepo;
-    private readonly IUserRepository _userRepo;
-    private readonly IMfaService _mfaService;
-    private readonly ITransactionCoordinator _transactionCoordinator;
-    private readonly IDomainEventPublisher _domainEventPublisher;
+    private readonly IInlineDomainEventDispatcher _inlineDomainEventDispatcher;
 
     /// <summary>
     /// Khởi tạo handler tạo withdrawal request.
-    /// Luồng xử lý: nhận repository/service để validate user, trừ ví, tạo yêu cầu rút và commit transaction.
+    /// Luồng xử lý: nhận dispatcher để publish domain event và tách toàn bộ side-effect sang event handlers.
     /// </summary>
     public CreateWithdrawalCommandHandler(
-        IWithdrawalRepository withdrawalRepo,
-        IWalletRepository walletRepo,
-        IUserRepository userRepo,
-        IMfaService mfaService,
-        ITransactionCoordinator transactionCoordinator,
-        IDomainEventPublisher domainEventPublisher)
+        IInlineDomainEventDispatcher inlineDomainEventDispatcher)
     {
-        _withdrawalRepo = withdrawalRepo;
-        _walletRepo = walletRepo;
-        _userRepo = userRepo;
-        _mfaService = mfaService;
-        _transactionCoordinator = transactionCoordinator;
-        _domainEventPublisher = domainEventPublisher;
+        _inlineDomainEventDispatcher = inlineDomainEventDispatcher;
     }
 
     /// <summary>
     /// Xử lý command tạo yêu cầu rút.
-    /// Luồng xử lý: lấy user, chạy các bước validation nghiệp vụ, build kế hoạch rút và thực thi workflow tạo yêu cầu trong transaction.
+    /// Luồng xử lý: publish domain event, để event handler xử lý freeze ví + persist request và trả về request id.
     /// </summary>
-    public async Task<Guid> Handle(CreateWithdrawalCommand request, CancellationToken cancellationToken)
+    public async Task<Guid> Handle(
+        CreateWithdrawalCommand request,
+        CancellationToken cancellationToken)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        var user = await GetUserOrThrowAsync(request.UserId, cancellationToken);
-        await ValidateRequestAsync(request, user, today, cancellationToken);
-        // Chặn toàn bộ trường hợp không hợp lệ trước khi bắt đầu tác vụ trừ ví.
+        var domainEvent = new WithdrawalCreateRequestedDomainEvent
+        {
+            UserId = request.UserId,
+            AmountDiamond = request.AmountDiamond,
+            IdempotencyKey = request.IdempotencyKey,
+            BankName = request.BankName,
+            BankAccountName = request.BankAccountName,
+            BankAccountNumber = request.BankAccountNumber,
+            UserNote = request.UserNote
+        };
 
-        var plan = BuildWithdrawalPlan(request.AmountDiamond);
-        var createdRequest = await ExecuteWithdrawalAsync(request, today, plan, cancellationToken);
-        // Workflow trả về request đã tạo (hoặc request cũ theo idempotency).
-
-        return createdRequest.Id;
+        await _inlineDomainEventDispatcher.PublishAsync(domainEvent, cancellationToken);
+        return domainEvent.RequestId;
     }
 }

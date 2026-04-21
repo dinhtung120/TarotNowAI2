@@ -1,5 +1,4 @@
 'use client';
-import MfaChallengeModal from '@/shared/components/auth/MfaChallengeModal';
 import { useLocale, useTranslations } from 'next-intl';
 import { useAdminWithdrawals } from '@/features/admin/withdrawals/application/useAdminWithdrawals';
 import { AdminWithdrawalCard } from '@/features/admin/withdrawals/presentation/components/AdminWithdrawalCard';
@@ -17,11 +16,7 @@ export default function AdminWithdrawalsPage() {
   processing,
   notes,
   setNotes,
-  showMfa,
-  setShowMfa,
-  pendingAction,
   handleProcess,
-  handleMfaSuccess,
   formatVnd,
  } = useAdminWithdrawals(t, locale);
 
@@ -38,8 +33,8 @@ export default function AdminWithdrawalsPage() {
    notePlaceholder={t('withdrawals.input.admin_note_placeholder')}
    value={notes[item.id] || ''}
    onChangeNote={(value) => setNotes((prev) => ({ ...prev, [item.id]: value }))}
-   onApprove={() => handleProcess(item.id, 'approve')}
-   onReject={() => handleProcess(item.id, 'reject')}
+   onApprove={() => void handleProcess(item.id, 'approve')}
+   onReject={() => void handleProcess(item.id, 'reject')}
    approveLabel={t('withdrawals.actions.approve')}
    rejectLabel={t('withdrawals.actions.reject')}
    processing={processing === item.id}
@@ -52,13 +47,6 @@ export default function AdminWithdrawalsPage() {
    {loading ? <AdminWithdrawalsLoadingState label={t('withdrawals.states.loading')} /> : null}
    {!loading && queue.length === 0 ? <AdminWithdrawalsEmptyState label={t('withdrawals.states.empty')} /> : null}
    {!loading && queue.length > 0 ? <div className={cn('space-y-6')}>{queue.map(renderCard)}</div> : null}
-   <MfaChallengeModal
-    isOpen={showMfa}
-    onClose={() => setShowMfa(false)}
-    onSuccess={handleMfaSuccess}
-    actionTitle={pendingAction?.action === 'approve' ? t('withdrawals.mfa.action_approve') : t('withdrawals.mfa.action_reject')}
-    skipApiCall
-   />
   </div>
  );
 }

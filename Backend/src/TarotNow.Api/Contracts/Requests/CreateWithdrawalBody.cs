@@ -18,6 +18,6 @@ public class CreateWithdrawalBody
     // Số tài khoản nhận tiền.
     public string BankAccountNumber { get; set; } = string.Empty;
 
-    // Mã MFA xác thực giao dịch rút tiền.
-    public string MfaCode { get; set; } = string.Empty;
+    // Ghi chú bổ sung từ user.
+    public string? UserNote { get; set; }
 }

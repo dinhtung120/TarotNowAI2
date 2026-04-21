@@ -9,6 +9,7 @@ export interface WithdrawalResult {
  bankAccountName: string;
  bankAccountNumber: string;
  status: string;
+ userNote?: string | null;
  adminNote?: string | null;
  processedAt?: string | null;
  createdAt: string;

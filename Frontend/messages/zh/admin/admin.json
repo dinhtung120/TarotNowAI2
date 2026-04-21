@@ -370,7 +370,7 @@
       "header": {
         "tag": "Admin",
         "title": "提现队列",
-        "subtitle": "审核或拒绝占卜师的提现申请（FIFO）。"
+        "subtitle": "审核或拒绝占卜师的提现申请。通过后由管理员手动转账。"
       },
       "states": {
         "loading": "正在加载队列...",
@@ -383,7 +383,7 @@
         "id_prefix": "ID: {id}..."
       },
       "input": {
-        "admin_note_placeholder": "管理员备注..."
+        "admin_note_placeholder": "拒绝原因（拒绝时必填）..."
       },
       "actions": {
         "approve": "批准",
@@ -391,11 +391,8 @@
       },
       "toast": {
         "success": "处理成功。",
-        "failed": "处理失败。"
-      },
-      "mfa": {
-        "action_approve": "批准该提现申请",
-        "action_reject": "拒绝该提现申请"
+        "failed": "处理失败。",
+        "reject_note_required": "拒绝时请填写原因。"
       }
     },
     "disputes": {

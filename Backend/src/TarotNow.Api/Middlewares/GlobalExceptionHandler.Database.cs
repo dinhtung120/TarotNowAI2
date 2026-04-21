@@ -6,10 +6,10 @@ namespace TarotNow.Api.Middlewares;
 public partial class GlobalExceptionHandler
 {
     /// <summary>
-    /// Kiểm tra lỗi unique constraint cho rule mỗi ngày chỉ có một yêu cầu rút tiền đang hoạt động.
+    /// Kiểm tra lỗi unique constraint cho rule mỗi tuần UTC chỉ có một yêu cầu rút tiền.
     /// Luồng xử lý: xác nhận inner exception là PostgresException rồi so khớp SqlState và tên constraint.
     /// </summary>
-    private static bool IsWithdrawalDailyLimitViolation(DbUpdateException exception)
+    private static bool IsWithdrawalWeeklyLimitViolation(DbUpdateException exception)
     {
         if (exception.InnerException is not PostgresException postgresException)
         {
@@ -17,11 +17,11 @@ public partial class GlobalExceptionHandler
             return false;
         }
 
-        // Điều kiện đầy đủ để nhận diện đúng business rule "một yêu cầu rút tiền mỗi ngày".
+        // Điều kiện đầy đủ để nhận diện đúng business rule "một yêu cầu rút tiền mỗi tuần UTC".
         return postgresException.SqlState == PostgresErrorCodes.UniqueViolation
                && string.Equals(
                    postgresException.ConstraintName,
-                   "ix_withdrawal_one_per_day_active",
+                   "ix_withdrawal_one_per_week",
                    StringComparison.OrdinalIgnoreCase);
     }
 

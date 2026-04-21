@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
+using TarotNow.Domain.Enums;
 using TarotNow.Infrastructure.Persistence;
 
 namespace TarotNow.Infrastructure.Repositories;
@@ -25,16 +26,34 @@ public class WithdrawalRepository : IWithdrawalRepository
         => await _db.WithdrawalRequests.FindAsync(new object[] { id }, ct);
 
     /// <summary>
-    /// Kiểm tra người dùng đã có yêu cầu rút chưa hoàn tất trong ngày nghiệp vụ hay chưa.
-    /// Luồng này chặn spam yêu cầu mới khi request cũ vẫn đang chờ xử lý.
+    /// Lấy yêu cầu rút tiền theo định danh với lock FOR UPDATE.
+    /// Luồng này dùng cho nhánh process để tránh race-condition khi nhiều admin thao tác đồng thời.
     /// </summary>
-    public async Task<bool> HasPendingRequestTodayAsync(Guid userId, DateOnly businessDate, CancellationToken ct = default)
+    public async Task<WithdrawalRequest?> GetByIdForUpdateAsync(Guid id, CancellationToken ct = default)
+    {
+        var records = await _db.WithdrawalRequests
+            .FromSqlRaw("SELECT * FROM withdrawal_requests WHERE id = {0} FOR UPDATE", id)
+            .ToListAsync(ct);
+
+        return records.FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Kiểm tra user đã tạo yêu cầu rút trong tuần nghiệp vụ UTC hay chưa.
+    /// Luồng này chặn user gửi nhiều hơn 1 request trong cùng tuần.
+    /// </summary>
+    public async Task<bool> HasAnyRequestInWeekAsync(Guid userId, DateOnly businessWeekStartUtc, CancellationToken ct = default)
         => await _db.WithdrawalRequests
-            .AnyAsync(r => r.UserId == userId
-                        && r.BusinessDateUtc == businessDate
-                        // Chỉ xem là pending khi chưa bị từ chối và chưa chi trả.
-                        && r.Status != "rejected"
-                        && r.Status != "paid", ct);
+            .AnyAsync(r => r.UserId == userId && r.BusinessWeekStartUtc == businessWeekStartUtc, ct);
+
+    /// <summary>
+    /// Lấy request theo process idempotency key.
+    /// Luồng này dùng để hỗ trợ idempotent retry cho thao tác approve/reject.
+    /// </summary>
+    public Task<WithdrawalRequest?> GetByProcessIdempotencyKeyAsync(string processIdempotencyKey, CancellationToken ct = default)
+        => _db.WithdrawalRequests.FirstOrDefaultAsync(
+            r => r.ProcessIdempotencyKey == processIdempotencyKey,
+            ct);
 
     /// <summary>
     /// Lấy lịch sử yêu cầu rút tiền của một người dùng theo phân trang.
@@ -66,7 +85,7 @@ public class WithdrawalRepository : IWithdrawalRepository
         var normalizedPageSize = pageSize <= 0 ? 20 : Math.Min(pageSize, 200);
 
         return await _db.WithdrawalRequests
-            .Where(r => r.Status == "pending")
+            .Where(r => r.Status == WithdrawalRequestStatus.Pending)
             .OrderBy(r => r.CreatedAt)
             .Skip((normalizedPage - 1) * normalizedPageSize)
             .Take(normalizedPageSize)

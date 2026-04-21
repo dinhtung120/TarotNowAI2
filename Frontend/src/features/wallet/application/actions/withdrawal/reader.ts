@@ -1,5 +1,6 @@
 'use server';
 
+import { randomUUID } from 'node:crypto';
 import { getTranslations } from 'next-intl/server';
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
@@ -7,17 +8,20 @@ import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import type { WithdrawalResult } from './types';
 import { AUTH_ERROR } from "@/shared/domain/authErrors";
+import { AUTH_HEADER } from '@/shared/infrastructure/auth/authConstants';
 
 export async function createWithdrawal(data: {
  amountDiamond: number;
  bankName: string;
  bankAccountName: string;
  bankAccountNumber: string;
- mfaCode: string;
+ userNote?: string;
+ idempotencyKey?: string;
 }): Promise<ActionResult<{ requestId?: string }>> {
  const tApi = await getTranslations('ApiErrors');
  const accessToken = await getServerAccessToken();
  if (!accessToken) return actionFail(tApi('unauthorized'));
+ const idempotencyKey = (data.idempotencyKey ?? randomUUID()).trim();
 
  try {
   const result = await serverHttpRequest<{ success: boolean; requestId?: string; error?: string }>(
@@ -25,7 +29,17 @@ export async function createWithdrawal(data: {
    {
     method: 'POST',
     token: accessToken,
-    json: data,
+    headers: {
+      [AUTH_HEADER.IDEMPOTENCY_KEY]: idempotencyKey,
+    },
+    json: {
+      amountDiamond: data.amountDiamond,
+      bankName: data.bankName,
+      bankAccountName: data.bankAccountName,
+      bankAccountNumber: data.bankAccountNumber,
+      userNote: data.userNote,
+      idempotencyKey,
+    },
     fallbackErrorMessage: tApi('unknown_error'),
    }
   );

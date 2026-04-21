@@ -1,4 +1,7 @@
 using FluentValidation;
+using System;
+using TarotNow.Application.Common.Constants;
+using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Withdrawal.Commands.ProcessWithdrawal;
 
@@ -7,7 +10,7 @@ public class ProcessWithdrawalCommandValidator : AbstractValidator<ProcessWithdr
 {
     /// <summary>
     /// Khởi tạo rule validation cho dữ liệu process withdrawal.
-    /// Luồng xử lý: kiểm tra request/admin/action/mfa và giới hạn độ dài admin note.
+    /// Luồng xử lý: kiểm tra request/admin/action/idempotency và giới hạn độ dài admin note.
     /// </summary>
     public ProcessWithdrawalCommandValidator()
     {
@@ -24,19 +27,25 @@ public class ProcessWithdrawalCommandValidator : AbstractValidator<ProcessWithdr
             .Must(action =>
             {
                 var normalized = action?.Trim().ToLowerInvariant();
-                return normalized is "approve" or "reject";
+                return normalized is WithdrawalProcessAction.Approve or WithdrawalProcessAction.Reject;
             })
             .WithMessage("Action phải là 'approve' hoặc 'reject'.");
         // Chỉ chấp nhận hai action nghiệp vụ hỗ trợ.
 
+        RuleFor(x => x.IdempotencyKey)
+            .NotEmpty()
+            .MaximumLength(WithdrawalPolicyConstants.IdempotencyKeyMaxLength);
+        // Idempotency key bắt buộc để chống double process khi admin retry/click lặp.
+
         RuleFor(x => x.AdminNote)
-            .MaximumLength(1000)
+            .MaximumLength(WithdrawalPolicyConstants.NoteMaxLength)
             .When(x => string.IsNullOrWhiteSpace(x.AdminNote) == false);
         // Ghi chú tùy chọn nhưng giới hạn độ dài để tránh dữ liệu quá lớn.
 
-        RuleFor(x => x.MfaCode)
+        RuleFor(x => x.AdminNote)
             .NotEmpty()
-            .Length(6, 64);
-        // Mã MFA admin bắt buộc cho thao tác duyệt/từ chối yêu cầu rút.
+            .When(x => string.Equals(x.Action?.Trim(), WithdrawalProcessAction.Reject, StringComparison.OrdinalIgnoreCase))
+            .WithMessage("Lý do từ chối là bắt buộc khi reject.");
+        // Từ chối yêu cầu phải lưu lại lý do để phục vụ giải trình với user.
     }
 }

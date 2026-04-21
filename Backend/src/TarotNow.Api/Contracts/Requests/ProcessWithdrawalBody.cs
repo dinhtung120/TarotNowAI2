@@ -12,6 +12,6 @@ public class ProcessWithdrawalBody
     // Ghi chú nội bộ của admin cho quyết định xử lý.
     public string? AdminNote { get; set; }
 
-    // Mã MFA bắt buộc để xác nhận hành động nhạy cảm.
-    public string MfaCode { get; set; } = string.Empty;
+    // Khóa idempotency chống xử lý lặp.
+    public string IdempotencyKey { get; set; } = string.Empty;
 }

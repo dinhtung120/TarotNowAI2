@@ -10,8 +10,8 @@ public class WithdrawalRequest
     // Người dùng tạo yêu cầu.
     public Guid UserId { get; set; }
 
-    // Ngày nghiệp vụ UTC của yêu cầu.
-    public DateOnly BusinessDateUtc { get; set; }
+    // Tuần nghiệp vụ UTC (mốc thứ Hai) dùng cho giới hạn 1 lần/tuần.
+    public DateOnly BusinessWeekStartUtc { get; set; }
 
     // Số Diamond quy đổi để rút.
     public long AmountDiamond { get; set; }
@@ -35,7 +35,16 @@ public class WithdrawalRequest
     public string BankAccountNumber { get; set; } = string.Empty;
 
     // Trạng thái xử lý yêu cầu (pending/approved/rejected/...).
-    public string Status { get; set; } = "pending";
+    public string Status { get; set; } = TarotNow.Domain.Enums.WithdrawalRequestStatus.Pending;
+
+    // Idempotency key của thao tác tạo request.
+    public string RequestIdempotencyKey { get; set; } = string.Empty;
+
+    // Idempotency key của thao tác process request (approve/reject).
+    public string? ProcessIdempotencyKey { get; set; }
+
+    // Ghi chú user khi tạo yêu cầu.
+    public string? UserNote { get; set; }
 
     // Admin xử lý yêu cầu (nếu có).
     public Guid? AdminId { get; set; }

@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
+using TarotNow.Api.Constants;
 using TarotNow.Api.Contracts.Requests;
 using TarotNow.Api.Extensions;
 
@@ -64,17 +65,37 @@ public sealed class AdminWithdrawalsController : ControllerBase
             return this.UnauthorizedProblem();
         }
 
-        // Mapping đầy đủ body sang command để handler kiểm soát MFA và rule duyệt/từ chối.
+        var idempotencyKey = ResolveIdempotencyKey(body.IdempotencyKey);
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Invalid idempotency key",
+                detail: "Idempotency key is required.");
+        }
+
+        // Mapping đầy đủ body sang command để handler kiểm soát idempotency và rule duyệt/từ chối.
         var command = new TarotNow.Application.Features.Withdrawal.Commands.ProcessWithdrawal.ProcessWithdrawalCommand
         {
             RequestId = body.WithdrawalId,
             AdminId = adminId,
             Action = body.Action,
             AdminNote = body.AdminNote,
-            MfaCode = body.MfaCode,
+            IdempotencyKey = idempotencyKey,
         };
 
         await _mediator.Send(command);
         return Ok(new { success = true, action = body.Action });
+    }
+
+    private string ResolveIdempotencyKey(string? bodyKey)
+    {
+        if (Request.Headers.TryGetValue(AuthHeaders.IdempotencyKey, out var headerValue)
+            && string.IsNullOrWhiteSpace(headerValue) == false)
+        {
+            return headerValue.ToString().Trim();
+        }
+
+        return bodyKey?.Trim() ?? string.Empty;
     }
 }

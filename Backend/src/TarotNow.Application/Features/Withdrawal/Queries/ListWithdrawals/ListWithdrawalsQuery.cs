@@ -58,6 +58,9 @@ public class WithdrawalResult
     // Trạng thái request (pending/approved/rejected).
     public string Status { get; set; } = string.Empty;
 
+    // Ghi chú user khi tạo yêu cầu.
+    public string? UserNote { get; set; }
+
     // Ghi chú admin khi xử lý.
     public string? AdminNote { get; set; }
 
@@ -118,6 +121,7 @@ public class ListWithdrawalsQueryHandler : IRequestHandler<ListWithdrawalsQuery,
             BankAccountName = item.BankAccountName,
             BankAccountNumber = item.BankAccountNumber,
             Status = item.Status,
+            UserNote = item.UserNote,
             AdminNote = item.AdminNote,
             ProcessedAt = item.ProcessedAt,
             CreatedAt = item.CreatedAt

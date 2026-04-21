@@ -6,6 +6,7 @@ import type { WalletPaginatedList, WalletTransaction } from '@/features/wallet/d
 import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { useWalletStore } from '@/store/walletStore';
+import { useAuthStore } from '@/store/authStore';
 import { useLocale, useTranslations } from 'next-intl';
 
 const WALLET_BALANCE_SYNC_QUERY_KEY = ['wallet', 'balance-sync'] as const;
@@ -15,6 +16,7 @@ export function useWalletOverviewPage() {
  const locale = useLocale();
  const balance = useWalletStore((state) => state.balance);
  const fetchBalance = useWalletStore((state) => state.fetchBalance);
+ const role = useAuthStore((state) => state.user?.role);
 
  const [page, setPage] = useState(1);
 
@@ -48,6 +50,7 @@ export function useWalletOverviewPage() {
   t,
   locale,
   balance,
+  canWithdraw: role === 'tarot_reader',
   ledger,
   isLoadingLedger,
   page,
