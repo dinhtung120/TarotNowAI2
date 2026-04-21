@@ -42,6 +42,35 @@ public sealed partial class RefreshTokenRepository
             cancellationToken);
     }
 
+    /// <inheritdoc />
+    public async Task<int> CleanupRevokedOrExpiredBeforeAsync(
+        DateTime cutoffUtc,
+        int batchSize,
+        CancellationToken cancellationToken = default)
+    {
+        if (batchSize <= 0)
+        {
+            return 0;
+        }
+
+        var candidateIds = await _dbContext.RefreshTokens
+            .Where(rt =>
+                (rt.RevokedAt != null && rt.RevokedAt <= cutoffUtc)
+                || (rt.RevokedAt == null && rt.ExpiresAt <= cutoffUtc))
+            .OrderBy(rt => rt.RevokedAt ?? rt.ExpiresAt)
+            .Select(rt => rt.Id)
+            .Take(batchSize)
+            .ToListAsync(cancellationToken);
+        if (candidateIds.Count == 0)
+        {
+            return 0;
+        }
+
+        return await _dbContext.RefreshTokens
+            .Where(rt => candidateIds.Contains(rt.Id))
+            .ExecuteDeleteAsync(cancellationToken);
+    }
+
     private async Task RevokeWhereAsync(
         IQueryable<RefreshToken> query,
         string reason,

@@ -124,7 +124,6 @@ export async function refreshAccessTokenAction(): Promise<ActionResult<RefreshAc
     credentials: 'include',
     cache: 'no-store',
     headers: {
-     [AUTH_HEADER.IDEMPOTENCY_KEY]: crypto.randomUUID(),
      [AUTH_HEADER.DEVICE_ID]: getOrCreateDeviceId(),
     },
    });

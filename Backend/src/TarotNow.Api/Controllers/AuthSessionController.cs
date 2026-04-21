@@ -58,9 +58,7 @@ public sealed class AuthSessionController : ControllerBase
     [EnableRateLimiting("auth-refresh-token-family")]
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AuthResponse))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> RefreshTokens(
-        [FromHeader(Name = AuthHeaders.IdempotencyKey)] string? idempotencyKey,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> RefreshTokens(CancellationToken cancellationToken)
     {
         var refreshToken = Request.Cookies[AuthCookieNames.RefreshToken];
         if (string.IsNullOrWhiteSpace(refreshToken))
@@ -69,13 +67,16 @@ public sealed class AuthSessionController : ControllerBase
             return this.UnauthorizedProblem("Missing refresh token.");
         }
 
+        var deviceId = ResolveDeviceId(Request);
+        var userAgentHash = HashValue(ResolveUserAgent(Request));
+
         var command = new RefreshTokenCommand
         {
             Token = refreshToken,
-            IdempotencyKey = string.IsNullOrWhiteSpace(idempotencyKey) ? Guid.NewGuid().ToString("N") : idempotencyKey,
+            IdempotencyKey = ResolveRefreshIdempotencyKey(refreshToken, deviceId, userAgentHash),
             ClientIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            DeviceId = ResolveDeviceId(Request),
-            UserAgentHash = HashValue(ResolveUserAgent(Request))
+            DeviceId = deviceId,
+            UserAgentHash = userAgentHash
         };
 
         var result = await _mediator.Send(command, cancellationToken);
@@ -103,13 +104,15 @@ public sealed class AuthSessionController : ControllerBase
 
         if (revokeAll)
         {
-            if (!User.TryGetUserId(out var userId))
+            if (User.TryGetUserId(out var userId))
+            {
+                command.UserId = userId;
+            }
+            else if (string.IsNullOrWhiteSpace(command.Token))
             {
                 _authCookieService.ClearAuthCookies(Request, Response);
-                return this.UnauthorizedProblem("Must be authenticated to revoke all sessions.");
+                return this.UnauthorizedProblem("Must be authenticated or provide refresh token to revoke all sessions.");
             }
-
-            command.UserId = userId;
         }
         else if (string.IsNullOrWhiteSpace(command.Token))
         {
@@ -168,5 +171,15 @@ public sealed class AuthSessionController : ControllerBase
         var normalized = string.IsNullOrWhiteSpace(raw) ? "unknown" : raw.Trim();
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
         return Convert.ToHexString(bytes).ToLowerInvariant();
+    }
+
+    private static string ResolveRefreshIdempotencyKey(
+        string refreshToken,
+        string deviceId,
+        string userAgentHash)
+    {
+        var source = $"{refreshToken.Trim()}|{deviceId.Trim()}|{userAgentHash.Trim()}";
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(source));
+        return $"auto-{Convert.ToHexString(hash).ToLowerInvariant()}";
     }
 }

@@ -81,12 +81,12 @@ public sealed class LoginCommandThrottleBehavior : IPipelineBehavior<LoginComman
 
     private static string BuildLoginIdentityFailureKey(string identityHash)
     {
-        return $"auth:login-fail:identity:{identityHash}";
+        return AuthCacheKeys.BuildLoginFailureByIdentityKey(identityHash);
     }
 
     private static string BuildLoginIpFailureKey(string ipHash)
     {
-        return $"auth:login-fail:ip:{ipHash}";
+        return AuthCacheKeys.BuildLoginFailureByIpKey(ipHash);
     }
 
     private static bool ShouldCountAsFailedAttempt(string errorCode)

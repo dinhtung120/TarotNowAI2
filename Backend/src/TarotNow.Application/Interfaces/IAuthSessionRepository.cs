@@ -23,6 +23,15 @@ public interface IAuthSessionRepository
     Task<AuthSession?> GetActiveAsync(Guid sessionId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Cập nhật metadata hoạt động mới nhất cho session đang active.
+    /// </summary>
+    Task TouchAsync(
+        Guid sessionId,
+        string ipHash,
+        string userAgentHash,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Thu hồi một session.
     /// </summary>
     Task RevokeAsync(Guid sessionId, CancellationToken cancellationToken = default);
@@ -36,4 +45,12 @@ public interface IAuthSessionRepository
     /// Lấy danh sách session id đang active của user.
     /// </summary>
     Task<IReadOnlyCollection<Guid>> GetActiveSessionIdsByUserAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Dọn các session đã revoke trước thời điểm cutoff (batch bounded).
+    /// </summary>
+    Task<int> CleanupRevokedBeforeAsync(
+        DateTime cutoffUtc,
+        int batchSize,
+        CancellationToken cancellationToken = default);
 }

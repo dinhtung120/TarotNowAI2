@@ -118,6 +118,23 @@ public partial class RefreshTokenCommandHandler
             cancellationToken);
     }
 
+    private async Task TouchSessionAsync(
+        Guid sessionId,
+        RefreshTokenCommand request,
+        CancellationToken cancellationToken)
+    {
+        if (sessionId == Guid.Empty)
+        {
+            return;
+        }
+
+        await _authSessionRepository.TouchAsync(
+            sessionId,
+            HashValue(request.ClientIpAddress),
+            request.UserAgentHash,
+            cancellationToken);
+    }
+
     private static string HashValue(string? raw)
     {
         var normalized = string.IsNullOrWhiteSpace(raw) ? "unknown" : raw.Trim();

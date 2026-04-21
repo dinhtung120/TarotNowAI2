@@ -5,6 +5,7 @@ using TarotNow.Application.Features.Auth.Commands.ResetPassword;
 using TarotNow.Application.Interfaces;
 using TarotNow.Application.Exceptions;
 using TarotNow.Domain.Entities;
+using TarotNow.Domain.Events;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
@@ -20,6 +21,8 @@ public class ResetPasswordCommandHandlerTests
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
     // Mock refresh token repo để kiểm tra revoke token sau đổi mật khẩu.
     private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock;
+    private readonly Mock<IAuthSessionRepository> _authSessionRepositoryMock;
+    private readonly Mock<IDomainEventPublisher> _domainEventPublisherMock;
     // Handler cần kiểm thử.
     private readonly ResetPasswordCommandHandler _handler;
 
@@ -33,10 +36,16 @@ public class ResetPasswordCommandHandlerTests
         _emailOtpRepositoryMock = new Mock<IEmailOtpRepository>();
         _passwordHasherMock = new Mock<IPasswordHasher>();
         _refreshTokenRepositoryMock = new Mock<IRefreshTokenRepository>();
+        _authSessionRepositoryMock = new Mock<IAuthSessionRepository>();
+        _domainEventPublisherMock = new Mock<IDomainEventPublisher>();
+        _domainEventPublisherMock
+            .Setup(x => x.PublishAsync(It.IsAny<IDomainEvent>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         _handler = new ResetPasswordCommandHandler(
             _userRepositoryMock.Object, _emailOtpRepositoryMock.Object,
-            _passwordHasherMock.Object, _refreshTokenRepositoryMock.Object
+            _passwordHasherMock.Object, _refreshTokenRepositoryMock.Object,
+            _authSessionRepositoryMock.Object, _domainEventPublisherMock.Object
         );
     }
 
@@ -90,6 +99,9 @@ public class ResetPasswordCommandHandlerTests
         _emailOtpRepositoryMock.Setup(r => r.GetLatestActiveOtpAsync(user.Id, OtpType.ResetPassword, It.IsAny<CancellationToken>()))
                                .ReturnsAsync(validOtp);
         _passwordHasherMock.Setup(h => h.HashPassword(command.NewPassword)).Returns("newHash");
+        _authSessionRepositoryMock
+            .Setup(x => x.GetActiveSessionIdsByUserAsync(user.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([Guid.NewGuid(), Guid.NewGuid()]);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -101,5 +113,14 @@ public class ResetPasswordCommandHandlerTests
         _emailOtpRepositoryMock.Verify(r => r.UpdateAsync(validOtp, It.IsAny<CancellationToken>()), Times.Once);
         _userRepositoryMock.Verify(r => r.UpdateAsync(It.Is<User>(u => u.PasswordHash == "newHash"), It.IsAny<CancellationToken>()), Times.Once);
         _refreshTokenRepositoryMock.Verify(r => r.RevokeAllByUserIdAsync(user.Id, It.IsAny<CancellationToken>()), Times.Once);
+        _authSessionRepositoryMock.Verify(r => r.RevokeAllByUserAsync(user.Id, It.IsAny<CancellationToken>()), Times.Once);
+        _domainEventPublisherMock.Verify(
+            x => x.PublishAsync(
+                It.Is<UserLoggedOutDomainEvent>(evt =>
+                    evt.UserId == user.Id
+                    && evt.RevokeAll
+                    && evt.Reason == RefreshRevocationReasons.ManualRevoke),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }

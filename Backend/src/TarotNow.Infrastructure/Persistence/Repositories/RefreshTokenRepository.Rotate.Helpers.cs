@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
+using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 
@@ -22,12 +24,12 @@ public sealed partial class RefreshTokenRepository
             await localTransaction.CommitAsync(cancellationToken);
         }
 
-        await CacheIdempotentResultAsync(
+        await TryCacheIdempotentResultAsync(
             context.IdempotencyCacheKey,
             context.Request.NewRawToken,
             nextToken.ExpiresAt,
             cancellationToken);
-        await CacheIdempotentResultAsync(
+        await TryCacheIdempotentResultAsync(
             context.TokenIdempotencyCacheKey,
             context.Request.NewRawToken,
             nextToken.ExpiresAt,
@@ -57,19 +59,30 @@ public sealed partial class RefreshTokenRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task CacheIdempotentResultAsync(
+    private async Task TryCacheIdempotentResultAsync(
         string idemCacheKey,
         string newRefreshTokenRaw,
         DateTime newTokenExpiresAtUtc,
         CancellationToken cancellationToken)
     {
-        var window = TimeSpan.FromSeconds(Math.Max(10, _authSecurityOptions.RefreshIdempotencyWindowSeconds));
-        var cacheItem = new RefreshRotateCacheItem
+        try
         {
-            NewRefreshTokenRaw = newRefreshTokenRaw,
-            NewTokenExpiresAtUtc = newTokenExpiresAtUtc
-        };
-        await _cacheService.SetAsync(idemCacheKey, cacheItem, window, cancellationToken);
+            var window = TimeSpan.FromSeconds(Math.Max(10, _authSecurityOptions.RefreshIdempotencyWindowSeconds));
+            var cacheItem = new RefreshRotateCacheItem
+            {
+                NewRefreshTokenRaw = newRefreshTokenRaw,
+                NewTokenExpiresAtUtc = newTokenExpiresAtUtc
+            };
+            await _cacheService.SetAsync(idemCacheKey, cacheItem, window, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Unable to persist refresh idempotency cache. Key={IdempotencyKey}",
+                idemCacheKey);
+            // Không fail request sau khi DB đã commit rotation thành công.
+        }
     }
 
     private async Task<RefreshToken?> LoadForUpdateAsync(string normalizedToken, string hashedToken, CancellationToken ct)
@@ -87,31 +100,46 @@ public sealed partial class RefreshTokenRepository
             .FirstOrDefaultAsync(ct);
     }
 
-    private static string NormalizeIdempotencyKey(string rawKey)
+    private static string NormalizeIdempotencyKey(
+        string rawKey,
+        string tokenHash,
+        string deviceId,
+        string userAgentHash)
     {
         if (string.IsNullOrWhiteSpace(rawKey))
         {
-            return Guid.NewGuid().ToString("N");
+            return BuildDeterministicIdempotencyKey(tokenHash, deviceId, userAgentHash);
         }
 
         var trimmed = rawKey.Trim();
         return trimmed.Length <= 128 ? trimmed : trimmed[..128];
     }
 
+    private static string BuildDeterministicIdempotencyKey(
+        string tokenHash,
+        string deviceId,
+        string userAgentHash)
+    {
+        var normalizedDeviceId = string.IsNullOrWhiteSpace(deviceId) ? "unknown-device" : deviceId.Trim();
+        var normalizedUserAgentHash = string.IsNullOrWhiteSpace(userAgentHash) ? "unknown-ua" : userAgentHash.Trim();
+        var source = $"{tokenHash}|{normalizedDeviceId}|{normalizedUserAgentHash}";
+        var hash = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(source));
+        return $"auto-{Convert.ToHexString(hash).ToLowerInvariant()}";
+    }
+
     private static string BuildRefreshLockKey(string tokenHash)
     {
-        return $"auth:refresh-lock:{tokenHash}";
+        return AuthCacheKeys.BuildRefreshLockKey(tokenHash);
     }
 
     private static string BuildRefreshIdempotencyKey(Guid sessionId, string idempotencyKey)
     {
-        var sessionPart = sessionId == Guid.Empty ? "legacy" : sessionId.ToString("N");
-        return $"auth:refresh-idem:{sessionPart}:{idempotencyKey}";
+        return AuthCacheKeys.BuildRefreshSessionIdempotencyKey(sessionId, idempotencyKey);
     }
 
     private static string BuildRefreshTokenIdempotencyKey(string tokenHash, string idempotencyKey)
     {
-        return $"auth:refresh-idem-token:{tokenHash}:{idempotencyKey}";
+        return AuthCacheKeys.BuildRefreshTokenIdempotencyKey(tokenHash, idempotencyKey);
     }
 
     private sealed class RefreshRotateCacheItem

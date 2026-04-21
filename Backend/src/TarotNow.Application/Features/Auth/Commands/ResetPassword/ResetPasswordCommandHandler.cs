@@ -1,6 +1,8 @@
 using MediatR;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Entities;
+using TarotNow.Domain.Events;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Auth.Commands.ResetPassword;
@@ -12,6 +14,8 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
     private readonly IEmailOtpRepository _emailOtpRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IAuthSessionRepository _authSessionRepository;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler reset password.
@@ -21,12 +25,16 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
         IUserRepository userRepository,
         IEmailOtpRepository emailOtpRepository,
         IPasswordHasher passwordHasher,
-        IRefreshTokenRepository refreshTokenRepository)
+        IRefreshTokenRepository refreshTokenRepository,
+        IAuthSessionRepository authSessionRepository,
+        IDomainEventPublisher domainEventPublisher)
     {
         _userRepository = userRepository;
         _emailOtpRepository = emailOtpRepository;
         _passwordHasher = passwordHasher;
         _refreshTokenRepository = refreshTokenRepository;
+        _authSessionRepository = authSessionRepository;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>
@@ -59,7 +67,19 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
         await _emailOtpRepository.UpdateAsync(latestOtp, cancellationToken);
 
         // Rule bảo mật: revoke toàn bộ refresh token hiện có sau khi đổi mật khẩu.
+        var activeSessionIds = await _authSessionRepository.GetActiveSessionIdsByUserAsync(user.Id, cancellationToken);
         await _refreshTokenRepository.RevokeAllByUserIdAsync(user.Id, cancellationToken);
+        await _authSessionRepository.RevokeAllByUserAsync(user.Id, cancellationToken);
+
+        await _domainEventPublisher.PublishAsync(
+            new UserLoggedOutDomainEvent
+            {
+                UserId = user.Id,
+                RevokeAll = true,
+                SessionIds = activeSessionIds,
+                Reason = RefreshRevocationReasons.ManualRevoke
+            },
+            cancellationToken);
 
         return true;
     }

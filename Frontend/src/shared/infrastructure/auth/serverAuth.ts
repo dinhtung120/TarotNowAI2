@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { cookies, headers } from 'next/headers';
 import type { AuthResponse, UserProfile } from '@/features/auth/domain/types';
 import { AUTH_COOKIE, AUTH_HEADER, AUTH_SESSION } from '@/shared/infrastructure/auth/authConstants';
@@ -41,6 +42,16 @@ function isExpiringSoon(token: string | undefined): boolean {
 
  const now = Math.floor(Date.now() / 1000);
  return exp <= now + Math.max(0, AUTH_SESSION.ACCESS_REFRESH_THRESHOLD_SECONDS);
+}
+
+function buildRefreshIdempotencyKey(
+ refreshToken: string,
+ deviceId: string,
+ userAgent: string,
+): string {
+ const material = `${refreshToken.trim()}|${deviceId.trim()}|${userAgent.trim()}`;
+ const digest = createHash('sha256').update(material).digest('hex');
+ return `server-${digest}`;
 }
 
 async function getValidAccessTokenFromCookie(): Promise<string | undefined> {
@@ -153,11 +164,12 @@ async function refreshServerAccessToken(
  deviceId: string,
  userAgent: string,
 ): Promise<string | undefined> {
+ const idempotencyKey = buildRefreshIdempotencyKey(refreshToken, deviceId, userAgent);
  const result = await serverHttpRequest<AuthResponse>('/auth/refresh', {
   method: 'POST',
   headers: {
    Cookie: `${AUTH_COOKIE.REFRESH}=${refreshToken}`,
-   [AUTH_HEADER.IDEMPOTENCY_KEY]: crypto.randomUUID(),
+   [AUTH_HEADER.IDEMPOTENCY_KEY]: idempotencyKey,
    [AUTH_HEADER.DEVICE_ID]: deviceId,
    [AUTH_HEADER.FORWARDED_USER_AGENT]: userAgent,
   },

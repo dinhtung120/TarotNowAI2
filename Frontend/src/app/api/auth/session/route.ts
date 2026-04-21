@@ -48,7 +48,6 @@ async function refreshSessionViaInternalRoute(request: NextRequest): Promise<Res
   method: 'POST',
   headers: {
    Cookie: request.headers.get('cookie') ?? '',
-   [AUTH_HEADER.IDEMPOTENCY_KEY]: crypto.randomUUID(),
    [AUTH_HEADER.DEVICE_ID]: deviceId,
    [AUTH_HEADER.FORWARDED_USER_AGENT]: request.headers.get('user-agent') ?? '',
   },

@@ -8,17 +8,28 @@ interface LogoutPayload {
  revokeAll?: boolean;
 }
 
+function shouldClearCookiesAfterLogout(
+ status: number,
+ error: string | undefined,
+): boolean {
+ if (status === 401 || status === 403) {
+  return true;
+ }
+
+ return error === AUTH_ERROR.UNAUTHORIZED;
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
  let payload: LogoutPayload = {};
  try {
   payload = (await request.json()) as LogoutPayload;
  } catch {
- payload = {};
-}
+  payload = {};
+ }
 
-const revokeAll = payload.revokeAll === true;
+ const revokeAll = payload.revokeAll === true;
  const logoutPath = revokeAll ? '/auth/logout?revokeAll=true' : '/auth/logout';
-const deviceId = resolveDeviceIdFromRequest(request);
+ const deviceId = resolveDeviceIdFromRequest(request);
  const result = await serverHttpRequest<Record<string, unknown>>(logoutPath, {
   method: 'POST',
   headers: {
@@ -30,10 +41,14 @@ const deviceId = resolveDeviceIdFromRequest(request);
   fallbackErrorMessage: AUTH_ERROR.UNAUTHORIZED,
  });
 
+ const shouldClearCookies = result.ok || shouldClearCookiesAfterLogout(result.status, result.error);
  const response = NextResponse.json(
   result.ok ? { success: true } : { success: false, error: result.error },
-  { status: result.ok ? 200 : result.status },
+  { status: result.ok ? 200 : (result.status >= 500 ? 503 : result.status) },
  );
- clearAuthCookies(response);
+ if (shouldClearCookies) {
+  clearAuthCookies(response);
+ }
+
  return response;
 }

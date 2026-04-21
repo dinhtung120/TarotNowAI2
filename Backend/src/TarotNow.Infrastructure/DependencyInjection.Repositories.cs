@@ -122,6 +122,7 @@ public static partial class DependencyInjection
     /// </summary>
     private static void AddHostedWorkers(IServiceCollection services)
     {
+        services.AddHostedService<AuthSessionCleanupJob>();
         services.AddHostedService<EscrowTimerService>();
         services.AddHostedService<ChatModerationWorker>();
         services.AddHostedService<StreakBreakBackgroundJob>();

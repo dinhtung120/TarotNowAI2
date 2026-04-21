@@ -37,20 +37,30 @@ public class RevokeTokenCommandHandler : IRequestHandler<RevokeTokenCommand, boo
     /// </summary>
     public async Task<bool> Handle(RevokeTokenCommand request, CancellationToken cancellationToken)
     {
-        if (request.RevokeAll && request.UserId.HasValue)
+        if (request.RevokeAll)
         {
-            await HandleRevokeAllAsync(request.UserId.Value, cancellationToken);
+            var tokenEntity = await LoadTokenToRevokeAsync(
+                request.Token,
+                tokenRequired: false,
+                cancellationToken);
+            var userId = ResolveRevokeAllUserId(request.UserId, tokenEntity);
+            EnsureRevokeAllIdentityConsistency(request.UserId, tokenEntity);
+
+            await HandleRevokeAllAsync(userId, cancellationToken);
             return true;
         }
 
-        var tokenEntity = await LoadTokenToRevokeAsync(request.Token, cancellationToken);
-        if (tokenEntity is null)
+        var singleTokenEntity = await LoadTokenToRevokeAsync(
+            request.Token,
+            tokenRequired: true,
+            cancellationToken);
+        if (singleTokenEntity is null)
         {
             return false;
         }
 
-        await RevokeSingleTokenAsync(tokenEntity, cancellationToken);
-        await PublishSingleLogoutEventAsync(tokenEntity, cancellationToken);
+        await RevokeSingleTokenAsync(singleTokenEntity, cancellationToken);
+        await PublishSingleLogoutEventAsync(singleTokenEntity, cancellationToken);
         return true;
     }
 
@@ -71,20 +81,61 @@ public class RevokeTokenCommandHandler : IRequestHandler<RevokeTokenCommand, boo
             cancellationToken);
     }
 
-    private async Task<RefreshTokenEntity?> LoadTokenToRevokeAsync(string? rawToken, CancellationToken cancellationToken)
+    private static Guid ResolveRevokeAllUserId(Guid? requestedUserId, RefreshTokenEntity? tokenEntity)
+    {
+        if (requestedUserId is Guid userId && userId != Guid.Empty)
+        {
+            return userId;
+        }
+
+        if (tokenEntity is not null && tokenEntity.UserId != Guid.Empty)
+        {
+            return tokenEntity.UserId;
+        }
+
+        throw new BusinessRuleException(
+            AuthErrorCodes.Unauthorized,
+            "Unable to resolve user identity for revoke-all operation.");
+    }
+
+    private static void EnsureRevokeAllIdentityConsistency(Guid? requestedUserId, RefreshTokenEntity? tokenEntity)
+    {
+        if (requestedUserId is not Guid userId || userId == Guid.Empty || tokenEntity is null)
+        {
+            return;
+        }
+
+        if (tokenEntity.UserId != userId)
+        {
+            throw new BusinessRuleException(
+                AuthErrorCodes.Unauthorized,
+                "Refresh token does not belong to the authenticated user.");
+        }
+    }
+
+    private async Task<RefreshTokenEntity?> LoadTokenToRevokeAsync(
+        string? rawToken,
+        bool tokenRequired,
+        CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(rawToken))
         {
-            throw new BusinessRuleException(AuthErrorCodes.Unauthorized, "Token is required for revocation.");
+            if (tokenRequired)
+            {
+                throw new BusinessRuleException(AuthErrorCodes.Unauthorized, "Token is required for revocation.");
+            }
+
+            return null;
         }
 
-        var tokenEntity = await _refreshTokenRepository.GetByTokenAsync(rawToken, cancellationToken);
+        var normalizedToken = rawToken.Trim();
+        var tokenEntity = await _refreshTokenRepository.GetByTokenAsync(normalizedToken, cancellationToken);
         if (tokenEntity is null)
         {
             return null;
         }
 
-        return tokenEntity.MatchesToken(rawToken) ? tokenEntity : null;
+        return tokenEntity.MatchesToken(normalizedToken) ? tokenEntity : null;
     }
 
     private async Task RevokeSingleTokenAsync(RefreshTokenEntity tokenEntity, CancellationToken cancellationToken)
@@ -97,6 +148,14 @@ public class RevokeTokenCommandHandler : IRequestHandler<RevokeTokenCommand, boo
 
         if (tokenEntity.SessionId == Guid.Empty)
         {
+            if (tokenEntity.FamilyId != Guid.Empty)
+            {
+                await _refreshTokenRepository.RevokeFamilyAsync(
+                    tokenEntity.FamilyId,
+                    RefreshRevocationReasons.ManualRevoke,
+                    cancellationToken);
+            }
+
             return;
         }
 

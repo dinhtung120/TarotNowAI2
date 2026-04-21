@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Interfaces;
 using TarotNow.Infrastructure.Constants;
 using TarotNow.Infrastructure.Options;
@@ -144,7 +145,9 @@ public static partial class DependencyInjection
         var jti = principal.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
         if (cacheService is not null && HasToken(jti))
         {
-            var isBlacklisted = await cacheService.GetAsync<string>($"auth:access-blacklist:{jti!.Trim()}", cancellationToken);
+            var isBlacklisted = await cacheService.GetAsync<string>(
+                AuthCacheKeys.BuildAccessBlacklistKey(jti!.Trim()),
+                cancellationToken);
             if (isBlacklisted is not null)
             {
                 context.Fail("Access token has been revoked.");
@@ -160,7 +163,9 @@ public static partial class DependencyInjection
 
         if (cacheService is not null)
         {
-            var isRevokedSession = await cacheService.GetAsync<string>($"auth:session-revoked:{sessionId}", cancellationToken);
+            var isRevokedSession = await cacheService.GetAsync<string>(
+                AuthCacheKeys.BuildSessionRevokedKey(sessionId),
+                cancellationToken);
             if (isRevokedSession is not null)
             {
                 context.Fail("Session has been revoked.");

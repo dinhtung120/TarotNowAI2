@@ -24,6 +24,9 @@ public sealed class AuthSecuritySettings : IAuthSecuritySettings
         SessionCacheTtlSeconds = value.SessionCacheTtlSeconds > 0
             ? value.SessionCacheTtlSeconds
             : 30 * 24 * 60 * 60;
+        ReplaySecurityRecordTtlSeconds = value.ReplaySecurityRecordTtlSeconds > 0
+            ? value.ReplaySecurityRecordTtlSeconds
+            : 24 * 60 * 60;
     }
 
     /// <inheritdoc />
@@ -34,4 +37,7 @@ public sealed class AuthSecuritySettings : IAuthSecuritySettings
 
     /// <inheritdoc />
     public int SessionCacheTtlSeconds { get; }
+
+    /// <inheritdoc />
+    public int ReplaySecurityRecordTtlSeconds { get; }
 }

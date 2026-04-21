@@ -86,6 +86,20 @@ public sealed class AuthSession
     }
 
     /// <summary>
+    /// Cập nhật hoạt động session kèm user-agent hash mới nhất.
+    /// </summary>
+    public void Touch(string ipHash, string userAgentHash, DateTime nowUtc)
+    {
+        LastIpHash = Normalize(ipHash, 128, "unknown");
+        if (!string.IsNullOrWhiteSpace(userAgentHash))
+        {
+            UserAgentHash = Normalize(userAgentHash, 128, "unknown");
+        }
+
+        LastSeenAtUtc = nowUtc;
+    }
+
+    /// <summary>
     /// Revoke session.
     /// </summary>
     public void Revoke(DateTime nowUtc)

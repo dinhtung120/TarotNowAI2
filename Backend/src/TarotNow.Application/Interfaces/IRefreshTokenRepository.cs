@@ -44,6 +44,14 @@ public interface IRefreshTokenRepository
     /// Thu hồi toàn bộ token của user.
     /// </summary>
     Task RevokeAllByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Dọn refresh token đã revoke hoặc hết hạn trước cutoff (batch bounded).
+    /// </summary>
+    Task<int> CleanupRevokedOrExpiredBeforeAsync(
+        DateTime cutoffUtc,
+        int batchSize,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>

@@ -52,13 +52,14 @@ public partial class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCo
         var user = EnsureUserIsActive(currentToken.User);
         var sessionId = currentToken.SessionId;
         await EnsureSessionIsActiveAsync(sessionId, cancellationToken);
+        await TouchSessionAsync(sessionId, request, cancellationToken);
 
         var accessToken = _tokenService.GenerateAccessToken(user, sessionId, out _, out var jti);
         var response = BuildAuthResponse(user, accessToken);
         await PublishTokenRefreshedEventIfNeededAsync(
             rotateResult,
             currentToken,
-            request.DeviceId,
+            request,
             jti,
             cancellationToken);
 
@@ -143,7 +144,7 @@ public partial class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCo
     private async Task PublishTokenRefreshedEventIfNeededAsync(
         RefreshRotateResult rotateResult,
         RefreshTokenEntity currentToken,
-        string deviceId,
+        RefreshTokenCommand request,
         string accessTokenJti,
         CancellationToken cancellationToken)
     {
@@ -160,7 +161,9 @@ public partial class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCo
                 OldTokenId = currentToken.Id,
                 NewTokenId = rotateResult.NewToken.Id,
                 AccessTokenJti = accessTokenJti,
-                DeviceId = deviceId
+                DeviceId = request.DeviceId,
+                IpHash = HashValue(request.ClientIpAddress),
+                UserAgentHash = request.UserAgentHash
             },
             cancellationToken);
     }

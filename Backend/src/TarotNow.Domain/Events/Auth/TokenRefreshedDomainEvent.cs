@@ -35,6 +35,16 @@ public sealed class TokenRefreshedDomainEvent : IDomainEvent
     /// </summary>
     public string DeviceId { get; init; } = string.Empty;
 
+    /// <summary>
+    /// Hash ip nguồn của request refresh.
+    /// </summary>
+    public string IpHash { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Hash user-agent nguồn của request refresh.
+    /// </summary>
+    public string UserAgentHash { get; init; } = string.Empty;
+
     /// <inheritdoc />
     public DateTime OccurredAtUtc { get; init; } = DateTime.UtcNow;
 }

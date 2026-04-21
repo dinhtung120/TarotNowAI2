@@ -19,4 +19,9 @@ public interface IAuthSecuritySettings
     /// TTL cache session snapshot (theo giây).
     /// </summary>
     int SessionCacheTtlSeconds { get; }
+
+    /// <summary>
+    /// TTL lưu bản ghi security khi phát hiện refresh replay (theo giây).
+    /// </summary>
+    int ReplaySecurityRecordTtlSeconds { get; }
 }

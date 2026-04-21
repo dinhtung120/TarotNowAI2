@@ -1,3 +1,4 @@
+using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.DomainEvents.Handlers;
@@ -15,11 +16,11 @@ internal sealed class AuthSessionCacheSnapshot
 
 internal static class AuthEventCacheHelpers
 {
-    public static string BuildSessionKey(Guid sessionId) => $"auth:session:{sessionId}";
+    public static string BuildSessionKey(Guid sessionId) => AuthCacheKeys.BuildSessionSnapshotKey(sessionId);
 
-    public static string BuildSessionRevokedKey(Guid sessionId) => $"auth:session-revoked:{sessionId}";
+    public static string BuildSessionRevokedKey(Guid sessionId) => AuthCacheKeys.BuildSessionRevokedKey(sessionId);
 
-    public static string BuildAccessBlacklistKey(string jti) => $"auth:access-blacklist:{jti}";
+    public static string BuildAccessBlacklistKey(string jti) => AuthCacheKeys.BuildAccessBlacklistKey(jti);
 
     public static async Task MarkSessionRevokedAsync(
         ICacheService cacheService,
@@ -85,5 +86,5 @@ internal static class AuthEventCacheHelpers
             cancellationToken);
     }
 
-    public static string BuildUserSessionIndexKey(Guid userId) => $"auth:user-sessions:{userId}";
+    public static string BuildUserSessionIndexKey(Guid userId) => AuthCacheKeys.BuildUserSessionsIndexKey(userId);
 }

@@ -31,6 +31,31 @@ public sealed class AuthSecurityOptions
     public int SessionCacheTtlSeconds { get; set; } = 30 * 24 * 60 * 60;
 
     /// <summary>
+    /// TTL lưu security record khi phát hiện refresh replay.
+    /// </summary>
+    public int ReplaySecurityRecordTtlSeconds { get; set; } = 24 * 60 * 60;
+
+    /// <summary>
+    /// Batch size cho mỗi lần dọn auth session/refresh token.
+    /// </summary>
+    public int CleanupBatchSize { get; set; } = 200;
+
+    /// <summary>
+    /// Chu kỳ chạy auth cleanup job (phút).
+    /// </summary>
+    public int CleanupIntervalMinutes { get; set; } = 30;
+
+    /// <summary>
+    /// Số ngày giữ lại refresh token đã revoke/hết hạn trước khi cleanup.
+    /// </summary>
+    public int RefreshTokenRetentionDays { get; set; } = 30;
+
+    /// <summary>
+    /// Số ngày giữ lại auth session đã revoke trước khi cleanup.
+    /// </summary>
+    public int RevokedSessionRetentionDays { get; set; } = 30;
+
+    /// <summary>
     /// Bật fail-closed cho refresh rotation khi Redis không sẵn sàng.
     /// </summary>
     public bool RequireRedisForRefreshConsistency { get; set; } = true;

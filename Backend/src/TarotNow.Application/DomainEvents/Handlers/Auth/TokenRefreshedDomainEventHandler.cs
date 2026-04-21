@@ -55,6 +55,16 @@ public sealed class TokenRefreshedDomainEventHandler
 
         snapshot.LastSeenAtUtc = domainEvent.OccurredAtUtc;
         snapshot.LastAccessJti = domainEvent.AccessTokenJti;
+        if (string.IsNullOrWhiteSpace(domainEvent.IpHash) == false)
+        {
+            snapshot.LastIpHash = domainEvent.IpHash;
+        }
+
+        if (string.IsNullOrWhiteSpace(domainEvent.UserAgentHash) == false)
+        {
+            snapshot.UserAgentHash = domainEvent.UserAgentHash;
+        }
+
         await _cacheService.SetAsync(key, snapshot, _sessionCacheTtl, cancellationToken);
         await AuthEventCacheHelpers.AddSessionToUserIndexAsync(
             _cacheService,

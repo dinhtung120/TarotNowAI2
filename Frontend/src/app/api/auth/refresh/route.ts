@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import type { AuthResponse } from '@/features/auth/domain/types';
 import { AUTH_COOKIE, AUTH_HEADER } from '@/shared/infrastructure/auth/authConstants';
@@ -23,14 +24,25 @@ function shouldClearCookiesForRefreshFailure(status: number, error: string): boo
   || error === AUTH_ERROR.TOKEN_REPLAY;
 }
 
+function resolveRefreshIdempotencyKey(
+ refreshToken: string,
+ deviceId: string,
+ userAgent: string,
+): string {
+ const material = `${refreshToken.trim()}|${deviceId.trim()}|${userAgent.trim()}`;
+ const digest = createHash('sha256').update(material).digest('hex');
+ return `bff-${digest}`;
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
  const refreshToken = request.cookies.get(AUTH_COOKIE.REFRESH)?.value;
  if (!refreshToken) {
   return unauthorizedResponse(true);
  }
 
- const idempotencyKey = request.headers.get(AUTH_HEADER.IDEMPOTENCY_KEY) ?? crypto.randomUUID();
  const deviceId = resolveDeviceIdFromRequest(request);
+ const userAgent = request.headers.get('user-agent') ?? '';
+ const idempotencyKey = resolveRefreshIdempotencyKey(refreshToken, deviceId, userAgent);
 
  let result: Awaited<ReturnType<typeof serverHttpRequest<AuthResponse>>>;
  try {
@@ -40,7 +52,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     Cookie: `${AUTH_COOKIE.REFRESH}=${refreshToken}`,
     [AUTH_HEADER.IDEMPOTENCY_KEY]: idempotencyKey,
     [AUTH_HEADER.DEVICE_ID]: deviceId,
-    [AUTH_HEADER.FORWARDED_USER_AGENT]: request.headers.get('user-agent') ?? '',
+    [AUTH_HEADER.FORWARDED_USER_AGENT]: userAgent,
    },
    cache: 'no-store',
    fallbackErrorMessage: AUTH_ERROR.UNAUTHORIZED,

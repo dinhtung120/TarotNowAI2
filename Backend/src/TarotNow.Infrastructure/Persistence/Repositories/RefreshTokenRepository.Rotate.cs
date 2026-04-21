@@ -27,7 +27,11 @@ public sealed partial class RefreshTokenRepository
         var tokenHash = RefreshToken.HashToken(normalizedToken);
         var lockKey = BuildRefreshLockKey(tokenHash);
         var lockOwner = Guid.NewGuid().ToString("N");
-        var normalizedIdempotencyKey = NormalizeIdempotencyKey(request.IdempotencyKey);
+        var normalizedIdempotencyKey = NormalizeIdempotencyKey(
+            request.IdempotencyKey,
+            tokenHash,
+            request.DeviceId,
+            request.UserAgentHash);
         var tokenIdempotencyCacheKey = BuildRefreshTokenIdempotencyKey(tokenHash, normalizedIdempotencyKey);
 
         if (!await TryAcquireLockAsync(lockKey, lockOwner, cancellationToken))
@@ -158,7 +162,7 @@ public sealed partial class RefreshTokenRepository
             return null;
         }
 
-        if (IsLockContention(current, idempotencyKey))
+        if (IsLockContention(current, idempotencyKey, DateTime.UtcNow))
         {
             return RefreshRotateResult.Locked();
         }
@@ -166,10 +170,23 @@ public sealed partial class RefreshTokenRepository
         return RefreshRotateResult.ReplayDetected(current);
     }
 
-    private bool IsLockContention(RefreshToken current, string idempotencyKey)
+    private bool IsLockContention(RefreshToken current, string idempotencyKey, DateTime nowUtc)
     {
-        return current.ReplacedByTokenId is not null
-               && string.Equals(current.LastRotateIdempotencyKey, idempotencyKey, StringComparison.Ordinal);
+        if (current.ReplacedByTokenId is null
+            || current.UsedAtUtc is null
+            || string.Equals(current.LastRotateIdempotencyKey, idempotencyKey, StringComparison.Ordinal) == false)
+        {
+            return false;
+        }
+
+        var contentionWindow = TimeSpan.FromSeconds(Math.Max(3, _authSecurityOptions.RefreshLockSeconds));
+        var usedAtUtc = current.UsedAtUtc.Value;
+        if (usedAtUtc > nowUtc)
+        {
+            return true;
+        }
+
+        return nowUtc - usedAtUtc <= contentionWindow;
     }
 
     private static async Task<RefreshRotateResult> FinalizeResultAsync(

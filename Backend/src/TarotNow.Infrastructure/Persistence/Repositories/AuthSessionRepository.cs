@@ -36,7 +36,7 @@ public sealed class AuthSessionRepository : IAuthSessionRepository
                 cancellationToken);
         if (existing is not null)
         {
-            existing.Touch(ipHash, DateTime.UtcNow);
+            existing.Touch(ipHash, userAgentHash, DateTime.UtcNow);
             _dbContext.AuthSessions.Update(existing);
             await _dbContext.SaveChangesAsync(cancellationToken);
             return existing;
@@ -62,7 +62,7 @@ public sealed class AuthSessionRepository : IAuthSessionRepository
                 throw;
             }
 
-            concurrent.Touch(ipHash, DateTime.UtcNow);
+            concurrent.Touch(ipHash, userAgentHash, DateTime.UtcNow);
             _dbContext.AuthSessions.Update(concurrent);
             await _dbContext.SaveChangesAsync(cancellationToken);
             return concurrent;
@@ -74,6 +74,30 @@ public sealed class AuthSessionRepository : IAuthSessionRepository
     {
         return await _dbContext.AuthSessions
             .FirstOrDefaultAsync(x => x.Id == sessionId && x.RevokedAtUtc == null, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task TouchAsync(
+        Guid sessionId,
+        string ipHash,
+        string userAgentHash,
+        CancellationToken cancellationToken = default)
+    {
+        if (sessionId == Guid.Empty)
+        {
+            return;
+        }
+
+        var session = await _dbContext.AuthSessions
+            .FirstOrDefaultAsync(x => x.Id == sessionId && x.RevokedAtUtc == null, cancellationToken);
+        if (session is null)
+        {
+            return;
+        }
+
+        session.Touch(ipHash, userAgentHash, DateTime.UtcNow);
+        _dbContext.AuthSessions.Update(session);
+        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
     /// <inheritdoc />
@@ -121,6 +145,33 @@ public sealed class AuthSessionRepository : IAuthSessionRepository
             .Where(x => x.UserId == userId && x.RevokedAtUtc == null)
             .Select(x => x.Id)
             .ToListAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<int> CleanupRevokedBeforeAsync(
+        DateTime cutoffUtc,
+        int batchSize,
+        CancellationToken cancellationToken = default)
+    {
+        if (batchSize <= 0)
+        {
+            return 0;
+        }
+
+        var candidateIds = await _dbContext.AuthSessions
+            .Where(x => x.RevokedAtUtc != null && x.RevokedAtUtc <= cutoffUtc)
+            .OrderBy(x => x.RevokedAtUtc)
+            .Select(x => x.Id)
+            .Take(batchSize)
+            .ToListAsync(cancellationToken);
+        if (candidateIds.Count == 0)
+        {
+            return 0;
+        }
+
+        return await _dbContext.AuthSessions
+            .Where(x => candidateIds.Contains(x.Id))
+            .ExecuteDeleteAsync(cancellationToken);
     }
 
     private static string NormalizeDeviceId(string deviceId)

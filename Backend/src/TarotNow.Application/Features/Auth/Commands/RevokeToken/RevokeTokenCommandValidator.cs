@@ -17,12 +17,13 @@ public class RevokeTokenCommandValidator : AbstractValidator<RevokeTokenCommand>
             {
                 if (command.RevokeAll)
                 {
-                    return command.UserId.HasValue && command.UserId.Value != Guid.Empty;
+                    return (command.UserId.HasValue && command.UserId.Value != Guid.Empty)
+                           || string.IsNullOrWhiteSpace(command.Token) == false;
                 }
 
                 return string.IsNullOrWhiteSpace(command.Token) == false;
             })
-            .WithMessage("Khi RevokeAll=true cần UserId hợp lệ; ngược lại Token là bắt buộc.");
+            .WithMessage("Khi RevokeAll=true cần UserId hợp lệ hoặc refresh token; ngược lại Token là bắt buộc.");
 
         // Token có thể dài, nhưng vẫn giới hạn để bảo vệ input bất thường.
         RuleFor(x => x.Token)

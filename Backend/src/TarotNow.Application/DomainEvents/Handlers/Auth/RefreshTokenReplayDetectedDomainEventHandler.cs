@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging;
+using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
 using TarotNow.Application.Interfaces.DomainEvents;
@@ -17,6 +18,7 @@ public sealed class RefreshTokenReplayDetectedDomainEventHandler
     private readonly ICacheService _cacheService;
     private readonly TimeSpan _accessBlacklistTtl;
     private readonly TimeSpan _sessionRevokedTtl;
+    private readonly TimeSpan _replayRecordTtl;
     private readonly ILogger<RefreshTokenReplayDetectedDomainEventHandler> _logger;
 
     /// <summary>
@@ -32,6 +34,7 @@ public sealed class RefreshTokenReplayDetectedDomainEventHandler
         _cacheService = cacheService;
         _accessBlacklistTtl = TimeSpan.FromSeconds(Math.Max(60, authSecuritySettings.AccessTokenBlacklistTtlSeconds));
         _sessionRevokedTtl = TimeSpan.FromSeconds(Math.Max(60, authSecuritySettings.SessionRevocationTtlSeconds));
+        _replayRecordTtl = TimeSpan.FromSeconds(Math.Max(300, authSecuritySettings.ReplaySecurityRecordTtlSeconds));
         _logger = logger;
     }
 
@@ -47,7 +50,7 @@ public sealed class RefreshTokenReplayDetectedDomainEventHandler
         activity?.SetTag("auth.family_id", domainEvent.FamilyId);
 
         await _cacheService.SetAsync(
-            $"auth:security:replay:{domainEvent.SessionId}",
+            AuthCacheKeys.BuildReplaySecurityKey(domainEvent.SessionId),
             new
             {
                 domainEvent.UserId,
@@ -56,8 +59,18 @@ public sealed class RefreshTokenReplayDetectedDomainEventHandler
                 domainEvent.SourceIpHash,
                 domainEvent.OccurredAtUtc
             },
-            TimeSpan.FromHours(24),
+            _replayRecordTtl,
             cancellationToken);
+
+        if (domainEvent.SessionId == Guid.Empty)
+        {
+            _logger.LogWarning(
+                "Refresh token replay detected without session id. UserId={UserId} FamilyId={FamilyId} OutboxId={OutboxId}",
+                domainEvent.UserId,
+                domainEvent.FamilyId,
+                outboxMessageId);
+            return;
+        }
 
         var snapshot = await _cacheService.GetAsync<AuthSessionCacheSnapshot>(
             AuthEventCacheHelpers.BuildSessionKey(domainEvent.SessionId),

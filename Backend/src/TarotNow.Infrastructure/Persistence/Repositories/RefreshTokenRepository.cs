@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
@@ -16,6 +17,7 @@ public sealed partial class RefreshTokenRepository : IRefreshTokenRepository
     private readonly ICacheService _cacheService;
     private readonly AuthSecurityOptions _authSecurityOptions;
     private readonly CacheBackendState _cacheBackendState;
+    private readonly ILogger<RefreshTokenRepository> _logger;
 
     /// <summary>
     /// Khởi tạo refresh token repository.
@@ -24,12 +26,14 @@ public sealed partial class RefreshTokenRepository : IRefreshTokenRepository
         ApplicationDbContext dbContext,
         ICacheService cacheService,
         IOptions<AuthSecurityOptions> authSecurityOptions,
-        CacheBackendState cacheBackendState)
+        CacheBackendState cacheBackendState,
+        ILogger<RefreshTokenRepository> logger)
     {
         _dbContext = dbContext;
         _cacheService = cacheService;
         _authSecurityOptions = authSecurityOptions.Value;
         _cacheBackendState = cacheBackendState;
+        _logger = logger;
     }
 
     /// <inheritdoc />
