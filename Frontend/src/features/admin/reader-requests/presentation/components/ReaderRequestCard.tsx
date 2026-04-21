@@ -34,8 +34,12 @@ export function ReaderRequestCard({
    />
    <ReaderRequestIntro
     introExpand={labels.introExpand}
-    introText={request.introText}
     introTitle={labels.introTitle}
+    specialtiesTitle={labels.specialtiesTitle}
+    yearsOfExperienceTitle={labels.yearsOfExperienceTitle}
+    socialLinksTitle={labels.socialLinksTitle}
+    priceTitle={labels.priceTitle}
+    request={request}
     isSelected={isSelected}
     onSelectRequest={onSelectRequest}
    />

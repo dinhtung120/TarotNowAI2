@@ -23,6 +23,7 @@ export default async function FeaturedReadersGrid() {
           key={reader.userId}
           reader={reader}
           profileCta={t("showcase.profileCta")}
+          experienceSuffix={t("showcase.experienceSuffix")}
         />
       ))}
     </div>

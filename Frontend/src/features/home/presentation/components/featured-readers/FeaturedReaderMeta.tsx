@@ -1,10 +1,12 @@
-import { Gem, Star } from "lucide-react";
+import { BriefcaseBusiness, Gem, Star } from "lucide-react";
 import type { FeaturedReaderMetaProps } from "@/features/home/presentation/components/featured-readers/types";
+import ReaderSocialLinksInline from "@/features/reader/presentation/components/ReaderSocialLinksInline";
 import { Badge } from "@/shared/components/ui";
 import { cn } from "@/lib/utils";
 
 export default function FeaturedReaderMeta({
   profileCta,
+  experienceSuffix,
   reader,
   statusClassName,
 }: FeaturedReaderMetaProps) {
@@ -49,12 +51,21 @@ export default function FeaturedReaderMeta({
           "flex items-center justify-between border-t tn-border-soft pt-4",
         )}
       >
-        <div className={cn("flex items-center gap-1.5")}>
-          <Gem className={cn("h-3.5 w-3.5 tn-text-warning")} />
-          <span className={cn("text-xs font-black tn-text-ink")}>
-            {reader.diamondPerQuestion} 💎
-          </span>
+        <div className={cn("flex flex-col gap-2")}>
+          <div className={cn("flex items-center gap-1.5")}>
+            <Gem className={cn("h-3.5 w-3.5 tn-text-warning")} />
+            <span className={cn("text-xs font-black tn-text-ink")}>
+              {reader.diamondPerQuestion} 💎
+            </span>
+          </div>
+          <div className={cn("flex items-center gap-1.5")}>
+            <BriefcaseBusiness className={cn("h-3.5 w-3.5 tn-text-secondary")} />
+            <span className={cn("text-[10px] font-black uppercase tn-text-ink")}>
+              {reader.yearsOfExperience}+ {experienceSuffix}
+            </span>
+          </div>
         </div>
+        <ReaderSocialLinksInline facebookUrl={reader.facebookUrl} instagramUrl={reader.instagramUrl} tikTokUrl={reader.tikTokUrl} />
         <div
           className={cn(
             "tn-text-10 font-black tracking-widest tn-text-accent uppercase tn-group-shift-x-2",

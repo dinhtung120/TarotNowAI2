@@ -343,6 +343,10 @@
         "id_prefix": "ID: {id}...",
         "intro_title": "Introduction",
         "expand": "Expand",
+        "specialties_title": "Specialties",
+        "years_experience_title": "Experience",
+        "social_links_title": "Social links",
+        "price_title": "Service price",
         "admin_note_title": "Admin note"
       },
       "input": {

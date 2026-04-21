@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 
 interface ReaderApplyStatusPanelProps {
  accent: "success" | "warning";
+ details?: ReadonlyArray<{ label: string; value: string }>;
  description: string;
  footerLabel?: string;
  icon: LucideIcon;
@@ -28,6 +29,7 @@ const ACCENT_CLASS = {
 
 export function ReaderApplyStatusPanel({
  accent,
+ details,
  description,
  footerLabel,
  icon: Icon,
@@ -48,6 +50,16 @@ export function ReaderApplyStatusPanel({
       <div className={cn("p-6 rounded-2xl tn-panel-overlay-soft text-left space-y-2")}>
        {introLabel ? <div className={cn("tn-text-overline", classes.label)}>{introLabel}</div> : null}
        <p className={cn("text-xs tn-text-secondary leading-relaxed")}>{introText}</p>
+      </div>
+     ) : null}
+     {details && details.length > 0 ? (
+      <div className={cn("grid grid-cols-1 gap-3 rounded-2xl p-4 tn-panel-overlay-soft text-left sm:grid-cols-2")}>
+       {details.map((item) => (
+        <div key={`${item.label}-${item.value}`} className={cn("space-y-1")}>
+         <div className={cn("tn-text-overline tn-text-muted")}>{item.label}</div>
+         <div className={cn("text-xs font-bold tn-text-secondary break-words")}>{item.value}</div>
+        </div>
+       ))}
       </div>
      ) : null}
      {footerLabel ? <div className={cn("tn-text-overline tn-text-muted")}>{footerLabel}</div> : null}

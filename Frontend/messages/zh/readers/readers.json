@@ -29,6 +29,8 @@
       "empty": "没有符合筛选条件的占卜师。",
       "reader_fallback": "占卜师",
       "bio_fallback": "暂无详细介绍。",
+      "experience_years_label": "年经验",
+      "social_links_label": "社交链接",
       "per_question_suffix": "/ 问"
     },
     "profile": {
@@ -40,6 +42,7 @@
         "busy": "忙碌中",
         "offline": "离线"
       },
+      "years_experience_suffix": "年",
       "diamond_per_question_suffix": "/ 问",
       "rating_label": "评分",
       "reviews_label": "评价数",

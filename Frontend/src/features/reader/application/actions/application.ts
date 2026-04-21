@@ -5,31 +5,58 @@ import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
-import { AUTH_ERROR } from "@/shared/domain/authErrors";
+import { AUTH_ERROR } from '@/shared/domain/authErrors';
 
-export interface MyReaderRequest {
+export interface ReaderSocialLinks {
+ facebookUrl?: string | null;
+ instagramUrl?: string | null;
+ tikTokUrl?: string | null;
+}
+
+export interface SubmitReaderApplicationPayload extends ReaderSocialLinks {
+ bio: string;
+ specialties: string[];
+ yearsOfExperience: number;
+ diamondPerQuestion: number;
+ proofDocuments?: string[];
+}
+
+export interface MyReaderRequest extends ReaderSocialLinks {
  hasRequest: boolean;
  status?: string;
- introText?: string;
+ bio?: string;
+ specialties?: string[];
+ yearsOfExperience?: number;
+ diamondPerQuestion?: number;
  adminNote?: string;
  createdAt?: string;
  reviewedAt?: string;
 }
 
 export async function submitReaderApplication(
- introText: string,
- proofDocuments: string[] = []
+ payload: SubmitReaderApplicationPayload,
 ): Promise<ActionResult<{ message: string }>> {
  const t = await getTranslations('ReaderApply');
  const tApi = await getTranslations('ApiErrors');
  const accessToken = await getServerAccessToken();
- if (!accessToken) return actionFail(tApi('unauthorized'));
+ if (!accessToken) {
+  return actionFail(tApi('unauthorized'));
+ }
 
  try {
   const result = await serverHttpRequest<{ message?: string }>('/reader/apply', {
    method: 'POST',
    token: accessToken,
-   json: { introText, proofDocuments },
+   json: {
+    bio: payload.bio,
+    specialties: payload.specialties,
+    yearsOfExperience: payload.yearsOfExperience,
+    facebookUrl: payload.facebookUrl,
+    instagramUrl: payload.instagramUrl,
+    tikTokUrl: payload.tikTokUrl,
+    diamondPerQuestion: payload.diamondPerQuestion,
+    proofDocuments: payload.proofDocuments ?? [],
+   },
    fallbackErrorMessage: t('errors.submit_failed'),
   });
 
@@ -47,7 +74,9 @@ export async function submitReaderApplication(
 
 export async function getMyReaderRequest(): Promise<ActionResult<MyReaderRequest>> {
  const accessToken = await getServerAccessToken();
- if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
+ if (!accessToken) {
+  return actionFail(AUTH_ERROR.UNAUTHORIZED);
+ }
 
  try {
   const result = await serverHttpRequest<MyReaderRequest>('/reader/my-request', {

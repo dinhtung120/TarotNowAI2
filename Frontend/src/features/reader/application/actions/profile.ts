@@ -4,17 +4,25 @@ import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
-import { AUTH_ERROR } from "@/shared/domain/authErrors";
+import { AUTH_ERROR } from '@/shared/domain/authErrors';
 
-export async function updateReaderProfile(data: {
+export interface UpdateReaderProfilePayload {
  bioVi?: string;
  bioEn?: string;
  bioZh?: string;
  diamondPerQuestion?: number;
  specialties?: string[];
-}): Promise<ActionResult<undefined>> {
+ yearsOfExperience?: number;
+ facebookUrl?: string;
+ instagramUrl?: string;
+ tikTokUrl?: string;
+}
+
+export async function updateReaderProfile(data: UpdateReaderProfilePayload): Promise<ActionResult<undefined>> {
  const accessToken = await getServerAccessToken();
- if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
+ if (!accessToken) {
+  return actionFail(AUTH_ERROR.UNAUTHORIZED);
+ }
 
  try {
   const result = await serverHttpRequest<unknown>('/reader/profile', {
@@ -38,7 +46,9 @@ export async function updateReaderProfile(data: {
 
 export async function updateReaderStatus(status: string): Promise<ActionResult<undefined>> {
  const accessToken = await getServerAccessToken();
- if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
+ if (!accessToken) {
+  return actionFail(AUTH_ERROR.UNAUTHORIZED);
+ }
 
  try {
   const result = await serverHttpRequest<unknown>('/reader/status', {

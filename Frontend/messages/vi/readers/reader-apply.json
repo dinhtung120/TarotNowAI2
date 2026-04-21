@@ -24,11 +24,11 @@
     "steps": {
       "intro": {
         "title": "Giới thiệu bản thân",
-        "desc": "Chia sẻ kinh nghiệm Tarot"
+        "desc": "Điền đầy đủ hồ sơ Reader"
       },
       "review": {
         "title": "Chờ phê duyệt",
-        "desc": "Admin sẽ xem xét đơn"
+        "desc": "Admin sẽ xác minh thông tin"
       },
       "start": {
         "title": "Bắt đầu nhận câu hỏi",
@@ -36,11 +36,40 @@
       }
     },
     "form": {
+      "specialties_label": "Chuyên môn *",
+      "specialties": {
+        "love": "Tarot Tình Yêu",
+        "career": "Tarot Công Việc",
+        "general": "Tarot Tổng Quát",
+        "health": "Tarot Sức Khỏe",
+        "finance": "Tarot Tài Chính"
+      },
+      "years_experience_label": "Số năm kinh nghiệm *",
+      "diamond_per_question_label": "Giá dịch vụ (Diamond / câu hỏi) *",
+      "social_links_label": "Link mạng xã hội *",
+      "social_links_hint": "Bắt buộc điền ít nhất 1 link (Facebook hoặc Instagram hoặc TikTok) để admin xác minh.",
+      "facebook_placeholder": "https://facebook.com/...",
+      "instagram_placeholder": "https://instagram.com/...",
+      "tiktok_placeholder": "https://tiktok.com/@...",
       "intro_label": "Lời giới thiệu *",
-      "intro_placeholder": "Hãy chia sẻ kinh nghiệm đọc bài Tarot của bạn, tại sao bạn muốn trở thành Reader, và bạn có thể mang lại giá trị gì cho cộng đồng...",
+      "intro_placeholder": "Hãy chia sẻ kinh nghiệm đọc bài Tarot, định hướng chuyên môn và phong cách tư vấn của bạn...",
       "min_chars": "Tối thiểu 20 ký tự",
+      "markdown_hint": "Bạn có thể dùng markdown nhẹ: **đậm**, *nghiêng*, danh sách.",
+      "not_provided": "Chưa cập nhật",
       "submitting": "Đang gửi đơn...",
       "submit": "Gửi Đơn Đăng Ký"
+    },
+    "validation": {
+      "bio_min": "Lời giới thiệu phải có ít nhất 20 ký tự.",
+      "bio_max": "Lời giới thiệu không được vượt quá 4000 ký tự.",
+      "specialties_min": "Vui lòng chọn ít nhất 1 chuyên môn.",
+      "years_min": "Số năm kinh nghiệm tối thiểu là 1.",
+      "diamond_min": "Giá dịch vụ phải từ 50 Diamond.",
+      "social_too_long": "Link mạng xã hội quá dài.",
+      "social_required": "Bạn phải cung cấp ít nhất 1 link mạng xã hội.",
+      "facebook_invalid": "Link Facebook không hợp lệ hoặc sai domain.",
+      "instagram_invalid": "Link Instagram không hợp lệ hoặc sai domain.",
+      "tiktok_invalid": "Link TikTok không hợp lệ hoặc sai domain."
     },
     "errors": {
       "submit_failed": "Gửi đơn thất bại."

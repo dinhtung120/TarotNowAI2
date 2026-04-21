@@ -1,76 +1,43 @@
 using MediatR;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using TarotNow.Application.Common;
-using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
-using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Reader.Commands.SubmitReaderRequest;
 
-// Handler xử lý gửi đơn đăng ký Reader.
-public class SubmitReaderRequestCommandHandler : IRequestHandler<SubmitReaderRequestCommand, bool>
+/// <summary>
+/// Handler gửi đơn Reader theo Rule 0: chỉ publish domain event.
+/// </summary>
+public sealed class SubmitReaderRequestCommandHandler : IRequestHandler<SubmitReaderRequestCommand, bool>
 {
-    private readonly IUserRepository _userRepository;
-    private readonly IReaderRequestRepository _readerRequestRepository;
+    private readonly IInlineDomainEventDispatcher _inlineDomainEventDispatcher;
 
     /// <summary>
-    /// Khởi tạo handler gửi đơn reader.
-    /// Luồng xử lý: nhận user repository để kiểm tra điều kiện tài khoản và reader request repository để kiểm tra/lưu đơn.
+    /// Khởi tạo handler gửi đơn Reader.
     /// </summary>
-    public SubmitReaderRequestCommandHandler(
-        IUserRepository userRepository,
-        IReaderRequestRepository readerRequestRepository)
+    public SubmitReaderRequestCommandHandler(IInlineDomainEventDispatcher inlineDomainEventDispatcher)
     {
-        _userRepository = userRepository;
-        _readerRequestRepository = readerRequestRepository;
+        _inlineDomainEventDispatcher = inlineDomainEventDispatcher;
     }
 
     /// <summary>
-    /// Xử lý command gửi đơn reader.
-    /// Luồng xử lý: xác thực điều kiện user hợp lệ, chặn đơn pending trùng, tạo đơn mới trạng thái pending và lưu persistence.
+    /// Xử lý command bằng cách publish domain event và trả kết quả hydrate từ handler.
     /// </summary>
     public async Task<bool> Handle(SubmitReaderRequestCommand request, CancellationToken cancellationToken)
     {
-        var user = await _userRepository.GetByIdAsync(request.UserId, cancellationToken)
-            ?? throw new NotFoundException("Không tìm thấy người dùng.");
-
-        if (user.Status != UserStatus.Active)
+        var domainEvent = new ReaderRequestSubmitRequestedDomainEvent
         {
-            // Business rule: chỉ tài khoản active mới được gửi đơn để tránh luồng duyệt cho user bị khóa/chưa kích hoạt.
-            throw new BadRequestException("Tài khoản chưa được kích hoạt hoặc đã bị khóa.");
-        }
-
-        if (user.Role != UserRole.User)
-        {
-            // Business rule: tài khoản đã là role đặc biệt thì không cần đăng ký Reader lần nữa.
-            throw new BadRequestException("Bạn đã có vai trò đặc biệt, không cần đăng ký Reader.");
-        }
-
-        var latestRequest = await _readerRequestRepository.GetLatestByUserIdAsync(
-            request.UserId.ToString(),
-            cancellationToken);
-
-        if (latestRequest is not null && latestRequest.Status == ReaderApprovalStatus.Pending)
-        {
-            // Chặn gửi trùng khi vẫn còn đơn chờ duyệt để giữ luồng vận hành admin rõ ràng.
-            throw new BadRequestException("Bạn đã có đơn đang chờ duyệt. Vui lòng chờ admin xử lý.");
-        }
-
-        var readerRequest = new ReaderRequestDto
-        {
-            UserId = request.UserId.ToString(),
-            Status = ReaderApprovalStatus.Pending,
-            IntroText = request.IntroText,
-            ProofDocuments = request.ProofDocuments,
-            CreatedAt = DateTime.UtcNow
+            UserId = request.UserId,
+            Bio = request.Bio,
+            Specialties = request.Specialties,
+            YearsOfExperience = request.YearsOfExperience,
+            FacebookUrl = request.FacebookUrl,
+            InstagramUrl = request.InstagramUrl,
+            TikTokUrl = request.TikTokUrl,
+            DiamondPerQuestion = request.DiamondPerQuestion,
+            ProofDocuments = request.ProofDocuments
         };
-        // Tạo đơn mới luôn ở trạng thái Pending để admin review trước khi cấp quyền Reader.
 
-        await _readerRequestRepository.AddAsync(readerRequest, cancellationToken);
-        // Ghi nhận trạng thái đơn mới vào persistence để hiển thị trong màn hình theo dõi đơn.
-
-        return true;
+        await _inlineDomainEventDispatcher.PublishAsync(domainEvent, cancellationToken);
+        return domainEvent.Submitted;
     }
 }

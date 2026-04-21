@@ -343,6 +343,10 @@
         "id_prefix": "ID: {id}...",
         "intro_title": "Lời giới thiệu",
         "expand": "Mở rộng",
+        "specialties_title": "Chuyên môn",
+        "years_experience_title": "Kinh nghiệm",
+        "social_links_title": "Mạng xã hội",
+        "price_title": "Giá dịch vụ",
         "admin_note_title": "Ghi chú Admin"
       },
       "input": {

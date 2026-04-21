@@ -3,6 +3,7 @@
 import { cn } from '@/lib/utils';
 
 interface ReaderSettingsBioFieldProps {
+ error?: string;
  label: string;
  onChange: (value: string) => void;
  placeholder: string;
@@ -10,6 +11,7 @@ interface ReaderSettingsBioFieldProps {
 }
 
 export function ReaderSettingsBioField({
+ error,
  label,
  onChange,
  placeholder,
@@ -23,8 +25,10 @@ export function ReaderSettingsBioField({
     onChange={(event) => onChange(event.target.value)}
     rows={4}
     placeholder={placeholder}
-    className={cn('w-full tn-field rounded-xl px-4 py-3.5 text-sm tn-text-primary tn-field-accent transition-all shadow-inner resize-none')}
+    aria-invalid={Boolean(error)}
+    className={cn('w-full tn-field rounded-xl px-4 py-3.5 text-sm tn-text-primary tn-field-accent transition-all shadow-inner resize-none', error ? 'tn-border-danger' : '')}
    />
+   {error ? <p className={cn('tn-text-10 tn-text-danger')}>{error}</p> : null}
   </div>
  );
 }

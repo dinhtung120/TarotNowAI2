@@ -7,6 +7,10 @@ export interface ReaderRequestLabels {
  userPrefix: (id: string) => string;
  introTitle: string;
  introExpand: string;
+ specialtiesTitle: string;
+ yearsOfExperienceTitle: string;
+ socialLinksTitle: string;
+ priceTitle: string;
  adminNoteTitle: string;
  adminNotePlaceholder: string;
  approve: string;

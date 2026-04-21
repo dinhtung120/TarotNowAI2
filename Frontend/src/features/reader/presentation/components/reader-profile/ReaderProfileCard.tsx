@@ -12,6 +12,7 @@ interface ReaderProfileCardProps {
  bio: string;
  diamondSuffix: string;
  fallbackName: string;
+ yearsExperienceLabel: string;
  profile: ReaderProfile;
  ratingLabel: string;
  reviewsLabel: string;
@@ -28,7 +29,13 @@ export function ReaderProfileCard(props: ReaderProfileCardProps) {
     <Sparkles size={240} className={cn('tn-text-accent')} />
    </div>
    <div className={cn('tn-reader-profile-card-content relative z-10')}>
-    <ReaderProfileHero profile={props.profile} fallbackName={props.fallbackName} diamondSuffix={props.diamondSuffix} t={props.t} />
+    <ReaderProfileHero
+     profile={props.profile}
+     fallbackName={props.fallbackName}
+     diamondSuffix={props.diamondSuffix}
+     yearsExperienceLabel={props.yearsExperienceLabel}
+     t={props.t}
+    />
     <ReaderProfileStatsGrid profile={props.profile} ratingLabel={props.ratingLabel} reviewsLabel={props.reviewsLabel} />
     <ReaderProfileBioPanel bio={props.bio} profile={props.profile} soulLinkLabel={props.soulLinkLabel} specialtiesTitle={props.specialtiesTitle} />
    </div>

@@ -1,28 +1,67 @@
 using FluentValidation;
+using TarotNow.Application.Common.Helpers;
+using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Reader.Commands.SubmitReaderRequest;
 
-// Validator cho command gửi đơn reader.
-public class SubmitReaderRequestValidator : AbstractValidator<SubmitReaderRequestCommand>
+/// <summary>
+/// Validator cho command gửi đơn Reader.
+/// </summary>
+public sealed class SubmitReaderRequestValidator : AbstractValidator<SubmitReaderRequestCommand>
 {
+    private const int MinBioLength = 20;
+    private const int MaxBioLength = 4_000;
+    private const int MinYearsOfExperience = 1;
+    private const long MinDiamondPerQuestion = 50;
+
     /// <summary>
-    /// Khởi tạo rule validation cho dữ liệu gửi đơn reader.
-    /// Luồng xử lý: kiểm tra UserId và ràng buộc độ dài IntroText để bảo đảm đơn có nội dung đủ đánh giá.
+    /// Khởi tạo rule validation cho luồng nộp đơn Reader.
     /// </summary>
     public SubmitReaderRequestValidator()
     {
         RuleFor(x => x.UserId)
             .NotEmpty()
             .WithMessage("UserId không được để trống.");
-        // UserId bắt buộc để liên kết đơn với đúng tài khoản.
 
-        RuleFor(x => x.IntroText)
+        RuleFor(x => x.Bio)
             .NotEmpty()
             .WithMessage("Lời giới thiệu không được để trống.")
-            .MinimumLength(20)
-            .WithMessage("Lời giới thiệu phải có ít nhất 20 ký tự.")
-            .MaximumLength(2000)
-            .WithMessage("Lời giới thiệu không được vượt quá 2000 ký tự.");
-        // Business rule: mô tả quá ngắn sẽ không đủ dữ liệu cho admin đánh giá năng lực reader.
+            .MinimumLength(MinBioLength)
+            .WithMessage($"Lời giới thiệu phải có ít nhất {MinBioLength} ký tự.")
+            .MaximumLength(MaxBioLength)
+            .WithMessage($"Lời giới thiệu không được vượt quá {MaxBioLength} ký tự.");
+
+        RuleFor(x => x.Specialties)
+            .NotNull()
+            .Must(x => x is { Count: > 0 })
+            .WithMessage("Reader phải chọn ít nhất 1 chuyên môn.");
+
+        RuleForEach(x => x.Specialties)
+            .Must(ReaderSpecialties.IsSupported)
+            .WithMessage("Chuyên môn không hợp lệ.");
+
+        RuleFor(x => x.YearsOfExperience)
+            .GreaterThanOrEqualTo(MinYearsOfExperience)
+            .WithMessage("Số năm kinh nghiệm tối thiểu là 1.");
+
+        RuleFor(x => x.DiamondPerQuestion)
+            .GreaterThanOrEqualTo(MinDiamondPerQuestion)
+            .WithMessage("Giá mỗi câu hỏi phải từ 50 Diamond.");
+
+        RuleFor(x => x)
+            .Must(x => ReaderSocialUrlValidator.HasAtLeastOneSocialLink(x.FacebookUrl, x.InstagramUrl, x.TikTokUrl))
+            .WithMessage("Phải cung cấp ít nhất 1 link Facebook, Instagram hoặc TikTok.");
+
+        RuleFor(x => x.FacebookUrl)
+            .Must(ReaderSocialUrlValidator.IsValidFacebookUrl)
+            .WithMessage("FacebookUrl không hợp lệ hoặc không đúng domain Facebook.");
+
+        RuleFor(x => x.InstagramUrl)
+            .Must(ReaderSocialUrlValidator.IsValidInstagramUrl)
+            .WithMessage("InstagramUrl không hợp lệ hoặc không đúng domain Instagram.");
+
+        RuleFor(x => x.TikTokUrl)
+            .Must(ReaderSocialUrlValidator.IsValidTikTokUrl)
+            .WithMessage("TikTokUrl không hợp lệ hoặc không đúng domain TikTok.");
     }
 }

@@ -1,10 +1,11 @@
 import Image from 'next/image';
-import { Gem, Loader2, MessageCircle, Star, X } from 'lucide-react';
+import { BriefcaseBusiness, Gem, Loader2, MessageCircle, Star, X } from 'lucide-react';
 import { Button } from '@/shared/components/ui';
 import type { ReaderProfile } from '@/features/reader/application/actions';
 import { cn } from '@/lib/utils';
 import { ReaderStatusIndicator } from './ReaderStatusIndicator';
 import { resolveAvatarUrl } from '@/shared/infrastructure/http/assetUrl';
+import ReaderSocialLinksInline from '@/features/reader/presentation/components/ReaderSocialLinksInline';
 
 interface ReaderDetailModalProps {
  reader: ReaderProfile | null;
@@ -15,6 +16,7 @@ interface ReaderDetailModalProps {
  labels: {
   readerFallback: string;
   perQuestionSuffix: string;
+  yearsExperienceLabel: string;
   startConversationCta: string;
   online: string;
   busy: string;
@@ -65,6 +67,7 @@ export function ReaderDetailModal({
        <div className={cn('flex flex-wrap items-center gap-3')}>
         <div className={cn('flex items-center gap-1.5 tn-surface px-3 py-1.5 rounded-lg border tn-border-soft')}><Star className={cn('w-3.5 h-3.5 tn-text-warning')} fill="currentColor" /><span className={cn('text-xs font-black tn-text-primary')}>{reader.avgRating > 0 ? reader.avgRating.toFixed(1) : '--'}</span><span className={cn('tn-text-10 tn-text-tertiary font-bold')}>({reader.totalReviews})</span></div>
         <div className={cn('flex items-center gap-1.5 tn-bg-accent-10 px-3 py-1.5 rounded-lg border tn-border-accent-20')}><Gem className={cn('w-3.5 h-3.5 tn-text-accent')} /><span className={cn('tn-text-10 font-black uppercase tracking-widest tn-text-accent')}>{reader.diamondPerQuestion} {labels.perQuestionSuffix}</span></div>
+        <div className={cn('flex items-center gap-1.5 tn-surface px-3 py-1.5 rounded-lg border tn-border-soft')}><BriefcaseBusiness className={cn('w-3.5 h-3.5 tn-text-secondary')} /><span className={cn('tn-text-10 font-black uppercase tn-text-secondary')}>{reader.yearsOfExperience}+ {labels.yearsExperienceLabel}</span></div>
        </div>
 
        {reader.specialties.length > 0 ? (
@@ -76,6 +79,12 @@ export function ReaderDetailModal({
          ))}
         </div>
        ) : null}
+       <ReaderSocialLinksInline
+        facebookUrl={reader.facebookUrl}
+        instagramUrl={reader.instagramUrl}
+        tikTokUrl={reader.tikTokUrl}
+        size="md"
+       />
 
        {/* Footer: Cố định ở cuối phần cuộn hoặc có thể tách ra nếu muốn luôn hiển thị - CTA button at the bottom of the content */}
        <div className={cn('pt-6 border-t tn-border-soft flex justify-end')}>

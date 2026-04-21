@@ -3,11 +3,12 @@ import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
 interface ReaderApplyIntroFieldProps {
-  introText: string;
-  setIntroText: (value: string) => void;
+ bio: string;
+ error?: string;
+ setBio: (value: string) => void;
 }
 
-export default function ReaderApplyIntroField({ introText, setIntroText }: ReaderApplyIntroFieldProps) {
+export default function ReaderApplyIntroField({ bio, error, setBio }: ReaderApplyIntroFieldProps) {
   const t = useTranslations('ReaderApply');
 
   return (
@@ -18,16 +19,18 @@ export default function ReaderApplyIntroField({ introText, setIntroText }: Reade
       </label>
       <textarea
         id="reader-intro-text"
-        value={introText}
-        onChange={(event) => setIntroText(event.target.value)}
+        value={bio}
+        onChange={(event) => setBio(event.target.value)}
         placeholder={t('form.intro_placeholder')}
         rows={6}
-        className={cn('w-full resize-none rounded-2xl border border-white/10 bg-white/5 p-6 text-sm tn-text-primary tn-placeholder transition-all')}
+        className={cn('w-full resize-none rounded-2xl border bg-white/5 p-6 text-sm tn-text-primary tn-placeholder transition-all', error ? 'tn-border-danger' : 'border-white/10')}
       />
       <div className={cn('flex justify-between')}>
-        <span className={cn('tn-text-10', introText.length >= 20 ? 'tn-text-muted' : 'tn-text-danger')}>{t('form.min_chars')}</span>
-        <span className={cn('tn-text-10 tn-text-muted')}>{introText.length}/2000</span>
+        <span className={cn('tn-text-10', bio.length >= 20 ? 'tn-text-muted' : 'tn-text-danger')}>{t('form.min_chars')}</span>
+        <span className={cn('tn-text-10 tn-text-muted')}>{bio.length}/4000</span>
       </div>
+      <p className={cn('tn-text-10 tn-text-muted')}>{t('form.markdown_hint')}</p>
+      {error ? <p className={cn('tn-text-10 tn-text-danger')}>{error}</p> : null}
     </div>
   );
 }

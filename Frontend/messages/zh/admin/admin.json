@@ -343,6 +343,10 @@
         "id_prefix": "ID: {id}...",
         "intro_title": "自我介绍",
         "expand": "展开",
+        "specialties_title": "擅长领域",
+        "years_experience_title": "经验",
+        "social_links_title": "社交链接",
+        "price_title": "服务价格",
         "admin_note_title": "管理员备注"
       },
       "input": {

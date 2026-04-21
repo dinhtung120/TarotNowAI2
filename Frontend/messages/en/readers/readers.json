@@ -29,6 +29,8 @@
       "empty": "No readers match your filters.",
       "reader_fallback": "Reader",
       "bio_fallback": "No detailed bio yet.",
+      "experience_years_label": "years",
+      "social_links_label": "Social links",
       "per_question_suffix": "/ Q"
     },
     "profile": {
@@ -40,6 +42,7 @@
         "busy": "Busy",
         "offline": "Offline"
       },
+      "years_experience_suffix": "years",
       "diamond_per_question_suffix": "/ Q",
       "rating_label": "Rating",
       "reviews_label": "Reviews",

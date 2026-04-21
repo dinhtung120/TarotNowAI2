@@ -4,20 +4,22 @@ import { useCallback, useMemo, useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
-import {
- getReaderProfile,
- updateReaderProfile,
- updateReaderStatus,
-} from '@/features/reader/public';
+import { getReaderProfile, updateReaderProfile, updateReaderStatus } from '@/features/reader/public';
 import type { ReaderProfile } from '@/features/reader/application/actions';
 import { normalizeReaderStatus, type ReaderStatus } from '@/features/reader/domain/readerStatus';
+import { isReaderSpecialtyValue, type ReaderSpecialtyValue } from '@/features/reader/domain/readerSpecialties';
+import { hasAtLeastOneSocialLink, normalizeOptionalSocialUrl } from '@/features/reader/domain/readerSocialLinks';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 
 interface ReaderSettingsDraft {
  bioVi: string;
  diamondPerQuestion: number;
- specialtiesStr: string;
+ specialties: ReaderSpecialtyValue[];
+ yearsOfExperience: number;
+ facebookUrl: string;
+ instagramUrl: string;
+ tikTokUrl: string;
  status: ReaderStatus;
 }
 
@@ -39,20 +41,20 @@ const DANGER_TOAST_STYLE = {
  border: '1px solid var(--danger)',
 } as const;
 
+const DEFAULT_DIAMOND_PER_QUESTION = 100;
+const DEFAULT_YEARS_OF_EXPERIENCE = 1;
+
 function toDraft(profile: ReaderProfile | null | undefined): ReaderSettingsDraft {
  return {
   bioVi: profile?.bioVi || '',
-  diamondPerQuestion: profile?.diamondPerQuestion || 100,
-  specialtiesStr: profile?.specialties?.join(', ') || '',
+  diamondPerQuestion: Math.max(50, profile?.diamondPerQuestion || DEFAULT_DIAMOND_PER_QUESTION),
+  specialties: (profile?.specialties ?? []).filter(isReaderSpecialtyValue),
+  yearsOfExperience: Math.max(1, profile?.yearsOfExperience || DEFAULT_YEARS_OF_EXPERIENCE),
+  facebookUrl: normalizeOptionalSocialUrl(profile?.facebookUrl),
+  instagramUrl: normalizeOptionalSocialUrl(profile?.instagramUrl),
+  tikTokUrl: normalizeOptionalSocialUrl(profile?.tikTokUrl),
   status: normalizeReaderStatus(profile?.status),
  };
-}
-
-function resolveSpecialties(input: string): string[] {
- return input
-  .split(',')
-  .map((item) => item.trim())
-  .filter((item) => item.length > 0);
 }
 
 export function useProfileReaderSettingsPage(t: TranslateFn) {
@@ -94,8 +96,24 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
   updateDraft((current) => ({ ...current, diamondPerQuestion: value }));
  }, [updateDraft]);
 
- const setSpecialtiesStr = useCallback((value: string) => {
-  updateDraft((current) => ({ ...current, specialtiesStr: value }));
+ const setSpecialties = useCallback((value: ReaderSpecialtyValue[]) => {
+  updateDraft((current) => ({ ...current, specialties: value }));
+ }, [updateDraft]);
+
+ const setYearsOfExperience = useCallback((value: number) => {
+  updateDraft((current) => ({ ...current, yearsOfExperience: value }));
+ }, [updateDraft]);
+
+ const setFacebookUrl = useCallback((value: string) => {
+  updateDraft((current) => ({ ...current, facebookUrl: value }));
+ }, [updateDraft]);
+
+ const setInstagramUrl = useCallback((value: string) => {
+  updateDraft((current) => ({ ...current, instagramUrl: value }));
+ }, [updateDraft]);
+
+ const setTikTokUrl = useCallback((value: string) => {
+  updateDraft((current) => ({ ...current, tikTokUrl: value }));
  }, [updateDraft]);
 
  const handleSave = useCallback(async (event: FormEvent) => {
@@ -105,10 +123,24 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
    return;
   }
 
+  if (effectiveValues.specialties.length === 0) {
+   toast.error(t('reader.toast_specialties_required'), { style: DANGER_TOAST_STYLE });
+   return;
+  }
+
+  if (!hasAtLeastOneSocialLink(effectiveValues)) {
+   toast.error(t('reader.toast_social_required'), { style: DANGER_TOAST_STYLE });
+   return;
+  }
+
   const result = await saveMutation.mutateAsync({
    bioVi: effectiveValues.bioVi,
    diamondPerQuestion: effectiveValues.diamondPerQuestion,
-   specialties: resolveSpecialties(effectiveValues.specialtiesStr),
+   specialties: effectiveValues.specialties,
+   yearsOfExperience: effectiveValues.yearsOfExperience,
+   facebookUrl: normalizeOptionalSocialUrl(effectiveValues.facebookUrl) || undefined,
+   instagramUrl: normalizeOptionalSocialUrl(effectiveValues.instagramUrl) || undefined,
+   tikTokUrl: normalizeOptionalSocialUrl(effectiveValues.tikTokUrl) || undefined,
   });
 
   if (!result.success) {
@@ -119,7 +151,7 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
   toast.success(t('reader.toast_save_success'), { style: SUCCESS_TOAST_STYLE });
   setDraft(null);
   await queryClient.invalidateQueries({ queryKey: ['reader-profile-settings', user?.id] });
- }, [effectiveValues.bioVi, effectiveValues.diamondPerQuestion, effectiveValues.specialtiesStr, isTarotReader, queryClient, saveMutation, t, user?.id]);
+ }, [effectiveValues, isTarotReader, queryClient, saveMutation, t, user?.id]);
 
  const handleStatusChange = useCallback(async (newStatus: ReaderStatus) => {
   if (!isTarotReader) {
@@ -147,8 +179,16 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
   setBioVi,
   diamondPerQuestion: effectiveValues.diamondPerQuestion,
   setDiamondPerQuestion,
-  specialtiesStr: effectiveValues.specialtiesStr,
-  setSpecialtiesStr,
+  specialties: effectiveValues.specialties,
+  setSpecialties,
+  yearsOfExperience: effectiveValues.yearsOfExperience,
+  setYearsOfExperience,
+  facebookUrl: effectiveValues.facebookUrl,
+  setFacebookUrl,
+  instagramUrl: effectiveValues.instagramUrl,
+  setInstagramUrl,
+  tikTokUrl: effectiveValues.tikTokUrl,
+  setTikTokUrl,
   status: effectiveValues.status,
   handleSave,
   handleStatusChange,

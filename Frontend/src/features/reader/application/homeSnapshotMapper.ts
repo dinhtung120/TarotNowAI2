@@ -21,7 +21,7 @@ function mapReaderProfile(raw: unknown): ReaderProfile {
  const asStrArr = (v: unknown) =>
   Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
 
- return {
+  return {
   id: asString(source.id ?? source.Id),
   userId: asString(source.userId ?? source.UserId),
   status: normalizeReaderStatus(asString(source.status ?? source.Status, 'offline')),
@@ -30,6 +30,10 @@ function mapReaderProfile(raw: unknown): ReaderProfile {
   bioEn: asString(source.bioEn ?? source.BioEn),
   bioZh: asString(source.bioZh ?? source.BioZh),
   specialties: asStrArr(source.specialties ?? source.Specialties),
+  yearsOfExperience: Math.max(0, Math.trunc(asNum(source.yearsOfExperience ?? source.YearsOfExperience))),
+  facebookUrl: asString(source.facebookUrl ?? source.FacebookUrl) || null,
+  instagramUrl: asString(source.instagramUrl ?? source.InstagramUrl) || null,
+  tikTokUrl: asString(source.tikTokUrl ?? source.TikTokUrl) || null,
   avgRating: asNum(source.avgRating ?? source.AvgRating),
   totalReviews: Math.trunc(asNum(source.totalReviews ?? source.TotalReviews)),
   displayName: asString(source.displayName ?? source.DisplayName),

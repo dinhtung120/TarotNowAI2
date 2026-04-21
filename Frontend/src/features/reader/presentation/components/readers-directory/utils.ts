@@ -6,12 +6,16 @@ export function getLocalizedReaderBio(
  fallback: string,
 ): string {
  if (locale === 'vi') {
-  return reader.bioVi || reader.bioEn || reader.bioZh || fallback;
+  return reader.bioVi || fallback;
  }
 
  if (locale === 'en') {
-  return reader.bioEn || reader.bioVi || reader.bioZh || fallback;
+  return reader.bioEn || reader.bioVi || fallback;
  }
 
- return reader.bioZh || reader.bioEn || reader.bioVi || fallback;
+ if (locale === 'zh') {
+  return reader.bioZh || reader.bioVi || fallback;
+ }
+
+ return reader.bioVi || fallback;
 }

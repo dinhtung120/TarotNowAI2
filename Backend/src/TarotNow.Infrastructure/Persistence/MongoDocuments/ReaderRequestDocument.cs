@@ -1,63 +1,126 @@
-
-
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace TarotNow.Infrastructure.Persistence.MongoDocuments;
 
-// Document yêu cầu đăng ký reader của người dùng.
+/// <summary>
+/// Document yêu cầu đăng ký Reader của người dùng.
+/// </summary>
 public class ReaderRequestDocument
 {
-    // ObjectId của yêu cầu.
+    /// <summary>
+    /// ObjectId của yêu cầu.
+    /// </summary>
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
     public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
 
-    // User gửi yêu cầu.
+    /// <summary>
+    /// User gửi yêu cầu.
+    /// </summary>
     [BsonElement("user_id")]
     public string UserId { get; set; } = string.Empty;
 
-    // Trạng thái duyệt yêu cầu (pending/approved/rejected).
+    /// <summary>
+    /// Trạng thái duyệt yêu cầu (pending/approved/rejected).
+    /// </summary>
     [BsonElement("status")]
     public string Status { get; set; } = "pending";
 
-    // Phần giới thiệu bản thân của ứng viên.
-    [BsonElement("intro_text")]
-    public string IntroText { get; set; } = string.Empty;
+    /// <summary>
+    /// Lời giới thiệu Reader.
+    /// </summary>
+    [BsonElement("bio")]
+    public string Bio { get; set; } = string.Empty;
 
-    // Danh sách tài liệu minh chứng.
+    /// <summary>
+    /// Danh sách chuyên môn Reader đăng ký.
+    /// </summary>
+    [BsonElement("specialties")]
+    public List<string> Specialties { get; set; } = [];
+
+    /// <summary>
+    /// Số năm kinh nghiệm đăng ký.
+    /// </summary>
+    [BsonElement("years_of_experience")]
+    public int YearsOfExperience { get; set; }
+
+    /// <summary>
+    /// Link Facebook.
+    /// </summary>
+    [BsonElement("facebook_url")]
+    [BsonIgnoreIfNull]
+    public string? FacebookUrl { get; set; }
+
+    /// <summary>
+    /// Link Instagram.
+    /// </summary>
+    [BsonElement("instagram_url")]
+    [BsonIgnoreIfNull]
+    public string? InstagramUrl { get; set; }
+
+    /// <summary>
+    /// Link TikTok.
+    /// </summary>
+    [BsonElement("tiktok_url")]
+    [BsonIgnoreIfNull]
+    public string? TikTokUrl { get; set; }
+
+    /// <summary>
+    /// Giá diamond cho mỗi câu hỏi.
+    /// </summary>
+    [BsonElement("diamond_per_question")]
+    public long DiamondPerQuestion { get; set; }
+
+    /// <summary>
+    /// Danh sách tài liệu minh chứng.
+    /// </summary>
     [BsonElement("proof_documents")]
-    public List<string> ProofDocuments { get; set; } = new();
+    public List<string> ProofDocuments { get; set; } = [];
 
-    // Ghi chú xử lý từ admin (nếu có).
+    /// <summary>
+    /// Ghi chú xử lý từ admin (nếu có).
+    /// </summary>
     [BsonElement("admin_note")]
     [BsonIgnoreIfNull]
     public string? AdminNote { get; set; }
 
-    // Admin đã duyệt yêu cầu.
+    /// <summary>
+    /// Admin đã duyệt yêu cầu.
+    /// </summary>
     [BsonElement("reviewed_by")]
     [BsonIgnoreIfNull]
     public string? ReviewedBy { get; set; }
 
-    // Mốc thời gian duyệt.
+    /// <summary>
+    /// Mốc thời gian duyệt.
+    /// </summary>
     [BsonElement("reviewed_at")]
     [BsonIgnoreIfNull]
     public DateTime? ReviewedAt { get; set; }
 
-    // Soft-delete flag.
+    /// <summary>
+    /// Soft-delete flag.
+    /// </summary>
     [BsonElement("is_deleted")]
-    public bool IsDeleted { get; set; } = false;
+    public bool IsDeleted { get; set; }
 
-    // Mốc thời gian xóa mềm.
+    /// <summary>
+    /// Mốc thời gian xóa mềm.
+    /// </summary>
     [BsonElement("deleted_at")]
     [BsonIgnoreIfNull]
     public DateTime? DeletedAt { get; set; }
 
-    // Thời điểm tạo yêu cầu.
+    /// <summary>
+    /// Thời điểm tạo yêu cầu.
+    /// </summary>
     [BsonElement("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    // Thời điểm cập nhật gần nhất.
+    /// <summary>
+    /// Thời điểm cập nhật gần nhất.
+    /// </summary>
     [BsonElement("updated_at")]
     [BsonIgnoreIfNull]
     public DateTime? UpdatedAt { get; set; }

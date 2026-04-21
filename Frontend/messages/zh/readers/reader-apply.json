@@ -23,12 +23,12 @@
     },
     "steps": {
       "intro": {
-        "title": "自我介绍",
-        "desc": "分享你的塔罗经验"
+        "title": "完善资料",
+        "desc": "填写完整占卜师信息"
       },
       "review": {
         "title": "等待审核",
-        "desc": "管理员将审核申请"
+        "desc": "管理员将核验你的资料"
       },
       "start": {
         "title": "开始接收提问",
@@ -36,11 +36,40 @@
       }
     },
     "form": {
+      "specialties_label": "擅长领域 *",
+      "specialties": {
+        "love": "爱情塔罗",
+        "career": "事业塔罗",
+        "general": "综合塔罗",
+        "health": "健康塔罗",
+        "finance": "财务塔罗"
+      },
+      "years_experience_label": "从业年限 *",
+      "diamond_per_question_label": "服务价格（Diamond / 问题）*",
+      "social_links_label": "社交链接 *",
+      "social_links_hint": "至少提供 1 个链接（Facebook 或 Instagram 或 TikTok）用于管理员审核。",
+      "facebook_placeholder": "https://facebook.com/...",
+      "instagram_placeholder": "https://instagram.com/...",
+      "tiktok_placeholder": "https://tiktok.com/@...",
       "intro_label": "自我介绍 *",
-      "intro_placeholder": "分享你的塔罗解读经验、你想成为占卜师的原因，以及你能为社区带来什么价值...",
+      "intro_placeholder": "请介绍你的塔罗经验、擅长方向和咨询风格...",
       "min_chars": "至少 20 个字符",
+      "markdown_hint": "支持轻量 markdown：**加粗**、*斜体*、列表。",
+      "not_provided": "未填写",
       "submitting": "提交中...",
       "submit": "提交申请"
+    },
+    "validation": {
+      "bio_min": "自我介绍至少需要 20 个字符。",
+      "bio_max": "自我介绍不能超过 4000 个字符。",
+      "specialties_min": "请至少选择一个擅长领域。",
+      "years_min": "从业年限至少为 1 年。",
+      "diamond_min": "服务价格至少为 50 Diamond。",
+      "social_too_long": "社交链接过长。",
+      "social_required": "你必须至少提供 1 个社交链接。",
+      "facebook_invalid": "Facebook 链接无效或域名不受支持。",
+      "instagram_invalid": "Instagram 链接无效或域名不受支持。",
+      "tiktok_invalid": "TikTok 链接无效或域名不受支持。"
     },
     "errors": {
       "submit_failed": "提交失败。"

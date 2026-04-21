@@ -29,6 +29,8 @@
       "empty": "Chưa có Reader nào phù hợp với bộ lọc.",
       "reader_fallback": "Reader",
       "bio_fallback": "Chưa có mô tả chi tiết.",
+      "experience_years_label": "năm",
+      "social_links_label": "Mạng xã hội",
       "per_question_suffix": "/ Câu"
     },
     "profile": {
@@ -40,6 +42,7 @@
         "busy": "Đang bận",
         "offline": "Ngoại tuyến"
       },
+      "years_experience_suffix": "năm",
       "diamond_per_question_suffix": "/ Câu",
       "rating_label": "Điểm Đánh Giá",
       "reviews_label": "Lượt Nhận Xét",

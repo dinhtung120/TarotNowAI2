@@ -1,27 +1,59 @@
 using MediatR;
-using System;
-using System.Collections.Generic;
 
 namespace TarotNow.Application.Features.Reader.Commands.UpdateReaderProfile;
 
-// Command cập nhật hồ sơ Reader.
+/// <summary>
+/// Command cập nhật hồ sơ Reader.
+/// </summary>
 public class UpdateReaderProfileCommand : IRequest<bool>
 {
-    // Định danh user của reader cần cập nhật hồ sơ.
+    /// <summary>
+    /// Định danh user của Reader.
+    /// </summary>
     public Guid UserId { get; set; }
 
-    // Mô tả reader tiếng Việt (tùy chọn).
+    /// <summary>
+    /// Bio tiếng Việt.
+    /// </summary>
     public string? BioVi { get; set; }
 
-    // Mô tả reader tiếng Anh (tùy chọn).
+    /// <summary>
+    /// Bio tiếng Anh.
+    /// </summary>
     public string? BioEn { get; set; }
 
-    // Mô tả reader tiếng Trung (tùy chọn).
+    /// <summary>
+    /// Bio tiếng Trung.
+    /// </summary>
     public string? BioZh { get; set; }
 
-    // Mức giá mỗi câu hỏi (Diamond) nếu cần thay đổi.
+    /// <summary>
+    /// Giá diamond mỗi câu hỏi.
+    /// </summary>
     public long? DiamondPerQuestion { get; set; }
 
-    // Danh sách chuyên môn reader (tùy chọn).
+    /// <summary>
+    /// Danh sách chuyên môn.
+    /// </summary>
     public List<string>? Specialties { get; set; }
+
+    /// <summary>
+    /// Số năm kinh nghiệm.
+    /// </summary>
+    public int? YearsOfExperience { get; set; }
+
+    /// <summary>
+    /// Link Facebook.
+    /// </summary>
+    public string? FacebookUrl { get; set; }
+
+    /// <summary>
+    /// Link Instagram.
+    /// </summary>
+    public string? InstagramUrl { get; set; }
+
+    /// <summary>
+    /// Link TikTok.
+    /// </summary>
+    public string? TikTokUrl { get; set; }
 }

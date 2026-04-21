@@ -20,8 +20,16 @@ export default function ReaderSettingsPage({ embedded = false }: ReaderSettingsP
   setBioVi,
   diamondPerQuestion,
   setDiamondPerQuestion,
-  specialtiesStr,
-  setSpecialtiesStr,
+  specialties,
+  setSpecialties,
+  yearsOfExperience,
+  setYearsOfExperience,
+  facebookUrl,
+  setFacebookUrl,
+  instagramUrl,
+  setInstagramUrl,
+  tikTokUrl,
+  setTikTokUrl,
   handleSave,
  } = useProfileReaderSettingsPage(t);
 
@@ -38,13 +46,38 @@ export default function ReaderSettingsPage({ embedded = false }: ReaderSettingsP
     bioValue={bioVi}
     onChangeBio={setBioVi}
     specialtiesLabel={t('reader.specialties_label')}
-    specialtiesPlaceholder={t('reader.specialties_placeholder')}
-    specialtiesValue={specialtiesStr}
-    onChangeSpecialties={setSpecialtiesStr}
+    specialtiesValue={specialties}
+    renderSpecialtyLabel={(value) => t(`reader.specialties.${value}`)}
+    onChangeSpecialties={setSpecialties}
+    yearsLabel={t('reader.years_experience_label')}
+    yearsValue={yearsOfExperience}
+    onChangeYears={setYearsOfExperience}
+    socialLinksLabel={t('reader.social_links_label')}
+    socialLinksHint={t('reader.social_links_hint')}
+    facebookPlaceholder={t('reader.facebook_placeholder')}
+    instagramPlaceholder={t('reader.instagram_placeholder')}
+    tikTokPlaceholder={t('reader.tiktok_placeholder')}
+    facebookUrl={facebookUrl}
+    instagramUrl={instagramUrl}
+    tikTokUrl={tikTokUrl}
+    onChangeFacebookUrl={setFacebookUrl}
+    onChangeInstagramUrl={setInstagramUrl}
+    onChangeTikTokUrl={setTikTokUrl}
     priceLabel={t('reader.price_label')}
     priceHelp={t('reader.price_help')}
     priceValue={diamondPerQuestion}
     onChangePrice={setDiamondPerQuestion}
+    validation={{
+      bioMax: t('reader.validation.bio_max'),
+      specialtiesMin: t('reader.validation.specialties_min'),
+      yearsMin: t('reader.validation.years_min'),
+      priceMin: t('reader.validation.diamond_min'),
+      socialRequired: t('reader.validation.social_required'),
+      socialTooLong: t('reader.validation.social_too_long'),
+      facebookInvalid: t('reader.validation.facebook_invalid'),
+      instagramInvalid: t('reader.validation.instagram_invalid'),
+      tikTokInvalid: t('reader.validation.tiktok_invalid'),
+    }}
     onSubmit={handleSave}
     saving={saving}
     savingLabel={t('reader.saving')}

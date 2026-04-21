@@ -33,7 +33,13 @@ public partial class ReaderController
         var result = await _mediator.Send(new SubmitReaderRequestCommand
         {
             UserId = userId,
-            IntroText = body.IntroText,
+            Bio = body.Bio,
+            Specialties = body.Specialties,
+            YearsOfExperience = body.YearsOfExperience,
+            FacebookUrl = body.FacebookUrl,
+            InstagramUrl = body.InstagramUrl,
+            TikTokUrl = body.TikTokUrl,
+            DiamondPerQuestion = body.DiamondPerQuestion,
             ProofDocuments = body.ProofDocuments ?? []
         });
 
@@ -89,7 +95,11 @@ public partial class ReaderController
             BioEn = body.BioEn,
             BioZh = body.BioZh,
             DiamondPerQuestion = body.DiamondPerQuestion,
-            Specialties = body.Specialties
+            Specialties = body.Specialties,
+            YearsOfExperience = body.YearsOfExperience,
+            FacebookUrl = body.FacebookUrl,
+            InstagramUrl = body.InstagramUrl,
+            TikTokUrl = body.TikTokUrl
         });
 
         // Trả lỗi business khi cập nhật thất bại để client hiển thị thông báo phù hợp.

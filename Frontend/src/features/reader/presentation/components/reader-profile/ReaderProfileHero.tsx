@@ -1,13 +1,15 @@
 'use client';
 
-import { Gem } from 'lucide-react';
+import { BriefcaseBusiness, Gem } from 'lucide-react';
 import type { ReaderProfile } from '@/features/reader/application/actions';
 import { cn } from '@/lib/utils';
 import { ReaderStatusBadge } from '../ReaderStatusBadge';
+import ReaderSocialLinksInline from '@/features/reader/presentation/components/ReaderSocialLinksInline';
 
 interface ReaderProfileHeroProps {
  diamondSuffix: string;
  fallbackName: string;
+ yearsExperienceLabel: string;
  profile: ReaderProfile;
  t: (key: string, values?: Record<string, string | number | Date>) => string;
 }
@@ -15,6 +17,7 @@ interface ReaderProfileHeroProps {
 export function ReaderProfileHero({
  diamondSuffix,
  fallbackName,
+ yearsExperienceLabel,
  profile,
  t,
 }: ReaderProfileHeroProps) {
@@ -34,7 +37,16 @@ export function ReaderProfileHero({
       <Gem className={cn('w-3.5 h-3.5 tn-text-accent')} />
       <span className={cn('tn-text-overline tn-text-primary')}>{profile.diamondPerQuestion} {diamondSuffix}</span>
      </div>
+     <div className={cn('inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full tn-panel ')}>
+      <BriefcaseBusiness className={cn('w-3.5 h-3.5 tn-text-secondary')} />
+      <span className={cn('tn-text-overline tn-text-primary')}>{profile.yearsOfExperience}+ {yearsExperienceLabel}</span>
+     </div>
     </div>
+    <ReaderSocialLinksInline
+     facebookUrl={profile.facebookUrl}
+     instagramUrl={profile.instagramUrl}
+     tikTokUrl={profile.tikTokUrl}
+    />
    </div>
   </div>
  );

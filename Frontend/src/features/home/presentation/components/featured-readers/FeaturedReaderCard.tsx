@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 
 export default function FeaturedReaderCard({
   profileCta,
+  experienceSuffix,
   reader,
 }: FeaturedReaderCardProps) {
   const status = normalizeReaderStatus(reader.status);
@@ -41,6 +42,7 @@ export default function FeaturedReaderCard({
       <FeaturedReaderMeta
         reader={reader}
         profileCta={profileCta}
+        experienceSuffix={experienceSuffix}
         statusClassName={statusClassName}
       />
     </Link>

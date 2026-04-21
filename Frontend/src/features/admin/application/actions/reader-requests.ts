@@ -4,13 +4,19 @@ import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
-import { AUTH_ERROR } from "@/shared/domain/authErrors";
+import { AUTH_ERROR } from '@/shared/domain/authErrors';
 
 export interface AdminReaderRequest {
  id: string;
  userId: string;
  status: string;
- introText: string;
+ bio: string;
+ specialties: string[];
+ yearsOfExperience: number;
+ facebookUrl?: string | null;
+ instagramUrl?: string | null;
+ tikTokUrl?: string | null;
+ diamondPerQuestion: number;
  proofDocuments: string[];
  adminNote?: string;
  reviewedBy?: string;
@@ -26,7 +32,7 @@ interface ListReaderRequestsResponse {
 export async function listReaderRequests(
  page = 1,
  pageSize = 20,
- statusFilter = ''
+ statusFilter = '',
 ): Promise<ActionResult<ListReaderRequestsResponse>> {
  const accessToken = await getServerAccessToken();
  if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
@@ -73,7 +79,7 @@ export async function listReaderRequests(
 export async function processReaderRequest(
  requestId: string,
  action: 'approve' | 'reject',
- adminNote?: string
+ adminNote?: string,
 ): Promise<ActionResult<undefined>> {
  const accessToken = await getServerAccessToken();
  if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
