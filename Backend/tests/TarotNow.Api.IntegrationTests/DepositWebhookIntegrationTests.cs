@@ -49,6 +49,36 @@ public class DepositWebhookIntegrationTests : IClassFixture<CustomWebApplication
     }
 
     /// <summary>
+    /// Webhook payment link id lệch với order phải bị chặn.
+    /// </summary>
+    [Fact]
+    public async Task PayOsWebhook_ShouldReject_WhenPaymentLinkIdDoesNotMatchOrder()
+    {
+        var client = _factory.CreateClient();
+        var orderCode = 920_010L;
+        var user = await SeedUserAsync("webhook-link-mismatch");
+        var order = await SeedDepositOrderAsync(
+            userId: user.Id,
+            orderCode: orderCode,
+            amountVnd: 50_000,
+            baseDiamond: 500,
+            bonusGold: 25);
+
+        var rawPayload = BuildWebhookPayload(
+            orderCode: orderCode,
+            amount: order.AmountVnd,
+            paymentLinkId: "plink_mismatch",
+            reference: "REF-LINK-MISMATCH",
+            isSuccess: true);
+
+        var response = await client.PostAsync(
+            "/api/v1/deposits/webhook/payos",
+            new StringContent(rawPayload, Encoding.UTF8, "application/json"));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    /// <summary>
     /// Webhook retry chỉ credit ví một lần.
     /// </summary>
     [Fact]
@@ -150,7 +180,8 @@ public class DepositWebhookIntegrationTests : IClassFixture<CustomWebApplication
     {
         var client = _factory.CreateClient();
         var orderCode = 920_004L;
-        const string successReference = "REF-REPLAY-SUCCESS";
+        const string existingReference = "REF-REPLAY-SUCCESS";
+        const string incomingReference = "REF-REPLAY-DIFFERENT";
 
         var user = await SeedUserAsync("webhook-replay-success");
         var order = await SeedDepositOrderAsync(
@@ -159,13 +190,13 @@ public class DepositWebhookIntegrationTests : IClassFixture<CustomWebApplication
             amountVnd: 100_000,
             baseDiamond: 1_000,
             bonusGold: 50);
-        await MarkOrderSuccessWithoutWalletGrantAsync(order.Id, successReference);
+        await MarkOrderSuccessWithoutWalletGrantAsync(order.Id, existingReference);
 
         var rawPayload = BuildWebhookPayload(
             orderCode: orderCode,
             amount: order.AmountVnd,
             paymentLinkId: order.PayOsPaymentLinkId,
-            reference: successReference,
+            reference: incomingReference,
             isSuccess: true);
 
         var response = await client.PostAsync(
@@ -182,6 +213,7 @@ public class DepositWebhookIntegrationTests : IClassFixture<CustomWebApplication
         Assert.NotNull(updatedOrder);
         Assert.NotNull(updatedUser);
         Assert.Equal(DepositOrderStatus.Success, updatedOrder!.Status);
+        Assert.Equal(existingReference, updatedOrder.TransactionId);
         Assert.NotNull(updatedOrder.WalletGrantedAtUtc);
         Assert.Equal(1_000, updatedUser!.DiamondBalance);
         Assert.Equal(50, updatedUser.GoldBalance);

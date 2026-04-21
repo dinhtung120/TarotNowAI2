@@ -50,7 +50,7 @@ public sealed class DepositWebhookReceivedDomainEventHandler
             return;
         }
 
-        ValidateWebhookAmount(order, verifiedData.Amount);
+        ValidateWebhookInvariants(order, verifiedData);
         if (await TryHandleAlreadyProcessedOrderAsync(domainEvent, order, verifiedData))
         {
             return;
@@ -107,8 +107,12 @@ public sealed class DepositWebhookReceivedDomainEventHandler
         PayOsVerifiedWebhookData verifiedData,
         CancellationToken cancellationToken)
     {
-        order.MarkAsSuccess(verifiedData.Reference, verifiedData.TransactionAtUtc);
-        await _depositOrderRepository.UpdateAsync(order, cancellationToken);
+        var referenceId = ResolveReferenceId(order, verifiedData);
+        if (order.Status != DepositOrderStatus.Success)
+        {
+            order.MarkAsSuccess(referenceId, verifiedData.TransactionAtUtc);
+            await _depositOrderRepository.UpdateAsync(order, cancellationToken);
+        }
 
         await _inlineDomainEventDispatcher.PublishAsync(
             new DepositPaymentSucceededDomainEvent
@@ -117,18 +121,46 @@ public sealed class DepositWebhookReceivedDomainEventHandler
                 UserId = order.UserId,
                 DiamondAmount = order.DiamondAmount,
                 BonusGoldAmount = order.BonusGoldAmount,
-                ReferenceId = verifiedData.Reference
+                ReferenceId = referenceId
             },
             cancellationToken);
 
         domainEvent.Handled = true;
     }
 
-    private static void ValidateWebhookAmount(DepositOrder order, long webhookAmount)
+    private static void ValidateWebhookInvariants(DepositOrder order, PayOsVerifiedWebhookData verifiedData)
     {
-        if (order.AmountVnd != webhookAmount)
+        if (order.AmountVnd != verifiedData.Amount)
         {
             throw new BadRequestException("Webhook amount does not match order amount.");
         }
+
+        if (string.IsNullOrWhiteSpace(verifiedData.PaymentLinkId))
+        {
+            return;
+        }
+
+        if (!string.Equals(
+                order.PayOsPaymentLinkId,
+                verifiedData.PaymentLinkId.Trim(),
+                StringComparison.OrdinalIgnoreCase))
+        {
+            throw new BadRequestException("Webhook payment link id does not match order payment link.");
+        }
+    }
+
+    private static string ResolveReferenceId(DepositOrder order, PayOsVerifiedWebhookData verifiedData)
+    {
+        if (string.IsNullOrWhiteSpace(order.TransactionId) == false)
+        {
+            return order.TransactionId.Trim();
+        }
+
+        if (string.IsNullOrWhiteSpace(verifiedData.Reference) == false)
+        {
+            return verifiedData.Reference.Trim();
+        }
+
+        return order.PayOsOrderCode.ToString();
     }
 }

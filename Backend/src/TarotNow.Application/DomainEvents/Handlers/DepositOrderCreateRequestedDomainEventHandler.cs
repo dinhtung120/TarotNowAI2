@@ -49,6 +49,7 @@ public sealed class DepositOrderCreateRequestedDomainEventHandler
         CancellationToken cancellationToken)
     {
         var clientRequestKey = BuildClientRequestKey(domainEvent.UserId, domainEvent.IdempotencyKey);
+        await _depositOrderRepository.AcquireCreateOrderLockAsync(clientRequestKey, cancellationToken);
         var existingOrder = await _depositOrderRepository.GetByClientRequestKeyAsync(clientRequestKey, cancellationToken);
         if (existingOrder != null)
         {
@@ -74,8 +75,11 @@ public sealed class DepositOrderCreateRequestedDomainEventHandler
             paymentLink.QrCode,
             paymentLink.ExpiresAtUtc);
 
-        await _depositOrderRepository.AddAsync(order, cancellationToken);
-        HydrateCreateResponse(domainEvent, order);
+        var persistedOrder = await _depositOrderRepository.AddOrGetExistingByClientRequestKeyAsync(
+            order,
+            clientRequestKey,
+            cancellationToken);
+        HydrateCreateResponse(domainEvent, persistedOrder);
     }
 
     private Task<PayOsCreatePaymentLinkResult> CreatePaymentLinkAsync(

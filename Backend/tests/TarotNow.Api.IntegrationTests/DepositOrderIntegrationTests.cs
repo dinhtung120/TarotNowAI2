@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TarotNow.Domain.Entities;
@@ -40,12 +42,13 @@ public class DepositOrderIntegrationTests : IClassFixture<CustomWebApplicationFa
             packageCode = "topup_100k",
             idempotencyKey = "create-order-idem-001"
         };
+        var clientRequestKey = BuildClientRequestKey(userId, requestPayload.idempotencyKey);
 
         var response1 = await client.PostAsJsonAsync("/api/v1/deposits/orders", requestPayload);
         var response2 = await client.PostAsJsonAsync("/api/v1/deposits/orders", requestPayload);
 
-        Assert.Equal(HttpStatusCode.OK, response1.StatusCode);
-        Assert.Equal(HttpStatusCode.OK, response2.StatusCode);
+        await AssertStatusCodeAsync(response1, HttpStatusCode.OK);
+        await AssertStatusCodeAsync(response2, HttpStatusCode.OK);
 
         var order1 = await response1.Content.ReadFromJsonAsync<CreateOrderResponse>();
         var order2 = await response2.Content.ReadFromJsonAsync<CreateOrderResponse>();
@@ -58,11 +61,67 @@ public class DepositOrderIntegrationTests : IClassFixture<CustomWebApplicationFa
         using var scope = _factory.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var orders = await db.DepositOrders
-            .Where(order => order.UserId == userId)
+            .Where(order => order.ClientRequestKey == clientRequestKey)
             .ToListAsync();
 
         Assert.Single(orders);
         Assert.Equal("topup_100k", orders[0].PackageCode);
+    }
+
+    /// <summary>
+    /// Tạo order đồng thời cùng idempotency key phải luôn hội tụ về một order duy nhất.
+    /// </summary>
+    [Fact]
+    public async Task CreateOrder_ShouldBeIdempotent_UnderConcurrentRequests()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue(TestAuthHandler.AuthenticationScheme);
+
+        var userId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        await SeedUserAsync(userId);
+
+        var requestPayload = new
+        {
+            packageCode = "topup_50k",
+            idempotencyKey = "create-order-concurrent-idem-001"
+        };
+        var clientRequestKey = BuildClientRequestKey(userId, requestPayload.idempotencyKey);
+
+        var request1 = client.PostAsJsonAsync("/api/v1/deposits/orders", requestPayload);
+        var request2 = client.PostAsJsonAsync("/api/v1/deposits/orders", requestPayload);
+        var responses = await Task.WhenAll(request1, request2);
+        var response1 = responses[0];
+        var response2 = responses[1];
+
+        await AssertStatusCodeAsync(response1, HttpStatusCode.OK);
+        await AssertStatusCodeAsync(response2, HttpStatusCode.OK);
+
+        var order1 = await response1.Content.ReadFromJsonAsync<CreateOrderResponse>();
+        var order2 = await response2.Content.ReadFromJsonAsync<CreateOrderResponse>();
+        Assert.NotNull(order1);
+        Assert.NotNull(order2);
+        Assert.Equal(order1!.OrderId, order2!.OrderId);
+        Assert.Equal(order1.PayOsOrderCode, order2.PayOsOrderCode);
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var orderCount = await db.DepositOrders
+            .CountAsync(order => order.ClientRequestKey == clientRequestKey);
+
+        Assert.Equal(1, orderCount);
+    }
+
+    private static async Task AssertStatusCodeAsync(HttpResponseMessage response, HttpStatusCode expectedStatusCode)
+    {
+        if (response.StatusCode == expectedStatusCode)
+        {
+            return;
+        }
+
+        var responseBody = await response.Content.ReadAsStringAsync();
+        throw new Xunit.Sdk.XunitException(
+            $"Expected status {(int)expectedStatusCode} but was {(int)response.StatusCode}. Body: {responseBody}");
     }
 
     private async Task SeedUserAsync(Guid userId)
@@ -87,6 +146,14 @@ public class DepositOrderIntegrationTests : IClassFixture<CustomWebApplicationFa
 
         db.Users.Add(user);
         await db.SaveChangesAsync();
+    }
+
+    private static string BuildClientRequestKey(Guid userId, string idempotencyKey)
+    {
+        var source = $"{userId:N}:{idempotencyKey.Trim()}";
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(source));
+        var hashPrefix = Convert.ToHexString(hash.AsSpan(0, 16)).ToLowerInvariant();
+        return $"deposit_{userId:N}_{hashPrefix}";
     }
 
     private sealed class CreateOrderResponse

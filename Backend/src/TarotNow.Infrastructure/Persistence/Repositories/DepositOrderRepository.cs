@@ -1,21 +1,48 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
 
 // Repository quản lý đơn nạp tiền qua cổng thanh toán.
-public class DepositOrderRepository : IDepositOrderRepository
+public partial class DepositOrderRepository : IDepositOrderRepository
 {
     // DbContext thao tác bảng deposit_orders.
     private readonly ApplicationDbContext _context;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     /// <summary>
     /// Khởi tạo repository đơn nạp.
     /// </summary>
-    public DepositOrderRepository(ApplicationDbContext context)
+    public DepositOrderRepository(
+        ApplicationDbContext context,
+        IServiceScopeFactory scopeFactory)
     {
         _context = context;
+        _scopeFactory = scopeFactory;
+    }
+
+    /// <summary>
+    /// Khóa transaction theo client request key để tránh tạo trùng order khi request đồng thời.
+    /// </summary>
+    public async Task AcquireCreateOrderLockAsync(
+        string clientRequestKey,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(clientRequestKey))
+        {
+            throw new ArgumentException("Client request key is required.", nameof(clientRequestKey));
+        }
+
+        if (_context.Database.CurrentTransaction == null)
+        {
+            throw new InvalidOperationException("AcquireCreateOrderLockAsync requires an active transaction.");
+        }
+
+        await _context.Database.ExecuteSqlInterpolatedAsync(
+            $"SELECT pg_advisory_xact_lock(hashtext({clientRequestKey.Trim()}))",
+            cancellationToken);
     }
 
     /// <summary>

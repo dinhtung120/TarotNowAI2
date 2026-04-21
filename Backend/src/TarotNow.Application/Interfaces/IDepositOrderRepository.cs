@@ -6,6 +6,11 @@ namespace TarotNow.Application.Interfaces;
 public interface IDepositOrderRepository
 {
     /// <summary>
+    /// Khóa transaction theo client request key để serialize luồng tạo order idempotent.
+    /// </summary>
+    Task AcquireCreateOrderLockAsync(string clientRequestKey, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Lấy lệnh nạp theo id.
     /// </summary>
     Task<DepositOrder?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
@@ -63,6 +68,14 @@ public interface IDepositOrderRepository
     /// Tạo lệnh nạp mới.
     /// </summary>
     Task AddAsync(DepositOrder order, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Tạo lệnh nạp mới hoặc trả về lệnh đã tồn tại theo client request key khi có race idempotency.
+    /// </summary>
+    Task<DepositOrder> AddOrGetExistingByClientRequestKeyAsync(
+        DepositOrder order,
+        string clientRequestKey,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Cập nhật lệnh nạp hiện có.

@@ -62,7 +62,7 @@ public sealed class DepositPaymentSucceededDomainEventHandler
             return;
         }
 
-        await _walletRepository.CreditAsync(
+        var operationResult = await _walletRepository.CreditWithResultAsync(
             userId: domainEvent.UserId,
             currency: CurrencyType.Diamond,
             type: TransactionType.Deposit,
@@ -73,6 +73,10 @@ public sealed class DepositPaymentSucceededDomainEventHandler
             metadataJson: null,
             idempotencyKey: BuildDiamondCreditIdempotencyKey(domainEvent.OrderId),
             cancellationToken: cancellationToken);
+        if (operationResult.Executed == false)
+        {
+            return;
+        }
 
         await PublishMoneyChangedAsync(
             new MoneyChangedDomainEvent
@@ -95,7 +99,7 @@ public sealed class DepositPaymentSucceededDomainEventHandler
             return;
         }
 
-        await _walletRepository.CreditAsync(
+        var operationResult = await _walletRepository.CreditWithResultAsync(
             userId: domainEvent.UserId,
             currency: CurrencyType.Gold,
             type: TransactionType.DepositBonus,
@@ -106,6 +110,10 @@ public sealed class DepositPaymentSucceededDomainEventHandler
             metadataJson: null,
             idempotencyKey: BuildGoldBonusIdempotencyKey(domainEvent.OrderId),
             cancellationToken: cancellationToken);
+        if (operationResult.Executed == false)
+        {
+            return;
+        }
 
         await PublishMoneyChangedAsync(
             new MoneyChangedDomainEvent

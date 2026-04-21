@@ -36,7 +36,15 @@ public static partial class DependencyInjection
         services.Configure<AiProviderOptions>(configuration.GetSection("AiProvider"));
         services.Configure<SystemConfigOptions>(configuration.GetSection("SystemConfig"));
         services.Configure<DepositOptions>(configuration.GetSection("Deposit"));
-        services.Configure<PayOsOptions>(configuration.GetSection("PayOS"));
+        services.AddOptions<PayOsOptions>()
+            .Bind(configuration.GetSection("PayOS"))
+            .Validate(options =>
+            {
+                return HasValidPayOsCredential(options.ClientId)
+                       && HasValidPayOsCredential(options.ApiKey)
+                       && HasValidPayOsCredential(options.ChecksumKey);
+            }, "PayOS credentials are missing or still use placeholder values.")
+            .ValidateOnStart();
         services.Configure<PaymentGatewayOptions>(configuration.GetSection("PaymentGateway"));
         services.Configure<Argon2Options>(configuration.GetSection("Argon2"));
         services.Configure<SecurityOptions>(configuration.GetSection("Security"));
@@ -58,6 +66,19 @@ public static partial class DependencyInjection
             }, "ObjectStorage R2 chưa đủ cấu hình bắt buộc (AccountId, AccessKeyId, SecretAccessKey, BucketName, PublicBaseUrl).")
             .ValidateOnStart();
         services.Configure<MediaCdnOptions>(configuration.GetSection("MediaCdn"));
+    }
+
+    private static bool HasValidPayOsCredential(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return false;
+        }
+
+        var normalized = value.Trim();
+        return !normalized.Contains("REPLACE", StringComparison.OrdinalIgnoreCase)
+               && !normalized.Contains("PLACEHOLDER", StringComparison.OrdinalIgnoreCase)
+               && !normalized.Contains("CHANGEME", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>
