@@ -16,7 +16,6 @@ public sealed class AuthSessionCleanupJob : BackgroundService
     private const int MaxBatchLoopsPerCycle = 10;
 
     private readonly IServiceProvider _serviceProvider;
-    private readonly ICacheService _cacheService;
     private readonly ILogger<AuthSessionCleanupJob> _logger;
     private readonly AuthSecurityOptions _options;
 
@@ -25,12 +24,10 @@ public sealed class AuthSessionCleanupJob : BackgroundService
     /// </summary>
     public AuthSessionCleanupJob(
         IServiceProvider serviceProvider,
-        ICacheService cacheService,
         IOptions<AuthSecurityOptions> options,
         ILogger<AuthSessionCleanupJob> logger)
     {
         _serviceProvider = serviceProvider;
-        _cacheService = cacheService;
         _options = options.Value;
         _logger = logger;
     }
@@ -56,82 +53,110 @@ public sealed class AuthSessionCleanupJob : BackgroundService
 
     private async Task RunCleanupCycleAsync(CancellationToken cancellationToken)
     {
-        var lockOwner = Guid.NewGuid().ToString("N");
-        var lockLease = ResolveLockLease();
-        var lockAcquired = false;
-
         try
         {
-            lockAcquired = await _cacheService.AcquireLockAsync(
-                AuthCacheKeys.AuthCleanupLockKey,
-                lockOwner,
-                lockLease,
-                cancellationToken);
-            if (!lockAcquired)
-            {
-                return;
-            }
-
-            using var scope = _serviceProvider.CreateScope();
-            var authSessionRepository = scope.ServiceProvider.GetRequiredService<IAuthSessionRepository>();
-            var refreshTokenRepository = scope.ServiceProvider.GetRequiredService<IRefreshTokenRepository>();
-
-            var nowUtc = DateTime.UtcNow;
-            var refreshRetentionDays = Math.Max(1, _options.RefreshTokenRetentionDays);
-            var revokedSessionRetentionDays = Math.Max(1, _options.RevokedSessionRetentionDays);
-            var refreshCutoffUtc = nowUtc.AddDays(-refreshRetentionDays);
-            var sessionCutoffUtc = nowUtc.AddDays(-revokedSessionRetentionDays);
-            var batchSize = ResolveBatchSize();
-
-            var totalRefreshDeleted = 0;
-            var totalSessionsDeleted = 0;
-            for (var loop = 0; loop < MaxBatchLoopsPerCycle; loop++)
-            {
-                var deletedRefresh = await refreshTokenRepository.CleanupRevokedOrExpiredBeforeAsync(
-                    refreshCutoffUtc,
-                    batchSize,
-                    cancellationToken);
-                var deletedSessions = await authSessionRepository.CleanupRevokedBeforeAsync(
-                    sessionCutoffUtc,
-                    batchSize,
-                    cancellationToken);
-
-                totalRefreshDeleted += deletedRefresh;
-                totalSessionsDeleted += deletedSessions;
-
-                if (deletedRefresh < batchSize && deletedSessions < batchSize)
-                {
-                    break;
-                }
-            }
-
-            if (totalRefreshDeleted > 0 || totalSessionsDeleted > 0)
-            {
-                _logger.LogInformation(
-                    "[AuthSessionCleanupJob] Cleanup hoàn tất. DeletedRefreshTokens={DeletedRefreshTokens} DeletedAuthSessions={DeletedAuthSessions} RefreshCutoffUtc={RefreshCutoffUtc:o} SessionCutoffUtc={SessionCutoffUtc:o}",
-                    totalRefreshDeleted,
-                    totalSessionsDeleted,
-                    refreshCutoffUtc,
-                    sessionCutoffUtc);
-            }
+            await ExecuteCleanupWithDistributedLockAsync(cancellationToken);
         }
         catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
         {
             _logger.LogError(ex, "[AuthSessionCleanupJob] Lỗi khi chạy cleanup cycle.");
         }
+    }
+
+    private async Task ExecuteCleanupWithDistributedLockAsync(CancellationToken cancellationToken)
+    {
+        using var scope = _serviceProvider.CreateScope();
+        var cacheService = scope.ServiceProvider.GetRequiredService<ICacheService>();
+        var lockOwner = Guid.NewGuid().ToString("N");
+        if (!await TryAcquireCleanupLockAsync(cacheService, lockOwner, cancellationToken))
+        {
+            return;
+        }
+
+        try
+        {
+            await ExecuteCleanupBatchLoopAsync(scope.ServiceProvider, cancellationToken);
+        }
         finally
         {
-            if (lockAcquired)
+            await TryReleaseCleanupLockAsync(cacheService, lockOwner, cancellationToken);
+        }
+    }
+
+    private async Task ExecuteCleanupBatchLoopAsync(IServiceProvider serviceProvider, CancellationToken cancellationToken)
+    {
+        var authSessionRepository = serviceProvider.GetRequiredService<IAuthSessionRepository>();
+        var refreshTokenRepository = serviceProvider.GetRequiredService<IRefreshTokenRepository>();
+        var context = BuildCleanupContext();
+
+        var totalRefreshDeleted = 0;
+        var totalSessionsDeleted = 0;
+        for (var loop = 0; loop < MaxBatchLoopsPerCycle; loop++)
+        {
+            var deletedRefresh = await refreshTokenRepository.CleanupRevokedOrExpiredBeforeAsync(
+                context.RefreshCutoffUtc,
+                context.BatchSize,
+                cancellationToken);
+            var deletedSessions = await authSessionRepository.CleanupRevokedBeforeAsync(
+                context.SessionCutoffUtc,
+                context.BatchSize,
+                cancellationToken);
+
+            totalRefreshDeleted += deletedRefresh;
+            totalSessionsDeleted += deletedSessions;
+
+            if (deletedRefresh < context.BatchSize && deletedSessions < context.BatchSize)
             {
-                try
-                {
-                    await _cacheService.ReleaseLockAsync(AuthCacheKeys.AuthCleanupLockKey, lockOwner, cancellationToken);
-                }
-                catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
-                {
-                    _logger.LogWarning(ex, "[AuthSessionCleanupJob] Không release được cleanup lock.");
-                }
+                break;
             }
+        }
+
+        if (totalRefreshDeleted > 0 || totalSessionsDeleted > 0)
+        {
+            _logger.LogInformation(
+                "[AuthSessionCleanupJob] Cleanup hoàn tất. DeletedRefreshTokens={DeletedRefreshTokens} DeletedAuthSessions={DeletedAuthSessions} RefreshCutoffUtc={RefreshCutoffUtc:o} SessionCutoffUtc={SessionCutoffUtc:o}",
+                totalRefreshDeleted,
+                totalSessionsDeleted,
+                context.RefreshCutoffUtc,
+                context.SessionCutoffUtc);
+        }
+    }
+
+    private CleanupContext BuildCleanupContext()
+    {
+        var nowUtc = DateTime.UtcNow;
+        var refreshRetentionDays = Math.Max(1, _options.RefreshTokenRetentionDays);
+        var revokedSessionRetentionDays = Math.Max(1, _options.RevokedSessionRetentionDays);
+        return new CleanupContext(
+            RefreshCutoffUtc: nowUtc.AddDays(-refreshRetentionDays),
+            SessionCutoffUtc: nowUtc.AddDays(-revokedSessionRetentionDays),
+            BatchSize: ResolveBatchSize());
+    }
+
+    private async Task<bool> TryAcquireCleanupLockAsync(
+        ICacheService cacheService,
+        string lockOwner,
+        CancellationToken cancellationToken)
+    {
+        return await cacheService.AcquireLockAsync(
+            AuthCacheKeys.AuthCleanupLockKey,
+            lockOwner,
+            ResolveLockLease(),
+            cancellationToken);
+    }
+
+    private async Task TryReleaseCleanupLockAsync(
+        ICacheService cacheService,
+        string lockOwner,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await cacheService.ReleaseLockAsync(AuthCacheKeys.AuthCleanupLockKey, lockOwner, cancellationToken);
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogWarning(ex, "[AuthSessionCleanupJob] Không release được cleanup lock.");
         }
     }
 
@@ -152,4 +177,6 @@ public sealed class AuthSessionCleanupJob : BackgroundService
         var minutes = _options.CleanupIntervalMinutes <= 0 ? 30 : _options.CleanupIntervalMinutes;
         return TimeSpan.FromMinutes(minutes);
     }
+
+    private readonly record struct CleanupContext(DateTime RefreshCutoffUtc, DateTime SessionCutoffUtc, int BatchSize);
 }

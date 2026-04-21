@@ -45,22 +45,8 @@ public sealed class RefreshTokenReplayDetectedDomainEventHandler
         CancellationToken cancellationToken)
     {
         using var activity = ActivitySource.StartActivity("auth.replay_detected");
-        activity?.SetTag("auth.user_id", domainEvent.UserId);
-        activity?.SetTag("auth.session_id", domainEvent.SessionId);
-        activity?.SetTag("auth.family_id", domainEvent.FamilyId);
-
-        await _cacheService.SetAsync(
-            AuthCacheKeys.BuildReplaySecurityKey(domainEvent.SessionId),
-            new
-            {
-                domainEvent.UserId,
-                domainEvent.SessionId,
-                domainEvent.FamilyId,
-                domainEvent.SourceIpHash,
-                domainEvent.OccurredAtUtc
-            },
-            _replayRecordTtl,
-            cancellationToken);
+        TagReplayActivity(activity, domainEvent);
+        await CacheReplaySecurityRecordAsync(domainEvent, cancellationToken);
 
         if (domainEvent.SessionId == Guid.Empty)
         {
@@ -98,5 +84,32 @@ public sealed class RefreshTokenReplayDetectedDomainEventHandler
             domainEvent.FamilyId,
             domainEvent.SourceIpHash,
             outboxMessageId);
+    }
+
+    private async Task CacheReplaySecurityRecordAsync(
+        RefreshTokenReplayDetectedDomainEvent domainEvent,
+        CancellationToken cancellationToken)
+    {
+        await _cacheService.SetAsync(
+            AuthCacheKeys.BuildReplaySecurityKey(domainEvent.SessionId),
+            new
+            {
+                domainEvent.UserId,
+                domainEvent.SessionId,
+                domainEvent.FamilyId,
+                domainEvent.SourceIpHash,
+                domainEvent.OccurredAtUtc
+            },
+            _replayRecordTtl,
+            cancellationToken);
+    }
+
+    private static void TagReplayActivity(
+        Activity? activity,
+        RefreshTokenReplayDetectedDomainEvent domainEvent)
+    {
+        activity?.SetTag("auth.user_id", domainEvent.UserId);
+        activity?.SetTag("auth.session_id", domainEvent.SessionId);
+        activity?.SetTag("auth.family_id", domainEvent.FamilyId);
     }
 }

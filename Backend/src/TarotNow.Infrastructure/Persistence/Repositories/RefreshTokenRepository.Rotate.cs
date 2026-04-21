@@ -23,63 +23,23 @@ public sealed partial class RefreshTokenRepository
             return RefreshRotateResult.Invalid();
         }
 
-        var normalizedToken = request.RawToken.Trim();
-        var tokenHash = RefreshToken.HashToken(normalizedToken);
-        var lockKey = BuildRefreshLockKey(tokenHash);
-        var lockOwner = Guid.NewGuid().ToString("N");
-        var normalizedIdempotencyKey = NormalizeIdempotencyKey(
-            request.IdempotencyKey,
-            tokenHash,
-            request.DeviceId,
-            request.UserAgentHash);
-        var tokenIdempotencyCacheKey = BuildRefreshTokenIdempotencyKey(tokenHash, normalizedIdempotencyKey);
-
-        if (!await TryAcquireLockAsync(lockKey, lockOwner, cancellationToken))
+        var context = BuildRotateExecutionContext(request);
+        if (!await TryAcquireLockAsync(context.LockKey, context.LockOwner, cancellationToken))
         {
-            var tokenCached = await _cacheService.GetAsync<RefreshRotateCacheItem>(tokenIdempotencyCacheKey, cancellationToken);
-            if (tokenCached is not null
-                && string.IsNullOrWhiteSpace(tokenCached.NewRefreshTokenRaw) == false
-                && tokenCached.NewTokenExpiresAtUtc > DateTime.MinValue)
-            {
-                var tokenSnapshot = await GetByTokenAsync(request.RawToken, cancellationToken);
-                if (tokenSnapshot is not null)
-                {
-                    return RefreshRotateResult.Idempotent(
-                        tokenSnapshot,
-                        tokenCached.NewRefreshTokenRaw,
-                        tokenCached.NewTokenExpiresAtUtc);
-                }
-            }
-
-            return RefreshRotateResult.Locked();
+            return await HandleLockContentionAsync(
+                request.RawToken,
+                context.TokenIdempotencyCacheKey,
+                cancellationToken);
         }
 
         try
         {
-            var transactionContext = new RotateTransactionContext(
-                request,
-                normalizedToken,
-                tokenHash,
-                normalizedIdempotencyKey,
-                tokenIdempotencyCacheKey);
-            return await RotateWithTransactionAsync(transactionContext, cancellationToken);
+            return await RotateWithTransactionAsync(context.TransactionContext, cancellationToken);
         }
         finally
         {
-            await _cacheService.ReleaseLockAsync(lockKey, lockOwner, cancellationToken);
+            await _cacheService.ReleaseLockAsync(context.LockKey, context.LockOwner, cancellationToken);
         }
-    }
-
-    private static bool IsValidRotateRequest(RefreshRotateRequest request)
-    {
-        return string.IsNullOrWhiteSpace(request.RawToken) == false
-            && string.IsNullOrWhiteSpace(request.NewRawToken) == false;
-    }
-
-    private async Task<bool> TryAcquireLockAsync(string lockKey, string lockOwner, CancellationToken cancellationToken)
-    {
-        var lockWindow = TimeSpan.FromSeconds(Math.Max(3, _authSecurityOptions.RefreshLockSeconds));
-        return await _cacheService.AcquireLockAsync(lockKey, lockOwner, lockWindow, cancellationToken);
     }
 
     private async Task<RefreshRotateResult> RotateWithTransactionAsync(
@@ -170,42 +130,48 @@ public sealed partial class RefreshTokenRepository
         return RefreshRotateResult.ReplayDetected(current);
     }
 
-    private bool IsLockContention(RefreshToken current, string idempotencyKey, DateTime nowUtc)
+    private RotateExecutionContext BuildRotateExecutionContext(RefreshRotateRequest request)
     {
-        if (current.ReplacedByTokenId is null
-            || current.UsedAtUtc is null
-            || string.Equals(current.LastRotateIdempotencyKey, idempotencyKey, StringComparison.Ordinal) == false)
-        {
-            return false;
-        }
-
-        var contentionWindow = TimeSpan.FromSeconds(Math.Max(3, _authSecurityOptions.RefreshLockSeconds));
-        var usedAtUtc = current.UsedAtUtc.Value;
-        if (usedAtUtc > nowUtc)
-        {
-            return true;
-        }
-
-        return nowUtc - usedAtUtc <= contentionWindow;
+        var normalizedToken = request.RawToken.Trim();
+        var tokenHash = RefreshToken.HashToken(normalizedToken);
+        var normalizedIdempotencyKey = NormalizeIdempotencyKey(
+            request.IdempotencyKey,
+            tokenHash,
+            request.DeviceId,
+            request.UserAgentHash);
+        var tokenIdempotencyCacheKey = BuildRefreshTokenIdempotencyKey(tokenHash, normalizedIdempotencyKey);
+        return new RotateExecutionContext(
+            LockKey: BuildRefreshLockKey(tokenHash),
+            LockOwner: Guid.NewGuid().ToString("N"),
+            TokenIdempotencyCacheKey: tokenIdempotencyCacheKey,
+            TransactionContext: new RotateTransactionContext(
+                request,
+                normalizedToken,
+                tokenHash,
+                normalizedIdempotencyKey,
+                tokenIdempotencyCacheKey));
     }
 
-    private static async Task<RefreshRotateResult> FinalizeResultAsync(
-        IDbContextTransaction? localTransaction,
-        RefreshRotateResult result,
+    private async Task<RefreshRotateResult> HandleLockContentionAsync(
+        string rawToken,
+        string tokenIdempotencyCacheKey,
         CancellationToken cancellationToken)
     {
-        if (localTransaction is not null)
+        var tokenCached = await _cacheService.GetAsync<RefreshRotateCacheItem>(tokenIdempotencyCacheKey, cancellationToken);
+        if (tokenCached is null
+            || string.IsNullOrWhiteSpace(tokenCached.NewRefreshTokenRaw)
+            || tokenCached.NewTokenExpiresAtUtc <= DateTime.MinValue)
         {
-            await localTransaction.CommitAsync(cancellationToken);
+            return RefreshRotateResult.Locked();
         }
 
-        return result;
+        var tokenSnapshot = await GetByTokenAsync(rawToken, cancellationToken);
+        return tokenSnapshot is not null
+            ? RefreshRotateResult.Idempotent(
+                tokenSnapshot,
+                tokenCached.NewRefreshTokenRaw,
+                tokenCached.NewTokenExpiresAtUtc)
+            : RefreshRotateResult.Locked();
     }
 
-    private readonly record struct RotateTransactionContext(
-        RefreshRotateRequest Request,
-        string NormalizedToken,
-        string TokenHash,
-        string NormalizedIdempotencyKey,
-        string TokenIdempotencyCacheKey);
 }
