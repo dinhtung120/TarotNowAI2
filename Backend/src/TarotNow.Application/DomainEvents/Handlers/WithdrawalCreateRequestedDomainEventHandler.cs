@@ -60,14 +60,16 @@ public sealed partial class WithdrawalCreateRequestedDomainEventHandler
         var businessWeekStartUtc = ResolveBusinessWeekStartUtc(DateTime.UtcNow);
         await EnsureNoWeeklyRequestAsync(domainEvent.UserId, businessWeekStartUtc, cancellationToken);
         await FreezeDiamondAsync(domainEvent, requestId, cancellationToken);
-
-        var request = BuildPendingRequest(
-            domainEvent,
-            user,
+        var pendingRequestContext = new PendingRequestContext(
             requestId,
             normalizedRequestKey,
             businessWeekStartUtc,
             BuildWithdrawalPlan(domainEvent.AmountDiamond));
+
+        var request = BuildPendingRequest(
+            domainEvent,
+            user,
+            pendingRequestContext);
 
         await _withdrawalRepository.AddAsync(request, cancellationToken);
         await _withdrawalRepository.SaveChangesAsync(cancellationToken);

@@ -20,26 +20,23 @@ public sealed partial class WithdrawalCreateRequestedDomainEventHandler
     private static WithdrawalRequest BuildPendingRequest(
         WithdrawalCreateRequestedDomainEvent domainEvent,
         User user,
-        Guid requestId,
-        string normalizedRequestKey,
-        DateOnly businessWeekStartUtc,
-        WithdrawalPlan plan)
+        PendingRequestContext context)
     {
         return new WithdrawalRequest
         {
-            Id = requestId,
+            Id = context.RequestId,
             UserId = domainEvent.UserId,
-            BusinessWeekStartUtc = businessWeekStartUtc,
+            BusinessWeekStartUtc = context.BusinessWeekStartUtc,
             AmountDiamond = domainEvent.AmountDiamond,
-            AmountVnd = plan.AmountVnd,
-            FeeVnd = plan.FeeVnd,
-            NetAmountVnd = plan.NetAmountVnd,
+            AmountVnd = context.Plan.AmountVnd,
+            FeeVnd = context.Plan.FeeVnd,
+            NetAmountVnd = context.Plan.NetAmountVnd,
             BankName = user.PayoutBankName!.Trim(),
             BankBin = user.PayoutBankBin!.Trim(),
             BankAccountName = user.PayoutBankAccountHolder!.Trim(),
             BankAccountNumber = user.PayoutBankAccountNumber!.Trim(),
             UserNote = NormalizeOptionalNote(domainEvent.UserNote),
-            RequestIdempotencyKey = normalizedRequestKey,
+            RequestIdempotencyKey = context.NormalizedRequestKey,
             Status = WithdrawalRequestStatus.Pending,
             CreatedAt = DateTime.UtcNow
         };
@@ -136,4 +133,10 @@ public sealed partial class WithdrawalCreateRequestedDomainEventHandler
     }
 
     private readonly record struct WithdrawalPlan(long AmountVnd, long FeeVnd, long NetAmountVnd);
+
+    private readonly record struct PendingRequestContext(
+        Guid RequestId,
+        string NormalizedRequestKey,
+        DateOnly BusinessWeekStartUtc,
+        WithdrawalPlan Plan);
 }
