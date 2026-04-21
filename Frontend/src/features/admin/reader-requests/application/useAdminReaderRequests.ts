@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useLocale, useTranslations } from 'next-intl';
@@ -18,8 +18,8 @@ export function useAdminReaderRequests() {
  const [page, setPage] = useState(1);
  const [statusFilter, setStatusFilter] = useState('pending');
  const [processing, setProcessing] = useState<string | null>(null);
- const [adminNote, setAdminNote] = useState('');
- const [selectedRequest, setSelectedRequest] = useState<AdminReaderRequest | null>(null);
+ const [noteByRequestId, setNoteByRequestId] = useState<Record<string, string>>({});
+ const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
 
  const pageSize = 10;
 
@@ -42,7 +42,31 @@ export function useAdminReaderRequests() {
    processReaderRequest(payload.requestId, payload.action, payload.note),
  });
 
- const handleProcess = async (
+ const updateAdminNote = useCallback((requestId: string, note: string) => {
+  setNoteByRequestId((currentNotes) => ({
+   ...currentNotes,
+   [requestId]: note,
+  }));
+ }, []);
+
+ const clearAdminNote = useCallback((requestId: string) => {
+  setNoteByRequestId((currentNotes) => {
+   if (!currentNotes[requestId]) {
+    return currentNotes;
+   }
+
+   const nextNotes = { ...currentNotes };
+   delete nextNotes[requestId];
+   return nextNotes;
+  });
+ }, []);
+
+ const getAdminNote = useCallback((requestId: string) => noteByRequestId[requestId] || '', [noteByRequestId]);
+ const selectRequest = useCallback((requestId: string) => {
+  setSelectedRequestId(requestId);
+ }, []);
+
+ const handleProcess = useCallback(async (
   requestId: string,
   action: 'approve' | 'reject'
  ) => {
@@ -50,7 +74,7 @@ export function useAdminReaderRequests() {
   const result = await processMutation.mutateAsync({
    requestId,
    action,
-   note: adminNote,
+   note: getAdminNote(requestId),
   });
   if (result.success) {
    toast.success(
@@ -58,14 +82,14 @@ export function useAdminReaderRequests() {
      ? t('reader_requests.toast.approve_success')
      : t('reader_requests.toast.reject_success')
    );
-   setAdminNote('');
-   setSelectedRequest(null);
+   clearAdminNote(requestId);
+   setSelectedRequestId(null);
    await queryClient.invalidateQueries({ queryKey: ['admin', 'reader-requests'] });
   } else {
    toast.error(t('reader_requests.toast.process_failed'));
   }
   setProcessing(null);
- };
+ }, [clearAdminNote, getAdminNote, processMutation, queryClient, t]);
 
  return {
   t,
@@ -78,10 +102,10 @@ export function useAdminReaderRequests() {
   setStatusFilter,
   loading: isLoading || isFetching,
   processing,
-  adminNote,
-  setAdminNote,
-  selectedRequest,
-  setSelectedRequest,
+  selectedRequestId,
+  selectRequest,
+  getAdminNote,
+  updateAdminNote,
   totalPages: useMemo(() => Math.ceil((data?.totalCount ?? 0) / pageSize), [data, pageSize]),
   handleProcess,
  };

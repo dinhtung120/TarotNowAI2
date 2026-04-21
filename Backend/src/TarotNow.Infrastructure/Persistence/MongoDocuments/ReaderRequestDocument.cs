@@ -124,4 +124,47 @@ public class ReaderRequestDocument
     [BsonElement("updated_at")]
     [BsonIgnoreIfNull]
     public DateTime? UpdatedAt { get; set; }
+
+    /// <summary>
+    /// Lịch sử duyệt yêu cầu Reader theo từng lần xử lý.
+    /// </summary>
+    [BsonElement("review_history")]
+    public List<ReaderRequestReviewHistoryEntryDocument> ReviewHistory { get; set; } = [];
+}
+
+/// <summary>
+/// Bản ghi lịch sử duyệt đơn Reader trong Mongo.
+/// </summary>
+public class ReaderRequestReviewHistoryEntryDocument
+{
+    /// <summary>
+    /// Hành động admin thực hiện.
+    /// </summary>
+    [BsonElement("action")]
+    public string Action { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Trạng thái đơn sau khi xử lý.
+    /// </summary>
+    [BsonElement("status")]
+    public string Status { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Định danh admin xử lý.
+    /// </summary>
+    [BsonElement("reviewed_by")]
+    public string ReviewedBy { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Ghi chú quyết định của admin.
+    /// </summary>
+    [BsonElement("admin_note")]
+    [BsonIgnoreIfNull]
+    public string? AdminNote { get; set; }
+
+    /// <summary>
+    /// Mốc thời gian xử lý.
+    /// </summary>
+    [BsonElement("reviewed_at")]
+    public DateTime ReviewedAt { get; set; }
 }

@@ -22,11 +22,131 @@ export interface AdminReaderRequest {
  reviewedBy?: string;
  reviewedAt?: string;
  createdAt: string;
+ reviewHistory: AdminReaderRequestReviewHistoryEntry[];
+}
+
+export interface AdminReaderRequestReviewHistoryEntry {
+ action: string;
+ status: string;
+ reviewedBy?: string;
+ adminNote?: string;
+ reviewedAt: string;
+}
+
+interface AdminReaderRequestReviewHistoryEntryRaw {
+ action?: string;
+ Action?: string;
+ status?: string;
+ Status?: string;
+ reviewedBy?: string;
+ ReviewedBy?: string;
+ adminNote?: string;
+ AdminNote?: string;
+ reviewedAt?: string;
+ ReviewedAt?: string;
+}
+
+interface AdminReaderRequestRaw {
+ id?: string;
+ Id?: string;
+ userId?: string;
+ UserId?: string;
+ status?: string;
+ Status?: string;
+ bio?: string;
+ Bio?: string;
+ specialties?: string[];
+ Specialties?: string[];
+ yearsOfExperience?: number;
+ YearsOfExperience?: number;
+ facebookUrl?: string | null;
+ FacebookUrl?: string | null;
+ instagramUrl?: string | null;
+ InstagramUrl?: string | null;
+ tikTokUrl?: string | null;
+ TikTokUrl?: string | null;
+ diamondPerQuestion?: number;
+ DiamondPerQuestion?: number;
+ proofDocuments?: string[];
+ ProofDocuments?: string[];
+ adminNote?: string;
+ AdminNote?: string;
+ reviewedBy?: string;
+ ReviewedBy?: string;
+ reviewedAt?: string;
+ ReviewedAt?: string;
+ createdAt?: string;
+ CreatedAt?: string;
+ reviewHistory?: AdminReaderRequestReviewHistoryEntryRaw[];
+ ReviewHistory?: AdminReaderRequestReviewHistoryEntryRaw[];
 }
 
 interface ListReaderRequestsResponse {
  requests: AdminReaderRequest[];
  totalCount: number;
+}
+
+function normalizeReviewHistory(rawEntries: AdminReaderRequestReviewHistoryEntryRaw[] | undefined): AdminReaderRequestReviewHistoryEntry[] {
+ if (!rawEntries || rawEntries.length === 0) {
+  return [];
+ }
+
+ return rawEntries
+  .map((entry) => ({
+   action: entry.action || entry.Action || '',
+   status: entry.status || entry.Status || '',
+   reviewedBy: entry.reviewedBy || entry.ReviewedBy || '',
+   adminNote: entry.adminNote || entry.AdminNote || '',
+   reviewedAt: entry.reviewedAt || entry.ReviewedAt || '',
+  }))
+  .filter((entry) => entry.reviewedAt.length > 0);
+}
+
+function normalizeRequest(raw: AdminReaderRequestRaw): AdminReaderRequest {
+ const id = raw.id || raw.Id || '';
+ const userId = raw.userId || raw.UserId || '';
+ const status = raw.status || raw.Status || '';
+ const bio = raw.bio || raw.Bio || '';
+ const specialties = raw.specialties || raw.Specialties || [];
+ const yearsOfExperience = raw.yearsOfExperience ?? raw.YearsOfExperience ?? 0;
+ const facebookUrl = raw.facebookUrl ?? raw.FacebookUrl ?? null;
+ const instagramUrl = raw.instagramUrl ?? raw.InstagramUrl ?? null;
+ const tikTokUrl = raw.tikTokUrl ?? raw.TikTokUrl ?? null;
+ const diamondPerQuestion = raw.diamondPerQuestion ?? raw.DiamondPerQuestion ?? 0;
+ const proofDocuments = raw.proofDocuments || raw.ProofDocuments || [];
+ const reviewedAt = raw.reviewedAt || raw.ReviewedAt || '';
+ const reviewedBy = raw.reviewedBy || raw.ReviewedBy || '';
+ const adminNote = raw.adminNote || raw.AdminNote || '';
+ const createdAt = raw.createdAt || raw.CreatedAt || '';
+ const reviewHistory = normalizeReviewHistory(raw.reviewHistory || raw.ReviewHistory);
+ const fallbackHistory = reviewedAt
+  ? [{
+    action: status === 'approved' ? 'approve' : status === 'rejected' ? 'reject' : status,
+    status,
+    reviewedBy,
+    adminNote,
+    reviewedAt,
+   }]
+  : [];
+
+ return {
+  id,
+  userId,
+  status,
+  bio,
+  specialties,
+  yearsOfExperience,
+  facebookUrl,
+  instagramUrl,
+  tikTokUrl,
+  diamondPerQuestion,
+  proofDocuments,
+  adminNote,
+  reviewedBy,
+  reviewedAt,
+  createdAt,
+  reviewHistory: reviewHistory.length > 0 ? reviewHistory : fallbackHistory,
+ };
 }
 
 export async function listReaderRequests(
@@ -45,8 +165,8 @@ export async function listReaderRequests(
   if (statusFilter) query.append('statusFilter', statusFilter);
 
   const result = await serverHttpRequest<{
-   requests?: AdminReaderRequest[];
-   Requests?: AdminReaderRequest[];
+   requests?: AdminReaderRequestRaw[];
+   Requests?: AdminReaderRequestRaw[];
    totalCount?: number;
    TotalCount?: number;
   }>(`/admin/reader-requests?${query.toString()}`, {
@@ -66,8 +186,9 @@ export async function listReaderRequests(
   }
 
   const data = result.data;
+  const requests = (data.requests || data.Requests || []).map(normalizeRequest);
   return actionOk({
-   requests: data.requests || data.Requests || [],
+   requests,
    totalCount: data.totalCount ?? data.TotalCount ?? 0,
   });
  } catch (error) {

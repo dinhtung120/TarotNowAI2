@@ -339,16 +339,22 @@
         "loading": "Đang tải...",
         "empty": "Không có đơn nào trong danh sách."
       },
-      "row": {
-        "id_prefix": "ID: {id}...",
-        "intro_title": "Lời giới thiệu",
-        "expand": "Mở rộng",
-        "specialties_title": "Chuyên môn",
-        "years_experience_title": "Kinh nghiệm",
-        "social_links_title": "Mạng xã hội",
-        "price_title": "Giá dịch vụ",
-        "admin_note_title": "Ghi chú Admin"
-      },
+  "row": {
+    "id_prefix": "ID: {id}...",
+    "intro_title": "Lời giới thiệu",
+    "expand": "Mở rộng",
+    "specialties_title": "Chuyên môn",
+    "years_experience_title": "Kinh nghiệm",
+    "social_links_title": "Mạng xã hội",
+    "price_title": "Giá dịch vụ",
+    "admin_note_title": "Ghi chú Admin",
+    "review_history_title": "Lịch sử duyệt đơn",
+    "review_history_empty": "Chưa có lịch sử xử lý.",
+    "review_history_at": "Thời gian",
+    "review_history_by": "Admin",
+    "review_history_action_approve": "Phê duyệt",
+    "review_history_action_reject": "Từ chối"
+  },
       "input": {
         "admin_note_placeholder": "GHI CHÚ ADMIN TRƯỚC KHI DUYỆT (TÙY CHỌN)..."
       },

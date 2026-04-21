@@ -7,20 +7,20 @@ interface ReaderRequestsListProps {
  locale: string;
  requests: AdminReaderRequest[];
  selectedRequestId: string | null;
- adminNote: string;
+ getAdminNote: (requestId: string) => string;
  processingId: string | null;
  labels: ReaderRequestLabels;
- onSelectRequest: (request: AdminReaderRequest) => void;
+ onSelectRequest: (requestId: string) => void;
  onApprove: (requestId: string) => Promise<void>;
  onReject: (requestId: string) => Promise<void>;
- onAdminNoteChange: (value: string) => void;
+ onAdminNoteChange: (requestId: string, value: string) => void;
 }
 
 export function ReaderRequestsList({
  locale,
  requests,
  selectedRequestId,
- adminNote,
+ getAdminNote,
  processingId,
  labels,
  onSelectRequest,
@@ -36,13 +36,13 @@ export function ReaderRequestsList({
      locale={locale}
      request={request}
      selectedRequestId={selectedRequestId}
-     adminNote={adminNote}
+     adminNoteDraft={getAdminNote(request.id)}
      processingId={processingId}
      labels={labels}
-     onSelectRequest={() => onSelectRequest(request)}
+     onSelectRequest={() => onSelectRequest(request.id)}
      onApprove={() => onApprove(request.id)}
      onReject={() => onReject(request.id)}
-     onAdminNoteChange={onAdminNoteChange}
+     onAdminNoteChange={(value) => onAdminNoteChange(request.id, value)}
     />
    ))}
   </div>

@@ -4,13 +4,14 @@ import { ReaderRequestAdminNote } from './ReaderRequestAdminNote';
 import { ReaderRequestActions } from './ReaderRequestActions';
 import { ReaderRequestIntro } from './ReaderRequestIntro';
 import { ReaderRequestMeta } from './ReaderRequestMeta';
+import { ReaderRequestReviewHistory } from './ReaderRequestReviewHistory';
 import type { ReaderRequestCardProps } from './ReaderRequestCard.types';
 
 export function ReaderRequestCard({
  locale,
  request,
  selectedRequestId,
- adminNote,
+ adminNoteDraft,
  processingId,
  labels,
  onSelectRequest,
@@ -43,12 +44,24 @@ export function ReaderRequestCard({
     isSelected={isSelected}
     onSelectRequest={onSelectRequest}
    />
-   <ReaderRequestAdminNote note={request.adminNote || ''} title={labels.adminNoteTitle} />
+  <ReaderRequestAdminNote note={request.adminNote || ''} title={labels.adminNoteTitle} />
+   <ReaderRequestReviewHistory
+    locale={locale}
+    history={request.reviewHistory}
+    labels={{
+     title: labels.reviewHistoryTitle,
+     empty: labels.reviewHistoryEmpty,
+     at: labels.reviewHistoryAt,
+     by: labels.reviewHistoryBy,
+     actionApprove: labels.reviewHistoryActionApprove,
+     actionReject: labels.reviewHistoryActionReject,
+    }}
+   />
    {request.status === 'pending' ? (
     <ReaderRequestActions
      requestId={request.id}
      processingId={processingId}
-     note={isSelected ? adminNote : ''}
+     note={isSelected ? adminNoteDraft : ''}
      notePlaceholder={labels.adminNotePlaceholder}
      approveLabel={labels.approve}
      rejectLabel={labels.reject}

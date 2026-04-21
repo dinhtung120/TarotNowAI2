@@ -21,6 +21,11 @@ public sealed partial class ReaderRequestReviewRequestedDomainEventHandler
     private readonly IReaderRequestRepository _readerRequestRepository;
     private readonly IReaderProfileRepository _readerProfileRepository;
     private readonly IUserRepository _userRepository;
+    private readonly INotificationRepository _notificationRepository;
+    private readonly IRedisPublisher _redisPublisher;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IAuthSessionRepository _authSessionRepository;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler xử lý duyệt đơn Reader.
@@ -29,12 +34,22 @@ public sealed partial class ReaderRequestReviewRequestedDomainEventHandler
         IReaderRequestRepository readerRequestRepository,
         IReaderProfileRepository readerProfileRepository,
         IUserRepository userRepository,
+        INotificationRepository notificationRepository,
+        IRedisPublisher redisPublisher,
+        IRefreshTokenRepository refreshTokenRepository,
+        IAuthSessionRepository authSessionRepository,
+        IDomainEventPublisher domainEventPublisher,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
         _readerRequestRepository = readerRequestRepository;
         _readerProfileRepository = readerProfileRepository;
         _userRepository = userRepository;
+        _notificationRepository = notificationRepository;
+        _redisPublisher = redisPublisher;
+        _refreshTokenRepository = refreshTokenRepository;
+        _authSessionRepository = authSessionRepository;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <inheritdoc />
@@ -82,11 +97,16 @@ public sealed partial class ReaderRequestReviewRequestedDomainEventHandler
 
         await UpsertReaderProfileFromRequestAsync(readerRequest, user, cancellationToken);
 
+        var reviewedAtUtc = DateTime.UtcNow;
         readerRequest.Status = ReaderApprovalStatus.Approved;
         readerRequest.AdminNote = domainEvent.AdminNote;
         readerRequest.ReviewedBy = domainEvent.AdminId.ToString();
-        readerRequest.ReviewedAt = DateTime.UtcNow;
+        readerRequest.ReviewedAt = reviewedAtUtc;
+        AppendReviewHistory(readerRequest, domainEvent, ReaderApprovalStatus.Approved, reviewedAtUtc);
         await _readerRequestRepository.UpdateAsync(readerRequest, cancellationToken);
+
+        await RevokeSessionsAfterRoleChangeAsync(user.Id, cancellationToken);
+        await PublishReviewNotificationAsync(readerRequest, domainEvent, ReaderApprovalStatus.Approved, cancellationToken);
     }
 
     private async Task RejectAsync(
@@ -98,10 +118,14 @@ public sealed partial class ReaderRequestReviewRequestedDomainEventHandler
         user.RejectReaderRequest();
         await _userRepository.UpdateAsync(user, cancellationToken);
 
+        var reviewedAtUtc = DateTime.UtcNow;
         readerRequest.Status = ReaderApprovalStatus.Rejected;
         readerRequest.AdminNote = domainEvent.AdminNote;
         readerRequest.ReviewedBy = domainEvent.AdminId.ToString();
-        readerRequest.ReviewedAt = DateTime.UtcNow;
+        readerRequest.ReviewedAt = reviewedAtUtc;
+        AppendReviewHistory(readerRequest, domainEvent, ReaderApprovalStatus.Rejected, reviewedAtUtc);
         await _readerRequestRepository.UpdateAsync(readerRequest, cancellationToken);
+
+        await PublishReviewNotificationAsync(readerRequest, domainEvent, ReaderApprovalStatus.Rejected, cancellationToken);
     }
 }

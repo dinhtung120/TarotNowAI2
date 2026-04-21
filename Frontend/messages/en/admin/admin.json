@@ -339,16 +339,22 @@
         "loading": "Loading...",
         "empty": "No requests found."
       },
-      "row": {
-        "id_prefix": "ID: {id}...",
-        "intro_title": "Introduction",
-        "expand": "Expand",
-        "specialties_title": "Specialties",
-        "years_experience_title": "Experience",
-        "social_links_title": "Social links",
-        "price_title": "Service price",
-        "admin_note_title": "Admin note"
-      },
+  "row": {
+    "id_prefix": "ID: {id}...",
+    "intro_title": "Introduction",
+    "expand": "Expand",
+    "specialties_title": "Specialties",
+    "years_experience_title": "Experience",
+    "social_links_title": "Social links",
+    "price_title": "Service price",
+    "admin_note_title": "Admin note",
+    "review_history_title": "Review history",
+    "review_history_empty": "No review history yet.",
+    "review_history_at": "Time",
+    "review_history_by": "Admin",
+    "review_history_action_approve": "Approved",
+    "review_history_action_reject": "Rejected"
+  },
       "input": {
         "admin_note_placeholder": "ADMIN NOTE BEFORE REVIEW (OPTIONAL)..."
       },

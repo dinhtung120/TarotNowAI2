@@ -111,7 +111,8 @@ public class MongoReaderRequestRepository : IReaderRequestRepository
             ReviewedBy = dto.ReviewedBy,
             ReviewedAt = dto.ReviewedAt,
             CreatedAt = dto.CreatedAt,
-            UpdatedAt = dto.UpdatedAt
+            UpdatedAt = dto.UpdatedAt,
+            ReviewHistory = dto.ReviewHistory?.Select(ToReviewHistoryDocument).ToList() ?? []
         };
     }
 
@@ -134,7 +135,32 @@ public class MongoReaderRequestRepository : IReaderRequestRepository
             ReviewedBy = doc.ReviewedBy,
             ReviewedAt = doc.ReviewedAt,
             CreatedAt = doc.CreatedAt,
-            UpdatedAt = doc.UpdatedAt
+            UpdatedAt = doc.UpdatedAt,
+            ReviewHistory = doc.ReviewHistory?.Select(ToReviewHistoryDto).ToList() ?? []
+        };
+    }
+
+    private static ReaderRequestReviewHistoryEntryDocument ToReviewHistoryDocument(ReaderRequestReviewHistoryEntryDto dto)
+    {
+        return new ReaderRequestReviewHistoryEntryDocument
+        {
+            Action = dto.Action,
+            Status = dto.Status,
+            ReviewedBy = dto.ReviewedBy,
+            AdminNote = dto.AdminNote,
+            ReviewedAt = dto.ReviewedAt
+        };
+    }
+
+    private static ReaderRequestReviewHistoryEntryDto ToReviewHistoryDto(ReaderRequestReviewHistoryEntryDocument doc)
+    {
+        return new ReaderRequestReviewHistoryEntryDto
+        {
+            Action = doc.Action,
+            Status = doc.Status,
+            ReviewedBy = doc.ReviewedBy,
+            AdminNote = doc.AdminNote,
+            ReviewedAt = doc.ReviewedAt
         };
     }
 }

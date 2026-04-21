@@ -283,4 +283,9 @@ public static class RefreshRevocationReasons
     /// Token bị revoke thủ công (logout/admin revoke).
     /// </summary>
     public const string ManualRevoke = "MANUAL_REVOKE";
+
+    /// <summary>
+    /// Token bị revoke vì thay đổi role yêu cầu đăng nhập lại.
+    /// </summary>
+    public const string RoleChanged = "ROLE_CHANGED";
 }

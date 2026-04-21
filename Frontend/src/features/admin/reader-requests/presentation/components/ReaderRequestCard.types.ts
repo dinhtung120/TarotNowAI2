@@ -12,6 +12,12 @@ export interface ReaderRequestLabels {
  socialLinksTitle: string;
  priceTitle: string;
  adminNoteTitle: string;
+ reviewHistoryTitle: string;
+ reviewHistoryEmpty: string;
+ reviewHistoryAt: string;
+ reviewHistoryBy: string;
+ reviewHistoryActionApprove: string;
+ reviewHistoryActionReject: string;
  adminNotePlaceholder: string;
  approve: string;
  reject: string;
@@ -21,7 +27,7 @@ export interface ReaderRequestCardProps {
  locale: string;
  request: AdminReaderRequest;
  selectedRequestId: string | null;
- adminNote: string;
+ adminNoteDraft: string;
  processingId: string | null;
  labels: ReaderRequestLabels;
  onSelectRequest: () => void;

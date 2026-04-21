@@ -1,7 +1,10 @@
 import { HubConnectionState, type HubConnection } from '@microsoft/signalr';
 import type { QueryClient } from '@tanstack/react-query';
 import { useWalletStore } from '@/store/walletStore';
+import { useAuthStore } from '@/store/authStore';
+import { routing } from '@/i18n/routing';
 import { logger } from '@/shared/infrastructure/logging/logger';
+import { invalidateClientSessionSnapshot } from '@/shared/infrastructure/auth/clientSessionSnapshot';
 import { shouldSkipRealtimeGachaInvalidation } from '@/shared/infrastructure/gacha/gachaRealtimeDedup';
 import { shouldSkipRealtimeInventoryInvalidation } from '@/shared/infrastructure/inventory/inventoryRealtimeDedup';
 import {
@@ -14,6 +17,7 @@ const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000;
 const INVALIDATION_BATCH_DELAY_MS = 320;
 const WALLET_REFRESH_MIN_INTERVAL_MS = 2_000;
 const MIN_RETRY_INVALIDATION_DELAY_MS = 80;
+const ROLE_CHANGED_FORCE_LOGOUT_NOTIFICATION_TYPE = 'reader_request_approved';
 
 const DOMAIN_INVALIDATION_COOLDOWN_MS: Record<UserStateInvalidationDomain, number> = {
   wallet: 1_000,
@@ -35,6 +39,10 @@ interface WalletBalanceChangedPayload {
 }
 
 interface ConversationUpdatedPayload {
+ type?: string;
+}
+
+interface NotificationNewPayload {
  type?: string;
 }
 
@@ -88,6 +96,14 @@ function applyWalletDelta(payload?: WalletBalanceChangedPayload): boolean {
  return false;
 }
 
+function resolveLoginPathname(currentPathname: string): string {
+ const segments = currentPathname.split('/').filter(Boolean);
+ const firstSegment = segments[0] ?? '';
+ const hasLocalePrefix = routing.locales.some((locale) => locale === firstSegment);
+ const locale = hasLocalePrefix ? firstSegment : routing.defaultLocale;
+ return `/${locale}/login`;
+}
+
 export function registerPresenceConnectionHandlers(hubConnection: HubConnection, queryClient: QueryClient) {
   let inboxInvalidateTimeout: NodeJS.Timeout | null = null;
   let unreadInvalidateTimeout: NodeJS.Timeout | null = null;
@@ -96,6 +112,7 @@ export function registerPresenceConnectionHandlers(hubConnection: HubConnection,
   const pendingInvalidationDomains = new Set<UserStateInvalidationDomain>();
   const domainLastInvalidatedAt = new Map<UserStateInvalidationDomain, number>();
   let lastWalletRefreshAt = 0;
+  let roleChangeLogoutTriggered = false;
 
   const scheduleInvalidationFlush = (delayMs = INVALIDATION_BATCH_DELAY_MS) => {
     if (invalidationBatchTimeout) {
@@ -146,6 +163,35 @@ export function registerPresenceConnectionHandlers(hubConnection: HubConnection,
     scheduleInvalidationFlush();
   };
 
+  const forceLogoutAfterRoleChange = async () => {
+    if (roleChangeLogoutTriggered) {
+      return;
+    }
+
+    roleChangeLogoutTriggered = true;
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+        cache: 'no-store',
+      });
+    } catch {
+      // No-op: vẫn cưỡng bức clear session cục bộ để chặn tiếp tục dùng role cũ.
+    } finally {
+      invalidateClientSessionSnapshot();
+      useAuthStore.getState().clearAuth();
+    }
+
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const loginPath = resolveLoginPathname(window.location.pathname);
+    if (window.location.pathname !== loginPath) {
+      window.location.assign(loginPath);
+    }
+  };
+
   const scheduleWalletRefresh = () => {
     const elapsedMs = Date.now() - lastWalletRefreshAt;
     const remainingMs = Math.max(0, WALLET_REFRESH_MIN_INTERVAL_MS - elapsedMs);
@@ -188,8 +234,12 @@ export function registerPresenceConnectionHandlers(hubConnection: HubConnection,
     }
   });
 
-  hubConnection.on('notification.new', () => {
+  hubConnection.on('notification.new', (payload?: NotificationNewPayload) => {
     queueInvalidation(['notifications']);
+    const notificationType = payload?.type?.trim().toLowerCase();
+    if (notificationType === ROLE_CHANGED_FORCE_LOGOUT_NOTIFICATION_TYPE && useAuthStore.getState().isAuthenticated) {
+      void forceLogoutAfterRoleChange();
+    }
   });
 
   hubConnection.on('wallet.balance_changed', (payload?: WalletBalanceChangedPayload) => {
