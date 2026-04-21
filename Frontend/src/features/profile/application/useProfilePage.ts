@@ -6,7 +6,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { getProfileAction, updateProfileAction, type ProfileDto } from '@/features/profile/application/actions';
+import {
+ getPayoutBanksAction,
+ getProfileAction,
+ updateProfileAction,
+ type PayoutBankOption,
+ type ProfileDto,
+} from '@/features/profile/application/actions';
 import { uploadProfileAvatar } from '@/features/profile/application/uploadProfileAvatar';
 import { getMyReaderRequest, type MyReaderRequest } from '@/features/reader/public';
 import { useRouter } from '@/i18n/routing';
@@ -17,6 +23,9 @@ import { toast } from 'react-hot-toast';
 interface ProfileFormValues {
   dateOfBirth: string;
   displayName: string;
+  payoutBankBin: string;
+  payoutBankAccountNumber: string;
+  payoutBankAccountHolder: string;
 }
 
 export function useProfilePage() {
@@ -32,13 +41,73 @@ export function useProfilePage() {
   const [avatarUploadProgress, setAvatarUploadProgress] = useState(0);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const profileQueryKey = userStateQueryKeys.profile.me();
+  const payoutBanksQueryKey = userStateQueryKeys.profile.payoutBanks();
   const isAdmin = user?.role === 'admin';
   const isTarotReader = user?.role === 'tarot_reader';
+  const MIN_ACCOUNT_NUMBER_LENGTH = 6;
+  const MAX_ACCOUNT_NUMBER_LENGTH = 32;
 
   const profileSchema = useMemo(() => z.object({
     displayName: z.string().min(2, t('validation.display_name_min')),
     dateOfBirth: z.string().refine((date) => !isNaN(Date.parse(date)), { message: t('validation.date_of_birth_invalid') }),
-  }), [t]);
+    payoutBankBin: z.string(),
+    payoutBankAccountNumber: z.string().max(MAX_ACCOUNT_NUMBER_LENGTH, t('validation.account_number_invalid')),
+    payoutBankAccountHolder: z.string().max(120, t('validation.account_holder_invalid')),
+  }).superRefine((value, context) => {
+    if (!isTarotReader) {
+      return;
+    }
+
+    const hasAnyPayoutField = Boolean(
+      value.payoutBankBin.trim()
+      || value.payoutBankAccountNumber.trim()
+      || value.payoutBankAccountHolder.trim(),
+    );
+
+    if (!hasAnyPayoutField) {
+      return;
+    }
+
+    if (!value.payoutBankBin.trim()) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: t('validation.bank_required'),
+        path: ['payoutBankBin'],
+      });
+    }
+
+    const accountNumber = value.payoutBankAccountNumber.trim();
+    if (!accountNumber) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: t('validation.account_number_required'),
+        path: ['payoutBankAccountNumber'],
+      });
+    } else if (!/^\d+$/.test(accountNumber)
+      || accountNumber.length < MIN_ACCOUNT_NUMBER_LENGTH
+      || accountNumber.length > MAX_ACCOUNT_NUMBER_LENGTH) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: t('validation.account_number_invalid'),
+        path: ['payoutBankAccountNumber'],
+      });
+    }
+
+    const accountHolder = value.payoutBankAccountHolder.trim();
+    if (!accountHolder) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: t('validation.account_holder_required'),
+        path: ['payoutBankAccountHolder'],
+      });
+    } else if (!isUppercaseNoAccent(accountHolder)) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: t('validation.account_holder_invalid'),
+        path: ['payoutBankAccountHolder'],
+      });
+    }
+  }), [MAX_ACCOUNT_NUMBER_LENGTH, MIN_ACCOUNT_NUMBER_LENGTH, isTarotReader, t]);
 
   const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -53,11 +122,25 @@ export function useProfilePage() {
     },
   });
 
+  const payoutBanksQuery = useQuery<{ options: PayoutBankOption[]; error: string }>({
+    queryKey: payoutBanksQueryKey,
+    enabled: isAuthenticated && isTarotReader,
+    queryFn: async () => {
+      const result = await getPayoutBanksAction();
+      return result.success ? { options: result.data ?? [], error: '' } : { options: [], error: result.error };
+    },
+  });
+
+  const payoutBankOptions = payoutBanksQuery.data?.options ?? [];
+
   useEffect(() => {
     const payload = profileQuery.data;
     if (!payload || payload.error || !payload.profile) return;
 
     setValue('displayName', payload.profile.displayName);
+    setValue('payoutBankBin', payload.profile.payoutBankBin ?? '');
+    setValue('payoutBankAccountNumber', payload.profile.payoutBankAccountNumber ?? '');
+    setValue('payoutBankAccountHolder', payload.profile.payoutBankAccountHolder ?? '');
     setAvatarPreview(payload.profile.avatarUrl || null);
     if (!payload.profile.dateOfBirth) return;
 
@@ -82,10 +165,19 @@ export function useProfilePage() {
     setErrorMsg('');
 
     try {
+      const payoutBankName = isTarotReader ? resolveBankName(payoutBankOptions, data.payoutBankBin) : undefined;
+      if (isTarotReader && normalizeOptional(data.payoutBankBin) && !payoutBankName) {
+        setErrorMsg(t('validation.bank_required'));
+        return;
+      }
+
       const result = await updateProfileAction({
-        displayName: data.displayName,
-        avatarUrl: avatarPreview || null,
+        displayName: data.displayName.trim(),
         dateOfBirth: new Date(data.dateOfBirth).toISOString(),
+        payoutBankBin: isTarotReader ? normalizeOptional(data.payoutBankBin) : undefined,
+        payoutBankName,
+        payoutBankAccountNumber: isTarotReader ? normalizeOptional(data.payoutBankAccountNumber) : undefined,
+        payoutBankAccountHolder: isTarotReader ? normalizeOptional(data.payoutBankAccountHolder) : undefined,
       });
       if (!result.success) {
         setErrorMsg(result.error);
@@ -94,7 +186,10 @@ export function useProfilePage() {
 
       setSuccessMsg(t('successMsg'));
       useAuthStore.getState().updateUser({ displayName: data.displayName, avatarUrl: avatarPreview || null });
-      await queryClient.invalidateQueries({ queryKey: profileQueryKey });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: profileQueryKey }),
+        queryClient.invalidateQueries({ queryKey: payoutBanksQueryKey }),
+      ]);
     } catch {
       setErrorMsg(t('errorSave'));
     }
@@ -153,6 +248,9 @@ export function useProfilePage() {
     loading: profileQuery.isLoading || profileQuery.isFetching,
     successMsg,
     errorMsg: errorMsg || profileQuery.data?.error || '',
+    payoutBanksError: payoutBanksQuery.data?.error || '',
+    payoutBankOptions,
+    isTarotReader,
     readerRequest: readerRequestQuery.data ?? null,
     readerRequestLoading: readerRequestQuery.isLoading || readerRequestQuery.isFetching,
     register, handleSubmit, errors, isSubmitting, onSubmit,
@@ -166,4 +264,31 @@ function revokeObjectUrlIfNeeded(value: string | null) {
   }
 
   URL.revokeObjectURL(value);
+}
+
+function normalizeOptional(value: string): string | null {
+  const normalized = value.trim();
+  return normalized ? normalized : null;
+}
+
+function resolveBankName(options: PayoutBankOption[], bankBin: string): string | null {
+  const normalizedBankBin = bankBin.trim();
+  if (!normalizedBankBin) {
+    return null;
+  }
+
+  return options.find((item) => item.bankBin === normalizedBankBin)?.bankName ?? null;
+}
+
+function isUppercaseNoAccent(value: string): boolean {
+  const normalized = value.trim();
+  if (!normalized || normalized !== normalized.toUpperCase()) {
+    return false;
+  }
+
+  if (/[\u0300-\u036f]/.test(normalized.normalize('NFD'))) {
+    return false;
+  }
+
+  return /^[A-Z ]+$/.test(normalized);
 }

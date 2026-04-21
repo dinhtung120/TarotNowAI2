@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
+import { getProfileAction, type ProfileDto } from '@/features/profile/application/actions';
 import { createWithdrawal, listMyWithdrawals, type WithdrawalResult } from '@/features/wallet/application/actions/withdrawal';
 import { EXCHANGE_RATE_VND_PER_DIAMOND, MIN_WITHDRAW_DIAMOND, WITHDRAW_FEE_RATE } from '@/features/wallet/domain/constants';
 import { getWithdrawalStatusBadge } from '@/features/wallet/domain/withdrawalStatus';
@@ -10,6 +11,7 @@ import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQuery
 import { useWalletStore } from '@/store/walletStore';
 
 const HISTORY_QUERY_KEY = userStateQueryKeys.wallet.withdrawalsMine();
+const PROFILE_QUERY_KEY = userStateQueryKeys.profile.me();
 
 export function useWithdrawPage() {
  const t = useTranslations('Wallet');
@@ -18,9 +20,6 @@ export function useWithdrawPage() {
  const balance = useWalletStore((state) => state.balance);
 
  const [amount, setAmount] = useState('');
- const [bankName, setBankName] = useState('');
- const [accountName, setAccountName] = useState('');
- const [accountNumber, setAccountNumber] = useState('');
  const [userNote, setUserNote] = useState('');
  const [success, setSuccess] = useState(false);
  const [error, setError] = useState<string | null>(null);
@@ -33,14 +32,41 @@ export function useWithdrawPage() {
   },
  });
 
- const withdrawalMutation = useMutation({
-  mutationFn: createWithdrawal,
+ const profileQuery = useQuery<{ profile: ProfileDto | null; error: string }>({
+  queryKey: PROFILE_QUERY_KEY,
+  queryFn: async () => {
+   const result = await getProfileAction();
+   return result.success ? { profile: result.data ?? null, error: '' } : { profile: null, error: result.error };
+  },
  });
+
+ const withdrawalMutation = useMutation({ mutationFn: createWithdrawal });
 
  const amountNum = useMemo(() => Number.parseInt(amount, 10) || 0, [amount]);
  const grossVnd = amountNum * EXCHANGE_RATE_VND_PER_DIAMOND;
  const feeVnd = Math.ceil(grossVnd * WITHDRAW_FEE_RATE);
  const netVnd = grossVnd - feeVnd;
+
+ const payoutInfo = useMemo(() => {
+  const profile = profileQuery.data?.profile;
+  if (!profile) {
+   return null;
+  }
+
+  return {
+   bankName: profile.payoutBankName?.trim() || '',
+   bankBin: profile.payoutBankBin?.trim() || '',
+   accountNumber: profile.payoutBankAccountNumber?.trim() || '',
+   accountHolder: profile.payoutBankAccountHolder?.trim() || '',
+  };
+ }, [profileQuery.data?.profile]);
+
+ const payoutConfigured = Boolean(
+  payoutInfo?.bankName
+  && payoutInfo.bankBin
+  && payoutInfo.accountNumber
+  && payoutInfo.accountHolder,
+ );
 
  const getStatusBadge = useCallback(
   (status: string) =>
@@ -59,6 +85,11 @@ export function useWithdrawPage() {
    setError(null);
    setSuccess(false);
 
+   if (!payoutConfigured) {
+    setError(t('withdraw.error_bank_missing_profile'));
+    return;
+   }
+
    if (amountNum < MIN_WITHDRAW_DIAMOND) {
     setError(t('withdraw.error_min_amount'));
     return;
@@ -69,32 +100,14 @@ export function useWithdrawPage() {
     return;
    }
 
-   if (!bankName.trim()) {
-    setError(t('withdraw.error_enter_bank'));
-    return;
-   }
-
-   if (!accountName.trim()) {
-    setError(t('withdraw.error_enter_account_name'));
-    return;
-   }
-
-   if (!accountNumber.trim()) {
-    setError(t('withdraw.error_enter_account_number'));
-    return;
-   }
-
    const result = await withdrawalMutation.mutateAsync({
     amountDiamond: amountNum,
-    bankName: bankName.trim(),
-    bankAccountName: accountName.trim(),
-    bankAccountNumber: accountNumber.trim(),
     userNote: userNote.trim() || undefined,
     idempotencyKey: buildCreateWithdrawalIdempotencyKey(),
    });
 
    if (!result.success) {
-    setError(result.error);
+    setError(result.error || t('withdraw.error_create_failed'));
     return;
    }
 
@@ -103,7 +116,7 @@ export function useWithdrawPage() {
    setUserNote('');
    await queryClient.invalidateQueries({ queryKey: HISTORY_QUERY_KEY });
   },
-  [accountName, accountNumber, amountNum, balance?.diamondBalance, bankName, queryClient, t, userNote, withdrawalMutation],
+  [amountNum, balance?.diamondBalance, payoutConfigured, queryClient, t, userNote, withdrawalMutation],
  );
 
  return {
@@ -111,12 +124,6 @@ export function useWithdrawPage() {
   locale,
   amount,
   setAmount,
-  bankName,
-  setBankName,
-  accountName,
-  setAccountName,
-  accountNumber,
-  setAccountNumber,
   userNote,
   setUserNote,
   submitting: withdrawalMutation.isPending,
@@ -128,6 +135,9 @@ export function useWithdrawPage() {
   grossVnd,
   feeVnd,
   netVnd,
+  payoutInfo,
+  payoutConfigured,
+  profilePath: '/profile',
   getStatusBadge,
   handleSubmit,
  };

@@ -10,8 +10,16 @@ namespace TarotNow.Application.DomainEvents.Handlers;
 
 public sealed partial class WithdrawalCreateRequestedDomainEventHandler
 {
+    private const string ErrorReaderOnly = "Chỉ tài khoản Reader mới được rút tiền.";
+    private const string ErrorInsufficientBalance = "Số dư Diamond không đủ để tạo yêu cầu rút tiền.";
+    private const string ErrorMissingPayoutInfo = "Bạn chưa cập nhật thông tin ngân hàng nhận tiền. Vui lòng vào Profile để bổ sung trước khi rút.";
+    private const string ErrorIdempotencyRequired = "Idempotency key là bắt buộc.";
+    private const string ErrorMinimumWithdrawTemplate = "Số lượng rút tối thiểu là {0} Diamond.";
+    private const string ErrorIdempotencyMaxLengthTemplate = "Idempotency key tối đa {0} ký tự.";
+
     private static WithdrawalRequest BuildPendingRequest(
         WithdrawalCreateRequestedDomainEvent domainEvent,
+        User user,
         Guid requestId,
         string normalizedRequestKey,
         DateOnly businessWeekStartUtc,
@@ -26,9 +34,10 @@ public sealed partial class WithdrawalCreateRequestedDomainEventHandler
             AmountVnd = plan.AmountVnd,
             FeeVnd = plan.FeeVnd,
             NetAmountVnd = plan.NetAmountVnd,
-            BankName = domainEvent.BankName.Trim(),
-            BankAccountName = domainEvent.BankAccountName.Trim(),
-            BankAccountNumber = domainEvent.BankAccountNumber.Trim(),
+            BankName = user.PayoutBankName!.Trim(),
+            BankBin = user.PayoutBankBin!.Trim(),
+            BankAccountName = user.PayoutBankAccountHolder!.Trim(),
+            BankAccountNumber = user.PayoutBankAccountNumber!.Trim(),
             UserNote = NormalizeOptionalNote(domainEvent.UserNote),
             RequestIdempotencyKey = normalizedRequestKey,
             Status = WithdrawalRequestStatus.Pending,
@@ -40,18 +49,26 @@ public sealed partial class WithdrawalCreateRequestedDomainEventHandler
     {
         if (!string.Equals(user.Role, UserRole.TarotReader, StringComparison.OrdinalIgnoreCase))
         {
-            throw new BadRequestException("Chỉ tài khoản Reader mới được rút tiền.");
+            throw new BadRequestException(ErrorReaderOnly);
         }
 
         if (amountDiamond < WithdrawalPolicyConstants.MinimumWithdrawDiamond)
         {
             throw new BadRequestException(
-                $"Số lượng rút tối thiểu là {WithdrawalPolicyConstants.MinimumWithdrawDiamond} Diamond.");
+                string.Format(ErrorMinimumWithdrawTemplate, WithdrawalPolicyConstants.MinimumWithdrawDiamond));
         }
 
         if (user.Wallet.DiamondBalance < amountDiamond)
         {
-            throw new BadRequestException("Số dư Diamond không đủ để tạo yêu cầu rút tiền.");
+            throw new BadRequestException(ErrorInsufficientBalance);
+        }
+
+        if (string.IsNullOrWhiteSpace(user.PayoutBankName)
+            || string.IsNullOrWhiteSpace(user.PayoutBankBin)
+            || string.IsNullOrWhiteSpace(user.PayoutBankAccountNumber)
+            || string.IsNullOrWhiteSpace(user.PayoutBankAccountHolder))
+        {
+            throw new BadRequestException(ErrorMissingPayoutInfo);
         }
     }
 
@@ -68,13 +85,13 @@ public sealed partial class WithdrawalCreateRequestedDomainEventHandler
         var normalized = idempotencyKey?.Trim();
         if (string.IsNullOrWhiteSpace(normalized))
         {
-            throw new BadRequestException("Idempotency key là bắt buộc.");
+            throw new BadRequestException(ErrorIdempotencyRequired);
         }
 
         if (normalized.Length > WithdrawalPolicyConstants.IdempotencyKeyMaxLength)
         {
             throw new BadRequestException(
-                $"Idempotency key tối đa {WithdrawalPolicyConstants.IdempotencyKeyMaxLength} ký tự.");
+                string.Format(ErrorIdempotencyMaxLengthTemplate, WithdrawalPolicyConstants.IdempotencyKeyMaxLength));
         }
 
         return normalized;

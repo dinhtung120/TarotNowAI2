@@ -29,6 +29,18 @@ public partial class User
     // Ngày sinh.
     public DateTime DateOfBirth { get; private set; }
 
+    // Tên ngân hàng rút tiền đã cấu hình (chỉ áp dụng cho Reader).
+    public string? PayoutBankName { get; private set; }
+
+    // Mã BIN ngân hàng theo chuẩn NAPAS/VietQR.
+    public string? PayoutBankBin { get; private set; }
+
+    // Số tài khoản nhận tiền.
+    public string? PayoutBankAccountNumber { get; private set; }
+
+    // Tên chủ tài khoản nhận tiền (chữ hoa không dấu).
+    public string? PayoutBankAccountHolder { get; private set; }
+
     // Cờ người dùng đã chấp thuận điều khoản bắt buộc.
     public bool HasConsented { get; private set; }
 

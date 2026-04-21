@@ -22,6 +22,24 @@
     "successMsg": "Cập nhật thông tin thành công!",
     "errorLoad": "Không thể tải thông tin cá nhân",
     "errorSave": "Cập nhật thất bại",
+    "payout": {
+      "section_title": "Thông tin nhận tiền rút",
+      "bank_label": "Ngân hàng",
+      "bank_placeholder": "Chọn ngân hàng nhận tiền",
+      "account_number_label": "Số tài khoản",
+      "account_number_placeholder": "Chỉ nhập chữ số",
+      "account_holder_label": "Tên chủ tài khoản",
+      "account_holder_placeholder": "NGUYEN VAN A"
+    },
+    "validation": {
+      "display_name_min": "Tên hiển thị phải có ít nhất 2 ký tự.",
+      "date_of_birth_invalid": "Ngày sinh không hợp lệ.",
+      "bank_required": "Vui lòng chọn ngân hàng.",
+      "account_number_required": "Vui lòng nhập số tài khoản.",
+      "account_number_invalid": "Số tài khoản phải từ 6-32 chữ số.",
+      "account_holder_required": "Vui lòng nhập tên chủ tài khoản.",
+      "account_holder_invalid": "Tên chủ tài khoản phải là chữ hoa không dấu."
+    },
     "level": "Cấp độ",
     "zodiac": "Cung hoàng đạo",
     "numerology": "Thần số học",

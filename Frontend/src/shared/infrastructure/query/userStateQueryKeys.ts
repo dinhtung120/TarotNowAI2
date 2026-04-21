@@ -26,6 +26,7 @@ export const userStateQueryKeys = {
  },
  profile: {
   me: () => ['profile', 'me'] as const,
+  payoutBanks: () => ['profile', 'payout-banks'] as const,
   mfaStatus: () => ['profile', 'mfa-status'] as const,
  },
  reader: {

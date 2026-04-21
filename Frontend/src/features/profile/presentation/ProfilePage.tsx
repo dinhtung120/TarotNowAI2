@@ -54,6 +54,9 @@ export default function ProfilePage() {
           t={state.t}
           successMsg={state.successMsg}
           errorMsg={state.errorMsg}
+          payoutBanksError={state.payoutBanksError}
+          payoutBankOptions={state.payoutBankOptions}
+          isTarotReader={isTarotReader}
           register={state.register}
           handleSubmit={state.handleSubmit}
           errors={state.errors}

@@ -49,6 +49,9 @@ public class WithdrawalResult
     // Tên ngân hàng nhận tiền.
     public string BankName { get; set; } = string.Empty;
 
+    // Mã BIN ngân hàng theo chuẩn NAPAS/VietQR.
+    public string BankBin { get; set; } = string.Empty;
+
     // Tên chủ tài khoản ngân hàng.
     public string BankAccountName { get; set; } = string.Empty;
 
@@ -118,6 +121,7 @@ public class ListWithdrawalsQueryHandler : IRequestHandler<ListWithdrawalsQuery,
             FeeVnd = item.FeeVnd,
             NetAmountVnd = item.NetAmountVnd,
             BankName = item.BankName,
+            BankBin = item.BankBin,
             BankAccountName = item.BankAccountName,
             BankAccountNumber = item.BankAccountNumber,
             Status = item.Status,

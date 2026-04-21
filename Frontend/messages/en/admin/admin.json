@@ -386,13 +386,25 @@
         "admin_note_placeholder": "REJECTION REASON (REQUIRED ON REJECT)..."
       },
       "actions": {
+        "view_detail": "View transfer QR",
         "approve": "Approve",
         "reject": "Reject"
+      },
+      "detail": {
+        "title": "Transfer details",
+        "qr_title": "Bank transfer QR",
+        "amount": "Transfer amount",
+        "bank_name": "Bank",
+        "account_number": "Account number",
+        "account_holder": "Account holder",
+        "transfer_content": "Transfer content",
+        "close": "Close"
       },
       "toast": {
         "success": "Request processed successfully.",
         "failed": "Processing failed.",
-        "reject_note_required": "Please provide a rejection reason."
+        "reject_note_required": "Please provide a rejection reason.",
+        "detail_failed": "Unable to load withdrawal details."
       }
     },
     "disputes": {

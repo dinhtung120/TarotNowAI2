@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using TarotNow.Api.Constants;
 using TarotNow.Api.Contracts.Requests;
 using TarotNow.Api.Extensions;
+using TarotNow.Application.Features.Withdrawal.Queries.GetWithdrawalDetail;
 
 namespace TarotNow.Api.Controllers;
 
@@ -47,6 +48,21 @@ public sealed class AdminWithdrawalsController : ControllerBase
         };
 
         var result = await _mediator.Send(query);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Lấy chi tiết một yêu cầu rút tiền kèm QR chuyển khoản.
+    /// </summary>
+    /// <param name="withdrawalId">Định danh yêu cầu rút tiền.</param>
+    /// <returns>Dữ liệu chi tiết phục vụ thao tác chuyển khoản thủ công.</returns>
+    [HttpGet("withdrawals/{withdrawalId:guid}")]
+    public async Task<IActionResult> WithdrawalDetail([FromRoute] Guid withdrawalId)
+    {
+        var result = await _mediator.Send(new GetWithdrawalDetailQuery
+        {
+            WithdrawalId = withdrawalId
+        });
         return Ok(result);
     }
 

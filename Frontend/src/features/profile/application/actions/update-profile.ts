@@ -8,8 +8,11 @@ import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionR
 
 export async function updateProfileAction(profileData: {
  displayName: string;
- avatarUrl: string | null;
  dateOfBirth: string;
+ payoutBankName?: string | null;
+ payoutBankBin?: string | null;
+ payoutBankAccountNumber?: string | null;
+ payoutBankAccountHolder?: string | null;
 }): Promise<ActionResult<undefined>> {
  const tApi = await getTranslations('ApiErrors');
 

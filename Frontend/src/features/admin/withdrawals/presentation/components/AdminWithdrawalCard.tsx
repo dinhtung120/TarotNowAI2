@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import type { WithdrawalResult } from '@/features/wallet/public';
 import { GlassCard } from '@/shared/components/ui';
 import { cn } from '@/lib/utils';
@@ -19,14 +20,16 @@ interface AdminWithdrawalCardProps {
  netLabel: string;
  notePlaceholder: string;
  onApprove: () => void;
+ onViewDetail: () => void;
  onChangeNote: (value: string) => void;
  onReject: () => void;
  processing: boolean;
  rejectLabel: string;
+ detailLabel: string;
  value: string;
 }
 
-export function AdminWithdrawalCard(props: AdminWithdrawalCardProps) {
+function AdminWithdrawalCardComponent(props: AdminWithdrawalCardProps) {
  return (
   <GlassCard className={cn('space-y-6 group tn-hover-border transition-all')}>
    <div className={cn('flex flex-col tn-md-flex-row tn-md-items-center justify-between gap-4')}>
@@ -34,6 +37,11 @@ export function AdminWithdrawalCard(props: AdminWithdrawalCardProps) {
     <AdminWithdrawalMetaInfo createdAt={props.item.createdAt} idLabel={props.idLabel} locale={props.locale} />
    </div>
    <AdminWithdrawalBankInfo bankName={props.item.bankName} bankAccountName={props.item.bankAccountName} bankAccountNumber={props.item.bankAccountNumber} />
+   <div className={cn('flex justify-end')}>
+    <button type="button" onClick={props.onViewDetail} className={cn('rounded-xl px-3 py-2 text-sm font-semibold tn-surface tn-text-primary')}>
+     {props.detailLabel}
+    </button>
+   </div>
    <AdminWithdrawalActions
     approveLabel={props.approveLabel}
     disabled={props.processing}
@@ -47,3 +55,5 @@ export function AdminWithdrawalCard(props: AdminWithdrawalCardProps) {
   </GlassCard>
  );
 }
+
+export const AdminWithdrawalCard = memo(AdminWithdrawalCardComponent);

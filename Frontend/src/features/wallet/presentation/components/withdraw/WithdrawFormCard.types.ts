@@ -4,12 +4,13 @@ export interface WithdrawFormCardLabels {
   grossLabel: string;
   feeLabel: string;
   netLabel: string;
-  bankLabel: string;
-  bankPlaceholder: string;
+  bankInfoTitle: string;
+  bankNameLabel: string;
+  bankBinLabel: string;
   accountNameLabel: string;
-  accountNamePlaceholder: string;
   accountNumberLabel: string;
-  accountNumberPlaceholder: string;
+  bankInfoMissing: string;
+  bankInfoUpdateCta: string;
   noteLabel: string;
   notePlaceholder: string;
   successMessage: string;
@@ -24,18 +25,20 @@ export interface WithdrawFormCardProps {
   grossVnd: number;
   feeVnd: number;
   netVnd: number;
-  bankName: string;
-  accountName: string;
-  accountNumber: string;
+  payoutInfo: {
+    bankName: string;
+    bankBin: string;
+    accountNumber: string;
+    accountHolder: string;
+  } | null;
+  payoutConfigured: boolean;
+  profilePath: string;
   userNote: string;
   submitting: boolean;
   success: boolean;
   error: string | null;
   labels: WithdrawFormCardLabels;
   onAmountChange: (value: string) => void;
-  onBankNameChange: (value: string) => void;
-  onAccountNameChange: (value: string) => void;
-  onAccountNumberChange: (value: string) => void;
   onUserNoteChange: (value: string) => void;
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
 }

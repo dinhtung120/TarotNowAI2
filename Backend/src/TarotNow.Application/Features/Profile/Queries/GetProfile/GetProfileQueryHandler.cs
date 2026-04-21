@@ -63,7 +63,11 @@ public class GetProfileQueryHandler : IRequestHandler<GetProfileQuery, ProfileRe
             // Tính toán thuộc tính chiêm tinh/thần số học tại thời điểm query để tránh lưu dữ liệu dẫn xuất dư thừa.
             Level = user.Level,
             Exp = user.Exp,
-            HasConsented = hasConsented
+            HasConsented = hasConsented,
+            PayoutBankName = user.PayoutBankName,
+            PayoutBankBin = user.PayoutBankBin,
+            PayoutBankAccountNumber = user.PayoutBankAccountNumber,
+            PayoutBankAccountHolder = user.PayoutBankAccountHolder
         };
     }
 }

@@ -70,9 +70,6 @@ public class WithdrawalController : ControllerBase
             UserId = userId.Value,                       
             AmountDiamond = body.AmountDiamond,           
             IdempotencyKey = idempotencyKey,
-            BankName = body.BankName,                     
-            BankAccountName = body.BankAccountName,       
-            BankAccountNumber = body.BankAccountNumber,   
             UserNote = body.UserNote
         };
 

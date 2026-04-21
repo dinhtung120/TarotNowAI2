@@ -16,15 +16,6 @@ public class CreateWithdrawalCommand : IRequest<Guid>
     // Khóa idempotency để chống tạo yêu cầu trùng khi retry.
     public string IdempotencyKey { get; set; } = string.Empty;
 
-    // Tên ngân hàng nhận tiền.
-    public string BankName { get; set; } = string.Empty;
-
-    // Tên chủ tài khoản ngân hàng.
-    public string BankAccountName { get; set; } = string.Empty;
-
-    // Số tài khoản ngân hàng.
-    public string BankAccountNumber { get; set; } = string.Empty;
-
     // Ghi chú từ user.
     public string? UserNote { get; set; }
 }
@@ -57,9 +48,6 @@ public sealed class CreateWithdrawalCommandHandler : IRequestHandler<CreateWithd
             UserId = request.UserId,
             AmountDiamond = request.AmountDiamond,
             IdempotencyKey = request.IdempotencyKey,
-            BankName = request.BankName,
-            BankAccountName = request.BankAccountName,
-            BankAccountNumber = request.BankAccountNumber,
             UserNote = request.UserNote
         };
 

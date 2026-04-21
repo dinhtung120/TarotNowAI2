@@ -94,12 +94,13 @@
       "gross_label": "总额 VND",
       "fee_label": "手续费 10%",
       "net_label": "实收",
+      "bank_info_title": "收款信息（来自 Profile）",
       "bank_label": "银行",
-      "bank_placeholder": "例如：Vietcombank、Techcombank...",
+      "bank_bin_label": "BIN 代码",
       "account_name_label": "账户持有人姓名",
-      "account_name_placeholder": "ZHANG SAN",
       "account_number_label": "账号",
-      "account_number_placeholder": "0123456789",
+      "bank_info_missing": "你的 Profile 尚未配置收款银行信息。",
+      "bank_info_update_cta": "前往 Profile 立即更新",
       "note_label": "附加备注",
       "note_placeholder": "给管理员的补充信息（可选）...",
       "success_message": "提现申请已提交！",
@@ -115,9 +116,7 @@
       "status_paid": "已支付",
       "error_min_amount": "最低 500 Diamond。",
       "error_insufficient_balance": "Diamond 余额不足。",
-      "error_enter_bank": "请输入银行名称。",
-      "error_enter_account_name": "请输入账户持有人姓名。",
-      "error_enter_account_number": "请输入账号。",
+      "error_bank_missing_profile": "提现前请先在 Profile 更新收款信息。",
       "error_create_failed": "无法创建申请。"
     }
   }

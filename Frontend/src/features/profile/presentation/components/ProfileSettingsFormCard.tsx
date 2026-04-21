@@ -12,12 +12,17 @@ export function ProfileSettingsFormCard({
   t,
   successMsg,
   errorMsg,
+  payoutBanksError,
+  payoutBankOptions,
+  isTarotReader,
   register,
   handleSubmit,
   errors,
   isSubmitting,
   onSubmit,
 }: ProfileSettingsFormCardProps) {
+  const composedErrorMsg = payoutBanksError || errorMsg;
+
   return (
     <GlassCard className={cn("!tn-pad-6-8-sm")}>
       <h3
@@ -28,9 +33,15 @@ export function ProfileSettingsFormCard({
         <Sparkles className={cn("h-4 w-4 tn-text-warning")} />
         {t("settings_title")}
       </h3>
-      <ProfileFormStatusMessages successMsg={successMsg} errorMsg={errorMsg} />
+      <ProfileFormStatusMessages successMsg={successMsg} errorMsg={composedErrorMsg} />
       <form onSubmit={handleSubmit(onSubmit)} className={cn("space-y-6")}>
-        <ProfileSettingsFieldsGrid t={t} register={register} errors={errors} />
+        <ProfileSettingsFieldsGrid
+          t={t}
+          register={register}
+          errors={errors}
+          isTarotReader={isTarotReader}
+          payoutBankOptions={payoutBankOptions}
+        />
         <div className={cn("tn-border mt-8 border-t pt-4")}>
           <ProfileSettingsSubmitButton
             isSubmitting={isSubmitting}

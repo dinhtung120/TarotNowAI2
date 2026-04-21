@@ -94,12 +94,13 @@
       "gross_label": "Tổng VND",
       "fee_label": "Phí 10%",
       "net_label": "Thực nhận",
+      "bank_info_title": "Thông tin nhận tiền (lấy từ Profile)",
       "bank_label": "Ngân hàng",
-      "bank_placeholder": "VD: Vietcombank, Techcombank...",
+      "bank_bin_label": "Mã BIN",
       "account_name_label": "Tên chủ tài khoản",
-      "account_name_placeholder": "NGUYEN VAN A",
       "account_number_label": "Số tài khoản",
-      "account_number_placeholder": "0123456789",
+      "bank_info_missing": "Bạn chưa cập nhật thông tin ngân hàng trong Profile.",
+      "bank_info_update_cta": "Cập nhật ngay tại trang Profile",
       "note_label": "Ghi chú thêm",
       "note_placeholder": "Nội dung bổ sung cho admin (tùy chọn)...",
       "success_message": "Đã gửi yêu cầu rút tiền thành công!",
@@ -115,9 +116,7 @@
       "status_paid": "Đã thanh toán",
       "error_min_amount": "Tối thiểu 500 Diamond.",
       "error_insufficient_balance": "Số dư Diamond không đủ.",
-      "error_enter_bank": "Vui lòng nhập tên ngân hàng.",
-      "error_enter_account_name": "Vui lòng nhập tên chủ tài khoản.",
-      "error_enter_account_number": "Vui lòng nhập số tài khoản.",
+      "error_bank_missing_profile": "Vui lòng cập nhật thông tin ngân hàng trong Profile trước khi rút tiền.",
       "error_create_failed": "Không thể tạo yêu cầu."
     }
   }

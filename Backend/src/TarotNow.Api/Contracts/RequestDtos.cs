@@ -11,6 +11,18 @@ public class UpdateProfileRequest
 
     // Ngày sinh phục vụ xác minh độ tuổi và cá nhân hóa.
     public DateTime DateOfBirth { get; set; }
+
+    // Tên ngân hàng rút tiền.
+    public string? PayoutBankName { get; set; }
+
+    // Mã BIN ngân hàng theo chuẩn NAPAS/VietQR.
+    public string? PayoutBankBin { get; set; }
+
+    // Số tài khoản nhận tiền.
+    public string? PayoutBankAccountNumber { get; set; }
+
+    // Tên chủ tài khoản nhận tiền (chữ hoa không dấu).
+    public string? PayoutBankAccountHolder { get; set; }
 }
 
 // Payload tạo đơn nạp tiền.

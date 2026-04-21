@@ -58,6 +58,23 @@ public partial class User
     }
 
     /// <summary>
+    /// Cập nhật thông tin nhận tiền rút cho tài khoản Reader.
+    /// Luồng xử lý: chuẩn hóa dữ liệu đầu vào theo dạng trim, gán vào hồ sơ và cập nhật thời điểm thay đổi.
+    /// </summary>
+    public void UpdatePayoutBankInfo(
+        string bankName,
+        string bankBin,
+        string accountNumber,
+        string accountHolder)
+    {
+        PayoutBankName = bankName.Trim();
+        PayoutBankBin = bankBin.Trim();
+        PayoutBankAccountNumber = accountNumber.Trim();
+        PayoutBankAccountHolder = accountHolder.Trim();
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
     /// Gán avatar sau khi upload qua pipeline R2/local: lưu URL public và key để xóa object cũ.
     /// </summary>
     public void ApplyManagedAvatar(string publicUrl, string objectStorageKey)

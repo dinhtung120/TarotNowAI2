@@ -45,4 +45,16 @@ public class ProfileResponse
 
     // Cờ cho biết user đã đồng ý đầy đủ bộ tài liệu pháp lý bắt buộc hay chưa.
     public bool HasConsented { get; set; }
+
+    // Tên ngân hàng rút tiền đã cấu hình.
+    public string? PayoutBankName { get; set; }
+
+    // Mã BIN ngân hàng đã cấu hình.
+    public string? PayoutBankBin { get; set; }
+
+    // Số tài khoản nhận tiền đã cấu hình.
+    public string? PayoutBankAccountNumber { get; set; }
+
+    // Tên chủ tài khoản đã cấu hình.
+    public string? PayoutBankAccountHolder { get; set; }
 }

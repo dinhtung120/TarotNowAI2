@@ -12,9 +12,6 @@ import { AUTH_HEADER } from '@/shared/infrastructure/auth/authConstants';
 
 export async function createWithdrawal(data: {
  amountDiamond: number;
- bankName: string;
- bankAccountName: string;
- bankAccountNumber: string;
  userNote?: string;
  idempotencyKey?: string;
 }): Promise<ActionResult<{ requestId?: string }>> {
@@ -34,9 +31,6 @@ export async function createWithdrawal(data: {
     },
     json: {
       amountDiamond: data.amountDiamond,
-      bankName: data.bankName,
-      bankAccountName: data.bankAccountName,
-      bankAccountNumber: data.bankAccountNumber,
       userNote: data.userNote,
       idempotencyKey,
     },

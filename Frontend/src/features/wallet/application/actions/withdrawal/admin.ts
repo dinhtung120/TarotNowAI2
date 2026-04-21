@@ -6,7 +6,7 @@ import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
-import type { WithdrawalResult } from './types';
+import type { WithdrawalDetailResult, WithdrawalResult } from './types';
 import { AUTH_ERROR } from "@/shared/domain/authErrors";
 import { AUTH_HEADER } from '@/shared/infrastructure/auth/authConstants';
 
@@ -82,5 +82,34 @@ export async function processWithdrawal(data: {
    action: data.action,
   });
   return actionFail(tApi('network_error'));
+  }
+}
+
+export async function getWithdrawalDetail(withdrawalId: string): Promise<ActionResult<WithdrawalDetailResult>> {
+ const accessToken = await getServerAccessToken();
+ if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
+
+ try {
+  const result = await serverHttpRequest<WithdrawalDetailResult>(
+   `/admin/withdrawals/${withdrawalId}`,
+   {
+    method: 'GET',
+    token: accessToken,
+    fallbackErrorMessage: 'Failed to get withdrawal detail',
+   },
+  );
+
+  if (!result.ok) {
+   logger.error('[WithdrawalAction] getWithdrawalDetail', result.error, {
+    status: result.status,
+    withdrawalId,
+   });
+   return actionFail(result.error || 'Failed to get withdrawal detail');
+  }
+
+  return actionOk(result.data);
+ } catch (error) {
+  logger.error('[WithdrawalAction] getWithdrawalDetail', error, { withdrawalId });
+  return actionFail('Failed to get withdrawal detail');
  }
 }

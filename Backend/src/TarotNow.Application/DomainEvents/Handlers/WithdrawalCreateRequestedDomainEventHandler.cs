@@ -63,6 +63,7 @@ public sealed partial class WithdrawalCreateRequestedDomainEventHandler
 
         var request = BuildPendingRequest(
             domainEvent,
+            user,
             requestId,
             normalizedRequestKey,
             businessWeekStartUtc,

@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
-import { listWithdrawalQueue, processWithdrawal, type WithdrawalResult } from '@/features/wallet/public';
+import { getWithdrawalDetail, listWithdrawalQueue, processWithdrawal, type WithdrawalDetailResult, type WithdrawalResult } from '@/features/wallet/public';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 type ProcessAction = 'approve' | 'reject';
@@ -13,6 +13,7 @@ export function useAdminWithdrawals(t: TranslateFn, locale: string) {
  const queryClient = useQueryClient();
  const [processing, setProcessing] = useState<string | null>(null);
  const [notes, setNotes] = useState<Record<string, string>>({});
+ const [selectedWithdrawalId, setSelectedWithdrawalId] = useState<string | null>(null);
 
  const { data, isLoading, isFetching } = useQuery<WithdrawalResult[]>({
   queryKey: queueQueryKey,
@@ -22,17 +23,32 @@ export function useAdminWithdrawals(t: TranslateFn, locale: string) {
   },
  });
 
- const processMutation = useMutation({
-  mutationFn: processWithdrawal,
+ const detailQuery = useQuery<WithdrawalDetailResult | null>({
+  queryKey: ['admin', 'withdrawals', 'detail', selectedWithdrawalId] as const,
+  enabled: Boolean(selectedWithdrawalId),
+  queryFn: async () => {
+   if (!selectedWithdrawalId) {
+    return null;
+   }
+
+   const result = await getWithdrawalDetail(selectedWithdrawalId);
+   if (!result.success || !result.data) {
+    throw new Error(result.error || 'Failed to get withdrawal detail');
+   }
+
+   return result.data;
+  },
  });
+
+ const processMutation = useMutation({ mutationFn: processWithdrawal });
 
  const handleProcess = useCallback(
   async (id: string, action: ProcessAction) => {
    const adminNote = notes[id]?.trim();
-  if (action === 'reject' && !adminNote) {
-   toast.error(t('withdrawals.toast.reject_note_required'));
-   return;
-  }
+   if (action === 'reject' && !adminNote) {
+    toast.error(t('withdrawals.toast.reject_note_required'));
+    return;
+   }
 
    setProcessing(id);
    try {
@@ -52,23 +68,34 @@ export function useAdminWithdrawals(t: TranslateFn, locale: string) {
     queryClient.setQueryData<WithdrawalResult[]>(queueQueryKey, (previous) =>
      (previous ?? []).filter((item) => item.id !== id),
     );
+    if (selectedWithdrawalId === id) {
+      setSelectedWithdrawalId(null);
+    }
    } catch {
     toast.error(t('withdrawals.toast.failed'));
    } finally {
     setProcessing(null);
    }
   },
-  [notes, processMutation, queryClient, t],
+  [notes, processMutation, queryClient, selectedWithdrawalId, t],
  );
 
- const formatVnd = (value: number | null | undefined) => {
+ const openDetail = useCallback((withdrawalId: string) => {
+  setSelectedWithdrawalId(withdrawalId);
+ }, []);
+
+ const closeDetail = useCallback(() => {
+  setSelectedWithdrawalId(null);
+ }, []);
+
+ const formatVnd = useCallback((value: number | null | undefined) => {
   if (value == null) return '-';
   return new Intl.NumberFormat(locale, {
    style: 'currency',
    currency: 'VND',
    maximumFractionDigits: 0,
   }).format(value);
- };
+ }, [locale]);
 
  return {
   queue: data ?? [],
@@ -78,6 +105,12 @@ export function useAdminWithdrawals(t: TranslateFn, locale: string) {
   setNotes,
   handleProcess,
   formatVnd,
+  selectedWithdrawalId,
+  detail: detailQuery.data ?? null,
+  loadingDetail: detailQuery.isLoading || detailQuery.isFetching,
+  detailError: detailQuery.error ? t('withdrawals.toast.detail_failed') : '',
+  openDetail,
+  closeDetail,
  };
 }
 

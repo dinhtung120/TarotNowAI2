@@ -6,6 +6,7 @@ export interface WithdrawalResult {
  feeVnd: number;
  netAmountVnd: number;
  bankName: string;
+ bankBin: string;
  bankAccountName: string;
  bankAccountNumber: string;
  status: string;
@@ -13,4 +14,9 @@ export interface WithdrawalResult {
  adminNote?: string | null;
  processedAt?: string | null;
  createdAt: string;
+}
+
+export interface WithdrawalDetailResult extends WithdrawalResult {
+ transferContent: string;
+ vietQrImageUrl: string;
 }

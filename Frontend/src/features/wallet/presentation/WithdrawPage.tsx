@@ -25,18 +25,15 @@ export default function WithdrawPage() {
         grossVnd={vm.grossVnd}
         feeVnd={vm.feeVnd}
         netVnd={vm.netVnd}
-        bankName={vm.bankName}
-        accountName={vm.accountName}
-        accountNumber={vm.accountNumber}
+        payoutInfo={vm.payoutInfo}
+        payoutConfigured={vm.payoutConfigured}
+        profilePath={vm.profilePath}
         userNote={vm.userNote}
         submitting={vm.submitting}
         success={vm.success}
         error={vm.error}
         labels={vm.formLabels}
         onAmountChange={vm.setAmount}
-        onBankNameChange={vm.setBankName}
-        onAccountNameChange={vm.setAccountName}
-        onAccountNumberChange={vm.setAccountNumber}
         onUserNoteChange={vm.setUserNote}
         onSubmit={vm.handleSubmit}
       />

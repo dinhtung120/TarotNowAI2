@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Contracts;
 using TarotNow.Api.Contracts.Requests;
 using TarotNow.Api.Extensions;
+using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Features.Profile.Commands.ConfirmAvatarUpload;
 using TarotNow.Application.Features.Profile.Commands.PresignAvatarUpload;
 using TarotNow.Application.Features.Profile.Commands.UpdateProfile;
@@ -48,6 +49,22 @@ public class ProfileController : ControllerBase
     }
 
     /// <summary>
+    /// Lấy danh mục ngân hàng hỗ trợ cấu hình payout.
+    /// </summary>
+    [HttpGet("payout-banks")]
+    [Authorize]
+    public IActionResult GetPayoutBanks()
+    {
+        var items = VietnamBankCatalog.GetAll()
+            .Select(item => new
+            {
+                bankBin = item.Bin,
+                bankName = item.Name
+            });
+        return Ok(items);
+    }
+
+    /// <summary>
     /// Cập nhật thông tin hồ sơ người dùng.
     /// </summary>
     [HttpPatch]
@@ -64,6 +81,10 @@ public class ProfileController : ControllerBase
             UserId = userId,
             DisplayName = request.DisplayName,
             DateOfBirth = request.DateOfBirth,
+            PayoutBankName = request.PayoutBankName,
+            PayoutBankBin = request.PayoutBankBin,
+            PayoutBankAccountNumber = request.PayoutBankAccountNumber,
+            PayoutBankAccountHolder = request.PayoutBankAccountHolder
         });
 
         return success

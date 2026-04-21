@@ -94,12 +94,13 @@
       "gross_label": "Gross VND",
       "fee_label": "Fee 10%",
       "net_label": "Net received",
+      "bank_info_title": "Payout details (from Profile)",
       "bank_label": "Bank",
-      "bank_placeholder": "e.g. Vietcombank, Techcombank...",
+      "bank_bin_label": "BIN code",
       "account_name_label": "Account holder name",
-      "account_name_placeholder": "JOHN DOE",
       "account_number_label": "Account number",
-      "account_number_placeholder": "0123456789",
+      "bank_info_missing": "Payout bank details are missing in your Profile.",
+      "bank_info_update_cta": "Update payout details in Profile",
       "note_label": "Additional note",
       "note_placeholder": "Extra details for admin (optional)...",
       "success_message": "Withdrawal request sent successfully!",
@@ -115,9 +116,7 @@
       "status_paid": "Paid",
       "error_min_amount": "Minimum 500 Diamond.",
       "error_insufficient_balance": "Insufficient Diamond balance.",
-      "error_enter_bank": "Please enter a bank name.",
-      "error_enter_account_name": "Please enter the account holder name.",
-      "error_enter_account_number": "Please enter the account number.",
+      "error_bank_missing_profile": "Please update payout details in Profile before withdrawing.",
       "error_create_failed": "Unable to create request."
     }
   }

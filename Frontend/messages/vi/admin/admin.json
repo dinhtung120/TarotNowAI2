@@ -386,13 +386,25 @@
         "admin_note_placeholder": "LÝ DO TỪ CHỐI (BẮT BUỘC KHI TỪ CHỐI)..."
       },
       "actions": {
+        "view_detail": "Xem QR chuyển khoản",
         "approve": "Phê duyệt",
         "reject": "Từ chối"
+      },
+      "detail": {
+        "title": "Chi tiết chuyển khoản",
+        "qr_title": "Mã QR chuyển tiền",
+        "amount": "Số tiền chuyển",
+        "bank_name": "Ngân hàng",
+        "account_number": "Số tài khoản",
+        "account_holder": "Tên chủ tài khoản",
+        "transfer_content": "Nội dung chuyển khoản",
+        "close": "Đóng"
       },
       "toast": {
         "success": "Xử lý yêu cầu thành công",
         "failed": "Xử lý thất bại",
-        "reject_note_required": "Vui lòng nhập lý do khi từ chối yêu cầu."
+        "reject_note_required": "Vui lòng nhập lý do khi từ chối yêu cầu.",
+        "detail_failed": "Không tải được chi tiết yêu cầu rút tiền."
       }
     },
     "disputes": {

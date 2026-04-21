@@ -21,21 +21,6 @@ public sealed class WithdrawalCreateRequestedDomainEvent : IDomainEvent
     public string IdempotencyKey { get; init; } = string.Empty;
 
     /// <summary>
-    /// Tên ngân hàng nhận tiền.
-    /// </summary>
-    public string BankName { get; init; } = string.Empty;
-
-    /// <summary>
-    /// Tên chủ tài khoản ngân hàng.
-    /// </summary>
-    public string BankAccountName { get; init; } = string.Empty;
-
-    /// <summary>
-    /// Số tài khoản ngân hàng.
-    /// </summary>
-    public string BankAccountNumber { get; init; } = string.Empty;
-
-    /// <summary>
     /// Ghi chú bổ sung từ user.
     /// </summary>
     public string? UserNote { get; init; }

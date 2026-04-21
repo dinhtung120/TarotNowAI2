@@ -22,6 +22,24 @@
     "successMsg": "Profile updated successfully!",
     "errorLoad": "Unable to load profile",
     "errorSave": "Failed to update profile",
+    "payout": {
+      "section_title": "Withdrawal payout details",
+      "bank_label": "Bank",
+      "bank_placeholder": "Select payout bank",
+      "account_number_label": "Account number",
+      "account_number_placeholder": "Digits only",
+      "account_holder_label": "Account holder",
+      "account_holder_placeholder": "JOHN DOE"
+    },
+    "validation": {
+      "display_name_min": "Display name must have at least 2 characters.",
+      "date_of_birth_invalid": "Invalid date of birth.",
+      "bank_required": "Please select a bank.",
+      "account_number_required": "Please enter an account number.",
+      "account_number_invalid": "Account number must contain 6-32 digits.",
+      "account_holder_required": "Please enter account holder name.",
+      "account_holder_invalid": "Account holder must be uppercase without accents."
+    },
     "level": "Level",
     "zodiac": "Zodiac",
     "numerology": "Numerology",

@@ -35,9 +35,6 @@ public class CreateWithdrawalCommandHandlerTests
             UserId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
             AmountDiamond = 500,
             IdempotencyKey = "wd-create-001",
-            BankName = "Vietcombank",
-            BankAccountName = "NGUYEN VAN A",
-            BankAccountNumber = "0123456789",
             UserNote = "Rut tuan nay"
         };
 
@@ -50,9 +47,6 @@ public class CreateWithdrawalCommandHandlerTests
                     domainEvent.UserId == command.UserId
                     && domainEvent.AmountDiamond == command.AmountDiamond
                     && domainEvent.IdempotencyKey == command.IdempotencyKey
-                    && domainEvent.BankName == command.BankName
-                    && domainEvent.BankAccountName == command.BankAccountName
-                    && domainEvent.BankAccountNumber == command.BankAccountNumber
                     && domainEvent.UserNote == command.UserNote),
                 It.IsAny<CancellationToken>()),
             Times.Once);

@@ -51,6 +51,18 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(512)
             .HasColumnType("character varying(512)");
         builder.Property(u => u.DateOfBirth).IsRequired();
+        builder.Property(u => u.PayoutBankName)
+            .HasColumnName("payout_bank_name")
+            .HasMaxLength(120);
+        builder.Property(u => u.PayoutBankBin)
+            .HasColumnName("payout_bank_bin")
+            .HasMaxLength(6);
+        builder.Property(u => u.PayoutBankAccountNumber)
+            .HasColumnName("payout_bank_account_number")
+            .HasMaxLength(32);
+        builder.Property(u => u.PayoutBankAccountHolder)
+            .HasColumnName("payout_bank_account_holder")
+            .HasMaxLength(120);
         builder.Property(u => u.Role).HasMaxLength(20);
         builder.Property(u => u.ReaderStatus).HasMaxLength(20);
         builder.Property(u => u.Level).HasColumnName("user_level").HasDefaultValue(1);

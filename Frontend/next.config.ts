@@ -103,7 +103,7 @@ function buildImageRemotePatterns(): NonNullable<NextConfig['images']>['remotePa
  const patterns: NonNullable<NonNullable<NextConfig['images']>['remotePatterns']> = [];
  const seen = new Set<string>();
 
- for (const raw of [process.env.NEXT_PUBLIC_MEDIA_CDN_URL, process.env.NEXT_PUBLIC_R2_PUBLIC_URL]) {
+ for (const raw of [process.env.NEXT_PUBLIC_MEDIA_CDN_URL, process.env.NEXT_PUBLIC_R2_PUBLIC_URL, 'https://img.vietqr.io']) {
   const value = raw?.trim();
   if (!value) continue;
 

@@ -36,6 +36,7 @@ public sealed class WithdrawalRequestConfiguration : IEntityTypeConfiguration<Wi
         builder.Property(x => x.FeeVnd).HasColumnName("fee_vnd");
         builder.Property(x => x.NetAmountVnd).HasColumnName("net_amount_vnd");
         builder.Property(x => x.BankName).HasColumnName("bank_name").IsRequired();
+        builder.Property(x => x.BankBin).HasColumnName("bank_bin").HasMaxLength(6).IsRequired();
         builder.Property(x => x.BankAccountName).HasColumnName("bank_account_name").IsRequired();
         builder.Property(x => x.BankAccountNumber).HasColumnName("bank_account_number").IsRequired();
         builder.Property(x => x.Status).HasColumnName("status").IsRequired();

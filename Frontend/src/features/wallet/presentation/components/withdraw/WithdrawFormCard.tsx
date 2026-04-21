@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { GlassCard } from '@/shared/components/ui';
 import { cn } from '@/lib/utils';
 import { WithdrawAmountSection } from './WithdrawAmountSection';
@@ -8,7 +9,7 @@ import { WithdrawSubmitSection } from './WithdrawSubmitSection';
 import type { WithdrawFormCardProps } from './WithdrawFormCard.types';
 import { useWithdrawFormCard } from './useWithdrawFormCard';
 
-export function WithdrawFormCard(props: WithdrawFormCardProps) {
+function WithdrawFormCardComponent(props: WithdrawFormCardProps) {
   const vm = useWithdrawFormCard(props);
 
   return (
@@ -31,23 +32,21 @@ export function WithdrawFormCard(props: WithdrawFormCardProps) {
           onAmountChange={vm.setAmount}
         />
         <WithdrawBankFields
-          accountName={vm.watchedAccountName}
-          accountNumber={vm.watchedAccountNumber}
-          bankName={vm.watchedBankName}
+          payoutInfo={props.payoutInfo}
+          payoutConfigured={props.payoutConfigured}
+          profilePath={props.profilePath}
           userNote={vm.watchedUserNote}
           labels={{
-            bankLabel: props.labels.bankLabel,
-            bankPlaceholder: props.labels.bankPlaceholder,
+            bankInfoTitle: props.labels.bankInfoTitle,
+            bankNameLabel: props.labels.bankNameLabel,
+            bankBinLabel: props.labels.bankBinLabel,
             accountNameLabel: props.labels.accountNameLabel,
-            accountNamePlaceholder: props.labels.accountNamePlaceholder,
             accountNumberLabel: props.labels.accountNumberLabel,
-            accountNumberPlaceholder: props.labels.accountNumberPlaceholder,
+            bankInfoMissing: props.labels.bankInfoMissing,
+            bankInfoUpdateCta: props.labels.bankInfoUpdateCta,
             noteLabel: props.labels.noteLabel,
             notePlaceholder: props.labels.notePlaceholder,
           }}
-          onAccountNameChange={vm.setAccountName}
-          onAccountNumberChange={vm.setAccountNumber}
-          onBankNameChange={vm.setBankName}
           onUserNoteChange={vm.setUserNote}
         />
         <WithdrawSubmitSection
@@ -63,3 +62,5 @@ export function WithdrawFormCard(props: WithdrawFormCardProps) {
     </GlassCard>
   );
 }
+
+export const WithdrawFormCard = memo(WithdrawFormCardComponent);

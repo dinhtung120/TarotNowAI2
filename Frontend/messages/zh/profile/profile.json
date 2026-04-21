@@ -22,6 +22,24 @@
     "successMsg": "更新成功！",
     "errorLoad": "无法加载个人资料",
     "errorSave": "更新失败",
+    "payout": {
+      "section_title": "提现收款信息",
+      "bank_label": "银行",
+      "bank_placeholder": "选择收款银行",
+      "account_number_label": "账号",
+      "account_number_placeholder": "仅输入数字",
+      "account_holder_label": "账户姓名",
+      "account_holder_placeholder": "ZHANG SAN"
+    },
+    "validation": {
+      "display_name_min": "显示名称至少 2 个字符。",
+      "date_of_birth_invalid": "出生日期无效。",
+      "bank_required": "请选择银行。",
+      "account_number_required": "请输入账号。",
+      "account_number_invalid": "账号必须为 6-32 位数字。",
+      "account_holder_required": "请输入账户姓名。",
+      "account_holder_invalid": "账户姓名必须为不带重音的大写字母。"
+    },
     "level": "等级",
     "zodiac": "星座",
     "numerology": "数字命理",

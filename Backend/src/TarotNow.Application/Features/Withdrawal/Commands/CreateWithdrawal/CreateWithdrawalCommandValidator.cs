@@ -25,21 +25,6 @@ public class CreateWithdrawalCommandValidator : AbstractValidator<CreateWithdraw
             .MaximumLength(WithdrawalPolicyConstants.IdempotencyKeyMaxLength);
         // Idempotency key bắt buộc và giới hạn độ dài để chống request trùng.
 
-        RuleFor(x => x.BankName)
-            .NotEmpty()
-            .MaximumLength(255);
-        // Tên ngân hàng bắt buộc để tạo lệnh chi trả.
-
-        RuleFor(x => x.BankAccountName)
-            .NotEmpty()
-            .MaximumLength(255);
-        // Tên chủ tài khoản bắt buộc để đối soát.
-
-        RuleFor(x => x.BankAccountNumber)
-            .NotEmpty()
-            .MaximumLength(50);
-        // Số tài khoản bắt buộc để chuyển khoản.
-
         RuleFor(x => x.UserNote)
             .MaximumLength(WithdrawalPolicyConstants.NoteMaxLength)
             .When(x => string.IsNullOrWhiteSpace(x.UserNote) == false);
