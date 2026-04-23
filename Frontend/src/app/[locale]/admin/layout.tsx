@@ -48,6 +48,7 @@ export default async function AdminLayout({ children, params }: AdminLayoutProps
    readerRequests: t('layout.menu.reader_requests'),
    withdrawals: t('layout.menu.withdrawals'),
    disputes: t('layout.menu.disputes'),
+   systemConfigs: t('layout.menu.system_configs'),
   },
  };
 

@@ -7,24 +7,40 @@ namespace TarotNow.Infrastructure.Services.Configuration;
 // Adapter expose cấu hình callback PayOS cho application.
 public sealed class DepositPayOsSettings : IDepositPayOsSettings
 {
-    /// <summary>
-    /// Khởi tạo settings từ section Deposit.
-    /// </summary>
-    public DepositPayOsSettings(IOptions<DepositOptions> options)
-    {
-        var value = options.Value;
+    private readonly IOptions<DepositOptions> _options;
+    private readonly SystemConfigSnapshotStore _snapshotStore;
 
-        ReturnUrl = value.ReturnUrl?.Trim() ?? string.Empty;
-        CancelUrl = value.CancelUrl?.Trim() ?? string.Empty;
-        LinkExpiryMinutes = value.LinkExpiryMinutes > 0 ? value.LinkExpiryMinutes : 15;
+    /// <summary>
+    /// Khởi tạo settings từ section Deposit + snapshot system configs.
+    /// </summary>
+    public DepositPayOsSettings(
+        IOptions<DepositOptions> options,
+        SystemConfigSnapshotStore snapshotStore)
+    {
+        _options = options;
+        _snapshotStore = snapshotStore;
     }
 
     /// <inheritdoc />
-    public string ReturnUrl { get; }
+    public string ReturnUrl => _options.Value.ReturnUrl?.Trim() ?? string.Empty;
 
     /// <inheritdoc />
-    public string CancelUrl { get; }
+    public string CancelUrl => _options.Value.CancelUrl?.Trim() ?? string.Empty;
 
     /// <inheritdoc />
-    public int LinkExpiryMinutes { get; }
+    public int LinkExpiryMinutes
+    {
+        get
+        {
+            if (_snapshotStore.TryGetValue("deposit.link_expiry_minutes", out var raw)
+                && int.TryParse(raw, out var parsed)
+                && parsed > 0)
+            {
+                return parsed;
+            }
+
+            var fallback = _options.Value.LinkExpiryMinutes;
+            return fallback > 0 ? fallback : 15;
+        }
+    }
 }

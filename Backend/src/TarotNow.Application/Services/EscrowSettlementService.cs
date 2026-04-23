@@ -9,6 +9,7 @@ public sealed partial class EscrowSettlementService : IEscrowSettlementService
     private readonly IChatFinanceRepository _financeRepository;
     private readonly IWalletRepository _walletRepository;
     private readonly IDomainEventPublisher _domainEventPublisher;
+    private readonly ISystemConfigSettings _systemConfigSettings;
 
     /// <summary>
     /// Khởi tạo dịch vụ settlement escrow với các dependency tài chính và phát sự kiện domain.
@@ -17,11 +18,13 @@ public sealed partial class EscrowSettlementService : IEscrowSettlementService
     public EscrowSettlementService(
         IChatFinanceRepository financeRepository,
         IWalletRepository walletRepository,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        ISystemConfigSettings systemConfigSettings)
     {
         _financeRepository = financeRepository;
         _walletRepository = walletRepository;
         _domainEventPublisher = domainEventPublisher;
+        _systemConfigSettings = systemConfigSettings;
     }
 
     /// <summary>
@@ -33,10 +36,10 @@ public sealed partial class EscrowSettlementService : IEscrowSettlementService
         bool isAutoRelease,
         CancellationToken cancellationToken = default)
     {
-        var fee = (long)Math.Ceiling(item.AmountDiamond * 0.10);
-        // Business rule: phí nền tảng cố định 10%, làm tròn lên để tránh thất thoát ở giá trị lẻ.
+        var feeRate = _systemConfigSettings.WithdrawalFeeRate;
+        var fee = (long)Math.Ceiling(item.AmountDiamond * (double)feeRate);
         var readerAmount = item.AmountDiamond - fee;
-        var (releaseDescription, feeDescription) = BuildDescriptions(isAutoRelease, readerAmount, fee);
+        var (releaseDescription, feeDescription) = BuildDescriptions(isAutoRelease, readerAmount, fee, feeRate);
 
         await _walletRepository.ReleaseAsync(
             item.PayerId,
@@ -62,7 +65,7 @@ public sealed partial class EscrowSettlementService : IEscrowSettlementService
             // Chỉ trừ platform fee khi fee dương để tránh phát sinh bút toán 0 giá trị.
         }
 
-        ApplyReleasedState(item, isAutoRelease);
+        ApplyReleasedState(item, isAutoRelease, _systemConfigSettings.EscrowDisputeWindowHours);
         // Chốt state item sau settlement trước khi ghi xuống repository để đảm bảo dữ liệu nhất quán.
 
         await _financeRepository.UpdateItemAsync(item, cancellationToken);

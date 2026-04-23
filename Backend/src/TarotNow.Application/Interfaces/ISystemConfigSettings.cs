@@ -38,4 +38,40 @@ public interface ISystemConfigSettings
 
     // Chi phí Diamond cho một lần quay gacha.
     long GachaCostDiamond { get; }
+
+    // Bậc giá follow-up trả phí theo thứ tự lượt hỏi.
+    IReadOnlyList<int> FollowupPriceTiers { get; }
+
+    // Số follow-up tối đa cho một phiên đọc bài.
+    int FollowupMaxAllowed { get; }
+
+    // Ngưỡng level để được 1 lượt follow-up miễn phí.
+    int FollowupFreeSlotThresholdLow { get; }
+
+    // Ngưỡng level để được 2 lượt follow-up miễn phí.
+    int FollowupFreeSlotThresholdMid { get; }
+
+    // Ngưỡng level để được 3 lượt follow-up miễn phí.
+    int FollowupFreeSlotThresholdHigh { get; }
+
+    // Ngưỡng tối thiểu Diamond cho một lệnh rút.
+    long WithdrawalMinDiamond { get; }
+
+    // Tỷ lệ phí rút (0..1).
+    decimal WithdrawalFeeRate { get; }
+
+    // Timeout online presence theo phút.
+    int PresenceTimeoutMinutes { get; }
+
+    // Chu kỳ quét timeout presence theo giây.
+    int PresenceScanIntervalSeconds { get; }
+
+    // Cửa sổ mở dispute theo giờ.
+    int EscrowDisputeWindowHours { get; }
+
+    // Deadline reader phản hồi theo giờ.
+    int EscrowReaderResponseDueHours { get; }
+
+    // Deadline tự động refund theo giờ.
+    int EscrowAutoRefundHours { get; }
 }

@@ -68,11 +68,14 @@ public partial class SendMessageCommandHandler
         }
 
         var now = DateTime.UtcNow;
+        var autoReleaseHours = _systemConfigSettings.EscrowDisputeWindowHours > 0
+            ? _systemConfigSettings.EscrowDisputeWindowHours
+            : 24;
         foreach (var item in candidates)
         {
             // Sau khi Reader phản hồi, bắt đầu cửa sổ auto-release cho item đã accepted.
             item.RepliedAt = now;
-            item.AutoReleaseAt = now.AddHours(24);
+            item.AutoReleaseAt = now.AddHours(autoReleaseHours);
             item.UpdatedAt = now;
             await _financeRepo.UpdateItemAsync(item, cancellationToken);
         }

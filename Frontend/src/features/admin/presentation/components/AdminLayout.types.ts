@@ -14,6 +14,7 @@ export interface AdminLayoutLabels {
   readerRequests: string;
   withdrawals: string;
   disputes: string;
+  systemConfigs: string;
  };
 }
 

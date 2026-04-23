@@ -13,7 +13,8 @@
         "readings": "占卜会话",
         "reader_requests": "占卜师申请",
         "withdrawals": "提现",
-        "disputes": "争议"
+        "disputes": "争议",
+        "system_configs": "系统配置"
       }
     },
     "dashboard": {
@@ -456,6 +457,42 @@
       "resolved": {
         "title": "本次会话已处理",
         "badge": "已处理"
+      }
+    },
+    "system_configs": {
+      "header": {
+        "tag": "配置中心",
+        "title": "系统配置",
+        "subtitle": "统一管理 PostgreSQL 中 {count} 个可运行时调整的业务参数。"
+      },
+      "filters": {
+        "search_placeholder": "按 key 或说明搜索..."
+      },
+      "form": {
+        "key": "键名",
+        "value_kind": "值类型",
+        "description": "说明",
+        "description_placeholder": "填写该配置用途说明...",
+        "value": "配置值",
+        "value_placeholder": "输入标量值或 JSON..."
+      },
+      "meta": {
+        "updated_at": "更新时间：{value}",
+        "never_updated": "暂无更新时间信息。",
+        "no_description": "暂无说明"
+      },
+      "actions": {
+        "save": "保存配置",
+        "saving": "保存中..."
+      },
+      "states": {
+        "empty": "未找到匹配配置。",
+        "select_prompt": "请选择一个配置项进行编辑。"
+      },
+      "toast": {
+        "save_success": "系统配置已更新。",
+        "save_failed": "更新系统配置失败。",
+        "select_item": "请先选择一个配置项。"
       }
     }
   }

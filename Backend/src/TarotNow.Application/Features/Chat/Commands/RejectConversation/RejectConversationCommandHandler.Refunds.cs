@@ -62,6 +62,9 @@ public partial class RejectConversationCommandHandler
         CancellationToken cancellationToken)
     {
         var total = 0L;
+        var disputeWindowHours = _systemConfigSettings.EscrowDisputeWindowHours > 0
+            ? _systemConfigSettings.EscrowDisputeWindowHours
+            : 24;
         foreach (var item in items)
         {
             // Ghi giao dịch refund idempotent theo item để tránh hoàn trùng.
@@ -88,7 +91,7 @@ public partial class RejectConversationCommandHandler
             item.Status = QuestionItemStatus.Refunded;
             item.RefundedAt = now;
             item.DisputeWindowStart = now;
-            item.DisputeWindowEnd = now.AddHours(24);
+            item.DisputeWindowEnd = now.AddHours(disputeWindowHours);
             item.UpdatedAt = now;
             total += item.AmountDiamond;
             await _financeRepository.UpdateItemAsync(item, cancellationToken);

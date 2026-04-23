@@ -42,17 +42,22 @@ public sealed partial class WithdrawalCreateRequestedDomainEventHandler
         };
     }
 
-    private static void ValidateUserCanWithdraw(User user, long amountDiamond)
+    private static void ValidateUserCanWithdraw(
+        User user,
+        long amountDiamond,
+        long minimumWithdrawDiamond)
     {
+        var normalizedMinimum = Math.Max(0, minimumWithdrawDiamond);
+
         if (!string.Equals(user.Role, UserRole.TarotReader, StringComparison.OrdinalIgnoreCase))
         {
             throw new BadRequestException(ErrorReaderOnly);
         }
 
-        if (amountDiamond < WithdrawalPolicyConstants.MinimumWithdrawDiamond)
+        if (amountDiamond < normalizedMinimum)
         {
             throw new BadRequestException(
-                string.Format(ErrorMinimumWithdrawTemplate, WithdrawalPolicyConstants.MinimumWithdrawDiamond));
+                string.Format(ErrorMinimumWithdrawTemplate, normalizedMinimum));
         }
 
         if (user.Wallet.DiamondBalance < amountDiamond)
@@ -124,10 +129,11 @@ public sealed partial class WithdrawalCreateRequestedDomainEventHandler
         return currentDate.AddDays(-offset);
     }
 
-    private static WithdrawalPlan BuildWithdrawalPlan(long amountDiamond)
+    private static WithdrawalPlan BuildWithdrawalPlan(long amountDiamond, decimal feeRate)
     {
+        var normalizedFeeRate = feeRate < 0m ? 0m : feeRate > 1m ? 1m : feeRate;
         var amountVnd = amountDiamond * EconomyConstants.VndPerDiamond;
-        var feeVnd = (long)Math.Ceiling(amountVnd * (double)WithdrawalPolicyConstants.FeeRate);
+        var feeVnd = (long)Math.Ceiling(amountVnd * (double)normalizedFeeRate);
         var netAmountVnd = amountVnd - feeVnd;
         return new WithdrawalPlan(amountVnd, feeVnd, netAmountVnd);
     }

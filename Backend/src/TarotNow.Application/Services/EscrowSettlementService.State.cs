@@ -1,6 +1,7 @@
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 using TarotNow.Domain.Events;
+using System.Globalization;
 
 namespace TarotNow.Application.Services;
 
@@ -14,31 +15,34 @@ public sealed partial class EscrowSettlementService
     private static (string ReleaseDescription, string FeeDescription) BuildDescriptions(
         bool isAutoRelease,
         long readerAmount,
-        long fee)
+        long fee,
+        decimal feeRate)
     {
+        var feePercentText = (feeRate * 100m).ToString("0.##", CultureInfo.InvariantCulture);
         if (isAutoRelease)
         {
             // Nhánh auto-release dùng wording riêng để phân biệt với thao tác xác nhận thủ công.
-            return ($"Auto-release {readerAmount}💎 (fee {fee}💎)", $"Platform fee auto 10% = {fee}💎");
+            return ($"Auto-release {readerAmount}💎 (fee {fee}💎)", $"Platform fee auto {feePercentText}% = {fee}💎");
         }
 
         // Nhánh manual release giữ mô tả nghiệp vụ rõ ràng cho luồng xác nhận bởi người dùng.
-        return ($"Release {readerAmount}💎 (fee {fee}💎) cho reader", $"Platform fee 10% = {fee}💎");
+        return ($"Release {readerAmount}💎 (fee {fee}💎) cho reader", $"Platform fee {feePercentText}% = {fee}💎");
     }
 
     /// <summary>
     /// Áp trạng thái Released cho item để đóng escrow và mở cửa sổ khiếu nại hậu giao dịch.
     /// Luồng xử lý: ghi các mốc thời gian release/dispute và chỉ set ConfirmedAt cho luồng không tự động.
     /// </summary>
-    private static void ApplyReleasedState(ChatQuestionItem item, bool isAutoRelease)
+    private static void ApplyReleasedState(ChatQuestionItem item, bool isAutoRelease, int disputeWindowHours)
     {
         var now = DateTime.UtcNow;
+        var normalizedDisputeWindowHours = disputeWindowHours > 0 ? disputeWindowHours : 24;
         item.Status = QuestionItemStatus.Released;
         item.ReleasedAt = now;
         item.DisputeWindowStart = now;
-        item.DisputeWindowEnd = now.AddHours(24);
+        item.DisputeWindowEnd = now.AddHours(normalizedDisputeWindowHours);
         item.AutoReleaseAt = null;
-        // Đồng bộ state item sang Released và mở dispute window 24 giờ theo rule hậu kiểm.
+        // Đồng bộ state item sang Released và mở dispute window theo policy cấu hình.
 
         if (isAutoRelease == false)
         {

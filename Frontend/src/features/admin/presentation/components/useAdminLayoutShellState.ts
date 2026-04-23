@@ -8,6 +8,7 @@ import {
  History,
  LayoutDashboard,
  Scale,
+ SlidersHorizontal,
  ScrollText,
  Users,
 } from 'lucide-react';
@@ -23,6 +24,7 @@ const MENU_CONFIG: MenuConfigItem[] = [
  { key: 'readerRequests', href: '/admin/reader-requests', icon: ScrollText },
  { key: 'withdrawals', href: '/admin/withdrawals', icon: Banknote },
  { key: 'disputes', href: '/admin/disputes', icon: Scale },
+ { key: 'systemConfigs', href: '/admin/system-configs', icon: SlidersHorizontal },
 ];
 
 export function useAdminLayoutShellState(labels: AdminLayoutLabels) {

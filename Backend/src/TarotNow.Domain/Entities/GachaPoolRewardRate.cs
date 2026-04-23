@@ -152,4 +152,12 @@ public sealed class GachaPoolRewardRate
 
         return normalized;
     }
+
+    /// <summary>
+    /// Bật/tắt reward rate theo trạng thái projection hiện hành.
+    /// </summary>
+    public void SetActive(bool isActive)
+    {
+        IsActive = isActive;
+    }
 }

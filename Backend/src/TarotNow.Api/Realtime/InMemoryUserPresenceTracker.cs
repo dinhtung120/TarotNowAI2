@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using TarotNow.Application.Common.Interfaces;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Api.Realtime;
 
@@ -13,6 +14,12 @@ public class InMemoryUserPresenceTracker : IUserPresenceTracker
     private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> _connectionsByUser = new(StringComparer.OrdinalIgnoreCase);
     // Lưu mốc hoạt động gần nhất để fallback online khi kết nối realtime vừa gián đoạn ngắn.
     private readonly ConcurrentDictionary<string, DateTime> _lastActivity = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ISystemConfigSettings _systemConfigSettings;
+
+    public InMemoryUserPresenceTracker(ISystemConfigSettings systemConfigSettings)
+    {
+        _systemConfigSettings = systemConfigSettings;
+    }
 
     /// <summary>
     /// Đánh dấu một kết nối mới của user.
@@ -83,7 +90,8 @@ public class InMemoryUserPresenceTracker : IUserPresenceTracker
         if (_lastActivity.TryGetValue(userId, out var lastActivityTime))
         {
             // Fallback nghiệp vụ: coi là online trong 15 phút gần nhất để tránh nhấp nháy trạng thái.
-            return (DateTime.UtcNow - lastActivityTime).TotalMinutes <= 15;
+            var onlineWindowMinutes = Math.Clamp(_systemConfigSettings.PresenceTimeoutMinutes, 1, 240);
+            return (DateTime.UtcNow - lastActivityTime).TotalMinutes <= onlineWindowMinutes;
         }
 
         // Không có connection và không có heartbeat thì xem là offline.

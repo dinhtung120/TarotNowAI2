@@ -13,7 +13,8 @@
         "readings": "Xem Bài",
         "reader_requests": "Đơn Xin Reader",
         "withdrawals": "Rút Tiền",
-        "disputes": "Tranh Chấp"
+        "disputes": "Tranh Chấp",
+        "system_configs": "System Configs"
       }
     },
     "dashboard": {
@@ -456,6 +457,42 @@
       "resolved": {
         "title": "Đã xử lý trong phiên",
         "badge": "Đã Resolve"
+      }
+    },
+    "system_configs": {
+      "header": {
+        "tag": "Configuration",
+        "title": "System Configs",
+        "subtitle": "Quản lý {count} khóa cấu hình runtime từ PostgreSQL source-of-truth."
+      },
+      "filters": {
+        "search_placeholder": "Tìm theo key hoặc mô tả..."
+      },
+      "form": {
+        "key": "Key",
+        "value_kind": "Loại giá trị",
+        "description": "Mô tả",
+        "description_placeholder": "Mô tả mục đích cấu hình...",
+        "value": "Giá trị",
+        "value_placeholder": "Nhập scalar hoặc JSON..."
+      },
+      "meta": {
+        "updated_at": "Cập nhật lúc: {value}",
+        "never_updated": "Chưa có thông tin cập nhật.",
+        "no_description": "Chưa có mô tả"
+      },
+      "actions": {
+        "save": "Lưu cấu hình",
+        "saving": "Đang lưu..."
+      },
+      "states": {
+        "empty": "Không có cấu hình phù hợp.",
+        "select_prompt": "Chọn một key cấu hình để chỉnh sửa."
+      },
+      "toast": {
+        "save_success": "Đã cập nhật system config.",
+        "save_failed": "Cập nhật system config thất bại.",
+        "select_item": "Vui lòng chọn key cấu hình trước."
       }
     }
   }

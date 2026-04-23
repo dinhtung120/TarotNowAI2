@@ -54,6 +54,9 @@ public partial class ApplicationDbContext : DbContext
     // DbSet bảng deposit_promotions.
     public DbSet<DepositPromotion> DepositPromotions { get; set; } = null!;
 
+    // DbSet bảng system_configs.
+    public DbSet<SystemConfig> SystemConfigs { get; set; } = null!;
+
     // DbSet bảng chat_finance_sessions.
     public DbSet<ChatFinanceSession> ChatFinanceSessions { get; set; } = null!;
 

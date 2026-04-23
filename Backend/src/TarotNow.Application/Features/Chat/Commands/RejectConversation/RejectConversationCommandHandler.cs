@@ -14,6 +14,7 @@ public partial class RejectConversationCommandHandler
     private readonly ITransactionCoordinator _transactionCoordinator;
     private readonly IChatMessageRepository _chatMessageRepository;
     private readonly IDomainEventPublisher _domainEventPublisher;
+    private readonly ISystemConfigSettings _systemConfigSettings;
 
     /// <summary>
     /// Khởi tạo handler reject conversation.
@@ -25,7 +26,8 @@ public partial class RejectConversationCommandHandler
         IWalletRepository walletRepository,
         ITransactionCoordinator transactionCoordinator,
         IChatMessageRepository chatMessageRepository,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        ISystemConfigSettings systemConfigSettings)
     {
         _conversationRepository = conversationRepository;
         _financeRepository = financeRepository;
@@ -33,6 +35,7 @@ public partial class RejectConversationCommandHandler
         _transactionCoordinator = transactionCoordinator;
         _chatMessageRepository = chatMessageRepository;
         _domainEventPublisher = domainEventPublisher;
+        _systemConfigSettings = systemConfigSettings;
     }
 
     /// <summary>

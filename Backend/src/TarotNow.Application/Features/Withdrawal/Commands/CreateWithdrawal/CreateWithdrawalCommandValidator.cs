@@ -1,5 +1,6 @@
 using FluentValidation;
 using TarotNow.Application.Common.Constants;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Withdrawal.Commands.CreateWithdrawal;
 
@@ -10,14 +11,16 @@ public class CreateWithdrawalCommandValidator : AbstractValidator<CreateWithdraw
     /// Khởi tạo rule validation cho dữ liệu rút tiền.
     /// Luồng xử lý: kiểm tra định danh user, số diamond, idempotency key, thông tin ngân hàng và ghi chú.
     /// </summary>
-    public CreateWithdrawalCommandValidator()
+    public CreateWithdrawalCommandValidator(ISystemConfigSettings systemConfigSettings)
     {
+        var minimumWithdrawDiamond = Math.Max(0, systemConfigSettings.WithdrawalMinDiamond);
+
         RuleFor(x => x.UserId)
             .NotEmpty();
         // UserId bắt buộc để xác định chủ yêu cầu rút.
 
         RuleFor(x => x.AmountDiamond)
-            .GreaterThanOrEqualTo(WithdrawalPolicyConstants.MinimumWithdrawDiamond);
+            .GreaterThanOrEqualTo(minimumWithdrawDiamond);
         // Số lượng rút phải đạt mức tối thiểu.
 
         RuleFor(x => x.IdempotencyKey)

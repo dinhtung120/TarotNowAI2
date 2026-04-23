@@ -17,6 +17,7 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
     private readonly ITransactionCoordinator _transactionCoordinator;
     private readonly IUploadSessionRepository _uploadSessionRepository;
     private readonly IDomainEventPublisher _domainEventPublisher;
+    private readonly ISystemConfigSettings _systemConfigSettings;
 
     /// <summary>
     /// Khởi tạo handler gửi tin nhắn.
@@ -30,7 +31,8 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
         IReaderProfileRepository readerProfileRepo,
         ITransactionCoordinator transactionCoordinator,
         IUploadSessionRepository uploadSessionRepository,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        ISystemConfigSettings systemConfigSettings)
     {
         _conversationRepo = conversationRepo;
         _messageRepo = messageRepo;
@@ -40,6 +42,7 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
         _transactionCoordinator = transactionCoordinator;
         _uploadSessionRepository = uploadSessionRepository;
         _domainEventPublisher = domainEventPublisher;
+        _systemConfigSettings = systemConfigSettings;
     }
 
     /// <summary>

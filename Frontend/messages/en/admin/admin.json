@@ -13,7 +13,8 @@
         "readings": "Readings",
         "reader_requests": "Reader requests",
         "withdrawals": "Withdrawals",
-        "disputes": "Disputes"
+        "disputes": "Disputes",
+        "system_configs": "System Configs"
       }
     },
     "dashboard": {
@@ -456,6 +457,42 @@
       "resolved": {
         "title": "Resolved in this session",
         "badge": "Resolved"
+      }
+    },
+    "system_configs": {
+      "header": {
+        "tag": "Configuration",
+        "title": "System Configs",
+        "subtitle": "Manage {count} runtime business keys from PostgreSQL source-of-truth."
+      },
+      "filters": {
+        "search_placeholder": "Search by key or description..."
+      },
+      "form": {
+        "key": "Key",
+        "value_kind": "Value kind",
+        "description": "Description",
+        "description_placeholder": "Describe this config usage...",
+        "value": "Value",
+        "value_placeholder": "Enter scalar value or JSON payload..."
+      },
+      "meta": {
+        "updated_at": "Updated at: {value}",
+        "never_updated": "No update metadata yet.",
+        "no_description": "No description"
+      },
+      "actions": {
+        "save": "Save config",
+        "saving": "Saving..."
+      },
+      "states": {
+        "empty": "No matching system config.",
+        "select_prompt": "Select a config key to edit."
+      },
+      "toast": {
+        "save_success": "System config updated.",
+        "save_failed": "Failed to update system config.",
+        "select_item": "Please select a config key first."
       }
     }
   }

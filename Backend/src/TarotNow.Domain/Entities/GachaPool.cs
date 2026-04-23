@@ -5,6 +5,23 @@ namespace TarotNow.Domain.Entities;
 /// </summary>
 public sealed class GachaPool
 {
+    public sealed record Configuration(
+        string PoolType,
+        string NameVi,
+        string NameEn,
+        string NameZh,
+        string DescriptionVi,
+        string DescriptionEn,
+        string DescriptionZh,
+        string CostCurrency,
+        long CostAmount,
+        string OddsVersion,
+        bool PityEnabled,
+        int HardPityCount,
+        DateTime EffectiveFrom,
+        DateTime? EffectiveTo,
+        bool IsActive);
+
     /// <summary>
     /// Định danh pool.
     /// </summary>
@@ -165,6 +182,42 @@ public sealed class GachaPool
         }
 
         return !EffectiveTo.HasValue || utcNow <= EffectiveTo.Value;
+    }
+
+    /// <summary>
+    /// Áp cấu hình mới cho pool hiện hữu.
+    /// </summary>
+    public void ApplyConfiguration(Configuration configuration)
+    {
+        ArgumentNullException.ThrowIfNull(configuration);
+
+        PoolType = NormalizeRequired(configuration.PoolType, nameof(configuration.PoolType), 32).ToLowerInvariant();
+        NameVi = NormalizeRequired(configuration.NameVi, nameof(configuration.NameVi), 256);
+        NameEn = NormalizeRequired(configuration.NameEn, nameof(configuration.NameEn), 256);
+        NameZh = NormalizeRequired(configuration.NameZh, nameof(configuration.NameZh), 256);
+        DescriptionVi = NormalizeRequired(configuration.DescriptionVi, nameof(configuration.DescriptionVi), 1024);
+        DescriptionEn = NormalizeRequired(configuration.DescriptionEn, nameof(configuration.DescriptionEn), 1024);
+        DescriptionZh = NormalizeRequired(configuration.DescriptionZh, nameof(configuration.DescriptionZh), 1024);
+        CostCurrency = NormalizeRequired(configuration.CostCurrency, nameof(configuration.CostCurrency), 32).ToLowerInvariant();
+        CostAmount = EnsurePositive(configuration.CostAmount, nameof(configuration.CostAmount));
+        OddsVersion = NormalizeRequired(configuration.OddsVersion, nameof(configuration.OddsVersion), 32);
+        PityEnabled = configuration.PityEnabled;
+        HardPityCount = configuration.PityEnabled
+            ? EnsurePositiveInt(configuration.HardPityCount, nameof(configuration.HardPityCount))
+            : 0;
+        EffectiveFrom = configuration.EffectiveFrom;
+        EffectiveTo = configuration.EffectiveTo;
+        IsActive = configuration.IsActive;
+        UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Bật/tắt trạng thái hoạt động của pool.
+    /// </summary>
+    public void SetActive(bool isActive)
+    {
+        IsActive = isActive;
+        UpdatedAtUtc = DateTime.UtcNow;
     }
 
     private static string NormalizeRequired(string value, string paramName, int maxLength)

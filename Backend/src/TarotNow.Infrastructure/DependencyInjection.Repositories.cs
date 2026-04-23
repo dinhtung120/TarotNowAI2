@@ -46,6 +46,7 @@ public static partial class DependencyInjection
         services.AddScoped<IUserConsentRepository, UserConsentRepository>();
         services.AddScoped<IDepositOrderRepository, DepositOrderRepository>();
         services.AddScoped<IDepositPromotionRepository, DepositPromotionRepository>();
+        services.AddScoped<ISystemConfigRepository, SystemConfigRepository>();
         services.AddScoped<IItemDefinitionRepository, ItemDefinitionRepository>();
         services.AddScoped<IUserItemRepository, UserItemRepository>();
         services.AddScoped<IFreeDrawCreditRepository, FreeDrawCreditRepository>();
@@ -122,6 +123,7 @@ public static partial class DependencyInjection
     /// </summary>
     private static void AddHostedWorkers(IServiceCollection services)
     {
+        services.AddHostedService<SystemConfigBootstrapHostedService>();
         services.AddHostedService<AuthSessionCleanupJob>();
         services.AddHostedService<EscrowTimerService>();
         services.AddHostedService<ChatModerationWorker>();

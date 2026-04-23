@@ -22,6 +22,7 @@ public sealed partial class WithdrawalCreateRequestedDomainEventHandler
     private readonly IUserRepository _userRepository;
     private readonly IWalletRepository _walletRepository;
     private readonly IDomainEventPublisher _domainEventPublisher;
+    private readonly ISystemConfigSettings _systemConfigSettings;
 
     /// <summary>
     /// Khởi tạo handler tạo withdrawal request.
@@ -31,6 +32,7 @@ public sealed partial class WithdrawalCreateRequestedDomainEventHandler
         IUserRepository userRepository,
         IWalletRepository walletRepository,
         IDomainEventPublisher domainEventPublisher,
+        ISystemConfigSettings systemConfigSettings,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
@@ -38,6 +40,7 @@ public sealed partial class WithdrawalCreateRequestedDomainEventHandler
         _userRepository = userRepository;
         _walletRepository = walletRepository;
         _domainEventPublisher = domainEventPublisher;
+        _systemConfigSettings = systemConfigSettings;
     }
 
     /// <inheritdoc />
@@ -64,7 +67,7 @@ public sealed partial class WithdrawalCreateRequestedDomainEventHandler
             requestId,
             normalizedRequestKey,
             businessWeekStartUtc,
-            BuildWithdrawalPlan(domainEvent.AmountDiamond));
+            BuildWithdrawalPlan(domainEvent.AmountDiamond, _systemConfigSettings.WithdrawalFeeRate));
 
         var request = BuildPendingRequest(
             domainEvent,
@@ -83,7 +86,7 @@ public sealed partial class WithdrawalCreateRequestedDomainEventHandler
     {
         var user = await _userRepository.GetByIdAsync(domainEvent.UserId, cancellationToken)
             ?? throw new NotFoundException("Không tìm thấy người dùng.");
-        ValidateUserCanWithdraw(user, domainEvent.AmountDiamond);
+        ValidateUserCanWithdraw(user, domainEvent.AmountDiamond, _systemConfigSettings.WithdrawalMinDiamond);
         return user;
     }
 

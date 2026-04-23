@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using StackExchange.Redis;
 using TarotNow.Application.Common.Interfaces;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Api.Realtime;
 
@@ -10,16 +11,18 @@ public sealed class RedisUserPresenceTracker : IUserPresenceTracker
     private const string ConnectionsKeyPrefix = "presence:user:";
     private const string ConnectionsKeySuffix = ":connections";
     private const string LastActivityKey = "presence:last-activity";
-    private static readonly TimeSpan OnlineWindow = TimeSpan.FromMinutes(15);
 
     private readonly IConnectionMultiplexer _multiplexer;
+    private readonly ISystemConfigSettings _systemConfigSettings;
     private readonly ILogger<RedisUserPresenceTracker> _logger;
 
     public RedisUserPresenceTracker(
         IConnectionMultiplexer multiplexer,
+        ISystemConfigSettings systemConfigSettings,
         ILogger<RedisUserPresenceTracker> logger)
     {
         _multiplexer = multiplexer;
+        _systemConfigSettings = systemConfigSettings;
         _logger = logger;
     }
 
@@ -86,7 +89,9 @@ public sealed class RedisUserPresenceTracker : IUserPresenceTracker
             }
 
             var lastActivity = GetLastActivity(userId);
-            return lastActivity is not null && (DateTime.UtcNow - lastActivity.Value) <= OnlineWindow;
+            var onlineWindow = TimeSpan.FromMinutes(
+                Math.Clamp(_systemConfigSettings.PresenceTimeoutMinutes, 1, 240));
+            return lastActivity is not null && (DateTime.UtcNow - lastActivity.Value) <= onlineWindow;
         }
         catch (Exception ex)
         {

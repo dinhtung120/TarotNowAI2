@@ -22,6 +22,8 @@ public class AddQuestionCommandHandlerTests
     private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
     // Mock publisher để xác nhận emit MoneyChangedDomainEvent.
     private readonly Mock<IDomainEventPublisher> _mockDomainEventPublisher;
+    // Mock system config để đọc policy thời hạn escrow.
+    private readonly Mock<ISystemConfigSettings> _mockSystemConfigSettings;
     // Handler cần kiểm thử.
     private readonly AddQuestionCommandHandler _handler;
 
@@ -35,6 +37,9 @@ public class AddQuestionCommandHandlerTests
         _mockWalletRepo = new Mock<IWalletRepository>();
         _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
         _mockDomainEventPublisher = new Mock<IDomainEventPublisher>();
+        _mockSystemConfigSettings = new Mock<ISystemConfigSettings>();
+        _mockSystemConfigSettings.SetupGet(x => x.EscrowReaderResponseDueHours).Returns(24);
+        _mockSystemConfigSettings.SetupGet(x => x.EscrowAutoRefundHours).Returns(24);
 
         _mockTransactionCoordinator
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
@@ -42,7 +47,8 @@ public class AddQuestionCommandHandlerTests
 
         _handler = new AddQuestionCommandHandler(
             _mockFinanceRepo.Object, _mockWalletRepo.Object,
-            _mockTransactionCoordinator.Object, _mockDomainEventPublisher.Object);
+            _mockTransactionCoordinator.Object, _mockDomainEventPublisher.Object,
+            _mockSystemConfigSettings.Object);
     }
 
     /// <summary>

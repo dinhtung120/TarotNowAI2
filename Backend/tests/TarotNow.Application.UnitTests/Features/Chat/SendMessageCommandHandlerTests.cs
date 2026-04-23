@@ -21,6 +21,7 @@ public class SendMessageCommandHandlerTests
     private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
     private readonly Mock<IUploadSessionRepository> _mockUploadSessionRepository;
     private readonly Mock<IDomainEventPublisher> _mockDomainEventPublisher;
+    private readonly Mock<ISystemConfigSettings> _mockSystemConfigSettings;
     private readonly SendMessageCommandHandler _handler;
 
     /// <summary>
@@ -36,6 +37,8 @@ public class SendMessageCommandHandlerTests
         _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
         _mockUploadSessionRepository = new Mock<IUploadSessionRepository>();
         _mockDomainEventPublisher = new Mock<IDomainEventPublisher>();
+        _mockSystemConfigSettings = new Mock<ISystemConfigSettings>();
+        _mockSystemConfigSettings.SetupGet(x => x.EscrowDisputeWindowHours).Returns(24);
 
         _mockTransactionCoordinator
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
@@ -49,7 +52,8 @@ public class SendMessageCommandHandlerTests
             _mockReaderProfileRepo.Object,
             _mockTransactionCoordinator.Object,
             _mockUploadSessionRepository.Object,
-            _mockDomainEventPublisher.Object);
+            _mockDomainEventPublisher.Object,
+            _mockSystemConfigSettings.Object);
     }
 
     [Fact]

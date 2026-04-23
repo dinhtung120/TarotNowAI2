@@ -1,15 +1,17 @@
 using TarotNow.Domain.Entities;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Common.Services;
 
 // Tính toán số lượt follow-up miễn phí và chi phí follow-up theo độ mạnh bộ bài.
 public class FollowupPricingService
 {
-    // Bậc giá follow-up trả phí theo thứ tự lượt hỏi sau phần miễn phí.
-    private static readonly int[] PriceTiers = [1, 2, 4, 8, 16];
+    private readonly ISystemConfigSettings _settings;
 
-    // Giới hạn cứng số lượt follow-up cho một phiên rút bài.
-    public const int MaxFollowupsAllowed = 5;
+    public FollowupPricingService(ISystemConfigSettings settings)
+    {
+        _settings = settings;
+    }
 
     /// <summary>
     /// Mô phỏng card level từ card id để áp dụng rule tính giá follow-up.
@@ -56,19 +58,19 @@ public class FollowupPricingService
 
             var highestLevel = cardIds.Max(GetMockCardLevel);
 
-            if (highestLevel >= 16)
+            if (highestLevel >= _settings.FollowupFreeSlotThresholdHigh)
             {
                 // Rule business: bộ bài cấp rất cao được 3 lượt follow-up miễn phí.
                 return 3;
             }
 
-            if (highestLevel >= 11)
+            if (highestLevel >= _settings.FollowupFreeSlotThresholdMid)
             {
                 // Rule business: cấp trung cao được 2 lượt miễn phí.
                 return 2;
             }
 
-            if (highestLevel >= 6)
+            if (highestLevel >= _settings.FollowupFreeSlotThresholdLow)
             {
                 // Rule business: cấp cơ bản đủ điều kiện 1 lượt miễn phí.
                 return 1;
@@ -89,10 +91,11 @@ public class FollowupPricingService
     /// </summary>
     public int CalculateNextFollowupCost(string cardsDrawnJson, int currentFollowupCount)
     {
-        if (currentFollowupCount >= MaxFollowupsAllowed)
+        var maxAllowed = _settings.FollowupMaxAllowed;
+        if (currentFollowupCount >= maxAllowed)
         {
             // Rule chặn cứng để bảo vệ cân bằng kinh tế và giới hạn phiên đọc bài.
-            throw new InvalidOperationException($"Đã đạt giới hạn tối đa {MaxFollowupsAllowed} câu hỏi phụ cho phiên rút bài này.");
+            throw new InvalidOperationException($"Đã đạt giới hạn tối đa {maxAllowed} câu hỏi phụ cho phiên rút bài này.");
         }
 
         var freeSlots = CalculateFreeSlotsAllowed(cardsDrawnJson);
@@ -103,13 +106,14 @@ public class FollowupPricingService
         }
 
         var paidTierIndex = currentFollowupCount - freeSlots;
-        if (paidTierIndex >= PriceTiers.Length)
+        var priceTiers = _settings.FollowupPriceTiers;
+        if (paidTierIndex >= priceTiers.Count)
         {
             // Edge case vượt số bậc giá khai báo: giữ mức giá trần cuối mảng.
-            paidTierIndex = PriceTiers.Length - 1;
+            paidTierIndex = priceTiers.Count - 1;
         }
 
         // Trả chi phí theo bậc tương ứng sau khi trừ phần miễn phí.
-        return PriceTiers[paidTierIndex];
+        return priceTiers[paidTierIndex];
     }
 }

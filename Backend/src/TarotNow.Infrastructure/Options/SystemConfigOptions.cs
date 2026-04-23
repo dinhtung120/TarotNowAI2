@@ -15,6 +15,18 @@ public sealed class SystemConfigOptions
     // Khoảng cách tối thiểu giữa các request đọc bài (giây).
     public int ReadingRateLimitSeconds { get; set; } = 30;
 
+    // Cấu hình follow-up cho phiên đọc bài.
+    public FollowupOptions Followup { get; set; } = new();
+
+    // Cấu hình nghiệp vụ rút tiền.
+    public WithdrawalOptions Withdrawal { get; set; } = new();
+
+    // Cấu hình presence realtime.
+    public PresenceOptions Presence { get; set; } = new();
+
+    // Cấu hình policy escrow.
+    public EscrowOptions Escrow { get; set; } = new();
+
     // Cấu hình chi tiết giá theo từng loại trải bài.
     public sealed class PricingOptions
     {
@@ -35,5 +47,33 @@ public sealed class SystemConfigOptions
 
         // Giá Diamond cho trải bài 10 lá.
         public long Spread10Diamond { get; set; } = 50;
+    }
+
+    public sealed class FollowupOptions
+    {
+        public List<int> PriceTiers { get; set; } = [1, 2, 4, 8, 16];
+        public int MaxAllowed { get; set; } = 5;
+        public int FreeSlotThresholdLow { get; set; } = 6;
+        public int FreeSlotThresholdMid { get; set; } = 11;
+        public int FreeSlotThresholdHigh { get; set; } = 16;
+    }
+
+    public sealed class WithdrawalOptions
+    {
+        public long MinDiamond { get; set; } = 500;
+        public decimal FeeRate { get; set; } = 0.10m;
+    }
+
+    public sealed class PresenceOptions
+    {
+        public int TimeoutMinutes { get; set; } = 15;
+        public int ScanIntervalSeconds { get; set; } = 60;
+    }
+
+    public sealed class EscrowOptions
+    {
+        public int DisputeWindowHours { get; set; } = 48;
+        public int ReaderResponseDueHours { get; set; } = 24;
+        public int AutoRefundHours { get; set; } = 24;
     }
 }

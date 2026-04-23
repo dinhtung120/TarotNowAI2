@@ -23,7 +23,10 @@ public static partial class DependencyInjection
         services.AddSingleton<IJwtTokenSettings, JwtTokenSettings>();
         services.AddSingleton<IAuthSecuritySettings, AuthSecuritySettings>();
         services.AddSingleton<ILegalVersionSettings, LegalVersionSettings>();
+        services.AddSingleton<SystemConfigSnapshotStore>();
         services.AddSingleton<ISystemConfigSettings, SystemConfigSettings>();
+        services.AddScoped<SystemConfigProjectionService>();
+        services.AddScoped<ISystemConfigAdminService, SystemConfigAdminService>();
 
         services.AddScoped<ISmtpClient, SmtpClient>();
         services.AddScoped<IEmailSender, SmtpEmailSender>();

@@ -53,7 +53,11 @@ public partial class AddQuestionCommandHandler
                 },
                 transactionCt);
 
-            var item = BuildAddQuestionItem(request, session.ReaderId, session.Id, idempotencyKey);
+            var item = BuildAddQuestionItem(
+                request,
+                session.ReaderId,
+                session.Id,
+                idempotencyKey);
             await _financeRepo.AddItemAsync(item, transactionCt);
 
             // Cập nhật tổng frozen sau khi thêm item mới để session phản ánh đúng số dư đang giữ.
@@ -115,13 +119,20 @@ public partial class AddQuestionCommandHandler
     /// Dựng entity ChatQuestionItem cho thao tác add-question.
     /// Luồng xử lý: map dữ liệu request, gán trạng thái Accepted và thiết lập các mốc thời gian xử lý/autorefund.
     /// </summary>
-    private static ChatQuestionItem BuildAddQuestionItem(
+    private ChatQuestionItem BuildAddQuestionItem(
         AddQuestionCommand request,
         Guid readerId,
         Guid sessionId,
         string idempotencyKey)
     {
         var now = DateTime.UtcNow;
+        var normalizedReaderResponseDueHours = _systemConfigSettings.EscrowReaderResponseDueHours > 0
+            ? _systemConfigSettings.EscrowReaderResponseDueHours
+            : 24;
+        var normalizedAutoRefundHours = _systemConfigSettings.EscrowAutoRefundHours > 0
+            ? _systemConfigSettings.EscrowAutoRefundHours
+            : 24;
+
         return new ChatQuestionItem
         {
             FinanceSessionId = sessionId,
@@ -133,8 +144,8 @@ public partial class AddQuestionCommandHandler
             Status = QuestionItemStatus.Accepted,
             ProposalMessageRef = request.ProposalMessageRef,
             AcceptedAt = now,
-            ReaderResponseDueAt = now.AddHours(24),
-            AutoRefundAt = now.AddHours(24),
+            ReaderResponseDueAt = now.AddHours(normalizedReaderResponseDueHours),
+            AutoRefundAt = now.AddHours(normalizedAutoRefundHours),
             IdempotencyKey = idempotencyKey
         };
     }

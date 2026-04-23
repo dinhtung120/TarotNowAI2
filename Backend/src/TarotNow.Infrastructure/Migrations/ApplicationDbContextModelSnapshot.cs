@@ -1410,6 +1410,53 @@ namespace TarotNow.Infrastructure.Migrations
                     b.ToTable("refresh_tokens", (string)null);
                 });
 
+            modelBuilder.Entity("TarotNow.Domain.Entities.SystemConfig", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("key");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("value");
+
+                    b.Property<string>("ValueKind")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasDefaultValue("scalar")
+                        .HasColumnName("value_kind");
+
+                    b.HasKey("Key")
+                        .HasName("pk_system_configs");
+
+                    b.HasIndex("UpdatedAt")
+                        .HasDatabaseName("ix_system_configs_updated_at");
+
+                    b.HasIndex("UpdatedBy")
+                        .HasDatabaseName("ix_system_configs_updated_by");
+
+                    b.ToTable("system_configs", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_system_configs_value_kind", "\"value_kind\" IN ('scalar', 'json')");
+                        });
+                });
+
             modelBuilder.Entity("TarotNow.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2065,6 +2112,15 @@ namespace TarotNow.Infrastructure.Migrations
                         .HasConstraintName("fk_refresh_tokens_users_user_id");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TarotNow.Domain.Entities.SystemConfig", b =>
+                {
+                    b.HasOne("TarotNow.Domain.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UpdatedBy")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_system_configs_users_updated_by");
                 });
 
             modelBuilder.Entity("TarotNow.Domain.Entities.User", b =>

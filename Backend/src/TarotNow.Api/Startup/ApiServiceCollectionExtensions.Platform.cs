@@ -7,6 +7,7 @@ using TarotNow.Api.Realtime;
 using TarotNow.Api.Services;
 using TarotNow.Application;
 using TarotNow.Application.Common.Interfaces;
+using TarotNow.Application.Interfaces;
 using TarotNow.Infrastructure;
 using TarotNow.Infrastructure.Services;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -32,6 +33,7 @@ public static partial class ApiServiceCollectionExtensions
         services.AddScoped<IAuthCookieService, AuthCookieService>();
         services.AddSingleton<IUserPresenceTracker>(serviceProvider =>
         {
+            var systemConfigSettings = serviceProvider.GetRequiredService<ISystemConfigSettings>();
             var cacheBackendState = serviceProvider.GetService<CacheBackendState>();
             if (cacheBackendState?.UsesRedis == true)
             {
@@ -40,11 +42,11 @@ public static partial class ApiServiceCollectionExtensions
                 {
                     var logger = serviceProvider
                         .GetRequiredService<ILogger<RedisUserPresenceTracker>>();
-                    return new RedisUserPresenceTracker(multiplexer, logger);
+                    return new RedisUserPresenceTracker(multiplexer, systemConfigSettings, logger);
                 }
             }
 
-            return new InMemoryUserPresenceTracker();
+            return new InMemoryUserPresenceTracker(systemConfigSettings);
         });
         services.AddHostedService<PresenceTimeoutBackgroundService>();
         services.AddSingleton<IRealtimeBridgeSource>(serviceProvider =>

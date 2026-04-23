@@ -1,4 +1,5 @@
 using TarotNow.Application.Common.Services;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.UnitTests.Services;
 
@@ -6,7 +7,7 @@ namespace TarotNow.Application.UnitTests.Services;
 public class FollowupPricingServiceTests
 {
     // Service thật vì logic thuần tính toán, không cần mock phụ thuộc ngoài.
-    private readonly FollowupPricingService _service = new();
+    private readonly FollowupPricingService _service = new(new TestSystemConfigSettings());
 
     /// <summary>
     /// Xác nhận JSON cards rỗng trả số slot miễn phí bằng 0.
@@ -89,5 +90,33 @@ public class FollowupPricingServiceTests
     {
         Assert.Throws<InvalidOperationException>(() =>
             _service.CalculateNextFollowupCost("[]", currentFollowupCount: 5));
+    }
+
+    private sealed class TestSystemConfigSettings : ISystemConfigSettings
+    {
+        public long Spread3GoldCost => 0;
+        public long Spread3DiamondCost => 0;
+        public long Spread5GoldCost => 0;
+        public long Spread5DiamondCost => 0;
+        public long Spread10GoldCost => 0;
+        public long Spread10DiamondCost => 0;
+        public int DailyAiQuota => 10;
+        public int InFlightAiCap => 3;
+        public int ReadingRateLimitSeconds => 1;
+        public long DailyCheckinGold => 100;
+        public int StreakFreezeWindowHours => 48;
+        public long GachaCostDiamond => 10;
+        public IReadOnlyList<int> FollowupPriceTiers => [1, 2, 4, 8, 16];
+        public int FollowupMaxAllowed => 5;
+        public int FollowupFreeSlotThresholdLow => 5;
+        public int FollowupFreeSlotThresholdMid => 10;
+        public int FollowupFreeSlotThresholdHigh => 20;
+        public long WithdrawalMinDiamond => 0;
+        public decimal WithdrawalFeeRate => 0.08m;
+        public int PresenceTimeoutMinutes => 15;
+        public int PresenceScanIntervalSeconds => 60;
+        public int EscrowDisputeWindowHours => 48;
+        public int EscrowReaderResponseDueHours => 12;
+        public int EscrowAutoRefundHours => 72;
     }
 }

@@ -13,12 +13,7 @@ public class PresenceTimeoutBackgroundService : BackgroundService
     private readonly IUserPresenceTracker _presenceTracker;
     private readonly IMediator _mediator;
     private readonly IServiceScopeFactory _scopeFactory;
-
-    // Sau 15 phút không heartbeat thì xem user đã timeout hiện diện.
-    private readonly TimeSpan _timeoutPeriod = TimeSpan.FromMinutes(15);
-
-    // Quét timeout mỗi 60 giây để cân bằng độ trễ cập nhật và chi phí hệ thống.
-    private readonly TimeSpan _scanInterval = TimeSpan.FromSeconds(60);
+    private readonly ISystemConfigSettings _systemConfigSettings;
 
     /// <summary>
     /// Khởi tạo worker dọn trạng thái presence quá hạn.
@@ -28,12 +23,14 @@ public class PresenceTimeoutBackgroundService : BackgroundService
         ILogger<PresenceTimeoutBackgroundService> logger,
         IUserPresenceTracker presenceTracker,
         IMediator mediator,
-        IServiceScopeFactory scopeFactory)
+        IServiceScopeFactory scopeFactory,
+        ISystemConfigSettings systemConfigSettings)
     {
         _logger = logger;
         _presenceTracker = presenceTracker;
         _mediator = mediator;
         _scopeFactory = scopeFactory;
+        _systemConfigSettings = systemConfigSettings;
     }
 
     /// <summary>
@@ -42,8 +39,11 @@ public class PresenceTimeoutBackgroundService : BackgroundService
     /// </summary>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var timeoutPeriod = ResolveTimeoutPeriod();
+        var scanInterval = ResolveScanInterval();
+
         _logger.LogDebug("[PresenceTimeout] Service started. Scan interval: {Interval}s, Timeout: {Timeout}m",
-            _scanInterval.TotalSeconds, _timeoutPeriod.TotalMinutes);
+            scanInterval.TotalSeconds, timeoutPeriod.TotalMinutes);
 
         try
         {
@@ -52,7 +52,7 @@ public class PresenceTimeoutBackgroundService : BackgroundService
                 try
                 {
                     // Mỗi vòng quét xử lý đầy đủ nhóm user đã quá hạn hoạt động.
-                    await ProcessTimeoutsAsync(stoppingToken);
+                    await ProcessTimeoutsAsync(timeoutPeriod, stoppingToken);
                 }
                 catch (ObjectDisposedException) when (stoppingToken.IsCancellationRequested)
                 {
@@ -65,7 +65,7 @@ public class PresenceTimeoutBackgroundService : BackgroundService
                 }
 
                 // Chờ theo chu kỳ quét; token bị hủy sẽ nhảy ra ngoài qua OperationCanceledException.
-                await Task.Delay(_scanInterval, stoppingToken);
+                await Task.Delay(scanInterval, stoppingToken);
             }
         }
         catch (OperationCanceledException)
@@ -80,9 +80,9 @@ public class PresenceTimeoutBackgroundService : BackgroundService
     /// Xử lý danh sách user đã timeout: cập nhật tracker, broadcast offline và đồng bộ trạng thái reader trong DB.
     /// Luồng xử lý: lấy danh sách timeout, xử lý từng user realtime, sau đó cập nhật batch profile qua repository.
     /// </summary>
-    private async Task ProcessTimeoutsAsync(CancellationToken cancellationToken)
+    private async Task ProcessTimeoutsAsync(TimeSpan timeoutPeriod, CancellationToken cancellationToken)
     {
-        var timedOutUsers = _presenceTracker.GetTimedOutUsers(_timeoutPeriod);
+        var timedOutUsers = _presenceTracker.GetTimedOutUsers(timeoutPeriod);
 
         if (timedOutUsers.Count == 0)
         {
@@ -157,5 +157,17 @@ public class PresenceTimeoutBackgroundService : BackgroundService
             // Không chặn worker khi lỗi DB tạm thời; lượt quét sau sẽ thử lại.
             _logger.LogError(ex, "[PresenceTimeout] Failed to update reader profiles to offline in DB.");
         }
+    }
+
+    private TimeSpan ResolveTimeoutPeriod()
+    {
+        var minutes = Math.Clamp(_systemConfigSettings.PresenceTimeoutMinutes, 1, 240);
+        return TimeSpan.FromMinutes(minutes);
+    }
+
+    private TimeSpan ResolveScanInterval()
+    {
+        var seconds = Math.Clamp(_systemConfigSettings.PresenceScanIntervalSeconds, 5, 600);
+        return TimeSpan.FromSeconds(seconds);
     }
 }
