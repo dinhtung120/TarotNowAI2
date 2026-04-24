@@ -64,3 +64,25 @@ export async function updateSystemConfig(
   }
  });
 }
+
+export async function restartServer(): Promise<ActionResult<void>> {
+ return withAdminToken(async (token) => {
+  try {
+   const result = await serverHttpRequest<void>('/admin/system-configs/restart', {
+    method: 'POST',
+    token,
+    fallbackErrorMessage: 'Failed to restart server',
+   });
+   
+   if (!result.ok) {
+    logger.error('[AdminAction] restartServer', result.error, { status: result.status });
+    return actionFail(result.error || 'Failed to restart server');
+   }
+
+   return actionOk(undefined);
+  } catch (error) {
+   logger.error('[AdminAction] restartServer', error);
+   return actionFail('Failed to restart server');
+  }
+ });
+}

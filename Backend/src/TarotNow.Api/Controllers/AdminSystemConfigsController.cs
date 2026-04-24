@@ -101,4 +101,17 @@ public sealed class AdminSystemConfigsController : ControllerBase
         public string? Description { get; set; }
     }
 
+    /// <summary>
+    /// Khởi động lại ứng dụng (restart process).
+    /// Sử dụng IHostApplicationLifetime.StopApplication() để đóng tiến trình hiện tại.
+    /// Thông thường Docker hoặc hệ thống quản lý (Systemd, IIS) sẽ tự động bật lại ứng dụng.
+    /// Điều này hữu ích khi cần áp dụng ngay lập tức các giá trị cấu hình chưa được live-reload.
+    /// </summary>
+    [HttpPost("system-configs/restart")]
+    public IActionResult RestartServer([FromServices] IHostApplicationLifetime lifetime)
+    {
+        // Gửi tín hiệu dừng ứng dụng
+        lifetime.StopApplication();
+        return Ok(new { message = "Server is restarting..." });
+    }
 }

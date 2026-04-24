@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import toast from 'react-hot-toast';
-import { listSystemConfigs, updateSystemConfig } from '@/features/admin/application/actions';
+import { listSystemConfigs, restartServer, updateSystemConfig } from '@/features/admin/application/actions';
 import type { AdminSystemConfigItem } from '@/features/admin/system-configs/system-config.types';
 
 const QUERY_KEY = ['admin', 'system-configs'] as const;
@@ -94,6 +94,24 @@ export function useAdminSystemConfigs(initialConfigs: AdminSystemConfigItem[]) {
   });
  }, [items, searchText]);
 
+ const groupedItems = useMemo(() => {
+  const groups = new Map<string, AdminSystemConfigItem[]>();
+  for (const item of filteredItems) {
+   const prefix = item.key.split('.')[0] || 'other';
+   const groupName = prefix.toLowerCase();
+   const existing = groups.get(groupName) || [];
+   existing.push(item);
+   groups.set(groupName, existing);
+  }
+  
+  return Array.from(groups.entries())
+   .sort((a, b) => a[0].localeCompare(b[0]))
+   .map(([groupName, items]) => ({
+    groupName,
+    items: items.sort((a, b) => a.key.localeCompare(b.key)),
+   }));
+ }, [filteredItems]);
+
  const updateMutation = useMutation({
   mutationFn: async () => {
    if (!selectedItem) {
@@ -105,6 +123,12 @@ export function useAdminSystemConfigs(initialConfigs: AdminSystemConfigItem[]) {
     valueKind: activeDraft.valueKind,
     description: activeDraft.description,
    });
+  },
+ });
+
+ const restartMutation = useMutation({
+  mutationFn: async () => {
+   return restartServer();
   },
  });
 
@@ -147,6 +171,15 @@ export function useAdminSystemConfigs(initialConfigs: AdminSystemConfigItem[]) {
   toast.success(t('system_configs.toast.save_success'));
  }
 
+ async function handleRestartServer() {
+  const result = await restartMutation.mutateAsync();
+  if (!result.success) {
+   toast.error(result.error || t('system_configs.toast.restart_failed'));
+   return;
+  }
+  toast.success(t('system_configs.toast.restart_success'));
+ }
+
  function selectConfig(item: AdminSystemConfigItem) {
   setSelectedKey(item.key);
  }
@@ -173,5 +206,8 @@ export function useAdminSystemConfigs(initialConfigs: AdminSystemConfigItem[]) {
    })),
   selectConfig,
   saveSelectedConfig,
+  handleRestartServer,
+  restarting: restartMutation.isPending,
+  groupedItems,
  };
 }
