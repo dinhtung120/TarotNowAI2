@@ -119,60 +119,67 @@ public static partial class DependencyInjection
     {
         try
         {
-            using var connection = new NpgsqlConnection(postgreSqlConnectionString);
-            connection.Open();
-
-            using var command = new NpgsqlCommand(
-                """
-                SELECT key, value
-                FROM system_configs
-                WHERE key IN (
-                    'operational.redis.connect_timeout_ms',
-                    'operational.redis.sync_timeout_ms',
-                    'operational.redis.connect_retry'
-                );
-                """,
-                connection);
-
-            using var reader = command.ExecuteReader();
-            var data = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            while (reader.Read())
-            {
-                var key = reader.GetString(0);
-                var value = reader.GetString(1);
-                data[key] = value;
-            }
-
-            var fallback = new SystemConfigOptions().Operational.Redis;
-            var result = new RedisBootstrapSettings
-            {
-                ConnectTimeoutMs = ParseIntOrFallback(
-                    data,
-                    "operational.redis.connect_timeout_ms",
-                    fallback.ConnectTimeoutMs,
-                    100,
-                    60_000),
-                SyncTimeoutMs = ParseIntOrFallback(
-                    data,
-                    "operational.redis.sync_timeout_ms",
-                    fallback.SyncTimeoutMs,
-                    100,
-                    60_000),
-                ConnectRetry = ParseIntOrFallback(
-                    data,
-                    "operational.redis.connect_retry",
-                    fallback.ConnectRetry,
-                    0,
-                    20)
-            };
-
-            return result;
+            var data = LoadRedisBootstrapRawValues(postgreSqlConnectionString);
+            return BuildRedisBootstrapSettings(data);
         }
         catch
         {
             // Bootstrap không thành công thì trả null để dùng fallback cố định.
             return null;
         }
+    }
+
+    private static IReadOnlyDictionary<string, string> LoadRedisBootstrapRawValues(string postgreSqlConnectionString)
+    {
+        using var connection = new NpgsqlConnection(postgreSqlConnectionString);
+        connection.Open();
+
+        using var command = new NpgsqlCommand(
+            """
+            SELECT key, value
+            FROM system_configs
+            WHERE key IN (
+                'operational.redis.connect_timeout_ms',
+                'operational.redis.sync_timeout_ms',
+                'operational.redis.connect_retry'
+            );
+            """,
+            connection);
+
+        using var reader = command.ExecuteReader();
+        var data = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        while (reader.Read())
+        {
+            data[reader.GetString(0)] = reader.GetString(1);
+        }
+
+        return data;
+    }
+
+    private static RedisBootstrapSettings BuildRedisBootstrapSettings(IReadOnlyDictionary<string, string> data)
+    {
+        var fallback = new SystemConfigOptions().Operational.Redis;
+        return new RedisBootstrapSettings
+        {
+            ConnectTimeoutMs = ParseIntOrFallback(
+                data,
+                "operational.redis.connect_timeout_ms",
+                fallback.ConnectTimeoutMs,
+                100,
+                60_000),
+            SyncTimeoutMs = ParseIntOrFallback(
+                data,
+                "operational.redis.sync_timeout_ms",
+                fallback.SyncTimeoutMs,
+                100,
+                60_000),
+            ConnectRetry = ParseIntOrFallback(
+                data,
+                "operational.redis.connect_retry",
+                fallback.ConnectRetry,
+                0,
+                20)
+        };
     }
 
     private static int ParseIntOrFallback(

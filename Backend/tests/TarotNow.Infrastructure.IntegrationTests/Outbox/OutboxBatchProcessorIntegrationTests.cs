@@ -10,6 +10,7 @@ using TarotNow.Infrastructure.BackgroundJobs.Outbox;
 using TarotNow.Infrastructure.Options;
 using TarotNow.Infrastructure.Persistence;
 using TarotNow.Infrastructure.Persistence.Outbox;
+using TarotNow.Infrastructure.Services.Configuration;
 
 namespace TarotNow.Infrastructure.IntegrationTests.Outbox;
 
@@ -143,7 +144,10 @@ public sealed class OutboxBatchProcessorIntegrationTests
         services.AddLogging();
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<ProbeMoneyChangedHandler>());
         services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(_fixture.ConnectionString));
+        services.AddOptions<SystemConfigOptions>();
         services.AddOptions<OutboxOptions>();
+        services.AddSingleton<SystemConfigSnapshotStore>();
+        services.AddScoped<ISystemConfigSettings, SystemConfigSettings>();
         services.AddScoped<IOutboxBatchProcessor, OutboxBatchProcessor>();
         services.AddScoped<IEventHandlerIdempotencyService, OutboxHandlerIdempotencyService>();
         services.AddSingleton(new OutboxHandlerProbe(shouldThrow));
