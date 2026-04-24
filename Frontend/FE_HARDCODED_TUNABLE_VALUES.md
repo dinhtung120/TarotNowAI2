@@ -1,11 +1,11 @@
 # DANH SÁCH TOÀN BỘ HARD-CODED VALUES TRONG FRONTEND
 
 ## Tổng quan
-- Số lượng hard-coded values tunable tìm thấy: 186
-- Số file bị ảnh hưởng: 83
+- Số lượng hard-coded values tunable tìm thấy: 203
+- Số file bị ảnh hưởng: 89
 - Phạm vi lọc: chỉ giữ các hard-code có ý nghĩa vận hành/business (timeout, retry, TTL, page size, pricing/economy, limit, policy, upload constraints, realtime settings); đã loại bỏ phần lớn literal UI thuần style/className.
 - Khuyến nghị:
-  - Đưa 140+ giá trị có thể đổi runtime vào `system_configs` (source-of-truth chung với BE).
+  - Đưa 150+ giá trị có thể đổi runtime vào `system_configs` (source-of-truth chung với BE).
   - Giữ ~30 giá trị technical guardrail ở `constants` (ví dụ min timeout floor, hard security cap).
   - Giữ ~10 giá trị domain invariant ở code (ví dụ 78 lá bài tarot), chỉ tài liệu hóa rõ lý do.
 
@@ -1122,6 +1122,12 @@
   Đánh giá: Cần cải thiện
   Đề xuất cải thiện cụ thể: constants/shared pagination.
 
+- **Dòng 52**: `'spent_gold_daily'`
+  Ý nghĩa / ngữ cảnh sử dụng: `DEFAULT_LEADERBOARD_TRACK` khi prefetch trang leaderboard.
+  Lý do cần có data này: quyết định bảng xếp hạng mặc định được tải trước.
+  Đánh giá: Cần cải thiện
+  Đề xuất cải thiện cụ thể: lấy từ metadata policy BE (`gamification.default_track`) để đồng bộ web/admin.
+
 - **Dòng 67**: `getFeedAction(..., pageSize=10)`
   Ý nghĩa / ngữ cảnh sử dụng: prefetch feed public/private.
   Lý do cần có data này: cân bằng payload SSR.
@@ -1179,6 +1185,96 @@
   Lý do cần có data này: giảm spam typing events.
   Đánh giá: Cần cải thiện
   Đề xuất cải thiện cụ thể: cấu hình `chat.typing_stop_delay_ms`.
+
+### 84. File: `/Users/lucifer/Desktop/TarotNowAI2/Frontend/src/proxy.ts`
+- **Dòng 11**: `'/profile'`
+  Ý nghĩa / ngữ cảnh sử dụng: route fallback khi role guard chặn truy cập `/admin` hoặc `/profile/reader`.
+  Lý do cần có data này: điều hướng an toàn sau khi từ chối quyền.
+  Đánh giá: Cần cải thiện
+  Đề xuất cải thiện cụ thể: đưa vào route-policy config (`routing.default_redirect_after_role_guard`) thay vì cố định trong middleware.
+
+- **Dòng 12**: `'www.tarotnow.xyz'`
+  Ý nghĩa / ngữ cảnh sử dụng: canonical host mặc định nếu env `NEXT_PUBLIC_CANONICAL_HOST` không có.
+  Lý do cần có data này: chuẩn hóa SEO/host redirect ở middleware.
+  Đánh giá: Nguy hiểm
+  Đề xuất cải thiện cụ thể: bắt buộc set env theo môi trường; nếu thiếu thì fail-fast khi boot để tránh redirect sai host ở staging/white-label.
+
+- **Dòng 200**: `'https://*.r2.cloudflarestorage.com'`
+  Ý nghĩa / ngữ cảnh sử dụng: default `connect-src` cho upload khi không set `NEXT_PUBLIC_R2_UPLOAD_ORIGIN`.
+  Lý do cần có data này: đảm bảo upload vẫn hoạt động khi thiếu env.
+  Đánh giá: Cần cải thiện
+  Đề xuất cải thiện cụ thể: chuyển sang danh sách origin cấu hình rõ ràng theo môi trường và hạ fallback wildcard.
+
+### 85. File: `/Users/lucifer/Desktop/TarotNowAI2/Frontend/src/shared/infrastructure/auth/serverAuth.ts`
+- **Dòng 10-11**: `'user'`, `'Active'`
+  Ý nghĩa / ngữ cảnh sử dụng: fallback role/status khi dữ liệu token/profile thiếu hoặc lỗi chuẩn hóa.
+  Lý do cần có data này: giữ luồng session không vỡ trong trường hợp payload không đầy đủ.
+  Đánh giá: Nguy hiểm
+  Đề xuất cải thiện cụ thể: lấy từ contract BE rõ ràng (không fallback permissive), hoặc dùng enum/guard fail-safe trả unauthenticated thay vì tự gán role/status.
+
+- **Dòng 216**: `'server-auth'`
+  Ý nghĩa / ngữ cảnh sử dụng: fallback device id khi refresh token nhưng thiếu cả header/cookie device id.
+  Lý do cần có data này: vẫn tạo được idempotency key cho luồng refresh.
+  Đánh giá: Cần cải thiện
+  Đề xuất cải thiện cụ thể: thay bằng device-id phát sinh deterministic theo request/session hoặc bắt buộc gửi `AUTH_HEADER.DEVICE_ID`.
+
+### 86. File: `/Users/lucifer/Desktop/TarotNowAI2/Frontend/src/features/gamification/application/gamificationServerActions.ts`
+- **Dòng 22**: `'daily'`
+  Ý nghĩa / ngữ cảnh sử dụng: default quest type khi gọi `fetchGamificationQuests`.
+  Lý do cần có data này: xác định tab quest mặc định từ tầng server action.
+  Đánh giá: Cần cải thiện
+  Đề xuất cải thiện cụ thể: lấy từ policy metadata (`gamification.default_quest_type`) đồng bộ với UI.
+
+- **Dòng 59**: `'daily_rank_score'`
+  Ý nghĩa / ngữ cảnh sử dụng: default leaderboard track trong `fetchGamificationLeaderboard`.
+  Lý do cần có data này: quyết định bảng xếp hạng mặc định nếu caller không truyền track.
+  Đánh giá: Cần cải thiện
+  Đề xuất cải thiện cụ thể: đọc từ `system_configs`/metadata endpoint để không lệch với track đang active trên BE.
+
+### 87. File: `/Users/lucifer/Desktop/TarotNowAI2/Frontend/src/features/gamification/useGamification.ts`
+- **Dòng 15**: `'daily'`
+  Ý nghĩa / ngữ cảnh sử dụng: default query key quest type ở hook `useQuests`.
+  Lý do cần có data này: khởi tạo loại nhiệm vụ mặc định cho client query.
+  Đánh giá: Cần cải thiện
+  Đề xuất cải thiện cụ thể: nhận default từ settings provider FE thay vì hard-code trong hook.
+
+- **Dòng 28-29**: `'daily'`, `'weekly'`
+  Ý nghĩa / ngữ cảnh sử dụng: danh sách quest types được invalidate sau khi claim reward.
+  Lý do cần có data này: đảm bảo cập nhật lại cache các tab quest phổ biến.
+  Đánh giá: Cần cải thiện
+  Đề xuất cải thiện cụ thể: dùng enum/list quest types lấy từ policy snapshot để tránh sót khi mở rộng loại quest.
+
+- **Dòng 60**: `'daily_rank_score'`
+  Ý nghĩa / ngữ cảnh sử dụng: default track ở hook `useLeaderboard`.
+  Lý do cần có data này: fallback track khi component không truyền tham số.
+  Đánh giá: Cần cải thiện
+  Đề xuất cải thiện cụ thể: đồng bộ bằng `gamification.default_track` từ BE.
+
+### 88. File: `/Users/lucifer/Desktop/TarotNowAI2/Frontend/src/features/gamification/components/LeaderboardTable.tsx`
+- **Dòng 15**: `'gold'`
+  Ý nghĩa / ngữ cảnh sử dụng: currency tab mặc định của leaderboard.
+  Lý do cần có data này: chọn ranking loại tiền ban đầu cho người dùng.
+  Đánh giá: Cần cải thiện
+  Đề xuất cải thiện cụ thể: nhận default currency từ policy/AB test config thay vì cố định trong component.
+
+- **Dòng 16**: `'daily'` (trong union `'daily' | 'monthly' | 'all'`)
+  Ý nghĩa / ngữ cảnh sử dụng: period tab mặc định của leaderboard.
+  Lý do cần có data này: quyết định khung thời gian ban đầu khi vào trang.
+  Đánh giá: Cần cải thiện
+  Đề xuất cải thiện cụ thể: lấy từ server metadata để nhất quán giữa SSR prefetch và client state.
+
+- **Dòng 17**: ``spent_${currency}_${period}``
+  Ý nghĩa / ngữ cảnh sử dụng: quy ước build track code trực tiếp từ currency/period.
+  Lý do cần có data này: map UI tab sang key leaderboard backend.
+  Đánh giá: Cần cải thiện
+  Đề xuất cải thiện cụ thể: map track qua dictionary BE trả về (không tự ghép string) để tránh lệch khi đổi naming convention.
+
+### 89. File: `/Users/lucifer/Desktop/TarotNowAI2/Frontend/src/features/gamification/components/QuestsPanel.tsx`
+- **Dòng 16**: `'daily'`
+  Ý nghĩa / ngữ cảnh sử dụng: quest tab mặc định khi mở panel.
+  Lý do cần có data này: quyết định nhóm quest được tải đầu tiên.
+  Đánh giá: Cần cải thiện
+  Đề xuất cải thiện cụ thể: dùng default quest type từ `gamification` metadata endpoint.
 
 ---
 
