@@ -90,4 +90,31 @@ public static partial class SystemConfigRegistry
             }
         };
     }
+
+    private static Func<string, (bool IsValid, string? Error)> ValidateIntArrayRange(
+        int minLength,
+        int maxLength,
+        int minValue,
+        int maxValue)
+    {
+        return rawValue =>
+        {
+            try
+            {
+                var values = JsonSerializer.Deserialize<int[]>(rawValue, JsonOptions);
+                if (values is null || values.Length < minLength || values.Length > maxLength)
+                {
+                    return (false, $"Array length must be between {minLength} and {maxLength}.");
+                }
+
+                return values.Any(v => v < minValue || v > maxValue)
+                    ? (false, $"Array values must be between {minValue} and {maxValue}.")
+                    : (true, null);
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Invalid integer array JSON: {ex.Message}");
+            }
+        };
+    }
 }

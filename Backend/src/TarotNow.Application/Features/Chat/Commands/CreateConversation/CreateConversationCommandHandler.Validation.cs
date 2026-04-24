@@ -1,3 +1,4 @@
+using System.Linq;
 using TarotNow.Application.Common;
 using TarotNow.Application.Exceptions;
 using TarotNow.Domain.Enums;
@@ -10,7 +11,7 @@ public partial class CreateConversationCommandHandler
     /// Validate nhanh các rule đầu vào cơ bản cho create conversation.
     /// Luồng xử lý: chặn self-chat và chỉ chấp nhận SLA 6/12/24 giờ.
     /// </summary>
-    private static void ValidateRequest(CreateConversationCommand request)
+    private void ValidateRequest(CreateConversationCommand request)
     {
         if (request.UserId == request.ReaderId)
         {
@@ -18,10 +19,12 @@ public partial class CreateConversationCommandHandler
             throw new BadRequestException("Bạn không thể tạo cuộc trò chuyện với chính mình.");
         }
 
-        if (request.SlaHours is not (6 or 12 or 24))
+        var allowedSlaHours = _systemConfigSettings.ChatAllowedSlaHours;
+        if (!allowedSlaHours.Contains(request.SlaHours))
         {
             // Giữ SLA trong tập giá trị được hệ thống hỗ trợ.
-            throw new BadRequestException("SLA chỉ chấp nhận 6, 12 hoặc 24 giờ.");
+            var allowedDisplay = string.Join(", ", allowedSlaHours);
+            throw new BadRequestException($"SLA chỉ chấp nhận các giá trị: {allowedDisplay} giờ.");
         }
     }
 
@@ -52,10 +55,11 @@ public partial class CreateConversationCommandHandler
         CancellationToken cancellationToken)
     {
         var activeCount = await _conversationRepo.CountActiveByUserIdAsync(request.UserId.ToString(), cancellationToken);
-        if (activeCount >= 5)
+        var maxAllowed = _systemConfigSettings.ChatMaxActiveConversationsPerUser;
+        if (activeCount >= maxAllowed)
         {
             // Rule quota: giới hạn số conversation active để bảo vệ trải nghiệm và chi phí hệ thống.
-            throw new BadRequestException("Bạn đã đạt giới hạn 5 cuộc trò chuyện đang hoạt động.");
+            throw new BadRequestException($"Bạn đã đạt giới hạn {maxAllowed} cuộc trò chuyện đang hoạt động.");
         }
     }
 

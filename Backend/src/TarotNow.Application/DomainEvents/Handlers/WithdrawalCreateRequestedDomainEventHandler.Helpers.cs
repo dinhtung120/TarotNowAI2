@@ -129,10 +129,11 @@ public sealed partial class WithdrawalCreateRequestedDomainEventHandler
         return currentDate.AddDays(-offset);
     }
 
-    private static WithdrawalPlan BuildWithdrawalPlan(long amountDiamond, decimal feeRate)
+    private static WithdrawalPlan BuildWithdrawalPlan(long amountDiamond, decimal feeRate, long vndPerDiamond)
     {
         var normalizedFeeRate = feeRate < 0m ? 0m : feeRate > 1m ? 1m : feeRate;
-        var amountVnd = amountDiamond * EconomyConstants.VndPerDiamond;
+        var normalizedVndPerDiamond = vndPerDiamond <= 0 ? 100 : vndPerDiamond;
+        var amountVnd = amountDiamond * normalizedVndPerDiamond;
         var feeVnd = (long)Math.Ceiling(amountVnd * (double)normalizedFeeRate);
         var netAmountVnd = amountVnd - feeVnd;
         return new WithdrawalPlan(amountVnd, feeVnd, netAmountVnd);

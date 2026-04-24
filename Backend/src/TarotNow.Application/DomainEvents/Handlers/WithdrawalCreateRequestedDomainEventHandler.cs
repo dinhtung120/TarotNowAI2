@@ -1,4 +1,3 @@
-using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
@@ -67,7 +66,10 @@ public sealed partial class WithdrawalCreateRequestedDomainEventHandler
             requestId,
             normalizedRequestKey,
             businessWeekStartUtc,
-            BuildWithdrawalPlan(domainEvent.AmountDiamond, _systemConfigSettings.WithdrawalFeeRate));
+            BuildWithdrawalPlan(
+                domainEvent.AmountDiamond,
+                _systemConfigSettings.WithdrawalFeeRate,
+                _systemConfigSettings.EconomyVndPerDiamond));
 
         var request = BuildPendingRequest(
             domainEvent,

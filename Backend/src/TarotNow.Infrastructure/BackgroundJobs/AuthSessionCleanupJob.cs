@@ -13,8 +13,6 @@ namespace TarotNow.Infrastructure.BackgroundJobs;
 /// </summary>
 public sealed class AuthSessionCleanupJob : BackgroundService
 {
-    private const int MaxBatchLoopsPerCycle = 10;
-
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<AuthSessionCleanupJob> _logger;
     private readonly AuthSecurityOptions _options;
@@ -88,10 +86,11 @@ public sealed class AuthSessionCleanupJob : BackgroundService
         var authSessionRepository = serviceProvider.GetRequiredService<IAuthSessionRepository>();
         var refreshTokenRepository = serviceProvider.GetRequiredService<IRefreshTokenRepository>();
         var context = BuildCleanupContext();
+        var maxBatchLoopsPerCycle = ResolveMaxBatchLoopsPerCycle();
 
         var totalRefreshDeleted = 0;
         var totalSessionsDeleted = 0;
-        for (var loop = 0; loop < MaxBatchLoopsPerCycle; loop++)
+        for (var loop = 0; loop < maxBatchLoopsPerCycle; loop++)
         {
             var deletedRefresh = await refreshTokenRepository.CleanupRevokedOrExpiredBeforeAsync(
                 context.RefreshCutoffUtc,
@@ -176,6 +175,11 @@ public sealed class AuthSessionCleanupJob : BackgroundService
     {
         var minutes = _options.CleanupIntervalMinutes <= 0 ? 30 : _options.CleanupIntervalMinutes;
         return TimeSpan.FromMinutes(minutes);
+    }
+
+    private int ResolveMaxBatchLoopsPerCycle()
+    {
+        return Math.Clamp(_options.CleanupMaxBatchLoopsPerCycle, 1, 100);
     }
 
     private readonly record struct CleanupContext(DateTime RefreshCutoffUtc, DateTime SessionCutoffUtc, int BatchSize);

@@ -31,8 +31,8 @@ public partial class ConversationController
         {
             UserId = userId,
             ReaderId = body.ReaderId,
-            // Dùng SLA mặc định 12 giờ để giữ behavior ổn định khi client không gửi trường này.
-            SlaHours = body.SlaHours ?? 12
+            // Dùng SLA mặc định từ system config để đồng bộ policy runtime.
+            SlaHours = body.SlaHours ?? SystemConfigSettings.ChatDefaultSlaHours
         });
 
         return Ok(result);

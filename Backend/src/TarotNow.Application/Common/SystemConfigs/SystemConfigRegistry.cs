@@ -131,6 +131,9 @@ public static partial class SystemConfigRegistry
             Scalar("gacha.cost_diamond", "5", "Chi phí Diamond mặc định cho một lượt quay gacha.", ValidateLong(0, 1_000_000)),
             Scalar("withdrawal.min_diamond", "500", "Ngưỡng Diamond tối thiểu cho một lệnh rút.", ValidateLong(0, 10_000_000)),
             Scalar("withdrawal.fee_rate", "0.10", "Tỷ lệ phí rút (0-1).", ValidateDecimal(0m, 1m)),
+            Scalar("chat.default_sla_hours", "12", "SLA mặc định cho conversation (giờ).", ValidateInt(1, 168)),
+            Scalar("chat.max_active_conversations_per_user", "5", "Số conversation active tối đa mỗi user.", ValidateInt(1, 200)),
+            Scalar("economy.vnd_per_diamond", "100", "Tỷ giá quy đổi 1 Diamond sang VND.", ValidateLong(1, 1_000_000)),
             Scalar("followup.max_allowed", "5", "Số follow-up tối đa trong một phiên.", ValidateInt(1, 20)),
             Scalar("followup.free_slots.threshold_high", "16", "Ngưỡng level để có 3 lượt free.", ValidateInt(1, 200)),
             Scalar("followup.free_slots.threshold_mid", "11", "Ngưỡng level để có 2 lượt free.", ValidateInt(1, 200)),
@@ -148,6 +151,7 @@ public static partial class SystemConfigRegistry
     {
         return
         [
+            Json("chat.allowed_sla_hours", SerializeDefault(new[] { 6, 12, 24 }), "Danh sách SLA giờ được phép cho conversation.", ValidateIntArrayRange(1, 24, 1, 168)),
             Json("deposit.packages", SerializeDefault(BuildDefaultDepositPackages()), "Danh sách package nạp tiền hiển thị trên wallet.", ValidateJson),
             Json("followup.price_tiers", SerializeDefault(BuildDefaultFollowupPriceTiers()), "Bậc giá follow-up trả phí.", ValidateIntArray(1, 20)),
             Json("gacha.pools", SerializeDefault(BuildDefaultGachaPools()), "Định nghĩa pool/rate gacha để projection xuống PostgreSQL.", ValidateJson),

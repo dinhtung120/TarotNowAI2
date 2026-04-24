@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.Json;
 using TarotNow.Application.Common.SystemConfigs;
 
 namespace TarotNow.Infrastructure.Services.Configuration;
@@ -82,6 +83,11 @@ public sealed partial class SystemConfigSettings
         return configuredValue >= 0 ? configuredValue : fallback;
     }
 
+    private static long ResolvePositiveLong(long configuredValue, long fallback)
+    {
+        return configuredValue > 0 ? configuredValue : fallback;
+    }
+
     private static decimal ClampDecimal(decimal value, decimal min, decimal max)
     {
         if (value < min)
@@ -95,5 +101,35 @@ public sealed partial class SystemConfigSettings
         }
 
         return value;
+    }
+
+    private static IReadOnlyList<int> NormalizeDistinctPositiveOrderedList(
+        IEnumerable<int> values,
+        int minInclusive,
+        int maxInclusive)
+    {
+        return values
+            .Where(v => v >= minInclusive && v <= maxInclusive)
+            .Distinct()
+            .OrderBy(v => v)
+            .ToArray();
+    }
+
+    private IReadOnlyList<int> ReadIntArray(string key)
+    {
+        var raw = ReadString(key);
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return [];
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<int[]>(raw, JsonOptions) ?? [];
+        }
+        catch
+        {
+            return [];
+        }
     }
 }

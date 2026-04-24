@@ -13,6 +13,7 @@ public partial class AcceptConversationCommandHandler
     private readonly ITransactionCoordinator _transactionCoordinator;
     private readonly IChatMessageRepository _chatMessageRepository;
     private readonly IDomainEventPublisher _domainEventPublisher;
+    private readonly ISystemConfigSettings _systemConfigSettings;
 
     /// <summary>
     /// Khởi tạo handler accept conversation.
@@ -23,13 +24,15 @@ public partial class AcceptConversationCommandHandler
         IChatFinanceRepository financeRepository,
         ITransactionCoordinator transactionCoordinator,
         IChatMessageRepository chatMessageRepository,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        ISystemConfigSettings systemConfigSettings)
     {
         _conversationRepository = conversationRepository;
         _financeRepository = financeRepository;
         _transactionCoordinator = transactionCoordinator;
         _chatMessageRepository = chatMessageRepository;
         _domainEventPublisher = domainEventPublisher;
+        _systemConfigSettings = systemConfigSettings;
     }
 
     /// <summary>

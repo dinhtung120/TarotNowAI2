@@ -2,10 +2,12 @@ using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Events;
 using TarotNow.Infrastructure.Messaging.DomainEvents;
+using TarotNow.Infrastructure.Options;
 using TarotNow.Infrastructure.Persistence;
 using TarotNow.Infrastructure.Persistence.Outbox;
 
@@ -16,15 +18,14 @@ namespace TarotNow.Infrastructure.BackgroundJobs.Outbox;
 /// </summary>
 public sealed class OutboxBatchProcessor : IOutboxBatchProcessor
 {
-    private const int BatchSize = 50;
-    private const int MaxRetryAttempts = 12;
-    private static readonly TimeSpan LockTimeout = TimeSpan.FromMinutes(2);
+    private const int LastErrorMaxLength = 3900;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private static readonly string WorkerId = $"{Environment.MachineName}:{Guid.NewGuid():N}";
 
     private readonly ApplicationDbContext _dbContext;
     private readonly IMediator _mediator;
     private readonly ILogger<OutboxBatchProcessor> _logger;
+    private readonly OutboxOptions _options;
 
     /// <summary>
     /// Khởi tạo outbox batch processor.
@@ -32,11 +33,13 @@ public sealed class OutboxBatchProcessor : IOutboxBatchProcessor
     public OutboxBatchProcessor(
         ApplicationDbContext dbContext,
         IMediator mediator,
-        ILogger<OutboxBatchProcessor> logger)
+        ILogger<OutboxBatchProcessor> logger,
+        IOptions<OutboxOptions> options)
     {
         _dbContext = dbContext;
         _mediator = mediator;
         _logger = logger;
+        _options = options.Value;
     }
 
     /// <inheritdoc />
@@ -62,7 +65,8 @@ public sealed class OutboxBatchProcessor : IOutboxBatchProcessor
     private async Task<List<OutboxMessage>> ClaimBatchAsync(CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
-        var staleLockThreshold = now - LockTimeout;
+        var staleLockThreshold = now - ResolveLockTimeout();
+        var batchSize = ResolveBatchSize();
 
         await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -78,7 +82,7 @@ WHERE (
             AND locked_at_utc <= {staleLockThreshold})
       )
 ORDER BY created_at_utc
-LIMIT {BatchSize}
+LIMIT {batchSize}
 FOR UPDATE SKIP LOCKED")
             .ToListAsync(cancellationToken);
 
@@ -147,11 +151,11 @@ FOR UPDATE SKIP LOCKED")
     {
         message.AttemptCount += 1;
         var now = DateTime.UtcNow;
-        var isDeadLetter = message.AttemptCount >= MaxRetryAttempts;
+        var isDeadLetter = message.AttemptCount >= ResolveMaxRetryAttempts();
 
         message.Status = isDeadLetter ? OutboxMessageStatus.DeadLetter : OutboxMessageStatus.Failed;
         message.NextAttemptAtUtc = now.AddSeconds(CalculateBackoffSeconds(message.AttemptCount));
-        message.LastError = Truncate(exception.ToString(), 3900);
+        message.LastError = Truncate(exception.ToString(), LastErrorMaxLength);
         message.LockedAtUtc = null;
         message.LockOwner = null;
 
@@ -173,14 +177,35 @@ FOR UPDATE SKIP LOCKED")
             message.NextAttemptAtUtc);
     }
 
-    private static int CalculateBackoffSeconds(int attemptCount)
+    private int CalculateBackoffSeconds(int attemptCount)
     {
         var seconds = Math.Pow(2, attemptCount);
-        return (int)Math.Min(300, seconds);
+        return (int)Math.Min(ResolveMaxBackoffSeconds(), seconds);
     }
 
     private static string Truncate(string value, int maxLength)
     {
         return value.Length <= maxLength ? value : value[..maxLength];
+    }
+
+    private int ResolveBatchSize()
+    {
+        return Math.Clamp(_options.BatchSize, 1, 5000);
+    }
+
+    private int ResolveMaxRetryAttempts()
+    {
+        return Math.Clamp(_options.MaxRetryAttempts, 1, 100);
+    }
+
+    private TimeSpan ResolveLockTimeout()
+    {
+        var seconds = _options.LockTimeoutSeconds <= 0 ? 120 : _options.LockTimeoutSeconds;
+        return TimeSpan.FromSeconds(Math.Clamp(seconds, 30, 3600));
+    }
+
+    private int ResolveMaxBackoffSeconds()
+    {
+        return Math.Clamp(_options.MaxBackoffSeconds, 1, 3600);
     }
 }

@@ -1,11 +1,13 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TarotNow.Application.Interfaces;
 using TarotNow.Application.Helpers;
+using TarotNow.Infrastructure.Options;
 
 namespace TarotNow.Infrastructure.BackgroundJobs;
 
@@ -14,15 +16,20 @@ public class LeaderboardSnapshotJob : BackgroundService
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<LeaderboardSnapshotJob> _logger;
+    private readonly LeaderboardSnapshotOptions _options;
 
     /// <summary>
     /// Khởi tạo job snapshot leaderboard.
     /// Luồng xử lý: nhận service provider để resolve repository theo scope và logger theo dõi tiến trình.
     /// </summary>
-    public LeaderboardSnapshotJob(IServiceProvider serviceProvider, ILogger<LeaderboardSnapshotJob> logger)
+    public LeaderboardSnapshotJob(
+        IServiceProvider serviceProvider,
+        ILogger<LeaderboardSnapshotJob> logger,
+        IOptions<LeaderboardSnapshotOptions> options)
     {
         _serviceProvider = serviceProvider;
         _logger = logger;
+        _options = options.Value;
     }
 
     /// <summary>
@@ -33,7 +40,7 @@ public class LeaderboardSnapshotJob : BackgroundService
     {
         try
         {
-            await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+            await Task.Delay(ResolveStartupDelay(), stoppingToken);
             // Delay ngắn sau startup để giảm cạnh tranh tài nguyên lúc hệ thống vừa khởi động.
 
             while (!stoppingToken.IsCancellationRequested)
@@ -42,11 +49,11 @@ public class LeaderboardSnapshotJob : BackgroundService
                 {
                     var now = DateTime.UtcNow;
 
-                    if (now.Hour == 0 && now.Minute >= 5 && now.Minute <= 15)
+                    if (IsWithinDailyWindow(now))
                     {
                         await PerformSnapshotsAsync(stoppingToken);
                         // Sau khi snapshot thành công thì ngủ dài để tránh chạy lặp nhiều lần cùng ngày.
-                        await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
+                        await Task.Delay(ResolvePostSnapshotSleep(), stoppingToken);
                     }
                 }
                 catch (ObjectDisposedException) when (stoppingToken.IsCancellationRequested)
@@ -59,7 +66,7 @@ public class LeaderboardSnapshotJob : BackgroundService
                     // Bắt lỗi cục bộ để vòng lặp job vẫn tiếp tục.
                 }
 
-                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+                await Task.Delay(ResolveLoopInterval(), stoppingToken);
             }
         }
         catch (OperationCanceledException)
@@ -109,7 +116,7 @@ public class LeaderboardSnapshotJob : BackgroundService
         string periodKey,
         CancellationToken ct)
     {
-        var entries = await lbRepo.GetTopEntriesAsync(track, periodKey, 100, ct);
+        var entries = await lbRepo.GetTopEntriesAsync(track, periodKey, ResolveTopEntries(), ct);
         if (entries.Count == 0)
         {
             // Không có dữ liệu thì bỏ qua snapshot để tránh tạo bản ghi rỗng.
@@ -140,5 +147,41 @@ public class LeaderboardSnapshotJob : BackgroundService
         }, ct);
 
         _logger.LogInformation("Đã lưu Snapshot cho {Track} - {Period}", track, periodKey);
+    }
+
+    private bool IsWithinDailyWindow(DateTime nowUtc)
+    {
+        var hour = Math.Clamp(_options.DailyWindowHourUtc, 0, 23);
+        var startMinute = Math.Clamp(_options.DailyWindowStartMinuteUtc, 0, 59);
+        var endMinute = Math.Clamp(_options.DailyWindowEndMinuteUtc, 0, 59);
+        if (endMinute < startMinute)
+        {
+            endMinute = startMinute;
+        }
+
+        return nowUtc.Hour == hour && nowUtc.Minute >= startMinute && nowUtc.Minute <= endMinute;
+    }
+
+    private TimeSpan ResolveStartupDelay()
+    {
+        var seconds = _options.StartupDelaySeconds <= 0 ? 60 : _options.StartupDelaySeconds;
+        return TimeSpan.FromSeconds(Math.Clamp(seconds, 1, 3600));
+    }
+
+    private TimeSpan ResolveLoopInterval()
+    {
+        var seconds = _options.LoopIntervalSeconds <= 0 ? 60 : _options.LoopIntervalSeconds;
+        return TimeSpan.FromSeconds(Math.Clamp(seconds, 5, 3600));
+    }
+
+    private TimeSpan ResolvePostSnapshotSleep()
+    {
+        var minutes = _options.PostSnapshotSleepMinutes <= 0 ? 60 : _options.PostSnapshotSleepMinutes;
+        return TimeSpan.FromMinutes(Math.Clamp(minutes, 1, 240));
+    }
+
+    private int ResolveTopEntries()
+    {
+        return Math.Clamp(_options.TopEntries, 1, 1000);
     }
 }

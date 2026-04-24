@@ -1,7 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using TarotNow.Application.Interfaces;
+using TarotNow.Infrastructure.Options;
 
 namespace TarotNow.Infrastructure.BackgroundJobs.Outbox;
 
@@ -10,20 +12,21 @@ namespace TarotNow.Infrastructure.BackgroundJobs.Outbox;
 /// </summary>
 public sealed class OutboxProcessorWorker : BackgroundService
 {
-    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(5);
-
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<OutboxProcessorWorker> _logger;
+    private readonly TimeSpan _pollInterval;
 
     /// <summary>
     /// Khởi tạo outbox processor worker.
     /// </summary>
     public OutboxProcessorWorker(
         IServiceScopeFactory scopeFactory,
-        ILogger<OutboxProcessorWorker> logger)
+        ILogger<OutboxProcessorWorker> logger,
+        IOptions<OutboxOptions> options)
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
+        _pollInterval = ResolvePollInterval(options.Value);
     }
 
     /// <inheritdoc />
@@ -46,7 +49,7 @@ public sealed class OutboxProcessorWorker : BackgroundService
                 _logger.LogError(exception, "Outbox processor loop failed.");
             }
 
-            await Task.Delay(PollInterval, stoppingToken);
+            await Task.Delay(_pollInterval, stoppingToken);
         }
 
         _logger.LogInformation("Outbox processor stopped.");
@@ -57,5 +60,11 @@ public sealed class OutboxProcessorWorker : BackgroundService
         using var scope = _scopeFactory.CreateScope();
         var processor = scope.ServiceProvider.GetRequiredService<IOutboxBatchProcessor>();
         await processor.ProcessOnceAsync(cancellationToken);
+    }
+
+    private static TimeSpan ResolvePollInterval(OutboxOptions options)
+    {
+        var seconds = options.PollIntervalSeconds <= 0 ? 5 : options.PollIntervalSeconds;
+        return TimeSpan.FromSeconds(Math.Clamp(seconds, 1, 300));
     }
 }

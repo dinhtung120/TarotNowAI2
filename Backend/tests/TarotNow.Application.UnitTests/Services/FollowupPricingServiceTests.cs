@@ -106,6 +106,10 @@ public class FollowupPricingServiceTests
         public long DailyCheckinGold => 100;
         public int StreakFreezeWindowHours => 48;
         public long GachaCostDiamond => 10;
+        public IReadOnlyList<int> ChatAllowedSlaHours => [6, 12, 24];
+        public int ChatDefaultSlaHours => 12;
+        public int ChatMaxActiveConversationsPerUser => 5;
+        public long EconomyVndPerDiamond => 100;
         public IReadOnlyList<int> FollowupPriceTiers => [1, 2, 4, 8, 16];
         public int FollowupMaxAllowed => 5;
         public int FollowupFreeSlotThresholdLow => 5;

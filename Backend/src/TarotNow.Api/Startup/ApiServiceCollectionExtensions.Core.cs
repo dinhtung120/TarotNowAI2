@@ -25,7 +25,7 @@ public static partial class ApiServiceCollectionExtensions
         AddApiVersioningServices(services);
         AddOpenApiServices(services);
         AddPlatformServices(services, configuration);
-        AddRateLimitPolicies(services);
+        AddRateLimitPolicies(services, configuration);
         return services;
     }
 

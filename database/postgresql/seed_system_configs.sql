@@ -8,7 +8,7 @@ WHERE updated_at IS NULL;
 
 INSERT INTO system_configs (key, value, description, updated_at)
 VALUES
-    ('diamond_vnd_rate', '1000', 'Tỷ giá: 1 Diamond = ? VND. Mặc định 1000.', NOW()),
+    ('economy.vnd_per_diamond', '100', 'Tỷ giá: 1 Diamond = ? VND. Mặc định 100.', NOW()),
     ('platform_fee_percent', '10', 'Phí nền tảng (%) khi Reader rút tiền. Mặc định 10%.', NOW()),
     ('min_withdrawal_diamond', '50', 'Số Diamond tối thiểu để rút tiền. Mặc định 50.', NOW()),
     ('daily_checkin_gold', '5', 'Số Gold thưởng khi điểm danh hàng ngày. Mặc định 5.', NOW()),

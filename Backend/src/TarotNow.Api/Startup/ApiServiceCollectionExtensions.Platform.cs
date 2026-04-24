@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using System.Reflection;
 using TarotNow.Api.Constants;
 using TarotNow.Api.Middlewares;
+using TarotNow.Api.Options;
 using TarotNow.Api.Realtime;
 using TarotNow.Api.Services;
 using TarotNow.Application;
@@ -11,6 +12,7 @@ using TarotNow.Application.Interfaces;
 using TarotNow.Infrastructure;
 using TarotNow.Infrastructure.Services;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Configuration;
 using System.Net;
 
 namespace TarotNow.Api.Startup;
@@ -67,7 +69,7 @@ public static partial class ApiServiceCollectionExtensions
             options.AddPolicy(ApiAuthorizationPolicies.AuthenticatedUser, ApiAuthorizationPolicies.RequireAuthenticatedUser);
             options.AddPolicy(ApiAuthorizationPolicies.AdminOnly, ApiAuthorizationPolicies.RequireAdminOnly);
         });
-        ConfigureSignalR(services, configuration.GetConnectionString("Redis"));
+        ConfigureSignalR(services, configuration.GetConnectionString("Redis"), ResolveSignalROptions(configuration));
     }
 
     /// <summary>
@@ -81,6 +83,7 @@ public static partial class ApiServiceCollectionExtensions
         {
             return;
         }
+        var runtimeOptions = ResolveForwardedHeadersRuntimeOptions(configuration);
 
         var knownProxies = ReadTrustedForwardedHeaderEntries(configuration, "ForwardedHeaders:KnownProxies");
         var knownNetworks = ReadTrustedForwardedHeaderEntries(configuration, "ForwardedHeaders:KnownNetworks");
@@ -94,7 +97,7 @@ public static partial class ApiServiceCollectionExtensions
         services.Configure<ForwardedHeadersOptions>(options =>
         {
             options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-            options.ForwardLimit = 2;
+            options.ForwardLimit = runtimeOptions.ForwardLimit;
             options.RequireHeaderSymmetry = false;
             options.KnownNetworks.Clear();
             options.KnownProxies.Clear();
@@ -168,12 +171,15 @@ public static partial class ApiServiceCollectionExtensions
     /// Cấu hình SignalR và tùy chọn backplane Redis khi có connection string.
     /// Luồng xử lý: tạo SignalR builder, cấu hình payload JSON enum, rồi bật Redis scale-out nếu được cấu hình.
     /// </summary>
-    private static void ConfigureSignalR(IServiceCollection services, string? redisConnectionString)
+    private static void ConfigureSignalR(
+        IServiceCollection services,
+        string? redisConnectionString,
+        SignalRRuntimeOptions signalROptions)
     {
         var signalRBuilder = services.AddSignalR(options =>
         {
             // Giới hạn cao hơn mặc định để hỗ trợ payload media metadata lớn trong chat.
-            options.MaximumReceiveMessageSize = 10 * 1024 * 1024;
+            options.MaximumReceiveMessageSize = signalROptions.MaximumReceiveMessageSizeBytes;
         }).AddJsonProtocol(options =>
         {
             // Đồng bộ chuẩn enum serialization giữa REST và SignalR payload.
@@ -186,5 +192,26 @@ public static partial class ApiServiceCollectionExtensions
             // Chỉ bật Redis backplane khi có cấu hình để mở rộng realtime theo mô hình multi-instance.
             signalRBuilder.AddStackExchangeRedis(redisConnectionString);
         }
+    }
+
+    private static ForwardedHeadersRuntimeOptions ResolveForwardedHeadersRuntimeOptions(IConfiguration configuration)
+    {
+        var configured = configuration.GetSection("ForwardedHeaders").Get<ForwardedHeadersRuntimeOptions>() ?? new();
+        return new ForwardedHeadersRuntimeOptions
+        {
+            ForwardLimit = Math.Clamp(configured.ForwardLimit, 1, 20)
+        };
+    }
+
+    private static SignalRRuntimeOptions ResolveSignalROptions(IConfiguration configuration)
+    {
+        var configured = configuration.GetSection("SignalR").Get<SignalRRuntimeOptions>() ?? new();
+        var maxSize = configured.MaximumReceiveMessageSizeBytes <= 0
+            ? 10 * 1024 * 1024
+            : configured.MaximumReceiveMessageSizeBytes;
+        return new SignalRRuntimeOptions
+        {
+            MaximumReceiveMessageSizeBytes = Math.Clamp(maxSize, 1024, 100L * 1024 * 1024)
+        };
     }
 }

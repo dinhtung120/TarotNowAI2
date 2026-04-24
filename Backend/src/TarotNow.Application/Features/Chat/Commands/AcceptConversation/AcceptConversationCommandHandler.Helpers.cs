@@ -1,3 +1,4 @@
+using System.Linq;
 using TarotNow.Application.Common;
 using TarotNow.Domain.Enums;
 
@@ -33,8 +34,20 @@ public partial class AcceptConversationCommandHandler
     /// Chuẩn hóa SLA hours về tập giá trị cho phép.
     /// Luồng xử lý: nhận giá trị cấu hình, chỉ chấp nhận 6/12/24, fallback về 12 nếu ngoài tập.
     /// </summary>
-    private static int ResolveSlaHours(int configuredSlaHours)
+    private int ResolveSlaHours(int configuredSlaHours)
     {
-        return configuredSlaHours is 6 or 12 or 24 ? configuredSlaHours : 12;
+        var allowedSlaHours = _systemConfigSettings.ChatAllowedSlaHours;
+        if (allowedSlaHours.Contains(configuredSlaHours))
+        {
+            return configuredSlaHours;
+        }
+
+        var defaultSlaHours = _systemConfigSettings.ChatDefaultSlaHours;
+        if (allowedSlaHours.Contains(defaultSlaHours))
+        {
+            return defaultSlaHours;
+        }
+
+        return allowedSlaHours[0];
     }
 }

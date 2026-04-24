@@ -1126,7 +1126,7 @@ CREATE TRIGGER trg_chat_question_items_updated_at BEFORE UPDATE ON chat_question
 
 
 INSERT INTO system_configs (key, value, description) VALUES
-    ('diamond_vnd_rate',         '1000',  '1 Diamond = 1000 VND (tỷ giá chuẩn)'),
+    ('economy.vnd_per_diamond',  '100',   '1 Diamond = 100 VND (tỷ giá chuẩn)'),
     ('daily_checkin_gold',       '1',    'Vàng trao mỗi ngày điểm danh'),
     ('register_bonus_gold',      '5',    'Vàng tặng khi xác minh email'),
     ('platform_fee_percent',     '10',   'Phí nền tảng (%) khi Reader rút tiền'),

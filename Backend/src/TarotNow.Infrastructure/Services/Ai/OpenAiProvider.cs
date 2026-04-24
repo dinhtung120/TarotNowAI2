@@ -19,6 +19,10 @@ public partial class OpenAiProvider : IAiProvider
     private readonly string _modelName;
     // Số lần retry tối đa cho lỗi tạm thời từ mạng/provider.
     private readonly int _maxRetries;
+    // Delay cơ sở cho retry streaming (ms).
+    private readonly int _streamingRetryBaseDelayMs;
+    // Temperature mặc định cho request streaming.
+    private readonly double _streamingTemperature;
 
     // Tên provider trả về cho tầng ứng dụng để định danh nguồn AI.
     public string ProviderName => "OpenAI";
@@ -58,6 +62,15 @@ public partial class OpenAiProvider : IAiProvider
 
         // Giới hạn retry ở giá trị không âm để tránh cấu hình âm gây hành vi bất định.
         _maxRetries = providerOptions.MaxRetries >= 0 ? providerOptions.MaxRetries : 2;
+        _streamingRetryBaseDelayMs = providerOptions.StreamingRetryBaseDelayMs > 0
+            ? providerOptions.StreamingRetryBaseDelayMs
+            : 200;
+        var configuredTemperature = providerOptions.StreamingTemperature;
+        if (double.IsNaN(configuredTemperature) || double.IsInfinity(configuredTemperature))
+        {
+            configuredTemperature = 0.7;
+        }
+        _streamingTemperature = Math.Clamp(configuredTemperature, 0.0, 2.0);
 
         // Chuẩn hóa timeout/baseUrl giúp client luôn có thông số chạy tối thiểu hợp lệ.
         var timeoutSeconds = providerOptions.TimeoutSeconds > 0 ? providerOptions.TimeoutSeconds : 30;

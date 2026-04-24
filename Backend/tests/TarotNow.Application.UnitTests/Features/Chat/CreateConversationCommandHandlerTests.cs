@@ -17,6 +17,8 @@ public class CreateConversationCommandHandlerTests
     private readonly Mock<IConversationRepository> _mockConvRepo;
     // Mock profile repo để xác thực trạng thái reader trước khi tạo conversation.
     private readonly Mock<IReaderProfileRepository> _mockProfileRepo;
+    // Mock system config để đọc policy SLA/cap runtime.
+    private readonly Mock<ISystemConfigSettings> _mockSystemConfigSettings;
     // Handler cần kiểm thử.
     private readonly CreateConversationCommandHandler _handler;
 
@@ -28,7 +30,14 @@ public class CreateConversationCommandHandlerTests
     {
         _mockConvRepo = new Mock<IConversationRepository>();
         _mockProfileRepo = new Mock<IReaderProfileRepository>();
-        _handler = new CreateConversationCommandHandler(_mockConvRepo.Object, _mockProfileRepo.Object);
+        _mockSystemConfigSettings = new Mock<ISystemConfigSettings>();
+        _mockSystemConfigSettings.SetupGet(x => x.ChatAllowedSlaHours).Returns([6, 12, 24]);
+        _mockSystemConfigSettings.SetupGet(x => x.ChatDefaultSlaHours).Returns(12);
+        _mockSystemConfigSettings.SetupGet(x => x.ChatMaxActiveConversationsPerUser).Returns(5);
+        _handler = new CreateConversationCommandHandler(
+            _mockConvRepo.Object,
+            _mockProfileRepo.Object,
+            _mockSystemConfigSettings.Object);
     }
 
     /// <summary>
@@ -40,6 +49,23 @@ public class CreateConversationCommandHandlerTests
     {
         var id = Guid.NewGuid();
         var command = new CreateConversationCommand { UserId = id, ReaderId = id };
+        await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
+    }
+
+    /// <summary>
+    /// Xác nhận SLA ngoài danh sách cho phép sẽ bị từ chối.
+    /// Luồng này đảm bảo policy SLA runtime từ system config được áp dụng.
+    /// </summary>
+    [Fact]
+    public async Task Handle_SlaHoursOutsideAllowedList_ThrowsBadRequest()
+    {
+        var command = new CreateConversationCommand
+        {
+            UserId = Guid.NewGuid(),
+            ReaderId = Guid.NewGuid(),
+            SlaHours = 48
+        };
+
         await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
     }
 
@@ -143,5 +169,24 @@ public class CreateConversationCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
         Assert.Equal(ConversationStatus.Pending, result.Status);
         _mockConvRepo.Verify(x => x.AddAsync(It.IsAny<ConversationDto>(), default), Times.Once);
+    }
+
+    /// <summary>
+    /// Xác nhận vượt ngưỡng active conversation từ config sẽ bị chặn.
+    /// Luồng này đảm bảo cap runtime theo system config được áp dụng.
+    /// </summary>
+    [Fact]
+    public async Task Handle_UserReachedActiveConversationCap_ThrowsBadRequest()
+    {
+        var userId = Guid.NewGuid();
+        var readerId = Guid.NewGuid();
+        var command = new CreateConversationCommand { UserId = userId, ReaderId = readerId };
+        var profile = new ReaderProfileDto { Status = ReaderOnlineStatus.Online };
+        _mockSystemConfigSettings.SetupGet(x => x.ChatMaxActiveConversationsPerUser).Returns(3);
+        _mockProfileRepo.Setup(x => x.GetByUserIdAsync(readerId.ToString(), default)).ReturnsAsync(profile);
+        _mockConvRepo.Setup(x => x.CountActiveByUserIdAsync(userId.ToString(), default)).ReturnsAsync(3);
+
+        await Assert.ThrowsAsync<BadRequestException>(() => _handler.Handle(command, CancellationToken.None));
+        _mockConvRepo.Verify(x => x.AddAsync(It.IsAny<ConversationDto>(), default), Times.Never);
     }
 }

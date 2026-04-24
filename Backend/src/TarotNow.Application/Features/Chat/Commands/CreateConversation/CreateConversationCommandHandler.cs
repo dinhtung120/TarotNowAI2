@@ -11,6 +11,7 @@ public partial class CreateConversationCommandHandler : IRequestHandler<CreateCo
 {
     private readonly IConversationRepository _conversationRepo;
     private readonly IReaderProfileRepository _readerProfileRepo;
+    private readonly ISystemConfigSettings _systemConfigSettings;
 
     /// <summary>
     /// Khởi tạo handler create conversation.
@@ -18,10 +19,12 @@ public partial class CreateConversationCommandHandler : IRequestHandler<CreateCo
     /// </summary>
     public CreateConversationCommandHandler(
         IConversationRepository conversationRepo,
-        IReaderProfileRepository readerProfileRepo)
+        IReaderProfileRepository readerProfileRepo,
+        ISystemConfigSettings systemConfigSettings)
     {
         _conversationRepo = conversationRepo;
         _readerProfileRepo = readerProfileRepo;
+        _systemConfigSettings = systemConfigSettings;
     }
 
     /// <summary>

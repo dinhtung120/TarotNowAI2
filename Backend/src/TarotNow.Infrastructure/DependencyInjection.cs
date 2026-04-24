@@ -35,6 +35,8 @@ public static partial class DependencyInjection
         services.Configure<CorsOptions>(configuration.GetSection("Cors"));
         services.Configure<AiProviderOptions>(configuration.GetSection("AiProvider"));
         services.Configure<SystemConfigOptions>(configuration.GetSection("SystemConfig"));
+        services.Configure<OutboxOptions>(configuration.GetSection("Outbox"));
+        services.Configure<LeaderboardSnapshotOptions>(configuration.GetSection("LeaderboardSnapshot"));
         services.Configure<DepositOptions>(configuration.GetSection("Deposit"));
         services.AddOptions<PayOsOptions>()
             .Bind(configuration.GetSection("PayOS"))

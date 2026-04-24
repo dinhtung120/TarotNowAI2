@@ -74,7 +74,7 @@ public partial class OpenAiProvider
             catch (Exception ex) when (IsRetryable(ex, cancellationToken) && attempt < _maxRetries)
             {
                 // Backoff tuyến tính ngắn để giảm bão retry nhưng vẫn giữ độ phản hồi.
-                var delayMs = 200 * (attempt + 1);
+                var delayMs = _streamingRetryBaseDelayMs * (attempt + 1);
                 _logger.LogWarning(
                     ex,
                     "OpenAI request failed. Retrying attempt {Attempt}/{MaxRetries} after {DelayMs}ms.",
@@ -118,7 +118,7 @@ public partial class OpenAiProvider
                 new { role = "system", content = systemPrompt },
                 new { role = "user", content = userPrompt }
             },
-            temperature = 0.7,
+            temperature = _streamingTemperature,
             stream = true
         };
     }

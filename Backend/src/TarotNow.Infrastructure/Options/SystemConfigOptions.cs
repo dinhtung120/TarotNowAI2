@@ -27,6 +27,12 @@ public sealed class SystemConfigOptions
     // Cấu hình policy escrow.
     public EscrowOptions Escrow { get; set; } = new();
 
+    // Cấu hình policy chat conversation.
+    public ChatOptions Chat { get; set; } = new();
+
+    // Cấu hình quy đổi economy.
+    public EconomyOptions Economy { get; set; } = new();
+
     // Cấu hình chi tiết giá theo từng loại trải bài.
     public sealed class PricingOptions
     {
@@ -75,5 +81,17 @@ public sealed class SystemConfigOptions
         public int DisputeWindowHours { get; set; } = 48;
         public int ReaderResponseDueHours { get; set; } = 24;
         public int AutoRefundHours { get; set; } = 24;
+    }
+
+    public sealed class ChatOptions
+    {
+        public List<int> AllowedSlaHours { get; set; } = [6, 12, 24];
+        public int DefaultSlaHours { get; set; } = 12;
+        public int MaxActiveConversationsPerUser { get; set; } = 5;
+    }
+
+    public sealed class EconomyOptions
+    {
+        public long VndPerDiamond { get; set; } = 100;
     }
 }

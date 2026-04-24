@@ -41,6 +41,11 @@ public sealed class AuthSecurityOptions
     public int CleanupBatchSize { get; set; } = 200;
 
     /// <summary>
+    /// Số vòng lặp batch tối đa trong mỗi chu kỳ cleanup.
+    /// </summary>
+    public int CleanupMaxBatchLoopsPerCycle { get; set; } = 10;
+
+    /// <summary>
     /// Chu kỳ chạy auth cleanup job (phút).
     /// </summary>
     public int CleanupIntervalMinutes { get; set; } = 30;

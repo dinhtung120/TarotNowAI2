@@ -39,6 +39,18 @@ public interface ISystemConfigSettings
     // Chi phí Diamond cho một lần quay gacha.
     long GachaCostDiamond { get; }
 
+    // Danh sách SLA giờ được phép cho conversation.
+    IReadOnlyList<int> ChatAllowedSlaHours { get; }
+
+    // SLA mặc định khi client không truyền giá trị.
+    int ChatDefaultSlaHours { get; }
+
+    // Số conversation active tối đa cho mỗi user.
+    int ChatMaxActiveConversationsPerUser { get; }
+
+    // Tỷ giá quy đổi VND theo 1 Diamond.
+    long EconomyVndPerDiamond { get; }
+
     // Bậc giá follow-up trả phí theo thứ tự lượt hỏi.
     IReadOnlyList<int> FollowupPriceTiers { get; }
 

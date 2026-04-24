@@ -17,4 +17,10 @@ public sealed class AiProviderOptions
 
     // Số lần retry tối đa khi request AI lỗi tạm thời.
     public int MaxRetries { get; set; } = 2;
+
+    // Delay cơ sở cho retry streaming (ms).
+    public int StreamingRetryBaseDelayMs { get; set; } = 200;
+
+    // Temperature mặc định cho chat completion streaming.
+    public double StreamingTemperature { get; set; } = 0.7;
 }

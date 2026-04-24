@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Extensions;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Api.Controllers;
 
@@ -16,14 +17,19 @@ namespace TarotNow.Api.Controllers;
 public partial class ConversationController : ControllerBase
 {
     protected readonly IMediator Mediator;
+    protected readonly ISystemConfigSettings SystemConfigSettings;
 
     /// <summary>
     /// Khởi tạo controller hội thoại.
     /// </summary>
     /// <param name="mediator">MediatR điều phối command/query hội thoại.</param>
-    public ConversationController(IMediator mediator)
+    /// <param name="systemConfigSettings">Runtime system config cho policy chat.</param>
+    public ConversationController(
+        IMediator mediator,
+        ISystemConfigSettings systemConfigSettings)
     {
         Mediator = mediator;
+        SystemConfigSettings = systemConfigSettings;
     }
 
     /// <summary>
