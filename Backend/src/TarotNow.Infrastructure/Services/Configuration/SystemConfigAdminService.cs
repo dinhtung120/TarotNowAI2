@@ -36,12 +36,10 @@ public sealed class SystemConfigAdminService : ISystemConfigAdminService
     {
         var existingConfigs = await _systemConfigRepository.GetAllAsync(cancellationToken);
         var existingByKey = existingConfigs.ToDictionary(x => x.Key, StringComparer.OrdinalIgnoreCase);
-        var managedKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var items = new List<SystemConfigAdminItem>();
 
         foreach (var definition in SystemConfigRegistry.GetAll())
         {
-            managedKeys.Add(definition.Key);
             if (existingByKey.TryGetValue(definition.Key, out var existing))
             {
                 items.Add(ToAdminItem(existing, isKnownKey: true, source: "db"));
@@ -59,11 +57,6 @@ public sealed class SystemConfigAdminService : ISystemConfigAdminService
                 IsKnownKey = true,
                 Source = "default"
             });
-        }
-
-        foreach (var unknown in existingConfigs.Where(x => !managedKeys.Contains(x.Key)))
-        {
-            items.Add(ToAdminItem(unknown, isKnownKey: false, source: "db"));
         }
 
         return items

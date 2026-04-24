@@ -1125,26 +1125,8 @@ CREATE TRIGGER trg_chat_question_items_updated_at BEFORE UPDATE ON chat_question
 
 
 
-INSERT INTO system_configs (key, value, description) VALUES
-    ('economy.vnd_per_diamond',  '100',   '1 Diamond = 100 VND (tỷ giá chuẩn)'),
-    ('daily_checkin_gold',       '1',    'Vàng trao mỗi ngày điểm danh'),
-    ('register_bonus_gold',      '5',    'Vàng tặng khi xác minh email'),
-    ('platform_fee_percent',     '10',   'Phí nền tảng (%) khi Reader rút tiền'),
-    ('min_withdrawal_diamond',   '50',   'Diamond tối thiểu để rút'),
-    ('ai_error_timeout_seconds', '30',   'Timeout AI (giây)'),
-    ('ai_daily_quota_free',      '3',    'Số request AI/ngày (Free tier)'),
-    ('share_reward_gold',        '2',    'Vàng thưởng mỗi lần share MXH'),
-    
-    ('ai_max_retry_per_request', '1',    'Số lần retry tối đa mỗi AI request (BR-14)'),
-    ('ai_timeout_before_token_seconds', '30', 'Timeout chờ token đầu tiên (ARCH-4.4.3)'),
-    ('ai_in_flight_cap',         '2',    'Số AI request đồng thời tối đa per user (ARCH-4.4.3)'),
-    ('streak_freeze_window_hours', '24', 'Cửa sổ mua streak freeze (giờ) – BR-7'),
-    
-    ('friend_chain_reward_gold', '3', 'Gold thưởng mỗi friend chain reading – BR-4.7.2'),
-    ('friend_chain_daily_cap', '3', 'Số lần nhận thưởng friend chain tối đa/ngày – BR-4.7.2'),
-    ('gacha_cost_diamond', '5', 'Diamond phí mỗi lần quay Gacha – BR-5.2'),
-    ('offer_timeout_hours', '12', 'Thời gian chờ reader accept offer trước khi hết hạn (giờ) – N3 fix')
-ON CONFLICT (key) DO NOTHING;
+-- Không seed key legacy tại schema bootstrap.
+-- Bộ key chuẩn được quản lý tập trung bởi SystemConfigRegistry và bootstrap runtime.
 
 
 

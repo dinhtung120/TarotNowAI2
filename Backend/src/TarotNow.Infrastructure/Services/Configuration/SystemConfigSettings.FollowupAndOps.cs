@@ -61,7 +61,7 @@ public sealed partial class SystemConfigSettings
 
     // Rút tối thiểu.
     public long WithdrawalMinDiamond => ResolveNonNegativeLong(
-        ReadLong(["withdrawal.min_diamond", "min_withdrawal_diamond"], _options.Withdrawal.MinDiamond),
+        ReadLong(["withdrawal.min_diamond"], _options.Withdrawal.MinDiamond),
         fallback: 500);
 
     // Tỷ lệ phí rút.
@@ -73,12 +73,6 @@ public sealed partial class SystemConfigSettings
             if (directRate.HasValue)
             {
                 return ClampDecimal(directRate.Value, 0m, 1m);
-            }
-
-            var percent = ReadDecimal("platform_fee_percent");
-            if (percent.HasValue)
-            {
-                return ClampDecimal(percent.Value / 100m, 0m, 1m);
             }
 
             return ClampDecimal(_options.Withdrawal.FeeRate, 0m, 1m);
@@ -102,11 +96,11 @@ public sealed partial class SystemConfigSettings
 
     // Escrow response due.
     public int EscrowReaderResponseDueHours => ResolvePositiveInt(
-        ReadInt(["escrow.reader_response_due_hours", "chat_reader_response_hours"], _options.Escrow.ReaderResponseDueHours),
+        ReadInt(["escrow.reader_response_due_hours"], _options.Escrow.ReaderResponseDueHours),
         fallback: 24);
 
     // Escrow auto refund.
     public int EscrowAutoRefundHours => ResolvePositiveInt(
-        ReadInt(["escrow.auto_refund_hours", "chat_auto_release_hours"], _options.Escrow.AutoRefundHours),
+        ReadInt(["escrow.auto_refund_hours"], _options.Escrow.AutoRefundHours),
         fallback: 24);
 }
