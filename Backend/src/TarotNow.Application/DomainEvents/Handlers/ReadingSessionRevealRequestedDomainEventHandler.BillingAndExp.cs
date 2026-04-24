@@ -32,6 +32,15 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
         ReadingSession session,
         CancellationToken cancellationToken)
     {
+        // Thẻ miễn phí lượt xem bài chỉ áp dụng khi user chọn thanh toán bằng gold.
+        // Nếu user chọn diamond thì không được sử dụng free draw credit,
+        // vì free draw ticket là phần thưởng dành riêng cho luồng gold.
+        // Trước đây thiếu kiểm tra này khiến user ở tab diamond vẫn được miễn phí.
+        if (string.Equals(session.CurrencyUsed, CurrencyType.Diamond, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
         var freeDrawSpreadCardCount = InventoryBusinessConstants.ResolveFreeDrawSpreadCardCount(session.SpreadType);
         if (freeDrawSpreadCardCount is null)
         {
