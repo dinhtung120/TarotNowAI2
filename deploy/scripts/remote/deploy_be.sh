@@ -38,6 +38,30 @@ if [[ ! -f "$COMPOSE_FILE" ]]; then
   exit 1
 fi
 
+dc() {
+  docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" -f "$OVERRIDE_FILE" "$@"
+}
+
+dump_backend_diagnostics() {
+  echo "[deploy-be] backend diagnostics begin" >&2
+  dc ps backend >&2 || true
+  echo "[deploy-be] backend logs (last 200 lines):" >&2
+  dc logs --no-color --tail=200 backend >&2 || true
+
+  local container_id
+  container_id="$(dc ps -q backend 2>/dev/null | head -n 1 || true)"
+  if [[ -n "$container_id" ]]; then
+    echo "[deploy-be] backend container inspect:" >&2
+    docker inspect --format 'name={{.Name}} status={{.State.Status}} health={{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}} exit={{.State.ExitCode}} started={{.State.StartedAt}} finished={{.State.FinishedAt}} error={{.State.Error}}' "$container_id" >&2 || true
+  fi
+
+  echo "[deploy-be] probe /api/v1/health/live:" >&2
+  curl -sS -i http://localhost:5037/api/v1/health/live >&2 || true
+  echo "[deploy-be] probe /api/v1/health/ready:" >&2
+  curl -sS -i http://localhost:5037/api/v1/health/ready >&2 || true
+  echo "[deploy-be] backend diagnostics end" >&2
+}
+
 echo "[deploy-be] pulling backend image: $BACKEND_IMAGE_REF"
 docker pull "$BACKEND_IMAGE_REF"
 
@@ -56,10 +80,16 @@ YAML
 export BACKEND_IMAGE="$BACKEND_IMAGE_REF"
 
 echo "[deploy-be] running schema migration guard (--migrate) with backend image"
-docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" -f "$OVERRIDE_FILE" run --rm --no-deps backend --migrate
+dc run --rm --no-deps backend --migrate
 
 echo "[deploy-be] deploying backend container"
-docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" -f "$OVERRIDE_FILE" up -d --no-deps backend
+dc up -d --no-deps backend
+
+if [[ -z "$(dc ps --status running -q backend)" ]]; then
+  echo "[deploy-be] backend container is not running right after deploy" >&2
+  dump_backend_diagnostics
+  exit 1
+fi
 
 echo "[deploy-be] waiting for backend readiness"
 for i in $(seq 1 60); do
@@ -70,6 +100,7 @@ for i in $(seq 1 60); do
   sleep 2
   if [[ "$i" -eq 60 ]]; then
     echo "[deploy-be] backend readiness check failed" >&2
+    dump_backend_diagnostics
     exit 1
   fi
 done

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TarotNow.Application.Common.SystemConfigs;
 using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Entities;
 using TarotNow.Infrastructure.Services.Configuration;
 
 namespace TarotNow.Infrastructure.BackgroundJobs;
@@ -36,6 +37,18 @@ public sealed class SystemConfigBootstrapHostedService : IHostedService
 
         _logger.LogInformation("[SystemConfig] bootstrap started.");
 
+        await EnsureKnownDefaultsAsync(repository, cancellationToken);
+        var reloaded = await repository.GetAllAsync(cancellationToken);
+        ValidateKnownConfigs(reloaded);
+
+        snapshotStore.Replace(reloaded);
+        await projectionService.ProjectAsync(snapshotStore.Items, cancellationToken);
+
+        _logger.LogInformation("[SystemConfig] bootstrap completed with {Count} keys.", reloaded.Count);
+    }
+
+    private async Task EnsureKnownDefaultsAsync(ISystemConfigRepository repository, CancellationToken cancellationToken)
+    {
         var existing = await repository.GetAllAsync(cancellationToken);
         var existingKeys = existing
             .Select(x => x.Key)
@@ -56,10 +69,19 @@ public sealed class SystemConfigBootstrapHostedService : IHostedService
                 updatedBy: null,
                 cancellationToken: cancellationToken);
         }
+    }
 
-        var reloaded = await repository.GetAllAsync(cancellationToken);
-        foreach (var config in reloaded)
+    private void ValidateKnownConfigs(IEnumerable<SystemConfig> configs)
+    {
+        var unknownKeys = new List<string>();
+        foreach (var config in configs)
         {
+            if (!SystemConfigRegistry.TryGetDefinition(config.Key, out _))
+            {
+                unknownKeys.Add(config.Key);
+                continue;
+            }
+
             var validation = SystemConfigRegistry.Validate(config.Key, config.Value, config.ValueKind);
             if (!validation.IsValid)
             {
@@ -68,10 +90,15 @@ public sealed class SystemConfigBootstrapHostedService : IHostedService
             }
         }
 
-        snapshotStore.Replace(reloaded);
-        await projectionService.ProjectAsync(snapshotStore.Items, cancellationToken);
+        if (unknownKeys.Count == 0)
+        {
+            return;
+        }
 
-        _logger.LogInformation("[SystemConfig] bootstrap completed with {Count} keys.", reloaded.Count);
+        _logger.LogWarning(
+            "[SystemConfig] found {Count} unknown keys in DB; skip validation for these keys: {Keys}",
+            unknownKeys.Count,
+            string.Join(", ", unknownKeys.OrderBy(x => x, StringComparer.OrdinalIgnoreCase)));
     }
 
     /// <summary>
