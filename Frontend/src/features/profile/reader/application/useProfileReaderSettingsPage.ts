@@ -66,8 +66,8 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
  const isTarotReader = user?.role === 'tarot_reader';
  const runtimePoliciesQuery = useRuntimePolicies();
  const readerPolicy = runtimePoliciesQuery.data?.reader;
- const minYearsOfExperience = readerPolicy?.minYearsOfExperience ?? 1;
- const minDiamondPerQuestion = readerPolicy?.minDiamondPerQuestion ?? 50;
+ const minYearsOfExperience = readerPolicy?.minYearsOfExperience ?? 0;
+ const minDiamondPerQuestion = readerPolicy?.minDiamondPerQuestion ?? 0;
  const defaultDiamondPerQuestion = readerPolicy?.defaultDiamondPerQuestion ?? minDiamondPerQuestion;
  const readerPolicyReady = Boolean(readerPolicy);
  const [draft, setDraft] = useState<ReaderSettingsDraft | null>(null);

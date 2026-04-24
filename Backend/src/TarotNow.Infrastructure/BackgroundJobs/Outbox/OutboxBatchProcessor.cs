@@ -2,12 +2,10 @@ using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Events;
 using TarotNow.Infrastructure.Messaging.DomainEvents;
-using TarotNow.Infrastructure.Options;
 using TarotNow.Infrastructure.Persistence;
 using TarotNow.Infrastructure.Persistence.Outbox;
 
@@ -25,7 +23,7 @@ public sealed class OutboxBatchProcessor : IOutboxBatchProcessor
     private readonly ApplicationDbContext _dbContext;
     private readonly IMediator _mediator;
     private readonly ILogger<OutboxBatchProcessor> _logger;
-    private readonly OutboxOptions _options;
+    private readonly ISystemConfigSettings _systemConfigSettings;
 
     /// <summary>
     /// Khởi tạo outbox batch processor.
@@ -34,12 +32,12 @@ public sealed class OutboxBatchProcessor : IOutboxBatchProcessor
         ApplicationDbContext dbContext,
         IMediator mediator,
         ILogger<OutboxBatchProcessor> logger,
-        IOptions<OutboxOptions> options)
+        ISystemConfigSettings systemConfigSettings)
     {
         _dbContext = dbContext;
         _mediator = mediator;
         _logger = logger;
-        _options = options.Value;
+        _systemConfigSettings = systemConfigSettings;
     }
 
     /// <inheritdoc />
@@ -190,22 +188,22 @@ FOR UPDATE SKIP LOCKED")
 
     private int ResolveBatchSize()
     {
-        return Math.Clamp(_options.BatchSize, 1, 5000);
+        return Math.Clamp(_systemConfigSettings.OperationalOutboxBatchSize, 1, 5000);
     }
 
     private int ResolveMaxRetryAttempts()
     {
-        return Math.Clamp(_options.MaxRetryAttempts, 1, 100);
+        return Math.Clamp(_systemConfigSettings.OperationalOutboxMaxRetryAttempts, 1, 100);
     }
 
     private TimeSpan ResolveLockTimeout()
     {
-        var seconds = _options.LockTimeoutSeconds <= 0 ? 120 : _options.LockTimeoutSeconds;
+        var seconds = _systemConfigSettings.OperationalOutboxLockTimeoutSeconds;
         return TimeSpan.FromSeconds(Math.Clamp(seconds, 30, 3600));
     }
 
     private int ResolveMaxBackoffSeconds()
     {
-        return Math.Clamp(_options.MaxBackoffSeconds, 1, 3600);
+        return Math.Clamp(_systemConfigSettings.OperationalOutboxMaxBackoffSeconds, 1, 3600);
     }
 }

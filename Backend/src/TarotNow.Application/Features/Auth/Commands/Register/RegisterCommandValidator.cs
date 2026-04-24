@@ -1,16 +1,21 @@
 using FluentValidation;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Features.Auth.Commands.Register;
 
 // Validator đầu vào cho command đăng ký.
 public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
 {
+    private readonly int _minimumAge;
+
     /// <summary>
     /// Khởi tạo bộ rule validation cho RegisterCommand.
     /// Luồng xử lý: kiểm tra email/username/password/displayname/date of birth/consent theo chính sách đăng ký.
     /// </summary>
-    public RegisterCommandValidator()
+    public RegisterCommandValidator(ISystemConfigSettings systemConfigSettings)
     {
+        _minimumAge = systemConfigSettings.LegalMinimumAge;
+
         // Email bắt buộc và đúng định dạng.
         RuleFor(x => x.Email)
             .NotEmpty().WithMessage("Email is required.")
@@ -37,7 +42,7 @@ public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
         // Người dùng phải đủ 18 tuổi theo quy định sử dụng dịch vụ.
         RuleFor(x => x.DateOfBirth)
             .NotEmpty().WithMessage("Date of Birth is required.")
-            .Must(BeAtLeast18YearsOld).WithMessage("You must be at least 18 years old to register.");
+            .Must(BeAtLeastMinimumAge).WithMessage($"You must be at least {_minimumAge} years old to register.");
 
         // Bắt buộc đồng ý điều khoản trước khi tạo tài khoản.
         RuleFor(x => x.HasConsented)
@@ -45,12 +50,11 @@ public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
     }
 
     /// <summary>
-    /// Kiểm tra tuổi người dùng có tối thiểu 18 tại thời điểm hiện tại hay không.
+    /// Kiểm tra tuổi người dùng có đạt tối thiểu theo policy runtime tại thời điểm hiện tại hay không.
     /// Luồng xử lý: tính chênh lệch năm, điều chỉnh theo mốc sinh nhật, so sánh với tuổi tối thiểu.
     /// </summary>
-    private bool BeAtLeast18YearsOld(DateTime dateOfBirth)
+    private bool BeAtLeastMinimumAge(DateTime dateOfBirth)
     {
-        var minAge = 18;
         var today = DateTime.UtcNow.Date;
         var diff = today.Year - dateOfBirth.Year;
 
@@ -60,6 +64,6 @@ public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
             diff--;
         }
 
-        return diff >= minAge;
+        return diff >= _minimumAge;
     }
 }

@@ -28,6 +28,7 @@ public class EscrowTimerServiceTests
     private readonly Mock<IChatMessageRepository> _mockMessageRepo;
     private readonly Mock<IDomainEventPublisher> _mockDomainEventPublisher;
     private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
+    private readonly Mock<ISystemConfigSettings> _mockSystemConfigSettings;
     private readonly Mock<ILogger<EscrowTimerService>> _mockLogger;
     // Settlement service thật để test end-to-end logic settle trong process timer.
     private readonly IEscrowSettlementService _settlementService;
@@ -49,11 +50,15 @@ public class EscrowTimerServiceTests
         _mockMessageRepo = new Mock<IChatMessageRepository>();
         _mockDomainEventPublisher = new Mock<IDomainEventPublisher>();
         _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
+        _mockSystemConfigSettings = new Mock<ISystemConfigSettings>();
+        _mockSystemConfigSettings.SetupGet(x => x.WithdrawalFeeRate).Returns(0.10m);
+        _mockSystemConfigSettings.SetupGet(x => x.EscrowDisputeWindowHours).Returns(48);
         _mockLogger = new Mock<ILogger<EscrowTimerService>>();
         _settlementService = new EscrowSettlementService(
             _mockFinanceRepo.Object,
             _mockWalletRepo.Object,
-            _mockDomainEventPublisher.Object);
+            _mockDomainEventPublisher.Object,
+            _mockSystemConfigSettings.Object);
 
         _mockScopeFactory.Setup(x => x.CreateScope()).Returns(_mockScope.Object);
         _mockScope.Setup(x => x.ServiceProvider).Returns(_mockServiceProvider.Object);

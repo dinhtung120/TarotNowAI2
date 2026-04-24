@@ -36,10 +36,87 @@ export interface RuntimePoliciesDto {
     defaultSlaHours: number;
     allowedSlaHours: number[];
     maxActiveConversationsPerUser: number;
+    paymentOffer: {
+      defaultAmount: number;
+      maxNoteLength: number;
+    };
+    history: {
+      pageSize: number;
+    };
+    participants: {
+      defaultPageSize: number;
+      maxPageSize: number;
+    };
   };
   gamification: {
     defaultQuestType: string;
     defaultLeaderboardTrack: string;
+  };
+  auth: {
+    minimumAge: number;
+  };
+  adminDispute: {
+    defaultSplitPercentToReader: number;
+    readerFreezePolicy: {
+      lookbackDays: number;
+      threshold: number;
+    };
+  };
+  realtime: {
+    reconnectScheduleMs: number[];
+    negotiationTimeoutMs: number;
+    presenceNegotiationCooldownMs: number;
+    chatUnauthorizedCooldownMs: number;
+    serverTimeoutMs: number;
+    chat: {
+      typingClearMs: number;
+      invalidateDebounceMs: number;
+      initialLoadGuardMs: number;
+      appStartGuardMs: number;
+    };
+  };
+  http: {
+    clientTimeoutMs: number;
+    serverTimeoutMs: number;
+    minTimeoutMs: number;
+  };
+  runtimePoliciesClient: {
+    timeoutMs: number;
+    staleMs: number;
+  };
+  ui: {
+    readers: {
+      directoryPageSize: number;
+      featuredLimit: number;
+      directoryStaleMs: number;
+    };
+    search: {
+      debounceMs: number;
+    };
+    prefetch: {
+      chatInboxStaleMs: number;
+    };
+  };
+  media: {
+    upload: {
+      maxImageBytes: number;
+      maxVoiceBytes: number;
+      maxVoiceDurationMs: number;
+      imageCompressionTargetBytes: number;
+      imageCompressionSteps: {
+        initialQuality: number;
+        maxSizeMb: number;
+        maxWidthOrHeight: number;
+      }[];
+      retryAttempts: number;
+      retryDelayMs: number;
+    };
+  };
+}
+
+export interface PublicRuntimePoliciesDto {
+  auth: {
+    minimumAge: number;
   };
 }
 
@@ -57,6 +134,20 @@ export async function getRuntimePoliciesAction(): Promise<ActionResult<RuntimePo
 
   if (!result.ok) {
     return actionFail(result.error || 'Failed to load runtime policies');
+  }
+
+  return actionOk(result.data);
+}
+
+export async function getPublicRuntimePoliciesAction(): Promise<ActionResult<PublicRuntimePoliciesDto>> {
+  const result = await serverHttpRequest<PublicRuntimePoliciesDto>('/legal/runtime-policies', {
+    method: 'GET',
+    cache: 'no-store',
+    fallbackErrorMessage: 'Failed to load public runtime policies',
+  });
+
+  if (!result.ok) {
+    return actionFail(result.error || 'Failed to load public runtime policies');
   }
 
   return actionOk(result.data);

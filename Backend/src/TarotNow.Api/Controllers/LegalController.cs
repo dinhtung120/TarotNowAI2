@@ -11,6 +11,7 @@ using TarotNow.Api.Contracts;
 using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.Legal.Commands.RecordConsent;
 using TarotNow.Application.Features.Legal.Queries.CheckConsent;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Api.Controllers;
 
@@ -23,14 +24,34 @@ namespace TarotNow.Api.Controllers;
 public class LegalController : ControllerBase
 {
     private readonly IMediator Mediator;
+    private readonly ISystemConfigSettings _systemConfigSettings;
 
     /// <summary>
     /// Khởi tạo controller legal.
     /// </summary>
     /// <param name="mediator">MediatR điều phối query/command consent.</param>
-    public LegalController(IMediator mediator)
+    /// <param name="systemConfigSettings">Cấu hình runtime policy public cho legal/auth.</param>
+    public LegalController(IMediator mediator, ISystemConfigSettings systemConfigSettings)
     {
         Mediator = mediator;
+        _systemConfigSettings = systemConfigSettings;
+    }
+
+    /// <summary>
+    /// Lấy policy runtime public cho các màn hình chưa đăng nhập (ví dụ form đăng ký).
+    /// Luồng xử lý: trả về các policy an toàn public, không yêu cầu token.
+    /// </summary>
+    [HttpGet("runtime-policies")]
+    [AllowAnonymous]
+    public IActionResult GetPublicRuntimePolicies()
+    {
+        return Ok(new
+        {
+            auth = new
+            {
+                minimumAge = _systemConfigSettings.LegalMinimumAge
+            }
+        });
     }
 
     /// <summary>

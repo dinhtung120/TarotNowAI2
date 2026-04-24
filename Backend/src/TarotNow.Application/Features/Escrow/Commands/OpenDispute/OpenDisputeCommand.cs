@@ -24,17 +24,12 @@ public class OpenDisputeCommand : IRequest<bool>
 // Handler xử lý mở tranh chấp.
 public class OpenDisputeCommandHandler : IRequestHandler<OpenDisputeCommand, bool>
 {
-    // Độ dài tối thiểu của lý do tranh chấp.
-    private const int MinReasonLength = 10;
-
-    // Khoảng thời gian cửa sổ tranh chấp kể từ lúc mở.
-    private static readonly TimeSpan DisputeWindowDuration = TimeSpan.FromHours(48);
-
     // Trạng thái session khi có tranh chấp.
     private const string SessionDisputedStatus = "disputed";
 
     private readonly IChatFinanceRepository _financeRepo;
     private readonly ITransactionCoordinator _transactionCoordinator;
+    private readonly ISystemConfigSettings _systemConfigSettings;
 
     /// <summary>
     /// Khởi tạo handler open dispute.
@@ -42,10 +37,12 @@ public class OpenDisputeCommandHandler : IRequestHandler<OpenDisputeCommand, boo
     /// </summary>
     public OpenDisputeCommandHandler(
         IChatFinanceRepository financeRepo,
-        ITransactionCoordinator transactionCoordinator)
+        ITransactionCoordinator transactionCoordinator,
+        ISystemConfigSettings systemConfigSettings)
     {
         _financeRepo = financeRepo;
         _transactionCoordinator = transactionCoordinator;
+        _systemConfigSettings = systemConfigSettings;
     }
 
     /// <summary>
@@ -70,10 +67,11 @@ public class OpenDisputeCommandHandler : IRequestHandler<OpenDisputeCommand, boo
             EnsureReasonIsValid(req.Reason);
 
             var now = DateTime.UtcNow;
+            var disputeWindowHours = Math.Max(1, _systemConfigSettings.EscrowDisputeWindowHours);
             item.Status = QuestionItemStatus.Disputed;
             item.AutoReleaseAt = null;
             item.DisputeWindowStart = now;
-            item.DisputeWindowEnd = now.Add(DisputeWindowDuration);
+            item.DisputeWindowEnd = now.AddHours(disputeWindowHours);
             item.UpdatedAt = now;
 
             await _financeRepo.UpdateItemAsync(item, transactionCt);
@@ -122,14 +120,15 @@ public class OpenDisputeCommandHandler : IRequestHandler<OpenDisputeCommand, boo
     /// Kiểm tra lý do tranh chấp hợp lệ.
     /// Luồng xử lý: bắt buộc reason có nội dung và đạt độ dài tối thiểu.
     /// </summary>
-    private static void EnsureReasonIsValid(string reason)
+    private void EnsureReasonIsValid(string reason)
     {
-        if (!string.IsNullOrWhiteSpace(reason) && reason.Length >= MinReasonLength)
+        var minReasonLength = Math.Max(1, _systemConfigSettings.EscrowDisputeMinReasonLength);
+        if (!string.IsNullOrWhiteSpace(reason) && reason.Trim().Length >= minReasonLength)
         {
             return;
         }
 
-        throw new BadRequestException($"Lý do tranh chấp phải có ít nhất {MinReasonLength} ký tự.");
+        throw new BadRequestException($"Lý do tranh chấp phải có ít nhất {minReasonLength} ký tự.");
     }
 
     /// <summary>

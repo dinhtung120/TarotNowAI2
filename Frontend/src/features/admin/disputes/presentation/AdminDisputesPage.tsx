@@ -20,12 +20,13 @@ export default function AdminDisputesPage() {
   setNoteById,
   splitPercentById,
   setSplitPercentById,
+  defaultSplitPercentToReader,
   resolveDispute,
  } = useAdminDisputes(t);
 
  const renderDisputeCard = (item: AdminDisputeItemDto) => {
   const note = noteById[item.id] ?? '';
-  const splitPercent = splitPercentById[item.id] ?? 50;
+  const splitPercent = splitPercentById[item.id] ?? defaultSplitPercentToReader;
   return (
    <AdminDisputeCard
     key={item.id}

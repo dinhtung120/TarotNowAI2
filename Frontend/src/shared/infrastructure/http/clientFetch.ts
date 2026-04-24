@@ -1,17 +1,23 @@
 'use client';
 
 import { parseApiError } from '@/shared/infrastructure/error/parseApiError';
+import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
+import { getRuntimePolicyStoreSnapshot } from '@/shared/config/runtimePolicyStore';
 
-const DEFAULT_CLIENT_TIMEOUT_MS = 8_000;
-const MIN_CLIENT_TIMEOUT_MS = 1_000;
+const DEFAULT_CLIENT_TIMEOUT_MS = RUNTIME_POLICY_FALLBACKS.http.clientTimeoutMs;
+const MIN_CLIENT_TIMEOUT_MS = RUNTIME_POLICY_FALLBACKS.http.minTimeoutMs;
 const REQUEST_TIMEOUT_ERROR_MESSAGE = 'Request timed out.';
 
 function resolveTimeout(timeoutMs: number | undefined): number {
+ const runtimePolicy = getRuntimePolicyStoreSnapshot();
+ const defaultTimeoutMs = runtimePolicy.http.clientTimeoutMs || DEFAULT_CLIENT_TIMEOUT_MS;
+ const minTimeoutMs = runtimePolicy.http.minTimeoutMs || MIN_CLIENT_TIMEOUT_MS;
+
  if (typeof timeoutMs !== 'number' || !Number.isFinite(timeoutMs)) {
-  return DEFAULT_CLIENT_TIMEOUT_MS;
+  return defaultTimeoutMs;
  }
 
- return Math.max(MIN_CLIENT_TIMEOUT_MS, Math.floor(timeoutMs));
+ return Math.max(minTimeoutMs, Math.floor(timeoutMs));
 }
 
 function isAbortError(error: unknown): boolean {

@@ -14,6 +14,7 @@ public partial class RequestConversationAddMoneyCommandHandler
     private readonly IChatMessageRepository _chatMessageRepository;
     private readonly IMediator _mediator;
     private readonly IDomainEventPublisher _domainEventPublisher;
+    private readonly ISystemConfigSettings _systemConfigSettings;
 
     /// <summary>
     /// Khởi tạo handler request conversation add money.
@@ -23,12 +24,14 @@ public partial class RequestConversationAddMoneyCommandHandler
         IConversationRepository conversationRepository,
         IChatMessageRepository chatMessageRepository,
         IMediator mediator,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        ISystemConfigSettings systemConfigSettings)
     {
         _conversationRepository = conversationRepository;
         _chatMessageRepository = chatMessageRepository;
         _mediator = mediator;
         _domainEventPublisher = domainEventPublisher;
+        _systemConfigSettings = systemConfigSettings;
     }
 
     /// <summary>

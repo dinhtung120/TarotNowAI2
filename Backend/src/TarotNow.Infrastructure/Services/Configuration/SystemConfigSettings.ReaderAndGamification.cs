@@ -10,7 +10,18 @@ public sealed partial class SystemConfigSettings
     // Giá Diamond/câu hỏi tối thiểu cho Reader.
     public long ReaderMinDiamondPerQuestion => ResolvePositiveLong(
         ReadLong(["reader.min_diamond_per_question"], _options.Reader.MinDiamondPerQuestion),
-        fallback: 50);
+        fallback: Math.Max(1, _options.Reader.MinDiamondPerQuestion));
+
+    // Reward Lucky Star khi đã sở hữu title.
+    public long InventoryLuckyStarOwnedTitleGoldReward => ResolveNonNegativeLong(
+        ReadLong(["inventory.lucky_star.owned_title_gold_reward"], _options.Inventory.LuckyStar.OwnedTitleGoldReward),
+        fallback: Math.Max(0, _options.Inventory.LuckyStar.OwnedTitleGoldReward));
+
+    // Tuổi tối thiểu đăng ký.
+    public int LegalMinimumAge => ClampInt(
+        ReadInt(["legal.minimum_age"], _options.Auth.MinimumAge),
+        min: 13,
+        max: 100);
 
     // Quest type mặc định cho gamification.
     public string GamificationDefaultQuestType

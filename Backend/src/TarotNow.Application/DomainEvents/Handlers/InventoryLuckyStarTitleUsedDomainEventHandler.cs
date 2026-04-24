@@ -17,6 +17,7 @@ public sealed class LuckyStarTitleUsedDomainEventHandler
     private readonly ITitleRepository _titleRepository;
     private readonly IWalletRepository _walletRepository;
     private readonly IDomainEventPublisher _domainEventPublisher;
+    private readonly ISystemConfigSettings _systemConfigSettings;
 
     /// <summary>
     /// Khởi tạo handler Lucky Star.
@@ -25,12 +26,14 @@ public sealed class LuckyStarTitleUsedDomainEventHandler
         ITitleRepository titleRepository,
         IWalletRepository walletRepository,
         IDomainEventPublisher domainEventPublisher,
+        ISystemConfigSettings systemConfigSettings,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
         _titleRepository = titleRepository;
         _walletRepository = walletRepository;
         _domainEventPublisher = domainEventPublisher;
+        _systemConfigSettings = systemConfigSettings;
     }
 
     /// <inheritdoc />
@@ -57,7 +60,7 @@ public sealed class LuckyStarTitleUsedDomainEventHandler
             return;
         }
 
-        var amount = InventoryBusinessConstants.LuckyStarOwnedTitleGoldReward;
+        var amount = _systemConfigSettings.InventoryLuckyStarOwnedTitleGoldReward;
         var operationResult = await _walletRepository.CreditWithResultAsync(
             userId: domainEvent.UserId,
             currency: CurrencyType.Gold,

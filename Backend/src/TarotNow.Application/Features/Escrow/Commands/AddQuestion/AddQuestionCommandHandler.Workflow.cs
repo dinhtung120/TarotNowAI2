@@ -126,12 +126,8 @@ public partial class AddQuestionCommandHandler
         string idempotencyKey)
     {
         var now = DateTime.UtcNow;
-        var normalizedReaderResponseDueHours = _systemConfigSettings.EscrowReaderResponseDueHours > 0
-            ? _systemConfigSettings.EscrowReaderResponseDueHours
-            : 24;
-        var normalizedAutoRefundHours = _systemConfigSettings.EscrowAutoRefundHours > 0
-            ? _systemConfigSettings.EscrowAutoRefundHours
-            : 24;
+        var normalizedReaderResponseDueHours = _systemConfigSettings.EscrowReaderResponseDueHours;
+        var normalizedAutoRefundHours = _systemConfigSettings.EscrowAutoRefundHours;
 
         return new ChatQuestionItem
         {

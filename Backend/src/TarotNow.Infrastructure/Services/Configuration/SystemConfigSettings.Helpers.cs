@@ -67,6 +67,19 @@ public sealed partial class SystemConfigSettings
             : null;
     }
 
+    private double? ReadDouble(string key)
+    {
+        var raw = ReadString(key);
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return null;
+        }
+
+        return double.TryParse(raw, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var parsed)
+            ? parsed
+            : null;
+    }
+
     /// <summary>
     /// Chuẩn hóa số nguyên dương cho các tham số giới hạn.
     /// </summary>
@@ -101,6 +114,26 @@ public sealed partial class SystemConfigSettings
         }
 
         return value;
+    }
+
+    private static int ClampInt(int value, int min, int max)
+    {
+        return Math.Clamp(value, min, max);
+    }
+
+    private static long ClampLong(long value, long min, long max)
+    {
+        return Math.Clamp(value, min, max);
+    }
+
+    private static double ClampDouble(double value, double min, double max)
+    {
+        if (double.IsNaN(value) || double.IsInfinity(value))
+        {
+            return min;
+        }
+
+        return Math.Clamp(value, min, max);
     }
 
     private static IReadOnlyList<int> NormalizeDistinctPositiveOrderedList(

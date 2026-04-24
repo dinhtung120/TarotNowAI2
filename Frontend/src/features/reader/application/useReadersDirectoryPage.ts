@@ -4,22 +4,33 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { ReaderProfile } from '@/features/reader/application/actions';
 import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
+import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
+import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 
 export function useReadersDirectoryPage() {
+ const runtimePoliciesQuery = useRuntimePolicies();
+ const directoryPageSize = runtimePoliciesQuery.data?.ui.readers.directoryPageSize
+  ?? RUNTIME_POLICY_FALLBACKS.ui.readers.directoryPageSize;
+ const searchDebounceMs = runtimePoliciesQuery.data?.ui.search.debounceMs
+  ?? RUNTIME_POLICY_FALLBACKS.ui.search.debounceMs;
+ const directoryStaleMs = runtimePoliciesQuery.data?.ui.readers.directoryStaleMs
+  ?? RUNTIME_POLICY_FALLBACKS.ui.readers.directoryStaleMs;
+ const clientTimeoutMs = runtimePoliciesQuery.data?.http.clientTimeoutMs
+  ?? RUNTIME_POLICY_FALLBACKS.http.clientTimeoutMs;
  const [page, setPage] = useState(1);
  const [searchInput, setSearchInput] = useState('');
  const [searchTerm, setSearchTerm] = useState('');
  const [selectedSpecialty, setSelectedSpecialty] = useState('');
  const [selectedStatus, setSelectedStatus] = useState('');
- const pageSize = 12;
+ const pageSize = directoryPageSize;
 
  useEffect(() => {
   const debounceTimer = window.setTimeout(() => {
    setSearchTerm(searchInput.trim());
-  }, 300);
+  }, searchDebounceMs);
 
   return () => window.clearTimeout(debounceTimer);
- }, [searchInput]);
+ }, [searchDebounceMs, searchInput]);
 
  const { data, isLoading } = useQuery({
   queryKey: ['readers', page, pageSize, selectedSpecialty, selectedStatus, searchTerm],
@@ -32,9 +43,9 @@ export function useReadersDirectoryPage() {
     signal,
    },
    'Failed to load readers.',
-   8_000,
+   clientTimeoutMs,
   ),
-  staleTime: 30_000,
+  staleTime: directoryStaleMs,
   refetchOnWindowFocus: false,
   refetchOnReconnect: true,
   refetchOnMount: false,

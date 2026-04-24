@@ -111,7 +111,7 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
         IReadOnlyList<ReadingDrawnCard> revealedCards,
         CancellationToken cancellationToken)
     {
-        var expToGrantPerCard = ResolveExpToGrant(session) * ExpPerCard;
+        var expToGrantPerCard = ResolveExpToGrant(session);
         foreach (var card in revealedCards)
         {
             await _userCollectionRepository.UpsertCardAsync(
@@ -139,13 +139,19 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
             : CurrencyType.Gold;
     }
 
-    private static decimal ResolveExpToGrant(ReadingSession session)
+    private decimal ResolveExpToGrant(ReadingSession session)
     {
+        var expPerCard = _systemConfigSettings.ProgressionReadingExpPerCard;
         var usesDiamond = string.Equals(
             session.CurrencyUsed,
             CurrencyType.Diamond,
             StringComparison.OrdinalIgnoreCase);
+        var multiplier = _systemConfigSettings.ProgressionReadingDiamondMultiplierNonDaily;
+        if (session.SpreadType != SpreadType.Daily1Card && usesDiamond)
+        {
+            return expPerCard * multiplier;
+        }
 
-        return session.SpreadType != SpreadType.Daily1Card && usesDiamond ? 2m : 1m;
+        return expPerCard;
     }
 }

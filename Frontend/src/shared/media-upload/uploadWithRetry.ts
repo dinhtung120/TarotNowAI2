@@ -1,6 +1,6 @@
 import {
-  DEFAULT_UPLOAD_RETRY_ATTEMPTS,
-  DEFAULT_UPLOAD_RETRY_DELAY_MS,
+  getDefaultUploadRetryAttempts,
+  getDefaultUploadRetryDelayMs,
 } from '@/shared/media-upload/constants';
 import { runWithRetry } from '@/shared/media-upload/retry';
 import { uploadToPresignedUrlViaXhr } from '@/shared/media-upload/uploadViaXhr';
@@ -18,7 +18,7 @@ export interface UploadWithRetryParams {
 export async function uploadToR2WithRetry({
   contentType,
   file,
-  maxAttempts = DEFAULT_UPLOAD_RETRY_ATTEMPTS,
+  maxAttempts = getDefaultUploadRetryAttempts(),
   onProgress,
   signal,
   timeoutMs,
@@ -37,7 +37,7 @@ export async function uploadToR2WithRetry({
     },
     {
       maxAttempts,
-      baseDelayMs: DEFAULT_UPLOAD_RETRY_DELAY_MS,
+      baseDelayMs: getDefaultUploadRetryDelayMs(),
       shouldRetry: shouldRetryUpload,
     },
   );

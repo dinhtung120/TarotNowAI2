@@ -1,5 +1,12 @@
 namespace TarotNow.Application.Interfaces;
 
+public sealed class MediaImageCompressionStep
+{
+    public double InitialQuality { get; set; }
+    public double MaxSizeMb { get; set; }
+    public int MaxWidthOrHeight { get; set; }
+}
+
 // Contract cấu hình hệ thống để tập trung các ngưỡng chi phí và hạn mức vận hành.
 public interface ISystemConfigSettings
 {
@@ -87,11 +94,164 @@ public interface ISystemConfigSettings
     // Cửa sổ mở dispute theo giờ.
     int EscrowDisputeWindowHours { get; }
 
+    // Độ dài tối thiểu của lý do mở dispute.
+    int EscrowDisputeMinReasonLength { get; }
+
     // Deadline reader phản hồi theo giờ.
     int EscrowReaderResponseDueHours { get; }
 
     // Deadline tự động refund theo giờ.
     int EscrowAutoRefundHours { get; }
+
+    // Split mặc định % dành cho Reader khi admin resolve dispute theo kiểu split.
+    int AdminDisputeDefaultSplitPercentToReader { get; }
+
+    // Lookback window (ngày) để xét policy freeze reader theo dispute.
+    int AdminDisputeReaderFreezeLookbackDays { get; }
+
+    // Ngưỡng số dispute gần đây để freeze reader.
+    int AdminDisputeReaderFreezeThreshold { get; }
+
+    // EXP cơ bản nhận trên mỗi lá bài khi reveal.
+    decimal ProgressionReadingExpPerCard { get; }
+
+    // Hệ số nhân EXP cho non-daily khi thanh toán bằng diamond.
+    decimal ProgressionReadingDiamondMultiplierNonDaily { get; }
+
+    // Gold thưởng khi dùng Lucky Star nhưng đã sở hữu title.
+    long InventoryLuckyStarOwnedTitleGoldReward { get; }
+
+    // Tuổi tối thiểu để đăng ký tài khoản.
+    int LegalMinimumAge { get; }
+
+    // Số Diamond mặc định đề xuất trong payment offer.
+    long ChatPaymentOfferDefaultAmount { get; }
+
+    // Độ dài tối đa ghi chú payment offer.
+    int ChatPaymentOfferMaxNoteLength { get; }
+
+    // Kích thước trang lịch sử chat.
+    int ChatHistoryPageSize { get; }
+
+    // Page size mặc định truy vấn conversation IDs theo participant.
+    int ChatParticipantsDefaultPageSize { get; }
+
+    // Page size tối đa truy vấn conversation IDs theo participant.
+    int ChatParticipantsMaxPageSize { get; }
+
+    // Lịch reconnect SignalR theo milliseconds.
+    IReadOnlyList<int> RealtimeReconnectScheduleMs { get; }
+
+    // Timeout negotiation realtime theo milliseconds.
+    int RealtimeNegotiationTimeoutMs { get; }
+
+    // Cooldown retry presence khi negotiation thất bại.
+    int RealtimePresenceNegotiationCooldownMs { get; }
+
+    // Cooldown retry chat realtime khi unauthorized.
+    int RealtimeChatUnauthorizedCooldownMs { get; }
+
+    // Server timeout cho SignalR connection.
+    int RealtimeServerTimeoutMs { get; }
+
+    // Thời gian clear typing indicator (ms).
+    int RealtimeChatTypingClearMs { get; }
+
+    // Debounce invalidate query realtime (ms).
+    int RealtimeChatInvalidateDebounceMs { get; }
+
+    // Guard khoảng thời gian sau lần load initial trước khi refetch conversation (ms).
+    int RealtimeChatInitialLoadGuardMs { get; }
+
+    // Guard bỏ qua invalidate trong vài giây đầu app start (ms).
+    int RealtimeChatAppStartGuardMs { get; }
+
+    // Timeout mặc định client HTTP fetch (ms).
+    int OperationalHttpClientTimeoutMs { get; }
+
+    // Timeout mặc định server-side HTTP proxy (ms).
+    int OperationalHttpServerTimeoutMs { get; }
+
+    // Mức timeout tối thiểu cho HTTP helper (ms).
+    int OperationalHttpMinTimeoutMs { get; }
+
+    // Timeout fetch runtime policies (ms).
+    int OperationalRuntimePoliciesTimeoutMs { get; }
+
+    // Stale time runtime policies (ms).
+    int OperationalRuntimePoliciesStaleMs { get; }
+
+    // Redis connect timeout (ms).
+    int OperationalRedisConnectTimeoutMs { get; }
+
+    // Redis sync timeout (ms).
+    int OperationalRedisSyncTimeoutMs { get; }
+
+    // Redis connect retry count.
+    int OperationalRedisConnectRetry { get; }
+
+    // AI timeout (giây).
+    int OperationalAiTimeoutSeconds { get; }
+
+    // AI max retries.
+    int OperationalAiMaxRetries { get; }
+
+    // AI retry base delay cho streaming (ms).
+    int OperationalAiStreamingRetryBaseDelayMs { get; }
+
+    // AI streaming temperature.
+    double OperationalAiStreamingTemperature { get; }
+
+    // Outbox batch size.
+    int OperationalOutboxBatchSize { get; }
+
+    // Outbox max retry attempts.
+    int OperationalOutboxMaxRetryAttempts { get; }
+
+    // Outbox lock timeout (giây).
+    int OperationalOutboxLockTimeoutSeconds { get; }
+
+    // Outbox max backoff (giây).
+    int OperationalOutboxMaxBackoffSeconds { get; }
+
+    // Outbox poll interval (giây).
+    int OperationalOutboxPollIntervalSeconds { get; }
+
+    // Page size mặc định danh sách readers ở FE.
+    int UiReadersDirectoryPageSize { get; }
+
+    // Giới hạn readers featured ở FE.
+    int UiReadersFeaturedLimit { get; }
+
+    // Debounce search input FE (ms).
+    int UiSearchDebounceMs { get; }
+
+    // Stale time readers directory FE (ms).
+    int UiReadersDirectoryStaleMs { get; }
+
+    // Stale time prefetch inbox FE (ms).
+    int UiPrefetchChatInboxStaleMs { get; }
+
+    // Kích thước tối đa file ảnh upload (bytes).
+    long MediaUploadMaxImageBytes { get; }
+
+    // Kích thước tối đa file voice upload (bytes).
+    long MediaUploadMaxVoiceBytes { get; }
+
+    // Thời lượng tối đa file voice upload (ms).
+    int MediaUploadMaxVoiceDurationMs { get; }
+
+    // Mục tiêu kích thước ảnh sau nén (bytes).
+    long MediaUploadImageCompressionTargetBytes { get; }
+
+    // Danh sách bước nén ảnh theo thứ tự fallback.
+    IReadOnlyList<MediaImageCompressionStep> MediaUploadImageCompressionSteps { get; }
+
+    // Số lần retry upload mặc định.
+    int MediaUploadRetryAttempts { get; }
+
+    // Delay retry upload mặc định (ms).
+    int MediaUploadRetryDelayMs { get; }
 
     // Quest type mặc định của gamification.
     string GamificationDefaultQuestType { get; }

@@ -21,7 +21,14 @@ public sealed class GetRuntimePoliciesQueryHandler : IRequestHandler<GetRuntimeP
             Wallet = BuildWalletPolicy(),
             Reader = BuildReaderPolicy(),
             Chat = BuildChatPolicy(),
-            Gamification = BuildGamificationPolicy()
+            Gamification = BuildGamificationPolicy(),
+            Auth = BuildAuthPolicy(),
+            AdminDispute = BuildAdminDisputePolicy(),
+            Realtime = BuildRealtimePolicy(),
+            Http = BuildHttpPolicy(),
+            RuntimePoliciesClient = BuildRuntimePoliciesClientPolicy(),
+            Ui = BuildUiPolicy(),
+            Media = BuildMediaPolicy()
         };
 
         return Task.FromResult(result);
@@ -99,7 +106,21 @@ public sealed class GetRuntimePoliciesQueryHandler : IRequestHandler<GetRuntimeP
         {
             DefaultSlaHours = _systemConfigSettings.ChatDefaultSlaHours,
             AllowedSlaHours = _systemConfigSettings.ChatAllowedSlaHours,
-            MaxActiveConversationsPerUser = _systemConfigSettings.ChatMaxActiveConversationsPerUser
+            MaxActiveConversationsPerUser = _systemConfigSettings.ChatMaxActiveConversationsPerUser,
+            PaymentOffer = new RuntimeChatPaymentOfferPolicyDto
+            {
+                DefaultAmount = _systemConfigSettings.ChatPaymentOfferDefaultAmount,
+                MaxNoteLength = _systemConfigSettings.ChatPaymentOfferMaxNoteLength
+            },
+            History = new RuntimeChatHistoryPolicyDto
+            {
+                PageSize = _systemConfigSettings.ChatHistoryPageSize
+            },
+            Participants = new RuntimeChatParticipantsPolicyDto
+            {
+                DefaultPageSize = _systemConfigSettings.ChatParticipantsDefaultPageSize,
+                MaxPageSize = _systemConfigSettings.ChatParticipantsMaxPageSize
+            }
         };
     }
 
@@ -109,6 +130,110 @@ public sealed class GetRuntimePoliciesQueryHandler : IRequestHandler<GetRuntimeP
         {
             DefaultQuestType = _systemConfigSettings.GamificationDefaultQuestType,
             DefaultLeaderboardTrack = _systemConfigSettings.GamificationDefaultLeaderboardTrack
+        };
+    }
+
+    private RuntimeAuthPolicyDto BuildAuthPolicy()
+    {
+        return new RuntimeAuthPolicyDto
+        {
+            MinimumAge = _systemConfigSettings.LegalMinimumAge
+        };
+    }
+
+    private RuntimeAdminDisputePolicyDto BuildAdminDisputePolicy()
+    {
+        return new RuntimeAdminDisputePolicyDto
+        {
+            DefaultSplitPercentToReader = _systemConfigSettings.AdminDisputeDefaultSplitPercentToReader,
+            ReaderFreezePolicy = new RuntimeAdminDisputeReaderFreezePolicyDto
+            {
+                LookbackDays = _systemConfigSettings.AdminDisputeReaderFreezeLookbackDays,
+                Threshold = _systemConfigSettings.AdminDisputeReaderFreezeThreshold
+            }
+        };
+    }
+
+    private RuntimeRealtimePolicyDto BuildRealtimePolicy()
+    {
+        return new RuntimeRealtimePolicyDto
+        {
+            ReconnectScheduleMs = _systemConfigSettings.RealtimeReconnectScheduleMs,
+            NegotiationTimeoutMs = _systemConfigSettings.RealtimeNegotiationTimeoutMs,
+            PresenceNegotiationCooldownMs = _systemConfigSettings.RealtimePresenceNegotiationCooldownMs,
+            ChatUnauthorizedCooldownMs = _systemConfigSettings.RealtimeChatUnauthorizedCooldownMs,
+            ServerTimeoutMs = _systemConfigSettings.RealtimeServerTimeoutMs,
+            Chat = new RuntimeRealtimeChatPolicyDto
+            {
+                TypingClearMs = _systemConfigSettings.RealtimeChatTypingClearMs,
+                InvalidateDebounceMs = _systemConfigSettings.RealtimeChatInvalidateDebounceMs,
+                InitialLoadGuardMs = _systemConfigSettings.RealtimeChatInitialLoadGuardMs,
+                AppStartGuardMs = _systemConfigSettings.RealtimeChatAppStartGuardMs
+            }
+        };
+    }
+
+    private RuntimeHttpPolicyDto BuildHttpPolicy()
+    {
+        return new RuntimeHttpPolicyDto
+        {
+            ClientTimeoutMs = _systemConfigSettings.OperationalHttpClientTimeoutMs,
+            ServerTimeoutMs = _systemConfigSettings.OperationalHttpServerTimeoutMs,
+            MinTimeoutMs = _systemConfigSettings.OperationalHttpMinTimeoutMs
+        };
+    }
+
+    private RuntimeRuntimePoliciesClientPolicyDto BuildRuntimePoliciesClientPolicy()
+    {
+        return new RuntimeRuntimePoliciesClientPolicyDto
+        {
+            TimeoutMs = _systemConfigSettings.OperationalRuntimePoliciesTimeoutMs,
+            StaleMs = _systemConfigSettings.OperationalRuntimePoliciesStaleMs
+        };
+    }
+
+    private RuntimeUiPolicyDto BuildUiPolicy()
+    {
+        return new RuntimeUiPolicyDto
+        {
+            Readers = new RuntimeUiReadersPolicyDto
+            {
+                DirectoryPageSize = _systemConfigSettings.UiReadersDirectoryPageSize,
+                FeaturedLimit = _systemConfigSettings.UiReadersFeaturedLimit,
+                DirectoryStaleMs = _systemConfigSettings.UiReadersDirectoryStaleMs
+            },
+            Search = new RuntimeUiSearchPolicyDto
+            {
+                DebounceMs = _systemConfigSettings.UiSearchDebounceMs
+            },
+            Prefetch = new RuntimeUiPrefetchPolicyDto
+            {
+                ChatInboxStaleMs = _systemConfigSettings.UiPrefetchChatInboxStaleMs
+            }
+        };
+    }
+
+    private RuntimeMediaPolicyDto BuildMediaPolicy()
+    {
+        return new RuntimeMediaPolicyDto
+        {
+            Upload = new RuntimeMediaUploadPolicyDto
+            {
+                MaxImageBytes = _systemConfigSettings.MediaUploadMaxImageBytes,
+                MaxVoiceBytes = _systemConfigSettings.MediaUploadMaxVoiceBytes,
+                MaxVoiceDurationMs = _systemConfigSettings.MediaUploadMaxVoiceDurationMs,
+                ImageCompressionTargetBytes = _systemConfigSettings.MediaUploadImageCompressionTargetBytes,
+                ImageCompressionSteps = _systemConfigSettings.MediaUploadImageCompressionSteps
+                    .Select(step => new RuntimeMediaImageCompressionStepDto
+                    {
+                        InitialQuality = step.InitialQuality,
+                        MaxSizeMb = step.MaxSizeMb,
+                        MaxWidthOrHeight = step.MaxWidthOrHeight
+                    })
+                    .ToArray(),
+                RetryAttempts = _systemConfigSettings.MediaUploadRetryAttempts,
+                RetryDelayMs = _systemConfigSettings.MediaUploadRetryDelayMs
+            }
         };
     }
 }

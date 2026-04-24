@@ -15,7 +15,6 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
     : IdempotentDomainEventNotificationHandler<ReadingSessionRevealRequestedDomainEvent>
 {
     private const int TarotDeckSize = 78;
-    private const decimal ExpPerCard = 1m;
 
     private readonly IReadingSessionRepository _readingSessionRepository;
     private readonly IUserCollectionRepository _userCollectionRepository;
@@ -24,6 +23,7 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
     private readonly IFreeDrawCreditRepository _freeDrawCreditRepository;
     private readonly IRngService _rngService;
     private readonly IDomainEventPublisher _domainEventPublisher;
+    private readonly ISystemConfigSettings _systemConfigSettings;
 
     /// <summary>
     /// Khởi tạo handler reveal-requested.
@@ -36,6 +36,7 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
         IFreeDrawCreditRepository freeDrawCreditRepository,
         IRngService rngService,
         IDomainEventPublisher domainEventPublisher,
+        ISystemConfigSettings systemConfigSettings,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
@@ -46,6 +47,7 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
         _freeDrawCreditRepository = freeDrawCreditRepository;
         _rngService = rngService;
         _domainEventPublisher = domainEventPublisher;
+        _systemConfigSettings = systemConfigSettings;
     }
 
     /// <inheritdoc />

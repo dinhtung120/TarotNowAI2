@@ -46,8 +46,11 @@ import type { GachaPool } from '@/shared/infrastructure/gacha/gachaTypes';
 import { inventoryQueryKeys } from '@/shared/infrastructure/inventory/inventoryConstants';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { fetchInventoryServer } from '@/shared/infrastructure/inventory/inventoryServerActions';
+import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 
-const readersDirectoryQueryKey = ['readers', 1, 12, '', '', ''] as const;
+const READERS_DIRECTORY_PAGE_SIZE = RUNTIME_POLICY_FALLBACKS.ui.readers.directoryPageSize;
+const CHAT_INBOX_PREFETCH_STALE_MS = RUNTIME_POLICY_FALLBACKS.ui.prefetch.chatInboxStaleMs;
+const readersDirectoryQueryKey = ['readers', 1, READERS_DIRECTORY_PAGE_SIZE, '', '', ''] as const;
 
 async function swallowPrefetch(run: () => Promise<void>): Promise<void> {
  try {
@@ -79,7 +82,7 @@ async function prefetchCommunityFeedInfinite(qc: QueryClient, visibility: 'publi
 }
 
 async function readersDirectoryQueryFn() {
- const result = await listReaders(1, 12, '', '', '');
+ const result = await listReaders(1, READERS_DIRECTORY_PAGE_SIZE, '', '', '');
  if (result.success && result.data) {
   return result.data;
  }
@@ -178,7 +181,7 @@ export async function prefetchChatInboxShell(qc: QueryClient): Promise<void> {
  await qc.prefetchQuery({
   queryKey: userStateQueryKeys.chat.inboxActive(),
   queryFn: chatInboxActiveQueryFn,
-  staleTime: 30_000,
+  staleTime: CHAT_INBOX_PREFETCH_STALE_MS,
  });
 }
 

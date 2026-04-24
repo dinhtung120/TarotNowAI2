@@ -23,11 +23,6 @@ public static class InventoryBusinessConstants
     public const int SpreadCardCount10 = 10;
 
     /// <summary>
-    /// Số vàng thưởng khi dùng Lucky Star đã sở hữu title.
-    /// </summary>
-    public const long LuckyStarOwnedTitleGoldReward = 500;
-
-    /// <summary>
     /// Mã title thực tế được grant từ item Lucky Star.
     /// </summary>
     public const string LuckyStarTitleCode = "title_lucky_star";

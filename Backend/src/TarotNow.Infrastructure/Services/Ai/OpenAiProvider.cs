@@ -37,6 +37,7 @@ public partial class OpenAiProvider : IAiProvider
     public OpenAiProvider(
         HttpClient httpClient,
         IOptions<AiProviderOptions> options,
+        ISystemConfigSettings systemConfigSettings,
         IAiProviderLogRepository logRepo,
         ILogger<OpenAiProvider> logger)
     {
@@ -60,20 +61,13 @@ public partial class OpenAiProvider : IAiProvider
         }
         _modelName = modelName;
 
-        // Giới hạn retry ở giá trị không âm để tránh cấu hình âm gây hành vi bất định.
-        _maxRetries = providerOptions.MaxRetries >= 0 ? providerOptions.MaxRetries : 2;
-        _streamingRetryBaseDelayMs = providerOptions.StreamingRetryBaseDelayMs > 0
-            ? providerOptions.StreamingRetryBaseDelayMs
-            : 200;
-        var configuredTemperature = providerOptions.StreamingTemperature;
-        if (double.IsNaN(configuredTemperature) || double.IsInfinity(configuredTemperature))
-        {
-            configuredTemperature = 0.7;
-        }
-        _streamingTemperature = Math.Clamp(configuredTemperature, 0.0, 2.0);
+        // Các tham số vận hành AI lấy từ runtime system config để tuning không cần redeploy.
+        _maxRetries = systemConfigSettings.OperationalAiMaxRetries;
+        _streamingRetryBaseDelayMs = systemConfigSettings.OperationalAiStreamingRetryBaseDelayMs;
+        _streamingTemperature = systemConfigSettings.OperationalAiStreamingTemperature;
 
         // Chuẩn hóa timeout/baseUrl giúp client luôn có thông số chạy tối thiểu hợp lệ.
-        var timeoutSeconds = providerOptions.TimeoutSeconds > 0 ? providerOptions.TimeoutSeconds : 30;
+        var timeoutSeconds = systemConfigSettings.OperationalAiTimeoutSeconds;
         var baseUrl = providerOptions.BaseUrl?.Trim();
         if (string.IsNullOrWhiteSpace(baseUrl))
         {

@@ -17,7 +17,7 @@ describe('auth schemas', () => {
  });
 
  it('validates register password complexity and confirmation', () => {
-  const schema = createRegisterSchema(t);
+  const schema = createRegisterSchema(t, 18);
 
   const valid = schema.safeParse({
    email: 'demo@example.com',

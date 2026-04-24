@@ -8,10 +8,8 @@ import { logger } from '@/shared/infrastructure/logging/logger';
 import { getSignalRHubUrl } from '@/shared/infrastructure/realtime/signalRUrl';
 import { ensureRealtimeSession } from '@/shared/infrastructure/realtime/realtimeSessionGuard';
 import { registerPresenceConnectionHandlers } from './usePresenceConnection.registration';
-
-const reconnectSchedule = [0, 2000, 5000, 10000, 30000];
-const NEGOTIATION_TIMEOUT_MS = 8_000;
-const NEGOTIATION_COOLDOWN_MS = 45_000;
+import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
+import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 
 let reconnectBlockedUntil = 0;
 
@@ -68,6 +66,13 @@ interface UsePresenceConnectionOptions {
 export function usePresenceConnection(options: UsePresenceConnectionOptions = {}) {
   const enabled = options.enabled ?? true;
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const runtimePoliciesQuery = useRuntimePolicies();
+  const realtimePolicy = runtimePoliciesQuery.data?.realtime;
+  const reconnectSchedule = [...(realtimePolicy?.reconnectScheduleMs ?? RUNTIME_POLICY_FALLBACKS.realtime.reconnectScheduleMs)];
+  const negotiationTimeoutMs = realtimePolicy?.negotiationTimeoutMs ?? RUNTIME_POLICY_FALLBACKS.realtime.negotiationTimeoutMs;
+  const negotiationCooldownMs =
+    realtimePolicy?.presenceNegotiationCooldownMs ?? RUNTIME_POLICY_FALLBACKS.realtime.presenceNegotiationCooldownMs;
+  const serverTimeoutMs = realtimePolicy?.serverTimeoutMs ?? RUNTIME_POLICY_FALLBACKS.realtime.serverTimeoutMs;
   const connectionRef = useRef<HubConnection | null>(null);
   const queryClient = useQueryClient();
 
@@ -107,12 +112,12 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
 	        .configureLogging(process.env.NODE_ENV === 'development' ? signalR.LogLevel.Debug : signalR.LogLevel.Warning)
 	        .build();
 
-      hubConnection.serverTimeoutInMilliseconds = 120000;
+      hubConnection.serverTimeoutInMilliseconds = serverTimeoutMs;
       const registration = registerPresenceConnectionHandlers(hubConnection, queryClient);
       disposeRegistration = registration.dispose;
 
       try {
-        await startConnectionWithTimeout(hubConnection, NEGOTIATION_TIMEOUT_MS);
+        await startConnectionWithTimeout(hubConnection, negotiationTimeoutMs);
         if (cancelled) {
           if (hubConnection.state !== HubConnectionState.Disconnected) {
             await hubConnection.stop().catch(() => undefined);
@@ -125,7 +130,7 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
         heartbeatInterval = registration.startHeartbeat();
       } catch (error) {
         if (isUnauthorizedNegotiationError(error) || error instanceof Error) {
-          reconnectBlockedUntil = Date.now() + NEGOTIATION_COOLDOWN_MS;
+          reconnectBlockedUntil = Date.now() + negotiationCooldownMs;
         }
 
         if (hubConnection && hubConnection.state !== HubConnectionState.Disconnected) {
@@ -148,5 +153,5 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
 
       connectionRef.current = null;
     };
-  }, [enabled, isAuthenticated, queryClient]);
+  }, [enabled, isAuthenticated, negotiationCooldownMs, negotiationTimeoutMs, queryClient, reconnectSchedule, serverTimeoutMs]);
 }

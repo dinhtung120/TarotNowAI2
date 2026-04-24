@@ -49,7 +49,7 @@ export function createLoginSchema(t: AuthTranslator) {
  });
 }
 
-export function createRegisterSchema(t: AuthTranslator) {
+export function createRegisterSchema(t: AuthTranslator, minimumAge: number) {
   return z
     .object({
       email: z.string().email(t('validation.email_invalid')).max(100),
@@ -83,9 +83,9 @@ export function createRegisterSchema(t: AuthTranslator) {
           }
 
           const age = (Date.now() - d.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-          return age >= 16;
+          return age >= minimumAge;
         },
-        t('validation.age_minimum')
+        t('validation.age_minimum', { age: minimumAge })
       ),
       hasConsented: z.boolean().refine((value) => value === true, {
         message: t('validation.must_accept_terms'),

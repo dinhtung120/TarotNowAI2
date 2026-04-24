@@ -31,11 +31,14 @@ public partial class ResolveDisputeCommandHandler
         ChatQuestionItem item,
         CancellationToken cancellationToken)
     {
-        var fromUtc = DateTime.UtcNow.AddDays(-7);
+        var lookbackDays = _systemConfigSettings.AdminDisputeReaderFreezeLookbackDays;
+        var threshold = _systemConfigSettings.AdminDisputeReaderFreezeThreshold;
+
+        var fromUtc = DateTime.UtcNow.AddDays(-lookbackDays);
         var recentDisputes = await _financeRepo.CountRecentDisputesByReceiverAsync(item.ReceiverId, fromUtc, cancellationToken);
-        if (recentDisputes <= 3)
+        if (recentDisputes <= threshold)
         {
-            // Rule hiện tại: chỉ can thiệp khi số dispute vượt 3 trong 7 ngày.
+            // Chỉ can thiệp khi số dispute vượt ngưỡng cấu hình trong cửa sổ lookback.
             return;
         }
 

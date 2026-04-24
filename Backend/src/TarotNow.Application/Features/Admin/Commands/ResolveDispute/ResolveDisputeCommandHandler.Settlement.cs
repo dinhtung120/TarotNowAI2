@@ -48,10 +48,11 @@ public partial class ResolveDisputeCommandHandler
         else
         {
             // Nhánh split: chia tiền giữa reader và user theo phần trăm admin quyết định.
+            var defaultSplitPercent = _systemConfigSettings.AdminDisputeDefaultSplitPercentToReader;
             await SplitBetweenReaderAndUserAsync(
                 request.AdminId,
                 item,
-                request.SplitPercentToReader ?? 50,
+                request.SplitPercentToReader ?? defaultSplitPercent,
                 auditMetadata,
                 cancellationToken);
         }

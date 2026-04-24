@@ -46,5 +46,6 @@ export const userStateQueryKeys = {
  },
  system: {
   runtimePolicies: () => ['me', 'runtime-policies'] as const,
+  publicRuntimePolicies: () => ['legal', 'runtime-policies'] as const,
  },
 } as const;

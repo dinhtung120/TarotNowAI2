@@ -1,5 +1,7 @@
 import { internalApiUrl } from '@/shared/infrastructure/http/apiUrl';
 import { parseApiError } from '@/shared/infrastructure/error/parseApiError';
+import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
+import { getRuntimePolicyStoreSnapshot } from '@/shared/config/runtimePolicyStore';
 
 interface ServerHttpResultOk<T> {
   ok: true;
@@ -26,8 +28,8 @@ interface ServerHttpRequestOptions extends Omit<RequestInit, 'body' | 'headers'>
   timeoutMs?: number;
 }
 
-const DEFAULT_SERVER_TIMEOUT_MS = 8_000;
-const MIN_SERVER_TIMEOUT_MS = 1_000;
+const DEFAULT_SERVER_TIMEOUT_MS = RUNTIME_POLICY_FALLBACKS.http.serverTimeoutMs;
+const MIN_SERVER_TIMEOUT_MS = RUNTIME_POLICY_FALLBACKS.http.minTimeoutMs;
 
 function buildHeaders(
   token?: string,
@@ -78,11 +80,15 @@ async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: numbe
 }
 
 function resolveTimeout(timeoutMs: number | undefined): number {
+  const runtimePolicy = getRuntimePolicyStoreSnapshot();
+  const defaultTimeoutMs = runtimePolicy.http.serverTimeoutMs || DEFAULT_SERVER_TIMEOUT_MS;
+  const minTimeoutMs = runtimePolicy.http.minTimeoutMs || MIN_SERVER_TIMEOUT_MS;
+
   if (!timeoutMs || !Number.isFinite(timeoutMs)) {
-    return DEFAULT_SERVER_TIMEOUT_MS;
+    return defaultTimeoutMs;
   }
 
-  return Math.max(MIN_SERVER_TIMEOUT_MS, Math.floor(timeoutMs));
+  return Math.max(minTimeoutMs, Math.floor(timeoutMs));
 }
 
 function isAbortError(error: unknown): boolean {

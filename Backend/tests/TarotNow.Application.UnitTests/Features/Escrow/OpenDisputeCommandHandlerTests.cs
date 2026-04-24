@@ -15,6 +15,7 @@ public class OpenDisputeCommandHandlerTests
     private readonly Mock<IChatFinanceRepository> _mockFinanceRepo;
     // Mock transaction coordinator để thực thi action transactional ngay trong test.
     private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
+    private readonly Mock<ISystemConfigSettings> _mockSystemConfigSettings;
     // Handler cần kiểm thử.
     private readonly OpenDisputeCommandHandler _handler;
 
@@ -26,10 +27,16 @@ public class OpenDisputeCommandHandlerTests
     {
         _mockFinanceRepo = new Mock<IChatFinanceRepository>();
         _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
+        _mockSystemConfigSettings = new Mock<ISystemConfigSettings>();
+        _mockSystemConfigSettings.SetupGet(x => x.EscrowDisputeMinReasonLength).Returns(10);
+        _mockSystemConfigSettings.SetupGet(x => x.EscrowDisputeWindowHours).Returns(48);
         _mockTransactionCoordinator
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
             .Returns((Func<CancellationToken, Task> action, CancellationToken ct) => action(ct));
-        _handler = new OpenDisputeCommandHandler(_mockFinanceRepo.Object, _mockTransactionCoordinator.Object);
+        _handler = new OpenDisputeCommandHandler(
+            _mockFinanceRepo.Object,
+            _mockTransactionCoordinator.Object,
+            _mockSystemConfigSettings.Object);
     }
 
     /// <summary>

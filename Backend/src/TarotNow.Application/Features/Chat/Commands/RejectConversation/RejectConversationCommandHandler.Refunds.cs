@@ -62,9 +62,7 @@ public partial class RejectConversationCommandHandler
         CancellationToken cancellationToken)
     {
         var total = 0L;
-        var disputeWindowHours = _systemConfigSettings.EscrowDisputeWindowHours > 0
-            ? _systemConfigSettings.EscrowDisputeWindowHours
-            : 24;
+        var disputeWindowHours = _systemConfigSettings.EscrowDisputeWindowHours;
         foreach (var item in items)
         {
             // Ghi giao dịch refund idempotent theo item để tránh hoàn trùng.

@@ -68,9 +68,7 @@ public partial class SendMessageCommandHandler
         }
 
         var now = DateTime.UtcNow;
-        var autoReleaseHours = _systemConfigSettings.EscrowDisputeWindowHours > 0
-            ? _systemConfigSettings.EscrowDisputeWindowHours
-            : 24;
+        var autoReleaseHours = _systemConfigSettings.EscrowDisputeWindowHours;
         foreach (var item in candidates)
         {
             // Sau khi Reader phản hồi, bắt đầu cửa sổ auto-release cho item đã accepted.

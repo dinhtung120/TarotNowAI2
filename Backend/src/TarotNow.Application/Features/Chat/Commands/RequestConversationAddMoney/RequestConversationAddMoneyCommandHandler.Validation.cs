@@ -8,7 +8,7 @@ public partial class RequestConversationAddMoneyCommandHandler
     /// Validate business rule đầu vào cho đề nghị cộng tiền.
     /// Luồng xử lý: kiểm tra amount dương, description bắt buộc/độ dài, idempotency key bắt buộc.
     /// </summary>
-    private static void ValidateRequest(RequestConversationAddMoneyCommand request)
+    private void ValidateRequest(RequestConversationAddMoneyCommand request)
     {
         if (request.AmountDiamond <= 0)
         {
@@ -22,10 +22,11 @@ public partial class RequestConversationAddMoneyCommandHandler
             throw new BadRequestException("Lý do cộng tiền là bắt buộc.");
         }
 
-        if (request.Description.Trim().Length > 100)
+        var maxNoteLength = _systemConfigSettings.ChatPaymentOfferMaxNoteLength;
+        if (request.Description.Trim().Length > maxNoteLength)
         {
             // Giới hạn mô tả theo UX hiển thị trong chat.
-            throw new BadRequestException("Lý do cộng tiền tối đa 100 ký tự.");
+            throw new BadRequestException($"Lý do cộng tiền tối đa {maxNoteLength} ký tự.");
         }
 
         if (string.IsNullOrWhiteSpace(request.IdempotencyKey))

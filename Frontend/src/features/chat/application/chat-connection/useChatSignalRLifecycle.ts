@@ -11,6 +11,8 @@ import type { ChatMessageDto, ConversationDto } from '@/features/chat/applicatio
 import { isSameParticipantId } from '@/features/chat/domain/participantId';
 import { listMessages } from '@/features/chat/application/actions';
 import { logger } from '@/shared/infrastructure/logging/logger';
+import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
+import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 import { createSignalRLogger, getCachedConversation } from './utils';
 
 interface UseChatSignalRLifecycleOptions {
@@ -31,7 +33,7 @@ interface UseChatSignalRLifecycleOptions {
  appendMessage: (message: ChatMessageDto) => void;
 }
 
-async function createHubConnection() {
+async function createHubConnection(reconnectSchedule: number[]) {
  const signalR = await import('@microsoft/signalr');
  const { getSignalRHubUrl } = await import('@/shared/infrastructure/realtime/signalRUrl');
  const customLogger = createSignalRLogger({
@@ -44,7 +46,7 @@ async function createHubConnection() {
   .withUrl(getSignalRHubUrl('/api/v1/chat'), {
    withCredentials: true,
   })
-  .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+  .withAutomaticReconnect(reconnectSchedule)
   .configureLogging(customLogger)
   .build();
 }
@@ -55,6 +57,15 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
   lastInitialLoadTimeRef, loadInitialRef, markReadRef, setConnected, setLoading,
   setTypingUserId, setMessages, setConversation, resetForConversation, appendMessage,
  } = options;
+ const runtimePoliciesQuery = useRuntimePolicies();
+ const realtimePolicy = runtimePoliciesQuery.data?.realtime;
+ const reconnectSchedule = [...(realtimePolicy?.reconnectScheduleMs ?? RUNTIME_POLICY_FALLBACKS.realtime.reconnectScheduleMs)];
+ const serverTimeoutMs = realtimePolicy?.serverTimeoutMs ?? RUNTIME_POLICY_FALLBACKS.realtime.serverTimeoutMs;
+ const typingClearMs = realtimePolicy?.chat.typingClearMs ?? RUNTIME_POLICY_FALLBACKS.realtime.chat.typingClearMs;
+ const invalidateDebounceMs = realtimePolicy?.chat.invalidateDebounceMs
+  ?? RUNTIME_POLICY_FALLBACKS.realtime.chat.invalidateDebounceMs;
+ const initialLoadGuardMs = realtimePolicy?.chat.initialLoadGuardMs
+  ?? RUNTIME_POLICY_FALLBACKS.realtime.chat.initialLoadGuardMs;
 
  const initializingRef = useRef(false);
 
@@ -71,6 +82,7 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
 
   let cancelled = false;
   let hubConnection: HubConnection | null = null;
+  let conversationInvalidateTimeout: ReturnType<typeof setTimeout> | null = null;
   initializingRef.current = true;
   
   resetForConversation(getCachedConversation(queryClient, conversationId));
@@ -84,9 +96,9 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
 
   const init = async () => {
    try {
-    hubConnection = await createHubConnection();
+    hubConnection = await createHubConnection(reconnectSchedule);
     // Cấu hình timeout dài hơn để tránh bị ngắt kết nối do mạng chập chờn
-    hubConnection.serverTimeoutInMilliseconds = 120000;
+    hubConnection.serverTimeoutInMilliseconds = serverTimeoutMs;
     
     // Đăng ký các sự kiện nhận tin nhắn và trạng thái realtime
     hubConnection.on('message.created', (message: ChatMessageDto) => {
@@ -120,7 +132,7 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
      if (payload.conversationId !== conversationId || isSameParticipantId(payload.userId, currentUserId)) return;
      setTypingUserId(payload.userId);
      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-     typingTimeoutRef.current = setTimeout(() => setTypingUserId(null), 2500);
+     typingTimeoutRef.current = setTimeout(() => setTypingUserId(null), typingClearMs);
     });
 
     hubConnection.on('typing.stopped', (payload: { userId: string; conversationId: string }) => {
@@ -133,10 +145,15 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
      // Các sự kiện này không làm thay đổi trạng thái room cần refetch lại conversation.
      if (payload.type === 'message_created' || payload.type === 'member_joined' || payload.type === 'message_read') return;
      // Debounce việc fetch lại dữ liệu khi có cập nhật status conversation
-     if (Date.now() - lastInitialLoadTimeRef.current < 2000) return;
-     void listMessages(conversationId, { limit: 1 }).then((res) => {
-      if (res.success && res.data?.conversation) setConversation(res.data.conversation);
-     });
+     if (Date.now() - lastInitialLoadTimeRef.current < initialLoadGuardMs) return;
+     if (conversationInvalidateTimeout) {
+      clearTimeout(conversationInvalidateTimeout);
+     }
+     conversationInvalidateTimeout = setTimeout(() => {
+      void listMessages(conversationId, { limit: 1 }).then((res) => {
+       if (res.success && res.data?.conversation) setConversation(res.data.conversation);
+      });
+     }, invalidateDebounceMs);
     });
 
     /*
@@ -192,6 +209,7 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
    
    // Gỡ bỏ trình lắng nghe sự kiện visibilitychange để tránh rò rỉ bộ nhớ (memory leak).
    document.removeEventListener('visibilitychange', onVisibilityChange);
+   if (conversationInvalidateTimeout) clearTimeout(conversationInvalidateTimeout);
 
    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
    if (!hubConnection) return;
@@ -210,16 +228,21 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
   connectionRef,
   conversationId,
   currentUserId,
+  initialLoadGuardMs,
+  invalidateDebounceMs,
   lastInitialLoadTimeRef,
   loadInitialRef,
   markReadRef,
   queryClient,
+  reconnectSchedule,
   resetForConversation,
+  serverTimeoutMs,
   setConnected,
   setConversation,
   setLoading,
   setMessages,
   setTypingUserId,
+  typingClearMs,
   typingTimeoutRef,
  ]);
 }

@@ -7,7 +7,8 @@ import {
  type ConversationDto,
 } from '@/features/chat/application/actions';
 import { appendUniqueMessage, mergeHistoryWithRealtimeMessages } from '@/features/chat/domain/mergeMessages';
-import { CHAT_PAGE_SIZE } from './utils';
+import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
+import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 
 interface UseChatHistoryStateOptions {
  conversationId?: string | null;
@@ -18,6 +19,8 @@ export function useChatHistoryState({
  conversationId,
  scrollToBottomRef,
 }: UseChatHistoryStateOptions) {
+ const runtimePoliciesQuery = useRuntimePolicies();
+ const chatPageSize = runtimePoliciesQuery.data?.chat.history.pageSize ?? RUNTIME_POLICY_FALLBACKS.chat.history.pageSize;
  const [messages, setMessages] = useState<ChatMessageDto[]>([]);
  const [conversation, setConversation] = useState<ConversationDto | null>(null);
  const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -33,7 +36,7 @@ export function useChatHistoryState({
   if (!conversationId) return;
   if (!silent) setLoading(true);
 
-  const history = await listMessages(conversationId, { limit: CHAT_PAGE_SIZE });
+  const history = await listMessages(conversationId, { limit: chatPageSize });
   if (history.success && history.data) {
    const payload = history.data;
    setMessages((prev) =>
@@ -58,7 +61,7 @@ export function useChatHistoryState({
    setInitializing(false);
    lastInitialLoadTimeRef.current = Date.now();
   }
- }, [conversationId, scrollToBottomRef]);
+ }, [chatPageSize, conversationId, scrollToBottomRef]);
 
  useEffect(() => {
   loadInitialRef.current = loadInitial;
@@ -75,7 +78,7 @@ export function useChatHistoryState({
   try {
    const result = await listMessages(conversationId, {
     cursor: nextCursor,
-    limit: CHAT_PAGE_SIZE,
+    limit: chatPageSize,
    });
 
    if (result.success && result.data) {
@@ -95,7 +98,7 @@ export function useChatHistoryState({
    setLoadingMore(false);
    loadingMoreRef.current = false;
   }
- }, [conversationId, nextCursor]);
+ }, [chatPageSize, conversationId, nextCursor]);
 
  const resetForConversation = useCallback((cachedConversation: ConversationDto | null) => {
   setMessages([]);

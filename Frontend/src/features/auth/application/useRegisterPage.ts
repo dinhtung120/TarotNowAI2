@@ -6,6 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { registerAction } from '@/features/auth/application/actions';
 import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
+import { usePublicRuntimePolicies } from '@/shared/application/hooks/usePublicRuntimePolicies';
+import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 import {
   createRegisterSchema,
   type RegisterFormValues,
@@ -19,9 +21,11 @@ export function useRegisterPage() {
   const t = useTranslations('Auth');
   const navigation = useOptimizedNavigation();
   const [errorMsg, setErrorMsg] = useState('');
+  const publicRuntimePoliciesQuery = usePublicRuntimePolicies();
+  const minimumAge = publicRuntimePoliciesQuery.data?.auth.minimumAge ?? RUNTIME_POLICY_FALLBACKS.auth.minimumAge;
 
   // Tạo schema validation dựa trên ngôn ngữ hiện tại
-  const registerSchema = useMemo(() => createRegisterSchema(t), [t]);
+  const registerSchema = useMemo(() => createRegisterSchema(t, minimumAge), [minimumAge, t]);
 
   // Khởi tạo form với các phương thức cần thiết
   const methods = useForm<RegisterFormValues>({

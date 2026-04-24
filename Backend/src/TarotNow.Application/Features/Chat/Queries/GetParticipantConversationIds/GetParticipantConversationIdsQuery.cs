@@ -10,7 +10,7 @@ public class GetParticipantConversationIdsQuery : IRequest<IReadOnlyList<string>
     public string ParticipantId { get; set; } = string.Empty;
 
     // Số lượng tối đa conversation id cần lấy.
-    public int MaxCount { get; set; } = 50;
+    public int MaxCount { get; set; }
 
     // Bộ lọc trạng thái conversation (tùy chọn).
     public IReadOnlyCollection<string>? Statuses { get; set; }
@@ -21,14 +21,18 @@ public class GetParticipantConversationIdsQueryHandler
     : IRequestHandler<GetParticipantConversationIdsQuery, IReadOnlyList<string>>
 {
     private readonly IConversationRepository _conversationRepository;
+    private readonly ISystemConfigSettings _systemConfigSettings;
 
     /// <summary>
     /// Khởi tạo handler lấy danh sách conversation id theo participant.
     /// Luồng xử lý: nhận conversation repository để thực hiện truy vấn phân trang.
     /// </summary>
-    public GetParticipantConversationIdsQueryHandler(IConversationRepository conversationRepository)
+    public GetParticipantConversationIdsQueryHandler(
+        IConversationRepository conversationRepository,
+        ISystemConfigSettings systemConfigSettings)
     {
         _conversationRepository = conversationRepository;
+        _systemConfigSettings = systemConfigSettings;
     }
 
     /// <summary>
@@ -46,7 +50,11 @@ public class GetParticipantConversationIdsQueryHandler
         }
 
         // Chuẩn hóa page size để tránh truy vấn quá lớn và giữ giới hạn hệ thống.
-        var pageSize = request.MaxCount <= 0 ? 50 : Math.Min(request.MaxCount, 200);
+        var defaultPageSize = _systemConfigSettings.ChatParticipantsDefaultPageSize;
+        var maxPageSize = _systemConfigSettings.ChatParticipantsMaxPageSize;
+        var pageSize = request.MaxCount <= 0
+            ? defaultPageSize
+            : Math.Min(request.MaxCount, maxPageSize);
         var (items, _) = await _conversationRepository.GetByParticipantIdPaginatedAsync(
             request.ParticipantId,
             page: 1,

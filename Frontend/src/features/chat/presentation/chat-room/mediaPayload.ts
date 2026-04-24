@@ -1,12 +1,12 @@
 import type { MediaPayloadDto } from '@/features/chat/application/actions';
 import {
   compressImageForDirectUpload,
+  getVoiceUploadMaxBytes,
+  getVoiceUploadMaxDurationMs,
   getImageDimensions,
   presignConversationMediaUpload,
   uploadToR2WithRetry,
   validateImageForDirectUpload,
-  VOICE_UPLOAD_MAX_BYTES,
-  VOICE_UPLOAD_MAX_DURATION_MS,
 } from '@/shared/media-upload';
 
 const FALLBACK_VOICE_MIME = 'audio/webm';
@@ -80,11 +80,11 @@ export async function buildVoiceMediaPayloadFromBlob({
   durationMs,
   onProgress,
 }: BuildVoicePayloadParams): Promise<MediaPayloadDto> {
-  if (blob.size <= 0 || blob.size > VOICE_UPLOAD_MAX_BYTES) {
+  if (blob.size <= 0 || blob.size > getVoiceUploadMaxBytes()) {
     throw new Error('Tin nhắn thoại vượt quá 5MB, vui lòng ghi ngắn hơn.');
   }
 
-  if (durationMs <= 0 || durationMs > VOICE_UPLOAD_MAX_DURATION_MS) {
+  if (durationMs <= 0 || durationMs > getVoiceUploadMaxDurationMs()) {
     throw new Error('Tin nhắn thoại vượt quá giới hạn 10 phút.');
   }
 

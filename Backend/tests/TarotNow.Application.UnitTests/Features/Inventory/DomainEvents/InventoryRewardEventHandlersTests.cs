@@ -64,6 +64,8 @@ public class InventoryRewardEventHandlersTests
         var titleRepositoryMock = new Mock<ITitleRepository>();
         var walletRepositoryMock = new Mock<IWalletRepository>();
         var domainEventPublisherMock = new Mock<IDomainEventPublisher>();
+        var systemConfigSettingsMock = new Mock<ISystemConfigSettings>();
+        systemConfigSettingsMock.SetupGet(x => x.InventoryLuckyStarOwnedTitleGoldReward).Returns(500);
         var domainEvent = new LuckyStarTitleUsedDomainEvent
         {
             UserId = Guid.NewGuid(),
@@ -78,6 +80,7 @@ public class InventoryRewardEventHandlersTests
             titleRepositoryMock.Object,
             walletRepositoryMock.Object,
             domainEventPublisherMock.Object,
+            systemConfigSettingsMock.Object,
             _idempotencyServiceMock.Object);
 
         await handler.Handle(new DomainEventNotification<LuckyStarTitleUsedDomainEvent>(domainEvent), CancellationToken.None);
@@ -114,6 +117,9 @@ public class InventoryRewardEventHandlersTests
         var titleRepositoryMock = new Mock<ITitleRepository>();
         var walletRepositoryMock = new Mock<IWalletRepository>();
         var domainEventPublisherMock = new Mock<IDomainEventPublisher>();
+        var systemConfigSettingsMock = new Mock<ISystemConfigSettings>();
+        const long expectedReward = 500;
+        systemConfigSettingsMock.SetupGet(x => x.InventoryLuckyStarOwnedTitleGoldReward).Returns(expectedReward);
         var domainEvent = new LuckyStarTitleUsedDomainEvent
         {
             UserId = Guid.NewGuid(),
@@ -128,7 +134,7 @@ public class InventoryRewardEventHandlersTests
                 domainEvent.UserId,
                 CurrencyType.Gold,
                 TransactionType.InventoryReward,
-                InventoryBusinessConstants.LuckyStarOwnedTitleGoldReward,
+                expectedReward,
                 It.IsAny<string?>(),
                 It.IsAny<string?>(),
                 It.IsAny<string?>(),
@@ -141,6 +147,7 @@ public class InventoryRewardEventHandlersTests
             titleRepositoryMock.Object,
             walletRepositoryMock.Object,
             domainEventPublisherMock.Object,
+            systemConfigSettingsMock.Object,
             _idempotencyServiceMock.Object);
 
         await handler.Handle(new DomainEventNotification<LuckyStarTitleUsedDomainEvent>(domainEvent), CancellationToken.None);
@@ -150,7 +157,7 @@ public class InventoryRewardEventHandlersTests
                 domainEvent.UserId,
                 CurrencyType.Gold,
                 TransactionType.InventoryReward,
-                InventoryBusinessConstants.LuckyStarOwnedTitleGoldReward,
+                expectedReward,
                 It.IsAny<string?>(),
                 It.IsAny<string?>(),
                 It.IsAny<string?>(),
@@ -164,7 +171,7 @@ public class InventoryRewardEventHandlersTests
                     e.UserId == domainEvent.UserId
                     && e.Currency == CurrencyType.Gold
                     && e.ChangeType == TransactionType.InventoryReward
-                    && e.DeltaAmount == InventoryBusinessConstants.LuckyStarOwnedTitleGoldReward),
+                    && e.DeltaAmount == expectedReward),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }

@@ -1,9 +1,10 @@
 export {
-  DEFAULT_UPLOAD_RETRY_ATTEMPTS,
+  getDefaultUploadRetryAttempts,
+  getDefaultUploadRetryDelayMs,
   IMAGE_UPLOAD_CONTENT_TYPE,
-  IMAGE_UPLOAD_MAX_BYTES,
-  VOICE_UPLOAD_MAX_BYTES,
-  VOICE_UPLOAD_MAX_DURATION_MS,
+  getImageUploadMaxBytes,
+  getVoiceUploadMaxBytes,
+  getVoiceUploadMaxDurationMs,
 } from '@/shared/media-upload/constants';
 export {
   compressImageForDirectUpload,

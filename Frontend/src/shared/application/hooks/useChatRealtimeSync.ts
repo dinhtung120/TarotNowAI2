@@ -8,6 +8,8 @@ import { logger } from '@/shared/infrastructure/logging/logger';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { getSignalRHubUrl } from '@/shared/infrastructure/realtime/signalRUrl';
 import { ensureRealtimeSession } from '@/shared/infrastructure/realtime/realtimeSessionGuard';
+import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
+import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 
 interface UseChatRealtimeSyncOptions {
   enabled?: boolean;
@@ -18,8 +20,6 @@ interface ConversationUpdatedPayload {
   type?: string;
 }
 
-const UNAUTHORIZED_COOLDOWN_MS = 60_000;
-const NEGOTIATION_TIMEOUT_MS = 8_000;
 const UNREAD_BADGE_REFRESH_EVENT_TYPES = new Set(['message_created', 'message_read', 'unread_changed']);
 let unauthorizedRetryBlockedUntil = 0;
 
@@ -73,6 +73,16 @@ async function startConnectionWithTimeout(
 export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
   const enabled = options.enabled ?? true;
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const runtimePoliciesQuery = useRuntimePolicies();
+  const realtimePolicy = runtimePoliciesQuery.data?.realtime;
+  const reconnectSchedule = [...(realtimePolicy?.reconnectScheduleMs ?? RUNTIME_POLICY_FALLBACKS.realtime.reconnectScheduleMs)];
+  const negotiationTimeoutMs = realtimePolicy?.negotiationTimeoutMs ?? RUNTIME_POLICY_FALLBACKS.realtime.negotiationTimeoutMs;
+  const unauthorizedCooldownMs = realtimePolicy?.chatUnauthorizedCooldownMs
+    ?? RUNTIME_POLICY_FALLBACKS.realtime.chatUnauthorizedCooldownMs;
+  const serverTimeoutMs = realtimePolicy?.serverTimeoutMs ?? RUNTIME_POLICY_FALLBACKS.realtime.serverTimeoutMs;
+  const invalidateDebounceMs = realtimePolicy?.chat.invalidateDebounceMs
+    ?? RUNTIME_POLICY_FALLBACKS.realtime.chat.invalidateDebounceMs;
+  const appStartGuardMs = realtimePolicy?.chat.appStartGuardMs ?? RUNTIME_POLICY_FALLBACKS.realtime.chat.appStartGuardMs;
   const connectionRef = useRef<HubConnection | null>(null);
   const queryClient = useQueryClient();
   
@@ -104,25 +114,25 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
 
     
     const invalidateInboxQueries = () => {
-      if (Date.now() - appStartTimeRef.current < 3000) {
+      if (Date.now() - appStartTimeRef.current < appStartGuardMs) {
         return;
       }
 
       if (inboxInvalidateTimeout) clearTimeout(inboxInvalidateTimeout);
       inboxInvalidateTimeout = setTimeout(() => {
         void queryClient.invalidateQueries({ queryKey: userStateQueryKeys.chat.inboxRoot() });
-      }, 1000); 
+      }, invalidateDebounceMs);
     };
 
     const invalidateUnreadBadge = () => {
-      if (Date.now() - appStartTimeRef.current < 3000) {
+      if (Date.now() - appStartTimeRef.current < appStartGuardMs) {
         return;
       }
 
       if (unreadInvalidateTimeout) clearTimeout(unreadInvalidateTimeout);
       unreadInvalidateTimeout = setTimeout(() => {
         void queryClient.invalidateQueries({ queryKey: userStateQueryKeys.chat.unreadBadge() });
-      }, 1000); 
+      }, invalidateDebounceMs);
     };
 
     const init = async () => {
@@ -137,11 +147,11 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
 	        .withUrl(getSignalRHubUrl('/api/v1/chat'), { 
 	          withCredentials: true,
 	        })
-	        .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+	        .withAutomaticReconnect(reconnectSchedule)
 	        .configureLogging(process.env.NODE_ENV === 'development' ? signalR.LogLevel.Debug : signalR.LogLevel.Warning)
 	        .build();
 
-      hubConnection.serverTimeoutInMilliseconds = 120000;
+      hubConnection.serverTimeoutInMilliseconds = serverTimeoutMs;
 
       hubConnection.on('conversation.updated', (payload: ConversationUpdatedPayload) => {
         invalidateInboxQueries();
@@ -159,7 +169,7 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
       });
 
       try {
-        await startConnectionWithTimeout(hubConnection, NEGOTIATION_TIMEOUT_MS);
+        await startConnectionWithTimeout(hubConnection, negotiationTimeoutMs);
         if (cancelled) {
           if (hubConnection.state !== HubConnectionState.Disconnected) {
             await hubConnection.stop().catch(() => undefined);
@@ -169,9 +179,9 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
         connectionRef.current = hubConnection;
       } catch (error) {
         if (isUnauthorizedNegotiationError(error)) {
-          unauthorizedRetryBlockedUntil = Date.now() + UNAUTHORIZED_COOLDOWN_MS;
+          unauthorizedRetryBlockedUntil = Date.now() + unauthorizedCooldownMs;
         } else if (error instanceof Error) {
-          unauthorizedRetryBlockedUntil = Date.now() + Math.floor(UNAUTHORIZED_COOLDOWN_MS / 2);
+          unauthorizedRetryBlockedUntil = Date.now() + Math.floor(unauthorizedCooldownMs / 2);
         }
         if (hubConnection && hubConnection.state !== HubConnectionState.Disconnected) {
           await hubConnection.stop().catch(() => undefined);
@@ -196,5 +206,5 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
       }
       connectionRef.current = null;
     };
-  }, [enabled, isAuthenticated, queryClient]);
+  }, [appStartGuardMs, enabled, invalidateDebounceMs, isAuthenticated, negotiationTimeoutMs, queryClient, reconnectSchedule, serverTimeoutMs, unauthorizedCooldownMs]);
 }

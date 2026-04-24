@@ -1,10 +1,12 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using StackExchange.Redis;
 using TarotNow.Application.Interfaces;
 using TarotNow.Infrastructure.BackgroundJobs;
 using TarotNow.Infrastructure.Messaging.Redis;
+using TarotNow.Infrastructure.Options;
 using TarotNow.Infrastructure.Services;
 
 namespace TarotNow.Infrastructure;
@@ -19,6 +21,7 @@ public static partial class DependencyInjection
     {
         services.AddMemoryCache();
         var redisConnectionString = configuration.GetConnectionString("Redis");
+        var postgreSqlConnectionString = configuration.GetConnectionString("PostgreSQL");
         var redisInstanceName = configuration["Redis:InstanceName"]?.Trim();
         var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? string.Empty;
         var requiresRedis = string.Equals(environmentName, "Production", StringComparison.OrdinalIgnoreCase);
@@ -28,8 +31,11 @@ public static partial class DependencyInjection
             throw new InvalidOperationException("Missing required configuration Redis:InstanceName (env: REDIS__INSTANCENAME).");
         }
 
+        var redisBootstrap = !string.IsNullOrWhiteSpace(postgreSqlConnectionString)
+            ? TryLoadRedisBootstrapSettings(postgreSqlConnectionString)
+            : null;
         var redisMultiplexer = !string.IsNullOrWhiteSpace(redisConnectionString)
-            ? TryCreateRedisMultiplexer(redisConnectionString)
+            ? TryCreateRedisMultiplexer(redisConnectionString, redisBootstrap)
             : null;
 
         if (requiresRedis && redisMultiplexer is null)
@@ -78,15 +84,19 @@ public static partial class DependencyInjection
     /// Thử tạo Redis multiplexer với timeout ngắn để không chặn startup lâu.
     /// Luồng xử lý: parse connection options, connect, trả multiplexer khi connected; lỗi thì trả null.
     /// </summary>
-    private static IConnectionMultiplexer? TryCreateRedisMultiplexer(string connectionString)
+    private static IConnectionMultiplexer? TryCreateRedisMultiplexer(
+        string connectionString,
+        RedisBootstrapSettings? bootstrapSettings)
     {
         try
         {
             var options = ConfigurationOptions.Parse(connectionString);
+            var fallback = new SystemConfigOptions().Operational.Redis;
+
             options.AbortOnConnectFail = false;
-            options.ConnectTimeout = 2000;
-            options.SyncTimeout = 2000;
-            options.ConnectRetry = 1;
+            options.ConnectTimeout = bootstrapSettings?.ConnectTimeoutMs ?? fallback.ConnectTimeoutMs;
+            options.SyncTimeout = bootstrapSettings?.SyncTimeoutMs ?? fallback.SyncTimeoutMs;
+            options.ConnectRetry = bootstrapSettings?.ConnectRetry ?? fallback.ConnectRetry;
 
             var multiplexer = ConnectionMultiplexer.Connect(options);
             if (multiplexer.IsConnected)
@@ -103,5 +113,89 @@ public static partial class DependencyInjection
             // Mọi lỗi kết nối Redis đều fallback để tránh fail startup toàn hệ thống.
             return null;
         }
+    }
+
+    private static RedisBootstrapSettings? TryLoadRedisBootstrapSettings(string postgreSqlConnectionString)
+    {
+        try
+        {
+            using var connection = new NpgsqlConnection(postgreSqlConnectionString);
+            connection.Open();
+
+            using var command = new NpgsqlCommand(
+                """
+                SELECT key, value
+                FROM system_configs
+                WHERE key IN (
+                    'operational.redis.connect_timeout_ms',
+                    'operational.redis.sync_timeout_ms',
+                    'operational.redis.connect_retry'
+                );
+                """,
+                connection);
+
+            using var reader = command.ExecuteReader();
+            var data = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            while (reader.Read())
+            {
+                var key = reader.GetString(0);
+                var value = reader.GetString(1);
+                data[key] = value;
+            }
+
+            var fallback = new SystemConfigOptions().Operational.Redis;
+            var result = new RedisBootstrapSettings
+            {
+                ConnectTimeoutMs = ParseIntOrFallback(
+                    data,
+                    "operational.redis.connect_timeout_ms",
+                    fallback.ConnectTimeoutMs,
+                    100,
+                    60_000),
+                SyncTimeoutMs = ParseIntOrFallback(
+                    data,
+                    "operational.redis.sync_timeout_ms",
+                    fallback.SyncTimeoutMs,
+                    100,
+                    60_000),
+                ConnectRetry = ParseIntOrFallback(
+                    data,
+                    "operational.redis.connect_retry",
+                    fallback.ConnectRetry,
+                    0,
+                    20)
+            };
+
+            return result;
+        }
+        catch
+        {
+            // Bootstrap không thành công thì trả null để dùng fallback cố định.
+            return null;
+        }
+    }
+
+    private static int ParseIntOrFallback(
+        IReadOnlyDictionary<string, string> values,
+        string key,
+        int fallback,
+        int min,
+        int max)
+    {
+        if (!values.TryGetValue(key, out var raw))
+        {
+            return Math.Clamp(fallback, min, max);
+        }
+
+        return int.TryParse(raw, out var parsed)
+            ? Math.Clamp(parsed, min, max)
+            : Math.Clamp(fallback, min, max);
+    }
+
+    private sealed class RedisBootstrapSettings
+    {
+        public int ConnectTimeoutMs { get; init; }
+        public int SyncTimeoutMs { get; init; }
+        public int ConnectRetry { get; init; }
     }
 }

@@ -1,10 +1,11 @@
 import imageCompression from 'browser-image-compression';
 import {
+  type ImageCompressionStep,
   IMAGE_COMPRESSION_BASE_OPTIONS,
-  IMAGE_COMPRESSION_STEPS,
-  IMAGE_COMPRESSION_TARGET_BYTES,
   IMAGE_UPLOAD_CONTENT_TYPE,
-  IMAGE_UPLOAD_MAX_BYTES,
+  getImageCompressionSteps,
+  getImageCompressionTargetBytes,
+  getImageUploadMaxBytes,
 } from '@/shared/media-upload/constants';
 
 export class ImageUploadValidationError extends Error {
@@ -15,6 +16,7 @@ export class ImageUploadValidationError extends Error {
 }
 
 export function validateImageForDirectUpload(file: File): void {
+  const imageUploadMaxBytes = getImageUploadMaxBytes();
   if (!file.type.toLowerCase().startsWith('image/')) {
     throw new ImageUploadValidationError('Chỉ được chọn file ảnh.');
   }
@@ -23,23 +25,26 @@ export function validateImageForDirectUpload(file: File): void {
     throw new ImageUploadValidationError('File ảnh không hợp lệ.');
   }
 
-  if (file.size > IMAGE_UPLOAD_MAX_BYTES) {
+  if (file.size > imageUploadMaxBytes) {
     throw new ImageUploadValidationError('Ảnh quá lớn (tối đa 10MB).');
   }
 }
 
 export async function compressImageForDirectUpload(file: File): Promise<File> {
   validateImageForDirectUpload(file);
+  const compressionSteps = getImageCompressionSteps();
+  const targetBytes = getImageCompressionTargetBytes();
+  const imageUploadMaxBytes = getImageUploadMaxBytes();
 
   let currentFile = file;
-  for (const step of IMAGE_COMPRESSION_STEPS) {
+  for (const step of compressionSteps) {
     currentFile = await compressByStep(currentFile, file.name, step);
-    if (currentFile.size <= IMAGE_COMPRESSION_TARGET_BYTES) {
+    if (currentFile.size <= targetBytes) {
       break;
     }
   }
 
-  if (currentFile.size <= 0 || currentFile.size > IMAGE_UPLOAD_MAX_BYTES) {
+  if (currentFile.size <= 0 || currentFile.size > imageUploadMaxBytes) {
     throw new ImageUploadValidationError('Ảnh sau nén không hợp lệ (tối đa 10MB).');
   }
 
@@ -76,7 +81,7 @@ function toWebpFileName(fileName: string): string {
 async function compressByStep(
   file: File,
   originalFileName: string,
-  step: (typeof IMAGE_COMPRESSION_STEPS)[number],
+  step: ImageCompressionStep,
 ): Promise<File> {
   const compressed = await imageCompression(file, {
     ...IMAGE_COMPRESSION_BASE_OPTIONS,

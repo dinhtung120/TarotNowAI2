@@ -4,8 +4,6 @@ import type { QueryClient } from '@tanstack/react-query';
 import type { ILogger, LogLevel } from '@microsoft/signalr';
 import type { ConversationDto } from '@/features/chat/application/actions';
 
-export const CHAT_PAGE_SIZE = 50;
-
 export function getCachedConversation(
  queryClient: QueryClient,
  id?: string | null

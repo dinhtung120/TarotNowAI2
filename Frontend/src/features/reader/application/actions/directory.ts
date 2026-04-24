@@ -4,6 +4,7 @@ import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionR
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { normalizeReaderStatus } from '@/features/reader/domain/readerStatus';
+import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 
 export interface ReaderProfile {
  id: string;
@@ -113,7 +114,7 @@ function mapReaderArray(data: ReaderApi | { readers?: ReaderProfile[]; Readers?:
 
 export async function listReaders(
  page = 1,
- pageSize = 12,
+ pageSize: number = RUNTIME_POLICY_FALLBACKS.ui.readers.directoryPageSize,
  specialty = '',
  status = '',
  searchTerm = '',
@@ -150,7 +151,9 @@ export async function listReaders(
  }
 }
 
-export async function listFeaturedReaders(limit = 4): Promise<ActionResult<ReaderProfile[]>> {
+export async function listFeaturedReaders(
+ limit: number = RUNTIME_POLICY_FALLBACKS.ui.readers.featuredLimit,
+): Promise<ActionResult<ReaderProfile[]>> {
  try {
   const result = await serverHttpRequest<{ readers?: ReaderProfile[]; Readers?: ReaderProfile[] }>(`/readers?page=1&pageSize=${limit}`, {
    method: 'GET',

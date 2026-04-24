@@ -1,15 +1,14 @@
-export const IMAGE_UPLOAD_CONTENT_TYPE = 'image/webp';
-export const IMAGE_UPLOAD_MAX_BYTES = 10 * 1024 * 1024;
-export const VOICE_UPLOAD_MAX_BYTES = 5 * 1024 * 1024;
-export const VOICE_UPLOAD_MAX_DURATION_MS = 600_000;
+import { getRuntimePolicyStoreSnapshot } from '@/shared/config/runtimePolicyStore';
+import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 
-export const IMAGE_COMPRESSION_TARGET_BYTES = 80 * 1024;
-export const IMAGE_COMPRESSION_STEPS = [
-  { initialQuality: 0.68, maxSizeMB: 0.15, maxWidthOrHeight: 1440 },
-  { initialQuality: 0.58, maxSizeMB: 0.1, maxWidthOrHeight: 1200 },
-  { initialQuality: 0.48, maxSizeMB: 0.06, maxWidthOrHeight: 960 },
-  { initialQuality: 0.38, maxSizeMB: 0.03, maxWidthOrHeight: 640 },
-] as const;
+export const IMAGE_UPLOAD_CONTENT_TYPE = 'image/webp';
+
+export interface ImageCompressionStep {
+  initialQuality: number;
+  maxSizeMb: number;
+  maxWidthOrHeight: number;
+}
+
 export const IMAGE_COMPRESSION_BASE_OPTIONS = {
   fileType: IMAGE_UPLOAD_CONTENT_TYPE,
   useWebWorker: true,
@@ -17,5 +16,41 @@ export const IMAGE_COMPRESSION_BASE_OPTIONS = {
   libURL: '/vendor/browser-image-compression.js',
 } as const;
 
-export const DEFAULT_UPLOAD_RETRY_ATTEMPTS = 3;
-export const DEFAULT_UPLOAD_RETRY_DELAY_MS = 350;
+export function getImageUploadMaxBytes(): number {
+  return getRuntimePolicyStoreSnapshot().media.upload.maxImageBytes
+    || RUNTIME_POLICY_FALLBACKS.media.upload.maxImageBytes;
+}
+
+export function getVoiceUploadMaxBytes(): number {
+  return getRuntimePolicyStoreSnapshot().media.upload.maxVoiceBytes
+    || RUNTIME_POLICY_FALLBACKS.media.upload.maxVoiceBytes;
+}
+
+export function getVoiceUploadMaxDurationMs(): number {
+  return getRuntimePolicyStoreSnapshot().media.upload.maxVoiceDurationMs
+    || RUNTIME_POLICY_FALLBACKS.media.upload.maxVoiceDurationMs;
+}
+
+export function getImageCompressionTargetBytes(): number {
+  return getRuntimePolicyStoreSnapshot().media.upload.imageCompressionTargetBytes
+    || RUNTIME_POLICY_FALLBACKS.media.upload.imageCompressionTargetBytes;
+}
+
+export function getImageCompressionSteps(): readonly ImageCompressionStep[] {
+  const runtimeSteps = getRuntimePolicyStoreSnapshot().media.upload.imageCompressionSteps;
+  if (runtimeSteps.length > 0) {
+    return runtimeSteps;
+  }
+
+  return RUNTIME_POLICY_FALLBACKS.media.upload.imageCompressionSteps;
+}
+
+export function getDefaultUploadRetryAttempts(): number {
+  return getRuntimePolicyStoreSnapshot().media.upload.retryAttempts
+    ?? RUNTIME_POLICY_FALLBACKS.media.upload.retryAttempts;
+}
+
+export function getDefaultUploadRetryDelayMs(): number {
+  return getRuntimePolicyStoreSnapshot().media.upload.retryDelayMs
+    ?? RUNTIME_POLICY_FALLBACKS.media.upload.retryDelayMs;
+}

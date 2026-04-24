@@ -8,11 +8,17 @@ import {
  resolveAdminDispute,
  type AdminDisputeItemDto,
 } from '@/features/chat/application/actions';
+import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
+import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 
 export function useAdminDisputes(t: TranslateFn) {
  const queryClient = useQueryClient();
+ const runtimePoliciesQuery = useRuntimePolicies();
+ const defaultSplitPercentToReader =
+  runtimePoliciesQuery.data?.adminDispute.defaultSplitPercentToReader
+  ?? RUNTIME_POLICY_FALLBACKS.adminDispute.defaultSplitPercentToReader;
  const [noteById, setNoteById] = useState<Record<string, string>>({});
  const [splitPercentById, setSplitPercentById] = useState<Record<string, number>>({});
 
@@ -33,7 +39,7 @@ export function useAdminDisputes(t: TranslateFn) {
     action: payload.action,
     splitPercentToReader:
      payload.action === 'split'
-      ? Math.max(1, Math.min(99, splitPercentById[payload.itemId] ?? 50))
+      ? Math.max(1, Math.min(99, splitPercentById[payload.itemId] ?? defaultSplitPercentToReader))
       : undefined,
     adminNote: noteById[payload.itemId] || undefined,
    });
@@ -73,6 +79,7 @@ export function useAdminDisputes(t: TranslateFn) {
   setNoteById,
   splitPercentById,
   setSplitPercentById,
+  defaultSplitPercentToReader,
   resolveDispute: (itemId: string, action: 'release' | 'refund' | 'split') =>
    resolveMutation.mutate({ itemId, action }),
  };

@@ -81,7 +81,7 @@
 - `WithdrawalPolicyConstants.NoteMaxLength`
 - Một số validation/security floor không nên mở cho admin runtime
 
-### Cần chuyển tiếp (Phase 2 đề xuất)
+### Cần chuyển tiếp (đợt tiếp theo đề xuất)
 - Các hard-coded còn lại trong module chat/conversation SLA & timeout không nằm trong key set hiện tại
 - Các key economy campaign đặc thù cần effective-date/versioning nâng cao
 
@@ -90,4 +90,3 @@
 - `npm run build` frontend: PASS
 - `dotnet test tests/TarotNow.Api.IntegrationTests --filter AdminRbacIntegrationTests.AdminRoute_ShouldReject_WhenUserIsNotAdmin`: PASS
 - `dotnet test tests/TarotNow.ArchitectureTests`: còn fail các rule line-budget/parameter-budget ở một số file legacy lớn (không riêng phần API system-config mới)
-
