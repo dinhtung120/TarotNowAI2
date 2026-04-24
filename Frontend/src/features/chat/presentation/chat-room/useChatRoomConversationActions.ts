@@ -120,7 +120,7 @@ export function useChatRoomConversationActions({
 
     setStartingNewSession(true);
     try {
-      const result = await createConversation(conversation.readerId, conversation.slaHours ?? 12);
+      const result = await createConversation(conversation.readerId, conversation.slaHours);
       if (!result.success || !result.data?.id) {
         toast.error(result.error || 'Không thể bắt đầu phiên tư vấn mới.');
         return;

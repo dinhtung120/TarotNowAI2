@@ -33,6 +33,12 @@ public sealed class SystemConfigOptions
     // Cấu hình quy đổi economy.
     public EconomyOptions Economy { get; set; } = new();
 
+    // Cấu hình ràng buộc business cho Reader.
+    public ReaderOptions Reader { get; set; } = new();
+
+    // Cấu hình default cho gamification.
+    public GamificationOptions Gamification { get; set; } = new();
+
     // Cấu hình chi tiết giá theo từng loại trải bài.
     public sealed class PricingOptions
     {
@@ -93,5 +99,17 @@ public sealed class SystemConfigOptions
     public sealed class EconomyOptions
     {
         public long VndPerDiamond { get; set; } = 100;
+    }
+
+    public sealed class ReaderOptions
+    {
+        public int MinYearsOfExperience { get; set; } = 1;
+        public long MinDiamondPerQuestion { get; set; } = 50;
+    }
+
+    public sealed class GamificationOptions
+    {
+        public string DefaultQuestType { get; set; } = "daily";
+        public string DefaultLeaderboardTrack { get; set; } = "spent_gold_daily";
     }
 }

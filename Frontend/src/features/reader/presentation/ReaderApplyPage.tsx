@@ -23,6 +23,7 @@ import {
  type ReaderApplyFormValues,
 } from '@/features/reader/presentation/readerApplyFormSchema';
 import { normalizeOptionalSocialUrl } from '@/features/reader/domain/readerSocialLinks';
+import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
 import { cn } from '@/lib/utils';
 
 type FeedbackState = { type: 'success' | 'error'; message: string } | null;
@@ -32,8 +33,23 @@ export default function ReaderApplyPage() {
  const t = useTranslations('ReaderApply');
  const locale = useLocale();
  const { submitApplication, submitting, existingRequest, loading, defaultErrorMessage } = useReaderApplyPage(t);
- const schema = useMemo(() => createReaderApplyFormSchema(t), [t]);
- const defaultValues = useMemo(() => mapReaderRequestToFormValues(existingRequest), [existingRequest]);
+ const runtimePoliciesQuery = useRuntimePolicies();
+ const readerPolicy = runtimePoliciesQuery.data?.reader;
+ const minYearsOfExperience = readerPolicy?.minYearsOfExperience ?? 1;
+ const minDiamondPerQuestion = readerPolicy?.minDiamondPerQuestion ?? 50;
+ const defaultDiamondPerQuestion = readerPolicy?.defaultDiamondPerQuestion ?? minDiamondPerQuestion;
+ const isReaderPolicyReady = Boolean(readerPolicy);
+
+ const schema = useMemo(() => createReaderApplyFormSchema(t, {
+  minYearsOfExperience,
+  minDiamondPerQuestion,
+  defaultDiamondPerQuestion,
+ }), [defaultDiamondPerQuestion, minDiamondPerQuestion, minYearsOfExperience, t]);
+ const defaultValues = useMemo(() => mapReaderRequestToFormValues(existingRequest, {
+  minYearsOfExperience,
+  minDiamondPerQuestion,
+  defaultDiamondPerQuestion,
+ }), [defaultDiamondPerQuestion, existingRequest, minDiamondPerQuestion, minYearsOfExperience]);
  const [feedback, setFeedback] = useState<FeedbackState>(null);
  const { handleSubmit, setValue, control, reset, formState: { errors } } = useForm<ReaderApplyFormValues>({
   resolver: zodResolver(schema),
@@ -42,8 +58,8 @@ export default function ReaderApplyPage() {
  const bio = useWatch({ control, name: 'bio' }) ?? '';
  const watchedSpecialties = useWatch({ control, name: 'specialties' });
  const specialties = watchedSpecialties ?? EMPTY_SPECIALTIES;
- const yearsOfExperience = useWatch({ control, name: 'yearsOfExperience' }) ?? 1;
- const diamondPerQuestion = useWatch({ control, name: 'diamondPerQuestion' }) ?? 50;
+ const yearsOfExperience = useWatch({ control, name: 'yearsOfExperience' }) ?? minYearsOfExperience;
+ const diamondPerQuestion = useWatch({ control, name: 'diamondPerQuestion' }) ?? minDiamondPerQuestion;
  const facebookUrl = useWatch({ control, name: 'facebookUrl' }) ?? '';
  const instagramUrl = useWatch({ control, name: 'instagramUrl' }) ?? '';
  const tikTokUrl = useWatch({ control, name: 'tikTokUrl' }) ?? '';
@@ -52,6 +68,11 @@ export default function ReaderApplyPage() {
  const facebookFieldError = errors.facebookUrl?.message !== t('validation.social_required') ? errors.facebookUrl?.message : undefined;
  const onSubmit = useCallback(async (values: ReaderApplyFormValues) => {
   setFeedback(null);
+  if (!isReaderPolicyReady) {
+   setFeedback({ type: 'error', message: t('errors.policy_unavailable') });
+   return;
+  }
+
   const result = await submitApplication({
    bio: values.bio.trim(),
    specialties: values.specialties,
@@ -66,7 +87,7 @@ export default function ReaderApplyPage() {
    return;
   }
   setFeedback({ type: 'success', message: result.data?.message ?? t('success.submitted') });
- }, [defaultErrorMessage, submitApplication, t]);
+ }, [defaultErrorMessage, isReaderPolicyReady, submitApplication, t]);
  if (loading) return <ReaderApplyLoadingState label={t('loading')} />;
  if (existingRequest?.hasRequest && existingRequest.status === 'approved') return <ReaderApplyStatusPanel accent="success" icon={CheckCircle2} title={t('approved.title')} description={t('approved.desc')} />;
  if (existingRequest?.hasRequest && existingRequest.status === 'pending') {
@@ -81,11 +102,11 @@ export default function ReaderApplyPage() {
    <form onSubmit={handleSubmit(onSubmit)} className={cn('space-y-8')}>
     <ReaderApplyStepsGrid />
     <ReaderApplySpecialtiesField value={specialties} onChange={(value) => setValue('specialties', value, EDIT_OPTIONS)} error={errors.specialties?.message} />
-    <ReaderApplyExperiencePriceRow yearsOfExperience={yearsOfExperience} diamondPerQuestion={diamondPerQuestion} yearsError={errors.yearsOfExperience?.message} diamondError={errors.diamondPerQuestion?.message} onChangeYears={(value) => setValue('yearsOfExperience', Number.isFinite(value) ? value : 1, EDIT_OPTIONS)} onChangeDiamond={(value) => setValue('diamondPerQuestion', Number.isFinite(value) ? value : 50, EDIT_OPTIONS)} />
+    <ReaderApplyExperiencePriceRow yearsOfExperience={yearsOfExperience} diamondPerQuestion={diamondPerQuestion} minYearsOfExperience={minYearsOfExperience} minDiamondPerQuestion={minDiamondPerQuestion} yearsError={errors.yearsOfExperience?.message} diamondError={errors.diamondPerQuestion?.message} onChangeYears={(value) => setValue('yearsOfExperience', Number.isFinite(value) ? value : minYearsOfExperience, EDIT_OPTIONS)} onChangeDiamond={(value) => setValue('diamondPerQuestion', Number.isFinite(value) ? value : minDiamondPerQuestion, EDIT_OPTIONS)} />
     <ReaderApplySocialLinksFields facebookUrl={facebookUrl} instagramUrl={instagramUrl} tikTokUrl={tikTokUrl} onChangeFacebook={(value) => setValue('facebookUrl', value, EDIT_OPTIONS)} onChangeInstagram={(value) => setValue('instagramUrl', value, EDIT_OPTIONS)} onChangeTikTok={(value) => setValue('tikTokUrl', value, EDIT_OPTIONS)} errors={{ facebookUrl: facebookFieldError, instagramUrl: errors.instagramUrl?.message, tikTokUrl: errors.tikTokUrl?.message, socialRequired: socialRequiredMessage }} />
     <ReaderApplyIntroField bio={bio} setBio={(value) => setValue('bio', value, EDIT_OPTIONS)} error={errors.bio?.message} />
     {feedback ? <ReaderApplyFeedbackMessage message={feedback.message} type={feedback.type} /> : null}
-    <ReaderApplySubmitButton submitting={submitting} disabled={submitting} />
+    <ReaderApplySubmitButton submitting={submitting} disabled={submitting || !isReaderPolicyReady} />
    </form>
   </div>
  );

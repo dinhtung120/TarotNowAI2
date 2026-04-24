@@ -26,6 +26,7 @@ public sealed partial class ReaderRequestReviewRequestedDomainEventHandler
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IAuthSessionRepository _authSessionRepository;
     private readonly IDomainEventPublisher _domainEventPublisher;
+    private readonly ISystemConfigSettings _systemConfigSettings;
 
     /// <summary>
     /// Khởi tạo handler xử lý duyệt đơn Reader.
@@ -39,6 +40,7 @@ public sealed partial class ReaderRequestReviewRequestedDomainEventHandler
         IRefreshTokenRepository refreshTokenRepository,
         IAuthSessionRepository authSessionRepository,
         IDomainEventPublisher domainEventPublisher,
+        ISystemConfigSettings systemConfigSettings,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
@@ -50,6 +52,7 @@ public sealed partial class ReaderRequestReviewRequestedDomainEventHandler
         _refreshTokenRepository = refreshTokenRepository;
         _authSessionRepository = authSessionRepository;
         _domainEventPublisher = domainEventPublisher;
+        _systemConfigSettings = systemConfigSettings;
     }
 
     /// <inheritdoc />
@@ -90,7 +93,10 @@ public sealed partial class ReaderRequestReviewRequestedDomainEventHandler
         ReaderRequestReviewRequestedDomainEvent domainEvent,
         CancellationToken cancellationToken)
     {
-        EnsureRequestHasMandatoryFieldsForApproval(readerRequest);
+        EnsureRequestHasMandatoryFieldsForApproval(
+            readerRequest,
+            _systemConfigSettings.ReaderMinYearsOfExperience,
+            _systemConfigSettings.ReaderMinDiamondPerQuestion);
 
         user.ApproveAsReader();
         await _userRepository.UpdateAsync(user, cancellationToken);

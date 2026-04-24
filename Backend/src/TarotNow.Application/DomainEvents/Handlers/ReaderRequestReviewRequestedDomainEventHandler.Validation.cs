@@ -7,9 +7,6 @@ namespace TarotNow.Application.DomainEvents.Handlers;
 
 public sealed partial class ReaderRequestReviewRequestedDomainEventHandler
 {
-    private const int MinYearsOfExperience = 1;
-    private const long MinDiamondPerQuestion = 50;
-
     private static void EnsurePendingRequest(ReaderRequestDto request)
     {
         if (request.Status != ReaderApprovalStatus.Pending)
@@ -28,21 +25,24 @@ public sealed partial class ReaderRequestReviewRequestedDomainEventHandler
         return parsed;
     }
 
-    private static void EnsureRequestHasMandatoryFieldsForApproval(ReaderRequestDto request)
+    private static void EnsureRequestHasMandatoryFieldsForApproval(
+        ReaderRequestDto request,
+        int minYearsOfExperience,
+        long minDiamondPerQuestion)
     {
         if (ReaderSpecialties.NormalizeDistinct(request.Specialties).Count == 0)
         {
             throw new BadRequestException("Đơn đăng ký thiếu chuyên môn hợp lệ. Vui lòng từ chối và yêu cầu user nộp lại.");
         }
 
-        if (request.YearsOfExperience < MinYearsOfExperience)
+        if (request.YearsOfExperience < minYearsOfExperience)
         {
-            throw new BadRequestException("Đơn đăng ký thiếu số năm kinh nghiệm hợp lệ. Vui lòng từ chối và yêu cầu user nộp lại.");
+            throw new BadRequestException($"Đơn đăng ký thiếu số năm kinh nghiệm hợp lệ (tối thiểu {minYearsOfExperience}). Vui lòng từ chối và yêu cầu user nộp lại.");
         }
 
-        if (request.DiamondPerQuestion < MinDiamondPerQuestion)
+        if (request.DiamondPerQuestion < minDiamondPerQuestion)
         {
-            throw new BadRequestException("Đơn đăng ký thiếu giá dịch vụ hợp lệ. Vui lòng từ chối và yêu cầu user nộp lại.");
+            throw new BadRequestException($"Đơn đăng ký thiếu giá dịch vụ hợp lệ (tối thiểu {minDiamondPerQuestion} Diamond). Vui lòng từ chối và yêu cầu user nộp lại.");
         }
 
         if (!ReaderSocialUrlValidator.HasAtLeastOneSocialLink(request.FacebookUrl, request.InstagramUrl, request.TikTokUrl))

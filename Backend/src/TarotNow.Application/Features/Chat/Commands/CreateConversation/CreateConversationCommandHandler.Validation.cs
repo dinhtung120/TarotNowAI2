@@ -19,6 +19,7 @@ public partial class CreateConversationCommandHandler
             throw new BadRequestException("Bạn không thể tạo cuộc trò chuyện với chính mình.");
         }
 
+        request.SlaHours = ResolveSlaHours(request.SlaHours);
         var allowedSlaHours = _systemConfigSettings.ChatAllowedSlaHours;
         if (!allowedSlaHours.Contains(request.SlaHours))
         {
@@ -26,6 +27,16 @@ public partial class CreateConversationCommandHandler
             var allowedDisplay = string.Join(", ", allowedSlaHours);
             throw new BadRequestException($"SLA chỉ chấp nhận các giá trị: {allowedDisplay} giờ.");
         }
+    }
+
+    private int ResolveSlaHours(int requestedSlaHours)
+    {
+        if (requestedSlaHours > 0)
+        {
+            return requestedSlaHours;
+        }
+
+        return _systemConfigSettings.ChatDefaultSlaHours;
     }
 
     /// <summary>

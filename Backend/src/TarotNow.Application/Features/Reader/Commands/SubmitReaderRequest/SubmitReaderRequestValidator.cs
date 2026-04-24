@@ -1,5 +1,6 @@
 using FluentValidation;
 using TarotNow.Application.Common.Helpers;
+using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Reader.Commands.SubmitReaderRequest;
@@ -11,14 +12,15 @@ public sealed class SubmitReaderRequestValidator : AbstractValidator<SubmitReade
 {
     private const int MinBioLength = 20;
     private const int MaxBioLength = 4_000;
-    private const int MinYearsOfExperience = 1;
-    private const long MinDiamondPerQuestion = 50;
 
     /// <summary>
     /// Khởi tạo rule validation cho luồng nộp đơn Reader.
     /// </summary>
-    public SubmitReaderRequestValidator()
+    public SubmitReaderRequestValidator(ISystemConfigSettings systemConfigSettings)
     {
+        var minYearsOfExperience = systemConfigSettings.ReaderMinYearsOfExperience;
+        var minDiamondPerQuestion = systemConfigSettings.ReaderMinDiamondPerQuestion;
+
         RuleFor(x => x.UserId)
             .NotEmpty()
             .WithMessage("UserId không được để trống.");
@@ -41,12 +43,12 @@ public sealed class SubmitReaderRequestValidator : AbstractValidator<SubmitReade
             .WithMessage("Chuyên môn không hợp lệ.");
 
         RuleFor(x => x.YearsOfExperience)
-            .GreaterThanOrEqualTo(MinYearsOfExperience)
-            .WithMessage("Số năm kinh nghiệm tối thiểu là 1.");
+            .GreaterThanOrEqualTo(minYearsOfExperience)
+            .WithMessage($"Số năm kinh nghiệm tối thiểu là {minYearsOfExperience}.");
 
         RuleFor(x => x.DiamondPerQuestion)
-            .GreaterThanOrEqualTo(MinDiamondPerQuestion)
-            .WithMessage("Giá mỗi câu hỏi phải từ 50 Diamond.");
+            .GreaterThanOrEqualTo(minDiamondPerQuestion)
+            .WithMessage($"Giá mỗi câu hỏi phải từ {minDiamondPerQuestion} Diamond.");
 
         RuleFor(x => x)
             .Must(x => ReaderSocialUrlValidator.HasAtLeastOneSocialLink(x.FacebookUrl, x.InstagramUrl, x.TikTokUrl))

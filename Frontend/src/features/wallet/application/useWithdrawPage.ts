@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { getProfileAction, type ProfileDto } from '@/features/profile/application/actions';
 import { createWithdrawal, listMyWithdrawals, type WithdrawalResult } from '@/features/wallet/application/actions/withdrawal';
-import { EXCHANGE_RATE_VND_PER_DIAMOND, MIN_WITHDRAW_DIAMOND, WITHDRAW_FEE_RATE } from '@/features/wallet/domain/constants';
+import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
 import { getWithdrawalStatusBadge } from '@/features/wallet/domain/withdrawalStatus';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { useWalletStore } from '@/store/walletStore';
@@ -18,6 +18,7 @@ export function useWithdrawPage() {
  const locale = useLocale();
  const queryClient = useQueryClient();
  const balance = useWalletStore((state) => state.balance);
+ const runtimePoliciesQuery = useRuntimePolicies();
 
  const [amount, setAmount] = useState('');
  const [userNote, setUserNote] = useState('');
@@ -42,10 +43,17 @@ export function useWithdrawPage() {
 
  const withdrawalMutation = useMutation({ mutationFn: createWithdrawal });
 
+ const walletPolicy = runtimePoliciesQuery.data?.wallet;
+ const minWithdrawDiamond = walletPolicy?.minWithdrawDiamond ?? 0;
+ const vndPerDiamond = walletPolicy?.vndPerDiamond ?? 0;
+ const withdrawFeeRate = walletPolicy?.withdrawFeeRate ?? 0;
+ const withdrawalPolicyReady = Boolean(walletPolicy && minWithdrawDiamond > 0 && vndPerDiamond > 0);
+
  const amountNum = useMemo(() => Number.parseInt(amount, 10) || 0, [amount]);
- const grossVnd = amountNum * EXCHANGE_RATE_VND_PER_DIAMOND;
- const feeVnd = Math.ceil(grossVnd * WITHDRAW_FEE_RATE);
+ const grossVnd = amountNum * vndPerDiamond;
+ const feeVnd = Math.ceil(grossVnd * withdrawFeeRate);
  const netVnd = grossVnd - feeVnd;
+ const withdrawFeePercent = Math.round(withdrawFeeRate * 10_000) / 100;
 
  const payoutInfo = useMemo(() => {
   const profile = profileQuery.data?.profile;
@@ -90,8 +98,13 @@ export function useWithdrawPage() {
     return;
    }
 
-   if (amountNum < MIN_WITHDRAW_DIAMOND) {
-    setError(t('withdraw.error_min_amount'));
+   if (!withdrawalPolicyReady) {
+    setError(t('withdraw.error_policy_unavailable'));
+    return;
+   }
+
+   if (amountNum < minWithdrawDiamond) {
+    setError(t('withdraw.error_min_amount', { min: minWithdrawDiamond }));
     return;
    }
 
@@ -116,7 +129,7 @@ export function useWithdrawPage() {
    setUserNote('');
    await queryClient.invalidateQueries({ queryKey: HISTORY_QUERY_KEY });
   },
-  [amountNum, balance?.diamondBalance, payoutConfigured, queryClient, t, userNote, withdrawalMutation],
+  [amountNum, balance?.diamondBalance, minWithdrawDiamond, payoutConfigured, queryClient, t, userNote, withdrawalMutation, withdrawalPolicyReady],
  );
 
  return {
@@ -135,6 +148,9 @@ export function useWithdrawPage() {
   grossVnd,
   feeVnd,
   netVnd,
+  minWithdrawDiamond,
+  withdrawFeePercent,
+  withdrawalPolicyReady,
   payoutInfo,
   payoutConfigured,
   profilePath: '/profile',

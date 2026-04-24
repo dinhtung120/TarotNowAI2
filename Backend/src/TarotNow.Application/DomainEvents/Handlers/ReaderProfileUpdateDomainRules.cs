@@ -8,9 +8,6 @@ namespace TarotNow.Application.DomainEvents.Handlers;
 
 internal static class ReaderProfileUpdateDomainRules
 {
-    private const int MinYearsOfExperience = 1;
-    private const long MinDiamondPerQuestion = 50;
-
     public static void ApplyBioPatch(ReaderProfileDto profile, ReaderProfileUpdateRequestedDomainEvent domainEvent)
     {
         if (domainEvent.BioVi is not null)
@@ -29,16 +26,19 @@ internal static class ReaderProfileUpdateDomainRules
         }
     }
 
-    public static void ApplyPricePatch(ReaderProfileDto profile, ReaderProfileUpdateRequestedDomainEvent domainEvent)
+    public static void ApplyPricePatch(
+        ReaderProfileDto profile,
+        ReaderProfileUpdateRequestedDomainEvent domainEvent,
+        long minDiamondPerQuestion)
     {
         if (!domainEvent.DiamondPerQuestion.HasValue)
         {
             return;
         }
 
-        if (domainEvent.DiamondPerQuestion.Value < MinDiamondPerQuestion)
+        if (domainEvent.DiamondPerQuestion.Value < minDiamondPerQuestion)
         {
-            throw new BadRequestException("Giá mỗi câu hỏi phải từ 50 Diamond.");
+            throw new BadRequestException($"Giá mỗi câu hỏi phải từ {minDiamondPerQuestion} Diamond.");
         }
 
         profile.DiamondPerQuestion = domainEvent.DiamondPerQuestion.Value;
@@ -65,16 +65,19 @@ internal static class ReaderProfileUpdateDomainRules
         profile.Specialties = specialties;
     }
 
-    public static void ApplyYearsOfExperiencePatch(ReaderProfileDto profile, ReaderProfileUpdateRequestedDomainEvent domainEvent)
+    public static void ApplyYearsOfExperiencePatch(
+        ReaderProfileDto profile,
+        ReaderProfileUpdateRequestedDomainEvent domainEvent,
+        int minYearsOfExperience)
     {
         if (!domainEvent.YearsOfExperience.HasValue)
         {
             return;
         }
 
-        if (domainEvent.YearsOfExperience.Value < MinYearsOfExperience)
+        if (domainEvent.YearsOfExperience.Value < minYearsOfExperience)
         {
-            throw new BadRequestException("Số năm kinh nghiệm tối thiểu là 1.");
+            throw new BadRequestException($"Số năm kinh nghiệm tối thiểu là {minYearsOfExperience}.");
         }
 
         profile.YearsOfExperience = domainEvent.YearsOfExperience.Value;
@@ -101,21 +104,24 @@ internal static class ReaderProfileUpdateDomainRules
             "TikTokUrl không hợp lệ hoặc không đúng domain TikTok.");
     }
 
-    public static void EnsureProfileInvariants(ReaderProfileDto profile)
+    public static void EnsureProfileInvariants(
+        ReaderProfileDto profile,
+        int minYearsOfExperience,
+        long minDiamondPerQuestion)
     {
         if (profile.Specialties.Count == 0)
         {
             throw new BadRequestException("Reader phải chọn ít nhất 1 chuyên môn.");
         }
 
-        if (profile.YearsOfExperience < MinYearsOfExperience)
+        if (profile.YearsOfExperience < minYearsOfExperience)
         {
-            throw new BadRequestException("Số năm kinh nghiệm tối thiểu là 1.");
+            throw new BadRequestException($"Số năm kinh nghiệm tối thiểu là {minYearsOfExperience}.");
         }
 
-        if (profile.DiamondPerQuestion < MinDiamondPerQuestion)
+        if (profile.DiamondPerQuestion < minDiamondPerQuestion)
         {
-            throw new BadRequestException("Giá mỗi câu hỏi phải từ 50 Diamond.");
+            throw new BadRequestException($"Giá mỗi câu hỏi phải từ {minDiamondPerQuestion} Diamond.");
         }
 
         if (!ReaderSocialUrlValidator.HasAtLeastOneSocialLink(profile.FacebookUrl, profile.InstagramUrl, profile.TikTokUrl))

@@ -7,11 +7,12 @@ import { AUTH_ERROR } from "@/shared/domain/authErrors";
 
 function unauthorized<T>() { return actionFail(AUTH_ERROR.UNAUTHORIZED) as ActionResult<T>; }
 
-export async function createConversation(readerId: string, slaHours = 12): Promise<ActionResult<ConversationDto>> {
+export async function createConversation(readerId: string, slaHours?: number): Promise<ActionResult<ConversationDto>> {
  const accessToken = await getServerAccessToken();
  if (!accessToken) return unauthorized();
  try {
-  const result = await serverHttpRequest<ConversationDto>('/conversations', { method: 'POST', token: accessToken, json: { readerId, slaHours }, fallbackErrorMessage: 'Failed to create conversation' });
+  const payload = slaHours ? { readerId, slaHours } : { readerId };
+  const result = await serverHttpRequest<ConversationDto>('/conversations', { method: 'POST', token: accessToken, json: payload, fallbackErrorMessage: 'Failed to create conversation' });
   if (!result.ok) {
    logger.error('[ChatAction] createConversation', result.error, { status: result.status, readerId });
    return actionFail(result.error || 'Failed to create conversation');

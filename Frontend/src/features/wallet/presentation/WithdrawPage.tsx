@@ -25,6 +25,7 @@ export default function WithdrawPage() {
         grossVnd={vm.grossVnd}
         feeVnd={vm.feeVnd}
         netVnd={vm.netVnd}
+        minWithdrawDiamond={vm.minWithdrawDiamond}
         payoutInfo={vm.payoutInfo}
         payoutConfigured={vm.payoutConfigured}
         profilePath={vm.profilePath}
@@ -33,6 +34,7 @@ export default function WithdrawPage() {
         success={vm.success}
         error={vm.error}
         labels={vm.formLabels}
+        onSubmitDisabled={vm.onSubmitDisabled}
         onAmountChange={vm.setAmount}
         onUserNoteChange={vm.setUserNote}
         onSubmit={vm.handleSubmit}

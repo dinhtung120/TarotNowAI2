@@ -88,6 +88,7 @@
       "toast_save_fail": "Failed to save.",
       "toast_specialties_required": "Please choose at least one specialty.",
       "toast_social_required": "At least one social link is required.",
+      "toast_policy_unavailable": "Unable to load Reader policy. Please try again later.",
       "toast_status_updated": "Status updated.",
       "toast_status_update_fail": "Failed to update status.",
       "status_title": "Availability status",
@@ -115,8 +116,8 @@
       "validation": {
         "bio_max": "Bio cannot exceed 4000 characters.",
         "specialties_min": "Please choose at least one specialty.",
-        "years_min": "Years of experience must be at least 1.",
-        "diamond_min": "Service price must be at least 50 Diamond.",
+        "years_min": "Years of experience must be at least {min}.",
+        "diamond_min": "Service price must be at least {min} Diamond.",
         "social_required": "At least one social link is required.",
         "social_too_long": "Social URL is too long.",
         "facebook_invalid": "Facebook URL is invalid or host is not supported.",

@@ -9,6 +9,7 @@ import type { ReaderProfile } from '@/features/reader/application/actions';
 import { normalizeReaderStatus, type ReaderStatus } from '@/features/reader/domain/readerStatus';
 import { isReaderSpecialtyValue, type ReaderSpecialtyValue } from '@/features/reader/domain/readerSpecialties';
 import { hasAtLeastOneSocialLink, normalizeOptionalSocialUrl } from '@/features/reader/domain/readerSocialLinks';
+import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 
@@ -41,15 +42,17 @@ const DANGER_TOAST_STYLE = {
  border: '1px solid var(--danger)',
 } as const;
 
-const DEFAULT_DIAMOND_PER_QUESTION = 100;
-const DEFAULT_YEARS_OF_EXPERIENCE = 1;
-
-function toDraft(profile: ReaderProfile | null | undefined): ReaderSettingsDraft {
+function toDraft(
+ profile: ReaderProfile | null | undefined,
+ minYearsOfExperience: number,
+ minDiamondPerQuestion: number,
+ defaultDiamondPerQuestion: number,
+): ReaderSettingsDraft {
  return {
   bioVi: profile?.bioVi || '',
-  diamondPerQuestion: Math.max(50, profile?.diamondPerQuestion || DEFAULT_DIAMOND_PER_QUESTION),
+  diamondPerQuestion: Math.max(minDiamondPerQuestion, profile?.diamondPerQuestion || defaultDiamondPerQuestion),
   specialties: (profile?.specialties ?? []).filter(isReaderSpecialtyValue),
-  yearsOfExperience: Math.max(1, profile?.yearsOfExperience || DEFAULT_YEARS_OF_EXPERIENCE),
+  yearsOfExperience: Math.max(minYearsOfExperience, profile?.yearsOfExperience || minYearsOfExperience),
   facebookUrl: normalizeOptionalSocialUrl(profile?.facebookUrl),
   instagramUrl: normalizeOptionalSocialUrl(profile?.instagramUrl),
   tikTokUrl: normalizeOptionalSocialUrl(profile?.tikTokUrl),
@@ -61,6 +64,12 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
  const queryClient = useQueryClient();
  const user = useAuthStore((state) => state.user);
  const isTarotReader = user?.role === 'tarot_reader';
+ const runtimePoliciesQuery = useRuntimePolicies();
+ const readerPolicy = runtimePoliciesQuery.data?.reader;
+ const minYearsOfExperience = readerPolicy?.minYearsOfExperience ?? 1;
+ const minDiamondPerQuestion = readerPolicy?.minDiamondPerQuestion ?? 50;
+ const defaultDiamondPerQuestion = readerPolicy?.defaultDiamondPerQuestion ?? minDiamondPerQuestion;
+ const readerPolicyReady = Boolean(readerPolicy);
  const [draft, setDraft] = useState<ReaderSettingsDraft | null>(null);
 
  const profileQuery = useQuery({
@@ -80,13 +89,18 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
  const statusMutation = useMutation({ mutationFn: updateReaderStatus });
 
  const effectiveValues = useMemo(
-  () => draft ?? toDraft(profileQuery.data),
-  [draft, profileQuery.data],
+  () => draft ?? toDraft(profileQuery.data, minYearsOfExperience, minDiamondPerQuestion, defaultDiamondPerQuestion),
+  [defaultDiamondPerQuestion, draft, minDiamondPerQuestion, minYearsOfExperience, profileQuery.data],
  );
 
  const updateDraft = useCallback((updater: (current: ReaderSettingsDraft) => ReaderSettingsDraft) => {
-  setDraft((previous) => updater(previous ?? toDraft(profileQuery.data)));
- }, [profileQuery.data]);
+  setDraft((previous) => updater(previous ?? toDraft(
+   profileQuery.data,
+   minYearsOfExperience,
+   minDiamondPerQuestion,
+   defaultDiamondPerQuestion,
+  )));
+ }, [defaultDiamondPerQuestion, minDiamondPerQuestion, minYearsOfExperience, profileQuery.data]);
 
  const setBioVi = useCallback((value: string) => {
   updateDraft((current) => ({ ...current, bioVi: value }));
@@ -123,6 +137,11 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
    return;
   }
 
+  if (!readerPolicyReady) {
+   toast.error(t('reader.toast_policy_unavailable'), { style: DANGER_TOAST_STYLE });
+   return;
+  }
+
   if (effectiveValues.specialties.length === 0) {
    toast.error(t('reader.toast_specialties_required'), { style: DANGER_TOAST_STYLE });
    return;
@@ -151,7 +170,7 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
   toast.success(t('reader.toast_save_success'), { style: SUCCESS_TOAST_STYLE });
   setDraft(null);
   await queryClient.invalidateQueries({ queryKey: ['reader-profile-settings', user?.id] });
- }, [effectiveValues, isTarotReader, queryClient, saveMutation, t, user?.id]);
+ }, [effectiveValues, isTarotReader, queryClient, readerPolicyReady, saveMutation, t, user?.id]);
 
  const handleStatusChange = useCallback(async (newStatus: ReaderStatus) => {
   if (!isTarotReader) {
@@ -182,6 +201,7 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
   specialties: effectiveValues.specialties,
   setSpecialties,
   yearsOfExperience: effectiveValues.yearsOfExperience,
+  minYearsOfExperience,
   setYearsOfExperience,
   facebookUrl: effectiveValues.facebookUrl,
   setFacebookUrl,
@@ -189,6 +209,8 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
   setInstagramUrl,
   tikTokUrl: effectiveValues.tikTokUrl,
   setTikTokUrl,
+  minDiamondPerQuestion,
+  readerPolicyReady,
   status: effectiveValues.status,
   handleSave,
   handleStatusChange,

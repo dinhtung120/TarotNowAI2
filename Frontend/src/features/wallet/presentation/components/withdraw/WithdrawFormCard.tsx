@@ -51,12 +51,14 @@ function WithdrawFormCardComponent(props: WithdrawFormCardProps) {
         />
         <WithdrawSubmitSection
           amountNum={props.amountNum}
+          minWithdrawDiamond={props.minWithdrawDiamond}
           error={props.error}
           submitLabel={props.labels.submitLabel}
           submitting={props.submitting}
           submittingLabel={props.labels.submittingLabel}
           success={props.success}
           successMessage={props.labels.successMessage}
+          onSubmitDisabled={props.onSubmitDisabled}
         />
       </form>
     </GlassCard>

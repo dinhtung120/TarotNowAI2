@@ -31,7 +31,7 @@ import type {
 } from './conversations.types';
 import type { ActionResult } from '@/shared/domain/actionResult';
 
-export async function createConversation(readerId: string, slaHours = 12): Promise<ActionResult<ConversationDto>> {
+export async function createConversation(readerId: string, slaHours?: number): Promise<ActionResult<ConversationDto>> {
  return createConversationCore(readerId, slaHours);
 }
 

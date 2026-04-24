@@ -25,6 +25,7 @@ export interface WithdrawFormCardProps {
   grossVnd: number;
   feeVnd: number;
   netVnd: number;
+  minWithdrawDiamond: number;
   payoutInfo: {
     bankName: string;
     bankBin: string;
@@ -37,6 +38,7 @@ export interface WithdrawFormCardProps {
   submitting: boolean;
   success: boolean;
   error: string | null;
+  onSubmitDisabled?: boolean;
   labels: WithdrawFormCardLabels;
   onAmountChange: (value: string) => void;
   onUserNoteChange: (value: string) => void;

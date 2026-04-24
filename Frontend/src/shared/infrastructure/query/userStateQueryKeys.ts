@@ -44,4 +44,7 @@ export const userStateQueryKeys = {
   inboxActive: () => ['chat', 'inbox', 'active'] as const,
   unreadBadge: () => ['chat', 'unread-badge'] as const,
  },
+ system: {
+  runtimePolicies: () => ['me', 'runtime-policies'] as const,
+ },
 } as const;

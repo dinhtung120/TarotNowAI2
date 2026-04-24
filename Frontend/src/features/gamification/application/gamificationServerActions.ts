@@ -19,7 +19,7 @@ async function requireToken(): Promise<string> {
  return token;
 }
 
-export async function fetchGamificationQuests(type: string = 'daily'): Promise<QuestWithProgress[]> {
+export async function fetchGamificationQuests(type: string): Promise<QuestWithProgress[]> {
  const token = await requireToken();
  const result = await serverHttpRequest<QuestWithProgress[]>(
   `/gamification/quests?type=${encodeURIComponent(type)}`,
@@ -56,7 +56,7 @@ export async function fetchGamificationTitles(): Promise<UserTitlesData> {
 }
 
 export async function fetchGamificationLeaderboard(
- track: string = 'daily_rank_score',
+ track: string,
  periodKey?: string
 ): Promise<LeaderboardResult> {
  const token = await requireToken();

@@ -110,6 +110,8 @@ public class FollowupPricingServiceTests
         public int ChatDefaultSlaHours => 12;
         public int ChatMaxActiveConversationsPerUser => 5;
         public long EconomyVndPerDiamond => 100;
+        public int ReaderMinYearsOfExperience => 1;
+        public long ReaderMinDiamondPerQuestion => 50;
         public IReadOnlyList<int> FollowupPriceTiers => [1, 2, 4, 8, 16];
         public int FollowupMaxAllowed => 5;
         public int FollowupFreeSlotThresholdLow => 5;
@@ -122,5 +124,7 @@ public class FollowupPricingServiceTests
         public int EscrowDisputeWindowHours => 48;
         public int EscrowReaderResponseDueHours => 12;
         public int EscrowAutoRefundHours => 72;
+        public string GamificationDefaultQuestType => "daily";
+        public string GamificationDefaultLeaderboardTrack => "spent_gold_daily";
     }
 }

@@ -12,10 +12,11 @@ import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQuery
 
 export { gamificationKeys };
 
-export function useQuests(type: string = 'daily') {
+export function useQuests(type?: string) {
   return useQuery({
-    queryKey: gamificationKeys.quests(type),
-    queryFn: () => fetchGamificationQuests(type),
+    queryKey: gamificationKeys.quests(type ?? 'none'),
+    queryFn: () => fetchGamificationQuests(type!),
+    enabled: Boolean(type),
   });
 }
 
@@ -25,8 +26,7 @@ export function useClaimQuestReward() {
     mutationFn: ({ questCode, periodKey }: { questCode: string; periodKey: string }) =>
       claimGamificationQuestRewardServer(questCode, periodKey),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: gamificationKeys.quests('daily') });
-      queryClient.invalidateQueries({ queryKey: gamificationKeys.quests('weekly') });
+      queryClient.invalidateQueries({ queryKey: [...gamificationKeys.all, 'quests'] });
       queryClient.invalidateQueries({ queryKey: userStateQueryKeys.wallet.all });
     },
   });
@@ -57,9 +57,10 @@ export function useSetActiveTitle() {
   });
 }
 
-export function useLeaderboard(track: string = 'daily_rank_score', periodKey?: string) {
+export function useLeaderboard(track?: string, periodKey?: string) {
   return useQuery({
-    queryKey: gamificationKeys.leaderboard(track, periodKey),
-    queryFn: () => fetchGamificationLeaderboard(track, periodKey),
+    queryKey: gamificationKeys.leaderboard(track ?? 'none', periodKey),
+    queryFn: () => fetchGamificationLeaderboard(track!, periodKey),
+    enabled: Boolean(track),
   });
 }

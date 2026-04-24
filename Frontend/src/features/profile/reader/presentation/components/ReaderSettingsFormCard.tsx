@@ -35,6 +35,7 @@ interface ReaderSettingsFormCardProps {
  renderSpecialtyLabel: (value: ReaderSpecialtyValue) => string;
  yearsLabel: string;
  yearsValue: number;
+ minYearsValue: number;
  socialLinksLabel: string;
  socialLinksHint: string;
  facebookPlaceholder: string;
@@ -46,6 +47,7 @@ interface ReaderSettingsFormCardProps {
  priceLabel: string;
  priceHelp: string;
  priceValue: number;
+ minPriceValue: number;
  saveLabel: string;
  savingLabel: string;
  saving: boolean;
@@ -75,9 +77,9 @@ export function ReaderSettingsFormCard(props: ReaderSettingsFormCardProps) {
     <div className={cn('space-y-6')}>
      <ReaderSettingsBioField label={props.bioLabel} value={vm.watchedBio} onChange={vm.setBio} placeholder={props.bioPlaceholder} error={vm.errors.bio?.message} />
      <ReaderSettingsSpecialtiesField label={props.specialtiesLabel} value={vm.watchedSpecialties} onChange={vm.setSpecialties} renderSpecialtyLabel={props.renderSpecialtyLabel} error={vm.errors.specialties?.message} />
-     <ReaderSettingsExperienceField label={props.yearsLabel} value={vm.watchedYears} onChange={vm.setYears} error={vm.errors.years?.message} />
+     <ReaderSettingsExperienceField label={props.yearsLabel} value={vm.watchedYears} minValue={props.minYearsValue} onChange={vm.setYears} error={vm.errors.years?.message} />
      <ReaderSettingsSocialLinksFields label={props.socialLinksLabel} hintLabel={props.socialLinksHint} facebookPlaceholder={props.facebookPlaceholder} instagramPlaceholder={props.instagramPlaceholder} tikTokPlaceholder={props.tikTokPlaceholder} facebookUrl={vm.watchedFacebookUrl} instagramUrl={vm.watchedInstagramUrl} tikTokUrl={vm.watchedTikTokUrl} onChangeFacebook={vm.setFacebookUrl} onChangeInstagram={vm.setInstagramUrl} onChangeTikTok={vm.setTikTokUrl} errors={{ socialRequired: socialRequiredMessage, facebookUrl: facebookFieldError, instagramUrl: vm.errors.instagramUrl?.message, tikTokUrl: vm.errors.tikTokUrl?.message }} />
-     <ReaderSettingsPriceField label={props.priceLabel} value={vm.watchedPrice} onChange={vm.setPrice} helpLabel={props.priceHelp} error={vm.errors.price?.message} />
+     <ReaderSettingsPriceField label={props.priceLabel} value={vm.watchedPrice} minValue={props.minPriceValue} onChange={vm.setPrice} helpLabel={props.priceHelp} error={vm.errors.price?.message} />
     </div>
     <div className={cn('mt-6 border-t pt-6 tn-border')}>
      <ReaderSettingsSubmitButton disabled={props.saving} loadingLabel={props.savingLabel} saveLabel={props.saveLabel} />

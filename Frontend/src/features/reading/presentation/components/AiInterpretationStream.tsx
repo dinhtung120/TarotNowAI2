@@ -7,6 +7,7 @@ import { AiStreamMessages } from "./ai-stream/AiStreamMessages";
 import { useAiStreamSession } from "./ai-stream/useAiStreamSession";
 import { AiStreamNotReadyState } from "./AiStreamNotReadyState";
 import type { RevealedReadingCard } from "@/features/reading/application/actions/types";
+import { useRuntimePolicies } from "@/shared/application/hooks/useRuntimePolicies";
 
 interface AiInterpretationStreamProps {
  sessionId: string;
@@ -15,23 +16,28 @@ interface AiInterpretationStreamProps {
  isReadyToShow?: boolean;
 }
 
-const PRICE_TIERS = [1, 2, 4, 8, 16];
-
 export default function AiInterpretationStream({ sessionId, onComplete, isReadyToShow = true }: AiInterpretationStreamProps) {
  const t = useTranslations("AiInterpretation");
  const locale = useLocale();
+ const runtimePoliciesQuery = useRuntimePolicies();
  const stream = useAiStreamSession({
   sessionId,
   locale,
   errorStreamMessage: t("error_stream"),
   onComplete,
  });
+ const followupPolicy = runtimePoliciesQuery.data?.followup;
  const freeSlotsTotal = 0;
  const userFollowupCount = stream.messages.filter((message) => message.role === "user").length;
  const freeSlotsRemaining = Math.max(0, freeSlotsTotal - userFollowupCount);
  const paidFollowupCount = Math.max(0, userFollowupCount - freeSlotsTotal);
- const nextDiamondCost = paidFollowupCount < PRICE_TIERS.length ? PRICE_TIERS[paidFollowupCount] : PRICE_TIERS[PRICE_TIERS.length - 1];
- const isHardCapReached = userFollowupCount >= 5;
+ const priceTiers = followupPolicy?.priceTiers ?? [];
+ const nextDiamondCost = priceTiers.length === 0
+  ? 0
+  : paidFollowupCount < priceTiers.length
+   ? priceTiers[paidFollowupCount]
+   : priceTiers[priceTiers.length - 1];
+ const isHardCapReached = !followupPolicy || userFollowupCount >= followupPolicy.maxFollowupsAllowed;
 
  if (!isReadyToShow) return <AiStreamNotReadyState waitingLabel={t("waiting_for_cards")} />;
 

@@ -1,5 +1,6 @@
 using FluentValidation;
 using TarotNow.Application.Common.Helpers;
+using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Reader.Commands.UpdateReaderProfile;
@@ -10,14 +11,15 @@ namespace TarotNow.Application.Features.Reader.Commands.UpdateReaderProfile;
 public sealed class UpdateReaderProfileCommandValidator : AbstractValidator<UpdateReaderProfileCommand>
 {
     private const int MaxBioLength = 4_000;
-    private const int MinYearsOfExperience = 1;
-    private const long MinDiamondPerQuestion = 50;
 
     /// <summary>
     /// Khởi tạo rule validation cho cập nhật hồ sơ Reader.
     /// </summary>
-    public UpdateReaderProfileCommandValidator()
+    public UpdateReaderProfileCommandValidator(ISystemConfigSettings systemConfigSettings)
     {
+        var minYearsOfExperience = systemConfigSettings.ReaderMinYearsOfExperience;
+        var minDiamondPerQuestion = systemConfigSettings.ReaderMinDiamondPerQuestion;
+
         RuleFor(x => x.UserId)
             .NotEmpty();
 
@@ -34,14 +36,14 @@ public sealed class UpdateReaderProfileCommandValidator : AbstractValidator<Upda
             .When(x => string.IsNullOrWhiteSpace(x.BioZh) == false);
 
         RuleFor(x => x.DiamondPerQuestion)
-            .GreaterThanOrEqualTo(MinDiamondPerQuestion)
+            .GreaterThanOrEqualTo(minDiamondPerQuestion)
             .When(x => x.DiamondPerQuestion.HasValue)
-            .WithMessage("Giá mỗi câu hỏi phải từ 50 Diamond.");
+            .WithMessage($"Giá mỗi câu hỏi phải từ {minDiamondPerQuestion} Diamond.");
 
         RuleFor(x => x.YearsOfExperience)
-            .GreaterThanOrEqualTo(MinYearsOfExperience)
+            .GreaterThanOrEqualTo(minYearsOfExperience)
             .When(x => x.YearsOfExperience.HasValue)
-            .WithMessage("Số năm kinh nghiệm tối thiểu là 1.");
+            .WithMessage($"Số năm kinh nghiệm tối thiểu là {minYearsOfExperience}.");
 
         RuleForEach(x => x.Specialties!)
             .Must(ReaderSpecialties.IsSupported)

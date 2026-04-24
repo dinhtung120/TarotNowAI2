@@ -30,6 +30,8 @@ interface ReaderSettingsFormStateProps {
  specialtiesValue: ReaderSpecialtyValue[];
  yearsValue: number;
  priceValue: number;
+ minYearsValue: number;
+ minPriceValue: number;
  facebookUrl: string;
  instagramUrl: string;
  tikTokUrl: string;
@@ -53,14 +55,16 @@ const EMPTY_SPECIALTIES: ReaderSpecialtyValue[] = [];
 
 export function useReaderSettingsFormCard(props: ReaderSettingsFormStateProps) {
  const {
-  bioValue,
-  specialtiesValue,
-  yearsValue,
-  priceValue,
-  facebookUrl,
-  instagramUrl,
-  tikTokUrl,
-  validation,
+ bioValue,
+ specialtiesValue,
+ yearsValue,
+ priceValue,
+ minYearsValue,
+ minPriceValue,
+ facebookUrl,
+ instagramUrl,
+ tikTokUrl,
+ validation,
   onChangeBio,
   onChangeSpecialties,
   onChangeYears,
@@ -74,8 +78,8 @@ export function useReaderSettingsFormCard(props: ReaderSettingsFormStateProps) {
  const schema = useMemo(() => z.object({
   bio: z.string().max(MAX_BIO_LENGTH, validation.bioMax),
   specialties: z.array(specialtySchema).min(1, validation.specialtiesMin),
-  years: z.number().int().min(1, validation.yearsMin),
-  price: z.number().int().min(50, validation.priceMin),
+  years: z.number().int().min(minYearsValue, validation.yearsMin),
+  price: z.number().int().min(minPriceValue, validation.priceMin),
   facebookUrl: z.string().trim().max(MAX_SOCIAL_URL_LENGTH, validation.socialTooLong),
   instagramUrl: z.string().trim().max(MAX_SOCIAL_URL_LENGTH, validation.socialTooLong),
   tikTokUrl: z.string().trim().max(MAX_SOCIAL_URL_LENGTH, validation.socialTooLong),
@@ -92,7 +96,7 @@ export function useReaderSettingsFormCard(props: ReaderSettingsFormStateProps) {
   if (!isValidTikTokUrl(values.tikTokUrl)) {
    context.addIssue({ code: z.ZodIssueCode.custom, path: ['tikTokUrl'], message: validation.tikTokInvalid });
   }
- }), [validation]);
+ }), [minPriceValue, validation, minYearsValue]);
 
  const { handleSubmit, setValue, control, formState: { errors } } = useForm<ReaderSettingsFormCardFormValues>({
   resolver: zodResolver(schema),
@@ -109,8 +113,8 @@ export function useReaderSettingsFormCard(props: ReaderSettingsFormStateProps) {
 
  const watchedBio = useWatch({ control, name: 'bio' }) ?? '';
  const watchedSpecialties = useWatch({ control, name: 'specialties' }) ?? EMPTY_SPECIALTIES;
- const watchedYears = useWatch({ control, name: 'years' }) ?? 1;
- const watchedPrice = useWatch({ control, name: 'price' }) ?? 50;
+ const watchedYears = useWatch({ control, name: 'years' }) ?? minYearsValue;
+ const watchedPrice = useWatch({ control, name: 'price' }) ?? minPriceValue;
  const watchedFacebookUrl = useWatch({ control, name: 'facebookUrl' }) ?? '';
  const watchedInstagramUrl = useWatch({ control, name: 'instagramUrl' }) ?? '';
  const watchedTikTokUrl = useWatch({ control, name: 'tikTokUrl' }) ?? '';

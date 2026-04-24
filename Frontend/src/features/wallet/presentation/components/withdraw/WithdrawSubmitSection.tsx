@@ -5,6 +5,7 @@ import { WithdrawSubmitButton } from './WithdrawSubmitButton';
 
 interface WithdrawSubmitSectionProps {
  amountNum: number;
+ minWithdrawDiamond: number;
  submitting: boolean;
  error: string | null;
  success: boolean;
@@ -16,6 +17,7 @@ interface WithdrawSubmitSectionProps {
 
 export function WithdrawSubmitSection({
  amountNum,
+ minWithdrawDiamond,
  submitting,
  error,
  success,
@@ -42,7 +44,7 @@ export function WithdrawSubmitSection({
    ) : null}
    <WithdrawSubmitButton
     submitting={submitting}
-    isDisabled={onSubmitDisabled || submitting || amountNum < 50}
+    isDisabled={onSubmitDisabled || submitting || amountNum < minWithdrawDiamond}
     submittingLabel={submittingLabel}
     submitLabel={submitLabel}
    />

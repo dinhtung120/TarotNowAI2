@@ -15,5 +15,5 @@ public class CreateConversationCommand : IRequest<ConversationDto>
     public Guid ReaderId { get; set; }
 
     // SLA giờ áp dụng cho main question.
-    public int SlaHours { get; set; } = 12;
+    public int SlaHours { get; set; }
 }

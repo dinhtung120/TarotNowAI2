@@ -6,6 +6,7 @@ using System.Security.Claims;
 using TarotNow.Api.Constants;
 using TarotNow.Application.Features.Gamification.Commands;
 using TarotNow.Application.Features.Gamification.Queries;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Api.Controllers;
 
@@ -19,14 +20,19 @@ namespace TarotNow.Api.Controllers;
 public class GamificationController : ControllerBase
 {
     private readonly IMediator _mediator;
+    private readonly ISystemConfigSettings _systemConfigSettings;
 
     /// <summary>
     /// Khởi tạo controller gamification.
     /// </summary>
     /// <param name="mediator">MediatR điều phối nghiệp vụ gamification.</param>
-    public GamificationController(IMediator mediator)
+    /// <param name="systemConfigSettings">Nguồn policy runtime cho quest type và leaderboard track mặc định.</param>
+    public GamificationController(
+        IMediator mediator,
+        ISystemConfigSettings systemConfigSettings)
     {
         _mediator = mediator;
+        _systemConfigSettings = systemConfigSettings;
     }
 
     /// <summary>
@@ -41,9 +47,12 @@ public class GamificationController : ControllerBase
     /// <param name="type">Loại quest cần lấy (daily, weekly...).</param>
     /// <returns>Danh sách quest active của người dùng.</returns>
     [HttpGet("quests")]
-    public async Task<IActionResult> GetActiveQuests([FromQuery] string type = "daily")
+    public async Task<IActionResult> GetActiveQuests([FromQuery] string? type = null)
     {
-        var result = await _mediator.Send(new GetActiveQuestsQuery(GetUserId(), type));
+        var resolvedType = string.IsNullOrWhiteSpace(type)
+            ? _systemConfigSettings.GamificationDefaultQuestType
+            : type.Trim().ToLowerInvariant();
+        var result = await _mediator.Send(new GetActiveQuestsQuery(GetUserId(), resolvedType));
         return Ok(result);
     }
 
@@ -107,9 +116,12 @@ public class GamificationController : ControllerBase
     /// <param name="periodKey">Mốc thời gian leaderboard tùy chọn.</param>
     /// <returns>Dữ liệu bảng xếp hạng cho người dùng hiện tại.</returns>
     [HttpGet("leaderboard")]
-    public async Task<IActionResult> GetLeaderboard([FromQuery] string track = "daily_rank_score", [FromQuery] string? periodKey = null)
+    public async Task<IActionResult> GetLeaderboard([FromQuery] string? track = null, [FromQuery] string? periodKey = null)
     {
-        var result = await _mediator.Send(new GetLeaderboardQuery(GetUserId(), track, periodKey));
+        var resolvedTrack = string.IsNullOrWhiteSpace(track)
+            ? _systemConfigSettings.GamificationDefaultLeaderboardTrack
+            : track.Trim().ToLowerInvariant();
+        var result = await _mediator.Send(new GetLeaderboardQuery(GetUserId(), resolvedTrack, periodKey));
         return Ok(result);
     }
 }

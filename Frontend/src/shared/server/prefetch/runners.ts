@@ -6,6 +6,7 @@ import type { CommunityFeedResponse } from '@/features/community/types';
 import { getUserCollection } from '@/features/collection/application/actions';
 import { getNavbarSnapshotAction } from '@/shared/application/actions/navbar-snapshot';
 import { getReadingSetupSnapshotAction } from '@/shared/application/actions/reading-setup-snapshot';
+import { getRuntimePoliciesAction } from '@/shared/application/actions/runtime-policies';
 import { checkinQueryKeys } from '@/features/checkin/domain/checkinQueryKeys';
 import { listAdminDisputes, listConversations } from '@/features/chat/application/actions';
 import {
@@ -47,9 +48,6 @@ import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQuery
 import { fetchInventoryServer } from '@/shared/infrastructure/inventory/inventoryServerActions';
 
 const readersDirectoryQueryKey = ['readers', 1, 12, '', '', ''] as const;
-
-/** Mặc định khớp LeaderboardTable lúc mở trang (gold + daily); đổi tab vẫn fetch trên client. */
-const DEFAULT_LEADERBOARD_TRACK = 'spent_gold_daily';
 
 async function swallowPrefetch(run: () => Promise<void>): Promise<void> {
  try {
@@ -415,15 +413,18 @@ export async function prefetchReadingHistoryDetailPage(qc: QueryClient, sessionI
 
 export async function prefetchGamificationHubPage(qc: QueryClient): Promise<void> {
  await swallowPrefetch(async () => {
+  const runtimePolicies = await getRuntimePoliciesAction();
+  const defaultQuestType = runtimePolicies.success && runtimePolicies.data
+   ? runtimePolicies.data.gamification.defaultQuestType
+   : null;
+
   await Promise.all([
-   qc.prefetchQuery({
-    queryKey: gamificationKeys.quests('daily'),
-    queryFn: () => fetchGamificationQuests('daily'),
-   }),
-   qc.prefetchQuery({
-    queryKey: gamificationKeys.quests('weekly'),
-    queryFn: () => fetchGamificationQuests('weekly'),
-   }),
+   ...(defaultQuestType
+    ? [qc.prefetchQuery({
+      queryKey: gamificationKeys.quests(defaultQuestType),
+      queryFn: () => fetchGamificationQuests(defaultQuestType),
+     })]
+    : []),
    qc.prefetchQuery({
     queryKey: gamificationKeys.achievements(),
     queryFn: () => fetchGamificationAchievements(),
@@ -438,9 +439,15 @@ export async function prefetchGamificationHubPage(qc: QueryClient): Promise<void
 
 export async function prefetchLeaderboardPage(qc: QueryClient): Promise<void> {
  await swallowPrefetch(async () => {
+  const runtimePolicies = await getRuntimePoliciesAction();
+  if (!runtimePolicies.success || !runtimePolicies.data) {
+   return;
+  }
+
+  const defaultTrack = runtimePolicies.data.gamification.defaultLeaderboardTrack;
   await qc.prefetchQuery({
-   queryKey: gamificationKeys.leaderboard(DEFAULT_LEADERBOARD_TRACK),
-   queryFn: () => fetchGamificationLeaderboard(DEFAULT_LEADERBOARD_TRACK),
+   queryKey: gamificationKeys.leaderboard(defaultTrack),
+   queryFn: () => fetchGamificationLeaderboard(defaultTrack),
   });
  });
 }

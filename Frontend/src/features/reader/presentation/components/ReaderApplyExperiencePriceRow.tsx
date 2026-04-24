@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 interface ReaderApplyExperiencePriceRowProps {
  yearsOfExperience: number;
  diamondPerQuestion: number;
+ minYearsOfExperience: number;
+ minDiamondPerQuestion: number;
  yearsError?: string;
  diamondError?: string;
  onChangeYears: (value: number) => void;
@@ -14,6 +16,8 @@ interface ReaderApplyExperiencePriceRowProps {
 export default function ReaderApplyExperiencePriceRow({
  yearsOfExperience,
  diamondPerQuestion,
+ minYearsOfExperience,
+ minDiamondPerQuestion,
  yearsError,
  diamondError,
  onChangeYears,
@@ -30,7 +34,7 @@ export default function ReaderApplyExperiencePriceRow({
     </label>
     <input
      type="number"
-     min={1}
+     min={minYearsOfExperience}
      value={yearsOfExperience}
      onChange={(event) => onChangeYears(Number(event.target.value))}
      aria-invalid={Boolean(yearsError)}
@@ -46,7 +50,7 @@ export default function ReaderApplyExperiencePriceRow({
     </label>
     <input
      type="number"
-     min={50}
+     min={minDiamondPerQuestion}
      value={diamondPerQuestion}
      onChange={(event) => onChangeDiamond(Number(event.target.value))}
      aria-invalid={Boolean(diamondError)}

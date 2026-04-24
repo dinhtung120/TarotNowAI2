@@ -6,9 +6,9 @@ export function useWithdrawPageViewModel() {
 
   const formLabels: WithdrawFormCardLabels = {
     amountLabel: state.t("withdraw.amount_label"),
-    amountPlaceholder: state.t("withdraw.amount_placeholder"),
+    amountPlaceholder: state.t("withdraw.amount_placeholder", { min: state.minWithdrawDiamond }),
     grossLabel: state.t("withdraw.gross_label"),
-    feeLabel: state.t("withdraw.fee_label"),
+    feeLabel: state.t("withdraw.fee_label", { feePercent: state.withdrawFeePercent }),
     netLabel: state.t("withdraw.net_label"),
     bankInfoTitle: state.t("withdraw.bank_info_title"),
     bankNameLabel: state.t("withdraw.bank_label"),
@@ -31,7 +31,10 @@ export function useWithdrawPageViewModel() {
       backLabel: state.t("withdraw.back_to_wallet"),
       tag: state.t("withdraw.tag"),
       title: state.t("withdraw.title"),
-      subtitle: state.t("withdraw.subtitle"),
+      subtitle: state.t("withdraw.subtitle", {
+        feePercent: state.withdrawFeePercent,
+        minDiamond: state.minWithdrawDiamond,
+      }),
     },
     historyLabels: {
       adminNotePrefix: state.t("withdraw.admin_note_prefix"),
@@ -39,5 +42,6 @@ export function useWithdrawPageViewModel() {
       emptyLabel: state.t("withdraw.history_empty"),
       title: state.t("withdraw.history_title"),
     },
+    onSubmitDisabled: !state.withdrawalPolicyReady,
   };
 }

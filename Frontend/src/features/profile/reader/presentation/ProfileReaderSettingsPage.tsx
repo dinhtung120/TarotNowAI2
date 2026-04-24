@@ -23,6 +23,7 @@ export default function ReaderSettingsPage({ embedded = false }: ReaderSettingsP
   specialties,
   setSpecialties,
   yearsOfExperience,
+  minYearsOfExperience,
   setYearsOfExperience,
   facebookUrl,
   setFacebookUrl,
@@ -30,6 +31,8 @@ export default function ReaderSettingsPage({ embedded = false }: ReaderSettingsP
   setInstagramUrl,
   tikTokUrl,
   setTikTokUrl,
+  minDiamondPerQuestion,
+  readerPolicyReady,
   handleSave,
  } = useProfileReaderSettingsPage(t);
 
@@ -39,7 +42,7 @@ export default function ReaderSettingsPage({ embedded = false }: ReaderSettingsP
 
  const content = (
   <div className={cn('space-y-8')}>
-   <ReaderSettingsFormCard
+    <ReaderSettingsFormCard
     title={t('reader.public_profile_title')}
     bioLabel={t('reader.bio_label')}
     bioPlaceholder={t('reader.bio_placeholder')}
@@ -51,6 +54,7 @@ export default function ReaderSettingsPage({ embedded = false }: ReaderSettingsP
     onChangeSpecialties={setSpecialties}
     yearsLabel={t('reader.years_experience_label')}
     yearsValue={yearsOfExperience}
+    minYearsValue={minYearsOfExperience}
     onChangeYears={setYearsOfExperience}
     socialLinksLabel={t('reader.social_links_label')}
     socialLinksHint={t('reader.social_links_hint')}
@@ -66,12 +70,13 @@ export default function ReaderSettingsPage({ embedded = false }: ReaderSettingsP
     priceLabel={t('reader.price_label')}
     priceHelp={t('reader.price_help')}
     priceValue={diamondPerQuestion}
+    minPriceValue={minDiamondPerQuestion}
     onChangePrice={setDiamondPerQuestion}
     validation={{
       bioMax: t('reader.validation.bio_max'),
       specialtiesMin: t('reader.validation.specialties_min'),
-      yearsMin: t('reader.validation.years_min'),
-      priceMin: t('reader.validation.diamond_min'),
+      yearsMin: t('reader.validation.years_min', { min: minYearsOfExperience }),
+      priceMin: t('reader.validation.diamond_min', { min: minDiamondPerQuestion }),
       socialRequired: t('reader.validation.social_required'),
       socialTooLong: t('reader.validation.social_too_long'),
       facebookInvalid: t('reader.validation.facebook_invalid'),
@@ -79,7 +84,7 @@ export default function ReaderSettingsPage({ embedded = false }: ReaderSettingsP
       tikTokInvalid: t('reader.validation.tiktok_invalid'),
     }}
     onSubmit={handleSave}
-    saving={saving}
+    saving={saving || !readerPolicyReady}
     savingLabel={t('reader.saving')}
     saveLabel={t('reader.save')}
    />

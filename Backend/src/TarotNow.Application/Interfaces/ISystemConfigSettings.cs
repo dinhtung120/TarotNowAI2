@@ -51,6 +51,12 @@ public interface ISystemConfigSettings
     // Tỷ giá quy đổi VND theo 1 Diamond.
     long EconomyVndPerDiamond { get; }
 
+    // Số năm kinh nghiệm tối thiểu khi đăng ký/cập nhật Reader.
+    int ReaderMinYearsOfExperience { get; }
+
+    // Mức Diamond/câu hỏi tối thiểu của Reader.
+    long ReaderMinDiamondPerQuestion { get; }
+
     // Bậc giá follow-up trả phí theo thứ tự lượt hỏi.
     IReadOnlyList<int> FollowupPriceTiers { get; }
 
@@ -86,4 +92,10 @@ public interface ISystemConfigSettings
 
     // Deadline tự động refund theo giờ.
     int EscrowAutoRefundHours { get; }
+
+    // Quest type mặc định của gamification.
+    string GamificationDefaultQuestType { get; }
+
+    // Leaderboard track mặc định của gamification.
+    string GamificationDefaultLeaderboardTrack { get; }
 }

@@ -63,8 +63,8 @@
       "bio_min": "自我介绍至少需要 20 个字符。",
       "bio_max": "自我介绍不能超过 4000 个字符。",
       "specialties_min": "请至少选择一个擅长领域。",
-      "years_min": "从业年限至少为 1 年。",
-      "diamond_min": "服务价格至少为 50 Diamond。",
+      "years_min": "从业年限至少为 {min} 年。",
+      "diamond_min": "服务价格至少为 {min} Diamond。",
       "social_too_long": "社交链接过长。",
       "social_required": "你必须至少提供 1 个社交链接。",
       "facebook_invalid": "Facebook 链接无效或域名不受支持。",
@@ -72,7 +72,8 @@
       "tiktok_invalid": "TikTok 链接无效或域名不受支持。"
     },
     "errors": {
-      "submit_failed": "提交失败。"
+      "submit_failed": "提交失败。",
+      "policy_unavailable": "无法加载 Reader 规则，请稍后再试。"
     },
     "success": {
       "submitted": "申请已提交成功。"

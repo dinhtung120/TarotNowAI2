@@ -14,16 +14,19 @@ public sealed class ReaderProfileUpdateRequestedDomainEventHandler
     : IdempotentDomainEventNotificationHandler<ReaderProfileUpdateRequestedDomainEvent>
 {
     private readonly IReaderProfileRepository _readerProfileRepository;
+    private readonly ISystemConfigSettings _systemConfigSettings;
 
     /// <summary>
     /// Khởi tạo handler cập nhật hồ sơ Reader.
     /// </summary>
     public ReaderProfileUpdateRequestedDomainEventHandler(
         IReaderProfileRepository readerProfileRepository,
+        ISystemConfigSettings systemConfigSettings,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
         _readerProfileRepository = readerProfileRepository;
+        _systemConfigSettings = systemConfigSettings;
     }
 
     /// <inheritdoc />
@@ -36,11 +39,20 @@ public sealed class ReaderProfileUpdateRequestedDomainEventHandler
             ?? throw new NotFoundException("Không tìm thấy hồ sơ Reader. Bạn cần được admin duyệt trước.");
 
         ReaderProfileUpdateDomainRules.ApplyBioPatch(profile, domainEvent);
-        ReaderProfileUpdateDomainRules.ApplyPricePatch(profile, domainEvent);
+        ReaderProfileUpdateDomainRules.ApplyPricePatch(
+            profile,
+            domainEvent,
+            _systemConfigSettings.ReaderMinDiamondPerQuestion);
         ReaderProfileUpdateDomainRules.ApplySpecialtiesPatch(profile, domainEvent);
-        ReaderProfileUpdateDomainRules.ApplyYearsOfExperiencePatch(profile, domainEvent);
+        ReaderProfileUpdateDomainRules.ApplyYearsOfExperiencePatch(
+            profile,
+            domainEvent,
+            _systemConfigSettings.ReaderMinYearsOfExperience);
         ReaderProfileUpdateDomainRules.ApplySocialLinksPatch(profile, domainEvent);
-        ReaderProfileUpdateDomainRules.EnsureProfileInvariants(profile);
+        ReaderProfileUpdateDomainRules.EnsureProfileInvariants(
+            profile,
+            _systemConfigSettings.ReaderMinYearsOfExperience,
+            _systemConfigSettings.ReaderMinDiamondPerQuestion);
 
         await _readerProfileRepository.UpdateAsync(profile, cancellationToken);
         domainEvent.Updated = true;

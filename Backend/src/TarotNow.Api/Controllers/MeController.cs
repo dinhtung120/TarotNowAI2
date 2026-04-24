@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using TarotNow.Api.Constants;
 using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.UserContext.Queries.GetNavbarSnapshot;
+using TarotNow.Application.Features.UserContext.Queries.GetRuntimePolicies;
 using TarotNow.Application.Features.UserContext.Queries.GetReadingSetupSnapshot;
 
 namespace TarotNow.Api.Controllers;
@@ -52,6 +53,23 @@ public class MeController : ControllerBase
         }
 
         var result = await _mediator.Send(new GetReadingSetupSnapshotQuery(userId), cancellationToken);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Lấy snapshot policy runtime từ system_configs cho FE.
+    /// </summary>
+    [HttpGet("runtime-policies")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RuntimePoliciesDto))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetRuntimePolicies(CancellationToken cancellationToken)
+    {
+        if (!User.TryGetUserId(out _))
+        {
+            return this.UnauthorizedProblem();
+        }
+
+        var result = await _mediator.Send(new GetRuntimePoliciesQuery(), cancellationToken);
         return Ok(result);
     }
 }

@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 interface ReaderSettingsExperienceFieldProps {
  label: string;
  value: number;
+ minValue: number;
  error?: string;
  onChange: (value: number) => void;
 }
@@ -13,6 +14,7 @@ interface ReaderSettingsExperienceFieldProps {
 export function ReaderSettingsExperienceField({
  label,
  value,
+ minValue,
  error,
  onChange,
 }: ReaderSettingsExperienceFieldProps) {
@@ -24,7 +26,7 @@ export function ReaderSettingsExperienceField({
    </label>
    <input
     type="number"
-    min={1}
+    min={minValue}
     value={value}
     aria-invalid={Boolean(error)}
     onChange={(event) => onChange(Number(event.target.value))}
