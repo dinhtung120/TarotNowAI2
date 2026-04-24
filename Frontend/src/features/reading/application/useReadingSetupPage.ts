@@ -66,6 +66,15 @@ export function useReadingSetupPage() {
   spread10: 0,
  };
 
+ const pricing = readingSetupSnapshotQuery.data?.pricing ?? {
+  spread3GoldCost: 50,
+  spread3DiamondCost: 5,
+  spread5GoldCost: 100,
+  spread5DiamondCost: 10,
+  spread10GoldCost: 500,
+  spread10DiamondCost: 50,
+ };
+
  const [selectedSpread, setSelectedSpread] = useState<ReadingSpreadOption['id']>('daily_1');
  const [selectedCurrency, setSelectedCurrency] = useState<'gold' | 'diamond'>('gold');
  const [initError, setInitError] = useState('');
@@ -106,8 +115,8 @@ export function useReadingSetupPage() {
     cost: selectedCurrency === 'gold' && freeDrawQuotas.spread3 > 0
      ? t('cost_free_ticket', { count: freeDrawQuotas.spread3, spread: 3 })
      : selectedCurrency === 'diamond'
-      ? t('cost_diamond', { amount: 5 })
-      : t('cost_gold', { amount: 50 }),
+      ? t('cost_diamond', { amount: pricing.spread3DiamondCost })
+      : t('cost_gold', { amount: pricing.spread3GoldCost }),
     exp: selectedCurrency === 'diamond' ? 2 : 1,
     freeDrawCount: selectedCurrency === 'gold' ? freeDrawQuotas.spread3 : 0,
     usesFreeDraw: selectedCurrency === 'gold' && freeDrawQuotas.spread3 > 0,
@@ -120,8 +129,8 @@ export function useReadingSetupPage() {
     cost: selectedCurrency === 'gold' && freeDrawQuotas.spread5 > 0
      ? t('cost_free_ticket', { count: freeDrawQuotas.spread5, spread: 5 })
      : selectedCurrency === 'diamond'
-      ? t('cost_diamond', { amount: 10 })
-      : t('cost_gold', { amount: 100 }),
+      ? t('cost_diamond', { amount: pricing.spread5DiamondCost })
+      : t('cost_gold', { amount: pricing.spread5GoldCost }),
     exp: selectedCurrency === 'diamond' ? 2 : 1,
     freeDrawCount: selectedCurrency === 'gold' ? freeDrawQuotas.spread5 : 0,
     usesFreeDraw: selectedCurrency === 'gold' && freeDrawQuotas.spread5 > 0,
@@ -134,15 +143,15 @@ export function useReadingSetupPage() {
     cost: selectedCurrency === 'gold' && freeDrawQuotas.spread10 > 0
      ? t('cost_free_ticket', { count: freeDrawQuotas.spread10, spread: 10 })
      : selectedCurrency === 'gold'
-      ? t('cost_gold', { amount: 500 })
-      : t('cost_diamond', { amount: 50 }),
+      ? t('cost_gold', { amount: pricing.spread10GoldCost })
+      : t('cost_diamond', { amount: pricing.spread10DiamondCost }),
     exp: selectedCurrency === 'diamond' ? 2 : 1,
     freeDrawCount: selectedCurrency === 'gold' ? freeDrawQuotas.spread10 : 0,
     usesFreeDraw: selectedCurrency === 'gold' && freeDrawQuotas.spread10 > 0,
     icon: 'moon',
    },
   ],
-  [freeDrawQuotas.spread10, freeDrawQuotas.spread3, freeDrawQuotas.spread5, selectedCurrency, t],
+  [freeDrawQuotas.spread10, freeDrawQuotas.spread3, freeDrawQuotas.spread5, selectedCurrency, pricing, t],
  );
 
  const submitSetup = async (data: ReadingSetupFormData) => {

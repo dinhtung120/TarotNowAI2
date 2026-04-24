@@ -15,6 +15,14 @@ export interface ReadingSetupSnapshotDto {
   spread5: number;
   spread10: number;
  };
+ pricing: {
+  spread3GoldCost: number;
+  spread3DiamondCost: number;
+  spread5GoldCost: number;
+  spread5DiamondCost: number;
+  spread10GoldCost: number;
+  spread10DiamondCost: number;
+ };
 }
 
 export async function getReadingSetupSnapshotAction(): Promise<ActionResult<ReadingSetupSnapshotDto>> {

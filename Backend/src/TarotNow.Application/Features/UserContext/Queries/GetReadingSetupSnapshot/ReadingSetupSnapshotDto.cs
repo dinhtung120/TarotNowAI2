@@ -11,6 +11,8 @@ public class ReadingSetupSnapshotDto
     public List<CardCatalogDto> CardsCatalog { get; set; } = [];
 
     public ReadingFreeDrawQuotaDto FreeDrawQuotas { get; set; } = new();
+
+    public ReadingPricingDto Pricing { get; set; } = new();
 }
 
 public sealed class ReadingFreeDrawQuotaDto
@@ -20,4 +22,16 @@ public sealed class ReadingFreeDrawQuotaDto
     public int Spread5 { get; set; }
 
     public int Spread10 { get; set; }
+}
+
+public sealed class ReadingPricingDto
+{
+    public long Spread3GoldCost { get; set; }
+    public long Spread3DiamondCost { get; set; }
+    
+    public long Spread5GoldCost { get; set; }
+    public long Spread5DiamondCost { get; set; }
+    
+    public long Spread10GoldCost { get; set; }
+    public long Spread10DiamondCost { get; set; }
 }

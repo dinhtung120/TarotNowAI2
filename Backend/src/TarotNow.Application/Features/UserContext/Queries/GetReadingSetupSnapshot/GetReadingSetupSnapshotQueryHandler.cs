@@ -11,13 +11,16 @@ public class GetReadingSetupSnapshotQueryHandler : IRequestHandler<GetReadingSet
 {
     private readonly IMediator _mediator;
     private readonly IFreeDrawCreditRepository _freeDrawCreditRepository;
+    private readonly ISystemConfigSettings _systemConfigSettings;
 
     public GetReadingSetupSnapshotQueryHandler(
         IMediator mediator,
-        IFreeDrawCreditRepository freeDrawCreditRepository)
+        IFreeDrawCreditRepository freeDrawCreditRepository,
+        ISystemConfigSettings systemConfigSettings)
     {
         _mediator = mediator;
         _freeDrawCreditRepository = freeDrawCreditRepository;
+        _systemConfigSettings = systemConfigSettings;
     }
 
     public async Task<ReadingSetupSnapshotDto> Handle(GetReadingSetupSnapshotQuery request, CancellationToken cancellationToken)
@@ -36,6 +39,15 @@ public class GetReadingSetupSnapshotQueryHandler : IRequestHandler<GetReadingSet
                 Spread5 = freeDrawSummary.Spread5Count,
                 Spread10 = freeDrawSummary.Spread10Count,
             },
+            Pricing = new ReadingPricingDto
+            {
+                Spread3GoldCost = _systemConfigSettings.Spread3GoldCost,
+                Spread3DiamondCost = _systemConfigSettings.Spread3DiamondCost,
+                Spread5GoldCost = _systemConfigSettings.Spread5GoldCost,
+                Spread5DiamondCost = _systemConfigSettings.Spread5DiamondCost,
+                Spread10GoldCost = _systemConfigSettings.Spread10GoldCost,
+                Spread10DiamondCost = _systemConfigSettings.Spread10DiamondCost,
+            }
         };
     }
 }
