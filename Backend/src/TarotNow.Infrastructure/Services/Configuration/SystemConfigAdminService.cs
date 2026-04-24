@@ -1,3 +1,5 @@
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using TarotNow.Application.Common.SystemConfigs;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
@@ -9,6 +11,12 @@ namespace TarotNow.Infrastructure.Services.Configuration;
 /// </summary>
 public sealed class SystemConfigAdminService : ISystemConfigAdminService
 {
+    private static readonly JsonSerializerOptions CanonicalJsonOptions = new()
+    {
+        WriteIndented = true,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
+
     private readonly ISystemConfigRepository _systemConfigRepository;
     private readonly SystemConfigSnapshotStore _snapshotStore;
     private readonly SystemConfigProjectionService _projectionService;
@@ -79,10 +87,11 @@ public sealed class SystemConfigAdminService : ISystemConfigAdminService
             ? definition.Description
             : string.Empty;
         var effectiveDescription = ResolveDescription(description, existing?.Description, fallbackDescription);
+        var normalizedValue = NormalizeValue(value, normalizedKind);
 
         var updated = await _systemConfigRepository.UpsertAsync(
             normalizedKey,
-            value,
+            normalizedValue,
             normalizedKind,
             effectiveDescription,
             updatedBy,
@@ -141,5 +150,21 @@ public sealed class SystemConfigAdminService : ISystemConfigAdminService
         }
 
         return fallbackDescription;
+    }
+
+    private static string NormalizeValue(string value, string valueKind)
+    {
+        if (string.Equals(valueKind, "json", StringComparison.Ordinal))
+        {
+            return CanonicalizeJson(value);
+        }
+
+        return value.Trim();
+    }
+
+    private static string CanonicalizeJson(string rawValue)
+    {
+        using var document = JsonDocument.Parse(rawValue);
+        return JsonSerializer.Serialize(document.RootElement, CanonicalJsonOptions);
     }
 }

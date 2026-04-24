@@ -1,3 +1,5 @@
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -13,6 +15,12 @@ namespace TarotNow.Infrastructure.BackgroundJobs;
 /// </summary>
 public sealed class SystemConfigBootstrapHostedService : IHostedService
 {
+    private static readonly JsonSerializerOptions CanonicalJsonOptions = new()
+    {
+        WriteIndented = true,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
+
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<SystemConfigBootstrapHostedService> _logger;
 
@@ -38,6 +46,7 @@ public sealed class SystemConfigBootstrapHostedService : IHostedService
         _logger.LogInformation("[SystemConfig] bootstrap started.");
 
         await EnsureKnownDefaultsAsync(repository, cancellationToken);
+        await NormalizeKnownConfigValuesAsync(repository, cancellationToken);
         var reloaded = await repository.GetAllAsync(cancellationToken);
         ValidateKnownConfigs(reloaded);
 
@@ -68,6 +77,56 @@ public sealed class SystemConfigBootstrapHostedService : IHostedService
                 description: definition.Description,
                 updatedBy: null,
                 cancellationToken: cancellationToken);
+        }
+    }
+
+    private async Task NormalizeKnownConfigValuesAsync(
+        ISystemConfigRepository repository,
+        CancellationToken cancellationToken)
+    {
+        var existing = await repository.GetAllAsync(cancellationToken);
+        foreach (var config in existing)
+        {
+            if (!SystemConfigRegistry.TryGetDefinition(config.Key, out var definition))
+            {
+                continue;
+            }
+
+            var expectedKind = definition.ValueKind.ToString().ToLowerInvariant();
+            var normalizedValue = NormalizeValue(config.Key, config.Value, definition.ValueKind);
+            if (string.Equals(config.ValueKind, expectedKind, StringComparison.Ordinal)
+                && string.Equals(config.Value, normalizedValue, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            await repository.UpsertAsync(
+                key: config.Key,
+                value: normalizedValue,
+                valueKind: expectedKind,
+                description: config.Description,
+                updatedBy: config.UpdatedBy,
+                cancellationToken: cancellationToken);
+
+            _logger.LogInformation("[SystemConfig] normalized key '{Key}' to canonical {Kind} format.", config.Key, expectedKind);
+        }
+    }
+
+    private static string NormalizeValue(string key, string rawValue, SystemConfigValueKind valueKind)
+    {
+        if (valueKind is not SystemConfigValueKind.Json)
+        {
+            return rawValue.Trim();
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(rawValue);
+            return JsonSerializer.Serialize(document.RootElement, CanonicalJsonOptions);
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException($"System config '{key}' contains invalid JSON payload.", ex);
         }
     }
 

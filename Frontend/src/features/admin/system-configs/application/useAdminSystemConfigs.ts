@@ -19,11 +19,20 @@ function normalizeValueKind(valueKind: string): 'scalar' | 'json' {
  return valueKind.trim().toLowerCase() === 'json' ? 'json' : 'scalar';
 }
 
+function formatJsonValueForEditor(rawValue: string): string {
+ try {
+  return JSON.stringify(JSON.parse(rawValue), null, 2);
+ } catch {
+  return rawValue;
+ }
+}
+
 function createDraft(item: AdminSystemConfigItem): SystemConfigDraft {
+ const normalizedValueKind = normalizeValueKind(item.valueKind);
  return {
-  value: item.value,
+  value: normalizedValueKind === 'json' ? formatJsonValueForEditor(item.value) : item.value,
   description: item.description ?? '',
-  valueKind: normalizeValueKind(item.valueKind),
+  valueKind: normalizedValueKind,
  };
 }
 

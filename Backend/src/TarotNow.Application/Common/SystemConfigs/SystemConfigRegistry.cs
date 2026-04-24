@@ -1,3 +1,4 @@
+using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace TarotNow.Application.Common.SystemConfigs;
@@ -30,7 +31,9 @@ public static partial class SystemConfigRegistry
 {
     internal static readonly JsonSerializerOptions JsonOptions = new()
     {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = true,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
 
     private static readonly IReadOnlyDictionary<string, SystemConfigDefinition> Definitions =
