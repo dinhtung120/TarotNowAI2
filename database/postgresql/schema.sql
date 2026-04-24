@@ -933,16 +933,18 @@ COMMENT ON COLUMN user_geo_signals.updated_at IS 'Thời điểm cập nhật.';
 
 
 CREATE TABLE system_configs (
-    key         VARCHAR(100) PRIMARY KEY,
+    key         VARCHAR(200) PRIMARY KEY,
     value       TEXT         NOT NULL,
+    value_kind  VARCHAR(16)  NOT NULL DEFAULT 'scalar' CHECK (value_kind IN ('scalar', 'json')),
     description TEXT,
-    updated_by  UUID        REFERENCES users(id),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_by  UUID         REFERENCES users(id),
+    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
 COMMENT ON TABLE system_configs IS 'Cấu hình runtime: key-value.';
 COMMENT ON COLUMN system_configs.key IS 'Key cấu hình (primary key).';
 COMMENT ON COLUMN system_configs.value IS 'Giá trị (text).';
+COMMENT ON COLUMN system_configs.value_kind IS 'Loại giá trị: scalar hoặc json.';
 COMMENT ON COLUMN system_configs.description IS 'Mô tả cấu hình.';
 COMMENT ON COLUMN system_configs.updated_by IS 'FK users (người cập nhật).';
 COMMENT ON COLUMN system_configs.updated_at IS 'Thời điểm cập nhật.';

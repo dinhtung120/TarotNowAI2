@@ -50,6 +50,7 @@ public sealed class SystemConfigConfiguration : IEntityTypeConfiguration<SystemC
 
         builder.Property(x => x.UpdatedAt)
             .HasColumnName("updated_at")
+            .HasDefaultValueSql("NOW()")
             .IsRequired();
 
         builder.HasOne<User>()
