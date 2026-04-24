@@ -59,13 +59,31 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
  } = options;
  const runtimePoliciesQuery = useRuntimePolicies();
  const realtimePolicy = runtimePoliciesQuery.data?.realtime;
- const reconnectSchedule = [...(realtimePolicy?.reconnectScheduleMs ?? RUNTIME_POLICY_FALLBACKS.realtime.reconnectScheduleMs)];
- const serverTimeoutMs = realtimePolicy?.serverTimeoutMs ?? RUNTIME_POLICY_FALLBACKS.realtime.serverTimeoutMs;
- const typingClearMs = realtimePolicy?.chat.typingClearMs ?? RUNTIME_POLICY_FALLBACKS.realtime.chat.typingClearMs;
- const invalidateDebounceMs = realtimePolicy?.chat.invalidateDebounceMs
-  ?? RUNTIME_POLICY_FALLBACKS.realtime.chat.invalidateDebounceMs;
- const initialLoadGuardMs = realtimePolicy?.chat.initialLoadGuardMs
-  ?? RUNTIME_POLICY_FALLBACKS.realtime.chat.initialLoadGuardMs;
+  // Sử dụng ref để giữ cấu hình ổn định, tránh việc array [0, 2000, ...] tạo mới mỗi render phá vỡ effect.
+  const reconnectScheduleRef = useRef<number[]>([...RUNTIME_POLICY_FALLBACKS.realtime.reconnectScheduleMs]);
+  const configRef = useRef({
+    serverTimeoutMs: RUNTIME_POLICY_FALLBACKS.realtime.serverTimeoutMs as number,
+    typingClearMs: RUNTIME_POLICY_FALLBACKS.realtime.chat.typingClearMs as number,
+    invalidateDebounceMs: RUNTIME_POLICY_FALLBACKS.realtime.chat.invalidateDebounceMs as number,
+    initialLoadGuardMs: RUNTIME_POLICY_FALLBACKS.realtime.chat.initialLoadGuardMs as number,
+  });
+
+  // Đồng bộ cấu hình từ runtimePolicy vào ref.
+  useEffect(() => {
+    const currentSchedule = realtimePolicy?.reconnectScheduleMs ?? RUNTIME_POLICY_FALLBACKS.realtime.reconnectScheduleMs;
+    if (JSON.stringify(reconnectScheduleRef.current) !== JSON.stringify(currentSchedule)) {
+      reconnectScheduleRef.current = [...currentSchedule];
+    }
+
+    configRef.current = {
+      serverTimeoutMs: realtimePolicy?.serverTimeoutMs ?? RUNTIME_POLICY_FALLBACKS.realtime.serverTimeoutMs,
+      typingClearMs: realtimePolicy?.chat.typingClearMs ?? RUNTIME_POLICY_FALLBACKS.realtime.chat.typingClearMs,
+      invalidateDebounceMs:
+        realtimePolicy?.chat.invalidateDebounceMs ?? RUNTIME_POLICY_FALLBACKS.realtime.chat.invalidateDebounceMs,
+      initialLoadGuardMs:
+        realtimePolicy?.chat.initialLoadGuardMs ?? RUNTIME_POLICY_FALLBACKS.realtime.chat.initialLoadGuardMs,
+    };
+  }, [realtimePolicy]);
 
  const initializingRef = useRef(false);
 
@@ -88,6 +106,10 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
   resetForConversation(getCachedConversation(queryClient, conversationId));
   setTypingUserId(null);
 
+  // Lấy cấu hình ổn định từ ref.
+  const { serverTimeoutMs, typingClearMs, invalidateDebounceMs, initialLoadGuardMs } = configRef.current;
+  const schedule = reconnectScheduleRef.current;
+
   const onVisibilityChange = () => {
    if (document.visibilityState === 'visible' && conversationId) {
     void markReadRef.current();
@@ -96,7 +118,7 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
 
   const init = async () => {
    try {
-    hubConnection = await createHubConnection(reconnectSchedule);
+     hubConnection = await createHubConnection(schedule);
     // Cấu hình timeout dài hơn để tránh bị ngắt kết nối do mạng chập chờn
     hubConnection.serverTimeoutInMilliseconds = serverTimeoutMs;
     
@@ -228,21 +250,16 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
   connectionRef,
   conversationId,
   currentUserId,
-  initialLoadGuardMs,
-  invalidateDebounceMs,
   lastInitialLoadTimeRef,
   loadInitialRef,
   markReadRef,
   queryClient,
-  reconnectSchedule,
   resetForConversation,
-  serverTimeoutMs,
   setConnected,
   setConversation,
   setLoading,
   setMessages,
   setTypingUserId,
-  typingClearMs,
   typingTimeoutRef,
  ]);
 }

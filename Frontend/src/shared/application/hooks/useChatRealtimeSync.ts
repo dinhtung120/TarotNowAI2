@@ -88,7 +88,39 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
   
   const appStartTimeRef = useRef(Date.now());
 
+  // Ổn định cấu hình bằng useRef để tránh phá vỡ kết nối SignalR khi component re-render.
+  const reconnectScheduleRef = useRef<number[]>([...RUNTIME_POLICY_FALLBACKS.realtime.reconnectScheduleMs]);
+  const configRef = useRef({
+    negotiationTimeoutMs: RUNTIME_POLICY_FALLBACKS.realtime.negotiationTimeoutMs as number,
+    unauthorizedCooldownMs: RUNTIME_POLICY_FALLBACKS.realtime.chatUnauthorizedCooldownMs as number,
+    serverTimeoutMs: RUNTIME_POLICY_FALLBACKS.realtime.serverTimeoutMs as number,
+    invalidateDebounceMs: RUNTIME_POLICY_FALLBACKS.realtime.chat.invalidateDebounceMs as number,
+    appStartGuardMs: RUNTIME_POLICY_FALLBACKS.realtime.chat.appStartGuardMs as number,
+  });
+
+  // Đồng bộ giá trị từ runtimePolicy vào ref mà không gây ảnh hưởng đến useEffect chính.
   useEffect(() => {
+    const currentSchedule = realtimePolicy?.reconnectScheduleMs ?? RUNTIME_POLICY_FALLBACKS.realtime.reconnectScheduleMs;
+    if (JSON.stringify(reconnectScheduleRef.current) !== JSON.stringify(currentSchedule)) {
+      reconnectScheduleRef.current = [...currentSchedule];
+    }
+
+    configRef.current = {
+      negotiationTimeoutMs: realtimePolicy?.negotiationTimeoutMs ?? RUNTIME_POLICY_FALLBACKS.realtime.negotiationTimeoutMs,
+      unauthorizedCooldownMs:
+        realtimePolicy?.chatUnauthorizedCooldownMs ?? RUNTIME_POLICY_FALLBACKS.realtime.chatUnauthorizedCooldownMs,
+      serverTimeoutMs: realtimePolicy?.serverTimeoutMs ?? RUNTIME_POLICY_FALLBACKS.realtime.serverTimeoutMs,
+      invalidateDebounceMs:
+        realtimePolicy?.chat.invalidateDebounceMs ?? RUNTIME_POLICY_FALLBACKS.realtime.chat.invalidateDebounceMs,
+      appStartGuardMs: realtimePolicy?.chat.appStartGuardMs ?? RUNTIME_POLICY_FALLBACKS.realtime.chat.appStartGuardMs,
+    };
+  }, [realtimePolicy]);
+
+  useEffect(() => {
+    /*
+     * Quản lý vòng đời kết nối Chat SignalR.
+     * Chỉ kết nối lại khi trạng thái enabled hoặc isAuthenticated thay đổi.
+     */
     if (!enabled || !isAuthenticated) {
       const existing = connectionRef.current;
       if (
@@ -112,6 +144,9 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
     let inboxInvalidateTimeout: NodeJS.Timeout | null = null;
     let unreadInvalidateTimeout: NodeJS.Timeout | null = null;
 
+    // Lấy cấu hình từ ref để sử dụng trong closures của effect.
+    const { appStartGuardMs, invalidateDebounceMs, serverTimeoutMs, negotiationTimeoutMs, unauthorizedCooldownMs } = configRef.current;
+    const schedule = reconnectScheduleRef.current;
     
     const invalidateInboxQueries = () => {
       if (Date.now() - appStartTimeRef.current < appStartGuardMs) {
@@ -147,7 +182,7 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
 	        .withUrl(getSignalRHubUrl('/api/v1/chat'), { 
 	          withCredentials: true,
 	        })
-	        .withAutomaticReconnect(reconnectSchedule)
+	        .withAutomaticReconnect(schedule)
 	        .configureLogging(process.env.NODE_ENV === 'development' ? signalR.LogLevel.Debug : signalR.LogLevel.Warning)
 	        .build();
 
@@ -206,5 +241,5 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
       }
       connectionRef.current = null;
     };
-  }, [appStartGuardMs, enabled, invalidateDebounceMs, isAuthenticated, negotiationTimeoutMs, queryClient, reconnectSchedule, serverTimeoutMs, unauthorizedCooldownMs]);
+  }, [enabled, isAuthenticated, queryClient]);
 }

@@ -76,7 +76,38 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
   const connectionRef = useRef<HubConnection | null>(null);
   const queryClient = useQueryClient();
 
+  // Khởi tạo các ref để lưu trữ giá trị cấu hình nhằm giữ cho dependency array của useEffect chính ổn định.
+  // Việc tạo array mới ([...]) trong mỗi lần render là nguyên nhân chính gây ra việc reconnect liên tục.
+  const reconnectScheduleRef = useRef<number[]>([...RUNTIME_POLICY_FALLBACKS.realtime.reconnectScheduleMs]);
+  const configRef = useRef({
+    negotiationTimeoutMs: RUNTIME_POLICY_FALLBACKS.realtime.negotiationTimeoutMs as number,
+    negotiationCooldownMs: RUNTIME_POLICY_FALLBACKS.realtime.presenceNegotiationCooldownMs as number,
+    serverTimeoutMs: RUNTIME_POLICY_FALLBACKS.realtime.serverTimeoutMs as number,
+  });
+
+  // Cập nhật các giá trị cấu hình vào ref khi runtimePolicies thay đổi, nhưng không trigger re-render
+  // và quan trọng nhất là không làm cho useEffect kết nối SignalR chạy lại.
   useEffect(() => {
+    const currentSchedule = realtimePolicy?.reconnectScheduleMs ?? RUNTIME_POLICY_FALLBACKS.realtime.reconnectScheduleMs;
+    // So sánh JSON để tránh cập nhật ref nếu giá trị thực tế không đổi (tránh clone array vô ích).
+    if (JSON.stringify(reconnectScheduleRef.current) !== JSON.stringify(currentSchedule)) {
+      reconnectScheduleRef.current = [...currentSchedule];
+    }
+
+    configRef.current = {
+      negotiationTimeoutMs: realtimePolicy?.negotiationTimeoutMs ?? RUNTIME_POLICY_FALLBACKS.realtime.negotiationTimeoutMs,
+      negotiationCooldownMs:
+        realtimePolicy?.presenceNegotiationCooldownMs ?? RUNTIME_POLICY_FALLBACKS.realtime.presenceNegotiationCooldownMs,
+      serverTimeoutMs: realtimePolicy?.serverTimeoutMs ?? RUNTIME_POLICY_FALLBACKS.realtime.serverTimeoutMs,
+    };
+  }, [realtimePolicy]);
+
+  useEffect(() => {
+    /*
+     * Logic chính để thiết lập kết nối SignalR.
+     * Effect này giờ đây chỉ phụ thuộc vào `enabled` và `isAuthenticated`, giúp kết nối
+     * luôn ổn định trừ khi trạng thái đăng nhập hoặc yêu cầu bật/tắt realtime thay đổi.
+     */
     if (!enabled || !isAuthenticated) {
       const existing = connectionRef.current;
       if (existing && shouldStopConnection(existing)) {
@@ -106,11 +137,15 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
       const hubUrl = getSignalRHubUrl('/api/v1/presence');
       logger.info('[PresenceRealtimeSync]', `Connecting to: ${hubUrl}`);
 
-	      hubConnection = new signalR.HubConnectionBuilder()
-	        .withUrl(hubUrl, { withCredentials: true })
-	        .withAutomaticReconnect(reconnectSchedule)
-	        .configureLogging(process.env.NODE_ENV === 'development' ? signalR.LogLevel.Debug : signalR.LogLevel.Warning)
-	        .build();
+      // Sử dụng giá trị từ ref để đảm bảo tính ổn định của effect.
+      const schedule = reconnectScheduleRef.current;
+      const { negotiationTimeoutMs, serverTimeoutMs, negotiationCooldownMs } = configRef.current;
+
+      hubConnection = new signalR.HubConnectionBuilder()
+        .withUrl(hubUrl, { withCredentials: true })
+        .withAutomaticReconnect(schedule)
+        .configureLogging(process.env.NODE_ENV === 'development' ? signalR.LogLevel.Debug : signalR.LogLevel.Warning)
+        .build();
 
       hubConnection.serverTimeoutInMilliseconds = serverTimeoutMs;
       const registration = registerPresenceConnectionHandlers(hubConnection, queryClient);
@@ -153,5 +188,5 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
 
       connectionRef.current = null;
     };
-  }, [enabled, isAuthenticated, negotiationCooldownMs, negotiationTimeoutMs, queryClient, reconnectSchedule, serverTimeoutMs]);
+  }, [enabled, isAuthenticated, queryClient]);
 }
