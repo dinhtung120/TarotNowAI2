@@ -19,12 +19,18 @@ export default function FeaturedReaderCard({
         : "bg-[var(--text-muted)]";
 
   return (
-    <Link
-      href={`/readers/${reader.userId}`}
+    <article
       className={cn(
         "group preserve-3d relative h-96 overflow-hidden rounded-[2.5rem] border border-[var(--border-default)] bg-[var(--bg-surface)] shadow-[var(--shadow-card)] transition-all duration-700 hover:-translate-y-4 hover:border-[var(--border-focus)]",
       )}
     >
+      <Link
+        href={`/readers/${reader.userId}`}
+        aria-label={`${profileCta} ${reader.displayName}`}
+        className={cn(
+          "absolute inset-0 z-20 rounded-[2.5rem] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-surface)]",
+        )}
+      />
       <FeaturedReaderAvatar
         avatarUrl={reader.avatarUrl}
         displayName={reader.displayName}
@@ -45,6 +51,6 @@ export default function FeaturedReaderCard({
         experienceSuffix={experienceSuffix}
         statusClassName={statusClassName}
       />
-    </Link>
+    </article>
   );
 }

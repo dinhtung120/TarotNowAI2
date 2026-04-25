@@ -11,7 +11,7 @@ export default function FeaturedReaderMeta({
   statusClassName,
 }: FeaturedReaderMetaProps) {
   return (
-    <div className={cn("absolute inset-x-0 bottom-0 z-20 space-y-4 p-8")}>
+    <div className={cn("pointer-events-none absolute inset-x-0 bottom-0 z-30 space-y-4 p-8")}>
       <div className={cn("flex items-center justify-between")}>
         <div className={cn("h-3 w-3 rounded-full", statusClassName)} />
         <Badge
@@ -65,7 +65,12 @@ export default function FeaturedReaderMeta({
             </span>
           </div>
         </div>
-        <ReaderSocialLinksInline facebookUrl={reader.facebookUrl} instagramUrl={reader.instagramUrl} tikTokUrl={reader.tikTokUrl} />
+        <ReaderSocialLinksInline
+          className={cn("pointer-events-auto")}
+          facebookUrl={reader.facebookUrl}
+          instagramUrl={reader.instagramUrl}
+          tikTokUrl={reader.tikTokUrl}
+        />
         <div
           className={cn(
             "tn-text-10 font-black tracking-widest tn-text-accent uppercase tn-group-shift-x-2",

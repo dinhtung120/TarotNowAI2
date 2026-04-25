@@ -6,6 +6,7 @@ interface ReaderSocialLinksInlineProps {
  instagramUrl?: string | null;
  tikTokUrl?: string | null;
  size?: 'sm' | 'md';
+ className?: string;
 }
 
 export default function ReaderSocialLinksInline({
@@ -13,6 +14,7 @@ export default function ReaderSocialLinksInline({
  instagramUrl,
  tikTokUrl,
  size = 'sm',
+ className,
 }: ReaderSocialLinksInlineProps) {
  const links = [
   { key: 'facebook', href: facebookUrl, icon: Facebook },
@@ -28,7 +30,7 @@ export default function ReaderSocialLinksInline({
  const wrapperPaddingClass = size === 'md' ? 'p-2' : 'p-1.5';
 
  return (
-  <div className={cn('flex items-center gap-2')}>
+  <div className={cn('flex items-center gap-2', className)}>
    {links.map((item) => (
     <a
      key={item.key}
