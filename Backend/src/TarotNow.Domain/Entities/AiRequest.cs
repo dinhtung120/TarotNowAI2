@@ -11,7 +11,7 @@ public class AiRequest
     public Guid UserId { get; set; }
 
     // Mã tham chiếu phiên đọc bài chứa yêu cầu này.
-    public string ReadingSessionRef { get; set; } = null!;
+    public Guid ReadingSessionRef { get; set; }
 
     // Số thứ tự follow-up trong cùng phiên; null khi là lượt đầu.
     public short? FollowupSequence { get; set; }

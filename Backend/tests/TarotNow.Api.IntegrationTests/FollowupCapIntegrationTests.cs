@@ -74,7 +74,7 @@ public class FollowupCapIntegrationTests : IClassFixture<CustomWebApplicationFac
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
-                ReadingSessionRef = sessionId.ToString(),
+                ReadingSessionRef = sessionId,
                 Status = AiRequestStatus.Completed,
                 ChargeDiamond = 0,
                 CompletionMarkerAt = DateTimeOffset.UtcNow,

@@ -320,10 +320,9 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         var assertDb = assertScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         var aiReqs = await assertDb.AiRequests.ToListAsync();
-        var sessionRef = session.Id.ToString();
         var aiReq = aiReqs
             .OrderByDescending(r => r.CreatedAt)
-            .FirstOrDefault(r => string.Equals(r.ReadingSessionRef, sessionRef, StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefault(r => r.ReadingSessionRef == sessionId);
 
         if (aiReq == null)
         {
@@ -396,7 +395,7 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
             var testReq = new AiRequest
             {
                 UserId = userId,
-                ReadingSessionRef = sessionId.ToString(),
+                ReadingSessionRef = sessionId,
                 Status = AiRequestStatus.Completed,
                 IdempotencyKey = $"test_daily_{i}",
                 ChargeDiamond = 5,
@@ -473,7 +472,7 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
             var testReq = new AiRequest
             {
                 UserId = userId,
-                ReadingSessionRef = sessionId.ToString(),
+                ReadingSessionRef = sessionId,
                 Status = AiRequestStatus.Requested,
                 IdempotencyKey = $"test_inflight_{i}",
                 ChargeDiamond = 5,
@@ -576,10 +575,9 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         Assert.Equal(100, userAfter.DiamondBalance);
 
         // AiRequest phải được đánh dấu failed-before-first-token và không có first token timestamp.
-        var sessionRef = session.Id.ToString();
         var aiReq = assertDb.AiRequests
             .OrderByDescending(r => r.CreatedAt)
-            .FirstOrDefault(r => r.ReadingSessionRef != null && EF.Functions.ILike(r.ReadingSessionRef, sessionRef));
+            .FirstOrDefault(r => r.ReadingSessionRef == sessionId);
         Assert.NotNull(aiReq);
         Assert.Equal(AiRequestStatus.FailedBeforeFirstToken, aiReq.Status);
         Assert.Null(aiReq.FirstTokenAt);
@@ -675,10 +673,9 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         Assert.Equal(100, userAfter.DiamondBalance);
 
         // AiRequest phải có first token nhưng kết thúc ở trạng thái failed-after-first-token.
-        var sessionRef = session.Id.ToString();
         var aiReq = assertDb.AiRequests
             .OrderByDescending(r => r.CreatedAt)
-            .FirstOrDefault(r => r.ReadingSessionRef != null && EF.Functions.ILike(r.ReadingSessionRef, sessionRef));
+            .FirstOrDefault(r => r.ReadingSessionRef == sessionId);
         Assert.NotNull(aiReq);
         Assert.Equal(AiRequestStatus.FailedAfterFirstToken, aiReq.Status);
         Assert.NotNull(aiReq.FirstTokenAt);

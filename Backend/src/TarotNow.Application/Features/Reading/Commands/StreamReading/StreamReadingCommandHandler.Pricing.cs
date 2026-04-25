@@ -16,6 +16,7 @@ public partial class StreamReadingCommandHandler
     private async Task<long> CalculateCostAsync(
         StreamReadingCommand request,
         ReadingSession session,
+        Guid readingSessionRef,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(request.FollowupQuestion))
@@ -25,7 +26,7 @@ public partial class StreamReadingCommandHandler
         }
 
         var followUpCount = await _aiRequestRepo.GetFollowupCountBySessionAsync(
-            request.ReadingSessionId,
+            readingSessionRef,
             cancellationToken);
 
         long cost;

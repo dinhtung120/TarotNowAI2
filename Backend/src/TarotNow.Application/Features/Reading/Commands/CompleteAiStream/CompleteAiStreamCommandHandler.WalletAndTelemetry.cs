@@ -111,7 +111,7 @@ public partial class CompleteAiStreamCommandHandler
             {
                 UserId = request.UserId,
                 AiRequestId = record.Id,
-                ReadingSessionRef = record.ReadingSessionRef ?? string.Empty,
+                ReadingSessionRef = record.ReadingSessionRef.ToString("D"),
                 ChargeDiamond = record.ChargeDiamond,
                 FinalStatus = request.FinalStatus,
                 WasRefunded = wasRefunded

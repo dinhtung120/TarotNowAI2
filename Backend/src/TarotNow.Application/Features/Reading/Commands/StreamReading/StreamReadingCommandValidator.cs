@@ -1,4 +1,5 @@
 using FluentValidation;
+using System;
 
 namespace TarotNow.Application.Features.Reading.Commands.StreamReading;
 
@@ -16,7 +17,9 @@ public class StreamReadingCommandValidator : AbstractValidator<StreamReadingComm
         // UserId bắt buộc để kiểm tra quyền và quota theo tài khoản.
 
         RuleFor(x => x.ReadingSessionId)
-            .NotEmpty();
+            .NotEmpty()
+            .Must(id => Guid.TryParse(id, out var parsed) && parsed != Guid.Empty)
+            .WithMessage("ReadingSessionId must be a valid GUID.");
         // SessionId bắt buộc để truy xuất đúng phiên cần stream.
 
         RuleFor(x => x.FollowupQuestion)

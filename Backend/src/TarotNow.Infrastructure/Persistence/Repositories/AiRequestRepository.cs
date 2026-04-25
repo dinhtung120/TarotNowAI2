@@ -86,7 +86,7 @@ public class AiRequestRepository : IAiRequestRepository
     /// Đếm số follow-up đã hoàn tất trong một reading session.
     /// Luồng xử lý: đếm tổng request completed theo session rồi trừ request đầu tiên để ra số follow-up thực.
     /// </summary>
-    public async Task<int> GetFollowupCountBySessionAsync(string sessionId, CancellationToken cancellationToken = default)
+    public async Task<int> GetFollowupCountBySessionAsync(Guid sessionId, CancellationToken cancellationToken = default)
     {
         var totalRequests = await _context.AiRequests.CountAsync(
             x => x.ReadingSessionRef == sessionId &&

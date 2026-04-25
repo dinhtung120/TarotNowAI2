@@ -34,7 +34,7 @@ public partial class CompleteAiStreamCommandHandler
 
         context.Processed = true;
         context.RequestId = record.Id.ToString();
-        context.SessionRef = record.ReadingSessionRef;
+        context.SessionRef = record.ReadingSessionRef.ToString("D");
         context.TelemetryStatus = request.FinalStatus == AiStreamFinalStatuses.Completed ? "completed" : "failed";
         context.TelemetryErrorCode = context.TelemetryStatus == "failed" ? request.ErrorMessage : null;
         // Ghi context phục vụ log telemetry và quyết định hậu xử lý ngoài transaction.

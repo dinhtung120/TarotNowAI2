@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
@@ -56,10 +57,16 @@ public partial class MongoReadingSessionRepository
             // Edge case: session không tồn tại thì không truy vấn phụ AI requests.
         }
 
-        var aiRequests = _pgContext.AiRequests
-            .Where(a => a.ReadingSessionRef == sessionId)
+        if (Guid.TryParse(sessionId, out var readingSessionRef) == false || readingSessionRef == Guid.Empty)
+        {
+            // Session id không phải Guid thì không thể join sang ai_requests kiểu uuid.
+            return (session, Enumerable.Empty<AiRequest>());
+        }
+
+        var aiRequests = await _pgContext.AiRequests
+            .Where(a => a.ReadingSessionRef == readingSessionRef)
             .OrderBy(a => a.CreatedAt)
-            .AsEnumerable();
+            .ToListAsync(cancellationToken);
         // Giữ thứ tự thời gian để tái dựng timeline stream/follow-up chính xác.
 
         return (session, aiRequests);

@@ -43,8 +43,8 @@ public class GetReadingDetailQueryHandlerTests
 
         var aiRequests = new List<AiRequest>
         {
-            new AiRequest { Id = Guid.NewGuid(), ReadingSessionRef = sessionId.ToString(), UserId = userId, Status = "completed", ChargeDiamond = 0, FinishReason = "stop" },
-            new AiRequest { Id = Guid.NewGuid(), ReadingSessionRef = sessionId.ToString(), UserId = userId, Status = "completed", ChargeDiamond = 2, FinishReason = "stop" }
+            new AiRequest { Id = Guid.NewGuid(), ReadingSessionRef = Guid.Parse(sessionId), UserId = userId, Status = "completed", ChargeDiamond = 0, FinishReason = "stop" },
+            new AiRequest { Id = Guid.NewGuid(), ReadingSessionRef = Guid.Parse(sessionId), UserId = userId, Status = "completed", ChargeDiamond = 2, FinishReason = "stop" }
         };
 
         _mockSessionRepository.Setup(r => r.GetSessionWithAiRequestsAsync(sessionId, default))

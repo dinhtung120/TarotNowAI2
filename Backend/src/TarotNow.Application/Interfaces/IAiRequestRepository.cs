@@ -44,5 +44,5 @@ public interface IAiRequestRepository
     /// Đếm số lượt follow-up trong cùng phiên để giới hạn độ dài hội thoại.
     /// Luồng xử lý: truy vấn theo sessionId và trả về số request đã phát sinh.
     /// </summary>
-    Task<int> GetFollowupCountBySessionAsync(string sessionId, CancellationToken cancellationToken = default);
+    Task<int> GetFollowupCountBySessionAsync(Guid sessionId, CancellationToken cancellationToken = default);
 }

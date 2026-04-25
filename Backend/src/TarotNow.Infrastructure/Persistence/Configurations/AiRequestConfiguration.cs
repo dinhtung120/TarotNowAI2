@@ -50,8 +50,7 @@ public class AiRequestConfiguration : IEntityTypeConfiguration<AiRequest>
 
         builder.Property(x => x.ReadingSessionRef)
             .HasColumnName("reading_session_ref")
-            .IsRequired()
-            .HasMaxLength(36);
+            .HasColumnType("uuid");
 
         builder.Property(x => x.Status)
             .HasColumnName("status")

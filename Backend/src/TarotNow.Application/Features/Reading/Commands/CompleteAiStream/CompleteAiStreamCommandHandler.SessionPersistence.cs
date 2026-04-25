@@ -23,7 +23,7 @@ public partial class CompleteAiStreamCommandHandler
             return;
         }
 
-        var session = await _readingRepo.GetByIdAsync(record.ReadingSessionRef, cancellationToken);
+        var session = await _readingRepo.GetByIdAsync(record.ReadingSessionRef.ToString("D"), cancellationToken);
         if (session is null)
         {
             // Edge case: session đã bị xóa/không tồn tại, bỏ qua cập nhật nội dung để tránh fail completion.

@@ -77,4 +77,19 @@ public partial class StreamReadingCommandHandler
         // Vượt ngưỡng rate-limit thì buộc đợi để giảm spam request AI.
         throw new BadRequestException($"Vui lòng đợi {_readingRateLimitSeconds} giây giữa các lần yêu cầu AI giải bài.");
     }
+
+    /// <summary>
+    /// Parse session id về Guid để đồng nhất kiểu lưu trữ trên PostgreSQL.
+    /// Luồng xử lý: validate định dạng Guid và chặn Guid.Empty để tránh truy vấn lệch kiểu.
+    /// </summary>
+    private static Guid ParseReadingSessionRefOrThrow(string sessionId)
+    {
+        if (Guid.TryParse(sessionId, out var parsed) && parsed != Guid.Empty)
+        {
+            return parsed;
+        }
+
+        // Session id không phải Guid thì không thể đối chiếu bảng ai_requests kiểu uuid.
+        throw new BadRequestException("Reading session id không hợp lệ.");
+    }
 }

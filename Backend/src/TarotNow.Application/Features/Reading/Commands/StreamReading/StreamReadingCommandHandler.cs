@@ -53,12 +53,13 @@ public partial class StreamReadingCommandHandler : IRequestHandler<StreamReading
     public async Task<StreamReadingResult> Handle(StreamReadingCommand request, CancellationToken cancellationToken)
     {
         var session = await ValidateSessionAsync(request, cancellationToken);
+        var readingSessionRef = ParseReadingSessionRefOrThrow(session.Id);
         await EnsureQuotaAsync(request.UserId, cancellationToken);
         await EnsureRateLimitAsync(request.UserId, cancellationToken);
         // Chuỗi validation chặn sớm các trường hợp không hợp lệ trước khi tạo request/billing.
 
-        var calculatedCost = await CalculateCostAsync(request, session, cancellationToken);
-        var aiRequest = await CreateAiRequestAsync(request, session, calculatedCost, cancellationToken);
+        var calculatedCost = await CalculateCostAsync(request, session, readingSessionRef, cancellationToken);
+        var aiRequest = await CreateAiRequestAsync(request, readingSessionRef, calculatedCost, cancellationToken);
 
         await FreezeEscrowAsync(request, aiRequest, calculatedCost, cancellationToken);
         // Chỉ khi freeze thành công mới cho phép tạo stream để đảm bảo an toàn tài chính.
