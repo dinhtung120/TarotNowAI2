@@ -11,6 +11,11 @@ public interface IDepositOrderRepository
     Task AcquireCreateOrderLockAsync(string clientRequestKey, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Lấy mã PayOS order code tiếp theo từ DB sequence.
+    /// </summary>
+    Task<long> GetNextPayOsOrderCodeAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Lấy lệnh nạp theo id.
     /// </summary>
     Task<DepositOrder?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);

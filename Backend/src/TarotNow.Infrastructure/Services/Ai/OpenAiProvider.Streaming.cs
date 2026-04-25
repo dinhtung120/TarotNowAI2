@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
+using System.Net;
 
 namespace TarotNow.Infrastructure.Services.Ai;
 
@@ -66,15 +67,30 @@ public partial class OpenAiProvider
                     Content = JsonContent.Create(requestBody)
                 };
 
-                return await _httpClient.SendAsync(
+                var response = await _httpClient.SendAsync(
                     requestMessage,
                     HttpCompletionOption.ResponseHeadersRead,
                     cancellationToken);
+
+                if (IsRetryableStatusCode(response.StatusCode) && attempt < _maxRetries)
+                {
+                    var delayMs = CalculateRetryDelayMs(attempt);
+                    _logger.LogWarning(
+                        "OpenAI returned retryable status {StatusCode}. Retrying attempt {Attempt}/{MaxRetries} after {DelayMs}ms.",
+                        (int)response.StatusCode,
+                        attempt + 1,
+                        _maxRetries,
+                        delayMs);
+                    response.Dispose();
+                    await Task.Delay(delayMs, cancellationToken);
+                    continue;
+                }
+
+                return response;
             }
             catch (Exception ex) when (IsRetryable(ex, cancellationToken) && attempt < _maxRetries)
             {
-                // Backoff tuyến tính ngắn để giảm bão retry nhưng vẫn giữ độ phản hồi.
-                var delayMs = _streamingRetryBaseDelayMs * (attempt + 1);
+                var delayMs = CalculateRetryDelayMs(attempt);
                 _logger.LogWarning(
                     ex,
                     "OpenAI request failed. Retrying attempt {Attempt}/{MaxRetries} after {DelayMs}ms.",
@@ -99,6 +115,19 @@ public partial class OpenAiProvider
         }
 
         return ex is HttpRequestException or TaskCanceledException;
+    }
+
+    private static bool IsRetryableStatusCode(HttpStatusCode statusCode)
+    {
+        var code = (int)statusCode;
+        return code == 408 || code == 429 || code >= 500;
+    }
+
+    private int CalculateRetryDelayMs(int attempt)
+    {
+        var exponential = _streamingRetryBaseDelayMs * (int)Math.Pow(2, attempt);
+        var jitter = Random.Shared.Next(0, Math.Max(1, _streamingRetryBaseDelayMs));
+        return Math.Clamp(exponential + jitter, _streamingRetryBaseDelayMs, 30_000);
     }
 
     // Sentinel nội bộ để biểu diễn tín hiệu kết thúc stream.
@@ -127,7 +156,7 @@ public partial class OpenAiProvider
     /// Trích nội dung text từ một dòng SSE trả về.
     /// Luồng bỏ qua dòng không hợp lệ, nhận diện tín hiệu [DONE], và parse JSON delta content.
     /// </summary>
-    private static string? TryReadChunkContent(string? line)
+    private string? TryReadChunkContent(string? line)
     {
         if (string.IsNullOrWhiteSpace(line) || !line.StartsWith("data: ", StringComparison.Ordinal))
         {
@@ -141,7 +170,15 @@ public partial class OpenAiProvider
             return StreamChunkDone;
         }
 
-        // JSON delta có thể không có content ở một số chunk, khi đó trả null để bỏ qua.
-        return JsonNode.Parse(data)?["choices"]?[0]?["delta"]?["content"]?.GetValue<string>();
+        try
+        {
+            // JSON delta có thể không có content ở một số chunk, khi đó trả null để bỏ qua.
+            return JsonNode.Parse(data)?["choices"]?[0]?["delta"]?["content"]?.GetValue<string>();
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning(exception, "Malformed OpenAI stream chunk detected and skipped.");
+            return null;
+        }
     }
 }

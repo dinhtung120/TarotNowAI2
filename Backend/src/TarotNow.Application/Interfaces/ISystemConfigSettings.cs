@@ -205,6 +205,9 @@ public interface ISystemConfigSettings
     // Outbox batch size.
     int OperationalOutboxBatchSize { get; }
 
+    // Outbox parallel worker count cho một batch.
+    int OperationalOutboxParallelism { get; }
+
     // Outbox max retry attempts.
     int OperationalOutboxMaxRetryAttempts { get; }
 

@@ -31,5 +31,10 @@ public class StreamReadingCommandValidator : AbstractValidator<StreamReadingComm
             .NotEmpty()
             .MaximumLength(10);
         // Language bắt buộc và giới hạn ngắn để giữ format mã ngôn ngữ nhất quán.
+
+        RuleFor(x => x.IdempotencyKey)
+            .MaximumLength(100)
+            .When(x => string.IsNullOrWhiteSpace(x.IdempotencyKey) == false);
+        // Idempotency key có thể rỗng cho request miễn phí nhưng nếu có thì phải nằm trong chuẩn DB index.
     }
 }

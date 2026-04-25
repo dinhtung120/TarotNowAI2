@@ -23,6 +23,26 @@ public static class ApiApplicationBuilderExtensions
     private const string WebpExtension = ".webp";
     // MIME type chuẩn cho ảnh WEBP.
     private const string WebpMimeType = "image/webp";
+    // MIME type cho ảnh JPEG.
+    private const string JpegMimeType = "image/jpeg";
+    // MIME type cho ảnh PNG.
+    private const string PngMimeType = "image/png";
+    // MIME type cho ảnh GIF.
+    private const string GifMimeType = "image/gif";
+    // MIME type cho ảnh HEIC.
+    private const string HeicMimeType = "image/heic";
+    // MIME type cho ảnh HEIF.
+    private const string HeifMimeType = "image/heif";
+    // MIME type cho âm thanh MP3.
+    private const string Mp3MimeType = "audio/mpeg";
+    // MIME type cho âm thanh WAV.
+    private const string WavMimeType = "audio/wav";
+    // MIME type cho âm thanh OGG.
+    private const string OggMimeType = "audio/ogg";
+    // MIME type cho âm thanh WEBM.
+    private const string WebmMimeType = "audio/webm";
+    // MIME type cho âm thanh M4A.
+    private const string M4aMimeType = "audio/mp4";
 
     /// <summary>
     /// Ghép toàn bộ pipeline middleware và map endpoint cho API.
@@ -74,15 +94,14 @@ public static class ApiApplicationBuilderExtensions
     /// </summary>
     private static void ConfigureSwagger(WebApplication app)
     {
-        app.MapOpenApi();
-
         if (!app.Environment.IsDevelopment())
         {
-            // Nhánh production: không mở swagger UI để giảm bề mặt lộ metadata API công khai.
+            // Nhánh production: không mở OpenAPI endpoint để giảm bề mặt lộ metadata API công khai.
             return;
         }
 
         // Nhánh development: bật swagger để developer kiểm thử và khám phá endpoint nhanh.
+        app.MapOpenApi();
         app.UseSwagger();
         app.UseSwaggerUI();
     }
@@ -129,7 +148,7 @@ public static class ApiApplicationBuilderExtensions
             FileProvider = new PhysicalFileProvider(uploadsPath),
             RequestPath = "/" + UploadsFolderName,
             ContentTypeProvider = contentTypeProvider,
-            ServeUnknownFileTypes = true,
+            ServeUnknownFileTypes = false,
         });
     }
 
@@ -162,9 +181,21 @@ public static class ApiApplicationBuilderExtensions
     private static FileExtensionContentTypeProvider CreateUploadsContentTypeProvider()
     {
         var contentTypeProvider = new FileExtensionContentTypeProvider();
-        // Bổ sung MIME map để browser/client xử lý đúng định dạng ảnh hiện đại.
+        // Chỉ cho phép serve tập extension an toàn đã được hệ thống upload hỗ trợ.
+        contentTypeProvider.Mappings.Clear();
+        contentTypeProvider.Mappings[".jpg"] = JpegMimeType;
+        contentTypeProvider.Mappings[".jpeg"] = JpegMimeType;
+        contentTypeProvider.Mappings[".png"] = PngMimeType;
+        contentTypeProvider.Mappings[".gif"] = GifMimeType;
         contentTypeProvider.Mappings[AvifExtension] = AvifMimeType;
         contentTypeProvider.Mappings[WebpExtension] = WebpMimeType;
+        contentTypeProvider.Mappings[".heic"] = HeicMimeType;
+        contentTypeProvider.Mappings[".heif"] = HeifMimeType;
+        contentTypeProvider.Mappings[".mp3"] = Mp3MimeType;
+        contentTypeProvider.Mappings[".wav"] = WavMimeType;
+        contentTypeProvider.Mappings[".ogg"] = OggMimeType;
+        contentTypeProvider.Mappings[".webm"] = WebmMimeType;
+        contentTypeProvider.Mappings[".m4a"] = M4aMimeType;
         return contentTypeProvider;
     }
 

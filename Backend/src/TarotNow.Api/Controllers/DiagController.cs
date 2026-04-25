@@ -50,19 +50,4 @@ public partial class DiagController : ControllerBase
         return this.NotFoundProblem("Endpoint chỉ khả dụng trong môi trường development.");
     }
 
-    /// <summary>
-    /// Endpoint mẫu cho thao tác wipe dữ liệu (đang tắt mặc định).
-    /// </summary>
-    /// <returns>Thông báo endpoint đã bị vô hiệu hóa mặc định.</returns>
-    [HttpPost("wipe")]
-    public IActionResult Wipe()
-    {
-        // Bảo vệ endpoint theo môi trường trước khi thực hiện bất kỳ thao tác phá hủy nào.
-        var guard = RejectIfNotDevelopment();
-        if (guard != null) return guard; 
-
-        // Chủ động trả thông báo disabled để tránh xóa dữ liệu ngoài ý muốn.
-        return Ok(new { message = "Wipe endpoint is disabled by default." });
-    }
-
 }

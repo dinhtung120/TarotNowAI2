@@ -14,7 +14,7 @@ public partial class DepositController
     /// </summary>
     [HttpPost("webhook/payos")]
     [AllowAnonymous]
-    [DisableRateLimiting]
+    [EnableRateLimiting("payment-webhook")]
     [RequestSizeLimit(MaxWebhookPayloadBytes)]
     public async Task<IActionResult> PayOsWebhook(CancellationToken cancellationToken)
     {

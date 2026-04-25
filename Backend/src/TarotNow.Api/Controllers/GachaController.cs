@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using System;
 using TarotNow.Api.Constants;
 using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.Gacha.Commands.PullGacha;
@@ -78,7 +79,6 @@ public sealed class GachaController : ControllerBase
     /// </summary>
     [HttpPost(GachaRoutes.Pull)]
     public async Task<IActionResult> Pull(
-        [FromHeader(Name = AuthHeaders.IdempotencyKey)] string? headerIdempotencyKey,
         [FromBody] PullGachaRequest request,
         CancellationToken cancellationToken)
     {
@@ -88,7 +88,7 @@ public sealed class GachaController : ControllerBase
             return this.UnauthorizedProblem();
         }
 
-        var idempotencyKey = ResolveIdempotencyKey(headerIdempotencyKey, request.IdempotencyKey);
+        var idempotencyKey = ResolveIdempotencyKey(request.IdempotencyKey);
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
             return Problem(
@@ -106,17 +106,17 @@ public sealed class GachaController : ControllerBase
         };
 
         var result = await _mediator.Send(command, cancellationToken);
+        if (string.Equals(result.OperationStatus, PullGachaResult.OperationStatusProcessing, StringComparison.Ordinal))
+        {
+            return Accepted(result);
+        }
+
         return Ok(result);
     }
 
-    private static string ResolveIdempotencyKey(string? headerValue, string? bodyValue)
+    private string ResolveIdempotencyKey(string? bodyValue)
     {
-        if (string.IsNullOrWhiteSpace(headerValue) == false)
-        {
-            return headerValue.Trim();
-        }
-
-        return bodyValue?.Trim() ?? string.Empty;
+        return Request.GetIdempotencyKeyOrEmpty(bodyValue);
     }
 }
 

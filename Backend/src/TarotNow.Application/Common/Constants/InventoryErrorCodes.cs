@@ -39,4 +39,9 @@ public static class InventoryErrorCodes
     /// Idempotency key đã được xử lý trước đó.
     /// </summary>
     public const string AlreadyProcessed = "INVENTORY_ALREADY_PROCESSED";
+
+    /// <summary>
+    /// Số lượng sử dụng item không hợp lệ với loại item hiện tại.
+    /// </summary>
+    public const string InvalidQuantity = "INVENTORY_INVALID_QUANTITY";
 }

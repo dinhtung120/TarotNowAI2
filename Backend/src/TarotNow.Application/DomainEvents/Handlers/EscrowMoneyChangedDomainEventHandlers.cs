@@ -44,12 +44,11 @@ public sealed class EscrowReleasedMoneyChangedDomainEventHandler
 
         // Payer nhận tín hiệu refresh số dư/frozen dù số dư khả dụng có thể không đổi.
         await _domainEventPublisher.PublishAsync(
-            new MoneyChangedDomainEvent
+            new WalletSnapshotChangedDomainEvent
             {
                 UserId = domainEvent.PayerId,
                 Currency = CurrencyType.Diamond,
                 ChangeType = TransactionType.EscrowRelease,
-                DeltaAmount = 0,
                 ReferenceId = domainEvent.ItemId.ToString()
             },
             cancellationToken);

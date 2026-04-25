@@ -28,6 +28,51 @@ public partial class WalletRepository
     }
 
     /// <summary>
+    /// Khóa đồng thời 2 user theo thứ tự canonical để tránh deadlock A->B/B->A.
+    /// Luồng xử lý: sắp xếp userId tăng dần rồi thực hiện một truy vấn FOR UPDATE duy nhất.
+    /// </summary>
+    private async Task<IReadOnlyDictionary<Guid, User>> GetUsersForUpdatePairAsync(
+        Guid firstUserId,
+        Guid secondUserId,
+        CancellationToken cancellationToken)
+    {
+        if (firstUserId == secondUserId)
+        {
+            var single = await GetUserForUpdateAsync(firstUserId, "user", cancellationToken);
+            return new Dictionary<Guid, User> { [single.Id] = single };
+        }
+
+        var ordered = firstUserId.CompareTo(secondUserId) <= 0
+            ? new[] { firstUserId, secondUserId }
+            : new[] { secondUserId, firstUserId };
+
+        var users = await _dbContext.Set<User>()
+            .FromSqlInterpolated(
+                $"""
+                 SELECT * FROM users
+                 WHERE id IN ({ordered[0]}, {ordered[1]})
+                 ORDER BY id
+                 FOR UPDATE
+                 """)
+            .ToListAsync(cancellationToken);
+
+        return users.ToDictionary(x => x.Id);
+    }
+
+    private static User ResolveLockedUserOrThrow(
+        IReadOnlyDictionary<Guid, User> lockedUsers,
+        Guid userId,
+        string role)
+    {
+        if (lockedUsers.TryGetValue(userId, out var user))
+        {
+            return user;
+        }
+
+        throw new InvalidOperationException($"Không tìm thấy {role} {userId}");
+    }
+
+    /// <summary>
     /// Tạo ledger entry từ request chuẩn hóa.
     /// Luồng xử lý: gọi factory WalletTransaction.Create để bảo toàn invariant domain transaction.
     /// </summary>

@@ -8,6 +8,7 @@ namespace TarotNow.Infrastructure.Persistence.Repositories;
 // Repository quản lý đơn nạp tiền qua cổng thanh toán.
 public partial class DepositOrderRepository : IDepositOrderRepository
 {
+    private const string PayOsOrderCodeSequenceName = "deposit_order_code_seq";
     // DbContext thao tác bảng deposit_orders.
     private readonly ApplicationDbContext _context;
     private readonly IServiceScopeFactory _scopeFactory;
@@ -43,6 +44,32 @@ public partial class DepositOrderRepository : IDepositOrderRepository
         await _context.Database.ExecuteSqlInterpolatedAsync(
             $"SELECT pg_advisory_xact_lock(hashtext({clientRequestKey.Trim()}))",
             cancellationToken);
+    }
+
+    /// <summary>
+    /// Lấy PayOS order code tiếp theo bằng DB sequence để tránh collision đa instance.
+    /// </summary>
+    public async Task<long> GetNextPayOsOrderCodeAsync(CancellationToken cancellationToken = default)
+    {
+        if (_context.Database.ProviderName?.Contains("Npgsql", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            await _context.Database.ExecuteSqlRawAsync(
+                $"CREATE SEQUENCE IF NOT EXISTS {PayOsOrderCodeSequenceName} START WITH 100000000000 INCREMENT BY 1 MINVALUE 1",
+                cancellationToken);
+
+            return await _context.Database
+                .SqlQueryRaw<long>($"SELECT nextval('{PayOsOrderCodeSequenceName}'::regclass) AS \"Value\"")
+                .SingleAsync(cancellationToken);
+        }
+
+        var baseCode = checked(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() * 1000L);
+        var candidate = baseCode + Random.Shared.Next(0, 1000);
+        while (await _context.DepositOrders.AnyAsync(order => order.PayOsOrderCode == candidate, cancellationToken))
+        {
+            candidate += 1;
+        }
+
+        return candidate;
     }
 
     /// <summary>

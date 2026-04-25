@@ -159,6 +159,7 @@ public class FollowupPricingServiceTests
         public int OperationalAiStreamingRetryBaseDelayMs => 200;
         public double OperationalAiStreamingTemperature => 0.7;
         public int OperationalOutboxBatchSize => 50;
+        public int OperationalOutboxParallelism => 4;
         public int OperationalOutboxMaxRetryAttempts => 12;
         public int OperationalOutboxLockTimeoutSeconds => 120;
         public int OperationalOutboxMaxBackoffSeconds => 300;

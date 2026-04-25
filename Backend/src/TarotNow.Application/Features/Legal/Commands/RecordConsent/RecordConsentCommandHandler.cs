@@ -26,28 +26,13 @@ public class RecordConsentCommandHandler : IRequestHandler<RecordConsentCommand,
     /// </summary>
     public async Task<bool> Handle(RecordConsentCommand request, CancellationToken cancellationToken)
     {
-        var existingConsent = await _consentRepository.GetConsentAsync(
-            request.UserId,
-            request.DocumentType,
-            request.Version,
-            cancellationToken);
-
-        if (existingConsent is not null)
-        {
-            // Consent đã tồn tại thì trả thành công ngay để đảm bảo idempotent khi client gửi lặp.
-            return true;
-        }
-
         var newConsent = new UserConsent(
             request.UserId,
             request.DocumentType,
             request.Version,
             request.IpAddress,
             request.UserAgent);
-        // Tạo entity mới vì chưa có bản ghi phù hợp cho cùng user + document + version.
-
-        await _consentRepository.AddAsync(newConsent, cancellationToken);
-        // Ghi nhận state mới vào persistence để phục vụ kiểm tra consent ở các luồng sau.
+        await _consentRepository.TryAddAsync(newConsent, cancellationToken);
 
         return true;
     }

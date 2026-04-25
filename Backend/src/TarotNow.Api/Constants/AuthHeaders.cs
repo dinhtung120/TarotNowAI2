@@ -6,9 +6,14 @@ namespace TarotNow.Api.Constants;
 public static class AuthHeaders
 {
     /// <summary>
-    /// Header idempotency key cho refresh token.
+    /// Header idempotency key chuẩn cho API.
     /// </summary>
-    public const string IdempotencyKey = "x-idempotency-key";
+    public const string IdempotencyKey = "Idempotency-Key";
+
+    /// <summary>
+    /// Header idempotency key legacy (backward compatibility tạm thời).
+    /// </summary>
+    public const string LegacyIdempotencyKey = "x-idempotency-key";
 
     /// <summary>
     /// Header định danh thiết bị phía client gửi lên.

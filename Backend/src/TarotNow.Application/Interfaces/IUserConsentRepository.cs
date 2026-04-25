@@ -25,7 +25,7 @@ public interface IUserConsentRepository
 
     /// <summary>
     /// Thêm bản ghi consent mới khi người dùng đồng ý một tài liệu pháp lý.
-    /// Luồng xử lý: persist entity consent vào nguồn dữ liệu phục vụ audit.
+    /// Luồng xử lý: insert-first, trả false khi đụng unique key để caller xử lý idempotent.
     /// </summary>
-    Task AddAsync(UserConsent consent, CancellationToken cancellationToken = default);
+    Task<bool> TryAddAsync(UserConsent consent, CancellationToken cancellationToken = default);
 }

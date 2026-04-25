@@ -32,6 +32,7 @@ public static partial class ApiServiceCollectionExtensions
         services.AddInfrastructureServices(configuration);
         services.AddApiObservability(configuration);
         ConfigureForwardedHeaders(services, configuration);
+        services.AddSingleton<IForwardedHeaderTrustEvaluator, ForwardedHeaderTrustEvaluator>();
         services.AddScoped<IAuthCookieService, AuthCookieService>();
         services.AddSingleton<IUserPresenceTracker>(serviceProvider =>
         {

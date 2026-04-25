@@ -43,6 +43,10 @@ public sealed class PullGachaCommandHandler : IRequestHandler<PullGachaCommand, 
         {
             Success = true,
             IsIdempotentReplay = domainEvent.IsIdempotentReplay,
+            OperationStatus = domainEvent.IsProcessingReplay
+                ? PullGachaResult.OperationStatusProcessing
+                : PullGachaResult.OperationStatusCompleted,
+            OperationId = domainEvent.OperationId,
             PoolCode = domainEvent.PoolCode,
             CurrentPityCount = domainEvent.CurrentPityCount,
             HardPityThreshold = domainEvent.HardPityThreshold,

@@ -25,8 +25,12 @@ public partial class WalletRepository
                     // Request đã xử lý trước đó nên thoát sớm theo nguyên tắc idempotent.
                 }
 
-                var payer = await GetUserForUpdateAsync(request.PayerId, "payer", cancellationToken);
-                var receiver = await GetUserForUpdateAsync(request.ReceiverId, "receiver", cancellationToken);
+                var lockedUsers = await GetUsersForUpdatePairAsync(
+                    request.PayerId,
+                    request.ReceiverId,
+                    cancellationToken);
+                var payer = ResolveLockedUserOrThrow(lockedUsers, request.PayerId, "payer");
+                var receiver = ResolveLockedUserOrThrow(lockedUsers, request.ReceiverId, "receiver");
                 if (await TryHandleIdempotentAsync(normalizedIdempotencyKey, cancellationToken))
                 {
                     return;

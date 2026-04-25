@@ -12,8 +12,6 @@ namespace TarotNow.Api.Controllers;
 
 public partial class DepositController
 {
-    private const string IdempotencyHeaderName = "Idempotency-Key";
-
     /// <summary>
     /// Lấy danh sách gói nạp preset đang active.
     /// </summary>
@@ -137,14 +135,6 @@ public partial class DepositController
 
     private string ResolveIdempotencyKey(CreateDepositOrderRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.IdempotencyKey) == false)
-        {
-            return request.IdempotencyKey.Trim();
-        }
-
-        var headerValue = Request.Headers[IdempotencyHeaderName].ToString();
-        return string.IsNullOrWhiteSpace(headerValue)
-            ? string.Empty
-            : headerValue.Trim();
+        return Request.GetIdempotencyKeyOrEmpty(request.IdempotencyKey);
     }
 }

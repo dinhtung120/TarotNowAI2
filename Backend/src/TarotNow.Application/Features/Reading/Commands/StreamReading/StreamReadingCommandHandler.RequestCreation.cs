@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Exceptions;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 
@@ -16,8 +17,23 @@ public partial class StreamReadingCommandHandler
         StreamReadingCommand request,
         Guid readingSessionRef,
         long calculatedCost,
+        string? normalizedIdempotencyKey,
         CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(normalizedIdempotencyKey) == false)
+        {
+            var existing = await _aiRequestRepo.GetByIdempotencyKeyAsync(normalizedIdempotencyKey, cancellationToken);
+            if (existing is not null)
+            {
+                if (existing.Status == AiRequestStatus.Requested)
+                {
+                    throw new BadRequestException("A request with this Idempotency-Key is still processing.");
+                }
+
+                throw new BadRequestException("This Idempotency-Key has already been used.");
+            }
+        }
+
         var followUpCount = await _aiRequestRepo.GetFollowupCountBySessionAsync(
             readingSessionRef,
             cancellationToken);
@@ -28,7 +44,7 @@ public partial class StreamReadingCommandHandler
             ReadingSessionRef = readingSessionRef,
             FollowupSequence = ResolveFollowupSequence(request.FollowupQuestion, followUpCount),
             Status = AiRequestStatus.Requested,
-            IdempotencyKey = $"ai_stream_{readingSessionRef:D}_{Guid.CreateVersion7():N}",
+            IdempotencyKey = normalizedIdempotencyKey ?? $"ai_stream_{readingSessionRef:D}_{Guid.CreateVersion7():N}",
             PromptVersion = "v1.5",
             ChargeDiamond = calculatedCost
         };

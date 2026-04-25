@@ -1,3 +1,5 @@
+using System;
+
 namespace TarotNow.Application.Features.Gacha.Commands.PullGacha;
 
 /// <summary>
@@ -5,6 +7,9 @@ namespace TarotNow.Application.Features.Gacha.Commands.PullGacha;
 /// </summary>
 public sealed class PullGachaResult
 {
+    public const string OperationStatusCompleted = "completed";
+    public const string OperationStatusProcessing = "processing";
+
     /// <summary>
     /// Cờ thành công.
     /// </summary>
@@ -14,6 +19,16 @@ public sealed class PullGachaResult
     /// Cờ replay idempotency.
     /// </summary>
     public bool IsIdempotentReplay { get; init; }
+
+    /// <summary>
+    /// Trạng thái operation idempotent (`processing` hoặc `completed`).
+    /// </summary>
+    public string OperationStatus { get; init; } = OperationStatusCompleted;
+
+    /// <summary>
+    /// Định danh operation để client poll/replay deterministic.
+    /// </summary>
+    public Guid OperationId { get; init; }
 
     /// <summary>
     /// Mã pool đã pull.

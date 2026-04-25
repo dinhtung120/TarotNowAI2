@@ -71,18 +71,75 @@ public partial class MongoReadingSessionRepository
 
         if (session.Followups != null && session.Followups.Any())
         {
-            var mappedFollowups = session.Followups.Select(f => new FollowupEntry
-            {
-                Question = f.Question,
-                Answer = f.Answer
-            }).ToList();
-            update = update.Set(r => r.Followups, mappedFollowups);
-            // Ghi đè danh sách followups bằng snapshot mới nhất để tránh lệch dữ liệu.
+            await ApplyFollowupsWithOptimisticConcurrencyAsync(session, update, cancellationToken);
+            return;
         }
 
         await _mongoContext.ReadingSessions.UpdateOneAsync(
             BuildIdFilter(session.Id),
             update,
             cancellationToken: cancellationToken);
+    }
+
+    private async Task ApplyFollowupsWithOptimisticConcurrencyAsync(
+        ReadingSession session,
+        UpdateDefinition<ReadingSessionDocument> baseUpdate,
+        CancellationToken cancellationToken)
+    {
+        var mappedFollowups = session.Followups.Select((followup, index) => new FollowupEntry
+        {
+            Sequence = index + 1,
+            Question = followup.Question,
+            Answer = followup.Answer
+        }).ToList();
+
+        const int maxRetries = 3;
+        for (var attempt = 0; attempt < maxRetries; attempt++)
+        {
+            var filterById = BuildIdFilter(session.Id);
+            var snapshot = await _mongoContext.ReadingSessions
+                .Find(filterById)
+                .Project(r => new ReadingSessionConcurrencySnapshot
+                {
+                    UpdatedAt = r.UpdatedAt,
+                    FollowupsCount = r.Followups.Count
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+            if (snapshot is null)
+            {
+                return;
+            }
+
+            var deltaFollowups = mappedFollowups.Skip(snapshot.FollowupsCount).ToList();
+            var update = baseUpdate;
+            if (deltaFollowups.Count > 0)
+            {
+                update = update.PushEach(r => r.Followups, deltaFollowups);
+            }
+
+            var filterWithVersion = Builders<ReadingSessionDocument>.Filter.And(
+                filterById,
+                Builders<ReadingSessionDocument>.Filter.Eq(r => r.UpdatedAt, snapshot.UpdatedAt));
+            var result = await _mongoContext.ReadingSessions.UpdateOneAsync(
+                filterWithVersion,
+                update,
+                cancellationToken: cancellationToken);
+            if (result.ModifiedCount > 0)
+            {
+                return;
+            }
+        }
+
+        // Fallback cuối cùng: nếu vẫn conflict liên tục, chỉ cập nhật metadata không ghi đè followups.
+        await _mongoContext.ReadingSessions.UpdateOneAsync(
+            BuildIdFilter(session.Id),
+            baseUpdate,
+            cancellationToken: cancellationToken);
+    }
+
+    private sealed class ReadingSessionConcurrencySnapshot
+    {
+        public DateTime UpdatedAt { get; set; }
+        public int FollowupsCount { get; set; }
     }
 }

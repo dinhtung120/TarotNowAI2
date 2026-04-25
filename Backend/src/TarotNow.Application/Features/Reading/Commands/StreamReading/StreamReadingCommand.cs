@@ -17,4 +17,7 @@ public class StreamReadingCommand : IRequest<StreamReadingResult>
 
     // Ngôn ngữ phản hồi mong muốn của AI (vi/en/zh).
     public string Language { get; set; } = "vi";
+
+    // Idempotency key từ client cho các request có charge.
+    public string? IdempotencyKey { get; set; }
 }

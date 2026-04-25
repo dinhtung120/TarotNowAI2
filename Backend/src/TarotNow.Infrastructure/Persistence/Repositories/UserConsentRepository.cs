@@ -1,6 +1,7 @@
 
 
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,7 @@ namespace TarotNow.Infrastructure.Persistence.Repositories;
 // Repository quản lý dữ liệu chấp thuận pháp lý của user.
 public class UserConsentRepository : IUserConsentRepository
 {
+    private const string UserConsentUniqueConstraintSuffix = "userid_documenttype_version";
     // DbContext thao tác bảng user_consents.
     private readonly ApplicationDbContext _context;
 
@@ -48,12 +50,29 @@ public class UserConsentRepository : IUserConsentRepository
     }
 
     /// <summary>
-    /// Thêm mới consent.
-    /// Luồng xử lý: add entity và save ngay để bảo đảm log consent được ghi nhận tức thời.
+    /// Thêm mới consent theo hướng insert-first idempotent.
+    /// Luồng xử lý: add entity và save ngay; nếu trùng unique key thì trả false.
     /// </summary>
-    public async Task AddAsync(UserConsent consent, CancellationToken cancellationToken = default)
+    public async Task<bool> TryAddAsync(UserConsent consent, CancellationToken cancellationToken = default)
     {
-        await _context.UserConsents.AddAsync(consent, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _context.UserConsents.AddAsync(consent, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+            return true;
+        }
+        catch (DbUpdateException exception) when (IsDuplicateConsent(exception))
+        {
+            _context.Entry(consent).State = EntityState.Detached;
+            return false;
+        }
+    }
+
+    private static bool IsDuplicateConsent(DbUpdateException exception)
+    {
+        return exception.InnerException is PostgresException postgresException
+               && postgresException.SqlState == PostgresErrorCodes.UniqueViolation
+               && (postgresException.ConstraintName?.Replace("_", string.Empty, StringComparison.OrdinalIgnoreCase)
+                   .Contains(UserConsentUniqueConstraintSuffix, StringComparison.OrdinalIgnoreCase) ?? false);
     }
 }

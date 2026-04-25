@@ -92,4 +92,19 @@ public partial class StreamReadingCommandHandler
         // Session id không phải Guid thì không thể đối chiếu bảng ai_requests kiểu uuid.
         throw new BadRequestException("Reading session id không hợp lệ.");
     }
+
+    /// <summary>
+    /// Chuẩn hóa idempotency key cho request stream.
+    /// Luồng xử lý: với request có charge thì key là bắt buộc; request miễn phí có thể bỏ trống.
+    /// </summary>
+    private static string? ResolveIdempotencyKeyForRequest(StreamReadingCommand request, long calculatedCost)
+    {
+        var normalized = request.IdempotencyKey?.Trim();
+        if (calculatedCost > 0 && string.IsNullOrWhiteSpace(normalized))
+        {
+            throw new BadRequestException("Idempotency-Key is required for paid AI stream requests.");
+        }
+
+        return string.IsNullOrWhiteSpace(normalized) ? null : normalized;
+    }
 }

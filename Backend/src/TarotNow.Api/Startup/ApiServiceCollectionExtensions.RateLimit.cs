@@ -43,6 +43,7 @@ public static partial class ApiServiceCollectionExtensions
         AddRefreshPolicies(options, rateLimitPolicies);
         AddCommunityPolicy(options, rateLimitPolicies);
         AddChatPolicy(options, rateLimitPolicies);
+        AddPaymentWebhookPolicy(options, rateLimitPolicies);
     }
 
     private static void AddLoginPolicy(RateLimiterOptions options, RateLimitPoliciesOptions rateLimitPolicies)
@@ -114,6 +115,16 @@ public static partial class ApiServiceCollectionExtensions
             ResolveAuthenticatedPartitionKey,
             permitLimit: rateLimitPolicies.ChatStandard.PermitLimit,
             window: TimeSpan.FromSeconds(rateLimitPolicies.ChatStandard.WindowSeconds));
+    }
+
+    private static void AddPaymentWebhookPolicy(RateLimiterOptions options, RateLimitPoliciesOptions rateLimitPolicies)
+    {
+        AddFixedWindowPolicy(
+            options,
+            "payment-webhook",
+            ResolveClientIp,
+            permitLimit: rateLimitPolicies.PaymentWebhook.PermitLimit,
+            window: TimeSpan.FromSeconds(rateLimitPolicies.PaymentWebhook.WindowSeconds));
     }
 
     /// <summary>

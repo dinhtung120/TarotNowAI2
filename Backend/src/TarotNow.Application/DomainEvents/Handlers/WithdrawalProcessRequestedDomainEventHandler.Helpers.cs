@@ -35,12 +35,11 @@ public sealed partial class WithdrawalProcessRequestedDomainEventHandler
     private async Task PublishApproveMoneyChangedAsync(WithdrawalRequest request, CancellationToken cancellationToken)
     {
         await _domainEventPublisher.PublishAsync(
-            new MoneyChangedDomainEvent
+            new WalletSnapshotChangedDomainEvent
             {
                 UserId = request.UserId,
                 Currency = CurrencyType.Diamond,
                 ChangeType = TransactionType.Withdrawal,
-                DeltaAmount = 0,
                 ReferenceId = request.Id.ToString()
             },
             cancellationToken);

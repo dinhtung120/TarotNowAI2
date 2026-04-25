@@ -39,13 +39,15 @@ public partial class GlobalExceptionHandler
         if (exception is BadRequestException badRequestException)
         {
             // Nhánh bad request nghiệp vụ: trả 400 với thông điệp đã chuẩn hóa ở tầng application.
-            return CreateBadRequestProblem(badRequestException.Message);
+            _ = badRequestException;
+            return CreateBadRequestProblem();
         }
 
         if (exception is NotFoundException notFoundException)
         {
             // Không tìm thấy tài nguyên: map sang 404 thay vì 500 để client xử lý retry hợp lý.
-            return CreateNotFoundProblem(notFoundException.Message);
+            _ = notFoundException;
+            return CreateNotFoundProblem();
         }
 
         if (exception is BusinessRuleException businessRuleException)
@@ -57,13 +59,15 @@ public partial class GlobalExceptionHandler
         if (exception is ArgumentException argumentException)
         {
             // Guard clause ở tầng dưới ném ArgumentException thì map về 400 cho nhất quán.
-            return CreateBadRequestProblem(argumentException.Message);
+            _ = argumentException;
+            return CreateBadRequestProblem();
         }
 
         if (exception is InvalidOperationException invalidOperationException)
         {
             // Trạng thái không hợp lệ theo luồng xử lý nghiệp vụ: trả 422.
-            return CreateInvalidOperationProblem(invalidOperationException.Message);
+            _ = invalidOperationException;
+            return CreateInvalidOperationProblem();
         }
 
         if (exception is UnauthorizedAccessException)
@@ -92,7 +96,7 @@ public partial class GlobalExceptionHandler
         if (IsWithdrawalWeeklyLimitViolation(dbUpdateException))
         {
             // Rule nghiệp vụ: mỗi tuần UTC chỉ cho một yêu cầu rút tiền.
-            problemDetails = CreateBadRequestProblem("Bạn đã tạo yêu cầu rút tiền trong tuần này. Hệ thống reset vào thứ Hai 00:00 UTC.");
+            problemDetails = CreateBadRequestProblem();
             return true;
         }
 
@@ -118,7 +122,7 @@ public partial class GlobalExceptionHandler
             StatusCodes.Status400BadRequest,
             "Validation Failed",
             "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1",
-            exception.Message);
+            "One or more validation errors occurred.");
 
         // Gắn metadata lỗi chi tiết để frontend map trực tiếp vào form validation.
         problemDetails.Extensions["errors"] = exception.Errors;
@@ -145,7 +149,11 @@ public partial class GlobalExceptionHandler
                 : status == StatusCodes.Status401Unauthorized
                     ? "https://datatracker.ietf.org/doc/html/rfc7235#section-3.1"
                     : "https://datatracker.ietf.org/doc/html/rfc4918#section-11.2",
-            exception.Message);
+            status == StatusCodes.Status429TooManyRequests
+                ? "Rate limit exceeded. Please retry later."
+                : status == StatusCodes.Status401Unauthorized
+                    ? "Authentication is required or token is invalid."
+                    : "A business rule was violated.");
 
         // Mã lỗi domain giúp client xử lý chính xác hơn thay vì chỉ dựa vào message tự do.
         problemDetails.Extensions["errorCode"] = exception.ErrorCode;

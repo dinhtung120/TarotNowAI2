@@ -61,6 +61,11 @@ public sealed partial class UserItemRepository
         {
             throw new ArgumentException("IdempotencyKey is required.", nameof(request));
         }
+
+        if (request.IsConsumable == false && request.ConsumeQuantity > 1)
+        {
+            throw new ArgumentException("Non-consumable item only supports quantity = 1.", nameof(request));
+        }
     }
 
     private static InventoryItemUseOperation BuildUseOperation(InventoryItemConsumeRequest request)

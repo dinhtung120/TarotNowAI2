@@ -2,7 +2,6 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
-using TarotNow.Api.Constants;
 using TarotNow.Api.Contracts.Requests;
 using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.Withdrawal.Queries.GetWithdrawalDetail;
@@ -106,12 +105,6 @@ public sealed class AdminWithdrawalsController : ControllerBase
 
     private string ResolveIdempotencyKey(string? bodyKey)
     {
-        if (Request.Headers.TryGetValue(AuthHeaders.IdempotencyKey, out var headerValue)
-            && string.IsNullOrWhiteSpace(headerValue) == false)
-        {
-            return headerValue.ToString().Trim();
-        }
-
-        return bodyKey?.Trim() ?? string.Empty;
+        return Request.GetIdempotencyKeyOrEmpty(bodyKey);
     }
 }

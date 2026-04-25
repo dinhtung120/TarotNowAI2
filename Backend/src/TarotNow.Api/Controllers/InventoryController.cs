@@ -4,7 +4,6 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using TarotNow.Api.Constants;
 using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.Inventory.Commands;
 using TarotNow.Application.Features.Inventory.Queries;
@@ -87,13 +86,7 @@ public sealed class InventoryController : ControllerBase
 
     private string ResolveIdempotencyKey(string? bodyKey)
     {
-        if (Request.Headers.TryGetValue(AuthHeaders.IdempotencyKey, out var headerValue)
-            && string.IsNullOrWhiteSpace(headerValue.ToString()) == false)
-        {
-            return headerValue.ToString();
-        }
-
-        return bodyKey ?? string.Empty;
+        return Request.GetIdempotencyKeyOrEmpty(bodyKey);
     }
 }
 

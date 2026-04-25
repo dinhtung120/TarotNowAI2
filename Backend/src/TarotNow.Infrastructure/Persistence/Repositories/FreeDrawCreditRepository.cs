@@ -27,22 +27,20 @@ public sealed class FreeDrawCreditRepository : IFreeDrawCreditRepository
         CancellationToken cancellationToken = default)
     {
         ValidateAddCreditsInput(userId, spreadCardCount, creditCount);
-        var credit = await _dbContext.Set<FreeDrawCredit>()
-            .FirstOrDefaultAsync(
-                x => x.UserId == userId && x.SpreadCardCount == spreadCardCount,
-                cancellationToken);
-        if (credit is null)
-        {
-            credit = new FreeDrawCredit(userId, spreadCardCount, creditCount);
-            await _dbContext.Set<FreeDrawCredit>().AddAsync(credit, cancellationToken);
-        }
-        else
-        {
-            credit.AddCredits(creditCount);
-            _dbContext.Set<FreeDrawCredit>().Update(credit);
-        }
-
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        var nowUtc = DateTime.UtcNow;
+        var newId = Guid.CreateVersion7();
+        await _dbContext.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+             INSERT INTO free_draw_credits
+                 (id, user_id, spread_card_count, available_count, created_at_utc, updated_at_utc)
+             VALUES
+                 ({newId}, {userId}, {spreadCardCount}, {creditCount}, {nowUtc}, {nowUtc})
+             ON CONFLICT (user_id, spread_card_count)
+             DO UPDATE SET
+                 available_count = free_draw_credits.available_count + EXCLUDED.available_count,
+                 updated_at_utc = EXCLUDED.updated_at_utc;
+             """,
+            cancellationToken);
     }
 
     /// <inheritdoc />

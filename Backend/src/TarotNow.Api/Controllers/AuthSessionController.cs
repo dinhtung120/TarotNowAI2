@@ -20,14 +20,19 @@ public sealed class AuthSessionController : ControllerBase
     private const string LogoutSuccessMessage = "Logged out successfully.";
     private readonly IMediator _mediator;
     private readonly IAuthCookieService _authCookieService;
+    private readonly IForwardedHeaderTrustEvaluator _forwardedHeaderTrustEvaluator;
 
     /// <summary>
     /// Khởi tạo auth session controller.
     /// </summary>
-    public AuthSessionController(IMediator mediator, IAuthCookieService authCookieService)
+    public AuthSessionController(
+        IMediator mediator,
+        IAuthCookieService authCookieService,
+        IForwardedHeaderTrustEvaluator forwardedHeaderTrustEvaluator)
     {
         _mediator = mediator;
         _authCookieService = authCookieService;
+        _forwardedHeaderTrustEvaluator = forwardedHeaderTrustEvaluator;
     }
 
     /// <summary>
@@ -158,12 +163,18 @@ public sealed class AuthSessionController : ControllerBase
         return normalized.Length > 0;
     }
 
-    private static string ResolveUserAgent(HttpRequest request)
+    private string ResolveUserAgent(HttpRequest request)
     {
-        var forwardedUserAgent = request.Headers[AuthHeaders.ForwardedUserAgent].ToString();
-        return string.IsNullOrWhiteSpace(forwardedUserAgent)
-            ? request.Headers.UserAgent.ToString()
-            : forwardedUserAgent;
+        if (_forwardedHeaderTrustEvaluator.IsTrustedProxy(request.HttpContext.Connection.RemoteIpAddress))
+        {
+            var forwardedUserAgent = request.Headers[AuthHeaders.ForwardedUserAgent].ToString();
+            if (string.IsNullOrWhiteSpace(forwardedUserAgent) == false)
+            {
+                return forwardedUserAgent;
+            }
+        }
+
+        return request.Headers.UserAgent.ToString();
     }
 
     private static string HashValue(string? raw)

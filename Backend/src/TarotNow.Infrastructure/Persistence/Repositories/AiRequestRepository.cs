@@ -32,6 +32,18 @@ public class AiRequestRepository : IAiRequestRepository
     }
 
     /// <summary>
+    /// Lấy AiRequest theo idempotency key.
+    /// Luồng xử lý: trim key rồi truy vấn bản ghi đầu tiên khớp tuyệt đối.
+    /// </summary>
+    public async Task<AiRequest?> GetByIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken = default)
+    {
+        var normalized = idempotencyKey.Trim();
+        return await _context.AiRequests.FirstOrDefaultAsync(
+            x => x.IdempotencyKey == normalized,
+            cancellationToken);
+    }
+
+    /// <summary>
     /// Thêm mới request AI.
     /// Luồng xử lý: add entity vào DbSet rồi persist ngay để phát sinh id và timestamp.
     /// </summary>
@@ -65,6 +77,7 @@ public class AiRequestRepository : IAiRequestRepository
             x => x.UserId == userId &&
                  x.CreatedAt >= todayOffset &&
                  (x.Status == TarotNow.Domain.Enums.AiRequestStatus.Completed
+                     || x.Status == TarotNow.Domain.Enums.AiRequestStatus.FailedBeforeFirstToken
                      || x.Status == TarotNow.Domain.Enums.AiRequestStatus.FailedAfterFirstToken),
             cancellationToken);
         // Không tính trạng thái Requested để tránh khóa quota do request còn treo/chưa kết thúc.

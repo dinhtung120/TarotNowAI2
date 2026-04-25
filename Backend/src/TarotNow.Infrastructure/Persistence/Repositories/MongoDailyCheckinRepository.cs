@@ -37,10 +37,10 @@ public class MongoDailyCheckinRepository : IDailyCheckinRepository
     }
 
     /// <summary>
-    /// Ghi nhận một lượt check-in mới.
-    /// Luồng xử lý: insert document mới; nếu trùng unique key userId-businessDate thì ném lỗi nghiệp vụ đã điểm danh.
+    /// Ghi nhận một lượt check-in mới theo hướng insert-first.
+    /// Luồng xử lý: insert document mới; nếu trùng unique key userId-businessDate thì trả false để caller xử lý idempotent.
     /// </summary>
-    public async Task InsertAsync(string userId, string businessDate, long goldReward, CancellationToken cancellationToken = default)
+    public async Task<bool> TryInsertAsync(string userId, string businessDate, long goldReward, CancellationToken cancellationToken = default)
     {
         var document = new DailyCheckinDocument
         {
@@ -53,11 +53,11 @@ public class MongoDailyCheckinRepository : IDailyCheckinRepository
         try
         {
             await _context.DailyCheckins.InsertOneAsync(document, cancellationToken: cancellationToken);
+            return true;
         }
         catch (MongoWriteException ex) when (ex.WriteError.Category == ServerErrorCategory.DuplicateKey)
         {
-            throw new System.InvalidOperationException("Hôm nay bạn đã điểm danh rồi, đừng cố bấm nữa.");
-            // DuplicateKey phản ánh đúng business rule mỗi user chỉ có một check-in mỗi ngày.
+            return false;
         }
     }
 

@@ -18,6 +18,7 @@ public static partial class ApiServiceCollectionExtensions
             AuthLogout = NormalizeWindow(configured.AuthLogout, permitLimit: 30, windowSeconds: 60),
             CommunityWrite = NormalizeWindow(configured.CommunityWrite, permitLimit: 60, windowSeconds: 60),
             ChatStandard = NormalizeWindow(configured.ChatStandard, permitLimit: 200, windowSeconds: 60),
+            PaymentWebhook = NormalizeWindow(configured.PaymentWebhook, permitLimit: 40, windowSeconds: 60),
             HashPrefixes = new RateLimitHashOptions
             {
                 RefreshDeviceLength = NormalizeHashLength(hashPrefixes.RefreshDeviceLength, fallback: 24),

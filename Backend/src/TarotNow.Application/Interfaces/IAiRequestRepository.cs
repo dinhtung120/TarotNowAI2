@@ -17,6 +17,12 @@ public interface IAiRequestRepository
     Task<AiRequest?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Lấy yêu cầu AI theo idempotency key để chống tạo request trùng.
+    /// Luồng xử lý: truy vấn theo key đã chuẩn hóa và trả null nếu chưa tồn tại.
+    /// </summary>
+    Task<AiRequest?> GetByIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Tạo yêu cầu AI mới trước khi bắt đầu luồng sinh nội dung.
     /// Luồng xử lý: nhận entity đã chuẩn hóa và persist vào kho dữ liệu.
     /// </summary>

@@ -14,7 +14,7 @@ public sealed class ChatModerationQueue : IChatModerationQueue
 
     /// <summary>
     /// Khởi tạo hàng đợi moderation dạng bounded channel để kiểm soát áp lực tải.
-    /// Luồng xử lý: đọc MaxQueueSize từ options, ép tối thiểu 100, tạo channel single-reader với chiến lược DropOldest.
+    /// Luồng xử lý: đọc MaxQueueSize từ options, ép tối thiểu 100, tạo channel single-reader với chiến lược backpressure.
     /// </summary>
     public ChatModerationQueue(
         IOptions<ChatModerationOptions> options,
@@ -27,13 +27,13 @@ public sealed class ChatModerationQueue : IChatModerationQueue
         {
             SingleReader = true,
             SingleWriter = false,
-            FullMode = BoundedChannelFullMode.DropOldest
+            FullMode = BoundedChannelFullMode.Wait
         });
     }
 
     /// <summary>
     /// Đưa payload moderation vào hàng đợi.
-    /// Luồng xử lý: ưu tiên TryWrite nhanh; nếu đầy thì log warning và ghi theo cơ chế channel (DropOldest).
+    /// Luồng xử lý: ưu tiên TryWrite nhanh; nếu đầy thì áp backpressure để không làm mất sự kiện.
     /// </summary>
     public ValueTask EnqueueAsync(ChatModerationPayload payload, CancellationToken cancellationToken = default)
     {
@@ -44,11 +44,11 @@ public sealed class ChatModerationQueue : IChatModerationQueue
         }
 
         _logger.LogWarning(
-            "[ChatModerationQueue] Queue is full. Dropping oldest before enqueue. ConversationId={ConversationId}, MessageId={MessageId}",
+            "[ChatModerationQueue] Queue is full. Applying backpressure. ConversationId={ConversationId}, MessageId={MessageId}",
             payload.ConversationId,
             payload.MessageId);
 
-        // Queue đầy: writer sẽ áp dụng policy DropOldest để giữ payload mới nhất.
+        // Queue đầy: chờ consumer xử lý bớt để không drop sự kiện moderation.
         return _channel.Writer.WriteAsync(payload, cancellationToken);
     }
 

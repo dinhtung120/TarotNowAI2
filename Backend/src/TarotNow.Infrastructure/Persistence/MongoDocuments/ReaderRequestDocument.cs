@@ -130,6 +130,12 @@ public class ReaderRequestDocument
     /// </summary>
     [BsonElement("review_history")]
     public List<ReaderRequestReviewHistoryEntryDocument> ReviewHistory { get; set; } = [];
+
+    /// <summary>
+    /// Version optimistic concurrency cho các thao tác review/update.
+    /// </summary>
+    [BsonElement("version")]
+    public long Version { get; set; } = 1;
 }
 
 /// <summary>

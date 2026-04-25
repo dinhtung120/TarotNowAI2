@@ -1,11 +1,8 @@
 using System.Text.Json;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
-using TarotNow.Domain.Events;
-using TarotNow.Infrastructure.Messaging.DomainEvents;
 using TarotNow.Infrastructure.Persistence;
 using TarotNow.Infrastructure.Persistence.Outbox;
 
@@ -14,14 +11,14 @@ namespace TarotNow.Infrastructure.BackgroundJobs.Outbox;
 /// <summary>
 /// Xử lý một vòng claim/dispatch outbox batch.
 /// </summary>
-public sealed class OutboxBatchProcessor : IOutboxBatchProcessor
+public sealed partial class OutboxBatchProcessor : IOutboxBatchProcessor
 {
     private const int LastErrorMaxLength = 3900;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private static readonly string WorkerId = $"{Environment.MachineName}:{Guid.NewGuid():N}";
 
     private readonly ApplicationDbContext _dbContext;
-    private readonly IMediator _mediator;
+    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<OutboxBatchProcessor> _logger;
     private readonly ISystemConfigSettings _systemConfigSettings;
 
@@ -30,12 +27,12 @@ public sealed class OutboxBatchProcessor : IOutboxBatchProcessor
     /// </summary>
     public OutboxBatchProcessor(
         ApplicationDbContext dbContext,
-        IMediator mediator,
+        IServiceScopeFactory scopeFactory,
         ILogger<OutboxBatchProcessor> logger,
         ISystemConfigSettings systemConfigSettings)
     {
         _dbContext = dbContext;
-        _mediator = mediator;
+        _scopeFactory = scopeFactory;
         _logger = logger;
         _systemConfigSettings = systemConfigSettings;
     }
@@ -49,13 +46,29 @@ public sealed class OutboxBatchProcessor : IOutboxBatchProcessor
             return;
         }
 
-        foreach (var message in messages)
+        var parallelism = ResolveParallelism();
+        var partitions = messages
+            .GroupBy(message => string.IsNullOrWhiteSpace(message.EventType) ? "unknown" : message.EventType, StringComparer.Ordinal)
+            .Select(group => group.OrderBy(message => message.CreatedAtUtc).ToList())
+            .ToList();
+
+        using var throttler = new SemaphoreSlim(parallelism);
+        var tasks = partitions.Select(async partition =>
         {
-            await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
-            await ProcessMessageAsync(message, cancellationToken);
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-        }
+            await throttler.WaitAsync(cancellationToken);
+            try
+            {
+                foreach (var message in partition)
+                {
+                    await ProcessMessageInNewScopeAsync(message.Id, cancellationToken);
+                }
+            }
+            finally
+            {
+                throttler.Release();
+            }
+        });
+        await Task.WhenAll(tasks);
 
         _dbContext.ChangeTracker.Clear();
     }
@@ -96,114 +109,8 @@ FOR UPDATE SKIP LOCKED")
         return messages;
     }
 
-    private async Task ProcessMessageAsync(OutboxMessage message, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await DispatchAsync(message, cancellationToken);
-            MarkProcessed(message);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            MarkFailed(message, exception);
-        }
-    }
-
-    private async Task DispatchAsync(OutboxMessage outboxMessage, CancellationToken cancellationToken)
-    {
-        if (DomainEventTypeRegistry.TryResolve(outboxMessage.EventType, out var eventClrType) == false)
-        {
-            throw new InvalidOperationException($"Unknown domain event type '{outboxMessage.EventType}'.");
-        }
-
-        var deserialized = JsonSerializer.Deserialize(outboxMessage.PayloadJson, eventClrType, JsonOptions);
-        if (deserialized is not IDomainEvent domainEvent)
-        {
-            throw new InvalidOperationException($"Cannot deserialize payload as IDomainEvent. OutboxId={outboxMessage.Id}");
-        }
-
-        var notificationType = typeof(DomainEventNotification<>).MakeGenericType(eventClrType);
-        var notification = Activator.CreateInstance(notificationType, domainEvent, outboxMessage.Id) as INotification;
-        if (notification == null)
-        {
-            throw new InvalidOperationException($"Cannot create notification for outbox message {outboxMessage.Id}.");
-        }
-
-        await _mediator.Publish(notification, cancellationToken);
-    }
-
-    private void MarkProcessed(OutboxMessage message)
-    {
-        message.Status = OutboxMessageStatus.Processed;
-        message.ProcessedAtUtc = DateTime.UtcNow;
-        message.LastError = null;
-        message.LockedAtUtc = null;
-        message.LockOwner = null;
-    }
-
-    private void MarkFailed(OutboxMessage message, Exception exception)
-    {
-        message.AttemptCount += 1;
-        var now = DateTime.UtcNow;
-        var isDeadLetter = message.AttemptCount >= ResolveMaxRetryAttempts();
-
-        message.Status = isDeadLetter ? OutboxMessageStatus.DeadLetter : OutboxMessageStatus.Failed;
-        message.NextAttemptAtUtc = now.AddSeconds(CalculateBackoffSeconds(message.AttemptCount));
-        message.LastError = Truncate(exception.ToString(), LastErrorMaxLength);
-        message.LockedAtUtc = null;
-        message.LockOwner = null;
-
-        if (isDeadLetter)
-        {
-            _logger.LogError(
-                exception,
-                "Outbox message moved to dead-letter. MessageId={MessageId}, Attempts={AttemptCount}",
-                message.Id,
-                message.AttemptCount);
-            return;
-        }
-
-        _logger.LogWarning(
-            exception,
-            "Outbox message failed and will retry. MessageId={MessageId}, Attempts={AttemptCount}, NextAttemptAtUtc={NextAttemptAtUtc}",
-            message.Id,
-            message.AttemptCount,
-            message.NextAttemptAtUtc);
-    }
-
-    private int CalculateBackoffSeconds(int attemptCount)
-    {
-        var seconds = Math.Pow(2, attemptCount);
-        return (int)Math.Min(ResolveMaxBackoffSeconds(), seconds);
-    }
-
-    private static string Truncate(string value, int maxLength)
-    {
-        return value.Length <= maxLength ? value : value[..maxLength];
-    }
-
     private int ResolveBatchSize()
     {
         return Math.Clamp(_systemConfigSettings.OperationalOutboxBatchSize, 1, 5000);
-    }
-
-    private int ResolveMaxRetryAttempts()
-    {
-        return Math.Clamp(_systemConfigSettings.OperationalOutboxMaxRetryAttempts, 1, 100);
-    }
-
-    private TimeSpan ResolveLockTimeout()
-    {
-        var seconds = _systemConfigSettings.OperationalOutboxLockTimeoutSeconds;
-        return TimeSpan.FromSeconds(Math.Clamp(seconds, 30, 3600));
-    }
-
-    private int ResolveMaxBackoffSeconds()
-    {
-        return Math.Clamp(_systemConfigSettings.OperationalOutboxMaxBackoffSeconds, 1, 3600);
     }
 }

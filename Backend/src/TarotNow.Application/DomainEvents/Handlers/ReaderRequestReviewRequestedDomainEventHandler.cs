@@ -109,7 +109,7 @@ public sealed partial class ReaderRequestReviewRequestedDomainEventHandler
         readerRequest.ReviewedBy = domainEvent.AdminId.ToString();
         readerRequest.ReviewedAt = reviewedAtUtc;
         AppendReviewHistory(readerRequest, domainEvent, ReaderApprovalStatus.Approved, reviewedAtUtc);
-        await _readerRequestRepository.UpdateAsync(readerRequest, cancellationToken);
+        await SaveReaderRequestWithConcurrencyGuardAsync(readerRequest, cancellationToken);
 
         await RevokeSessionsAfterRoleChangeAsync(user.Id, cancellationToken);
         await PublishReviewNotificationAsync(readerRequest, domainEvent, ReaderApprovalStatus.Approved, cancellationToken);
@@ -130,8 +130,22 @@ public sealed partial class ReaderRequestReviewRequestedDomainEventHandler
         readerRequest.ReviewedBy = domainEvent.AdminId.ToString();
         readerRequest.ReviewedAt = reviewedAtUtc;
         AppendReviewHistory(readerRequest, domainEvent, ReaderApprovalStatus.Rejected, reviewedAtUtc);
-        await _readerRequestRepository.UpdateAsync(readerRequest, cancellationToken);
+        await SaveReaderRequestWithConcurrencyGuardAsync(readerRequest, cancellationToken);
 
         await PublishReviewNotificationAsync(readerRequest, domainEvent, ReaderApprovalStatus.Rejected, cancellationToken);
+    }
+
+    private async Task SaveReaderRequestWithConcurrencyGuardAsync(
+        ReaderRequestDto readerRequest,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _readerRequestRepository.UpdateAsync(readerRequest, cancellationToken);
+        }
+        catch (InvalidOperationException exception)
+        {
+            throw new BadRequestException("Reader request was updated by another admin. Please reload and retry.", exception);
+        }
     }
 }

@@ -66,7 +66,22 @@ public partial class AiController : ControllerBase
             return;
         }
 
-        var streamResult = await TryStartStreamAsync(userId, sessionId, followUpQuestion, language, cancellationToken);
+        var idempotencyKey = Request.GetIdempotencyKeyOrEmpty();
+        if (string.IsNullOrWhiteSpace(followUpQuestion) == false && string.IsNullOrWhiteSpace(idempotencyKey))
+        {
+            Response.StatusCode = StatusCodes.Status400BadRequest;
+            await WriteServerEventAsync("Idempotency-Key header is required for follow-up stream.", cancellationToken);
+            return;
+        }
+
+        var streamResult = await TryStartStreamAsync(
+            userId,
+            new StreamStartRequest(
+                sessionId,
+                followUpQuestion,
+                language,
+                idempotencyKey),
+            cancellationToken);
         if (streamResult == null)
         {
             // Nhánh null biểu thị lỗi đã được xử lý trong bước khởi tạo nên không xử lý lặp ở đây.

@@ -72,8 +72,8 @@ public static partial class DependencyInjection
     }
 
     /// <summary>
-    /// Resolve bearer token từ cookie/query cho các endpoint realtime hoặc stream.
-    /// Luồng xử lý: ưu tiên cookie cho hub endpoint, fallback query token cho hub hoặc endpoint stream.
+    /// Resolve bearer token từ cookie/query cho các endpoint realtime.
+    /// Luồng xử lý: ưu tiên cookie; query token chỉ chấp nhận cho SignalR hub.
     /// </summary>
     private static Task ResolveBearerTokenAsync(MessageReceivedContext context)
     {
@@ -89,10 +89,10 @@ public static partial class DependencyInjection
         else
         {
             var isHubEndpoint = IsHubEndpoint(path);
-            if (HasToken(queryToken) && (isHubEndpoint || IsAiStreamEndpoint(path)))
+            if (HasToken(queryToken) && isHubEndpoint)
             {
                 context.Token = queryToken;
-                // Fallback query token cho SignalR/client stream không gửi cookie thuận tiện.
+                // Fallback query token chỉ cho SignalR khi client không gửi cookie/header thuận tiện.
             }
         }
 
@@ -107,17 +107,6 @@ public static partial class DependencyInjection
     {
         return path.StartsWithSegments(ApiPathConstants.ChatHub)
             || path.StartsWithSegments(ApiPathConstants.PresenceHub);
-    }
-
-    /// <summary>
-    /// Kiểm tra path có phải endpoint stream phiên đọc bài hay không.
-    /// Luồng xử lý: xác nhận path thuộc Sessions và phần còn lại kết thúc bằng /stream.
-    /// </summary>
-    private static bool IsAiStreamEndpoint(PathString path)
-    {
-        return path.StartsWithSegments(ApiPathConstants.Sessions, out var remaining)
-            && remaining.HasValue
-            && remaining.Value.EndsWith("/stream", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>

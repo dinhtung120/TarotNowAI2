@@ -32,6 +32,7 @@ public static partial class SystemConfigRegistry
             Scalar("operational.ai.streaming_retry_base_delay_ms", "200", "Base delay retry streaming AI (ms).", ValidateInt(10, 60000)),
             Scalar("operational.ai.streaming_temperature", "0.7", "Temperature mặc định cho streaming AI.", ValidateDecimal(0m, 2m)),
             Scalar("operational.outbox.batch_size", "50", "Số message outbox claim mỗi batch.", ValidateInt(1, 5000)),
+            Scalar("operational.outbox.parallelism", "4", "Số worker xử lý song song mỗi batch outbox.", ValidateInt(1, 64)),
             Scalar("operational.outbox.max_retry_attempts", "12", "Số lần retry outbox trước dead-letter.", ValidateInt(1, 100)),
             Scalar("operational.outbox.lock_timeout_seconds", "120", "Outbox processing lock timeout (giây).", ValidateInt(30, 3600)),
             Scalar("operational.outbox.max_backoff_seconds", "300", "Outbox retry backoff tối đa (giây).", ValidateInt(1, 3600)),

@@ -15,9 +15,9 @@ public interface IDailyCheckinRepository
 
     /// <summary>
     /// Ghi nhận điểm danh mới kèm phần thưởng để khóa trạng thái nhận quà trong ngày.
-    /// Luồng xử lý: tạo bản ghi check-in theo userId/businessDate và lưu goldReward tương ứng.
+    /// Luồng xử lý: insert bản ghi mới, trả false khi trùng business key để caller xử lý idempotent.
     /// </summary>
-    Task InsertAsync(string userId, string businessDate, long goldReward, CancellationToken cancellationToken = default);
+    Task<bool> TryInsertAsync(string userId, string businessDate, long goldReward, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Đếm số lần điểm danh trong khoảng ngày gần đây để tính chuỗi hoặc nhiệm vụ.

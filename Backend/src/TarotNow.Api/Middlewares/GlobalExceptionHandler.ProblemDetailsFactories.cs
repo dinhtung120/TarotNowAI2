@@ -8,23 +8,23 @@ public partial class GlobalExceptionHandler
     /// Tạo ProblemDetails cho lỗi yêu cầu không hợp lệ.
     /// Luồng xử lý: ủy quyền về factory chung để giữ cấu trúc lỗi client nhất quán.
     /// </summary>
-    private static ProblemDetails CreateBadRequestProblem(string detail)
+    private static ProblemDetails CreateBadRequestProblem()
         => CreateClientProblem(
             StatusCodes.Status400BadRequest,
             "Bad Request",
             "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1",
-            detail);
+            "Request payload is invalid or unsupported.");
 
     /// <summary>
     /// Tạo ProblemDetails cho lỗi không tìm thấy tài nguyên.
     /// Luồng xử lý: đóng gói tiêu đề/type chuẩn 404 để client xử lý nhánh thiếu dữ liệu.
     /// </summary>
-    private static ProblemDetails CreateNotFoundProblem(string detail)
+    private static ProblemDetails CreateNotFoundProblem()
         => CreateClientProblem(
             StatusCodes.Status404NotFound,
             "Not Found",
             "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4",
-            detail);
+            "Requested resource was not found.");
 
     /// <summary>
     /// Tạo ProblemDetails cho lỗi xung đột dữ liệu.
@@ -41,12 +41,12 @@ public partial class GlobalExceptionHandler
     /// Tạo ProblemDetails cho thao tác không hợp lệ theo trạng thái nghiệp vụ.
     /// Luồng xử lý: trả 422 để phân biệt với lỗi cú pháp request.
     /// </summary>
-    private static ProblemDetails CreateInvalidOperationProblem(string detail)
+    private static ProblemDetails CreateInvalidOperationProblem()
         => CreateClientProblem(
             StatusCodes.Status422UnprocessableEntity,
             "Invalid Operation",
             "https://datatracker.ietf.org/doc/html/rfc4918#section-11.2",
-            detail);
+            "The requested operation cannot be completed in the current state.");
 
     /// <summary>
     /// Tạo ProblemDetails cho trường hợp truy cập chưa được xác thực/ủy quyền.

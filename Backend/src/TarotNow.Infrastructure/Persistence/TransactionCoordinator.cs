@@ -39,7 +39,7 @@ public class TransactionCoordinator : ITransactionCoordinator
         await strategy.ExecuteAsync(async () =>
         {
             await using var transaction = await _dbContext.Database
-                .BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
+                .BeginTransactionAsync(System.Data.IsolationLevel.ReadCommitted, cancellationToken);
 
             await action(cancellationToken);
             await _dbContext.SaveChangesAsync(cancellationToken);

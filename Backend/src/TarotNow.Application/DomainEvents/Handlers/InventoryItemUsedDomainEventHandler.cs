@@ -51,8 +51,7 @@ public sealed partial class ItemUsedDomainEventHandler
         var definition = await GetActiveDefinitionAsync(domainEvent.ItemCode, cancellationToken);
         var targetCardId = await ResolveTargetCardIdAsync(domainEvent, definition.Type, cancellationToken);
 
-        // Giới hạn tối đa 10 item mỗi lần dùng để đảm bảo an toàn hệ thống.
-        var quantityToUse = Math.Clamp(domainEvent.Quantity, 1, 10);
+        var quantityToUse = ResolveQuantityToUse(domainEvent.Quantity, definition.IsConsumable);
 
         var consumeResult = await _userItemRepository.TryConsumeWithIdempotencyAsync(
             new InventoryItemConsumeRequest
@@ -89,6 +88,24 @@ public sealed partial class ItemUsedDomainEventHandler
             }
         }
         domainEvent.EffectSummaries = summaries;
+    }
+
+    private static int ResolveQuantityToUse(int requestedQuantity, bool isConsumable)
+    {
+        var normalized = Math.Clamp(requestedQuantity, 1, 10);
+        if (isConsumable)
+        {
+            return normalized;
+        }
+
+        if (normalized > 1)
+        {
+            throw new BusinessRuleException(
+                InventoryErrorCodes.InvalidQuantity,
+                "Non-consumable item can only be used with quantity = 1.");
+        }
+
+        return 1;
     }
 
     private async Task<ItemDefinition> GetActiveDefinitionAsync(string itemCode, CancellationToken cancellationToken)

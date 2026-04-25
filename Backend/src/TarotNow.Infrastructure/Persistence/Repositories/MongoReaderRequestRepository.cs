@@ -1,5 +1,6 @@
 using MongoDB.Driver;
 using TarotNow.Application.Common;
+using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
@@ -10,6 +11,7 @@ namespace TarotNow.Infrastructure.Persistence.Repositories;
 /// </summary>
 public class MongoReaderRequestRepository : IReaderRequestRepository
 {
+    private const string PendingRequestUniqueIndexName = "idx_user_pending_unique";
     private readonly MongoDbContext _context;
 
     /// <summary>
@@ -24,8 +26,16 @@ public class MongoReaderRequestRepository : IReaderRequestRepository
     public async Task AddAsync(ReaderRequestDto request, CancellationToken cancellationToken = default)
     {
         var doc = ToDocument(request);
-        await _context.ReaderRequests.InsertOneAsync(doc, cancellationToken: cancellationToken);
-        request.Id = doc.Id;
+        try
+        {
+            await _context.ReaderRequests.InsertOneAsync(doc, cancellationToken: cancellationToken);
+            request.Id = doc.Id;
+            request.Version = doc.Version;
+        }
+        catch (MongoWriteException exception) when (IsPendingUniqueViolation(exception))
+        {
+            throw new BadRequestException("Bạn đã có đơn đang chờ duyệt. Vui lòng chờ admin xử lý.");
+        }
     }
 
     /// <inheritdoc />
@@ -88,8 +98,19 @@ public class MongoReaderRequestRepository : IReaderRequestRepository
     {
         var doc = ToDocument(request);
         doc.UpdatedAt = DateTime.UtcNow;
-        var filter = Builders<ReaderRequestDocument>.Filter.Eq(r => r.Id, doc.Id);
-        await _context.ReaderRequests.ReplaceOneAsync(filter, doc, cancellationToken: cancellationToken);
+        var currentVersion = Math.Max(1, request.Version);
+        doc.Version = currentVersion + 1;
+
+        var filter = Builders<ReaderRequestDocument>.Filter.And(
+            Builders<ReaderRequestDocument>.Filter.Eq(r => r.Id, doc.Id),
+            Builders<ReaderRequestDocument>.Filter.Eq(r => r.Version, currentVersion));
+        var result = await _context.ReaderRequests.ReplaceOneAsync(filter, doc, cancellationToken: cancellationToken);
+        if (result.ModifiedCount == 0)
+        {
+            throw new InvalidOperationException("Reader request has been modified by another process.");
+        }
+
+        request.Version = doc.Version;
     }
 
     private static ReaderRequestDocument ToDocument(ReaderRequestDto dto)
@@ -112,7 +133,8 @@ public class MongoReaderRequestRepository : IReaderRequestRepository
             ReviewedAt = dto.ReviewedAt,
             CreatedAt = dto.CreatedAt,
             UpdatedAt = dto.UpdatedAt,
-            ReviewHistory = dto.ReviewHistory?.Select(ToReviewHistoryDocument).ToList() ?? []
+            ReviewHistory = dto.ReviewHistory?.Select(ToReviewHistoryDocument).ToList() ?? [],
+            Version = dto.Version <= 0 ? 1 : dto.Version
         };
     }
 
@@ -136,8 +158,21 @@ public class MongoReaderRequestRepository : IReaderRequestRepository
             ReviewedAt = doc.ReviewedAt,
             CreatedAt = doc.CreatedAt,
             UpdatedAt = doc.UpdatedAt,
-            ReviewHistory = doc.ReviewHistory?.Select(ToReviewHistoryDto).ToList() ?? []
+            ReviewHistory = doc.ReviewHistory?.Select(ToReviewHistoryDto).ToList() ?? [],
+            Version = doc.Version <= 0 ? 1 : doc.Version
         };
+    }
+
+    private static bool IsPendingUniqueViolation(MongoWriteException exception)
+    {
+        if (exception.WriteError.Category != ServerErrorCategory.DuplicateKey)
+        {
+            return false;
+        }
+
+        var message = exception.Message;
+        return string.IsNullOrWhiteSpace(message) == false
+               && message.Contains(PendingRequestUniqueIndexName, StringComparison.OrdinalIgnoreCase);
     }
 
     private static ReaderRequestReviewHistoryEntryDocument ToReviewHistoryDocument(ReaderRequestReviewHistoryEntryDto dto)

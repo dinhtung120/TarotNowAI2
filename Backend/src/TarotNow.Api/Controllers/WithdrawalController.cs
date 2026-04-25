@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.RateLimiting;
 
 using TarotNow.Application.Features.Withdrawal.Commands.CreateWithdrawal;
 using TarotNow.Application.Features.Withdrawal.Queries.ListWithdrawals;
-using TarotNow.Api.Constants;
 using TarotNow.Api.Contracts.Requests;
 using TarotNow.Api.Extensions;
 
@@ -108,12 +107,6 @@ public class WithdrawalController : ControllerBase
 
     private string ResolveIdempotencyKey(string? bodyKey)
     {
-        if (Request.Headers.TryGetValue(AuthHeaders.IdempotencyKey, out var headerValue)
-            && string.IsNullOrWhiteSpace(headerValue) == false)
-        {
-            return headerValue.ToString().Trim();
-        }
-
-        return bodyKey?.Trim() ?? string.Empty;
+        return Request.GetIdempotencyKeyOrEmpty(bodyKey);
     }
 }

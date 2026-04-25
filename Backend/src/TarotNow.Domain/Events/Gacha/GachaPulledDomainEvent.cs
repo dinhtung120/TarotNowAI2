@@ -31,6 +31,16 @@ public sealed class GachaPulledDomainEvent : IDomainEvent
     public bool IsIdempotentReplay { get; set; }
 
     /// <summary>
+    /// Cờ cho biết replay idempotent nhưng operation vẫn đang xử lý.
+    /// </summary>
+    public bool IsProcessingReplay { get; set; }
+
+    /// <summary>
+    /// Định danh operation idempotent tương ứng.
+    /// </summary>
+    public Guid OperationId { get; set; }
+
+    /// <summary>
     /// Pity hiện tại sau pull.
     /// </summary>
     public int CurrentPityCount { get; set; }

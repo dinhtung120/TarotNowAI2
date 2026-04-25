@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Events;
@@ -69,9 +70,13 @@ public partial class CompleteAiStreamCommandHandler
                 ErrorCode = context.TelemetryErrorCode
             });
         }
-        catch
+        catch (Exception exception)
         {
-            // Telemetry lỗi không được làm fail completion vì đây là luồng quan sát, không phải nghiệp vụ cốt lõi.
+            _logger.LogWarning(
+                exception,
+                "AI completion telemetry failed for request {AiRequestId}, user {UserId}.",
+                request.AiRequestId,
+                request.UserId);
         }
     }
 

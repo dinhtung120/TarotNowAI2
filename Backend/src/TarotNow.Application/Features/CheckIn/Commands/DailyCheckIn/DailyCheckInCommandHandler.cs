@@ -56,16 +56,15 @@ public class DailyCheckInCommandHandler : IRequestHandler<DailyCheckInCommand, D
         }
 
         var todayString = DateOnly.FromDateTime(DateTime.UtcNow).ToString(DateFormat);
-        var isCheckedIn = await _checkinRepository.HasCheckedInAsync(request.UserId.ToString(), todayString, cancellationToken);
-        if (isCheckedIn)
+        var goldAmount = _settings.DailyCheckinGold;
+        // Luồng check-in insert-first: credit idempotent trước, sau đó cố gắng insert bản ghi check-in.
+        await CreditCheckInRewardAsync(user.Id, todayString, goldAmount, cancellationToken);
+        var inserted = await _checkinRepository.TryInsertAsync(user.Id.ToString(), todayString, goldAmount, cancellationToken);
+        if (!inserted)
         {
-            // User đã check-in hôm nay thì trả kết quả idempotent, không cộng thưởng lại.
             return BuildAlreadyCheckedInResult(todayString, user.CurrentStreak);
         }
 
-        var goldAmount = _settings.DailyCheckinGold;
-        // Luồng check-in thành công: cộng vàng, ghi bản ghi check-in và kích hoạt gamification.
-        await CreditCheckInRewardAsync(user.Id, todayString, goldAmount, cancellationToken);
         await _domainEventPublisher.PublishAsync(
             new MoneyChangedDomainEvent
             {
@@ -76,7 +75,6 @@ public class DailyCheckInCommandHandler : IRequestHandler<DailyCheckInCommand, D
                 ReferenceId = $"{CheckinIdempotencyPrefix}{user.Id}_{todayString}"
             },
             cancellationToken);
-        await _checkinRepository.InsertAsync(user.Id.ToString(), todayString, goldAmount, cancellationToken);
         await _domainEventPublisher.PublishAsync(
             new TarotNow.Domain.Events.DailyCheckInCompletedDomainEvent
             {

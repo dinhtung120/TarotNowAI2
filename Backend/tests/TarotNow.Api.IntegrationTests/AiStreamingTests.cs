@@ -411,7 +411,7 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
         var resBody = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Daily AI request quota exceeded", resBody);
+        Assert.Contains("AI stream request is invalid.", resBody);
     }
 
     /// <summary>
@@ -488,7 +488,7 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
         var resBody = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Too many in-flight AI requests", resBody);
+        Assert.Contains("AI stream request is invalid.", resBody);
     }
 
     /// <summary>
@@ -581,7 +581,7 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         Assert.NotNull(aiReq);
         Assert.Equal(AiRequestStatus.FailedBeforeFirstToken, aiReq.Status);
         Assert.Null(aiReq.FirstTokenAt);
-        Assert.Contains("OpenAI API is down", aiReq.FinishReason ?? string.Empty);
+        Assert.Contains("stream_runtime_error", aiReq.FinishReason ?? string.Empty);
 
         // Không thu phí nên charge phải bằng 0 và không có giao dịch refund phát sinh.
         Assert.Equal(0, aiReq.ChargeDiamond);

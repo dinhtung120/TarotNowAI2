@@ -14,13 +14,15 @@ public sealed partial class GachaPulledDomainEventHandler
         GachaPullOperation operation,
         CancellationToken cancellationToken)
     {
+        domainEvent.IsIdempotentReplay = true;
+        domainEvent.OperationId = operation.Id;
         if (!operation.IsCompleted)
         {
-            throw new InvalidOperationException("Gacha pull operation is still processing.");
+            domainEvent.IsProcessingReplay = true;
+            return;
         }
 
         var rewardLogs = await _gachaPoolRepository.GetRewardLogsByOperationIdAsync(operation.Id, cancellationToken);
-        domainEvent.IsIdempotentReplay = true;
         domainEvent.CurrentPityCount = operation.CurrentPityCount;
         domainEvent.HardPityThreshold = operation.HardPityThreshold;
         domainEvent.WasPityTriggered = operation.WasPityTriggered;

@@ -96,6 +96,8 @@ public sealed partial class GachaPulledDomainEventHandler
             throw new InvalidOperationException("Gacha pull operation result was not initialized.");
         }
 
+        domainEvent.OperationId = operationResult.Operation.Id;
+
         if (!operationResult.IsCreated)
         {
             await PopulateReplayResultAsync(domainEvent, operationResult.Operation, cancellationToken);

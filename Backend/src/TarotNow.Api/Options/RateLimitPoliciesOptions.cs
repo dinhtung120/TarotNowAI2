@@ -9,6 +9,7 @@ public sealed class RateLimitPoliciesOptions
     public RateLimitWindowOptions AuthLogout { get; set; } = new() { PermitLimit = 30, WindowSeconds = 60 };
     public RateLimitWindowOptions CommunityWrite { get; set; } = new() { PermitLimit = 60, WindowSeconds = 60 };
     public RateLimitWindowOptions ChatStandard { get; set; } = new() { PermitLimit = 200, WindowSeconds = 60 };
+    public RateLimitWindowOptions PaymentWebhook { get; set; } = new() { PermitLimit = 40, WindowSeconds = 60 };
     public RateLimitHashOptions HashPrefixes { get; set; } = new();
 }
 

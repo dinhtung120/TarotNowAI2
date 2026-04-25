@@ -133,13 +133,13 @@ public sealed partial class PayOsGateway
                 value,
                 "yyyy-MM-dd HH:mm:ss",
                 CultureInfo.InvariantCulture,
-                DateTimeStyles.AssumeLocal,
+                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
                 out var parsed))
         {
             return null;
         }
 
-        return parsed.ToUniversalTime();
+        return DateTime.SpecifyKind(parsed, DateTimeKind.Utc);
     }
 
     private static Transaction? ResolveLatestTransaction(IReadOnlyCollection<Transaction>? transactions)

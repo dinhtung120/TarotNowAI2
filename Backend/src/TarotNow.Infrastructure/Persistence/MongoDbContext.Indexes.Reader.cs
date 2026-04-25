@@ -19,6 +19,19 @@ public partial class MongoDbContext
             new CreateIndexOptions { Name = "idx_userid_createdat_desc" }));
         // Hỗ trợ truy vấn lịch sử gửi yêu cầu theo user với bản ghi mới nhất trước.
 
+        var pendingUniqueFilter = Builders<ReaderRequestDocument>.Filter.And(
+            Builders<ReaderRequestDocument>.Filter.Eq(r => r.IsDeleted, false),
+            Builders<ReaderRequestDocument>.Filter.Eq(r => r.Status, "pending"));
+        SafeCreateIndex(ReaderRequests, new CreateIndexModel<ReaderRequestDocument>(
+            Builders<ReaderRequestDocument>.IndexKeys.Ascending(r => r.UserId),
+            new CreateIndexOptions<ReaderRequestDocument>
+            {
+                Name = "idx_user_pending_unique",
+                Unique = true,
+                PartialFilterExpression = pendingUniqueFilter
+            }));
+        // Business rule: mỗi user chỉ có tối đa một đơn pending tại cùng thời điểm.
+
         SafeCreateIndex(ReaderRequests, new CreateIndexModel<ReaderRequestDocument>(
             Builders<ReaderRequestDocument>.IndexKeys
                 .Ascending(r => r.Status)

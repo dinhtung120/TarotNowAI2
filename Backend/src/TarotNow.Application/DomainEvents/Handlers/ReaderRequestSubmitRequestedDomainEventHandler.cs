@@ -63,9 +63,24 @@ public sealed class ReaderRequestSubmitRequestedDomainEventHandler
             CreatedAt = DateTime.UtcNow
         };
 
-        await _readerRequestRepository.AddAsync(request, cancellationToken);
-        domainEvent.Submitted = true;
-        domainEvent.RequestId = request.Id;
+        try
+        {
+            await _readerRequestRepository.AddAsync(request, cancellationToken);
+            domainEvent.Submitted = true;
+            domainEvent.RequestId = request.Id;
+        }
+        catch (BadRequestException)
+        {
+            var latestRequest = await _readerRequestRepository.GetLatestByUserIdAsync(user.Id.ToString(), cancellationToken);
+            if (latestRequest is not null && latestRequest.Status == ReaderApprovalStatus.Pending)
+            {
+                domainEvent.Submitted = true;
+                domainEvent.RequestId = latestRequest.Id;
+                return;
+            }
+
+            throw;
+        }
     }
 
     private async Task<User> LoadUserAsync(Guid userId, CancellationToken cancellationToken)

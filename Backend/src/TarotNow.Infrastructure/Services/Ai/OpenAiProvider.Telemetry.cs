@@ -1,4 +1,5 @@
 using TarotNow.Application.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace TarotNow.Infrastructure.Services.Ai;
 
@@ -29,9 +30,13 @@ public partial class OpenAiProvider
                 PromptVersion = "v1.0"
             }, cancellationToken);
         }
-        catch
+        catch (Exception exception)
         {
-            // Chủ động bỏ qua lỗi telemetry để không ảnh hưởng nghiệp vụ trả lời AI cho người dùng.
+            _logger.LogWarning(
+                exception,
+                "Failed to write AI provider telemetry. RequestId={RequestId}, UserId={UserId}",
+                logEntry.RequestId,
+                logEntry.UserId);
         }
     }
 }

@@ -89,6 +89,11 @@ public class ReaderRequestDto
     /// Lịch sử duyệt yêu cầu theo từng quyết định của admin.
     /// </summary>
     public List<ReaderRequestReviewHistoryEntryDto> ReviewHistory { get; set; } = [];
+
+    /// <summary>
+    /// Version optimistic concurrency cho update Mongo.
+    /// </summary>
+    public long Version { get; set; } = 1;
 }
 
 /// <summary>

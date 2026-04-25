@@ -59,7 +59,13 @@ public partial class StreamReadingCommandHandler : IRequestHandler<StreamReading
         // Chuỗi validation chặn sớm các trường hợp không hợp lệ trước khi tạo request/billing.
 
         var calculatedCost = await CalculateCostAsync(request, session, readingSessionRef, cancellationToken);
-        var aiRequest = await CreateAiRequestAsync(request, readingSessionRef, calculatedCost, cancellationToken);
+        var normalizedIdempotencyKey = ResolveIdempotencyKeyForRequest(request, calculatedCost);
+        var aiRequest = await CreateAiRequestAsync(
+            request,
+            readingSessionRef,
+            calculatedCost,
+            normalizedIdempotencyKey,
+            cancellationToken);
 
         await FreezeEscrowAsync(request, aiRequest, calculatedCost, cancellationToken);
         // Chỉ khi freeze thành công mới cho phép tạo stream để đảm bảo an toàn tài chính.

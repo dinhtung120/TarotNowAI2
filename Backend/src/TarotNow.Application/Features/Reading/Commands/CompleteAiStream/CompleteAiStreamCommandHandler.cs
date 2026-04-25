@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using System.Threading;
 using System.Threading.Tasks;
 using TarotNow.Application.Interfaces;
@@ -14,6 +15,7 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
     private readonly IAiProvider _aiProvider;
     private readonly IReadingSessionRepository _readingRepo;
     private readonly IDomainEventPublisher _domainEventPublisher;
+    private readonly ILogger<CompleteAiStreamCommandHandler> _logger;
 
     /// <summary>
     /// Khởi tạo handler complete AI stream.
@@ -25,7 +27,8 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
         ITransactionCoordinator transactionCoordinator,
         IAiProvider aiProvider,
         IReadingSessionRepository readingRepo,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        ILogger<CompleteAiStreamCommandHandler> logger)
     {
         _aiRequestRepo = aiRequestRepo;
         _walletRepo = walletRepo;
@@ -33,6 +36,7 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
         _aiProvider = aiProvider;
         _readingRepo = readingRepo;
         _domainEventPublisher = domainEventPublisher;
+        _logger = logger;
     }
 
     /// <summary>

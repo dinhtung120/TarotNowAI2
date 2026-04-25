@@ -79,7 +79,7 @@ public partial class AiController
             FollowUpQuestion: null,
             context.State,
             finalStatus,
-            exception.Message,
+            "stream_runtime_error",
             IsClientDisconnect: false,
             cancellationToken));
 

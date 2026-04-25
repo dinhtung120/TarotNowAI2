@@ -59,7 +59,7 @@ public sealed class DepositOrderCreateRequestedDomainEventHandler
 
         var selectedPackage = ResolvePackage(domainEvent.PackageCode);
         var bonusGoldAmount = await ResolveBonusGoldAsync(selectedPackage.AmountVnd, cancellationToken);
-        var orderCode = GenerateOrderCode();
+        var orderCode = await _depositOrderRepository.GetNextPayOsOrderCodeAsync(cancellationToken);
         var paymentLink = await CreatePaymentLinkAsync(selectedPackage, orderCode, cancellationToken);
 
         var order = new DepositOrder(
@@ -165,13 +165,6 @@ public sealed class DepositOrderCreateRequestedDomainEventHandler
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(source));
         var hashPrefix = Convert.ToHexString(hash.AsSpan(0, 16)).ToLowerInvariant();
         return $"deposit_{userId:N}_{hashPrefix}";
-    }
-
-    private static long GenerateOrderCode()
-    {
-        var unixMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        var suffix = RandomNumberGenerator.GetInt32(0, 1000);
-        return checked(unixMilliseconds * 1000 + suffix);
     }
 
     private static string BuildPaymentDescription(long orderCode)

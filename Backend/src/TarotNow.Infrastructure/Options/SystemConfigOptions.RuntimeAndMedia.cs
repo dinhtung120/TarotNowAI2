@@ -54,6 +54,7 @@ public sealed partial class SystemConfigOptions
         public sealed class OutboxOptions
         {
             public int BatchSize { get; set; } = 50;
+            public int Parallelism { get; set; } = 4;
             public int MaxRetryAttempts { get; set; } = 12;
             public int LockTimeoutSeconds { get; set; } = 120;
             public int MaxBackoffSeconds { get; set; } = 300;

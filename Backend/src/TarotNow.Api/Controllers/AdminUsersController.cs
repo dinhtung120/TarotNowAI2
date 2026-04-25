@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.Mvc;
+using TarotNow.Api.Extensions;
 
 namespace TarotNow.Api.Controllers;
 
@@ -82,7 +83,7 @@ public sealed class AdminUsersController : ControllerBase
         command.UserId = id;
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
         {
-            var headerKey = Request.Headers["X-Idempotency-Key"].ToString();
+            var headerKey = Request.GetIdempotencyKeyOrEmpty();
             // Ưu tiên idempotency key từ header, fallback sang GUID mới để chống xử lý lặp.
             command.IdempotencyKey = !string.IsNullOrWhiteSpace(headerKey) ? headerKey : Guid.NewGuid().ToString();
         }
@@ -109,7 +110,7 @@ public sealed class AdminUsersController : ControllerBase
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
         {
             // Đọc idempotency key từ header để giảm rủi ro cộng tiền trùng khi retry request.
-            command.IdempotencyKey = Request.Headers["X-Idempotency-Key"].ToString();
+            command.IdempotencyKey = Request.GetIdempotencyKeyOrEmpty();
         }
 
         var result = await _mediator.Send(command);

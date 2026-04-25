@@ -11,16 +11,12 @@ public partial class AiController
     /// Luồng xử lý: gửi command, ánh xạ exception thành HTTP status + SSE message phù hợp.
     /// </summary>
     /// <param name="userId">Id người dùng yêu cầu stream.</param>
-    /// <param name="sessionId">Id reading session.</param>
-    /// <param name="followUpQuestion">Câu hỏi follow-up tùy chọn.</param>
-    /// <param name="language">Ngôn ngữ phản hồi mong muốn.</param>
+    /// <param name="streamStartRequest">Ngữ cảnh request stream đã gom tham số transport.</param>
     /// <param name="cancellationToken">Token hủy request.</param>
     /// <returns>Thông tin stream nếu khởi tạo thành công; ngược lại trả <c>null</c>.</returns>
     private async Task<StreamReadingResult?> TryStartStreamAsync(
         Guid userId,
-        string sessionId,
-        string? followUpQuestion,
-        string? language,
+        StreamStartRequest streamStartRequest,
         CancellationToken cancellationToken)
     {
         try
@@ -29,34 +25,43 @@ public partial class AiController
             return await _mediator.Send(new StreamReadingCommand
             {
                 UserId = userId,
-                ReadingSessionId = sessionId,
-                FollowupQuestion = followUpQuestion,
-                Language = language ?? "vi"
+                ReadingSessionId = streamStartRequest.SessionId,
+                FollowupQuestion = streamStartRequest.FollowUpQuestion,
+                Language = streamStartRequest.Language ?? "vi",
+                IdempotencyKey = streamStartRequest.IdempotencyKey
             }, cancellationToken);
         }
         catch (BadRequestException ex)
         {
             // Nhóm lỗi validation/business input được phản hồi 400 để client tự chỉnh request.
+            _logger.LogInformation(ex, "Rejected AI stream request for session {SessionId}.", streamStartRequest.SessionId);
             Response.StatusCode = StatusCodes.Status400BadRequest;
-            await WriteServerEventAsync(ex.Message, cancellationToken);
+            await WriteServerEventAsync("AI stream request is invalid.", cancellationToken);
             return null;
         }
         catch (NotFoundException ex)
         {
             // Session không tồn tại hoặc không truy cập được được ánh xạ về 404 nhất quán.
+            _logger.LogInformation(ex, "AI stream session not found {SessionId}.", streamStartRequest.SessionId);
             Response.StatusCode = StatusCodes.Status404NotFound;
-            await WriteServerEventAsync(ex.Message, cancellationToken);
+            await WriteServerEventAsync("Reading session was not found.", cancellationToken);
             return null;
         }
         catch (Exception ex)
         {
             // Lỗi hạ tầng không mong đợi được log cảnh báo và trả thông điệp an toàn cho client.
-            _logger.LogWarning(ex, "Failed to initialize AI stream for session {SessionId}.", sessionId);
+            _logger.LogWarning(ex, "Failed to initialize AI stream for session {SessionId}.", streamStartRequest.SessionId);
             Response.StatusCode = StatusCodes.Status500InternalServerError;
             await WriteServerEventAsync("Unable to start AI stream. Please try again later.", cancellationToken);
             return null;
         }
     }
+
+    private readonly record struct StreamStartRequest(
+        string SessionId,
+        string? FollowUpQuestion,
+        string? Language,
+        string? IdempotencyKey);
 
     /// <summary>
     /// Thiết lập header chuẩn cho response SSE.

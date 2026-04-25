@@ -151,6 +151,12 @@ public sealed partial class SystemConfigSettings
         min: 1,
         max: 5000);
 
+    // Outbox parallelism.
+    public int OperationalOutboxParallelism => ClampInt(
+        ReadInt(["operational.outbox.parallelism"], _options.Operational.Outbox.Parallelism),
+        min: 1,
+        max: 64);
+
     // Outbox max retry attempts.
     public int OperationalOutboxMaxRetryAttempts => ClampInt(
         ReadInt(["operational.outbox.max_retry_attempts"], _options.Operational.Outbox.MaxRetryAttempts),
