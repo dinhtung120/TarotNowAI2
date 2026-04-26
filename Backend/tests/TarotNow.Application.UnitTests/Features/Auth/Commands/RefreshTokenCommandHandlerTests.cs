@@ -1,6 +1,8 @@
+using AutoMapper;
 using Moq;
 using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Exceptions;
+using TarotNow.Application.Features.Auth.Commands.Login;
 using TarotNow.Application.Features.Auth.Commands.RefreshToken;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
@@ -15,6 +17,7 @@ public class RefreshTokenCommandExecutorTests
     private readonly Mock<ITokenService> _tokenServiceMock;
     private readonly Mock<IJwtTokenSettings> _jwtTokenSettingsMock;
     private readonly Mock<IDomainEventPublisher> _domainEventPublisherMock;
+    private readonly Mock<IMapper> _mapperMock;
     private readonly RefreshTokenCommandExecutor _handler;
 
     public RefreshTokenCommandExecutorTests()
@@ -24,6 +27,7 @@ public class RefreshTokenCommandExecutorTests
         _tokenServiceMock = new Mock<ITokenService>();
         _jwtTokenSettingsMock = new Mock<IJwtTokenSettings>();
         _domainEventPublisherMock = new Mock<IDomainEventPublisher>();
+        _mapperMock = new Mock<IMapper>();
 
         _jwtTokenSettingsMock.SetupGet(x => x.RefreshTokenExpiryDays).Returns(30);
         _jwtTokenSettingsMock.SetupGet(x => x.AccessTokenExpiryMinutes).Returns(10);
@@ -31,6 +35,20 @@ public class RefreshTokenCommandExecutorTests
         _domainEventPublisherMock
             .Setup(x => x.PublishAsync(It.IsAny<Domain.Events.IDomainEvent>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
+        _mapperMock
+            .Setup(x => x.Map<UserProfileDto>(It.IsAny<User>()))
+            .Returns((User source) => new UserProfileDto
+            {
+                Id = source.Id,
+                Username = source.Username,
+                DisplayName = source.DisplayName,
+                Email = source.Email,
+                AvatarUrl = source.AvatarUrl,
+                Level = source.Level,
+                Exp = source.Exp,
+                Role = source.Role,
+                Status = source.Status.ToString()
+            });
         _authSessionRepositoryMock
             .Setup(x => x.TouchAsync(
                 It.IsAny<Guid>(),
@@ -44,7 +62,8 @@ public class RefreshTokenCommandExecutorTests
             _authSessionRepositoryMock.Object,
             _tokenServiceMock.Object,
             _jwtTokenSettingsMock.Object,
-            _domainEventPublisherMock.Object);
+            _domainEventPublisherMock.Object,
+            _mapperMock.Object);
     }
 
     [Fact]

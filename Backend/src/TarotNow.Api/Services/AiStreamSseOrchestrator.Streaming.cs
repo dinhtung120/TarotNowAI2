@@ -1,5 +1,6 @@
 using TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
 using TarotNow.Application.Features.Reading.Commands.StreamReading;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Api.Services;
 
@@ -47,21 +48,37 @@ public sealed partial class AiStreamSseOrchestrator
 
     private async Task WriteStreamAsync(
         HttpResponse response,
-        IAsyncEnumerable<string> stream,
+        IAsyncEnumerable<AiStreamChunk> stream,
         StreamExecutionState state,
         CancellationToken cancellationToken)
     {
-        await foreach (var chunk in stream.WithCancellation(cancellationToken))
+        await foreach (var streamChunk in stream.WithCancellation(cancellationToken))
         {
+            if (streamChunk.Usage is not null)
+            {
+                state.ProviderOutputTokens = Math.Max(0, streamChunk.Usage.OutputTokens);
+                if (streamChunk.Usage.InputTokens > 0)
+                {
+                    state.ProviderInputTokens = streamChunk.Usage.InputTokens;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(streamChunk.Content))
+            {
+                continue;
+            }
+
+            var content = streamChunk.Content;
             if (state.FirstTokenAt is null)
             {
                 state.FirstTokenAt = DateTimeOffset.UtcNow;
             }
 
-            state.FullResponseBuilder.Append(chunk);
-            state.OutputTokens += EstimateTokenCount(chunk);
+            state.HasStreamedContent = true;
+            state.FullResponseBuilder.Append(content);
+            state.EstimatedOutputTokens += EstimateTokenCount(content);
 
-            var sanitizedChunk = chunk.Replace("\n", "\\n");
+            var sanitizedChunk = content.Replace("\n", "\\n");
             await WriteServerEventAsync(response, sanitizedChunk, cancellationToken);
             await response.Body.FlushAsync(cancellationToken);
         }
@@ -81,9 +98,22 @@ public sealed partial class AiStreamSseOrchestrator
     {
         public DateTimeOffset? FirstTokenAt { get; set; }
 
-        public int OutputTokens { get; set; }
+        public bool HasStreamedContent { get; set; }
+
+        public int EstimatedOutputTokens { get; set; }
+
+        public int? ProviderOutputTokens { get; set; }
+
+        public int? ProviderInputTokens { get; set; }
 
         public System.Text.StringBuilder FullResponseBuilder { get; } = new();
+
+        public int OutputTokens => ProviderOutputTokens ?? EstimatedOutputTokens;
+
+        public int ResolveInputTokens(int fallbackInputTokens)
+        {
+            return ProviderInputTokens ?? fallbackInputTokens;
+        }
     }
 
     private readonly record struct StreamCompletionContext(

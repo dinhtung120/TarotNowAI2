@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
 using System.Net;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Infrastructure.Services.Ai;
 
@@ -12,7 +13,7 @@ public partial class OpenAiProvider
     /// Stream phản hồi chat từ OpenAI theo từng chunk text.
     /// Luồng gửi request dạng stream, đọc tuần tự từng dòng SSE và yield nội dung hợp lệ về caller.
     /// </summary>
-    public async IAsyncEnumerable<string> StreamChatAsync(
+    public async IAsyncEnumerable<AiStreamChunk> StreamChatAsync(
         string systemPrompt,
         string userPrompt,
         [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -36,17 +37,17 @@ public partial class OpenAiProvider
                 break;
             }
 
-            var chunkContent = TryReadChunkContent(line);
-            if (chunkContent == StreamChunkDone)
+            var parsedChunk = TryReadChunk(line);
+            if (parsedChunk.IsDone)
             {
                 // Nhận tín hiệu [DONE] từ OpenAI thì dừng stream có kiểm soát.
                 yield break;
             }
 
-            if (chunkContent != null)
+            if (parsedChunk.Chunk is not null)
             {
                 // Chỉ phát chunk có nội dung để tránh đẩy dòng keep-alive vô nghĩa.
-                yield return chunkContent;
+                yield return parsedChunk.Chunk;
             }
         }
     }
@@ -130,9 +131,6 @@ public partial class OpenAiProvider
         return Math.Clamp(exponential + jitter, _streamingRetryBaseDelayMs, 30_000);
     }
 
-    // Sentinel nội bộ để biểu diễn tín hiệu kết thúc stream.
-    private static readonly string StreamChunkDone = "__DONE__";
-
     /// <summary>
     /// Tạo payload chat completion theo cấu hình provider hiện tại.
     /// Luồng này gom prompt hệ thống và prompt người dùng vào đúng định dạng OpenAI API.
@@ -148,37 +146,73 @@ public partial class OpenAiProvider
                 new { role = "user", content = userPrompt }
             },
             temperature = _streamingTemperature,
-            stream = true
+            stream = true,
+            stream_options = new
+            {
+                include_usage = true
+            }
         };
     }
 
     /// <summary>
-    /// Trích nội dung text từ một dòng SSE trả về.
-    /// Luồng bỏ qua dòng không hợp lệ, nhận diện tín hiệu [DONE], và parse JSON delta content.
+    /// Parse một dòng SSE thành chunk có content/usage.
+    /// Luồng bỏ qua keep-alive, nhận diện [DONE], và parse JSON payload hợp lệ.
     /// </summary>
-    private string? TryReadChunkContent(string? line)
+    private ParsedStreamChunk TryReadChunk(string? line)
     {
         if (string.IsNullOrWhiteSpace(line) || !line.StartsWith("data: ", StringComparison.Ordinal))
         {
             // Dòng rỗng/không đúng tiền tố SSE không chứa nội dung cần phát.
-            return null;
+            return default;
         }
 
         var data = line[6..].Trim();
         if (data == "[DONE]")
         {
-            return StreamChunkDone;
+            return new ParsedStreamChunk(IsDone: true, Chunk: null);
         }
 
         try
         {
-            // JSON delta có thể không có content ở một số chunk, khi đó trả null để bỏ qua.
-            return JsonNode.Parse(data)?["choices"]?[0]?["delta"]?["content"]?.GetValue<string>();
+            var root = JsonNode.Parse(data);
+            var content = root?["choices"]?[0]?["delta"]?["content"]?.GetValue<string>();
+            var usageNode = root?["usage"];
+            AiProviderTokenUsage? usage = null;
+            if (usageNode is not null)
+            {
+                usage = new AiProviderTokenUsage
+                {
+                    InputTokens = ReadInt(usageNode["prompt_tokens"]),
+                    OutputTokens = ReadInt(usageNode["completion_tokens"])
+                };
+            }
+
+            if (string.IsNullOrWhiteSpace(content) && usage is null)
+            {
+                return default;
+            }
+
+            return new ParsedStreamChunk(
+                IsDone: false,
+                Chunk: new AiStreamChunk
+                {
+                    Content = content,
+                    Usage = usage
+                });
         }
         catch (Exception exception)
         {
             _logger.LogWarning(exception, "Malformed OpenAI stream chunk detected and skipped.");
-            return null;
+            return default;
         }
     }
+
+    private static int ReadInt(JsonNode? node)
+    {
+        return node is JsonValue jsonValue && jsonValue.TryGetValue<int>(out var value)
+            ? value
+            : 0;
+    }
+
+    private readonly record struct ParsedStreamChunk(bool IsDone, AiStreamChunk? Chunk);
 }

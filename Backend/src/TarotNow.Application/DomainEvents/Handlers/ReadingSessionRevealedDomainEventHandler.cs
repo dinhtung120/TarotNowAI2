@@ -82,11 +82,25 @@ public sealed class ReadingSessionRevealedDomainEventHandler
 
         try
         {
-            await foreach (var chunk in streamResult.Stream.WithCancellation(cancellationToken))
+            await foreach (var streamChunk in streamResult.Stream.WithCancellation(cancellationToken))
             {
+                if (streamChunk.Usage is not null)
+                {
+                    state.ProviderOutputTokens = Math.Max(0, streamChunk.Usage.OutputTokens);
+                    if (streamChunk.Usage.InputTokens > 0)
+                    {
+                        state.ProviderInputTokens = streamChunk.Usage.InputTokens;
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(streamChunk.Content))
+                {
+                    continue;
+                }
+
                 state.FirstTokenAt ??= DateTimeOffset.UtcNow;
-                state.FullResponse.Append(chunk);
-                state.OutputTokens += EstimateTokenCount(chunk);
+                state.FullResponse.Append(streamChunk.Content);
+                state.EstimatedOutputTokens += EstimateTokenCount(streamChunk.Content);
             }
         }
         catch (Exception ex)
@@ -122,7 +136,7 @@ public sealed class ReadingSessionRevealedDomainEventHandler
                 IsClientDisconnect = false,
                 FirstTokenAt = state.FirstTokenAt,
                 OutputTokens = state.OutputTokens,
-                InputTokens = streamResult.EstimatedInputTokens,
+                InputTokens = state.ResolveInputTokens(streamResult.EstimatedInputTokens),
                 LatencyMs = 0,
                 FullResponse = state.FullResponse.ToString(),
                 FollowupQuestion = null
@@ -144,13 +158,24 @@ public sealed class ReadingSessionRevealedDomainEventHandler
     {
         public DateTimeOffset? FirstTokenAt { get; set; }
 
-        public int OutputTokens { get; set; }
+        public int EstimatedOutputTokens { get; set; }
+
+        public int? ProviderOutputTokens { get; set; }
+
+        public int? ProviderInputTokens { get; set; }
 
         public string FinalStatus { get; set; } = AiStreamFinalStatuses.Completed;
 
         public string? ErrorMessage { get; set; }
 
         public System.Text.StringBuilder FullResponse { get; } = new();
+
+        public int OutputTokens => ProviderOutputTokens ?? EstimatedOutputTokens;
+
+        public int ResolveInputTokens(int fallbackInputTokens)
+        {
+            return ProviderInputTokens ?? fallbackInputTokens;
+        }
     }
 
     private static int EstimateTokenCount(string? content)

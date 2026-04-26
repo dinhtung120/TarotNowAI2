@@ -1,5 +1,6 @@
 
 
+using AutoMapper;
 using Moq;
 using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Features.Auth.Commands.Login;
@@ -25,6 +26,7 @@ public class LoginCommandExecutorTests
     private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock;
     private readonly Mock<IAuthSessionRepository> _authSessionRepositoryMock;
     private readonly Mock<IDomainEventPublisher> _domainEventPublisherMock;
+    private readonly Mock<IMapper> _mapperMock;
     // Handler cần kiểm thử.
     private readonly LoginCommandExecutor _handler;
 
@@ -41,19 +43,35 @@ public class LoginCommandExecutorTests
         _refreshTokenRepositoryMock = new Mock<IRefreshTokenRepository>();
         _authSessionRepositoryMock = new Mock<IAuthSessionRepository>();
         _domainEventPublisherMock = new Mock<IDomainEventPublisher>();
+        _mapperMock = new Mock<IMapper>();
 
         _jwtTokenSettingsMock.SetupGet(x => x.RefreshTokenExpiryDays).Returns(7);
         _jwtTokenSettingsMock.SetupGet(x => x.AccessTokenExpiryMinutes).Returns(15);
         _domainEventPublisherMock
             .Setup(x => x.PublishAsync(It.IsAny<Domain.Events.IDomainEvent>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
+        _mapperMock
+            .Setup(x => x.Map<UserProfileDto>(It.IsAny<User>()))
+            .Returns((User source) => new UserProfileDto
+            {
+                Id = source.Id,
+                Username = source.Username,
+                DisplayName = source.DisplayName,
+                Email = source.Email,
+                AvatarUrl = source.AvatarUrl,
+                Level = source.Level,
+                Exp = source.Exp,
+                Role = source.Role,
+                Status = source.Status.ToString()
+            });
 
         _handler = new LoginCommandExecutor(
             _userRepositoryMock.Object, _passwordHasherMock.Object,
             _tokenServiceMock.Object, _jwtTokenSettingsMock.Object,
             _refreshTokenRepositoryMock.Object,
             _authSessionRepositoryMock.Object,
-            _domainEventPublisherMock.Object
+            _domainEventPublisherMock.Object,
+            _mapperMock.Object
         );
     }
 

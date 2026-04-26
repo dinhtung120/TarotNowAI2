@@ -1,5 +1,4 @@
 using TarotNow.Application.Common.Constants;
-using TarotNow.Application.Common.Mappings;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Auth.Commands.Login;
 using TarotNow.Application.Interfaces;
@@ -58,7 +57,7 @@ public partial class RefreshTokenCommandExecutor
         {
             AccessToken = accessToken,
             ExpiresInSeconds = _jwtTokenSettings.AccessTokenExpiryMinutes * 60,
-            User = user.ToUserProfileDto()
+            User = _mapper.Map<UserProfileDto>(user)
         };
     }
 

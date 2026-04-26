@@ -24,16 +24,6 @@ public sealed partial class RefreshTokenRepository
             await localTransaction.CommitAsync(cancellationToken);
         }
 
-        await TryCacheIdempotentResultAsync(
-            context.IdempotencyCacheKey,
-            nextToken.Id,
-            nextToken.ExpiresAt,
-            cancellationToken);
-        await TryCacheIdempotentResultAsync(
-            context.TokenIdempotencyCacheKey,
-            nextToken.Id,
-            nextToken.ExpiresAt,
-            cancellationToken);
         return RefreshRotateResult.Success(context.CurrentToken, nextToken, context.Request.NewRawToken);
     }
 
@@ -59,32 +49,6 @@ public sealed partial class RefreshTokenRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    private async Task TryCacheIdempotentResultAsync(
-        string idemCacheKey,
-        Guid newTokenId,
-        DateTime newTokenExpiresAtUtc,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var window = TimeSpan.FromSeconds(Math.Max(10, _authSecurityOptions.RefreshIdempotencyWindowSeconds));
-            var cacheItem = new RefreshRotateCacheItem
-            {
-                NewTokenId = newTokenId,
-                NewTokenExpiresAtUtc = newTokenExpiresAtUtc
-            };
-            await _cacheService.SetAsync(idemCacheKey, cacheItem, window, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(
-                ex,
-                "Unable to persist refresh idempotency cache. Key={IdempotencyKey}",
-                idemCacheKey);
-            // Không fail request sau khi DB đã commit rotation thành công.
-        }
-    }
-
     private async Task<RefreshToken?> LoadForUpdateAsync(string hashedToken, CancellationToken ct)
     {
         return await _dbContext.RefreshTokens
@@ -98,6 +62,14 @@ public sealed partial class RefreshTokenRepository
                 """)
             .Include(x => x.User)
             .FirstOrDefaultAsync(ct);
+    }
+
+    private async Task<RefreshToken?> LoadTokenSnapshotByHashAsync(string hashedToken, CancellationToken cancellationToken)
+    {
+        return await _dbContext.RefreshTokens
+            .AsNoTracking()
+            .Include(x => x.User)
+            .FirstOrDefaultAsync(x => x.Token == hashedToken, cancellationToken);
     }
 
     private static string NormalizeIdempotencyKey(
@@ -132,26 +104,8 @@ public sealed partial class RefreshTokenRepository
         return AuthCacheKeys.BuildRefreshLockKey(tokenHash);
     }
 
-    private static string BuildRefreshIdempotencyKey(Guid sessionId, string idempotencyKey)
-    {
-        return AuthCacheKeys.BuildRefreshSessionIdempotencyKey(sessionId, idempotencyKey);
-    }
-
-    private static string BuildRefreshTokenIdempotencyKey(string tokenHash, string idempotencyKey)
-    {
-        return AuthCacheKeys.BuildRefreshTokenIdempotencyKey(tokenHash, idempotencyKey);
-    }
-
-    private sealed class RefreshRotateCacheItem
-    {
-        public Guid NewTokenId { get; set; }
-        public DateTime NewTokenExpiresAtUtc { get; set; }
-    }
-
     private sealed record RotatePersistContext(
         RefreshRotateRequest Request,
         RefreshToken CurrentToken,
-        string IdempotencyKey,
-        string IdempotencyCacheKey,
-        string TokenIdempotencyCacheKey);
+        string IdempotencyKey);
 }

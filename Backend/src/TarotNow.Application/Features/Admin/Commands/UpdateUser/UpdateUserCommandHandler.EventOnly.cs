@@ -2,6 +2,7 @@ using MediatR;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Events;
 
@@ -24,13 +25,17 @@ public sealed class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand
     }
 }
 
-public sealed class UpdateUserCommandHandlerRequestedDomainEvent : IDomainEvent
+public sealed class UpdateUserCommandHandlerRequestedDomainEvent : IIdempotentDomainEvent
 {
     public UpdateUserCommand Command { get; }
 
     public object? Result { get; set; }
 
     public DateTime OccurredAtUtc { get; } = DateTime.UtcNow;
+
+    public string EventIdempotencyKey => CommandEventIdempotencyKey.Build(
+        nameof(UpdateUserCommandHandlerRequestedDomainEvent),
+        Command.IdempotencyKey);
 
     public UpdateUserCommandHandlerRequestedDomainEvent(UpdateUserCommand command)
     {

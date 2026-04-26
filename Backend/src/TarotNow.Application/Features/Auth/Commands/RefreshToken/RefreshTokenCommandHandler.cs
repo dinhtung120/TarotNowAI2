@@ -1,5 +1,6 @@
 
 
+using AutoMapper;
 using MediatR;
 using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Features.Auth.Commands.Login;
@@ -20,6 +21,7 @@ public partial class RefreshTokenCommandExecutor : ICommandExecutionExecutor<Ref
     private readonly ITokenService _tokenService;
     private readonly IJwtTokenSettings _jwtTokenSettings;
     private readonly IDomainEventPublisher _domainEventPublisher;
+    private readonly IMapper _mapper;
 
     /// <summary>
     /// Khởi tạo handler refresh token.
@@ -30,13 +32,15 @@ public partial class RefreshTokenCommandExecutor : ICommandExecutionExecutor<Ref
         IAuthSessionRepository authSessionRepository,
         ITokenService tokenService,
         IJwtTokenSettings jwtTokenSettings,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        IMapper mapper)
     {
         _refreshTokenRepository = refreshTokenRepository;
         _authSessionRepository = authSessionRepository;
         _tokenService = tokenService;
         _jwtTokenSettings = jwtTokenSettings;
         _domainEventPublisher = domainEventPublisher;
+        _mapper = mapper;
     }
 
     /// <summary>

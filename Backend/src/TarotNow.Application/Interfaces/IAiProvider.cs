@@ -13,7 +13,7 @@ public interface IAiProvider
     /// Stream phản hồi hội thoại từ AI để giảm độ trễ hiển thị cho người dùng.
     /// Luồng xử lý: gửi systemPrompt và userPrompt tới provider, sau đó trả luồng token theo thời gian thực.
     /// </summary>
-    IAsyncEnumerable<string> StreamChatAsync(string systemPrompt, string userPrompt, CancellationToken cancellationToken);
+    IAsyncEnumerable<AiStreamChunk> StreamChatAsync(string systemPrompt, string userPrompt, CancellationToken cancellationToken);
 
     // Tên nhà cung cấp để phục vụ audit và routing theo cấu hình.
     string ProviderName { get; }
@@ -26,6 +26,24 @@ public interface IAiProvider
     /// Luồng xử lý: nhận payload log đã chuẩn hóa và ghi xuống kho lưu trữ tương ứng của provider.
     /// </summary>
     Task LogRequestAsync(AiProviderRequestLog logEntry, CancellationToken cancellationToken = default);
+}
+
+// Chunk stream trả về từ provider; có thể chứa content, usage hoặc cả hai.
+public sealed class AiStreamChunk
+{
+    // Phần nội dung text trả về theo thời gian thực (nếu có).
+    public string? Content { get; init; }
+
+    // Token usage thực từ provider (thường có ở cuối stream).
+    public AiProviderTokenUsage? Usage { get; init; }
+}
+
+// Token usage chuẩn hóa từ provider để telemetry/billing dùng thống nhất.
+public sealed class AiProviderTokenUsage
+{
+    public int InputTokens { get; init; }
+
+    public int OutputTokens { get; init; }
 }
 
 // DTO log request để thống nhất dữ liệu giám sát giữa các provider.

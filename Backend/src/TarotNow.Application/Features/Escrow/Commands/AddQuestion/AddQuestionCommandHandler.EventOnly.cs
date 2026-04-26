@@ -2,6 +2,7 @@ using MediatR;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Events;
 
@@ -24,13 +25,17 @@ public sealed class AddQuestionCommandHandler : IRequestHandler<AddQuestionComma
     }
 }
 
-public sealed class AddQuestionCommandHandlerRequestedDomainEvent : IDomainEvent
+public sealed class AddQuestionCommandHandlerRequestedDomainEvent : IIdempotentDomainEvent
 {
     public AddQuestionCommand Command { get; }
 
     public object? Result { get; set; }
 
     public DateTime OccurredAtUtc { get; } = DateTime.UtcNow;
+
+    public string EventIdempotencyKey => CommandEventIdempotencyKey.Build(
+        nameof(AddQuestionCommandHandlerRequestedDomainEvent),
+        Command.IdempotencyKey);
 
     public AddQuestionCommandHandlerRequestedDomainEvent(AddQuestionCommand command)
     {

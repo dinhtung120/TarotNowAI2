@@ -177,6 +177,71 @@ public sealed class EventDrivenArchitectureRulesTests
             "all command handlers must dispatch domain events via IInlineDomainEventDispatcher and must not inject repository/service/provider dependencies directly.");
     }
 
+    /// <summary>
+    /// Xác nhận command-requested domain events của command critical (IdempotencyKey/AiRequestId) đều khai báo idempotency inline.
+    /// </summary>
+    [Fact]
+    public void CommandRequestedDomainEvents_WithCriticalIdempotencyCommands_ShouldImplementIIdempotentDomainEvent()
+    {
+        var backendRoot = FindBackendRoot();
+        var featuresRoot = Path.Combine(backendRoot, "src", "TarotNow.Application", "Features");
+        var eventOnlyFiles = Directory.GetFiles(featuresRoot, "*CommandHandler.EventOnly.cs", SearchOption.AllDirectories);
+        var commandFiles = Directory.GetFiles(featuresRoot, "*.cs", SearchOption.AllDirectories);
+        var commandClassRegex = new Regex(@"\b(?:class|record|struct)\s+(?<name>\w+Command)\b", RegexOptions.Compiled);
+        var commandByType = commandFiles
+            .SelectMany(path =>
+            {
+                var text = File.ReadAllText(path);
+                var matches = commandClassRegex.Matches(text);
+                return matches
+                    .Cast<Match>()
+                    .Select(match => new { CommandType = match.Groups["name"].Value, Path = path, Text = text });
+            })
+            .GroupBy(item => item.CommandType, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+
+        var commandPropertyRegex = new Regex(@"\bpublic\s+(?<command>\w+Command)\s+Command\s*\{", RegexOptions.Compiled);
+        var criticalIdempotencyRegex = new Regex(@"\bIdempotencyKey\b", RegexOptions.Compiled);
+        var eventContractRegex = new Regex(@"\bclass\s+\w+CommandHandlerRequestedDomainEvent\s*:\s*IIdempotentDomainEvent\b", RegexOptions.Compiled);
+        var keyBuilderRegex = new Regex(@"\bCommandEventIdempotencyKey\.Build\s*\(", RegexOptions.Compiled);
+
+        var violations = new List<string>();
+        foreach (var eventFile in eventOnlyFiles)
+        {
+            var eventText = File.ReadAllText(eventFile);
+            var commandMatch = commandPropertyRegex.Match(eventText);
+            if (!commandMatch.Success)
+            {
+                continue;
+            }
+
+            var commandType = commandMatch.Groups["command"].Value;
+            if (!commandByType.TryGetValue(commandType, out var commandInfo))
+            {
+                violations.Add($"{ToBackendRelativePath(backendRoot, eventFile)} (missing command file for {commandType})");
+                continue;
+            }
+
+            var isCriticalCommand = criticalIdempotencyRegex.IsMatch(commandInfo.Text)
+                                    || string.Equals(commandType, "CompleteAiStreamCommand", StringComparison.Ordinal);
+            if (!isCriticalCommand)
+            {
+                continue;
+            }
+
+            if (!eventContractRegex.IsMatch(eventText) || !keyBuilderRegex.IsMatch(eventText))
+            {
+                violations.Add(ToBackendRelativePath(backendRoot, eventFile));
+            }
+        }
+
+        violations
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .Should()
+            .BeEmpty("critical command-requested events must implement IIdempotentDomainEvent with CommandEventIdempotencyKey.Build(...).");
+    }
+
     private static string FindBackendRoot()
     {
         var current = new DirectoryInfo(AppContext.BaseDirectory);

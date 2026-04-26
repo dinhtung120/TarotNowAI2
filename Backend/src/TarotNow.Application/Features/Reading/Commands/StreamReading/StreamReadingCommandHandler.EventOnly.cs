@@ -2,6 +2,7 @@ using MediatR;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Events;
 
@@ -24,7 +25,7 @@ public sealed class StreamReadingCommandHandler : IRequestHandler<StreamReadingC
     }
 }
 
-public sealed class StreamReadingCommandHandlerRequestedDomainEvent : IDomainEvent
+public sealed class StreamReadingCommandHandlerRequestedDomainEvent : IIdempotentDomainEvent
 {
     public StreamReadingCommand Command { get; }
 
@@ -32,8 +33,25 @@ public sealed class StreamReadingCommandHandlerRequestedDomainEvent : IDomainEve
 
     public DateTime OccurredAtUtc { get; } = DateTime.UtcNow;
 
+    public string EventIdempotencyKey => CommandEventIdempotencyKey.Build(
+        nameof(StreamReadingCommandHandlerRequestedDomainEvent),
+        ResolveRawIdempotencyKey(Command));
+
     public StreamReadingCommandHandlerRequestedDomainEvent(StreamReadingCommand command)
     {
         Command = command;
+    }
+
+    private static string ResolveRawIdempotencyKey(StreamReadingCommand command)
+    {
+        if (string.IsNullOrWhiteSpace(command.IdempotencyKey) == false)
+        {
+            return command.IdempotencyKey!;
+        }
+
+        var followup = string.IsNullOrWhiteSpace(command.FollowupQuestion)
+            ? "none"
+            : command.FollowupQuestion.Trim().ToLowerInvariant();
+        return $"{command.UserId:N}:{command.ReadingSessionId.Trim().ToLowerInvariant()}:{followup}";
     }
 }

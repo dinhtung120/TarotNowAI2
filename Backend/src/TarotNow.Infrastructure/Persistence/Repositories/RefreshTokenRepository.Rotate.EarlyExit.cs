@@ -8,7 +8,6 @@ public sealed partial class RefreshTokenRepository
 {
     private async Task<RefreshRotateResult?> TryBuildEarlyExitResultAsync(
         RefreshToken current,
-        string idemCacheKey,
         RotateTransactionContext context,
         CancellationToken cancellationToken)
     {
@@ -28,8 +27,6 @@ public sealed partial class RefreshTokenRepository
             var idempotentResult = await TryBuildIdempotentResultAsync(
                 current,
                 context.Request.NewRawToken,
-                idemCacheKey,
-                context.TokenIdempotencyCacheKey,
                 cancellationToken);
             // Nếu không thể chứng minh cùng refresh token mới thì fail-closed để tránh trả token sai.
             return idempotentResult ?? RefreshRotateResult.Locked();
@@ -46,8 +43,6 @@ public sealed partial class RefreshTokenRepository
     private async Task<RefreshRotateResult?> TryBuildIdempotentResultAsync(
         RefreshToken current,
         string requestNewRawToken,
-        string idemCacheKey,
-        string tokenIdempotencyCacheKey,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(requestNewRawToken))
@@ -60,18 +55,7 @@ public sealed partial class RefreshTokenRepository
         {
             return RefreshRotateResult.Idempotent(current, requestNewRawToken, replacementToken.ExpiresAt);
         }
-
-        var cached = await _cacheService.GetAsync<RefreshRotateCacheItem>(idemCacheKey, cancellationToken)
-            ?? await _cacheService.GetAsync<RefreshRotateCacheItem>(tokenIdempotencyCacheKey, cancellationToken);
-        if (cached is null || cached.NewTokenId == Guid.Empty)
-        {
-            return null;
-        }
-
-        replacementToken = await TryLoadReplacementTokenAsync(cached.NewTokenId, cancellationToken);
-        return replacementToken is not null && replacementToken.MatchesToken(requestNewRawToken)
-            ? RefreshRotateResult.Idempotent(current, requestNewRawToken, replacementToken.ExpiresAt)
-            : null;
+        return null;
     }
 
     private async Task<RefreshToken?> TryLoadReplacementTokenAsync(Guid? replacementTokenId, CancellationToken cancellationToken)

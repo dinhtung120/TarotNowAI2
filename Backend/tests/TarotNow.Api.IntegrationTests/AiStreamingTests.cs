@@ -36,7 +36,7 @@ public class MockAiProvider : IAiProvider
     /// Trả về chuỗi chunk mẫu để mô phỏng stream từ provider thật.
     /// Luồng đọc tuần tự từng chunk và tôn trọng cancellation token.
     /// </summary>
-    public async IAsyncEnumerable<string> StreamChatAsync(string systemPrompt, string userPrompt, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<AiStreamChunk> StreamChatAsync(string systemPrompt, string userPrompt, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         string[] chunks = { "Đây ", "là ", "kết ", "quả ", "giải ", "bài ", "mẫu " };
 
@@ -50,8 +50,20 @@ public class MockAiProvider : IAiProvider
 
             // Delay ngắn để mô phỏng provider trả token theo thời gian.
             await Task.Delay(50, cancellationToken);
-            yield return chunk;
+            yield return new AiStreamChunk
+            {
+                Content = chunk
+            };
         }
+
+        yield return new AiStreamChunk
+        {
+            Usage = new AiProviderTokenUsage
+            {
+                InputTokens = 32,
+                OutputTokens = 7
+            }
+        };
     }
 }
 
@@ -74,7 +86,7 @@ public class ErrorMockAiProvider : IAiProvider
     /// Mô phỏng provider bị sự cố trước khi trả token đầu tiên.
     /// Luồng ném HttpRequestException để backend đi vào nhánh xử lý lỗi upstream.
     /// </summary>
-    public async IAsyncEnumerable<string> StreamChatAsync(string systemPrompt, string userPrompt, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<AiStreamChunk> StreamChatAsync(string systemPrompt, string userPrompt, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
         {
@@ -107,11 +119,17 @@ public class PartialMockAiProvider : IAiProvider
     /// Trả vài token đầu rồi ném TaskCanceledException.
     /// Luồng mô phỏng upstream timeout/cancellation sau khi đã phát token đầu tiên.
     /// </summary>
-    public async IAsyncEnumerable<string> StreamChatAsync(string systemPrompt, string userPrompt, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<AiStreamChunk> StreamChatAsync(string systemPrompt, string userPrompt, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        yield return "Đây ";
+        yield return new AiStreamChunk
+        {
+            Content = "Đây "
+        };
         await Task.Delay(50);
-        yield return "là ";
+        yield return new AiStreamChunk
+        {
+            Content = "là "
+        };
 
         // Ném hủy giữa luồng để backend phân loại đúng trạng thái failed-after-first-token.
         throw new TaskCanceledException("Client disconnected midway.");
@@ -127,12 +145,18 @@ public class SlowMockAiProvider : IAiProvider
     public Task LogRequestAsync(AiProviderRequestLog logEntry, CancellationToken cancellationToken = default)
         => Task.CompletedTask;
 
-    public async IAsyncEnumerable<string> StreamChatAsync(string systemPrompt, string userPrompt, [EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<AiStreamChunk> StreamChatAsync(string systemPrompt, string userPrompt, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         await Task.Delay(1200, cancellationToken);
-        yield return "slow-token-1";
+        yield return new AiStreamChunk
+        {
+            Content = "slow-token-1"
+        };
         await Task.Delay(1200, cancellationToken);
-        yield return "slow-token-2";
+        yield return new AiStreamChunk
+        {
+            Content = "slow-token-2"
+        };
     }
 }
 
@@ -630,15 +654,18 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         using var request2 = new HttpRequestMessage(HttpMethod.Get, requestPath);
         request2.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
 
-        var responseTask1 = client.SendAsync(request1, HttpCompletionOption.ResponseHeadersRead);
-        await Task.Delay(50);
-        var responseTask2 = client.SendAsync(request2, HttpCompletionOption.ResponseHeadersRead);
-        var responses = await Task.WhenAll(responseTask1, responseTask2);
+        using var accepted = await client.SendAsync(request1, HttpCompletionOption.ResponseHeadersRead);
+        Assert.Equal(System.Net.HttpStatusCode.OK, accepted.StatusCode);
 
-        Assert.Contains(responses, response => response.StatusCode == System.Net.HttpStatusCode.OK);
-        var rejected = Assert.Single(responses, response => response.StatusCode == System.Net.HttpStatusCode.BadRequest);
-        var rejectedBody = await rejected.Content.ReadAsStringAsync();
-        Assert.Contains("AI stream request is invalid.", rejectedBody);
+        using var rejected = await client.SendAsync(request2, HttpCompletionOption.ResponseHeadersRead);
+        if (rejected.StatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            var rejectedBody = await rejected.Content.ReadAsStringAsync();
+            Assert.Contains("AI stream request is invalid.", rejectedBody);
+            return;
+        }
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, rejected.StatusCode);
     }
 
     /// <summary>

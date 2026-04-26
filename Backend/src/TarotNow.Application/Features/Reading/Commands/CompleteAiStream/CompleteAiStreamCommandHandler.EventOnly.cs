@@ -2,6 +2,7 @@ using MediatR;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Events;
 
@@ -24,13 +25,17 @@ public sealed class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAiS
     }
 }
 
-public sealed class CompleteAiStreamCommandHandlerRequestedDomainEvent : IDomainEvent
+public sealed class CompleteAiStreamCommandHandlerRequestedDomainEvent : IIdempotentDomainEvent
 {
     public CompleteAiStreamCommand Command { get; }
 
     public object? Result { get; set; }
 
     public DateTime OccurredAtUtc { get; } = DateTime.UtcNow;
+
+    public string EventIdempotencyKey => CommandEventIdempotencyKey.Build(
+        nameof(CompleteAiStreamCommandHandlerRequestedDomainEvent),
+        Command.AiRequestId.ToString("N"));
 
     public CompleteAiStreamCommandHandlerRequestedDomainEvent(CompleteAiStreamCommand command)
     {

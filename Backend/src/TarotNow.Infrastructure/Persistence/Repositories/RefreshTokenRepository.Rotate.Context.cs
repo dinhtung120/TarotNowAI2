@@ -27,12 +27,10 @@ public sealed partial class RefreshTokenRepository
     private readonly record struct RotateTransactionContext(
         RefreshRotateRequest Request,
         string TokenHash,
-        string NormalizedIdempotencyKey,
-        string TokenIdempotencyCacheKey);
+        string NormalizedIdempotencyKey);
 
     private readonly record struct RotateExecutionContext(
         string LockKey,
         string LockOwner,
-        string TokenIdempotencyCacheKey,
         RotateTransactionContext TransactionContext);
 }

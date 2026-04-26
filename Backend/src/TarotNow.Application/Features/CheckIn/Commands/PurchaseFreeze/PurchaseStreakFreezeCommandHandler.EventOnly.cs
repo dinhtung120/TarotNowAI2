@@ -2,6 +2,7 @@ using MediatR;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Events;
 
@@ -24,13 +25,17 @@ public sealed class PurchaseStreakFreezeCommandHandler : IRequestHandler<Purchas
     }
 }
 
-public sealed class PurchaseStreakFreezeCommandHandlerRequestedDomainEvent : IDomainEvent
+public sealed class PurchaseStreakFreezeCommandHandlerRequestedDomainEvent : IIdempotentDomainEvent
 {
     public PurchaseStreakFreezeCommand Command { get; }
 
     public object? Result { get; set; }
 
     public DateTime OccurredAtUtc { get; } = DateTime.UtcNow;
+
+    public string EventIdempotencyKey => CommandEventIdempotencyKey.Build(
+        nameof(PurchaseStreakFreezeCommandHandlerRequestedDomainEvent),
+        Command.IdempotencyKey);
 
     public PurchaseStreakFreezeCommandHandlerRequestedDomainEvent(PurchaseStreakFreezeCommand command)
     {

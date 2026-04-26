@@ -1,3 +1,4 @@
+using AutoMapper;
 using MediatR;
 using TarotNow.Application.Interfaces;
 
@@ -13,6 +14,7 @@ public partial class LoginCommandExecutor : ICommandExecutionExecutor<LoginComma
     private readonly IAuthSessionRepository _authSessionRepository;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IDomainEventPublisher _domainEventPublisher;
+    private readonly IMapper _mapper;
 
     /// <summary>
     /// Khởi tạo handler đăng nhập.
@@ -25,7 +27,8 @@ public partial class LoginCommandExecutor : ICommandExecutionExecutor<LoginComma
         IJwtTokenSettings jwtTokenSettings,
         IRefreshTokenRepository refreshTokenRepository,
         IAuthSessionRepository authSessionRepository,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        IMapper mapper)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
@@ -34,6 +37,7 @@ public partial class LoginCommandExecutor : ICommandExecutionExecutor<LoginComma
         _refreshTokenRepository = refreshTokenRepository;
         _authSessionRepository = authSessionRepository;
         _domainEventPublisher = domainEventPublisher;
+        _mapper = mapper;
     }
 
     /// <summary>

@@ -12,7 +12,7 @@ public sealed partial class AiStreamSseOrchestrator
         HttpContext httpContext,
         CancellationToken requestToken)
     {
-        var finalStatus = context.State.OutputTokens > 0
+        var finalStatus = context.State.HasStreamedContent
             ? AiStreamFinalStatuses.FailedAfterFirstToken
             : AiStreamFinalStatuses.FailedBeforeFirstToken;
 
@@ -49,7 +49,7 @@ public sealed partial class AiStreamSseOrchestrator
         HttpResponse response,
         CancellationToken cancellationToken)
     {
-        var finalStatus = context.State.OutputTokens > 0
+        var finalStatus = context.State.HasStreamedContent
             ? AiStreamFinalStatuses.FailedAfterFirstToken
             : AiStreamFinalStatuses.FailedBeforeFirstToken;
 
@@ -104,7 +104,7 @@ public sealed partial class AiStreamSseOrchestrator
             IsClientDisconnect = completion.IsClientDisconnect,
             FirstTokenAt = completion.State.FirstTokenAt,
             OutputTokens = completion.State.OutputTokens,
-            InputTokens = completion.InputTokens,
+            InputTokens = completion.State.ResolveInputTokens(completion.InputTokens),
             LatencyMs = latencyMs,
             FullResponse = completion.State.FullResponseBuilder.ToString(),
             FollowupQuestion = completion.FollowUpQuestion

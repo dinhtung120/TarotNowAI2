@@ -2,6 +2,7 @@ using MediatR;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Events;
 
@@ -24,13 +25,17 @@ public sealed class AddUserBalanceCommandHandler : IRequestHandler<AddUserBalanc
     }
 }
 
-public sealed class AddUserBalanceCommandHandlerRequestedDomainEvent : IDomainEvent
+public sealed class AddUserBalanceCommandHandlerRequestedDomainEvent : IIdempotentDomainEvent
 {
     public AddUserBalanceCommand Command { get; }
 
     public object? Result { get; set; }
 
     public DateTime OccurredAtUtc { get; } = DateTime.UtcNow;
+
+    public string EventIdempotencyKey => CommandEventIdempotencyKey.Build(
+        nameof(AddUserBalanceCommandHandlerRequestedDomainEvent),
+        Command.IdempotencyKey);
 
     public AddUserBalanceCommandHandlerRequestedDomainEvent(AddUserBalanceCommand command)
     {

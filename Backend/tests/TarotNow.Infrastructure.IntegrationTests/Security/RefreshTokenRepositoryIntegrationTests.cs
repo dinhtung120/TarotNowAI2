@@ -89,7 +89,7 @@ public sealed class RefreshTokenRepositoryIntegrationTests
     }
 
     [Fact]
-    public async Task RotateAsync_ShouldReturnIdempotentFromCache_WhenLockContentionOccurs()
+    public async Task RotateAsync_ShouldReturnIdempotentFromDatabase_WhenLockContentionOccurs()
     {
         await ResetAuthTablesAsync();
 
@@ -107,10 +107,34 @@ public sealed class RefreshTokenRepositoryIntegrationTests
         var first = await repository.RotateAsync(request);
         Assert.Equal(RefreshRotateStatus.Success, first.Status);
 
-        // Mô phỏng request concurrent không acquire được lock; nhánh xử lý phải trả idempotent từ cache.
+        // Mô phỏng request concurrent không acquire được lock; nhánh xử lý phải trả idempotent từ DB state.
         cacheService.ForceAcquireFailure = true;
         var second = await repository.RotateAsync(request);
 
+        Assert.Equal(RefreshRotateStatus.Idempotent, second.Status);
+        Assert.Equal(newRawToken, second.NewRawToken);
+    }
+
+    [Fact]
+    public async Task RotateAsync_ShouldRemainIdempotent_WhenCacheGetSetThrows()
+    {
+        await ResetAuthTablesAsync();
+
+        var cacheService = new ThrowingReadWriteRefreshCacheService();
+        var user = CreateUser("db-first");
+        const string oldRawToken = "refresh-old-db-first";
+        const string newRawToken = "refresh-new-db-first";
+        var idempotencyKey = $"db-first-{Guid.NewGuid():N}";
+
+        await using var context = _fixture.CreateDbContext();
+        var repository = CreateRepository(context, cacheService);
+        await SeedUserAndTokenAsync(context, user, oldRawToken, DateTime.UtcNow.AddDays(7));
+
+        var request = BuildRotateRequest(oldRawToken, newRawToken, idempotencyKey);
+        var first = await repository.RotateAsync(request);
+        var second = await repository.RotateAsync(request);
+
+        Assert.Equal(RefreshRotateStatus.Success, first.Status);
         Assert.Equal(RefreshRotateStatus.Idempotent, second.Status);
         Assert.Equal(newRawToken, second.NewRawToken);
     }
@@ -305,5 +329,71 @@ public sealed class RefreshTokenRepositoryIntegrationTests
         }
 
         private readonly record struct CacheValue(object? Value, DateTime? ExpiresAtUtc);
+    }
+
+    private sealed class ThrowingReadWriteRefreshCacheService : ICacheService
+    {
+        private readonly ConcurrentDictionary<string, string> _locks = new(StringComparer.Ordinal);
+
+        public Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
+        {
+            throw new InvalidOperationException("GetAsync must not be called for refresh idempotency.");
+        }
+
+        public Task SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken cancellationToken = default)
+        {
+            throw new InvalidOperationException("SetAsync must not be called for refresh idempotency.");
+        }
+
+        public Task RemoveAsync(string key, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task<bool> CheckRateLimitAsync(string key, TimeSpan limitWindow, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(true);
+        }
+
+        public Task<long> IncrementAsync(string key, TimeSpan? expiration = null, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(1L);
+        }
+
+        public Task AddToSetAsync(string key, string member, TimeSpan? expiration = null, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task RemoveFromSetAsync(string key, string member, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task<IReadOnlyCollection<string>> GetSetMembersAsync(string key, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<IReadOnlyCollection<string>>(Array.Empty<string>());
+        }
+
+        public Task<bool> AcquireLockAsync(
+            string key,
+            string owner,
+            TimeSpan leaseTime,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(_locks.TryAdd(key, owner));
+        }
+
+        public Task<bool> ReleaseLockAsync(string key, string owner, CancellationToken cancellationToken = default)
+        {
+            if (_locks.TryGetValue(key, out var currentOwner) == false
+                || string.Equals(currentOwner, owner, StringComparison.Ordinal) == false)
+            {
+                return Task.FromResult(false);
+            }
+
+            _locks.TryRemove(key, out _);
+            return Task.FromResult(true);
+        }
     }
 }

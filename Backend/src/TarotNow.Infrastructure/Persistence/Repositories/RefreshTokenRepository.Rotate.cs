@@ -29,7 +29,7 @@ public sealed partial class RefreshTokenRepository
             return await HandleLockContentionAsync(
                 request.RawToken,
                 request.NewRawToken,
-                context.TokenIdempotencyCacheKey,
+                context.TransactionContext.NormalizedIdempotencyKey,
                 cancellationToken);
         }
 
@@ -63,10 +63,8 @@ public sealed partial class RefreshTokenRepository
             }
 
             var idempotencyKey = context.NormalizedIdempotencyKey;
-            var idemCacheKey = BuildRefreshIdempotencyKey(current.SessionId, idempotencyKey);
             var earlyExit = await TryBuildEarlyExitResultAsync(
                 current,
-                idemCacheKey,
                 context,
                 cancellationToken);
 
@@ -78,9 +76,7 @@ public sealed partial class RefreshTokenRepository
             var persistContext = new RotatePersistContext(
                 context.Request,
                 current,
-                idempotencyKey,
-                idemCacheKey,
-                context.TokenIdempotencyCacheKey);
+                idempotencyKey);
             return await RotateAndPersistAsync(persistContext, localTransaction, cancellationToken);
         }
         finally
@@ -101,44 +97,97 @@ public sealed partial class RefreshTokenRepository
             tokenHash,
             request.DeviceId,
             request.UserAgentHash);
-        var tokenIdempotencyCacheKey = BuildRefreshTokenIdempotencyKey(tokenHash, normalizedIdempotencyKey);
         return new RotateExecutionContext(
             LockKey: BuildRefreshLockKey(tokenHash),
             LockOwner: Guid.NewGuid().ToString("N"),
-            TokenIdempotencyCacheKey: tokenIdempotencyCacheKey,
             TransactionContext: new RotateTransactionContext(
                 request,
                 tokenHash,
-                normalizedIdempotencyKey,
-                tokenIdempotencyCacheKey));
+                normalizedIdempotencyKey));
     }
 
     private async Task<RefreshRotateResult> HandleLockContentionAsync(
         string rawToken,
         string newRawToken,
-        string tokenIdempotencyCacheKey,
+        string normalizedIdempotencyKey,
         CancellationToken cancellationToken)
     {
-        var tokenCached = await _cacheService.GetAsync<RefreshRotateCacheItem>(tokenIdempotencyCacheKey, cancellationToken);
-        if (tokenCached is null
-            || tokenCached.NewTokenId == Guid.Empty
-            || tokenCached.NewTokenExpiresAtUtc <= DateTime.MinValue)
+        if (string.IsNullOrWhiteSpace(rawToken) || string.IsNullOrWhiteSpace(newRawToken))
         {
             return RefreshRotateResult.Locked();
         }
 
-        var replacementToken = await TryLoadReplacementTokenAsync(tokenCached.NewTokenId, cancellationToken);
+        var tokenHash = RefreshToken.HashToken(rawToken.Trim());
+        const int maxAttempts = 5;
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            var tokenSnapshot = await LoadTokenSnapshotByHashAsync(tokenHash, cancellationToken);
+            if (tokenSnapshot is null)
+            {
+                return RefreshRotateResult.Locked();
+            }
+
+            var idempotentResult = await TryBuildIdempotentLockContentionResultAsync(
+                tokenSnapshot,
+                normalizedIdempotencyKey,
+                newRawToken,
+                cancellationToken);
+            if (idempotentResult is not null)
+            {
+                return idempotentResult;
+            }
+
+            if (ShouldStopLockContentionPolling(tokenSnapshot))
+            {
+                return RefreshRotateResult.Locked();
+            }
+
+            await DelayNextLockContentionAttemptAsync(attempt, maxAttempts, cancellationToken);
+        }
+
+        return RefreshRotateResult.Locked();
+    }
+
+    private async Task<RefreshRotateResult?> TryBuildIdempotentLockContentionResultAsync(
+        RefreshToken tokenSnapshot,
+        string normalizedIdempotencyKey,
+        string newRawToken,
+        CancellationToken cancellationToken)
+    {
+        var sameIdempotency = string.Equals(
+            tokenSnapshot.LastRotateIdempotencyKey,
+            normalizedIdempotencyKey,
+            StringComparison.Ordinal);
+        if (!sameIdempotency || !tokenSnapshot.ReplacedByTokenId.HasValue)
+        {
+            return null;
+        }
+
+        var replacementToken = await TryLoadReplacementTokenAsync(tokenSnapshot.ReplacedByTokenId.Value, cancellationToken);
         if (replacementToken is null || !replacementToken.MatchesToken(newRawToken))
         {
-            return RefreshRotateResult.Locked();
+            return null;
         }
 
-        var tokenSnapshot = await GetByTokenAsync(rawToken, cancellationToken);
-        return tokenSnapshot is not null
-            ? RefreshRotateResult.Idempotent(
-                tokenSnapshot,
-                newRawToken,
-                replacementToken.ExpiresAt)
-            : RefreshRotateResult.Locked();
+        return RefreshRotateResult.Idempotent(tokenSnapshot, newRawToken, replacementToken.ExpiresAt);
+    }
+
+    private static bool ShouldStopLockContentionPolling(RefreshToken tokenSnapshot)
+    {
+        return !tokenSnapshot.IsActive;
+    }
+
+    private static Task DelayNextLockContentionAttemptAsync(
+        int attempt,
+        int maxAttempts,
+        CancellationToken cancellationToken)
+    {
+        if (attempt >= maxAttempts)
+        {
+            return Task.CompletedTask;
+        }
+
+        return Task.Delay(TimeSpan.FromMilliseconds(35 * attempt), cancellationToken);
     }
 }

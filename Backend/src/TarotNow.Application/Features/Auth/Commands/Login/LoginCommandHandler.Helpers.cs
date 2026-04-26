@@ -1,6 +1,5 @@
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Common.Constants;
-using TarotNow.Application.Common.Mappings;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 using TarotNow.Domain.Events;
@@ -175,7 +174,7 @@ public partial class LoginCommandExecutor
         {
             AccessToken = accessToken,
             ExpiresInSeconds = _jwtTokenSettings.AccessTokenExpiryMinutes * 60,
-            User = user.ToUserProfileDto()
+            User = _mapper.Map<UserProfileDto>(user)
         };
     }
 
