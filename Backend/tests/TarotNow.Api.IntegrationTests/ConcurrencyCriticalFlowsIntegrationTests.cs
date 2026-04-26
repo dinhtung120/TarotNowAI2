@@ -3,7 +3,11 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using TarotNow.Application.Features.CheckIn.Commands.DailyCheckIn;
 using TarotNow.Application.Interfaces;
@@ -374,6 +378,90 @@ public sealed class ConcurrencyCriticalFlowsIntegrationTests
 
         Assert.Equal(1, collectionCard.Copies);
         Assert.Equal(25m, collectionCard.CurrentExp);
+    }
+
+    [Fact]
+    public async Task MongoIndexBootstrap_DuplicateSystemEventKey_ShouldNormalizeAndRecreateUniqueIndex()
+    {
+        var conversationId = ObjectId.GenerateNewId().ToString();
+        var duplicateSystemEventKey = $"sys_evt_{Guid.NewGuid():N}";
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var mongo = scope.ServiceProvider.GetRequiredService<MongoDbContext>();
+            try
+            {
+                mongo.ChatMessages.Indexes.DropOne("ux_conversationid_systemeventkey");
+            }
+            catch (MongoCommandException)
+            {
+                // Index chưa tồn tại ở DB mới thì bỏ qua.
+            }
+
+            await mongo.ChatMessages.InsertManyAsync([
+                new ChatMessageDocument
+                {
+                    Id = ObjectId.GenerateNewId().ToString(),
+                    ConversationId = conversationId,
+                    SenderId = Guid.NewGuid().ToString(),
+                    Type = "system",
+                    Content = "sys-msg-a",
+                    SystemEventKey = duplicateSystemEventKey,
+                    IsRead = false,
+                    IsDeleted = false,
+                    CreatedAt = DateTime.UtcNow.AddSeconds(-2)
+                },
+                new ChatMessageDocument
+                {
+                    Id = ObjectId.GenerateNewId().ToString(),
+                    ConversationId = conversationId,
+                    SenderId = Guid.NewGuid().ToString(),
+                    Type = "system",
+                    Content = "sys-msg-b",
+                    SystemEventKey = duplicateSystemEventKey,
+                    IsRead = false,
+                    IsDeleted = false,
+                    CreatedAt = DateTime.UtcNow
+                }
+            ]);
+        }
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var mongoDatabase = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<MongoDbContext>>();
+            _ = new MongoDbContext(mongoDatabase, logger, new FixedHostEnvironment("Production"));
+        }
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var mongo = scope.ServiceProvider.GetRequiredService<MongoDbContext>();
+
+            var indexedDocuments = await mongo.ChatMessages.CountDocumentsAsync(
+                Builders<ChatMessageDocument>.Filter.And(
+                    Builders<ChatMessageDocument>.Filter.Eq(x => x.ConversationId, conversationId),
+                    Builders<ChatMessageDocument>.Filter.Eq(x => x.SystemEventKey, duplicateSystemEventKey)));
+            Assert.Equal(1, indexedDocuments);
+
+            var indexes = await (await mongo.ChatMessages.Indexes.ListAsync()).ToListAsync();
+            Assert.Contains(indexes, x => x["name"].AsString == "ux_conversationid_systemeventkey");
+        }
+    }
+
+    private sealed class FixedHostEnvironment : IHostEnvironment
+    {
+        public FixedHostEnvironment(string environmentName)
+        {
+            EnvironmentName = environmentName;
+            ApplicationName = "TarotNow.Api.IntegrationTests";
+            ContentRootPath = AppContext.BaseDirectory;
+            ContentRootFileProvider = new NullFileProvider();
+        }
+
+        public string EnvironmentName { get; set; }
+        public string ApplicationName { get; set; }
+        public string ContentRootPath { get; set; }
+        public IFileProvider ContentRootFileProvider { get; set; }
     }
 
     private HttpClient CreateAuthenticatedClient(Guid userId)

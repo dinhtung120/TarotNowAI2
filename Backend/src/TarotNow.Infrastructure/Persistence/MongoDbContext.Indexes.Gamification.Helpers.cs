@@ -12,24 +12,20 @@ public partial class MongoDbContext
     /// </summary>
     private void EnsureQuestIndexes()
     {
-        Quests.Indexes.CreateOne(new CreateIndexModel<QuestDefinitionDocument>(
+        SafeCreateIndex(Quests, new CreateIndexModel<QuestDefinitionDocument>(
             Builders<QuestDefinitionDocument>.IndexKeys.Ascending(x => x.Code),
-            new CreateIndexOptions { Unique = true }));
+            new CreateIndexOptions { Unique = true, Name = "ux_quests_code" }));
         // Code quest là khóa nghiệp vụ, cần unique để đồng bộ giữa seed và runtime.
 
-        var progressIndexes = new[]
-        {
-            new CreateIndexModel<QuestProgressDocument>(
-                Builders<QuestProgressDocument>.IndexKeys
-                    .Ascending(x => x.UserId)
-                    .Ascending(x => x.QuestCode)
-                    .Ascending(x => x.PeriodKey),
-                new CreateIndexOptions { Unique = true }),
-            new CreateIndexModel<QuestProgressDocument>(
-                Builders<QuestProgressDocument>.IndexKeys.Ascending(x => x.CreatedAt),
-                new CreateIndexOptions { ExpireAfter = TimeSpan.FromDays(90) })
-        };
-        QuestProgress.Indexes.CreateMany(progressIndexes);
+        SafeCreateIndex(QuestProgress, new CreateIndexModel<QuestProgressDocument>(
+            Builders<QuestProgressDocument>.IndexKeys
+                .Ascending(x => x.UserId)
+                .Ascending(x => x.QuestCode)
+                .Ascending(x => x.PeriodKey),
+            new CreateIndexOptions { Unique = true, Name = "ux_questprogress_userid_questcode_periodkey" }));
+        SafeCreateIndex(QuestProgress, new CreateIndexModel<QuestProgressDocument>(
+            Builders<QuestProgressDocument>.IndexKeys.Ascending(x => x.CreatedAt),
+            new CreateIndexOptions { ExpireAfter = TimeSpan.FromDays(90), Name = "idx_questprogress_createdat_ttl_90d" }));
         // Unique index giữ idempotency cập nhật tiến độ; TTL giảm phình dữ liệu lịch sử.
     }
 
@@ -39,15 +35,15 @@ public partial class MongoDbContext
     /// </summary>
     private void EnsureAchievementIndexes()
     {
-        Achievements.Indexes.CreateOne(new CreateIndexModel<AchievementDefinitionDocument>(
+        SafeCreateIndex(Achievements, new CreateIndexModel<AchievementDefinitionDocument>(
             Builders<AchievementDefinitionDocument>.IndexKeys.Ascending(x => x.Code),
-            new CreateIndexOptions { Unique = true }));
+            new CreateIndexOptions { Unique = true, Name = "ux_achievements_code" }));
 
-        UserAchievements.Indexes.CreateOne(new CreateIndexModel<UserAchievementDocument>(
+        SafeCreateIndex(UserAchievements, new CreateIndexModel<UserAchievementDocument>(
             Builders<UserAchievementDocument>.IndexKeys
                 .Ascending(x => x.UserId)
                 .Ascending(x => x.AchievementCode),
-            new CreateIndexOptions { Unique = true }));
+            new CreateIndexOptions { Unique = true, Name = "ux_userachievements_userid_achievementcode" }));
         // Business rule: một achievement chỉ unlock một lần cho mỗi user.
     }
 
@@ -57,15 +53,15 @@ public partial class MongoDbContext
     /// </summary>
     private void EnsureTitleIndexes()
     {
-        Titles.Indexes.CreateOne(new CreateIndexModel<TitleDefinitionDocument>(
+        SafeCreateIndex(Titles, new CreateIndexModel<TitleDefinitionDocument>(
             Builders<TitleDefinitionDocument>.IndexKeys.Ascending(x => x.Code),
-            new CreateIndexOptions { Unique = true }));
+            new CreateIndexOptions { Unique = true, Name = "ux_titles_code" }));
 
-        UserTitles.Indexes.CreateOne(new CreateIndexModel<UserTitleDocument>(
+        SafeCreateIndex(UserTitles, new CreateIndexModel<UserTitleDocument>(
             Builders<UserTitleDocument>.IndexKeys
                 .Ascending(x => x.UserId)
                 .Ascending(x => x.TitleCode),
-            new CreateIndexOptions { Unique = true }));
+            new CreateIndexOptions { Unique = true, Name = "ux_usertitles_userid_titlecode" }));
         // Giữ tính nhất quán dữ liệu danh hiệu giữa service và repository.
     }
 
@@ -75,28 +71,25 @@ public partial class MongoDbContext
     /// </summary>
     private void EnsureLeaderboardIndexes()
     {
-        var entryIndexes = new[]
-        {
-            new CreateIndexModel<LeaderboardEntryDocument>(
-                Builders<LeaderboardEntryDocument>.IndexKeys
-                    .Ascending(x => x.UserId)
-                    .Ascending(x => x.ScoreTrack)
-                    .Ascending(x => x.PeriodKey),
-                new CreateIndexOptions { Unique = true }),
-            new CreateIndexModel<LeaderboardEntryDocument>(
-                Builders<LeaderboardEntryDocument>.IndexKeys
-                    .Ascending(x => x.ScoreTrack)
-                    .Ascending(x => x.PeriodKey)
-                    .Descending(x => x.Score))
-        };
-        LeaderboardEntries.Indexes.CreateMany(entryIndexes);
+        SafeCreateIndex(LeaderboardEntries, new CreateIndexModel<LeaderboardEntryDocument>(
+            Builders<LeaderboardEntryDocument>.IndexKeys
+                .Ascending(x => x.UserId)
+                .Ascending(x => x.ScoreTrack)
+                .Ascending(x => x.PeriodKey),
+            new CreateIndexOptions { Unique = true, Name = "ux_leaderboardentries_userid_track_period" }));
+        SafeCreateIndex(LeaderboardEntries, new CreateIndexModel<LeaderboardEntryDocument>(
+            Builders<LeaderboardEntryDocument>.IndexKeys
+                .Ascending(x => x.ScoreTrack)
+                .Ascending(x => x.PeriodKey)
+                .Descending(x => x.Score),
+            new CreateIndexOptions { Name = "idx_leaderboardentries_track_period_score_desc" }));
         // Index score desc tối ưu truy vấn top N theo từng bảng xếp hạng.
 
-        LeaderboardSnapshots.Indexes.CreateOne(new CreateIndexModel<LeaderboardSnapshotDocument>(
+        SafeCreateIndex(LeaderboardSnapshots, new CreateIndexModel<LeaderboardSnapshotDocument>(
             Builders<LeaderboardSnapshotDocument>.IndexKeys
                 .Ascending(x => x.ScoreTrack)
                 .Ascending(x => x.PeriodKey),
-            new CreateIndexOptions { Unique = true }));
+            new CreateIndexOptions { Unique = true, Name = "ux_leaderboardsnapshots_track_period" }));
         // Mỗi track + period chỉ có một snapshot cuối kỳ để tránh lệch dữ liệu chốt.
     }
 }

@@ -1,4 +1,7 @@
+using MongoDB.Bson;
 using MongoDB.Driver;
+using Microsoft.Extensions.Logging;
+using System.Linq;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence;
@@ -63,10 +66,19 @@ public partial class MongoDbContext
             new CreateIndexOptions { Name = "idx_senderid_createdat_desc" }));
         // Hỗ trợ tra soát lịch sử gửi của một user trong các luồng moderation/audit.
 
-        var systemEventFilter = Builders<ChatMessageDocument>.Filter.And(
-            Builders<ChatMessageDocument>.Filter.Ne(m => m.SystemEventKey, null),
-            Builders<ChatMessageDocument>.Filter.Ne(m => m.SystemEventKey, string.Empty));
-        SafeCreateIndex(ChatMessages, new CreateIndexModel<ChatMessageDocument>(
+        EnsureSystemEventUniquenessIndex();
+    }
+
+    private void EnsureSystemEventUniquenessIndex()
+    {
+        var systemEventFilter = new BsonDocument(
+            "system_event_key",
+            new BsonDocument
+            {
+                { "$type", "string" },
+                { "$gt", string.Empty }
+            });
+        var model = new CreateIndexModel<ChatMessageDocument>(
             Builders<ChatMessageDocument>.IndexKeys
                 .Ascending(m => m.ConversationId)
                 .Ascending(m => m.SystemEventKey),
@@ -75,8 +87,89 @@ public partial class MongoDbContext
                 Name = "ux_conversationid_systemeventkey",
                 Unique = true,
                 PartialFilterExpression = systemEventFilter
-            }));
+            });
+
+        try
+        {
+            SafeCreateIndex(ChatMessages, model);
+        }
+        catch (MongoCommandException ex) when (IsDuplicateKeyConflict(ex))
+        {
+            var normalizedCount = NormalizeDuplicateSystemEventKeys();
+            _logger.LogWarning(
+                ex,
+                "[MongoDB] Found duplicate chat system_event_key records while creating '{IndexName}'. Normalized={NormalizedCount}, collection={Collection}. Retrying index creation.",
+                model.Options.Name,
+                normalizedCount,
+                ChatMessages.CollectionNamespace.CollectionName);
+            SafeCreateIndex(ChatMessages, model);
+        }
         // Chặn tạo trùng system message khi outbox retry trên cùng business event.
+    }
+
+    private long NormalizeDuplicateSystemEventKeys()
+    {
+        long normalized = 0;
+        var now = DateTime.UtcNow;
+        foreach (var group in ListDuplicateSystemEventGroups())
+        {
+            normalized += NormalizeDuplicateSystemEventGroup(group, now);
+        }
+
+        return normalized;
+    }
+
+    private List<BsonDocument> ListDuplicateSystemEventGroups()
+    {
+        return ChatMessages.Aggregate<BsonDocument>(new[]
+        {
+            new BsonDocument("$match", new BsonDocument("$and", new BsonArray
+            {
+                new BsonDocument("system_event_key", new BsonDocument("$type", "string")),
+                new BsonDocument("system_event_key", new BsonDocument("$ne", string.Empty))
+            })),
+            new BsonDocument("$sort", new BsonDocument
+            {
+                { "created_at", 1 },
+                { "_id", 1 }
+            }),
+            new BsonDocument("$group", new BsonDocument
+            {
+                {
+                    "_id", new BsonDocument
+                    {
+                        { "conversation_id", "$conversation_id" },
+                        { "system_event_key", "$system_event_key" }
+                    }
+                },
+                { "ids", new BsonDocument("$push", "$_id") },
+                { "count", new BsonDocument("$sum", 1) }
+            }),
+            new BsonDocument("$match", new BsonDocument("count", new BsonDocument("$gt", 1)))
+        }).ToList();
+    }
+
+    private long NormalizeDuplicateSystemEventGroup(BsonDocument group, DateTime now)
+    {
+        if (!group.TryGetValue("ids", out var idsValue) || idsValue is not BsonArray ids || ids.Count <= 1)
+        {
+            return 0;
+        }
+
+        var duplicatedIds = new BsonArray(ids.Skip(1));
+        if (duplicatedIds.Count == 0)
+        {
+            return 0;
+        }
+
+        var result = ChatMessages.UpdateMany(
+            new BsonDocument("_id", new BsonDocument("$in", duplicatedIds)),
+            new BsonDocument("$set", new BsonDocument
+            {
+                { "system_event_key", BsonNull.Value },
+                { "updated_at", now }
+            }));
+        return result.ModifiedCount;
     }
 
     /// <summary>

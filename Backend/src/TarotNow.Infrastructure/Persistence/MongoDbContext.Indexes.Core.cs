@@ -11,6 +11,10 @@ public partial class MongoDbContext
     private const string DifferentNameConflictMarker = "Index already exists with a different name";
     // Prefix chuỗi Mongo trả về để tách tên index cũ cần migrate.
     private const string DifferentNamePrefix = "a different name: ";
+    // Mongo error codes cho xung đột definition index.
+    private const int IndexOptionsConflictCode = 85;
+    private const int IndexKeySpecsConflictCode = 86;
+    private const int DuplicateKeyCode = 11000;
 
     /// <summary>
     /// Bảo đảm index cho các collection lõi.
@@ -123,6 +127,21 @@ public partial class MongoDbContext
             MigrateConflictingIndex(collection, indexModel, oldName);
             // Khi đã có tên cũ rõ ràng thì drop-create để chuẩn hóa naming toàn môi trường.
         }
+        catch (MongoCommandException ex) when (IsSameNameIndexConflict(ex))
+        {
+            var expectedName = indexModel.Options.Name;
+            if (string.IsNullOrWhiteSpace(expectedName))
+            {
+                throw;
+            }
+
+            _logger.LogWarning(
+                ex,
+                "[MongoDB] Rebuilding index '{IndexName}' on {Collection} due to definition/options conflict.",
+                expectedName,
+                collection.CollectionNamespace.CollectionName);
+            MigrateConflictingIndex(collection, indexModel, expectedName);
+        }
     }
 
     /// <summary>
@@ -156,5 +175,35 @@ public partial class MongoDbContext
 
         var name = errorMessage[(idx + DifferentNamePrefix.Length)..].Trim().TrimEnd('.');
         return string.IsNullOrEmpty(name) ? null : name;
+    }
+
+    private static bool IsSameNameIndexConflict(MongoCommandException exception)
+    {
+        if (exception.Code is IndexOptionsConflictCode or IndexKeySpecsConflictCode)
+        {
+            return true;
+        }
+
+        var message = exception.Message;
+        return message.Contains("already exists with different options", StringComparison.OrdinalIgnoreCase)
+               || message.Contains("already exists with different spec", StringComparison.OrdinalIgnoreCase)
+               || message.Contains("same name", StringComparison.OrdinalIgnoreCase)
+               || message.Contains("IndexOptionsConflict", StringComparison.OrdinalIgnoreCase)
+               || message.Contains("IndexKeySpecsConflict", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsDuplicateKeyConflict(MongoCommandException exception)
+    {
+        if (exception.Code == DuplicateKeyCode)
+        {
+            return true;
+        }
+
+        if (string.Equals(exception.CodeName, "DuplicateKey", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return exception.Message.Contains("E11000", StringComparison.OrdinalIgnoreCase);
     }
 }
