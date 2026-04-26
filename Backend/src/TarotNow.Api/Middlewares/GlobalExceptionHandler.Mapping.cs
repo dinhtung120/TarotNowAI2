@@ -63,16 +63,14 @@ public partial class GlobalExceptionHandler
             return CreateBadRequestProblem();
         }
 
-        if (exception is InvalidOperationException invalidOperationException)
+        if (exception is ForbiddenException)
         {
-            // Trạng thái không hợp lệ theo luồng xử lý nghiệp vụ: trả 422.
-            _ = invalidOperationException;
-            return CreateInvalidOperationProblem();
+            return CreateForbiddenProblem();
         }
 
         if (exception is UnauthorizedAccessException)
         {
-            // Không đủ quyền truy cập tài nguyên: trả 401 để client kích hoạt luồng đăng nhập lại.
+            // Nhánh chưa xác thực hoặc claim session/user không hợp lệ.
             return CreateUnauthorizedProblem();
         }
 

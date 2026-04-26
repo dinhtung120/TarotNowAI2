@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
 using MongoDB.Driver;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
@@ -11,15 +12,20 @@ public partial class MongoDbContext
     private readonly IMongoDatabase _database;
     // Logger dùng theo dõi lỗi khi tạo index hoặc thao tác hạ tầng.
     private readonly ILogger<MongoDbContext> _logger;
+    private readonly IHostEnvironment _hostEnvironment;
 
     /// <summary>
     /// Khởi tạo MongoDbContext và chạy bootstrap index.
     /// Luồng xử lý: giữ tham chiếu database/logger, sau đó gọi EnsureIndexes trong try-catch để tránh crash startup.
     /// </summary>
-    public MongoDbContext(IMongoDatabase database, ILogger<MongoDbContext> logger)
+    public MongoDbContext(
+        IMongoDatabase database,
+        ILogger<MongoDbContext> logger,
+        IHostEnvironment hostEnvironment)
     {
         _database = database;
         _logger = logger;
+        _hostEnvironment = hostEnvironment;
 
         try
         {
@@ -27,8 +33,13 @@ public partial class MongoDbContext
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "[MongoDB] Failed to ensure indexes at startup.");
-            // Startup vẫn tiếp tục để hệ thống còn khả năng phục vụ và quan sát lỗi qua monitoring.
+            _logger.LogError(ex, "[MongoDB] Failed to ensure indexes at startup. Environment={EnvironmentName}", _hostEnvironment.EnvironmentName);
+            if (!_hostEnvironment.IsDevelopment())
+            {
+                throw new InvalidOperationException("MongoDB index bootstrap failed on non-development environment.", ex);
+            }
+
+            // Development fallback: cho phép app chạy để dev có thể sửa dữ liệu/index nhanh tại local.
         }
     }
 

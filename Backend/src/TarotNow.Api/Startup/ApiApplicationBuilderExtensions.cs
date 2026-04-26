@@ -90,7 +90,7 @@ public static class ApiApplicationBuilderExtensions
 
     /// <summary>
     /// Cấu hình OpenAPI/Swagger cho tài liệu API.
-    /// Luồng xử lý: luôn map OpenAPI endpoint, chỉ bật UI swagger khi chạy môi trường development.
+    /// Luồng xử lý: chỉ map OpenAPI endpoint và bật UI swagger trong môi trường development.
     /// </summary>
     private static void ConfigureSwagger(WebApplication app)
     {

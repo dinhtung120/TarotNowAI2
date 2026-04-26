@@ -85,6 +85,8 @@ public class MfaSetupCommandExecutorTests
         _mockMfaService.Setup(x => x.EncryptSecret("plain_secret")).Returns("encrypted_secret");
         _mockMfaService.Setup(x => x.GenerateQrCodeUri("plain_secret", "test@test.com")).Returns("qr_uri");
         _mockMfaService.Setup(x => x.GenerateBackupCodes(6)).Returns(new List<string> { "code1", "code2" });
+        _mockMfaService.Setup(x => x.HashBackupCode("code1")).Returns("hash_code1");
+        _mockMfaService.Setup(x => x.HashBackupCode("code2")).Returns("hash_code2");
 
         // Thực thi setup MFA và kiểm tra dữ liệu trả về.
         var result = await _handler.Handle(command, CancellationToken.None);

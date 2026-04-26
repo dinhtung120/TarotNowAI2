@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Reading.Commands.StreamReading;
 
@@ -66,21 +67,36 @@ public sealed partial class AiStreamSseOrchestrator : IAiStreamSseOrchestrator
         {
             _logger.LogInformation(ex, "Rejected AI stream request for session {SessionId}.", request.SessionId);
             response.StatusCode = StatusCodes.Status400BadRequest;
-            await WriteServerEventAsync(response, "AI stream request is invalid.", cancellationToken);
+            await WriteProblemResponseAsync(
+                response,
+                StatusCodes.Status400BadRequest,
+                "Bad Request",
+                "AI stream request is invalid.",
+                cancellationToken);
             return null;
         }
         catch (NotFoundException ex)
         {
             _logger.LogInformation(ex, "AI stream session not found {SessionId}.", request.SessionId);
             response.StatusCode = StatusCodes.Status404NotFound;
-            await WriteServerEventAsync(response, "Reading session was not found.", cancellationToken);
+            await WriteProblemResponseAsync(
+                response,
+                StatusCodes.Status404NotFound,
+                "Not Found",
+                "Reading session was not found.",
+                cancellationToken);
             return null;
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to initialize AI stream for session {SessionId}.", request.SessionId);
             response.StatusCode = StatusCodes.Status500InternalServerError;
-            await WriteServerEventAsync(response, "Unable to start AI stream. Please try again later.", cancellationToken);
+            await WriteProblemResponseAsync(
+                response,
+                StatusCodes.Status500InternalServerError,
+                "Internal Server Error",
+                "Unable to start AI stream. Please try again later.",
+                cancellationToken);
             return null;
         }
     }
@@ -90,5 +106,21 @@ public sealed partial class AiStreamSseOrchestrator : IAiStreamSseOrchestrator
         response.Headers.Append("Content-Type", "text/event-stream");
         response.Headers.Append("Cache-Control", "no-cache");
         response.Headers.Append("Connection", "keep-alive");
+    }
+
+    private static Task WriteProblemResponseAsync(
+        HttpResponse response,
+        int statusCode,
+        string title,
+        string detail,
+        CancellationToken cancellationToken)
+    {
+        response.ContentType = "application/problem+json";
+        return response.WriteAsJsonAsync(new ProblemDetails
+        {
+            Status = statusCode,
+            Title = title,
+            Detail = detail
+        }, cancellationToken);
     }
 }

@@ -13,4 +13,5 @@ public interface IReadinessService
 public sealed record ReadinessStatus(
     bool PostgreSqlReady,
     bool MongoDbReady,
-    bool RedisReady);
+    bool RedisReady,
+    bool RedisRequired);

@@ -1,4 +1,5 @@
 using MediatR;
+using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 
@@ -124,7 +125,7 @@ public class GetReadingDetailQueryHandler : IRequestHandler<GetReadingDetailQuer
         if (session.Value.ReadingSession.UserId != request.UserId.ToString())
         {
             // Chặn truy cập trái phép reading session của user khác.
-            throw new UnauthorizedAccessException("Reading session not found or access denied");
+            throw new ForbiddenException("Reading session not found or access denied");
         }
 
         return new GetReadingDetailResponse
@@ -156,10 +157,7 @@ public class GetReadingDetailQueryHandler : IRequestHandler<GetReadingDetailQuer
                 FinishReason = a.FinishReason,
                 ChargeDiamond = a.ChargeDiamond,
                 CreatedAt = a.CreatedAt,
-                // Suy luận loại request từ idempotency key và mức phí để hỗ trợ UI phân loại timeline.
-                RequestType = a.IdempotencyKey != null && a.IdempotencyKey.Contains("ai_stream")
-                    ? (a.ChargeDiamond > 5 ? "Followup" : "InitialReading")
-                    : "Unknown"
+                RequestType = a.FollowupSequence.HasValue ? "Followup" : "InitialReading"
             }).OrderBy(x => x.CreatedAt)
         };
     }

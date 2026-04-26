@@ -43,8 +43,9 @@ public sealed class ReadinessService : IReadinessService
         var postgresReady = await CheckPostgreSqlAsync(cancellationToken);
         var mongoReady = await CheckMongoDbAsync(cancellationToken);
         var redisReady = await CheckRedisAsync();
+        var redisRequired = _cacheBackendState.UsesRedis;
 
-        return new ReadinessStatus(postgresReady, mongoReady, redisReady);
+        return new ReadinessStatus(postgresReady, mongoReady, redisReady, redisRequired);
     }
 
     private async Task<bool> CheckPostgreSqlAsync(CancellationToken cancellationToken)

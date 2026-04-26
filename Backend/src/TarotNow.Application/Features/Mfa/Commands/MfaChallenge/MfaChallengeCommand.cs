@@ -1,8 +1,6 @@
 using MediatR;
 using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -78,7 +76,7 @@ public class MfaChallengeCommandExecutor : ICommandExecutionExecutor<MfaChalleng
     /// Thử tiêu thụ một backup code của user.
     /// Luồng xử lý: đọc danh sách hash backup code, so khớp mã đầu vào theo fixed-time compare, xóa mã trùng nếu tìm thấy.
     /// </summary>
-    private static bool TryConsumeBackupCode(Domain.Entities.User user, string code)
+    private bool TryConsumeBackupCode(Domain.Entities.User user, string code)
     {
         if (string.IsNullOrWhiteSpace(code) || string.IsNullOrWhiteSpace(user.MfaBackupCodesHashJson))
         {
@@ -103,8 +101,7 @@ public class MfaChallengeCommandExecutor : ICommandExecutionExecutor<MfaChalleng
             return false;
         }
 
-        var hashedInput = HashBackupCode(code);
-        var matchedIndex = backupCodeHashes.FindIndex(hash => FixedTimeEquals(hash, hashedInput));
+        var matchedIndex = backupCodeHashes.FindIndex(hash => _mfaService.VerifyBackupCode(code, hash));
         // So khớp bằng fixed-time compare để giảm rủi ro timing attack khi đối chiếu hash.
 
         if (matchedIndex < 0)
@@ -118,28 +115,5 @@ public class MfaChallengeCommandExecutor : ICommandExecutionExecutor<MfaChalleng
         // Thay đổi state user: xóa mã đã dùng và lưu lại danh sách mới.
 
         return true;
-    }
-
-    /// <summary>
-    /// Băm backup code bằng SHA-256 để so khớp với dữ liệu lưu trữ.
-    /// Luồng xử lý: trim mã đầu vào, băm nhị phân rồi chuyển về chuỗi hex thường.
-    /// </summary>
-    private static string HashBackupCode(string code)
-    {
-        var normalized = code.Trim();
-        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
-        return Convert.ToHexString(hash).ToLowerInvariant();
-    }
-
-    /// <summary>
-    /// So sánh hai chuỗi theo thời gian hằng để tránh lộ thông tin qua thời gian xử lý.
-    /// Luồng xử lý: chuyển chuỗi sang byte và dùng CryptographicOperations.FixedTimeEquals khi độ dài khớp.
-    /// </summary>
-    private static bool FixedTimeEquals(string left, string right)
-    {
-        var leftBytes = Encoding.UTF8.GetBytes(left);
-        var rightBytes = Encoding.UTF8.GetBytes(right);
-        return leftBytes.Length == rightBytes.Length &&
-               CryptographicOperations.FixedTimeEquals(leftBytes, rightBytes);
     }
 }

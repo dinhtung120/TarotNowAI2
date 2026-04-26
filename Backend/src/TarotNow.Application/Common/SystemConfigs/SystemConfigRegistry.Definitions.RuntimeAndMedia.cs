@@ -31,6 +31,8 @@ public static partial class SystemConfigRegistry
             Scalar("operational.ai.max_retries", "2", "Số lần retry tối đa request AI.", ValidateInt(0, 20)),
             Scalar("operational.ai.streaming_retry_base_delay_ms", "200", "Base delay retry streaming AI (ms).", ValidateInt(10, 60000)),
             Scalar("operational.ai.streaming_temperature", "0.7", "Temperature mặc định cho streaming AI.", ValidateDecimal(0m, 2m)),
+            Scalar("operational.ai.quota_reservation_lease_seconds", "30", "Lease lock reservation quota AI stream (giây).", ValidateInt(3, 300)),
+            Scalar("operational.ai.prompt_version", "v1.5", "Phiên bản prompt AI dùng thống nhất cho request và telemetry.", ValidateTextLength(2, 32)),
             Scalar("operational.outbox.batch_size", "50", "Số message outbox claim mỗi batch.", ValidateInt(1, 5000)),
             Scalar("operational.outbox.parallelism", "4", "Số worker xử lý song song mỗi batch outbox.", ValidateInt(1, 64)),
             Scalar("operational.outbox.max_retry_attempts", "12", "Số lần retry outbox trước dead-letter.", ValidateInt(1, 100)),

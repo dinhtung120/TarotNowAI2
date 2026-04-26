@@ -67,10 +67,12 @@ public partial class CompleteAiStreamCommandExecutor
                     AiRequestId = request.AiRequestId,
                     SessionId = context.SessionRef,
                     RequestId = context.RequestId,
+                    InputTokens = request.InputTokens,
                     OutputTokens = request.OutputTokens,
                     LatencyMs = request.LatencyMs,
                     Status = context.TelemetryStatus,
-                    ErrorCode = context.TelemetryErrorCode
+                    ErrorCode = context.TelemetryErrorCode,
+                    PromptVersion = context.PromptVersion
                 },
                 cancellationToken);
         }

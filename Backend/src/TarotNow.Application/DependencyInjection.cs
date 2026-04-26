@@ -1,4 +1,5 @@
 using System.Reflection;
+using AutoMapper;
 using FluentValidation;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +23,7 @@ public static class DependencyInjection
     {
         RegisterMediatR(services, additionalAssemblies);
         RegisterValidation(services);
+        RegisterMappings(services);
         RegisterCommandExecutors(services);
         RegisterDomainServices(services);
 
@@ -80,6 +82,14 @@ public static class DependencyInjection
     private static void RegisterValidation(IServiceCollection services)
     {
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+    }
+
+    /// <summary>
+    /// Đăng ký AutoMapper profiles cho toàn bộ assembly Application.
+    /// </summary>
+    private static void RegisterMappings(IServiceCollection services)
+    {
+        services.AddAutoMapper(cfg => { }, Assembly.GetExecutingAssembly());
     }
 
     /// <summary>

@@ -145,6 +145,31 @@ public sealed partial class SystemConfigSettings
         }
     }
 
+    // Lease lock reservation quota AI stream (giây).
+    public int OperationalAiQuotaReservationLeaseSeconds => ClampInt(
+        ReadInt(
+            ["operational.ai.quota_reservation_lease_seconds"],
+            _options.Operational.Ai.QuotaReservationLeaseSeconds),
+        min: 3,
+        max: 300);
+
+    // Version prompt AI dùng chung cho request và telemetry.
+    public string OperationalAiPromptVersion
+    {
+        get
+        {
+            var configured = ReadString("operational.ai.prompt_version");
+            if (string.IsNullOrWhiteSpace(configured))
+            {
+                var fallback = _options.Operational.Ai.PromptVersion.Trim();
+                return string.IsNullOrWhiteSpace(fallback) ? "v1.0" : fallback;
+            }
+
+            var normalized = configured.Trim();
+            return normalized.Length <= 32 ? normalized : normalized[..32];
+        }
+    }
+
     // Outbox batch size.
     public int OperationalOutboxBatchSize => ClampInt(
         ReadInt(["operational.outbox.batch_size"], _options.Operational.Outbox.BatchSize),

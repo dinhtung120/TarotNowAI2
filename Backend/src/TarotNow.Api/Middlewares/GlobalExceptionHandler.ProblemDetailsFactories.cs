@@ -38,17 +38,6 @@ public partial class GlobalExceptionHandler
             detail);
 
     /// <summary>
-    /// Tạo ProblemDetails cho thao tác không hợp lệ theo trạng thái nghiệp vụ.
-    /// Luồng xử lý: trả 422 để phân biệt với lỗi cú pháp request.
-    /// </summary>
-    private static ProblemDetails CreateInvalidOperationProblem()
-        => CreateClientProblem(
-            StatusCodes.Status422UnprocessableEntity,
-            "Invalid Operation",
-            "https://datatracker.ietf.org/doc/html/rfc4918#section-11.2",
-            "The requested operation cannot be completed in the current state.");
-
-    /// <summary>
     /// Tạo ProblemDetails cho trường hợp truy cập chưa được xác thực/ủy quyền.
     /// Luồng xử lý: dùng phản hồi 401 chuẩn để client biết cần làm mới phiên đăng nhập.
     /// </summary>
@@ -58,6 +47,16 @@ public partial class GlobalExceptionHandler
             "Unauthorized",
             "https://datatracker.ietf.org/doc/html/rfc7235#section-3.1",
             "You are not authorized to access this resource.");
+
+    /// <summary>
+    /// Tạo ProblemDetails cho trường hợp đã xác thực nhưng không đủ quyền thao tác.
+    /// </summary>
+    private static ProblemDetails CreateForbiddenProblem()
+        => CreateClientProblem(
+            StatusCodes.Status403Forbidden,
+            "Forbidden",
+            "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.3",
+            "You do not have permission to access this resource.");
 
     /// <summary>
     /// Tạo ProblemDetails mặc định cho lỗi hệ thống chưa được map cụ thể.

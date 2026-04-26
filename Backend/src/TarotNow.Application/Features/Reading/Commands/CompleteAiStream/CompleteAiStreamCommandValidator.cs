@@ -29,6 +29,10 @@ public class CompleteAiStreamCommandValidator : AbstractValidator<CompleteAiStre
             .GreaterThanOrEqualTo(0);
         // Output token là metric nên không được âm.
 
+        RuleFor(x => x.InputTokens)
+            .GreaterThanOrEqualTo(0);
+        // Input token là metric nên không được âm.
+
         RuleFor(x => x.LatencyMs)
             .GreaterThanOrEqualTo(0);
         // Latency là metric thời gian nên không được âm.

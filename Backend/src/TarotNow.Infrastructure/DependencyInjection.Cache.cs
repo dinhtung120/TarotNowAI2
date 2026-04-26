@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 using StackExchange.Redis;
 using TarotNow.Application.Interfaces;
 using TarotNow.Infrastructure.BackgroundJobs;
@@ -108,101 +107,24 @@ public static partial class DependencyInjection
             // Kết nối tạo được nhưng chưa connected thì dispose và fallback an toàn.
             return null;
         }
-        catch
+        catch (Exception ex)
         {
-            // Mọi lỗi kết nối Redis đều fallback để tránh fail startup toàn hệ thống.
+            var endpointSummary = "unknown";
+            try
+            {
+                var parsed = ConfigurationOptions.Parse(connectionString);
+                endpointSummary = string.Join(",", parsed.EndPoints.Select(endpoint => endpoint.ToString()));
+            }
+            catch
+            {
+                // Ignore parse failures in fallback logger path.
+            }
+
+            Console.Error.WriteLine(
+                $"[RedisBootstrap] Failed to initialize Redis multiplexer for endpoint(s) {endpointSummary}. " +
+                $"Falling back to distributed memory cache. Reason={ex.GetType().Name}: {ex.Message}");
             return null;
         }
     }
 
-    private static RedisBootstrapSettings? TryLoadRedisBootstrapSettings(string postgreSqlConnectionString)
-    {
-        try
-        {
-            var data = LoadRedisBootstrapRawValues(postgreSqlConnectionString);
-            return BuildRedisBootstrapSettings(data);
-        }
-        catch
-        {
-            // Bootstrap không thành công thì trả null để dùng fallback cố định.
-            return null;
-        }
-    }
-
-    private static IReadOnlyDictionary<string, string> LoadRedisBootstrapRawValues(string postgreSqlConnectionString)
-    {
-        using var connection = new NpgsqlConnection(postgreSqlConnectionString);
-        connection.Open();
-
-        using var command = new NpgsqlCommand(
-            """
-            SELECT key, value
-            FROM system_configs
-            WHERE key IN (
-                'operational.redis.connect_timeout_ms',
-                'operational.redis.sync_timeout_ms',
-                'operational.redis.connect_retry'
-            );
-            """,
-            connection);
-
-        using var reader = command.ExecuteReader();
-        var data = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        while (reader.Read())
-        {
-            data[reader.GetString(0)] = reader.GetString(1);
-        }
-
-        return data;
-    }
-
-    private static RedisBootstrapSettings BuildRedisBootstrapSettings(IReadOnlyDictionary<string, string> data)
-    {
-        var fallback = new SystemConfigOptions().Operational.Redis;
-        return new RedisBootstrapSettings
-        {
-            ConnectTimeoutMs = ParseIntOrFallback(
-                data,
-                "operational.redis.connect_timeout_ms",
-                fallback.ConnectTimeoutMs,
-                100,
-                60_000),
-            SyncTimeoutMs = ParseIntOrFallback(
-                data,
-                "operational.redis.sync_timeout_ms",
-                fallback.SyncTimeoutMs,
-                100,
-                60_000),
-            ConnectRetry = ParseIntOrFallback(
-                data,
-                "operational.redis.connect_retry",
-                fallback.ConnectRetry,
-                0,
-                20)
-        };
-    }
-
-    private static int ParseIntOrFallback(
-        IReadOnlyDictionary<string, string> values,
-        string key,
-        int fallback,
-        int min,
-        int max)
-    {
-        if (!values.TryGetValue(key, out var raw))
-        {
-            return Math.Clamp(fallback, min, max);
-        }
-
-        return int.TryParse(raw, out var parsed)
-            ? Math.Clamp(parsed, min, max)
-            : Math.Clamp(fallback, min, max);
-    }
-
-    private sealed class RedisBootstrapSettings
-    {
-        public int ConnectTimeoutMs { get; init; }
-        public int SyncTimeoutMs { get; init; }
-        public int ConnectRetry { get; init; }
-    }
 }

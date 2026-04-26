@@ -1,4 +1,6 @@
 using TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
+using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace TarotNow.Api.Services;
 
@@ -25,6 +27,7 @@ public sealed partial class AiStreamSseOrchestrator
             context.UserId,
             FollowUpQuestion: null,
             context.State,
+            context.InputTokens,
             finalStatus,
             finishReason,
             clientDisconnected,
@@ -55,6 +58,7 @@ public sealed partial class AiStreamSseOrchestrator
             context.UserId,
             FollowUpQuestion: null,
             context.State,
+            context.InputTokens,
             finalStatus,
             "stream_runtime_error",
             IsClientDisconnect: false,
@@ -68,9 +72,21 @@ public sealed partial class AiStreamSseOrchestrator
 
         if (!response.HasStarted)
         {
-            response.StatusCode = StatusCodes.Status500InternalServerError;
-            await WriteServerEventAsync(response, "Stream Error: Unable to process AI stream. Please try again.", CancellationToken.None);
+            await WriteProblemResponseAsync(
+                response,
+                StatusCodes.Status500InternalServerError,
+                "Internal Server Error",
+                "Unable to process AI stream. Please try again.",
+                CancellationToken.None);
+            return;
         }
+
+        await WriteProblemServerEventAsync(
+            response,
+            StatusCodes.Status500InternalServerError,
+            "Internal Server Error",
+            "Unable to process AI stream. Please try again.",
+            CancellationToken.None);
     }
 
     private async Task CompleteStreamAsync(StreamCompletionDispatch completion)
@@ -88,6 +104,7 @@ public sealed partial class AiStreamSseOrchestrator
             IsClientDisconnect = completion.IsClientDisconnect,
             FirstTokenAt = completion.State.FirstTokenAt,
             OutputTokens = completion.State.OutputTokens,
+            InputTokens = completion.InputTokens,
             LatencyMs = latencyMs,
             FullResponse = completion.State.FullResponseBuilder.ToString(),
             FollowupQuestion = completion.FollowUpQuestion
@@ -99,8 +116,25 @@ public sealed partial class AiStreamSseOrchestrator
         Guid UserId,
         string? FollowUpQuestion,
         StreamExecutionState State,
+        int InputTokens,
         string FinalStatus,
         string? ErrorMessage,
         bool IsClientDisconnect,
         CancellationToken CancellationToken);
+
+    private static Task WriteProblemServerEventAsync(
+        HttpResponse response,
+        int statusCode,
+        string title,
+        string detail,
+        CancellationToken cancellationToken)
+    {
+        var problemJson = JsonSerializer.Serialize(new ProblemDetails
+        {
+            Status = statusCode,
+            Title = title,
+            Detail = detail
+        });
+        return response.WriteAsync($"event: problem\ndata: {problemJson}\n\n", cancellationToken);
+    }
 }

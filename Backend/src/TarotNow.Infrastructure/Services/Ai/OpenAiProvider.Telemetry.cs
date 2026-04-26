@@ -27,7 +27,7 @@ public partial class OpenAiProvider
                 LatencyMs = logEntry.LatencyMs,
                 Status = logEntry.Status,
                 ErrorCode = logEntry.ErrorCode,
-                PromptVersion = "v1.0"
+                PromptVersion = logEntry.PromptVersion ?? _promptVersion
             }, cancellationToken);
         }
         catch (Exception exception)

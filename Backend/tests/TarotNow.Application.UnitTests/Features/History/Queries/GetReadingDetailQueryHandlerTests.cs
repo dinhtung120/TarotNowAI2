@@ -2,6 +2,7 @@
 
 using FluentAssertions;
 using Moq;
+using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.History.Queries.GetReadingDetail;
 using TarotNow.Domain.Entities;
 using TarotNow.Application.Interfaces;
@@ -72,7 +73,7 @@ public class GetReadingDetailQueryHandlerTests
     /// Luồng này bảo vệ quyền riêng tư lịch sử xem bài.
     /// </summary>
     [Fact]
-    public async Task Handle_ShouldThrowUnauthorizedAccessException_WhenSessionBelongsToAnotherUser()
+    public async Task Handle_ShouldThrowForbiddenException_WhenSessionBelongsToAnotherUser()
     {
         var userId = Guid.NewGuid();
         var anotherUserId = Guid.NewGuid();
@@ -83,7 +84,7 @@ public class GetReadingDetailQueryHandlerTests
         _mockSessionRepository.Setup(r => r.GetSessionWithAiRequestsAsync(sessionId, default))
             .ReturnsAsync(((ReadingSession, IEnumerable<AiRequest>)?)(session, new List<AiRequest>()));
 
-        await Assert.ThrowsAsync<UnauthorizedAccessException>(() => _handler.Handle(query, CancellationToken.None));
+        await Assert.ThrowsAsync<ForbiddenException>(() => _handler.Handle(query, CancellationToken.None));
     }
 
     /// <summary>

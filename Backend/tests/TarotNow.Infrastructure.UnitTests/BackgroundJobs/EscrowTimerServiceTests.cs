@@ -88,7 +88,10 @@ public class EscrowTimerServiceTests
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
             .Returns((Func<CancellationToken, Task> action, CancellationToken ct) => action(ct));
 
-        _service = new EscrowTimerService(_mockScopeFactory.Object, _mockLogger.Object);
+        _service = new EscrowTimerService(
+            _mockScopeFactory.Object,
+            _mockLogger.Object,
+            _mockSystemConfigSettings.Object);
     }
 
     /// <summary>

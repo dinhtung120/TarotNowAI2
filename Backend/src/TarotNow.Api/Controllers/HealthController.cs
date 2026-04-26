@@ -1,6 +1,7 @@
 
 using Microsoft.AspNetCore.Authorization; 
 using Microsoft.AspNetCore.Mvc;           
+using System.Reflection;
 using TarotNow.Api.Extensions;
 using TarotNow.Application.Interfaces;
 
@@ -54,14 +55,18 @@ public class HealthController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public IActionResult Live()
     {
-        
-        _logger.LogInformation("Health check endpoint was called.");
+        _logger.LogDebug("Health liveness endpoint was called.");
+
+        var assembly = typeof(HealthController).Assembly;
+        var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+                      ?? assembly.GetName().Version?.ToString()
+                      ?? "unknown";
 
         return Ok(new
         {
             Status = "Healthy",              
             Timestamp = DateTime.UtcNow,     
-            Version = "1.0"                  
+            Version = version
         });
     }
 
@@ -79,13 +84,22 @@ public class HealthController : ControllerBase
         var readiness = await _readinessService.CheckAsync(cancellationToken);
         checks["postgresql"] = new { status = readiness.PostgreSqlReady ? "Healthy" : "Unhealthy" };
         checks["mongodb"] = new { status = readiness.MongoDbReady ? "Healthy" : "Unhealthy" };
-        checks["redis"] = new { status = readiness.RedisReady ? "Healthy" : "Unhealthy" };
+        checks["redis"] = new
+        {
+            status = readiness.RedisRequired
+                ? (readiness.RedisReady ? "Healthy" : "Unhealthy")
+                : "Skipped",
+            required = readiness.RedisRequired
+        };
 
-        var allReady = readiness.PostgreSqlReady && readiness.MongoDbReady && readiness.RedisReady;
+        var allReady = readiness.PostgreSqlReady
+                       && readiness.MongoDbReady
+                       && (!readiness.RedisRequired || readiness.RedisReady);
         var payload = new
         {
             Status = allReady ? "Ready" : "NotReady",
             Timestamp = DateTime.UtcNow,
+            RedisRequired = readiness.RedisRequired,
             Checks = checks
         };
 

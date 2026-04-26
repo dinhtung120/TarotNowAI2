@@ -78,20 +78,29 @@ public partial class RedisCacheService : ICacheService
             return await _redisDatabase.StringSetAsync(key, "1", expiry: limitWindow, when: When.NotExists);
         }
 
-        // Fallback path: kiểm tra tồn tại trong DistributedCache (không đảm bảo atomic tuyệt đối).
-        var existing = await _cache.GetStringAsync(key, cancellationToken);
-        if (existing != null)
+        var localGuard = GetLocalLockGuard(key);
+        await localGuard.WaitAsync(cancellationToken);
+        try
         {
-            return false;
+            // Fallback path: khóa theo key để giữ tính nhất quán trên node hiện tại.
+            var existing = await _cache.GetStringAsync(key, cancellationToken);
+            if (existing != null)
+            {
+                return false;
+            }
+
+            var options = new DistributedCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = limitWindow
+            };
+
+            await _cache.SetStringAsync(key, "1", options, cancellationToken);
+            return true;
         }
-
-        var options = new DistributedCacheEntryOptions
+        finally
         {
-            AbsoluteExpirationRelativeToNow = limitWindow
-        };
-
-        await _cache.SetStringAsync(key, "1", options, cancellationToken);
-        return true;
+            ReleaseLocalLockGuard(key, localGuard);
+        }
     }
 
     /// <summary>
@@ -114,25 +123,34 @@ public partial class RedisCacheService : ICacheService
             return value;
         }
 
-        // Fallback path: parse giá trị hiện tại rồi tăng thủ công.
-        var valString = await _cache.GetStringAsync(key, cancellationToken);
-        long currentVal = 0;
-
-        if (valString != null && long.TryParse(valString, out var parsed))
+        var localGuard = GetLocalLockGuard(key);
+        await localGuard.WaitAsync(cancellationToken);
+        try
         {
-            currentVal = parsed;
+            // Fallback path: khóa theo key để tránh lost update trên cùng instance.
+            var valString = await _cache.GetStringAsync(key, cancellationToken);
+            long currentVal = 0;
+
+            if (valString != null && long.TryParse(valString, out var parsed))
+            {
+                currentVal = parsed;
+            }
+
+            currentVal++;
+
+            var options = new DistributedCacheEntryOptions();
+            if (expiration.HasValue)
+            {
+                options.AbsoluteExpirationRelativeToNow = expiration;
+            }
+
+            await _cache.SetStringAsync(key, currentVal.ToString(), options, cancellationToken);
+            return currentVal;
         }
-
-        currentVal++;
-
-        var options = new DistributedCacheEntryOptions();
-        if (expiration.HasValue)
+        finally
         {
-            options.AbsoluteExpirationRelativeToNow = expiration;
+            ReleaseLocalLockGuard(key, localGuard);
         }
-
-        await _cache.SetStringAsync(key, currentVal.ToString(), options, cancellationToken);
-        return currentVal;
     }
 
 }

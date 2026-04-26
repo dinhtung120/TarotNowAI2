@@ -39,7 +39,16 @@ public class GamificationController : ControllerBase
     /// Lấy user id hiện tại từ claim định danh.
     /// </summary>
     /// <returns>User id của request hiện tại.</returns>
-    private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    private Guid GetUserId()
+    {
+        var rawUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!Guid.TryParse(rawUserId, out var userId) || userId == Guid.Empty)
+        {
+            throw new UnauthorizedAccessException("Invalid authenticated user context.");
+        }
+
+        return userId;
+    }
 
     /// <summary>
     /// Lấy danh sách quest đang hoạt động theo loại.

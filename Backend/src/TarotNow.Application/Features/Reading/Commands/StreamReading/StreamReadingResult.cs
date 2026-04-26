@@ -11,4 +11,7 @@ public class StreamReadingResult
 
     // Định danh AI request dùng để chốt completion/billing ở bước sau.
     public required Guid AiRequestId { get; init; }
+
+    // Token input ước lượng tại thời điểm gửi request lên provider.
+    public int EstimatedInputTokens { get; init; }
 }

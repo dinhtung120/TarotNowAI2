@@ -48,7 +48,7 @@ public sealed partial class RefreshTokenRepository : IRefreshTokenRepository
         var hashedToken = RefreshToken.HashToken(normalizedToken);
         return await _dbContext.RefreshTokens
             .Include(rt => rt.User)
-            .FirstOrDefaultAsync(rt => rt.Token == hashedToken || rt.Token == normalizedToken, cancellationToken);
+            .FirstOrDefaultAsync(rt => rt.Token == hashedToken, cancellationToken);
     }
 
     /// <inheritdoc />

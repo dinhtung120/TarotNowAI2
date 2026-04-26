@@ -27,6 +27,9 @@ public class CompleteAiStreamCommand : IRequest<bool>
     // Tổng output token đã sinh từ provider.
     public int OutputTokens { get; set; }
 
+    // Tổng input token ước lượng đã gửi lên provider.
+    public int InputTokens { get; set; }
+
     // Độ trễ tổng của request (ms).
     public int LatencyMs { get; set; }
 

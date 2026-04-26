@@ -38,6 +38,16 @@ public interface IMfaService
     bool VerifyCode(string plainSecret, string code);
 
     /// <summary>
+    /// Băm backup code trước khi lưu để chống lộ mã sử dụng một lần.
+    /// </summary>
+    string HashBackupCode(string code);
+
+    /// <summary>
+    /// Verify backup code đầu vào với hash đã lưu.
+    /// </summary>
+    bool VerifyBackupCode(string code, string storedHash);
+
+    /// <summary>
     /// Tạo danh sách mã dự phòng để người dùng dùng khi mất thiết bị OTP.
     /// Luồng xử lý: sinh ngẫu nhiên count mã backup và trả về để lưu/hash theo chính sách bảo mật.
     /// </summary>

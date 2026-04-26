@@ -1,7 +1,4 @@
 
-
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using Moq;
 using TarotNow.Application.Exceptions;
@@ -42,7 +39,7 @@ public class MfaChallengeCommandExecutorTests
     {
         var userId = Guid.NewGuid();
         var user = CreateUser(userId);
-        var originalBackupCodes = JsonSerializer.Serialize(new List<string> { HashBackupCode("12345678") });
+        var originalBackupCodes = JsonSerializer.Serialize(new List<string> { "stored_hash" });
         user.MfaEnabled = true;
         user.MfaSecretEncrypted = "encrypted-secret";
         user.MfaBackupCodesHashJson = originalBackupCodes;
@@ -70,11 +67,12 @@ public class MfaChallengeCommandExecutorTests
         var user = CreateUser(userId);
         user.MfaEnabled = true;
         user.MfaSecretEncrypted = "encrypted-secret";
-        user.MfaBackupCodesHashJson = JsonSerializer.Serialize(new List<string> { HashBackupCode("12345678") });
+        user.MfaBackupCodesHashJson = JsonSerializer.Serialize(new List<string> { "stored_hash" });
 
         _mockUserRepo.Setup(x => x.GetByIdAsync(userId, default)).ReturnsAsync(user);
         _mockMfaService.Setup(x => x.DecryptSecret("encrypted-secret")).Returns("plain-secret");
         _mockMfaService.Setup(x => x.VerifyCode("plain-secret", "12345678")).Returns(false);
+        _mockMfaService.Setup(x => x.VerifyBackupCode("12345678", "stored_hash")).Returns(true);
 
         var result = await _handler.Handle(new MfaChallengeCommand { UserId = userId, Code = "12345678" }, CancellationToken.None);
 
@@ -96,11 +94,12 @@ public class MfaChallengeCommandExecutorTests
         var user = CreateUser(userId);
         user.MfaEnabled = true;
         user.MfaSecretEncrypted = "encrypted-secret";
-        user.MfaBackupCodesHashJson = JsonSerializer.Serialize(new List<string> { HashBackupCode("12345678") });
+        user.MfaBackupCodesHashJson = JsonSerializer.Serialize(new List<string> { "stored_hash" });
 
         _mockUserRepo.Setup(x => x.GetByIdAsync(userId, default)).ReturnsAsync(user);
         _mockMfaService.Setup(x => x.DecryptSecret("encrypted-secret")).Returns("plain-secret");
         _mockMfaService.Setup(x => x.VerifyCode("plain-secret", "00000000")).Returns(false);
+        _mockMfaService.Setup(x => x.VerifyBackupCode("00000000", "stored_hash")).Returns(false);
 
         await Assert.ThrowsAsync<BadRequestException>(() =>
             _handler.Handle(new MfaChallengeCommand { UserId = userId, Code = "00000000" }, CancellationToken.None));
@@ -118,16 +117,5 @@ public class MfaChallengeCommandExecutorTests
         typeof(User).GetProperty("Id")?.SetValue(user, userId);
         user.Activate();
         return user;
-    }
-
-    /// <summary>
-    /// Băm backup code bằng SHA256 để mô phỏng dữ liệu lưu trữ thực tế.
-    /// Luồng helper giúp assert consume backup code dựa trên hash thay vì plain text.
-    /// </summary>
-    private static string HashBackupCode(string code)
-    {
-        var normalized = code.Trim();
-        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
-        return Convert.ToHexString(hash).ToLowerInvariant();
     }
 }

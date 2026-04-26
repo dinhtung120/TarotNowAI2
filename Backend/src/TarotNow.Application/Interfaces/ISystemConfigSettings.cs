@@ -202,6 +202,12 @@ public interface ISystemConfigSettings
     // AI streaming temperature.
     double OperationalAiStreamingTemperature { get; }
 
+    // Lease lock quota reservation cho luồng AI stream (giây).
+    int OperationalAiQuotaReservationLeaseSeconds { get; }
+
+    // Phiên bản prompt AI dùng thống nhất cho request + telemetry.
+    string OperationalAiPromptVersion { get; }
+
     // Outbox batch size.
     int OperationalOutboxBatchSize { get; }
 

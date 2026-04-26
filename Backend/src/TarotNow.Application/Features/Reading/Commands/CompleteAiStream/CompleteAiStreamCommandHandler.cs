@@ -94,5 +94,8 @@ public partial class CompleteAiStreamCommandExecutor : ICommandExecutionExecutor
 
         // Mã lỗi telemetry khi thất bại (nếu có).
         public string? TelemetryErrorCode { get; set; }
+
+        // Phiên bản prompt của request dùng cho telemetry đối soát.
+        public string? PromptVersion { get; set; }
     }
 }

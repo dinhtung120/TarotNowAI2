@@ -94,7 +94,7 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
 
         if (session.UserId != domainEvent.UserId.ToString())
         {
-            throw new UnauthorizedAccessException("Reading session not found or access denied");
+            throw new ForbiddenException("Reading session not found or access denied");
         }
 
         return session;

@@ -86,7 +86,7 @@ public sealed class ReadingSessionRevealedDomainEventHandler
             {
                 state.FirstTokenAt ??= DateTimeOffset.UtcNow;
                 state.FullResponse.Append(chunk);
-                state.OutputTokens++;
+                state.OutputTokens += EstimateTokenCount(chunk);
             }
         }
         catch (Exception ex)
@@ -122,6 +122,7 @@ public sealed class ReadingSessionRevealedDomainEventHandler
                 IsClientDisconnect = false,
                 FirstTokenAt = state.FirstTokenAt,
                 OutputTokens = state.OutputTokens,
+                InputTokens = streamResult.EstimatedInputTokens,
                 LatencyMs = 0,
                 FullResponse = state.FullResponse.ToString(),
                 FollowupQuestion = null
@@ -150,5 +151,16 @@ public sealed class ReadingSessionRevealedDomainEventHandler
         public string? ErrorMessage { get; set; }
 
         public System.Text.StringBuilder FullResponse { get; } = new();
+    }
+
+    private static int EstimateTokenCount(string? content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return 0;
+        }
+
+        var normalizedLength = content.Trim().Length;
+        return Math.Max(1, (int)Math.Ceiling(normalizedLength / 4d));
     }
 }

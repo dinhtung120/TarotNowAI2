@@ -8,12 +8,20 @@ using TarotNow.Infrastructure.Options;
 namespace TarotNow.Infrastructure.Services;
 
 // Service MFA dựa trên TOTP: sinh secret, verify mã và mã hóa secret lưu trữ.
-public class TotpMfaService : IMfaService
+public partial class TotpMfaService : IMfaService
 {
     // Issuer hiển thị trong ứng dụng Authenticator để người dùng nhận diện đúng tài khoản.
     private const string Issuer = "TarotNowAI";
-    // Khóa AES dẫn xuất từ cấu hình để mã hóa secret MFA trong database.
-    private readonly byte[] _encryptionKey;
+    private const string EncryptionVersionV2Prefix = "v2";
+    private const string BackupHashAlgorithm = "pbkdf2-sha256";
+    private const string BackupCodeAlphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+    // Material key lấy từ cấu hình để dẫn xuất key theo từng secret.
+    private readonly byte[] _masterKeyBytes;
+    // Key legacy để giải mã dữ liệu MFA cũ trước khi migration lên v2.
+    private readonly byte[] _legacyEncryptionKey;
+    private readonly int _kdfIterations;
+    private readonly int _backupCodeLength;
 
     /// <summary>
     /// Khởi tạo service MFA và dẫn xuất khóa mã hóa từ cấu hình bảo mật.
@@ -21,8 +29,9 @@ public class TotpMfaService : IMfaService
     /// </summary>
     public TotpMfaService(IOptions<SecurityOptions> options)
     {
+        var securityOptions = options.Value;
         // Đọc khóa mã hóa MFA từ cấu hình vận hành.
-        var configuredKey = options.Value.MfaEncryptionKey?.Trim();
+        var configuredKey = securityOptions.MfaEncryptionKey?.Trim();
         if (string.IsNullOrWhiteSpace(configuredKey))
         {
             throw new InvalidOperationException("Missing Security:MfaEncryptionKey configuration.");
@@ -34,8 +43,10 @@ public class TotpMfaService : IMfaService
             throw new InvalidOperationException("Security:MfaEncryptionKey is not configured with a real secret.");
         }
 
-        // Dẫn xuất SHA-256 để lấy key dài cố định, phù hợp yêu cầu AES key bytes.
-        _encryptionKey = SHA256.HashData(Encoding.UTF8.GetBytes(configuredKey));
+        _masterKeyBytes = Encoding.UTF8.GetBytes(configuredKey);
+        _legacyEncryptionKey = SHA256.HashData(_masterKeyBytes);
+        _kdfIterations = Math.Max(100_000, securityOptions.MfaKdfIterations);
+        _backupCodeLength = Math.Clamp(securityOptions.MfaBackupCodeLength, 10, 24);
     }
 
     /// <summary>
@@ -90,62 +101,24 @@ public class TotpMfaService : IMfaService
     /// </summary>
     public List<string> GenerateBackupCodes(int count = 6)
     {
-        var result = new List<string>();
+        var result = new List<string>(count);
         for (int i = 0; i < count; i++)
         {
-            var bytes = new byte[4];
-            RandomNumberGenerator.Fill(bytes);
-            // Ràng buộc 8 chữ số để dễ nhập tay nhưng vẫn đủ không gian giá trị.
-            var code = BitConverter.ToUInt32(bytes, 0) % 100000000;
-            result.Add(code.ToString("D8"));
+            result.Add(GenerateRandomBackupCode(_backupCodeLength));
         }
+
         return result;
     }
 
-    /// <summary>
-    /// Mã hóa secret TOTP trước khi lưu trữ.
-    /// Luồng dùng AES với IV ngẫu nhiên; kết quả gồm IV + ciphertext dạng Base64.
-    /// </summary>
-    public string EncryptSecret(string plainSecret)
+    private static string GenerateRandomBackupCode(int length)
     {
-        using var aes = Aes.Create();
-        aes.Key = _encryptionKey;
-        aes.GenerateIV();
+        var bytes = RandomNumberGenerator.GetBytes(length);
+        var builder = new StringBuilder(length);
+        for (var i = 0; i < length; i++)
+        {
+            builder.Append(BackupCodeAlphabet[bytes[i] % BackupCodeAlphabet.Length]);
+        }
 
-        var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
-        var plainBytes = Encoding.UTF8.GetBytes(plainSecret);
-        var encryptedBytes = encryptor.TransformFinalBlock(plainBytes, 0, plainBytes.Length);
-
-        // Ghép IV + ciphertext để phục vụ giải mã về sau trong cùng chuỗi lưu trữ.
-        var result = new byte[aes.IV.Length + encryptedBytes.Length];
-        Buffer.BlockCopy(aes.IV, 0, result, 0, aes.IV.Length);
-        Buffer.BlockCopy(encryptedBytes, 0, result, aes.IV.Length, encryptedBytes.Length);
-
-        return Convert.ToBase64String(result);
-    }
-
-    /// <summary>
-    /// Giải mã secret TOTP đã lưu.
-    /// Luồng tách IV và ciphertext từ payload Base64 rồi giải mã bằng cùng khóa AES dẫn xuất.
-    /// </summary>
-    public string DecryptSecret(string encryptedSecret)
-    {
-        var fullBytes = Convert.FromBase64String(encryptedSecret);
-
-        using var aes = Aes.Create();
-        aes.Key = _encryptionKey;
-
-        // Tách block đầu làm IV, phần còn lại là ciphertext.
-        var iv = new byte[aes.BlockSize / 8];
-        var cipherText = new byte[fullBytes.Length - iv.Length];
-
-        Buffer.BlockCopy(fullBytes, 0, iv, 0, iv.Length);
-        Buffer.BlockCopy(fullBytes, iv.Length, cipherText, 0, cipherText.Length);
-        aes.IV = iv;
-
-        var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
-        var plainBytes = decryptor.TransformFinalBlock(cipherText, 0, cipherText.Length);
-
-        return Encoding.UTF8.GetString(plainBytes);
+        return builder.ToString();
     }
 }

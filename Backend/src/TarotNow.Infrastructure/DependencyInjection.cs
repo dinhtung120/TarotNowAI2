@@ -47,7 +47,6 @@ public static partial class DependencyInjection
                        && HasValidPayOsCredential(options.ChecksumKey);
             }, "PayOS credentials are missing or still use placeholder values.")
             .ValidateOnStart();
-        services.Configure<PaymentGatewayOptions>(configuration.GetSection("PaymentGateway"));
         services.Configure<Argon2Options>(configuration.GetSection("Argon2"));
         services.Configure<SecurityOptions>(configuration.GetSection("Security"));
         services.Configure<SmtpOptions>(configuration.GetSection("Smtp"));

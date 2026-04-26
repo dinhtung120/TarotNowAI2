@@ -71,21 +71,10 @@ public partial class StreamReadingCommandExecutor
                 idempotencyKey: $"freeze_{aiRequest.Id}",
                 cancellationToken: cancellationToken);
         }
-        catch (Exception ex)
+        catch (InvalidOperationException)
         {
-            aiRequest.Status = AiRequestStatus.FailedBeforeFirstToken;
-            aiRequest.FinishReason = "insufficient_funds_or_error";
-            await _aiRequestRepo.UpdateAsync(aiRequest, cancellationToken);
-            // Đổi state request về failed sớm khi không freeze được để downstream không chờ completion vô nghĩa.
-
-            if (ex is InvalidOperationException)
-            {
-                // Nhóm lỗi số dư không đủ được ánh xạ sang thông điệp người dùng dễ hiểu.
-                throw new BadRequestException("Not enough balance to perform AI Reading.");
-            }
-
-            // Lỗi kỹ thuật khác khi freeze được quy về thông điệp chung để tránh lộ chi tiết hệ thống.
-            throw new BadRequestException("Unable to reserve balance for AI Reading. Please try again later.");
+            // Nhóm lỗi nghiệp vụ số dư/điều kiện ví không đủ.
+            throw new BadRequestException("Not enough balance to perform AI Reading.");
         }
     }
 

@@ -26,7 +26,7 @@ public partial class StreamReadingCommandExecutor
         if (session.UserId != request.UserId.ToString())
         {
             // Chặn truy cập stream chéo session của user khác.
-            throw new UnauthorizedAccessException("Session not found or access denied");
+            throw new ForbiddenException("Session not found or access denied");
         }
 
         if (!session.IsCompleted)

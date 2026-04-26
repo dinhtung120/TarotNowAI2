@@ -23,6 +23,8 @@ public partial class OpenAiProvider : IAiProvider
     private readonly int _streamingRetryBaseDelayMs;
     // Temperature mặc định cho request streaming.
     private readonly double _streamingTemperature;
+    // Phiên bản prompt dùng đồng nhất giữa request và telemetry.
+    private readonly string _promptVersion;
 
     // Tên provider trả về cho tầng ứng dụng để định danh nguồn AI.
     public string ProviderName => "OpenAI";
@@ -65,6 +67,7 @@ public partial class OpenAiProvider : IAiProvider
         _maxRetries = systemConfigSettings.OperationalAiMaxRetries;
         _streamingRetryBaseDelayMs = systemConfigSettings.OperationalAiStreamingRetryBaseDelayMs;
         _streamingTemperature = systemConfigSettings.OperationalAiStreamingTemperature;
+        _promptVersion = systemConfigSettings.OperationalAiPromptVersion;
 
         // Chuẩn hóa timeout/baseUrl giúp client luôn có thông số chạy tối thiểu hợp lệ.
         var timeoutSeconds = systemConfigSettings.OperationalAiTimeoutSeconds;

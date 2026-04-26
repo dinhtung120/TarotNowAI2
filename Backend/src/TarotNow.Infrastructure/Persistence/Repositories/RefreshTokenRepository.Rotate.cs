@@ -28,6 +28,7 @@ public sealed partial class RefreshTokenRepository
         {
             return await HandleLockContentionAsync(
                 request.RawToken,
+                request.NewRawToken,
                 context.TokenIdempotencyCacheKey,
                 cancellationToken);
         }
@@ -55,7 +56,7 @@ public sealed partial class RefreshTokenRepository
 
         try
         {
-            var current = await LoadForUpdateAsync(context.NormalizedToken, context.TokenHash, cancellationToken);
+            var current = await LoadForUpdateAsync(context.TokenHash, cancellationToken);
             if (current is null)
             {
                 return await FinalizeResultAsync(localTransaction, RefreshRotateResult.Invalid(), cancellationToken);
@@ -65,9 +66,8 @@ public sealed partial class RefreshTokenRepository
             var idemCacheKey = BuildRefreshIdempotencyKey(current.SessionId, idempotencyKey);
             var earlyExit = await TryBuildEarlyExitResultAsync(
                 current,
-                idempotencyKey,
                 idemCacheKey,
-                context.TokenIdempotencyCacheKey,
+                context,
                 cancellationToken);
 
             if (earlyExit is not null)
@@ -92,44 +92,6 @@ public sealed partial class RefreshTokenRepository
         }
     }
 
-    private async Task<RefreshRotateResult?> TryBuildEarlyExitResultAsync(
-        RefreshToken current,
-        string idempotencyKey,
-        string idemCacheKey,
-        string tokenIdempotencyCacheKey,
-        CancellationToken cancellationToken)
-    {
-        var cached = await _cacheService.GetAsync<RefreshRotateCacheItem>(idemCacheKey, cancellationToken);
-        if (cached is null)
-        {
-            cached = await _cacheService.GetAsync<RefreshRotateCacheItem>(tokenIdempotencyCacheKey, cancellationToken);
-        }
-
-        if (cached is not null
-            && string.IsNullOrWhiteSpace(cached.NewRefreshTokenRaw) == false
-            && cached.NewTokenExpiresAtUtc > DateTime.MinValue)
-        {
-            return RefreshRotateResult.Idempotent(current, cached.NewRefreshTokenRaw, cached.NewTokenExpiresAtUtc);
-        }
-
-        if (current.IsExpired)
-        {
-            return RefreshRotateResult.Expired(current);
-        }
-
-        if (current.IsActive)
-        {
-            return null;
-        }
-
-        if (IsLockContention(current, idempotencyKey, DateTime.UtcNow))
-        {
-            return RefreshRotateResult.Locked();
-        }
-
-        return RefreshRotateResult.ReplayDetected(current);
-    }
-
     private RotateExecutionContext BuildRotateExecutionContext(RefreshRotateRequest request)
     {
         var normalizedToken = request.RawToken.Trim();
@@ -146,7 +108,6 @@ public sealed partial class RefreshTokenRepository
             TokenIdempotencyCacheKey: tokenIdempotencyCacheKey,
             TransactionContext: new RotateTransactionContext(
                 request,
-                normalizedToken,
                 tokenHash,
                 normalizedIdempotencyKey,
                 tokenIdempotencyCacheKey));
@@ -154,13 +115,20 @@ public sealed partial class RefreshTokenRepository
 
     private async Task<RefreshRotateResult> HandleLockContentionAsync(
         string rawToken,
+        string newRawToken,
         string tokenIdempotencyCacheKey,
         CancellationToken cancellationToken)
     {
         var tokenCached = await _cacheService.GetAsync<RefreshRotateCacheItem>(tokenIdempotencyCacheKey, cancellationToken);
         if (tokenCached is null
-            || string.IsNullOrWhiteSpace(tokenCached.NewRefreshTokenRaw)
+            || tokenCached.NewTokenId == Guid.Empty
             || tokenCached.NewTokenExpiresAtUtc <= DateTime.MinValue)
+        {
+            return RefreshRotateResult.Locked();
+        }
+
+        var replacementToken = await TryLoadReplacementTokenAsync(tokenCached.NewTokenId, cancellationToken);
+        if (replacementToken is null || !replacementToken.MatchesToken(newRawToken))
         {
             return RefreshRotateResult.Locked();
         }
@@ -169,9 +137,8 @@ public sealed partial class RefreshTokenRepository
         return tokenSnapshot is not null
             ? RefreshRotateResult.Idempotent(
                 tokenSnapshot,
-                tokenCached.NewRefreshTokenRaw,
-                tokenCached.NewTokenExpiresAtUtc)
+                newRawToken,
+                replacementToken.ExpiresAt)
             : RefreshRotateResult.Locked();
     }
-
 }

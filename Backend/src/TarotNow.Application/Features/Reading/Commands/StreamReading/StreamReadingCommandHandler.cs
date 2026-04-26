@@ -14,10 +14,13 @@ public partial class StreamReadingCommandExecutor : ICommandExecutionExecutor<St
     private readonly IWalletRepository _walletRepo;
     private readonly IAiProvider _aiProvider;
     private readonly ICacheService _cacheService;
+    private readonly ITransactionCoordinator _transactionCoordinator;
     private readonly FollowupPricingService _pricingService;
     private readonly int _dailyAiQuota;
     private readonly int _inFlightAiCap;
     private readonly int _readingRateLimitSeconds;
+    private readonly int _aiQuotaReservationLeaseSeconds;
+    private readonly string _aiPromptVersion;
     private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
@@ -30,6 +33,7 @@ public partial class StreamReadingCommandExecutor : ICommandExecutionExecutor<St
         IWalletRepository walletRepo,
         IAiProvider aiProvider,
         ICacheService cacheService,
+        ITransactionCoordinator transactionCoordinator,
         FollowupPricingService pricingService,
         ISystemConfigSettings systemConfigSettings,
         IDomainEventPublisher domainEventPublisher)
@@ -39,10 +43,13 @@ public partial class StreamReadingCommandExecutor : ICommandExecutionExecutor<St
         _walletRepo = walletRepo;
         _aiProvider = aiProvider;
         _cacheService = cacheService;
+        _transactionCoordinator = transactionCoordinator;
         _pricingService = pricingService;
         _dailyAiQuota = systemConfigSettings.DailyAiQuota;
         _inFlightAiCap = systemConfigSettings.InFlightAiCap;
         _readingRateLimitSeconds = systemConfigSettings.ReadingRateLimitSeconds;
+        _aiQuotaReservationLeaseSeconds = systemConfigSettings.OperationalAiQuotaReservationLeaseSeconds;
+        _aiPromptVersion = systemConfigSettings.OperationalAiPromptVersion;
         _domainEventPublisher = domainEventPublisher;
     }
 
@@ -66,11 +73,9 @@ public partial class StreamReadingCommandExecutor : ICommandExecutionExecutor<St
             normalizedIdempotencyKey,
             cancellationToken);
 
-        await FreezeEscrowAsync(request, aiRequest, calculatedCost, cancellationToken);
-        // Chỉ khi freeze thành công mới cho phép tạo stream để đảm bảo an toàn tài chính.
-
         var prompts = StreamReadingPromptFactory.Build(session, request.FollowupQuestion, request.Language);
         var stream = _aiProvider.StreamChatAsync(prompts.SystemPrompt, prompts.UserPrompt, cancellationToken);
+        var estimatedInputTokens = EstimateTokenCount(prompts.SystemPrompt) + EstimateTokenCount(prompts.UserPrompt);
 
         if (calculatedCost > 0)
         {
@@ -90,7 +95,19 @@ public partial class StreamReadingCommandExecutor : ICommandExecutionExecutor<St
         return new StreamReadingResult
         {
             Stream = stream,
-            AiRequestId = aiRequest.Id
+            AiRequestId = aiRequest.Id,
+            EstimatedInputTokens = estimatedInputTokens
         };
+    }
+
+    private static int EstimateTokenCount(string? content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return 0;
+        }
+
+        var normalizedLength = content.Trim().Length;
+        return Math.Max(1, (int)Math.Ceiling(normalizedLength / 4d));
     }
 }

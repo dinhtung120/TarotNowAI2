@@ -16,7 +16,8 @@ public sealed partial class AiStreamSseOrchestrator
             streamResult.AiRequestId,
             request.UserId,
             request.SessionId,
-            state);
+            state,
+            streamResult.EstimatedInputTokens);
 
         try
         {
@@ -28,6 +29,7 @@ public sealed partial class AiStreamSseOrchestrator
                 request.UserId,
                 request.FollowUpQuestion,
                 state,
+                streamResult.EstimatedInputTokens,
                 AiStreamFinalStatuses.Completed,
                 ErrorMessage: null,
                 IsClientDisconnect: false,
@@ -57,7 +59,7 @@ public sealed partial class AiStreamSseOrchestrator
             }
 
             state.FullResponseBuilder.Append(chunk);
-            state.OutputTokens++;
+            state.OutputTokens += EstimateTokenCount(chunk);
 
             var sanitizedChunk = chunk.Replace("\n", "\\n");
             await WriteServerEventAsync(response, sanitizedChunk, cancellationToken);
@@ -88,5 +90,17 @@ public sealed partial class AiStreamSseOrchestrator
         Guid AiRequestId,
         Guid UserId,
         string SessionId,
-        StreamExecutionState State);
+        StreamExecutionState State,
+        int InputTokens);
+
+    private static int EstimateTokenCount(string? content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return 0;
+        }
+
+        var normalizedLength = content.Trim().Length;
+        return Math.Max(1, (int)Math.Ceiling(normalizedLength / 4d));
+    }
 }

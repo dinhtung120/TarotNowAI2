@@ -42,7 +42,13 @@ public sealed class AiController : ControllerBase
         if (!await _featureManager.IsEnabledAsync(FeatureFlags.AiStreamingEnabled))
         {
             Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-            await Response.WriteAsync("data: AI streaming is temporarily disabled by feature flag.\n\n", cancellationToken);
+            await Response.WriteAsJsonAsync(new ProblemDetails
+            {
+                Status = StatusCodes.Status503ServiceUnavailable,
+                Title = "Service Unavailable",
+                Detail = "AI streaming is temporarily disabled by feature flag.",
+                Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.4"
+            }, cancellationToken);
             return;
         }
 
@@ -56,7 +62,13 @@ public sealed class AiController : ControllerBase
         if (string.IsNullOrWhiteSpace(followUpQuestion) == false && string.IsNullOrWhiteSpace(idempotencyKey))
         {
             Response.StatusCode = StatusCodes.Status400BadRequest;
-            await Response.WriteAsync("data: Idempotency-Key header is required for follow-up stream.\n\n", cancellationToken);
+            await Response.WriteAsJsonAsync(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Bad Request",
+                Detail = "Idempotency-Key header is required for follow-up stream.",
+                Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"
+            }, cancellationToken);
             return;
         }
 

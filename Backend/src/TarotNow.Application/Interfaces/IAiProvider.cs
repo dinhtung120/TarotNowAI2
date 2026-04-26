@@ -54,4 +54,7 @@ public sealed class AiProviderRequestLog
 
     // Mã lỗi chi tiết khi request thất bại hoặc bị từ chối.
     public string? ErrorCode { get; init; }
+
+    // Phiên bản prompt áp dụng cho request này.
+    public string? PromptVersion { get; init; }
 }

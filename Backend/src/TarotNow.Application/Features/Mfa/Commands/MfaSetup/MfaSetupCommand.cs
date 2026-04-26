@@ -2,8 +2,6 @@ using MediatR;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -69,7 +67,7 @@ public class MfaSetupCommandExecutor : ICommandExecutionExecutor<MfaSetupCommand
         // Sinh đầy đủ dữ liệu onboarding từ cùng một secret để đồng bộ giữa QR và verify code.
 
         var backupCodes = _mfaService.GenerateBackupCodes();
-        var backupCodeHashes = backupCodes.Select(HashBackupCode).ToList();
+        var backupCodeHashes = backupCodes.Select(_mfaService.HashBackupCode).ToList();
         // Chỉ lưu hash backup code trong DB để giảm rủi ro lộ mã dùng một lần.
 
         user.MfaSecretEncrypted = encryptedSecret;
@@ -85,16 +83,5 @@ public class MfaSetupCommandExecutor : ICommandExecutionExecutor<MfaSetupCommand
             SecretDisplay = plainSecret,
             BackupCodes = backupCodes
         };
-    }
-
-    /// <summary>
-    /// Băm backup code bằng SHA-256 trước khi lưu.
-    /// Luồng xử lý: chuẩn hóa code đầu vào, băm nhị phân và chuyển sang chuỗi hex thường.
-    /// </summary>
-    private static string HashBackupCode(string code)
-    {
-        var normalized = code.Trim();
-        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
-        return Convert.ToHexString(hash).ToLowerInvariant();
     }
 }

@@ -25,6 +25,7 @@ public static partial class DependencyInjection
         services.AddSingleton<ILegalVersionSettings, LegalVersionSettings>();
         services.AddSingleton<SystemConfigSnapshotStore>();
         services.AddSingleton<ISystemConfigSettings, SystemConfigSettings>();
+        services.AddSingleton<IChatModerationSettings, ChatModerationSettings>();
         services.AddScoped<SystemConfigProjectionService>();
         services.AddScoped<ISystemConfigAdminService, SystemConfigAdminService>();
 
@@ -34,7 +35,6 @@ public static partial class DependencyInjection
         services.AddScoped<IInlineDomainEventDispatcher, InlineMediatRDomainEventDispatcher>();
         services.AddScoped<IEventHandlerIdempotencyService, OutboxHandlerIdempotencyService>();
         services.AddSingleton<IRngService, RngService>();
-        services.AddSingleton<IPaymentGatewayService, HmacPaymentGatewayService>();
         services.AddSingleton<IDepositPackageCatalog, DepositPackageCatalog>();
         services.AddSingleton<IDepositPayOsSettings, DepositPayOsSettings>();
         services.AddSingleton<IPayOsGateway, PayOsGateway>();

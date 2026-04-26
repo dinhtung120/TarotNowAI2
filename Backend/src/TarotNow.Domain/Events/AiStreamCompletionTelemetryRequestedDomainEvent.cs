@@ -26,6 +26,11 @@ public sealed class AiStreamCompletionTelemetryRequestedDomainEvent : IDomainEve
     public string? RequestId { get; init; }
 
     /// <summary>
+    /// Số token input gửi lên provider.
+    /// </summary>
+    public int InputTokens { get; init; }
+
+    /// <summary>
     /// Số token output trả về.
     /// </summary>
     public int OutputTokens { get; init; }
@@ -44,6 +49,11 @@ public sealed class AiStreamCompletionTelemetryRequestedDomainEvent : IDomainEve
     /// Mã lỗi telemetry (nếu có).
     /// </summary>
     public string? ErrorCode { get; init; }
+
+    /// <summary>
+    /// Phiên bản prompt áp dụng cho request.
+    /// </summary>
+    public string? PromptVersion { get; init; }
 
     /// <summary>
     /// Thời điểm phát sinh event.

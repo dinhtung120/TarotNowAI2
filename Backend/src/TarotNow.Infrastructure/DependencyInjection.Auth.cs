@@ -61,7 +61,8 @@ public static partial class DependencyInjection
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtOptions.Issuer,
             ValidAudience = jwtOptions.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+            ClockSkew = TimeSpan.Zero
         };
 
         options.Events = new JwtBearerEvents
@@ -147,6 +148,7 @@ public static partial class DependencyInjection
         var sessionIdRaw = principal.FindFirst(AuthClaimConstants.SessionId)?.Value;
         if (!Guid.TryParse(sessionIdRaw, out var sessionId) || sessionId == Guid.Empty)
         {
+            context.Fail("Missing or invalid session binding claim.");
             return;
         }
 
@@ -164,6 +166,7 @@ public static partial class DependencyInjection
 
         if (authSessionRepository is null)
         {
+            context.Fail("Auth session repository is unavailable.");
             return;
         }
 

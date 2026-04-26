@@ -111,10 +111,6 @@ public static partial class DependencyInjection
         services.AddScoped<IChatFinanceRepository, ChatFinanceRepository>();
         services.AddScoped<IWithdrawalRepository, WithdrawalRepository>();
         services.AddScoped<IMfaService, TotpMfaService>();
-
-        services.AddSingleton<ChatModerationQueue>();
-        services.AddSingleton<IChatModerationQueue>(sp => sp.GetRequiredService<ChatModerationQueue>());
-        // Dùng một queue singleton để mọi producer/consumer moderation chia sẻ cùng kênh dữ liệu.
     }
 
     /// <summary>
@@ -126,7 +122,6 @@ public static partial class DependencyInjection
         services.AddHostedService<SystemConfigBootstrapHostedService>();
         services.AddHostedService<AuthSessionCleanupJob>();
         services.AddHostedService<EscrowTimerService>();
-        services.AddHostedService<ChatModerationWorker>();
         services.AddHostedService<StreakBreakBackgroundJob>();
         services.AddHostedService<MediaUploadCleanupJob>();
         services.AddHostedService<OutboxProcessorWorker>();

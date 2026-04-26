@@ -26,12 +26,12 @@ public sealed partial class RefreshTokenRepository
 
         await TryCacheIdempotentResultAsync(
             context.IdempotencyCacheKey,
-            context.Request.NewRawToken,
+            nextToken.Id,
             nextToken.ExpiresAt,
             cancellationToken);
         await TryCacheIdempotentResultAsync(
             context.TokenIdempotencyCacheKey,
-            context.Request.NewRawToken,
+            nextToken.Id,
             nextToken.ExpiresAt,
             cancellationToken);
         return RefreshRotateResult.Success(context.CurrentToken, nextToken, context.Request.NewRawToken);
@@ -61,7 +61,7 @@ public sealed partial class RefreshTokenRepository
 
     private async Task TryCacheIdempotentResultAsync(
         string idemCacheKey,
-        string newRefreshTokenRaw,
+        Guid newTokenId,
         DateTime newTokenExpiresAtUtc,
         CancellationToken cancellationToken)
     {
@@ -70,7 +70,7 @@ public sealed partial class RefreshTokenRepository
             var window = TimeSpan.FromSeconds(Math.Max(10, _authSecurityOptions.RefreshIdempotencyWindowSeconds));
             var cacheItem = new RefreshRotateCacheItem
             {
-                NewRefreshTokenRaw = newRefreshTokenRaw,
+                NewTokenId = newTokenId,
                 NewTokenExpiresAtUtc = newTokenExpiresAtUtc
             };
             await _cacheService.SetAsync(idemCacheKey, cacheItem, window, cancellationToken);
@@ -85,13 +85,13 @@ public sealed partial class RefreshTokenRepository
         }
     }
 
-    private async Task<RefreshToken?> LoadForUpdateAsync(string normalizedToken, string hashedToken, CancellationToken ct)
+    private async Task<RefreshToken?> LoadForUpdateAsync(string hashedToken, CancellationToken ct)
     {
         return await _dbContext.RefreshTokens
             .FromSqlInterpolated($"""
                 SELECT * 
                 FROM refresh_tokens
-                WHERE token = {hashedToken} OR token = {normalizedToken}
+                WHERE token = {hashedToken}
                 ORDER BY created_at DESC
                 LIMIT 1
                 FOR UPDATE
@@ -144,7 +144,7 @@ public sealed partial class RefreshTokenRepository
 
     private sealed class RefreshRotateCacheItem
     {
-        public string NewRefreshTokenRaw { get; set; } = string.Empty;
+        public Guid NewTokenId { get; set; }
         public DateTime NewTokenExpiresAtUtc { get; set; }
     }
 

@@ -40,7 +40,7 @@ public class RefreshToken
     public Guid? ReplacedByTokenId { get; private set; }
 
     /// <summary>
-    /// Giá trị token đã hash (hoặc plain legacy để tương thích dữ liệu cũ).
+    /// Giá trị token đã hash.
     /// </summary>
     public string Token { get; private set; } = string.Empty;
 
@@ -223,11 +223,6 @@ public class RefreshToken
         if (string.IsNullOrWhiteSpace(rawToken))
         {
             return false;
-        }
-
-        if (Token.Length < 64)
-        {
-            return string.Equals(Token, rawToken, StringComparison.Ordinal);
         }
 
         var hashedInput = HashToken(rawToken);

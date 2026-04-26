@@ -50,6 +50,20 @@ public static partial class SystemConfigRegistry
         };
     }
 
+    private static Func<string, (bool IsValid, string? Error)> ValidateTextLength(int minLength, int maxLength)
+    {
+        return rawValue =>
+        {
+            var normalized = rawValue.Trim();
+            if (normalized.Length < minLength || normalized.Length > maxLength)
+            {
+                return (false, $"Text length must be between {minLength} and {maxLength} characters.");
+            }
+
+            return (true, null);
+        };
+    }
+
     private static (bool IsValid, string? Error) ValidateJson(string rawValue)
     {
         if (string.IsNullOrWhiteSpace(rawValue))

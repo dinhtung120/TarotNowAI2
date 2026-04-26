@@ -67,7 +67,18 @@ public sealed class RedisRealtimeBridgeSource : IRealtimeBridgeSource
     {
         return (redisChannel, redisValue) =>
         {
-            _ = onMessageAsync(redisChannel.ToString(), redisValue.ToString());
+            try
+            {
+                // Chạy callback theo kiểu blocking tại điểm subscribe để giữ backpressure và không nuốt exception.
+                onMessageAsync(redisChannel.ToString(), redisValue.ToString()).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Redis realtime callback failed. Channel={Channel}",
+                    redisChannel.ToString());
+            }
         };
     }
 

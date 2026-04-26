@@ -24,7 +24,7 @@ public partial class StreamReadingCommandExecutor
         var acquired = await _cacheService.AcquireLockAsync(
             lockKey,
             lockOwner,
-            leaseTime: TimeSpan.FromSeconds(10),
+            leaseTime: TimeSpan.FromSeconds(_aiQuotaReservationLeaseSeconds),
             cancellationToken);
         if (!acquired)
         {
@@ -34,12 +34,24 @@ public partial class StreamReadingCommandExecutor
         try
         {
             await EnsureQuotaAsync(request.UserId, cancellationToken);
-            return await CreateAiRequestAsync(
-                request,
-                readingSessionRef,
-                calculatedCost,
-                normalizedIdempotencyKey,
+
+            AiRequest? persistedRequest = null;
+            await _transactionCoordinator.ExecuteAsync(
+                async transactionCt =>
+                {
+                    var aiRequest = await CreateAiRequestAsync(
+                        request,
+                        readingSessionRef,
+                        calculatedCost,
+                        normalizedIdempotencyKey,
+                        transactionCt);
+                    await FreezeEscrowAsync(request, aiRequest, calculatedCost, transactionCt);
+                    persistedRequest = aiRequest;
+                },
                 cancellationToken);
+
+            return persistedRequest
+                   ?? throw new InvalidOperationException("Unable to persist AI request for streaming.");
         }
         finally
         {
@@ -83,14 +95,13 @@ public partial class StreamReadingCommandExecutor
             FollowupSequence = ResolveFollowupSequence(request.FollowupQuestion, followUpCount),
             Status = AiRequestStatus.Requested,
             IdempotencyKey = normalizedIdempotencyKey ?? $"ai_stream_{readingSessionRef:D}_{Guid.CreateVersion7():N}",
-            PromptVersion = "v1.5",
+            PromptVersion = _aiPromptVersion,
             ChargeDiamond = calculatedCost
         };
         // Gắn idempotency key duy nhất cho mỗi request để hỗ trợ truy vết và xử lý retry an toàn.
 
         await _aiRequestRepo.AddAsync(aiRequest, cancellationToken);
-        // Persist request trước khi mở stream để completion callback có bản ghi đối chiếu.
-
+        // Persist request trong cùng transaction với freeze escrow để giữ nhất quán billing.
         return aiRequest;
     }
 

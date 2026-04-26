@@ -42,11 +42,12 @@ public sealed class AiStreamCompletionTelemetryRequestedDomainEventHandler
                 UserId = domainEvent.UserId,
                 SessionId = domainEvent.SessionId,
                 RequestId = domainEvent.RequestId,
-                InputTokens = 0,
+                InputTokens = domainEvent.InputTokens,
                 OutputTokens = domainEvent.OutputTokens,
                 LatencyMs = domainEvent.LatencyMs,
                 Status = domainEvent.Status,
-                ErrorCode = domainEvent.ErrorCode
+                ErrorCode = domainEvent.ErrorCode,
+                PromptVersion = domainEvent.PromptVersion
             });
         }
         catch (Exception exception)

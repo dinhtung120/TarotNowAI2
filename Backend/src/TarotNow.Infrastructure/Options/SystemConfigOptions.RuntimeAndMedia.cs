@@ -50,6 +50,8 @@ public sealed partial class SystemConfigOptions
             public int MaxRetries { get; set; } = 2;
             public int StreamingRetryBaseDelayMs { get; set; } = 200;
             public double StreamingTemperature { get; set; } = 0.7;
+            public int QuotaReservationLeaseSeconds { get; set; } = 30;
+            public string PromptVersion { get; set; } = "v1.5";
         }
 
         public sealed class OutboxOptions

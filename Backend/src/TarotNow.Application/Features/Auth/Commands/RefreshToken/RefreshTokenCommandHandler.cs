@@ -70,12 +70,13 @@ public partial class RefreshTokenCommandExecutor : ICommandExecutionExecutor<Ref
         RefreshTokenCommand request,
         CancellationToken cancellationToken)
     {
+        var nextRefreshToken = BuildDeterministicRefreshToken(request);
         for (var attempt = 1; attempt <= MaxRotateLockRetries; attempt++)
         {
             var rotateRequest = new RefreshRotateRequest
             {
                 RawToken = request.Token,
-                NewRawToken = _tokenService.GenerateRefreshToken(),
+                NewRawToken = nextRefreshToken,
                 NewExpiresAtUtc = DateTime.UtcNow.AddDays(_jwtTokenSettings.RefreshTokenExpiryDays),
                 IpAddress = request.ClientIpAddress,
                 DeviceId = request.DeviceId,
@@ -93,6 +94,20 @@ public partial class RefreshTokenCommandExecutor : ICommandExecutionExecutor<Ref
         }
 
         return RefreshRotateResult.Locked();
+    }
+
+    private static string BuildDeterministicRefreshToken(RefreshTokenCommand request)
+    {
+        var material = string.Concat(
+            request.Token.Trim(),
+            "|",
+            request.IdempotencyKey.Trim(),
+            "|",
+            request.DeviceId.Trim(),
+            "|",
+            request.UserAgentHash.Trim());
+        var bytes = System.Security.Cryptography.SHA512.HashData(System.Text.Encoding.UTF8.GetBytes(material));
+        return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 
     private async Task<RefreshTokenEntity> ValidateRotationResultAsync(
