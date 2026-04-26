@@ -7,7 +7,7 @@ using TarotNow.Application.Interfaces;
 namespace TarotNow.Application.Features.Promotions.Commands.DeletePromotion;
 
 // Handler xóa promotion khỏi hệ thống.
-public class DeletePromotionCommandHandler : IRequestHandler<DeletePromotionCommand, bool>
+public class DeletePromotionCommandExecutor : ICommandExecutionExecutor<DeletePromotionCommand, bool>
 {
     private readonly IDepositPromotionRepository _promotionRepository;
 
@@ -15,7 +15,7 @@ public class DeletePromotionCommandHandler : IRequestHandler<DeletePromotionComm
     /// Khởi tạo handler xóa promotion.
     /// Luồng xử lý: nhận promotion repository để tải và xóa bản ghi khuyến mãi mục tiêu.
     /// </summary>
-    public DeletePromotionCommandHandler(IDepositPromotionRepository promotionRepository)
+    public DeletePromotionCommandExecutor(IDepositPromotionRepository promotionRepository)
     {
         _promotionRepository = promotionRepository;
     }

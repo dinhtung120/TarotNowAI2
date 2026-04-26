@@ -5,8 +5,8 @@ using TarotNow.Application.Interfaces;
 namespace TarotNow.Application.Features.Chat.Commands.RespondConversationComplete;
 
 // Handler điều phối luồng phản hồi yêu cầu hoàn thành conversation.
-public partial class RespondConversationCompleteCommandHandler
-    : IRequestHandler<RespondConversationCompleteCommand, ConversationCompleteRespondResult>
+public partial class RespondConversationCompleteCommandExecutor
+    : ICommandExecutionExecutor<RespondConversationCompleteCommand, ConversationCompleteRespondResult>
 {
     private readonly IConversationRepository _conversationRepository;
     private readonly IChatFinanceRepository _financeRepository;
@@ -19,7 +19,7 @@ public partial class RespondConversationCompleteCommandHandler
     /// Khởi tạo handler respond conversation complete.
     /// Luồng xử lý: nhận repository conversation/finance/message, settlement service và publisher để xử lý đầy đủ nhánh accept/reject.
     /// </summary>
-    public RespondConversationCompleteCommandHandler(
+    public RespondConversationCompleteCommandExecutor(
         IConversationRepository conversationRepository,
         IChatFinanceRepository financeRepository,
         IEscrowSettlementService escrowSettlementService,

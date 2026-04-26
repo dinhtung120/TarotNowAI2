@@ -26,7 +26,7 @@ public class CreateReportCommand : IRequest<ReportDto>
 }
 
 // Handler tạo report và lưu vào repository.
-public class CreateReportCommandHandler : IRequestHandler<CreateReportCommand, ReportDto>
+public class CreateReportCommandExecutor : ICommandExecutionExecutor<CreateReportCommand, ReportDto>
 {
     private readonly IReportRepository _reportRepo;
     private readonly IConversationRepository _conversationRepo;
@@ -37,7 +37,7 @@ public class CreateReportCommandHandler : IRequestHandler<CreateReportCommand, R
     /// Khởi tạo handler create report.
     /// Luồng xử lý: nhận report repository để persist dữ liệu báo cáo vi phạm.
     /// </summary>
-    public CreateReportCommandHandler(
+    public CreateReportCommandExecutor(
         IReportRepository reportRepo,
         IConversationRepository conversationRepo,
         IChatMessageRepository chatMessageRepo,

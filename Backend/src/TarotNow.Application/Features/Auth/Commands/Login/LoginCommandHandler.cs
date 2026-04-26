@@ -4,7 +4,7 @@ using TarotNow.Application.Interfaces;
 namespace TarotNow.Application.Features.Auth.Commands.Login;
 
 // Handler chính cho luồng đăng nhập và cấp token phiên.
-public partial class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResult>
+public partial class LoginCommandExecutor : ICommandExecutionExecutor<LoginCommand, LoginResult>
 {
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
@@ -18,7 +18,7 @@ public partial class LoginCommandHandler : IRequestHandler<LoginCommand, LoginRe
     /// Khởi tạo handler đăng nhập.
     /// Luồng xử lý: nhận user repo, password hasher, token service, jwt settings và refresh token repo.
     /// </summary>
-    public LoginCommandHandler(
+    public LoginCommandExecutor(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
         ITokenService tokenService,

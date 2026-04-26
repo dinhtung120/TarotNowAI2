@@ -7,7 +7,7 @@ using TarotNow.Application.Interfaces;
 namespace TarotNow.Application.Features.Reading.Commands.StreamReading;
 
 // Handler điều phối luồng stream reading: validate session/quota/rate-limit, tạo request, freeze escrow và trả stream AI.
-public partial class StreamReadingCommandHandler : IRequestHandler<StreamReadingCommand, StreamReadingResult>
+public partial class StreamReadingCommandExecutor : ICommandExecutionExecutor<StreamReadingCommand, StreamReadingResult>
 {
     private readonly IReadingSessionRepository _readingRepo;
     private readonly IAiRequestRepository _aiRequestRepo;
@@ -24,7 +24,7 @@ public partial class StreamReadingCommandHandler : IRequestHandler<StreamReading
     /// Khởi tạo handler stream reading.
     /// Luồng xử lý: nhận repository/service cho validation, pricing, wallet escrow, ai streaming và thông báo số dư.
     /// </summary>
-    public StreamReadingCommandHandler(
+    public StreamReadingCommandExecutor(
         IReadingSessionRepository readingRepo,
         IAiRequestRepository aiRequestRepo,
         IWalletRepository walletRepo,

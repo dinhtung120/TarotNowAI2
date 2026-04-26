@@ -72,7 +72,7 @@ public sealed class ConversationAddMoneyAcceptedSyncRequestedDomainEventHandler
             ConversationId = domainEvent.ConversationId,
             SenderId = domainEvent.SenderUserId,
             Type = ChatMessageType.PaymentAccept,
-            Content = RespondConversationAddMoneyCommandHandler.BuildOfferResponseContent(
+            Content = RespondConversationAddMoneyCommandExecutor.BuildOfferResponseContent(
                 domainEvent.OfferMessageId,
                 domainEvent.ProposalId,
                 note: null),

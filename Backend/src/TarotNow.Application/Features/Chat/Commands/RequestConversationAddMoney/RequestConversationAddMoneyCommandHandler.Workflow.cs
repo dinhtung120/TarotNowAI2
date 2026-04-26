@@ -5,7 +5,7 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Commands.RequestConversationAddMoney;
 
-public partial class RequestConversationAddMoneyCommandHandler
+public partial class RequestConversationAddMoneyCommandExecutor
 {
     /// <summary>
     /// Tải conversation và kiểm tra điều kiện hợp lệ cho đề nghị cộng tiền.

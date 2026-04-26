@@ -21,7 +21,7 @@ public class DeletePostCommand : IRequest<bool>
 }
 
 // Handler xử lý xóa mềm bài viết.
-public class DeletePostCommandHandler : IRequestHandler<DeletePostCommand, bool>
+public class DeletePostCommandExecutor : ICommandExecutionExecutor<DeletePostCommand, bool>
 {
     private readonly ICommunityPostRepository _postRepo;
 
@@ -29,7 +29,7 @@ public class DeletePostCommandHandler : IRequestHandler<DeletePostCommand, bool>
     /// Khởi tạo handler delete post.
     /// Luồng xử lý: nhận post repository để kiểm tra quyền và thực hiện soft-delete.
     /// </summary>
-    public DeletePostCommandHandler(ICommunityPostRepository postRepo)
+    public DeletePostCommandExecutor(ICommunityPostRepository postRepo)
     {
         _postRepo = postRepo;
     }

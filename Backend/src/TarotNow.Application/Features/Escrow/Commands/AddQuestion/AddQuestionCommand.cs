@@ -28,7 +28,7 @@ public class AddQuestionCommand : IRequest<Guid>
 }
 
 // Handler điều phối luồng add-question.
-public partial class AddQuestionCommandHandler : IRequestHandler<AddQuestionCommand, Guid>
+public partial class AddQuestionCommandExecutor : ICommandExecutionExecutor<AddQuestionCommand, Guid>
 {
     private readonly IChatFinanceRepository _financeRepo;
     private readonly IWalletRepository _walletRepo;
@@ -40,7 +40,7 @@ public partial class AddQuestionCommandHandler : IRequestHandler<AddQuestionComm
     /// Khởi tạo handler add question.
     /// Luồng xử lý: nhận finance repo, wallet repo và transaction coordinator cho luồng freeze + ghi item nhất quán.
     /// </summary>
-    public AddQuestionCommandHandler(
+    public AddQuestionCommandExecutor(
         IChatFinanceRepository financeRepo,
         IWalletRepository walletRepo,
         ITransactionCoordinator transactionCoordinator,

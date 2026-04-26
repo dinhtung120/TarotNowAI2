@@ -4,14 +4,14 @@ using TarotNow.Application.Interfaces;
 namespace TarotNow.Application.Features.Promotions.Commands.UpdatePromotion;
 
 // Handler cập nhật promotion nạp tiền.
-public class UpdatePromotionCommandHandler : IRequestHandler<UpdatePromotionCommand, bool>
+public class UpdatePromotionCommandExecutor : ICommandExecutionExecutor<UpdatePromotionCommand, bool>
 {
     private readonly IDepositPromotionRepository _promotionRepository;
 
     /// <summary>
     /// Khởi tạo handler cập nhật promotion.
     /// </summary>
-    public UpdatePromotionCommandHandler(IDepositPromotionRepository promotionRepository)
+    public UpdatePromotionCommandExecutor(IDepositPromotionRepository promotionRepository)
     {
         _promotionRepository = promotionRepository;
     }

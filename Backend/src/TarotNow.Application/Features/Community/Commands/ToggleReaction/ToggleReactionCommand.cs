@@ -24,7 +24,7 @@ public class ToggleReactionCommand : IRequest<bool>
 }
 
 // Handler xử lý toggle reaction theo ngữ cảnh hiện tại của user.
-public class ToggleReactionCommandHandler : IRequestHandler<ToggleReactionCommand, bool>
+public class ToggleReactionCommandExecutor : ICommandExecutionExecutor<ToggleReactionCommand, bool>
 {
     private readonly ICommunityReactionRepository _reactionRepo;
     private readonly ICommunityPostRepository _postRepo;
@@ -33,7 +33,7 @@ public class ToggleReactionCommandHandler : IRequestHandler<ToggleReactionComman
     /// Khởi tạo handler toggle reaction.
     /// Luồng xử lý: nhận repository reaction/post để kiểm tra trạng thái hiện tại và cập nhật bộ đếm reaction tương ứng.
     /// </summary>
-    public ToggleReactionCommandHandler(ICommunityReactionRepository reactionRepo, ICommunityPostRepository postRepo)
+    public ToggleReactionCommandExecutor(ICommunityReactionRepository reactionRepo, ICommunityPostRepository postRepo)
     {
         _reactionRepo = reactionRepo;
         _postRepo = postRepo;

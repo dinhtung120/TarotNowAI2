@@ -5,7 +5,7 @@ using TarotNow.Domain.Entities;
 
 namespace TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
 
-public partial class CompleteAiStreamCommandHandler
+public partial class CompleteAiStreamCommandExecutor
 {
     /// <summary>
     /// Thực thi phần chốt completion trong transaction.

@@ -5,14 +5,14 @@ using TarotNow.Domain.Entities;
 namespace TarotNow.Application.Features.Promotions.Commands.CreatePromotion;
 
 // Handler tạo mới promotion nạp tiền.
-public class CreatePromotionCommandHandler : IRequestHandler<CreatePromotionCommand, bool>
+public class CreatePromotionCommandExecutor : ICommandExecutionExecutor<CreatePromotionCommand, bool>
 {
     private readonly IDepositPromotionRepository _promotionRepository;
 
     /// <summary>
     /// Khởi tạo handler tạo promotion.
     /// </summary>
-    public CreatePromotionCommandHandler(IDepositPromotionRepository promotionRepository)
+    public CreatePromotionCommandExecutor(IDepositPromotionRepository promotionRepository)
     {
         _promotionRepository = promotionRepository;
     }

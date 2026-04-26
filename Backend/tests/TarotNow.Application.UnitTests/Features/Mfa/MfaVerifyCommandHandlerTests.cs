@@ -10,24 +10,24 @@ using Xunit;
 namespace TarotNow.Application.UnitTests.Features.Mfa;
 
 // Unit test cho handler xác minh mã MFA để bật MFA chính thức.
-public class MfaVerifyCommandHandlerTests
+public class MfaVerifyCommandExecutorTests
 {
     // Mock user repo để điều khiển trạng thái MFA của user.
     private readonly Mock<IUserRepository> _mockUserRepo;
     // Mock MFA service để mô phỏng decrypt và verify TOTP.
     private readonly Mock<IMfaService> _mockMfaService;
     // Handler cần kiểm thử.
-    private readonly MfaVerifyCommandHandler _handler;
+    private readonly MfaVerifyCommandExecutor _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho MfaVerifyCommandHandler.
+    /// Khởi tạo fixture cho MfaVerifyCommandExecutor.
     /// Luồng dùng mock services để cô lập logic verify MFA khỏi crypto thật.
     /// </summary>
-    public MfaVerifyCommandHandlerTests()
+    public MfaVerifyCommandExecutorTests()
     {
         _mockUserRepo = new Mock<IUserRepository>();
         _mockMfaService = new Mock<IMfaService>();
-        _handler = new MfaVerifyCommandHandler(_mockUserRepo.Object, _mockMfaService.Object);
+        _handler = new MfaVerifyCommandExecutor(_mockUserRepo.Object, _mockMfaService.Object);
     }
 
     /// <summary>

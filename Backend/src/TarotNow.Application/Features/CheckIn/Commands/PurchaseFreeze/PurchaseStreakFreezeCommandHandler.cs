@@ -9,7 +9,7 @@ using TarotNow.Domain.Enums;
 namespace TarotNow.Application.Features.CheckIn.Commands.PurchaseFreeze;
 
 // Handler xử lý nghiệp vụ mua phục hồi streak.
-public class PurchaseStreakFreezeCommandHandler : IRequestHandler<PurchaseStreakFreezeCommand, PurchaseStreakFreezeResult>
+public class PurchaseStreakFreezeCommandExecutor : ICommandExecutionExecutor<PurchaseStreakFreezeCommand, PurchaseStreakFreezeResult>
 {
     // Prefix idempotency cho giao dịch trừ kim cương mua freeze.
     private const string FreezeIdempotencyPrefix = "freeze_";
@@ -26,7 +26,7 @@ public class PurchaseStreakFreezeCommandHandler : IRequestHandler<PurchaseStreak
     /// Khởi tạo handler purchase streak freeze.
     /// Luồng xử lý: nhận repository user/wallet và system settings để kiểm tra cửa sổ mua.
     /// </summary>
-    public PurchaseStreakFreezeCommandHandler(
+    public PurchaseStreakFreezeCommandExecutor(
         IUserRepository userRepository,
         IWalletRepository walletRepository,
         ISystemConfigSettings settings,

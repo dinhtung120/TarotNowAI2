@@ -2,7 +2,7 @@ using TarotNow.Application.Exceptions;
 
 namespace TarotNow.Application.Features.Chat.Commands.RequestConversationAddMoney;
 
-public partial class RequestConversationAddMoneyCommandHandler
+public partial class RequestConversationAddMoneyCommandExecutor
 {
     /// <summary>
     /// Validate business rule đầu vào cho đề nghị cộng tiền.

@@ -5,7 +5,7 @@ using TarotNow.Application.Interfaces;
 namespace TarotNow.Application.Features.Admin.Commands.ResolveDispute;
 
 // Handler điều phối toàn bộ luồng xử lý tranh chấp question item.
-public partial class ResolveDisputeCommandHandler : IRequestHandler<ResolveDisputeCommand, bool>
+public partial class ResolveDisputeCommandExecutor : ICommandExecutionExecutor<ResolveDisputeCommand, bool>
 {
     private readonly IChatFinanceRepository _financeRepo;
     private readonly IWalletRepository _walletRepo;
@@ -20,7 +20,7 @@ public partial class ResolveDisputeCommandHandler : IRequestHandler<ResolveDispu
     /// Khởi tạo handler resolve dispute.
     /// Luồng xử lý: nhận các repository tài chính/chat và transaction coordinator để xử lý atomically.
     /// </summary>
-    public ResolveDisputeCommandHandler(
+    public ResolveDisputeCommandExecutor(
         IChatFinanceRepository financeRepo,
         IWalletRepository walletRepo,
         IReaderProfileRepository readerProfileRepository,

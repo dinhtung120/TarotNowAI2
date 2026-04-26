@@ -8,16 +8,16 @@ using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
-public class RefreshTokenCommandHandlerTests
+public class RefreshTokenCommandExecutorTests
 {
     private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock;
     private readonly Mock<IAuthSessionRepository> _authSessionRepositoryMock;
     private readonly Mock<ITokenService> _tokenServiceMock;
     private readonly Mock<IJwtTokenSettings> _jwtTokenSettingsMock;
     private readonly Mock<IDomainEventPublisher> _domainEventPublisherMock;
-    private readonly RefreshTokenCommandHandler _handler;
+    private readonly RefreshTokenCommandExecutor _handler;
 
-    public RefreshTokenCommandHandlerTests()
+    public RefreshTokenCommandExecutorTests()
     {
         _refreshTokenRepositoryMock = new Mock<IRefreshTokenRepository>();
         _authSessionRepositoryMock = new Mock<IAuthSessionRepository>();
@@ -39,7 +39,7 @@ public class RefreshTokenCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        _handler = new RefreshTokenCommandHandler(
+        _handler = new RefreshTokenCommandExecutor(
             _refreshTokenRepositoryMock.Object,
             _authSessionRepositoryMock.Object,
             _tokenServiceMock.Object,

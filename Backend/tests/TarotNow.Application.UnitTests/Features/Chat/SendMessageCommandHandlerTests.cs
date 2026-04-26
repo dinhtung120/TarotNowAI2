@@ -11,7 +11,7 @@ using Xunit;
 namespace TarotNow.Application.UnitTests.Features.Chat;
 
 // Unit test cho handler gửi tin nhắn chat với luồng media uploadToken one-time.
-public class SendMessageCommandHandlerTests
+public class SendMessageCommandExecutorTests
 {
     private readonly Mock<IConversationRepository> _mockConvRepo;
     private readonly Mock<IChatMessageRepository> _mockMsgRepo;
@@ -22,12 +22,12 @@ public class SendMessageCommandHandlerTests
     private readonly Mock<IUploadSessionRepository> _mockUploadSessionRepository;
     private readonly Mock<IDomainEventPublisher> _mockDomainEventPublisher;
     private readonly Mock<ISystemConfigSettings> _mockSystemConfigSettings;
-    private readonly SendMessageCommandHandler _handler;
+    private readonly SendMessageCommandExecutor _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho SendMessageCommandHandler.
+    /// Khởi tạo fixture cho SendMessageCommandExecutor.
     /// </summary>
-    public SendMessageCommandHandlerTests()
+    public SendMessageCommandExecutorTests()
     {
         _mockConvRepo = new Mock<IConversationRepository>();
         _mockMsgRepo = new Mock<IChatMessageRepository>();
@@ -44,7 +44,7 @@ public class SendMessageCommandHandlerTests
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
             .Returns((Func<CancellationToken, Task> action, CancellationToken token) => action(token));
 
-        _handler = new SendMessageCommandHandler(
+        _handler = new SendMessageCommandExecutor(
             _mockConvRepo.Object,
             _mockMsgRepo.Object,
             _mockFinanceRepo.Object,

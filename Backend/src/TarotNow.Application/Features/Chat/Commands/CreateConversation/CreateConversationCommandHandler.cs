@@ -7,7 +7,7 @@ using TarotNow.Application.Interfaces;
 namespace TarotNow.Application.Features.Chat.Commands.CreateConversation;
 
 // Handler chính cho luồng tạo conversation.
-public partial class CreateConversationCommandHandler : IRequestHandler<CreateConversationCommand, ConversationDto>
+public partial class CreateConversationCommandExecutor : ICommandExecutionExecutor<CreateConversationCommand, ConversationDto>
 {
     private readonly IConversationRepository _conversationRepo;
     private readonly IReaderProfileRepository _readerProfileRepo;
@@ -17,7 +17,7 @@ public partial class CreateConversationCommandHandler : IRequestHandler<CreateCo
     /// Khởi tạo handler create conversation.
     /// Luồng xử lý: nhận repository conversation và reader profile để kiểm tra điều kiện tạo mới.
     /// </summary>
-    public CreateConversationCommandHandler(
+    public CreateConversationCommandExecutor(
         IConversationRepository conversationRepo,
         IReaderProfileRepository readerProfileRepo,
         ISystemConfigSettings systemConfigSettings)

@@ -32,23 +32,23 @@ public sealed record ConfirmAvatarUploadResult(string AvatarUrl, string ObjectKe
 /// <summary>
 /// Handler xác nhận avatar upload.
 /// </summary>
-public sealed class ConfirmAvatarUploadCommandHandler : IRequestHandler<ConfirmAvatarUploadCommand, ConfirmAvatarUploadResult>
+public sealed class ConfirmAvatarUploadCommandExecutor : ICommandExecutionExecutor<ConfirmAvatarUploadCommand, ConfirmAvatarUploadResult>
 {
     private readonly IUserRepository _userRepository;
     private readonly IReaderProfileRepository _readerProfileRepository;
     private readonly IUploadSessionRepository _uploadSessionRepository;
     private readonly IR2UploadService _r2UploadService;
-    private readonly ILogger<ConfirmAvatarUploadCommandHandler> _logger;
+    private readonly ILogger<ConfirmAvatarUploadCommandExecutor> _logger;
 
     /// <summary>
     /// Khởi tạo handler confirm avatar.
     /// </summary>
-    public ConfirmAvatarUploadCommandHandler(
+    public ConfirmAvatarUploadCommandExecutor(
         IUserRepository userRepository,
         IReaderProfileRepository readerProfileRepository,
         IUploadSessionRepository uploadSessionRepository,
         IR2UploadService r2UploadService,
-        ILogger<ConfirmAvatarUploadCommandHandler> logger)
+        ILogger<ConfirmAvatarUploadCommandExecutor> logger)
     {
         _userRepository = userRepository;
         _readerProfileRepository = readerProfileRepository;

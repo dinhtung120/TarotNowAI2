@@ -18,7 +18,7 @@ public class MfaVerifyCommand : IRequest<bool>
 }
 
 // Handler verify mã MFA và bật cờ MFA cho user khi hợp lệ.
-public class MfaVerifyCommandHandler : IRequestHandler<MfaVerifyCommand, bool>
+public class MfaVerifyCommandExecutor : ICommandExecutionExecutor<MfaVerifyCommand, bool>
 {
     private readonly IUserRepository _userRepo;
     private readonly IMfaService _mfaService;
@@ -27,7 +27,7 @@ public class MfaVerifyCommandHandler : IRequestHandler<MfaVerifyCommand, bool>
     /// Khởi tạo handler verify MFA.
     /// Luồng xử lý: nhận user repository để truy cập tài khoản và MFA service để giải mã/đối chiếu mã xác thực.
     /// </summary>
-    public MfaVerifyCommandHandler(IUserRepository userRepo, IMfaService mfaService)
+    public MfaVerifyCommandExecutor(IUserRepository userRepo, IMfaService mfaService)
     {
         _userRepo = userRepo;
         _mfaService = mfaService;

@@ -6,7 +6,7 @@ using TarotNow.Application.Interfaces;
 namespace TarotNow.Application.Features.Notification.Commands.MarkAsRead;
 
 // Handler đánh dấu một thông báo đã đọc theo user.
-public class MarkNotificationReadCommandHandler : IRequestHandler<MarkNotificationReadCommand, bool>
+public class MarkNotificationReadCommandExecutor : ICommandExecutionExecutor<MarkNotificationReadCommand, bool>
 {
     private readonly INotificationRepository _notificationRepository;
 
@@ -14,7 +14,7 @@ public class MarkNotificationReadCommandHandler : IRequestHandler<MarkNotificati
     /// Khởi tạo handler mark-as-read.
     /// Luồng xử lý: nhận notification repository để cập nhật trạng thái read của bản ghi mục tiêu.
     /// </summary>
-    public MarkNotificationReadCommandHandler(INotificationRepository notificationRepository)
+    public MarkNotificationReadCommandExecutor(INotificationRepository notificationRepository)
     {
         _notificationRepository = notificationRepository;
     }

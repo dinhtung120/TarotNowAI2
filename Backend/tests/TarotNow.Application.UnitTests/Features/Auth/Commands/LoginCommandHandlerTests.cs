@@ -11,7 +11,7 @@ using TarotNow.Domain.Enums;
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
 // Unit test cho handler đăng nhập và phát hành token.
-public class LoginCommandHandlerTests
+public class LoginCommandExecutorTests
 {
     // Mock user repository để kiểm soát luồng tìm user.
     private readonly Mock<IUserRepository> _userRepositoryMock;
@@ -26,13 +26,13 @@ public class LoginCommandHandlerTests
     private readonly Mock<IAuthSessionRepository> _authSessionRepositoryMock;
     private readonly Mock<IDomainEventPublisher> _domainEventPublisherMock;
     // Handler cần kiểm thử.
-    private readonly LoginCommandHandler _handler;
+    private readonly LoginCommandExecutor _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho LoginCommandHandler.
+    /// Khởi tạo fixture cho LoginCommandExecutor.
     /// Luồng thiết lập expiry mặc định giúp assert kết quả ổn định giữa các lần chạy.
     /// </summary>
-    public LoginCommandHandlerTests()
+    public LoginCommandExecutorTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _passwordHasherMock = new Mock<IPasswordHasher>();
@@ -48,7 +48,7 @@ public class LoginCommandHandlerTests
             .Setup(x => x.PublishAsync(It.IsAny<Domain.Events.IDomainEvent>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        _handler = new LoginCommandHandler(
+        _handler = new LoginCommandExecutor(
             _userRepositoryMock.Object, _passwordHasherMock.Object,
             _tokenServiceMock.Object, _jwtTokenSettingsMock.Object,
             _refreshTokenRepositoryMock.Object,

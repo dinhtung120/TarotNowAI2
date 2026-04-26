@@ -10,7 +10,7 @@ using TarotNow.Domain.Events;
 namespace TarotNow.Application.Features.CheckIn.Commands.DailyCheckIn;
 
 // Handler xử lý nghiệp vụ check-in hằng ngày.
-public class DailyCheckInCommandHandler : IRequestHandler<DailyCheckInCommand, DailyCheckInResult>
+public class DailyCheckInCommandExecutor : ICommandExecutionExecutor<DailyCheckInCommand, DailyCheckInResult>
 {
     // Định dạng business date chuẩn dùng cho check-in theo UTC.
     private const string DateFormat = "yyyy-MM-dd";
@@ -33,7 +33,7 @@ public class DailyCheckInCommandHandler : IRequestHandler<DailyCheckInCommand, D
     /// Khởi tạo handler daily check-in.
     /// Luồng xử lý: nhận repository user/check-in/wallet, settings phần thưởng và service gamification.
     /// </summary>
-    public DailyCheckInCommandHandler(
+    public DailyCheckInCommandExecutor(
         IUserRepository userRepository,
         IDailyCheckinRepository checkinRepository,
         IWalletRepository walletRepository,

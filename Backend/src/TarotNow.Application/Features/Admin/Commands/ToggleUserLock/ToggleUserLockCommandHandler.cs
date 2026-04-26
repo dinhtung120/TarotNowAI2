@@ -5,7 +5,7 @@ using TarotNow.Application.Interfaces;
 namespace TarotNow.Application.Features.Admin.Commands.ToggleUserLock;
 
 // Handler thay đổi trạng thái khóa của tài khoản người dùng.
-public class ToggleUserLockCommandHandler : IRequestHandler<ToggleUserLockCommand, bool>
+public class ToggleUserLockCommandExecutor : ICommandExecutionExecutor<ToggleUserLockCommand, bool>
 {
     private readonly IUserRepository _userRepository;
 
@@ -13,7 +13,7 @@ public class ToggleUserLockCommandHandler : IRequestHandler<ToggleUserLockComman
     /// Khởi tạo handler toggle lock user.
     /// Luồng xử lý: nhận user repository để tải và cập nhật trạng thái tài khoản.
     /// </summary>
-    public ToggleUserLockCommandHandler(IUserRepository userRepository)
+    public ToggleUserLockCommandExecutor(IUserRepository userRepository)
     {
         _userRepository = userRepository;
     }

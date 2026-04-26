@@ -8,7 +8,7 @@ using RefreshTokenEntity = TarotNow.Domain.Entities.RefreshToken;
 
 namespace TarotNow.Application.Features.Auth.Commands.Login;
 
-public partial class LoginCommandHandler
+public partial class LoginCommandExecutor
 {
     private async Task<User> ValidateCredentialsAsync(
         LoginCommand request,

@@ -7,7 +7,7 @@ namespace TarotNow.Application.Features.Gamification.Commands;
 public record SetActiveTitleCommand(Guid UserId, string TitleCode) : IRequest<bool>;
 
 // Handler xử lý đặt active title.
-public class SetActiveTitleCommandHandler : IRequestHandler<SetActiveTitleCommand, bool>
+public class SetActiveTitleCommandExecutor : ICommandExecutionExecutor<SetActiveTitleCommand, bool>
 {
     private readonly ITitleRepository _titleRepo;
     private readonly IUserRepository _userRepo;
@@ -16,7 +16,7 @@ public class SetActiveTitleCommandHandler : IRequestHandler<SetActiveTitleComman
     /// Khởi tạo handler set active title.
     /// Luồng xử lý: nhận title repo để kiểm tra ownership và user repo để cập nhật profile.
     /// </summary>
-    public SetActiveTitleCommandHandler(ITitleRepository titleRepo, IUserRepository userRepo)
+    public SetActiveTitleCommandExecutor(ITitleRepository titleRepo, IUserRepository userRepo)
     {
         _titleRepo = titleRepo;
         _userRepo = userRepo;

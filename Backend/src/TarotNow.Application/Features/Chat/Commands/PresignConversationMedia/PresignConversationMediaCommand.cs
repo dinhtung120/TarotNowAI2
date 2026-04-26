@@ -34,7 +34,7 @@ public sealed class PresignConversationMediaCommand : IRequest<PresignedUploadRe
 /// <summary>
 /// Handler presign conversation media.
 /// </summary>
-public sealed class PresignConversationMediaCommandHandler : IRequestHandler<PresignConversationMediaCommand, PresignedUploadResult>
+public sealed class PresignConversationMediaCommandExecutor : ICommandExecutionExecutor<PresignConversationMediaCommand, PresignedUploadResult>
 {
     private static readonly HashSet<string> AllowedVoiceMimeTypes = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -63,7 +63,7 @@ public sealed class PresignConversationMediaCommandHandler : IRequestHandler<Pre
     /// <summary>
     /// Khởi tạo handler presign media chat.
     /// </summary>
-    public PresignConversationMediaCommandHandler(
+    public PresignConversationMediaCommandExecutor(
         IConversationRepository conversationRepository,
         IR2UploadService r2UploadService,
         IUploadSessionRepository uploadSessionRepository)

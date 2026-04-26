@@ -27,7 +27,7 @@ public class ReportPostCommand : IRequest<ReportDto>
 }
 
 // Handler xử lý tạo report cho bài viết community.
-public class ReportPostCommandHandler : IRequestHandler<ReportPostCommand, ReportDto>
+public class ReportPostCommandExecutor : ICommandExecutionExecutor<ReportPostCommand, ReportDto>
 {
     private readonly IReportRepository _reportRepo;
     private readonly ICommunityPostRepository _postRepo;
@@ -36,7 +36,7 @@ public class ReportPostCommandHandler : IRequestHandler<ReportPostCommand, Repor
     /// Khởi tạo handler report post.
     /// Luồng xử lý: nhận repository report và post để validate mục tiêu rồi ghi report.
     /// </summary>
-    public ReportPostCommandHandler(IReportRepository reportRepo, ICommunityPostRepository postRepo)
+    public ReportPostCommandExecutor(IReportRepository reportRepo, ICommunityPostRepository postRepo)
     {
         _reportRepo = reportRepo;
         _postRepo = postRepo;

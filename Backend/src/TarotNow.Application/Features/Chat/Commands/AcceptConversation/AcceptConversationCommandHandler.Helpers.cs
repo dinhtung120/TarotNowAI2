@@ -4,7 +4,7 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Commands.AcceptConversation;
 
-public partial class AcceptConversationCommandHandler
+public partial class AcceptConversationCommandExecutor
 {
     /// <summary>
     /// Thêm system message khi reader accept conversation.

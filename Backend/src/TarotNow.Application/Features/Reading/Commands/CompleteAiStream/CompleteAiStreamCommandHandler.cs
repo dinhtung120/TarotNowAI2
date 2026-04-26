@@ -7,26 +7,26 @@ using TarotNow.Application.Interfaces;
 namespace TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
 
 // Handler điều phối luồng chốt AI stream: transaction, settlement, session update, telemetry và gamification.
-public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAiStreamCommand, bool>
+public partial class CompleteAiStreamCommandExecutor : ICommandExecutionExecutor<CompleteAiStreamCommand, bool>
 {
     private readonly IAiRequestRepository _aiRequestRepo;
     private readonly IWalletRepository _walletRepo;
     private readonly ITransactionCoordinator _transactionCoordinator;
     private readonly IReadingSessionRepository _readingRepo;
     private readonly IDomainEventPublisher _domainEventPublisher;
-    private readonly ILogger<CompleteAiStreamCommandHandler> _logger;
+    private readonly ILogger<CompleteAiStreamCommandExecutor> _logger;
 
     /// <summary>
     /// Khởi tạo handler complete AI stream.
     /// Luồng xử lý: nhận đầy đủ repository/service để thực hiện chốt request theo giao dịch và phát sinh side-effects sau commit.
     /// </summary>
-    public CompleteAiStreamCommandHandler(
+    public CompleteAiStreamCommandExecutor(
         IAiRequestRepository aiRequestRepo,
         IWalletRepository walletRepo,
         ITransactionCoordinator transactionCoordinator,
         IReadingSessionRepository readingRepo,
         IDomainEventPublisher domainEventPublisher,
-        ILogger<CompleteAiStreamCommandHandler> logger)
+        ILogger<CompleteAiStreamCommandExecutor> logger)
     {
         _aiRequestRepo = aiRequestRepo;
         _walletRepo = walletRepo;

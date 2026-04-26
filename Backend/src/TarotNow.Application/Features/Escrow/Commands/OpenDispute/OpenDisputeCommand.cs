@@ -22,7 +22,7 @@ public class OpenDisputeCommand : IRequest<bool>
 }
 
 // Handler xử lý mở tranh chấp.
-public class OpenDisputeCommandHandler : IRequestHandler<OpenDisputeCommand, bool>
+public class OpenDisputeCommandExecutor : ICommandExecutionExecutor<OpenDisputeCommand, bool>
 {
     private readonly IChatFinanceRepository _financeRepo;
     private readonly ITransactionCoordinator _transactionCoordinator;
@@ -32,7 +32,7 @@ public class OpenDisputeCommandHandler : IRequestHandler<OpenDisputeCommand, boo
     /// Khởi tạo handler open dispute.
     /// Luồng xử lý: nhận finance repository và transaction coordinator để cập nhật item/session an toàn trong transaction.
     /// </summary>
-    public OpenDisputeCommandHandler(
+    public OpenDisputeCommandExecutor(
         IChatFinanceRepository financeRepo,
         ITransactionCoordinator transactionCoordinator,
         ISystemConfigSettings systemConfigSettings)

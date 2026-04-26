@@ -6,7 +6,7 @@ using TarotNow.Domain.Enums;
 namespace TarotNow.Application.Features.Auth.Commands.VerifyEmail;
 
 // Handler xác minh email và kích hoạt tài khoản.
-public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, bool>
+public class VerifyEmailCommandExecutor : ICommandExecutionExecutor<VerifyEmailCommand, bool>
 {
     private readonly IUserRepository _userRepository;
     private readonly IEmailOtpRepository _emailOtpRepository;
@@ -16,7 +16,7 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, boo
     /// Khởi tạo handler verify email.
     /// Luồng xử lý: nhận user repository và OTP repository để xác minh mã và cập nhật trạng thái account.
     /// </summary>
-    public VerifyEmailCommandHandler(
+    public VerifyEmailCommandExecutor(
         IUserRepository userRepository,
         IEmailOtpRepository emailOtpRepository,
         IDomainEventPublisher domainEventPublisher)

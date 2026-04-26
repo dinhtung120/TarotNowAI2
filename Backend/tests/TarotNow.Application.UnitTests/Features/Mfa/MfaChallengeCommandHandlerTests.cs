@@ -13,24 +13,24 @@ using Xunit;
 namespace TarotNow.Application.UnitTests.Features.Mfa;
 
 // Unit test cho handler challenge MFA (TOTP + backup code).
-public class MfaChallengeCommandHandlerTests
+public class MfaChallengeCommandExecutorTests
 {
     // Mock user repo để điều khiển dữ liệu MFA user.
     private readonly Mock<IUserRepository> _mockUserRepo;
     // Mock MFA service để mô phỏng decrypt/verify code.
     private readonly Mock<IMfaService> _mockMfaService;
     // Handler cần kiểm thử.
-    private readonly MfaChallengeCommandHandler _handler;
+    private readonly MfaChallengeCommandExecutor _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho MfaChallengeCommandHandler.
+    /// Khởi tạo fixture cho MfaChallengeCommandExecutor.
     /// Luồng này cô lập kiểm thử challenge MFA khỏi triển khai crypto thật.
     /// </summary>
-    public MfaChallengeCommandHandlerTests()
+    public MfaChallengeCommandExecutorTests()
     {
         _mockUserRepo = new Mock<IUserRepository>();
         _mockMfaService = new Mock<IMfaService>();
-        _handler = new MfaChallengeCommandHandler(_mockUserRepo.Object, _mockMfaService.Object);
+        _handler = new MfaChallengeCommandExecutor(_mockUserRepo.Object, _mockMfaService.Object);
     }
 
     /// <summary>

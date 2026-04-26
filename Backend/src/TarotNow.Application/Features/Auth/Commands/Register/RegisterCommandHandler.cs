@@ -8,7 +8,7 @@ using TarotNow.Domain.Entities;
 namespace TarotNow.Application.Features.Auth.Commands.Register;
 
 // Handler xử lý luồng đăng ký tài khoản mới.
-public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
+public class RegisterCommandExecutor : ICommandExecutionExecutor<RegisterCommand, Guid>
 {
     // Mã lỗi nghiệp vụ khi email đã tồn tại.
     private const string EmailExistsCode = "EMAIL_ALREADY_EXISTS";
@@ -22,7 +22,7 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
     /// Khởi tạo handler đăng ký.
     /// Luồng xử lý: nhận user repository và password hasher để kiểm tra trùng, tạo user mới an toàn.
     /// </summary>
-    public RegisterCommandHandler(IUserRepository userRepository, IPasswordHasher passwordHasher)
+    public RegisterCommandExecutor(IUserRepository userRepository, IPasswordHasher passwordHasher)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;

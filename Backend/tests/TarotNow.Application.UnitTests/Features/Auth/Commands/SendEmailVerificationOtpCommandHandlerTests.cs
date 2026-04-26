@@ -10,7 +10,7 @@ using TarotNow.Domain.Events;
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
 // Unit test cho handler gửi OTP xác thực email.
-public class SendEmailVerificationOtpCommandHandlerTests
+public class SendEmailVerificationOtpCommandExecutorTests
 {
     // Mock user repo để điều khiển trạng thái user theo email.
     private readonly Mock<IUserRepository> _userRepositoryMock;
@@ -21,13 +21,13 @@ public class SendEmailVerificationOtpCommandHandlerTests
     // Mock transaction coordinator để mô phỏng ranh giới transaction.
     private readonly Mock<ITransactionCoordinator> _transactionCoordinatorMock;
     // Handler cần kiểm thử.
-    private readonly SendEmailVerificationOtpCommandHandler _handler;
+    private readonly SendEmailVerificationOtpCommandExecutor _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho SendEmailVerificationOtpCommandHandler.
+    /// Khởi tạo fixture cho SendEmailVerificationOtpCommandExecutor.
     /// Luồng dùng mock để test logic gửi OTP mà không phụ thuộc SMTP thật.
     /// </summary>
-    public SendEmailVerificationOtpCommandHandlerTests()
+    public SendEmailVerificationOtpCommandExecutorTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _emailOtpRepositoryMock = new Mock<IEmailOtpRepository>();
@@ -37,7 +37,7 @@ public class SendEmailVerificationOtpCommandHandlerTests
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
             .Returns<Func<CancellationToken, Task>, CancellationToken>((action, ct) => action(ct));
 
-        _handler = new SendEmailVerificationOtpCommandHandler(
+        _handler = new SendEmailVerificationOtpCommandExecutor(
             _userRepositoryMock.Object,
             _emailOtpRepositoryMock.Object,
             _domainEventPublisherMock.Object,

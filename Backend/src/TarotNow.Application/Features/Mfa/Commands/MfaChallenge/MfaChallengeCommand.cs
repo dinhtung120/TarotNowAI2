@@ -22,7 +22,7 @@ public class MfaChallengeCommand : IRequest<bool>
 }
 
 // Handler xử lý logic challenge MFA.
-public class MfaChallengeCommandHandler : IRequestHandler<MfaChallengeCommand, bool>
+public class MfaChallengeCommandExecutor : ICommandExecutionExecutor<MfaChallengeCommand, bool>
 {
     private readonly IUserRepository _userRepo;
     private readonly IMfaService _mfaService;
@@ -31,7 +31,7 @@ public class MfaChallengeCommandHandler : IRequestHandler<MfaChallengeCommand, b
     /// Khởi tạo handler challenge MFA.
     /// Luồng xử lý: nhận user repository để tải/cập nhật user và MFA service để verify mã.
     /// </summary>
-    public MfaChallengeCommandHandler(IUserRepository userRepo, IMfaService mfaService)
+    public MfaChallengeCommandExecutor(IUserRepository userRepo, IMfaService mfaService)
     {
         _userRepo = userRepo;
         _mfaService = mfaService;

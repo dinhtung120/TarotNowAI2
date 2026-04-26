@@ -8,7 +8,7 @@ namespace TarotNow.Application.Features.Gamification.Commands;
 public record ClaimQuestRewardCommand(Guid UserId, string QuestCode, string PeriodKey) : IRequest<ClaimQuestRewardResult>;
 
 // Handler xử lý luồng claim reward của quest.
-public partial class ClaimQuestRewardCommandHandler : IRequestHandler<ClaimQuestRewardCommand, ClaimQuestRewardResult>
+public partial class ClaimQuestRewardCommandExecutor : ICommandExecutionExecutor<ClaimQuestRewardCommand, ClaimQuestRewardResult>
 {
     private readonly IQuestRepository _questRepo;
     private readonly IWalletRepository _walletRepo;
@@ -18,7 +18,7 @@ public partial class ClaimQuestRewardCommandHandler : IRequestHandler<ClaimQuest
     /// Khởi tạo handler claim quest reward.
     /// Luồng xử lý: nhận repository quest/wallet/title và domain event publisher để xử lý claim + trả thưởng + phát sự kiện.
     /// </summary>
-    public ClaimQuestRewardCommandHandler(
+    public ClaimQuestRewardCommandExecutor(
         IQuestRepository questRepo,
         IWalletRepository walletRepo,
         IDomainEventPublisher domainEventPublisher)

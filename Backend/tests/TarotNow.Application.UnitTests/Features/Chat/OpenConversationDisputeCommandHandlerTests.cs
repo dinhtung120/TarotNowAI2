@@ -10,7 +10,7 @@ using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.UnitTests.Features.Chat;
 
-public class OpenConversationDisputeCommandHandlerTests
+public class OpenConversationDisputeCommandExecutorTests
 {
     [Fact]
     public async Task Handle_WhenItemIdMissing_ShouldResolveLatestEligibleItemAndPublishDisputeEvent()
@@ -71,7 +71,7 @@ public class OpenConversationDisputeCommandHandlerTests
             .Setup(x => x.Send(It.IsAny<OpenDisputeCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        var handler = new OpenConversationDisputeCommandHandler(
+        var handler = new OpenConversationDisputeCommandExecutor(
             conversationRepo.Object,
             financeRepo.Object,
             mediator.Object,

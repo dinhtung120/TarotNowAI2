@@ -7,7 +7,7 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Reading.Commands.StreamReading;
 
-public partial class StreamReadingCommandHandler
+public partial class StreamReadingCommandExecutor
 {
     /// <summary>
     /// Tính chi phí cho lần stream hiện tại.

@@ -29,8 +29,8 @@ public sealed class PublishTypingStateCommand : IRequest<bool>
 /// <summary>
 /// Handler xử lý publish typing state qua domain event.
 /// </summary>
-public sealed class PublishTypingStateCommandHandler
-    : IRequestHandler<PublishTypingStateCommand, bool>
+public sealed class PublishTypingStateCommandExecutor
+    : ICommandExecutionExecutor<PublishTypingStateCommand, bool>
 {
     private readonly IConversationRepository _conversationRepository;
     private readonly IDomainEventPublisher _domainEventPublisher;
@@ -38,7 +38,7 @@ public sealed class PublishTypingStateCommandHandler
     /// <summary>
     /// Khởi tạo handler publish typing state.
     /// </summary>
-    public PublishTypingStateCommandHandler(
+    public PublishTypingStateCommandExecutor(
         IConversationRepository conversationRepository,
         IDomainEventPublisher domainEventPublisher)
     {

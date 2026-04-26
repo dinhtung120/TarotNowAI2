@@ -9,7 +9,7 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Chat.Commands;
 
-public class PresignConversationMediaCommandHandlerTests
+public class PresignConversationMediaCommandExecutorTests
 {
     private readonly Mock<IConversationRepository> _conversationRepositoryMock = new();
     private readonly Mock<IR2UploadService> _r2UploadServiceMock = new();
@@ -44,7 +44,7 @@ public class PresignConversationMediaCommandHandlerTests
             .Callback<UploadSessionRecord, CancellationToken>((session, _) => capturedSession = session)
             .Returns(Task.CompletedTask);
 
-        var handler = new PresignConversationMediaCommandHandler(
+        var handler = new PresignConversationMediaCommandExecutor(
             _conversationRepositoryMock.Object,
             _r2UploadServiceMock.Object,
             _uploadSessionRepositoryMock.Object);
@@ -69,7 +69,7 @@ public class PresignConversationMediaCommandHandlerTests
     public async Task Handle_InvalidVoiceMimeType_ThrowsBadRequestException()
     {
         _r2UploadServiceMock.SetupGet(x => x.IsEnabled).Returns(true);
-        var handler = new PresignConversationMediaCommandHandler(
+        var handler = new PresignConversationMediaCommandExecutor(
             _conversationRepositoryMock.Object,
             _r2UploadServiceMock.Object,
             _uploadSessionRepositoryMock.Object);

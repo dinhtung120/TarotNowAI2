@@ -11,24 +11,24 @@ using Xunit;
 namespace TarotNow.Application.UnitTests.Features.Community.Commands;
 
 // Unit test cho handler bật/tắt reaction bài viết cộng đồng.
-public class ToggleReactionCommandHandlerTests
+public class ToggleReactionCommandExecutorTests
 {
     // Mock reaction repo để kiểm soát trạng thái reaction hiện có.
     private readonly Mock<ICommunityReactionRepository> _reactionRepoMock;
     // Mock post repo để xác nhận thao tác cập nhật bộ đếm reaction.
     private readonly Mock<ICommunityPostRepository> _postRepoMock;
     // Handler cần kiểm thử.
-    private readonly ToggleReactionCommandHandler _handler;
+    private readonly ToggleReactionCommandExecutor _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho ToggleReactionCommandHandler.
+    /// Khởi tạo fixture cho ToggleReactionCommandExecutor.
     /// Luồng dùng mock repository để test độc lập logic cộng/trừ reaction count.
     /// </summary>
-    public ToggleReactionCommandHandlerTests()
+    public ToggleReactionCommandExecutorTests()
     {
         _reactionRepoMock = new Mock<ICommunityReactionRepository>();
         _postRepoMock = new Mock<ICommunityPostRepository>();
-        _handler = new ToggleReactionCommandHandler(_reactionRepoMock.Object, _postRepoMock.Object);
+        _handler = new ToggleReactionCommandExecutor(_reactionRepoMock.Object, _postRepoMock.Object);
     }
 
     /// <summary>

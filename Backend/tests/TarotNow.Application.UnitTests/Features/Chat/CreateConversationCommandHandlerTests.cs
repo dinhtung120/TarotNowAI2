@@ -11,7 +11,7 @@ using Xunit;
 namespace TarotNow.Application.UnitTests.Features.Chat;
 
 // Unit test cho handler tạo hội thoại giữa user và reader.
-public class CreateConversationCommandHandlerTests
+public class CreateConversationCommandExecutorTests
 {
     // Mock conversation repo để kiểm tra nhánh tạo mới/trả về hội thoại hiện có.
     private readonly Mock<IConversationRepository> _mockConvRepo;
@@ -20,13 +20,13 @@ public class CreateConversationCommandHandlerTests
     // Mock system config để đọc policy SLA/cap runtime.
     private readonly Mock<ISystemConfigSettings> _mockSystemConfigSettings;
     // Handler cần kiểm thử.
-    private readonly CreateConversationCommandHandler _handler;
+    private readonly CreateConversationCommandExecutor _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho CreateConversationCommandHandler.
+    /// Khởi tạo fixture cho CreateConversationCommandExecutor.
     /// Luồng dùng mock repositories để test độc lập logic nghiệp vụ chat.
     /// </summary>
-    public CreateConversationCommandHandlerTests()
+    public CreateConversationCommandExecutorTests()
     {
         _mockConvRepo = new Mock<IConversationRepository>();
         _mockProfileRepo = new Mock<IReaderProfileRepository>();
@@ -34,7 +34,7 @@ public class CreateConversationCommandHandlerTests
         _mockSystemConfigSettings.SetupGet(x => x.ChatAllowedSlaHours).Returns([6, 12, 24]);
         _mockSystemConfigSettings.SetupGet(x => x.ChatDefaultSlaHours).Returns(12);
         _mockSystemConfigSettings.SetupGet(x => x.ChatMaxActiveConversationsPerUser).Returns(5);
-        _handler = new CreateConversationCommandHandler(
+        _handler = new CreateConversationCommandExecutor(
             _mockConvRepo.Object,
             _mockProfileRepo.Object,
             _mockSystemConfigSettings.Object);

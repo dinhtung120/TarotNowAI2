@@ -10,7 +10,7 @@ using TarotNow.Domain.Events;
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
 // Unit test cho handler quên mật khẩu.
-public class ForgotPasswordCommandHandlerTests
+public class ForgotPasswordCommandExecutorTests
 {
     // Mock user repo để điều khiển tồn tại/không tồn tại user.
     private readonly Mock<IUserRepository> _userRepositoryMock;
@@ -21,13 +21,13 @@ public class ForgotPasswordCommandHandlerTests
     // Mock transaction coordinator để mô phỏng transaction boundary trong unit test.
     private readonly Mock<ITransactionCoordinator> _transactionCoordinatorMock;
     // Handler cần kiểm thử.
-    private readonly ForgotPasswordCommandHandler _handler;
+    private readonly ForgotPasswordCommandExecutor _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho ForgotPasswordCommandHandler.
+    /// Khởi tạo fixture cho ForgotPasswordCommandExecutor.
     /// Luồng dùng mock giúp kiểm thử logic bảo mật mà không gọi hạ tầng ngoài.
     /// </summary>
-    public ForgotPasswordCommandHandlerTests()
+    public ForgotPasswordCommandExecutorTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _emailOtpRepositoryMock = new Mock<IEmailOtpRepository>();
@@ -37,7 +37,7 @@ public class ForgotPasswordCommandHandlerTests
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
             .Returns<Func<CancellationToken, Task>, CancellationToken>((action, ct) => action(ct));
 
-        _handler = new ForgotPasswordCommandHandler(
+        _handler = new ForgotPasswordCommandExecutor(
             _userRepositoryMock.Object,
             _emailOtpRepositoryMock.Object,
             _domainEventPublisherMock.Object,

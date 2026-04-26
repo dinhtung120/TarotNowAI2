@@ -7,7 +7,7 @@ namespace TarotNow.Application.Features.Gamification.Commands;
 public record GrantAllTitlesCommand(Guid UserId) : IRequest<bool>;
 
 // Handler cấp toàn bộ title cho user.
-public class GrantAllTitlesCommandHandler : IRequestHandler<GrantAllTitlesCommand, bool>
+public class GrantAllTitlesCommandExecutor : ICommandExecutionExecutor<GrantAllTitlesCommand, bool>
 {
     private readonly ITitleRepository _titleRepository;
 
@@ -15,7 +15,7 @@ public class GrantAllTitlesCommandHandler : IRequestHandler<GrantAllTitlesComman
     /// Khởi tạo handler grant all titles.
     /// Luồng xử lý: nhận title repository để liệt kê title và cấp cho user chưa sở hữu.
     /// </summary>
-    public GrantAllTitlesCommandHandler(ITitleRepository titleRepository)
+    public GrantAllTitlesCommandExecutor(ITitleRepository titleRepository)
     {
         _titleRepository = titleRepository;
     }

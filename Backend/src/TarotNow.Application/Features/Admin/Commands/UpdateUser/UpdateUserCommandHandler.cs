@@ -6,7 +6,7 @@ using TarotNow.Domain.Entities;
 namespace TarotNow.Application.Features.Admin.Commands.UpdateUser;
 
 // Handler cập nhật thông tin tài khoản và cân bằng ví theo giá trị mục tiêu admin nhập.
-public partial class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, bool>
+public partial class UpdateUserCommandExecutor : ICommandExecutionExecutor<UpdateUserCommand, bool>
 {
     private readonly IUserRepository _userRepository;
     private readonly IWalletRepository _walletRepository;
@@ -16,7 +16,7 @@ public partial class UpdateUserCommandHandler : IRequestHandler<UpdateUserComman
     /// Khởi tạo handler update user.
     /// Luồng xử lý: nhận user repository để cập nhật hồ sơ và wallet repository để điều chỉnh số dư.
     /// </summary>
-    public UpdateUserCommandHandler(
+    public UpdateUserCommandExecutor(
         IUserRepository userRepository,
         IWalletRepository walletRepository,
         IDomainEventPublisher domainEventPublisher)

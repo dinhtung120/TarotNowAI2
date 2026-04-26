@@ -37,7 +37,7 @@ public sealed record ConfirmCommunityImageResult(string ObjectKey, string Public
 /// <summary>
 /// Handler xác nhận community image upload.
 /// </summary>
-public sealed class ConfirmCommunityImageCommandHandler : IRequestHandler<ConfirmCommunityImageCommand, ConfirmCommunityImageResult>
+public sealed class ConfirmCommunityImageCommandExecutor : ICommandExecutionExecutor<ConfirmCommunityImageCommand, ConfirmCommunityImageResult>
 {
     private readonly IUploadSessionRepository _uploadSessionRepository;
     private readonly ICommunityMediaAssetRepository _communityMediaAssetRepository;
@@ -46,7 +46,7 @@ public sealed class ConfirmCommunityImageCommandHandler : IRequestHandler<Confir
     /// <summary>
     /// Khởi tạo handler confirm community image.
     /// </summary>
-    public ConfirmCommunityImageCommandHandler(
+    public ConfirmCommunityImageCommandExecutor(
         IUploadSessionRepository uploadSessionRepository,
         ICommunityMediaAssetRepository communityMediaAssetRepository,
         IR2UploadService r2UploadService)

@@ -150,44 +150,12 @@ public sealed class EventDrivenArchitectureRulesTests
     }
 
     /// <summary>
-    /// Xác nhận các command handlers đã migrate theo event-only không còn inject repository/service/provider.
+    /// Xác nhận toàn bộ command handlers đã chuyển sang event-only, không còn phụ thuộc trực tiếp repository/service/provider.
     /// </summary>
     [Fact]
-    public void MigratedEventOnlyCommandHandlers_ShouldNotInjectRepositoryServiceProviderDependencies()
+    public void CommandHandlers_ShouldNotInjectRepositoryServiceProviderDependencies()
     {
         var backendRoot = FindBackendRoot();
-        var migratedRoots = new[]
-        {
-            Path.Combine(backendRoot, "src", "TarotNow.Application", "Features", "Community", "Commands", "CreatePost"),
-            Path.Combine(backendRoot, "src", "TarotNow.Application", "Features", "Community", "Commands", "AddComment"),
-            Path.Combine(backendRoot, "src", "TarotNow.Application", "Features", "Reading", "Commands", "InitSession"),
-            Path.Combine(backendRoot, "src", "TarotNow.Application", "Features", "Reading", "Commands", "RevealSession")
-        };
-        var forbidden = new Regex(@"\bI\w*(Repository|Service|Provider)\b", RegexOptions.Compiled);
-        var allowed = new HashSet<string>(StringComparer.Ordinal)
-        {
-            "IInlineDomainEventDispatcher"
-        };
-
-        var violations = migratedRoots
-            .SelectMany(root => Directory.GetFiles(root, "*.cs", SearchOption.AllDirectories))
-            .SelectMany(path => CollectDisallowedDependencyMentions(path, forbidden, allowed)
-                .Select(match => $"{ToBackendRelativePath(backendRoot, path)} -> {match}"))
-            .OrderBy(item => item, StringComparer.Ordinal)
-            .ToArray();
-
-        violations.Should().BeEmpty(
-            "Migrated event-only command handlers must only dispatch domain events and must not inject repository/service/provider dependencies.");
-    }
-
-    /// <summary>
-    /// Khóa baseline nợ kiến trúc hiện tại để không phát sinh thêm command handler phụ thuộc trực tiếp repository/service/provider.
-    /// </summary>
-    [Fact]
-    public void CommandHandlers_DependencyDebtBaseline_ShouldNotIncrease()
-    {
-        var backendRoot = FindBackendRoot();
-        var lockedBaseline = LoadDependencyDebtBaselineEntries(backendRoot);
         var featuresRoot = Path.Combine(backendRoot, "src", "TarotNow.Application", "Features");
         var forbidden = new Regex(@"\bI\w*(Repository|Service|Provider)\b", RegexOptions.Compiled);
 
@@ -205,83 +173,8 @@ public sealed class EventDrivenArchitectureRulesTests
             .OrderBy(path => path, StringComparer.Ordinal)
             .ToArray();
 
-        var addedViolations = violatingFiles
-            .Except(lockedBaseline, StringComparer.Ordinal)
-            .ToArray();
-        var removedViolations = lockedBaseline
-            .Except(violatingFiles, StringComparer.Ordinal)
-            .ToArray();
-        if (addedViolations.Length == 0 && removedViolations.Length == 0)
-        {
-            return;
-        }
-
-        var addedText = addedViolations.Length == 0
-            ? "(none)"
-            : string.Join(Environment.NewLine, addedViolations.Select(path => $"- {path}"));
-        var removedText = removedViolations.Length == 0
-            ? "(none)"
-            : string.Join(Environment.NewLine, removedViolations.Select(path => $"- {path}"));
-        throw new Xunit.Sdk.XunitException(
-            $"Command handler dependency debt baseline drift detected.{Environment.NewLine}" +
-            $"Added violations:{Environment.NewLine}{addedText}{Environment.NewLine}" +
-            $"Removed violations:{Environment.NewLine}{removedText}{Environment.NewLine}" +
-            "Update the baseline file only after intentionally triaging and approving the architectural debt change.");
-    }
-
-    private static IReadOnlyList<string> LoadDependencyDebtBaselineEntries(string backendRoot)
-    {
-        var baselinePath = Path.Combine(
-            backendRoot,
-            "tests",
-            "TarotNow.ArchitectureTests",
-            "Baselines",
-            "command-handler-dependency-debt-baseline.txt");
-        if (!File.Exists(baselinePath))
-        {
-            throw new FileNotFoundException(
-                $"Missing dependency debt baseline file: {baselinePath}");
-        }
-
-        return File
-            .ReadAllLines(baselinePath)
-            .Select(line => line.Trim())
-            .Where(line => string.IsNullOrWhiteSpace(line) == false)
-            .Where(line => line.StartsWith('#') == false)
-            .Distinct(StringComparer.Ordinal)
-            .OrderBy(path => path, StringComparer.Ordinal)
-            .ToArray();
-    }
-
-    private static IReadOnlyList<string> CollectDisallowedDependencyMentions(
-        string path,
-        Regex forbidden,
-        IReadOnlySet<string> allowedInterfaces)
-    {
-        var text = File.ReadAllText(path);
-        if (!text.Contains("CommandHandler", StringComparison.Ordinal))
-        {
-            return Array.Empty<string>();
-        }
-
-        var matches = forbidden.Matches(text);
-        if (matches.Count == 0)
-        {
-            return Array.Empty<string>();
-        }
-
-        var disallowed = new List<string>();
-        foreach (Match match in matches)
-        {
-            if (allowedInterfaces.Contains(match.Value))
-            {
-                continue;
-            }
-
-            disallowed.Add(match.Value);
-        }
-
-        return disallowed;
+        violatingFiles.Should().BeEmpty(
+            "all command handlers must dispatch domain events via IInlineDomainEventDispatcher and must not inject repository/service/provider dependencies directly.");
     }
 
     private static string FindBackendRoot()

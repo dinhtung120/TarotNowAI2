@@ -7,7 +7,7 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Community.Commands;
 
-public class PresignCommunityImageCommandHandlerTests
+public class PresignCommunityImageCommandExecutorTests
 {
     private readonly Mock<IR2UploadService> _r2UploadServiceMock = new();
     private readonly Mock<IUploadSessionRepository> _uploadSessionRepositoryMock = new();
@@ -30,7 +30,7 @@ public class PresignCommunityImageCommandHandlerTests
             .Callback<UploadSessionRecord, CancellationToken>((session, _) => capturedSession = session)
             .Returns(Task.CompletedTask);
 
-        var handler = new PresignCommunityImageCommandHandler(_r2UploadServiceMock.Object, _uploadSessionRepositoryMock.Object);
+        var handler = new PresignCommunityImageCommandExecutor(_r2UploadServiceMock.Object, _uploadSessionRepositoryMock.Object);
         var result = await handler.Handle(new PresignCommunityImageCommand
         {
             UserId = userId,
@@ -53,7 +53,7 @@ public class PresignCommunityImageCommandHandlerTests
     public async Task Handle_InvalidContextType_ThrowsBadRequestException()
     {
         _r2UploadServiceMock.SetupGet(x => x.IsEnabled).Returns(true);
-        var handler = new PresignCommunityImageCommandHandler(_r2UploadServiceMock.Object, _uploadSessionRepositoryMock.Object);
+        var handler = new PresignCommunityImageCommandExecutor(_r2UploadServiceMock.Object, _uploadSessionRepositoryMock.Object);
 
         await Assert.ThrowsAsync<BadRequestException>(() => handler.Handle(new PresignCommunityImageCommand
         {

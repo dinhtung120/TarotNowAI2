@@ -11,7 +11,7 @@ using RefreshTokenEntity = TarotNow.Domain.Entities.RefreshToken;
 namespace TarotNow.Application.Features.Auth.Commands.RevokeToken;
 
 // Handler thu hồi refresh token theo yêu cầu bảo mật phiên đăng nhập.
-public class RevokeTokenCommandHandler : IRequestHandler<RevokeTokenCommand, bool>
+public class RevokeTokenCommandExecutor : ICommandExecutionExecutor<RevokeTokenCommand, bool>
 {
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IAuthSessionRepository _authSessionRepository;
@@ -21,7 +21,7 @@ public class RevokeTokenCommandHandler : IRequestHandler<RevokeTokenCommand, boo
     /// Khởi tạo handler revoke token.
     /// Luồng xử lý: nhận refresh token repository để thao tác revoke theo token hoặc theo user.
     /// </summary>
-    public RevokeTokenCommandHandler(
+    public RevokeTokenCommandExecutor(
         IRefreshTokenRepository refreshTokenRepository,
         IAuthSessionRepository authSessionRepository,
         IDomainEventPublisher domainEventPublisher)

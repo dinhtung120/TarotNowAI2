@@ -33,7 +33,7 @@ public class MfaSetupResult
 }
 
 // Handler xử lý luồng setup MFA.
-public class MfaSetupCommandHandler : IRequestHandler<MfaSetupCommand, MfaSetupResult>
+public class MfaSetupCommandExecutor : ICommandExecutionExecutor<MfaSetupCommand, MfaSetupResult>
 {
     private readonly IUserRepository _userRepo;
     private readonly IMfaService _mfaService;
@@ -42,7 +42,7 @@ public class MfaSetupCommandHandler : IRequestHandler<MfaSetupCommand, MfaSetupR
     /// Khởi tạo handler setup MFA.
     /// Luồng xử lý: nhận user repository để đọc/cập nhật trạng thái người dùng và MFA service để sinh dữ liệu bảo mật.
     /// </summary>
-    public MfaSetupCommandHandler(IUserRepository userRepo, IMfaService mfaService)
+    public MfaSetupCommandExecutor(IUserRepository userRepo, IMfaService mfaService)
     {
         _userRepo = userRepo;
         _mfaService = mfaService;

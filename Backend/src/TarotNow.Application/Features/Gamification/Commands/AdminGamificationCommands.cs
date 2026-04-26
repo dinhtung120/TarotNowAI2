@@ -13,8 +13,8 @@ public record UpsertQuestDefinitionCommand(QuestDefinitionDto Quest) : IRequest<
 public record DeleteQuestDefinitionCommand(string Code) : IRequest<bool>;
 
 // Handler command admin cho định nghĩa quest.
-public class AdminQuestCommandHandler :
-    IRequestHandler<UpsertQuestDefinitionCommand, bool>,
+public class AdminQuestCommandExecutor :
+    ICommandExecutionExecutor<UpsertQuestDefinitionCommand, bool>,
     IRequestHandler<DeleteQuestDefinitionCommand, bool>
 {
     private readonly IQuestRepository _questRepo;
@@ -23,7 +23,7 @@ public class AdminQuestCommandHandler :
     /// Khởi tạo handler admin quest.
     /// Luồng xử lý: nhận quest repository để upsert/xóa định nghĩa quest.
     /// </summary>
-    public AdminQuestCommandHandler(IQuestRepository questRepo)
+    public AdminQuestCommandExecutor(IQuestRepository questRepo)
     {
         _questRepo = questRepo;
     }
@@ -56,8 +56,8 @@ public record UpsertAchievementDefinitionCommand(AchievementDefinitionDto Achiev
 public record DeleteAchievementDefinitionCommand(string Code) : IRequest<bool>;
 
 // Handler command admin cho định nghĩa achievement.
-public class AdminAchievementCommandHandler :
-    IRequestHandler<UpsertAchievementDefinitionCommand, bool>,
+public class AdminAchievementCommandExecutor :
+    ICommandExecutionExecutor<UpsertAchievementDefinitionCommand, bool>,
     IRequestHandler<DeleteAchievementDefinitionCommand, bool>
 {
     private readonly IAchievementRepository _achRepo;
@@ -66,7 +66,7 @@ public class AdminAchievementCommandHandler :
     /// Khởi tạo handler admin achievement.
     /// Luồng xử lý: nhận achievement repository để upsert/xóa định nghĩa achievement.
     /// </summary>
-    public AdminAchievementCommandHandler(IAchievementRepository achRepo)
+    public AdminAchievementCommandExecutor(IAchievementRepository achRepo)
     {
         _achRepo = achRepo;
     }
@@ -99,8 +99,8 @@ public record UpsertTitleDefinitionCommand(TitleDefinitionDto Title) : IRequest<
 public record DeleteTitleDefinitionCommand(string Code) : IRequest<bool>;
 
 // Handler command admin cho định nghĩa title.
-public class AdminTitleCommandHandler :
-    IRequestHandler<UpsertTitleDefinitionCommand, bool>,
+public class AdminTitleCommandExecutor :
+    ICommandExecutionExecutor<UpsertTitleDefinitionCommand, bool>,
     IRequestHandler<DeleteTitleDefinitionCommand, bool>
 {
     private readonly ITitleRepository _titleRepo;
@@ -109,7 +109,7 @@ public class AdminTitleCommandHandler :
     /// Khởi tạo handler admin title.
     /// Luồng xử lý: nhận title repository để upsert/xóa định nghĩa title.
     /// </summary>
-    public AdminTitleCommandHandler(ITitleRepository titleRepo)
+    public AdminTitleCommandExecutor(ITitleRepository titleRepo)
     {
         _titleRepo = titleRepo;
     }

@@ -17,7 +17,7 @@ public class MarkMessagesReadCommand : IRequest<bool>
 }
 
 // Handler xử lý đánh dấu message đã đọc.
-public class MarkMessagesReadCommandHandler : IRequestHandler<MarkMessagesReadCommand, bool>
+public class MarkMessagesReadCommandExecutor : ICommandExecutionExecutor<MarkMessagesReadCommand, bool>
 {
     private readonly IConversationRepository _conversationRepo;
     private readonly IChatMessageRepository _messageRepo;
@@ -27,7 +27,7 @@ public class MarkMessagesReadCommandHandler : IRequestHandler<MarkMessagesReadCo
     /// Khởi tạo handler mark messages read.
     /// Luồng xử lý: nhận conversation repo để kiểm tra quyền và message repo để cập nhật trạng thái đọc.
     /// </summary>
-    public MarkMessagesReadCommandHandler(
+    public MarkMessagesReadCommandExecutor(
         IConversationRepository conversationRepo,
         IChatMessageRepository messageRepo,
         IDomainEventPublisher domainEventPublisher)

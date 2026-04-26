@@ -6,7 +6,7 @@ using TarotNow.Domain.Enums;
 namespace TarotNow.Application.Features.Auth.Commands.ForgotPassword;
 
 // Handler khởi tạo luồng quên mật khẩu bằng OTP qua email.
-public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordCommand, bool>
+public class ForgotPasswordCommandExecutor : ICommandExecutionExecutor<ForgotPasswordCommand, bool>
 {
     private readonly IUserRepository _userRepository;
     private readonly IEmailOtpRepository _emailOtpRepository;
@@ -17,7 +17,7 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
     /// Khởi tạo handler forgot password.
     /// Luồng xử lý: nhận user repo, OTP repo, transaction coordinator và domain event publisher để enqueue email OTP.
     /// </summary>
-    public ForgotPasswordCommandHandler(
+    public ForgotPasswordCommandExecutor(
         IUserRepository userRepository,
         IEmailOtpRepository emailOtpRepository,
         IDomainEventPublisher domainEventPublisher,

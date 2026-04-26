@@ -5,8 +5,8 @@ using TarotNow.Application.Interfaces;
 namespace TarotNow.Application.Features.Chat.Commands.AcceptConversation;
 
 // Handler điều phối luồng accept conversation cho reader.
-public partial class AcceptConversationCommandHandler
-    : IRequestHandler<AcceptConversationCommand, ConversationActionResult>
+public partial class AcceptConversationCommandExecutor
+    : ICommandExecutionExecutor<AcceptConversationCommand, ConversationActionResult>
 {
     private readonly IConversationRepository _conversationRepository;
     private readonly IChatFinanceRepository _financeRepository;
@@ -19,7 +19,7 @@ public partial class AcceptConversationCommandHandler
     /// Khởi tạo handler accept conversation.
     /// Luồng xử lý: nhận repository conversation/finance/message và transaction coordinator để xử lý atomically.
     /// </summary>
-    public AcceptConversationCommandHandler(
+    public AcceptConversationCommandExecutor(
         IConversationRepository conversationRepository,
         IChatFinanceRepository financeRepository,
         ITransactionCoordinator transactionCoordinator,

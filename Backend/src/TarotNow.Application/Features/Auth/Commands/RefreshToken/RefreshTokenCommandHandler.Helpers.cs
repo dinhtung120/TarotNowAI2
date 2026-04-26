@@ -8,7 +8,7 @@ using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Auth.Commands.RefreshToken;
 
-public partial class RefreshTokenCommandHandler
+public partial class RefreshTokenCommandExecutor
 {
     /// <summary>
     /// Nâng cấp refresh token legacy chưa có session sang mô hình auth session theo thiết bị.

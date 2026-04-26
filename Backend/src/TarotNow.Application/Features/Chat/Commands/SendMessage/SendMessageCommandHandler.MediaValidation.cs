@@ -3,7 +3,7 @@ using TarotNow.Application.Exceptions;
 
 namespace TarotNow.Application.Features.Chat.Commands.SendMessage;
 
-public partial class SendMessageCommandHandler
+public partial class SendMessageCommandExecutor
 {
     /// <summary>
     /// Validate và chuẩn hóa media payload trong request gửi tin nhắn.

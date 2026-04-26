@@ -11,7 +11,7 @@ using TarotNow.Domain.Enums;
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
 // Unit test cho handler đặt lại mật khẩu bằng OTP email.
-public class ResetPasswordCommandHandlerTests
+public class ResetPasswordCommandExecutorTests
 {
     // Mock user repository để điều khiển trạng thái user theo email.
     private readonly Mock<IUserRepository> _userRepositoryMock;
@@ -24,13 +24,13 @@ public class ResetPasswordCommandHandlerTests
     private readonly Mock<IAuthSessionRepository> _authSessionRepositoryMock;
     private readonly Mock<IDomainEventPublisher> _domainEventPublisherMock;
     // Handler cần kiểm thử.
-    private readonly ResetPasswordCommandHandler _handler;
+    private readonly ResetPasswordCommandExecutor _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho ResetPasswordCommandHandler.
+    /// Khởi tạo fixture cho ResetPasswordCommandExecutor.
     /// Luồng tiêm mock dependencies giúp test cô lập hoàn toàn logic đổi mật khẩu.
     /// </summary>
-    public ResetPasswordCommandHandlerTests()
+    public ResetPasswordCommandExecutorTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _emailOtpRepositoryMock = new Mock<IEmailOtpRepository>();
@@ -42,7 +42,7 @@ public class ResetPasswordCommandHandlerTests
             .Setup(x => x.PublishAsync(It.IsAny<IDomainEvent>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        _handler = new ResetPasswordCommandHandler(
+        _handler = new ResetPasswordCommandExecutor(
             _userRepositoryMock.Object, _emailOtpRepositoryMock.Object,
             _passwordHasherMock.Object, _refreshTokenRepositoryMock.Object,
             _authSessionRepositoryMock.Object, _domainEventPublisherMock.Object

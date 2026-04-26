@@ -7,8 +7,8 @@ using TarotNow.Domain.Enums;
 namespace TarotNow.Application.Features.Chat.Commands.RequestConversationAddMoney;
 
 // Handler điều phối luồng tạo đề nghị cộng thêm tiền trong conversation.
-public partial class RequestConversationAddMoneyCommandHandler
-    : IRequestHandler<RequestConversationAddMoneyCommand, ConversationAddMoneyRequestResult>
+public partial class RequestConversationAddMoneyCommandExecutor
+    : ICommandExecutionExecutor<RequestConversationAddMoneyCommand, ConversationAddMoneyRequestResult>
 {
     private readonly IConversationRepository _conversationRepository;
     private readonly IChatMessageRepository _chatMessageRepository;
@@ -20,7 +20,7 @@ public partial class RequestConversationAddMoneyCommandHandler
     /// Khởi tạo handler request conversation add money.
     /// Luồng xử lý: nhận repository conversation/message, mediator gửi message và publisher phát event cập nhật conversation.
     /// </summary>
-    public RequestConversationAddMoneyCommandHandler(
+    public RequestConversationAddMoneyCommandExecutor(
         IConversationRepository conversationRepository,
         IChatMessageRepository chatMessageRepository,
         IMediator mediator,

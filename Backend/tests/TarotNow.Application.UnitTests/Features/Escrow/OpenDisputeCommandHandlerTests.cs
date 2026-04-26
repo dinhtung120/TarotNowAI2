@@ -9,7 +9,7 @@ using Xunit;
 namespace TarotNow.Application.UnitTests.Features.Escrow;
 
 // Unit test cho handler mở tranh chấp item escrow.
-public class OpenDisputeCommandHandlerTests
+public class OpenDisputeCommandExecutorTests
 {
     // Mock finance repo để điều khiển item/session và kiểm tra cập nhật trạng thái.
     private readonly Mock<IChatFinanceRepository> _mockFinanceRepo;
@@ -17,13 +17,13 @@ public class OpenDisputeCommandHandlerTests
     private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
     private readonly Mock<ISystemConfigSettings> _mockSystemConfigSettings;
     // Handler cần kiểm thử.
-    private readonly OpenDisputeCommandHandler _handler;
+    private readonly OpenDisputeCommandExecutor _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho OpenDisputeCommandHandler.
+    /// Khởi tạo fixture cho OpenDisputeCommandExecutor.
     /// Luồng setup transaction coordinator inline giúp test deterministic.
     /// </summary>
-    public OpenDisputeCommandHandlerTests()
+    public OpenDisputeCommandExecutorTests()
     {
         _mockFinanceRepo = new Mock<IChatFinanceRepository>();
         _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
@@ -33,7 +33,7 @@ public class OpenDisputeCommandHandlerTests
         _mockTransactionCoordinator
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
             .Returns((Func<CancellationToken, Task> action, CancellationToken ct) => action(ct));
-        _handler = new OpenDisputeCommandHandler(
+        _handler = new OpenDisputeCommandExecutor(
             _mockFinanceRepo.Object,
             _mockTransactionCoordinator.Object,
             _mockSystemConfigSettings.Object);

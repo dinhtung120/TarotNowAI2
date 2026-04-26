@@ -29,7 +29,7 @@ public sealed class PresignCommunityImageCommand : IRequest<PresignedUploadResul
 /// <summary>
 /// Handler presign ảnh community.
 /// </summary>
-public sealed class PresignCommunityImageCommandHandler : IRequestHandler<PresignCommunityImageCommand, PresignedUploadResult>
+public sealed class PresignCommunityImageCommandExecutor : ICommandExecutionExecutor<PresignCommunityImageCommand, PresignedUploadResult>
 {
     private readonly IR2UploadService _r2UploadService;
     private readonly IUploadSessionRepository _uploadSessionRepository;
@@ -37,7 +37,7 @@ public sealed class PresignCommunityImageCommandHandler : IRequestHandler<Presig
     /// <summary>
     /// Khởi tạo handler presign ảnh community.
     /// </summary>
-    public PresignCommunityImageCommandHandler(
+    public PresignCommunityImageCommandExecutor(
         IR2UploadService r2UploadService,
         IUploadSessionRepository uploadSessionRepository)
     {

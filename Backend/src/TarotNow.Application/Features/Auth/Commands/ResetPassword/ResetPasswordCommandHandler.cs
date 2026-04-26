@@ -8,7 +8,7 @@ using TarotNow.Domain.Enums;
 namespace TarotNow.Application.Features.Auth.Commands.ResetPassword;
 
 // Handler xử lý đặt lại mật khẩu bằng OTP email.
-public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand, bool>
+public class ResetPasswordCommandExecutor : ICommandExecutionExecutor<ResetPasswordCommand, bool>
 {
     private readonly IUserRepository _userRepository;
     private readonly IEmailOtpRepository _emailOtpRepository;
@@ -21,7 +21,7 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
     /// Khởi tạo handler reset password.
     /// Luồng xử lý: nhận user repo, OTP repo, password hasher và refresh token repo.
     /// </summary>
-    public ResetPasswordCommandHandler(
+    public ResetPasswordCommandExecutor(
         IUserRepository userRepository,
         IEmailOtpRepository emailOtpRepository,
         IPasswordHasher passwordHasher,

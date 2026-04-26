@@ -4,7 +4,7 @@ using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Gamification.Commands;
 
-public partial class ClaimQuestRewardCommandHandler
+public partial class ClaimQuestRewardCommandExecutor
 {
     /// <summary>
     /// Cấp toàn bộ phần thưởng của quest.

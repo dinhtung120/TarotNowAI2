@@ -8,7 +8,7 @@ using TarotNow.Domain.Events;
 namespace TarotNow.Application.Features.Auth.Commands.SendEmailVerificationOtp;
 
 // Handler gửi OTP xác minh email cho tài khoản chưa active.
-public class SendEmailVerificationOtpCommandHandler : IRequestHandler<SendEmailVerificationOtpCommand, bool>
+public class SendEmailVerificationOtpCommandExecutor : ICommandExecutionExecutor<SendEmailVerificationOtpCommand, bool>
 {
     private readonly IUserRepository _userRepository;
     private readonly IEmailOtpRepository _emailOtpRepository;
@@ -19,7 +19,7 @@ public class SendEmailVerificationOtpCommandHandler : IRequestHandler<SendEmailV
     /// Khởi tạo handler gửi OTP verify email.
     /// Luồng xử lý: nhận user repo, OTP repo, transaction coordinator và domain event publisher để enqueue email OTP.
     /// </summary>
-    public SendEmailVerificationOtpCommandHandler(
+    public SendEmailVerificationOtpCommandExecutor(
         IUserRepository userRepository,
         IEmailOtpRepository emailOtpRepository,
         IDomainEventPublisher domainEventPublisher,

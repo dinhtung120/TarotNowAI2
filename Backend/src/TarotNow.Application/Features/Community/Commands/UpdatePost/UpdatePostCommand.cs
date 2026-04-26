@@ -20,7 +20,7 @@ public class UpdatePostCommand : IRequest<bool>
 }
 
 // Handler xử lý cập nhật bài viết.
-public class UpdatePostCommandHandler : IRequestHandler<UpdatePostCommand, bool>
+public class UpdatePostCommandExecutor : ICommandExecutionExecutor<UpdatePostCommand, bool>
 {
     private readonly ICommunityPostRepository _postRepo;
     private readonly ICommunityMediaAttachmentService _communityMediaAttachmentService;
@@ -29,7 +29,7 @@ public class UpdatePostCommandHandler : IRequestHandler<UpdatePostCommand, bool>
     /// Khởi tạo handler update post.
     /// Luồng xử lý: nhận post repository để kiểm tra quyền sở hữu và cập nhật nội dung.
     /// </summary>
-    public UpdatePostCommandHandler(
+    public UpdatePostCommandExecutor(
         ICommunityPostRepository postRepo,
         ICommunityMediaAttachmentService communityMediaAttachmentService)
     {

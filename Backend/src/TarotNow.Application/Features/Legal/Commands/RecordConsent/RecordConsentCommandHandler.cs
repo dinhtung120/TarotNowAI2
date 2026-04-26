@@ -7,7 +7,7 @@ using TarotNow.Domain.Entities;
 namespace TarotNow.Application.Features.Legal.Commands.RecordConsent;
 
 // Handler ghi nhận consent pháp lý theo nguyên tắc idempotent.
-public class RecordConsentCommandHandler : IRequestHandler<RecordConsentCommand, bool>
+public class RecordConsentCommandExecutor : ICommandExecutionExecutor<RecordConsentCommand, bool>
 {
     private readonly IUserConsentRepository _consentRepository;
 
@@ -15,7 +15,7 @@ public class RecordConsentCommandHandler : IRequestHandler<RecordConsentCommand,
     /// Khởi tạo handler để xử lý ghi nhận consent.
     /// Luồng xử lý: nhận repository để kiểm tra consent hiện có và lưu consent mới khi cần.
     /// </summary>
-    public RecordConsentCommandHandler(IUserConsentRepository consentRepository)
+    public RecordConsentCommandExecutor(IUserConsentRepository consentRepository)
     {
         _consentRepository = consentRepository;
     }

@@ -27,8 +27,8 @@ public class RespondConversationAddMoneyCommand : IRequest<ConversationAddMoneyR
 }
 
 // Handler điều phối luồng phản hồi đề nghị cộng tiền.
-public partial class RespondConversationAddMoneyCommandHandler
-    : IRequestHandler<RespondConversationAddMoneyCommand, ConversationAddMoneyRespondResult>
+public partial class RespondConversationAddMoneyCommandExecutor
+    : ICommandExecutionExecutor<RespondConversationAddMoneyCommand, ConversationAddMoneyRespondResult>
 {
     private readonly IConversationRepository _conversationRepository;
     private readonly IChatMessageRepository _chatMessageRepository;
@@ -39,7 +39,7 @@ public partial class RespondConversationAddMoneyCommandHandler
     /// Khởi tạo handler respond conversation add money.
     /// Luồng xử lý: nhận repository conversation/message, mediator xử lý command liên quan và publisher phát event đồng bộ conversation.
     /// </summary>
-    public RespondConversationAddMoneyCommandHandler(
+    public RespondConversationAddMoneyCommandExecutor(
         IConversationRepository conversationRepository,
         IChatMessageRepository chatMessageRepository,
         IMediator mediator,

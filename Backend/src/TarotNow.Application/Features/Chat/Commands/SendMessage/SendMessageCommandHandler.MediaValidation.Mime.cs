@@ -1,6 +1,6 @@
 namespace TarotNow.Application.Features.Chat.Commands.SendMessage;
 
-public partial class SendMessageCommandHandler
+public partial class SendMessageCommandExecutor
 {
     // Luồng mới chỉ chấp nhận ảnh WebP do FE chuẩn hóa trước khi upload.
     private static readonly HashSet<string> AllowedImageMimeTypes = new(StringComparer.OrdinalIgnoreCase)

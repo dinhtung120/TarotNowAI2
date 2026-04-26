@@ -4,7 +4,7 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Commands.RequestConversationComplete;
 
-public partial class RequestConversationCompleteCommandHandler
+public partial class RequestConversationCompleteCommandExecutor
 {
     // Gói context để các bước xử lý dùng chung dữ liệu đã validate, tránh đọc DB lặp lại.
     private readonly record struct RequestContext(

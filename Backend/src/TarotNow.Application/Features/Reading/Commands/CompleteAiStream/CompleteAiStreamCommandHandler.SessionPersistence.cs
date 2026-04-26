@@ -7,7 +7,7 @@ using TarotNow.Domain.Entities;
 
 namespace TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
 
-public partial class CompleteAiStreamCommandHandler
+public partial class CompleteAiStreamCommandExecutor
 {
     /// <summary>
     /// Cập nhật nội dung ReadingSession theo kết quả AI stream.

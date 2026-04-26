@@ -24,8 +24,8 @@ public class OpenConversationDisputeCommand : IRequest<ConversationActionResult>
 }
 
 // Handler mở tranh chấp ở tầng conversation và ủy quyền settle item cho OpenDisputeCommand.
-public class OpenConversationDisputeCommandHandler
-    : IRequestHandler<OpenConversationDisputeCommand, ConversationActionResult>
+public class OpenConversationDisputeCommandExecutor
+    : ICommandExecutionExecutor<OpenConversationDisputeCommand, ConversationActionResult>
 {
     private readonly IConversationRepository _conversationRepository;
     private readonly IChatFinanceRepository _financeRepository;
@@ -36,7 +36,7 @@ public class OpenConversationDisputeCommandHandler
     /// Khởi tạo handler open conversation dispute.
     /// Luồng xử lý: nhận repository conversation/finance, mediator và domain event publisher.
     /// </summary>
-    public OpenConversationDisputeCommandHandler(
+    public OpenConversationDisputeCommandExecutor(
         IConversationRepository conversationRepository,
         IChatFinanceRepository financeRepository,
         IMediator mediator,

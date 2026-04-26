@@ -23,7 +23,7 @@ public sealed class PresignAvatarUploadCommand : IRequest<PresignedUploadResult>
 /// <summary>
 /// Handler presign avatar upload.
 /// </summary>
-public sealed class PresignAvatarUploadCommandHandler : IRequestHandler<PresignAvatarUploadCommand, PresignedUploadResult>
+public sealed class PresignAvatarUploadCommandExecutor : ICommandExecutionExecutor<PresignAvatarUploadCommand, PresignedUploadResult>
 {
     private readonly IR2UploadService _r2UploadService;
     private readonly IUploadSessionRepository _uploadSessionRepository;
@@ -31,7 +31,7 @@ public sealed class PresignAvatarUploadCommandHandler : IRequestHandler<PresignA
     /// <summary>
     /// Khởi tạo handler presign avatar.
     /// </summary>
-    public PresignAvatarUploadCommandHandler(
+    public PresignAvatarUploadCommandExecutor(
         IR2UploadService r2UploadService,
         IUploadSessionRepository uploadSessionRepository)
     {

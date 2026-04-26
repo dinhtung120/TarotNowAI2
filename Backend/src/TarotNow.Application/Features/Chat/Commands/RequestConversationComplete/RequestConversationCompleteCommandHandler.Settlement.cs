@@ -5,7 +5,7 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Commands.RequestConversationComplete;
 
-public partial class RequestConversationCompleteCommandHandler
+public partial class RequestConversationCompleteCommandExecutor
 {
     /// <summary>
     /// Hoàn tất conversation khi đã đủ xác nhận từ hai phía.

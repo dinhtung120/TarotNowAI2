@@ -11,7 +11,7 @@ using RefreshTokenEntity = TarotNow.Domain.Entities.RefreshToken;
 namespace TarotNow.Application.Features.Auth.Commands.RefreshToken;
 
 // Handler chính cho luồng refresh token và rotate phiên đăng nhập.
-public partial class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, RefreshTokenResult>
+public partial class RefreshTokenCommandExecutor : ICommandExecutionExecutor<RefreshTokenCommand, RefreshTokenResult>
 {
     private const int MaxRotateLockRetries = 3;
 
@@ -25,7 +25,7 @@ public partial class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCo
     /// Khởi tạo handler refresh token.
     /// Luồng xử lý: nhận các repository/service cần để validate token, rotate token và phát access token mới.
     /// </summary>
-    public RefreshTokenCommandHandler(
+    public RefreshTokenCommandExecutor(
         IRefreshTokenRepository refreshTokenRepository,
         IAuthSessionRepository authSessionRepository,
         ITokenService tokenService,

@@ -5,7 +5,7 @@ using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Chat.Commands.RejectConversation;
 
-public partial class RejectConversationCommandHandler
+public partial class RejectConversationCommandExecutor
 {
     /// <summary>
     /// Hoàn tiền các item đủ điều kiện khi reader reject conversation awaiting acceptance.

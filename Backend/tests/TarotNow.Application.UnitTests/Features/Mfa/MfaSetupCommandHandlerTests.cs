@@ -10,24 +10,24 @@ using Xunit;
 namespace TarotNow.Application.UnitTests.Features.Mfa;
 
 // Unit test cho handler thiết lập MFA ban đầu.
-public class MfaSetupCommandHandlerTests
+public class MfaSetupCommandExecutorTests
 {
     // Mock user repo để điều khiển dữ liệu user MFA.
     private readonly Mock<IUserRepository> _mockUserRepo;
     // Mock MFA service để mô phỏng generate/encrypt/qr/backup codes.
     private readonly Mock<IMfaService> _mockMfaService;
     // Handler cần kiểm thử.
-    private readonly MfaSetupCommandHandler _handler;
+    private readonly MfaSetupCommandExecutor _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho MfaSetupCommandHandler.
+    /// Khởi tạo fixture cho MfaSetupCommandExecutor.
     /// Luồng dùng mock services để test logic setup MFA không phụ thuộc crypto thật.
     /// </summary>
-    public MfaSetupCommandHandlerTests()
+    public MfaSetupCommandExecutorTests()
     {
         _mockUserRepo = new Mock<IUserRepository>();
         _mockMfaService = new Mock<IMfaService>();
-        _handler = new MfaSetupCommandHandler(_mockUserRepo.Object, _mockMfaService.Object);
+        _handler = new MfaSetupCommandExecutor(_mockUserRepo.Object, _mockMfaService.Object);
     }
 
     /// <summary>

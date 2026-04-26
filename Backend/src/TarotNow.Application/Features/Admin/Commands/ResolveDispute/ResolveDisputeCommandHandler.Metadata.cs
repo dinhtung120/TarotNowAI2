@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace TarotNow.Application.Features.Admin.Commands.ResolveDispute;
 
-public partial class ResolveDisputeCommandHandler
+public partial class ResolveDisputeCommandExecutor
 {
     /// <summary>
     /// Dựng JSON metadata audit cho giao dịch resolve dispute.

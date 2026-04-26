@@ -3,7 +3,7 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Admin.Commands.ResolveDispute;
 
-public partial class ResolveDisputeCommandHandler
+public partial class ResolveDisputeCommandExecutor
 {
     // Kết quả tính chia tiền gồm gross cho reader, phần refund user, fee nền tảng và net reader thực nhận.
     private readonly record struct SplitAmounts(long ReaderGross, long RefundAmount, long Fee, long ReaderNet);

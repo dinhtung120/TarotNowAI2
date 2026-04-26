@@ -3,7 +3,7 @@ using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Admin.Commands.ResolveDispute;
 
-public partial class ResolveDisputeCommandHandler
+public partial class ResolveDisputeCommandExecutor
 {
     private Task PublishMoneyChangedAsync(
         Guid userId,

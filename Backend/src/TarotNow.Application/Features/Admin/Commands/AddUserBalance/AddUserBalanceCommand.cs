@@ -25,7 +25,7 @@ public class AddUserBalanceCommand : IRequest<bool>
 }
 
 // Handler thực thi nghiệp vụ cộng số dư thủ công cho admin.
-public class AddUserBalanceCommandHandler : IRequestHandler<AddUserBalanceCommand, bool>
+public class AddUserBalanceCommandExecutor : ICommandExecutionExecutor<AddUserBalanceCommand, bool>
 {
     // Reference source cố định để phân loại giao dịch cộng tay từ admin.
     private const string AdminReferenceSource = "Admin_Manual";
@@ -44,7 +44,7 @@ public class AddUserBalanceCommandHandler : IRequestHandler<AddUserBalanceComman
     /// Khởi tạo handler cộng số dư cho admin.
     /// Luồng xử lý: nhận repository user để kiểm tra tồn tại và wallet repository để thực thi credit.
     /// </summary>
-    public AddUserBalanceCommandHandler(
+    public AddUserBalanceCommandExecutor(
         IWalletRepository walletRepository,
         IUserRepository userRepository,
         IDomainEventPublisher domainEventPublisher)

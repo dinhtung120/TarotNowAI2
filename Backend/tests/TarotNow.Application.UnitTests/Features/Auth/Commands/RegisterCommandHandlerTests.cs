@@ -9,24 +9,24 @@ using TarotNow.Domain.Entities;
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
 // Unit test cho handler đăng ký tài khoản mới.
-public class RegisterCommandHandlerTests
+public class RegisterCommandExecutorTests
 {
     // Mock user repository để kiểm soát kiểm tra trùng email/username và thao tác add user.
     private readonly Mock<IUserRepository> _mockUserRepository;
     // Mock password hasher để xác nhận hash password trước khi lưu.
     private readonly Mock<IPasswordHasher> _mockPasswordHasher;
     // Handler cần kiểm thử.
-    private readonly RegisterCommandHandler _handler;
+    private readonly RegisterCommandExecutor _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho RegisterCommandHandler.
+    /// Khởi tạo fixture cho RegisterCommandExecutor.
     /// Luồng dùng mock để test riêng logic đăng ký không phụ thuộc persistence thật.
     /// </summary>
-    public RegisterCommandHandlerTests()
+    public RegisterCommandExecutorTests()
     {
         _mockUserRepository = new Mock<IUserRepository>();
         _mockPasswordHasher = new Mock<IPasswordHasher>();
-        _handler = new RegisterCommandHandler(_mockUserRepository.Object, _mockPasswordHasher.Object);
+        _handler = new RegisterCommandExecutor(_mockUserRepository.Object, _mockPasswordHasher.Object);
     }
 
     /// <summary>

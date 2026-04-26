@@ -5,7 +5,7 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Admin.Commands.ResolveDispute;
 
-public partial class ResolveDisputeCommandHandler
+public partial class ResolveDisputeCommandExecutor
 {
     /// <summary>
     /// Thực thi settlement dispute cho question item theo action đã chuẩn hóa.

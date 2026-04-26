@@ -7,7 +7,7 @@ using TarotNow.Application.Interfaces;
 namespace TarotNow.Application.Features.Chat.Commands.SendMessage;
 
 // Handler điều phối toàn bộ luồng gửi tin nhắn trong conversation.
-public partial class SendMessageCommandHandler : IRequestHandler<SendMessageCommand, ChatMessageDto>
+public partial class SendMessageCommandExecutor : ICommandExecutionExecutor<SendMessageCommand, ChatMessageDto>
 {
     private readonly IConversationRepository _conversationRepo;
     private readonly IChatMessageRepository _messageRepo;
@@ -23,7 +23,7 @@ public partial class SendMessageCommandHandler : IRequestHandler<SendMessageComm
     /// Khởi tạo handler gửi tin nhắn.
     /// Luồng xử lý: nhận các repository/service cần cho validate, media processing, freeze tài chính và push số dư.
     /// </summary>
-    public SendMessageCommandHandler(
+    public SendMessageCommandExecutor(
         IConversationRepository conversationRepo,
         IChatMessageRepository messageRepo,
         IChatFinanceRepository financeRepo,

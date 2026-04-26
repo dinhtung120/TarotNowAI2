@@ -22,7 +22,7 @@ public class ResolvePostReportCommand : IRequest<bool>
 }
 
 // Handler xử lý resolve report community post.
-public class ResolvePostReportCommandHandler : IRequestHandler<ResolvePostReportCommand, bool>
+public class ResolvePostReportCommandExecutor : ICommandExecutionExecutor<ResolvePostReportCommand, bool>
 {
     private readonly ICommunityPostRepository _postRepository;
     private readonly IReportRepository _reportRepository;
@@ -31,7 +31,7 @@ public class ResolvePostReportCommandHandler : IRequestHandler<ResolvePostReport
     /// Khởi tạo handler resolve post report.
     /// Luồng xử lý: nhận repository post/report để xác thực report và thực thi hành động moderation.
     /// </summary>
-    public ResolvePostReportCommandHandler(
+    public ResolvePostReportCommandExecutor(
         ICommunityPostRepository postRepository,
         IReportRepository reportRepository)
     {

@@ -7,7 +7,7 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Community.Commands;
 
-public class ConfirmCommunityImageCommandHandlerTests
+public class ConfirmCommunityImageCommandExecutorTests
 {
     private readonly Mock<IUploadSessionRepository> _uploadSessionRepositoryMock = new();
     private readonly Mock<ICommunityMediaAssetRepository> _communityMediaAssetRepositoryMock = new();
@@ -41,7 +41,7 @@ public class ConfirmCommunityImageCommandHandlerTests
             .Callback<CommunityMediaAssetRecord, CancellationToken>((asset, _) => capturedAsset = asset)
             .Returns(Task.CompletedTask);
 
-        var handler = new ConfirmCommunityImageCommandHandler(
+        var handler = new ConfirmCommunityImageCommandExecutor(
             _uploadSessionRepositoryMock.Object,
             _communityMediaAssetRepositoryMock.Object,
             _r2UploadServiceMock.Object);
@@ -83,7 +83,7 @@ public class ConfirmCommunityImageCommandHandlerTests
                 ExpiresAtUtc = DateTime.UtcNow.AddMinutes(5),
             });
 
-        var handler = new ConfirmCommunityImageCommandHandler(
+        var handler = new ConfirmCommunityImageCommandExecutor(
             _uploadSessionRepositoryMock.Object,
             _communityMediaAssetRepositoryMock.Object,
             _r2UploadServiceMock.Object);

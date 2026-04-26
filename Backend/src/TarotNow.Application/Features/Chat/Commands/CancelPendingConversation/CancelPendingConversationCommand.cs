@@ -17,7 +17,7 @@ public class CancelPendingConversationCommand : IRequest<ConversationActionResul
 }
 
 // Handler xử lý hủy conversation pending.
-public class CancelPendingConversationCommandHandler : IRequestHandler<CancelPendingConversationCommand, ConversationActionResult>
+public class CancelPendingConversationCommandExecutor : ICommandExecutionExecutor<CancelPendingConversationCommand, ConversationActionResult>
 {
     private readonly IConversationRepository _conversationRepository;
     private readonly IDomainEventPublisher _domainEventPublisher;
@@ -26,7 +26,7 @@ public class CancelPendingConversationCommandHandler : IRequestHandler<CancelPen
     /// Khởi tạo handler cancel pending conversation.
     /// Luồng xử lý: nhận conversation repository và domain event publisher để cập nhật trạng thái + phát event.
     /// </summary>
-    public CancelPendingConversationCommandHandler(
+    public CancelPendingConversationCommandExecutor(
         IConversationRepository conversationRepository,
         IDomainEventPublisher domainEventPublisher)
     {

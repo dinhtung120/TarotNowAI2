@@ -7,7 +7,7 @@ using TarotNow.Domain.Enums;
 namespace TarotNow.Application.Features.Admin.Commands.CreateUser;
 
 // Handler tạo tài khoản mới và gán vai trò ban đầu theo command từ admin.
-public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Guid>
+public class CreateUserCommandExecutor : ICommandExecutionExecutor<CreateUserCommand, Guid>
 {
     // DOB mặc định cho tài khoản tạo thủ công khi admin không nhập ngày sinh.
     private static readonly DateTime DefaultDateOfBirth = new(1990, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -19,7 +19,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, Guid>
     /// Khởi tạo handler tạo user.
     /// Luồng xử lý: nhận repository user để kiểm tra trùng/lưu mới và hasher để mã hóa mật khẩu.
     /// </summary>
-    public CreateUserCommandHandler(IUserRepository userRepository, IPasswordHasher passwordHasher)
+    public CreateUserCommandExecutor(IUserRepository userRepository, IPasswordHasher passwordHasher)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
