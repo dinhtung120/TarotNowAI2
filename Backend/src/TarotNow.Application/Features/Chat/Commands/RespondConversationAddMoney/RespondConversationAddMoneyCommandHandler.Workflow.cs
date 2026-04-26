@@ -40,26 +40,6 @@ public partial class RespondConversationAddMoneyCommandHandler
     }
 
     /// <summary>
-    /// Kiểm tra OfferMessageId bắt buộc và parse ReaderId từ conversation.
-    /// Luồng xử lý: validate dữ liệu bắt buộc, parse reader id để dùng cho lệnh freeze.
-    /// </summary>
-    private static Guid ValidateAndParseReaderId(ConversationDto conversation, RespondConversationAddMoneyCommand request)
-    {
-        if (string.IsNullOrWhiteSpace(request.OfferMessageId))
-        {
-            // OfferMessageId là khóa chính để ràng buộc phản hồi vào đúng đề nghị.
-            throw new BadRequestException("OfferMessageId là bắt buộc.");
-        }
-        if (Guid.TryParse(conversation.ReaderId, out var readerId) == false)
-        {
-            // Edge case dữ liệu conversation lỗi định dạng reader id.
-            throw new BadRequestException("ReaderId không hợp lệ.");
-        }
-
-        return readerId;
-    }
-
-    /// <summary>
     /// Xử lý nhánh từ chối đề nghị cộng tiền.
     /// Luồng xử lý: dựng payload reject từ offer gốc, gửi payment reject message, rồi trả kết quả rejected.
     /// </summary>
@@ -95,7 +75,6 @@ public partial class RespondConversationAddMoneyCommandHandler
     private async Task<Guid> FreezeOfferAsync(
         RespondConversationAddMoneyCommand request,
         ChatMessageDto offer,
-        Guid readerId,
         CancellationToken cancellationToken)
     {
         var amountDiamond = offer.PaymentPayload?.AmountDiamond ?? 0;
@@ -121,63 +100,4 @@ public partial class RespondConversationAddMoneyCommandHandler
             IdempotencyKey = idempotencyKey
         }, cancellationToken);
     }
-
-    /// <summary>
-    /// Compensation khi đã freeze tiền nhưng gửi accept message thất bại.
-    /// </summary>
-    private async Task CompensateOfferFreezeAsync(
-        RespondConversationAddMoneyCommand request,
-        Guid itemId,
-        CancellationToken cancellationToken)
-    {
-        await _transactionCoordinator.ExecuteAsync(async transactionCt =>
-        {
-            var item = await _financeRepository.GetItemForUpdateAsync(itemId, transactionCt);
-            if (item == null || item.Status == QuestionItemStatus.Refunded)
-            {
-                return;
-            }
-
-            var refundAmount = item.AmountDiamond;
-            await _walletRepository.RefundAsync(
-                request.UserId,
-                refundAmount,
-                referenceSource: "offer_accept_compensation",
-                referenceId: item.Id.ToString(),
-                description: $"Compensate add-money freeze {refundAmount}💎",
-                idempotencyKey: $"compensate_offer_accept_{item.Id}",
-                cancellationToken: transactionCt);
-
-            item.Status = QuestionItemStatus.Refunded;
-            item.RefundedAt = DateTime.UtcNow;
-            item.UpdatedAt = item.RefundedAt;
-            await _financeRepository.UpdateItemAsync(item, transactionCt);
-
-            var session = await _financeRepository.GetSessionForUpdateAsync(item.FinanceSessionId, transactionCt);
-            if (session != null)
-            {
-                session.TotalFrozen = Math.Max(0, session.TotalFrozen - refundAmount);
-                if (session.TotalFrozen == 0 && session.Status == ChatFinanceSessionStatus.Active)
-                {
-                    session.Status = ChatFinanceSessionStatus.Refunded;
-                }
-
-                session.UpdatedAt = DateTime.UtcNow;
-                await _financeRepository.UpdateSessionAsync(session, transactionCt);
-            }
-
-            await _financeRepository.SaveChangesAsync(transactionCt);
-            await _domainEventPublisher.PublishAsync(
-                new Domain.Events.MoneyChangedDomainEvent
-                {
-                    UserId = request.UserId,
-                    Currency = CurrencyType.Diamond,
-                    ChangeType = TransactionType.EscrowRefund,
-                    DeltaAmount = refundAmount,
-                    ReferenceId = item.Id.ToString()
-                },
-                transactionCt);
-        }, cancellationToken);
-    }
-
 }

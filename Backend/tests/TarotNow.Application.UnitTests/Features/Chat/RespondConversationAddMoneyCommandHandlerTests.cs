@@ -1,11 +1,11 @@
+using System.Security.Cryptography;
+using System.Text;
 using MediatR;
 using Moq;
 using TarotNow.Application.Common;
 using TarotNow.Application.Features.Chat.Commands.RespondConversationAddMoney;
-using TarotNow.Application.Features.Chat.Commands.SendMessage;
 using TarotNow.Application.Features.Escrow.Commands.AddQuestion;
 using TarotNow.Application.Interfaces;
-using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 using TarotNow.Domain.Events;
 
@@ -14,24 +14,16 @@ namespace TarotNow.Application.UnitTests.Features.Chat;
 public class RespondConversationAddMoneyCommandHandlerTests
 {
     [Fact]
-    public async Task Handle_WhenAcceptMessageFails_ShouldCompensateFrozenOffer()
+    public async Task Handle_WhenAccept_ShouldPublishDurableSyncEventAndReturnReservedMessageId()
     {
         var requesterId = Guid.NewGuid();
         var readerId = Guid.NewGuid();
         var itemId = Guid.NewGuid();
-        var sessionId = Guid.NewGuid();
 
         var conversationRepo = new Mock<IConversationRepository>();
         var chatMessageRepo = new Mock<IChatMessageRepository>();
-        var financeRepo = new Mock<IChatFinanceRepository>();
-        var walletRepo = new Mock<IWalletRepository>();
-        var transactionCoordinator = new Mock<ITransactionCoordinator>();
         var mediator = new Mock<IMediator>();
         var domainEventPublisher = new Mock<IDomainEventPublisher>();
-
-        transactionCoordinator
-            .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
-            .Returns((Func<CancellationToken, Task> action, CancellationToken ct) => action(ct));
 
         var conversation = new ConversationDto
         {
@@ -67,40 +59,10 @@ public class RespondConversationAddMoneyCommandHandlerTests
         mediator
             .Setup(x => x.Send(It.IsAny<AddQuestionCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(itemId);
-        mediator
-            .Setup(x => x.Send(It.IsAny<SendMessageCommand>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("mongo write failed"));
-
-        var frozenItem = new ChatQuestionItem
-        {
-            Id = itemId,
-            FinanceSessionId = sessionId,
-            AmountDiamond = 25,
-            PayerId = requesterId,
-            ReceiverId = readerId,
-            Status = QuestionItemStatus.Accepted
-        };
-        financeRepo
-            .Setup(x => x.GetItemForUpdateAsync(itemId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(frozenItem);
-        financeRepo
-            .Setup(x => x.GetSessionForUpdateAsync(sessionId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ChatFinanceSession
-            {
-                Id = sessionId,
-                ConversationRef = conversation.Id,
-                UserId = requesterId,
-                ReaderId = readerId,
-                Status = ChatFinanceSessionStatus.Active,
-                TotalFrozen = 25
-            });
 
         var handler = new RespondConversationAddMoneyCommandHandler(
             conversationRepo.Object,
             chatMessageRepo.Object,
-            financeRepo.Object,
-            walletRepo.Object,
-            transactionCoordinator.Object,
             mediator.Object,
             domainEventPublisher.Object);
 
@@ -112,38 +74,33 @@ public class RespondConversationAddMoneyCommandHandlerTests
             OfferMessageId = offer.Id
         };
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => handler.Handle(command, CancellationToken.None));
+        var result = await handler.Handle(command, CancellationToken.None);
 
-        walletRepo.Verify(
-            x => x.RefundAsync(
-                requesterId,
-                25,
-                "offer_accept_compensation",
-                itemId.ToString(),
-                It.IsAny<string>(),
-                null,
-                $"compensate_offer_accept_{itemId}",
-                It.IsAny<CancellationToken>()),
-            Times.Once);
-        financeRepo.Verify(x => x.UpdateItemAsync(It.Is<ChatQuestionItem>(item =>
-            item.Id == itemId
-            && item.Status == QuestionItemStatus.Refunded
-            && item.RefundedAt != null), It.IsAny<CancellationToken>()), Times.Once);
-        financeRepo.Verify(x => x.UpdateSessionAsync(It.Is<ChatFinanceSession>(session =>
-            session.Id == sessionId
-            && session.TotalFrozen == 0
-            && session.Status == ChatFinanceSessionStatus.Refunded), It.IsAny<CancellationToken>()), Times.Once);
-        financeRepo.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        Assert.True(result.Accepted);
+        Assert.Equal(itemId, result.ItemId);
+        var expectedMessageId = ComputeDeterministicMessageId(conversation.Id, offer.Id);
+        Assert.Equal(expectedMessageId, result.MessageId);
+
+        mediator.Verify(x => x.Send(It.IsAny<AddQuestionCommand>(), It.IsAny<CancellationToken>()), Times.Once);
+        mediator.VerifyNoOtherCalls();
+
         domainEventPublisher.Verify(x => x.PublishAsync(
-            It.Is<MoneyChangedDomainEvent>(eventData =>
-                eventData.UserId == requesterId
-                && eventData.Currency == CurrencyType.Diamond
-                && eventData.ChangeType == TransactionType.EscrowRefund
-                && eventData.DeltaAmount == 25
-                && eventData.ReferenceId == itemId.ToString()),
+            It.Is<ConversationAddMoneyAcceptedSyncRequestedDomainEvent>(eventData =>
+                eventData.ConversationId == conversation.Id
+                && eventData.SenderUserId == requesterId.ToString()
+                && eventData.OfferMessageId == offer.Id
+                && eventData.ProposalId == offer.PaymentPayload!.ProposalId
+                && eventData.ResponseMessageId == result.MessageId),
             It.IsAny<CancellationToken>()), Times.Once);
-        domainEventPublisher.Verify(x => x.PublishAsync(
-            It.IsAny<ConversationUpdatedDomainEvent>(),
-            It.IsAny<CancellationToken>()), Times.Never);
+        domainEventPublisher.VerifyNoOtherCalls();
+    }
+
+    private static string ComputeDeterministicMessageId(string conversationId, string offerMessageId)
+    {
+        var key = $"{conversationId}:{offerMessageId}";
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(key));
+        Span<byte> bytes = stackalloc byte[12];
+        hash.AsSpan(0, 12).CopyTo(bytes);
+        return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 }

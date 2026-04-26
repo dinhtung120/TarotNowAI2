@@ -186,9 +186,8 @@ public sealed class EventDrivenArchitectureRulesTests
     [Fact]
     public void CommandHandlers_DependencyDebtBaseline_ShouldNotIncrease()
     {
-        const int currentBaselineCount = 55;
-
         var backendRoot = FindBackendRoot();
+        var lockedBaseline = LoadDependencyDebtBaselineEntries(backendRoot);
         var featuresRoot = Path.Combine(backendRoot, "src", "TarotNow.Application", "Features");
         var forbidden = new Regex(@"\bI\w*(Repository|Service|Provider)\b", RegexOptions.Compiled);
 
@@ -206,9 +205,52 @@ public sealed class EventDrivenArchitectureRulesTests
             .OrderBy(path => path, StringComparer.Ordinal)
             .ToArray();
 
-        violatingFiles.Length.Should().BeLessThanOrEqualTo(
-            currentBaselineCount,
-            "we are migrating command handlers to event-only architecture incrementally; dependency debt must never grow beyond the locked baseline.");
+        var addedViolations = violatingFiles
+            .Except(lockedBaseline, StringComparer.Ordinal)
+            .ToArray();
+        var removedViolations = lockedBaseline
+            .Except(violatingFiles, StringComparer.Ordinal)
+            .ToArray();
+        if (addedViolations.Length == 0 && removedViolations.Length == 0)
+        {
+            return;
+        }
+
+        var addedText = addedViolations.Length == 0
+            ? "(none)"
+            : string.Join(Environment.NewLine, addedViolations.Select(path => $"- {path}"));
+        var removedText = removedViolations.Length == 0
+            ? "(none)"
+            : string.Join(Environment.NewLine, removedViolations.Select(path => $"- {path}"));
+        throw new Xunit.Sdk.XunitException(
+            $"Command handler dependency debt baseline drift detected.{Environment.NewLine}" +
+            $"Added violations:{Environment.NewLine}{addedText}{Environment.NewLine}" +
+            $"Removed violations:{Environment.NewLine}{removedText}{Environment.NewLine}" +
+            "Update the baseline file only after intentionally triaging and approving the architectural debt change.");
+    }
+
+    private static IReadOnlyList<string> LoadDependencyDebtBaselineEntries(string backendRoot)
+    {
+        var baselinePath = Path.Combine(
+            backendRoot,
+            "tests",
+            "TarotNow.ArchitectureTests",
+            "Baselines",
+            "command-handler-dependency-debt-baseline.txt");
+        if (!File.Exists(baselinePath))
+        {
+            throw new FileNotFoundException(
+                $"Missing dependency debt baseline file: {baselinePath}");
+        }
+
+        return File
+            .ReadAllLines(baselinePath)
+            .Select(line => line.Trim())
+            .Where(line => string.IsNullOrWhiteSpace(line) == false)
+            .Where(line => line.StartsWith('#') == false)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
     }
 
     private static IReadOnlyList<string> CollectDisallowedDependencyMentions(

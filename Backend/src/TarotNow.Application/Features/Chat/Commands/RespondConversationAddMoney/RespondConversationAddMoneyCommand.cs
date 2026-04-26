@@ -1,6 +1,9 @@
+using System.Security.Cryptography;
+using System.Text;
 using MediatR;
 using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Chat.Commands.RespondConversationAddMoney;
 
@@ -29,9 +32,6 @@ public partial class RespondConversationAddMoneyCommandHandler
 {
     private readonly IConversationRepository _conversationRepository;
     private readonly IChatMessageRepository _chatMessageRepository;
-    private readonly IChatFinanceRepository _financeRepository;
-    private readonly IWalletRepository _walletRepository;
-    private readonly ITransactionCoordinator _transactionCoordinator;
     private readonly IMediator _mediator;
     private readonly IDomainEventPublisher _domainEventPublisher;
 
@@ -42,17 +42,11 @@ public partial class RespondConversationAddMoneyCommandHandler
     public RespondConversationAddMoneyCommandHandler(
         IConversationRepository conversationRepository,
         IChatMessageRepository chatMessageRepository,
-        IChatFinanceRepository financeRepository,
-        IWalletRepository walletRepository,
-        ITransactionCoordinator transactionCoordinator,
         IMediator mediator,
         IDomainEventPublisher domainEventPublisher)
     {
         _conversationRepository = conversationRepository;
         _chatMessageRepository = chatMessageRepository;
-        _financeRepository = financeRepository;
-        _walletRepository = walletRepository;
-        _transactionCoordinator = transactionCoordinator;
         _mediator = mediator;
         _domainEventPublisher = domainEventPublisher;
     }
@@ -77,30 +71,33 @@ public partial class RespondConversationAddMoneyCommandHandler
             return await RejectOfferAsync(request, offer, cancellationToken);
         }
 
-        var readerId = ValidateAndParseReaderId(conversation, request);
-        // Nhánh chấp nhận: freeze thêm tiền theo payload offer trước khi gửi message xác nhận.
-        var itemId = await FreezeOfferAsync(request, offer, readerId, cancellationToken);
-        ChatMessageDto acceptMessage;
-        try
-        {
-            acceptMessage = await SendAcceptMessageAsync(request, offer, cancellationToken);
-        }
-        catch
-        {
-            await CompensateOfferFreezeAsync(request, itemId, cancellationToken);
-            throw;
-        }
-
-        // Publish để UI hai phía nhận trạng thái offer đã được phản hồi.
+        // Nhánh chấp nhận: freeze thêm tiền theo payload offer trước khi enqueue sync message accept.
+        var itemId = await FreezeOfferAsync(request, offer, cancellationToken);
+        var responseMessageId = GenerateDeterministicMongoObjectIdHex(request.ConversationId, offer.Id);
         await _domainEventPublisher.PublishAsync(
-            new Domain.Events.ConversationUpdatedDomainEvent(request.ConversationId, "add_money_responded", DateTime.UtcNow),
+            new ConversationAddMoneyAcceptedSyncRequestedDomainEvent(
+                request.ConversationId,
+                request.UserId.ToString(),
+                offer.Id,
+                offer.PaymentPayload?.ProposalId,
+                responseMessageId,
+                DateTime.UtcNow),
             cancellationToken);
 
         return new ConversationAddMoneyRespondResult
         {
             Accepted = true,
             ItemId = itemId,
-            MessageId = acceptMessage.Id
+            MessageId = responseMessageId
         };
+    }
+
+    private static string GenerateDeterministicMongoObjectIdHex(string conversationId, string offerMessageId)
+    {
+        var key = $"{conversationId}:{offerMessageId}";
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(key));
+        Span<byte> bytes = stackalloc byte[12];
+        hash.AsSpan(0, 12).CopyTo(bytes);
+        return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 }

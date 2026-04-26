@@ -1,32 +1,12 @@
+using System.Text.Json;
 using TarotNow.Application.Common;
 using TarotNow.Application.Exceptions;
-using TarotNow.Application.Features.Chat.Commands.SendMessage;
 using TarotNow.Domain.Enums;
-using System.Text.Json;
 
 namespace TarotNow.Application.Features.Chat.Commands.RespondConversationAddMoney;
 
 public partial class RespondConversationAddMoneyCommandHandler
 {
-    /// <summary>
-    /// Gửi message xác nhận chấp nhận đề nghị cộng tiền.
-    /// Luồng xử lý: dựng payload accept từ offer gốc và gửi SendMessageCommand kiểu PaymentAccept.
-    /// </summary>
-    private async Task<ChatMessageDto> SendAcceptMessageAsync(
-        RespondConversationAddMoneyCommand request,
-        ChatMessageDto offer,
-        CancellationToken cancellationToken)
-    {
-        var content = BuildOfferResponseContent(offer.Id, offer.PaymentPayload?.ProposalId, note: null);
-        return await _mediator.Send(new SendMessageCommand
-        {
-            ConversationId = request.ConversationId,
-            SenderId = request.UserId,
-            Type = ChatMessageType.PaymentAccept,
-            Content = content
-        }, cancellationToken);
-    }
-
     /// <summary>
     /// Lấy offer message cần phản hồi và kiểm tra tính hợp lệ.
     /// Luồng xử lý: validate offer id bắt buộc, tải message, kiểm tra conversation/type/payload để đảm bảo phản hồi đúng offer.
@@ -104,7 +84,7 @@ public partial class RespondConversationAddMoneyCommandHandler
     /// Dựng JSON payload phản hồi offer để lưu trong chat message.
     /// Luồng xử lý: escape ký tự nháy cho note/proposalId rồi ghép JSON nhằm giữ payload hợp lệ khi parse downstream.
     /// </summary>
-    private static string BuildOfferResponseContent(
+    internal static string BuildOfferResponseContent(
         string offerMessageId,
         string? proposalId,
         string? note)
