@@ -16,13 +16,18 @@ public sealed class EventDrivenArchitectureRulesTests
     {
         var backendRoot = FindBackendRoot();
         var featuresRoot = Path.Combine(backendRoot, "src", "TarotNow.Application", "Features");
+        var allowedLegacyPaths = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "src/TarotNow.Application/Features/Reading/Commands/StreamReading/StreamReadingCommandHandler.cs"
+        };
         var forbiddenPatterns = new[]
         {
-            @"\bIEmailSender\b",
-            @"\bIGamificationPushService\b",
-            @"\bIChatPushService\b",
-            @"\bINotificationPushService\b",
-            @"\bIWalletPushService\b",
+            @"\bI\w*PushService\b",
+            @"\bI\w*Notification(?:Service|Sender|Publisher|Client)?\b",
+            @"\bI\w*Email(?:Sender|Service|Client)?\b",
+            @"\bI\w*Webhook(?:Client|Service|Provider)?\b",
+            @"\bI\w*RealtimeBridge(?:Source|Publisher|Client)?\b",
+            @"\bIAiProvider\b",
             @"\bIHubContext<"
         };
 
@@ -37,6 +42,7 @@ public sealed class EventDrivenArchitectureRulesTests
                        && regexes.Any(regex => regex.IsMatch(text));
             })
             .Select(path => ToBackendRelativePath(backendRoot, path))
+            .Where(path => !allowedLegacyPaths.Contains(path))
             .Distinct(StringComparer.Ordinal)
             .OrderBy(path => path, StringComparer.Ordinal)
             .ToArray();
@@ -144,52 +150,65 @@ public sealed class EventDrivenArchitectureRulesTests
     }
 
     /// <summary>
-    /// Xác nhận command handlers của module Reading chỉ publish domain event.
+    /// Xác nhận các command handlers đã migrate theo event-only không còn inject repository/service/provider.
     /// </summary>
     [Fact]
-    public void ReadingCommandHandlers_ShouldNotInjectBusinessSideEffectDependencies()
+    public void MigratedEventOnlyCommandHandlers_ShouldNotInjectRepositoryServiceProviderDependencies()
     {
         var backendRoot = FindBackendRoot();
-        var targetRoots = new[]
+        var migratedRoots = new[]
         {
-            Path.Combine(
-                backendRoot,
-                "src",
-                "TarotNow.Application",
-                "Features",
-                "Reading",
-                "Commands",
-                "InitSession"),
-            Path.Combine(
-                backendRoot,
-                "src",
-                "TarotNow.Application",
-                "Features",
-                "Reading",
-                "Commands",
-                "RevealSession")
+            Path.Combine(backendRoot, "src", "TarotNow.Application", "Features", "Community", "Commands", "CreatePost"),
+            Path.Combine(backendRoot, "src", "TarotNow.Application", "Features", "Community", "Commands", "AddComment"),
+            Path.Combine(backendRoot, "src", "TarotNow.Application", "Features", "Reading", "Commands", "InitSession"),
+            Path.Combine(backendRoot, "src", "TarotNow.Application", "Features", "Reading", "Commands", "RevealSession")
         };
-        var forbiddenPatterns = new[]
+        var forbidden = new Regex(@"\bI\w*(Repository|Service|Provider)\b", RegexOptions.Compiled);
+        var allowed = new HashSet<string>(StringComparer.Ordinal)
         {
-            @"\bIReadingSessionRepository\b",
-            @"\bIWalletRepository\b",
-            @"\bIUserRepository\b",
-            @"\bIUserCollectionRepository\b",
-            @"\bIReadingSessionOrchestrator\b",
-            @"\bIAiProvider\b",
-            @"\bIRngService\b"
+            "IInlineDomainEventDispatcher"
         };
 
-        var regexes = forbiddenPatterns.Select(pattern => new Regex(pattern, RegexOptions.Compiled)).ToArray();
-        var violations = targetRoots
+        var violations = migratedRoots
             .SelectMany(root => Directory.GetFiles(root, "*.cs", SearchOption.AllDirectories))
-            .Where(path => path.Contains("CommandHandler", StringComparison.Ordinal))
-            .Where(path => regexes.Any(regex => regex.IsMatch(File.ReadAllText(path))))
-            .Select(path => ToBackendRelativePath(backendRoot, path))
-            .OrderBy(path => path, StringComparer.Ordinal)
+            .SelectMany(path => CollectDisallowedDependencyMentions(path, forbidden, allowed)
+                .Select(match => $"{ToBackendRelativePath(backendRoot, path)} -> {match}"))
+            .OrderBy(item => item, StringComparer.Ordinal)
             .ToArray();
 
-        violations.Should().BeEmpty("Reading command handlers must only publish domain events and delegate side-effects to event handlers.");
+        violations.Should().BeEmpty(
+            "Migrated event-only command handlers must only dispatch domain events and must not inject repository/service/provider dependencies.");
+    }
+
+    private static IReadOnlyList<string> CollectDisallowedDependencyMentions(
+        string path,
+        Regex forbidden,
+        IReadOnlySet<string> allowedInterfaces)
+    {
+        var text = File.ReadAllText(path);
+        if (!text.Contains("CommandHandler", StringComparison.Ordinal))
+        {
+            return Array.Empty<string>();
+        }
+
+        var matches = forbidden.Matches(text);
+        if (matches.Count == 0)
+        {
+            return Array.Empty<string>();
+        }
+
+        var disallowed = new List<string>();
+        foreach (Match match in matches)
+        {
+            if (allowedInterfaces.Contains(match.Value))
+            {
+                continue;
+            }
+
+            disallowed.Add(match.Value);
+        }
+
+        return disallowed;
     }
 
     private static string FindBackendRoot()

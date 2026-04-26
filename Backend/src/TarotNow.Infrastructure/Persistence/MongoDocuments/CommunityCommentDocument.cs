@@ -1,5 +1,6 @@
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using TarotNow.Application.Common.MediaUpload;
 
 namespace TarotNow.Infrastructure.Persistence.MongoDocuments;
 
@@ -32,6 +33,15 @@ public class CommunityCommentDocument
     // Nội dung bình luận.
     [BsonElement("content")]
     public string Content { get; set; } = string.Empty;
+
+    // Trạng thái attach media của bình luận.
+    [BsonElement("media_attach_status")]
+    public string MediaAttachStatus { get; set; } = MediaUploadConstants.EntityMediaAttachStatusNone;
+
+    // Lỗi attach media gần nhất nếu có.
+    [BsonElement("media_attach_last_error")]
+    [BsonIgnoreIfNull]
+    public string? MediaAttachLastError { get; set; }
 
     // Soft-delete flag.
     [BsonElement("is_deleted")]

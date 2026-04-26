@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Events;
 
@@ -51,24 +50,29 @@ public partial class CompleteAiStreamCommandHandler
     }
 
     /// <summary>
-    /// Ghi telemetry completion theo cơ chế best-effort.
-    /// Luồng xử lý: gửi log request sang provider log; nếu lỗi thì nuốt ngoại lệ để không ảnh hưởng luồng nghiệp vụ chính.
+    /// Publish domain event telemetry completion theo cơ chế best-effort.
+    /// Luồng xử lý: phát event telemetry ra outbox; nếu publish lỗi thì chỉ log warning để không ảnh hưởng luồng nghiệp vụ chính.
     /// </summary>
-    private async Task LogTelemetrySafeAsync(CompleteAiStreamCommand request, CompletionContext context)
+    private async Task PublishTelemetryEventSafeAsync(
+        CompleteAiStreamCommand request,
+        CompletionContext context,
+        CancellationToken cancellationToken)
     {
         try
         {
-            await _aiProvider.LogRequestAsync(new AiProviderRequestLog
-            {
-                UserId = request.UserId,
-                SessionId = context.SessionRef,
-                RequestId = context.RequestId,
-                InputTokens = 0,
-                OutputTokens = request.OutputTokens,
-                LatencyMs = request.LatencyMs,
-                Status = context.TelemetryStatus,
-                ErrorCode = context.TelemetryErrorCode
-            });
+            await _domainEventPublisher.PublishAsync(
+                new AiStreamCompletionTelemetryRequestedDomainEvent
+                {
+                    UserId = request.UserId,
+                    AiRequestId = request.AiRequestId,
+                    SessionId = context.SessionRef,
+                    RequestId = context.RequestId,
+                    OutputTokens = request.OutputTokens,
+                    LatencyMs = request.LatencyMs,
+                    Status = context.TelemetryStatus,
+                    ErrorCode = context.TelemetryErrorCode
+                },
+                cancellationToken);
         }
         catch (Exception exception)
         {

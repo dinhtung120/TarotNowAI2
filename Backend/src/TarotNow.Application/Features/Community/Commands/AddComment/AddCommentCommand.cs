@@ -1,11 +1,9 @@
 using MediatR;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using TarotNow.Application.Common;
+using TarotNow.Application.Common.MediaUpload;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
-using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Community.Commands.AddComment;
 
@@ -28,30 +26,20 @@ public class AddCommentCommand : IRequest<CommunityCommentDto>
 // Handler xử lý thêm bình luận cho community post.
 public class AddCommentCommandHandler : IRequestHandler<AddCommentCommand, CommunityCommentDto>
 {
-    private readonly ICommunityPostRepository _postRepo;
-    private readonly ICommunityCommentRepository _commentRepo;
-    private readonly IUserRepository _userRepo;
-    private readonly ICommunityMediaAttachmentService _communityMediaAttachmentService;
+    private readonly IInlineDomainEventDispatcher _inlineDomainEventDispatcher;
 
     /// <summary>
     /// Khởi tạo handler add comment.
-    /// Luồng xử lý: nhận repository bài viết, bình luận và user để kiểm tra quyền + tạo comment đầy đủ thông tin tác giả.
+    /// Luồng xử lý: command chỉ publish domain event theo rule event-only.
     /// </summary>
-    public AddCommentCommandHandler(
-        ICommunityPostRepository postRepo,
-        ICommunityCommentRepository commentRepo,
-        IUserRepository userRepo,
-        ICommunityMediaAttachmentService communityMediaAttachmentService)
+    public AddCommentCommandHandler(IInlineDomainEventDispatcher inlineDomainEventDispatcher)
     {
-        _postRepo = postRepo;
-        _commentRepo = commentRepo;
-        _userRepo = userRepo;
-        _communityMediaAttachmentService = communityMediaAttachmentService;
+        _inlineDomainEventDispatcher = inlineDomainEventDispatcher;
     }
 
     /// <summary>
     /// Xử lý command thêm bình luận.
-    /// Luồng xử lý: validate nội dung, kiểm tra bài viết tồn tại và quyền truy cập, tải thông tin user, tạo comment mới rồi tăng comments count của post.
+    /// Luồng xử lý: validate input, publish event request, rồi dựng response từ payload đã được handler xử lý.
     /// </summary>
     public async Task<CommunityCommentDto> Handle(AddCommentCommand request, CancellationToken cancellationToken)
     {
@@ -67,41 +55,33 @@ public class AddCommentCommandHandler : IRequestHandler<AddCommentCommand, Commu
             throw new ValidationException("Bình luận không được vượt quá 1000 ký tự.");
         }
 
-        var post = await _postRepo.GetByIdAsync(request.PostId, cancellationToken)
-            ?? throw new NotFoundException($"Không tìm thấy bài viết ID {request.PostId}.");
-
-        if (post.Visibility == PostVisibility.Private
-            && post.AuthorId != request.AuthorId.ToString())
-        {
-            // Bài viết private chỉ cho chủ bài viết tương tác bình luận.
-            throw new ForbiddenException("Bạn không có quyền bình luận bài viết riêng tư này.");
-        }
-
-        var user = await _userRepo.GetByIdAsync(request.AuthorId)
-            ?? throw new NotFoundException("Không tìm thấy người dùng.");
-
-        var commentDto = new CommunityCommentDto
+        var domainEvent = new CommunityCommentAddRequestedDomainEvent
         {
             PostId = request.PostId,
-            AuthorId = user.Id.ToString(),
-            AuthorDisplayName = user.DisplayName,
-            AuthorAvatarUrl = user.AvatarUrl,
-            Content = request.Content,
-            CreatedAt = DateTime.UtcNow
+            AuthorId = request.AuthorId,
+            Content = request.Content.Trim(),
+            ContextDraftId = string.IsNullOrWhiteSpace(request.ContextDraftId) ? null : request.ContextDraftId.Trim()
         };
 
-        var createdComment = await _commentRepo.AddCommentAsync(commentDto, cancellationToken);
+        await _inlineDomainEventDispatcher.PublishAsync(domainEvent, cancellationToken);
+        if (string.IsNullOrWhiteSpace(domainEvent.CreatedCommentId))
+        {
+            throw new BadRequestException("Không thể tạo bình luận.");
+        }
 
-        // Cập nhật bộ đếm bình luận sau khi tạo comment thành công.
-        await _postRepo.IncrementCommentsCountAsync(request.PostId, 1, cancellationToken);
-        await _communityMediaAttachmentService.AttachForNewEntityAsync(
-            request.AuthorId,
-            "comment",
-            request.ContextDraftId,
-            createdComment.Id,
-            createdComment.Content,
-            cancellationToken);
-
-        return createdComment;
+        return new CommunityCommentDto
+        {
+            Id = domainEvent.CreatedCommentId,
+            PostId = domainEvent.PostId,
+            AuthorId = request.AuthorId.ToString(),
+            AuthorDisplayName = domainEvent.AuthorDisplayName,
+            AuthorAvatarUrl = domainEvent.AuthorAvatarUrl,
+            Content = domainEvent.Content,
+            CreatedAt = domainEvent.CreatedAtUtc,
+            MediaAttachStatus = string.IsNullOrWhiteSpace(domainEvent.MediaAttachStatus)
+                ? MediaUploadConstants.EntityMediaAttachStatusNone
+                : domainEvent.MediaAttachStatus,
+            MediaAttachLastError = null
+        };
     }
 }

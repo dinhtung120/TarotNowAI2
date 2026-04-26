@@ -1,10 +1,10 @@
 
 
 using MediatR;
-using AutoMapper;
 using TarotNow.Application.Common;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Community;
+using TarotNow.Application.Features.Community.Mappings;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Enums;
 
@@ -25,20 +25,17 @@ public class GetPostDetailQueryHandler : IRequestHandler<GetPostDetailQuery, Com
 {
     private readonly ICommunityPostRepository _postRepo;
     private readonly ICommunityReactionRepository _reactionRepo;
-    private readonly IMapper _mapper;
 
     /// <summary>
     /// Khởi tạo handler get post detail.
-    /// Luồng xử lý: nhận repository post/reaction và mapper để trả dữ liệu bài viết đã enrich reaction của viewer.
+    /// Luồng xử lý: nhận repository post/reaction để trả dữ liệu bài viết đã enrich reaction của viewer.
     /// </summary>
     public GetPostDetailQueryHandler(
         ICommunityPostRepository postRepo,
-        ICommunityReactionRepository reactionRepo,
-        IMapper mapper)
+        ICommunityReactionRepository reactionRepo)
     {
         _postRepo = postRepo;
         _reactionRepo = reactionRepo;
-        _mapper = mapper;
     }
 
     /// <summary>
@@ -63,7 +60,7 @@ public class GetPostDetailQueryHandler : IRequestHandler<GetPostDetailQuery, Com
 
         var viewerReaction = await _reactionRepo.GetAsync(request.PostId, viewerId, cancellationToken);
 
-        var mapped = _mapper.Map<CommunityPostFeedItemDto>(post);
+        var mapped = CommunityPostFeedItemMapper.Map(post);
         mapped.ViewerReaction = viewerReaction?.Type;
         return mapped;
     }

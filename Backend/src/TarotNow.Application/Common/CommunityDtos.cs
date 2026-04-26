@@ -38,6 +38,12 @@ public class CommunityPostDto
 
     // Thời điểm cập nhật bài đăng gần nhất.
     public DateTime? UpdatedAt { get; set; }
+
+    // Trạng thái attach media của bài viết (`none/pending/completed/failed`).
+    public string MediaAttachStatus { get; set; } = MediaUpload.MediaUploadConstants.EntityMediaAttachStatusNone;
+
+    // Lỗi attach media gần nhất nếu có.
+    public string? MediaAttachLastError { get; set; }
 }
 
 // DTO item feed cho người xem hiện tại, kế thừa thông tin bài đăng cơ bản.
@@ -89,4 +95,10 @@ public class CommunityCommentDto
 
     // Thời điểm tạo bình luận.
     public DateTime CreatedAt { get; set; }
+
+    // Trạng thái attach media của bình luận (`none/pending/completed/failed`).
+    public string MediaAttachStatus { get; set; } = MediaUpload.MediaUploadConstants.EntityMediaAttachStatusNone;
+
+    // Lỗi attach media gần nhất nếu có.
+    public string? MediaAttachLastError { get; set; }
 }

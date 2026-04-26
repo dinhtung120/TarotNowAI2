@@ -12,7 +12,6 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
     private readonly IAiRequestRepository _aiRequestRepo;
     private readonly IWalletRepository _walletRepo;
     private readonly ITransactionCoordinator _transactionCoordinator;
-    private readonly IAiProvider _aiProvider;
     private readonly IReadingSessionRepository _readingRepo;
     private readonly IDomainEventPublisher _domainEventPublisher;
     private readonly ILogger<CompleteAiStreamCommandHandler> _logger;
@@ -25,7 +24,6 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
         IAiRequestRepository aiRequestRepo,
         IWalletRepository walletRepo,
         ITransactionCoordinator transactionCoordinator,
-        IAiProvider aiProvider,
         IReadingSessionRepository readingRepo,
         IDomainEventPublisher domainEventPublisher,
         ILogger<CompleteAiStreamCommandHandler> logger)
@@ -33,7 +31,6 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
         _aiRequestRepo = aiRequestRepo;
         _walletRepo = walletRepo;
         _transactionCoordinator = transactionCoordinator;
-        _aiProvider = aiProvider;
         _readingRepo = readingRepo;
         _domainEventPublisher = domainEventPublisher;
         _logger = logger;
@@ -74,7 +71,7 @@ public partial class CompleteAiStreamCommandHandler : IRequestHandler<CompleteAi
             // Chỉ publish event hoàn tất khi stream completed để handler hậu xử lý streak/gamification chạy đúng ngữ cảnh.
         }
 
-        await LogTelemetrySafeAsync(request, context);
+        await PublishTelemetryEventSafeAsync(request, context, cancellationToken);
         // Ghi telemetry sau completion để quan sát vận hành; lỗi telemetry không làm fail nghiệp vụ chính.
 
         return true;

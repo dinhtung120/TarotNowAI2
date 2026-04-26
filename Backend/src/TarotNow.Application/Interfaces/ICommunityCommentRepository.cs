@@ -28,4 +28,14 @@ public interface ICommunityCommentRepository
     /// Luồng xử lý: đánh dấu deleted theo commentId và deletedBy, trả true khi cập nhật thành công.
     /// </summary>
     Task<bool> SoftDeleteAsync(string commentId, string deletedBy, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Cập nhật trạng thái attach media của bình luận.
+    /// Luồng xử lý: set trạng thái và lỗi gần nhất (nếu có) cho commentId mục tiêu.
+    /// </summary>
+    Task UpdateMediaAttachStatusAsync(
+        string commentId,
+        string status,
+        string? lastError = null,
+        CancellationToken cancellationToken = default);
 }

@@ -46,6 +46,13 @@ public partial class MongoDbContext
                 .Descending(x => x.CreatedAt),
             new CreateIndexOptions { Name = "idx_visibility_isdeleted_createdat" }));
         // Kết hợp visibility để hỗ trợ phân quyền bài public/private trong feed.
+
+        SafeCreateIndex(CommunityPosts, new CreateIndexModel<CommunityPostDocument>(
+            Builders<CommunityPostDocument>.IndexKeys
+                .Ascending(x => x.MediaAttachStatus)
+                .Descending(x => x.CreatedAt),
+            new CreateIndexOptions { Name = "idx_media_attach_status_createdat" }));
+        // Hỗ trợ monitor/reconcile các post còn pending/failed media attach.
     }
 
     /// <summary>
@@ -89,5 +96,12 @@ public partial class MongoDbContext
                 .Descending(x => x.CreatedAt),
             new CreateIndexOptions { Name = "idx_authorid_createdat" }));
         // Cần cho trang hồ sơ và moderation theo tác giả.
+
+        SafeCreateIndex(CommunityComments, new CreateIndexModel<CommunityCommentDocument>(
+            Builders<CommunityCommentDocument>.IndexKeys
+                .Ascending(x => x.MediaAttachStatus)
+                .Descending(x => x.CreatedAt),
+            new CreateIndexOptions { Name = "idx_comment_media_attach_status_createdat" }));
+        // Hỗ trợ monitor/reconcile comment còn pending/failed media attach.
     }
 }

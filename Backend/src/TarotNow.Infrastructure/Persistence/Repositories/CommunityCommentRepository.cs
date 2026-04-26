@@ -1,6 +1,7 @@
 using MongoDB.Bson;
 using MongoDB.Driver;
 using TarotNow.Application.Common;
+using TarotNow.Application.Common.MediaUpload;
 using TarotNow.Application.Interfaces;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
@@ -34,6 +35,8 @@ public class CommunityCommentRepository : ICommunityCommentRepository
             AuthorDisplayName = comment.AuthorDisplayName,
             AuthorAvatarUrl = comment.AuthorAvatarUrl,
             Content = comment.Content,
+            MediaAttachStatus = comment.MediaAttachStatus,
+            MediaAttachLastError = comment.MediaAttachLastError,
             CreatedAt = comment.CreatedAt,
             IsDeleted = false
         };
@@ -70,6 +73,8 @@ public class CommunityCommentRepository : ICommunityCommentRepository
             AuthorDisplayName = doc.AuthorDisplayName,
             AuthorAvatarUrl = doc.AuthorAvatarUrl,
             Content = doc.Content,
+            MediaAttachStatus = doc.MediaAttachStatus,
+            MediaAttachLastError = doc.MediaAttachLastError,
             CreatedAt = doc.CreatedAt
         });
 
@@ -98,6 +103,8 @@ public class CommunityCommentRepository : ICommunityCommentRepository
             AuthorDisplayName = doc.AuthorDisplayName,
             AuthorAvatarUrl = doc.AuthorAvatarUrl,
             Content = doc.Content,
+            MediaAttachStatus = doc.MediaAttachStatus,
+            MediaAttachLastError = doc.MediaAttachLastError,
             CreatedAt = doc.CreatedAt
         };
     }
@@ -117,5 +124,29 @@ public class CommunityCommentRepository : ICommunityCommentRepository
         var result = await _context.CommunityComments.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
         return result.ModifiedCount > 0;
         // Chỉ báo thành công khi Mongo thực sự cập nhật được bản ghi đích.
+    }
+
+    /// <summary>
+    /// Cập nhật trạng thái attach media cho bình luận.
+    /// Luồng xử lý: validate status hợp lệ, rồi set trạng thái/lỗi theo comment id.
+    /// </summary>
+    public async Task UpdateMediaAttachStatusAsync(
+        string commentId,
+        string status,
+        string? lastError = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (!MediaUploadConstants.IsCommunityEntityMediaAttachStatus(status))
+        {
+            throw new ArgumentException("Community media attach status không hợp lệ.", nameof(status));
+        }
+
+        var normalizedStatus = status.Trim().ToLowerInvariant();
+        var filter = Builders<CommunityCommentDocument>.Filter.Eq(x => x.Id, commentId);
+        var update = Builders<CommunityCommentDocument>.Update
+            .Set(x => x.MediaAttachStatus, normalizedStatus)
+            .Set(x => x.MediaAttachLastError, string.IsNullOrWhiteSpace(lastError) ? null : lastError.Trim());
+
+        await _context.CommunityComments.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
     }
 }

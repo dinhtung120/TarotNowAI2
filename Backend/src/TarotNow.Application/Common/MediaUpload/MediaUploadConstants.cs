@@ -50,6 +50,18 @@ public static class MediaUploadConstants
     /// <summary>Trạng thái asset đã xóa object khỏi R2.</summary>
     public const string AssetStatusDeleted = "deleted";
 
+    /// <summary>Trạng thái attach media: không có media cần attach.</summary>
+    public const string EntityMediaAttachStatusNone = "none";
+
+    /// <summary>Trạng thái attach media: đang chờ worker attach.</summary>
+    public const string EntityMediaAttachStatusPending = "pending";
+
+    /// <summary>Trạng thái attach media: attach đã hoàn tất.</summary>
+    public const string EntityMediaAttachStatusCompleted = "completed";
+
+    /// <summary>Trạng thái attach media: attach thất bại.</summary>
+    public const string EntityMediaAttachStatusFailed = "failed";
+
     /// <summary>
     /// Kiểm tra contextType community hợp lệ.
     /// </summary>
@@ -57,6 +69,17 @@ public static class MediaUploadConstants
     {
         return string.Equals(value, ContextPost, StringComparison.OrdinalIgnoreCase)
             || string.Equals(value, ContextComment, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Kiểm tra trạng thái attach media entity community hợp lệ.
+    /// </summary>
+    public static bool IsCommunityEntityMediaAttachStatus(string value)
+    {
+        return string.Equals(value, EntityMediaAttachStatusNone, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, EntityMediaAttachStatusPending, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, EntityMediaAttachStatusCompleted, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(value, EntityMediaAttachStatusFailed, StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>

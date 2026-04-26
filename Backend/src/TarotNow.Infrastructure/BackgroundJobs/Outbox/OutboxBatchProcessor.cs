@@ -48,7 +48,7 @@ public sealed partial class OutboxBatchProcessor : IOutboxBatchProcessor
 
         var parallelism = ResolveParallelism();
         var partitions = messages
-            .GroupBy(message => string.IsNullOrWhiteSpace(message.EventType) ? "unknown" : message.EventType, StringComparer.Ordinal)
+            .GroupBy(message => ResolveProcessingPartitionKey(message), StringComparer.Ordinal)
             .Select(group => group.OrderBy(message => message.CreatedAtUtc).ToList())
             .ToList();
 

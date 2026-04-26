@@ -1,9 +1,8 @@
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.FeatureManagement;
 using TarotNow.Api.Extensions;
-using TarotNow.Application.Features.Reading.Commands.StreamReading;
+using TarotNow.Api.Services;
 
 namespace TarotNow.Api.Controllers;
 
@@ -12,38 +11,27 @@ namespace TarotNow.Api.Controllers;
 [Route(ApiRoutes.Sessions)]
 [Authorize]
 // API streaming AI cho reading session.
-// Luồng chính: kiểm tra feature flag + quyền truy cập, khởi tạo stream, rồi đẩy SSE cho client.
-public partial class AiController : ControllerBase
+// Luồng chính: kiểm tra feature flag + quyền truy cập, rồi ủy quyền toàn bộ orchestration cho service chuyên trách.
+public sealed class AiController : ControllerBase
 {
-    private readonly IMediator _mediator;
-    private readonly ILogger<AiController> _logger;
     private readonly IFeatureManagerSnapshot _featureManager;
+    private readonly IAiStreamSseOrchestrator _aiStreamSseOrchestrator;
 
     /// <summary>
     /// Khởi tạo controller streaming AI.
     /// </summary>
-    /// <param name="mediator">MediatR dùng để gọi command/query.</param>
-    /// <param name="logger">Logger phục vụ quan sát lỗi stream.</param>
-    /// <param name="featureManager">Feature manager để bật/tắt streaming theo cấu hình.</param>
     public AiController(
-        IMediator mediator,
-        ILogger<AiController> logger,
-        IFeatureManagerSnapshot featureManager)
+        IFeatureManagerSnapshot featureManager,
+        IAiStreamSseOrchestrator aiStreamSseOrchestrator)
     {
-        _mediator = mediator;
-        _logger = logger;
         _featureManager = featureManager;
+        _aiStreamSseOrchestrator = aiStreamSseOrchestrator;
     }
 
     /// <summary>
     /// Stream kết quả đọc bài theo chuẩn SSE.
-    /// Luồng xử lý: gate bằng feature flag, xác thực user, khởi tạo stream, phát chunk và finalize trạng thái.
+    /// Luồng xử lý: gate feature flag + auth + idempotency guard, rồi dispatch cho orchestrator.
     /// </summary>
-    /// <param name="sessionId">Id phiên reading cần stream kết quả.</param>
-    /// <param name="followUpQuestion">Câu hỏi follow-up tùy chọn.</param>
-    /// <param name="language">Ngôn ngữ mong muốn của phản hồi AI.</param>
-    /// <param name="cancellationToken">Token hủy request từ client hoặc server.</param>
-    /// <returns>Không trả body JSON; response được ghi trực tiếp theo SSE.</returns>
     [HttpGet("{sessionId}/stream")]
     public async Task StreamReading(
         string sessionId,
@@ -53,15 +41,13 @@ public partial class AiController : ControllerBase
     {
         if (!await _featureManager.IsEnabledAsync(FeatureFlags.AiStreamingEnabled))
         {
-            // Edge case vận hành: feature bị tắt thì dừng sớm và trả thông điệp SSE để client xử lý đồng nhất.
             Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-            await WriteServerEventAsync("AI streaming is temporarily disabled by feature flag.", cancellationToken);
+            await Response.WriteAsync("data: AI streaming is temporarily disabled by feature flag.\n\n", cancellationToken);
             return;
         }
 
         if (!User.TryGetUserId(out var userId))
         {
-            // Chặn request không có danh tính hợp lệ trước khi gọi nghiệp vụ tốn tài nguyên.
             Response.StatusCode = StatusCodes.Status401Unauthorized;
             return;
         }
@@ -70,26 +56,18 @@ public partial class AiController : ControllerBase
         if (string.IsNullOrWhiteSpace(followUpQuestion) == false && string.IsNullOrWhiteSpace(idempotencyKey))
         {
             Response.StatusCode = StatusCodes.Status400BadRequest;
-            await WriteServerEventAsync("Idempotency-Key header is required for follow-up stream.", cancellationToken);
+            await Response.WriteAsync("data: Idempotency-Key header is required for follow-up stream.\n\n", cancellationToken);
             return;
         }
 
-        var streamResult = await TryStartStreamAsync(
-            userId,
-            new StreamStartRequest(
+        await _aiStreamSseOrchestrator.ExecuteAsync(
+            HttpContext,
+            new AiStreamOrchestrationRequest(
+                userId,
                 sessionId,
                 followUpQuestion,
                 language,
                 idempotencyKey),
             cancellationToken);
-        if (streamResult == null)
-        {
-            // Nhánh null biểu thị lỗi đã được xử lý trong bước khởi tạo nên không xử lý lặp ở đây.
-            return;
-        }
-
-        // Chỉ cấu hình header sau khi khởi tạo stream thành công để tránh mở SSE cho request lỗi.
-        ConfigureSseHeaders(Response);
-        await StreamAndFinalizeAsync(streamResult, userId, sessionId, followUpQuestion, cancellationToken);
     }
 }

@@ -1,5 +1,6 @@
 using MongoDB.Driver;
 using TarotNow.Application.Common;
+using TarotNow.Application.Common.MediaUpload;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
 namespace TarotNow.Infrastructure.Persistence.Repositories;
@@ -34,6 +35,31 @@ public partial class CommunityPostRepository
     }
 
     /// <summary>
+    /// Cập nhật trạng thái attach media cho bài viết.
+    /// Luồng xử lý: validate status hợp lệ, rồi set trạng thái/lỗi/updated_at theo post id.
+    /// </summary>
+    public async Task UpdateMediaAttachStatusAsync(
+        string postId,
+        string status,
+        string? lastError = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (!MediaUploadConstants.IsCommunityEntityMediaAttachStatus(status))
+        {
+            throw new ArgumentException("Community media attach status không hợp lệ.", nameof(status));
+        }
+
+        var normalizedStatus = status.Trim().ToLowerInvariant();
+        var filter = Builders<CommunityPostDocument>.Filter.Eq(x => x.Id, postId);
+        var update = Builders<CommunityPostDocument>.Update
+            .Set(x => x.MediaAttachStatus, normalizedStatus)
+            .Set(x => x.MediaAttachLastError, string.IsNullOrWhiteSpace(lastError) ? null : lastError.Trim())
+            .Set(x => x.UpdatedAt, DateTime.UtcNow);
+
+        await _context.CommunityPosts.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
+    }
+
+    /// <summary>
     /// Map document Mongo sang DTO dùng cho tầng Application/API.
     /// Luồng xử lý: copy đầy đủ field hiển thị và fallback reactions_count rỗng để tránh null reference ở caller.
     /// </summary>
@@ -51,6 +77,8 @@ public partial class CommunityPostRepository
             // Edge case: dữ liệu cũ có thể thiếu reactions_count, fallback dictionary rỗng để ổn định response.
             TotalReactions = doc.TotalReactions,
             CommentsCount = doc.CommentsCount,
+            MediaAttachStatus = doc.MediaAttachStatus,
+            MediaAttachLastError = doc.MediaAttachLastError,
             IsDeleted = doc.IsDeleted,
             CreatedAt = doc.CreatedAt,
             UpdatedAt = doc.UpdatedAt

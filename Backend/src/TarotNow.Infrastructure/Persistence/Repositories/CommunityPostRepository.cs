@@ -37,6 +37,9 @@ public partial class CommunityPostRepository : ICommunityPostRepository
             CreatedAt = post.CreatedAt,
             ReactionsCount = post.ReactionsCount,
             TotalReactions = post.TotalReactions,
+            CommentsCount = post.CommentsCount,
+            MediaAttachStatus = post.MediaAttachStatus,
+            MediaAttachLastError = post.MediaAttachLastError,
             IsDeleted = false
         };
 

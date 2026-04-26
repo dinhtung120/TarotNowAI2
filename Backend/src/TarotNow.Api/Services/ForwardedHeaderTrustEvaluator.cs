@@ -2,7 +2,6 @@ using System.Net;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
-using HttpOverridesIPNetwork = Microsoft.AspNetCore.HttpOverrides.IPNetwork;
 
 namespace TarotNow.Api.Services;
 
@@ -18,7 +17,7 @@ public sealed class ForwardedHeaderTrustEvaluator : IForwardedHeaderTrustEvaluat
 {
     private readonly bool _forwardedHeadersEnabled;
     private readonly HashSet<IPAddress> _knownProxies;
-    private readonly IReadOnlyList<HttpOverridesIPNetwork> _knownNetworks;
+    private readonly IReadOnlyList<System.Net.IPNetwork> _knownIpNetworks;
 
     public ForwardedHeaderTrustEvaluator(
         IConfiguration configuration,
@@ -27,7 +26,7 @@ public sealed class ForwardedHeaderTrustEvaluator : IForwardedHeaderTrustEvaluat
         _forwardedHeadersEnabled = configuration.GetValue<bool>("ForwardedHeaders:Enabled");
         var options = forwardedHeadersOptions.Value;
         _knownProxies = options.KnownProxies.ToHashSet();
-        _knownNetworks = options.KnownNetworks.ToArray();
+        _knownIpNetworks = options.KnownIPNetworks.ToArray();
     }
 
     public bool IsTrustedProxy(IPAddress? remoteIpAddress)
@@ -42,7 +41,7 @@ public sealed class ForwardedHeaderTrustEvaluator : IForwardedHeaderTrustEvaluat
             return true;
         }
 
-        foreach (var network in _knownNetworks)
+        foreach (var network in _knownIpNetworks)
         {
             if (network.Contains(remoteIpAddress))
             {

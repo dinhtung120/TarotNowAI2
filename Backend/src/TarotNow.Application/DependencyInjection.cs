@@ -13,7 +13,7 @@ namespace TarotNow.Application;
 public static class DependencyInjection
 {
     /// <summary>
-    /// Đăng ký toàn bộ service MediatR, validation/mapping và domain services của Application.
+    /// Đăng ký toàn bộ service MediatR, validation và domain services của Application.
     /// Luồng xử lý: lần lượt đăng ký MediatR, validator+mapper, rồi các service nghiệp vụ bổ sung.
     /// </summary>
     public static IServiceCollection AddApplicationServices(
@@ -21,7 +21,7 @@ public static class DependencyInjection
         params Assembly[] additionalAssemblies)
     {
         RegisterMediatR(services, additionalAssemblies);
-        RegisterValidationAndMapping(services);
+        RegisterValidation(services);
         RegisterDomainServices(services);
 
         return services;
@@ -73,13 +73,12 @@ public static class DependencyInjection
     }
 
     /// <summary>
-    /// Đăng ký FluentValidation và AutoMapper cho assembly hiện tại.
-    /// Luồng xử lý: scan validator trước, sau đó scan profile mapping.
+    /// Đăng ký FluentValidation cho assembly hiện tại.
+    /// Luồng xử lý: scan validator và để mapping theo chuẩn manual mapper tường minh.
     /// </summary>
-    private static void RegisterValidationAndMapping(IServiceCollection services)
+    private static void RegisterValidation(IServiceCollection services)
     {
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
-        services.AddAutoMapper(cfg => { }, Assembly.GetExecutingAssembly());
     }
 
     /// <summary>

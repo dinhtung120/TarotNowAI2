@@ -48,4 +48,14 @@ public interface ICommunityPostRepository
     /// Luồng xử lý: cập nhật comments_count theo postId với giá trị delta.
     /// </summary>
     Task IncrementCommentsCountAsync(string postId, int delta, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Cập nhật trạng thái attach media của bài viết.
+    /// Luồng xử lý: set trạng thái và lỗi gần nhất (nếu có) cho postId mục tiêu.
+    /// </summary>
+    Task UpdateMediaAttachStatusAsync(
+        string postId,
+        string status,
+        string? lastError = null,
+        CancellationToken cancellationToken = default);
 }

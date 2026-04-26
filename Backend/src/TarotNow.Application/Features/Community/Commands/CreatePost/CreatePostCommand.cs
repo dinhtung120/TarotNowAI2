@@ -1,10 +1,10 @@
-
-
 using MediatR;
 using TarotNow.Application.Common;
+using TarotNow.Application.Common.MediaUpload;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Community.Commands.CreatePost;
 
@@ -27,30 +27,20 @@ public class CreatePostCommand : IRequest<CommunityPostDto>
 // Handler xử lý tạo community post.
 public class CreatePostCommandHandler : IRequestHandler<CreatePostCommand, CommunityPostDto>
 {
-    private readonly ICommunityPostRepository _postRepo;
-    private readonly IUserRepository _userRepo;
-    private readonly IDomainEventPublisher _domainEventPublisher;
-    private readonly ICommunityMediaAttachmentService _communityMediaAttachmentService;
+    private readonly IInlineDomainEventDispatcher _inlineDomainEventDispatcher;
 
     /// <summary>
     /// Khởi tạo handler create post.
-    /// Luồng xử lý: nhận repository bài viết/user và service gamification để tạo post + cộng tiến trình.
+    /// Luồng xử lý: command chỉ publish domain event theo rule event-only.
     /// </summary>
-    public CreatePostCommandHandler(
-        ICommunityPostRepository postRepo,
-        IUserRepository userRepo,
-        IDomainEventPublisher domainEventPublisher,
-        ICommunityMediaAttachmentService communityMediaAttachmentService)
+    public CreatePostCommandHandler(IInlineDomainEventDispatcher inlineDomainEventDispatcher)
     {
-        _postRepo = postRepo;
-        _userRepo = userRepo;
-        _domainEventPublisher = domainEventPublisher;
-        _communityMediaAttachmentService = communityMediaAttachmentService;
+        _inlineDomainEventDispatcher = inlineDomainEventDispatcher;
     }
 
     /// <summary>
     /// Xử lý command tạo bài viết.
-    /// Luồng xử lý: validate content/visibility, kiểm tra user tồn tại, tạo DTO post mới, lưu repository và kích hoạt gamification.
+    /// Luồng xử lý: validate input, publish event request, rồi dựng response từ payload đã được handler xử lý.
     /// </summary>
     public async Task<CommunityPostDto> Handle(CreatePostCommand request, CancellationToken cancellationToken)
     {
@@ -67,45 +57,37 @@ public class CreatePostCommandHandler : IRequestHandler<CreatePostCommand, Commu
             throw new BadRequestException("Quyền riêng tư không hợp lệ.");
         }
 
-        var user = await _userRepo.GetByIdAsync(request.AuthorId, cancellationToken);
-        if (user == null)
+        var domainEvent = new CommunityPostCreateRequestedDomainEvent
         {
-            // Edge case: user không tồn tại.
-            throw new NotFoundException("User không tồn tại.");
-        }
-
-        var newPost = new CommunityPostDto
-        {
-            AuthorId = request.AuthorId.ToString(),
-            AuthorDisplayName = user.DisplayName,
-            AuthorAvatarUrl = user.AvatarUrl,
+            AuthorId = request.AuthorId,
             Content = request.Content.Trim(),
             Visibility = request.Visibility,
-            CreatedAt = DateTime.UtcNow,
-            ReactionsCount = new Dictionary<string, int>(),
-            TotalReactions = 0,
-            IsDeleted = false
+            ContextDraftId = string.IsNullOrWhiteSpace(request.ContextDraftId) ? null : request.ContextDraftId.Trim()
         };
 
-        // Lưu post mới trước để đảm bảo có dữ liệu nguồn cho các bước tiếp theo.
-        var result = await _postRepo.CreateAsync(newPost, cancellationToken);
+        await _inlineDomainEventDispatcher.PublishAsync(domainEvent, cancellationToken);
+        if (string.IsNullOrWhiteSpace(domainEvent.CreatedPostId))
+        {
+            throw new BadRequestException("Không thể tạo bài viết.");
+        }
 
-        await _domainEventPublisher.PublishAsync(
-            new Domain.Events.CommunityPostCreatedDomainEvent
-            {
-                AuthorId = request.AuthorId,
-                PostId = result.Id
-            },
-            cancellationToken);
-
-        await _communityMediaAttachmentService.AttachForNewEntityAsync(
-            request.AuthorId,
-            "post",
-            request.ContextDraftId,
-            result.Id,
-            result.Content,
-            cancellationToken);
-
-        return result;
+        return new CommunityPostDto
+        {
+            Id = domainEvent.CreatedPostId,
+            AuthorId = request.AuthorId.ToString(),
+            AuthorDisplayName = domainEvent.AuthorDisplayName,
+            AuthorAvatarUrl = domainEvent.AuthorAvatarUrl,
+            Content = domainEvent.Content,
+            Visibility = domainEvent.Visibility,
+            CreatedAt = domainEvent.CreatedAtUtc,
+            ReactionsCount = new Dictionary<string, int>(),
+            TotalReactions = 0,
+            CommentsCount = 0,
+            IsDeleted = false,
+            MediaAttachStatus = string.IsNullOrWhiteSpace(domainEvent.MediaAttachStatus)
+                ? MediaUploadConstants.EntityMediaAttachStatusNone
+                : domainEvent.MediaAttachStatus,
+            MediaAttachLastError = null
+        };
     }
 }

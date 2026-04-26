@@ -1,9 +1,9 @@
 
 
 using MediatR;
-using AutoMapper;
 using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Features.Community.Mappings;
 
 namespace TarotNow.Application.Features.Community.Queries.GetFeed;
 
@@ -40,20 +40,17 @@ public class GetFeedQueryHandler : IRequestHandler<GetFeedQuery, (IEnumerable<Co
 
     private readonly ICommunityPostRepository _postRepo;
     private readonly ICommunityReactionRepository _reactionRepo;
-    private readonly IMapper _mapper;
 
     /// <summary>
     /// Khởi tạo handler get feed.
-    /// Luồng xử lý: nhận repository post/reaction và mapper để tải dữ liệu feed rồi enrich viewer reaction.
+    /// Luồng xử lý: nhận repository post/reaction để tải dữ liệu feed rồi enrich viewer reaction.
     /// </summary>
     public GetFeedQueryHandler(
         ICommunityPostRepository postRepo,
-        ICommunityReactionRepository reactionRepo,
-        IMapper mapper)
+        ICommunityReactionRepository reactionRepo)
     {
         _postRepo = postRepo;
         _reactionRepo = reactionRepo;
-        _mapper = mapper;
     }
 
     /// <summary>
@@ -107,7 +104,7 @@ public class GetFeedQueryHandler : IRequestHandler<GetFeedQuery, (IEnumerable<Co
 
     /// <summary>
     /// Map danh sách post sang feed item và gán reaction của viewer.
-    /// Luồng xử lý: map từng post bằng AutoMapper, rồi tra dictionary reaction để gán ViewerReaction.
+    /// Luồng xử lý: map từng post bằng helper thống nhất, rồi tra dictionary reaction để gán ViewerReaction.
     /// </summary>
     private IEnumerable<CommunityPostFeedItemDto> MapFeedItems(
         IEnumerable<CommunityPostDto> posts,
@@ -115,7 +112,7 @@ public class GetFeedQueryHandler : IRequestHandler<GetFeedQuery, (IEnumerable<Co
     {
         return posts.Select(post =>
         {
-            var mapped = _mapper.Map<CommunityPostFeedItemDto>(post);
+            var mapped = CommunityPostFeedItemMapper.Map(post);
             var postId = post.Id;
             mapped.ViewerReaction = userReactions.ContainsKey(postId)
                 // Có reaction của viewer thì gán đúng type để UI highlight.
