@@ -1,13 +1,17 @@
 
 
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Chat.Commands.SendMessage;
 
 // Handler điều phối toàn bộ luồng gửi tin nhắn trong conversation.
-public partial class SendMessageCommandExecutor : ICommandExecutionExecutor<SendMessageCommand, ChatMessageDto>
+public partial class SendMessageCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<SendMessageCommandHandlerRequestedDomainEvent>
 {
     private readonly IConversationRepository _conversationRepo;
     private readonly IChatMessageRepository _messageRepo;
@@ -23,7 +27,7 @@ public partial class SendMessageCommandExecutor : ICommandExecutionExecutor<Send
     /// Khởi tạo handler gửi tin nhắn.
     /// Luồng xử lý: nhận các repository/service cần cho validate, media processing, freeze tài chính và push số dư.
     /// </summary>
-    public SendMessageCommandExecutor(
+    public SendMessageCommandHandlerRequestedDomainEventHandler(
         IConversationRepository conversationRepo,
         IChatMessageRepository messageRepo,
         IChatFinanceRepository financeRepo,
@@ -32,7 +36,9 @@ public partial class SendMessageCommandExecutor : ICommandExecutionExecutor<Send
         ITransactionCoordinator transactionCoordinator,
         IUploadSessionRepository uploadSessionRepository,
         IDomainEventPublisher domainEventPublisher,
-        ISystemConfigSettings systemConfigSettings)
+        ISystemConfigSettings systemConfigSettings,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _conversationRepo = conversationRepo;
         _messageRepo = messageRepo;
@@ -171,5 +177,13 @@ public partial class SendMessageCommandExecutor : ICommandExecutionExecutor<Send
                 CreatedAtUtc = message.CreatedAt
             },
             cancellationToken);
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        SendMessageCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

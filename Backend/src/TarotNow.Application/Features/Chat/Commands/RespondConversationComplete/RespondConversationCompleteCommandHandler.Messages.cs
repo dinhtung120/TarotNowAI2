@@ -2,7 +2,7 @@ using TarotNow.Application.Common;
 
 namespace TarotNow.Application.Features.Chat.Commands.RespondConversationComplete;
 
-public partial class RespondConversationCompleteCommandExecutor
+public partial class RespondConversationCompleteCommandHandlerRequestedDomainEventHandler
 {
     // Mô tả payload system message dùng chung cho các nhánh phản hồi complete.
     private readonly record struct SystemMessageSpec(string Type, string Content, DateTime? CreatedAt);

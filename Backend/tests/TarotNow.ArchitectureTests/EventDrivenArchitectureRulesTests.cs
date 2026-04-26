@@ -1,5 +1,7 @@
 using System.Text.RegularExpressions;
 using FluentAssertions;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace TarotNow.ArchitectureTests;
 
@@ -9,45 +11,165 @@ namespace TarotNow.ArchitectureTests;
 public sealed class EventDrivenArchitectureRulesTests
 {
     /// <summary>
-    /// Xác nhận command handlers không inject side-effect services trực tiếp.
+    /// Cấm tồn tại bất kỳ class legacy kiểu *CommandExecutor.
     /// </summary>
     [Fact]
-    public void CommandHandlers_ShouldNotInjectDirectSideEffectServices()
+    public void Application_ShouldNotContainCommandExecutorClasses()
     {
         var backendRoot = FindBackendRoot();
-        var featuresRoot = Path.Combine(backendRoot, "src", "TarotNow.Application", "Features");
-        var allowedLegacyPaths = new HashSet<string>(StringComparer.Ordinal)
-        {
-            "src/TarotNow.Application/Features/Reading/Commands/StreamReading/StreamReadingCommandHandler.cs"
-        };
-        var forbiddenPatterns = new[]
-        {
-            @"\bI\w*PushService\b",
-            @"\bI\w*Notification(?:Service|Sender|Publisher|Client)?\b",
-            @"\bI\w*Email(?:Sender|Service|Client)?\b",
-            @"\bI\w*Webhook(?:Client|Service|Provider)?\b",
-            @"\bI\w*RealtimeBridge(?:Source|Publisher|Client)?\b",
-            @"\bIAiProvider\b",
-            @"\bIHubContext<"
-        };
+        var applicationFiles = GetApplicationSourceFiles(backendRoot);
+        var violations = new List<string>();
 
-        var regexes = forbiddenPatterns.Select(pattern => new Regex(pattern, RegexOptions.Compiled)).ToArray();
-        var violations = Directory
-            .GetFiles(featuresRoot, "*.cs", SearchOption.AllDirectories)
-            .Where(path => path.Contains("/Commands/", StringComparison.Ordinal))
-            .Where(path =>
+        foreach (var file in applicationFiles)
+        {
+            var root = ParseSyntaxRoot(file);
+            var executorClasses = root
+                .DescendantNodes()
+                .OfType<ClassDeclarationSyntax>()
+                .Where(classNode => classNode.Identifier.Text.EndsWith("CommandExecutor", StringComparison.Ordinal))
+                .ToArray();
+
+            if (executorClasses.Length == 0)
             {
-                var text = File.ReadAllText(path);
-                return text.Contains("CommandHandler", StringComparison.Ordinal)
-                       && regexes.Any(regex => regex.IsMatch(text));
-            })
-            .Select(path => ToBackendRelativePath(backendRoot, path))
-            .Where(path => !allowedLegacyPaths.Contains(path))
-            .Distinct(StringComparer.Ordinal)
+                continue;
+            }
+
+            foreach (var classNode in executorClasses)
+            {
+                var line = classNode.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
+                violations.Add($"{ToBackendRelativePath(backendRoot, file)}:{line}");
+            }
+        }
+
+        violations.Should().BeEmpty("legacy executor classes must be removed and logic must live in requested domain event handlers.");
+    }
+
+    /// <summary>
+    /// Cấm mọi khai báo hoặc tham chiếu contract ICommandExecutionExecutor.
+    /// </summary>
+    [Fact]
+    public void Application_ShouldNotReferenceICommandExecutionExecutorContract()
+    {
+        var backendRoot = FindBackendRoot();
+        var applicationFiles = GetApplicationSourceFiles(backendRoot);
+        var violations = new List<string>();
+
+        foreach (var file in applicationFiles)
+        {
+            var root = ParseSyntaxRoot(file);
+
+            var interfaceDeclarations = root
+                .DescendantNodes()
+                .OfType<InterfaceDeclarationSyntax>()
+                .Where(interfaceNode => string.Equals(interfaceNode.Identifier.Text, "ICommandExecutionExecutor", StringComparison.Ordinal))
+                .Select(interfaceNode => interfaceNode.GetLocation().GetLineSpan().StartLinePosition.Line + 1);
+
+            var typeReferences = root
+                .DescendantNodes()
+                .OfType<GenericNameSyntax>()
+                .Where(genericNode => string.Equals(genericNode.Identifier.Text, "ICommandExecutionExecutor", StringComparison.Ordinal))
+                .Select(genericNode => genericNode.GetLocation().GetLineSpan().StartLinePosition.Line + 1);
+
+            foreach (var line in interfaceDeclarations.Concat(typeReferences))
+            {
+                violations.Add($"{ToBackendRelativePath(backendRoot, file)}:{line}");
+            }
+        }
+
+        violations.Should().BeEmpty("ICommandExecutionExecutor<,> contract must be fully removed from Application layer.");
+    }
+
+    /// <summary>
+    /// Cấm để lại legacy wrappers trong DomainEvents/Handlers/CommandDispatch.
+    /// </summary>
+    [Fact]
+    public void LegacyCommandDispatchFolder_ShouldBeEmpty()
+    {
+        var backendRoot = FindBackendRoot();
+        var commandDispatchRoot = Path.Combine(
+            backendRoot,
+            "src",
+            "TarotNow.Application",
+            "DomainEvents",
+            "Handlers",
+            "CommandDispatch");
+
+        var remainingLegacyWrappers = Directory.Exists(commandDispatchRoot)
+            ? Directory.GetFiles(commandDispatchRoot, "*.cs", SearchOption.AllDirectories)
+                .Select(path => ToBackendRelativePath(backendRoot, path))
+                .OrderBy(path => path, StringComparer.Ordinal)
+                .ToArray()
+            : Array.Empty<string>();
+
+        remainingLegacyWrappers.Should().BeEmpty("command-dispatch wrappers must be removed to avoid duplicate handling paths.");
+    }
+
+    /// <summary>
+    /// Xác nhận command handlers EventOnly chỉ phụ thuộc IInlineDomainEventDispatcher.
+    /// </summary>
+    [Fact]
+    public void EventOnlyCommandHandlers_ShouldOnlyDependOnInlineDomainEventDispatcher()
+    {
+        var backendRoot = FindBackendRoot();
+        var eventOnlyFiles = Directory
+            .GetFiles(
+                Path.Combine(backendRoot, "src", "TarotNow.Application", "Features"),
+                "*CommandHandler.EventOnly.cs",
+                SearchOption.AllDirectories)
             .OrderBy(path => path, StringComparer.Ordinal)
             .ToArray();
 
-        violations.Should().BeEmpty("Command handlers must publish domain events instead of calling side-effect services directly.");
+        var violations = new List<string>();
+        foreach (var file in eventOnlyFiles)
+        {
+            var root = ParseSyntaxRoot(file);
+            var handlerClasses = root
+                .DescendantNodes()
+                .OfType<ClassDeclarationSyntax>()
+                .Where(classNode => classNode.BaseList is not null
+                                    && classNode.BaseList.Types.Any(baseType =>
+                                        baseType.Type.ToString().Contains("IRequestHandler", StringComparison.Ordinal)))
+                .ToArray();
+
+            foreach (var handlerClass in handlerClasses)
+            {
+                var constructors = handlerClass.Members
+                    .OfType<ConstructorDeclarationSyntax>()
+                    .ToArray();
+
+                if (constructors.Length == 0)
+                {
+                    var line = handlerClass.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
+                    violations.Add($"{ToBackendRelativePath(backendRoot, file)}:{line} {handlerClass.Identifier.Text} (missing constructor)");
+                    continue;
+                }
+
+                foreach (var constructor in constructors)
+                {
+                    var parameterTypes = constructor.ParameterList.Parameters
+                        .Select(parameter => parameter.Type?.ToString() ?? string.Empty)
+                        .ToArray();
+
+                    var isThinConstructor = parameterTypes.Length == 1
+                                            && string.Equals(
+                                                parameterTypes[0],
+                                                "IInlineDomainEventDispatcher",
+                                                StringComparison.Ordinal);
+
+                    if (isThinConstructor)
+                    {
+                        continue;
+                    }
+
+                    var line = constructor.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
+                    var deps = parameterTypes.Length == 0 ? "(none)" : string.Join(", ", parameterTypes);
+                    violations.Add($"{ToBackendRelativePath(backendRoot, file)}:{line} {handlerClass.Identifier.Text} ({deps})");
+                }
+            }
+        }
+
+        violations.Should().BeEmpty(
+            "event-only command handlers must stay thin and only inject IInlineDomainEventDispatcher.");
     }
 
     /// <summary>
@@ -150,34 +272,6 @@ public sealed class EventDrivenArchitectureRulesTests
     }
 
     /// <summary>
-    /// Xác nhận toàn bộ command handlers đã chuyển sang event-only, không còn phụ thuộc trực tiếp repository/service/provider.
-    /// </summary>
-    [Fact]
-    public void CommandHandlers_ShouldNotInjectRepositoryServiceProviderDependencies()
-    {
-        var backendRoot = FindBackendRoot();
-        var featuresRoot = Path.Combine(backendRoot, "src", "TarotNow.Application", "Features");
-        var forbidden = new Regex(@"\bI\w*(Repository|Service|Provider)\b", RegexOptions.Compiled);
-
-        var violatingFiles = Directory
-            .GetFiles(featuresRoot, "*.cs", SearchOption.AllDirectories)
-            .Where(path => path.Contains("/Commands/", StringComparison.Ordinal))
-            .Where(path =>
-            {
-                var text = File.ReadAllText(path);
-                return text.Contains("CommandHandler", StringComparison.Ordinal)
-                       && forbidden.IsMatch(text);
-            })
-            .Select(path => ToBackendRelativePath(backendRoot, path))
-            .Distinct(StringComparer.Ordinal)
-            .OrderBy(path => path, StringComparer.Ordinal)
-            .ToArray();
-
-        violatingFiles.Should().BeEmpty(
-            "all command handlers must dispatch domain events via IInlineDomainEventDispatcher and must not inject repository/service/provider dependencies directly.");
-    }
-
-    /// <summary>
     /// Xác nhận command-requested domain events của command critical (IdempotencyKey/AiRequestId) đều khai báo idempotency inline.
     /// </summary>
     [Fact]
@@ -240,6 +334,23 @@ public sealed class EventDrivenArchitectureRulesTests
             .OrderBy(path => path, StringComparer.Ordinal)
             .Should()
             .BeEmpty("critical command-requested events must implement IIdempotentDomainEvent with CommandEventIdempotencyKey.Build(...).");
+    }
+
+    private static string[] GetApplicationSourceFiles(string backendRoot)
+    {
+        var appRoot = Path.Combine(backendRoot, "src", "TarotNow.Application");
+        return Directory
+            .GetFiles(appRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    private static CompilationUnitSyntax ParseSyntaxRoot(string filePath)
+    {
+        var tree = CSharpSyntaxTree.ParseText(File.ReadAllText(filePath), path: filePath);
+        return tree.GetCompilationUnitRoot();
     }
 
     private static string FindBackendRoot()

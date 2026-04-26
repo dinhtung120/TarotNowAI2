@@ -2,8 +2,10 @@ using MediatR;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Mfa.Commands.MfaVerify;
 
@@ -18,7 +20,8 @@ public class MfaVerifyCommand : IRequest<bool>
 }
 
 // Handler verify mã MFA và bật cờ MFA cho user khi hợp lệ.
-public class MfaVerifyCommandExecutor : ICommandExecutionExecutor<MfaVerifyCommand, bool>
+public class MfaVerifyCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<MfaVerifyCommandHandlerRequestedDomainEvent>
 {
     private readonly IUserRepository _userRepo;
     private readonly IMfaService _mfaService;
@@ -27,7 +30,11 @@ public class MfaVerifyCommandExecutor : ICommandExecutionExecutor<MfaVerifyComma
     /// Khởi tạo handler verify MFA.
     /// Luồng xử lý: nhận user repository để truy cập tài khoản và MFA service để giải mã/đối chiếu mã xác thực.
     /// </summary>
-    public MfaVerifyCommandExecutor(IUserRepository userRepo, IMfaService mfaService)
+    public MfaVerifyCommandHandlerRequestedDomainEventHandler(
+        IUserRepository userRepo,
+        IMfaService mfaService,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _userRepo = userRepo;
         _mfaService = mfaService;
@@ -71,5 +78,13 @@ public class MfaVerifyCommandExecutor : ICommandExecutionExecutor<MfaVerifyComma
         // Persist trạng thái mới để các luồng đăng nhập/ủy quyền áp dụng MFA ngay.
 
         return true;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        MfaVerifyCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

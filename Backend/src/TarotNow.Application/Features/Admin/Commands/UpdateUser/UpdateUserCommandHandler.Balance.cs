@@ -4,7 +4,7 @@ using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Admin.Commands.UpdateUser;
 
-public partial class UpdateUserCommandExecutor
+public partial class UpdateUserCommandHandlerRequestedDomainEventHandler
 {
     private const string AdminReferenceSource = "Admin_Update_User";
 

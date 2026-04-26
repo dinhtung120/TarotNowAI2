@@ -2,17 +2,21 @@
 
 using AutoMapper;
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Features.Auth.Commands.Login;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Events;
 using RefreshTokenEntity = TarotNow.Domain.Entities.RefreshToken;
 
 namespace TarotNow.Application.Features.Auth.Commands.RefreshToken;
 
 // Handler chính cho luồng refresh token và rotate phiên đăng nhập.
-public partial class RefreshTokenCommandExecutor : ICommandExecutionExecutor<RefreshTokenCommand, RefreshTokenResult>
+public partial class RefreshTokenCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<RefreshTokenCommandHandlerRequestedDomainEvent>
 {
     private const int MaxRotateLockRetries = 3;
 
@@ -27,13 +31,15 @@ public partial class RefreshTokenCommandExecutor : ICommandExecutionExecutor<Ref
     /// Khởi tạo handler refresh token.
     /// Luồng xử lý: nhận các repository/service cần để validate token, rotate token và phát access token mới.
     /// </summary>
-    public RefreshTokenCommandExecutor(
+    public RefreshTokenCommandHandlerRequestedDomainEventHandler(
         IRefreshTokenRepository refreshTokenRepository,
         IAuthSessionRepository authSessionRepository,
         ITokenService tokenService,
         IJwtTokenSettings jwtTokenSettings,
         IDomainEventPublisher domainEventPublisher,
-        IMapper mapper)
+        IMapper mapper,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _refreshTokenRepository = refreshTokenRepository;
         _authSessionRepository = authSessionRepository;
@@ -68,6 +74,14 @@ public partial class RefreshTokenCommandExecutor : ICommandExecutionExecutor<Ref
             cancellationToken);
 
         return BuildRefreshResult(response, rotateResult);
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        RefreshTokenCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 
     private async Task<RefreshRotateResult> RotateRefreshTokenAsync(
@@ -189,14 +203,13 @@ public partial class RefreshTokenCommandExecutor : ICommandExecutionExecutor<Ref
 
     private RefreshTokenResult BuildRefreshResult(AuthResponse response, RefreshRotateResult rotateResult)
     {
-        var refreshTokenExpiresAtUtc = rotateResult.NewTokenExpiresAtUtc
-            ?? DateTime.UtcNow.AddDays(_jwtTokenSettings.RefreshTokenExpiryDays);
         return new RefreshTokenResult
         {
             Response = response,
             NewRefreshToken = rotateResult.NewRawToken,
             IsIdempotent = rotateResult.IsIdempotent,
-            RefreshTokenExpiresAtUtc = refreshTokenExpiresAtUtc
+            RefreshTokenExpiresAtUtc = rotateResult.NewTokenExpiresAtUtc
+                ?? DateTime.UtcNow.AddDays(_jwtTokenSettings.RefreshTokenExpiryDays)
         };
     }
 }

@@ -1,14 +1,17 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common;
 using TarotNow.Application.Features.Chat.Commands.SendMessage;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Commands.RequestConversationAddMoney;
 
 // Handler điều phối luồng tạo đề nghị cộng thêm tiền trong conversation.
-public partial class RequestConversationAddMoneyCommandExecutor
-    : ICommandExecutionExecutor<RequestConversationAddMoneyCommand, ConversationAddMoneyRequestResult>
+public partial class RequestConversationAddMoneyCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<RequestConversationAddMoneyCommandHandlerRequestedDomainEvent>
 {
     private readonly IConversationRepository _conversationRepository;
     private readonly IChatMessageRepository _chatMessageRepository;
@@ -20,12 +23,14 @@ public partial class RequestConversationAddMoneyCommandExecutor
     /// Khởi tạo handler request conversation add money.
     /// Luồng xử lý: nhận repository conversation/message, mediator gửi message và publisher phát event cập nhật conversation.
     /// </summary>
-    public RequestConversationAddMoneyCommandExecutor(
+    public RequestConversationAddMoneyCommandHandlerRequestedDomainEventHandler(
         IConversationRepository conversationRepository,
         IChatMessageRepository chatMessageRepository,
         IMediator mediator,
         IDomainEventPublisher domainEventPublisher,
-        ISystemConfigSettings systemConfigSettings)
+        ISystemConfigSettings systemConfigSettings,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _conversationRepository = conversationRepository;
         _chatMessageRepository = chatMessageRepository;
@@ -61,5 +66,13 @@ public partial class RequestConversationAddMoneyCommandExecutor
             cancellationToken);
 
         return new ConversationAddMoneyRequestResult { MessageId = message.Id };
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        RequestConversationAddMoneyCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

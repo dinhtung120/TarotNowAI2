@@ -1,13 +1,17 @@
 
 
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Chat.Commands.CreateConversation;
 
 // Handler chính cho luồng tạo conversation.
-public partial class CreateConversationCommandExecutor : ICommandExecutionExecutor<CreateConversationCommand, ConversationDto>
+public partial class CreateConversationCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<CreateConversationCommandHandlerRequestedDomainEvent>
 {
     private readonly IConversationRepository _conversationRepo;
     private readonly IReaderProfileRepository _readerProfileRepo;
@@ -17,10 +21,12 @@ public partial class CreateConversationCommandExecutor : ICommandExecutionExecut
     /// Khởi tạo handler create conversation.
     /// Luồng xử lý: nhận repository conversation và reader profile để kiểm tra điều kiện tạo mới.
     /// </summary>
-    public CreateConversationCommandExecutor(
+    public CreateConversationCommandHandlerRequestedDomainEventHandler(
         IConversationRepository conversationRepo,
         IReaderProfileRepository readerProfileRepo,
-        ISystemConfigSettings systemConfigSettings)
+        ISystemConfigSettings systemConfigSettings,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _conversationRepo = conversationRepo;
         _readerProfileRepo = readerProfileRepo;
@@ -51,5 +57,13 @@ public partial class CreateConversationCommandExecutor : ICommandExecutionExecut
         var conversation = BuildConversation(request);
         await _conversationRepo.AddAsync(conversation, cancellationToken);
         return conversation;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        CreateConversationCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

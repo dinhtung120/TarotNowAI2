@@ -1,12 +1,15 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Chat.Commands.RespondConversationComplete;
 
 // Handler điều phối luồng phản hồi yêu cầu hoàn thành conversation.
-public partial class RespondConversationCompleteCommandExecutor
-    : ICommandExecutionExecutor<RespondConversationCompleteCommand, ConversationCompleteRespondResult>
+public partial class RespondConversationCompleteCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<RespondConversationCompleteCommandHandlerRequestedDomainEvent>
 {
     private readonly IConversationRepository _conversationRepository;
     private readonly IChatFinanceRepository _financeRepository;
@@ -19,13 +22,15 @@ public partial class RespondConversationCompleteCommandExecutor
     /// Khởi tạo handler respond conversation complete.
     /// Luồng xử lý: nhận repository conversation/finance/message, settlement service và publisher để xử lý đầy đủ nhánh accept/reject.
     /// </summary>
-    public RespondConversationCompleteCommandExecutor(
+    public RespondConversationCompleteCommandHandlerRequestedDomainEventHandler(
         IConversationRepository conversationRepository,
         IChatFinanceRepository financeRepository,
         IEscrowSettlementService escrowSettlementService,
         ITransactionCoordinator transactionCoordinator,
         IChatMessageRepository chatMessageRepository,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _conversationRepository = conversationRepository;
         _financeRepository = financeRepository;
@@ -68,5 +73,13 @@ public partial class RespondConversationCompleteCommandExecutor
             cancellationToken);
 
         return new ConversationCompleteRespondResult { Status = context.Conversation.Status, Accepted = true };
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        RespondConversationCompleteCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

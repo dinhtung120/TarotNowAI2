@@ -3,7 +3,7 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Admin.Commands.ResolveDispute;
 
-public partial class ResolveDisputeCommandExecutor
+public partial class ResolveDisputeCommandHandlerRequestedDomainEventHandler
 {
     /// <summary>
     /// Chuyển phần tiền net cho reader trong nhánh split.

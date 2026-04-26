@@ -1,7 +1,10 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common.MediaUpload;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Community.Commands.PresignCommunityImage;
 
@@ -29,7 +32,8 @@ public sealed class PresignCommunityImageCommand : IRequest<PresignedUploadResul
 /// <summary>
 /// Handler presign ảnh community.
 /// </summary>
-public sealed class PresignCommunityImageCommandExecutor : ICommandExecutionExecutor<PresignCommunityImageCommand, PresignedUploadResult>
+public sealed class PresignCommunityImageCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<PresignCommunityImageCommandHandlerRequestedDomainEvent>
 {
     private readonly IR2UploadService _r2UploadService;
     private readonly IUploadSessionRepository _uploadSessionRepository;
@@ -37,9 +41,11 @@ public sealed class PresignCommunityImageCommandExecutor : ICommandExecutionExec
     /// <summary>
     /// Khởi tạo handler presign ảnh community.
     /// </summary>
-    public PresignCommunityImageCommandExecutor(
+    public PresignCommunityImageCommandHandlerRequestedDomainEventHandler(
         IR2UploadService r2UploadService,
-        IUploadSessionRepository uploadSessionRepository)
+        IUploadSessionRepository uploadSessionRepository,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _r2UploadService = r2UploadService;
         _uploadSessionRepository = uploadSessionRepository;
@@ -119,5 +125,13 @@ public sealed class PresignCommunityImageCommandExecutor : ICommandExecutionExec
     private static string BuildCommunityObjectKey(string contextType, Guid userId)
     {
         return $"community/{contextType}/{userId:N}-{Guid.NewGuid():N}.webp";
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        PresignCommunityImageCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

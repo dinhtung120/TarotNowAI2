@@ -1,13 +1,17 @@
 using MediatR;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Promotions.Commands.DeletePromotion;
 
 // Handler xóa promotion khỏi hệ thống.
-public class DeletePromotionCommandExecutor : ICommandExecutionExecutor<DeletePromotionCommand, bool>
+public class DeletePromotionCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<DeletePromotionCommandHandlerRequestedDomainEvent>
 {
     private readonly IDepositPromotionRepository _promotionRepository;
 
@@ -15,7 +19,10 @@ public class DeletePromotionCommandExecutor : ICommandExecutionExecutor<DeletePr
     /// Khởi tạo handler xóa promotion.
     /// Luồng xử lý: nhận promotion repository để tải và xóa bản ghi khuyến mãi mục tiêu.
     /// </summary>
-    public DeletePromotionCommandExecutor(IDepositPromotionRepository promotionRepository)
+    public DeletePromotionCommandHandlerRequestedDomainEventHandler(
+        IDepositPromotionRepository promotionRepository,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _promotionRepository = promotionRepository;
     }
@@ -33,5 +40,13 @@ public class DeletePromotionCommandExecutor : ICommandExecutionExecutor<DeletePr
         // Đổi state hệ thống: loại bỏ promotion khỏi kho cấu hình áp dụng nạp tiền.
 
         return true;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        DeletePromotionCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

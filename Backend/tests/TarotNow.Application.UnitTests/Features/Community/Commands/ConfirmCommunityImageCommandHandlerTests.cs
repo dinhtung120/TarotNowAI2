@@ -7,7 +7,7 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Community.Commands;
 
-public class ConfirmCommunityImageCommandExecutorTests
+public class ConfirmCommunityImageCommandHandlerRequestedDomainEventHandlerTests
 {
     private readonly Mock<IUploadSessionRepository> _uploadSessionRepositoryMock = new();
     private readonly Mock<ICommunityMediaAssetRepository> _communityMediaAssetRepositoryMock = new();
@@ -41,10 +41,11 @@ public class ConfirmCommunityImageCommandExecutorTests
             .Callback<CommunityMediaAssetRecord, CancellationToken>((asset, _) => capturedAsset = asset)
             .Returns(Task.CompletedTask);
 
-        var handler = new ConfirmCommunityImageCommandExecutor(
+        var handler = new ConfirmCommunityImageCommandHandlerRequestedDomainEventHandler(
             _uploadSessionRepositoryMock.Object,
             _communityMediaAssetRepositoryMock.Object,
-            _r2UploadServiceMock.Object);
+            _r2UploadServiceMock.Object,
+            Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>());
 
         var result = await handler.Handle(new ConfirmCommunityImageCommand
         {
@@ -83,10 +84,11 @@ public class ConfirmCommunityImageCommandExecutorTests
                 ExpiresAtUtc = DateTime.UtcNow.AddMinutes(5),
             });
 
-        var handler = new ConfirmCommunityImageCommandExecutor(
+        var handler = new ConfirmCommunityImageCommandHandlerRequestedDomainEventHandler(
             _uploadSessionRepositoryMock.Object,
             _communityMediaAssetRepositoryMock.Object,
-            _r2UploadServiceMock.Object);
+            _r2UploadServiceMock.Object,
+            Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>());
 
         await Assert.ThrowsAsync<BadRequestException>(() => handler.Handle(new ConfirmCommunityImageCommand
         {

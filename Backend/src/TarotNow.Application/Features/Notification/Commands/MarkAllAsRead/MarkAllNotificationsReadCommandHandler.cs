@@ -1,24 +1,30 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Notification.Commands.MarkAllAsRead;
 
 // Handler đánh dấu toàn bộ thông báo là đã đọc.
-public class MarkAllNotificationsReadCommandExecutor : ICommandExecutionExecutor<MarkAllNotificationsReadCommand, bool>
+public class MarkAllNotificationsReadCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<MarkAllNotificationsReadCommandHandlerRequestedDomainEvent>
 {
     private readonly INotificationRepository _notificationRepository;
-    private readonly ILogger<MarkAllNotificationsReadCommandExecutor> _logger;
+    private readonly ILogger<MarkAllNotificationsReadCommandHandlerRequestedDomainEventHandler> _logger;
 
     /// <summary>
     /// Khởi tạo handler đánh dấu toàn bộ thông báo đã đọc.
     /// Luồng xử lý: nhận repository để cập nhật trạng thái thông báo và logger để ghi vết thao tác.
     /// </summary>
-    public MarkAllNotificationsReadCommandExecutor(
+    public MarkAllNotificationsReadCommandHandlerRequestedDomainEventHandler(
         INotificationRepository notificationRepository,
-        ILogger<MarkAllNotificationsReadCommandExecutor> logger)
+        ILogger<MarkAllNotificationsReadCommandHandlerRequestedDomainEventHandler> logger,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _notificationRepository = notificationRepository;
         _logger = logger;
@@ -37,5 +43,13 @@ public class MarkAllNotificationsReadCommandExecutor : ICommandExecutionExecutor
         // Đổi trạng thái hàng loạt ở tầng persistence; kết quả trả về phản ánh số bản ghi có cập nhật thành công.
 
         return success;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        MarkAllNotificationsReadCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

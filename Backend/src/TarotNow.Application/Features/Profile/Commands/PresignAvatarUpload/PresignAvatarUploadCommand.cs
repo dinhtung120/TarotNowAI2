@@ -1,7 +1,10 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common.MediaUpload;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Profile.Commands.PresignAvatarUpload;
 
@@ -23,7 +26,8 @@ public sealed class PresignAvatarUploadCommand : IRequest<PresignedUploadResult>
 /// <summary>
 /// Handler presign avatar upload.
 /// </summary>
-public sealed class PresignAvatarUploadCommandExecutor : ICommandExecutionExecutor<PresignAvatarUploadCommand, PresignedUploadResult>
+public sealed class PresignAvatarUploadCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<PresignAvatarUploadCommandHandlerRequestedDomainEvent>
 {
     private readonly IR2UploadService _r2UploadService;
     private readonly IUploadSessionRepository _uploadSessionRepository;
@@ -31,9 +35,11 @@ public sealed class PresignAvatarUploadCommandExecutor : ICommandExecutionExecut
     /// <summary>
     /// Khởi tạo handler presign avatar.
     /// </summary>
-    public PresignAvatarUploadCommandExecutor(
+    public PresignAvatarUploadCommandHandlerRequestedDomainEventHandler(
         IR2UploadService r2UploadService,
-        IUploadSessionRepository uploadSessionRepository)
+        IUploadSessionRepository uploadSessionRepository,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _r2UploadService = r2UploadService;
         _uploadSessionRepository = uploadSessionRepository;
@@ -99,5 +105,13 @@ public sealed class PresignAvatarUploadCommandExecutor : ICommandExecutionExecut
     private static string BuildAvatarObjectKey(Guid userId)
     {
         return $"avatars/{userId:N}-{Guid.NewGuid():N}.webp";
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        PresignAvatarUploadCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

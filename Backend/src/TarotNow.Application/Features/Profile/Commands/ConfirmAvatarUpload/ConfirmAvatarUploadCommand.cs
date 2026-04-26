@@ -1,8 +1,11 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common.MediaUpload;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Profile.Commands.ConfirmAvatarUpload;
 
@@ -32,23 +35,26 @@ public sealed record ConfirmAvatarUploadResult(string AvatarUrl, string ObjectKe
 /// <summary>
 /// Handler xác nhận avatar upload.
 /// </summary>
-public sealed class ConfirmAvatarUploadCommandExecutor : ICommandExecutionExecutor<ConfirmAvatarUploadCommand, ConfirmAvatarUploadResult>
+public sealed class ConfirmAvatarUploadCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<ConfirmAvatarUploadCommandHandlerRequestedDomainEvent>
 {
     private readonly IUserRepository _userRepository;
     private readonly IReaderProfileRepository _readerProfileRepository;
     private readonly IUploadSessionRepository _uploadSessionRepository;
     private readonly IR2UploadService _r2UploadService;
-    private readonly ILogger<ConfirmAvatarUploadCommandExecutor> _logger;
+    private readonly ILogger<ConfirmAvatarUploadCommandHandlerRequestedDomainEventHandler> _logger;
 
     /// <summary>
     /// Khởi tạo handler confirm avatar.
     /// </summary>
-    public ConfirmAvatarUploadCommandExecutor(
+    public ConfirmAvatarUploadCommandHandlerRequestedDomainEventHandler(
         IUserRepository userRepository,
         IReaderProfileRepository readerProfileRepository,
         IUploadSessionRepository uploadSessionRepository,
         IR2UploadService r2UploadService,
-        ILogger<ConfirmAvatarUploadCommandExecutor> logger)
+        ILogger<ConfirmAvatarUploadCommandHandlerRequestedDomainEventHandler> logger,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _userRepository = userRepository;
         _readerProfileRepository = readerProfileRepository;
@@ -147,5 +153,13 @@ public sealed class ConfirmAvatarUploadCommandExecutor : ICommandExecutionExecut
         {
             _logger.LogWarning(ex, "Không xóa được avatar cũ key={ObjectKey}", oldObjectKey);
         }
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        ConfirmAvatarUploadCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

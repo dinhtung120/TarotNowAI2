@@ -1,17 +1,24 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Promotions.Commands.UpdatePromotion;
 
 // Handler cập nhật promotion nạp tiền.
-public class UpdatePromotionCommandExecutor : ICommandExecutionExecutor<UpdatePromotionCommand, bool>
+public class UpdatePromotionCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<UpdatePromotionCommandHandlerRequestedDomainEvent>
 {
     private readonly IDepositPromotionRepository _promotionRepository;
 
     /// <summary>
     /// Khởi tạo handler cập nhật promotion.
     /// </summary>
-    public UpdatePromotionCommandExecutor(IDepositPromotionRepository promotionRepository)
+    public UpdatePromotionCommandHandlerRequestedDomainEventHandler(
+        IDepositPromotionRepository promotionRepository,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _promotionRepository = promotionRepository;
     }
@@ -30,5 +37,13 @@ public class UpdatePromotionCommandExecutor : ICommandExecutionExecutor<UpdatePr
         promotion.Update(request.MinAmountVnd, request.BonusGold, request.IsActive);
         await _promotionRepository.UpdateAsync(promotion, cancellationToken);
         return true;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        UpdatePromotionCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

@@ -12,7 +12,7 @@ using TarotNow.Domain.Enums;
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
 // Unit test cho handler đăng nhập và phát hành token.
-public class LoginCommandExecutorTests
+public class LoginCommandHandlerRequestedDomainEventHandlerTests
 {
     // Mock user repository để kiểm soát luồng tìm user.
     private readonly Mock<IUserRepository> _userRepositoryMock;
@@ -28,13 +28,13 @@ public class LoginCommandExecutorTests
     private readonly Mock<IDomainEventPublisher> _domainEventPublisherMock;
     private readonly Mock<IMapper> _mapperMock;
     // Handler cần kiểm thử.
-    private readonly LoginCommandExecutor _handler;
+    private readonly LoginCommandHandlerRequestedDomainEventHandler _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho LoginCommandExecutor.
+    /// Khởi tạo fixture cho LoginCommandHandlerRequestedDomainEventHandler.
     /// Luồng thiết lập expiry mặc định giúp assert kết quả ổn định giữa các lần chạy.
     /// </summary>
-    public LoginCommandExecutorTests()
+    public LoginCommandHandlerRequestedDomainEventHandlerTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _passwordHasherMock = new Mock<IPasswordHasher>();
@@ -65,13 +65,14 @@ public class LoginCommandExecutorTests
                 Status = source.Status.ToString()
             });
 
-        _handler = new LoginCommandExecutor(
+        _handler = new LoginCommandHandlerRequestedDomainEventHandler(
             _userRepositoryMock.Object, _passwordHasherMock.Object,
             _tokenServiceMock.Object, _jwtTokenSettingsMock.Object,
             _refreshTokenRepositoryMock.Object,
             _authSessionRepositoryMock.Object,
             _domainEventPublisherMock.Object,
-            _mapperMock.Object
+            _mapperMock.Object,
+            Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>()
         );
     }
 

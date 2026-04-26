@@ -11,7 +11,7 @@ using Xunit;
 namespace TarotNow.Application.UnitTests.Features.Chat;
 
 // Unit test cho handler tạo hội thoại giữa user và reader.
-public class CreateConversationCommandExecutorTests
+public class CreateConversationCommandHandlerRequestedDomainEventHandlerTests
 {
     // Mock conversation repo để kiểm tra nhánh tạo mới/trả về hội thoại hiện có.
     private readonly Mock<IConversationRepository> _mockConvRepo;
@@ -20,13 +20,13 @@ public class CreateConversationCommandExecutorTests
     // Mock system config để đọc policy SLA/cap runtime.
     private readonly Mock<ISystemConfigSettings> _mockSystemConfigSettings;
     // Handler cần kiểm thử.
-    private readonly CreateConversationCommandExecutor _handler;
+    private readonly CreateConversationCommandHandlerRequestedDomainEventHandler _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho CreateConversationCommandExecutor.
+    /// Khởi tạo fixture cho CreateConversationCommandHandlerRequestedDomainEventHandler.
     /// Luồng dùng mock repositories để test độc lập logic nghiệp vụ chat.
     /// </summary>
-    public CreateConversationCommandExecutorTests()
+    public CreateConversationCommandHandlerRequestedDomainEventHandlerTests()
     {
         _mockConvRepo = new Mock<IConversationRepository>();
         _mockProfileRepo = new Mock<IReaderProfileRepository>();
@@ -34,10 +34,11 @@ public class CreateConversationCommandExecutorTests
         _mockSystemConfigSettings.SetupGet(x => x.ChatAllowedSlaHours).Returns([6, 12, 24]);
         _mockSystemConfigSettings.SetupGet(x => x.ChatDefaultSlaHours).Returns(12);
         _mockSystemConfigSettings.SetupGet(x => x.ChatMaxActiveConversationsPerUser).Returns(5);
-        _handler = new CreateConversationCommandExecutor(
+        _handler = new CreateConversationCommandHandlerRequestedDomainEventHandler(
             _mockConvRepo.Object,
             _mockProfileRepo.Object,
-            _mockSystemConfigSettings.Object);
+            _mockSystemConfigSettings.Object,
+            Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>());
     }
 
     /// <summary>

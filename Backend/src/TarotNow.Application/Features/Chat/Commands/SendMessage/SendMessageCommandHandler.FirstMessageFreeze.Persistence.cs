@@ -2,7 +2,7 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Commands.SendMessage;
 
-public partial class SendMessageCommandExecutor
+public partial class SendMessageCommandHandlerRequestedDomainEventHandler
 {
     /// <summary>
     /// Tạo question item pending đại diện cho khoản freeze câu hỏi chính.

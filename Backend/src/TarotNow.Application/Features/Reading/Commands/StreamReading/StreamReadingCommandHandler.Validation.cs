@@ -6,7 +6,7 @@ using TarotNow.Domain.Entities;
 
 namespace TarotNow.Application.Features.Reading.Commands.StreamReading;
 
-public partial class StreamReadingCommandExecutor
+public partial class StreamReadingCommandHandlerRequestedDomainEventHandler
 {
     /// <summary>
     /// Kiểm tra session hợp lệ trước khi stream.

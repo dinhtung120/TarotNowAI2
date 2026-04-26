@@ -1,5 +1,8 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Gamification.Commands;
 
@@ -7,7 +10,8 @@ namespace TarotNow.Application.Features.Gamification.Commands;
 public record GrantAllTitlesCommand(Guid UserId) : IRequest<bool>;
 
 // Handler cấp toàn bộ title cho user.
-public class GrantAllTitlesCommandExecutor : ICommandExecutionExecutor<GrantAllTitlesCommand, bool>
+public class GrantAllTitlesCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<GrantAllTitlesCommandHandlerRequestedDomainEvent>
 {
     private readonly ITitleRepository _titleRepository;
 
@@ -15,7 +19,10 @@ public class GrantAllTitlesCommandExecutor : ICommandExecutionExecutor<GrantAllT
     /// Khởi tạo handler grant all titles.
     /// Luồng xử lý: nhận title repository để liệt kê title và cấp cho user chưa sở hữu.
     /// </summary>
-    public GrantAllTitlesCommandExecutor(ITitleRepository titleRepository)
+    public GrantAllTitlesCommandHandlerRequestedDomainEventHandler(
+        ITitleRepository titleRepository,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _titleRepository = titleRepository;
     }
@@ -37,5 +44,13 @@ public class GrantAllTitlesCommandExecutor : ICommandExecutionExecutor<GrantAllT
         }
 
         return true;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        GrantAllTitlesCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

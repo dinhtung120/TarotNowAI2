@@ -5,8 +5,10 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Mfa.Commands.MfaSetup;
 
@@ -31,7 +33,8 @@ public class MfaSetupResult
 }
 
 // Handler xử lý luồng setup MFA.
-public class MfaSetupCommandExecutor : ICommandExecutionExecutor<MfaSetupCommand, MfaSetupResult>
+public class MfaSetupCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<MfaSetupCommandHandlerRequestedDomainEvent>
 {
     private readonly IUserRepository _userRepo;
     private readonly IMfaService _mfaService;
@@ -40,7 +43,11 @@ public class MfaSetupCommandExecutor : ICommandExecutionExecutor<MfaSetupCommand
     /// Khởi tạo handler setup MFA.
     /// Luồng xử lý: nhận user repository để đọc/cập nhật trạng thái người dùng và MFA service để sinh dữ liệu bảo mật.
     /// </summary>
-    public MfaSetupCommandExecutor(IUserRepository userRepo, IMfaService mfaService)
+    public MfaSetupCommandHandlerRequestedDomainEventHandler(
+        IUserRepository userRepo,
+        IMfaService mfaService,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _userRepo = userRepo;
         _mfaService = mfaService;
@@ -83,5 +90,13 @@ public class MfaSetupCommandExecutor : ICommandExecutionExecutor<MfaSetupCommand
             SecretDisplay = plainSecret,
             BackupCodes = backupCodes
         };
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        MfaSetupCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

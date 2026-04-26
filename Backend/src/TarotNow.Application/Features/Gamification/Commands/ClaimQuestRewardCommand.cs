@@ -1,6 +1,9 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Features.Gamification.Dtos;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Gamification.Commands;
 
@@ -8,7 +11,8 @@ namespace TarotNow.Application.Features.Gamification.Commands;
 public record ClaimQuestRewardCommand(Guid UserId, string QuestCode, string PeriodKey) : IRequest<ClaimQuestRewardResult>;
 
 // Handler xử lý luồng claim reward của quest.
-public partial class ClaimQuestRewardCommandExecutor : ICommandExecutionExecutor<ClaimQuestRewardCommand, ClaimQuestRewardResult>
+public partial class ClaimQuestRewardCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<ClaimQuestRewardCommandHandlerRequestedDomainEvent>
 {
     private readonly IQuestRepository _questRepo;
     private readonly IWalletRepository _walletRepo;
@@ -18,10 +22,12 @@ public partial class ClaimQuestRewardCommandExecutor : ICommandExecutionExecutor
     /// Khởi tạo handler claim quest reward.
     /// Luồng xử lý: nhận repository quest/wallet/title và domain event publisher để xử lý claim + trả thưởng + phát sự kiện.
     /// </summary>
-    public ClaimQuestRewardCommandExecutor(
+    public ClaimQuestRewardCommandHandlerRequestedDomainEventHandler(
         IQuestRepository questRepo,
         IWalletRepository walletRepo,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _questRepo = questRepo;
         _walletRepo = walletRepo;
@@ -81,4 +87,12 @@ public partial class ClaimQuestRewardCommandExecutor : ICommandExecutionExecutor
     /// </summary>
     private static bool CanClaim(QuestProgressDto? progress)
         => progress != null && progress.CurrentProgress >= progress.Target;
+
+    protected override async Task HandleDomainEventAsync(
+        ClaimQuestRewardCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
+    }
 }

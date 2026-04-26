@@ -10,7 +10,7 @@ using TarotNow.Domain.Events;
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
 // Unit test cho handler quên mật khẩu.
-public class ForgotPasswordCommandExecutorTests
+public class ForgotPasswordCommandHandlerRequestedDomainEventHandlerTests
 {
     // Mock user repo để điều khiển tồn tại/không tồn tại user.
     private readonly Mock<IUserRepository> _userRepositoryMock;
@@ -21,13 +21,13 @@ public class ForgotPasswordCommandExecutorTests
     // Mock transaction coordinator để mô phỏng transaction boundary trong unit test.
     private readonly Mock<ITransactionCoordinator> _transactionCoordinatorMock;
     // Handler cần kiểm thử.
-    private readonly ForgotPasswordCommandExecutor _handler;
+    private readonly ForgotPasswordCommandHandlerRequestedDomainEventHandler _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho ForgotPasswordCommandExecutor.
+    /// Khởi tạo fixture cho ForgotPasswordCommandHandlerRequestedDomainEventHandler.
     /// Luồng dùng mock giúp kiểm thử logic bảo mật mà không gọi hạ tầng ngoài.
     /// </summary>
-    public ForgotPasswordCommandExecutorTests()
+    public ForgotPasswordCommandHandlerRequestedDomainEventHandlerTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _emailOtpRepositoryMock = new Mock<IEmailOtpRepository>();
@@ -37,11 +37,12 @@ public class ForgotPasswordCommandExecutorTests
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
             .Returns<Func<CancellationToken, Task>, CancellationToken>((action, ct) => action(ct));
 
-        _handler = new ForgotPasswordCommandExecutor(
+        _handler = new ForgotPasswordCommandHandlerRequestedDomainEventHandler(
             _userRepositoryMock.Object,
             _emailOtpRepositoryMock.Object,
             _domainEventPublisherMock.Object,
-            _transactionCoordinatorMock.Object
+            _transactionCoordinatorMock.Object,
+            Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>()
         );
     }
 

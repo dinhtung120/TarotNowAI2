@@ -3,7 +3,7 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Commands.SendMessage;
 
-public partial class SendMessageCommandExecutor
+public partial class SendMessageCommandHandlerRequestedDomainEventHandler
 {
     /// <summary>
     /// Thực thi luồng freeze câu hỏi chính trong transaction.

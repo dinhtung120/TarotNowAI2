@@ -1,13 +1,17 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Admin.Commands.CreateUser;
 
 // Handler tạo tài khoản mới và gán vai trò ban đầu theo command từ admin.
-public class CreateUserCommandExecutor : ICommandExecutionExecutor<CreateUserCommand, Guid>
+public class CreateUserCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<CreateUserCommandHandlerRequestedDomainEvent>
 {
     // DOB mặc định cho tài khoản tạo thủ công khi admin không nhập ngày sinh.
     private static readonly DateTime DefaultDateOfBirth = new(1990, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -19,7 +23,11 @@ public class CreateUserCommandExecutor : ICommandExecutionExecutor<CreateUserCom
     /// Khởi tạo handler tạo user.
     /// Luồng xử lý: nhận repository user để kiểm tra trùng/lưu mới và hasher để mã hóa mật khẩu.
     /// </summary>
-    public CreateUserCommandExecutor(IUserRepository userRepository, IPasswordHasher passwordHasher)
+    public CreateUserCommandHandlerRequestedDomainEventHandler(
+        IUserRepository userRepository,
+        IPasswordHasher passwordHasher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
@@ -76,6 +84,14 @@ public class CreateUserCommandExecutor : ICommandExecutionExecutor<CreateUserCom
         // Persist user sau khi hoàn tất toàn bộ rule khởi tạo và gán quyền.
         await _userRepository.AddAsync(user, cancellationToken);
         return user.Id;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        CreateUserCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 
     /// <summary>

@@ -24,7 +24,6 @@ public static class DependencyInjection
         RegisterMediatR(services, additionalAssemblies);
         RegisterValidation(services);
         RegisterMappings(services);
-        RegisterCommandExecutors(services);
         RegisterDomainServices(services);
 
         return services;
@@ -90,38 +89,6 @@ public static class DependencyInjection
     private static void RegisterMappings(IServiceCollection services)
     {
         services.AddAutoMapper(cfg => { }, Assembly.GetExecutingAssembly());
-    }
-
-    /// <summary>
-    /// Đăng ký các command executor đã tách khỏi command handlers event-only.
-    /// Luồng xử lý: quét assembly Application và bind mọi closed interface ICommandExecutionExecutor<,> với implementation tương ứng.
-    /// </summary>
-    private static void RegisterCommandExecutors(IServiceCollection services)
-    {
-        var executorInterface = typeof(ICommandExecutionExecutor<,>);
-        var executorTypes = Assembly
-            .GetExecutingAssembly()
-            .GetTypes()
-            .Where(type => type.IsClass && !type.IsAbstract)
-            .Select(type => new
-            {
-                Implementation = type,
-                Contracts = type
-                    .GetInterfaces()
-                    .Where(contract => contract.IsGenericType
-                                       && contract.GetGenericTypeDefinition() == executorInterface)
-                    .ToArray()
-            })
-            .Where(item => item.Contracts.Length > 0)
-            .ToArray();
-
-        foreach (var executor in executorTypes)
-        {
-            foreach (var contract in executor.Contracts)
-            {
-                services.AddScoped(contract, executor.Implementation);
-            }
-        }
     }
 
     /// <summary>

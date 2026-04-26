@@ -10,7 +10,7 @@ using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
-public class RefreshTokenCommandExecutorTests
+public class RefreshTokenCommandHandlerRequestedDomainEventHandlerTests
 {
     private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock;
     private readonly Mock<IAuthSessionRepository> _authSessionRepositoryMock;
@@ -18,9 +18,9 @@ public class RefreshTokenCommandExecutorTests
     private readonly Mock<IJwtTokenSettings> _jwtTokenSettingsMock;
     private readonly Mock<IDomainEventPublisher> _domainEventPublisherMock;
     private readonly Mock<IMapper> _mapperMock;
-    private readonly RefreshTokenCommandExecutor _handler;
+    private readonly RefreshTokenCommandHandlerRequestedDomainEventHandler _handler;
 
-    public RefreshTokenCommandExecutorTests()
+    public RefreshTokenCommandHandlerRequestedDomainEventHandlerTests()
     {
         _refreshTokenRepositoryMock = new Mock<IRefreshTokenRepository>();
         _authSessionRepositoryMock = new Mock<IAuthSessionRepository>();
@@ -57,13 +57,14 @@ public class RefreshTokenCommandExecutorTests
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        _handler = new RefreshTokenCommandExecutor(
+        _handler = new RefreshTokenCommandHandlerRequestedDomainEventHandler(
             _refreshTokenRepositoryMock.Object,
             _authSessionRepositoryMock.Object,
             _tokenServiceMock.Object,
             _jwtTokenSettingsMock.Object,
             _domainEventPublisherMock.Object,
-            _mapperMock.Object);
+            _mapperMock.Object,
+            Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>());
     }
 
     [Fact]

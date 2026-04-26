@@ -1,8 +1,11 @@
 
 
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Chat.Commands.MarkMessagesRead;
 
@@ -17,7 +20,8 @@ public class MarkMessagesReadCommand : IRequest<bool>
 }
 
 // Handler xử lý đánh dấu message đã đọc.
-public class MarkMessagesReadCommandExecutor : ICommandExecutionExecutor<MarkMessagesReadCommand, bool>
+public class MarkMessagesReadCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<MarkMessagesReadCommandHandlerRequestedDomainEvent>
 {
     private readonly IConversationRepository _conversationRepo;
     private readonly IChatMessageRepository _messageRepo;
@@ -27,10 +31,12 @@ public class MarkMessagesReadCommandExecutor : ICommandExecutionExecutor<MarkMes
     /// Khởi tạo handler mark messages read.
     /// Luồng xử lý: nhận conversation repo để kiểm tra quyền và message repo để cập nhật trạng thái đọc.
     /// </summary>
-    public MarkMessagesReadCommandExecutor(
+    public MarkMessagesReadCommandHandlerRequestedDomainEventHandler(
         IConversationRepository conversationRepo,
         IChatMessageRepository messageRepo,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _conversationRepo = conversationRepo;
         _messageRepo = messageRepo;
@@ -94,5 +100,13 @@ public class MarkMessagesReadCommandExecutor : ICommandExecutionExecutor<MarkMes
             cancellationToken);
 
         return true;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        MarkMessagesReadCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

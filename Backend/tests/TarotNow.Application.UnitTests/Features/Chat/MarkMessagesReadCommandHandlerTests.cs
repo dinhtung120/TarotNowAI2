@@ -9,7 +9,7 @@ using Xunit;
 namespace TarotNow.Application.UnitTests.Features.Chat;
 
 // Unit test cho handler đánh dấu tin nhắn đã đọc.
-public class MarkMessagesReadCommandExecutorTests
+public class MarkMessagesReadCommandHandlerRequestedDomainEventHandlerTests
 {
     // Mock conversation repo để kiểm soát membership và unread counters.
     private readonly Mock<IConversationRepository> _mockConvRepo;
@@ -18,21 +18,22 @@ public class MarkMessagesReadCommandExecutorTests
     // Mock domain event publisher để xác nhận enqueue outbox events.
     private readonly Mock<IDomainEventPublisher> _mockDomainEventPublisher;
     // Handler cần kiểm thử.
-    private readonly MarkMessagesReadCommandExecutor _handler;
+    private readonly MarkMessagesReadCommandHandlerRequestedDomainEventHandler _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho MarkMessagesReadCommandExecutor.
+    /// Khởi tạo fixture cho MarkMessagesReadCommandHandlerRequestedDomainEventHandler.
     /// Luồng sử dụng mock repositories để test logic unread count độc lập DB thật.
     /// </summary>
-    public MarkMessagesReadCommandExecutorTests()
+    public MarkMessagesReadCommandHandlerRequestedDomainEventHandlerTests()
     {
         _mockConvRepo = new Mock<IConversationRepository>();
         _mockMsgRepo = new Mock<IChatMessageRepository>();
         _mockDomainEventPublisher = new Mock<IDomainEventPublisher>();
-        _handler = new MarkMessagesReadCommandExecutor(
+        _handler = new MarkMessagesReadCommandHandlerRequestedDomainEventHandler(
             _mockConvRepo.Object,
             _mockMsgRepo.Object,
-            _mockDomainEventPublisher.Object);
+            _mockDomainEventPublisher.Object,
+            Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>());
     }
 
     /// <summary>

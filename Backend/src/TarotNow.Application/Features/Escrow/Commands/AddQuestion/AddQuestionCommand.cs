@@ -1,8 +1,11 @@
 
 
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 
@@ -28,7 +31,8 @@ public class AddQuestionCommand : IRequest<Guid>
 }
 
 // Handler điều phối luồng add-question.
-public partial class AddQuestionCommandExecutor : ICommandExecutionExecutor<AddQuestionCommand, Guid>
+public partial class AddQuestionCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<AddQuestionCommandHandlerRequestedDomainEvent>
 {
     private readonly IChatFinanceRepository _financeRepo;
     private readonly IWalletRepository _walletRepo;
@@ -40,12 +44,14 @@ public partial class AddQuestionCommandExecutor : ICommandExecutionExecutor<AddQ
     /// Khởi tạo handler add question.
     /// Luồng xử lý: nhận finance repo, wallet repo và transaction coordinator cho luồng freeze + ghi item nhất quán.
     /// </summary>
-    public AddQuestionCommandExecutor(
+    public AddQuestionCommandHandlerRequestedDomainEventHandler(
         IChatFinanceRepository financeRepo,
         IWalletRepository walletRepo,
         ITransactionCoordinator transactionCoordinator,
         IDomainEventPublisher domainEventPublisher,
-        ISystemConfigSettings systemConfigSettings)
+        ISystemConfigSettings systemConfigSettings,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _financeRepo = financeRepo;
         _walletRepo = walletRepo;
@@ -69,5 +75,13 @@ public partial class AddQuestionCommandExecutor : ICommandExecutionExecutor<AddQ
         }
 
         return await ExecuteAddQuestionAsync(req, idempotencyKey, ct);
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        AddQuestionCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

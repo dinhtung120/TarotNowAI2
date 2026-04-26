@@ -2,10 +2,12 @@
 
 using MediatR;
 using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Community;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Community.Commands.ReportPost;
@@ -27,7 +29,8 @@ public class ReportPostCommand : IRequest<ReportDto>
 }
 
 // Handler xử lý tạo report cho bài viết community.
-public class ReportPostCommandExecutor : ICommandExecutionExecutor<ReportPostCommand, ReportDto>
+public class ReportPostCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<ReportPostCommandHandlerRequestedDomainEvent>
 {
     private readonly IReportRepository _reportRepo;
     private readonly ICommunityPostRepository _postRepo;
@@ -36,7 +39,11 @@ public class ReportPostCommandExecutor : ICommandExecutionExecutor<ReportPostCom
     /// Khởi tạo handler report post.
     /// Luồng xử lý: nhận repository report và post để validate mục tiêu rồi ghi report.
     /// </summary>
-    public ReportPostCommandExecutor(IReportRepository reportRepo, ICommunityPostRepository postRepo)
+    public ReportPostCommandHandlerRequestedDomainEventHandler(
+        IReportRepository reportRepo,
+        ICommunityPostRepository postRepo,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _reportRepo = reportRepo;
         _postRepo = postRepo;
@@ -93,5 +100,13 @@ public class ReportPostCommandExecutor : ICommandExecutionExecutor<ReportPostCom
 
         await _reportRepo.AddAsync(report, cancellationToken);
         return report;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        ReportPostCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

@@ -6,7 +6,7 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Commands.RespondConversationAddMoney;
 
-public partial class RespondConversationAddMoneyCommandExecutor
+public partial class RespondConversationAddMoneyCommandHandlerRequestedDomainEventHandler
 {
     /// <summary>
     /// Tải conversation theo id từ request phản hồi cộng tiền.

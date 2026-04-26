@@ -1,7 +1,10 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common.MediaUpload;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Community.Commands.ConfirmCommunityImage;
 
@@ -37,7 +40,8 @@ public sealed record ConfirmCommunityImageResult(string ObjectKey, string Public
 /// <summary>
 /// Handler xác nhận community image upload.
 /// </summary>
-public sealed class ConfirmCommunityImageCommandExecutor : ICommandExecutionExecutor<ConfirmCommunityImageCommand, ConfirmCommunityImageResult>
+public sealed class ConfirmCommunityImageCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<ConfirmCommunityImageCommandHandlerRequestedDomainEvent>
 {
     private readonly IUploadSessionRepository _uploadSessionRepository;
     private readonly ICommunityMediaAssetRepository _communityMediaAssetRepository;
@@ -46,10 +50,12 @@ public sealed class ConfirmCommunityImageCommandExecutor : ICommandExecutionExec
     /// <summary>
     /// Khởi tạo handler confirm community image.
     /// </summary>
-    public ConfirmCommunityImageCommandExecutor(
+    public ConfirmCommunityImageCommandHandlerRequestedDomainEventHandler(
         IUploadSessionRepository uploadSessionRepository,
         ICommunityMediaAssetRepository communityMediaAssetRepository,
-        IR2UploadService r2UploadService)
+        IR2UploadService r2UploadService,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _uploadSessionRepository = uploadSessionRepository;
         _communityMediaAssetRepository = communityMediaAssetRepository;
@@ -145,5 +151,13 @@ public sealed class ConfirmCommunityImageCommandExecutor : ICommandExecutionExec
         {
             throw new BadRequestException("ContextDraftId không khớp với upload token.");
         }
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        ConfirmCommunityImageCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

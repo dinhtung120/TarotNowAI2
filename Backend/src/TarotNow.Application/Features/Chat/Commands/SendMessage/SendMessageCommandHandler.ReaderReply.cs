@@ -4,7 +4,7 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Commands.SendMessage;
 
-public partial class SendMessageCommandExecutor
+public partial class SendMessageCommandHandlerRequestedDomainEventHandler
 {
     /// <summary>
     /// Thử đánh dấu item Accepted đã có phản hồi từ Reader.

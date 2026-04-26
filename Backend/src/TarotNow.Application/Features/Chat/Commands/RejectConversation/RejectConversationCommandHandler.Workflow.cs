@@ -5,7 +5,7 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Commands.RejectConversation;
 
-public partial class RejectConversationCommandExecutor
+public partial class RejectConversationCommandHandlerRequestedDomainEventHandler
 {
     /// <summary>
     /// Tải conversation và kiểm tra điều kiện hợp lệ để reader reject.

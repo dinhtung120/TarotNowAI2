@@ -2,10 +2,12 @@
 
 using MediatR;
 using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Community;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Community.Commands.ToggleReaction;
@@ -24,7 +26,8 @@ public class ToggleReactionCommand : IRequest<bool>
 }
 
 // Handler xử lý toggle reaction theo ngữ cảnh hiện tại của user.
-public class ToggleReactionCommandExecutor : ICommandExecutionExecutor<ToggleReactionCommand, bool>
+public class ToggleReactionCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<ToggleReactionCommandHandlerRequestedDomainEvent>
 {
     private readonly ICommunityReactionRepository _reactionRepo;
     private readonly ICommunityPostRepository _postRepo;
@@ -33,7 +36,11 @@ public class ToggleReactionCommandExecutor : ICommandExecutionExecutor<ToggleRea
     /// Khởi tạo handler toggle reaction.
     /// Luồng xử lý: nhận repository reaction/post để kiểm tra trạng thái hiện tại và cập nhật bộ đếm reaction tương ứng.
     /// </summary>
-    public ToggleReactionCommandExecutor(ICommunityReactionRepository reactionRepo, ICommunityPostRepository postRepo)
+    public ToggleReactionCommandHandlerRequestedDomainEventHandler(
+        ICommunityReactionRepository reactionRepo,
+        ICommunityPostRepository postRepo,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _reactionRepo = reactionRepo;
         _postRepo = postRepo;
@@ -138,5 +145,13 @@ public class ToggleReactionCommandExecutor : ICommandExecutionExecutor<ToggleRea
         }
 
         return true;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        ToggleReactionCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

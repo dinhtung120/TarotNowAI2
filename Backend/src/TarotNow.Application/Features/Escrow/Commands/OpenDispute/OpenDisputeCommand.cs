@@ -1,8 +1,11 @@
 
 
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 
@@ -22,7 +25,8 @@ public class OpenDisputeCommand : IRequest<bool>
 }
 
 // Handler xử lý mở tranh chấp.
-public class OpenDisputeCommandExecutor : ICommandExecutionExecutor<OpenDisputeCommand, bool>
+public class OpenDisputeCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<OpenDisputeCommandHandlerRequestedDomainEvent>
 {
     private readonly IChatFinanceRepository _financeRepo;
     private readonly ITransactionCoordinator _transactionCoordinator;
@@ -32,10 +36,12 @@ public class OpenDisputeCommandExecutor : ICommandExecutionExecutor<OpenDisputeC
     /// Khởi tạo handler open dispute.
     /// Luồng xử lý: nhận finance repository và transaction coordinator để cập nhật item/session an toàn trong transaction.
     /// </summary>
-    public OpenDisputeCommandExecutor(
+    public OpenDisputeCommandHandlerRequestedDomainEventHandler(
         IChatFinanceRepository financeRepo,
         ITransactionCoordinator transactionCoordinator,
-        ISystemConfigSettings systemConfigSettings)
+        ISystemConfigSettings systemConfigSettings,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _financeRepo = financeRepo;
         _transactionCoordinator = transactionCoordinator;
@@ -84,6 +90,14 @@ public class OpenDisputeCommandExecutor : ICommandExecutionExecutor<OpenDisputeC
         }, ct);
 
         return true;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        OpenDisputeCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 
     /// <summary>

@@ -11,7 +11,7 @@ using Xunit;
 namespace TarotNow.Application.UnitTests.Features.Chat;
 
 // Unit test cho handler gửi tin nhắn chat với luồng media uploadToken one-time.
-public class SendMessageCommandExecutorTests
+public class SendMessageCommandHandlerRequestedDomainEventHandlerTests
 {
     private readonly Mock<IConversationRepository> _mockConvRepo;
     private readonly Mock<IChatMessageRepository> _mockMsgRepo;
@@ -22,12 +22,12 @@ public class SendMessageCommandExecutorTests
     private readonly Mock<IUploadSessionRepository> _mockUploadSessionRepository;
     private readonly Mock<IDomainEventPublisher> _mockDomainEventPublisher;
     private readonly Mock<ISystemConfigSettings> _mockSystemConfigSettings;
-    private readonly SendMessageCommandExecutor _handler;
+    private readonly SendMessageCommandHandlerRequestedDomainEventHandler _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho SendMessageCommandExecutor.
+    /// Khởi tạo fixture cho SendMessageCommandHandlerRequestedDomainEventHandler.
     /// </summary>
-    public SendMessageCommandExecutorTests()
+    public SendMessageCommandHandlerRequestedDomainEventHandlerTests()
     {
         _mockConvRepo = new Mock<IConversationRepository>();
         _mockMsgRepo = new Mock<IChatMessageRepository>();
@@ -44,7 +44,7 @@ public class SendMessageCommandExecutorTests
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
             .Returns((Func<CancellationToken, Task> action, CancellationToken token) => action(token));
 
-        _handler = new SendMessageCommandExecutor(
+        _handler = new SendMessageCommandHandlerRequestedDomainEventHandler(
             _mockConvRepo.Object,
             _mockMsgRepo.Object,
             _mockFinanceRepo.Object,
@@ -53,7 +53,8 @@ public class SendMessageCommandExecutorTests
             _mockTransactionCoordinator.Object,
             _mockUploadSessionRepository.Object,
             _mockDomainEventPublisher.Object,
-            _mockSystemConfigSettings.Object);
+            _mockSystemConfigSettings.Object,
+            Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>());
     }
 
     [Fact]

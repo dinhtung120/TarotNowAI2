@@ -12,7 +12,7 @@ using Xunit;
 namespace TarotNow.Application.UnitTests.Features.Escrow;
 
 // Unit test cho handler thêm câu hỏi trả phí trong phiên chat finance.
-public class AddQuestionCommandExecutorTests
+public class AddQuestionCommandHandlerRequestedDomainEventHandlerTests
 {
     // Mock finance repo để điều khiển session/item và kiểm tra persistence.
     private readonly Mock<IChatFinanceRepository> _mockFinanceRepo;
@@ -25,13 +25,13 @@ public class AddQuestionCommandExecutorTests
     // Mock system config để đọc policy thời hạn escrow.
     private readonly Mock<ISystemConfigSettings> _mockSystemConfigSettings;
     // Handler cần kiểm thử.
-    private readonly AddQuestionCommandExecutor _handler;
+    private readonly AddQuestionCommandHandlerRequestedDomainEventHandler _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho AddQuestionCommandExecutor.
+    /// Khởi tạo fixture cho AddQuestionCommandHandlerRequestedDomainEventHandler.
     /// Luồng cấu hình transaction coordinator chạy inline để test deterministic.
     /// </summary>
-    public AddQuestionCommandExecutorTests()
+    public AddQuestionCommandHandlerRequestedDomainEventHandlerTests()
     {
         _mockFinanceRepo = new Mock<IChatFinanceRepository>();
         _mockWalletRepo = new Mock<IWalletRepository>();
@@ -45,10 +45,11 @@ public class AddQuestionCommandExecutorTests
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
             .Returns((Func<CancellationToken, Task> action, CancellationToken ct) => action(ct));
 
-        _handler = new AddQuestionCommandExecutor(
+        _handler = new AddQuestionCommandHandlerRequestedDomainEventHandler(
             _mockFinanceRepo.Object, _mockWalletRepo.Object,
             _mockTransactionCoordinator.Object, _mockDomainEventPublisher.Object,
-            _mockSystemConfigSettings.Object);
+            _mockSystemConfigSettings.Object,
+            Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>());
     }
 
     /// <summary>

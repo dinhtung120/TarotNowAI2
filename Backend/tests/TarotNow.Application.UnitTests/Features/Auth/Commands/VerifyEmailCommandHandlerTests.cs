@@ -10,7 +10,7 @@ using TarotNow.Application.Interfaces;
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
 // Unit test cho handler xác thực email bằng OTP.
-public class VerifyEmailCommandExecutorTests
+public class VerifyEmailCommandHandlerRequestedDomainEventHandlerTests
 {
     // Mock user repo để điều khiển trạng thái user trước/sau verify.
     private readonly Mock<IUserRepository> _userRepositoryMock;
@@ -18,22 +18,23 @@ public class VerifyEmailCommandExecutorTests
     private readonly Mock<IEmailOtpRepository> _emailOtpRepositoryMock;
     private readonly Mock<IDomainEventPublisher> _domainEventPublisherMock;
     // Handler cần kiểm thử.
-    private readonly VerifyEmailCommandExecutor _handler;
+    private readonly VerifyEmailCommandHandlerRequestedDomainEventHandler _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho VerifyEmailCommandExecutor.
+    /// Khởi tạo fixture cho VerifyEmailCommandHandlerRequestedDomainEventHandler.
     /// Luồng tiêm mock dependencies giúp kiểm thử độc lập khỏi DB và SMTP.
     /// </summary>
-    public VerifyEmailCommandExecutorTests()
+    public VerifyEmailCommandHandlerRequestedDomainEventHandlerTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _emailOtpRepositoryMock = new Mock<IEmailOtpRepository>();
         _domainEventPublisherMock = new Mock<IDomainEventPublisher>();
 
-        _handler = new VerifyEmailCommandExecutor(
+        _handler = new VerifyEmailCommandHandlerRequestedDomainEventHandler(
             _userRepositoryMock.Object,
             _emailOtpRepositoryMock.Object,
-            _domainEventPublisherMock.Object
+            _domainEventPublisherMock.Object,
+            Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>()
         );
     }
 

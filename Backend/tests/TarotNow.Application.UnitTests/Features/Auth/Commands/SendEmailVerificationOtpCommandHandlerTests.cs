@@ -10,7 +10,7 @@ using TarotNow.Domain.Events;
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
 // Unit test cho handler gửi OTP xác thực email.
-public class SendEmailVerificationOtpCommandExecutorTests
+public class SendEmailVerificationOtpCommandHandlerRequestedDomainEventHandlerTests
 {
     // Mock user repo để điều khiển trạng thái user theo email.
     private readonly Mock<IUserRepository> _userRepositoryMock;
@@ -21,13 +21,13 @@ public class SendEmailVerificationOtpCommandExecutorTests
     // Mock transaction coordinator để mô phỏng ranh giới transaction.
     private readonly Mock<ITransactionCoordinator> _transactionCoordinatorMock;
     // Handler cần kiểm thử.
-    private readonly SendEmailVerificationOtpCommandExecutor _handler;
+    private readonly SendEmailVerificationOtpCommandHandlerRequestedDomainEventHandler _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho SendEmailVerificationOtpCommandExecutor.
+    /// Khởi tạo fixture cho SendEmailVerificationOtpCommandHandlerRequestedDomainEventHandler.
     /// Luồng dùng mock để test logic gửi OTP mà không phụ thuộc SMTP thật.
     /// </summary>
-    public SendEmailVerificationOtpCommandExecutorTests()
+    public SendEmailVerificationOtpCommandHandlerRequestedDomainEventHandlerTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _emailOtpRepositoryMock = new Mock<IEmailOtpRepository>();
@@ -37,11 +37,12 @@ public class SendEmailVerificationOtpCommandExecutorTests
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
             .Returns<Func<CancellationToken, Task>, CancellationToken>((action, ct) => action(ct));
 
-        _handler = new SendEmailVerificationOtpCommandExecutor(
+        _handler = new SendEmailVerificationOtpCommandHandlerRequestedDomainEventHandler(
             _userRepositoryMock.Object,
             _emailOtpRepositoryMock.Object,
             _domainEventPublisherMock.Object,
-            _transactionCoordinatorMock.Object
+            _transactionCoordinatorMock.Object,
+            Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>()
         );
     }
 

@@ -1,6 +1,9 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Community.Commands.ResolvePostReport;
@@ -22,7 +25,8 @@ public class ResolvePostReportCommand : IRequest<bool>
 }
 
 // Handler xử lý resolve report community post.
-public class ResolvePostReportCommandExecutor : ICommandExecutionExecutor<ResolvePostReportCommand, bool>
+public class ResolvePostReportCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<ResolvePostReportCommandHandlerRequestedDomainEvent>
 {
     private readonly ICommunityPostRepository _postRepository;
     private readonly IReportRepository _reportRepository;
@@ -31,9 +35,11 @@ public class ResolvePostReportCommandExecutor : ICommandExecutionExecutor<Resolv
     /// Khởi tạo handler resolve post report.
     /// Luồng xử lý: nhận repository post/report để xác thực report và thực thi hành động moderation.
     /// </summary>
-    public ResolvePostReportCommandExecutor(
+    public ResolvePostReportCommandHandlerRequestedDomainEventHandler(
         ICommunityPostRepository postRepository,
-        IReportRepository reportRepository)
+        IReportRepository reportRepository,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _postRepository = postRepository;
         _reportRepository = reportRepository;
@@ -83,6 +89,14 @@ public class ResolvePostReportCommandExecutor : ICommandExecutionExecutor<Resolv
         }
 
         return true;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        ResolvePostReportCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 
     /// <summary>

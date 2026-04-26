@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Mfa.Commands.MfaChallenge;
 
@@ -20,7 +22,8 @@ public class MfaChallengeCommand : IRequest<bool>
 }
 
 // Handler xử lý logic challenge MFA.
-public class MfaChallengeCommandExecutor : ICommandExecutionExecutor<MfaChallengeCommand, bool>
+public class MfaChallengeCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<MfaChallengeCommandHandlerRequestedDomainEvent>
 {
     private readonly IUserRepository _userRepo;
     private readonly IMfaService _mfaService;
@@ -29,7 +32,11 @@ public class MfaChallengeCommandExecutor : ICommandExecutionExecutor<MfaChalleng
     /// Khởi tạo handler challenge MFA.
     /// Luồng xử lý: nhận user repository để tải/cập nhật user và MFA service để verify mã.
     /// </summary>
-    public MfaChallengeCommandExecutor(IUserRepository userRepo, IMfaService mfaService)
+    public MfaChallengeCommandHandlerRequestedDomainEventHandler(
+        IUserRepository userRepo,
+        IMfaService mfaService,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _userRepo = userRepo;
         _mfaService = mfaService;
@@ -70,6 +77,14 @@ public class MfaChallengeCommandExecutor : ICommandExecutionExecutor<MfaChalleng
 
         // Cả TOTP và backup code đều không hợp lệ thì từ chối challenge.
         throw new BadRequestException("Mã MFA không chính xác hoặc đã hết hạn.");
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        MfaChallengeCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 
     /// <summary>

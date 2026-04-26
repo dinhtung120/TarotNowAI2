@@ -5,7 +5,7 @@ using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Escrow.Commands.AddQuestion;
 
-public partial class AddQuestionCommandExecutor
+public partial class AddQuestionCommandHandlerRequestedDomainEventHandler
 {
     /// <summary>
     /// Validate và chuẩn hóa idempotency key cho luồng add-question.

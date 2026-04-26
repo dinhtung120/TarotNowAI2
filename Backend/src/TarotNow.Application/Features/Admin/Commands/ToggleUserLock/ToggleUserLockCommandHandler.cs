@@ -1,11 +1,15 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Admin.Commands.ToggleUserLock;
 
 // Handler thay đổi trạng thái khóa của tài khoản người dùng.
-public class ToggleUserLockCommandExecutor : ICommandExecutionExecutor<ToggleUserLockCommand, bool>
+public class ToggleUserLockCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<ToggleUserLockCommandHandlerRequestedDomainEvent>
 {
     private readonly IUserRepository _userRepository;
 
@@ -13,7 +17,10 @@ public class ToggleUserLockCommandExecutor : ICommandExecutionExecutor<ToggleUse
     /// Khởi tạo handler toggle lock user.
     /// Luồng xử lý: nhận user repository để tải và cập nhật trạng thái tài khoản.
     /// </summary>
-    public ToggleUserLockCommandExecutor(IUserRepository userRepository)
+    public ToggleUserLockCommandHandlerRequestedDomainEventHandler(
+        IUserRepository userRepository,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _userRepository = userRepository;
     }
@@ -42,5 +49,13 @@ public class ToggleUserLockCommandExecutor : ICommandExecutionExecutor<ToggleUse
         await _userRepository.UpdateAsync(user);
 
         return true;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        ToggleUserLockCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

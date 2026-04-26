@@ -11,7 +11,7 @@ using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.UnitTests.Features.Chat;
 
-public class RespondConversationAddMoneyCommandExecutorTests
+public class RespondConversationAddMoneyCommandHandlerRequestedDomainEventHandlerTests
 {
     [Fact]
     public async Task Handle_WhenAccept_ShouldPublishDurableSyncEventAndReturnReservedMessageId()
@@ -60,11 +60,12 @@ public class RespondConversationAddMoneyCommandExecutorTests
             .Setup(x => x.Send(It.IsAny<AddQuestionCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(itemId);
 
-        var handler = new RespondConversationAddMoneyCommandExecutor(
+        var handler = new RespondConversationAddMoneyCommandHandlerRequestedDomainEventHandler(
             conversationRepo.Object,
             chatMessageRepo.Object,
             mediator.Object,
-            domainEventPublisher.Object);
+            domainEventPublisher.Object,
+            Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>());
 
         var command = new RespondConversationAddMoneyCommand
         {

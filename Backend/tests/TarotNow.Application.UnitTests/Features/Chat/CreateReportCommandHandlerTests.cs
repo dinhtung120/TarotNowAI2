@@ -11,7 +11,7 @@ using Xunit;
 namespace TarotNow.Application.UnitTests.Features.Chat;
 
 // Unit test cho handler tạo report trong module chat.
-public class CreateReportCommandExecutorTests
+public class CreateReportCommandHandlerRequestedDomainEventHandlerTests
 {
     // Mock report repo để xác minh side-effect lưu report.
     private readonly Mock<IReportRepository> _mockReportRepo;
@@ -19,23 +19,24 @@ public class CreateReportCommandExecutorTests
     private readonly Mock<IChatMessageRepository> _mockChatMessageRepo;
     private readonly Mock<IUserRepository> _mockUserRepo;
     // Handler cần kiểm thử.
-    private readonly CreateReportCommandExecutor _handler;
+    private readonly CreateReportCommandHandlerRequestedDomainEventHandler _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho CreateReportCommandExecutor.
+    /// Khởi tạo fixture cho CreateReportCommandHandlerRequestedDomainEventHandler.
     /// Luồng dùng mock repository để kiểm thử logic validate và tạo report.
     /// </summary>
-    public CreateReportCommandExecutorTests()
+    public CreateReportCommandHandlerRequestedDomainEventHandlerTests()
     {
         _mockReportRepo = new Mock<IReportRepository>();
         _mockConversationRepo = new Mock<IConversationRepository>();
         _mockChatMessageRepo = new Mock<IChatMessageRepository>();
         _mockUserRepo = new Mock<IUserRepository>();
-        _handler = new CreateReportCommandExecutor(
+        _handler = new CreateReportCommandHandlerRequestedDomainEventHandler(
             _mockReportRepo.Object,
             _mockConversationRepo.Object,
             _mockChatMessageRepo.Object,
-            _mockUserRepo.Object);
+            _mockUserRepo.Object,
+            Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>());
     }
 
     /// <summary>

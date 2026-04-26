@@ -1,8 +1,11 @@
 
 
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Events;
@@ -11,7 +14,8 @@ using RefreshTokenEntity = TarotNow.Domain.Entities.RefreshToken;
 namespace TarotNow.Application.Features.Auth.Commands.RevokeToken;
 
 // Handler thu hồi refresh token theo yêu cầu bảo mật phiên đăng nhập.
-public class RevokeTokenCommandExecutor : ICommandExecutionExecutor<RevokeTokenCommand, bool>
+public class RevokeTokenCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<RevokeTokenCommandHandlerRequestedDomainEvent>
 {
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IAuthSessionRepository _authSessionRepository;
@@ -21,10 +25,12 @@ public class RevokeTokenCommandExecutor : ICommandExecutionExecutor<RevokeTokenC
     /// Khởi tạo handler revoke token.
     /// Luồng xử lý: nhận refresh token repository để thao tác revoke theo token hoặc theo user.
     /// </summary>
-    public RevokeTokenCommandExecutor(
+    public RevokeTokenCommandHandlerRequestedDomainEventHandler(
         IRefreshTokenRepository refreshTokenRepository,
         IAuthSessionRepository authSessionRepository,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _refreshTokenRepository = refreshTokenRepository;
         _authSessionRepository = authSessionRepository;
@@ -177,5 +183,13 @@ public class RevokeTokenCommandExecutor : ICommandExecutionExecutor<RevokeTokenC
                 Reason = RefreshRevocationReasons.ManualRevoke
             },
             cancellationToken);
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        RevokeTokenCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

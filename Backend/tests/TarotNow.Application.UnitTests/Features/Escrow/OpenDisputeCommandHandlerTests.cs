@@ -9,7 +9,7 @@ using Xunit;
 namespace TarotNow.Application.UnitTests.Features.Escrow;
 
 // Unit test cho handler mở tranh chấp item escrow.
-public class OpenDisputeCommandExecutorTests
+public class OpenDisputeCommandHandlerRequestedDomainEventHandlerTests
 {
     // Mock finance repo để điều khiển item/session và kiểm tra cập nhật trạng thái.
     private readonly Mock<IChatFinanceRepository> _mockFinanceRepo;
@@ -17,13 +17,13 @@ public class OpenDisputeCommandExecutorTests
     private readonly Mock<ITransactionCoordinator> _mockTransactionCoordinator;
     private readonly Mock<ISystemConfigSettings> _mockSystemConfigSettings;
     // Handler cần kiểm thử.
-    private readonly OpenDisputeCommandExecutor _handler;
+    private readonly OpenDisputeCommandHandlerRequestedDomainEventHandler _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho OpenDisputeCommandExecutor.
+    /// Khởi tạo fixture cho OpenDisputeCommandHandlerRequestedDomainEventHandler.
     /// Luồng setup transaction coordinator inline giúp test deterministic.
     /// </summary>
-    public OpenDisputeCommandExecutorTests()
+    public OpenDisputeCommandHandlerRequestedDomainEventHandlerTests()
     {
         _mockFinanceRepo = new Mock<IChatFinanceRepository>();
         _mockTransactionCoordinator = new Mock<ITransactionCoordinator>();
@@ -33,10 +33,11 @@ public class OpenDisputeCommandExecutorTests
         _mockTransactionCoordinator
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
             .Returns((Func<CancellationToken, Task> action, CancellationToken ct) => action(ct));
-        _handler = new OpenDisputeCommandExecutor(
+        _handler = new OpenDisputeCommandHandlerRequestedDomainEventHandler(
             _mockFinanceRepo.Object,
             _mockTransactionCoordinator.Object,
-            _mockSystemConfigSettings.Object);
+            _mockSystemConfigSettings.Object,
+            Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>());
     }
 
     /// <summary>

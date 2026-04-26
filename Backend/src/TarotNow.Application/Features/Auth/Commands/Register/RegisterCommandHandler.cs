@@ -1,14 +1,18 @@
 
 
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Entities;
 
 namespace TarotNow.Application.Features.Auth.Commands.Register;
 
 // Handler xử lý luồng đăng ký tài khoản mới.
-public class RegisterCommandExecutor : ICommandExecutionExecutor<RegisterCommand, Guid>
+public class RegisterCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<RegisterCommandHandlerRequestedDomainEvent>
 {
     // Mã lỗi nghiệp vụ khi email đã tồn tại.
     private const string EmailExistsCode = "EMAIL_ALREADY_EXISTS";
@@ -22,7 +26,11 @@ public class RegisterCommandExecutor : ICommandExecutionExecutor<RegisterCommand
     /// Khởi tạo handler đăng ký.
     /// Luồng xử lý: nhận user repository và password hasher để kiểm tra trùng, tạo user mới an toàn.
     /// </summary>
-    public RegisterCommandExecutor(IUserRepository userRepository, IPasswordHasher passwordHasher)
+    public RegisterCommandHandlerRequestedDomainEventHandler(
+        IUserRepository userRepository,
+        IPasswordHasher passwordHasher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
@@ -40,6 +48,14 @@ public class RegisterCommandExecutor : ICommandExecutionExecutor<RegisterCommand
         var newUser = BuildUser(request, hashedPassword);
         await _userRepository.AddAsync(newUser, cancellationToken);
         return newUser.Id;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        RegisterCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 
     /// <summary>

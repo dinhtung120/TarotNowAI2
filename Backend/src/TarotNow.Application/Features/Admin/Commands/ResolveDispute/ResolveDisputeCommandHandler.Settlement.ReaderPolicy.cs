@@ -3,7 +3,7 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Admin.Commands.ResolveDispute;
 
-public partial class ResolveDisputeCommandExecutor
+public partial class ResolveDisputeCommandHandlerRequestedDomainEventHandler
 {
     /// <summary>
     /// Giảm tổng frozen balance của phiên tài chính sau khi một item đã được settle.

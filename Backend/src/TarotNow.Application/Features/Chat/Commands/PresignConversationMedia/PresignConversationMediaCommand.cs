@@ -1,8 +1,11 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common;
 using TarotNow.Application.Common.MediaUpload;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Commands.PresignConversationMedia;
@@ -34,7 +37,8 @@ public sealed class PresignConversationMediaCommand : IRequest<PresignedUploadRe
 /// <summary>
 /// Handler presign conversation media.
 /// </summary>
-public sealed class PresignConversationMediaCommandExecutor : ICommandExecutionExecutor<PresignConversationMediaCommand, PresignedUploadResult>
+public sealed class PresignConversationMediaCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<PresignConversationMediaCommandHandlerRequestedDomainEvent>
 {
     private static readonly HashSet<string> AllowedVoiceMimeTypes = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -63,10 +67,12 @@ public sealed class PresignConversationMediaCommandExecutor : ICommandExecutionE
     /// <summary>
     /// Khởi tạo handler presign media chat.
     /// </summary>
-    public PresignConversationMediaCommandExecutor(
+    public PresignConversationMediaCommandHandlerRequestedDomainEventHandler(
         IConversationRepository conversationRepository,
         IR2UploadService r2UploadService,
-        IUploadSessionRepository uploadSessionRepository)
+        IUploadSessionRepository uploadSessionRepository,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _conversationRepository = conversationRepository;
         _r2UploadService = r2UploadService;
@@ -199,5 +205,13 @@ public sealed class PresignConversationMediaCommandExecutor : ICommandExecutionE
             ? value
             : ".webm";
         return $"chat/{conversationId}/voices/{requesterId:N}-{Guid.NewGuid():N}{ext}";
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        PresignConversationMediaCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

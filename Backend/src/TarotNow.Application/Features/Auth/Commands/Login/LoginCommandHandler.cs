@@ -1,11 +1,15 @@
 using AutoMapper;
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Auth.Commands.Login;
 
 // Handler chính cho luồng đăng nhập và cấp token phiên.
-public partial class LoginCommandExecutor : ICommandExecutionExecutor<LoginCommand, LoginResult>
+public partial class LoginCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<LoginCommandHandlerRequestedDomainEvent>
 {
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
@@ -20,7 +24,7 @@ public partial class LoginCommandExecutor : ICommandExecutionExecutor<LoginComma
     /// Khởi tạo handler đăng nhập.
     /// Luồng xử lý: nhận user repo, password hasher, token service, jwt settings và refresh token repo.
     /// </summary>
-    public LoginCommandExecutor(
+    public LoginCommandHandlerRequestedDomainEventHandler(
         IUserRepository userRepository,
         IPasswordHasher passwordHasher,
         ITokenService tokenService,
@@ -28,7 +32,9 @@ public partial class LoginCommandExecutor : ICommandExecutionExecutor<LoginComma
         IRefreshTokenRepository refreshTokenRepository,
         IAuthSessionRepository authSessionRepository,
         IDomainEventPublisher domainEventPublisher,
-        IMapper mapper)
+        IMapper mapper,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
@@ -49,5 +55,13 @@ public partial class LoginCommandExecutor : ICommandExecutionExecutor<LoginComma
         var user = await ValidateCredentialsAsync(request, cancellationToken);
         var sessionContext = await CreateSessionContextAsync(user, request, cancellationToken);
         return await IssueLoginResultAsync(user, request, sessionContext, cancellationToken);
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        LoginCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

@@ -1,12 +1,16 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Auth.Commands.VerifyEmail;
 
 // Handler xác minh email và kích hoạt tài khoản.
-public class VerifyEmailCommandExecutor : ICommandExecutionExecutor<VerifyEmailCommand, bool>
+public class VerifyEmailCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<VerifyEmailCommandHandlerRequestedDomainEvent>
 {
     private readonly IUserRepository _userRepository;
     private readonly IEmailOtpRepository _emailOtpRepository;
@@ -16,10 +20,12 @@ public class VerifyEmailCommandExecutor : ICommandExecutionExecutor<VerifyEmailC
     /// Khởi tạo handler verify email.
     /// Luồng xử lý: nhận user repository và OTP repository để xác minh mã và cập nhật trạng thái account.
     /// </summary>
-    public VerifyEmailCommandExecutor(
+    public VerifyEmailCommandHandlerRequestedDomainEventHandler(
         IUserRepository userRepository,
         IEmailOtpRepository emailOtpRepository,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _userRepository = userRepository;
         _emailOtpRepository = emailOtpRepository;
@@ -74,5 +80,13 @@ public class VerifyEmailCommandExecutor : ICommandExecutionExecutor<VerifyEmailC
             cancellationToken);
 
         return true;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        VerifyEmailCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

@@ -1,6 +1,9 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Admin.Commands.AddUserBalance;
@@ -25,7 +28,8 @@ public class AddUserBalanceCommand : IRequest<bool>
 }
 
 // Handler thực thi nghiệp vụ cộng số dư thủ công cho admin.
-public class AddUserBalanceCommandExecutor : ICommandExecutionExecutor<AddUserBalanceCommand, bool>
+public class AddUserBalanceCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<AddUserBalanceCommandHandlerRequestedDomainEvent>
 {
     // Reference source cố định để phân loại giao dịch cộng tay từ admin.
     private const string AdminReferenceSource = "Admin_Manual";
@@ -44,10 +48,12 @@ public class AddUserBalanceCommandExecutor : ICommandExecutionExecutor<AddUserBa
     /// Khởi tạo handler cộng số dư cho admin.
     /// Luồng xử lý: nhận repository user để kiểm tra tồn tại và wallet repository để thực thi credit.
     /// </summary>
-    public AddUserBalanceCommandExecutor(
+    public AddUserBalanceCommandHandlerRequestedDomainEventHandler(
         IWalletRepository walletRepository,
         IUserRepository userRepository,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _walletRepository = walletRepository;
         _userRepository = userRepository;
@@ -138,5 +144,13 @@ public class AddUserBalanceCommandExecutor : ICommandExecutionExecutor<AddUserBa
             description: request.Reason ?? $"Admin credited {request.Amount} {request.Currency}",
             idempotencyKey: IdempotencyPrefix + idempotencyKey,
             cancellationToken: cancellationToken);
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        AddUserBalanceCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

@@ -4,7 +4,7 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Commands.SendMessage;
 
-public partial class SendMessageCommandExecutor
+public partial class SendMessageCommandHandlerRequestedDomainEventHandler
 {
     /// <summary>
     /// Validate dữ liệu đầu vào cơ bản cho lệnh gửi tin nhắn.

@@ -3,7 +3,7 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Commands.RequestConversationComplete;
 
-public partial class RequestConversationCompleteCommandExecutor
+public partial class RequestConversationCompleteCommandHandlerRequestedDomainEventHandler
 {
     /// <summary>
     /// Xử lý nhánh first-request complete nếu đây là lần yêu cầu đầu tiên.

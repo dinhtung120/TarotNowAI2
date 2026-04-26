@@ -4,7 +4,7 @@ using TarotNow.Application.Exceptions;
 
 namespace TarotNow.Application.Features.Chat.Commands.SendMessage;
 
-public partial class SendMessageCommandExecutor
+public partial class SendMessageCommandHandlerRequestedDomainEventHandler
 {
     /// <summary>
     /// Kiểm tra mime type có thuộc whitelist theo loại media hay không.

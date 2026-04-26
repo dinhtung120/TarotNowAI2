@@ -7,7 +7,7 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Reading.Commands.StreamReading;
 
-public partial class StreamReadingCommandExecutor
+public partial class StreamReadingCommandHandlerRequestedDomainEventHandler
 {
     /// <summary>
     /// Reserve slot theo user rồi tạo AI request trong critical section để tránh race quota/in-flight.

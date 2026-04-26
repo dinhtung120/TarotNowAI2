@@ -1,11 +1,15 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Admin.Commands.ResolveDispute;
 
 // Handler điều phối toàn bộ luồng xử lý tranh chấp question item.
-public partial class ResolveDisputeCommandExecutor : ICommandExecutionExecutor<ResolveDisputeCommand, bool>
+public partial class ResolveDisputeCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<ResolveDisputeCommandHandlerRequestedDomainEvent>
 {
     private readonly IChatFinanceRepository _financeRepo;
     private readonly IWalletRepository _walletRepo;
@@ -20,7 +24,7 @@ public partial class ResolveDisputeCommandExecutor : ICommandExecutionExecutor<R
     /// Khởi tạo handler resolve dispute.
     /// Luồng xử lý: nhận các repository tài chính/chat và transaction coordinator để xử lý atomically.
     /// </summary>
-    public ResolveDisputeCommandExecutor(
+    public ResolveDisputeCommandHandlerRequestedDomainEventHandler(
         IChatFinanceRepository financeRepo,
         IWalletRepository walletRepo,
         IReaderProfileRepository readerProfileRepository,
@@ -28,7 +32,9 @@ public partial class ResolveDisputeCommandExecutor : ICommandExecutionExecutor<R
         IConversationRepository conversationRepository,
         IChatMessageRepository chatMessageRepository,
         IDomainEventPublisher domainEventPublisher,
-        ISystemConfigSettings systemConfigSettings)
+        ISystemConfigSettings systemConfigSettings,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _financeRepo = financeRepo;
         _walletRepo = walletRepo;
@@ -71,5 +77,13 @@ public partial class ResolveDisputeCommandExecutor : ICommandExecutionExecutor<R
             cancellationToken);
 
         return true;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        ResolveDisputeCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

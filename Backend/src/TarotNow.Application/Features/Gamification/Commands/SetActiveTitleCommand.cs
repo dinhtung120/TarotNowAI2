@@ -1,5 +1,8 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Gamification.Commands;
 
@@ -7,7 +10,8 @@ namespace TarotNow.Application.Features.Gamification.Commands;
 public record SetActiveTitleCommand(Guid UserId, string TitleCode) : IRequest<bool>;
 
 // Handler xử lý đặt active title.
-public class SetActiveTitleCommandExecutor : ICommandExecutionExecutor<SetActiveTitleCommand, bool>
+public class SetActiveTitleCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<SetActiveTitleCommandHandlerRequestedDomainEvent>
 {
     private readonly ITitleRepository _titleRepo;
     private readonly IUserRepository _userRepo;
@@ -16,7 +20,11 @@ public class SetActiveTitleCommandExecutor : ICommandExecutionExecutor<SetActive
     /// Khởi tạo handler set active title.
     /// Luồng xử lý: nhận title repo để kiểm tra ownership và user repo để cập nhật profile.
     /// </summary>
-    public SetActiveTitleCommandExecutor(ITitleRepository titleRepo, IUserRepository userRepo)
+    public SetActiveTitleCommandHandlerRequestedDomainEventHandler(
+        ITitleRepository titleRepo,
+        IUserRepository userRepo,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _titleRepo = titleRepo;
         _userRepo = userRepo;
@@ -46,5 +54,13 @@ public class SetActiveTitleCommandExecutor : ICommandExecutionExecutor<SetActive
         user.SetActiveTitle(string.IsNullOrEmpty(request.TitleCode) ? null : request.TitleCode);
         await _userRepo.UpdateAsync(user, cancellationToken);
         return true;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        SetActiveTitleCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

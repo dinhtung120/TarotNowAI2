@@ -1,12 +1,16 @@
 using MediatR;
+using System;
 using System.Security.Cryptography;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Auth.Commands.ForgotPassword;
 
 // Handler khởi tạo luồng quên mật khẩu bằng OTP qua email.
-public class ForgotPasswordCommandExecutor : ICommandExecutionExecutor<ForgotPasswordCommand, bool>
+public class ForgotPasswordCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<ForgotPasswordCommandHandlerRequestedDomainEvent>
 {
     private readonly IUserRepository _userRepository;
     private readonly IEmailOtpRepository _emailOtpRepository;
@@ -17,11 +21,13 @@ public class ForgotPasswordCommandExecutor : ICommandExecutionExecutor<ForgotPas
     /// Khởi tạo handler forgot password.
     /// Luồng xử lý: nhận user repo, OTP repo, transaction coordinator và domain event publisher để enqueue email OTP.
     /// </summary>
-    public ForgotPasswordCommandExecutor(
+    public ForgotPasswordCommandHandlerRequestedDomainEventHandler(
         IUserRepository userRepository,
         IEmailOtpRepository emailOtpRepository,
         IDomainEventPublisher domainEventPublisher,
-        ITransactionCoordinator transactionCoordinator)
+        ITransactionCoordinator transactionCoordinator,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _userRepository = userRepository;
         _emailOtpRepository = emailOtpRepository;
@@ -73,5 +79,13 @@ public class ForgotPasswordCommandExecutor : ICommandExecutionExecutor<ForgotPas
             cancellationToken);
 
         return true;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        ForgotPasswordCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

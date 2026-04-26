@@ -9,7 +9,7 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Chat.Commands;
 
-public class PresignConversationMediaCommandExecutorTests
+public class PresignConversationMediaCommandHandlerRequestedDomainEventHandlerTests
 {
     private readonly Mock<IConversationRepository> _conversationRepositoryMock = new();
     private readonly Mock<IR2UploadService> _r2UploadServiceMock = new();
@@ -44,10 +44,11 @@ public class PresignConversationMediaCommandExecutorTests
             .Callback<UploadSessionRecord, CancellationToken>((session, _) => capturedSession = session)
             .Returns(Task.CompletedTask);
 
-        var handler = new PresignConversationMediaCommandExecutor(
+        var handler = new PresignConversationMediaCommandHandlerRequestedDomainEventHandler(
             _conversationRepositoryMock.Object,
             _r2UploadServiceMock.Object,
-            _uploadSessionRepositoryMock.Object);
+            _uploadSessionRepositoryMock.Object,
+            Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>());
 
         var result = await handler.Handle(new PresignConversationMediaCommand
         {
@@ -69,10 +70,11 @@ public class PresignConversationMediaCommandExecutorTests
     public async Task Handle_InvalidVoiceMimeType_ThrowsBadRequestException()
     {
         _r2UploadServiceMock.SetupGet(x => x.IsEnabled).Returns(true);
-        var handler = new PresignConversationMediaCommandExecutor(
+        var handler = new PresignConversationMediaCommandHandlerRequestedDomainEventHandler(
             _conversationRepositoryMock.Object,
             _r2UploadServiceMock.Object,
-            _uploadSessionRepositoryMock.Object);
+            _uploadSessionRepositoryMock.Object,
+            Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>());
 
         await Assert.ThrowsAsync<BadRequestException>(() => handler.Handle(new PresignConversationMediaCommand
         {

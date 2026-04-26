@@ -1,12 +1,16 @@
 using MediatR;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Notification.Commands.MarkAsRead;
 
 // Handler đánh dấu một thông báo đã đọc theo user.
-public class MarkNotificationReadCommandExecutor : ICommandExecutionExecutor<MarkNotificationReadCommand, bool>
+public class MarkNotificationReadCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<MarkNotificationReadCommandHandlerRequestedDomainEvent>
 {
     private readonly INotificationRepository _notificationRepository;
 
@@ -14,7 +18,10 @@ public class MarkNotificationReadCommandExecutor : ICommandExecutionExecutor<Mar
     /// Khởi tạo handler mark-as-read.
     /// Luồng xử lý: nhận notification repository để cập nhật trạng thái read của bản ghi mục tiêu.
     /// </summary>
-    public MarkNotificationReadCommandExecutor(INotificationRepository notificationRepository)
+    public MarkNotificationReadCommandHandlerRequestedDomainEventHandler(
+        INotificationRepository notificationRepository,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _notificationRepository = notificationRepository;
     }
@@ -29,5 +36,13 @@ public class MarkNotificationReadCommandExecutor : ICommandExecutionExecutor<Mar
             request.NotificationId,
             request.UserId,
             cancellationToken);
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        MarkNotificationReadCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

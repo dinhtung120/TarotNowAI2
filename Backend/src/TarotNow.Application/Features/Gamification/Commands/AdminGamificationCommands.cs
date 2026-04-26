@@ -1,8 +1,11 @@
 using MediatR;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Features.Gamification.Dtos;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Gamification.Commands;
 
@@ -13,9 +16,8 @@ public record UpsertQuestDefinitionCommand(QuestDefinitionDto Quest) : IRequest<
 public record DeleteQuestDefinitionCommand(string Code) : IRequest<bool>;
 
 // Handler command admin cho định nghĩa quest.
-public class AdminQuestCommandExecutor :
-    ICommandExecutionExecutor<UpsertQuestDefinitionCommand, bool>,
-    IRequestHandler<DeleteQuestDefinitionCommand, bool>
+public class AdminQuestCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<AdminQuestCommandHandlerRequestedDomainEvent>
 {
     private readonly IQuestRepository _questRepo;
 
@@ -23,7 +25,10 @@ public class AdminQuestCommandExecutor :
     /// Khởi tạo handler admin quest.
     /// Luồng xử lý: nhận quest repository để upsert/xóa định nghĩa quest.
     /// </summary>
-    public AdminQuestCommandExecutor(IQuestRepository questRepo)
+    public AdminQuestCommandHandlerRequestedDomainEventHandler(
+        IQuestRepository questRepo,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _questRepo = questRepo;
     }
@@ -38,10 +43,25 @@ public class AdminQuestCommandExecutor :
         return true;
     }
 
-    /// <summary>
-    /// Xử lý command delete quest definition.
-    /// Luồng xử lý: gọi repository xóa quest theo code và trả true khi hoàn tất.
-    /// </summary>
+    protected override async Task HandleDomainEventAsync(
+        AdminQuestCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
+    }
+}
+
+// Handler command admin xóa định nghĩa quest.
+public class DeleteQuestDefinitionCommandHandler : IRequestHandler<DeleteQuestDefinitionCommand, bool>
+{
+    private readonly IQuestRepository _questRepo;
+
+    public DeleteQuestDefinitionCommandHandler(IQuestRepository questRepo)
+    {
+        _questRepo = questRepo;
+    }
+
     public async Task<bool> Handle(DeleteQuestDefinitionCommand request, CancellationToken cancellationToken)
     {
         await _questRepo.DeleteQuestDefinitionAsync(request.Code, cancellationToken);
@@ -56,9 +76,8 @@ public record UpsertAchievementDefinitionCommand(AchievementDefinitionDto Achiev
 public record DeleteAchievementDefinitionCommand(string Code) : IRequest<bool>;
 
 // Handler command admin cho định nghĩa achievement.
-public class AdminAchievementCommandExecutor :
-    ICommandExecutionExecutor<UpsertAchievementDefinitionCommand, bool>,
-    IRequestHandler<DeleteAchievementDefinitionCommand, bool>
+public class AdminAchievementCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<AdminAchievementCommandHandlerRequestedDomainEvent>
 {
     private readonly IAchievementRepository _achRepo;
 
@@ -66,7 +85,10 @@ public class AdminAchievementCommandExecutor :
     /// Khởi tạo handler admin achievement.
     /// Luồng xử lý: nhận achievement repository để upsert/xóa định nghĩa achievement.
     /// </summary>
-    public AdminAchievementCommandExecutor(IAchievementRepository achRepo)
+    public AdminAchievementCommandHandlerRequestedDomainEventHandler(
+        IAchievementRepository achRepo,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _achRepo = achRepo;
     }
@@ -81,10 +103,25 @@ public class AdminAchievementCommandExecutor :
         return true;
     }
 
-    /// <summary>
-    /// Xử lý command delete achievement definition.
-    /// Luồng xử lý: gọi repository xóa achievement theo code và trả true khi hoàn tất.
-    /// </summary>
+    protected override async Task HandleDomainEventAsync(
+        AdminAchievementCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
+    }
+}
+
+// Handler command admin xóa định nghĩa achievement.
+public class DeleteAchievementDefinitionCommandHandler : IRequestHandler<DeleteAchievementDefinitionCommand, bool>
+{
+    private readonly IAchievementRepository _achRepo;
+
+    public DeleteAchievementDefinitionCommandHandler(IAchievementRepository achRepo)
+    {
+        _achRepo = achRepo;
+    }
+
     public async Task<bool> Handle(DeleteAchievementDefinitionCommand request, CancellationToken cancellationToken)
     {
         await _achRepo.DeleteAchievementDefinitionAsync(request.Code, cancellationToken);
@@ -99,9 +136,8 @@ public record UpsertTitleDefinitionCommand(TitleDefinitionDto Title) : IRequest<
 public record DeleteTitleDefinitionCommand(string Code) : IRequest<bool>;
 
 // Handler command admin cho định nghĩa title.
-public class AdminTitleCommandExecutor :
-    ICommandExecutionExecutor<UpsertTitleDefinitionCommand, bool>,
-    IRequestHandler<DeleteTitleDefinitionCommand, bool>
+public class AdminTitleCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<AdminTitleCommandHandlerRequestedDomainEvent>
 {
     private readonly ITitleRepository _titleRepo;
 
@@ -109,7 +145,10 @@ public class AdminTitleCommandExecutor :
     /// Khởi tạo handler admin title.
     /// Luồng xử lý: nhận title repository để upsert/xóa định nghĩa title.
     /// </summary>
-    public AdminTitleCommandExecutor(ITitleRepository titleRepo)
+    public AdminTitleCommandHandlerRequestedDomainEventHandler(
+        ITitleRepository titleRepo,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _titleRepo = titleRepo;
     }
@@ -124,10 +163,25 @@ public class AdminTitleCommandExecutor :
         return true;
     }
 
-    /// <summary>
-    /// Xử lý command delete title definition.
-    /// Luồng xử lý: gọi repository xóa title theo code và trả true khi hoàn tất.
-    /// </summary>
+    protected override async Task HandleDomainEventAsync(
+        AdminTitleCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
+    }
+}
+
+// Handler command admin xóa định nghĩa title.
+public class DeleteTitleDefinitionCommandHandler : IRequestHandler<DeleteTitleDefinitionCommand, bool>
+{
+    private readonly ITitleRepository _titleRepo;
+
+    public DeleteTitleDefinitionCommandHandler(ITitleRepository titleRepo)
+    {
+        _titleRepo = titleRepo;
+    }
+
     public async Task<bool> Handle(DeleteTitleDefinitionCommand request, CancellationToken cancellationToken)
     {
         await _titleRepo.DeleteTitleDefinitionAsync(request.Code, cancellationToken);

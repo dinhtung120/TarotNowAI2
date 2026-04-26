@@ -5,7 +5,7 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Commands.CreateConversation;
 
-public partial class CreateConversationCommandExecutor
+public partial class CreateConversationCommandHandlerRequestedDomainEventHandler
 {
     /// <summary>
     /// Validate nhanh các rule đầu vào cơ bản cho create conversation.

@@ -1,13 +1,17 @@
 using MediatR;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Entities;
 
 namespace TarotNow.Application.Features.Legal.Commands.RecordConsent;
 
 // Handler ghi nhận consent pháp lý theo nguyên tắc idempotent.
-public class RecordConsentCommandExecutor : ICommandExecutionExecutor<RecordConsentCommand, bool>
+public class RecordConsentCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<RecordConsentCommandHandlerRequestedDomainEvent>
 {
     private readonly IUserConsentRepository _consentRepository;
 
@@ -15,7 +19,10 @@ public class RecordConsentCommandExecutor : ICommandExecutionExecutor<RecordCons
     /// Khởi tạo handler để xử lý ghi nhận consent.
     /// Luồng xử lý: nhận repository để kiểm tra consent hiện có và lưu consent mới khi cần.
     /// </summary>
-    public RecordConsentCommandExecutor(IUserConsentRepository consentRepository)
+    public RecordConsentCommandHandlerRequestedDomainEventHandler(
+        IUserConsentRepository consentRepository,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _consentRepository = consentRepository;
     }
@@ -35,5 +42,13 @@ public class RecordConsentCommandExecutor : ICommandExecutionExecutor<RecordCons
         await _consentRepository.TryAddAsync(newConsent, cancellationToken);
 
         return true;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        RecordConsentCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

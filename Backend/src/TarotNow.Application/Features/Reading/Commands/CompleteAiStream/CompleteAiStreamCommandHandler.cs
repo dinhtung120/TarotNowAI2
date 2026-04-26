@@ -1,32 +1,38 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
 
 // Handler điều phối luồng chốt AI stream: transaction, settlement, session update, telemetry và gamification.
-public partial class CompleteAiStreamCommandExecutor : ICommandExecutionExecutor<CompleteAiStreamCommand, bool>
+public partial class CompleteAiStreamCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<CompleteAiStreamCommandHandlerRequestedDomainEvent>
 {
     private readonly IAiRequestRepository _aiRequestRepo;
     private readonly IWalletRepository _walletRepo;
     private readonly ITransactionCoordinator _transactionCoordinator;
     private readonly IReadingSessionRepository _readingRepo;
     private readonly IDomainEventPublisher _domainEventPublisher;
-    private readonly ILogger<CompleteAiStreamCommandExecutor> _logger;
+    private readonly ILogger<CompleteAiStreamCommandHandlerRequestedDomainEventHandler> _logger;
 
     /// <summary>
     /// Khởi tạo handler complete AI stream.
     /// Luồng xử lý: nhận đầy đủ repository/service để thực hiện chốt request theo giao dịch và phát sinh side-effects sau commit.
     /// </summary>
-    public CompleteAiStreamCommandExecutor(
+    public CompleteAiStreamCommandHandlerRequestedDomainEventHandler(
         IAiRequestRepository aiRequestRepo,
         IWalletRepository walletRepo,
         ITransactionCoordinator transactionCoordinator,
         IReadingSessionRepository readingRepo,
         IDomainEventPublisher domainEventPublisher,
-        ILogger<CompleteAiStreamCommandExecutor> logger)
+        ILogger<CompleteAiStreamCommandHandlerRequestedDomainEventHandler> logger,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _aiRequestRepo = aiRequestRepo;
         _walletRepo = walletRepo;
@@ -75,6 +81,14 @@ public partial class CompleteAiStreamCommandExecutor : ICommandExecutionExecutor
         // Ghi telemetry sau completion để quan sát vận hành; lỗi telemetry không làm fail nghiệp vụ chính.
 
         return true;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        CompleteAiStreamCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 
     // Context truyền giữa các bước trong transaction và hậu xử lý.

@@ -3,7 +3,7 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Commands.RequestConversationComplete;
 
-public partial class RequestConversationCompleteCommandExecutor
+public partial class RequestConversationCompleteCommandHandlerRequestedDomainEventHandler
 {
     // Mô tả dữ liệu đầu vào để ghi system message theo đúng loại/nội dung/thời điểm.
     private readonly record struct SystemMessageSpec(string Type, string Content, DateTime? CreatedAt);

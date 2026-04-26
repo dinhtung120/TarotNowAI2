@@ -1,6 +1,9 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Chat.Commands.PublishTypingState;
@@ -29,8 +32,8 @@ public sealed class PublishTypingStateCommand : IRequest<bool>
 /// <summary>
 /// Handler xử lý publish typing state qua domain event.
 /// </summary>
-public sealed class PublishTypingStateCommandExecutor
-    : ICommandExecutionExecutor<PublishTypingStateCommand, bool>
+public sealed class PublishTypingStateCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<PublishTypingStateCommandHandlerRequestedDomainEvent>
 {
     private readonly IConversationRepository _conversationRepository;
     private readonly IDomainEventPublisher _domainEventPublisher;
@@ -38,9 +41,11 @@ public sealed class PublishTypingStateCommandExecutor
     /// <summary>
     /// Khởi tạo handler publish typing state.
     /// </summary>
-    public PublishTypingStateCommandExecutor(
+    public PublishTypingStateCommandHandlerRequestedDomainEventHandler(
         IConversationRepository conversationRepository,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _conversationRepository = conversationRepository;
         _domainEventPublisher = domainEventPublisher;
@@ -74,5 +79,13 @@ public sealed class PublishTypingStateCommandExecutor
             cancellationToken);
 
         return true;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        PublishTypingStateCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

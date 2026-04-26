@@ -1,7 +1,10 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Commands.CreateReport;
@@ -26,7 +29,8 @@ public class CreateReportCommand : IRequest<ReportDto>
 }
 
 // Handler tạo report và lưu vào repository.
-public class CreateReportCommandExecutor : ICommandExecutionExecutor<CreateReportCommand, ReportDto>
+public class CreateReportCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<CreateReportCommandHandlerRequestedDomainEvent>
 {
     private readonly IReportRepository _reportRepo;
     private readonly IConversationRepository _conversationRepo;
@@ -37,11 +41,13 @@ public class CreateReportCommandExecutor : ICommandExecutionExecutor<CreateRepor
     /// Khởi tạo handler create report.
     /// Luồng xử lý: nhận report repository để persist dữ liệu báo cáo vi phạm.
     /// </summary>
-    public CreateReportCommandExecutor(
+    public CreateReportCommandHandlerRequestedDomainEventHandler(
         IReportRepository reportRepo,
         IConversationRepository conversationRepo,
         IChatMessageRepository chatMessageRepo,
-        IUserRepository userRepo)
+        IUserRepository userRepo,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _reportRepo = reportRepo;
         _conversationRepo = conversationRepo;
@@ -203,5 +209,13 @@ public class CreateReportCommandExecutor : ICommandExecutionExecutor<CreateRepor
         }
 
         throw new BadRequestException("Bạn không có quyền report đối tượng ngoài phạm vi truy cập.");
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        CreateReportCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

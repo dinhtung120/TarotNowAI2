@@ -1,8 +1,11 @@
 
 
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Community.Commands.UpdatePost;
 
@@ -20,7 +23,8 @@ public class UpdatePostCommand : IRequest<bool>
 }
 
 // Handler xử lý cập nhật bài viết.
-public class UpdatePostCommandExecutor : ICommandExecutionExecutor<UpdatePostCommand, bool>
+public class UpdatePostCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<UpdatePostCommandHandlerRequestedDomainEvent>
 {
     private readonly ICommunityPostRepository _postRepo;
     private readonly ICommunityMediaAttachmentService _communityMediaAttachmentService;
@@ -29,9 +33,11 @@ public class UpdatePostCommandExecutor : ICommandExecutionExecutor<UpdatePostCom
     /// Khởi tạo handler update post.
     /// Luồng xử lý: nhận post repository để kiểm tra quyền sở hữu và cập nhật nội dung.
     /// </summary>
-    public UpdatePostCommandExecutor(
+    public UpdatePostCommandHandlerRequestedDomainEventHandler(
         ICommunityPostRepository postRepo,
-        ICommunityMediaAttachmentService communityMediaAttachmentService)
+        ICommunityMediaAttachmentService communityMediaAttachmentService,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _postRepo = postRepo;
         _communityMediaAttachmentService = communityMediaAttachmentService;
@@ -77,5 +83,13 @@ public class UpdatePostCommandExecutor : ICommandExecutionExecutor<UpdatePostCom
             cancellationToken);
 
         return true;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        UpdatePostCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

@@ -2,14 +2,17 @@ using MediatR;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.CheckIn.Commands.PurchaseFreeze;
 
 // Handler xử lý nghiệp vụ mua phục hồi streak.
-public class PurchaseStreakFreezeCommandExecutor : ICommandExecutionExecutor<PurchaseStreakFreezeCommand, PurchaseStreakFreezeResult>
+public class PurchaseStreakFreezeCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<PurchaseStreakFreezeCommandHandlerRequestedDomainEvent>
 {
     // Prefix idempotency cho giao dịch trừ kim cương mua freeze.
     private const string FreezeIdempotencyPrefix = "freeze_";
@@ -26,11 +29,13 @@ public class PurchaseStreakFreezeCommandExecutor : ICommandExecutionExecutor<Pur
     /// Khởi tạo handler purchase streak freeze.
     /// Luồng xử lý: nhận repository user/wallet và system settings để kiểm tra cửa sổ mua.
     /// </summary>
-    public PurchaseStreakFreezeCommandExecutor(
+    public PurchaseStreakFreezeCommandHandlerRequestedDomainEventHandler(
         IUserRepository userRepository,
         IWalletRepository walletRepository,
         ISystemConfigSettings settings,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _userRepository = userRepository;
         _walletRepository = walletRepository;
@@ -158,5 +163,13 @@ public class PurchaseStreakFreezeCommandExecutor : ICommandExecutionExecutor<Pur
             description: $"Mua Lệnh Hồi Sinh Chuỗi Streak {user.PreBreakStreak} Ngày.",
             idempotencyKey: FreezeIdempotencyPrefix + idempotencyKey,
             cancellationToken: cancellationToken);
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        PurchaseStreakFreezeCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

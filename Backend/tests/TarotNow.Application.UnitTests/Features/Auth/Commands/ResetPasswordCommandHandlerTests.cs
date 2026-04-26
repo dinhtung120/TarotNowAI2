@@ -11,7 +11,7 @@ using TarotNow.Domain.Enums;
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
 // Unit test cho handler đặt lại mật khẩu bằng OTP email.
-public class ResetPasswordCommandExecutorTests
+public class ResetPasswordCommandHandlerRequestedDomainEventHandlerTests
 {
     // Mock user repository để điều khiển trạng thái user theo email.
     private readonly Mock<IUserRepository> _userRepositoryMock;
@@ -24,13 +24,13 @@ public class ResetPasswordCommandExecutorTests
     private readonly Mock<IAuthSessionRepository> _authSessionRepositoryMock;
     private readonly Mock<IDomainEventPublisher> _domainEventPublisherMock;
     // Handler cần kiểm thử.
-    private readonly ResetPasswordCommandExecutor _handler;
+    private readonly ResetPasswordCommandHandlerRequestedDomainEventHandler _handler;
 
     /// <summary>
-    /// Khởi tạo fixture cho ResetPasswordCommandExecutor.
+    /// Khởi tạo fixture cho ResetPasswordCommandHandlerRequestedDomainEventHandler.
     /// Luồng tiêm mock dependencies giúp test cô lập hoàn toàn logic đổi mật khẩu.
     /// </summary>
-    public ResetPasswordCommandExecutorTests()
+    public ResetPasswordCommandHandlerRequestedDomainEventHandlerTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _emailOtpRepositoryMock = new Mock<IEmailOtpRepository>();
@@ -42,10 +42,11 @@ public class ResetPasswordCommandExecutorTests
             .Setup(x => x.PublishAsync(It.IsAny<IDomainEvent>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        _handler = new ResetPasswordCommandExecutor(
+        _handler = new ResetPasswordCommandHandlerRequestedDomainEventHandler(
             _userRepositoryMock.Object, _emailOtpRepositoryMock.Object,
             _passwordHasherMock.Object, _refreshTokenRepositoryMock.Object,
-            _authSessionRepositoryMock.Object, _domainEventPublisherMock.Object
+            _authSessionRepositoryMock.Object, _domainEventPublisherMock.Object,
+            Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>()
         );
     }
 

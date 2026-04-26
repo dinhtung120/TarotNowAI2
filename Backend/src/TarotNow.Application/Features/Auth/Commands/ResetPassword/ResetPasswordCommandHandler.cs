@@ -1,6 +1,9 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Events;
 using TarotNow.Domain.Enums;
@@ -8,7 +11,8 @@ using TarotNow.Domain.Enums;
 namespace TarotNow.Application.Features.Auth.Commands.ResetPassword;
 
 // Handler xử lý đặt lại mật khẩu bằng OTP email.
-public class ResetPasswordCommandExecutor : ICommandExecutionExecutor<ResetPasswordCommand, bool>
+public class ResetPasswordCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<ResetPasswordCommandHandlerRequestedDomainEvent>
 {
     private readonly IUserRepository _userRepository;
     private readonly IEmailOtpRepository _emailOtpRepository;
@@ -21,13 +25,15 @@ public class ResetPasswordCommandExecutor : ICommandExecutionExecutor<ResetPassw
     /// Khởi tạo handler reset password.
     /// Luồng xử lý: nhận user repo, OTP repo, password hasher và refresh token repo.
     /// </summary>
-    public ResetPasswordCommandExecutor(
+    public ResetPasswordCommandHandlerRequestedDomainEventHandler(
         IUserRepository userRepository,
         IEmailOtpRepository emailOtpRepository,
         IPasswordHasher passwordHasher,
         IRefreshTokenRepository refreshTokenRepository,
         IAuthSessionRepository authSessionRepository,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _userRepository = userRepository;
         _emailOtpRepository = emailOtpRepository;
@@ -82,5 +88,13 @@ public class ResetPasswordCommandExecutor : ICommandExecutionExecutor<ResetPassw
             cancellationToken);
 
         return true;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        ResetPasswordCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

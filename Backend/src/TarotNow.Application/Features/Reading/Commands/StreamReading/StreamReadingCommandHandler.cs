@@ -1,13 +1,17 @@
 using MediatR;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common.Services;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Reading.Commands.StreamReading;
 
 // Handler điều phối luồng stream reading: validate session/quota/rate-limit, tạo request, freeze escrow và trả stream AI.
-public partial class StreamReadingCommandExecutor : ICommandExecutionExecutor<StreamReadingCommand, StreamReadingResult>
+public partial class StreamReadingCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<StreamReadingCommandHandlerRequestedDomainEvent>
 {
     private readonly IReadingSessionRepository _readingRepo;
     private readonly IAiRequestRepository _aiRequestRepo;
@@ -27,7 +31,7 @@ public partial class StreamReadingCommandExecutor : ICommandExecutionExecutor<St
     /// Khởi tạo handler stream reading.
     /// Luồng xử lý: nhận repository/service cho validation, pricing, wallet escrow, ai streaming và thông báo số dư.
     /// </summary>
-    public StreamReadingCommandExecutor(
+    public StreamReadingCommandHandlerRequestedDomainEventHandler(
         IReadingSessionRepository readingRepo,
         IAiRequestRepository aiRequestRepo,
         IWalletRepository walletRepo,
@@ -36,7 +40,9 @@ public partial class StreamReadingCommandExecutor : ICommandExecutionExecutor<St
         ITransactionCoordinator transactionCoordinator,
         FollowupPricingService pricingService,
         ISystemConfigSettings systemConfigSettings,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _readingRepo = readingRepo;
         _aiRequestRepo = aiRequestRepo;
@@ -109,5 +115,13 @@ public partial class StreamReadingCommandExecutor : ICommandExecutionExecutor<St
 
         var normalizedLength = content.Trim().Length;
         return Math.Max(1, (int)Math.Ceiling(normalizedLength / 4d));
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        StreamReadingCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

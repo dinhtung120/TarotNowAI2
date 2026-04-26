@@ -2,15 +2,18 @@ using MediatR;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Enums;
 using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.CheckIn.Commands.DailyCheckIn;
 
 // Handler xử lý nghiệp vụ check-in hằng ngày.
-public class DailyCheckInCommandExecutor : ICommandExecutionExecutor<DailyCheckInCommand, DailyCheckInResult>
+public class DailyCheckInCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<DailyCheckInCommandHandlerRequestedDomainEvent>
 {
     // Định dạng business date chuẩn dùng cho check-in theo UTC.
     private const string DateFormat = "yyyy-MM-dd";
@@ -33,13 +36,15 @@ public class DailyCheckInCommandExecutor : ICommandExecutionExecutor<DailyCheckI
     /// Khởi tạo handler daily check-in.
     /// Luồng xử lý: nhận repository user/check-in/wallet, settings phần thưởng và service gamification.
     /// </summary>
-    public DailyCheckInCommandExecutor(
+    public DailyCheckInCommandHandlerRequestedDomainEventHandler(
         IUserRepository userRepository,
         IDailyCheckinRepository checkinRepository,
         IWalletRepository walletRepository,
         ICacheService cacheService,
         ISystemConfigSettings settings,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _userRepository = userRepository;
         _checkinRepository = checkinRepository;
@@ -200,5 +205,13 @@ public class DailyCheckInCommandExecutor : ICommandExecutionExecutor<DailyCheckI
             BusinessDate = businessDate,
             CurrentStreak = currentStreak
         };
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        DailyCheckInCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

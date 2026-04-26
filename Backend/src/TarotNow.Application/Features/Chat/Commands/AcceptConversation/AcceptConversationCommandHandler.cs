@@ -1,12 +1,15 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 
 namespace TarotNow.Application.Features.Chat.Commands.AcceptConversation;
 
 // Handler điều phối luồng accept conversation cho reader.
-public partial class AcceptConversationCommandExecutor
-    : ICommandExecutionExecutor<AcceptConversationCommand, ConversationActionResult>
+public partial class AcceptConversationCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<AcceptConversationCommandHandlerRequestedDomainEvent>
 {
     private readonly IConversationRepository _conversationRepository;
     private readonly IChatFinanceRepository _financeRepository;
@@ -19,13 +22,15 @@ public partial class AcceptConversationCommandExecutor
     /// Khởi tạo handler accept conversation.
     /// Luồng xử lý: nhận repository conversation/finance/message và transaction coordinator để xử lý atomically.
     /// </summary>
-    public AcceptConversationCommandExecutor(
+    public AcceptConversationCommandHandlerRequestedDomainEventHandler(
         IConversationRepository conversationRepository,
         IChatFinanceRepository financeRepository,
         ITransactionCoordinator transactionCoordinator,
         IChatMessageRepository chatMessageRepository,
         IDomainEventPublisher domainEventPublisher,
-        ISystemConfigSettings systemConfigSettings)
+        ISystemConfigSettings systemConfigSettings,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _conversationRepository = conversationRepository;
         _financeRepository = financeRepository;
@@ -65,5 +70,13 @@ public partial class AcceptConversationCommandExecutor
             cancellationToken);
 
         return new ConversationActionResult { Status = conversation.Status };
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        AcceptConversationCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

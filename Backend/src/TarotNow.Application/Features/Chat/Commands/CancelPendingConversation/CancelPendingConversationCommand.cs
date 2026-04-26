@@ -1,7 +1,10 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Commands.CancelPendingConversation;
@@ -17,7 +20,8 @@ public class CancelPendingConversationCommand : IRequest<ConversationActionResul
 }
 
 // Handler xử lý hủy conversation pending.
-public class CancelPendingConversationCommandExecutor : ICommandExecutionExecutor<CancelPendingConversationCommand, ConversationActionResult>
+public class CancelPendingConversationCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<CancelPendingConversationCommandHandlerRequestedDomainEvent>
 {
     private readonly IConversationRepository _conversationRepository;
     private readonly IDomainEventPublisher _domainEventPublisher;
@@ -26,9 +30,11 @@ public class CancelPendingConversationCommandExecutor : ICommandExecutionExecuto
     /// Khởi tạo handler cancel pending conversation.
     /// Luồng xử lý: nhận conversation repository và domain event publisher để cập nhật trạng thái + phát event.
     /// </summary>
-    public CancelPendingConversationCommandExecutor(
+    public CancelPendingConversationCommandHandlerRequestedDomainEventHandler(
         IConversationRepository conversationRepository,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _conversationRepository = conversationRepository;
         _domainEventPublisher = domainEventPublisher;
@@ -73,5 +79,13 @@ public class CancelPendingConversationCommandExecutor : ICommandExecutionExecuto
         {
             Status = conversation.Status
         };
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        CancelPendingConversationCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

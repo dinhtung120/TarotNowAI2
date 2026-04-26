@@ -1,8 +1,10 @@
 using System.Security.Cryptography;
 using System.Text;
 using MediatR;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Chat.Commands.RespondConversationAddMoney;
@@ -27,8 +29,8 @@ public class RespondConversationAddMoneyCommand : IRequest<ConversationAddMoneyR
 }
 
 // Handler điều phối luồng phản hồi đề nghị cộng tiền.
-public partial class RespondConversationAddMoneyCommandExecutor
-    : ICommandExecutionExecutor<RespondConversationAddMoneyCommand, ConversationAddMoneyRespondResult>
+public partial class RespondConversationAddMoneyCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<RespondConversationAddMoneyCommandHandlerRequestedDomainEvent>
 {
     private readonly IConversationRepository _conversationRepository;
     private readonly IChatMessageRepository _chatMessageRepository;
@@ -39,11 +41,13 @@ public partial class RespondConversationAddMoneyCommandExecutor
     /// Khởi tạo handler respond conversation add money.
     /// Luồng xử lý: nhận repository conversation/message, mediator xử lý command liên quan và publisher phát event đồng bộ conversation.
     /// </summary>
-    public RespondConversationAddMoneyCommandExecutor(
+    public RespondConversationAddMoneyCommandHandlerRequestedDomainEventHandler(
         IConversationRepository conversationRepository,
         IChatMessageRepository chatMessageRepository,
         IMediator mediator,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _conversationRepository = conversationRepository;
         _chatMessageRepository = chatMessageRepository;
@@ -90,6 +94,14 @@ public partial class RespondConversationAddMoneyCommandExecutor
             ItemId = itemId,
             MessageId = responseMessageId
         };
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        RespondConversationAddMoneyCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 
     private static string GenerateDeterministicMongoObjectIdHex(string conversationId, string offerMessageId)

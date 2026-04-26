@@ -8,14 +8,14 @@ using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.UnitTests.Features.Auth.Commands;
 
-public class RevokeTokenCommandExecutorTests
+public class RevokeTokenCommandHandlerRequestedDomainEventHandlerTests
 {
     private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock;
     private readonly Mock<IAuthSessionRepository> _authSessionRepositoryMock;
     private readonly Mock<IDomainEventPublisher> _domainEventPublisherMock;
-    private readonly RevokeTokenCommandExecutor _handler;
+    private readonly RevokeTokenCommandHandlerRequestedDomainEventHandler _handler;
 
-    public RevokeTokenCommandExecutorTests()
+    public RevokeTokenCommandHandlerRequestedDomainEventHandlerTests()
     {
         _refreshTokenRepositoryMock = new Mock<IRefreshTokenRepository>();
         _authSessionRepositoryMock = new Mock<IAuthSessionRepository>();
@@ -24,10 +24,11 @@ public class RevokeTokenCommandExecutorTests
             .Setup(x => x.PublishAsync(It.IsAny<IDomainEvent>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        _handler = new RevokeTokenCommandExecutor(
+        _handler = new RevokeTokenCommandHandlerRequestedDomainEventHandler(
             _refreshTokenRepositoryMock.Object,
             _authSessionRepositoryMock.Object,
-            _domainEventPublisherMock.Object);
+            _domainEventPublisherMock.Object,
+            Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>());
     }
 
     [Fact]

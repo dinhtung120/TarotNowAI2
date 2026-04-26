@@ -7,7 +7,7 @@ using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
 
-public partial class CompleteAiStreamCommandExecutor
+public partial class CompleteAiStreamCommandHandlerRequestedDomainEventHandler
 {
     /// <summary>
     /// Tiêu thụ escrow đã giữ cho AI request.

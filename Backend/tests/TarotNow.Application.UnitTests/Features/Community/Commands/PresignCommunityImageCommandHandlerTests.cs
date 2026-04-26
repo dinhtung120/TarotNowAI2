@@ -7,7 +7,7 @@ using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Community.Commands;
 
-public class PresignCommunityImageCommandExecutorTests
+public class PresignCommunityImageCommandHandlerRequestedDomainEventHandlerTests
 {
     private readonly Mock<IR2UploadService> _r2UploadServiceMock = new();
     private readonly Mock<IUploadSessionRepository> _uploadSessionRepositoryMock = new();
@@ -30,7 +30,10 @@ public class PresignCommunityImageCommandExecutorTests
             .Callback<UploadSessionRecord, CancellationToken>((session, _) => capturedSession = session)
             .Returns(Task.CompletedTask);
 
-        var handler = new PresignCommunityImageCommandExecutor(_r2UploadServiceMock.Object, _uploadSessionRepositoryMock.Object);
+        var handler = new PresignCommunityImageCommandHandlerRequestedDomainEventHandler(
+            _r2UploadServiceMock.Object,
+            _uploadSessionRepositoryMock.Object,
+            Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>());
         var result = await handler.Handle(new PresignCommunityImageCommand
         {
             UserId = userId,
@@ -53,7 +56,10 @@ public class PresignCommunityImageCommandExecutorTests
     public async Task Handle_InvalidContextType_ThrowsBadRequestException()
     {
         _r2UploadServiceMock.SetupGet(x => x.IsEnabled).Returns(true);
-        var handler = new PresignCommunityImageCommandExecutor(_r2UploadServiceMock.Object, _uploadSessionRepositoryMock.Object);
+        var handler = new PresignCommunityImageCommandHandlerRequestedDomainEventHandler(
+            _r2UploadServiceMock.Object,
+            _uploadSessionRepositoryMock.Object,
+            Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>());
 
         await Assert.ThrowsAsync<BadRequestException>(() => handler.Handle(new PresignCommunityImageCommand
         {

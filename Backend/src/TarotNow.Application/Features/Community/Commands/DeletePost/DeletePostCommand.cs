@@ -1,8 +1,11 @@
 
 
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Community.Commands.DeletePost;
@@ -21,7 +24,8 @@ public class DeletePostCommand : IRequest<bool>
 }
 
 // Handler xử lý xóa mềm bài viết.
-public class DeletePostCommandExecutor : ICommandExecutionExecutor<DeletePostCommand, bool>
+public class DeletePostCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<DeletePostCommandHandlerRequestedDomainEvent>
 {
     private readonly ICommunityPostRepository _postRepo;
 
@@ -29,7 +33,10 @@ public class DeletePostCommandExecutor : ICommandExecutionExecutor<DeletePostCom
     /// Khởi tạo handler delete post.
     /// Luồng xử lý: nhận post repository để kiểm tra quyền và thực hiện soft-delete.
     /// </summary>
-    public DeletePostCommandExecutor(ICommunityPostRepository postRepo)
+    public DeletePostCommandHandlerRequestedDomainEventHandler(
+        ICommunityPostRepository postRepo,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _postRepo = postRepo;
     }
@@ -58,5 +65,13 @@ public class DeletePostCommandExecutor : ICommandExecutionExecutor<DeletePostCom
         }
 
         return await _postRepo.SoftDeleteAsync(request.PostId, request.RequesterId.ToString(), cancellationToken);
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        DeletePostCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }

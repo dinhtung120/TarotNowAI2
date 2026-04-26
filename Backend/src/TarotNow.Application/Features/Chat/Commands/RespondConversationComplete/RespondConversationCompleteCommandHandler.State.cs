@@ -4,7 +4,7 @@ using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Commands.RespondConversationComplete;
 
-public partial class RespondConversationCompleteCommandExecutor
+public partial class RespondConversationCompleteCommandHandlerRequestedDomainEventHandler
 {
     // Gói context cho luồng phản hồi complete để tái sử dụng dữ liệu đã validate.
     private readonly record struct ResponseContext(

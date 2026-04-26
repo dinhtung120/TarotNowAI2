@@ -1,8 +1,11 @@
 using MediatR;
+using System;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Escrow.Commands.OpenDispute;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Features.Chat.Commands.OpenConversationDispute;
@@ -24,8 +27,8 @@ public class OpenConversationDisputeCommand : IRequest<ConversationActionResult>
 }
 
 // Handler mở tranh chấp ở tầng conversation và ủy quyền settle item cho OpenDisputeCommand.
-public class OpenConversationDisputeCommandExecutor
-    : ICommandExecutionExecutor<OpenConversationDisputeCommand, ConversationActionResult>
+public class OpenConversationDisputeCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<OpenConversationDisputeCommandHandlerRequestedDomainEvent>
 {
     private readonly IConversationRepository _conversationRepository;
     private readonly IChatFinanceRepository _financeRepository;
@@ -36,11 +39,13 @@ public class OpenConversationDisputeCommandExecutor
     /// Khởi tạo handler open conversation dispute.
     /// Luồng xử lý: nhận repository conversation/finance, mediator và domain event publisher.
     /// </summary>
-    public OpenConversationDisputeCommandExecutor(
+    public OpenConversationDisputeCommandHandlerRequestedDomainEventHandler(
         IConversationRepository conversationRepository,
         IChatFinanceRepository financeRepository,
         IMediator mediator,
-        IDomainEventPublisher domainEventPublisher)
+        IDomainEventPublisher domainEventPublisher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _conversationRepository = conversationRepository;
         _financeRepository = financeRepository;
@@ -116,5 +121,13 @@ public class OpenConversationDisputeCommandExecutor
         }
 
         return candidate.Id;
+    }
+
+    protected override async Task HandleDomainEventAsync(
+        OpenConversationDisputeCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 }
