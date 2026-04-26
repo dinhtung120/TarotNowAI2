@@ -2,6 +2,7 @@ using TarotNow.Application.Common;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Chat.Commands.SendMessage;
 using TarotNow.Domain.Enums;
+using System.Text.Json;
 
 namespace TarotNow.Application.Features.Chat.Commands.RespondConversationAddMoney;
 
@@ -108,13 +109,16 @@ public partial class RespondConversationAddMoneyCommandHandler
         string? proposalId,
         string? note)
     {
-        // Escape chuỗi trước khi nội suy JSON thủ công để tránh lỗi cú pháp payload.
-        var escapedNote = note?.Replace("\"", "\\\"");
-        var noteJson = string.IsNullOrWhiteSpace(escapedNote)
-            ? string.Empty
-            : $",\"note\":\"{escapedNote}\"";
+        var payload = new Dictionary<string, string?>
+        {
+            ["offerMessageId"] = offerMessageId,
+            ["proposalId"] = proposalId ?? string.Empty
+        };
+        if (!string.IsNullOrWhiteSpace(note))
+        {
+            payload["note"] = note;
+        }
 
-        var safeProposal = proposalId?.Replace("\"", "\\\"") ?? string.Empty;
-        return $"{{\"offerMessageId\":\"{offerMessageId}\",\"proposalId\":\"{safeProposal}\"{noteJson}}}";
+        return JsonSerializer.Serialize(payload);
     }
 }

@@ -164,6 +164,8 @@ public class FollowupPricingServiceTests
         public int OperationalOutboxLockTimeoutSeconds => 120;
         public int OperationalOutboxMaxBackoffSeconds => 300;
         public int OperationalOutboxPollIntervalSeconds => 5;
+        public int OperationalEscrowTimerScanIntervalSeconds => 3600;
+        public int OperationalEscrowCompletionTimeoutBatchSize => 200;
         public int UiReadersDirectoryPageSize => 12;
         public int UiReadersFeaturedLimit => 4;
         public int UiSearchDebounceMs => 300;

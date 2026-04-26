@@ -39,92 +39,17 @@ public static partial class ApiServiceCollectionExtensions
         RateLimitPoliciesOptions rateLimitPolicies)
     {
         AddLoginPolicy(options, rateLimitPolicies);
+        AddRegisterPolicy(options, rateLimitPolicies);
+        AddPasswordPolicy(options, rateLimitPolicies);
+        AddMfaChallengePolicy(options, rateLimitPolicies);
         AddSessionPolicy(options, rateLimitPolicies);
         AddRefreshPolicies(options, rateLimitPolicies);
+        AddWithdrawalCreatePolicy(options, rateLimitPolicies);
+        AddPaymentCreateOrderPolicy(options, rateLimitPolicies);
+        AddReportCreatePolicy(options, rateLimitPolicies);
         AddCommunityPolicy(options, rateLimitPolicies);
         AddChatPolicy(options, rateLimitPolicies);
         AddPaymentWebhookPolicy(options, rateLimitPolicies);
-    }
-
-    private static void AddLoginPolicy(RateLimiterOptions options, RateLimitPoliciesOptions rateLimitPolicies)
-    {
-        AddFixedWindowPolicy(
-            options,
-            "auth-login",
-            ResolveClientIp,
-            permitLimit: rateLimitPolicies.AuthLogin.PermitLimit,
-            window: TimeSpan.FromSeconds(rateLimitPolicies.AuthLogin.WindowSeconds));
-    }
-
-    private static void AddSessionPolicy(RateLimiterOptions options, RateLimitPoliciesOptions rateLimitPolicies)
-    {
-        AddFixedWindowPolicy(
-            options,
-            "auth-session",
-            ResolveAuthenticatedPartitionKey,
-            permitLimit: rateLimitPolicies.AuthSession.PermitLimit,
-            window: TimeSpan.FromSeconds(rateLimitPolicies.AuthSession.WindowSeconds));
-    }
-
-    private static void AddRefreshPolicies(RateLimiterOptions options, RateLimitPoliciesOptions rateLimitPolicies)
-    {
-        AddFixedWindowPolicy(
-            options,
-            "auth-refresh",
-            httpContext => ResolveRefreshPartitionKey(
-                httpContext,
-                rateLimitPolicies.HashPrefixes.RefreshDeviceLength,
-                rateLimitPolicies.HashPrefixes.RefreshTokenLength),
-            permitLimit: rateLimitPolicies.AuthRefresh.PermitLimit,
-            window: TimeSpan.FromSeconds(rateLimitPolicies.AuthRefresh.WindowSeconds));
-        AddFixedWindowPolicy(
-            options,
-            "auth-refresh-token-family",
-            httpContext => ResolveRefreshFamilyKey(
-                httpContext,
-                rateLimitPolicies.HashPrefixes.RefreshDeviceLength,
-                rateLimitPolicies.HashPrefixes.RefreshTokenLength),
-            permitLimit: rateLimitPolicies.AuthRefreshTokenFamily.PermitLimit,
-            window: TimeSpan.FromSeconds(rateLimitPolicies.AuthRefreshTokenFamily.WindowSeconds));
-        AddFixedWindowPolicy(
-            options,
-            "auth-logout",
-            httpContext => ResolveRefreshPartitionKey(
-                httpContext,
-                rateLimitPolicies.HashPrefixes.RefreshDeviceLength,
-                rateLimitPolicies.HashPrefixes.RefreshTokenLength),
-            permitLimit: rateLimitPolicies.AuthLogout.PermitLimit,
-            window: TimeSpan.FromSeconds(rateLimitPolicies.AuthLogout.WindowSeconds));
-    }
-
-    private static void AddCommunityPolicy(RateLimiterOptions options, RateLimitPoliciesOptions rateLimitPolicies)
-    {
-        AddFixedWindowPolicy(
-            options,
-            "community-write",
-            ResolveAuthenticatedPartitionKey,
-            permitLimit: rateLimitPolicies.CommunityWrite.PermitLimit,
-            window: TimeSpan.FromSeconds(rateLimitPolicies.CommunityWrite.WindowSeconds));
-    }
-
-    private static void AddChatPolicy(RateLimiterOptions options, RateLimitPoliciesOptions rateLimitPolicies)
-    {
-        AddFixedWindowPolicy(
-            options,
-            "chat-standard",
-            ResolveAuthenticatedPartitionKey,
-            permitLimit: rateLimitPolicies.ChatStandard.PermitLimit,
-            window: TimeSpan.FromSeconds(rateLimitPolicies.ChatStandard.WindowSeconds));
-    }
-
-    private static void AddPaymentWebhookPolicy(RateLimiterOptions options, RateLimitPoliciesOptions rateLimitPolicies)
-    {
-        AddFixedWindowPolicy(
-            options,
-            "payment-webhook",
-            ResolveClientIp,
-            permitLimit: rateLimitPolicies.PaymentWebhook.PermitLimit,
-            window: TimeSpan.FromSeconds(rateLimitPolicies.PaymentWebhook.WindowSeconds));
     }
 
     /// <summary>

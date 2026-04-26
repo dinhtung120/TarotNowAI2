@@ -90,7 +90,8 @@ public partial class MongoReadingSessionRepository
         {
             Sequence = index + 1,
             Question = followup.Question,
-            Answer = followup.Answer
+            Answer = followup.Answer,
+            AiRequestId = followup.AiRequestId
         }).ToList();
 
         const int maxRetries = 3;

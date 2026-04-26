@@ -17,10 +17,15 @@ public class DailyCheckInCommandHandler : IRequestHandler<DailyCheckInCommand, D
 
     // Prefix idempotency cho giao dịch thưởng check-in.
     private const string CheckinIdempotencyPrefix = "checkin_";
+    private const string CheckinLockPrefix = "checkin:lock:";
+    private const int CheckinLockRetryAttempts = 8;
+    private const int CheckinLockRetryDelayMs = 40;
+    private static readonly TimeSpan CheckinLockLease = TimeSpan.FromSeconds(15);
 
     private readonly IUserRepository _userRepository;
     private readonly IDailyCheckinRepository _checkinRepository;
     private readonly IWalletRepository _walletRepository;
+    private readonly ICacheService _cacheService;
     private readonly ISystemConfigSettings _settings;
     private readonly IDomainEventPublisher _domainEventPublisher;
 
@@ -32,12 +37,14 @@ public class DailyCheckInCommandHandler : IRequestHandler<DailyCheckInCommand, D
         IUserRepository userRepository,
         IDailyCheckinRepository checkinRepository,
         IWalletRepository walletRepository,
+        ICacheService cacheService,
         ISystemConfigSettings settings,
         IDomainEventPublisher domainEventPublisher)
     {
         _userRepository = userRepository;
         _checkinRepository = checkinRepository;
         _walletRepository = walletRepository;
+        _cacheService = cacheService;
         _settings = settings;
         _domainEventPublisher = domainEventPublisher;
     }
@@ -57,35 +64,89 @@ public class DailyCheckInCommandHandler : IRequestHandler<DailyCheckInCommand, D
 
         var todayString = DateOnly.FromDateTime(DateTime.UtcNow).ToString(DateFormat);
         var goldAmount = _settings.DailyCheckinGold;
-        // Luồng check-in insert-first: credit idempotent trước, sau đó cố gắng insert bản ghi check-in.
-        await CreditCheckInRewardAsync(user.Id, todayString, goldAmount, cancellationToken);
-        var inserted = await _checkinRepository.TryInsertAsync(user.Id.ToString(), todayString, goldAmount, cancellationToken);
-        if (!inserted)
+        var lockContext = CreateCheckinLockContext(user.Id, todayString);
+        if (!await AcquireCheckinLockAsync(lockContext.Key, lockContext.Owner, cancellationToken))
         {
             return BuildAlreadyCheckedInResult(todayString, user.CurrentStreak);
         }
 
+        try
+        {
+            var alreadyCheckedIn = await _checkinRepository.HasCheckedInAsync(
+                user.Id.ToString(),
+                todayString,
+                cancellationToken);
+            if (alreadyCheckedIn)
+            {
+                return BuildAlreadyCheckedInResult(todayString, user.CurrentStreak);
+            }
+
+            // Luồng check-in insert-first: credit idempotent trước, sau đó cố gắng insert bản ghi check-in.
+            await CreditCheckInRewardAsync(user.Id, todayString, goldAmount, cancellationToken);
+            var inserted = await _checkinRepository.TryInsertAsync(user.Id.ToString(), todayString, goldAmount, cancellationToken);
+            if (!inserted)
+            {
+                return BuildAlreadyCheckedInResult(todayString, user.CurrentStreak);
+            }
+
+            await PublishCheckinEventsAsync(user.Id, user.CurrentStreak, todayString, goldAmount, cancellationToken);
+            return BuildCheckedInResult(todayString, user.CurrentStreak, goldAmount);
+        }
+        finally
+        {
+            await _cacheService.ReleaseLockAsync(lockContext.Key, lockContext.Owner, cancellationToken);
+        }
+    }
+
+    private static (string Key, string Owner) CreateCheckinLockContext(Guid userId, string businessDate)
+    {
+        return (
+            $"{CheckinLockPrefix}{userId:N}:{businessDate}",
+            $"{userId:N}:{Guid.NewGuid():N}");
+    }
+
+    private async Task<bool> AcquireCheckinLockAsync(string lockKey, string lockOwner, CancellationToken cancellationToken)
+    {
+        for (var attempt = 0; attempt < CheckinLockRetryAttempts; attempt++)
+        {
+            var acquired = await _cacheService.AcquireLockAsync(lockKey, lockOwner, CheckinLockLease, cancellationToken);
+            if (acquired)
+            {
+                return true;
+            }
+
+            await Task.Delay(CheckinLockRetryDelayMs, cancellationToken);
+        }
+
+        return false;
+    }
+
+    private async Task PublishCheckinEventsAsync(
+        Guid userId,
+        int currentStreak,
+        string businessDate,
+        long goldAmount,
+        CancellationToken cancellationToken)
+    {
         await _domainEventPublisher.PublishAsync(
             new MoneyChangedDomainEvent
             {
-                UserId = user.Id,
+                UserId = userId,
                 Currency = CurrencyType.Gold,
                 ChangeType = TransactionType.DailyCheckin,
                 DeltaAmount = goldAmount,
-                ReferenceId = $"{CheckinIdempotencyPrefix}{user.Id}_{todayString}"
+                ReferenceId = $"{CheckinIdempotencyPrefix}{userId}_{businessDate}"
             },
             cancellationToken);
         await _domainEventPublisher.PublishAsync(
             new TarotNow.Domain.Events.DailyCheckInCompletedDomainEvent
             {
-                UserId = user.Id,
-                CurrentStreak = user.CurrentStreak,
-                BusinessDate = todayString,
+                UserId = userId,
+                CurrentStreak = currentStreak,
+                BusinessDate = businessDate,
                 GoldRewarded = goldAmount
             },
             cancellationToken);
-
-        return BuildCheckedInResult(todayString, user.CurrentStreak, goldAmount);
     }
 
     /// <summary>

@@ -113,7 +113,7 @@ public partial class RequestConversationCompleteCommandHandler
         if (lockedSession.TotalFrozen <= 0)
         {
             // Chỉ đóng session khi đã giải ngân hết để không sai lệch đối soát.
-            lockedSession.Status = "completed";
+            lockedSession.Status = ChatFinanceSessionStatus.Completed;
         }
 
         lockedSession.UpdatedAt = DateTime.UtcNow;

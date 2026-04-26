@@ -22,6 +22,7 @@ public sealed partial class SystemConfigOptions
         public RedisOptions Redis { get; set; } = new();
         public AiOptions Ai { get; set; } = new();
         public OutboxOptions Outbox { get; set; } = new();
+        public EscrowTimerOptions EscrowTimer { get; set; } = new();
 
         public sealed class HttpOptions
         {
@@ -59,6 +60,12 @@ public sealed partial class SystemConfigOptions
             public int LockTimeoutSeconds { get; set; } = 120;
             public int MaxBackoffSeconds { get; set; } = 300;
             public int PollIntervalSeconds { get; set; } = 5;
+        }
+
+        public sealed class EscrowTimerOptions
+        {
+            public int ScanIntervalSeconds { get; set; } = 300;
+            public int CompletionTimeoutBatchSize { get; set; } = 200;
         }
     }
 

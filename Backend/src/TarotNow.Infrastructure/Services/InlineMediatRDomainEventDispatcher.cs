@@ -37,7 +37,7 @@ public sealed class InlineMediatRDomainEventDispatcher : IInlineDomainEventDispa
     private static Func<IDomainEvent, INotification> CreateNotificationFactory(Type eventType)
     {
         var notificationType = typeof(DomainEventNotification<>).MakeGenericType(eventType);
-        var constructor = notificationType.GetConstructor(new[] { eventType, typeof(Guid?) });
+        var constructor = notificationType.GetConstructor(new[] { eventType, typeof(Guid?), typeof(string) });
         if (constructor is null)
         {
             throw new InvalidOperationException($"Cannot find DomainEventNotification constructor for {eventType.FullName}.");
@@ -45,7 +45,8 @@ public sealed class InlineMediatRDomainEventDispatcher : IInlineDomainEventDispa
 
         return domainEvent =>
         {
-            var notification = constructor.Invoke(new object?[] { domainEvent, null }) as INotification;
+            var eventIdempotencyKey = (domainEvent as IIdempotentDomainEvent)?.EventIdempotencyKey?.Trim();
+            var notification = constructor.Invoke(new object?[] { domainEvent, null, eventIdempotencyKey }) as INotification;
             if (notification is null)
             {
                 throw new InvalidOperationException($"Cannot create DomainEventNotification for {eventType.FullName}.");

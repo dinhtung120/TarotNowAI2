@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -43,15 +44,23 @@ public partial class CompleteAiStreamCommandHandler
         ReadingSession session,
         CompleteAiStreamCommand request)
     {
+        var aiRequestId = request.AiRequestId.ToString("D");
         if (!string.IsNullOrEmpty(session.AiSummary))
         {
+            if (session.Followups.Any(f => string.Equals(f.AiRequestId, aiRequestId, StringComparison.OrdinalIgnoreCase)))
+            {
+                // Callback completion lặp cho cùng request thì giữ nguyên session để tránh duplicate follow-up.
+                return session;
+            }
+
             var newFollowups = session.Followups.ToList();
             newFollowups.Add(new ReadingFollowup
             {
                 Question = string.IsNullOrWhiteSpace(request.FollowupQuestion)
                     ? "Câu hỏi Follow-up"
                     : request.FollowupQuestion,
-                Answer = request.FullResponse!
+                Answer = request.FullResponse!,
+                AiRequestId = aiRequestId
             });
             // Session đã có summary chính thì câu trả lời mới được ghi như follow-up để giữ timeline hội thoại.
 

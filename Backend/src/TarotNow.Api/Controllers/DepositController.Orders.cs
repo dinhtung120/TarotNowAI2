@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Contracts;
 using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.Deposit.Commands.CreateDepositOrder;
@@ -28,6 +29,7 @@ public partial class DepositController
     /// </summary>
     [HttpPost("orders")]
     [Authorize]
+    [EnableRateLimiting("payment-create-order")]
     public async Task<IActionResult> CreateOrder(
         [FromBody] CreateDepositOrderRequest request,
         CancellationToken cancellationToken)

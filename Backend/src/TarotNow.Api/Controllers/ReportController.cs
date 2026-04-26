@@ -3,6 +3,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Application.Features.Chat.Commands.CreateReport;
 using TarotNow.Api.Contracts.Requests;
 using TarotNow.Api.Extensions;
@@ -35,6 +36,7 @@ public class ReportController : ControllerBase
     /// <param name="body">Payload thông tin báo cáo.</param>
     /// <returns>Kết quả success kèm id report mới tạo.</returns>
     [HttpPost]
+    [EnableRateLimiting("report-create")]
     public async Task<IActionResult> Create([FromBody] CreateReportBody body)
     {
         if (!User.TryGetUserId(out var userId))

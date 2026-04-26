@@ -121,11 +121,17 @@ public class UserRepository : IUserRepository
     /// </summary>
     public async Task<IEnumerable<User>> SearchUsersByUsernameAsync(string usernamePart, CancellationToken cancellationToken = default)
     {
-        var part = usernamePart.Trim().ToLower();
+        var part = usernamePart.Trim();
+        if (string.IsNullOrWhiteSpace(part))
+        {
+            return Enumerable.Empty<User>();
+        }
+
+        var pattern = $"%{EscapeLikePattern(part)}%";
         return await _dbContext.Users
-            .Where(u => u.Username.ToLower().Contains(part))
+            .Where(u => EF.Functions.ILike(u.Username, pattern, @"\"))
             .ToListAsync(cancellationToken);
-        // Dùng ToLower để thực hiện tìm kiếm gần đúng không phân biệt hoa thường.
+        // ILIKE cho PostgreSQL giúp tận dụng index/text search tốt hơn so với ToLower().Contains().
     }
 
     /// <summary>
@@ -158,5 +164,13 @@ public class UserRepository : IUserRepository
             x => (!string.IsNullOrWhiteSpace(x.DisplayName) ? x.DisplayName : x.xUsername, x.AvatarUrl, x.ActiveTitleRef)
         );
         // Edge case: user chưa đặt display name thì dùng username để tránh tên trống ở UI.
+    }
+
+    private static string EscapeLikePattern(string value)
+    {
+        return value
+            .Replace(@"\", @"\\", StringComparison.Ordinal)
+            .Replace("%", @"\%", StringComparison.Ordinal)
+            .Replace("_", @"\_", StringComparison.Ordinal);
     }
 }

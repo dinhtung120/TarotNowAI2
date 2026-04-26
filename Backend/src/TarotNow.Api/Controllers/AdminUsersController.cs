@@ -84,8 +84,16 @@ public sealed class AdminUsersController : ControllerBase
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
         {
             var headerKey = Request.GetIdempotencyKeyOrEmpty();
-            // Ưu tiên idempotency key từ header, fallback sang GUID mới để chống xử lý lặp.
-            command.IdempotencyKey = !string.IsNullOrWhiteSpace(headerKey) ? headerKey : Guid.NewGuid().ToString();
+            // Ưu tiên idempotency key từ header để giữ semantics retry phía client.
+            command.IdempotencyKey = !string.IsNullOrWhiteSpace(headerKey) ? headerKey : string.Empty;
+        }
+
+        if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
+        {
+            return Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                title: "Missing idempotency key",
+                detail: "Idempotency-Key is required.");
         }
 
         var result = await _mediator.Send(command);

@@ -101,6 +101,9 @@ public class ChatMessageDto
     // Nội dung text chính của tin nhắn.
     public string Content { get; set; } = string.Empty;
 
+    // Khóa idempotency cho system message phát sinh từ event nền.
+    public string? SystemEventKey { get; set; }
+
     // Payload thanh toán nếu đây là tin nhắn payment.
     public PaymentPayloadDto? PaymentPayload { get; set; }
 

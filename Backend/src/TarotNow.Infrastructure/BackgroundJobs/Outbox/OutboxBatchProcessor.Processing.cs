@@ -66,8 +66,13 @@ public sealed partial class OutboxBatchProcessor
             throw new InvalidOperationException($"Cannot deserialize payload as IDomainEvent. OutboxId={outboxMessage.Id}");
         }
 
+        var eventIdempotencyKey = (domainEvent as IIdempotentDomainEvent)?.EventIdempotencyKey?.Trim();
         var notificationType = typeof(DomainEventNotification<>).MakeGenericType(eventClrType);
-        var notification = Activator.CreateInstance(notificationType, domainEvent, outboxMessage.Id) as INotification;
+        var notification = Activator.CreateInstance(
+            notificationType,
+            domainEvent,
+            outboxMessage.Id,
+            eventIdempotencyKey) as INotification;
         if (notification == null)
         {
             throw new InvalidOperationException($"Cannot create notification for outbox message {outboxMessage.Id}.");

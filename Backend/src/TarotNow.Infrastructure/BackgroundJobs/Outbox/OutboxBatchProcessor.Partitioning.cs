@@ -71,7 +71,7 @@ public sealed partial class OutboxBatchProcessor
     private static bool TryReadRootStringProperty(JsonElement root, string propertyName, out string value)
     {
         value = string.Empty;
-        if (!root.TryGetProperty(propertyName, out var node))
+        if (!TryGetPropertyCaseInsensitive(root, propertyName, out var node))
         {
             return false;
         }
@@ -101,5 +101,28 @@ public sealed partial class OutboxBatchProcessor
 
         value = node.GetRawText();
         return string.IsNullOrWhiteSpace(value) == false;
+    }
+
+    private static bool TryGetPropertyCaseInsensitive(
+        JsonElement root,
+        string propertyName,
+        out JsonElement value)
+    {
+        if (root.TryGetProperty(propertyName, out value))
+        {
+            return true;
+        }
+
+        foreach (var property in root.EnumerateObject())
+        {
+            if (string.Equals(property.Name, propertyName, StringComparison.OrdinalIgnoreCase))
+            {
+                value = property.Value;
+                return true;
+            }
+        }
+
+        value = default;
+        return false;
     }
 }

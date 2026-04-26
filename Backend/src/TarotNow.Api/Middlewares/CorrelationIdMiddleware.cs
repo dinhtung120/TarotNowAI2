@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Primitives;
 
 namespace TarotNow.Api.Middlewares;
@@ -8,6 +9,10 @@ public sealed class CorrelationIdMiddleware
 {
     // Header chuẩn dùng để nhận/trả correlation id giữa client và server.
     public const string HeaderName = "X-Correlation-ID";
+    private const int CorrelationIdMaxLength = 64;
+    private static readonly Regex SafeCorrelationIdPattern = new(
+        "^[A-Za-z0-9._:-]+$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     private readonly RequestDelegate _next;
     private readonly ILogger<CorrelationIdMiddleware> _logger;
@@ -55,7 +60,7 @@ public sealed class CorrelationIdMiddleware
             && !StringValues.IsNullOrEmpty(incoming))
         {
             var existing = incoming.ToString().Trim();
-            if (!string.IsNullOrWhiteSpace(existing))
+            if (IsSafeCorrelationId(existing))
             {
                 // Ưu tiên giá trị client gửi để giữ liên kết trace giữa nhiều service.
                 return existing;
@@ -71,5 +76,20 @@ public sealed class CorrelationIdMiddleware
 
         // Edge case cuối: sinh GUID mới để đảm bảo request luôn có id truy vết.
         return Guid.NewGuid().ToString("N");
+    }
+
+    private static bool IsSafeCorrelationId(string candidate)
+    {
+        if (string.IsNullOrWhiteSpace(candidate))
+        {
+            return false;
+        }
+
+        if (candidate.Length > CorrelationIdMaxLength)
+        {
+            return false;
+        }
+
+        return SafeCorrelationIdPattern.IsMatch(candidate);
     }
 }

@@ -20,7 +20,6 @@ namespace TarotNow.Api.Controllers;
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
 [Authorize]
-[EnableRateLimiting("auth-session")]
 // API xác thực đa yếu tố (MFA).
 // Luồng chính: setup secret, verify mã, challenge giao dịch và truy vấn trạng thái MFA.
 public class MfaController : ControllerBase
@@ -48,6 +47,7 @@ public class MfaController : ControllerBase
     /// </summary>
     /// <returns>Dữ liệu setup MFA hoặc unauthorized khi thiếu user id.</returns>
     [HttpPost("setup")]
+    [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> Setup()
     {
         var userId = GetUserId();
@@ -68,6 +68,7 @@ public class MfaController : ControllerBase
     /// <param name="body">Payload mã MFA người dùng nhập.</param>
     /// <returns>Thông báo bật MFA thành công.</returns>
     [HttpPost("verify")]
+    [EnableRateLimiting("auth-mfa-challenge")]
     public async Task<IActionResult> Verify([FromBody] MfaVerifyBody body)
     {
         var userId = GetUserId();
@@ -88,6 +89,7 @@ public class MfaController : ControllerBase
     /// <param name="body">Payload mã challenge MFA.</param>
     /// <returns>Thông báo challenge thành công.</returns>
     [HttpPost("challenge")]
+    [EnableRateLimiting("auth-mfa-challenge")]
     public async Task<IActionResult> Challenge([FromBody] MfaChallengeBody body)
     {
         var userId = GetUserId();
@@ -106,6 +108,7 @@ public class MfaController : ControllerBase
     /// </summary>
     /// <returns>Trạng thái MFA hiện tại của user.</returns>
     [HttpGet("status")]
+    [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> Status()
     {
         var userId = GetUserId();

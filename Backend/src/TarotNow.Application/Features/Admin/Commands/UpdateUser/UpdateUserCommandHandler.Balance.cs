@@ -102,7 +102,7 @@ public partial class UpdateUserCommandHandler
             await _walletRepository.CreditAsync(
                 userId: adjustment.UserId,
                 currency: adjustment.Currency,
-                type: TransactionType.AdminTopup,
+                type: TransactionType.AdminAdjustmentCredit,
                 amount: adjustment.Amount,
                 referenceSource: AdminReferenceSource,
                 referenceId: adjustment.ReferenceId,
@@ -115,7 +115,7 @@ public partial class UpdateUserCommandHandler
         await _walletRepository.DebitAsync(
             userId: adjustment.UserId,
             currency: adjustment.Currency,
-            type: TransactionType.AdminTopup,
+            type: TransactionType.AdminAdjustmentDebit,
             amount: adjustment.Amount,
             referenceSource: AdminReferenceSource,
             referenceId: adjustment.ReferenceId,
@@ -136,7 +136,9 @@ public partial class UpdateUserCommandHandler
             {
                 UserId = userId,
                 Currency = currency,
-                ChangeType = TransactionType.AdminTopup,
+                ChangeType = deltaAmount >= 0
+                    ? TransactionType.AdminAdjustmentCredit
+                    : TransactionType.AdminAdjustmentDebit,
                 DeltaAmount = deltaAmount,
                 ReferenceId = referenceId
             },

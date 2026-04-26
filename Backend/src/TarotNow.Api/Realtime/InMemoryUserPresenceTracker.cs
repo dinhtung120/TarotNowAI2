@@ -99,6 +99,20 @@ public class InMemoryUserPresenceTracker : IUserPresenceTracker
     }
 
     /// <summary>
+    /// Kiểm tra user còn kết nối realtime active hay không (không tính heartbeat fallback).
+    /// Luồng xử lý: dựa thuần vào tập connections hiện có của user.
+    /// </summary>
+    public bool HasActiveConnection(string userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return false;
+        }
+
+        return _connectionsByUser.TryGetValue(userId, out var userConnections) && !userConnections.IsEmpty;
+    }
+
+    /// <summary>
     /// Ghi nhận thời điểm hoạt động gần nhất của user.
     /// Luồng xử lý: chỉ cập nhật khi user id hợp lệ để tránh key rỗng.
     /// </summary>

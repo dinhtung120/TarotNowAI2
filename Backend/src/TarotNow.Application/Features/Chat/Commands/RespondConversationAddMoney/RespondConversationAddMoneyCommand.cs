@@ -29,6 +29,9 @@ public partial class RespondConversationAddMoneyCommandHandler
 {
     private readonly IConversationRepository _conversationRepository;
     private readonly IChatMessageRepository _chatMessageRepository;
+    private readonly IChatFinanceRepository _financeRepository;
+    private readonly IWalletRepository _walletRepository;
+    private readonly ITransactionCoordinator _transactionCoordinator;
     private readonly IMediator _mediator;
     private readonly IDomainEventPublisher _domainEventPublisher;
 
@@ -39,11 +42,17 @@ public partial class RespondConversationAddMoneyCommandHandler
     public RespondConversationAddMoneyCommandHandler(
         IConversationRepository conversationRepository,
         IChatMessageRepository chatMessageRepository,
+        IChatFinanceRepository financeRepository,
+        IWalletRepository walletRepository,
+        ITransactionCoordinator transactionCoordinator,
         IMediator mediator,
         IDomainEventPublisher domainEventPublisher)
     {
         _conversationRepository = conversationRepository;
         _chatMessageRepository = chatMessageRepository;
+        _financeRepository = financeRepository;
+        _walletRepository = walletRepository;
+        _transactionCoordinator = transactionCoordinator;
         _mediator = mediator;
         _domainEventPublisher = domainEventPublisher;
     }
@@ -71,7 +80,16 @@ public partial class RespondConversationAddMoneyCommandHandler
         var readerId = ValidateAndParseReaderId(conversation, request);
         // Nhánh chấp nhận: freeze thêm tiền theo payload offer trước khi gửi message xác nhận.
         var itemId = await FreezeOfferAsync(request, offer, readerId, cancellationToken);
-        var acceptMessage = await SendAcceptMessageAsync(request, offer, cancellationToken);
+        ChatMessageDto acceptMessage;
+        try
+        {
+            acceptMessage = await SendAcceptMessageAsync(request, offer, cancellationToken);
+        }
+        catch
+        {
+            await CompensateOfferFreezeAsync(request, itemId, cancellationToken);
+            throw;
+        }
 
         // Publish để UI hai phía nhận trạng thái offer đã được phản hồi.
         await _domainEventPublisher.PublishAsync(

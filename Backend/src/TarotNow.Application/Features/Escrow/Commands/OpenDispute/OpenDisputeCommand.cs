@@ -24,9 +24,6 @@ public class OpenDisputeCommand : IRequest<bool>
 // Handler xử lý mở tranh chấp.
 public class OpenDisputeCommandHandler : IRequestHandler<OpenDisputeCommand, bool>
 {
-    // Trạng thái session khi có tranh chấp.
-    private const string SessionDisputedStatus = "disputed";
-
     private readonly IChatFinanceRepository _financeRepo;
     private readonly ITransactionCoordinator _transactionCoordinator;
     private readonly ISystemConfigSettings _systemConfigSettings;
@@ -72,6 +69,7 @@ public class OpenDisputeCommandHandler : IRequestHandler<OpenDisputeCommand, boo
             item.AutoReleaseAt = null;
             item.DisputeWindowStart = now;
             item.DisputeWindowEnd = now.AddHours(disputeWindowHours);
+            item.DisputeReason = req.Reason.Trim();
             item.UpdatedAt = now;
 
             await _financeRepo.UpdateItemAsync(item, transactionCt);
@@ -137,7 +135,7 @@ public class OpenDisputeCommandHandler : IRequestHandler<OpenDisputeCommand, boo
     /// </summary>
     private async Task UpdateSessionStatusAsync(ChatFinanceSession session, CancellationToken cancellationToken)
     {
-        session.Status = SessionDisputedStatus;
+        session.Status = ChatFinanceSessionStatus.Disputed;
         await _financeRepo.UpdateSessionAsync(session, cancellationToken);
     }
 }

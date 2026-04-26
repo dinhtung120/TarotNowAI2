@@ -1,10 +1,13 @@
 using Microsoft.Extensions.Caching.Distributed;
 using StackExchange.Redis;
+using System.Collections.Concurrent;
 
 namespace TarotNow.Infrastructure.Services;
 
 public partial class RedisCacheService
 {
+    private static readonly ConcurrentDictionary<string, SemaphoreSlim> LocalLockGuards = new(StringComparer.Ordinal);
+
     /// <inheritdoc />
     public async Task AddToSetAsync(string key, string member, TimeSpan? expiration = null, CancellationToken cancellationToken = default)
     {
@@ -113,21 +116,30 @@ public partial class RedisCacheService
             return await _redisDatabase.StringSetAsync(key, normalizedOwner, leaseTime, When.NotExists);
         }
 
-        var existing = await _cache.GetStringAsync(key, cancellationToken);
-        if (!string.IsNullOrWhiteSpace(existing))
+        var localGuard = GetLocalLockGuard(key);
+        await localGuard.WaitAsync(cancellationToken);
+        try
         {
-            return false;
-        }
-
-        await _cache.SetStringAsync(
-            key,
-            normalizedOwner,
-            new DistributedCacheEntryOptions
+            var existing = await _cache.GetStringAsync(key, cancellationToken);
+            if (!string.IsNullOrWhiteSpace(existing))
             {
-                AbsoluteExpirationRelativeToNow = leaseTime
-            },
-            cancellationToken);
-        return true;
+                return false;
+            }
+
+            await _cache.SetStringAsync(
+                key,
+                normalizedOwner,
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = leaseTime
+                },
+                cancellationToken);
+            return true;
+        }
+        finally
+        {
+            localGuard.Release();
+        }
     }
 
     /// <inheritdoc />
@@ -154,13 +166,27 @@ public partial class RedisCacheService
             return (long)result == 1;
         }
 
-        var existing = await _cache.GetStringAsync(key, cancellationToken);
-        if (!string.Equals(existing, normalizedOwner, StringComparison.Ordinal))
+        var localGuard = GetLocalLockGuard(key);
+        await localGuard.WaitAsync(cancellationToken);
+        try
         {
-            return false;
-        }
+            var existing = await _cache.GetStringAsync(key, cancellationToken);
+            if (!string.Equals(existing, normalizedOwner, StringComparison.Ordinal))
+            {
+                return false;
+            }
 
-        await _cache.RemoveAsync(key, cancellationToken);
-        return true;
+            await _cache.RemoveAsync(key, cancellationToken);
+            return true;
+        }
+        finally
+        {
+            localGuard.Release();
+        }
+    }
+
+    private static SemaphoreSlim GetLocalLockGuard(string key)
+    {
+        return LocalLockGuards.GetOrAdd(key, _ => new SemaphoreSlim(1, 1));
     }
 }

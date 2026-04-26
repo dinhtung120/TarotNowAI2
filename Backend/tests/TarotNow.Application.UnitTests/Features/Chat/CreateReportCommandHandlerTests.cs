@@ -5,6 +5,7 @@ using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Chat.Commands.CreateReport;
 using TarotNow.Application.Interfaces;
 using TarotNow.Application.Common;
+using TarotNow.Domain.Enums;
 using Xunit;
 
 namespace TarotNow.Application.UnitTests.Features.Chat;
@@ -14,6 +15,9 @@ public class CreateReportCommandHandlerTests
 {
     // Mock report repo để xác minh side-effect lưu report.
     private readonly Mock<IReportRepository> _mockReportRepo;
+    private readonly Mock<IConversationRepository> _mockConversationRepo;
+    private readonly Mock<IChatMessageRepository> _mockChatMessageRepo;
+    private readonly Mock<IUserRepository> _mockUserRepo;
     // Handler cần kiểm thử.
     private readonly CreateReportCommandHandler _handler;
 
@@ -24,7 +28,14 @@ public class CreateReportCommandHandlerTests
     public CreateReportCommandHandlerTests()
     {
         _mockReportRepo = new Mock<IReportRepository>();
-        _handler = new CreateReportCommandHandler(_mockReportRepo.Object);
+        _mockConversationRepo = new Mock<IConversationRepository>();
+        _mockChatMessageRepo = new Mock<IChatMessageRepository>();
+        _mockUserRepo = new Mock<IUserRepository>();
+        _handler = new CreateReportCommandHandler(
+            _mockReportRepo.Object,
+            _mockConversationRepo.Object,
+            _mockChatMessageRepo.Object,
+            _mockUserRepo.Object);
     }
 
     /// <summary>
@@ -60,18 +71,36 @@ public class CreateReportCommandHandlerTests
         var command = new CreateReportCommand
         {
             ReporterId = Guid.Parse(reporterIdStr),
-            TargetType = "message",
+            TargetType = ReportTargetTypes.Message,
             TargetId = "msg1",
             Reason = "This is a valid reason"
         };
+        _mockChatMessageRepo
+            .Setup(x => x.GetByIdAsync("msg1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ChatMessageDto
+            {
+                Id = "msg1",
+                ConversationId = "conv1",
+                SenderId = Guid.NewGuid().ToString()
+            });
+        _mockConversationRepo
+            .Setup(x => x.GetByIdAsync("conv1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ConversationDto
+            {
+                Id = "conv1",
+                UserId = reporterIdStr,
+                ReaderId = Guid.NewGuid().ToString(),
+                Status = ConversationStatus.Ongoing
+            });
 
         // Thực thi handler và kiểm tra dữ liệu report đầu ra.
         var result = await _handler.Handle(command, CancellationToken.None);
 
         Assert.NotNull(result);
-        Assert.Equal("message", result.TargetType);
+        Assert.Equal(ReportTargetTypes.Message, result.TargetType);
         Assert.Equal("This is a valid reason", result.Reason);
         Assert.Equal("pending", result.Status);
+        Assert.Equal("conv1", result.ConversationRef);
 
         // Xác nhận repo nhận report với reporterId và status pending đúng kỳ vọng.
         _mockReportRepo.Verify(x => x.AddAsync(It.Is<ReportDto>(r => r.ReporterId == reporterIdStr && r.Status == "pending"), default), Times.Once);

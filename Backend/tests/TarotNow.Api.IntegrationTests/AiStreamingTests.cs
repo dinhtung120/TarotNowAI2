@@ -2,6 +2,7 @@
 
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
+using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using TarotNow.Application.Interfaces;
@@ -117,6 +118,24 @@ public class PartialMockAiProvider : IAiProvider
     }
 }
 
+// Mock provider trả stream chậm để giữ request ở trạng thái active trong bài test concurrency.
+public class SlowMockAiProvider : IAiProvider
+{
+    public string ProviderName => "SlowMock-OpenAI";
+    public string ModelName => "gpt-slow";
+
+    public Task LogRequestAsync(AiProviderRequestLog logEntry, CancellationToken cancellationToken = default)
+        => Task.CompletedTask;
+
+    public async IAsyncEnumerable<string> StreamChatAsync(string systemPrompt, string userPrompt, [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await Task.Delay(1200, cancellationToken);
+        yield return "slow-token-1";
+        await Task.Delay(1200, cancellationToken);
+        yield return "slow-token-2";
+    }
+}
+
 // Mock cache luôn cho qua để cô lập test khỏi behavior cache runtime.
 public class MockCacheService : ICacheService
 {
@@ -178,6 +197,53 @@ public class MockCacheService : ICacheService
         string key,
         string owner,
         CancellationToken cancellationToken = default) => Task.FromResult(true);
+}
+
+// Mock cache có lock semantics thật để kiểm thử concurrency path trong stream reading.
+public class LockingMockCacheService : ICacheService
+{
+    private static readonly ConcurrentDictionary<string, (string Owner, DateTime ExpiresAtUtc)> Locks = new(StringComparer.Ordinal);
+
+    public Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default) => Task.FromResult<T?>(default);
+    public Task SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task RemoveAsync(string key, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task<bool> CheckRateLimitAsync(string key, TimeSpan limitWindow, CancellationToken cancellationToken = default) => Task.FromResult(true);
+    public Task<long> IncrementAsync(string key, TimeSpan? expiration = null, CancellationToken cancellationToken = default) => Task.FromResult(1L);
+    public Task AddToSetAsync(string key, string member, TimeSpan? expiration = null, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task RemoveFromSetAsync(string key, string member, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task<IReadOnlyCollection<string>> GetSetMembersAsync(string key, CancellationToken cancellationToken = default)
+        => Task.FromResult<IReadOnlyCollection<string>>(Array.Empty<string>());
+
+    public Task<bool> AcquireLockAsync(
+        string key,
+        string owner,
+        TimeSpan leaseTime,
+        CancellationToken cancellationToken = default)
+    {
+        var now = DateTime.UtcNow;
+        Locks.AddOrUpdate(
+            key,
+            _ => (owner, now.Add(leaseTime)),
+            (_, existing) => existing.ExpiresAtUtc <= now ? (owner, now.Add(leaseTime)) : existing);
+
+        var current = Locks[key];
+        return Task.FromResult(string.Equals(current.Owner, owner, StringComparison.Ordinal));
+    }
+
+    public Task<bool> ReleaseLockAsync(
+        string key,
+        string owner,
+        CancellationToken cancellationToken = default)
+    {
+        if (Locks.TryGetValue(key, out var existing) == false
+            || !string.Equals(existing.Owner, owner, StringComparison.Ordinal))
+        {
+            return Task.FromResult(false);
+        }
+
+        Locks.TryRemove(key, out _);
+        return Task.FromResult(true);
+    }
 }
 
 // Bộ integration tests cho endpoint stream AI và các nhánh quota/error liên quan.
@@ -489,6 +555,90 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
         var resBody = await response.Content.ReadAsStringAsync();
         Assert.Contains("AI stream request is invalid.", resBody);
+    }
+
+    [Fact]
+    public async Task StreamReading_ConcurrentRequests_NearInFlightCap_ShouldAllowOnlyOneAdditionalRequest()
+    {
+        var refinedFactory = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.RemoveAll(typeof(IAiProvider));
+                services.AddScoped<IAiProvider, SlowMockAiProvider>();
+                services.RemoveAll(typeof(ICacheService));
+                services.AddSingleton<ICacheService, LockingMockCacheService>();
+            });
+        });
+
+        var client = refinedFactory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+
+        var userId = Guid.Parse("00000000-0000-0000-0000-000000000006");
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(TestAuthHandler.AuthenticationScheme);
+        client.DefaultRequestHeaders.Add("X-Test-UserId", userId.ToString());
+
+        using var scope = refinedFactory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var readingRepo = scope.ServiceProvider.GetRequiredService<IReadingSessionRepository>();
+
+        if (!db.Users.Any(u => u.Id == userId))
+        {
+            var user = new User(
+                email: "test6@tarotnow.com",
+                username: "TestUser6",
+                passwordHash: "hash",
+                displayName: "Test6",
+                dateOfBirth: new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+                hasConsented: true);
+            typeof(User).GetProperty("Id")?.SetValue(user, userId);
+            user.Activate();
+            user.Credit(CurrencyType.Diamond, 100L, TransactionType.AdminTopup);
+            db.Users.Add(user);
+            await db.SaveChangesAsync();
+        }
+
+        var sessionId = Guid.NewGuid();
+        var session = new ReadingSession(userId.ToString(), SpreadType.Daily1Card);
+        typeof(ReadingSession).GetProperty("Id")?.SetValue(session, sessionId.ToString());
+        session.CompleteSession("[8]");
+        await readingRepo.CreateAsync(session);
+
+        // Seed trước 2 request active để đưa user tới sát ngưỡng in-flight (cap mặc định = 3).
+        db.AiRequests.Add(new AiRequest
+        {
+            UserId = userId,
+            ReadingSessionRef = sessionId,
+            Status = AiRequestStatus.Requested,
+            IdempotencyKey = "seed_active_1",
+            ChargeDiamond = 5,
+            CreatedAt = DateTimeOffset.UtcNow.AddSeconds(-20)
+        });
+        db.AiRequests.Add(new AiRequest
+        {
+            UserId = userId,
+            ReadingSessionRef = sessionId,
+            Status = AiRequestStatus.Requested,
+            IdempotencyKey = "seed_active_2",
+            ChargeDiamond = 5,
+            CreatedAt = DateTimeOffset.UtcNow.AddSeconds(-10)
+        });
+        await db.SaveChangesAsync();
+
+        var requestPath = $"/api/v1/sessions/{session.Id}/stream";
+        using var request1 = new HttpRequestMessage(HttpMethod.Get, requestPath);
+        request1.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
+        using var request2 = new HttpRequestMessage(HttpMethod.Get, requestPath);
+        request2.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
+
+        var responseTask1 = client.SendAsync(request1, HttpCompletionOption.ResponseHeadersRead);
+        await Task.Delay(50);
+        var responseTask2 = client.SendAsync(request2, HttpCompletionOption.ResponseHeadersRead);
+        var responses = await Task.WhenAll(responseTask1, responseTask2);
+
+        Assert.Contains(responses, response => response.StatusCode == System.Net.HttpStatusCode.OK);
+        var rejected = Assert.Single(responses, response => response.StatusCode == System.Net.HttpStatusCode.BadRequest);
+        var rejectedBody = await rejected.Content.ReadAsStringAsync();
+        Assert.Contains("AI stream request is invalid.", rejectedBody);
     }
 
     /// <summary>

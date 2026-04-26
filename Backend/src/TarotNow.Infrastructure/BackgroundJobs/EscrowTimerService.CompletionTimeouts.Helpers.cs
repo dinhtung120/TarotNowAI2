@@ -2,6 +2,7 @@ using System.Linq;
 using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Infrastructure.BackgroundJobs;
 
@@ -48,12 +49,12 @@ public partial class EscrowTimerService
     private async Task AutoSettleCompletionTimeoutAsync(
         RefundDependencies dependencies,
         IEscrowSettlementService escrowSettlementService,
-        string conversationId,
+        ConversationDto conversation,
         CancellationToken cancellationToken)
     {
         await dependencies.TransactionCoordinator.ExecuteAsync(async transactionCt =>
         {
-            var session = await dependencies.FinanceRepository.GetSessionByConversationRefAsync(conversationId, transactionCt);
+            var session = await dependencies.FinanceRepository.GetSessionByConversationRefAsync(conversation.Id, transactionCt);
             if (session == null)
             {
                 // Edge case: không có finance session thì không thể auto-settle.
@@ -62,6 +63,10 @@ public partial class EscrowTimerService
 
             await AutoReleaseAcceptedItemsAsync(dependencies, escrowSettlementService, session.Id, transactionCt);
             await MarkCompletedIfNoFrozenAsync(dependencies, session.Id, transactionCt);
+            await dependencies.DomainEventPublisher.PublishAsync(
+                BuildCompletionTimeoutSyncEvent(conversation),
+                transactionCt);
+            await dependencies.FinanceRepository.SaveChangesAsync(transactionCt);
         }, cancellationToken);
     }
 
@@ -81,9 +86,6 @@ public partial class EscrowTimerService
             await escrowSettlementService.ApplyReleaseAsync(item, isAutoRelease: true, cancellationToken);
             // Chỉ release item Accepted để tránh xử lý nhầm item đã refunded/released trước đó.
         }
-
-        await dependencies.FinanceRepository.SaveChangesAsync(cancellationToken);
-        // Commit batch release sau khi xử lý xong toàn bộ item đủ điều kiện.
     }
 
     /// <summary>
@@ -99,34 +101,29 @@ public partial class EscrowTimerService
         if (lockedSession == null)
         {
             // Session có thể đã bị xóa hoặc không còn tồn tại ở thời điểm xử lý.
+            await dependencies.FinanceRepository.SaveChangesAsync(cancellationToken);
             return;
         }
 
         if (lockedSession.TotalFrozen <= 0)
         {
-            lockedSession.Status = "completed";
+            lockedSession.Status = ChatFinanceSessionStatus.Completed;
             // Chỉ chốt completed khi chắc chắn không còn tiền bị giữ trong session.
         }
 
         lockedSession.UpdatedAt = DateTime.UtcNow;
         await dependencies.FinanceRepository.UpdateSessionAsync(lockedSession, cancellationToken);
-        await dependencies.FinanceRepository.SaveChangesAsync(cancellationToken);
     }
 
-    /// <summary>
-    /// Dựng system message thông báo auto-release do quá hạn xác nhận hoàn tất.
-    /// Luồng xử lý: map dữ liệu conversation sang ChatMessageDto chuẩn với type SystemRelease.
-    /// </summary>
-    private static ChatMessageDto BuildCompletionTimeoutMessage(ConversationDto conversation)
+    private static CompletionTimeoutConversationSyncRequestedDomainEvent BuildCompletionTimeoutSyncEvent(
+        ConversationDto conversation)
     {
-        return new ChatMessageDto
-        {
-            ConversationId = conversation.Id,
-            SenderId = conversation.Confirm?.RequestedBy ?? conversation.ReaderId,
-            Type = ChatMessageType.SystemRelease,
-            Content = "Yêu cầu hoàn thành đã quá hạn phản hồi. Hệ thống tự động giải ngân cho Reader.",
-            IsRead = false,
-            CreatedAt = DateTime.UtcNow
-        };
+        const string message = "Yêu cầu hoàn thành đã quá hạn phản hồi. Hệ thống tự động giải ngân cho Reader.";
+        var actorId = conversation.Confirm?.RequestedBy ?? conversation.ReaderId;
+        return new CompletionTimeoutConversationSyncRequestedDomainEvent(
+            conversation.Id,
+            actorId,
+            message,
+            DateTime.UtcNow);
     }
 }

@@ -17,7 +17,7 @@ namespace TarotNow.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.2")
+                .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -285,6 +285,11 @@ namespace TarotNow.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("DisputeReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("dispute_reason");
+
                     b.Property<DateTime?>("DisputeWindowEnd")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("dispute_window_end");
@@ -357,6 +362,9 @@ namespace TarotNow.Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_chat_question_items_idempotency_key")
                         .HasFilter("idempotency_key IS NOT NULL");
+
+                    b.HasIndex("Status", "DisputeWindowEnd")
+                        .HasDatabaseName("ix_chat_question_items_status_dispute_window_end");
 
                     b.ToTable("chat_question_items", (string)null);
                 });
@@ -1958,6 +1966,42 @@ namespace TarotNow.Infrastructure.Migrations
                         .HasDatabaseName("ux_outbox_handler_states_message_handler");
 
                     b.ToTable("outbox_handler_states", (string)null);
+                });
+
+            modelBuilder.Entity("TarotNow.Infrastructure.Persistence.Outbox.OutboxInlineHandlerState", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("EventKey")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("event_key");
+
+                    b.Property<string>("HandlerName")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("handler_name");
+
+                    b.Property<DateTime>("ProcessedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_at_utc");
+
+                    b.HasKey("Id")
+                        .HasName("pk_outbox_inline_handler_states");
+
+                    b.HasIndex("ProcessedAtUtc")
+                        .HasDatabaseName("ix_outbox_inline_handler_states_processed_at_utc");
+
+                    b.HasIndex("EventKey", "HandlerName")
+                        .IsUnique()
+                        .HasDatabaseName("ux_outbox_inline_handler_states_event_handler");
+
+                    b.ToTable("outbox_inline_handler_states", (string)null);
                 });
 
             modelBuilder.Entity("TarotNow.Infrastructure.Persistence.Outbox.OutboxMessage", b =>

@@ -17,23 +17,38 @@ public partial class EscrowTimerService
         IEscrowSettlementService escrowSettlementService,
         CancellationToken cancellationToken)
     {
-        var dueConversations = await dependencies.ConversationRepository
-            .GetConversationsAwaitingCompletionResolutionAsync(DateTime.UtcNow, 200, cancellationToken);
+        var batchSize = Math.Clamp(_systemConfigSettings.OperationalEscrowCompletionTimeoutBatchSize, 1, 1000);
+        const int maxDrainBatches = 20;
 
-        foreach (var conversation in dueConversations)
+        for (var batchIndex = 0; batchIndex < maxDrainBatches; batchIndex++)
         {
-            try
+            var dueConversations = await dependencies.ConversationRepository
+                .GetConversationsAwaitingCompletionResolutionAsync(DateTime.UtcNow, batchSize, cancellationToken);
+            if (dueConversations.Count == 0)
             {
-                await ProcessCompletionTimeoutConversationAsync(
-                    dependencies,
-                    escrowSettlementService,
-                    conversation.Id,
-                    cancellationToken);
+                break;
             }
-            catch (Exception ex)
+
+            foreach (var conversation in dueConversations)
             {
-                _logger.LogError(ex, "[EscrowTimer] Completion timeout failed: {ConversationId}", conversation.Id);
-                // Giữ vòng quét tiếp tục cho conversation khác dù một item lỗi.
+                try
+                {
+                    await ProcessCompletionTimeoutConversationAsync(
+                        dependencies,
+                        escrowSettlementService,
+                        conversation.Id,
+                        cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "[EscrowTimer] Completion timeout failed: {ConversationId}", conversation.Id);
+                    // Giữ vòng quét tiếp tục cho conversation khác dù một item lỗi.
+                }
+            }
+
+            if (dueConversations.Count < batchSize)
+            {
+                break;
             }
         }
     }
@@ -64,15 +79,7 @@ public partial class EscrowTimerService
             return;
         }
 
-        await AutoSettleCompletionTimeoutAsync(dependencies, escrowSettlementService, conversation.Id, cancellationToken);
-        var systemMessage = BuildCompletionTimeoutMessage(conversation);
-        await dependencies.MessageRepository.AddAsync(systemMessage, cancellationToken);
-        conversation.Status = ConversationStatus.Completed;
-        conversation.OfferExpiresAt = null;
-        conversation.Confirm!.AutoResolveAt = null;
-        conversation.LastMessageAt = systemMessage.CreatedAt;
-        conversation.UpdatedAt = systemMessage.CreatedAt;
-        await dependencies.ConversationRepository.UpdateAsync(conversation, cancellationToken);
-        // Đồng bộ trạng thái completed + system message để UI hiển thị kết quả timeout nhất quán.
+        await AutoSettleCompletionTimeoutAsync(dependencies, escrowSettlementService, conversation, cancellationToken);
+        // Projection Mongo được đồng bộ qua outbox event để tránh partial success giữa PG và Mongo.
     }
 }

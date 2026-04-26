@@ -103,7 +103,8 @@ public class OpenDisputeCommandHandlerTests
     [Fact]
     public async Task Handle_ValidRequest_FromPayer_UpdatesStatus()
     {
-        var command = new OpenDisputeCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid(), Reason = "Valid dispute reason" };
+        const string disputeReason = "Valid dispute reason";
+        var command = new OpenDisputeCommand { ItemId = Guid.NewGuid(), UserId = Guid.NewGuid(), Reason = disputeReason };
         var item = new ChatQuestionItem
         {
             Id = command.ItemId, PayerId = command.UserId, Status = QuestionItemStatus.Accepted,
@@ -121,6 +122,7 @@ public class OpenDisputeCommandHandlerTests
         Assert.Equal("disputed", session.Status);
         Assert.NotNull(item.DisputeWindowStart);
         Assert.NotNull(item.DisputeWindowEnd);
+        Assert.Equal(disputeReason, item.DisputeReason);
         Assert.True(item.DisputeWindowEnd > item.DisputeWindowStart);
     }
 
@@ -152,6 +154,7 @@ public class OpenDisputeCommandHandlerTests
         Assert.Equal("disputed", session.Status);
         Assert.NotNull(item.DisputeWindowStart);
         Assert.NotNull(item.DisputeWindowEnd);
+        Assert.Equal(command.Reason, item.DisputeReason);
         Assert.True(item.DisputeWindowEnd > item.DisputeWindowStart);
     }
 

@@ -180,6 +180,37 @@ public sealed class EventDrivenArchitectureRulesTests
             "Migrated event-only command handlers must only dispatch domain events and must not inject repository/service/provider dependencies.");
     }
 
+    /// <summary>
+    /// Khóa baseline nợ kiến trúc hiện tại để không phát sinh thêm command handler phụ thuộc trực tiếp repository/service/provider.
+    /// </summary>
+    [Fact]
+    public void CommandHandlers_DependencyDebtBaseline_ShouldNotIncrease()
+    {
+        const int currentBaselineCount = 55;
+
+        var backendRoot = FindBackendRoot();
+        var featuresRoot = Path.Combine(backendRoot, "src", "TarotNow.Application", "Features");
+        var forbidden = new Regex(@"\bI\w*(Repository|Service|Provider)\b", RegexOptions.Compiled);
+
+        var violatingFiles = Directory
+            .GetFiles(featuresRoot, "*.cs", SearchOption.AllDirectories)
+            .Where(path => path.Contains("/Commands/", StringComparison.Ordinal))
+            .Where(path =>
+            {
+                var text = File.ReadAllText(path);
+                return text.Contains("CommandHandler", StringComparison.Ordinal)
+                       && forbidden.IsMatch(text);
+            })
+            .Select(path => ToBackendRelativePath(backendRoot, path))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
+
+        violatingFiles.Length.Should().BeLessThanOrEqualTo(
+            currentBaselineCount,
+            "we are migrating command handlers to event-only architecture incrementally; dependency debt must never grow beyond the locked baseline.");
+    }
+
     private static IReadOnlyList<string> CollectDisallowedDependencyMentions(
         string path,
         Regex forbidden,

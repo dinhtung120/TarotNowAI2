@@ -74,7 +74,10 @@ public class PresenceHub : Hub
         {
             _presenceTracker.MarkDisconnected(userId, Context.ConnectionId);
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"user:{userId}");
-            await PublishUserStatusChangedAsync(userId, "offline");
+            if (!_presenceTracker.HasActiveConnection(userId))
+            {
+                await PublishUserStatusChangedAsync(userId, "offline");
+            }
         }
 
         _logger.LogDebug(

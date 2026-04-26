@@ -9,5 +9,6 @@ namespace TarotNow.Application.Common.DomainEvents;
 /// <typeparam name="TDomainEvent">Kiểu domain event cụ thể.</typeparam>
 public sealed record DomainEventNotification<TDomainEvent>(
     TDomainEvent DomainEvent,
-    Guid? OutboxMessageId = null) : INotification
+    Guid? OutboxMessageId = null,
+    string? EventIdempotencyKey = null) : INotification
     where TDomainEvent : IDomainEvent;

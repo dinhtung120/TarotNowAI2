@@ -50,13 +50,14 @@ public partial class ChatFinanceRepository
 
     /// <summary>
     /// Lấy item disputed đến hạn auto-resolve.
-    /// Luồng xử lý: lọc status Disputed và dùng mốc updated_at fallback created_at để so với dueAtUtc.
+    /// Luồng xử lý: lọc status Disputed và mốc dispute_window_end đã tới hạn.
     /// </summary>
     public async Task<List<ChatQuestionItem>> GetDisputedItemsForAutoResolveAsync(DateTime dueAtUtc, CancellationToken ct = default)
     {
         return await _db.ChatQuestionItems
             .Where(i => i.Status == QuestionItemStatus.Disputed
-                     && (i.UpdatedAt ?? i.CreatedAt) <= dueAtUtc)
+                     && i.DisputeWindowEnd != null
+                     && i.DisputeWindowEnd <= dueAtUtc)
             .ToListAsync(ct);
     }
 }

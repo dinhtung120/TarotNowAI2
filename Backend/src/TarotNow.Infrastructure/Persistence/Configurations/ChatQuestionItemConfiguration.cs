@@ -58,6 +58,7 @@ public class ChatQuestionItemConfiguration : IEntityTypeConfiguration<ChatQuesti
         builder.Property(x => x.RefundedAt).HasColumnName("refunded_at");
         builder.Property(x => x.DisputeWindowStart).HasColumnName("dispute_window_start");
         builder.Property(x => x.DisputeWindowEnd).HasColumnName("dispute_window_end");
+        builder.Property(x => x.DisputeReason).HasColumnName("dispute_reason").HasMaxLength(1000);
         builder.Property(x => x.CreatedAt).HasColumnName("created_at");
         builder.Property(x => x.UpdatedAt).HasColumnName("updated_at");
     }
@@ -89,5 +90,8 @@ public class ChatQuestionItemConfiguration : IEntityTypeConfiguration<ChatQuesti
             .HasDatabaseName("ix_chat_question_items_idempotency_key")
             .IsUnique()
             .HasFilter("idempotency_key IS NOT NULL");
+
+        builder.HasIndex(x => new { x.Status, x.DisputeWindowEnd })
+            .HasDatabaseName("ix_chat_question_items_status_dispute_window_end");
     }
 }

@@ -122,4 +122,62 @@ public partial class RespondConversationAddMoneyCommandHandler
         }, cancellationToken);
     }
 
+    /// <summary>
+    /// Compensation khi đã freeze tiền nhưng gửi accept message thất bại.
+    /// </summary>
+    private async Task CompensateOfferFreezeAsync(
+        RespondConversationAddMoneyCommand request,
+        Guid itemId,
+        CancellationToken cancellationToken)
+    {
+        await _transactionCoordinator.ExecuteAsync(async transactionCt =>
+        {
+            var item = await _financeRepository.GetItemForUpdateAsync(itemId, transactionCt);
+            if (item == null || item.Status == QuestionItemStatus.Refunded)
+            {
+                return;
+            }
+
+            var refundAmount = item.AmountDiamond;
+            await _walletRepository.RefundAsync(
+                request.UserId,
+                refundAmount,
+                referenceSource: "offer_accept_compensation",
+                referenceId: item.Id.ToString(),
+                description: $"Compensate add-money freeze {refundAmount}💎",
+                idempotencyKey: $"compensate_offer_accept_{item.Id}",
+                cancellationToken: transactionCt);
+
+            item.Status = QuestionItemStatus.Refunded;
+            item.RefundedAt = DateTime.UtcNow;
+            item.UpdatedAt = item.RefundedAt;
+            await _financeRepository.UpdateItemAsync(item, transactionCt);
+
+            var session = await _financeRepository.GetSessionForUpdateAsync(item.FinanceSessionId, transactionCt);
+            if (session != null)
+            {
+                session.TotalFrozen = Math.Max(0, session.TotalFrozen - refundAmount);
+                if (session.TotalFrozen == 0 && session.Status == ChatFinanceSessionStatus.Active)
+                {
+                    session.Status = ChatFinanceSessionStatus.Refunded;
+                }
+
+                session.UpdatedAt = DateTime.UtcNow;
+                await _financeRepository.UpdateSessionAsync(session, transactionCt);
+            }
+
+            await _financeRepository.SaveChangesAsync(transactionCt);
+            await _domainEventPublisher.PublishAsync(
+                new Domain.Events.MoneyChangedDomainEvent
+                {
+                    UserId = request.UserId,
+                    Currency = CurrencyType.Diamond,
+                    ChangeType = TransactionType.EscrowRefund,
+                    DeltaAmount = refundAmount,
+                    ReferenceId = item.Id.ToString()
+                },
+                transactionCt);
+        }, cancellationToken);
+    }
+
 }

@@ -31,6 +31,11 @@ public partial class ChatMessageDocument
     [BsonElement("content")]
     public string Content { get; set; } = string.Empty;
 
+    // Khóa idempotency cho system message phát sinh từ background/outbox.
+    [BsonElement("system_event_key")]
+    [BsonIgnoreIfNull]
+    public string? SystemEventKey { get; set; }
+
     // Payload nghiệp vụ thanh toán khi message là payment offer.
     [BsonElement("payment_payload")]
     [BsonIgnoreIfNull]

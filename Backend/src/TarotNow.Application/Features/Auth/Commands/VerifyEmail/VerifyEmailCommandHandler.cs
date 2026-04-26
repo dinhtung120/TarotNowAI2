@@ -10,15 +10,20 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, boo
 {
     private readonly IUserRepository _userRepository;
     private readonly IEmailOtpRepository _emailOtpRepository;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler verify email.
     /// Luồng xử lý: nhận user repository và OTP repository để xác minh mã và cập nhật trạng thái account.
     /// </summary>
-    public VerifyEmailCommandHandler(IUserRepository userRepository, IEmailOtpRepository emailOtpRepository)
+    public VerifyEmailCommandHandler(
+        IUserRepository userRepository,
+        IEmailOtpRepository emailOtpRepository,
+        IDomainEventPublisher domainEventPublisher)
     {
         _userRepository = userRepository;
         _emailOtpRepository = emailOtpRepository;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <summary>
@@ -57,6 +62,16 @@ public class VerifyEmailCommandHandler : IRequestHandler<VerifyEmailCommand, boo
         // Thưởng vàng chào mừng khi user xác minh email thành công.
         user.Wallet.Credit(CurrencyType.Gold, 5, TransactionType.RegisterBonus);
         await _userRepository.UpdateAsync(user, cancellationToken);
+        await _domainEventPublisher.PublishAsync(
+            new Domain.Events.MoneyChangedDomainEvent
+            {
+                UserId = user.Id,
+                Currency = CurrencyType.Gold,
+                ChangeType = TransactionType.RegisterBonus,
+                DeltaAmount = 5,
+                ReferenceId = $"verify_email_{user.Id:N}"
+            },
+            cancellationToken);
 
         return true;
     }

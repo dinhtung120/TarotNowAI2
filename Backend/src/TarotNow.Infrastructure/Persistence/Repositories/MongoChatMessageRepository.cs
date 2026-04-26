@@ -43,9 +43,17 @@ public partial class MongoChatMessageRepository : IChatMessageRepository
     public async Task AddAsync(ChatMessageDto message, CancellationToken cancellationToken = default)
     {
         var doc = ToDocument(message);
-        await _context.ChatMessages.InsertOneAsync(doc, cancellationToken: cancellationToken);
-        message.Id = doc.Id;
-        // Đồng bộ id phát sinh để các bước push realtime dùng cùng message id.
+        try
+        {
+            await _context.ChatMessages.InsertOneAsync(doc, cancellationToken: cancellationToken);
+            message.Id = doc.Id;
+            // Đồng bộ id phát sinh để các bước push realtime dùng cùng message id.
+        }
+        catch (MongoWriteException exception) when (CanRecoverSystemEventDuplicate(exception, doc))
+        {
+            message.Id = await ResolveExistingSystemEventMessageIdAsync(doc, cancellationToken) ?? doc.Id;
+            // Trường hợp retry outbox đã chèn trước đó: trả về id cũ để caller tiếp tục idempotent.
+        }
     }
 
     /// <summary>
@@ -106,5 +114,25 @@ public partial class MongoChatMessageRepository : IChatMessageRepository
 
         var docs = await _context.ChatMessages.Aggregate(pipeline, cancellationToken: cancellationToken).ToListAsync(cancellationToken);
         return docs.Select(ToDto);
+    }
+
+    private static bool CanRecoverSystemEventDuplicate(MongoWriteException exception, ChatMessageDocument doc)
+    {
+        return exception.WriteError?.Category == ServerErrorCategory.DuplicateKey
+               && !string.IsNullOrWhiteSpace(doc.SystemEventKey);
+    }
+
+    private async Task<string?> ResolveExistingSystemEventMessageIdAsync(
+        ChatMessageDocument doc,
+        CancellationToken cancellationToken)
+    {
+        var filter = Builders<ChatMessageDocument>.Filter.And(
+            Builders<ChatMessageDocument>.Filter.Eq(m => m.ConversationId, doc.ConversationId),
+            Builders<ChatMessageDocument>.Filter.Eq(m => m.SystemEventKey, doc.SystemEventKey));
+        var existing = await _context.ChatMessages
+            .Find(filter)
+            .Project(m => m.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+        return string.IsNullOrWhiteSpace(existing) ? null : existing;
     }
 }

@@ -22,7 +22,7 @@ public partial class EscrowTimerService
             return;
         }
 
-        session.Status = "refunded";
+        session.Status = ChatFinanceSessionStatus.Refunded;
         session.UpdatedAt = DateTime.UtcNow;
         await financeRepository.UpdateSessionAsync(session, cancellationToken);
         // Đồng bộ trạng thái session để nghiệp vụ phía conversation đọc đúng kết quả.

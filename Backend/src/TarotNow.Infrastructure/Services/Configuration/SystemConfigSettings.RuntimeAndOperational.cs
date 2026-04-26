@@ -181,6 +181,22 @@ public sealed partial class SystemConfigSettings
         min: 1,
         max: 300);
 
+    // Escrow timer scan interval (giây).
+    public int OperationalEscrowTimerScanIntervalSeconds => ClampInt(
+        ReadInt(
+            ["operational.escrow_timer.scan_interval_seconds"],
+            _options.Operational.EscrowTimer.ScanIntervalSeconds),
+        min: 10,
+        max: 3600);
+
+    // Escrow completion-timeout batch size.
+    public int OperationalEscrowCompletionTimeoutBatchSize => ClampInt(
+        ReadInt(
+            ["operational.escrow_timer.completion_timeout_batch_size"],
+            _options.Operational.EscrowTimer.CompletionTimeoutBatchSize),
+        min: 1,
+        max: 1000);
+
     private static IReadOnlyList<int> NormalizeReconnectSchedule(IEnumerable<int> values)
     {
         return values

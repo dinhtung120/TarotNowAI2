@@ -16,6 +16,7 @@ public class VerifyEmailCommandHandlerTests
     private readonly Mock<IUserRepository> _userRepositoryMock;
     // Mock OTP repo để mô phỏng OTP hợp lệ/không hợp lệ.
     private readonly Mock<IEmailOtpRepository> _emailOtpRepositoryMock;
+    private readonly Mock<IDomainEventPublisher> _domainEventPublisherMock;
     // Handler cần kiểm thử.
     private readonly VerifyEmailCommandHandler _handler;
 
@@ -27,9 +28,12 @@ public class VerifyEmailCommandHandlerTests
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _emailOtpRepositoryMock = new Mock<IEmailOtpRepository>();
+        _domainEventPublisherMock = new Mock<IDomainEventPublisher>();
 
         _handler = new VerifyEmailCommandHandler(
-            _userRepositoryMock.Object, _emailOtpRepositoryMock.Object
+            _userRepositoryMock.Object,
+            _emailOtpRepositoryMock.Object,
+            _domainEventPublisherMock.Object
         );
     }
 
@@ -110,5 +114,14 @@ public class VerifyEmailCommandHandlerTests
         // Xác nhận OTP và user đều được cập nhật đúng một lần.
         _emailOtpRepositoryMock.Verify(r => r.UpdateAsync(validOtp, It.IsAny<CancellationToken>()), Times.Once);
         _userRepositoryMock.Verify(r => r.UpdateAsync(user, It.IsAny<CancellationToken>()), Times.Once);
+        _domainEventPublisherMock.Verify(
+            p => p.PublishAsync(
+                It.Is<Domain.Events.MoneyChangedDomainEvent>(e =>
+                    e.UserId == user.Id
+                    && e.Currency == CurrencyType.Gold
+                    && e.ChangeType == TransactionType.RegisterBonus
+                    && e.DeltaAmount == 5),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }

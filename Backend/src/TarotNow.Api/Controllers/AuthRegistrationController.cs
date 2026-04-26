@@ -11,7 +11,6 @@ namespace TarotNow.Api.Controllers;
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
 [Route(ApiRoutes.Auth)]
-[EnableRateLimiting("auth-login")]
 // API xử lý đăng ký và xác minh email tài khoản mới.
 // Luồng chính: đăng ký user, gửi OTP xác minh và xác nhận kích hoạt tài khoản.
 public sealed class AuthRegistrationController : ControllerBase
@@ -39,6 +38,7 @@ public sealed class AuthRegistrationController : ControllerBase
     /// <param name="command">Command đăng ký người dùng.</param>
     /// <returns>Phản hồi 201 kèm thông tin user mới tạo.</returns>
     [HttpPost("register")]
+    [EnableRateLimiting("auth-register")]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(RegisterResponse))]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
@@ -72,6 +72,7 @@ public sealed class AuthRegistrationController : ControllerBase
     /// <param name="command">Command gửi OTP xác minh email.</param>
     /// <returns>Thông báo đã xử lý yêu cầu gửi OTP.</returns>
     [HttpPost("send-verification-email")]
+    [EnableRateLimiting("auth-register")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> SendVerificationEmail([FromBody] SendEmailVerificationOtpCommand command)
     {
@@ -85,6 +86,7 @@ public sealed class AuthRegistrationController : ControllerBase
     /// <param name="command">Command xác minh email.</param>
     /// <returns>Thông báo kích hoạt tài khoản thành công.</returns>
     [HttpPost("verify-email")]
+    [EnableRateLimiting("auth-register")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailCommand command)

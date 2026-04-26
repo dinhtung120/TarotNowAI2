@@ -8,7 +8,7 @@ namespace TarotNow.Infrastructure.BackgroundJobs;
 public partial class EscrowTimerService
 {
     /// <summary>
-    /// Quét và xử lý auto-resolution cho dispute đã quá hạn 48 giờ.
+    /// Quét và xử lý auto-resolution cho dispute đã quá hạn dispute window.
     /// Luồng xử lý: lấy candidate disputed tới hạn, xử lý tuần tự từng item và bắt lỗi cục bộ.
     /// </summary>
     private async Task ProcessDisputeAutoResolutions(
@@ -16,7 +16,7 @@ public partial class EscrowTimerService
         IEscrowSettlementService escrowSettlementService,
         CancellationToken cancellationToken)
     {
-        var dueAtUtc = DateTime.UtcNow.AddHours(-48);
+        var dueAtUtc = DateTime.UtcNow;
         var candidates = await dependencies.FinanceRepository.GetDisputedItemsForAutoResolveAsync(dueAtUtc, cancellationToken);
 
         foreach (var candidate in candidates)
@@ -54,14 +54,14 @@ public partial class EscrowTimerService
             var item = await dependencies.FinanceRepository.GetItemForUpdateAsync(candidateId, transactionCt);
             if (item == null
                 || item.Status != QuestionItemStatus.Disputed
-                || (item.UpdatedAt ?? item.CreatedAt) > DateTime.UtcNow.AddHours(-48))
+                || item.DisputeWindowEnd == null
+                || item.DisputeWindowEnd > DateTime.UtcNow)
             {
-                // Candidate không còn disputed hợp lệ hoặc chưa đủ thời gian quá hạn.
+                // Candidate không còn disputed hợp lệ hoặc chưa tới hạn dispute window.
                 return;
             }
 
             await escrowSettlementService.ApplyReleaseAsync(item, isAutoRelease: true, cancellationToken: transactionCt);
-            await dependencies.FinanceRepository.SaveChangesAsync(transactionCt);
             // Chốt release cho disputed item theo chính sách auto-resolve quá hạn.
 
             var session = await dependencies.FinanceRepository.GetSessionByConversationRefAsync(item.ConversationRef, transactionCt);
@@ -69,20 +69,21 @@ public partial class EscrowTimerService
             {
                 if (session.TotalFrozen <= 0)
                 {
-                    session.Status = "completed";
+                    session.Status = ChatFinanceSessionStatus.Completed;
                     completedConversationId = session.ConversationRef;
                     // Không còn frozen thì conversation có thể chốt completed.
                 }
                 else
                 {
-                    session.Status = "active";
+                    session.Status = ChatFinanceSessionStatus.Active;
                     // Còn frozen thì giữ session active để chờ xử lý item khác.
                 }
 
                 session.UpdatedAt = DateTime.UtcNow;
                 await dependencies.FinanceRepository.UpdateSessionAsync(session, transactionCt);
-                await dependencies.FinanceRepository.SaveChangesAsync(transactionCt);
             }
+
+            await dependencies.FinanceRepository.SaveChangesAsync(transactionCt);
         }, cancellationToken);
 
         if (string.IsNullOrWhiteSpace(completedConversationId) == false)
@@ -90,7 +91,7 @@ public partial class EscrowTimerService
             await MarkConversationCompletedAsync(
                 dependencies,
                 completedConversationId,
-                "Dispute đã quá hạn xử lý 48 giờ. Hệ thống tự động giải ngân cho Reader.",
+                "Dispute đã quá hạn xử lý. Hệ thống tự động giải ngân cho Reader.",
                 cancellationToken);
             // Đồng bộ trạng thái conversation sau khi auto-resolve dispute thành công.
         }

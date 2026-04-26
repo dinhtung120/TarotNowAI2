@@ -111,6 +111,9 @@ public class ReadingFollowup
 
     // Nội dung câu trả lời follow-up.
     public string Answer { get; set; } = string.Empty;
+
+    // AI request id tạo ra follow-up này, dùng cho idempotency khi callback lặp.
+    public string? AiRequestId { get; set; }
 }
 
 // Snapshot dữ liệu phiên đọc bài dùng cho cơ chế rehydrate domain entity.

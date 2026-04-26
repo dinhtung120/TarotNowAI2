@@ -62,6 +62,21 @@ public partial class MongoDbContext
                 .Descending(m => m.CreatedAt),
             new CreateIndexOptions { Name = "idx_senderid_createdat_desc" }));
         // Hỗ trợ tra soát lịch sử gửi của một user trong các luồng moderation/audit.
+
+        var systemEventFilter = Builders<ChatMessageDocument>.Filter.And(
+            Builders<ChatMessageDocument>.Filter.Ne(m => m.SystemEventKey, null),
+            Builders<ChatMessageDocument>.Filter.Ne(m => m.SystemEventKey, string.Empty));
+        SafeCreateIndex(ChatMessages, new CreateIndexModel<ChatMessageDocument>(
+            Builders<ChatMessageDocument>.IndexKeys
+                .Ascending(m => m.ConversationId)
+                .Ascending(m => m.SystemEventKey),
+            new CreateIndexOptions<ChatMessageDocument>
+            {
+                Name = "ux_conversationid_systemeventkey",
+                Unique = true,
+                PartialFilterExpression = systemEventFilter
+            }));
+        // Chặn tạo trùng system message khi outbox retry trên cùng business event.
     }
 
     /// <summary>

@@ -7,20 +7,22 @@ namespace TarotNow.Infrastructure.BackgroundJobs;
 
 public partial class EscrowTimerService : BackgroundService
 {
-    // Khoảng thời gian giữa các lần quét timer escrow.
-    private static readonly TimeSpan ScanInterval = TimeSpan.FromHours(1);
-
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<EscrowTimerService> _logger;
+    private readonly ISystemConfigSettings _systemConfigSettings;
 
     /// <summary>
     /// Khởi tạo EscrowTimer background service.
     /// Luồng xử lý: nhận scope factory để resolve dependency scoped theo từng vòng quét và logger vận hành.
     /// </summary>
-    public EscrowTimerService(IServiceScopeFactory scopeFactory, ILogger<EscrowTimerService> logger)
+    public EscrowTimerService(
+        IServiceScopeFactory scopeFactory,
+        ILogger<EscrowTimerService> logger,
+        ISystemConfigSettings systemConfigSettings)
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
+        _systemConfigSettings = systemConfigSettings;
     }
 
     /// <summary>
@@ -49,7 +51,7 @@ public partial class EscrowTimerService : BackgroundService
                     // Bắt lỗi để job tiếp tục vòng quét sau thay vì dừng hẳn.
                 }
 
-                await Task.Delay(ScanInterval, stoppingToken);
+                await Task.Delay(ResolveScanInterval(), stoppingToken);
             }
         }
         catch (OperationCanceledException)
@@ -104,4 +106,10 @@ public partial class EscrowTimerService : BackgroundService
         IChatMessageRepository MessageRepository,
         IDomainEventPublisher DomainEventPublisher,
         ITransactionCoordinator TransactionCoordinator);
+
+    private TimeSpan ResolveScanInterval()
+    {
+        return TimeSpan.FromSeconds(
+            Math.Clamp(_systemConfigSettings.OperationalEscrowTimerScanIntervalSeconds, 10, 3600));
+    }
 }

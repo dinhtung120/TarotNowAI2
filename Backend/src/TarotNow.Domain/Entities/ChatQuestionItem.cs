@@ -64,6 +64,9 @@ public class ChatQuestionItem
     // Thời điểm đóng cửa sổ khiếu nại.
     public DateTime? DisputeWindowEnd { get; set; }
 
+    // Lý do tranh chấp do người dùng cung cấp khi mở dispute.
+    public string? DisputeReason { get; set; }
+
     // Khóa idempotency để chống tạo item trùng khi retry.
     public string? IdempotencyKey { get; set; }
 

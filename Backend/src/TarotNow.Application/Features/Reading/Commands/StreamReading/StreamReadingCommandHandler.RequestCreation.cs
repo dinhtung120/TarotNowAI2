@@ -10,6 +10,44 @@ namespace TarotNow.Application.Features.Reading.Commands.StreamReading;
 public partial class StreamReadingCommandHandler
 {
     /// <summary>
+    /// Reserve slot theo user rồi tạo AI request trong critical section để tránh race quota/in-flight.
+    /// </summary>
+    private async Task<AiRequest> ReserveAndCreateAiRequestAsync(
+        StreamReadingCommand request,
+        Guid readingSessionRef,
+        long calculatedCost,
+        string? normalizedIdempotencyKey,
+        CancellationToken cancellationToken)
+    {
+        var lockKey = $"ai-quota-reservation:{request.UserId:N}";
+        var lockOwner = Guid.NewGuid().ToString("N");
+        var acquired = await _cacheService.AcquireLockAsync(
+            lockKey,
+            lockOwner,
+            leaseTime: TimeSpan.FromSeconds(10),
+            cancellationToken);
+        if (!acquired)
+        {
+            throw new BadRequestException("Too many concurrent AI requests. Please retry shortly.");
+        }
+
+        try
+        {
+            await EnsureQuotaAsync(request.UserId, cancellationToken);
+            return await CreateAiRequestAsync(
+                request,
+                readingSessionRef,
+                calculatedCost,
+                normalizedIdempotencyKey,
+                cancellationToken);
+        }
+        finally
+        {
+            await _cacheService.ReleaseLockAsync(lockKey, lockOwner, cancellationToken);
+        }
+    }
+
+    /// <summary>
     /// Tạo bản ghi AI request cho lần stream hiện tại.
     /// Luồng xử lý: lấy số follow-up hiện tại, dựng aiRequest với metadata tương ứng và lưu persistence.
     /// </summary>

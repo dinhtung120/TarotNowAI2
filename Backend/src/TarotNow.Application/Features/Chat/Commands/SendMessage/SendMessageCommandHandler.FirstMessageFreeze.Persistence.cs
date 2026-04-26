@@ -41,7 +41,7 @@ public partial class SendMessageCommandHandler
         CancellationToken cancellationToken)
     {
         session.TotalFrozen += amountDiamond;
-        session.Status = "pending";
+        session.Status = ChatFinanceSessionStatus.Pending;
         session.UpdatedAt = DateTime.UtcNow;
 
         await _financeRepo.UpdateSessionAsync(session, cancellationToken);

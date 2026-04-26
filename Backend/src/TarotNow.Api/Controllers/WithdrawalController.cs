@@ -16,7 +16,6 @@ namespace TarotNow.Api.Controllers;
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
 [Authorize] 
-[EnableRateLimiting("auth-session")]
 // API rút tiền người dùng.
 // Luồng chính: tạo yêu cầu rút tiền và truy vấn danh sách yêu cầu rút của chính user.
 public class WithdrawalController : ControllerBase
@@ -45,6 +44,7 @@ public class WithdrawalController : ControllerBase
     /// <param name="body">Payload tạo yêu cầu rút tiền.</param>
     /// <returns>Kết quả tạo yêu cầu rút tiền.</returns>
     [HttpPost("create")]
+    [EnableRateLimiting("withdrawal-create")]
     public async Task<IActionResult> Create([FromBody] CreateWithdrawalBody body)
     {
         var userId = GetUserId();
@@ -84,6 +84,7 @@ public class WithdrawalController : ControllerBase
     /// <param name="pageSize">Số yêu cầu mỗi trang.</param>
     /// <returns>Danh sách yêu cầu rút tiền của user.</returns>
     [HttpGet("my")]
+    [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> MyWithdrawals([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var userId = GetUserId();

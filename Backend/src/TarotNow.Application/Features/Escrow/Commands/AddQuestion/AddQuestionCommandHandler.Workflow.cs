@@ -87,7 +87,8 @@ public partial class AddQuestionCommandHandler
             throw new BadRequestException("Bạn không phải chủ phiên.");
         }
 
-        if (session.Status != "active" && session.Status != "pending")
+        if (session.Status != ChatFinanceSessionStatus.Active
+            && session.Status != ChatFinanceSessionStatus.Pending)
         {
             // Session đã kết thúc/không hợp lệ thì không nhận thêm câu hỏi.
             throw new BadRequestException("Phiên đã kết thúc, không thể thêm câu hỏi.");

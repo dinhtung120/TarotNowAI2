@@ -28,7 +28,8 @@ public partial class MongoReadingSessionRepository
         var followups = doc.Followups?.Select(f => new ReadingFollowup
         {
             Question = f.Question,
-            Answer = f.Answer
+            Answer = f.Answer,
+            AiRequestId = f.AiRequestId
         }).ToList();
 
         return ReadingSession.Rehydrate(new ReadingSessionSnapshot

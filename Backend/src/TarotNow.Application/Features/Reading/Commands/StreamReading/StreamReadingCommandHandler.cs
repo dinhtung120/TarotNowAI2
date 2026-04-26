@@ -54,13 +54,12 @@ public partial class StreamReadingCommandHandler : IRequestHandler<StreamReading
     {
         var session = await ValidateSessionAsync(request, cancellationToken);
         var readingSessionRef = ParseReadingSessionRefOrThrow(session.Id);
-        await EnsureQuotaAsync(request.UserId, cancellationToken);
         await EnsureRateLimitAsync(request.UserId, cancellationToken);
         // Chuỗi validation chặn sớm các trường hợp không hợp lệ trước khi tạo request/billing.
 
         var calculatedCost = await CalculateCostAsync(request, session, readingSessionRef, cancellationToken);
         var normalizedIdempotencyKey = ResolveIdempotencyKeyForRequest(request, calculatedCost);
-        var aiRequest = await CreateAiRequestAsync(
+        var aiRequest = await ReserveAndCreateAiRequestAsync(
             request,
             readingSessionRef,
             calculatedCost,

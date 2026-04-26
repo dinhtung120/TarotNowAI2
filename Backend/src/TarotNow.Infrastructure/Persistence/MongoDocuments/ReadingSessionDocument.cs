@@ -123,6 +123,8 @@ public class FollowupEntry
     [BsonElement("question")] public string Question { get; set; } = string.Empty;
     // Câu trả lời follow-up từ AI.
     [BsonElement("answer")] public string Answer { get; set; } = string.Empty;
+    // AiRequest id tạo follow-up (dedupe callback lặp).
+    [BsonElement("ai_request_id")] [BsonIgnoreIfNull] public string? AiRequestId { get; set; }
     // Chi phí diamond đã thu.
     [BsonElement("cost_diamond")] public long CostDiamond { get; set; }
     // Chi phí gold đã thu (nếu áp dụng).

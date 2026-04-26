@@ -25,22 +25,52 @@ public abstract class IdempotentDomainEventNotificationHandler<TDomainEvent>
     public async Task Handle(DomainEventNotification<TDomainEvent> notification, CancellationToken cancellationToken)
     {
         var outboxMessageId = notification.OutboxMessageId;
+        var eventIdempotencyKey = notification.EventIdempotencyKey?.Trim();
         var handlerName = GetType().FullName ?? GetType().Name;
 
-        if (outboxMessageId.HasValue)
+        if (await IsAlreadyProcessedAsync(outboxMessageId, eventIdempotencyKey, handlerName, cancellationToken))
         {
-            var processed = await _idempotencyService.HasProcessedAsync(outboxMessageId.Value, handlerName, cancellationToken);
-            if (processed)
-            {
-                return;
-            }
+            return;
         }
 
         await HandleDomainEventAsync(notification.DomainEvent, outboxMessageId, cancellationToken);
 
+        await MarkProcessedAsync(outboxMessageId, eventIdempotencyKey, handlerName, cancellationToken);
+    }
+
+    private async Task<bool> IsAlreadyProcessedAsync(
+        Guid? outboxMessageId,
+        string? eventIdempotencyKey,
+        string handlerName,
+        CancellationToken cancellationToken)
+    {
+        if (outboxMessageId.HasValue
+            && await _idempotencyService.HasProcessedAsync(outboxMessageId.Value, handlerName, cancellationToken))
+        {
+            return true;
+        }
+
+        return !string.IsNullOrWhiteSpace(eventIdempotencyKey)
+               && await _idempotencyService.HasProcessedInlineEventAsync(
+                   eventIdempotencyKey,
+                   handlerName,
+                   cancellationToken);
+    }
+
+    private async Task MarkProcessedAsync(
+        Guid? outboxMessageId,
+        string? eventIdempotencyKey,
+        string handlerName,
+        CancellationToken cancellationToken)
+    {
         if (outboxMessageId.HasValue)
         {
             await _idempotencyService.MarkProcessedAsync(outboxMessageId.Value, handlerName, cancellationToken);
+        }
+
+        if (!string.IsNullOrWhiteSpace(eventIdempotencyKey))
+        {
+            await _idempotencyService.MarkInlineEventProcessedAsync(eventIdempotencyKey, handlerName, cancellationToken);
         }
     }
 

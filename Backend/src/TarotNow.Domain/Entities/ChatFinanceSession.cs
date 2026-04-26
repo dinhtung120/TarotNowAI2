@@ -1,4 +1,6 @@
 
+using TarotNow.Domain.Enums;
+
 namespace TarotNow.Domain.Entities;
 
 // Entity phiên tài chính của hội thoại để theo dõi trạng thái escrow tổng và các item thanh toán liên quan.
@@ -17,7 +19,7 @@ public class ChatFinanceSession
     public Guid ReaderId { get; set; }
 
     // Trạng thái phiên tài chính (pending/closed/...).
-    public string Status { get; set; } = "pending";
+    public string Status { get; set; } = ChatFinanceSessionStatus.Pending;
 
     // Tổng số Diamond đang bị giữ trong escrow của phiên.
     public long TotalFrozen { get; set; }

@@ -62,21 +62,20 @@ public partial class EscrowTimerService
                 isAutoRelease: true,
                 cancellationToken: transactionCt);
             // Chạy settlement chuẩn để release tiền và cập nhật state item liên quan.
-
-            await dependencies.FinanceRepository.SaveChangesAsync(transactionCt);
             _logger.LogInformation("[EscrowTimer] Auto-release: {ItemId}", item.Id);
 
             var session = await dependencies.FinanceRepository.GetSessionByConversationRefAsync(item.ConversationRef, transactionCt);
             if (session != null && session.TotalFrozen <= 0)
             {
-                session.Status = "completed";
+                session.Status = ChatFinanceSessionStatus.Completed;
                 session.UpdatedAt = DateTime.UtcNow;
                 await dependencies.FinanceRepository.UpdateSessionAsync(session, transactionCt);
-                await dependencies.FinanceRepository.SaveChangesAsync(transactionCt);
                 // Khi không còn frozen thì chốt session completed để đóng phiên tài chính.
                 completedConversationId = item.ConversationRef;
                 releasedAmount = item.AmountDiamond;
             }
+
+            await dependencies.FinanceRepository.SaveChangesAsync(transactionCt);
         }, cancellationToken);
 
         if (string.IsNullOrWhiteSpace(completedConversationId) == false && releasedAmount > 0)

@@ -46,6 +46,12 @@ public static class TransactionType
     // Admin nạp thủ công cho tài khoản.
     public const string AdminTopup = "admin_topup";
 
+    // Admin cộng thủ công số dư (thay thế dần AdminTopup trong nhánh điều chỉnh số dư).
+    public const string AdminAdjustmentCredit = "admin_adjustment_credit";
+
+    // Admin trừ thủ công số dư.
+    public const string AdminAdjustmentDebit = "admin_adjustment_debit";
+
     // Giải ngân tiền escrow.
     public const string EscrowRelease = "escrow_release";
 

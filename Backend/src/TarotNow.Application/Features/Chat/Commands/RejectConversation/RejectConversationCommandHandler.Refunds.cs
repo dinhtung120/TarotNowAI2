@@ -41,7 +41,7 @@ public partial class RejectConversationCommandHandler
             if (session.TotalFrozen == 0)
             {
                 // Khi không còn frozen thì đánh dấu session đã refunded toàn phần.
-                session.Status = "refunded";
+                session.Status = ChatFinanceSessionStatus.Refunded;
             }
 
             session.UpdatedAt = now;

@@ -57,7 +57,7 @@ public partial class AcceptConversationCommandHandler
             mainQuestion.UpdatedAt = now;
 
             // Kích hoạt finance session để bước xử lý chat/settlement tiếp theo sử dụng.
-            session.Status = "active";
+            session.Status = ChatFinanceSessionStatus.Active;
             session.UpdatedAt = now;
 
             await _financeRepository.UpdateItemAsync(mainQuestion, transactionCt);

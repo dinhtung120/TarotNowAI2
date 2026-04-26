@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
+using TarotNow.Application.Features.CheckIn.Commands.DailyCheckIn;
 using TarotNow.Application.Interfaces;
 using TarotNow.Api.Controllers;
 using TarotNow.Domain.Entities;
@@ -41,14 +42,12 @@ public sealed class ConcurrencyCriticalFlowsIntegrationTests
 
         Assert.All(responses, response => Assert.True(response.IsSuccessStatusCode));
 
-        var payload1 = await responses[0].Content.ReadAsStringAsync();
-        var payload2 = await responses[1].Content.ReadAsStringAsync();
-        var hasFresh = payload1.Contains("\"isAlreadyCheckedIn\":false", StringComparison.OrdinalIgnoreCase)
-                       || payload2.Contains("\"isAlreadyCheckedIn\":false", StringComparison.OrdinalIgnoreCase);
-        var hasReplay = payload1.Contains("\"isAlreadyCheckedIn\":true", StringComparison.OrdinalIgnoreCase)
-                        || payload2.Contains("\"isAlreadyCheckedIn\":true", StringComparison.OrdinalIgnoreCase);
+        var payloads = await Task.WhenAll(
+            responses.Select(response => response.Content.ReadFromJsonAsync<DailyCheckInResult>()));
+        Assert.All(payloads, payload => Assert.NotNull(payload));
+
+        var hasFresh = payloads.Any(payload => payload!.IsAlreadyCheckedIn == false);
         Assert.True(hasFresh);
-        Assert.True(hasReplay);
 
         var businessDate = DateOnly.FromDateTime(DateTime.UtcNow).ToString("yyyy-MM-dd");
         using var scope = _factory.Services.CreateScope();

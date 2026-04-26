@@ -25,6 +25,12 @@ public interface IUserPresenceTracker
     bool IsOnline(string userId);
 
     /// <summary>
+    /// Kiểm tra user còn connection realtime active hay không (không xét fallback heartbeat).
+    /// Luồng xử lý: dùng cho các quyết định publish online/offline theo lifecycle kết nối SignalR.
+    /// </summary>
+    bool HasActiveConnection(string userId);
+
+    /// <summary>
     /// Ghi nhận heartbeat hoạt động của user.
     /// Luồng xử lý: cập nhật mốc thời gian hoạt động cuối cùng cho user.
     /// </summary>

@@ -6,7 +6,7 @@ using TarotNow.Application.Interfaces;
 namespace TarotNow.Api.Realtime;
 
 // Presence tracker dùng Redis để đồng bộ trạng thái online khi chạy nhiều instance.
-public sealed class RedisUserPresenceTracker : IUserPresenceTracker
+public sealed partial class RedisUserPresenceTracker : IUserPresenceTracker
 {
     private const string ConnectionsKeyPrefix = "presence:user:";
     private const string ConnectionsKeySuffix = ":connections";

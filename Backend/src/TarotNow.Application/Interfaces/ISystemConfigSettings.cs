@@ -220,6 +220,12 @@ public interface ISystemConfigSettings
     // Outbox poll interval (giây).
     int OperationalOutboxPollIntervalSeconds { get; }
 
+    // Escrow timer scan interval (giây).
+    int OperationalEscrowTimerScanIntervalSeconds { get; }
+
+    // Escrow completion-timeout batch size mỗi vòng quét.
+    int OperationalEscrowCompletionTimeoutBatchSize { get; }
+
     // Page size mặc định danh sách readers ở FE.
     int UiReadersDirectoryPageSize { get; }
 
