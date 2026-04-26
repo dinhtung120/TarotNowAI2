@@ -52,20 +52,27 @@ public class AdminQuestCommandHandlerRequestedDomainEventHandler
     }
 }
 
-// Handler command admin xóa định nghĩa quest.
-public class DeleteQuestDefinitionCommandHandler : IRequestHandler<DeleteQuestDefinitionCommand, bool>
+// Handler xử lý event yêu cầu xóa định nghĩa quest.
+public class DeleteQuestDefinitionCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<DeleteQuestDefinitionCommandHandlerRequestedDomainEvent>
 {
     private readonly IQuestRepository _questRepo;
 
-    public DeleteQuestDefinitionCommandHandler(IQuestRepository questRepo)
+    public DeleteQuestDefinitionCommandHandlerRequestedDomainEventHandler(
+        IQuestRepository questRepo,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _questRepo = questRepo;
     }
 
-    public async Task<bool> Handle(DeleteQuestDefinitionCommand request, CancellationToken cancellationToken)
+    protected override async Task HandleDomainEventAsync(
+        DeleteQuestDefinitionCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
     {
-        await _questRepo.DeleteQuestDefinitionAsync(request.Code, cancellationToken);
-        return true;
+        await _questRepo.DeleteQuestDefinitionAsync(domainEvent.Command.Code, cancellationToken);
+        domainEvent.Result = true;
     }
 }
 
@@ -112,20 +119,27 @@ public class AdminAchievementCommandHandlerRequestedDomainEventHandler
     }
 }
 
-// Handler command admin xóa định nghĩa achievement.
-public class DeleteAchievementDefinitionCommandHandler : IRequestHandler<DeleteAchievementDefinitionCommand, bool>
+// Handler xử lý event yêu cầu xóa định nghĩa achievement.
+public class DeleteAchievementDefinitionCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<DeleteAchievementDefinitionCommandHandlerRequestedDomainEvent>
 {
     private readonly IAchievementRepository _achRepo;
 
-    public DeleteAchievementDefinitionCommandHandler(IAchievementRepository achRepo)
+    public DeleteAchievementDefinitionCommandHandlerRequestedDomainEventHandler(
+        IAchievementRepository achRepo,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _achRepo = achRepo;
     }
 
-    public async Task<bool> Handle(DeleteAchievementDefinitionCommand request, CancellationToken cancellationToken)
+    protected override async Task HandleDomainEventAsync(
+        DeleteAchievementDefinitionCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
     {
-        await _achRepo.DeleteAchievementDefinitionAsync(request.Code, cancellationToken);
-        return true;
+        await _achRepo.DeleteAchievementDefinitionAsync(domainEvent.Command.Code, cancellationToken);
+        domainEvent.Result = true;
     }
 }
 
@@ -172,19 +186,26 @@ public class AdminTitleCommandHandlerRequestedDomainEventHandler
     }
 }
 
-// Handler command admin xóa định nghĩa title.
-public class DeleteTitleDefinitionCommandHandler : IRequestHandler<DeleteTitleDefinitionCommand, bool>
+// Handler xử lý event yêu cầu xóa định nghĩa title.
+public class DeleteTitleDefinitionCommandHandlerRequestedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<DeleteTitleDefinitionCommandHandlerRequestedDomainEvent>
 {
     private readonly ITitleRepository _titleRepo;
 
-    public DeleteTitleDefinitionCommandHandler(ITitleRepository titleRepo)
+    public DeleteTitleDefinitionCommandHandlerRequestedDomainEventHandler(
+        ITitleRepository titleRepo,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
     {
         _titleRepo = titleRepo;
     }
 
-    public async Task<bool> Handle(DeleteTitleDefinitionCommand request, CancellationToken cancellationToken)
+    protected override async Task HandleDomainEventAsync(
+        DeleteTitleDefinitionCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
     {
-        await _titleRepo.DeleteTitleDefinitionAsync(request.Code, cancellationToken);
-        return true;
+        await _titleRepo.DeleteTitleDefinitionAsync(domainEvent.Command.Code, cancellationToken);
+        domainEvent.Result = true;
     }
 }

@@ -3,7 +3,6 @@ using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
 using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Entities;
-using TarotNow.Domain.Enums;
 using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.DomainEvents.Handlers;
@@ -14,9 +13,15 @@ namespace TarotNow.Application.DomainEvents.Handlers;
 public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
     : IdempotentDomainEventNotificationHandler<ReadingSessionRevealRequestedDomainEvent>
 {
-    private const int TarotDeckSize = 78;
+    private readonly record struct ReadingChargeSnapshot(
+        bool Debited,
+        string Currency,
+        string ChangeType,
+        long Amount,
+        string ReferenceId);
 
     private readonly IReadingSessionRepository _readingSessionRepository;
+    private readonly IReadingRevealSagaStateRepository _readingRevealSagaStateRepository;
     private readonly IUserCollectionRepository _userCollectionRepository;
     private readonly IUserRepository _userRepository;
     private readonly IWalletRepository _walletRepository;
@@ -24,12 +29,14 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
     private readonly IRngService _rngService;
     private readonly IDomainEventPublisher _domainEventPublisher;
     private readonly ISystemConfigSettings _systemConfigSettings;
+    private readonly ITransactionCoordinator _transactionCoordinator;
 
     /// <summary>
     /// Khởi tạo handler reveal-requested.
     /// </summary>
     public ReadingSessionRevealRequestedDomainEventHandler(
         IReadingSessionRepository readingSessionRepository,
+        IReadingRevealSagaStateRepository readingRevealSagaStateRepository,
         IUserCollectionRepository userCollectionRepository,
         IUserRepository userRepository,
         IWalletRepository walletRepository,
@@ -37,10 +44,12 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
         IRngService rngService,
         IDomainEventPublisher domainEventPublisher,
         ISystemConfigSettings systemConfigSettings,
+        ITransactionCoordinator transactionCoordinator,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
         _readingSessionRepository = readingSessionRepository;
+        _readingRevealSagaStateRepository = readingRevealSagaStateRepository;
         _userCollectionRepository = userCollectionRepository;
         _userRepository = userRepository;
         _walletRepository = walletRepository;
@@ -48,6 +57,7 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
         _rngService = rngService;
         _domainEventPublisher = domainEventPublisher;
         _systemConfigSettings = systemConfigSettings;
+        _transactionCoordinator = transactionCoordinator;
     }
 
     /// <inheritdoc />
@@ -57,28 +67,21 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
         CancellationToken cancellationToken)
     {
         var session = await GetSessionAsync(domainEvent, cancellationToken);
-        if (session.IsCompleted)
+        var saga = await _readingRevealSagaStateRepository.GetOrCreateAsync(
+            domainEvent.SessionId,
+            domainEvent.UserId,
+            domainEvent.Language,
+            cancellationToken);
+
+        if (await TryHandleCompletedSessionReplayAsync(domainEvent, session, saga, cancellationToken))
         {
-            domainEvent.RevealedCards = ReadingDrawnCardCodec.Parse(session.CardsDrawn);
-            domainEvent.IsIdempotentReplay = true;
             return;
         }
 
-        var revealedCards = DrawCards(session.SpreadType);
-        await ChargeReadingAsync(domainEvent.UserId, session, cancellationToken);
-        await UpdateCollectionAndUserExpAsync(domainEvent.UserId, session, revealedCards, cancellationToken);
-
-        session.CompleteSession(ReadingDrawnCardCodec.Serialize(revealedCards));
-        await _readingSessionRepository.UpdateAsync(session, cancellationToken);
-
-        await _domainEventPublisher.PublishAsync(
-            new ReadingSessionRevealedDomainEvent
-            {
-                UserId = domainEvent.UserId,
-                SessionId = session.Id,
-                Language = domainEvent.Language,
-                RevealedCards = revealedCards
-            },
+        var revealedCards = await ExecuteSagaWorkflowAsync(
+            domainEvent,
+            session,
+            saga,
             cancellationToken);
 
         domainEvent.RevealedCards = revealedCards;
@@ -99,36 +102,4 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
 
         return session;
     }
-
-    private IReadOnlyList<ReadingDrawnCard> DrawCards(string spreadType)
-    {
-        var cardsToDraw = ResolveCardsToDraw(spreadType);
-        var shuffledDeck = _rngService.ShuffleDeck(TarotDeckSize);
-        var revealedCards = new List<ReadingDrawnCard>(cardsToDraw);
-
-        for (var i = 0; i < cardsToDraw; i++)
-        {
-            revealedCards.Add(new ReadingDrawnCard
-            {
-                CardId = shuffledDeck[i],
-                Position = i,
-                Orientation = _rngService.NextBoolean() ? CardOrientation.Reversed : CardOrientation.Upright
-            });
-        }
-
-        return revealedCards;
-    }
-
-    private static int ResolveCardsToDraw(string spreadType)
-    {
-        return spreadType switch
-        {
-            SpreadType.Daily1Card => 1,
-            SpreadType.Spread3Cards => 3,
-            SpreadType.Spread5Cards => 5,
-            SpreadType.Spread10Cards => 10,
-            _ => throw new BadRequestException($"Invalid spread type: {spreadType}")
-        };
-    }
-
 }

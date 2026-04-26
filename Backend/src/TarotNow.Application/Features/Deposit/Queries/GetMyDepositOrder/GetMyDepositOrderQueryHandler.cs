@@ -42,13 +42,15 @@ public class GetMyDepositOrderQueryHandler : IRequestHandler<GetMyDepositOrderQu
             BonusGoldAmount = order.BonusGoldAmount,
             TotalDiamondAmount = order.DiamondAmount,
             PayOsOrderCode = order.PayOsOrderCode,
+            PaymentLinkStatus = order.PaymentLinkStatus,
             CheckoutUrl = order.CheckoutUrl,
             QrCode = order.QrCode,
             PaymentLinkId = order.PayOsPaymentLinkId,
             TransactionId = order.TransactionId,
             FailureReason = order.FailureReason,
             ProcessedAt = order.ProcessedAt,
-            ExpiresAtUtc = order.ExpiresAtUtc
+            ExpiresAtUtc = order.ExpiresAtUtc,
+            PaymentLinkFailureReason = order.PaymentLinkFailureReason
         };
     }
 }

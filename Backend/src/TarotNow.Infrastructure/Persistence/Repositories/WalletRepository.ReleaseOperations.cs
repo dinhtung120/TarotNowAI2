@@ -60,8 +60,10 @@ public partial class WalletRepository
         User receiver)
     {
         var payerBalanceBefore = payer.DiamondBalance;
+        var payerFrozenBalanceBefore = payer.FrozenDiamondBalance;
         payer.ReleaseFrozenDiamond(request.Amount);
         var payerBalanceAfter = payer.DiamondBalance;
+        var payerFrozenBalanceAfter = payer.FrozenDiamondBalance;
 
         var receiverBalanceBefore = receiver.DiamondBalance;
         receiver.Credit(CurrencyType.Diamond, request.Amount, TransactionType.EscrowRelease);
@@ -74,6 +76,10 @@ public partial class WalletRepository
             -request.Amount,
             payerBalanceBefore,
             payerBalanceAfter,
+            payerBalanceBefore,
+            payerBalanceAfter,
+            payerFrozenBalanceBefore,
+            payerFrozenBalanceAfter,
             request.ReferenceSource,
             request.ReferenceId,
             request.Description,
@@ -87,6 +93,10 @@ public partial class WalletRepository
             request.Amount,
             receiverBalanceBefore,
             receiverBalanceAfter,
+            receiverBalanceBefore,
+            receiverBalanceAfter,
+            0,
+            0,
             request.ReferenceSource,
             request.ReferenceId,
             request.Description,

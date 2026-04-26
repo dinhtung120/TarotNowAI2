@@ -3,6 +3,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Constants;
 using TarotNow.Api.Contracts.Requests;
 using TarotNow.Api.Extensions;
@@ -15,6 +16,7 @@ namespace TarotNow.Api.Controllers;
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
 [Authorize(Roles = ApiRoleConstants.Admin)] 
+[EnableRateLimiting("auth-session")]
 // API quản trị cộng đồng dành cho moderator/admin.
 // Luồng chính: lấy hàng chờ moderation và ghi nhận quyết định xử lý báo cáo.
 public class AdminCommunityController : ControllerBase

@@ -59,9 +59,11 @@ public partial class WalletRepository
             // Double-check sau FOR UPDATE để chặn race-condition giữa các request song song.
         }
 
-        var balanceBefore = ResolveBalance(user, request.Currency);
+        var balanceBefore = ResolveAvailableBalance(user, request.Currency);
+        var frozenBalanceBefore = ResolveFrozenBalance(user, request.Currency);
         ApplyBalanceMutation(user, request);
-        var balanceAfter = ResolveBalance(user, request.Currency);
+        var balanceAfter = ResolveAvailableBalance(user, request.Currency);
+        var frozenBalanceAfter = ResolveFrozenBalance(user, request.Currency);
 
         var ledgerEntry = CreateWalletLedgerEntry(new WalletLedgerEntryRequest(
             request.UserId,
@@ -70,6 +72,10 @@ public partial class WalletRepository
             ResolveLedgerAmount(request),
             balanceBefore,
             balanceAfter,
+            balanceBefore,
+            balanceAfter,
+            frozenBalanceBefore,
+            frozenBalanceAfter,
             request.ReferenceSource,
             request.ReferenceId,
             request.Description,
@@ -107,9 +113,16 @@ public partial class WalletRepository
         => request.IsDebit ? -request.Amount : request.Amount;
 
     /// <summary>
-    /// Lấy số dư hiện tại theo currency.
+    /// Lấy số dư khả dụng hiện tại theo currency.
     /// Luồng xử lý: gold trả GoldBalance, còn lại trả DiamondBalance.
     /// </summary>
-    private static long ResolveBalance(User user, string currency)
+    private static long ResolveAvailableBalance(User user, string currency)
         => currency == CurrencyType.Gold ? user.GoldBalance : user.DiamondBalance;
+
+    /// <summary>
+    /// Lấy số dư frozen hiện tại theo currency.
+    /// Luồng xử lý: chỉ Diamond có frozen balance, Gold luôn bằng 0.
+    /// </summary>
+    private static long ResolveFrozenBalance(User user, string currency)
+        => currency == CurrencyType.Diamond ? user.FrozenDiamondBalance : 0;
 }

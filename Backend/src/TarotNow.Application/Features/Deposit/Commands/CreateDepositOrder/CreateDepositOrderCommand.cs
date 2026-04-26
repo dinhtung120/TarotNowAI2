@@ -39,15 +39,21 @@ public class CreateDepositOrderResponse
     // PayOS order code.
     public long PayOsOrderCode { get; set; }
 
-    // Url checkout PayOS.
-    public string CheckoutUrl { get; set; } = string.Empty;
+    // Trạng thái provisioning payment link.
+    public string PaymentLinkStatus { get; set; } = string.Empty;
 
-    // Chuỗi QR code thanh toán.
-    public string QrCode { get; set; } = string.Empty;
+    // Url checkout PayOS (có thể chưa sẵn sàng nếu đang provisioning).
+    public string? CheckoutUrl { get; set; }
 
-    // Payment link id từ PayOS.
-    public string PaymentLinkId { get; set; } = string.Empty;
+    // Chuỗi QR code thanh toán (có thể chưa sẵn sàng nếu đang provisioning).
+    public string? QrCode { get; set; }
+
+    // Payment link id từ PayOS (có thể chưa sẵn sàng nếu đang provisioning).
+    public string? PaymentLinkId { get; set; }
 
     // Thời điểm payment link hết hạn.
     public DateTime? ExpiresAtUtc { get; set; }
+
+    // Lý do lỗi provisioning payment link gần nhất (nếu có).
+    public string? PaymentLinkFailureReason { get; set; }
 }

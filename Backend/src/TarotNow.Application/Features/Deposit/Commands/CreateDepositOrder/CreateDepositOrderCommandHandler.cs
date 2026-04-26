@@ -42,10 +42,12 @@ public class CreateDepositOrderCommandHandler : IRequestHandler<CreateDepositOrd
             BonusGoldAmount = domainEvent.BonusGoldAmount,
             TotalDiamondAmount = domainEvent.TotalDiamondAmount,
             PayOsOrderCode = domainEvent.PayOsOrderCode,
+            PaymentLinkStatus = domainEvent.PaymentLinkStatus,
             CheckoutUrl = domainEvent.CheckoutUrl,
             QrCode = domainEvent.QrCode,
             PaymentLinkId = domainEvent.PaymentLinkId,
-            ExpiresAtUtc = domainEvent.ExpiresAtUtc
+            ExpiresAtUtc = domainEvent.ExpiresAtUtc,
+            PaymentLinkFailureReason = domainEvent.PaymentLinkFailureReason
         };
     }
 }

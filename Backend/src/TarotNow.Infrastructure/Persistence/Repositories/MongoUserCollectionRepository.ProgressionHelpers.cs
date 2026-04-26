@@ -24,6 +24,7 @@ public partial class MongoUserCollectionRepository
         document.BonusDefPercent = Round2(Math.Max(document.BonusDefPercent, 0m));
         document.Stats ??= new DrawStats();
         document.StatHistory ??= new List<StatRollRecord>();
+        document.AppliedOperationKeys ??= new List<string>();
         document.IsDeleted = false;
         RecalculateTotalStats(document);
         
@@ -65,6 +66,9 @@ public partial class MongoUserCollectionRepository
             Atk = document.Atk,
             Def = document.Def,
             StatHistory = CloneStatHistory(document.StatHistory),
+            AppliedOperationKeys = document.AppliedOperationKeys is null
+                ? new List<string>()
+                : document.AppliedOperationKeys.ToList(),
             IsDeleted = document.IsDeleted,
             DeletedAt = document.DeletedAt,
             CreatedAt = document.CreatedAt,

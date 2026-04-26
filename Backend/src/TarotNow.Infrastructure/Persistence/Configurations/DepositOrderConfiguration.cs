@@ -30,9 +30,14 @@ public class DepositOrderConfiguration : IEntityTypeConfiguration<DepositOrder>
         builder.Property(o => o.Status).HasColumnName("status").HasMaxLength(20).IsRequired();
         builder.Property(o => o.ClientRequestKey).HasColumnName("client_request_key").HasMaxLength(128).IsRequired();
         builder.Property(o => o.PayOsOrderCode).HasColumnName("payos_order_code").IsRequired();
-        builder.Property(o => o.PayOsPaymentLinkId).HasColumnName("payos_payment_link_id").HasMaxLength(128).IsRequired();
-        builder.Property(o => o.CheckoutUrl).HasColumnName("checkout_url").HasMaxLength(1000).IsRequired();
-        builder.Property(o => o.QrCode).HasColumnName("qr_code").HasMaxLength(4000).IsRequired();
+        builder.Property(o => o.PayOsPaymentLinkId).HasColumnName("payos_payment_link_id").HasMaxLength(128).IsRequired(false);
+        builder.Property(o => o.CheckoutUrl).HasColumnName("checkout_url").HasMaxLength(1000).IsRequired(false);
+        builder.Property(o => o.QrCode).HasColumnName("qr_code").HasMaxLength(4000).IsRequired(false);
+        builder.Property(o => o.PaymentLinkStatus).HasColumnName("payment_link_status").HasMaxLength(32).IsRequired();
+        builder.Property(o => o.PaymentLinkFailureReason).HasColumnName("payment_link_failure_reason").HasMaxLength(500);
+        builder.Property(o => o.PaymentLinkAttemptCount).HasColumnName("payment_link_attempt_count").IsRequired();
+        builder.Property(o => o.PaymentLinkLastAttemptAtUtc).HasColumnName("payment_link_last_attempt_at_utc");
+        builder.Property(o => o.PaymentLinkProvisionedAtUtc).HasColumnName("payment_link_provisioned_at_utc");
         builder.Property(o => o.TransactionId).HasColumnName("transaction_id").HasMaxLength(200);
         builder.Property(o => o.FailureReason).HasColumnName("failure_reason").HasMaxLength(500);
         builder.Property(o => o.ExpiresAtUtc).HasColumnName("expires_at_utc");

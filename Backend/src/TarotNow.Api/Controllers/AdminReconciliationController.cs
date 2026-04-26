@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Application.Features.Admin.Queries.GetLedgerMismatch;
 
 namespace TarotNow.Api.Controllers;
@@ -9,6 +10,7 @@ namespace TarotNow.Api.Controllers;
 [ApiVersion(ApiVersions.V1)]
 [Route(ApiRoutes.Admin)]
 [Authorize(Roles = "admin")]
+[EnableRateLimiting("auth-session")]
 // API đối soát dữ liệu tài chính cho admin.
 // Luồng chính: truy xuất các mismatch giữa ledger và số dư ví.
 public sealed class AdminReconciliationController : ControllerBase

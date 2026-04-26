@@ -12,7 +12,7 @@ public sealed class WithdrawalRequestConfiguration : IEntityTypeConfiguration<Wi
 {
     /// <summary>
     /// Cấu hình mapping tổng thể bảng withdrawal_requests.
-    /// Luồng xử lý: gán table/key, tách cấu hình cột nghiệp vụ và index one-per-day cho request đang mở.
+    /// Luồng xử lý: gán table/key, tách cấu hình cột nghiệp vụ và index one-per-week cho request đang mở.
     /// </summary>
     public void Configure(EntityTypeBuilder<WithdrawalRequest> builder)
     {
@@ -60,8 +60,8 @@ public sealed class WithdrawalRequestConfiguration : IEntityTypeConfiguration<Wi
     }
 
     /// <summary>
-    /// Cấu hình index phục vụ kiểm soát nghiệp vụ rút tiền theo ngày.
-    /// Luồng xử lý: tạo unique filtered index chỉ áp dụng cho trạng thái pending/approved để chặn nhiều lệnh mở cùng ngày.
+    /// Cấu hình index phục vụ kiểm soát nghiệp vụ rút tiền theo tuần.
+    /// Luồng xử lý: tạo unique index theo business week để chặn nhiều yêu cầu rút trong cùng tuần.
     /// </summary>
     private static void ConfigureIndexes(EntityTypeBuilder<WithdrawalRequest> builder)
     {

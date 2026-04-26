@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace TarotNow.Api.Controllers;
 
@@ -8,6 +9,7 @@ namespace TarotNow.Api.Controllers;
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
 [Authorize]
+[EnableRateLimiting("auth-session")]
 // API thông báo người dùng.
 // Luồng chính: truy vấn danh sách/unread count và cập nhật trạng thái đã đọc qua các partial controller.
 public partial class NotificationController : ControllerBase

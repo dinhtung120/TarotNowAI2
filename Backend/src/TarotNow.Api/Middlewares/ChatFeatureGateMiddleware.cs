@@ -1,4 +1,5 @@
 using Microsoft.FeatureManagement;
+using Microsoft.AspNetCore.Mvc;
 
 namespace TarotNow.Api.Middlewares;
 
@@ -44,10 +45,16 @@ public class ChatFeatureGateMiddleware
 
         // Nhánh chat bị tắt: trả 404 để ẩn endpoint tạm thời khỏi client.
         context.Response.StatusCode = StatusCodes.Status404NotFound;
-        await context.Response.WriteAsJsonAsync(new
+        await context.Response.WriteAsJsonAsync(new ProblemDetails
         {
-            error = "CHAT_V2_DISABLED",
-            message = "Chat service is temporarily unavailable."
+            Status = StatusCodes.Status404NotFound,
+            Title = "Not Found",
+            Detail = "Chat service is temporarily unavailable.",
+            Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4",
+            Extensions =
+            {
+                ["errorCode"] = "CHAT_V2_DISABLED"
+            }
         });
     }
 

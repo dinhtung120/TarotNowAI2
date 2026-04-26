@@ -31,7 +31,17 @@ dc exec -T mongodb sh -lc \
 
 echo "[backup] dumping Redis..."
 dc exec -T redis redis-cli BGSAVE >/dev/null
-sleep 3
+for i in $(seq 1 60); do
+  in_progress="$(dc exec -T redis redis-cli --raw INFO Persistence | awk -F: '/^rdb_bgsave_in_progress:/ {gsub(/\\r/, \"\", $2); print $2}')"
+  if [[ "$in_progress" == "0" ]]; then
+    break
+  fi
+  sleep 1
+  if [[ "$i" -eq 60 ]]; then
+    echo "[backup] redis bgsave did not complete in time" >&2
+    exit 1
+  fi
+done
 dc cp redis:/data/dump.rdb "$BACKUP_DIR/redis.dump.rdb"
 
 echo "[backup] completed."

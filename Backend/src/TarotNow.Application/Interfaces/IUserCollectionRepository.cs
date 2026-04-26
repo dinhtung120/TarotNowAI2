@@ -16,6 +16,7 @@ public interface IUserCollectionRepository
         int cardId,
         decimal expToGain,
         string orientation = CardOrientation.Upright,
+        string? operationKey = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>

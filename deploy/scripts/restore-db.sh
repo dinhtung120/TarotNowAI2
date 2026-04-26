@@ -33,7 +33,7 @@ dc() {
 
 echo "[restore] restoring PostgreSQL..."
 cat "$POSTGRES_FILE" | dc exec -T postgres sh -lc \
-  'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+  'psql -v ON_ERROR_STOP=1 -1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
 
 echo "[restore] restoring MongoDB..."
 cat "$MONGO_FILE" | dc exec -T mongodb sh -lc \

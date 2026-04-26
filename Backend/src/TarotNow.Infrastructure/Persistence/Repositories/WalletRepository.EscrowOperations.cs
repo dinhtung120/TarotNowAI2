@@ -47,8 +47,10 @@ public partial class WalletRepository
         // Double-check sau lock để tránh ghi ledger trùng trong race-condition.
 
         var balanceBefore = user.DiamondBalance;
+        var frozenBalanceBefore = user.FrozenDiamondBalance;
         applyMutation(user, request.Amount);
         var balanceAfter = user.DiamondBalance;
+        var frozenBalanceAfter = user.FrozenDiamondBalance;
         var ledgerEntry = CreateWalletLedgerEntry(new WalletLedgerEntryRequest(
             request.UserId,
             CurrencyType.Diamond,
@@ -56,6 +58,10 @@ public partial class WalletRepository
             request.LedgerAmount,
             balanceBefore,
             balanceAfter,
+            balanceBefore,
+            balanceAfter,
+            frozenBalanceBefore,
+            frozenBalanceAfter,
             request.ReferenceSource,
             request.ReferenceId,
             request.Description,

@@ -13,6 +13,10 @@ namespace TarotNow.Api.Controllers;
 
 public partial class DepositController
 {
+    private static readonly TimeSpan CreateOrderProvisioningWaitTimeout = TimeSpan.FromSeconds(3);
+    private static readonly TimeSpan CreateOrderProvisioningPollInterval = TimeSpan.FromMilliseconds(150);
+    private const string ReadyPaymentLinkStatus = "ready";
+
     /// <summary>
     /// Lấy danh sách gói nạp preset đang active.
     /// </summary>
@@ -56,6 +60,11 @@ public partial class DepositController
         };
 
         var response = await _mediator.Send(command, cancellationToken);
+        if (!string.Equals(response.PaymentLinkStatus, ReadyPaymentLinkStatus, StringComparison.OrdinalIgnoreCase))
+        {
+            response = await WaitForProvisionedPaymentLinkAsync(userId, response, cancellationToken);
+        }
+
         return Ok(response);
     }
 
@@ -138,5 +147,54 @@ public partial class DepositController
     private string ResolveIdempotencyKey(CreateDepositOrderRequest request)
     {
         return Request.GetIdempotencyKeyOrEmpty(request.IdempotencyKey);
+    }
+
+    private async Task<CreateDepositOrderResponse> WaitForProvisionedPaymentLinkAsync(
+        Guid userId,
+        CreateDepositOrderResponse currentResponse,
+        CancellationToken cancellationToken)
+    {
+        var deadline = DateTime.UtcNow + CreateOrderProvisioningWaitTimeout;
+        while (DateTime.UtcNow < deadline)
+        {
+            await Task.Delay(CreateOrderProvisioningPollInterval, cancellationToken);
+
+            var snapshot = await _mediator.Send(
+                new GetMyDepositOrderQuery
+                {
+                    UserId = userId,
+                    OrderId = currentResponse.OrderId
+                },
+                cancellationToken);
+            if (!string.Equals(snapshot.PaymentLinkStatus, ReadyPaymentLinkStatus, StringComparison.OrdinalIgnoreCase))
+            {
+                currentResponse = MapToCreateResponse(snapshot);
+                continue;
+            }
+
+            return MapToCreateResponse(snapshot);
+        }
+
+        return currentResponse;
+    }
+
+    private static CreateDepositOrderResponse MapToCreateResponse(MyDepositOrderDto snapshot)
+    {
+        return new CreateDepositOrderResponse
+        {
+            OrderId = snapshot.OrderId,
+            Status = snapshot.Status,
+            AmountVnd = snapshot.AmountVnd,
+            BaseDiamondAmount = snapshot.BaseDiamondAmount,
+            BonusGoldAmount = snapshot.BonusGoldAmount,
+            TotalDiamondAmount = snapshot.TotalDiamondAmount,
+            PayOsOrderCode = snapshot.PayOsOrderCode,
+            PaymentLinkStatus = snapshot.PaymentLinkStatus,
+            CheckoutUrl = snapshot.CheckoutUrl,
+            QrCode = snapshot.QrCode,
+            PaymentLinkId = snapshot.PaymentLinkId,
+            ExpiresAtUtc = snapshot.ExpiresAtUtc,
+            PaymentLinkFailureReason = snapshot.PaymentLinkFailureReason
+        };
     }
 }

@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
 using TarotNow.Infrastructure.Persistence;
 using Xunit;
@@ -112,6 +113,59 @@ public class DepositOrderIntegrationTests : IClassFixture<CustomWebApplicationFa
         Assert.Equal(1, orderCount);
     }
 
+    [Fact]
+    public async Task CreateOrder_ShouldRecoverProvisioning_WhenTransientGatewayFailureOccurs()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue(TestAuthHandler.AuthenticationScheme);
+
+        var userId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        await SeedUserAsync(userId);
+
+        var payOsGateway = default(TestPayOsGateway);
+        using (var scope = _factory.Services.CreateScope())
+        {
+            payOsGateway = Assert.IsType<TestPayOsGateway>(scope.ServiceProvider.GetRequiredService<IPayOsGateway>());
+            payOsGateway.SetFailFirstCreateAttemptPerOrder(true);
+        }
+
+        try
+        {
+            var requestPayload = new
+            {
+                packageCode = "topup_100k",
+                idempotencyKey = $"provisioning-retry-{Guid.NewGuid():N}"
+            };
+
+            var createResponse = await client.PostAsJsonAsync("/api/v1/deposits/orders", requestPayload);
+            await AssertStatusCodeAsync(createResponse, HttpStatusCode.OK);
+
+            var createdOrder = await createResponse.Content.ReadFromJsonAsync<CreateOrderResponse>();
+            Assert.NotNull(createdOrder);
+
+            var readySnapshot = await WaitUntilPaymentLinkReadyAsync(client, createdOrder!.OrderId, timeout: TimeSpan.FromSeconds(20));
+            Assert.NotNull(readySnapshot);
+            Assert.Equal("ready", readySnapshot!.PaymentLinkStatus, ignoreCase: true);
+            Assert.False(string.IsNullOrWhiteSpace(readySnapshot.PaymentLinkId));
+            Assert.False(string.IsNullOrWhiteSpace(readySnapshot.CheckoutUrl));
+
+            using var verifyScope = _factory.Services.CreateScope();
+            var db = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var payOsGatewayVerify = Assert.IsType<TestPayOsGateway>(verifyScope.ServiceProvider.GetRequiredService<IPayOsGateway>());
+            var persistedOrder = await db.DepositOrders.FindAsync(createdOrder.OrderId);
+
+            Assert.NotNull(persistedOrder);
+            Assert.Equal("ready", persistedOrder!.PaymentLinkStatus, ignoreCase: true);
+            Assert.Equal(2, payOsGatewayVerify.GetCreatePaymentLinkCallCount(createdOrder.PayOsOrderCode));
+            Assert.Equal(2, persistedOrder.PaymentLinkAttemptCount);
+        }
+        finally
+        {
+            payOsGateway?.SetFailFirstCreateAttemptPerOrder(false);
+        }
+    }
+
     private static async Task AssertStatusCodeAsync(HttpResponseMessage response, HttpStatusCode expectedStatusCode)
     {
         if (response.StatusCode == expectedStatusCode)
@@ -122,6 +176,31 @@ public class DepositOrderIntegrationTests : IClassFixture<CustomWebApplicationFa
         var responseBody = await response.Content.ReadAsStringAsync();
         throw new Xunit.Sdk.XunitException(
             $"Expected status {(int)expectedStatusCode} but was {(int)response.StatusCode}. Body: {responseBody}");
+    }
+
+    private static async Task<MyOrderSnapshotResponse?> WaitUntilPaymentLinkReadyAsync(
+        HttpClient client,
+        Guid orderId,
+        TimeSpan timeout)
+    {
+        var deadline = DateTime.UtcNow.Add(timeout);
+        while (DateTime.UtcNow < deadline)
+        {
+            var response = await client.GetAsync($"/api/v1/deposits/orders/{orderId}");
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                var snapshot = await response.Content.ReadFromJsonAsync<MyOrderSnapshotResponse>();
+                if (snapshot is not null
+                    && string.Equals(snapshot.PaymentLinkStatus, "ready", StringComparison.OrdinalIgnoreCase))
+                {
+                    return snapshot;
+                }
+            }
+
+            await Task.Delay(250);
+        }
+
+        return null;
     }
 
     private async Task SeedUserAsync(Guid userId)
@@ -160,5 +239,13 @@ public class DepositOrderIntegrationTests : IClassFixture<CustomWebApplicationFa
     {
         public Guid OrderId { get; set; }
         public long PayOsOrderCode { get; set; }
+    }
+
+    private sealed class MyOrderSnapshotResponse
+    {
+        public Guid OrderId { get; set; }
+        public string PaymentLinkStatus { get; set; } = string.Empty;
+        public string? PaymentLinkId { get; set; }
+        public string? CheckoutUrl { get; set; }
     }
 }

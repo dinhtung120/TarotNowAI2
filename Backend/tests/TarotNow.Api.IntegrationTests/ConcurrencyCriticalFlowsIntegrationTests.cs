@@ -40,10 +40,14 @@ public sealed class ConcurrencyCriticalFlowsIntegrationTests
         };
         var responses = await Task.WhenAll(postTasks);
 
-        Assert.All(responses, response => Assert.True(response.IsSuccessStatusCode));
+        var statusCodes = responses.Select(response => response.StatusCode).ToArray();
+        Assert.Contains(HttpStatusCode.OK, statusCodes);
+        Assert.All(statusCodes, statusCode => Assert.True(
+            statusCode is HttpStatusCode.OK or HttpStatusCode.TooManyRequests));
 
-        var payloads = await Task.WhenAll(
-            responses.Select(response => response.Content.ReadFromJsonAsync<DailyCheckInResult>()));
+        var payloads = await Task.WhenAll(responses
+            .Where(response => response.StatusCode == HttpStatusCode.OK)
+            .Select(response => response.Content.ReadFromJsonAsync<DailyCheckInResult>()));
         Assert.All(payloads, payload => Assert.NotNull(payload));
 
         var hasFresh = payloads.Any(payload => payload!.IsAlreadyCheckedIn == false);
@@ -196,9 +200,197 @@ public sealed class ConcurrencyCriticalFlowsIntegrationTests
         Assert.Equal(0, payerB.FrozenDiamondBalance);
     }
 
+    [Fact]
+    public async Task RateLimit_AuthSession_ShouldPartitionByAuthenticatedUser()
+    {
+        var userA = Guid.NewGuid();
+        var userB = Guid.NewGuid();
+
+        var clientA = CreateAuthenticatedClient(_factory, userA);
+        var clientB = CreateAuthenticatedClient(_factory, userB);
+
+        var userAStatuses = new List<HttpStatusCode>();
+        for (var i = 0; i < 110; i++)
+        {
+            var response = await clientA.GetAsync("/api/v1/me/runtime-policies");
+            userAStatuses.Add(response.StatusCode);
+        }
+
+        var userBFirst = await clientB.GetAsync("/api/v1/me/runtime-policies");
+
+        Assert.Contains(HttpStatusCode.TooManyRequests, userAStatuses);
+        Assert.Equal(HttpStatusCode.OK, userBFirst.StatusCode);
+    }
+
+    [Fact]
+    public async Task RateLimit_AuthSession_ShouldFallbackToIp_WhenNameIdentifierMissing()
+    {
+        var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false
+        });
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue(TestAuthHandler.AuthenticationScheme);
+        client.DefaultRequestHeaders.Add("X-Test-UserId", " ");
+
+        var first = await client.GetAsync("/api/v1/me/runtime-policies");
+        var statuses = new List<HttpStatusCode> { first.StatusCode };
+        for (var i = 0; i < 110; i++)
+        {
+            var response = await client.GetAsync("/api/v1/me/runtime-policies");
+            statuses.Add(response.StatusCode);
+        }
+
+        Assert.Equal(HttpStatusCode.Unauthorized, first.StatusCode);
+        Assert.Contains(HttpStatusCode.TooManyRequests, statuses);
+    }
+
+    [Fact]
+    public async Task ReadingSessionFollowup_ConcurrentUpdates_ShouldPersistFullDelta()
+    {
+        var userId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid().ToString("N");
+        var now = DateTime.UtcNow;
+
+        await CreateReadingSessionAsync(
+            ReadingSession.Rehydrate(new ReadingSessionSnapshot
+            {
+                Id = sessionId,
+                UserId = userId.ToString(),
+                SpreadType = SpreadType.Spread3Cards,
+                Question = "base",
+                CardsDrawn = null,
+                CurrencyUsed = CurrencyType.Gold,
+                AmountCharged = 0,
+                IsCompleted = false,
+                CreatedAt = now,
+                CompletedAt = null,
+                AiSummary = null,
+                Followups = []
+            }));
+
+        var followupA = new ReadingFollowup
+        {
+            Question = "Q1",
+            Answer = "A1",
+            AiRequestId = "ai-req-1"
+        };
+        var followupB = new ReadingFollowup
+        {
+            Question = "Q2",
+            Answer = "A2",
+            AiRequestId = "ai-req-2"
+        };
+
+        var writer1Session = ReadingSession.Rehydrate(new ReadingSessionSnapshot
+        {
+            Id = sessionId,
+            UserId = userId.ToString(),
+            SpreadType = SpreadType.Spread3Cards,
+            Question = "base",
+            CardsDrawn = null,
+            CurrencyUsed = CurrencyType.Gold,
+            AmountCharged = 0,
+            IsCompleted = false,
+            CreatedAt = now,
+            CompletedAt = null,
+            AiSummary = null,
+            Followups = [followupA]
+        });
+        var writer2Session = ReadingSession.Rehydrate(new ReadingSessionSnapshot
+        {
+            Id = sessionId,
+            UserId = userId.ToString(),
+            SpreadType = SpreadType.Spread3Cards,
+            Question = "base",
+            CardsDrawn = null,
+            CurrencyUsed = CurrencyType.Gold,
+            AmountCharged = 0,
+            IsCompleted = false,
+            CreatedAt = now,
+            CompletedAt = null,
+            AiSummary = null,
+            Followups = [followupA, followupB]
+        });
+
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var writer1 = Task.Run(async () =>
+        {
+            await gate.Task;
+            await UpdateReadingSessionAsync(writer1Session);
+        });
+        var writer2 = Task.Run(async () =>
+        {
+            await gate.Task;
+            await UpdateReadingSessionAsync(writer2Session);
+        });
+
+        gate.SetResult();
+        await Task.WhenAll(writer1, writer2);
+
+        using var verifyScope = _factory.Services.CreateScope();
+        var repository = verifyScope.ServiceProvider.GetRequiredService<IReadingSessionRepository>();
+        var persisted = await repository.GetByIdAsync(sessionId);
+        Assert.NotNull(persisted);
+        Assert.Equal(2, persisted!.Followups.Count);
+
+        var followupIds = persisted.Followups
+            .Select(x => x.AiRequestId)
+            .Where(x => string.IsNullOrWhiteSpace(x) == false)
+            .ToHashSet(StringComparer.Ordinal);
+        Assert.Contains("ai-req-1", followupIds);
+        Assert.Contains("ai-req-2", followupIds);
+    }
+
+    [Fact]
+    public async Task UserCollection_UpsertWithSameOperationKey_ShouldBeIdempotent()
+    {
+        var userId = Guid.NewGuid();
+        const int cardId = 7;
+        const string operationKey = "reading_reveal_collection_test_key";
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var collectionRepository = scope.ServiceProvider.GetRequiredService<IUserCollectionRepository>();
+            await collectionRepository.UpsertCardAsync(
+                userId,
+                cardId,
+                expToGain: 25m,
+                orientation: CardOrientation.Upright,
+                operationKey: operationKey);
+            await collectionRepository.UpsertCardAsync(
+                userId,
+                cardId,
+                expToGain: 25m,
+                orientation: CardOrientation.Upright,
+                operationKey: operationKey);
+        }
+
+        using var verifyScope = _factory.Services.CreateScope();
+        var verifyRepository = verifyScope.ServiceProvider.GetRequiredService<IUserCollectionRepository>();
+        var cards = (await verifyRepository.GetUserCollectionAsync(userId)).ToList();
+        var collectionCard = Assert.Single(cards, x => x.CardId == cardId);
+
+        Assert.Equal(1, collectionCard.Copies);
+        Assert.Equal(25m, collectionCard.CurrentExp);
+    }
+
     private HttpClient CreateAuthenticatedClient(Guid userId)
     {
         var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false
+        });
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue(TestAuthHandler.AuthenticationScheme);
+        client.DefaultRequestHeaders.Add("X-Test-UserId", userId.ToString());
+        return client;
+    }
+
+    private static HttpClient CreateAuthenticatedClient(WebApplicationFactory<Program> factory, Guid userId)
+    {
+        var client = factory.CreateClient(new WebApplicationFactoryClientOptions
         {
             AllowAutoRedirect = false
         });
@@ -235,5 +427,19 @@ public sealed class ConcurrencyCriticalFlowsIntegrationTests
         using var scope = _factory.Services.CreateScope();
         var walletRepository = scope.ServiceProvider.GetRequiredService<IWalletRepository>();
         await operation(walletRepository);
+    }
+
+    private async Task CreateReadingSessionAsync(ReadingSession session)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var repository = scope.ServiceProvider.GetRequiredService<IReadingSessionRepository>();
+        await repository.CreateAsync(session);
+    }
+
+    private async Task UpdateReadingSessionAsync(ReadingSession session)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var repository = scope.ServiceProvider.GetRequiredService<IReadingSessionRepository>();
+        await repository.UpdateAsync(session);
     }
 }

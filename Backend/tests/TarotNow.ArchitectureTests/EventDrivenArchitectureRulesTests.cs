@@ -105,22 +105,28 @@ public sealed class EventDrivenArchitectureRulesTests
     }
 
     /// <summary>
-    /// Xác nhận command handlers EventOnly chỉ phụ thuộc IInlineDomainEventDispatcher.
+    /// Xác nhận toàn bộ command handlers (IRequestHandler<,>) chỉ phụ thuộc IInlineDomainEventDispatcher.
     /// </summary>
     [Fact]
-    public void EventOnlyCommandHandlers_ShouldOnlyDependOnInlineDomainEventDispatcher()
+    public void CommandHandlers_ShouldOnlyDependOnInlineDomainEventDispatcher()
     {
         var backendRoot = FindBackendRoot();
-        var eventOnlyFiles = Directory
+        var commandFiles = Directory
             .GetFiles(
                 Path.Combine(backendRoot, "src", "TarotNow.Application", "Features"),
-                "*CommandHandler.EventOnly.cs",
+                "*.cs",
                 SearchOption.AllDirectories)
+            .Where(path => path.Contains("/Commands/", StringComparison.Ordinal))
             .OrderBy(path => path, StringComparer.Ordinal)
             .ToArray();
 
+        var allowlistNoDispatcherConstructors = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "ProcessDepositCommandHandler"
+        };
+
         var violations = new List<string>();
-        foreach (var file in eventOnlyFiles)
+        foreach (var file in commandFiles)
         {
             var root = ParseSyntaxRoot(file);
             var handlerClasses = root
@@ -128,7 +134,8 @@ public sealed class EventDrivenArchitectureRulesTests
                 .OfType<ClassDeclarationSyntax>()
                 .Where(classNode => classNode.BaseList is not null
                                     && classNode.BaseList.Types.Any(baseType =>
-                                        baseType.Type.ToString().Contains("IRequestHandler", StringComparison.Ordinal)))
+                                        baseType.Type.ToString().Contains("IRequestHandler", StringComparison.Ordinal))
+                                    && !classNode.Identifier.Text.Contains("RequestedDomainEventHandler", StringComparison.Ordinal))
                 .ToArray();
 
             foreach (var handlerClass in handlerClasses)
@@ -136,11 +143,17 @@ public sealed class EventDrivenArchitectureRulesTests
                 var constructors = handlerClass.Members
                     .OfType<ConstructorDeclarationSyntax>()
                     .ToArray();
+                var className = handlerClass.Identifier.Text;
 
                 if (constructors.Length == 0)
                 {
+                    if (allowlistNoDispatcherConstructors.Contains(className))
+                    {
+                        continue;
+                    }
+
                     var line = handlerClass.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
-                    violations.Add($"{ToBackendRelativePath(backendRoot, file)}:{line} {handlerClass.Identifier.Text} (missing constructor)");
+                    violations.Add($"{ToBackendRelativePath(backendRoot, file)}:{line} {className} (missing constructor)");
                     continue;
                 }
 
@@ -163,13 +176,13 @@ public sealed class EventDrivenArchitectureRulesTests
 
                     var line = constructor.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
                     var deps = parameterTypes.Length == 0 ? "(none)" : string.Join(", ", parameterTypes);
-                    violations.Add($"{ToBackendRelativePath(backendRoot, file)}:{line} {handlerClass.Identifier.Text} ({deps})");
+                    violations.Add($"{ToBackendRelativePath(backendRoot, file)}:{line} {className} ({deps})");
                 }
             }
         }
 
         violations.Should().BeEmpty(
-            "event-only command handlers must stay thin and only inject IInlineDomainEventDispatcher.");
+            "command handlers must stay thin and only inject IInlineDomainEventDispatcher.");
     }
 
     /// <summary>

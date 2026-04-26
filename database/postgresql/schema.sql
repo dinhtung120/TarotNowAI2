@@ -395,8 +395,12 @@ CREATE TABLE wallet_transactions (
     currency        VARCHAR(20)      NOT NULL,         
     type            VARCHAR(50)      NOT NULL,         
     amount          BIGINT           NOT NULL,         
-    balance_before  BIGINT           NOT NULL CHECK (balance_before >= 0),
-    balance_after   BIGINT           NOT NULL CHECK (balance_after >= 0),
+    balance_before  BIGINT           NOT NULL CHECK (balance_before >= 0), -- legacy alias của available_balance_before
+    balance_after   BIGINT           NOT NULL CHECK (balance_after >= 0),  -- legacy alias của available_balance_after
+    available_balance_before BIGINT  NOT NULL CHECK (available_balance_before >= 0),
+    available_balance_after  BIGINT  NOT NULL CHECK (available_balance_after >= 0),
+    frozen_balance_before    BIGINT  NOT NULL DEFAULT 0 CHECK (frozen_balance_before >= 0),
+    frozen_balance_after     BIGINT  NOT NULL DEFAULT 0 CHECK (frozen_balance_after >= 0),
     reference_source VARCHAR(50),                 
     reference_id    TEXT,                             
     description     TEXT,
@@ -411,18 +415,25 @@ CREATE UNIQUE INDEX idx_wallet_tx_idempotency ON wallet_transactions(idempotency
 
 
 ALTER TABLE wallet_transactions ADD CONSTRAINT chk_wallet_balance_consistency
-    CHECK (balance_after = balance_before + amount);
+    CHECK (
+        type = 'escrow_release'
+        OR available_balance_after = available_balance_before + amount
+    );
 ALTER TABLE wallet_transactions ADD CONSTRAINT chk_wallet_amount_nonzero
     CHECK (amount != 0);
 
-COMMENT ON TABLE wallet_transactions IS 'Sổ cái double-entry: mọi biến động ví phải có dòng. balance_after = balance_before + amount.';
+COMMENT ON TABLE wallet_transactions IS 'Sổ cái ví. available/frozen snapshots là source-of-truth; balance_before/after giữ tương thích ngược.';
 COMMENT ON COLUMN wallet_transactions.id IS 'UUID primary key.';
 COMMENT ON COLUMN wallet_transactions.user_id IS 'FK users.';
 COMMENT ON COLUMN wallet_transactions.currency IS 'gold | diamond.';
 COMMENT ON COLUMN wallet_transactions.type IS 'Loại giao dịch (transaction_type).';
 COMMENT ON COLUMN wallet_transactions.amount IS 'Số tiền (+ credit, - debit).';
-COMMENT ON COLUMN wallet_transactions.balance_before IS 'Số dư trước giao dịch.';
-COMMENT ON COLUMN wallet_transactions.balance_after IS 'Phải = balance_before + amount.';
+COMMENT ON COLUMN wallet_transactions.balance_before IS 'Legacy snapshot khả dụng trước giao dịch.';
+COMMENT ON COLUMN wallet_transactions.balance_after IS 'Legacy snapshot khả dụng sau giao dịch.';
+COMMENT ON COLUMN wallet_transactions.available_balance_before IS 'Số dư khả dụng trước giao dịch.';
+COMMENT ON COLUMN wallet_transactions.available_balance_after IS 'Số dư khả dụng sau giao dịch.';
+COMMENT ON COLUMN wallet_transactions.frozen_balance_before IS 'Số dư frozen trước giao dịch.';
+COMMENT ON COLUMN wallet_transactions.frozen_balance_after IS 'Số dư frozen sau giao dịch.';
 COMMENT ON COLUMN wallet_transactions.reference_source IS 'postgres | mongo | system.';
 COMMENT ON COLUMN wallet_transactions.reference_id IS 'UUID hoặc ObjectId string.';
 COMMENT ON COLUMN wallet_transactions.description IS 'Mô tả tùy chọn.';
@@ -743,7 +754,7 @@ COMMENT ON COLUMN entitlement_consumes.created_at IS 'Thời điểm tạo.';
 CREATE TABLE ai_requests (
     id                   UUID              PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id              UUID              NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
-    reading_session_ref  TEXT              NOT NULL,   
+    reading_session_ref  UUID              NOT NULL,   
     
     followup_sequence    SMALLINT          CHECK (followup_sequence IS NULL OR (followup_sequence >= 1 AND followup_sequence <= 5)),  
     status               VARCHAR(50)       NOT NULL DEFAULT 'requested',
@@ -766,15 +777,13 @@ CREATE TABLE ai_requests (
     updated_at           TIMESTAMPTZ
 );
 CREATE UNIQUE INDEX idx_ai_requests_idempotency ON ai_requests(idempotency_key) WHERE idempotency_key IS NOT NULL;
-ALTER TABLE ai_requests ADD CONSTRAINT chk_air_reading_session_ref_format
-    CHECK (reading_session_ref ~ '^[0-9a-f]{24}$');  
 CREATE INDEX idx_ai_requests_reading ON ai_requests(reading_session_ref);
 CREATE INDEX idx_ai_requests_status ON ai_requests(status, created_at);
 
-COMMENT ON TABLE ai_requests IS 'Trạng thái AI streaming. Refund idempotent theo id. reading_session_ref → reading_sessions._id.';
+COMMENT ON TABLE ai_requests IS 'Trạng thái AI streaming. Refund idempotent theo id. reading_session_ref dùng UUID session chuẩn.';
 COMMENT ON COLUMN ai_requests.id IS 'UUID primary key.';
 COMMENT ON COLUMN ai_requests.user_id IS 'FK users.';
-COMMENT ON COLUMN ai_requests.reading_session_ref IS 'reading_sessions._id (MongoDB).';
+COMMENT ON COLUMN ai_requests.reading_session_ref IS 'UUID reading session ref.';
 COMMENT ON COLUMN ai_requests.followup_sequence IS 'NULL=initial reading, 1-5=follow-up #1 đến #5; chi phí tính dynamic theo highest card level (UX-4.4.5), KHÔNG map cứng sequence→giá.';  
 COMMENT ON COLUMN ai_requests.status IS 'requested | first_token_received | completed | failed_before/after_first_token.';
 COMMENT ON COLUMN ai_requests.first_token_at IS 'Thời điểm nhận token đầu.';
@@ -797,7 +806,7 @@ COMMENT ON COLUMN ai_requests.updated_at IS 'Thời điểm cập nhật.';
 
 CREATE TABLE reading_rng_audits (
     id                 UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-    reading_session_ref TEXT       NOT NULL,   
+    reading_session_ref UUID       NOT NULL,   
     user_id            UUID        NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
     algorithm_version  VARCHAR(20) NOT NULL,
     secret_version     VARCHAR(20) NOT NULL,   
@@ -809,14 +818,12 @@ CREATE TABLE reading_rng_audits (
     timestamp_utc_ms   BIGINT,                 
     created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-ALTER TABLE reading_rng_audits ADD CONSTRAINT chk_rra_reading_session_ref_format
-    CHECK (reading_session_ref ~ '^[0-9a-f]{24}$');  
 CREATE INDEX idx_rng_audit_reading ON reading_rng_audits(reading_session_ref);
 CREATE INDEX idx_rng_audit_user ON reading_rng_audits(user_id, created_at DESC);
 
 COMMENT ON TABLE reading_rng_audits IS 'Audit RNG để replay tranh chấp. Không lưu raw secret. Retention ≥ 24 tháng.';
 COMMENT ON COLUMN reading_rng_audits.id IS 'UUID primary key.';
-COMMENT ON COLUMN reading_rng_audits.reading_session_ref IS 'reading_sessions._id (MongoDB).';
+COMMENT ON COLUMN reading_rng_audits.reading_session_ref IS 'UUID reading session ref.';
 COMMENT ON COLUMN reading_rng_audits.user_id IS 'FK users.';
 COMMENT ON COLUMN reading_rng_audits.algorithm_version IS 'Phiên bản thuật toán.';
 COMMENT ON COLUMN reading_rng_audits.secret_version IS 'Phiên bản secret (không lưu raw).';

@@ -101,6 +101,16 @@ public sealed class DepositWebhookReceivedDomainEventHandler
         domainEvent.Handled = true;
     }
 
+    /// <inheritdoc />
+    protected override Task HandleAlreadyProcessedDomainEventAsync(
+        DepositWebhookReceivedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        domainEvent.Handled = true;
+        return Task.CompletedTask;
+    }
+
     private async Task HandleSuccessfulWebhookAsync(
         DepositWebhookReceivedDomainEvent domainEvent,
         DepositOrder order,

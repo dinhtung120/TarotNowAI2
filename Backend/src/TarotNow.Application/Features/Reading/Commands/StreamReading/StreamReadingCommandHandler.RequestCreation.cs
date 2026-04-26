@@ -55,7 +55,7 @@ public partial class StreamReadingCommandHandlerRequestedDomainEventHandler
         }
         finally
         {
-            await _cacheService.ReleaseLockAsync(lockKey, lockOwner, cancellationToken);
+            await _cacheService.ReleaseLockAsync(lockKey, lockOwner, CancellationToken.None);
         }
     }
 

@@ -115,6 +115,8 @@ fi
 echo "$BACKEND_IMAGE_REF" > "$CURRENT_FILE"
 
 echo "[deploy-be] cleaning up old images"
-docker system prune -a -f --volumes
+# Chỉ dọn image/build cache cũ, không đụng volumes dùng chung của host.
+docker image prune -f --filter "until=168h"
+docker builder prune -f --filter "until=168h"
 
 echo "[deploy-be] done"

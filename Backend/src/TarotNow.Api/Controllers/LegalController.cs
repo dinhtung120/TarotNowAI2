@@ -3,6 +3,7 @@
 using MediatR;                 
 using Microsoft.AspNetCore.Authorization; 
 using Microsoft.AspNetCore.Mvc; 
+using Microsoft.AspNetCore.RateLimiting;
 using System;
 using System.Threading.Tasks;
 
@@ -63,6 +64,7 @@ public class LegalController : ControllerBase
     /// <returns>Trạng thái consent hiện tại của người dùng.</returns>
     [HttpGet("consent-status")]
     [Authorize]
+    [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> CheckConsentStatus([FromQuery] string? documentType, [FromQuery] string? version)
     {
         if (!User.TryGetUserId(out var userId))
@@ -89,6 +91,7 @@ public class LegalController : ControllerBase
     /// <returns>Kết quả success khi ghi nhận consent thành công.</returns>
     [HttpPost("consent")]
     [Authorize]
+    [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> RecordConsent([FromBody] RecordConsentRequest request)
     {
         if (!User.TryGetUserId(out var userId))

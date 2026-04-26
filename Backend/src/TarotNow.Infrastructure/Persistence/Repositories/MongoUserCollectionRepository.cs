@@ -12,6 +12,7 @@ namespace TarotNow.Infrastructure.Persistence.Repositories;
 public partial class MongoUserCollectionRepository : IUserCollectionRepository
 {
     private const int MaxOptimisticRetries = 5;
+    private const int MaxAppliedOperationKeyHistory = 128;
 
     private readonly MongoDbContext _mongoContext;
 
@@ -31,56 +32,36 @@ public partial class MongoUserCollectionRepository : IUserCollectionRepository
         int cardId,
         decimal expToGain,
         string orientation = CardOrientation.Upright,
+        string? operationKey = null,
         CancellationToken cancellationToken = default)
     {
-        if (userId == Guid.Empty)
-        {
-            throw new ArgumentException("UserId is required.", nameof(userId));
-        }
-
-        if (cardId < 0)
-        {
-            throw new ArgumentException("CardId must be greater than or equal to 0.", nameof(cardId));
-        }
-
-        if (expToGain < 0m)
-        {
-            throw new ArgumentException("Exp must be greater than or equal to 0.", nameof(expToGain));
-        }
+        ValidateUpsertInputs(userId, cardId, expToGain);
 
         var filter = BuildUserCardFilter(userId, cardId);
         var normalizedOrientation = ReadingDrawnCardCodec.NormalizeOrientation(orientation);
+        var normalizedOperationKey = NormalizeOperationKey(operationKey);
+        var context = new UpsertCardContext(
+            UserId: userId,
+            CardId: cardId,
+            ExpToGain: expToGain,
+            Filter: filter,
+            Orientation: normalizedOrientation,
+            OperationKey: normalizedOperationKey);
 
         for (var attempt = 0; attempt < MaxOptimisticRetries; attempt++)
         {
-            var existingDoc = await _mongoContext.UserCollections.Find(filter).FirstOrDefaultAsync(cancellationToken);
+            var existingDoc = await _mongoContext.UserCollections.Find(context.Filter).FirstOrDefaultAsync(cancellationToken);
             if (existingDoc is null)
             {
-                var createdDoc = CreateBaselineDocument(userId, cardId, DateTime.UtcNow);
-                IncreaseDrawCount(createdDoc, normalizedOrientation);
-                ApplyExpAndProgression(createdDoc, expToGain, DateTime.UtcNow);
-
-                try
+                if (await TryInsertNewDocumentAsync(context, cancellationToken))
                 {
-                    await _mongoContext.UserCollections.InsertOneAsync(createdDoc, cancellationToken: cancellationToken);
                     return;
                 }
-                catch (MongoWriteException writeException) when (writeException.WriteError.Code == 11000)
-                {
-                    continue;
-                }
+
+                continue;
             }
 
-            NormalizeAndHydrateLegacyFields(existingDoc);
-            var updatedDoc = CloneDocument(existingDoc);
-            IncreaseDrawCount(updatedDoc, normalizedOrientation);
-            ApplyExpAndProgression(updatedDoc, expToGain, DateTime.UtcNow);
-
-            var replaceResult = await _mongoContext.UserCollections.ReplaceOneAsync(
-                BuildVersionedFilter(filter, existingDoc.UpdatedAt),
-                updatedDoc,
-                cancellationToken: cancellationToken);
-            if (replaceResult.ModifiedCount > 0)
+            if (await TryReplaceExistingDocumentAsync(existingDoc, context, cancellationToken))
             {
                 return;
             }
@@ -88,6 +69,63 @@ public partial class MongoUserCollectionRepository : IUserCollectionRepository
 
         throw new InvalidOperationException("Collection card was updated concurrently. Please retry.");
     }
+
+    private async Task<bool> TryInsertNewDocumentAsync(
+        UpsertCardContext context,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+        var createdDoc = CreateBaselineDocument(context.UserId, context.CardId, now);
+        if (context.OperationKey is not null)
+        {
+            createdDoc.AppliedOperationKeys = new List<string> { context.OperationKey };
+        }
+
+        IncreaseDrawCount(createdDoc, context.Orientation);
+        ApplyExpAndProgression(createdDoc, context.ExpToGain, now);
+
+        try
+        {
+            await _mongoContext.UserCollections.InsertOneAsync(createdDoc, cancellationToken: cancellationToken);
+            return true;
+        }
+        catch (MongoWriteException writeException) when (writeException.WriteError.Code == 11000)
+        {
+            return false;
+        }
+    }
+
+    private async Task<bool> TryReplaceExistingDocumentAsync(
+        UserCollectionDocument existingDoc,
+        UpsertCardContext context,
+        CancellationToken cancellationToken)
+    {
+        NormalizeAndHydrateLegacyFields(existingDoc);
+        if (HasAppliedOperationKey(existingDoc, context.OperationKey))
+        {
+            return true;
+        }
+
+        var now = DateTime.UtcNow;
+        var updatedDoc = CloneDocument(existingDoc);
+        AppendOperationKey(updatedDoc, context.OperationKey);
+        IncreaseDrawCount(updatedDoc, context.Orientation);
+        ApplyExpAndProgression(updatedDoc, context.ExpToGain, now);
+
+        var replaceResult = await _mongoContext.UserCollections.ReplaceOneAsync(
+            BuildVersionedFilter(context.Filter, existingDoc.UpdatedAt),
+            updatedDoc,
+            cancellationToken: cancellationToken);
+        return replaceResult.ModifiedCount > 0;
+    }
+
+    private readonly record struct UpsertCardContext(
+        Guid UserId,
+        int CardId,
+        decimal ExpToGain,
+        FilterDefinition<UserCollectionDocument> Filter,
+        string Orientation,
+        string? OperationKey);
 
     /// <summary>
     /// Lấy bộ sưu tập thẻ của user.

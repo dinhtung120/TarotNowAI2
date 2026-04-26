@@ -3,7 +3,7 @@ using TarotNow.Domain.Enums;
 namespace TarotNow.Domain.Entities;
 
 // Entity lệnh nạp tiền quản lý vòng đời giao dịch PayOS và cấp ví hậu thanh toán.
-public class DepositOrder
+public partial class DepositOrder
 {
     // Định danh lệnh nạp.
     public Guid Id { get; private set; }
@@ -36,13 +36,28 @@ public class DepositOrder
     public long PayOsOrderCode { get; private set; }
 
     // Định danh payment link từ PayOS.
-    public string PayOsPaymentLinkId { get; private set; } = string.Empty;
+    public string? PayOsPaymentLinkId { get; private set; }
 
     // URL checkout PayOS.
-    public string CheckoutUrl { get; private set; } = string.Empty;
+    public string? CheckoutUrl { get; private set; }
 
     // Chuỗi dữ liệu QR từ PayOS.
-    public string QrCode { get; private set; } = string.Empty;
+    public string? QrCode { get; private set; }
+
+    // Trạng thái provisioning payment link.
+    public string PaymentLinkStatus { get; private set; } = DepositPaymentLinkStatus.Provisioning;
+
+    // Lý do lỗi gần nhất khi provision payment link thất bại.
+    public string? PaymentLinkFailureReason { get; private set; }
+
+    // Số lần worker đã thử provision payment link.
+    public int PaymentLinkAttemptCount { get; private set; }
+
+    // Thời điểm worker thử provision gần nhất.
+    public DateTime? PaymentLinkLastAttemptAtUtc { get; private set; }
+
+    // Thời điểm payment link được provision thành công.
+    public DateTime? PaymentLinkProvisionedAtUtc { get; private set; }
 
     // Transaction/reference từ webhook PayOS.
     public string? TransactionId { get; private set; }
@@ -74,7 +89,7 @@ public class DepositOrder
     protected DepositOrder() { }
 
     /// <summary>
-    /// Khởi tạo lệnh nạp mới với trạng thái pending.
+    /// Khởi tạo lệnh nạp mới.
     /// </summary>
     public DepositOrder(
         Guid userId,
@@ -84,17 +99,14 @@ public class DepositOrder
         long bonusGoldAmount,
         string clientRequestKey,
         long payOsOrderCode,
-        string payOsPaymentLinkId,
-        string checkoutUrl,
-        string qrCode,
+        string? payOsPaymentLinkId,
+        string? checkoutUrl,
+        string? qrCode,
         DateTime? expiresAtUtc)
     {
         ValidateMoney(amountVnd, baseDiamondAmount, bonusGoldAmount);
         ValidateRequiredString(packageCode, nameof(packageCode));
         ValidateRequiredString(clientRequestKey, nameof(clientRequestKey));
-        ValidateRequiredString(payOsPaymentLinkId, nameof(payOsPaymentLinkId));
-        ValidateRequiredString(checkoutUrl, nameof(checkoutUrl));
-        ValidateRequiredString(qrCode, nameof(qrCode));
 
         Id = Guid.NewGuid();
         UserId = userId;
@@ -105,114 +117,23 @@ public class DepositOrder
         DiamondAmount = baseDiamondAmount;
         ClientRequestKey = clientRequestKey.Trim();
         PayOsOrderCode = payOsOrderCode;
-        PayOsPaymentLinkId = payOsPaymentLinkId.Trim();
-        CheckoutUrl = checkoutUrl.Trim();
-        QrCode = qrCode.Trim();
+        PayOsPaymentLinkId = NormalizeOptional(payOsPaymentLinkId);
+        CheckoutUrl = NormalizeOptional(checkoutUrl);
+        QrCode = NormalizeOptional(qrCode);
         ExpiresAtUtc = expiresAtUtc;
         Status = DepositOrderStatus.Pending;
+        PaymentLinkStatus = HasPaymentLinkDetails()
+            ? DepositPaymentLinkStatus.Ready
+            : DepositPaymentLinkStatus.Provisioning;
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = CreatedAt;
-    }
 
-    /// <summary>
-    /// Đánh dấu lệnh nạp thành công sau khi webhook PayOS hợp lệ.
-    /// </summary>
-    public void MarkAsSuccess(string transactionId, DateTime? processedAtUtc = null)
-    {
-        ValidateRequiredString(transactionId, nameof(transactionId));
-
-        if (Status == DepositOrderStatus.Success)
+        if (PaymentLinkStatus == DepositPaymentLinkStatus.Ready)
         {
-            EnsureTransactionConsistency(transactionId);
-            return;
-        }
-
-        if (Status == DepositOrderStatus.Failed && WalletGrantedAtUtc.HasValue)
-        {
-            throw new InvalidOperationException("Cannot recover a failed order after wallet grant.");
-        }
-
-        Status = DepositOrderStatus.Success;
-        TransactionId = transactionId.Trim();
-        FailureReason = null;
-        ProcessedAt = processedAtUtc ?? DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    /// <summary>
-    /// Đánh dấu lệnh nạp thất bại khi webhook trả trạng thái không thành công.
-    /// </summary>
-    public void MarkAsFailed(string? reason, string? transactionId = null, DateTime? processedAtUtc = null)
-    {
-        if (Status == DepositOrderStatus.Success)
-        {
-            throw new InvalidOperationException("Cannot fail a successful order.");
-        }
-
-        Status = DepositOrderStatus.Failed;
-        FailureReason = NormalizeOptional(reason);
-        TransactionId = NormalizeOptional(transactionId);
-        ProcessedAt = processedAtUtc ?? DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    /// <summary>
-    /// Đánh dấu lệnh đã cấp ví để chống credit lặp.
-    /// </summary>
-    public void MarkWalletGranted(DateTime? grantedAtUtc = null)
-    {
-        if (WalletGrantedAtUtc.HasValue)
-        {
-            return;
-        }
-
-        WalletGrantedAtUtc = grantedAtUtc ?? DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    private static void ValidateMoney(long amountVnd, long baseDiamondAmount, long bonusGoldAmount)
-    {
-        if (amountVnd <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(amountVnd), "AmountVnd must be greater than zero.");
-        }
-
-        if (baseDiamondAmount <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(baseDiamondAmount), "BaseDiamondAmount must be greater than zero.");
-        }
-
-        if (bonusGoldAmount < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(bonusGoldAmount), "BonusGoldAmount cannot be negative.");
+            PaymentLinkAttemptCount = 1;
+            PaymentLinkLastAttemptAtUtc = CreatedAt;
+            PaymentLinkProvisionedAtUtc = CreatedAt;
         }
     }
 
-    private static void ValidateRequiredString(string? value, string parameterName)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            throw new ArgumentException($"{parameterName} is required.", parameterName);
-        }
-    }
-
-    private static string? NormalizeOptional(string? value)
-    {
-        return string.IsNullOrWhiteSpace(value)
-            ? null
-            : value.Trim();
-    }
-
-    private void EnsureTransactionConsistency(string transactionId)
-    {
-        if (string.IsNullOrWhiteSpace(TransactionId))
-        {
-            return;
-        }
-
-        if (!string.Equals(TransactionId, transactionId.Trim(), StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException("Processed order transaction id mismatch.");
-        }
-    }
 }

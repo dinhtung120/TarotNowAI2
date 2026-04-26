@@ -39,7 +39,7 @@ public sealed partial class RefreshTokenRepository
         }
         finally
         {
-            await _cacheService.ReleaseLockAsync(context.LockKey, context.LockOwner, cancellationToken);
+            await _cacheService.ReleaseLockAsync(context.LockKey, context.LockOwner, CancellationToken.None);
         }
     }
 

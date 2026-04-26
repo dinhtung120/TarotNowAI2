@@ -2,6 +2,7 @@
 
 using Microsoft.AspNetCore.Authorization; 
 using Microsoft.AspNetCore.Mvc;           
+using Microsoft.AspNetCore.RateLimiting;
 
 using TarotNow.Application.Interfaces;
 using TarotNow.Api.Extensions;
@@ -13,6 +14,7 @@ namespace TarotNow.Api.Controllers;
 [ApiVersion(ApiVersions.V1)]
 [Route(ApiRoutes.Controller)]
 [Authorize(Roles = "admin")]
+[EnableRateLimiting("auth-session")]
 [ApiExplorerSettings(IgnoreApi = true)] 
 // API chẩn đoán nội bộ dành cho môi trường development.
 // Luồng chính: cung cấp các endpoint hỗ trợ seed/test nhưng chặn ở non-development.

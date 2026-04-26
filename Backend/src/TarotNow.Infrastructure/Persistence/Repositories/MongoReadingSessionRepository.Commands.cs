@@ -86,61 +86,128 @@ public partial class MongoReadingSessionRepository
         UpdateDefinition<ReadingSessionDocument> baseUpdate,
         CancellationToken cancellationToken)
     {
-        var mappedFollowups = session.Followups.Select((followup, index) => new FollowupEntry
+        var mappedFollowups = MapFollowups(session);
+        const int maxRetries = 3;
+        for (var attempt = 0; attempt < maxRetries; attempt++)
+        {
+            var snapshot = await GetConcurrencySnapshotAsync(session.Id, cancellationToken);
+            if (snapshot is null) return;
+
+            var persisted = await TryPersistFollowupDeltaAsync(
+                new FollowupPersistenceRequest(
+                    session.Id,
+                    snapshot,
+                    mappedFollowups,
+                    baseUpdate,
+                    UseVersionFilter: true),
+                cancellationToken);
+            if (persisted) return;
+
+            await Task.Delay(BuildRetryDelay(attempt), cancellationToken);
+        }
+
+        var finalSnapshot = await GetConcurrencySnapshotAsync(session.Id, cancellationToken);
+        if (finalSnapshot is null) return;
+
+        var finalPersisted = await TryPersistFollowupDeltaAsync(
+            new FollowupPersistenceRequest(
+                session.Id,
+                finalSnapshot,
+                mappedFollowups,
+                baseUpdate,
+                UseVersionFilter: false),
+            cancellationToken);
+        if (finalPersisted) return;
+
+        throw new InvalidOperationException(
+            $"Failed to persist follow-up delta for reading session {session.Id} after optimistic retries.");
+    }
+
+    private static List<FollowupEntry> MapFollowups(ReadingSession session)
+    {
+        return session.Followups.Select((followup, index) => new FollowupEntry
         {
             Sequence = index + 1,
             Question = followup.Question,
             Answer = followup.Answer,
             AiRequestId = followup.AiRequestId
         }).ToList();
+    }
 
-        const int maxRetries = 3;
-        for (var attempt = 0; attempt < maxRetries; attempt++)
+    private async Task<ReadingSessionConcurrencySnapshot?> GetConcurrencySnapshotAsync(
+        string sessionId,
+        CancellationToken cancellationToken)
+    {
+        return await _mongoContext.ReadingSessions
+            .Find(BuildIdFilter(sessionId))
+            .Project(r => new ReadingSessionConcurrencySnapshot
+            {
+                UpdatedAt = r.UpdatedAt,
+                FollowupsCount = r.Followups.Count
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    private async Task<bool> TryPersistFollowupDeltaAsync(
+        FollowupPersistenceRequest request,
+        CancellationToken cancellationToken)
+    {
+        var deltaFollowups = request.MappedFollowups.Skip(request.Snapshot.FollowupsCount).ToList();
+        var update = ComposeFollowupUpdate(deltaFollowups, request.BaseUpdate);
+        var filter = BuildUpdateFilter(request.SessionId, request.Snapshot, request.UseVersionFilter);
+        var result = await _mongoContext.ReadingSessions.UpdateOneAsync(
+            filter,
+            update,
+            cancellationToken: cancellationToken);
+        if (result.ModifiedCount > 0)
         {
-            var filterById = BuildIdFilter(session.Id);
-            var snapshot = await _mongoContext.ReadingSessions
-                .Find(filterById)
-                .Project(r => new ReadingSessionConcurrencySnapshot
-                {
-                    UpdatedAt = r.UpdatedAt,
-                    FollowupsCount = r.Followups.Count
-                })
-                .FirstOrDefaultAsync(cancellationToken);
-            if (snapshot is null)
-            {
-                return;
-            }
-
-            var deltaFollowups = mappedFollowups.Skip(snapshot.FollowupsCount).ToList();
-            var update = baseUpdate;
-            if (deltaFollowups.Count > 0)
-            {
-                update = update.PushEach(r => r.Followups, deltaFollowups);
-            }
-
-            var filterWithVersion = Builders<ReadingSessionDocument>.Filter.And(
-                filterById,
-                Builders<ReadingSessionDocument>.Filter.Eq(r => r.UpdatedAt, snapshot.UpdatedAt));
-            var result = await _mongoContext.ReadingSessions.UpdateOneAsync(
-                filterWithVersion,
-                update,
-                cancellationToken: cancellationToken);
-            if (result.ModifiedCount > 0)
-            {
-                return;
-            }
+            return true;
         }
 
-        // Fallback cuối cùng: nếu vẫn conflict liên tục, chỉ cập nhật metadata không ghi đè followups.
-        await _mongoContext.ReadingSessions.UpdateOneAsync(
-            BuildIdFilter(session.Id),
-            baseUpdate,
-            cancellationToken: cancellationToken);
+        // No-op hợp lệ: trạng thái follow-up đã được writer khác ghi trước đó.
+        if (deltaFollowups.Count == 0 && result.MatchedCount > 0)
+        {
+            return true;
+        }
+
+        return false;
     }
+
+    private static UpdateDefinition<ReadingSessionDocument> ComposeFollowupUpdate(
+        IReadOnlyList<FollowupEntry> deltaFollowups,
+        UpdateDefinition<ReadingSessionDocument> baseUpdate)
+    {
+        return deltaFollowups.Count == 0
+            ? baseUpdate
+            : baseUpdate.PushEach(r => r.Followups, deltaFollowups);
+    }
+
+    private static FilterDefinition<ReadingSessionDocument> BuildUpdateFilter(
+        string sessionId,
+        ReadingSessionConcurrencySnapshot snapshot,
+        bool useVersionFilter)
+    {
+        var filterById = BuildIdFilter(sessionId);
+        return useVersionFilter
+            ? Builders<ReadingSessionDocument>.Filter.And(
+                filterById,
+                Builders<ReadingSessionDocument>.Filter.Eq(r => r.UpdatedAt, snapshot.UpdatedAt))
+            : filterById;
+    }
+
+    private static TimeSpan BuildRetryDelay(int attempt)
+        => TimeSpan.FromMilliseconds(20 * (attempt + 1));
 
     private sealed class ReadingSessionConcurrencySnapshot
     {
         public DateTime UpdatedAt { get; set; }
         public int FollowupsCount { get; set; }
     }
+
+    private readonly record struct FollowupPersistenceRequest(
+        string SessionId,
+        ReadingSessionConcurrencySnapshot Snapshot,
+        IReadOnlyList<FollowupEntry> MappedFollowups,
+        UpdateDefinition<ReadingSessionDocument> BaseUpdate,
+        bool UseVersionFilter);
 }

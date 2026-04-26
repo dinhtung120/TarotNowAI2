@@ -66,6 +66,8 @@ if [[ "$deposit_schema_ok" != "t" ]]; then
 fi
 
 echo "[deploy-db] cleaning up old images"
-docker system prune -a -f
+# Chỉ dọn image/build cache cũ, không tác động volumes host shared.
+docker image prune -f --filter "until=168h"
+docker builder prune -f --filter "until=168h"
 
 echo "[deploy-db] done"

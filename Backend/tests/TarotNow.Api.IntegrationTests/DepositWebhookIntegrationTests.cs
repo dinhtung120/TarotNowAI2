@@ -98,7 +98,7 @@ public class DepositWebhookIntegrationTests : IClassFixture<CustomWebApplication
         var rawPayload = BuildWebhookPayload(
             orderCode: orderCode,
             amount: order.AmountVnd,
-            paymentLinkId: order.PayOsPaymentLinkId,
+            paymentLinkId: order.PayOsPaymentLinkId!,
             reference: "REF-IDEMP-001",
             isSuccess: true);
 
@@ -147,7 +147,7 @@ public class DepositWebhookIntegrationTests : IClassFixture<CustomWebApplication
         var rawPayload = BuildWebhookPayload(
             orderCode: orderCode,
             amount: order.AmountVnd,
-            paymentLinkId: order.PayOsPaymentLinkId,
+            paymentLinkId: order.PayOsPaymentLinkId!,
             reference: "REF-LATE-FAILED",
             isSuccess: false);
 
@@ -195,7 +195,7 @@ public class DepositWebhookIntegrationTests : IClassFixture<CustomWebApplication
         var rawPayload = BuildWebhookPayload(
             orderCode: orderCode,
             amount: order.AmountVnd,
-            paymentLinkId: order.PayOsPaymentLinkId,
+            paymentLinkId: order.PayOsPaymentLinkId!,
             reference: incomingReference,
             isSuccess: true);
 

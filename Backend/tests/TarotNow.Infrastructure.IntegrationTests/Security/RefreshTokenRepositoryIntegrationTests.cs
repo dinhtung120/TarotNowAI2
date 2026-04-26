@@ -139,6 +139,33 @@ public sealed class RefreshTokenRepositoryIntegrationTests
         Assert.Equal(newRawToken, second.NewRawToken);
     }
 
+    [Fact]
+    public async Task RotateAsync_ShouldReleaseLockWithCancellationTokenNone_WhenRequestIsCanceled()
+    {
+        await ResetAuthTablesAsync();
+
+        var cacheService = new CancellationAwareReleaseLockCacheService();
+        var user = CreateUser("cancel-release");
+        const string oldRawToken = "refresh-old-cancel-release";
+        const string newRawToken = "refresh-new-cancel-release";
+        var idempotencyKey = $"cancel-release-{Guid.NewGuid():N}";
+
+        await using var context = _fixture.CreateDbContext();
+        var repository = CreateRepository(context, cacheService);
+        await SeedUserAndTokenAsync(context, user, oldRawToken, DateTime.UtcNow.AddDays(7));
+
+        var request = BuildRotateRequest(oldRawToken, newRawToken, idempotencyKey);
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            repository.RotateAsync(request, cts.Token));
+
+        Assert.True(cacheService.ReleaseCalled);
+        Assert.False(cacheService.ReleaseCancellationTokenCanBeCanceled);
+        Assert.False(cacheService.ReleaseCancellationRequested);
+    }
+
     private static RefreshRotateRequest BuildRotateRequest(string rawToken, string newRawToken, string idempotencyKey)
     {
         return new RefreshRotateRequest
@@ -392,6 +419,76 @@ public sealed class RefreshTokenRepositoryIntegrationTests
                 return Task.FromResult(false);
             }
 
+            _locks.TryRemove(key, out _);
+            return Task.FromResult(true);
+        }
+    }
+
+    private sealed class CancellationAwareReleaseLockCacheService : ICacheService
+    {
+        private readonly ConcurrentDictionary<string, string> _locks = new(StringComparer.Ordinal);
+
+        public bool ReleaseCalled { get; private set; }
+
+        public bool ReleaseCancellationTokenCanBeCanceled { get; private set; }
+
+        public bool ReleaseCancellationRequested { get; private set; }
+
+        public Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<T?>(default);
+        }
+
+        public Task SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task RemoveAsync(string key, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task<bool> CheckRateLimitAsync(string key, TimeSpan limitWindow, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(true);
+        }
+
+        public Task<long> IncrementAsync(string key, TimeSpan? expiration = null, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(1L);
+        }
+
+        public Task AddToSetAsync(string key, string member, TimeSpan? expiration = null, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task RemoveFromSetAsync(string key, string member, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        public Task<IReadOnlyCollection<string>> GetSetMembersAsync(string key, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<IReadOnlyCollection<string>>(Array.Empty<string>());
+        }
+
+        public Task<bool> AcquireLockAsync(
+            string key,
+            string owner,
+            TimeSpan leaseTime,
+            CancellationToken cancellationToken = default)
+        {
+            _locks[key] = owner;
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> ReleaseLockAsync(string key, string owner, CancellationToken cancellationToken = default)
+        {
+            ReleaseCalled = true;
+            ReleaseCancellationTokenCanBeCanceled = cancellationToken.CanBeCanceled;
+            ReleaseCancellationRequested = cancellationToken.IsCancellationRequested;
             _locks.TryRemove(key, out _);
             return Task.FromResult(true);
         }

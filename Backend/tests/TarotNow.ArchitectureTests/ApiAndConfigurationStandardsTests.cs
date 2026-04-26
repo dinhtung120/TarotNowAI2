@@ -185,6 +185,179 @@ public class ApiAndConfigurationStandardsTests
     }
 
     /// <summary>
+    /// Xác nhận middleware pipeline chạy authentication trước rate limiter để partition key theo user hoạt động đúng.
+    /// </summary>
+    [Fact]
+    public void ApiPipeline_ShouldAuthenticateBeforeRateLimiting()
+    {
+        var backendRoot = FindBackendRoot();
+        var pipelineFile = Path.Combine(
+            backendRoot,
+            "src",
+            "TarotNow.Api",
+            "Startup",
+            "ApiApplicationBuilderExtensions.cs");
+        var content = File.ReadAllText(pipelineFile);
+
+        var authIndex = content.IndexOf("app.UseAuthentication();", StringComparison.Ordinal);
+        var limiterIndex = content.IndexOf("app.UseRateLimiter();", StringComparison.Ordinal);
+
+        authIndex.Should().BeGreaterThanOrEqualTo(0);
+        limiterIndex.Should().BeGreaterThanOrEqualTo(0);
+        authIndex.Should().BeLessThan(
+            limiterIndex,
+            "UseAuthentication must be registered before UseRateLimiter.");
+    }
+
+    /// <summary>
+    /// Xác nhận mọi HTTP action yêu cầu authorize đều phải có metadata rate limiting ở method hoặc class.
+    /// </summary>
+    [Fact]
+    public void AuthorizedHttpActions_ShouldDeclareRateLimitingMetadata()
+    {
+        var backendRoot = FindBackendRoot();
+        var controllerFiles = Directory.GetFiles(
+            Path.Combine(backendRoot, "src", "TarotNow.Api", "Controllers"),
+            "*.cs",
+            SearchOption.TopDirectoryOnly);
+        var classDeclarations = new List<(string File, ClassDeclarationSyntax ClassNode)>();
+
+        foreach (var file in controllerFiles)
+        {
+            var tree = CSharpSyntaxTree.ParseText(File.ReadAllText(file));
+            var root = tree.GetRoot();
+            classDeclarations.AddRange(
+                root.DescendantNodes()
+                    .OfType<ClassDeclarationSyntax>()
+                    .Select(classNode => (file, classNode)));
+        }
+
+        var groupedByClass = classDeclarations
+            .GroupBy(item => item.ClassNode.Identifier.Text, StringComparer.Ordinal);
+        var violations = new List<string>();
+
+        foreach (var classGroup in groupedByClass)
+        {
+            var classHasAuthorize = classGroup.Any(item => HasAnyAttribute(
+                item.ClassNode.AttributeLists,
+                "Authorize"));
+            var classHasRateLimit = classGroup.Any(item => HasAnyAttribute(
+                item.ClassNode.AttributeLists,
+                "EnableRateLimiting",
+                "DisableRateLimiting"));
+
+            foreach (var (file, classNode) in classGroup)
+            {
+                foreach (var method in classNode.Members.OfType<MethodDeclarationSyntax>())
+                {
+                    if (!HasHttpAttribute(method.AttributeLists))
+                    {
+                        continue;
+                    }
+
+                    if (HasAnyAttribute(method.AttributeLists, "AllowAnonymous"))
+                    {
+                        continue;
+                    }
+
+                    var methodHasAuthorize = classHasAuthorize || HasAnyAttribute(method.AttributeLists, "Authorize");
+                    if (!methodHasAuthorize)
+                    {
+                        continue;
+                    }
+
+                    var methodHasRateLimit = classHasRateLimit
+                                             || HasAnyAttribute(
+                                                 method.AttributeLists,
+                                                 "EnableRateLimiting",
+                                                 "DisableRateLimiting");
+                    if (methodHasRateLimit)
+                    {
+                        continue;
+                    }
+
+                    var line = method.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
+                    violations.Add($"{ToBackendRelativePath(backendRoot, file)}:{line}");
+                }
+            }
+        }
+
+        violations.Should().BeEmpty(
+            "authorized endpoints must declare rate limiting metadata to prevent flood/cost abuse regressions.");
+    }
+
+    /// <summary>
+    /// Xác nhận partition key của auth rate-limit ưu tiên user claim trước khi fallback về IP.
+    /// </summary>
+    [Fact]
+    public void AuthRateLimitPartitioning_ShouldPreferUserClaimBeforeIpFallback()
+    {
+        var backendRoot = FindBackendRoot();
+        var partitioningFile = Path.Combine(
+            backendRoot,
+            "src",
+            "TarotNow.Api",
+            "Startup",
+            "ApiServiceCollectionExtensions.RateLimit.Partitioning.cs");
+        var content = File.ReadAllText(partitioningFile);
+
+        content.Should().Contain("ClaimTypes.NameIdentifier");
+        content.Should().Contain("return $\"user:{userId}\";");
+        content.Should().Contain("return $\"ip:{ResolveClientIp(httpContext)}\";");
+    }
+
+    /// <summary>
+    /// Xác nhận các finally block giải phóng distributed lock dùng token an toàn thay vì token request đã cancel.
+    /// </summary>
+    [Fact]
+    public void LockCleanup_ShouldUseCancellationTokenNoneInFinallyBlocks()
+    {
+        var backendRoot = FindBackendRoot();
+        var targetFiles = new[]
+        {
+            Path.Combine(
+                backendRoot,
+                "src",
+                "TarotNow.Application",
+                "Features",
+                "CheckIn",
+                "Commands",
+                "DailyCheckIn",
+                "DailyCheckInCommandHandler.cs"),
+            Path.Combine(
+                backendRoot,
+                "src",
+                "TarotNow.Application",
+                "Features",
+                "Reading",
+                "Commands",
+                "StreamReading",
+                "StreamReadingCommandHandler.RequestCreation.cs"),
+            Path.Combine(
+                backendRoot,
+                "src",
+                "TarotNow.Infrastructure",
+                "Persistence",
+                "Repositories",
+                "RefreshTokenRepository.Rotate.cs")
+        };
+
+        var missing = new List<string>();
+        foreach (var file in targetFiles)
+        {
+            var content = File.ReadAllText(file);
+            if (!content.Contains("ReleaseLockAsync", StringComparison.Ordinal)
+                || !content.Contains("CancellationToken.None", StringComparison.Ordinal))
+            {
+                missing.Add(ToBackendRelativePath(backendRoot, file));
+            }
+        }
+
+        missing.Should().BeEmpty(
+            "lock cleanup in finally blocks must ignore request cancellation and use CancellationToken.None.");
+    }
+
+    /// <summary>
     /// Kiểm tra một method có thẻ `<summary>` trong XML documentation hay không.
     /// Luồng này dùng Roslyn trivia để đọc comment tài liệu tại compile-time.
     /// </summary>
@@ -205,6 +378,29 @@ public class ApiAndConfigurationStandardsTests
         }
 
         return false;
+    }
+
+    private static bool HasHttpAttribute(SyntaxList<AttributeListSyntax> attributeLists)
+    {
+        return attributeLists
+            .SelectMany(list => list.Attributes)
+            .Any(attribute => attribute.Name.ToString().StartsWith("Http", StringComparison.Ordinal));
+    }
+
+    private static bool HasAnyAttribute(
+        SyntaxList<AttributeListSyntax> attributeLists,
+        params string[] attributeNames)
+    {
+        return attributeLists
+            .SelectMany(list => list.Attributes)
+            .Any(attribute =>
+            {
+                var name = attribute.Name.ToString();
+                return attributeNames.Any(candidate =>
+                    name.Equals(candidate, StringComparison.Ordinal)
+                    || name.EndsWith(candidate, StringComparison.Ordinal)
+                    || name.EndsWith($"{candidate}Attribute", StringComparison.Ordinal));
+            });
     }
 
     /// <summary>

@@ -29,6 +29,7 @@ public class DepositCommandHandlersPublishOnlyTests
                 depositEvent.BonusGoldAmount = 50;
                 depositEvent.TotalDiamondAmount = 1_000;
                 depositEvent.PayOsOrderCode = 990_001;
+                depositEvent.PaymentLinkStatus = "ready";
                 depositEvent.CheckoutUrl = "https://payos.test/checkout/990001";
                 depositEvent.QrCode = "PAYOS_QR_990001";
                 depositEvent.PaymentLinkId = "plink_990001";
@@ -51,6 +52,7 @@ public class DepositCommandHandlersPublishOnlyTests
         Assert.Equal(1_000, result.BaseDiamondAmount);
         Assert.Equal(50, result.BonusGoldAmount);
         Assert.Equal(990_001, result.PayOsOrderCode);
+        Assert.Equal("ready", result.PaymentLinkStatus);
         dispatcher.Verify(
             service => service.PublishAsync(
                 It.Is<DepositOrderCreateRequestedDomainEvent>(domainEvent =>

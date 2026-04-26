@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Contracts;
 using TarotNow.Application.Features.Promotions.Commands.CreatePromotion;
 using TarotNow.Application.Features.Promotions.Commands.DeletePromotion;
@@ -13,6 +14,7 @@ namespace TarotNow.Api.Controllers;
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
 [Authorize(Roles = "admin")]
+[EnableRateLimiting("auth-session")]
 // API quản trị khuyến mãi.
 public class PromotionsController : ControllerBase
 {

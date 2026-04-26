@@ -34,6 +34,10 @@ public class WalletTransactionConfiguration : IEntityTypeConfiguration<WalletTra
         builder.Property(e => e.Amount).HasColumnName("amount").IsRequired();
         builder.Property(e => e.BalanceBefore).HasColumnName("balance_before").IsRequired();
         builder.Property(e => e.BalanceAfter).HasColumnName("balance_after").IsRequired();
+        builder.Property(e => e.AvailableBalanceBefore).HasColumnName("available_balance_before").IsRequired();
+        builder.Property(e => e.AvailableBalanceAfter).HasColumnName("available_balance_after").IsRequired();
+        builder.Property(e => e.FrozenBalanceBefore).HasColumnName("frozen_balance_before").IsRequired();
+        builder.Property(e => e.FrozenBalanceAfter).HasColumnName("frozen_balance_after").IsRequired();
         // Lưu đầy đủ số dư trước/sau để audit được mọi biến động số dư.
 
         builder.Property(e => e.ReferenceSource).HasColumnName("reference_source");

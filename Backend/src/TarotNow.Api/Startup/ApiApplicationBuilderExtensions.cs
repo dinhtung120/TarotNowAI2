@@ -3,6 +3,8 @@ using TarotNow.Api.Middlewares;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace TarotNow.Api.Startup;
 
@@ -58,7 +60,7 @@ public static class ApiApplicationBuilderExtensions
         ConfigureStaticFiles(app);
         ConfigureSecurityPipeline(app);
         MapRealtimeEndpoints(app);
-        app.MapControllers();
+        MapApiControllers(app);
 
         return app;
     }
@@ -201,13 +203,13 @@ public static class ApiApplicationBuilderExtensions
 
     /// <summary>
     /// Cấu hình chuỗi middleware bảo mật cho request pipeline.
-    /// Luồng xử lý: CORS trước, sau đó rate limit, rồi authentication và authorization.
+    /// Luồng xử lý: CORS trước, sau đó authentication, rồi rate limit và authorization.
     /// </summary>
     private static void ConfigureSecurityPipeline(WebApplication app)
     {
         app.UseCors();
-        app.UseRateLimiter();
         app.UseAuthentication();
+        app.UseRateLimiter();
         app.UseAuthorization();
     }
 
@@ -219,5 +221,31 @@ public static class ApiApplicationBuilderExtensions
     {
         app.MapHub<ChatHub>("/" + ApiRoutes.ChatHub);
         app.MapHub<PresenceHub>(PresenceHubPath);
+    }
+
+    /// <summary>
+    /// Map controllers và tự gán policy rate-limit mặc định cho endpoint có authorize nếu chưa khai báo explicit.
+    /// </summary>
+    private static void MapApiControllers(WebApplication app)
+    {
+        var controllers = app.MapControllers();
+        controllers.Add(endpointBuilder =>
+        {
+            var hasAuthorize = endpointBuilder.Metadata.OfType<IAuthorizeData>().Any();
+            var hasAllowAnonymous = endpointBuilder.Metadata.OfType<IAllowAnonymous>().Any();
+            if (!hasAuthorize || hasAllowAnonymous)
+            {
+                return;
+            }
+
+            var hasExplicitRateLimit = endpointBuilder.Metadata.OfType<EnableRateLimitingAttribute>().Any()
+                                      || endpointBuilder.Metadata.OfType<DisableRateLimitingAttribute>().Any();
+            if (hasExplicitRateLimit)
+            {
+                return;
+            }
+
+            endpointBuilder.Metadata.Add(new EnableRateLimitingAttribute("auth-session"));
+        });
     }
 }

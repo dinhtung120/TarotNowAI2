@@ -2,6 +2,7 @@ using MediatR;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
@@ -72,7 +73,9 @@ public class DailyCheckInCommandHandlerRequestedDomainEventHandler
         var lockContext = CreateCheckinLockContext(user.Id, todayString);
         if (!await AcquireCheckinLockAsync(lockContext.Key, lockContext.Owner, cancellationToken))
         {
-            return BuildAlreadyCheckedInResult(todayString, user.CurrentStreak);
+            throw new BusinessRuleException(
+                AuthErrorCodes.RateLimited,
+                "Daily check-in is busy. Please retry in a few seconds.");
         }
 
         try
@@ -99,7 +102,7 @@ public class DailyCheckInCommandHandlerRequestedDomainEventHandler
         }
         finally
         {
-            await _cacheService.ReleaseLockAsync(lockContext.Key, lockContext.Owner, cancellationToken);
+            await _cacheService.ReleaseLockAsync(lockContext.Key, lockContext.Owner, CancellationToken.None);
         }
     }
 

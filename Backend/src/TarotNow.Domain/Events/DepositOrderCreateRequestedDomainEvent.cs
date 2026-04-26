@@ -3,7 +3,7 @@ namespace TarotNow.Domain.Events;
 /// <summary>
 /// Domain event yêu cầu tạo đơn nạp tiền và payment link PayOS.
 /// </summary>
-public sealed class DepositOrderCreateRequestedDomainEvent : IDomainEvent
+public sealed class DepositOrderCreateRequestedDomainEvent : IIdempotentDomainEvent
 {
     /// <summary>
     /// User khởi tạo đơn nạp.
@@ -56,25 +56,45 @@ public sealed class DepositOrderCreateRequestedDomainEvent : IDomainEvent
     public long PayOsOrderCode { get; set; }
 
     /// <summary>
+    /// Trạng thái provisioning payment link.
+    /// </summary>
+    public string PaymentLinkStatus { get; set; } = string.Empty;
+
+    /// <summary>
     /// URL checkout PayOS.
     /// </summary>
-    public string CheckoutUrl { get; set; } = string.Empty;
+    public string? CheckoutUrl { get; set; }
 
     /// <summary>
     /// QR code từ PayOS.
     /// </summary>
-    public string QrCode { get; set; } = string.Empty;
+    public string? QrCode { get; set; }
 
     /// <summary>
     /// Payment link id từ PayOS.
     /// </summary>
-    public string PaymentLinkId { get; set; } = string.Empty;
+    public string? PaymentLinkId { get; set; }
 
     /// <summary>
     /// Thời điểm payment link hết hạn.
     /// </summary>
     public DateTime? ExpiresAtUtc { get; set; }
 
+    /// <summary>
+    /// Lý do thất bại gần nhất khi provisioning payment link.
+    /// </summary>
+    public string? PaymentLinkFailureReason { get; set; }
+
     /// <inheritdoc />
     public DateTime OccurredAtUtc { get; init; } = DateTime.UtcNow;
+
+    /// <inheritdoc />
+    public string EventIdempotencyKey
+    {
+        get
+        {
+            var normalized = IdempotencyKey?.Trim();
+            return $"deposit:create:{UserId:N}:{normalized}";
+        }
+    }
 }

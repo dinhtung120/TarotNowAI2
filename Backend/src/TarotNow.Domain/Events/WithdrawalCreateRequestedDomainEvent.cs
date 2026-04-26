@@ -3,7 +3,7 @@ namespace TarotNow.Domain.Events;
 /// <summary>
 /// Domain event yêu cầu tạo một withdrawal request mới.
 /// </summary>
-public sealed class WithdrawalCreateRequestedDomainEvent : IDomainEvent
+public sealed class WithdrawalCreateRequestedDomainEvent : IIdempotentDomainEvent
 {
     /// <summary>
     /// Định danh user gửi yêu cầu.
@@ -37,4 +37,14 @@ public sealed class WithdrawalCreateRequestedDomainEvent : IDomainEvent
 
     /// <inheritdoc />
     public DateTime OccurredAtUtc { get; init; } = DateTime.UtcNow;
+
+    /// <inheritdoc />
+    public string EventIdempotencyKey
+    {
+        get
+        {
+            var normalized = IdempotencyKey?.Trim();
+            return $"withdrawal:create:{UserId:N}:{normalized}";
+        }
+    }
 }

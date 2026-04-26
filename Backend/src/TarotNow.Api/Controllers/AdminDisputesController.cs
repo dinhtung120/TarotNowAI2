@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Contracts.Requests;
 using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.Admin.Commands.ResolveDispute;
@@ -12,6 +13,7 @@ namespace TarotNow.Api.Controllers;
 [ApiVersion(ApiVersions.V1)]
 [Route(ApiRoutes.AdminDisputes)]
 [Authorize(Roles = "admin")]
+[EnableRateLimiting("auth-session")]
 // API quản trị tranh chấp.
 // Luồng chính: liệt kê item tranh chấp và ghi nhận quyết định resolve từ admin.
 public sealed class AdminDisputesController : ControllerBase

@@ -389,7 +389,6 @@ namespace TarotNow.Infrastructure.Migrations
                         .HasColumnName("bonus_gold_amount");
 
                     b.Property<string>("CheckoutUrl")
-                        .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)")
                         .HasColumnName("checkout_url");
@@ -428,17 +427,38 @@ namespace TarotNow.Infrastructure.Migrations
                         .HasColumnName("payos_order_code");
 
                     b.Property<string>("PayOsPaymentLinkId")
-                        .IsRequired()
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)")
                         .HasColumnName("payos_payment_link_id");
+
+                    b.Property<int>("PaymentLinkAttemptCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("payment_link_attempt_count");
+
+                    b.Property<string>("PaymentLinkFailureReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("payment_link_failure_reason");
+
+                    b.Property<DateTime?>("PaymentLinkLastAttemptAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("payment_link_last_attempt_at_utc");
+
+                    b.Property<DateTime?>("PaymentLinkProvisionedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("payment_link_provisioned_at_utc");
+
+                    b.Property<string>("PaymentLinkStatus")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("payment_link_status");
 
                     b.Property<DateTime?>("ProcessedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("processed_at");
 
                     b.Property<string>("QrCode")
-                        .IsRequired()
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)")
                         .HasColumnName("qr_code");
@@ -1304,6 +1324,138 @@ namespace TarotNow.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("TarotNow.Domain.Entities.ReadingRevealSagaState", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("AttemptCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("attempt_count");
+
+                    b.Property<long>("ChargeAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("charge_amount");
+
+                    b.Property<string>("ChargeChangeType")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("charge_change_type");
+
+                    b.Property<string>("ChargeCurrency")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("charge_currency");
+
+                    b.Property<bool>("ChargeDebited")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("charge_debited");
+
+                    b.Property<string>("ChargeReferenceId")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("charge_reference_id");
+
+                    b.Property<bool>("CollectionApplied")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("collection_applied");
+
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at_utc");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<bool>("ExpGranted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("exp_granted");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("language");
+
+                    b.Property<DateTime?>("LastAttemptAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_attempt_at_utc");
+
+                    b.Property<string>("LastError")
+                        .HasColumnType("text")
+                        .HasColumnName("last_error");
+
+                    b.Property<DateTime?>("NextRepairAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_repair_at_utc");
+
+                    b.Property<bool>("RefundCompensated")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("refund_compensated");
+
+                    b.Property<string>("RevealedCardsJson")
+                        .HasColumnType("text")
+                        .HasColumnName("revealed_cards_json");
+
+                    b.Property<bool>("RevealedEventPublished")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("revealed_event_published");
+
+                    b.Property<bool>("SessionCompleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("session_completed");
+
+                    b.Property<string>("SessionId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("session_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at_utc");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_reading_reveal_saga_states");
+
+                    b.HasIndex("SessionId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_reading_reveal_saga_states_session_id");
+
+                    b.HasIndex("Status", "NextRepairAtUtc")
+                        .HasDatabaseName("ix_reading_reveal_saga_states_status_next_repair");
+
+                    b.ToTable("reading_reveal_saga_states", (string)null);
+                });
+
             modelBuilder.Entity("TarotNow.Domain.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1768,6 +1920,14 @@ namespace TarotNow.Infrastructure.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("amount");
 
+                    b.Property<long>("AvailableBalanceAfter")
+                        .HasColumnType("bigint")
+                        .HasColumnName("available_balance_after");
+
+                    b.Property<long>("AvailableBalanceBefore")
+                        .HasColumnType("bigint")
+                        .HasColumnName("available_balance_before");
+
                     b.Property<long>("BalanceAfter")
                         .HasColumnType("bigint")
                         .HasColumnName("balance_after");
@@ -1788,6 +1948,14 @@ namespace TarotNow.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text")
                         .HasColumnName("description");
+
+                    b.Property<long>("FrozenBalanceAfter")
+                        .HasColumnType("bigint")
+                        .HasColumnName("frozen_balance_after");
+
+                    b.Property<long>("FrozenBalanceBefore")
+                        .HasColumnType("bigint")
+                        .HasColumnName("frozen_balance_before");
 
                     b.Property<string>("IdempotencyKey")
                         .HasColumnType("text")

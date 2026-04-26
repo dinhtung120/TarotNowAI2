@@ -2,6 +2,7 @@ using Asp.Versioning;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Constants;
 using TarotNow.Api.Extensions;
 
@@ -11,6 +12,7 @@ namespace TarotNow.Api.Controllers;
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
 [Authorize(Policy = ApiAuthorizationPolicies.AuthenticatedUser)]
+[EnableRateLimiting("auth-session")]
 // API cộng đồng cho thao tác bài viết, bình luận, reaction và báo cáo.
 // Luồng chính: lấy user hiện tại làm ngữ cảnh nghiệp vụ cho các partial controller liên quan.
 public partial class CommunityController : ControllerBase

@@ -51,6 +51,7 @@ public static partial class DependencyInjection
         services.AddScoped<IUserItemRepository, UserItemRepository>();
         services.AddScoped<IFreeDrawCreditRepository, FreeDrawCreditRepository>();
         services.AddScoped<IInventoryLuckEffectRepository, InventoryLuckEffectRepository>();
+        services.AddScoped<IReadingRevealSagaStateRepository, ReadingRevealSagaStateRepository>();
         services.AddScoped<ITransactionCoordinator, TransactionCoordinator>();
         services.AddScoped<IOutboxMonitoringRepository, OutboxMonitoringRepository>();
         services.AddScoped<IOutboxBatchProcessor, OutboxBatchProcessor>();
@@ -124,6 +125,7 @@ public static partial class DependencyInjection
         services.AddHostedService<EscrowTimerService>();
         services.AddHostedService<StreakBreakBackgroundJob>();
         services.AddHostedService<MediaUploadCleanupJob>();
+        services.AddHostedService<ReadingRevealSagaRepairWorker>();
         services.AddHostedService<OutboxProcessorWorker>();
     }
 }

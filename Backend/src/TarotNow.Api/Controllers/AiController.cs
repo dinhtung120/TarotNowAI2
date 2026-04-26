@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.FeatureManagement;
 using TarotNow.Api.Extensions;
 using TarotNow.Api.Services;
@@ -33,6 +34,7 @@ public sealed class AiController : ControllerBase
     /// Luồng xử lý: gate feature flag + auth + idempotency guard, rồi dispatch cho orchestrator.
     /// </summary>
     [HttpGet("{sessionId}/stream")]
+    [EnableRateLimiting("chat-standard")]
     public async Task StreamReading(
         string sessionId,
         [FromQuery] string? followUpQuestion,
@@ -55,6 +57,13 @@ public sealed class AiController : ControllerBase
         if (!User.TryGetUserId(out var userId))
         {
             Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await Response.WriteAsJsonAsync(new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "Unauthorized",
+                Detail = "Authentication is required or token is invalid.",
+                Type = "https://datatracker.ietf.org/doc/html/rfc7235#section-3.1"
+            }, cancellationToken);
             return;
         }
 

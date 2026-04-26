@@ -28,12 +28,20 @@ public class AdminRepository : IAdminRepository
     public async Task<List<MismatchRecord>> GetLedgerMismatchesAsync(CancellationToken cancellationToken = default)
     {
         var sql = @"
-            SELECT u.id AS UserId, u.gold_balance AS UserGoldBalance, v.ledger_gold AS LedgerGoldBalance, 
-                   u.diamond_balance AS UserDiamondBalance, v.ledger_diamond AS LedgerDiamondBalance 
+            SELECT u.id AS UserId,
+                   u.gold_balance AS UserGoldBalance,
+                   COALESCE(g.ledger_balance, 0) AS LedgerGoldBalance,
+                   u.diamond_balance AS UserDiamondBalance,
+                   COALESCE(d.ledger_balance, 0) AS LedgerDiamondBalance
             FROM users u
-            LEFT JOIN v_user_ledger_balance v ON u.id = v.user_id
-            WHERE u.gold_balance IS DISTINCT FROM COALESCE(v.ledger_gold, 0)
-               OR u.diamond_balance IS DISTINCT FROM COALESCE(v.ledger_diamond, 0);
+            LEFT JOIN v_user_ledger_balance g
+                ON u.id = g.user_id
+               AND g.currency = 'gold'
+            LEFT JOIN v_user_ledger_balance d
+                ON u.id = d.user_id
+               AND d.currency = 'diamond'
+            WHERE u.gold_balance IS DISTINCT FROM COALESCE(g.ledger_balance, 0)
+               OR u.diamond_balance IS DISTINCT FROM COALESCE(d.ledger_balance, 0);
         ";
         // IS DISTINCT FROM xử lý đúng cả trường hợp null, tránh bỏ sót mismatch do giá trị thiếu.
 

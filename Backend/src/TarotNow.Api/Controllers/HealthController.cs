@@ -1,6 +1,7 @@
 
 using Microsoft.AspNetCore.Authorization; 
 using Microsoft.AspNetCore.Mvc;           
+using Microsoft.AspNetCore.RateLimiting;
 using System.Reflection;
 using TarotNow.Api.Extensions;
 using TarotNow.Application.Interfaces;
@@ -113,6 +114,7 @@ public class HealthController : ControllerBase
     /// <returns>Không có giá trị trả về thành công; endpoint dùng để kiểm tra xử lý lỗi.</returns>
     [HttpGet("error-test")]
     [Authorize(Roles = "admin")]
+    [EnableRateLimiting("auth-session")]
     public IActionResult TriggerError()
     {
         // Chặn endpoint test lỗi trên môi trường non-development để tránh hành vi nguy hiểm.

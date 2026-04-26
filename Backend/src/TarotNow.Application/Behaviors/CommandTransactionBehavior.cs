@@ -25,6 +25,11 @@ public sealed class CommandTransactionBehavior<TRequest, TResponse> : IPipelineB
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
+        if (request is INonTransactionalCommand)
+        {
+            return await next();
+        }
+
         if (IsCommandRequest() == false)
         {
             return await next();

@@ -30,6 +30,7 @@ public abstract class IdempotentDomainEventNotificationHandler<TDomainEvent>
 
         if (await IsAlreadyProcessedAsync(outboxMessageId, eventIdempotencyKey, handlerName, cancellationToken))
         {
+            await HandleAlreadyProcessedDomainEventAsync(notification.DomainEvent, outboxMessageId, cancellationToken);
             return;
         }
 
@@ -81,4 +82,13 @@ public abstract class IdempotentDomainEventNotificationHandler<TDomainEvent>
         TDomainEvent domainEvent,
         Guid? outboxMessageId,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Hook cho nhánh event đã xử lý trước đó. Mặc định không làm gì.
+    /// </summary>
+    protected virtual Task HandleAlreadyProcessedDomainEventAsync(
+        TDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+        => Task.CompletedTask;
 }

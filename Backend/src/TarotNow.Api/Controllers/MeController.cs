@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Constants;
 using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.UserContext.Queries.GetNavbarSnapshot;
@@ -13,6 +14,7 @@ namespace TarotNow.Api.Controllers;
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
 [Authorize]
+[EnableRateLimiting("auth-session")]
 public class MeController : ControllerBase
 {
     private readonly IMediator _mediator;

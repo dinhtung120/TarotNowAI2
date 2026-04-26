@@ -117,6 +117,13 @@ public class UserCollectionDocument
     public List<StatRollRecord>? StatHistory { get; set; }
 
     /// <summary>
+    /// Danh sách operation key đã áp dụng cho card để idempotent các luồng retry cross-store.
+    /// </summary>
+    [BsonElement("applied_operation_keys")]
+    [BsonIgnoreIfNull]
+    public List<string>? AppliedOperationKeys { get; set; }
+
+    /// <summary>
     /// Soft-delete flag của bản ghi collection.
     /// </summary>
     [BsonElement("is_deleted")]

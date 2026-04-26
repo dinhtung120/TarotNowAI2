@@ -27,6 +27,18 @@ public class WalletTransaction
     // Số dư sau khi ghi bút toán.
     public long BalanceAfter { get; private set; }
 
+    // Số dư khả dụng trước giao dịch.
+    public long AvailableBalanceBefore { get; private set; }
+
+    // Số dư khả dụng sau giao dịch.
+    public long AvailableBalanceAfter { get; private set; }
+
+    // Số dư frozen trước giao dịch.
+    public long FrozenBalanceBefore { get; private set; }
+
+    // Số dư frozen sau giao dịch.
+    public long FrozenBalanceAfter { get; private set; }
+
     // Nguồn nghiệp vụ phát sinh bút toán.
     public string? ReferenceSource { get; private set; }
 
@@ -55,7 +67,22 @@ public class WalletTransaction
     /// Constructor nội bộ tạo bút toán với đầy đủ dữ liệu đối soát.
     /// Luồng xử lý: gán snapshot số dư trước/sau cùng metadata nguồn và mốc tạo.
     /// </summary>
-    private WalletTransaction(Guid userId, string currency, string type, long amount, long balanceBefore, long balanceAfter, string? referenceSource, string? referenceId, string? description, string? metadataJson, string? idempotencyKey)
+    private WalletTransaction(
+        Guid userId,
+        string currency,
+        string type,
+        long amount,
+        long balanceBefore,
+        long balanceAfter,
+        long availableBalanceBefore,
+        long availableBalanceAfter,
+        long frozenBalanceBefore,
+        long frozenBalanceAfter,
+        string? referenceSource,
+        string? referenceId,
+        string? description,
+        string? metadataJson,
+        string? idempotencyKey)
     {
         Id = Guid.NewGuid();
         UserId = userId;
@@ -64,6 +91,10 @@ public class WalletTransaction
         Amount = amount;
         BalanceBefore = balanceBefore;
         BalanceAfter = balanceAfter;
+        AvailableBalanceBefore = availableBalanceBefore;
+        AvailableBalanceAfter = availableBalanceAfter;
+        FrozenBalanceBefore = frozenBalanceBefore;
+        FrozenBalanceAfter = frozenBalanceAfter;
         ReferenceSource = referenceSource;
         ReferenceId = referenceId;
         Description = description;
@@ -85,6 +116,10 @@ public class WalletTransaction
             request.Amount,
             request.BalanceBefore,
             request.BalanceAfter,
+            request.AvailableBalanceBefore,
+            request.AvailableBalanceAfter,
+            request.FrozenBalanceBefore,
+            request.FrozenBalanceAfter,
             request.ReferenceSource,
             request.ReferenceId,
             request.Description,
@@ -113,6 +148,18 @@ public sealed class WalletTransactionCreateRequest
 
     // Số dư sau giao dịch.
     public long BalanceAfter { get; init; }
+
+    // Số dư khả dụng trước giao dịch.
+    public long AvailableBalanceBefore { get; init; }
+
+    // Số dư khả dụng sau giao dịch.
+    public long AvailableBalanceAfter { get; init; }
+
+    // Số dư frozen trước giao dịch.
+    public long FrozenBalanceBefore { get; init; }
+
+    // Số dư frozen sau giao dịch.
+    public long FrozenBalanceAfter { get; init; }
 
     // Nguồn nghiệp vụ.
     public string? ReferenceSource { get; init; }

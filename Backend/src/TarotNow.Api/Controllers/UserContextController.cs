@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.Tasks;
 using TarotNow.Api.Constants;
 using TarotNow.Api.Extensions;
@@ -11,6 +12,7 @@ namespace TarotNow.Api.Controllers;
 [Route(ApiRoutes.UserContext)]
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
+[EnableRateLimiting("auth-session")]
 // API cung cấp metadata khởi tạo cho user context.
 // Luồng chính: xác thực user rồi trả metadata tổng hợp dùng cho bootstrap client.
 public class UserContextController : ControllerBase

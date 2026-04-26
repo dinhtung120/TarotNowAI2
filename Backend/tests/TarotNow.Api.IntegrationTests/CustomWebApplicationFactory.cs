@@ -231,8 +231,14 @@ public class CustomWebApplicationFactory<TProgram>
                 RAISE EXCEPTION 'Insufficient balance';
             END IF;
 
-            INSERT INTO wallet_transactions(id, user_id, currency, type, amount, balance_before, balance_after, reference_source, reference_id, description, idempotency_key, created_at)
-            VALUES (gen_random_uuid(), p_user_id, p_currency, p_type, -p_amount, v_current_balance, v_current_balance - p_amount, p_reference_source, p_reference_id, p_description, p_idempotency_key, CURRENT_TIMESTAMP);
+            INSERT INTO wallet_transactions(
+                id, user_id, currency, type, amount, balance_before, balance_after,
+                available_balance_before, available_balance_after, frozen_balance_before, frozen_balance_after,
+                reference_source, reference_id, description, idempotency_key, created_at)
+            VALUES (
+                gen_random_uuid(), p_user_id, p_currency, p_type, -p_amount, v_current_balance, v_current_balance - p_amount,
+                v_current_balance, v_current_balance - p_amount, 0, 0,
+                p_reference_source, p_reference_id, p_description, p_idempotency_key, CURRENT_TIMESTAMP);
         END;
         $$;
         
@@ -250,8 +256,14 @@ public class CustomWebApplicationFactory<TProgram>
             SELECT COALESCE(SUM(amount), 0) INTO v_current_balance FROM wallet_transactions 
             WHERE user_id = p_user_id AND currency = p_currency;
 
-            INSERT INTO wallet_transactions(id, user_id, currency, type, amount, balance_before, balance_after, reference_source, reference_id, description, idempotency_key, created_at)
-            VALUES (gen_random_uuid(), p_user_id, p_currency, 'AiRefund', p_amount, v_current_balance, v_current_balance + p_amount, p_reference_source, p_reference_id, p_description, p_idempotency_key, CURRENT_TIMESTAMP);
+            INSERT INTO wallet_transactions(
+                id, user_id, currency, type, amount, balance_before, balance_after,
+                available_balance_before, available_balance_after, frozen_balance_before, frozen_balance_after,
+                reference_source, reference_id, description, idempotency_key, created_at)
+            VALUES (
+                gen_random_uuid(), p_user_id, p_currency, 'AiRefund', p_amount, v_current_balance, v_current_balance + p_amount,
+                v_current_balance, v_current_balance + p_amount, 0, 0,
+                p_reference_source, p_reference_id, p_description, p_idempotency_key, CURRENT_TIMESTAMP);
         END;
         $$;";
 

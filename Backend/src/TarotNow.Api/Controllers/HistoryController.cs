@@ -3,6 +3,7 @@
 using MediatR;                 
 using Microsoft.AspNetCore.Authorization; 
 using Microsoft.AspNetCore.Mvc; 
+using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Extensions;
 
 
@@ -17,6 +18,7 @@ namespace TarotNow.Api.Controllers;
 [ApiVersion(ApiVersions.V1)]
 [Route(ApiRoutes.Controller)]
 [Authorize] 
+[EnableRateLimiting("auth-session")]
 // API lịch sử reading session.
 // Luồng chính: lấy danh sách phiên, chi tiết phiên và endpoint admin xem toàn bộ phiên.
 public class HistoryController : ControllerBase

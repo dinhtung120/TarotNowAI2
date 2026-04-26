@@ -3,6 +3,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Threading;
 using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.Reading.Commands.InitSession;
@@ -14,6 +15,7 @@ namespace TarotNow.Api.Controllers;
 [ApiVersion(ApiVersions.V1)]
 [Route(ApiRoutes.Reading)]
 [Authorize] 
+[EnableRateLimiting("auth-session")]
 // API reading tarot.
 // Luồng chính: khởi tạo phiên, reveal kết quả, lấy catalog lá bài và bộ sưu tập người dùng.
 public class TarotController : ControllerBase

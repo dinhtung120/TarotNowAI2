@@ -15,13 +15,10 @@ namespace TarotNow.Application.DomainEvents.Handlers;
 public sealed class DepositOrderCreateRequestedDomainEventHandler
     : IdempotentDomainEventNotificationHandler<DepositOrderCreateRequestedDomainEvent>
 {
-    private const string DescriptionPrefix = "TOPUP";
-
     private readonly IDepositOrderRepository _depositOrderRepository;
     private readonly IDepositPromotionRepository _depositPromotionRepository;
     private readonly IDepositPackageCatalog _depositPackageCatalog;
-    private readonly IDepositPayOsSettings _depositPayOsSettings;
-    private readonly IPayOsGateway _payOsGateway;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler tạo đơn nạp.
@@ -30,16 +27,14 @@ public sealed class DepositOrderCreateRequestedDomainEventHandler
         IDepositOrderRepository depositOrderRepository,
         IDepositPromotionRepository depositPromotionRepository,
         IDepositPackageCatalog depositPackageCatalog,
-        IDepositPayOsSettings depositPayOsSettings,
-        IPayOsGateway payOsGateway,
+        IDomainEventPublisher domainEventPublisher,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
         _depositOrderRepository = depositOrderRepository;
         _depositPromotionRepository = depositPromotionRepository;
         _depositPackageCatalog = depositPackageCatalog;
-        _depositPayOsSettings = depositPayOsSettings;
-        _payOsGateway = payOsGateway;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <inheritdoc />
@@ -60,7 +55,6 @@ public sealed class DepositOrderCreateRequestedDomainEventHandler
         var selectedPackage = ResolvePackage(domainEvent.PackageCode);
         var bonusGoldAmount = await ResolveBonusGoldAsync(selectedPackage.AmountVnd, cancellationToken);
         var orderCode = await _depositOrderRepository.GetNextPayOsOrderCodeAsync(cancellationToken);
-        var paymentLink = await CreatePaymentLinkAsync(selectedPackage, orderCode, cancellationToken);
 
         var order = new DepositOrder(
             domainEvent.UserId,
@@ -70,47 +64,44 @@ public sealed class DepositOrderCreateRequestedDomainEventHandler
             bonusGoldAmount,
             clientRequestKey,
             orderCode,
-            paymentLink.PaymentLinkId,
-            paymentLink.CheckoutUrl,
-            paymentLink.QrCode,
-            paymentLink.ExpiresAtUtc);
+            payOsPaymentLinkId: null,
+            checkoutUrl: null,
+            qrCode: null,
+            expiresAtUtc: null);
 
         var persistedOrder = await _depositOrderRepository.AddOrGetExistingByClientRequestKeyAsync(
             order,
             clientRequestKey,
             cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(persistedOrder.PayOsPaymentLinkId))
+        {
+            await _domainEventPublisher.PublishAsync(
+                new DepositPaymentLinkProvisionRequestedDomainEvent
+                {
+                    OrderId = persistedOrder.Id,
+                    PayOsOrderCode = persistedOrder.PayOsOrderCode
+                },
+                cancellationToken);
+        }
+
         HydrateCreateResponse(domainEvent, persistedOrder);
     }
 
-    private Task<PayOsCreatePaymentLinkResult> CreatePaymentLinkAsync(
-        DepositPackageDefinition selectedPackage,
-        long orderCode,
+    /// <inheritdoc />
+    protected override async Task HandleAlreadyProcessedDomainEventAsync(
+        DepositOrderCreateRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
         CancellationToken cancellationToken)
     {
-        var expiredAtUnix = DateTimeOffset.UtcNow
-            .AddMinutes(_depositPayOsSettings.LinkExpiryMinutes)
-            .ToUnixTimeSeconds();
+        var clientRequestKey = BuildClientRequestKey(domainEvent.UserId, domainEvent.IdempotencyKey);
+        var existingOrder = await _depositOrderRepository.GetByClientRequestKeyAsync(clientRequestKey, cancellationToken);
+        if (existingOrder is null)
+        {
+            throw new InvalidOperationException("Processed deposit create event is missing order snapshot.");
+        }
 
-        return _payOsGateway.CreatePaymentLinkAsync(
-            new PayOsCreatePaymentLinkRequest
-            {
-                OrderCode = orderCode,
-                Amount = selectedPackage.AmountVnd,
-                Description = BuildPaymentDescription(orderCode),
-                CancelUrl = _depositPayOsSettings.CancelUrl,
-                ReturnUrl = _depositPayOsSettings.ReturnUrl,
-                ExpiredAtUnix = expiredAtUnix,
-                Items =
-                [
-                    new PayOsPaymentItem
-                    {
-                        Name = $"TarotNow {selectedPackage.Code}",
-                        Quantity = 1,
-                        Price = selectedPackage.AmountVnd
-                    }
-                ]
-            },
-            cancellationToken);
+        HydrateCreateResponse(domainEvent, existingOrder);
     }
 
     private DepositPackageDefinition ResolvePackage(string packageCode)
@@ -147,10 +138,12 @@ public sealed class DepositOrderCreateRequestedDomainEventHandler
         domainEvent.BonusGoldAmount = order.BonusGoldAmount;
         domainEvent.TotalDiamondAmount = order.DiamondAmount;
         domainEvent.PayOsOrderCode = order.PayOsOrderCode;
+        domainEvent.PaymentLinkStatus = order.PaymentLinkStatus;
         domainEvent.CheckoutUrl = order.CheckoutUrl;
         domainEvent.QrCode = order.QrCode;
         domainEvent.PaymentLinkId = order.PayOsPaymentLinkId;
         domainEvent.ExpiresAtUtc = order.ExpiresAtUtc;
+        domainEvent.PaymentLinkFailureReason = order.PaymentLinkFailureReason;
     }
 
     private static string BuildClientRequestKey(Guid userId, string idempotencyKey)
@@ -165,10 +158,5 @@ public sealed class DepositOrderCreateRequestedDomainEventHandler
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(source));
         var hashPrefix = Convert.ToHexString(hash.AsSpan(0, 16)).ToLowerInvariant();
         return $"deposit_{userId:N}_{hashPrefix}";
-    }
-
-    private static string BuildPaymentDescription(long orderCode)
-    {
-        return $"{DescriptionPrefix} {orderCode}";
     }
 }

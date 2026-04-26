@@ -108,6 +108,9 @@ public partial class ApplicationDbContext : DbContext
     // DbSet bảng outbox_inline_handler_states.
     public DbSet<OutboxInlineHandlerState> OutboxInlineHandlerStates { get; set; } = null!;
 
+    // DbSet bảng reading_reveal_saga_states.
+    public DbSet<ReadingRevealSagaState> ReadingRevealSagaStates { get; set; } = null!;
+
     /// <summary>
     /// Xây dựng model mapping cho DbContext.
     /// Luồng xử lý: gọi base.OnModelCreating, áp cấu hình entity từ assembly và chuẩn hóa naming snake_case.

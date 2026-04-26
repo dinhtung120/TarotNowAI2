@@ -1,11 +1,12 @@
 using MediatR;
 using System;
+using TarotNow.Application.Behaviors;
 using TarotNow.Domain.Entities;
 
 namespace TarotNow.Application.Features.Reading.Commands.RevealSession;
 
 // Command mở bài cho một reading session đã được khởi tạo.
-public class RevealReadingSessionCommand : IRequest<RevealReadingSessionResult>
+public class RevealReadingSessionCommand : IRequest<RevealReadingSessionResult>, INonTransactionalCommand
 {
     // Định danh user sở hữu phiên reading cần reveal.
     public Guid UserId { get; set; }

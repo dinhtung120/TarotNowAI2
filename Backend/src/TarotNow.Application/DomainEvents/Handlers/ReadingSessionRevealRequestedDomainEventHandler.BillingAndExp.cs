@@ -11,20 +11,23 @@ namespace TarotNow.Application.DomainEvents.Handlers;
 /// </summary>
 public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
 {
-    private async Task ChargeReadingAsync(Guid userId, ReadingSession session, CancellationToken cancellationToken)
+    private async Task<ReadingChargeSnapshot> ChargeReadingAsync(
+        Guid userId,
+        ReadingSession session,
+        CancellationToken cancellationToken)
     {
         var amount = Math.Max(session.AmountCharged, 0);
         if (await TryConsumeFreeDrawAsync(userId, session, cancellationToken))
         {
-            return;
+            return default;
         }
 
         if (amount <= 0)
         {
-            return;
+            return default;
         }
 
-        await DebitReadingCostAsync(userId, session, amount, cancellationToken);
+        return await DebitReadingCostAsync(userId, session, amount, cancellationToken);
     }
 
     private async Task<bool> TryConsumeFreeDrawAsync(
@@ -53,7 +56,7 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
             cancellationToken);
     }
 
-    private async Task DebitReadingCostAsync(
+    private async Task<ReadingChargeSnapshot> DebitReadingCostAsync(
         Guid userId,
         ReadingSession session,
         long amount,
@@ -78,7 +81,7 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
 
             if (!operationResult.Executed)
             {
-                return;
+                return default;
             }
 
             await _domainEventPublisher.PublishAsync(
@@ -91,6 +94,13 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
                     ReferenceId = session.Id
                 },
                 cancellationToken);
+
+            return new ReadingChargeSnapshot(
+                Debited: true,
+                Currency: currency,
+                ChangeType: changeType,
+                Amount: amount,
+                ReferenceId: session.Id);
         }
         catch (InvalidOperationException)
         {
@@ -105,7 +115,7 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
             : TransactionType.ReadingCostDiamond;
     }
 
-    private async Task UpdateCollectionAndUserExpAsync(
+    private async Task ApplyCollectionStepAsync(
         Guid userId,
         ReadingSession session,
         IReadOnlyList<ReadingDrawnCard> revealedCards,
@@ -119,17 +129,31 @@ public sealed partial class ReadingSessionRevealRequestedDomainEventHandler
                 card.CardId,
                 expToGrantPerCard,
                 card.Orientation,
-                cancellationToken);
+                operationKey: BuildCardCollectionOperationKey(session.Id, card.CardId),
+                cancellationToken: cancellationToken);
         }
+    }
 
+    private async Task GrantUserExpAsync(
+        Guid userId,
+        ReadingSession session,
+        IReadOnlyList<ReadingDrawnCard> revealedCards,
+        CancellationToken cancellationToken)
+    {
         var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
         if (user is null)
         {
             return;
         }
 
+        var expToGrantPerCard = ResolveExpToGrant(session);
         user.AddExp((long)(revealedCards.Count * expToGrantPerCard));
         await _userRepository.UpdateAsync(user, cancellationToken);
+    }
+
+    private static string BuildCardCollectionOperationKey(string sessionId, int cardId)
+    {
+        return $"reading_reveal_collection_{sessionId}_{cardId}";
     }
 
     private static string NormalizeCurrency(string? currency)
