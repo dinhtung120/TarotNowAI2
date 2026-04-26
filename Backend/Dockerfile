@@ -1,6 +1,8 @@
 # syntax=docker/dockerfile:1.7
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0-bookworm-slim AS build
+ARG DOTNET_VERSION=10.0
+
+FROM mcr.microsoft.com/dotnet/sdk:${DOTNET_VERSION} AS build
 WORKDIR /src
 
 # Copy project files first for better restore cache.
@@ -14,7 +16,7 @@ RUN dotnet restore Backend/src/TarotNow.Api/TarotNow.Api.csproj
 COPY Backend/ Backend/
 RUN dotnet publish Backend/src/TarotNow.Api/TarotNow.Api.csproj -c Release -o /app/publish --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0-bookworm-slim AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:${DOTNET_VERSION} AS runtime
 RUN apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends ffmpeg ca-certificates wget \

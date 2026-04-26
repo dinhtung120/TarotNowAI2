@@ -36,10 +36,15 @@ jobs:
       - name: Checkout mã nguồn
         uses: actions/checkout@v6
 
-      - name: Thiết lập .NET 9
+      - name: Thiết lập .NET
         uses: actions/setup-dotnet@v5
         with:
-          dotnet-version: "9.0.x"
+          global-json-file: Backend/global.json
+
+      - name: Kiểm tra đồng bộ version .NET và Dockerfile
+        run: |
+          chmod +x scripts/ci/validate-dotnet-container-version.sh
+          scripts/ci/validate-dotnet-container-version.sh
 
       - name: Khôi phục dependencies Backend
         working-directory: Backend
