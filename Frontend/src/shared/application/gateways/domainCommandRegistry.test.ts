@@ -69,4 +69,31 @@ describe('domain command registry', () => {
    }),
   );
  });
+
+ it('fails fast when invocation method does not match command contract', async () => {
+  const result = await invokeDomainCommand('chat.dispute.resolve', {
+   path: '/admin/disputes/dispute-2/resolve',
+   method: 'PUT' as never,
+   token: 'access-token',
+   json: { action: 'refund' },
+   fallbackErrorMessage: 'Failed to resolve dispute',
+  });
+
+  expect(result).toEqual({
+   ok: false,
+   status: 500,
+   headers: expect.any(Headers),
+   error: 'domain-command.method-mismatch',
+  });
+  expect(mockedServerHttpRequest).not.toHaveBeenCalled();
+  expect(mockedLoggerError).toHaveBeenCalledWith(
+   '[DomainCommand]',
+   'domain-command.missing-contract',
+   expect.objectContaining({
+    key: 'chat.dispute.resolve',
+    expectedMethod: 'POST',
+    receivedMethod: 'PUT',
+   }),
+  );
+ });
 });

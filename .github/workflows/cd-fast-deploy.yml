@@ -81,7 +81,7 @@ jobs:
           NODE_TLS_REJECT_UNAUTHORIZED: "1"
         run: npm run build
 
-      - name: Chạy Unit Test Frontend
+      - name: Chạy Unit Test + Risk Coverage Gate Frontend
         working-directory: Frontend
         env:
           NEXT_PUBLIC_API_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:5037' }}/api/v1
@@ -91,7 +91,7 @@ jobs:
           NEXT_PUBLIC_R2_PUBLIC_URL: ${{ vars.PROD_R2_PUBLIC_URL || '' }}
           NEXT_PUBLIC_R2_UPLOAD_ORIGIN: ${{ vars.PROD_R2_UPLOAD_ORIGIN || '' }}
           NODE_TLS_REJECT_UNAUTHORIZED: "1"
-        run: npm test
+        run: npm run test:coverage:risk
 
   # Bước 2: Đóng gói và đẩy Docker Image lên GitHub Container Registry (GHCR)
   # Đã loại bỏ code-analysis và security-scan để chạy nhanh hơn

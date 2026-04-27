@@ -3,13 +3,14 @@ import type { UserProfile } from '@/features/auth/domain/types';
 import { AUTH_COOKIE, AUTH_SESSION } from '@/shared/infrastructure/auth/authConstants';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { verifyAccessToken } from '@/shared/server/auth/accessTokenVerifier';
 
 const ROLE_CLAIM_KEY = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
 const SUBJECT_CLAIM_KEY = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier';
 const DEFAULT_USER_ROLE = 'user';
 const DEFAULT_USER_STATUS: UserProfile['status'] = 'Active';
 
-type JwtPayload = Record<string, unknown> & { exp?: number };
+type JwtPayload = Record<string, unknown> & { exp?: number | string };
 
 function decodeJwtPart(part: string): Record<string, unknown> | null {
  if (!part) {
@@ -41,40 +42,24 @@ function parseJwtPayload(token: string | undefined): JwtPayload | null {
  return decodeJwtPart(parts[1]) as JwtPayload | null;
 }
 
-function parseJwtHeader(token: string | undefined): Record<string, unknown> | null {
- if (!token) {
-  return null;
+function resolveNumericExp(payload: JwtPayload | null | undefined): number | undefined {
+ const rawExp = payload?.exp;
+ if (typeof rawExp === 'number' && Number.isFinite(rawExp)) {
+  return rawExp;
  }
 
- const parts = token.split('.');
- if (parts.length !== 3 || !parts[0]) {
-  return null;
+ if (typeof rawExp === 'string' && rawExp.trim().length > 0) {
+  const parsed = Number(rawExp);
+  if (Number.isFinite(parsed)) {
+   return parsed;
+  }
  }
 
- return decodeJwtPart(parts[0]);
+ return undefined;
 }
 
-function hasValidJwtSignatureMetadata(token: string | undefined): boolean {
- const header = parseJwtHeader(token);
- if (!header) {
-  return false;
- }
-
- const algorithm = header.alg;
- if (typeof algorithm !== 'string' || algorithm.trim().length === 0) {
-  return false;
- }
-
- return algorithm.toLowerCase() !== 'none';
-}
-
-function parseJwtExp(token: string | undefined): number | undefined {
- const payload = parseJwtPayload(token);
- return typeof payload?.exp === 'number' ? payload.exp : undefined;
-}
-
-function isExpiringSoon(token: string | undefined): boolean {
- const exp = parseJwtExp(token);
+function isExpiringSoon(payload: JwtPayload | null | undefined): boolean {
+ const exp = resolveNumericExp(payload);
  if (!exp) {
   return true;
  }
@@ -86,7 +71,12 @@ function isExpiringSoon(token: string | undefined): boolean {
 async function getValidAccessTokenFromCookie(): Promise<string | undefined> {
  const cookieStore = await cookies();
  const accessToken = cookieStore.get(AUTH_COOKIE.ACCESS)?.value;
- if (!accessToken || !hasValidJwtSignatureMetadata(accessToken) || isExpiringSoon(accessToken)) {
+ if (!accessToken) {
+  return undefined;
+ }
+
+ const verification = await verifyAccessToken(accessToken);
+ if (!verification.valid || isExpiringSoon(verification.payload as JwtPayload | null | undefined)) {
   return undefined;
  }
 

@@ -41,13 +41,7 @@ export function useQuestClaimHandlers({ t }: UseQuestClaimHandlersParams) {
        <span>{t("ClaimedSuccessfully", { amount: result.rewardAmount, type: result.rewardType })}</span>
       </div>,
       {
-       style: {
-        borderRadius: "16px",
-        background: "rgba(30, 41, 59, 0.9)",
-        color: "#fff",
-        border: "1px solid rgba(255, 255, 255, 0.1)",
-        backdropFilter: "blur(10px)",
-       },
+       className: 'tn-toast tn-toast-success tn-toast-quest-claim',
       },
      );
     },

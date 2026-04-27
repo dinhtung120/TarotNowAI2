@@ -1,105 +1,170 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { globSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const LINE_LIMIT = Number(process.env.COMPONENT_SIZE_LIMIT ?? '120');
+const HARD_LIMIT = Number(process.env.COMPONENT_SIZE_LIMIT ?? '120');
 const RATCHET_LIMIT = Number(process.env.COMPONENT_SIZE_RATCHET_LIMIT ?? '100');
-const ENFORCE_RATCHET = process.env.COMPONENT_SIZE_STRICT === 'true';
-
-const TEMP_ALLOWLIST = {
-  'src/features/community/components/PostReportModal.tsx': {
-    reason: 'Pending extraction into report form + actions subcomponents',
-    expiresAt: '2026-07-01',
-  },
-  'src/features/reader/presentation/components/readers-directory/ReaderDetailModal.tsx': {
-    reason: 'Pending split into summary/actions/sections',
-    expiresAt: '2026-07-01',
-  },
-};
-
-function isAllowlistExpired(expiresAt) {
-  const parsed = new Date(expiresAt);
-  if (Number.isNaN(parsed.getTime())) {
-    return true;
-  }
-
-  return parsed.getTime() < Date.now();
-}
+const BASELINE_PATH = resolve(process.cwd(), 'scripts/component-size-baseline.json');
 
 function collectTargetFiles() {
-  const files = globSync('src/**/*.tsx', {
-    cwd: process.cwd(),
-    nodir: true,
-    ignore: [
-      '**/*.test.tsx',
-      '**/*.spec.tsx',
-      '**/__tests__/**',
-    ],
-  });
+ const files = globSync('src/**/*.tsx', {
+  cwd: process.cwd(),
+  nodir: true,
+  ignore: [
+   '**/*.test.tsx',
+   '**/*.spec.tsx',
+   '**/__tests__/**',
+  ],
+ });
 
-  return files.sort((left, right) => left.localeCompare(right));
+ return files.sort((left, right) => left.localeCompare(right));
 }
 
+function countLines(content) {
+ const normalized = content.replace(/\r\n/g, '\n');
+ const withoutTrailingNewline = normalized.endsWith('\n')
+  ? normalized.slice(0, -1)
+  : normalized;
+
+ if (withoutTrailingNewline.length === 0) {
+  return 0;
+ }
+
+ return withoutTrailingNewline.split('\n').length;
+}
+
+function loadBaseline() {
+ if (!existsSync(BASELINE_PATH)) {
+  console.error('Component size baseline file is missing:', BASELINE_PATH);
+  process.exit(1);
+ }
+
+ const baselineRaw = readFileSync(BASELINE_PATH, 'utf8');
+ const baseline = JSON.parse(baselineRaw);
+ const ratchetLimitFromBaseline = Number(baseline.ratchetLimit);
+ if (!Number.isFinite(ratchetLimitFromBaseline) || ratchetLimitFromBaseline !== RATCHET_LIMIT) {
+  console.error(
+   `Component size baseline ratchet mismatch: expected ${RATCHET_LIMIT}, got ${baseline.ratchetLimit}`,
+  );
+  process.exit(1);
+ }
+
+ if (!baseline.entries || typeof baseline.entries !== 'object') {
+  console.error('Invalid component-size baseline format: missing entries map.');
+  process.exit(1);
+ }
+
+ return baseline.entries;
+}
+
+const baselineEntries = loadBaseline();
 const files = collectTargetFiles();
-const violations = [];
-const expiredAllowlist = [];
-const ratchetCandidates = [];
+const currentLineByFile = new Map();
+
+const hardLimitViolations = [];
+const newRatchetViolations = [];
+const ratchetGrowthViolations = [];
+const baselineStaleEntries = [];
+const baselineNeedsTightening = [];
 
 for (const relativePath of files) {
-  const absolutePath = resolve(process.cwd(), relativePath);
+ const absolutePath = resolve(process.cwd(), relativePath);
  const content = readFileSync(absolutePath, 'utf8');
- const lines = content.split('\n').length;
- if (lines > RATCHET_LIMIT) {
-  ratchetCandidates.push({ relativePath, lines });
+ const lines = countLines(content);
+ currentLineByFile.set(relativePath, lines);
+
+ if (lines > HARD_LIMIT) {
+  hardLimitViolations.push({ relativePath, lines });
  }
 
-  if (lines <= LINE_LIMIT) {
-    continue;
-  }
+ if (lines <= RATCHET_LIMIT) {
+  continue;
+ }
 
-  const allowEntry = TEMP_ALLOWLIST[relativePath];
-  if (!allowEntry) {
-    violations.push({ relativePath, lines, reason: 'Not in allowlist' });
-    continue;
-  }
+ const baselineLines = baselineEntries[relativePath];
+ if (typeof baselineLines !== 'number') {
+  newRatchetViolations.push({ relativePath, lines });
+  continue;
+ }
 
-  if (!allowEntry.reason || !allowEntry.expiresAt || isAllowlistExpired(allowEntry.expiresAt)) {
-    expiredAllowlist.push({ relativePath, lines, ...allowEntry });
-  }
-}
+ if (lines > baselineLines) {
+  ratchetGrowthViolations.push({ relativePath, lines, baselineLines });
+  continue;
+ }
 
-if (expiredAllowlist.length > 0) {
-  console.error('Component size allowlist has expired entries:');
-  for (const entry of expiredAllowlist) {
-    console.error(`- ${entry.relativePath}: ${entry.lines} lines (expiresAt=${entry.expiresAt || 'missing'})`);
-  }
-  process.exit(1);
-}
-
-if (violations.length > 0) {
-  console.error(`Component size guard failed (hard limit: ${LINE_LIMIT} lines):`);
-  for (const entry of violations) {
-    console.error(`- ${entry.relativePath}: ${entry.lines} lines (${entry.reason})`);
-  }
-  process.exit(1);
-}
-
-if (ENFORCE_RATCHET) {
- const ratchetViolations = ratchetCandidates.filter((entry) => entry.lines > RATCHET_LIMIT);
- if (ratchetViolations.length > 0) {
-  console.error(`Component size ratchet failed (limit: ${RATCHET_LIMIT} lines):`);
-  for (const entry of ratchetViolations) {
-   console.error(`- ${entry.relativePath}: ${entry.lines} lines`);
-  }
-  process.exit(1);
+ if (lines < baselineLines) {
+  baselineNeedsTightening.push({ relativePath, lines, baselineLines });
  }
 }
 
-const ratchetDebtCount = ratchetCandidates.length;
-if (ratchetDebtCount > 0) {
- console.warn(
-  `Component size ratchet debt: ${ratchetDebtCount} files exceed ${RATCHET_LIMIT} lines (strict=${ENFORCE_RATCHET ? 'on' : 'off'}).`,
- );
+for (const [relativePath, baselineLines] of Object.entries(baselineEntries)) {
+ const currentLines = currentLineByFile.get(relativePath);
+ if (typeof currentLines !== 'number') {
+  baselineStaleEntries.push({ relativePath, baselineLines, reason: 'missing file' });
+  continue;
+ }
+
+ if (currentLines <= RATCHET_LIMIT) {
+  baselineStaleEntries.push({
+   relativePath,
+   baselineLines,
+   reason: `no longer exceeds ratchet (${currentLines} <= ${RATCHET_LIMIT})`,
+  });
+ }
 }
 
-console.log(`Component size guard passed for ${files.length} files (hard limit: ${LINE_LIMIT}, ratchet target: ${RATCHET_LIMIT}).`);
+if (
+ hardLimitViolations.length > 0
+ || newRatchetViolations.length > 0
+ || ratchetGrowthViolations.length > 0
+ || baselineStaleEntries.length > 0
+ || baselineNeedsTightening.length > 0
+) {
+ console.error('Component size guard failed.');
+
+ if (hardLimitViolations.length > 0) {
+  console.error(`Hard limit violations (> ${HARD_LIMIT} lines):`);
+  for (const violation of hardLimitViolations) {
+   console.error(`- ${violation.relativePath}: ${violation.lines} lines`);
+  }
+ }
+
+ if (newRatchetViolations.length > 0) {
+  console.error(`New ratchet debt violations (> ${RATCHET_LIMIT} lines and not in baseline):`);
+  for (const violation of newRatchetViolations) {
+   console.error(`- ${violation.relativePath}: ${violation.lines} lines`);
+  }
+ }
+
+ if (ratchetGrowthViolations.length > 0) {
+  console.error('Ratchet growth violations (existing debt got larger):');
+  for (const violation of ratchetGrowthViolations) {
+   console.error(
+    `- ${violation.relativePath}: ${violation.lines} lines (baseline ${violation.baselineLines})`,
+   );
+  }
+ }
+
+ if (baselineStaleEntries.length > 0) {
+  console.error('Baseline stale entries must be removed:');
+  for (const violation of baselineStaleEntries) {
+   console.error(`- ${violation.relativePath}: baseline ${violation.baselineLines} (${violation.reason})`);
+  }
+ }
+
+ if (baselineNeedsTightening.length > 0) {
+  console.error('Baseline must be tightened where file size decreased:');
+  for (const violation of baselineNeedsTightening) {
+   console.error(
+    `- ${violation.relativePath}: current ${violation.lines}, baseline ${violation.baselineLines}`,
+   );
+  }
+ }
+
+ process.exit(1);
+}
+
+const debtCount = Array.from(currentLineByFile.values()).filter((lines) => lines > RATCHET_LIMIT).length;
+console.log(
+ `Component size guard passed for ${files.length} files (hard limit: ${HARD_LIMIT}, ratchet: ${RATCHET_LIMIT}, baseline debt: ${debtCount}).`,
+);

@@ -110,8 +110,8 @@ export function useAdminUsers() {
  const listError = usersQuery.error instanceof Error ? usersQuery.error.message : '';
 
  const updateMutation = useMutation({
-  mutationFn: async (payload: { userId: string; values: UpdateUserParams; enforceMoneyEvent: boolean }) =>
-   updateUser(payload.userId, payload.values, { enforceMoneyEvent: payload.enforceMoneyEvent }),
+  mutationFn: async (payload: { userId: string; values: UpdateUserParams }) =>
+   updateUser(payload.userId, payload.values),
  });
  const createMutation = useMutation({
   mutationFn: async (values: CreateUserParams) => createUser(values),
@@ -174,14 +174,10 @@ export function useAdminUsers() {
  const handleSaveUser = editUserForm.handleSubmit(async (values) => {
   if (!editModal.user) return;
 
-  const hasBalanceChanged = values.diamondBalance !== editModal.user.diamondBalance
-   || values.goldBalance !== editModal.user.goldBalance;
-
   try {
    const result = await updateMutation.mutateAsync({
     userId: editModal.user.id,
     values,
-    enforceMoneyEvent: hasBalanceChanged,
    });
    if (!result.success) {
     toast.error(result.error || t('users.toast.update_failed'));

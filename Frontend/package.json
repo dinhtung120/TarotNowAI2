@@ -15,6 +15,8 @@
     "verify:event-evidence": "node scripts/verify-backend-event-evidence.mjs",
     "knip": "npx knip --include files,dependencies,duplicates",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:coverage:risk": "npm run test:coverage && node scripts/check-risk-coverage.mjs",
     "test:watch": "vitest",
     "test:e2e": "playwright test"
   },
@@ -24,6 +26,7 @@
     "@tanstack/react-query": "^5.95.2",
     "browser-image-compression": "^2.0.2",
     "clsx": "^2.1.1",
+    "jose": "^5.10.0",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.577.0",
     "next": "^16.2.4",

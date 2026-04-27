@@ -1,5 +1,7 @@
-import type { CSSProperties } from "react";
+"use client";
+
 import type { FlyingCard } from "@/features/reading/session/presentation/session-page/types";
+import { useFlyingCardAnimations } from "@/features/reading/session/presentation/session-page/useFlyingCardAnimations";
 import { cn } from "@/lib/utils";
 
 interface FlyingCardsLayerProps {
@@ -9,24 +11,19 @@ interface FlyingCardsLayerProps {
 export default function FlyingCardsLayer({
   flyingCards,
 }: FlyingCardsLayerProps) {
-  if (flyingCards.length === 0) return null;
+  const { sortedFlyingCards, setCardNode } = useFlyingCardAnimations(flyingCards);
+
+  if (sortedFlyingCards.length === 0) return null;
 
   return (
     <div className={cn("pointer-events-none fixed inset-0 tn-z-60")}>
-      {flyingCards.map((card) => (
+      {sortedFlyingCards.map((card) => (
         <div
           key={card.key}
+          ref={(node) => setCardNode(card.key, node)}
           className={cn(
             "tarot-flying-card rounded-md border border-[var(--purple-accent)]/35 bg-gradient-to-br from-[var(--purple-accent)]/95 to-[color:var(--c-61-49-80-55)] shadow-md",
           )}
-          style={{
-            top: `${card.startY}px`,
-            left: `${card.startX}px`,
-            zIndex: 120 + card.stackIndex,
-            "--fly-x": `${card.deltaX}px`,
-            "--fly-y": `${card.deltaY}px`,
-            "--fly-rotate": `${card.rotate}deg`,
-          } as CSSProperties}
         >
           <div
             className={cn(

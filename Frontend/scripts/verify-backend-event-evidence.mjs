@@ -49,7 +49,8 @@ const updateUserFlowSource = readFileSync(
  resolve(process.cwd(), 'src/features/admin/users/application/useAdminUsers.ts'),
  'utf8',
 );
-const updateUserFlowViolation = !updateUserFlowSource.includes('enforceMoneyEvent');
+const updateUserFlowViolation = updateUserFlowSource.includes('enforceMoneyEvent')
+ || updateUserFlowSource.includes('hasBalanceChanged');
 
 const sensitiveDirectCallDetectors = [
  {
@@ -63,6 +64,10 @@ const sensitiveDirectCallDetectors = [
  {
   label: '/reading/init',
   pattern: /serverHttpRequest(?:<[^>]+>)?\s*\(\s*['"`]\/reading\/init['"`]/,
+ },
+ {
+  label: '/admin/users/{id}',
+  pattern: /serverHttpRequest(?:<[^>]+>)?\s*\(\s*`\/admin\/users\/\$\{[^}]+\}`/,
  },
 ];
 
@@ -110,7 +115,7 @@ if (commandKeyViolations.length > 0 || usageViolations.length > 0 || updateUserF
  }
 
  if (updateUserFlowViolation) {
-  console.error('Admin users flow does not enforce money-event contract for balance adjustments.');
+  console.error('Admin users flow still contains UI-side money-event decision logic.');
  }
 
  if (directCallViolations.length > 0) {

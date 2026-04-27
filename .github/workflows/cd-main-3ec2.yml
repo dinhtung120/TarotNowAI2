@@ -95,7 +95,7 @@ jobs:
           NODE_TLS_REJECT_UNAUTHORIZED: "1"
         run: npm run build
 
-      - name: Frontend test
+      - name: Frontend test + risk coverage gate
         working-directory: Frontend
         env:
           NEXT_PUBLIC_API_URL: ${{ vars.PROD_PUBLIC_BASE_URL || 'http://localhost:5037' }}/api/v1
@@ -105,7 +105,7 @@ jobs:
           NEXT_PUBLIC_R2_PUBLIC_URL: ${{ vars.PROD_R2_PUBLIC_URL || '' }}
           NEXT_PUBLIC_R2_UPLOAD_ORIGIN: ${{ vars.PROD_R2_UPLOAD_ORIGIN || '' }}
           NODE_TLS_REJECT_UNAUTHORIZED: "1"
-        run: npm test
+        run: npm run test:coverage:risk
 
   code-analysis:
     runs-on: ubuntu-latest

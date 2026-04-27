@@ -37,7 +37,7 @@ export async function requireSessionWithHandshake(
  const accessToken = cookieStore.get(AUTH_COOKIE.ACCESS)?.value;
  const refreshToken = cookieStore.get(AUTH_COOKIE.REFRESH)?.value;
 
- const authDecision = resolveProtectedRouteAuthDecision({
+ const authDecision = await resolveProtectedRouteAuthDecision({
   accessToken,
   refreshToken,
   locale,

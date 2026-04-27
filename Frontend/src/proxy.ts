@@ -170,8 +170,15 @@ const buildContentSecurityPolicy = (nonce: string): string => {
   .filter((value) => value.length > 0)
   .join(' ');
 
- const styleSrc = "style-src 'self' 'unsafe-inline'";
- const styleSrcElem = "style-src-elem 'self' 'unsafe-inline'";
+ const styleSrc = isProduction
+  ? `style-src 'self' 'nonce-${nonce}'`
+  : "style-src 'self' 'unsafe-inline'";
+ const styleSrcElem = isProduction
+  ? `style-src-elem 'self' 'nonce-${nonce}'`
+  : "style-src-elem 'self' 'unsafe-inline'";
+ const styleSrcAttr = isProduction
+  ? "style-src-attr 'none'"
+  : "style-src-attr 'unsafe-inline'";
  const scriptSrc = isProduction
   ? `script-src 'self' 'nonce-${nonce}' https://static.cloudflareinsights.com`
   : `script-src 'self' 'unsafe-eval' 'nonce-${nonce}' https://static.cloudflareinsights.com`;
@@ -185,20 +192,14 @@ const buildContentSecurityPolicy = (nonce: string): string => {
   "font-src 'self' data: https:",
   "media-src 'self' blob: data:",
   styleSrc,
+  styleSrcElem,
+  styleSrcAttr,
   scriptSrc,
   "worker-src 'self' blob:",
   `connect-src ${connectSrc}`,
  ];
 
  if (isProduction) {
-  /**
-   * Runtime UI vẫn dùng style attributes (toast, modal lock, animations). Safari/Firefox cũ
-   * chưa hỗ trợ đầy đủ style-src-attr/style-src-elem nên cần fallback style-src unsafe-inline.
-   * Với browser hiện đại, style elements và style attributes đều được cho phép rõ ràng để
-   * tránh block các style động từ runtime chunk.
-   */
-  cspParts.push(styleSrcElem);
-  cspParts.push("style-src-attr 'unsafe-inline'");
   cspParts.push('upgrade-insecure-requests');
  }
 
@@ -231,7 +232,7 @@ export default async function proxy(request: NextRequest) {
  const refreshToken = isProtectedRoute ? request.cookies.get(AUTH_COOKIE.REFRESH)?.value : undefined;
 
  if (isProtectedRoute) {
-  const authDecision = resolveProtectedRouteAuthDecision({
+  const authDecision = await resolveProtectedRouteAuthDecision({
    accessToken,
    refreshToken,
    locale,

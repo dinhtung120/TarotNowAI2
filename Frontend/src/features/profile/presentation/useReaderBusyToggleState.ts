@@ -39,12 +39,8 @@ export function useReaderBusyToggleState() {
       return;
     }
 
-    toast.error("Cập nhật trạng thái thất bại", {
-      style: {
-        background: "var(--danger-bg)",
-        color: "var(--danger)",
-        border: "1px solid var(--danger)",
-      },
+    toast.error('Cập nhật trạng thái thất bại', {
+      className: 'tn-toast tn-toast-error tn-toast-reader-status',
     });
   };
 

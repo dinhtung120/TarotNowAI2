@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { globSync } from 'node:fs';
 import { dirname, extname, resolve } from 'node:path';
+import ts from 'typescript';
 
 const layerOrder = {
  domain: 0,
@@ -98,16 +99,33 @@ function resolveLayer(path) {
 
 function extractImports(sourceCode) {
  const imports = new Set();
- const staticRegex = /(?:import|export)\s+[^'"]*from\s+['"]([^'"]+)['"]/g;
- const dynamicRegex = /import\(\s*['"]([^'"]+)['"]\s*\)/g;
+ const sourceFile = ts.createSourceFile(
+  'architecture-check.ts',
+  sourceCode,
+  ts.ScriptTarget.Latest,
+  true,
+  ts.ScriptKind.TSX,
+ );
 
- for (const regex of [staticRegex, dynamicRegex]) {
-  let match = regex.exec(sourceCode);
-  while (match) {
-   imports.add(match[1]);
-   match = regex.exec(sourceCode);
+ const visit = (node) => {
+  if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
+   const moduleSpecifier = node.moduleSpecifier;
+   if (moduleSpecifier && ts.isStringLiteralLike(moduleSpecifier)) {
+    imports.add(moduleSpecifier.text);
+   }
   }
- }
+
+  if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword) {
+   const [argument] = node.arguments;
+   if (argument && ts.isStringLiteralLike(argument)) {
+    imports.add(argument.text);
+   }
+  }
+
+  ts.forEachChild(node, visit);
+ };
+
+ visit(sourceFile);
 
  return imports;
 }
