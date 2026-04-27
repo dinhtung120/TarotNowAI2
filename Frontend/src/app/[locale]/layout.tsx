@@ -52,7 +52,11 @@ export default async function RootLayout({ children, params }: Readonly<{ childr
 
  return (
   <html lang={locale} data-theme={initialTheme}>
-   <head><link id="tn-theme-stylesheet" rel="stylesheet" href={getThemeStylesheetHref(initialTheme)} /></head>
+   <head>
+    <link id="tn-theme-stylesheet" rel="stylesheet" href={getThemeStylesheetHref(initialTheme)} />
+    {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+    <script src="/csp-nonce-bootstrap.js" />
+   </head>
    <body className={cn(geistSans.variable, geistMono.variable, playfair.variable, "antialiased")}>
     <ThemeStylesheetManager initialTheme={initialTheme} />
 		    <NextIntlClientProvider messages={rootClientMessages}>
