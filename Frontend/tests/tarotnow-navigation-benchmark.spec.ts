@@ -435,6 +435,27 @@ async function benchmarkNavigation(
 }
 
 async function loginAsBenchmarkUser(page: Page): Promise<void> {
+  const hasAuthCookies = async (): Promise<boolean> => {
+    const cookies = await page.context().cookies();
+    return cookies.some((cookie) =>
+      cookie.name === 'accessToken' || cookie.name === 'refreshToken',
+    );
+  };
+
+  const hasAuthenticatedSession = async (): Promise<boolean> => {
+    try {
+      const response = await page.request.get(`${BASE_ORIGIN}/api/auth/session?mode=full`);
+      if (!response.ok()) return false;
+      const payload = await response.json().catch(() => ({ success: false, authenticated: false })) as {
+        success?: boolean;
+        authenticated?: boolean;
+      };
+      return payload.success === true && payload.authenticated === true;
+    } catch {
+      return false;
+    }
+  };
+
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     await page.goto(`${BASE_URL}/login`, {
       waitUntil: 'domcontentloaded',
@@ -461,11 +482,15 @@ async function loginAsBenchmarkUser(page: Page): Promise<void> {
       continue;
     }
 
-    await page.goto(`${BASE_URL}/profile`, {
-      waitUntil: 'domcontentloaded',
-      timeout: NAVIGATION_TIMEOUT_MS,
-    });
-    await page.waitForFunction(() => !window.location.pathname.endsWith('/login'), null, { timeout: 30_000 });
+    await page.waitForTimeout(1_000);
+    if (!await hasAuthCookies()) {
+      continue;
+    }
+
+    if (!await hasAuthenticatedSession()) {
+      continue;
+    }
+
     await page.waitForTimeout(1_500);
     return;
   }

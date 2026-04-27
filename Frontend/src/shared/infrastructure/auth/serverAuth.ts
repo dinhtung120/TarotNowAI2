@@ -231,6 +231,35 @@ interface ServerSessionOptions {
  allowRefresh?: boolean;
 }
 
+async function resolveProfileFromAccessToken(accessToken: string): Promise<UserProfile | null> {
+ const profile = await serverHttpRequest<unknown>('/profile', {
+  method: 'GET',
+  token: accessToken,
+  cache: 'no-store',
+  fallbackErrorMessage: AUTH_ERROR.UNAUTHORIZED,
+ });
+ if (!profile.ok) {
+  return null;
+ }
+
+ return normalizeProfileWithTokenRole(profile.data, accessToken);
+}
+
+async function refreshAccessTokenFromRequestContext(): Promise<string | undefined> {
+ const cookieStore = await cookies();
+ const refreshToken = cookieStore.get(AUTH_COOKIE.REFRESH)?.value;
+ if (!refreshToken) {
+  return undefined;
+ }
+
+ const headerStore = await headers();
+ const forwardedDeviceId = normalizeHeaderValue(headerStore.get(AUTH_HEADER.DEVICE_ID));
+ const cookieDeviceId = normalizeHeaderValue(cookieStore.get(AUTH_COOKIE.DEVICE)?.value);
+ const resolvedDeviceId = cookieDeviceId || forwardedDeviceId || 'server-auth';
+ const userAgent = normalizeHeaderValue(headerStore.get('user-agent'));
+ return refreshServerAccessToken(refreshToken, resolvedDeviceId, userAgent);
+}
+
 export async function getServerSessionSnapshot(
  options: ServerSessionOptions = {},
 ): Promise<ServerSessionSnapshot> {
@@ -239,19 +268,23 @@ export async function getServerSessionSnapshot(
   return { authenticated: false, user: null };
  }
 
- const profile = await serverHttpRequest<unknown>('/profile', {
-  method: 'GET',
-  token: accessToken,
-  cache: 'no-store',
-  fallbackErrorMessage: AUTH_ERROR.UNAUTHORIZED,
- });
- if (!profile.ok) {
-  return { authenticated: false, user: null };
- }
-
- const normalizedProfile = normalizeProfileWithTokenRole(profile.data, accessToken);
+ const normalizedProfile = await resolveProfileFromAccessToken(accessToken);
  if (!normalizedProfile) {
-  return { authenticated: false, user: null };
+  if (options.allowRefresh === false) {
+   return { authenticated: false, user: null };
+  }
+
+  const refreshedAccessToken = await refreshAccessTokenFromRequestContext();
+  if (!refreshedAccessToken) {
+   return { authenticated: false, user: null };
+  }
+
+  const refreshedProfile = await resolveProfileFromAccessToken(refreshedAccessToken);
+  if (!refreshedProfile) {
+   return { authenticated: false, user: null };
+  }
+
+  return { authenticated: true, user: refreshedProfile };
  }
 
  return { authenticated: true, user: normalizedProfile };

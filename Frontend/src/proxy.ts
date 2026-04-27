@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
 import { routing } from './i18n/routing';
 import { PROTECTED_PREFIXES } from '@/shared/config/authRoutes';
-import { AUTH_COOKIE, AUTH_HEADER } from '@/shared/infrastructure/auth/authConstants';
+import { AUTH_COOKIE } from '@/shared/infrastructure/auth/authConstants';
 import { getPublicApiOrigin } from '@/shared/infrastructure/http/apiUrl';
 
 const intlMiddleware = createMiddleware(routing);
@@ -10,7 +10,6 @@ const localeSet = new Set(routing.locales);
 const DEFAULT_CANONICAL_HOST = 'www.tarotnow.xyz';
 const CANONICAL_HOST = (process.env.NEXT_PUBLIC_CANONICAL_HOST?.trim().toLowerCase() || DEFAULT_CANONICAL_HOST);
 const AUTH_COOKIE_DOMAIN = process.env.AUTH_COOKIE_DOMAIN?.trim() || undefined;
-const SESSION_VALIDATE_PATH = '/api/auth/session?mode=lite';
 
 const resolveNonCanonicalHosts = (canonicalHost: string): Set<string> => {
  const hosts = new Set<string>();
@@ -94,39 +93,6 @@ function createCspNonce(): string {
  }
 
  return btoa(ascii);
-}
-
-async function hasValidProtectedSession(request: NextRequest): Promise<boolean> {
- const sessionUrl = new URL(SESSION_VALIDATE_PATH, request.url);
- const cookieHeader = request.headers.get('cookie') ?? '';
- if (!cookieHeader) {
-  return false;
- }
-
- const headers: Record<string, string> = {
-  Cookie: cookieHeader,
-  Accept: 'application/json',
- };
- const deviceId = request.cookies.get(AUTH_COOKIE.DEVICE)?.value ?? '';
- if (deviceId) {
-  headers[AUTH_HEADER.DEVICE_ID] = deviceId;
- }
- const userAgent = request.headers.get('user-agent') ?? '';
- if (userAgent) {
-  headers[AUTH_HEADER.FORWARDED_USER_AGENT] = userAgent;
- }
-
- try {
-  const response = await fetch(sessionUrl.toString(), {
-   method: 'GET',
-   headers,
-   cache: 'no-store',
-   redirect: 'manual',
-  });
-  return response.ok;
- } catch {
-  return false;
- }
 }
 
 const shouldBypassMiddleware = (request: NextRequest): boolean => {
@@ -263,16 +229,6 @@ export default async function proxy(request: NextRequest) {
   const response = NextResponse.redirect(loginUrl);
   clearAuthCookies(response);
   return isDocument && cspNonce ? withResponseCsp(response, cspNonce) : response;
- }
-
- if (isProtectedRoute) {
-  const validSession = await hasValidProtectedSession(request);
-  if (!validSession) {
-   const loginUrl = new URL(`/${locale}/login`, request.url);
-   const response = NextResponse.redirect(loginUrl);
-   clearAuthCookies(response);
-   return isDocument && cspNonce ? withResponseCsp(response, cspNonce) : response;
-  }
  }
 
  const response = intlMiddleware(request);
