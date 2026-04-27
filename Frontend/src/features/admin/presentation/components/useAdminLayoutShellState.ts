@@ -13,6 +13,7 @@ import {
  Users,
 } from 'lucide-react';
 import { usePathname } from '@/i18n/routing';
+import { acquirePageScrollLock } from '@/shared/infrastructure/dom/scrollLock';
 import type { AdminLayoutLabels, MenuConfigItem } from './AdminLayout.types';
 
 const MENU_CONFIG: MenuConfigItem[] = [
@@ -40,11 +41,7 @@ export function useAdminLayoutShellState(labels: AdminLayoutLabels) {
 
  useEffect(() => {
   if (!mobileNavOpen) return undefined;
-  const previousOverflow = document.body.style.overflow;
-  document.body.style.overflow = 'hidden';
-  return () => {
-   document.body.style.overflow = previousOverflow;
-  };
+  return acquirePageScrollLock();
  }, [mobileNavOpen]);
 
  useEffect(() => {

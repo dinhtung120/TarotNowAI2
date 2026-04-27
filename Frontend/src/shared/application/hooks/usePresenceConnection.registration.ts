@@ -225,13 +225,16 @@ export function registerPresenceConnectionHandlers(hubConnection: HubConnection,
     }, 1000);
   };
 
-  hubConnection.on('UserStatusChanged', (userId: string, status?: string) => {
+  const handleUserStatusChanged = (userId: string, status?: string) => {
     logger.info('[PresenceRealtimeSync]', 'UserStatusChanged received', { userId, status });
     void queryClient.invalidateQueries({ queryKey: userStateQueryKeys.reader.directoryRoot() });
     if (userId) {
       void queryClient.invalidateQueries({ queryKey: userStateQueryKeys.reader.profile(userId) });
     }
-  });
+  };
+
+  hubConnection.on('UserStatusChanged', handleUserStatusChanged);
+  hubConnection.on('user.status_changed', handleUserStatusChanged);
 
   hubConnection.on('notification.new', (payload?: NotificationNewPayload) => {
     queueInvalidation(['notifications']);

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import CollectionZoomCardVisual from "@/features/collection/presentation/components/zoom-modal/CollectionZoomCardVisual";
 import CollectionZoomDetails from "@/features/collection/presentation/components/zoom-modal/CollectionZoomDetails";
 import type { CollectionZoomModalProps } from "@/features/collection/presentation/components/zoom-modal/types";
+import { acquirePageScrollLock } from "@/shared/infrastructure/dom/scrollLock";
 import { cn } from "@/lib/utils";
 
 export function CollectionZoomModal({
@@ -15,10 +16,7 @@ export function CollectionZoomModal({
   onClose,
 }: CollectionZoomModalProps) {
   useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return acquirePageScrollLock();
   }, []);
 
   if (!cardData) return null;

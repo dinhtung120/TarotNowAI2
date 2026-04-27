@@ -34,24 +34,6 @@ interface ReaderSettingsSubmitPayload {
  tikTokUrl: string;
 }
 
-const NEUTRAL_TOAST_STYLE = {
- background: 'var(--bg-elevated)',
- color: 'var(--text-primary)',
- border: '1px solid var(--border-default)',
-} as const;
-
-const SUCCESS_TOAST_STYLE = {
- background: 'var(--success-bg)',
- color: 'var(--success)',
- border: '1px solid var(--success)',
-} as const;
-
-const DANGER_TOAST_STYLE = {
- background: 'var(--danger-bg)',
- color: 'var(--danger)',
- border: '1px solid var(--danger)',
-} as const;
-
 function toDraft(
  profile: ReaderProfile | null | undefined,
  minYearsOfExperience: number,
@@ -104,22 +86,22 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
 
  const handleSave = useCallback(async (values: ReaderSettingsSubmitPayload) => {
   if (!isTarotReader) {
-   toast.error(t('reader.toast_not_found'), { style: NEUTRAL_TOAST_STYLE });
+   toast.error(t('reader.toast_not_found'));
    return;
   }
 
   if (!readerPolicyReady) {
-   toast.error(t('reader.toast_policy_unavailable'), { style: DANGER_TOAST_STYLE });
+   toast.error(t('reader.toast_policy_unavailable'));
    return;
   }
 
   if (values.specialties.length === 0) {
-   toast.error(t('reader.toast_specialties_required'), { style: DANGER_TOAST_STYLE });
+   toast.error(t('reader.toast_specialties_required'));
    return;
   }
 
   if (!hasAtLeastOneSocialLink(values)) {
-   toast.error(t('reader.toast_social_required'), { style: DANGER_TOAST_STYLE });
+   toast.error(t('reader.toast_social_required'));
    return;
   }
 
@@ -134,11 +116,11 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
   });
 
   if (!result.success) {
-   toast.error(t('reader.toast_save_fail'), { style: DANGER_TOAST_STYLE });
+   toast.error(t('reader.toast_save_fail'));
    return;
   }
 
-  toast.success(t('reader.toast_save_success'), { style: SUCCESS_TOAST_STYLE });
+  toast.success(t('reader.toast_save_success'));
   await queryClient.invalidateQueries({ queryKey: ['reader-profile-settings', user?.id] });
  }, [isTarotReader, queryClient, readerPolicyReady, saveMutation, t, user?.id]);
 
@@ -150,12 +132,12 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
   const result = await statusMutation.mutateAsync(newStatus);
 
   if (!result.success) {
-   toast.error(t('reader.toast_status_update_fail'), { style: DANGER_TOAST_STYLE });
+   toast.error(t('reader.toast_status_update_fail'));
    return;
   }
 
   await queryClient.invalidateQueries({ queryKey: ['reader-profile-settings', user?.id] });
-  toast.success(t('reader.toast_status_updated'), { style: SUCCESS_TOAST_STYLE });
+  toast.success(t('reader.toast_status_updated'));
  }, [isTarotReader, queryClient, statusMutation, t, user?.id]);
 
  return {

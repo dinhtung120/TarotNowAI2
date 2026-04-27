@@ -24,7 +24,7 @@ export default function TitleSelector() {
 
  const handleEquipTitle = (code: string) => {
   if (code === data.activeTitleCode) return;
-  setMutation.mutate(code, { onSuccess: () => toast.success(t("TitleUpdated", { defaultMessage: "Cập nhật danh hiệu thành công" }), { style: { background: "rgba(30, 41, 59, 0.9)", color: "#fff", backdropFilter: "blur(10px)" } }) });
+  setMutation.mutate(code, { onSuccess: () => toast.success(t("TitleUpdated", { defaultMessage: "Cập nhật danh hiệu thành công" })) });
  };
 
  return (

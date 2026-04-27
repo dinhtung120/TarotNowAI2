@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, type RefObject } from 'react';
+import { acquirePageScrollLock } from '@/shared/infrastructure/dom/scrollLock';
 
 interface UseModalLifecycleArgs {
   isOpen: boolean;
@@ -62,8 +63,7 @@ export function useModalLifecycle({ isOpen, onClose, containerRef }: UseModalLif
       ? document.activeElement
       : null;
     document.addEventListener('keydown', handleKeyDown);
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
+    const releaseScrollLock = acquirePageScrollLock();
 
     const focusTimer = window.setTimeout(() => {
       const container = containerRef?.current;
@@ -79,8 +79,7 @@ export function useModalLifecycle({ isOpen, onClose, containerRef }: UseModalLif
     return () => {
       window.clearTimeout(focusTimer);
       document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
+      releaseScrollLock();
       previousActiveElementRef.current?.focus();
       previousActiveElementRef.current = null;
     };

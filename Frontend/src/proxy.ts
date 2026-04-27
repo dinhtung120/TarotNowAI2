@@ -166,9 +166,10 @@ const buildContentSecurityPolicy = (nonce: string): string => {
   .filter((value) => value.length > 0)
   .join(' ');
 
- const styleSrc = isProduction
-  ? `style-src 'self' 'nonce-${nonce}'`
-  : "style-src 'self' 'unsafe-inline'";
+ const styleSrc = "style-src 'self' 'unsafe-inline'";
+ const styleSrcElem = isProduction
+  ? `style-src-elem 'self' 'nonce-${nonce}'`
+  : '';
  const scriptSrc = isProduction
   ? `script-src 'self' 'nonce-${nonce}' https://static.cloudflareinsights.com`
   : `script-src 'self' 'unsafe-eval' 'nonce-${nonce}' https://static.cloudflareinsights.com`;
@@ -189,9 +190,11 @@ const buildContentSecurityPolicy = (nonce: string): string => {
 
  if (isProduction) {
   /**
-   * Runtime UI libraries (ví dụ react-hot-toast) dùng style attributes cho positioning/animation.
-   * Chặn tuyệt đối style attributes sẽ làm hỏng login/home và các flow toast toàn app.
+   * Runtime UI vẫn dùng style attributes (toast, modal lock, animations). Safari/Firefox cũ
+   * chưa hỗ trợ đầy đủ style-src-attr/style-src-elem nên cần fallback style-src unsafe-inline.
+   * Với browser hiện đại, style elements vẫn bị siết bằng nonce qua style-src-elem.
    */
+  cspParts.push(styleSrcElem);
   cspParts.push("style-src-attr 'unsafe-inline'");
   cspParts.push('upgrade-insecure-requests');
  }
