@@ -17,11 +17,11 @@ export default defineConfig({
   exclude: [
    'src/shared/media-upload/index.ts',
   ],
-  thresholds: {
-   statements: 63,
-   branches: 50,
-   functions: 70,
-   lines: 65,
+   thresholds: {
+    statements: 70,
+    branches: 55,
+    functions: 75,
+    lines: 72,
    'src/shared/infrastructure/http/clientFetch.ts': {
     statements: 75,
     branches: 65,
@@ -31,6 +31,26 @@ export default defineConfig({
     branches: 80,
    },
    'src/features/wallet/application/actions/deposit/user-orders.ts': {
+    statements: 75,
+    branches: 60,
+   },
+   'src/shared/infrastructure/auth/serverAuth.ts': {
+    statements: 70,
+    branches: 55,
+   },
+   'src/shared/infrastructure/auth/deviceId.ts': {
+    statements: 80,
+    branches: 75,
+   },
+   'src/shared/infrastructure/auth/refreshClient.ts': {
+    statements: 90,
+    branches: 80,
+   },
+   'src/shared/infrastructure/http/apiUrl.ts': {
+    statements: 75,
+    branches: 50,
+   },
+   'src/shared/infrastructure/http/serverHttpClient.ts': {
     statements: 75,
     branches: 60,
    },

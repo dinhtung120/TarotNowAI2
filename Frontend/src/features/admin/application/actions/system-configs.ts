@@ -2,9 +2,9 @@
 
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
-import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
-import { logger } from '@/shared/infrastructure/logging/logger';
+import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
+import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
+import { logger } from '@/shared/application/gateways/logger';
 import type { AdminSystemConfigItem, UpdateSystemConfigParams } from '@/features/admin/system-configs/system-config.types';
 
 const FAIL_LIST_SYSTEM_CONFIGS = 'Failed to list system configs';

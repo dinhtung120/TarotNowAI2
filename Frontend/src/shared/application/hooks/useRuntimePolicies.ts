@@ -3,8 +3,8 @@
 import { useEffect } from 'react';
 import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query';
 import type { RuntimePoliciesDto } from '@/shared/application/actions/runtime-policies';
-import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { fetchJsonOrThrow } from '@/shared/application/gateways/clientFetch';
+import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 import { updateRuntimePolicyStore } from '@/shared/config/runtimePolicyStore';
 

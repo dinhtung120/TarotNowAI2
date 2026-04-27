@@ -21,7 +21,7 @@ export default async function SiteLayout({ children }: SiteLayoutProps) {
   cookieStore.get(AUTH_COOKIE.ACCESS)?.value || cookieStore.get(AUTH_COOKIE.REFRESH)?.value,
  );
  const sessionSnapshot = hasAuthCookie
-  ? await getServerSessionSnapshot({ allowRefresh: true })
+  ? await getServerSessionSnapshot({ allowRefresh: false })
   : { authenticated: false, user: null };
 
  return (

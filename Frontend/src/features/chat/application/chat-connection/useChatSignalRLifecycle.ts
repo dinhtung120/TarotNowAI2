@@ -10,7 +10,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import type { ChatMessageDto, ConversationDto } from '@/features/chat/application/actions';
 import { isSameParticipantId } from '@/features/chat/domain/participantId';
 import { listMessages } from '@/features/chat/application/actions';
-import { logger } from '@/shared/infrastructure/logging/logger';
+import { logger } from '@/shared/application/gateways/logger';
 import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 import { createSignalRLogger, getCachedConversation } from './utils';

@@ -24,6 +24,7 @@ interface ServerHttpRequestOptions extends Omit<RequestInit, 'body' | 'headers'>
   headers?: HeadersInit;
   json?: unknown;
   formData?: FormData;
+  expectedDomainEvents?: readonly string[];
   fallbackErrorMessage?: string;
   timeoutMs?: number;
 }
@@ -34,12 +35,16 @@ const MIN_SERVER_TIMEOUT_MS = RUNTIME_POLICY_FALLBACKS.http.minTimeoutMs;
 function buildHeaders(
   token?: string,
   rawHeaders?: HeadersInit,
-  hasJsonBody?: boolean
+  hasJsonBody?: boolean,
+  expectedDomainEvents?: readonly string[],
 ): Headers {
   const headers = new Headers(rawHeaders);
   if (token) headers.set('Authorization', `Bearer ${token}`);
   if (hasJsonBody && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
+  }
+  if (expectedDomainEvents && expectedDomainEvents.length > 0) {
+    headers.set('x-domain-events-expected', expectedDomainEvents.join(','));
   }
   return headers;
 }
@@ -107,7 +112,16 @@ export async function serverHttpRequest<T>(
   path: string,
   options: ServerHttpRequestOptions = {}
 ): Promise<ServerHttpResult<T>> {
-  const { token, headers: rawHeaders, json, formData, fallbackErrorMessage, timeoutMs, ...rest } = options;
+  const {
+    token,
+    headers: rawHeaders,
+    json,
+    formData,
+    expectedDomainEvents,
+    fallbackErrorMessage,
+    timeoutMs,
+    ...rest
+  } = options;
   const resolvedCache = rest.cache ?? (hasNextRevalidate(rest.next) ? undefined : 'no-store');
   const resolvedTimeoutMs = resolveTimeout(timeoutMs);
   
@@ -125,7 +139,7 @@ export async function serverHttpRequest<T>(
       {
         ...rest,
         ...(resolvedCache ? { cache: resolvedCache } : {}),
-        headers: buildHeaders(token, rawHeaders, json !== undefined),
+        headers: buildHeaders(token, rawHeaders, json !== undefined, expectedDomainEvents),
         body,
       },
       resolvedTimeoutMs,

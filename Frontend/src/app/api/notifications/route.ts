@@ -1,28 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import type { NotificationListResponse } from '@/features/notifications/application/actions/types';
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
-
-interface ProblemDetailsPayload {
- type: string;
- title: string;
- status: number;
- detail: string;
- errorCode?: string;
-}
-
-function buildProblemResponse(status: number, detail: string, errorCode?: string): NextResponse {
- const payload: ProblemDetailsPayload = {
-  type: 'about:blank',
-  title: status >= 500 ? 'Server Error' : status === 401 ? 'Unauthorized' : 'Bad Request',
-  status,
-  detail,
-  ...(errorCode ? { errorCode } : {}),
- };
-
- return NextResponse.json(payload, { status });
-}
 
 function parseReadFilter(raw: string | null): boolean | undefined {
  if (raw === null) {

@@ -1,8 +1,8 @@
 'use server';
 
-import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
-import { logger } from '@/shared/infrastructure/logging/logger';
+import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
+import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
+import { logger } from '@/shared/application/gateways/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import type { ConsentStatus } from './types';
 import { AUTH_ERROR } from "@/shared/domain/authErrors";

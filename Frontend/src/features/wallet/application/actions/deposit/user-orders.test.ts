@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
-import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
-import { logger } from '@/shared/infrastructure/logging/logger';
+import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
+import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
+import { logger } from '@/shared/application/gateways/logger';
 import {
  createDepositOrder,
  getMyDepositOrder,
@@ -10,16 +10,17 @@ import {
  listMyDepositOrders,
  reconcileDepositOrder,
 } from '@/features/wallet/application/actions/deposit/user-orders';
+import { EVENT_CONTRACTS } from '@/shared/domain/eventContracts';
 
-vi.mock('@/shared/infrastructure/auth/serverAuth', () => ({
+vi.mock('@/shared/application/gateways/serverAuth', () => ({
  getServerAccessToken: vi.fn(),
 }));
 
-vi.mock('@/shared/infrastructure/http/serverHttpClient', () => ({
+vi.mock('@/shared/application/gateways/serverHttpClient', () => ({
  serverHttpRequest: vi.fn(),
 }));
 
-vi.mock('@/shared/infrastructure/logging/logger', () => ({
+vi.mock('@/shared/application/gateways/logger', () => ({
  logger: {
   error: vi.fn(),
  },
@@ -109,6 +110,7 @@ describe('deposit user-orders actions', () => {
   expect(mockedServerHttpRequest).toHaveBeenCalledWith('/deposits/orders', {
    method: 'POST',
    token: 'token',
+   expectedDomainEvents: EVENT_CONTRACTS.walletDeposit,
    json: { packageCode: 'pkg-1', idempotencyKey: 'idem-1' },
    fallbackErrorMessage: 'Failed to create deposit order',
   });
@@ -212,6 +214,11 @@ describe('deposit user-orders actions', () => {
   const result = await reconcileDepositOrder('order-2');
 
   expect(result).toEqual({ success: true, data: false });
+  expect(mockedServerHttpRequest).toHaveBeenCalledWith('/deposits/orders/order-2/reconcile', expect.objectContaining({
+   method: 'POST',
+   token: 'token',
+   expectedDomainEvents: EVENT_CONTRACTS.walletDeposit,
+  }));
  });
 
  it('returns failure when reconcileDepositOrder throws unexpectedly', async () => {

@@ -4,10 +4,10 @@ import { useEffect, useRef } from 'react';
 import { HubConnectionState, type HubConnection } from '@microsoft/signalr';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
-import { logger } from '@/shared/infrastructure/logging/logger';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
-import { getSignalRHubUrl } from '@/shared/infrastructure/realtime/signalRUrl';
-import { ensureRealtimeSession } from '@/shared/infrastructure/realtime/realtimeSessionGuard';
+import { logger } from '@/shared/application/gateways/logger';
+import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { getSignalRHubUrl } from '@/shared/application/gateways/signalRUrl';
+import { ensureRealtimeSession } from '@/shared/application/gateways/realtimeSessionGuard';
 import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 
@@ -21,7 +21,6 @@ interface ConversationUpdatedPayload {
 }
 
 const UNREAD_BADGE_REFRESH_EVENT_TYPES = new Set(['message_created', 'message_read', 'unread_changed']);
-let unauthorizedRetryBlockedUntil = 0;
 
 function shouldRefreshUnreadBadge(payload?: ConversationUpdatedPayload): boolean {
  const eventType = payload?.type?.trim().toLowerCase();
@@ -76,6 +75,7 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
   const runtimePoliciesQuery = useRuntimePolicies();
   const realtimePolicy = runtimePoliciesQuery.data?.realtime;
   const connectionRef = useRef<HubConnection | null>(null);
+  const unauthorizedRetryBlockedUntilRef = useRef(0);
   const queryClient = useQueryClient();
   
   const appStartTimeRef = useRef(Date.now());
@@ -127,7 +127,7 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
       return;
     }
 
-    if (Date.now() < unauthorizedRetryBlockedUntil) {
+    if (Date.now() < unauthorizedRetryBlockedUntilRef.current) {
       return;
     }
 
@@ -206,9 +206,9 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
         connectionRef.current = hubConnection;
       } catch (error) {
         if (isUnauthorizedNegotiationError(error)) {
-          unauthorizedRetryBlockedUntil = Date.now() + unauthorizedCooldownMs;
+          unauthorizedRetryBlockedUntilRef.current = Date.now() + unauthorizedCooldownMs;
         } else if (error instanceof Error) {
-          unauthorizedRetryBlockedUntil = Date.now() + Math.floor(unauthorizedCooldownMs / 2);
+          unauthorizedRetryBlockedUntilRef.current = Date.now() + Math.floor(unauthorizedCooldownMs / 2);
         }
         if (hubConnection && hubConnection.state !== HubConnectionState.Disconnected) {
           await hubConnection.stop().catch(() => undefined);

@@ -5,10 +5,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { getProfileAction, type ProfileDto } from '@/features/profile/application/actions';
 import { createWithdrawal, listMyWithdrawals, type WithdrawalResult } from '@/features/wallet/application/actions/withdrawal';
+import { useWalletBalanceQuery } from '@/features/wallet/application/useWalletBalanceQuery';
 import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
 import { getWithdrawalStatusBadge } from '@/features/wallet/domain/withdrawalStatus';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
-import { useWalletStore } from '@/store/walletStore';
+import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 
 const HISTORY_QUERY_KEY = userStateQueryKeys.wallet.withdrawalsMine();
 const PROFILE_QUERY_KEY = userStateQueryKeys.profile.me();
@@ -17,7 +17,7 @@ export function useWithdrawPage() {
  const t = useTranslations('Wallet');
  const locale = useLocale();
  const queryClient = useQueryClient();
- const balance = useWalletStore((state) => state.balance);
+ const balanceQuery = useWalletBalanceQuery();
  const runtimePoliciesQuery = useRuntimePolicies();
 
  const [amount, setAmount] = useState('');
@@ -108,7 +108,7 @@ export function useWithdrawPage() {
     return;
    }
 
-   if ((balance?.diamondBalance ?? 0) < amountNum) {
+   if ((balanceQuery.data?.diamondBalance ?? 0) < amountNum) {
     setError(t('withdraw.error_insufficient_balance'));
     return;
    }
@@ -127,9 +127,12 @@ export function useWithdrawPage() {
    setSuccess(true);
    setAmount('');
    setUserNote('');
-   await queryClient.invalidateQueries({ queryKey: HISTORY_QUERY_KEY });
+   await Promise.all([
+    queryClient.invalidateQueries({ queryKey: HISTORY_QUERY_KEY }),
+    queryClient.invalidateQueries({ queryKey: userStateQueryKeys.wallet.balance() }),
+   ]);
   },
-  [amountNum, balance?.diamondBalance, minWithdrawDiamond, payoutConfigured, queryClient, t, userNote, withdrawalMutation, withdrawalPolicyReady],
+  [amountNum, balanceQuery.data?.diamondBalance, minWithdrawDiamond, payoutConfigured, queryClient, t, userNote, withdrawalMutation, withdrawalPolicyReady],
  );
 
  return {

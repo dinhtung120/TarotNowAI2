@@ -3,8 +3,8 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { UserCollectionDto } from '@/features/collection/application/actions';
-import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { fetchJsonOrThrow } from '@/shared/application/gateways/clientFetch';
+import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 import { TAROT_CARD_COUNT, TAROT_DECK } from '@/shared/domain/tarotData';
 
 export type CollectionFilter = 'all' | 'owned' | 'unowned';

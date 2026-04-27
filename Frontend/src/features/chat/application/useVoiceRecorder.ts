@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
  ANALYSER_INTERVAL_MS,
  MAX_DURATION_SECONDS,
@@ -94,5 +94,10 @@ export function useVoiceRecorder() {
   cleanup(); setRecordingState('idle'); setElapsedMs(0); setAudioLevels([]); setErrorMessage(null);
  }, [cleanup]);
  const dismissError = useCallback(() => { setRecordingState('idle'); setErrorMessage(null); }, []);
+
+ useEffect(() => () => {
+  cleanup();
+ }, [cleanup]);
+
  return { recordingState, isRecording: recordingState === 'recording', isRequesting: recordingState === 'requesting', elapsedMs, audioLevels, errorMessage, startRecording, stopRecording, cancelRecording, dismissError };
 }

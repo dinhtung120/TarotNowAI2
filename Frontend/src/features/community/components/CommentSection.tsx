@@ -49,6 +49,11 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ postId }) => {
     contextType: 'comment',
     getContent: () => contentRef.current,
     setContent: setCommentContent,
+    messages: {
+      alreadyUploading: t('composer.upload_in_progress'),
+      prepareFailed: t('composer.upload_prepare_failed'),
+      uploadFailed: t('composer.upload_failed'),
+    },
   });
 
   const submitComment = handleSubmit((values) => {

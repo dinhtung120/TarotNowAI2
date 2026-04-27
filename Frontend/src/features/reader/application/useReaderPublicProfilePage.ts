@@ -5,9 +5,9 @@ import { useParams } from 'next/navigation';
 import toast from 'react-hot-toast';
 import type { ReaderProfile } from '@/features/reader/application/actions';
 import { createConversation } from '@/features/chat/public';
-import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
-import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { fetchJsonOrThrow } from '@/shared/application/gateways/clientFetch';
+import { useOptimizedNavigation } from '@/shared/application/gateways/useOptimizedNavigation';
+import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 

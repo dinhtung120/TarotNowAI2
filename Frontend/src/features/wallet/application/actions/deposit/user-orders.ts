@@ -2,9 +2,10 @@
 
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
-import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
-import { logger } from '@/shared/infrastructure/logging/logger';
+import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
+import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
+import { logger } from '@/shared/application/gateways/logger';
+import { EVENT_CONTRACTS } from '@/shared/domain/eventContracts';
 import type {
  CreateDepositOrderResponse,
  MyDepositOrderHistoryResponse,
@@ -42,6 +43,7 @@ export async function createDepositOrder(
   const result = await serverHttpRequest<CreateDepositOrderResponse>('/deposits/orders', {
    method: 'POST',
    token: accessToken,
+   expectedDomainEvents: EVENT_CONTRACTS.walletDeposit,
    json: { packageCode, idempotencyKey },
    fallbackErrorMessage: 'Failed to create deposit order',
   });
@@ -141,6 +143,7 @@ export async function reconcileDepositOrder(orderId: string): Promise<ActionResu
   const result = await serverHttpRequest<{ handled: boolean }>(`/deposits/orders/${orderId}/reconcile`, {
    method: 'POST',
    token: accessToken,
+   expectedDomainEvents: EVENT_CONTRACTS.walletDeposit,
    fallbackErrorMessage: 'Failed to reconcile deposit order',
   });
 

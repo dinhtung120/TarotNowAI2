@@ -1,24 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getTranslations } from 'next-intl/server';
-import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
-import { logger } from '@/shared/infrastructure/logging/logger';
+import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
+import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
+import { logger } from '@/shared/application/gateways/logger';
 import { initReadingSession } from '@/features/reading/application/actions/init-session';
 import { revealReadingSession } from '@/features/reading/application/actions/reveal-session';
+import { EVENT_CONTRACTS } from '@/shared/domain/eventContracts';
 
 vi.mock('next-intl/server', () => ({
  getTranslations: vi.fn(),
 }));
 
-vi.mock('@/shared/infrastructure/auth/serverAuth', () => ({
+vi.mock('@/shared/application/gateways/serverAuth', () => ({
  getServerAccessToken: vi.fn(),
 }));
 
-vi.mock('@/shared/infrastructure/http/serverHttpClient', () => ({
+vi.mock('@/shared/application/gateways/serverHttpClient', () => ({
  serverHttpRequest: vi.fn(),
 }));
 
-vi.mock('@/shared/infrastructure/logging/logger', () => ({
+vi.mock('@/shared/application/gateways/logger', () => ({
  logger: {
   error: vi.fn(),
  },
@@ -76,6 +77,7 @@ describe('reading actions', () => {
   expect(mockedServerHttpRequest).toHaveBeenCalledWith('/reading/init', {
    method: 'POST',
    token: 'access-token',
+   expectedDomainEvents: EVENT_CONTRACTS.readingInit,
    json: {
     spreadType: 'three-card',
     question: 'What should I do?',
@@ -83,6 +85,24 @@ describe('reading actions', () => {
    },
    fallbackErrorMessage: 't:unknown_error',
   });
+ });
+
+ it('sends expected domain-event contract header metadata for reveal', async () => {
+  mockedGetServerAccessToken.mockResolvedValue('access-token');
+  mockedServerHttpRequest.mockResolvedValue({
+   ok: true,
+   status: 200,
+   headers: new Headers(),
+   data: { sessionId: 'session-200', interpretation: 'ok' },
+  });
+
+  await revealReadingSession({ sessionId: 'session-200' });
+
+  expect(mockedServerHttpRequest).toHaveBeenCalledWith('/reading/reveal', expect.objectContaining({
+   method: 'POST',
+   token: 'access-token',
+   expectedDomainEvents: EVENT_CONTRACTS.readingReveal,
+  }));
  });
 
  it('maps 401 to unauthorized in revealReadingSession', async () => {

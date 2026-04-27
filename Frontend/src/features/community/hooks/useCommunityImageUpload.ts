@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   appendPlaceholderMarkdown,
   compressImageForDirectUpload,
@@ -16,6 +16,7 @@ interface UseCommunityImageUploadParams {
   contextType: CommunityImageContextType;
   getContent: () => string;
   setContent: (nextValue: string) => void;
+  messages?: Partial<UseCommunityImageUploadMessages>;
 }
 
 interface UploadImageResult {
@@ -23,32 +24,60 @@ interface UploadImageResult {
   success: boolean;
 }
 
+interface UseCommunityImageUploadMessages {
+  alreadyUploading: string;
+  prepareFailed: string;
+  uploadFailed: string;
+}
+
+const DEFAULT_MESSAGES: UseCommunityImageUploadMessages = {
+  alreadyUploading: 'An upload is already in progress. Please wait.',
+  prepareFailed: 'Unable to prepare the selected image.',
+  uploadFailed: 'Unable to upload image.',
+};
+
 export function useCommunityImageUpload({
   contextType,
   getContent,
   setContent,
+  messages,
 }: UseCommunityImageUploadParams) {
   const [contextDraftId, setContextDraftId] = useState(generateDraftId());
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const inFlightRef = useRef(false);
+  const progressResetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const mountedRef = useRef(true);
+  const resolvedMessages: UseCommunityImageUploadMessages = {
+    ...DEFAULT_MESSAGES,
+    ...messages,
+  };
 
   const uploadImage = useCallback(async (file: File): Promise<UploadImageResult> => {
-    if (isUploading) {
-      return { success: false, error: 'Đang tải ảnh lên. Vui lòng đợi hoàn tất.' };
+    if (inFlightRef.current) {
+      return { success: false, error: resolvedMessages.alreadyUploading };
     }
 
     let compressedFile: File;
     try {
       compressedFile = await compressImageForDirectUpload(file);
     } catch (error) {
-      const message = error instanceof ImageUploadValidationError ? error.message : 'Không thể xử lý ảnh trước khi upload.';
+      const message = error instanceof ImageUploadValidationError ? error.message : resolvedMessages.prepareFailed;
       return { success: false, error: message };
     }
 
     const placeholder = createMarkdownImagePlaceholder('uploading-image');
-    setContent(appendPlaceholderMarkdown(getContent(), placeholder));
-    setIsUploading(true);
-    setUploadProgress(0);
+    if (mountedRef.current) {
+      setContent(appendPlaceholderMarkdown(getContent(), placeholder));
+    }
+    inFlightRef.current = true;
+    if (mountedRef.current) {
+      setIsUploading(true);
+      setUploadProgress(0);
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     try {
       const presigned = await presignCommunityImageUpload({
@@ -66,6 +95,7 @@ export function useCommunityImageUpload({
         contentType: compressedFile.type,
         file: compressedFile,
         onProgress: setUploadProgress,
+        signal: controller.signal,
       });
 
       const confirmed = await confirmCommunityImageUpload({
@@ -80,17 +110,48 @@ export function useCommunityImageUpload({
         return { success: false, error: confirmed.error };
       }
 
-      setContent(replacePlaceholderMarkdown(getContent(), placeholder, confirmed.data.publicUrl));
-      setUploadProgress(100);
+      if (mountedRef.current) {
+        setContent(replacePlaceholderMarkdown(getContent(), placeholder, confirmed.data.publicUrl));
+        setUploadProgress(100);
+      }
       return { success: true, error: '' };
     } catch (error) {
-      rollbackPlaceholder(getContent, placeholder, setContent);
-      return { success: false, error: error instanceof Error ? error.message : 'Không thể upload ảnh.' };
+      if (mountedRef.current) {
+        rollbackPlaceholder(getContent, placeholder, setContent);
+      }
+      if (controller.signal.aborted) {
+        return { success: false, error: resolvedMessages.uploadFailed };
+      }
+
+      return { success: false, error: error instanceof Error ? error.message : resolvedMessages.uploadFailed };
     } finally {
-      setIsUploading(false);
-      setTimeout(() => setUploadProgress(0), 200);
+      inFlightRef.current = false;
+      abortControllerRef.current = null;
+      if (mountedRef.current) {
+        setIsUploading(false);
+      }
+      if (progressResetTimerRef.current) {
+        clearTimeout(progressResetTimerRef.current);
+      }
+      progressResetTimerRef.current = setTimeout(() => {
+        if (mountedRef.current) {
+          setUploadProgress(0);
+        }
+      }, 200);
     }
-  }, [contextDraftId, contextType, getContent, isUploading, setContent]);
+  }, [contextDraftId, contextType, getContent, resolvedMessages.alreadyUploading, resolvedMessages.prepareFailed, resolvedMessages.uploadFailed, setContent]);
+
+  useEffect(() => () => {
+    mountedRef.current = false;
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    if (progressResetTimerRef.current) {
+      clearTimeout(progressResetTimerRef.current);
+      progressResetTimerRef.current = null;
+    }
+  }, []);
 
   return {
     contextDraftId,

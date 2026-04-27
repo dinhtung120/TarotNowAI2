@@ -35,31 +35,41 @@ export function useChatHistoryState({
  const loadInitial = useCallback(async (silent = false) => {
   if (!conversationId) return;
   if (!silent) setLoading(true);
-
-  const history = await listMessages(conversationId, { limit: chatPageSize });
-  if (history.success && history.data) {
-   const payload = history.data;
-   setMessages((prev) =>
-    silent && hasLoadedInitialRef.current
-     ? mergeHistoryWithRealtimeMessages(prev, payload.messages)
-     : mergeHistoryWithRealtimeMessages([], payload.messages)
-   );
-   setConversation(payload.conversation ?? null);
-   setNextCursor(payload.nextCursor ?? null);
-   if (!hasLoadedInitialRef.current) {
-    hasLoadedInitialRef.current = true;
-    setTimeout(() => scrollToBottomRef.current?.('auto'), 10);
+  try {
+   const history = await listMessages(conversationId, { limit: chatPageSize });
+   if (history.success && history.data) {
+    const payload = history.data;
+    setMessages((prev) =>
+     silent && hasLoadedInitialRef.current
+      ? mergeHistoryWithRealtimeMessages(prev, payload.messages)
+      : mergeHistoryWithRealtimeMessages([], payload.messages)
+    );
+    setConversation(payload.conversation ?? null);
+    setNextCursor(payload.nextCursor ?? null);
+    if (!hasLoadedInitialRef.current) {
+     hasLoadedInitialRef.current = true;
+     setTimeout(() => scrollToBottomRef.current?.('auto'), 10);
+    }
+    return;
    }
-  } else if (!silent) {
-   setMessages([]);
-   setConversation(null);
-   setNextCursor(null);
-  }
 
-  if (!silent) {
-   setLoading(false);
-   setInitializing(false);
-   lastInitialLoadTimeRef.current = Date.now();
+   if (!silent) {
+    setMessages([]);
+    setConversation(null);
+    setNextCursor(null);
+   }
+  } catch {
+   if (!silent) {
+    setMessages([]);
+    setConversation(null);
+    setNextCursor(null);
+   }
+  } finally {
+   if (!silent) {
+    setLoading(false);
+    setInitializing(false);
+    lastInitialLoadTimeRef.current = Date.now();
+   }
   }
  }, [chatPageSize, conversationId, scrollToBottomRef]);
 

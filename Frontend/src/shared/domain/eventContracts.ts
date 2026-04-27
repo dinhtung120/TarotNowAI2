@@ -1,0 +1,18 @@
+export const DOMAIN_EVENT_HEADER = 'x-domain-events-expected';
+
+const DOMAIN_EVENTS = {
+ MONEY_CHANGED: 'MoneyChangedEvent',
+ QUOTA_RESERVED: 'AiQuotaReservedEvent',
+ QUOTA_REFUNDED: 'AiQuotaRefundedEvent',
+ CHAT_CONVERSATION_UPDATED: 'ConversationUpdatedEvent',
+} as const;
+
+export const EVENT_CONTRACTS = {
+ walletWithdrawal: [DOMAIN_EVENTS.MONEY_CHANGED],
+ walletDeposit: [DOMAIN_EVENTS.MONEY_CHANGED],
+ chatAddMoneyRequest: [DOMAIN_EVENTS.MONEY_CHANGED, DOMAIN_EVENTS.CHAT_CONVERSATION_UPDATED],
+ chatAddMoneyRespond: [DOMAIN_EVENTS.MONEY_CHANGED, DOMAIN_EVENTS.CHAT_CONVERSATION_UPDATED],
+ chatDisputeOpen: [DOMAIN_EVENTS.CHAT_CONVERSATION_UPDATED],
+ readingInit: [DOMAIN_EVENTS.QUOTA_RESERVED],
+ readingReveal: [DOMAIN_EVENTS.QUOTA_RESERVED, DOMAIN_EVENTS.QUOTA_REFUNDED],
+} as const;

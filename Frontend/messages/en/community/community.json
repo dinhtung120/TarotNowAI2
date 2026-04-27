@@ -45,6 +45,8 @@
       "visibility_private": "🔒 Private",
       "attach_image": "Attach image",
       "upload_failed": "Image upload failed",
+      "upload_in_progress": "An image upload is already in progress. Please wait.",
+      "upload_prepare_failed": "Unable to prepare this image before upload.",
       "upload_success": "Image added to your post",
       "upload_error": "Error while uploading image",
       "uploading_progress": "Uploading image... {percent}%",

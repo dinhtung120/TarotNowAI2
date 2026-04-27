@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { ReaderProfile } from '@/features/reader/application/actions';
-import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
+import { fetchJsonOrThrow } from '@/shared/application/gateways/clientFetch';
 import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 
@@ -31,6 +31,21 @@ export function useReadersDirectoryPage() {
 
   return () => window.clearTimeout(debounceTimer);
  }, [searchDebounceMs, searchInput]);
+
+ const setSearchInputWithReset = useCallback((value: string) => {
+  setPage(1);
+  setSearchInput(value);
+ }, []);
+
+ const setSelectedSpecialtyWithReset = useCallback((value: string) => {
+  setPage(1);
+  setSelectedSpecialty(value);
+ }, []);
+
+ const setSelectedStatusWithReset = useCallback((value: string) => {
+  setPage(1);
+  setSelectedStatus(value);
+ }, []);
 
  const { data, isLoading } = useQuery({
   queryKey: ['readers', page, pageSize, selectedSpecialty, selectedStatus, searchTerm],
@@ -67,11 +82,11 @@ export function useReadersDirectoryPage() {
     setPage,
     loading,
     searchInput,
-    setSearchInput,
+    setSearchInput: setSearchInputWithReset,
     selectedSpecialty,
-    setSelectedSpecialty,
+    setSelectedSpecialty: setSelectedSpecialtyWithReset,
     selectedStatus,
-    setSelectedStatus,
+    setSelectedStatus: setSelectedStatusWithReset,
     totalPages,
   };
 }

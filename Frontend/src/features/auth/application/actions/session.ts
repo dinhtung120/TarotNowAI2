@@ -3,8 +3,8 @@
 import type { UserProfile } from '@/features/auth/domain/types';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
-import { AUTH_HEADER } from '@/shared/infrastructure/auth/authConstants';
-import { getOrCreateDeviceId } from '@/shared/infrastructure/auth/deviceId';
+import { AUTH_HEADER } from '@/shared/application/gateways/authConstants';
+import { getOrCreateDeviceId } from '@/shared/application/gateways/deviceId';
 
 interface LoginActionPayload {
  user: UserProfile;

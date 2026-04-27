@@ -13,6 +13,7 @@ export default function VoiceRecorderStartButton({ disabled, isRequesting, onSta
       type="button"
       onClick={onStart}
       disabled={disabled || isRequesting}
+      aria-label="Bắt đầu ghi âm tin nhắn thoại"
       className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl tn-chat-icon-btn')}
       title="Ghi âm tin nhắn thoại"
     >

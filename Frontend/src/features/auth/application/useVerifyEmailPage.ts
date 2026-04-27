@@ -8,7 +8,7 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { resendVerificationEmailAction, verifyEmailAction } from '@/features/auth/application/actions';
 import { resolveVerifyEmailPrefill, isValidAuthFlowEmail } from '@/features/auth/application/authFlowEmail';
-import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
+import { useOptimizedNavigation } from '@/shared/application/gateways/useOptimizedNavigation';
 import {
  createVerifyEmailSchema,
  type VerifyEmailFormValues,

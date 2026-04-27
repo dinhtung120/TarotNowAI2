@@ -1,8 +1,8 @@
 'use server';
 
 import { getTranslations } from 'next-intl/server';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
-import { logger } from '@/shared/infrastructure/logging/logger';
+import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
+import { logger } from '@/shared/application/gateways/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 
 export interface CardCatalogItemDto {

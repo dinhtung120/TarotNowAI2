@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import {
  createDepositOrder,
@@ -11,8 +11,8 @@ import {
  type CreateDepositOrderResponse,
  type MyDepositOrderResponse,
 } from '@/features/wallet/application/actions/deposit';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
-import { useWalletStore } from '@/store/walletStore';
+import { useWalletBalanceQuery } from '@/features/wallet/application/useWalletBalanceQuery';
+import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 
 type DepositOrderView = MyDepositOrderResponse;
 type CreateOrderPayload = { packageCode: string; idempotencyKey: string };
@@ -21,19 +21,14 @@ type CreateOrderIntent = { packageCode: string; idempotencyKey: string };
 export function useDepositPage() {
  const t = useTranslations('Wallet');
  const locale = useLocale();
- const balance = useWalletStore((state) => state.balance);
- const fetchBalance = useWalletStore((state) => state.fetchBalance);
+ const queryClient = useQueryClient();
+ const balanceQuery = useWalletBalanceQuery();
 
  const [selectedPackageCode, setSelectedPackageCode] = useState<string>('');
  const [createError, setCreateError] = useState<string | null>(null);
  const [createdOrder, setCreatedOrder] = useState<CreateDepositOrderResponse | null>(null);
  const [orderId, setOrderId] = useState<string | null>(null);
  const createOrderIntentRef = useRef<CreateOrderIntent | null>(null);
-
- useQuery({
-  queryKey: userStateQueryKeys.wallet.balance(),
-  queryFn: () => fetchBalance(),
- });
 
  const packagesQuery = useQuery({
   queryKey: userStateQueryKeys.wallet.depositPackages(),
@@ -79,8 +74,8 @@ export function useDepositPage() {
 
  useEffect(() => {
   if (orderQuery.data?.status !== 'success') return;
-  void fetchBalance();
- }, [fetchBalance, orderQuery.data?.status]);
+  void queryClient.invalidateQueries({ queryKey: userStateQueryKeys.wallet.balance() });
+ }, [orderQuery.data?.status, queryClient]);
 
  const handleCreateOrder = useCallback(async () => {
   if (!selectedPackage) {
@@ -131,7 +126,7 @@ export function useDepositPage() {
  return {
   t,
   locale,
-  balance,
+  balance: balanceQuery.data ?? null,
   packages: packagesQuery.data ?? [],
   loadingPackages: packagesQuery.isLoading,
   selectedPackageCode: effectiveSelectedPackageCode,

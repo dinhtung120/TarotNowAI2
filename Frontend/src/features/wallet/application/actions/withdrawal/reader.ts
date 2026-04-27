@@ -2,13 +2,14 @@
 
 import { randomUUID } from 'node:crypto';
 import { getTranslations } from 'next-intl/server';
-import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
-import { logger } from '@/shared/infrastructure/logging/logger';
+import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
+import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
+import { logger } from '@/shared/application/gateways/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import type { WithdrawalResult } from './types';
 import { AUTH_ERROR } from "@/shared/domain/authErrors";
-import { AUTH_HEADER } from '@/shared/infrastructure/auth/authConstants';
+import { AUTH_HEADER } from '@/shared/application/gateways/authConstants';
+import { EVENT_CONTRACTS } from '@/shared/domain/eventContracts';
 
 export async function createWithdrawal(data: {
  amountDiamond: number;
@@ -26,6 +27,7 @@ export async function createWithdrawal(data: {
    {
     method: 'POST',
     token: accessToken,
+    expectedDomainEvents: EVENT_CONTRACTS.walletWithdrawal,
     headers: {
       [AUTH_HEADER.IDEMPOTENCY_KEY]: idempotencyKey,
     },

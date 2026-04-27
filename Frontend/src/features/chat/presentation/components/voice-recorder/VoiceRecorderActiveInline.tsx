@@ -41,7 +41,7 @@ function resolveWaveOpacityClass(level: number): string {
 export default function VoiceRecorderActiveInline({ audioLevels, elapsedMs, onCancel, onSend }: VoiceRecorderActiveInlineProps) {
   return (
     <div className={cn('flex min-w-0 flex-1 items-center gap-2')}>
-      <button type="button" onClick={onCancel} className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border tn-border-danger tn-bg-danger-soft tn-text-danger transition-colors tn-voice-recorder-cancel-hover')} title="Hủy ghi âm">
+      <button type="button" onClick={onCancel} aria-label="Hủy ghi âm" className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border tn-border-danger tn-bg-danger-soft tn-text-danger transition-colors tn-voice-recorder-cancel-hover')} title="Hủy ghi âm">
         <X className={cn('h-4 w-4')} />
       </button>
 
@@ -62,7 +62,7 @@ export default function VoiceRecorderActiveInline({ audioLevels, elapsedMs, onCa
         <span className={cn('ml-1 shrink-0 font-mono text-xs tabular-nums tn-text-secondary')}>{formatRecordingDuration(elapsedMs)}</span>
       </div>
 
-      <button type="button" onClick={onSend} className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl tn-bg-accent text-white transition-all tn-hover-brightness-110')} title="Gửi tin nhắn thoại">
+      <button type="button" onClick={onSend} aria-label="Gửi tin nhắn thoại" className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl tn-bg-accent text-white transition-all tn-hover-brightness-110')} title="Gửi tin nhắn thoại">
         <Send className={cn('h-4 w-4')} />
       </button>
     </div>

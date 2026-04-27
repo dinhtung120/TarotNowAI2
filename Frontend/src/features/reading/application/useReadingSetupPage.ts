@@ -5,16 +5,15 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useTranslations } from 'next-intl';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InitReadingResponse } from '@/features/reading/application/actions/types';
 import {
  type ReadingSetupSnapshotDto,
 } from '@/shared/application/actions/reading-setup-snapshot';
-import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
-import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
-import { useWalletStore } from '@/store/walletStore';
-import { setSessionStorageItem } from '@/shared/infrastructure/storage/browserStorage';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { fetchJsonOrThrow } from '@/shared/application/gateways/clientFetch';
+import { useOptimizedNavigation } from '@/shared/application/gateways/useOptimizedNavigation';
+import { setSessionStorageItem } from '@/shared/application/gateways/browserStorage';
+import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 
 interface ReadingSetupFormData {
  question?: string;
@@ -44,7 +43,7 @@ const READING_INIT_TIMEOUT_MS = 12_000;
 export function useReadingSetupPage() {
  const navigation = useOptimizedNavigation();
  const t = useTranslations('ReadingSetup');
- const fetchBalance = useWalletStore((state) => state.fetchBalance);
+ const queryClient = useQueryClient();
  const readingSetupSnapshotQuery = useQuery({
   queryKey: userStateQueryKeys.reading.setupSnapshot(),
   queryFn: ({ signal }) => fetchJsonOrThrow<ReadingSetupSnapshotDto>(
@@ -181,7 +180,7 @@ export function useReadingSetupPage() {
    return;
   }
 
-  void fetchBalance();
+  void queryClient.invalidateQueries({ queryKey: userStateQueryKeys.wallet.balance() });
   const cardsToDraw = CARDS_TO_DRAW_MAP[selectedSpread] || 1;
 
   if (data.question) {

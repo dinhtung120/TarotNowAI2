@@ -7,7 +7,7 @@ import {
  respondConversationAddMoney,
  type ChatMessageDto,
 } from '@/features/chat/application/actions';
-import { logger } from '@/shared/infrastructure/logging/logger';
+import { logger } from '@/shared/application/gateways/logger';
 
 interface UsePaymentOfferActionsParams {
  conversationId: string;

@@ -3,8 +3,8 @@
 import { useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { usePathname } from '@/i18n/routing';
-import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { fetchJsonOrThrow } from '@/shared/application/gateways/clientFetch';
+import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 import { useAuthStore } from '@/store/authStore';
 
 interface ChatUnreadResult {

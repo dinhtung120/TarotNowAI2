@@ -1,28 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AUTH_COOKIE, AUTH_HEADER, AUTH_SESSION } from '@/shared/infrastructure/auth/authConstants';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
+import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
+export { buildProblemResponse };
 
 const AUTH_COOKIE_DOMAIN = process.env.AUTH_COOKIE_DOMAIN?.trim() || undefined;
-
-interface ProblemDetailsPayload {
- type: string;
- title: string;
- status: number;
- detail: string;
- errorCode?: string;
-}
-
-export function buildProblemResponse(status: number, detail: string, errorCode?: string): NextResponse {
- const payload: ProblemDetailsPayload = {
-  type: 'about:blank',
-  title: status >= 500 ? 'Server Error' : status === 401 ? 'Unauthorized' : 'Bad Request',
-  status,
-  detail,
-  ...(errorCode ? { errorCode } : {}),
- };
-
- return NextResponse.json(payload, { status });
-}
 
 export function resolveAccessTtlSeconds(payload: { expiresInSeconds?: number }): number {
  if (typeof payload.expiresInSeconds === 'number' && payload.expiresInSeconds > 0) {
@@ -225,4 +207,25 @@ export function unauthorizedResponse(clearCookies = false): NextResponse {
  }
 
  return response;
+}
+
+export function getSetCookieHeaders(headers: Headers): string[] {
+ if (typeof headers.getSetCookie === 'function') {
+  return headers.getSetCookie();
+ }
+
+ const raw = headers.get('set-cookie');
+ return raw ? raw.split(/,\s*(?=[a-zA-Z_]+=)/) : [];
+}
+
+interface SetCookieTarget {
+ headers: Headers;
+}
+
+export function appendSetCookieHeaders(source: Headers, target: SetCookieTarget): void {
+ for (const cookie of getSetCookieHeaders(source)) {
+  if (cookie.trim().length > 0) {
+   target.headers.append('set-cookie', cookie);
+  }
+ }
 }

@@ -1,8 +1,8 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { parseApiError } from '@/shared/infrastructure/error/parseApiError';
-import { fetchJsonOrThrow, fetchWithTimeout } from '@/shared/infrastructure/http/clientFetch';
+import { parseApiError } from '@/shared/application/gateways/parseApiError';
+import { fetchJsonOrThrow, fetchWithTimeout } from '@/shared/application/gateways/clientFetch';
 import type { NotificationListResponse } from '@/features/notifications/application/actions';
 import { useAuthStore } from '@/store/authStore';
 
@@ -97,18 +97,23 @@ export function useNotificationDropdown(options: UseNotificationDropdownOptions 
  });
 
  const markAsRead = async (id: string) => {
+  let wasUnread = false;
   queryClient.setQueryData<NotificationListResponse | null>(queryKeyList, (previous) => {
    if (!previous) {
     return previous;
    }
 
+   const target = previous.items.find((item) => item.id === id);
+   wasUnread = target ? !target.isRead : false;
    return {
     ...previous,
     items: previous.items.map((item) => (item.id === id ? { ...item, isRead: true } : item)),
    };
   });
 
-  queryClient.setQueryData<number>(queryKeyCount, (previous) => Math.max(0, (previous ?? 0) - 1));
+  if (wasUnread) {
+   queryClient.setQueryData<number>(queryKeyCount, (previous) => Math.max(0, (previous ?? 0) - 1));
+  }
 
   queryClient.setQueryData<NotificationListResponse | null>(['notifications', 1, false], (previous) => {
    if (!previous) {

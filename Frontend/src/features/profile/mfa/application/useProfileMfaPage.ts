@@ -8,7 +8,7 @@ import {
   verifyMfa,
   type MfaSetupResult,
 } from '@/features/profile/mfa/application/actions';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 

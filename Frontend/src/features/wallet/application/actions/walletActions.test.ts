@@ -1,20 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
-import { logger } from '@/shared/infrastructure/logging/logger';
+import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
+import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
+import { logger } from '@/shared/application/gateways/logger';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { getWalletBalance } from '@/features/wallet/application/actions/balance';
 import { createDepositOrder } from '@/features/wallet/application/actions/deposit/user-orders';
+import { EVENT_CONTRACTS } from '@/shared/domain/eventContracts';
 
-vi.mock('@/shared/infrastructure/auth/serverAuth', () => ({
+vi.mock('@/shared/application/gateways/serverAuth', () => ({
  getServerAccessToken: vi.fn(),
 }));
 
-vi.mock('@/shared/infrastructure/http/serverHttpClient', () => ({
+vi.mock('@/shared/application/gateways/serverHttpClient', () => ({
  serverHttpRequest: vi.fn(),
 }));
 
-vi.mock('@/shared/infrastructure/logging/logger', () => ({
+vi.mock('@/shared/application/gateways/logger', () => ({
  logger: {
   error: vi.fn(),
  },
@@ -94,6 +95,7 @@ describe('wallet actions', () => {
   expect(mockedServerHttpRequest).toHaveBeenCalledWith('/deposits/orders', {
    method: 'POST',
    token: 'deposit-token',
+   expectedDomainEvents: EVENT_CONTRACTS.walletDeposit,
    json: { packageCode: 'topup_100k', idempotencyKey: 'idem-key-001' },
    fallbackErrorMessage: 'Failed to create deposit order',
   });

@@ -5,7 +5,7 @@ import {
  type HomeSnapshotDto,
 } from '@/features/reader/application/homeSnapshotMapper';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
 
 export async function getHomeSnapshotAction(): Promise<ActionResult<HomeSnapshotDto>> {
  try {

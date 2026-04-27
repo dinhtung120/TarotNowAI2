@@ -15,6 +15,7 @@ export default function VoiceRecorderErrorInline({ errorMessage, onDismiss }: Vo
       <button
         type="button"
         onClick={onDismiss}
+        aria-label="Đóng thông báo lỗi ghi âm"
         className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border tn-voice-error-btn')}
         title="Đóng lỗi"
       >

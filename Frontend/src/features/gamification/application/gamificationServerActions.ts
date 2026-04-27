@@ -1,7 +1,7 @@
 'use server';
 
-import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
+import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import type {
  ClaimQuestRewardResult,

@@ -5,8 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import {
  type CardCatalogItemDto,
 } from '@/features/reading/application/actions/cards-catalog';
-import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { fetchJsonOrThrow } from '@/shared/application/gateways/clientFetch';
+import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 
 interface UseCardsCatalogOptions {
  enabled?: boolean;

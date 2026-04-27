@@ -4,14 +4,12 @@ import { useEffect, useRef } from 'react';
 import { HubConnectionState, type HubConnection } from '@microsoft/signalr';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
-import { logger } from '@/shared/infrastructure/logging/logger';
-import { getSignalRHubUrl } from '@/shared/infrastructure/realtime/signalRUrl';
-import { ensureRealtimeSession } from '@/shared/infrastructure/realtime/realtimeSessionGuard';
+import { logger } from '@/shared/application/gateways/logger';
+import { getSignalRHubUrl } from '@/shared/application/gateways/signalRUrl';
+import { ensureRealtimeSession } from '@/shared/application/gateways/realtimeSessionGuard';
 import { registerPresenceConnectionHandlers } from './usePresenceConnection.registration';
 import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
-
-let reconnectBlockedUntil = 0;
 
 function shouldStopConnection(connection: HubConnection | null) {
   return !!connection && (
@@ -69,6 +67,7 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
   const runtimePoliciesQuery = useRuntimePolicies();
   const realtimePolicy = runtimePoliciesQuery.data?.realtime;
   const connectionRef = useRef<HubConnection | null>(null);
+  const reconnectBlockedUntilRef = useRef(0);
   const queryClient = useQueryClient();
 
   // Khởi tạo các ref để lưu trữ giá trị cấu hình nhằm giữ cho dependency array của useEffect chính ổn định.
@@ -113,7 +112,7 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
       return;
     }
 
-    if (Date.now() < reconnectBlockedUntil) {
+    if (Date.now() < reconnectBlockedUntilRef.current) {
       return;
     }
 
@@ -160,9 +159,9 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
         heartbeatInterval = registration.startHeartbeat();
       } catch (error) {
         if (isUnauthorizedNegotiationError(error)) {
-          reconnectBlockedUntil = Date.now() + negotiationCooldownMs;
+          reconnectBlockedUntilRef.current = Date.now() + negotiationCooldownMs;
         } else if (error instanceof Error) {
-          reconnectBlockedUntil = Date.now() + Math.floor(negotiationCooldownMs / 2);
+          reconnectBlockedUntilRef.current = Date.now() + Math.floor(negotiationCooldownMs / 2);
         }
 
         if (hubConnection && hubConnection.state !== HubConnectionState.Disconnected) {

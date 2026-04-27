@@ -2,8 +2,8 @@
 
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import type { PublicRuntimePoliciesDto } from '@/shared/application/actions/runtime-policies';
-import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { fetchJsonOrThrow } from '@/shared/application/gateways/clientFetch';
+import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 
 const PUBLIC_RUNTIME_POLICIES_TIMEOUT_MS = 8_000;
 const PUBLIC_RUNTIME_POLICIES_STALE_TIME_MS = 60_000;

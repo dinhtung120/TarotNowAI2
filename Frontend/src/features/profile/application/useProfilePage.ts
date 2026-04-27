@@ -16,7 +16,7 @@ import {
 import { uploadProfileAvatar } from '@/features/profile/application/uploadProfileAvatar';
 import { getMyReaderRequest, type MyReaderRequest } from '@/features/reader/public';
 import { useRouter } from '@/i18n/routing';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'react-hot-toast';
 

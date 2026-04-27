@@ -1,6 +1,8 @@
-import { useSyncExternalStore } from 'react';
+import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/shim/with-selector';
+import type { QueryClient } from '@tanstack/react-query';
 import type { WalletBalance } from '@/features/wallet/domain/types';
 import type { ActionResult } from '@/shared/domain/actionResult';
+import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 
 type WalletBalanceFetcher = () => Promise<ActionResult<WalletBalance>>;
 type WalletStoreListener = () => void;
@@ -8,10 +10,41 @@ type WalletStoreSelector<T> = (state: WalletState) => T;
 type WalletStateData = Pick<WalletState, 'balance' | 'isLoading' | 'error'>;
 type WalletStoreActions = Pick<WalletState, 'resetWallet' | 'fetchBalance' | 'setBalance'>;
 
+const WALLET_BALANCE_QUERY_KEY = userStateQueryKeys.wallet.balance();
+
 let walletBalanceFetcher: WalletBalanceFetcher | null = null;
+let walletQueryClient: QueryClient | null = null;
+let detachWalletQueryBridge: (() => void) | null = null;
 
 export function setWalletBalanceFetcher(fetcher?: WalletBalanceFetcher) {
  walletBalanceFetcher = fetcher ?? null;
+}
+
+export function registerWalletQueryBridge(queryClient?: QueryClient | null) {
+ if (detachWalletQueryBridge) {
+  detachWalletQueryBridge();
+  detachWalletQueryBridge = null;
+ }
+
+ walletQueryClient = queryClient ?? null;
+ if (!walletQueryClient) {
+  return;
+ }
+
+ syncWalletFromQueryCache();
+ detachWalletQueryBridge = walletQueryClient.getQueryCache().subscribe((event) => {
+  const query = event?.query;
+  if (!query) {
+   return;
+  }
+
+  const queryKey = query.queryKey as readonly unknown[];
+  if (!isWalletBalanceQueryKey(queryKey)) {
+   return;
+  }
+
+  syncWalletFromQueryCache();
+ });
 }
 
 interface WalletState {
@@ -49,6 +82,7 @@ function isSameWalletData(nextData: WalletStateData) {
 
 const walletActions: WalletStoreActions = {
  resetWallet: () => {
+  walletQueryClient?.setQueryData(WALLET_BALANCE_QUERY_KEY, null);
   updateWalletData({
    balance: null,
    isLoading: false,
@@ -56,8 +90,21 @@ const walletActions: WalletStoreActions = {
   });
  },
  fetchBalance: async () => {
-  if (walletData.isLoading) return walletData.balance;
+  if (walletData.isLoading) {
+   return walletData.balance;
+  }
 
+  const fetcher = walletBalanceFetcher;
+  if (!fetcher) {
+   updateWalletData({
+    ...walletData,
+    isLoading: false,
+    error: 'Wallet balance fetcher is not configured',
+   });
+   return null;
+  }
+
+  const previousBalance = walletData.balance;
   updateWalletData({
    ...walletData,
    isLoading: true,
@@ -65,35 +112,29 @@ const walletActions: WalletStoreActions = {
   });
 
   try {
-   const fetcher = walletBalanceFetcher;
-   if (!fetcher) {
-    updateWalletData({
-     ...walletData,
-     isLoading: false,
-     error: 'Wallet balance fetcher is not configured',
-    });
-    return null;
-   }
+   const resolvedBalance = walletQueryClient
+    ? await walletQueryClient.fetchQuery({
+      queryKey: WALLET_BALANCE_QUERY_KEY,
+      queryFn: async () => {
+       const result = await fetcher();
+       if (!result.success || !result.data) {
+        throw new Error(result.error ?? 'Unknown error');
+       }
 
-   const result = await fetcher();
-   if (result.success && result.data) {
-     updateWalletData({
-      balance: result.data,
-      isLoading: false,
-      error: null,
-     });
-    return result.data;
-   }
+       return result.data;
+      },
+     })
+    : await fetchWalletBalanceDirect(fetcher);
 
    updateWalletData({
-    balance: null,
+    balance: resolvedBalance,
     isLoading: false,
-    error: result.error ?? 'Unknown error',
+    error: null,
    });
-   return null;
+   return resolvedBalance;
   } catch (error: unknown) {
    updateWalletData({
-    balance: null,
+    balance: previousBalance,
     isLoading: false,
     error: error instanceof Error ? error.message : 'Unknown error',
    });
@@ -101,6 +142,7 @@ const walletActions: WalletStoreActions = {
   }
  },
  setBalance: (balance) => {
+  walletQueryClient?.setQueryData(WALLET_BALANCE_QUERY_KEY, balance);
   updateWalletData({
    balance,
    isLoading: false,
@@ -122,6 +164,19 @@ function getWalletSnapshot() {
  return walletSnapshot;
 }
 
+const serverWalletSnapshot = createWalletSnapshot(
+ {
+  balance: null,
+  isLoading: false,
+  error: null,
+ },
+ walletActions,
+);
+
+function getServerWalletSnapshot() {
+ return serverWalletSnapshot;
+}
+
 function subscribeWallet(listener: WalletStoreListener) {
  walletListeners.add(listener);
  return () => walletListeners.delete(listener);
@@ -135,8 +190,48 @@ type UseWalletStore = {
 
 export const useWalletStore = ((selector?: WalletStoreSelector<unknown>) =>
  {
-  const snapshot = useSyncExternalStore(subscribeWallet, getWalletSnapshot, getWalletSnapshot);
-  return selector ? selector(snapshot) : snapshot;
+  const resolvedSelector = (selector ?? identityWalletSelector) as WalletStoreSelector<unknown>;
+  return useSyncExternalStoreWithSelector(
+   subscribeWallet,
+   getWalletSnapshot,
+   getServerWalletSnapshot,
+   resolvedSelector,
+   Object.is,
+  );
  }) as UseWalletStore;
 
 useWalletStore.getState = getWalletSnapshot;
+
+const identityWalletSelector = (state: WalletState): WalletState => state;
+
+async function fetchWalletBalanceDirect(fetcher: WalletBalanceFetcher): Promise<WalletBalance> {
+ const result = await fetcher();
+ if (!result.success || !result.data) {
+  throw new Error(result.error ?? 'Unknown error');
+ }
+
+ if (walletQueryClient) {
+  walletQueryClient.setQueryData(WALLET_BALANCE_QUERY_KEY, result.data);
+ }
+ return result.data;
+}
+
+function isWalletBalanceQueryKey(queryKey: readonly unknown[]): boolean {
+ if (queryKey.length !== WALLET_BALANCE_QUERY_KEY.length) {
+  return false;
+ }
+
+ return WALLET_BALANCE_QUERY_KEY.every((segment, index) => queryKey[index] === segment);
+}
+
+function syncWalletFromQueryCache() {
+ if (!walletQueryClient) {
+  return;
+ }
+
+ const cachedBalance = walletQueryClient.getQueryData<WalletBalance | null>(WALLET_BALANCE_QUERY_KEY) ?? null;
+ updateWalletData({
+  ...walletData,
+  balance: cachedBalance,
+ });
+}

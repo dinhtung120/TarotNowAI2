@@ -8,7 +8,7 @@ import { useWalletStore } from '@/store/walletStore';
 import { checkinQueryKeys } from '@/features/checkin/domain/checkinQueryKeys';
 import type { ActionResult } from '@/shared/domain/actionResult';
 import type { UserMetadataDto } from '@/shared/application/actions/metadata';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 
 let metadataFetchInFlight = false;
 let metadataFetchCompleted = false;

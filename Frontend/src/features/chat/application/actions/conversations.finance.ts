@@ -1,8 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
-import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
-import { logger } from '@/shared/infrastructure/logging/logger';
+import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
+import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
+import { logger } from '@/shared/application/gateways/logger';
+import { EVENT_CONTRACTS } from '@/shared/domain/eventContracts';
 import type { ListAdminDisputesResult } from './conversations.types';
 import { AUTH_ERROR } from "@/shared/domain/authErrors";
 
@@ -18,6 +19,7 @@ export async function requestConversationAddMoney(
   const result = await serverHttpRequest<{ messageId: string }>(`/conversations/${conversationId}/add-money/request`, {
    method: 'POST',
    token: accessToken,
+   expectedDomainEvents: EVENT_CONTRACTS.chatAddMoneyRequest,
    json: { amountDiamond: data.amountDiamond, description: data.description, idempotencyKey: data.idempotencyKey ?? randomUUID() },
    fallbackErrorMessage: 'Failed to request add money',
   });
@@ -42,6 +44,7 @@ export async function respondConversationAddMoney(
   const result = await serverHttpRequest<{ accepted: boolean; messageId: string }>(`/conversations/${conversationId}/add-money/respond`, {
    method: 'POST',
    token: accessToken,
+   expectedDomainEvents: EVENT_CONTRACTS.chatAddMoneyRespond,
    json: data,
    fallbackErrorMessage: 'Failed to respond add money',
   });
@@ -63,6 +66,7 @@ export async function openConversationDispute(conversationId: string, data: { re
   const result = await serverHttpRequest<{ status: string }>(`/conversations/${conversationId}/dispute`, {
    method: 'POST',
    token: accessToken,
+   expectedDomainEvents: EVENT_CONTRACTS.chatDisputeOpen,
    json: { reason: data.reason, itemId: data.itemId ?? null },
    fallbackErrorMessage: 'Failed to open dispute',
   });
@@ -104,6 +108,7 @@ export async function resolveAdminDispute(
   const result = await serverHttpRequest<{ success: boolean; itemId: string; action: string }>(`/admin/disputes/${itemId}/resolve`, {
    method: 'POST',
    token: accessToken,
+   expectedDomainEvents: EVENT_CONTRACTS.chatDisputeOpen,
    json: data,
    fallbackErrorMessage: 'Failed to resolve dispute',
   });

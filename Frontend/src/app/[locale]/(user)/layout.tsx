@@ -1,6 +1,4 @@
 import { Suspense, type ReactNode } from 'react';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import AppNavbar from '@/features/auth/presentation/components/AppNavbar';
@@ -8,12 +6,11 @@ import WalletStoreBridge from '@/features/wallet/presentation/components/WalletS
 import AuthBootstrap from '@/shared/components/auth/AuthBootstrap';
 import UserLayout from '@/shared/components/layout/UserLayout';
 import MetadataInitialLoader from '@/shared/components/common/MetadataInitialLoader';
-import { AUTH_COOKIE } from '@/shared/infrastructure/auth/authConstants';
-import { getServerSessionSnapshot } from '@/shared/infrastructure/auth/serverAuth';
 import { UserSegmentMainSkeleton } from '@/shared/components/loading/segment-skeletons';
 import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
 import { prefetchUserSegmentShell } from '@/shared/server/prefetch/runners';
 import { pickClientMessages, USER_CLIENT_NAMESPACES } from '@/i18n/clientMessages';
+import { requireSessionWithHandshake } from '@/shared/server/auth/sessionHandshake';
 
 interface UserSegmentLayoutProps {
  children: ReactNode;
@@ -22,18 +19,10 @@ interface UserSegmentLayoutProps {
 
 export default async function UserSegmentLayout({ children, params }: UserSegmentLayoutProps) {
  const { locale } = await params;
- const cookieStore = await cookies();
- const hasAuthCookie = Boolean(
-  cookieStore.get(AUTH_COOKIE.ACCESS)?.value || cookieStore.get(AUTH_COOKIE.REFRESH)?.value,
- );
- if (!hasAuthCookie) {
-  redirect(`/${locale}/login`);
- }
-
- const sessionSnapshot = await getServerSessionSnapshot({ allowRefresh: true });
- if (!sessionSnapshot.authenticated || !sessionSnapshot.user) {
-  redirect(`/${locale}/login`);
- }
+ const sessionSnapshot = await requireSessionWithHandshake({
+  locale,
+  nextPath: `/${locale}`,
+ });
 
  const state = await dehydrateAppQueries(prefetchUserSegmentShell);
  const messages = await getMessages();

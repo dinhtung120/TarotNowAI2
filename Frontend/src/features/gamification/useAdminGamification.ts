@@ -2,14 +2,14 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
-import { getApiBaseUrl } from '@/shared/infrastructure/http/apiUrl';
+import { getPublicApiBaseUrl } from '@/shared/infrastructure/http/apiUrl';
 import { parseApiError } from '@/shared/infrastructure/error/parseApiError';
 import type { QuestDefinition, AchievementDefinition, TitleDefinition } from './gamification.types';
 
 
 
 async function adminFetch(path: string, options: RequestInit = {}) {
-  const adminApiBase = `${getApiBaseUrl()}/admin/gamification`;
+  const adminApiBase = `${getPublicApiBaseUrl()}/admin/gamification`;
   const res = await fetch(`${adminApiBase}${path}`, {
     ...options,
     credentials: 'include',

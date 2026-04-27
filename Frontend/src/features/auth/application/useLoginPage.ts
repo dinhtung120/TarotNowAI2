@@ -9,13 +9,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import { loginAction } from '@/features/auth/application/actions';
 import { useAuthStore } from '@/store/authStore';
 import { resolveLoginIdentityPrefill } from '@/features/auth/application/authFlowEmail';
-import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
-import { invalidateClientSessionSnapshot } from '@/shared/infrastructure/auth/clientSessionSnapshot';
+import { useOptimizedNavigation } from '@/shared/application/gateways/useOptimizedNavigation';
+import { invalidateClientSessionSnapshot } from '@/shared/application/gateways/clientSessionSnapshot';
 import {
  getLocalStorageItem,
  removeLocalStorageItem,
  setLocalStorageItem,
-} from '@/shared/infrastructure/storage/browserStorage';
+} from '@/shared/application/gateways/browserStorage';
 import { createLoginSchema, type LoginFormValues } from '@/features/auth/domain/schemas';
 
 export function useLoginPage() {
@@ -79,7 +79,7 @@ export function useLoginPage() {
      * Bước 1: Cập nhật trạng thái người dùng trong store client-side.
      * Điều này giúp UI client phản ứng ngay lập tức (ví dụ: đổi Navigation bar).
      */
-    setAuth(result.data.user);
+    setAuth(result.data.user, result.data.expiresInSeconds);
     
     /* 
      * Bước 2: Xóa snapshot session client-side. 

@@ -45,6 +45,8 @@
       "visibility_private": "🔒 Riêng tư",
       "attach_image": "Đính kèm ảnh",
       "upload_failed": "Upload ảnh thất bại",
+      "upload_in_progress": "Ảnh đang được tải lên. Vui lòng đợi hoàn tất.",
+      "upload_prepare_failed": "Không thể chuẩn bị ảnh trước khi tải lên.",
       "upload_success": "Đã thêm ảnh vào bài viết",
       "upload_error": "Lỗi khi tải ảnh lên",
       "uploading_progress": "Đang tải ảnh... {percent}%",

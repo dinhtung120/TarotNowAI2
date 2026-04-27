@@ -52,6 +52,7 @@ export default function UseItemQuantitySelector({
             type="button"
             onClick={decrement}
             disabled={value <= 1}
+            aria-label="Giảm số lượng vật phẩm"
             className={cn(
               'flex h-10 w-10 items-center justify-center rounded-xl border tn-border-soft transition-all',
               'bg-white/[0.03] hover:bg-white/[0.08] hover:border-violet-500/30 active:scale-95 disabled:opacity-20'
@@ -68,6 +69,7 @@ export default function UseItemQuantitySelector({
             type="button"
             onClick={increment}
             disabled={value >= actualMax}
+            aria-label="Tăng số lượng vật phẩm"
             className={cn(
               'flex h-10 w-10 items-center justify-center rounded-xl border tn-border-soft transition-all',
               'bg-white/[0.03] hover:bg-white/[0.08] hover:border-violet-500/30 active:scale-95 disabled:opacity-20'
@@ -79,9 +81,9 @@ export default function UseItemQuantitySelector({
 
         {/* Total Quantity Box (Right Side) */}
         <div className={cn(
-          'flex h-[60px] min-w-[70px] flex-col items-center justify-center rounded-2xl border tn-border-soft bg-white/[0.02] px-3'
+          'flex h-15 min-w-20 flex-col items-center justify-center rounded-2xl border tn-border-soft bg-white/[0.02] px-3'
         )}>
-           <span className={cn('text-[9px] font-black tn-text-muted uppercase tracking-widest opacity-30 mb-0.5')}>
+           <span className={cn('tn-text-9 mb-0.5 font-black tn-text-muted uppercase tracking-widest opacity-30')}>
              Tổng
            </span>
            <span className={cn("text-lg font-black tn-text-primary tracking-tighter")}>

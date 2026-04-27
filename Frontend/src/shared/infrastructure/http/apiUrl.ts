@@ -108,7 +108,3 @@ export function browserApiPath(pathFromV1Root: string): string {
   const rel = pathFromV1Root.startsWith('/') ? pathFromV1Root : `/${pathFromV1Root}`;
   return `${API_V1_PREFIX}${rel}`;
 }
-
-// Giữ lại các export cũ để tránh lỗi compile, nhưng sẽ refactor dần.
-export const getApiBaseUrl = getPublicApiBaseUrl;
-export const getApiOrigin = getPublicApiOrigin;

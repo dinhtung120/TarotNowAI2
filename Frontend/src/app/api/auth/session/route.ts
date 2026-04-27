@@ -6,7 +6,11 @@ import {
  getServerAccessTokenOrRefresh,
  getServerSessionSnapshot,
 } from '@/shared/infrastructure/auth/serverAuth';
-import { buildProblemResponse, unauthorizedResponse } from '@/app/api/auth/_shared';
+import {
+ appendSetCookieHeaders,
+ buildProblemResponse,
+ unauthorizedResponse,
+} from '@/app/api/auth/_shared';
 
 interface SessionResponsePayload {
  success: boolean;
@@ -21,23 +25,6 @@ const SESSION_MODE = {
 } as const;
 
 type SessionMode = (typeof SESSION_MODE)[keyof typeof SESSION_MODE];
-
-function getSetCookieHeaders(headers: Headers): string[] {
- if (typeof headers.getSetCookie === 'function') {
-  return headers.getSetCookie();
- }
-
- const raw = headers.get('set-cookie');
- return raw ? raw.split(/,\s*(?=[a-zA-Z_]+=)/) : [];
-}
-
-function appendSetCookies(source: Headers, target: NextResponse): void {
- for (const cookie of getSetCookieHeaders(source)) {
-  if (cookie.trim().length > 0) {
-   target.headers.append('set-cookie', cookie);
-  }
- }
-}
 
 async function refreshSessionViaInternalRoute(request: NextRequest): Promise<Response> {
  const refreshUrl = new URL('/api/auth/refresh', request.url);
@@ -136,7 +123,7 @@ async function refreshSessionAndBuildResponse(
  }
 
  const response = createSuccessResponse(mode === SESSION_MODE.FULL ? refreshPayload.user : undefined);
- appendSetCookies(refreshResponse.headers, response);
+ appendSetCookieHeaders(refreshResponse.headers, response);
  return response;
 }
 

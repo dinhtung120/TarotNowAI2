@@ -29,10 +29,7 @@ export const PostComposer: React.FC<PostComposerProps> = ({ currentVisibilityTab
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { control, handleSubmit, register, reset, setValue } = useForm<PostComposerFormValues>({
     resolver: zodResolver(postComposerFormSchema),
-    defaultValues: {
-      content: '',
-      visibility: 'public',
-    },
+    defaultValues: { content: '', visibility: 'public' },
   });
 
   const content = useWatch({ control, name: 'content' }) ?? '';
@@ -43,16 +40,18 @@ export const PostComposer: React.FC<PostComposerProps> = ({ currentVisibilityTab
 
   const setComposerContent = useCallback((nextValue: string) => {
     contentRef.current = nextValue;
-    setValue('content', nextValue, {
-      shouldDirty: true,
-      shouldValidate: true,
-    });
+    setValue('content', nextValue, { shouldDirty: true, shouldValidate: true });
   }, [setValue]);
 
   const imageUpload = useCommunityImageUpload({
     contextType: 'post',
     getContent: () => contentRef.current,
     setContent: setComposerContent,
+    messages: {
+      alreadyUploading: t('composer.upload_in_progress'),
+      prepareFailed: t('composer.upload_prepare_failed'),
+      uploadFailed: t('composer.upload_failed'),
+    },
   });
 
   const handleImageUpload = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
@@ -62,11 +61,8 @@ export const PostComposer: React.FC<PostComposerProps> = ({ currentVisibilityTab
     }
 
     const result = await imageUpload.uploadImage(file);
-    if (result.success) {
-      toast.success(t('composer.upload_success'));
-    } else {
-      toast.error(result.error || t('composer.upload_failed'));
-    }
+    if (result.success) toast.success(t('composer.upload_success'));
+    else toast.error(result.error || t('composer.upload_failed'));
 
     if (fileInputRef.current) {
       fileInputRef.current.value = '';

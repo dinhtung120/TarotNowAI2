@@ -16,10 +16,10 @@ interface InventoryItemCardProps {
 
 const rarityConfig: Record<InventoryRarity, { badgeVariant: 'amber' | 'purple' | 'info' | 'success' | 'default'; glowClass: string; label: string; }> = {
   common: { badgeVariant: 'default', glowClass: 'tn-border-soft', label: 'Phổ thông' },
-  uncommon: { badgeVariant: 'success', glowClass: 'border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.05)]', label: 'Bất thường' },
-  rare: { badgeVariant: 'info', glowClass: 'border-sky-500/20 shadow-[0_0_15px_rgba(14,165,233,0.05)]', label: 'Hiếm' },
-  epic: { badgeVariant: 'purple', glowClass: 'border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.05)]', label: 'Sử thi' },
-  legendary: { badgeVariant: 'amber', glowClass: 'border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.05)]', label: 'Huyền thoại' },
+  uncommon: { badgeVariant: 'success', glowClass: 'tn-inventory-glow-uncommon', label: 'Bất thường' },
+  rare: { badgeVariant: 'info', glowClass: 'tn-inventory-glow-rare', label: 'Hiếm' },
+  epic: { badgeVariant: 'purple', glowClass: 'tn-inventory-glow-epic', label: 'Sử thi' },
+  legendary: { badgeVariant: 'amber', glowClass: 'tn-inventory-glow-legendary', label: 'Huyền thoại' },
 };
 
 const rarityGlowClass: Record<InventoryRarity, string> = {
@@ -47,13 +47,13 @@ function InventoryItemCardComponent({ item, locale, onSelect }: InventoryItemCar
 
   return (
     <div className={cn('group relative')}>
-      <div className={cn('absolute -inset-0.5 rounded-[2rem] opacity-0 blur-xl transition-opacity duration-700 group-hover:opacity-40', rarityGlowClass[rarity])} />
+      <div className={cn('tn-inventory-glow-shell absolute -inset-0.5 opacity-0 blur-xl transition-opacity duration-700 group-hover:opacity-40', rarityGlowClass[rarity])} />
 
       <GlassCard
         variant="interactive"
         padding="none"
         onClick={() => onSelect(item)}
-        className={cn('relative flex flex-col overflow-hidden rounded-[1.8rem] border-t border-white/10 bg-[#0a0a0c]/80 transition-all duration-500 hover:bg-[#121216]/90', config.glowClass)}
+        className={cn('tn-inventory-card-surface relative flex flex-col overflow-hidden transition-all duration-500', config.glowClass)}
       >
         <div className={cn('absolute inset-0 translate-x-[-100%] bg-gradient-to-r from-transparent via-white/[0.03] to-transparent transition-transform duration-1000 group-hover:translate-x-[100%]')} />
 

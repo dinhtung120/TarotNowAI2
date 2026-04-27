@@ -10,8 +10,8 @@ import {
  type MediaPayloadDto,
 } from '@/features/chat/application/actions';
 import { appendUniqueMessage } from '@/features/chat/domain/mergeMessages';
-import { logger } from '@/shared/infrastructure/logging/logger';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { logger } from '@/shared/application/gateways/logger';
+import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 
 interface UseChatSendActionsOptions {
  conversationId?: string | null;

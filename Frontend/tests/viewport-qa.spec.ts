@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import {
  QA_JWT,
  QA_TOKEN_EXP,
@@ -11,8 +11,11 @@ import { metricsScript } from './helpers/viewportMetrics';
 
 test.describe.configure({ mode: 'serial' });
 test.setTimeout(8 * 60 * 1000);
+const RUN_VIEWPORT_QA = process.env.RUN_VIEWPORT_QA === 'true';
 
 test('viewport QA (mobile/tablet/desktop)', async ({ page }) => {
+ test.skip(!RUN_VIEWPORT_QA, 'Set RUN_VIEWPORT_QA=true to run viewport quality gate.');
+
  const baseURL = process.env.QA_BASE_URL || 'http://127.0.0.1:3100';
  const reportRows: Array<Record<string, unknown>> = [];
  const baseHost = new URL(baseURL).hostname;
@@ -109,4 +112,26 @@ test('viewport QA (mobile/tablet/desktop)', async ({ page }) => {
   ),
   'utf8'
  );
+
+ const fatalRows = reportRows.filter((row) => typeof row.fatalError === 'string' && row.fatalError.length > 0);
+ const overflowRows = reportRows.filter((row) => row.hasHorizontalOverflow === true);
+ const pageErrorRows = reportRows.filter((row) => Array.isArray(row.pageErrors) && row.pageErrors.length > 0);
+ const failedRequestRows = reportRows.filter((row) => Array.isArray(row.failedRequests) && row.failedRequests.length > 0);
+
+ expect(
+  fatalRows,
+  `Viewport QA fatal errors detected:\n${JSON.stringify(fatalRows.slice(0, 5), null, 2)}`,
+ ).toHaveLength(0);
+ expect(
+  overflowRows,
+  `Viewport QA horizontal overflow detected:\n${JSON.stringify(overflowRows.slice(0, 5), null, 2)}`,
+ ).toHaveLength(0);
+ expect(
+  pageErrorRows,
+  `Viewport QA page errors detected:\n${JSON.stringify(pageErrorRows.slice(0, 5), null, 2)}`,
+ ).toHaveLength(0);
+ expect(
+  failedRequestRows,
+  `Viewport QA failed requests detected:\n${JSON.stringify(failedRequestRows.slice(0, 5), null, 2)}`,
+ ).toHaveLength(0);
 });

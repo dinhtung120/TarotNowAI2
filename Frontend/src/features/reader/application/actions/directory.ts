@@ -1,8 +1,8 @@
 'use server';
 
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
-import { logger } from '@/shared/infrastructure/logging/logger';
+import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
+import { logger } from '@/shared/application/gateways/logger';
 import { normalizeReaderStatus } from '@/features/reader/domain/readerStatus';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 
@@ -140,14 +140,16 @@ export async function listReaders(
     statusFilter: status,
     searchTerm,
    });
-   return actionFail(result.error || FAIL_LIST_READERS);
+   return actionFail(result.error || FAIL_LIST_READERS, {
+    status: result.status,
+   });
   }
 
   const data = result.data;
   return actionOk({ readers: mapReaderArray(data), totalCount: data.totalCount ?? data.TotalCount ?? 0 });
  } catch (error) {
   logger.error('[ReaderAction] listReaders', error, { page, pageSize, specialty, statusFilter: status, searchTerm });
-  return actionFail(FAIL_LIST_READERS);
+  return actionFail(FAIL_LIST_READERS, { status: 503 });
  }
 }
 
@@ -163,13 +165,15 @@ export async function listFeaturedReaders(
 
   if (!result.ok) {
    logger.error('[ReaderAction] listFeaturedReaders', result.error, { status: result.status, limit });
-   return actionFail(result.error || FAIL_LIST_FEATURED);
+   return actionFail(result.error || FAIL_LIST_FEATURED, {
+    status: result.status,
+   });
   }
 
   return actionOk(mapReaderArray(result.data));
  } catch (error) {
   logger.error('[ReaderAction] listFeaturedReaders', error, { limit });
-  return actionFail(FAIL_LIST_FEATURED);
+  return actionFail(FAIL_LIST_FEATURED, { status: 503 });
  }
 }
 
@@ -183,12 +187,14 @@ export async function getReaderProfile(userId: string): Promise<ActionResult<Rea
 
   if (!result.ok) {
    logger.error('[ReaderAction] getReaderProfile', result.error, { status: result.status, userId });
-   return actionFail(result.error || FAIL_GET_READER);
+   return actionFail(result.error || FAIL_GET_READER, {
+    status: result.status,
+   });
   }
 
   return actionOk(mapReaderProfile(result.data));
  } catch (error) {
   logger.error('[ReaderAction] getReaderProfile', error, { userId });
-  return actionFail(FAIL_GET_READER);
+  return actionFail(FAIL_GET_READER, { status: 503 });
  }
 }

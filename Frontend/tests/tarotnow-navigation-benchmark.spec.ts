@@ -73,12 +73,13 @@ interface MutableRequestMetric {
   failureText: string | null;
 }
 
-const BASE_ORIGIN = 'https://www.tarotnow.xyz';
+const RUN_NAVIGATION_BENCHMARK = process.env.RUN_NAVIGATION_BENCHMARK === 'true';
+const BASE_ORIGIN = (process.env.BENCHMARK_BASE_ORIGIN ?? 'http://127.0.0.1:3100').trim().replace(/\/+$/, '');
 const LOCALE_PREFIX = '/vi';
 const BASE_URL = `${BASE_ORIGIN}${LOCALE_PREFIX}`;
 
-const BENCHMARK_USER = process.env.BENCHMARK_USERNAME ?? 'Lucifer';
-const BENCHMARK_PASSWORD = process.env.BENCHMARK_PASSWORD ?? 'Sontung123!';
+const BENCHMARK_USER = process.env.BENCHMARK_USERNAME?.trim() ?? '';
+const BENCHMARK_PASSWORD = process.env.BENCHMARK_PASSWORD?.trim() ?? '';
 
 const MAX_PAGES_PER_SCENARIO = 48;
 const DISCOVERY_LIMIT_PER_PAGE = 16;
@@ -118,6 +119,24 @@ const CORE_ROUTE_SEEDS = [
   `${LOCALE_PREFIX}/reader/apply`,
   `${LOCALE_PREFIX}/reading/history`,
 ] as const;
+
+function isLoopbackHost(hostname: string): boolean {
+  return hostname === '127.0.0.1'
+    || hostname === 'localhost'
+    || hostname === '::1';
+}
+
+function assertSafeBenchmarkEnvironment(): void {
+  const parsed = new URL(BASE_ORIGIN);
+  const allowProductionHost = process.env.ALLOW_PRODUCTION_BENCHMARK === 'true';
+  if (!allowProductionHost && !isLoopbackHost(parsed.hostname)) {
+    throw new Error(`Unsafe BENCHMARK_BASE_ORIGIN: ${BASE_ORIGIN}. Set ALLOW_PRODUCTION_BENCHMARK=true to override.`);
+  }
+
+  if (!BENCHMARK_USER || !BENCHMARK_PASSWORD) {
+    throw new Error('Missing BENCHMARK_USERNAME/BENCHMARK_PASSWORD for benchmark run.');
+  }
+}
 
 function formatNumber(value: number | null): string {
   if (value === null || Number.isNaN(value)) return '-';
@@ -721,6 +740,9 @@ test.describe('TarotNow production benchmark', () => {
   test.setTimeout(30 * 60 * 1000);
 
   test('benchmark navigation and api timing for logged-out + logged-in', async ({ browser }) => {
+    test.skip(!RUN_NAVIGATION_BENCHMARK, 'Set RUN_NAVIGATION_BENCHMARK=true to run benchmark.');
+    assertSafeBenchmarkEnvironment();
+
     const staticRoutes = await collectStaticLocaleRoutes();
     const seedRoutes = [...new Set([...CORE_ROUTE_SEEDS, ...staticRoutes])];
     const loggedInResult = await runScenario(browser, 'logged-in', seedRoutes);

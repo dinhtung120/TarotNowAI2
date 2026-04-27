@@ -29,10 +29,10 @@ export interface InventoryResponse {
 }
 
 export interface UseInventoryItemPayload {
- itemCode: string;
- quantity: number;
- targetCardId?: number;
- idempotencyKey?: string;
+ readonly itemCode: string;
+ readonly quantity: number;
+ readonly targetCardId?: number;
+ readonly idempotencyKey?: string;
 }
 
 export interface UseInventoryCardStatSnapshot {

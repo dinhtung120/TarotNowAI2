@@ -45,6 +45,8 @@
       "visibility_private": "🔒 私密",
       "attach_image": "添加图片",
       "upload_failed": "图片上传失败",
+      "upload_in_progress": "图片正在上传中，请等待完成。",
+      "upload_prepare_failed": "上传前无法处理该图片。",
       "upload_success": "图片已插入正文",
       "upload_error": "上传图片时出错",
       "uploading_progress": "正在上传图片... {percent}%",

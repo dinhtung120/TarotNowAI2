@@ -3,8 +3,8 @@
 import type { IStreakStatusResult } from '@/features/checkin/types/checkin.types';
 import type { NotificationListResponse } from '@/features/notifications/application/actions/types';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
-import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
+import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
+import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
 import { AUTH_ERROR } from "@/shared/domain/authErrors";
 
 export interface NavbarSnapshotDto {

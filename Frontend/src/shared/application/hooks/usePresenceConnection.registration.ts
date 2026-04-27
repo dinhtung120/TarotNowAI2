@@ -3,15 +3,15 @@ import type { QueryClient } from '@tanstack/react-query';
 import { useWalletStore } from '@/store/walletStore';
 import { useAuthStore } from '@/store/authStore';
 import { routing } from '@/i18n/routing';
-import { logger } from '@/shared/infrastructure/logging/logger';
-import { performClientLogoutCleanup } from '@/shared/infrastructure/auth/clientLogoutCleanup';
-import { shouldSkipRealtimeGachaInvalidation } from '@/shared/infrastructure/gacha/gachaRealtimeDedup';
-import { shouldSkipRealtimeInventoryInvalidation } from '@/shared/infrastructure/inventory/inventoryRealtimeDedup';
+import { logger } from '@/shared/application/gateways/logger';
+import { performClientLogoutCleanup } from '@/shared/application/gateways/clientLogoutCleanup';
+import { shouldSkipRealtimeGachaInvalidation } from '@/shared/application/gateways/gachaRealtimeDedup';
+import { shouldSkipRealtimeInventoryInvalidation } from '@/shared/application/gateways/inventoryRealtimeDedup';
 import {
   invalidateUserStateQueries,
   type UserStateInvalidationDomain,
-} from '@/shared/infrastructure/query/invalidateUserStateQueries';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+} from '@/shared/application/gateways/invalidateUserStateQueries';
+import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 
 const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000;
 const INVALIDATION_BATCH_DELAY_MS = 320;
