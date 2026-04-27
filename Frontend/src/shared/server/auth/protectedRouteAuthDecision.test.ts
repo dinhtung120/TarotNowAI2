@@ -83,8 +83,21 @@ describe('resolveProtectedRouteAuthDecision', () => {
 
   expect(decision.decision).toBe(PROTECTED_ROUTE_AUTH_DECISION.REDIRECT_HANDSHAKE);
   expect(decision.redirectPath).toContain('/api/auth/session/handshake?next=');
- expect(decision.reason).toBe('access_token_invalid_refresh_present');
-});
+  expect(decision.reason).toBe('access_token_invalid_refresh_present');
+ });
+
+ it('redirects to handshake when access token is missing but refresh cookie exists', async () => {
+  const decision = await resolveProtectedRouteAuthDecision({
+   accessToken: undefined,
+   refreshToken: 'refresh-token-only',
+   locale: 'vi',
+   nextPath: '/vi/profile',
+  });
+
+  expect(decision.decision).toBe(PROTECTED_ROUTE_AUTH_DECISION.REDIRECT_HANDSHAKE);
+  expect(decision.redirectPath).toContain('/api/auth/session/handshake?next=');
+  expect(decision.reason).toBe('access_token_invalid_refresh_present');
+ });
 
  it('redirects to handshake when signed-like token has invalid signature and refresh cookie exists', async () => {
   const decision = await resolveProtectedRouteAuthDecision({
@@ -99,7 +112,7 @@ describe('resolveProtectedRouteAuthDecision', () => {
   expect(decision.reason).toBe('access_token_invalid_refresh_present');
  });
 
- it('redirects to login when verifier config is missing', async () => {
+ it('allows protected route when verifier config is missing but access token exists', async () => {
   const signedLikeToken = createForgedSignedLikeJwt(Math.floor(Date.now() / 1000) + 3600);
   delete process.env.JWT_SECRETKEY;
 
@@ -111,15 +124,30 @@ describe('resolveProtectedRouteAuthDecision', () => {
   });
 
   expect(decision).toEqual({
-   decision: PROTECTED_ROUTE_AUTH_DECISION.REDIRECT_LOGIN,
-   redirectPath: '/en/login',
-   reason: 'access_token_invalid_missing_verifier_config',
+   decision: PROTECTED_ROUTE_AUTH_DECISION.ALLOW,
+   redirectPath: null,
+   reason: 'access_token_unverified_missing_verifier_config',
   });
  });
 
  it('redirects to login when both access and refresh cookies are missing', async () => {
   const decision = await resolveProtectedRouteAuthDecision({
    accessToken: undefined,
+   refreshToken: undefined,
+   locale: 'en',
+   nextPath: '/en/wallet',
+  });
+
+  expect(decision).toEqual({
+   decision: PROTECTED_ROUTE_AUTH_DECISION.REDIRECT_LOGIN,
+   redirectPath: '/en/login',
+   reason: 'missing_session_cookies',
+  });
+ });
+
+ it('redirects to login when access token is invalid and refresh cookie is missing', async () => {
+  const decision = await resolveProtectedRouteAuthDecision({
+   accessToken: createUnsignedJwt(Math.floor(Date.now() / 1000) + 3600),
    refreshToken: undefined,
    locale: 'en',
    nextPath: '/en/wallet',
