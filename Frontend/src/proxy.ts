@@ -167,9 +167,7 @@ const buildContentSecurityPolicy = (nonce: string): string => {
   .join(' ');
 
  const styleSrc = "style-src 'self' 'unsafe-inline'";
- const styleSrcElem = isProduction
-  ? `style-src-elem 'self' 'nonce-${nonce}'`
-  : '';
+ const styleSrcElem = "style-src-elem 'self' 'unsafe-inline'";
  const scriptSrc = isProduction
   ? `script-src 'self' 'nonce-${nonce}' https://static.cloudflareinsights.com`
   : `script-src 'self' 'unsafe-eval' 'nonce-${nonce}' https://static.cloudflareinsights.com`;
@@ -192,7 +190,8 @@ const buildContentSecurityPolicy = (nonce: string): string => {
   /**
    * Runtime UI vẫn dùng style attributes (toast, modal lock, animations). Safari/Firefox cũ
    * chưa hỗ trợ đầy đủ style-src-attr/style-src-elem nên cần fallback style-src unsafe-inline.
-   * Với browser hiện đại, style elements vẫn bị siết bằng nonce qua style-src-elem.
+   * Với browser hiện đại, style elements và style attributes đều được cho phép rõ ràng để
+   * tránh block các style động từ runtime chunk.
    */
   cspParts.push(styleSrcElem);
   cspParts.push("style-src-attr 'unsafe-inline'");

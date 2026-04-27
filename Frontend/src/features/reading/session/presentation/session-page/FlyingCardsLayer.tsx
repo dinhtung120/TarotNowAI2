@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { FlyingCard } from "@/features/reading/session/presentation/session-page/types";
 import { cn } from "@/lib/utils";
 
@@ -17,8 +18,15 @@ export default function FlyingCardsLayer({
           key={card.key}
           className={cn(
             "tarot-flying-card rounded-md border border-[var(--purple-accent)]/35 bg-gradient-to-br from-[var(--purple-accent)]/95 to-[color:var(--c-61-49-80-55)] shadow-md",
-            `tn-flying-card-variant-${Math.abs(card.stackIndex) % 8}`,
           )}
+          style={{
+            top: `${card.startY}px`,
+            left: `${card.startX}px`,
+            zIndex: 120 + card.stackIndex,
+            "--fly-x": `${card.deltaX}px`,
+            "--fly-y": `${card.deltaY}px`,
+            "--fly-rotate": `${card.rotate}deg`,
+          } as CSSProperties}
         >
           <div
             className={cn(
