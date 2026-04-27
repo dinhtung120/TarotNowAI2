@@ -19,7 +19,7 @@ public partial class CommunityController
     [EnableRateLimiting("community-write")]
     public async Task<IActionResult> ToggleReaction(string id, [FromBody] ToggleReactionBody body)
     {
-        await _mediator.Send(new ToggleReactionCommand
+        await _mediator.SendWithRequestCancellation(HttpContext, new ToggleReactionCommand
         {
             PostId = id,
             UserId = GetRequiredUserId(),
@@ -40,7 +40,7 @@ public partial class CommunityController
     [EnableRateLimiting("community-write")]
     public async Task<IActionResult> ReportPost(string id, [FromBody] ReportPostBody body)
     {
-        var result = await _mediator.Send(new ReportPostCommand
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new ReportPostCommand
         {
             PostId = id,
             ReporterId = GetRequiredUserId(),

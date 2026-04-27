@@ -49,7 +49,7 @@ public sealed class AuthSessionController : ControllerBase
         command.DeviceId = ResolveDeviceId(Request);
         command.UserAgentHash = HashValue(ResolveUserAgent(Request));
 
-        var result = await _mediator.Send(command, cancellationToken);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, command, cancellationToken);
 
         _authCookieService.SetAccessToken(Request, Response, result.Response.AccessToken, result.Response.ExpiresInSeconds);
         _authCookieService.SetRefreshToken(Request, Response, result.RefreshToken, result.RefreshTokenExpiresAtUtc);
@@ -84,7 +84,7 @@ public sealed class AuthSessionController : ControllerBase
             UserAgentHash = userAgentHash
         };
 
-        var result = await _mediator.Send(command, cancellationToken);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, command, cancellationToken);
 
         _authCookieService.SetAccessToken(Request, Response, result.Response.AccessToken, result.Response.ExpiresInSeconds);
         _authCookieService.SetRefreshToken(Request, Response, result.NewRefreshToken, result.RefreshTokenExpiresAtUtc);
@@ -125,7 +125,7 @@ public sealed class AuthSessionController : ControllerBase
             return this.UnauthorizedProblem("Missing refresh token.");
         }
 
-        await _mediator.Send(command, cancellationToken);
+        await _mediator.SendWithRequestCancellation(HttpContext, command, cancellationToken);
         _authCookieService.ClearAuthCookies(Request, Response);
         return Ok(new { success = true, message = LogoutSuccessMessage });
     }

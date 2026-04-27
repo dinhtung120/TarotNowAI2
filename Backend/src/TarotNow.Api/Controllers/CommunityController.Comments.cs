@@ -21,7 +21,7 @@ public partial class CommunityController
     [EnableRateLimiting("community-write")]
     public async Task<IActionResult> AddComment(string postId, [FromBody] CommunityAddCommentRequest body)
     {
-        var result = await _mediator.Send(new AddCommentCommand
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new AddCommentCommand
         {
             PostId = postId,
             AuthorId = GetRequiredUserId(),
@@ -48,7 +48,7 @@ public partial class CommunityController
         var normalizedPage = page < 1 ? 1 : page;
         var normalizedPageSize = pageSize < 1 ? 10 : Math.Min(pageSize, 50);
 
-        var result = await _mediator.Send(new GetCommentsQuery
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetCommentsQuery
         {
             PostId = postId,
             ViewerId = User.GetUserIdOrNull(),

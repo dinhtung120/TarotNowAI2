@@ -12,6 +12,8 @@ public class ToggleUserLockCommandHandlerRequestedDomainEventHandler
     : IdempotentDomainEventNotificationHandler<ToggleUserLockCommandHandlerRequestedDomainEvent>
 {
     private readonly IUserRepository _userRepository;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IAuthSessionRepository _authSessionRepository;
 
     /// <summary>
     /// Khởi tạo handler toggle lock user.
@@ -19,10 +21,14 @@ public class ToggleUserLockCommandHandlerRequestedDomainEventHandler
     /// </summary>
     public ToggleUserLockCommandHandlerRequestedDomainEventHandler(
         IUserRepository userRepository,
+        IRefreshTokenRepository refreshTokenRepository,
+        IAuthSessionRepository authSessionRepository,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
         _userRepository = userRepository;
+        _refreshTokenRepository = refreshTokenRepository;
+        _authSessionRepository = authSessionRepository;
     }
 
     /// <summary>
@@ -38,6 +44,8 @@ public class ToggleUserLockCommandHandlerRequestedDomainEventHandler
         {
             // Nhánh lock: chuyển tài khoản sang trạng thái bị khóa.
             user.Lock();
+            await _refreshTokenRepository.RevokeAllByUserIdAsync(request.UserId, cancellationToken);
+            await _authSessionRepository.RevokeAllByUserAsync(request.UserId, cancellationToken);
         }
         else
         {

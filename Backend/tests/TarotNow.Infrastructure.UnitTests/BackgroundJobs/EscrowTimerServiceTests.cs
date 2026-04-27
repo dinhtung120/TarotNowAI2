@@ -9,6 +9,7 @@ using TarotNow.Application.Interfaces;
 using TarotNow.Application.Services;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 using TarotNow.Infrastructure.BackgroundJobs;
 using Xunit;
 
@@ -207,5 +208,71 @@ public class EscrowTimerServiceTests
         _mockWalletRepo.Verify(x => x.ConsumeAsync(item.PayerId, 10, "platform_fee", item.Id.ToString(), It.IsAny<string>(), null, $"settle_fee_{item.Id}", It.IsAny<CancellationToken>()), Times.Once);
         _mockFinanceRepo.Verify(x => x.UpdateItemAsync(item, It.IsAny<CancellationToken>()), Times.Once);
         _mockFinanceRepo.Verify(x => x.UpdateSessionAsync(session, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessAutoRefunds_ShouldPublishConversationSyncInsideTransaction()
+    {
+        var item = new ChatQuestionItem
+        {
+            Id = Guid.NewGuid(),
+            ConversationRef = "conv-sync-1",
+            PayerId = Guid.NewGuid(),
+            AmountDiamond = 80,
+            FinanceSessionId = Guid.NewGuid(),
+            Status = QuestionItemStatus.Accepted,
+            AutoRefundAt = DateTime.UtcNow.AddMinutes(-1)
+        };
+        var session = new ChatFinanceSession
+        {
+            Id = item.FinanceSessionId,
+            TotalFrozen = 80,
+            Status = ChatFinanceSessionStatus.Pending
+        };
+        var inTransaction = false;
+
+        _mockTransactionCoordinator
+            .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
+            .Returns(async (Func<CancellationToken, Task> action, CancellationToken ct) =>
+            {
+                inTransaction = true;
+                try
+                {
+                    await action(ct);
+                }
+                finally
+                {
+                    inTransaction = false;
+                }
+            });
+
+        _mockDomainEventPublisher
+            .Setup(x => x.PublishAsync(It.IsAny<IDomainEvent>(), It.IsAny<CancellationToken>()))
+            .Returns<IDomainEvent, CancellationToken>((domainEvent, _) =>
+            {
+                if (domainEvent is EscrowConversationSyncRequestedDomainEvent && !inTransaction)
+                {
+                    throw new InvalidOperationException("Escrow conversation sync event published outside transaction.");
+                }
+
+                return Task.CompletedTask;
+            });
+
+        _mockFinanceRepo.Setup(x => x.GetExpiredOffersAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem>());
+        _mockFinanceRepo.Setup(x => x.GetItemsForAutoRefundAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem> { item });
+        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(item.Id, It.IsAny<CancellationToken>())).ReturnsAsync(item);
+        _mockFinanceRepo.Setup(x => x.GetSessionForUpdateAsync(item.FinanceSessionId, It.IsAny<CancellationToken>())).ReturnsAsync(session);
+        _mockFinanceRepo.Setup(x => x.GetItemsForAutoReleaseAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem>());
+
+        await InvokeProcessTimersAsync();
+
+        _mockDomainEventPublisher.Verify(
+            x => x.PublishAsync(
+                It.Is<EscrowConversationSyncRequestedDomainEvent>(e =>
+                    e.ConversationId == "conv-sync-1"
+                    && e.SyncReason == "auto_refund"
+                    && e.TargetStatus == ConversationStatus.Expired),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }

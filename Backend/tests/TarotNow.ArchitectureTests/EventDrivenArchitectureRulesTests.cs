@@ -120,10 +120,7 @@ public sealed class EventDrivenArchitectureRulesTests
             .OrderBy(path => path, StringComparer.Ordinal)
             .ToArray();
 
-        var allowlistNoDispatcherConstructors = new HashSet<string>(StringComparer.Ordinal)
-        {
-            "ProcessDepositCommandHandler"
-        };
+        var allowlistNoDispatcherConstructors = new HashSet<string>(StringComparer.Ordinal);
 
         var violations = new List<string>();
         foreach (var file in commandFiles)

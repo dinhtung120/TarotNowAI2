@@ -22,7 +22,7 @@ public partial class CommunityController
     public async Task<IActionResult> CreatePost([FromBody] CreatePostBody body)
     {
         // Mapping rõ ràng từ DTO sang command để handler tập trung xử lý rule nghiệp vụ.
-        var result = await _mediator.Send(new CreatePostCommand
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new CreatePostCommand
         {
             AuthorId = GetRequiredUserId(),
             Content = body.Content,
@@ -50,7 +50,7 @@ public partial class CommunityController
         [FromQuery] string? visibility = null)
     {
         // ViewerId được truyền xuống để handler xử lý đúng quyền xem theo visibility.
-        var (items, total) = await _mediator.Send(new GetFeedQuery
+        var (items, total) = await _mediator.SendWithRequestCancellation(HttpContext, new GetFeedQuery
         {
             ViewerId = GetRequiredUserId(),
             Page = page,
@@ -70,7 +70,7 @@ public partial class CommunityController
     [HttpGet("posts/{id}")]
     public async Task<IActionResult> GetPostDetail(string id)
     {
-        var post = await _mediator.Send(new GetPostDetailQuery
+        var post = await _mediator.SendWithRequestCancellation(HttpContext, new GetPostDetailQuery
         {
             PostId = id,
             ViewerId = GetRequiredUserId()
@@ -90,7 +90,7 @@ public partial class CommunityController
     [EnableRateLimiting("community-write")]
     public async Task<IActionResult> UpdatePost(string id, [FromBody] UpdatePostBody body)
     {
-        await _mediator.Send(new UpdatePostCommand
+        await _mediator.SendWithRequestCancellation(HttpContext, new UpdatePostCommand
         {
             PostId = id,
             AuthorId = GetRequiredUserId(),
@@ -112,7 +112,7 @@ public partial class CommunityController
     {
         // Role được gửi xuống để hỗ trợ nhánh quyền admin/moderator khác với author thường.
         var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? string.Empty;
-        await _mediator.Send(new DeletePostCommand
+        await _mediator.SendWithRequestCancellation(HttpContext, new DeletePostCommand
         {
             PostId = id,
             RequesterId = GetRequiredUserId(),

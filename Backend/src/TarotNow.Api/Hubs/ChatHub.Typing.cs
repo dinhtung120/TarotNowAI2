@@ -41,7 +41,7 @@ public partial class ChatHub
     {
         try
         {
-            await _mediator.Send(new PublishTypingStateCommand
+            await _mediator.SendWithConnectionCancellation(Context, new PublishTypingStateCommand
             {
                 ConversationId = conversationId,
                 UserId = userGuid,

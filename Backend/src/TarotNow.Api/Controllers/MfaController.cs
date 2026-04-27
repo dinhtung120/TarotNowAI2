@@ -58,7 +58,7 @@ public class MfaController : ControllerBase
         }
 
         // Gọi command setup để tạo secret/otpauth cho user hiện tại.
-        var result = await _mediator.Send(new MfaSetupCommand { UserId = userId.Value });
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new MfaSetupCommand { UserId = userId.Value });
         return Ok(result);
     }
 
@@ -79,7 +79,7 @@ public class MfaController : ControllerBase
         }
 
         // Verify thành công sẽ cập nhật trạng thái bật MFA ở tầng ứng dụng.
-        await _mediator.Send(new MfaVerifyCommand { UserId = userId.Value, Code = body.Code });
+        await _mediator.SendWithRequestCancellation(HttpContext, new MfaVerifyCommand { UserId = userId.Value, Code = body.Code });
         return Ok(new { success = true, msg = "MFA đã được bật thành công." });
     }
 
@@ -99,7 +99,7 @@ public class MfaController : ControllerBase
             return this.UnauthorizedProblem();
         }
 
-        await _mediator.Send(new MfaChallengeCommand { UserId = userId.Value, Code = body.Code });
+        await _mediator.SendWithRequestCancellation(HttpContext, new MfaChallengeCommand { UserId = userId.Value, Code = body.Code });
         return Ok(new { success = true, msg = "Xác thực MFA thành công." });
     }
 
@@ -118,7 +118,7 @@ public class MfaController : ControllerBase
             return this.UnauthorizedProblem();
         }
 
-        var result = await _mediator.Send(new GetMfaStatusQuery { UserId = userId.Value });
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetMfaStatusQuery { UserId = userId.Value });
         return Ok(new { mfaEnabled = result.MfaEnabled });
     }
 }

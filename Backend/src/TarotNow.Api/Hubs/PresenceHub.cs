@@ -109,11 +109,11 @@ public class PresenceHub : Hub
     {
         try
         {
-            await _mediator.Send(new PublishUserStatusChangedCommand
+            await _mediator.SendWithConnectionCancellation(Context, new PublishUserStatusChangedCommand
             {
                 UserId = userId,
                 Status = status
-            });
+            }, Context.ConnectionAborted);
         }
         catch (Exception ex)
         {

@@ -52,7 +52,7 @@ public partial class ChatHub
     /// <param name="userGuid">User id thực hiện mark-read.</param>
     private async Task MarkReadCoreAsync(string conversationId, Guid userGuid)
     {
-        await _mediator.Send(new MarkMessagesReadCommand
+        await _mediator.SendWithConnectionCancellation(Context, new MarkMessagesReadCommand
         {
             ConversationId = conversationId,
             ReaderId = userGuid

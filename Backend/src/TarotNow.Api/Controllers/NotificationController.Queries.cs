@@ -37,7 +37,7 @@ public partial class NotificationController
             IsRead = isRead
         };
 
-        var result = await _mediator.Send(query);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, query);
         return Ok(result);
     }
 
@@ -56,7 +56,7 @@ public partial class NotificationController
             return this.UnauthorizedProblem();
         }
 
-        var count = await _mediator.Send(new CountUnreadQuery(userId));
+        var count = await _mediator.SendWithRequestCancellation(HttpContext, new CountUnreadQuery(userId));
         return Ok(new { count });
     }
 }

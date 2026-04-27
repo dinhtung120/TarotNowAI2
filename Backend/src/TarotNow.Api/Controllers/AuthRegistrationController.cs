@@ -44,11 +44,11 @@ public sealed class AuthRegistrationController : ControllerBase
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Register([FromBody] RegisterCommand command)
     {
-        var userId = await _mediator.Send(command);
+        var userId = await _mediator.SendWithRequestCancellation(HttpContext, command);
 
         try
         {
-            await _mediator.Send(new SendEmailVerificationOtpCommand { Email = command.Email });
+            await _mediator.SendWithRequestCancellation(HttpContext, new SendEmailVerificationOtpCommand { Email = command.Email });
         }
         catch (Exception ex)
         {
@@ -76,7 +76,7 @@ public sealed class AuthRegistrationController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> SendVerificationEmail([FromBody] SendEmailVerificationOtpCommand command)
     {
-        await _mediator.Send(command);
+        await _mediator.SendWithRequestCancellation(HttpContext, command);
         return Ok(new { message = "If the email is valid and unverified, an OTP has been sent." });
     }
 
@@ -91,7 +91,7 @@ public sealed class AuthRegistrationController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailCommand command)
     {
-        await _mediator.Send(command);
+        await _mediator.SendWithRequestCancellation(HttpContext, command);
         return Ok(new { message = "Email verified successfully. Account is now active." });
     }
 }

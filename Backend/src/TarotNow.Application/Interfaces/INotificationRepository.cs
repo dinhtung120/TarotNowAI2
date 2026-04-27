@@ -93,6 +93,12 @@ public class NotificationDto
     // Nội dung tiếng Anh.
     public string BodyEn { get; set; } = string.Empty;
 
+    // Tiêu đề tiếng Trung.
+    public string TitleZh { get; set; } = string.Empty;
+
+    // Nội dung tiếng Trung.
+    public string BodyZh { get; set; } = string.Empty;
+
     // Loại thông báo.
     public string Type { get; set; } = string.Empty;
 

@@ -41,7 +41,7 @@ public sealed class InventoryController : ControllerBase
             return this.UnauthorizedProblem();
         }
 
-        var result = await _mediator.Send(new GetUserInventoryQuery(userId), cancellationToken);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetUserInventoryQuery(userId), cancellationToken);
         return Ok(result);
     }
 
@@ -74,7 +74,7 @@ public sealed class InventoryController : ControllerBase
             IdempotencyKey = idempotencyKey,
         };
 
-        var result = await _mediator.Send(command, cancellationToken);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, command, cancellationToken);
         return Ok(result);
     }
 

@@ -319,12 +319,9 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
             });
 
         var userEvent = await presenceUserStatusProbe.WaitForAsync(PositiveTimeout);
-        var readerEvent = await presenceReaderStatusProbe.WaitForAsync(PositiveTimeout);
-        var otherEvent = await presenceOtherStatusProbe.WaitForAsync(PositiveTimeout);
-
         Assert.Equal((userId, status), userEvent);
-        Assert.Equal((userId, status), readerEvent);
-        Assert.Equal((userId, status), otherEvent);
+        await presenceReaderStatusProbe.AssertNoEventAsync(NegativeTimeout);
+        await presenceOtherStatusProbe.AssertNoEventAsync(NegativeTimeout);
     }
 
     private async Task AssertInvalidPayloadDroppedAsync(
@@ -604,6 +601,21 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
         {
             while (_events.TryDequeue(out _))
             {
+            }
+        }
+
+        public async Task AssertNoEventAsync(TimeSpan timeout)
+        {
+            var start = DateTime.UtcNow;
+            while (DateTime.UtcNow - start < timeout)
+            {
+                if (_events.TryDequeue(out _))
+                {
+                    throw new Xunit.Sdk.XunitException(
+                        $"Unexpected SignalR event '{RealtimeEventNames.UserStatusChanged}' was received.");
+                }
+
+                await Task.Delay(25);
             }
         }
 

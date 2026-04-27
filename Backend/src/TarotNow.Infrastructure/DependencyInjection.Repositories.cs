@@ -126,6 +126,8 @@ public static partial class DependencyInjection
         services.AddHostedService<StreakBreakBackgroundJob>();
         services.AddHostedService<MediaUploadCleanupJob>();
         services.AddHostedService<ReadingRevealSagaRepairWorker>();
+        services.AddHostedService<ProjectionReconcileWorker>();
         services.AddHostedService<OutboxProcessorWorker>();
+        services.AddHostedService<WithdrawalDataEncryptionBackfillHostedService>();
     }
 }

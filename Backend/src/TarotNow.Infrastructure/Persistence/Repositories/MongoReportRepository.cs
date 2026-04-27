@@ -12,14 +12,16 @@ public partial class MongoReportRepository : IReportRepository
 {
     // Mongo context truy cập collection reports.
     private readonly MongoDbContext _context;
+    private readonly IMongoClient _mongoClient;
 
     /// <summary>
     /// Khởi tạo repository report.
     /// Luồng xử lý: nhận MongoDbContext từ DI để thao tác dữ liệu report.
     /// </summary>
-    public MongoReportRepository(MongoDbContext context)
+    public MongoReportRepository(MongoDbContext context, IMongoClient mongoClient)
     {
         _context = context;
+        _mongoClient = mongoClient;
     }
 
     /// <summary>

@@ -6,20 +6,15 @@ namespace TarotNow.Infrastructure.BackgroundJobs;
 
 public partial class EscrowTimerService
 {
-    // Kết quả xử lý refund expired offer để dùng ở bước cập nhật conversation.
-    private readonly record struct ExpiredOfferOutcome(string? ConversationId, long RefundedAmount);
-
     /// <summary>
     /// Thực thi transaction refund cho một offer đã hết hạn.
     /// Luồng xử lý: lock item, kiểm tra eligibility pending+expired, refund ví, cập nhật state/session và commit.
     /// </summary>
-    private async Task<ExpiredOfferOutcome> ExecuteExpiredOfferRefundAsync(
+    private async Task ExecuteExpiredOfferRefundAsync(
         RefundDependencies dependencies,
         Guid candidateId,
         CancellationToken cancellationToken)
     {
-        var outcome = new ExpiredOfferOutcome(null, 0);
-
         await dependencies.TransactionCoordinator.ExecuteAsync(async transactionCt =>
         {
             var item = await dependencies.FinanceRepository.GetItemForUpdateAsync(candidateId, transactionCt);
@@ -30,12 +25,29 @@ public partial class EscrowTimerService
             }
 
             await RefundExpiredOfferAsync(dependencies, item, transactionCt);
+            if (string.IsNullOrWhiteSpace(item.ConversationRef) == false && item.AmountDiamond > 0)
+            {
+                var now = DateTime.UtcNow;
+                await PublishConversationSyncRequestedAsync(
+                    dependencies,
+                    new EscrowConversationSyncRequestedDomainEvent
+                    {
+                        ConversationId = item.ConversationRef,
+                        TargetStatus = ConversationStatus.Expired,
+                        MessageType = ChatMessageType.SystemRefund,
+                        ActorId = "system",
+                        MessageContent = $"Reader không phản hồi trong thời gian quy định. Đã hoàn {item.AmountDiamond} 💎.",
+                        SyncReason = "offer_expired_refund",
+                        ResolvedAtUtc = now,
+                        OccurredAtUtc = now
+                    },
+                    transactionCt);
+                // Publish trong transaction để outbox và settlement commit atomically.
+            }
+
             await dependencies.FinanceRepository.SaveChangesAsync(transactionCt);
             // Commit sau khi refund + update state để đảm bảo atomicity của một candidate.
-            outcome = new ExpiredOfferOutcome(item.ConversationRef, item.AmountDiamond);
         }, cancellationToken);
-
-        return outcome;
     }
 
     /// <summary>

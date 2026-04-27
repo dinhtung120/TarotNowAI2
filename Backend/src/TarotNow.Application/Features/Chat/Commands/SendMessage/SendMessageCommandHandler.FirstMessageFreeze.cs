@@ -6,6 +6,9 @@ namespace TarotNow.Application.Features.Chat.Commands.SendMessage;
 
 public partial class SendMessageCommandHandlerRequestedDomainEventHandler
 {
+    private const string FirstMessageFreezeLockPrefix = "chat:first-message-freeze";
+    private static readonly TimeSpan FirstMessageFreezeLockLease = TimeSpan.FromSeconds(15);
+
     /// <summary>
     /// Thử đóng băng phí câu hỏi chính khi user gửi tin nhắn đầu tiên.
     /// Luồng xử lý: chỉ kích hoạt ở trạng thái Pending và sender là user, đọc giá reader, dựng context freeze, thực thi transaction freeze.
@@ -13,7 +16,7 @@ public partial class SendMessageCommandHandlerRequestedDomainEventHandler
     private async Task<FirstMessageFreezeResult> TryFreezeMainQuestionOnFirstUserMessageAsync(
         ConversationDto conversation,
         string senderId,
-        string messageType,
+        string firstUserMessageId,
         CancellationToken cancellationToken)
     {
         if (conversation.Status != ConversationStatus.Pending || senderId != conversation.UserId)
@@ -22,32 +25,161 @@ public partial class SendMessageCommandHandlerRequestedDomainEventHandler
             return FirstMessageFreezeResult.None;
         }
 
+        if (string.IsNullOrWhiteSpace(firstUserMessageId))
+        {
+            throw new BadRequestException("Không thể xác định idempotency cho tin nhắn đầu tiên.");
+        }
+
+        var lockKey = BuildFirstMessageFreezeLockKey(conversation.Id);
+        var lockOwner = await AcquireFirstMessageFreezeLockAsync(conversation.Id, lockKey, cancellationToken);
+        if (string.IsNullOrWhiteSpace(lockOwner))
+        {
+            return FirstMessageFreezeResult.None;
+        }
+
+        try
+        {
+            return await ExecuteFirstMessageFreezeAsync(conversation, firstUserMessageId, cancellationToken);
+        }
+        finally
+        {
+            await _cacheService.ReleaseLockAsync(lockKey, lockOwner, CancellationToken.None);
+        }
+    }
+
+    private async Task<string?> AcquireFirstMessageFreezeLockAsync(
+        string conversationId,
+        string lockKey,
+        CancellationToken cancellationToken)
+    {
+        var lockOwner = Guid.NewGuid().ToString("N");
+        if (await _cacheService.AcquireLockAsync(lockKey, lockOwner, FirstMessageFreezeLockLease, cancellationToken))
+        {
+            return lockOwner;
+        }
+
+        var latestConversation = await _conversationRepo.GetByIdAsync(conversationId, cancellationToken);
+        if (latestConversation?.Status != ConversationStatus.Pending)
+        {
+            return null;
+        }
+
+        throw new BadRequestException("Cuộc trò chuyện đang được xử lý tin nhắn đầu tiên. Vui lòng thử lại.");
+    }
+
+    private async Task<FirstMessageFreezeResult> ExecuteFirstMessageFreezeAsync(
+        ConversationDto conversation,
+        string firstUserMessageId,
+        CancellationToken cancellationToken)
+    {
         var ids = ParseConversationParticipants(conversation);
         var readerProfile = await _readerProfileRepo.GetByUserIdAsync(conversation.ReaderId, cancellationToken)
             ?? throw new NotFoundException("Không tìm thấy hồ sơ Reader.");
 
         if (readerProfile.DiamondPerQuestion <= 0)
         {
-            // Business rule: giá câu hỏi phải dương để tính freeze hợp lệ.
             throw new BadRequestException("Giá câu hỏi của Reader không hợp lệ.");
         }
 
-        var amountDiamond = readerProfile.DiamondPerQuestion;
         var offerExpiresAtUtc = DateTime.UtcNow.AddHours(ResolveAwaitingAcceptanceHours(conversation.SlaHours));
-        var idempotencyKey = $"main_question_{conversation.Id}";
         var freezeContext = new MainQuestionFreezeContext(
             ids.UserId,
             ids.ReaderId,
-            amountDiamond,
+            readerProfile.DiamondPerQuestion,
             offerExpiresAtUtc,
-            idempotencyKey);
+            BuildMainQuestionIdempotencyKey(conversation.Id, firstUserMessageId));
+        var executionResult = MainQuestionFreezeExecutionResult.Skipped(
+            freezeContext.OfferExpiresAtUtc,
+            freezeContext.IdempotencyKey);
 
         await _transactionCoordinator.ExecuteAsync(
-            transactionCt => FreezeMainQuestionAsync(conversation, freezeContext, transactionCt),
+            async transactionCt => executionResult = await FreezeMainQuestionAsync(conversation, freezeContext, transactionCt),
             cancellationToken);
 
-        return new FirstMessageFreezeResult(true, freezeContext.AmountDiamond, freezeContext.OfferExpiresAtUtc);
+        return executionResult.ToFirstMessageFreezeResult(freezeContext.AmountDiamond);
     }
+
+    private static string BuildFirstMessageFreezeLockKey(string conversationId)
+    {
+        return $"{FirstMessageFreezeLockPrefix}:{conversationId}";
+    }
+
+    private static string BuildMainQuestionIdempotencyKey(string conversationId, string firstUserMessageId)
+    {
+        return $"main_question_{conversationId}_{firstUserMessageId}";
+    }
+
+    private enum FirstMessageFreezeState
+    {
+        None = 0,
+        Applied = 1,
+        AlreadyFrozen = 2
+    }
+
+    private readonly record struct MainQuestionFreezeExecutionResult(
+        FirstMessageFreezeState State,
+        DateTime OfferExpiresAtUtc,
+        string FreezeItemIdempotencyKey)
+    {
+        public static MainQuestionFreezeExecutionResult Applied(
+            DateTime offerExpiresAtUtc,
+            string freezeItemIdempotencyKey)
+            => new(FirstMessageFreezeState.Applied, offerExpiresAtUtc, freezeItemIdempotencyKey);
+
+        public static MainQuestionFreezeExecutionResult Skipped(
+            DateTime offerExpiresAtUtc,
+            string freezeItemIdempotencyKey)
+            => new(FirstMessageFreezeState.AlreadyFrozen, offerExpiresAtUtc, freezeItemIdempotencyKey);
+
+        public FirstMessageFreezeResult ToFirstMessageFreezeResult(long amountDiamond)
+        {
+            return State switch
+            {
+                FirstMessageFreezeState.Applied => FirstMessageFreezeResult.Applied(
+                    amountDiamond,
+                    OfferExpiresAtUtc,
+                    FreezeItemIdempotencyKey),
+                FirstMessageFreezeState.AlreadyFrozen => FirstMessageFreezeResult.AlreadyFrozen(
+                    amountDiamond,
+                    OfferExpiresAtUtc,
+                    FreezeItemIdempotencyKey),
+                _ => FirstMessageFreezeResult.None
+            };
+        }
+    }
+
+    // Kết quả freeze của tin nhắn đầu tiên để điều phối cập nhật state và push số dư.
+    private readonly record struct FirstMessageFreezeResult(
+        FirstMessageFreezeState State,
+        long AmountDiamond,
+        DateTime? OfferExpiresAtUtc,
+        string? FreezeItemIdempotencyKey)
+    {
+        public bool IsApplied => State == FirstMessageFreezeState.Applied;
+
+        // Trạng thái mặc định khi không phát sinh freeze.
+        public static FirstMessageFreezeResult None => new(FirstMessageFreezeState.None, 0, null, null);
+
+        public static FirstMessageFreezeResult Applied(
+            long amountDiamond,
+            DateTime offerExpiresAtUtc,
+            string freezeItemIdempotencyKey)
+            => new(FirstMessageFreezeState.Applied, amountDiamond, offerExpiresAtUtc, freezeItemIdempotencyKey);
+
+        public static FirstMessageFreezeResult AlreadyFrozen(
+            long amountDiamond,
+            DateTime offerExpiresAtUtc,
+            string freezeItemIdempotencyKey)
+            => new(FirstMessageFreezeState.AlreadyFrozen, amountDiamond, offerExpiresAtUtc, freezeItemIdempotencyKey);
+    }
+
+    // Context đóng băng câu hỏi chính dùng xuyên suốt transaction freeze.
+    private readonly record struct MainQuestionFreezeContext(
+        Guid UserId,
+        Guid ReaderId,
+        long AmountDiamond,
+        DateTime OfferExpiresAtUtc,
+        string IdempotencyKey);
 
     /// <summary>
     /// Parse và validate định danh participant trong conversation.
@@ -95,22 +227,4 @@ public partial class SendMessageCommandHandlerRequestedDomainEventHandler
             CreatedAt = DateTime.UtcNow
         };
     }
-
-    // Kết quả freeze của tin nhắn đầu tiên để điều phối cập nhật state và push số dư.
-    private readonly record struct FirstMessageFreezeResult(
-        bool IsTriggered,
-        long AmountDiamond,
-        DateTime? OfferExpiresAtUtc)
-    {
-        // Trạng thái mặc định khi không phát sinh freeze.
-        public static FirstMessageFreezeResult None => new(false, 0, null);
-    }
-
-    // Context đóng băng câu hỏi chính dùng xuyên suốt transaction freeze.
-    private readonly record struct MainQuestionFreezeContext(
-        Guid UserId,
-        Guid ReaderId,
-        long AmountDiamond,
-        DateTime OfferExpiresAtUtc,
-        string IdempotencyKey);
 }

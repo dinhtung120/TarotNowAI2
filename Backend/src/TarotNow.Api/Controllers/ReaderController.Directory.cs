@@ -18,7 +18,7 @@ public partial class ReaderController
     [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> GetProfile(string userId)
     {
-        var profile = await _mediator.Send(new GetReaderProfileQuery { UserId = userId });
+        var profile = await _mediator.SendWithRequestCancellation(HttpContext, new GetReaderProfileQuery { UserId = userId });
         if (profile == null)
         {
             // Trả 404 rõ ràng để client xử lý trường hợp reader không tồn tại.
@@ -42,7 +42,7 @@ public partial class ReaderController
     [EnableRateLimiting("auth-session")]
     public async Task<IActionResult> ListReaders([FromQuery] ListReadersQuery query)
     {
-        var result = await _mediator.Send(query);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, query);
         foreach (var reader in result.Readers)
         {
             // Đồng bộ realtime status từng reader để directory hiển thị chính xác hơn.

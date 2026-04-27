@@ -5,20 +5,15 @@ namespace TarotNow.Infrastructure.BackgroundJobs;
 
 public partial class EscrowTimerService
 {
-    // Kết quả xử lý auto-refund cho một candidate để dùng ở bước cập nhật conversation.
-    private readonly record struct AutoRefundOutcome(string? ConversationId, long RefundedAmount);
-
     /// <summary>
     /// Thực thi transaction auto-refund cho một item candidate.
     /// Luồng xử lý: lock item for update, kiểm tra eligibility, refund ví, cập nhật state/session, publish event và commit.
     /// </summary>
-    private async Task<AutoRefundOutcome> ExecuteAutoRefundTransactionAsync(
+    private async Task ExecuteAutoRefundTransactionAsync(
         RefundDependencies dependencies,
         Guid candidateId,
         CancellationToken cancellationToken)
     {
-        var outcome = new AutoRefundOutcome(null, 0);
-
         await dependencies.TransactionCoordinator.ExecuteAsync(async transactionCt =>
         {
             var item = await dependencies.FinanceRepository.GetItemForUpdateAsync(candidateId, transactionCt);
@@ -43,13 +38,29 @@ public partial class EscrowTimerService
             await UpdateSessionFrozenBalanceAsync(dependencies.FinanceRepository, item, transactionCt);
             await MarkSessionRefundedWhenFullyReleasedAsync(dependencies.FinanceRepository, item.FinanceSessionId, transactionCt);
             await PublishAutoRefundEventAsync(dependencies, item, transactionCt);
+            if (string.IsNullOrWhiteSpace(item.ConversationRef) == false && item.AmountDiamond > 0)
+            {
+                var now = DateTime.UtcNow;
+                await PublishConversationSyncRequestedAsync(
+                    dependencies,
+                    new EscrowConversationSyncRequestedDomainEvent
+                    {
+                        ConversationId = item.ConversationRef,
+                        TargetStatus = ConversationStatus.Expired,
+                        MessageType = ChatMessageType.SystemRefund,
+                        ActorId = "system",
+                        MessageContent = $"Reader không phản hồi trong SLA đã cam kết. Đã hoàn {item.AmountDiamond} 💎.",
+                        SyncReason = "auto_refund",
+                        ResolvedAtUtc = now,
+                        OccurredAtUtc = now
+                    },
+                    transactionCt);
+                // Publish trong transaction để outbox và settlement commit atomically.
+            }
+
             await dependencies.FinanceRepository.SaveChangesAsync(transactionCt);
             // Đồng bộ state item/session + domain event trong cùng transaction để tránh lệch dữ liệu.
-
-            outcome = new AutoRefundOutcome(item.ConversationRef, item.AmountDiamond);
         }, cancellationToken);
-
-        return outcome;
     }
 
     /// <summary>

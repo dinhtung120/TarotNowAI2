@@ -45,8 +45,8 @@ public class GetNavbarSnapshotQueryHandler : IRequestHandler<GetNavbarSnapshotQu
 
         return new NavbarSnapshotDto
         {
-            UnreadNotificationCount = (int)unreadNotifCount,
-            UnreadChatCount = unreadChatCount,
+            UnreadNotificationCount = unreadNotifCount,
+            UnreadChatCount = unreadChatCount < 0 ? 0 : unreadChatCount,
             Streak = streakInfo,
             DropdownPreview = dropdownPreview
         };

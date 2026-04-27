@@ -1,4 +1,5 @@
 using MongoDB.Driver;
+using System;
 using TarotNow.Application.Common;
 using TarotNow.Application.Common.MediaUpload;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
@@ -14,12 +15,52 @@ public partial class CommunityPostRepository
     /// </summary>
     public async Task IncrementReactionCountAsync(string postId, string reactionType, int delta, CancellationToken cancellationToken = default)
     {
+        if (delta == 0)
+        {
+            return;
+        }
+
+        var reactionField = $"reactions_count.{reactionType}";
         var filter = Builders<CommunityPostDocument>.Filter.Eq(x => x.Id, postId);
+        if (delta < 0)
+        {
+            filter = Builders<CommunityPostDocument>.Filter.And(
+                filter,
+                Builders<CommunityPostDocument>.Filter.Gt(reactionField, 0),
+                Builders<CommunityPostDocument>.Filter.Gt(x => x.TotalReactions, 0));
+        }
+
         var update = Builders<CommunityPostDocument>.Update.Combine(
-            Builders<CommunityPostDocument>.Update.Inc($"reactions_count.{reactionType}", delta),
+            Builders<CommunityPostDocument>.Update.Inc(reactionField, delta),
             Builders<CommunityPostDocument>.Update.Inc(x => x.TotalReactions, delta));
         // Cập nhật gộp trong một lệnh để tránh lệch tổng khi có concurrent update.
 
+        await _context.CommunityPosts.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
+    }
+
+    /// <summary>
+    /// Swap bộ đếm reaction old -> new trong một câu lệnh atomic.
+    /// Luồng xử lý: chỉ swap khi old count > 0, giảm old và tăng new; total_reactions giữ nguyên.
+    /// </summary>
+    public async Task SwapReactionCountAsync(
+        string postId,
+        string oldReactionType,
+        string newReactionType,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.Equals(oldReactionType, newReactionType, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        var oldField = $"reactions_count.{oldReactionType}";
+        var newField = $"reactions_count.{newReactionType}";
+        var filter = Builders<CommunityPostDocument>.Filter.And(
+            Builders<CommunityPostDocument>.Filter.Eq(x => x.Id, postId),
+            Builders<CommunityPostDocument>.Filter.Gt(oldField, 0));
+        var update = Builders<CommunityPostDocument>.Update.Combine(
+            Builders<CommunityPostDocument>.Update.Inc(oldField, -1),
+            Builders<CommunityPostDocument>.Update.Inc(newField, 1));
         await _context.CommunityPosts.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
     }
 
@@ -29,7 +70,19 @@ public partial class CommunityPostRepository
     /// </summary>
     public async Task IncrementCommentsCountAsync(string postId, int delta, CancellationToken cancellationToken = default)
     {
+        if (delta == 0)
+        {
+            return;
+        }
+
         var filter = Builders<CommunityPostDocument>.Filter.Eq(x => x.Id, postId);
+        if (delta < 0)
+        {
+            filter = Builders<CommunityPostDocument>.Filter.And(
+                filter,
+                Builders<CommunityPostDocument>.Filter.Gt(x => x.CommentsCount, 0));
+        }
+
         var update = Builders<CommunityPostDocument>.Update.Inc(x => x.CommentsCount, delta);
         await _context.CommunityPosts.UpdateOneAsync(filter, update, cancellationToken: cancellationToken);
     }

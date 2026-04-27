@@ -95,8 +95,10 @@ public class MongoNotificationRepository : INotificationRepository
             UserId = userId,
             TitleVi = d.Title.Vi,
             TitleEn = d.Title.En,
+            TitleZh = d.Title.Zh,
             BodyVi = d.Body.Vi,
             BodyEn = d.Body.En,
+            BodyZh = d.Body.Zh,
             Type = d.Type,
             IsRead = d.IsRead,
             CreatedAt = d.CreatedAt

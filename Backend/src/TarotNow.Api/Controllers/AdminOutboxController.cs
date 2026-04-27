@@ -32,7 +32,7 @@ public sealed class AdminOutboxController : ControllerBase
     [HttpGet("outbox/dashboard")]
     public async Task<IActionResult> GetDashboard([FromQuery] int top = 20)
     {
-        var result = await _mediator.Send(new GetOutboxDashboardQuery
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetOutboxDashboardQuery
         {
             Top = top
         });

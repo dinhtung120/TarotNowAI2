@@ -35,7 +35,7 @@ public sealed class AdminReaderRequestsController : ControllerBase
     [HttpGet("reader-requests")]
     public async Task<IActionResult> ListReaderRequests([FromQuery] TarotNow.Application.Features.Admin.Queries.ListReaderRequests.ListReaderRequestsQuery query)
     {
-        var result = await _mediator.Send(query);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, query);
         return Ok(result);
     }
 
@@ -63,7 +63,7 @@ public sealed class AdminReaderRequestsController : ControllerBase
             AdminId = adminId
         };
 
-        var result = await _mediator.Send(command);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, command);
         // Rẽ nhánh phản hồi để dashboard hiển thị chính xác trạng thái xử lý cuối cùng.
         return result
             ? Ok(new { success = true })

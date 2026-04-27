@@ -44,7 +44,7 @@ public class ProfileController : ControllerBase
             return this.UnauthorizedProblem();
         }
 
-        var result = await _mediator.Send(new GetProfileQuery { UserId = userId });
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetProfileQuery { UserId = userId });
         return Ok(result);
     }
 
@@ -76,7 +76,7 @@ public class ProfileController : ControllerBase
             return this.UnauthorizedProblem();
         }
 
-        var success = await _mediator.Send(new UpdateProfileCommand
+        var success = await _mediator.SendWithRequestCancellation(HttpContext, new UpdateProfileCommand
         {
             UserId = userId,
             DisplayName = request.DisplayName,
@@ -107,7 +107,7 @@ public class ProfileController : ControllerBase
             return this.UnauthorizedProblem();
         }
 
-        var result = await _mediator.Send(new PresignAvatarUploadCommand
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new PresignAvatarUploadCommand
         {
             UserId = userId,
             ContentType = body.ContentType,
@@ -134,7 +134,7 @@ public class ProfileController : ControllerBase
             return this.UnauthorizedProblem();
         }
 
-        var result = await _mediator.Send(new ConfirmAvatarUploadCommand
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new ConfirmAvatarUploadCommand
         {
             UserId = userId,
             ObjectKey = body.ObjectKey,

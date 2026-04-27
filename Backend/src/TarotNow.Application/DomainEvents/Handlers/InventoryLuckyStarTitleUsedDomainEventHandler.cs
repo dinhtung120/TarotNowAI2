@@ -61,6 +61,9 @@ public sealed class LuckyStarTitleUsedDomainEventHandler
         }
 
         var amount = _systemConfigSettings.InventoryLuckyStarOwnedTitleGoldReward;
+        var stableIdempotencyKey = string.IsNullOrWhiteSpace(domainEvent.SourceIdempotencyKey)
+            ? $"inventory_lucky_star_reward_{domainEvent.UserId:N}_{domainEvent.SourceItemCode}_{domainEvent.OccurredAtUtc:yyyyMMddHHmmss}"
+            : $"inventory_lucky_star_reward_{domainEvent.SourceIdempotencyKey}";
         var operationResult = await _walletRepository.CreditWithResultAsync(
             userId: domainEvent.UserId,
             currency: CurrencyType.Gold,
@@ -70,7 +73,7 @@ public sealed class LuckyStarTitleUsedDomainEventHandler
             referenceId: domainEvent.SourceItemCode,
             description: "Lucky Star bonus because title was already owned.",
             metadataJson: null,
-            idempotencyKey: null,
+            idempotencyKey: stableIdempotencyKey,
             cancellationToken: cancellationToken);
         if (operationResult.Executed == false)
         {

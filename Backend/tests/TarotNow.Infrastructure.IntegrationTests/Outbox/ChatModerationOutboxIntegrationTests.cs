@@ -229,6 +229,13 @@ public sealed class ChatModerationOutboxIntegrationTests
         {
             return Task.FromResult(false);
         }
+
+        public Task<bool> ResolvePostReportWithPostMutationAsync(
+            PostReportResolutionMutation mutation,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(false);
+        }
     }
 
     private sealed class InMemoryChatMessageRepository : IChatMessageRepository

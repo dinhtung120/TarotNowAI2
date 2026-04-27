@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TarotNow.Domain.Entities;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Application.Features.Reading.Commands.CompleteAiStream;
 
@@ -24,16 +25,17 @@ public partial class CompleteAiStreamCommandHandlerRequestedDomainEventHandler
             return;
         }
 
-        var session = await _readingRepo.GetByIdAsync(record.ReadingSessionRef.ToString("D"), cancellationToken);
-        if (session is null)
-        {
-            // Edge case: session đã bị xóa/không tồn tại, bỏ qua cập nhật nội dung để tránh fail completion.
-            return;
-        }
-
-        var updatedSession = BuildUpdatedSession(session, request);
-        await _readingRepo.UpdateAsync(updatedSession, cancellationToken);
-        // Persist phiên đọc đã được merge summary/followup mới.
+        await _domainEventPublisher.PublishAsync(
+            new ReadingSessionContentSyncRequestedDomainEvent
+            {
+                SessionId = record.ReadingSessionRef.ToString("D"),
+                AiRequestId = request.AiRequestId,
+                FollowupQuestion = request.FollowupQuestion,
+                FullResponse = request.FullResponse!,
+                OccurredAtUtc = DateTime.UtcNow
+            },
+            cancellationToken);
+        // Chỉ publish yêu cầu sync để tránh trộn write-model PG và read-model Mongo trong cùng transaction.
     }
 
     /// <summary>

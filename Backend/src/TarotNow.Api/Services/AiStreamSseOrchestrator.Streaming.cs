@@ -78,7 +78,9 @@ public sealed partial class AiStreamSseOrchestrator
             state.FullResponseBuilder.Append(content);
             state.EstimatedOutputTokens += EstimateTokenCount(content);
 
-            var sanitizedChunk = content.Replace("\n", "\\n");
+            var sanitizedChunk = content
+                .Replace("\r", "\\r")
+                .Replace("\n", "\\n");
             await WriteServerEventAsync(response, sanitizedChunk, cancellationToken);
             await response.Body.FlushAsync(cancellationToken);
         }

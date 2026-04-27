@@ -53,10 +53,6 @@ public partial class DepositOrderRepository : IDepositOrderRepository
     {
         if (_context.Database.ProviderName?.Contains("Npgsql", StringComparison.OrdinalIgnoreCase) == true)
         {
-            await _context.Database.ExecuteSqlRawAsync(
-                $"CREATE SEQUENCE IF NOT EXISTS {PayOsOrderCodeSequenceName} START WITH 100000000000 INCREMENT BY 1 MINVALUE 1",
-                cancellationToken);
-
             return await _context.Database
                 .SqlQueryRaw<long>($"SELECT nextval('{PayOsOrderCodeSequenceName}'::regclass) AS \"Value\"")
                 .SingleAsync(cancellationToken);

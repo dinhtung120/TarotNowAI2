@@ -27,4 +27,9 @@ public interface ISystemConfigRepository
         string? description,
         Guid? updatedBy,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Xóa cấu hình theo key.
+    /// </summary>
+    Task DeleteByKeyAsync(string key, CancellationToken cancellationToken = default);
 }

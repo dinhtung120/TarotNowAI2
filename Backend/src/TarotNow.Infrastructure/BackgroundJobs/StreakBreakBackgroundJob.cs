@@ -88,21 +88,27 @@ public class StreakBreakBackgroundJob : BackgroundService
 
         _logger.LogInformation("[StreakBreakBackgroundJob] Tiết mục chặt chuỗi của {Count} người lười.", lazyUsersIds.Count);
 
-        int processed = 0;
-        foreach (var userId in lazyUsersIds)
+        const int chunkSize = 250;
+        for (var offset = 0; offset < lazyUsersIds.Count; offset += chunkSize)
         {
-            if (processed++ % 100 == 0)
+            var chunkUserIds = lazyUsersIds.Skip(offset).Take(chunkSize).ToArray();
+            var users = await dbContext.Users
+                .Where(user => chunkUserIds.Contains(user.Id))
+                .ToListAsync(stoppingToken);
+
+            foreach (var user in users)
             {
-                await Task.Delay(100, stoppingToken);
-                // Throttle nhẹ mỗi 100 user để giảm tải DB ở đợt dữ liệu lớn.
+                if (user.CurrentStreak > 0 && user.LastStreakDate.HasValue && user.LastStreakDate.Value < yesterday)
+                {
+                    user.BreakStreak();
+                }
             }
 
-            var user = await dbContext.Users.FindAsync(new object[] { userId }, stoppingToken);
-            if (user != null && user.CurrentStreak > 0 && user.LastStreakDate.HasValue && user.LastStreakDate.Value < yesterday)
+            await dbContext.SaveChangesAsync(stoppingToken);
+            if (offset + chunkSize < lazyUsersIds.Count)
             {
-                user.BreakStreak();
-                await dbContext.SaveChangesAsync(stoppingToken);
-                // Ghi ngay từng user để giảm rủi ro mất tiến độ khi job bị hủy giữa chừng.
+                await Task.Delay(50, stoppingToken);
+                // Nhịp nghỉ ngắn giữa các chunk để giảm áp lực ghi DB liên tục.
             }
         }
 

@@ -73,7 +73,7 @@ public class WithdrawalController : ControllerBase
         };
 
         // Gọi command tạo yêu cầu và nhận request id để client theo dõi trạng thái.
-        var requestId = await _mediator.Send(command);
+        var requestId = await _mediator.SendWithRequestCancellation(HttpContext, command);
         return Ok(new { success = true, requestId });
     }
 
@@ -102,7 +102,7 @@ public class WithdrawalController : ControllerBase
             PageSize = pageSize,
         };
 
-        var result = await _mediator.Send(query);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, query);
         return Ok(result);
     }
 

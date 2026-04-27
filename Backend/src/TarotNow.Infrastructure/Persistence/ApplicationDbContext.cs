@@ -1,20 +1,28 @@
 
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TarotNow.Domain.Entities;
 using TarotNow.Infrastructure.Persistence.Outbox;
 using TarotNow.Infrastructure.Persistence.Configurations;
+using TarotNow.Infrastructure.Security;
 
 namespace TarotNow.Infrastructure.Persistence;
 
 public partial class ApplicationDbContext : DbContext
 {
+    private readonly ISensitiveDataProtector _sensitiveDataProtector;
+
     /// <summary>
     /// Khởi tạo DbContext với options đã được cấu hình từ DI.
     /// Luồng xử lý: truyền options cho DbContext base để dùng trong runtime.
     /// </summary>
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+    public ApplicationDbContext(
+        DbContextOptions<ApplicationDbContext> options,
+        ISensitiveDataProtector? sensitiveDataProtector = null)
+        : base(options)
     {
+        _sensitiveDataProtector = sensitiveDataProtector ?? new PassthroughSensitiveDataProtector();
     }
 
     /// <summary>
@@ -118,7 +126,32 @@ public partial class ApplicationDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        ConfigureDatabaseSequences(modelBuilder);
         ApplyEntityConfigurations(modelBuilder);
+        ApplySensitiveFieldEncryption(modelBuilder);
         ApplySnakeCaseConventions(modelBuilder);
+    }
+
+    private static void ConfigureDatabaseSequences(ModelBuilder modelBuilder)
+    {
+        modelBuilder.HasSequence<long>("deposit_order_code_seq")
+            .StartsAt(100_000_000L)
+            .IncrementsBy(1);
+    }
+
+    private void ApplySensitiveFieldEncryption(ModelBuilder modelBuilder)
+    {
+        var converter = new ValueConverter<string, string>(
+            toStore => _sensitiveDataProtector.Protect(toStore),
+            fromStore => _sensitiveDataProtector.Unprotect(fromStore));
+        modelBuilder.Entity<WithdrawalRequest>().Property(x => x.BankAccountName).HasConversion(converter);
+        modelBuilder.Entity<WithdrawalRequest>().Property(x => x.BankAccountNumber).HasConversion(converter);
+    }
+
+    private sealed class PassthroughSensitiveDataProtector : ISensitiveDataProtector
+    {
+        public string Protect(string? plaintext) => plaintext ?? string.Empty;
+
+        public string Unprotect(string? protectedValue) => protectedValue ?? string.Empty;
     }
 }

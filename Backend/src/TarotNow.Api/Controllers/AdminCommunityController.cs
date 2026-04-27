@@ -54,7 +54,7 @@ public class AdminCommunityController : ControllerBase
             StatusFilter = statusFilter
         };
 
-        var (items, total) = await _mediator.Send(query);
+        var (items, total) = await _mediator.SendWithRequestCancellation(HttpContext, query);
         // Trả metadata phân trang để client đồng bộ UI và điều hướng trang tiếp theo.
         return Ok(new
         {
@@ -86,7 +86,7 @@ public class AdminCommunityController : ControllerBase
             AdminNote = body.AdminNote
         };
 
-        await _mediator.Send(command);
+        await _mediator.SendWithRequestCancellation(HttpContext, command);
         return Ok(new { success = true });
     }
 }

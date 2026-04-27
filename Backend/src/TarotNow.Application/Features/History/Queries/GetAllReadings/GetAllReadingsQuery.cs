@@ -91,15 +91,27 @@ public partial class GetAllReadingsQueryHandler : IRequestHandler<GetAllReadings
     /// </summary>
     public async Task<GetAllReadingsResponse> Handle(GetAllReadingsQuery request, CancellationToken cancellationToken)
     {
-        var filteredUserIds = await ResolveUserFilterAsync(request.Username, cancellationToken);
+        var normalizedPage = request.Page < 1 ? 1 : request.Page;
+        var normalizedPageSize = request.PageSize <= 0 ? 10 : Math.Min(request.PageSize, 200);
+        var normalizedRequest = new GetAllReadingsQuery
+        {
+            Page = normalizedPage,
+            PageSize = normalizedPageSize,
+            Username = request.Username,
+            SpreadType = request.SpreadType,
+            StartDate = request.StartDate,
+            EndDate = request.EndDate
+        };
+
+        var filteredUserIds = await ResolveUserFilterAsync(normalizedRequest.Username, cancellationToken);
         if (filteredUserIds is { Count: 0 })
         {
             // Có lọc username nhưng không tìm thấy user phù hợp thì trả kết quả rỗng ngay.
-            return BuildEmptyResponse(request);
+            return BuildEmptyResponse(normalizedRequest);
         }
 
-        var (items, totalCount) = await LoadReadingsAsync(request, filteredUserIds, cancellationToken);
+        var (items, totalCount) = await LoadReadingsAsync(normalizedRequest, filteredUserIds, cancellationToken);
         var dtos = await BuildDtosAsync(items, cancellationToken);
-        return BuildResponse(request, totalCount, dtos);
+        return BuildResponse(normalizedRequest, totalCount, dtos);
     }
 }

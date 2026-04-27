@@ -45,7 +45,7 @@ public class CheckInController : ControllerBase
         }
 
         var command = new DailyCheckInCommand { UserId = userId };
-        var result = await _mediator.Send(command);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, command);
         return Ok(result);
     }
 
@@ -63,7 +63,7 @@ public class CheckInController : ControllerBase
         }
 
         var query = new GetStreakStatusQuery { UserId = userId };
-        var result = await _mediator.Send(query);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, query);
         return Ok(result);
     }
 
@@ -85,7 +85,7 @@ public class CheckInController : ControllerBase
         // Bắt buộc ghi đè user id từ token để tránh client giả mạo chủ thể trong payload.
         command.UserId = userId; 
 
-        var result = await _mediator.Send(command);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, command);
         return Ok(result);
     }
 }

@@ -49,7 +49,7 @@ public class TarotController : ControllerBase
         // Luôn ghi đè UserId từ token để tránh giả mạo chủ thể trong payload.
         command.UserId = userId; 
 
-        var result = await _mediator.Send(command);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, command);
         return Ok(result); 
     }
 
@@ -71,7 +71,7 @@ public class TarotController : ControllerBase
         // Gắn user id từ context để handler kiểm tra quyền truy cập session.
         command.UserId = userId; 
 
-        var result = await _mediator.Send(command);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, command);
         return Ok(result); 
     }
 
@@ -84,7 +84,7 @@ public class TarotController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetCardsCatalog(CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, 
             new TarotNow.Application.Features.Reading.Queries.GetCardsCatalog.GetCardsCatalogQuery(),
             cancellationToken
         );
@@ -104,7 +104,7 @@ public class TarotController : ControllerBase
             return this.UnauthorizedProblem();
         }
 
-        var result = await _mediator.Send(
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, 
             new TarotNow.Application.Features.Reading.Queries.GetCollection.GetUserCollectionQuery { UserId = userId }
         );
         return Ok(result);

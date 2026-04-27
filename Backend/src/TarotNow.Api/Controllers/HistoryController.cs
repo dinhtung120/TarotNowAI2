@@ -72,7 +72,7 @@ public class HistoryController : ControllerBase
             Date = date
         };
 
-        var result = await _mediator.Send(query);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, query);
         return Ok(result);
     }
 
@@ -101,7 +101,7 @@ public class HistoryController : ControllerBase
             SessionId = id     
         };
 
-        var result = await _mediator.Send(query);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, query);
 
         if (result == null)
         {
@@ -149,7 +149,7 @@ public class HistoryController : ControllerBase
             EndDate = endDate          
         };
 
-        var result = await _mediator.Send(query);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, query);
         return Ok(result);
     }
 }

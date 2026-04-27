@@ -36,6 +36,9 @@ public class ConfirmCommunityImageCommandHandlerRequestedDomainEventHandlerTests
         _uploadSessionRepositoryMock
             .Setup(x => x.ConsumeAsync("token-1", It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
+        _r2UploadServiceMock
+            .Setup(x => x.ExistsObjectAsync("community/post/file.webp", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
         _communityMediaAssetRepositoryMock
             .Setup(x => x.UpsertUploadedAsync(It.IsAny<CommunityMediaAssetRecord>(), It.IsAny<CancellationToken>()))
             .Callback<CommunityMediaAssetRecord, CancellationToken>((asset, _) => capturedAsset = asset)

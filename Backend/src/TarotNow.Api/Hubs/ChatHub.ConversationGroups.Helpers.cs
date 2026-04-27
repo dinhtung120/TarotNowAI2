@@ -19,7 +19,7 @@ public partial class ChatHub
             return "ConversationId is required";
         }
 
-        var accessStatus = await _mediator.Send(new ValidateConversationAccessQuery
+        var accessStatus = await _mediator.SendWithConnectionCancellation(Context, new ValidateConversationAccessQuery
         {
             ConversationId = conversationId,
             RequesterId = userGuid

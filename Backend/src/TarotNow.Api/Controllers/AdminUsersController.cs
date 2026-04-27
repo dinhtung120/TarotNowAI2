@@ -34,7 +34,7 @@ public sealed class AdminUsersController : ControllerBase
     [HttpGet("users")]
     public async Task<IActionResult> ListUsers([FromQuery] TarotNow.Application.Features.Admin.Queries.ListUsers.ListUsersQuery query)
     {
-        var result = await _mediator.Send(query);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, query);
         return Ok(result);
     }
 
@@ -46,7 +46,7 @@ public sealed class AdminUsersController : ControllerBase
     [HttpPost("users")]
     public async Task<IActionResult> CreateUser([FromBody] TarotNow.Application.Features.Admin.Commands.CreateUser.CreateUserCommand command)
     {
-        var userId = await _mediator.Send(command);
+        var userId = await _mediator.SendWithRequestCancellation(HttpContext, command);
         return Ok(new { userId });
     }
 
@@ -59,7 +59,7 @@ public sealed class AdminUsersController : ControllerBase
     [HttpPatch("users/lock")]
     public async Task<IActionResult> ToggleUserLock([FromBody] TarotNow.Application.Features.Admin.Commands.ToggleUserLock.ToggleUserLockCommand command)
     {
-        var success = await _mediator.Send(command);
+        var success = await _mediator.SendWithRequestCancellation(HttpContext, command);
         // Tách response lỗi riêng để dashboard có thông điệp rõ ràng khi thao tác thất bại.
         return success
             ? Ok()
@@ -96,7 +96,7 @@ public sealed class AdminUsersController : ControllerBase
                 detail: "Idempotency-Key is required.");
         }
 
-        var result = await _mediator.Send(command);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, command);
         // Rẽ nhánh chuẩn hóa kết quả nhằm giữ hợp đồng phản hồi nhất quán cho client admin.
         return result
             ? Ok(new { success = true })
@@ -121,7 +121,7 @@ public sealed class AdminUsersController : ControllerBase
             command.IdempotencyKey = Request.GetIdempotencyKeyOrEmpty();
         }
 
-        var result = await _mediator.Send(command);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, command);
         // Tách nhánh lỗi để cảnh báo rõ thao tác cộng tiền không thành công.
         return result
             ? Ok(new { success = true })

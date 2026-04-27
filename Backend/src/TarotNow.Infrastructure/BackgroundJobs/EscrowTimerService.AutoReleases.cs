@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Logging;
+using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Infrastructure.BackgroundJobs;
 
@@ -45,9 +47,6 @@ public partial class EscrowTimerService
         Guid candidateId,
         CancellationToken cancellationToken)
     {
-        string? completedConversationId = null;
-        long releasedAmount = 0;
-
         await dependencies.TransactionCoordinator.ExecuteAsync(async transactionCt =>
         {
             var item = await dependencies.FinanceRepository.GetItemForUpdateAsync(candidateId, transactionCt);
@@ -71,22 +70,29 @@ public partial class EscrowTimerService
                 session.UpdatedAt = DateTime.UtcNow;
                 await dependencies.FinanceRepository.UpdateSessionAsync(session, transactionCt);
                 // Khi không còn frozen thì chốt session completed để đóng phiên tài chính.
-                completedConversationId = item.ConversationRef;
-                releasedAmount = item.AmountDiamond;
+                if (string.IsNullOrWhiteSpace(item.ConversationRef) == false && item.AmountDiamond > 0)
+                {
+                    var now = DateTime.UtcNow;
+                    await PublishConversationSyncRequestedAsync(
+                        dependencies,
+                        new EscrowConversationSyncRequestedDomainEvent
+                        {
+                            ConversationId = item.ConversationRef,
+                            TargetStatus = ConversationStatus.Completed,
+                            MessageType = ChatMessageType.SystemRelease,
+                            ActorId = item.ReceiverId.ToString("D"),
+                            MessageContent = $"Hệ thống đã tự động giải ngân {item.AmountDiamond} 💎 cho Reader theo timeout.",
+                            SyncReason = "auto_release",
+                            ResolvedAtUtc = now,
+                            OccurredAtUtc = now
+                        },
+                        transactionCt);
+                    // Publish trong transaction để outbox và settlement commit atomically.
+                }
             }
 
             await dependencies.FinanceRepository.SaveChangesAsync(transactionCt);
         }, cancellationToken);
-
-        if (string.IsNullOrWhiteSpace(completedConversationId) == false && releasedAmount > 0)
-        {
-            await MarkConversationCompletedAsync(
-                dependencies,
-                completedConversationId,
-                $"Hệ thống đã tự động giải ngân {releasedAmount} 💎 cho Reader theo timeout.",
-                cancellationToken);
-            // Đồng bộ trạng thái conversation để người dùng thấy kết quả auto-release.
-        }
     }
 
     /// <summary>

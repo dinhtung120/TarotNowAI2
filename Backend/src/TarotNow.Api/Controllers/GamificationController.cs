@@ -61,7 +61,7 @@ public class GamificationController : ControllerBase
         var resolvedType = string.IsNullOrWhiteSpace(type)
             ? _systemConfigSettings.GamificationDefaultQuestType
             : type.Trim().ToLowerInvariant();
-        var result = await _mediator.Send(new GetActiveQuestsQuery(GetUserId(), resolvedType));
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetActiveQuestsQuery(GetUserId(), resolvedType));
         return Ok(result);
     }
 
@@ -75,7 +75,7 @@ public class GamificationController : ControllerBase
     [HttpPost("quests/{questCode}/claim")]
     public async Task<IActionResult> ClaimQuestReward(string questCode, [FromBody] ClaimQuestRewardRequest request)
     {
-        var result = await _mediator.Send(new ClaimQuestRewardCommand(GetUserId(), questCode, request.PeriodKey));
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new ClaimQuestRewardCommand(GetUserId(), questCode, request.PeriodKey));
         // Tách mã lỗi chi tiết để client phân biệt quest đã claim và quest chưa đủ điều kiện.
         if (!result.Success && result.AlreadyClaimed) return Problem(statusCode: 400, detail: "QUEST_ALREADY_CLAIMED");
         if (!result.Success) return Problem(statusCode: 400, detail: "QUEST_NOT_COMPLETED_OR_FAILED");
@@ -89,7 +89,7 @@ public class GamificationController : ControllerBase
     [HttpGet("achievements")]
     public async Task<IActionResult> GetAchievements()
     {
-        var result = await _mediator.Send(new GetUserAchievementsQuery(GetUserId()));
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetUserAchievementsQuery(GetUserId()));
         return Ok(result);
     }
 
@@ -100,7 +100,7 @@ public class GamificationController : ControllerBase
     [HttpGet("titles")]
     public async Task<IActionResult> GetTitles()
     {
-        var result = await _mediator.Send(new GetUserTitlesQuery(GetUserId()));
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetUserTitlesQuery(GetUserId()));
         return Ok(result);
     }
 
@@ -112,7 +112,7 @@ public class GamificationController : ControllerBase
     [HttpPost("titles/active")]
     public async Task<IActionResult> SetActiveTitle([FromBody] SetActiveTitleRequest request)
     {
-        var success = await _mediator.Send(new SetActiveTitleCommand(GetUserId(), request.TitleCode));
+        var success = await _mediator.SendWithRequestCancellation(HttpContext, new SetActiveTitleCommand(GetUserId(), request.TitleCode));
         // Rule nghiệp vụ: chỉ cho phép set active title khi user đã sở hữu title đó.
         if (!success) return Problem(statusCode: 400, detail: "TITLE_NOT_OWNED");
         return Ok(new { message = "Cập nhật danh hiệu thành công." });
@@ -130,7 +130,7 @@ public class GamificationController : ControllerBase
         var resolvedTrack = string.IsNullOrWhiteSpace(track)
             ? _systemConfigSettings.GamificationDefaultLeaderboardTrack
             : track.Trim().ToLowerInvariant();
-        var result = await _mediator.Send(new GetLeaderboardQuery(GetUserId(), resolvedTrack, periodKey));
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetLeaderboardQuery(GetUserId(), resolvedTrack, periodKey));
         return Ok(result);
     }
 }

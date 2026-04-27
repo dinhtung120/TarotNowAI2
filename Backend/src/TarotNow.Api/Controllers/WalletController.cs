@@ -47,7 +47,7 @@ public class WalletController : ControllerBase
 
         // Query số dư theo user hiện tại để tránh lộ dữ liệu ví chéo tài khoản.
         var query = new GetWalletBalanceQuery(userId);
-        var result = await _mediator.Send(query);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, query);
 
         return Ok(result);
     }
@@ -69,7 +69,7 @@ public class WalletController : ControllerBase
 
         // Truy vấn ledger giữ nguyên page/limit để handler chịu trách nhiệm chuẩn hóa business rule.
         var query = new GetLedgerListQuery(userId, page, limit);
-        var result = await _mediator.Send(query);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, query);
 
         return Ok(result);
     }

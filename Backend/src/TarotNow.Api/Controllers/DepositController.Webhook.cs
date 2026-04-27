@@ -39,7 +39,7 @@ public partial class DepositController
             RawPayload = rawPayload
         };
 
-        var handled = await _mediator.Send(command, cancellationToken);
+        var handled = await _mediator.SendWithRequestCancellation(HttpContext, command, cancellationToken);
         if (!handled)
         {
             _logger.LogWarning("PayOS webhook was not handled.");

@@ -123,16 +123,28 @@ public class LeaderboardSnapshotJob : BackgroundService
             return;
         }
 
-        var userIds = entries.ConvertAll(e => Guid.Parse(e.UserId));
+        var validEntries = new List<(Application.Features.Gamification.Dtos.LeaderboardEntryDto Entry, Guid UserId)>(entries.Count);
+        foreach (var entry in entries)
+        {
+            if (!Guid.TryParse(entry.UserId, out var userId))
+            {
+                _logger.LogWarning("Bỏ qua leaderboard entry có UserId không hợp lệ: {UserId}", entry.UserId);
+                continue;
+            }
+
+            validEntries.Add((entry, userId));
+        }
+
+        var userIds = validEntries.Select(x => x.UserId).Distinct().ToList();
         var userMap = await userRepo.GetUserBasicInfoMapAsync(userIds, ct);
 
-        foreach (var e in entries)
+        foreach (var (entry, userId) in validEntries)
         {
-            if (userMap.TryGetValue(Guid.Parse(e.UserId), out var info))
+            if (userMap.TryGetValue(userId, out var info))
             {
-                e.DisplayName = info.DisplayName;
-                e.Avatar = info.AvatarUrl;
-                e.ActiveTitle = info.ActiveTitle;
+                entry.DisplayName = info.DisplayName;
+                entry.Avatar = info.AvatarUrl;
+                entry.ActiveTitle = info.ActiveTitle;
                 // Bổ sung metadata hiển thị vào entry để snapshot dùng trực tiếp trên UI.
             }
         }

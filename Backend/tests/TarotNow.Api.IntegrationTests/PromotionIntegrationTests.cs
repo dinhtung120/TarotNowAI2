@@ -64,6 +64,63 @@ public class PromotionIntegrationTests : IClassFixture<CustomWebApplicationFacto
         Assert.Equal(1_000, latestOrder.DiamondAmount);
     }
 
+    [Fact]
+    public async Task AdminPromotion_ShouldUpdate_ById()
+    {
+        var userId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        await SeedUserAsync(userId);
+
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/admin/promotions", new
+        {
+            MinAmountVnd = 200_000,
+            BonusGold = 75,
+            IsActive = true
+        });
+        createResponse.EnsureSuccessStatusCode();
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var created = await db.DepositPromotions.OrderByDescending(x => x.CreatedAt).FirstAsync();
+
+        var updateResponse = await _client.PutAsJsonAsync($"/api/v1/admin/promotions/{created.Id}", new
+        {
+            MinAmountVnd = 300_000,
+            BonusGold = 150,
+            IsActive = false
+        });
+        updateResponse.EnsureSuccessStatusCode();
+
+        await db.Entry(created).ReloadAsync();
+        Assert.Equal(300_000, created.MinAmountVnd);
+        Assert.Equal(150, created.BonusGold);
+        Assert.False(created.IsActive);
+    }
+
+    [Fact]
+    public async Task AdminPromotion_ShouldDelete_ById()
+    {
+        var userId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+        await SeedUserAsync(userId);
+
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/admin/promotions", new
+        {
+            MinAmountVnd = 400_000,
+            BonusGold = 200,
+            IsActive = true
+        });
+        createResponse.EnsureSuccessStatusCode();
+
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var created = await db.DepositPromotions.OrderByDescending(x => x.CreatedAt).FirstAsync();
+
+        var deleteResponse = await _client.DeleteAsync($"/api/v1/admin/promotions/{created.Id}");
+        deleteResponse.EnsureSuccessStatusCode();
+
+        var exists = await db.DepositPromotions.AnyAsync(x => x.Id == created.Id);
+        Assert.False(exists);
+    }
+
     private async Task SeedUserAsync(Guid userId)
     {
         using var scope = _factory.Services.CreateScope();

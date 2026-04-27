@@ -1,6 +1,7 @@
 using TarotNow.Application.Common;
 using TarotNow.Application.Exceptions;
 using TarotNow.Domain.Enums;
+using System.Security.Cryptography;
 
 namespace TarotNow.Application.Features.Chat.Commands.SendMessage;
 
@@ -110,6 +111,7 @@ public partial class SendMessageCommandHandlerRequestedDomainEventHandler
     {
         return new ChatMessageDto
         {
+            Id = GenerateMongoCompatibleMessageId(),
             ConversationId = request.ConversationId,
             SenderId = senderId,
             Type = request.Type,
@@ -119,6 +121,13 @@ public partial class SendMessageCommandHandlerRequestedDomainEventHandler
             IsRead = false,
             CreatedAt = DateTime.UtcNow
         };
+    }
+
+    private static string GenerateMongoCompatibleMessageId()
+    {
+        Span<byte> bytes = stackalloc byte[12];
+        RandomNumberGenerator.Fill(bytes);
+        return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 
     /// <summary>

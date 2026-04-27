@@ -55,7 +55,7 @@ public class ReportController : ControllerBase
             Reason = body.Reason                    
         };
 
-        var result = await _mediator.Send(command);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, command);
         return Ok(new { success = true, reportId = result.Id });
     }
 }

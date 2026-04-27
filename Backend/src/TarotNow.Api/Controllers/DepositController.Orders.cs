@@ -24,7 +24,7 @@ public partial class DepositController
     [AllowAnonymous]
     public async Task<IActionResult> ListPackages(CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new ListDepositPackagesQuery(), cancellationToken);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new ListDepositPackagesQuery(), cancellationToken);
         return Ok(result);
     }
 
@@ -59,7 +59,7 @@ public partial class DepositController
             IdempotencyKey = idempotencyKey
         };
 
-        var response = await _mediator.Send(command, cancellationToken);
+        var response = await _mediator.SendWithRequestCancellation(HttpContext, command, cancellationToken);
         if (!string.Equals(response.PaymentLinkStatus, ReadyPaymentLinkStatus, StringComparison.OrdinalIgnoreCase))
         {
             response = await WaitForProvisionedPaymentLinkAsync(userId, response, cancellationToken);
@@ -92,7 +92,7 @@ public partial class DepositController
             Status = status
         };
 
-        var response = await _mediator.Send(query, cancellationToken);
+        var response = await _mediator.SendWithRequestCancellation(HttpContext, query, cancellationToken);
         return Ok(response);
     }
 
@@ -116,7 +116,7 @@ public partial class DepositController
             OrderId = orderId
         };
 
-        var response = await _mediator.Send(query, cancellationToken);
+        var response = await _mediator.SendWithRequestCancellation(HttpContext, query, cancellationToken);
         return Ok(response);
     }
 
@@ -140,7 +140,7 @@ public partial class DepositController
             OrderId = orderId
         };
 
-        var handled = await _mediator.Send(command, cancellationToken);
+        var handled = await _mediator.SendWithRequestCancellation(HttpContext, command, cancellationToken);
         return Ok(new { handled });
     }
 
@@ -159,7 +159,7 @@ public partial class DepositController
         {
             await Task.Delay(CreateOrderProvisioningPollInterval, cancellationToken);
 
-            var snapshot = await _mediator.Send(
+            var snapshot = await _mediator.SendWithRequestCancellation(HttpContext, 
                 new GetMyDepositOrderQuery
                 {
                     UserId = userId,

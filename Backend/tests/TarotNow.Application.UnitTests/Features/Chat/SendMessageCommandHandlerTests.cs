@@ -22,6 +22,7 @@ public class SendMessageCommandHandlerRequestedDomainEventHandlerTests
     private readonly Mock<IUploadSessionRepository> _mockUploadSessionRepository;
     private readonly Mock<IDomainEventPublisher> _mockDomainEventPublisher;
     private readonly Mock<ISystemConfigSettings> _mockSystemConfigSettings;
+    private readonly Mock<ICacheService> _mockCacheService;
     private readonly SendMessageCommandHandlerRequestedDomainEventHandler _handler;
 
     /// <summary>
@@ -38,7 +39,14 @@ public class SendMessageCommandHandlerRequestedDomainEventHandlerTests
         _mockUploadSessionRepository = new Mock<IUploadSessionRepository>();
         _mockDomainEventPublisher = new Mock<IDomainEventPublisher>();
         _mockSystemConfigSettings = new Mock<ISystemConfigSettings>();
+        _mockCacheService = new Mock<ICacheService>();
         _mockSystemConfigSettings.SetupGet(x => x.EscrowDisputeWindowHours).Returns(24);
+        _mockCacheService
+            .Setup(x => x.AcquireLockAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _mockCacheService
+            .Setup(x => x.ReleaseLockAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         _mockTransactionCoordinator
             .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
@@ -54,6 +62,7 @@ public class SendMessageCommandHandlerRequestedDomainEventHandlerTests
             _mockUploadSessionRepository.Object,
             _mockDomainEventPublisher.Object,
             _mockSystemConfigSettings.Object,
+            _mockCacheService.Object,
             Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>());
     }
 
@@ -105,6 +114,28 @@ public class SendMessageCommandHandlerRequestedDomainEventHandlerTests
         _mockFinanceRepo
             .Setup(x => x.GetSessionByConversationRefAsync("c1", It.IsAny<CancellationToken>()))
             .ReturnsAsync((ChatFinanceSession?)null);
+        _mockFinanceRepo
+            .Setup(x => x.GetItemsBySessionIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ChatQuestionItem>());
+
+        string? capturedFreezeReferenceId = null;
+        string? capturedFreezeIdempotencyKey = null;
+        _mockWalletRepo
+            .Setup(x => x.FreezeAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<long>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<Guid, long, string?, string?, string?, string?, string?, CancellationToken>((_, _, _, referenceId, _, _, idempotencyKey, _) =>
+            {
+                capturedFreezeReferenceId = referenceId;
+                capturedFreezeIdempotencyKey = idempotencyKey;
+            })
+            .Returns(Task.CompletedTask);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -126,6 +157,81 @@ public class SendMessageCommandHandlerRequestedDomainEventHandlerTests
                 It.IsAny<string?>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
+
+        Assert.NotNull(capturedFreezeReferenceId);
+        Assert.Matches(@"^main_question_c1_[a-f0-9]{24}$", capturedFreezeReferenceId!);
+        Assert.Equal($"freeze_{capturedFreezeReferenceId}", capturedFreezeIdempotencyKey);
+    }
+
+    [Fact]
+    public async Task Handle_FirstUserMessage_WhenAlreadyFrozen_DoesNotFreezeAgain()
+    {
+        var senderId = Guid.NewGuid();
+        var readerId = Guid.NewGuid();
+        var command = new SendMessageCommand
+        {
+            Type = ChatMessageType.Text,
+            Content = "Hello again",
+            ConversationId = "c1",
+            SenderId = senderId
+        };
+        var conv = new ConversationDto
+        {
+            Id = "c1",
+            UserId = senderId.ToString(),
+            ReaderId = readerId.ToString(),
+            Status = ConversationStatus.Pending,
+            UnreadCountReader = 0
+        };
+        var existingSession = new ChatFinanceSession
+        {
+            Id = Guid.NewGuid(),
+            ConversationRef = "c1",
+            Status = ChatFinanceSessionStatus.Pending,
+            TotalFrozen = 10
+        };
+
+        _mockConvRepo.Setup(x => x.GetByIdAsync("c1", It.IsAny<CancellationToken>())).ReturnsAsync(conv);
+        _mockReaderProfileRepo
+            .Setup(x => x.GetByUserIdAsync(readerId.ToString(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new ReaderProfileDto
+            {
+                UserId = readerId.ToString(),
+                DiamondPerQuestion = 10
+            });
+        _mockFinanceRepo
+            .Setup(x => x.GetItemByIdempotencyKeyAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ChatQuestionItem?)null);
+        _mockFinanceRepo
+            .Setup(x => x.GetSessionByConversationRefAsync("c1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingSession);
+        _mockFinanceRepo
+            .Setup(x => x.GetItemsBySessionIdAsync(existingSession.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ChatQuestionItem>
+            {
+                new()
+                {
+                    Id = Guid.NewGuid(),
+                    FinanceSessionId = existingSession.Id,
+                    Type = QuestionItemType.MainQuestion,
+                    Status = QuestionItemStatus.Pending
+                }
+            });
+
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        Assert.Equal(ChatMessageType.Text, result.Type);
+        _mockWalletRepo.Verify(x => x.FreezeAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<long>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+        _mockMsgRepo.Verify(x => x.AddAsync(It.IsAny<ChatMessageDto>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

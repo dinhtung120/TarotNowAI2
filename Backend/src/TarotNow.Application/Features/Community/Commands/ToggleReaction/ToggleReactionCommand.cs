@@ -139,9 +139,8 @@ public class ToggleReactionCommandHandlerRequestedDomainEventHandler
         var swapped = await _reactionRepo.UpdateTypeAsync(request.PostId, userIdStr, request.ReactionType, cancellationToken);
         if (swapped)
         {
-            // Cập nhật song song hai bộ đếm để tổng reaction không bị lệch.
-            await _postRepo.IncrementReactionCountAsync(request.PostId, oldType, -1, cancellationToken);
-            await _postRepo.IncrementReactionCountAsync(request.PostId, request.ReactionType, 1, cancellationToken);
+            // Swap trong một lệnh atomic để tránh lệch counter khi lỗi giữa chừng.
+            await _postRepo.SwapReactionCountAsync(request.PostId, oldType, request.ReactionType, cancellationToken);
         }
 
         return true;

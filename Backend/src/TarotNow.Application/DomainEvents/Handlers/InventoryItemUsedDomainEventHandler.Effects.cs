@@ -10,11 +10,12 @@ namespace TarotNow.Application.DomainEvents.Handlers;
 public sealed partial class ItemUsedDomainEventHandler
 {
     private async Task<InventoryItemEffectSummary?> DispatchItemEffectAsync(
-        Guid userId,
-        ItemDefinition definition,
-        int? targetCardId,
+        ItemEffectDispatchContext context,
         CancellationToken cancellationToken)
     {
+        var userId = context.UserId;
+        var definition = context.Definition;
+        var targetCardId = context.TargetCardId;
         if (string.Equals(definition.Type, ItemType.CardEnhancer, StringComparison.OrdinalIgnoreCase))
         {
             return await HandleCardEnhancerAsync(userId, definition, targetCardId, cancellationToken);
@@ -42,6 +43,7 @@ public sealed partial class ItemUsedDomainEventHandler
                 {
                     UserId = userId,
                     SourceItemCode = definition.Code,
+                    SourceIdempotencyKey = $"{context.SourceIdempotencyKey}:{context.EffectIndex}"
                 },
                 cancellationToken);
 
@@ -186,4 +188,11 @@ public sealed partial class ItemUsedDomainEventHandler
 
         throw new BusinessRuleException(InventoryErrorCodes.UnsupportedItemType, "Free draw ticket item is not supported.");
     }
+
+    private readonly record struct ItemEffectDispatchContext(
+        Guid UserId,
+        ItemDefinition Definition,
+        int? TargetCardId,
+        string SourceIdempotencyKey,
+        int EffectIndex);
 }

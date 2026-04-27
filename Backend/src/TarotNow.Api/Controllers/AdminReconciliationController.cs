@@ -33,7 +33,7 @@ public sealed class AdminReconciliationController : ControllerBase
     [HttpGet("reconciliation/wallet")]
     public async Task<IActionResult> GetWalletMismatches()
     {
-        var result = await _mediator.Send(new GetLedgerMismatchQuery());
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetLedgerMismatchQuery());
         return Ok(result);
     }
 }

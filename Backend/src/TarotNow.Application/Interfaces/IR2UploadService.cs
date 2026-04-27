@@ -25,6 +25,11 @@ public interface IR2UploadService
     Task DeleteObjectAsync(string objectKey, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Kiểm tra object có tồn tại thực tế trên R2.
+    /// </summary>
+    Task<bool> ExistsObjectAsync(string objectKey, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Dựng public URL từ object key.
     /// </summary>
     string BuildPublicUrl(string objectKey);

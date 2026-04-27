@@ -37,7 +37,7 @@ public class AdminGamificationController : ControllerBase
     [HttpGet("quests")]
     public async Task<IActionResult> GetAllQuests(CancellationToken ct)
     {
-        var result = await _mediator.Send(new GetAllQuestsAdminQuery(), ct);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetAllQuestsAdminQuery(), ct);
         return Ok(result);
     }
 
@@ -51,7 +51,7 @@ public class AdminGamificationController : ControllerBase
     public async Task<IActionResult> UpsertQuest([FromBody] QuestDefinitionDto quest, CancellationToken ct)
     {
         // Upsert giúp dashboard dùng cùng một endpoint cho create/update, giảm nhánh xử lý phía client.
-        await _mediator.Send(new UpsertQuestDefinitionCommand(quest), ct);
+        await _mediator.SendWithRequestCancellation(HttpContext, new UpsertQuestDefinitionCommand(quest), ct);
         return Ok(new { message = "Lưu Quest thành công." });
     }
 
@@ -64,7 +64,7 @@ public class AdminGamificationController : ControllerBase
     [HttpDelete("quests/{code}")]
     public async Task<IActionResult> DeleteQuest(string code, CancellationToken ct)
     {
-        await _mediator.Send(new DeleteQuestDefinitionCommand(code), ct);
+        await _mediator.SendWithRequestCancellation(HttpContext, new DeleteQuestDefinitionCommand(code), ct);
         return Ok(new { message = "Xóa Quest thành công." });
     }
 
@@ -76,7 +76,7 @@ public class AdminGamificationController : ControllerBase
     [HttpGet("achievements")]
     public async Task<IActionResult> GetAllAchievements(CancellationToken ct)
     {
-        var result = await _mediator.Send(new GetAllAchievementsAdminQuery(), ct);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetAllAchievementsAdminQuery(), ct);
         return Ok(result);
     }
 
@@ -89,7 +89,7 @@ public class AdminGamificationController : ControllerBase
     [HttpPost("achievements")]
     public async Task<IActionResult> UpsertAchievement([FromBody] AchievementDefinitionDto achievement, CancellationToken ct)
     {
-        await _mediator.Send(new UpsertAchievementDefinitionCommand(achievement), ct);
+        await _mediator.SendWithRequestCancellation(HttpContext, new UpsertAchievementDefinitionCommand(achievement), ct);
         return Ok(new { message = "Lưu Achievement thành công." });
     }
 
@@ -102,7 +102,7 @@ public class AdminGamificationController : ControllerBase
     [HttpDelete("achievements/{code}")]
     public async Task<IActionResult> DeleteAchievement(string code, CancellationToken ct)
     {
-        await _mediator.Send(new DeleteAchievementDefinitionCommand(code), ct);
+        await _mediator.SendWithRequestCancellation(HttpContext, new DeleteAchievementDefinitionCommand(code), ct);
         return Ok(new { message = "Xóa Achievement thành công." });
     }
 
@@ -114,7 +114,7 @@ public class AdminGamificationController : ControllerBase
     [HttpGet("titles")]
     public async Task<IActionResult> GetAllTitles(CancellationToken ct)
     {
-        var result = await _mediator.Send(new GetAllTitlesAdminQuery(), ct);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetAllTitlesAdminQuery(), ct);
         return Ok(result);
     }
 
@@ -127,7 +127,7 @@ public class AdminGamificationController : ControllerBase
     [HttpPost("titles")]
     public async Task<IActionResult> UpsertTitle([FromBody] TitleDefinitionDto title, CancellationToken ct)
     {
-        await _mediator.Send(new UpsertTitleDefinitionCommand(title), ct);
+        await _mediator.SendWithRequestCancellation(HttpContext, new UpsertTitleDefinitionCommand(title), ct);
         return Ok(new { message = "Lưu Title thành công." });
     }
 
@@ -140,7 +140,7 @@ public class AdminGamificationController : ControllerBase
     [HttpDelete("titles/{code}")]
     public async Task<IActionResult> DeleteTitle(string code, CancellationToken ct)
     {
-        await _mediator.Send(new DeleteTitleDefinitionCommand(code), ct);
+        await _mediator.SendWithRequestCancellation(HttpContext, new DeleteTitleDefinitionCommand(code), ct);
         return Ok(new { message = "Xóa danh hiệu thành công." });
     }
 
@@ -154,7 +154,7 @@ public class AdminGamificationController : ControllerBase
     public async Task<IActionResult> GrantAllTitles(Guid userId, CancellationToken ct)
     {
         // Đây là thao tác có tác động rộng nên được tách command riêng để kiểm soát side effect.
-        await _mediator.Send(new GrantAllTitlesCommand(userId), ct);
+        await _mediator.SendWithRequestCancellation(HttpContext, new GrantAllTitlesCommand(userId), ct);
         return Ok(new { message = "Đã cấp toàn bộ danh hiệu cho user." });
     }
 }

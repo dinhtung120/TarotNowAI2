@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using System.Threading;
 using TarotNow.Api.Contracts;
 using TarotNow.Application.Features.Promotions.Commands.CreatePromotion;
 using TarotNow.Application.Features.Promotions.Commands.DeletePromotion;
@@ -32,9 +33,9 @@ public class PromotionsController : ControllerBase
     /// Lấy danh sách khuyến mãi.
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> ListPromotions([FromQuery] bool onlyActive = false)
+    public async Task<IActionResult> ListPromotions([FromQuery] bool onlyActive = false, CancellationToken cancellationToken = default)
     {
-        var result = await _mediator.Send(new ListPromotionsQuery { OnlyActive = onlyActive });
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new ListPromotionsQuery { OnlyActive = onlyActive }, cancellationToken);
         return Ok(result);
     }
 
@@ -42,9 +43,9 @@ public class PromotionsController : ControllerBase
     /// Tạo mới chương trình khuyến mãi.
     /// </summary>
     [HttpPost]
-    public async Task<IActionResult> CreatePromotion([FromBody] CreatePromotionCommand command)
+    public async Task<IActionResult> CreatePromotion([FromBody] CreatePromotionCommand command, CancellationToken cancellationToken)
     {
-        var success = await _mediator.Send(command);
+        var success = await _mediator.SendWithRequestCancellation(HttpContext, command, cancellationToken);
         return success
             ? Ok()
             : Problem(
@@ -57,7 +58,7 @@ public class PromotionsController : ControllerBase
     /// Cập nhật chương trình khuyến mãi theo id.
     /// </summary>
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdatePromotion(Guid id, [FromBody] UpdatePromotionRequest request)
+    public async Task<IActionResult> UpdatePromotion(Guid id, [FromBody] UpdatePromotionRequest request, CancellationToken cancellationToken)
     {
         var command = new UpdatePromotionCommand
         {
@@ -67,7 +68,7 @@ public class PromotionsController : ControllerBase
             IsActive = request.IsActive
         };
 
-        var success = await _mediator.Send(command);
+        var success = await _mediator.SendWithRequestCancellation(HttpContext, command, cancellationToken);
         return success
             ? Ok()
             : Problem(
@@ -80,9 +81,9 @@ public class PromotionsController : ControllerBase
     /// Xóa một chương trình khuyến mãi.
     /// </summary>
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeletePromotion([FromRoute] Guid id)
+    public async Task<IActionResult> DeletePromotion([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        var success = await _mediator.Send(new DeletePromotionCommand { Id = id });
+        var success = await _mediator.SendWithRequestCancellation(HttpContext, new DeletePromotionCommand { Id = id }, cancellationToken);
         if (!success)
         {
             return Problem(

@@ -26,6 +26,7 @@ public sealed partial class GachaPulledDomainEventHandler
             var rewardLog = await ApplyRewardAndBuildLogAsync(
                 context,
                 roll,
+                index,
                 pityCountAtRoll,
                 cancellationToken);
             rewardLogs.Add(rewardLog);
@@ -47,17 +48,19 @@ public sealed partial class GachaPulledDomainEventHandler
     private Task<GachaPullRewardLog> ApplyRewardAndBuildLogAsync(
         PullExecutionContext context,
         PullRollSelection roll,
+        int rollIndex,
         int pityCountAtRoll,
         CancellationToken cancellationToken)
     {
         return string.Equals(roll.SelectedRate.RewardKind, GachaRewardTypes.Currency, StringComparison.Ordinal)
-            ? ApplyCurrencyRewardAsync(context, roll, pityCountAtRoll, cancellationToken)
-            : ApplyItemRewardAsync(context, roll, pityCountAtRoll, cancellationToken);
+            ? ApplyCurrencyRewardAsync(context, roll, rollIndex, pityCountAtRoll, cancellationToken)
+            : ApplyItemRewardAsync(context, roll, rollIndex, pityCountAtRoll, cancellationToken);
     }
 
     private async Task<GachaPullRewardLog> ApplyCurrencyRewardAsync(
         PullExecutionContext context,
         PullRollSelection roll,
+        int rollIndex,
         int pityCountAtRoll,
         CancellationToken cancellationToken)
     {
@@ -73,7 +76,7 @@ public sealed partial class GachaPulledDomainEventHandler
             TransactionType.GachaReward,
             totalAmount,
             description: $"Gacha reward {context.Pool.Code}",
-            idempotencyKey: $"gacha_pull_reward_{currency}_{context.Operation.Id}_{roll.SelectedRate.Id}",
+            idempotencyKey: $"gacha_pull_reward_{currency}_{context.Operation.Id}_{roll.SelectedRate.Id}_{rollIndex}",
             cancellationToken: cancellationToken);
 
         var moneyChanged = new MoneyChangeRequest(
@@ -109,9 +112,11 @@ public sealed partial class GachaPulledDomainEventHandler
     private async Task<GachaPullRewardLog> ApplyItemRewardAsync(
         PullExecutionContext context,
         PullRollSelection roll,
+        int rollIndex,
         int pityCountAtRoll,
         CancellationToken cancellationToken)
     {
+        _ = rollIndex;
         var itemDefinition = ResolveItemDefinition(context, roll);
         await _userItemRepository.GrantItemByCodeAsync(
             context.DomainEvent.UserId,

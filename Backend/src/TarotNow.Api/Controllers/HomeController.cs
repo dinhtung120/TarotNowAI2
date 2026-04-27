@@ -26,7 +26,7 @@ public class HomeController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HomeSnapshotDto))]
     public async Task<IActionResult> GetSnapshot(CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetHomeSnapshotQuery(), cancellationToken);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetHomeSnapshotQuery(), cancellationToken);
         return Ok(result);
     }
 }

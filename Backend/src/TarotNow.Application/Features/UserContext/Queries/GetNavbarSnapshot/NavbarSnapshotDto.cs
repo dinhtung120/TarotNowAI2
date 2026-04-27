@@ -8,9 +8,9 @@ namespace TarotNow.Application.Features.UserContext.Queries.GetNavbarSnapshot;
 /// </summary>
 public class NavbarSnapshotDto
 {
-    public int UnreadNotificationCount { get; set; }
+    public long UnreadNotificationCount { get; set; }
 
-    public int UnreadChatCount { get; set; }
+    public long UnreadChatCount { get; set; }
 
     public StreakStatusResult Streak { get; set; } = null!;
 

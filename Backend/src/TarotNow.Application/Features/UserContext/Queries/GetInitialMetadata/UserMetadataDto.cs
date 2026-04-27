@@ -15,13 +15,13 @@ public class UserMetadataDto
     public StreakStatusResult Streak { get; set; } = null!;
 
     // Tổng số thông báo chưa đọc.
-    public int UnreadNotificationCount { get; set; }
+    public long UnreadNotificationCount { get; set; }
 
     // Danh sách thông báo gần đây theo phân trang mặc định.
     public NotificationListResponse RecentNotifications { get; set; } = null!;
 
     // Tổng số tin nhắn chat chưa đọc.
-    public int UnreadChatCount { get; set; }
+    public long UnreadChatCount { get; set; }
 
     // Danh sách hội thoại active để hiển thị nhanh ở trang chính.
     public ListConversationsResult ActiveConversations { get; set; } = null!;

@@ -41,7 +41,7 @@ public sealed class GachaController : ControllerBase
     public async Task<IActionResult> GetPools(CancellationToken cancellationToken)
     {
         var userId = User.GetUserIdOrNull();
-        var result = await _mediator.Send(new GetGachaPoolsQuery { UserId = userId }, cancellationToken);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetGachaPoolsQuery { UserId = userId }, cancellationToken);
         return Ok(result);
     }
 
@@ -51,7 +51,7 @@ public sealed class GachaController : ControllerBase
     [HttpGet(GachaRoutes.PoolOdds)]
     public async Task<IActionResult> GetPoolOdds([FromRoute] string poolCode, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetGachaPoolOddsQuery(poolCode), cancellationToken);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetGachaPoolOddsQuery(poolCode), cancellationToken);
         return Ok(result);
     }
 
@@ -70,7 +70,7 @@ public sealed class GachaController : ControllerBase
             return this.UnauthorizedProblem();
         }
 
-        var result = await _mediator.Send(new GetGachaHistoryQuery(userId.Value, page, pageSize), cancellationToken);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetGachaHistoryQuery(userId.Value, page, pageSize), cancellationToken);
         return Ok(result);
     }
 
@@ -105,7 +105,7 @@ public sealed class GachaController : ControllerBase
             IdempotencyKey = idempotencyKey,
         };
 
-        var result = await _mediator.Send(command, cancellationToken);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, command, cancellationToken);
         if (string.Equals(result.OperationStatus, PullGachaResult.OperationStatusProcessing, StringComparison.Ordinal))
         {
             return Accepted(result);

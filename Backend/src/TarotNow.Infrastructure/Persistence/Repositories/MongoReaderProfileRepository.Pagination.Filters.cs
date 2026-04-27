@@ -1,5 +1,6 @@
 using MongoDB.Bson;
 using MongoDB.Driver;
+using System.Text.RegularExpressions;
 using TarotNow.Domain.Enums;
 using TarotNow.Infrastructure.Persistence.MongoDocuments;
 
@@ -70,7 +71,8 @@ public partial class MongoReaderProfileRepository
             // Không có từ khóa tìm kiếm thì giữ filter hiện tại để tận dụng index tốt hơn.
         }
 
-        var regex = new BsonRegularExpression(searchTerm, "i");
+        var escapedSearchTerm = Regex.Escape(searchTerm);
+        var regex = new BsonRegularExpression(escapedSearchTerm, "i");
         return filterBuilder.And(filter, filterBuilder.Regex(r => r.DisplayName, regex));
         // Regex không phân biệt hoa thường cho trải nghiệm tìm kiếm tên reader.
     }

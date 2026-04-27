@@ -11,6 +11,8 @@ public sealed partial class RedisUserPresenceTracker : IUserPresenceTracker
     private const string ConnectionsKeyPrefix = "presence:user:";
     private const string ConnectionsKeySuffix = ":connections";
     private const string LastActivityKey = "presence:last-activity";
+    private const int MinPresenceLeaseSeconds = 30;
+    private const int MaxPresenceLeaseSeconds = 86_400;
 
     private readonly IConnectionMultiplexer _multiplexer;
     private readonly ISystemConfigSettings _systemConfigSettings;
@@ -39,7 +41,9 @@ public sealed partial class RedisUserPresenceTracker : IUserPresenceTracker
         try
         {
             var db = _multiplexer.GetDatabase();
-            db.SetAdd(GetConnectionsKey(userId), connectionId);
+            var connectionsKey = GetConnectionsKey(userId);
+            db.SetAdd(connectionsKey, connectionId);
+            db.KeyExpire(connectionsKey, ResolveConnectionLease());
             RecordHeartbeat(userId);
         }
         catch (Exception ex)
@@ -61,7 +65,13 @@ public sealed partial class RedisUserPresenceTracker : IUserPresenceTracker
         try
         {
             var db = _multiplexer.GetDatabase();
-            db.SetRemove(GetConnectionsKey(userId), connectionId);
+            var connectionsKey = GetConnectionsKey(userId);
+            db.SetRemove(connectionsKey, connectionId);
+            if (db.SetLength(connectionsKey) <= 0)
+            {
+                db.KeyDelete(connectionsKey);
+            }
+
             RecordHeartbeat(userId);
         }
         catch (Exception ex)
@@ -83,7 +93,9 @@ public sealed partial class RedisUserPresenceTracker : IUserPresenceTracker
         try
         {
             var db = _multiplexer.GetDatabase();
-            if (db.SetLength(GetConnectionsKey(userId)) > 0)
+            var connectionsKey = GetConnectionsKey(userId);
+            EnsureConnectionLease(db, connectionsKey);
+            if (db.SetLength(connectionsKey) > 0)
             {
                 return true;
             }
@@ -115,6 +127,8 @@ public sealed partial class RedisUserPresenceTracker : IUserPresenceTracker
             var db = _multiplexer.GetDatabase();
             var nowUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             db.SortedSetAdd(LastActivityKey, userId, nowUnix);
+            var connectionsKey = GetConnectionsKey(userId);
+            EnsureConnectionLease(db, connectionsKey);
         }
         catch (Exception ex)
         {
@@ -122,92 +136,4 @@ public sealed partial class RedisUserPresenceTracker : IUserPresenceTracker
         }
     }
 
-    /// <summary>
-    /// Lấy timestamp hoạt động cuối cùng của user.
-    /// </summary>
-    public DateTime? GetLastActivity(string userId)
-    {
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            return null;
-        }
-
-        try
-        {
-            var db = _multiplexer.GetDatabase();
-            var score = db.SortedSetScore(LastActivityKey, userId);
-            if (!score.HasValue)
-            {
-                return null;
-            }
-
-            return DateTimeOffset.FromUnixTimeSeconds((long)score.Value).UtcDateTime;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "[PresenceRedis] Failed to read last activity. UserId={UserId}", userId);
-            return null;
-        }
-    }
-
-    /// <summary>
-    /// Lấy danh sách user timeout (không còn connections và quá ngưỡng heartbeat).
-    /// </summary>
-    public IReadOnlyList<string> GetTimedOutUsers(TimeSpan timeout)
-    {
-        try
-        {
-            var db = _multiplexer.GetDatabase();
-            var cutoff = DateTimeOffset.UtcNow.Subtract(timeout).ToUnixTimeSeconds();
-            var timedOutCandidates = db.SortedSetRangeByScore(LastActivityKey, double.NegativeInfinity, cutoff);
-
-            var result = new List<string>(timedOutCandidates.Length);
-            foreach (var userId in timedOutCandidates)
-            {
-                if (userId.IsNullOrEmpty)
-                {
-                    continue;
-                }
-
-                if (db.SetLength(GetConnectionsKey(userId!)) == 0)
-                {
-                    result.Add(userId!);
-                }
-            }
-
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "[PresenceRedis] Failed to query timed out users.");
-            return Array.Empty<string>();
-        }
-    }
-
-    /// <summary>
-    /// Xóa toàn bộ state presence của user.
-    /// </summary>
-    public void RemoveUser(string userId)
-    {
-        if (string.IsNullOrWhiteSpace(userId))
-        {
-            return;
-        }
-
-        try
-        {
-            var db = _multiplexer.GetDatabase();
-            db.KeyDelete(GetConnectionsKey(userId));
-            db.SortedSetRemove(LastActivityKey, userId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "[PresenceRedis] Failed to remove user state. UserId={UserId}", userId);
-        }
-    }
-
-    private static string GetConnectionsKey(string userId)
-    {
-        return $"{ConnectionsKeyPrefix}{userId}{ConnectionsKeySuffix}";
-    }
 }

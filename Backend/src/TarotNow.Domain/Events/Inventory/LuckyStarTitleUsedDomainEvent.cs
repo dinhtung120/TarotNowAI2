@@ -16,6 +16,11 @@ public sealed class LuckyStarTitleUsedDomainEvent : IDomainEvent
     public string SourceItemCode { get; init; } = string.Empty;
 
     /// <summary>
+    /// Khóa idempotency của thao tác dùng item nguồn.
+    /// </summary>
+    public string? SourceIdempotencyKey { get; init; }
+
+    /// <summary>
     /// Thời điểm phát sinh theo UTC.
     /// </summary>
     public DateTime OccurredAtUtc { get; init; } = DateTime.UtcNow;

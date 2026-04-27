@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using TarotNow.Application.Exceptions;
 
 namespace TarotNow.Api.Middlewares;
 
@@ -26,8 +27,8 @@ public partial class GlobalExceptionHandler : IExceptionHandler
         Exception exception,
         CancellationToken cancellationToken)
     {
-        // Ghi lỗi gốc ngay tại điểm bắt cuối để giữ đủ context điều tra production incident.
-        _logger.LogError(exception, "An unhandled exception occurred: {Message}", exception.Message);
+        var logLevel = ResolveLogLevel(exception);
+        _logger.Log(logLevel, exception, "Unhandled exception mapped to ProblemDetails: {Message}", exception.Message);
 
         var problemDetails = CreateProblemDetails(exception);
 
@@ -38,5 +39,34 @@ public partial class GlobalExceptionHandler : IExceptionHandler
         // Trả payload chuẩn hóa để client xử lý đồng nhất mọi nhánh lỗi.
         await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
         return true;
+    }
+
+    private static LogLevel ResolveLogLevel(Exception exception)
+    {
+        if (IsInformationException(exception))
+        {
+            return LogLevel.Information;
+        }
+
+        if (IsWarningException(exception))
+        {
+            return LogLevel.Warning;
+        }
+
+        return LogLevel.Error;
+    }
+
+    private static bool IsInformationException(Exception exception)
+    {
+        return exception is ValidationException or NotFoundException;
+    }
+
+    private static bool IsWarningException(Exception exception)
+    {
+        return exception is BusinessRuleException
+            or BadRequestException
+            or ForbiddenException
+            or UnauthorizedAccessException
+            or ArgumentException;
     }
 }

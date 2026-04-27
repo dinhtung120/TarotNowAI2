@@ -37,7 +37,7 @@ public class MeController : ControllerBase
             return this.UnauthorizedProblem();
         }
 
-        var result = await _mediator.Send(new GetNavbarSnapshotQuery(userId));
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetNavbarSnapshotQuery(userId));
         return Ok(result);
     }
 
@@ -54,7 +54,7 @@ public class MeController : ControllerBase
             return this.UnauthorizedProblem();
         }
 
-        var result = await _mediator.Send(new GetReadingSetupSnapshotQuery(userId), cancellationToken);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetReadingSetupSnapshotQuery(userId), cancellationToken);
         return Ok(result);
     }
 
@@ -71,7 +71,7 @@ public class MeController : ControllerBase
             return this.UnauthorizedProblem();
         }
 
-        var result = await _mediator.Send(new GetRuntimePoliciesQuery(), cancellationToken);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetRuntimePoliciesQuery(), cancellationToken);
         return Ok(result);
     }
 }

@@ -1,5 +1,6 @@
 using MediatR;
 using System;
+using TarotNow.Application.Common;
 using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Interfaces;
@@ -30,6 +31,9 @@ public class ResolvePostReportCommandHandlerRequestedDomainEventHandler
 {
     private readonly ICommunityPostRepository _postRepository;
     private readonly IReportRepository _reportRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IAuthSessionRepository _authSessionRepository;
 
     /// <summary>
     /// Khởi tạo handler resolve post report.
@@ -38,11 +42,17 @@ public class ResolvePostReportCommandHandlerRequestedDomainEventHandler
     public ResolvePostReportCommandHandlerRequestedDomainEventHandler(
         ICommunityPostRepository postRepository,
         IReportRepository reportRepository,
+        IUserRepository userRepository,
+        IRefreshTokenRepository refreshTokenRepository,
+        IAuthSessionRepository authSessionRepository,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
         _postRepository = postRepository;
         _reportRepository = reportRepository;
+        _userRepository = userRepository;
+        _refreshTokenRepository = refreshTokenRepository;
+        _authSessionRepository = authSessionRepository;
     }
 
     /// <summary>
@@ -68,22 +78,42 @@ public class ResolvePostReportCommandHandlerRequestedDomainEventHandler
             throw new BadRequestException("Report đã được xử lý trước đó.");
         }
 
-        if (request.Result == ModerationResult.RemovePost)
+        var isRemovePostAction = string.Equals(request.Result, ModerationResult.RemovePost, StringComparison.Ordinal);
+        var isFreezeAccountAction = string.Equals(request.Result, ModerationResult.FreezeAccount, StringComparison.Ordinal);
+
+        CommunityPostDto? reportedPost = null;
+        if (isRemovePostAction || isFreezeAccountAction)
         {
-            // Khi chọn RemovePost, phải gỡ bài trước khi chốt report.
-            await RemovePostOrThrowAsync(report.TargetId, request.AdminId, cancellationToken);
+            reportedPost = await GetPostOrThrowAsync(report.TargetId, cancellationToken);
         }
 
-        var resolved = await _reportRepository.ResolveAsync(
-            reportId: request.ReportId,
-            status: PostReportStatus.Resolved,
-            result: request.Result,
-            resolvedBy: request.AdminId.ToString(),
-            adminNote: request.AdminNote,
-            cancellationToken: cancellationToken);
+        Guid? lockedUserId = null;
+        if (isFreezeAccountAction && reportedPost is not null)
+        {
+            lockedUserId = await LockReportedUserAndRevokeSessionsAsync(reportedPost.AuthorId, cancellationToken);
+        }
+
+        var resolved = await _reportRepository.ResolvePostReportWithPostMutationAsync(
+            new PostReportResolutionMutation
+            {
+                ReportId = request.ReportId,
+                PostId = report.TargetId,
+                RemovePost = isRemovePostAction,
+                Status = PostReportStatus.Resolved,
+                Result = request.Result,
+                ResolvedBy = request.AdminId.ToString(),
+                AdminNote = request.AdminNote,
+                DeletedBy = request.AdminId.ToString()
+            },
+            cancellationToken);
 
         if (!resolved)
         {
+            if (lockedUserId.HasValue)
+            {
+                await TryRollbackUserLockAsync(lockedUserId.Value, cancellationToken);
+            }
+
             // Edge case repository không cập nhật được trạng thái report.
             throw new BadRequestException("Không thể cập nhật trạng thái report.");
         }
@@ -119,20 +149,54 @@ public class ResolvePostReportCommandHandlerRequestedDomainEventHandler
         }
     }
 
-    /// <summary>
-    /// Gỡ bài viết theo quyết định moderation, ném lỗi nếu không tìm thấy bài.
-    /// Luồng xử lý: gọi soft-delete với ngữ cảnh admin và xác nhận thao tác thành công.
-    /// </summary>
-    private async Task RemovePostOrThrowAsync(
+    private async Task<CommunityPostDto> GetPostOrThrowAsync(
         string postId,
-        Guid adminId,
         CancellationToken cancellationToken)
     {
-        var removed = await _postRepository.SoftDeleteAsync(postId, adminId.ToString(), cancellationToken);
-        if (!removed)
+        var post = await _postRepository.GetByIdAsync(postId, cancellationToken);
+        if (post == null || post.IsDeleted)
         {
             // Edge case report trỏ tới bài đã bị xóa hoặc không còn tồn tại.
             throw new NotFoundException("Không tìm thấy bài viết để gỡ.");
+        }
+
+        return post;
+    }
+
+    private async Task<Guid> LockReportedUserAndRevokeSessionsAsync(
+        string authorId,
+        CancellationToken cancellationToken)
+    {
+        if (!Guid.TryParse(authorId, out var targetUserId))
+        {
+            throw new BadRequestException("Target user không hợp lệ cho action freeze_account.");
+        }
+
+        var user = await _userRepository.GetByIdAsync(targetUserId, cancellationToken)
+            ?? throw new NotFoundException("Không tìm thấy user để khóa tài khoản.");
+        user.Lock();
+        await _userRepository.UpdateAsync(user, cancellationToken);
+        await _refreshTokenRepository.RevokeAllByUserIdAsync(targetUserId, cancellationToken);
+        await _authSessionRepository.RevokeAllByUserAsync(targetUserId, cancellationToken);
+        return targetUserId;
+    }
+
+    private async Task TryRollbackUserLockAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var user = await _userRepository.GetByIdAsync(userId, cancellationToken);
+            if (user == null)
+            {
+                return;
+            }
+
+            user.Unlock();
+            await _userRepository.UpdateAsync(user, cancellationToken);
+        }
+        catch
+        {
+            // Best-effort rollback khi resolve report thất bại sau bước lock.
         }
     }
 }

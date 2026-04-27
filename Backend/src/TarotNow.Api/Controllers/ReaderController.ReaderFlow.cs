@@ -30,7 +30,7 @@ public partial class ReaderController
             return this.UnauthorizedProblem();
         }
 
-        var result = await _mediator.Send(new SubmitReaderRequestCommand
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new SubmitReaderRequestCommand
         {
             UserId = userId,
             Bio = body.Bio,
@@ -67,7 +67,7 @@ public partial class ReaderController
             return this.UnauthorizedProblem();
         }
 
-        var result = await _mediator.Send(new GetMyReaderRequestQuery { UserId = userId });
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetMyReaderRequestQuery { UserId = userId });
         return Ok(result);
     }
 
@@ -88,7 +88,7 @@ public partial class ReaderController
             return this.UnauthorizedProblem();
         }
 
-        var result = await _mediator.Send(new UpdateReaderProfileCommand
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new UpdateReaderProfileCommand
         {
             UserId = userId,
             BioVi = body.BioVi,
@@ -128,7 +128,7 @@ public partial class ReaderController
             return this.UnauthorizedProblem();
         }
 
-        var result = await _mediator.Send(new UpdateReaderStatusCommand
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new UpdateReaderStatusCommand
         {
             UserId = userId,
             Status = body.Status

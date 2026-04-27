@@ -6,8 +6,11 @@ namespace TarotNow.Domain.Events;
 /// <summary>
 /// Domain event nhận webhook PayOS để xử lý trạng thái nạp tiền.
 /// </summary>
-public sealed class DepositWebhookReceivedDomainEvent : IIdempotentDomainEvent
+public sealed partial class DepositWebhookReceivedDomainEvent : IIdempotentDomainEvent
 {
+    private const string EventKeyPrefix = "deposit:webhook";
+    private const string ProviderName = "payos";
+
     /// <summary>
     /// Payload raw nhận từ PayOS.
     /// </summary>
@@ -26,10 +29,16 @@ public sealed class DepositWebhookReceivedDomainEvent : IIdempotentDomainEvent
     {
         get
         {
-            var normalizedPayload = RawPayload?.Trim() ?? string.Empty;
+            var providerIdentityKey = TryBuildProviderIdentityKey(RawPayload);
+            if (!string.IsNullOrWhiteSpace(providerIdentityKey))
+            {
+                return providerIdentityKey;
+            }
+
+            var normalizedPayload = CanonicalizePayload(RawPayload);
             var hash = SHA256.HashData(Encoding.UTF8.GetBytes(normalizedPayload));
             var hashPrefix = Convert.ToHexString(hash.AsSpan(0, 16)).ToLowerInvariant();
-            return $"deposit:webhook:{hashPrefix}";
+            return $"{EventKeyPrefix}:payload:{hashPrefix}";
         }
     }
 }

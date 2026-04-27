@@ -35,7 +35,7 @@ public sealed class AuthPasswordController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordCommand command)
     {
-        await _mediator.Send(command);
+        await _mediator.SendWithRequestCancellation(HttpContext, command);
         // Trả thông điệp cố định để giảm nguy cơ enumeration tài khoản.
         return Ok(new { message = "If the email exists, a password reset OTP has been sent." });
     }
@@ -52,7 +52,7 @@ public sealed class AuthPasswordController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommand command)
     {
-        await _mediator.Send(command);
+        await _mediator.SendWithRequestCancellation(HttpContext, command);
         return Ok(new { message = "Password has been successfully reset. All existing devices have been logged out." });
     }
 }

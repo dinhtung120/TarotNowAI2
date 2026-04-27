@@ -31,7 +31,7 @@ public partial class NotificationController
             UserId = userId
         };
 
-        var success = await _mediator.Send(command);
+        var success = await _mediator.SendWithRequestCancellation(HttpContext, command);
         if (!success)
         {
             // Trả 404 để client biết id thông báo không còn tồn tại hoặc không thuộc user hiện tại.
@@ -62,7 +62,7 @@ public partial class NotificationController
         }
 
         var command = new MarkAllNotificationsReadCommand { UserId = userId };
-        var modifiedAny = await _mediator.Send(command);
+        var modifiedAny = await _mediator.SendWithRequestCancellation(HttpContext, command);
 
         if (!modifiedAny)
         {

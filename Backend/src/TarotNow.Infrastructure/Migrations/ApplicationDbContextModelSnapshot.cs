@@ -22,6 +22,9 @@ namespace TarotNow.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.HasSequence("deposit_order_code_seq")
+                .StartsAt(100000000L);
+
             modelBuilder.Entity("TarotNow.Domain.Entities.AiRequest", b =>
                 {
                     b.Property<Guid>("Id")

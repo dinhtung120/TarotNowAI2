@@ -96,9 +96,7 @@ public class PurchaseStreakFreezeCommandHandlerRequestedDomainEventHandler
     {
         if (string.IsNullOrWhiteSpace(idempotencyKey))
         {
-            throw new ArgumentException(
-                "Thiếu IdempotencyKey để giao dịch Kim Cương.",
-                nameof(idempotencyKey));
+            throw new BadRequestException("Thiếu IdempotencyKey để giao dịch Kim Cương.");
         }
 
         return idempotencyKey.Trim();
@@ -115,7 +113,7 @@ public class PurchaseStreakFreezeCommandHandlerRequestedDomainEventHandler
             return;
         }
 
-        throw new InvalidOperationException("Bạn không có chuỗi Streak bị gãy nào để phải tốn tiền phục hồi.");
+        throw new BadRequestException("Bạn không có chuỗi Streak bị gãy nào để phải tốn tiền phục hồi.");
     }
 
     /// <summary>
@@ -130,7 +128,7 @@ public class PurchaseStreakFreezeCommandHandlerRequestedDomainEventHandler
         if (breakDiscoveryDate != todayDate)
         {
             // Chỉ cho mua trong đúng ngày phát hiện vỡ chuỗi.
-            throw new InvalidOperationException(
+            throw new BadRequestException(
                 "Đã quá hạn để đóng băng/phục hồi Streak (Chỉ có quyền mua trong ngày phát hiện vỡ chuỗi).");
         }
 
@@ -141,7 +139,7 @@ public class PurchaseStreakFreezeCommandHandlerRequestedDomainEventHandler
         }
 
         // Quá hạn cửa sổ theo giờ cấu hình thì không cho phục hồi nữa.
-        throw new InvalidOperationException(
+        throw new BadRequestException(
             $"Đã quá cửa sổ {freezeWindowHours} tiếng kể từ lúc bị gãy. Không thể phục hồi nữa.");
     }
 

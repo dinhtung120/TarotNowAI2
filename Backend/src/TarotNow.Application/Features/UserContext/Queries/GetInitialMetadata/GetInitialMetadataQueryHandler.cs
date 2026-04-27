@@ -71,7 +71,7 @@ public class GetInitialMetadataQueryHandler : IRequestHandler<GetInitialMetadata
         {
             Wallet = wallet,
             Streak = streak,
-            UnreadNotificationCount = (int)await metadataTasks.UnreadNotificationTask,
+            UnreadNotificationCount = await metadataTasks.UnreadNotificationTask,
             RecentNotifications = await metadataTasks.RecentNotificationsTask,
             UnreadChatCount = await metadataTasks.UnreadChatTask,
             ActiveConversations = await metadataTasks.ActiveConversationsTask
@@ -89,7 +89,7 @@ public class GetInitialMetadataQueryHandler : IRequestHandler<GetInitialMetadata
     {
         return new MetadataTasks(
             UnreadNotificationTask: _notificationRepository.CountUnreadAsync(userId, cancellationToken),
-            UnreadChatTask: _conversationRepository.GetTotalUnreadCountAsync(userIdString, cancellationToken),
+            UnreadChatTask: GetUnreadChatCountAsync(userIdString, cancellationToken),
             RecentNotificationsTask: _mediator.Send(
                 new GetNotificationsQuery
                 {
@@ -109,10 +109,16 @@ public class GetInitialMetadataQueryHandler : IRequestHandler<GetInitialMetadata
                 cancellationToken));
     }
 
+    private async Task<long> GetUnreadChatCountAsync(string userId, CancellationToken cancellationToken)
+    {
+        var unread = await _conversationRepository.GetTotalUnreadCountAsync(userId, cancellationToken);
+        return unread < 0 ? 0 : unread;
+    }
+
     // Nhóm task metadata dùng để gom kết quả song song một cách có kiểu dữ liệu rõ ràng.
     private readonly record struct MetadataTasks(
         Task<long> UnreadNotificationTask,
-        Task<int> UnreadChatTask,
+        Task<long> UnreadChatTask,
         Task<NotificationListResponse> RecentNotificationsTask,
         Task<ListConversationsResult> ActiveConversationsTask);
 }

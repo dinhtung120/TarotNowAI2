@@ -34,7 +34,7 @@ public sealed class AdminDepositsController : ControllerBase
     [HttpGet("deposits")]
     public async Task<IActionResult> ListDeposits([FromQuery] TarotNow.Application.Features.Admin.Queries.ListDeposits.ListDepositsQuery query)
     {
-        var result = await _mediator.Send(query);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, query);
         return Ok(result);
     }
 

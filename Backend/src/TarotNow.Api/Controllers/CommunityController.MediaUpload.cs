@@ -15,7 +15,7 @@ public partial class CommunityController
     [EnableRateLimiting("community-write")]
     public async Task<IActionResult> PresignCommunityImage([FromBody] CommunityImagePresignRequest body)
     {
-        var result = await _mediator.Send(new PresignCommunityImageCommand
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new PresignCommunityImageCommand
         {
             UserId = GetRequiredUserId(),
             ContextType = body.ContextType,
@@ -39,7 +39,7 @@ public partial class CommunityController
     [EnableRateLimiting("community-write")]
     public async Task<IActionResult> ConfirmCommunityImage([FromBody] CommunityImageConfirmRequest body)
     {
-        var result = await _mediator.Send(new ConfirmCommunityImageCommand
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new ConfirmCommunityImageCommand
         {
             UserId = GetRequiredUserId(),
             ContextType = body.ContextType,

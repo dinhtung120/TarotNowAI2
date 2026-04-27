@@ -39,7 +39,7 @@ public sealed class AdminDisputesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var result = await _mediator.Send(new ListDisputesQuery { Page = page, PageSize = pageSize });
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new ListDisputesQuery { Page = page, PageSize = pageSize });
         return Ok(result);
     }
 
@@ -60,7 +60,7 @@ public sealed class AdminDisputesController : ControllerBase
         }
 
         // Ánh xạ đầy đủ payload sang command để handler xử lý đúng rule nghiệp vụ settlement.
-        await _mediator.Send(new ResolveDisputeCommand
+        await _mediator.SendWithRequestCancellation(HttpContext, new ResolveDisputeCommand
         {
             ItemId = id,
             AdminId = adminId,

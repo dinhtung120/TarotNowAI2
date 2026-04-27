@@ -20,6 +20,7 @@ public static partial class DependencyInjection
     {
         services.AddSingleton<IPasswordHasher, Argon2idPasswordHasher>();
         services.AddSingleton<ITokenService, JwtTokenService>();
+        services.AddSingleton<ISensitiveDataProtector, SensitiveDataProtector>();
         services.AddSingleton<IJwtTokenSettings, JwtTokenSettings>();
         services.AddSingleton<IAuthSecuritySettings, AuthSecuritySettings>();
         services.AddSingleton<ILegalVersionSettings, LegalVersionSettings>();

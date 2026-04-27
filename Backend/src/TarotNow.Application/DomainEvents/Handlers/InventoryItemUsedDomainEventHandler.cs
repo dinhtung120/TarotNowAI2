@@ -77,10 +77,14 @@ public sealed partial class ItemUsedDomainEventHandler
         var summaries = new List<InventoryItemEffectSummary>();
         for (int i = 0; i < quantityToUse; i++)
         {
-            var summary = await DispatchItemEffectAsync(
+            var effectContext = new ItemEffectDispatchContext(
                 domainEvent.UserId,
                 definition,
                 targetCardId,
+                domainEvent.IdempotencyKey,
+                i);
+            var summary = await DispatchItemEffectAsync(
+                effectContext,
                 cancellationToken);
             if (summary != null)
             {

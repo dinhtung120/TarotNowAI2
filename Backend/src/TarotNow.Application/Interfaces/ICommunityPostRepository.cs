@@ -44,6 +44,12 @@ public interface ICommunityPostRepository
     Task IncrementReactionCountAsync(string postId, string reactionType, int delta, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Đổi reaction từ loại cũ sang loại mới trong một thao tác atomic.
+    /// Luồng xử lý: giảm bộ đếm loại cũ và tăng bộ đếm loại mới trong cùng update command.
+    /// </summary>
+    Task SwapReactionCountAsync(string postId, string oldReactionType, string newReactionType, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Tăng/giảm bộ đếm bình luận của bài viết nhằm đồng bộ số liệu hiển thị.
     /// Luồng xử lý: cập nhật comments_count theo postId với giá trị delta.
     /// </summary>

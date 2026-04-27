@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
+using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
-using TarotNow.Domain.Enums;
-using TarotNow.Domain.Events;
 
 namespace TarotNow.Infrastructure.BackgroundJobs;
 
@@ -48,15 +47,6 @@ public partial class EscrowTimerService
         Guid candidateId,
         CancellationToken cancellationToken)
     {
-        var outcome = await ExecuteAutoRefundTransactionAsync(dependencies, candidateId, cancellationToken);
-        if (string.IsNullOrWhiteSpace(outcome.ConversationId) == false && outcome.RefundedAmount > 0)
-        {
-            await MarkConversationExpiredAsync(
-                dependencies,
-                outcome.ConversationId,
-                $"Reader không phản hồi trong SLA đã cam kết. Đã hoàn {outcome.RefundedAmount} 💎.",
-                cancellationToken);
-            // Đánh dấu conversation expired để UI và nghiệp vụ phản ánh đúng kết quả timeout.
-        }
+        await ExecuteAutoRefundTransactionAsync(dependencies, candidateId, cancellationToken);
     }
 }

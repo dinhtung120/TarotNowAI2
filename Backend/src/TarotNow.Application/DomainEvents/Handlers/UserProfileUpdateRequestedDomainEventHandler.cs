@@ -31,19 +31,19 @@ public sealed class UserProfileUpdateRequestedDomainEventHandler
     private const string ErrorUnsupportedBank = "Ngân hàng không nằm trong danh mục hỗ trợ payout.";
 
     private readonly IUserRepository _userRepository;
-    private readonly IReaderProfileRepository _readerProfileRepository;
+    private readonly IDomainEventPublisher _domainEventPublisher;
 
     /// <summary>
     /// Khởi tạo handler cập nhật profile.
     /// </summary>
     public UserProfileUpdateRequestedDomainEventHandler(
         IUserRepository userRepository,
-        IReaderProfileRepository readerProfileRepository,
+        IDomainEventPublisher domainEventPublisher,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
         _userRepository = userRepository;
-        _readerProfileRepository = readerProfileRepository;
+        _domainEventPublisher = domainEventPublisher;
     }
 
     /// <inheritdoc />
@@ -56,7 +56,16 @@ public sealed class UserProfileUpdateRequestedDomainEventHandler
         user.UpdateProfile(domainEvent.DisplayName, user.AvatarUrl, domainEvent.DateOfBirth);
         ApplyPayoutBankInfoIfProvided(user, domainEvent);
         await _userRepository.UpdateAsync(user, cancellationToken);
-        await SyncReaderProfileAsync(user, cancellationToken);
+        await _domainEventPublisher.PublishAsync(
+            new UserProfileProjectionSyncRequestedDomainEvent
+            {
+                UserId = user.Id,
+                DisplayName = user.DisplayName,
+                AvatarUrl = user.AvatarUrl,
+                SourceUpdatedAtUtc = user.UpdatedAt ?? DateTime.UtcNow,
+                OccurredAtUtc = DateTime.UtcNow
+            },
+            cancellationToken);
         domainEvent.Updated = true;
     }
 
@@ -148,16 +157,4 @@ public sealed class UserProfileUpdateRequestedDomainEventHandler
         throw new BadRequestException(ErrorUnsupportedBank);
     }
 
-    private async Task SyncReaderProfileAsync(User user, CancellationToken cancellationToken)
-    {
-        var readerProfile = await _readerProfileRepository.GetByUserIdAsync(user.Id.ToString(), cancellationToken);
-        if (readerProfile is null)
-        {
-            return;
-        }
-
-        readerProfile.DisplayName = user.DisplayName;
-        readerProfile.AvatarUrl = user.AvatarUrl;
-        await _readerProfileRepository.UpdateAsync(readerProfile, cancellationToken);
-    }
 }

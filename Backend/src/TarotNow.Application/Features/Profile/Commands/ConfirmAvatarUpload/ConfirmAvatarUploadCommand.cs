@@ -74,6 +74,12 @@ public sealed class ConfirmAvatarUploadCommandHandlerRequestedDomainEventHandler
             ?? throw new BadRequestException("Upload token không tồn tại.");
 
         ValidateUploadSession(session, request);
+        var objectExists = await _r2UploadService.ExistsObjectAsync(request.ObjectKey, cancellationToken);
+        if (!objectExists)
+        {
+            throw new BadRequestException("Object avatar chưa tồn tại trên Object Storage hoặc đã bị xóa.");
+        }
+
         var consumed = await _uploadSessionRepository.ConsumeAsync(request.UploadToken, DateTime.UtcNow, cancellationToken);
         if (!consumed)
         {

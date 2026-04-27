@@ -165,6 +165,8 @@ public class CustomWebApplicationFactory<TProgram>
             services.RemoveAll<StackExchange.Redis.IConnectionMultiplexer>();
             services.RemoveAll<IPayOsGateway>();
             services.AddSingleton<IPayOsGateway, TestPayOsGateway>();
+            services.RemoveAll<IR2UploadService>();
+            services.AddSingleton<IR2UploadService, TestR2UploadService>();
 
             // Ép buộc SignalR dùng in-memory lifetime manager, ngăn chặn việc sử dụng Redis backplane trong môi trường test.
             // Điều này giải quyết triệt để lỗi kết nối Redis khi chạy trên CI.

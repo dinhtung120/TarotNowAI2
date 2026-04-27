@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using System.Threading;
 using System.Threading.Tasks;
 using TarotNow.Api.Constants;
 using TarotNow.Api.Extensions;
@@ -34,7 +35,7 @@ public class UserContextController : ControllerBase
     /// <returns>Metadata bootstrap của user hoặc unauthorized khi thiếu user id.</returns>
     [HttpGet("metadata")]
     [Authorize]
-    public async Task<IActionResult> GetInitialMetadata()
+    public async Task<IActionResult> GetInitialMetadata(CancellationToken cancellationToken)
     {
         if (!User.TryGetUserId(out var userId))
         {
@@ -43,7 +44,7 @@ public class UserContextController : ControllerBase
         }
 
         var query = new GetInitialMetadataQuery(userId);
-        var result = await _mediator.Send(query);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, query, cancellationToken);
 
         return Ok(result);
     }

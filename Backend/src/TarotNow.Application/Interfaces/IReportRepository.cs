@@ -40,4 +40,31 @@ public interface IReportRepository
         string resolvedBy,
         string? adminNote,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Resolve report post và (tùy chọn) soft-delete post trong một transaction Mongo.
+    /// Luồng xử lý: đảm bảo report/post nhất quán khi admin chọn action remove post.
+    /// </summary>
+    Task<bool> ResolvePostReportWithPostMutationAsync(
+        PostReportResolutionMutation mutation,
+        CancellationToken cancellationToken = default);
+}
+
+public sealed class PostReportResolutionMutation
+{
+    public string ReportId { get; init; } = string.Empty;
+
+    public string PostId { get; init; } = string.Empty;
+
+    public bool RemovePost { get; init; }
+
+    public string Status { get; init; } = string.Empty;
+
+    public string Result { get; init; } = string.Empty;
+
+    public string ResolvedBy { get; init; } = string.Empty;
+
+    public string? AdminNote { get; init; }
+
+    public string? DeletedBy { get; init; }
 }

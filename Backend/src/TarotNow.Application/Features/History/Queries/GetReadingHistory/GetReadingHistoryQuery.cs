@@ -77,10 +77,13 @@ public class GetReadingHistoryQueryHandler : IRequestHandler<GetReadingHistoryQu
     /// </summary>
     public async Task<GetReadingHistoryResponse> Handle(GetReadingHistoryQuery request, CancellationToken cancellationToken)
     {
+        var normalizedPage = request.Page < 1 ? 1 : request.Page;
+        var normalizedPageSize = request.PageSize <= 0 ? 10 : Math.Min(request.PageSize, 100);
+
         var (items, totalCount) = await _readingRepo.GetSessionsByUserIdAsync(
             request.UserId,
-            request.Page,
-            request.PageSize,
+            normalizedPage,
+            normalizedPageSize,
             request.SpreadType,
             request.Date,
             cancellationToken);
@@ -95,11 +98,11 @@ public class GetReadingHistoryQueryHandler : IRequestHandler<GetReadingHistoryQu
 
         return new GetReadingHistoryResponse
         {
-            Page = request.Page,
-            PageSize = request.PageSize,
+            Page = normalizedPage,
+            PageSize = normalizedPageSize,
             TotalCount = totalCount,
             // Tính số trang theo tổng bản ghi và page size.
-            TotalPages = (int)Math.Ceiling(totalCount / (double)request.PageSize),
+            TotalPages = (int)Math.Ceiling(totalCount / (double)normalizedPageSize),
             Items = dtos
         };
     }

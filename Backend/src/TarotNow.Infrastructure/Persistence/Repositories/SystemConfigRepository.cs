@@ -63,4 +63,19 @@ public sealed class SystemConfigRepository : ISystemConfigRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
         return entity;
     }
+
+    /// <inheritdoc />
+    public async Task DeleteByKeyAsync(string key, CancellationToken cancellationToken = default)
+    {
+        var normalizedKey = SystemConfigRegistry.NormalizeKey(key);
+        var entity = await _dbContext.SystemConfigs
+            .FirstOrDefaultAsync(x => x.Key == normalizedKey, cancellationToken);
+        if (entity is null)
+        {
+            return;
+        }
+
+        _dbContext.SystemConfigs.Remove(entity);
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
 }

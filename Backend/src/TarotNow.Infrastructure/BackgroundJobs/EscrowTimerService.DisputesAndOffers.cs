@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Enums;
+using TarotNow.Domain.Events;
 
 namespace TarotNow.Infrastructure.BackgroundJobs;
 
@@ -47,8 +48,6 @@ public partial class EscrowTimerService
         Guid candidateId,
         CancellationToken cancellationToken)
     {
-        string? completedConversationId = null;
-
         await dependencies.TransactionCoordinator.ExecuteAsync(async transactionCt =>
         {
             var item = await dependencies.FinanceRepository.GetItemForUpdateAsync(candidateId, transactionCt);
@@ -70,8 +69,26 @@ public partial class EscrowTimerService
                 if (session.TotalFrozen <= 0)
                 {
                     session.Status = ChatFinanceSessionStatus.Completed;
-                    completedConversationId = session.ConversationRef;
                     // Không còn frozen thì conversation có thể chốt completed.
+                    if (string.IsNullOrWhiteSpace(session.ConversationRef) == false)
+                    {
+                        var now = DateTime.UtcNow;
+                        await PublishConversationSyncRequestedAsync(
+                            dependencies,
+                            new EscrowConversationSyncRequestedDomainEvent
+                            {
+                                ConversationId = session.ConversationRef,
+                                TargetStatus = ConversationStatus.Completed,
+                                MessageType = ChatMessageType.SystemRelease,
+                                ActorId = item.ReceiverId.ToString("D"),
+                                MessageContent = "Dispute đã quá hạn xử lý. Hệ thống tự động giải ngân cho Reader.",
+                                SyncReason = "dispute_auto_release",
+                                ResolvedAtUtc = now,
+                                OccurredAtUtc = now
+                            },
+                            transactionCt);
+                        // Publish trong transaction để outbox và settlement commit atomically.
+                    }
                 }
                 else
                 {
@@ -85,15 +102,5 @@ public partial class EscrowTimerService
 
             await dependencies.FinanceRepository.SaveChangesAsync(transactionCt);
         }, cancellationToken);
-
-        if (string.IsNullOrWhiteSpace(completedConversationId) == false)
-        {
-            await MarkConversationCompletedAsync(
-                dependencies,
-                completedConversationId,
-                "Dispute đã quá hạn xử lý. Hệ thống tự động giải ngân cho Reader.",
-                cancellationToken);
-            // Đồng bộ trạng thái conversation sau khi auto-resolve dispute thành công.
-        }
     }
 }

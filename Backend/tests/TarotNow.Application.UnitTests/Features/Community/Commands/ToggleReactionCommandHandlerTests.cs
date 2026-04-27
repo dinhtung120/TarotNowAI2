@@ -119,7 +119,6 @@ public class ToggleReactionCommandHandlerRequestedDomainEventHandlerTests
 
         Assert.True(result);
         _reactionRepoMock.Verify(x => x.UpdateTypeAsync("post1", request.UserId.ToString(), ReactionType.Love, default), Times.Once);
-        _postRepoMock.Verify(x => x.IncrementReactionCountAsync("post1", ReactionType.Like, -1, default), Times.Once);
-        _postRepoMock.Verify(x => x.IncrementReactionCountAsync("post1", ReactionType.Love, 1, default), Times.Once);
+        _postRepoMock.Verify(x => x.SwapReactionCountAsync("post1", ReactionType.Like, ReactionType.Love, default), Times.Once);
     }
 }

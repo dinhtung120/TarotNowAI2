@@ -86,6 +86,31 @@ public sealed class R2UploadService : IR2UploadService
     }
 
     /// <inheritdoc />
+    public async Task<bool> ExistsObjectAsync(string objectKey, CancellationToken cancellationToken = default)
+    {
+        if (!IsEnabled || string.IsNullOrWhiteSpace(objectKey))
+        {
+            return false;
+        }
+
+        try
+        {
+            var request = new GetObjectMetadataRequest
+            {
+                BucketName = _settings.BucketName,
+                Key = NormalizeObjectKey(objectKey),
+            };
+
+            await _s3!.GetObjectMetadataAsync(request, cancellationToken);
+            return true;
+        }
+        catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return false;
+        }
+    }
+
+    /// <inheritdoc />
     public string BuildPublicUrl(string objectKey)
     {
         EnsureEnabled();

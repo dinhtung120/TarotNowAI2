@@ -30,6 +30,8 @@ public sealed class RedisPublisher : IRedisPublisher
     /// <inheritdoc />
     public async Task PublishAsync(string channel, string eventName, object payload, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         if (string.IsNullOrWhiteSpace(channel))
         {
             throw new ArgumentException("Channel is required.", nameof(channel));
@@ -48,6 +50,7 @@ public sealed class RedisPublisher : IRedisPublisher
         };
 
         var json = JsonSerializer.Serialize(envelope, JsonOptions);
+        cancellationToken.ThrowIfCancellationRequested();
         await _connectionMultiplexer.GetSubscriber().PublishAsync(RedisChannel.Literal(channel), json);
 
         _logger.LogDebug("Published realtime event {EventName} to channel {Channel}", eventName, channel);

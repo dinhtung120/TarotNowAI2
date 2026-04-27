@@ -46,7 +46,7 @@ public sealed class AdminWithdrawalsController : ControllerBase
             PageSize = pageSize
         };
 
-        var result = await _mediator.Send(query);
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, query);
         return Ok(result);
     }
 
@@ -58,7 +58,7 @@ public sealed class AdminWithdrawalsController : ControllerBase
     [HttpGet("withdrawals/{withdrawalId:guid}")]
     public async Task<IActionResult> WithdrawalDetail([FromRoute] Guid withdrawalId)
     {
-        var result = await _mediator.Send(new GetWithdrawalDetailQuery
+        var result = await _mediator.SendWithRequestCancellation(HttpContext, new GetWithdrawalDetailQuery
         {
             WithdrawalId = withdrawalId
         });
@@ -99,7 +99,7 @@ public sealed class AdminWithdrawalsController : ControllerBase
             IdempotencyKey = idempotencyKey,
         };
 
-        await _mediator.Send(command);
+        await _mediator.SendWithRequestCancellation(HttpContext, command);
         return Ok(new { success = true, action = body.Action });
     }
 
