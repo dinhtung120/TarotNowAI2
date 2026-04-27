@@ -5,6 +5,7 @@ import { AUTH_COOKIE, AUTH_HEADER } from '@/shared/infrastructure/auth/authConst
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import {
+ buildProblemResponse,
  clearAuthCookies,
  resolveAccessTtlSeconds,
  resolveDeviceIdFromRequest,
@@ -58,26 +59,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
    fallbackErrorMessage: AUTH_ERROR.UNAUTHORIZED,
   });
  } catch {
-  return NextResponse.json(
-   { success: false, error: AUTH_ERROR.TEMPORARY_FAILURE },
-   { status: 503 },
-  );
+  return buildProblemResponse(503, AUTH_ERROR.TEMPORARY_FAILURE, AUTH_ERROR.TEMPORARY_FAILURE);
  }
 
  if (!result.ok) {
   if (shouldClearCookiesForRefreshFailure(result.status, result.error)) {
-   const response = NextResponse.json(
-    { success: false, error: result.error || AUTH_ERROR.UNAUTHORIZED },
-    { status: 401 },
+   const response = buildProblemResponse(
+    401,
+    result.error || AUTH_ERROR.UNAUTHORIZED,
+    result.error || AUTH_ERROR.UNAUTHORIZED,
    );
    clearAuthCookies(response);
    return response;
   }
 
-  return NextResponse.json(
-   { success: false, error: result.error },
-   { status: result.status >= 500 ? 503 : result.status },
-  );
+  const transientStatus = result.status >= 500 ? 503 : result.status;
+  const errorCode = result.error ?? AUTH_ERROR.TEMPORARY_FAILURE;
+  return buildProblemResponse(transientStatus, errorCode, errorCode);
  }
 
  const accessToken = result.data.accessToken;

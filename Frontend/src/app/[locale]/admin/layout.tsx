@@ -1,13 +1,15 @@
 import type { ReactNode } from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages, getTranslations } from 'next-intl/server';
 import AdminLayoutShell, {
  type AdminLayoutLabels,
 } from '@/features/admin/presentation/components/AdminLayoutShell';
 import AuthBootstrap from '@/shared/components/auth/AuthBootstrap';
 import { AUTH_COOKIE } from '@/shared/infrastructure/auth/authConstants';
 import { getServerSessionSnapshot } from '@/shared/infrastructure/auth/serverAuth';
+import { ADMIN_CLIENT_NAMESPACES, pickClientMessages } from '@/i18n/clientMessages';
 
 interface AdminLayoutProps {
  children: ReactNode;
@@ -33,6 +35,8 @@ export default async function AdminLayout({ children, params }: AdminLayoutProps
  }
 
  const t = await getTranslations('Admin');
+ const messages = await getMessages();
+ const adminMessages = pickClientMessages(messages, ADMIN_CLIENT_NAMESPACES);
 
  const labels: AdminLayoutLabels = {
   title: t('layout.title'),
@@ -53,9 +57,11 @@ export default async function AdminLayout({ children, params }: AdminLayoutProps
  };
 
  return (
-  <>
+  <NextIntlClientProvider messages={adminMessages}>
    <AuthBootstrap initialUser={sessionSnapshot.user} />
    <AdminLayoutShell labels={labels}>{children}</AdminLayoutShell>
-  </>
+  </NextIntlClientProvider>
  );
 }
+
+export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';

@@ -44,6 +44,14 @@ export function useCollectionPage() {
   [queryError]
  );
  const loading = isLoading || isFetching;
+ const collectionByCardId = useMemo(
+  () => new Map(collection.map((card) => [card.cardId, card])),
+  [collection],
+ );
+ const ownedCardIds = useMemo(
+  () => new Set(collectionByCardId.keys()),
+  [collectionByCardId],
+ );
 
   const selectedCardData = useMemo(() => {
     if (selectedCardId === null) return null;
@@ -57,7 +65,7 @@ export function useCollectionPage() {
   
   const filteredDeck = useMemo(() => {
     const baseDeck = TAROT_DECK.filter((deckCard) => {
-      const isOwned = collection.some((card) => card.cardId === deckCard.id);
+      const isOwned = ownedCardIds.has(deckCard.id);
       if (activeFilter === 'owned') return isOwned;
       if (activeFilter === 'unowned') return !isOwned;
       return true;
@@ -66,8 +74,8 @@ export function useCollectionPage() {
     if (sortBy === 'id') return baseDeck;
 
     return [...baseDeck].sort((cardA, cardB) => {
-      const userCardA = collection.find(c => c.cardId === cardA.id);
-      const userCardB = collection.find(c => c.cardId === cardB.id);
+      const userCardA = collectionByCardId.get(cardA.id);
+      const userCardB = collectionByCardId.get(cardB.id);
 
       let valA = 0;
       let valB = 0;
@@ -90,7 +98,7 @@ export function useCollectionPage() {
       if (valB !== valA) return valB - valA;
       return cardA.id - cardB.id;
     });
-  }, [collection, activeFilter, sortBy]);
+  }, [ownedCardIds, collectionByCardId, activeFilter, sortBy]);
 
   const totalCollected = collection.length;
   const totalCardCount = TAROT_CARD_COUNT;

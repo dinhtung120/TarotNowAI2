@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { internalApiUrl } from '@/shared/infrastructure/http/apiUrl';
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 
@@ -6,6 +6,7 @@ const SESSION_ID_PATTERN = /^[A-Za-z0-9-]+$/;
 const SESSION_ID_MAX_LENGTH = 64;
 const ALLOWED_LANGUAGES = new Set(['vi', 'en', 'zh']);
 const FOLLOWUP_MAX_LENGTH = 2000;
+const UPSTREAM_OPEN_TIMEOUT_MS = 12_000;
 
 function getSafeLanguage(rawLanguage: string | null): string {
   if (!rawLanguage) return 'en';
@@ -31,6 +32,38 @@ function isTrustedOrigin(request: NextRequest): boolean {
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+function buildProblemResponse(status: number, detail: string): NextResponse {
+  return NextResponse.json(
+    {
+      type: 'about:blank',
+      title: status >= 500 ? 'Server Error' : status === 401 ? 'Unauthorized' : 'Bad Request',
+      status,
+      detail,
+    },
+    { status },
+  );
+}
+
+async function fetchUpstreamWithTimeout(url: string, accessToken: string): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), UPSTREAM_OPEN_TIMEOUT_MS);
+  try {
+    return await fetch(url, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'text/event-stream',
+        'Cache-Control': 'no-cache',
+      },
+      cache: 'no-store',
+      redirect: 'error',
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ sessionId: string }> }
@@ -40,18 +73,18 @@ export async function GET(
 
   if (!isTrustedOrigin(request)) {
     console.warn(`[StreamRoute][${requestId}] Untrusted origin: ${request.headers.get('origin')}`);
-    return new Response('Forbidden', { status: 403 });
+    return buildProblemResponse(403, 'Forbidden');
   }
 
   const accessToken = await getServerAccessToken();
   if (!accessToken) {
     console.error(`[StreamRoute][${requestId}] Unauthorized: Access token not found in cookies.`);
-    return new Response('Unauthorized', { status: 401 });
+    return buildProblemResponse(401, 'Unauthorized');
   }
 
   const { sessionId } = await context.params;
   if (!SESSION_ID_PATTERN.test(sessionId) || sessionId.length > SESSION_ID_MAX_LENGTH) {
-    return new Response('Invalid session id', { status: 400 });
+    return buildProblemResponse(400, 'Invalid session id');
   }
 
   const path = `/sessions/${encodeURIComponent(sessionId)}/stream`;
@@ -66,36 +99,19 @@ export async function GET(
     upstreamUrl.searchParams.set('followupQuestion', followupQuestion);
   }
 
-  console.log(`[StreamRoute][${requestId}] Fetching from upstream: ${upstreamUrl.toString()}`);
-
   let upstream: Response;
   try {
-    upstream = await fetch(upstreamUrl.toString(), {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: 'text/event-stream',
-        'Cache-Control': 'no-cache',
-      },
-      cache: 'no-store',
-      redirect: 'error',
-    });
-  } catch (err) {
-    console.error(`[StreamRoute][${requestId}] Fetch error:`, err);
-    return new Response('Failed to open stream', { status: 502 });
+    upstream = await fetchUpstreamWithTimeout(upstreamUrl.toString(), accessToken);
+  } catch {
+   console.error(`[StreamRoute][${requestId}] Fetch error when opening upstream stream.`);
+   return buildProblemResponse(502, 'Failed to open stream');
   }
 
   console.log(`[StreamRoute][${requestId}] Upstream response: ${upstream.status} ${upstream.statusText}`);
 
   if (!upstream.ok || !upstream.body) {
-    const errorBody = await upstream.text().catch(() => 'No error body');
-    console.error(`[StreamRoute][${requestId}] Upstream error body:`, errorBody);
-    return new Response(errorBody || 'Failed to open stream', {
-      status: upstream.status,
-      headers: {
-        'Content-Type': upstream.headers.get('content-type') ?? 'text/plain; charset=utf-8',
-      },
-    });
+    console.error(`[StreamRoute][${requestId}] Upstream stream rejected. status=${upstream.status}`);
+    return buildProblemResponse(upstream.status, 'Failed to open stream');
   }
 
   const headers = new Headers();

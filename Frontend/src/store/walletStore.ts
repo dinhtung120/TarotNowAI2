@@ -19,7 +19,7 @@ interface WalletState {
  isLoading: boolean;
  error: string | null;
  resetWallet: () => void;
- fetchBalance: () => Promise<void>;
+ fetchBalance: () => Promise<WalletBalance | null>;
  setBalance: (balance: WalletBalance) => void;
 }
 
@@ -56,7 +56,7 @@ const walletActions: WalletStoreActions = {
   });
  },
  fetchBalance: async () => {
-  if (walletData.isLoading) return;
+  if (walletData.isLoading) return walletData.balance;
 
   updateWalletData({
    ...walletData,
@@ -72,17 +72,17 @@ const walletActions: WalletStoreActions = {
      isLoading: false,
      error: 'Wallet balance fetcher is not configured',
     });
-    return;
+    return null;
    }
 
    const result = await fetcher();
    if (result.success && result.data) {
-    updateWalletData({
-     balance: result.data,
-     isLoading: false,
-     error: null,
-    });
-    return;
+     updateWalletData({
+      balance: result.data,
+      isLoading: false,
+      error: null,
+     });
+    return result.data;
    }
 
    updateWalletData({
@@ -90,12 +90,14 @@ const walletActions: WalletStoreActions = {
     isLoading: false,
     error: result.error ?? 'Unknown error',
    });
+   return null;
   } catch (error: unknown) {
    updateWalletData({
     balance: null,
     isLoading: false,
     error: error instanceof Error ? error.message : 'Unknown error',
    });
+   return null;
   }
  },
  setBalance: (balance) => {

@@ -5,10 +5,8 @@ export interface DrawPhaseSectionProps {
   activeDeckRows: number[][];
   cardsToDraw: number;
   changeCardText: string;
-  deckCardWidth: string;
   error: string;
   flyingCards: FlyingCard[];
-  horizontalOverlapFactor: number;
   isRevealing: boolean;
   isShuffling: boolean;
   modalDescription: string;
@@ -21,7 +19,6 @@ export interface DrawPhaseSectionProps {
   pickedDoneText: string;
   pickedPromptText: string;
   randomSelectText: string;
-  rowOverlapMargin: string;
   shufflePaths: ShufflePath[];
   shuffleSubtitle: string;
   shuffleTitle: string;

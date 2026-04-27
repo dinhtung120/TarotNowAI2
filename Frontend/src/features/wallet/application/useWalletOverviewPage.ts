@@ -22,10 +22,7 @@ export function useWalletOverviewPage() {
 
  useQuery({
   queryKey: WALLET_BALANCE_SYNC_QUERY_KEY,
-  queryFn: async () => {
-   await fetchBalance();
-   return true;
-  },
+  queryFn: () => fetchBalance(),
  });
 
  const { data: ledger, isFetching: isLoadingLedger } = useQuery<

@@ -11,3 +11,5 @@ export default async function DepositHistoryRoutePage() {
   </AppQueryHydrationBoundary>
  );
 }
+
+export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';

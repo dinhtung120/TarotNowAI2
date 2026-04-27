@@ -24,7 +24,10 @@ export function FeedPostsSection({ activeVisibility, data, hasNextPage, isFetchi
 
  return (
   <div className={cn("space-y-4")}>
-   {data?.pages.map((page, pageIndex) => <React.Fragment key={pageIndex}>{page.data.map((post) => <PostCard key={post.id} post={post} currentVisibilityTab={activeVisibility} onReportClick={onReport} />)}</React.Fragment>)}
+   {data?.pages.map((page) => {
+    const pageKey = `feed-page-${page.metadata.page}-${page.metadata.pageSize}`;
+    return <React.Fragment key={pageKey}>{page.data.map((post) => <PostCard key={post.id} post={post} currentVisibilityTab={activeVisibility} onReportClick={onReport} />)}</React.Fragment>;
+   })}
    {hasNextPage ? (
     <button
      type="button"

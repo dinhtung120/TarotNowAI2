@@ -174,10 +174,10 @@ export function useAdminSystemConfigs(initialConfigs: AdminSystemConfigItem[]) {
  async function handleRestartServer() {
   const result = await restartMutation.mutateAsync();
   if (!result.success) {
-   toast.error(result.error || t('system_configs.toast.restart_failed'));
+   toast.error(result.error || t('system_configs.toast.restart_failed') || 'Failed to create restart request');
    return;
   }
-  toast.success(t('system_configs.toast.restart_success'));
+  toast.success(t('system_configs.toast.restart_success') || 'Restart request submitted');
  }
 
  function selectConfig(item: AdminSystemConfigItem) {
@@ -211,3 +211,5 @@ export function useAdminSystemConfigs(initialConfigs: AdminSystemConfigItem[]) {
   groupedItems,
  };
 }
+
+export type AdminSystemConfigsViewModel = ReturnType<typeof useAdminSystemConfigs>;

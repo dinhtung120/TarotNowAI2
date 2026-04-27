@@ -68,21 +68,28 @@ export async function updateSystemConfig(
 export async function restartServer(): Promise<ActionResult<void>> {
  return withAdminToken(async (token) => {
   try {
-   const result = await serverHttpRequest<void>('/admin/system-configs/restart', {
+   const result = await serverHttpRequest<void>('/admin/system-configs/restart-requests', {
     method: 'POST',
     token,
-    fallbackErrorMessage: 'Failed to restart server',
+    json: {
+      reason: 'manual_restart_request_from_admin_ui',
+      requestedAtUtc: new Date().toISOString(),
+      auditMetadata: {
+        source: 'frontend_admin_system_configs',
+      },
+    },
+    fallbackErrorMessage: 'Failed to create restart request',
    });
    
    if (!result.ok) {
     logger.error('[AdminAction] restartServer', result.error, { status: result.status });
-    return actionFail(result.error || 'Failed to restart server');
+    return actionFail(result.error || 'Failed to create restart request');
    }
 
    return actionOk(undefined);
   } catch (error) {
    logger.error('[AdminAction] restartServer', error);
-   return actionFail('Failed to restart server');
+   return actionFail('Failed to create restart request');
   }
  });
 }

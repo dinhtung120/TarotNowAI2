@@ -47,3 +47,4 @@ export default async function GamificationPage() {
     </AppQueryHydrationBoundary>
   );
 }
+

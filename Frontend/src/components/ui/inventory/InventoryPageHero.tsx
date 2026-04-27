@@ -37,7 +37,7 @@ export default function InventoryPageHero({ title, subtitle }: InventoryPageHero
         <div className={cn('absolute -bottom-1 -left-1 h-2 w-2 rounded-full bg-fuchsia-400 blur-[1px] animate-pulse delay-75')} />
       </div>
       
-      <div className="flex flex-col gap-2">
+      <div className={cn("flex flex-col gap-2")}>
         {/* 
             Tiêu đề Lunar Metallic 
         */}
@@ -48,12 +48,12 @@ export default function InventoryPageHero({ title, subtitle }: InventoryPageHero
           {title}
         </h1>
         
-        <div className="flex items-center gap-3">
-          <div className="h-[1px] w-8 bg-gradient-to-r from-transparent via-violet-500 to-transparent sm:w-12" />
+        <div className={cn("flex items-center gap-3")}>
+          <div className={cn("h-[1px] w-8 bg-gradient-to-r from-transparent via-violet-500 to-transparent sm:w-12")} />
           <p className={cn('tn-text-secondary text-sm font-bold tracking-widest uppercase opacity-60')}>
             {subtitle}
           </p>
-          <div className="h-[1px] w-8 bg-gradient-to-r from-transparent via-fuchsia-500 to-transparent sm:w-12" />
+          <div className={cn("h-[1px] w-8 bg-gradient-to-r from-transparent via-fuchsia-500 to-transparent sm:w-12")} />
         </div>
       </div>
 

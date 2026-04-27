@@ -7,7 +7,8 @@
     "build": "dotenv -e ../.env -- next build",
     "build:analyze": "dotenv -e ../.env -- env ANALYZE=true next build --webpack",
     "start": "dotenv -e ../.env -- next start --hostname 0.0.0.0 --port 3000",
-    "lint": "eslint",
+    "lint": "eslint && npm run lint:component-size",
+    "lint:component-size": "node scripts/check-component-size.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test"
@@ -20,8 +21,8 @@
     "clsx": "^2.1.1",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.577.0",
-    "next": "^16.2.1",
-    "next-intl": "^4.8.3",
+    "next": "^16.2.4",
+    "next-intl": "^4.9.1",
     "next-qrcode": "^2.5.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -29,7 +30,7 @@
     "react-hot-toast": "^2.6.0",
     "react-markdown": "^10.1.0",
     "tailwind-merge": "^3.5.0",
-    "uuid": "^13.0.0",
+    "uuid": "^14.0.0",
     "zod": "^4.3.6",
     "zustand": "^5.0.11"
   },
@@ -44,9 +45,9 @@
     "@vitest/coverage-v8": "^4.1.1",
     "dotenv-cli": "^11.0.0",
     "eslint": "^9",
-    "eslint-config-next": "^16.2.1",
+    "eslint-config-next": "^16.2.4",
     "jsdom": "^29.0.1",
-    "postcss": "^8.5.8",
+    "postcss": "^8.5.12",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4",
@@ -54,6 +55,7 @@
     "vitest": "^4.1.1"
   },
   "overrides": {
+    "postcss": "^8.5.12",
     "tar": ">=7.5.11"
   }
 }

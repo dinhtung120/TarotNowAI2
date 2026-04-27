@@ -10,8 +10,34 @@
       "load_more": "Mở rộng tầm mắt",
       "loading_more": "Đang tò mò thêm...",
       "end": "Bạn đã lướt hết dòng thời gian rồi.",
-      "empty": "Khoảng không im lặng. Chưa có thông điệp nào.",
-      "report_placeholder": "Mở modal báo cáo cho bài viết [{postId}] (MVP phase)"
+      "empty": "Khoảng không im lặng. Chưa có thông điệp nào."
+    },
+    "report_modal": {
+      "title": "Báo cáo bài viết",
+      "description": "Giúp chúng tôi kiểm duyệt cộng đồng. Báo cáo của bạn sẽ được xem xét.",
+      "reason_label": "Lý do",
+      "reason_placeholder": "Chọn lý do",
+      "description_label": "Mô tả",
+      "description_placeholder": "Mô tả vấn đề (tối thiểu {min} ký tự)",
+      "cancel": "Hủy",
+      "submit": "Gửi báo cáo",
+      "submitting": "Đang gửi...",
+      "toast": {
+        "success": "Đã gửi báo cáo thành công.",
+        "failure": "Hiện không thể gửi báo cáo."
+      },
+      "validation": {
+        "reason_required": "Vui lòng chọn lý do.",
+        "description_min": "Mô tả phải có ít nhất {min} ký tự."
+      },
+      "reasons": {
+        "spam": "Spam",
+        "hate_speech": "Ngôn từ thù ghét",
+        "harassment": "Quấy rối",
+        "misinformation": "Thông tin sai lệch",
+        "inappropriate": "Nội dung không phù hợp",
+        "other": "Khác"
+      }
     },
     "composer": {
       "placeholder": "Hôm nay vũ trụ gửi thông điệp gì đến bạn?...",

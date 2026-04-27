@@ -10,8 +10,34 @@
       "load_more": "加载更多",
       "loading_more": "正在加载...",
       "end": "你已经浏览完时间线了。",
-      "empty": "一片寂静。还没有任何讯息。",
-      "report_placeholder": "打开帖子 [{postId}] 的举报弹窗（MVP 阶段）"
+      "empty": "一片寂静。还没有任何讯息。"
+    },
+    "report_modal": {
+      "title": "举报帖子",
+      "description": "帮助我们维护社区。你的举报会被审核。",
+      "reason_label": "举报原因",
+      "reason_placeholder": "请选择原因",
+      "description_label": "详细说明",
+      "description_placeholder": "请描述发生了什么（至少 {min} 个字符）",
+      "cancel": "取消",
+      "submit": "提交举报",
+      "submitting": "提交中...",
+      "toast": {
+        "success": "举报已成功提交。",
+        "failure": "当前无法提交举报。"
+      },
+      "validation": {
+        "reason_required": "请选择举报原因。",
+        "description_min": "说明至少需要 {min} 个字符。"
+      },
+      "reasons": {
+        "spam": "垃圾信息",
+        "hate_speech": "仇恨言论",
+        "harassment": "骚扰",
+        "misinformation": "虚假信息",
+        "inappropriate": "不当内容",
+        "other": "其他"
+      }
     },
     "composer": {
       "placeholder": "今天宇宙给你什么讯息？...",

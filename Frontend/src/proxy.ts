@@ -2,16 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import createMiddleware from 'next-intl/middleware';
 import { routing } from './i18n/routing';
 import { PROTECTED_PREFIXES } from '@/shared/config/authRoutes';
-import { AUTH_COOKIE } from '@/shared/infrastructure/auth/authConstants';
+import { AUTH_COOKIE, AUTH_HEADER } from '@/shared/infrastructure/auth/authConstants';
 import { getPublicApiOrigin } from '@/shared/infrastructure/http/apiUrl';
 
 const intlMiddleware = createMiddleware(routing);
 const localeSet = new Set(routing.locales);
-const ROLE_CLAIM_KEY = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
-const DEFAULT_REDIRECT_AFTER_ROLE_GUARD = '/profile';
 const DEFAULT_CANONICAL_HOST = 'www.tarotnow.xyz';
 const CANONICAL_HOST = (process.env.NEXT_PUBLIC_CANONICAL_HOST?.trim().toLowerCase() || DEFAULT_CANONICAL_HOST);
 const AUTH_COOKIE_DOMAIN = process.env.AUTH_COOKIE_DOMAIN?.trim() || undefined;
+const SESSION_VALIDATE_PATH = '/api/auth/session?mode=lite';
 
 const resolveNonCanonicalHosts = (canonicalHost: string): Set<string> => {
  const hosts = new Set<string>();
@@ -86,70 +85,49 @@ const isDocumentRequest = (request: NextRequest): boolean => {
  return accept.includes('text/html') && !hasRscMarker;
 };
 
-const decodeJwtPayload = (token: string | undefined): Record<string, unknown> | null => {
- if (!token) {
-  return null;
+function createCspNonce(): string {
+ const bytes = new Uint8Array(16);
+ crypto.getRandomValues(bytes);
+ let ascii = '';
+ for (const value of bytes) {
+  ascii += String.fromCharCode(value);
  }
 
- const parts = token.split('.');
- if (parts.length < 2 || !parts[1]) {
-  return null;
+ return btoa(ascii);
+}
+
+async function hasValidProtectedSession(request: NextRequest): Promise<boolean> {
+ const sessionUrl = new URL(SESSION_VALIDATE_PATH, request.url);
+ const cookieHeader = request.headers.get('cookie') ?? '';
+ if (!cookieHeader) {
+  return false;
  }
 
- const normalized = parts[1].replace(/-/g, '+').replace(/_/g, '/');
- const padded = `${normalized}${'='.repeat((4 - (normalized.length % 4)) % 4)}`;
+ const headers: Record<string, string> = {
+  Cookie: cookieHeader,
+  Accept: 'application/json',
+ };
+ const deviceId = request.cookies.get(AUTH_COOKIE.DEVICE)?.value ?? '';
+ if (deviceId) {
+  headers[AUTH_HEADER.DEVICE_ID] = deviceId;
+ }
+ const userAgent = request.headers.get('user-agent') ?? '';
+ if (userAgent) {
+  headers[AUTH_HEADER.FORWARDED_USER_AGENT] = userAgent;
+ }
+
  try {
-  return JSON.parse(atob(padded)) as Record<string, unknown>;
+  const response = await fetch(sessionUrl.toString(), {
+   method: 'GET',
+   headers,
+   cache: 'no-store',
+   redirect: 'manual',
+  });
+  return response.ok;
  } catch {
-  return null;
+  return false;
  }
-};
-
-const resolveRoleFromAccessToken = (token: string | undefined): string => {
- const payload = decodeJwtPayload(token);
- if (!payload) {
-  return '';
- }
-
- const directRole = payload.role;
- if (typeof directRole === 'string' && directRole.trim().length > 0) {
-  return directRole.trim();
- }
-
- const claimRole = payload[ROLE_CLAIM_KEY];
- if (typeof claimRole === 'string' && claimRole.trim().length > 0) {
-  return claimRole.trim();
- }
-
- if (Array.isArray(claimRole)) {
-  const firstRole = claimRole.find((value) => typeof value === 'string' && value.trim().length > 0);
-  return typeof firstRole === 'string' ? firstRole : '';
- }
-
- return '';
-};
-
-const resolveRoleGuardRedirect = (
- request: NextRequest,
- locale: string,
- pathWithoutLocale: string,
-): NextResponse | null => {
- const accessToken = request.cookies.get(AUTH_COOKIE.ACCESS)?.value;
- const role = resolveRoleFromAccessToken(accessToken).toLowerCase();
- if (!role) {
-  return null;
- }
-
- if (matchesPrefix(pathWithoutLocale, '/profile/reader') && role !== 'tarot_reader') {
-  return NextResponse.redirect(new URL(`/${locale}${DEFAULT_REDIRECT_AFTER_ROLE_GUARD}`, request.url));
- }
-
- if (matchesPrefix(pathWithoutLocale, '/admin') && role !== 'admin') {
-  return NextResponse.redirect(new URL(`/${locale}${DEFAULT_REDIRECT_AFTER_ROLE_GUARD}`, request.url));
- }
-
- return null;
-};
+}
 
 const shouldBypassMiddleware = (request: NextRequest): boolean => {
  const { pathname } = request.nextUrl;
@@ -200,7 +178,8 @@ const resolveR2UploadConnectSrc = (): string => {
  return 'https://*.r2.cloudflarestorage.com';
 };
 
-const buildContentSecurityPolicy = (): string => {
+const buildContentSecurityPolicy = (nonce: string): string => {
+ const isProduction = process.env.NODE_ENV === 'production';
  const apiOrigin = getPublicApiOrigin().replace(/\/+$/, '');
  const wsApiOrigin = apiOrigin.startsWith('https://')
   ? `wss://${apiOrigin.slice('https://'.length)}`
@@ -221,7 +200,14 @@ const buildContentSecurityPolicy = (): string => {
   .filter((value) => value.length > 0)
   .join(' ');
 
-  const cspParts = [
+ const styleSrc = isProduction
+  ? `style-src 'self' 'nonce-${nonce}'`
+  : "style-src 'self' 'unsafe-inline'";
+ const scriptSrc = isProduction
+  ? `script-src 'self' 'nonce-${nonce}' https://static.cloudflareinsights.com`
+  : `script-src 'self' 'unsafe-eval' 'nonce-${nonce}' https://static.cloudflareinsights.com`;
+
+ const cspParts = [
   "default-src 'self'",
   "base-uri 'self'",
   "frame-ancestors 'none'",
@@ -229,21 +215,23 @@ const buildContentSecurityPolicy = (): string => {
   "img-src 'self' data: blob: https: http:",
   "font-src 'self' data: https:",
   "media-src 'self' blob: data:",
-  "style-src 'self' 'unsafe-inline'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com",
+  styleSrc,
+  scriptSrc,
   "worker-src 'self' blob:",
   `connect-src ${connectSrc}`,
  ];
 
- if (process.env.NODE_ENV === 'production') {
+ if (isProduction) {
+  cspParts.push("style-src-attr 'none'");
   cspParts.push('upgrade-insecure-requests');
  }
 
  return cspParts.join('; ');
 };
 
-const withResponseCsp = (response: NextResponse): NextResponse => {
- response.headers.set('Content-Security-Policy', buildContentSecurityPolicy());
+const withResponseCsp = (response: NextResponse, nonce: string): NextResponse => {
+ response.headers.set('x-nonce', nonce);
+ response.headers.set('Content-Security-Policy', buildContentSecurityPolicy(nonce));
  return response;
 };
 
@@ -251,7 +239,7 @@ const withResponseCsp = (response: NextResponse): NextResponse => {
  * Middleware cố ý chỉ làm auth presence guard cho route protected để tránh network hop.
  * Refresh/validate token được xử lý ở API layer và client session manager.
  */
-export default function proxy(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
  if (shouldRedirectToCanonicalHost(request)) {
   return createCanonicalRedirectResponse(request);
  }
@@ -263,28 +251,33 @@ export default function proxy(request: NextRequest) {
  const { pathname } = request.nextUrl;
  const locale = resolveLocale(pathname);
  const pathWithoutLocale = stripLocalePrefix(pathname);
+ const isDocument = isDocumentRequest(request);
+ const cspNonce = isDocument ? createCspNonce() : null;
 
  const isProtectedRoute = PROTECTED_PREFIXES.some((prefix) => matchesPrefix(pathWithoutLocale, prefix));
  const accessToken = isProtectedRoute ? request.cookies.get(AUTH_COOKIE.ACCESS)?.value : undefined;
  const refreshToken = isProtectedRoute ? request.cookies.get(AUTH_COOKIE.REFRESH)?.value : undefined;
 
- if (isDocumentRequest(request)) {
-  const roleGuardRedirect = resolveRoleGuardRedirect(request, locale, pathWithoutLocale);
-  if (roleGuardRedirect) {
-   return withResponseCsp(roleGuardRedirect);
-  }
- }
-
  if (isProtectedRoute && !accessToken && !refreshToken) {
   const loginUrl = new URL(`/${locale}/login`, request.url);
   const response = NextResponse.redirect(loginUrl);
   clearAuthCookies(response);
-  return withResponseCsp(response);
+  return isDocument && cspNonce ? withResponseCsp(response, cspNonce) : response;
+ }
+
+ if (isProtectedRoute) {
+  const validSession = await hasValidProtectedSession(request);
+  if (!validSession) {
+   const loginUrl = new URL(`/${locale}/login`, request.url);
+   const response = NextResponse.redirect(loginUrl);
+   clearAuthCookies(response);
+   return isDocument && cspNonce ? withResponseCsp(response, cspNonce) : response;
+  }
  }
 
  const response = intlMiddleware(request);
- if (isDocumentRequest(request)) {
-  return withResponseCsp(response);
+ if (isDocument && cspNonce) {
+  return withResponseCsp(response, cspNonce);
  }
 
  return response;

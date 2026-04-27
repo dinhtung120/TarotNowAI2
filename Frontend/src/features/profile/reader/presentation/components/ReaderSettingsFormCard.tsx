@@ -1,6 +1,5 @@
 'use client';
 
-import type { FormEvent } from 'react';
 import { BookOpen } from 'lucide-react';
 import type { ReaderSpecialtyValue } from '@/features/reader/domain/readerSpecialties';
 import { GlassCard } from '@/shared/components/ui';
@@ -12,6 +11,7 @@ import { ReaderSettingsSocialLinksFields } from './ReaderSettingsSocialLinksFiel
 import { ReaderSettingsSpecialtiesField } from './ReaderSettingsSpecialtiesField';
 import { ReaderSettingsSubmitButton } from './ReaderSettingsSubmitButton';
 import { useReaderSettingsFormCard } from './useReaderSettingsFormCard';
+import type { ReaderSettingsFormCardFormValues } from './useReaderSettingsFormCard';
 
 interface ReaderSettingsValidationLabels {
  bioMax: string;
@@ -52,14 +52,7 @@ interface ReaderSettingsFormCardProps {
  savingLabel: string;
  saving: boolean;
  validation: ReaderSettingsValidationLabels;
- onChangeBio: (value: string) => void;
- onChangeSpecialties: (value: ReaderSpecialtyValue[]) => void;
- onChangeYears: (value: number) => void;
- onChangePrice: (value: number) => void;
- onChangeFacebookUrl: (value: string) => void;
- onChangeInstagramUrl: (value: string) => void;
- onChangeTikTokUrl: (value: string) => void;
- onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+ onSubmit: (values: ReaderSettingsFormCardFormValues) => void;
 }
 
 export function ReaderSettingsFormCard(props: ReaderSettingsFormCardProps) {

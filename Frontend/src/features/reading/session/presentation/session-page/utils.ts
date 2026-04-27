@@ -56,3 +56,8 @@ export const getStackPlacement = (stackIndex: number) => {
     rotate: -8 + (clampedIndex % 5) * 2,
   };
 };
+
+export const resolveStackPlacementClass = (stackIndex: number): string => {
+  const clampedIndex = Math.max(0, Math.min(stackIndex, 7));
+  return `tn-stack-placement-${clampedIndex}`;
+};

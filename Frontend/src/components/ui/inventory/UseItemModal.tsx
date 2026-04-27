@@ -24,90 +24,66 @@ export default function UseItemModal({
 }: UseItemModalProps) {
   const [quantity, setQuantity] = useState(1);
   const [result, setResult] = useState<UseInventoryItemResponse | null>(null);
-  const { selectedCardId, setSelectedCardId, text, needCard, canSubmit } = useUseItemModalState({
-    item,
-    locale,
-  });
+  const { selectedCardId, setSelectedCardId, text, needCard, canSubmit } = useUseItemModalState({ item, locale });
 
   const selectedCard = useMemo(
     () => cardOptions.find((card) => card.id === selectedCardId) ?? null,
     [cardOptions, selectedCardId],
   );
 
-  if (!item || !text) {
-    return null;
-  }
+  if (!item || !text) return null;
 
   const maxQuantity = Math.max(1, Math.min(10, item.quantity));
   const safeQuantity = Math.max(1, Math.min(quantity, maxQuantity));
 
   const handleUseItem = async (payload: { itemCode: string; quantity: number; targetCardId?: number }) => {
     try {
-      const response = await onUse({
-        ...payload,
-        quantity: Math.max(1, Math.min(payload.quantity, maxQuantity)),
-      });
+      const response = await onUse({ ...payload, quantity: Math.max(1, Math.min(payload.quantity, maxQuantity)) });
       setResult(response);
     } catch (error) {
       console.error('Failed to use inventory item', error);
     }
   };
 
-  const handleDone = () => {
+  const closeModal = () => {
     setResult(null);
     onClose();
   };
 
-  const handleUseAgain = () => {
-    setResult(null);
+  const useAgain = () => {
     if (!item.canUse || item.quantity <= 0) {
+      setResult(null);
       return;
     }
 
-    const nextQuantity = safeQuantity;
-    setQuantity(nextQuantity);
-
+    setResult(null);
+    setQuantity(safeQuantity);
     void handleUseItem({
       itemCode: item.itemCode,
-      quantity: nextQuantity,
-      targetCardId: selectedCardId === '' ? undefined : selectedCardId
+      quantity: safeQuantity,
+      targetCardId: selectedCardId === '' ? undefined : selectedCardId,
     });
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={handleDone}
-      title={text.name}
-      description={text.description}
-      size="md"
-    >
+    <Modal isOpen={isOpen} onClose={closeModal} title={text.name} description={text.description} size="md">
       <div className={cn('space-y-6 py-2')}>
-        {!result ? (
-          <div className="animate-in fade-in slide-in-from-top-2 duration-500">
-            {item.isConsumable && (
-              <UseItemQuantitySelector
-                label={labels.quantity}
-                value={safeQuantity}
-                max={item.quantity}
-                totalQuantity={item.quantity}
-                onChange={(nextQuantity) => {
-                  setQuantity(Math.max(1, Math.min(nextQuantity, maxQuantity)));
-                }}
-                disabled={isPending}
-              />
-            )}
+        {!result && item.isConsumable ? (
+          <div className={cn('animate-in fade-in slide-in-from-top-2 duration-500')}>
+            <UseItemQuantitySelector
+              label={labels.quantity}
+              value={safeQuantity}
+              max={item.quantity}
+              totalQuantity={item.quantity}
+              onChange={(nextQuantity) => setQuantity(Math.max(1, Math.min(nextQuantity, maxQuantity)))}
+              disabled={isPending}
+            />
           </div>
         ) : null}
 
         {needCard ? (
           <>
-            <UseItemCardSelector
-              label={labels.selectCard}
-              value={selectedCardId}
-              onChange={setSelectedCardId}
-              cardOptions={cardOptions}
-            />
+            <UseItemCardSelector label={labels.selectCard} value={selectedCardId} onChange={setSelectedCardId} cardOptions={cardOptions} />
             <UseItemCardPreview card={selectedCard} label={labels.selectedCard} />
           </>
         ) : null}
@@ -122,8 +98,8 @@ export default function UseItemModal({
               done: labels.done,
               useAgain: labels.useAgain,
             }}
-            onDone={handleDone}
-            onUseAgain={handleUseAgain}
+            onDone={closeModal}
+            onUseAgain={useAgain}
           />
         ) : (
           <UseItemActionButton
@@ -133,9 +109,7 @@ export default function UseItemModal({
             canSubmit={canSubmit}
             isPending={isPending}
             useNowLabel={labels.useNow}
-            onUse={(payload) => {
-              void handleUseItem(payload);
-            }}
+            onUse={(payload) => void handleUseItem(payload)}
           />
         )}
       </div>

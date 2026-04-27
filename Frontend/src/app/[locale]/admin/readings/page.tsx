@@ -19,3 +19,5 @@ export default async function AdminReadingsRoutePage() {
   </AppQueryHydrationBoundary>
  );
 }
+
+export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';

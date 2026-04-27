@@ -173,7 +173,7 @@ export function useProfilePage() {
 
       const result = await updateProfileAction({
         displayName: data.displayName.trim(),
-        dateOfBirth: new Date(data.dateOfBirth).toISOString(),
+        dateOfBirth: data.dateOfBirth.trim(),
         payoutBankBin: isTarotReader ? normalizeOptional(data.payoutBankBin) : undefined,
         payoutBankName,
         payoutBankAccountNumber: isTarotReader ? normalizeOptional(data.payoutBankAccountNumber) : undefined,

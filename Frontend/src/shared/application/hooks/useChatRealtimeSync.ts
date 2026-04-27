@@ -75,14 +75,6 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const runtimePoliciesQuery = useRuntimePolicies();
   const realtimePolicy = runtimePoliciesQuery.data?.realtime;
-  const reconnectSchedule = [...(realtimePolicy?.reconnectScheduleMs ?? RUNTIME_POLICY_FALLBACKS.realtime.reconnectScheduleMs)];
-  const negotiationTimeoutMs = realtimePolicy?.negotiationTimeoutMs ?? RUNTIME_POLICY_FALLBACKS.realtime.negotiationTimeoutMs;
-  const unauthorizedCooldownMs = realtimePolicy?.chatUnauthorizedCooldownMs
-    ?? RUNTIME_POLICY_FALLBACKS.realtime.chatUnauthorizedCooldownMs;
-  const serverTimeoutMs = realtimePolicy?.serverTimeoutMs ?? RUNTIME_POLICY_FALLBACKS.realtime.serverTimeoutMs;
-  const invalidateDebounceMs = realtimePolicy?.chat.invalidateDebounceMs
-    ?? RUNTIME_POLICY_FALLBACKS.realtime.chat.invalidateDebounceMs;
-  const appStartGuardMs = realtimePolicy?.chat.appStartGuardMs ?? RUNTIME_POLICY_FALLBACKS.realtime.chat.appStartGuardMs;
   const connectionRef = useRef<HubConnection | null>(null);
   const queryClient = useQueryClient();
   

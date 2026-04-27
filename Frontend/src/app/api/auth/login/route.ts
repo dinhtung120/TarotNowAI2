@@ -4,6 +4,7 @@ import { AUTH_HEADER } from '@/shared/infrastructure/auth/authConstants';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import {
+ buildProblemResponse,
  resolveAccessTtlSeconds,
  resolveDeviceIdFromRequest,
  setAccessCookie,
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  try {
   payload = (await request.json()) as LoginRequestBody;
  } catch {
-  return NextResponse.json({ success: false, error: AUTH_ERROR.TEMPORARY_FAILURE }, { status: 400 });
+  return buildProblemResponse(400, AUTH_ERROR.TEMPORARY_FAILURE, AUTH_ERROR.TEMPORARY_FAILURE);
  }
 
   const result = await serverHttpRequest<AuthResponse>('/auth/login', {
@@ -44,7 +45,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
    return unauthorizedResponse(true);
   }
 
-  return NextResponse.json({ success: false, error: result.error }, { status: result.status });
+  return buildProblemResponse(result.status, result.error, result.error);
  }
 
  const accessToken = result.data.accessToken;

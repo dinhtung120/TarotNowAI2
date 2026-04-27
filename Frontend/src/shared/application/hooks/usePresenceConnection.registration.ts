@@ -4,7 +4,7 @@ import { useWalletStore } from '@/store/walletStore';
 import { useAuthStore } from '@/store/authStore';
 import { routing } from '@/i18n/routing';
 import { logger } from '@/shared/infrastructure/logging/logger';
-import { invalidateClientSessionSnapshot } from '@/shared/infrastructure/auth/clientSessionSnapshot';
+import { performClientLogoutCleanup } from '@/shared/infrastructure/auth/clientLogoutCleanup';
 import { shouldSkipRealtimeGachaInvalidation } from '@/shared/infrastructure/gacha/gachaRealtimeDedup';
 import { shouldSkipRealtimeInventoryInvalidation } from '@/shared/infrastructure/inventory/inventoryRealtimeDedup';
 import {
@@ -178,8 +178,7 @@ export function registerPresenceConnectionHandlers(hubConnection: HubConnection,
     } catch {
       // No-op: vẫn cưỡng bức clear session cục bộ để chặn tiếp tục dùng role cũ.
     } finally {
-      invalidateClientSessionSnapshot();
-      useAuthStore.getState().clearAuth();
+      performClientLogoutCleanup(queryClient);
     }
 
     if (typeof window === 'undefined') {
@@ -271,8 +270,12 @@ export function registerPresenceConnectionHandlers(hubConnection: HubConnection,
     queueInvalidation(['collection']);
   });
 
-  hubConnection.on('gacha.result', () => {
-    if (shouldSkipRealtimeGachaInvalidation()) {
+  hubConnection.on('gacha.result', (payload?: {
+    operationId?: string;
+    idempotencyKey?: string;
+  }) => {
+    const correlationKey = payload?.idempotencyKey?.trim() || payload?.operationId?.trim();
+    if (shouldSkipRealtimeGachaInvalidation(correlationKey)) {
       return;
     }
 
@@ -282,8 +285,11 @@ export function registerPresenceConnectionHandlers(hubConnection: HubConnection,
   hubConnection.on('inventory.changed', (payload?: {
     itemCode?: string;
     enhancementType?: string;
+    operationId?: string;
+    idempotencyKey?: string;
   }) => {
-    if (shouldSkipRealtimeInventoryInvalidation()) {
+    const correlationKey = payload?.idempotencyKey?.trim() || payload?.operationId?.trim();
+    if (shouldSkipRealtimeInventoryInvalidation(correlationKey)) {
       return;
     }
 

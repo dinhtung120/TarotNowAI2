@@ -9,6 +9,35 @@ interface VoiceRecorderActiveInlineProps {
   onSend: () => void;
 }
 
+function resolveWaveHeightClass(level: number): string {
+  const height = Math.max(3, Math.round(level * 28));
+  if (height >= 28) return 'tn-wave-h-28';
+  if (height >= 25) return 'tn-wave-h-25';
+  if (height >= 23) return 'tn-wave-h-23';
+  if (height >= 21) return 'tn-wave-h-21';
+  if (height >= 19) return 'tn-wave-h-19';
+  if (height >= 17) return 'tn-wave-h-17';
+  if (height >= 15) return 'tn-wave-h-15';
+  if (height >= 13) return 'tn-wave-h-13';
+  if (height >= 11) return 'tn-wave-h-11';
+  if (height >= 9) return 'tn-wave-h-9';
+  if (height >= 7) return 'tn-wave-h-7';
+  if (height >= 5) return 'tn-wave-h-5';
+  return 'tn-wave-h-3';
+}
+
+function resolveWaveOpacityClass(level: number): string {
+  const opacity = Math.max(0.3, level);
+  if (opacity >= 1) return 'tn-opacity-100';
+  if (opacity >= 0.9) return 'tn-opacity-90';
+  if (opacity >= 0.8) return 'tn-opacity-80';
+  if (opacity >= 0.7) return 'tn-opacity-70';
+  if (opacity >= 0.6) return 'tn-opacity-60';
+  if (opacity >= 0.5) return 'tn-opacity-50';
+  if (opacity >= 0.4) return 'tn-opacity-40';
+  return 'tn-opacity-30';
+}
+
 export default function VoiceRecorderActiveInline({ audioLevels, elapsedMs, onCancel, onSend }: VoiceRecorderActiveInlineProps) {
   return (
     <div className={cn('flex min-w-0 flex-1 items-center gap-2')}>
@@ -22,8 +51,11 @@ export default function VoiceRecorderActiveInline({ audioLevels, elapsedMs, onCa
           {getWaveformLevels(audioLevels).map((level, index) => (
             <div
               key={index}
-              className={cn('flex-1 rounded-full tn-bg-accent transition-all')}
-              style={{ height: `${Math.max(3, Math.round(level * 28))}px`, opacity: Math.max(0.3, level), transitionDuration: '80ms' }}
+              className={cn(
+                'flex-1 rounded-full tn-bg-accent transition-all duration-75',
+                resolveWaveHeightClass(level),
+                resolveWaveOpacityClass(level),
+              )}
             />
           ))}
         </div>

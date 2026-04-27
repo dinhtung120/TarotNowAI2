@@ -6,7 +6,7 @@ import TarotDeckGrid from '@/features/reading/session/presentation/session-page/
 import type { DrawPhaseContentProps } from '@/features/reading/session/presentation/session-page/DrawPhaseSection.types';
 import { cn } from '@/lib/utils';
 
-export default function DrawPhaseContent({ activeDeckRows, cardsToDraw, changeCardText, deckCardWidth, flyingCards, horizontalOverlapFactor, isRevealing, modalDescription, modalRevealText, modalRevealingText, modalTitle, pickedCardCountText, pickedCardSet, pickedCards, pickedDoneText, pickedPromptText, randomSelectText, rowOverlapMargin, stackAnchorRef, onChangeCard, onPickCard, onRandomSelect, onRemovePickedCard, onReveal, setDeckCardRef }: DrawPhaseContentProps) {
+export default function DrawPhaseContent({ activeDeckRows, cardsToDraw, changeCardText, flyingCards, isRevealing, modalDescription, modalRevealText, modalRevealingText, modalTitle, pickedCardCountText, pickedCardSet, pickedCards, pickedDoneText, pickedPromptText, randomSelectText, stackAnchorRef, onChangeCard, onPickCard, onRandomSelect, onRemovePickedCard, onReveal, setDeckCardRef }: DrawPhaseContentProps) {
   return (
     <div className={cn('w-full animate-in zoom-in-95 duration-700 flex flex-col items-center')}>
       <PickProgress cardsToDraw={cardsToDraw} pickedCount={pickedCards.length} doneText={pickedDoneText} promptText={pickedPromptText} countText={pickedCardCountText} randomText={randomSelectText} onRandomSelect={onRandomSelect} />
@@ -15,12 +15,9 @@ export default function DrawPhaseContent({ activeDeckRows, cardsToDraw, changeCa
       <TarotDeckGrid
         activeDeckRows={activeDeckRows}
         cardsToDraw={cardsToDraw}
-        deckCardWidth={deckCardWidth}
-        horizontalOverlapFactor={horizontalOverlapFactor}
         isRevealing={isRevealing}
         pickedCards={pickedCards}
         pickedCardSet={pickedCardSet}
-        rowOverlapMargin={rowOverlapMargin}
         onPickCard={onPickCard}
         setDeckCardRef={setDeckCardRef}
       />

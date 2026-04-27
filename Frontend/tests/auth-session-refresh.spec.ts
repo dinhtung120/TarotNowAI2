@@ -39,7 +39,7 @@ function expectRedirectToLogin(response: APIResponse): void {
 }
 
 test.describe('auth middleware hardening', () => {
- test('forged access/refresh cookies pass middleware but are rejected by auth API', async ({ request }) => {
+ test('forged access/refresh cookies are rejected by middleware and auth API', async ({ request }) => {
   const cookieHeader = buildForgedCookieHeader();
   const firstLoad = await requestPath('/vi/profile', request, cookieHeader);
   const secondLoad = await requestPath('/vi/profile', request, cookieHeader);
@@ -48,8 +48,8 @@ test.describe('auth middleware hardening', () => {
    maxRedirects: 0,
   });
 
-  expect([301, 302, 303, 307, 308]).not.toContain(firstLoad.status());
-  expect([301, 302, 303, 307, 308]).not.toContain(secondLoad.status());
+  expectRedirectToLogin(firstLoad);
+  expectRedirectToLogin(secondLoad);
   expect([401, 403]).toContain(sessionResponse.status());
  });
 

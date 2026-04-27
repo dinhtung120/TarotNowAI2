@@ -2,10 +2,11 @@
 
 import { useStreakStatus } from '@/features/checkin/application/hooks';
 import { Flame } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
 export default function StreakBadge() {
-  
+  const t = useTranslations('Common');
   const { data: streakData, isLoading } = useStreakStatus();
 
   
@@ -36,11 +37,10 @@ export default function StreakBadge() {
           : "border-slate-700 bg-slate-800/70",
       )}
       title={isActive
-        ? `Chuỗi ${streak} ngày rút bài liên tiếp`
-        : 'Rút bài AI để bắt đầu chuỗi Streak!'
+        ? t('streak_active_title', { streak })
+        : t('streak_inactive_title')
       }
     >
-      {}
       <Flame
         className={cn(
           "h-4",
@@ -50,8 +50,6 @@ export default function StreakBadge() {
         )}
         fill={isActive ? 'var(--amber-accent)' : 'var(--text-muted)'}
       />
-
-      {}
       <span className={cn("text-xs", "font-black", "tracking-tight", isActive ? "text-amber-500" : "text-slate-400")}>
         {streak}
       </span>

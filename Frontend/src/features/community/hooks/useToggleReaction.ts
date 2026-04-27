@@ -73,6 +73,7 @@ export const useToggleReaction = ({ postId, visibility }: UseToggleReactionProps
       }
     },
     onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey });
     },
   });
 };

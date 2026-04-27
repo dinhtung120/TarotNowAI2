@@ -68,7 +68,6 @@ export default function BottomTabBarMenuPanel({
         activeMenu === "game" && "left-[70%] -translate-x-1/2",
         activeMenu === "account" && "right-3",
       )}
-      style={{ WebkitBackdropFilter: "blur(20px)" }}
     >
       <div className={cn("flex flex-col gap-1.5")}>
         {activeSubItems.map((sub) => {

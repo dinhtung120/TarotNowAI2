@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { useAuthStore } from '@/store/authStore';
-import { useWalletStore } from '@/store/walletStore';
+import { useQueryClient } from '@tanstack/react-query';
+import { performClientLogoutCleanup } from '@/shared/infrastructure/auth/clientLogoutCleanup';
 
 interface UseNavbarLogoutArgs {
   closeAvatarMenu: () => void;
@@ -9,11 +9,12 @@ interface UseNavbarLogoutArgs {
 }
 
 export function useNavbarLogout({ closeAvatarMenu, navigateToLogin, onLogout }: UseNavbarLogoutArgs) {
+  const queryClient = useQueryClient();
+
   return useCallback(async () => {
     closeAvatarMenu();
     if (onLogout) await onLogout();
-    useWalletStore.getState().resetWallet();
-    useAuthStore.getState().clearAuth();
+    performClientLogoutCleanup(queryClient);
     navigateToLogin();
-  }, [closeAvatarMenu, navigateToLogin, onLogout]);
+  }, [closeAvatarMenu, navigateToLogin, onLogout, queryClient]);
 }

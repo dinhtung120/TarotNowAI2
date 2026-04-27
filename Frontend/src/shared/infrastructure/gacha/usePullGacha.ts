@@ -157,10 +157,11 @@ async function sendPullRequest(payload: PullGachaPayload, idempotencyKey: string
 export function usePullGacha() {
  const queryClient = useQueryClient();
 
- return useMutation({
+  return useMutation({
   mutationFn: (payload: PullGachaPayload) => {
    const activeIdempotencyKey = payload.idempotencyKey || createIdempotencyKey();
-   markLocalGachaCacheSynced();
+   payload.idempotencyKey = activeIdempotencyKey;
+   markLocalGachaCacheSynced(activeIdempotencyKey);
    return sendPullRequest(payload, activeIdempotencyKey);
   },
   onSuccess: (result, variables) => {
@@ -179,7 +180,7 @@ export function usePullGacha() {
 
    patchHistoryCaches(queryClient, result, variables.count);
    updateInventoryCacheFromGachaResult(queryClient, result);
-   markLocalGachaCacheSynced();
+   markLocalGachaCacheSynced(variables.idempotencyKey);
    void queryClient.invalidateQueries({ queryKey: GACHA_HISTORY_QUERY_KEY, refetchType: 'none' });
   },
  });

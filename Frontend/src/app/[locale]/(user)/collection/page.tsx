@@ -11,3 +11,5 @@ export default async function CollectionRoutePage() {
   </AppQueryHydrationBoundary>
  );
 }
+
+export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';

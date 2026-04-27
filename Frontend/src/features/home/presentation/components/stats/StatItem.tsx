@@ -17,12 +17,12 @@ export default function StatItem({
 }: StatItemProps) {
   const styleByColor: Record<
     StatItemProps["color"],
-    { bg: string; text: string }
+    { shell: string; icon: string }
   > = {
-    purple: { bg: "var(--purple-50)", text: "var(--purple-accent)" },
-    amber: { bg: "var(--amber-50)", text: "var(--amber-accent)" },
-    success: { bg: "var(--success-bg)", text: "var(--success)" },
-    info: { bg: "var(--info-bg)", text: "var(--info)" },
+    purple: { shell: "bg-[var(--purple-50)] tn-border-accent-20", icon: "tn-text-accent" },
+    amber: { shell: "bg-[var(--amber-50)] tn-border-warning-20", icon: "tn-text-warning" },
+    success: { shell: "tn-bg-success-soft tn-border-success-20", icon: "tn-text-success" },
+    info: { shell: "tn-bg-info-soft tn-border-info-20", icon: "tn-text-info" },
   };
 
   const styles = styleByColor[color];
@@ -32,14 +32,10 @@ export default function StatItem({
       <div
         className={cn(
           "mb-4 flex h-10 w-10 items-center justify-center rounded-2xl border border-[var(--border-subtle)]",
+          styles.shell,
         )}
-        style={{
-          backgroundColor: styles.bg,
-          borderColor: `color-mix(in srgb, ${styles.text} 20%, transparent)`,
-          color: styles.text,
-        }}
       >
-        <Icon className={cn("h-5 w-5")} />
+        <Icon className={cn("h-5 w-5", styles.icon)} />
       </div>
       <div
         className={cn(

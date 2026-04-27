@@ -31,24 +31,24 @@ export default function InventoryGrid({ items, locale, emptyLabel, onSelect }: I
         'group relative flex flex-col items-center justify-center rounded-[2.5rem] border border-dashed tn-border-soft',
         'bg-white/[0.01] px-6 py-32 text-center transition-all duration-700 hover:bg-white/[0.02]'
       )}>
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_50%,rgba(139,92,246,0.03),transparent_70%)] opacity-0 transition-opacity duration-700 group-hover:opacity-100" />
+        <div className={cn("absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_50%,rgba(139,92,246,0.03),transparent_70%)] opacity-0 transition-opacity duration-700 group-hover:opacity-100")} />
         
-        <div className="relative mb-8">
+        <div className={cn("relative mb-8")}>
           <div className={cn('flex h-24 w-24 items-center justify-center rounded-full bg-slate-500/5 border tn-border-soft shadow-inner')}>
             <span className={cn('text-5xl opacity-20 grayscale transition-all duration-700 group-hover:scale-110 group-hover:opacity-40 group-hover:grayscale-0')}>
               📦
             </span>
           </div>
-          <div className="absolute -right-2 -top-2 flex h-6 w-6 animate-pulse items-center justify-center rounded-full bg-violet-500/10">
-             <div className="h-2 w-2 rounded-full bg-violet-400 blur-[1px]" />
+          <div className={cn("absolute -right-2 -top-2 flex h-6 w-6 animate-pulse items-center justify-center rounded-full bg-violet-500/10")}>
+             <div className={cn("h-2 w-2 rounded-full bg-violet-400 blur-[1px]")} />
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className={cn("space-y-4")}>
           <p className={cn('lunar-metallic-text text-xl font-black uppercase tracking-[0.2em] opacity-30')}>
             {emptyLabel}
           </p>
-          <div className="mx-auto h-[1px] w-12 bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
+          <div className={cn("mx-auto h-[1px] w-12 bg-gradient-to-r from-transparent via-violet-500/30 to-transparent")} />
           <p className={cn('tn-text-muted text-xs font-medium tracking-widest uppercase opacity-40')}>
             Hãy quay lại sau khi thu thập thêm vật phẩm
           </p>

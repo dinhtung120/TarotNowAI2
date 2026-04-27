@@ -32,10 +32,7 @@ export function useDepositPage() {
 
  useQuery({
   queryKey: userStateQueryKeys.wallet.balance(),
-  queryFn: async () => {
-   await fetchBalance();
-   return true;
-  },
+  queryFn: () => fetchBalance(),
  });
 
  const packagesQuery = useQuery({

@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { getParticleStyle } from "./config";
+import { resolveParticleClass } from "./config";
 
 interface AstralParticlesProps {
  particleCount: number;
@@ -11,8 +11,7 @@ export function AstralParticles({ particleCount }: AstralParticlesProps) {
    {Array.from({ length: particleCount }).map((_, index) => (
     <div
      key={`astral-particle-${index}`}
-     className={cn("absolute tn-size-2px tn-bg-holo-silver rounded-full animate-float tn-opacity-40 tn-shadow-particle")}
-     style={getParticleStyle(index)}
+     className={cn("absolute tn-size-2px tn-bg-holo-silver rounded-full animate-float tn-opacity-40 tn-shadow-particle", resolveParticleClass(index))}
     />
    ))}
   </div>

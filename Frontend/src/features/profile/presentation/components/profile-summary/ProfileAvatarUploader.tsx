@@ -42,9 +42,11 @@ export function ProfileAvatarUploader({
    </div>
    {avatarUploading ? (
     <div className={cn('absolute -bottom-7 left-1/2 w-28 -translate-x-1/2')}>
-     <div className={cn('h-1.5 w-full overflow-hidden rounded-full bg-white/20')}>
-      <div className={cn('h-full rounded-full bg-emerald-400 transition-all duration-150')} style={{ width: `${Math.max(5, avatarUploadProgress)}%` }} />
-     </div>
+     <progress
+      className={cn('tn-progress tn-progress-sm tn-progress-success')}
+      max={100}
+      value={Math.max(5, Math.min(100, avatarUploadProgress))}
+     />
      <p className={cn('mt-1 text-center text-[10px] font-medium text-emerald-200')}>{Math.max(0, Math.min(100, avatarUploadProgress))}%</p>
     </div>
    ) : null}

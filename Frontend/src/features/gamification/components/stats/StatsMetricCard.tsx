@@ -36,9 +36,11 @@ export function StatsMetricCard({ borderClassName, iconClassName, icon: Icon, la
    <div className={cn("text-2xl", "font-black", "text-white")}>{value}</div>
    {detail ? <p className={cn("mt-2", "truncate", "text-xs")}>{detail}</p> : null}
    {typeof progressPercent === "number" ? (
-    <div className={cn("mt-3", "h-1.5", "w-full", "overflow-hidden", "rounded-full", "bg-slate-800")}>
-     <div className={cn("h-full", "rounded-full", "bg-gradient-to-r", "from-purple-500", "to-indigo-500")} style={{ width: `${Math.max(0, Math.min(progressPercent, 100))}%` }} />
-    </div>
+    <progress
+     className={cn("mt-3", "tn-progress", "tn-progress-sm", "tn-progress-indigo")}
+     max={100}
+     value={Math.max(0, Math.min(progressPercent, 100))}
+    />
    ) : null}
   </div>
  );

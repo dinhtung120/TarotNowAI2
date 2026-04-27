@@ -57,10 +57,10 @@ export default function UseItemQuantitySelector({
               'bg-white/[0.03] hover:bg-white/[0.08] hover:border-violet-500/30 active:scale-95 disabled:opacity-20'
             )}
           >
-            <Minus className="h-4 w-4" />
+            <Minus className={cn("h-4 w-4")} />
           </button>
 
-          <span className="text-xl font-black tn-text-primary tracking-tighter">
+          <span className={cn("text-xl font-black tn-text-primary tracking-tighter")}>
             {value}
           </span>
 
@@ -73,7 +73,7 @@ export default function UseItemQuantitySelector({
               'bg-white/[0.03] hover:bg-white/[0.08] hover:border-violet-500/30 active:scale-95 disabled:opacity-20'
             )}
           >
-            <Plus className="h-4 w-4" />
+            <Plus className={cn("h-4 w-4")} />
           </button>
         </div>
 
@@ -84,7 +84,7 @@ export default function UseItemQuantitySelector({
            <span className={cn('text-[9px] font-black tn-text-muted uppercase tracking-widest opacity-30 mb-0.5')}>
              Tổng
            </span>
-           <span className="text-lg font-black tn-text-primary tracking-tighter">
+           <span className={cn("text-lg font-black tn-text-primary tracking-tighter")}>
              x{totalQuantity}
            </span>
         </div>

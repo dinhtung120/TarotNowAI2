@@ -19,3 +19,5 @@ export default async function AdminDepositsRoutePage() {
   </AppQueryHydrationBoundary>
  );
 }
+
+export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';

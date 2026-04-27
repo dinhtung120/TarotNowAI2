@@ -14,3 +14,5 @@ export default function ReadingSessionRoutePage() {
   </Suspense>
  );
 }
+
+export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';

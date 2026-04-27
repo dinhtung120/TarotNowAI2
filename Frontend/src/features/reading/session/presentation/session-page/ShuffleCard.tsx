@@ -1,5 +1,4 @@
 import { Sparkles } from "lucide-react";
-import type { CSSProperties } from "react";
 import type { ShufflePath } from "@/features/reading/session/presentation/session-page/types";
 import { cn } from "@/lib/utils";
 
@@ -7,25 +6,18 @@ interface ShuffleCardProps {
   path: ShufflePath;
 }
 
-export default function ShuffleCard({ path }: ShuffleCardProps) {
-  const animationStyle = {
-    "--tx": path.tx,
-    "--ty": path.ty,
-    "--r": path.r,
-    "--tx2": path.tx2,
-    "--ty2": path.ty2,
-    "--r2": path.r2,
-    "--anim-duration": path.duration,
-    "--anim-delay": path.delay,
-    "--z": path.z,
-  } as CSSProperties;
+function resolveShufflePathClass(path: ShufflePath): string {
+  const normalizedIndex = Number.isFinite(path.z) ? Math.max(0, Math.min(Math.round(path.z), 8)) : 0;
+  return `tn-shuffle-path-${normalizedIndex}`;
+}
 
+export default function ShuffleCard({ path }: ShuffleCardProps) {
   return (
     <div
       className={cn(
         "tarot-shuffling-card absolute inset-0 rounded-xl border-2 border-[var(--purple-accent)]/30 bg-gradient-to-br from-[var(--purple-accent)] via-[var(--purple-accent)] to-[color:var(--c-61-49-80-55)] shadow-[0_10px_30px_var(--c-168-85-247-20)] motion-reduce:animate-none",
+        resolveShufflePathClass(path),
       )}
-      style={animationStyle}
     >
       <div
         className={cn(

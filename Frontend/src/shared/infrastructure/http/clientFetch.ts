@@ -32,16 +32,27 @@ function isAbortError(error: unknown): boolean {
  return false;
 }
 
+interface MergedAbortSignal {
+ signal: AbortSignal;
+ cleanup: () => void;
+}
+
 function mergeAbortSignals(
  requestSignal: AbortSignal | null | undefined,
  timeoutSignal: AbortSignal,
-): AbortSignal {
+): MergedAbortSignal {
  if (!requestSignal) {
-  return timeoutSignal;
+  return {
+   signal: timeoutSignal,
+   cleanup: () => undefined,
+  };
  }
 
  if (typeof AbortSignal.any === 'function') {
-  return AbortSignal.any([requestSignal, timeoutSignal]);
+  return {
+   signal: AbortSignal.any([requestSignal, timeoutSignal]),
+   cleanup: () => undefined,
+  };
  }
 
  const mergedController = new AbortController();
@@ -49,12 +60,21 @@ function mergeAbortSignals(
 
  if (requestSignal.aborted || timeoutSignal.aborted) {
   abortMerged();
-  return mergedController.signal;
+  return {
+   signal: mergedController.signal,
+   cleanup: () => undefined,
+  };
  }
 
  requestSignal.addEventListener('abort', abortMerged, { once: true });
  timeoutSignal.addEventListener('abort', abortMerged, { once: true });
- return mergedController.signal;
+ return {
+  signal: mergedController.signal,
+  cleanup: () => {
+   requestSignal.removeEventListener('abort', abortMerged);
+   timeoutSignal.removeEventListener('abort', abortMerged);
+  },
+ };
 }
 
 /**
@@ -67,7 +87,7 @@ export async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs
   timedOut = true;
   timeoutController.abort();
  }, resolveTimeout(timeoutMs));
- const signal = mergeAbortSignals(init.signal, timeoutController.signal);
+ const { signal, cleanup } = mergeAbortSignals(init.signal, timeoutController.signal);
  try {
   return await fetch(url, { ...init, signal });
  } catch (error) {
@@ -77,6 +97,7 @@ export async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs
   throw error;
  } finally {
   window.clearTimeout(timeoutHandle);
+  cleanup();
  }
 }
 

@@ -13,26 +13,19 @@ interface ReaderSettingsPageProps {
 
 export default function ReaderSettingsPage({ embedded = false }: ReaderSettingsPageProps) {
  const t = useTranslations('Profile');
- const {
-  loading,
-  saving,
-  bioVi,
-  setBioVi,
-  diamondPerQuestion,
-  setDiamondPerQuestion,
-  specialties,
-  setSpecialties,
-  yearsOfExperience,
-  minYearsOfExperience,
-  setYearsOfExperience,
-  facebookUrl,
-  setFacebookUrl,
-  instagramUrl,
-  setInstagramUrl,
-  tikTokUrl,
-  setTikTokUrl,
-  minDiamondPerQuestion,
-  readerPolicyReady,
+  const {
+   loading,
+   saving,
+   bioVi,
+   diamondPerQuestion,
+   specialties,
+   yearsOfExperience,
+   minYearsOfExperience,
+   facebookUrl,
+   instagramUrl,
+   tikTokUrl,
+   minDiamondPerQuestion,
+   readerPolicyReady,
   handleSave,
  } = useProfileReaderSettingsPage(t);
 
@@ -47,15 +40,12 @@ export default function ReaderSettingsPage({ embedded = false }: ReaderSettingsP
     bioLabel={t('reader.bio_label')}
     bioPlaceholder={t('reader.bio_placeholder')}
     bioValue={bioVi}
-    onChangeBio={setBioVi}
     specialtiesLabel={t('reader.specialties_label')}
     specialtiesValue={specialties}
     renderSpecialtyLabel={(value) => t(`reader.specialties.${value}`)}
-    onChangeSpecialties={setSpecialties}
     yearsLabel={t('reader.years_experience_label')}
     yearsValue={yearsOfExperience}
     minYearsValue={minYearsOfExperience}
-    onChangeYears={setYearsOfExperience}
     socialLinksLabel={t('reader.social_links_label')}
     socialLinksHint={t('reader.social_links_hint')}
     facebookPlaceholder={t('reader.facebook_placeholder')}
@@ -64,14 +54,10 @@ export default function ReaderSettingsPage({ embedded = false }: ReaderSettingsP
     facebookUrl={facebookUrl}
     instagramUrl={instagramUrl}
     tikTokUrl={tikTokUrl}
-    onChangeFacebookUrl={setFacebookUrl}
-    onChangeInstagramUrl={setInstagramUrl}
-    onChangeTikTokUrl={setTikTokUrl}
     priceLabel={t('reader.price_label')}
     priceHelp={t('reader.price_help')}
     priceValue={diamondPerQuestion}
     minPriceValue={minDiamondPerQuestion}
-    onChangePrice={setDiamondPerQuestion}
     validation={{
       bioMax: t('reader.validation.bio_max'),
       specialtiesMin: t('reader.validation.specialties_min'),

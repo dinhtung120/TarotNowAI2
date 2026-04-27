@@ -8,6 +8,8 @@ import {
  AddCommentPayload,
  CommunityPost,
  CreatePostPayload,
+ ReportPostPayload,
+ ReportPostResponse,
  ToggleReactionPayload,
  type CommunityComment,
  type CommunityFeedResponse,
@@ -19,6 +21,7 @@ const FAIL_CREATE_POST = 'Failed to create post';
 const FAIL_TOGGLE_REACTION = 'Failed to toggle reaction';
 const FAIL_ADD_COMMENT = 'Failed to add comment';
 const FAIL_GET_COMMENTS = 'Failed to fetch comments';
+const FAIL_REPORT_POST = 'Failed to report post';
 
 async function withToken<T>(work: (token: string) => Promise<ActionResult<T>>): Promise<ActionResult<T>> {
  const token = await getServerAccessToken();
@@ -97,4 +100,25 @@ export async function getCommentsAction(postId: string, page = 1, pageSize = 10)
   logger.error('getCommentsAction error', error);
   return actionFail(FAIL_GET_COMMENTS);
  }
+}
+
+export async function reportPostAction(postId: string, payload: ReportPostPayload): Promise<ActionResult<ReportPostResponse>> {
+ return withToken(async (token) => {
+  try {
+   const result = await serverHttpRequest<ReportPostResponse>(
+    `/community/posts/${postId}/reports`,
+    {
+     method: 'POST',
+     token,
+     json: payload,
+     fallbackErrorMessage: FAIL_REPORT_POST,
+    },
+   );
+   if (!result.ok) return actionFail(result.error || FAIL_REPORT_POST);
+   return actionOk(result.data);
+  } catch (error) {
+   logger.error('reportPostAction error', error);
+   return actionFail(FAIL_REPORT_POST);
+  }
+ });
 }

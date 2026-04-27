@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState, type FormEvent } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
@@ -22,6 +22,16 @@ interface ReaderSettingsDraft {
  instagramUrl: string;
  tikTokUrl: string;
  status: ReaderStatus;
+}
+
+interface ReaderSettingsSubmitPayload {
+ bio: string;
+ specialties: ReaderSpecialtyValue[];
+ years: number;
+ price: number;
+ facebookUrl: string;
+ instagramUrl: string;
+ tikTokUrl: string;
 }
 
 const NEUTRAL_TOAST_STYLE = {
@@ -70,7 +80,6 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
  const minDiamondPerQuestion = readerPolicy?.minDiamondPerQuestion ?? 0;
  const defaultDiamondPerQuestion = readerPolicy?.defaultDiamondPerQuestion ?? minDiamondPerQuestion;
  const readerPolicyReady = Boolean(readerPolicy);
- const [draft, setDraft] = useState<ReaderSettingsDraft | null>(null);
 
  const profileQuery = useQuery({
   queryKey: ['reader-profile-settings', user?.id],
@@ -89,49 +98,11 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
  const statusMutation = useMutation({ mutationFn: updateReaderStatus });
 
  const effectiveValues = useMemo(
-  () => draft ?? toDraft(profileQuery.data, minYearsOfExperience, minDiamondPerQuestion, defaultDiamondPerQuestion),
-  [defaultDiamondPerQuestion, draft, minDiamondPerQuestion, minYearsOfExperience, profileQuery.data],
+  () => toDraft(profileQuery.data, minYearsOfExperience, minDiamondPerQuestion, defaultDiamondPerQuestion),
+  [defaultDiamondPerQuestion, minDiamondPerQuestion, minYearsOfExperience, profileQuery.data],
  );
 
- const updateDraft = useCallback((updater: (current: ReaderSettingsDraft) => ReaderSettingsDraft) => {
-  setDraft((previous) => updater(previous ?? toDraft(
-   profileQuery.data,
-   minYearsOfExperience,
-   minDiamondPerQuestion,
-   defaultDiamondPerQuestion,
-  )));
- }, [defaultDiamondPerQuestion, minDiamondPerQuestion, minYearsOfExperience, profileQuery.data]);
-
- const setBioVi = useCallback((value: string) => {
-  updateDraft((current) => ({ ...current, bioVi: value }));
- }, [updateDraft]);
-
- const setDiamondPerQuestion = useCallback((value: number) => {
-  updateDraft((current) => ({ ...current, diamondPerQuestion: value }));
- }, [updateDraft]);
-
- const setSpecialties = useCallback((value: ReaderSpecialtyValue[]) => {
-  updateDraft((current) => ({ ...current, specialties: value }));
- }, [updateDraft]);
-
- const setYearsOfExperience = useCallback((value: number) => {
-  updateDraft((current) => ({ ...current, yearsOfExperience: value }));
- }, [updateDraft]);
-
- const setFacebookUrl = useCallback((value: string) => {
-  updateDraft((current) => ({ ...current, facebookUrl: value }));
- }, [updateDraft]);
-
- const setInstagramUrl = useCallback((value: string) => {
-  updateDraft((current) => ({ ...current, instagramUrl: value }));
- }, [updateDraft]);
-
- const setTikTokUrl = useCallback((value: string) => {
-  updateDraft((current) => ({ ...current, tikTokUrl: value }));
- }, [updateDraft]);
-
- const handleSave = useCallback(async (event: FormEvent) => {
-  event.preventDefault();
+ const handleSave = useCallback(async (values: ReaderSettingsSubmitPayload) => {
   if (!isTarotReader) {
    toast.error(t('reader.toast_not_found'), { style: NEUTRAL_TOAST_STYLE });
    return;
@@ -142,24 +113,24 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
    return;
   }
 
-  if (effectiveValues.specialties.length === 0) {
+  if (values.specialties.length === 0) {
    toast.error(t('reader.toast_specialties_required'), { style: DANGER_TOAST_STYLE });
    return;
   }
 
-  if (!hasAtLeastOneSocialLink(effectiveValues)) {
+  if (!hasAtLeastOneSocialLink(values)) {
    toast.error(t('reader.toast_social_required'), { style: DANGER_TOAST_STYLE });
    return;
   }
 
   const result = await saveMutation.mutateAsync({
-   bioVi: effectiveValues.bioVi,
-   diamondPerQuestion: effectiveValues.diamondPerQuestion,
-   specialties: effectiveValues.specialties,
-   yearsOfExperience: effectiveValues.yearsOfExperience,
-   facebookUrl: normalizeOptionalSocialUrl(effectiveValues.facebookUrl) || undefined,
-   instagramUrl: normalizeOptionalSocialUrl(effectiveValues.instagramUrl) || undefined,
-   tikTokUrl: normalizeOptionalSocialUrl(effectiveValues.tikTokUrl) || undefined,
+   bioVi: values.bio,
+   diamondPerQuestion: values.price,
+   specialties: values.specialties,
+   yearsOfExperience: values.years,
+   facebookUrl: normalizeOptionalSocialUrl(values.facebookUrl) || undefined,
+   instagramUrl: normalizeOptionalSocialUrl(values.instagramUrl) || undefined,
+   tikTokUrl: normalizeOptionalSocialUrl(values.tikTokUrl) || undefined,
   });
 
   if (!result.success) {
@@ -168,47 +139,36 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
   }
 
   toast.success(t('reader.toast_save_success'), { style: SUCCESS_TOAST_STYLE });
-  setDraft(null);
   await queryClient.invalidateQueries({ queryKey: ['reader-profile-settings', user?.id] });
- }, [effectiveValues, isTarotReader, queryClient, readerPolicyReady, saveMutation, t, user?.id]);
+ }, [isTarotReader, queryClient, readerPolicyReady, saveMutation, t, user?.id]);
 
  const handleStatusChange = useCallback(async (newStatus: ReaderStatus) => {
   if (!isTarotReader) {
    return;
   }
 
-  const previousStatus = effectiveValues.status;
-  updateDraft((current) => ({ ...current, status: newStatus }));
   const result = await statusMutation.mutateAsync(newStatus);
 
   if (!result.success) {
-   updateDraft((current) => ({ ...current, status: previousStatus }));
    toast.error(t('reader.toast_status_update_fail'), { style: DANGER_TOAST_STYLE });
    return;
   }
 
   await queryClient.invalidateQueries({ queryKey: ['reader-profile-settings', user?.id] });
   toast.success(t('reader.toast_status_updated'), { style: SUCCESS_TOAST_STYLE });
- }, [effectiveValues.status, isTarotReader, queryClient, statusMutation, t, updateDraft, user?.id]);
+ }, [isTarotReader, queryClient, statusMutation, t, user?.id]);
 
  return {
   loading: profileQuery.isLoading || profileQuery.isFetching,
   saving: saveMutation.isPending || statusMutation.isPending,
   bioVi: effectiveValues.bioVi,
-  setBioVi,
   diamondPerQuestion: effectiveValues.diamondPerQuestion,
-  setDiamondPerQuestion,
   specialties: effectiveValues.specialties,
-  setSpecialties,
   yearsOfExperience: effectiveValues.yearsOfExperience,
   minYearsOfExperience,
-  setYearsOfExperience,
   facebookUrl: effectiveValues.facebookUrl,
-  setFacebookUrl,
   instagramUrl: effectiveValues.instagramUrl,
-  setInstagramUrl,
   tikTokUrl: effectiveValues.tikTokUrl,
-  setTikTokUrl,
   minDiamondPerQuestion,
   readerPolicyReady,
   status: effectiveValues.status,

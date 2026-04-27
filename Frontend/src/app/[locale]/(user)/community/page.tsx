@@ -14,3 +14,5 @@ export default async function CommunityIndexPage() {
   </main>
  );
 }
+
+export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';

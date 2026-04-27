@@ -16,9 +16,11 @@ export function QuestProgressSection({ current, target, isCompleted, progressLab
      {current} / {target}
     </span>
    </div>
-   <div className={cn("h-2.5", "w-full", "overflow-hidden", "rounded-full", "border", "border-slate-800", "bg-slate-950/80")}>
-    <div className={cn("h-full", "rounded-full", "transition-all", "duration-1000", "ease-out", isCompleted ? "bg-gradient-to-r from-indigo-500 to-purple-500" : "bg-indigo-500")} style={{ width: `${Math.min((current / target) * 100, 100)}%` }} />
-   </div>
+   <progress
+    className={cn("tn-progress", "tn-progress-md", isCompleted ? "tn-progress-indigo" : "tn-progress-accent")}
+    max={100}
+    value={Math.max(0, Math.min((current / Math.max(1, target)) * 100, 100))}
+   />
   </div>
  );
 }

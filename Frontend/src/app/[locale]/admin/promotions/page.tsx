@@ -11,3 +11,5 @@ const AdminPromotionsPage = dynamic(
 export default function AdminPromotionsRoutePage() {
  return <AdminPromotionsPage />;
 }
+
+export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';

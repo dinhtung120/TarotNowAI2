@@ -79,8 +79,11 @@ export function useAiStreamSession({
     setIsSendingFollowup(false);
     setMessages((prev) => {
      const next = [...prev];
-     const last = next[next.length - 1];
-     if (last && last.role === 'ai') last.isStreaming = false;
+     const lastIndex = next.length - 1;
+     const last = next[lastIndex];
+     if (last && last.role === 'ai') {
+      next[lastIndex] = { ...last, isStreaming: false };
+     }
      return next;
     });
     queryClient.invalidateQueries({ queryKey: checkinQueryKeys.streakStatus });

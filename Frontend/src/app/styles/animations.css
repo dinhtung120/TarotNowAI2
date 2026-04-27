@@ -193,6 +193,22 @@
   backface-visibility: hidden;
 }
 
+@keyframes tn-stack-flight-fade {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.tn-stack-flight {
+  animation: tn-stack-flight-fade 260ms ease-out;
+}
+
 
 .animate-in {
   animation-duration: 260ms !important;

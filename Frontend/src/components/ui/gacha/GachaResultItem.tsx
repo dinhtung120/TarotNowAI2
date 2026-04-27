@@ -70,13 +70,13 @@ function GachaResultItemComponent({ reward, locale }: GachaResultItemProps) {
             src={reward.iconUrl}
             alt={name}
             fill
-            className="object-cover transition-transform duration-700 group-hover:scale-125"
+            className={cn("object-cover transition-transform duration-700 group-hover:scale-125")}
             onError={() => setImageError(true)}
             unoptimized
           />
         ) : (
           /* Biểu tượng dự phòng tùy theo loại phần thưởng */
-          <div className="opacity-40">
+          <div className={cn("opacity-40")}>
             {reward.currency?.toLowerCase() === 'gold' ? <Coins size={28} /> :
              reward.currency?.toLowerCase() === 'diamond' ? <Gem size={28} /> :
              <Package size={28} />}
@@ -85,23 +85,23 @@ function GachaResultItemComponent({ reward, locale }: GachaResultItemProps) {
       </div>
 
       {/* Thông tin chi tiết vật phẩm: Tên, Phẩm cấp và Số lượng */}
-      <div className="min-w-0 flex-1 space-y-1">
+      <div className={cn("min-w-0 flex-1 space-y-1")}>
         <h4 className={cn('truncate text-sm font-black tracking-tight tn-text-primary')}>
           {name}
         </h4>
-        <div className="flex items-center gap-2">
+        <div className={cn("flex items-center gap-2")}>
           <span className={cn('text-[10px] font-black uppercase tracking-widest', config.text)}>
             {reward.rarity}
           </span>
-          <span className="h-1 w-1 rounded-full bg-white/20" />
-          <span className="tn-text-secondary text-[11px] font-bold">
+          <span className={cn("h-1 w-1 rounded-full bg-white/20")} />
+          <span className={cn("tn-text-secondary text-[11px] font-bold")}>
             {summary}
           </span>
         </div>
       </div>
       
       {/* Hiệu ứng trang trí light-beam huyền bí khi hover */}
-      <div className="absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-current to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-30" />
+      <div className={cn("absolute inset-x-0 bottom-0 h-[1px] bg-gradient-to-r from-transparent via-current to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-30")} />
     </article>
   );
 }

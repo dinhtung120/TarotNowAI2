@@ -32,7 +32,6 @@ export interface ReadingSessionContentProps {
   allCardsFlipped: boolean;
   cards: RevealedReadingCard[];
   cardsToDraw: number;
-  deckCardWidth: string;
   error: string;
   flippedIndex: number;
   flyingCards: FlyingCard[];
@@ -45,7 +44,6 @@ export interface ReadingSessionContentProps {
   handleChangeCard: () => void;
   handleRandomSelect: () => void;
   handleReveal: () => void;
-  horizontalOverlapFactor: number;
   isRevealing: boolean;
   isShuffling: boolean;
   onBack: () => void;
@@ -54,7 +52,6 @@ export interface ReadingSessionContentProps {
   pickedCardSet: Set<number>;
   pickedCards: number[];
   question: string;
-  rowOverlapMargin: string;
   sessionId: string;
   setDeckCardRef: (cardId: number) => (node: HTMLDivElement | null) => void;
   shufflePaths: ShufflePath[];

@@ -3,6 +3,7 @@
 export type PostVisibility = 'public' | 'private';
 
 export type ReactionType = 'like' | 'love' | 'insightful' | 'haha' | 'sad';
+export type CommunityReportReasonCode = 'spam' | 'hate_speech' | 'harassment' | 'misinformation' | 'inappropriate' | 'other';
 
 export interface CommunityPost {
   id: string;
@@ -43,6 +44,16 @@ export interface AddCommentPayload {
 
 export interface ToggleReactionPayload {
   type: ReactionType;
+}
+
+export interface ReportPostPayload {
+  reasonCode: CommunityReportReasonCode;
+  description: string;
+}
+
+export interface ReportPostResponse {
+  success: boolean;
+  reportId: string;
 }
 
 /** Một trang feed (API + infinite query). */

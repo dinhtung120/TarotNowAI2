@@ -61,20 +61,14 @@ export function QuestCard({ quest, isClaimPending, localize, t, onOpen, onClaim 
       </span>
      </div>
      <div className={cn("h-2", "w-full", "overflow-hidden", "rounded-full", "border", "border-slate-800", "bg-slate-900/50")}>
-      <div
+      <progress
        className={cn(
-        "h-full",
-        "rounded-full",
-        "transition-all",
-        "duration-1000",
-        "ease-out",
-        isClaimed
-         ? "bg-slate-600"
-         : isCompleted
-          ? "bg-gradient-to-r from-indigo-500 to-purple-500 shadow-md"
-          : "bg-gradient-to-r from-blue-500 to-indigo-500",
+        "tn-progress",
+        "tn-progress-sm",
+        isClaimed ? "tn-progress-slate" : "tn-progress-indigo",
        )}
-       style={{ width: `${percent}%` }}
+       max={100}
+       value={percent}
       />
      </div>
     </div>

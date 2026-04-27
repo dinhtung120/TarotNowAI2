@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { AUTH_HEADER } from '@/shared/infrastructure/auth/authConstants';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
-import { clearAuthCookies, resolveDeviceIdFromRequest } from '@/app/api/auth/_shared';
+import { buildProblemResponse, clearAuthCookies, resolveDeviceIdFromRequest } from '@/app/api/auth/_shared';
 
 interface LogoutPayload {
  revokeAll?: boolean;
@@ -42,10 +42,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
  });
 
  const shouldClearCookies = result.ok || shouldClearCookiesAfterLogout(result.status, result.error);
- const response = NextResponse.json(
-  result.ok ? { success: true } : { success: false, error: result.error },
-  { status: result.ok ? 200 : (result.status >= 500 ? 503 : result.status) },
- );
+ const response = result.ok
+  ? NextResponse.json({ success: true }, { status: 200 })
+  : buildProblemResponse(result.status >= 500 ? 503 : result.status, result.error ?? AUTH_ERROR.TEMPORARY_FAILURE, result.error);
  if (shouldClearCookies) {
   clearAuthCookies(response);
  }

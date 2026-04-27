@@ -4,6 +4,26 @@ import { AUTH_ERROR } from '@/shared/domain/authErrors';
 
 const AUTH_COOKIE_DOMAIN = process.env.AUTH_COOKIE_DOMAIN?.trim() || undefined;
 
+interface ProblemDetailsPayload {
+ type: string;
+ title: string;
+ status: number;
+ detail: string;
+ errorCode?: string;
+}
+
+export function buildProblemResponse(status: number, detail: string, errorCode?: string): NextResponse {
+ const payload: ProblemDetailsPayload = {
+  type: 'about:blank',
+  title: status >= 500 ? 'Server Error' : status === 401 ? 'Unauthorized' : 'Bad Request',
+  status,
+  detail,
+  ...(errorCode ? { errorCode } : {}),
+ };
+
+ return NextResponse.json(payload, { status });
+}
+
 export function resolveAccessTtlSeconds(payload: { expiresInSeconds?: number }): number {
  if (typeof payload.expiresInSeconds === 'number' && payload.expiresInSeconds > 0) {
   return payload.expiresInSeconds;
@@ -199,7 +219,7 @@ export function clearAuthCookies(response: NextResponse): void {
 }
 
 export function unauthorizedResponse(clearCookies = false): NextResponse {
- const response = NextResponse.json({ success: false, error: AUTH_ERROR.UNAUTHORIZED }, { status: 401 });
+ const response = buildProblemResponse(401, AUTH_ERROR.UNAUTHORIZED, AUTH_ERROR.UNAUTHORIZED);
  if (clearCookies) {
   clearAuthCookies(response);
  }

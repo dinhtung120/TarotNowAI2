@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-import type { FormEvent } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
@@ -36,18 +35,10 @@ interface ReaderSettingsFormStateProps {
  instagramUrl: string;
  tikTokUrl: string;
  validation: ReaderSettingsFormValidationLabels;
- onChangeBio: (value: string) => void;
- onChangeSpecialties: (value: ReaderSpecialtyValue[]) => void;
- onChangeYears: (value: number) => void;
- onChangePrice: (value: number) => void;
- onChangeFacebookUrl: (value: string) => void;
- onChangeInstagramUrl: (value: string) => void;
- onChangeTikTokUrl: (value: string) => void;
- onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+ onSubmit: (values: ReaderSettingsFormCardFormValues) => void;
 }
 
 const specialtySchema = z.enum(READER_SPECIALTY_VALUES);
-const syncOptions = { shouldDirty: false, shouldValidate: false } as const;
 const editOptions = { shouldDirty: true, shouldValidate: true } as const;
 const MAX_BIO_LENGTH = 4_000;
 const MAX_SOCIAL_URL_LENGTH = 500;
@@ -65,42 +56,40 @@ export function useReaderSettingsFormCard(props: ReaderSettingsFormStateProps) {
  instagramUrl,
  tikTokUrl,
  validation,
-  onChangeBio,
-  onChangeSpecialties,
-  onChangeYears,
-  onChangePrice,
-  onChangeFacebookUrl,
-  onChangeInstagramUrl,
-  onChangeTikTokUrl,
   onSubmit,
  } = props;
 
- const schema = useMemo(() => z.object({
-  bio: z.string().max(MAX_BIO_LENGTH, validation.bioMax),
-  specialties: z.array(specialtySchema).min(1, validation.specialtiesMin),
-  years: z.number().int().min(minYearsValue, validation.yearsMin),
-  price: z.number().int().min(minPriceValue, validation.priceMin),
-  facebookUrl: z.string().trim().max(MAX_SOCIAL_URL_LENGTH, validation.socialTooLong),
-  instagramUrl: z.string().trim().max(MAX_SOCIAL_URL_LENGTH, validation.socialTooLong),
-  tikTokUrl: z.string().trim().max(MAX_SOCIAL_URL_LENGTH, validation.socialTooLong),
- }).superRefine((values, context) => {
-  if (!hasAtLeastOneSocialLink(values)) {
-   context.addIssue({ code: z.ZodIssueCode.custom, path: ['facebookUrl'], message: validation.socialRequired });
-  }
-  if (!isValidFacebookUrl(values.facebookUrl)) {
-   context.addIssue({ code: z.ZodIssueCode.custom, path: ['facebookUrl'], message: validation.facebookInvalid });
-  }
-  if (!isValidInstagramUrl(values.instagramUrl)) {
-   context.addIssue({ code: z.ZodIssueCode.custom, path: ['instagramUrl'], message: validation.instagramInvalid });
-  }
-  if (!isValidTikTokUrl(values.tikTokUrl)) {
-   context.addIssue({ code: z.ZodIssueCode.custom, path: ['tikTokUrl'], message: validation.tikTokInvalid });
-  }
- }), [minPriceValue, validation, minYearsValue]);
+ const schema = useMemo(
+  () =>
+   z
+    .object({
+     bio: z.string().max(MAX_BIO_LENGTH, validation.bioMax),
+     specialties: z.array(specialtySchema).min(1, validation.specialtiesMin),
+     years: z.number().int().min(minYearsValue, validation.yearsMin),
+     price: z.number().int().min(minPriceValue, validation.priceMin),
+     facebookUrl: z.string().trim().max(MAX_SOCIAL_URL_LENGTH, validation.socialTooLong),
+     instagramUrl: z.string().trim().max(MAX_SOCIAL_URL_LENGTH, validation.socialTooLong),
+     tikTokUrl: z.string().trim().max(MAX_SOCIAL_URL_LENGTH, validation.socialTooLong),
+    })
+    .superRefine((values, context) => {
+     if (!hasAtLeastOneSocialLink(values)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['facebookUrl'], message: validation.socialRequired });
+     }
+     if (!isValidFacebookUrl(values.facebookUrl)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['facebookUrl'], message: validation.facebookInvalid });
+     }
+     if (!isValidInstagramUrl(values.instagramUrl)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['instagramUrl'], message: validation.instagramInvalid });
+     }
+     if (!isValidTikTokUrl(values.tikTokUrl)) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ['tikTokUrl'], message: validation.tikTokInvalid });
+     }
+    }),
+  [minPriceValue, minYearsValue, validation],
+ );
 
- const { handleSubmit, setValue, control, formState: { errors } } = useForm<ReaderSettingsFormCardFormValues>({
-  resolver: zodResolver(schema),
-  defaultValues: {
+ const initialValues = useMemo<ReaderSettingsFormCardFormValues>(
+  () => ({
    bio: bioValue,
    specialties: specialtiesValue,
    years: yearsValue,
@@ -108,8 +97,27 @@ export function useReaderSettingsFormCard(props: ReaderSettingsFormStateProps) {
    facebookUrl,
    instagramUrl,
    tikTokUrl,
-  },
+  }),
+  [bioValue, facebookUrl, instagramUrl, priceValue, specialtiesValue, tikTokUrl, yearsValue],
+ );
+
+ const {
+  handleSubmit,
+  setValue,
+  control,
+  reset,
+  formState: { errors, isDirty },
+ } = useForm<ReaderSettingsFormCardFormValues>({
+  resolver: zodResolver(schema),
+  defaultValues: initialValues,
  });
+
+ useEffect(() => {
+  if (isDirty) {
+   return;
+  }
+  reset(initialValues);
+ }, [initialValues, isDirty, reset]);
 
  const watchedBio = useWatch({ control, name: 'bio' }) ?? '';
  const watchedSpecialties = useWatch({ control, name: 'specialties' }) ?? EMPTY_SPECIALTIES;
@@ -119,27 +127,8 @@ export function useReaderSettingsFormCard(props: ReaderSettingsFormStateProps) {
  const watchedInstagramUrl = useWatch({ control, name: 'instagramUrl' }) ?? '';
  const watchedTikTokUrl = useWatch({ control, name: 'tikTokUrl' }) ?? '';
 
- useEffect(() => { if (watchedBio !== bioValue) setValue('bio', bioValue, syncOptions); }, [bioValue, setValue, watchedBio]);
- useEffect(() => { if (!areArrayValuesEqual(watchedSpecialties, specialtiesValue)) setValue('specialties', specialtiesValue, syncOptions); }, [setValue, specialtiesValue, watchedSpecialties]);
- useEffect(() => { if (watchedYears !== yearsValue) setValue('years', yearsValue, syncOptions); }, [setValue, watchedYears, yearsValue]);
- useEffect(() => { if (watchedPrice !== priceValue) setValue('price', priceValue, syncOptions); }, [priceValue, setValue, watchedPrice]);
- useEffect(() => { if (watchedFacebookUrl !== facebookUrl) setValue('facebookUrl', facebookUrl, syncOptions); }, [facebookUrl, setValue, watchedFacebookUrl]);
- useEffect(() => { if (watchedInstagramUrl !== instagramUrl) setValue('instagramUrl', instagramUrl, syncOptions); }, [instagramUrl, setValue, watchedInstagramUrl]);
- useEffect(() => { if (watchedTikTokUrl !== tikTokUrl) setValue('tikTokUrl', tikTokUrl, syncOptions); }, [setValue, tikTokUrl, watchedTikTokUrl]);
-
- useEffect(() => { if (watchedBio !== bioValue) onChangeBio(watchedBio); }, [bioValue, onChangeBio, watchedBio]);
- useEffect(() => { if (!areArrayValuesEqual(watchedSpecialties, specialtiesValue)) onChangeSpecialties(watchedSpecialties); }, [onChangeSpecialties, specialtiesValue, watchedSpecialties]);
- useEffect(() => { if (watchedYears !== yearsValue) onChangeYears(watchedYears); }, [onChangeYears, watchedYears, yearsValue]);
- useEffect(() => { if (watchedPrice !== priceValue) onChangePrice(watchedPrice); }, [onChangePrice, priceValue, watchedPrice]);
- useEffect(() => { if (watchedFacebookUrl !== facebookUrl) onChangeFacebookUrl(watchedFacebookUrl); }, [facebookUrl, onChangeFacebookUrl, watchedFacebookUrl]);
- useEffect(() => { if (watchedInstagramUrl !== instagramUrl) onChangeInstagramUrl(watchedInstagramUrl); }, [instagramUrl, onChangeInstagramUrl, watchedInstagramUrl]);
- useEffect(() => { if (watchedTikTokUrl !== tikTokUrl) onChangeTikTokUrl(watchedTikTokUrl); }, [onChangeTikTokUrl, tikTokUrl, watchedTikTokUrl]);
-
- const submitWithValidation = handleSubmit(() => {
-  onSubmit({
-   preventDefault: () => undefined,
-   stopPropagation: () => undefined,
-  } as unknown as FormEvent<HTMLFormElement>);
+ const submitWithValidation = handleSubmit((values) => {
+  onSubmit(values);
  });
 
  return {
@@ -172,9 +161,4 @@ type ReaderSettingsFormCardFormValues = {
  tikTokUrl: string;
 };
 
-function areArrayValuesEqual(left: ReaderSpecialtyValue[], right: ReaderSpecialtyValue[]): boolean {
- if (left.length !== right.length) {
-  return false;
- }
- return left.every((value, index) => value === right[index]);
-}
+export type { ReaderSettingsFormCardFormValues };

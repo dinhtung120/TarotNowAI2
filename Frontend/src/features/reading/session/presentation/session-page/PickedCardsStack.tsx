@@ -1,5 +1,5 @@
 import type { MutableRefObject } from "react";
-import { getStackPlacement } from "@/features/reading/session/presentation/session-page/utils";
+import { resolveStackPlacementClass } from "@/features/reading/session/presentation/session-page/utils";
 import { cn } from "@/lib/utils";
 
 interface PickedCardsStackProps {
@@ -26,33 +26,28 @@ export default function PickedCardsStack({
         />
 
         {pickedCards.map((cardId, stackIndex) => {
-          const placement = getStackPlacement(stackIndex);
-
           return (
-            <button
-              key={`${cardId}-${stackIndex}`}
-              type="button"
-              onClick={() => onRemove(cardId)}
-              disabled={isRevealing}
-              className={cn(
-                "absolute left-0 top-0 aspect-[14/22] w-[72px] rounded-md border border-[var(--purple-accent)]/35 bg-gradient-to-br from-[var(--purple-accent)]/95 to-[color:var(--c-61-49-80-55)] shadow-md transition-transform duration-200 hover:-translate-y-1 disabled:pointer-events-none tarot-deck-card",
-              )}
-              style={{
-                transform: `translate(${placement.xOffset}px, ${placement.yOffset}px) rotate(${placement.rotate}deg)`,
-                zIndex: stackIndex + 1,
-              }}
-            >
-              <div
+            <div key={`${cardId}-${stackIndex}`} className={cn("absolute left-0 top-0", resolveStackPlacementClass(stackIndex))}>
+              <button
+                type="button"
+                onClick={() => onRemove(cardId)}
+                disabled={isRevealing}
                 className={cn(
-                  "pointer-events-none absolute inset-1 rounded-sm border border-[var(--purple-accent)]/30 opacity-60",
+                  "relative aspect-[14/22] w-[72px] rounded-md border border-[var(--purple-accent)]/35 bg-gradient-to-br from-[var(--purple-accent)]/95 to-[color:var(--c-61-49-80-55)] shadow-md transition-transform duration-200 hover:-translate-y-1 disabled:pointer-events-none tarot-deck-card",
                 )}
-              />
-              <div
-                className={cn(
-                  "pointer-events-none absolute inset-0 rounded-md bg-[radial-gradient(circle_at_24%_22%,var(--c-255-255-255-15)_0,transparent_34%),linear-gradient(160deg,var(--c-61-49-80-20),transparent_65%)]",
-                )}
-              />
-            </button>
+              >
+                <div
+                  className={cn(
+                    "pointer-events-none absolute inset-1 rounded-sm border border-[var(--purple-accent)]/30 opacity-60",
+                  )}
+                />
+                <div
+                  className={cn(
+                    "pointer-events-none absolute inset-0 rounded-md bg-[radial-gradient(circle_at_24%_22%,var(--c-255-255-255-15)_0,transparent_34%),linear-gradient(160deg,var(--c-61-49-80-20),transparent_65%)]",
+                  )}
+                />
+              </button>
+            </div>
           );
         })}
       </div>

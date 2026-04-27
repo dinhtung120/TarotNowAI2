@@ -10,8 +10,34 @@
       "load_more": "Load more",
       "loading_more": "Loading more...",
       "end": "You've reached the end of the timeline.",
-      "empty": "Silence in the void. No messages yet.",
-      "report_placeholder": "Open report modal for post [{postId}] (MVP phase)"
+      "empty": "Silence in the void. No messages yet."
+    },
+    "report_modal": {
+      "title": "Report post",
+      "description": "Help us moderate the community. Your report will be reviewed.",
+      "reason_label": "Reason",
+      "reason_placeholder": "Select a reason",
+      "description_label": "Details",
+      "description_placeholder": "Describe what happened (minimum {min} characters)",
+      "cancel": "Cancel",
+      "submit": "Submit report",
+      "submitting": "Submitting...",
+      "toast": {
+        "success": "Report submitted successfully.",
+        "failure": "Unable to submit report right now."
+      },
+      "validation": {
+        "reason_required": "Please select a reason.",
+        "description_min": "Description must be at least {min} characters."
+      },
+      "reasons": {
+        "spam": "Spam",
+        "hate_speech": "Hate speech",
+        "harassment": "Harassment",
+        "misinformation": "Misinformation",
+        "inappropriate": "Inappropriate content",
+        "other": "Other"
+      }
     },
     "composer": {
       "placeholder": "What message did the universe send to you today?...",

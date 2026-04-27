@@ -48,3 +48,10 @@ export function getParticleStyle(index: number) {
   animationDelay: `${delay.toFixed(6)}s`,
  } as const;
 }
+
+const ASTRAL_PARTICLE_CLASS_COUNT = 25;
+
+export function resolveParticleClass(index: number): string {
+ const normalizedIndex = ((index % ASTRAL_PARTICLE_CLASS_COUNT) + ASTRAL_PARTICLE_CLASS_COUNT) % ASTRAL_PARTICLE_CLASS_COUNT;
+ return `tn-astral-particle-${normalizedIndex}`;
+}

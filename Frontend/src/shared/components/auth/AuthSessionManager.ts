@@ -2,12 +2,14 @@
 import { useCallback, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslations } from 'next-intl';
+import { useQueryClient } from '@tanstack/react-query';
 import { usePathname } from '@/i18n/routing';
 import { useAuthStore } from '@/store/authStore';
 import type { ActionResult } from '@/shared/domain/actionResult';
 import { isTerminalAuthError } from '@/shared/domain/authErrors';
 import type { UserProfile } from '@/features/auth/domain/types';
 import { getClientSessionSnapshot, invalidateClientSessionSnapshot } from '@/shared/infrastructure/auth/clientSessionSnapshot';
+import { performClientLogoutCleanup } from '@/shared/infrastructure/auth/clientLogoutCleanup';
 import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
 import {
  isAuthlessPath,
@@ -32,10 +34,10 @@ export default function AuthSessionManager({
     refreshAccessToken,
 }: AuthSessionManagerProps) {
     const navigation = useOptimizedNavigation();
+    const queryClient = useQueryClient();
     const pathname = usePathname();
     const tApi = useTranslations('ApiErrors');
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-    const clearAuth = useAuthStore((s) => s.clearAuth);
     const setSession = useAuthStore((s) => s.setSession);
     const logoutInProgressRef = useRef(false);
     const refreshInProgressRef = useRef(false);
@@ -55,8 +57,7 @@ export default function AuthSessionManager({
                 await logout();
             } catch {
             } finally {
-                invalidateClientSessionSnapshot();
-                clearAuth();
+                performClientLogoutCleanup(queryClient);
                 logoutInProgressRef.current = false;
             }
             if (showToast) {
@@ -67,7 +68,7 @@ export default function AuthSessionManager({
                 navigation.push('/login');
             }
         },
-        [clearAuth, logout, navigation]
+        [logout, navigation, queryClient]
     );
     const tryRefresh = useCallback(
         async (showToastOnFailure = false) => {
@@ -122,7 +123,7 @@ export default function AuthSessionManager({
             }
 
             if (sessionState.terminalFailure && useAuthStore.getState().isAuthenticated) {
-                clearAuth();
+                performClientLogoutCleanup(queryClient);
             }
         };
 
@@ -133,7 +134,7 @@ export default function AuthSessionManager({
             cancelled = true;
             window.clearTimeout(bootstrapTimerId);
         };
-    }, [clearAuth, setSession]);
+    }, [queryClient, setSession]);
     useEffect(() => {
         if (!isAuthenticated) return;
         const intervalId = window.setInterval(() => {

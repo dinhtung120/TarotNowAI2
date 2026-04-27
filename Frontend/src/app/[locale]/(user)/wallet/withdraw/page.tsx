@@ -36,3 +36,5 @@ export default async function WithdrawRoutePage({
   </AppQueryHydrationBoundary>
  );
 }
+
+export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';

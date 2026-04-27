@@ -28,14 +28,11 @@ export default function CollectionDeckCardHeader({
           {expToNext <= 0 ? 'MAX' : `${formatCardStat(currentExp)} / ${formatCardStat(expToNext)}`}
         </span>
       </div>
-      <div className={cn('tn-surface h-1 w-full overflow-hidden rounded-full')}>
-        <div
-          className={cn(
-            'h-full bg-[var(--warning)] shadow-[0_0_5px_var(--c-245-158-11-30)] transition-all duration-1000',
-          )}
-          style={{ width: `${progress}%` }}
-        />
-      </div>
+      <progress
+        className={cn('tn-progress tn-progress-xs tn-progress-warning')}
+        max={100}
+        value={progress}
+      />
     </div>
   );
 }

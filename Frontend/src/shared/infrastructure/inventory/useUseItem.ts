@@ -19,7 +19,6 @@ import type {
 } from '@/shared/infrastructure/inventory/inventoryTypes';
 import { invalidateUserStateQueries } from '@/shared/infrastructure/query/invalidateUserStateQueries';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
-import type { ActionResult } from '@/shared/domain/actionResult';
 import type { UserCollectionDto } from '@/features/collection/application/actions';
 import type { ReadingSetupSnapshotDto } from '@/shared/application/actions/reading-setup-snapshot';
 
@@ -182,14 +181,14 @@ function patchCollectionCache(
   return;
  }
 
- queryClient.setQueryData<ActionResult<UserCollectionDto[]> | undefined>(
+ queryClient.setQueryData<UserCollectionDto[] | undefined>(
   userStateQueryKeys.collection.mine(),
-  (currentCollectionResult) => {
-   if (!currentCollectionResult?.success || !currentCollectionResult.data?.length) {
-    return currentCollectionResult;
+  (currentCollection) => {
+   if (!currentCollection?.length) {
+    return currentCollection;
    }
 
-   const updatedCollection = currentCollectionResult.data.map((card) => {
+   const updatedCollection = currentCollection.map((card) => {
     if (card.cardId !== enhancementSummary.cardId) {
      return card;
     }
@@ -211,10 +210,7 @@ function patchCollectionCache(
     };
    });
 
-   return {
-    ...currentCollectionResult,
-    data: updatedCollection,
-   };
+   return updatedCollection;
   },
  );
 }
@@ -388,14 +384,15 @@ export function useUseItem() {
     || pendingIntentKeysRef.current.get(intentKey)
     || createIdempotencyKey();
 
+   payload.idempotencyKey = currentIdempotencyKey;
    pendingIntentKeysRef.current.set(intentKey, currentIdempotencyKey);
-   markLocalInventoryCacheSynced();
+   markLocalInventoryCacheSynced(currentIdempotencyKey);
    return sendUseItemRequest(payload, currentIdempotencyKey);
   },
   onSuccess: (result, variables, context) => {
    const intentKey = context?.intentKey ?? normalizeIntentKey(variables);
    pendingIntentKeysRef.current.delete(intentKey);
-   markLocalInventoryCacheSynced();
+   markLocalInventoryCacheSynced(variables.idempotencyKey);
    patchReadingSetupSnapshot(queryClient, result);
    patchCollectionCache(queryClient, result);
 

@@ -6,10 +6,11 @@ interface ModalHeaderProps {
   description?: string;
   showCloseButton: boolean;
   title?: string;
+  titleId?: string;
   onClose: () => void;
 }
 
-export default function ModalHeader({ description, showCloseButton, title, onClose }: ModalHeaderProps) {
+export default function ModalHeader({ description, showCloseButton, title, titleId, onClose }: ModalHeaderProps) {
   const t = useTranslations('Common');
 
   if (!title && !showCloseButton) return null;
@@ -17,7 +18,7 @@ export default function ModalHeader({ description, showCloseButton, title, onClo
   return (
     <div className={cn('flex items-start justify-between p-6 pb-0')}>
       <div className={cn('space-y-1')}>
-        {title ? <h2 className={cn('text-lg font-black tracking-tight tn-text-ink')}>{title}</h2> : null}
+        {title ? <h2 id={titleId} className={cn('text-lg font-black tracking-tight tn-text-ink')}>{title}</h2> : null}
         {description ? <p className={cn('text-sm font-medium tn-text-secondary')}>{description}</p> : null}
       </div>
       {showCloseButton ? (

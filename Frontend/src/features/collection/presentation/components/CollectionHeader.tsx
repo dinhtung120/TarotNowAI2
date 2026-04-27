@@ -39,12 +39,11 @@ export function CollectionHeader({
       {totalCollected} <span className={cn('tn-text-muted')}>/ {totalCardCount}</span>
      </span>
     </div>
-    <div className={cn('h-1 w-full tn-surface rounded-full overflow-hidden')}>
-     <div
-      className={cn('h-full bg-gradient-to-r from-amber-400 via-amber-400 to-amber-400 rounded-full transition-all duration-1000 ease-out shadow-md')}
-      style={{ width: `${progressRatio}%` }}
-     />
-    </div>
+    <progress
+     className={cn('tn-progress tn-progress-xs tn-progress-warning')}
+     max={100}
+     value={Math.max(0, Math.min(100, progressRatio))}
+    />
    </div>
   </div>
  );

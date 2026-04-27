@@ -6,7 +6,7 @@ import {
  getServerAccessTokenOrRefresh,
  getServerSessionSnapshot,
 } from '@/shared/infrastructure/auth/serverAuth';
-import { unauthorizedResponse } from '@/app/api/auth/_shared';
+import { buildProblemResponse, unauthorizedResponse } from '@/app/api/auth/_shared';
 
 interface SessionResponsePayload {
  success: boolean;
@@ -57,8 +57,12 @@ async function refreshSessionViaInternalRoute(request: NextRequest): Promise<Res
 
 async function resolveAuthError(response: Response): Promise<string | undefined> {
  try {
-  const payload = (await response.clone().json()) as { error?: string };
-  return payload.error;
+  const payload = (await response.clone().json()) as {
+   error?: string;
+   errorCode?: string;
+   detail?: string;
+  };
+  return payload.errorCode ?? payload.error ?? payload.detail;
  } catch {
   return undefined;
  }
@@ -89,14 +93,7 @@ function createSuccessResponse(user?: UserProfile): NextResponse {
 }
 
 function createTemporaryFailureResponse(): NextResponse {
- return NextResponse.json(
-  {
-   success: false,
-   authenticated: false,
-   error: AUTH_ERROR.TEMPORARY_FAILURE,
-  } satisfies SessionResponsePayload,
-  { status: 503 },
- );
+ return buildProblemResponse(503, AUTH_ERROR.TEMPORARY_FAILURE, AUTH_ERROR.TEMPORARY_FAILURE);
 }
 
 async function refreshSessionAndBuildResponse(
@@ -118,14 +115,9 @@ async function refreshSessionAndBuildResponse(
    return unauthorizedResponse(true);
   }
 
-  return NextResponse.json(
-   {
-    success: false,
-    authenticated: false,
-    error: error ?? AUTH_ERROR.TEMPORARY_FAILURE,
-   } satisfies SessionResponsePayload,
-   { status: resolveTransientStatus(refreshResponse.status) },
-  );
+  const transientStatus = resolveTransientStatus(refreshResponse.status);
+  const errorCode = error ?? AUTH_ERROR.TEMPORARY_FAILURE;
+  return buildProblemResponse(transientStatus, errorCode, errorCode);
  }
 
  let refreshPayload: { success?: boolean; user?: UserProfile; error?: string };

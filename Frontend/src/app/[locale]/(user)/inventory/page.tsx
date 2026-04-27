@@ -1,13 +1,15 @@
-import InventoryPageClient from '@/components/ui/inventory/InventoryPageClient';
+import InventoryPage from '@/features/inventory/presentation/InventoryPage';
 import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
 import { prefetchInventoryPage } from '@/shared/server/prefetch/runners';
 
 export default async function InventoryRoutePage() {
  const state = await dehydrateAppQueries(prefetchInventoryPage);
 
- return (
+  return (
   <AppQueryHydrationBoundary state={state}>
-   <InventoryPageClient />
+   <InventoryPage />
   </AppQueryHydrationBoundary>
  );
 }
+
+export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';

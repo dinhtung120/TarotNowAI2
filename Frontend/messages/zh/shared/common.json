@@ -12,6 +12,8 @@
     "notifications": "通知",
     "confirm": "确认",
     "status_complete": "完成",
-    "sort_by": "排序方式"
+    "sort_by": "排序方式",
+    "streak_active_title": "连续抽牌 {streak} 天",
+    "streak_inactive_title": "先进行一次 AI 抽牌来开始你的连击！"
   }
 }

@@ -68,11 +68,6 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const runtimePoliciesQuery = useRuntimePolicies();
   const realtimePolicy = runtimePoliciesQuery.data?.realtime;
-  const reconnectSchedule = [...(realtimePolicy?.reconnectScheduleMs ?? RUNTIME_POLICY_FALLBACKS.realtime.reconnectScheduleMs)];
-  const negotiationTimeoutMs = realtimePolicy?.negotiationTimeoutMs ?? RUNTIME_POLICY_FALLBACKS.realtime.negotiationTimeoutMs;
-  const negotiationCooldownMs =
-    realtimePolicy?.presenceNegotiationCooldownMs ?? RUNTIME_POLICY_FALLBACKS.realtime.presenceNegotiationCooldownMs;
-  const serverTimeoutMs = realtimePolicy?.serverTimeoutMs ?? RUNTIME_POLICY_FALLBACKS.realtime.serverTimeoutMs;
   const connectionRef = useRef<HubConnection | null>(null);
   const queryClient = useQueryClient();
 
@@ -164,8 +159,10 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
         connectionRef.current = hubConnection;
         heartbeatInterval = registration.startHeartbeat();
       } catch (error) {
-        if (isUnauthorizedNegotiationError(error) || error instanceof Error) {
+        if (isUnauthorizedNegotiationError(error)) {
           reconnectBlockedUntil = Date.now() + negotiationCooldownMs;
+        } else if (error instanceof Error) {
+          reconnectBlockedUntil = Date.now() + Math.floor(negotiationCooldownMs / 2);
         }
 
         if (hubConnection && hubConnection.state !== HubConnectionState.Disconnected) {

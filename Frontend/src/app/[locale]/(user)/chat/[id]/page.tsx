@@ -14,3 +14,5 @@ export default function ChatRoomRoutePage() {
   </Suspense>
  );
 }
+
+export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';

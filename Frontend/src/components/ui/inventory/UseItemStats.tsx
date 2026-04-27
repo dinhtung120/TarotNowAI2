@@ -29,8 +29,8 @@ export default function UseItemStats({
         'relative overflow-hidden rounded-xl border tn-border-soft bg-white/[0.02] px-3 py-2 transition-all hover:bg-white/[0.04]',
         'min-w-[120px]'
       )}>
-        <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center opacity-5">
-          <div className="h-full w-full rounded-full bg-violet-500 blur-xl" />
+        <div className={cn("absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center opacity-5")}>
+          <div className={cn("h-full w-full rounded-full bg-violet-500 blur-xl")} />
         </div>
         <p className={cn('tn-text-muted text-[9px] font-black uppercase tracking-[0.1em] mb-0.5 opacity-30')}>
           {quantityLabel}

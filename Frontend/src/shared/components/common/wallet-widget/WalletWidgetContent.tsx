@@ -40,7 +40,7 @@ export function WalletWidgetContent({ locale, title, diamondTitle, goldTitle, fr
     {balance.frozenDiamondBalance > 0 ? <span className={cn("ml-0.5", "text-xs", "font-medium", "text-slate-400")}>{frozenSuffix(balance.frozenDiamondBalance.toLocaleString(locale))}</span> : null}
    </div>
    <div className={cn("flex", "items-center", "justify-start", "gap-1", "border-t", "border-slate-700", "py-0.5", "leading-none")} title={goldTitle}>
-    <Coins className={cn("h-3", "w-3", "text-amber-500")} style={{ animationDuration: "3s" }} />
+    <Coins className={cn("h-3", "w-3", "animate-pulse", "text-amber-500")} />
     <span className={cn("tn-text-13", "font-bold", "tracking-tighter", "text-amber-500")}>{balance.goldBalance.toLocaleString(locale)}</span>
    </div>
   </Link>

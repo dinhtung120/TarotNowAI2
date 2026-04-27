@@ -1,88 +1,50 @@
 'use client';
 
-/* 
- * Import các hooks và thư viện cốt lõi.
- */
 import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
-
-/* 
- * Import các thành phần nội bộ của trang Kho đồ.
- */
 import InventoryGrid from '@/components/ui/inventory/InventoryGrid';
 import InventoryPageHero from '@/components/ui/inventory/InventoryPageHero';
 import InventoryQueryState from '@/components/ui/inventory/InventoryQueryState';
 import UseItemModal from '@/components/ui/inventory/UseItemModal';
-
-/* 
- * Import hạ tầng dữ liệu để quản lý trạng thái kho đồ và sử dụng vật phẩm.
- */
 import { useInventory } from '@/shared/infrastructure/inventory/useInventory';
 import { useOwnedInventoryCards } from '@/shared/infrastructure/inventory/useOwnedInventoryCards';
 import { useUseItem } from '@/shared/infrastructure/inventory/useUseItem';
 import type { InventoryItem } from '@/shared/infrastructure/inventory/inventoryTypes';
 
-/**
- * InventoryPageClient - Thành phần điều hướng chính cho giao diện Kho đồ người dùng.
- * @returns JSX.Element
- */
 export default function InventoryPageClient() {
   const locale = useLocale();
   const t = useTranslations('Inventory');
   const useAgainLabel = t.has('useAgain') ? t('useAgain') : 'Sử dụng tiếp';
   const useItemTitleLabel = t.has('useItemTitle') ? t('useItemTitle') : 'Sử dụng vật phẩm';
-  
-  /* Quản lý trạng thái vật phẩm đang được chọn để sử dụng */
+
   const [selectedItemSnapshot, setSelectedItemSnapshot] = useState<InventoryItem | null>(null);
   const shouldLoadOwnedCards = selectedItemSnapshot !== null;
-  
-  /* Lấy dữ liệu kho đồ tổng quát */
   const inventoryQuery = useInventory();
-  
-  /* Lấy dữ liệu các lá bài người dùng đang sở hữu */
   const ownedCards = useOwnedInventoryCards(locale, { enabled: shouldLoadOwnedCards });
-  
-  /* Hook thực thi hành động sử dụng vật phẩm */
   const useItemMutation = useUseItem();
+
   const inventoryItems = inventoryQuery.data?.items ?? [];
   const selectedItemFromQuery = selectedItemSnapshot
     ? (inventoryItems.find((item) => item.itemCode === selectedItemSnapshot.itemCode) ?? null)
     : null;
   const selectedItem = selectedItemSnapshot
-    ? selectedItemFromQuery ?? {
-      ...selectedItemSnapshot,
-      quantity: 0,
-      canUse: false,
-    }
+    ? selectedItemFromQuery ?? { ...selectedItemSnapshot, quantity: 0, canUse: false }
     : null;
 
   return (
-    <div className={cn('relative mx-auto w-full max-w-7xl px-4 pb-24 pt-32 sm:px-6 lg:px-8 overflow-x-hidden')}>
-      {/* Decorative Background Elements */}
-      <div className="pointer-events-none absolute left-0 top-0 -z-10 h-[500px] w-full bg-[radial-gradient(circle_at_50%_0%,rgba(139,92,246,0.08),transparent_70%)]" />
-      <div className="pointer-events-none absolute right-0 top-1/2 -z-10 h-[300px] w-[300px] rounded-full bg-violet-600/5 blur-[120px]" />
-      
-      {/* 
-          Phần giới thiệu trang: Hiển thị tiêu đề metallic và icon kho đồ.
-      */}
+    <div className={cn('relative mx-auto w-full max-w-7xl overflow-x-hidden px-4 pb-24 pt-32 sm:px-6 lg:px-8')}>
+      <div className={cn('pointer-events-none absolute left-0 top-0 -z-10 h-[500px] w-full bg-[radial-gradient(circle_at_50%_0%,rgba(139,92,246,0.08),transparent_70%)]')} />
+      <div className={cn('pointer-events-none absolute right-0 top-1/2 -z-10 h-[300px] w-[300px] rounded-full bg-violet-600/5 blur-[120px]')} />
+
       <InventoryPageHero title={t('title')} subtitle={t('subtitle')} />
 
-      {/* 
-          Quản lý trạng thái tải dữ liệu và hiển thị lỗi
-      */}
       <InventoryQueryState
         isLoading={inventoryQuery.isLoading || ownedCards.isLoading}
-        errorMessage={inventoryQuery.error
-          ? (inventoryQuery.error as Error).message
-          : ownedCards.error}
+        errorMessage={inventoryQuery.error ? (inventoryQuery.error as Error).message : ownedCards.error}
         loadingLabel={t('loading')}
       />
 
-      {/* 
-          Lưới vật phẩm (Inventory Grid):
-          Đảm bảo min-h để tránh layout shift khi danh sách trống.
-      */}
       <div className={cn('relative min-h-[400px]')}>
         <div className={cn('absolute -right-20 -top-20 -z-10 h-64 w-64 rounded-full bg-purple-500/5 blur-3xl')} />
         <InventoryGrid
@@ -93,14 +55,10 @@ export default function InventoryPageClient() {
         />
       </div>
 
-      {/* 
-          Modal sử dụng vật phẩm:
-          Được ghim bằng key của item để ổn định trạng thái.
-      */}
       {selectedItem ? (
         <UseItemModal
           key={selectedItem.itemCode}
-          isOpen={!!selectedItem}
+          isOpen={Boolean(selectedItem)}
           item={selectedItem}
           locale={locale}
           cardOptions={ownedCards.cardOptions}

@@ -11,3 +11,5 @@ export default async function ChatSegmentLayout({ children }: { children: React.
   </AppQueryHydrationBoundary>
  );
 }
+
+export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';

@@ -36,3 +36,5 @@ export default async function ProfileReaderRoutePage({
   </AppQueryHydrationBoundary>
  );
 }
+
+export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';

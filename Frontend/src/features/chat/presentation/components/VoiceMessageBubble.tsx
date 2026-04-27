@@ -16,6 +16,22 @@ interface VoiceMessageBubbleProps {
  isMe: boolean;
 }
 
+function resolveWaveHeightClass(level: number): string {
+ const height = Math.max(3, Math.round(level * 24));
+ if (height >= 25) return 'tn-wave-h-25';
+ if (height >= 23) return 'tn-wave-h-23';
+ if (height >= 21) return 'tn-wave-h-21';
+ if (height >= 19) return 'tn-wave-h-19';
+ if (height >= 17) return 'tn-wave-h-17';
+ if (height >= 15) return 'tn-wave-h-15';
+ if (height >= 13) return 'tn-wave-h-13';
+ if (height >= 11) return 'tn-wave-h-11';
+ if (height >= 9) return 'tn-wave-h-9';
+ if (height >= 7) return 'tn-wave-h-7';
+ if (height >= 5) return 'tn-wave-h-5';
+ return 'tn-wave-h-3';
+}
+
 export default function VoiceMessageBubble({
  audioUrl,
  durationMs,
@@ -47,14 +63,17 @@ export default function VoiceMessageBubble({
    <div className={cn('tn-gap-0_5 flex-1 flex items-center h-7 min-w-0')}>
     {bars.map((level, index) => {
      const isPlayed = index / STATIC_BAR_COUNT <= progress;
-     return (
-      <div
+      return (
+       <div
        key={index}
-       className={cn('flex-1 rounded-full transition-opacity duration-150', isPlayed ? barColor : barDimColor)}
-       style={{ height: `${Math.max(3, Math.round(level * 24))}px` }}
-      />
-     );
-    })}
+       className={cn(
+        'flex-1 rounded-full transition-opacity duration-150',
+        resolveWaveHeightClass(level),
+        isPlayed ? barColor : barDimColor,
+       )}
+       />
+      );
+     })}
    </div>
 
    <span className={cn('tn-text-11 font-mono tabular-nums shrink-0', isMe ? 'text-white/70' : 'tn-text-secondary')}>
