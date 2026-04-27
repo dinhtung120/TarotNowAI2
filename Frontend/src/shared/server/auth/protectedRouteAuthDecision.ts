@@ -21,6 +21,7 @@ export interface ProtectedRouteAuthDecisionResult {
  redirectPath: string | null;
  reason:
   | 'access_token_valid'
+  | 'access_token_unverified_missing_verifier_config'
   | 'access_token_invalid_refresh_present'
   | 'missing_session_cookies'
   | 'access_token_invalid_missing_verifier_config';
@@ -43,6 +44,22 @@ export async function resolveProtectedRouteAuthDecision(
 ): Promise<ProtectedRouteAuthDecisionResult> {
  const { accessToken, refreshToken, locale, nextPath } = options;
 
+ if (!isNonEmptyToken(accessToken)) {
+  if (isNonEmptyToken(refreshToken)) {
+   return {
+    decision: PROTECTED_ROUTE_AUTH_DECISION.REDIRECT_HANDSHAKE,
+    redirectPath: buildHandshakePath(nextPath),
+    reason: 'access_token_invalid_refresh_present',
+   };
+  }
+
+  return {
+   decision: PROTECTED_ROUTE_AUTH_DECISION.REDIRECT_LOGIN,
+   redirectPath: buildLoginPath(locale),
+   reason: 'missing_session_cookies',
+  };
+ }
+
  const verification = await verifyAccessToken(accessToken);
  if (verification.valid) {
   return {
@@ -54,9 +71,11 @@ export async function resolveProtectedRouteAuthDecision(
 
  if (verification.reason === 'missing_verifier_config') {
   return {
-   decision: PROTECTED_ROUTE_AUTH_DECISION.REDIRECT_LOGIN,
-   redirectPath: buildLoginPath(locale),
-   reason: 'access_token_invalid_missing_verifier_config',
+   // Do not block navigation when local JWT verifier is not configured.
+   // Backend API authorization remains the source of truth.
+   decision: PROTECTED_ROUTE_AUTH_DECISION.ALLOW,
+   redirectPath: null,
+   reason: 'access_token_unverified_missing_verifier_config',
   };
  }
 

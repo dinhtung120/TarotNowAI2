@@ -76,11 +76,24 @@ async function getValidAccessTokenFromCookie(): Promise<string | undefined> {
  }
 
  const verification = await verifyAccessToken(accessToken);
- if (!verification.valid || isExpiringSoon(verification.payload as JwtPayload | null | undefined)) {
-  return undefined;
+ if (verification.valid) {
+  if (isExpiringSoon(verification.payload as JwtPayload | null | undefined)) {
+   return undefined;
+  }
+  return accessToken;
  }
 
- return accessToken;
+ if (verification.reason === 'missing_verifier_config') {
+  // Fallback to unverified payload only when verifier config is unavailable.
+  // Real authorization is still enforced by backend /profile response.
+  const unverifiedPayload = parseJwtPayload(accessToken);
+  if (isExpiringSoon(unverifiedPayload)) {
+   return undefined;
+  }
+  return accessToken;
+ }
+
+ return undefined;
 }
 
 function toStringValue(value: unknown): string {

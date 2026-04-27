@@ -45,6 +45,8 @@ interface ScenarioBenchmarkResult {
   scenario: BenchmarkScenario;
   pages: PageBenchmarkMetric[];
   visitedRoutes: string[];
+  loginBootstrapSucceeded: boolean;
+  loginBootstrapNotes: string[];
 }
 
 interface BenchmarkRunResult {
@@ -453,7 +455,11 @@ async function benchmarkNavigation(
   };
 }
 
-async function loginAsBenchmarkUser(page: Page): Promise<void> {
+async function loginAsBenchmarkUser(page: Page): Promise<{
+  success: boolean;
+  notes: string[];
+}> {
+  const notes: string[] = [];
   const hasAuthCookies = async (): Promise<boolean> => {
     const cookies = await page.context().cookies();
     return cookies.some((cookie) =>
@@ -461,15 +467,20 @@ async function loginAsBenchmarkUser(page: Page): Promise<void> {
     );
   };
 
-  const hasAuthenticatedSession = async (): Promise<boolean> => {
+  const canAccessProtectedRoute = async (): Promise<boolean> => {
     try {
-      const response = await page.request.get(`${BASE_ORIGIN}/api/auth/session?mode=full`);
-      if (!response.ok()) return false;
-      const payload = await response.json().catch(() => ({ success: false, authenticated: false })) as {
-        success?: boolean;
-        authenticated?: boolean;
-      };
-      return payload.success === true && payload.authenticated === true;
+      const response = await page.request.get(`${BASE_URL}/profile`, { maxRedirects: 0 });
+      const status = response.status();
+      if (status >= 200 && status < 300) {
+        return true;
+      }
+
+      if (status === 301 || status === 302 || status === 307 || status === 308) {
+        const redirectLocation = response.headers().location ?? '';
+        return !redirectLocation.includes('/login');
+      }
+
+      return false;
     } catch {
       return false;
     }
@@ -498,23 +509,30 @@ async function loginAsBenchmarkUser(page: Page): Promise<void> {
     await page.locator('form button[type="submit"]').first().click();
     const [loginResponseOk, routeChanged] = await Promise.all([loginResponsePromise, routeChangedPromise]);
     if (!loginResponseOk && !routeChanged) {
+      notes.push(`Attempt ${attempt}: login response and route-change both failed.`);
       continue;
     }
 
     await page.waitForTimeout(1_000);
-    if (!await hasAuthCookies()) {
+    const authCookiesReady = await hasAuthCookies();
+    if (!authCookiesReady) {
+      notes.push(`Attempt ${attempt}: auth cookies not present after login.`);
       continue;
     }
 
-    if (!await hasAuthenticatedSession()) {
+    const protectedRouteReady = await canAccessProtectedRoute();
+    if (!protectedRouteReady) {
+      notes.push(`Attempt ${attempt}: protected route still redirects to /login.`);
       continue;
     }
 
     await page.waitForTimeout(1_500);
-    return;
+    notes.push(`Attempt ${attempt}: login bootstrap succeeded.`);
+    return { success: true, notes };
   }
 
-  throw new Error('Unable to login with benchmark credentials after 3 attempts.');
+  notes.push('Login bootstrap failed after 3 attempts.');
+  return { success: false, notes };
 }
 
 async function runScenario(browser: Browser, scenario: BenchmarkScenario, seedRoutes: string[]): Promise<ScenarioBenchmarkResult> {
@@ -522,8 +540,12 @@ async function runScenario(browser: Browser, scenario: BenchmarkScenario, seedRo
   const page = await context.newPage();
   await installPaintObservers(page);
 
+  let loginBootstrapSucceeded = true;
+  let loginBootstrapNotes: string[] = [];
   if (scenario === 'logged-in') {
-    await loginAsBenchmarkUser(page);
+    const loginResult = await loginAsBenchmarkUser(page);
+    loginBootstrapSucceeded = loginResult.success;
+    loginBootstrapNotes = loginResult.notes;
   }
 
   const queue: string[] = [...seedRoutes];
@@ -558,6 +580,8 @@ async function runScenario(browser: Browser, scenario: BenchmarkScenario, seedRo
     scenario,
     pages: pageMetrics,
     visitedRoutes: [...visited],
+    loginBootstrapSucceeded,
+    loginBootstrapNotes,
   };
 }
 
@@ -580,7 +604,7 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
       : 0;
     const totalRequests = scenario.pages.reduce((sum, page) => sum + page.requestCount, 0);
     const pending = scenario.pages.reduce((sum, page) => sum + page.pendingCount, 0);
-    return `| ${scenario.scenario} | ${pageCount} | ${avgNavigation.toFixed(0)} | ${totalRequests} | ${pending} |`;
+    return `| ${scenario.scenario} | ${pageCount} | ${avgNavigation.toFixed(0)} | ${totalRequests} | ${pending} | ${scenario.loginBootstrapSucceeded ? 'yes' : 'no'} |`;
   });
 
   const pageLines = allPages.map((page) =>
@@ -626,8 +650,8 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
     `- Thresholds: suspicious page > ${SUSPICIOUS_REQUEST_COUNT} requests, slow request > ${SLOW_REQUEST_THRESHOLD_MS}ms`,
     '',
     '## Scenario Summary',
-    '| Scenario | Pages Benchmarked | Avg Navigation (ms) | Total Requests | Pending Requests |',
-    '| --- | ---: | ---: | ---: | ---: |',
+    '| Scenario | Pages Benchmarked | Avg Navigation (ms) | Total Requests | Pending Requests | Login bootstrap |',
+    '| --- | ---: | ---: | ---: | ---: | --- |',
     ...summaryLines,
     '',
     '## Per-Page Metrics',
@@ -655,6 +679,16 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
     '| --- | --- | ---: | --- |',
     ...(duplicateLines.length > 0 ? duplicateLines : ['| - | - | - | - |']),
     '',
+    '## Login Bootstrap Notes',
+    ...(result.scenarios.flatMap((scenario) =>
+      scenario.loginBootstrapNotes.length > 0
+        ? [
+          `### ${scenario.scenario}`,
+          ...scenario.loginBootstrapNotes.map((note) => `- ${note}`),
+          '',
+        ]
+        : []
+    )),
   ].join('\n');
 }
 
@@ -678,7 +712,7 @@ function createAnalysisReport(result: BenchmarkRunResult): string {
       : 0;
     const avgRequestsPerPage = scenario.pages.length > 0 ? totalRequests / scenario.pages.length : 0;
     const pendingCount = scenario.pages.reduce((sum, page) => sum + page.pendingCount, 0);
-    return `| ${scenario.scenario} | ${scenario.pages.length} | ${avgRequestsPerPage.toFixed(1)} | ${avgNavigationMs.toFixed(0)} | ${pendingCount} |`;
+    return `| ${scenario.scenario} | ${scenario.pages.length} | ${avgRequestsPerPage.toFixed(1)} | ${avgNavigationMs.toFixed(0)} | ${pendingCount} | ${scenario.loginBootstrapSucceeded ? 'yes' : 'no'} |`;
   });
 
   const topSlowPageLines = topSlowPages.map((page) =>
@@ -712,8 +746,8 @@ function createAnalysisReport(result: BenchmarkRunResult): string {
     `  - Slow request: > ${SLOW_REQUEST_THRESHOLD_MS}ms`,
     '',
     '## Scenario summary',
-    '| Scenario | Pages | Avg requests/page | Avg nav (ms) | Pending |',
-    '| --- | ---: | ---: | ---: | ---: |',
+    '| Scenario | Pages | Avg requests/page | Avg nav (ms) | Pending | Login bootstrap |',
+    '| --- | ---: | ---: | ---: | ---: | --- |',
     ...scenarioLines,
     '',
     '## Top slow pages',
@@ -732,6 +766,11 @@ function createAnalysisReport(result: BenchmarkRunResult): string {
     '## Notes',
     '- Cloudflare RUM duplicate POSTs (`/cdn-cgi/rum`) là telemetry ngoại vi, không phải business API.',
     '- Nếu cần so sánh trước/sau refactor, chạy benchmark trên cùng environment và cùng account.',
+    ...result.scenarios.flatMap((scenario) =>
+      scenario.loginBootstrapSucceeded
+        ? []
+        : [`- ${scenario.scenario}: login bootstrap failed, metrics may be redirected to /login.`]
+    ),
   ].join('\n');
 }
 
