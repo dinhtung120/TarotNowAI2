@@ -31,6 +31,7 @@ export const AUTH_CLIENT_NAMESPACES = uniqueNamespaces([
 export const SITE_CLIENT_NAMESPACES = uniqueNamespaces([
  ...ROOT_CLIENT_NAMESPACES,
  'Legal',
+ 'Wallet',
 ]);
 
 export const USER_CLIENT_NAMESPACES = uniqueNamespaces([

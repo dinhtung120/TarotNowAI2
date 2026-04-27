@@ -188,7 +188,11 @@ const buildContentSecurityPolicy = (nonce: string): string => {
  ];
 
  if (isProduction) {
-  cspParts.push("style-src-attr 'none'");
+  /**
+   * Runtime UI libraries (ví dụ react-hot-toast) dùng style attributes cho positioning/animation.
+   * Chặn tuyệt đối style attributes sẽ làm hỏng login/home và các flow toast toàn app.
+   */
+  cspParts.push("style-src-attr 'unsafe-inline'");
   cspParts.push('upgrade-insecure-requests');
  }
 
