@@ -39,6 +39,11 @@ export default function AdminPromotionsClient({ initialPromotions }: AdminPromot
     onToggle={vm.handleToggle}
     onDelete={vm.setDeleteId}
    />
+   {vm.listError ? (
+    <div className={cn("rounded-2xl border border-red-400/40 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200")}>
+     {vm.listError}
+    </div>
+   ) : null}
    <ActionConfirmModal
     open={Boolean(vm.deleteId)}
     onCancel={() => vm.setDeleteId(null)}

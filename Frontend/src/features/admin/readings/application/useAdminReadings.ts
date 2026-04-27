@@ -59,8 +59,7 @@ export function useAdminReadings() {
   },
  });
 
- const handleSearch = (event: React.FormEvent) => {
-  event.preventDefault();
+ const handleSearch = () => {
   setPage(1);
  };
 

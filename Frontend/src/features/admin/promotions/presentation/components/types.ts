@@ -1,4 +1,3 @@
-import type { FormEvent } from 'react';
 import type { DepositPromotion } from '@/features/admin/application/actions/promotion';
 
 export interface AdminPromotionsCommonProps {
@@ -17,5 +16,5 @@ export interface AdminPromotionCreateFormProps {
  submitting: boolean;
  onMinAmountChange: (value: number) => void;
  onBonusGoldChange: (value: number) => void;
- onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+ onSubmit: (data: { minAmount: number; bonusGold: number }) => void | Promise<void>;
 }

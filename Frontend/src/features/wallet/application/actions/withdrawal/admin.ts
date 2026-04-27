@@ -9,6 +9,7 @@ import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionR
 import type { WithdrawalDetailResult, WithdrawalResult } from './types';
 import { AUTH_ERROR } from "@/shared/domain/authErrors";
 import { AUTH_HEADER } from '@/shared/application/gateways/authConstants';
+import { invokeDomainCommand } from '@/shared/application/gateways/domainCommandRegistry';
 
 export async function listWithdrawalQueue(
  page = 1,
@@ -53,8 +54,8 @@ export async function processWithdrawal(data: {
  const idempotencyKey = (data.idempotencyKey ?? randomUUID()).trim();
 
  try {
-  const result = await serverHttpRequest<unknown>('/admin/withdrawals/process', {
-   method: 'POST',
+  const result = await invokeDomainCommand<unknown>('wallet.withdrawal.admin.process', {
+   path: '/admin/withdrawals/process',
    token: accessToken,
    headers: {
     [AUTH_HEADER.IDEMPOTENCY_KEY]: idempotencyKey,

@@ -15,7 +15,7 @@ export function AdminUserTableRow({ locale, onEdit, t, user }: AdminUserTableRow
    <AdminUserBalanceCell locale={locale} user={user} />
    <AdminUserRoleCell t={t} user={user} />
    <AdminUserStatusCell t={t} user={user} />
-   <AdminUserActionsCell onEdit={onEdit} user={user} />
+   <AdminUserActionsCell onEdit={onEdit} t={t} user={user} />
   </tr>
  );
 }

@@ -18,12 +18,15 @@ export default function AdminUsersPage() {
   searchTerm,
   setSearchTerm,
   loading,
+  listError,
   addModal,
   addForm,
   setAddForm,
+  addFormErrors,
   editModal,
   editForm,
   setEditForm,
+  editFormErrors,
   actionLoading,
   createLoading,
   handleOpenAdd,
@@ -38,8 +41,8 @@ export default function AdminUsersPage() {
  return (
   <div className={cn('space-y-8 pb-20 animate-in fade-in duration-700')}>
    <AdminUsersPageModals
-    addModalProps={{ addModal, addForm, closeAddModal, createLoading, onCreateUser: handleCreateUser, setAddForm, t: translate }}
-    editModalProps={{ actionLoading, closeEditModal, editForm, editModal, onSaveUser: handleSaveUser, setEditForm, t: translate }}
+    addModalProps={{ addModal, addForm, addFormErrors, closeAddModal, createLoading, onCreateUser: handleCreateUser, setAddForm, t: translate }}
+    editModalProps={{ actionLoading, closeEditModal, editForm, editFormErrors, editModal, onSaveUser: handleSaveUser, setEditForm, t: translate }}
    />
    <AdminUsersPageHeader
     t={translate}
@@ -52,6 +55,7 @@ export default function AdminUsersPage() {
     }}
    />
    <AdminUsersTable
+    errorLabel={listError}
     loading={loading}
     locale={locale}
     onEdit={handleOpenEdit}

@@ -4,6 +4,10 @@ import { routing } from './i18n/routing';
 import { PROTECTED_PREFIXES } from '@/shared/config/authRoutes';
 import { AUTH_COOKIE } from '@/shared/infrastructure/auth/authConstants';
 import { getPublicApiOrigin } from '@/shared/infrastructure/http/apiUrl';
+import {
+ PROTECTED_ROUTE_AUTH_DECISION,
+ resolveProtectedRouteAuthDecision,
+} from '@/shared/server/auth/protectedRouteAuthDecision';
 
 const intlMiddleware = createMiddleware(routing);
 const localeSet = new Set(routing.locales);
@@ -207,10 +211,6 @@ const withResponseCsp = (response: NextResponse, nonce: string): NextResponse =>
  return response;
 };
 
-/**
- * Middleware cố ý chỉ làm auth presence guard cho route protected để tránh network hop.
- * Refresh/validate token được xử lý ở API layer và client session manager.
- */
 export default async function proxy(request: NextRequest) {
  if (shouldRedirectToCanonicalHost(request)) {
   return createCanonicalRedirectResponse(request);
@@ -230,11 +230,21 @@ export default async function proxy(request: NextRequest) {
  const accessToken = isProtectedRoute ? request.cookies.get(AUTH_COOKIE.ACCESS)?.value : undefined;
  const refreshToken = isProtectedRoute ? request.cookies.get(AUTH_COOKIE.REFRESH)?.value : undefined;
 
- if (isProtectedRoute && !accessToken && !refreshToken) {
-  const loginUrl = new URL(`/${locale}/login`, request.url);
-  const response = NextResponse.redirect(loginUrl);
-  clearAuthCookies(response);
-  return isDocument && cspNonce ? withResponseCsp(response, cspNonce) : response;
+ if (isProtectedRoute) {
+  const authDecision = resolveProtectedRouteAuthDecision({
+   accessToken,
+   refreshToken,
+   locale,
+   nextPath: `${pathname}${request.nextUrl.search}`,
+  });
+
+  if (authDecision.decision !== PROTECTED_ROUTE_AUTH_DECISION.ALLOW && authDecision.redirectPath) {
+   const response = NextResponse.redirect(new URL(authDecision.redirectPath, request.url));
+   if (authDecision.decision === PROTECTED_ROUTE_AUTH_DECISION.REDIRECT_LOGIN) {
+    clearAuthCookies(response);
+   }
+   return isDocument && cspNonce ? withResponseCsp(response, cspNonce) : response;
+  }
  }
 
  const response = intlMiddleware(request);

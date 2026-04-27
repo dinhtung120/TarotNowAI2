@@ -15,6 +15,7 @@ export default function AdminDisputesPage() {
  const {
   disputes,
   loading,
+  error,
   processingId,
   noteById,
   setNoteById,
@@ -45,9 +46,9 @@ export default function AdminDisputesPage() {
     readerLabel={t('disputes.card.reader')}
     refundLabel={t('disputes.form.refund_button')}
     releaseLabel={t('disputes.form.release_button')}
-    splitLabel="Split"
+    splitLabel={t('disputes.form.split_button')}
     splitPercent={splitPercent}
-    splitPercentLabel="Split % Reader"
+    splitPercentLabel={t('disputes.form.split_percent_label')}
    />
   );
  };
@@ -62,8 +63,9 @@ export default function AdminDisputesPage() {
     className={cn('mb-0')}
    />
    {loading ? <AdminDisputesLoadingState /> : null}
-   {!loading && disputes.length === 0 ? <AdminDisputesEmptyState label={t('disputes.empty')} /> : null}
-   {!loading && disputes.length > 0 ? <div className={cn('space-y-4')}>{disputes.map(renderDisputeCard)}</div> : null}
+   {!loading && error ? <AdminDisputesEmptyState label={error} /> : null}
+   {!loading && !error && disputes.length === 0 ? <AdminDisputesEmptyState label={t('disputes.empty')} /> : null}
+   {!loading && !error && disputes.length > 0 ? <div className={cn('space-y-4')}>{disputes.map(renderDisputeCard)}</div> : null}
   </div>
  );
 }

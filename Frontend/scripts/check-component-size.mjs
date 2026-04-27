@@ -2,7 +2,9 @@ import { readFileSync } from 'node:fs';
 import { globSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const LINE_LIMIT = 120;
+const LINE_LIMIT = Number(process.env.COMPONENT_SIZE_LIMIT ?? '120');
+const RATCHET_LIMIT = Number(process.env.COMPONENT_SIZE_RATCHET_LIMIT ?? '100');
+const ENFORCE_RATCHET = process.env.COMPONENT_SIZE_STRICT === 'true';
 
 const TEMP_ALLOWLIST = {
   'src/features/community/components/PostReportModal.tsx': {
@@ -41,11 +43,16 @@ function collectTargetFiles() {
 const files = collectTargetFiles();
 const violations = [];
 const expiredAllowlist = [];
+const ratchetCandidates = [];
 
 for (const relativePath of files) {
   const absolutePath = resolve(process.cwd(), relativePath);
-  const content = readFileSync(absolutePath, 'utf8');
-  const lines = content.split('\n').length;
+ const content = readFileSync(absolutePath, 'utf8');
+ const lines = content.split('\n').length;
+ if (lines > RATCHET_LIMIT) {
+  ratchetCandidates.push({ relativePath, lines });
+ }
+
   if (lines <= LINE_LIMIT) {
     continue;
   }
@@ -70,11 +77,29 @@ if (expiredAllowlist.length > 0) {
 }
 
 if (violations.length > 0) {
-  console.error(`Component size guard failed (limit: ${LINE_LIMIT} lines):`);
+  console.error(`Component size guard failed (hard limit: ${LINE_LIMIT} lines):`);
   for (const entry of violations) {
     console.error(`- ${entry.relativePath}: ${entry.lines} lines (${entry.reason})`);
   }
   process.exit(1);
 }
 
-console.log(`Component size guard passed for ${files.length} files (<= ${LINE_LIMIT} lines, with temporary allowlist).`);
+if (ENFORCE_RATCHET) {
+ const ratchetViolations = ratchetCandidates.filter((entry) => entry.lines > RATCHET_LIMIT);
+ if (ratchetViolations.length > 0) {
+  console.error(`Component size ratchet failed (limit: ${RATCHET_LIMIT} lines):`);
+  for (const entry of ratchetViolations) {
+   console.error(`- ${entry.relativePath}: ${entry.lines} lines`);
+  }
+  process.exit(1);
+ }
+}
+
+const ratchetDebtCount = ratchetCandidates.length;
+if (ratchetDebtCount > 0) {
+ console.warn(
+  `Component size ratchet debt: ${ratchetDebtCount} files exceed ${RATCHET_LIMIT} lines (strict=${ENFORCE_RATCHET ? 'on' : 'off'}).`,
+ );
+}
+
+console.log(`Component size guard passed for ${files.length} files (hard limit: ${LINE_LIMIT}, ratchet target: ${RATCHET_LIMIT}).`);

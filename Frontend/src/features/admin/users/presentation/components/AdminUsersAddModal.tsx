@@ -8,6 +8,7 @@ import { AdminUsersModalHeader } from './user-modals/AdminUsersModalHeader';
 export function AdminUsersAddModal({
  addModal,
  addForm,
+ addFormErrors,
  closeAddModal,
  createLoading,
  onCreateUser,
@@ -23,7 +24,7 @@ export function AdminUsersAddModal({
    <button type="button" className={cn('absolute inset-0 tn-overlay-strong')} onClick={closeAddModal} aria-label={t('users.add_user.cancel')} />
    <div className={cn('relative z-10 w-full max-w-xl tn-panel tn-rounded-3xl overflow-hidden tn-shadow-accent-100-soft animate-in zoom-in-95 duration-300')}>
     <AdminUsersModalHeader cancelLabel={t('users.add_user.cancel')} Icon={UserPlus} iconClassName={cn('tn-icon-chip-info')} onClose={closeAddModal} title={t('users.add_user.title')} subtitle={t('users.add_user.subtitle')} />
-    <AdminUsersAddFields addForm={addForm} setAddForm={setAddForm} t={t} />
+    <AdminUsersAddFields addForm={addForm} addFormErrors={addFormErrors} setAddForm={setAddForm} t={t} />
     <AdminUsersModalActions cancelLabel={t('users.add_user.cancel')} confirmLabel={t('users.add_user.submit')} confirmIcon={UserPlus} isLoading={createLoading} onCancel={closeAddModal} onConfirm={onCreateUser} />
    </div>
   </div>

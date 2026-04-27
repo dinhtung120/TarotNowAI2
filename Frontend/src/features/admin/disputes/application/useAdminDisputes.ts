@@ -6,10 +6,10 @@ import toast from 'react-hot-toast';
 import {
  listAdminDisputes,
  resolveAdminDispute,
- type AdminDisputeItemDto,
 } from '@/features/chat/application/actions';
 import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
+import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 
@@ -26,10 +26,7 @@ export function useAdminDisputes(t: TranslateFn) {
   queryKey: ['admin', 'disputes', 'list'],
   queryFn: async () => {
    const result = await listAdminDisputes(1, 100);
-   if (result.success && result.data) {
-    return result.data.items;
-   }
-   return [] as AdminDisputeItemDto[];
+   return queryFnOrThrow(result, 'Failed to load disputes').items;
   },
  });
 
@@ -51,7 +48,7 @@ export function useAdminDisputes(t: TranslateFn) {
       ? t('disputes.toast.release_success')
       : variables.action === 'refund'
        ? t('disputes.toast.refund_success')
-       : t('disputes.toast.release_success');
+       : t('disputes.toast.split_success');
     toast.success(message);
     void queryClient.invalidateQueries({ queryKey: ['admin', 'disputes', 'list'] });
    } else {
@@ -73,6 +70,7 @@ export function useAdminDisputes(t: TranslateFn) {
  return {
   disputes: sortedItems,
   loading: disputesQuery.isLoading,
+  error: disputesQuery.error instanceof Error ? disputesQuery.error.message : '',
   fetching: disputesQuery.isFetching,
   processingId,
   noteById,

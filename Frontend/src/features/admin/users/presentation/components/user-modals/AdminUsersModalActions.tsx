@@ -11,7 +11,7 @@ interface AdminUsersModalActionsProps {
  confirmIcon: LucideIcon;
  isLoading: boolean;
  onCancel: () => void;
- onConfirm: () => void;
+ onConfirm: () => void | Promise<void>;
 }
 
 export function AdminUsersModalActions({
@@ -27,7 +27,7 @@ export function AdminUsersModalActions({
   <Button variant="secondary" onClick={onCancel} disabled={isLoading} className={cn('flex-1 py-5 shadow-sm')}>
    {cancelLabel}
   </Button>
-  <Button variant="primary" onClick={onConfirm} disabled={isLoading} className={cn('flex-1 py-5 tn-btn-primary-shadow')}>
+  <Button variant="primary" onClick={() => { void onConfirm(); }} disabled={isLoading} className={cn('flex-1 py-5 tn-btn-primary-shadow')}>
    {isLoading ? <Loader2 className={cn('w-5 h-5 animate-spin mx-auto')} /> : <span className={cn('flex items-center justify-center gap-2')}>{confirmLabel} <ConfirmIcon className={cn('w-4 h-4 ml-1')} /></span>}
   </Button>
   </div>

@@ -159,7 +159,8 @@
       "actions": {
         "add_balance_title": "Cộng tiền thủ công",
         "lock_title": "Khóa tài khoản",
-        "unlock_title": "Mở khóa"
+        "unlock_title": "Mở khóa",
+        "edit_title": "Sửa thông tin thiết lập"
       },
       "pagination": {
         "summary": "Vũ trụ {page} | Tổng {total} người dùng"
@@ -200,6 +201,19 @@
         "cancel": "Hủy",
         "submit": "Tạo tài khoản",
         "submitting": "Đang tạo..."
+      },
+      "edit_user": {
+        "title": "Sửa Thông Tin",
+        "confirm": "Xác Nhận & Lưu",
+        "role_label": "Chức Vụ Hệ Thống",
+        "role_user": "USER (Khách)",
+        "role_reader": "TAROT READER (Thầy)",
+        "role_admin": "ADMIN (Quản trị)",
+        "status_label": "Trạng Thái (Status)",
+        "status_active": "ACTIVE (Đang Hoạt Động)",
+        "status_locked": "LOCKED (Bị Khóa Cấm)",
+        "gold_balance_label": "Vàng Hiện Có",
+        "diamond_balance_label": "KC Hiện Có"
       },
       "toast": {
         "lock_success": "Đã khóa tài khoản thành công.",
@@ -446,11 +460,14 @@
         "note_label": "Ghi chú admin",
         "note_placeholder": "Lý do quyết định...",
         "release_button": "Release cho Reader",
-        "refund_button": "Refund cho User"
+        "refund_button": "Refund cho User",
+        "split_button": "Chia Escrow",
+        "split_percent_label": "Tỷ lệ Reader (%)"
       },
       "toast": {
         "release_success": "Đã giải ngân cho Reader thành công",
         "refund_success": "Đã hoàn tiền cho User thành công",
+        "split_success": "Đã chia escrow thành công",
         "failed": "Xử lý tranh chấp thất bại. Vui lòng kiểm tra lại.",
         "missing_item_id": "Vui lòng nhập Item ID"
       },

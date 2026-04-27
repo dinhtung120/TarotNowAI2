@@ -1,4 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
+import type { FieldErrors } from 'react-hook-form';
 import type { CreateUserParams, UpdateUserParams } from "@/features/admin/application/actions";
 import type { AdminUsersAddModalState, AdminUsersEditModalState, AdminUsersViewUser } from "@/features/admin/users/application/useAdminUsers";
 
@@ -13,9 +14,10 @@ export type SetEditUserForm = Dispatch<SetStateAction<UpdateUserParams>>;
 export interface AdminUsersAddModalProps {
  addModal: AdminUsersAddModalState;
  addForm: CreateUserParams;
+ addFormErrors: FieldErrors<CreateUserParams>;
  closeAddModal: () => void;
  createLoading: boolean;
- onCreateUser: () => void;
+ onCreateUser: () => void | Promise<void>;
  setAddForm: SetAddUserForm;
  t: AdminUsersTranslateFn;
 }
@@ -24,8 +26,9 @@ export interface AdminUsersEditModalProps {
  actionLoading: boolean;
  closeEditModal: () => void;
  editForm: UpdateUserParams;
+ editFormErrors: FieldErrors<UpdateUserParams>;
  editModal: AdminUsersEditModalState;
- onSaveUser: () => void;
+ onSaveUser: () => void | Promise<void>;
  setEditForm: SetEditUserForm;
  t: AdminUsersTranslateFn;
 }
@@ -38,6 +41,7 @@ export interface AdminUserTableRowProps {
 }
 
 export interface AdminUsersTableProps {
+ errorLabel?: string;
  loading: boolean;
  locale: string;
  onNextPage: () => void;

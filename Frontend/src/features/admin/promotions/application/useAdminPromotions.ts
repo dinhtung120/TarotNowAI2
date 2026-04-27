@@ -17,6 +17,7 @@ export function useAdminPromotions(initialPromotions: DepositPromotion[]) {
 
  const [promotions, setPromotions] = useState<DepositPromotion[]>(initialPromotions);
  const [loading, setLoading] = useState(false);
+ const [listError, setListError] = useState('');
  const [isCreating, setIsCreating] = useState(false);
  const [minAmount, setMinAmount] = useState<number>(0);
  const [bonusGold, setBonusGold] = useState<number>(0);
@@ -35,23 +36,29 @@ export function useAdminPromotions(initialPromotions: DepositPromotion[]) {
  const refreshPromotions = useCallback(async (options?: { showLoading?: boolean }) => {
   const showLoading = options?.showLoading ?? true;
   if (showLoading) setLoading(true);
+  setListError('');
 
   try {
    const result = await listPromotionsAction(false);
-   setPromotions(result.success && result.data ? result.data : []);
+   if (!result.success || !result.data) {
+    const message = result.error || t('promotions.toast.network_error');
+    setListError(message);
+    return;
+   }
+
+   setPromotions(result.data);
   } catch {
-   setPromotions([]);
+   setListError(t('promotions.toast.network_error'));
   } finally {
    if (showLoading) setLoading(false);
   }
- }, []);
+ }, [t]);
 
- const handleCreate = useCallback(async (e: React.FormEvent) => {
-  e.preventDefault();
+ const handleCreate = useCallback(async (payload: { minAmount: number; bonusGold: number }) => {
   setSubmitting(true);
 
   try {
-   const result = await createPromotionAction(minAmount, bonusGold);
+   const result = await createPromotionAction(payload.minAmount, payload.bonusGold);
    if (result.success) {
     setIsCreating(false);
     setMinAmount(0);
@@ -66,7 +73,7 @@ export function useAdminPromotions(initialPromotions: DepositPromotion[]) {
   } finally {
    setSubmitting(false);
   }
- }, [bonusGold, minAmount, refreshPromotions, t]);
+ }, [refreshPromotions, t]);
 
  const handleToggle = useCallback(async (promotion: DepositPromotion) => {
   setTogglingId(promotion.id);
@@ -117,6 +124,7 @@ export function useAdminPromotions(initialPromotions: DepositPromotion[]) {
   locale,
   promotions,
   loading,
+  listError,
   isCreating,
   setIsCreating,
   minAmount,

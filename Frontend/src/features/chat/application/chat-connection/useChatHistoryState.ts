@@ -9,6 +9,7 @@ import {
 import { appendUniqueMessage, mergeHistoryWithRealtimeMessages } from '@/features/chat/domain/mergeMessages';
 import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
+import { createCancellableLoadTask } from '@/shared/application/utils/queryPolicy';
 
 interface UseChatHistoryStateOptions {
  conversationId?: string | null;
@@ -31,12 +32,20 @@ export function useChatHistoryState({
  const hasLoadedInitialRef = useRef(false);
  const lastInitialLoadTimeRef = useRef(0);
  const loadInitialRef = useRef<(silent?: boolean) => Promise<void>>(async () => {});
+ const initialLoadTaskRef = useRef(createCancellableLoadTask());
+ const loadMoreTaskRef = useRef(createCancellableLoadTask());
+ const initialScrollTimeoutRef = useRef<number | null>(null);
 
  const loadInitial = useCallback(async (silent = false) => {
   if (!conversationId) return;
+  const requestId = initialLoadTaskRef.current.createToken();
   if (!silent) setLoading(true);
   try {
    const history = await listMessages(conversationId, { limit: chatPageSize });
+   if (!initialLoadTaskRef.current.isCurrentToken(requestId)) {
+    return;
+   }
+
    if (history.success && history.data) {
     const payload = history.data;
     setMessages((prev) =>
@@ -48,7 +57,13 @@ export function useChatHistoryState({
     setNextCursor(payload.nextCursor ?? null);
     if (!hasLoadedInitialRef.current) {
      hasLoadedInitialRef.current = true;
-     setTimeout(() => scrollToBottomRef.current?.('auto'), 10);
+     if (initialScrollTimeoutRef.current !== null) {
+      window.clearTimeout(initialScrollTimeoutRef.current);
+     }
+     initialScrollTimeoutRef.current = window.setTimeout(() => {
+      scrollToBottomRef.current?.('auto');
+      initialScrollTimeoutRef.current = null;
+     }, 10);
     }
     return;
    }
@@ -59,12 +74,18 @@ export function useChatHistoryState({
     setNextCursor(null);
    }
   } catch {
+   if (!initialLoadTaskRef.current.isCurrentToken(requestId)) {
+    return;
+   }
    if (!silent) {
     setMessages([]);
     setConversation(null);
     setNextCursor(null);
    }
   } finally {
+   if (!initialLoadTaskRef.current.isCurrentToken(requestId)) {
+    return;
+   }
    if (!silent) {
     setLoading(false);
     setInitializing(false);
@@ -82,6 +103,7 @@ export function useChatHistoryState({
  const loadMore = useCallback(async () => {
   if (!conversationId || !nextCursor || loadingMoreRef.current) return;
 
+  const requestId = loadMoreTaskRef.current.createToken();
   loadingMoreRef.current = true;
   setLoadingMore(true);
 
@@ -90,6 +112,9 @@ export function useChatHistoryState({
     cursor: nextCursor,
     limit: chatPageSize,
    });
+   if (!loadMoreTaskRef.current.isCurrentToken(requestId)) {
+    return;
+   }
 
    if (result.success && result.data) {
     const older = [...result.data.messages].reverse();
@@ -105,17 +130,40 @@ export function useChatHistoryState({
     setNextCursor(result.data.nextCursor ?? null);
    }
   } finally {
+   if (!loadMoreTaskRef.current.isCurrentToken(requestId)) {
+    return;
+   }
    setLoadingMore(false);
    loadingMoreRef.current = false;
   }
  }, [chatPageSize, conversationId, nextCursor]);
 
  const resetForConversation = useCallback((cachedConversation: ConversationDto | null) => {
+  initialLoadTaskRef.current.cancel();
+  loadMoreTaskRef.current.cancel();
+  loadingMoreRef.current = false;
+  if (initialScrollTimeoutRef.current !== null) {
+   window.clearTimeout(initialScrollTimeoutRef.current);
+   initialScrollTimeoutRef.current = null;
+  }
   setMessages([]);
   setConversation(cachedConversation);
   setNextCursor(null);
   hasLoadedInitialRef.current = false;
   setInitializing(true);
+ }, []);
+
+ useEffect(() => {
+  const initialLoadTask = initialLoadTaskRef.current;
+  const loadMoreTask = loadMoreTaskRef.current;
+  return () => {
+   initialLoadTask.cancel();
+   loadMoreTask.cancel();
+   if (initialScrollTimeoutRef.current !== null) {
+    window.clearTimeout(initialScrollTimeoutRef.current);
+    initialScrollTimeoutRef.current = null;
+   }
+  };
  }, []);
 
  const appendMessage = useCallback((message: ChatMessageDto) => {

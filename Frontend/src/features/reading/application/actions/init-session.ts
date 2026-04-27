@@ -2,11 +2,10 @@
 
 import { getTranslations } from 'next-intl/server';
 import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
-import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
 import { logger } from '@/shared/application/gateways/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
-import { EVENT_CONTRACTS } from '@/shared/domain/eventContracts';
 import type { InitReadingRequest, InitReadingResponse } from './types';
+import { invokeDomainCommand } from '@/shared/application/gateways/domainCommandRegistry';
 
 export async function initReadingSession(data: InitReadingRequest): Promise<ActionResult<InitReadingResponse>> {
  const t = await getTranslations('ApiErrors');
@@ -18,10 +17,9 @@ export async function initReadingSession(data: InitReadingRequest): Promise<Acti
    return actionFail(t('unauthorized'));
   }
 
-  const result = await serverHttpRequest<InitReadingResponse>('/reading/init', {
-   method: 'POST',
+  const result = await invokeDomainCommand<InitReadingResponse>('reading.session.init', {
+   path: '/reading/init',
    token,
-   expectedDomainEvents: EVENT_CONTRACTS.readingInit,
    json: data,
    fallbackErrorMessage: t('unknown_error'),
   });

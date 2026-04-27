@@ -5,7 +5,7 @@ import {
  createRegisterSchema,
  createResetPasswordSchema,
  createVerifyEmailSchema,
-} from '@/features/auth/domain/schemas';
+} from '@/features/auth/application/validation/schemas';
 
 const t = (key: string) => key;
 

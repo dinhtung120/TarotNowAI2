@@ -2,19 +2,19 @@
 
 import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { FormEvent } from 'react';
 import { AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
 import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { Button, GlassCard } from '@/shared/components/ui';
 import { cn } from '@/lib/utils';
+import type { TypedSubmitHandler } from '@/shared/application/utils/typedSubmit';
 
 interface MfaVerifyCodeCardProps {
  code: string;
  codePlaceholder: string;
  errorMessage: string;
  onChangeCode: (value: string) => void;
- onSubmit: (event: FormEvent) => void;
+ onSubmit: TypedSubmitHandler<{ code: string }>;
  subtitle: string;
  title: string;
  verifyLabel: string;
@@ -55,11 +55,8 @@ export function MfaVerifyCodeCard({
   onChangeCode(watchedCode);
  }, [onChangeCode, watchedCode]);
 
- const submitWithValidation = handleSubmit(() => {
-  onSubmit({
-   preventDefault: () => undefined,
-   stopPropagation: () => undefined,
-  } as unknown as FormEvent);
+ const submitWithValidation = handleSubmit(async (values) => {
+  await onSubmit({ code: values.code });
  });
 
  return (

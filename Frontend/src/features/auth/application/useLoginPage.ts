@@ -16,7 +16,7 @@ import {
  removeLocalStorageItem,
  setLocalStorageItem,
 } from '@/shared/application/gateways/browserStorage';
-import { createLoginSchema, type LoginFormValues } from '@/features/auth/domain/schemas';
+import { createLoginSchema, type LoginFormValues } from '@/features/auth/application/validation/schemas';
 
 export function useLoginPage() {
  const t = useTranslations('Auth');

@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { BookOpen, Calendar, Search, User } from "lucide-react";
-import type { FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
@@ -21,7 +20,7 @@ interface AdminReadingsFiltersProps {
  onSpreadTypeChange: (value: string) => void;
  onStartDateChange: (value: string) => void;
  onEndDateChange: (value: string) => void;
- onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+ onSubmit: () => void;
 }
 
 const adminReadingsFiltersSchema = z
@@ -94,10 +93,7 @@ export function AdminReadingsFilters({ username, spreadType, startDate, endDate,
  }, [onEndDateChange, watchedEndDate]);
 
  const submitWithValidation = handleSubmit(() => {
-  onSubmit({
-   preventDefault: () => undefined,
-   stopPropagation: () => undefined,
-  } as unknown as FormEvent<HTMLFormElement>);
+  onSubmit();
  });
 
  return (

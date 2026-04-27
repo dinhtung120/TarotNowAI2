@@ -159,7 +159,8 @@
       "actions": {
         "add_balance_title": "Manual top-up",
         "lock_title": "Lock account",
-        "unlock_title": "Unlock"
+        "unlock_title": "Unlock",
+        "edit_title": "Edit user settings"
       },
       "pagination": {
         "summary": "Page {page} | Total {total} users"
@@ -200,6 +201,19 @@
         "cancel": "Cancel",
         "submit": "Create Account",
         "submitting": "Creating..."
+      },
+      "edit_user": {
+        "title": "Edit User",
+        "confirm": "Confirm & Save",
+        "role_label": "System Role",
+        "role_user": "USER",
+        "role_reader": "TAROT READER",
+        "role_admin": "ADMIN",
+        "status_label": "Account Status",
+        "status_active": "ACTIVE",
+        "status_locked": "LOCKED",
+        "gold_balance_label": "Current Gold",
+        "diamond_balance_label": "Current Diamond"
       },
       "toast": {
         "lock_success": "Account locked successfully.",
@@ -446,11 +460,14 @@
         "note_label": "Admin note",
         "note_placeholder": "Reason for decision...",
         "release_button": "Release to Reader",
-        "refund_button": "Refund to User"
+        "refund_button": "Refund to User",
+        "split_button": "Split Escrow",
+        "split_percent_label": "Reader split (%)"
       },
       "toast": {
         "release_success": "Released to Reader successfully.",
         "refund_success": "Refunded to User successfully.",
+        "split_success": "Dispute split completed successfully.",
         "failed": "Failed to resolve dispute. Please check again.",
         "missing_item_id": "Please enter Item ID."
       },

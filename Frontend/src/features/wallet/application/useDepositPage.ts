@@ -13,6 +13,7 @@ import {
 } from '@/features/wallet/application/actions/deposit';
 import { useWalletBalanceQuery } from '@/features/wallet/application/useWalletBalanceQuery';
 import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
 
 type DepositOrderView = MyDepositOrderResponse;
 type CreateOrderPayload = { packageCode: string; idempotencyKey: string };
@@ -34,7 +35,7 @@ export function useDepositPage() {
   queryKey: userStateQueryKeys.wallet.depositPackages(),
   queryFn: async () => {
    const result = await listDepositPackages();
-   return result.success && result.data ? result.data : [];
+   return queryFnOrThrow(result, 'Failed to list deposit packages');
   },
  });
 
@@ -52,25 +53,46 @@ export function useDepositPage() {
   },
  });
 
+ const reconcileMutation = useMutation({
+  mutationFn: async (currentOrderId: string) => {
+   const result = await reconcileDepositOrder(currentOrderId);
+   if (!result.success) {
+    throw new Error(result.error || 'Failed to reconcile deposit order');
+   }
+   return result.data ?? false;
+  },
+ });
+
+ const lastReconcileMarkerRef = useRef<string | null>(null);
+
  const orderQuery = useQuery({
   queryKey: userStateQueryKeys.wallet.depositOrder(orderId),
   enabled: Boolean(orderId),
- queryFn: async () => {
-  if (!orderId) return null;
+  queryFn: async () => {
+   if (!orderId) return null;
 
-   await reconcileDepositOrder(orderId);
    const result = await getMyDepositOrder(orderId);
-   if (!result.success || !result.data) {
-    throw new Error(result.error || 'Failed to get deposit order');
-   }
-
-   return result.data;
+   return queryFnOrThrow(result, 'Failed to get deposit order');
   },
   refetchInterval: (query) => {
    const data = query.state.data as MyDepositOrderResponse | null | undefined;
    return data?.status === 'pending' ? 10_000 : false;
   },
  });
+
+ useEffect(() => {
+  if (!orderId || orderQuery.data?.status !== 'pending') {
+   return;
+  }
+
+  const marker = `${orderId}:${orderQuery.dataUpdatedAt}`;
+  if (lastReconcileMarkerRef.current === marker) {
+   return;
+  }
+
+  lastReconcileMarkerRef.current = marker;
+  void reconcileMutation.mutateAsync(orderId).catch(() => undefined);
+ }, [orderId, orderQuery.data?.status, orderQuery.dataUpdatedAt, reconcileMutation]);
 
  useEffect(() => {
   if (orderQuery.data?.status !== 'success') return;
@@ -119,9 +141,10 @@ export function useDepositPage() {
 
  const resolvedCreateError = useMemo(() => {
   if (createError) return createError;
+  if (packagesQuery.error) return t('deposit.errors.fetch_order_failed');
   if (orderQuery.error) return t('deposit.errors.fetch_order_failed');
   return null;
- }, [createError, orderQuery.error, t]);
+ }, [createError, orderQuery.error, packagesQuery.error, t]);
 
  return {
   t,
@@ -135,7 +158,7 @@ export function useDepositPage() {
   createError: resolvedCreateError,
   order: activeOrder,
   creatingOrder: createOrderMutation.isPending,
-  pollingOrder: orderQuery.isFetching,
+  pollingOrder: orderQuery.isFetching || reconcileMutation.isPending,
   createOrder: handleCreateOrder,
  };
 }

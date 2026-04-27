@@ -1,0 +1,72 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { EVENT_CONTRACTS } from '@/shared/domain/eventContracts';
+import { logger } from '@/shared/application/gateways/logger';
+import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
+import { invokeDomainCommand } from '@/shared/application/gateways/domainCommandRegistry';
+
+vi.mock('@/shared/application/gateways/serverHttpClient', () => ({
+ serverHttpRequest: vi.fn(),
+}));
+
+vi.mock('@/shared/application/gateways/logger', () => ({
+ logger: {
+  error: vi.fn(),
+ },
+}));
+
+const mockedServerHttpRequest = vi.mocked(serverHttpRequest);
+const mockedLoggerError = vi.mocked(logger.error);
+
+describe('domain command registry', () => {
+ beforeEach(() => {
+  vi.clearAllMocks();
+ });
+
+ it('injects expected event contract for command invocation', async () => {
+  mockedServerHttpRequest.mockResolvedValue({
+   ok: true,
+   status: 200,
+   headers: new Headers(),
+   data: { success: true },
+  });
+
+  await invokeDomainCommand('chat.dispute.resolve', {
+   path: '/admin/disputes/dispute-1/resolve',
+   token: 'access-token',
+   json: { action: 'release' },
+   fallbackErrorMessage: 'Failed to resolve dispute',
+  });
+
+  expect(mockedServerHttpRequest).toHaveBeenCalledWith('/admin/disputes/dispute-1/resolve', {
+   method: 'POST',
+   token: 'access-token',
+   expectedDomainEvents: EVENT_CONTRACTS.chatDisputeResolve,
+   json: { action: 'release' },
+   fallbackErrorMessage: 'Failed to resolve dispute',
+  });
+ });
+
+ it('fails fast when invocation does not match command path contract', async () => {
+  const result = await invokeDomainCommand('reading.session.init', {
+   path: '/reading/init/session',
+   token: 'access-token',
+   json: { spreadType: 'daily_1' },
+   fallbackErrorMessage: 'Failed to initialize reading session',
+  });
+
+  expect(result).toEqual({
+   ok: false,
+   status: 500,
+   headers: expect.any(Headers),
+   error: 'domain-command.path-mismatch',
+  });
+  expect(mockedServerHttpRequest).not.toHaveBeenCalled();
+  expect(mockedLoggerError).toHaveBeenCalledWith(
+   '[DomainCommand]',
+   'domain-command.missing-contract',
+   expect.objectContaining({
+    key: 'reading.session.init',
+   }),
+  );
+ });
+});

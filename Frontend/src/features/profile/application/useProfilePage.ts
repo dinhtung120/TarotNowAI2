@@ -144,11 +144,10 @@ export function useProfilePage() {
     setAvatarPreview(payload.profile.avatarUrl || null);
     if (!payload.profile.dateOfBirth) return;
 
-    const dateObj = new Date(payload.profile.dateOfBirth);
-    const yyyy = dateObj.getFullYear();
-    const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const dd = String(dateObj.getDate()).padStart(2, '0');
-    setValue('dateOfBirth', `${yyyy}-${mm}-${dd}`);
+    const normalizedDate = toDateInputValue(payload.profile.dateOfBirth);
+    if (normalizedDate) {
+      setValue('dateOfBirth', normalizedDate);
+    }
   }, [profileQuery.data, setValue]);
 
   const readerRequestQuery = useQuery<MyReaderRequest | null>({
@@ -291,4 +290,21 @@ function isUppercaseNoAccent(value: string): boolean {
   }
 
   return /^[A-Z ]+$/.test(normalized);
+}
+
+function toDateInputValue(rawDate: string): string | null {
+ const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})/.exec(rawDate.trim());
+ if (dateOnlyMatch) {
+  return `${dateOnlyMatch[1]}-${dateOnlyMatch[2]}-${dateOnlyMatch[3]}`;
+ }
+
+ const parsed = new Date(rawDate);
+ if (Number.isNaN(parsed.getTime())) {
+  return null;
+ }
+
+ const yyyy = parsed.getUTCFullYear();
+ const mm = String(parsed.getUTCMonth() + 1).padStart(2, '0');
+ const dd = String(parsed.getUTCDate()).padStart(2, '0');
+ return `${yyyy}-${mm}-${dd}`;
 }

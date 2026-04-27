@@ -38,18 +38,36 @@ function expectRedirectToLogin(response: APIResponse): void {
  expect(location).toContain('/vi/login');
 }
 
+function expectRedirectToHandshake(response: APIResponse): string {
+ const status = response.status();
+ const location = response.headers()['location'] ?? '';
+ expect([301, 302, 303, 307, 308]).toContain(status);
+ expect(location).toContain('/api/auth/session/handshake?next=');
+ return location;
+}
+
 test.describe('auth middleware hardening', () => {
- test('forged access/refresh cookies are rejected by middleware and auth API', async ({ request }) => {
+ test('forged access/refresh cookies cannot render protected shell and are redirected to login via handshake', async ({ request }) => {
   const cookieHeader = buildForgedCookieHeader();
   const firstLoad = await requestPath('/vi/profile', request, cookieHeader);
   const secondLoad = await requestPath('/vi/profile', request, cookieHeader);
+  const handshakeLocation = expectRedirectToHandshake(firstLoad);
+  expectRedirectToHandshake(secondLoad);
+  const handshakeUrl = handshakeLocation.startsWith('http')
+   ? handshakeLocation
+   : `${BASE_URL}${handshakeLocation}`;
+
+  const handshakeRedirect = await request.get(handshakeUrl, {
+   headers: { Cookie: cookieHeader },
+   maxRedirects: 0,
+  });
+
   const sessionResponse = await request.get(`${BASE_URL}/api/auth/session`, {
    headers: { Cookie: cookieHeader },
    maxRedirects: 0,
   });
 
-  expectRedirectToLogin(firstLoad);
-  expectRedirectToLogin(secondLoad);
+  expectRedirectToLogin(handshakeRedirect);
   expect([401, 403]).toContain(sessionResponse.status());
  });
 

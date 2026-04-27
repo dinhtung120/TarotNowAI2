@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import type { FormEvent } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Sparkles } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -56,11 +55,11 @@ export function AdminPromotionCreateForm({
   onBonusGoldChange(watchedBonusGold);
  }, [onBonusGoldChange, watchedBonusGold]);
 
- const submitWithValidation = handleSubmit(() => {
- onSubmit({
-   preventDefault: () => undefined,
-   stopPropagation: () => undefined,
-  } as unknown as FormEvent<HTMLFormElement>);
+ const submitWithValidation = handleSubmit(async (values) => {
+  await onSubmit({
+   minAmount: values.minAmount,
+   bonusGold: values.bonusGold,
+  });
  });
 
  return (

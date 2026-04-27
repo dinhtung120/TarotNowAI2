@@ -5,13 +5,13 @@ import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionR
 import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
 import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
 import { logger } from '@/shared/application/gateways/logger';
-import { EVENT_CONTRACTS } from '@/shared/domain/eventContracts';
 import type {
  CreateDepositOrderResponse,
  MyDepositOrderHistoryResponse,
  DepositPackageResponse,
  MyDepositOrderResponse,
 } from './types';
+import { invokeDomainCommand } from '@/shared/application/gateways/domainCommandRegistry';
 
 export async function listDepositPackages(): Promise<ActionResult<DepositPackageResponse[]>> {
  try {
@@ -40,10 +40,9 @@ export async function createDepositOrder(
  if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
 
  try {
-  const result = await serverHttpRequest<CreateDepositOrderResponse>('/deposits/orders', {
-   method: 'POST',
+  const result = await invokeDomainCommand<CreateDepositOrderResponse>('wallet.deposit.create', {
+   path: '/deposits/orders',
    token: accessToken,
-   expectedDomainEvents: EVENT_CONTRACTS.walletDeposit,
    json: { packageCode, idempotencyKey },
    fallbackErrorMessage: 'Failed to create deposit order',
   });
@@ -140,10 +139,9 @@ export async function reconcileDepositOrder(orderId: string): Promise<ActionResu
  if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
 
  try {
-  const result = await serverHttpRequest<{ handled: boolean }>(`/deposits/orders/${orderId}/reconcile`, {
-   method: 'POST',
+  const result = await invokeDomainCommand<{ handled: boolean }>('wallet.deposit.reconcile', {
+   path: `/deposits/orders/${orderId}/reconcile`,
    token: accessToken,
-   expectedDomainEvents: EVENT_CONTRACTS.walletDeposit,
    fallbackErrorMessage: 'Failed to reconcile deposit order',
   });
 

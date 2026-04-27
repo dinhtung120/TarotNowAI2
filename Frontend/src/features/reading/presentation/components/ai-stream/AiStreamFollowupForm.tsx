@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { FormEvent } from "react";
 import { RefreshCw, Send } from "lucide-react";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { AiStreamFollowupBadge } from "./AiStreamFollowupBadge";
+import type { TypedSubmitHandler } from '@/shared/application/utils/typedSubmit';
 
 interface AiStreamFollowupFormProps {
  isStreaming: boolean;
@@ -17,7 +17,7 @@ interface AiStreamFollowupFormProps {
  freeBadgeText: string;
  paidBadgeText: string;
  onFollowupTextChange: (value: string) => void;
- onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+ onSubmit: TypedSubmitHandler<{ followupText: string }>;
 }
 
 const aiStreamFollowupFormSchema = z.object({
@@ -44,11 +44,8 @@ export function AiStreamFollowupForm({ isStreaming, isSendingFollowup, followupT
   onFollowupTextChange(watchedFollowupText);
  }, [onFollowupTextChange, watchedFollowupText]);
 
- const submitWithValidation = handleSubmit(() => {
-  onSubmit({
-   preventDefault: () => undefined,
-   stopPropagation: () => undefined,
-  } as unknown as FormEvent<HTMLFormElement>);
+ const submitWithValidation = handleSubmit(async (values) => {
+  await onSubmit({ followupText: values.followupText });
  });
 
  return (

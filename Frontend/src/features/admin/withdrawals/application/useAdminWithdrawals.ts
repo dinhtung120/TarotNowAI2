@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { getWithdrawalDetail, listWithdrawalQueue, processWithdrawal, type WithdrawalDetailResult, type WithdrawalResult } from '@/features/wallet/public';
+import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 type ProcessAction = 'approve' | 'reject';
@@ -15,11 +16,11 @@ export function useAdminWithdrawals(t: TranslateFn, locale: string) {
  const [notes, setNotes] = useState<Record<string, string>>({});
  const [selectedWithdrawalId, setSelectedWithdrawalId] = useState<string | null>(null);
 
- const { data, isLoading, isFetching } = useQuery<WithdrawalResult[]>({
-  queryKey: queueQueryKey,
+ const { data, isLoading, isFetching, error } = useQuery<WithdrawalResult[]>({
+ queryKey: queueQueryKey,
   queryFn: async () => {
    const result = await listWithdrawalQueue();
-   return result.success && result.data ? result.data : [];
+   return queryFnOrThrow(result, 'Failed to load withdrawal queue');
   },
  });
 
@@ -32,11 +33,7 @@ export function useAdminWithdrawals(t: TranslateFn, locale: string) {
    }
 
    const result = await getWithdrawalDetail(selectedWithdrawalId);
-   if (!result.success || !result.data) {
-    throw new Error(result.error || 'Failed to get withdrawal detail');
-   }
-
-   return result.data;
+   return queryFnOrThrow(result, 'Failed to get withdrawal detail');
   },
  });
 
@@ -99,6 +96,7 @@ export function useAdminWithdrawals(t: TranslateFn, locale: string) {
 
  return {
   queue: data ?? [],
+  queueError: error instanceof Error ? error.message : '',
   loading: isLoading || isFetching,
   processing,
   notes,

@@ -11,7 +11,7 @@ import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks
 import {
   createRegisterSchema,
   type RegisterFormValues,
-} from '@/features/auth/domain/schemas';
+} from '@/features/auth/application/validation/schemas';
 
 /**
  * Hook quản lý logic cho trang Đăng ký

@@ -14,6 +14,8 @@ const blockedRegexPatterns = [
 ] as const;
 
 const ROUTE_CHANGE_DELAY_MS = 500;
+const PREFETCH_TIMESTAMP_TTL_MS = 10 * 60 * 1000;
+const PREFETCH_TIMESTAMP_MAX_SIZE = 500;
 
 let prefetchReadyAt = 0;
 let lastMarkedPathname = '';
@@ -23,6 +25,29 @@ const pendingPrefetches = new Map<string, number>();
 const inFlightPrefetches = new Set<string>();
 const lastPrefetchTimestamps = new Map<string, number>();
 const gateListeners = new Set<() => void>();
+
+function pruneLastPrefetchTimestamps(now = Date.now()): void {
+ for (const [taskKey, timestamp] of lastPrefetchTimestamps.entries()) {
+  if (now - timestamp > PREFETCH_TIMESTAMP_TTL_MS) {
+   lastPrefetchTimestamps.delete(taskKey);
+  }
+ }
+
+ if (lastPrefetchTimestamps.size <= PREFETCH_TIMESTAMP_MAX_SIZE) {
+  return;
+ }
+
+ const sortedByOldest = [...lastPrefetchTimestamps.entries()].sort((left, right) => left[1] - right[1]);
+ const overflow = sortedByOldest.length - PREFETCH_TIMESTAMP_MAX_SIZE;
+ for (let index = 0; index < overflow; index += 1) {
+  const entry = sortedByOldest[index];
+  if (!entry) {
+   continue;
+  }
+
+  lastPrefetchTimestamps.delete(entry[0]);
+ }
+}
 
 function normalizePathname(pathname: string): string {
  const basePath = pathname.split('#')[0]?.split('?')[0] ?? pathname;
@@ -150,6 +175,7 @@ export function subscribePrefetchGate(listener: () => void): () => void {
  */
 export function shouldRunPrefetch(taskKey: string, cooldownMs: number): boolean {
  syncRouteChangeGateFromBrowserPath();
+ pruneLastPrefetchTimestamps();
 
  if (pendingPrefetches.has(taskKey) || inFlightPrefetches.has(taskKey)) {
   return false;
@@ -168,6 +194,7 @@ export function shouldRunPrefetch(taskKey: string, cooldownMs: number): boolean 
  */
 export function schedulePrefetch(taskKey: string, task: () => Promise<void> | void): void {
  syncRouteChangeGateFromBrowserPath();
+ pruneLastPrefetchTimestamps();
 
  if (pendingPrefetches.has(taskKey) || inFlightPrefetches.has(taskKey)) {
   return;
@@ -181,6 +208,7 @@ export function schedulePrefetch(taskKey: string, task: () => Promise<void> | vo
    await task();
   } finally {
    lastPrefetchTimestamps.set(taskKey, Date.now());
+   pruneLastPrefetchTimestamps();
    inFlightPrefetches.delete(taskKey);
   }
  };
@@ -196,4 +224,13 @@ export function schedulePrefetch(taskKey: string, task: () => Promise<void> | vo
  }, delayMs);
 
  pendingPrefetches.set(taskKey, timeoutId);
+}
+
+export function getPrefetchPolicyTelemetry() {
+ pruneLastPrefetchTimestamps();
+ return {
+  pendingCount: pendingPrefetches.size,
+  inFlightCount: inFlightPrefetches.size,
+  mapSize: lastPrefetchTimestamps.size,
+ };
 }

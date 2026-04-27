@@ -1,6 +1,6 @@
 "use client";
 
-import type { FormEvent } from "react";
+import type { TypedSubmitHandler } from '@/shared/application/utils/typedSubmit';
 import { AiStreamFollowupForm } from "./AiStreamFollowupForm";
 import { AiStreamHardCapState } from "./AiStreamHardCapState";
 
@@ -12,7 +12,7 @@ interface AiStreamFollowupComposerProps {
  followupText: string;
  freeSlotsRemaining: number;
  onFollowupTextChange: (value: string) => void;
- onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+ onSubmit: TypedSubmitHandler<{ followupText: string }>;
  freeBadgeText: string;
  paidBadgeText: string;
  labels: {

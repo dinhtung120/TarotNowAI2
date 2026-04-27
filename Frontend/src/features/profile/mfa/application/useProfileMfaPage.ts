@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, type FormEvent } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   getMfaStatus,
@@ -9,6 +9,7 @@ import {
   type MfaSetupResult,
 } from '@/features/profile/mfa/application/actions';
 import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { createTypedSubmitHandler } from '@/shared/application/utils/typedSubmit';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 
@@ -63,13 +64,13 @@ export function useProfileMfaPage(t: TranslateFn) {
     setSetupLoading(false);
   };
 
-  const handleVerify = async (event: FormEvent) => {
-    event.preventDefault();
-    if (code.length < 6) return;
+  const handleVerify = createTypedSubmitHandler(async (payload: { code: string }) => {
+    const normalizedCode = payload.code.trim();
+    if (normalizedCode.length < 6) return;
 
     setVerifyLoading(true);
     setVerifyError('');
-    const res = await verifyMfa(code);
+    const res = await verifyMfa(normalizedCode);
     if (res.success) {
    setMfaEnabledOverride(true);
       setSetupData(null);
@@ -77,7 +78,7 @@ export function useProfileMfaPage(t: TranslateFn) {
       setVerifyError(res.error);
     }
     setVerifyLoading(false);
-  };
+  });
 
   const copyToClipboard = (value: string) => {
     navigator.clipboard.writeText(value);

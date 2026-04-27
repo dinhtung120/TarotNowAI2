@@ -4,6 +4,9 @@ import { cn } from '@/lib/utils';
 
 interface TableStatesProps {
  colSpan: number;
+ errorIcon?: ReactNode;
+ errorLabel?: string;
+ isError?: boolean;
  isLoading: boolean;
  isEmpty: boolean;
  loadingLabel: string;
@@ -14,6 +17,9 @@ interface TableStatesProps {
 
 export default function TableStates({
  colSpan,
+ errorIcon,
+ errorLabel,
+ isError = false,
  isLoading,
  isEmpty,
  loadingLabel,
@@ -29,6 +35,21 @@ export default function TableStates({
       {loadingIcon ?? <Loader2 className={cn("w-8 h-8 animate-spin tn-text-accent")} />}
       <span className={cn("tn-text-10 font-black uppercase tracking-widest tn-text-secondary")}>
        {loadingLabel}
+      </span>
+     </div>
+    </td>
+   </tr>
+ );
+}
+
+ if (isError) {
+  return (
+   <tr>
+    <td colSpan={colSpan} className={cn("py-24 text-center")}>
+     <div className={cn("flex flex-col items-center justify-center space-y-4")}>
+      {errorIcon}
+      <span className={cn("tn-text-10 font-black uppercase tracking-widest text-red-300")}>
+       {errorLabel}
       </span>
      </div>
     </td>

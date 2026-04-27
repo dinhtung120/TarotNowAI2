@@ -42,8 +42,9 @@ export default function AdminWithdrawalsPage() {
   <div className={cn('space-y-8 pb-20 animate-in fade-in duration-700 max-w-5xl mx-auto')}>
    <AdminWithdrawalsHeader tag={t('withdrawals.header.tag')} title={t('withdrawals.header.title')} subtitle={t('withdrawals.header.subtitle')} />
    {vm.loading ? <AdminWithdrawalsLoadingState label={t('withdrawals.states.loading')} /> : null}
-   {!vm.loading && vm.queue.length === 0 ? <AdminWithdrawalsEmptyState label={t('withdrawals.states.empty')} /> : null}
-   {!vm.loading && vm.queue.length > 0 ? <div className={cn('space-y-6')}>{vm.queue.map(renderCard)}</div> : null}
+   {!vm.loading && vm.queueError ? <AdminWithdrawalsEmptyState label={vm.queueError} /> : null}
+   {!vm.loading && !vm.queueError && vm.queue.length === 0 ? <AdminWithdrawalsEmptyState label={t('withdrawals.states.empty')} /> : null}
+   {!vm.loading && !vm.queueError && vm.queue.length > 0 ? <div className={cn('space-y-6')}>{vm.queue.map(renderCard)}</div> : null}
    <AdminWithdrawalDetailModal
     open={Boolean(vm.selectedWithdrawalId)}
     onClose={vm.closeDetail}

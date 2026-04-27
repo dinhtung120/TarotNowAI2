@@ -88,10 +88,12 @@ export function useWithdrawPage() {
  );
 
  const handleSubmit = useCallback(
-  async (event: React.FormEvent<HTMLFormElement>) => {
-   event.preventDefault();
+  async (formData: { amount: string; userNote: string }) => {
    setError(null);
    setSuccess(false);
+   const normalizedAmount = formData.amount.trim();
+   const normalizedAmountNum = Number.parseInt(normalizedAmount, 10) || 0;
+   const normalizedUserNote = formData.userNote.trim();
 
    if (!payoutConfigured) {
     setError(t('withdraw.error_bank_missing_profile'));
@@ -103,19 +105,19 @@ export function useWithdrawPage() {
     return;
    }
 
-   if (amountNum < minWithdrawDiamond) {
+   if (normalizedAmountNum < minWithdrawDiamond) {
     setError(t('withdraw.error_min_amount', { min: minWithdrawDiamond }));
     return;
    }
 
-   if ((balanceQuery.data?.diamondBalance ?? 0) < amountNum) {
+   if ((balanceQuery.data?.diamondBalance ?? 0) < normalizedAmountNum) {
     setError(t('withdraw.error_insufficient_balance'));
     return;
    }
 
    const result = await withdrawalMutation.mutateAsync({
-    amountDiamond: amountNum,
-    userNote: userNote.trim() || undefined,
+    amountDiamond: normalizedAmountNum,
+    userNote: normalizedUserNote || undefined,
     idempotencyKey: buildCreateWithdrawalIdempotencyKey(),
    });
 
@@ -132,7 +134,7 @@ export function useWithdrawPage() {
     queryClient.invalidateQueries({ queryKey: userStateQueryKeys.wallet.balance() }),
    ]);
   },
-  [amountNum, balanceQuery.data?.diamondBalance, minWithdrawDiamond, payoutConfigured, queryClient, t, userNote, withdrawalMutation, withdrawalPolicyReady],
+  [balanceQuery.data?.diamondBalance, minWithdrawDiamond, payoutConfigured, queryClient, t, withdrawalMutation, withdrawalPolicyReady],
  );
 
  return {

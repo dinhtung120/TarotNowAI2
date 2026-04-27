@@ -9,7 +9,7 @@ import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionR
 import type { WithdrawalResult } from './types';
 import { AUTH_ERROR } from "@/shared/domain/authErrors";
 import { AUTH_HEADER } from '@/shared/application/gateways/authConstants';
-import { EVENT_CONTRACTS } from '@/shared/domain/eventContracts';
+import { invokeDomainCommand } from '@/shared/application/gateways/domainCommandRegistry';
 
 export async function createWithdrawal(data: {
  amountDiamond: number;
@@ -22,22 +22,21 @@ export async function createWithdrawal(data: {
  const idempotencyKey = (data.idempotencyKey ?? randomUUID()).trim();
 
  try {
-  const result = await serverHttpRequest<{ success: boolean; requestId?: string; error?: string }>(
-   '/withdrawal/create',
+  const result = await invokeDomainCommand<{ success: boolean; requestId?: string; error?: string }>(
+   'wallet.withdrawal.reader.create',
    {
-    method: 'POST',
+    path: '/withdrawal/create',
     token: accessToken,
-    expectedDomainEvents: EVENT_CONTRACTS.walletWithdrawal,
     headers: {
-      [AUTH_HEADER.IDEMPOTENCY_KEY]: idempotencyKey,
+     [AUTH_HEADER.IDEMPOTENCY_KEY]: idempotencyKey,
     },
     json: {
-      amountDiamond: data.amountDiamond,
-      userNote: data.userNote,
-      idempotencyKey,
+     amountDiamond: data.amountDiamond,
+     userNote: data.userNote,
+     idempotencyKey,
     },
     fallbackErrorMessage: tApi('unknown_error'),
-   }
+   },
   );
   if (!result.ok) {
    logger.error('[WithdrawalAction] createWithdrawal', result.error, { status: result.status });

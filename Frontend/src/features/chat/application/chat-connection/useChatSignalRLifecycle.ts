@@ -35,7 +35,7 @@ interface UseChatSignalRLifecycleOptions {
 
 async function createHubConnection(reconnectSchedule: number[]) {
  const signalR = await import('@microsoft/signalr');
- const { getSignalRHubUrl } = await import('@/shared/infrastructure/realtime/signalRUrl');
+ const { getSignalRHubUrl } = await import('@/shared/application/gateways/signalRUrl');
  const customLogger = createSignalRLogger({
   error: signalR.LogLevel.Error as LogLevel,
   critical: signalR.LogLevel.Critical as LogLevel,

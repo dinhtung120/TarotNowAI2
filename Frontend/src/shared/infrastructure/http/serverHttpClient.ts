@@ -3,23 +3,23 @@ import { parseApiError } from '@/shared/infrastructure/error/parseApiError';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 import { getRuntimePolicyStoreSnapshot } from '@/shared/config/runtimePolicyStore';
 
-interface ServerHttpResultOk<T> {
+export interface ServerHttpResultOk<T> {
   ok: true;
   status: number;
   headers: Headers;
   data: T;
 }
 
-interface ServerHttpResultErr {
+export interface ServerHttpResultErr {
   ok: false;
   status: number;
   headers: Headers;
   error: string;
 }
 
-type ServerHttpResult<T> = ServerHttpResultOk<T> | ServerHttpResultErr;
+export type ServerHttpResult<T> = ServerHttpResultOk<T> | ServerHttpResultErr;
 
-interface ServerHttpRequestOptions extends Omit<RequestInit, 'body' | 'headers'> {
+export interface ServerHttpRequestOptions extends Omit<RequestInit, 'body' | 'headers'> {
   token?: string;
   headers?: HeadersInit;
   json?: unknown;

@@ -1,11 +1,11 @@
 'use client';
 
-import type { FormEvent } from 'react';
 import type { MfaSetupResult } from '@/features/profile/mfa/application/actions';
 import { cn } from '@/lib/utils';
 import { MfaBackupCodesCard } from './MfaBackupCodesCard';
 import { MfaQrCodeCard } from './MfaQrCodeCard';
 import { MfaVerifyCodeCard } from './MfaVerifyCodeCard';
+import type { TypedSubmitHandler } from '@/shared/application/utils/typedSubmit';
 
 interface MfaSetupFlowProps {
  code: string;
@@ -14,7 +14,7 @@ interface MfaSetupFlowProps {
  manualCodeLabel: string;
  onChangeCode: (value: string) => void;
  onCopy: (value: string) => void;
- onVerify: (event: FormEvent) => void;
+ onVerify: TypedSubmitHandler<{ code: string }>;
  qrColorOptions: Record<string, unknown>;
  setupData: MfaSetupResult;
  step1Desc: string;

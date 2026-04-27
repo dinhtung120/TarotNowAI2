@@ -1,3 +1,5 @@
+import { getLocalStorageItem, setLocalStorageItem } from '@/shared/infrastructure/storage/browserStorage';
+
 const DEVICE_ID_STORAGE_KEY = 'tarot-now-device-id';
 
 function generateDeviceId(): string {
@@ -13,12 +15,12 @@ export function getOrCreateDeviceId(): string {
   return generateDeviceId();
  }
 
- const existing = window.localStorage.getItem(DEVICE_ID_STORAGE_KEY);
+ const existing = getLocalStorageItem(DEVICE_ID_STORAGE_KEY, '');
  if (existing && existing.trim().length > 0) {
   return existing;
  }
 
  const created = generateDeviceId();
- window.localStorage.setItem(DEVICE_ID_STORAGE_KEY, created);
+ setLocalStorageItem(DEVICE_ID_STORAGE_KEY, created);
  return created;
 }

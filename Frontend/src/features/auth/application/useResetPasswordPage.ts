@@ -9,7 +9,7 @@ import { resetPasswordAction } from '@/features/auth/application/actions';
 import {
  createResetPasswordSchema,
  type ResetPasswordFormValues,
-} from '@/features/auth/domain/schemas';
+} from '@/features/auth/application/validation/schemas';
 
 /**
  * Hook quản lý nghiệp vụ cho trang Đặt lại mật khẩu (Reset Password).

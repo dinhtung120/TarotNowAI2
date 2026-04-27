@@ -3,9 +3,9 @@ import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionR
 import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
 import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
 import { logger } from '@/shared/application/gateways/logger';
-import { EVENT_CONTRACTS } from '@/shared/domain/eventContracts';
 import type { ListAdminDisputesResult } from './conversations.types';
 import { AUTH_ERROR } from "@/shared/domain/authErrors";
+import { invokeDomainCommand } from '@/shared/application/gateways/domainCommandRegistry';
 
 function unauthorized<T>() { return actionFail(AUTH_ERROR.UNAUTHORIZED) as ActionResult<T>; }
 
@@ -16,11 +16,14 @@ export async function requestConversationAddMoney(
  const accessToken = await getServerAccessToken();
  if (!accessToken) return unauthorized();
  try {
-  const result = await serverHttpRequest<{ messageId: string }>(`/conversations/${conversationId}/add-money/request`, {
-   method: 'POST',
+  const result = await invokeDomainCommand<{ messageId: string }>('chat.add-money.request', {
+   path: `/conversations/${conversationId}/add-money/request`,
    token: accessToken,
-   expectedDomainEvents: EVENT_CONTRACTS.chatAddMoneyRequest,
-   json: { amountDiamond: data.amountDiamond, description: data.description, idempotencyKey: data.idempotencyKey ?? randomUUID() },
+   json: {
+    amountDiamond: data.amountDiamond,
+    description: data.description,
+    idempotencyKey: data.idempotencyKey ?? randomUUID(),
+   },
    fallbackErrorMessage: 'Failed to request add money',
   });
   if (!result.ok) {
@@ -41,10 +44,9 @@ export async function respondConversationAddMoney(
  const accessToken = await getServerAccessToken();
  if (!accessToken) return unauthorized();
  try {
-  const result = await serverHttpRequest<{ accepted: boolean; messageId: string }>(`/conversations/${conversationId}/add-money/respond`, {
-   method: 'POST',
+  const result = await invokeDomainCommand<{ accepted: boolean; messageId: string }>('chat.add-money.respond', {
+   path: `/conversations/${conversationId}/add-money/respond`,
    token: accessToken,
-   expectedDomainEvents: EVENT_CONTRACTS.chatAddMoneyRespond,
    json: data,
    fallbackErrorMessage: 'Failed to respond add money',
   });
@@ -63,11 +65,13 @@ export async function openConversationDispute(conversationId: string, data: { re
  const accessToken = await getServerAccessToken();
  if (!accessToken) return unauthorized();
  try {
-  const result = await serverHttpRequest<{ status: string }>(`/conversations/${conversationId}/dispute`, {
-   method: 'POST',
+  const result = await invokeDomainCommand<{ status: string }>('chat.dispute.open', {
+   path: `/conversations/${conversationId}/dispute`,
    token: accessToken,
-   expectedDomainEvents: EVENT_CONTRACTS.chatDisputeOpen,
-   json: { reason: data.reason, itemId: data.itemId ?? null },
+   json: {
+    reason: data.reason,
+    itemId: data.itemId ?? null,
+   },
    fallbackErrorMessage: 'Failed to open dispute',
   });
   if (!result.ok) {
@@ -105,10 +109,9 @@ export async function resolveAdminDispute(
  const accessToken = await getServerAccessToken();
  if (!accessToken) return unauthorized();
  try {
-  const result = await serverHttpRequest<{ success: boolean; itemId: string; action: string }>(`/admin/disputes/${itemId}/resolve`, {
-   method: 'POST',
+  const result = await invokeDomainCommand<{ success: boolean; itemId: string; action: string }>('chat.dispute.resolve', {
+   path: `/admin/disputes/${itemId}/resolve`,
    token: accessToken,
-   expectedDomainEvents: EVENT_CONTRACTS.chatDisputeOpen,
    json: data,
    fallbackErrorMessage: 'Failed to resolve dispute',
   });

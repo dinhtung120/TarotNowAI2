@@ -4,11 +4,15 @@ import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
 import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
 import { logger } from '@/shared/application/gateways/logger';
+import { invokeDomainCommand } from '@/shared/application/gateways/domainCommandRegistry';
 
 export interface AdminUserItem { id: string; email: string; username: string; displayName: string; status: string; role: string; level: number; exp: number; goldBalance: number; diamondBalance: number; createdAt: string }
 interface ListUsersResponse { users: AdminUserItem[]; totalCount: number }
-export interface UpdateUserParams { role: string; status: string; diamondBalance: number; goldBalance: number }
-export interface CreateUserParams { email: string; username: string; displayName: string; password: string; role: string }
+export type AdminUserRole = 'user' | 'tarot_reader' | 'admin';
+export type AdminUserStatus = 'active' | 'locked';
+export interface UpdateUserParams { role: AdminUserRole; status: AdminUserStatus; diamondBalance: number; goldBalance: number }
+export interface CreateUserParams { email: string; username: string; displayName: string; password: string; role: AdminUserRole }
+interface UpdateUserOptions { enforceMoneyEvent?: boolean }
 
 const FAIL_LIST_USERS = 'Failed to list users';
 const FAIL_UPDATE_USER = 'Failed to update user';
@@ -41,10 +45,26 @@ export async function listUsers(page = 1, pageSize = 20, searchTerm = ''): Promi
  });
 }
 
-export async function updateUser(userId: string, data: UpdateUserParams): Promise<ActionResult<undefined>> {
+export async function updateUser(
+ userId: string,
+ data: UpdateUserParams,
+ options: UpdateUserOptions = {},
+): Promise<ActionResult<undefined>> {
  return withAdminToken(async (token) => {
   try {
-   const result = await serverHttpRequest<unknown>(`/admin/users/${userId}`, { method: 'PUT', token, json: data, fallbackErrorMessage: FAIL_UPDATE_USER });
+   const result = options.enforceMoneyEvent
+    ? await invokeDomainCommand<unknown>('admin.user.adjust-balance', {
+     path: `/admin/users/${userId}`,
+     token,
+     json: data,
+     fallbackErrorMessage: FAIL_UPDATE_USER,
+    })
+    : await serverHttpRequest<unknown>(`/admin/users/${userId}`, {
+     method: 'PUT',
+     token,
+     json: data,
+     fallbackErrorMessage: FAIL_UPDATE_USER,
+    });
    if (!result.ok) {
     logger.error('[AdminAction] updateUser', result.error, { status: result.status, userId });
     return actionFail(result.error || FAIL_UPDATE_USER);

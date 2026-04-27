@@ -11,21 +11,61 @@ const DEFAULT_USER_STATUS: UserProfile['status'] = 'Active';
 
 type JwtPayload = Record<string, unknown> & { exp?: number };
 
+function decodeJwtPart(part: string): Record<string, unknown> | null {
+ if (!part) {
+  return null;
+ }
+
+ try {
+  const normalized = part.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = normalized.padEnd(normalized.length + ((4 - (normalized.length % 4)) % 4), '=');
+  const decoded = typeof atob === 'function'
+   ? atob(padded)
+   : Buffer.from(padded, 'base64').toString('utf8');
+  return JSON.parse(decoded) as Record<string, unknown>;
+ } catch {
+  return null;
+ }
+}
+
 function parseJwtPayload(token: string | undefined): JwtPayload | null {
  if (!token) {
   return null;
  }
 
  const parts = token.split('.');
- if (parts.length < 2 || !parts[1]) {
+ if (parts.length !== 3 || !parts[1]) {
   return null;
  }
 
- try {
-  return JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8')) as JwtPayload;
- } catch {
+ return decodeJwtPart(parts[1]) as JwtPayload | null;
+}
+
+function parseJwtHeader(token: string | undefined): Record<string, unknown> | null {
+ if (!token) {
   return null;
  }
+
+ const parts = token.split('.');
+ if (parts.length !== 3 || !parts[0]) {
+  return null;
+ }
+
+ return decodeJwtPart(parts[0]);
+}
+
+function hasValidJwtSignatureMetadata(token: string | undefined): boolean {
+ const header = parseJwtHeader(token);
+ if (!header) {
+  return false;
+ }
+
+ const algorithm = header.alg;
+ if (typeof algorithm !== 'string' || algorithm.trim().length === 0) {
+  return false;
+ }
+
+ return algorithm.toLowerCase() !== 'none';
 }
 
 function parseJwtExp(token: string | undefined): number | undefined {
@@ -46,7 +86,7 @@ function isExpiringSoon(token: string | undefined): boolean {
 async function getValidAccessTokenFromCookie(): Promise<string | undefined> {
  const cookieStore = await cookies();
  const accessToken = cookieStore.get(AUTH_COOKIE.ACCESS)?.value;
- if (!accessToken || isExpiringSoon(accessToken)) {
+ if (!accessToken || !hasValidJwtSignatureMetadata(accessToken) || isExpiringSoon(accessToken)) {
   return undefined;
  }
 

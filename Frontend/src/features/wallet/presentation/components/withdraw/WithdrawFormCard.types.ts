@@ -42,5 +42,5 @@ export interface WithdrawFormCardProps {
   labels: WithdrawFormCardLabels;
   onAmountChange: (value: string) => void;
   onUserNoteChange: (value: string) => void;
-  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  onSubmit: (data: { amount: string; userNote: string }) => void | Promise<void>;
 }

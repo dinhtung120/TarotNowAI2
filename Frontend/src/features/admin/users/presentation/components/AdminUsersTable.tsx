@@ -4,7 +4,8 @@ import { cn } from "@/lib/utils";
 import type { AdminUsersTableProps } from "./types";
 import { AdminUserTableRow } from "./AdminUserTableRow";
 
-export function AdminUsersTable({ loading, locale, onEdit, onNextPage, onPrevPage, page, t, totalCount, users }: AdminUsersTableProps) {
+export function AdminUsersTable({ errorLabel, loading, locale, onEdit, onNextPage, onPrevPage, page, t, totalCount, users }: AdminUsersTableProps) {
+ const hasError = Boolean(errorLabel);
  return (
   <GlassCard className={cn("!p-0 !tn-rounded-2_5xl overflow-hidden")}>
    <div className={cn("overflow-x-auto custom-scrollbar")}>
@@ -20,8 +21,8 @@ export function AdminUsersTable({ loading, locale, onEdit, onNextPage, onPrevPag
       </tr>
      </thead>
      <tbody className={cn("divide-y divide-white/5")}>
-      <TableStates colSpan={6} isLoading={loading} isEmpty={!loading && users.length === 0} loadingLabel={t("users.states.loading")} emptyLabel={t("users.states.empty")} loadingIcon={<Loader2 className={cn("w-8 h-8 animate-spin tn-text-accent")} />} emptyIcon={<div className={cn("w-16 h-16 rounded-full tn-panel-soft flex items-center justify-center")}><Users className={cn("w-8 h-8 tn-text-tertiary opacity-50")} /></div>} />
-      {loading ? null : users.map((user) => <AdminUserTableRow key={user.id} user={user} locale={locale} onEdit={onEdit} t={t} />)}
+      <TableStates colSpan={6} isLoading={loading} isError={hasError} errorLabel={errorLabel || t("users.toast.system_error")} isEmpty={!loading && !hasError && users.length === 0} loadingLabel={t("users.states.loading")} emptyLabel={t("users.states.empty")} loadingIcon={<Loader2 className={cn("w-8 h-8 animate-spin tn-text-accent")} />} emptyIcon={<div className={cn("w-16 h-16 rounded-full tn-panel-soft flex items-center justify-center")}><Users className={cn("w-8 h-8 tn-text-tertiary opacity-50")} /></div>} />
+      {loading || hasError ? null : users.map((user) => <AdminUserTableRow key={user.id} user={user} locale={locale} onEdit={onEdit} t={t} />)}
      </tbody>
     </table>
    </div>

@@ -12,7 +12,7 @@ import { useOptimizedNavigation } from '@/shared/application/gateways/useOptimiz
 import {
  createVerifyEmailSchema,
  type VerifyEmailFormValues,
-} from '@/features/auth/domain/schemas';
+} from '@/features/auth/application/validation/schemas';
 
 export function useVerifyEmailPage() {
  const t = useTranslations('Auth');

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { checkinQueryKeys } from '@/features/checkin/domain/checkinQueryKeys';
 import type { StreamMessage } from './types';
@@ -107,15 +107,14 @@ export function useAiStreamSession({
   };
  }, [errorStreamMessage, flushPendingChunk, locale, onComplete, queryClient, sessionId, stopStream]);
 
- const handleFollowupSubmit = useCallback((event: FormEvent<HTMLFormElement>) => {
-  event.preventDefault();
-  if (!followupText.trim() || isStreaming || isSendingFollowup) return;
-  const question = followupText.trim();
+ const handleFollowupSubmit = useCallback(({ followupText: submittedFollowupText }: { followupText: string }) => {
+  if (!submittedFollowupText.trim() || isStreaming || isSendingFollowup) return;
+  const question = submittedFollowupText.trim();
   setFollowupText('');
   setIsSendingFollowup(true);
   setMessages((prev) => [...prev, { id: `${Date.now()}-user`, role: 'user', content: question }]);
   startStream(question);
- }, [followupText, isSendingFollowup, isStreaming, startStream]);
+ }, [isSendingFollowup, isStreaming, startStream]);
 
  useEffect(() => {
   const timerId = window.setTimeout(() => {

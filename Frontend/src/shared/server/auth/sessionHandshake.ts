@@ -6,6 +6,10 @@ import {
  type ServerSessionSnapshot,
 } from '@/shared/infrastructure/auth/serverAuth';
 import type { UserProfile } from '@/features/auth/domain/types';
+import {
+ PROTECTED_ROUTE_AUTH_DECISION,
+ resolveProtectedRouteAuthDecision,
+} from '@/shared/server/auth/protectedRouteAuthDecision';
 
 interface RequireSessionWithHandshakeOptions {
  locale: string;
@@ -33,8 +37,17 @@ export async function requireSessionWithHandshake(
  const accessToken = cookieStore.get(AUTH_COOKIE.ACCESS)?.value;
  const refreshToken = cookieStore.get(AUTH_COOKIE.REFRESH)?.value;
 
- if (!accessToken && !refreshToken) {
+ const authDecision = resolveProtectedRouteAuthDecision({
+  accessToken,
+  refreshToken,
+  locale,
+  nextPath,
+ });
+ if (authDecision.decision === PROTECTED_ROUTE_AUTH_DECISION.REDIRECT_LOGIN) {
   redirect(toLoginPath(locale));
+ }
+ if (authDecision.decision === PROTECTED_ROUTE_AUTH_DECISION.REDIRECT_HANDSHAKE) {
+  redirect(toHandshakePath(nextPath));
  }
 
  const sessionSnapshot = await getServerSessionSnapshot({ allowRefresh: false });

@@ -8,7 +8,7 @@ import { forgotPasswordAction } from '@/features/auth/application/actions';
 import {
  createForgotPasswordSchema,
  type ForgotPasswordFormValues,
-} from '@/features/auth/domain/schemas';
+} from '@/features/auth/application/validation/schemas';
 
 export function useForgotPasswordPage() {
  const t = useTranslations('Auth');

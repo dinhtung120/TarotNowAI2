@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import type { FormEvent } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
@@ -61,11 +60,11 @@ export function useWithdrawFormCard(props: WithdrawFormCardProps) {
     onUserNoteChange(watchedUserNote);
   }, [onUserNoteChange, watchedUserNote]);
 
-  const submitWithValidation = handleSubmit(() => {
-    onSubmit({
-      preventDefault: () => undefined,
-      stopPropagation: () => undefined,
-    } as unknown as FormEvent<HTMLFormElement>);
+  const submitWithValidation = handleSubmit(async (values) => {
+    await onSubmit({
+      amount: values.amount,
+      userNote: values.userNote,
+    });
   });
 
   return {

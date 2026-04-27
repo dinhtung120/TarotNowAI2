@@ -22,6 +22,13 @@ function buildJwt(expInSeconds: number): string {
  return `${header}.${payload}.signature`;
 }
 
+function buildUnsignedJwt(expInSeconds: number): string {
+ const now = Math.floor(Date.now() / 1000);
+ const header = Buffer.from(JSON.stringify({ alg: 'none', typ: 'JWT' })).toString('base64url');
+ const payload = Buffer.from(JSON.stringify({ sub: 'user-1', exp: now + expInSeconds })).toString('base64url');
+ return `${header}.${payload}.`;
+}
+
 describe('serverAuth', () => {
  beforeEach(() => {
   vi.clearAllMocks();
@@ -30,6 +37,18 @@ describe('serverAuth', () => {
  it('does not attempt hidden refresh when access token is missing', async () => {
   mockedCookies.mockResolvedValue({
    get: () => undefined,
+  } as never);
+
+  const result = await getServerAccessTokenOrRefresh();
+
+ expect(result).toBeUndefined();
+ expect(mockedServerHttpRequest).not.toHaveBeenCalled();
+});
+
+ it('returns undefined when token uses alg=none', async () => {
+  const forgedToken = buildUnsignedJwt(600);
+  mockedCookies.mockResolvedValue({
+   get: (name: string) => (name === AUTH_COOKIE.ACCESS ? { value: forgedToken } : undefined),
   } as never);
 
   const result = await getServerAccessTokenOrRefresh();
