@@ -14,6 +14,7 @@
     "beforeAfter": "使用前 / 使用后",
     "done": "完成",
     "useAgain": "再次使用",
-    "useItemTitle": "使用道具"
+    "useItemTitle": "使用道具",
+    "useError": "当前无法使用该道具，请稍后再试。"
   }
 }

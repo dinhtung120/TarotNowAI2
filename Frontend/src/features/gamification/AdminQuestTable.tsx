@@ -1,11 +1,11 @@
 'use client';
 
 import { Edit, Trash2 } from 'lucide-react';
-import type { QuestDefinition } from './gamification.types';
+import type { AdminQuestDefinition } from '@/features/gamification/admin/adminGamification.types';
 import { cn } from '@/lib/utils';
 
 interface AdminQuestTableProps {
-  quests: QuestDefinition[];
+  quests: AdminQuestDefinition[];
   onEdit: (code: string) => void;
   onDelete: (code: string) => void;
 }
@@ -20,6 +20,7 @@ export function AdminQuestTable({ quests, onEdit, onDelete }: AdminQuestTablePro
             <th className={cn("px-6 py-4")}>Nhiệm Vụ (VI)</th>
             <th className={cn("px-6 py-4")}>Loại</th>
             <th className={cn("px-6 py-4")}>Mục Tiêu</th>
+            <th className={cn("px-6 py-4")}>Trang Thai</th>
             <th className={cn("px-6 py-4 text-right")}>Thao Tác</th>
           </tr>
         </thead>
@@ -34,6 +35,7 @@ export function AdminQuestTable({ quests, onEdit, onDelete }: AdminQuestTablePro
                 <span className={cn("px-2 py-1 bg-slate-800 rounded-lg text-xs border border-slate-700")}>{quest.questType}</span>
               </td>
               <td className={cn("px-6 py-4")}>{quest.target}</td>
+              <td className={cn("px-6 py-4")}>{quest.isActive ? 'Active' : 'Inactive'}</td>
               <td className={cn("px-6 py-4 text-right flex justify-end gap-2")}>
                 <button type="button" onClick={() => onEdit(quest.code)} className={cn("p-2 rounded-lg text-slate-400 transition-colors")}>
                   <Edit className={cn("w-4 h-4")} />

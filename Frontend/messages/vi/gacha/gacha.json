@@ -38,6 +38,7 @@
     "pullResultTitle": "Kết quả rút gacha",
     "rareDropAnimation": "Hiệu ứng rơi đồ hiếm",
     "close": "Đóng",
-    "emptyOdds": "Pool hiện chưa có reward khả dụng."
+    "emptyOdds": "Pool hiện chưa có reward khả dụng.",
+    "pullError": "Không thể rút gacha lúc này. Vui lòng thử lại."
   }
 }

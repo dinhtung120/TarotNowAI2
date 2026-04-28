@@ -4,7 +4,8 @@ import type { UserProfile } from '@/features/auth/domain/types';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { registerAuthQueryBridge, useAuthStore } from '@/store/authStore';
 
-const PROFILE_ME_QUERY_KEY = userStateQueryKeys.profile.me();
+const AUTH_SESSION_QUERY_KEY = userStateQueryKeys.auth.session();
+const PROFILE_DETAIL_QUERY_KEY = userStateQueryKeys.profile.detail();
 
 const SAMPLE_USER: UserProfile = {
  id: 'user-1',
@@ -48,11 +49,11 @@ describe('authStore', () => {
   const queryClient = new QueryClient();
   registerAuthQueryBridge(queryClient);
 
-  queryClient.setQueryData(PROFILE_ME_QUERY_KEY, SAMPLE_USER);
+  queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, SAMPLE_USER);
   expect(useAuthStore.getState().user).toEqual(SAMPLE_USER);
   expect(useAuthStore.getState().isAuthenticated).toBe(true);
 
-  queryClient.setQueryData(PROFILE_ME_QUERY_KEY, null);
+  queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, null);
   expect(useAuthStore.getState().user).toBeNull();
   expect(useAuthStore.getState().isAuthenticated).toBe(false);
  });
@@ -63,10 +64,34 @@ describe('authStore', () => {
   useAuthStore.getState().setSession(SAMPLE_USER, 120);
 
   useAuthStore.getState().updateUser({ displayName: 'Updated Name' });
-  const cachedUser = queryClient.getQueryData<UserProfile | null>(PROFILE_ME_QUERY_KEY);
+  const cachedUser = queryClient.getQueryData<UserProfile | null>(AUTH_SESSION_QUERY_KEY);
 
   expect(cachedUser?.displayName).toBe('Updated Name');
   expect(useAuthStore.getState().user?.displayName).toBe('Updated Name');
+ });
+
+ it('ignores non-auth query keys and invalid auth cache shapes', () => {
+  const queryClient = new QueryClient();
+  registerAuthQueryBridge(queryClient);
+  useAuthStore.getState().setSession(SAMPLE_USER, 120);
+
+  queryClient.setQueryData(PROFILE_DETAIL_QUERY_KEY, {
+   profile: {
+    ...SAMPLE_USER,
+    dateOfBirth: '1990-01-01',
+    zodiac: 'leo',
+    numerology: 3,
+    hasConsented: true,
+   },
+   error: '',
+  });
+  queryClient.setQueryData(AUTH_SESSION_QUERY_KEY, {
+   profile: SAMPLE_USER,
+   error: '',
+  });
+
+  expect(useAuthStore.getState().user).toEqual(SAMPLE_USER);
+  expect(useAuthStore.getState().isAuthenticated).toBe(true);
  });
 
  it('supports setAuth without bridge and keeps session synced', () => {

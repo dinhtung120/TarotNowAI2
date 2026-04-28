@@ -84,6 +84,17 @@ for (const relativePath of sourceFiles) {
  }
 
  const source = readFileSync(resolve(process.cwd(), relativePath), 'utf8');
+ if (
+  relativePath.startsWith('src/features/gamification/')
+  && (source.includes('getPublicApiBaseUrl(') || source.includes('NEXT_PUBLIC_API_URL'))
+ ) {
+  directCallViolations.push({
+   file: relativePath,
+   pathPattern: 'admin gamification client must not read public backend origin directly',
+  });
+  continue;
+ }
+
  for (const detector of sensitiveDirectCallDetectors) {
   if (!detector.pattern.test(source)) {
    continue;

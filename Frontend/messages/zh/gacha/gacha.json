@@ -38,6 +38,7 @@
     "pullResultTitle": "抽奖结果",
     "rareDropAnimation": "稀有掉落动画",
     "close": "关闭",
-    "emptyOdds": "该奖池暂无可用奖励。"
+    "emptyOdds": "该奖池暂无可用奖励。",
+    "pullError": "当前无法抽奖，请稍后再试。"
   }
 }

@@ -1,7 +1,6 @@
 import dynamic from 'next/dynamic';
-import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
-import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
-import type { QuestDefinition, AchievementDefinition, TitleDefinition } from '@/features/gamification/gamification.types';
+import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
+import { prefetchAdminGamificationPage } from '@/shared/server/prefetch/runners';
 
 const AdminGamificationClient = dynamic(() =>
  import('@/features/gamification/AdminGamificationClient').then((m) => m.default)
@@ -14,23 +13,11 @@ export async function generateMetadata() {
 }
 
 export default async function AdminGamificationPage() {
-  const token = await getServerAccessToken();
-  
-  const [questsRes, achievementsRes, titlesRes] = await Promise.all([
-    serverHttpRequest<QuestDefinition[]>('/admin/gamification/quests', { token, next: { revalidate: 0 } }),
-    serverHttpRequest<AchievementDefinition[]>('/admin/gamification/achievements', { token, next: { revalidate: 0 } }),
-    serverHttpRequest<TitleDefinition[]>('/admin/gamification/titles', { token, next: { revalidate: 0 } }),
-  ]);
-
-  const quests = questsRes.ok ? questsRes.data || [] : [];
-  const achievements = achievementsRes.ok ? achievementsRes.data || [] : [];
-  const titles = titlesRes.ok ? titlesRes.data || [] : [];
+  const state = await dehydrateAppQueries(prefetchAdminGamificationPage);
 
   return (
-    <AdminGamificationClient
-      initialQuests={quests}
-      initialAchievements={achievements}
-      initialTitles={titles}
-    />
+    <AppQueryHydrationBoundary state={state}>
+      <AdminGamificationClient />
+    </AppQueryHydrationBoundary>
   );
 }

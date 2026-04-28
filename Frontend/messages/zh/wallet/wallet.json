@@ -116,6 +116,7 @@
       "status_paid": "已支付",
       "error_min_amount": "最低 {min} Diamond。",
       "error_policy_unavailable": "无法加载提现规则，请稍后再试。",
+      "error_balance_unavailable": "无法加载当前 Diamond 余额，请稍后再试。",
       "error_insufficient_balance": "Diamond 余额不足。",
       "error_bank_missing_profile": "提现前请先在 Profile 更新收款信息。",
       "error_create_failed": "无法创建申请。"

@@ -5,7 +5,6 @@ import AppNavbar from '@/features/auth/presentation/components/AppNavbar';
 import WalletStoreBridge from '@/features/wallet/presentation/components/WalletStoreBridge';
 import AuthBootstrap from '@/shared/components/auth/AuthBootstrap';
 import UserLayout from '@/shared/components/layout/UserLayout';
-import MetadataInitialLoader from '@/shared/components/common/MetadataInitialLoader';
 import { UserSegmentMainSkeleton } from '@/shared/components/loading/segment-skeletons';
 import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
 import { prefetchUserSegmentShell } from '@/shared/server/prefetch/runners';
@@ -32,7 +31,6 @@ export default async function UserSegmentLayout({ children, params }: UserSegmen
   <AppQueryHydrationBoundary state={state}>
    <NextIntlClientProvider messages={userMessages}>
     <AuthBootstrap initialUser={sessionSnapshot.user} />
-    <MetadataInitialLoader />
     <WalletStoreBridge />
     <AppNavbar />
     <UserLayout>

@@ -7,6 +7,7 @@ import InventoryGrid from '@/components/ui/inventory/InventoryGrid';
 import InventoryPageHero from '@/components/ui/inventory/InventoryPageHero';
 import InventoryQueryState from '@/components/ui/inventory/InventoryQueryState';
 import UseItemModal from '@/components/ui/inventory/UseItemModal';
+import { resolveErrorMessage } from '@/shared/application/utils/resolveErrorMessage';
 import { useInventory } from '@/shared/infrastructure/inventory/useInventory';
 import { useOwnedInventoryCards } from '@/shared/infrastructure/inventory/useOwnedInventoryCards';
 import { useUseItem } from '@/shared/infrastructure/inventory/useUseItem';
@@ -74,6 +75,7 @@ export default function InventoryPageClient() {
             done: t('done'),
             useAgain: useAgainLabel,
             title: useItemTitleLabel,
+            error: t('useError'),
           }}
           isPending={useItemMutation.isPending}
           onClose={() => setSelectedItemSnapshot(null)}
@@ -81,8 +83,7 @@ export default function InventoryPageClient() {
             try {
               return await useItemMutation.mutateAsync(payload);
             } catch (error) {
-              console.error('Lỗi khi sử dụng vật phẩm:', error);
-              throw error;
+              throw new Error(resolveErrorMessage(error, t('useError')));
             }
           }}
         />

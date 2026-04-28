@@ -116,6 +116,7 @@
       "status_paid": "Đã thanh toán",
       "error_min_amount": "Tối thiểu {min} Diamond.",
       "error_policy_unavailable": "Không tải được chính sách rút tiền. Vui lòng thử lại sau.",
+      "error_balance_unavailable": "Không tải được số dư Diamond hiện tại. Vui lòng thử lại sau.",
       "error_insufficient_balance": "Số dư Diamond không đủ.",
       "error_bank_missing_profile": "Vui lòng cập nhật thông tin ngân hàng trong Profile trước khi rút tiền.",
       "error_create_failed": "Không thể tạo yêu cầu."

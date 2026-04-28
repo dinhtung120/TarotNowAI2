@@ -2,6 +2,12 @@ import type { QueryClient } from '@tanstack/react-query';
 import { listDeposits, listReaderRequests, listUsers } from '@/features/admin/application/actions';
 import { listPromotions } from '@/features/admin/application/actions/promotion';
 import { listAdminDisputes } from '@/features/chat/application/actions';
+import { adminGamificationKeys } from '@/features/gamification/admin/application/adminGamificationKeys';
+import {
+ fetchAdminGamificationAchievementsServer,
+ fetchAdminGamificationQuestsServer,
+ fetchAdminGamificationTitlesServer,
+} from '@/features/gamification/admin/infrastructure/adminGamificationServer';
 import { getAllHistorySessionsAdminAction } from '@/features/reading/public';
 import { listWithdrawalQueue } from '@/features/wallet/public';
 
@@ -146,6 +152,25 @@ export async function prefetchAdminDisputesPage(qc: QueryClient): Promise<void> 
     }
     return [];
    },
-  });
+ });
+});
+}
+
+export async function prefetchAdminGamificationPage(qc: QueryClient): Promise<void> {
+ await swallowPrefetch(async () => {
+  await Promise.all([
+   qc.prefetchQuery({
+    queryKey: adminGamificationKeys.quests(),
+    queryFn: fetchAdminGamificationQuestsServer,
+   }),
+   qc.prefetchQuery({
+    queryKey: adminGamificationKeys.achievements(),
+    queryFn: fetchAdminGamificationAchievementsServer,
+   }),
+   qc.prefetchQuery({
+    queryKey: adminGamificationKeys.titles(),
+    queryFn: fetchAdminGamificationTitlesServer,
+   }),
+  ]);
  });
 }

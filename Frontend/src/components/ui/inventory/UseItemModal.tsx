@@ -1,16 +1,14 @@
 'use client';
-
-import { useMemo, useState } from 'react';
 import Modal from '@/shared/components/ui/Modal';
 import { cn } from '@/lib/utils';
-import { useUseItemModalState } from '@/shared/infrastructure/inventory/useUseItemModalState';
+import InlineErrorAlert from '@/shared/components/ui/InlineErrorAlert';
 import UseItemActionButton from '@/components/ui/inventory/UseItemActionButton';
 import UseItemCardSelector from '@/components/ui/inventory/UseItemCardSelector';
 import UseItemCardPreview from '@/components/ui/inventory/UseItemCardPreview';
 import UseItemResultPanel from '@/components/ui/inventory/UseItemResultPanel';
 import UseItemQuantitySelector from '@/components/ui/inventory/UseItemQuantitySelector';
+import { useUseItemModalController } from '@/components/ui/inventory/useUseItemModalController';
 import type { UseItemModalProps } from '@/components/ui/inventory/UseItemModal.types';
-import type { UseInventoryItemResponse } from '@/shared/infrastructure/inventory/inventoryTypes';
 
 export default function UseItemModal({
   isOpen,
@@ -22,52 +20,34 @@ export default function UseItemModal({
   onClose,
   onUse,
 }: UseItemModalProps) {
-  const [quantity, setQuantity] = useState(1);
-  const [result, setResult] = useState<UseInventoryItemResponse | null>(null);
-  const { selectedCardId, setSelectedCardId, text, needCard, canSubmit } = useUseItemModalState({ item, locale });
-
-  const selectedCard = useMemo(
-    () => cardOptions.find((card) => card.id === selectedCardId) ?? null,
-    [cardOptions, selectedCardId],
-  );
-
+  const {
+   canSubmit,
+   closeModal,
+   handleUseItem,
+   maxQuantity,
+   needCard,
+   result,
+   safeQuantity,
+   selectedCard,
+   selectedCardId,
+   setQuantity,
+   setSelectedCardId,
+   submitError,
+   text,
+   useAgain,
+  } = useUseItemModalController({
+   item,
+   locale,
+   cardOptions,
+   labels,
+   onClose,
+   onUse,
+  });
   if (!item || !text) return null;
-
-  const maxQuantity = Math.max(1, Math.min(10, item.quantity));
-  const safeQuantity = Math.max(1, Math.min(quantity, maxQuantity));
-
-  const handleUseItem = async (payload: { itemCode: string; quantity: number; targetCardId?: number }) => {
-    try {
-      const response = await onUse({ ...payload, quantity: Math.max(1, Math.min(payload.quantity, maxQuantity)) });
-      setResult(response);
-    } catch (error) {
-      console.error('Failed to use inventory item', error);
-    }
-  };
-
-  const closeModal = () => {
-    setResult(null);
-    onClose();
-  };
-
-  const useAgain = () => {
-    if (!item.canUse || item.quantity <= 0) {
-      setResult(null);
-      return;
-    }
-
-    setResult(null);
-    setQuantity(safeQuantity);
-    void handleUseItem({
-      itemCode: item.itemCode,
-      quantity: safeQuantity,
-      targetCardId: selectedCardId === '' ? undefined : selectedCardId,
-    });
-  };
-
   return (
     <Modal isOpen={isOpen} onClose={closeModal} title={text.name} description={text.description} size="md">
       <div className={cn('space-y-6 py-2')}>
+        <InlineErrorAlert message={submitError} className={cn('px-4 py-3')} />
         {!result && item.isConsumable ? (
           <div className={cn('animate-in fade-in slide-in-from-top-2 duration-500')}>
             <UseItemQuantitySelector
@@ -80,14 +60,12 @@ export default function UseItemModal({
             />
           </div>
         ) : null}
-
         {needCard ? (
           <>
             <UseItemCardSelector label={labels.selectCard} value={selectedCardId} onChange={setSelectedCardId} cardOptions={cardOptions} />
             <UseItemCardPreview card={selectedCard} label={labels.selectedCard} />
           </>
         ) : null}
-
         {result ? (
           <UseItemResultPanel
             effectSummaries={result.effectSummaries ?? []}

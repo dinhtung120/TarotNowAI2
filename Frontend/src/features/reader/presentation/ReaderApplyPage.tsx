@@ -1,15 +1,15 @@
 'use client';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CheckCircle2, Clock } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useForm, useWatch } from 'react-hook-form';
 import { useReaderApplyPage } from '@/features/reader/application/useReaderApplyPage';
-import { isReaderSpecialtyValue } from '@/features/reader/domain/readerSpecialties';
 import ReaderApplyFeedbackMessage from '@/features/reader/presentation/components/ReaderApplyFeedbackMessage';
 import ReaderApplyHeader from '@/features/reader/presentation/components/ReaderApplyHeader';
 import ReaderApplyIntroField from '@/features/reader/presentation/components/ReaderApplyIntroField';
 import { ReaderApplyLoadingState } from '@/features/reader/presentation/components/ReaderApplyLoadingState';
+import { ReaderApplyPendingPanel } from '@/features/reader/presentation/components/ReaderApplyPendingPanel';
 import ReaderApplyRejectedNotice from '@/features/reader/presentation/components/ReaderApplyRejectedNotice';
 import ReaderApplySocialLinksFields from '@/features/reader/presentation/components/ReaderApplySocialLinksFields';
 import ReaderApplySpecialtiesField from '@/features/reader/presentation/components/ReaderApplySpecialtiesField';
@@ -22,7 +22,9 @@ import {
  mapReaderRequestToFormValues,
  type ReaderApplyFormValues,
 } from '@/features/reader/presentation/readerApplyFormSchema';
+import { resolveReaderApplyHydrationIdentity } from '@/features/reader/presentation/readerApplyHydration';
 import { normalizeOptionalSocialUrl } from '@/features/reader/domain/readerSocialLinks';
+import { useHydrateFormOnce } from '@/shared/application/hooks/useHydrateFormOnce';
 import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
 import { cn } from '@/lib/utils';
 
@@ -63,7 +65,7 @@ export default function ReaderApplyPage() {
  const facebookUrl = useWatch({ control, name: 'facebookUrl' }) ?? '';
  const instagramUrl = useWatch({ control, name: 'instagramUrl' }) ?? '';
  const tikTokUrl = useWatch({ control, name: 'tikTokUrl' }) ?? '';
- useEffect(() => reset(defaultValues), [defaultValues, reset]);
+ useHydrateFormOnce({ enabled: isReaderPolicyReady, identity: resolveReaderApplyHydrationIdentity(existingRequest), reset, values: defaultValues });
  const socialRequiredMessage = errors.facebookUrl?.message === t('validation.social_required') ? errors.facebookUrl.message : undefined;
  const facebookFieldError = errors.facebookUrl?.message !== t('validation.social_required') ? errors.facebookUrl?.message : undefined;
  const onSubmit = useCallback(async (values: ReaderApplyFormValues) => {
@@ -90,11 +92,7 @@ export default function ReaderApplyPage() {
  }, [defaultErrorMessage, isReaderPolicyReady, submitApplication, t]);
  if (loading) return <ReaderApplyLoadingState label={t('loading')} />;
  if (existingRequest?.hasRequest && existingRequest.status === 'approved') return <ReaderApplyStatusPanel accent="success" icon={CheckCircle2} title={t('approved.title')} description={t('approved.desc')} />;
- if (existingRequest?.hasRequest && existingRequest.status === 'pending') {
-  const specialtyLabel = (existingRequest.specialties ?? []).map((item) => (isReaderSpecialtyValue(item) ? t(`form.specialties.${item}`) : item)).join(', ');
-  const socialLabel = [existingRequest.facebookUrl, existingRequest.instagramUrl, existingRequest.tikTokUrl].filter(Boolean).join(' • ');
-  return <ReaderApplyStatusPanel accent="warning" icon={Clock} title={t('pending.title')} description={t('pending.desc')} introLabel={t('pending.intro_label')} introText={existingRequest.bio} footerLabel={t('pending.sent_at', { date: new Date(existingRequest.createdAt || '').toLocaleString(locale) })} details={[{ label: t('form.specialties_label'), value: specialtyLabel || t('form.not_provided') }, { label: t('form.years_experience_label'), value: `${existingRequest.yearsOfExperience ?? '--'}` }, { label: t('form.diamond_per_question_label'), value: `${existingRequest.diamondPerQuestion ?? '--'}` }, { label: t('form.social_links_label'), value: socialLabel || t('form.not_provided') }]} />;
- }
+ if (existingRequest?.hasRequest && existingRequest.status === 'pending') return <ReaderApplyPendingPanel existingRequest={existingRequest} locale={locale} t={t} />;
  return (
   <div className={cn('mx-auto max-w-2xl animate-in fade-in slide-in-from-bottom-8 space-y-10 tn-page-x py-20 duration-1000')}>
    <ReaderApplyHeader />

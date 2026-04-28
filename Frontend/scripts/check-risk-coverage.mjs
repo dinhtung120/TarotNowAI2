@@ -49,6 +49,78 @@ const RISK_COVERAGE_RULES = [
    lines: 72,
   },
  },
+ {
+  file: 'src/store/authStore.ts',
+  thresholds: {
+   statements: 75,
+   branches: 60,
+   functions: 80,
+   lines: 75,
+  },
+ },
+ {
+  file: 'src/shared/server/auth/redirectAuthenticatedAuthEntry.ts',
+  thresholds: {
+   statements: 85,
+   branches: 75,
+   functions: 85,
+   lines: 85,
+  },
+ },
+ {
+  file: 'src/features/notifications/application/notificationCache.ts',
+  thresholds: {
+   statements: 90,
+   branches: 80,
+   functions: 90,
+   lines: 90,
+  },
+ },
+ {
+  file: 'src/shared/application/hooks/useHydrateFormOnce.ts',
+  thresholds: {
+   statements: 90,
+   branches: 80,
+   functions: 90,
+   lines: 90,
+  },
+ },
+ {
+  file: 'src/shared/application/hooks/useReconnectWakeup.ts',
+  thresholds: {
+   statements: 90,
+   branches: 80,
+   functions: 90,
+   lines: 90,
+  },
+ },
+ {
+  file: 'src/app/[locale]/api/reading/sessions/[sessionId]/streamRouteGuards.ts',
+  thresholds: {
+   statements: 90,
+   branches: 80,
+   functions: 90,
+   lines: 90,
+  },
+ },
+ {
+  file: 'src/app/api/_shared/problemDetails.ts',
+  thresholds: {
+   statements: 90,
+   branches: 70,
+   functions: 90,
+   lines: 90,
+  },
+ },
+ {
+  file: 'src/features/gamification/adminGamificationFormSchema.ts',
+  thresholds: {
+   statements: 75,
+   branches: 60,
+   functions: 75,
+   lines: 75,
+  },
+ },
 ];
 
 function normalizePath(filePath) {

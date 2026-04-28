@@ -29,8 +29,11 @@ export function useNotificationDropdownState({ locale, markAllAsRead }: UseNotif
   const handleMarkAllRead = useCallback(async () => {
     if (isMarkingAll) return;
     setIsMarkingAll(true);
-    await markAllAsRead();
-    setIsMarkingAll(false);
+    try {
+      await markAllAsRead();
+    } finally {
+      setIsMarkingAll(false);
+    }
   }, [isMarkingAll, markAllAsRead]);
 
   const getTitle = useCallback(

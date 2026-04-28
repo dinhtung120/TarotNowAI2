@@ -19,7 +19,7 @@ type AuthStoreListener = () => void;
 type AuthStateData = Pick<AuthState, 'user' | 'isAuthenticated' | 'accessTokenExpiresAtMs'>;
 type AuthStoreActions = Pick<AuthState, 'setAuth' | 'setSession' | 'updateUser' | 'clearAuth' | 'syncAuth'>;
 
-const PROFILE_ME_QUERY_KEY = userStateQueryKeys.profile.me();
+const AUTH_SESSION_QUERY_KEY = userStateQueryKeys.auth.session();
 
 const authListeners = new Set<AuthStoreListener>();
 
@@ -81,6 +81,23 @@ function resolveExpiryTimestamp(expiresInSeconds: number | undefined): number | 
  }
 
  return Date.now() + Math.floor(expiresInSeconds * 1000);
+}
+
+function isUserProfile(value: unknown): value is UserProfile {
+ if (!value || typeof value !== 'object') {
+  return false;
+ }
+
+ const candidate = value as Partial<UserProfile>;
+ return typeof candidate.id === 'string'
+  && typeof candidate.email === 'string'
+  && typeof candidate.username === 'string'
+  && typeof candidate.displayName === 'string'
+  && typeof candidate.level === 'number'
+  && typeof candidate.exp === 'number'
+  && typeof candidate.role === 'string'
+  && typeof candidate.status === 'string'
+  && (candidate.avatarUrl === null || typeof candidate.avatarUrl === 'string');
 }
 
 const authActions: AuthStoreActions = {
@@ -194,15 +211,15 @@ function persistAuthUserToQuery(user: UserProfile | null) {
   return;
  }
 
- authQueryClient.setQueryData(PROFILE_ME_QUERY_KEY, user);
+ authQueryClient.setQueryData(AUTH_SESSION_QUERY_KEY, user);
 }
 
 function isProfileMeQueryKey(queryKey: readonly unknown[]): boolean {
- if (queryKey.length !== PROFILE_ME_QUERY_KEY.length) {
+ if (queryKey.length !== AUTH_SESSION_QUERY_KEY.length) {
   return false;
  }
 
- return PROFILE_ME_QUERY_KEY.every((segment, index) => queryKey[index] === segment);
+ return AUTH_SESSION_QUERY_KEY.every((segment, index) => queryKey[index] === segment);
 }
 
 function syncAuthFromQueryCache() {
@@ -210,7 +227,12 @@ function syncAuthFromQueryCache() {
   return;
  }
 
- const cachedUser = authQueryClient.getQueryData<UserProfile | null>(PROFILE_ME_QUERY_KEY) ?? null;
+ const cachedValue = authQueryClient.getQueryData<unknown>(AUTH_SESSION_QUERY_KEY);
+ const cachedUser = cachedValue === null || cachedValue === undefined
+  ? null
+  : isUserProfile(cachedValue)
+   ? cachedValue
+   : authData.user;
  updateAuthData({
   user: cachedUser,
   isAuthenticated: Boolean(cachedUser),

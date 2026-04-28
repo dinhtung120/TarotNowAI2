@@ -1,9 +1,11 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { applyNotificationReadPatch } from '@/features/notifications/application/notificationCache';
 import { parseApiError } from '@/shared/application/gateways/parseApiError';
 import { fetchJsonOrThrow, fetchWithTimeout } from '@/shared/application/gateways/clientFetch';
 import type { NotificationListResponse } from '@/features/notifications/application/actions';
+import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 import { useAuthStore } from '@/store/authStore';
 
 interface UseNotificationDropdownOptions {
@@ -35,21 +37,17 @@ async function fetchNotifications(page = 1, pageSize = 10): Promise<Notification
 }
 
 async function fetchUnreadNotificationCount(): Promise<number> {
- try {
-  const response = await fetchJsonOrThrow<{ count?: number }>(
-   NOTIFICATION_API_ROUTES.unreadCount,
-   {
-    method: 'GET',
-    credentials: 'include',
-    cache: 'no-store',
-   },
-   'Failed to get unread notifications.',
-   8_000,
-  );
-  return response.count ?? 0;
- } catch {
-  return 0;
- }
+ const response = await fetchJsonOrThrow<{ count?: number }>(
+  NOTIFICATION_API_ROUTES.unreadCount,
+  {
+   method: 'GET',
+   credentials: 'include',
+   cache: 'no-store',
+  },
+  'Failed to get unread notifications.',
+  8_000,
+ );
+ return response.count ?? 0;
 }
 
 async function sendNotificationPatch(path: string): Promise<void> {
@@ -73,23 +71,23 @@ export function useNotificationDropdown(options: UseNotificationDropdownOptions 
  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
  const queryClient = useQueryClient();
 
- const queryKeyList = ['notifications', 'dropdown'] as const;
- const queryKeyCount = ['notifications', 'unread-count'] as const;
+ const queryKeyList = userStateQueryKeys.notifications.dropdown();
+ const queryKeyCount = userStateQueryKeys.notifications.unreadCount();
 
- const { data, isLoading } = useQuery<NotificationListResponse | null>({
+ const dropdownQuery = useQuery<NotificationListResponse | null>({
   queryKey: queryKeyList,
   queryFn: () => fetchNotifications(1, 10),
   enabled: isAuthenticated && enabled,
   staleTime: 60_000,
  });
 
- const { data: unreadCount = 0 } = useQuery<number>({
+ const unreadCountQuery = useQuery<number>({
   queryKey: queryKeyCount,
   queryFn: fetchUnreadNotificationCount,
   enabled: isAuthenticated && enabled,
-  staleTime: Infinity,
-  refetchOnWindowFocus: false,
-  refetchOnMount: false,
+  staleTime: 30_000,
+  refetchOnWindowFocus: true,
+  refetchOnMount: true,
  });
 
  const markReadMutation = useMutation({
@@ -97,46 +95,7 @@ export function useNotificationDropdown(options: UseNotificationDropdownOptions 
  });
 
  const markAsRead = async (id: string) => {
-  let wasUnread = false;
-  queryClient.setQueryData<NotificationListResponse | null>(queryKeyList, (previous) => {
-   if (!previous) {
-    return previous;
-   }
-
-   const target = previous.items.find((item) => item.id === id);
-   wasUnread = target ? !target.isRead : false;
-   return {
-    ...previous,
-    items: previous.items.map((item) => (item.id === id ? { ...item, isRead: true } : item)),
-   };
-  });
-
-  if (wasUnread) {
-   queryClient.setQueryData<number>(queryKeyCount, (previous) => Math.max(0, (previous ?? 0) - 1));
-  }
-
-  queryClient.setQueryData<NotificationListResponse | null>(['notifications', 1, false], (previous) => {
-   if (!previous) {
-    return previous;
-   }
-
-   return {
-    ...previous,
-    items: previous.items.map((item) => (item.id === id ? { ...item, isRead: true } : item)),
-   };
-  });
-
-  queryClient.setQueryData<NotificationListResponse | null>(['notifications', 1, true], (previous) => {
-   if (!previous) {
-    return previous;
-   }
-
-   return {
-    ...previous,
-    items: previous.items.filter((item) => item.id !== id),
-    totalCount: Math.max(0, previous.totalCount - 1),
-   };
-  });
+  applyNotificationReadPatch(queryClient, { id });
 
   try {
    await markReadMutation.mutateAsync(id);
@@ -170,10 +129,12 @@ export function useNotificationDropdown(options: UseNotificationDropdownOptions 
  };
 
  return {
-  notifications: data?.items ?? [],
-  unreadCount,
-  isLoading,
+  notifications: dropdownQuery.data?.items ?? [],
+  unreadCount: unreadCountQuery.data ?? 0,
+  isLoading: dropdownQuery.isLoading,
   markAsRead,
   markAllAsRead,
+  refreshDropdown: dropdownQuery.refetch,
+  refreshUnreadCount: unreadCountQuery.refetch,
  };
 }

@@ -3,27 +3,12 @@ import { internalApiUrl } from '@/shared/infrastructure/http/apiUrl';
 import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
-
-const SESSION_ID_PATTERN = /^[A-Za-z0-9-]+$/;
-const SESSION_ID_MAX_LENGTH = 64;
-const ALLOWED_LANGUAGES = new Set(['vi', 'en', 'zh']);
-const FOLLOWUP_MAX_LENGTH = 2000;
+import {
+ getSafeFollowupQuestion,
+ getSafeStreamLanguage,
+ isValidStreamSessionId,
+} from '../streamRouteGuards';
 const UPSTREAM_OPEN_TIMEOUT_MS = 12_000;
-
-function getSafeLanguage(rawLanguage: string | null): string {
-  if (!rawLanguage) return 'en';
-  const language = rawLanguage.trim().toLowerCase();
-  if (!language) return 'en';
-  if (ALLOWED_LANGUAGES.has(language)) return language;
-  const baseLanguage = language.split('-')[0];
-  return ALLOWED_LANGUAGES.has(baseLanguage) ? baseLanguage : 'en';
-}
-
-function getSafeFollowupQuestion(rawQuestion: string | null): string | undefined {
-  if (!rawQuestion) return undefined;
-  const question = rawQuestion.replace(/\u0000/g, '').replace(/\r/g, '').trim();
-  return question ? question.slice(0, FOLLOWUP_MAX_LENGTH) : undefined;
-}
 
 function isTrustedOrigin(request: NextRequest): boolean {
   const origin = request.headers.get('origin');
@@ -34,17 +19,26 @@ function isTrustedOrigin(request: NextRequest): boolean {
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-async function fetchUpstreamWithTimeout(url: string, accessToken: string): Promise<Response> {
+async function fetchUpstreamWithTimeout(
+ url: string,
+ accessToken: string,
+ idempotencyKey?: string,
+): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), UPSTREAM_OPEN_TIMEOUT_MS);
   try {
+    const headers = new Headers({
+      Authorization: `Bearer ${accessToken}`,
+      Accept: 'text/event-stream',
+      'Cache-Control': 'no-cache',
+    });
+    if (idempotencyKey) {
+      headers.set('x-idempotency-key', idempotencyKey);
+    }
+
     return await fetch(url, {
       method: 'GET',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Accept: 'text/event-stream',
-        'Cache-Control': 'no-cache',
-      },
+      headers,
       cache: 'no-store',
       redirect: 'error',
       signal: controller.signal,
@@ -75,7 +69,7 @@ export async function GET(
   }
 
   const { sessionId } = await context.params;
-  if (!SESSION_ID_PATTERN.test(sessionId) || sessionId.length > SESSION_ID_MAX_LENGTH) {
+  if (!isValidStreamSessionId(sessionId)) {
     return buildProblemResponse(400, 'Invalid session id');
   }
 
@@ -83,17 +77,23 @@ export async function GET(
   const upstreamUrlString = internalApiUrl(path);
   const upstreamUrl = new URL(upstreamUrlString);
 
-  const language = getSafeLanguage(request.nextUrl.searchParams.get('language'));
+  const streamToken = request.nextUrl.searchParams.get('streamToken')?.trim() || '';
+  const language = getSafeStreamLanguage(request.nextUrl.searchParams.get('language'));
   const followupQuestion = getSafeFollowupQuestion(request.nextUrl.searchParams.get('followupQuestion'));
+  const idempotencyKey = request.headers.get('x-idempotency-key')?.trim() || undefined;
 
-  upstreamUrl.searchParams.set('language', language);
-  if (followupQuestion) {
-    upstreamUrl.searchParams.set('followupQuestion', followupQuestion);
+  if (streamToken) {
+    upstreamUrl.searchParams.set('streamToken', streamToken);
+  } else {
+    upstreamUrl.searchParams.set('language', language);
+    if (followupQuestion) {
+      upstreamUrl.searchParams.set('followupQuestion', followupQuestion);
+    }
   }
 
   let upstream: Response;
   try {
-    upstream = await fetchUpstreamWithTimeout(upstreamUrl.toString(), accessToken);
+    upstream = await fetchUpstreamWithTimeout(upstreamUrl.toString(), accessToken, idempotencyKey);
   } catch {
    logger.error('ReadingSessionStreamRoute', 'Failed to open upstream stream.', { requestId });
    return buildProblemResponse(502, 'Failed to open stream');

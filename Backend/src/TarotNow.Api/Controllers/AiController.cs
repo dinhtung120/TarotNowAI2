@@ -17,17 +17,22 @@ public sealed class AiController : ControllerBase
 {
     private readonly IFeatureManagerSnapshot _featureManager;
     private readonly IAiStreamSseOrchestrator _aiStreamSseOrchestrator;
+    private readonly IAiStreamTicketService _aiStreamTicketService;
 
     /// <summary>
     /// Khởi tạo controller streaming AI.
     /// </summary>
     public AiController(
         IFeatureManagerSnapshot featureManager,
-        IAiStreamSseOrchestrator aiStreamSseOrchestrator)
+        IAiStreamSseOrchestrator aiStreamSseOrchestrator,
+        IAiStreamTicketService aiStreamTicketService)
     {
         _featureManager = featureManager;
         _aiStreamSseOrchestrator = aiStreamSseOrchestrator;
+        _aiStreamTicketService = aiStreamTicketService;
     }
+
+    public sealed record CreateAiStreamTicketBody(string? FollowUpQuestion, string? Language);
 
     /// <summary>
     /// Stream kết quả đọc bài theo chuẩn SSE.
@@ -38,6 +43,7 @@ public sealed class AiController : ControllerBase
     public async Task StreamReading(
         string sessionId,
         [FromQuery] string? followUpQuestion,
+        [FromQuery] string? streamToken,
         [FromQuery] string? language,
         CancellationToken cancellationToken)
     {
@@ -67,8 +73,44 @@ public sealed class AiController : ControllerBase
             return;
         }
 
+        var resolvedFollowUpQuestion = followUpQuestion;
+        var resolvedLanguage = language;
         var idempotencyKey = Request.GetIdempotencyKeyOrEmpty();
-        if (string.IsNullOrWhiteSpace(followUpQuestion) == false && string.IsNullOrWhiteSpace(idempotencyKey))
+
+        if (string.IsNullOrWhiteSpace(streamToken) == false)
+        {
+            if (!_aiStreamTicketService.TryRead(streamToken, out var ticketPayload))
+            {
+                Response.StatusCode = StatusCodes.Status400BadRequest;
+                await Response.WriteAsJsonAsync(new ProblemDetails
+                {
+                    Status = StatusCodes.Status400BadRequest,
+                    Title = "Bad Request",
+                    Detail = "Invalid or expired stream token.",
+                    Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"
+                }, cancellationToken);
+                return;
+            }
+
+            if (ticketPayload.UserId != userId || string.Equals(ticketPayload.SessionId, sessionId, StringComparison.Ordinal) == false)
+            {
+                Response.StatusCode = StatusCodes.Status403Forbidden;
+                await Response.WriteAsJsonAsync(new ProblemDetails
+                {
+                    Status = StatusCodes.Status403Forbidden,
+                    Title = "Forbidden",
+                    Detail = "Stream token does not match the authenticated user or session.",
+                    Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.3"
+                }, cancellationToken);
+                return;
+            }
+
+            resolvedFollowUpQuestion = ticketPayload.FollowUpQuestion;
+            resolvedLanguage = ticketPayload.Language;
+            idempotencyKey = ticketPayload.IdempotencyKey;
+        }
+
+        if (string.IsNullOrWhiteSpace(resolvedFollowUpQuestion) == false && string.IsNullOrWhiteSpace(idempotencyKey))
         {
             Response.StatusCode = StatusCodes.Status400BadRequest;
             await Response.WriteAsJsonAsync(new ProblemDetails
@@ -86,9 +128,84 @@ public sealed class AiController : ControllerBase
             new AiStreamOrchestrationRequest(
                 userId,
                 sessionId,
-                followUpQuestion,
-                language,
+                resolvedFollowUpQuestion,
+                resolvedLanguage,
                 idempotencyKey),
             cancellationToken);
+    }
+
+    [HttpPost("{sessionId}/stream-ticket")]
+    [EnableRateLimiting("chat-standard")]
+    public async Task<IActionResult> CreateStreamTicket(
+        string sessionId,
+        [FromBody] CreateAiStreamTicketBody body,
+        CancellationToken cancellationToken)
+    {
+        if (!await _featureManager.IsEnabledAsync(FeatureFlags.AiStreamingEnabled))
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, new ProblemDetails
+            {
+                Status = StatusCodes.Status503ServiceUnavailable,
+                Title = "Service Unavailable",
+                Detail = "AI streaming is temporarily disabled by feature flag.",
+                Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.4"
+            });
+        }
+
+        if (!User.TryGetUserId(out var userId))
+        {
+            return Unauthorized(new ProblemDetails
+            {
+                Status = StatusCodes.Status401Unauthorized,
+                Title = "Unauthorized",
+                Detail = "Authentication is required or token is invalid.",
+                Type = "https://datatracker.ietf.org/doc/html/rfc7235#section-3.1"
+            });
+        }
+
+        if (Guid.TryParse(sessionId, out var parsedSessionId) == false || parsedSessionId == Guid.Empty)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Bad Request",
+                Detail = "Session id must be a valid GUID.",
+                Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"
+            });
+        }
+
+        var followUpQuestion = body.FollowUpQuestion?.Trim();
+        if (string.IsNullOrWhiteSpace(followUpQuestion))
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Bad Request",
+                Detail = "Follow-up question is required.",
+                Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"
+            });
+        }
+
+        var idempotencyKey = Request.GetIdempotencyKeyOrEmpty();
+        if (string.IsNullOrWhiteSpace(idempotencyKey))
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Bad Request",
+                Detail = "Idempotency-Key header is required for follow-up stream ticket.",
+                Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"
+            });
+        }
+
+        var streamToken = _aiStreamTicketService.Create(new AiStreamTicketCreateRequest(
+            userId,
+            sessionId,
+            followUpQuestion,
+            string.IsNullOrWhiteSpace(body.Language) ? "en" : body.Language.Trim(),
+            idempotencyKey));
+
+        await Task.CompletedTask;
+        return Ok(new { streamToken });
     }
 }

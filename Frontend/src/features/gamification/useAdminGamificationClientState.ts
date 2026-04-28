@@ -1,76 +1,168 @@
 "use client";
 
-import { useState } from "react";
-import toast from "react-hot-toast";
-import { useAdminGamification } from "@/features/gamification/useAdminGamification";
+import { useMemo, useState } from 'react';
+import type {
+ AdminAchievementDefinition,
+ AdminGamificationEntityType,
+ AdminGamificationTab,
+ AdminQuestDefinition,
+ AdminTitleDefinition,
+} from '@/features/gamification/admin/adminGamification.types';
+import { useAdminGamification } from '@/features/gamification/admin/application/useAdminGamification';
 
-type AdminGamificationDialogState =
- | { mode: "create"; type: string }
- | { mode: "edit"; type: string; code: string }
- | { mode: "delete"; type: "Quest" | "Achievement" | "Title"; code: string }
+type AdminGamificationEditorState =
+ | { entityType: AdminGamificationEntityType; mode: 'create' }
+ | { entityType: AdminGamificationEntityType; mode: 'edit'; code: string }
  | null;
 
+type AdminGamificationDeleteState =
+ | { entityType: AdminGamificationEntityType; code: string }
+ | null;
+
+const EMPTY_QUESTS: AdminQuestDefinition[] = [];
+const EMPTY_ACHIEVEMENTS: AdminAchievementDefinition[] = [];
+const EMPTY_TITLES: AdminTitleDefinition[] = [];
+
 export function useAdminGamificationClientState() {
- const { deleteQuest, deleteAchievement, deleteTitle } = useAdminGamification();
- const [activeTab, setActiveTab] = useState<"quests" | "achievements" | "titles">("quests");
- const [dialog, setDialog] = useState<AdminGamificationDialogState>(null);
+ const {
+  questsQuery,
+  achievementsQuery,
+  titlesQuery,
+  upsertQuest,
+  deleteQuest,
+  upsertAchievement,
+  deleteAchievement,
+  upsertTitle,
+  deleteTitle,
+ } = useAdminGamification();
+ const [activeTab, setActiveTab] = useState<AdminGamificationTab>('quests');
+ const [editor, setEditor] = useState<AdminGamificationEditorState>(null);
+ const [deleteDialog, setDeleteDialog] = useState<AdminGamificationDeleteState>(null);
 
- const handleCreate = (type: string) => {
-  setDialog({ mode: "create", type });
+ const quests = questsQuery.data ?? EMPTY_QUESTS;
+ const achievements = achievementsQuery.data ?? EMPTY_ACHIEVEMENTS;
+ const titles = titlesQuery.data ?? EMPTY_TITLES;
+
+ const selectedQuest = useMemo<AdminQuestDefinition | null>(() => {
+  if (editor?.entityType !== 'quest' || editor.mode !== 'edit') {
+   return null;
+  }
+
+  return quests.find((quest) => quest.code === editor.code) ?? null;
+ }, [editor, quests]);
+
+ const selectedAchievement = useMemo<AdminAchievementDefinition | null>(() => {
+  if (editor?.entityType !== 'achievement' || editor.mode !== 'edit') {
+   return null;
+  }
+
+  return achievements.find((achievement) => achievement.code === editor.code) ?? null;
+ }, [achievements, editor]);
+
+ const selectedTitle = useMemo<AdminTitleDefinition | null>(() => {
+  if (editor?.entityType !== 'title' || editor.mode !== 'edit') {
+   return null;
+  }
+
+  return titles.find((title) => title.code === editor.code) ?? null;
+ }, [editor, titles]);
+
+ const handleCreate = () => {
+  const entityType = activeTab === 'quests' ? 'quest' : activeTab === 'achievements' ? 'achievement' : 'title';
+  setEditor({ entityType, mode: 'create' });
  };
 
- const handleEdit = (type: string, code: string) => {
-  setDialog({ mode: "edit", type, code });
+ const handleEdit = (entityType: AdminGamificationEntityType, code: string) => {
+  setEditor({ entityType, mode: 'edit', code });
  };
 
- const handleDelete = (type: "Quest" | "Achievement" | "Title", code: string) => {
-  setDialog({ mode: "delete", type, code });
+ const handleDelete = (entityType: AdminGamificationEntityType, code: string) => {
+  setDeleteDialog({ entityType, code });
  };
 
- const closeDialog = () => {
-  setDialog(null);
+ const closeDeleteDialog = () => {
+  setDeleteDialog(null);
  };
 
- const confirmDialog = () => {
-  if (!dialog) {
+ const closeEditor = () => {
+  setEditor(null);
+ };
+
+ const confirmDelete = async () => {
+  if (!deleteDialog) {
    return;
   }
 
-  if (dialog.mode === "delete") {
-   if (dialog.type === "Quest") {
-    deleteQuest.mutate(dialog.code);
+  try {
+   if (deleteDialog.entityType === 'quest') {
+    await deleteQuest.mutateAsync(deleteDialog.code);
+   } else if (deleteDialog.entityType === 'achievement') {
+    await deleteAchievement.mutateAsync(deleteDialog.code);
+   } else {
+    await deleteTitle.mutateAsync(deleteDialog.code);
    }
-   if (dialog.type === "Achievement") {
-    deleteAchievement.mutate(dialog.code);
-   }
-   if (dialog.type === "Title") {
-    deleteTitle.mutate(dialog.code);
-   }
-  } else if (dialog.mode === "create") {
-   toast(`Flow tạo ${dialog.type} sẽ được bật ở wave tiếp theo.`);
-  } else {
-   toast(`Flow sửa ${dialog.type}: ${dialog.code} sẽ được bật ở wave tiếp theo.`);
-  }
 
-  setDialog(null);
+   setDeleteDialog(null);
+  } catch {
+   return;
+  }
  };
 
- const isDeletePending = dialog?.mode === "delete"
-  && (
-   (dialog.type === "Quest" && deleteQuest.isPending)
-   || (dialog.type === "Achievement" && deleteAchievement.isPending)
-   || (dialog.type === "Title" && deleteTitle.isPending)
-  );
+ const submitQuest = async (value: AdminQuestDefinition) => {
+  try {
+   await upsertQuest.mutateAsync(value);
+   setEditor(null);
+  } catch {
+   return;
+  }
+ };
+
+ const submitAchievement = async (value: AdminAchievementDefinition) => {
+  try {
+   await upsertAchievement.mutateAsync(value);
+   setEditor(null);
+  } catch {
+   return;
+  }
+ };
+
+ const submitTitle = async (value: AdminTitleDefinition) => {
+  try {
+   await upsertTitle.mutateAsync(value);
+   setEditor(null);
+  } catch {
+   return;
+  }
+ };
+
+ const isLoading = questsQuery.isLoading || achievementsQuery.isLoading || titlesQuery.isLoading;
+ const isEditorSubmitting = upsertQuest.isPending || upsertAchievement.isPending || upsertTitle.isPending;
+ const isDeletePending = deleteQuest.isPending || deleteAchievement.isPending || deleteTitle.isPending;
+ const error = questsQuery.error || achievementsQuery.error || titlesQuery.error;
 
  return {
   activeTab,
   setActiveTab,
+  quests,
+  achievements,
+  titles,
+  isLoading,
+  error: error instanceof Error ? error.message : '',
   handleCreate,
   handleEdit,
   handleDelete,
-  dialog,
-  closeDialog,
-  confirmDialog,
+  editor,
+  selectedQuest,
+  selectedAchievement,
+  selectedTitle,
+  closeEditor,
+  submitQuest,
+  submitAchievement,
+  submitTitle,
+  deleteDialog,
+  closeDeleteDialog,
+  confirmDelete,
+  isEditorSubmitting,
   isDeletePending,
  };
 }

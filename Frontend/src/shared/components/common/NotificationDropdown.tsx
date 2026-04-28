@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useNotificationDropdown } from '@/features/notifications/application/useNotificationDropdown';
 import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
@@ -17,8 +18,25 @@ export default function NotificationDropdown({ enabled = true }: NotificationDro
   const tCommon = useTranslations('Common');
   const locale = useLocale();
   const navigation = useOptimizedNavigation();
-  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotificationDropdown({ enabled });
+  const {
+    notifications,
+    unreadCount,
+    isLoading,
+    markAsRead,
+    markAllAsRead,
+    refreshDropdown,
+    refreshUnreadCount,
+  } = useNotificationDropdown({ enabled });
   const { bellButtonRef, close, dropdownRef, getTitle, handleMarkAllRead, isMarkingAll, isOpen, toggleOpen } = useNotificationDropdownState({ locale, markAllAsRead });
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    void refreshUnreadCount();
+    void refreshDropdown();
+  }, [isOpen, refreshDropdown, refreshUnreadCount]);
 
   return (
     <div className={cn('relative inline-flex items-center')}>

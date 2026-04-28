@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { checkinQueryKeys } from '@/features/checkin/domain/checkinQueryKeys';
+import { fetchJsonOrThrow } from '@/shared/application/gateways/clientFetch';
 import type { StreamMessage } from './types';
 
 interface UseAiStreamSessionOptions {
@@ -31,6 +32,29 @@ export function useAiStreamSession({
  const pendingChunkRef = useRef('');
  const flushTimerRef = useRef<number | null>(null);
 
+ const createStreamTicket = useCallback(async (followupQuestion: string) => {
+  const response = await fetchJsonOrThrow<{ streamToken: string }>(
+   `/${locale}/api/reading/sessions/${sessionId}/stream-ticket`,
+   {
+    method: 'POST',
+    credentials: 'include',
+    cache: 'no-store',
+    headers: {
+     'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+     followupQuestion,
+     language: locale,
+     idempotencyKey: buildFollowupIdempotencyKey(),
+    }),
+   },
+   errorStreamMessage,
+   8_000,
+  );
+
+  return response.streamToken;
+ }, [errorStreamMessage, locale, sessionId]);
+
  const flushPendingChunk = useCallback(() => {
   if (!pendingChunkRef.current) return;
   const chunk = pendingChunkRef.current;
@@ -58,54 +82,66 @@ export function useAiStreamSession({
   if (updateState) setIsStreaming(false);
  }, [flushPendingChunk]);
 
- const startStream = useCallback((customPrompt?: string) => {
+ const startStream = useCallback(async (customPrompt?: string) => {
   setIsStreaming(true);
   setError(null);
   const isFollowup = Boolean(customPrompt);
   const messageId = `${Date.now()}-ai`;
 
-  setMessages((prev) =>
-   isFollowup ? [...prev, { id: messageId, role: 'ai', content: '', isStreaming: true }] : [{ id: messageId, role: 'ai', content: '', isStreaming: true }]
-  );
+  try {
+   const baseUrl = `/${locale}/api/reading/sessions/${sessionId}/stream?language=${encodeURIComponent(locale)}`;
+   const finalUrl = customPrompt
+    ? `${baseUrl}&streamToken=${encodeURIComponent(await createStreamTicket(customPrompt))}`
+    : baseUrl;
 
-  const baseUrl = `/${locale}/api/reading/sessions/${sessionId}/stream?language=${encodeURIComponent(locale)}`;
-  const finalUrl = customPrompt ? `${baseUrl}&followupQuestion=${encodeURIComponent(customPrompt)}` : baseUrl;
-  eventSourceRef.current = new EventSource(finalUrl);
+   setMessages((prev) =>
+    isFollowup
+     ? [...prev, { id: messageId, role: 'ai', content: '', isStreaming: true }]
+     : [{ id: messageId, role: 'ai', content: '', isStreaming: true }],
+   );
 
-  eventSourceRef.current.onmessage = (event) => {
-   if (event.data === '[DONE]') {
+   eventSourceRef.current = new EventSource(finalUrl);
+
+   eventSourceRef.current.onmessage = (event) => {
+    if (event.data === '[DONE]') {
+     stopStream();
+     if (!isFollowup) setIsComplete(true);
+     setIsSendingFollowup(false);
+     setMessages((prev) => {
+      const next = [...prev];
+      const lastIndex = next.length - 1;
+      const last = next[lastIndex];
+      if (last && last.role === 'ai') {
+       next[lastIndex] = { ...last, isStreaming: false };
+      }
+      return next;
+     });
+     queryClient.invalidateQueries({ queryKey: checkinQueryKeys.streakStatus });
+     if (onComplete && !isFollowup) onComplete();
+     return;
+    }
+
+    pendingChunkRef.current += event.data.replace(/\\n/g, '\n');
+    if (flushTimerRef.current === null) {
+     flushTimerRef.current = window.setTimeout(() => {
+      flushPendingChunk();
+      flushTimerRef.current = null;
+     }, 48);
+    }
+   };
+
+   eventSourceRef.current.onerror = () => {
     stopStream();
-    if (!isFollowup) setIsComplete(true);
+    setError(errorStreamMessage);
     setIsSendingFollowup(false);
-    setMessages((prev) => {
-     const next = [...prev];
-     const lastIndex = next.length - 1;
-     const last = next[lastIndex];
-     if (last && last.role === 'ai') {
-      next[lastIndex] = { ...last, isStreaming: false };
-     }
-     return next;
-    });
-    queryClient.invalidateQueries({ queryKey: checkinQueryKeys.streakStatus });
-    if (onComplete && !isFollowup) onComplete();
-    return;
-   }
-
-   pendingChunkRef.current += event.data.replace(/\\n/g, '\n');
-   if (flushTimerRef.current === null) {
-    flushTimerRef.current = window.setTimeout(() => {
-     flushPendingChunk();
-     flushTimerRef.current = null;
-    }, 48);
-   }
-  };
-
-  eventSourceRef.current.onerror = () => {
+   };
+  } catch {
    stopStream();
    setError(errorStreamMessage);
    setIsSendingFollowup(false);
-  };
- }, [errorStreamMessage, flushPendingChunk, locale, onComplete, queryClient, sessionId, stopStream]);
+   setMessages((prev) => prev.filter((message) => message.id !== messageId));
+  }
+ }, [createStreamTicket, errorStreamMessage, flushPendingChunk, locale, onComplete, queryClient, sessionId, stopStream]);
 
  const handleFollowupSubmit = useCallback(({ followupText: submittedFollowupText }: { followupText: string }) => {
   if (!submittedFollowupText.trim() || isStreaming || isSendingFollowup) return;
@@ -118,7 +154,9 @@ export function useAiStreamSession({
 
  useEffect(() => {
   const timerId = window.setTimeout(() => {
-   if (!eventSourceRef.current) startStream();
+   if (!eventSourceRef.current) {
+    void startStream();
+   }
   }, 100);
   return () => {
    window.clearTimeout(timerId);
@@ -138,4 +176,10 @@ export function useAiStreamSession({
   startStream,
   handleFollowupSubmit,
  };
+}
+
+function buildFollowupIdempotencyKey(): string {
+ return typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+  ? `reading_followup_${crypto.randomUUID()}`
+  : `reading_followup_${Date.now()}`;
 }

@@ -52,7 +52,7 @@ export function useSetActiveTitle() {
     mutationFn: (titleCode: string) => setGamificationActiveTitleServer(titleCode),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: gamificationKeys.titles() });
-      queryClient.invalidateQueries({ queryKey: userStateQueryKeys.profile.me() });
+      queryClient.invalidateQueries({ queryKey: userStateQueryKeys.profile.detail() });
     },
   });
 }

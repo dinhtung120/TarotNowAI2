@@ -1,11 +1,11 @@
 'use client';
 
 import { Edit, Trash2 } from 'lucide-react';
-import type { AchievementDefinition } from './gamification.types';
+import type { AdminAchievementDefinition } from '@/features/gamification/admin/adminGamification.types';
 import { cn } from '@/lib/utils';
 
 interface AdminAchievementTableProps {
-  achievements: AchievementDefinition[];
+  achievements: AdminAchievementDefinition[];
   onEdit: (code: string) => void;
   onDelete: (code: string) => void;
 }
@@ -18,7 +18,7 @@ export function AdminAchievementTable({ achievements, onEdit, onDelete }: AdminA
           <tr className={cn("bg-slate-800/40 text-slate-400 text-xs font-bold uppercase tracking-wider")}>
             <th className={cn("px-6 py-4")}>Mã</th>
             <th className={cn("px-6 py-4")}>Thành Tựu (VI)</th>
-            <th className={cn("px-6 py-4")}>Ẩn</th>
+            <th className={cn("px-6 py-4")}>Trang Thai</th>
             <th className={cn("px-6 py-4")}>Danh Hiệu Tặng Kèm</th>
             <th className={cn("px-6 py-4 text-right")}>Thao Tác</th>
           </tr>
@@ -31,10 +31,10 @@ export function AdminAchievementTable({ achievements, onEdit, onDelete }: AdminA
               </td>
               <td className={cn("px-6 py-4 font-bold")}>{achievement.titleVi}</td>
               <td className={cn("px-6 py-4")}>
-                {achievement.isHidden ? (
-                  <span className={cn("text-slate-500 text-xs")}>Có</span>
+                {achievement.isActive ? (
+                  <span className={cn("text-green-500 text-xs")}>Active</span>
                 ) : (
-                  <span className={cn("text-green-500 text-xs")}>Không</span>
+                  <span className={cn("text-slate-500 text-xs")}>Inactive</span>
                 )}
               </td>
               <td className={cn("px-6 py-4 text-indigo-400 text-sm font-medium")}>{achievement.grantsTitleCode || '-'}</td>

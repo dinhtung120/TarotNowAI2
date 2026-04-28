@@ -1,16 +1,17 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import type { WalletBalance } from '@/features/wallet/domain/types';
 import { getWalletBalanceClient } from '@/features/wallet/application/getWalletBalanceClient';
+import type { WalletBalance } from '@/features/wallet/domain/types';
 import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
 
 export function useWalletBalanceQuery() {
- return useQuery<WalletBalance | null>({
+ return useQuery<WalletBalance>({
   queryKey: userStateQueryKeys.wallet.balance(),
   queryFn: async () => {
    const result = await getWalletBalanceClient();
-   return result.success && result.data ? result.data : null;
+   return queryFnOrThrow(result, 'Failed to get wallet balance.');
   },
  });
 }

@@ -13,6 +13,7 @@ export interface UseItemModalLabels {
   beforeAfter: string;
   done: string;
   useAgain: string;
+  error: string;
 }
 
 export interface UseItemModalProps {

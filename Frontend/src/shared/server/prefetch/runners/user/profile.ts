@@ -1,19 +1,14 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { getProfileAction } from '@/features/profile/application/actions/get-profile';
 import { getMyReaderRequest } from '@/features/reader/application/actions';
+import { fetchProfileDetail, profileDetailQueryKey } from '@/features/profile/application/profileDetailQuery';
 import { getMfaStatus } from '@/features/profile/mfa/application/actions/status';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
-
-async function profileMeQueryFn() {
- const result = await getProfileAction();
- return result.success ? { profile: result.data ?? null, error: '' } : { profile: null, error: result.error };
-}
 
 export async function prefetchProfilePage(qc: QueryClient): Promise<void> {
  await Promise.all([
   qc.prefetchQuery({
-   queryKey: userStateQueryKeys.profile.me(),
-   queryFn: profileMeQueryFn,
+   queryKey: profileDetailQueryKey,
+   queryFn: fetchProfileDetail,
   }),
   qc.prefetchQuery({
    queryKey: userStateQueryKeys.reader.myRequest(),

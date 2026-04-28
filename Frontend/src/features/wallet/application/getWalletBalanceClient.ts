@@ -17,7 +17,7 @@ export async function getWalletBalanceClient(): Promise<ActionResult<WalletBalan
    8_000,
   );
   return actionOk(data);
- } catch {
-  return actionFail('Failed to get wallet balance.');
+ } catch (error) {
+  return actionFail(error instanceof Error ? error.message : 'Failed to get wallet balance.');
  }
 }

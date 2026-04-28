@@ -7,6 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import { logger } from '@/shared/application/gateways/logger';
 import { getSignalRHubUrl } from '@/shared/application/gateways/signalRUrl';
 import { ensureRealtimeSession } from '@/shared/application/gateways/realtimeSessionGuard';
+import { useReconnectWakeup } from '@/shared/application/hooks/useReconnectWakeup';
 import { registerPresenceConnectionHandlers } from './usePresenceConnection.registration';
 import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
@@ -69,6 +70,7 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
   const connectionRef = useRef<HubConnection | null>(null);
   const reconnectBlockedUntilRef = useRef(0);
   const queryClient = useQueryClient();
+  const { wakeupVersion, scheduleWakeup, cancelWakeup } = useReconnectWakeup();
 
   // Khởi tạo các ref để lưu trữ giá trị cấu hình nhằm giữ cho dependency array của useEffect chính ổn định.
   // Việc tạo array mới ([...]) trong mỗi lần render là nguyên nhân chính gây ra việc reconnect liên tục.
@@ -103,6 +105,7 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
      * luôn ổn định trừ khi trạng thái đăng nhập hoặc yêu cầu bật/tắt realtime thay đổi.
      */
     if (!enabled || !isAuthenticated) {
+      cancelWakeup();
       const existing = connectionRef.current;
       if (existing && shouldStopConnection(existing)) {
         void existing.stop().catch(() => undefined);
@@ -113,6 +116,7 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
     }
 
     if (Date.now() < reconnectBlockedUntilRef.current) {
+      scheduleWakeup(reconnectBlockedUntilRef.current - Date.now());
       return;
     }
 
@@ -156,6 +160,8 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
         }
 
         connectionRef.current = hubConnection;
+        reconnectBlockedUntilRef.current = 0;
+        cancelWakeup();
         heartbeatInterval = registration.startHeartbeat();
       } catch (error) {
         if (isUnauthorizedNegotiationError(error)) {
@@ -163,6 +169,8 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
         } else if (error instanceof Error) {
           reconnectBlockedUntilRef.current = Date.now() + Math.floor(negotiationCooldownMs / 2);
         }
+
+        scheduleWakeup(reconnectBlockedUntilRef.current - Date.now());
 
         if (hubConnection && hubConnection.state !== HubConnectionState.Disconnected) {
           await hubConnection.stop().catch(() => undefined);
@@ -184,5 +192,5 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
 
       connectionRef.current = null;
     };
-  }, [enabled, isAuthenticated, queryClient]);
+  }, [cancelWakeup, enabled, isAuthenticated, queryClient, scheduleWakeup, wakeupVersion]);
 }

@@ -1,11 +1,11 @@
 'use client';
 
 import { Edit, Trash2 } from 'lucide-react';
-import type { TitleDefinition } from './gamification.types';
+import type { AdminTitleDefinition } from '@/features/gamification/admin/adminGamification.types';
 import { cn } from '@/lib/utils';
 
 interface AdminTitleTableProps {
-  titles: TitleDefinition[];
+  titles: AdminTitleDefinition[];
   onEdit: (code: string) => void;
   onDelete: (code: string) => void;
 }

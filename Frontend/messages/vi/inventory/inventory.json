@@ -14,6 +14,7 @@
     "beforeAfter": "Trước / Sau",
     "done": "Hoàn tất",
     "useAgain": "Sử dụng tiếp",
-    "useItemTitle": "Sử dụng vật phẩm"
+    "useItemTitle": "Sử dụng vật phẩm",
+    "useError": "Không thể sử dụng vật phẩm lúc này. Vui lòng thử lại."
   }
 }

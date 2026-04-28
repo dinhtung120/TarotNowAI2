@@ -116,6 +116,7 @@
       "status_paid": "Paid",
       "error_min_amount": "Minimum {min} Diamond.",
       "error_policy_unavailable": "Unable to load withdrawal policy. Please try again later.",
+      "error_balance_unavailable": "Unable to load the current Diamond balance. Please try again later.",
       "error_insufficient_balance": "Insufficient Diamond balance.",
       "error_bank_missing_profile": "Please update payout details in Profile before withdrawing.",
       "error_create_failed": "Unable to create request."

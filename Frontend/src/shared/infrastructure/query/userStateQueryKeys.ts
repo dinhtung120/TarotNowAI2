@@ -1,4 +1,8 @@
 export const userStateQueryKeys = {
+ auth: {
+  all: ['auth'] as const,
+  session: () => [...userStateQueryKeys.auth.all, 'session'] as const,
+ },
  wallet: {
   all: ['wallet'] as const,
   balance: () => [...userStateQueryKeys.wallet.all, 'balance'] as const,
@@ -25,7 +29,7 @@ export const userStateQueryKeys = {
   historyRoot: () => ['reading', 'history'] as const,
  },
  profile: {
-  me: () => ['profile', 'me'] as const,
+  detail: () => ['profile', 'detail'] as const,
   payoutBanks: () => ['profile', 'payout-banks'] as const,
   mfaStatus: () => ['profile', 'mfa-status'] as const,
  },
@@ -38,6 +42,8 @@ export const userStateQueryKeys = {
   all: ['notifications'] as const,
   dropdown: () => ['notifications', 'dropdown'] as const,
   unreadCount: () => ['notifications', 'unread-count'] as const,
+  list: (page: number, unreadOnly: boolean) =>
+   ['notifications', 'list', page, unreadOnly ? 'unread' : 'all'] as const,
  },
  chat: {
   inboxRoot: () => ['chat', 'inbox'] as const,

@@ -49,7 +49,7 @@ export async function invalidateUserStateQueries(
  }
 
  if (uniqueDomains.has('profile')) {
-  tasks.push(queryClient.invalidateQueries({ queryKey: userStateQueryKeys.profile.me() }).then(() => undefined));
+  tasks.push(queryClient.invalidateQueries({ queryKey: userStateQueryKeys.profile.detail() }).then(() => undefined));
   tasks.push(queryClient.invalidateQueries({ queryKey: userStateQueryKeys.profile.mfaStatus() }).then(() => undefined));
  }
 

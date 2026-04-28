@@ -2,11 +2,14 @@
 
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { applyNotificationReadPatch } from '@/features/notifications/application/notificationCache';
 import {
   getNotifications,
   markNotificationAsRead,
   type NotificationListResponse,
 } from '@/features/notifications/application/actions';
+import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
+import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
 
 export function useNotificationsPage() {
   const queryClient = useQueryClient();
@@ -14,7 +17,7 @@ export function useNotificationsPage() {
   const [filterUnread, setFilterUnread] = useState(false);
   const pageSize = 20;
 
-  const queryKey = ['notifications', page, filterUnread] as const;
+  const queryKey = userStateQueryKeys.notifications.list(page, filterUnread);
 
   const { data, isLoading, isFetching } = useQuery<NotificationListResponse | null>({
     queryKey,
@@ -24,7 +27,7 @@ export function useNotificationsPage() {
         pageSize,
         filterUnread ? false : undefined
       );
-      return result.success ? result.data ?? null : null;
+      return queryFnOrThrow(result, 'Failed to get notifications');
     },
   });
 
@@ -37,15 +40,7 @@ export function useNotificationsPage() {
   const markAsRead = async (id: string) => {
     const result = await markReadMutation.mutateAsync(id);
     if (result.success) {
-      queryClient.setQueryData<NotificationListResponse | null>(queryKey, (prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          items: prev.items.map((item) =>
-            item.id === id ? { ...item, isRead: true } : item
-          ),
-        };
-      });
+      applyNotificationReadPatch(queryClient, { id, page, unreadOnly: filterUnread });
     }
 
     return result;

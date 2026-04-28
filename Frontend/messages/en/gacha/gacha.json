@@ -38,6 +38,7 @@
     "pullResultTitle": "Gacha Pull Result",
     "rareDropAnimation": "Rare drop animation",
     "close": "Close",
-    "emptyOdds": "No rewards are available for this pool."
+    "emptyOdds": "No rewards are available for this pool.",
+    "pullError": "Unable to pull gacha right now. Please try again."
   }
 }

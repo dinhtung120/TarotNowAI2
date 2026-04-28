@@ -10,7 +10,9 @@ import type { QueryClient } from '@tanstack/react-query';
 import type { ChatMessageDto, ConversationDto } from '@/features/chat/application/actions';
 import { isSameParticipantId } from '@/features/chat/domain/participantId';
 import { listMessages } from '@/features/chat/application/actions';
+import { ensureRealtimeSession } from '@/shared/application/gateways/realtimeSessionGuard';
 import { logger } from '@/shared/application/gateways/logger';
+import { useReconnectWakeup } from '@/shared/application/hooks/useReconnectWakeup';
 import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 import { createSignalRLogger, getCachedConversation } from './utils';
@@ -54,11 +56,12 @@ async function createHubConnection(reconnectSchedule: number[]) {
 export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions) {
  const {
   conversationId, currentUserId, queryClient, connectionRef, typingTimeoutRef,
-  lastInitialLoadTimeRef, loadInitialRef, markReadRef, setConnected, setLoading,
-  setTypingUserId, setMessages, setConversation, resetForConversation, appendMessage,
+ lastInitialLoadTimeRef, loadInitialRef, markReadRef, setConnected, setLoading,
+ setTypingUserId, setMessages, setConversation, resetForConversation, appendMessage,
  } = options;
  const runtimePoliciesQuery = useRuntimePolicies();
  const realtimePolicy = runtimePoliciesQuery.data?.realtime;
+ const { wakeupVersion, scheduleWakeup, cancelWakeup } = useReconnectWakeup();
   // Sử dụng ref để giữ cấu hình ổn định, tránh việc array [0, 2000, ...] tạo mới mỗi render phá vỡ effect.
   const reconnectScheduleRef = useRef<number[]>([...RUNTIME_POLICY_FALLBACKS.realtime.reconnectScheduleMs]);
   const configRef = useRef({
@@ -83,14 +86,24 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
       initialLoadGuardMs:
         realtimePolicy?.chat.initialLoadGuardMs ?? RUNTIME_POLICY_FALLBACKS.realtime.chat.initialLoadGuardMs,
     };
-  }, [realtimePolicy]);
+ }, [realtimePolicy]);
 
  const initializingRef = useRef(false);
+ const initialConnectAttemptRef = useRef(0);
+ const lastConversationIdRef = useRef<string | null>(null);
 
  useEffect(() => {
+  if (lastConversationIdRef.current !== (conversationId ?? null)) {
+   lastConversationIdRef.current = conversationId ?? null;
+   initialConnectAttemptRef.current = 0;
+   cancelWakeup();
+  }
+
   // Chỉ khởi tạo khi có đủ thông tin và không đang trong quá trình khởi tạo khác cho cùng conversation
   if (!conversationId || initializingRef.current) {
    if (!conversationId) {
+    initialConnectAttemptRef.current = 0;
+    cancelWakeup();
     resetForConversation(null);
     setConnected(false);
     setLoading(false);
@@ -102,9 +115,11 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
   let hubConnection: HubConnection | null = null;
   let conversationInvalidateTimeout: ReturnType<typeof setTimeout> | null = null;
   initializingRef.current = true;
-  
-  resetForConversation(getCachedConversation(queryClient, conversationId));
-  setTypingUserId(null);
+
+  if (initialConnectAttemptRef.current === 0) {
+   resetForConversation(getCachedConversation(queryClient, conversationId));
+   setTypingUserId(null);
+  }
 
   // Lấy cấu hình ổn định từ ref.
   const { serverTimeoutMs, typingClearMs, invalidateDebounceMs, initialLoadGuardMs } = configRef.current;
@@ -118,6 +133,11 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
 
   const init = async () => {
    try {
+    const hasValidSession = await ensureRealtimeSession();
+    if (!hasValidSession || cancelled) {
+      return;
+    }
+
      hubConnection = await createHubConnection(schedule);
     // Cấu hình timeout dài hơn để tránh bị ngắt kết nối do mạng chập chờn
     hubConnection.serverTimeoutInMilliseconds = serverTimeoutMs;
@@ -205,6 +225,8 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
     
     connectionRef.current = hubConnection;
     setConnected(true);
+    initialConnectAttemptRef.current = 0;
+    cancelWakeup();
     
     // Join group và đồng bộ dữ liệu ban đầu
     await hubConnection.invoke('JoinConversation', conversationId);
@@ -215,6 +237,16 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
      logger.warn('[Chat] Connection failed', error, { conversationId });
      // Fallback tải dữ liệu qua REST nếu SignalR thất bại
      await loadInitialRef.current(false);
+     const retryIndex = Math.min(
+      initialConnectAttemptRef.current + 1,
+      Math.max(0, schedule.length - 1),
+     );
+     initialConnectAttemptRef.current = retryIndex;
+     scheduleWakeup(
+      schedule[retryIndex]
+      ?? RUNTIME_POLICY_FALLBACKS.realtime.reconnectScheduleMs[1]
+      ?? 2_000,
+     );
     }
    } finally {
     if (!cancelled) {
@@ -247,6 +279,7 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
   };
  }, [
   appendMessage,
+  cancelWakeup,
   connectionRef,
   conversationId,
   currentUserId,
@@ -255,11 +288,13 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
   markReadRef,
   queryClient,
   resetForConversation,
+  scheduleWakeup,
   setConnected,
   setConversation,
   setLoading,
   setMessages,
   setTypingUserId,
   typingTimeoutRef,
+  wakeupVersion,
  ]);
 }

@@ -3,15 +3,14 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
-import { getProfileAction, type ProfileDto } from '@/features/profile/application/actions';
 import { createWithdrawal, listMyWithdrawals, type WithdrawalResult } from '@/features/wallet/application/actions/withdrawal';
+import { fetchProfileDetail, profileDetailQueryKey } from '@/features/profile/application/profileDetailQuery';
 import { useWalletBalanceQuery } from '@/features/wallet/application/useWalletBalanceQuery';
 import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
 import { getWithdrawalStatusBadge } from '@/features/wallet/domain/withdrawalStatus';
 import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 
 const HISTORY_QUERY_KEY = userStateQueryKeys.wallet.withdrawalsMine();
-const PROFILE_QUERY_KEY = userStateQueryKeys.profile.me();
 
 export function useWithdrawPage() {
  const t = useTranslations('Wallet');
@@ -33,12 +32,9 @@ export function useWithdrawPage() {
   },
  });
 
- const profileQuery = useQuery<{ profile: ProfileDto | null; error: string }>({
-  queryKey: PROFILE_QUERY_KEY,
-  queryFn: async () => {
-   const result = await getProfileAction();
-   return result.success ? { profile: result.data ?? null, error: '' } : { profile: null, error: result.error };
-  },
+ const profileQuery = useQuery({
+  queryKey: profileDetailQueryKey,
+  queryFn: fetchProfileDetail,
  });
 
  const withdrawalMutation = useMutation({ mutationFn: createWithdrawal });
@@ -48,6 +44,7 @@ export function useWithdrawPage() {
  const vndPerDiamond = walletPolicy?.vndPerDiamond ?? 0;
  const withdrawFeeRate = walletPolicy?.withdrawFeeRate ?? 0;
  const withdrawalPolicyReady = Boolean(walletPolicy && minWithdrawDiamond > 0 && vndPerDiamond > 0);
+ const walletBalance = balanceQuery.data;
 
  const amountNum = useMemo(() => Number.parseInt(amount, 10) || 0, [amount]);
  const grossVnd = amountNum * vndPerDiamond;
@@ -106,11 +103,16 @@ export function useWithdrawPage() {
    }
 
    if (normalizedAmountNum < minWithdrawDiamond) {
-    setError(t('withdraw.error_min_amount', { min: minWithdrawDiamond }));
+   setError(t('withdraw.error_min_amount', { min: minWithdrawDiamond }));
+   return;
+  }
+
+   if (balanceQuery.isError || typeof walletBalance?.diamondBalance !== 'number') {
+    setError(t('withdraw.error_balance_unavailable'));
     return;
    }
 
-   if ((balanceQuery.data?.diamondBalance ?? 0) < normalizedAmountNum) {
+   if (walletBalance.diamondBalance < normalizedAmountNum) {
     setError(t('withdraw.error_insufficient_balance'));
     return;
    }
@@ -134,7 +136,7 @@ export function useWithdrawPage() {
     queryClient.invalidateQueries({ queryKey: userStateQueryKeys.wallet.balance() }),
    ]);
   },
-  [balanceQuery.data?.diamondBalance, minWithdrawDiamond, payoutConfigured, queryClient, t, withdrawalMutation, withdrawalPolicyReady],
+  [balanceQuery.isError, minWithdrawDiamond, payoutConfigured, queryClient, t, walletBalance, withdrawalMutation, withdrawalPolicyReady],
  );
 
  return {

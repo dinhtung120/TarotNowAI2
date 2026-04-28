@@ -18,14 +18,31 @@ const sourceFiles = globSync('src/**/*.{ts,tsx,mts}', {
 
 const dependencyViolations = [];
 const domainPurityViolations = [];
+const clientBoundaryViolations = [];
+const sensitiveStreamViolations = [];
+
+const PUBLIC_API_ACCESS_ALLOWLIST = new Set([
+ 'src/shared/infrastructure/http/apiUrl.ts',
+ 'src/shared/infrastructure/http/clientJsonRequest.ts',
+]);
 
 for (const relativePath of sourceFiles) {
  const sourceLayer = resolveLayer(relativePath);
+ const sourceCode = readFileSync(resolve(process.cwd(), relativePath), 'utf8');
+ const clientBoundaryViolation = findClientBoundaryViolation(relativePath, sourceCode);
+ if (clientBoundaryViolation) {
+  clientBoundaryViolations.push(clientBoundaryViolation);
+ }
+
+ const sensitiveStreamViolation = findSensitiveStreamViolation(relativePath, sourceCode);
+ if (sensitiveStreamViolation) {
+  sensitiveStreamViolations.push(sensitiveStreamViolation);
+ }
+
  if (!sourceLayer) {
   continue;
  }
 
- const sourceCode = readFileSync(resolve(process.cwd(), relativePath), 'utf8');
  const imports = extractImports(sourceCode);
  for (const importPath of imports) {
   if (sourceLayer === 'domain' && isExternalImport(importPath)) {
@@ -65,7 +82,12 @@ for (const relativePath of sourceFiles) {
  }
 }
 
-if (dependencyViolations.length > 0 || domainPurityViolations.length > 0) {
+if (
+ dependencyViolations.length > 0
+ || domainPurityViolations.length > 0
+ || clientBoundaryViolations.length > 0
+ || sensitiveStreamViolations.length > 0
+) {
  console.error('Clean architecture guard failed.');
 
  if (dependencyViolations.length > 0) {
@@ -81,6 +103,20 @@ if (dependencyViolations.length > 0 || domainPurityViolations.length > 0) {
   console.error('Domain purity violations (external imports are forbidden in domain layer):');
   for (const violation of domainPurityViolations) {
    console.error(`- ${violation.file}:${violation.line} import ${violation.importPath}`);
+  }
+ }
+
+ if (clientBoundaryViolations.length > 0) {
+  console.error('Client/runtime boundary violations:');
+  for (const violation of clientBoundaryViolations) {
+   console.error(`- ${violation.file}:${violation.line} ${violation.message}`);
+  }
+ }
+
+ if (sensitiveStreamViolations.length > 0) {
+  console.error('Sensitive stream payload must not appear on EventSource URLs:');
+  for (const violation of sensitiveStreamViolations) {
+   console.error(`- ${violation.file}:${violation.line} ${violation.message}`);
   }
  }
 
@@ -207,4 +243,60 @@ function isTestFile(path) {
  return path.includes('.test.')
   || path.includes('.spec.')
   || path.includes('/__tests__/');
+}
+
+function findClientBoundaryViolation(relativePath, sourceCode) {
+ if (PUBLIC_API_ACCESS_ALLOWLIST.has(relativePath)) {
+  return null;
+ }
+
+ if (sourceCode.includes('getPublicApiBaseUrl(')) {
+  return {
+   file: relativePath,
+   line: findLine(sourceCode, 'getPublicApiBaseUrl'),
+   message: 'imports getPublicApiBaseUrl directly instead of using a local BFF/shared client gateway.',
+  };
+ }
+
+ if (sourceCode.includes('NEXT_PUBLIC_API_URL')) {
+  return {
+   file: relativePath,
+   line: findLine(sourceCode, 'NEXT_PUBLIC_API_URL'),
+   message: 'reads NEXT_PUBLIC_API_URL directly outside shared/infrastructure/http/apiUrl.ts.',
+  };
+ }
+
+ const absoluteFetchMatch = sourceCode.match(/\b(?:fetch|EventSource)\s*\(\s*['"`]https?:\/\//);
+ if (absoluteFetchMatch) {
+  return {
+   file: relativePath,
+   line: findLine(sourceCode, absoluteFetchMatch[0]),
+   message: 'uses an absolute-origin fetch/EventSource instead of going through the local BFF boundary.',
+  };
+ }
+
+ return null;
+}
+
+function findSensitiveStreamViolation(relativePath, sourceCode) {
+ if (!sourceCode.includes('new EventSource(')) {
+  return null;
+ }
+
+ const sensitiveParamPatterns = [
+  'followupQuestion=',
+  "set('followupQuestion'",
+  'set("followupQuestion"',
+ ];
+
+ const matchedPattern = sensitiveParamPatterns.find((pattern) => sourceCode.includes(pattern));
+ if (!matchedPattern) {
+  return null;
+ }
+
+ return {
+  file: relativePath,
+  line: findLine(sourceCode, matchedPattern),
+  message: 'builds an EventSource URL that exposes follow-up prompt data in the query string.',
+ };
 }

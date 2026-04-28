@@ -5,6 +5,38 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      "src/**/*.test.{ts,tsx}",
+      "src/shared/infrastructure/http/apiUrl.ts",
+      "src/shared/infrastructure/http/clientJsonRequest.ts",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@/shared/infrastructure/http/apiUrl",
+              importNames: ["getPublicApiBaseUrl"],
+              message:
+                "Use local BFF routes or shared clientJsonRequest helpers instead of reading NEXT_PUBLIC_API_URL directly.",
+            },
+          ],
+        },
+      ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "MemberExpression[object.object.name='process'][object.property.name='env'][property.name='NEXT_PUBLIC_API_URL']",
+          message:
+            "Read NEXT_PUBLIC_API_URL only inside shared/infrastructure/http/apiUrl.ts.",
+        },
+      ],
+    },
+  },
   
   globalIgnores([
     

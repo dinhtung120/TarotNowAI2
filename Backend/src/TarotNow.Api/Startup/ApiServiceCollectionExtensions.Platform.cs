@@ -34,6 +34,7 @@ public static partial class ApiServiceCollectionExtensions
         services.AddSingleton<IForwardedHeaderTrustEvaluator, ForwardedHeaderTrustEvaluator>();
         services.AddScoped<IAuthCookieService, AuthCookieService>();
         services.AddScoped<IAiStreamSseOrchestrator, AiStreamSseOrchestrator>();
+        services.AddSingleton<IAiStreamTicketService, AiStreamTicketService>();
         services.AddSingleton<IUserPresenceTracker>(serviceProvider =>
         {
             var systemConfigSettings = serviceProvider.GetRequiredService<ISystemConfigSettings>();

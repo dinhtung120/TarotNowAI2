@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import type { AchievementDefinition, QuestDefinition, TitleDefinition } from "@/features/gamification/gamification.types";
+import { AdminGamificationFormModal } from "@/features/gamification/AdminGamificationFormModal";
 import { AdminAchievementTable } from "@/features/gamification/AdminAchievementTable";
 import { AdminGamificationTabs } from "@/features/gamification/AdminGamificationTabs";
 import { AdminQuestTable } from "@/features/gamification/AdminQuestTable";
@@ -10,30 +10,12 @@ import { useAdminGamificationClientState } from "@/features/gamification/useAdmi
 import { cn } from "@/lib/utils";
 import ActionConfirmModal from "@/shared/components/ui/ActionConfirmModal";
 
-interface Props {
- initialQuests: QuestDefinition[];
- initialAchievements: AchievementDefinition[];
- initialTitles: TitleDefinition[];
-}
-
-export default function AdminGamificationClient({ initialQuests, initialAchievements, initialTitles }: Props) {
+export default function AdminGamificationClient() {
  const state = useAdminGamificationClientState();
- const createType = state.activeTab === "quests" ? "Nhiệm Vụ" : state.activeTab === "achievements" ? "Thành Tựu" : "Danh Hiệu";
- const dialogTitle = state.dialog?.mode === "delete"
-  ? `Xóa ${state.dialog.type}`
-  : state.dialog?.mode === "edit"
-   ? `Sửa ${state.dialog.type}`
-   : state.dialog?.mode === "create"
-    ? `Tạo ${state.dialog.type}`
-    : "";
- const dialogDescription = state.dialog?.mode === "delete"
-  ? `Bạn có chắc muốn xóa ${state.dialog.type} (${state.dialog.code})? Hành động này không thể hoàn tác.`
-  : state.dialog?.mode === "edit"
-   ? `Mở flow chỉnh sửa cho ${state.dialog.type} (${state.dialog.code})?`
-   : state.dialog?.mode === "create"
-    ? `Mở flow tạo mới cho ${state.dialog.type}?`
-    : "";
- const dialogConfirmLabel = state.dialog?.mode === "delete" ? "Xóa" : "Xác nhận";
+ const dialogTitle = state.deleteDialog ? `Delete ${state.deleteDialog.entityType}` : "";
+ const dialogDescription = state.deleteDialog
+  ? `Delete ${state.deleteDialog.entityType} (${state.deleteDialog.code})? This action cannot be undone.`
+  : "";
 
  return (
   <div className={cn("mx-auto", "max-w-7xl", "space-y-6", "p-6")}>
@@ -44,7 +26,7 @@ export default function AdminGamificationClient({ initialQuests, initialAchievem
     </div>
     <button
      type="button"
-     onClick={() => state.handleCreate(createType)}
+     onClick={state.handleCreate}
      className={cn("flex", "items-center", "gap-2", "rounded-xl", "bg-indigo-600", "px-5", "py-2.5", "font-bold", "text-white", "shadow-lg", "shadow-indigo-500/20", "transition-all")}
     >
      <Plus className={cn("h-5", "w-5")} />
@@ -52,22 +34,35 @@ export default function AdminGamificationClient({ initialQuests, initialAchievem
     </button>
    </header>
    <AdminGamificationTabs activeTab={state.activeTab} onChange={state.setActiveTab} />
+   {state.error ? <p className={cn("text-sm text-rose-400")}>{state.error}</p> : null}
    <div className={cn("overflow-hidden", "rounded-3xl", "border", "border-slate-800/60", "bg-slate-900/40", "shadow-2xl", "backdrop-blur-md")}>
-    {state.activeTab === "quests" ? <AdminQuestTable quests={initialQuests} onEdit={(code) => state.handleEdit("Quest", code)} onDelete={(code) => state.handleDelete("Quest", code)} /> : null}
-    {state.activeTab === "achievements" ? <AdminAchievementTable achievements={initialAchievements} onEdit={(code) => state.handleEdit("Achievement", code)} onDelete={(code) => state.handleDelete("Achievement", code)} /> : null}
-    {state.activeTab === "titles" ? <AdminTitleTable titles={initialTitles} onEdit={(code) => state.handleEdit("Title", code)} onDelete={(code) => state.handleDelete("Title", code)} /> : null}
+    {state.activeTab === "quests" ? <AdminQuestTable quests={state.quests} onEdit={(code) => state.handleEdit("quest", code)} onDelete={(code) => state.handleDelete("quest", code)} /> : null}
+    {state.activeTab === "achievements" ? <AdminAchievementTable achievements={state.achievements} onEdit={(code) => state.handleEdit("achievement", code)} onDelete={(code) => state.handleDelete("achievement", code)} /> : null}
+    {state.activeTab === "titles" ? <AdminTitleTable titles={state.titles} onEdit={(code) => state.handleEdit("title", code)} onDelete={(code) => state.handleDelete("title", code)} /> : null}
    </div>
+   <AdminGamificationFormModal
+    entityType={state.editor?.entityType ?? null}
+    initialQuest={state.selectedQuest}
+    initialAchievement={state.selectedAchievement}
+    initialTitle={state.selectedTitle}
+    open={Boolean(state.editor)}
+    onClose={state.closeEditor}
+    onSubmitQuest={state.submitQuest}
+    onSubmitAchievement={state.submitAchievement}
+    onSubmitTitle={state.submitTitle}
+    submitting={state.isEditorSubmitting}
+   />
    <ActionConfirmModal
-    open={Boolean(state.dialog)}
+    open={Boolean(state.deleteDialog)}
     icon={<Plus className={cn("h-6 w-6 text-indigo-300")} />}
     title={dialogTitle}
     description={dialogDescription}
-    confirmLabel={dialogConfirmLabel}
-    cancelLabel="Hủy"
-    confirmVariant={state.dialog?.mode === "delete" ? "danger" : "primary"}
+    confirmLabel="Delete"
+    cancelLabel="Cancel"
+    confirmVariant="danger"
     confirmLoading={state.isDeletePending}
-    onCancel={state.closeDialog}
-    onConfirm={state.confirmDialog}
+    onCancel={state.closeDeleteDialog}
+    onConfirm={state.confirmDelete}
    />
   </div>
  );
