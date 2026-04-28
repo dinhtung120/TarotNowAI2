@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace TarotNow.Infrastructure.Services.Configuration;
 
 public sealed partial class ReadingPromptService
@@ -24,26 +26,26 @@ public sealed partial class ReadingPromptService
 
         public Dictionary<string, string> System { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
-        public Dictionary<string, Dictionary<string, string>> Initial { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, JsonElement> Initial { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
-        public Dictionary<string, Dictionary<string, string>> Followup { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, JsonElement> Followup { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
         public ReadingPromptContext Context { get; set; } = new();
     }
 
     private sealed class ReadingPromptContext
     {
-        public Dictionary<string, string> DefaultQuestion { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+        public JsonElement DefaultQuestion { get; set; }
 
         public ReadingPromptOrientation Orientation { get; set; } = new();
 
-        public Dictionary<string, string> UnknownCardLabel { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+        public JsonElement UnknownCardLabel { get; set; }
     }
 
     private sealed class ReadingPromptOrientation
     {
-        public Dictionary<string, string> Upright { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+        public JsonElement Upright { get; set; }
 
-        public Dictionary<string, string> Reversed { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+        public JsonElement Reversed { get; set; }
     }
 }

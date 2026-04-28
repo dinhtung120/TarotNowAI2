@@ -69,13 +69,12 @@ public static partial class SystemConfigRegistry
             return sectionValidation;
         }
 
-        var defaultValidation = TryGetRequiredObject(section, "default", out var defaultTemplate);
-        if (!defaultValidation.IsValid)
+        if (!TryGetPropertyCaseInsensitive(section, "default", out var defaultTemplate))
         {
-            return defaultValidation;
+            return (false, $"{sectionName}.default is required.");
         }
 
-        return ValidateLocaleMap(defaultTemplate, $"{sectionName}.default");
+        return ValidatePromptValueElement(defaultTemplate, $"{sectionName}.default");
     }
 
     private static (bool IsValid, string? Error) ValidatePromptContext(JsonElement root)
@@ -86,7 +85,7 @@ public static partial class SystemConfigRegistry
             return contextValidation;
         }
 
-        var defaultQuestionValidation = ValidateRequiredLocaleSection(context, "defaultQuestion", "context.defaultQuestion");
+        var defaultQuestionValidation = ValidateRequiredPromptValueSection(context, "defaultQuestion", "context.defaultQuestion");
         if (!defaultQuestionValidation.IsValid)
         {
             return defaultQuestionValidation;
@@ -109,13 +108,13 @@ public static partial class SystemConfigRegistry
             return orientationValidation;
         }
 
-        var uprightValidation = ValidateRequiredLocaleSection(orientation, "upright", "context.orientation.upright");
+        var uprightValidation = ValidateRequiredPromptValueSection(orientation, "upright", "context.orientation.upright");
         if (!uprightValidation.IsValid)
         {
             return uprightValidation;
         }
 
-        return ValidateRequiredLocaleSection(orientation, "reversed", "context.orientation.reversed");
+        return ValidateRequiredPromptValueSection(orientation, "reversed", "context.orientation.reversed");
     }
 
     private static (bool IsValid, string? Error) ValidateOptionalUnknownCardSection(JsonElement context)
@@ -130,12 +129,7 @@ public static partial class SystemConfigRegistry
             return (true, null);
         }
 
-        if (unknownCardLabel.ValueKind != JsonValueKind.Object)
-        {
-            return (false, "context.unknownCardLabel must be a JSON object.");
-        }
-
-        return ValidateLocaleMap(unknownCardLabel, "context.unknownCardLabel");
+        return ValidatePromptValueElement(unknownCardLabel, "context.unknownCardLabel");
     }
 
     private static (bool IsValid, string? Error) ValidateRequiredLocaleSection(
@@ -150,5 +144,18 @@ public static partial class SystemConfigRegistry
         }
 
         return ValidateLocaleMap(localeMap, explicitPath ?? propertyName);
+    }
+
+    private static (bool IsValid, string? Error) ValidateRequiredPromptValueSection(
+        JsonElement parent,
+        string propertyName,
+        string? explicitPath = null)
+    {
+        if (!TryGetPropertyCaseInsensitive(parent, propertyName, out var value))
+        {
+            return (false, $"{propertyName} is required.");
+        }
+
+        return ValidatePromptValueElement(value, explicitPath ?? propertyName);
     }
 }

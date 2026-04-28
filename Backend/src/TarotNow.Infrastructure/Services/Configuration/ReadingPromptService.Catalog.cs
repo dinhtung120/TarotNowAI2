@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace TarotNow.Infrastructure.Services.Configuration;
 
 public sealed partial class ReadingPromptService
@@ -12,21 +14,20 @@ public sealed partial class ReadingPromptService
             Followup = NormalizePromptTemplates(catalog.Followup),
             Context = new ReadingPromptContext
             {
-                DefaultQuestion = NormalizeNestedMap(catalog.Context.DefaultQuestion),
+                DefaultQuestion = NormalizePromptValue(catalog.Context.DefaultQuestion),
                 Orientation = new ReadingPromptOrientation
                 {
-                    Upright = NormalizeNestedMap(catalog.Context.Orientation.Upright),
-                    Reversed = NormalizeNestedMap(catalog.Context.Orientation.Reversed)
+                    Upright = NormalizePromptValue(catalog.Context.Orientation.Upright),
+                    Reversed = NormalizePromptValue(catalog.Context.Orientation.Reversed)
                 },
-                UnknownCardLabel = NormalizeNestedMap(catalog.Context.UnknownCardLabel)
+                UnknownCardLabel = NormalizePromptValue(catalog.Context.UnknownCardLabel)
             }
         };
     }
 
-    private static Dictionary<string, Dictionary<string, string>> NormalizePromptTemplates(
-        Dictionary<string, Dictionary<string, string>> templates)
+    private static Dictionary<string, JsonElement> NormalizePromptTemplates(Dictionary<string, JsonElement> templates)
     {
-        var result = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+        var result = new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase);
         foreach (var pair in templates)
         {
             var key = pair.Key?.Trim();
@@ -35,10 +36,44 @@ public sealed partial class ReadingPromptService
                 continue;
             }
 
-            result[key.ToLowerInvariant()] = NormalizeNestedMap(pair.Value);
+            result[key.ToLowerInvariant()] = NormalizePromptValue(pair.Value);
         }
 
         return result;
+    }
+
+    private static JsonElement NormalizePromptValue(JsonElement value)
+    {
+        if (value.ValueKind == JsonValueKind.String)
+        {
+            var normalized = value.GetString()?.Trim();
+            return JsonSerializer.SerializeToElement(normalized ?? string.Empty);
+        }
+
+        if (value.ValueKind != JsonValueKind.Object)
+        {
+            return default;
+        }
+
+        var normalizedMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var property in value.EnumerateObject())
+        {
+            if (property.Value.ValueKind != JsonValueKind.String)
+            {
+                continue;
+            }
+
+            var propertyName = property.Name.Trim().ToLowerInvariant();
+            var propertyValue = property.Value.GetString()?.Trim();
+            if (string.IsNullOrWhiteSpace(propertyName) || string.IsNullOrWhiteSpace(propertyValue))
+            {
+                continue;
+            }
+
+            normalizedMap[propertyName] = propertyValue;
+        }
+
+        return JsonSerializer.SerializeToElement(normalizedMap);
     }
 
     private static Dictionary<string, string> NormalizeNestedMap(Dictionary<string, string> map)
@@ -81,31 +116,23 @@ public sealed partial class ReadingPromptService
         };
     }
 
-    private static Dictionary<string, Dictionary<string, string>> BuildFallbackInitialPrompts()
+    private static Dictionary<string, JsonElement> BuildFallbackInitialPrompts()
     {
-        return new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase)
+        return new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase)
         {
-            ["default"] = BuildFallbackTemplateLocaleMap(
-                """My question: "{{question}}". Interpret this reading for me. Spread Type: {{spread_type}}. Cards Chosen: {{cards_context}}""")
+            ["default"] = CreateJsonString("""My question: "{{question}}". Interpret this reading for me. Spread Type: {{spread_type}}. Cards Chosen: {{cards_context}}"""),
+            ["daily_1"] = CreateJsonString("""My question: "{{question}}". Interpret this reading for me. Spread Type: {{spread_type}}. Cards Chosen: {{cards_context}}"""),
+            ["spread_3"] = CreateJsonString("""My question: "{{question}}". Interpret this reading for me. Spread Type: {{spread_type}}. Cards Chosen: {{cards_context}}"""),
+            ["spread_5"] = CreateJsonString("""My question: "{{question}}". Interpret this reading for me. Spread Type: {{spread_type}}. Cards Chosen: {{cards_context}}"""),
+            ["spread_10"] = CreateJsonString("""My question: "{{question}}". Interpret this reading for me. Spread Type: {{spread_type}}. Cards Chosen: {{cards_context}}""")
         };
     }
 
-    private static Dictionary<string, Dictionary<string, string>> BuildFallbackFollowupPrompts()
+    private static Dictionary<string, JsonElement> BuildFallbackFollowupPrompts()
     {
-        return new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase)
+        return new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase)
         {
-            ["default"] = BuildFallbackTemplateLocaleMap(
-                """Based on my previous reading (Question: "{{question}}", Spread: {{spread_type}}, Cards: {{cards_context}}), answer my follow-up question: {{followup_question}}""")
-        };
-    }
-
-    private static Dictionary<string, string> BuildFallbackTemplateLocaleMap(string template)
-    {
-        return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ["vi"] = template,
-            ["en"] = template,
-            ["zh"] = template
+            ["default"] = CreateJsonString("""Based on my previous reading (Question: "{{question}}", Spread: {{spread_type}}, Cards: {{cards_context}}), answer my follow-up question: {{followup_question}}""")
         };
     }
 
@@ -113,13 +140,18 @@ public sealed partial class ReadingPromptService
     {
         return new ReadingPromptContext
         {
-            DefaultQuestion = BuildFallbackTemplateLocaleMap("A general reading about my current life."),
+            DefaultQuestion = CreateJsonString("A general reading about my current life."),
             Orientation = new ReadingPromptOrientation
             {
-                Upright = BuildFallbackTemplateLocaleMap("Upright"),
-                Reversed = BuildFallbackTemplateLocaleMap("Reversed")
+                Upright = CreateJsonString("Upright"),
+                Reversed = CreateJsonString("Reversed")
             },
-            UnknownCardLabel = BuildFallbackTemplateLocaleMap("Unknown Card")
+            UnknownCardLabel = CreateJsonString("Unknown Card")
         };
+    }
+
+    private static JsonElement CreateJsonString(string value)
+    {
+        return JsonSerializer.SerializeToElement(value);
     }
 }

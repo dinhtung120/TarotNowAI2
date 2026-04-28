@@ -39,9 +39,10 @@ public sealed class SystemConfigRegistryReadingPromptsValidationTests
         Assert.NotNull(validation.Error);
     }
 
-    private static string BuildValidPromptCatalogJson()
+    [Fact]
+    public void ValidateReadingPromptCatalog_WhenLegacyLocalizedNonSystemShape_ShouldPass()
     {
-        return
+        var legacyJson =
             """
             {
               "defaultLocale": "vi",
@@ -87,6 +88,42 @@ public sealed class SystemConfigRegistryReadingPromptsValidationTests
                   "en": "Unknown Card",
                   "zh": "Unknown Card"
                 }
+              }
+            }
+            """;
+
+        var validation = SystemConfigRegistry.Validate(
+            key: "ai.reading.prompts",
+            value: legacyJson,
+            valueKind: "json");
+
+        Assert.True(validation.IsValid, validation.Error);
+    }
+
+    private static string BuildValidPromptCatalogJson()
+    {
+        return
+            """
+            {
+              "defaultLocale": "vi",
+              "system": {
+                "vi": "You MUST reply purely in Vietnamese (Tiếng Việt).",
+                "en": "You MUST reply purely in English.",
+                "zh": "You MUST reply purely in Chinese (繁體中文)."
+              },
+              "initial": {
+                "default": "My question: \"{{question}}\". Interpret this reading for me. Spread Type: {{spread_type}}. Cards Chosen: {{cards_context}}"
+              },
+              "followup": {
+                "default": "Based on my previous reading (Question: \"{{question}}\", Spread: {{spread_type}}, Cards: {{cards_context}}), answer my follow-up question: {{followup_question}}"
+              },
+              "context": {
+                "defaultQuestion": "A general reading about my current life.",
+                "orientation": {
+                  "upright": "Upright",
+                  "reversed": "Reversed"
+                },
+                "unknownCardLabel": "Unknown Card"
               }
             }
             """;

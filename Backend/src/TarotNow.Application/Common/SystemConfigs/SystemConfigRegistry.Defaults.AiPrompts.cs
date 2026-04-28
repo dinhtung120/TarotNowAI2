@@ -43,11 +43,11 @@ public static partial class SystemConfigRegistry
     {
         return new
         {
-            @default = BuildInitialPromptLocaleMap(),
-            daily_1 = BuildInitialPromptLocaleMap(),
-            spread_3 = BuildInitialPromptLocaleMap(),
-            spread_5 = BuildInitialPromptLocaleMap(),
-            spread_10 = BuildInitialPromptLocaleMap()
+            @default = BuildInitialPromptTemplate(),
+            daily_1 = BuildInitialPromptTemplate(),
+            spread_3 = BuildInitialPromptTemplate(),
+            spread_5 = BuildInitialPromptTemplate(),
+            spread_10 = BuildInitialPromptTemplate()
         };
     }
 
@@ -55,7 +55,7 @@ public static partial class SystemConfigRegistry
     {
         return new
         {
-            @default = BuildFollowupPromptLocaleMap()
+            @default = BuildFollowupPromptTemplate()
         };
     }
 
@@ -63,68 +63,30 @@ public static partial class SystemConfigRegistry
     {
         return new
         {
-            defaultQuestion = BuildDefaultQuestionLocaleMap(),
+            defaultQuestion = BuildDefaultQuestionTemplate(),
             orientation = BuildOrientationPromptContext(),
-            unknownCardLabel = BuildUnknownCardLabelLocaleMap()
+            unknownCardLabel = BuildUnknownCardLabelTemplate()
         };
     }
 
-    private static object BuildDefaultQuestionLocaleMap()
-    {
-        return new
-        {
-            vi = "A general reading about my current life.",
-            en = "A general reading about my current life.",
-            zh = "A general reading about my current life."
-        };
-    }
+    private static string BuildDefaultQuestionTemplate()
+        => "A general reading about my current life.";
 
     private static object BuildOrientationPromptContext()
     {
         return new
         {
-            upright = BuildOrientationLocaleMap("Upright"),
-            reversed = BuildOrientationLocaleMap("Reversed")
+            upright = "Upright",
+            reversed = "Reversed"
         };
     }
 
-    private static object BuildOrientationLocaleMap(string label)
-    {
-        return new
-        {
-            vi = label,
-            en = label,
-            zh = label
-        };
-    }
+    private static string BuildUnknownCardLabelTemplate()
+        => "Unknown Card";
 
-    private static object BuildUnknownCardLabelLocaleMap()
-    {
-        return new
-        {
-            vi = "Unknown Card",
-            en = "Unknown Card",
-            zh = "Unknown Card"
-        };
-    }
+    private static string BuildInitialPromptTemplate()
+        => """My question: "{{question}}". Interpret this reading for me. Spread Type: {{spread_type}}. Cards Chosen: {{cards_context}}""";
 
-    private static object BuildInitialPromptLocaleMap()
-    {
-        return new
-        {
-            vi = """My question: "{{question}}". Interpret this reading for me. Spread Type: {{spread_type}}. Cards Chosen: {{cards_context}}""",
-            en = """My question: "{{question}}". Interpret this reading for me. Spread Type: {{spread_type}}. Cards Chosen: {{cards_context}}""",
-            zh = """My question: "{{question}}". Interpret this reading for me. Spread Type: {{spread_type}}. Cards Chosen: {{cards_context}}"""
-        };
-    }
-
-    private static object BuildFollowupPromptLocaleMap()
-    {
-        return new
-        {
-            vi = """Based on my previous reading (Question: "{{question}}", Spread: {{spread_type}}, Cards: {{cards_context}}), answer my follow-up question: {{followup_question}}""",
-            en = """Based on my previous reading (Question: "{{question}}", Spread: {{spread_type}}, Cards: {{cards_context}}), answer my follow-up question: {{followup_question}}""",
-            zh = """Based on my previous reading (Question: "{{question}}", Spread: {{spread_type}}, Cards: {{cards_context}}), answer my follow-up question: {{followup_question}}"""
-        };
-    }
+    private static string BuildFollowupPromptTemplate()
+        => """Based on my previous reading (Question: "{{question}}", Spread: {{spread_type}}, Cards: {{cards_context}}), answer my follow-up question: {{followup_question}}""";
 }

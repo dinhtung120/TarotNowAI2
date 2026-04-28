@@ -1,12 +1,13 @@
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
+using System.Text.Json;
 
 namespace TarotNow.Infrastructure.Services.Configuration;
 
 public sealed partial class ReadingPromptService
 {
     private static string ResolvePromptTemplate(
-        Dictionary<string, Dictionary<string, string>> promptMap,
+        Dictionary<string, JsonElement> promptMap,
         string? spreadType,
         string locale,
         string defaultLocale)
@@ -17,15 +18,43 @@ public sealed partial class ReadingPromptService
 
         if (promptMap.TryGetValue(normalizedSpread, out var spreadTemplate))
         {
-            return ResolveLocalizedText(spreadTemplate, locale, defaultLocale, string.Empty);
+            return ResolvePromptValue(spreadTemplate, locale, defaultLocale, string.Empty);
         }
 
         if (promptMap.TryGetValue("default", out var defaultTemplate))
         {
-            return ResolveLocalizedText(defaultTemplate, locale, defaultLocale, string.Empty);
+            return ResolvePromptValue(defaultTemplate, locale, defaultLocale, string.Empty);
         }
 
         return string.Empty;
+    }
+
+    private static string ResolvePromptValue(
+        JsonElement promptValue,
+        string locale,
+        string defaultLocale,
+        string fallback)
+    {
+        if (promptValue.ValueKind == JsonValueKind.String)
+        {
+            var value = promptValue.GetString();
+            return string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
+        }
+
+        if (promptValue.ValueKind != JsonValueKind.Object)
+        {
+            return fallback;
+        }
+
+        foreach (var candidate in BuildLocaleCandidates(locale, defaultLocale))
+        {
+            if (TryReadLocaleFromObject(promptValue, candidate, out var localized))
+            {
+                return localized;
+            }
+        }
+
+        return fallback;
     }
 
     private static string ResolveLocalizedText(
@@ -53,9 +82,9 @@ public sealed partial class ReadingPromptService
         ReadingPromptContext context)
     {
         var cards = ReadingDrawnCardCodec.Parse(cardsDrawn);
-        var unknownCardLabel = ResolveLocalizedText(context.UnknownCardLabel, locale, defaultLocale, "Unknown Card");
-        var uprightLabel = ResolveLocalizedText(context.Orientation.Upright, locale, defaultLocale, "Upright");
-        var reversedLabel = ResolveLocalizedText(context.Orientation.Reversed, locale, defaultLocale, "Reversed");
+        var unknownCardLabel = ResolvePromptValue(context.UnknownCardLabel, locale, defaultLocale, "Unknown Card");
+        var uprightLabel = ResolvePromptValue(context.Orientation.Upright, locale, defaultLocale, "Upright");
+        var reversedLabel = ResolvePromptValue(context.Orientation.Reversed, locale, defaultLocale, "Reversed");
 
         return string.Join(", ", cards.Select(card =>
             FormatCardContextItem(card, unknownCardLabel, uprightLabel, reversedLabel)));
@@ -131,5 +160,35 @@ public sealed partial class ReadingPromptService
     private static bool IsSupportedLocale(string locale)
     {
         return locale is "vi" or "en" or "zh";
+    }
+
+    private static bool TryReadLocaleFromObject(
+        JsonElement localeObject,
+        string locale,
+        out string localized)
+    {
+        if (localeObject.TryGetProperty(locale, out var value)
+            && value.ValueKind == JsonValueKind.String
+            && string.IsNullOrWhiteSpace(value.GetString()) == false)
+        {
+            localized = value.GetString()!.Trim();
+            return true;
+        }
+
+        foreach (var property in localeObject.EnumerateObject())
+        {
+            if (!string.Equals(property.Name, locale, StringComparison.OrdinalIgnoreCase)
+                || property.Value.ValueKind != JsonValueKind.String
+                || string.IsNullOrWhiteSpace(property.Value.GetString()))
+            {
+                continue;
+            }
+
+            localized = property.Value.GetString()!.Trim();
+            return true;
+        }
+
+        localized = string.Empty;
+        return false;
     }
 }

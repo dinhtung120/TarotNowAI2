@@ -38,6 +38,21 @@ public static partial class SystemConfigRegistry
         return ValidateStringElement(value, propertyName);
     }
 
+    private static (bool IsValid, string? Error) ValidatePromptValueElement(JsonElement value, string path)
+    {
+        if (value.ValueKind == JsonValueKind.String)
+        {
+            return ValidateStringElement(value, path);
+        }
+
+        if (value.ValueKind == JsonValueKind.Object)
+        {
+            return ValidateLocaleMap(value, path);
+        }
+
+        return (false, $"{path} must be either string or locale object.");
+    }
+
     private static (bool IsValid, string? Error) ValidateStringElement(JsonElement value, string path)
     {
         if (value.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(value.GetString()))

@@ -60,7 +60,7 @@ public sealed partial class ReadingPromptService : IReadingPromptService
         var promptTemplate = string.IsNullOrWhiteSpace(followupQuestion)
             ? ResolvePromptTemplate(catalog.Initial, session.SpreadType, resolvedLanguage, defaultLocale)
             : ResolvePromptTemplate(catalog.Followup, session.SpreadType, resolvedLanguage, defaultLocale);
-        var defaultQuestion = ResolveLocalizedText(
+        var defaultQuestion = ResolvePromptValue(
             catalog.Context.DefaultQuestion,
             resolvedLanguage,
             defaultLocale,
