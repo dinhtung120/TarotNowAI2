@@ -112,6 +112,7 @@ public static partial class SystemConfigRegistry
     {
         return
         [
+            Json("ai.reading.prompts", SerializeDefault(BuildDefaultReadingPromptCatalog()), "Catalog prompt AI cho luồng trải bài reading/follow-up (single version).", ValidateReadingPromptsJson),
             Json("chat.allowed_sla_hours", SerializeDefault(new[] { 6, 12, 24 }), "Danh sách SLA giờ được phép cho conversation.", ValidateIntArrayRange(1, 24, 1, 168)),
             Json("deposit.packages", SerializeDefault(BuildDefaultDepositPackages()), "Danh sách package nạp tiền hiển thị trên wallet.", ValidateJson),
             Json("followup.price_tiers", SerializeDefault(BuildDefaultFollowupPriceTiers()), "Bậc giá follow-up trả phí.", ValidateIntArray(1, 20)),

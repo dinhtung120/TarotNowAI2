@@ -22,4 +22,9 @@ public interface ISystemConfigAdminService
         string? description,
         Guid updatedBy,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Reload snapshot + projection runtime từ DB hiện tại.
+    /// </summary>
+    Task RefreshRuntimeAsync(CancellationToken cancellationToken = default);
 }

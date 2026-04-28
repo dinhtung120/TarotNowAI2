@@ -1,6 +1,7 @@
 using TarotNow.Application.Common.SystemConfigs;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace TarotNow.Infrastructure.Services.Configuration;
 
@@ -12,15 +13,21 @@ public sealed partial class SystemConfigAdminService : ISystemConfigAdminService
     private readonly ISystemConfigRepository _systemConfigRepository;
     private readonly SystemConfigSnapshotStore _snapshotStore;
     private readonly SystemConfigProjectionService _projectionService;
+    private readonly IRedisPublisher _redisPublisher;
+    private readonly ILogger<SystemConfigAdminService> _logger;
 
     public SystemConfigAdminService(
         ISystemConfigRepository systemConfigRepository,
         SystemConfigSnapshotStore snapshotStore,
-        SystemConfigProjectionService projectionService)
+        SystemConfigProjectionService projectionService,
+        IRedisPublisher redisPublisher,
+        ILogger<SystemConfigAdminService> logger)
     {
         _systemConfigRepository = systemConfigRepository;
         _snapshotStore = snapshotStore;
         _projectionService = projectionService;
+        _redisPublisher = redisPublisher;
+        _logger = logger;
     }
 
     /// <inheritdoc />
@@ -107,7 +114,15 @@ public sealed partial class SystemConfigAdminService : ISystemConfigAdminService
                 projectionException);
         }
 
+        await PublishRefreshSignalSafeAsync(updated, cancellationToken);
+
         return ToAdminItem(updated, isKnownKey: SystemConfigRegistry.TryGetDefinition(updated.Key, out _), source: "db");
+    }
+
+    /// <inheritdoc />
+    public Task RefreshRuntimeAsync(CancellationToken cancellationToken = default)
+    {
+        return RefreshSnapshotAndProjectionAsync(cancellationToken);
     }
 
     private static SystemConfigAdminItem ToAdminItem(SystemConfig config, bool isKnownKey, string source)

@@ -26,6 +26,7 @@ public static partial class DependencyInjection
         services.AddSingleton<ILegalVersionSettings, LegalVersionSettings>();
         services.AddSingleton<SystemConfigSnapshotStore>();
         services.AddSingleton<ISystemConfigSettings, SystemConfigSettings>();
+        services.AddSingleton<IReadingPromptService, ReadingPromptService>();
         services.AddSingleton<IChatModerationSettings, ChatModerationSettings>();
         services.AddScoped<SystemConfigProjectionService>();
         services.AddScoped<ISystemConfigAdminService, SystemConfigAdminService>();

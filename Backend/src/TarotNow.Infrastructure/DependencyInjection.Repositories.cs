@@ -121,6 +121,7 @@ public static partial class DependencyInjection
     private static void AddHostedWorkers(IServiceCollection services)
     {
         services.AddHostedService<SystemConfigBootstrapHostedService>();
+        services.AddHostedService<SystemConfigRuntimeRefreshSubscriberService>();
         services.AddHostedService<AuthSessionCleanupJob>();
         services.AddHostedService<EscrowTimerService>();
         services.AddHostedService<StreakBreakBackgroundJob>();

@@ -20,6 +20,7 @@ public partial class StreamReadingCommandHandlerRequestedDomainEventHandler
     private readonly ICacheService _cacheService;
     private readonly ITransactionCoordinator _transactionCoordinator;
     private readonly FollowupPricingService _pricingService;
+    private readonly IReadingPromptService _readingPromptService;
     private readonly int _dailyAiQuota;
     private readonly int _inFlightAiCap;
     private readonly int _readingRateLimitSeconds;
@@ -39,6 +40,7 @@ public partial class StreamReadingCommandHandlerRequestedDomainEventHandler
         ICacheService cacheService,
         ITransactionCoordinator transactionCoordinator,
         FollowupPricingService pricingService,
+        IReadingPromptService readingPromptService,
         ISystemConfigSettings systemConfigSettings,
         IDomainEventPublisher domainEventPublisher,
         IEventHandlerIdempotencyService idempotencyService)
@@ -51,6 +53,7 @@ public partial class StreamReadingCommandHandlerRequestedDomainEventHandler
         _cacheService = cacheService;
         _transactionCoordinator = transactionCoordinator;
         _pricingService = pricingService;
+        _readingPromptService = readingPromptService;
         _dailyAiQuota = systemConfigSettings.DailyAiQuota;
         _inFlightAiCap = systemConfigSettings.InFlightAiCap;
         _readingRateLimitSeconds = systemConfigSettings.ReadingRateLimitSeconds;
@@ -79,7 +82,7 @@ public partial class StreamReadingCommandHandlerRequestedDomainEventHandler
             normalizedIdempotencyKey,
             cancellationToken);
 
-        var prompts = StreamReadingPromptFactory.Build(session, request.FollowupQuestion, request.Language);
+        var prompts = _readingPromptService.Build(session, request.FollowupQuestion, request.Language);
         var stream = _aiProvider.StreamChatAsync(prompts.SystemPrompt, prompts.UserPrompt, cancellationToken);
         var estimatedInputTokens = EstimateTokenCount(prompts.SystemPrompt) + EstimateTokenCount(prompts.UserPrompt);
 

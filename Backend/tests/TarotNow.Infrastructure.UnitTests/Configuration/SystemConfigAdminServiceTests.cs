@@ -14,7 +14,12 @@ public sealed class SystemConfigAdminServiceTests
         var repository = new InMemorySystemConfigRepository();
         var snapshotStore = new SystemConfigSnapshotStore();
         var projectionService = BuildProjectionService();
-        var service = new SystemConfigAdminService(repository, snapshotStore, projectionService);
+        var service = new SystemConfigAdminService(
+            repository,
+            snapshotStore,
+            projectionService,
+            Mock.Of<IRedisPublisher>(),
+            Mock.Of<ILogger<SystemConfigAdminService>>());
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             service.UpsertAsync(
@@ -42,7 +47,12 @@ public sealed class SystemConfigAdminServiceTests
                 updatedBy: null));
         var snapshotStore = new SystemConfigSnapshotStore();
         var projectionService = BuildProjectionService();
-        var service = new SystemConfigAdminService(repository, snapshotStore, projectionService);
+        var service = new SystemConfigAdminService(
+            repository,
+            snapshotStore,
+            projectionService,
+            Mock.Of<IRedisPublisher>(),
+            Mock.Of<ILogger<SystemConfigAdminService>>());
 
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             service.UpsertAsync(
