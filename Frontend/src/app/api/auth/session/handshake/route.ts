@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { AUTH_COOKIE, AUTH_HEADER } from '@/shared/infrastructure/auth/authConstants';
 import { appendSetCookieHeaders } from '@/app/api/auth/_shared';
+import { buildPublicRequestUrl } from '@/app/api/auth/_shared/requestUrl';
+import {
+ getSessionRouteResponse,
+ SESSION_MODE,
+} from '@/app/api/auth/session/sessionRouteHandler';
 import { routing } from '@/i18n/routing';
 
 const SAFE_INTERNAL_PATH = /^\/[^\s]*$/;
@@ -32,31 +36,21 @@ function buildLoginPath(path: string): string {
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
  const nextPath = resolveSafeNextPath(request.nextUrl.searchParams.get('next'));
- const sessionUrl = new URL('/api/auth/session?mode=lite', request.url);
- const deviceId = request.cookies.get(AUTH_COOKIE.DEVICE)?.value ?? '';
 
- let sessionResponse: Response;
+ let sessionResponse: NextResponse;
  try {
-  sessionResponse = await fetch(sessionUrl, {
-   method: 'GET',
-   headers: {
-    Cookie: request.headers.get('cookie') ?? '',
-    [AUTH_HEADER.DEVICE_ID]: deviceId,
-    [AUTH_HEADER.FORWARDED_USER_AGENT]: request.headers.get('user-agent') ?? '',
-   },
-   cache: 'no-store',
-  });
+  sessionResponse = await getSessionRouteResponse(request, SESSION_MODE.LITE);
  } catch {
   const fallbackPath = buildLoginPath(nextPath);
-  return NextResponse.redirect(new URL(fallbackPath, request.url));
+  return NextResponse.redirect(buildPublicRequestUrl(request, fallbackPath));
  }
 
  if (!sessionResponse.ok) {
   const fallbackPath = buildLoginPath(nextPath);
-  return NextResponse.redirect(new URL(fallbackPath, request.url));
+  return NextResponse.redirect(buildPublicRequestUrl(request, fallbackPath));
  }
 
- const redirectResponse = NextResponse.redirect(new URL(nextPath, request.url));
+ const redirectResponse = NextResponse.redirect(buildPublicRequestUrl(request, nextPath));
  appendSetCookieHeaders(sessionResponse.headers, redirectResponse);
  return redirectResponse;
 }
