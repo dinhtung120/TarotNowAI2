@@ -187,7 +187,7 @@ public partial class OpenAiProvider
                 };
             }
 
-            if (string.IsNullOrWhiteSpace(content) && usage is null)
+            if (string.IsNullOrEmpty(content) && usage is null)
             {
                 return default;
             }
