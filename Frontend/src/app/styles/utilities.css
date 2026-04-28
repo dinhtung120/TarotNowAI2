@@ -2569,47 +2569,6 @@
   max-width: 95%;
 }
 
-.tn-ai-stream-markdown p {
-  line-height: 1.625;
-  color: var(--text-secondary);
-}
-
-/* Loại bỏ định dạng in đậm và màu sắc đặc biệt cho thẻ strong trong nội dung AI. 
-   Việc này giúp văn bản mô tả đồng nhất, không bị ngắt quãng bởi các từ in đậm quá mức,
-   giảm mỏi mắt cho người dùng theo phản hồi. */
-.tn-ai-stream-markdown strong {
-  color: inherit;
-  font-weight: inherit;
-}
-
-.tn-ai-stream-markdown em {
-  color: var(--text-secondary);
-  font-style: italic;
-}
-
-.tn-ai-stream-markdown li {
-  color: var(--purple-accent);
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-}
-
-.tn-ai-stream-markdown li p,
-.tn-ai-stream-markdown li strong {
-  color: var(--text-secondary);
-  font-weight: 400;
-  display: inline;
-}
-
-.tn-ai-stream-markdown h1,
-.tn-ai-stream-markdown h2,
-.tn-ai-stream-markdown h3,
-.tn-ai-stream-markdown h4 {
-  font-family: var(--font-playfair-display), serif;
-  color: var(--purple-accent);
-  margin-top: 1.5rem;
-  margin-bottom: 0.75rem;
-}
-
 .tn-profile-avatar-glow {
   inset: -6px;
   background-image: linear-gradient(

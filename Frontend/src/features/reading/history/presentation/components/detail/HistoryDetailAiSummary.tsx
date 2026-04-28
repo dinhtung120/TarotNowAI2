@@ -1,6 +1,5 @@
 import { Bot } from 'lucide-react';
 import type { HistoryDetailResponse } from '@/features/reading/application/actions/history';
-import { LazyMarkdown } from '@/shared/components/LazyMarkdown';
 import { cn } from '@/lib/utils';
 
 interface HistoryDetailAiSummaryProps {
@@ -32,8 +31,8 @@ export function HistoryDetailAiSummary({
       {labels.title}
      </h3>
      {detail.aiSummary ? (
-      <div className={cn('prose prose-purple max-w-none prose-p:leading-relaxed prose-p:tn-text-secondary prose-headings:font-serif prose-headings:tn-text-accent prose-strong:font-normal prose-strong:tn-text-secondary prose-em:tn-text-secondary prose-em:italic prose-li:tn-text-accent prose-li:font-semibold text-left')}>
-       <LazyMarkdown>{detail.aiSummary}</LazyMarkdown>
+      <div className={cn('max-w-none text-left whitespace-pre-wrap break-words')}>
+       {detail.aiSummary}
        {detail.followups?.map((followup) => (
         <div key={`${followup.question}-${followup.answer.slice(0, 24)}`} className={cn('mt-6 space-y-4')}>
          <div className={cn('flex justify-end')}>
@@ -42,8 +41,8 @@ export function HistoryDetailAiSummary({
           </div>
          </div>
          <div className={cn('flex justify-start')}>
-          <div className={cn('tn-bg-accent-10 border tn-border-accent-20 px-5 py-4 rounded-3xl rounded-tl-none tn-maxw-85p')}>
-           <LazyMarkdown>{followup.answer}</LazyMarkdown>
+          <div className={cn('tn-bg-accent-10 border tn-border-accent-20 px-5 py-4 rounded-3xl rounded-tl-none tn-maxw-85p whitespace-pre-wrap break-words')}>
+           {followup.answer}
           </div>
          </div>
         </div>
