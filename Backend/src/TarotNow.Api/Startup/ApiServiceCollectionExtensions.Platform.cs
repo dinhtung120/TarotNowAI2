@@ -33,6 +33,7 @@ public static partial class ApiServiceCollectionExtensions
         ConfigureForwardedHeaders(services, configuration);
         services.AddSingleton<IForwardedHeaderTrustEvaluator, ForwardedHeaderTrustEvaluator>();
         services.AddScoped<IAuthCookieService, AuthCookieService>();
+        services.AddScoped<IAiStreamEndpointService, AiStreamEndpointService>();
         services.AddScoped<IAiStreamSseOrchestrator, AiStreamSseOrchestrator>();
         services.AddSingleton<IAiStreamTicketService, AiStreamTicketService>();
         services.AddSingleton<IUserPresenceTracker>(serviceProvider =>
