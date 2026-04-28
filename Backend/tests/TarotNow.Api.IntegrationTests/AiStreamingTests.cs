@@ -501,7 +501,7 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
         var resBody = await response.Content.ReadAsStringAsync();
-        Assert.Contains("AI stream request is invalid.", resBody);
+        Assert.Contains("Daily AI request quota exceeded", resBody);
     }
 
     /// <summary>
@@ -578,7 +578,7 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
         var resBody = await response.Content.ReadAsStringAsync();
-        Assert.Contains("AI stream request is invalid.", resBody);
+        Assert.Contains("Too many in-flight AI requests", resBody);
     }
 
     [Fact]
@@ -661,7 +661,10 @@ public class AiStreamingTests : IClassFixture<CustomWebApplicationFactory<Progra
         if (rejected.StatusCode == System.Net.HttpStatusCode.BadRequest)
         {
             var rejectedBody = await rejected.Content.ReadAsStringAsync();
-            Assert.Contains("AI stream request is invalid.", rejectedBody);
+            Assert.True(
+                rejectedBody.Contains("Too many in-flight AI requests", StringComparison.Ordinal)
+                || rejectedBody.Contains("Too many concurrent AI requests. Please retry shortly.", StringComparison.Ordinal),
+                $"Unexpected rejection payload: {rejectedBody}");
             return;
         }
 

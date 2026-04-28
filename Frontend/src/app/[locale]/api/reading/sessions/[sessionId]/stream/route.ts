@@ -8,6 +8,12 @@ import {
  isValidStreamSessionId,
 } from '../streamRouteGuards';
 const UPSTREAM_OPEN_TIMEOUT_MS = 12_000;
+const FALLBACK_STREAM_ERROR_DETAIL = 'Failed to open stream';
+
+interface UpstreamProblemPayload {
+ detail?: string;
+ errorCode?: string;
+}
 
 function isTrustedOrigin(request: NextRequest): boolean {
   const origin = request.headers.get('origin');
@@ -45,6 +51,60 @@ async function fetchUpstreamWithTimeout(
   } finally {
     clearTimeout(timeoutId);
   }
+}
+
+async function readUpstreamProblem(upstream: Response): Promise<UpstreamProblemPayload> {
+  const fallback: UpstreamProblemPayload = { detail: FALLBACK_STREAM_ERROR_DETAIL };
+
+  let rawBody = '';
+  try {
+    rawBody = await upstream.text();
+  } catch {
+    return fallback;
+  }
+
+  const trimmedBody = rawBody.trim();
+  if (!trimmedBody) {
+    return fallback;
+  }
+
+  const contentType = upstream.headers.get('content-type') ?? '';
+  if (contentType.includes('application/json') || contentType.includes('application/problem+json')) {
+    try {
+      const parsed = JSON.parse(trimmedBody) as UpstreamProblemPayload;
+      const detail = parsed.detail?.trim();
+      return {
+        detail: detail || FALLBACK_STREAM_ERROR_DETAIL,
+        errorCode: parsed.errorCode?.trim(),
+      };
+    } catch {
+      return { detail: trimmedBody };
+    }
+  }
+
+  return { detail: trimmedBody };
+}
+
+function buildStreamErrorSseResponse(
+  status: number,
+  detail: string,
+  errorCode?: string,
+): Response {
+  const payload = JSON.stringify({
+    status,
+    detail: detail.trim() || FALLBACK_STREAM_ERROR_DETAIL,
+    ...(errorCode ? { errorCode } : {}),
+  });
+  const body = `event: stream_error\ndata: ${payload}\n\ndata: [DONE]\n\n`;
+  const headers = new Headers();
+  headers.set('Content-Type', 'text/event-stream; charset=utf-8');
+  headers.set('Cache-Control', 'no-store, no-cache, no-transform');
+  headers.set('Connection', 'keep-alive');
+  headers.set('X-Accel-Buffering', 'no');
+  return new Response(body, {
+    status: 200,
+    headers,
+  });
 }
 
 export async function GET(
@@ -103,11 +163,17 @@ export async function GET(
   }
 
   if (!upstream.ok || !upstream.body) {
+    const problem = await readUpstreamProblem(upstream);
     logger.warn('ReadingSessionStreamRoute', 'Upstream stream rejected.', {
       requestId,
       status: upstream.status,
+      detail: problem.detail ?? FALLBACK_STREAM_ERROR_DETAIL,
     });
-    return buildProblemResponse(upstream.status, 'Failed to open stream');
+    return buildStreamErrorSseResponse(
+      upstream.status,
+      problem.detail ?? FALLBACK_STREAM_ERROR_DETAIL,
+      problem.errorCode,
+    );
   }
 
   const headers = new Headers();

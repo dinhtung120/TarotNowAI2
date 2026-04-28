@@ -101,6 +101,26 @@ export function useAiStreamSession({
    );
 
    eventSourceRef.current = new EventSource(finalUrl);
+   let handledStreamError = false;
+
+   eventSourceRef.current.addEventListener('stream_error', (event) => {
+    handledStreamError = true;
+    stopStream();
+    setError(extractStreamErrorDetail((event as MessageEvent<string>).data, errorStreamMessage));
+    setIsSendingFollowup(false);
+    setMessages((prev) => prev.filter((message) => message.id !== messageId));
+   });
+
+   eventSourceRef.current.onerror = () => {
+    if (handledStreamError) {
+     return;
+    }
+
+    stopStream();
+    setError(errorStreamMessage);
+    setIsSendingFollowup(false);
+    setMessages((prev) => prev.filter((message) => message.id !== messageId));
+   };
 
    eventSourceRef.current.onmessage = (event) => {
     if (event.data === '[DONE]') {
@@ -128,12 +148,6 @@ export function useAiStreamSession({
       flushTimerRef.current = null;
      }, 48);
     }
-   };
-
-   eventSourceRef.current.onerror = () => {
-    stopStream();
-    setError(errorStreamMessage);
-    setIsSendingFollowup(false);
    };
   } catch {
    stopStream();
@@ -182,4 +196,18 @@ function buildFollowupIdempotencyKey(): string {
  return typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
   ? `reading_followup_${crypto.randomUUID()}`
   : `reading_followup_${Date.now()}`;
+}
+
+function extractStreamErrorDetail(payload: string, fallback: string): string {
+ if (!payload) {
+  return fallback;
+ }
+
+ try {
+  const parsed = JSON.parse(payload) as { detail?: string };
+  const detail = parsed.detail?.trim();
+  return detail || fallback;
+ } catch {
+  return payload.trim() || fallback;
+ }
 }

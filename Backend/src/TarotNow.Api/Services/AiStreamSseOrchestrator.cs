@@ -66,12 +66,13 @@ public sealed partial class AiStreamSseOrchestrator : IAiStreamSseOrchestrator
         catch (BadRequestException ex)
         {
             _logger.LogInformation(ex, "Rejected AI stream request for session {SessionId}.", request.SessionId);
-            response.StatusCode = StatusCodes.Status400BadRequest;
+            var statusCode = ResolveBadRequestStatusCode(ex);
+            response.StatusCode = statusCode;
             await WriteProblemResponseAsync(
                 response,
-                StatusCodes.Status400BadRequest,
-                "Bad Request",
-                "AI stream request is invalid.",
+                statusCode,
+                statusCode == StatusCodes.Status429TooManyRequests ? "Too Many Requests" : "Bad Request",
+                ResolveBadRequestDetail(ex),
                 cancellationToken);
             return null;
         }
@@ -122,5 +123,30 @@ public sealed partial class AiStreamSseOrchestrator : IAiStreamSseOrchestrator
             Title = title,
             Detail = detail
         }, cancellationToken);
+    }
+
+    private static int ResolveBadRequestStatusCode(BadRequestException exception)
+    {
+        return IsRateLimitViolation(exception)
+            ? StatusCodes.Status429TooManyRequests
+            : StatusCodes.Status400BadRequest;
+    }
+
+    private static string ResolveBadRequestDetail(BadRequestException exception)
+    {
+        return string.IsNullOrWhiteSpace(exception.Message)
+            ? "AI stream request is invalid."
+            : exception.Message.Trim();
+    }
+
+    private static bool IsRateLimitViolation(BadRequestException exception)
+    {
+        if (string.IsNullOrWhiteSpace(exception.Message))
+        {
+            return false;
+        }
+
+        return exception.Message.Contains("Vui lòng đợi", StringComparison.OrdinalIgnoreCase)
+               || exception.Message.Contains("giữa các lần yêu cầu AI giải bài", StringComparison.OrdinalIgnoreCase);
     }
 }

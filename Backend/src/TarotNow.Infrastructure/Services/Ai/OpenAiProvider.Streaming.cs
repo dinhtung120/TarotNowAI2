@@ -175,7 +175,7 @@ public partial class OpenAiProvider
         try
         {
             var root = JsonNode.Parse(data);
-            var content = root?["choices"]?[0]?["delta"]?["content"]?.GetValue<string>();
+            var content = TryReadDeltaContent(root);
             var usageNode = root?["usage"];
             AiProviderTokenUsage? usage = null;
             if (usageNode is not null)
@@ -205,6 +205,17 @@ public partial class OpenAiProvider
             _logger.LogWarning(exception, "Malformed OpenAI stream chunk detected and skipped.");
             return default;
         }
+    }
+
+    private static string? TryReadDeltaContent(JsonNode? root)
+    {
+        if (root?["choices"] is not JsonArray choices || choices.Count == 0)
+        {
+            return null;
+        }
+
+        var firstChoice = choices[0];
+        return firstChoice?["delta"]?["content"]?.GetValue<string>();
     }
 
     private static int ReadInt(JsonNode? node)

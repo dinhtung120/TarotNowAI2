@@ -124,20 +124,31 @@ describe('GET /[locale]/api/reading/sessions/[sessionId]/stream', () => {
  });
 
  it('rejects missing access tokens and upstream rejections before proxying the stream body', async () => {
-  mockedGetServerAccessToken.mockResolvedValueOnce(null);
-  const unauthorizedResponse = await GET(
+ mockedGetServerAccessToken.mockResolvedValueOnce(null);
+ const unauthorizedResponse = await GET(
    new NextRequest('http://localhost/vi/api/reading/sessions/session-1/stream?language=vi'),
    { params: Promise.resolve({ sessionId: 'session-1' }) },
   );
   expect(unauthorizedResponse.status).toBe(401);
   expect(mockedFetch).not.toHaveBeenCalled();
 
-  mockedFetch.mockResolvedValueOnce(new Response(null, { status: 429 }));
+  mockedFetch.mockResolvedValueOnce(new Response(JSON.stringify({
+   status: 429,
+   title: 'Too Many Requests',
+   detail: 'Vui lòng đợi 30 giây giữa các lần yêu cầu AI giải bài.',
+  }), {
+   status: 429,
+   headers: {
+    'content-type': 'application/problem+json',
+   },
+  }));
   const rejectedResponse = await GET(
    new NextRequest('http://localhost/vi/api/reading/sessions/session-1/stream?language=vi'),
    { params: Promise.resolve({ sessionId: 'session-1' }) },
   );
-  expect(rejectedResponse.status).toBe(429);
+  expect(rejectedResponse.status).toBe(200);
+  expect(rejectedResponse.headers.get('content-type')).toContain('text/event-stream');
+  await expect(rejectedResponse.text()).resolves.toContain('Vui lòng đợi 30 giây giữa các lần yêu cầu AI giải bài.');
  });
 
  it('forwards idempotency headers and aborts stalled upstream opens', async () => {
