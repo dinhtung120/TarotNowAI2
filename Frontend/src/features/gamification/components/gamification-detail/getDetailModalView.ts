@@ -1,4 +1,4 @@
-import type { AchievementDefinition, QuestWithProgress, TitleDefinition, UserAchievement } from "@/features/gamification/gamification.types";
+import type { AchievementDefinition, QuestWithProgress, TitleDefinition, UserAchievement } from "@/features/gamification/application/gamification.types";
 
 interface DetailModalInput {
  type: "quest" | "achievement" | "title";

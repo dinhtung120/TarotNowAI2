@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { cn, formatCardStat } from '@/lib/utils';
-import type { CardOption } from '@/components/ui/inventory/UseItemCardSelector';
+import type { CardOption } from '@/shared/application/inventory/cardOption';
 
 interface UseItemCardPreviewProps {
   card: CardOption | null;

@@ -3,7 +3,7 @@ import type {
  AdminAchievementDefinition,
  AdminQuestDefinition,
  AdminTitleDefinition,
-} from '@/features/gamification/admin/adminGamification.types';
+} from '@/features/gamification/admin/application/adminGamification.types';
 
 const nonEmptyText = z.string().trim().min(1);
 const optionalText = z.string().trim();

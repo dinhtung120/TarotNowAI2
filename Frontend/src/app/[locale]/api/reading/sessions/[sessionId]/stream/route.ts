@@ -4,7 +4,6 @@ import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
 import {
- getSafeFollowupQuestion,
  getSafeStreamLanguage,
  isValidStreamSessionId,
 } from '../streamRouteGuards';
@@ -79,16 +78,20 @@ export async function GET(
 
   const streamToken = request.nextUrl.searchParams.get('streamToken')?.trim() || '';
   const language = getSafeStreamLanguage(request.nextUrl.searchParams.get('language'));
-  const followupQuestion = getSafeFollowupQuestion(request.nextUrl.searchParams.get('followupQuestion'));
   const idempotencyKey = request.headers.get('x-idempotency-key')?.trim() || undefined;
+
+  if (request.nextUrl.searchParams.has('followupQuestion')) {
+   logger.warn('ReadingSessionStreamRoute', 'Legacy follow-up query transport rejected.', {
+    requestId,
+    sessionId,
+   });
+   return buildProblemResponse(400, 'Follow-up question must be sent via stream ticket.');
+  }
 
   if (streamToken) {
     upstreamUrl.searchParams.set('streamToken', streamToken);
   } else {
     upstreamUrl.searchParams.set('language', language);
-    if (followupQuestion) {
-      upstreamUrl.searchParams.set('followupQuestion', followupQuestion);
-    }
   }
 
   let upstream: Response;

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import type { LeaderboardEntry } from "@/features/gamification/gamification.types";
+import type { LeaderboardEntry } from "@/features/gamification/application/gamification.types";
 import { cn } from "@/lib/utils";
 import { resolveAvatarUrl } from "@/shared/infrastructure/http/assetUrl";
 

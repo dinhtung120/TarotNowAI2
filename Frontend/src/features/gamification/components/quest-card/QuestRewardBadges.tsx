@@ -1,5 +1,5 @@
 import { Award, Coins, Diamond, Gift } from "lucide-react";
-import type { QuestRewardItem } from "@/features/gamification/gamification.types";
+import type { QuestRewardItem } from "@/features/gamification/application/gamification.types";
 import { cn } from "@/lib/utils";
 
 interface QuestRewardBadgesProps {

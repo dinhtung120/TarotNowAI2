@@ -5,7 +5,7 @@ import type {
  AdminAchievementDefinition,
  AdminQuestDefinition,
  AdminTitleDefinition,
-} from '@/features/gamification/admin/adminGamification.types';
+} from '@/features/gamification/admin/application/adminGamification.types';
 
 const ADMIN_GAMIFICATION_API_ROOT = '/api/admin/gamification';
 

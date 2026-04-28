@@ -5,10 +5,10 @@ import type {
  AdminGamificationEntityType,
  AdminQuestDefinition,
  AdminTitleDefinition,
-} from '@/features/gamification/admin/adminGamification.types';
-import { AdminAchievementForm } from '@/features/gamification/AdminAchievementForm';
-import { AdminQuestForm } from '@/features/gamification/AdminQuestForm';
-import { AdminTitleForm } from '@/features/gamification/AdminTitleForm';
+} from '@/features/gamification/admin/application/adminGamification.types';
+import { AdminAchievementForm } from '@/features/gamification/admin/presentation/AdminAchievementForm';
+import { AdminQuestForm } from '@/features/gamification/admin/presentation/AdminQuestForm';
+import { AdminTitleForm } from '@/features/gamification/admin/presentation/AdminTitleForm';
 
 interface AdminGamificationFormModalProps {
  entityType: AdminGamificationEntityType | null;

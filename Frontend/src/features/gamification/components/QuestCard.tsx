@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { QuestWithProgress } from "@/features/gamification/gamification.types";
+import type { QuestWithProgress } from "@/features/gamification/application/gamification.types";
 import { QuestClaimButton } from "@/features/gamification/components/quest-card/QuestClaimButton";
 import { QuestRewardBadges } from "@/features/gamification/components/quest-card/QuestRewardBadges";
 

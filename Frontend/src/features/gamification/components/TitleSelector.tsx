@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useTranslations } from "next-intl";
-import type { TitleDefinition, UserTitle } from "@/features/gamification/gamification.types";
-import { useSetActiveTitle, useTitles } from "@/features/gamification/useGamification";
-import { useLocalizedField } from "@/features/gamification/useLocalizedField";
+import type { TitleDefinition, UserTitle } from "@/features/gamification/application/gamification.types";
+import { useSetActiveTitle, useTitles } from "@/features/gamification/application/useGamification";
+import { useLocalizedField } from "@/features/gamification/presentation/useLocalizedField";
 import GamificationDetailModal from "@/features/gamification/components/GamificationDetailModal";
 import { NoTitleCard } from "@/features/gamification/components/NoTitleCard";
 import { TitleCard } from "@/features/gamification/components/TitleCard";

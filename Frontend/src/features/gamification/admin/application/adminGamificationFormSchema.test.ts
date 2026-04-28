@@ -9,7 +9,7 @@ import {
  toQuestFormValues,
  toTitleDefinition,
  toTitleFormValues,
-} from '@/features/gamification/adminGamificationFormSchema';
+} from '@/features/gamification/admin/application/adminGamificationFormSchema';
 
 describe('adminGamificationFormSchema mappings', () => {
  it('preserves multilingual quest fields and normalizes optional reward title codes', () => {

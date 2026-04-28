@@ -2,9 +2,9 @@
 
 import { useTranslations } from "next-intl";
 import Modal from "@/shared/components/ui/Modal";
-import type { AchievementDefinition, QuestWithProgress, TitleDefinition, UserAchievement } from "@/features/gamification/gamification.types";
+import type { AchievementDefinition, QuestWithProgress, TitleDefinition, UserAchievement } from "@/features/gamification/application/gamification.types";
 import { cn } from "@/lib/utils";
-import { useLocalizedField } from "@/features/gamification/useLocalizedField";
+import { useLocalizedField } from "@/features/gamification/presentation/useLocalizedField";
 import { GamificationDetailActions } from "@/features/gamification/components/GamificationDetailActions";
 import { GamificationDetailBody } from "@/features/gamification/components/GamificationDetailBody";
 import { GamificationDetailHeader } from "@/features/gamification/components/GamificationDetailHeader";

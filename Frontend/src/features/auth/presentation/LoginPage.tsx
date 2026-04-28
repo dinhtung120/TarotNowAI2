@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
 import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
 import { useLoginPage } from "@/features/auth/application/useLoginPage";
 import { AuthErrorBanner } from "@/features/auth/presentation/components/AuthErrorBanner";
+import { LoginPasswordField } from "@/features/auth/presentation/components/LoginPasswordField";
 import { LoginRememberField } from "@/features/auth/presentation/components/LoginRememberField";
 import { cn } from "@/lib/utils";
 import AuthLayout from "@/shared/components/layout/AuthLayout";
@@ -21,8 +21,6 @@ import { Button, Input } from "@/shared/components/ui";
  */
 export default function LoginPage() {
   const vm = useLoginPage();
-  // Trạng thái cục bộ để kiểm soát việc hiển thị mật khẩu (password vs text)
-  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <AuthLayout title={vm.t("login.title")} subtitle={vm.t("login.subtitle")}>
@@ -36,28 +34,11 @@ export default function LoginPage() {
           {...vm.register("emailOrUsername")}
         />
         <div className={cn("space-y-1")}>
-          {/* 
-            Trường nhập mật khẩu tích hợp nút ẩn/hiện. 
-            - type: thay đổi dựa trên showPassword.
-            - rightElement: chứa nút bấm chuyển đổi biểu tượng con mắt.
-          */}
-          <Input
+          <LoginPasswordField
             label={vm.t("login.password_label")}
-            type={showPassword ? "text" : "password"}
-            leftIcon={<Lock className={cn("h-5", "w-5")} />}
             placeholder={vm.t("login.password_placeholder")}
             error={vm.errors.password?.message}
-            rightElement={
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className={cn("tn-text-secondary hover:tn-text-primary transition-colors focus:outline-none")}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? <EyeOff className={cn("h-5", "w-5")} /> : <Eye className={cn("h-5", "w-5")} />}
-              </button>
-            }
-            {...vm.register("password")}
+            registerField={vm.register("password")}
           />
           <div className={cn("flex", "items-center", "justify-between")}>
             <LoginRememberField label={vm.t("login.remember_me")} register={vm.register("rememberMe")} />

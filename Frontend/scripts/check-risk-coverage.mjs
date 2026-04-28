@@ -104,6 +104,15 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
+  file: 'src/app/[locale]/api/reading/sessions/[sessionId]/stream/route.ts',
+  thresholds: {
+   statements: 85,
+   branches: 70,
+   functions: 85,
+   lines: 85,
+  },
+ },
+ {
   file: 'src/app/api/_shared/problemDetails.ts',
   thresholds: {
    statements: 90,
@@ -113,11 +122,65 @@ const RISK_COVERAGE_RULES = [
   },
  },
  {
-  file: 'src/features/gamification/adminGamificationFormSchema.ts',
+  file: 'src/features/gamification/admin/application/adminGamificationFormSchema.ts',
   thresholds: {
    statements: 75,
    branches: 60,
    functions: 75,
+   lines: 75,
+  },
+ },
+ {
+  file: 'src/features/chat/application/chat-connection/useChatSignalRLifecycle.ts',
+  thresholds: {
+   statements: 55,
+   branches: 40,
+   functions: 60,
+   lines: 55,
+  },
+ },
+ {
+  file: 'src/shared/application/hooks/usePresenceConnection.ts',
+  thresholds: {
+   statements: 70,
+   branches: 50,
+   functions: 80,
+   lines: 70,
+  },
+ },
+ {
+  file: 'src/features/notifications/application/useNotificationDropdown.ts',
+  thresholds: {
+   statements: 75,
+   branches: 60,
+   functions: 80,
+   lines: 75,
+  },
+ },
+ {
+  file: 'src/features/notifications/application/useNotificationsPage.ts',
+  thresholds: {
+   statements: 80,
+   branches: 60,
+   functions: 90,
+   lines: 80,
+  },
+ },
+ {
+  file: 'src/features/profile/application/useProfilePage.ts',
+  thresholds: {
+   statements: 45,
+   branches: 25,
+   functions: 40,
+   lines: 45,
+  },
+ },
+ {
+  file: 'src/features/gamification/admin/application/useAdminGamification.ts',
+  thresholds: {
+   statements: 75,
+   branches: 50,
+   functions: 80,
    lines: 75,
   },
  },

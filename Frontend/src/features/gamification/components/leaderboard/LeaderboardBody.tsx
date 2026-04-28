@@ -1,5 +1,5 @@
 import { TrendingUp } from "lucide-react";
-import type { LeaderboardResult } from "@/features/gamification/gamification.types";
+import type { LeaderboardResult } from "@/features/gamification/application/gamification.types";
 import { LeaderboardEntryRow } from "@/features/gamification/components/LeaderboardEntryRow";
 import { cn } from "@/lib/utils";
 

@@ -1,18 +1,5 @@
 {
   "ratchetLimit": 100,
   "generatedAt": "2026-04-28",
-  "entries": {
-    "src/app/[locale]/(user)/leaderboard/page.tsx": 116,
-    "src/components/ui/gacha/GachaHistoryPageClient.tsx": 105,
-    "src/components/ui/gacha/GachaResultItem.tsx": 109,
-    "src/components/ui/inventory/InventoryItemCard.tsx": 101,
-    "src/features/admin/readings/presentation/components/AdminReadingsFilters.tsx": 108,
-    "src/features/auth/presentation/LoginPage.tsx": 106,
-    "src/features/auth/presentation/components/RegisterBirthdayInput.tsx": 110,
-    "src/features/community/components/CommentSection.tsx": 113,
-    "src/features/community/components/PostComposer.tsx": 112,
-    "src/features/reader/presentation/ReaderApplyPage.tsx": 111,
-    "src/shared/components/layout/bottom-tab-bar/BottomTabBarMenuPanel.tsx": 110,
-    "src/shared/infrastructure/navigation/useOptimizedLink.tsx": 114
-  }
+  "entries": {}
 }

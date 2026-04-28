@@ -9,7 +9,7 @@ import type {
  QuestWithProgress,
  UserAchievementsData,
  UserTitlesData,
-} from '@/features/gamification/gamification.types';
+} from '@/features/gamification/application/gamification.types';
 
 async function requireToken(): Promise<string> {
  const token = await getServerAccessToken();

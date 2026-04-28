@@ -1,5 +1,5 @@
 import type { InventoryItem, UseInventoryItemResponse } from '@/shared/infrastructure/inventory/inventoryTypes';
-import type { CardOption } from '@/components/ui/inventory/UseItemCardSelector';
+import type { CardOption } from '@/shared/application/inventory/cardOption';
 
 export interface UseItemModalLabels {
   title: string;

@@ -5,7 +5,7 @@ import { toast } from "react-hot-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { useWalletStore } from "@/store/walletStore";
-import { useClaimQuestReward } from "@/features/gamification/useGamification";
+import { useClaimQuestReward } from "@/features/gamification/application/useGamification";
 
 interface UseQuestClaimHandlersParams {
  t: (key: string, values?: Record<string, string | number>) => string;

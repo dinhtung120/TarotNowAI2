@@ -5,6 +5,11 @@ import { cn } from "@/lib/utils";
 import InputFieldMeta from "@/shared/components/ui/input/InputFieldMeta";
 import { baseInputStyles } from "@/shared/components/ui/input/inputStyles";
 import { Calendar } from "lucide-react";
+import {
+ formatBirthdayDraft,
+ formatIsoToDisplay,
+ parseDisplayBirthday,
+} from "@/features/auth/presentation/components/registerBirthdayInputValue";
 
 interface RegisterBirthdayInputProps {
   label: string;
@@ -26,39 +31,16 @@ export default function RegisterBirthdayInput({ label, error, value, onChange, o
   }, [draftValue, value]);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = event.target.value.replace(/\D/g, "").slice(0, 8);
-
-    let formatted = "";
-    if (rawValue.length > 0) {
-      formatted += rawValue.slice(0, 2);
-    }
-    if (rawValue.length > 2) {
-      formatted += `/${rawValue.slice(2, 4)}`;
-    }
-    if (rawValue.length > 4) {
-      formatted += `/${rawValue.slice(4, 8)}`;
-    }
-
+    const formatted = formatBirthdayDraft(event.target.value);
     setDraftValue(formatted);
-
-    if (rawValue.length === 8) {
-      const day = rawValue.slice(0, 2);
-      const month = rawValue.slice(2, 4);
-      const year = rawValue.slice(4, 8);
-      onChange(`${year}-${month}-${day}`);
+    const normalized = parseDisplayBirthday(formatted);
+    if (normalized) {
+      onChange(normalized);
     }
   };
 
   const handleBlur = () => {
-    const rawValue = displayValue.replace(/\D/g, "");
-    if (rawValue.length === 8) {
-      const day = rawValue.slice(0, 2);
-      const month = rawValue.slice(2, 4);
-      const year = rawValue.slice(4, 8);
-      onChange(`${year}-${month}-${day}`);
-    } else {
-      onChange("");
-    }
+    onChange(parseDisplayBirthday(displayValue));
 
     setDraftValue(null);
     onBlur?.();
@@ -98,13 +80,4 @@ export default function RegisterBirthdayInput({ label, error, value, onChange, o
       />
     </div>
   );
-}
-
-function formatIsoToDisplay(value?: string): string {
-  if (!value || !value.includes("-")) {
-    return "";
-  }
-
-  const [year, month, day] = value.split("-");
-  return `${day}/${month}/${year}`;
 }

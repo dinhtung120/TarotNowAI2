@@ -1,4 +1,4 @@
-import type { LeaderboardEntry } from "@/features/gamification/gamification.types";
+import type { LeaderboardEntry } from "@/features/gamification/application/gamification.types";
 import LeaderboardCurrentUserIdentity from "@/features/gamification/components/leaderboard/LeaderboardCurrentUserIdentity";
 import { cn } from "@/lib/utils";
 

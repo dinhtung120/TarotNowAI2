@@ -1,5 +1,5 @@
 import { Award, Lock } from "lucide-react";
-import type { AchievementDefinition, UserAchievement } from "@/features/gamification/gamification.types";
+import type { AchievementDefinition, UserAchievement } from "@/features/gamification/application/gamification.types";
 import { cn } from "@/lib/utils";
 
 interface AchievementCardProps {

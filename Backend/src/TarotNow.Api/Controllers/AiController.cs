@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.FeatureManagement;
+using Microsoft.Extensions.Logging;
 using TarotNow.Api.Extensions;
 using TarotNow.Api.Services;
 
@@ -18,6 +19,7 @@ public sealed class AiController : ControllerBase
     private readonly IFeatureManagerSnapshot _featureManager;
     private readonly IAiStreamSseOrchestrator _aiStreamSseOrchestrator;
     private readonly IAiStreamTicketService _aiStreamTicketService;
+    private readonly ILogger<AiController> _logger;
 
     /// <summary>
     /// Khởi tạo controller streaming AI.
@@ -25,11 +27,13 @@ public sealed class AiController : ControllerBase
     public AiController(
         IFeatureManagerSnapshot featureManager,
         IAiStreamSseOrchestrator aiStreamSseOrchestrator,
-        IAiStreamTicketService aiStreamTicketService)
+        IAiStreamTicketService aiStreamTicketService,
+        ILogger<AiController> logger)
     {
         _featureManager = featureManager;
         _aiStreamSseOrchestrator = aiStreamSseOrchestrator;
         _aiStreamTicketService = aiStreamTicketService;
+        _logger = logger;
     }
 
     public sealed record CreateAiStreamTicketBody(string? FollowUpQuestion, string? Language);
@@ -42,7 +46,6 @@ public sealed class AiController : ControllerBase
     [EnableRateLimiting("chat-standard")]
     public async Task StreamReading(
         string sessionId,
-        [FromQuery] string? followUpQuestion,
         [FromQuery] string? streamToken,
         [FromQuery] string? language,
         CancellationToken cancellationToken)
@@ -73,7 +76,25 @@ public sealed class AiController : ControllerBase
             return;
         }
 
-        var resolvedFollowUpQuestion = followUpQuestion;
+        if (Request.Query.ContainsKey("followupQuestion"))
+        {
+            _logger.LogWarning(
+                "Rejected legacy follow-up query transport for session {SessionId} and user {UserId}.",
+                sessionId,
+                userId);
+
+            Response.StatusCode = StatusCodes.Status400BadRequest;
+            await Response.WriteAsJsonAsync(new ProblemDetails
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "Bad Request",
+                Detail = "Follow-up question must be sent via stream ticket.",
+                Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"
+            }, cancellationToken);
+            return;
+        }
+
+        string? resolvedFollowUpQuestion = null;
         var resolvedLanguage = language;
         var idempotencyKey = Request.GetIdempotencyKeyOrEmpty();
 

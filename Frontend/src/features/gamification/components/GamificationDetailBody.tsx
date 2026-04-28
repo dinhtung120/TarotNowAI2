@@ -1,7 +1,7 @@
 "use client";
 
 import { Clock } from "lucide-react";
-import type { QuestWithProgress, UserAchievement } from "@/features/gamification/gamification.types";
+import type { QuestWithProgress, UserAchievement } from "@/features/gamification/application/gamification.types";
 import { QuestProgressSection } from "@/features/gamification/components/gamification-detail/QuestProgressSection";
 import { QuestRewardsSection } from "@/features/gamification/components/gamification-detail/QuestRewardsSection";
 import { UnlockedInfoSection } from "@/features/gamification/components/gamification-detail/UnlockedInfoSection";

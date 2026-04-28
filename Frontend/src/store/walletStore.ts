@@ -2,7 +2,7 @@ import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/shim/w
 import type { QueryClient } from '@tanstack/react-query';
 import type { WalletBalance } from '@/features/wallet/domain/types';
 import type { ActionResult } from '@/shared/domain/actionResult';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 
 type WalletBalanceFetcher = () => Promise<ActionResult<WalletBalance>>;
 type WalletStoreListener = () => void;

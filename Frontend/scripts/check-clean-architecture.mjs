@@ -2,13 +2,16 @@ import { existsSync, readFileSync } from 'node:fs';
 import { globSync } from 'node:fs';
 import { dirname, extname, resolve } from 'node:path';
 import ts from 'typescript';
-
-const layerOrder = {
- domain: 0,
- application: 1,
- infrastructure: 2,
- presentation: 3,
-};
+import {
+ findClientBoundaryViolation,
+ findLine,
+ findSensitiveStreamViolation,
+ findUnclassifiedRuntimeFiles,
+ isAllowedLayerException,
+ isTestFile,
+ layerOrder,
+ resolveLayer,
+} from './lib/cleanArchitectureGuard.mjs';
 
 const sourceFiles = globSync('src/**/*.{ts,tsx,mts}', {
  cwd: process.cwd(),
@@ -20,11 +23,7 @@ const dependencyViolations = [];
 const domainPurityViolations = [];
 const clientBoundaryViolations = [];
 const sensitiveStreamViolations = [];
-
-const PUBLIC_API_ACCESS_ALLOWLIST = new Set([
- 'src/shared/infrastructure/http/apiUrl.ts',
- 'src/shared/infrastructure/http/clientJsonRequest.ts',
-]);
+const unclassifiedRuntimeFiles = findUnclassifiedRuntimeFiles(sourceFiles);
 
 for (const relativePath of sourceFiles) {
  const sourceLayer = resolveLayer(relativePath);
@@ -83,12 +82,20 @@ for (const relativePath of sourceFiles) {
 }
 
 if (
- dependencyViolations.length > 0
+ unclassifiedRuntimeFiles.length > 0
+ || dependencyViolations.length > 0
  || domainPurityViolations.length > 0
  || clientBoundaryViolations.length > 0
  || sensitiveStreamViolations.length > 0
 ) {
  console.error('Clean architecture guard failed.');
+
+ if (unclassifiedRuntimeFiles.length > 0) {
+  console.error('Unclassified runtime files:');
+  for (const filePath of unclassifiedRuntimeFiles) {
+   console.error(`- ${filePath}`);
+  }
+ }
 
  if (dependencyViolations.length > 0) {
   console.error('Layer direction violations:');
@@ -124,14 +131,6 @@ if (
 }
 
 console.log(`Clean architecture guard passed (${sourceFiles.length} files checked).`);
-
-function resolveLayer(path) {
- if (path.includes('/domain/')) return 'domain';
- if (path.includes('/application/')) return 'application';
- if (path.includes('/infrastructure/')) return 'infrastructure';
- if (path.includes('/presentation/')) return 'presentation';
- return null;
-}
 
 function extractImports(sourceCode) {
  const imports = new Set();
@@ -218,85 +217,4 @@ function toPosixRelative(absolutePath) {
   .replace(resolve(process.cwd()), '')
   .replace(/^\/+/, '')
   .replace(/\\/g, '/');
-}
-
-function isAllowedLayerException(filePath, sourceLayer, targetLayer) {
- if (sourceLayer === 'application'
-  && targetLayer === 'infrastructure'
-  && filePath.includes('/application/gateways/')) {
-  return true;
- }
-
- return false;
-}
-
-function findLine(sourceCode, snippet) {
- const index = sourceCode.indexOf(snippet);
- if (index < 0) {
-  return 1;
- }
-
- return sourceCode.slice(0, index).split('\n').length;
-}
-
-function isTestFile(path) {
- return path.includes('.test.')
-  || path.includes('.spec.')
-  || path.includes('/__tests__/');
-}
-
-function findClientBoundaryViolation(relativePath, sourceCode) {
- if (PUBLIC_API_ACCESS_ALLOWLIST.has(relativePath)) {
-  return null;
- }
-
- if (sourceCode.includes('getPublicApiBaseUrl(')) {
-  return {
-   file: relativePath,
-   line: findLine(sourceCode, 'getPublicApiBaseUrl'),
-   message: 'imports getPublicApiBaseUrl directly instead of using a local BFF/shared client gateway.',
-  };
- }
-
- if (sourceCode.includes('NEXT_PUBLIC_API_URL')) {
-  return {
-   file: relativePath,
-   line: findLine(sourceCode, 'NEXT_PUBLIC_API_URL'),
-   message: 'reads NEXT_PUBLIC_API_URL directly outside shared/infrastructure/http/apiUrl.ts.',
-  };
- }
-
- const absoluteFetchMatch = sourceCode.match(/\b(?:fetch|EventSource)\s*\(\s*['"`]https?:\/\//);
- if (absoluteFetchMatch) {
-  return {
-   file: relativePath,
-   line: findLine(sourceCode, absoluteFetchMatch[0]),
-   message: 'uses an absolute-origin fetch/EventSource instead of going through the local BFF boundary.',
-  };
- }
-
- return null;
-}
-
-function findSensitiveStreamViolation(relativePath, sourceCode) {
- if (!sourceCode.includes('new EventSource(')) {
-  return null;
- }
-
- const sensitiveParamPatterns = [
-  'followupQuestion=',
-  "set('followupQuestion'",
-  'set("followupQuestion"',
- ];
-
- const matchedPattern = sensitiveParamPatterns.find((pattern) => sourceCode.includes(pattern));
- if (!matchedPattern) {
-  return null;
- }
-
- return {
-  file: relativePath,
-  line: findLine(sourceCode, matchedPattern),
-  message: 'builds an EventSource URL that exposes follow-up prompt data in the query string.',
- };
 }

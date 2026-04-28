@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import type { QuestWithProgress } from "@/features/gamification/gamification.types";
-import { useQuests } from "@/features/gamification/useGamification";
-import { useLocalizedField } from "@/features/gamification/useLocalizedField";
+import type { QuestWithProgress } from "@/features/gamification/application/gamification.types";
+import { useQuests } from "@/features/gamification/application/useGamification";
+import { useLocalizedField } from "@/features/gamification/presentation/useLocalizedField";
 import GamificationDetailModal from "@/features/gamification/components/GamificationDetailModal";
 import { QuestCard } from "@/features/gamification/components/QuestCard";
 import { QuestPanelHeader } from "@/features/gamification/components/QuestPanelHeader";

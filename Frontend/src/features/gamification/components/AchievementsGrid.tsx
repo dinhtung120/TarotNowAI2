@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { useAchievements } from "@/features/gamification/useGamification";
-import type { AchievementDefinition, UserAchievement } from "@/features/gamification/gamification.types";
-import { useLocalizedField } from "@/features/gamification/useLocalizedField";
+import type { AchievementDefinition, UserAchievement } from "@/features/gamification/application/gamification.types";
+import { useAchievements } from "@/features/gamification/application/useGamification";
+import { useLocalizedField } from "@/features/gamification/presentation/useLocalizedField";
 import GamificationDetailModal from "@/features/gamification/components/GamificationDetailModal";
 import { AchievementCard } from "@/features/gamification/components/achievement/AchievementCard";
 import { AchievementsHeader } from "@/features/gamification/components/achievement/AchievementsHeader";

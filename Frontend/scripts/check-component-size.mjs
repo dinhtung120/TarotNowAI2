@@ -10,14 +10,17 @@ function collectTargetFiles() {
  const files = globSync('src/**/*.tsx', {
   cwd: process.cwd(),
   nodir: true,
-  ignore: [
-   '**/*.test.tsx',
-   '**/*.spec.tsx',
-   '**/__tests__/**',
-  ],
  });
 
- return files.sort((left, right) => left.localeCompare(right));
+ return files
+  .filter((path) => !isIgnoredComponentFile(path))
+  .sort((left, right) => left.localeCompare(right));
+}
+
+function isIgnoredComponentFile(path) {
+ return path.includes('.test.')
+  || path.includes('.spec.')
+  || path.includes('/__tests__/');
 }
 
 function countLines(content) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCircle2, Lock, Medal } from "lucide-react";
-import type { TitleDefinition } from "@/features/gamification/gamification.types";
+import type { TitleDefinition } from "@/features/gamification/application/gamification.types";
 import { rarityColors } from "@/features/gamification/components/title-card/rarityColors";
 import { cn } from "@/lib/utils";
 

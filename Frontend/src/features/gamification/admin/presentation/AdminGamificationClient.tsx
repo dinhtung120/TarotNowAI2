@@ -1,12 +1,12 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { AdminGamificationFormModal } from "@/features/gamification/AdminGamificationFormModal";
-import { AdminAchievementTable } from "@/features/gamification/AdminAchievementTable";
-import { AdminGamificationTabs } from "@/features/gamification/AdminGamificationTabs";
-import { AdminQuestTable } from "@/features/gamification/AdminQuestTable";
-import { AdminTitleTable } from "@/features/gamification/AdminTitleTable";
-import { useAdminGamificationClientState } from "@/features/gamification/useAdminGamificationClientState";
+import { useAdminGamificationClientState } from '@/features/gamification/admin/application/useAdminGamificationClientState';
+import { AdminAchievementTable } from '@/features/gamification/admin/presentation/AdminAchievementTable';
+import { AdminGamificationFormModal } from '@/features/gamification/admin/presentation/AdminGamificationFormModal';
+import { AdminGamificationTabs } from '@/features/gamification/admin/presentation/AdminGamificationTabs';
+import { AdminQuestTable } from '@/features/gamification/admin/presentation/AdminQuestTable';
+import { AdminTitleTable } from '@/features/gamification/admin/presentation/AdminTitleTable';
 import { cn } from "@/lib/utils";
 import ActionConfirmModal from "@/shared/components/ui/ActionConfirmModal";
 

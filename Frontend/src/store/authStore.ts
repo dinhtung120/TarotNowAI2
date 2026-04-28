@@ -1,7 +1,7 @@
 import { useSyncExternalStoreWithSelector } from 'use-sync-external-store/shim/with-selector';
 import type { QueryClient } from '@tanstack/react-query';
 import type { UserProfile } from '@/features/auth/domain/types';
-import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
+import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 
 interface AuthState {
  user: UserProfile | null;

@@ -4,7 +4,7 @@ import type {
  AdminAchievementDefinition,
  AdminQuestDefinition,
  AdminTitleDefinition,
-} from '@/features/gamification/admin/adminGamification.types';
+} from '@/features/gamification/admin/application/adminGamification.types';
 
 export async function fetchAdminGamificationQuestsServer(): Promise<AdminQuestDefinition[]> {
  const token = await getServerAccessToken();

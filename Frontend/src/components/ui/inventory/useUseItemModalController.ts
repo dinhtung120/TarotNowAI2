@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { resolveErrorMessage } from '@/shared/application/utils/resolveErrorMessage';
 import { useUseItemModalState } from '@/shared/infrastructure/inventory/useUseItemModalState';
 import type { UseItemModalLabels } from '@/components/ui/inventory/UseItemModal.types';
-import type { CardOption } from '@/components/ui/inventory/UseItemCardSelector';
+import type { CardOption } from '@/shared/application/inventory/cardOption';
 import type { InventoryItem, UseInventoryItemResponse } from '@/shared/infrastructure/inventory/inventoryTypes';
 
 interface UseUseItemModalControllerOptions {

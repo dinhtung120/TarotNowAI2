@@ -3,41 +3,12 @@
 import { useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
-import Button from '@/shared/components/ui/Button';
 import GlassCard from '@/shared/components/ui/GlassCard';
 import GachaHistoryTable from '@/components/ui/gacha/GachaHistoryTable';
+import { GachaHistoryPagination } from '@/components/ui/gacha/GachaHistoryPagination';
 import { useGachaHistory } from '@/shared/infrastructure/gacha/useGachaHistory';
 
 const DEFAULT_PAGE_SIZE = 20;
-
-function PaginationActions({
- page,
- totalPages,
- isLoading,
- previousLabel,
- nextLabel,
- onPrevious,
- onNext,
-}: {
- page: number;
- totalPages: number;
- isLoading: boolean;
- previousLabel: string;
- nextLabel: string;
- onPrevious: () => void;
- onNext: () => void;
-}) {
- return (
-  <div className={cn('flex items-center gap-4')}>
-   <Button variant="secondary" size="md" disabled={page <= 1 || isLoading} onClick={onPrevious}>
-    {previousLabel}
-   </Button>
-   <Button variant="secondary" size="md" disabled={page >= totalPages || isLoading} onClick={onNext}>
-    {nextLabel}
-   </Button>
-  </div>
- );
-}
 
 export default function GachaHistoryPageClient() {
  const locale = useLocale();
@@ -89,7 +60,7 @@ export default function GachaHistoryPageClient() {
      <div className={cn('tn-text-secondary text-xs font-black uppercase tracking-[0.25em] opacity-70')}>
       {t('historyPageIndicator', { page, totalPages })}
      </div>
-     <PaginationActions
+     <GachaHistoryPagination
       page={page}
       totalPages={totalPages}
       isLoading={historyQuery.isLoading}

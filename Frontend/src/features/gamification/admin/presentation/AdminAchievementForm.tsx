@@ -3,13 +3,13 @@
 import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import type { AdminAchievementDefinition } from '@/features/gamification/admin/adminGamification.types';
+import type { AdminAchievementDefinition } from '@/features/gamification/admin/application/adminGamification.types';
 import {
  adminAchievementFormSchema,
  toAchievementDefinition,
  toAchievementFormValues,
  type AdminAchievementFormValues,
-} from '@/features/gamification/adminGamificationFormSchema';
+} from '@/features/gamification/admin/application/adminGamificationFormSchema';
 import { Button, Input } from '@/shared/components/ui';
 import Modal from '@/shared/components/ui/Modal';
 import { cn } from '@/lib/utils';

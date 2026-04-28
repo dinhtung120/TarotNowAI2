@@ -4,9 +4,15 @@ import { memo } from 'react';
 import { Package2 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import type { InventoryItem, InventoryRarity } from '@/shared/infrastructure/inventory/inventoryTypes';
+import type { InventoryItem } from '@/shared/infrastructure/inventory/inventoryTypes';
 import GlassCard from '@/shared/components/ui/GlassCard';
 import Badge from '@/shared/components/ui/Badge';
+import {
+ getLocalizedInventoryText,
+ inventoryRarityConfig,
+ inventoryRarityGlowClass,
+ resolveInventoryRarity,
+} from '@/components/ui/inventory/inventoryItemCardView';
 
 interface InventoryItemCardProps {
   item: InventoryItem;
@@ -14,40 +20,14 @@ interface InventoryItemCardProps {
   onSelect: (item: InventoryItem) => void;
 }
 
-const rarityConfig: Record<InventoryRarity, { badgeVariant: 'amber' | 'purple' | 'info' | 'success' | 'default'; glowClass: string; label: string; }> = {
-  common: { badgeVariant: 'default', glowClass: 'tn-border-soft', label: 'Phổ thông' },
-  uncommon: { badgeVariant: 'success', glowClass: 'tn-inventory-glow-uncommon', label: 'Bất thường' },
-  rare: { badgeVariant: 'info', glowClass: 'tn-inventory-glow-rare', label: 'Hiếm' },
-  epic: { badgeVariant: 'purple', glowClass: 'tn-inventory-glow-epic', label: 'Sử thi' },
-  legendary: { badgeVariant: 'amber', glowClass: 'tn-inventory-glow-legendary', label: 'Huyền thoại' },
-};
-
-const rarityGlowClass: Record<InventoryRarity, string> = {
-  common: 'bg-slate-500',
-  uncommon: 'bg-emerald-500',
-  rare: 'bg-sky-500',
-  epic: 'bg-purple-500',
-  legendary: 'bg-amber-500',
-};
-
-function isKnownRarity(rarity: string): rarity is InventoryRarity {
-  return rarity in rarityConfig;
-}
-
-function getLocalizedText(item: InventoryItem, locale: string) {
-  if (locale === 'en') return { name: item.nameEn, description: item.descriptionEn };
-  if (locale === 'zh') return { name: item.nameZh, description: item.descriptionZh };
-  return { name: item.nameVi, description: item.descriptionVi };
-}
-
 function InventoryItemCardComponent({ item, locale, onSelect }: InventoryItemCardProps) {
-  const text = getLocalizedText(item, locale);
-  const rarity = isKnownRarity(item.rarity) ? item.rarity : 'common';
-  const config = rarityConfig[rarity];
+  const text = getLocalizedInventoryText(item, locale);
+  const rarity = resolveInventoryRarity(item.rarity);
+  const config = inventoryRarityConfig[rarity];
 
   return (
     <div className={cn('group relative')}>
-      <div className={cn('tn-inventory-glow-shell absolute -inset-0.5 opacity-0 blur-xl transition-opacity duration-700 group-hover:opacity-40', rarityGlowClass[rarity])} />
+      <div className={cn('tn-inventory-glow-shell absolute -inset-0.5 opacity-0 blur-xl transition-opacity duration-700 group-hover:opacity-40', inventoryRarityGlowClass[rarity])} />
 
       <GlassCard
         variant="interactive"

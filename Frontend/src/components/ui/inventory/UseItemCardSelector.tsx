@@ -1,24 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-
-interface CardOptionStats {
-  level: number;
-  currentExp: number;
-  expToNextLevel: number;
-  totalAtk: number;
-  totalDef: number;
-}
-
-/**
- * Interface cho các tùy chọn card mục tiêu.
- */
-export interface CardOption {
-  id: number;
-  name: string;
-  imageUrl?: string;
-  stats?: CardOptionStats;
-}
+import type { CardOption } from '@/shared/application/inventory/cardOption';
 
 interface UseItemCardSelectorProps {
   label: string;

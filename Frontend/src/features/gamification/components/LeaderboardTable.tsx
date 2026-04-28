@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { BarChart3 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useLeaderboard } from "@/features/gamification/useGamification";
+import { useLeaderboard } from "@/features/gamification/application/useGamification";
 import { LeaderboardCurrentUserCard } from "@/features/gamification/components/LeaderboardCurrentUserCard";
 import { LeaderboardBody } from "@/features/gamification/components/leaderboard/LeaderboardBody";
 import { LeaderboardCurrencyTabs } from "@/features/gamification/components/leaderboard/LeaderboardCurrencyTabs";

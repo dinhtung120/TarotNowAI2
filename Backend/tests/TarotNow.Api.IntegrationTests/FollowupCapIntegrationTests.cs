@@ -13,7 +13,7 @@ using Xunit;
 namespace TarotNow.Api.IntegrationTests;
 
 [Collection("Testcontainers")]
-// Kiểm thử giới hạn số câu follow-up của luồng streaming AI.
+// Kiểm thử các contract follow-up nhạy cảm của luồng streaming AI.
 public class FollowupCapIntegrationTests : IClassFixture<CustomWebApplicationFactory<Program>>
 {
     // Factory tích hợp dùng để tạo client và service scope.
@@ -29,11 +29,11 @@ public class FollowupCapIntegrationTests : IClassFixture<CustomWebApplicationFac
     }
 
     /// <summary>
-    /// Xác nhận endpoint stream từ chối khi đã chạm trần follow-up.
-    /// Luồng seed sẵn 6 request completed rồi gọi follow-up mới và kỳ vọng thất bại.
+    /// Xác nhận endpoint stream từ chối legacy follow-up query transport.
+    /// Luồng này chặn việc lộ câu hỏi follow-up trên URL trước khi vào orchestration phía sau.
     /// </summary>
     [Fact]
-    public async Task StreamEndpoint_ShouldReject_WhenFollowUpCapIsReached()
+    public async Task StreamEndpoint_ShouldReject_LegacyFollowUpQueryTransport()
     {
         var client = _factory.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(TestAuthHandler.AuthenticationScheme);
@@ -67,31 +67,15 @@ public class FollowupCapIntegrationTests : IClassFixture<CustomWebApplicationFac
         session.CompleteSession("[12]");
         await readingRepo.CreateAsync(session);
 
-        // Seed vượt ngưỡng cap (6 bản ghi) để ép endpoint vào nhánh từ chối.
-        for (int i = 0; i <= 5; i++)
-        {
-            var request = new AiRequest
-            {
-                Id = Guid.NewGuid(),
-                UserId = userId,
-                ReadingSessionRef = sessionId,
-                Status = AiRequestStatus.Completed,
-                ChargeDiamond = 0,
-                CompletionMarkerAt = DateTimeOffset.UtcNow,
-                IdempotencyKey = $"seed_{sessionId}_{i}"
-            };
-            db.AiRequests.Add(request);
-        }
-        await db.SaveChangesAsync();
-
-        // Gọi follow-up mới với query param để kiểm tra enforcement của cap.
+        // Gọi follow-up mới với query param để xác nhận legacy transport bị cấm tuyệt đối.
         var requestUrl = $"/api/v1/sessions/{sessionId}/stream?followupQuestion=Should+Fail";
         var requestMsg = new HttpRequestMessage(HttpMethod.Get, requestUrl);
         requestMsg.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
 
         var response = await client.SendAsync(requestMsg, HttpCompletionOption.ResponseHeadersRead);
 
-        // Kỳ vọng request bị từ chối do đã đạt hard cap.
-        Assert.False(response.IsSuccessStatusCode, "Because the hard cap of 5 follow ups has been reached");
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        var payload = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Follow-up question must be sent via stream ticket.", payload);
     }
 }

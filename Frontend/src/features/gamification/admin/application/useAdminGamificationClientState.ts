@@ -7,7 +7,7 @@ import type {
  AdminGamificationTab,
  AdminQuestDefinition,
  AdminTitleDefinition,
-} from '@/features/gamification/admin/adminGamification.types';
+} from '@/features/gamification/admin/application/adminGamification.types';
 import { useAdminGamification } from '@/features/gamification/admin/application/useAdminGamification';
 
 type AdminGamificationEditorState =

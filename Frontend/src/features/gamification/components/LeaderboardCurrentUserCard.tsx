@@ -2,7 +2,7 @@
 
 import LeaderboardCurrentUserEmpty from "@/features/gamification/components/leaderboard/LeaderboardCurrentUserEmpty";
 import LeaderboardCurrentUserRankContent from "@/features/gamification/components/leaderboard/LeaderboardCurrentUserRankContent";
-import type { LeaderboardEntry } from "../gamification.types";
+import type { LeaderboardEntry } from "@/features/gamification/application/gamification.types";
 import { cn } from "@/lib/utils";
 
 interface LeaderboardCurrentUserCardProps {

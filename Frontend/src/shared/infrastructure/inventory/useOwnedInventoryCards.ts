@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { UserCollectionDto } from '@/features/collection/application/actions';
-import type { CardOption } from '@/components/ui/inventory/UseItemCardSelector';
+import type { CardOption } from '@/shared/application/inventory/cardOption';
 import { useCardsCatalog } from '@/shared/application/hooks/useCardsCatalog';
 import { fetchJsonOrThrow } from '@/shared/infrastructure/http/clientFetch';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';

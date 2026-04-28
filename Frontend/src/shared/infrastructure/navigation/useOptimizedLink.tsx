@@ -1,32 +1,18 @@
 'use client';
 
-import { forwardRef, useCallback, useMemo } from 'react';
+import { forwardRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
 import type { ComponentPropsWithoutRef, FocusEvent, MouseEvent } from 'react';
 import { Link as IntlLink, usePathname, useRouter } from '@/i18n/routing';
-import { isPrefetchBlocked, schedulePrefetch, shouldRunPrefetch } from '@/shared/infrastructure/navigation/prefetchPolicy';
-import { normalizeNavigationPath, prefetchRouteQueries } from '@/shared/infrastructure/navigation/routeQueryPrefetch';
+import { prefetchRouteQueries } from '@/shared/infrastructure/navigation/routeQueryPrefetch';
+import { useOptimizedLinkPrefetch } from '@/shared/infrastructure/navigation/optimizedLinkPrefetch';
 
 type IntlLinkProps = ComponentPropsWithoutRef<typeof IntlLink>;
+type RouterPrefetchHref = Parameters<ReturnType<typeof useRouter>['prefetch']>[0];
 
 interface OptimizedLinkProps extends IntlLinkProps {
  prefetchQueries?: boolean;
-}
-
-const QUERY_PREFETCH_COOLDOWN_MS = 90_000;
-const ROUTE_PREFETCH_COOLDOWN_MS = 90_000;
-
-function resolveHrefPath(href: IntlLinkProps['href']): string | null {
- if (typeof href === 'string') {
-  return href;
- }
-
- if (href && typeof href === 'object' && 'pathname' in href && typeof href.pathname === 'string') {
-  return href.pathname;
- }
-
- return null;
 }
 
 /** Link wrapper: giữ route prefetch sau gate 500ms + query prefetch theo policy trung tâm. */
@@ -38,56 +24,28 @@ export const OptimizedLink = forwardRef<HTMLAnchorElement, OptimizedLinkProps>(f
  const router = useRouter();
  const pathname = usePathname();
  const locale = useLocale();
- const rawHref = useMemo(() => resolveHrefPath(href), [href]);
- const normalizedCurrentPath = useMemo(() => normalizeNavigationPath(pathname), [pathname]);
-
- const normalizedHref = useMemo(() => {
-  const hrefPath = rawHref;
-  if (!hrefPath) {
-   return null;
-  }
-  const normalizedPath = normalizeNavigationPath(hrefPath);
-  return normalizedPath.startsWith('/') ? normalizedPath : null;
- }, [rawHref]);
-
- const isBlockedPath = normalizedHref ? isPrefetchBlocked(normalizedHref) : true;
- const isSameRoute = Boolean(normalizedHref) && normalizedHref === normalizedCurrentPath;
- const canPrefetchQueries = Boolean(normalizedHref) && !isBlockedPath && !isSameRoute && prefetchQueries;
- const canPrefetchRouteOnIntent = Boolean(rawHref) && !isBlockedPath && !isSameRoute && (prefetch ?? true);
- const routeTaskKey = normalizedHref ? `route:${locale}:${normalizedHref}` : '';
- const queryTaskKey = normalizedHref ? `query:${locale}:${normalizedHref}` : '';
-
- const runRoutePrefetch = useCallback(() => {
-  if (!canPrefetchRouteOnIntent || !rawHref) {
-   return;
-  }
-
-  if (!shouldRunPrefetch(routeTaskKey, ROUTE_PREFETCH_COOLDOWN_MS)) {
-   return;
-  }
-
-  schedulePrefetch(routeTaskKey, async () => {
-   try {
+ const { runRoutePrefetch, runQueryPrefetch } = useOptimizedLinkPrefetch({
+  href,
+ locale,
+ pathname,
+ prefetch,
+ prefetchQueries,
+ onQueryPrefetch: async (normalizedHref) => prefetchRouteQueries(queryClient, normalizedHref),
+  onRoutePrefetch: async (rawHref) => {
+   if (typeof rawHref === 'string') {
     await router.prefetch(rawHref);
-   } catch {
-    // Route prefetch remains best-effort and should never block navigation.
+    return;
    }
-  });
- }, [canPrefetchRouteOnIntent, rawHref, routeTaskKey, router]);
 
- const runQueryPrefetch = useCallback(() => {
-  if (!canPrefetchQueries || !normalizedHref) {
-   return;
-  }
-
-  if (!shouldRunPrefetch(queryTaskKey, QUERY_PREFETCH_COOLDOWN_MS)) {
-   return;
-  }
-
-  schedulePrefetch(queryTaskKey, async () => {
-   await prefetchRouteQueries(queryClient, normalizedHref);
-  });
- }, [canPrefetchQueries, normalizedHref, queryClient, queryTaskKey]);
+   if (typeof rawHref.pathname === 'string') {
+    const prefetchHref: RouterPrefetchHref = {
+     ...rawHref,
+     pathname: rawHref.pathname,
+    };
+    await router.prefetch(prefetchHref);
+   }
+  },
+ });
 
  const handleMouseEnter = useCallback((event: MouseEvent<HTMLAnchorElement>) => {
   onMouseEnter?.(event);

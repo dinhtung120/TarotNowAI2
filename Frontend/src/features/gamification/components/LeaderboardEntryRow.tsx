@@ -4,7 +4,7 @@ import LeaderboardAvatar from "@/features/gamification/components/leaderboard/Le
 import LeaderboardRankBadge from "@/features/gamification/components/leaderboard/LeaderboardRankBadge";
 import LeaderboardScore from "@/features/gamification/components/leaderboard/LeaderboardScore";
 import { leaderboardRowClass } from "@/features/gamification/components/leaderboard/leaderboardRowClass";
-import type { LeaderboardEntry } from "../gamification.types";
+import type { LeaderboardEntry } from "@/features/gamification/application/gamification.types";
 import { cn } from "@/lib/utils";
 
 interface LeaderboardEntryRowProps {

@@ -1,15 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { BookOpen, Calendar, Search, User } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useForm, useWatch } from "react-hook-form";
-import { z } from "zod";
 import { Button } from "@/shared/components/ui";
 import { cn } from "@/lib/utils";
 import { AdminReadingsFilterField } from "./AdminReadingsFilterField";
 import { AdminReadingsSpreadSelect } from "./AdminReadingsSpreadSelect";
+import { useAdminReadingsFiltersForm } from "./useAdminReadingsFiltersForm";
 
 interface AdminReadingsFiltersProps {
  username: string;
@@ -23,77 +20,25 @@ interface AdminReadingsFiltersProps {
  onSubmit: () => void;
 }
 
-const adminReadingsFiltersSchema = z
- .object({
-  username: z.string().trim().max(100),
-  spreadType: z.string().max(50),
-  startDate: z.string().max(50),
-  endDate: z.string().max(50),
- })
- .refine(
-  (values) => {
-   if (!values.startDate || !values.endDate) return true;
-   return values.endDate >= values.startDate;
-  },
-  {
-   path: ["endDate"],
-   message: "End date must be greater than or equal to start date",
-  },
- );
-
-type AdminReadingsFiltersFormValues = z.infer<typeof adminReadingsFiltersSchema>;
-
 export function AdminReadingsFilters({ username, spreadType, startDate, endDate, onUsernameChange, onSpreadTypeChange, onStartDateChange, onEndDateChange, onSubmit }: AdminReadingsFiltersProps) {
  const t = useTranslations("Admin");
- const { handleSubmit, setValue, control } = useForm<AdminReadingsFiltersFormValues>({
-  resolver: zodResolver(adminReadingsFiltersSchema),
-  defaultValues: {
-   username,
-   spreadType,
-   startDate,
-   endDate,
-  },
- });
-
- const watchedUsername = useWatch({ control, name: "username" }) ?? "";
- const watchedSpreadType = useWatch({ control, name: "spreadType" }) ?? "";
- const watchedStartDate = useWatch({ control, name: "startDate" }) ?? "";
- const watchedEndDate = useWatch({ control, name: "endDate" }) ?? "";
-
- useEffect(() => {
-  setValue("username", username, { shouldDirty: false, shouldValidate: false });
- }, [setValue, username]);
-
- useEffect(() => {
-  setValue("spreadType", spreadType, { shouldDirty: false, shouldValidate: false });
- }, [setValue, spreadType]);
-
- useEffect(() => {
-  setValue("startDate", startDate, { shouldDirty: false, shouldValidate: false });
- }, [setValue, startDate]);
-
- useEffect(() => {
-  setValue("endDate", endDate, { shouldDirty: false, shouldValidate: false });
- }, [endDate, setValue]);
-
- useEffect(() => {
-  onUsernameChange(watchedUsername);
- }, [onUsernameChange, watchedUsername]);
-
- useEffect(() => {
-  onSpreadTypeChange(watchedSpreadType);
- }, [onSpreadTypeChange, watchedSpreadType]);
-
- useEffect(() => {
-  onStartDateChange(watchedStartDate);
- }, [onStartDateChange, watchedStartDate]);
-
- useEffect(() => {
-  onEndDateChange(watchedEndDate);
- }, [onEndDateChange, watchedEndDate]);
-
- const submitWithValidation = handleSubmit(() => {
-  onSubmit();
+ const {
+  setValue,
+  submitWithValidation,
+  watchedUsername,
+  watchedSpreadType,
+  watchedStartDate,
+  watchedEndDate,
+ } = useAdminReadingsFiltersForm({
+  username,
+  spreadType,
+  startDate,
+  endDate,
+  onUsernameChange,
+  onSpreadTypeChange,
+  onStartDateChange,
+  onEndDateChange,
+  onSubmit,
  });
 
  return (

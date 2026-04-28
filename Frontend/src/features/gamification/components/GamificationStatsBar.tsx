@@ -3,9 +3,9 @@
 import { Flame, Medal, Trophy, Zap } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useAuthStore } from "@/store/authStore";
-import type { TitleDefinition } from "@/features/gamification/gamification.types";
-import { useAchievements, useTitles } from "@/features/gamification/useGamification";
-import { useLocalizedField } from "@/features/gamification/useLocalizedField";
+import type { TitleDefinition } from "@/features/gamification/application/gamification.types";
+import { useAchievements, useTitles } from "@/features/gamification/application/useGamification";
+import { useLocalizedField } from "@/features/gamification/presentation/useLocalizedField";
 import { StatsMetricCard } from "@/features/gamification/components/stats/StatsMetricCard";
 import { cn } from "@/lib/utils";
 

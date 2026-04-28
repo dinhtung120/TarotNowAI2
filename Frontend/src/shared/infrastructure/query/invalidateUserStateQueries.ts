@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { gamificationKeys } from '@/features/gamification/gamificationQueryKeys';
+import { gamificationKeys } from '@/features/gamification/application/gamificationQueryKeys';
 import { gachaQueryKeys } from '@/shared/infrastructure/gacha/gachaConstants';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 
