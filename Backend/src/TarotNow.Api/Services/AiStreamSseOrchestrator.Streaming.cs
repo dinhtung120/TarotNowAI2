@@ -63,7 +63,7 @@ public sealed partial class AiStreamSseOrchestrator
                 }
             }
 
-            if (string.IsNullOrWhiteSpace(streamChunk.Content))
+            if (string.IsNullOrEmpty(streamChunk.Content))
             {
                 continue;
             }
