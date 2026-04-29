@@ -98,6 +98,13 @@ fi
 # Normalize: bỏ trailing slash để so sánh chính xác
 PUBLIC_BASE_URL_NORMALIZED="${PUBLIC_BASE_URL_VALUE%/}"
 NEXT_PUBLIC_API_URL_NORMALIZED="${NEXT_PUBLIC_API_URL_VALUE%/}"
+PUBLIC_BASE_AUTHORITY="${PUBLIC_BASE_URL_NORMALIZED#*://}"
+PUBLIC_BASE_AUTHORITY="${PUBLIC_BASE_AUTHORITY%%/*}"
+
+if [[ -z "$PUBLIC_BASE_AUTHORITY" ]]; then
+  echo "[deploy-fe] cannot parse host from PUBLIC_BASE_URL ($PUBLIC_BASE_URL_VALUE)" >&2
+  exit 1
+fi
 
 # ── Kiểm tra API URL phải cùng origin với PUBLIC_BASE_URL ──
 # Tránh CORS issues do API ở domain khác frontend
@@ -130,12 +137,13 @@ docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --no-deps fronten
 # ──────────────────────────────────────────────────────────────────────
 echo "[deploy-fe] waiting for nginx health"
 for i in $(seq 1 50); do
-  if curl -fsS http://localhost/nginx-health >/dev/null; then
+  health_code="$(curl -sS -o /dev/null -w '%{http_code}' -H "Host: $PUBLIC_BASE_AUTHORITY" "http://localhost/nginx-health" || true)"
+  if [[ "$health_code" == "200" ]]; then
     break
   fi
   sleep 2
   if [[ "$i" -eq 50 ]]; then
-    echo "[deploy-fe] nginx health check failed" >&2
+    echo "[deploy-fe] nginx health check failed (last status: ${health_code:-n/a})" >&2
     exit 1
   fi
 done
@@ -154,11 +162,20 @@ done
 # ──────────────────────────────────────────────────────────────────────
 echo "[deploy-fe] verifying Next.js responds through nginx"
 health_response_file="$(mktemp)"
-if ! curl -fsSI \
+if ! curl -sSI \
+  -H "Host: $PUBLIC_BASE_AUTHORITY" \
   -H 'Accept: text/html' \
   "http://localhost/vi" \
   >"$health_response_file" 2>&1; then
   echo "[deploy-fe] Next.js health check failed through nginx" >&2
+  cat "$health_response_file" >&2
+  rm -f "$health_response_file"
+  exit 1
+fi
+
+# Xác nhận status là 200 thay vì redirect/misroute.
+if ! grep -Eqi '^HTTP/[0-9.]+[[:space:]]+200([[:space:]]|$)' "$health_response_file"; then
+  echo "[deploy-fe] unexpected Next.js status through nginx (expected 200):" >&2
   cat "$health_response_file" >&2
   rm -f "$health_response_file"
   exit 1
@@ -183,10 +200,19 @@ rm -f "$health_response_file"
 # ──────────────────────────────────────────────────────────────────────
 echo "[deploy-fe] verifying next/image endpoint does not redirect to http"
 image_probe_file="$(mktemp)"
-if ! curl -fsSI \
+if ! curl -sSI \
+  -H "Host: $PUBLIC_BASE_AUTHORITY" \
   "http://localhost/_next/image?url=%2Ffavicon.ico&w=64&q=75" \
   >"$image_probe_file" 2>&1; then
   echo "[deploy-fe] next/image health check failed" >&2
+  cat "$image_probe_file" >&2
+  rm -f "$image_probe_file"
+  exit 1
+fi
+
+# Endpoint local probe phải trả ảnh trực tiếp (200), không redirect.
+if ! grep -Eqi '^HTTP/[0-9.]+[[:space:]]+200([[:space:]]|$)' "$image_probe_file"; then
+  echo "[deploy-fe] next/image returned non-200 status on local probe:" >&2
   cat "$image_probe_file" >&2
   rm -f "$image_probe_file"
   exit 1
