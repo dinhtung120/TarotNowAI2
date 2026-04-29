@@ -1,4 +1,4 @@
-import HistoryPage from '@/features/reading/history/presentation/HistoryPage';
+import { ReadingHistoryPage } from '@/features/reading/public';
 import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
 import { prefetchReadingHistoryListPage } from '@/shared/server/prefetch/runners';
 
@@ -7,7 +7,7 @@ export default async function ReadingHistoryRoutePage() {
 
  return (
   <AppQueryHydrationBoundary state={state}>
-   <HistoryPage />
+   <ReadingHistoryPage />
   </AppQueryHydrationBoundary>
  );
 }

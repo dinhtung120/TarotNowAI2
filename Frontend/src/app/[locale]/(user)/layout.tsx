@@ -1,8 +1,8 @@
 import { Suspense, type ReactNode } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
-import AppNavbar from '@/features/auth/presentation/components/AppNavbar';
-import WalletStoreBridge from '@/features/wallet/presentation/components/WalletStoreBridge';
+import { AppNavbar } from '@/features/auth/public';
+import { WalletStoreBridge } from '@/features/wallet/public';
 import AuthBootstrap from '@/shared/components/auth/AuthBootstrap';
 import UserLayout from '@/shared/components/layout/UserLayout';
 import { UserSegmentMainSkeleton } from '@/shared/components/loading/segment-skeletons';

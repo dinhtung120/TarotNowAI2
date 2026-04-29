@@ -1,4 +1,5 @@
 import { verifyAccessToken } from '@/shared/server/auth/accessTokenVerifier';
+import { AUTH_VERIFIER_POLICY, resolveAuthVerificationPolicy } from '@/shared/server/auth/authVerifierPolicy';
 
 export const PROTECTED_ROUTE_AUTH_DECISION = {
  ALLOW: 'ALLOW',
@@ -70,12 +71,26 @@ export async function resolveProtectedRouteAuthDecision(
  }
 
  if (verification.reason === 'missing_verifier_config') {
+  if (resolveAuthVerificationPolicy() === AUTH_VERIFIER_POLICY.FAIL_OPEN) {
+   return {
+    decision: PROTECTED_ROUTE_AUTH_DECISION.ALLOW,
+    redirectPath: null,
+    reason: 'access_token_unverified_missing_verifier_config',
+   };
+  }
+
+  if (isNonEmptyToken(refreshToken)) {
+   return {
+    decision: PROTECTED_ROUTE_AUTH_DECISION.REDIRECT_HANDSHAKE,
+    redirectPath: buildHandshakePath(nextPath),
+    reason: 'access_token_invalid_missing_verifier_config',
+   };
+  }
+
   return {
-   // Do not block navigation when local JWT verifier is not configured.
-   // Backend API authorization remains the source of truth.
-   decision: PROTECTED_ROUTE_AUTH_DECISION.ALLOW,
-   redirectPath: null,
-   reason: 'access_token_unverified_missing_verifier_config',
+   decision: PROTECTED_ROUTE_AUTH_DECISION.REDIRECT_LOGIN,
+   redirectPath: buildLoginPath(locale),
+   reason: 'access_token_invalid_missing_verifier_config',
   };
  }
 

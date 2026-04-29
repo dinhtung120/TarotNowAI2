@@ -1,4 +1,4 @@
-import InventoryPage from '@/features/inventory/presentation/InventoryPage';
+import { InventoryPage } from '@/features/inventory/public';
 import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
 import { prefetchInventoryPage } from '@/shared/server/prefetch/runners';
 

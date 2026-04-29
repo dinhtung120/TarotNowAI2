@@ -25,26 +25,51 @@ export interface PaginatedResponse {
  items: AdminReading[];
 }
 
+export interface AdminReadingsFilters {
+ username: string;
+ spreadType: string;
+ startDate: string;
+ endDate: string;
+}
+
+const EMPTY_FILTERS: AdminReadingsFilters = {
+ username: '',
+ spreadType: '',
+ startDate: '',
+ endDate: '',
+};
+
+function normalizeFilters(filters: AdminReadingsFilters): AdminReadingsFilters {
+ return {
+  username: filters.username.trim(),
+  spreadType: filters.spreadType.trim(),
+  startDate: filters.startDate.trim(),
+  endDate: filters.endDate.trim(),
+ };
+}
+
 export function useAdminReadings() {
  const t = useTranslations('Admin');
  const locale = useLocale();
 
  const [page, setPage] = useState(1);
- const [username, setUsername] = useState('');
- const [spreadType, setSpreadType] = useState('');
- const [startDate, setStartDate] = useState('');
- const [endDate, setEndDate] = useState('');
+ const [draftFilters, setDraftFilters] = useState<AdminReadingsFilters>(EMPTY_FILTERS);
+ const [appliedFilters, setAppliedFilters] = useState<AdminReadingsFilters>(EMPTY_FILTERS);
 
- const { data, isLoading, isFetching } = useQuery<PaginatedResponse | null>({
-  queryKey: ['admin', 'readings', page, username, spreadType, startDate, endDate],
+ const { data, isLoading, isFetching, error } = useQuery<PaginatedResponse>({
+  queryKey: ['admin', 'readings', page, appliedFilters],
   queryFn: async () => {
    const result = await getAllHistorySessionsAdminAction({
     page,
     pageSize: 10,
-    username,
-    spreadType,
-    startDate: startDate ? new Date(startDate).toISOString() : undefined,
-    endDate: endDate ? new Date(endDate).toISOString() : undefined,
+    username: appliedFilters.username,
+    spreadType: appliedFilters.spreadType,
+    startDate: appliedFilters.startDate
+     ? new Date(appliedFilters.startDate).toISOString()
+     : undefined,
+    endDate: appliedFilters.endDate
+     ? new Date(appliedFilters.endDate).toISOString()
+     : undefined,
    });
 
    if (result.success && result.data) {
@@ -55,11 +80,14 @@ export function useAdminReadings() {
     toast.error(t('readings.toast.unauthorized'));
    }
 
-   return null;
+   throw new Error(result.error || 'Failed to load admin readings');
   },
  });
 
- const handleSearch = () => {
+ const applyFilters = (nextDraftFilters: AdminReadingsFilters) => {
+  const normalizedFilters = normalizeFilters(nextDraftFilters);
+  setDraftFilters(normalizedFilters);
+  setAppliedFilters(normalizedFilters);
   setPage(1);
  };
 
@@ -85,15 +113,9 @@ export function useAdminReadings() {
   loading: isLoading || isFetching,
   page,
   setPage,
-  username,
-  setUsername,
-  spreadType,
-  setSpreadType,
-  startDate,
-  setStartDate,
-  endDate,
-  setEndDate,
-  handleSearch,
+  filters: draftFilters,
+  applyFilters,
+  listError: error instanceof Error ? error.message : '',
   getSpreadLabel,
  };
 }

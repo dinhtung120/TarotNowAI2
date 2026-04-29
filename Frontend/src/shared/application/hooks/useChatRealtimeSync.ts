@@ -9,6 +9,14 @@ import { userStateQueryKeys } from '@/shared/application/gateways/userStateQuery
 import { getSignalRHubUrl } from '@/shared/application/gateways/signalRUrl';
 import { ensureRealtimeSession } from '@/shared/application/gateways/realtimeSessionGuard';
 import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
+import { useReconnectWakeup } from '@/shared/application/hooks/useReconnectWakeup';
+import {
+  hasSameNumberArray,
+  isUnauthorizedNegotiationError,
+  shouldStopConnection,
+  startConnectionWithTimeout,
+  stopConnectionSafely,
+} from '@/shared/application/hooks/signalRConnectionUtils';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 
 interface UseChatRealtimeSyncOptions {
@@ -31,44 +39,6 @@ function shouldRefreshUnreadBadge(payload?: ConversationUpdatedPayload): boolean
  return UNREAD_BADGE_REFRESH_EVENT_TYPES.has(eventType);
 }
 
-function isUnauthorizedNegotiationError(error: unknown): boolean {
- if (!error) {
-  return false;
- }
-
- const text = typeof error === 'string'
-  ? error
-  : error instanceof Error
-   ? error.message
-   : JSON.stringify(error);
- return text.includes('401') || /unauthorized/i.test(text);
-}
-
-function createTimeoutError(timeoutMs: number): Error {
- return new Error(`Chat negotiation timeout after ${timeoutMs}ms.`);
-}
-
-async function startConnectionWithTimeout(
- connection: HubConnection,
- timeoutMs: number,
-): Promise<void> {
- let timeoutId: NodeJS.Timeout | null = null;
- try {
-  await Promise.race([
-   connection.start(),
-   new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => {
-     reject(createTimeoutError(timeoutMs));
-    }, timeoutMs);
-   }),
-  ]);
- } finally {
-  if (timeoutId) {
-   clearTimeout(timeoutId);
-  }
- }
-}
-
 export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
   const enabled = options.enabled ?? true;
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -77,6 +47,7 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
   const connectionRef = useRef<HubConnection | null>(null);
   const unauthorizedRetryBlockedUntilRef = useRef(0);
   const queryClient = useQueryClient();
+  const { wakeupVersion, scheduleWakeup, cancelWakeup } = useReconnectWakeup();
   
   const appStartTimeRef = useRef(Date.now());
 
@@ -93,7 +64,7 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
   // Đồng bộ giá trị từ runtimePolicy vào ref mà không gây ảnh hưởng đến useEffect chính.
   useEffect(() => {
     const currentSchedule = realtimePolicy?.reconnectScheduleMs ?? RUNTIME_POLICY_FALLBACKS.realtime.reconnectScheduleMs;
-    if (JSON.stringify(reconnectScheduleRef.current) !== JSON.stringify(currentSchedule)) {
+    if (!hasSameNumberArray(reconnectScheduleRef.current, currentSchedule)) {
       reconnectScheduleRef.current = [...currentSchedule];
     }
 
@@ -114,20 +85,17 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
      * Chỉ kết nối lại khi trạng thái enabled hoặc isAuthenticated thay đổi.
      */
     if (!enabled || !isAuthenticated) {
+      cancelWakeup();
       const existing = connectionRef.current;
-      if (
-        existing &&
-        (existing.state === HubConnectionState.Connected
-         || existing.state === HubConnectionState.Reconnecting
-         || existing.state === HubConnectionState.Disconnecting)
-      ) {
-        void existing.stop().catch(() => undefined);
+      if (shouldStopConnection(existing)) {
+        void stopConnectionSafely(existing);
       }
       connectionRef.current = null;
       return;
     }
 
     if (Date.now() < unauthorizedRetryBlockedUntilRef.current) {
+      scheduleWakeup(unauthorizedRetryBlockedUntilRef.current - Date.now());
       return;
     }
 
@@ -196,22 +164,25 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
       });
 
       try {
-        await startConnectionWithTimeout(hubConnection, negotiationTimeoutMs);
+        await startConnectionWithTimeout(hubConnection, negotiationTimeoutMs, 'Chat');
         if (cancelled) {
           if (hubConnection.state !== HubConnectionState.Disconnected) {
-            await hubConnection.stop().catch(() => undefined);
+            await stopConnectionSafely(hubConnection);
           }
           return;
         }
         connectionRef.current = hubConnection;
+        unauthorizedRetryBlockedUntilRef.current = 0;
+        cancelWakeup();
       } catch (error) {
         if (isUnauthorizedNegotiationError(error)) {
           unauthorizedRetryBlockedUntilRef.current = Date.now() + unauthorizedCooldownMs;
         } else if (error instanceof Error) {
           unauthorizedRetryBlockedUntilRef.current = Date.now() + Math.floor(unauthorizedCooldownMs / 2);
         }
+        scheduleWakeup(unauthorizedRetryBlockedUntilRef.current - Date.now());
         if (hubConnection && hubConnection.state !== HubConnectionState.Disconnected) {
-          await hubConnection.stop().catch(() => undefined);
+          await stopConnectionSafely(hubConnection);
         }
         logger.error('[ChatRealtimeSync] connect failed', error);
       }
@@ -229,9 +200,9 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
          || hubConnection.state === HubConnectionState.Reconnecting
          || hubConnection.state === HubConnectionState.Disconnecting)
       ) {
-        void hubConnection.stop().catch(() => undefined);
+        void stopConnectionSafely(hubConnection);
       }
       connectionRef.current = null;
     };
-  }, [enabled, isAuthenticated, queryClient]);
+  }, [cancelWakeup, enabled, isAuthenticated, queryClient, scheduleWakeup, wakeupVersion]);
 }

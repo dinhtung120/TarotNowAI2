@@ -1,2 +1,4 @@
-export { default, generateMetadata } from '@/features/legal/presentation/TermsOfServicePage';
-
+export {
+ TermsOfServicePage as default,
+ generateTermsOfServiceMetadata as generateMetadata,
+} from '@/features/legal/public';

@@ -18,7 +18,7 @@ export default function AdminDashboardPage() {
  const navigation = useOptimizedNavigation();
  const t = useTranslations('Admin');
  const locale = useLocale();
- const { stats, loading } = useAdminDashboard();
+ const { stats, loading, statsError } = useAdminDashboard();
 
  const statCards: AdminStatCard[] = [
   { name: t('dashboard.stats.users'), value: stats.users, icon: Users, color: 'text-[var(--info)]', bg: 'bg-[var(--info)]/10', hoverRing: 'hover:ring-[var(--info)]/30', href: '/admin/users' },
@@ -33,6 +33,11 @@ export default function AdminDashboardPage() {
 
  return (
   <div className={cn('space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000 pb-20')}>
+   {statsError ? (
+    <div className={cn('rounded-2xl border border-red-400/30 bg-red-500/10 px-5 py-4 text-sm font-semibold text-red-200')}>
+     {statsError}
+    </div>
+   ) : null}
    <AdminDashboardHeader />
    <AdminDashboardStatsGrid
     cards={statCards}

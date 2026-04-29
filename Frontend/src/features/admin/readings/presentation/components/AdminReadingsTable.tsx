@@ -10,6 +10,7 @@ import { AdminReadingsTableHead } from './AdminReadingsTableHead';
 interface AdminReadingsTableProps {
  data: PaginatedResponse | null | undefined;
  loading: boolean;
+ listError: string;
  page: number;
  onPageChange: (page: number) => void;
  getSpreadLabel: (type: string) => string;
@@ -18,6 +19,7 @@ interface AdminReadingsTableProps {
 export function AdminReadingsTable({
  data,
  loading,
+ listError,
  page,
  onPageChange,
  getSpreadLabel,
@@ -31,6 +33,7 @@ export function AdminReadingsTable({
       <AdminReadingsTableContent
        data={data}
        loading={loading}
+       listError={listError}
        getSpreadLabel={getSpreadLabel}
       />
      </tbody>

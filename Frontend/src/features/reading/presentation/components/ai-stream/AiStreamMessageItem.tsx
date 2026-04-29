@@ -18,7 +18,7 @@ export function AiStreamMessageItem({ message }: AiStreamMessageItemProps) {
      {isUser ? (
       <p className={cn("tn-text-warning")}>{message.content}</p>
      ) : (
-      <div className="whitespace-pre-wrap break-words">
+      <div className={cn("whitespace-pre-wrap break-words")}>
        {message.content}
       </div>
      )}

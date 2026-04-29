@@ -23,6 +23,7 @@ const dependencyViolations = [];
 const domainPurityViolations = [];
 const clientBoundaryViolations = [];
 const sensitiveStreamViolations = [];
+const pagePublicApiViolations = [];
 const unclassifiedRuntimeFiles = findUnclassifiedRuntimeFiles(sourceFiles);
 
 for (const relativePath of sourceFiles) {
@@ -44,6 +45,18 @@ for (const relativePath of sourceFiles) {
 
  const imports = extractImports(sourceCode);
  for (const importPath of imports) {
+  if (
+   isAppPageOrLayout(relativePath)
+   && importPath.startsWith('@/features/')
+   && !/^@\/features\/[^/]+\/public$/.test(importPath)
+  ) {
+   pagePublicApiViolations.push({
+    file: relativePath,
+    importPath,
+    line: findLine(sourceCode, importPath),
+   });
+  }
+
   if (sourceLayer === 'domain' && isExternalImport(importPath)) {
    domainPurityViolations.push({
     file: relativePath,
@@ -87,6 +100,7 @@ if (
  || domainPurityViolations.length > 0
  || clientBoundaryViolations.length > 0
  || sensitiveStreamViolations.length > 0
+ || pagePublicApiViolations.length > 0
 ) {
  console.error('Clean architecture guard failed.');
 
@@ -124,6 +138,13 @@ if (
   console.error('Sensitive stream payload must not appear on EventSource URLs:');
   for (const violation of sensitiveStreamViolations) {
    console.error(`- ${violation.file}:${violation.line} ${violation.message}`);
+  }
+ }
+
+ if (pagePublicApiViolations.length > 0) {
+  console.error('App page/layout files must import features through feature public APIs only:');
+  for (const violation of pagePublicApiViolations) {
+   console.error(`- ${violation.file}:${violation.line} import ${violation.importPath}`);
   }
  }
 
@@ -169,6 +190,10 @@ function isExternalImport(importPath) {
  return !importPath.startsWith('./')
   && !importPath.startsWith('../')
   && !importPath.startsWith('@/');
+}
+
+function isAppPageOrLayout(relativePath) {
+ return /^src\/app\/.+\/(page|layout)\.(ts|tsx|mts)$/.test(relativePath);
 }
 
 function resolveImportTarget(sourceRelativePath, importPath) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { History, Loader2 } from 'lucide-react';
+import { History, Loader2, TriangleAlert } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import type { PaginatedResponse } from '@/features/admin/readings/application/useAdminReadings';
@@ -9,10 +9,11 @@ import { AdminReadingsTableRow } from './AdminReadingsTableRow';
 interface AdminReadingsTableContentProps {
  data: PaginatedResponse | null | undefined;
  loading: boolean;
+ listError: string;
  getSpreadLabel: (type: string) => string;
 }
 
-export function AdminReadingsTableContent({ data, loading, getSpreadLabel }: AdminReadingsTableContentProps) {
+export function AdminReadingsTableContent({ data, loading, listError, getSpreadLabel }: AdminReadingsTableContentProps) {
  const t = useTranslations('Admin');
 
  if (loading) {
@@ -31,6 +32,21 @@ export function AdminReadingsTableContent({ data, loading, getSpreadLabel }: Adm
  }
 
  if (!data || !data.items || data.items.length === 0) {
+  if (listError) {
+   return (
+    <tr>
+     <td colSpan={5} className={cn('px-8 py-20 text-center')}>
+      <div className={cn('flex flex-col items-center justify-center space-y-4')}>
+       <TriangleAlert className={cn('w-8 h-8 text-red-300')} />
+       <span className={cn('tn-text-10 font-black uppercase tracking-widest text-red-300')}>
+        {listError}
+       </span>
+      </div>
+     </td>
+    </tr>
+   );
+  }
+
   return (
    <tr>
     <td colSpan={5} className={cn('px-8 py-20 text-center')}>

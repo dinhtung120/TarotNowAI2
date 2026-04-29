@@ -1,4 +1,4 @@
-import DepositHistoryPage from '@/features/wallet/presentation/DepositHistoryPage';
+import { WalletDepositHistoryPage } from '@/features/wallet/public';
 import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
 import { prefetchDepositHistoryPage } from '@/shared/server/prefetch/runners';
 
@@ -7,7 +7,7 @@ export default async function DepositHistoryRoutePage() {
 
  return (
   <AppQueryHydrationBoundary state={state}>
-   <DepositHistoryPage />
+   <WalletDepositHistoryPage />
   </AppQueryHydrationBoundary>
  );
 }

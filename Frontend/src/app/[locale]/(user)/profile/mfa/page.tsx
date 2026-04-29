@@ -1,4 +1,4 @@
-import ProfileMfaPage from '@/features/profile/mfa/presentation/ProfileMfaPage';
+import { ProfileMfaPage } from '@/features/profile/public';
 import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
 import { prefetchProfileMfaPage } from '@/shared/server/prefetch/runners';
 

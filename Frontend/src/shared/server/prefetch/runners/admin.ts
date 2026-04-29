@@ -10,12 +10,17 @@ import {
 } from '@/features/gamification/admin/infrastructure/adminGamificationServer';
 import { getAllHistorySessionsAdminAction } from '@/features/reading/public';
 import { listWithdrawalQueue } from '@/features/wallet/public';
+import { logger } from '@/shared/application/gateways/logger';
+import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
 
-async function swallowPrefetch(run: () => Promise<void>): Promise<void> {
+async function swallowPrefetch(
+ label: string,
+ run: () => Promise<void>,
+): Promise<void> {
  try {
   await run();
- } catch {
-  /* Prefetch server-side là best-effort nếu thiếu session hoặc API lỗi. */
+ } catch (error) {
+  logger.warn('[AdminPrefetch]', `${label}.failed`, { error });
  }
 }
 
@@ -23,52 +28,41 @@ export async function prefetchAdminDashboardPage(qc: QueryClient): Promise<void>
  await qc.prefetchQuery({
   queryKey: ['admin', 'dashboard-stats'],
   queryFn: async () => {
-   try {
-    const [usersRes, depositsRes, promosRes, readingsRes] = await Promise.all([
-     listUsers(1, 1),
-     listDeposits(1, 1),
-     listPromotions(false),
-     getAllHistorySessionsAdminAction({ page: 1, pageSize: 1 }),
-    ]);
+   const [usersRes, depositsRes, promosRes, readingsRes] = await Promise.all([
+    listUsers(1, 1),
+    listDeposits(1, 1),
+    listPromotions(false),
+    getAllHistorySessionsAdminAction({ page: 1, pageSize: 1 }),
+   ]);
 
-    const readingCount =
-     readingsRes && 'success' in readingsRes && readingsRes.success
-      ? readingsRes.data?.totalCount ?? 0
-      : 0;
+   const users = queryFnOrThrow(usersRes, 'Failed to load admin users for dashboard prefetch');
+   const deposits = queryFnOrThrow(depositsRes, 'Failed to load admin deposits for dashboard prefetch');
+   const promotions = queryFnOrThrow(promosRes, 'Failed to load promotions for dashboard prefetch');
+   const readings = queryFnOrThrow(readingsRes, 'Failed to load readings for dashboard prefetch');
 
-    return {
-     users: usersRes.success && usersRes.data ? usersRes.data.totalCount : 0,
-     deposits: depositsRes.success && depositsRes.data ? depositsRes.data.totalCount : 0,
-     promotions: promosRes.success && promosRes.data ? promosRes.data.length : 0,
-     readings: readingCount,
-    };
-   } catch {
-    return {
-     users: 0,
-     deposits: 0,
-     promotions: 0,
-     readings: 0,
-    };
-   }
+   return {
+    users: users.totalCount,
+    deposits: deposits.totalCount,
+    promotions: promotions.length,
+    readings: readings.totalCount,
+   };
   },
  });
 }
 
 export async function prefetchAdminUsersPage(qc: QueryClient): Promise<void> {
- await swallowPrefetch(async () => {
+ await swallowPrefetch('prefetchAdminUsersPage', async () => {
   await qc.prefetchQuery({
    queryKey: ['admin', 'users', 1, ''] as const,
    queryFn: async () => {
     const result = await listUsers(1, 10, '');
-    if (!result.success || !result.data) {
-     return { users: [], totalCount: 0 };
-    }
+    const payload = queryFnOrThrow(result, 'Failed to prefetch admin users');
     return {
-     users: result.data.users.map((item) => ({
+     users: payload.users.map((item) => ({
       ...item,
       isLocked: item.status?.toLowerCase() === 'locked',
      })),
-     totalCount: result.data.totalCount,
+     totalCount: payload.totalCount,
     };
    },
   });
@@ -76,41 +70,35 @@ export async function prefetchAdminUsersPage(qc: QueryClient): Promise<void> {
 }
 
 export async function prefetchAdminDepositsPage(qc: QueryClient): Promise<void> {
- await swallowPrefetch(async () => {
+ await swallowPrefetch('prefetchAdminDepositsPage', async () => {
   await qc.prefetchQuery({
    queryKey: ['admin', 'deposits', 1, ''],
    queryFn: async () => {
     const result = await listDeposits(1, 10, '');
-    if (!result.success || !result.data) {
-     return { deposits: [], totalCount: 0 };
-    }
-    return result.data;
+    return queryFnOrThrow(result, 'Failed to prefetch admin deposits');
    },
   });
  });
 }
 
 export async function prefetchAdminReaderRequestsPage(qc: QueryClient): Promise<void> {
- await swallowPrefetch(async () => {
+ await swallowPrefetch('prefetchAdminReaderRequestsPage', async () => {
   const pageSize = 10;
   const statusFilter = 'pending';
   await qc.prefetchQuery({
    queryKey: ['admin', 'reader-requests', 1, statusFilter],
    queryFn: async () => {
     const result = await listReaderRequests(1, pageSize, statusFilter);
-    if (!result.success || !result.data) {
-     return { requests: [], totalCount: 0 };
-    }
-    return result.data;
+    return queryFnOrThrow(result, 'Failed to prefetch admin reader requests');
    },
   });
  });
 }
 
 export async function prefetchAdminReadingsPage(qc: QueryClient): Promise<void> {
- await swallowPrefetch(async () => {
+ await swallowPrefetch('prefetchAdminReadingsPage', async () => {
   await qc.prefetchQuery({
-   queryKey: ['admin', 'readings', 1, '', '', '', ''],
+   queryKey: ['admin', 'readings', 1, { username: '', spreadType: '', startDate: '', endDate: '' }],
    queryFn: async () => {
     const result = await getAllHistorySessionsAdminAction({
      page: 1,
@@ -120,44 +108,38 @@ export async function prefetchAdminReadingsPage(qc: QueryClient): Promise<void> 
      startDate: undefined,
      endDate: undefined,
     });
-    if (result.success && result.data) {
-     return result.data;
-    }
-    return null;
+    return queryFnOrThrow(result, 'Failed to prefetch admin readings');
    },
   });
  });
 }
 
 export async function prefetchAdminWithdrawalsQueuePage(qc: QueryClient): Promise<void> {
- await swallowPrefetch(async () => {
+ await swallowPrefetch('prefetchAdminWithdrawalsQueuePage', async () => {
   await qc.prefetchQuery({
    queryKey: ['admin', 'withdrawals', 'queue'] as const,
    queryFn: async () => {
     const result = await listWithdrawalQueue();
-    return result.success && result.data ? result.data : [];
+    return queryFnOrThrow(result, 'Failed to prefetch withdrawal queue');
    },
   });
  });
 }
 
 export async function prefetchAdminDisputesPage(qc: QueryClient): Promise<void> {
- await swallowPrefetch(async () => {
+ await swallowPrefetch('prefetchAdminDisputesPage', async () => {
   await qc.prefetchQuery({
    queryKey: ['admin', 'disputes', 'list'],
    queryFn: async () => {
     const result = await listAdminDisputes(1, 100);
-    if (result.success && result.data) {
-     return result.data.items;
-    }
-    return [];
+    return queryFnOrThrow(result, 'Failed to prefetch admin disputes').items;
    },
  });
 });
 }
 
 export async function prefetchAdminGamificationPage(qc: QueryClient): Promise<void> {
- await swallowPrefetch(async () => {
+ await swallowPrefetch('prefetchAdminGamificationPage', async () => {
   await Promise.all([
    qc.prefetchQuery({
     queryKey: adminGamificationKeys.quests(),

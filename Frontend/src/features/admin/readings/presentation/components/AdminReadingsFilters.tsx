@@ -4,23 +4,17 @@ import { BookOpen, Calendar, Search, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/shared/components/ui";
 import { cn } from "@/lib/utils";
+import type { AdminReadingsFilters as AdminReadingsFiltersValue } from '@/features/admin/readings/application/useAdminReadings';
 import { AdminReadingsFilterField } from "./AdminReadingsFilterField";
 import { AdminReadingsSpreadSelect } from "./AdminReadingsSpreadSelect";
 import { useAdminReadingsFiltersForm } from "./useAdminReadingsFiltersForm";
 
 interface AdminReadingsFiltersProps {
- username: string;
- spreadType: string;
- startDate: string;
- endDate: string;
- onUsernameChange: (value: string) => void;
- onSpreadTypeChange: (value: string) => void;
- onStartDateChange: (value: string) => void;
- onEndDateChange: (value: string) => void;
- onSubmit: () => void;
+ values: AdminReadingsFiltersValue;
+ onSubmit: (values: AdminReadingsFiltersValue) => void;
 }
 
-export function AdminReadingsFilters({ username, spreadType, startDate, endDate, onUsernameChange, onSpreadTypeChange, onStartDateChange, onEndDateChange, onSubmit }: AdminReadingsFiltersProps) {
+export function AdminReadingsFilters({ values, onSubmit }: AdminReadingsFiltersProps) {
  const t = useTranslations("Admin");
  const {
   setValue,
@@ -30,14 +24,7 @@ export function AdminReadingsFilters({ username, spreadType, startDate, endDate,
   watchedStartDate,
   watchedEndDate,
  } = useAdminReadingsFiltersForm({
-  username,
-  spreadType,
-  startDate,
-  endDate,
-  onUsernameChange,
-  onSpreadTypeChange,
-  onStartDateChange,
-  onEndDateChange,
+  initialValues: values,
   onSubmit,
  });
 

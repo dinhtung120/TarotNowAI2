@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   GACHA_API_ROUTES,
@@ -156,15 +157,33 @@ async function sendPullRequest(payload: PullGachaPayload, idempotencyKey: string
 
 export function usePullGacha() {
  const queryClient = useQueryClient();
+ const pendingIdempotencyByPayloadRef = useRef<WeakMap<PullGachaPayload, string>>(new WeakMap());
+
+ const resolveRequestIdempotencyKey = (payload: PullGachaPayload): string => {
+  const cached = pendingIdempotencyByPayloadRef.current.get(payload);
+  if (cached) {
+   return cached;
+  }
+
+  if (payload.idempotencyKey?.trim()) {
+   return payload.idempotencyKey.trim();
+  }
+
+  return createIdempotencyKey();
+ };
 
   return useMutation({
-  mutationFn: (payload: PullGachaPayload) => {
-   const activeIdempotencyKey = payload.idempotencyKey || createIdempotencyKey();
-   payload.idempotencyKey = activeIdempotencyKey;
-   markLocalGachaCacheSynced(activeIdempotencyKey);
-   return sendPullRequest(payload, activeIdempotencyKey);
+  onMutate: (payload) => {
+   const idempotencyKey = resolveRequestIdempotencyKey(payload);
+   pendingIdempotencyByPayloadRef.current.set(payload, idempotencyKey);
+   markLocalGachaCacheSynced(idempotencyKey);
+   return { idempotencyKey };
   },
-  onSuccess: (result, variables) => {
+  mutationFn: (payload: PullGachaPayload) => {
+   const activeIdempotencyKey = resolveRequestIdempotencyKey(payload);
+   return sendPullRequest({ ...payload, idempotencyKey: activeIdempotencyKey }, activeIdempotencyKey);
+  },
+  onSuccess: (result, variables, context) => {
    queryClient.setQueryData<GachaPool[] | undefined>(gachaQueryKeys.pools(), (currentPools) => {
     if (!currentPools?.length) {
      return currentPools;
@@ -180,8 +199,11 @@ export function usePullGacha() {
 
    patchHistoryCaches(queryClient, result, variables.count);
    updateInventoryCacheFromGachaResult(queryClient, result);
-   markLocalGachaCacheSynced(variables.idempotencyKey);
+   markLocalGachaCacheSynced(context?.idempotencyKey);
    void queryClient.invalidateQueries({ queryKey: GACHA_HISTORY_QUERY_KEY, refetchType: 'none' });
+  },
+  onSettled: (_result, _error, variables) => {
+   pendingIdempotencyByPayloadRef.current.delete(variables);
   },
  });
 }

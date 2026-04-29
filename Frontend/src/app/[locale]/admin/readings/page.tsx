@@ -4,7 +4,7 @@ import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/
 import { prefetchAdminReadingsPage } from '@/shared/server/prefetch/runners';
 
 const AdminReadingsPage = dynamic(
- () => import('@/features/admin/readings/presentation/AdminReadingsPage').then((m) => m.default),
+ () => import('@/features/admin/public').then((m) => m.AdminReadingsPage),
  {
   loading: () => <AdminRouteLoadingFallback />,
  }

@@ -4,6 +4,7 @@ import { getServerAccessToken } from '@/shared/infrastructure/auth/serverAuth';
 import { internalApiUrl } from '@/shared/infrastructure/http/apiUrl';
 import { logger } from '@/shared/infrastructure/logging/logger';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
+import { forwardUpstreamJsonWithTimeout } from '@/app/api/_shared/forwardUpstreamJsonWithTimeout';
 import {
  getSafeFollowupQuestion,
  getSafeStreamLanguage,
@@ -24,6 +25,7 @@ function isTrustedOrigin(request: NextRequest): boolean {
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+const STREAM_TICKET_TIMEOUT_MS = 10_000;
 
 export async function POST(
  request: NextRequest,
@@ -68,28 +70,25 @@ export async function POST(
  }
 
  const language = getSafeStreamLanguage(payload.language ?? null);
- const upstreamResponse = await fetch(internalApiUrl(`/sessions/${encodeURIComponent(sessionId)}/stream-ticket`), {
-  method: 'POST',
-  headers: {
-   Authorization: `Bearer ${accessToken}`,
-   Accept: 'application/json',
-   'Content-Type': 'application/json',
-   [AUTH_HEADER.IDEMPOTENCY_KEY]: idempotencyKey,
+ return forwardUpstreamJsonWithTimeout(
+  internalApiUrl(`/sessions/${encodeURIComponent(sessionId)}/stream-ticket`),
+  {
+   timeoutMs: STREAM_TICKET_TIMEOUT_MS,
+   fallbackErrorDetail: 'Failed to request stream ticket.',
+   request: {
+    method: 'POST',
+    headers: {
+     Authorization: `Bearer ${accessToken}`,
+     Accept: 'application/json',
+     'Content-Type': 'application/json',
+     [AUTH_HEADER.IDEMPOTENCY_KEY]: idempotencyKey,
+    },
+    cache: 'no-store',
+    body: JSON.stringify({
+     followUpQuestion: followupQuestion,
+     language,
+    }),
+   },
   },
-  cache: 'no-store',
-  body: JSON.stringify({
-   followUpQuestion: followupQuestion,
-   language,
-  }),
- });
-
- const responseText = await upstreamResponse.text();
- const contentType = upstreamResponse.headers.get('content-type') ?? 'application/json';
-
- return new NextResponse(responseText, {
-  status: upstreamResponse.status,
-  headers: {
-   'Content-Type': contentType,
-  },
- });
+ );
 }

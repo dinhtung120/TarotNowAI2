@@ -2,7 +2,7 @@ import dynamic from 'next/dynamic';
 import AdminRouteLoadingFallback from '@/shared/components/loading/AdminRouteLoadingFallback';
 
 const AdminPromotionsPage = dynamic(
- () => import('@/features/admin/promotions/presentation/AdminPromotionsPage').then((m) => m.default),
+ () => import('@/features/admin/public').then((m) => m.AdminPromotionsPage),
  {
   loading: () => <AdminRouteLoadingFallback />,
  }

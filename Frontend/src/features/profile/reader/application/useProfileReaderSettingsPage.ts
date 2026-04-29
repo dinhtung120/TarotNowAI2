@@ -1,38 +1,19 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import toast from 'react-hot-toast';
+import { useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
-import { getReaderProfile, updateReaderProfile, updateReaderStatus } from '@/features/reader/public';
+import { getReaderProfile } from '@/features/reader/public';
 import type { ReaderProfile } from '@/features/reader/application/actions';
-import { normalizeReaderStatus, type ReaderStatus } from '@/features/reader/domain/readerStatus';
-import { isReaderSpecialtyValue, type ReaderSpecialtyValue } from '@/features/reader/domain/readerSpecialties';
-import { hasAtLeastOneSocialLink, normalizeOptionalSocialUrl } from '@/features/reader/domain/readerSocialLinks';
+import { normalizeReaderStatus } from '@/features/reader/domain/readerStatus';
+import { isReaderSpecialtyValue } from '@/features/reader/domain/readerSpecialties';
+import { normalizeOptionalSocialUrl } from '@/features/reader/domain/readerSocialLinks';
+import { useProfileReaderSettingsHandlers } from '@/features/profile/reader/application/useProfileReaderSettings.handlers';
+import type {
+ ReaderSettingsDraft,
+ TranslateFn,
+} from '@/features/profile/reader/application/useProfileReaderSettings.types';
 import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
-
-type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
-
-interface ReaderSettingsDraft {
- bioVi: string;
- diamondPerQuestion: number;
- specialties: ReaderSpecialtyValue[];
- yearsOfExperience: number;
- facebookUrl: string;
- instagramUrl: string;
- tikTokUrl: string;
- status: ReaderStatus;
-}
-
-interface ReaderSettingsSubmitPayload {
- bio: string;
- specialties: ReaderSpecialtyValue[];
- years: number;
- price: number;
- facebookUrl: string;
- instagramUrl: string;
- tikTokUrl: string;
-}
 
 function toDraft(
  profile: ReaderProfile | null | undefined,
@@ -75,74 +56,22 @@ export function useProfileReaderSettingsPage(t: TranslateFn) {
    return result.success ? result.data ?? null : null;
   },
  });
-
- const saveMutation = useMutation({ mutationFn: updateReaderProfile });
- const statusMutation = useMutation({ mutationFn: updateReaderStatus });
+ const { handleSave, handleStatusChange, saving } = useProfileReaderSettingsHandlers({
+  t,
+  queryClient,
+  isTarotReader,
+  readerPolicyReady,
+  userId: user?.id,
+ });
 
  const effectiveValues = useMemo(
   () => toDraft(profileQuery.data, minYearsOfExperience, minDiamondPerQuestion, defaultDiamondPerQuestion),
   [defaultDiamondPerQuestion, minDiamondPerQuestion, minYearsOfExperience, profileQuery.data],
  );
 
- const handleSave = useCallback(async (values: ReaderSettingsSubmitPayload) => {
-  if (!isTarotReader) {
-   toast.error(t('reader.toast_not_found'));
-   return;
-  }
-
-  if (!readerPolicyReady) {
-   toast.error(t('reader.toast_policy_unavailable'));
-   return;
-  }
-
-  if (values.specialties.length === 0) {
-   toast.error(t('reader.toast_specialties_required'));
-   return;
-  }
-
-  if (!hasAtLeastOneSocialLink(values)) {
-   toast.error(t('reader.toast_social_required'));
-   return;
-  }
-
-  const result = await saveMutation.mutateAsync({
-   bioVi: values.bio,
-   diamondPerQuestion: values.price,
-   specialties: values.specialties,
-   yearsOfExperience: values.years,
-   facebookUrl: normalizeOptionalSocialUrl(values.facebookUrl) || undefined,
-   instagramUrl: normalizeOptionalSocialUrl(values.instagramUrl) || undefined,
-   tikTokUrl: normalizeOptionalSocialUrl(values.tikTokUrl) || undefined,
-  });
-
-  if (!result.success) {
-   toast.error(t('reader.toast_save_fail'));
-   return;
-  }
-
-  toast.success(t('reader.toast_save_success'));
-  await queryClient.invalidateQueries({ queryKey: ['reader-profile-settings', user?.id] });
- }, [isTarotReader, queryClient, readerPolicyReady, saveMutation, t, user?.id]);
-
- const handleStatusChange = useCallback(async (newStatus: ReaderStatus) => {
-  if (!isTarotReader) {
-   return;
-  }
-
-  const result = await statusMutation.mutateAsync(newStatus);
-
-  if (!result.success) {
-   toast.error(t('reader.toast_status_update_fail'));
-   return;
-  }
-
-  await queryClient.invalidateQueries({ queryKey: ['reader-profile-settings', user?.id] });
-  toast.success(t('reader.toast_status_updated'));
- }, [isTarotReader, queryClient, statusMutation, t, user?.id]);
-
  return {
   loading: profileQuery.isLoading || profileQuery.isFetching,
-  saving: saveMutation.isPending || statusMutation.isPending,
+  saving,
   bioVi: effectiveValues.bioVi,
   diamondPerQuestion: effectiveValues.diamondPerQuestion,
   specialties: effectiveValues.specialties,

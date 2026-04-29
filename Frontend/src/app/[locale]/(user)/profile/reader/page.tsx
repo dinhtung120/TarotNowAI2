@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import ProfileReaderSettingsPage from '@/features/profile/reader/presentation/ProfileReaderSettingsPage';
+import { ProfileReaderSettingsPage } from '@/features/profile/public';
 import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
 import { prefetchProfileReaderSettingsPage } from '@/shared/server/prefetch/runners';
 import { requireSessionWithHandshake } from '@/shared/server/auth/sessionHandshake';

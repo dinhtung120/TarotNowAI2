@@ -2,6 +2,7 @@
 
 import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
 import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
+import { createIdempotentDomainCommandInvoker } from '@/shared/application/gateways/idempotentDomainCommandInvoker';
 import { logger } from '@/shared/application/gateways/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import { AUTH_ERROR } from "@/shared/domain/authErrors";
@@ -93,12 +94,16 @@ export async function processDeposit(
    bodyPayload.TransactionId = normalizedTransactionId;
   }
 
-  const result = await serverHttpRequest<unknown>('/admin/deposits/process', {
-   method: 'PATCH',
-   token: accessToken,
-   json: bodyPayload,
-   fallbackErrorMessage: 'Failed to process deposit',
-  });
+  const result = await createIdempotentDomainCommandInvoker<unknown, Record<string, string>>(
+   'wallet.deposit.admin.process',
+   {
+    path: '/admin/deposits/process',
+    method: 'PATCH',
+    token: accessToken,
+    payload: bodyPayload,
+    fallbackErrorMessage: 'Failed to process deposit',
+   },
+  );
 
   if (!result.ok) {
    logger.error('[AdminAction] processDeposit', result.error, {

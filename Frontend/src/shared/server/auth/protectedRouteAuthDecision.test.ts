@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createHmac } from 'node:crypto';
 import { verifyAccessToken } from '@/shared/server/auth/accessTokenVerifier';
 import {
@@ -48,10 +48,19 @@ function createUnsignedJwt(expSeconds: number): string {
 }
 
 describe('resolveProtectedRouteAuthDecision', () => {
+ const originalNodeEnv = process.env.NODE_ENV;
+
  beforeEach(() => {
   process.env.JWT_SECRETKEY = TEST_JWT_SECRET;
   process.env.JWT_ISSUER = TEST_JWT_ISSUER;
   process.env.JWT_AUDIENCE = TEST_JWT_AUDIENCE;
+  process.env.NODE_ENV = 'test';
+  delete process.env.AUTH_VERIFIER_POLICY;
+ });
+
+ afterEach(() => {
+  process.env.NODE_ENV = originalNodeEnv;
+  delete process.env.AUTH_VERIFIER_POLICY;
  });
 
  it('allows protected route when access token is cryptographically valid', async () => {
@@ -112,7 +121,7 @@ describe('resolveProtectedRouteAuthDecision', () => {
   expect(decision.reason).toBe('access_token_invalid_refresh_present');
  });
 
- it('allows protected route when verifier config is missing but access token exists', async () => {
+ it('allows protected route when verifier config is missing in non-production policy', async () => {
   const signedLikeToken = createForgedSignedLikeJwt(Math.floor(Date.now() / 1000) + 3600);
   delete process.env.JWT_SECRETKEY;
 
@@ -127,6 +136,25 @@ describe('resolveProtectedRouteAuthDecision', () => {
    decision: PROTECTED_ROUTE_AUTH_DECISION.ALLOW,
    redirectPath: null,
    reason: 'access_token_unverified_missing_verifier_config',
+  });
+ });
+
+ it('fails closed in production when verifier config is missing and refresh token exists', async () => {
+  process.env.NODE_ENV = 'production';
+  const signedLikeToken = createForgedSignedLikeJwt(Math.floor(Date.now() / 1000) + 3600);
+  delete process.env.JWT_SECRETKEY;
+
+  const decision = await resolveProtectedRouteAuthDecision({
+   accessToken: signedLikeToken,
+   refreshToken: 'refresh-token',
+   locale: 'en',
+   nextPath: '/en/wallet',
+  });
+
+  expect(decision).toEqual({
+   decision: PROTECTED_ROUTE_AUTH_DECISION.REDIRECT_HANDSHAKE,
+   redirectPath: '/api/auth/session/handshake?next=%2Fen%2Fwallet',
+   reason: 'access_token_invalid_missing_verifier_config',
   });
  });
 

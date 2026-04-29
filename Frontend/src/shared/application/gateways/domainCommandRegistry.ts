@@ -65,6 +65,18 @@ const DOMAIN_COMMAND_REGISTRY = {
   expectedEvents: EVENT_CONTRACTS.walletDeposit,
   ownership: 'wallet',
  },
+ 'wallet.deposit.admin.process': {
+  method: 'PATCH',
+  pathPattern: /^\/admin\/deposits\/process$/,
+  expectedEvents: EVENT_CONTRACTS.walletDeposit,
+  ownership: 'wallet',
+ },
+ 'admin.reader-request.process': {
+  method: 'PATCH',
+  pathPattern: /^\/admin\/reader-requests\/process$/,
+  expectedEvents: EVENT_CONTRACTS.adminReaderRequestProcess,
+  ownership: 'admin',
+ },
  'chat.add-money.request': {
   method: 'POST',
   pathPattern: /^\/conversations\/[^/]+\/add-money\/request$/,

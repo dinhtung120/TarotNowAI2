@@ -22,6 +22,8 @@ export default function NotificationDropdown({ enabled = true }: NotificationDro
     notifications,
     unreadCount,
     isLoading,
+    hasLoadError,
+    loadErrorMessage,
     markAsRead,
     markAllAsRead,
     refreshDropdown,
@@ -50,6 +52,8 @@ export default function NotificationDropdown({ enabled = true }: NotificationDro
           notifications={notifications}
           unreadCount={unreadCount}
           isLoading={isLoading}
+          hasLoadError={hasLoadError}
+          loadErrorMessage={loadErrorMessage || tCommon('error')}
           isMarkingAll={isMarkingAll}
           getTitle={getTitle}
           onMarkRead={markAsRead}

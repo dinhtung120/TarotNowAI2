@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { HubConnectionState, type HubConnection } from '@microsoft/signalr';
+import type { HubConnection } from '@microsoft/signalr';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
 import { logger } from '@/shared/application/gateways/logger';
@@ -10,53 +10,14 @@ import { ensureRealtimeSession } from '@/shared/application/gateways/realtimeSes
 import { useReconnectWakeup } from '@/shared/application/hooks/useReconnectWakeup';
 import { registerPresenceConnectionHandlers } from './usePresenceConnection.registration';
 import { useRuntimePolicies } from '@/shared/application/hooks/useRuntimePolicies';
+import {
+  hasSameNumberArray,
+  isUnauthorizedNegotiationError,
+  shouldStopConnection,
+  startConnectionWithTimeout,
+  stopConnectionSafely,
+} from '@/shared/application/hooks/signalRConnectionUtils';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
-
-function shouldStopConnection(connection: HubConnection | null) {
-  return !!connection && (
-    connection.state === HubConnectionState.Connected
-    || connection.state === HubConnectionState.Reconnecting
-    || connection.state === HubConnectionState.Disconnecting
-  );
-}
-
-function isUnauthorizedNegotiationError(error: unknown): boolean {
- if (!error) {
-  return false;
- }
-
- const text = typeof error === 'string'
-  ? error
-  : error instanceof Error
-   ? error.message
-   : JSON.stringify(error);
- return text.includes('401') || /unauthorized/i.test(text);
-}
-
-function createTimeoutError(timeoutMs: number): Error {
- return new Error(`Presence negotiation timeout after ${timeoutMs}ms.`);
-}
-
-async function startConnectionWithTimeout(
- connection: HubConnection,
- timeoutMs: number,
-): Promise<void> {
- let timeoutId: NodeJS.Timeout | null = null;
- try {
-  await Promise.race([
-   connection.start(),
-   new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => {
-     reject(createTimeoutError(timeoutMs));
-    }, timeoutMs);
-   }),
-  ]);
- } finally {
-  if (timeoutId) {
-   clearTimeout(timeoutId);
-  }
- }
-}
 
 interface UsePresenceConnectionOptions {
   enabled?: boolean;
@@ -86,7 +47,7 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
   useEffect(() => {
     const currentSchedule = realtimePolicy?.reconnectScheduleMs ?? RUNTIME_POLICY_FALLBACKS.realtime.reconnectScheduleMs;
     // So sánh JSON để tránh cập nhật ref nếu giá trị thực tế không đổi (tránh clone array vô ích).
-    if (JSON.stringify(reconnectScheduleRef.current) !== JSON.stringify(currentSchedule)) {
+    if (!hasSameNumberArray(reconnectScheduleRef.current, currentSchedule)) {
       reconnectScheduleRef.current = [...currentSchedule];
     }
 
@@ -108,7 +69,7 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
       cancelWakeup();
       const existing = connectionRef.current;
       if (existing && shouldStopConnection(existing)) {
-        void existing.stop().catch(() => undefined);
+        void stopConnectionSafely(existing);
       }
 
       connectionRef.current = null;
@@ -150,10 +111,10 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
       disposeRegistration = registration.dispose;
 
       try {
-        await startConnectionWithTimeout(hubConnection, negotiationTimeoutMs);
+        await startConnectionWithTimeout(hubConnection, negotiationTimeoutMs, 'Presence');
         if (cancelled) {
-          if (hubConnection.state !== HubConnectionState.Disconnected) {
-            await hubConnection.stop().catch(() => undefined);
+          if (shouldStopConnection(hubConnection)) {
+            await stopConnectionSafely(hubConnection);
           }
 
           return;
@@ -172,8 +133,8 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
 
         scheduleWakeup(reconnectBlockedUntilRef.current - Date.now());
 
-        if (hubConnection && hubConnection.state !== HubConnectionState.Disconnected) {
-          await hubConnection.stop().catch(() => undefined);
+        if (shouldStopConnection(hubConnection)) {
+          await stopConnectionSafely(hubConnection);
         }
         logger.error('[PresenceRealtimeSync] connect failed', error);
       }
@@ -187,7 +148,7 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
       disposeRegistration();
 
       if (hubConnection && shouldStopConnection(hubConnection)) {
-        void hubConnection.stop().catch(() => undefined);
+        void stopConnectionSafely(hubConnection);
       }
 
       connectionRef.current = null;

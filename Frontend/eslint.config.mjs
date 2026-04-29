@@ -34,7 +34,18 @@ const eslintConfig = defineConfig([
           message:
             "Read NEXT_PUBLIC_API_URL only inside shared/infrastructure/http/apiUrl.ts.",
         },
+        {
+          selector: "CallExpression[callee.name='useAuthStore'][arguments.length=0]",
+          message:
+            "useAuthStore must use a selector to avoid unnecessary re-renders.",
+        },
       ],
+    },
+  },
+  {
+    files: ["src/shared/infrastructure/gacha/**/*.{ts,tsx}"],
+    rules: {
+      "no-param-reassign": ["error", { props: true }],
     },
   },
   

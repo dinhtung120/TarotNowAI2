@@ -4,7 +4,7 @@ import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/
 import { prefetchAdminDisputesPage } from '@/shared/server/prefetch/runners';
 
 const AdminDisputesPage = dynamic(
- () => import('@/features/admin/disputes/presentation/AdminDisputesPage').then((m) => m.default),
+ () => import('@/features/admin/public').then((m) => m.AdminDisputesPage),
  {
   loading: () => <AdminRouteLoadingFallback />,
  }

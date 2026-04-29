@@ -9,6 +9,7 @@ import {
  processDeposit,
  type AdminDepositOrder,
 } from '@/features/admin/application/actions';
+import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
 
 interface ConfirmModalState {
  isOpen: boolean;
@@ -30,17 +31,11 @@ export function useAdminDeposits() {
   order: null,
  });
 
- const { data, isLoading, isFetching } = useQuery({
+ const { data, isLoading, isFetching, error } = useQuery({
   queryKey: ['admin', 'deposits', page, statusFilter],
   queryFn: async () => {
    const result = await listDeposits(page, 10, statusFilter);
-   if (!result.success || !result.data) {
-    return {
-     deposits: [] as AdminDepositOrder[],
-     totalCount: 0,
-    };
-   }
-   return result.data;
+   return queryFnOrThrow(result, 'Failed to load deposits');
   },
  });
 
@@ -87,6 +82,7 @@ export function useAdminDeposits() {
   statusFilter,
   setStatusFilter,
   loading: isLoading || isFetching,
+  listError: error instanceof Error ? error.message : '',
   processingId,
   confirmModal,
   setConfirmModal,

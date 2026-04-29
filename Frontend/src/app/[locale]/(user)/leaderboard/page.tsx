@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import LeaderboardTable from "@/features/gamification/components/LeaderboardTable";
+import { LeaderboardTable } from '@/features/gamification/public';
 import { BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AppQueryHydrationBoundary, dehydrateAppQueries } from "@/shared/server/prefetch/appQueryDehydrate";

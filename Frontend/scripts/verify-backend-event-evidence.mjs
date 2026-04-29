@@ -10,6 +10,8 @@ const requiredCommandKeys = [
  'admin.user.adjust-balance',
  'chat.dispute.resolve',
  'reading.session.init',
+ 'wallet.deposit.admin.process',
+ 'admin.reader-request.process',
 ];
 
 const commandKeyViolations = requiredCommandKeys.filter((key) => {
@@ -33,6 +35,14 @@ const expectedCommandUsage = [
  {
   file: 'src/app/api/reading/init/route.ts',
   key: 'reading.session.init',
+ },
+ {
+  file: 'src/features/admin/application/actions/deposits.ts',
+  key: 'wallet.deposit.admin.process',
+ },
+ {
+  file: 'src/features/admin/application/actions/reader-requests.ts',
+  key: 'admin.reader-request.process',
  },
 ];
 
@@ -68,6 +78,14 @@ const sensitiveDirectCallDetectors = [
  {
   label: '/admin/users/{id}',
   pattern: /serverHttpRequest(?:<[^>]+>)?\s*\(\s*`\/admin\/users\/\$\{[^}]+\}`/,
+ },
+ {
+  label: '/admin/deposits/process',
+  pattern: /serverHttpRequest(?:<[^>]+>)?\s*\(\s*['"`]\/admin\/deposits\/process['"`]/,
+ },
+ {
+  label: '/admin/reader-requests/process',
+  pattern: /serverHttpRequest(?:<[^>]+>)?\s*\(\s*['"`]\/admin\/reader-requests\/process['"`]/,
  },
 ];
 

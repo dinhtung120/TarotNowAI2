@@ -1,4 +1,4 @@
-import ProfilePage from '@/features/profile/presentation/ProfilePage';
+import { ProfilePage } from '@/features/profile/public';
 import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
 import { prefetchProfilePage } from '@/shared/server/prefetch/runners';
 

@@ -1,0 +1,9 @@
+{
+  "entries": {
+    "src/shared/application/hooks/useChatRealtimeSync.ts": 208,
+    "src/shared/application/hooks/usePresenceConnection.ts": 157,
+    "src/features/profile/reader/application/useProfileReaderSettingsPage.ts": 89,
+    "src/features/admin/users/application/useAdminUsers.ts": 102,
+    "src/features/chat/application/useChatConnection.ts": 133
+  }
+}

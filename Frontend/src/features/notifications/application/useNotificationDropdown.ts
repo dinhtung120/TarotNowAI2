@@ -19,21 +19,17 @@ const NOTIFICATION_API_ROUTES = {
  markRead: (id: string) => `/api/notifications/${encodeURIComponent(id)}/read`,
 } as const;
 
-async function fetchNotifications(page = 1, pageSize = 10): Promise<NotificationListResponse | null> {
- try {
-  return await fetchJsonOrThrow<NotificationListResponse>(
-   `${NOTIFICATION_API_ROUTES.list}?page=${page}&pageSize=${pageSize}`,
-   {
-    method: 'GET',
-    credentials: 'include',
-    cache: 'no-store',
-   },
-   'Failed to get notifications.',
-   8_000,
-  );
- } catch {
-  return null;
- }
+async function fetchNotifications(page = 1, pageSize = 10): Promise<NotificationListResponse> {
+ return await fetchJsonOrThrow<NotificationListResponse>(
+  `${NOTIFICATION_API_ROUTES.list}?page=${page}&pageSize=${pageSize}`,
+  {
+   method: 'GET',
+   credentials: 'include',
+   cache: 'no-store',
+  },
+  'Failed to get notifications.',
+  8_000,
+ );
 }
 
 async function fetchUnreadNotificationCount(): Promise<number> {
@@ -74,7 +70,7 @@ export function useNotificationDropdown(options: UseNotificationDropdownOptions 
  const queryKeyList = userStateQueryKeys.notifications.dropdown();
  const queryKeyCount = userStateQueryKeys.notifications.unreadCount();
 
- const dropdownQuery = useQuery<NotificationListResponse | null>({
+ const dropdownQuery = useQuery<NotificationListResponse>({
   queryKey: queryKeyList,
   queryFn: () => fetchNotifications(1, 10),
   enabled: isAuthenticated && enabled,
@@ -132,6 +128,12 @@ export function useNotificationDropdown(options: UseNotificationDropdownOptions 
   notifications: dropdownQuery.data?.items ?? [],
   unreadCount: unreadCountQuery.data ?? 0,
   isLoading: dropdownQuery.isLoading,
+  hasLoadError: dropdownQuery.isError || unreadCountQuery.isError,
+  loadErrorMessage: dropdownQuery.error instanceof Error
+   ? dropdownQuery.error.message
+   : unreadCountQuery.error instanceof Error
+    ? unreadCountQuery.error.message
+    : '',
   markAsRead,
   markAllAsRead,
   refreshDropdown: dropdownQuery.refetch,

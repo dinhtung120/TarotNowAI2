@@ -25,6 +25,7 @@ export default function ChatComposerInputRow({
         disabled={!conversationExists || uploadingMedia}
         className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl tn-chat-icon-btn')}
         title="Gửi ảnh"
+        aria-label="Gửi ảnh"
       >
         {uploadingMedia ? <Loader2 className={cn('h-4 w-4 animate-spin')} /> : <ImageIcon className={cn('h-4 w-4')} />}
       </button>
@@ -49,6 +50,7 @@ export default function ChatComposerInputRow({
         onClick={() => void onSendTextMessage()}
         disabled={!newMessage.trim() || sending || uploadingMedia || !conversationExists}
         className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl tn-chat-send-btn')}
+        aria-label="Gửi tin nhắn"
       >
         {sending ? <Loader2 className={cn('h-4 w-4 animate-spin')} /> : <Send className={cn('h-4 w-4')} />}
       </button>

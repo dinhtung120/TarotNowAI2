@@ -27,6 +27,7 @@ export interface AdminDepositsTableProps {
  locale: string;
  orders: AdminDepositOrder[];
  loading: boolean;
+ errorLabel: string;
  page: number;
  totalCount: number;
  processingId: string | null;

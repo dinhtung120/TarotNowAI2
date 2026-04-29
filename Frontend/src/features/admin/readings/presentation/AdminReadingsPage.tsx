@@ -15,15 +15,9 @@ export default function AdminReadingsPage() {
   loading,
   page,
   setPage,
-  username,
-  setUsername,
-  spreadType,
-  setSpreadType,
-  startDate,
-  setStartDate,
-  endDate,
-  setEndDate,
-  handleSearch,
+  filters,
+  applyFilters,
+  listError,
   getSpreadLabel,
  } = useAdminReadings();
 
@@ -32,20 +26,14 @@ export default function AdminReadingsPage() {
    <AdminReadingsHeader totalCount={data?.totalCount ?? 0} />
 
    <AdminReadingsFilters
-    username={username}
-    spreadType={spreadType}
-    startDate={startDate}
-    endDate={endDate}
-    onUsernameChange={setUsername}
-    onSpreadTypeChange={setSpreadType}
-    onStartDateChange={setStartDate}
-    onEndDateChange={setEndDate}
-    onSubmit={handleSearch}
+    values={filters}
+    onSubmit={applyFilters}
    />
 
    <AdminReadingsTable
     data={data}
     loading={loading}
+    listError={listError}
     page={page}
     onPageChange={setPage}
     getSpreadLabel={getSpreadLabel}

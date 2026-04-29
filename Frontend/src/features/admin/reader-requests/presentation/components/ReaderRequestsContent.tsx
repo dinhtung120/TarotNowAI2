@@ -8,6 +8,7 @@ import { ReaderRequestsStates } from './ReaderRequestsStates';
 
 interface ReaderRequestsContentProps {
  emptyLabel: string;
+ errorLabel: string;
  labels: ReaderRequestLabels;
  loading: boolean;
  locale: string;
@@ -26,11 +27,13 @@ interface ReaderRequestsContentProps {
 }
 
 export function ReaderRequestsContent(props: ReaderRequestsContentProps) {
+ const hasError = !props.loading && props.errorLabel.trim().length > 0;
+
  return (
   <>
-   <ReaderRequestsStates loading={props.loading} isEmpty={!props.loading && props.requests.length === 0} emptyLabel={props.emptyLabel} />
-   {!props.loading && props.requests.length > 0 ? <ReaderRequestsList locale={props.locale} requests={props.requests} selectedRequestId={props.selectedRequestId} getAdminNote={props.getAdminNote} processingId={props.processingId} labels={props.labels} onSelectRequest={props.onSelectRequest} onApprove={props.onApprove} onReject={props.onReject} onAdminNoteChange={props.onAdminNoteChange} /> : null}
-   {!props.loading && props.totalPages > 1 ? <ReaderRequestsPagination currentLabel={props.paginationLabel} canPrev={props.page > 1} canNext={props.page < props.totalPages} onPrev={() => props.setPage((currentPage) => Math.max(1, currentPage - 1))} onNext={() => props.setPage((currentPage) => Math.min(props.totalPages, currentPage + 1))} /> : null}
+   <ReaderRequestsStates loading={props.loading} hasError={hasError} errorLabel={props.errorLabel} isEmpty={!props.loading && !hasError && props.requests.length === 0} emptyLabel={props.emptyLabel} />
+   {!props.loading && !hasError && props.requests.length > 0 ? <ReaderRequestsList locale={props.locale} requests={props.requests} selectedRequestId={props.selectedRequestId} getAdminNote={props.getAdminNote} processingId={props.processingId} labels={props.labels} onSelectRequest={props.onSelectRequest} onApprove={props.onApprove} onReject={props.onReject} onAdminNoteChange={props.onAdminNoteChange} /> : null}
+   {!props.loading && !hasError && props.totalPages > 1 ? <ReaderRequestsPagination currentLabel={props.paginationLabel} canPrev={props.page > 1} canNext={props.page < props.totalPages} onPrev={() => props.setPage((currentPage) => Math.max(1, currentPage - 1))} onNext={() => props.setPage((currentPage) => Math.min(props.totalPages, currentPage + 1))} /> : null}
   </>
  );
 }

@@ -1,4 +1,4 @@
-import ReadingSetupPage from '@/features/reading/presentation/ReadingSetupPage';
+import { ReadingSetupPage } from '@/features/reading/public';
 import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
 import { prefetchReadingSetupPage } from '@/shared/server/prefetch/runners';
 

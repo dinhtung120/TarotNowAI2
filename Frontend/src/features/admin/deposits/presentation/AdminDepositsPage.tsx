@@ -42,6 +42,7 @@ export default function AdminDepositsPage() {
     locale={vm.locale}
     orders={vm.orders}
     loading={vm.loading}
+    errorLabel={vm.listError}
     page={vm.page}
     totalCount={vm.totalCount}
     processingId={vm.processingId}
@@ -51,7 +52,7 @@ export default function AdminDepositsPage() {
     onPrev={() => vm.setPage((currentPage) => Math.max(1, currentPage - 1))}
     onNext={() => vm.setPage((currentPage) => currentPage + 1)}
    />
-   {!vm.loading && vm.orders.length > 0 ? <AdminDepositsSummary labels={labels.summary} /> : null}
+   {!vm.loading && !vm.listError && vm.orders.length > 0 ? <AdminDepositsSummary labels={labels.summary} /> : null}
   </div>
  );
 }

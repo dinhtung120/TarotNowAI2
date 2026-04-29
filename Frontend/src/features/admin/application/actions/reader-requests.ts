@@ -2,6 +2,7 @@
 
 import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
 import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
+import { createIdempotentDomainCommandInvoker } from '@/shared/application/gateways/idempotentDomainCommandInvoker';
 import { logger } from '@/shared/application/gateways/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/domain/actionResult';
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
@@ -206,19 +207,23 @@ export async function processReaderRequest(
  if (!accessToken) return actionFail(AUTH_ERROR.UNAUTHORIZED);
 
  try {
-  const result = await serverHttpRequest<unknown>('/admin/reader-requests/process', {
-   method: 'PATCH',
-   token: accessToken,
-   json: {
-    requestId,
-    RequestId: requestId,
-    action,
-    Action: action,
-    adminNote: adminNote || '',
-    AdminNote: adminNote || '',
+  const result = await createIdempotentDomainCommandInvoker<unknown, Record<string, string>>(
+   'admin.reader-request.process',
+   {
+    path: '/admin/reader-requests/process',
+    method: 'PATCH',
+    token: accessToken,
+    payload: {
+     requestId,
+     RequestId: requestId,
+     action,
+     Action: action,
+     adminNote: adminNote || '',
+     AdminNote: adminNote || '',
+    },
+    fallbackErrorMessage: 'Failed to process reader request',
    },
-   fallbackErrorMessage: 'Failed to process reader request',
-  });
+  );
 
   if (!result.ok) {
    logger.error('[AdminAction] processReaderRequest', result.error, {

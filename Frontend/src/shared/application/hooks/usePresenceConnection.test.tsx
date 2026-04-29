@@ -230,11 +230,10 @@ describe('usePresenceConnection', () => {
   expect(fakeConnection.stop).toHaveBeenCalled();
  });
 
- it('stops the existing connection when realtime becomes disabled', async () => {
+ it('stops the existing connection when realtime is disabled and swallows stop errors', async () => {
   fakeConnection.start.mockImplementation(async () => {
    fakeConnection.state = 'Connected';
   });
-  fakeConnection.stop.mockRejectedValueOnce(new Error('stop failed'));
 
   act(() => {
    root.render(<Harness />);
@@ -245,9 +244,9 @@ describe('usePresenceConnection', () => {
    await Promise.resolve();
   });
 
-  authState = { isAuthenticated: false };
+  fakeConnection.stop.mockRejectedValueOnce(new Error('stop failed'));
   act(() => {
-   root.render(<Harness />);
+   root.render(<Harness enabled={false} />);
   });
 
   await act(async () => {
@@ -255,6 +254,38 @@ describe('usePresenceConnection', () => {
   });
 
   expect(cancelWakeup).toHaveBeenCalled();
+  expect(fakeConnection.stop).toHaveBeenCalled();
+ });
+
+ it('stops the connection if unmounted right before negotiation completes', async () => {
+  let resolveStart: (() => void) | null = null;
+  fakeConnection.start.mockImplementationOnce(() =>
+   new Promise<void>((resolve) => {
+    resolveStart = () => {
+     fakeConnection.state = 'Connected';
+     resolve();
+    };
+   }),
+  );
+
+  act(() => {
+   root.render(<Harness />);
+  });
+
+  await act(async () => {
+   await Promise.resolve();
+   await Promise.resolve();
+  });
+
+  act(() => {
+   root.unmount();
+  });
+
+  await act(async () => {
+   resolveStart?.();
+   await Promise.resolve();
+  });
+
   expect(fakeConnection.stop).toHaveBeenCalled();
  });
 

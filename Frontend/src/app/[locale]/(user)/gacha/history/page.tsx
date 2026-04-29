@@ -1,4 +1,4 @@
-import GachaHistoryPage from '@/features/gacha/presentation/GachaHistoryPage';
+import { GachaHistoryPage } from '@/features/gacha/public';
 import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
 import { prefetchGachaHistoryPage } from '@/shared/server/prefetch/runners';
 

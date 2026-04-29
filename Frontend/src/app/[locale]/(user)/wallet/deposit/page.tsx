@@ -1,4 +1,4 @@
-import DepositPage from '@/features/wallet/presentation/DepositPage';
+import { WalletDepositPage } from '@/features/wallet/public';
 import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
 import { prefetchDepositPage } from '@/shared/server/prefetch/runners';
 
@@ -7,7 +7,7 @@ export default async function DepositRoutePage() {
 
  return (
   <AppQueryHydrationBoundary state={state}>
-   <DepositPage />
+   <WalletDepositPage />
   </AppQueryHydrationBoundary>
  );
 }

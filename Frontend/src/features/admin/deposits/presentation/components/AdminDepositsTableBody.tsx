@@ -9,25 +9,29 @@ interface AdminDepositsTableBodyProps {
  locale: string;
  orders: AdminDepositOrder[];
  loading: boolean;
+ errorLabel: string;
  processingId: string | null;
  labels: AdminDepositRowLabels & { loading: string; empty: string };
  onApprove: (order: AdminDepositOrder) => void;
  onReject: (order: AdminDepositOrder) => void;
 }
 
-export function AdminDepositsTableBody({ locale, orders, loading, processingId, labels, onApprove, onReject }: AdminDepositsTableBodyProps) {
+export function AdminDepositsTableBody({ locale, orders, loading, errorLabel, processingId, labels, onApprove, onReject }: AdminDepositsTableBodyProps) {
+ const hasError = !loading && errorLabel.trim().length > 0;
  return (
   <tbody className={cn("divide-y divide-white/5")}>
    <TableStates
     colSpan={6}
    isLoading={loading}
-   isEmpty={!loading && orders.length === 0}
+   isError={hasError}
+   errorLabel={errorLabel}
+   isEmpty={!loading && !hasError && orders.length === 0}
    loadingLabel={labels.loading}
    emptyLabel={labels.empty}
     loadingIcon={<Loader2 className={cn("w-8 h-8 animate-spin tn-text-accent")} />}
     emptyIcon={<div className={cn("w-16 h-16 rounded-full tn-panel-soft flex items-center justify-center")}><CreditCard className={cn("w-8 h-8 tn-text-tertiary opacity-50")} /></div>}
    />
-   {loading ? null : orders.map((order) => (
+   {loading || hasError ? null : orders.map((order) => (
     <AdminDepositTableRow
      key={order.id}
      locale={locale}

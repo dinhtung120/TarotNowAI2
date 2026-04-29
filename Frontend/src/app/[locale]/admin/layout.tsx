@@ -2,9 +2,10 @@ import type { ReactNode } from 'react';
 import { redirect } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
-import AdminLayoutShell, {
+import {
+ AdminLayoutShell,
  type AdminLayoutLabels,
-} from '@/features/admin/presentation/components/AdminLayoutShell';
+} from '@/features/admin/public';
 import AuthBootstrap from '@/shared/components/auth/AuthBootstrap';
 import { ADMIN_CLIENT_NAMESPACES, pickClientMessages } from '@/i18n/clientMessages';
 import { requireSessionWithHandshake } from '@/shared/server/auth/sessionHandshake';

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
+import type { AdminReadingsFilters } from '@/features/admin/readings/application/useAdminReadings';
 
 const adminReadingsFiltersSchema = z
  .object({
@@ -23,26 +24,23 @@ const adminReadingsFiltersSchema = z
 type AdminReadingsFiltersFormValues = z.infer<typeof adminReadingsFiltersSchema>;
 
 interface UseAdminReadingsFiltersFormOptions {
- username: string;
- spreadType: string;
- startDate: string;
- endDate: string;
- onUsernameChange: (value: string) => void;
- onSpreadTypeChange: (value: string) => void;
- onStartDateChange: (value: string) => void;
- onEndDateChange: (value: string) => void;
- onSubmit: () => void;
+ initialValues: AdminReadingsFilters;
+ onSubmit: (values: AdminReadingsFilters) => void;
+}
+
+function normalizeFormValues(values: AdminReadingsFiltersFormValues): AdminReadingsFilters {
+ return {
+  username: values.username.trim(),
+  spreadType: values.spreadType.trim(),
+  startDate: values.startDate.trim(),
+  endDate: values.endDate.trim(),
+ };
 }
 
 export function useAdminReadingsFiltersForm(options: UseAdminReadingsFiltersFormOptions) {
  const { handleSubmit, setValue, control } = useForm<AdminReadingsFiltersFormValues>({
   resolver: zodResolver(adminReadingsFiltersSchema),
-  defaultValues: {
-   username: options.username,
-   spreadType: options.spreadType,
-   startDate: options.startDate,
-   endDate: options.endDate,
-  },
+  defaultValues: options.initialValues,
  });
 
  const watchedUsername = useWatch({ control, name: 'username' }) ?? '';
@@ -51,28 +49,15 @@ export function useAdminReadingsFiltersForm(options: UseAdminReadingsFiltersForm
  const watchedEndDate = useWatch({ control, name: 'endDate' }) ?? '';
 
  useEffect(() => {
-  setValue('username', options.username, { shouldDirty: false, shouldValidate: false });
-  setValue('spreadType', options.spreadType, { shouldDirty: false, shouldValidate: false });
-  setValue('startDate', options.startDate, { shouldDirty: false, shouldValidate: false });
-  setValue('endDate', options.endDate, { shouldDirty: false, shouldValidate: false });
- }, [options.endDate, options.spreadType, options.startDate, options.username, setValue]);
-
- useEffect(() => {
-  options.onUsernameChange(watchedUsername);
-  options.onSpreadTypeChange(watchedSpreadType);
-  options.onStartDateChange(watchedStartDate);
-  options.onEndDateChange(watchedEndDate);
- }, [
-  options,
-  watchedEndDate,
-  watchedSpreadType,
-  watchedStartDate,
-  watchedUsername,
- ]);
+  setValue('username', options.initialValues.username, { shouldDirty: false, shouldValidate: false });
+  setValue('spreadType', options.initialValues.spreadType, { shouldDirty: false, shouldValidate: false });
+  setValue('startDate', options.initialValues.startDate, { shouldDirty: false, shouldValidate: false });
+  setValue('endDate', options.initialValues.endDate, { shouldDirty: false, shouldValidate: false });
+ }, [options.initialValues.endDate, options.initialValues.spreadType, options.initialValues.startDate, options.initialValues.username, setValue]);
 
  return {
   setValue,
-  submitWithValidation: handleSubmit(options.onSubmit),
+  submitWithValidation: handleSubmit((values) => options.onSubmit(normalizeFormValues(values))),
   watchedUsername,
   watchedSpreadType,
   watchedStartDate,

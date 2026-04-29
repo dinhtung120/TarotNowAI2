@@ -1,0 +1,24 @@
+{
+  "files": [
+    "src/components/ui/gacha/GachaRewardPreview.tsx",
+    "src/components/ui/inventory/UseItemCardPreview.tsx",
+    "src/components/ui/gacha/GachaResultItem.tsx",
+    "src/features/community/components/comment-section/CommentItem.tsx",
+    "src/features/community/components/post-card/PostCardHeader.tsx",
+    "src/shared/components/common/navbar/avatar-menu/NavbarAvatarTrigger.tsx",
+    "src/features/community/components/post-card/PostCardContent.tsx",
+    "src/features/admin/withdrawals/presentation/components/AdminWithdrawalDetailModal.tsx",
+    "src/features/gamification/components/leaderboard/LeaderboardAvatar.tsx",
+    "src/features/profile/presentation/components/profile-summary/ProfileAvatarUploader.tsx",
+    "src/features/collection/presentation/components/deck-card/CollectionDeckCardVisual.tsx",
+    "src/features/collection/presentation/components/zoom-modal/CollectionZoomCardImage.tsx",
+    "src/features/chat/presentation/chat-room/header/ChatHeaderAvatar.tsx",
+    "src/features/chat/presentation/components/conversation-sidebar/ConversationListItem.tsx",
+    "src/features/chat/presentation/chat-room/messages/ChatImageMessage.tsx",
+    "src/features/home/presentation/components/featured-readers/FeaturedReaderAvatar.tsx",
+    "src/features/reading/session/presentation/session-page/RevealedCardItem.tsx",
+    "src/features/reading/history/presentation/components/detail/HistoryDetailCardItem.tsx",
+    "src/features/reader/presentation/components/readers-directory/card/ReaderDirectoryCardAvatar.tsx",
+    "src/features/reader/presentation/components/readers-directory/ReaderDetailHeader.tsx"
+  ]
+}

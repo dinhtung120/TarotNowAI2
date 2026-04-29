@@ -1,4 +1,4 @@
-import ChatSegmentShell from '@/features/chat/presentation/ChatSegmentShell';
+import { ChatSegmentShell } from '@/features/chat/public';
 import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
 import { prefetchChatInboxShell } from '@/shared/server/prefetch/runners';
 

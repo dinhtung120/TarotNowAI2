@@ -1,4 +1,4 @@
-import { FeedPage } from '@/features/community/components/FeedPage';
+import { FeedPage } from '@/features/community/public';
 import { cn } from '@/lib/utils';
 import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
 import { prefetchCommunityFeedsPage } from '@/shared/server/prefetch/runners';

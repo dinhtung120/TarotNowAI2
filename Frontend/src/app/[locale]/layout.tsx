@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { pickClientMessages, ROOT_CLIENT_NAMESPACES } from "@/i18n/clientMessages";
 import ThemeStylesheetManager from "@/shared/components/common/ThemeStylesheetManager";
 import { DEFAULT_THEME, getThemeStylesheetHref, isValidTheme, THEME_COOKIE_KEY, type ThemeId } from "@/shared/domain/theme";
-import AppAuthSessionManager from "@/features/auth/presentation/components/AppAuthSessionManager";
+import { AppAuthSessionManager } from '@/features/auth/public';
 import AppQueryProvider from "@/shared/components/common/AppQueryProvider";
 import "../globals.css";
 

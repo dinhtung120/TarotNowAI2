@@ -1,4 +1,4 @@
-import ReadersDirectoryPage from '@/features/reader/presentation/ReadersDirectoryPage';
+import { ReadersDirectoryPage } from '@/features/reader/public';
 import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
 import { prefetchReadersDirectoryPage } from '@/shared/server/prefetch/runners';
 

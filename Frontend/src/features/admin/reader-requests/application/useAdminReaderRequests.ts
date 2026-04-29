@@ -7,8 +7,8 @@ import { useLocale, useTranslations } from 'next-intl';
 import {
  listReaderRequests,
  processReaderRequest,
- type AdminReaderRequest,
 } from '@/features/admin/application/actions';
+import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
 
 export function useAdminReaderRequests() {
  const t = useTranslations('Admin');
@@ -23,17 +23,11 @@ export function useAdminReaderRequests() {
 
  const pageSize = 10;
 
- const { data, isLoading, isFetching } = useQuery({
+ const { data, isLoading, isFetching, error } = useQuery({
   queryKey: ['admin', 'reader-requests', page, statusFilter],
   queryFn: async () => {
    const result = await listReaderRequests(page, pageSize, statusFilter);
-   if (!result.success || !result.data) {
-    return {
-     requests: [] as AdminReaderRequest[],
-     totalCount: 0,
-    };
-   }
-   return result.data;
+   return queryFnOrThrow(result, 'Failed to load reader requests');
   },
  });
 
@@ -101,6 +95,7 @@ export function useAdminReaderRequests() {
   statusFilter,
   setStatusFilter,
   loading: isLoading || isFetching,
+  listError: error instanceof Error ? error.message : '',
   processing,
   selectedRequestId,
   selectRequest,

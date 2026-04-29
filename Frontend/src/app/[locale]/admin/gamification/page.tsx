@@ -3,7 +3,7 @@ import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/
 import { prefetchAdminGamificationPage } from '@/shared/server/prefetch/runners';
 
 const AdminGamificationClient = dynamic(() =>
- import('@/features/gamification/admin/presentation/AdminGamificationClient').then((m) => m.default)
+ import('@/features/gamification/public').then((m) => m.AdminGamificationClient)
 );
 
 export async function generateMetadata() {

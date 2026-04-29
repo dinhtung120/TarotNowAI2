@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import WithdrawPage from '@/features/wallet/presentation/WithdrawPage';
+import { WalletWithdrawPage } from '@/features/wallet/public';
 import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
 import { prefetchWithdrawPage } from '@/shared/server/prefetch/runners';
 import { requireSessionWithHandshake } from '@/shared/server/auth/sessionHandshake';
@@ -23,7 +23,7 @@ export default async function WithdrawRoutePage({
 
  return (
   <AppQueryHydrationBoundary state={state}>
-   <WithdrawPage />
+   <WalletWithdrawPage />
   </AppQueryHydrationBoundary>
  );
 }

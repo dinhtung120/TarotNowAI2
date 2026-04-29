@@ -30,14 +30,14 @@ describe('domain command registry', () => {
    data: { success: true },
   });
 
-  await invokeDomainCommand('chat.dispute.resolve', {
-   path: '/admin/disputes/dispute-1/resolve',
-   token: 'access-token',
+ await invokeDomainCommand('chat.dispute.resolve', {
+  path: '/admin/disputes/dispute-1/resolve',
+  token: 'access-token',
    json: { action: 'release' },
    fallbackErrorMessage: 'Failed to resolve dispute',
   });
 
-  expect(mockedServerHttpRequest).toHaveBeenCalledWith('/admin/disputes/dispute-1/resolve', {
+ expect(mockedServerHttpRequest).toHaveBeenCalledWith('/admin/disputes/dispute-1/resolve', {
    method: 'POST',
    token: 'access-token',
    expectedDomainEvents: EVENT_CONTRACTS.chatDisputeResolve,
@@ -97,3 +97,28 @@ describe('domain command registry', () => {
   );
  });
 });
+
+ it('registers expected domain events for admin.reader-request.process command', async () => {
+  mockedServerHttpRequest.mockResolvedValue({
+   ok: true,
+   status: 200,
+   headers: new Headers(),
+   data: { success: true },
+  });
+
+  await invokeDomainCommand('admin.reader-request.process', {
+   path: '/admin/reader-requests/process',
+   method: 'PATCH',
+   token: 'access-token',
+   json: { requestId: 'request-1', action: 'approve' },
+   fallbackErrorMessage: 'Failed to process reader request',
+  });
+
+  expect(mockedServerHttpRequest).toHaveBeenCalledWith('/admin/reader-requests/process', {
+   method: 'PATCH',
+   token: 'access-token',
+   expectedDomainEvents: EVENT_CONTRACTS.adminReaderRequestProcess,
+   json: { requestId: 'request-1', action: 'approve' },
+   fallbackErrorMessage: 'Failed to process reader request',
+  });
+ });

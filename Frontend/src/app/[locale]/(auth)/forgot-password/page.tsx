@@ -1,4 +1,4 @@
-import ForgotPasswordPage from '@/features/auth/presentation/ForgotPasswordPage';
+import { ForgotPasswordPage } from '@/features/auth/public';
 import { redirectAuthenticatedAuthEntry } from '@/shared/server/auth/redirectAuthenticatedAuthEntry';
 
 export default async function ForgotPasswordRoutePage({

@@ -1,4 +1,4 @@
-import ReaderPublicProfilePage from '@/features/reader/presentation/ReaderPublicProfilePage';
+import { ReaderPublicProfilePage } from '@/features/reader/public';
 import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
 import { prefetchReaderPublicProfilePage } from '@/shared/server/prefetch/runners';
 

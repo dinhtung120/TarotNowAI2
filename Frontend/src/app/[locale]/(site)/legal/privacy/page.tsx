@@ -1,2 +1,4 @@
-export { default, generateMetadata } from '@/features/legal/presentation/PrivacyPolicyPage';
-
+export {
+ PrivacyPolicyPage as default,
+ generatePrivacyPolicyMetadata as generateMetadata,
+} from '@/features/legal/public';

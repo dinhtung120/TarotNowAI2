@@ -4,6 +4,7 @@ import { AUTH_COOKIE, AUTH_SESSION } from '@/shared/infrastructure/auth/authCons
 import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import { verifyAccessToken } from '@/shared/server/auth/accessTokenVerifier';
+import { AUTH_VERIFIER_POLICY, resolveAuthVerificationPolicy } from '@/shared/server/auth/authVerifierPolicy';
 
 const ROLE_CLAIM_KEY = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
 const SUBJECT_CLAIM_KEY = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier';
@@ -84,13 +85,16 @@ async function getValidAccessTokenFromCookie(): Promise<string | undefined> {
  }
 
  if (verification.reason === 'missing_verifier_config') {
-  // Fallback to unverified payload only when verifier config is unavailable.
-  // Real authorization is still enforced by backend /profile response.
-  const unverifiedPayload = parseJwtPayload(accessToken);
-  if (isExpiringSoon(unverifiedPayload)) {
-   return undefined;
+  if (resolveAuthVerificationPolicy() === AUTH_VERIFIER_POLICY.FAIL_OPEN) {
+   // For local/dev environments without verifier config, keep non-production DX.
+   const unverifiedPayload = parseJwtPayload(accessToken);
+   if (isExpiringSoon(unverifiedPayload)) {
+    return undefined;
+   }
+   return accessToken;
   }
-  return accessToken;
+
+  return undefined;
  }
 
  return undefined;

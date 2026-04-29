@@ -1,6 +1,6 @@
 // @vitest-environment node
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createHmac } from 'node:crypto';
 import { cookies } from 'next/headers';
 import { AUTH_COOKIE } from '@/shared/infrastructure/auth/authConstants';
@@ -69,11 +69,20 @@ function buildUnsignedJwt(expInSeconds: number): string {
 }
 
 describe('serverAuth', () => {
+ const originalNodeEnv = process.env.NODE_ENV;
+
  beforeEach(() => {
   vi.clearAllMocks();
   process.env.JWT_SECRETKEY = TEST_JWT_SECRET;
   process.env.JWT_ISSUER = TEST_JWT_ISSUER;
   process.env.JWT_AUDIENCE = TEST_JWT_AUDIENCE;
+  process.env.NODE_ENV = 'test';
+  delete process.env.AUTH_VERIFIER_POLICY;
+ });
+
+ afterEach(() => {
+  process.env.NODE_ENV = originalNodeEnv;
+  delete process.env.AUTH_VERIFIER_POLICY;
  });
 
  it('does not attempt hidden refresh when access token is missing', async () => {
@@ -103,6 +112,20 @@ describe('serverAuth', () => {
   const forgedToken = buildForgedSignedLikeJwt(600);
   mockedCookies.mockResolvedValue({
    get: (name: string) => (name === AUTH_COOKIE.ACCESS ? { value: forgedToken } : undefined),
+  } as never);
+
+  const result = await getServerAccessTokenOrRefresh();
+
+  expect(result).toBeUndefined();
+  expect(mockedServerHttpRequest).not.toHaveBeenCalled();
+ });
+
+ it('returns undefined in production when verifier config is missing', async () => {
+  process.env.NODE_ENV = 'production';
+  delete process.env.JWT_SECRETKEY;
+  const signedLikeToken = buildForgedSignedLikeJwt(600);
+  mockedCookies.mockResolvedValue({
+   get: (name: string) => (name === AUTH_COOKIE.ACCESS ? { value: signedLikeToken } : undefined),
   } as never);
 
   const result = await getServerAccessTokenOrRefresh();

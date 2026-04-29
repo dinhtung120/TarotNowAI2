@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
-import { requireAdminAccessToken } from '@/app/api/admin/gamification/_shared';
+import { requireAdminSession } from '@/app/api/admin/gamification/_shared';
 import type { AdminTitleDefinition } from '@/features/gamification/admin/application/adminGamification.types';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 
 export async function GET(): Promise<NextResponse> {
- const tokenOrResponse = await requireAdminAccessToken();
- if (tokenOrResponse instanceof NextResponse) {
-  return tokenOrResponse;
+ const sessionOrResponse = await requireAdminSession();
+ if (sessionOrResponse instanceof NextResponse) {
+  return sessionOrResponse;
  }
 
  const result = await serverHttpRequest<AdminTitleDefinition[]>('/admin/gamification/titles', {
   method: 'GET',
-  token: tokenOrResponse,
+  token: sessionOrResponse.token,
   fallbackErrorMessage: 'Failed to load admin titles.',
  });
 
@@ -24,9 +24,9 @@ export async function GET(): Promise<NextResponse> {
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
- const tokenOrResponse = await requireAdminAccessToken();
- if (tokenOrResponse instanceof NextResponse) {
-  return tokenOrResponse;
+ const sessionOrResponse = await requireAdminSession();
+ if (sessionOrResponse instanceof NextResponse) {
+  return sessionOrResponse;
  }
 
  let payload: AdminTitleDefinition;
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
  const result = await serverHttpRequest<{ message: string }>('/admin/gamification/titles', {
   method: 'POST',
-  token: tokenOrResponse,
+  token: sessionOrResponse.token,
   json: payload,
   fallbackErrorMessage: 'Failed to save admin title.',
  });

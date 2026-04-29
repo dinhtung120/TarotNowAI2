@@ -15,7 +15,7 @@ interface UseChatConnectionOptions {
 }
 
 export function useChatConnection({ conversationId }: UseChatConnectionOptions) {
- const authStore = useAuthStore();
+ const currentUserIdFromStore = useAuthStore((state) => state.user?.id ?? '');
  const queryClient = useQueryClient();
  const connectionRef = useRef<HubConnection | null>(null);
  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -32,7 +32,7 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
   scrollToBottomRef.current = scrollToBottom;
  }, [scrollToBottom]);
 
- const resolvedCurrentUserId = authStore.user?.id ?? '';
+ const resolvedCurrentUserId = currentUserIdFromStore;
 
  const {
   messages,
