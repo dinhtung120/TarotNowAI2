@@ -258,7 +258,8 @@
       },
       "states": {
         "loading": "Loading promotions...",
-        "empty": "No promotions found."
+        "empty": "No promotions found.",
+        "retry": "Retry"
       },
       "row": {
         "condition_from": "From {amount}"
@@ -504,7 +505,9 @@
       },
       "states": {
         "empty": "No matching system config.",
-        "select_prompt": "Select a config key to edit."
+        "select_prompt": "Select a config key to edit.",
+        "load_error": "Unable to load system configs.",
+        "retry": "Retry load"
       },
       "toast": {
         "save_success": "System config updated.",

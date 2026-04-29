@@ -28,4 +28,29 @@ describe('buildPublicRequestUrl', () => {
 
   expect(buildPublicRequestUrl(request, '/vi/login').toString()).toBe('https://staging.tarotnow.xyz:8443/vi/login');
  });
+
+ it('drops forwarded port 80 for https redirects', () => {
+  const request = new NextRequest('http://0.0.0.0:3000/api/auth/session/handshake?next=%2Fvi%2Fprofile', {
+   headers: {
+    host: '0.0.0.0:3000',
+    'x-forwarded-proto': 'https',
+    'x-forwarded-host': 'www.tarotnow.xyz',
+    'x-forwarded-port': '80',
+   },
+  });
+
+  expect(buildPublicRequestUrl(request, '/vi/login').toString()).toBe('https://www.tarotnow.xyz/vi/login');
+ });
+
+ it('drops explicit :80 in forwarded host for https redirects', () => {
+  const request = new NextRequest('http://0.0.0.0:3000/api/auth/session/handshake?next=%2Fvi%2Fprofile', {
+   headers: {
+    host: '0.0.0.0:3000',
+    'x-forwarded-proto': 'https',
+    'x-forwarded-host': 'www.tarotnow.xyz:80',
+   },
+  });
+
+  expect(buildPublicRequestUrl(request, '/vi/login').toString()).toBe('https://www.tarotnow.xyz/vi/login');
+ });
 });

@@ -1,317 +1,146 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState, type ChangeEvent } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
-import * as z from 'zod';
 import {
  getPayoutBanksAction,
- updateProfileAction,
  type PayoutBankOption,
 } from '@/features/profile/application/actions';
-import { uploadProfileAvatar } from '@/features/profile/application/uploadProfileAvatar';
 import { fetchProfileDetail, profileDetailQueryKey } from '@/features/profile/application/profileDetailQuery';
+import { handleProfileAvatarSelect } from '@/features/profile/application/useProfilePage.avatar';
+import { buildProfileFormValues } from '@/features/profile/application/useProfilePage.helpers';
+import { submitProfileUpdate } from '@/features/profile/application/useProfilePage.submit';
+import type { ProfileFormValues } from '@/features/profile/application/useProfilePage.types';
+import { createProfileSchema } from '@/features/profile/application/useProfilePage.validation';
 import { getMyReaderRequest, type MyReaderRequest } from '@/features/reader/public';
 import { useRouter } from '@/i18n/routing';
 import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 import { useHydrateFormOnce } from '@/shared/application/hooks/useHydrateFormOnce';
 import { useAuthStore } from '@/store/authStore';
-import { toast } from 'react-hot-toast';
-
-interface ProfileFormValues {
-  dateOfBirth: string;
-  displayName: string;
-  payoutBankBin: string;
-  payoutBankAccountNumber: string;
-  payoutBankAccountHolder: string;
-}
 
 export function useProfilePage() {
-  const t = useTranslations('Profile');
-  const tCommon = useTranslations('Common');
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const user = useAuthStore((state) => state.user);
-  const [successMsg, setSuccessMsg] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [avatarUploadProgress, setAvatarUploadProgress] = useState(0);
-  const [avatarUploading, setAvatarUploading] = useState(false);
-  const payoutBanksQueryKey = userStateQueryKeys.profile.payoutBanks();
-  const isAdmin = user?.role === 'admin';
-  const isTarotReader = user?.role === 'tarot_reader';
-  const MIN_ACCOUNT_NUMBER_LENGTH = 6;
-  const MAX_ACCOUNT_NUMBER_LENGTH = 32;
+ const t = useTranslations('Profile');
+ const tCommon = useTranslations('Common');
+ const router = useRouter();
+ const queryClient = useQueryClient();
+ const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+ const user = useAuthStore((state) => state.user);
+ const [successMsg, setSuccessMsg] = useState('');
+ const [errorMsg, setErrorMsg] = useState('');
+ const [avatarPreviewOverride, setAvatarPreviewOverride] = useState<{
+  profileId: string | null;
+  value: string | null;
+ }>({ profileId: null, value: null });
+ const [avatarUploadProgress, setAvatarUploadProgress] = useState(0);
+ const [avatarUploading, setAvatarUploading] = useState(false);
+ const payoutBanksQueryKey = userStateQueryKeys.profile.payoutBanks();
+ const isAdmin = user?.role === 'admin';
+ const isTarotReader = user?.role === 'tarot_reader';
 
-  const profileSchema = useMemo(() => z.object({
-    displayName: z.string().min(2, t('validation.display_name_min')),
-    dateOfBirth: z.string().refine((date) => !isNaN(Date.parse(date)), { message: t('validation.date_of_birth_invalid') }),
-    payoutBankBin: z.string(),
-    payoutBankAccountNumber: z.string().max(MAX_ACCOUNT_NUMBER_LENGTH, t('validation.account_number_invalid')),
-    payoutBankAccountHolder: z.string().max(120, t('validation.account_holder_invalid')),
-  }).superRefine((value, context) => {
-    if (!isTarotReader) {
-      return;
-    }
+ const profileSchema = useMemo(() => createProfileSchema({ isTarotReader, t }), [isTarotReader, t]);
+ const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<ProfileFormValues>({
+  resolver: zodResolver(profileSchema),
+ });
 
-    const hasAnyPayoutField = Boolean(
-      value.payoutBankBin.trim()
-      || value.payoutBankAccountNumber.trim()
-      || value.payoutBankAccountHolder.trim(),
-    );
+ const profileQuery = useQuery({
+  queryKey: profileDetailQueryKey,
+  enabled: isAuthenticated,
+  queryFn: fetchProfileDetail,
+ });
 
-    if (!hasAnyPayoutField) {
-      return;
-    }
+ const payoutBanksQuery = useQuery<{ options: PayoutBankOption[]; error: string }>({
+  queryKey: payoutBanksQueryKey,
+  enabled: isAuthenticated && isTarotReader,
+  queryFn: async () => {
+   const result = await getPayoutBanksAction();
+   return result.success ? { options: result.data ?? [], error: '' } : { options: [], error: result.error };
+  },
+ });
 
-    if (!value.payoutBankBin.trim()) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: t('validation.bank_required'),
-        path: ['payoutBankBin'],
-      });
-    }
+ const payoutBankOptions = payoutBanksQuery.data?.options ?? [];
+ const activeProfileId = profileQuery.data?.profile?.id ?? null;
+ const profileAvatar = profileQuery.data?.profile && !profileQuery.data.error
+  ? profileQuery.data.profile.avatarUrl || null
+  : null;
+ const avatarPreview = avatarPreviewOverride.profileId === activeProfileId
+  ? (avatarPreviewOverride.value ?? profileAvatar)
+  : profileAvatar;
+ const setAvatarPreviewForActiveProfile = (value: string | null) => {
+  setAvatarPreviewOverride({ profileId: activeProfileId, value });
+ };
+ const profileFormValues = useMemo(
+  () => buildProfileFormValues(profileQuery.data?.profile, profileQuery.data?.error),
+  [profileQuery.data?.error, profileQuery.data?.profile],
+ );
 
-    const accountNumber = value.payoutBankAccountNumber.trim();
-    if (!accountNumber) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: t('validation.account_number_required'),
-        path: ['payoutBankAccountNumber'],
-      });
-    } else if (!/^\d+$/.test(accountNumber)
-      || accountNumber.length < MIN_ACCOUNT_NUMBER_LENGTH
-      || accountNumber.length > MAX_ACCOUNT_NUMBER_LENGTH) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: t('validation.account_number_invalid'),
-        path: ['payoutBankAccountNumber'],
-      });
-    }
+ useHydrateFormOnce({
+  identity: profileQuery.data?.profile?.id ?? null,
+  reset,
+  values: profileFormValues,
+ });
 
-    const accountHolder = value.payoutBankAccountHolder.trim();
-    if (!accountHolder) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: t('validation.account_holder_required'),
-        path: ['payoutBankAccountHolder'],
-      });
-    } else if (!isUppercaseNoAccent(accountHolder)) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: t('validation.account_holder_invalid'),
-        path: ['payoutBankAccountHolder'],
-      });
-    }
-  }), [MAX_ACCOUNT_NUMBER_LENGTH, MIN_ACCOUNT_NUMBER_LENGTH, isTarotReader, t]);
+ const readerRequestQuery = useQuery<MyReaderRequest | null>({
+  queryKey: userStateQueryKeys.reader.myRequest(),
+  enabled: isAuthenticated && !!user && !isTarotReader && !isAdmin,
+  queryFn: async () => {
+   const result = await getMyReaderRequest();
+   return result.success ? result.data ?? null : null;
+  },
+ });
 
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<ProfileFormValues>({
-    resolver: zodResolver(profileSchema),
+ const onSubmit = async (data: ProfileFormValues) => {
+  await submitProfileUpdate({
+   avatarPreview,
+   data,
+   isTarotReader,
+   payoutBankOptions,
+   payoutBanksQueryKey,
+   queryClient,
+   setErrorMsg,
+   setSuccessMsg,
+   t,
   });
+ };
 
-  const profileQuery = useQuery({
-    queryKey: profileDetailQueryKey,
-    enabled: isAuthenticated,
-    queryFn: fetchProfileDetail,
+ const handleAvatarSelect = async (event: ChangeEvent<HTMLInputElement>) => {
+  await handleProfileAvatarSelect({
+   avatarPreview,
+   event,
+   queryClient,
+   setAvatarPreview: setAvatarPreviewForActiveProfile,
+   setAvatarUploadProgress,
+   setAvatarUploading,
+   setErrorMsg,
+   setSuccessMsg,
+   t,
   });
+ };
 
-  const payoutBanksQuery = useQuery<{ options: PayoutBankOption[]; error: string }>({
-    queryKey: payoutBanksQueryKey,
-    enabled: isAuthenticated && isTarotReader,
-    queryFn: async () => {
-      const result = await getPayoutBanksAction();
-      return result.success ? { options: result.data ?? [], error: '' } : { options: [], error: result.error };
-    },
-  });
-
-  const payoutBankOptions = payoutBanksQuery.data?.options ?? [];
-
-  const profileFormValues = useMemo<ProfileFormValues | null>(() => {
-    if (!profileQuery.data?.profile || profileQuery.data.error) {
-      return null;
-    }
-
-    return {
-      displayName: profileQuery.data.profile.displayName,
-      payoutBankBin: profileQuery.data.profile.payoutBankBin ?? '',
-      payoutBankAccountNumber: profileQuery.data.profile.payoutBankAccountNumber ?? '',
-      payoutBankAccountHolder: profileQuery.data.profile.payoutBankAccountHolder ?? '',
-      dateOfBirth: toDateInputValue(profileQuery.data.profile.dateOfBirth) ?? '',
-    };
-  }, [profileQuery.data]);
-
-  useHydrateFormOnce({
-    identity: profileQuery.data?.profile?.id ?? null,
-    reset,
-    values: profileFormValues,
-  });
-
-  useEffect(() => {
-    if (!profileQuery.data?.profile || profileQuery.data.error) {
-      return;
-    }
-
-    setAvatarPreview(profileQuery.data.profile.avatarUrl || null);
-  }, [profileQuery.data]);
-
-  const readerRequestQuery = useQuery<MyReaderRequest | null>({
-    queryKey: userStateQueryKeys.reader.myRequest(),
-    enabled: isAuthenticated && !!user && !isTarotReader && !isAdmin,
-    queryFn: async () => {
-      const result = await getMyReaderRequest();
-      return result.success ? result.data ?? null : null;
-    },
-  });
-
-  const onSubmit = async (data: ProfileFormValues) => {
-    setSuccessMsg('');
-    setErrorMsg('');
-
-    try {
-      const payoutBankName = isTarotReader ? resolveBankName(payoutBankOptions, data.payoutBankBin) : undefined;
-      if (isTarotReader && normalizeOptional(data.payoutBankBin) && !payoutBankName) {
-        setErrorMsg(t('validation.bank_required'));
-        return;
-      }
-
-      const result = await updateProfileAction({
-        displayName: data.displayName.trim(),
-        dateOfBirth: data.dateOfBirth.trim(),
-        payoutBankBin: isTarotReader ? normalizeOptional(data.payoutBankBin) : undefined,
-        payoutBankName,
-        payoutBankAccountNumber: isTarotReader ? normalizeOptional(data.payoutBankAccountNumber) : undefined,
-        payoutBankAccountHolder: isTarotReader ? normalizeOptional(data.payoutBankAccountHolder) : undefined,
-      });
-      if (!result.success) {
-        setErrorMsg(result.error);
-        return;
-      }
-
-      setSuccessMsg(t('successMsg'));
-      useAuthStore.getState().updateUser({ displayName: data.displayName, avatarUrl: avatarPreview || null });
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: profileDetailQueryKey }),
-        queryClient.invalidateQueries({ queryKey: payoutBanksQueryKey }),
-      ]);
-    } catch {
-      setErrorMsg(t('errorSave'));
-    }
-  };
-
-  const handleAvatarSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-    if (!file) return;
-
-    const previousAvatarPreview = avatarPreview;
-    const optimisticPreview = URL.createObjectURL(file);
-
-    setAvatarPreview(optimisticPreview);
-    setAvatarUploadProgress(0);
-    setAvatarUploading(true);
-    setErrorMsg('');
-    try {
-      const uploadResult = await uploadProfileAvatar({
-        file,
-        profileQueryKey: profileDetailQueryKey,
-        queryClient,
-        t,
-        onProgress: setAvatarUploadProgress,
-      });
-
-      if (!uploadResult.success) {
-        const err = uploadResult.error || t('avatar_upload_error') || 'Không thể tải ảnh lên';
-        setAvatarPreview(previousAvatarPreview);
-        setErrorMsg(err);
-        toast.error(err);
-        revokeObjectUrlIfNeeded(optimisticPreview);
-        return;
-      }
-
-      setAvatarPreview(uploadResult.avatarUrl);
-      revokeObjectUrlIfNeeded(optimisticPreview);
-      setSuccessMsg(uploadResult.message);
-      toast.success(uploadResult.message);
-      useAuthStore.getState().updateUser({ avatarUrl: uploadResult.avatarUrl });
-    } catch {
-      setAvatarPreview(previousAvatarPreview);
-      const err = t('avatar_upload_error') || 'Không thể tải ảnh lên';
-      setErrorMsg(err);
-      toast.error(err);
-      revokeObjectUrlIfNeeded(optimisticPreview);
-    } finally {
-      setAvatarUploading(false);
-      setAvatarUploadProgress(0);
-    }
-  };
-
-  return {
-    t, tCommon, router, user,
-    profileData: profileQuery.data?.profile ?? null,
-    loading: profileQuery.isLoading || profileQuery.isFetching,
-    successMsg,
-    errorMsg: errorMsg || profileQuery.data?.error || '',
-    payoutBanksError: payoutBanksQuery.data?.error || '',
-    payoutBankOptions,
-    isTarotReader,
-    readerRequest: readerRequestQuery.data ?? null,
-    readerRequestLoading: readerRequestQuery.isLoading || readerRequestQuery.isFetching,
-    register, handleSubmit, errors, isSubmitting, onSubmit,
-    avatarPreview, avatarUploadProgress, avatarUploading, handleAvatarSelect,
-  };
-}
-
-function revokeObjectUrlIfNeeded(value: string | null) {
-  if (!value || !value.startsWith('blob:')) {
-    return;
-  }
-
-  URL.revokeObjectURL(value);
-}
-
-function normalizeOptional(value: string): string | null {
-  const normalized = value.trim();
-  return normalized ? normalized : null;
-}
-
-function resolveBankName(options: PayoutBankOption[], bankBin: string): string | null {
-  const normalizedBankBin = bankBin.trim();
-  if (!normalizedBankBin) {
-    return null;
-  }
-
-  return options.find((item) => item.bankBin === normalizedBankBin)?.bankName ?? null;
-}
-
-function isUppercaseNoAccent(value: string): boolean {
-  const normalized = value.trim();
-  if (!normalized || normalized !== normalized.toUpperCase()) {
-    return false;
-  }
-
-  if (/[\u0300-\u036f]/.test(normalized.normalize('NFD'))) {
-    return false;
-  }
-
-  return /^[A-Z ]+$/.test(normalized);
-}
-
-function toDateInputValue(rawDate: string): string | null {
- const dateOnlyMatch = /^(\d{4})-(\d{2})-(\d{2})/.exec(rawDate.trim());
- if (dateOnlyMatch) {
-  return `${dateOnlyMatch[1]}-${dateOnlyMatch[2]}-${dateOnlyMatch[3]}`;
- }
-
- const parsed = new Date(rawDate);
- if (Number.isNaN(parsed.getTime())) {
-  return null;
- }
-
- const yyyy = parsed.getUTCFullYear();
- const mm = String(parsed.getUTCMonth() + 1).padStart(2, '0');
- const dd = String(parsed.getUTCDate()).padStart(2, '0');
- return `${yyyy}-${mm}-${dd}`;
+ return {
+  t,
+  tCommon,
+  router,
+  user,
+  profileData: profileQuery.data?.profile ?? null,
+  loading: profileQuery.isLoading || profileQuery.isFetching,
+  successMsg,
+  errorMsg: errorMsg || profileQuery.data?.error || '',
+  payoutBanksError: payoutBanksQuery.data?.error || '',
+  payoutBankOptions,
+  isTarotReader,
+  readerRequest: readerRequestQuery.data ?? null,
+  readerRequestLoading: readerRequestQuery.isLoading || readerRequestQuery.isFetching,
+  register,
+  handleSubmit,
+  errors,
+  isSubmitting,
+  onSubmit,
+  avatarPreview,
+  avatarUploadProgress,
+  avatarUploading,
+  handleAvatarSelect,
+ };
 }

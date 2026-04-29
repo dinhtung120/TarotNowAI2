@@ -169,10 +169,28 @@ const RISK_COVERAGE_RULES = [
  {
   file: 'src/features/profile/application/useProfilePage.ts',
   thresholds: {
-   statements: 45,
-   branches: 25,
-   functions: 40,
-   lines: 45,
+   statements: 55,
+   branches: 40,
+   functions: 55,
+   lines: 55,
+  },
+ },
+ {
+  file: 'src/features/admin/system-configs/application/useAdminSystemConfigs.ts',
+  thresholds: {
+   statements: 55,
+   branches: 40,
+   functions: 55,
+   lines: 55,
+  },
+ },
+ {
+  file: 'src/features/admin/promotions/application/useAdminPromotions.ts',
+  thresholds: {
+   statements: 55,
+   branches: 40,
+   functions: 55,
+   lines: 55,
   },
  },
  {

@@ -37,6 +37,20 @@ function createHandshakeRequest(nextPath = '/vi/profile'): NextRequest {
  });
 }
 
+function createHandshakeRequestWithPort(
+ forwardedPort: string,
+ nextPath = '/vi/profile',
+): NextRequest {
+ return new NextRequest(`https://0.0.0.0:3000/api/auth/session/handshake?next=${encodeURIComponent(nextPath)}`, {
+  headers: {
+   host: '0.0.0.0:3000',
+   'x-forwarded-proto': 'https',
+   'x-forwarded-host': 'www.tarotnow.xyz',
+   'x-forwarded-port': forwardedPort,
+  },
+ });
+}
+
 describe('GET /api/auth/session/handshake', () => {
  beforeEach(() => {
   vi.clearAllMocks();
@@ -48,6 +62,17 @@ describe('GET /api/auth/session/handshake', () => {
   );
 
   const response = await GET(createHandshakeRequest(),);
+
+  expect(response.status).toBe(307);
+  expect(response.headers.get('location')).toBe('https://www.tarotnow.xyz/vi/login');
+ });
+
+ it('never appends :80 on public https redirects when proxy forwards port 80', async () => {
+  mockedGetSessionRouteResponse.mockResolvedValue(
+   NextResponse.json({ success: false }, { status: 401 }),
+  );
+
+  const response = await GET(createHandshakeRequestWithPort('80'));
 
   expect(response.status).toBe(307);
   expect(response.headers.get('location')).toBe('https://www.tarotnow.xyz/vi/login');

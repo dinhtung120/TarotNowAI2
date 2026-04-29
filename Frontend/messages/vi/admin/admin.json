@@ -258,7 +258,8 @@
       },
       "states": {
         "loading": "Đang đọc Sổ lệnh...",
-        "empty": "Vùng không gian ưu đãi đang trống vắng."
+        "empty": "Vùng không gian ưu đãi đang trống vắng.",
+        "retry": "Tải lại danh sách"
       },
       "row": {
         "condition_from": "Từ {amount}"
@@ -504,7 +505,9 @@
       },
       "states": {
         "empty": "Không có cấu hình phù hợp.",
-        "select_prompt": "Chọn một key cấu hình để chỉnh sửa."
+        "select_prompt": "Chọn một key cấu hình để chỉnh sửa.",
+        "load_error": "Không thể tải system configs.",
+        "retry": "Thử tải lại"
       },
       "toast": {
         "save_success": "Đã cập nhật system config.",

@@ -32,6 +32,8 @@ function AdminPromotionsTableHead() {
 export function AdminPromotionsDesktopTable({
  promotions,
  loading,
+ listError,
+ onRetry,
  locale,
  formatMoney,
  togglingId,
@@ -46,7 +48,7 @@ export function AdminPromotionsDesktopTable({
      {loading || promotions.length === 0 ? (
       <tr>
        <td colSpan={4}>
-        <AdminPromotionsStateBlock loading={loading} />
+        <AdminPromotionsStateBlock loading={loading} error={listError} onRetry={onRetry} />
        </td>
       </tr>
      ) : (

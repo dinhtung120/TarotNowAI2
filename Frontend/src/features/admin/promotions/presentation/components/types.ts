@@ -3,6 +3,8 @@ import type { DepositPromotion } from '@/features/admin/application/actions/prom
 export interface AdminPromotionsCommonProps {
  promotions: DepositPromotion[];
  loading: boolean;
+ listError: string;
+ onRetry: () => void | Promise<void>;
  locale: string;
  formatMoney: (value: number) => string;
  togglingId: string | null;

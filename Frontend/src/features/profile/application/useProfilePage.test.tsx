@@ -214,7 +214,124 @@ describe('useProfilePage', () => {
    } as React.ChangeEvent<HTMLInputElement>);
   });
 
-  expect(mockedToast.success).toHaveBeenCalledWith('Avatar updated.');
-  expect(updateUser).toHaveBeenCalledWith({ avatarUrl: 'https://cdn.test/new-avatar.webp' });
+ expect(mockedToast.success).toHaveBeenCalledWith('Avatar updated.');
+ expect(updateUser).toHaveBeenCalledWith({ avatarUrl: 'https://cdn.test/new-avatar.webp' });
+ });
+
+ it('blocks tarot reader submit when payout bank cannot be resolved', async () => {
+  mockedUseAuthStore.mockImplementation((selector) => selector({
+   isAuthenticated: true,
+   user: { role: 'tarot_reader' },
+  } as never));
+
+  mockedUseQuery.mockImplementation(({ queryKey }) => {
+   const normalizedKey = JSON.stringify(queryKey);
+   if (normalizedKey === JSON.stringify(['profile', 'detail'])) {
+    return {
+     data: {
+      profile: {
+       id: 'reader-1',
+       displayName: 'Reader One',
+       payoutBankBin: null,
+       payoutBankAccountNumber: null,
+       payoutBankAccountHolder: null,
+       dateOfBirth: '2000-01-02T00:00:00Z',
+       avatarUrl: null,
+      },
+      error: '',
+     },
+     isLoading: false,
+     isFetching: false,
+    } as never;
+   }
+
+   if (normalizedKey === JSON.stringify(['profile', 'payout-banks'])) {
+    return {
+     data: { options: [], error: '' },
+     isLoading: false,
+     isFetching: false,
+    } as never;
+   }
+
+   return { data: null, isLoading: false, isFetching: false } as never;
+  });
+
+  let latest: ReturnType<typeof useProfilePage> | null = null;
+  act(() => {
+   root.render(<Harness onChange={(value) => {
+    latest = value;
+   }} />);
+  });
+
+  await act(async () => {
+   await latest?.onSubmit({
+    displayName: 'Reader One',
+    dateOfBirth: '2000-01-02',
+    payoutBankBin: '9704',
+    payoutBankAccountNumber: '12345678',
+    payoutBankAccountHolder: 'NGUYEN VAN A',
+   });
+  });
+
+  expect(mockedUpdateProfileAction).not.toHaveBeenCalled();
+  expect(latest?.errorMsg).toBe('validation.bank_required');
+ });
+
+ it('surfaces update failure message without mutating auth profile state', async () => {
+  const updateUser = vi.fn();
+  mockedUseAuthStore.getState = vi.fn(() => ({ updateUser })) as never;
+  mockedUpdateProfileAction.mockResolvedValue({
+   success: false,
+   error: 'Profile update rejected',
+  } as never);
+
+  let latest: ReturnType<typeof useProfilePage> | null = null;
+  act(() => {
+   root.render(<Harness onChange={(value) => {
+    latest = value;
+   }} />);
+  });
+
+  await act(async () => {
+   await latest?.onSubmit({
+    displayName: 'Updated User',
+    dateOfBirth: '2000-01-02',
+    payoutBankBin: '',
+    payoutBankAccountNumber: '',
+    payoutBankAccountHolder: '',
+   });
+  });
+
+  expect(updateUser).not.toHaveBeenCalled();
+  expect(latest?.errorMsg).toBe('Profile update rejected');
+ });
+
+ it('rolls back optimistic avatar preview when upload fails', async () => {
+  mockedUploadProfileAvatar.mockResolvedValue({
+   success: false,
+   error: 'Avatar upload failed',
+  } as never);
+  vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:failed-avatar');
+  vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+
+  let latest: ReturnType<typeof useProfilePage> | null = null;
+  act(() => {
+   root.render(<Harness onChange={(value) => {
+    latest = value;
+   }} />);
+  });
+
+  const file = new File(['avatar'], 'avatar.png', { type: 'image/png' });
+  await act(async () => {
+   await latest?.handleAvatarSelect({
+    target: {
+     files: [file],
+     value: 'avatar.png',
+    },
+   } as React.ChangeEvent<HTMLInputElement>);
+  });
+
+  expect(latest?.avatarPreview).toBe('https://cdn.test/avatar.webp');
+  expect(mockedToast.error).toHaveBeenCalledWith('Avatar upload failed');
  });
 });

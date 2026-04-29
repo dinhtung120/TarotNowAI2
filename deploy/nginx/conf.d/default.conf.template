@@ -18,9 +18,12 @@ map $http_x_forwarded_host $forwarded_host {
   '' $request_host;
 }
 
-map $http_x_forwarded_port $forwarded_port {
-  default $http_x_forwarded_port;
-  '' $server_port;
+map "$forwarded_proto:$http_x_forwarded_port" $forwarded_port {
+  "~^https:(\\d+)$" $1;
+  "~^http:(\\d+)$" $1;
+  "https:" 443;
+  "http:" 80;
+  default $server_port;
 }
 
 server {

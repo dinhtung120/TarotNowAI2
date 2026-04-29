@@ -11,13 +11,16 @@ import {
  type DepositPromotion,
 } from '@/features/admin/application/actions/promotion';
 
-export function useAdminPromotions(initialPromotions: DepositPromotion[]) {
+export function useAdminPromotions(
+ initialPromotions: DepositPromotion[],
+ initialLoadError: string | null,
+) {
  const t = useTranslations('Admin');
  const locale = useLocale();
 
  const [promotions, setPromotions] = useState<DepositPromotion[]>(initialPromotions);
  const [loading, setLoading] = useState(false);
- const [listError, setListError] = useState('');
+ const [listError, setListError] = useState(initialLoadError ?? '');
  const [isCreating, setIsCreating] = useState(false);
  const [minAmount, setMinAmount] = useState<number>(0);
  const [bonusGold, setBonusGold] = useState<number>(0);
@@ -47,6 +50,7 @@ export function useAdminPromotions(initialPromotions: DepositPromotion[]) {
    }
 
    setPromotions(result.data);
+   setListError('');
   } catch {
    setListError(t('promotions.toast.network_error'));
   } finally {
@@ -119,6 +123,10 @@ export function useAdminPromotions(initialPromotions: DepositPromotion[]) {
   }
  }, [deleteId, t]);
 
+ const retryList = useCallback(async () => {
+  await refreshPromotions();
+ }, [refreshPromotions]);
+
  return {
   t,
   locale,
@@ -137,6 +145,7 @@ export function useAdminPromotions(initialPromotions: DepositPromotion[]) {
   togglingId,
   deletingId,
   formatMoney,
+  retryList,
   handleCreate,
   handleToggle,
   handleDelete,

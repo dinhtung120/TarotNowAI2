@@ -258,7 +258,8 @@
       },
       "states": {
         "loading": "正在加载促销...",
-        "empty": "暂无促销。"
+        "empty": "暂无促销。",
+        "retry": "重试"
       },
       "row": {
         "condition_from": "从 {amount} 起"
@@ -504,7 +505,9 @@
       },
       "states": {
         "empty": "未找到匹配配置。",
-        "select_prompt": "请选择一个配置项进行编辑。"
+        "select_prompt": "请选择一个配置项进行编辑。",
+        "load_error": "系统配置加载失败。",
+        "retry": "重新加载"
       },
       "toast": {
         "save_success": "系统配置已更新。",

@@ -14,6 +14,7 @@
     "lint:auth-policy": "node scripts/check-auth-fail-closed.mjs",
     "lint:image-policy": "node scripts/check-next-image-policy.mjs",
     "lint:hook-size": "node scripts/check-hook-action-size.mjs",
+    "lint:hook-size:sync": "node scripts/check-hook-action-size.mjs --sync",
     "lint:component-size": "node scripts/check-component-size.mjs",
     "verify:event-evidence": "node scripts/verify-backend-event-evidence.mjs",
     "knip": "npx knip --include files,dependencies,duplicates",

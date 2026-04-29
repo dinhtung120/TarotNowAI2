@@ -9,6 +9,8 @@ import { AdminPromotionsMobileCard } from './AdminPromotionsMobileCard';
 export function AdminPromotionsMobileList({
  promotions,
  loading,
+ listError,
+ onRetry,
  locale,
  formatMoney,
  togglingId,
@@ -20,7 +22,7 @@ export function AdminPromotionsMobileList({
  return (
   <div className={cn('tn-hide-md tn-p-4-6-sm space-y-3')}>
    {loading || promotions.length === 0 ? (
-    <AdminPromotionsStateBlock loading={loading} />
+    <AdminPromotionsStateBlock loading={loading} error={listError} onRetry={onRetry} />
    ) : (
     promotions.map((promotion) => (
      <AdminPromotionsMobileCard

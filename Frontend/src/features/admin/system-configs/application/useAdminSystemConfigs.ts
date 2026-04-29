@@ -44,6 +44,14 @@ function emptyDraft(): SystemConfigDraft {
  };
 }
 
+function resolveErrorMessage(error: unknown, fallback: string): string {
+ if (error instanceof Error && error.message.trim().length > 0) {
+  return error.message;
+ }
+
+ return fallback;
+}
+
 export function useAdminSystemConfigs(initialConfigs: AdminSystemConfigItem[]) {
  const t = useTranslations('Admin');
  const queryClient = useQueryClient();
@@ -55,11 +63,11 @@ export function useAdminSystemConfigs(initialConfigs: AdminSystemConfigItem[]) {
   queryKey: QUERY_KEY,
   queryFn: async () => {
    const result = await listSystemConfigs();
-   if (!result.success || !result.data) {
-    return [] as AdminSystemConfigItem[];
+   if (!result.success) {
+    throw new Error(result.error || t('system_configs.states.load_error'));
    }
 
-   return result.data;
+   return result.data ?? [];
   },
   initialData: initialConfigs,
  });
@@ -111,6 +119,11 @@ export function useAdminSystemConfigs(initialConfigs: AdminSystemConfigItem[]) {
     items: items.sort((a, b) => a.key.localeCompare(b.key)),
    }));
  }, [filteredItems]);
+
+ const loadError = query.isError
+  ? resolveErrorMessage(query.error, t('system_configs.states.load_error'))
+  : '';
+ const hasLoadError = !query.isFetching && loadError.trim().length > 0;
 
  const updateMutation = useMutation({
   mutationFn: async () => {
@@ -184,6 +197,10 @@ export function useAdminSystemConfigs(initialConfigs: AdminSystemConfigItem[]) {
   setSelectedKey(item.key);
  }
 
+ async function retryLoadConfigs() {
+  await query.refetch();
+ }
+
  return {
   t,
   items,
@@ -195,6 +212,8 @@ export function useAdminSystemConfigs(initialConfigs: AdminSystemConfigItem[]) {
   draftDescription: activeDraft.description,
   draftValueKind: activeDraft.valueKind,
   loading: query.isLoading || query.isFetching,
+  loadError,
+  hasLoadError,
   saving: updateMutation.isPending,
   setSearchText,
   setDraftValue: (value: string) => updateSelectedDraft((current) => ({ ...current, value })),
@@ -205,6 +224,7 @@ export function useAdminSystemConfigs(initialConfigs: AdminSystemConfigItem[]) {
     valueKind,
    })),
   selectConfig,
+  retryLoadConfigs,
   saveSelectedConfig,
   handleRestartServer,
   restarting: restartMutation.isPending,

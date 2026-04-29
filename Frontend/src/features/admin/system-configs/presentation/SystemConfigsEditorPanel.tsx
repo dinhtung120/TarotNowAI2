@@ -2,6 +2,7 @@ import { Save, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button, GlassCard } from '@/shared/components/ui';
 import type { AdminSystemConfigsViewModel } from '@/features/admin/system-configs/application/useAdminSystemConfigs';
+import SystemConfigsLoadErrorState from '@/features/admin/system-configs/presentation/SystemConfigsLoadErrorState';
 
 interface SystemConfigsEditorPanelProps {
  vm: AdminSystemConfigsViewModel;
@@ -11,7 +12,9 @@ interface SystemConfigsEditorPanelProps {
 export default function SystemConfigsEditorPanel({ vm, selectedUpdatedAt }: SystemConfigsEditorPanelProps) {
  return (
   <GlassCard padding="lg" className={cn('self-start tn-panel shadow-[var(--shadow-card)]')}>
-   {vm.selectedItem ? (
+   {vm.hasLoadError ? (
+    <SystemConfigsLoadErrorState vm={vm} />
+   ) : vm.selectedItem ? (
     <div className={cn('space-y-6')}>
      <div className={cn('grid gap-6 md:grid-cols-2')}>
       <div>
@@ -36,9 +39,8 @@ export default function SystemConfigsEditorPanel({ vm, selectedUpdatedAt }: Syst
          json
         </option>
        </select>
-      </label>
+     </label>
      </div>
-
      <label className={cn('block')}>
       <span className={cn('text-xs font-bold uppercase tracking-wider tn-text-tertiary')}>
        {vm.t('system_configs.form.description')}
@@ -48,10 +50,9 @@ export default function SystemConfigsEditorPanel({ vm, selectedUpdatedAt }: Syst
        onChange={(event) => vm.setDraftDescription(event.target.value)}
        rows={3}
        className={cn('mt-2 w-full resize-y rounded-xl border px-4 py-3 text-sm outline-none transition-colors placeholder:text-[var(--text-tertiary)] focus:tn-border-accent tn-border-soft tn-panel-soft tn-text-primary')}
-       placeholder={vm.t('system_configs.form.description_placeholder')}
+      placeholder={vm.t('system_configs.form.description_placeholder')}
       />
      </label>
-
      <label className={cn('block')}>
       <span className={cn('text-xs font-bold uppercase tracking-wider tn-text-tertiary')}>
        {vm.t('system_configs.form.value')}
@@ -62,10 +63,9 @@ export default function SystemConfigsEditorPanel({ vm, selectedUpdatedAt }: Syst
        rows={16}
        className={cn('custom-scrollbar mt-2 w-full resize-y rounded-xl border bg-[#0f111a]/80 px-4 py-4 font-mono text-[13px] leading-relaxed outline-none transition-colors placeholder:text-[var(--text-tertiary)] focus:tn-border-accent tn-border-soft tn-text-primary')}
        placeholder={vm.t('system_configs.form.value_placeholder')}
-       spellCheck={false}
-      />
+      spellCheck={false}
+     />
      </label>
-
      <div className={cn('flex flex-wrap items-center justify-between gap-4 border-t pt-4 tn-border-soft')}>
       <div className={cn('text-xs tn-text-tertiary')}>
        {selectedUpdatedAt
