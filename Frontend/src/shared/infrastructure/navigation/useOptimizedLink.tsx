@@ -1,12 +1,13 @@
 'use client';
 
-import { forwardRef, useCallback } from 'react';
+import { forwardRef, useCallback, useSyncExternalStore } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
 import type { ComponentPropsWithoutRef, FocusEvent, MouseEvent } from 'react';
 import { Link as IntlLink, usePathname, useRouter } from '@/i18n/routing';
 import { prefetchRouteQueries } from '@/shared/infrastructure/navigation/routeQueryPrefetch';
 import { useOptimizedLinkPrefetch } from '@/shared/infrastructure/navigation/optimizedLinkPrefetch';
+import { isPrefetchGateOpen, subscribePrefetchGate } from '@/shared/infrastructure/navigation/prefetchPolicy';
 
 type IntlLinkProps = ComponentPropsWithoutRef<typeof IntlLink>;
 type RouterPrefetchHref = Parameters<ReturnType<typeof useRouter>['prefetch']>[0];
@@ -24,13 +25,14 @@ export const OptimizedLink = forwardRef<HTMLAnchorElement, OptimizedLinkProps>(f
  const router = useRouter();
  const pathname = usePathname();
  const locale = useLocale();
- const { runRoutePrefetch, runQueryPrefetch } = useOptimizedLinkPrefetch({
+ const prefetchGateOpen = useSyncExternalStore(subscribePrefetchGate, isPrefetchGateOpen, () => false);
+ const { canPrefetchRouteOnIntent, runRoutePrefetch, runQueryPrefetch } = useOptimizedLinkPrefetch({
   href,
- locale,
- pathname,
- prefetch,
- prefetchQueries,
- onQueryPrefetch: async (normalizedHref) => prefetchRouteQueries(queryClient, normalizedHref),
+  locale,
+  pathname,
+  prefetch,
+  prefetchQueries,
+  onQueryPrefetch: async (normalizedHref) => prefetchRouteQueries(queryClient, normalizedHref),
   onRoutePrefetch: async (rawHref) => {
    if (typeof rawHref === 'string') {
     await router.prefetch(rawHref);
@@ -46,6 +48,8 @@ export const OptimizedLink = forwardRef<HTMLAnchorElement, OptimizedLinkProps>(f
    }
   },
  });
+
+ const nativePrefetchEnabled = prefetchGateOpen && canPrefetchRouteOnIntent;
 
  const handleMouseEnter = useCallback((event: MouseEvent<HTMLAnchorElement>) => {
   onMouseEnter?.(event);
@@ -63,7 +67,7 @@ export const OptimizedLink = forwardRef<HTMLAnchorElement, OptimizedLinkProps>(f
   <IntlLink
    ref={ref}
    href={href}
-   prefetch={false}
+   prefetch={nativePrefetchEnabled}
    onFocus={handleFocus}
    onMouseEnter={handleMouseEnter}
    {...rest}

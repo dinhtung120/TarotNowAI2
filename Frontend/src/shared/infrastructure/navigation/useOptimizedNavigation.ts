@@ -4,7 +4,12 @@ import { useCallback, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
 import { usePathname, useRouter } from '@/i18n/routing';
-import { isPrefetchBlocked, schedulePrefetch, shouldRunPrefetch } from '@/shared/infrastructure/navigation/prefetchPolicy';
+import {
+ isPrefetchBlocked,
+ markRouteChanged,
+ schedulePrefetch,
+ shouldRunPrefetch,
+} from '@/shared/infrastructure/navigation/prefetchPolicy';
 import { normalizeNavigationPath, prefetchRouteQueries } from '@/shared/infrastructure/navigation/routeQueryPrefetch';
 
 interface OptimizedNavigateOptions {
@@ -69,20 +74,20 @@ export function useOptimizedNavigation() {
  }, [locale, normalizedCurrentPath, queryClient, router]);
 
  const push = useCallback((href: string, options?: OptimizedNavigateOptions) => {
-  prefetch(href);
+  markRouteChanged(normalizeNavigationPath(href));
 
   runWithViewTransition(() => {
    router.push(href);
   }, options?.useViewTransition ?? true);
- }, [prefetch, router]);
+ }, [router]);
 
  const replace = useCallback((href: string, options?: OptimizedNavigateOptions) => {
-  prefetch(href);
+  markRouteChanged(normalizeNavigationPath(href));
 
   runWithViewTransition(() => {
    router.replace(href);
   }, options?.useViewTransition ?? true);
- }, [prefetch, router]);
+ }, [router]);
 
  const refresh = useCallback(() => {
   router.refresh();

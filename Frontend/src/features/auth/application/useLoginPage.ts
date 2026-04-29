@@ -87,26 +87,10 @@ export function useLoginPage() {
      */
     invalidateClientSessionSnapshot();
 
-    /* 
-     * Bước 3: Xóa toàn bộ cache của TanStack Query.
-     * Rất quan trọng vì các component có thể đang lưu cache dữ liệu của user cũ 
-     * hoặc user vô danh trước khi đăng nhập.
-     */
+    // Reset cache user-state cũ để tránh hiển thị lệch danh tính ngay sau login.
     queryClient.clear();
 
-    /* 
-     * Bước 4: Làm mới Router của Next.js (Router Cache).
-     * Next.js lưu các trang đã prefetch vào cache. Nếu trang Home đã được prefetch 
-     * khi chưa đăng nhập, nó sẽ hiển thị bản "chưa đăng nhập" nếu không refresh.
-     */
-    navigation.refresh();
-
     setIsRedirecting(true);
-
-    /* 
-     * Bước 5: Chuyển hướng về trang chủ. 
-     * Lúc này Next.js sẽ fetch lại bản mới của trang chủ từ server (cookies mới).
-     */
     navigation.replace('/');
    }
   } catch {

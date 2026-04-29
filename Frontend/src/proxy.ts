@@ -4,10 +4,6 @@ import { routing } from './i18n/routing';
 import { PROTECTED_PREFIXES } from '@/shared/config/authRoutes';
 import { AUTH_COOKIE } from '@/shared/infrastructure/auth/authConstants';
 import { getPublicApiOrigin } from '@/shared/infrastructure/http/apiUrl';
-import {
- PROTECTED_ROUTE_AUTH_DECISION,
- resolveProtectedRouteAuthDecision,
-} from '@/shared/server/auth/protectedRouteAuthDecision';
 
 const intlMiddleware = createMiddleware(routing);
 const localeSet = new Set(routing.locales);
@@ -47,6 +43,8 @@ const stripLocalePrefix = (pathname: string): string => {
 
 const matchesPrefix = (pathname: string, prefix: string): boolean =>
  pathname === prefix || pathname.startsWith(`${prefix}/`);
+
+const buildLoginPath = (locale: string): string => `/${locale}/login`;
 
 const clearAuthCookies = (response: NextResponse): void => {
  response.cookies.set({
@@ -232,18 +230,12 @@ export default async function proxy(request: NextRequest) {
  const refreshToken = isProtectedRoute ? request.cookies.get(AUTH_COOKIE.REFRESH)?.value : undefined;
 
  if (isProtectedRoute) {
-  const authDecision = await resolveProtectedRouteAuthDecision({
-   accessToken,
-   refreshToken,
-   locale,
-   nextPath: `${pathname}${request.nextUrl.search}`,
-  });
-
-  if (authDecision.decision !== PROTECTED_ROUTE_AUTH_DECISION.ALLOW && authDecision.redirectPath) {
-   const response = NextResponse.redirect(new URL(authDecision.redirectPath, request.url));
-   if (authDecision.decision === PROTECTED_ROUTE_AUTH_DECISION.REDIRECT_LOGIN) {
-    clearAuthCookies(response);
-   }
+  // Middleware chỉ làm optimistic auth gate bằng cookie presence để giữ navigation nhẹ.
+  // Refresh/verify thực tế được xử lý ở route handler hoặc server component.
+  const hasSessionCookie = Boolean(accessToken || refreshToken);
+  if (!hasSessionCookie) {
+   const response = NextResponse.redirect(new URL(buildLoginPath(locale), request.url));
+   clearAuthCookies(response);
    return isDocument && cspNonce ? withResponseCsp(response, cspNonce) : response;
   }
  }

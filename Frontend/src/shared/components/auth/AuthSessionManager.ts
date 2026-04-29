@@ -182,7 +182,7 @@ export default function AuthSessionManager({
    }
 
    const currentPath = normalizePathname(pathnameRef.current);
-   const shouldBootstrapOnPath = isProtectedPath(currentPath) || currentPath === '/';
+   const shouldBootstrapOnPath = isProtectedPath(currentPath);
    const shouldSkipBootstrap = !useAuthStore.getState().isAuthenticated
     && (!shouldBootstrapOnPath || isAuthlessPath(currentPath) || isLegalPath(currentPath));
    if (shouldSkipBootstrap) {

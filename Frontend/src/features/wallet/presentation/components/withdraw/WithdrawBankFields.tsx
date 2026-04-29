@@ -1,6 +1,6 @@
 import { Building2, Landmark, UserRound } from 'lucide-react';
 import { memo } from 'react';
-import { Link } from '@/i18n/routing';
+import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
 import { cn } from '@/lib/utils';
 
 interface WithdrawBankFieldsProps {

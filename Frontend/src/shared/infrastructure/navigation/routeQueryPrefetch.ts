@@ -87,6 +87,10 @@ function buildRouteQuerySpecs(pathname: string): RouteQuerySpec[] {
  }
 
  if (pathname === '/reading') {
+  if (!authState.user?.role) {
+   return [];
+  }
+
   if (normalizedRole === 'admin') {
    return [];
   }

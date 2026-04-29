@@ -26,8 +26,17 @@ interface UseOptimizedLinkPrefetchOptions {
 }
 
 export function useOptimizedLinkPrefetch(options: UseOptimizedLinkPrefetchOptions) {
- const rawHref = useMemo(() => resolveHrefPath(options.href), [options.href]);
- const normalizedCurrentPath = useMemo(() => normalizeNavigationPath(options.pathname), [options.pathname]);
+ const {
+  href,
+  locale,
+  onQueryPrefetch,
+  onRoutePrefetch,
+  pathname,
+  prefetch,
+  prefetchQueries,
+ } = options;
+ const rawHref = useMemo(() => resolveHrefPath(href), [href]);
+ const normalizedCurrentPath = useMemo(() => normalizeNavigationPath(pathname), [pathname]);
  const normalizedHref = useMemo(() => {
   if (!rawHref) {
    return null;
@@ -39,11 +48,11 @@ export function useOptimizedLinkPrefetch(options: UseOptimizedLinkPrefetchOption
 
  const isBlockedPath = normalizedHref ? isPrefetchBlocked(normalizedHref) : true;
  const isSameRoute = Boolean(normalizedHref) && normalizedHref === normalizedCurrentPath;
- const canPrefetchQueries = Boolean(normalizedHref) && !isBlockedPath && !isSameRoute && options.prefetchQueries;
- const prefetchEnabled = options.prefetch !== false;
+ const canPrefetchQueries = Boolean(normalizedHref) && !isBlockedPath && !isSameRoute && prefetchQueries;
+ const prefetchEnabled = prefetch !== false;
  const canPrefetchRouteOnIntent = Boolean(rawHref) && !isBlockedPath && !isSameRoute && prefetchEnabled;
- const routeTaskKey = normalizedHref ? `route:${options.locale}:${normalizedHref}` : '';
- const queryTaskKey = normalizedHref ? `query:${options.locale}:${normalizedHref}` : '';
+ const routeTaskKey = normalizedHref ? `route:${locale}:${normalizedHref}` : '';
+ const queryTaskKey = normalizedHref ? `query:${locale}:${normalizedHref}` : '';
 
  const runRoutePrefetch = useCallback(() => {
   if (!canPrefetchRouteOnIntent || !rawHref || !shouldRunPrefetch(routeTaskKey, ROUTE_PREFETCH_COOLDOWN_MS)) {
@@ -52,12 +61,12 @@ export function useOptimizedLinkPrefetch(options: UseOptimizedLinkPrefetchOption
 
   schedulePrefetch(routeTaskKey, async () => {
    try {
-    await options.onRoutePrefetch(options.href);
+    await onRoutePrefetch(href);
    } catch {
     // Route prefetch remains best-effort and should never block navigation.
    }
   });
- }, [canPrefetchRouteOnIntent, options, rawHref, routeTaskKey]);
+ }, [canPrefetchRouteOnIntent, href, onRoutePrefetch, rawHref, routeTaskKey]);
 
  const runQueryPrefetch = useCallback(() => {
   if (!canPrefetchQueries || !normalizedHref || !shouldRunPrefetch(queryTaskKey, QUERY_PREFETCH_COOLDOWN_MS)) {
@@ -65,11 +74,13 @@ export function useOptimizedLinkPrefetch(options: UseOptimizedLinkPrefetchOption
   }
 
   schedulePrefetch(queryTaskKey, async () => {
-   await options.onQueryPrefetch(normalizedHref);
+   await onQueryPrefetch(normalizedHref);
   });
- }, [canPrefetchQueries, normalizedHref, options, queryTaskKey]);
+ }, [canPrefetchQueries, normalizedHref, onQueryPrefetch, queryTaskKey]);
 
  return {
+  canPrefetchRouteOnIntent,
+  canPrefetchQueries,
   runRoutePrefetch,
   runQueryPrefetch,
  };

@@ -26,7 +26,7 @@ interface UsePresenceConnectionOptions {
 export function usePresenceConnection(options: UsePresenceConnectionOptions = {}) {
   const enabled = options.enabled ?? true;
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const runtimePoliciesQuery = useRuntimePolicies();
+  const runtimePoliciesQuery = useRuntimePolicies(enabled && isAuthenticated);
   const realtimePolicy = runtimePoliciesQuery.data?.realtime;
   const connectionRef = useRef<HubConnection | null>(null);
   const reconnectBlockedUntilRef = useRef(0);

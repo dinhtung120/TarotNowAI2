@@ -1,10 +1,10 @@
 'use client';
 
 import { memo } from 'react';
-import { Link } from '@/i18n/routing';
 import { DepositPackagePicker } from '@/features/wallet/presentation/components/deposit/DepositPackagePicker';
 import { DepositPaymentPanel } from '@/features/wallet/presentation/components/deposit/DepositPaymentPanel';
 import { useDepositPageViewModel } from '@/features/wallet/presentation/useDepositPageViewModel';
+import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
 import { cn } from '@/lib/utils';
 
 const DepositPage = memo(function DepositPage() {

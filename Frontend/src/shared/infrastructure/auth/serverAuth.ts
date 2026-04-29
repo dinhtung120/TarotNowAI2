@@ -86,7 +86,8 @@ async function getValidAccessTokenFromCookie(): Promise<string | undefined> {
 
  if (verification.reason === 'missing_verifier_config') {
   if (resolveAuthVerificationPolicy() === AUTH_VERIFIER_POLICY.FAIL_OPEN) {
-   // For local/dev environments without verifier config, keep non-production DX.
+   // Fallback by decoding payload when verifier config is unavailable in frontend runtime.
+   // Sensitive authorization is still enforced by backend /profile response.
    const unverifiedPayload = parseJwtPayload(accessToken);
    if (isExpiringSoon(unverifiedPayload)) {
     return undefined;

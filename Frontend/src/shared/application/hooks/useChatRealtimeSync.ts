@@ -42,7 +42,7 @@ function shouldRefreshUnreadBadge(payload?: ConversationUpdatedPayload): boolean
 export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
   const enabled = options.enabled ?? true;
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const runtimePoliciesQuery = useRuntimePolicies();
+  const runtimePoliciesQuery = useRuntimePolicies(enabled && isAuthenticated);
   const realtimePolicy = runtimePoliciesQuery.data?.realtime;
   const connectionRef = useRef<HubConnection | null>(null);
   const unauthorizedRetryBlockedUntilRef = useRef(0);
