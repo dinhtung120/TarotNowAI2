@@ -112,8 +112,15 @@ server {
   }
 
   # ── Next.js Image Optimization ──
-  # Cache 1 giờ vì Next.js có thể thay đổi kích thước/format
-  location ^~ /_next/image/ {
+  # QUAN TRỌNG:
+  # Dùng prefix '/_next/image' (không có '/' cuối) để match cả:
+  #   - /_next/image?...    (request thật của next/image)
+  #   - /_next/image/...    (nếu có)
+  # Tránh implicit 301 của Nginx từ '/_next/image' -> '/_next/image/'
+  # (redirect này dễ làm browser thấy Location=http://... khi origin phía sau Cloudflare là HTTP,
+  # gây mixed-content trên trang HTTPS).
+  # Cache 1 giờ vì Next.js có thể thay đổi kích thước/format.
+  location ^~ /_next/image {
     proxy_set_header Host $request_host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

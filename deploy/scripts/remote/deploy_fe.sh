@@ -173,6 +173,40 @@ if ! grep -qi '^content-type:[[:space:]]*text/html' "$health_response_file"; the
 fi
 rm -f "$health_response_file"
 
+# ──────────────────────────────────────────────────────────────────────
+# Health Check #3: next/image không redirect về HTTP
+#
+# Mục tiêu:
+# - Phát hiện sớm lỗi mixed-content do Nginx tự 301:
+#   /_next/image?... -> http://.../_next/image/?...
+# - Xác nhận optimizer endpoint trả image trực tiếp.
+# ──────────────────────────────────────────────────────────────────────
+echo "[deploy-fe] verifying next/image endpoint does not redirect to http"
+image_probe_file="$(mktemp)"
+if ! curl -fsSI \
+  "http://localhost/_next/image?url=%2Ffavicon.ico&w=64&q=75" \
+  >"$image_probe_file" 2>&1; then
+  echo "[deploy-fe] next/image health check failed" >&2
+  cat "$image_probe_file" >&2
+  rm -f "$image_probe_file"
+  exit 1
+fi
+
+if grep -qi '^location:[[:space:]]*http://' "$image_probe_file"; then
+  echo "[deploy-fe] next/image returned insecure redirect (http://), potential mixed-content regression:" >&2
+  cat "$image_probe_file" >&2
+  rm -f "$image_probe_file"
+  exit 1
+fi
+
+if ! grep -qi '^content-type:[[:space:]]*image/' "$image_probe_file"; then
+  echo "[deploy-fe] next/image did not return an image response:" >&2
+  cat "$image_probe_file" >&2
+  rm -f "$image_probe_file"
+  exit 1
+fi
+rm -f "$image_probe_file"
+
 echo "[deploy-fe] health checks passed"
 
 # ── Cập nhật release state cho rollback ──
