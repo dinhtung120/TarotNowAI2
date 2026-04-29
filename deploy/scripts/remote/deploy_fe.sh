@@ -60,6 +60,40 @@ read_env_file_value() {
   ' "$ENV_FILE"
 }
 
+parse_host_from_url_or_host() {
+  local raw="${1:-}"
+  raw="${raw#http://}"
+  raw="${raw#https://}"
+  raw="${raw%%/*}"
+  raw="${raw%%[[:space:]]*}"
+  printf '%s' "$raw"
+}
+
+probe_headers_with_retry() {
+  local label="$1"
+  local url="$2"
+  local host_header="$3"
+  local output_file="$4"
+  local attempts="${5:-30}"
+  local sleep_seconds="${6:-2}"
+  local i
+
+  for i in $(seq 1 "$attempts"); do
+    if curl -sSI -H "Host: $host_header" "$url" >"$output_file" 2>&1; then
+      return 0
+    fi
+
+    if [[ "$i" -lt "$attempts" ]]; then
+      sleep "$sleep_seconds"
+      continue
+    fi
+
+    echo "[deploy-fe] $label failed after ${attempts} attempts" >&2
+    cat "$output_file" >&2
+    return 1
+  done
+}
+
 cd "$REPO_DIR"
 
 materialize_root_env_from_ci "$ENV_FILE" || exit 1
@@ -98,11 +132,18 @@ fi
 # Normalize: bỏ trailing slash để so sánh chính xác
 PUBLIC_BASE_URL_NORMALIZED="${PUBLIC_BASE_URL_VALUE%/}"
 NEXT_PUBLIC_API_URL_NORMALIZED="${NEXT_PUBLIC_API_URL_VALUE%/}"
-PUBLIC_BASE_AUTHORITY="${PUBLIC_BASE_URL_NORMALIZED#*://}"
-PUBLIC_BASE_AUTHORITY="${PUBLIC_BASE_AUTHORITY%%/*}"
+PUBLIC_BASE_AUTHORITY="$(parse_host_from_url_or_host "$PUBLIC_BASE_URL_NORMALIZED")"
+CANONICAL_HOST_VALUE="${CANONICAL_HOST:-$(read_env_file_value CANONICAL_HOST)}"
+CANONICAL_AUTHORITY="$(parse_host_from_url_or_host "$CANONICAL_HOST_VALUE")"
+PROBE_HOST="${CANONICAL_AUTHORITY:-$PUBLIC_BASE_AUTHORITY}"
 
 if [[ -z "$PUBLIC_BASE_AUTHORITY" ]]; then
   echo "[deploy-fe] cannot parse host from PUBLIC_BASE_URL ($PUBLIC_BASE_URL_VALUE)" >&2
+  exit 1
+fi
+
+if [[ -z "$PROBE_HOST" ]]; then
+  echo "[deploy-fe] cannot resolve probe host (PUBLIC_BASE_URL=$PUBLIC_BASE_URL_VALUE, CANONICAL_HOST=${CANONICAL_HOST_VALUE:-<empty>})" >&2
   exit 1
 fi
 
@@ -137,7 +178,7 @@ docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" up -d --no-deps fronten
 # ──────────────────────────────────────────────────────────────────────
 echo "[deploy-fe] waiting for nginx health"
 for i in $(seq 1 50); do
-  health_code="$(curl -sS -o /dev/null -w '%{http_code}' -H "Host: $PUBLIC_BASE_AUTHORITY" "http://localhost/nginx-health" || true)"
+  health_code="$(curl -sS -o /dev/null -w '%{http_code}' -H "Host: $PROBE_HOST" "http://localhost/nginx-health" || true)"
   if [[ "$health_code" == "200" ]]; then
     break
   fi
@@ -162,13 +203,14 @@ done
 # ──────────────────────────────────────────────────────────────────────
 echo "[deploy-fe] verifying Next.js responds through nginx"
 health_response_file="$(mktemp)"
-if ! curl -sSI \
-  -H "Host: $PUBLIC_BASE_AUTHORITY" \
-  -H 'Accept: text/html' \
+if ! probe_headers_with_retry \
+  "Next.js health check through nginx" \
   "http://localhost/vi" \
-  >"$health_response_file" 2>&1; then
+  "$PROBE_HOST" \
+  "$health_response_file" \
+  30 \
+  2; then
   echo "[deploy-fe] Next.js health check failed through nginx" >&2
-  cat "$health_response_file" >&2
   rm -f "$health_response_file"
   exit 1
 fi
@@ -200,12 +242,14 @@ rm -f "$health_response_file"
 # ──────────────────────────────────────────────────────────────────────
 echo "[deploy-fe] verifying next/image endpoint does not redirect to http"
 image_probe_file="$(mktemp)"
-if ! curl -sSI \
-  -H "Host: $PUBLIC_BASE_AUTHORITY" \
+if ! probe_headers_with_retry \
+  "next/image health check" \
   "http://localhost/_next/image?url=%2Ffavicon.ico&w=64&q=75" \
-  >"$image_probe_file" 2>&1; then
+  "$PROBE_HOST" \
+  "$image_probe_file" \
+  30 \
+  2; then
   echo "[deploy-fe] next/image health check failed" >&2
-  cat "$image_probe_file" >&2
   rm -f "$image_probe_file"
   exit 1
 fi

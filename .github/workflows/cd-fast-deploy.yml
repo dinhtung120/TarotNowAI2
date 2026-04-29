@@ -165,6 +165,15 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Guard latest main SHA
+        run: |
+          git fetch origin main
+          latest_main="$(git rev-parse origin/main)"
+          if [[ "${GITHUB_SHA}" != "$latest_main" ]]; then
+            echo "::error::This workflow run is stale. GITHUB_SHA=${GITHUB_SHA}, latest origin/main=${latest_main}. Re-run pipeline from latest commit."
+            exit 1
+          fi
+
       - name: Cấu hình SSH
         run: |
           mkdir -p ~/.ssh
@@ -230,6 +239,15 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Guard latest main SHA
+        run: |
+          git fetch origin main
+          latest_main="$(git rev-parse origin/main)"
+          if [[ "${GITHUB_SHA}" != "$latest_main" ]]; then
+            echo "::error::This workflow run is stale. GITHUB_SHA=${GITHUB_SHA}, latest origin/main=${latest_main}. Re-run pipeline from latest commit."
+            exit 1
+          fi
+
       - name: Cấu hình SSH
         run: |
           mkdir -p ~/.ssh
@@ -294,6 +312,15 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 1
+
+      - name: Guard latest main SHA
+        run: |
+          git fetch origin main
+          latest_main="$(git rev-parse origin/main)"
+          if [[ "${GITHUB_SHA}" != "$latest_main" ]]; then
+            echo "::error::This workflow run is stale. GITHUB_SHA=${GITHUB_SHA}, latest origin/main=${latest_main}. Re-run pipeline from latest commit."
+            exit 1
+          fi
 
       - name: Cấu hình SSH
         run: |
