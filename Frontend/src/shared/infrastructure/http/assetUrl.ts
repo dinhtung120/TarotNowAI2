@@ -1,6 +1,11 @@
 const UPLOADS_PREFIX = '/uploads/';
 const API_UPLOADS_PREFIX = '/api/v1/uploads/';
 const HTTP_URL_REGEX = /^https?:\/\//i;
+const OPTIMIZED_REMOTE_IMAGE_HOSTS = new Set([
+  'media.tarotnow.xyz',
+  'ui-avatars.com',
+  'img.vietqr.io',
+]);
 
 function normalizeUploadsPath(pathname: string): string | null {
   const lowerPath = pathname.toLowerCase();
@@ -44,5 +49,22 @@ export function resolveAvatarUrl(value: string | null | undefined): string | nul
     return `${uploadsPath}${parsed.search}${parsed.hash}`;
   } catch {
     return raw;
+  }
+}
+
+export function shouldUseUnoptimizedImage(src: string | null | undefined): boolean {
+  if (!src) return true;
+  const raw = src.trim();
+  if (!raw) return true;
+
+  if (raw.startsWith('blob:') || raw.startsWith('data:')) return true;
+  if (raw.startsWith('/')) return false;
+  if (!HTTP_URL_REGEX.test(raw)) return false;
+
+  try {
+    const parsed = new URL(raw);
+    return !OPTIMIZED_REMOTE_IMAGE_HOSTS.has(parsed.hostname.toLowerCase());
+  } catch {
+    return true;
   }
 }

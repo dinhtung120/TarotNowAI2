@@ -30,7 +30,7 @@ export function useChatInboxPage(initialTab: InboxTab = 'active') {
       staleTime: 30000,
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
-      refetchOnMount: true,
+      refetchOnMount: false,
    });
    const conversations = useMemo(() => data?.conversations ?? [], [data?.conversations]);
 

@@ -38,7 +38,7 @@ export const RUNTIME_POLICY_FALLBACKS = {
   },
   runtimePoliciesClient: {
     timeoutMs: 8000,
-    staleMs: 15000,
+    staleMs: 60000,
   },
   ui: {
     readers: {
@@ -50,7 +50,7 @@ export const RUNTIME_POLICY_FALLBACKS = {
       debounceMs: 300,
     },
     prefetch: {
-      chatInboxStaleMs: 30000,
+      chatInboxStaleMs: 60000,
     },
   },
   media: {

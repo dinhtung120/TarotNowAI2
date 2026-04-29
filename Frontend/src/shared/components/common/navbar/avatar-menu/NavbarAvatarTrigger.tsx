@@ -2,7 +2,7 @@ import Image from 'next/image';
 import { ChevronDown } from 'lucide-react';
 import type { UserProfile } from '@/features/auth/domain/types';
 import { cn } from '@/lib/utils';
-import { resolveAvatarUrl } from '@/shared/infrastructure/http/assetUrl';
+import { resolveAvatarUrl, shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
 
 interface NavbarAvatarTriggerProps {
   open: boolean;
@@ -13,11 +13,12 @@ interface NavbarAvatarTriggerProps {
 
 export default function NavbarAvatarTrigger({ open, tNav, user, onToggle }: NavbarAvatarTriggerProps) {
   const avatarSrc = resolveAvatarUrl(user?.avatarUrl);
+  const unoptimizedAvatar = shouldUseUnoptimizedImage(avatarSrc);
 
   return (
     <button type="button" onClick={onToggle} className={cn('tn-avatar-trigger-root flex min-h-11 cursor-pointer items-center gap-2 rounded-xl transition-all', open ? 'border tn-border tn-bg-elevated tn-text-ink tn-shadow-card' : 'border tn-border-soft tn-bg-surface-hover tn-text-secondary tn-avatar-trigger-hover')}>
       <div className={cn('relative flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border tn-border tn-bg-purple-100 tn-text-10 font-black tn-text-ink')}>
-        {avatarSrc ? <Image src={avatarSrc} alt="avatar" fill sizes="28px" unoptimized className={cn('h-full w-full object-cover')} /> : user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
+        {avatarSrc ? <Image src={avatarSrc} alt="avatar" fill sizes="28px" unoptimized={unoptimizedAvatar} className={cn('h-full w-full object-cover')} /> : user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
       </div>
       <div className={cn('tn-avatar-trigger-meta -space-y-0.5 leading-tight')}>
         <span className={cn('tn-maxw-100 truncate tn-text-11 font-black tracking-wide tn-text-ink')}>{user?.displayName || tNav('profile')}</span>

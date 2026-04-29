@@ -23,8 +23,10 @@ export default async function UserSegmentLayout({ children, params }: UserSegmen
   nextPath: `/${locale}`,
  });
 
- const state = await dehydrateAppQueries(prefetchUserSegmentShell);
- const messages = await getMessages();
+ const [state, messages] = await Promise.all([
+  dehydrateAppQueries(prefetchUserSegmentShell),
+  getMessages(),
+ ]);
  const userMessages = pickClientMessages(messages, USER_CLIENT_NAMESPACES);
 
  return (

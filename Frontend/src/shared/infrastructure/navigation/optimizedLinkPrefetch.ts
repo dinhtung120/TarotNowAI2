@@ -2,8 +2,8 @@ import { useCallback, useMemo } from 'react';
 import { isPrefetchBlocked, schedulePrefetch, shouldRunPrefetch } from '@/shared/infrastructure/navigation/prefetchPolicy';
 import { normalizeNavigationPath } from '@/shared/infrastructure/navigation/routeQueryPrefetch';
 
-const QUERY_PREFETCH_COOLDOWN_MS = 90_000;
-const ROUTE_PREFETCH_COOLDOWN_MS = 90_000;
+const QUERY_PREFETCH_COOLDOWN_MS = 180_000;
+const ROUTE_PREFETCH_COOLDOWN_MS = 180_000;
 
 type HrefLike = { pathname?: string | null } | string;
 

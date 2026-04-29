@@ -24,6 +24,19 @@ interface NavbarProps {
   onLogout?: () => Promise<unknown> | unknown;
 }
 
+function shouldEnableGlobalNavbarRealtime(normalizedPath: string): boolean {
+  return (
+    normalizedPath === '/chat'
+    || normalizedPath.startsWith('/chat/')
+    || normalizedPath === '/community'
+    || normalizedPath.startsWith('/community/')
+    || normalizedPath === '/notifications'
+    || normalizedPath.startsWith('/notifications/')
+    || normalizedPath === '/readers'
+    || normalizedPath.startsWith('/readers/')
+  );
+}
+
 export default function Navbar({ onLogout }: NavbarProps = {}) {
   const navigation = useOptimizedNavigation();
   const pathname = usePathname();
@@ -34,8 +47,9 @@ export default function Navbar({ onLogout }: NavbarProps = {}) {
   const normalizedPath = normalizePathname(pathname);
   const allowRealtime = shouldEnableRealtimeForPath(pathname);
   const isChatRoomPath = /\/chat\/[^/]+/.test(normalizedPath);
-  const enableGlobalChatSync = allowRealtime && !isChatRoomPath;
-  const enableNotificationSync = allowRealtime;
+  const allowNavbarRealtime = allowRealtime && shouldEnableGlobalNavbarRealtime(normalizedPath);
+  const enableGlobalChatSync = allowNavbarRealtime && !isChatRoomPath;
+  const enableNotificationSync = allowNavbarRealtime;
 
   useChatUnreadNotifications({ enabled: enableGlobalChatSync });
   useChatRealtimeSync({ enabled: enableGlobalChatSync });

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { resolveAvatarUrl } from "@/shared/infrastructure/http/assetUrl";
+import { resolveAvatarUrl, shouldUseUnoptimizedImage } from "@/shared/infrastructure/http/assetUrl";
 
 interface FeaturedReaderAvatarProps {
   avatarUrl?: string | null;
@@ -12,6 +12,7 @@ export default function FeaturedReaderAvatar({
   displayName,
 }: FeaturedReaderAvatarProps) {
   const avatarSrc = resolveAvatarUrl(avatarUrl);
+  const unoptimizedAvatar = shouldUseUnoptimizedImage(avatarSrc);
 
   if (avatarSrc) {
     return (
@@ -20,7 +21,7 @@ export default function FeaturedReaderAvatar({
         alt={displayName}
         fill
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-        unoptimized
+        unoptimized={unoptimizedAvatar}
         className={cn(
           "absolute inset-0 z-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110",
         )}

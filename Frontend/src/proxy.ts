@@ -10,6 +10,7 @@ const localeSet = new Set(routing.locales);
 const DEFAULT_CANONICAL_HOST = 'www.tarotnow.xyz';
 const CANONICAL_HOST = (process.env.NEXT_PUBLIC_CANONICAL_HOST?.trim().toLowerCase() || DEFAULT_CANONICAL_HOST);
 const AUTH_COOKIE_DOMAIN = process.env.AUTH_COOKIE_DOMAIN?.trim() || undefined;
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 const resolveNonCanonicalHosts = (canonicalHost: string): Set<string> => {
  const hosts = new Set<string>();
@@ -146,38 +147,34 @@ const resolveR2UploadConnectSrc = (): string => {
  return 'https://*.r2.cloudflarestorage.com';
 };
 
+const API_ORIGIN = getPublicApiOrigin().replace(/\/+$/, '');
+const WS_API_ORIGIN = API_ORIGIN.startsWith('https://')
+ ? `wss://${API_ORIGIN.slice('https://'.length)}`
+ : API_ORIGIN.startsWith('http://')
+  ? `ws://${API_ORIGIN.slice('http://'.length)}`
+  : '';
+const CONNECT_SRC = Array.from(new Set<string>([
+ "'self'",
+ API_ORIGIN,
+ WS_API_ORIGIN,
+ 'https://cloudflareinsights.com',
+ resolveR2UploadConnectSrc(),
+ ...resolveExtraConnectSrc(),
+]))
+ .filter((value) => value.length > 0)
+ .join(' ');
+
 const buildContentSecurityPolicy = (nonce: string): string => {
- const isProduction = process.env.NODE_ENV === 'production';
- const apiOrigin = getPublicApiOrigin().replace(/\/+$/, '');
- const wsApiOrigin = apiOrigin.startsWith('https://')
-  ? `wss://${apiOrigin.slice('https://'.length)}`
-  : apiOrigin.startsWith('http://')
-   ? `ws://${apiOrigin.slice('http://'.length)}`
-   : '';
-
- const connectSrcSet = new Set<string>([
-  "'self'",
-  apiOrigin,
-  wsApiOrigin,
-  'https://cloudflareinsights.com',
-  resolveR2UploadConnectSrc(),
-  ...resolveExtraConnectSrc(),
- ]);
-
- const connectSrc = Array.from(connectSrcSet)
-  .filter((value) => value.length > 0)
-  .join(' ');
-
- const styleSrc = isProduction
+ const styleSrc = IS_PRODUCTION
   ? `style-src 'self' 'nonce-${nonce}'`
   : "style-src 'self' 'unsafe-inline'";
- const styleSrcElem = isProduction
+ const styleSrcElem = IS_PRODUCTION
   ? `style-src-elem 'self' 'nonce-${nonce}'`
   : "style-src-elem 'self' 'unsafe-inline'";
- const styleSrcAttr = isProduction
+ const styleSrcAttr = IS_PRODUCTION
   ? "style-src-attr 'none'"
   : "style-src-attr 'unsafe-inline'";
- const scriptSrc = isProduction
+ const scriptSrc = IS_PRODUCTION
   ? `script-src 'self' 'nonce-${nonce}' https://static.cloudflareinsights.com`
   : `script-src 'self' 'unsafe-eval' 'nonce-${nonce}' https://static.cloudflareinsights.com`;
 
@@ -194,10 +191,10 @@ const buildContentSecurityPolicy = (nonce: string): string => {
   styleSrcAttr,
   scriptSrc,
   "worker-src 'self' blob:",
-  `connect-src ${connectSrc}`,
+  `connect-src ${CONNECT_SRC}`,
  ];
 
- if (isProduction) {
+ if (IS_PRODUCTION) {
   cspParts.push('upgrade-insecure-requests');
  }
 

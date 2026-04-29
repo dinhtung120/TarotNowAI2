@@ -16,8 +16,8 @@ interface OptimizedNavigateOptions {
  useViewTransition?: boolean;
 }
 
-const ROUTE_PREFETCH_COOLDOWN_MS = 90_000;
-const QUERY_PREFETCH_COOLDOWN_MS = 90_000;
+const ROUTE_PREFETCH_COOLDOWN_MS = 180_000;
+const QUERY_PREFETCH_COOLDOWN_MS = 180_000;
 
 function runWithViewTransition(callback: () => void, enabled: boolean): void {
  if (!enabled || typeof document === 'undefined' || typeof window === 'undefined') {

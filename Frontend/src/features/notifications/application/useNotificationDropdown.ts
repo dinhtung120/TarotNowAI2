@@ -74,16 +74,20 @@ export function useNotificationDropdown(options: UseNotificationDropdownOptions 
   queryKey: queryKeyList,
   queryFn: () => fetchNotifications(1, 10),
   enabled: isAuthenticated && enabled,
-  staleTime: 60_000,
+  staleTime: 90_000,
+  refetchOnWindowFocus: false,
+  refetchOnMount: false,
+  refetchOnReconnect: true,
  });
 
  const unreadCountQuery = useQuery<number>({
   queryKey: queryKeyCount,
   queryFn: fetchUnreadNotificationCount,
   enabled: isAuthenticated && enabled,
-  staleTime: 30_000,
-  refetchOnWindowFocus: true,
-  refetchOnMount: true,
+  staleTime: 60_000,
+  refetchOnWindowFocus: false,
+  refetchOnMount: false,
+  refetchOnReconnect: true,
  });
 
  const markReadMutation = useMutation({

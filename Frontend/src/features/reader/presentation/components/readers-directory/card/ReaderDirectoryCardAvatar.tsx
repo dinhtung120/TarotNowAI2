@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { resolveAvatarUrl } from "@/shared/infrastructure/http/assetUrl";
+import { resolveAvatarUrl, shouldUseUnoptimizedImage } from "@/shared/infrastructure/http/assetUrl";
 
 interface ReaderDirectoryCardAvatarProps {
   avatarUrl?: string | null;
@@ -12,6 +12,7 @@ export default function ReaderDirectoryCardAvatar({
   displayName,
 }: ReaderDirectoryCardAvatarProps) {
   const avatarSrc = resolveAvatarUrl(avatarUrl);
+  const unoptimizedAvatar = shouldUseUnoptimizedImage(avatarSrc);
 
   return (
     <div className={cn("relative h-14 w-14 shrink-0")}>
@@ -32,7 +33,7 @@ export default function ReaderDirectoryCardAvatar({
             fill
             sizes="56px"
             src={avatarSrc}
-            unoptimized
+            unoptimized={unoptimizedAvatar}
           />
         ) : (
           displayName?.charAt(0)?.toUpperCase() || "?"
