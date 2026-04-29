@@ -1670,6 +1670,9 @@ async function runScenario(
   viewportProfile: ViewportProfile,
   seedRoutes: string[],
   routeDiscoveryNotes: string[],
+  options?: {
+    enableRecursiveDomDiscovery?: boolean;
+  },
 ): Promise<ScenarioBenchmarkResult> {
   const context = await browser.newContext(viewportProfile.contextOptions);
   const bootstrapPage = await context.newPage();
@@ -1692,6 +1695,7 @@ async function runScenario(
   const seededRoutes = buildSeedRoutes(seedRoutes, dynamicRoutes, scenario);
   coverageNotes.push(...seededRoutes.notes);
   const queue: string[] = seededRoutes.routes;
+  const enableRecursiveDomDiscovery = options?.enableRecursiveDomDiscovery ?? true;
   const visited = new Set<string>();
   const pageMetrics: PageBenchmarkMetric[] = [];
   let navFrom: string | null = null;
@@ -1713,13 +1717,15 @@ async function runScenario(
     visited.add(normalizedRoute);
     navFrom = normalizedRoute;
 
-    const discoveredRoutes = await discoverRoutesFromPage(routePage);
-    for (const discovered of discoveredRoutes.slice(0, DISCOVERY_LIMIT_PER_PAGE)) {
-      if (visited.has(discovered)) continue;
-      if (queue.includes(discovered)) continue;
-      if (scenario === 'logged-out' && isProtectedRoutePath(discovered)) continue;
-      if (scenario === 'logged-in-reader' && isAdminRoutePath(discovered)) continue;
-      queue.push(discovered);
+    if (enableRecursiveDomDiscovery) {
+      const discoveredRoutes = await discoverRoutesFromPage(routePage);
+      for (const discovered of discoveredRoutes.slice(0, DISCOVERY_LIMIT_PER_PAGE)) {
+        if (visited.has(discovered)) continue;
+        if (queue.includes(discovered)) continue;
+        if (scenario === 'logged-out' && isProtectedRoutePath(discovered)) continue;
+        if (scenario === 'logged-in-reader' && isAdminRoutePath(discovered)) continue;
+        queue.push(discovered);
+      }
     }
 
     await routePage.close();
@@ -2161,7 +2167,9 @@ test.describe('TarotNow production benchmark', () => {
 
     for (const viewport of VIEWPORT_PROFILES) {
       for (const scenario of scenarios) {
-        const result = await runScenario(browser, scenario, viewport, modeSeedRoutes, originRouteCollection.notes);
+        const result = await runScenario(browser, scenario, viewport, modeSeedRoutes, originRouteCollection.notes, {
+          enableRecursiveDomDiscovery: mode !== 'targeted-hotspots',
+        });
         scenarioResults.push(result);
       }
     }
