@@ -43,6 +43,35 @@ function resolveCookieDomain(request?: NextRequest): string | undefined {
  return undefined;
 }
 
+function resolveCookieCleanupDomains(request?: NextRequest): string[] {
+ const domains = new Set<string>();
+ const resolved = resolveCookieDomain(request);
+ if (resolved) {
+  domains.add(resolved.toLowerCase());
+ }
+
+ if (!AUTH_COOKIE_DOMAIN) {
+  return Array.from(domains);
+ }
+
+ const normalized = AUTH_COOKIE_DOMAIN.trim().toLowerCase();
+ if (normalized.length === 0) {
+  return Array.from(domains);
+ }
+
+ domains.add(normalized);
+ const withoutLeadingDot = normalized.startsWith('.') ? normalized.slice(1) : normalized;
+ if (withoutLeadingDot.length > 0) {
+  domains.add(withoutLeadingDot);
+ }
+
+ if (withoutLeadingDot.startsWith('www.') && withoutLeadingDot.length > 4) {
+  domains.add(withoutLeadingDot.slice(4));
+ }
+
+ return Array.from(domains);
+}
+
 function shouldUseSecureCookie(request?: NextRequest): boolean {
  if (AUTH_COOKIE_SECURE === 'true') {
   return true;
@@ -216,6 +245,7 @@ export function setAccessCookie(
  ttlSeconds: number,
  request?: NextRequest,
 ): void {
+ const domain = resolveCookieDomain(request);
  response.cookies.set({
   name: AUTH_COOKIE.ACCESS,
   value: accessToken,
@@ -223,7 +253,7 @@ export function setAccessCookie(
   secure: shouldUseSecureCookie(request),
   sameSite: 'strict',
   path: '/',
-  ...(resolveCookieDomain(request) ? { domain: resolveCookieDomain(request) } : {}),
+  ...(domain ? { domain } : {}),
   maxAge: Math.max(1, ttlSeconds),
  });
 }
@@ -240,6 +270,7 @@ export function setRefreshCookieFromHeaders(
   return false;
  }
 
+ const domain = resolveCookieDomain(request);
  response.cookies.set({
   name: AUTH_COOKIE.REFRESH,
   value: refreshToken,
@@ -247,7 +278,7 @@ export function setRefreshCookieFromHeaders(
   secure: shouldUseSecureCookie(request),
   sameSite: 'strict',
   path: '/',
-  ...(resolveCookieDomain(request) ? { domain: resolveCookieDomain(request) } : {}),
+  ...(domain ? { domain } : {}),
   maxAge: Math.max(1, parsed?.maxAgeSeconds ?? AUTH_SESSION.DEFAULT_REFRESH_TTL_SECONDS),
  });
  return true;
@@ -268,6 +299,7 @@ export function resolveDeviceIdFromRequest(request: NextRequest): string {
 }
 
 export function setDeviceCookie(response: NextResponse, deviceId: string, request?: NextRequest): void {
+ const domain = resolveCookieDomain(request);
  response.cookies.set({
   name: AUTH_COOKIE.DEVICE,
   value: deviceId,
@@ -275,32 +307,41 @@ export function setDeviceCookie(response: NextResponse, deviceId: string, reques
   secure: shouldUseSecureCookie(request),
   sameSite: 'strict',
   path: '/',
-  ...(resolveCookieDomain(request) ? { domain: resolveCookieDomain(request) } : {}),
+  ...(domain ? { domain } : {}),
   maxAge: 365 * 24 * 60 * 60,
  });
 }
 
 export function clearAuthCookies(response: NextResponse, request?: NextRequest): void {
- response.cookies.set({
-  name: AUTH_COOKIE.ACCESS,
-  value: '',
-  httpOnly: true,
-  secure: shouldUseSecureCookie(request),
-  sameSite: 'strict',
-  path: '/',
-  ...(resolveCookieDomain(request) ? { domain: resolveCookieDomain(request) } : {}),
-  maxAge: 0,
- });
- response.cookies.set({
-  name: AUTH_COOKIE.REFRESH,
-  value: '',
-  httpOnly: true,
-  secure: shouldUseSecureCookie(request),
-  sameSite: 'strict',
-  path: '/',
-  ...(resolveCookieDomain(request) ? { domain: resolveCookieDomain(request) } : {}),
-  maxAge: 0,
- });
+ const secure = shouldUseSecureCookie(request);
+ const cleanupDomains = resolveCookieCleanupDomains(request);
+ const appendClearCookieHeader = (name: string, domain?: string): void => {
+  const segments = [
+   `${name}=`,
+   'Path=/',
+   'Max-Age=0',
+   'HttpOnly',
+   'SameSite=Strict',
+  ];
+
+  if (secure) {
+   segments.push('Secure');
+  }
+
+  if (domain) {
+   segments.push(`Domain=${domain}`);
+  }
+
+  response.headers.append('set-cookie', segments.join('; '));
+ };
+
+ appendClearCookieHeader(AUTH_COOKIE.ACCESS);
+ appendClearCookieHeader(AUTH_COOKIE.REFRESH);
+
+ for (const domain of cleanupDomains) {
+  appendClearCookieHeader(AUTH_COOKIE.ACCESS, domain);
+  appendClearCookieHeader(AUTH_COOKIE.REFRESH, domain);
+ }
 }
 
 export function unauthorizedResponse(clearCookies = false, request?: NextRequest): NextResponse {

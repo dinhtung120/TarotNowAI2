@@ -5,6 +5,7 @@ import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient';
 import {
  buildProblemResponse,
+ clearAuthCookies,
  resolveAccessTtlSeconds,
  resolveDeviceIdFromRequest,
  setAccessCookie,
@@ -58,10 +59,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
    success: true,
    user: result.data.user,
    expiresInSeconds: resolveAccessTtlSeconds(result.data),
-  },
-  { status: 200 },
- );
+ },
+ { status: 200 },
+);
 
+ clearAuthCookies(response, request);
  setAccessCookie(response, accessToken, resolveAccessTtlSeconds(result.data), request);
  const refreshCookieSet = setRefreshCookieFromHeaders(response, result.headers, request);
  if (!refreshCookieSet) {

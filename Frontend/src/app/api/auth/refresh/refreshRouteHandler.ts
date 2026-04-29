@@ -94,6 +94,7 @@ export async function executeRefreshRoute(request: NextRequest): Promise<NextRes
   { status: 200 },
  );
 
+ clearAuthCookies(response, request);
  setAccessCookie(response, accessToken, resolveAccessTtlSeconds(result.data), request);
  const refreshCookieSet = setRefreshCookieFromHeaders(response, result.headers, request);
  if (!refreshCookieSet) {
