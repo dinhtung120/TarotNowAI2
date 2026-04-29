@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { Sparkles } from "lucide-react";
 import type { TarotCardMeta } from "@/shared/domain/tarotData";
+import { shouldUseUnoptimizedImage } from "@/shared/infrastructure/http/assetUrl";
 import { cn } from "@/lib/utils";
 
 interface CollectionZoomCardImageProps {
@@ -18,13 +19,15 @@ export default function CollectionZoomCardImage({
   isOwned,
   unknownCardLabel,
 }: CollectionZoomCardImageProps) {
+  const unoptimizedCardImage = shouldUseUnoptimizedImage(cardImageUrl);
+
   if (cardImageUrl) {
     return (
       <Image
         src={cardImageUrl}
         alt={cardName || unknownCardLabel}
         fill
-        unoptimized
+        unoptimized={unoptimizedCardImage}
         sizes="(max-width: 768px) 13rem, 20rem"
         className={cn(
           "h-full w-full object-cover transition-all duration-500",

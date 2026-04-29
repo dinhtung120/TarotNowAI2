@@ -29,6 +29,10 @@ export function useNotificationsPage() {
       );
       return queryFnOrThrow(result, 'Failed to get notifications');
     },
+    staleTime: 90_000,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: 1,
   });
 
   const markReadMutation = useMutation({

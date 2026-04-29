@@ -4,6 +4,7 @@ import { expect, test, type Browser, type Page, type Request, type Response } fr
 
 type BenchmarkScenario = 'logged-out' | 'logged-in-admin' | 'logged-in-reader';
 type BenchmarkViewportId = 'desktop' | 'mobile';
+type BenchmarkMode = 'full-matrix' | 'targeted-hotspots';
 
 type RequestCategory = 'html' | 'api' | 'static' | 'third-party' | 'telemetry' | 'websocket' | 'other';
 type SeverityLevel = 'critical' | 'high' | 'medium' | 'low' | 'none';
@@ -61,6 +62,10 @@ interface PageBenchmarkMetric {
   tbt: number | null;
   requestCount: number;
   requestSeverity: SeverityLevel;
+  documentReloadCount: number;
+  handshakeRedirectCount: number;
+  sessionApiCallCount: number;
+  failedRequestCount: number;
   pendingCount: number;
   pendingUrls: string[];
   totalResponseBytes: number;
@@ -88,6 +93,7 @@ interface BenchmarkRunResult {
   generatedAtUtc: string;
   baseOrigin: string;
   localePrefix: string;
+  benchmarkMode: BenchmarkMode;
   thresholds: {
     requestCountHigh: number;
     requestCountCritical: number;
@@ -153,6 +159,7 @@ interface ViewportProfile {
 }
 
 const RUN_NAVIGATION_BENCHMARK = process.env.RUN_NAVIGATION_BENCHMARK === 'true';
+const RUN_NAVIGATION_BENCHMARK_TARGETED = process.env.RUN_NAVIGATION_BENCHMARK_TARGETED === 'true';
 const BASE_ORIGIN = (process.env.BENCHMARK_BASE_ORIGIN ?? 'http://127.0.0.1:3100').trim().replace(/\/+$/, '');
 const LOCALE_PREFIX = '/vi';
 const BASE_URL = `${BASE_ORIGIN}${LOCALE_PREFIX}`;
@@ -185,6 +192,12 @@ const OUTPUT_REQUESTS_CSV = path.join(OUTPUT_DIR, 'tarotnow-benchmark-requests.c
 const OUTPUT_MD = path.join(OUTPUT_DIR, 'tarotnow-benchmark-report.md');
 const OUTPUT_ANALYSIS_MD = path.join(OUTPUT_DIR, 'tarotnow-benchmark-analysis.md');
 const OUTPUT_ROUTE_MAP = path.join(OUTPUT_DIR, 'tarotnow-route-map.json');
+const OUTPUT_TARGETED_JSON = path.join(OUTPUT_DIR, 'tarotnow-benchmark-hotspots.json');
+const OUTPUT_TARGETED_PAGES_CSV = path.join(OUTPUT_DIR, 'tarotnow-benchmark-hotspots-pages.csv');
+const OUTPUT_TARGETED_REQUESTS_CSV = path.join(OUTPUT_DIR, 'tarotnow-benchmark-hotspots-requests.csv');
+const OUTPUT_TARGETED_MD = path.join(OUTPUT_DIR, 'tarotnow-benchmark-hotspots-report.md');
+const OUTPUT_TARGETED_ANALYSIS_MD = path.join(OUTPUT_DIR, 'tarotnow-benchmark-hotspots-analysis.md');
+const OUTPUT_TARGETED_ROUTE_MAP = path.join(OUTPUT_DIR, 'tarotnow-route-map-hotspots.json');
 
 const CONTROLLED_SPREAD_TYPES = ['daily_1', 'spread_3', 'spread_5', 'spread_10'] as const;
 const MAX_DYNAMIC_READING_SESSIONS = 4;
@@ -238,6 +251,13 @@ const CORE_ROUTE_SEEDS = [
   `${LOCALE_PREFIX}/legal/ai-disclaimer`,
 ] as const;
 
+const HOTSPOT_ROUTE_SEEDS = [
+  `${LOCALE_PREFIX}/admin`,
+  `${LOCALE_PREFIX}/wallet/deposit/history`,
+  `${LOCALE_PREFIX}/community`,
+  `${LOCALE_PREFIX}/collection`,
+] as const;
+
 const VIEWPORT_PROFILES: ViewportProfile[] = [
   {
     id: 'desktop',
@@ -262,6 +282,15 @@ const VIEWPORT_PROFILES: ViewportProfile[] = [
 ];
 
 const AUTH_REQUIRED_SCENARIOS: BenchmarkScenario[] = ['logged-in-admin', 'logged-in-reader'];
+
+interface BenchmarkOutputPaths {
+  json: string;
+  pagesCsv: string;
+  requestsCsv: string;
+  reportMd: string;
+  analysisMd: string;
+  routeMap: string;
+}
 
 function isLoopbackHost(hostname: string): boolean {
   return hostname === '127.0.0.1'
@@ -450,6 +479,14 @@ function normalizeRequestKey(method: string, requestUrl: string): string {
     return `${method.toUpperCase()} ${parsed.origin}${parsed.pathname}${query ? `?${query}` : ''}`;
   } catch {
     return `${method.toUpperCase()} ${requestUrl}`;
+  }
+}
+
+function tryParsePathnameFromUrl(requestUrl: string): string | null {
+  try {
+    return new URL(requestUrl).pathname;
+  } catch {
+    return null;
   }
 }
 
@@ -852,6 +889,41 @@ async function collectStaticLocaleRoutes(): Promise<string[]> {
 
   await walk(appLocaleDir);
   return [...staticRoutes].sort((left, right) => left.localeCompare(right));
+}
+
+function resolveOutputPaths(mode: BenchmarkMode): BenchmarkOutputPaths {
+  if (mode === 'targeted-hotspots') {
+    return {
+      json: OUTPUT_TARGETED_JSON,
+      pagesCsv: OUTPUT_TARGETED_PAGES_CSV,
+      requestsCsv: OUTPUT_TARGETED_REQUESTS_CSV,
+      reportMd: OUTPUT_TARGETED_MD,
+      analysisMd: OUTPUT_TARGETED_ANALYSIS_MD,
+      routeMap: OUTPUT_TARGETED_ROUTE_MAP,
+    };
+  }
+
+  return {
+    json: OUTPUT_JSON,
+    pagesCsv: OUTPUT_PAGES_CSV,
+    requestsCsv: OUTPUT_REQUESTS_CSV,
+    reportMd: OUTPUT_MD,
+    analysisMd: OUTPUT_ANALYSIS_MD,
+    routeMap: OUTPUT_ROUTE_MAP,
+  };
+}
+
+function resolveSeedRoutesForMode(
+  mode: BenchmarkMode,
+  fullSeedRoutes: string[],
+): string[] {
+  if (mode === 'targeted-hotspots') {
+    return HOTSPOT_ROUTE_SEEDS
+      .map((route) => normalizeRoutePath(route))
+      .filter((route): route is string => Boolean(route));
+  }
+
+  return fullSeedRoutes;
 }
 
 async function loginAsUser(page: Page, credential: ScenarioCredential, expectedRole: string): Promise<{
@@ -1299,6 +1371,7 @@ async function benchmarkNavigation(
   const responseMap = new Map<Request, Response>();
   const finalizeTasks: Array<Promise<void>> = [];
   const coverageBlocked: string[] = [];
+  const runtimeConsoleErrors = new Set<string>();
   let inFlightCounter = 0;
 
   const onRoute = async (routeHandler: Parameters<Parameters<Page['route']>[1]>[0]): Promise<void> => {
@@ -1421,11 +1494,28 @@ async function benchmarkNavigation(
     inFlightCounter = Math.max(0, inFlightCounter - 1);
   };
 
+  const onConsoleMessage = (message: { type: () => string; text: () => string }): void => {
+    if (message.type() !== 'error') {
+      return;
+    }
+
+    const text = message.text();
+    const normalized = text.trim();
+    if (!normalized) {
+      return;
+    }
+
+    if (normalized.includes('#418') || normalized.toLowerCase().includes('hydration')) {
+      runtimeConsoleErrors.add(`console-error:${normalized}`);
+    }
+  };
+
   await page.route('**/*', onRoute);
   page.on('request', onRequest);
   page.on('response', onResponse);
   page.on('requestfinished', onRequestFinished);
   page.on('requestfailed', onRequestFailed);
+  page.on('console', onConsoleMessage);
 
   const startedAtMs = Date.now();
   try {
@@ -1453,6 +1543,7 @@ async function benchmarkNavigation(
   page.off('response', onResponse);
   page.off('requestfinished', onRequestFinished);
   page.off('requestfailed', onRequestFailed);
+  page.off('console', onConsoleMessage);
   await page.unroute('**/*', onRoute);
 
   const navigationMs = Date.now() - startedAtMs;
@@ -1488,6 +1579,35 @@ async function benchmarkNavigation(
     && request.resourceType !== 'websocket'
     && request.resourceType !== 'eventsource',
   );
+
+  const normalizedRoute = normalizeRoutePath(route) ?? route;
+  const matchingDocumentRequests = requestMetrics.filter((request) =>
+    request.resourceType === 'document'
+    && normalizeRoutePath(request.url) === normalizedRoute,
+  );
+  const documentReloadCount = Math.max(0, matchingDocumentRequests.length - 1);
+
+  const handshakeRedirectCount = requestMetrics.filter((request) => {
+    const pathname = tryParsePathnameFromUrl(request.url);
+    if (pathname !== '/api/auth/session/handshake') {
+      return false;
+    }
+
+    return typeof request.status === 'number' && request.status >= 300 && request.status < 400;
+  }).length;
+
+  const sessionApiCallCount = requestMetrics.filter((request) => {
+    const pathname = tryParsePathnameFromUrl(request.url);
+    return pathname === '/api/auth/session';
+  }).length;
+
+  const failedRequestCount = requestMetrics.filter((request) => {
+    if (request.failed) {
+      return true;
+    }
+
+    return typeof request.status === 'number' && request.status >= 400;
+  }).length;
 
   const slowRequests = requestMetrics.filter((request) => (request.durationMs ?? 0) > SLOW_REQUEST_MEDIUM_THRESHOLD_MS);
   const totalResponseBytes = requestMetrics.reduce((sum, request) => sum + request.responseBytes, 0);
@@ -1526,6 +1646,10 @@ async function benchmarkNavigation(
     tbt: paintMetrics.tbt,
     requestCount: requestMetrics.length,
     requestSeverity: deriveRequestSeverity(requestMetrics.length),
+    documentReloadCount,
+    handshakeRedirectCount,
+    sessionApiCallCount,
+    failedRequestCount,
     pendingCount: pendingNonPersistent.length,
     pendingUrls: pendingNonPersistent.map((request) => request.url),
     totalResponseBytes,
@@ -1535,7 +1659,7 @@ async function benchmarkNavigation(
     duplicateRequestGroups,
     slowRequests,
     requests: requestMetrics,
-    interactionNotes,
+    interactionNotes: [...interactionNotes, ...runtimeConsoleErrors],
     coverageBlocked,
   };
 }
@@ -1623,6 +1747,10 @@ function createPagesCsv(result: BenchmarkRunResult): string {
     'final_url',
     'request_count',
     'request_severity',
+    'document_reload_count',
+    'handshake_redirect_count',
+    'session_api_call_count',
+    'failed_request_count',
     'pending_count',
     'navigation_ms',
     'dom_content_loaded_ms',
@@ -1652,6 +1780,10 @@ function createPagesCsv(result: BenchmarkRunResult): string {
         toCsvValue(page.finalUrl),
         toCsvValue(page.requestCount),
         toCsvValue(page.requestSeverity),
+        toCsvValue(page.documentReloadCount),
+        toCsvValue(page.handshakeRedirectCount),
+        toCsvValue(page.sessionApiCallCount),
+        toCsvValue(page.failedRequestCount),
         toCsvValue(page.pendingCount),
         toCsvValue(formatNumber(page.navigationMs)),
         toCsvValue(formatNumber(page.domContentLoadedMs)),
@@ -1756,12 +1888,15 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
       : 0;
     const totalRequests = scenario.pages.reduce((sum, page) => sum + page.requestCount, 0);
     const pending = scenario.pages.reduce((sum, page) => sum + page.pendingCount, 0);
-    return `| ${scenario.scenario} | ${scenario.viewport} | ${pageCount} | ${avgNavigation.toFixed(0)} | ${totalRequests} | ${pending} | ${scenario.loginBootstrapSucceeded ? 'yes' : 'no'} |`;
+    const documentReloads = scenario.pages.reduce((sum, page) => sum + page.documentReloadCount, 0);
+    const sessionApiCalls = scenario.pages.reduce((sum, page) => sum + page.sessionApiCallCount, 0);
+    const failedRequests = scenario.pages.reduce((sum, page) => sum + page.failedRequestCount, 0);
+    return `| ${scenario.scenario} | ${scenario.viewport} | ${pageCount} | ${avgNavigation.toFixed(0)} | ${totalRequests} | ${pending} | ${documentReloads} | ${sessionApiCalls} | ${failedRequests} | ${scenario.loginBootstrapSucceeded ? 'yes' : 'no'} |`;
   });
   const routeFamilySummaryLines = buildRouteFamilySummaryLines(result);
 
   const pageLines = allPages.map((page) =>
-    `| ${page.scenario} | ${page.viewport} | ${page.route} | ${page.requestCount} | ${page.requestSeverity} | ${formatNumber(page.navigationMs)} | ${formatNumber(page.domContentLoadedMs)} | ${formatNumber(page.loadMs)} | ${formatNumber(page.fcpMs)} | ${formatNumber(page.lcpMs)} | ${formatNumber(page.cls, 4)} | ${formatNumber(page.tbt, 1)} | ${page.totalTransferBytes} |`,
+    `| ${page.scenario} | ${page.viewport} | ${page.route} | ${page.requestCount} | ${page.requestSeverity} | ${page.documentReloadCount} | ${page.handshakeRedirectCount} | ${page.sessionApiCallCount} | ${page.failedRequestCount} | ${formatNumber(page.navigationMs)} | ${formatNumber(page.domContentLoadedMs)} | ${formatNumber(page.loadMs)} | ${formatNumber(page.fcpMs)} | ${formatNumber(page.lcpMs)} | ${formatNumber(page.cls, 4)} | ${formatNumber(page.tbt, 1)} | ${page.totalTransferBytes} |`,
   );
 
   const slowHighLines = highSlowRequests.length > 0
@@ -1805,6 +1940,7 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
     '',
     `- Generated at (UTC): ${result.generatedAtUtc}`,
     `- Base URL: ${BASE_URL}`,
+    `- Benchmark mode: ${result.benchmarkMode}`,
     `- Thresholds: >${REQUEST_COUNT_CRITICAL_THRESHOLD} requests = Critical, >${REQUEST_COUNT_HIGH_THRESHOLD} = High, request >${SLOW_REQUEST_HIGH_THRESHOLD_MS}ms = High, >${SLOW_REQUEST_MEDIUM_THRESHOLD_MS}ms = Medium`,
     `- Critical pages (request count): ${criticalPages.length}`,
     `- High pages (request count): ${suspiciousPages.length}`,
@@ -1812,8 +1948,8 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
     `- Medium slow requests: ${mediumSlowRequests.length}`,
     '',
     '## Scenario Summary',
-    '| Scenario | Viewport | Pages Benchmarked | Avg Navigation (ms) | Total Requests | Pending Requests | Login bootstrap |',
-    '| --- | --- | ---: | ---: | ---: | ---: | --- |',
+    '| Scenario | Viewport | Pages Benchmarked | Avg Navigation (ms) | Total Requests | Pending Requests | Document Reloads | Session API Calls | Failed Requests | Login bootstrap |',
+    '| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |',
     ...summaryLines,
     '',
     '## Route-Family Summary',
@@ -1822,8 +1958,8 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
     ...(routeFamilySummaryLines.length > 0 ? routeFamilySummaryLines : ['| - | - | - | - | - | - | - |']),
     '',
     '## Per-Page Metrics',
-    '| Scenario | Viewport | Route | Requests | Severity | Navigate (ms) | DOMContentLoaded (ms) | Load (ms) | FCP (ms) | LCP (ms) | CLS | TBT (ms) | Transfer Bytes |',
-    '| --- | --- | --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
+    '| Scenario | Viewport | Route | Requests | Severity | Doc Reloads | Handshake Redirects | Session API Calls | Failed Requests | Navigate (ms) | DOMContentLoaded (ms) | Load (ms) | FCP (ms) | LCP (ms) | CLS | TBT (ms) | Transfer Bytes |',
+    '| --- | --- | --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
     ...pageLines,
     '',
     '## Suspicious Pages (>25 requests)',
@@ -1897,7 +2033,11 @@ function createAnalysisReport(result: BenchmarkRunResult): string {
       : 0;
     const avgRequestsPerPage = scenario.pages.length > 0 ? totalRequests / scenario.pages.length : 0;
     const pendingCount = scenario.pages.reduce((sum, page) => sum + page.pendingCount, 0);
-    return `| ${scenario.scenario} | ${scenario.viewport} | ${scenario.pages.length} | ${avgRequestsPerPage.toFixed(1)} | ${avgNavigationMs.toFixed(0)} | ${pendingCount} | ${scenario.loginBootstrapSucceeded ? 'yes' : 'no'} |`;
+    const documentReloads = scenario.pages.reduce((sum, page) => sum + page.documentReloadCount, 0);
+    const handshakeRedirects = scenario.pages.reduce((sum, page) => sum + page.handshakeRedirectCount, 0);
+    const sessionApiCalls = scenario.pages.reduce((sum, page) => sum + page.sessionApiCallCount, 0);
+    const failedRequests = scenario.pages.reduce((sum, page) => sum + page.failedRequestCount, 0);
+    return `| ${scenario.scenario} | ${scenario.viewport} | ${scenario.pages.length} | ${avgRequestsPerPage.toFixed(1)} | ${avgNavigationMs.toFixed(0)} | ${pendingCount} | ${documentReloads} | ${handshakeRedirects} | ${sessionApiCalls} | ${failedRequests} | ${scenario.loginBootstrapSucceeded ? 'yes' : 'no'} |`;
   });
   const routeFamilySummaryLines = buildRouteFamilySummaryLines(result);
 
@@ -1930,6 +2070,12 @@ function createAnalysisReport(result: BenchmarkRunResult): string {
     mediumSlowRequests.length > 0
       ? `Medium: ${mediumSlowRequests.length} request trong dải ${SLOW_REQUEST_MEDIUM_THRESHOLD_MS}-${SLOW_REQUEST_HIGH_THRESHOLD_MS}ms.`
       : `Không có request trong dải ${SLOW_REQUEST_MEDIUM_THRESHOLD_MS}-${SLOW_REQUEST_HIGH_THRESHOLD_MS}ms.`,
+    (() => {
+      const handshakeLoops = allPages.reduce((sum, page) => sum + page.handshakeRedirectCount, 0);
+      return handshakeLoops > 0
+        ? `High: phát hiện ${handshakeLoops} handshake redirect(s), cần kiểm tra vòng lặp auth/session.`
+        : 'Không phát hiện handshake redirect bất thường.';
+    })(),
   ];
 
   return [
@@ -1937,11 +2083,12 @@ function createAnalysisReport(result: BenchmarkRunResult): string {
     '',
     `- Run time (UTC): ${result.generatedAtUtc}`,
     `- Base: ${BASE_URL}`,
+    `- Benchmark mode: ${result.benchmarkMode}`,
     '- Matrix: Chromium desktop + mobile, logged-out + logged-in-admin + logged-in-reader',
     '',
     '## Scenario Summary',
-    '| Scenario | Viewport | Pages | Avg requests/page | Avg nav (ms) | Pending | Login bootstrap |',
-    '| --- | --- | ---: | ---: | ---: | ---: | --- |',
+    '| Scenario | Viewport | Pages | Avg requests/page | Avg nav (ms) | Pending | Doc Reloads | Handshake Redirects | Session API Calls | Failed Requests | Login bootstrap |',
+    '| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |',
     ...scenarioLines,
     '',
     '## Route-Family Summary',
@@ -1978,7 +2125,7 @@ function createAnalysisReport(result: BenchmarkRunResult): string {
   ].join('\n');
 }
 
-async function writeRouteMap(result: BenchmarkRunResult): Promise<void> {
+async function writeRouteMap(result: BenchmarkRunResult, outputPath: string): Promise<void> {
   const map = result.scenarios.map((scenario) => ({
     scenario: scenario.scenario,
     viewport: scenario.viewport,
@@ -1986,35 +2133,44 @@ async function writeRouteMap(result: BenchmarkRunResult): Promise<void> {
     coverageNotes: scenario.coverageNotes,
   }));
 
-  await fs.writeFile(OUTPUT_ROUTE_MAP, JSON.stringify(map, null, 2), 'utf8');
+  await fs.writeFile(outputPath, JSON.stringify(map, null, 2), 'utf8');
+}
+
+async function writeBenchmarkArtifacts(result: BenchmarkRunResult, outputPaths: BenchmarkOutputPaths): Promise<void> {
+  await fs.mkdir(OUTPUT_DIR, { recursive: true });
+  await fs.writeFile(outputPaths.json, JSON.stringify(result, null, 2), 'utf8');
+  await fs.writeFile(outputPaths.pagesCsv, createPagesCsv(result), 'utf8');
+  await fs.writeFile(outputPaths.requestsCsv, createRequestsCsv(result), 'utf8');
+  await fs.writeFile(outputPaths.reportMd, createMarkdownReport(result), 'utf8');
+  await fs.writeFile(outputPaths.analysisMd, createAnalysisReport(result), 'utf8');
+  await writeRouteMap(result, outputPaths.routeMap);
 }
 
 test.describe('TarotNow production benchmark', () => {
   test.describe.configure({ mode: 'serial' });
   test.setTimeout(45 * 60 * 1000);
 
-  test('benchmark navigation and api timing for full vi route matrix', async ({ browser }) => {
-    test.skip(!RUN_NAVIGATION_BENCHMARK, 'Set RUN_NAVIGATION_BENCHMARK=true to run benchmark.');
-    assertSafeBenchmarkEnvironment();
-
+  async function runBenchmarkSuite(browser: Browser, mode: BenchmarkMode): Promise<BenchmarkRunResult> {
     const staticRoutes = await collectStaticLocaleRoutes();
     const originRouteCollection = await collectOriginDiscoveredRoutes();
-    const seedRoutes = [...new Set([...CORE_ROUTE_SEEDS, ...staticRoutes, ...originRouteCollection.routes])];
+    const fullSeedRoutes = [...new Set([...CORE_ROUTE_SEEDS, ...staticRoutes, ...originRouteCollection.routes])];
+    const modeSeedRoutes = resolveSeedRoutesForMode(mode, fullSeedRoutes);
 
     const scenarios: BenchmarkScenario[] = ['logged-out', 'logged-in-admin', 'logged-in-reader'];
     const scenarioResults: ScenarioBenchmarkResult[] = [];
 
     for (const viewport of VIEWPORT_PROFILES) {
       for (const scenario of scenarios) {
-        const result = await runScenario(browser, scenario, viewport, seedRoutes, originRouteCollection.notes);
+        const result = await runScenario(browser, scenario, viewport, modeSeedRoutes, originRouteCollection.notes);
         scenarioResults.push(result);
       }
     }
 
-    const runResult: BenchmarkRunResult = {
+    return {
       generatedAtUtc: new Date().toISOString(),
       baseOrigin: BASE_ORIGIN,
       localePrefix: LOCALE_PREFIX,
+      benchmarkMode: mode,
       thresholds: {
         requestCountHigh: REQUEST_COUNT_HIGH_THRESHOLD,
         requestCountCritical: REQUEST_COUNT_CRITICAL_THRESHOLD,
@@ -2023,15 +2179,9 @@ test.describe('TarotNow production benchmark', () => {
       },
       scenarios: scenarioResults,
     };
+  }
 
-    await fs.mkdir(OUTPUT_DIR, { recursive: true });
-    await fs.writeFile(OUTPUT_JSON, JSON.stringify(runResult, null, 2), 'utf8');
-    await fs.writeFile(OUTPUT_PAGES_CSV, createPagesCsv(runResult), 'utf8');
-    await fs.writeFile(OUTPUT_REQUESTS_CSV, createRequestsCsv(runResult), 'utf8');
-    await fs.writeFile(OUTPUT_MD, createMarkdownReport(runResult), 'utf8');
-    await fs.writeFile(OUTPUT_ANALYSIS_MD, createAnalysisReport(runResult), 'utf8');
-    await writeRouteMap(runResult);
-
+  function assertScenarioIntegrity(runResult: BenchmarkRunResult): void {
     for (const scenario of AUTH_REQUIRED_SCENARIOS) {
       for (const viewport of VIEWPORT_PROFILES) {
         const record = runResult.scenarios.find((item) => item.scenario === scenario && item.viewport === viewport.id);
@@ -2042,5 +2192,23 @@ test.describe('TarotNow production benchmark', () => {
     for (const scenario of runResult.scenarios) {
       expect(scenario.pages.length).toBeGreaterThan(0);
     }
+  }
+
+  test('benchmark navigation and api timing for full vi route matrix', async ({ browser }) => {
+    test.skip(!RUN_NAVIGATION_BENCHMARK, 'Set RUN_NAVIGATION_BENCHMARK=true to run benchmark.');
+    assertSafeBenchmarkEnvironment();
+
+    const runResult = await runBenchmarkSuite(browser, 'full-matrix');
+    await writeBenchmarkArtifacts(runResult, resolveOutputPaths('full-matrix'));
+    assertScenarioIntegrity(runResult);
+  });
+
+  test('benchmark hotspot routes for cycle2 targeted verification', async ({ browser }) => {
+    test.skip(!RUN_NAVIGATION_BENCHMARK_TARGETED, 'Set RUN_NAVIGATION_BENCHMARK_TARGETED=true to run targeted benchmark.');
+    assertSafeBenchmarkEnvironment();
+
+    const runResult = await runBenchmarkSuite(browser, 'targeted-hotspots');
+    await writeBenchmarkArtifacts(runResult, resolveOutputPaths('targeted-hotspots'));
+    assertScenarioIntegrity(runResult);
   });
 });

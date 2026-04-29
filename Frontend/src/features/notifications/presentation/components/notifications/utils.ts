@@ -13,8 +13,15 @@ export const notificationTypeIconMap: Record<string, { icon: typeof Bell; colorC
 export function formatRelativeNotificationTime(
  dateStr: string,
  t: ReturnType<typeof useTranslations>,
+ referenceNowMs?: number,
 ): string {
- const now = Date.now();
+ const now = typeof referenceNowMs === 'number' && Number.isFinite(referenceNowMs)
+  ? referenceNowMs
+  : null;
+ if (now === null) {
+  return t('time_just_now');
+ }
+
  const date = new Date(dateStr).getTime();
  const diffMs = now - date;
  const diffMinutes = Math.floor(diffMs / 60000);

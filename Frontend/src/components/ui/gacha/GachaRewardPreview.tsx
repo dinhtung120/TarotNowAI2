@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { cn, formatCardStat } from '@/lib/utils';
 import { gachaRewardKinds } from '@/shared/infrastructure/gacha/gachaConstants';
 import type { GachaPoolRewardRate } from '@/shared/infrastructure/gacha/gachaTypes';
+import { shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
 import Badge from '@/shared/components/ui/Badge';
 
 interface GachaRewardPreviewProps {
@@ -46,7 +47,14 @@ function GachaRewardPreviewComponent({ rewards, locale, emptyLabel }: GachaRewar
             <div className={cn('flex min-w-0 items-center gap-4')}>
               <div className={cn('relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border tn-border-soft bg-slate-900/40 transition-transform duration-500 group-hover:scale-110', isRare ? 'border-amber-500/30' : isEpic ? 'border-purple-500/30' : '')}>
                 {reward.iconUrl ? (
-                  <Image src={reward.iconUrl} alt={localizeRewardName(reward, locale)} fill sizes="48px" unoptimized className={cn('object-cover p-1')} />
+                  <Image
+                    src={reward.iconUrl}
+                    alt={localizeRewardName(reward, locale)}
+                    fill
+                    sizes="48px"
+                    unoptimized={shouldUseUnoptimizedImage(reward.iconUrl)}
+                    className={cn('object-cover p-1')}
+                  />
                 ) : (
                   <div className={cn('flex h-full w-full items-center justify-center text-xs opacity-20')}>✦</div>
                 )}

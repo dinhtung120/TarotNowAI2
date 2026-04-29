@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useLocale, useTranslations } from 'next-intl';
+import { ADMIN_QUERY_POLICY } from '@/features/admin/application/adminQueryPolicy';
 import { adminQueryKeys } from '@/features/admin/application/adminQueryKeys';
 import { getAllHistorySessionsAdminAction } from '@/features/reading/public';
 import { isUnauthorizedError } from '@/shared/domain/authErrors';
@@ -83,6 +84,7 @@ export function useAdminReadings() {
 
    throw new Error(result.error || 'Failed to load admin readings');
   },
+  ...ADMIN_QUERY_POLICY.heavyList,
  });
 
  const applyFilters = (nextDraftFilters: AdminReadingsFilters) => {

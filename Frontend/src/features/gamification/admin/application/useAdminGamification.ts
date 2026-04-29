@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { ADMIN_QUERY_POLICY } from '@/features/admin/application/adminQueryPolicy';
 import {
  deleteAdminAchievement,
  deleteAdminQuest,
@@ -21,16 +22,19 @@ export function useAdminGamification() {
  const questsQuery = useQuery({
   queryKey: adminGamificationKeys.quests(),
   queryFn: listAdminQuests,
+  ...ADMIN_QUERY_POLICY.list,
  });
 
  const achievementsQuery = useQuery({
   queryKey: adminGamificationKeys.achievements(),
   queryFn: listAdminAchievements,
+  ...ADMIN_QUERY_POLICY.list,
  });
 
  const titlesQuery = useQuery({
   queryKey: adminGamificationKeys.titles(),
   queryFn: listAdminTitles,
+  ...ADMIN_QUERY_POLICY.list,
  });
 
  const upsertQuest = useMutation({

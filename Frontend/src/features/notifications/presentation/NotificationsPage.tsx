@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { SectionHeader } from '@/shared/components/ui';
 import { useNotificationMarkRead } from '@/features/notifications/application/useNotificationMarkRead';
 import { useNotificationsPage } from '@/features/notifications/application/useNotificationsPage';
+import { useRelativeTimeNow } from '@/shared/application/hooks/useRelativeTimeNow';
 import {
  NotificationFilters,
  NotificationsContent,
@@ -16,6 +17,7 @@ import { cn } from '@/lib/utils';
 export default function NotificationsPage() {
  const t = useTranslations('Notifications');
  const locale = useLocale();
+ const referenceNowMs = useRelativeTimeNow();
  const { data, loading, page, setPage, filterUnread, setFilterUnread, totalPages, markAsRead } = useNotificationsPage();
  const { handleMarkRead } = useNotificationMarkRead({ markAsRead });
 
@@ -48,7 +50,7 @@ export default function NotificationsPage() {
     markReadLabel={t('mark_read')}
     getTitle={(item) => getLocalizedNotificationTitle(item, locale)}
     getBody={(item) => getLocalizedNotificationBody(item, locale)}
-    getTimeLabel={(item) => formatRelativeNotificationTime(item.createdAt, t)}
+    getTimeLabel={(item) => formatRelativeNotificationTime(item.createdAt, t, referenceNowMs)}
     onPageChange={setPage}
     onMarkRead={handleMarkRead}
    />

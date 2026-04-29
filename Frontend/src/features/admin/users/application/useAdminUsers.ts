@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { listUsers } from '@/features/admin/application/actions';
+import { ADMIN_QUERY_POLICY } from '@/features/admin/application/adminQueryPolicy';
 import { adminQueryKeys } from '@/features/admin/application/adminQueryKeys';
 import { useAdminUsersModalForms } from '@/features/admin/users/application/useAdminUsersModalForms';
 import { useAdminUsersMutations } from '@/features/admin/users/application/useAdminUsersMutations';
@@ -44,17 +45,18 @@ export function useAdminUsers() {
  const queryKey = adminQueryKeys.users(page, debouncedSearchTerm);
  const usersQuery = useQuery({
   queryKey,
-  queryFn: async () => {
-   const result = await listUsers(page, 10, debouncedSearchTerm);
-   const payload = queryFnOrThrow(result, 'Failed to load admin users');
-   return {
+ queryFn: async () => {
+  const result = await listUsers(page, 10, debouncedSearchTerm);
+  const payload = queryFnOrThrow(result, 'Failed to load admin users');
+  return {
     users: payload.users.map((item) => ({
      ...item,
      isLocked: item.status?.toLowerCase() === 'locked',
     })),
-    totalCount: payload.totalCount,
-   };
-  },
+   totalCount: payload.totalCount,
+  };
+ },
+  ...ADMIN_QUERY_POLICY.list,
  });
 
  const users = useMemo(() => usersQuery.data?.users ?? [], [usersQuery.data]);

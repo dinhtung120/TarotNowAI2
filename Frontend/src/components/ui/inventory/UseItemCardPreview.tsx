@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { cn, formatCardStat } from '@/lib/utils';
 import type { CardOption } from '@/shared/application/inventory/cardOption';
+import { shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
 
 interface UseItemCardPreviewProps {
   card: CardOption | null;
@@ -18,6 +19,7 @@ export default function UseItemCardPreview({ card, label }: UseItemCardPreviewPr
   const imageUrl = card.imageUrl 
     ? (card.imageUrl.startsWith('http') || card.imageUrl.startsWith('/') ? card.imageUrl : `/${card.imageUrl}`)
     : null;
+  const unoptimizedCardImage = shouldUseUnoptimizedImage(imageUrl);
 
   return (
     <section className={cn('relative overflow-hidden rounded-[1.5rem] border tn-border-soft bg-[#0a0a0c]/40 p-4 transition-all duration-500 hover:tn-border-accent/30')}>
@@ -37,7 +39,7 @@ export default function UseItemCardPreview({ card, label }: UseItemCardPreviewPr
               src={imageUrl} 
               alt={card.name} 
               fill 
-              unoptimized
+              unoptimized={unoptimizedCardImage}
               className={cn('object-cover')} 
               sizes="64px" 
             />

@@ -8,6 +8,7 @@ import {
  listReaderRequests,
  processReaderRequest,
 } from '@/features/admin/application/actions';
+import { ADMIN_QUERY_POLICY } from '@/features/admin/application/adminQueryPolicy';
 import { adminQueryKeys } from '@/features/admin/application/adminQueryKeys';
 import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
 
@@ -26,10 +27,11 @@ export function useAdminReaderRequests() {
 
  const { data, isLoading, isFetching, error } = useQuery({
   queryKey: adminQueryKeys.readerRequests(page, statusFilter),
-  queryFn: async () => {
-   const result = await listReaderRequests(page, pageSize, statusFilter);
-   return queryFnOrThrow(result, 'Failed to load reader requests');
-  },
+ queryFn: async () => {
+  const result = await listReaderRequests(page, pageSize, statusFilter);
+  return queryFnOrThrow(result, 'Failed to load reader requests');
+ },
+  ...ADMIN_QUERY_POLICY.list,
  });
 
  const processMutation = useMutation({
@@ -79,12 +81,15 @@ export function useAdminReaderRequests() {
    );
    clearAdminNote(requestId);
    setSelectedRequestId(null);
-   await queryClient.invalidateQueries({ queryKey: adminQueryKeys.readerRequestsRoot() });
+   await queryClient.invalidateQueries({
+    queryKey: adminQueryKeys.readerRequests(page, statusFilter),
+    exact: true,
+   });
   } else {
    toast.error(t('reader_requests.toast.process_failed'));
   }
   setProcessing(null);
- }, [clearAdminNote, getAdminNote, processMutation, queryClient, t]);
+ }, [clearAdminNote, getAdminNote, page, processMutation, queryClient, statusFilter, t]);
 
  return {
   t,

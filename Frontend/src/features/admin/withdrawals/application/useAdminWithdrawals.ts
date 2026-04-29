@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { ADMIN_QUERY_POLICY } from '@/features/admin/application/adminQueryPolicy';
 import { adminQueryKeys } from '@/features/admin/application/adminQueryKeys';
 import { getWithdrawalDetail, listWithdrawalQueue, processWithdrawal, type WithdrawalDetailResult, type WithdrawalResult } from '@/features/wallet/public';
 import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
@@ -23,6 +24,7 @@ export function useAdminWithdrawals(t: TranslateFn, locale: string) {
    const result = await listWithdrawalQueue();
    return queryFnOrThrow(result, 'Failed to load withdrawal queue');
   },
+  ...ADMIN_QUERY_POLICY.list,
  });
 
  const detailQuery = useQuery<WithdrawalDetailResult | null>({
@@ -36,6 +38,7 @@ export function useAdminWithdrawals(t: TranslateFn, locale: string) {
    const result = await getWithdrawalDetail(selectedWithdrawalId);
    return queryFnOrThrow(result, 'Failed to get withdrawal detail');
   },
+  ...ADMIN_QUERY_POLICY.detail,
  });
 
  const processMutation = useMutation({ mutationFn: processWithdrawal });

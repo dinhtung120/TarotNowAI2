@@ -102,7 +102,10 @@ export function useNotificationDropdown(options: UseNotificationDropdownOptions 
   try {
    await markReadMutation.mutateAsync(id);
   } catch {
-   await queryClient.invalidateQueries({ queryKey: ['notifications'] });
+   await Promise.all([
+    queryClient.invalidateQueries({ queryKey: queryKeyList, exact: true }),
+    queryClient.invalidateQueries({ queryKey: queryKeyCount, exact: true }),
+   ]);
   }
  };
 
@@ -126,7 +129,10 @@ export function useNotificationDropdown(options: UseNotificationDropdownOptions 
   try {
    await markAllReadMutation.mutateAsync();
   } finally {
-   await queryClient.invalidateQueries({ queryKey: ['notifications'] });
+   await Promise.all([
+    queryClient.invalidateQueries({ queryKey: queryKeyList, exact: true }),
+    queryClient.invalidateQueries({ queryKey: queryKeyCount, exact: true }),
+   ]);
   }
  };
 

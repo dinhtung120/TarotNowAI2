@@ -99,7 +99,14 @@ describe('useNotificationDropdown', () => {
   });
 
   expect(mockedApplyNotificationReadPatch).toHaveBeenCalledWith(expect.anything(), { id: 'n1' });
-  expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['notifications'] });
+  expect(invalidateQueries).toHaveBeenNthCalledWith(1, {
+   queryKey: ['notifications', 'dropdown'],
+   exact: true,
+  });
+  expect(invalidateQueries).toHaveBeenNthCalledWith(2, {
+   queryKey: ['notifications', 'unread-count'],
+   exact: true,
+  });
  });
 
  it('always invalidates notification caches after mark-all, even when the request fails', async () => {
@@ -136,7 +143,14 @@ describe('useNotificationDropdown', () => {
 
   expect(setQueryData).toHaveBeenCalledWith(['notifications', 'dropdown'], expect.any(Function));
   expect(setQueryData).toHaveBeenCalledWith(['notifications', 'unread-count'], 0);
-  expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ['notifications'] });
+  expect(invalidateQueries).toHaveBeenNthCalledWith(1, {
+   queryKey: ['notifications', 'dropdown'],
+   exact: true,
+  });
+  expect(invalidateQueries).toHaveBeenNthCalledWith(2, {
+   queryKey: ['notifications', 'unread-count'],
+   exact: true,
+  });
   expect(latest?.unreadCount).toBe(0);
  });
 

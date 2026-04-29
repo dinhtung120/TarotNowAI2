@@ -4,6 +4,7 @@ import { memo, useState } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import type { PullGachaReward } from '@/shared/infrastructure/gacha/gachaTypes';
+import { shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
 import {
  gachaResultRarityConfig,
  resolveGachaResultName,
@@ -23,6 +24,7 @@ function GachaResultItemComponent({ reward, locale }: GachaResultItemProps) {
   const config = gachaResultRarityConfig[normalizedRarity] || { shadow: '', border: 'tn-border-soft', bg: 'bg-white/[0.02]', text: 'tn-text-primary' };
   const name = resolveGachaResultName(reward, locale);
   const summary = resolveGachaResultSummary(reward);
+  const unoptimizedRewardImage = shouldUseUnoptimizedImage(reward.iconUrl);
 
   return (
     <article className={cn(
@@ -43,7 +45,7 @@ function GachaResultItemComponent({ reward, locale }: GachaResultItemProps) {
             fill
             className={cn("object-cover transition-transform duration-700 group-hover:scale-125")}
             onError={() => setImageError(true)}
-            unoptimized
+            unoptimized={unoptimizedRewardImage}
           />
         ) : <RewardFallbackIcon reward={reward} />}
       </div>

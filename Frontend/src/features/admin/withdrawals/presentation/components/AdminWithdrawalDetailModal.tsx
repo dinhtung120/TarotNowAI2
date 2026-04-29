@@ -4,6 +4,7 @@ import { memo } from 'react';
 import Image from 'next/image';
 import Modal from '@/shared/components/ui/Modal';
 import type { WithdrawalDetailResult } from '@/features/wallet/public';
+import { shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
 import { cn } from '@/lib/utils';
 
 interface AdminWithdrawalDetailModalProps {
@@ -24,6 +25,8 @@ interface AdminWithdrawalDetailModalProps {
 }
 
 function AdminWithdrawalDetailModalComponent(props: AdminWithdrawalDetailModalProps) {
+  const unoptimizedQrImage = shouldUseUnoptimizedImage(props.detail?.vietQrImageUrl);
+
   return (
     <Modal isOpen={props.open} onClose={props.onClose} title={props.title} size="lg">
       {props.loading ? <p className={cn('text-sm tn-text-secondary')}>...</p> : null}
@@ -45,7 +48,7 @@ function AdminWithdrawalDetailModalComponent(props: AdminWithdrawalDetailModalPr
               width={280}
               height={280}
               className={cn('w-full max-w-[280px] rounded-xl border tn-border bg-white p-2')}
-              unoptimized
+              unoptimized={unoptimizedQrImage}
             />
           </div>
         </div>

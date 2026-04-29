@@ -1,7 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { listDeposits, listReaderRequests, listUsers } from '@/features/admin/application/actions';
+import { getAdminDashboardSummary, listDeposits, listReaderRequests, listUsers } from '@/features/admin/application/actions';
 import { adminQueryKeys } from '@/features/admin/application/adminQueryKeys';
-import { listPromotions } from '@/features/admin/application/actions/promotion';
 import { listAdminDisputes } from '@/features/chat/application/actions';
 import { adminGamificationKeys } from '@/features/gamification/admin/application/adminGamificationKeys';
 import {
@@ -29,25 +28,10 @@ export async function prefetchAdminDashboardPage(qc: QueryClient): Promise<void>
  await qc.prefetchQuery({
   queryKey: adminQueryKeys.dashboardStats(),
   queryFn: async () => {
-   const [usersRes, depositsRes, promosRes, readingsRes] = await Promise.all([
-    listUsers(1, 1),
-    listDeposits(1, 1),
-    listPromotions(false),
-    getAllHistorySessionsAdminAction({ page: 1, pageSize: 1 }),
-   ]);
-
-   const users = queryFnOrThrow(usersRes, 'Failed to load admin users for dashboard prefetch');
-   const deposits = queryFnOrThrow(depositsRes, 'Failed to load admin deposits for dashboard prefetch');
-   const promotions = queryFnOrThrow(promosRes, 'Failed to load promotions for dashboard prefetch');
-   const readings = queryFnOrThrow(readingsRes, 'Failed to load readings for dashboard prefetch');
-
-   return {
-    users: users.totalCount,
-    deposits: deposits.totalCount,
-    promotions: promotions.length,
-    readings: readings.totalCount,
-   };
+   const result = await getAdminDashboardSummary();
+   return queryFnOrThrow(result, 'Failed to load admin dashboard summary prefetch');
   },
+  staleTime: 120_000,
  });
 }
 

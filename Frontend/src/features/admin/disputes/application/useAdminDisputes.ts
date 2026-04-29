@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { ADMIN_QUERY_POLICY } from '@/features/admin/application/adminQueryPolicy';
 import { adminQueryKeys } from '@/features/admin/application/adminQueryKeys';
 import {
  listAdminDisputes,
@@ -25,10 +26,11 @@ export function useAdminDisputes(t: TranslateFn) {
 
  const disputesQuery = useQuery({
   queryKey: adminQueryKeys.disputesList(),
-  queryFn: async () => {
-   const result = await listAdminDisputes(1, 100);
-   return queryFnOrThrow(result, 'Failed to load disputes').items;
-  },
+ queryFn: async () => {
+  const result = await listAdminDisputes(1, 100);
+  return queryFnOrThrow(result, 'Failed to load disputes').items;
+ },
+  ...ADMIN_QUERY_POLICY.heavyList,
  });
 
  const resolveMutation = useMutation({

@@ -34,6 +34,19 @@ const stripLocalePrefix = (pathname: string): string => {
  return `/${rest}`.replace(/\/+$/, '') || '/';
 };
 
+function shouldSkipMobileHeavyPrefetch(pathname: string): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const isMobileViewport = window.matchMedia('(max-width: 900px)').matches;
+  if (!isMobileViewport) {
+    return false;
+  }
+
+  return startsWithSegment(pathname, '/wallet') || startsWithSegment(pathname, '/community');
+}
+
 async function fetchPrefetchJson<T>(apiPath: string, fallbackErrorMessage: string): Promise<T> {
  return fetchJsonOrThrow<T>(
   apiPath,
@@ -59,12 +72,16 @@ export function normalizeNavigationPath(href: string): string {
 }
 
 function buildRouteQuerySpecs(pathname: string): RouteQuerySpec[] {
- const authState = useAuthStore.getState();
- const isAuthenticated = authState.isAuthenticated;
- const normalizedRole = authState.user?.role?.trim().toLowerCase() ?? '';
- if (!isAuthenticated) {
-  return [];
- }
+  const authState = useAuthStore.getState();
+  const isAuthenticated = authState.isAuthenticated;
+  const normalizedRole = authState.user?.role?.trim().toLowerCase() ?? '';
+  if (!isAuthenticated) {
+   return [];
+  }
+
+  if (shouldSkipMobileHeavyPrefetch(pathname)) {
+    return [];
+  }
 
  if (pathname === '/inventory') {
   return [

@@ -22,7 +22,8 @@
     "test:coverage": "vitest run --coverage",
     "test:coverage:risk": "npm run test:coverage && node scripts/check-risk-coverage.mjs",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "perf:gate": "node scripts/check-benchmark-gates.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import toast from 'react-hot-toast';
 import { listSystemConfigs, restartServer, updateSystemConfig } from '@/features/admin/application/actions';
+import { ADMIN_QUERY_POLICY } from '@/features/admin/application/adminQueryPolicy';
 import type { AdminSystemConfigItem } from '@/features/admin/system-configs/system-config.types';
 
 const QUERY_KEY = ['admin', 'system-configs'] as const;
@@ -70,6 +71,7 @@ export function useAdminSystemConfigs(initialConfigs: AdminSystemConfigItem[]) {
    return result.data ?? [];
   },
   initialData: initialConfigs,
+  ...ADMIN_QUERY_POLICY.list,
  });
 
  const items = useMemo(() => query.data ?? [], [query.data]);

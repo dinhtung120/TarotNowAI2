@@ -9,6 +9,7 @@ import {
  processDeposit,
  type AdminDepositOrder,
 } from '@/features/admin/application/actions';
+import { ADMIN_QUERY_POLICY } from '@/features/admin/application/adminQueryPolicy';
 import { adminQueryKeys } from '@/features/admin/application/adminQueryKeys';
 import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
 
@@ -34,10 +35,11 @@ export function useAdminDeposits() {
 
  const { data, isLoading, isFetching, error } = useQuery({
   queryKey: adminQueryKeys.deposits(page, statusFilter),
-  queryFn: async () => {
-   const result = await listDeposits(page, 10, statusFilter);
-   return queryFnOrThrow(result, 'Failed to load deposits');
-  },
+ queryFn: async () => {
+  const result = await listDeposits(page, 10, statusFilter);
+  return queryFnOrThrow(result, 'Failed to load deposits');
+ },
+  ...ADMIN_QUERY_POLICY.list,
  });
 
  const processMutation = useMutation({
@@ -65,7 +67,10 @@ export function useAdminDeposits() {
      ? t('deposits.toast.approve_success')
      : t('deposits.toast.reject_success')
    );
-   await queryClient.invalidateQueries({ queryKey: adminQueryKeys.depositsRoot() });
+   await queryClient.invalidateQueries({
+    queryKey: adminQueryKeys.deposits(page, statusFilter),
+    exact: true,
+   });
   } catch {
    toast.error(t('deposits.toast.network_error'));
   } finally {

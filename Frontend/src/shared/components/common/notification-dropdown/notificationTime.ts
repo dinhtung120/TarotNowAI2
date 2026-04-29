@@ -1,7 +1,17 @@
 import type { useTranslations } from 'next-intl';
 
-export function formatRelativeTime(dateStr: string, t: ReturnType<typeof useTranslations>): string {
-  const now = Date.now();
+export function formatRelativeTime(
+  dateStr: string,
+  t: ReturnType<typeof useTranslations>,
+  referenceNowMs?: number,
+): string {
+  const now = typeof referenceNowMs === 'number' && Number.isFinite(referenceNowMs)
+    ? referenceNowMs
+    : null;
+  if (now === null) {
+    return t('time_just_now');
+  }
+
   const date = new Date(dateStr).getTime();
   const diffMs = now - date;
   const diffMinutes = Math.floor(diffMs / 60000);

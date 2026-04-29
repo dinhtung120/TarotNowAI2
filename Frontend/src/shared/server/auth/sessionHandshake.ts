@@ -6,6 +6,7 @@ import {
 } from '@/shared/infrastructure/auth/serverAuth';
 import type { UserProfile } from '@/features/auth/domain/types';
 import { getCachedServerSessionSnapshot } from '@/shared/server/auth/cachedSessionSnapshot';
+import { isServerDocumentNavigationRequest } from '@/shared/server/auth/navigationRequest';
 
 interface RequireSessionWithHandshakeOptions {
  locale: string;
@@ -42,6 +43,11 @@ export async function requireSessionWithHandshake(
  }
 
  if (refreshToken) {
+  const isDocumentNavigation = await isServerDocumentNavigationRequest();
+  if (!isDocumentNavigation) {
+   redirect(toLoginPath(locale));
+  }
+
   redirect(toHandshakePath(nextPath));
  }
 

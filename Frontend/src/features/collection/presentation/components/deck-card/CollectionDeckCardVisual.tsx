@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { TarotCardMeta } from "@/shared/domain/tarotData";
+import { shouldUseUnoptimizedImage } from "@/shared/infrastructure/http/assetUrl";
 import { cn } from "@/lib/utils";
 
 interface CollectionDeckCardVisualProps {
@@ -17,6 +18,8 @@ export default function CollectionDeckCardVisual({
   isOwned,
   unknownCardLabel,
 }: CollectionDeckCardVisualProps) {
+  const unoptimizedCardImage = shouldUseUnoptimizedImage(cardImageUrl);
+
   return (
     <div
       className={cn(
@@ -32,7 +35,7 @@ export default function CollectionDeckCardVisual({
           src={cardImageUrl}
           alt={cardName || unknownCardLabel}
           fill
-          unoptimized
+          unoptimized={unoptimizedCardImage}
           priority={deckCard.id < 7}
           sizes="(max-width: 768px) 33vw, 220px"
           className={cn("h-full w-full object-cover", !isOwned && "blur-sm")}
