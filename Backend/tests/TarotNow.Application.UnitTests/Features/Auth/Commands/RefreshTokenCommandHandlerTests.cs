@@ -1,10 +1,12 @@
 using AutoMapper;
 using Moq;
+using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Auth.Commands.Login;
 using TarotNow.Application.Features.Auth.Commands.RefreshToken;
 using TarotNow.Application.Interfaces;
+using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Entities;
 using TarotNow.Domain.Events;
 
@@ -214,6 +216,79 @@ public class RefreshTokenCommandHandlerRequestedDomainEventHandlerTests
                     && evt.UserAgentHash == command.UserAgentHash),
                 It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleNotification_WhenInlineEventAlreadyProcessed_ShouldStillPopulateResult()
+    {
+        var command = BuildCommand();
+        var domainEvent = new RefreshTokenCommandHandlerRequestedDomainEvent(command);
+        var user = new User("active@example.com", "active-user", "hash", "Active User", new DateTime(2000, 1, 1), true);
+        user.Activate();
+
+        var sessionId = Guid.NewGuid();
+        var currentToken = new RefreshToken(
+            userId: user.Id,
+            token: command.Token,
+            expiresAt: DateTime.UtcNow.AddDays(1),
+            createdByIp: command.ClientIpAddress,
+            sessionId: sessionId,
+            familyId: Guid.NewGuid(),
+            parentTokenId: null,
+            createdDeviceId: command.DeviceId,
+            createdUserAgentHash: command.UserAgentHash);
+        SetTokenUser(currentToken, user);
+
+        var activeSession = new AuthSession(user.Id, command.DeviceId, command.UserAgentHash, "ip-hash");
+        var accessExpiresAt = DateTime.UtcNow.AddMinutes(10);
+        var accessJti = "jti-refresh-inline";
+        const string accessToken = "access-token-inline";
+        const string rotatedRawRefresh = "rotated-refresh-inline";
+        var rotatedRefreshExpiresAt = DateTime.UtcNow.AddDays(7);
+
+        _refreshTokenRepositoryMock
+            .Setup(x => x.GetByTokenAsync(command.Token, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(currentToken);
+        _refreshTokenRepositoryMock
+            .Setup(x => x.RotateAsync(It.IsAny<RefreshRotateRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(RefreshRotateResult.Idempotent(currentToken, rotatedRawRefresh, rotatedRefreshExpiresAt));
+        _authSessionRepositoryMock
+            .Setup(x => x.GetActiveAsync(sessionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(activeSession);
+        _tokenServiceMock
+            .Setup(x => x.GenerateAccessToken(user, sessionId, out accessExpiresAt, out accessJti))
+            .Returns(accessToken);
+
+        var idempotencyServiceMock = new Mock<IEventHandlerIdempotencyService>();
+        idempotencyServiceMock
+            .Setup(x => x.HasProcessedAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        idempotencyServiceMock
+            .Setup(x => x.HasProcessedInlineEventAsync(
+                domainEvent.EventIdempotencyKey,
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        var handler = new RefreshTokenCommandHandlerRequestedDomainEventHandler(
+            _refreshTokenRepositoryMock.Object,
+            _authSessionRepositoryMock.Object,
+            _tokenServiceMock.Object,
+            _jwtTokenSettingsMock.Object,
+            _domainEventPublisherMock.Object,
+            _mapperMock.Object,
+            idempotencyServiceMock.Object);
+
+        var notification = new DomainEventNotification<RefreshTokenCommandHandlerRequestedDomainEvent>(
+            domainEvent,
+            null,
+            domainEvent.EventIdempotencyKey);
+
+        await handler.Handle(notification, CancellationToken.None);
+
+        var result = Assert.IsType<RefreshTokenResult>(domainEvent.Result);
+        Assert.Equal(accessToken, result.Response.AccessToken);
+        Assert.Equal(rotatedRawRefresh, result.NewRefreshToken);
     }
 
     private static RefreshTokenCommand BuildCommand()

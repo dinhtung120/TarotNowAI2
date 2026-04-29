@@ -7,6 +7,7 @@ import { serverHttpRequest } from '@/shared/infrastructure/http/serverHttpClient
 import {
  buildProblemResponse,
  clearAuthCookies,
+ normalizeAuthTokenCookieValue,
  resolveAccessTtlSeconds,
  resolveDeviceIdFromRequest,
  setAccessCookie,
@@ -36,7 +37,8 @@ function resolveRefreshIdempotencyKey(
 }
 
 export async function executeRefreshRoute(request: NextRequest): Promise<NextResponse> {
- const refreshToken = request.cookies.get(AUTH_COOKIE.REFRESH)?.value;
+ const refreshTokenRaw = request.cookies.get(AUTH_COOKIE.REFRESH)?.value;
+ const refreshToken = refreshTokenRaw ? normalizeAuthTokenCookieValue(refreshTokenRaw) : undefined;
  if (!refreshToken) {
   return unauthorizedResponse(true);
  }

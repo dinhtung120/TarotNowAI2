@@ -6,6 +6,36 @@ export { buildProblemResponse };
 
 const AUTH_COOKIE_DOMAIN = process.env.AUTH_COOKIE_DOMAIN?.trim() || undefined;
 
+function decodeTokenValueOnce(value: string): string {
+ if (!/%[0-9a-f]{2}/i.test(value)) {
+  return value;
+ }
+
+ try {
+  return decodeURIComponent(value);
+ } catch {
+  return value;
+ }
+}
+
+export function normalizeAuthTokenCookieValue(value: string): string {
+ let normalized = value.trim();
+ if (!normalized) {
+  return normalized;
+ }
+
+ // Giảm rủi ro double-encode (%252B...) do nhiều lớp proxy/set-cookie.
+ for (let attempt = 0; attempt < 2; attempt += 1) {
+  const decoded = decodeTokenValueOnce(normalized);
+  if (decoded === normalized) {
+   break;
+  }
+  normalized = decoded;
+ }
+
+ return normalized;
+}
+
 export function resolveAccessTtlSeconds(payload: { expiresInSeconds?: number }): number {
  if (typeof payload.expiresInSeconds === 'number' && payload.expiresInSeconds > 0) {
   return payload.expiresInSeconds;
@@ -35,7 +65,7 @@ function parseRefreshTokenFromSetCookie(headers: Headers): string | undefined {
   const name = firstPair.substring(0, separator).trim();
   const value = firstPair.substring(separator + 1).trim();
   if (name === AUTH_COOKIE.REFRESH && value.length > 0) {
-   return value;
+   return normalizeAuthTokenCookieValue(value);
   }
  }
 
@@ -72,6 +102,7 @@ function parseRefreshCookieMetadata(headers: Headers): ParsedRefreshCookieMetada
   if (cookieName !== AUTH_COOKIE.REFRESH || cookieValue.length === 0) {
    continue;
   }
+  const normalizedCookieValue = normalizeAuthTokenCookieValue(cookieValue);
 
   const attributes = new Map<string, string>();
   for (const attribute of attributeParts) {
@@ -90,10 +121,10 @@ function parseRefreshCookieMetadata(headers: Headers): ParsedRefreshCookieMetada
   if (maxAgeRaw && /^-?\d+$/.test(maxAgeRaw)) {
    const maxAgeParsed = Number.parseInt(maxAgeRaw, 10);
    if (Number.isFinite(maxAgeParsed) && maxAgeParsed > 0) {
-    return {
-     value: cookieValue,
-     maxAgeSeconds: maxAgeParsed,
-    };
+     return {
+      value: normalizedCookieValue,
+      maxAgeSeconds: maxAgeParsed,
+     };
    }
   }
 
@@ -104,14 +135,14 @@ function parseRefreshCookieMetadata(headers: Headers): ParsedRefreshCookieMetada
     const remaining = Math.floor((expiresDate.getTime() - Date.now()) / 1000);
     if (remaining > 0) {
      return {
-      value: cookieValue,
+      value: normalizedCookieValue,
       maxAgeSeconds: remaining,
      };
     }
    }
   }
 
-  return { value: cookieValue };
+  return { value: normalizedCookieValue };
  }
 
  return undefined;
@@ -132,7 +163,8 @@ export function setAccessCookie(response: NextResponse, accessToken: string, ttl
 
 export function setRefreshCookieFromHeaders(response: NextResponse, headers: Headers): boolean {
  const parsed = parseRefreshCookieMetadata(headers);
- const refreshToken = parsed?.value ?? parseRefreshTokenFromSetCookie(headers);
+ const refreshTokenRaw = parsed?.value ?? parseRefreshTokenFromSetCookie(headers);
+ const refreshToken = refreshTokenRaw ? normalizeAuthTokenCookieValue(refreshTokenRaw) : undefined;
  if (!refreshToken) {
   return false;
  }

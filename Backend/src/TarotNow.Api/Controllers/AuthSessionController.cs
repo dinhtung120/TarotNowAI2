@@ -85,6 +85,13 @@ public sealed class AuthSessionController : ControllerBase
         };
 
         var result = await _mediator.SendWithRequestCancellation(HttpContext, command, cancellationToken);
+        if (result?.Response is null
+            || string.IsNullOrWhiteSpace(result.Response.AccessToken)
+            || string.IsNullOrWhiteSpace(result.NewRefreshToken))
+        {
+            _authCookieService.ClearAuthCookies(Request, Response);
+            return this.UnauthorizedProblem("Failed to refresh authentication session.");
+        }
 
         _authCookieService.SetAccessToken(Request, Response, result.Response.AccessToken, result.Response.ExpiresInSeconds);
         _authCookieService.SetRefreshToken(Request, Response, result.NewRefreshToken, result.RefreshTokenExpiresAtUtc);

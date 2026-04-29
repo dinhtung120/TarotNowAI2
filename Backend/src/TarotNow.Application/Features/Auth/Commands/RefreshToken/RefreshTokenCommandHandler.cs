@@ -84,6 +84,15 @@ public partial class RefreshTokenCommandHandlerRequestedDomainEventHandler
         domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
     }
 
+    protected override async Task HandleAlreadyProcessedDomainEventAsync(
+        RefreshTokenCommandHandlerRequestedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        // Inline idempotency hit vẫn cần trả lại payload refresh để controller set cookie ổn định.
+        domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
+    }
+
     private async Task<RefreshRotateResult> RotateRefreshTokenAsync(
         RefreshTokenCommand request,
         CancellationToken cancellationToken)

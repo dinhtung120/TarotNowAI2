@@ -60,6 +60,10 @@ services:
       NEXT_PUBLIC_R2_UPLOAD_ORIGIN: ${NEXT_PUBLIC_R2_UPLOAD_ORIGIN:-}
       INTERNAL_API_URL: http://${BE_PRIVATE_IP:?BE_PRIVATE_IP is required}:5037/api/v1
       NEXT_ALLOWED_DEV_HOSTS: ${NEXT_ALLOWED_DEV_HOSTS:-}
+      JWT_SECRETKEY: ${JWT_SECRETKEY:?JWT_SECRETKEY is required}
+      JWT_ISSUER: ${JWT_ISSUER:-TarotNowAI}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-TarotNowAIUsers}
+      AUTH_VERIFIER_POLICY: ${AUTH_VERIFIER_POLICY:-fail-closed}
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000 > /dev/null || exit 1"]
       interval: 20s
