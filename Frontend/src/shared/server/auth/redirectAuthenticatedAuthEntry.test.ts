@@ -80,17 +80,17 @@ describe('redirectAuthenticatedAuthEntry', () => {
   expect(mockedGetServerSessionSnapshot).not.toHaveBeenCalled();
  });
 
- it('redirects refresh-only sessions to handshake before rendering auth pages', async () => {
+ it('keeps refresh-only sessions on auth entry pages without handshake redirects', async () => {
   mockedCookies.mockResolvedValue(createCookieStore({ refreshToken: 'refresh-token' }));
   mockedResolveProtectedRouteAuthDecision.mockResolvedValue({
-   decision: PROTECTED_ROUTE_AUTH_DECISION.REDIRECT_HANDSHAKE,
-   redirectPath: '/api/auth/session/handshake?next=%2Fvi',
-   reason: 'access_token_invalid_refresh_present',
+   decision: PROTECTED_ROUTE_AUTH_DECISION.REDIRECT_LOGIN,
+   redirectPath: '/vi/login',
+   reason: 'missing_session_cookies',
   });
 
   await redirectAuthenticatedAuthEntry({ locale: 'vi' });
 
-  expect(mockedRedirect).toHaveBeenCalledWith('/api/auth/session/handshake?next=%2Fvi');
+  expect(mockedRedirect).not.toHaveBeenCalled();
   expect(mockedGetServerSessionSnapshot).not.toHaveBeenCalled();
  });
 
@@ -122,7 +122,7 @@ describe('redirectAuthenticatedAuthEntry', () => {
   expect(mockedRedirect).toHaveBeenCalledWith('/vi/profile');
  });
 
- it('falls back to handshake when profile lookup fails but refresh token still exists', async () => {
+ it('keeps user on auth entry page when session lookup is unauthenticated', async () => {
   mockedCookies.mockResolvedValue(createCookieStore({
    accessToken: 'access-token',
    refreshToken: 'refresh-token',
@@ -139,6 +139,6 @@ describe('redirectAuthenticatedAuthEntry', () => {
 
   await redirectAuthenticatedAuthEntry({ locale: 'en' });
 
-  expect(mockedRedirect).toHaveBeenCalledWith('/api/auth/session/handshake?next=%2Fen');
+  expect(mockedRedirect).not.toHaveBeenCalled();
  });
 });
