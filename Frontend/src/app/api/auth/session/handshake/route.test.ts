@@ -57,25 +57,25 @@ describe('GET /api/auth/session/handshake', () => {
  });
 
  it('redirects failed handshakes back to the public login origin, not the internal app host', async () => {
-  mockedGetSessionRouteResponse.mockResolvedValue(
-   NextResponse.json({ success: false }, { status: 401 }),
-  );
+  const failedResponse = NextResponse.json({ success: false }, { status: 401 });
+  mockedGetSessionRouteResponse.mockResolvedValue(failedResponse);
 
   const response = await GET(createHandshakeRequest(),);
 
   expect(response.status).toBe(307);
   expect(response.headers.get('location')).toBe('https://www.tarotnow.xyz/vi/login');
+  expect(mockedAppendSetCookieHeaders).toHaveBeenCalledWith(failedResponse.headers, response);
  });
 
  it('never appends :80 on public https redirects when proxy forwards port 80', async () => {
-  mockedGetSessionRouteResponse.mockResolvedValue(
-   NextResponse.json({ success: false }, { status: 401 }),
-  );
+  const failedResponse = NextResponse.json({ success: false }, { status: 401 });
+  mockedGetSessionRouteResponse.mockResolvedValue(failedResponse);
 
   const response = await GET(createHandshakeRequestWithPort('80'));
 
   expect(response.status).toBe(307);
   expect(response.headers.get('location')).toBe('https://www.tarotnow.xyz/vi/login');
+  expect(mockedAppendSetCookieHeaders).toHaveBeenCalledWith(failedResponse.headers, response);
  });
 
  it('redirects successful handshakes back to the requested public path and forwards cookies', async () => {

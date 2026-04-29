@@ -1,16 +1,15 @@
 "use client";
 
 import AuthSessionManager from "@/shared/components/auth/AuthSessionManager";
-import {
- logoutAction,
- refreshAccessTokenAction,
-} from "@/features/auth/application/actions";
+import { useAuth } from "@/shared/hooks/useAuth";
 
 export default function AppAuthSessionManager() {
+ const { logout, refresh } = useAuth();
+
  return (
   <AuthSessionManager
-   logout={logoutAction}
-   refreshAccessToken={refreshAccessTokenAction}
+   logout={logout}
+   refreshAccessToken={refresh}
   />
  );
 }

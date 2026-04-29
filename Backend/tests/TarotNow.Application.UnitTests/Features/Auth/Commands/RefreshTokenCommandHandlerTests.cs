@@ -16,6 +16,7 @@ public class RefreshTokenCommandHandlerRequestedDomainEventHandlerTests
 {
     private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock;
     private readonly Mock<IAuthSessionRepository> _authSessionRepositoryMock;
+    private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly Mock<ITokenService> _tokenServiceMock;
     private readonly Mock<IJwtTokenSettings> _jwtTokenSettingsMock;
     private readonly Mock<IDomainEventPublisher> _domainEventPublisherMock;
@@ -26,6 +27,7 @@ public class RefreshTokenCommandHandlerRequestedDomainEventHandlerTests
     {
         _refreshTokenRepositoryMock = new Mock<IRefreshTokenRepository>();
         _authSessionRepositoryMock = new Mock<IAuthSessionRepository>();
+        _userRepositoryMock = new Mock<IUserRepository>();
         _tokenServiceMock = new Mock<ITokenService>();
         _jwtTokenSettingsMock = new Mock<IJwtTokenSettings>();
         _domainEventPublisherMock = new Mock<IDomainEventPublisher>();
@@ -62,6 +64,7 @@ public class RefreshTokenCommandHandlerRequestedDomainEventHandlerTests
         _handler = new RefreshTokenCommandHandlerRequestedDomainEventHandler(
             _refreshTokenRepositoryMock.Object,
             _authSessionRepositoryMock.Object,
+            _userRepositoryMock.Object,
             _tokenServiceMock.Object,
             _jwtTokenSettingsMock.Object,
             _domainEventPublisherMock.Object,
@@ -193,6 +196,9 @@ public class RefreshTokenCommandHandlerRequestedDomainEventHandlerTests
         _tokenServiceMock
             .Setup(x => x.GenerateAccessToken(user, sessionId, out accessExpiresAt, out accessJti))
             .Returns(accessToken);
+        _userRepositoryMock
+            .Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
 
         var result = await _handler.Handle(command, CancellationToken.None);
 
@@ -207,7 +213,7 @@ public class RefreshTokenCommandHandlerRequestedDomainEventHandlerTests
             Times.Once);
         _domainEventPublisherMock.Verify(
             x => x.PublishAsync(
-                It.Is<TokenRefreshedDomainEvent>(evt =>
+                It.Is<RefreshTokenRotatedDomainEvent>(evt =>
                     evt.UserId == user.Id
                     && evt.SessionId == sessionId
                     && evt.DeviceId == command.DeviceId
@@ -258,6 +264,9 @@ public class RefreshTokenCommandHandlerRequestedDomainEventHandlerTests
         _tokenServiceMock
             .Setup(x => x.GenerateAccessToken(user, sessionId, out accessExpiresAt, out accessJti))
             .Returns(accessToken);
+        _userRepositoryMock
+            .Setup(x => x.GetByIdAsync(user.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
 
         var idempotencyServiceMock = new Mock<IEventHandlerIdempotencyService>();
         idempotencyServiceMock
@@ -273,6 +282,7 @@ public class RefreshTokenCommandHandlerRequestedDomainEventHandlerTests
         var handler = new RefreshTokenCommandHandlerRequestedDomainEventHandler(
             _refreshTokenRepositoryMock.Object,
             _authSessionRepositoryMock.Object,
+            _userRepositoryMock.Object,
             _tokenServiceMock.Object,
             _jwtTokenSettingsMock.Object,
             _domainEventPublisherMock.Object,

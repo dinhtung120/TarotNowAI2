@@ -40,7 +40,7 @@ export async function executeRefreshRoute(request: NextRequest): Promise<NextRes
  const refreshTokenRaw = request.cookies.get(AUTH_COOKIE.REFRESH)?.value;
  const refreshToken = refreshTokenRaw ? normalizeAuthTokenCookieValue(refreshTokenRaw) : undefined;
  if (!refreshToken) {
-  return unauthorizedResponse(true);
+  return unauthorizedResponse(true, request);
  }
 
  const deviceId = resolveDeviceIdFromRequest(request);
@@ -71,7 +71,7 @@ export async function executeRefreshRoute(request: NextRequest): Promise<NextRes
     result.error || AUTH_ERROR.UNAUTHORIZED,
     result.error || AUTH_ERROR.UNAUTHORIZED,
    );
-   clearAuthCookies(response);
+   clearAuthCookies(response, request);
    return response;
   }
 
@@ -82,7 +82,7 @@ export async function executeRefreshRoute(request: NextRequest): Promise<NextRes
 
  const accessToken = result.data.accessToken;
  if (!accessToken) {
-  return unauthorizedResponse(true);
+  return unauthorizedResponse(true, request);
  }
 
  const response = NextResponse.json(
@@ -94,11 +94,11 @@ export async function executeRefreshRoute(request: NextRequest): Promise<NextRes
   { status: 200 },
  );
 
- setAccessCookie(response, accessToken, resolveAccessTtlSeconds(result.data));
- const refreshCookieSet = setRefreshCookieFromHeaders(response, result.headers);
+ setAccessCookie(response, accessToken, resolveAccessTtlSeconds(result.data), request);
+ const refreshCookieSet = setRefreshCookieFromHeaders(response, result.headers, request);
  if (!refreshCookieSet) {
-  return unauthorizedResponse(true);
+  return unauthorizedResponse(true, request);
  }
- setDeviceCookie(response, deviceId);
+ setDeviceCookie(response, deviceId, request);
  return response;
 }

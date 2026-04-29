@@ -178,9 +178,9 @@ public partial class LoginCommandHandlerRequestedDomainEventHandler
         };
     }
 
-    private static LoginFailedDomainEvent BuildLoginFailedEvent(LoginCommand request, string reasonCode)
+    private static UserAuthenticationFailedDomainEvent BuildLoginFailedEvent(LoginCommand request, string reasonCode)
     {
-        return new LoginFailedDomainEvent
+        return new UserAuthenticationFailedDomainEvent
         {
             IdentityHash = HashIdentity(request.EmailOrUsername),
             IpHash = HashIpAddress(request.ClientIpAddress),

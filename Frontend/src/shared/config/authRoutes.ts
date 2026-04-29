@@ -14,3 +14,11 @@ export const PROTECTED_PREFIXES = [
  '/notifications',
  '/admin',
 ] as const;
+
+export const AUTH_ENTRY_PATHS = [
+ '/login',
+ '/register',
+ '/forgot-password',
+ '/reset-password',
+ '/verify-email',
+] as const;

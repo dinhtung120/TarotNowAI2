@@ -101,15 +101,15 @@ async function refreshSessionAndBuildResponse(
    error?: string;
   };
  } catch {
-  return unauthorizedResponse(true);
+  return unauthorizedResponse(true, request);
  }
 
  if (!refreshPayload.success) {
-  return unauthorizedResponse(true);
+  return unauthorizedResponse(true, request);
  }
 
  if (mode === SESSION_MODE.FULL && !refreshPayload.user) {
-  return unauthorizedResponse(true);
+  return unauthorizedResponse(true, request);
  }
 
  const response = createSuccessResponse(
@@ -127,7 +127,7 @@ export async function getSessionRouteResponse(
  const accessToken = request.cookies.get(AUTH_COOKIE.ACCESS)?.value;
  const refreshToken = request.cookies.get(AUTH_COOKIE.REFRESH)?.value;
  if (!accessToken && !refreshToken) {
-  return unauthorizedResponse();
+  return unauthorizedResponse(false, request);
  }
 
  if (mode === SESSION_MODE.LITE) {
@@ -140,8 +140,8 @@ export async function getSessionRouteResponse(
    return createTemporaryFailureResponse();
   }
 
-  if (!refreshToken) {
-   return unauthorizedResponse(true);
+ if (!refreshToken) {
+   return unauthorizedResponse(true, request);
   }
 
   return refreshSessionAndBuildResponse(request, mode);
@@ -159,7 +159,7 @@ export async function getSessionRouteResponse(
  }
 
  if (!refreshToken) {
-  return unauthorizedResponse(true);
+  return unauthorizedResponse(true, request);
  }
 
  return refreshSessionAndBuildResponse(request, mode);

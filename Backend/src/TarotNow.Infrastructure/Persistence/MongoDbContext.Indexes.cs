@@ -10,6 +10,7 @@ public partial class MongoDbContext
     private void EnsureIndexes()
     {
         EnsureCoreCollectionIndexes();
+        EnsureAuthIndexes();
         EnsureReaderCollectionIndexes();
         EnsureChatCollectionIndexes();
         EnsureCommunityIndexes();

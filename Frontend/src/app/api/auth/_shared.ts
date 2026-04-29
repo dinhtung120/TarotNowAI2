@@ -5,6 +5,68 @@ import { buildProblemResponse } from '@/app/api/_shared/problemDetails';
 export { buildProblemResponse };
 
 const AUTH_COOKIE_DOMAIN = process.env.AUTH_COOKIE_DOMAIN?.trim() || undefined;
+const AUTH_COOKIE_SECURE = process.env.AUTH_COOKIE_SECURE?.trim().toLowerCase();
+
+function resolveHostFromRequest(request: NextRequest): string | undefined {
+ const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
+ if (forwardedHost) {
+  return forwardedHost.split(':')[0]?.trim().toLowerCase();
+ }
+
+ const rawHost = request.headers.get('host')?.trim() ?? request.nextUrl.host;
+ if (!rawHost) {
+  return undefined;
+ }
+
+ return rawHost.split(':')[0]?.trim().toLowerCase();
+}
+
+function resolveCookieDomain(request?: NextRequest): string | undefined {
+ if (!AUTH_COOKIE_DOMAIN) {
+  return undefined;
+ }
+
+ if (!request) {
+  return AUTH_COOKIE_DOMAIN;
+ }
+
+ const requestHost = resolveHostFromRequest(request);
+ if (!requestHost) {
+  return AUTH_COOKIE_DOMAIN;
+ }
+
+ const normalizedDomain = AUTH_COOKIE_DOMAIN.toLowerCase();
+ if (requestHost === normalizedDomain || requestHost.endsWith(`.${normalizedDomain}`)) {
+  return AUTH_COOKIE_DOMAIN;
+ }
+
+ return undefined;
+}
+
+function shouldUseSecureCookie(request?: NextRequest): boolean {
+ if (AUTH_COOKIE_SECURE === 'true') {
+  return true;
+ }
+
+ if (AUTH_COOKIE_SECURE === 'false') {
+  return false;
+ }
+
+ if (process.env.NODE_ENV === 'production') {
+  return true;
+ }
+
+ if (!request) {
+  return false;
+ }
+
+ const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim().toLowerCase();
+ if (forwardedProto === 'https') {
+  return true;
+ }
+
+ return request.nextUrl.protocol === 'https:';
+}
 
 function decodeTokenValueOnce(value: string): string {
  if (!/%[0-9a-f]{2}/i.test(value)) {
@@ -148,20 +210,29 @@ function parseRefreshCookieMetadata(headers: Headers): ParsedRefreshCookieMetada
  return undefined;
 }
 
-export function setAccessCookie(response: NextResponse, accessToken: string, ttlSeconds: number): void {
+export function setAccessCookie(
+ response: NextResponse,
+ accessToken: string,
+ ttlSeconds: number,
+ request?: NextRequest,
+): void {
  response.cookies.set({
   name: AUTH_COOKIE.ACCESS,
   value: accessToken,
   httpOnly: true,
-  secure: true,
+  secure: shouldUseSecureCookie(request),
   sameSite: 'strict',
   path: '/',
-  ...(AUTH_COOKIE_DOMAIN ? { domain: AUTH_COOKIE_DOMAIN } : {}),
+  ...(resolveCookieDomain(request) ? { domain: resolveCookieDomain(request) } : {}),
   maxAge: Math.max(1, ttlSeconds),
  });
 }
 
-export function setRefreshCookieFromHeaders(response: NextResponse, headers: Headers): boolean {
+export function setRefreshCookieFromHeaders(
+ response: NextResponse,
+ headers: Headers,
+ request?: NextRequest,
+): boolean {
  const parsed = parseRefreshCookieMetadata(headers);
  const refreshTokenRaw = parsed?.value ?? parseRefreshTokenFromSetCookie(headers);
  const refreshToken = refreshTokenRaw ? normalizeAuthTokenCookieValue(refreshTokenRaw) : undefined;
@@ -173,10 +244,10 @@ export function setRefreshCookieFromHeaders(response: NextResponse, headers: Hea
   name: AUTH_COOKIE.REFRESH,
   value: refreshToken,
   httpOnly: true,
-  secure: true,
+  secure: shouldUseSecureCookie(request),
   sameSite: 'strict',
   path: '/',
-  ...(AUTH_COOKIE_DOMAIN ? { domain: AUTH_COOKIE_DOMAIN } : {}),
+  ...(resolveCookieDomain(request) ? { domain: resolveCookieDomain(request) } : {}),
   maxAge: Math.max(1, parsed?.maxAgeSeconds ?? AUTH_SESSION.DEFAULT_REFRESH_TTL_SECONDS),
  });
  return true;
@@ -196,46 +267,46 @@ export function resolveDeviceIdFromRequest(request: NextRequest): string {
  return crypto.randomUUID();
 }
 
-export function setDeviceCookie(response: NextResponse, deviceId: string): void {
+export function setDeviceCookie(response: NextResponse, deviceId: string, request?: NextRequest): void {
  response.cookies.set({
   name: AUTH_COOKIE.DEVICE,
   value: deviceId,
   httpOnly: false,
-  secure: true,
+  secure: shouldUseSecureCookie(request),
   sameSite: 'strict',
   path: '/',
-  ...(AUTH_COOKIE_DOMAIN ? { domain: AUTH_COOKIE_DOMAIN } : {}),
+  ...(resolveCookieDomain(request) ? { domain: resolveCookieDomain(request) } : {}),
   maxAge: 365 * 24 * 60 * 60,
  });
 }
 
-export function clearAuthCookies(response: NextResponse): void {
+export function clearAuthCookies(response: NextResponse, request?: NextRequest): void {
  response.cookies.set({
   name: AUTH_COOKIE.ACCESS,
   value: '',
   httpOnly: true,
-  secure: true,
+  secure: shouldUseSecureCookie(request),
   sameSite: 'strict',
   path: '/',
-  ...(AUTH_COOKIE_DOMAIN ? { domain: AUTH_COOKIE_DOMAIN } : {}),
+  ...(resolveCookieDomain(request) ? { domain: resolveCookieDomain(request) } : {}),
   maxAge: 0,
  });
  response.cookies.set({
   name: AUTH_COOKIE.REFRESH,
   value: '',
   httpOnly: true,
-  secure: true,
+  secure: shouldUseSecureCookie(request),
   sameSite: 'strict',
   path: '/',
-  ...(AUTH_COOKIE_DOMAIN ? { domain: AUTH_COOKIE_DOMAIN } : {}),
+  ...(resolveCookieDomain(request) ? { domain: resolveCookieDomain(request) } : {}),
   maxAge: 0,
  });
 }
 
-export function unauthorizedResponse(clearCookies = false): NextResponse {
+export function unauthorizedResponse(clearCookies = false, request?: NextRequest): NextResponse {
  const response = buildProblemResponse(401, AUTH_ERROR.UNAUTHORIZED, AUTH_ERROR.UNAUTHORIZED);
  if (clearCookies) {
-  clearAuthCookies(response);
+  clearAuthCookies(response, request);
  }
 
  return response;

@@ -3,6 +3,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import PresenceProvider from '@/shared/providers/PresenceProvider';
+import AuthProvider from '@/shared/providers/AuthProvider';
 import { useAppQueryClient } from '@/shared/components/common/hooks/useAppQueryClient';
 
 interface AppQueryProviderProps {
@@ -14,7 +15,9 @@ export default function AppQueryProvider({ children }: AppQueryProviderProps) {
 
  return (
   <QueryClientProvider client={queryClient}>
-   <PresenceProvider>{children}</PresenceProvider>
+   <AuthProvider>
+    <PresenceProvider>{children}</PresenceProvider>
+   </AuthProvider>
   </QueryClientProvider>
  );
 }

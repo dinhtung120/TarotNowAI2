@@ -56,6 +56,7 @@ export function resolveLayer(filePath) {
 
  if (normalized.startsWith('src/shared/components/')) return 'presentation';
  if (normalized.startsWith('src/shared/providers/')) return 'presentation';
+ if (normalized.startsWith('src/shared/hooks/')) return 'application';
  if (normalized.startsWith('src/shared/server/')) return 'infrastructure';
  if (normalized.startsWith('src/shared/seo/')) return 'presentation';
  if (normalized.startsWith('src/shared/config/')) return 'application';

@@ -67,6 +67,10 @@ public partial class MongoDbContext
     public IMongoCollection<NotificationDocument> Notifications
         => _database.GetCollection<NotificationDocument>("notifications");
 
+    // Collection refresh token cho auth rotation/replay detection.
+    public IMongoCollection<RefreshTokenDocument> RefreshTokens
+        => _database.GetCollection<RefreshTokenDocument>("refresh_tokens");
+
     // Collection yêu cầu trở thành reader.
     public IMongoCollection<ReaderRequestDocument> ReaderRequests
         => _database.GetCollection<ReaderRequestDocument>("reader_requests");

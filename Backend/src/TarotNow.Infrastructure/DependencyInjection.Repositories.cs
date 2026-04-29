@@ -34,7 +34,7 @@ public static partial class DependencyInjection
     {
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IAuthSessionRepository, AuthSessionRepository>();
-        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IRefreshTokenRepository, MongoRefreshTokenRepository>();
         services.AddScoped<IEmailOtpRepository, EmailOtpRepository>();
         services.AddScoped<IWalletRepository, WalletRepository>();
         services.AddScoped<ICommunityPostRepository, CommunityPostRepository>();

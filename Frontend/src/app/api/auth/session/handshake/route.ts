@@ -47,7 +47,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
  if (!sessionResponse.ok) {
   const fallbackPath = buildLoginPath(nextPath);
-  return NextResponse.redirect(buildPublicRequestUrl(request, fallbackPath));
+  const redirectResponse = NextResponse.redirect(buildPublicRequestUrl(request, fallbackPath));
+  appendSetCookieHeaders(sessionResponse.headers, redirectResponse);
+  return redirectResponse;
  }
 
  const redirectResponse = NextResponse.redirect(buildPublicRequestUrl(request, nextPath));

@@ -42,7 +42,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
  if (!result.ok) {
   if (result.status === 401) {
-   return unauthorizedResponse(true);
+   return unauthorizedResponse(true, request);
   }
 
   return buildProblemResponse(result.status, result.error, result.error);
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
  const accessToken = result.data.accessToken;
  if (!accessToken) {
-  return unauthorizedResponse(true);
+  return unauthorizedResponse(true, request);
  }
 
  const response = NextResponse.json(
@@ -62,11 +62,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   { status: 200 },
  );
 
- setAccessCookie(response, accessToken, resolveAccessTtlSeconds(result.data));
- const refreshCookieSet = setRefreshCookieFromHeaders(response, result.headers);
+ setAccessCookie(response, accessToken, resolveAccessTtlSeconds(result.data), request);
+ const refreshCookieSet = setRefreshCookieFromHeaders(response, result.headers, request);
  if (!refreshCookieSet) {
-  return unauthorizedResponse(true);
+  return unauthorizedResponse(true, request);
  }
- setDeviceCookie(response, deviceId);
+ setDeviceCookie(response, deviceId, request);
  return response;
 }

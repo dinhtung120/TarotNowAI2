@@ -1,14 +1,9 @@
-using System.Security.Cryptography;
-using System.Text;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using TarotNow.Api.Constants;
 using TarotNow.Api.Extensions;
 using TarotNow.Api.Services;
 using TarotNow.Application.Features.Auth.Commands.Login;
-using TarotNow.Application.Features.Auth.Commands.RefreshToken;
-using TarotNow.Application.Features.Auth.Commands.RevokeToken;
 
 namespace TarotNow.Api.Controllers;
 
@@ -18,25 +13,17 @@ namespace TarotNow.Api.Controllers;
 public sealed class AuthSessionController : ControllerBase
 {
     private const string LogoutSuccessMessage = "Logged out successfully.";
-    private readonly IMediator _mediator;
+    private readonly IAuthService _authService;
     private readonly IAuthCookieService _authCookieService;
-    private readonly IForwardedHeaderTrustEvaluator _forwardedHeaderTrustEvaluator;
 
-    /// <summary>
-    /// Khởi tạo auth session controller.
-    /// </summary>
-    public AuthSessionController(
-        IMediator mediator,
-        IAuthCookieService authCookieService,
-        IForwardedHeaderTrustEvaluator forwardedHeaderTrustEvaluator)
+    public AuthSessionController(IAuthService authService, IAuthCookieService authCookieService)
     {
-        _mediator = mediator;
+        _authService = authService;
         _authCookieService = authCookieService;
-        _forwardedHeaderTrustEvaluator = forwardedHeaderTrustEvaluator;
     }
 
     /// <summary>
-    /// Đăng nhập user và cấp access/refresh tokens.
+    /// Xác thực thông tin đăng nhập và cấp access/refresh token mới.
     /// </summary>
     [HttpPost("login")]
     [EnableRateLimiting("auth-login")]
@@ -45,19 +32,14 @@ public sealed class AuthSessionController : ControllerBase
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Login([FromBody] LoginCommand command, CancellationToken cancellationToken)
     {
-        command.ClientIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-        command.DeviceId = ResolveDeviceId(Request);
-        command.UserAgentHash = HashValue(ResolveUserAgent(Request));
-
-        var result = await _mediator.SendWithRequestCancellation(HttpContext, command, cancellationToken);
-
+        var result = await _authService.LoginAsync(command, HttpContext, cancellationToken);
         _authCookieService.SetAccessToken(Request, Response, result.Response.AccessToken, result.Response.ExpiresInSeconds);
         _authCookieService.SetRefreshToken(Request, Response, result.RefreshToken, result.RefreshTokenExpiresAtUtc);
         return Ok(result.Response);
     }
 
     /// <summary>
-    /// Refresh access token từ refresh token cookie.
+    /// Refresh access token theo mô hình refresh token rotation.
     /// </summary>
     [HttpPost("refresh")]
     [EnableRateLimiting("auth-refresh-token-family")]
@@ -72,19 +54,11 @@ public sealed class AuthSessionController : ControllerBase
             return this.UnauthorizedProblem("Missing refresh token.");
         }
 
-        var deviceId = ResolveDeviceId(Request);
-        var userAgentHash = HashValue(ResolveUserAgent(Request));
-
-        var command = new RefreshTokenCommand
-        {
-            Token = refreshToken,
-            IdempotencyKey = ResolveRefreshIdempotencyKey(refreshToken, deviceId, userAgentHash),
-            ClientIpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            DeviceId = deviceId,
-            UserAgentHash = userAgentHash
-        };
-
-        var result = await _mediator.SendWithRequestCancellation(HttpContext, command, cancellationToken);
+        var result = await _authService.RefreshAsync(
+            refreshToken,
+            ResolveIdempotencyKeyHeader(Request),
+            HttpContext,
+            cancellationToken);
         if (result?.Response is null
             || string.IsNullOrWhiteSpace(result.Response.AccessToken)
             || string.IsNullOrWhiteSpace(result.NewRefreshToken))
@@ -99,105 +73,41 @@ public sealed class AuthSessionController : ControllerBase
     }
 
     /// <summary>
-    /// Logout session hiện tại hoặc toàn bộ sessions.
+    /// Đăng xuất phiên hiện tại hoặc thu hồi toàn bộ phiên của người dùng.
     /// </summary>
     [HttpPost("logout")]
     [EnableRateLimiting("auth-logout")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Logout([FromQuery] bool revokeAll = false, CancellationToken cancellationToken = default)
     {
-        var refreshToken = Request.Cookies[AuthCookieNames.RefreshToken];
-
-        var command = new RevokeTokenCommand
+        var refreshToken = Request.Cookies[AuthCookieNames.RefreshToken] ?? string.Empty;
+        Guid? userId = User.TryGetUserId(out var parsedUserId) ? parsedUserId : null;
+        if (revokeAll && userId is null && string.IsNullOrWhiteSpace(refreshToken))
         {
-            Token = refreshToken ?? string.Empty,
-            RevokeAll = revokeAll
-        };
-
-        if (revokeAll)
-        {
-            if (User.TryGetUserId(out var userId))
-            {
-                command.UserId = userId;
-            }
-            else if (string.IsNullOrWhiteSpace(command.Token))
-            {
-                _authCookieService.ClearAuthCookies(Request, Response);
-                return this.UnauthorizedProblem("Must be authenticated or provide refresh token to revoke all sessions.");
-            }
+            _authCookieService.ClearAuthCookies(Request, Response);
+            return this.UnauthorizedProblem("Must be authenticated or provide refresh token to revoke all sessions.");
         }
-        else if (string.IsNullOrWhiteSpace(command.Token))
+
+        if (!revokeAll && string.IsNullOrWhiteSpace(refreshToken))
         {
             _authCookieService.ClearAuthCookies(Request, Response);
             return this.UnauthorizedProblem("Missing refresh token.");
         }
 
-        await _mediator.SendWithRequestCancellation(HttpContext, command, cancellationToken);
+        await _authService.LogoutAsync(refreshToken, revokeAll, userId, HttpContext, cancellationToken);
         _authCookieService.ClearAuthCookies(Request, Response);
         return Ok(new { success = true, message = LogoutSuccessMessage });
     }
 
-    private static string ResolveDeviceId(HttpRequest request)
+    private static string? ResolveIdempotencyKeyHeader(HttpRequest request)
     {
-        var headerValue = request.Headers[AuthHeaders.DeviceId].ToString();
-        if (TryNormalizeDeviceId(headerValue, out var normalizedFromHeader))
+        var primary = request.Headers[AuthHeaders.IdempotencyKey].ToString();
+        if (!string.IsNullOrWhiteSpace(primary))
         {
-            return normalizedFromHeader;
+            return primary;
         }
 
-        if (request.Cookies.TryGetValue(AuthCookieNames.DeviceId, out var cookieValue)
-            && TryNormalizeDeviceId(cookieValue, out var normalizedFromCookie))
-        {
-            return normalizedFromCookie;
-        }
-
-        // Fallback deterministic fingerprint để tránh gom mọi client vào một unknown-device.
-        var ip = request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown-ip";
-        var ua = request.Headers.UserAgent.ToString();
-        return $"fp-{HashValue($"{ip}|{ua}")}";
-    }
-
-    private static bool TryNormalizeDeviceId(string? raw, out string normalized)
-    {
-        normalized = string.Empty;
-        if (string.IsNullOrWhiteSpace(raw))
-        {
-            return false;
-        }
-
-        var trimmed = raw.Trim();
-        normalized = trimmed.Length <= 128 ? trimmed : trimmed[..128];
-        return normalized.Length > 0;
-    }
-
-    private string ResolveUserAgent(HttpRequest request)
-    {
-        if (_forwardedHeaderTrustEvaluator.IsTrustedProxy(request.HttpContext.Connection.RemoteIpAddress))
-        {
-            var forwardedUserAgent = request.Headers[AuthHeaders.ForwardedUserAgent].ToString();
-            if (string.IsNullOrWhiteSpace(forwardedUserAgent) == false)
-            {
-                return forwardedUserAgent;
-            }
-        }
-
-        return request.Headers.UserAgent.ToString();
-    }
-
-    private static string HashValue(string? raw)
-    {
-        var normalized = string.IsNullOrWhiteSpace(raw) ? "unknown" : raw.Trim();
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
-        return Convert.ToHexString(bytes).ToLowerInvariant();
-    }
-
-    private static string ResolveRefreshIdempotencyKey(
-        string refreshToken,
-        string deviceId,
-        string userAgentHash)
-    {
-        var source = $"{refreshToken.Trim()}|{deviceId.Trim()}|{userAgentHash.Trim()}";
-        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(source));
-        return $"auto-{Convert.ToHexString(hash).ToLowerInvariant()}";
+        var legacy = request.Headers[AuthHeaders.LegacyIdempotencyKey].ToString();
+        return string.IsNullOrWhiteSpace(legacy) ? null : legacy;
     }
 }

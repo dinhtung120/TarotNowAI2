@@ -22,6 +22,7 @@ public partial class RefreshTokenCommandHandlerRequestedDomainEventHandler
 
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IAuthSessionRepository _authSessionRepository;
+    private readonly IUserRepository _userRepository;
     private readonly ITokenService _tokenService;
     private readonly IJwtTokenSettings _jwtTokenSettings;
     private readonly IDomainEventPublisher _domainEventPublisher;
@@ -34,6 +35,7 @@ public partial class RefreshTokenCommandHandlerRequestedDomainEventHandler
     public RefreshTokenCommandHandlerRequestedDomainEventHandler(
         IRefreshTokenRepository refreshTokenRepository,
         IAuthSessionRepository authSessionRepository,
+        IUserRepository userRepository,
         ITokenService tokenService,
         IJwtTokenSettings jwtTokenSettings,
         IDomainEventPublisher domainEventPublisher,
@@ -43,6 +45,7 @@ public partial class RefreshTokenCommandHandlerRequestedDomainEventHandler
     {
         _refreshTokenRepository = refreshTokenRepository;
         _authSessionRepository = authSessionRepository;
+        _userRepository = userRepository;
         _tokenService = tokenService;
         _jwtTokenSettings = jwtTokenSettings;
         _domainEventPublisher = domainEventPublisher;
@@ -59,7 +62,7 @@ public partial class RefreshTokenCommandHandlerRequestedDomainEventHandler
         var rotateResult = await RotateRefreshTokenAsync(request, cancellationToken);
         var currentToken = await ValidateRotationResultAsync(rotateResult, request, cancellationToken);
 
-        var user = EnsureUserIsActive(currentToken.User);
+        var user = await LoadActiveUserAsync(currentToken.UserId, cancellationToken);
         var sessionId = currentToken.SessionId;
         await EnsureSessionIsActiveAsync(sessionId, cancellationToken);
         await TouchSessionAsync(sessionId, request, cancellationToken);
@@ -91,50 +94,6 @@ public partial class RefreshTokenCommandHandlerRequestedDomainEventHandler
     {
         // Inline idempotency hit vẫn cần trả lại payload refresh để controller set cookie ổn định.
         domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
-    }
-
-    private async Task<RefreshRotateResult> RotateRefreshTokenAsync(
-        RefreshTokenCommand request,
-        CancellationToken cancellationToken)
-    {
-        var nextRefreshToken = BuildDeterministicRefreshToken(request);
-        for (var attempt = 1; attempt <= MaxRotateLockRetries; attempt++)
-        {
-            var rotateRequest = new RefreshRotateRequest
-            {
-                RawToken = request.Token,
-                NewRawToken = nextRefreshToken,
-                NewExpiresAtUtc = DateTime.UtcNow.AddDays(_jwtTokenSettings.RefreshTokenExpiryDays),
-                IpAddress = request.ClientIpAddress,
-                DeviceId = request.DeviceId,
-                UserAgentHash = request.UserAgentHash,
-                IdempotencyKey = request.IdempotencyKey
-            };
-
-            var rotateResult = await _refreshTokenRepository.RotateAsync(rotateRequest, cancellationToken);
-            if (rotateResult.Status != RefreshRotateStatus.Locked || attempt == MaxRotateLockRetries)
-            {
-                return rotateResult;
-            }
-
-            await Task.Delay(TimeSpan.FromMilliseconds(40 * attempt), cancellationToken);
-        }
-
-        return RefreshRotateResult.Locked();
-    }
-
-    private static string BuildDeterministicRefreshToken(RefreshTokenCommand request)
-    {
-        var material = string.Concat(
-            request.Token.Trim(),
-            "|",
-            request.IdempotencyKey.Trim(),
-            "|",
-            request.DeviceId.Trim(),
-            "|",
-            request.UserAgentHash.Trim());
-        var bytes = System.Security.Cryptography.SHA512.HashData(System.Text.Encoding.UTF8.GetBytes(material));
-        return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 
     private async Task<RefreshTokenEntity> ValidateRotationResultAsync(
@@ -169,20 +128,6 @@ public partial class RefreshTokenCommandHandlerRequestedDomainEventHandler
             ?? throw new BusinessRuleException(AuthErrorCodes.Unauthorized, "Refresh token is invalid.");
     }
 
-    private async Task EnsureSessionIsActiveAsync(Guid sessionId, CancellationToken cancellationToken)
-    {
-        if (sessionId == Guid.Empty)
-        {
-            return;
-        }
-
-        var activeSession = await _authSessionRepository.GetActiveAsync(sessionId, cancellationToken);
-        if (activeSession is null)
-        {
-            throw new BusinessRuleException(AuthErrorCodes.Unauthorized, "Session is no longer active.");
-        }
-    }
-
     private async Task PublishTokenRefreshedEventIfNeededAsync(
         RefreshRotateResult rotateResult,
         RefreshTokenEntity currentToken,
@@ -196,7 +141,7 @@ public partial class RefreshTokenCommandHandlerRequestedDomainEventHandler
         }
 
         await _domainEventPublisher.PublishAsync(
-            new TokenRefreshedDomainEvent
+            new RefreshTokenRotatedDomainEvent
             {
                 UserId = currentToken.UserId,
                 SessionId = currentToken.SessionId,

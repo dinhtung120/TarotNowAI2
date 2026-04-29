@@ -46,7 +46,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   ? NextResponse.json({ success: true }, { status: 200 })
   : buildProblemResponse(result.status >= 500 ? 503 : result.status, result.error ?? AUTH_ERROR.TEMPORARY_FAILURE, result.error);
  if (shouldClearCookies) {
-  clearAuthCookies(response);
+  clearAuthCookies(response, request);
  }
 
  return response;

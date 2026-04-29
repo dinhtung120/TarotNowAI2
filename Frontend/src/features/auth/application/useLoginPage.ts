@@ -5,12 +5,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { useQueryClient } from '@tanstack/react-query';
-import { loginAction } from '@/features/auth/application/actions';
-import { useAuthStore } from '@/store/authStore';
 import { resolveLoginIdentityPrefill } from '@/features/auth/application/authFlowEmail';
 import { useOptimizedNavigation } from '@/shared/application/gateways/useOptimizedNavigation';
-import { invalidateClientSessionSnapshot } from '@/shared/application/gateways/clientSessionSnapshot';
+import { useAuth } from '@/shared/hooks/useAuth';
 import {
  getLocalStorageItem,
  removeLocalStorageItem,
@@ -22,8 +19,7 @@ export function useLoginPage() {
  const t = useTranslations('Auth');
  const navigation = useOptimizedNavigation();
  const searchParams = useSearchParams();
- const queryClient = useQueryClient();
- const setAuth = useAuthStore((state) => state.setAuth);
+ const { login } = useAuth();
 
  const [errorMsg, setErrorMsg] = useState('');
  const [isRedirecting, setIsRedirecting] = useState(false);
@@ -68,28 +64,13 @@ export function useLoginPage() {
   }
 
   try {
-   const result = await loginAction(data);
+   const result = await login(data);
    if (!result.success) {
     setErrorMsg(result.error);
     return;
    }
 
    if (result.data) {
-    /* 
-     * Bước 1: Cập nhật trạng thái người dùng trong store client-side.
-     * Điều này giúp UI client phản ứng ngay lập tức (ví dụ: đổi Navigation bar).
-     */
-    setAuth(result.data.user, result.data.expiresInSeconds);
-    
-    /* 
-     * Bước 2: Xóa snapshot session client-side. 
-     * Đảm bảo các lần check session tiếp theo sẽ fetch dữ liệu mới từ backend.
-     */
-    invalidateClientSessionSnapshot();
-
-    // Reset cache user-state cũ để tránh hiển thị lệch danh tính ngay sau login.
-    queryClient.clear();
-
     setIsRedirecting(true);
     navigation.replace('/');
    }
