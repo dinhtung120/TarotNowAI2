@@ -70,6 +70,7 @@ interface PageBenchmarkMetric {
   duplicateRequestGroups: DuplicateRequestGroup[];
   slowRequests: RequestMetric[];
   requests: RequestMetric[];
+  interactionNotes: string[];
   coverageBlocked: string[];
 }
 
@@ -123,7 +124,13 @@ interface DynamicRouteDiscovery {
   readingHistoryIds: string[];
   readerIds: string[];
   chatIds: string[];
+  communityPostIds: string[];
   coverageNotes: string[];
+}
+
+interface RouteCollectionResult {
+  routes: string[];
+  notes: string[];
 }
 
 interface ScenarioCredential {
@@ -181,6 +188,23 @@ const OUTPUT_ROUTE_MAP = path.join(OUTPUT_DIR, 'tarotnow-route-map.json');
 
 const CONTROLLED_SPREAD_TYPES = ['daily_1', 'spread_3', 'spread_5', 'spread_10'] as const;
 const MAX_DYNAMIC_READING_SESSIONS = 4;
+const ORIGIN_ROUTE_DISCOVERY_ENDPOINTS = ['/sitemap.xml', '/robots.txt'] as const;
+const PROTECTED_ROUTE_PREFIXES = [
+  '/profile',
+  '/wallet',
+  '/chat',
+  '/collection',
+  '/reading',
+  '/reader',
+  '/readers',
+  '/gamification',
+  '/leaderboard',
+  '/gacha',
+  '/inventory',
+  '/community',
+  '/notifications',
+  '/admin',
+] as const;
 
 const CORE_ROUTE_SEEDS = [
   `${LOCALE_PREFIX}`,
@@ -303,6 +327,119 @@ function normalizeRoutePath(route: string): string | null {
   return normalized;
 }
 
+function stripLocalePath(pathname: string): string {
+  if (pathname === LOCALE_PREFIX) {
+    return '/';
+  }
+
+  const withoutPrefix = pathname.startsWith(`${LOCALE_PREFIX}/`)
+    ? pathname.slice(LOCALE_PREFIX.length)
+    : pathname;
+  return withoutPrefix.startsWith('/') ? withoutPrefix : `/${withoutPrefix}`;
+}
+
+function isProtectedRoutePath(route: string): boolean {
+  const pathWithoutLocale = stripLocalePath(route);
+  return PROTECTED_ROUTE_PREFIXES.some((prefix) =>
+    pathWithoutLocale === prefix || pathWithoutLocale.startsWith(`${prefix}/`),
+  );
+}
+
+function isAdminRoutePath(route: string): boolean {
+  const pathWithoutLocale = stripLocalePath(route);
+  return pathWithoutLocale === '/admin' || pathWithoutLocale.startsWith('/admin/');
+}
+
+function filterRoutesForScenario(
+  scenario: BenchmarkScenario,
+  routes: string[],
+): { routes: string[]; notes: string[] } {
+  const notes: string[] = [];
+  const filteredRoutes: string[] = [];
+  let removedCount = 0;
+
+  for (const route of routes) {
+    if (scenario === 'logged-out' && isProtectedRoutePath(route)) {
+      removedCount += 1;
+      continue;
+    }
+
+    if (scenario === 'logged-in-reader' && isAdminRoutePath(route)) {
+      removedCount += 1;
+      continue;
+    }
+
+    filteredRoutes.push(route);
+  }
+
+  if (scenario === 'logged-out') {
+    notes.push(`scenario-filter:logged-out-protected-routes-skipped=${removedCount}`);
+  } else if (scenario === 'logged-in-reader') {
+    notes.push(`scenario-filter:reader-admin-routes-skipped=${removedCount}`);
+  }
+
+  return {
+    routes: [...new Set(filteredRoutes)],
+    notes,
+  };
+}
+
+function extractRouteCandidatesFromRawText(raw: string): string[] {
+  const routeCandidates = new Set<string>();
+  const routePattern = /\/vi(?:\/[a-z0-9\-._~%!$&'()*+,;=:@/]*)?/gi;
+  for (const match of raw.matchAll(routePattern)) {
+    const route = match[0];
+    if (!route) continue;
+    const normalized = normalizeRoutePath(route);
+    if (normalized) {
+      routeCandidates.add(normalized);
+    }
+  }
+  return [...routeCandidates];
+}
+
+async function collectOriginDiscoveredRoutes(): Promise<RouteCollectionResult> {
+  const notes: string[] = [];
+  const routes = new Set<string>();
+
+  for (const endpoint of ORIGIN_ROUTE_DISCOVERY_ENDPOINTS) {
+    const endpointUrl = `${BASE_ORIGIN}${endpoint}`;
+    try {
+      const response = await fetch(endpointUrl, {
+        method: 'GET',
+        redirect: 'follow',
+      });
+      if (!response.ok) {
+        notes.push(`origin-discovery:${endpoint}:status-${response.status}`);
+        continue;
+      }
+
+      const body = await response.text();
+      const discovered = extractRouteCandidatesFromRawText(body);
+      if (discovered.length === 0) {
+        notes.push(`origin-discovery:${endpoint}:no-route-candidates`);
+        continue;
+      }
+
+      for (const route of discovered) {
+        routes.add(route);
+      }
+      notes.push(`origin-discovery:${endpoint}:routes-${discovered.length}`);
+    } catch {
+      notes.push(`origin-discovery:${endpoint}:request-failed`);
+    }
+  }
+
+  if (routes.size === 0) {
+    notes.push('origin-discovery:fallback-to-static-and-dom-crawl');
+  }
+
+  return {
+    routes: [...routes].sort((left, right) => left.localeCompare(right)),
+    notes,
+  };
+}
+
 function normalizeRequestKey(method: string, requestUrl: string): string {
   try {
     const parsed = new URL(requestUrl);
@@ -392,6 +529,81 @@ function buildBreakdown(requests: RequestMetric[]): PageBreakdown {
   }
 
   return breakdown;
+}
+
+function resolveRouteFamily(route: string): string {
+  const pathWithoutLocale = stripLocalePath(route);
+  if (pathWithoutLocale === '/') return 'home';
+  if (pathWithoutLocale === '/login'
+    || pathWithoutLocale === '/register'
+    || pathWithoutLocale === '/forgot-password'
+    || pathWithoutLocale === '/reset-password'
+    || pathWithoutLocale === '/verify-email') return 'auth';
+  if (pathWithoutLocale === '/reading' || pathWithoutLocale.startsWith('/reading/')) return 'reading';
+  if (pathWithoutLocale === '/inventory' || pathWithoutLocale.startsWith('/inventory/')) return 'inventory';
+  if (pathWithoutLocale === '/gacha' || pathWithoutLocale.startsWith('/gacha/')) return 'gacha';
+  if (pathWithoutLocale === '/collection' || pathWithoutLocale.startsWith('/collection/')) return 'collection';
+  if (pathWithoutLocale === '/profile' || pathWithoutLocale.startsWith('/profile/')) return 'profile';
+  if (pathWithoutLocale === '/reader' || pathWithoutLocale.startsWith('/reader/')) return 'reader';
+  if (pathWithoutLocale === '/readers' || pathWithoutLocale.startsWith('/readers/')) return 'readers';
+  if (pathWithoutLocale === '/chat' || pathWithoutLocale.startsWith('/chat/')) return 'chat';
+  if (pathWithoutLocale === '/leaderboard' || pathWithoutLocale.startsWith('/leaderboard/')) return 'leaderboard';
+  if (pathWithoutLocale === '/community' || pathWithoutLocale.startsWith('/community/')) return 'community';
+  if (pathWithoutLocale === '/gamification' || pathWithoutLocale.startsWith('/gamification/')) return 'gamification';
+  if (pathWithoutLocale === '/wallet' || pathWithoutLocale.startsWith('/wallet/')) return 'wallet';
+  if (pathWithoutLocale === '/notifications' || pathWithoutLocale.startsWith('/notifications/')) return 'notifications';
+  if (pathWithoutLocale === '/legal' || pathWithoutLocale.startsWith('/legal/')) return 'legal';
+  if (pathWithoutLocale === '/admin' || pathWithoutLocale.startsWith('/admin/')) return 'admin';
+  return 'other';
+}
+
+function buildRouteFamilySummaryLines(result: BenchmarkRunResult): string[] {
+  const aggregates = new Map<string, {
+    scenario: BenchmarkScenario;
+    viewport: BenchmarkViewportId;
+    family: string;
+    pages: number;
+    requests: number;
+    navigationMs: number;
+    pending: number;
+  }>();
+
+  for (const scenario of result.scenarios) {
+    for (const page of scenario.pages) {
+      const family = resolveRouteFamily(page.route);
+      const key = `${scenario.scenario}|${scenario.viewport}|${family}`;
+      const current = aggregates.get(key);
+      if (!current) {
+        aggregates.set(key, {
+          scenario: scenario.scenario,
+          viewport: scenario.viewport,
+          family,
+          pages: 1,
+          requests: page.requestCount,
+          navigationMs: page.navigationMs,
+          pending: page.pendingCount,
+        });
+        continue;
+      }
+
+      current.pages += 1;
+      current.requests += page.requestCount;
+      current.navigationMs += page.navigationMs;
+      current.pending += page.pendingCount;
+    }
+  }
+
+  return [...aggregates.values()]
+    .sort((left, right) => {
+      if (left.scenario !== right.scenario) return left.scenario.localeCompare(right.scenario);
+      if (left.viewport !== right.viewport) return left.viewport.localeCompare(right.viewport);
+      return left.family.localeCompare(right.family);
+    })
+    .map((entry) => {
+      const avgRequests = entry.requests / entry.pages;
+      const avgNavigation = entry.navigationMs / entry.pages;
+      return `| ${entry.scenario} | ${entry.viewport} | ${entry.family} | ${entry.pages} | ${avgRequests.toFixed(1)} | ${avgNavigation.toFixed(0)} | ${entry.pending} |`;
+    });
 }
 
 function deriveRequestSeverity(requestCount: number): SeverityLevel {
@@ -783,6 +995,91 @@ async function collectReadingHistoryIds(page: Page): Promise<string[]> {
   }
 }
 
+function pickIdsFromRoutes(routes: string[], matcher: RegExp, limit: number): string[] {
+  const ids = new Set<string>();
+  for (const route of routes) {
+    const match = matcher.exec(route);
+    matcher.lastIndex = 0;
+    if (!match?.[1]) continue;
+    ids.add(match[1]);
+    if (ids.size >= limit) {
+      break;
+    }
+  }
+  return [...ids];
+}
+
+async function collectRouteIdsFromUi(
+  page: Page,
+  routePath: string,
+  matcher: RegExp,
+  limit: number,
+  notePrefix: string,
+): Promise<{ ids: string[]; notes: string[] }> {
+  const notes: string[] = [];
+  try {
+    await page.goto(`${BASE_ORIGIN}${routePath}`, {
+      waitUntil: 'domcontentloaded',
+      timeout: NAVIGATION_TIMEOUT_MS,
+    });
+    await page.waitForTimeout(800);
+    const routes = await discoverRoutesFromPage(page);
+    const ids = pickIdsFromRoutes(routes, matcher, limit);
+    if (ids.length === 0) {
+      notes.push(`${notePrefix}:ui-discovery-empty`);
+    } else {
+      notes.push(`${notePrefix}:ui-discovery-${ids.length}`);
+    }
+    return { ids, notes };
+  } catch {
+    notes.push(`${notePrefix}:ui-discovery-failed`);
+    return { ids: [], notes };
+  }
+}
+
+async function collectCommunityPostIds(page: Page): Promise<string[]> {
+  try {
+    const response = await page.request.get(`${BASE_ORIGIN}/api/v1/community/posts?page=1&pageSize=12&visibility=public`, {
+      timeout: 12_000,
+      failOnStatusCode: false,
+    });
+    if (!response.ok()) return [];
+    const payload = await response.json().catch(() => null) as {
+      data?: Array<{ id?: string }>;
+    } | null;
+    return (payload?.data ?? [])
+      .map((item) => item.id ?? '')
+      .filter((id) => id.length > 0)
+      .slice(0, 6);
+  } catch {
+    return [];
+  }
+}
+
+async function probeCommunityPostDetails(page: Page, postIds: string[]): Promise<string[]> {
+  if (postIds.length === 0) {
+    return ['community-post-detail:probe-skipped-no-id'];
+  }
+
+  const notes: string[] = [];
+  for (const postId of postIds.slice(0, 3)) {
+    try {
+      const response = await page.request.get(
+        `${BASE_ORIGIN}/api/v1/community/posts/${encodeURIComponent(postId)}/comments?page=1&pageSize=5`,
+        {
+          timeout: 12_000,
+          failOnStatusCode: false,
+        },
+      );
+      notes.push(`community-post-detail:${postId}:${response.status()}`);
+    } catch {
+      notes.push(`community-post-detail:${postId}:request-failed`);
+    }
+  }
+
+  return notes;
+}
+
 async function createControlledReadingSessions(page: Page): Promise<{ ids: string[]; notes: string[] }> {
   const ids: string[] = [];
   const notes: string[] = [];
@@ -833,6 +1130,7 @@ async function discoverDynamicRoutesForScenario(
       readingHistoryIds: [],
       readerIds: [],
       chatIds: [],
+      communityPostIds: [],
       coverageNotes: ['dynamic-routes: skipped for logged-out scenario.'],
     };
   }
@@ -841,6 +1139,7 @@ async function discoverDynamicRoutesForScenario(
   const readingHistoryIds: string[] = [];
   const readerIds: string[] = [];
   const chatIds: string[] = [];
+  const communityPostIds: string[] = [];
 
   const controlledSessions = await createControlledReadingSessions(page);
   readingSessionIds.push(...controlledSessions.ids);
@@ -868,16 +1167,48 @@ async function discoverDynamicRoutesForScenario(
     coverageNotes.push('reading-session-detail: coverage-blocked (could not create session ids).');
   }
 
+  const uiReaders = await collectRouteIdsFromUi(page, `${LOCALE_PREFIX}/readers`, /^\/vi\/readers\/([^/]+)$/i, 6, 'reader-detail');
+  readerIds.push(...uiReaders.ids);
+  coverageNotes.push(...uiReaders.notes);
+
+  const uiChats = await collectRouteIdsFromUi(page, `${LOCALE_PREFIX}/chat`, /^\/vi\/chat\/([^/]+)$/i, 6, 'chat-room-detail');
+  chatIds.push(...uiChats.ids);
+  coverageNotes.push(...uiChats.notes);
+
+  const uiHistory = await collectRouteIdsFromUi(
+    page,
+    `${LOCALE_PREFIX}/reading/history`,
+    /^\/vi\/reading\/history\/([^/]+)$/i,
+    6,
+    'reading-history-detail',
+  );
+  readingHistoryIds.push(...uiHistory.ids);
+  coverageNotes.push(...uiHistory.notes);
+
+  const apiCommunityPostIds = await collectCommunityPostIds(page);
+  communityPostIds.push(...apiCommunityPostIds);
+  if (apiCommunityPostIds.length === 0) {
+    coverageNotes.push('community-posts:api-discovery-empty');
+  } else {
+    coverageNotes.push(`community-posts:api-discovery-${apiCommunityPostIds.length}`);
+  }
+  coverageNotes.push(...await probeCommunityPostDetails(page, apiCommunityPostIds));
+
   return {
     readingSessionIds: [...new Set(readingSessionIds)].slice(0, 6),
     readingHistoryIds: [...new Set(readingHistoryIds)].slice(0, 6),
     readerIds: [...new Set(readerIds)].slice(0, 6),
     chatIds: [...new Set(chatIds)].slice(0, 6),
+    communityPostIds: [...new Set(communityPostIds)].slice(0, 6),
     coverageNotes,
   };
 }
 
-function buildSeedRoutes(baseRoutes: string[], dynamic: DynamicRouteDiscovery): string[] {
+function buildSeedRoutes(
+  baseRoutes: string[],
+  dynamic: DynamicRouteDiscovery,
+  scenario: BenchmarkScenario,
+): { routes: string[]; notes: string[] } {
   const routes = new Set<string>(baseRoutes);
 
   for (const id of dynamic.readingSessionIds) {
@@ -896,7 +1227,11 @@ function buildSeedRoutes(baseRoutes: string[], dynamic: DynamicRouteDiscovery): 
     routes.add(`${LOCALE_PREFIX}/chat/${id}`);
   }
 
-  return [...routes];
+  const scenarioFiltered = filterRoutesForScenario(scenario, [...routes]);
+  return {
+    routes: scenarioFiltered.routes,
+    notes: scenarioFiltered.notes,
+  };
 }
 
 function resolveScenarioCredential(scenario: BenchmarkScenario): ScenarioCredential | null {
@@ -909,6 +1244,47 @@ function resolveExpectedRole(scenario: BenchmarkScenario): string {
   if (scenario === 'logged-in-admin') return 'admin';
   if (scenario === 'logged-in-reader') return 'tarot_reader';
   return '';
+}
+
+async function runRouteInteractionProbe(page: Page, route: string): Promise<string[]> {
+  const notes: string[] = [];
+
+  if (route !== `${LOCALE_PREFIX}/community`) {
+    return notes;
+  }
+
+  try {
+    const postCards = page.locator('.tn-community-card');
+    const postCount = await postCards.count();
+    if (postCount === 0) {
+      notes.push('interaction-community:no-post-card');
+      return notes;
+    }
+
+    const firstPost = postCards.nth(0);
+
+    const commentButton = firstPost.locator('button:has(svg.lucide-message-circle)');
+    if (await commentButton.count() > 0) {
+      await commentButton.nth(0).click({ timeout: 6_000 });
+      notes.push('interaction-community:toggle-comments');
+    } else {
+      notes.push('interaction-community:comment-button-missing');
+    }
+
+    const reactionButton = firstPost.locator('button:has-text("👍")');
+    if (await reactionButton.count() > 0) {
+      await reactionButton.nth(0).click({ timeout: 6_000 });
+      notes.push('interaction-community:react-like');
+    } else {
+      notes.push('interaction-community:reaction-button-missing');
+    }
+
+    await page.waitForTimeout(700);
+  } catch {
+    notes.push('interaction-community:failed');
+  }
+
+  return notes;
 }
 
 async function benchmarkNavigation(
@@ -1067,6 +1443,9 @@ async function benchmarkNavigation(
     coverageBlocked.push(`load-timeout:${route}`);
   }
 
+  const interactionNotes = await runRouteInteractionProbe(page, route);
+  coverageBlocked.push(...interactionNotes);
+
   await page.waitForTimeout(SETTLE_AFTER_NAVIGATION_MS);
   await Promise.allSettled(finalizeTasks);
 
@@ -1156,6 +1535,7 @@ async function benchmarkNavigation(
     duplicateRequestGroups,
     slowRequests,
     requests: requestMetrics,
+    interactionNotes,
     coverageBlocked,
   };
 }
@@ -1165,26 +1545,29 @@ async function runScenario(
   scenario: BenchmarkScenario,
   viewportProfile: ViewportProfile,
   seedRoutes: string[],
+  routeDiscoveryNotes: string[],
 ): Promise<ScenarioBenchmarkResult> {
   const context = await browser.newContext(viewportProfile.contextOptions);
-  const page = await context.newPage();
-  await installPaintObservers(page);
+  const bootstrapPage = await context.newPage();
+  await installPaintObservers(bootstrapPage);
 
   let loginBootstrapSucceeded = true;
   let loginBootstrapNotes: string[] = [];
-  const coverageNotes: string[] = [];
+  const coverageNotes: string[] = [...routeDiscoveryNotes];
 
   const credential = resolveScenarioCredential(scenario);
   if (credential) {
-    const loginResult = await loginAsUser(page, credential, resolveExpectedRole(scenario));
+    const loginResult = await loginAsUser(bootstrapPage, credential, resolveExpectedRole(scenario));
     loginBootstrapSucceeded = loginResult.success;
     loginBootstrapNotes = loginResult.notes;
   }
 
-  const dynamicRoutes = await discoverDynamicRoutesForScenario(page, scenario);
+  const dynamicRoutes = await discoverDynamicRoutesForScenario(bootstrapPage, scenario);
   coverageNotes.push(...dynamicRoutes.coverageNotes);
 
-  const queue: string[] = buildSeedRoutes(seedRoutes, dynamicRoutes);
+  const seededRoutes = buildSeedRoutes(seedRoutes, dynamicRoutes, scenario);
+  coverageNotes.push(...seededRoutes.notes);
+  const queue: string[] = seededRoutes.routes;
   const visited = new Set<string>();
   const pageMetrics: PageBenchmarkMetric[] = [];
   let navFrom: string | null = null;
@@ -1198,19 +1581,27 @@ async function runScenario(
       continue;
     }
 
-    const metric = await benchmarkNavigation(page, scenario, viewportProfile.id, normalizedRoute, navFrom);
+    const routePage = await context.newPage();
+    await installPaintObservers(routePage);
+
+    const metric = await benchmarkNavigation(routePage, scenario, viewportProfile.id, normalizedRoute, navFrom);
     pageMetrics.push(metric);
     visited.add(normalizedRoute);
     navFrom = normalizedRoute;
 
-    const discoveredRoutes = await discoverRoutesFromPage(page);
+    const discoveredRoutes = await discoverRoutesFromPage(routePage);
     for (const discovered of discoveredRoutes.slice(0, DISCOVERY_LIMIT_PER_PAGE)) {
       if (visited.has(discovered)) continue;
       if (queue.includes(discovered)) continue;
+      if (scenario === 'logged-out' && isProtectedRoutePath(discovered)) continue;
+      if (scenario === 'logged-in-reader' && isAdminRoutePath(discovered)) continue;
       queue.push(discovered);
     }
+
+    await routePage.close();
   }
 
+  await bootstrapPage.close();
   await context.close();
   return {
     scenario,
@@ -1249,6 +1640,7 @@ function createPagesCsv(result: BenchmarkRunResult): string {
     'telemetry',
     'websocket',
     'other',
+    'interaction_notes',
   ].join(','));
 
   for (const scenario of result.scenarios) {
@@ -1277,6 +1669,7 @@ function createPagesCsv(result: BenchmarkRunResult): string {
         toCsvValue(page.requestBreakdown.telemetry),
         toCsvValue(page.requestBreakdown.websocket),
         toCsvValue(page.requestBreakdown.other),
+        toCsvValue(page.interactionNotes.join('|')),
       ].join(','));
     }
   }
@@ -1365,6 +1758,7 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
     const pending = scenario.pages.reduce((sum, page) => sum + page.pendingCount, 0);
     return `| ${scenario.scenario} | ${scenario.viewport} | ${pageCount} | ${avgNavigation.toFixed(0)} | ${totalRequests} | ${pending} | ${scenario.loginBootstrapSucceeded ? 'yes' : 'no'} |`;
   });
+  const routeFamilySummaryLines = buildRouteFamilySummaryLines(result);
 
   const pageLines = allPages.map((page) =>
     `| ${page.scenario} | ${page.viewport} | ${page.route} | ${page.requestCount} | ${page.requestSeverity} | ${formatNumber(page.navigationMs)} | ${formatNumber(page.domContentLoadedMs)} | ${formatNumber(page.loadMs)} | ${formatNumber(page.fcpMs)} | ${formatNumber(page.lcpMs)} | ${formatNumber(page.cls, 4)} | ${formatNumber(page.tbt, 1)} | ${page.totalTransferBytes} |`,
@@ -1421,6 +1815,11 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
     '| Scenario | Viewport | Pages Benchmarked | Avg Navigation (ms) | Total Requests | Pending Requests | Login bootstrap |',
     '| --- | --- | ---: | ---: | ---: | ---: | --- |',
     ...summaryLines,
+    '',
+    '## Route-Family Summary',
+    '| Scenario | Viewport | Route Family | Pages | Avg Requests/Page | Avg Navigation (ms) | Pending |',
+    '| --- | --- | --- | ---: | ---: | ---: | ---: |',
+    ...(routeFamilySummaryLines.length > 0 ? routeFamilySummaryLines : ['| - | - | - | - | - | - | - |']),
     '',
     '## Per-Page Metrics',
     '| Scenario | Viewport | Route | Requests | Severity | Navigate (ms) | DOMContentLoaded (ms) | Load (ms) | FCP (ms) | LCP (ms) | CLS | TBT (ms) | Transfer Bytes |',
@@ -1500,6 +1899,7 @@ function createAnalysisReport(result: BenchmarkRunResult): string {
     const pendingCount = scenario.pages.reduce((sum, page) => sum + page.pendingCount, 0);
     return `| ${scenario.scenario} | ${scenario.viewport} | ${scenario.pages.length} | ${avgRequestsPerPage.toFixed(1)} | ${avgNavigationMs.toFixed(0)} | ${pendingCount} | ${scenario.loginBootstrapSucceeded ? 'yes' : 'no'} |`;
   });
+  const routeFamilySummaryLines = buildRouteFamilySummaryLines(result);
 
   const topSlowPageLines = topSlowPages.map((page) =>
     `| ${page.scenario} | ${page.viewport} | ${page.route} | ${page.navigationMs} | ${page.requestCount} | ${formatNumber(page.lcpMs)} | ${formatNumber(page.tbt, 1)} | ${formatNumber(page.cls, 4)} |`,
@@ -1543,6 +1943,11 @@ function createAnalysisReport(result: BenchmarkRunResult): string {
     '| Scenario | Viewport | Pages | Avg requests/page | Avg nav (ms) | Pending | Login bootstrap |',
     '| --- | --- | ---: | ---: | ---: | ---: | --- |',
     ...scenarioLines,
+    '',
+    '## Route-Family Summary',
+    '| Scenario | Viewport | Route Family | Pages | Avg Requests/Page | Avg Navigation (ms) | Pending |',
+    '| --- | --- | --- | ---: | ---: | ---: | ---: |',
+    ...(routeFamilySummaryLines.length > 0 ? routeFamilySummaryLines : ['| - | - | - | - | - | - | - |']),
     '',
     '## Key Findings',
     ...keyFindings.map((item, index) => `${index + 1}. ${item}`),
@@ -1593,14 +1998,15 @@ test.describe('TarotNow production benchmark', () => {
     assertSafeBenchmarkEnvironment();
 
     const staticRoutes = await collectStaticLocaleRoutes();
-    const seedRoutes = [...new Set([...CORE_ROUTE_SEEDS, ...staticRoutes])];
+    const originRouteCollection = await collectOriginDiscoveredRoutes();
+    const seedRoutes = [...new Set([...CORE_ROUTE_SEEDS, ...staticRoutes, ...originRouteCollection.routes])];
 
     const scenarios: BenchmarkScenario[] = ['logged-out', 'logged-in-admin', 'logged-in-reader'];
     const scenarioResults: ScenarioBenchmarkResult[] = [];
 
     for (const viewport of VIEWPORT_PROFILES) {
       for (const scenario of scenarios) {
-        const result = await runScenario(browser, scenario, viewport, seedRoutes);
+        const result = await runScenario(browser, scenario, viewport, seedRoutes, originRouteCollection.notes);
         scenarioResults.push(result);
       }
     }

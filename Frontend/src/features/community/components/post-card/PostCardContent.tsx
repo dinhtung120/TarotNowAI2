@@ -3,6 +3,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { isRenderableImageUrl, parseMarkdownSegments } from "@/features/community/application/markdownImageParser";
+import { shouldUseUnoptimizedImage } from "@/shared/infrastructure/http/assetUrl";
 
 interface PostCardContentProps {
  content: string;
@@ -23,7 +24,8 @@ export function PostCardContent({ content }: PostCardContentProps) {
        width={1200}
        height={800}
        sizes="100vw"
-       unoptimized
+       unoptimized={shouldUseUnoptimizedImage(segment.url)}
+       loading="lazy"
        className={cn("mt-3", "h-auto", "max-h-96", "w-full", "rounded-xl", "border", "border-slate-700", "object-cover")}
       />
      );

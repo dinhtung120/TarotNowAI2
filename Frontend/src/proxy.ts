@@ -223,10 +223,11 @@ export default async function proxy(request: NextRequest) {
  const cspNonce = isDocument ? createCspNonce() : null;
 
  const isProtectedRoute = PROTECTED_PREFIXES.some((prefix) => matchesPrefix(pathWithoutLocale, prefix));
- const accessToken = isProtectedRoute ? request.cookies.get(AUTH_COOKIE.ACCESS)?.value : undefined;
- const refreshToken = isProtectedRoute ? request.cookies.get(AUTH_COOKIE.REFRESH)?.value : undefined;
+ const shouldRunDocumentAuthGate = isProtectedRoute && isDocument && (request.method === 'GET' || request.method === 'HEAD');
+ const accessToken = shouldRunDocumentAuthGate ? request.cookies.get(AUTH_COOKIE.ACCESS)?.value : undefined;
+ const refreshToken = shouldRunDocumentAuthGate ? request.cookies.get(AUTH_COOKIE.REFRESH)?.value : undefined;
 
- if (isProtectedRoute) {
+ if (shouldRunDocumentAuthGate) {
   // Middleware chỉ làm optimistic auth gate bằng cookie presence để giữ navigation nhẹ.
   // Refresh/verify thực tế được xử lý ở route handler hoặc server component.
   const hasSessionCookie = Boolean(accessToken || refreshToken);

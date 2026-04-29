@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { resolveAvatarUrl } from '@/shared/infrastructure/http/assetUrl';
+import { resolveAvatarUrl, shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
 import { ReaderStatusIndicator } from '@/features/reader/presentation/components/readers-directory/ReaderStatusIndicator';
 
 interface ReaderDetailHeaderProps {
@@ -23,12 +23,13 @@ export function ReaderDetailHeader({
  labels,
 }: ReaderDetailHeaderProps) {
  const avatarSrc = resolveAvatarUrl(avatarUrl);
+ const unoptimizedAvatar = shouldUseUnoptimizedImage(avatarSrc);
 
  return (
   <div className={cn('flex items-center gap-4')}>
    <div className={cn('relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-full border-2 tn-border tn-surface-strong')}>
     {avatarSrc ? (
-     <Image src={avatarSrc} alt={displayName} fill sizes="64px" unoptimized className={cn('h-full w-full object-cover bg-white')} />
+     <Image src={avatarSrc} alt={displayName} fill sizes="64px" loading="lazy" unoptimized={unoptimizedAvatar} className={cn('h-full w-full object-cover bg-white')} />
     ) : (
      <div className={cn('flex h-full w-full items-center justify-center text-xl font-black tn-text-primary')}>
       {displayName.charAt(0)?.toUpperCase() || '?'}

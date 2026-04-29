@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
 
 interface ChatImageMessageProps {
   imageUrl: string;
@@ -22,7 +23,9 @@ export default function ChatImageMessage({
           alt="media"
           width={320}
           height={240}
-          unoptimized
+          sizes="(max-width: 768px) 75vw, 320px"
+          loading="lazy"
+          unoptimized={shouldUseUnoptimizedImage(imageUrl)}
           className={cn('h-auto w-full')}
         />
       </div>

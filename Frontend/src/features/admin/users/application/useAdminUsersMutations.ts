@@ -9,6 +9,7 @@ import {
  type CreateUserParams,
  type UpdateUserParams,
 } from '@/features/admin/application/actions';
+import { adminQueryKeys } from '@/features/admin/application/adminQueryKeys';
 import type { AdminUsersEditModalState } from './useAdminUsers.types';
 
 interface UseAdminUsersMutationsOptions {
@@ -48,7 +49,7 @@ export function useAdminUsersMutations(options: UseAdminUsersMutationsOptions) {
 
    closeAddModal();
    toast.success(t('users.toast.create_success'));
-   await queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+   await queryClient.invalidateQueries({ queryKey: adminQueryKeys.usersRoot() });
   } catch {
    toast.error(t('users.toast.system_error'));
   }
@@ -73,7 +74,7 @@ export function useAdminUsersMutations(options: UseAdminUsersMutationsOptions) {
 
    closeEditModal();
    toast.success(t('users.toast.update_success'));
-   await queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+   await queryClient.invalidateQueries({ queryKey: adminQueryKeys.usersRoot() });
   } catch {
    toast.error(t('users.toast.system_error'));
   }

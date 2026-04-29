@@ -22,7 +22,7 @@ export function useCardsCatalog(options: UseCardsCatalogOptions = {}) {
    {
     method: 'GET',
     credentials: 'include',
-    cache: 'no-store',
+    cache: 'force-cache',
    },
    'Failed to load cards catalog.',
    8_000,

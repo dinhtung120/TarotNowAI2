@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import type { CommunityComment } from '@/features/community/types';
 import { cn } from '@/lib/utils';
-import { resolveAvatarUrl } from '@/shared/infrastructure/http/assetUrl';
+import { resolveAvatarUrl, shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
 import { isRenderableImageUrl, parseMarkdownSegments } from '@/features/community/application/markdownImageParser';
 
 interface CommentItemProps {
@@ -14,6 +14,7 @@ interface CommentItemProps {
 export function CommentItem({ comment }: CommentItemProps) {
   const t = useTranslations('Community');
   const avatarSrc = resolveAvatarUrl(comment.authorAvatarUrl);
+  const unoptimizedAvatar = shouldUseUnoptimizedImage(avatarSrc);
 
   return (
     <div className={cn('flex gap-3')}>
@@ -24,7 +25,8 @@ export function CommentItem({ comment }: CommentItemProps) {
             alt={comment.authorDisplayName}
             fill
             sizes="32px"
-            unoptimized
+            unoptimized={unoptimizedAvatar}
+            loading="lazy"
             className={cn('object-cover')}
           />
         ) : (
@@ -47,7 +49,8 @@ export function CommentItem({ comment }: CommentItemProps) {
                   width={720}
                   height={400}
                   sizes="100vw"
-                  unoptimized
+                  unoptimized={shouldUseUnoptimizedImage(segment.url)}
+                  loading="lazy"
                   className={cn('h-auto max-h-72 w-full rounded-lg border border-slate-700 object-cover')}
                 />
               );

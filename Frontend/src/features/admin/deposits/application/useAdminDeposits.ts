@@ -9,6 +9,7 @@ import {
  processDeposit,
  type AdminDepositOrder,
 } from '@/features/admin/application/actions';
+import { adminQueryKeys } from '@/features/admin/application/adminQueryKeys';
 import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
 
 interface ConfirmModalState {
@@ -32,7 +33,7 @@ export function useAdminDeposits() {
  });
 
  const { data, isLoading, isFetching, error } = useQuery({
-  queryKey: ['admin', 'deposits', page, statusFilter],
+  queryKey: adminQueryKeys.deposits(page, statusFilter),
   queryFn: async () => {
    const result = await listDeposits(page, 10, statusFilter);
    return queryFnOrThrow(result, 'Failed to load deposits');
@@ -64,7 +65,7 @@ export function useAdminDeposits() {
      ? t('deposits.toast.approve_success')
      : t('deposits.toast.reject_success')
    );
-   await queryClient.invalidateQueries({ queryKey: ['admin', 'deposits'] });
+   await queryClient.invalidateQueries({ queryKey: adminQueryKeys.depositsRoot() });
   } catch {
    toast.error(t('deposits.toast.network_error'));
   } finally {

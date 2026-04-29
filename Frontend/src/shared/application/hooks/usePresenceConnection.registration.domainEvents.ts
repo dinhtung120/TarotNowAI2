@@ -148,16 +148,8 @@ export function registerPresenceDomainEventHandlers({
   logger.info('[PresenceRealtimeSync] reconnected. new id:', connectionId || 'unknown');
   queueInvalidation([
    'wallet',
-   'inventory',
-   'collection',
-   'readingSetup',
-   'readingHistory',
-   'profile',
-   'readerRequest',
    'notifications',
    'chat',
-   'gacha',
-   'gamification',
   ]);
   invalidateInbox();
   invalidateUnreadBadge();

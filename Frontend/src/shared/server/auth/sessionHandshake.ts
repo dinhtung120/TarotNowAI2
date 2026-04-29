@@ -2,10 +2,10 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { AUTH_COOKIE } from '@/shared/infrastructure/auth/authConstants';
 import {
- getServerSessionSnapshot,
  type ServerSessionSnapshot,
 } from '@/shared/infrastructure/auth/serverAuth';
 import type { UserProfile } from '@/features/auth/domain/types';
+import { getCachedServerSessionSnapshot } from '@/shared/server/auth/cachedSessionSnapshot';
 
 interface RequireSessionWithHandshakeOptions {
  locale: string;
@@ -36,7 +36,7 @@ export async function requireSessionWithHandshake(
   redirect(toLoginPath(locale));
  }
 
- const sessionSnapshot = await getServerSessionSnapshot({ allowRefresh: false });
+ const sessionSnapshot = await getCachedServerSessionSnapshot();
  if (isAuthenticatedSnapshot(sessionSnapshot)) {
   return sessionSnapshot;
  }

@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
 
 interface HistoryDetailCardItemProps {
  index: number;
@@ -16,6 +17,8 @@ export function HistoryDetailCardItem({
  cardImageUrl,
  essenceLabel,
 }: HistoryDetailCardItemProps) {
+ const unoptimizedCardImage = shouldUseUnoptimizedImage(cardImageUrl);
+
  return (
   <div className={cn('group flex flex-col items-center gap-6')}>
    <div className={cn('tn-history-card-lift relative w-full tn-aspect-14-22 flex flex-col items-center group cursor-pointer transition-all duration-700')}>
@@ -27,7 +30,7 @@ export function HistoryDetailCardItem({
        src={cardImageUrl}
        alt={cardName}
        fill
-       unoptimized
+       unoptimized={unoptimizedCardImage}
        sizes="(max-width: 1024px) 45vw, 220px"
        className={cn('h-full w-full object-cover')}
       />

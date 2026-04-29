@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { listUsers, listDeposits } from '@/features/admin/application/actions';
+import { adminQueryKeys } from '@/features/admin/application/adminQueryKeys';
 import { listPromotions } from '@/features/admin/application/actions/promotion';
 import { getAllHistorySessionsAdminAction } from '@/features/reading/public';
 import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
@@ -15,7 +16,7 @@ interface AdminStats {
 
 export function useAdminDashboard() {
  const { data, isLoading, isFetching, error } = useQuery<AdminStats>({
-  queryKey: ['admin', 'dashboard-stats'],
+  queryKey: adminQueryKeys.dashboardStats(),
   queryFn: async () => {
    const [usersRes, depositsRes, promosRes, readingsRes] = await Promise.all([
     listUsers(1, 1),

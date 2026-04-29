@@ -25,8 +25,10 @@ export default async function AdminLayout({ children, params }: AdminLayoutProps
   redirect(`/${locale}`);
  }
 
- const t = await getTranslations('Admin');
- const messages = await getMessages();
+ const [t, messages] = await Promise.all([
+  getTranslations('Admin'),
+  getMessages(),
+ ]);
  const adminMessages = pickClientMessages(messages, ADMIN_CLIENT_NAMESPACES);
 
  const labels: AdminLayoutLabels = {

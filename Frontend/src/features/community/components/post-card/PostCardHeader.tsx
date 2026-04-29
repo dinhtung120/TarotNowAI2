@@ -3,7 +3,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import type { CommunityPost } from "@/features/community/types";
 import { cn } from "@/lib/utils";
-import { resolveAvatarUrl } from "@/shared/infrastructure/http/assetUrl";
+import { resolveAvatarUrl, shouldUseUnoptimizedImage } from "@/shared/infrastructure/http/assetUrl";
 
 interface PostCardHeaderProps {
  post: CommunityPost;
@@ -15,6 +15,7 @@ interface PostCardHeaderProps {
 export function PostCardHeader({ post, dateText, timeText, onReportClick }: PostCardHeaderProps) {
  const t = useTranslations("Community");
  const avatarSrc = resolveAvatarUrl(post.authorAvatarUrl);
+ const unoptimizedAvatar = shouldUseUnoptimizedImage(avatarSrc);
 
  return (
   <div className={cn("mb-4", "flex", "items-start", "justify-between")}>
@@ -27,7 +28,8 @@ export function PostCardHeader({ post, dateText, timeText, onReportClick }: Post
         alt={post.authorDisplayName}
         fill
         sizes="40px"
-        unoptimized
+        unoptimized={unoptimizedAvatar}
+        loading="lazy"
         className={cn("object-cover")}
        />
       ) : (

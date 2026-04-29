@@ -1,217 +1,235 @@
-# PERFORMANCE AUDIT - TarotNow `/vi`
+# PERFORMANCE-AUDIT - TarotNow `/vi`
 
 ## Executive Summary
-- Audit date (UTC): `2026-04-29T10:42:32.529Z`
-- Benchmark target: `https://www.tarotnow.xyz/vi`
-- Matrix executed: `Chromium` x `desktop/mobile` x `logged-out/logged-in-admin/logged-in-reader`
-- Total pages benchmarked: `204`
-- Total requests captured: `12,226`
-- Request severity thresholds:
-  - `>35 requests/page`: `Critical`
-  - `>25 requests/page`: `High`
-  - request `>800ms`: `High`
-  - request `>400ms`: `Medium`
+- Audit timestamp (UTC): `2026-04-29T18:30:17.976Z`
+- Target: `https://www.tarotnow.xyz/vi`
+- Baseline matrix: `Chromium` x `desktop/mobile` x `logged-out/logged-in-admin/logged-in-reader`
+- Total pages benchmarked: `190`
+- Total requests captured: `10,151`
+- Severity gates:
+  - `>35 requests/page` => `Critical`
+  - `>25 requests/page` => `High`
+  - request `>800ms` => `High`
+  - request `>400ms` => `Medium`
 
 ### Headline Results
-- Pages `>25 requests`: `204/204` (100%)
-- Pages `>35 requests`: `194/204` (95.1%)
-- Slow requests `>800ms`: `162`
-- Slow requests `>400ms`: `940` (includes `>800ms`)
-- Duplicate request records (`isDuplicate=true`): `8,097`
-- Pages with pending requests: `123/204`
+- Pages `>25 requests`: `190/190` (100%)
+- Pages `>35 requests`: `172/190` (90.5%)
+- Slow requests `>800ms`: `141`
+- Slow requests `400-800ms`: `720`
+- Pages with pending non-websocket requests: `69`
 
 ### Coverage Status
 - Covered route families:
-  - Landing/home, login/register/forgot/reset/verify
-  - Reading, reading history
-  - Inventory
-  - Gacha + gacha history
-  - Collection
+  - Home/Landing, Auth (`/login`, `/register`, `/forgot-password`, `/reset-password`, `/verify-email`)
+  - Reading + reading history + reading session
+  - Inventory, Gacha + history, Collection
   - Profile + tabs (`/profile`, `/profile/mfa`, `/profile/reader`)
-  - Readers directory + reader detail pages
-  - Chat/messages shell (`/chat`)
-  - Leaderboard
-  - Community
+  - Readers + reader detail, Reader apply
+  - Chat/messages shell
+  - Notifications, Leaderboard, Community
   - Quest/Mission (`/gamification`)
-  - Wallet + deposit/withdraw/history
-  - Notifications
-  - Legal pages
-- Dynamic coverage notes:
-  - Reading session init flows (`daily_1`, `spread_3`, `spread_5`, `spread_10`) returned `401` in benchmark env.
-  - `reading/session/[id]`, `reading/history/[id]`, `chat/[id]` were marked `coverage-blocked` when IDs were unavailable.
-- Route mapping note:
-  - Runtime does not expose `/vi/user/*`; protected routes are effectively under `/vi/*` with route groups.
+  - Wallet (`/wallet`, `deposit`, `deposit/history`, `withdraw`)
+  - Admin surfaces (`/admin` + child pages)
+- Dynamic coverage/runtime notes:
+  - `reading.init.daily_1: blocked (400)`
+  - `reading-history-detail: coverage-blocked (no history id found)`
+  - `chat-room-detail: coverage-blocked (no conversation id found)`
 
 ## Detailed Metrics Table
 
 ### Scenario Summary
 | Scenario | Viewport | Pages | Avg requests/page | Avg nav (ms) | Total requests | Pending requests | Login bootstrap |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| logged-out | desktop | 32 | 37.9 | 3005 | 1213 | 0 | yes |
-| logged-in-admin | desktop | 35 | 69.8 | 3606 | 2444 | 113 | yes |
-| logged-in-reader | desktop | 35 | 70.5 | 3064 | 2467 | 90 | yes |
-| logged-out | mobile | 32 | 37.5 | 3020 | 1201 | 0 | yes |
-| logged-in-admin | mobile | 35 | 69.8 | 3183 | 2444 | 81 | yes |
-| logged-in-reader | mobile | 35 | 70.2 | 3067 | 2457 | 85 | yes |
+| logged-out | desktop | 9 | 36.8 | 2800 | 331 | 0 | yes |
+| logged-in-admin | desktop | 48 | 71.4 | 3339 | 3426 | 127 | yes |
+| logged-in-reader | desktop | 38 | 62.7 | 3201 | 2381 | 148 | yes |
+| logged-out | mobile | 9 | 35.4 | 2858 | 319 | 0 | yes |
+| logged-in-admin | mobile | 48 | 43.1 | 3182 | 2068 | 6 | yes |
+| logged-in-reader | mobile | 38 | 42.8 | 2924 | 1626 | 4 | yes |
 
-### Most Expensive Routes (by request volume)
-| Route | Pages sampled | Avg req/page | Max req | Avg nav (ms) | Max nav (ms) | Avg LCP (ms) | Avg TBT (ms) |
+### Most Expensive Routes (by avg request volume)
+| Route | Samples | Avg req/page | Max req | Avg nav (ms) | Max nav (ms) | Avg LCP (ms) | Avg TBT (ms) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `/vi/community` | 6 | 67.2 | 86 | 4793 | 10795 | 1661 | 43.8 |
-| `/vi/reading/history` | 6 | 66.3 | 81 | 3623 | 4013 | 1591 | 63.3 |
-| `/vi/profile/reader` | 6 | 66.2 | 82 | 3439 | 4027 | 1248 | 33.8 |
-| `/vi/leaderboard` | 6 | 65.2 | 83 | 3812 | 8614 | 1382 | 14.8 |
-| `/vi/collection` | 6 | 65.0 | 80 | 3540 | 3900 | 1789 | 23.8 |
-| `/vi/reading` | 6 | 64.0 | 77 | 3752 | 4313 | 1327 | 29.7 |
-| `/vi/inventory` | 6 | 64.0 | 77 | 3542 | 4022 | 1207 | 50.8 |
-| `/vi/gacha` | 6 | 64.0 | 77 | 3528 | 3811 | 1308 | 43.3 |
-| `/vi/gacha/history` | 6 | 64.0 | 77 | 3621 | 4051 | 1513 | 27.2 |
-| `/vi/chat` | 6 | 61.5 | 81 | 3637 | 7528 | 1246 | 13.7 |
+| `/vi/admin` | 2 | 358.5 | 681 | 12365 | 21965 | 1092 | 0.0 |
+| `/vi/reading/session/31bfd0d0-fe5b-44b9-a81f-54a1cd5f3527` | 1 | 74.0 | 74 | 2701 | 2701 | 1392 | 362.0 |
+| `/vi/reading/session/3d5a761c-c8d3-4ce1-9c6d-470373630aad` | 1 | 72.0 | 72 | 2969 | 2969 | 1468 | 17.0 |
+| `/vi/community` | 4 | 70.3 | 79 | 3982 | 4715 | 1137 | 5.0 |
+| `/vi/readers` | 4 | 68.3 | 77 | 2809 | 2986 | 1135 | 106.8 |
+| `/vi/collection` | 4 | 66.8 | 80 | 3464 | 3872 | 1344 | 183.3 |
+| `/vi/profile/reader` | 4 | 66.3 | 76 | 2888 | 3405 | 1155 | 36.8 |
+| `/vi/wallet/withdraw` | 4 | 64.3 | 79 | 3257 | 4361 | 1364 | 89.0 |
+| `/vi/gacha` | 4 | 60.8 | 77 | 3827 | 4878 | 1379 | 39.0 |
+| `/vi/gacha/history` | 4 | 58.0 | 77 | 3625 | 4952 | 1206 | 88.5 |
 
-### Top Slow Requests (`>800ms`, sampled)
-| Method | URL (normalized) | Count | Max (ms) | Avg (ms) | Type |
-| --- | --- | ---: | ---: | ---: | --- |
-| GET | `https://www.tarotnow.xyz/vi` | 8 | 2833 | 1281 | html |
-| GET | `https://www.tarotnow.xyz/themes/prismatic-royal.css` | 5 | 3488 | 1678 | static |
-| GET | `https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js` | 4 | 3805 | 3103 | static |
-| GET | `https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js` | 4 | 3075 | 2226 | static |
-| GET | `https://www.tarotnow.xyz/_next/static/chunks/0boqrfoz8awwu.js` | 4 | 3896 | 3306 | static |
-| GET | `https://www.tarotnow.xyz/_next/static/chunks/17jnkfnr-ry28.js` | 4 | 4280 | 2477 | static |
-| GET | `https://www.tarotnow.xyz/_next/static/chunks/12p7z~rbu83t1.js` | 4 | 4800 | 2509 | static |
-| GET | `https://www.tarotnow.xyz/_next/static/chunks/0sw~iwigqoi1o.js` | 4 | 4274 | 2436 | static |
-| GET | `https://www.tarotnow.xyz/_next/static/chunks/08nnjyw~vjmez.js` | 4 | 4273 | 2100 | static |
-| GET | `https://www.tarotnow.xyz/vi/community` | 4 | 2204 | 1606 | html |
+### High Slow Requests (`>800ms`, sample)
+| Scenario | Viewport | Route | Method | Duration (ms) | TTFB (ms) | Category | URL |
+| --- | --- | --- | --- | ---: | ---: | --- | --- |
+| logged-in-admin | mobile | `/vi/wallet/deposit/history` | GET | 6643 | 67.9 | static | `.../_next/static/chunks/14zfgnebl8n68.js` |
+| logged-in-admin | mobile | `/vi/wallet/deposit/history` | GET | 6472 | 88.7 | static | `.../_next/static/chunks/08nnjyw~vjmez.js` |
+| logged-in-admin | mobile | `/vi/wallet/deposit/history` | GET | 6421 | 331.0 | static | `.../themes/prismatic-royal.css` |
+| logged-in-admin | mobile | `/vi/wallet/deposit/history` | GET | 6375 | 77.1 | static | `.../_next/static/chunks/04tx~cql46cw0.js` |
+| logged-in-admin | mobile | `/vi/wallet/deposit/history` | GET | 6330 | 98.3 | static | `.../_next/static/chunks/15fy9wk7qbfwp.js` |
+| logged-in-admin | desktop | `/vi/admin` | GET | 1328 | 327.0 | html | `https://www.tarotnow.xyz/vi/admin` |
+| logged-in-reader | desktop | `/vi/wallet/withdraw` | GET | 1198 | 672.3 | html | `https://www.tarotnow.xyz/vi/wallet/withdraw` |
+| logged-in-admin | desktop | `/vi/community` | GET | 1186 | 633.2 | html | `https://www.tarotnow.xyz/vi/community` |
 
-### Duplicate Request Hotspots (sample)
+### Duplicate Request Hotspots (non-telemetry)
 | Request key | Duplicate count |
 | --- | ---: |
-| `POST https://www.tarotnow.xyz/cdn-cgi/rum` | 562 |
-| `GET https://www.tarotnow.xyz/vi/register` | 322 |
-| `GET https://www.tarotnow.xyz/vi/login` | 249 |
-| `GET https://www.tarotnow.xyz/_next/static/chunks/0kjazl8b8k9ly.css` | 232 |
-| `GET https://www.tarotnow.xyz/_next/static/chunks/0fqgq6m2b-440.css` | 232 |
-| `GET https://www.tarotnow.xyz/themes/prismatic-royal.css` | 232 |
-| `GET https://www.tarotnow.xyz/_next/static/chunks/0dg6ntv_3jdd4.js` | 232 |
-| `GET https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js` | 232 |
-| `GET https://www.tarotnow.xyz/vi/readers` | 197 |
-| `GET https://www.tarotnow.xyz/vi/reading` | 190 |
+| `GET https://www.tarotnow.xyz/vi` | 324 |
+| `GET https://www.tarotnow.xyz/_next/static/media/7178...woff2` | 247 |
+| `GET https://www.tarotnow.xyz/_next/static/media/caa3...woff2` | 247 |
+| `GET https://www.tarotnow.xyz/_next/static/chunks/0kjazl8b8k9ly.css` | 247 |
+| `GET https://www.tarotnow.xyz/_next/static/chunks/0fqgq6m2b-440.css` | 247 |
+| `GET https://www.tarotnow.xyz/themes/prismatic-royal.css` | 247 |
+| `GET https://www.tarotnow.xyz/_next/static/chunks/14l~.r2kq13je.js` | 247 |
+| `GET https://www.tarotnow.xyz/_next/static/chunks/0~dckf69l39fe.js` | 247 |
+
+### Manual Browser Use Verification (production)
+- Artifact: `Frontend/test-results/benchmark/tarotnow-manual-browser-verify.json`
+- Admin verification:
+  - Login success.
+  - Full route sweep pass for reading/inventory/gacha/collection/profile/chat/leaderboard/community/gamification and admin child pages.
+  - Community interaction probe executed (comment toggle).
+- Reader verification:
+  - Logout path discovered at avatar menu.
+  - Reader login validated from login form.
+  - Core protected routes pass (`/reading`, `/inventory`, `/chat`, `/community`, `/gamification`).
+  - Admin route role-gated redirect observed (`/vi/admin` -> `/vi`).
+- Manual anomaly captured:
+  - Repeated console `Minified React error #418` appeared during rapid interactive traversal.
 
 ## Major Issues Found
 
 ### Critical
-1. Request explosion across authenticated surfaces
-- Evidence: authenticated scenarios average `~70 requests/page`; highest page `/vi/community` at `86` requests.
-- Impact: poor navigation responsiveness, high data usage, cache churn.
+1. Authenticated surfaces remain far above request budget
+- Evidence: `logged-in-admin desktop` averages `71.4 req/page`; `logged-in-reader desktop` `62.7 req/page`.
+- Impact: slow transitions, large transfer cost, unstable UX under weaker networks.
 
-2. Static chunk waterfall and asset latency
-- Evidence: many `_next/static/chunks/*` requests repeatedly exceed `800ms`, max `~4.8s` per chunk.
-- Impact: route transition delays, especially on leaderboard/community/chat clusters.
+2. Severe admin route burst behavior on desktop
+- Evidence: `/vi/admin` recorded `681` requests and ~`22s` navigation in baseline matrix.
+- Impact: extreme overhead and likely redundant session/static reload loop.
 
-3. Repeated background fetches and duplicate route-level loads
-- Evidence: high duplicate counts for `/vi/login`, `/vi/register`, `/vi/readers`, `/vi/reading` and static bundles.
-- Impact: over-fetching and avoidable network pressure.
-
-4. Pending network accumulation on logged-in routes
-- Evidence: pending requests observed on `123` pages, concentrated in authenticated matrices.
-- Impact: hidden background contention and potential UI race conditions.
+3. Static bundle/asset latency spikes
+- Evidence: many static chunks/css on `/wallet/deposit/history` exceeded `6s` in mobile-admin path.
+- Impact: high LCP/TTI degradation and interaction stalls.
 
 ### High
-1. Dynamic reading coverage blocked by auth/API behavior
-- Evidence: controlled reading-init probes returned `401` for spread types.
-- Impact: prevents complete performance visibility of `reading/session/[id]` and related dynamic flows.
+1. Duplicate static chunk/css/font fetches across route transitions
+- Evidence: core static assets repeated `~247` times each in one run.
+- Impact: cache inefficiency and avoidable bandwidth.
 
-2. Route shell still carries heavy static payload even for low-interaction pages
-- Evidence: authless and legal pages still carry `33-44` requests.
-- Impact: first navigation cost remains high even outside core product flows.
+2. Pending non-websocket requests on authenticated scenarios
+- Evidence: `69` pages had pending carry-over requests.
+- Impact: hidden contention + stale state risk.
+
+3. Dynamic route discovery partially blocked by runtime data state
+- Evidence: `reading.init` blocked and some detail IDs unavailable.
+- Impact: limits deterministic coverage on dynamic detail flows.
 
 ### Medium
-1. Over-eager prefetch and global realtime hooks were broad by default
-- Impact: unnecessary background requests during simple browsing.
-- Status: mitigated in this refactor set.
+1. Console stability warning (`React #418`) in manual pass
+- Impact: possible hydration/render mismatch in certain navigation sequences.
 
-2. SSR/client query-key mismatch risk (notifications)
-- Impact: hydration misses and extra client refetch.
-- Status: fixed in this refactor set.
+2. Realtime/polling invalidation previously too broad
+- Impact: over-fetch pressure on nav/chat/notification domains.
 
 ### Low
-1. Widespread `unoptimized` image usage for avatars/cards
-- Impact: misses Next image optimization path when source host is optimizable.
-- Status: partially mitigated with conditional optimization strategy.
+1. Image host latency variance remains high on collection-heavy screens
+- Impact: inconsistent perceived performance, especially mobile.
 
-## Optimization Plan (Prioritized)
+## Optimization Plan (Impact-Priority)
 
-### P0 - Network load reduction on authenticated shell
-- Tighten global realtime + unread polling mount conditions by route and role.
-- Reduce default refetch pressure (`focus`, `mount`) for navbar/dropdown/unread hooks.
-- Align server prefetch keys with client keys to avoid hydration misses.
+### P0 - Request/duplication reduction on authenticated shell
+- Gate prefetch by intent + network profile.
+- Restrict realtime invalidation to domain-scoped keys.
+- Eliminate SSR/CSR key mismatch that forces redundant refetch.
 
-### P1 - Route prefetch and middleware overhead
-- Make Link prefetch opt-in by default for non-critical paths.
-- Increase prefetch cooldown windows to reduce burst behavior.
-- Cache static CSP directive segments in middleware/proxy path.
+### P1 - Auth/middleware and server fetch overhead
+- Apply auth checks only on document navigations.
+- Dedupe session snapshot reads request-scope.
+- Parallelize independent server layout fetches.
 
-### P2 - Server component and hydration efficiency
-- Parallelize independent server layout operations (`dehydrate` + `messages`) after auth handshake.
-- Keep query stale windows coherent between server-hydrated data and client hooks.
+### P2 - TanStack Query tuning
+- Increase stale windows for stable resources.
+- Normalize admin query-key contracts and targeted invalidation.
+- Disable reconnect refetch where realtime signal already exists.
 
-### P3 - Image/asset policy hardening
-- Replace blanket `unoptimized` with conditional strategy based on source host and URL type.
-- Keep remote pattern allowlist explicit for trusted image hosts.
+### P3 - Image and route strategy
+- Conditional `unoptimized` instead of blanket bypass.
+- Enforce `sizes` + lazy policy on cards/lists/avatars.
+- Block prefetch for expensive, low-value routes (`/admin`, `/chat`, `/community`, `/notifications`, wallet-heavy paths).
+
+### P4 - Benchmark reliability
+- Isolate measurement by route on fresh `page` within same authenticated context (implemented in harness).
 
 ## Recommended Refactors
 
 ### Implemented in this cycle
-- Benchmark harness rewrite (Playwright)
-  - File: `Frontend/tests/tarotnow-navigation-benchmark.spec.ts`
-  - Added: full network timeline, per-page/per-request schema, recursive crawl, dynamic route probes, 3 auth scenarios, desktop/mobile matrix, robust context-race guards.
+1. Benchmark harness upgrade
+- `Frontend/tests/tarotnow-navigation-benchmark.spec.ts`
+- Added multi-source crawl, dynamic discovery, route-family reporting, interaction notes, and per-route page isolation.
 
-- TanStack Query key alignment and refetch tuning
-  - `Frontend/src/shared/server/prefetch/runners/user/notifications.ts`
-  - `Frontend/src/features/notifications/application/useNotificationDropdown.ts`
-  - `Frontend/src/shared/lib/appQueryClient.ts`
-  - `Frontend/src/shared/application/hooks/useChatUnreadNotifications.ts`
-  - `Frontend/src/features/chat/application/useChatInboxPage.ts`
+2. Middleware / proxy optimization
+- `Frontend/src/proxy.ts`
+- Reduced auth gate overhead to protected document navigations only.
 
-- Layout/global-hook request suppression
-  - `Frontend/src/shared/infrastructure/navigation/normalizePathname.ts`
-  - `Frontend/src/shared/components/common/Navbar.tsx`
+3. TanStack Query contract normalization
+- `Frontend/src/features/admin/application/adminQueryKeys.ts` (new)
+- Updated admin hooks + SSR prefetch runner:
+  - `.../useAdminDashboard.ts`
+  - `.../useAdminUsers.ts`
+  - `.../useAdminUsersMutations.ts`
+  - `.../useAdminDeposits.ts`
+  - `.../useAdminReaderRequests.ts`
+  - `.../useAdminReadings.ts`
+  - `.../useAdminDisputes.ts`
+  - `.../useAdminWithdrawals.ts`
+  - `Frontend/src/shared/server/prefetch/runners/admin.ts`
+- `Frontend/src/shared/lib/appQueryClient.ts` stale window tuning.
 
-- Prefetch strategy and runtime policy throttling
-  - `Frontend/src/i18n/routing.tsx`
-  - `Frontend/src/shared/infrastructure/navigation/useOptimizedNavigation.ts`
-  - `Frontend/src/shared/infrastructure/navigation/optimizedLinkPrefetch.ts`
-  - `Frontend/src/shared/config/runtimePolicyFallbacks.ts`
+4. Server component/layout and auth dedupe
+- `Frontend/src/shared/server/auth/cachedSessionSnapshot.ts` (new)
+- Wired into session handshake + auth redirect + site layout:
+  - `.../sessionHandshake.ts`
+  - `.../redirectAuthenticatedAuthEntry.ts`
+  - `Frontend/src/app/[locale]/(site)/layout.tsx`
+- Parallelized server layout fetches in site/admin layouts.
 
-- Middleware/proxy optimization
-  - `Frontend/src/proxy.ts`
-  - Cached CSP/static connect-src calculation to reduce per-request middleware compute cost.
+5. Realtime/custom-hook tightening
+- `Frontend/src/shared/infrastructure/navigation/normalizePathname.ts`
+- `Frontend/src/shared/components/common/Navbar.tsx`
+- `Frontend/src/shared/application/hooks/usePresenceConnection.registration.domainEvents.ts`
+- `Frontend/src/shared/application/hooks/useChatUnreadNotifications.ts`
 
-- Server Components render path optimization
-  - `Frontend/src/app/[locale]/(user)/layout.tsx`
-  - Parallelized independent async operations after auth handshake.
+6. Notification over-fetch suppression
+- `Frontend/src/features/notifications/application/useNotificationDropdown.ts`
+- `Frontend/src/shared/components/common/NotificationDropdown.tsx`
 
-- Image optimization guardrail
-  - `Frontend/src/shared/infrastructure/http/assetUrl.ts`
-  - `Frontend/src/shared/components/common/navbar/avatar-menu/NavbarAvatarTrigger.tsx`
-  - `Frontend/src/features/reader/presentation/components/readers-directory/card/ReaderDirectoryCardAvatar.tsx`
-  - `Frontend/src/features/home/presentation/components/featured-readers/FeaturedReaderAvatar.tsx`
-  - `Frontend/next.config.ts`
+7. Image + prefetch strategy hardening
+- Navigation/prefetch policy:
+  - `Frontend/src/shared/infrastructure/navigation/useOptimizedLink.tsx`
+  - `.../optimizedLinkPrefetch.ts`
+  - `.../useOptimizedNavigation.ts`
+  - `.../prefetchPolicy.ts`
+- Conditional image optimization and sizing updates across chat/community/profile/reader/reading surfaces.
 
-## Before/After Comparison Note
-- Current benchmark target is production (`https://www.tarotnow.xyz/vi`).
-- Local refactors in this workspace are not yet deployed to that production host, so a true runtime delta on production cannot be measured in this turn.
-- Baseline artifacts are available now and ready for post-deploy A/B rerun using the same matrix and thresholds.
+## Deploy Preflight Status (workspace)
+- Deploy is currently blocked by missing required access/secrets:
+  - Missing env: `BE_PRIVATE_IP` (required by `deploy_fe.sh`).
+  - Missing env: `DB_PRIVATE_IP` (required by `deploy_be.sh`).
+  - `gh` not authenticated in workspace (`gh auth status` reports no login).
+  - No local Docker GHCR auth configured (`~/.docker/config.json` has no auth entries).
+- Result: production deploy/post-deploy benchmark cannot proceed until credentials are provided.
 
-## Benchmark Artifacts
-- JSON raw: `Frontend/test-results/benchmark/tarotnow-benchmark.json`
+## Artifacts
+- Raw JSON: `Frontend/test-results/benchmark/tarotnow-benchmark.json`
 - Pages CSV: `Frontend/test-results/benchmark/tarotnow-benchmark-pages.csv`
 - Requests CSV: `Frontend/test-results/benchmark/tarotnow-benchmark-requests.csv`
 - Route map: `Frontend/test-results/benchmark/tarotnow-route-map.json`
 - Auto reports:
   - `Frontend/test-results/benchmark/tarotnow-benchmark-report.md`
   - `Frontend/test-results/benchmark/tarotnow-benchmark-analysis.md`
-
-## Validation Performed
-- Benchmark run: `npx playwright test tests/tarotnow-navigation-benchmark.spec.ts --project=chromium`
-- Lint check on all modified files: passed.
-- Full `tsc --noEmit` currently fails due pre-existing test typing issues unrelated to this patch set.
+- Manual verification:
+  - `Frontend/test-results/benchmark/tarotnow-manual-browser-verify.json`

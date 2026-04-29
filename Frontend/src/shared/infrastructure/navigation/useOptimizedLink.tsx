@@ -1,13 +1,12 @@
 'use client';
 
-import { forwardRef, useCallback, useSyncExternalStore } from 'react';
+import { forwardRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
 import type { ComponentPropsWithoutRef, FocusEvent, MouseEvent } from 'react';
 import { Link as IntlLink, usePathname, useRouter } from '@/i18n/routing';
 import { prefetchRouteQueries } from '@/shared/infrastructure/navigation/routeQueryPrefetch';
 import { useOptimizedLinkPrefetch } from '@/shared/infrastructure/navigation/optimizedLinkPrefetch';
-import { isPrefetchGateOpen, subscribePrefetchGate } from '@/shared/infrastructure/navigation/prefetchPolicy';
 
 type IntlLinkProps = ComponentPropsWithoutRef<typeof IntlLink>;
 type RouterPrefetchHref = Parameters<ReturnType<typeof useRouter>['prefetch']>[0];
@@ -18,15 +17,14 @@ interface OptimizedLinkProps extends IntlLinkProps {
 
 /** Link wrapper: giữ route prefetch sau gate 500ms + query prefetch theo policy trung tâm. */
 export const OptimizedLink = forwardRef<HTMLAnchorElement, OptimizedLinkProps>(function OptimizedLink(
- { href, onFocus, onMouseEnter, prefetch, prefetchQueries = true, ...rest },
+ { href, onFocus, onMouseEnter, prefetch, prefetchQueries = false, ...rest },
  ref,
 ) {
  const queryClient = useQueryClient();
  const router = useRouter();
  const pathname = usePathname();
  const locale = useLocale();
- const prefetchGateOpen = useSyncExternalStore(subscribePrefetchGate, isPrefetchGateOpen, () => false);
- const { canPrefetchRouteOnIntent, runRoutePrefetch, runQueryPrefetch } = useOptimizedLinkPrefetch({
+ const { runRoutePrefetch, runQueryPrefetch } = useOptimizedLinkPrefetch({
   href,
   locale,
   pathname,
@@ -49,8 +47,6 @@ export const OptimizedLink = forwardRef<HTMLAnchorElement, OptimizedLinkProps>(f
   },
  });
 
- const nativePrefetchEnabled = prefetchGateOpen && canPrefetchRouteOnIntent;
-
  const handleMouseEnter = useCallback((event: MouseEvent<HTMLAnchorElement>) => {
   onMouseEnter?.(event);
   runRoutePrefetch();
@@ -62,6 +58,8 @@ export const OptimizedLink = forwardRef<HTMLAnchorElement, OptimizedLinkProps>(f
   runRoutePrefetch();
   runQueryPrefetch();
  }, [onFocus, runQueryPrefetch, runRoutePrefetch]);
+
+ const nativePrefetchEnabled = prefetch === true;
 
  return (
   <IntlLink

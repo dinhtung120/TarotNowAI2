@@ -6,22 +6,21 @@ import { AppNavbar } from '@/features/auth/public';
 import { WalletStoreBridge } from '@/features/wallet/public';
 import AuthBootstrap from "@/shared/components/auth/AuthBootstrap";
 import { AUTH_COOKIE } from "@/shared/infrastructure/auth/authConstants";
-import { getServerSessionSnapshot } from "@/shared/infrastructure/auth/serverAuth";
 import { pickClientMessages, SITE_CLIENT_NAMESPACES } from '@/i18n/clientMessages';
+import { getCachedServerSessionSnapshot } from '@/shared/server/auth/cachedSessionSnapshot';
 
 interface SiteLayoutProps {
  children: ReactNode;
 }
 
 export default async function SiteLayout({ children }: SiteLayoutProps) {
- const messages = await getMessages();
+ const [messages, cookieStore] = await Promise.all([getMessages(), cookies()]);
  const siteMessages = pickClientMessages(messages, SITE_CLIENT_NAMESPACES);
- const cookieStore = await cookies();
  const hasAuthCookie = Boolean(
   cookieStore.get(AUTH_COOKIE.ACCESS)?.value || cookieStore.get(AUTH_COOKIE.REFRESH)?.value,
  );
  const sessionSnapshot = hasAuthCookie
-  ? await getServerSessionSnapshot({ allowRefresh: false })
+  ? await getCachedServerSessionSnapshot()
   : { authenticated: false, user: null };
 
  return (

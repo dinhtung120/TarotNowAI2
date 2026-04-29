@@ -1,11 +1,11 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { AUTH_COOKIE } from '@/shared/infrastructure/auth/authConstants';
-import { getServerSessionSnapshot } from '@/shared/infrastructure/auth/serverAuth';
 import {
  PROTECTED_ROUTE_AUTH_DECISION,
  resolveProtectedRouteAuthDecision,
 } from '@/shared/server/auth/protectedRouteAuthDecision';
+import { getCachedServerSessionSnapshot } from '@/shared/server/auth/cachedSessionSnapshot';
 
 interface RedirectAuthenticatedAuthEntryOptions {
  locale: string;
@@ -34,7 +34,7 @@ export async function redirectAuthenticatedAuthEntry(
   return;
  }
 
- const sessionSnapshot = await getServerSessionSnapshot({ allowRefresh: false });
+ const sessionSnapshot = await getCachedServerSessionSnapshot();
  if (sessionSnapshot.authenticated) {
   return redirect(nextPath);
  }

@@ -2,8 +2,8 @@ import { useCallback, useMemo } from 'react';
 import { isPrefetchBlocked, schedulePrefetch, shouldRunPrefetch } from '@/shared/infrastructure/navigation/prefetchPolicy';
 import { normalizeNavigationPath } from '@/shared/infrastructure/navigation/routeQueryPrefetch';
 
-const QUERY_PREFETCH_COOLDOWN_MS = 180_000;
-const ROUTE_PREFETCH_COOLDOWN_MS = 180_000;
+const QUERY_PREFETCH_COOLDOWN_MS = 300_000;
+const ROUTE_PREFETCH_COOLDOWN_MS = 240_000;
 
 type HrefLike = { pathname?: string | null } | string;
 
@@ -23,6 +23,29 @@ interface UseOptimizedLinkPrefetchOptions {
  pathname: string;
  prefetch?: boolean | 'auto' | null;
  prefetchQueries: boolean;
+}
+
+function isPrefetchBudgetAvailable(): boolean {
+ if (typeof navigator === 'undefined') {
+  return true;
+ }
+
+ const connection = (navigator as Navigator & {
+  connection?: {
+   saveData?: boolean;
+   effectiveType?: string;
+  };
+ }).connection;
+ if (!connection) {
+  return true;
+ }
+
+ if (connection.saveData) {
+  return false;
+ }
+
+ const effectiveType = connection.effectiveType?.toLowerCase() ?? '';
+ return effectiveType !== 'slow-2g' && effectiveType !== '2g';
 }
 
 export function useOptimizedLinkPrefetch(options: UseOptimizedLinkPrefetchOptions) {
@@ -55,7 +78,12 @@ export function useOptimizedLinkPrefetch(options: UseOptimizedLinkPrefetchOption
  const queryTaskKey = normalizedHref ? `query:${locale}:${normalizedHref}` : '';
 
  const runRoutePrefetch = useCallback(() => {
-  if (!canPrefetchRouteOnIntent || !rawHref || !shouldRunPrefetch(routeTaskKey, ROUTE_PREFETCH_COOLDOWN_MS)) {
+  if (
+   !canPrefetchRouteOnIntent
+   || !rawHref
+   || !isPrefetchBudgetAvailable()
+   || !shouldRunPrefetch(routeTaskKey, ROUTE_PREFETCH_COOLDOWN_MS)
+  ) {
    return;
   }
 
@@ -69,7 +97,12 @@ export function useOptimizedLinkPrefetch(options: UseOptimizedLinkPrefetchOption
  }, [canPrefetchRouteOnIntent, href, onRoutePrefetch, rawHref, routeTaskKey]);
 
  const runQueryPrefetch = useCallback(() => {
-  if (!canPrefetchQueries || !normalizedHref || !shouldRunPrefetch(queryTaskKey, QUERY_PREFETCH_COOLDOWN_MS)) {
+  if (
+   !canPrefetchQueries
+   || !normalizedHref
+   || !isPrefetchBudgetAvailable()
+   || !shouldRunPrefetch(queryTaskKey, QUERY_PREFETCH_COOLDOWN_MS)
+  ) {
    return;
   }
 

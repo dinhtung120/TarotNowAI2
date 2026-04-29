@@ -28,12 +28,8 @@ function shouldEnableGlobalNavbarRealtime(normalizedPath: string): boolean {
   return (
     normalizedPath === '/chat'
     || normalizedPath.startsWith('/chat/')
-    || normalizedPath === '/community'
-    || normalizedPath.startsWith('/community/')
     || normalizedPath === '/notifications'
     || normalizedPath.startsWith('/notifications/')
-    || normalizedPath === '/readers'
-    || normalizedPath.startsWith('/readers/')
   );
 }
 

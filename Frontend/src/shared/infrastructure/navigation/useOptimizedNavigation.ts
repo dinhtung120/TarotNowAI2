@@ -19,6 +19,29 @@ interface OptimizedNavigateOptions {
 const ROUTE_PREFETCH_COOLDOWN_MS = 180_000;
 const QUERY_PREFETCH_COOLDOWN_MS = 180_000;
 
+function isPrefetchBudgetAvailable(): boolean {
+ if (typeof navigator === 'undefined') {
+  return true;
+ }
+
+ const connection = (navigator as Navigator & {
+  connection?: {
+   saveData?: boolean;
+   effectiveType?: string;
+  };
+ }).connection;
+ if (!connection) {
+  return true;
+ }
+
+ if (connection.saveData) {
+  return false;
+ }
+
+ const effectiveType = connection.effectiveType?.toLowerCase() ?? '';
+ return effectiveType !== 'slow-2g' && effectiveType !== '2g';
+}
+
 function runWithViewTransition(callback: () => void, enabled: boolean): void {
  if (!enabled || typeof document === 'undefined' || typeof window === 'undefined') {
   callback();
@@ -50,7 +73,12 @@ export function useOptimizedNavigation() {
 
  const prefetch = useCallback((href: string) => {
   const normalizedHref = normalizeNavigationPath(href);
-  if (!normalizedHref.startsWith('/') || normalizedHref === normalizedCurrentPath || isPrefetchBlocked(normalizedHref)) {
+  if (
+   !normalizedHref.startsWith('/')
+   || normalizedHref === normalizedCurrentPath
+   || isPrefetchBlocked(normalizedHref)
+   || !isPrefetchBudgetAvailable()
+  ) {
    return;
   }
 

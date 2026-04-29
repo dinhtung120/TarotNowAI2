@@ -6,7 +6,7 @@ import { fetchJsonOrThrow } from '@/shared/application/gateways/clientFetch';
 import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 
 const PUBLIC_RUNTIME_POLICIES_TIMEOUT_MS = 8_000;
-const PUBLIC_RUNTIME_POLICIES_STALE_TIME_MS = 60_000;
+const PUBLIC_RUNTIME_POLICIES_STALE_TIME_MS = 5 * 60_000;
 
 export function usePublicRuntimePolicies(): UseQueryResult<PublicRuntimePoliciesDto, Error> {
   const query = useQuery({
@@ -17,7 +17,7 @@ export function usePublicRuntimePolicies(): UseQueryResult<PublicRuntimePolicies
         {
           method: 'GET',
           credentials: 'include',
-          cache: 'no-store',
+          cache: 'force-cache',
           signal,
         },
         'Failed to load public runtime policies',

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useLocale, useTranslations } from 'next-intl';
+import { adminQueryKeys } from '@/features/admin/application/adminQueryKeys';
 import { getAllHistorySessionsAdminAction } from '@/features/reading/public';
 import { isUnauthorizedError } from '@/shared/domain/authErrors';
 
@@ -57,7 +58,7 @@ export function useAdminReadings() {
  const [appliedFilters, setAppliedFilters] = useState<AdminReadingsFilters>(EMPTY_FILTERS);
 
  const { data, isLoading, isFetching, error } = useQuery<PaginatedResponse>({
-  queryKey: ['admin', 'readings', page, appliedFilters],
+  queryKey: adminQueryKeys.readings(page, appliedFilters),
   queryFn: async () => {
    const result = await getAllHistorySessionsAdminAction({
     page,

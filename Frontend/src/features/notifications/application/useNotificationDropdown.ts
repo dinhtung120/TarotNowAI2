@@ -10,6 +10,7 @@ import { useAuthStore } from '@/store/authStore';
 
 interface UseNotificationDropdownOptions {
  enabled?: boolean;
+ open?: boolean;
 }
 
 const NOTIFICATION_API_ROUTES = {
@@ -64,6 +65,7 @@ async function sendNotificationPatch(path: string): Promise<void> {
 
 export function useNotificationDropdown(options: UseNotificationDropdownOptions = {}) {
  const enabled = options.enabled ?? true;
+ const open = options.open ?? enabled;
  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
  const queryClient = useQueryClient();
 
@@ -73,21 +75,21 @@ export function useNotificationDropdown(options: UseNotificationDropdownOptions 
  const dropdownQuery = useQuery<NotificationListResponse>({
   queryKey: queryKeyList,
   queryFn: () => fetchNotifications(1, 10),
-  enabled: isAuthenticated && enabled,
-  staleTime: 90_000,
+  enabled: isAuthenticated && enabled && open,
+  staleTime: 120_000,
   refetchOnWindowFocus: false,
   refetchOnMount: false,
-  refetchOnReconnect: true,
+  refetchOnReconnect: false,
  });
 
  const unreadCountQuery = useQuery<number>({
   queryKey: queryKeyCount,
   queryFn: fetchUnreadNotificationCount,
   enabled: isAuthenticated && enabled,
-  staleTime: 60_000,
+  staleTime: 90_000,
   refetchOnWindowFocus: false,
   refetchOnMount: false,
-  refetchOnReconnect: true,
+  refetchOnReconnect: false,
  });
 
  const markReadMutation = useMutation({

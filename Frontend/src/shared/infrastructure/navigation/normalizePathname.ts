@@ -72,7 +72,5 @@ export function shouldEnableRealtimeForPath(pathname: string): boolean {
   || normalizedPath.startsWith('/community/')
   || normalizedPath === '/notifications'
   || normalizedPath.startsWith('/notifications/')
-  || normalizedPath === '/readers'
-  || normalizedPath.startsWith('/readers/')
  );
 }

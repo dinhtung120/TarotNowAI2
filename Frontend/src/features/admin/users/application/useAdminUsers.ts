@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { listUsers } from '@/features/admin/application/actions';
+import { adminQueryKeys } from '@/features/admin/application/adminQueryKeys';
 import { useAdminUsersModalForms } from '@/features/admin/users/application/useAdminUsersModalForms';
 import { useAdminUsersMutations } from '@/features/admin/users/application/useAdminUsersMutations';
 import { queryFnOrThrow, useDebouncedQueryInput } from '@/shared/application/utils/queryPolicy';
@@ -40,7 +41,7 @@ export function useAdminUsers() {
   closeAddModal,
  } = useAdminUsersModalForms();
 
- const queryKey = ['admin', 'users', page, debouncedSearchTerm] as const;
+ const queryKey = adminQueryKeys.users(page, debouncedSearchTerm);
  const usersQuery = useQuery({
   queryKey,
   queryFn: async () => {

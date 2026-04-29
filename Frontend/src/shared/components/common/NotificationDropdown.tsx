@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useNotificationDropdown } from '@/features/notifications/application/useNotificationDropdown';
 import { useOptimizedNavigation } from '@/shared/infrastructure/navigation/useOptimizedNavigation';
@@ -18,6 +18,11 @@ export default function NotificationDropdown({ enabled = true }: NotificationDro
   const tCommon = useTranslations('Common');
   const locale = useLocale();
   const navigation = useOptimizedNavigation();
+  const markAllAsReadRef = useRef<() => Promise<unknown>>(async () => undefined);
+  const { bellButtonRef, close, dropdownRef, getTitle, handleMarkAllRead, isMarkingAll, isOpen, toggleOpen } = useNotificationDropdownState({
+    locale,
+    markAllAsRead: async () => markAllAsReadRef.current(),
+  });
   const {
     notifications,
     unreadCount,
@@ -28,8 +33,11 @@ export default function NotificationDropdown({ enabled = true }: NotificationDro
     markAllAsRead,
     refreshDropdown,
     refreshUnreadCount,
-  } = useNotificationDropdown({ enabled });
-  const { bellButtonRef, close, dropdownRef, getTitle, handleMarkAllRead, isMarkingAll, isOpen, toggleOpen } = useNotificationDropdownState({ locale, markAllAsRead });
+  } = useNotificationDropdown({ enabled, open: isOpen });
+
+  useEffect(() => {
+    markAllAsReadRef.current = markAllAsRead;
+  }, [markAllAsRead]);
 
   useEffect(() => {
     if (!isOpen) {

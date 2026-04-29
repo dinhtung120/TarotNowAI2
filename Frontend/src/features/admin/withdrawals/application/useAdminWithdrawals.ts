@@ -3,12 +3,13 @@
 import { useCallback, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { adminQueryKeys } from '@/features/admin/application/adminQueryKeys';
 import { getWithdrawalDetail, listWithdrawalQueue, processWithdrawal, type WithdrawalDetailResult, type WithdrawalResult } from '@/features/wallet/public';
 import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
 
 type TranslateFn = (key: string, values?: Record<string, string | number | Date>) => string;
 type ProcessAction = 'approve' | 'reject';
-const queueQueryKey = ['admin', 'withdrawals', 'queue'] as const;
+const queueQueryKey = adminQueryKeys.withdrawalsQueue();
 
 export function useAdminWithdrawals(t: TranslateFn, locale: string) {
  const queryClient = useQueryClient();
@@ -25,7 +26,7 @@ export function useAdminWithdrawals(t: TranslateFn, locale: string) {
  });
 
  const detailQuery = useQuery<WithdrawalDetailResult | null>({
-  queryKey: ['admin', 'withdrawals', 'detail', selectedWithdrawalId] as const,
+  queryKey: adminQueryKeys.withdrawalDetail(selectedWithdrawalId),
   enabled: Boolean(selectedWithdrawalId),
   queryFn: async () => {
    if (!selectedWithdrawalId) {

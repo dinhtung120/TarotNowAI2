@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
+import { adminQueryKeys } from '@/features/admin/application/adminQueryKeys';
 import {
  listAdminDisputes,
  resolveAdminDispute,
@@ -23,7 +24,7 @@ export function useAdminDisputes(t: TranslateFn) {
  const [splitPercentById, setSplitPercentById] = useState<Record<string, number>>({});
 
  const disputesQuery = useQuery({
-  queryKey: ['admin', 'disputes', 'list'],
+  queryKey: adminQueryKeys.disputesList(),
   queryFn: async () => {
    const result = await listAdminDisputes(1, 100);
    return queryFnOrThrow(result, 'Failed to load disputes').items;
@@ -50,7 +51,7 @@ export function useAdminDisputes(t: TranslateFn) {
        ? t('disputes.toast.refund_success')
        : t('disputes.toast.split_success');
     toast.success(message);
-    void queryClient.invalidateQueries({ queryKey: ['admin', 'disputes', 'list'] });
+    void queryClient.invalidateQueries({ queryKey: adminQueryKeys.disputesList() });
    } else {
     toast.error(result.error || t('disputes.toast.failed'));
    }

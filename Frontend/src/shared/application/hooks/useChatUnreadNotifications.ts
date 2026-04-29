@@ -81,7 +81,7 @@ export function useChatUnreadNotifications(options: UseChatUnreadNotificationsOp
   staleTime: 60_000,
   // Realtime event sẽ invalidate query key, tránh refetch mỗi lần focus/mount.
   refetchOnWindowFocus: false,
-  refetchOnReconnect: true,
+  refetchOnReconnect: false,
   refetchOnMount: false,
  });
 

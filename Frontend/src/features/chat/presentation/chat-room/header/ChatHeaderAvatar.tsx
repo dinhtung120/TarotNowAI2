@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { resolveAvatarUrl, shouldUseUnoptimizedImage } from '@/shared/infrastructure/http/assetUrl';
 
 interface ChatHeaderAvatarProps {
   otherAvatar: string | null;
@@ -10,7 +11,10 @@ export default function ChatHeaderAvatar({
   otherAvatar,
   otherName,
 }: ChatHeaderAvatarProps) {
-  if (otherAvatar) {
+  const avatarSrc = resolveAvatarUrl(otherAvatar);
+  const unoptimizedAvatar = shouldUseUnoptimizedImage(avatarSrc);
+
+  if (avatarSrc) {
     return (
       <Image
         alt={otherName || "user"}
@@ -18,8 +22,10 @@ export default function ChatHeaderAvatar({
           "h-9 w-9 rounded-full border border-white/10 object-cover",
         )}
         height={36}
-        src={otherAvatar}
-        unoptimized
+        src={avatarSrc}
+        sizes="36px"
+        loading="lazy"
+        unoptimized={unoptimizedAvatar}
         width={36}
       />
     );

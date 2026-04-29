@@ -1,9 +1,19 @@
 import { routing } from '@/i18n/routing';
 
-const blockedPrefixes = ['/admin'] as const;
+const blockedPrefixes = [
+ '/admin',
+ '/chat',
+ '/community',
+ '/notifications',
+] as const;
 const blockedExactPaths = new Set([
  '/wallet/withdraw',
+ '/wallet/deposit',
+ '/wallet/deposit/history',
  '/gacha/history',
+ '/gacha',
+ '/collection',
+ '/reading',
  '/profile/mfa',
  '/readers/[id]',
  '/reading/history/[id]',
@@ -11,6 +21,7 @@ const blockedExactPaths = new Set([
 const blockedRegexPatterns = [
  /^\/readers\/[^/]+$/,
  /^\/reading\/history\/[^/]+$/,
+ /^\/reading\/session\/[^/]+$/,
 ] as const;
 
 const ROUTE_CHANGE_DELAY_MS = 500;

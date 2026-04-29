@@ -8,6 +8,7 @@ import {
  listReaderRequests,
  processReaderRequest,
 } from '@/features/admin/application/actions';
+import { adminQueryKeys } from '@/features/admin/application/adminQueryKeys';
 import { queryFnOrThrow } from '@/shared/application/utils/queryPolicy';
 
 export function useAdminReaderRequests() {
@@ -24,7 +25,7 @@ export function useAdminReaderRequests() {
  const pageSize = 10;
 
  const { data, isLoading, isFetching, error } = useQuery({
-  queryKey: ['admin', 'reader-requests', page, statusFilter],
+  queryKey: adminQueryKeys.readerRequests(page, statusFilter),
   queryFn: async () => {
    const result = await listReaderRequests(page, pageSize, statusFilter);
    return queryFnOrThrow(result, 'Failed to load reader requests');
@@ -78,7 +79,7 @@ export function useAdminReaderRequests() {
    );
    clearAdminNote(requestId);
    setSelectedRequestId(null);
-   await queryClient.invalidateQueries({ queryKey: ['admin', 'reader-requests'] });
+   await queryClient.invalidateQueries({ queryKey: adminQueryKeys.readerRequestsRoot() });
   } else {
    toast.error(t('reader_requests.toast.process_failed'));
   }
