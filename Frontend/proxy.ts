@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AUTH_COOKIE } from '@/shared/infrastructure/auth/authConstants';
 import { AUTH_ENTRY_PATHS, PROTECTED_PREFIXES } from '@/shared/config/authRoutes';
+import createMiddleware from 'next-intl/middleware';
+import { routing } from '@/i18n/routing';
+
+const intlMiddleware = createMiddleware(routing);
 
 const SUPPORTED_LOCALES = ['vi', 'en', 'zh'] as const;
 
@@ -48,9 +52,13 @@ function redirectWithPath(request: NextRequest, targetPath: string): NextRespons
 
 export function proxy(request: NextRequest): NextResponse {
  const { pathname } = request.nextUrl;
+ if (pathname.startsWith('/api/')) {
+  return NextResponse.next();
+ }
+
  const { locale, localPath } = resolveLocalizedPath(pathname);
  if (!locale) {
-  return NextResponse.next();
+  return intlMiddleware(request);
  }
 
  if (localPath.startsWith('/api/')) {
@@ -72,7 +80,7 @@ export function proxy(request: NextRequest): NextResponse {
   return redirectWithPath(request, buildHomePath(locale));
  }
 
- return NextResponse.next();
+ return intlMiddleware(request);
 }
 
 export const config = {

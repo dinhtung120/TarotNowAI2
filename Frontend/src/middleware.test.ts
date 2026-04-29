@@ -1,6 +1,23 @@
-import { describe, expect, it } from 'vitest';
-import { NextRequest } from 'next/server';
+import { describe, expect, it, vi } from 'vitest';
+import { NextRequest, NextResponse } from 'next/server';
 import { proxy } from '../proxy';
+
+vi.mock('next-intl/middleware', () => ({
+ default: () => (request: NextRequest) => {
+  if (request.nextUrl.pathname === '/') {
+   return NextResponse.redirect(new URL('/vi', request.url));
+  }
+
+  return NextResponse.next();
+ },
+}));
+
+vi.mock('@/i18n/routing', () => ({
+ routing: {
+  locales: ['vi', 'en', 'zh'],
+  defaultLocale: 'vi',
+ },
+}));
 
 function createRequest(url: string, cookieHeader?: string): NextRequest {
  const headers = new Headers();
@@ -12,6 +29,12 @@ function createRequest(url: string, cookieHeader?: string): NextRequest {
 }
 
 describe('auth middleware', () => {
+ it('redirects locale-less root path to default locale', () => {
+  const response = proxy(createRequest('https://www.tarotnow.xyz/'));
+  expect(response.status).toBe(307);
+  expect(response.headers.get('location')).toBe('https://www.tarotnow.xyz/vi');
+ });
+
  it('redirects protected route to login when no auth cookies exist', () => {
   const response = proxy(createRequest('https://www.tarotnow.xyz/vi/wallet'));
   expect(response.status).toBe(307);

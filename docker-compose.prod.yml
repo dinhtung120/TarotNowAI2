@@ -65,7 +65,7 @@ services:
       JWT_AUDIENCE: ${JWT_AUDIENCE:-TarotNowAIUsers}
       AUTH_VERIFIER_POLICY: ${AUTH_VERIFIER_POLICY:-fail-closed}
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000 > /dev/null || exit 1"]
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:3000/api/health > /dev/null || exit 1"]
       interval: 20s
       timeout: 5s
       retries: 6
