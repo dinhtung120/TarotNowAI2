@@ -16,8 +16,17 @@ x86/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
-[Bb]in/
-[Oo]bj/
+**/[Bb]in/
+**/[Oo]bj/
+**/*.dll
+**/*.exe
+**/*.pdb
+**/*.user
+**/*.suo
+**/*.userosscache
+**/*.sln.docstates
+**/*.cache
+**/*.log
 [Ll]og/
 [Ll]ogs/
 ## .NET Core
