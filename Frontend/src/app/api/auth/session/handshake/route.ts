@@ -117,16 +117,18 @@ function buildHandshakeGuardCookieValue(state: HandshakeGuardState): string {
 function resolveHandshakeGuardState(request: NextRequest, nextPath: string): HandshakeGuardState {
  const now = Date.now();
  const previous = parseHandshakeGuardCookie(request.cookies.get(HANDSHAKE_GUARD_COOKIE)?.value);
- const isSamePathWithinWindow = Boolean(
+ const previousCount = (
   previous
   && previous.nextPath === nextPath
-  && now - previous.issuedAtMs <= HANDSHAKE_LOOP_WINDOW_MS,
- );
+  && now - previous.issuedAtMs <= HANDSHAKE_LOOP_WINDOW_MS
+ )
+  ? previous.count
+  : 0;
 
  return {
   nextPath,
   issuedAtMs: now,
-  count: isSamePathWithinWindow ? previous.count + 1 : 1,
+  count: previousCount + 1,
  };
 }
 
@@ -175,7 +177,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   return NextResponse.redirect(buildPublicRequestUrl(request, fallbackPath));
  }
 
-const guardState = resolveHandshakeGuardState(request, nextPath);
+ const guardState = resolveHandshakeGuardState(request, nextPath);
  if (guardState.count > 1) {
   const redirectResponse = NextResponse.redirect(buildPublicRequestUrl(request, fallbackPath));
   clearAuthCookies(redirectResponse, request);
