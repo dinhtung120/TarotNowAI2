@@ -30,7 +30,7 @@
       "report_title": "举报违规",
       "loading": "正在同步...",
       "empty": "连接已建立，发送第一条消息吧。",
-      "input_placeholder": "发送你的消息...",
+      "input_placeholder": "输入消息...",
       "uploading_media": "正在上传媒体... {percent}%",
       "payment_offer": "💎 支付提议",
       "payment_accept": "✅ 已接受",

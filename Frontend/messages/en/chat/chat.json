@@ -30,7 +30,7 @@
       "report_title": "Report violation",
       "loading": "Synchronizing...",
       "empty": "Connection is open. Send your first message.",
-      "input_placeholder": "Send your message...",
+      "input_placeholder": "type a message...",
       "uploading_media": "Uploading media... {percent}%",
       "payment_offer": "💎 Payment offer",
       "payment_accept": "✅ Accepted",
