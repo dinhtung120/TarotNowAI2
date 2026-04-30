@@ -76,6 +76,18 @@ export function useCollectionPageViewModel() {
     return resolveOwnedCardImageUrl(cardId, 'full');
   }, [chunkedCatalog.selectedCardDetail, isSelectedCardOwned, pageState.selectedCardData, resolveOwnedCardImageUrl]);
 
+  const selectedCardPreviewImageUrl = useMemo(() => {
+    if (!pageState.selectedCardData) {
+      return undefined;
+    }
+
+    if (!isSelectedCardOwned) {
+      return COLLECTION_BACK_CARD_SRC;
+    }
+
+    return resolveOwnedCardImageUrl(pageState.selectedCardData.id, 'thumb');
+  }, [isSelectedCardOwned, pageState.selectedCardData, resolveOwnedCardImageUrl]);
+
   const selectedCardName = useMemo(() => {
     if (!pageState.selectedCardData) return '';
     return getCardName(pageState.selectedCardData.id) ?? '';
@@ -126,6 +138,7 @@ export function useCollectionPageViewModel() {
       title: t('title'),
     },
     selectedCardImageUrl,
+    selectedCardPreviewImageUrl,
     selectedCardMeaning,
     selectedCardName,
     selectedSuitLabel,

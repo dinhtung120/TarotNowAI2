@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 export function CollectionZoomModal({
   cardData,
   cardImageUrl,
+  cardPreviewImageUrl,
   cardMeaning,
   cardName,
   labels,
@@ -54,6 +55,7 @@ export function CollectionZoomModal({
         <CollectionZoomCardVisual
           cardData={cardData}
           cardImageUrl={cardImageUrl}
+          cardPreviewImageUrl={cardPreviewImageUrl}
           cardName={cardName}
           isOwned={isOwned}
           suitLabel={suitLabel}

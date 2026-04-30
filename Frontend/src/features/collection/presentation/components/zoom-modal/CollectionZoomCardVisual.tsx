@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 interface CollectionZoomCardVisualProps {
   cardData: TarotCardMeta;
   cardImageUrl?: string;
+  cardPreviewImageUrl?: string;
   cardName: string;
   isOwned: boolean;
   suitLabel: string;
@@ -15,6 +16,7 @@ interface CollectionZoomCardVisualProps {
 export default function CollectionZoomCardVisual({
   cardData,
   cardImageUrl,
+  cardPreviewImageUrl,
   cardName,
   isOwned,
   suitLabel,
@@ -38,6 +40,7 @@ export default function CollectionZoomCardVisual({
           <CollectionZoomCardImage
             cardData={cardData}
             cardImageUrl={cardImageUrl}
+            cardPreviewImageUrl={cardPreviewImageUrl}
             cardName={cardName}
             isOwned={isOwned}
             unknownCardLabel={unknownCardLabel}

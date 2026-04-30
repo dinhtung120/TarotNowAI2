@@ -12,6 +12,7 @@ export interface CollectionZoomLabels {
 export interface CollectionZoomModalProps {
   cardData: TarotCardMeta | null;
   cardImageUrl?: string;
+  cardPreviewImageUrl?: string;
   cardMeaning: string;
   cardName: string;
   labels: CollectionZoomLabels;

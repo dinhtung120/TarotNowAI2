@@ -25,6 +25,7 @@ export default function CollectionPage() {
         cardData={vm.selectedCardData}
         userCard={vm.selectedUserCard}
         cardImageUrl={vm.selectedCardImageUrl}
+        cardPreviewImageUrl={vm.selectedCardPreviewImageUrl}
         cardName={vm.selectedCardName}
         cardMeaning={vm.selectedCardMeaning}
         suitLabel={vm.selectedSuitLabel}
