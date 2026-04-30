@@ -28,5 +28,5 @@ public sealed class OutboxOptions
     /// <summary>
     /// Chu kỳ quét outbox worker (giây).
     /// </summary>
-    public int PollIntervalSeconds { get; set; } = 5;
+    public int PollIntervalSeconds { get; set; } = 1;
 }

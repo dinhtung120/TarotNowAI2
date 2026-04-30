@@ -20,6 +20,9 @@ public class SendMessageCommand : IRequest<ChatMessageDto>
     // Nội dung chính của tin nhắn.
     public string Content { get; set; } = string.Empty;
 
+    // Định danh do client cấp để chống gửi trùng và reconcile optimistic UI.
+    public string? ClientMessageId { get; set; }
+
     // Payload thanh toán khi dùng message loại payment.
     public PaymentPayloadDto? PaymentPayload { get; set; }
 

@@ -8,5 +8,5 @@ public interface IOutboxBatchProcessor
     /// <summary>
     /// Xử lý một lần: claim batch, publish MediatR notifications, cập nhật trạng thái retry/dead-letter.
     /// </summary>
-    Task ProcessOnceAsync(CancellationToken cancellationToken = default);
+    Task<int> ProcessOnceAsync(CancellationToken cancellationToken = default);
 }

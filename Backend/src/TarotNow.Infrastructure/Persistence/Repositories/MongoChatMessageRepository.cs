@@ -37,6 +37,30 @@ public partial class MongoChatMessageRepository : IChatMessageRepository
     }
 
     /// <summary>
+    /// Lấy message theo conversation + clientMessageId phục vụ idempotency retry từ client.
+    /// Luồng xử lý: filter cặp khóa hội thoại và client_message_id, chỉ lấy bản ghi chưa xóa mềm.
+    /// </summary>
+    public async Task<ChatMessageDto?> GetByConversationAndClientMessageIdAsync(
+        string conversationId,
+        string clientMessageId,
+        CancellationToken cancellationToken = default)
+    {
+        var normalizedClientMessageId = clientMessageId.Trim();
+        if (string.IsNullOrWhiteSpace(conversationId) || string.IsNullOrWhiteSpace(normalizedClientMessageId))
+        {
+            return null;
+        }
+
+        var filter = Builders<ChatMessageDocument>.Filter.And(
+            Builders<ChatMessageDocument>.Filter.Eq(m => m.ConversationId, conversationId),
+            Builders<ChatMessageDocument>.Filter.Eq(m => m.ClientMessageId, normalizedClientMessageId),
+            Builders<ChatMessageDocument>.Filter.Eq(m => m.IsDeleted, false));
+
+        var doc = await _context.ChatMessages.Find(filter).FirstOrDefaultAsync(cancellationToken);
+        return doc == null ? null : ToDto(doc);
+    }
+
+    /// <summary>
     /// Thêm mới message vào hội thoại.
     /// Luồng xử lý: map DTO sang document, insert Mongo và cập nhật lại id cho DTO đầu vào.
     /// </summary>
@@ -49,9 +73,9 @@ public partial class MongoChatMessageRepository : IChatMessageRepository
             message.Id = doc.Id;
             // Đồng bộ id phát sinh để các bước push realtime dùng cùng message id.
         }
-        catch (MongoWriteException exception) when (CanRecoverSystemEventDuplicate(exception, doc))
+        catch (MongoWriteException exception) when (CanRecoverDuplicateInsert(exception, doc))
         {
-            message.Id = await ResolveExistingSystemEventMessageIdAsync(doc, cancellationToken) ?? doc.Id;
+            message.Id = await ResolveExistingDuplicateMessageIdAsync(doc, cancellationToken) ?? doc.Id;
             // Trường hợp retry outbox đã chèn trước đó: trả về id cũ để caller tiếp tục idempotent.
         }
     }
@@ -116,23 +140,50 @@ public partial class MongoChatMessageRepository : IChatMessageRepository
         return docs.Select(ToDto);
     }
 
-    private static bool CanRecoverSystemEventDuplicate(MongoWriteException exception, ChatMessageDocument doc)
+    private static bool CanRecoverDuplicateInsert(MongoWriteException exception, ChatMessageDocument doc)
     {
-        return exception.WriteError?.Category == ServerErrorCategory.DuplicateKey
-               && !string.IsNullOrWhiteSpace(doc.SystemEventKey);
+        if (exception.WriteError?.Category != ServerErrorCategory.DuplicateKey)
+        {
+            return false;
+        }
+
+        return !string.IsNullOrWhiteSpace(doc.SystemEventKey)
+               || !string.IsNullOrWhiteSpace(doc.ClientMessageId);
     }
 
-    private async Task<string?> ResolveExistingSystemEventMessageIdAsync(
+    private async Task<string?> ResolveExistingDuplicateMessageIdAsync(
         ChatMessageDocument doc,
         CancellationToken cancellationToken)
     {
-        var filter = Builders<ChatMessageDocument>.Filter.And(
-            Builders<ChatMessageDocument>.Filter.Eq(m => m.ConversationId, doc.ConversationId),
-            Builders<ChatMessageDocument>.Filter.Eq(m => m.SystemEventKey, doc.SystemEventKey));
+        var filter = BuildDuplicateMessageFilter(doc);
+        if (filter is null)
+        {
+            return null;
+        }
+
         var existing = await _context.ChatMessages
             .Find(filter)
             .Project(m => m.Id)
             .FirstOrDefaultAsync(cancellationToken);
         return string.IsNullOrWhiteSpace(existing) ? null : existing;
+    }
+
+    private static FilterDefinition<ChatMessageDocument>? BuildDuplicateMessageFilter(ChatMessageDocument doc)
+    {
+        if (!string.IsNullOrWhiteSpace(doc.SystemEventKey))
+        {
+            return Builders<ChatMessageDocument>.Filter.And(
+                Builders<ChatMessageDocument>.Filter.Eq(m => m.ConversationId, doc.ConversationId),
+                Builders<ChatMessageDocument>.Filter.Eq(m => m.SystemEventKey, doc.SystemEventKey));
+        }
+
+        if (!string.IsNullOrWhiteSpace(doc.ClientMessageId))
+        {
+            return Builders<ChatMessageDocument>.Filter.And(
+                Builders<ChatMessageDocument>.Filter.Eq(m => m.ConversationId, doc.ConversationId),
+                Builders<ChatMessageDocument>.Filter.Eq(m => m.ClientMessageId, doc.ClientMessageId));
+        }
+
+        return null;
     }
 }

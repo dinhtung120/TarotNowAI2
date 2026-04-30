@@ -1,7 +1,7 @@
 namespace TarotNow.Domain.Events;
 
 // Domain event phát sinh khi conversation thay đổi trạng thái hoặc metadata quan trọng.
-public class ConversationUpdatedDomainEvent : IDomainEvent
+public class ConversationUpdatedDomainEvent : IIdempotentDomainEvent
 {
     // Định danh conversation được cập nhật.
     public string ConversationId { get; }
@@ -11,6 +11,10 @@ public class ConversationUpdatedDomainEvent : IDomainEvent
 
     // Thời điểm phát sinh sự kiện (UTC).
     public DateTime OccurredAtUtc { get; }
+
+    /// <inheritdoc />
+    public string EventIdempotencyKey =>
+        $"chat:conversation_updated:{ConversationId}:{Type}:{OccurredAtUtc:O}";
 
     /// <summary>
     /// Khởi tạo sự kiện cập nhật conversation cho luồng publish domain event.

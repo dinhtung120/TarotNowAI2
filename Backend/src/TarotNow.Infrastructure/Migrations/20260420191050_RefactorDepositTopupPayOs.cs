@@ -126,13 +126,15 @@ namespace TarotNow.Infrastructure.Migrations
                 name: "ix_deposit_orders_client_request_key",
                 table: "deposit_orders",
                 column: "client_request_key",
-                unique: true);
+                unique: true,
+                filter: "\"client_request_key\" <> ''");
 
             migrationBuilder.CreateIndex(
                 name: "ix_deposit_orders_payos_order_code",
                 table: "deposit_orders",
                 column: "payos_order_code",
-                unique: true);
+                unique: true,
+                filter: "\"payos_order_code\" <> 0");
         }
 
         /// <inheritdoc />

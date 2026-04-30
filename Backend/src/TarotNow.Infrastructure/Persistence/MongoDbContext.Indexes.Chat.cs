@@ -66,7 +66,30 @@ public partial class MongoDbContext
             new CreateIndexOptions { Name = "idx_senderid_createdat_desc" }));
         // Hỗ trợ tra soát lịch sử gửi của một user trong các luồng moderation/audit.
 
+        EnsureClientMessageIdUniquenessIndex();
         EnsureSystemEventUniquenessIndex();
+    }
+
+    private void EnsureClientMessageIdUniquenessIndex()
+    {
+        var clientMessageIdFilter = new BsonDocument(
+            "client_message_id",
+            new BsonDocument
+            {
+                { "$type", "string" },
+                { "$gt", string.Empty }
+            });
+        var model = new CreateIndexModel<ChatMessageDocument>(
+            Builders<ChatMessageDocument>.IndexKeys
+                .Ascending(m => m.ConversationId)
+                .Ascending(m => m.ClientMessageId),
+            new CreateIndexOptions<ChatMessageDocument>
+            {
+                Name = "ux_conversationid_clientmessageid",
+                Unique = true,
+                PartialFilterExpression = clientMessageIdFilter
+            });
+        SafeCreateIndex(ChatMessages, model);
     }
 
     private void EnsureSystemEventUniquenessIndex()

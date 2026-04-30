@@ -38,12 +38,12 @@ public sealed partial class OutboxBatchProcessor : IOutboxBatchProcessor
     }
 
     /// <inheritdoc />
-    public async Task ProcessOnceAsync(CancellationToken cancellationToken = default)
+    public async Task<int> ProcessOnceAsync(CancellationToken cancellationToken = default)
     {
         var messages = await ClaimBatchAsync(cancellationToken);
         if (messages.Count == 0)
         {
-            return;
+            return 0;
         }
 
         var parallelism = ResolveParallelism();
@@ -71,6 +71,7 @@ public sealed partial class OutboxBatchProcessor : IOutboxBatchProcessor
         await Task.WhenAll(tasks);
 
         _dbContext.ChangeTracker.Clear();
+        return messages.Count;
     }
 
     private async Task<List<OutboxMessage>> ClaimBatchAsync(CancellationToken cancellationToken)

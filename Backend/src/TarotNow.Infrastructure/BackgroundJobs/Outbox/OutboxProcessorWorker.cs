@@ -31,12 +31,14 @@ public sealed class OutboxProcessorWorker : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.LogInformation("Outbox processor started.");
+        var fastLoopCooldown = TimeSpan.FromMilliseconds(50);
 
         while (stoppingToken.IsCancellationRequested == false)
         {
+            var processedCount = 0;
             try
             {
-                await ProcessBatchOnceAsync(stoppingToken);
+                processedCount = await ProcessBatchOnceAsync(stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -47,20 +49,26 @@ public sealed class OutboxProcessorWorker : BackgroundService
                 _logger.LogError(exception, "Outbox processor loop failed.");
             }
 
-            await Task.Delay(ResolvePollInterval(), stoppingToken);
+            if (processedCount > 0)
+            {
+                await Task.Delay(fastLoopCooldown, stoppingToken);
+                continue;
+            }
+
+            await Task.Delay(ResolveIdlePollInterval(), stoppingToken);
         }
 
         _logger.LogInformation("Outbox processor stopped.");
     }
 
-    private async Task ProcessBatchOnceAsync(CancellationToken cancellationToken)
+    private async Task<int> ProcessBatchOnceAsync(CancellationToken cancellationToken)
     {
         using var scope = _scopeFactory.CreateScope();
         var processor = scope.ServiceProvider.GetRequiredService<IOutboxBatchProcessor>();
-        await processor.ProcessOnceAsync(cancellationToken);
+        return await processor.ProcessOnceAsync(cancellationToken);
     }
 
-    private TimeSpan ResolvePollInterval()
+    private TimeSpan ResolveIdlePollInterval()
     {
         var seconds = _systemConfigSettings.OperationalOutboxPollIntervalSeconds;
         return TimeSpan.FromSeconds(Math.Clamp(seconds, 1, 300));

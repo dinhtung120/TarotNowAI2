@@ -249,6 +249,14 @@ public sealed class ChatModerationOutboxIntegrationTests
             return Task.FromResult<ChatMessageDto?>(null);
         }
 
+        public Task<ChatMessageDto?> GetByConversationAndClientMessageIdAsync(
+            string conversationId,
+            string clientMessageId,
+            CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<ChatMessageDto?>(null);
+        }
+
         public Task AddAsync(ChatMessageDto message, CancellationToken cancellationToken = default)
         {
             return Task.CompletedTask;

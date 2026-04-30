@@ -12,7 +12,12 @@ public partial class ChatHub
     /// <param name="conversationId">Id conversation đích.</param>
     /// <param name="content">Nội dung tin nhắn thô.</param>
     /// <param name="type">Loại tin nhắn (text/image/voice/payment_offer...).</param>
-    public async Task SendMessage(string conversationId, string content, string type = "text")
+    /// <param name="clientMessageId">Id do client cấp để dedup/reconcile optimistic UI.</param>
+    public async Task SendMessage(
+        string conversationId,
+        string content,
+        string type = "text",
+        string? clientMessageId = null)
     {
         if (!TryGetUserGuid(out var userGuid))
         {
@@ -21,7 +26,7 @@ public partial class ChatHub
             return;
         }
 
-        await SendMessageCoreAsync(conversationId, content, type, userGuid);
+        await SendMessageCoreAsync(conversationId, content, type, userGuid, clientMessageId);
     }
 
     /// <summary>
@@ -32,15 +37,17 @@ public partial class ChatHub
     /// <param name="content">Nội dung message.</param>
     /// <param name="type">Loại message.</param>
     /// <param name="userGuid">Sender id.</param>
+    /// <param name="clientMessageId">Id phía client cho idempotency/reconcile.</param>
     private async Task SendMessageCoreAsync(
         string conversationId,
         string content,
         string type,
-        Guid userGuid)
+        Guid userGuid,
+        string? clientMessageId)
     {
         try
         {
-            var command = BuildSendMessageCommand(conversationId, content, type, userGuid);
+            var command = BuildSendMessageCommand(conversationId, content, type, userGuid, clientMessageId);
             // Gắn payload media/payment khi type đặc biệt để handler xử lý đúng rule.
             TryAttachSpecialPayload(command, content);
 
@@ -75,19 +82,22 @@ public partial class ChatHub
     /// <param name="content">Nội dung message.</param>
     /// <param name="type">Loại message.</param>
     /// <param name="userGuid">Sender id.</param>
+    /// <param name="clientMessageId">Id phía client cho idempotency/reconcile.</param>
     /// <returns>Command gửi message đã map các trường cơ bản.</returns>
     private static SendMessageCommand BuildSendMessageCommand(
         string conversationId,
         string content,
         string type,
-        Guid userGuid)
+        Guid userGuid,
+        string? clientMessageId)
     {
         return new SendMessageCommand
         {
             ConversationId = conversationId,
             SenderId = userGuid,
             Type = type,
-            Content = content
+            Content = content,
+            ClientMessageId = clientMessageId
         };
     }
 }

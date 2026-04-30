@@ -9,6 +9,9 @@ public class ConversationSendMessageBody
     // Nội dung text của tin nhắn khi loại message hỗ trợ văn bản.
     public string Content { get; set; } = string.Empty;
 
+    // Định danh phía client để idempotency khi retry và reconcile optimistic UI.
+    public string? ClientMessageId { get; set; }
+
     // Payload media đi kèm khi message không thuần văn bản.
     public TarotNow.Application.Common.MediaPayloadDto? MediaPayload { get; set; }
 }

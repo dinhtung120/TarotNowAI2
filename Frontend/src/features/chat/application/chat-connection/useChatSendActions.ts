@@ -15,14 +15,58 @@ import { userStateQueryKeys } from '@/shared/application/gateways/userStateQuery
 
 interface UseChatSendActionsOptions {
  conversationId?: string | null;
+ currentUserId: string;
  connected: boolean;
  connectionRef: RefObject<HubConnection | null>;
  inputRef: RefObject<HTMLInputElement | null>;
  setMessages: Dispatch<SetStateAction<ChatMessageDto[]>>;
 }
 
+function createClientMessageId() {
+ if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+  return `cmsg_${crypto.randomUUID()}`;
+ }
+
+ return `cmsg_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function normalizeClientMessageId(value: string | null | undefined) {
+ return value?.trim() || '';
+}
+
+function resolveMediaFallbackContent(type: 'image' | 'voice', payload: MediaPayloadDto) {
+ if (payload.description && payload.description.trim()) {
+  return payload.description.trim();
+ }
+
+ return type === 'voice' ? '[voice]' : '[image]';
+}
+
+function buildOptimisticMessage(params: {
+ conversationId: string;
+ currentUserId: string;
+ type: string;
+ content: string;
+ clientMessageId: string;
+ mediaPayload?: MediaPayloadDto | null;
+}): ChatMessageDto {
+ return {
+  id: `tmp:${params.clientMessageId}`,
+  conversationId: params.conversationId,
+  senderId: params.currentUserId,
+  type: params.type,
+  content: params.content,
+  clientMessageId: params.clientMessageId,
+  mediaPayload: params.mediaPayload ?? null,
+  isRead: false,
+  createdAt: new Date().toISOString(),
+  localStatus: 'sending',
+ };
+}
+
 export function useChatSendActions({
  conversationId,
+ currentUserId,
  connected,
  connectionRef,
  inputRef,
@@ -73,13 +117,35 @@ export function useChatSendActions({
   markReadRef.current = markRead;
  }, [markRead, markReadRef]);
 
+ const markOptimisticMessageFailed = useCallback((clientMessageId: string) => {
+  const normalized = normalizeClientMessageId(clientMessageId);
+  if (!normalized) return;
+
+  setMessages((prev) =>
+   prev.map((message) =>
+    normalizeClientMessageId(message.clientMessageId) === normalized
+     ? { ...message, localStatus: 'failed' }
+     : message
+   )
+  );
+ }, [setMessages]);
+
  const sendTypedMessage = useCallback(async (content: string, type = 'text') => {
   const normalized = content.trim();
-  if (!normalized || !conversationId) return false;
+  if (!normalized || !conversationId || !currentUserId) return false;
+  const clientMessageId = createClientMessageId();
+  const optimisticMessage = buildOptimisticMessage({
+   conversationId,
+   currentUserId,
+   type,
+   content: normalized,
+   clientMessageId,
+  });
+  setMessages((prev) => appendUniqueMessage(prev, optimisticMessage));
 
   if (connectionRef.current && connected) {
    try {
-    await connectionRef.current.invoke('SendMessage', conversationId, normalized, type);
+    await connectionRef.current.invoke('SendMessage', conversationId, normalized, type, clientMessageId);
     return true;
    } catch (error) {
     logger.warn('[Chat] SendMessage via SignalR failed, fallback REST', error, { conversationId, type });
@@ -87,7 +153,11 @@ export function useChatSendActions({
   }
 
   try {
-   const result = await sendConversationMessage(conversationId, { type, content: normalized });
+   const result = await sendConversationMessage(conversationId, {
+    type,
+    content: normalized,
+    clientMessageId,
+   });
    if (result.success && result.data) {
     setMessages((prev) => appendUniqueMessage(prev, result.data as ChatMessageDto));
     return true;
@@ -96,15 +166,33 @@ export function useChatSendActions({
   } catch (error) {
    logger.warn('[Chat] REST SendMessage error', error, { conversationId });
   }
+
+  markOptimisticMessageFailed(clientMessageId);
   return false;
- }, [connected, connectionRef, conversationId, setMessages]);
+ }, [connected, connectionRef, conversationId, currentUserId, markOptimisticMessageFailed, setMessages]);
 
  const sendMediaMessage = useCallback(async (type: 'image' | 'voice', payload: MediaPayloadDto) => {
-  if (!conversationId) return false;
+  if (!conversationId || !currentUserId) return false;
+  const clientMessageId = createClientMessageId();
+  const optimisticMessage = buildOptimisticMessage({
+   conversationId,
+   currentUserId,
+   type,
+   content: resolveMediaFallbackContent(type, payload),
+   clientMessageId,
+   mediaPayload: payload,
+  });
+  setMessages((prev) => appendUniqueMessage(prev, optimisticMessage));
 
   if (connectionRef.current && connected) {
    try {
-    await connectionRef.current.invoke('SendMessage', conversationId, JSON.stringify(payload), type);
+    await connectionRef.current.invoke(
+     'SendMessage',
+     conversationId,
+     JSON.stringify(payload),
+     type,
+     clientMessageId
+    );
     return true;
    } catch (error) {
     logger.warn('[Chat] SendMediaMessage via SignalR failed, fallback REST', error, { conversationId, type });
@@ -115,6 +203,7 @@ export function useChatSendActions({
    const result = await sendConversationMessage(conversationId, {
     type,
     content: JSON.stringify(payload),
+    clientMessageId,
     mediaPayload: payload,
    });
    if (result.success && result.data) {
@@ -125,8 +214,10 @@ export function useChatSendActions({
   } catch (error) {
    logger.warn('[Chat] REST SendMediaMessage error', error, { conversationId });
   }
+
+  markOptimisticMessageFailed(clientMessageId);
   return false;
- }, [connected, connectionRef, conversationId, setMessages]);
+ }, [connected, connectionRef, conversationId, currentUserId, markOptimisticMessageFailed, setMessages]);
 
  const handleSendTextMessage = useCallback(async () => {
   if (!newMessage.trim()) return false;

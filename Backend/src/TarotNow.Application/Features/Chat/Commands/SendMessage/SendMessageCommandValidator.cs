@@ -43,5 +43,9 @@ public class SendMessageCommandValidator : AbstractValidator<SendMessageCommand>
         RuleFor(x => x.MediaPayload!.ObjectKey)
             .NotEmpty()
             .When(x => x.Type is ChatMessageType.Image or ChatMessageType.Voice);
+
+        RuleFor(x => x.ClientMessageId)
+            .MaximumLength(128)
+            .When(x => string.IsNullOrWhiteSpace(x.ClientMessageId) == false);
     }
 }

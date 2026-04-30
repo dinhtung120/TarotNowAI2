@@ -78,7 +78,10 @@ export async function listMessages(conversationId: string, options?: { cursor?: 
  }
 }
 
-export async function sendConversationMessage(conversationId: string, payload: { type?: string; content: string; mediaPayload?: MediaPayloadDto | null }): Promise<ActionResult<ChatMessageDto>> {
+export async function sendConversationMessage(
+ conversationId: string,
+ payload: { type?: string; content: string; clientMessageId?: string; mediaPayload?: MediaPayloadDto | null }
+): Promise<ActionResult<ChatMessageDto>> {
  const accessToken = await getServerAccessToken();
  if (!accessToken) return unauthorized();
  try {

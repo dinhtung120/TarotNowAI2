@@ -31,6 +31,11 @@ public partial class ChatMessageDocument
     [BsonElement("content")]
     public string Content { get; set; } = string.Empty;
 
+    // Định danh message từ client để idempotency khi retry gửi.
+    [BsonElement("client_message_id")]
+    [BsonIgnoreIfNull]
+    public string? ClientMessageId { get; set; }
+
     // Khóa idempotency cho system message phát sinh từ background/outbox.
     [BsonElement("system_event_key")]
     [BsonIgnoreIfNull]

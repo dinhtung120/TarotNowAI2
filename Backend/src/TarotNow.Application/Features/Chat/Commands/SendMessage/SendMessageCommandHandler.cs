@@ -57,6 +57,12 @@ public partial class SendMessageCommandHandlerRequestedDomainEventHandler
 
         ValidateSender(conversation, senderId);
         ValidateConversationForSend(conversation, senderId, request.Type);
+        var existingMessage = await ResolveExistingClientMessageAsync(request, cancellationToken);
+        if (existingMessage is not null)
+        {
+            return existingMessage;
+        }
+
         await ValidateAndConsumeMediaUploadSessionAsync(request, conversation, cancellationToken);
         var message = BuildMessage(request, senderId);
 
@@ -75,6 +81,23 @@ public partial class SendMessageCommandHandlerRequestedDomainEventHandler
                 senderId,
                 message,
                 firstMessageFreeze),
+            cancellationToken);
+    }
+
+    private async Task<ChatMessageDto?> ResolveExistingClientMessageAsync(
+        SendMessageCommand request,
+        CancellationToken cancellationToken)
+    {
+        var normalizedClientMessageId = NormalizeClientMessageId(request.ClientMessageId);
+        if (string.IsNullOrWhiteSpace(normalizedClientMessageId))
+        {
+            return null;
+        }
+
+        request.ClientMessageId = normalizedClientMessageId;
+        return await _messageRepo.GetByConversationAndClientMessageIdAsync(
+            request.ConversationId,
+            normalizedClientMessageId,
             cancellationToken);
     }
 

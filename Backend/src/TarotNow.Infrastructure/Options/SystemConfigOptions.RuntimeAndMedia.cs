@@ -61,7 +61,7 @@ public sealed partial class SystemConfigOptions
             public int MaxRetryAttempts { get; set; } = 12;
             public int LockTimeoutSeconds { get; set; } = 120;
             public int MaxBackoffSeconds { get; set; } = 300;
-            public int PollIntervalSeconds { get; set; } = 5;
+            public int PollIntervalSeconds { get; set; } = 1;
         }
 
         public sealed class EscrowTimerOptions

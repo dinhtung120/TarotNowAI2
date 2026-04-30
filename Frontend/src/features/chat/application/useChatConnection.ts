@@ -61,14 +61,15 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
   handleSendTextMessage,
   notifyTyping,
   markRead,
-  markReadRef,
- } = useChatSendActions({
-  conversationId,
-  connected,
-  connectionRef,
-  inputRef,
-  setMessages,
- });
+ markReadRef,
+} = useChatSendActions({
+ conversationId,
+ currentUserId: resolvedCurrentUserId,
+ connected,
+ connectionRef,
+ inputRef,
+ setMessages,
+});
 
  useChatSignalRLifecycle({
   conversationId,

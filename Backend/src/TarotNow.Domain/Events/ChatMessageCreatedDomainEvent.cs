@@ -3,7 +3,7 @@ namespace TarotNow.Domain.Events;
 /// <summary>
 /// Domain event phát sinh khi tin nhắn chat mới được tạo.
 /// </summary>
-public sealed class ChatMessageCreatedDomainEvent : IDomainEvent
+public sealed class ChatMessageCreatedDomainEvent : IIdempotentDomainEvent
 {
     /// <summary>
     /// Định danh hội thoại.
@@ -26,7 +26,15 @@ public sealed class ChatMessageCreatedDomainEvent : IDomainEvent
     public string MessageType { get; init; } = string.Empty;
 
     /// <summary>
+    /// Định danh client-side phục vụ idempotency/reconcile ở các lane realtime.
+    /// </summary>
+    public string? ClientMessageId { get; init; }
+
+    /// <summary>
     /// Thời điểm phát sinh theo UTC.
     /// </summary>
     public DateTime OccurredAtUtc { get; init; } = DateTime.UtcNow;
+
+    /// <inheritdoc />
+    public string EventIdempotencyKey => $"chat:message_created:{MessageId}";
 }

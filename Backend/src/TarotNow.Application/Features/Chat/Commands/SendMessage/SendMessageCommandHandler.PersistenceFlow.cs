@@ -112,6 +112,7 @@ public partial class SendMessageCommandHandlerRequestedDomainEventHandler
                 MessageId = message.Id,
                 SenderId = message.SenderId,
                 MessageType = message.Type,
+                ClientMessageId = message.ClientMessageId,
                 OccurredAtUtc = message.CreatedAt
             },
             cancellationToken);

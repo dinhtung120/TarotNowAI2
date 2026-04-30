@@ -65,6 +65,7 @@ public partial class ConversationController
             // Chuẩn hóa type về text khi client gửi rỗng để tránh nhánh nghiệp vụ không xác định.
             Type = string.IsNullOrWhiteSpace(body.Type) ? "text" : body.Type.Trim(),
             Content = body.Content,
+            ClientMessageId = body.ClientMessageId,
             MediaPayload = body.MediaPayload
         });
 

@@ -109,9 +109,12 @@ public partial class SendMessageCommandHandlerRequestedDomainEventHandler
     /// </summary>
     private static ChatMessageDto BuildMessage(SendMessageCommand request, string senderId)
     {
+        var messageId = GenerateMongoCompatibleMessageId();
+        var normalizedClientMessageId = NormalizeClientMessageId(request.ClientMessageId);
         return new ChatMessageDto
         {
-            Id = GenerateMongoCompatibleMessageId(),
+            Id = messageId,
+            ClientMessageId = normalizedClientMessageId ?? $"srv:{request.ConversationId}:{messageId}",
             ConversationId = request.ConversationId,
             SenderId = senderId,
             Type = request.Type,
@@ -128,6 +131,17 @@ public partial class SendMessageCommandHandlerRequestedDomainEventHandler
         Span<byte> bytes = stackalloc byte[12];
         RandomNumberGenerator.Fill(bytes);
         return Convert.ToHexString(bytes).ToLowerInvariant();
+    }
+
+    private static string? NormalizeClientMessageId(string? rawClientMessageId)
+    {
+        if (string.IsNullOrWhiteSpace(rawClientMessageId))
+        {
+            return null;
+        }
+
+        var trimmed = rawClientMessageId.Trim();
+        return trimmed.Length <= 128 ? trimmed : trimmed[..128];
     }
 
     /// <summary>

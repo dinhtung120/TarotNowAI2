@@ -89,6 +89,9 @@ public class ChatMessageDto
     // Định danh tin nhắn.
     public string Id { get; set; } = string.Empty;
 
+    // Định danh client-side để idempotency và reconcile optimistic UI.
+    public string? ClientMessageId { get; set; }
+
     // Định danh hội thoại chứa tin nhắn.
     public string ConversationId { get; set; } = string.Empty;
 

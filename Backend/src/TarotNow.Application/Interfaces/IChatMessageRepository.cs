@@ -17,6 +17,15 @@ public interface IChatMessageRepository
     Task<ChatMessageDto?> GetByIdAsync(string id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Lấy tin nhắn theo cặp conversation + clientMessageId để đảm bảo idempotency khi client retry.
+    /// Luồng xử lý: trả bản ghi đầu tiên khớp khóa client nếu đã tồn tại, ngược lại trả null.
+    /// </summary>
+    Task<ChatMessageDto?> GetByConversationAndClientMessageIdAsync(
+        string conversationId,
+        string clientMessageId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Tạo tin nhắn mới vào cuộc hội thoại khi có nội dung gửi lên hệ thống.
     /// Luồng xử lý: nhận DTO tin nhắn đã hợp lệ và persist bản ghi mới.
     /// </summary>
