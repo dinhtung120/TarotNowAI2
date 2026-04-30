@@ -73,6 +73,9 @@ export function useLoginPage() {
    if (result.data) {
     setIsRedirecting(true);
     navigation.replace('/');
+    window.setTimeout(() => {
+     navigation.refresh();
+    }, 0);
    }
   } catch {
    setErrorMsg(t('login.error_unexpected'));
