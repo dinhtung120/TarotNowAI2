@@ -23,9 +23,9 @@ export function useCollectionPage() {
 
  const { data, error: queryError, isLoading, isFetching } = useQuery({
   queryKey: userStateQueryKeys.collection.mine(),
-  queryFn: () => fetchJsonOrThrow<UserCollectionDto[]>(
-   '/api/collection',
-   {
+ queryFn: () => fetchJsonOrThrow<UserCollectionDto[]>(
+  '/api/collection',
+  {
     method: 'GET',
     credentials: 'include',
     cache: 'no-store',
@@ -33,6 +33,10 @@ export function useCollectionPage() {
    'Failed to load collection.',
    8_000,
   ),
+  staleTime: 120_000,
+  gcTime: 1000 * 60 * 20,
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: false,
  });
 
  const collection = useMemo<UserCollectionDto[]>(
@@ -59,8 +63,9 @@ export function useCollectionPage() {
   }, [selectedCardId]);
 
   const selectedUserCard = useMemo(() => {
-    return collection.find((card) => card.cardId === selectedCardId) ?? null;
-  }, [collection, selectedCardId]);
+    if (selectedCardId === null) return null;
+    return collectionByCardId.get(selectedCardId) ?? null;
+  }, [collectionByCardId, selectedCardId]);
 
   
   const filteredDeck = useMemo(() => {

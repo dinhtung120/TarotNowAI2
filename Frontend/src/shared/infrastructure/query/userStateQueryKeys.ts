@@ -22,6 +22,13 @@ export const userStateQueryKeys = {
  collection: {
   all: ['collection'] as const,
   mine: () => [...userStateQueryKeys.collection.all, 'user'] as const,
+  catalog: {
+   manifest: () => [...userStateQueryKeys.collection.all, 'catalog', 'manifest'] as const,
+   chunk: (version: string, chunkId: number) =>
+    [...userStateQueryKeys.collection.all, 'catalog', 'chunk', version, chunkId] as const,
+   detail: (version: string, cardId: number) =>
+    [...userStateQueryKeys.collection.all, 'catalog', 'detail', version, cardId] as const,
+  },
  },
  reading: {
   cardsCatalog: () => ['reading', 'cards-catalog'] as const,

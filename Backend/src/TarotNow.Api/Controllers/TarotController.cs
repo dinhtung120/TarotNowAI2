@@ -1,25 +1,24 @@
-
-
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using System.Threading;
+using TarotNow.Api.Contracts;
 using TarotNow.Api.Extensions;
 using TarotNow.Application.Features.Reading.Commands.InitSession;
+using TarotNow.Application.Features.Reading.Queries.GetCardsCatalog;
 
 namespace TarotNow.Api.Controllers;
-
 
 [ApiController]
 [ApiVersion(ApiVersions.V1)]
 [Route(ApiRoutes.Reading)]
-[Authorize] 
+[Authorize]
 [EnableRateLimiting("auth-session")]
 // API reading tarot.
 // Luồng chính: khởi tạo phiên, reveal kết quả, lấy catalog lá bài và bộ sưu tập người dùng.
 public class TarotController : ControllerBase
 {
+    private const int CollectionCatalogChunkSize = 16;
     private readonly IMediator _mediator;
 
     /// <summary>
@@ -47,10 +46,10 @@ public class TarotController : ControllerBase
         }
 
         // Luôn ghi đè UserId từ token để tránh giả mạo chủ thể trong payload.
-        command.UserId = userId; 
+        command.UserId = userId;
 
         var result = await _mediator.SendWithRequestCancellation(HttpContext, command);
-        return Ok(result); 
+        return Ok(result);
     }
 
     /// <summary>
@@ -69,14 +68,14 @@ public class TarotController : ControllerBase
         }
 
         // Gắn user id từ context để handler kiểm tra quyền truy cập session.
-        command.UserId = userId; 
+        command.UserId = userId;
 
         var result = await _mediator.SendWithRequestCancellation(HttpContext, command);
-        return Ok(result); 
+        return Ok(result);
     }
 
     /// <summary>
-    /// Lấy catalog lá bài tarot công khai.
+    /// Lấy catalog lá bài tarot công khai (legacy full payload).
     /// </summary>
     /// <param name="cancellationToken">Token hủy request.</param>
     /// <returns>Danh mục lá bài dùng cho client hiển thị.</returns>
@@ -84,11 +83,80 @@ public class TarotController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> GetCardsCatalog(CancellationToken cancellationToken)
     {
-        var result = await _mediator.SendWithRequestCancellation(HttpContext, 
-            new TarotNow.Application.Features.Reading.Queries.GetCardsCatalog.GetCardsCatalogQuery(),
-            cancellationToken
-        );
+        var result = await _mediator.SendWithRequestCancellation(
+            HttpContext,
+            new GetCardsCatalogQuery(),
+            cancellationToken);
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Manifest chunked metadata cho collection.
+    /// </summary>
+    [HttpGet("cards-catalog/manifest")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetCardsCatalogManifest(CancellationToken cancellationToken)
+    {
+        var projection = await BuildCollectionCatalogProjectionAsync(cancellationToken);
+        ApplyManifestCacheHeaders();
+        Response.Headers.ETag = $"\"{projection.Version}\"";
+        return Ok(projection.Manifest);
+    }
+
+    /// <summary>
+    /// Chunk metadata cho collection theo chunk id.
+    /// </summary>
+    [HttpGet("cards-catalog/chunks/{chunkId:int}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetCardsCatalogChunk([FromRoute] int chunkId, [FromQuery(Name = "v")] string? version, CancellationToken cancellationToken)
+    {
+        if (chunkId < 0)
+        {
+            return BadRequest(new { error = "chunkId must be >= 0." });
+        }
+
+        var projection = await BuildCollectionCatalogProjectionAsync(cancellationToken);
+        if (!VersionMatches(version, projection.Version))
+        {
+            return Conflict(new { error = "Catalog version mismatch.", currentVersion = projection.Version });
+        }
+
+        if (!projection.TryGetChunk(chunkId, out var chunk))
+        {
+            return NotFound(new { error = "Chunk not found.", chunkId, version = projection.Version });
+        }
+
+        ApplyImmutableCacheHeaders();
+        Response.Headers.ETag = $"\"{projection.Version}:chunk:{chunkId}\"";
+        return Ok(chunk);
+    }
+
+    /// <summary>
+    /// Detail metadata của card để mở modal diễn giải.
+    /// </summary>
+    [HttpGet("cards-catalog/details/{cardId:int}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetCardsCatalogDetail([FromRoute] int cardId, [FromQuery(Name = "v")] string? version, CancellationToken cancellationToken)
+    {
+        if (cardId < 0)
+        {
+            return BadRequest(new { error = "cardId must be >= 0." });
+        }
+
+        var projection = await BuildCollectionCatalogProjectionAsync(cancellationToken);
+        if (!VersionMatches(version, projection.Version))
+        {
+            return Conflict(new { error = "Catalog version mismatch.", currentVersion = projection.Version });
+        }
+
+        if (!projection.TryGetDetail(cardId, out var detail))
+        {
+            return NotFound(new { error = "Card not found.", cardId, version = projection.Version });
+        }
+
+        ApplyImmutableCacheHeaders();
+        Response.Headers.ETag = $"\"{projection.Version}:detail:{cardId}\"";
+        return Ok(detail);
     }
 
     /// <summary>
@@ -104,9 +172,35 @@ public class TarotController : ControllerBase
             return this.UnauthorizedProblem();
         }
 
-        var result = await _mediator.SendWithRequestCancellation(HttpContext, 
+        var result = await _mediator.SendWithRequestCancellation(
+            HttpContext,
             new TarotNow.Application.Features.Reading.Queries.GetCollection.GetUserCollectionQuery { UserId = userId }
         );
         return Ok(result);
+    }
+
+    private async Task<CollectionCatalogProjection> BuildCollectionCatalogProjectionAsync(CancellationToken cancellationToken)
+    {
+        var cards = await _mediator.SendWithRequestCancellation(
+            HttpContext,
+            new GetCardsCatalogQuery(),
+            cancellationToken);
+        return CollectionCatalogProjectionBuilder.Build(cards, CollectionCatalogChunkSize);
+    }
+
+    private static bool VersionMatches(string? requestedVersion, string currentVersion)
+    {
+        return string.IsNullOrWhiteSpace(requestedVersion)
+            || string.Equals(requestedVersion, currentVersion, StringComparison.Ordinal);
+    }
+
+    private void ApplyManifestCacheHeaders()
+    {
+        Response.Headers.CacheControl = "public, max-age=60, s-maxage=60, stale-while-revalidate=120";
+    }
+
+    private void ApplyImmutableCacheHeaders()
+    {
+        Response.Headers.CacheControl = "public, max-age=31536000, immutable";
     }
 }

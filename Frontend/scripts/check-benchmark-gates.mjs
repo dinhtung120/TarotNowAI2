@@ -93,6 +93,54 @@ function countSlowRequestsOver(pages, thresholdMs) {
  }, 0);
 }
 
+function isCollectionImageRequest(request) {
+ if (!request || typeof request.url !== 'string') {
+  return false;
+ }
+
+ const url = request.url;
+ return url.includes('/api/collection/card-image')
+  || url.includes('img.tarotnow.xyz')
+  || url.includes('media.tarotnow.xyz')
+  || (url.includes('/_next/image') && url.includes('collection%2Fcard-image'));
+}
+
+function countCollectionImageSlowRequestsOver(pages, thresholdMs) {
+ return pages.reduce((total, page) => {
+  const route = page?.route;
+  if (route !== '/vi/collection') {
+   return total;
+  }
+
+  if (typeof page?.collectionImageSlowRequestHighCount === 'number' && thresholdMs >= 800) {
+   return total + Number(page.collectionImageSlowRequestHighCount ?? 0);
+  }
+
+  const requests = Array.isArray(page?.requests) ? page.requests : [];
+  const count = requests
+   .filter((request) => isCollectionImageRequest(request))
+   .filter((request) => Number(request?.durationMs ?? 0) > thresholdMs)
+   .length;
+  return total + count;
+ }, 0);
+}
+
+function pickCollectionDesktopPage(pages) {
+ const candidates = pages.filter((page) =>
+  page?.route === '/vi/collection'
+   && page?.viewport === 'desktop'
+   && (page?.scenario === 'logged-in-admin' || page?.scenario === 'logged-in-reader')
+ );
+
+ if (candidates.length === 0) {
+  return null;
+ }
+
+ return candidates.reduce((current, next) => (
+  Number(next.requestCount ?? 0) > Number(current.requestCount ?? 0) ? next : current
+ ));
+}
+
 function pickAdminDesktopPage(pages) {
  const candidates = pages.filter((page) =>
   page?.scenario === 'logged-in-admin'
@@ -147,6 +195,14 @@ const maxAdminDesktopSessionApiCalls = parseNumber(
  args.maxAdminDesktopSessionApiCalls ?? process.env.PERF_GATE_MAX_ADMIN_DESKTOP_SESSION_API_CALLS,
  4,
 );
+const maxCollectionDesktopRequestCount = parseNumber(
+ args.maxCollectionDesktopRequestCount ?? process.env.PERF_GATE_MAX_COLLECTION_DESKTOP_REQUESTS,
+ 60,
+);
+const minCollectionImageSlowHighReductionPct = parseNumber(
+ args.minCollectionImageSlowHighReductionPct ?? process.env.PERF_GATE_MIN_COLLECTION_IMAGE_SLOW_HIGH_REDUCTION_PCT,
+ 70,
+);
 
 const baseline = loadBenchmark(baselineFile);
 const current = loadBenchmark(currentFile);
@@ -164,8 +220,15 @@ const authMedianReductionPct = reductionPercent(baselineAuthMedianRequests, curr
 const baselineSlowHighCount = countSlowRequestsOver(baselinePages, 800);
 const currentSlowHighCount = countSlowRequestsOver(currentPages, 800);
 const slowHighReductionPct = reductionPercent(baselineSlowHighCount, currentSlowHighCount);
+const baselineCollectionImageSlowHighCount = countCollectionImageSlowRequestsOver(baselinePages, 800);
+const currentCollectionImageSlowHighCount = countCollectionImageSlowRequestsOver(currentPages, 800);
+const collectionImageSlowHighReductionPct = reductionPercent(
+ baselineCollectionImageSlowHighCount,
+ currentCollectionImageSlowHighCount,
+);
 
 const adminDesktopPage = pickAdminDesktopPage(currentPages);
+const collectionDesktopPage = pickCollectionDesktopPage(currentPages);
 
 const failures = [];
 
@@ -214,16 +277,39 @@ if (!adminDesktopPage) {
  }
 }
 
+if (!collectionDesktopPage) {
+ failures.push('Missing /vi/collection page data for authenticated desktop scenarios.');
+} else {
+ const requestCount = Number(collectionDesktopPage.requestCount ?? 0);
+ if (requestCount > maxCollectionDesktopRequestCount) {
+  failures.push(
+   `/vi/collection desktop request count is ${requestCount} (max ${maxCollectionDesktopRequestCount}).`,
+  );
+ }
+}
+
+if (baselineCollectionImageSlowHighCount > 0 && collectionImageSlowHighReductionPct < minCollectionImageSlowHighReductionPct) {
+ failures.push(
+  `Collection image slow-request reduction (>800ms) is ${formatPercent(collectionImageSlowHighReductionPct)} (required >= ${formatPercent(minCollectionImageSlowHighReductionPct)}).`,
+ );
+}
+
 const summaryLines = [
  `Current file: ${currentFile}`,
  `Baseline file: ${baselineFile}`,
  `Auth median request/page: baseline=${baselineAuthMedianRequests.toFixed(2)} current=${currentAuthMedianRequests.toFixed(2)} reduction=${formatPercent(authMedianReductionPct)}`,
  `Slow requests >800ms: baseline=${baselineSlowHighCount} current=${currentSlowHighCount} reduction=${formatPercent(slowHighReductionPct)}`,
+ `Collection image slow requests >800ms: baseline=${baselineCollectionImageSlowHighCount} current=${currentCollectionImageSlowHighCount} reduction=${formatPercent(collectionImageSlowHighReductionPct)}`,
 ];
 
 if (adminDesktopPage) {
  summaryLines.push(
   `/vi/admin desktop: requests=${adminDesktopPage.requestCount}, docReloads=${adminDesktopPage.documentReloadCount}, handshakes=${adminDesktopPage.handshakeRedirectCount}, sessionApiCalls=${adminDesktopPage.sessionApiCallCount}`,
+ );
+}
+if (collectionDesktopPage) {
+ summaryLines.push(
+  `/vi/collection desktop: requests=${collectionDesktopPage.requestCount}, imageRequests=${collectionDesktopPage.collectionImageRequestCount ?? 'n/a'}, image>800ms=${collectionDesktopPage.collectionImageSlowRequestHighCount ?? 'n/a'}, imageReloadRequests=${collectionDesktopPage.collectionImageReloadRequestCount ?? 'n/a'}, image304=${collectionDesktopPage.collectionImageCacheHitCount ?? 'n/a'}`,
  );
 }
 

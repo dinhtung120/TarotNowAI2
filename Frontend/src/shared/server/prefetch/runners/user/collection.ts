@@ -1,29 +1,19 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { getUserCollection } from '@/features/collection/application/actions';
 import { getReadingSetupSnapshotAction } from '@/shared/application/actions/reading-setup-snapshot';
-import { getCardsCatalogAction } from '@/features/reading/application/actions/cards-catalog';
 import { inventoryQueryKeys } from '@/shared/infrastructure/inventory/inventoryConstants';
 import { fetchInventoryServer } from '@/shared/infrastructure/inventory/inventoryServerActions';
 import { userStateQueryKeys } from '@/shared/infrastructure/query/userStateQueryKeys';
 import { swallowPrefetch } from '@/shared/server/prefetch/runners/user/shared';
 
 export async function prefetchCollectionPage(qc: QueryClient): Promise<void> {
- await Promise.all([
-  qc.prefetchQuery({
-   queryKey: userStateQueryKeys.collection.mine(),
-   queryFn: async () => {
-    const result = await getUserCollection();
-    return result.success && Array.isArray(result.data) ? result.data : [];
-   },
-  }),
-  qc.prefetchQuery({
-   queryKey: userStateQueryKeys.reading.cardsCatalog(),
-   queryFn: async () => {
-    const result = await getCardsCatalogAction();
-    return result.success && Array.isArray(result.data) ? result.data : [];
-   },
-  }),
- ]);
+ await qc.prefetchQuery({
+  queryKey: userStateQueryKeys.collection.mine(),
+  queryFn: async () => {
+   const result = await getUserCollection();
+   return result.success && Array.isArray(result.data) ? result.data : [];
+  },
+ });
 }
 
 export async function prefetchInventoryPage(qc: QueryClient): Promise<void> {

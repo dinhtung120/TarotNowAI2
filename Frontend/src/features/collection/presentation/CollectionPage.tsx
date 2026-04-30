@@ -53,12 +53,15 @@ export default function CollectionPage() {
         <CollectionDeckGrid
           activeFilter={vm.activeFilter}
           collection={vm.collection}
-          filteredDeck={vm.filteredDeck}
+          filteredDeck={vm.visibleDeck}
           error={vm.error}
           labels={vm.deckGridLabels}
           getCardImageUrl={vm.getCardImageUrl}
           getCardName={vm.getCardName}
           onSelectCard={vm.setSelectedCardId}
+          hasMore={vm.hasMoreVisibleCards}
+          onLoadMore={vm.requestNextVisibleChunkWindow}
+          loadingMore={vm.isCatalogChunkLoading}
         />
       </main>
     </div>

@@ -28,6 +28,7 @@ export default function CollectionZoomCardImage({
         alt={cardName || unknownCardLabel}
         fill
         unoptimized={unoptimizedCardImage}
+        priority
         sizes="(max-width: 768px) 13rem, 20rem"
         className={cn(
           "h-full w-full object-cover transition-all duration-500",

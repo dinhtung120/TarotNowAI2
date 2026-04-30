@@ -26,6 +26,7 @@ export function CollectionZoomModal({
 
   return (
     <div
+      data-tn-collection-modal="true"
       className={cn(
         "animate-in fade-in fixed inset-0 z-[100] overflow-y-auto custom-scrollbar duration-500",
       )}

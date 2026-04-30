@@ -66,6 +66,12 @@ interface PageBenchmarkMetric {
   handshakeRedirectCount: number;
   sessionApiCallCount: number;
   failedRequestCount: number;
+  collectionImageRequestCount: number;
+  collectionImageSlowRequestMediumCount: number;
+  collectionImageSlowRequestHighCount: number;
+  collectionImageFirstLoadRequestCount: number;
+  collectionImageReloadRequestCount: number;
+  collectionImageCacheHitCount: number;
   pendingCount: number;
   pendingUrls: string[];
   totalResponseBytes: number;
@@ -77,6 +83,11 @@ interface PageBenchmarkMetric {
   requests: RequestMetric[];
   interactionNotes: string[];
   coverageBlocked: string[];
+}
+
+interface RouteInteractionProbeResult {
+  notes: string[];
+  collectionReloadStartedAtMs: number | null;
 }
 
 interface ScenarioBenchmarkResult {
@@ -592,6 +603,38 @@ function resolveRouteFamily(route: string): string {
   if (pathWithoutLocale === '/legal' || pathWithoutLocale.startsWith('/legal/')) return 'legal';
   if (pathWithoutLocale === '/admin' || pathWithoutLocale.startsWith('/admin/')) return 'admin';
   return 'other';
+}
+
+function isCollectionImageRequestUrl(requestUrl: string): boolean {
+  try {
+    const parsed = new URL(requestUrl);
+    const host = parsed.hostname.toLowerCase();
+    if (host === 'img.tarotnow.xyz' || host === 'media.tarotnow.xyz') {
+      return true;
+    }
+
+    if (parsed.pathname === '/api/collection/card-image') {
+      return true;
+    }
+
+    if (parsed.pathname !== '/_next/image') {
+      return false;
+    }
+
+    const encodedUpstream = parsed.searchParams.get('url');
+    if (!encodedUpstream) {
+      return false;
+    }
+
+    const upstream = decodeURIComponent(encodedUpstream);
+    return upstream.includes('/api/collection/card-image')
+      || upstream.includes('img.tarotnow.xyz')
+      || upstream.includes('media.tarotnow.xyz');
+  } catch {
+    return requestUrl.includes('/api/collection/card-image')
+      || requestUrl.includes('img.tarotnow.xyz')
+      || requestUrl.includes('media.tarotnow.xyz');
+  }
 }
 
 function buildRouteFamilySummaryLines(result: BenchmarkRunResult): string[] {
@@ -1318,45 +1361,84 @@ function resolveExpectedRole(scenario: BenchmarkScenario): string {
   return '';
 }
 
-async function runRouteInteractionProbe(page: Page, route: string): Promise<string[]> {
+async function runRouteInteractionProbe(page: Page, route: string): Promise<RouteInteractionProbeResult> {
   const notes: string[] = [];
+  let collectionReloadStartedAtMs: number | null = null;
 
-  if (route !== `${LOCALE_PREFIX}/community`) {
-    return notes;
+  if (route === `${LOCALE_PREFIX}/community`) {
+    try {
+      const postCards = page.locator('.tn-community-card');
+      const postCount = await postCards.count();
+      if (postCount === 0) {
+        notes.push('interaction-community:no-post-card');
+      } else {
+        const firstPost = postCards.nth(0);
+        const commentButton = firstPost.locator('button:has(svg.lucide-message-circle)');
+        if (await commentButton.count() > 0) {
+          await commentButton.nth(0).click({ timeout: 6_000 });
+          notes.push('interaction-community:toggle-comments');
+        } else {
+          notes.push('interaction-community:comment-button-missing');
+        }
+
+        const reactionButton = firstPost.locator('button:has-text("👍")');
+        if (await reactionButton.count() > 0) {
+          await reactionButton.nth(0).click({ timeout: 6_000 });
+          notes.push('interaction-community:react-like');
+        } else {
+          notes.push('interaction-community:reaction-button-missing');
+        }
+      }
+      await page.waitForTimeout(700);
+    } catch {
+      notes.push('interaction-community:failed');
+    }
   }
 
-  try {
-    const postCards = page.locator('.tn-community-card');
-    const postCount = await postCards.count();
-    if (postCount === 0) {
-      notes.push('interaction-community:no-post-card');
-      return notes;
+  if (route === `${LOCALE_PREFIX}/collection`) {
+    try {
+      for (let index = 0; index < 2; index += 1) {
+        await page.mouse.wheel(0, 900);
+        await page.waitForTimeout(450);
+      }
+      notes.push('interaction-collection:scroll-2-viewports');
+    } catch {
+      notes.push('interaction-collection:scroll-failed');
     }
 
-    const firstPost = postCards.nth(0);
-
-    const commentButton = firstPost.locator('button:has(svg.lucide-message-circle)');
-    if (await commentButton.count() > 0) {
-      await commentButton.nth(0).click({ timeout: 6_000 });
-      notes.push('interaction-community:toggle-comments');
-    } else {
-      notes.push('interaction-community:comment-button-missing');
+    try {
+      const cards = page.locator('[data-tn-collection-card="true"]');
+      const count = await cards.count();
+      const openCount = Math.min(5, count);
+      for (let index = 0; index < openCount; index += 1) {
+        await cards.nth(index).click({ timeout: 8_000 });
+        const closeButton = page.locator('[data-tn-collection-modal-close="true"]');
+        if (await closeButton.count() > 0) {
+          await closeButton.first().click({ timeout: 8_000 });
+        } else {
+          await page.keyboard.press('Escape');
+        }
+        await page.waitForTimeout(220);
+      }
+      notes.push(`interaction-collection:modal-opened-${openCount}`);
+    } catch {
+      notes.push('interaction-collection:modal-open-failed');
     }
 
-    const reactionButton = firstPost.locator('button:has-text("👍")');
-    if (await reactionButton.count() > 0) {
-      await reactionButton.nth(0).click({ timeout: 6_000 });
-      notes.push('interaction-community:react-like');
-    } else {
-      notes.push('interaction-community:reaction-button-missing');
+    try {
+      collectionReloadStartedAtMs = Date.now();
+      await page.reload({ waitUntil: 'domcontentloaded', timeout: NAVIGATION_TIMEOUT_MS });
+      await page.waitForTimeout(800);
+      notes.push('interaction-collection:reloaded');
+    } catch {
+      notes.push('interaction-collection:reload-failed');
     }
-
-    await page.waitForTimeout(700);
-  } catch {
-    notes.push('interaction-community:failed');
   }
 
-  return notes;
+  return {
+    notes,
+    collectionReloadStartedAtMs,
+  };
 }
 
 async function benchmarkNavigation(
@@ -1533,8 +1615,8 @@ async function benchmarkNavigation(
     coverageBlocked.push(`load-timeout:${route}`);
   }
 
-  const interactionNotes = await runRouteInteractionProbe(page, route);
-  coverageBlocked.push(...interactionNotes);
+  const interactionProbe = await runRouteInteractionProbe(page, route);
+  coverageBlocked.push(...interactionProbe.notes);
 
   await page.waitForTimeout(SETTLE_AFTER_NAVIGATION_MS);
   await Promise.allSettled(finalizeTasks);
@@ -1610,6 +1692,25 @@ async function benchmarkNavigation(
   }).length;
 
   const slowRequests = requestMetrics.filter((request) => (request.durationMs ?? 0) > SLOW_REQUEST_MEDIUM_THRESHOLD_MS);
+  const collectionImageRequests = requestRecords.filter((request) => isCollectionImageRequestUrl(request.url));
+  const collectionReloadStartedAtMs = interactionProbe.collectionReloadStartedAtMs;
+  const collectionImageRequestCount = collectionImageRequests.length;
+  const collectionImageSlowRequestHighCount = collectionImageRequests.filter((request) =>
+    (request.durationMs ?? 0) > SLOW_REQUEST_HIGH_THRESHOLD_MS,
+  ).length;
+  const collectionImageSlowRequestMediumCount = collectionImageRequests.filter((request) => {
+    const duration = request.durationMs ?? 0;
+    return duration > SLOW_REQUEST_MEDIUM_THRESHOLD_MS && duration <= SLOW_REQUEST_HIGH_THRESHOLD_MS;
+  }).length;
+  const collectionImageCacheHitCount = collectionImageRequests.filter((request) =>
+    request.status === 304,
+  ).length;
+  const collectionImageFirstLoadRequestCount = collectionImageRequests.filter((request) =>
+    collectionReloadStartedAtMs === null || request.startedAtMs < collectionReloadStartedAtMs,
+  ).length;
+  const collectionImageReloadRequestCount = collectionImageRequests.filter((request) =>
+    collectionReloadStartedAtMs !== null && request.startedAtMs >= collectionReloadStartedAtMs,
+  ).length;
   const totalResponseBytes = requestMetrics.reduce((sum, request) => sum + request.responseBytes, 0);
   const totalTransferBytes = requestMetrics.reduce((sum, request) => sum + request.transferBytes, 0);
 
@@ -1650,6 +1751,12 @@ async function benchmarkNavigation(
     handshakeRedirectCount,
     sessionApiCallCount,
     failedRequestCount,
+    collectionImageRequestCount,
+    collectionImageSlowRequestMediumCount,
+    collectionImageSlowRequestHighCount,
+    collectionImageFirstLoadRequestCount,
+    collectionImageReloadRequestCount,
+    collectionImageCacheHitCount,
     pendingCount: pendingNonPersistent.length,
     pendingUrls: pendingNonPersistent.map((request) => request.url),
     totalResponseBytes,
@@ -1659,7 +1766,7 @@ async function benchmarkNavigation(
     duplicateRequestGroups,
     slowRequests,
     requests: requestMetrics,
-    interactionNotes: [...interactionNotes, ...runtimeConsoleErrors],
+    interactionNotes: [...interactionProbe.notes, ...runtimeConsoleErrors],
     coverageBlocked,
   };
 }
@@ -1757,6 +1864,12 @@ function createPagesCsv(result: BenchmarkRunResult): string {
     'handshake_redirect_count',
     'session_api_call_count',
     'failed_request_count',
+    'collection_image_request_count',
+    'collection_image_slow_400_800_count',
+    'collection_image_slow_over_800_count',
+    'collection_image_first_load_count',
+    'collection_image_reload_count',
+    'collection_image_cache_hit_count',
     'pending_count',
     'navigation_ms',
     'dom_content_loaded_ms',
@@ -1790,6 +1903,12 @@ function createPagesCsv(result: BenchmarkRunResult): string {
         toCsvValue(page.handshakeRedirectCount),
         toCsvValue(page.sessionApiCallCount),
         toCsvValue(page.failedRequestCount),
+        toCsvValue(page.collectionImageRequestCount),
+        toCsvValue(page.collectionImageSlowRequestMediumCount),
+        toCsvValue(page.collectionImageSlowRequestHighCount),
+        toCsvValue(page.collectionImageFirstLoadRequestCount),
+        toCsvValue(page.collectionImageReloadRequestCount),
+        toCsvValue(page.collectionImageCacheHitCount),
         toCsvValue(page.pendingCount),
         toCsvValue(formatNumber(page.navigationMs)),
         toCsvValue(formatNumber(page.domContentLoadedMs)),
@@ -1871,6 +1990,7 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
   const suspiciousPages = allPages.filter((page) => page.requestCount > REQUEST_COUNT_HIGH_THRESHOLD);
   const criticalPages = allPages.filter((page) => page.requestCount > REQUEST_COUNT_CRITICAL_THRESHOLD);
   const pendingPages = allPages.filter((page) => page.pendingCount > 0);
+  const collectionFocusPages = allPages.filter((page) => page.route === `${LOCALE_PREFIX}/collection`);
 
   const highSlowRequests = allPages.flatMap((page) =>
     page.slowRequests
@@ -1902,8 +2022,14 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
   const routeFamilySummaryLines = buildRouteFamilySummaryLines(result);
 
   const pageLines = allPages.map((page) =>
-    `| ${page.scenario} | ${page.viewport} | ${page.route} | ${page.requestCount} | ${page.requestSeverity} | ${page.documentReloadCount} | ${page.handshakeRedirectCount} | ${page.sessionApiCallCount} | ${page.failedRequestCount} | ${formatNumber(page.navigationMs)} | ${formatNumber(page.domContentLoadedMs)} | ${formatNumber(page.loadMs)} | ${formatNumber(page.fcpMs)} | ${formatNumber(page.lcpMs)} | ${formatNumber(page.cls, 4)} | ${formatNumber(page.tbt, 1)} | ${page.totalTransferBytes} |`,
+    `| ${page.scenario} | ${page.viewport} | ${page.route} | ${page.requestCount} | ${page.requestSeverity} | ${page.documentReloadCount} | ${page.handshakeRedirectCount} | ${page.sessionApiCallCount} | ${page.failedRequestCount} | ${page.collectionImageRequestCount} | ${page.collectionImageSlowRequestMediumCount} | ${page.collectionImageSlowRequestHighCount} | ${page.collectionImageFirstLoadRequestCount} | ${page.collectionImageReloadRequestCount} | ${page.collectionImageCacheHitCount} | ${formatNumber(page.navigationMs)} | ${formatNumber(page.domContentLoadedMs)} | ${formatNumber(page.loadMs)} | ${formatNumber(page.fcpMs)} | ${formatNumber(page.lcpMs)} | ${formatNumber(page.cls, 4)} | ${formatNumber(page.tbt, 1)} | ${page.totalTransferBytes} |`,
   );
+
+  const collectionFocusLines = collectionFocusPages.length > 0
+    ? collectionFocusPages.map((page) =>
+      `| ${page.scenario} | ${page.viewport} | ${page.route} | ${page.collectionImageRequestCount} | ${page.collectionImageSlowRequestMediumCount} | ${page.collectionImageSlowRequestHighCount} | ${page.collectionImageFirstLoadRequestCount} | ${page.collectionImageReloadRequestCount} | ${page.collectionImageCacheHitCount} |`,
+    )
+    : ['| - | - | - | - | - | - | - | - | - |'];
 
   const slowHighLines = highSlowRequests.length > 0
     ? highSlowRequests
@@ -1964,9 +2090,14 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
     ...(routeFamilySummaryLines.length > 0 ? routeFamilySummaryLines : ['| - | - | - | - | - | - | - |']),
     '',
     '## Per-Page Metrics',
-    '| Scenario | Viewport | Route | Requests | Severity | Doc Reloads | Handshake Redirects | Session API Calls | Failed Requests | Navigate (ms) | DOMContentLoaded (ms) | Load (ms) | FCP (ms) | LCP (ms) | CLS | TBT (ms) | Transfer Bytes |',
-    '| --- | --- | --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
+    '| Scenario | Viewport | Route | Requests | Severity | Doc Reloads | Handshake Redirects | Session API Calls | Failed Requests | Collection Img Requests | Collection Img 400-800ms | Collection Img >800ms | Collection Img First Load | Collection Img Reload | Collection Img Cache Hits | Navigate (ms) | DOMContentLoaded (ms) | Load (ms) | FCP (ms) | LCP (ms) | CLS | TBT (ms) | Transfer Bytes |',
+    '| --- | --- | --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
     ...pageLines,
+    '',
+    '## Collection Image Focus',
+    '| Scenario | Viewport | Route | Image Requests | Image 400-800ms | Image >800ms | First-load Img Requests | Reload Img Requests | 304 Cache Hits |',
+    '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |',
+    ...collectionFocusLines,
     '',
     '## Suspicious Pages (>25 requests)',
     '| Scenario | Viewport | Route | Request Count | Severity | API | Static | Third-party |',
@@ -2008,6 +2139,7 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
 
 function createAnalysisReport(result: BenchmarkRunResult): string {
   const allPages = result.scenarios.flatMap((scenario) => scenario.pages);
+  const collectionPages = allPages.filter((page) => page.route === `${LOCALE_PREFIX}/collection`);
   const highRequestPages = allPages.filter((page) => page.requestCount > REQUEST_COUNT_HIGH_THRESHOLD);
   const criticalRequestPages = allPages.filter((page) => page.requestCount > REQUEST_COUNT_CRITICAL_THRESHOLD);
   const highSlowRequests = allPages
@@ -2031,6 +2163,12 @@ function createAnalysisReport(result: BenchmarkRunResult): string {
     .filter((entry) => !entry.key.includes('/cdn-cgi/rum'))
     .sort((left, right) => right.count - left.count)
     .slice(0, 20);
+
+  const collectionImageSummaryLines = collectionPages.length > 0
+    ? collectionPages.map((page) =>
+      `| ${page.scenario} | ${page.viewport} | ${page.collectionImageRequestCount} | ${page.collectionImageSlowRequestMediumCount} | ${page.collectionImageSlowRequestHighCount} | ${page.collectionImageFirstLoadRequestCount} | ${page.collectionImageReloadRequestCount} | ${page.collectionImageCacheHitCount} |`,
+    )
+    : ['| - | - | - | - | - | - | - | - |'];
 
   const scenarioLines = result.scenarios.map((scenario) => {
     const totalRequests = scenario.pages.reduce((sum, page) => sum + page.requestCount, 0);
@@ -2082,6 +2220,14 @@ function createAnalysisReport(result: BenchmarkRunResult): string {
         ? `High: phát hiện ${handshakeLoops} handshake redirect(s), cần kiểm tra vòng lặp auth/session.`
         : 'Không phát hiện handshake redirect bất thường.';
     })(),
+    (() => {
+      if (collectionPages.length === 0) {
+        return 'Collection-focus: không có sample `/vi/collection` trong run.';
+      }
+      const totalCollectionImageSlowHigh = collectionPages.reduce((sum, page) => sum + page.collectionImageSlowRequestHighCount, 0);
+      const totalCollectionImageRequests = collectionPages.reduce((sum, page) => sum + page.collectionImageRequestCount, 0);
+      return `Collection-focus: ${totalCollectionImageSlowHigh} image request(s) >${SLOW_REQUEST_HIGH_THRESHOLD_MS}ms trên ${totalCollectionImageRequests} image request(s).`;
+    })(),
   ];
 
   return [
@@ -2124,6 +2270,11 @@ function createAnalysisReport(result: BenchmarkRunResult): string {
     '| Scenario | Viewport | Route | Count | Request Key |',
     '| --- | --- | --- | ---: | --- |',
     ...(duplicateLines.length > 0 ? duplicateLines : ['| - | - | - | - | - |']),
+    '',
+    '## Collection Image Metrics',
+    '| Scenario | Viewport | Image Requests | Image 400-800ms | Image >800ms | First-load Img Requests | Reload Img Requests | 304 Cache Hits |',
+    '| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |',
+    ...collectionImageSummaryLines,
     '',
     '## Notes',
     '- Duplicate `/cdn-cgi/rum` được xem là telemetry của Cloudflare, không coi là business over-fetch.',

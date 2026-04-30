@@ -55,6 +55,7 @@ export default function CollectionZoomDetails({
         <button
           type="button"
           onClick={onClose}
+          data-tn-collection-modal-close="true"
           className={cn(
             "tn-surface-strong tn-text-ink rounded-full px-10 py-3.5 tn-text-10-12-md font-black tracking-widest uppercase shadow-xl transition-all",
           )}

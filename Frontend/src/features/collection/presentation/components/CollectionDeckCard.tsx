@@ -28,6 +28,8 @@ export function CollectionDeckCard({
     <button
       type="button"
       onClick={() => onSelect(deckCard.id)}
+      data-tn-collection-card="true"
+      data-tn-card-id={deckCard.id}
       className={cn(
         "tn-panel group relative flex cursor-pointer flex-col items-center overflow-hidden rounded-3xl border p-3 text-left transition-transform duration-500",
         isOwned
