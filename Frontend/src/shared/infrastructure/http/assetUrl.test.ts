@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { resolveAvatarUrl } from './assetUrl';
+import { resolveAvatarUrl, shouldUseUnoptimizedImage } from './assetUrl';
 
 describe('resolveAvatarUrl', () => {
   it('returns null for null or blank inputs', () => {
@@ -32,5 +32,38 @@ describe('resolveAvatarUrl', () => {
   it('keeps blob and data urls unchanged', () => {
     expect(resolveAvatarUrl('blob:http://localhost:3000/abc')).toBe('blob:http://localhost:3000/abc');
     expect(resolveAvatarUrl('data:image/png;base64,AAA')).toBe('data:image/png;base64,AAA');
+  });
+});
+
+describe('shouldUseUnoptimizedImage', () => {
+  it('returns true for empty values', () => {
+    expect(shouldUseUnoptimizedImage(null)).toBe(true);
+    expect(shouldUseUnoptimizedImage(undefined)).toBe(true);
+    expect(shouldUseUnoptimizedImage('   ')).toBe(true);
+  });
+
+  it('keeps local static assets optimized', () => {
+    expect(shouldUseUnoptimizedImage('/images/collection/back-card.svg')).toBe(false);
+  });
+
+  it('forces unoptimized for collection image proxy urls', () => {
+    expect(
+      shouldUseUnoptimizedImage(
+        '/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Fa.avif%3Fiv%3Dabc%26variant%3Dthumb&iv=abc',
+      ),
+    ).toBe(true);
+    expect(
+      shouldUseUnoptimizedImage(
+        'https://www.tarotnow.xyz/api/collection/card-image?src=https%3A%2F%2Fimg.tarotnow.xyz%2Fa.avif&iv=abc',
+      ),
+    ).toBe(true);
+  });
+
+  it('keeps allowlisted remote hosts optimized', () => {
+    expect(shouldUseUnoptimizedImage('https://media.tarotnow.xyz/uploads/a.webp')).toBe(false);
+  });
+
+  it('falls back to unoptimized for non-allowlisted remote hosts', () => {
+    expect(shouldUseUnoptimizedImage('https://cdn.example.com/avatar.png')).toBe(true);
   });
 });

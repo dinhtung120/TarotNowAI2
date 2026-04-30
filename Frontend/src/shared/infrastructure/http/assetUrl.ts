@@ -1,11 +1,18 @@
 const UPLOADS_PREFIX = '/uploads/';
 const API_UPLOADS_PREFIX = '/api/v1/uploads/';
 const HTTP_URL_REGEX = /^https?:\/\//i;
+const COLLECTION_IMAGE_PROXY_PATH = '/api/collection/card-image';
 const OPTIMIZED_REMOTE_IMAGE_HOSTS = new Set([
   'media.tarotnow.xyz',
   'ui-avatars.com',
   'img.vietqr.io',
 ]);
+
+function isCollectionImageProxyPath(pathname: string): boolean {
+  const normalizedPath = pathname.toLowerCase();
+  return normalizedPath === COLLECTION_IMAGE_PROXY_PATH
+    || normalizedPath.startsWith(`${COLLECTION_IMAGE_PROXY_PATH}/`);
+}
 
 function normalizeUploadsPath(pathname: string): string | null {
   const lowerPath = pathname.toLowerCase();
@@ -58,11 +65,16 @@ export function shouldUseUnoptimizedImage(src: string | null | undefined): boole
   if (!raw) return true;
 
   if (raw.startsWith('blob:') || raw.startsWith('data:')) return true;
-  if (raw.startsWith('/')) return false;
+  if (raw.startsWith('/')) {
+    return isCollectionImageProxyPath(raw.split('?')[0] ?? raw);
+  }
   if (!HTTP_URL_REGEX.test(raw)) return false;
 
   try {
     const parsed = new URL(raw);
+    if (isCollectionImageProxyPath(parsed.pathname)) {
+      return true;
+    }
     return !OPTIMIZED_REMOTE_IMAGE_HOSTS.has(parsed.hostname.toLowerCase());
   } catch {
     return true;
