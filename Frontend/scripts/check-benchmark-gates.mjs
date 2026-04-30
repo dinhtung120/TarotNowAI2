@@ -309,7 +309,7 @@ if (adminDesktopPage) {
 }
 if (collectionDesktopPage) {
  summaryLines.push(
-  `/vi/collection desktop: requests=${collectionDesktopPage.requestCount}, imageRequests=${collectionDesktopPage.collectionImageRequestCount ?? 'n/a'}, image>800ms=${collectionDesktopPage.collectionImageSlowRequestHighCount ?? 'n/a'}, imageReloadRequests=${collectionDesktopPage.collectionImageReloadRequestCount ?? 'n/a'}, image304=${collectionDesktopPage.collectionImageCacheHitCount ?? 'n/a'}`,
+  `/vi/collection desktop: requests=${collectionDesktopPage.requestCount}, imageRequests=${collectionDesktopPage.collectionImageRequestCount ?? 'n/a'}, image>800ms=${collectionDesktopPage.collectionImageSlowRequestHighCount ?? 'n/a'}, imageReopenRequests=${collectionDesktopPage.collectionImageReopenRequestCount ?? 'n/a'}, image304=${collectionDesktopPage.collectionImageCacheHitCount ?? 'n/a'}`,
  );
 }
 

@@ -61,6 +61,7 @@ interface PageBenchmarkMetric {
   cls: number | null;
   tbt: number | null;
   requestCount: number;
+  interactionRequestCount: number;
   requestSeverity: SeverityLevel;
   documentReloadCount: number;
   handshakeRedirectCount: number;
@@ -70,7 +71,7 @@ interface PageBenchmarkMetric {
   collectionImageSlowRequestMediumCount: number;
   collectionImageSlowRequestHighCount: number;
   collectionImageFirstLoadRequestCount: number;
-  collectionImageReloadRequestCount: number;
+  collectionImageReopenRequestCount: number;
   collectionImageCacheHitCount: number;
   pendingCount: number;
   pendingUrls: string[];
@@ -1426,12 +1427,21 @@ async function runRouteInteractionProbe(page: Page, route: string): Promise<Rout
     }
 
     try {
-      collectionReloadStartedAtMs = Date.now();
-      await page.reload({ waitUntil: 'domcontentloaded', timeout: NAVIGATION_TIMEOUT_MS });
-      await page.waitForTimeout(800);
-      notes.push('interaction-collection:reloaded');
+      const cards = page.locator('[data-tn-collection-card="true"]');
+      if (await cards.count() > 0) {
+        collectionReloadStartedAtMs = Date.now();
+        await cards.nth(0).click({ timeout: 8_000 });
+        const closeButton = page.locator('[data-tn-collection-modal-close="true"]');
+        if (await closeButton.count() > 0) {
+          await closeButton.first().click({ timeout: 8_000 });
+        } else {
+          await page.keyboard.press('Escape');
+        }
+        await page.waitForTimeout(220);
+        notes.push('interaction-collection:reopen-first-card');
+      }
     } catch {
-      notes.push('interaction-collection:reload-failed');
+      notes.push('interaction-collection:reopen-failed');
     }
   }
 
@@ -1615,6 +1625,7 @@ async function benchmarkNavigation(
     coverageBlocked.push(`load-timeout:${route}`);
   }
 
+  const interactionStartedAtMs = Date.now();
   const interactionProbe = await runRouteInteractionProbe(page, route);
   coverageBlocked.push(...interactionProbe.notes);
 
@@ -1634,9 +1645,11 @@ async function benchmarkNavigation(
   const settledAtMs = Date.now();
 
   const requestRecords = [...requests.values()];
+  const baseRequestRecords = requestRecords.filter((request) => request.startedAtMs < interactionStartedAtMs);
+  const interactionRequestCount = Math.max(0, requestRecords.length - baseRequestRecords.length);
 
   const duplicateCounter = new Map<string, number>();
-  for (const request of requestRecords) {
+  for (const request of baseRequestRecords) {
     const key = normalizeRequestKey(request.method, request.url);
     duplicateCounter.set(key, (duplicateCounter.get(key) ?? 0) + 1);
   }
@@ -1647,13 +1660,16 @@ async function benchmarkNavigation(
 
   for (const request of requestRecords) {
     const key = normalizeRequestKey(request.method, request.url);
-    request.isDuplicate = duplicateSet.has(key);
+    request.isDuplicate = request.startedAtMs < interactionStartedAtMs && duplicateSet.has(key);
     if (request.finishedAtMs === null && !request.failed) {
       request.pendingAgeMs = Math.max(0, settledAtMs - request.startedAtMs);
     }
   }
 
   const requestMetrics = requestRecords.map((record) => toRequestMetric(record, scenario, viewport));
+  const baseRequestMetrics = requestMetrics.filter((request, index) =>
+    requestRecords[index]?.startedAtMs < interactionStartedAtMs,
+  );
 
   const pendingNonPersistent = requestMetrics.filter((request) =>
     request.durationMs === null
@@ -1663,13 +1679,13 @@ async function benchmarkNavigation(
   );
 
   const normalizedRoute = normalizeRoutePath(route) ?? route;
-  const matchingDocumentRequests = requestMetrics.filter((request) =>
+  const matchingDocumentRequests = baseRequestMetrics.filter((request) =>
     request.resourceType === 'document'
     && normalizeRoutePath(request.url) === normalizedRoute,
   );
   const documentReloadCount = Math.max(0, matchingDocumentRequests.length - 1);
 
-  const handshakeRedirectCount = requestMetrics.filter((request) => {
+  const handshakeRedirectCount = baseRequestMetrics.filter((request) => {
     const pathname = tryParsePathnameFromUrl(request.url);
     if (pathname !== '/api/auth/session/handshake') {
       return false;
@@ -1678,12 +1694,12 @@ async function benchmarkNavigation(
     return typeof request.status === 'number' && request.status >= 300 && request.status < 400;
   }).length;
 
-  const sessionApiCallCount = requestMetrics.filter((request) => {
+  const sessionApiCallCount = baseRequestMetrics.filter((request) => {
     const pathname = tryParsePathnameFromUrl(request.url);
     return pathname === '/api/auth/session';
   }).length;
 
-  const failedRequestCount = requestMetrics.filter((request) => {
+  const failedRequestCount = baseRequestMetrics.filter((request) => {
     if (request.failed) {
       return true;
     }
@@ -1691,7 +1707,7 @@ async function benchmarkNavigation(
     return typeof request.status === 'number' && request.status >= 400;
   }).length;
 
-  const slowRequests = requestMetrics.filter((request) => (request.durationMs ?? 0) > SLOW_REQUEST_MEDIUM_THRESHOLD_MS);
+  const slowRequests = baseRequestMetrics.filter((request) => (request.durationMs ?? 0) > SLOW_REQUEST_MEDIUM_THRESHOLD_MS);
   const collectionImageRequests = requestRecords.filter((request) => isCollectionImageRequestUrl(request.url));
   const collectionReloadStartedAtMs = interactionProbe.collectionReloadStartedAtMs;
   const collectionImageRequestCount = collectionImageRequests.length;
@@ -1708,11 +1724,11 @@ async function benchmarkNavigation(
   const collectionImageFirstLoadRequestCount = collectionImageRequests.filter((request) =>
     collectionReloadStartedAtMs === null || request.startedAtMs < collectionReloadStartedAtMs,
   ).length;
-  const collectionImageReloadRequestCount = collectionImageRequests.filter((request) =>
+  const collectionImageReopenRequestCount = collectionImageRequests.filter((request) =>
     collectionReloadStartedAtMs !== null && request.startedAtMs >= collectionReloadStartedAtMs,
   ).length;
-  const totalResponseBytes = requestMetrics.reduce((sum, request) => sum + request.responseBytes, 0);
-  const totalTransferBytes = requestMetrics.reduce((sum, request) => sum + request.transferBytes, 0);
+  const totalResponseBytes = baseRequestMetrics.reduce((sum, request) => sum + request.responseBytes, 0);
+  const totalTransferBytes = baseRequestMetrics.reduce((sum, request) => sum + request.transferBytes, 0);
 
   const duplicateRequestGroups = [...duplicateCounter.entries()]
     .filter(([, count]) => count > 1)
@@ -1720,7 +1736,7 @@ async function benchmarkNavigation(
     .map(([key, count]) => ({ key, count }));
 
   const thirdPartyCounter = new Map<string, number>();
-  for (const request of requestMetrics) {
+  for (const request of baseRequestMetrics) {
     if (request.category === 'third-party' || request.category === 'telemetry') {
       const host = request.host || 'unknown';
       thirdPartyCounter.set(host, (thirdPartyCounter.get(host) ?? 0) + 1);
@@ -1745,8 +1761,9 @@ async function benchmarkNavigation(
     lcpMs: paintMetrics.lcpMs,
     cls: paintMetrics.cls,
     tbt: paintMetrics.tbt,
-    requestCount: requestMetrics.length,
-    requestSeverity: deriveRequestSeverity(requestMetrics.length),
+    requestCount: baseRequestMetrics.length,
+    interactionRequestCount,
+    requestSeverity: deriveRequestSeverity(baseRequestMetrics.length),
     documentReloadCount,
     handshakeRedirectCount,
     sessionApiCallCount,
@@ -1755,13 +1772,13 @@ async function benchmarkNavigation(
     collectionImageSlowRequestMediumCount,
     collectionImageSlowRequestHighCount,
     collectionImageFirstLoadRequestCount,
-    collectionImageReloadRequestCount,
+    collectionImageReopenRequestCount,
     collectionImageCacheHitCount,
     pendingCount: pendingNonPersistent.length,
     pendingUrls: pendingNonPersistent.map((request) => request.url),
     totalResponseBytes,
     totalTransferBytes,
-    requestBreakdown: buildBreakdown(requestMetrics),
+    requestBreakdown: buildBreakdown(baseRequestMetrics),
     thirdPartyBreakdown,
     duplicateRequestGroups,
     slowRequests,
@@ -1859,6 +1876,7 @@ function createPagesCsv(result: BenchmarkRunResult): string {
     'route',
     'final_url',
     'request_count',
+    'interaction_request_count',
     'request_severity',
     'document_reload_count',
     'handshake_redirect_count',
@@ -1868,7 +1886,7 @@ function createPagesCsv(result: BenchmarkRunResult): string {
     'collection_image_slow_400_800_count',
     'collection_image_slow_over_800_count',
     'collection_image_first_load_count',
-    'collection_image_reload_count',
+    'collection_image_reopen_count',
     'collection_image_cache_hit_count',
     'pending_count',
     'navigation_ms',
@@ -1898,6 +1916,7 @@ function createPagesCsv(result: BenchmarkRunResult): string {
         toCsvValue(page.route),
         toCsvValue(page.finalUrl),
         toCsvValue(page.requestCount),
+        toCsvValue(page.interactionRequestCount),
         toCsvValue(page.requestSeverity),
         toCsvValue(page.documentReloadCount),
         toCsvValue(page.handshakeRedirectCount),
@@ -1907,7 +1926,7 @@ function createPagesCsv(result: BenchmarkRunResult): string {
         toCsvValue(page.collectionImageSlowRequestMediumCount),
         toCsvValue(page.collectionImageSlowRequestHighCount),
         toCsvValue(page.collectionImageFirstLoadRequestCount),
-        toCsvValue(page.collectionImageReloadRequestCount),
+        toCsvValue(page.collectionImageReopenRequestCount),
         toCsvValue(page.collectionImageCacheHitCount),
         toCsvValue(page.pendingCount),
         toCsvValue(formatNumber(page.navigationMs)),
@@ -2022,12 +2041,12 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
   const routeFamilySummaryLines = buildRouteFamilySummaryLines(result);
 
   const pageLines = allPages.map((page) =>
-    `| ${page.scenario} | ${page.viewport} | ${page.route} | ${page.requestCount} | ${page.requestSeverity} | ${page.documentReloadCount} | ${page.handshakeRedirectCount} | ${page.sessionApiCallCount} | ${page.failedRequestCount} | ${page.collectionImageRequestCount} | ${page.collectionImageSlowRequestMediumCount} | ${page.collectionImageSlowRequestHighCount} | ${page.collectionImageFirstLoadRequestCount} | ${page.collectionImageReloadRequestCount} | ${page.collectionImageCacheHitCount} | ${formatNumber(page.navigationMs)} | ${formatNumber(page.domContentLoadedMs)} | ${formatNumber(page.loadMs)} | ${formatNumber(page.fcpMs)} | ${formatNumber(page.lcpMs)} | ${formatNumber(page.cls, 4)} | ${formatNumber(page.tbt, 1)} | ${page.totalTransferBytes} |`,
+    `| ${page.scenario} | ${page.viewport} | ${page.route} | ${page.requestCount} | ${page.interactionRequestCount} | ${page.requestSeverity} | ${page.documentReloadCount} | ${page.handshakeRedirectCount} | ${page.sessionApiCallCount} | ${page.failedRequestCount} | ${page.collectionImageRequestCount} | ${page.collectionImageSlowRequestMediumCount} | ${page.collectionImageSlowRequestHighCount} | ${page.collectionImageFirstLoadRequestCount} | ${page.collectionImageReopenRequestCount} | ${page.collectionImageCacheHitCount} | ${formatNumber(page.navigationMs)} | ${formatNumber(page.domContentLoadedMs)} | ${formatNumber(page.loadMs)} | ${formatNumber(page.fcpMs)} | ${formatNumber(page.lcpMs)} | ${formatNumber(page.cls, 4)} | ${formatNumber(page.tbt, 1)} | ${page.totalTransferBytes} |`,
   );
 
   const collectionFocusLines = collectionFocusPages.length > 0
     ? collectionFocusPages.map((page) =>
-      `| ${page.scenario} | ${page.viewport} | ${page.route} | ${page.collectionImageRequestCount} | ${page.collectionImageSlowRequestMediumCount} | ${page.collectionImageSlowRequestHighCount} | ${page.collectionImageFirstLoadRequestCount} | ${page.collectionImageReloadRequestCount} | ${page.collectionImageCacheHitCount} |`,
+      `| ${page.scenario} | ${page.viewport} | ${page.route} | ${page.collectionImageRequestCount} | ${page.collectionImageSlowRequestMediumCount} | ${page.collectionImageSlowRequestHighCount} | ${page.collectionImageFirstLoadRequestCount} | ${page.collectionImageReopenRequestCount} | ${page.collectionImageCacheHitCount} |`,
     )
     : ['| - | - | - | - | - | - | - | - | - |'];
 
@@ -2090,12 +2109,12 @@ function createMarkdownReport(result: BenchmarkRunResult): string {
     ...(routeFamilySummaryLines.length > 0 ? routeFamilySummaryLines : ['| - | - | - | - | - | - | - |']),
     '',
     '## Per-Page Metrics',
-    '| Scenario | Viewport | Route | Requests | Severity | Doc Reloads | Handshake Redirects | Session API Calls | Failed Requests | Collection Img Requests | Collection Img 400-800ms | Collection Img >800ms | Collection Img First Load | Collection Img Reload | Collection Img Cache Hits | Navigate (ms) | DOMContentLoaded (ms) | Load (ms) | FCP (ms) | LCP (ms) | CLS | TBT (ms) | Transfer Bytes |',
-    '| --- | --- | --- | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
+    '| Scenario | Viewport | Route | Requests | Interaction Requests | Severity | Doc Reloads | Handshake Redirects | Session API Calls | Failed Requests | Collection Img Requests | Collection Img 400-800ms | Collection Img >800ms | Collection Img First Load | Collection Img Reopen | Collection Img Cache Hits | Navigate (ms) | DOMContentLoaded (ms) | Load (ms) | FCP (ms) | LCP (ms) | CLS | TBT (ms) | Transfer Bytes |',
+    '| --- | --- | --- | ---: | ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |',
     ...pageLines,
     '',
     '## Collection Image Focus',
-    '| Scenario | Viewport | Route | Image Requests | Image 400-800ms | Image >800ms | First-load Img Requests | Reload Img Requests | 304 Cache Hits |',
+    '| Scenario | Viewport | Route | Image Requests | Image 400-800ms | Image >800ms | First-load Img Requests | Reopen Img Requests | 304 Cache Hits |',
     '| --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |',
     ...collectionFocusLines,
     '',
@@ -2166,7 +2185,7 @@ function createAnalysisReport(result: BenchmarkRunResult): string {
 
   const collectionImageSummaryLines = collectionPages.length > 0
     ? collectionPages.map((page) =>
-      `| ${page.scenario} | ${page.viewport} | ${page.collectionImageRequestCount} | ${page.collectionImageSlowRequestMediumCount} | ${page.collectionImageSlowRequestHighCount} | ${page.collectionImageFirstLoadRequestCount} | ${page.collectionImageReloadRequestCount} | ${page.collectionImageCacheHitCount} |`,
+      `| ${page.scenario} | ${page.viewport} | ${page.collectionImageRequestCount} | ${page.collectionImageSlowRequestMediumCount} | ${page.collectionImageSlowRequestHighCount} | ${page.collectionImageFirstLoadRequestCount} | ${page.collectionImageReopenRequestCount} | ${page.collectionImageCacheHitCount} |`,
     )
     : ['| - | - | - | - | - | - | - | - |'];
 
@@ -2272,7 +2291,7 @@ function createAnalysisReport(result: BenchmarkRunResult): string {
     ...(duplicateLines.length > 0 ? duplicateLines : ['| - | - | - | - | - |']),
     '',
     '## Collection Image Metrics',
-    '| Scenario | Viewport | Image Requests | Image 400-800ms | Image >800ms | First-load Img Requests | Reload Img Requests | 304 Cache Hits |',
+    '| Scenario | Viewport | Image Requests | Image 400-800ms | Image >800ms | First-load Img Requests | Reopen Img Requests | 304 Cache Hits |',
     '| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |',
     ...collectionImageSummaryLines,
     '',
