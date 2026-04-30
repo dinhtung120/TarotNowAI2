@@ -93,6 +93,14 @@ body {
   overflow-x: clip;
 }
 
+@supports (-webkit-touch-callout: none) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

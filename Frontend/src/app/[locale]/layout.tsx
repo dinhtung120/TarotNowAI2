@@ -34,7 +34,13 @@ const playfair = Playfair_Display({
  adjustFontFallback: true,
 });
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };
+export const viewport: Viewport = {
+ width: "device-width",
+ initialScale: 1,
+ maximumScale: 1,
+ userScalable: false,
+ viewportFit: "cover",
+};
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
  const { locale } = await params;
