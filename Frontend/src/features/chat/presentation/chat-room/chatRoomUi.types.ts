@@ -62,6 +62,7 @@ export interface ChatComposerInputRowProps {
   VoiceRecorderButton: ComponentType<{
     disabled?: boolean;
     onRecordingComplete: (result: VoiceRecordingResult) => void;
+    onImageClick?: () => void;
   }>;
   onImageInputChange: (event: ChangeEvent<HTMLInputElement>) => Promise<void>;
   onInputChange: (value: string) => void;

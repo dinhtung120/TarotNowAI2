@@ -59,6 +59,7 @@ export interface ChatRoomViewProps {
   VoiceRecorderButton: ComponentType<{
     disabled?: boolean;
     onRecordingComplete: (result: VoiceRecordingResult) => void;
+    onImageClick?: () => void;
   }>;
   onAcceptConversation: () => Promise<void>;
   onAcceptOffer: (message: ChatMessageDto) => Promise<boolean>;
