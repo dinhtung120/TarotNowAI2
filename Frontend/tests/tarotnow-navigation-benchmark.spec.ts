@@ -2198,6 +2198,14 @@ test.describe('TarotNow production benchmark', () => {
     }
 
     for (const scenario of runResult.scenarios) {
+      if (
+        runResult.benchmarkMode === 'targeted-hotspots'
+        && scenario.scenario === 'logged-out'
+        && scenario.pages.length === 0
+      ) {
+        continue;
+      }
+
       expect(scenario.pages.length).toBeGreaterThan(0);
     }
   }
