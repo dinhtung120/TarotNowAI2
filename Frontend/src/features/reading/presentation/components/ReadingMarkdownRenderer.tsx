@@ -20,7 +20,7 @@ export function ReadingMarkdownRenderer({ content, className }: { content: strin
           // Tùy chỉnh cách hiển thị tiêu đề (h4 thường dùng cho vị trí lá bài)
           h4: ({ node, ...props }) => (
             <span
-              className="text-[15px] font-bold tracking-tight text-purple-400 uppercase mr-1"
+              className="text-[15px] font-bold tracking-tight text-purple-400 after:content-[':'] mr-0.5"
               {...props}
             />
           ),
