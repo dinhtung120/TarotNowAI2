@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import type { StreamMessage } from "./types";
 import { AiStreamStreamingDots } from "./AiStreamStreamingDots";
+import { ReadingMarkdownRenderer } from "../ReadingMarkdownRenderer";
 
 interface AiStreamMessageItemProps {
  message: StreamMessage;
@@ -18,9 +19,7 @@ export function AiStreamMessageItem({ message }: AiStreamMessageItemProps) {
      {isUser ? (
       <p className={cn("tn-text-warning")}>{message.content}</p>
      ) : (
-      <div className={cn("whitespace-pre-wrap break-words")}>
-       {message.content}
-      </div>
+      <ReadingMarkdownRenderer content={message.content} />
      )}
      {message.isStreaming ? <AiStreamStreamingDots /> : null}
     </div>
