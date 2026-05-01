@@ -19,8 +19,8 @@ export function ReadingMarkdownRenderer({ content, className }: { content: strin
         components={{
           // Tùy chỉnh cách hiển thị tiêu đề (h4 thường dùng cho vị trí lá bài)
           h4: ({ node, ...props }) => (
-            <h4
-              className="clear-both float-left mr-2 mt-0.5 text-[15px] font-bold tracking-tight text-purple-500 uppercase"
+            <span
+              className="text-[16px] font-bold tracking-tight text-purple-400 uppercase mr-2"
               {...props}
             />
           ),
@@ -33,10 +33,12 @@ export function ReadingMarkdownRenderer({ content, className }: { content: strin
           ),
           // Tùy chỉnh cách hiển thị đoạn văn
           p: ({ node, ...props }) => (
-            <p
-              className="text-gray-300 leading-relaxed mb-4 text-[15px]"
-              {...props}
-            />
+            <span
+              className="text-gray-300 leading-relaxed text-[15px] inline"
+            >
+              {props.children}
+              <span className="block h-4" />
+            </span>
           ),
           // Tùy chỉnh danh sách
           ul: ({ node, ...props }) => (
