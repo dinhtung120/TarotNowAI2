@@ -5,6 +5,8 @@ import { getMessages } from 'next-intl/server';
 import { AppNavbar } from '@/features/auth/public';
 import { WalletStoreBridge } from '@/features/wallet/public';
 import AuthBootstrap from "@/shared/components/auth/AuthBootstrap";
+import UserSidebar from "@/shared/components/layout/UserSidebar";
+import BottomTabBar from "@/shared/components/layout/BottomTabBar";
 import { AUTH_COOKIE } from "@/shared/infrastructure/auth/authConstants";
 import { pickClientMessages, SITE_CLIENT_NAMESPACES } from '@/i18n/clientMessages';
 import { getCachedServerSessionSnapshot } from '@/shared/server/auth/cachedSessionSnapshot';
@@ -28,7 +30,9 @@ export default async function SiteLayout({ children }: SiteLayoutProps) {
    <AuthBootstrap initialUser={sessionSnapshot.user} />
    <WalletStoreBridge />
    <AppNavbar />
+   <UserSidebar />
    {children}
+   <BottomTabBar />
   </NextIntlClientProvider>
  );
 }
