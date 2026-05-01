@@ -28,7 +28,7 @@ export function HistoryDetailAiSummary({
      <Bot className={cn('w-8 h-8 tn-text-accent')} />
     </div>
     <div className={cn('relative z-10 w-full text-left')}>
-     <h3 className={cn('text-2xl font-black italic tracking-tight tn-text-primary mb-6 uppercase text-center')}>
+     <h3 className={cn('text-2xl font-black italic tracking-tight text-purple-400 mb-6 uppercase text-center')}>
       {labels.title}
      </h3>
      {detail.aiSummary ? (

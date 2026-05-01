@@ -19,24 +19,24 @@ export function ReadingMarkdownRenderer({ content, className }: { content: strin
         components={{
           // Tùy chỉnh cách hiển thị tiêu đề (h4 thường dùng cho vị trí lá bài)
           h4: ({ node, ...props }) => (
-            <h4 
-              className="mt-8 mb-3 text-lg font-bold tracking-tight text-white/90 uppercase" 
-              {...props} 
+            <h4
+              className="clear-both float-left mr-2 mt-0.5 text-[15px] font-bold tracking-tight text-purple-500 uppercase"
+              {...props}
             />
           ),
           // Tùy chỉnh cách hiển thị văn bản in đậm
           strong: ({ node, ...props }) => (
-            <strong 
-              className="font-semibold text-purple-300" 
-              {...props} 
+            <strong
+              className="font-semibold text-purple-400"
+              {...props}
             />
           ),
           // Tùy chỉnh cách hiển thị đoạn văn
           p: ({ node, ...props }) => (
-             <p 
-               className="text-gray-300 leading-relaxed mb-4 text-[15px]" 
-               {...props} 
-             />
+            <p
+              className="text-gray-300 leading-relaxed mb-4 text-[15px]"
+              {...props}
+            />
           ),
           // Tùy chỉnh danh sách
           ul: ({ node, ...props }) => (
@@ -47,9 +47,9 @@ export function ReadingMarkdownRenderer({ content, className }: { content: strin
           ),
           // Tùy chỉnh blockquote
           blockquote: ({ node, ...props }) => (
-            <blockquote 
-              className="border-l-2 border-purple-500/50 pl-4 py-1 my-6 italic text-gray-400" 
-              {...props} 
+            <blockquote
+              className="border-l-2 border-purple-500/50 pl-4 py-1 my-6 italic text-gray-400"
+              {...props}
             />
           ),
           // Tùy chỉnh hr
