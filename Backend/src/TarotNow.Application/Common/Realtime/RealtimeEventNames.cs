@@ -21,9 +21,19 @@ public static class RealtimeEventNames
     public const string ChatMessageCreated = "message.created";
 
     /// <summary>
+    /// Sự kiện tin nhắn chat fast-lane.
+    /// </summary>
+    public const string ChatMessageCreatedFast = "message.created.fast";
+
+    /// <summary>
     /// Sự kiện conversation được cập nhật.
     /// </summary>
     public const string ConversationUpdated = "conversation.updated";
+
+    /// <summary>
+    /// Sự kiện delta conversation cho fast-lane chat.
+    /// </summary>
+    public const string ConversationUpdatedDelta = "conversation.updated.delta";
 
     /// <summary>
     /// Sự kiện số lượng unread chat thay đổi.
@@ -31,9 +41,19 @@ public static class RealtimeEventNames
     public const string ChatUnreadChanged = "chat.unread_changed";
 
     /// <summary>
+    /// Sự kiện delta unread chat cho fast-lane.
+    /// </summary>
+    public const string ChatUnreadDelta = "chat.unread.delta";
+
+    /// <summary>
     /// Sự kiện mark-read tin nhắn.
     /// </summary>
     public const string ChatMessageRead = "message.read";
+
+    /// <summary>
+    /// Sự kiện delta mark-read cho fast-lane.
+    /// </summary>
+    public const string ChatMessageReadDelta = "message.read.delta";
 
     /// <summary>
     /// Sự kiện bắt đầu gõ tin nhắn.

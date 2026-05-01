@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Collections.Concurrent;
 using Microsoft.AspNetCore.SignalR;
 using TarotNow.Api.Hubs;
 using TarotNow.Application.Common.Realtime;
@@ -17,6 +18,7 @@ public sealed partial class RedisRealtimeSignalRBridgeService : BackgroundServic
         RealtimeChannelNames.Notifications,
         RealtimeChannelNames.Wallet,
         RealtimeChannelNames.Chat,
+        RealtimeChannelNames.ChatFast,
         RealtimeChannelNames.Gacha,
         RealtimeChannelNames.Gamification,
         RealtimeChannelNames.UserState
@@ -26,6 +28,7 @@ public sealed partial class RedisRealtimeSignalRBridgeService : BackgroundServic
     private readonly IHubContext<PresenceHub> _presenceHubContext;
     private readonly IHubContext<ChatHub> _chatHubContext;
     private readonly ILogger<RedisRealtimeSignalRBridgeService> _logger;
+    private readonly ConcurrentDictionary<string, DateTime> _bridgeDedupByEventId = new(StringComparer.Ordinal);
 
     /// <summary>
     /// Khởi tạo bridge service Redis sang SignalR.
@@ -101,6 +104,12 @@ public sealed partial class RedisRealtimeSignalRBridgeService : BackgroundServic
                 return;
             }
 
+            if (channel == RealtimeChannelNames.ChatFast)
+            {
+                await ForwardChatFastLaneEventAsync(envelope.EventName, envelope.Payload);
+                return;
+            }
+
             if (channel == RealtimeChannelNames.Gacha
                 || channel == RealtimeChannelNames.Gamification
                 || channel == RealtimeChannelNames.UserState)
@@ -112,5 +121,25 @@ public sealed partial class RedisRealtimeSignalRBridgeService : BackgroundServic
         {
             _logger.LogError(exception, "Failed to bridge Redis realtime message for channel {Channel}.", channel);
         }
+    }
+
+    private bool ShouldSkipDuplicatedFastLaneEvent(string? eventId)
+    {
+        if (string.IsNullOrWhiteSpace(eventId))
+        {
+            return false;
+        }
+
+        var now = DateTime.UtcNow;
+        var ttlCutoff = now.AddMinutes(-10);
+        foreach (var pair in _bridgeDedupByEventId)
+        {
+            if (pair.Value < ttlCutoff)
+            {
+                _bridgeDedupByEventId.TryRemove(pair.Key, out _);
+            }
+        }
+
+        return !_bridgeDedupByEventId.TryAdd(eventId, now);
     }
 }

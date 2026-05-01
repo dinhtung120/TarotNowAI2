@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Threading.Channels;
 using StackExchange.Redis;
 
 namespace TarotNow.Api.Realtime;
@@ -8,9 +9,11 @@ namespace TarotNow.Api.Realtime;
 /// </summary>
 public sealed class RedisRealtimeBridgeSource : IRealtimeBridgeSource
 {
+    private const int MaxBufferedMessagesPerChannel = 2048;
+
     private readonly IConnectionMultiplexer _connectionMultiplexer;
     private readonly ILogger<RedisRealtimeBridgeSource> _logger;
-    private readonly ConcurrentDictionary<string, Action<RedisChannel, RedisValue>> _subscriptions = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, SubscriptionState> _subscriptions = new(StringComparer.Ordinal);
 
     /// <summary>
     /// Khởi tạo Redis realtime source.
@@ -39,47 +42,76 @@ public sealed class RedisRealtimeBridgeSource : IRealtimeBridgeSource
             return;
         }
 
-        var callback = CreateRedisCallback(onMessageAsync);
-        if (_subscriptions.TryAdd(channel, callback) == false)
+        var state = CreateSubscriptionState(channel, onMessageAsync, cancellationToken);
+        if (_subscriptions.TryAdd(channel, state) == false)
         {
             return;
         }
 
         var subscriber = _connectionMultiplexer.GetSubscriber();
-        await subscriber.SubscribeAsync(RedisChannel.Literal(channel), callback);
+        await subscriber.SubscribeAsync(RedisChannel.Literal(channel), state.Callback);
         _logger.LogInformation("Subscribed Redis realtime channel {Channel}.", channel);
     }
 
     /// <inheritdoc />
     public async Task UnsubscribeAsync(string channel, CancellationToken cancellationToken = default)
     {
-        if (_subscriptions.TryRemove(channel, out var callback) == false)
+        if (_subscriptions.TryRemove(channel, out var state) == false)
         {
             return;
         }
 
         var subscriber = _connectionMultiplexer.GetSubscriber();
-        await subscriber.UnsubscribeAsync(RedisChannel.Literal(channel), callback);
+        await subscriber.UnsubscribeAsync(RedisChannel.Literal(channel), state.Callback);
+        await state.StopAsync(cancellationToken);
+
         _logger.LogInformation("Unsubscribed Redis realtime channel {Channel}.", channel);
     }
 
-    private Action<RedisChannel, RedisValue> CreateRedisCallback(Func<string, string, Task> onMessageAsync)
+    private SubscriptionState CreateSubscriptionState(
+        string channel,
+        Func<string, string, Task> onMessageAsync,
+        CancellationToken cancellationToken)
     {
-        return (redisChannel, redisValue) =>
+        var messageQueue = Channel.CreateBounded<RedisRealtimeMessage>(new BoundedChannelOptions(MaxBufferedMessagesPerChannel)
         {
-            try
+            SingleReader = true,
+            SingleWriter = false,
+            FullMode = BoundedChannelFullMode.DropOldest
+        });
+
+        var worker = Task.Run(async () =>
+        {
+            await foreach (var message in messageQueue.Reader.ReadAllAsync(cancellationToken))
             {
-                // Chạy callback theo kiểu blocking tại điểm subscribe để giữ backpressure và không nuốt exception.
-                onMessageAsync(redisChannel.ToString(), redisValue.ToString()).GetAwaiter().GetResult();
+                try
+                {
+                    await onMessageAsync(message.Channel, message.PayloadJson);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Redis realtime callback failed. Channel={Channel}", message.Channel);
+                }
             }
-            catch (Exception ex)
+        }, cancellationToken);
+
+        var callback = new Action<RedisChannel, RedisValue>((redisChannel, redisValue) =>
+        {
+            var message = new RedisRealtimeMessage(redisChannel.ToString(), redisValue.ToString());
+            if (messageQueue.Writer.TryWrite(message) == false)
             {
-                _logger.LogError(
-                    ex,
-                    "Redis realtime callback failed. Channel={Channel}",
-                    redisChannel.ToString());
+                _logger.LogWarning(
+                    "Dropped realtime message because bridge queue is full. Channel={Channel}, Capacity={Capacity}",
+                    redisChannel.ToString(),
+                    MaxBufferedMessagesPerChannel);
             }
-        };
+        });
+
+        return new SubscriptionState(channel, callback, messageQueue, worker);
     }
 
     private static void ValidateArguments(string channel, Func<string, string, Task> onMessageAsync)
@@ -90,5 +122,43 @@ public sealed class RedisRealtimeBridgeSource : IRealtimeBridgeSource
         }
 
         ArgumentNullException.ThrowIfNull(onMessageAsync);
+    }
+
+    private readonly record struct RedisRealtimeMessage(string Channel, string PayloadJson);
+
+    private sealed class SubscriptionState
+    {
+        public SubscriptionState(
+            string channel,
+            Action<RedisChannel, RedisValue> callback,
+            Channel<RedisRealtimeMessage> queue,
+            Task worker)
+        {
+            Channel = channel;
+            Callback = callback;
+            Queue = queue;
+            Worker = worker;
+        }
+
+        public string Channel { get; }
+
+        public Action<RedisChannel, RedisValue> Callback { get; }
+
+        private Channel<RedisRealtimeMessage> Queue { get; }
+
+        private Task Worker { get; }
+
+        public async Task StopAsync(CancellationToken cancellationToken)
+        {
+            Queue.Writer.TryComplete();
+
+            try
+            {
+                await Worker.WaitAsync(cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+            }
+        }
     }
 }

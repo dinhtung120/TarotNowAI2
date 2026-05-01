@@ -60,7 +60,7 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
     public async Task Bridge_ShouldRouteRealtimeEvents_ToExpectedSignalRGroups()
     {
         _ = _factory.CreateClient();
-        var subscribed = await _bridgeSource.WaitForSubscriptionCountAsync(5, TimeSpan.FromSeconds(5));
+        var subscribed = await _bridgeSource.WaitForSubscriptionCountAsync(6, TimeSpan.FromSeconds(5));
         Assert.True(subscribed);
 
         const string userId = "11111111-1111-1111-1111-111111111111";

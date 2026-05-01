@@ -36,6 +36,7 @@ public partial class RespondConversationAddMoneyCommandHandlerRequestedDomainEve
     private readonly IChatMessageRepository _chatMessageRepository;
     private readonly IMediator _mediator;
     private readonly IDomainEventPublisher _domainEventPublisher;
+    private readonly IChatRealtimeFastLanePublisher _chatRealtimeFastLanePublisher;
 
     /// <summary>
     /// Khởi tạo handler respond conversation add money.
@@ -46,6 +47,7 @@ public partial class RespondConversationAddMoneyCommandHandlerRequestedDomainEve
         IChatMessageRepository chatMessageRepository,
         IMediator mediator,
         IDomainEventPublisher domainEventPublisher,
+        IChatRealtimeFastLanePublisher chatRealtimeFastLanePublisher,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
@@ -53,6 +55,7 @@ public partial class RespondConversationAddMoneyCommandHandlerRequestedDomainEve
         _chatMessageRepository = chatMessageRepository;
         _mediator = mediator;
         _domainEventPublisher = domainEventPublisher;
+        _chatRealtimeFastLanePublisher = chatRealtimeFastLanePublisher;
     }
 
     /// <summary>
@@ -86,6 +89,13 @@ public partial class RespondConversationAddMoneyCommandHandlerRequestedDomainEve
                 offer.PaymentPayload?.ProposalId,
                 responseMessageId,
                 DateTime.UtcNow),
+            cancellationToken);
+
+        await PublishFastLanePaymentAcceptAsync(
+            conversation,
+            request.UserId.ToString(),
+            offer,
+            responseMessageId,
             cancellationToken);
 
         return new ConversationAddMoneyRespondResult

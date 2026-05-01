@@ -15,7 +15,7 @@ export default function ChatImageMessage({
     <div className={cn('flex', isMe ? 'justify-end' : 'justify-start')}>
       <div
         className={cn(
-          'max-w-[75%] overflow-hidden rounded-2xl border border-white/10',
+          'max-w-[75%] min-h-36 min-w-36 overflow-hidden rounded-2xl border border-white/10 bg-black/20',
         )}
       >
         <Image
@@ -26,7 +26,7 @@ export default function ChatImageMessage({
           sizes="(max-width: 768px) 75vw, 320px"
           loading="lazy"
           unoptimized={shouldUseUnoptimizedImage(imageUrl)}
-          className={cn('h-auto w-full')}
+          className={cn('h-auto min-h-36 w-full object-cover')}
         />
       </div>
     </div>

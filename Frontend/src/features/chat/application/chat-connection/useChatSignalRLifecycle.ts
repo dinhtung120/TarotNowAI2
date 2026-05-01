@@ -35,6 +35,13 @@ interface UseChatSignalRLifecycleOptions {
  appendMessage: (message: ChatMessageDto) => void;
 }
 
+interface ConversationDeltaPayload {
+ conversationId: string;
+ status?: ConversationDto['status'];
+ type?: string;
+ updatedAt?: string;
+}
+
 async function createHubConnection(reconnectSchedule: number[]) {
  const signalR = await import('@microsoft/signalr');
  const { getSignalRHubUrl } = await import('@/shared/application/gateways/signalRUrl');
@@ -143,7 +150,7 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
     hubConnection.serverTimeoutInMilliseconds = serverTimeoutMs;
     
     // Đăng ký các sự kiện nhận tin nhắn và trạng thái realtime
-    hubConnection.on('message.created', (message: ChatMessageDto) => {
+    const handleIncomingMessage = (message: ChatMessageDto) => {
      /*
       * Step: Xử lý khi có tin nhắn mới đến.
       * Logic: 
@@ -159,7 +166,9 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
        void markReadRef.current();
       }
      }
-    });
+    };
+    hubConnection.on('message.created', handleIncomingMessage);
+    hubConnection.on('message.created.fast', handleIncomingMessage);
     
     hubConnection.on('message.read', (payload: { userId: string; conversationId: string }) => {
      if (payload.conversationId !== conversationId || isSameParticipantId(payload.userId, currentUserId)) return;
@@ -196,6 +205,28 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
        if (res.success && res.data?.conversation) setConversation(res.data.conversation);
       });
      }, invalidateDebounceMs);
+    });
+
+    hubConnection.on('conversation.updated.delta', (payload: ConversationDeltaPayload) => {
+     if (payload.conversationId !== conversationId) return;
+     setConversation((prev) => {
+      if (!prev) return prev;
+
+      return {
+       ...prev,
+       status: payload.status ?? prev.status,
+       updatedAt: payload.updatedAt ?? prev.updatedAt,
+      };
+     });
+    });
+
+    hubConnection.on('message.read.delta', (payload: { userId: string; conversationId: string }) => {
+     if (payload.conversationId !== conversationId || isSameParticipantId(payload.userId, currentUserId)) return;
+     setMessages((prev) =>
+      prev.map((item) =>
+       isSameParticipantId(item.senderId, currentUserId) ? { ...item, isRead: true } : item
+      )
+     );
     });
 
     /*

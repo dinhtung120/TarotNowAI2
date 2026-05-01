@@ -32,6 +32,10 @@ export function validateImageForDirectUpload(file: File): void {
 
 export async function compressImageForDirectUpload(file: File): Promise<File> {
   validateImageForDirectUpload(file);
+  if (isGifImage(file)) {
+    return file;
+  }
+
   const compressionSteps = getImageCompressionSteps();
   const targetBytes = getImageCompressionTargetBytes();
   const imageUploadMaxBytes = getImageUploadMaxBytes();
@@ -49,6 +53,10 @@ export async function compressImageForDirectUpload(file: File): Promise<File> {
   }
 
   return currentFile;
+}
+
+function isGifImage(file: File): boolean {
+  return file.type.trim().toLowerCase() === 'image/gif';
 }
 
 export async function getImageDimensions(file: Blob): Promise<{ height: number; width: number }> {

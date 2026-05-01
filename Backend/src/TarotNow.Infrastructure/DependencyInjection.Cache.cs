@@ -62,6 +62,15 @@ public static partial class DependencyInjection
             // Fallback: vẫn chạy được nhưng nhất quán kém hơn trong môi trường nhiều node.
         }
 
+        RegisterRealtimePublishers(services);
+
+        services.AddSingleton(new CacheBackendState(usesRedisCache));
+        services.AddHostedService<CacheBackendStartupLogger>();
+        services.AddScoped<ICacheService, RedisCacheService>();
+    }
+
+    private static void RegisterRealtimePublishers(IServiceCollection services)
+    {
         services.AddSingleton<IRedisPublisher>(serviceProvider =>
         {
             var multiplexer = serviceProvider.GetService<IConnectionMultiplexer>();
@@ -74,9 +83,18 @@ public static partial class DependencyInjection
             return new RedisPublisher(multiplexer, logger);
         });
 
-        services.AddSingleton(new CacheBackendState(usesRedisCache));
-        services.AddHostedService<CacheBackendStartupLogger>();
-        services.AddScoped<ICacheService, RedisCacheService>();
+        services.AddSingleton<IChatRealtimeFastLanePublisher>(serviceProvider =>
+        {
+            var multiplexer = serviceProvider.GetService<IConnectionMultiplexer>();
+            if (multiplexer == null)
+            {
+                return new NoOpChatRealtimeFastLanePublisher();
+            }
+
+            var redisPublisher = serviceProvider.GetRequiredService<IRedisPublisher>();
+            var logger = serviceProvider.GetRequiredService<ILogger<RedisChatRealtimeFastLanePublisher>>();
+            return new RedisChatRealtimeFastLanePublisher(redisPublisher, logger);
+        });
     }
 
     /// <summary>

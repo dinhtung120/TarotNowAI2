@@ -23,6 +23,7 @@ public class SendMessageCommandHandlerRequestedDomainEventHandlerTests
     private readonly Mock<IDomainEventPublisher> _mockDomainEventPublisher;
     private readonly Mock<ISystemConfigSettings> _mockSystemConfigSettings;
     private readonly Mock<ICacheService> _mockCacheService;
+    private readonly Mock<IChatRealtimeFastLanePublisher> _mockChatRealtimeFastLanePublisher;
     private readonly SendMessageCommandHandlerRequestedDomainEventHandler _handler;
 
     /// <summary>
@@ -40,6 +41,7 @@ public class SendMessageCommandHandlerRequestedDomainEventHandlerTests
         _mockDomainEventPublisher = new Mock<IDomainEventPublisher>();
         _mockSystemConfigSettings = new Mock<ISystemConfigSettings>();
         _mockCacheService = new Mock<ICacheService>();
+        _mockChatRealtimeFastLanePublisher = new Mock<IChatRealtimeFastLanePublisher>();
         _mockSystemConfigSettings.SetupGet(x => x.EscrowDisputeWindowHours).Returns(24);
         _mockCacheService
             .Setup(x => x.AcquireLockAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
@@ -63,6 +65,7 @@ public class SendMessageCommandHandlerRequestedDomainEventHandlerTests
             _mockDomainEventPublisher.Object,
             _mockSystemConfigSettings.Object,
             _mockCacheService.Object,
+            _mockChatRealtimeFastLanePublisher.Object,
             Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>());
     }
 

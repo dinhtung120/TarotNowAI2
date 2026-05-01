@@ -1,6 +1,7 @@
 using MediatR;
 using System;
 using TarotNow.Application.Common.DomainEvents;
+using TarotNow.Application.Common.Realtime;
 using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
 using TarotNow.Application.Interfaces.DomainEvents;
@@ -17,6 +18,7 @@ public partial class AcceptConversationCommandHandlerRequestedDomainEventHandler
     private readonly IChatMessageRepository _chatMessageRepository;
     private readonly IDomainEventPublisher _domainEventPublisher;
     private readonly ISystemConfigSettings _systemConfigSettings;
+    private readonly IChatRealtimeFastLanePublisher _chatRealtimeFastLanePublisher;
 
     /// <summary>
     /// Khởi tạo handler accept conversation.
@@ -29,6 +31,7 @@ public partial class AcceptConversationCommandHandlerRequestedDomainEventHandler
         IChatMessageRepository chatMessageRepository,
         IDomainEventPublisher domainEventPublisher,
         ISystemConfigSettings systemConfigSettings,
+        IChatRealtimeFastLanePublisher chatRealtimeFastLanePublisher,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
@@ -38,6 +41,7 @@ public partial class AcceptConversationCommandHandlerRequestedDomainEventHandler
         _chatMessageRepository = chatMessageRepository;
         _domainEventPublisher = domainEventPublisher;
         _systemConfigSettings = systemConfigSettings;
+        _chatRealtimeFastLanePublisher = chatRealtimeFastLanePublisher;
     }
 
     /// <summary>
@@ -68,6 +72,7 @@ public partial class AcceptConversationCommandHandlerRequestedDomainEventHandler
         await _domainEventPublisher.PublishAsync(
             new Domain.Events.ConversationUpdatedDomainEvent(conversation.Id, "accepted", now),
             cancellationToken);
+        await PublishFastLaneConversationAcceptedAsync(conversation, now, cancellationToken);
 
         return new ConversationActionResult { Status = conversation.Status };
     }
@@ -78,5 +83,29 @@ public partial class AcceptConversationCommandHandlerRequestedDomainEventHandler
         CancellationToken cancellationToken)
     {
         domainEvent.Result = await Handle(domainEvent.Command, cancellationToken);
+    }
+
+    private Task PublishFastLaneConversationAcceptedAsync(
+        ConversationDto conversation,
+        DateTime occurredAtUtc,
+        CancellationToken cancellationToken)
+    {
+        return _chatRealtimeFastLanePublisher.PublishAsync(
+            new ChatRealtimeEnvelopeV2
+            {
+                EventType = RealtimeEventNames.ConversationUpdatedDelta,
+                ConversationId = conversation.Id,
+                OccurredAtUtc = occurredAtUtc,
+                Payload = new
+                {
+                    conversationId = conversation.Id,
+                    userId = conversation.UserId,
+                    readerId = conversation.ReaderId,
+                    type = "accepted",
+                    status = conversation.Status.ToString(),
+                    updatedAt = occurredAtUtc
+                }
+            },
+            cancellationToken);
     }
 }

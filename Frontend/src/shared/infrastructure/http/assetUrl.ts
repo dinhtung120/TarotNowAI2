@@ -65,6 +65,7 @@ export function shouldUseUnoptimizedImage(src: string | null | undefined): boole
   if (!raw) return true;
 
   if (raw.startsWith('blob:') || raw.startsWith('data:')) return true;
+  if (raw.toLowerCase().includes('.gif')) return true;
   if (raw.startsWith('/')) {
     return isCollectionImageProxyPath(raw.split('?')[0] ?? raw);
   }
@@ -72,6 +73,9 @@ export function shouldUseUnoptimizedImage(src: string | null | undefined): boole
 
   try {
     const parsed = new URL(raw);
+    if (parsed.pathname.toLowerCase().endsWith('.gif')) {
+      return true;
+    }
     if (isCollectionImageProxyPath(parsed.pathname)) {
       return true;
     }

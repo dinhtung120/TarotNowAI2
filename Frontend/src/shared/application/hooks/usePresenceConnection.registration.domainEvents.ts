@@ -67,13 +67,27 @@ export function registerPresenceDomainEventHandlers({
   }
  });
 
- hubConnection.on('conversation.updated', (payload?: ConversationUpdatedPayload) => {
+  hubConnection.on('conversation.updated', (payload?: ConversationUpdatedPayload) => {
   logger.info('[PresenceRealtimeSync]', 'conversation.updated received. Invalidating inbox queries...');
   invalidateInbox();
   const eventType = payload?.type?.trim().toLowerCase();
   if (!eventType || CHAT_UNREAD_REFRESH_EVENT_TYPES.has(eventType)) {
    invalidateUnreadBadge();
   }
+ });
+
+ hubConnection.on('conversation.updated.delta', () => {
+  invalidateInbox();
+ });
+
+ hubConnection.on('chat.unread.delta', () => {
+  invalidateInbox();
+  invalidateUnreadBadge();
+ });
+
+ hubConnection.on('message.created.fast', () => {
+  invalidateInbox();
+  invalidateUnreadBadge();
  });
 
  hubConnection.on('gamification.quest_completed', () => {

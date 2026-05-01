@@ -24,6 +24,7 @@ public class RespondConversationAddMoneyCommandHandlerRequestedDomainEventHandle
         var chatMessageRepo = new Mock<IChatMessageRepository>();
         var mediator = new Mock<IMediator>();
         var domainEventPublisher = new Mock<IDomainEventPublisher>();
+        var chatRealtimeFastLanePublisher = new Mock<IChatRealtimeFastLanePublisher>();
 
         var conversation = new ConversationDto
         {
@@ -65,6 +66,7 @@ public class RespondConversationAddMoneyCommandHandlerRequestedDomainEventHandle
             chatMessageRepo.Object,
             mediator.Object,
             domainEventPublisher.Object,
+            chatRealtimeFastLanePublisher.Object,
             Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>());
 
         var command = new RespondConversationAddMoneyCommand

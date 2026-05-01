@@ -66,7 +66,7 @@ export default function ChatComposerEditableFooter({
           onRequestComplete={onRequestComplete}
         />
       </div>
-      <input ref={imageInputRef} type="file" accept="image/avif,image/webp,image/jpeg,image/png" className={cn('hidden')} onChange={(event) => void onImageInputChange(event)} />
+      <input ref={imageInputRef} type="file" accept="image/avif,image/webp,image/jpeg,image/png,image/gif" className={cn('hidden')} onChange={(event) => void onImageInputChange(event)} />
     </div>
   );
 }

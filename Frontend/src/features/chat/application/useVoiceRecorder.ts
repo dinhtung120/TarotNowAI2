@@ -52,7 +52,7 @@ export function useVoiceRecorder() {
    const analyser = audioContext.createAnalyser();
    analyser.fftSize = 256; source.connect(analyser); analyserRef.current = analyser;
    const mimeType = resolveRecorderMimeType();
-   if (!mimeType) { cleanup(); setRecordingState('error'); setErrorMessage('Trình duyệt không hỗ trợ ghi âm WebM/Opus.'); return; }
+   if (!mimeType) { cleanup(); setRecordingState('error'); setErrorMessage('Trình duyệt không hỗ trợ định dạng ghi âm phù hợp.'); return; }
    const recorder = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 16_000 });
    mediaRecorderRef.current = recorder;
    recorder.ondataavailable = (event) => { if (event.data.size > 0) chunksRef.current.push(event.data); };

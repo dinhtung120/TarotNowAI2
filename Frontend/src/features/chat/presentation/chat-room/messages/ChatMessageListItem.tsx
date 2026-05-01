@@ -1,5 +1,6 @@
 import ChatImageMessage from '@/features/chat/presentation/chat-room/messages/ChatImageMessage';
 import ChatPaymentOfferMessage from '@/features/chat/presentation/chat-room/messages/ChatPaymentOfferMessage';
+import ChatPaymentResponseMessage from '@/features/chat/presentation/chat-room/messages/ChatPaymentResponseMessage';
 import ChatSystemMessage from '@/features/chat/presentation/chat-room/messages/ChatSystemMessage';
 import ChatTextMessage from '@/features/chat/presentation/chat-room/messages/ChatTextMessage';
 import ChatVoiceMessage from '@/features/chat/presentation/chat-room/messages/ChatVoiceMessage';
@@ -44,6 +45,19 @@ export default function ChatMessageListItem({
 
   if (message.type === 'voice' && message.mediaPayload?.url) {
     return <ChatVoiceMessage audioUrl={message.mediaPayload.url} durationMs={message.mediaPayload.durationMs} createdAt={message.createdAt} isMe={isMe} isRead={message.isRead} locale={locale} VoiceMessageBubble={VoiceMessageBubble} />;
+  }
+
+  if (message.type === 'payment_accept' || message.type === 'payment_reject') {
+    return (
+      <ChatPaymentResponseMessage
+        content={message.content}
+        createdAt={message.createdAt}
+        isMe={isMe}
+        isRead={message.isRead}
+        locale={locale}
+        type={message.type}
+      />
+    );
   }
 
   return <ChatTextMessage content={message.content} createdAt={message.createdAt} isMe={isMe} isRead={message.isRead} locale={locale} />;

@@ -8,9 +8,21 @@ export function stopMediaStream(stream: MediaStream | null) {
 }
 
 export function resolveRecorderMimeType() {
- const preferred = 'audio/webm;codecs=opus';
- if (MediaRecorder.isTypeSupported(preferred)) return preferred;
- if (MediaRecorder.isTypeSupported('audio/webm')) return 'audio/webm';
+ const preferredMimeTypes = [
+  'audio/webm;codecs=opus',
+  'audio/webm',
+  'audio/mp4',
+  'audio/ogg;codecs=opus',
+  'audio/ogg',
+  'audio/mpeg',
+ ];
+
+ for (const mimeType of preferredMimeTypes) {
+  if (MediaRecorder.isTypeSupported(mimeType)) {
+   return mimeType;
+  }
+ }
+
  return null;
 }
 

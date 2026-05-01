@@ -21,6 +21,11 @@ public static class RealtimeChannelNames
     public const string Chat = "realtime:chat";
 
     /// <summary>
+    /// Kênh fast-lane chat realtime ưu tiên thấp độ trễ.
+    /// </summary>
+    public const string ChatFast = "realtime:chat:fast";
+
+    /// <summary>
     /// Kênh gacha realtime.
     /// </summary>
     public const string Gacha = "realtime:gacha";

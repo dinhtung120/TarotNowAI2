@@ -2,8 +2,12 @@
 
 import { useEffect, useRef } from 'react';
 import { HubConnectionState, type HubConnection } from '@microsoft/signalr';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
+import type {
+  ChatMessageDto,
+  ListConversationsResult,
+} from '@/features/chat/application/actions';
 import { logger } from '@/shared/application/gateways/logger';
 import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 import { getSignalRHubUrl } from '@/shared/application/gateways/signalRUrl';
@@ -26,6 +30,24 @@ interface UseChatRealtimeSyncOptions {
 interface ConversationUpdatedPayload {
   conversationId?: string;
   type?: string;
+  updatedAt?: string;
+  status?: string;
+}
+
+interface MessageCreatedFastPayload extends ChatMessageDto {
+  conversationId: string;
+}
+
+interface ConversationUnreadDeltaPayload {
+  conversationId?: string;
+  userId?: string;
+  readerId?: string;
+  recipientUserId?: string;
+  clearForUserId?: string;
+  unreadDelta?: number;
+  lastMessagePreview?: string;
+  lastMessageType?: string;
+  updatedAt?: string;
 }
 
 const UNREAD_BADGE_REFRESH_EVENT_TYPES = new Set(['message_created', 'message_read', 'unread_changed']);
@@ -42,6 +64,7 @@ function shouldRefreshUnreadBadge(payload?: ConversationUpdatedPayload): boolean
 export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
   const enabled = options.enabled ?? true;
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const currentUserId = useAuthStore((state) => state.user?.id ?? '');
   const runtimePoliciesQuery = useRuntimePolicies(enabled && isAuthenticated);
   const realtimePolicy = runtimePoliciesQuery.data?.realtime;
   const connectionRef = useRef<HubConnection | null>(null);
@@ -130,6 +153,121 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
       }, invalidateDebounceMs);
     };
 
+    const patchInboxWithMessage = (message: MessageCreatedFastPayload): boolean => {
+      let patched = false;
+
+      queryClient.setQueriesData<ListConversationsResult>(
+        { queryKey: userStateQueryKeys.chat.inboxRoot() },
+        (previous) => {
+          if (!previous?.conversations?.length || !currentUserId) {
+            return previous;
+          }
+
+          const index = previous.conversations.findIndex(
+            (conversation) => conversation.id === message.conversationId,
+          );
+          if (index < 0) {
+            return previous;
+          }
+
+          const conversation = previous.conversations[index];
+          const isUserRole = conversation.userId === currentUserId;
+          const isSenderCurrentUser = message.senderId === currentUserId;
+          const unreadField = isUserRole ? 'unreadCountUser' : 'unreadCountReader';
+          const updatedUnread = isSenderCurrentUser
+            ? conversation[unreadField]
+            : conversation[unreadField] + 1;
+
+          const updatedConversation = {
+            ...conversation,
+            lastMessageAt: message.createdAt,
+            updatedAt: message.createdAt,
+            lastMessagePreview: resolveRealtimePreview(message),
+            [unreadField]: updatedUnread,
+          };
+
+          const conversations = [...previous.conversations];
+          conversations.splice(index, 1);
+          conversations.unshift(updatedConversation);
+          patched = true;
+
+          return {
+            ...previous,
+            conversations,
+          };
+        },
+      );
+
+      return patched;
+    };
+
+    const patchInboxWithUnreadDelta = (payload: ConversationUnreadDeltaPayload): boolean => {
+      if (!payload.conversationId || !currentUserId) {
+        return false;
+      }
+
+      let patched = false;
+      queryClient.setQueriesData<ListConversationsResult>(
+        { queryKey: userStateQueryKeys.chat.inboxRoot() },
+        (previous) => {
+          if (!previous?.conversations?.length) {
+            return previous;
+          }
+
+          const index = previous.conversations.findIndex(
+            (conversation) => conversation.id === payload.conversationId,
+          );
+          if (index < 0) {
+            return previous;
+          }
+
+          const conversation = previous.conversations[index];
+          const isUserRole = conversation.userId === currentUserId;
+          const unreadField = isUserRole ? 'unreadCountUser' : 'unreadCountReader';
+          let nextUnread = conversation[unreadField];
+
+          if (payload.unreadDelta === 0) {
+            if (payload.clearForUserId !== currentUserId) {
+              return previous;
+            }
+            nextUnread = 0;
+          } else if (payload.recipientUserId && payload.recipientUserId === currentUserId) {
+            nextUnread = Math.max(0, nextUnread + (payload.unreadDelta ?? 0));
+          }
+
+          const updatedConversation = {
+            ...conversation,
+            [unreadField]: nextUnread,
+            updatedAt: payload.updatedAt ?? conversation.updatedAt,
+            lastMessagePreview: payload.lastMessagePreview ?? conversation.lastMessagePreview,
+          };
+          const conversations = [...previous.conversations];
+          const shouldPromote = payload.unreadDelta !== 0 || Boolean(payload.lastMessagePreview);
+          if (shouldPromote) {
+            conversations.splice(index, 1);
+            conversations.unshift(updatedConversation);
+          } else {
+            conversations[index] = updatedConversation;
+          }
+          patched = true;
+
+          return {
+            ...previous,
+            conversations,
+          };
+        },
+      );
+
+      return patched;
+    };
+
+    const patchUnreadBadge = (delta: number) => {
+      queryClient.setQueryData<number>(userStateQueryKeys.chat.unreadBadge(), (previous) => {
+        const base = previous ?? 0;
+        return Math.max(0, base + delta);
+      });
+    };
+
     const init = async () => {
       const hasValidSession = await ensureRealtimeSession();
       if (!hasValidSession || cancelled) {
@@ -137,9 +275,9 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
       }
 
       const signalR = await import('@microsoft/signalr');
-      logger.info('[ChatRealtimeSync]', `Connecting to: ${getSignalRHubUrl('/api/v1/chat')}`);
+      logger.info('[ChatRealtimeSync]', `Connecting to: ${getSignalRHubUrl('/api/v1/presence')}`);
 	      hubConnection = new signalR.HubConnectionBuilder()
-	        .withUrl(getSignalRHubUrl('/api/v1/chat'), { 
+	        .withUrl(getSignalRHubUrl('/api/v1/presence'), { 
 	          withCredentials: true,
 	        })
 	        .withAutomaticReconnect(schedule)
@@ -153,6 +291,39 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
         // Giữ unread badge đồng bộ cho mọi sự kiện làm đổi trạng thái đọc/chưa đọc.
         if (shouldRefreshUnreadBadge(payload)) {
           invalidateUnreadBadge();
+        }
+      });
+      const applyIncomingMessage = (message: MessageCreatedFastPayload) => {
+        const patched = patchInboxWithMessage(message);
+        if (!patched) {
+          invalidateInboxQueries();
+        }
+
+        if (message.senderId !== currentUserId) {
+          patchUnreadBadge(1);
+        }
+      };
+      hubConnection.on('message.created.fast', applyIncomingMessage);
+      hubConnection.on('message.created', applyIncomingMessage);
+      hubConnection.on('chat.unread.delta', (payload: ConversationUnreadDeltaPayload) => {
+        const patched = patchInboxWithUnreadDelta(payload);
+        if (!patched) {
+          invalidateInboxQueries();
+        }
+
+        if (payload.unreadDelta === 0) {
+          invalidateUnreadBadge();
+          return;
+        }
+
+        if (payload.recipientUserId && payload.recipientUserId === currentUserId) {
+          patchUnreadBadge(payload.unreadDelta ?? 0);
+        }
+      });
+      hubConnection.on('conversation.updated.delta', (payload: ConversationUpdatedPayload) => {
+        const patched = patchInboxConversationDelta(queryClient, payload);
+        if (!patched) {
+          invalidateInboxQueries();
         }
       });
       hubConnection.on('Error', (error: string) => {
@@ -204,5 +375,55 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
       }
       connectionRef.current = null;
     };
-  }, [cancelWakeup, enabled, isAuthenticated, queryClient, scheduleWakeup, wakeupVersion]);
+  }, [cancelWakeup, currentUserId, enabled, isAuthenticated, queryClient, scheduleWakeup, wakeupVersion]);
+}
+
+function resolveRealtimePreview(message: MessageCreatedFastPayload): string {
+  if (message.type === 'image') return '[image]';
+  if (message.type === 'voice') return '[voice]';
+  if (message.type === 'payment_offer') return 'Đề xuất cộng tiền';
+  if (message.type === 'payment_accept') return 'Đã chấp nhận đề xuất cộng tiền';
+  if (message.type === 'payment_reject') return 'Đã từ chối đề xuất cộng tiền';
+  return message.content?.trim() || 'Tin nhắn mới';
+}
+
+function patchInboxConversationDelta(
+  queryClient: QueryClient,
+  payload: ConversationUpdatedPayload,
+): boolean {
+  if (!payload.conversationId) {
+    return false;
+  }
+
+  let patched = false;
+  queryClient.setQueriesData<ListConversationsResult>(
+    { queryKey: userStateQueryKeys.chat.inboxRoot() },
+    (previous) => {
+      if (!previous?.conversations?.length) {
+        return previous;
+      }
+
+      const index = previous.conversations.findIndex(
+        (conversation) => conversation.id === payload.conversationId,
+      );
+      if (index < 0) {
+        return previous;
+      }
+
+      const target = previous.conversations[index];
+      const next = [...previous.conversations];
+      next[index] = {
+        ...target,
+        status: (payload.status as typeof target.status | undefined) ?? target.status,
+        updatedAt: payload.updatedAt ?? target.updatedAt,
+      };
+      patched = true;
+      return {
+        ...previous,
+        conversations: next,
+      };
+    },
+  );
+
+  return patched;
 }

@@ -2,10 +2,14 @@ namespace TarotNow.Application.Features.Chat.Commands.SendMessage;
 
 public partial class SendMessageCommandHandlerRequestedDomainEventHandler
 {
-    // Luồng mới chỉ chấp nhận ảnh WebP do FE chuẩn hóa trước khi upload.
+    // Mime ảnh hỗ trợ cho chat (bao gồm GIF động).
     private static readonly HashSet<string> AllowedImageMimeTypes = new(StringComparer.OrdinalIgnoreCase)
     {
-        "image/webp"
+        "image/webp",
+        "image/jpeg",
+        "image/png",
+        "image/avif",
+        "image/gif"
     };
 
     // Tập mime âm thanh hỗ trợ cho voice message.
@@ -16,13 +20,20 @@ public partial class SendMessageCommandHandlerRequestedDomainEventHandler
         "audio/mpeg",
         "audio/wav",
         "audio/webm",
-        "audio/mp4"
+        "audio/mp4",
+        "audio/m4a",
+        "audio/x-m4a"
     };
 
     // Bảng ánh xạ extension -> mime để suy đoán định dạng khi payload thiếu mime.
     private static readonly IReadOnlyDictionary<string, string> MimeByExtension = new Dictionary<string, string>
     {
         [".webp"] = "image/webp",
+        [".jpg"] = "image/jpeg",
+        [".jpeg"] = "image/jpeg",
+        [".png"] = "image/png",
+        [".avif"] = "image/avif",
+        [".gif"] = "image/gif",
         [".opus"] = "audio/opus",
         [".ogg"] = "audio/ogg",
         [".mp3"] = "audio/mpeg",

@@ -38,7 +38,7 @@ public static partial class SystemConfigRegistry
             Scalar("operational.outbox.max_retry_attempts", "12", "Số lần retry outbox trước dead-letter.", ValidateInt(1, 100)),
             Scalar("operational.outbox.lock_timeout_seconds", "120", "Outbox processing lock timeout (giây).", ValidateInt(30, 3600)),
             Scalar("operational.outbox.max_backoff_seconds", "300", "Outbox retry backoff tối đa (giây).", ValidateInt(1, 3600)),
-            Scalar("operational.outbox.poll_interval_seconds", "5", "Chu kỳ poll outbox worker (giây).", ValidateInt(1, 300))
+            Scalar("operational.outbox.poll_interval_seconds", "1", "Chu kỳ poll outbox worker (giây).", ValidateInt(1, 300))
         ];
     }
 

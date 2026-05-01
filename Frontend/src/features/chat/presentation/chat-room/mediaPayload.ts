@@ -15,6 +15,8 @@ const ALLOWED_VOICE_MIME_TYPES = new Set([
   'audio/ogg',
   'audio/opus',
   'audio/mp4',
+  'audio/x-m4a',
+  'audio/m4a',
   'audio/mpeg',
   'audio/wav',
 ]);
@@ -125,9 +127,14 @@ function normalizeVoiceMimeType(rawMimeType: string): string {
     return FALLBACK_VOICE_MIME;
   }
 
-  if (!ALLOWED_VOICE_MIME_TYPES.has(normalized)) {
+  const mimeWithoutCodec = normalized.split(';')[0]?.trim() || normalized;
+  const canonicalMimeType = mimeWithoutCodec === 'audio/x-m4a' || mimeWithoutCodec === 'audio/m4a'
+    ? 'audio/mp4'
+    : mimeWithoutCodec;
+
+  if (!ALLOWED_VOICE_MIME_TYPES.has(canonicalMimeType)) {
     throw new Error('Định dạng âm thanh chưa được hỗ trợ.');
   }
 
-  return normalized;
+  return canonicalMimeType;
 }
