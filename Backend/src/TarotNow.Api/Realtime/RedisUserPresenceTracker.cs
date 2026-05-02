@@ -93,13 +93,12 @@ public sealed partial class RedisUserPresenceTracker : IUserPresenceTracker
         {
             var db = _multiplexer.GetDatabase();
             var connectionsKey = GetConnectionsKey(userId);
-            EnsureConnectionLease(db, connectionsKey);
-            if (db.SetLength(connectionsKey) > 0)
+            if (HasNonStaleActiveConnections(db, userId, connectionsKey))
             {
                 return true;
             }
 
-            var lastActivity = GetLastActivity(userId);
+            var lastActivity = ReadLastActivity(db, userId);
             var onlineWindow = TimeSpan.FromMinutes(
                 Math.Clamp(_systemConfigSettings.PresenceTimeoutMinutes, 1, 240));
             return lastActivity is not null && (DateTime.UtcNow - lastActivity.Value) <= onlineWindow;

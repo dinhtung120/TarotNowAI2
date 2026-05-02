@@ -18,8 +18,7 @@ public sealed partial class RedisUserPresenceTracker : IUserPresenceTracker
         {
             var db = _multiplexer.GetDatabase();
             var connectionsKey = GetConnectionsKey(userId);
-            EnsureConnectionLease(db, connectionsKey);
-            return db.SetLength(connectionsKey) > 0;
+            return HasNonStaleActiveConnections(db, userId, connectionsKey);
         }
         catch (Exception ex)
         {

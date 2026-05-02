@@ -19,13 +19,7 @@ public sealed partial class RedisUserPresenceTracker : IUserPresenceTracker
         try
         {
             var db = _multiplexer.GetDatabase();
-            var score = db.SortedSetScore(LastActivityKey, userId);
-            if (!score.HasValue)
-            {
-                return null;
-            }
-
-            return DateTimeOffset.FromUnixTimeSeconds((long)score.Value).UtcDateTime;
+            return ReadLastActivity(db, userId);
         }
         catch (Exception ex)
         {
@@ -53,9 +47,23 @@ public sealed partial class RedisUserPresenceTracker : IUserPresenceTracker
                     continue;
                 }
 
-                if (db.SetLength(GetConnectionsKey(userId!)) == 0)
+                var resolvedUserId = userId.ToString();
+                if (string.IsNullOrWhiteSpace(resolvedUserId))
                 {
-                    result.Add(userId!);
+                    continue;
+                }
+
+                var connectionsKey = GetConnectionsKey(resolvedUserId);
+                var activeConnections = db.SetLength(connectionsKey);
+                if (activeConnections <= 0)
+                {
+                    result.Add(resolvedUserId);
+                    continue;
+                }
+
+                if (TryPruneStaleConnections(db, resolvedUserId, connectionsKey, activeConnections))
+                {
+                    result.Add(resolvedUserId);
                 }
             }
 
@@ -116,5 +124,76 @@ public sealed partial class RedisUserPresenceTracker : IUserPresenceTracker
         }
 
         db.KeyExpire(connectionsKey, ResolveConnectionLease());
+    }
+
+    private bool HasNonStaleActiveConnections(IDatabase db, string userId, string connectionsKey)
+    {
+        EnsureConnectionLease(db, connectionsKey);
+        var activeConnections = db.SetLength(connectionsKey);
+        if (activeConnections <= 0)
+        {
+            return false;
+        }
+
+        return !TryPruneStaleConnections(db, userId, connectionsKey, activeConnections);
+    }
+
+    private bool TryPruneStaleConnections(
+        IDatabase db,
+        string userId,
+        string connectionsKey,
+        long activeConnections)
+    {
+        if (activeConnections <= 0)
+        {
+            return false;
+        }
+
+        var lastActivity = ReadLastActivity(db, userId);
+        if (lastActivity is null)
+        {
+            return false;
+        }
+
+        var now = DateTime.UtcNow;
+        var idleDuration = now - lastActivity.Value;
+        var staleWindow = ResolveStaleConnectionWindow();
+        if (idleDuration <= staleWindow)
+        {
+            return false;
+        }
+
+        var deletedConnections = db.KeyDelete(connectionsKey);
+        _logger.LogWarning(
+            "[PresenceRedis] Pruned stale active connections. UserId={UserId}, ActiveConnections={ActiveConnections}, IdleSeconds={IdleSeconds}, StaleWindowSeconds={StaleWindowSeconds}, DeletedConnections={DeletedConnections}",
+            userId,
+            activeConnections,
+            Math.Round(idleDuration.TotalSeconds),
+            Math.Round(staleWindow.TotalSeconds),
+            deletedConnections);
+
+        return true;
+    }
+
+    private DateTime? ReadLastActivity(IDatabase db, string userId)
+    {
+        var score = db.SortedSetScore(LastActivityKey, userId);
+        if (!score.HasValue)
+        {
+            return null;
+        }
+
+        return DateTimeOffset.FromUnixTimeSeconds((long)score.Value).UtcDateTime;
+    }
+
+    private TimeSpan ResolveStaleConnectionWindow()
+    {
+        var timeoutSeconds = Math.Clamp(_systemConfigSettings.PresenceTimeoutMinutes, 1, 240) * 60;
+        var scanIntervalSeconds = Math.Clamp(_systemConfigSettings.PresenceScanIntervalSeconds, 5, 600);
+        var leaseSeconds = (int)ResolveConnectionLease().TotalSeconds;
+        var staleWindowSeconds = timeoutSeconds + Math.Max(scanIntervalSeconds, 60);
+        var maxStaleWindowSeconds = Math.Max(timeoutSeconds, leaseSeconds - 10);
+        var boundedWindowSeconds = Math.Clamp(staleWindowSeconds, timeoutSeconds, maxStaleWindowSeconds);
+        return TimeSpan.FromSeconds(boundedWindowSeconds);
     }
 }
