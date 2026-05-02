@@ -53,7 +53,7 @@ public sealed partial class RedisUserPresenceTracker : IUserPresenceTracker
     }
 
     /// <summary>
-    /// Đánh dấu một connection bị ngắt và cập nhật heartbeat.
+    /// Đánh dấu một connection bị ngắt.
     /// </summary>
     public void MarkDisconnected(string userId, string connectionId)
     {
@@ -70,9 +70,8 @@ public sealed partial class RedisUserPresenceTracker : IUserPresenceTracker
             if (db.SetLength(connectionsKey) <= 0)
             {
                 db.KeyDelete(connectionsKey);
+                db.SortedSetRemove(LastActivityKey, userId);
             }
-
-            RecordHeartbeat(userId);
         }
         catch (Exception ex)
         {

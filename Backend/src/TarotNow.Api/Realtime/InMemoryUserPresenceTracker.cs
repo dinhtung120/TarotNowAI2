@@ -45,7 +45,7 @@ public class InMemoryUserPresenceTracker : IUserPresenceTracker
 
     /// <summary>
     /// Đánh dấu ngắt kết nối cho một connection của user.
-    /// Luồng xử lý: validate input, remove connection, dọn user khỏi map nếu hết connection, rồi cập nhật heartbeat.
+    /// Luồng xử lý: validate input, remove connection, dọn user khỏi map nếu hết connection và xóa fallback heartbeat.
     /// </summary>
     public void MarkDisconnected(string userId, string connectionId)
     {
@@ -62,11 +62,9 @@ public class InMemoryUserPresenceTracker : IUserPresenceTracker
             {
                 // Khi user không còn connection hoạt động, xóa hẳn để giảm bộ nhớ và tránh false-positive online.
                 _connectionsByUser.TryRemove(userId, out _);
+                _lastActivity.TryRemove(userId, out _);
             }
         }
-
-        // Vẫn ghi heartbeat để phản ánh thời điểm cuối cùng user còn tương tác hệ thống.
-        RecordHeartbeat(userId);
     }
 
     /// <summary>
