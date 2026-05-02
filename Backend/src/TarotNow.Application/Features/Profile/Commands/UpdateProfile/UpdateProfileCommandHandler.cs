@@ -1,4 +1,5 @@
 using MediatR;
+using System;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Events;
 
@@ -28,7 +29,7 @@ public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand,
         {
             UserId = request.UserId,
             DisplayName = request.DisplayName,
-            DateOfBirth = request.DateOfBirth,
+            DateOfBirth = NormalizeDateOfBirth(request.DateOfBirth),
             PayoutBankName = request.PayoutBankName,
             PayoutBankBin = request.PayoutBankBin,
             PayoutBankAccountNumber = request.PayoutBankAccountNumber,
@@ -37,5 +38,12 @@ public class UpdateProfileCommandHandler : IRequestHandler<UpdateProfileCommand,
 
         await _inlineDomainEventDispatcher.PublishAsync(domainEvent, cancellationToken);
         return domainEvent.Updated;
+    }
+
+    private static DateTime NormalizeDateOfBirth(DateTime dateOfBirth)
+    {
+        // Date of birth is date-only business data; normalize to UTC midnight
+        // so PostgreSQL timestamptz writes don't fail on Kind=Unspecified.
+        return DateTime.SpecifyKind(dateOfBirth.Date, DateTimeKind.Utc);
     }
 }

@@ -91,6 +91,44 @@ public class ProfileIntegrationTests : IClassFixture<CustomWebApplicationFactory
         Assert.Equal(1, profile.Numerology);
     }
 
+    [Fact]
+    public async Task UpdateProfile_ShouldAcceptDateOnlyAndPayoutBank_ForReader()
+    {
+        await EnsureTestUserAsync();
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            var userId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+            var user = await db.Users.FirstAsync(u => u.Id == userId);
+            user.ApproveAsReader();
+            await db.SaveChangesAsync();
+        }
+
+        var payload = new
+        {
+            displayName = "Reader Profile",
+            dateOfBirth = "1994-11-03",
+            payoutBankBin = "970436",
+            payoutBankName = "Vietcombank",
+            payoutBankAccountNumber = "1019030535",
+            payoutBankAccountHolder = "DINH SON TUNG"
+        };
+
+        var patchResponse = await _client.PatchAsJsonAsync("/api/v1/profile", payload);
+        patchResponse.EnsureSuccessStatusCode();
+
+        using var verifyScope = _factory.Services.CreateScope();
+        var verifyDb = verifyScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var verifyUser = await verifyDb.Users.FirstAsync(u => u.Id == Guid.Parse("00000000-0000-0000-0000-000000000001"));
+
+        Assert.Equal("Reader Profile", verifyUser.DisplayName);
+        Assert.Equal("970436", verifyUser.PayoutBankBin);
+        Assert.Equal("Vietcombank", verifyUser.PayoutBankName);
+        Assert.Equal("1019030535", verifyUser.PayoutBankAccountNumber);
+        Assert.Equal("DINH SON TUNG", verifyUser.PayoutBankAccountHolder);
+    }
+
     /// <summary>
     /// Xác nhận upload avatar theo luồng mới presign + confirm và phản ánh lại trong profile.
     /// </summary>

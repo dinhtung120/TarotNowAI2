@@ -53,7 +53,7 @@ public partial class User
         }
 
         AvatarUrl = avatarUrl;
-        DateOfBirth = dateOfBirth;
+        DateOfBirth = DateTime.SpecifyKind(dateOfBirth.Date, DateTimeKind.Utc);
         UpdatedAt = DateTime.UtcNow;
     }
 
