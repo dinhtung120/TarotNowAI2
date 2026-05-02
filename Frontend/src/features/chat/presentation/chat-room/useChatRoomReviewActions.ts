@@ -6,6 +6,7 @@ import { submitConversationReview, type ConversationDto } from '@/features/chat/
 interface UseChatRoomReviewActionsParams {
   conversation: ConversationDto | null;
   conversationId?: string;
+  isUserRole: boolean | null;
   setConversation: Dispatch<SetStateAction<ConversationDto | null>>;
 }
 
@@ -43,6 +44,7 @@ function setDismissed(dismissedKey: string, dismissed: boolean) {
 export function useChatRoomReviewActions({
   conversation,
   conversationId,
+  isUserRole,
   setConversation,
 }: UseChatRoomReviewActionsParams) {
   const t = useTranslations('Chat');
@@ -50,7 +52,13 @@ export function useChatRoomReviewActions({
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState('');
-  const canSubmitReview = Boolean(conversation?.canSubmitReview && conversation?.hasSubmittedReview !== true);
+  const canSubmitReview = Boolean(
+    conversation?.hasSubmittedReview !== true
+    && (
+      conversation?.canSubmitReview === true
+      || (isUserRole === true && conversation?.status === 'completed')
+    ),
+  );
   const dismissedReviewKey = useMemo(() => getDismissedReviewKey(conversationId), [conversationId]);
 
   useEffect(() => {

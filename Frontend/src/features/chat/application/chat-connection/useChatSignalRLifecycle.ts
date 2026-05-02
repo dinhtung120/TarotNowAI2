@@ -40,6 +40,10 @@ interface ConversationDeltaPayload {
  status?: ConversationDto['status'];
  type?: string;
  updatedAt?: string;
+ confirm?: ConversationDto['confirm'];
+ canSubmitReview?: boolean;
+ hasSubmittedReview?: boolean;
+ reviewedAt?: string | null;
 }
 
 const NON_CRITICAL_CONVERSATION_EVENT_TYPES = new Set(['message_created', 'member_joined', 'message_read']);
@@ -50,6 +54,14 @@ const CRITICAL_CONVERSATION_EVENT_TYPES = new Set([
   'accepted',
   'rejected',
 ]);
+
+function normalizeConversationEventType(value?: string) {
+ return value?.trim().toLowerCase() ?? '';
+}
+
+function isCriticalConversationEventType(eventType: string) {
+ return CRITICAL_CONVERSATION_EVENT_TYPES.has(eventType);
+}
 
 async function createHubConnection(reconnectSchedule: number[]) {
  const signalR = await import('@microsoft/signalr');
@@ -200,41 +212,51 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
      setTypingUserId(null);
     });
 
+    const reloadConversationSnapshot = () => {
+     void loadInitialRef.current(true);
+    };
+
     hubConnection.on('conversation.updated', (payload: { conversationId: string; type?: string }) => {
      if (payload.conversationId !== conversationId) return;
-     const eventType = payload.type?.trim().toLowerCase() ?? '';
+     const eventType = normalizeConversationEventType(payload.type);
      if (NON_CRITICAL_CONVERSATION_EVENT_TYPES.has(eventType)) return;
-     const isCriticalEvent = CRITICAL_CONVERSATION_EVENT_TYPES.has(eventType);
+     const isCriticalEvent = isCriticalConversationEventType(eventType);
      // Với event thường, giữ guard để tránh refetch dồn dập lúc mới mount.
      if (!isCriticalEvent && Date.now() - lastInitialLoadTimeRef.current < initialLoadGuardMs) return;
      if (conversationInvalidateTimeout) {
       clearTimeout(conversationInvalidateTimeout);
      }
-     const reloadConversation = () => {
-      void listMessages(conversationId, { limit: 1 }).then((res) => {
-       if (res.success && res.data?.conversation) setConversation(res.data.conversation);
-      });
-     };
-
      if (isCriticalEvent) {
-      void reloadConversation();
+      reloadConversationSnapshot();
       return;
      }
 
-     conversationInvalidateTimeout = setTimeout(reloadConversation, invalidateDebounceMs);
+     conversationInvalidateTimeout = setTimeout(() => {
+      void listMessages(conversationId, { limit: 1 }).then((res) => {
+       if (res.success && res.data?.conversation) setConversation(res.data.conversation);
+      });
+     }, invalidateDebounceMs);
     });
 
     hubConnection.on('conversation.updated.delta', (payload: ConversationDeltaPayload) => {
      if (payload.conversationId !== conversationId) return;
-     setConversation((prev) => {
-      if (!prev) return prev;
+     const eventType = normalizeConversationEventType(payload.type);
+      setConversation((prev) => {
+       if (!prev) return prev;
 
-      return {
-       ...prev,
-       status: payload.status ?? prev.status,
-       updatedAt: payload.updatedAt ?? prev.updatedAt,
-      };
-     });
+       return {
+        ...prev,
+        status: payload.status ?? prev.status,
+        updatedAt: payload.updatedAt ?? prev.updatedAt,
+        confirm: payload.confirm ?? prev.confirm,
+        canSubmitReview: payload.canSubmitReview ?? prev.canSubmitReview,
+        hasSubmittedReview: payload.hasSubmittedReview ?? prev.hasSubmittedReview,
+        reviewedAt: payload.reviewedAt ?? prev.reviewedAt,
+       };
+      });
+     if (isCriticalConversationEventType(eventType)) {
+      reloadConversationSnapshot();
+     }
     });
 
     hubConnection.on('message.read.delta', (payload: { userId: string; conversationId: string }) => {

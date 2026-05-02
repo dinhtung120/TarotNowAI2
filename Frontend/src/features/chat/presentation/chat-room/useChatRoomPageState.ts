@@ -51,6 +51,7 @@ export function useChatRoomPageState({
   const reviewActions = useChatRoomReviewActions({
     conversation: chatConnection.conversation,
     conversationId,
+    isUserRole: chatConnection.isUserRole,
     setConversation: chatConnection.setConversation,
   });
 

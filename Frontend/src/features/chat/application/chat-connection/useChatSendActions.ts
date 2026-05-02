@@ -80,9 +80,12 @@ export function useChatSendActions({
 
  const focusComposerInput = useCallback(() => {
   if (typeof window === 'undefined') return;
-  window.requestAnimationFrame(() => {
-   inputRef.current?.focus();
-  });
+  const focusInput = () => {
+   inputRef.current?.focus({ preventScroll: true });
+  };
+  focusInput();
+  window.requestAnimationFrame(focusInput);
+  window.setTimeout(focusInput, 0);
  }, [inputRef]);
 
  const syncInboxUnreadAfterRead = useCallback(() => {

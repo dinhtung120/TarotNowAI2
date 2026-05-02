@@ -51,6 +51,21 @@ interface ConversationUnreadDeltaPayload {
 }
 
 const UNREAD_BADGE_REFRESH_EVENT_TYPES = new Set(['message_created', 'message_read', 'unread_changed']);
+const CRITICAL_CHAT_CONVERSATION_EVENT_TYPES = new Set([
+ 'complete_requested',
+ 'complete_responded',
+ 'completed',
+ 'accepted',
+ 'rejected',
+]);
+
+function normalizeConversationEventType(value?: string) {
+ return value?.trim().toLowerCase() ?? '';
+}
+
+function isCriticalConversationEventType(eventType: string) {
+ return CRITICAL_CHAT_CONVERSATION_EVENT_TYPES.has(eventType);
+}
 
 function shouldRefreshUnreadBadge(payload?: ConversationUpdatedPayload): boolean {
  const eventType = payload?.type?.trim().toLowerCase();
@@ -131,26 +146,26 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
     const { appStartGuardMs, invalidateDebounceMs, serverTimeoutMs, negotiationTimeoutMs, unauthorizedCooldownMs } = configRef.current;
     const schedule = reconnectScheduleRef.current;
     
-    const invalidateInboxQueries = () => {
-      if (Date.now() - appStartTimeRef.current < appStartGuardMs) {
+    const invalidateInboxQueries = (force = false) => {
+      if (!force && Date.now() - appStartTimeRef.current < appStartGuardMs) {
         return;
       }
 
       if (inboxInvalidateTimeout) clearTimeout(inboxInvalidateTimeout);
       inboxInvalidateTimeout = setTimeout(() => {
         void queryClient.invalidateQueries({ queryKey: userStateQueryKeys.chat.inboxRoot() });
-      }, invalidateDebounceMs);
+      }, force ? 0 : invalidateDebounceMs);
     };
 
-    const invalidateUnreadBadge = () => {
-      if (Date.now() - appStartTimeRef.current < appStartGuardMs) {
+    const invalidateUnreadBadge = (force = false) => {
+      if (!force && Date.now() - appStartTimeRef.current < appStartGuardMs) {
         return;
       }
 
       if (unreadInvalidateTimeout) clearTimeout(unreadInvalidateTimeout);
       unreadInvalidateTimeout = setTimeout(() => {
         void queryClient.invalidateQueries({ queryKey: userStateQueryKeys.chat.unreadBadge() });
-      }, invalidateDebounceMs);
+      }, force ? 0 : invalidateDebounceMs);
     };
 
     const patchInboxWithMessage = (message: MessageCreatedFastPayload): boolean => {
@@ -287,10 +302,12 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
       hubConnection.serverTimeoutInMilliseconds = serverTimeoutMs;
 
       hubConnection.on('conversation.updated', (payload: ConversationUpdatedPayload) => {
-        invalidateInboxQueries();
+        const eventType = normalizeConversationEventType(payload.type);
+        const isCriticalEvent = isCriticalConversationEventType(eventType);
+        invalidateInboxQueries(isCriticalEvent);
         // Giữ unread badge đồng bộ cho mọi sự kiện làm đổi trạng thái đọc/chưa đọc.
-        if (shouldRefreshUnreadBadge(payload)) {
-          invalidateUnreadBadge();
+        if (isCriticalEvent || shouldRefreshUnreadBadge(payload)) {
+          invalidateUnreadBadge(isCriticalEvent);
         }
       });
       const applyIncomingMessage = (message: MessageCreatedFastPayload) => {
@@ -321,9 +338,14 @@ export function useChatRealtimeSync(options: UseChatRealtimeSyncOptions = {}) {
         }
       });
       hubConnection.on('conversation.updated.delta', (payload: ConversationUpdatedPayload) => {
+        const eventType = normalizeConversationEventType(payload.type);
+        const isCriticalEvent = isCriticalConversationEventType(eventType);
         const patched = patchInboxConversationDelta(queryClient, payload);
         if (!patched) {
-          invalidateInboxQueries();
+          invalidateInboxQueries(isCriticalEvent);
+        }
+        if (isCriticalEvent) {
+          invalidateUnreadBadge(true);
         }
       });
       hubConnection.on('Error', (error: string) => {
