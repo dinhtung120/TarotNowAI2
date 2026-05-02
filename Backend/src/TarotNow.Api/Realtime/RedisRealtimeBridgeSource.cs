@@ -15,7 +15,7 @@ public sealed class RedisRealtimeBridgeSource : IRealtimeBridgeSource
 
     private readonly IConnectionMultiplexer _connectionMultiplexer;
     private readonly ILogger<RedisRealtimeBridgeSource> _logger;
-    private readonly ConcurrentDictionary<string, SubscriptionState> _subscriptions = new(StringComparer.Ordinal);
+    private readonly ConcurrentDictionary<string, RedisRealtimeBridgeSubscriptionState> _subscriptions = new(StringComparer.Ordinal);
 
     /// <summary>
     /// Khởi tạo Redis realtime source.
@@ -70,27 +70,51 @@ public sealed class RedisRealtimeBridgeSource : IRealtimeBridgeSource
         _logger.LogInformation("Unsubscribed Redis realtime channel {Channel}.", channel);
     }
 
-    private SubscriptionState CreateSubscriptionState(
+    private RedisRealtimeBridgeSubscriptionState CreateSubscriptionState(
         string channel,
         Func<string, string, Task> onMessageAsync,
         CancellationToken cancellationToken)
     {
         var useLosslessQueue = string.Equals(channel, RealtimeChannelNames.UserState, StringComparison.Ordinal);
-        var messageQueue = useLosslessQueue
-            ? Channel.CreateUnbounded<RedisRealtimeMessage>(new UnboundedChannelOptions
+        var messageQueue = CreateMessageQueue(useLosslessQueue);
+        var state = new RedisRealtimeBridgeSubscriptionState(
+            channel,
+            useLosslessQueue,
+            messageQueue,
+            PresenceBacklogWarnThreshold);
+        var worker = CreateWorker(messageQueue, state, onMessageAsync, cancellationToken);
+        var callback = CreateCallback(messageQueue, state, useLosslessQueue);
+
+        state.AttachRuntime(callback, worker);
+        return state;
+    }
+
+    private Channel<RedisRealtimeBridgeMessage> CreateMessageQueue(bool useLosslessQueue)
+    {
+        if (useLosslessQueue)
+        {
+            return Channel.CreateUnbounded<RedisRealtimeBridgeMessage>(new UnboundedChannelOptions
             {
                 SingleReader = true,
                 SingleWriter = false
-            })
-            : Channel.CreateBounded<RedisRealtimeMessage>(new BoundedChannelOptions(MaxBufferedMessagesPerChannel)
-            {
-                SingleReader = true,
-                SingleWriter = false,
-                FullMode = BoundedChannelFullMode.DropOldest
             });
-        var state = new SubscriptionState(channel, useLosslessQueue, messageQueue);
+        }
 
-        var worker = Task.Run(async () =>
+        return Channel.CreateBounded<RedisRealtimeBridgeMessage>(new BoundedChannelOptions(MaxBufferedMessagesPerChannel)
+        {
+            SingleReader = true,
+            SingleWriter = false,
+            FullMode = BoundedChannelFullMode.DropOldest
+        });
+    }
+
+    private Task CreateWorker(
+        Channel<RedisRealtimeBridgeMessage> messageQueue,
+        RedisRealtimeBridgeSubscriptionState state,
+        Func<string, string, Task> onMessageAsync,
+        CancellationToken cancellationToken)
+    {
+        return Task.Run(async () =>
         {
             await foreach (var message in messageQueue.Reader.ReadAllAsync(cancellationToken))
             {
@@ -112,32 +136,41 @@ public sealed class RedisRealtimeBridgeSource : IRealtimeBridgeSource
                 }
             }
         }, cancellationToken);
+    }
 
-        var callback = new Action<RedisChannel, RedisValue>((redisChannel, redisValue) =>
+    private Action<RedisChannel, RedisValue> CreateCallback(
+        Channel<RedisRealtimeBridgeMessage> messageQueue,
+        RedisRealtimeBridgeSubscriptionState state,
+        bool useLosslessQueue)
+    {
+        return (redisChannel, redisValue) =>
         {
-            var message = new RedisRealtimeMessage(redisChannel.ToString(), redisValue.ToString());
-            if (messageQueue.Writer.TryWrite(message) == false)
+            var channel = redisChannel.ToString();
+            var message = new RedisRealtimeBridgeMessage(channel, redisValue.ToString());
+            if (messageQueue.Writer.TryWrite(message))
             {
-                if (useLosslessQueue)
-                {
-                    _logger.LogError(
-                        "Failed to enqueue lossless realtime message. Channel={Channel}",
-                        redisChannel.ToString());
-                    return;
-                }
-
-                _logger.LogWarning(
-                    "Dropped realtime message because bridge queue is full. Channel={Channel}, Capacity={Capacity}",
-                    redisChannel.ToString(),
-                    MaxBufferedMessagesPerChannel);
+                state.MarkEnqueued(_logger);
                 return;
             }
 
-            state.MarkEnqueued(_logger);
-        });
+            HandleFailedEnqueue(channel, useLosslessQueue);
+        };
+    }
 
-        state.AttachRuntime(callback, worker);
-        return state;
+    private void HandleFailedEnqueue(string channel, bool useLosslessQueue)
+    {
+        if (useLosslessQueue)
+        {
+            _logger.LogError(
+                "Failed to enqueue lossless realtime message. Channel={Channel}",
+                channel);
+            return;
+        }
+
+        _logger.LogWarning(
+            "Dropped realtime message because bridge queue is full. Channel={Channel}, Capacity={Capacity}",
+            channel,
+            MaxBufferedMessagesPerChannel);
     }
 
     private static void ValidateArguments(string channel, Func<string, string, Task> onMessageAsync)
@@ -148,114 +181,5 @@ public sealed class RedisRealtimeBridgeSource : IRealtimeBridgeSource
         }
 
         ArgumentNullException.ThrowIfNull(onMessageAsync);
-    }
-
-    private readonly record struct RedisRealtimeMessage(string Channel, string PayloadJson);
-
-    private sealed class SubscriptionState
-    {
-        private long _pendingMessages;
-        private long _lastWarnedBacklogBucket;
-
-        public SubscriptionState(
-            string channel,
-            bool useLosslessQueue,
-            Channel<RedisRealtimeMessage> queue)
-        {
-            Channel = channel;
-            UseLosslessQueue = useLosslessQueue;
-            Queue = queue;
-        }
-
-        public string Channel { get; }
-
-        public Action<RedisChannel, RedisValue> Callback { get; private set; } = null!;
-
-        public bool UseLosslessQueue { get; }
-
-        private Channel<RedisRealtimeMessage> Queue { get; }
-
-        private Task Worker { get; set; } = Task.CompletedTask;
-
-        public void AttachRuntime(Action<RedisChannel, RedisValue> callback, Task worker)
-        {
-            Callback = callback;
-            Worker = worker;
-        }
-
-        public void MarkEnqueued(ILogger logger)
-        {
-            if (!UseLosslessQueue)
-            {
-                return;
-            }
-
-            var pending = Interlocked.Increment(ref _pendingMessages);
-            if (pending < PresenceBacklogWarnThreshold)
-            {
-                return;
-            }
-
-            var bucket = pending / PresenceBacklogWarnThreshold;
-            var lastBucket = Interlocked.Read(ref _lastWarnedBacklogBucket);
-            if (bucket <= lastBucket)
-            {
-                return;
-            }
-
-            if (Interlocked.CompareExchange(ref _lastWarnedBacklogBucket, bucket, lastBucket) != lastBucket)
-            {
-                return;
-            }
-
-            logger.LogWarning(
-                "Presence realtime backlog is high. Channel={Channel}, PendingMessages={PendingMessages}, Threshold={Threshold}",
-                Channel,
-                pending,
-                PresenceBacklogWarnThreshold);
-        }
-
-        public void MarkDequeued(ILogger logger)
-        {
-            if (!UseLosslessQueue)
-            {
-                return;
-            }
-
-            var pending = Interlocked.Decrement(ref _pendingMessages);
-            if (pending >= PresenceBacklogWarnThreshold || pending < 0)
-            {
-                return;
-            }
-
-            var lastBucket = Interlocked.Read(ref _lastWarnedBacklogBucket);
-            if (lastBucket <= 0)
-            {
-                return;
-            }
-
-            if (Interlocked.CompareExchange(ref _lastWarnedBacklogBucket, 0, lastBucket) != lastBucket)
-            {
-                return;
-            }
-
-            logger.LogInformation(
-                "Presence realtime backlog recovered. Channel={Channel}, PendingMessages={PendingMessages}",
-                Channel,
-                Math.Max(0, pending));
-        }
-
-        public async Task StopAsync(CancellationToken cancellationToken)
-        {
-            Queue.Writer.TryComplete();
-
-            try
-            {
-                await Worker.WaitAsync(cancellationToken);
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-            }
-        }
     }
 }

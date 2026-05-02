@@ -13,6 +13,7 @@ using TarotNow.Infrastructure;
 using TarotNow.Infrastructure.Services;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 
 namespace TarotNow.Api.Startup;
 
@@ -24,11 +25,6 @@ public static partial class ApiServiceCollectionExtensions
     /// </summary>
     private static void AddPlatformServices(IServiceCollection services, IConfiguration configuration)
     {
-        var environmentName = configuration["ASPNETCORE_ENVIRONMENT"]
-            ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
-            ?? string.Empty;
-        var allowDegradedPresence = IsLocalPresenceFallbackAllowed(environmentName);
-
         // Gắn global exception handler để mọi lỗi chưa bắt được chuẩn hóa về ProblemDetails.
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
@@ -42,55 +38,96 @@ public static partial class ApiServiceCollectionExtensions
         services.AddScoped<IAiStreamEndpointService, AiStreamEndpointService>();
         services.AddScoped<IAiStreamSseOrchestrator, AiStreamSseOrchestrator>();
         services.AddSingleton<IAiStreamTicketService, AiStreamTicketService>();
-        services.AddSingleton<IUserPresenceTracker>(serviceProvider =>
-        {
-            var systemConfigSettings = serviceProvider.GetRequiredService<ISystemConfigSettings>();
-            var cacheBackendState = serviceProvider.GetService<CacheBackendState>();
-            if (cacheBackendState?.UsesRedis == true)
-            {
-                var multiplexer = serviceProvider.GetService<StackExchange.Redis.IConnectionMultiplexer>();
-                if (multiplexer is not null)
-                {
-                    var logger = serviceProvider
-                        .GetRequiredService<ILogger<RedisUserPresenceTracker>>();
-                    return new RedisUserPresenceTracker(multiplexer, systemConfigSettings, logger);
-                }
-            }
+        AddPresenceServices(services);
+        AddAuthorizationPolicies(services);
+        ConfigureSignalR(services, configuration.GetConnectionString("Redis"), ResolveSignalROptions(configuration));
+    }
 
-            if (!allowDegradedPresence)
-            {
-                throw new InvalidOperationException(
-                    $"Redis is required for presence consistency when ASPNETCORE_ENVIRONMENT='{environmentName}'.");
-            }
-
-            return new InMemoryUserPresenceTracker(systemConfigSettings);
-        });
+    private static void AddPresenceServices(IServiceCollection services)
+    {
+        services.AddSingleton<IUserPresenceTracker>(CreateUserPresenceTracker);
         services.AddHostedService<PresenceTimeoutBackgroundService>();
-        services.AddSingleton<IRealtimeBridgeSource>(serviceProvider =>
+        services.AddSingleton<IRealtimeBridgeSource>(CreateRealtimeBridgeSource);
+        services.AddHostedService<RedisRealtimeSignalRBridgeService>();
+    }
+
+    private static IUserPresenceTracker CreateUserPresenceTracker(IServiceProvider serviceProvider)
+    {
+        var systemConfigSettings = serviceProvider.GetRequiredService<ISystemConfigSettings>();
+        if (TryCreateRedisPresenceTracker(serviceProvider, systemConfigSettings, out var redisTracker))
         {
-            var multiplexer = serviceProvider.GetService<StackExchange.Redis.IConnectionMultiplexer>();
-            if (multiplexer is null)
-            {
-                if (!allowDegradedPresence)
-                {
-                    throw new InvalidOperationException(
-                        $"Redis realtime bridge requires Redis when ASPNETCORE_ENVIRONMENT='{environmentName}'.");
-                }
+            return redisTracker;
+        }
 
-                return new NoOpRealtimeBridgeSource();
-            }
+        var environmentName = ResolveEnvironmentName(serviceProvider);
+        if (!IsLocalPresenceFallbackAllowed(environmentName))
+        {
+            throw new InvalidOperationException(
+                $"Redis is required for presence consistency when ASPNETCORE_ENVIRONMENT='{environmentName}'.");
+        }
 
+        return new InMemoryUserPresenceTracker(systemConfigSettings);
+    }
+
+    private static bool TryCreateRedisPresenceTracker(
+        IServiceProvider serviceProvider,
+        ISystemConfigSettings systemConfigSettings,
+        out IUserPresenceTracker tracker)
+    {
+        var cacheBackendState = serviceProvider.GetService<CacheBackendState>();
+        var multiplexer = serviceProvider.GetService<StackExchange.Redis.IConnectionMultiplexer>();
+        if (cacheBackendState?.UsesRedis != true || multiplexer is null)
+        {
+            tracker = null!;
+            return false;
+        }
+
+        var logger = serviceProvider.GetRequiredService<ILogger<RedisUserPresenceTracker>>();
+        tracker = new RedisUserPresenceTracker(multiplexer, systemConfigSettings, logger);
+        return true;
+    }
+
+    private static IRealtimeBridgeSource CreateRealtimeBridgeSource(IServiceProvider serviceProvider)
+    {
+        var multiplexer = serviceProvider.GetService<StackExchange.Redis.IConnectionMultiplexer>();
+        if (multiplexer is not null)
+        {
             var logger = serviceProvider.GetRequiredService<ILogger<RedisRealtimeBridgeSource>>();
             return new RedisRealtimeBridgeSource(multiplexer, logger);
-        });
-        services.AddHostedService<RedisRealtimeSignalRBridgeService>();
+        }
+
+        var environmentName = ResolveEnvironmentName(serviceProvider);
+        if (!IsLocalPresenceFallbackAllowed(environmentName))
+        {
+            throw new InvalidOperationException(
+                $"Redis realtime bridge requires Redis when ASPNETCORE_ENVIRONMENT='{environmentName}'.");
+        }
+
+        return new NoOpRealtimeBridgeSource();
+    }
+
+    private static string ResolveEnvironmentName(IServiceProvider serviceProvider)
+    {
+        var hostEnvironment = serviceProvider.GetService<IHostEnvironment>();
+        if (!string.IsNullOrWhiteSpace(hostEnvironment?.EnvironmentName))
+        {
+            return hostEnvironment.EnvironmentName;
+        }
+
+        var configuration = serviceProvider.GetService<IConfiguration>();
+        var configuredEnvironment = configuration?["ASPNETCORE_ENVIRONMENT"]
+            ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+        return string.IsNullOrWhiteSpace(configuredEnvironment) ? "Production" : configuredEnvironment;
+    }
+
+    private static void AddAuthorizationPolicies(IServiceCollection services)
+    {
         services.AddAuthorization(options =>
         {
             // Định nghĩa policy tập trung để controller tái sử dụng và tránh lệch rule quyền.
             options.AddPolicy(ApiAuthorizationPolicies.AuthenticatedUser, ApiAuthorizationPolicies.RequireAuthenticatedUser);
             options.AddPolicy(ApiAuthorizationPolicies.AdminOnly, ApiAuthorizationPolicies.RequireAdminOnly);
         });
-        ConfigureSignalR(services, configuration.GetConnectionString("Redis"), ResolveSignalROptions(configuration));
     }
 
     private static bool IsLocalPresenceFallbackAllowed(string environmentName)
