@@ -211,4 +211,77 @@ const mockedAuthGetState = vi.mocked(useAuthStore.getState);
   clearInterval(heartbeat);
   handlers.dispose();
  });
+
+ it('syncs observer groups for active reader queries and unsubscribes stale users', async () => {
+  const hub = createFakeHubConnection();
+  const activeDirectoryQueries = [
+   {
+    queryKey: ['readers', 1, 12, '', '', ''],
+    state: { data: { readers: [{ userId: 'reader-1' }, { userId: 'reader-2' }] } },
+    getObserversCount: () => 1,
+   },
+  ];
+  const activeProfileQueries = [
+   {
+    queryKey: ['reader-profile', 'reader-3'],
+    state: { data: null },
+    getObserversCount: () => 1,
+   },
+  ];
+
+  let directoryQueries = activeDirectoryQueries;
+  let profileQueries = activeProfileQueries;
+
+  const queryClientWithCache = {
+   invalidateQueries: vi.fn().mockResolvedValue(undefined),
+   getQueryCache: () => ({
+    findAll: (filters?: { queryKey?: readonly unknown[] }) => {
+     const key = filters?.queryKey?.[0];
+     if (key === 'readers') {
+      return directoryQueries;
+     }
+
+     if (key === 'reader-profile') {
+      return profileQueries;
+     }
+
+     return [];
+    },
+    subscribe: (listener: () => void) => {
+     return () => {
+      listener();
+     };
+    },
+   }),
+  } as unknown as QueryClient;
+
+  const handlers = registerPresenceConnectionHandlers(hub as HubConnection, queryClientWithCache);
+  handlers.syncStatusObservers();
+  await vi.advanceTimersByTimeAsync(0);
+  await Promise.resolve();
+
+  expect(hub.invoke).toHaveBeenCalledWith(
+   'SubscribeUserStatusObservers',
+   expect.arrayContaining(['reader-1', 'reader-2', 'reader-3']),
+  );
+
+  directoryQueries = [
+   {
+    queryKey: ['readers', 1, 12, '', '', ''],
+    state: { data: { readers: [{ userId: 'reader-2' }] } },
+    getObserversCount: () => 1,
+   },
+  ];
+  profileQueries = [];
+  handlers.syncStatusObservers();
+  await vi.advanceTimersByTimeAsync(0);
+  await Promise.resolve();
+
+  expect(hub.invoke).toHaveBeenCalledWith(
+   'UnsubscribeUserStatusObservers',
+   expect.arrayContaining(['reader-1', 'reader-3']),
+  );
+
+  handlers.dispose();
+ });
 });

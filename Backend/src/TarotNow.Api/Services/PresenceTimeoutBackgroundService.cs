@@ -1,35 +1,31 @@
 using MediatR;
-using TarotNow.Api.Constants;
 using TarotNow.Application.Common.Interfaces;
 using TarotNow.Application.Features.Presence.Commands.PublishUserStatusChanged;
 using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Api.Services;
 
-// Worker nền dọn trạng thái hiện diện quá hạn để đồng bộ SignalR và trạng thái reader trong database.
+// Worker nền dọn trạng thái hiện diện quá hạn và phát domain event offline.
 public class PresenceTimeoutBackgroundService : BackgroundService
 {
     private readonly ILogger<PresenceTimeoutBackgroundService> _logger;
     private readonly IUserPresenceTracker _presenceTracker;
     private readonly IMediator _mediator;
-    private readonly IServiceScopeFactory _scopeFactory;
     private readonly ISystemConfigSettings _systemConfigSettings;
 
     /// <summary>
     /// Khởi tạo worker dọn trạng thái presence quá hạn.
-    /// Luồng xử lý: nhận tracker, hub context và scope factory để vừa phát realtime vừa cập nhật DB an toàn scope.
+    /// Luồng xử lý: nhận tracker + mediator để cleanup presence state và phát domain event offline.
     /// </summary>
     public PresenceTimeoutBackgroundService(
         ILogger<PresenceTimeoutBackgroundService> logger,
         IUserPresenceTracker presenceTracker,
         IMediator mediator,
-        IServiceScopeFactory scopeFactory,
         ISystemConfigSettings systemConfigSettings)
     {
         _logger = logger;
         _presenceTracker = presenceTracker;
         _mediator = mediator;
-        _scopeFactory = scopeFactory;
         _systemConfigSettings = systemConfigSettings;
     }
 
@@ -77,8 +73,8 @@ public class PresenceTimeoutBackgroundService : BackgroundService
     }
 
     /// <summary>
-    /// Xử lý danh sách user đã timeout: cập nhật tracker, broadcast offline và đồng bộ trạng thái reader trong DB.
-    /// Luồng xử lý: lấy danh sách timeout, xử lý từng user realtime, sau đó cập nhật batch profile qua repository.
+    /// Xử lý danh sách user đã timeout: cập nhật tracker và publish offline event.
+    /// Luồng xử lý: lấy danh sách timeout, remove state và publish command cho từng user.
     /// </summary>
     private async Task ProcessTimeoutsAsync(TimeSpan timeoutPeriod, CancellationToken cancellationToken)
     {
@@ -100,12 +96,8 @@ public class PresenceTimeoutBackgroundService : BackgroundService
             await PublishOfflineStatusAsync(userId, cancellationToken);
         }
 
-        // Tạo scope mới cho repository để tránh giữ DbContext ngoài vòng đời phù hợp.
-        using var scope = _scopeFactory.CreateScope();
-        var profileRepo = scope.ServiceProvider.GetRequiredService<IReaderProfileRepository>();
-
-        // Bước 3: đồng bộ trạng thái reader online/offline trong DB cho các luồng truy vấn không qua SignalR.
-        await UpdateReaderProfilesToOfflineAsync(profileRepo, timedOutUsers, cancellationToken);
+        // Side-effect cập nhật projection Reader status sẽ được thực hiện tại Domain Event handler
+        // của UserStatusChangedDomainEvent để tuân thủ Rule 0 (không ghi trực tiếp repository tại service này).
     }
 
     private async Task PublishOfflineStatusAsync(string userId, CancellationToken cancellationToken)
@@ -123,39 +115,6 @@ public class PresenceTimeoutBackgroundService : BackgroundService
         catch (Exception ex)
         {
             _logger.LogError(ex, "[PresenceTimeout] Failed to publish offline status for user {UserId}.", userId);
-        }
-    }
-
-    /// <summary>
-    /// Cập nhật trạng thái các reader đã timeout về Offline trong database.
-    /// Luồng xử lý: lấy profile theo danh sách user id, chỉ cập nhật record đang Online để tránh ghi thừa.
-    /// </summary>
-    private async Task UpdateReaderProfilesToOfflineAsync(
-        IReaderProfileRepository profileRepo,
-        IReadOnlyList<string> userIds,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var profiles = await profileRepo.GetByUserIdsAsync(userIds, cancellationToken);
-
-            foreach (var profile in profiles)
-            {
-                if (string.Equals(profile.Status, ApiReaderStatusConstants.Online, StringComparison.OrdinalIgnoreCase))
-                {
-                    // Rule nghiệp vụ: chỉ chuyển Online -> Offline, giữ nguyên các trạng thái đặc thù khác.
-                    profile.Status = ApiReaderStatusConstants.Offline;
-                    await profileRepo.UpdateAsync(profile, cancellationToken);
-
-                    // Ghi log tại điểm đổi state DB để truy vết sai lệch giữa presence memory và persistent store.
-                    _logger.LogDebug("[PresenceTimeout] Updated Reader DB status to Offline for user {UserId}", profile.UserId);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            // Không chặn worker khi lỗi DB tạm thời; lượt quét sau sẽ thử lại.
-            _logger.LogError(ex, "[PresenceTimeout] Failed to update reader profiles to offline in DB.");
         }
     }
 

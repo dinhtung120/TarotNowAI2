@@ -19,7 +19,7 @@ public sealed partial class RedisRealtimeSignalRBridgeService
             return;
         }
 
-        var groupName = $"user:{userId}";
+        var groupName = PresenceGroupNames.User(userId);
         if (groups.Contains(groupName, StringComparer.Ordinal))
         {
             return;

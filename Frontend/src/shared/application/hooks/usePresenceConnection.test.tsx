@@ -133,6 +133,7 @@ describe('usePresenceConnection', () => {
   ensureRealtimeSession.mockResolvedValue(true);
   registerPresenceConnectionHandlers.mockReturnValue({
    dispose: vi.fn(),
+   syncStatusObservers: vi.fn(),
    startHeartbeat: vi.fn(() => setInterval(() => undefined, 1_000)),
   });
   fakeConnection.state = 'Disconnected';
@@ -320,6 +321,7 @@ describe('usePresenceConnection', () => {
   const dispose = vi.fn();
   registerPresenceConnectionHandlers.mockReturnValue({
    dispose,
+   syncStatusObservers: vi.fn(),
    startHeartbeat: vi.fn(() => setInterval(() => undefined, 1_000)),
   });
   fakeConnection.start.mockImplementation(async () => {

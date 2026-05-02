@@ -123,6 +123,7 @@ export function usePresenceConnection(options: UsePresenceConnectionOptions = {}
         connectionRef.current = hubConnection;
         reconnectBlockedUntilRef.current = 0;
         cancelWakeup();
+        registration.syncStatusObservers();
         heartbeatInterval = registration.startHeartbeat();
       } catch (error) {
         if (isUnauthorizedNegotiationError(error)) {

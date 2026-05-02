@@ -52,7 +52,9 @@ public sealed partial class RedisRealtimeSignalRBridgeService
             }
 
             var status = GetStringProperty(payload, "status") ?? "offline";
-            await _presenceHubContext.Clients.Group($"user:{broadcastUserId}")
+            await _presenceHubContext.Clients.Groups(
+                    PresenceGroupNames.User(broadcastUserId),
+                    PresenceGroupNames.UserStatusObservers(broadcastUserId))
                 .SendAsync(eventName, broadcastUserId, status);
             return;
         }
@@ -63,7 +65,8 @@ public sealed partial class RedisRealtimeSignalRBridgeService
             return;
         }
 
-        await _presenceHubContext.Clients.Group($"user:{userId}").SendAsync(eventName, payload);
+        await _presenceHubContext.Clients.Group(PresenceGroupNames.User(userId))
+            .SendAsync(eventName, payload);
     }
 
     private async Task ForwardConversationUpdatedAsync(JsonElement payload)

@@ -55,22 +55,13 @@ export function isAuthlessPath(pathname: string): boolean {
 }
 
 /**
- * Giữ realtime chỉ ở route người dùng có tương tác động.
+ * Bật realtime cho toàn bộ route người dùng đã xác thực (trừ auth/admin/legal).
  */
 export function shouldEnableRealtimeForPath(pathname: string): boolean {
  const normalizedPath = normalizePathname(pathname);
- if (normalizedPath === '/') return false;
  if (isAuthlessPath(normalizedPath)) return false;
  if (normalizedPath === '/admin' || normalizedPath.startsWith('/admin/')) return false;
  if (isLegalPath(normalizedPath)) return false;
 
- // Chỉ bật realtime cho các route thực sự cần đồng bộ trạng thái tương tác.
- return (
-  normalizedPath === '/chat'
-  || normalizedPath.startsWith('/chat/')
-  || normalizedPath === '/community'
-  || normalizedPath.startsWith('/community/')
-  || normalizedPath === '/notifications'
-  || normalizedPath.startsWith('/notifications/')
- );
+ return true;
 }

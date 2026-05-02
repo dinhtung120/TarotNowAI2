@@ -112,6 +112,7 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
         await StartConnectionsAsync(presenceUser, presenceReader, presenceOther, chatUser, chatReader, chatOther);
         await AddConnectionToConversationGroupAsync(chatUser, conversationId);
         await AddConnectionToConversationGroupAsync(chatReader, conversationId);
+        await SubscribeToUserStatusObserversAsync(presenceReader, userId);
         await Task.Delay(150);
         ClearAllProbes(presenceUserProbe, presenceReaderProbe, presenceOtherProbe, chatUserProbe, chatReaderProbe, chatOtherProbe);
         ClearAllStatusProbes(presenceUserStatusProbe, presenceReaderStatusProbe, presenceOtherStatusProbe);
@@ -319,8 +320,9 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
             });
 
         var userEvent = await presenceUserStatusProbe.WaitForAsync(PositiveTimeout);
+        var observerEvent = await presenceReaderStatusProbe.WaitForAsync(PositiveTimeout);
         Assert.Equal((userId, status), userEvent);
-        await presenceReaderStatusProbe.AssertNoEventAsync(NegativeTimeout);
+        Assert.Equal((userId, status), observerEvent);
         await presenceOtherStatusProbe.AssertNoEventAsync(NegativeTimeout);
     }
 
@@ -397,6 +399,14 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
             connection.ConnectionId,
             $"conversation:{conversationId}",
             CancellationToken.None);
+    }
+
+    private static async Task SubscribeToUserStatusObserversAsync(
+        HubConnection connection,
+        params string[] observedUserIds)
+    {
+        await EnsureConnectedAsync(connection);
+        await connection.InvokeAsync("SubscribeUserStatusObservers", observedUserIds);
     }
 
     private static async Task StartConnectionsAsync(params HubConnection[] connections)

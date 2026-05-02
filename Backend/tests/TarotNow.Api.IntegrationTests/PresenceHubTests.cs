@@ -65,6 +65,52 @@ public class PresenceHubTests
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public async Task SubscribeUserStatusObservers_ShouldJoinNormalizedObserverGroups()
+    {
+        var userId = Guid.NewGuid().ToString();
+        var mediator = new Mock<IMediator>();
+        var tracker = new Mock<IUserPresenceTracker>();
+        var groups = new Mock<IGroupManager>();
+        var hub = new PresenceHub(mediator.Object, tracker.Object, NullLogger<PresenceHub>.Instance)
+        {
+            Context = CreateContext("conn-c", userId),
+            Groups = groups.Object
+        };
+
+        await hub.SubscribeUserStatusObservers(new[] { " reader-1 ", "reader-1", "reader-2", "" });
+
+        groups.Verify(
+            x => x.AddToGroupAsync("conn-c", "presence:watch:user:reader-1", It.IsAny<CancellationToken>()),
+            Times.Once);
+        groups.Verify(
+            x => x.AddToGroupAsync("conn-c", "presence:watch:user:reader-2", It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task UnsubscribeUserStatusObservers_ShouldLeaveNormalizedObserverGroups()
+    {
+        var userId = Guid.NewGuid().ToString();
+        var mediator = new Mock<IMediator>();
+        var tracker = new Mock<IUserPresenceTracker>();
+        var groups = new Mock<IGroupManager>();
+        var hub = new PresenceHub(mediator.Object, tracker.Object, NullLogger<PresenceHub>.Instance)
+        {
+            Context = CreateContext("conn-d", userId),
+            Groups = groups.Object
+        };
+
+        await hub.UnsubscribeUserStatusObservers(new[] { " reader-1 ", "reader-1", "reader-2", "" });
+
+        groups.Verify(
+            x => x.RemoveFromGroupAsync("conn-d", "presence:watch:user:reader-1", It.IsAny<CancellationToken>()),
+            Times.Once);
+        groups.Verify(
+            x => x.RemoveFromGroupAsync("conn-d", "presence:watch:user:reader-2", It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
     private static HubCallerContext CreateContext(string connectionId, string userId)
     {
         var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(

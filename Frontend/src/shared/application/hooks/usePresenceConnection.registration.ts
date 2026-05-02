@@ -6,6 +6,7 @@ import { createPresenceRoleChangeLogoutCoordinator } from '@/shared/application/
 import { createPresenceChatInvalidationSchedulers } from '@/shared/application/hooks/usePresenceConnection.registration.chatInvalidation';
 import { registerPresenceDomainEventHandlers } from '@/shared/application/hooks/usePresenceConnection.registration.domainEvents';
 import { startPresenceHeartbeat } from '@/shared/application/hooks/usePresenceConnection.registration.heartbeat';
+import { createPresenceStatusObserverCoordinator } from '@/shared/application/hooks/usePresenceConnection.registration.statusObservers';
 
 export function registerPresenceConnectionHandlers(
  hubConnection: HubConnection,
@@ -15,6 +16,7 @@ export function registerPresenceConnectionHandlers(
  const walletRefreshScheduler = createPresenceWalletRefreshScheduler();
  const roleLogoutCoordinator = createPresenceRoleChangeLogoutCoordinator(queryClient);
  const chatInvalidationSchedulers = createPresenceChatInvalidationSchedulers(queryClient);
+ const statusObserverCoordinator = createPresenceStatusObserverCoordinator(hubConnection, queryClient);
 
  registerPresenceDomainEventHandlers({
   forceLogoutAfterRoleChange: roleLogoutCoordinator.handleNotificationType,
@@ -29,10 +31,12 @@ export function registerPresenceConnectionHandlers(
 
  return {
   dispose: () => {
+   statusObserverCoordinator.dispose();
    chatInvalidationSchedulers.dispose();
    invalidationScheduler.dispose();
    walletRefreshScheduler.dispose();
   },
+  syncStatusObservers: () => statusObserverCoordinator.sync(),
   startHeartbeat: () => startPresenceHeartbeat(hubConnection),
  };
 }

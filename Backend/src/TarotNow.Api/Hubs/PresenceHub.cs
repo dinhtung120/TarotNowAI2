@@ -1,7 +1,8 @@
+using System.Linq;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using TarotNow.Api.Extensions;
+using TarotNow.Api.Realtime;
 using TarotNow.Application.Common.Interfaces;
 using TarotNow.Application.Features.Presence.Commands.PublishUserStatusChanged;
 
@@ -12,6 +13,8 @@ namespace TarotNow.Api.Hubs;
 // Luồng chính: đánh dấu connected/disconnected, nhận heartbeat và phát domain event trạng thái hiện diện.
 public class PresenceHub : Hub
 {
+    private const int MaxObserverSubscriptionsPerRequest = 200;
+
     private readonly IMediator _mediator;
     private readonly IUserPresenceTracker _presenceTracker;
     private readonly ILogger<PresenceHub> _logger;
@@ -49,7 +52,7 @@ public class PresenceHub : Hub
         if (!string.IsNullOrWhiteSpace(userId))
         {
             _presenceTracker.MarkConnected(userId, Context.ConnectionId);
-            await Groups.AddToGroupAsync(Context.ConnectionId, $"user:{userId}");
+            await Groups.AddToGroupAsync(Context.ConnectionId, PresenceGroupNames.User(userId));
             await PublishUserStatusChangedAsync(userId, "online");
         }
 
@@ -73,7 +76,7 @@ public class PresenceHub : Hub
         if (!string.IsNullOrWhiteSpace(userId))
         {
             _presenceTracker.MarkDisconnected(userId, Context.ConnectionId);
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"user:{userId}");
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, PresenceGroupNames.User(userId));
             if (!_presenceTracker.HasActiveConnection(userId))
             {
                 await PublishUserStatusChangedAsync(userId, "offline");
@@ -105,15 +108,60 @@ public class PresenceHub : Hub
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Join nhóm observer trạng thái online/offline cho các user mục tiêu.
+    /// Luồng xử lý: chuẩn hóa danh sách user ids, giới hạn batch và add connection hiện tại vào group tương ứng.
+    /// </summary>
+    public async Task SubscribeUserStatusObservers(IReadOnlyCollection<string>? userIds)
+    {
+        foreach (var observedUserId in NormalizeObserverUserIds(userIds))
+        {
+            await Groups.AddToGroupAsync(
+                Context.ConnectionId,
+                PresenceGroupNames.UserStatusObservers(observedUserId));
+        }
+    }
+
+    /// <summary>
+    /// Leave nhóm observer trạng thái online/offline cho các user mục tiêu.
+    /// Luồng xử lý: chuẩn hóa danh sách user ids, giới hạn batch và remove connection hiện tại khỏi group tương ứng.
+    /// </summary>
+    public async Task UnsubscribeUserStatusObservers(IReadOnlyCollection<string>? userIds)
+    {
+        foreach (var observedUserId in NormalizeObserverUserIds(userIds))
+        {
+            await Groups.RemoveFromGroupAsync(
+                Context.ConnectionId,
+                PresenceGroupNames.UserStatusObservers(observedUserId));
+        }
+    }
+
+    private static IReadOnlyList<string> NormalizeObserverUserIds(IReadOnlyCollection<string>? userIds)
+    {
+        if (userIds == null || userIds.Count == 0)
+        {
+            return [];
+        }
+
+        return userIds
+            .Where(userId => string.IsNullOrWhiteSpace(userId) == false)
+            .Select(userId => userId.Trim())
+            .Distinct(StringComparer.Ordinal)
+            .Take(MaxObserverSubscriptionsPerRequest)
+            .ToArray();
+    }
+
     private async Task PublishUserStatusChangedAsync(string userId, string status)
     {
         try
         {
-            await _mediator.SendWithConnectionCancellation(Context, new PublishUserStatusChangedCommand
+            // Không gắn ConnectionAborted token để tránh mất event khi socket đóng nhanh
+            // trong lúc command đang được dispatch vào outbox.
+            await _mediator.Send(new PublishUserStatusChangedCommand
             {
                 UserId = userId,
                 Status = status
-            }, Context.ConnectionAborted);
+            });
         }
         catch (Exception ex)
         {

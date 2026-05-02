@@ -128,7 +128,11 @@ public sealed partial class RedisUserPresenceTracker : IUserPresenceTracker
             var nowUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             db.SortedSetAdd(LastActivityKey, userId, nowUnix);
             var connectionsKey = GetConnectionsKey(userId);
-            EnsureConnectionLease(db, connectionsKey);
+            // Gia hạn lease theo heartbeat để session dài không bị rơi active connection do hết TTL.
+            if (db.KeyExists(connectionsKey))
+            {
+                db.KeyExpire(connectionsKey, ResolveConnectionLease());
+            }
         }
         catch (Exception ex)
         {
