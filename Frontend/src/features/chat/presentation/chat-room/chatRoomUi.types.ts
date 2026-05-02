@@ -77,6 +77,8 @@ export interface ChatComposerProps extends ChatComposerInputRowProps {
   canUseActionMenu: boolean;
   canShowInput: boolean;
   canStartNewSession: boolean;
+  canSubmitReview: boolean;
+  hasSubmittedReview: boolean;
   isReadOnly: boolean;
   isUserRole: boolean | null;
   processingAction: string | null;
@@ -87,6 +89,7 @@ export interface ChatComposerProps extends ChatComposerInputRowProps {
   setShowActionMenu: (value: boolean) => void;
   onOpenDispute: () => void;
   onOpenPaymentOffer: () => void;
+  onOpenReviewModal: () => void;
   onRequestComplete: () => Promise<void>;
   onStartNewSession: () => Promise<void>;
 }

@@ -5,9 +5,12 @@ import type { ChatComposerProps } from '@/features/chat/presentation/chat-room/c
 export default function ChatComposer({
   canShowInput,
   canStartNewSession,
+  canSubmitReview,
+  hasSubmittedReview,
   isReadOnly,
   readOnlyHint,
   startingNewSession,
+  onOpenReviewModal,
   onStartNewSession,
   ...editableProps
 }: ChatComposerProps) {
@@ -15,9 +18,12 @@ export default function ChatComposer({
     return (
       <ChatReadOnlyFooter
         canStartNewSession={canStartNewSession}
+        canSubmitReview={canSubmitReview}
+        hasSubmittedReview={hasSubmittedReview}
         hint={readOnlyHint}
         isReadOnly={isReadOnly}
         startingNewSession={startingNewSession}
+        onOpenReviewModal={onOpenReviewModal}
         onStartNewSession={onStartNewSession}
       />
     );

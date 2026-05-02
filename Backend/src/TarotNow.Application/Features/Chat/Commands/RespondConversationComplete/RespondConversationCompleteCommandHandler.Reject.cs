@@ -11,18 +11,20 @@ public partial class RespondConversationCompleteCommandHandlerRequestedDomainEve
     /// </summary>
     private async Task<ConversationCompleteRespondResult> RejectCompletionRequestAsync(
         ResponseContext context,
+        List<ChatMessageDto> fastLaneMessages,
         CancellationToken cancellationToken)
     {
         var rejectMessage = BuildRejectMessage(context.Conversation);
-        var rejectAt = await AddSystemMessageAsync(
+        var rejectSystemMessage = await AddSystemMessageAsync(
             context.Conversation,
             context.RequesterId,
             new SystemMessageSpec(ChatMessageType.System, rejectMessage, DateTime.UtcNow),
             cancellationToken);
+        fastLaneMessages.Add(rejectSystemMessage);
 
         context.Conversation.Confirm = null;
-        context.Conversation.UpdatedAt = rejectAt;
-        context.Conversation.LastMessageAt = rejectAt;
+        context.Conversation.UpdatedAt = rejectSystemMessage.CreatedAt;
+        context.Conversation.LastMessageAt = rejectSystemMessage.CreatedAt;
         // Reset trạng thái confirm để conversation quay lại luồng ongoing bình thường.
         await _conversationRepository.UpdateAsync(context.Conversation, cancellationToken);
 

@@ -7,6 +7,8 @@ namespace TarotNow.Application.Features.Chat.Commands.RespondConversationAddMone
 
 public partial class RespondConversationAddMoneyCommandHandlerRequestedDomainEventHandler
 {
+    private const string DefaultRejectReason = "User từ chối đề xuất cộng tiền.";
+
     /// <summary>
     /// Lấy offer message cần phản hồi và kiểm tra tính hợp lệ.
     /// Luồng xử lý: validate offer id bắt buộc, tải message, kiểm tra conversation/type/payload để đảm bảo phản hồi đúng offer.
@@ -100,5 +102,11 @@ public partial class RespondConversationAddMoneyCommandHandlerRequestedDomainEve
         }
 
         return JsonSerializer.Serialize(payload);
+    }
+
+    internal static string NormalizeRejectReason(string? rawReason)
+    {
+        var normalized = rawReason?.Trim();
+        return string.IsNullOrWhiteSpace(normalized) ? DefaultRejectReason : normalized;
     }
 }

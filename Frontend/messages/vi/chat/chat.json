@@ -43,7 +43,18 @@
       "payment_modal_amount_label": "Số Diamond yêu cầu",
       "payment_modal_note_label": "Lời nhắn (tùy chọn)",
       "payment_modal_note_placeholder": "Nhập lời nhắn cho đề xuất này (ví dụ: Thanh toán cho lá bài thứ 2)...",
-      "payment_modal_submit": "Gửi đề xuất Kim Cương"
+      "payment_modal_submit": "Gửi đề xuất Kim Cương",
+      "review": {
+        "title": "Đánh giá Reader",
+        "description": "Phiên tư vấn đã hoàn thành. Hãy để lại đánh giá để giúp cộng đồng.",
+        "rating_label": "Mức đánh giá",
+        "comment_placeholder": "Chia sẻ trải nghiệm của bạn (tùy chọn)...",
+        "skip": "Để sau",
+        "submit": "Gửi đánh giá",
+        "submitting": "Đang gửi...",
+        "submit_success": "Cảm ơn bạn! Đánh giá đã được ghi nhận.",
+        "submit_failed": "Không thể gửi đánh giá. Vui lòng thử lại."
+      }
     },
     "report": {
       "success_title": "Đã gửi báo cáo",

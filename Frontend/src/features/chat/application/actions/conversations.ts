@@ -13,6 +13,7 @@ import {
  rejectConversation as rejectConversationFlow,
  requestConversationComplete as requestConversationCompleteFlow,
  respondConversationComplete as respondConversationCompleteFlow,
+ submitConversationReview as submitConversationReviewFlow,
 } from './conversations.flow';
 import {
  listAdminDisputes as listAdminDisputesFinance,
@@ -78,6 +79,13 @@ export async function respondConversationComplete(
  accept: boolean,
 ): Promise<ActionResult<{ status: string; accepted: boolean }>> {
  return respondConversationCompleteFlow(conversationId, accept);
+}
+
+export async function submitConversationReview(
+ conversationId: string,
+ payload: { rating: number; comment?: string },
+): Promise<ActionResult<{ conversationId: string; readerId: string; rating: number; comment?: string; createdAt: string }>> {
+ return submitConversationReviewFlow(conversationId, payload);
 }
 
 export async function requestConversationAddMoney(

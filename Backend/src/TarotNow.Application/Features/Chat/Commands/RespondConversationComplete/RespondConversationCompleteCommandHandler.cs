@@ -2,6 +2,7 @@ using MediatR;
 using System;
 using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common;
+using TarotNow.Application.Common.Realtime;
 using TarotNow.Application.Interfaces;
 using TarotNow.Application.Interfaces.DomainEvents;
 
@@ -17,6 +18,7 @@ public partial class RespondConversationCompleteCommandHandlerRequestedDomainEve
     private readonly ITransactionCoordinator _transactionCoordinator;
     private readonly IChatMessageRepository _chatMessageRepository;
     private readonly IDomainEventPublisher _domainEventPublisher;
+    private readonly IChatRealtimeFastLanePublisher _chatRealtimeFastLanePublisher;
 
     /// <summary>
     /// Khởi tạo handler respond conversation complete.
@@ -29,6 +31,7 @@ public partial class RespondConversationCompleteCommandHandlerRequestedDomainEve
         ITransactionCoordinator transactionCoordinator,
         IChatMessageRepository chatMessageRepository,
         IDomainEventPublisher domainEventPublisher,
+        IChatRealtimeFastLanePublisher chatRealtimeFastLanePublisher,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
@@ -38,6 +41,7 @@ public partial class RespondConversationCompleteCommandHandlerRequestedDomainEve
         _transactionCoordinator = transactionCoordinator;
         _chatMessageRepository = chatMessageRepository;
         _domainEventPublisher = domainEventPublisher;
+        _chatRealtimeFastLanePublisher = chatRealtimeFastLanePublisher;
     }
 
     /// <summary>
@@ -48,11 +52,22 @@ public partial class RespondConversationCompleteCommandHandlerRequestedDomainEve
         RespondConversationCompleteCommand request,
         CancellationToken cancellationToken)
     {
+        var fastLaneMessages = new List<ChatMessageDto>();
         var context = await BuildContextAsync(request, cancellationToken);
         if (request.Accept == false)
         {
             // Nhánh từ chối: xóa trạng thái confirm pending và ghi message hệ thống.
-            return await RejectCompletionRequestAsync(context, cancellationToken);
+            var result = await RejectCompletionRequestAsync(context, fastLaneMessages, cancellationToken);
+            var rejectedAt = context.Conversation.UpdatedAt ?? context.Now;
+            await _domainEventPublisher.PublishAsync(
+                new Domain.Events.ConversationUpdatedDomainEvent(context.Conversation.Id, "rejected", rejectedAt),
+                cancellationToken);
+            await PublishFastLaneConversationEventAsync(
+                context.Conversation,
+                new ConversationRealtimeEventContext(context.RequesterId, "rejected", rejectedAt),
+                fastLaneMessages,
+                cancellationToken);
+            return result;
         }
 
         // Nhánh chấp thuận: ghi mốc xác nhận của phía responder.
@@ -60,7 +75,17 @@ public partial class RespondConversationCompleteCommandHandlerRequestedDomainEve
         if (HasBothSidesConfirmed(context.Conversation))
         {
             // Khi đủ xác nhận hai bên thì chốt complete + settlement ngay.
-            return await CompleteConversationAsync(context, cancellationToken);
+            var result = await CompleteConversationAsync(context, fastLaneMessages, cancellationToken);
+            var completedAt = context.Conversation.UpdatedAt ?? context.Now;
+            await _domainEventPublisher.PublishAsync(
+                new Domain.Events.ConversationUpdatedDomainEvent(context.Conversation.Id, "completed", completedAt),
+                cancellationToken);
+            await PublishFastLaneConversationEventAsync(
+                context.Conversation,
+                new ConversationRealtimeEventContext(context.RequesterId, "completed", completedAt),
+                fastLaneMessages,
+                cancellationToken);
+            return result;
         }
 
         context.Conversation.UpdatedAt = context.Now;
@@ -70,6 +95,11 @@ public partial class RespondConversationCompleteCommandHandlerRequestedDomainEve
         // Publish để realtime cập nhật trạng thái phản hồi complete request.
         await _domainEventPublisher.PublishAsync(
             new Domain.Events.ConversationUpdatedDomainEvent(context.Conversation.Id, "complete_responded", context.Now),
+            cancellationToken);
+        await PublishFastLaneConversationEventAsync(
+            context.Conversation,
+            new ConversationRealtimeEventContext(context.RequesterId, "complete_responded", context.Now),
+            fastLaneMessages,
             cancellationToken);
 
         return new ConversationCompleteRespondResult { Status = context.Conversation.Status, Accepted = true };

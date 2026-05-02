@@ -42,6 +42,15 @@ interface ConversationDeltaPayload {
  updatedAt?: string;
 }
 
+const NON_CRITICAL_CONVERSATION_EVENT_TYPES = new Set(['message_created', 'member_joined', 'message_read']);
+const CRITICAL_CONVERSATION_EVENT_TYPES = new Set([
+  'complete_requested',
+  'complete_responded',
+  'completed',
+  'accepted',
+  'rejected',
+]);
+
 async function createHubConnection(reconnectSchedule: number[]) {
  const signalR = await import('@microsoft/signalr');
  const { getSignalRHubUrl } = await import('@/shared/application/gateways/signalRUrl');
@@ -193,18 +202,26 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
 
     hubConnection.on('conversation.updated', (payload: { conversationId: string; type?: string }) => {
      if (payload.conversationId !== conversationId) return;
-     // Các sự kiện này không làm thay đổi trạng thái room cần refetch lại conversation.
-     if (payload.type === 'message_created' || payload.type === 'member_joined' || payload.type === 'message_read') return;
-     // Debounce việc fetch lại dữ liệu khi có cập nhật status conversation
-     if (Date.now() - lastInitialLoadTimeRef.current < initialLoadGuardMs) return;
+     const eventType = payload.type?.trim().toLowerCase() ?? '';
+     if (NON_CRITICAL_CONVERSATION_EVENT_TYPES.has(eventType)) return;
+     const isCriticalEvent = CRITICAL_CONVERSATION_EVENT_TYPES.has(eventType);
+     // Với event thường, giữ guard để tránh refetch dồn dập lúc mới mount.
+     if (!isCriticalEvent && Date.now() - lastInitialLoadTimeRef.current < initialLoadGuardMs) return;
      if (conversationInvalidateTimeout) {
       clearTimeout(conversationInvalidateTimeout);
      }
-     conversationInvalidateTimeout = setTimeout(() => {
+     const reloadConversation = () => {
       void listMessages(conversationId, { limit: 1 }).then((res) => {
        if (res.success && res.data?.conversation) setConversation(res.data.conversation);
       });
-     }, invalidateDebounceMs);
+     };
+
+     if (isCriticalEvent) {
+      void reloadConversation();
+      return;
+     }
+
+     conversationInvalidateTimeout = setTimeout(reloadConversation, invalidateDebounceMs);
     });
 
     hubConnection.on('conversation.updated.delta', (payload: ConversationDeltaPayload) => {

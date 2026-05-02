@@ -75,7 +75,15 @@ export function useChatSendActions({
  const queryClient = useQueryClient();
  const [newMessage, setNewMessage] = useState('');
  const [sending, setSending] = useState(false);
+ const sendInFlightRef = useRef(false);
  const markReadRef = useRef<() => Promise<void>>(async () => {});
+
+ const focusComposerInput = useCallback(() => {
+  if (typeof window === 'undefined') return;
+  window.requestAnimationFrame(() => {
+   inputRef.current?.focus();
+  });
+ }, [inputRef]);
 
  const syncInboxUnreadAfterRead = useCallback(() => {
   if (!conversationId) return;
@@ -220,18 +228,25 @@ export function useChatSendActions({
  }, [connected, connectionRef, conversationId, currentUserId, markOptimisticMessageFailed, setMessages]);
 
  const handleSendTextMessage = useCallback(async () => {
-  if (!newMessage.trim()) return false;
+  const messageContent = newMessage.trim();
+  if (!messageContent || sendInFlightRef.current) return false;
+  sendInFlightRef.current = true;
   setSending(true);
-  const success = await sendTypedMessage(newMessage, 'text');
-  setSending(false);
-  if (!success) return false;
-  setNewMessage('');
-  inputRef.current?.focus();
-  if (connectionRef.current && connected && conversationId) {
-   void connectionRef.current.invoke('TypingStopped', conversationId).catch(() => undefined);
+
+  try {
+   const success = await sendTypedMessage(messageContent, 'text');
+   if (!success) return false;
+   setNewMessage('');
+   if (connectionRef.current && connected && conversationId) {
+    void connectionRef.current.invoke('TypingStopped', conversationId).catch(() => undefined);
+   }
+   return true;
+  } finally {
+   setSending(false);
+   sendInFlightRef.current = false;
+   focusComposerInput();
   }
-  return true;
- }, [connected, connectionRef, conversationId, inputRef, newMessage, sendTypedMessage]);
+ }, [connected, connectionRef, conversationId, focusComposerInput, newMessage, sendTypedMessage]);
 
  const notifyTyping = useCallback((typing: boolean) => {
   if (!connectionRef.current || !conversationId || !connected) return;

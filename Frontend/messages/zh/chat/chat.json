@@ -43,7 +43,18 @@
       "payment_modal_amount_label": "请求的 Diamond 数量",
       "payment_modal_note_label": "留言（可选）",
       "payment_modal_note_placeholder": "为此提议添加留言（例如：第 2 张牌的费用）...",
-      "payment_modal_submit": "发送 Diamond 提议"
+      "payment_modal_submit": "发送 Diamond 提议",
+      "review": {
+        "title": "评价占卜师",
+        "description": "本次会话已完成，欢迎留下评价帮助社区。",
+        "rating_label": "评分",
+        "comment_placeholder": "分享你的体验（可选）...",
+        "skip": "稍后再说",
+        "submit": "提交评价",
+        "submitting": "提交中...",
+        "submit_success": "感谢反馈，评价已提交。",
+        "submit_failed": "提交评价失败，请稍后重试。"
+      }
     },
     "report": {
       "success_title": "已发送举报",

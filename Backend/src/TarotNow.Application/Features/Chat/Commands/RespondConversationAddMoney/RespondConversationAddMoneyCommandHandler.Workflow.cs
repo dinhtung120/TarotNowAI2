@@ -48,10 +48,11 @@ public partial class RespondConversationAddMoneyCommandHandlerRequestedDomainEve
         ChatMessageDto offer,
         CancellationToken cancellationToken)
     {
+        var normalizedRejectReason = NormalizeRejectReason(request.RejectReason);
         var rejectContent = BuildOfferResponseContent(
             offer.Id,
             offer.PaymentPayload?.ProposalId,
-            request.RejectReason);
+            normalizedRejectReason);
 
         var message = await _mediator.Send(new SendMessageCommand
         {

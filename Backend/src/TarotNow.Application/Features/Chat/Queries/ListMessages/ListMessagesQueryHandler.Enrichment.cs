@@ -76,4 +76,39 @@ public partial class ListMessagesQueryHandler
             conversation.EscrowStatus = session.Status;
         }
     }
+
+    /// <summary>
+    /// Enrich trạng thái đánh giá reader của conversation cho requester hiện tại.
+    /// Luồng xử lý: chỉ bật review khi requester là user của conversation và trạng thái đã completed.
+    /// </summary>
+    private async Task EnrichConversationReviewStateAsync(
+        ConversationDto conversation,
+        string requesterId,
+        CancellationToken cancellationToken)
+    {
+        conversation.CanSubmitReview = false;
+        conversation.HasSubmittedReview = false;
+        conversation.ReviewedAt = null;
+
+        if (conversation.UserId != requesterId
+            || conversation.Status != ConversationStatus.Completed)
+        {
+            return;
+        }
+
+        conversation.CanSubmitReview = true;
+
+        var review = await _conversationReviewRepository.GetByConversationAndUserAsync(
+            conversation.Id,
+            requesterId,
+            cancellationToken);
+        if (review == null)
+        {
+            return;
+        }
+
+        conversation.HasSubmittedReview = true;
+        conversation.CanSubmitReview = false;
+        conversation.ReviewedAt = review.CreatedAt;
+    }
 }

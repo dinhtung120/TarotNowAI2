@@ -12,7 +12,8 @@ export interface ConversationConfirmDto {
 export interface ConversationDto {
  id: string; userId: string; readerId: string; userName?: string | null; userAvatar?: string | null; readerName?: string | null; readerAvatar?: string | null;
  readerStatus?: string | null; escrowTotalFrozen?: number; escrowStatus?: string | null; status: CompletionStatus; lastMessageAt?: string | null; lastMessagePreview?: string | null;
- offerExpiresAt?: string | null; slaHours?: number; confirm?: ConversationConfirmDto | null; unreadCountUser: number; unreadCountReader: number; createdAt: string; updatedAt?: string | null
+ offerExpiresAt?: string | null; slaHours?: number; confirm?: ConversationConfirmDto | null; unreadCountUser: number; unreadCountReader: number;
+ canSubmitReview?: boolean; hasSubmittedReview?: boolean; reviewedAt?: string | null; createdAt: string; updatedAt?: string | null
 }
 
 export interface MediaPayloadDto {

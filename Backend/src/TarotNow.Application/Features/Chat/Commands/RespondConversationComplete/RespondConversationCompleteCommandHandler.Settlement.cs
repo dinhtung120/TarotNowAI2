@@ -13,19 +13,21 @@ public partial class RespondConversationCompleteCommandHandlerRequestedDomainEve
     /// </summary>
     private async Task<ConversationCompleteRespondResult> CompleteConversationAsync(
         ResponseContext context,
+        List<ChatMessageDto> fastLaneMessages,
         CancellationToken cancellationToken)
     {
-        var completedAt = await CompleteAndSettleConversationAsync(
+        var completionMessage = await CompleteAndSettleConversationAsync(
             context.Conversation,
             context.RequesterId,
             "Yêu cầu hoàn thành đã được chấp thuận. Hệ thống đã giải ngân cho Reader.",
             cancellationToken);
+        fastLaneMessages.Add(completionMessage);
 
         return new ConversationCompleteRespondResult
         {
             Status = context.Conversation.Status,
             Accepted = true,
-            Metadata = new Dictionary<string, object> { ["completedAt"] = completedAt }
+            Metadata = new Dictionary<string, object> { ["completedAt"] = completionMessage.CreatedAt }
         };
     }
 
@@ -33,7 +35,7 @@ public partial class RespondConversationCompleteCommandHandlerRequestedDomainEve
     /// Chạy settlement và cập nhật conversation sang trạng thái Completed.
     /// Luồng xử lý: settle tài chính trong transaction, thêm system release message, cập nhật state conversation và persist.
     /// </summary>
-    private async Task<DateTime> CompleteAndSettleConversationAsync(
+    private async Task<ChatMessageDto> CompleteAndSettleConversationAsync(
         ConversationDto conversation,
         string actorId,
         string completionMessage,
@@ -43,7 +45,7 @@ public partial class RespondConversationCompleteCommandHandlerRequestedDomainEve
             transactionCt => SettleConversationSessionAsync(conversation.Id, transactionCt),
             cancellationToken);
 
-        var completedAt = await AddSystemMessageAsync(
+        var releaseMessage = await AddSystemMessageAsync(
             conversation,
             actorId,
             new SystemMessageSpec(ChatMessageType.SystemRelease, completionMessage, DateTime.UtcNow),
@@ -52,11 +54,11 @@ public partial class RespondConversationCompleteCommandHandlerRequestedDomainEve
         conversation.Status = ConversationStatus.Completed;
         conversation.OfferExpiresAt = null;
         conversation.Confirm!.AutoResolveAt = null;
-        conversation.UpdatedAt = completedAt;
-        conversation.LastMessageAt = completedAt;
+        conversation.UpdatedAt = releaseMessage.CreatedAt;
+        conversation.LastMessageAt = releaseMessage.CreatedAt;
         // Đồng bộ trạng thái cuối cùng ngay sau settlement để tránh hiển thị pending giả.
         await _conversationRepository.UpdateAsync(conversation, cancellationToken);
-        return completedAt;
+        return releaseMessage;
     }
 
     /// <summary>

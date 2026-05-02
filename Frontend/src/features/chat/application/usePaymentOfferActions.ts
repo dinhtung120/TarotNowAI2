@@ -16,6 +16,7 @@ interface UsePaymentOfferActionsParams {
 export function usePaymentOfferActions({ conversationId }: UsePaymentOfferActionsParams) {
  const [processingOfferId, setProcessingOfferId] = useState<string | null>(null);
  const [requestingAddMoney, setRequestingAddMoney] = useState(false);
+ const defaultRejectReason = 'User từ chối đề xuất cộng tiền.';
 
  const handleSendPaymentOffer = useCallback(
   async (amount: number, note: string) => {
@@ -73,10 +74,13 @@ export function usePaymentOfferActions({ conversationId }: UsePaymentOfferAction
   async (message: ChatMessageDto, reason?: string) => {
    setProcessingOfferId(message.id);
    try {
+    const normalizedReason = reason?.trim();
     const response = await respondConversationAddMoney(conversationId, {
       accept: false,
       offerMessageId: message.id,
-      rejectReason: reason,
+      rejectReason: normalizedReason && normalizedReason.length >= 3
+        ? normalizedReason
+        : defaultRejectReason,
     });
 
     if (!response.success) {

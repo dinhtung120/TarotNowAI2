@@ -1,3 +1,4 @@
+import ConversationReviewModal from "@/features/chat/presentation/chat-room/ConversationReviewModal";
 import DisputeModal from "@/features/chat/presentation/chat-room/DisputeModal";
 import type { ChatRoomViewProps } from "@/features/chat/presentation/chat-room/ChatRoomView.types";
 
@@ -24,6 +25,17 @@ export default function ChatRoomOverlays(props: ChatRoomViewProps) {
           }}
         />
       )}
+
+      <ConversationReviewModal
+        comment={props.reviewComment}
+        isOpen={props.showReviewModal}
+        rating={props.reviewRating}
+        submitting={props.submittingReview}
+        onClose={props.onCloseReviewModal}
+        onCommentChange={props.onSetReviewComment}
+        onRatingChange={props.onSetReviewRating}
+        onSubmit={props.onSubmitReview}
+      />
     </>
   );
 }

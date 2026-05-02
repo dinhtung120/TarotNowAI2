@@ -50,3 +50,25 @@ public class ConversationAddMoneyRespondResult
     // Định danh tin nhắn phản hồi trong hội thoại.
     public string MessageId { get; set; } = string.Empty;
 }
+
+// Kết quả gửi đánh giá reader sau khi hoàn thành hội thoại.
+public class ConversationReviewSubmitResult
+{
+    // Cờ báo thao tác gửi đánh giá thành công.
+    public bool Success { get; set; } = true;
+
+    // Định danh conversation được đánh giá.
+    public string ConversationId { get; set; } = string.Empty;
+
+    // Định danh reader nhận đánh giá.
+    public string ReaderId { get; set; } = string.Empty;
+
+    // Điểm sao đã gửi.
+    public int Rating { get; set; }
+
+    // Comment tùy chọn đi kèm.
+    public string? Comment { get; set; }
+
+    // Thời điểm đánh giá được lưu.
+    public DateTime CreatedAt { get; set; }
+}

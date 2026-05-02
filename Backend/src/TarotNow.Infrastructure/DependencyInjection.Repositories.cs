@@ -73,6 +73,7 @@ public static partial class DependencyInjection
         services.AddScoped<IReaderProfileRepository, MongoReaderProfileRepository>();
         services.AddScoped<IConversationRepository, MongoConversationRepository>();
         services.AddScoped<IChatMessageRepository, MongoChatMessageRepository>();
+        services.AddScoped<IConversationReviewRepository, MongoConversationReviewRepository>();
         services.AddScoped<IReportRepository, MongoReportRepository>();
         services.AddScoped<IUploadSessionRepository, UploadSessionRepository>();
         services.AddScoped<ICommunityMediaAssetRepository, CommunityMediaAssetRepository>();

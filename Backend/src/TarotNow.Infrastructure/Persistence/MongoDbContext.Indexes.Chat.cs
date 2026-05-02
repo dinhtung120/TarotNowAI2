@@ -17,6 +17,7 @@ public partial class MongoDbContext
     {
         EnsureConversationIndexes();
         EnsureChatMessageIndexes();
+        EnsureConversationReviewIndexes();
         EnsureReportIndexes();
     }
 
@@ -216,4 +217,5 @@ public partial class MongoDbContext
             new CreateIndexOptions { Name = "idx_targettype_targetid_createdat_desc" }));
         // Cần index target để gom tất cả report của cùng post/comment/message khi điều tra.
     }
+
 }

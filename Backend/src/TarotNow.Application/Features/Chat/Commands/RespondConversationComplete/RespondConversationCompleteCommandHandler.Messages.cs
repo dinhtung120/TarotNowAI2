@@ -11,7 +11,7 @@ public partial class RespondConversationCompleteCommandHandlerRequestedDomainEve
     /// Ghi system message vào conversation và trả về thời điểm tạo message.
     /// Luồng xử lý: map spec vào ChatMessageDto, lưu qua repository, rồi trả CreatedAt để cập nhật timeline conversation.
     /// </summary>
-    private async Task<DateTime> AddSystemMessageAsync(
+    private async Task<ChatMessageDto> AddSystemMessageAsync(
         ConversationDto conversation,
         string senderId,
         SystemMessageSpec spec,
@@ -28,7 +28,6 @@ public partial class RespondConversationCompleteCommandHandlerRequestedDomainEve
         };
 
         await _chatMessageRepository.AddAsync(message, cancellationToken);
-        // Trả thời điểm message thực tế để đồng bộ LastMessageAt/UpdatedAt chính xác.
-        return message.CreatedAt;
+        return message;
     }
 }

@@ -8,8 +8,10 @@ export default function ChatRoomComposerSection(props: ChatRoomViewProps) {
       awaitingCompleteResponse={props.awaitingCompleteResponse}
       canShowInput={props.canShowInput}
       canStartNewSession={props.canStartNewSession}
+      canSubmitReview={Boolean(props.conversation?.canSubmitReview)}
       canUseActionMenu={props.canUseActionMenu}
       conversationExists={Boolean(props.conversation)}
+      hasSubmittedReview={Boolean(props.conversation?.hasSubmittedReview)}
       imageInputRef={props.imageInputRef}
       inputPlaceholder={props.inputPlaceholder}
       inputRef={props.inputRef}
@@ -32,6 +34,7 @@ export default function ChatRoomComposerSection(props: ChatRoomViewProps) {
       onInputKeyDown={props.onInputKeyDown}
       onOpenDispute={() => props.onSetShowDisputeModal(true)}
       onOpenPaymentOffer={() => props.onSetShowPaymentOffer(true)}
+      onOpenReviewModal={props.onOpenReviewModal}
       onRequestComplete={props.onRequestComplete}
       onSendTextMessage={props.onSendTextMessage}
       onStartNewSession={props.onStartNewSession}

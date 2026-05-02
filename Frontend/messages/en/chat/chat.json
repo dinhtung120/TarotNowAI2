@@ -43,7 +43,18 @@
       "payment_modal_amount_label": "Requested Diamond amount",
       "payment_modal_note_label": "Message (optional)",
       "payment_modal_note_placeholder": "Enter a note for this offer (e.g. Payment for the second card)...",
-      "payment_modal_submit": "Send Diamond Offer"
+      "payment_modal_submit": "Send Diamond Offer",
+      "review": {
+        "title": "Rate this Reader",
+        "description": "This session is completed. Share a quick review to help the community.",
+        "rating_label": "Rating",
+        "comment_placeholder": "Share your experience (optional)...",
+        "skip": "Maybe later",
+        "submit": "Submit review",
+        "submitting": "Submitting...",
+        "submit_success": "Thanks! Your review has been submitted.",
+        "submit_failed": "Unable to submit review. Please try again."
+      }
     },
     "report": {
       "success_title": "Report sent",

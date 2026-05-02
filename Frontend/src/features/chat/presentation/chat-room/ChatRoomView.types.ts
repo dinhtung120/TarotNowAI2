@@ -36,12 +36,16 @@ export interface ChatRoomViewProps {
   rejectReason: string;
   remoteTyping: boolean;
   requestingAddMoney: boolean;
+  reviewComment: string;
+  reviewRating: number;
   scrollRef: MutableRefObject<HTMLDivElement | null>;
   sending: boolean;
   showActionMenu: boolean;
   showDisputeModal: boolean;
   showPaymentOffer: boolean;
+  showReviewModal: boolean;
   startingNewSession: boolean;
+  submittingReview: boolean;
   title: string;
   uploadingMedia: boolean;
   uploadPercent: number;
@@ -82,6 +86,11 @@ export interface ChatRoomViewProps {
   onSetShowActionMenu: (value: boolean) => void;
   onSetShowDisputeModal: (value: boolean) => void;
   onSetShowPaymentOffer: (value: boolean) => void;
+  onSetReviewComment: (value: string) => void;
+  onSetReviewRating: (value: number) => void;
+  onCloseReviewModal: () => void;
+  onOpenReviewModal: () => void;
+  onSubmitReview: () => Promise<void>;
   onStartNewSession: () => Promise<void>;
   onSubmitDispute: () => Promise<void>;
   onVoiceRecordingComplete: (result: VoiceRecordingResult) => Promise<void>;

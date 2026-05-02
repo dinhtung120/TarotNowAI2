@@ -85,3 +85,30 @@ export async function respondConversationComplete(conversationId: string, accept
   return actionFail('Failed to respond completion');
  }
 }
+
+export async function submitConversationReview(
+ conversationId: string,
+ payload: { rating: number; comment?: string },
+): Promise<ActionResult<{ conversationId: string; readerId: string; rating: number; comment?: string; createdAt: string }>> {
+ const accessToken = await getServerAccessToken();
+ if (!accessToken) return unauthorized();
+ try {
+  const result = await serverHttpRequest<{ conversationId: string; readerId: string; rating: number; comment?: string; createdAt: string }>(
+    `/conversations/${conversationId}/review`,
+    {
+      method: 'POST',
+      token: accessToken,
+      json: payload,
+      fallbackErrorMessage: 'Failed to submit review',
+    },
+  );
+  if (!result.ok) {
+   logger.error('[ChatAction] submitConversationReview', result.error, { status: result.status, conversationId });
+   return actionFail(result.error || 'Failed to submit review');
+  }
+  return actionOk(result.data);
+ } catch (error) {
+  logger.error('[ChatAction] submitConversationReview', error, { conversationId });
+  return actionFail('Failed to submit review');
+ }
+}

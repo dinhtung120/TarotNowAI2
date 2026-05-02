@@ -23,11 +23,10 @@ public class RespondConversationAddMoneyCommandValidator : AbstractValidator<Res
         RuleFor(x => x.OfferMessageId)
             .NotEmpty();
 
-        // Khi từ chối thì cần lý do có độ dài hợp lệ để hiển thị rõ trong message.
+        // Khi từ chối thì lý do nếu có phải nằm trong ngưỡng hợp lệ.
+        // Cho phép rỗng để tương thích client cũ; handler sẽ tự normalize reason mặc định.
         RuleFor(x => x.RejectReason)
-            .NotEmpty()
-            .MinimumLength(3)
             .MaximumLength(1000)
-            .When(x => x.Accept == false);
+            .When(x => x.Accept == false && string.IsNullOrWhiteSpace(x.RejectReason) == false);
     }
 }

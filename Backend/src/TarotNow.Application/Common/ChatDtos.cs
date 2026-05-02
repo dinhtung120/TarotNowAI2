@@ -57,6 +57,15 @@ public class ConversationDto
     // Số tin chưa đọc phía reader.
     public int UnreadCountReader { get; set; }
 
+    // Người dùng hiện tại có thể gửi đánh giá cho reader sau khi completed hay không.
+    public bool CanSubmitReview { get; set; }
+
+    // Cờ cho biết người dùng hiện tại đã gửi đánh giá cho cuộc trò chuyện này.
+    public bool HasSubmittedReview { get; set; }
+
+    // Thời điểm đánh giá được ghi nhận (nếu đã gửi).
+    public DateTime? ReviewedAt { get; set; }
+
     // Thời điểm tạo hội thoại.
     public DateTime CreatedAt { get; set; }
 

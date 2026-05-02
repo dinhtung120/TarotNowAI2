@@ -15,6 +15,7 @@ public partial class RequestConversationCompleteCommandHandlerRequestedDomainEve
     private async Task<DateTime?> CancelPendingAddMoneyOfferAsync(
         ConversationDto conversation,
         string actorId,
+        List<ChatMessageDto> fastLaneMessages,
         CancellationToken cancellationToken)
     {
         var pendingOffer = await _chatMessageRepository.FindLatestPendingPaymentOfferAsync(
@@ -28,27 +29,30 @@ public partial class RequestConversationCompleteCommandHandlerRequestedDomainEve
         }
 
         var rejectPayload = $"{{\"offerMessageId\":\"{pendingOffer.Id}\",\"proposalId\":\"{pendingOffer.PaymentPayload?.ProposalId ?? string.Empty}\",\"note\":\"cancelled_by_complete_request\"}}";
-        var rejectAt = await AddSystemMessageAsync(
+        var rejectMessage = await AddSystemMessageAsync(
             conversation,
             actorId,
             new SystemMessageSpec(ChatMessageType.PaymentReject, rejectPayload, conversation.LastMessageAt),
             cancellationToken);
+        fastLaneMessages.Add(rejectMessage);
 
-        return await AddSystemMessageAsync(
+        var cancelMessage = await AddSystemMessageAsync(
             conversation,
             actorId,
             new SystemMessageSpec(
                 ChatMessageType.System,
                 "Yêu cầu cộng thêm tiền đã bị hủy do một bên yêu cầu hoàn thành cuộc trò chuyện.",
-                rejectAt),
+                rejectMessage.CreatedAt),
             cancellationToken);
+        fastLaneMessages.Add(cancelMessage);
+        return cancelMessage.CreatedAt;
     }
 
     /// <summary>
     /// Thêm một system message vào conversation và trả về mốc thời gian đã ghi.
     /// Luồng xử lý: map dữ liệu từ spec sang DTO, lưu vào repository, rồi trả CreatedAt để đồng bộ timeline.
     /// </summary>
-    private async Task<DateTime> AddSystemMessageAsync(
+    private async Task<ChatMessageDto> AddSystemMessageAsync(
         ConversationDto conversation,
         string senderId,
         SystemMessageSpec spec,
@@ -65,7 +69,6 @@ public partial class RequestConversationCompleteCommandHandlerRequestedDomainEve
         };
 
         await _chatMessageRepository.AddAsync(message, cancellationToken);
-        // Trả lại CreatedAt thực tế để các bước sau cập nhật LastMessageAt chính xác.
-        return message.CreatedAt;
+        return message;
     }
 }

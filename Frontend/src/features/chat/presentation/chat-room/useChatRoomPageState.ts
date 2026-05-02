@@ -4,6 +4,7 @@ import { usePaymentOfferActions } from '@/features/chat/application/usePaymentOf
 import { useChatRoomConversationActions } from '@/features/chat/presentation/chat-room/useChatRoomConversationActions';
 import { useChatRoomDerivedFlags } from '@/features/chat/presentation/chat-room/useChatRoomDerivedFlags';
 import { useChatRoomInputMediaActions } from '@/features/chat/presentation/chat-room/useChatRoomInputMediaActions';
+import { useChatRoomReviewActions } from '@/features/chat/presentation/chat-room/useChatRoomReviewActions';
 import { useChatRoomScrollEffects } from '@/features/chat/presentation/chat-room/useChatRoomScrollEffects';
 import { useChatRoomUiState } from '@/features/chat/presentation/chat-room/useChatRoomUiState';
 
@@ -47,6 +48,11 @@ export function useChatRoomPageState({
     setShowDisputeModal: uiState.setShowDisputeModal,
     pushRoute,
   });
+  const reviewActions = useChatRoomReviewActions({
+    conversation: chatConnection.conversation,
+    conversationId,
+    setConversation: chatConnection.setConversation,
+  });
 
   const lastMessageId = chatConnection.messages[chatConnection.messages.length - 1]?.id;
 
@@ -67,8 +73,9 @@ export function useChatRoomPageState({
       derived,
       inputMedia,
       paymentOffers,
+      reviewActions,
       uiState,
     }),
-    [chatConnection, conversationActions, derived, inputMedia, paymentOffers, uiState],
+    [chatConnection, conversationActions, derived, inputMedia, paymentOffers, reviewActions, uiState],
   );
 }

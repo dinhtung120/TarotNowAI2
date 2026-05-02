@@ -29,22 +29,19 @@ export default function ChatComposerInputRow({
         ref={inputRef}
         value={newMessage}
         onChange={(event) => onInputChange(event.target.value)}
-        onKeyDown={(e) => {
-          onInputKeyDown(e);
-          if (e.key === 'Enter' && !e.shiftKey) {
-            setTimeout(() => inputRef.current?.focus(), 0);
-          }
-        }}
-        disabled={sending || !conversationExists}
+        onKeyDown={onInputKeyDown}
+        disabled={!conversationExists}
         placeholder={inputPlaceholder}
         className={cn('h-11 flex-1 rounded-xl tn-chat-input px-3 text-sm')}
       />
 
       <button
         type="button"
+        onMouseDown={(event) => {
+          event.preventDefault();
+        }}
         onClick={async () => {
           await onSendTextMessage();
-          setTimeout(() => inputRef.current?.focus(), 0);
         }}
         disabled={!newMessage.trim() || sending || uploadingMedia || !conversationExists}
         className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-xl tn-chat-send-btn')}

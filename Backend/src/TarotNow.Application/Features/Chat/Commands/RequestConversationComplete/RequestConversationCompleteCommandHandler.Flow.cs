@@ -11,6 +11,7 @@ public partial class RequestConversationCompleteCommandHandlerRequestedDomainEve
     /// </summary>
     private async Task<DateTime?> HandleFirstRequestIfNeededAsync(
         RequestContext context,
+        List<ChatMessageDto> fastLaneMessages,
         CancellationToken cancellationToken)
     {
         if (context.IsFirstRequest == false)
@@ -23,13 +24,14 @@ public partial class RequestConversationCompleteCommandHandlerRequestedDomainEve
         var lastMessageAt = await CancelPendingAddMoneyOfferAsync(
             context.Conversation,
             context.RequesterId,
+            fastLaneMessages,
             cancellationToken);
 
         context.Conversation.Confirm!.RequestedBy = context.RequesterId;
         context.Conversation.Confirm.RequestedAt = context.Now;
         context.Conversation.Confirm.AutoResolveAt = context.Now.AddHours(context.IsUserRequester ? 12 : 48);
 
-        return await AddSystemMessageAsync(
+        var requestMessage = await AddSystemMessageAsync(
             context.Conversation,
             context.RequesterId,
             new SystemMessageSpec(
@@ -37,6 +39,8 @@ public partial class RequestConversationCompleteCommandHandlerRequestedDomainEve
                 BuildFirstRequestMessage(context.IsUserRequester),
                 lastMessageAt),
             cancellationToken);
+        fastLaneMessages.Add(requestMessage);
+        return requestMessage.CreatedAt;
     }
 
     /// <summary>

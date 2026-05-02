@@ -87,6 +87,10 @@ public partial class MongoDbContext
     public IMongoCollection<ChatMessageDocument> ChatMessages
         => _database.GetCollection<ChatMessageDocument>("chat_messages");
 
+    // Collection đánh giá reader theo conversation completed.
+    public IMongoCollection<ConversationReviewDocument> ConversationReviews
+        => _database.GetCollection<ConversationReviewDocument>("conversation_reviews");
+
     // Collection báo cáo vi phạm.
     public IMongoCollection<ReportDocument> Reports
         => _database.GetCollection<ReportDocument>("reports");

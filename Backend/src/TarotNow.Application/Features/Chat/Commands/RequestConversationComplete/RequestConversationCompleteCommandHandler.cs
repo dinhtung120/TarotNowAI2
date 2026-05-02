@@ -2,6 +2,7 @@ using MediatR;
 using System;
 using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Common;
+using TarotNow.Application.Common.Realtime;
 using TarotNow.Application.Interfaces;
 using TarotNow.Application.Interfaces.DomainEvents;
 
@@ -17,6 +18,7 @@ public partial class RequestConversationCompleteCommandHandlerRequestedDomainEve
     private readonly ITransactionCoordinator _transactionCoordinator;
     private readonly IChatMessageRepository _chatMessageRepository;
     private readonly IDomainEventPublisher _domainEventPublisher;
+    private readonly IChatRealtimeFastLanePublisher _chatRealtimeFastLanePublisher;
 
     /// <summary>
     /// Khởi tạo handler request conversation complete.
@@ -29,6 +31,7 @@ public partial class RequestConversationCompleteCommandHandlerRequestedDomainEve
         ITransactionCoordinator transactionCoordinator,
         IChatMessageRepository chatMessageRepository,
         IDomainEventPublisher domainEventPublisher,
+        IChatRealtimeFastLanePublisher chatRealtimeFastLanePublisher,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
@@ -38,6 +41,7 @@ public partial class RequestConversationCompleteCommandHandlerRequestedDomainEve
         _transactionCoordinator = transactionCoordinator;
         _chatMessageRepository = chatMessageRepository;
         _domainEventPublisher = domainEventPublisher;
+        _chatRealtimeFastLanePublisher = chatRealtimeFastLanePublisher;
     }
 
     /// <summary>
@@ -48,6 +52,7 @@ public partial class RequestConversationCompleteCommandHandlerRequestedDomainEve
         RequestConversationCompleteCommand request,
         CancellationToken cancellationToken)
     {
+        var fastLaneMessages = new List<ChatMessageDto>();
         var context = await BuildContextAsync(request, cancellationToken);
         if (IsAlreadyConfirmedByRequester(context))
         {
@@ -55,14 +60,24 @@ public partial class RequestConversationCompleteCommandHandlerRequestedDomainEve
             return new ConversationActionResult { Status = context.Conversation.Status };
         }
 
-        var lastMessageAt = await HandleFirstRequestIfNeededAsync(context, cancellationToken);
+        var lastMessageAt = await HandleFirstRequestIfNeededAsync(context, fastLaneMessages, cancellationToken);
         // Ghi dấu thời điểm xác nhận của phía requester.
         ApplyRequesterConfirmation(context);
 
         if (HasBothSidesConfirmed(context.Conversation))
         {
             // Đủ xác nhận hai bên: chốt complete + settlement ngay.
-            return await CompleteConversationAsync(context, cancellationToken);
+            var result = await CompleteConversationAsync(context, fastLaneMessages, cancellationToken);
+            var completedAt = context.Conversation.UpdatedAt ?? context.Now;
+            await _domainEventPublisher.PublishAsync(
+                new Domain.Events.ConversationUpdatedDomainEvent(context.Conversation.Id, "completed", completedAt),
+                cancellationToken);
+            await PublishFastLaneConversationEventAsync(
+                context.Conversation,
+                new ConversationRealtimeEventContext(context.RequesterId, "completed", completedAt),
+                fastLaneMessages,
+                cancellationToken);
+            return result;
         }
 
         // Chưa đủ xác nhận: persist trạng thái chờ bên còn lại.
@@ -71,6 +86,11 @@ public partial class RequestConversationCompleteCommandHandlerRequestedDomainEve
         // Publish update để UI đối phương nhận thông báo yêu cầu hoàn thành.
         await _domainEventPublisher.PublishAsync(
             new Domain.Events.ConversationUpdatedDomainEvent(context.Conversation.Id, "complete_requested", context.Now),
+            cancellationToken);
+        await PublishFastLaneConversationEventAsync(
+            context.Conversation,
+            new ConversationRealtimeEventContext(context.RequesterId, "complete_requested", context.Now),
+            fastLaneMessages,
             cancellationToken);
 
         return new ConversationActionResult { Status = context.Conversation.Status };

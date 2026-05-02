@@ -14,6 +14,7 @@ public partial class ListMessagesQueryHandler : IRequestHandler<ListMessagesQuer
     private readonly IReaderProfileRepository _readerProfileRepository;
     private readonly IChatFinanceRepository _financeRepository;
     private readonly IUserPresenceTracker _presenceTracker;
+    private readonly IConversationReviewRepository _conversationReviewRepository;
 
     /// <summary>
     /// Khởi tạo handler list messages.
@@ -25,7 +26,8 @@ public partial class ListMessagesQueryHandler : IRequestHandler<ListMessagesQuer
         IUserRepository userRepo,
         IReaderProfileRepository readerProfileRepository,
         IChatFinanceRepository financeRepository,
-        IUserPresenceTracker presenceTracker)
+        IUserPresenceTracker presenceTracker,
+        IConversationReviewRepository conversationReviewRepository)
     {
         _conversationRepo = conversationRepo;
         _messageRepo = messageRepo;
@@ -33,6 +35,7 @@ public partial class ListMessagesQueryHandler : IRequestHandler<ListMessagesQuer
         _readerProfileRepository = readerProfileRepository;
         _financeRepository = financeRepository;
         _presenceTracker = presenceTracker;
+        _conversationReviewRepository = conversationReviewRepository;
     }
 
     /// <summary>
@@ -51,6 +54,7 @@ public partial class ListMessagesQueryHandler : IRequestHandler<ListMessagesQuer
         // Enrich conversation để client không cần gọi thêm API phụ trợ.
         await EnrichParticipantProfilesAsync(conversation, cancellationToken);
         await EnrichReaderStatusAndEscrowAsync(conversation, cancellationToken);
+        await EnrichConversationReviewStateAsync(conversation, request.RequesterId.ToString(), cancellationToken);
 
         return new ListMessagesResult
         {

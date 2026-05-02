@@ -2,7 +2,18 @@ import ChatActionMenu from '@/features/chat/presentation/chat-room/ChatActionMen
 import ChatComposerInputRow from '@/features/chat/presentation/chat-room/ChatComposerInputRow';
 import type { ChatComposerProps } from '@/features/chat/presentation/chat-room/chatRoomUi.types';
 import { cn } from '@/lib/utils';
-type ChatComposerEditableFooterProps = Omit<ChatComposerProps, 'canShowInput' | 'canStartNewSession' | 'isReadOnly' | 'readOnlyHint' | 'startingNewSession' | 'onStartNewSession'>;
+type ChatComposerEditableFooterProps = Omit<
+  ChatComposerProps,
+  | 'canShowInput'
+  | 'canStartNewSession'
+  | 'canSubmitReview'
+  | 'hasSubmittedReview'
+  | 'isReadOnly'
+  | 'readOnlyHint'
+  | 'startingNewSession'
+  | 'onOpenReviewModal'
+  | 'onStartNewSession'
+>;
 
 export default function ChatComposerEditableFooter({
   actionMenuRef,

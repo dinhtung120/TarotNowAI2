@@ -107,6 +107,7 @@ export function useChatConnection({ conversationId }: UseChatConnectionOptions) 
  return {
   messages,
   setMessages,
+  setConversation,
   newMessage,
   setNewMessage,
   loading,

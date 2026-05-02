@@ -65,3 +65,13 @@ public class ConversationDisputeBody
     // Lý do dispute do người dùng cung cấp.
     public string Reason { get; set; } = string.Empty;
 }
+
+// Payload gửi đánh giá reader sau khi conversation completed.
+public class ConversationReviewBody
+{
+    // Điểm đánh giá 1..5 sao.
+    public int Rating { get; set; }
+
+    // Nhận xét tùy chọn.
+    public string? Comment { get; set; }
+}
