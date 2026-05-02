@@ -32,6 +32,7 @@ export const SITE_CLIENT_NAMESPACES = uniqueNamespaces([
  ...ROOT_CLIENT_NAMESPACES,
  'Legal',
  'Wallet',
+ 'Index',
 ]);
 
 export const USER_CLIENT_NAMESPACES = uniqueNamespaces([
@@ -54,6 +55,7 @@ export const USER_CLIENT_NAMESPACES = uniqueNamespaces([
  'History',
  'Gamification',
  'Pagination',
+ 'Index',
 ]);
 
 export const ADMIN_CLIENT_NAMESPACES = uniqueNamespaces([
