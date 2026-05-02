@@ -1,10 +1,12 @@
 import { HubConnectionState, type HubConnection } from '@microsoft/signalr';
 import type { QueryClient } from '@tanstack/react-query';
 import { logger } from '@/shared/application/gateways/logger';
+import { userStateQueryKeys } from '@/shared/application/gateways/userStateQueryKeys';
 
 const DIRECTORY_QUERY_KEY = 'readers';
 const PROFILE_QUERY_KEY = 'reader-profile';
-const MAX_OBSERVED_USERS = 300;
+const OBSERVER_BATCH_SIZE = 200;
+const RECONCILIATION_INTERVAL_MS = 30_000;
 const SUBSCRIBE_METHOD = 'SubscribeUserStatusObservers';
 const UNSUBSCRIBE_METHOD = 'UnsubscribeUserStatusObservers';
 
@@ -32,6 +34,19 @@ function normalizeUserId(value: unknown): string | null {
 
 function hasActiveObservers(query: { getObserversCount: () => number }): boolean {
  return query.getObserversCount() > 0;
+}
+
+function chunkUserIds(userIds: readonly string[]): string[][] {
+ if (userIds.length === 0) {
+  return [];
+ }
+
+ const chunks: string[][] = [];
+ for (let index = 0; index < userIds.length; index += OBSERVER_BATCH_SIZE) {
+  chunks.push(userIds.slice(index, index + OBSERVER_BATCH_SIZE));
+ }
+
+ return chunks;
 }
 
 function collectObservedUserIds(queryClient: QueryClient): string[] {
@@ -73,7 +88,7 @@ function collectObservedUserIds(queryClient: QueryClient): string[] {
   }
  }
 
- return [...observedUserIds].slice(0, MAX_OBSERVED_USERS);
+ return [...observedUserIds];
 }
 
 export function createPresenceStatusObserverCoordinator(
@@ -91,6 +106,7 @@ export function createPresenceStatusObserverCoordinator(
  let disposed = false;
  let observedUserIds = new Set<string>();
  let syncChain = Promise.resolve();
+ let reconciliationTimer: ReturnType<typeof setInterval> | null = null;
 
  const syncNow = async () => {
   if (disposed || hubConnection.state !== HubConnectionState.Connected) {
@@ -114,14 +130,29 @@ export function createPresenceStatusObserverCoordinator(
   }
 
   if (toSubscribe.length > 0) {
-   await hubConnection.invoke(SUBSCRIBE_METHOD, toSubscribe);
+   for (const chunk of chunkUserIds(toSubscribe)) {
+    await hubConnection.invoke(SUBSCRIBE_METHOD, chunk);
+   }
   }
 
   if (toUnsubscribe.length > 0) {
-   await hubConnection.invoke(UNSUBSCRIBE_METHOD, toUnsubscribe);
+   for (const chunk of chunkUserIds(toUnsubscribe)) {
+    await hubConnection.invoke(UNSUBSCRIBE_METHOD, chunk);
+   }
   }
 
   observedUserIds = nextObservedUserIds;
+ };
+
+ const runReconciliation = async () => {
+  if (disposed || hubConnection.state !== HubConnectionState.Connected || observedUserIds.size === 0) {
+   return;
+  }
+
+  await queryClient.invalidateQueries({ queryKey: userStateQueryKeys.reader.directoryRoot() });
+  for (const observedUserId of observedUserIds) {
+   await queryClient.invalidateQueries({ queryKey: userStateQueryKeys.reader.profile(observedUserId) });
+  }
  };
 
  const enqueueSync = () => {
@@ -136,6 +167,18 @@ export function createPresenceStatusObserverCoordinator(
    });
  };
 
+ const enqueueReconciliation = () => {
+  if (disposed) {
+   return;
+  }
+
+  syncChain = syncChain
+   .then(runReconciliation)
+   .catch((error) => {
+    logger.error('[PresenceRealtimeSync] failed to run presence reconciliation', error);
+   });
+ };
+
  const unsubscribeQueryCache = queryCache.subscribe(() => {
   enqueueSync();
  });
@@ -143,12 +186,20 @@ export function createPresenceStatusObserverCoordinator(
  hubConnection.onreconnected(() => {
   observedUserIds.clear();
   enqueueSync();
+  enqueueReconciliation();
  });
+
+ reconciliationTimer = setInterval(() => {
+  enqueueReconciliation();
+ }, RECONCILIATION_INTERVAL_MS);
 
  return {
   dispose: () => {
    disposed = true;
    unsubscribeQueryCache();
+   if (reconciliationTimer) {
+    clearInterval(reconciliationTimer);
+   }
    observedUserIds.clear();
   },
   sync: enqueueSync,

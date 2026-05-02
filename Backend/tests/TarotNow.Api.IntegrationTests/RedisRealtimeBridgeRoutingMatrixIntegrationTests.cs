@@ -321,8 +321,10 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
 
         var userEvent = await presenceUserStatusProbe.WaitForAsync(PositiveTimeout);
         var observerEvent = await presenceReaderStatusProbe.WaitForAsync(PositiveTimeout);
-        Assert.Equal((userId, status), userEvent);
-        Assert.Equal((userId, status), observerEvent);
+        Assert.Equal((userId, status), (userEvent.UserId, userEvent.Status));
+        Assert.Equal((userId, status), (observerEvent.UserId, observerEvent.Status));
+        Assert.False(string.IsNullOrWhiteSpace(userEvent.At));
+        Assert.False(string.IsNullOrWhiteSpace(observerEvent.At));
         await presenceOtherStatusProbe.AssertNoEventAsync(NegativeTimeout);
     }
 
@@ -577,21 +579,21 @@ public sealed class RedisRealtimeBridgeRoutingMatrixIntegrationTests
 
     private sealed class PresenceStatusProbe : IDisposable
     {
-        private readonly ConcurrentQueue<(string UserId, string Status)> _events = new();
+        private readonly ConcurrentQueue<(string UserId, string Status, string? At)> _events = new();
         private readonly IDisposable _subscription;
 
         public PresenceStatusProbe(HubConnection connection)
         {
-            _subscription = connection.On<string, string>(
+            _subscription = connection.On<string, string, string?>(
                 RealtimeEventNames.UserStatusChanged,
-                (userId, status) =>
+                (userId, status, at) =>
                 {
-                    _events.Enqueue((userId, status));
+                    _events.Enqueue((userId, status, at));
                     return Task.CompletedTask;
                 });
         }
 
-        public async Task<(string UserId, string Status)> WaitForAsync(TimeSpan timeout)
+        public async Task<(string UserId, string Status, string? At)> WaitForAsync(TimeSpan timeout)
         {
             var start = DateTime.UtcNow;
             while (DateTime.UtcNow - start < timeout)

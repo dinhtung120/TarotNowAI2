@@ -52,10 +52,11 @@ public sealed partial class RedisRealtimeSignalRBridgeService
             }
 
             var status = GetStringProperty(payload, "status") ?? "offline";
+            var occurredAt = GetStringProperty(payload, "at");
             await _presenceHubContext.Clients.Groups(
                     PresenceGroupNames.User(broadcastUserId),
                     PresenceGroupNames.UserStatusObservers(broadcastUserId))
-                .SendAsync(eventName, broadcastUserId, status);
+                .SendAsync(eventName, broadcastUserId, status, occurredAt);
             return;
         }
 

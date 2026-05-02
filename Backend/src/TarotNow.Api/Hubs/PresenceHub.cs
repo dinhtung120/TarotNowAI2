@@ -114,7 +114,22 @@ public class PresenceHub : Hub
     /// </summary>
     public async Task SubscribeUserStatusObservers(IReadOnlyCollection<string>? userIds)
     {
-        foreach (var observedUserId in NormalizeObserverUserIds(userIds))
+        var normalizedUserIds = NormalizeObserverUserIds(userIds);
+        var normalizedInputCount = userIds?
+            .Where(userId => string.IsNullOrWhiteSpace(userId) == false)
+            .Select(userId => userId.Trim())
+            .Distinct(StringComparer.Ordinal)
+            .Count() ?? 0;
+        if (normalizedInputCount > MaxObserverSubscriptionsPerRequest)
+        {
+            _logger.LogWarning(
+                "[PresenceHub] SubscribeUserStatusObservers truncated input list. Input={InputCount}, Accepted={AcceptedCount}, ConnectionId={ConnectionId}",
+                normalizedInputCount,
+                normalizedUserIds.Count,
+                Context.ConnectionId);
+        }
+
+        foreach (var observedUserId in normalizedUserIds)
         {
             await Groups.AddToGroupAsync(
                 Context.ConnectionId,
@@ -128,7 +143,22 @@ public class PresenceHub : Hub
     /// </summary>
     public async Task UnsubscribeUserStatusObservers(IReadOnlyCollection<string>? userIds)
     {
-        foreach (var observedUserId in NormalizeObserverUserIds(userIds))
+        var normalizedUserIds = NormalizeObserverUserIds(userIds);
+        var normalizedInputCount = userIds?
+            .Where(userId => string.IsNullOrWhiteSpace(userId) == false)
+            .Select(userId => userId.Trim())
+            .Distinct(StringComparer.Ordinal)
+            .Count() ?? 0;
+        if (normalizedInputCount > MaxObserverSubscriptionsPerRequest)
+        {
+            _logger.LogWarning(
+                "[PresenceHub] UnsubscribeUserStatusObservers truncated input list. Input={InputCount}, Accepted={AcceptedCount}, ConnectionId={ConnectionId}",
+                normalizedInputCount,
+                normalizedUserIds.Count,
+                Context.ConnectionId);
+        }
+
+        foreach (var observedUserId in normalizedUserIds)
         {
             await Groups.RemoveFromGroupAsync(
                 Context.ConnectionId,

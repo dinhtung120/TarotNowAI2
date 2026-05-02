@@ -1,5 +1,6 @@
 using System.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -20,11 +21,13 @@ public sealed class ReadinessService : IReadinessService
     private readonly CacheBackendState _cacheBackendState;
     private readonly IConnectionMultiplexer? _redisConnectionMultiplexer;
     private readonly ILogger<ReadinessService> _logger;
+    private readonly bool _redisRequiredForPresence;
 
     public ReadinessService(
         ApplicationDbContext dbContext,
         IMongoDatabase mongoDatabase,
         CacheBackendState cacheBackendState,
+        IHostEnvironment hostEnvironment,
         ILogger<ReadinessService> logger,
         IConnectionMultiplexer? redisConnectionMultiplexer = null)
     {
@@ -33,6 +36,7 @@ public sealed class ReadinessService : IReadinessService
         _cacheBackendState = cacheBackendState;
         _logger = logger;
         _redisConnectionMultiplexer = redisConnectionMultiplexer;
+        _redisRequiredForPresence = !IsLocalPresenceFallbackAllowed(hostEnvironment.EnvironmentName);
     }
 
     /// <summary>
@@ -43,9 +47,17 @@ public sealed class ReadinessService : IReadinessService
         var postgresReady = await CheckPostgreSqlAsync(cancellationToken);
         var mongoReady = await CheckMongoDbAsync(cancellationToken);
         var redisReady = await CheckRedisAsync();
-        var redisRequired = _cacheBackendState.UsesRedis;
+        var redisRequired = _cacheBackendState.UsesRedis || _redisRequiredForPresence;
 
         return new ReadinessStatus(postgresReady, mongoReady, redisReady, redisRequired);
+    }
+
+    private static bool IsLocalPresenceFallbackAllowed(string environmentName)
+    {
+        return environmentName.Equals("Development", StringComparison.OrdinalIgnoreCase)
+            || environmentName.Equals("Local", StringComparison.OrdinalIgnoreCase)
+            || environmentName.Equals("Test", StringComparison.OrdinalIgnoreCase)
+            || environmentName.Equals("Testing", StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task<bool> CheckPostgreSqlAsync(CancellationToken cancellationToken)

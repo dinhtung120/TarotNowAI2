@@ -19,7 +19,42 @@ interface NotificationNewPayload {
  type?: string;
 }
 
+type UserStatusChangedEventAt = string | number | Date | null | undefined;
+
 const CHAT_UNREAD_REFRESH_EVENT_TYPES = new Set(['message_created', 'message_read', 'unread_changed']);
+const MAX_PRESENCE_EVENT_TRACKER_SIZE = 5_000;
+
+function toEventUnixMs(value: UserStatusChangedEventAt): number | null {
+ if (value instanceof Date) {
+  const timestamp = value.getTime();
+  return Number.isFinite(timestamp) ? timestamp : null;
+ }
+
+ if (typeof value === 'number') {
+  if (!Number.isFinite(value)) {
+   return null;
+  }
+
+  return value > 1e12 ? Math.trunc(value) : Math.trunc(value * 1000);
+ }
+
+ if (typeof value !== 'string') {
+  return null;
+ }
+
+ const normalized = value.trim();
+ if (normalized.length === 0) {
+  return null;
+ }
+
+ const asNumber = Number(normalized);
+ if (Number.isFinite(asNumber)) {
+  return asNumber > 1e12 ? Math.trunc(asNumber) : Math.trunc(asNumber * 1000);
+ }
+
+ const asDate = Date.parse(normalized);
+ return Number.isFinite(asDate) ? asDate : null;
+}
 
 interface RegisterPresenceDomainEventHandlersParams {
  forceLogoutAfterRoleChange: (notificationType?: string) => Promise<void>;
@@ -42,8 +77,29 @@ export function registerPresenceDomainEventHandlers({
  scheduleWalletRefresh,
  tryApplyWalletDelta,
 }: RegisterPresenceDomainEventHandlersParams) {
- const handleUserStatusChanged = (userId: string, status?: string) => {
-  logger.info('[PresenceRealtimeSync]', 'UserStatusChanged received', { userId, status });
+ const lastSeenStatusEventByUserId = new Map<string, number>();
+
+ const handleUserStatusChanged = (userId: string, status?: string, at?: UserStatusChangedEventAt) => {
+  const eventUnixMs = toEventUnixMs(at) ?? Date.now();
+  const previousEventUnixMs = userId ? lastSeenStatusEventByUserId.get(userId) : undefined;
+  if (typeof previousEventUnixMs === 'number' && eventUnixMs < previousEventUnixMs) {
+   logger.warn('[PresenceRealtimeSync]', 'Skipped stale UserStatusChanged event', {
+    at,
+    previousAtMs: previousEventUnixMs,
+    status,
+    userId,
+   });
+   return;
+  }
+
+  if (userId) {
+   lastSeenStatusEventByUserId.set(userId, eventUnixMs);
+   if (lastSeenStatusEventByUserId.size > MAX_PRESENCE_EVENT_TRACKER_SIZE) {
+    lastSeenStatusEventByUserId.clear();
+   }
+  }
+
+  logger.info('[PresenceRealtimeSync]', 'UserStatusChanged received', { at, userId, status });
   void queryClient.invalidateQueries({ queryKey: userStateQueryKeys.reader.directoryRoot() });
   if (userId) {
    void queryClient.invalidateQueries({ queryKey: userStateQueryKeys.reader.profile(userId) });

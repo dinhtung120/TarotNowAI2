@@ -96,9 +96,10 @@ const mockedAuthGetState = vi.mocked(useAuthStore.getState);
  beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(new Date('2026-04-29T12:00:00.000Z'));
-  mockedInvalidateUserStateQueries.mockClear();
-  mockedPerformClientLogoutCleanup.mockClear();
-  mockedWalletGetState.mockReturnValue({
+ mockedInvalidateUserStateQueries.mockClear();
+ mockedPerformClientLogoutCleanup.mockClear();
+ (queryClient.invalidateQueries as ReturnType<typeof vi.fn>).mockClear();
+ mockedWalletGetState.mockReturnValue({
    balance: null,
    setBalance: vi.fn(),
    fetchBalance: vi.fn().mockResolvedValue(undefined),
@@ -277,10 +278,80 @@ const mockedAuthGetState = vi.mocked(useAuthStore.getState);
   await vi.advanceTimersByTimeAsync(0);
   await Promise.resolve();
 
-  expect(hub.invoke).toHaveBeenCalledWith(
-   'UnsubscribeUserStatusObservers',
-   expect.arrayContaining(['reader-1', 'reader-3']),
-  );
+ expect(hub.invoke).toHaveBeenCalledWith(
+  'UnsubscribeUserStatusObservers',
+  expect.arrayContaining(['reader-1', 'reader-3']),
+ );
+
+ handlers.dispose();
+});
+
+ it('chunks observer subscriptions into 200-user batches without truncating observed users', async () => {
+  const hub = createFakeHubConnection();
+  const observedUsers = Array.from({ length: 401 }, (_, index) => ({ userId: `reader-${index + 1}` }));
+  const queryClientWithCache = {
+   invalidateQueries: vi.fn().mockResolvedValue(undefined),
+   getQueryCache: () => ({
+    findAll: (filters?: { queryKey?: readonly unknown[] }) => {
+     const key = filters?.queryKey?.[0];
+     if (key === 'readers') {
+      return [
+       {
+        queryKey: ['readers', 1, 12, '', '', ''],
+        state: { data: { readers: observedUsers } },
+        getObserversCount: () => 1,
+       },
+      ];
+     }
+
+     if (key === 'reader-profile') {
+      return [];
+     }
+
+     return [];
+    },
+    subscribe: (listener: () => void) => {
+     return () => {
+      listener();
+     };
+    },
+   }),
+  } as unknown as QueryClient;
+
+  const handlers = registerPresenceConnectionHandlers(hub as HubConnection, queryClientWithCache);
+  handlers.syncStatusObservers();
+  await vi.advanceTimersByTimeAsync(0);
+  await Promise.resolve();
+
+  const subscribeCalls = (hub.invoke as ReturnType<typeof vi.fn>).mock.calls
+   .filter(([methodName]) => methodName === 'SubscribeUserStatusObservers')
+   .map(([, userIds]) => userIds as string[]);
+
+  expect(subscribeCalls).toHaveLength(3);
+  expect(subscribeCalls[0]).toHaveLength(200);
+  expect(subscribeCalls[1]).toHaveLength(200);
+  expect(subscribeCalls[2]).toHaveLength(1);
+  const flattenedUserIds = subscribeCalls.flat();
+  expect(new Set(flattenedUserIds).size).toBe(401);
+  expect(flattenedUserIds).toContain('reader-1');
+  expect(flattenedUserIds).toContain('reader-401');
+
+  handlers.dispose();
+ });
+
+ it('ignores stale user status events based on event timestamp', async () => {
+  const hub = createFakeHubConnection();
+  const handlers = registerPresenceConnectionHandlers(hub as HubConnection, queryClient);
+
+  hub.emit('user.status_changed', 'reader-9', 'online', '2026-05-02T12:00:00.000Z');
+  hub.emit('user.status_changed', 'reader-9', 'offline', '2026-05-02T11:59:00.000Z');
+  await Promise.resolve();
+  await Promise.resolve();
+
+  const invalidateCalls = (queryClient.invalidateQueries as ReturnType<typeof vi.fn>).mock.calls;
+  expect(invalidateCalls).toHaveLength(2);
+  expect(invalidateCalls[0]?.[0]).toEqual({ queryKey: ['readers'] });
+  expect(invalidateCalls[1]?.[0]).toEqual({ queryKey: ['reader-profile', 'reader-9'] });
 
   handlers.dispose();
  });

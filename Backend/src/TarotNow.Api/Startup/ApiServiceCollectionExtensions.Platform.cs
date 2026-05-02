@@ -24,6 +24,11 @@ public static partial class ApiServiceCollectionExtensions
     /// </summary>
     private static void AddPlatformServices(IServiceCollection services, IConfiguration configuration)
     {
+        var environmentName = configuration["ASPNETCORE_ENVIRONMENT"]
+            ?? Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")
+            ?? string.Empty;
+        var allowDegradedPresence = IsLocalPresenceFallbackAllowed(environmentName);
+
         // Gắn global exception handler để mọi lỗi chưa bắt được chuẩn hóa về ProblemDetails.
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
@@ -52,6 +57,12 @@ public static partial class ApiServiceCollectionExtensions
                 }
             }
 
+            if (!allowDegradedPresence)
+            {
+                throw new InvalidOperationException(
+                    $"Redis is required for presence consistency when ASPNETCORE_ENVIRONMENT='{environmentName}'.");
+            }
+
             return new InMemoryUserPresenceTracker(systemConfigSettings);
         });
         services.AddHostedService<PresenceTimeoutBackgroundService>();
@@ -60,6 +71,12 @@ public static partial class ApiServiceCollectionExtensions
             var multiplexer = serviceProvider.GetService<StackExchange.Redis.IConnectionMultiplexer>();
             if (multiplexer is null)
             {
+                if (!allowDegradedPresence)
+                {
+                    throw new InvalidOperationException(
+                        $"Redis realtime bridge requires Redis when ASPNETCORE_ENVIRONMENT='{environmentName}'.");
+                }
+
                 return new NoOpRealtimeBridgeSource();
             }
 
@@ -74,6 +91,14 @@ public static partial class ApiServiceCollectionExtensions
             options.AddPolicy(ApiAuthorizationPolicies.AdminOnly, ApiAuthorizationPolicies.RequireAdminOnly);
         });
         ConfigureSignalR(services, configuration.GetConnectionString("Redis"), ResolveSignalROptions(configuration));
+    }
+
+    private static bool IsLocalPresenceFallbackAllowed(string environmentName)
+    {
+        return environmentName.Equals("Development", StringComparison.OrdinalIgnoreCase)
+            || environmentName.Equals("Local", StringComparison.OrdinalIgnoreCase)
+            || environmentName.Equals("Test", StringComparison.OrdinalIgnoreCase)
+            || environmentName.Equals("Testing", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>

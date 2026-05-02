@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Linq;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -109,6 +110,30 @@ public class PresenceHubTests
         groups.Verify(
             x => x.RemoveFromGroupAsync("conn-d", "presence:watch:user:reader-2", It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task SubscribeUserStatusObservers_ShouldCapBatchAt200Users()
+    {
+        var userId = Guid.NewGuid().ToString();
+        var mediator = new Mock<IMediator>();
+        var tracker = new Mock<IUserPresenceTracker>();
+        var groups = new Mock<IGroupManager>();
+        var hub = new PresenceHub(mediator.Object, tracker.Object, NullLogger<PresenceHub>.Instance)
+        {
+            Context = CreateContext("conn-e", userId),
+            Groups = groups.Object
+        };
+        var inputUserIds = Enumerable.Range(1, 250).Select(index => $"reader-{index}").ToArray();
+
+        await hub.SubscribeUserStatusObservers(inputUserIds);
+
+        groups.Verify(
+            x => x.AddToGroupAsync(
+                "conn-e",
+                It.Is<string>(groupName => groupName.StartsWith("presence:watch:user:", StringComparison.Ordinal)),
+                It.IsAny<CancellationToken>()),
+            Times.Exactly(200));
     }
 
     private static HubCallerContext CreateContext(string connectionId, string userId)
