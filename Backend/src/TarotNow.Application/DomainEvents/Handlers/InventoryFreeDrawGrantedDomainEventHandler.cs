@@ -1,5 +1,3 @@
-using System.Globalization;
-using TarotNow.Application.Common.Constants;
 using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
 using TarotNow.Application.Interfaces.DomainEvents;
@@ -14,19 +12,16 @@ public sealed class FreeDrawGrantedDomainEventHandler
     : IdempotentDomainEventNotificationHandler<FreeDrawGrantedDomainEvent>
 {
     private readonly IFreeDrawCreditRepository _freeDrawCreditRepository;
-    private readonly INotificationRepository _notificationRepository;
 
     /// <summary>
     /// Khởi tạo handler FreeDrawGrantedDomainEvent.
     /// </summary>
     public FreeDrawGrantedDomainEventHandler(
         IFreeDrawCreditRepository freeDrawCreditRepository,
-        INotificationRepository notificationRepository,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
         _freeDrawCreditRepository = freeDrawCreditRepository;
-        _notificationRepository = notificationRepository;
     }
 
     /// <inheritdoc />
@@ -39,34 +34,6 @@ public sealed class FreeDrawGrantedDomainEventHandler
             domainEvent.UserId,
             domainEvent.SpreadCardCount,
             domainEvent.GrantedCount,
-            cancellationToken);
-        await _notificationRepository.CreateAsync(
-            new NotificationCreateDto
-            {
-                UserId = domainEvent.UserId,
-                Type = InventoryNotificationTypes.FreeDrawGranted,
-                TitleVi = InventoryNotificationTemplates.FreeDrawTitleVi,
-                TitleEn = InventoryNotificationTemplates.FreeDrawTitleEn,
-                TitleZh = InventoryNotificationTemplates.FreeDrawTitleZh,
-                BodyVi = string.Format(
-                    CultureInfo.InvariantCulture,
-                    InventoryNotificationTemplates.FreeDrawBodyVi,
-                    domainEvent.GrantedCount,
-                    domainEvent.SourceItemCode,
-                    domainEvent.SpreadCardCount),
-                BodyEn = string.Format(
-                    CultureInfo.InvariantCulture,
-                    InventoryNotificationTemplates.FreeDrawBodyEn,
-                    domainEvent.GrantedCount,
-                    domainEvent.SourceItemCode,
-                    domainEvent.SpreadCardCount),
-                BodyZh = string.Format(
-                    CultureInfo.InvariantCulture,
-                    InventoryNotificationTemplates.FreeDrawBodyZh,
-                    domainEvent.GrantedCount,
-                    domainEvent.SourceItemCode,
-                    domainEvent.SpreadCardCount),
-            },
             cancellationToken);
     }
 }

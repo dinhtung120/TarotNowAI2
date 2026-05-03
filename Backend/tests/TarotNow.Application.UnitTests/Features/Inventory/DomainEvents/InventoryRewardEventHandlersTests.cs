@@ -7,6 +7,7 @@ using TarotNow.Application.Interfaces;
 using TarotNow.Application.Interfaces.DomainEvents;
 using TarotNow.Domain.Enums;
 using TarotNow.Domain.Events;
+using TarotNow.Domain.Events.Gacha;
 using TarotNow.Domain.Events.Inventory;
 
 namespace TarotNow.Application.UnitTests.Features.Inventory.DomainEvents;
@@ -19,13 +20,12 @@ public class InventoryRewardEventHandlersTests
     private readonly Mock<IEventHandlerIdempotencyService> _idempotencyServiceMock = new();
 
     /// <summary>
-    /// Xác nhận handler free draw sẽ cộng credit thật trước khi gửi notification.
+    /// Xác nhận handler free draw chỉ cộng credit và không tạo in-app notification.
     /// </summary>
     [Fact]
-    public async Task FreeDrawGrantedHandler_ShouldPersistCreditAndCreateNotification()
+    public async Task FreeDrawGrantedHandler_ShouldPersistCreditWithoutCreatingNotification()
     {
         var freeDrawCreditRepositoryMock = new Mock<IFreeDrawCreditRepository>();
-        var notificationRepositoryMock = new Mock<INotificationRepository>();
         var domainEvent = new FreeDrawGrantedDomainEvent
         {
             UserId = Guid.NewGuid(),
@@ -36,7 +36,6 @@ public class InventoryRewardEventHandlersTests
 
         var handler = new FreeDrawGrantedDomainEventHandler(
             freeDrawCreditRepositoryMock.Object,
-            notificationRepositoryMock.Object,
             _idempotencyServiceMock.Object);
 
         await handler.Handle(new DomainEventNotification<FreeDrawGrantedDomainEvent>(domainEvent), CancellationToken.None);
@@ -48,11 +47,48 @@ public class InventoryRewardEventHandlersTests
                 domainEvent.GrantedCount,
                 It.IsAny<CancellationToken>()),
             Times.Once);
-        notificationRepositoryMock.Verify(
-            x => x.CreateAsync(
-                It.Is<NotificationCreateDto>(n => n.Type == InventoryNotificationTypes.FreeDrawGranted),
-                It.IsAny<CancellationToken>()),
-            Times.Once);
+    }
+
+    /// <summary>
+    /// Xác nhận handler ItemGrantedFromGacha đã tắt side-effect tạo in-app notification.
+    /// </summary>
+    [Fact]
+    public async Task ItemGrantedFromGachaHandler_ShouldCompleteWithoutInAppNotificationSideEffects()
+    {
+        var domainEvent = new ItemGrantedFromGachaDomainEvent
+        {
+            UserId = Guid.NewGuid(),
+            ItemDefinitionId = Guid.NewGuid(),
+            ItemCode = InventoryItemCodes.ExpBooster,
+            QuantityGranted = 1,
+            PoolCode = "premium",
+            PullOperationId = Guid.NewGuid(),
+        };
+        var handler = new ItemGrantedFromGachaDomainEventHandler(_idempotencyServiceMock.Object);
+
+        await handler.Handle(new DomainEventNotification<ItemGrantedFromGachaDomainEvent>(domainEvent), CancellationToken.None);
+    }
+
+    /// <summary>
+    /// Xác nhận handler CardEnhanced đã tắt side-effect tạo in-app notification.
+    /// </summary>
+    [Fact]
+    public async Task CardEnhancedHandler_ShouldCompleteWithoutInAppNotificationSideEffects()
+    {
+        var domainEvent = new CardEnhancedDomainEvent
+        {
+            UserId = Guid.NewGuid(),
+            CardId = 101,
+            EnhancementType = "exp",
+            ExpDelta = 10,
+            AttackDelta = 0,
+            DefenseDelta = 0,
+            UpgradeSucceeded = false,
+            SourceItemCode = InventoryItemCodes.ExpBooster,
+        };
+        var handler = new CardEnhancedDomainEventHandler(_idempotencyServiceMock.Object);
+
+        await handler.Handle(new DomainEventNotification<CardEnhancedDomainEvent>(domainEvent), CancellationToken.None);
     }
 
     /// <summary>
