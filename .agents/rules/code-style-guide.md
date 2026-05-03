@@ -5,7 +5,7 @@ trigger: always_on
 Global Antigravity Rules – TarotNow Project
 0. MANDATORY EVENT-DRIVEN ARCHITECTURE (HIGHEST PRIORITY – MUST BE STRICTLY FOLLOWED)
 
-All business logic MUST ONLY publish Domain Events (via MediatR).
+All business logic not chat MUST ONLY publish Domain Events (via MediatR).
 ABSOLUTELY FORBIDDEN to call any service, repository, notification, email, task, leaderboard, gacha, achievement, title, exp card, wallet, or any other component directly from Command Handlers, Services, or any class in the Application or Domain layers.
 All side-effects (notifications, emails, leaderboard updates, gacha results, money changes, achievements, tasks, etc.) MUST reside exclusively in Event Handlers.
 Business logic must not know about or depend on any infrastructure concerns (no direct injection or usage of Redis, EmailService, NotificationService, etc.).
