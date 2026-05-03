@@ -33,6 +33,8 @@ export const SITE_CLIENT_NAMESPACES = uniqueNamespaces([
  'Legal',
  'Wallet',
  'Index',
+ 'Notifications',
+ 'Chat',
 ]);
 
 export const USER_CLIENT_NAMESPACES = uniqueNamespaces([
