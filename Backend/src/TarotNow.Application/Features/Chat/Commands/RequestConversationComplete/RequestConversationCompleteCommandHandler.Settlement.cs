@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using TarotNow.Application.Common;
 using TarotNow.Domain.Enums;
 
@@ -62,7 +61,7 @@ public partial class RequestConversationCompleteCommandHandlerRequestedDomainEve
 
     /// <summary>
     /// Settle toàn bộ phiên tài chính gắn với conversation.
-    /// Luồng xử lý: tìm session theo conversation, release các item đã Accepted, rồi đóng session khi không còn frozen.
+    /// Luồng xử lý: tìm session theo conversation, giải ngân gộp theo session cho các item Accepted rồi lưu thay đổi.
     /// </summary>
     private async Task SettleConversationSessionAsync(string conversationId, CancellationToken cancellationToken)
     {
@@ -74,53 +73,13 @@ public partial class RequestConversationCompleteCommandHandlerRequestedDomainEve
         }
 
         var items = await _financeRepository.GetItemsBySessionIdAsync(session.Id, cancellationToken);
-        // Chỉ release các item đã Accepted để không trả tiền cho item bị từ chối/chưa xử lý.
-        await ReleaseAcceptedItemsAsync(items, cancellationToken);
-        await MarkCompletedSessionWhenNoFrozenAsync(session.Id, cancellationToken);
-    }
+        await _escrowSettlementService.ApplySessionReleaseAsync(
+            session,
+            items,
+            isAutoRelease: false,
+            cancellationToken);
 
-    /// <summary>
-    /// Giải ngân các item đã được chấp nhận trong phiên.
-    /// Luồng xử lý: lặp qua item Accepted, gọi escrow settlement, rồi flush thay đổi finance.
-    /// </summary>
-    private async Task ReleaseAcceptedItemsAsync(
-        IEnumerable<Domain.Entities.ChatQuestionItem> items,
-        CancellationToken cancellationToken)
-    {
-        foreach (var item in items.Where(item => item.Status == QuestionItemStatus.Accepted))
-        {
-            // Business rule: chỉ item Accepted mới được phép release escrow.
-            await _escrowSettlementService.ApplyReleaseAsync(item, isAutoRelease: false, cancellationToken);
-        }
-
-        // Lưu một lần sau vòng lặp để giảm số lần ghi DB.
-        await _financeRepository.SaveChangesAsync(cancellationToken);
-    }
-
-    /// <summary>
-    /// Đánh dấu phiên completed khi đã không còn số dư bị khóa.
-    /// Luồng xử lý: khóa session để cập nhật an toàn, kiểm tra TotalFrozen, cập nhật trạng thái và thời gian chỉnh sửa.
-    /// </summary>
-    private async Task MarkCompletedSessionWhenNoFrozenAsync(
-        Guid sessionId,
-        CancellationToken cancellationToken)
-    {
-        var lockedSession = await _financeRepository.GetSessionForUpdateAsync(sessionId, cancellationToken);
-        if (lockedSession == null)
-        {
-            // Edge case: session bị xóa/không còn khả dụng khi vào nhánh cập nhật.
-            return;
-        }
-
-        if (lockedSession.TotalFrozen <= 0)
-        {
-            // Chỉ đóng session khi đã giải ngân hết để không sai lệch đối soát.
-            lockedSession.Status = ChatFinanceSessionStatus.Completed;
-        }
-
-        lockedSession.UpdatedAt = DateTime.UtcNow;
-        await _financeRepository.UpdateSessionAsync(lockedSession, cancellationToken);
-        // Persist thay đổi trạng thái session trong cùng luồng nghiệp vụ.
+        // Persist settlement session-level trong cùng transaction.
         await _financeRepository.SaveChangesAsync(cancellationToken);
     }
 }

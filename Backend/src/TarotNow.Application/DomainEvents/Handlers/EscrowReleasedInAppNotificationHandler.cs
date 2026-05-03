@@ -114,3 +114,111 @@ public sealed class EscrowReleasedInAppNotificationHandler
         };
     }
 }
+
+// Tạo và phát thông báo in-app theo session khi giao dịch escrow được giải ngân gộp.
+public sealed class EscrowSessionReleasedInAppNotificationHandler
+    : IdempotentDomainEventNotificationHandler<EscrowSessionReleasedDomainEvent>
+{
+    private readonly INotificationRepository _notificationRepository;
+    private readonly IRedisPublisher _redisPublisher;
+
+    /// <summary>
+    /// Khởi tạo handler thông báo in-app khi escrow session release.
+    /// Luồng xử lý: nhận repository lưu thông báo và redis publisher để phát realtime.
+    /// </summary>
+    public EscrowSessionReleasedInAppNotificationHandler(
+        INotificationRepository notificationRepository,
+        IRedisPublisher redisPublisher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
+    {
+        _notificationRepository = notificationRepository;
+        _redisPublisher = redisPublisher;
+    }
+
+    /// <summary>
+    /// Xử lý notification giải ngân gộp theo session.
+    /// Luồng xử lý: dựng dto cho payer/receiver rồi lưu + push từng dto đúng 1 lần cho mỗi bên.
+    /// </summary>
+    protected override async Task HandleDomainEventAsync(
+        EscrowSessionReleasedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        var payerDto = BuildPayerNotification(domainEvent);
+        var receiverDto = BuildReceiverNotification(domainEvent);
+
+        await PersistAndPublishRealtimeNotificationAsync(payerDto, cancellationToken);
+        await PersistAndPublishRealtimeNotificationAsync(receiverDto, cancellationToken);
+    }
+
+    /// <summary>
+    /// Lưu notification rồi publish realtime event cho user đích.
+    /// </summary>
+    private async Task PersistAndPublishRealtimeNotificationAsync(NotificationCreateDto dto, CancellationToken cancellationToken)
+    {
+        await _notificationRepository.CreateAsync(dto, cancellationToken);
+        await _redisPublisher.PublishAsync(
+            RealtimeChannelNames.Notifications,
+            RealtimeEventNames.NotificationNew,
+            new
+            {
+                userId = dto.UserId.ToString(),
+                dto.TitleVi,
+                dto.TitleEn,
+                dto.BodyVi,
+                dto.BodyEn,
+                dto.Type,
+                createdAt = DateTime.UtcNow
+            },
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Dựng notification dành cho người trả phí sau khi session escrow được release.
+    /// </summary>
+    private static NotificationCreateDto BuildPayerNotification(EscrowSessionReleasedDomainEvent domainEvent)
+    {
+        return new NotificationCreateDto
+        {
+            UserId = domainEvent.PayerId,
+            Type = "escrow_released",
+            TitleVi = "Phiên chat đã hoàn tất",
+            TitleEn = "Chat escrow settled",
+            TitleZh = "聊天托管已结算",
+            BodyVi = $"Đã giải ngân {domainEvent.ReleasedAmountDiamond} kim cương cho Reader.",
+            BodyEn = $"Released {domainEvent.ReleasedAmountDiamond} diamonds to the reader.",
+            BodyZh = $"已向占卜师释放 {domainEvent.ReleasedAmountDiamond} 钻石。",
+            Metadata = new Dictionary<string, string>
+            {
+                ["financeSessionId"] = domainEvent.FinanceSessionId.ToString(),
+                ["receiverId"] = domainEvent.ReceiverId.ToString(),
+                ["releasedItemCount"] = domainEvent.ReleasedItemCount.ToString()
+            }
+        };
+    }
+
+    /// <summary>
+    /// Dựng notification dành cho reader nhận tiền sau khi session escrow được release.
+    /// </summary>
+    private static NotificationCreateDto BuildReceiverNotification(EscrowSessionReleasedDomainEvent domainEvent)
+    {
+        return new NotificationCreateDto
+        {
+            UserId = domainEvent.ReceiverId,
+            Type = "escrow_income",
+            TitleVi = "Bạn vừa nhận kim cương",
+            TitleEn = "You received diamonds",
+            TitleZh = "你已收到钻石",
+            BodyVi = $"Bạn nhận được {domainEvent.ReleasedAmountDiamond} kim cương từ phiên chat.",
+            BodyEn = $"You received {domainEvent.ReleasedAmountDiamond} diamonds from chat escrow.",
+            BodyZh = $"你从聊天托管中收到 {domainEvent.ReleasedAmountDiamond} 钻石。",
+            Metadata = new Dictionary<string, string>
+            {
+                ["financeSessionId"] = domainEvent.FinanceSessionId.ToString(),
+                ["payerId"] = domainEvent.PayerId.ToString(),
+                ["releasedItemCount"] = domainEvent.ReleasedItemCount.ToString()
+            }
+        };
+    }
+}

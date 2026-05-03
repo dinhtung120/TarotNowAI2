@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using TarotNow.Application.Common;
 using TarotNow.Domain.Enums;
 
@@ -63,7 +62,7 @@ public partial class RespondConversationCompleteCommandHandlerRequestedDomainEve
 
     /// <summary>
     /// Settle phiên tài chính liên kết với conversation hiện tại.
-    /// Luồng xử lý: tải session theo conversation, release item Accepted, lưu thay đổi và đóng session khi không còn frozen.
+    /// Luồng xử lý: tải session theo conversation, giải ngân gộp theo session cho item Accepted rồi lưu thay đổi.
     /// </summary>
     private async Task SettleConversationSessionAsync(string conversationId, CancellationToken cancellationToken)
     {
@@ -75,41 +74,13 @@ public partial class RespondConversationCompleteCommandHandlerRequestedDomainEve
         }
 
         var items = await _financeRepository.GetItemsBySessionIdAsync(session.Id, cancellationToken);
-        foreach (var item in items.Where(item => item.Status == QuestionItemStatus.Accepted))
-        {
-            // Business rule: chỉ release item đã Accepted để đảm bảo đúng quyền lợi thanh toán.
-            await _escrowSettlementService.ApplyReleaseAsync(item, isAutoRelease: false, cancellationToken);
-        }
+        await _escrowSettlementService.ApplySessionReleaseAsync(
+            session,
+            items,
+            isAutoRelease: false,
+            cancellationToken);
 
-        await _financeRepository.SaveChangesAsync(cancellationToken);
-        // Sau khi release item, kiểm tra lại frozen để quyết định đóng session.
-        await MarkCompletedSessionWhenNoFrozenAsync(session.Id, cancellationToken);
-    }
-
-    /// <summary>
-    /// Đánh dấu session completed khi không còn số dư bị khóa.
-    /// Luồng xử lý: khóa session để cập nhật nhất quán, kiểm tra TotalFrozen, cập nhật trạng thái và thời điểm cập nhật.
-    /// </summary>
-    private async Task MarkCompletedSessionWhenNoFrozenAsync(
-        Guid sessionId,
-        CancellationToken cancellationToken)
-    {
-        var lockedSession = await _financeRepository.GetSessionForUpdateAsync(sessionId, cancellationToken);
-        if (lockedSession == null)
-        {
-            // Edge case: session không còn tồn tại tại thời điểm cập nhật.
-            return;
-        }
-
-        if (lockedSession.TotalFrozen <= 0)
-        {
-            // Chỉ đóng session khi frozen đã về 0 để đúng nghiệp vụ đối soát.
-            lockedSession.Status = ChatFinanceSessionStatus.Completed;
-        }
-
-        lockedSession.UpdatedAt = DateTime.UtcNow;
-        await _financeRepository.UpdateSessionAsync(lockedSession, cancellationToken);
-        // Persist thay đổi trạng thái session để hoàn tất vòng đời phiên.
+        // Persist settlement session-level trong cùng transaction.
         await _financeRepository.SaveChangesAsync(cancellationToken);
     }
 }

@@ -1,4 +1,3 @@
-using System.Linq;
 using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Enums;
@@ -44,7 +43,7 @@ public partial class EscrowTimerService
 
     /// <summary>
     /// Tự động settle các item accepted của conversation khi completion timeout.
-    /// Luồng xử lý: mở transaction, lấy finance session, auto-release item accepted và chốt session nếu hết frozen.
+    /// Luồng xử lý: mở transaction, lấy finance session, giải ngân gộp theo session, rồi phát sync event completed.
     /// </summary>
     private async Task AutoSettleCompletionTimeoutAsync(
         RefundDependencies dependencies,
@@ -61,58 +60,18 @@ public partial class EscrowTimerService
                 return;
             }
 
-            await AutoReleaseAcceptedItemsAsync(dependencies, escrowSettlementService, session.Id, transactionCt);
-            await MarkCompletedIfNoFrozenAsync(dependencies, session.Id, transactionCt);
+            var items = await dependencies.FinanceRepository.GetItemsBySessionIdAsync(session.Id, transactionCt);
+            await escrowSettlementService.ApplySessionReleaseAsync(
+                session,
+                items,
+                isAutoRelease: true,
+                transactionCt);
+
             await dependencies.DomainEventPublisher.PublishAsync(
                 BuildCompletionTimeoutSyncEvent(conversation),
                 transactionCt);
             await dependencies.FinanceRepository.SaveChangesAsync(transactionCt);
         }, cancellationToken);
-    }
-
-    /// <summary>
-    /// Auto-release toàn bộ item accepted trong session.
-    /// Luồng xử lý: đọc item theo sessionId, lọc accepted, gọi escrowSettlementService cho từng item rồi save changes.
-    /// </summary>
-    private static async Task AutoReleaseAcceptedItemsAsync(
-        RefundDependencies dependencies,
-        IEscrowSettlementService escrowSettlementService,
-        Guid sessionId,
-        CancellationToken cancellationToken)
-    {
-        var items = await dependencies.FinanceRepository.GetItemsBySessionIdAsync(sessionId, cancellationToken);
-        foreach (var item in items.Where(item => item.Status == QuestionItemStatus.Accepted))
-        {
-            await escrowSettlementService.ApplyReleaseAsync(item, isAutoRelease: true, cancellationToken);
-            // Chỉ release item Accepted để tránh xử lý nhầm item đã refunded/released trước đó.
-        }
-    }
-
-    /// <summary>
-    /// Đánh dấu session completed khi không còn số dư frozen.
-    /// Luồng xử lý: lock session for update, set status nếu TotalFrozen <= 0, cập nhật timestamp và save changes.
-    /// </summary>
-    private static async Task MarkCompletedIfNoFrozenAsync(
-        RefundDependencies dependencies,
-        Guid sessionId,
-        CancellationToken cancellationToken)
-    {
-        var lockedSession = await dependencies.FinanceRepository.GetSessionForUpdateAsync(sessionId, cancellationToken);
-        if (lockedSession == null)
-        {
-            // Session có thể đã bị xóa hoặc không còn tồn tại ở thời điểm xử lý.
-            await dependencies.FinanceRepository.SaveChangesAsync(cancellationToken);
-            return;
-        }
-
-        if (lockedSession.TotalFrozen <= 0)
-        {
-            lockedSession.Status = ChatFinanceSessionStatus.Completed;
-            // Chỉ chốt completed khi chắc chắn không còn tiền bị giữ trong session.
-        }
-
-        lockedSession.UpdatedAt = DateTime.UtcNow;
-        await dependencies.FinanceRepository.UpdateSessionAsync(lockedSession, cancellationToken);
     }
 
     private static CompletionTimeoutConversationSyncRequestedDomainEvent BuildCompletionTimeoutSyncEvent(

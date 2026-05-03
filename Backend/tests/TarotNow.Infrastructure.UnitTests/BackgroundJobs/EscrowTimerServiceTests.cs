@@ -171,30 +171,42 @@ public class EscrowTimerServiceTests
     }
 
     /// <summary>
-    /// Xác nhận auto-release sẽ release cho receiver, consume phí nền tảng và cập nhật session.
-    /// Luồng này kiểm tra settlement nhánh release cho item accepted đã tới hạn.
+    /// Xác nhận auto-release session-level sẽ release một lần cho receiver, consume phí nền tảng và cập nhật session.
+    /// Luồng này kiểm tra settlement gộp khi toàn bộ accepted item trong session đã tới hạn.
     /// </summary>
     [Fact]
     public async Task ProcessAutoReleases_ReleasesConsumesFeeAndUpdatesSession()
     {
+        var payerId = Guid.NewGuid();
+        var receiverId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
         var item = new ChatQuestionItem
         {
             Id = Guid.NewGuid(),
-            PayerId = Guid.NewGuid(),
-            ReceiverId = Guid.NewGuid(),
+            PayerId = payerId,
+            ReceiverId = receiverId,
             AmountDiamond = 100,
-            FinanceSessionId = Guid.NewGuid(),
+            FinanceSessionId = sessionId,
             Status = QuestionItemStatus.Accepted,
             RepliedAt = DateTime.UtcNow.AddMinutes(-2),
             AutoReleaseAt = DateTime.UtcNow.AddMinutes(-1)
         };
-        var session = new ChatFinanceSession { Id = item.FinanceSessionId, TotalFrozen = 100 };
+        var session = new ChatFinanceSession
+        {
+            Id = sessionId,
+            ConversationRef = "conv-auto-release-1",
+            UserId = payerId,
+            ReaderId = receiverId,
+            TotalFrozen = 100,
+            Status = ChatFinanceSessionStatus.Active
+        };
 
         _mockFinanceRepo.Setup(x => x.GetExpiredOffersAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem>());
         _mockFinanceRepo.Setup(x => x.GetItemsForAutoRefundAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem>());
         _mockFinanceRepo.Setup(x => x.GetItemsForAutoReleaseAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem> { item });
-        _mockFinanceRepo.Setup(x => x.GetItemForUpdateAsync(item.Id, It.IsAny<CancellationToken>())).ReturnsAsync(item);
-        _mockFinanceRepo.Setup(x => x.GetSessionForUpdateAsync(item.FinanceSessionId, It.IsAny<CancellationToken>())).ReturnsAsync(session);
+        _mockFinanceRepo.Setup(x => x.GetSessionForUpdateAsync(sessionId, It.IsAny<CancellationToken>())).ReturnsAsync(session);
+        _mockFinanceRepo.Setup(x => x.GetItemsBySessionIdAsync(sessionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ChatQuestionItem> { item });
 
         // Chạy timer processing và kiểm tra side-effect release + fee consume.
         await InvokeProcessTimersAsync();
@@ -203,11 +215,103 @@ public class EscrowTimerServiceTests
         Assert.NotNull(item.ReleasedAt);
         Assert.Equal(0, session.TotalFrozen);
 
-        // Release 90% cho receiver, 10% là phí nền tảng theo policy hiện tại.
-        _mockWalletRepo.Verify(x => x.ReleaseAsync(item.PayerId, item.ReceiverId, 90, "chat_question_item", item.Id.ToString(), It.IsAny<string>(), null, $"settle_release_{item.Id}", It.IsAny<CancellationToken>()), Times.Once);
-        _mockWalletRepo.Verify(x => x.ConsumeAsync(item.PayerId, 10, "platform_fee", item.Id.ToString(), It.IsAny<string>(), null, $"settle_fee_{item.Id}", It.IsAny<CancellationToken>()), Times.Once);
+        // Release 90% cho receiver, 10% là phí nền tảng theo policy hiện tại (tính trên tổng session).
+        _mockWalletRepo.Verify(x => x.ReleaseAsync(
+            payerId,
+            receiverId,
+            90,
+            "chat_finance_session",
+            sessionId.ToString(),
+            It.IsAny<string>(),
+            null,
+            $"settle_session_release_{sessionId}",
+            It.IsAny<CancellationToken>()), Times.Once);
+        _mockWalletRepo.Verify(x => x.ConsumeAsync(
+            payerId,
+            10,
+            "platform_fee",
+            sessionId.ToString(),
+            It.IsAny<string>(),
+            null,
+            $"settle_session_fee_{sessionId}",
+            It.IsAny<CancellationToken>()), Times.Once);
         _mockFinanceRepo.Verify(x => x.UpdateItemAsync(item, It.IsAny<CancellationToken>()), Times.Once);
         _mockFinanceRepo.Verify(x => x.UpdateSessionAsync(session, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    /// <summary>
+    /// Xác nhận auto-release sẽ không settle partial khi session còn accepted item chưa đủ điều kiện.
+    /// </summary>
+    [Fact]
+    public async Task ProcessAutoReleases_DoesNotSettle_WhenAnyAcceptedItemIsNotYetDue()
+    {
+        var payerId = Guid.NewGuid();
+        var receiverId = Guid.NewGuid();
+        var sessionId = Guid.NewGuid();
+        var dueItem = new ChatQuestionItem
+        {
+            Id = Guid.NewGuid(),
+            PayerId = payerId,
+            ReceiverId = receiverId,
+            AmountDiamond = 10,
+            FinanceSessionId = sessionId,
+            Status = QuestionItemStatus.Accepted,
+            RepliedAt = DateTime.UtcNow.AddMinutes(-3),
+            AutoReleaseAt = DateTime.UtcNow.AddMinutes(-1)
+        };
+        var notDueItem = new ChatQuestionItem
+        {
+            Id = Guid.NewGuid(),
+            PayerId = payerId,
+            ReceiverId = receiverId,
+            AmountDiamond = 20,
+            FinanceSessionId = sessionId,
+            Status = QuestionItemStatus.Accepted,
+            RepliedAt = DateTime.UtcNow.AddMinutes(-1),
+            AutoReleaseAt = DateTime.UtcNow.AddHours(1)
+        };
+        var session = new ChatFinanceSession
+        {
+            Id = sessionId,
+            ConversationRef = "conv-auto-release-2",
+            UserId = payerId,
+            ReaderId = receiverId,
+            TotalFrozen = 30,
+            Status = ChatFinanceSessionStatus.Active
+        };
+
+        _mockFinanceRepo.Setup(x => x.GetExpiredOffersAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem>());
+        _mockFinanceRepo.Setup(x => x.GetItemsForAutoRefundAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem>());
+        _mockFinanceRepo.Setup(x => x.GetItemsForAutoReleaseAsync(It.IsAny<CancellationToken>())).ReturnsAsync(new List<ChatQuestionItem> { dueItem });
+        _mockFinanceRepo.Setup(x => x.GetSessionForUpdateAsync(sessionId, It.IsAny<CancellationToken>())).ReturnsAsync(session);
+        _mockFinanceRepo.Setup(x => x.GetItemsBySessionIdAsync(sessionId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ChatQuestionItem> { dueItem, notDueItem });
+
+        await InvokeProcessTimersAsync();
+
+        _mockWalletRepo.Verify(x => x.ReleaseAsync(
+            It.IsAny<Guid>(),
+            It.IsAny<Guid>(),
+            It.IsAny<long>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+        _mockWalletRepo.Verify(x => x.ConsumeAsync(
+            It.IsAny<Guid>(),
+            It.IsAny<long>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<string?>(),
+            It.IsAny<CancellationToken>()), Times.Never);
+
+        Assert.Equal(QuestionItemStatus.Accepted, dueItem.Status);
+        Assert.Equal(QuestionItemStatus.Accepted, notDueItem.Status);
+        Assert.Equal(30, session.TotalFrozen);
     }
 
     [Fact]

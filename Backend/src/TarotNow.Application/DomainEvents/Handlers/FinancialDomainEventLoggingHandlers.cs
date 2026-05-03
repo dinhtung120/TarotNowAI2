@@ -47,6 +47,48 @@ public sealed class EscrowReleasedNotificationHandler
     }
 }
 
+// Handler ghi log khi có sự kiện giải ngân escrow theo session-level payout.
+public sealed class EscrowSessionReleasedNotificationHandler
+    : IdempotentDomainEventNotificationHandler<EscrowSessionReleasedDomainEvent>
+{
+    private readonly ILogger<EscrowSessionReleasedNotificationHandler> _logger;
+
+    /// <summary>
+    /// Khởi tạo handler logging cho sự kiện escrow session release.
+    /// Luồng xử lý: nhận logger typed để ghi thông tin payout tổng hợp theo phiên.
+    /// </summary>
+    public EscrowSessionReleasedNotificationHandler(
+        ILogger<EscrowSessionReleasedNotificationHandler> logger,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
+    {
+        _logger = logger;
+    }
+
+    /// <summary>
+    /// Ghi log thông tin giải ngân escrow theo session.
+    /// Luồng xử lý: đọc domain event và log financeSession/payer/receiver/tổng tiền cho đối soát.
+    /// </summary>
+    protected override Task HandleDomainEventAsync(
+        EscrowSessionReleasedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        _logger.LogInformation(
+            "[DomainEvent] Escrow session released. FinanceSessionId={FinanceSessionId}, PayerId={PayerId}, ReceiverId={ReceiverId}, Gross={Gross}, Released={Released}, Fee={Fee}, ReleasedItemCount={ReleasedItemCount}, Auto={Auto}",
+            domainEvent.FinanceSessionId,
+            domainEvent.PayerId,
+            domainEvent.ReceiverId,
+            domainEvent.GrossAmountDiamond,
+            domainEvent.ReleasedAmountDiamond,
+            domainEvent.FeeAmountDiamond,
+            domainEvent.ReleasedItemCount,
+            domainEvent.IsAutoRelease);
+
+        return Task.CompletedTask;
+    }
+}
+
 // Handler ghi log khi có sự kiện hoàn tiền escrow.
 public sealed class EscrowRefundedNotificationHandler
     : IdempotentDomainEventNotificationHandler<EscrowRefundedDomainEvent>

@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using System.Linq;
 using TarotNow.Application.Common;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Enums;
@@ -10,7 +11,7 @@ public partial class EscrowTimerService
 {
     /// <summary>
     /// Quét và xử lý các item đủ điều kiện auto-release.
-    /// Luồng xử lý: lấy candidates, xử lý từng item trong transaction, bắt lỗi cục bộ để job không dừng.
+    /// Luồng xử lý: lấy candidates đã due, gom theo session, xử lý từng session trong transaction, bắt lỗi cục bộ để job không dừng.
     /// </summary>
     private async Task ProcessAutoReleases(
         RefundDependencies dependencies,
@@ -18,77 +19,97 @@ public partial class EscrowTimerService
         CancellationToken cancellationToken)
     {
         var candidates = await dependencies.FinanceRepository.GetItemsForAutoReleaseAsync(cancellationToken);
+        var candidateSessionIds = candidates
+            .Select(candidate => candidate.FinanceSessionId)
+            .Distinct()
+            .ToList();
 
-        foreach (var candidate in candidates)
+        foreach (var sessionId in candidateSessionIds)
         {
             try
             {
-                await ProcessAutoReleaseCandidateAsync(
+                await ProcessAutoReleaseSessionAsync(
                     dependencies,
                     escrowSettlementService,
-                    candidate.Id,
+                    sessionId,
                     cancellationToken);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[EscrowTimer] Auto-release failed: {ItemId}", candidate.Id);
+                _logger.LogError(ex, "[EscrowTimer] Auto-release failed: {SessionId}", sessionId);
                 // Giữ tiến trình quét tiếp tục cho các candidate còn lại.
             }
         }
     }
 
     /// <summary>
-    /// Xử lý một candidate auto-release và cập nhật conversation khi session đã hoàn tất.
-    /// Luồng xử lý: lock item, kiểm tra eligibility, apply release, cập nhật session, rồi mark conversation completed.
+    /// Xử lý auto-release ở cấp session và cập nhật conversation khi session đã hoàn tất.
+    /// Luồng xử lý: lock session, xác thực toàn bộ accepted item đều đủ điều kiện, apply session release, rồi sync completed.
     /// </summary>
-    private async Task ProcessAutoReleaseCandidateAsync(
+    private async Task ProcessAutoReleaseSessionAsync(
         RefundDependencies dependencies,
         IEscrowSettlementService escrowSettlementService,
-        Guid candidateId,
+        Guid sessionId,
         CancellationToken cancellationToken)
     {
         await dependencies.TransactionCoordinator.ExecuteAsync(async transactionCt =>
         {
-            var item = await dependencies.FinanceRepository.GetItemForUpdateAsync(candidateId, transactionCt);
-            if (item == null || !IsEligibleForAutoRelease(item, DateTime.UtcNow))
+            var session = await dependencies.FinanceRepository.GetSessionForUpdateAsync(sessionId, transactionCt);
+            if (session == null)
             {
-                // Item không hợp lệ hoặc đã được xử lý trước đó thì bỏ qua.
+                // Session không còn tồn tại thì bỏ qua.
                 return;
             }
 
-            await escrowSettlementService.ApplyReleaseAsync(
-                item,
-                isAutoRelease: true,
-                cancellationToken: transactionCt);
-            // Chạy settlement chuẩn để release tiền và cập nhật state item liên quan.
-            _logger.LogInformation("[EscrowTimer] Auto-release: {ItemId}", item.Id);
-
-            var session = await dependencies.FinanceRepository.GetSessionByConversationRefAsync(item.ConversationRef, transactionCt);
-            if (session != null && session.TotalFrozen <= 0)
+            var items = await dependencies.FinanceRepository.GetItemsBySessionIdAsync(session.Id, transactionCt);
+            var acceptedItems = items.Where(item => item.Status == QuestionItemStatus.Accepted).ToList();
+            if (acceptedItems.Count == 0)
             {
-                session.Status = ChatFinanceSessionStatus.Completed;
-                session.UpdatedAt = DateTime.UtcNow;
-                await dependencies.FinanceRepository.UpdateSessionAsync(session, transactionCt);
-                // Khi không còn frozen thì chốt session completed để đóng phiên tài chính.
-                if (string.IsNullOrWhiteSpace(item.ConversationRef) == false && item.AmountDiamond > 0)
-                {
-                    var now = DateTime.UtcNow;
-                    await PublishConversationSyncRequestedAsync(
-                        dependencies,
-                        new EscrowConversationSyncRequestedDomainEvent
-                        {
-                            ConversationId = item.ConversationRef,
-                            TargetStatus = ConversationStatus.Completed,
-                            MessageType = ChatMessageType.SystemRelease,
-                            ActorId = item.ReceiverId.ToString("D"),
-                            MessageContent = $"Hệ thống đã tự động giải ngân {item.AmountDiamond} 💎 cho Reader theo timeout.",
-                            SyncReason = "auto_release",
-                            ResolvedAtUtc = now,
-                            OccurredAtUtc = now
-                        },
-                        transactionCt);
-                    // Publish trong transaction để outbox và settlement commit atomically.
-                }
+                return;
+            }
+
+            var now = DateTime.UtcNow;
+            if (acceptedItems.All(item => IsEligibleForAutoRelease(item, now)) == false)
+            {
+                // Chỉ auto-release khi toàn bộ accepted item trong session đã đủ điều kiện theo SLA.
+                return;
+            }
+
+            var summary = await escrowSettlementService.ApplySessionReleaseAsync(
+                session,
+                items,
+                isAutoRelease: true,
+                transactionCt);
+            if (summary == null)
+            {
+                return;
+            }
+
+            _logger.LogInformation(
+                "[EscrowTimer] Auto-release session: {SessionId}, Released={ReleasedAmount}💎, ReleasedItemCount={ReleasedItemCount}",
+                summary.FinanceSessionId,
+                summary.ReleasedAmountDiamond,
+                summary.ReleasedItemCount);
+
+            if (session.TotalFrozen <= 0
+                && string.IsNullOrWhiteSpace(session.ConversationRef) == false
+                && summary.ReleasedAmountDiamond > 0)
+            {
+                await PublishConversationSyncRequestedAsync(
+                    dependencies,
+                    new EscrowConversationSyncRequestedDomainEvent
+                    {
+                        ConversationId = session.ConversationRef,
+                        TargetStatus = ConversationStatus.Completed,
+                        MessageType = ChatMessageType.SystemRelease,
+                        ActorId = session.ReaderId.ToString("D"),
+                        MessageContent = $"Hệ thống đã tự động giải ngân {summary.ReleasedAmountDiamond} 💎 cho Reader theo timeout.",
+                        SyncReason = "auto_release",
+                        ResolvedAtUtc = now,
+                        OccurredAtUtc = now
+                    },
+                    transactionCt);
+                // Publish trong transaction để outbox và settlement commit atomically.
             }
 
             await dependencies.FinanceRepository.SaveChangesAsync(transactionCt);

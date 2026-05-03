@@ -2,6 +2,7 @@ using TarotNow.Domain.Entities;
 using TarotNow.Domain.Enums;
 using TarotNow.Domain.Events;
 using System.Globalization;
+using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Services;
 
@@ -30,23 +31,54 @@ public sealed partial class EscrowSettlementService
     }
 
     /// <summary>
+    /// Tạo mô tả giao dịch release/fee cho nhánh giải ngân gộp theo session.
+    /// Luồng xử lý: trả mô tả rõ là session payout để tiện truy vết đối soát.
+    /// </summary>
+    private static (string ReleaseDescription, string FeeDescription) BuildSessionDescriptions(
+        bool isAutoRelease,
+        long readerAmount,
+        long fee,
+        decimal feeRate)
+    {
+        var feePercentText = (feeRate * 100m).ToString("0.##", CultureInfo.InvariantCulture);
+        if (isAutoRelease)
+        {
+            return ($"Auto-release session {readerAmount}💎 (fee {fee}💎)", $"Platform fee auto session {feePercentText}% = {fee}💎");
+        }
+
+        return ($"Release session {readerAmount}💎 (fee {fee}💎) cho reader", $"Platform fee session {feePercentText}% = {fee}💎");
+    }
+
+    /// <summary>
     /// Áp trạng thái Released cho item để đóng escrow và mở cửa sổ khiếu nại hậu giao dịch.
     /// Luồng xử lý: ghi các mốc thời gian release/dispute và chỉ set ConfirmedAt cho luồng không tự động.
     /// </summary>
     private static void ApplyReleasedState(ChatQuestionItem item, bool isAutoRelease, int disputeWindowHours)
     {
-        var now = DateTime.UtcNow;
+        ApplyReleasedState(item, isAutoRelease, disputeWindowHours, DateTime.UtcNow);
+    }
+
+    /// <summary>
+    /// Áp trạng thái Released cho item tại một mốc thời gian cố định.
+    /// Luồng xử lý: dùng chung timestamp để đồng bộ nhiều item trong cùng đợt settlement.
+    /// </summary>
+    private static void ApplyReleasedState(
+        ChatQuestionItem item,
+        bool isAutoRelease,
+        int disputeWindowHours,
+        DateTime settledAtUtc)
+    {
         var normalizedDisputeWindowHours = disputeWindowHours > 0 ? disputeWindowHours : 24;
         item.Status = QuestionItemStatus.Released;
-        item.ReleasedAt = now;
-        item.DisputeWindowStart = now;
-        item.DisputeWindowEnd = now.AddHours(normalizedDisputeWindowHours);
+        item.ReleasedAt = settledAtUtc;
+        item.DisputeWindowStart = settledAtUtc;
+        item.DisputeWindowEnd = settledAtUtc.AddHours(normalizedDisputeWindowHours);
         item.AutoReleaseAt = null;
         // Đồng bộ state item sang Released và mở dispute window theo policy cấu hình.
 
         if (isAutoRelease == false)
         {
-            item.ConfirmedAt = now;
+            item.ConfirmedAt = settledAtUtc;
             // Luồng xác nhận thủ công cần lưu mốc ConfirmedAt để truy vết hành động xác nhận.
         }
     }
@@ -89,6 +121,27 @@ public sealed partial class EscrowSettlementService
             ReleasedAmountDiamond = releasedAmountDiamond,
             FeeAmountDiamond = feeAmountDiamond,
             IsAutoRelease = isAutoRelease
+        }, cancellationToken);
+    }
+
+    /// <summary>
+    /// Phát domain event escrow session released để đồng bộ side-effects theo một lần payout.
+    /// Luồng xử lý: publish payload tổng hợp gross/released/fee và số item đã release của session.
+    /// </summary>
+    private Task PublishSessionReleasedEventAsync(
+        EscrowSessionReleaseSummary summary,
+        CancellationToken cancellationToken)
+    {
+        return _domainEventPublisher.PublishAsync(new EscrowSessionReleasedDomainEvent
+        {
+            FinanceSessionId = summary.FinanceSessionId,
+            PayerId = summary.PayerId,
+            ReceiverId = summary.ReceiverId,
+            GrossAmountDiamond = summary.GrossAmountDiamond,
+            ReleasedAmountDiamond = summary.ReleasedAmountDiamond,
+            FeeAmountDiamond = summary.FeeAmountDiamond,
+            ReleasedItemCount = summary.ReleasedItemCount,
+            IsAutoRelease = summary.IsAutoRelease
         }, cancellationToken);
     }
 }

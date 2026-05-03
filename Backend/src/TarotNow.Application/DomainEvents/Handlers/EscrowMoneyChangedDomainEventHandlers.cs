@@ -56,6 +56,54 @@ public sealed class EscrowReleasedMoneyChangedDomainEventHandler
 }
 
 /// <summary>
+/// Chuyển EscrowSessionReleasedDomainEvent thành MoneyChangedDomainEvent để đồng bộ pipeline ví theo session-level payout.
+/// </summary>
+public sealed class EscrowSessionReleasedMoneyChangedDomainEventHandler
+    : IdempotentDomainEventNotificationHandler<EscrowSessionReleasedDomainEvent>
+{
+    private readonly IDomainEventPublisher _domainEventPublisher;
+
+    /// <summary>
+    /// Khởi tạo handler ánh xạ escrow session release sang wallet money-changed.
+    /// </summary>
+    public EscrowSessionReleasedMoneyChangedDomainEventHandler(
+        IDomainEventPublisher domainEventPublisher,
+        IEventHandlerIdempotencyService idempotencyService)
+        : base(idempotencyService)
+    {
+        _domainEventPublisher = domainEventPublisher;
+    }
+
+    /// <inheritdoc />
+    protected override async Task HandleDomainEventAsync(
+        EscrowSessionReleasedDomainEvent domainEvent,
+        Guid? outboxMessageId,
+        CancellationToken cancellationToken)
+    {
+        await _domainEventPublisher.PublishAsync(
+            new MoneyChangedDomainEvent
+            {
+                UserId = domainEvent.ReceiverId,
+                Currency = CurrencyType.Diamond,
+                ChangeType = TransactionType.EscrowRelease,
+                DeltaAmount = domainEvent.ReleasedAmountDiamond,
+                ReferenceId = domainEvent.FinanceSessionId.ToString()
+            },
+            cancellationToken);
+
+        await _domainEventPublisher.PublishAsync(
+            new WalletSnapshotChangedDomainEvent
+            {
+                UserId = domainEvent.PayerId,
+                Currency = CurrencyType.Diamond,
+                ChangeType = TransactionType.EscrowRelease,
+                ReferenceId = domainEvent.FinanceSessionId.ToString()
+            },
+            cancellationToken);
+    }
+}
+
+/// <summary>
 /// Chuyển EscrowRefundedDomainEvent thành MoneyChangedDomainEvent để đồng bộ pipeline ví.
 /// </summary>
 public sealed class EscrowRefundedMoneyChangedDomainEventHandler

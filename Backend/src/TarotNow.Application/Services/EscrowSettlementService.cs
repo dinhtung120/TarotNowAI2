@@ -1,5 +1,8 @@
+using System.Collections.Generic;
+using System.Linq;
 using TarotNow.Application.Interfaces;
 using TarotNow.Domain.Entities;
+using TarotNow.Domain.Enums;
 
 namespace TarotNow.Application.Services;
 
@@ -72,5 +75,83 @@ public sealed partial class EscrowSettlementService : IEscrowSettlementService
         await DecreaseSessionFrozenAsync(item, cancellationToken);
         await PublishReleasedEventAsync(item, readerAmount, fee, isAutoRelease, cancellationToken);
         // Đồng bộ persist + event để các luồng hậu xử lý đọc được trạng thái release mới nhất.
+    }
+
+    /// <summary>
+    /// Áp dụng release escrow theo toàn bộ accepted item trong một finance session.
+    /// Luồng xử lý: tính tổng gross/fee/released một lần, ghi bút toán ví gộp, cập nhật item/session và publish session event.
+    /// </summary>
+    public async Task<EscrowSessionReleaseSummary?> ApplySessionReleaseAsync(
+        ChatFinanceSession session,
+        IReadOnlyCollection<ChatQuestionItem> items,
+        bool isAutoRelease,
+        CancellationToken cancellationToken = default)
+    {
+        var acceptedItems = items
+            .Where(item => item.FinanceSessionId == session.Id && item.Status == QuestionItemStatus.Accepted)
+            .ToList();
+        if (acceptedItems.Count == 0)
+        {
+            return null;
+        }
+
+        var totalGross = acceptedItems.Sum(item => item.AmountDiamond);
+        var feeRate = _systemConfigSettings.WithdrawalFeeRate;
+        var totalFee = (long)Math.Ceiling(totalGross * feeRate);
+        var releasedAmount = Math.Max(0, totalGross - totalFee);
+        var (releaseDescription, feeDescription) = BuildSessionDescriptions(isAutoRelease, releasedAmount, totalFee, feeRate);
+
+        await _walletRepository.ReleaseAsync(
+            session.UserId,
+            session.ReaderId,
+            releasedAmount,
+            referenceSource: "chat_finance_session",
+            referenceId: session.Id.ToString(),
+            description: releaseDescription,
+            idempotencyKey: $"settle_session_release_{session.Id}",
+            cancellationToken: cancellationToken);
+
+        if (totalFee > 0)
+        {
+            await _walletRepository.ConsumeAsync(
+                session.UserId,
+                totalFee,
+                referenceSource: "platform_fee",
+                referenceId: session.Id.ToString(),
+                description: feeDescription,
+                idempotencyKey: $"settle_session_fee_{session.Id}",
+                cancellationToken: cancellationToken);
+        }
+
+        var now = DateTime.UtcNow;
+        foreach (var acceptedItem in acceptedItems)
+        {
+            ApplyReleasedState(acceptedItem, isAutoRelease, _systemConfigSettings.EscrowDisputeWindowHours, now);
+            await _financeRepository.UpdateItemAsync(acceptedItem, cancellationToken);
+        }
+
+        session.TotalFrozen = Math.Max(0, session.TotalFrozen - totalGross);
+        if (session.TotalFrozen <= 0)
+        {
+            session.Status = ChatFinanceSessionStatus.Completed;
+        }
+
+        session.UpdatedAt = now;
+        await _financeRepository.UpdateSessionAsync(session, cancellationToken);
+
+        var summary = new EscrowSessionReleaseSummary
+        {
+            FinanceSessionId = session.Id,
+            PayerId = session.UserId,
+            ReceiverId = session.ReaderId,
+            GrossAmountDiamond = totalGross,
+            FeeAmountDiamond = totalFee,
+            ReleasedAmountDiamond = releasedAmount,
+            ReleasedItemCount = acceptedItems.Count,
+            IsAutoRelease = isAutoRelease
+        };
+
+        await PublishSessionReleasedEventAsync(summary, cancellationToken);
+        return summary;
     }
 }
