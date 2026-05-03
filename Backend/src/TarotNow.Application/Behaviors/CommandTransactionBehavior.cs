@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using TarotNow.Application.Interfaces;
 
 namespace TarotNow.Application.Behaviors;
@@ -9,14 +10,23 @@ namespace TarotNow.Application.Behaviors;
 public sealed class CommandTransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
+    private const int ChatOutboxInlineFlushPasses = 1;
+
     private readonly ITransactionCoordinator _transactionCoordinator;
+    private readonly IOutboxBatchProcessor _outboxBatchProcessor;
+    private readonly ILogger<CommandTransactionBehavior<TRequest, TResponse>> _logger;
 
     /// <summary>
     /// Khởi tạo behavior transaction cho command pipeline.
     /// </summary>
-    public CommandTransactionBehavior(ITransactionCoordinator transactionCoordinator)
+    public CommandTransactionBehavior(
+        ITransactionCoordinator transactionCoordinator,
+        IOutboxBatchProcessor outboxBatchProcessor,
+        ILogger<CommandTransactionBehavior<TRequest, TResponse>> logger)
     {
         _transactionCoordinator = transactionCoordinator;
+        _outboxBatchProcessor = outboxBatchProcessor;
+        _logger = logger;
     }
 
     /// <inheritdoc />
@@ -40,6 +50,11 @@ public sealed class CommandTransactionBehavior<TRequest, TResponse> : IPipelineB
             async _ => response = await next(),
             cancellationToken);
 
+        if (IsChatCommandRequest())
+        {
+            await FlushChatOutboxInlineAsync(cancellationToken);
+        }
+
         return response!;
     }
 
@@ -49,5 +64,29 @@ public sealed class CommandTransactionBehavior<TRequest, TResponse> : IPipelineB
         var requestNamespace = requestType.Namespace ?? string.Empty;
         return requestNamespace.Contains(".Commands.", StringComparison.Ordinal)
                || requestType.Name.EndsWith("Command", StringComparison.Ordinal);
+    }
+
+    private static bool IsChatCommandRequest()
+    {
+        var requestType = typeof(TRequest);
+        var requestNamespace = requestType.Namespace ?? string.Empty;
+        return requestNamespace.Contains(".Features.Chat.Commands.", StringComparison.Ordinal);
+    }
+
+    private async Task FlushChatOutboxInlineAsync(CancellationToken cancellationToken)
+    {
+        for (var pass = 0; pass < ChatOutboxInlineFlushPasses; pass++)
+        {
+            var processed = await _outboxBatchProcessor.ProcessOnceAsync(cancellationToken);
+            if (processed <= 0)
+            {
+                return;
+            }
+
+            _logger.LogDebug(
+                "Inline chat outbox flush processed {ProcessedCount} message(s) on pass {Pass}.",
+                processed,
+                pass + 1);
+        }
     }
 }
