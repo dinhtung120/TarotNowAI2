@@ -1,0 +1,2103 @@
+[
+  {
+    "event": "AcceptConversationCommandHandlerRequestedDomainEvent",
+    "channels": [
+      "Realtime"
+    ],
+    "handlers": [
+      "AcceptConversationCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Chat/Commands/AcceptConversation/AcceptConversationCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "AchievementUnlockedDomainEvent",
+    "channels": [
+      "Push"
+    ],
+    "handlers": [
+      "AchievementUnlockedDomainEventHandler (Backend/src/TarotNow.Application/Features/Gamification/EventHandlers/GamificationEventHandlers.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": true,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "AddQuestionCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "AddQuestionCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Escrow/Commands/AddQuestion/AddQuestionCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "AddUserBalanceCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "AddUserBalanceCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Admin/Commands/AddUserBalance/AddUserBalanceCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "AdminAchievementCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "AdminAchievementCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Gamification/Commands/AdminGamificationCommands.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "AdminQuestCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "AdminQuestCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Gamification/Commands/AdminGamificationCommands.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "AdminTitleCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "AdminTitleCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Gamification/Commands/AdminGamificationCommands.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "AiStreamCompletionTelemetryRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "AiStreamCompletionTelemetryRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/AiStreamCompletionTelemetryRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "CancelPendingConversationCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "CancelPendingConversationCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Chat/Commands/CancelPendingConversation/CancelPendingConversationCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "CardEnhancedDomainEvent",
+    "channels": [
+      "InApp",
+      "Realtime"
+    ],
+    "handlers": [
+      "CardEnhancedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/InventoryCardEnhancedDomainEventHandler.cs)",
+      "CardEnhancedRealtimeHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/RealtimeDomainEventHandlers.InventoryState.cs)"
+    ],
+    "behaviors": {
+      "inApp": true,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ChatMessageCreatedDomainEvent",
+    "channels": [
+      "Realtime"
+    ],
+    "handlers": [
+      "ChatMessageCreatedRealtimeHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/RealtimeDomainEventHandlers.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ChatMessageReadDomainEvent",
+    "channels": [
+      "Realtime"
+    ],
+    "handlers": [
+      "ChatMessageReadRealtimeHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/RealtimeDomainEventHandlers.ChatEphemeral.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ChatModerationRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ChatModerationRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/ChatModerationRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "ChatOfferReceivedDomainEvent",
+    "channels": [
+      "Email"
+    ],
+    "handlers": [
+      "ChatOfferReceivedEmailNotificationHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/ChatOfferReceivedEmailNotificationHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": true,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "ChatTypingChangedDomainEvent",
+    "channels": [
+      "Realtime"
+    ],
+    "handlers": [
+      "ChatTypingChangedRealtimeHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/RealtimeDomainEventHandlers.ChatEphemeral.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ClaimQuestRewardCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ClaimQuestRewardCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Gamification/Commands/ClaimQuestRewardCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "CommunityCommentAddRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "CommunityCommentAddRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/CommunityCommentAddRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "CommunityMediaAttachRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "CommunityMediaAttachRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/CommunityMediaAttachRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "CommunityPostCreatedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "CommunityPostCreatedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/BusinessDomainEventHandlers.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "CommunityPostCreateRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "CommunityPostCreateRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/CommunityPostCreateRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "CompleteAiStreamCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "CompleteAiStreamCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Reading/Commands/CompleteAiStream/CompleteAiStreamCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "CompletionTimeoutConversationSyncRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "CompletionTimeoutConversationSyncRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/CompletionTimeoutConversationSyncRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "ConfirmAvatarUploadCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ConfirmAvatarUploadCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Profile/Commands/ConfirmAvatarUpload/ConfirmAvatarUploadCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "ConfirmCommunityImageCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ConfirmCommunityImageCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Community/Commands/ConfirmCommunityImage/ConfirmCommunityImageCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ConversationAddMoneyAcceptedSyncRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ConversationAddMoneyAcceptedSyncRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/ConversationAddMoneyAcceptedSyncRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "ConversationUpdatedDomainEvent",
+    "channels": [
+      "Realtime"
+    ],
+    "handlers": [
+      "ConversationUpdatedRealtimeHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/RealtimeDomainEventHandlers.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "CreateConversationCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "CreateConversationCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Chat/Commands/CreateConversation/CreateConversationCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "CreatePromotionCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "CreatePromotionCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Promotions/Commands/CreatePromotion/CreatePromotionCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "CreateReportCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "CreateReportCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Chat/Commands/CreateReport/CreateReportCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "CreateUserCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "CreateUserCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Admin/Commands/CreateUser/CreateUserCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "DailyCheckInCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "DailyCheckInCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/CheckIn/Commands/DailyCheckIn/DailyCheckInCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "DailyCheckInCompletedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "DailyCheckInCompletedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/BusinessDomainEventHandlers.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "DeleteAchievementDefinitionCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "DeleteAchievementDefinitionCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Gamification/Commands/AdminGamificationCommands.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "DeletePostCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "DeletePostCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Community/Commands/DeletePost/DeletePostCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "DeletePromotionCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "DeletePromotionCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Promotions/Commands/DeletePromotion/DeletePromotionCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "DeleteQuestDefinitionCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "DeleteQuestDefinitionCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Gamification/Commands/AdminGamificationCommands.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "DeleteTitleDefinitionCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "DeleteTitleDefinitionCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Gamification/Commands/AdminGamificationCommands.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "DepositOrderCreateRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "DepositOrderCreateRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/DepositOrderCreateRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "DepositOrderReconciliationRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "DepositOrderReconciliationRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/DepositOrderReconciliationRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": true,
+      "logs": false
+    }
+  },
+  {
+    "event": "DepositPaymentLinkProvisionRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "DepositPaymentLinkProvisionRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/DepositPaymentLinkProvisionRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "DepositPaymentSucceededDomainEvent",
+    "channels": [],
+    "handlers": [
+      "DepositPaymentSucceededDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/DepositPaymentSucceededDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "DepositWebhookReceivedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "DepositWebhookReceivedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/DepositWebhookReceivedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": true,
+      "logs": false
+    }
+  },
+  {
+    "event": "EmailOtpIssuedDomainEvent",
+    "channels": [
+      "Email"
+    ],
+    "handlers": [
+      "EmailOtpIssuedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/BusinessDomainEventHandlers.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": true,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "EscrowConversationSyncRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "EscrowConversationSyncRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/EscrowConversationSyncRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "EscrowRefundedDomainEvent",
+    "channels": [
+      "InApp",
+      "Realtime"
+    ],
+    "handlers": [
+      "EscrowRefundedMoneyChangedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/EscrowMoneyChangedDomainEventHandlers.cs)",
+      "EscrowRefundedInAppNotificationHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/EscrowRefundedInAppNotificationHandler.cs)",
+      "EscrowRefundedNotificationHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/FinancialDomainEventLoggingHandlers.cs)"
+    ],
+    "behaviors": {
+      "inApp": true,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "EscrowReleasedDomainEvent",
+    "channels": [
+      "InApp",
+      "Realtime"
+    ],
+    "handlers": [
+      "EscrowReleasedMoneyChangedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/EscrowMoneyChangedDomainEventHandlers.cs)",
+      "EscrowReleasedInAppNotificationHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/EscrowReleasedInAppNotificationHandler.cs)",
+      "EscrowReleasedNotificationHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/FinancialDomainEventLoggingHandlers.cs)"
+    ],
+    "behaviors": {
+      "inApp": true,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "ForgotPasswordCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ForgotPasswordCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Auth/Commands/ForgotPassword/ForgotPasswordCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "FreeDrawGrantedDomainEvent",
+    "channels": [
+      "InApp",
+      "Realtime"
+    ],
+    "handlers": [
+      "FreeDrawGrantedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/InventoryFreeDrawGrantedDomainEventHandler.cs)",
+      "FreeDrawGrantedRealtimeHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/RealtimeDomainEventHandlers.UserProfileState.cs)"
+    ],
+    "behaviors": {
+      "inApp": true,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "GachaPullCompletedDomainEvent",
+    "channels": [
+      "Realtime"
+    ],
+    "handlers": [
+      "GachaPullCompletedRealtimeHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/RealtimeDomainEventHandlers.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "GachaPulledDomainEvent",
+    "channels": [],
+    "handlers": [
+      "GachaPulledDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/GachaPulledDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": true,
+      "logs": false
+    }
+  },
+  {
+    "event": "GrantAllTitlesCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "GrantAllTitlesCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Gamification/Commands/GrantAllTitlesCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ItemGrantedFromGachaDomainEvent",
+    "channels": [
+      "InApp",
+      "Realtime"
+    ],
+    "handlers": [
+      "ItemGrantedFromGachaDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/ItemGrantedFromGachaDomainEventHandler.cs)",
+      "ItemGrantedFromGachaRealtimeHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/RealtimeDomainEventHandlers.InventoryState.cs)"
+    ],
+    "behaviors": {
+      "inApp": true,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ItemUsedDomainEvent",
+    "channels": [
+      "Realtime"
+    ],
+    "handlers": [
+      "ItemUsedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/InventoryItemUsedDomainEventHandler.cs)",
+      "InventoryItemUsedRealtimeHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/RealtimeDomainEventHandlers.InventoryState.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": true,
+      "logs": false
+    }
+  },
+  {
+    "event": "LoginCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "LoginCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Auth/Commands/Login/LoginCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "LoginFailedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "LoginFailedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/Auth/LoginFailedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "LogoutCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "LogoutCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Auth/Commands/Logout/LogoutCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "LuckAppliedDomainEvent",
+    "channels": [
+      "InApp"
+    ],
+    "handlers": [
+      "LuckAppliedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/InventoryLuckAppliedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": true,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "LuckyStarTitleUsedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "LuckyStarTitleUsedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/InventoryLuckyStarTitleUsedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "MarkAllNotificationsReadCommandHandlerRequestedDomainEvent",
+    "channels": [
+      "InApp"
+    ],
+    "handlers": [
+      "MarkAllNotificationsReadCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Notification/Commands/MarkAllAsRead/MarkAllNotificationsReadCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": true,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "MarkMessagesReadCommandHandlerRequestedDomainEvent",
+    "channels": [
+      "Realtime"
+    ],
+    "handlers": [
+      "MarkMessagesReadCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Chat/Commands/MarkMessagesRead/MarkMessagesReadCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "MarkNotificationReadCommandHandlerRequestedDomainEvent",
+    "channels": [
+      "InApp"
+    ],
+    "handlers": [
+      "MarkNotificationReadCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Notification/Commands/MarkAsRead/MarkNotificationReadCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": true,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "MfaChallengeCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "MfaChallengeCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Mfa/Commands/MfaChallenge/MfaChallengeCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "MfaSetupCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "MfaSetupCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Mfa/Commands/MfaSetup/MfaSetupCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "MfaVerifyCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "MfaVerifyCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Mfa/Commands/MfaVerify/MfaVerifyCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "MoneyChangedDomainEvent",
+    "channels": [
+      "Realtime"
+    ],
+    "handlers": [
+      "MoneyChangedSpendingLeaderboardDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/MoneyChangedSpendingLeaderboardDomainEventHandler.cs)",
+      "MoneyChangedRealtimeHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/RealtimeDomainEventHandlers.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "MysteryPackOpenedDomainEvent",
+    "channels": [
+      "InApp"
+    ],
+    "handlers": [
+      "MysteryPackOpenedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/InventoryMysteryPackOpenedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": true,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "OpenConversationDisputeCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "OpenConversationDisputeCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Chat/Commands/OpenConversationDispute/OpenConversationDisputeCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "OpenDisputeCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "OpenDisputeCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Escrow/Commands/OpenDispute/OpenDisputeCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "PresignAvatarUploadCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "PresignAvatarUploadCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Profile/Commands/PresignAvatarUpload/PresignAvatarUploadCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "PresignCommunityImageCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "PresignCommunityImageCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Community/Commands/PresignCommunityImage/PresignCommunityImageCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "PresignConversationMediaCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "PresignConversationMediaCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Chat/Commands/PresignConversationMedia/PresignConversationMediaCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "PublishTypingStateCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "PublishTypingStateCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Chat/Commands/PublishTypingState/PublishTypingStateCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "PublishUserStatusChangedCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "PublishUserStatusChangedCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Presence/Commands/PublishUserStatusChanged/PublishUserStatusChangedCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "PurchaseStreakFreezeCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "PurchaseStreakFreezeCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/CheckIn/Commands/PurchaseFreeze/PurchaseStreakFreezeCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "QuestCompletedDomainEvent",
+    "channels": [
+      "Push"
+    ],
+    "handlers": [
+      "QuestCompletedDomainEventHandler (Backend/src/TarotNow.Application/Features/Gamification/EventHandlers/GamificationEventHandlers.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": true,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ReaderProfileUpdateRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ReaderProfileUpdateRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/ReaderProfileUpdateRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ReaderRequestReviewRequestedDomainEvent",
+    "channels": [
+      "InApp",
+      "Realtime"
+    ],
+    "handlers": [
+      "ReaderRequestReviewRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/ReaderRequestReviewRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": true,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ReaderRequestSubmitRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ReaderRequestSubmitRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/ReaderRequestSubmitRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ReaderStatusUpdateRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ReaderStatusUpdateRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/ReaderStatusUpdateRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ReadingBillingCompletedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ReadingBillingCompletedNotificationHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/FinancialDomainEventLoggingHandlers.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "ReadingCompletedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ReadingCompletedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/BusinessDomainEventHandlers.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ReadingSessionContentSyncRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ReadingSessionContentSyncRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/ReadingSessionContentSyncRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ReadingSessionInitRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ReadingSessionInitRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/ReadingSessionInitRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ReadingSessionRevealedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ReadingSessionRevealedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/ReadingSessionRevealedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "ReadingSessionRevealRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ReadingSessionRevealRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/ReadingSessionRevealRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "RecordConsentCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "RecordConsentCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Legal/Commands/RecordConsent/RecordConsentCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "RefreshTokenCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "RefreshTokenCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Auth/Commands/RefreshToken/RefreshTokenCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "RefreshTokenReplayDetectedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "RefreshTokenReplayDetectedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/Auth/RefreshTokenReplayDetectedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "RefreshTokenRotatedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "RefreshTokenRotatedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/Auth/RefreshTokenRotatedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "RegisterCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "RegisterCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Auth/Commands/Register/RegisterCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "RejectConversationCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "RejectConversationCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Chat/Commands/RejectConversation/RejectConversationCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ReportPostCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ReportPostCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Community/Commands/ReportPost/ReportPostCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "RequestConversationAddMoneyCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "RequestConversationAddMoneyCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Chat/Commands/RequestConversationAddMoney/RequestConversationAddMoneyCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "RequestConversationCompleteCommandHandlerRequestedDomainEvent",
+    "channels": [
+      "Realtime"
+    ],
+    "handlers": [
+      "RequestConversationCompleteCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Chat/Commands/RequestConversationComplete/RequestConversationCompleteCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ResetPasswordCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ResetPasswordCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Auth/Commands/ResetPassword/ResetPasswordCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ResolveDisputeCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ResolveDisputeCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Admin/Commands/ResolveDispute/ResolveDisputeCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ResolvePostReportCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ResolvePostReportCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Community/Commands/ResolvePostReport/ResolvePostReportCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "RespondConversationAddMoneyCommandHandlerRequestedDomainEvent",
+    "channels": [
+      "Realtime"
+    ],
+    "handlers": [
+      "RespondConversationAddMoneyCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Chat/Commands/RespondConversationAddMoney/RespondConversationAddMoneyCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "RespondConversationCompleteCommandHandlerRequestedDomainEvent",
+    "channels": [
+      "Realtime"
+    ],
+    "handlers": [
+      "RespondConversationCompleteCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Chat/Commands/RespondConversationComplete/RespondConversationCompleteCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "RevokeRefreshTokenCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "RevokeRefreshTokenCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Auth/Commands/RevokeRefreshToken/RevokeRefreshTokenCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "RevokeTokenCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "RevokeTokenCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Auth/Commands/RevokeToken/RevokeTokenCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "SendEmailVerificationOtpCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "SendEmailVerificationOtpCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Auth/Commands/SendEmailVerificationOtp/SendEmailVerificationOtpCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "SendMessageCommandHandlerRequestedDomainEvent",
+    "channels": [
+      "Realtime"
+    ],
+    "handlers": [
+      "SendMessageCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Chat/Commands/SendMessage/SendMessageCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "SetActiveTitleCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "SetActiveTitleCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Gamification/Commands/SetActiveTitleCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "StreamReadingCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "StreamReadingCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Reading/Commands/StreamReading/StreamReadingCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "SubmitConversationReviewCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "SubmitConversationReviewCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Chat/Commands/SubmitConversationReview/SubmitConversationReviewCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "TitleGrantedDomainEvent",
+    "channels": [
+      "Realtime"
+    ],
+    "handlers": [
+      "TitleGrantedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/BusinessDomainEventHandlers.cs)",
+      "TitleGrantedRealtimeHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/RealtimeDomainEventHandlers.UserProfileState.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ToggleReactionCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ToggleReactionCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Community/Commands/ToggleReaction/ToggleReactionCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "ToggleUserLockCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "ToggleUserLockCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Admin/Commands/ToggleUserLock/ToggleUserLockCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "TokenRefreshedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "TokenRefreshedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/Auth/TokenRefreshedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "UnreadCountChangedDomainEvent",
+    "channels": [
+      "Realtime"
+    ],
+    "handlers": [
+      "UnreadCountChangedRealtimeHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/RealtimeDomainEventHandlers.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "UpdatePostCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "UpdatePostCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Community/Commands/UpdatePost/UpdatePostCommand.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "UpdatePromotionCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "UpdatePromotionCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Promotions/Commands/UpdatePromotion/UpdatePromotionCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "UpdateUserCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "UpdateUserCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Admin/Commands/UpdateUser/UpdateUserCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "UserAuthenticationFailedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "UserAuthenticationFailedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/Auth/UserAuthenticationFailedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "UserLoggedInDomainEvent",
+    "channels": [],
+    "handlers": [
+      "UserLoggedInDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/Auth/UserLoggedInDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "UserLoggedOutDomainEvent",
+    "channels": [],
+    "handlers": [
+      "UserLoggedOutDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/Auth/UserLoggedOutDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "UserProfileProjectionSyncRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "UserProfileProjectionSyncRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/UserProfileProjectionSyncRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "UserProfileUpdateRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "UserProfileUpdateRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/UserProfileUpdateRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "UserStatusChangedDomainEvent",
+    "channels": [
+      "Realtime"
+    ],
+    "handlers": [
+      "UserStatusChangedRealtimeHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/RealtimeDomainEventHandlers.UserProfileState.cs)",
+      "UserStatusChangedReaderProjectionDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/UserStatusChangedReaderProjectionDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "VerifyEmailCommandHandlerRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "VerifyEmailCommandHandlerRequestedDomainEventHandler (Backend/src/TarotNow.Application/Features/Auth/Commands/VerifyEmail/VerifyEmailCommandHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "WalletSnapshotChangedDomainEvent",
+    "channels": [
+      "Realtime"
+    ],
+    "handlers": [
+      "WalletSnapshotChangedRealtimeHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/WalletSnapshotChangedRealtimeHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "WithdrawalCreateRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "WithdrawalCreateRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/WithdrawalCreateRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "WithdrawalProcessedDomainEvent",
+    "channels": [
+      "InApp",
+      "Realtime"
+    ],
+    "handlers": [
+      "WithdrawalProcessedAuditLogHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/WithdrawalProcessedAuditLogHandler.cs)",
+      "WithdrawalProcessedInAppNotificationHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/WithdrawalProcessedInAppNotificationHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": true,
+      "email": false,
+      "realtime": true,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  },
+  {
+    "event": "WithdrawalProcessRequestedDomainEvent",
+    "channels": [],
+    "handlers": [
+      "WithdrawalProcessRequestedDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/WithdrawalProcessRequestedDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": false,
+      "realtime": false,
+      "push": false,
+      "domainPublish": true,
+      "inlineDispatch": false,
+      "logs": false
+    }
+  },
+  {
+    "event": "WithdrawalRequestedDomainEvent",
+    "channels": [
+      "Email"
+    ],
+    "handlers": [
+      "WithdrawalRequestedEmailDomainEventHandler (Backend/src/TarotNow.Application/DomainEvents/Handlers/WithdrawalRequestedEmailDomainEventHandler.cs)"
+    ],
+    "behaviors": {
+      "inApp": false,
+      "email": true,
+      "realtime": false,
+      "push": false,
+      "domainPublish": false,
+      "inlineDispatch": false,
+      "logs": true
+    }
+  }
+]
