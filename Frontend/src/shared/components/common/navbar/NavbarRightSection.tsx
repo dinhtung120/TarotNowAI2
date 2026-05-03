@@ -1,6 +1,7 @@
 import { Menu, X } from 'lucide-react';
 import { OptimizedLink as Link } from '@/shared/infrastructure/navigation/useOptimizedLink';
 import StreakBadge from '@/features/checkin/presentation/StreakBadge';
+import MessageDropdown from '@/shared/components/common/MessageDropdown';
 import NotificationDropdown from '@/shared/components/common/NotificationDropdown';
 import WalletWidget from '@/shared/components/common/WalletWidget';
 import { NavbarAvatarMenu } from '@/shared/components/common/navbar/NavbarAvatarMenu';
@@ -13,6 +14,7 @@ interface NavbarRightSectionProps {
   avatarMenuOpen: boolean;
   avatarMenuRef: React.RefObject<HTMLDivElement | null>;
   isAuthenticated: boolean;
+  messagesEnabled: boolean;
   mobileMenuOpen: boolean;
   notificationsEnabled: boolean;
   tCommon: (key: string) => string;
@@ -24,7 +26,7 @@ interface NavbarRightSectionProps {
   onToggleMobileMenu: () => void;
 }
 
-export default function NavbarRightSection({ avatarMenuItems, avatarMenuOpen, avatarMenuRef, isAuthenticated, mobileMenuOpen, notificationsEnabled, tCommon, tNav, user, onCloseAvatarMenu, onLogout, onToggleAvatarMenu, onToggleMobileMenu }: NavbarRightSectionProps) {
+export default function NavbarRightSection({ avatarMenuItems, avatarMenuOpen, avatarMenuRef, isAuthenticated, messagesEnabled, mobileMenuOpen, notificationsEnabled, tCommon, tNav, user, onCloseAvatarMenu, onLogout, onToggleAvatarMenu, onToggleMobileMenu }: NavbarRightSectionProps) {
   if (!isAuthenticated) {
     return (
       <div className={cn('flex items-center tn-gap-2-3-sm')}>
@@ -38,6 +40,7 @@ export default function NavbarRightSection({ avatarMenuItems, avatarMenuOpen, av
     <div className={cn('flex items-center tn-gap-2-3-sm')}>
       <StreakBadge />
       <div className={cn('tn-show-sm')}><WalletWidget /></div>
+      <MessageDropdown enabled={messagesEnabled} />
       <NotificationDropdown enabled={notificationsEnabled} />
       <NavbarAvatarMenu user={user} menuItems={avatarMenuItems} open={avatarMenuOpen} avatarMenuRef={avatarMenuRef} tNav={tNav} onClose={onCloseAvatarMenu} onToggle={onToggleAvatarMenu} onLogout={onLogout} />
       <button type="button" onClick={onToggleMobileMenu} className={cn('tn-hide-md min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-xl p-2.5 tn-text-secondary transition-colors tn-hover-surface-soft tn-hover-text-primary')} aria-label={tCommon('menu')}>

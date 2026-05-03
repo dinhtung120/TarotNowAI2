@@ -21,5 +21,9 @@ export async function prefetchUserSegmentShell(qc: QueryClient): Promise<void> {
   qc.setQueryData(userStateQueryKeys.notifications.dropdown(), data.recentNotifications);
   qc.setQueryData(userStateQueryKeys.chat.unreadBadge(), data.unreadChatCount);
   qc.setQueryData(userStateQueryKeys.chat.inboxActive(), data.activeConversations);
+  qc.setQueryData(userStateQueryKeys.chat.inboxPreview(), {
+   ...data.activeConversations,
+   conversations: data.activeConversations.conversations.slice(0, 8),
+  });
  });
 }

@@ -17,7 +17,6 @@ public class MarkMessagesReadCommandHandlerRequestedDomainEventHandlerTests
     private readonly Mock<IChatMessageRepository> _mockMsgRepo;
     // Mock domain event publisher để xác nhận enqueue outbox events.
     private readonly Mock<IDomainEventPublisher> _mockDomainEventPublisher;
-    private readonly Mock<IChatRealtimeFastLanePublisher> _mockChatRealtimeFastLanePublisher;
     // Handler cần kiểm thử.
     private readonly MarkMessagesReadCommandHandlerRequestedDomainEventHandler _handler;
 
@@ -30,12 +29,10 @@ public class MarkMessagesReadCommandHandlerRequestedDomainEventHandlerTests
         _mockConvRepo = new Mock<IConversationRepository>();
         _mockMsgRepo = new Mock<IChatMessageRepository>();
         _mockDomainEventPublisher = new Mock<IDomainEventPublisher>();
-        _mockChatRealtimeFastLanePublisher = new Mock<IChatRealtimeFastLanePublisher>();
         _handler = new MarkMessagesReadCommandHandlerRequestedDomainEventHandler(
             _mockConvRepo.Object,
             _mockMsgRepo.Object,
             _mockDomainEventPublisher.Object,
-            _mockChatRealtimeFastLanePublisher.Object,
             Mock.Of<TarotNow.Application.Interfaces.DomainEvents.IEventHandlerIdempotencyService>());
     }
 

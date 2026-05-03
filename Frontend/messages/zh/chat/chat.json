@@ -23,6 +23,15 @@
         "completed": "已完成"
       }
     },
+    "dropdown": {
+      "title": "消息",
+      "view_all": "查看全部",
+      "empty": "暂无对话",
+      "load_error": "加载消息收件箱失败。",
+      "preview_awaiting_reply": "等待回复",
+      "preview_completed": "对话已完成",
+      "preview_new_conversation": "新对话"
+    },
     "room": {
       "title": "灵性连接房间",
       "signal_ok": "信号稳定",

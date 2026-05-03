@@ -28,7 +28,9 @@ public static partial class ApiServiceCollectionExtensions
         // Gắn global exception handler để mọi lỗi chưa bắt được chuẩn hóa về ProblemDetails.
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
-        services.AddApplicationServices(Assembly.GetExecutingAssembly());
+        services.AddApplicationServices(
+            Assembly.GetExecutingAssembly(),
+            typeof(TarotNow.Infrastructure.DependencyInjection).Assembly);
         services.AddInfrastructureServices(configuration);
         services.AddApiObservability(configuration);
         ConfigureForwardedHeaders(services, configuration);

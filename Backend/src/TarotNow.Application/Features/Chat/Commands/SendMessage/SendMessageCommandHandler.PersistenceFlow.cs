@@ -27,7 +27,6 @@ public partial class SendMessageCommandHandlerRequestedDomainEventHandler
                 context.Conversation,
                 context.FirstMessageFreeze,
                 cancellationToken);
-            await PublishFastLaneRealtimeAsync(context.Conversation, context.Message, cancellationToken);
             await PublishRealtimeEventsAsync(context.Conversation, context.Message, cancellationToken);
 
             return context.Message;

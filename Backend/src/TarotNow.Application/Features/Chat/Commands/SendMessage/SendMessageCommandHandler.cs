@@ -3,7 +3,6 @@
 using MediatR;
 using System;
 using TarotNow.Application.Common;
-using TarotNow.Application.Common.Realtime;
 using TarotNow.Application.Common.DomainEvents;
 using TarotNow.Application.Interfaces;
 using TarotNow.Application.Interfaces.DomainEvents;
@@ -23,7 +22,6 @@ public partial class SendMessageCommandHandlerRequestedDomainEventHandler
     private readonly IDomainEventPublisher _domainEventPublisher;
     private readonly ISystemConfigSettings _systemConfigSettings;
     private readonly ICacheService _cacheService;
-    private readonly IChatRealtimeFastLanePublisher _chatRealtimeFastLanePublisher;
 
     public SendMessageCommandHandlerRequestedDomainEventHandler(
         IConversationRepository conversationRepo,
@@ -36,7 +34,6 @@ public partial class SendMessageCommandHandlerRequestedDomainEventHandler
         IDomainEventPublisher domainEventPublisher,
         ISystemConfigSettings systemConfigSettings,
         ICacheService cacheService,
-        IChatRealtimeFastLanePublisher chatRealtimeFastLanePublisher,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
@@ -50,7 +47,6 @@ public partial class SendMessageCommandHandlerRequestedDomainEventHandler
         _domainEventPublisher = domainEventPublisher;
         _systemConfigSettings = systemConfigSettings;
         _cacheService = cacheService;
-        _chatRealtimeFastLanePublisher = chatRealtimeFastLanePublisher;
     }
 
     public async Task<ChatMessageDto> Handle(SendMessageCommand request, CancellationToken cancellationToken)

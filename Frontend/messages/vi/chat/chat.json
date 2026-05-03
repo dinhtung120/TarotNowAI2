@@ -23,6 +23,15 @@
         "completed": "Hoàn thành"
       }
     },
+    "dropdown": {
+      "title": "Tin nhắn",
+      "view_all": "Xem tất cả",
+      "empty": "Chưa có cuộc trò chuyện",
+      "load_error": "Không thể tải hộp thư tin nhắn.",
+      "preview_awaiting_reply": "Đang chờ phản hồi",
+      "preview_completed": "Cuộc trò chuyện đã hoàn tất",
+      "preview_new_conversation": "Cuộc trò chuyện mới"
+    },
     "room": {
       "title": "Phòng Kết Nối Tâm Linh",
       "signal_ok": "Tín hiệu ổn định",

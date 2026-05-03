@@ -55,6 +55,7 @@ export const userStateQueryKeys = {
  chat: {
   inboxRoot: () => ['chat', 'inbox'] as const,
   inboxActive: () => ['chat', 'inbox', 'active'] as const,
+  inboxPreview: () => ['chat', 'inbox', 'preview'] as const,
   unreadBadge: () => ['chat', 'unread-badge'] as const,
  },
  system: {

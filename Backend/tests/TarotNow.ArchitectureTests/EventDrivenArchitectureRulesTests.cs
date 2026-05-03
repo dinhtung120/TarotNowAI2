@@ -282,6 +282,34 @@ public sealed class EventDrivenArchitectureRulesTests
     }
 
     /// <summary>
+    /// Cấm fast-lane realtime publisher trong các requested handlers của send/read chat.
+    /// </summary>
+    [Fact]
+    public void ChatSendReadRequestedHandlers_ShouldNotInjectFastLaneRealtimePublisher()
+    {
+        var backendRoot = FindBackendRoot();
+        var targetDirectories = new[]
+        {
+            Path.Combine(backendRoot, "src", "TarotNow.Application", "Features", "Chat", "Commands", "SendMessage"),
+            Path.Combine(backendRoot, "src", "TarotNow.Application", "Features", "Chat", "Commands", "MarkMessagesRead")
+        };
+        var violations = targetDirectories
+            .Where(Directory.Exists)
+            .SelectMany(directory => Directory.GetFiles(directory, "*.cs", SearchOption.TopDirectoryOnly))
+            .Where(path =>
+            {
+                var text = File.ReadAllText(path);
+                return text.Contains("IChatRealtimeFastLanePublisher", StringComparison.Ordinal)
+                       || text.Contains("PublishFastLaneRealtimeAsync", StringComparison.Ordinal);
+            })
+            .Select(path => ToBackendRelativePath(backendRoot, path))
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
+
+        violations.Should().BeEmpty("send/read chat requested handlers must only mutate state + publish domain events.");
+    }
+
+    /// <summary>
     /// Xác nhận command-requested domain events của command critical (IdempotencyKey/AiRequestId) đều khai báo idempotency inline.
     /// </summary>
     [Fact]

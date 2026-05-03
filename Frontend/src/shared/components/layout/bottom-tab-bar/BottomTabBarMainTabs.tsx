@@ -6,6 +6,7 @@ interface BottomTabBarMainTabsProps {
  tabs: BottomTabGroup[];
  activeTabId: string | null;
  activeMenu: string | null;
+ unreadChatCount: number;
  tNav: (key: string) => string;
  onToggleMenu: (tab: BottomTabGroup) => void;
 }
@@ -14,6 +15,7 @@ export default function BottomTabBarMainTabs({
  tabs,
  activeTabId,
  activeMenu,
+ unreadChatCount,
  tNav,
  onToggleMenu,
 }: BottomTabBarMainTabsProps) {
@@ -29,6 +31,11 @@ export default function BottomTabBarMainTabs({
       <span className={cn('tn-text-9 uppercase tracking-wider truncate mt-1', isMainActive || isOpen ? 'font-black' : 'font-bold')}>
        {tNav(tab.labelKey)}
       </span>
+       {tab.id === 'social' && unreadChatCount > 0 ? (
+        <span className={cn('absolute right-3 top-1 flex min-h-5 min-w-5 items-center justify-center rounded-full tn-notification-bell-badge px-1 tn-text-9 font-black text-white')}>
+         {unreadChatCount > 9 ? '9+' : unreadChatCount}
+        </span>
+       ) : null}
       {isMainActive ? (
        <div className={cn('absolute top-1.5 right-3 w-1.5 h-1.5 rounded-full tn-bottom-tab-indicator')} />
       ) : null}

@@ -27,6 +27,7 @@ describe('userStateQueryKeys', () => {
   expect(userStateQueryKeys.notifications.list(3, true)).toEqual(['notifications', 'list', 3, 'unread']);
   expect(userStateQueryKeys.chat.inboxRoot()).toEqual(['chat', 'inbox']);
   expect(userStateQueryKeys.chat.inboxActive()).toEqual(['chat', 'inbox', 'active']);
+  expect(userStateQueryKeys.chat.inboxPreview()).toEqual(['chat', 'inbox', 'preview']);
   expect(userStateQueryKeys.chat.unreadBadge()).toEqual(['chat', 'unread-badge']);
   expect(userStateQueryKeys.system.runtimePolicies()).toEqual(['me', 'runtime-policies']);
   expect(userStateQueryKeys.system.publicRuntimePolicies()).toEqual(['legal', 'runtime-policies']);

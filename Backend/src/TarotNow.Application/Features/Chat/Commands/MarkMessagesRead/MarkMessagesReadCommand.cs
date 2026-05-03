@@ -26,7 +26,6 @@ public partial class MarkMessagesReadCommandHandlerRequestedDomainEventHandler
     private readonly IConversationRepository _conversationRepo;
     private readonly IChatMessageRepository _messageRepo;
     private readonly IDomainEventPublisher _domainEventPublisher;
-    private readonly IChatRealtimeFastLanePublisher _chatRealtimeFastLanePublisher;
 
     /// <summary>
     /// Khởi tạo handler mark messages read.
@@ -36,14 +35,12 @@ public partial class MarkMessagesReadCommandHandlerRequestedDomainEventHandler
         IConversationRepository conversationRepo,
         IChatMessageRepository messageRepo,
         IDomainEventPublisher domainEventPublisher,
-        IChatRealtimeFastLanePublisher chatRealtimeFastLanePublisher,
         IEventHandlerIdempotencyService idempotencyService)
         : base(idempotencyService)
     {
         _conversationRepo = conversationRepo;
         _messageRepo = messageRepo;
         _domainEventPublisher = domainEventPublisher;
-        _chatRealtimeFastLanePublisher = chatRealtimeFastLanePublisher;
     }
 
     /// <summary>
@@ -101,8 +98,6 @@ public partial class MarkMessagesReadCommandHandlerRequestedDomainEventHandler
                 OccurredAtUtc = occurredAtUtc
             },
             cancellationToken);
-
-        await PublishFastLaneRealtimeAsync(conversation, readerId, occurredAtUtc, cancellationToken);
 
         return true;
     }

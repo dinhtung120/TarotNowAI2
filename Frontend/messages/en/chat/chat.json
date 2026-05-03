@@ -23,6 +23,15 @@
         "completed": "Completed"
       }
     },
+    "dropdown": {
+      "title": "Messages",
+      "view_all": "View all",
+      "empty": "No conversations yet",
+      "load_error": "Failed to load message inbox.",
+      "preview_awaiting_reply": "Awaiting reply",
+      "preview_completed": "Conversation completed",
+      "preview_new_conversation": "New conversation"
+    },
     "room": {
       "title": "Spiritual Connection Room",
       "signal_ok": "Signal stable",
