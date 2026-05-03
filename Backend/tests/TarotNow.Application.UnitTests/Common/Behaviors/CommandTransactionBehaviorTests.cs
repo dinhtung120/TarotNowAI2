@@ -36,6 +36,33 @@ namespace TarotNow.Application.UnitTests.Common.Behaviors
         }
 
         [Fact]
+        public async Task Handle_RespondConversationAddMoneyCommand_FlushesOutboxTwice()
+        {
+            var coordinator = new Mock<ITransactionCoordinator>();
+            coordinator
+                .Setup(x => x.ExecuteAsync(It.IsAny<Func<CancellationToken, Task>>(), It.IsAny<CancellationToken>()))
+                .Returns<Func<CancellationToken, Task>, CancellationToken>((action, token) => action(token));
+
+            var outbox = new Mock<IOutboxBatchProcessor>();
+            outbox.SetupSequence(x => x.ProcessOnceAsync(It.IsAny<CancellationToken>()))
+                .ReturnsAsync(1)
+                .ReturnsAsync(0);
+
+            var behavior = new CommandTransactionBehavior<TarotNow.Application.Features.Chat.Commands.TestDoubles.RespondConversationAddMoneyCommand, bool>(
+                coordinator.Object,
+                outbox.Object,
+                Mock.Of<ILogger<CommandTransactionBehavior<TarotNow.Application.Features.Chat.Commands.TestDoubles.RespondConversationAddMoneyCommand, bool>>>());
+
+            var result = await behavior.Handle(
+                new TarotNow.Application.Features.Chat.Commands.TestDoubles.RespondConversationAddMoneyCommand(),
+                _ => Task.FromResult(true),
+                CancellationToken.None);
+
+            Assert.True(result);
+            outbox.Verify(x => x.ProcessOnceAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+        }
+
+        [Fact]
         public async Task Handle_NonChatCommand_DoesNotFlushOutbox()
         {
             var coordinator = new Mock<ITransactionCoordinator>();
@@ -93,6 +120,10 @@ namespace TarotNow.Application.UnitTests.Common.Behaviors
 namespace TarotNow.Application.Features.Chat.Commands.TestDoubles
 {
     public sealed class ChatPingCommand : IRequest<bool>
+    {
+    }
+
+    public sealed class RespondConversationAddMoneyCommand : IRequest<bool>
     {
     }
 }

@@ -11,6 +11,7 @@ public sealed class CommandTransactionBehavior<TRequest, TResponse> : IPipelineB
     where TRequest : IRequest<TResponse>
 {
     private const int ChatOutboxInlineFlushPasses = 1;
+    private const int DeepChatOutboxInlineFlushPasses = 2;
 
     private readonly ITransactionCoordinator _transactionCoordinator;
     private readonly IOutboxBatchProcessor _outboxBatchProcessor;
@@ -75,7 +76,9 @@ public sealed class CommandTransactionBehavior<TRequest, TResponse> : IPipelineB
 
     private async Task FlushChatOutboxInlineAsync(CancellationToken cancellationToken)
     {
-        for (var pass = 0; pass < ChatOutboxInlineFlushPasses; pass++)
+        var maxPasses = ShouldFlushDeepChatOutbox() ? DeepChatOutboxInlineFlushPasses : ChatOutboxInlineFlushPasses;
+
+        for (var pass = 0; pass < maxPasses; pass++)
         {
             var processed = await _outboxBatchProcessor.ProcessOnceAsync(cancellationToken);
             if (processed <= 0)
@@ -88,5 +91,10 @@ public sealed class CommandTransactionBehavior<TRequest, TResponse> : IPipelineB
                 processed,
                 pass + 1);
         }
+    }
+
+    private static bool ShouldFlushDeepChatOutbox()
+    {
+        return typeof(TRequest).Name.Equals("RespondConversationAddMoneyCommand", StringComparison.Ordinal);
     }
 }
