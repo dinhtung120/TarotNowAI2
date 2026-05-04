@@ -95,12 +95,45 @@ public sealed partial class EscrowSettlementService : IEscrowSettlementService
             return null;
         }
 
-        var totalGross = acceptedItems.Sum(item => item.AmountDiamond);
         var feeRate = _systemConfigSettings.WithdrawalFeeRate;
-        var totalFee = (long)Math.Ceiling(totalGross * feeRate);
-        var releasedAmount = Math.Max(0, totalGross - totalFee);
+        var (totalGross, totalFee, releasedAmount) = CalculateSessionAmounts(acceptedItems, feeRate);
         var (releaseDescription, feeDescription) = BuildSessionDescriptions(isAutoRelease, releasedAmount, totalFee, feeRate);
 
+        await ApplySessionWalletSettlementAsync(
+            session,
+            releasedAmount,
+            totalFee,
+            releaseDescription,
+            feeDescription,
+            cancellationToken);
+
+        var now = DateTime.UtcNow;
+        await UpdateAcceptedItemsAsReleasedAsync(acceptedItems, isAutoRelease, now, cancellationToken);
+        await UpdateSessionAfterReleaseAsync(session, totalGross, now, cancellationToken);
+
+        var summary = CreateSessionReleaseSummary(session, totalGross, totalFee, releasedAmount, acceptedItems.Count, isAutoRelease);
+        await PublishSessionReleasedEventAsync(summary, cancellationToken);
+        return summary;
+    }
+
+    private static (long TotalGross, long TotalFee, long ReleasedAmount) CalculateSessionAmounts(
+        IReadOnlyCollection<ChatQuestionItem> acceptedItems,
+        decimal feeRate)
+    {
+        var totalGross = acceptedItems.Sum(item => item.AmountDiamond);
+        var totalFee = (long)Math.Ceiling(totalGross * feeRate);
+        var releasedAmount = Math.Max(0, totalGross - totalFee);
+        return (totalGross, totalFee, releasedAmount);
+    }
+
+    private async Task ApplySessionWalletSettlementAsync(
+        ChatFinanceSession session,
+        long releasedAmount,
+        long totalFee,
+        string releaseDescription,
+        string feeDescription,
+        CancellationToken cancellationToken)
+    {
         await _walletRepository.ReleaseAsync(
             session.UserId,
             session.ReaderId,
@@ -111,35 +144,59 @@ public sealed partial class EscrowSettlementService : IEscrowSettlementService
             idempotencyKey: $"settle_session_release_{session.Id}",
             cancellationToken: cancellationToken);
 
-        if (totalFee > 0)
+        if (totalFee <= 0)
         {
-            await _walletRepository.ConsumeAsync(
-                session.UserId,
-                totalFee,
-                referenceSource: "platform_fee",
-                referenceId: session.Id.ToString(),
-                description: feeDescription,
-                idempotencyKey: $"settle_session_fee_{session.Id}",
-                cancellationToken: cancellationToken);
+            return;
         }
 
-        var now = DateTime.UtcNow;
+        await _walletRepository.ConsumeAsync(
+            session.UserId,
+            totalFee,
+            referenceSource: "platform_fee",
+            referenceId: session.Id.ToString(),
+            description: feeDescription,
+            idempotencyKey: $"settle_session_fee_{session.Id}",
+            cancellationToken: cancellationToken);
+    }
+
+    private async Task UpdateAcceptedItemsAsReleasedAsync(
+        IReadOnlyCollection<ChatQuestionItem> acceptedItems,
+        bool isAutoRelease,
+        DateTime settledAtUtc,
+        CancellationToken cancellationToken)
+    {
         foreach (var acceptedItem in acceptedItems)
         {
-            ApplyReleasedState(acceptedItem, isAutoRelease, _systemConfigSettings.EscrowDisputeWindowHours, now);
+            ApplyReleasedState(acceptedItem, isAutoRelease, _systemConfigSettings.EscrowDisputeWindowHours, settledAtUtc);
             await _financeRepository.UpdateItemAsync(acceptedItem, cancellationToken);
         }
+    }
 
+    private async Task UpdateSessionAfterReleaseAsync(
+        ChatFinanceSession session,
+        long totalGross,
+        DateTime settledAtUtc,
+        CancellationToken cancellationToken)
+    {
         session.TotalFrozen = Math.Max(0, session.TotalFrozen - totalGross);
         if (session.TotalFrozen <= 0)
         {
             session.Status = ChatFinanceSessionStatus.Completed;
         }
 
-        session.UpdatedAt = now;
+        session.UpdatedAt = settledAtUtc;
         await _financeRepository.UpdateSessionAsync(session, cancellationToken);
+    }
 
-        var summary = new EscrowSessionReleaseSummary
+    private static EscrowSessionReleaseSummary CreateSessionReleaseSummary(
+        ChatFinanceSession session,
+        long totalGross,
+        long totalFee,
+        long releasedAmount,
+        int releasedItemCount,
+        bool isAutoRelease)
+    {
+        return new EscrowSessionReleaseSummary
         {
             FinanceSessionId = session.Id,
             PayerId = session.UserId,
@@ -147,11 +204,8 @@ public sealed partial class EscrowSettlementService : IEscrowSettlementService
             GrossAmountDiamond = totalGross,
             FeeAmountDiamond = totalFee,
             ReleasedAmountDiamond = releasedAmount,
-            ReleasedItemCount = acceptedItems.Count,
+            ReleasedItemCount = releasedItemCount,
             IsAutoRelease = isAutoRelease
         };
-
-        await PublishSessionReleasedEventAsync(summary, cancellationToken);
-        return summary;
     }
 }

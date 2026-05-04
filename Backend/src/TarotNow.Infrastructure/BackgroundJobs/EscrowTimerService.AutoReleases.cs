@@ -52,68 +52,92 @@ public partial class EscrowTimerService
         Guid sessionId,
         CancellationToken cancellationToken)
     {
-        await dependencies.TransactionCoordinator.ExecuteAsync(async transactionCt =>
+        await dependencies.TransactionCoordinator.ExecuteAsync(
+            transactionCt => ProcessAutoReleaseSessionInTransactionAsync(
+                dependencies,
+                escrowSettlementService,
+                sessionId,
+                transactionCt),
+            cancellationToken);
+    }
+
+    private async Task ProcessAutoReleaseSessionInTransactionAsync(
+        RefundDependencies dependencies,
+        IEscrowSettlementService escrowSettlementService,
+        Guid sessionId,
+        CancellationToken transactionCt)
+    {
+        var session = await dependencies.FinanceRepository.GetSessionForUpdateAsync(sessionId, transactionCt);
+        if (session == null)
         {
-            var session = await dependencies.FinanceRepository.GetSessionForUpdateAsync(sessionId, transactionCt);
-            if (session == null)
+            return;
+        }
+
+        var items = await dependencies.FinanceRepository.GetItemsBySessionIdAsync(session.Id, transactionCt);
+        var acceptedItems = items.Where(item => item.Status == QuestionItemStatus.Accepted).ToList();
+        if (acceptedItems.Count == 0)
+        {
+            return;
+        }
+
+        var now = DateTime.UtcNow;
+        if (acceptedItems.All(item => IsEligibleForAutoRelease(item, now)) == false)
+        {
+            return;
+        }
+
+        var summary = await escrowSettlementService.ApplySessionReleaseAsync(
+            session,
+            items,
+            isAutoRelease: true,
+            transactionCt);
+        if (summary == null)
+        {
+            return;
+        }
+
+        LogAutoReleaseSummary(summary);
+        await PublishAutoReleaseConversationSyncIfNeededAsync(dependencies, session, summary.ReleasedAmountDiamond, now, transactionCt);
+        await dependencies.FinanceRepository.SaveChangesAsync(transactionCt);
+    }
+
+    private void LogAutoReleaseSummary(EscrowSessionReleaseSummary summary)
+    {
+        _logger.LogInformation(
+            "[EscrowTimer] Auto-release session: {SessionId}, Released={ReleasedAmount}💎, ReleasedItemCount={ReleasedItemCount}",
+            summary.FinanceSessionId,
+            summary.ReleasedAmountDiamond,
+            summary.ReleasedItemCount);
+    }
+
+    private static async Task PublishAutoReleaseConversationSyncIfNeededAsync(
+        RefundDependencies dependencies,
+        Domain.Entities.ChatFinanceSession session,
+        long releasedAmountDiamond,
+        DateTime occurredAtUtc,
+        CancellationToken cancellationToken)
+    {
+        if (session.TotalFrozen > 0
+            || string.IsNullOrWhiteSpace(session.ConversationRef)
+            || releasedAmountDiamond <= 0)
+        {
+            return;
+        }
+
+        await PublishConversationSyncRequestedAsync(
+            dependencies,
+            new EscrowConversationSyncRequestedDomainEvent
             {
-                // Session không còn tồn tại thì bỏ qua.
-                return;
-            }
-
-            var items = await dependencies.FinanceRepository.GetItemsBySessionIdAsync(session.Id, transactionCt);
-            var acceptedItems = items.Where(item => item.Status == QuestionItemStatus.Accepted).ToList();
-            if (acceptedItems.Count == 0)
-            {
-                return;
-            }
-
-            var now = DateTime.UtcNow;
-            if (acceptedItems.All(item => IsEligibleForAutoRelease(item, now)) == false)
-            {
-                // Chỉ auto-release khi toàn bộ accepted item trong session đã đủ điều kiện theo SLA.
-                return;
-            }
-
-            var summary = await escrowSettlementService.ApplySessionReleaseAsync(
-                session,
-                items,
-                isAutoRelease: true,
-                transactionCt);
-            if (summary == null)
-            {
-                return;
-            }
-
-            _logger.LogInformation(
-                "[EscrowTimer] Auto-release session: {SessionId}, Released={ReleasedAmount}💎, ReleasedItemCount={ReleasedItemCount}",
-                summary.FinanceSessionId,
-                summary.ReleasedAmountDiamond,
-                summary.ReleasedItemCount);
-
-            if (session.TotalFrozen <= 0
-                && string.IsNullOrWhiteSpace(session.ConversationRef) == false
-                && summary.ReleasedAmountDiamond > 0)
-            {
-                await PublishConversationSyncRequestedAsync(
-                    dependencies,
-                    new EscrowConversationSyncRequestedDomainEvent
-                    {
-                        ConversationId = session.ConversationRef,
-                        TargetStatus = ConversationStatus.Completed,
-                        MessageType = ChatMessageType.SystemRelease,
-                        ActorId = session.ReaderId.ToString("D"),
-                        MessageContent = $"Hệ thống đã tự động giải ngân {summary.ReleasedAmountDiamond} 💎 cho Reader theo timeout.",
-                        SyncReason = "auto_release",
-                        ResolvedAtUtc = now,
-                        OccurredAtUtc = now
-                    },
-                    transactionCt);
-                // Publish trong transaction để outbox và settlement commit atomically.
-            }
-
-            await dependencies.FinanceRepository.SaveChangesAsync(transactionCt);
-        }, cancellationToken);
+                ConversationId = session.ConversationRef,
+                TargetStatus = ConversationStatus.Completed,
+                MessageType = ChatMessageType.SystemRelease,
+                ActorId = session.ReaderId.ToString("D"),
+                MessageContent = $"Hệ thống đã tự động giải ngân {releasedAmountDiamond} 💎 cho Reader theo timeout.",
+                SyncReason = "auto_release",
+                ResolvedAtUtc = occurredAtUtc,
+                OccurredAtUtc = occurredAtUtc
+            },
+            cancellationToken);
     }
 
     /// <summary>
