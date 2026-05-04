@@ -4,6 +4,8 @@ using TarotNow.Application.Features.Chat.Commands.SendMessage;
 using TarotNow.Application.Features.Escrow.Commands.AddQuestion;
 using TarotNow.Domain.Enums;
 
+using RespondAddMoneyErrorCodes = TarotNow.Application.Features.Chat.Commands.RespondConversationAddMoney.RespondConversationAddMoneyCommandHandlerRequestedDomainEventHandler.ErrorCodes;
+
 namespace TarotNow.Application.Features.Chat.Commands.RespondConversationAddMoney;
 
 public partial class RespondConversationAddMoneyCommandHandlerRequestedDomainEventHandler
@@ -29,13 +31,17 @@ public partial class RespondConversationAddMoneyCommandHandlerRequestedDomainEve
         if (conversation.UserId != userId.ToString())
         {
             // Chặn user ngoài conversation can thiệp vào offer cộng tiền.
-            throw new BadRequestException("Bạn không thể phản hồi cộng tiền cho cuộc trò chuyện này.");
+            throw new BusinessRuleException(
+                RespondAddMoneyErrorCodes.ForbiddenConversation,
+                "Bạn không thể phản hồi cộng tiền cho cuộc trò chuyện này.");
         }
 
         if (conversation.Status != ConversationStatus.Ongoing)
         {
             // Chỉ cho phép phản hồi offer khi conversation đang hoạt động.
-            throw new BadRequestException($"Không thể phản hồi cộng tiền ở trạng thái '{conversation.Status}'.");
+            throw new BusinessRuleException(
+                RespondAddMoneyErrorCodes.InvalidConversationStatus,
+                $"Không thể phản hồi cộng tiền ở trạng thái '{conversation.Status}'.");
         }
     }
 
@@ -82,13 +88,17 @@ public partial class RespondConversationAddMoneyCommandHandlerRequestedDomainEve
         if (amountDiamond <= 0)
         {
             // Business rule: offer không có amount dương thì không được freeze.
-            throw new BadRequestException("Đề xuất cộng tiền không hợp lệ.");
+            throw new BusinessRuleException(
+                RespondAddMoneyErrorCodes.InvalidOffer,
+                "Đề xuất cộng tiền không hợp lệ.");
         }
 
         if (offer.PaymentPayload?.ExpiresAt is DateTime expiresAt && expiresAt <= DateTime.UtcNow)
         {
             // Chặn xử lý offer đã hết hạn để tránh freeze sau deadline thỏa thuận.
-            throw new BadRequestException("Đề xuất cộng tiền đã hết hạn.");
+            throw new BusinessRuleException(
+                RespondAddMoneyErrorCodes.Expired,
+                "Đề xuất cộng tiền đã hết hạn.");
         }
 
         var idempotencyKey = BuildOfferIdempotencyKey(offer);

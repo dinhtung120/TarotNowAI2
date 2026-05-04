@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using TarotNow.Application.Interfaces;
@@ -80,16 +81,24 @@ public sealed class CommandTransactionBehavior<TRequest, TResponse> : IPipelineB
 
         for (var pass = 0; pass < maxPasses; pass++)
         {
+            var stopwatch = Stopwatch.StartNew();
             var processed = await _outboxBatchProcessor.ProcessOnceAsync(cancellationToken);
+            stopwatch.Stop();
+
             if (processed <= 0)
             {
+                _logger.LogDebug(
+                    "Inline chat outbox flush processed no messages on pass {Pass} after {ElapsedMs}ms.",
+                    pass + 1,
+                    stopwatch.ElapsedMilliseconds);
                 return;
             }
 
             _logger.LogDebug(
-                "Inline chat outbox flush processed {ProcessedCount} message(s) on pass {Pass}.",
+                "Inline chat outbox flush processed {ProcessedCount} message(s) on pass {Pass} in {ElapsedMs}ms.",
                 processed,
-                pass + 1);
+                pass + 1,
+                stopwatch.ElapsedMilliseconds);
         }
     }
 

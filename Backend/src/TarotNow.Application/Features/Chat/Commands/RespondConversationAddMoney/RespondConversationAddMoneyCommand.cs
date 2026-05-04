@@ -32,6 +32,15 @@ public class RespondConversationAddMoneyCommand : IRequest<ConversationAddMoneyR
 public partial class RespondConversationAddMoneyCommandHandlerRequestedDomainEventHandler
     : IdempotentDomainEventNotificationHandler<RespondConversationAddMoneyCommandHandlerRequestedDomainEvent>
 {
+    internal static class ErrorCodes
+    {
+        internal const string ForbiddenConversation = "chat.add_money.respond.forbidden_conversation";
+        internal const string InvalidConversationStatus = "chat.add_money.respond.invalid_conversation_status";
+        internal const string InvalidOffer = "chat.add_money.respond.invalid_offer";
+        internal const string AlreadyHandled = "chat.add_money.respond.already_handled";
+        internal const string Expired = "chat.add_money.respond.expired";
+    }
+
     private readonly IConversationRepository _conversationRepository;
     private readonly IChatMessageRepository _chatMessageRepository;
     private readonly IMediator _mediator;

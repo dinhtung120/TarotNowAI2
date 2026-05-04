@@ -49,6 +49,30 @@ function mergeDuplicateMessage<T extends MessageWithId>(existing: T, incoming: T
  return merged;
 }
 
+function canKeepOrderAfterReplace<T extends MessageWithId>(messages: T[], index: number, nextMessage: T): boolean {
+ const previous = index > 0 ? messages[index - 1] : null;
+ const following = index < messages.length - 1 ? messages[index + 1] : null;
+
+ if (previous && compareMessageOrder(previous, nextMessage) > 0) {
+  return false;
+ }
+
+ if (following && compareMessageOrder(nextMessage, following) > 0) {
+  return false;
+ }
+
+ return true;
+}
+
+function canAppendWithoutSorting<T extends MessageWithId>(messages: T[], incoming: T): boolean {
+ if (messages.length === 0) {
+  return true;
+ }
+
+ const last = messages[messages.length - 1];
+ return compareMessageOrder(last, incoming) <= 0;
+}
+
 export function appendUniqueMessage<T extends MessageWithId>(
  messages: T[],
  incoming: T
@@ -56,8 +80,9 @@ export function appendUniqueMessage<T extends MessageWithId>(
  const byIdIndex = messages.findIndex((item) => item.id === incoming.id);
  if (byIdIndex >= 0) {
   const next = [...messages];
-  next[byIdIndex] = mergeDuplicateMessage(next[byIdIndex], incoming);
-  return sortMessages(next);
+  const merged = mergeDuplicateMessage(next[byIdIndex], incoming);
+  next[byIdIndex] = merged;
+  return canKeepOrderAfterReplace(next, byIdIndex, merged) ? next : sortMessages(next);
  }
 
  const incomingClientMessageId = normalizeClientMessageId(incoming.clientMessageId);
@@ -67,9 +92,14 @@ export function appendUniqueMessage<T extends MessageWithId>(
   );
   if (byClientMessageIdIndex >= 0) {
    const next = [...messages];
-   next[byClientMessageIdIndex] = mergeDuplicateMessage(next[byClientMessageIdIndex], incoming);
-   return sortMessages(next);
+   const merged = mergeDuplicateMessage(next[byClientMessageIdIndex], incoming);
+   next[byClientMessageIdIndex] = merged;
+   return canKeepOrderAfterReplace(next, byClientMessageIdIndex, merged) ? next : sortMessages(next);
   }
+ }
+
+ if (canAppendWithoutSorting(messages, incoming)) {
+  return [...messages, incoming];
  }
 
  return sortMessages([...messages, incoming]);

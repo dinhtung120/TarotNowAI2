@@ -3,6 +3,8 @@ using TarotNow.Application.Exceptions;
 using TarotNow.Application.Features.Chat.Commands.SendMessage;
 using TarotNow.Domain.Enums;
 
+using RequestAddMoneyErrorCodes = TarotNow.Application.Features.Chat.Commands.RequestConversationAddMoney.RequestConversationAddMoneyCommandHandlerRequestedDomainEventHandler.ErrorCodes;
+
 namespace TarotNow.Application.Features.Chat.Commands.RequestConversationAddMoney;
 
 public partial class RequestConversationAddMoneyCommandHandlerRequestedDomainEventHandler
@@ -21,13 +23,17 @@ public partial class RequestConversationAddMoneyCommandHandlerRequestedDomainEve
         if (conversation.ReaderId != request.ReaderId.ToString())
         {
             // Chỉ reader của conversation mới được gửi yêu cầu cộng tiền.
-            throw new BadRequestException("Bạn không thể tạo yêu cầu cộng tiền cho cuộc trò chuyện này.");
+            throw new BusinessRuleException(
+                RequestAddMoneyErrorCodes.ForbiddenConversation,
+                "Bạn không thể tạo yêu cầu cộng tiền cho cuộc trò chuyện này.");
         }
 
         if (conversation.Status != ConversationStatus.Ongoing)
         {
             // Chỉ cho phép cộng tiền khi conversation đang ongoing.
-            throw new BadRequestException($"Không thể cộng tiền ở trạng thái '{conversation.Status}'.");
+            throw new BusinessRuleException(
+                RequestAddMoneyErrorCodes.InvalidConversationStatus,
+                $"Không thể cộng tiền ở trạng thái '{conversation.Status}'.");
         }
 
         return conversation;
@@ -74,7 +80,9 @@ public partial class RequestConversationAddMoneyCommandHandlerRequestedDomainEve
         if (pendingOffer != null)
         {
             // Rule nghiệp vụ: mỗi thời điểm chỉ cho phép một offer pending.
-            throw new BadRequestException("Đã có một yêu cầu cộng tiền đang chờ phản hồi.");
+            throw new BusinessRuleException(
+                RequestAddMoneyErrorCodes.PendingOfferExists,
+                "Đã có một yêu cầu cộng tiền đang chờ phản hồi.");
         }
     }
 

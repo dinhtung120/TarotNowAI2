@@ -13,6 +13,13 @@ namespace TarotNow.Application.Features.Chat.Commands.RequestConversationAddMone
 public partial class RequestConversationAddMoneyCommandHandlerRequestedDomainEventHandler
     : IdempotentDomainEventNotificationHandler<RequestConversationAddMoneyCommandHandlerRequestedDomainEvent>
 {
+    internal static class ErrorCodes
+    {
+        internal const string ForbiddenConversation = "chat.add_money.request.forbidden_conversation";
+        internal const string InvalidConversationStatus = "chat.add_money.request.invalid_conversation_status";
+        internal const string PendingOfferExists = "chat.add_money.request.pending_offer_exists";
+    }
+
     private readonly IConversationRepository _conversationRepository;
     private readonly IChatMessageRepository _chatMessageRepository;
     private readonly IMediator _mediator;

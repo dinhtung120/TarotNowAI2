@@ -235,15 +235,21 @@ export function useChatSendActions({
   if (!messageContent || sendInFlightRef.current) return false;
   sendInFlightRef.current = true;
   setSending(true);
+  setNewMessage('');
 
   try {
    const success = await sendTypedMessage(messageContent, 'text');
-   if (!success) return false;
-   setNewMessage('');
+   if (!success) {
+    setNewMessage(messageContent);
+    return false;
+   }
    if (connectionRef.current && connected && conversationId) {
     void connectionRef.current.invoke('TypingStopped', conversationId).catch(() => undefined);
    }
    return true;
+  } catch {
+   setNewMessage(messageContent);
+   return false;
   } finally {
    setSending(false);
    sendInFlightRef.current = false;

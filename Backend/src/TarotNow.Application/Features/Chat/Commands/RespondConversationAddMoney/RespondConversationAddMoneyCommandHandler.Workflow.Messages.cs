@@ -3,6 +3,8 @@ using TarotNow.Application.Common;
 using TarotNow.Application.Exceptions;
 using TarotNow.Domain.Enums;
 
+using RespondAddMoneyErrorCodes = TarotNow.Application.Features.Chat.Commands.RespondConversationAddMoney.RespondConversationAddMoneyCommandHandlerRequestedDomainEventHandler.ErrorCodes;
+
 namespace TarotNow.Application.Features.Chat.Commands.RespondConversationAddMoney;
 
 public partial class RespondConversationAddMoneyCommandHandlerRequestedDomainEventHandler
@@ -30,19 +32,25 @@ public partial class RespondConversationAddMoneyCommandHandlerRequestedDomainEve
         if (offer.ConversationId != conversation.Id)
         {
             // Chặn việc dùng offer của conversation khác để tránh thao tác sai ngữ cảnh.
-            throw new BadRequestException("Đề xuất cộng tiền không thuộc cuộc trò chuyện này.");
+            throw new BusinessRuleException(
+                RespondAddMoneyErrorCodes.InvalidOffer,
+                "Đề xuất cộng tiền không thuộc cuộc trò chuyện này.");
         }
 
         if (offer.Type != ChatMessageType.PaymentOffer)
         {
             // Chỉ payment offer mới được phép đi qua flow phản hồi này.
-            throw new BadRequestException("Tin nhắn được chọn không phải đề xuất cộng tiền.");
+            throw new BusinessRuleException(
+                RespondAddMoneyErrorCodes.InvalidOffer,
+                "Tin nhắn được chọn không phải đề xuất cộng tiền.");
         }
 
         if (offer.PaymentPayload == null || offer.PaymentPayload.AmountDiamond <= 0)
         {
             // Payload thiếu hoặc amount không hợp lệ thì phải dừng để bảo toàn nghiệp vụ tiền.
-            throw new BadRequestException("Đề xuất cộng tiền không hợp lệ.");
+            throw new BusinessRuleException(
+                RespondAddMoneyErrorCodes.InvalidOffer,
+                "Đề xuất cộng tiền không hợp lệ.");
         }
 
         return offer;
@@ -64,7 +72,9 @@ public partial class RespondConversationAddMoneyCommandHandlerRequestedDomainEve
 
         if (handled)
         {
-            throw new BadRequestException("Đề xuất cộng tiền này đã được xử lý.");
+            throw new BusinessRuleException(
+                RespondAddMoneyErrorCodes.AlreadyHandled,
+                "Đề xuất cộng tiền này đã được xử lý.");
         }
     }
 

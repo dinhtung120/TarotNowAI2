@@ -4,7 +4,7 @@ import { getServerAccessToken } from '@/shared/application/gateways/serverAuth';
 import { serverHttpRequest } from '@/shared/application/gateways/serverHttpClient';
 import { logger } from '@/shared/application/gateways/logger';
 import type { ListAdminDisputesResult } from './conversations.types';
-import { AUTH_ERROR } from "@/shared/domain/authErrors";
+import { AUTH_ERROR } from '@/shared/domain/authErrors';
 import { invokeDomainCommand } from '@/shared/application/gateways/domainCommandRegistry';
 
 function unauthorized<T>() { return actionFail(AUTH_ERROR.UNAUTHORIZED) as ActionResult<T>; }
@@ -15,6 +15,14 @@ export async function requestConversationAddMoney(
 ): Promise<ActionResult<{ messageId: string }>> {
  const accessToken = await getServerAccessToken();
  if (!accessToken) return unauthorized();
+ const idempotencyKey = data.idempotencyKey ?? randomUUID();
+
+ logger.info('[ChatAction] requestConversationAddMoney.start', {
+  conversationId,
+  amountDiamond: data.amountDiamond,
+  idempotencyKey,
+ });
+
  try {
   const result = await invokeDomainCommand<{ messageId: string }>('chat.add-money.request', {
    path: `/conversations/${conversationId}/add-money/request`,
@@ -22,17 +30,33 @@ export async function requestConversationAddMoney(
    json: {
     amountDiamond: data.amountDiamond,
     description: data.description,
-    idempotencyKey: data.idempotencyKey ?? randomUUID(),
+    idempotencyKey,
    },
    fallbackErrorMessage: 'Failed to request add money',
   });
   if (!result.ok) {
-   logger.error('[ChatAction] requestConversationAddMoney', result.error, { status: result.status, conversationId });
-   return actionFail(result.error || 'Failed to request add money');
+   logger.error('[ChatAction] requestConversationAddMoney.failed', result.error, {
+    status: result.status,
+    conversationId,
+    idempotencyKey,
+    failureClass: result.status === 503 || result.status === 504
+     ? 'transport'
+     : result.status === 401
+      ? 'auth'
+      : 'business-or-http',
+   });
+   return actionFail(result.error || 'Failed to request add money', { status: result.status, errorCode: result.error });
   }
+
+  logger.info('[ChatAction] requestConversationAddMoney.succeeded', {
+   conversationId,
+   idempotencyKey,
+   messageId: result.data?.messageId,
+  });
+
   return actionOk(result.data);
  } catch (error) {
-  logger.error('[ChatAction] requestConversationAddMoney', error, { conversationId });
+  logger.error('[ChatAction] requestConversationAddMoney.error', error, { conversationId, idempotencyKey });
   return actionFail('Failed to request add money');
  }
 }
@@ -43,6 +67,13 @@ export async function respondConversationAddMoney(
 ): Promise<ActionResult<{ accepted: boolean; messageId: string }>> {
  const accessToken = await getServerAccessToken();
  if (!accessToken) return unauthorized();
+
+ logger.info('[ChatAction] respondConversationAddMoney.start', {
+  conversationId,
+  offerMessageId: data.offerMessageId,
+  accept: data.accept,
+ });
+
  try {
   const result = await invokeDomainCommand<{ accepted: boolean; messageId: string }>('chat.add-money.respond', {
    path: `/conversations/${conversationId}/add-money/respond`,
@@ -51,12 +82,34 @@ export async function respondConversationAddMoney(
    fallbackErrorMessage: 'Failed to respond add money',
   });
   if (!result.ok) {
-   logger.error('[ChatAction] respondConversationAddMoney', result.error, { status: result.status, conversationId });
-   return actionFail(result.error || 'Failed to respond add money');
+   logger.error('[ChatAction] respondConversationAddMoney.failed', result.error, {
+    status: result.status,
+    conversationId,
+    offerMessageId: data.offerMessageId,
+    accept: data.accept,
+    failureClass: result.status === 503 || result.status === 504
+     ? 'transport'
+     : result.status === 401
+      ? 'auth'
+      : 'business-or-http',
+   });
+   return actionFail(result.error || 'Failed to respond add money', { status: result.status, errorCode: result.error });
   }
+
+  logger.info('[ChatAction] respondConversationAddMoney.succeeded', {
+   conversationId,
+   offerMessageId: data.offerMessageId,
+   accept: data.accept,
+   messageId: result.data?.messageId,
+  });
+
   return actionOk(result.data);
  } catch (error) {
-  logger.error('[ChatAction] respondConversationAddMoney', error, { conversationId });
+  logger.error('[ChatAction] respondConversationAddMoney.error', error, {
+   conversationId,
+   offerMessageId: data.offerMessageId,
+   accept: data.accept,
+  });
   return actionFail('Failed to respond add money');
  }
 }

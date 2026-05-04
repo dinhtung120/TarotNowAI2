@@ -8,9 +8,57 @@ import {
  type ChatMessageDto,
 } from '@/features/chat/application/actions';
 import { logger } from '@/shared/application/gateways/logger';
+import type { ActionResult } from '@/shared/domain/actionResult';
+import { AUTH_ERROR } from '@/shared/domain/authErrors';
 
 interface UsePaymentOfferActionsParams {
  conversationId: string;
+}
+
+const CHAT_FINANCE_ERROR_CODES = {
+ REQUEST_PENDING_OFFER_EXISTS: 'chat.add_money.request.pending_offer_exists',
+ REQUEST_FORBIDDEN_CONVERSATION: 'chat.add_money.request.forbidden_conversation',
+ REQUEST_INVALID_CONVERSATION_STATUS: 'chat.add_money.request.invalid_conversation_status',
+ RESPOND_ALREADY_HANDLED: 'chat.add_money.respond.already_handled',
+ RESPOND_EXPIRED: 'chat.add_money.respond.expired',
+ RESPOND_FORBIDDEN_CONVERSATION: 'chat.add_money.respond.forbidden_conversation',
+ RESPOND_INVALID_CONVERSATION_STATUS: 'chat.add_money.respond.invalid_conversation_status',
+ RESPOND_INVALID_OFFER: 'chat.add_money.respond.invalid_offer',
+} as const;
+
+function resolveAddMoneyFailureMessage<T>(
+ response: ActionResult<T>,
+ fallbackMessage: string,
+): string {
+ if (response.success) {
+  return fallbackMessage;
+ }
+
+ if (response.status === 503 || response.status === 504) {
+  return 'Kết nối đang chậm hoặc gián đoạn, vui lòng thử lại.';
+ }
+
+ if (response.status === 401 || response.error === AUTH_ERROR.UNAUTHORIZED) {
+  return 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.';
+ }
+
+ switch (response.error) {
+  case CHAT_FINANCE_ERROR_CODES.REQUEST_PENDING_OFFER_EXISTS:
+   return 'Đã có một yêu cầu cộng tiền đang chờ phản hồi.';
+  case CHAT_FINANCE_ERROR_CODES.REQUEST_FORBIDDEN_CONVERSATION:
+  case CHAT_FINANCE_ERROR_CODES.REQUEST_INVALID_CONVERSATION_STATUS:
+  case CHAT_FINANCE_ERROR_CODES.RESPOND_FORBIDDEN_CONVERSATION:
+  case CHAT_FINANCE_ERROR_CODES.RESPOND_INVALID_CONVERSATION_STATUS:
+   return 'Không thể thao tác cộng tiền ở trạng thái cuộc trò chuyện hiện tại.';
+  case CHAT_FINANCE_ERROR_CODES.RESPOND_ALREADY_HANDLED:
+   return 'Đề xuất cộng tiền này đã được xử lý trước đó.';
+  case CHAT_FINANCE_ERROR_CODES.RESPOND_EXPIRED:
+   return 'Đề xuất cộng tiền đã hết hạn.';
+  case CHAT_FINANCE_ERROR_CODES.RESPOND_INVALID_OFFER:
+   return 'Đề xuất cộng tiền không hợp lệ hoặc không còn khả dụng.';
+  default:
+   return response.error || fallbackMessage;
+ }
 }
 
 export function usePaymentOfferActions({ conversationId }: UsePaymentOfferActionsParams) {
@@ -28,7 +76,7 @@ export function usePaymentOfferActions({ conversationId }: UsePaymentOfferAction
     });
 
     if (!response.success) {
-     toast.error(response.error || 'Không thể gửi yêu cầu cộng tiền.');
+     toast.error(resolveAddMoneyFailureMessage(response, 'Không thể gửi yêu cầu cộng tiền.'));
      return false;
     }
 
@@ -54,7 +102,7 @@ export function usePaymentOfferActions({ conversationId }: UsePaymentOfferAction
     });
 
     if (!response.success) {
-     toast.error(response.error || 'Không thể chấp nhận đề xuất cộng tiền.');
+     toast.error(resolveAddMoneyFailureMessage(response, 'Không thể chấp nhận đề xuất cộng tiền.'));
      return false;
     }
 
@@ -84,7 +132,7 @@ export function usePaymentOfferActions({ conversationId }: UsePaymentOfferAction
     });
 
     if (!response.success) {
-     toast.error(response.error || 'Không thể từ chối đề xuất cộng tiền.');
+     toast.error(resolveAddMoneyFailureMessage(response, 'Không thể từ chối đề xuất cộng tiền.'));
      return false;
     }
 
