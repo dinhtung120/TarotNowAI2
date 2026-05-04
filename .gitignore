@@ -118,3 +118,6 @@ Thumbs.db
 nohup.out
 backend_log*.txt
 build_errors*.txt
+
+# ---------- Claude Agent Worktrees ----------
+.claude/worktrees/
