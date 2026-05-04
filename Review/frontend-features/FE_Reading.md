@@ -1,62 +1,53 @@
 # FE Reading
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Frontend/src/features/reading`.
-- Public export: `Frontend/src/features/reading/public.ts` nếu tồn tại.
-- App routes cần đối chiếu: `Frontend/src/app/[locale]` grep `reading` hoặc route nghiệp vụ tương ứng.
-- API route proxy/action source: `Frontend/src/app/api` và feature server actions nếu có.
-- Guards: `Frontend/scripts/check-clean-architecture.mjs`, `check-component-size.mjs`, `check-hook-action-size.mjs`, `check-auth-fail-closed.mjs`.
+- Feature: `Frontend/src/features/reading`
+- Public export: `Frontend/src/features/reading/public.ts`
+- Routes: `Frontend/src/app/[locale]/(user)/reading/page.tsx`, `reading/history/page.tsx`, `reading/history/[id]/page.tsx`, `reading/session/[id]/page.tsx`
+- API/SSE routes: `Frontend/src/app/[locale]/api/reading/sessions/[sessionId]/stream/route.ts`, `stream-ticket/route.ts`; app API reading routes under `Frontend/src/app/api/reading/**/route.ts`
+- Prefetch: `prefetchReadingSetupPage` in `runners/user/collection.ts`, `prefetchReadingHistoryListPage` and `prefetchReadingHistoryDetailPage` in `runners/user/readingHistory.ts`
+- Messages: `messages/{vi,en,zh}/reading/{tarot,setup,session,history,ai-interpretation}.json`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Route/page/layout: xác định bằng `find Frontend/src/app -type f | grep -E 'reading|reading'`.
-- Feature public surface: `Frontend/src/features/reading/public.ts` là boundary ưu tiên cho app imports.
-- Components/hooks/actions: nằm trong `Frontend/src/features/reading` theo cấu trúc hiện tại.
-- Backend/API contract: đi qua app API route, server action hoặc shared API client; không bypass auth/security flow.
+`reading/page.tsx` đã đọc là thin route:
 
-## 3. Dependency map thực tế
+- imports `ReadingSetupPage` from `@/features/reading/public`.
+- hydrates `prefetchReadingSetupPage`.
+- wraps with `AppQueryHydrationBoundary`.
 
-### Upstream
+`features/reading/public.ts` exports:
 
-- App Router page/layout/API route import feature `reading`.
-- Shared prefetch runner có thể gọi query/action của feature nếu SSR hydration cần server state.
+- `ReadingSetupPage`
+- `ReadingHistoryPage`
+- `ReadingHistoryDetailPage`
+- `ReadingSessionPage`
+- `getAllHistorySessionsAdminAction`
 
-### Downstream
+## Dependency và dữ liệu
 
-- Shared utilities: query client, auth/session, i18n, UI primitives, prefetch/hydration.
-- Backend contracts: API endpoints/commands tương ứng ở backend feature liên quan.
-- State: TanStack Query cho server state; Zustand chỉ cho local UI state khi có evidence.
+`prefetchReadingSetupPage` gọi `getReadingSetupSnapshotAction`, hydrate query key `userStateQueryKeys.reading.setupSnapshot()` và set cache `userStateQueryKeys.reading.cardsCatalog()` từ `cardsCatalog`.
 
-## 4. Dữ liệu & trạng thái
+Reading frontend phụ thuộc:
 
-- Server state: rà query keys/hooks/actions trong feature.
-- Local UI state: rà component/hook trong `Frontend/src/features/reading`.
-- i18n: đối chiếu `Frontend/messages/vi`, `Frontend/messages/en`, `Frontend/messages/zh`.
-- Realtime/payment/idempotency: chỉ áp dụng nếu route/action gọi command nhạy cảm.
+- Wallet balance + cards catalog setup snapshot.
+- Reading history list/detail runners.
+- SSE stream and stream-ticket localized API routes for AI interpretation.
 
-## 5. Boundary và guard
+## Boundary / guard
 
-- Thin route: `page.tsx`/`layout.tsx` chỉ composition, orchestration nằm trong feature/hook/action.
-- Public API: app route nên import qua `@/features/*/public` khi có.
-- Guard scripts: clean architecture, component size, hook/action size, auth fail-closed, image policy, risk coverage.
-- Accessibility/i18n: touched interactive UI cần accessible name/focus/error association; copy mới cần localization.
+- EventSource URL không được chứa prompt/follow-up nhạy cảm; stream-ticket route là evidence cần review khi sửa AI stream.
+- Reading setup prefetch phải giữ query keys khớp hooks trong session/setup components.
+- App pages phải import qua `@/features/reading/public`.
+- AI/session copy phải có keys trong reading message namespaces cả ba locale.
 
-## 6. Test coverage hiện tại
+## Rủi ro
 
-- Guard coverage: `Frontend/scripts/*.mjs`.
-- Feature tests: tìm trong `Frontend/tests` hoặc colocated tests với grep `reading`.
-- Không tìm thấy evidence trực tiếp: ghi rõ route/component/action chưa có test khi audit chi tiết.
+- P0: prompt/follow-up sensitive payload trên EventSource URL; stream token leak; reading command duplicate gây double charge; protected reading route fail-open.
+- P1: setup snapshot/cache key mismatch làm thiếu catalog/wallet; history detail route leak session của user khác qua API proxy/action; missing i18n in AI statuses.
+- P2: docs bỏ qua localized SSE API route under `[locale]/api`.
 
-## 7. Rủi ro kiến trúc
+## Kết luận
 
-- P0: auth fail-open, token/secret exposure, payment/reward command duplicate, route bypass backend security.
-- P1: route quá dày, import sâu vào feature internals, prefetch/hydration mismatch, thiếu i18n.
-- P2: component/hook gần vượt budget, evidence test chưa đủ.
-
-## 8. Kết luận review
-
-- Mức độ phù hợp kiến trúc: file đã neo đúng source feature `reading` và guard frontend; cần audit từng route/action để kết luận pass cuối cùng.
-- Evidence quan trọng: `Frontend/src/features/reading`, `Frontend/src/app/[locale]`, `Frontend/src/shared/server/prefetch`, `Frontend/messages`, `Frontend/scripts`.
-- Việc cần làm ưu tiên cao: điền route/action/test cụ thể trong review PR module.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+FE Reading là high-risk frontend module vì kết hợp SSR setup snapshot, history, AI SSE stream và wallet/AI billing backend. Review đúng phải đọc route, public exports, prefetch runners và localized stream API routes.

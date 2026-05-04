@@ -1,62 +1,66 @@
 # BE Admin
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/Admin`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `Admin`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `Admin`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `Admin`.
+- Feature: `Backend/src/TarotNow.Application/Features/Admin`
+- Controllers: `AdminUsersController.cs`, `AdminDepositsController.cs`, `AdminWithdrawalsController.cs`, `AdminDisputesController.cs`, `AdminReaderRequestsController.cs`, `AdminCommunityController.cs`, `AdminGamificationController.cs`, `AdminOutboxController.cs`, `AdminReconciliationController.cs`, `AdminSystemConfigsController.cs`
+- Tests: `Backend/tests/TarotNow.Api.IntegrationTests/AdminRbacIntegrationTests.cs`, `Backend/tests/TarotNow.Application.UnitTests/Admin/GetLedgerMismatchQueryHandlerTests.cs`, `Backend/tests/TarotNow.Application.UnitTests/Features/Admin/ApproveReaderCommandHandlerTests.cs`, `Backend/tests/TarotNow.Infrastructure.IntegrationTests/Reconciliation/AdminRepositoryIntegrationTests.cs`, `Backend/tests/TarotNow.Infrastructure.UnitTests/Configuration/SystemConfigAdminServiceTests.cs`
+- Datastore/runtime: spans `Users`, `WalletTransactions`, `DepositOrders`, `WithdrawalRequests`, `SystemConfigs`, outbox tables and Mongo read models for reader/community/gamification depending endpoint
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/Admin/Commands` và/hoặc `Features/Admin/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: không mặc định; chỉ áp dụng nếu feature publish notification/realtime/event phụ.
-- Finance/AI/reward integration: không mặc định; rà khi command có state mutation hoặc side effect.
+Admin API là một boundary rộng, tất cả controller đã đọc/map đều dùng `[Authorize(Roles = "admin")]`, `[ApiVersion(ApiVersions.V1)]` và rate limit `auth-session`.
 
-## 3. Dependency map thực tế
+Các nhóm endpoint chính:
 
-### Upstream
+- User operations qua `AdminUsersController.cs`: list/create/lock/update/add-balance.
+- Finance operations qua `AdminDepositsController.cs`, `AdminWithdrawalsController.cs`, `AdminReconciliationController.cs`.
+- Dispute/reader/community/gamification operations qua các controller admin tương ứng.
+- Ops/system qua `AdminOutboxController.cs` và `AdminSystemConfigsController.cs`.
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `Admin`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `Admin` nhận hoặc phát domain events.
+`AdminUsersController.UpdateUser` và `AddUserBalance` có idempotency key handling ở API boundary. `UpdateUser` yêu cầu key từ body/header và trả `400 Missing idempotency key` nếu thiếu; `AddUserBalance` đọc key từ header khi body chưa có.
 
-### Downstream
+`AdminOutboxController.GetDashboard` dispatch `GetOutboxDashboardQuery`; đây là ops read path cho pending/failed/dead-letter/retry age.
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+`AdminReconciliationController.GetWalletMismatches` dispatch `GetLedgerMismatchQuery`; đây là finance reconciliation read path giữa ledger và wallet aggregate.
 
-## 4. Dữ liệu & trạng thái
+## Dependency và dữ liệu
 
-- PostgreSQL: rà nếu feature có transactional state.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: rà nếu feature dùng cache/rate-limit/pubsub.
-- Transaction/idempotency/outbox: áp dụng nếu command mutate state hoặc publish side effect.
+Feature `Admin` có commands/queries quan trọng:
 
-## 5. Boundary và guard
+- Commands: `AddUserBalance`, `ApproveReader`, `CreateUser`, `ResolveDispute`, `ToggleUserLock`, `UpdateUser`.
+- Queries: `ListUsers`, `ListDeposits`, `ListReaderRequests`, `ListDisputes`, `GetLedgerMismatch`, `GetOutboxDashboard`.
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+Datastore touched tùy endpoint:
 
-## 6. Test coverage hiện tại
+- PostgreSQL `Users`, `WalletTransactions`, `DepositOrders`, `WithdrawalRequests`, `SystemConfigs`.
+- PostgreSQL outbox tables: `OutboxMessages`, `OutboxHandlerStates`, `OutboxInlineHandlerStates`.
+- MongoDB reader/community/gamification/report collections khi controller admin thao tác read-model hoặc moderation.
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'Admin|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+## Boundary / guard
 
-## 7. Rủi ro kiến trúc
+- Admin route phải RBAC fail-closed theo role `admin`.
+- Controller không được inject DbContext/repository trực tiếp; evidence đã đọc cho admin users/outbox/reconciliation chỉ inject `IMediator`.
+- Finance/admin mutation như add balance, dispute settlement, withdrawal processing phải review transaction/idempotency/money event.
+- System config/admin ops không được leak secret hoặc expose write endpoints thiếu rate-limit/RBAC.
 
-- P0: boundary/event-driven violation; state mutation/side effect sai layer.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+## Test coverage hiện có
 
-## 8. Kết luận review
+- `AdminRbacIntegrationTests.cs`: user role `User` gọi `/api/v1/admin/users` bị `403`; role `admin` gọi thành công `200`.
+- `GetLedgerMismatchQueryHandlerTests.cs`: coverage reconciliation query.
+- `ApproveReaderCommandHandlerTests.cs`: coverage admin reader approval command.
+- `AdminRepositoryIntegrationTests.cs`: infrastructure integration evidence cho reconciliation/admin repository.
+- `SystemConfigAdminServiceTests.cs`: coverage admin system config service.
 
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/Admin`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/Admin`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+Các controller admin còn lại có thể có coverage trong feature module tương ứng; khi review PR phải đọc test của bounded context liên quan, không chỉ `Features/Admin`.
+
+## Rủi ro
+
+- P0: RBAC admin fail-open; admin finance mutation thiếu idempotency/transaction; add balance không publish `MoneyChangedDomainEvent`; dispute settlement double payout/refund.
+- P1: admin endpoint bypass Application bằng direct repository/db; system config write expose secret hoặc thiếu audit.
+- P1: reconciliation/outbox dashboard thiếu integration test cho production-like state.
+- P2: docs gom mọi admin action vào `Features/Admin` trong khi nhiều admin controllers thuộc feature khác.
+
+## Kết luận
+
+Admin là operational boundary phủ nhiều bounded context, không phải một module nghiệp vụ đơn lẻ. Review đúng phải bắt đầu từ controller admin cụ thể, sau đó đọc command/query của feature đích và test RBAC/idempotency/finance/outbox tương ứng.

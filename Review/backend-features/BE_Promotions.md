@@ -1,62 +1,57 @@
 # BE Promotions
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/Promotions`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `Promotions`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `Promotions`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `Promotions`.
+- Feature: `Backend/src/TarotNow.Application/Features/Promotions`
+- Controller: `Backend/src/TarotNow.Api/Controllers/PromotionsController.cs`
+- Test: `Backend/tests/TarotNow.Api.IntegrationTests/PromotionIntegrationTests.cs`
+- Datastore: `ApplicationDbContext.cs` DbSet `DepositPromotions`; related Deposit state `DepositOrders`, `WalletTransactions`
+- Boundary: admin route under `ApiRoutes.Admin + "/promotions"`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/Promotions/Commands` và/hoặc `Features/Promotions/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: không mặc định; chỉ áp dụng nếu feature publish notification/realtime/event phụ.
-- Finance/AI/reward integration: có rủi ro cao, phải rà transaction, idempotency và settlement/refund/reward consistency.
+`PromotionsController.cs` là admin-only API với `[Authorize(Roles = "admin")]` và rate limit `auth-session`.
 
-## 3. Dependency map thực tế
+Endpoints chính:
 
-### Upstream
+- `GET /admin/promotions`: `ListPromotionsQuery { OnlyActive }`.
+- `POST /admin/promotions`: `CreatePromotionCommand`.
+- `PUT /admin/promotions/{id}`: maps `UpdatePromotionRequest` + route id to `UpdatePromotionCommand`.
+- `DELETE /admin/promotions/{id}`: `DeletePromotionCommand { Id }`.
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `Promotions`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `Promotions` nhận hoặc phát domain events.
+Controller chỉ dispatch MediatR, không inject DbContext/repository trực tiếp.
 
-### Downstream
+## Dependency và dữ liệu
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+Promotion state chính là PostgreSQL `DepositPromotions`, liên quan deposit order calculation/bonus.
 
-## 4. Dữ liệu & trạng thái
+Fields đọc từ update request gồm:
 
-- PostgreSQL: bắt buộc rà các bảng finance/transactional liên quan.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: rà nếu feature dùng cache/rate-limit/pubsub.
-- Transaction/idempotency/outbox: bắt buộc review vì module thuộc vùng finance/AI/reward/realtime.
+- `MinAmountVnd`
+- `BonusGold`
+- `IsActive`
 
-## 5. Boundary và guard
+Promotion không trực tiếp mutate wallet trong controller, nhưng ảnh hưởng finance flow Deposit khi bonus được áp dụng.
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+## Boundary / guard
 
-## 6. Test coverage hiện tại
+- Admin RBAC phải giữ fail-closed.
+- Promotion create/update/delete phải không làm lệch deposit bonus calculation đang active.
+- Khi đổi promotion schema/rule, phải review `BE_Deposit.md` vì deposit order creation/settlement phụ thuộc promotion.
+- Không coi Promotions là user-facing public API nếu chỉ thấy admin controller.
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'Promotions|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+## Test coverage hiện có
 
-## 7. Rủi ro kiến trúc
+- `PromotionIntegrationTests.cs`: API integration evidence cho promotion flow.
 
-- P0: boundary/event-driven violation; thiếu transaction/idempotency/money event hoặc double-spend.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+Cần đọc thêm handler tests nếu audit sâu; evidence hiện tại chủ yếu là integration test và controller.
 
-## 8. Kết luận review
+## Rủi ro
 
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/Promotions`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/Promotions`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+- P0: non-admin mutate promotion; promotion thay đổi làm deposit bonus sai hoặc double-credit wallet.
+- P1: active/inactive rule không đồng bộ với deposit order creation; thiếu audit cho admin mutation.
+- P2: docs gọi Promotions là reward/gacha module trong khi source evidence là deposit promotion.
+
+## Kết luận
+
+Promotions backend là admin-managed deposit promotion module. Review đúng phải đọc cùng Deposit order creation/bonus logic, không review tách rời khỏi finance deposit flow.

@@ -1,62 +1,52 @@
 # FE Community
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Frontend/src/features/community`.
-- Public export: `Frontend/src/features/community/public.ts` nếu tồn tại.
-- App routes cần đối chiếu: `Frontend/src/app/[locale]` grep `community` hoặc route nghiệp vụ tương ứng.
-- API route proxy/action source: `Frontend/src/app/api` và feature server actions nếu có.
-- Guards: `Frontend/scripts/check-clean-architecture.mjs`, `check-component-size.mjs`, `check-hook-action-size.mjs`, `check-auth-fail-closed.mjs`.
+- Feature: `Frontend/src/features/community`
+- Public export: `Frontend/src/features/community/public.ts`
+- Route: `Frontend/src/app/[locale]/(user)/community/page.tsx`
+- Prefetch: `Frontend/src/shared/server/prefetch/runners/user/community.ts`
+- Messages: `Frontend/messages/{vi,en,zh}/community/community.json`
+- API proxy: không thấy community app API proxy riêng trong evidence đã đọc; route dùng feature action qua prefetch runner.
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Route/page/layout: xác định bằng `find Frontend/src/app -type f | grep -E 'community|community'`.
-- Feature public surface: `Frontend/src/features/community/public.ts` là boundary ưu tiên cho app imports.
-- Components/hooks/actions: nằm trong `Frontend/src/features/community` theo cấu trúc hiện tại.
-- Backend/API contract: đi qua app API route, server action hoặc shared API client; không bypass auth/security flow.
+`community/page.tsx` là route có composition mỏng:
 
-## 3. Dependency map thực tế
+- gọi `dehydrateAppQueries(prefetchCommunityFeedsPage)`.
+- bọc `FeedPage` trong `AppQueryHydrationBoundary`.
+- import `FeedPage` từ `@/features/community/public`.
+- thêm wrapper `<main>` với background/text classes.
 
-### Upstream
+`features/community/public.ts` chỉ export `FeedPage` từ feature component.
 
-- App Router page/layout/API route import feature `community`.
-- Shared prefetch runner có thể gọi query/action của feature nếu SSR hydration cần server state.
+## Dependency và dữ liệu
 
-### Downstream
+`prefetchCommunityFeedsPage` gọi `prefetchCommunityFeedInfinite(qc, 'public')`.
 
-- Shared utilities: query client, auth/session, i18n, UI primitives, prefetch/hydration.
-- Backend contracts: API endpoints/commands tương ứng ở backend feature liên quan.
-- State: TanStack Query cho server state; Zustand chỉ cho local UI state khi có evidence.
+Luồng prefetch:
 
-## 4. Dữ liệu & trạng thái
+- query key `['community', 'feed', visibility]`.
+- queryFn gọi `getFeedAction(pageParam, 10, visibility)`.
+- `getNextPageParam` dựa trên `metadata.page`, `metadata.pageSize`, `metadata.totalCount`.
+- Chỉ SSR feed `public`; comment trong source ghi tab `private` tải khi user chuyển tab trên client.
 
-- Server state: rà query keys/hooks/actions trong feature.
-- Local UI state: rà component/hook trong `Frontend/src/features/community`.
-- i18n: đối chiếu `Frontend/messages/vi`, `Frontend/messages/en`, `Frontend/messages/zh`.
-- Realtime/payment/idempotency: chỉ áp dụng nếu route/action gọi command nhạy cảm.
+Community frontend phụ thuộc backend community feed/action, TanStack infinite query, i18n community messages và media/upload/report UI trong feature internals nếu sửa sâu.
 
-## 5. Boundary và guard
+## Boundary / guard
 
-- Thin route: `page.tsx`/`layout.tsx` chỉ composition, orchestration nằm trong feature/hook/action.
-- Public API: app route nên import qua `@/features/*/public` khi có.
-- Guard scripts: clean architecture, component size, hook/action size, auth fail-closed, image policy, risk coverage.
-- Accessibility/i18n: touched interactive UI cần accessible name/focus/error association; copy mới cần localization.
+- Community là protected user route nhưng SSR chỉ hydrate public feed; private feed phải giữ ownership/token boundary ở action/API backend.
+- App route import qua `@/features/community/public`, đúng public API boundary.
+- Query key `['community', 'feed', 'public']` phải khớp hook infinite feed trong `FeedPage`.
+- Không claim có app API proxy community riêng nếu chưa đọc thấy route dưới `Frontend/src/app/api/community`.
+- Copy mới thuộc `community/community.json` ở cả `vi/en/zh`.
 
-## 6. Test coverage hiện tại
+## Rủi ro
 
-- Guard coverage: `Frontend/scripts/*.mjs`.
-- Feature tests: tìm trong `Frontend/tests` hoặc colocated tests với grep `community`.
-- Không tìm thấy evidence trực tiếp: ghi rõ route/component/action chưa có test khi audit chi tiết.
+- P0: private feed/post/media/report action leak dữ liệu user khác hoặc bypass auth khi chuyển tab client-side.
+- P1: infinite query key mismatch giữa SSR public feed và client hook; hardcoded copy ngoài messages; route page phình thành business orchestration.
+- P2: docs mô tả SSR cả private feed trong khi source chỉ prefetch public feed.
 
-## 7. Rủi ro kiến trúc
+## Kết luận
 
-- P0: auth fail-open, token/secret exposure, payment/reward command duplicate, route bypass backend security.
-- P1: route quá dày, import sâu vào feature internals, prefetch/hydration mismatch, thiếu i18n.
-- P2: component/hook gần vượt budget, evidence test chưa đủ.
-
-## 8. Kết luận review
-
-- Mức độ phù hợp kiến trúc: file đã neo đúng source feature `community` và guard frontend; cần audit từng route/action để kết luận pass cuối cùng.
-- Evidence quan trọng: `Frontend/src/features/community`, `Frontend/src/app/[locale]`, `Frontend/src/shared/server/prefetch`, `Frontend/messages`, `Frontend/scripts`.
-- Việc cần làm ưu tiên cao: điền route/action/test cụ thể trong review PR module.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+FE Community là protected feed route với SSR hydration cho public feed và private tab tải client-side. Review đúng tập trung vào `FeedPage`, `getFeedAction`, query key infinite feed và boundary private/public khi sửa social UI.

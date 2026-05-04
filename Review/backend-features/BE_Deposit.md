@@ -1,65 +1,55 @@
 # BE Deposit
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/Deposit`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `Deposit`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `Deposit`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `Deposit`.
+- Feature: `Backend/src/TarotNow.Application/Features/Deposit`
+- Controllers: `Backend/src/TarotNow.Api/Controllers/DepositController.cs`, `DepositController.Orders.cs`, `DepositController.Webhook.cs`, `AdminDepositsController.cs`
+- Tests: `Backend/tests/TarotNow.Application.UnitTests/Features/Deposit/DepositCommandHandlersPublishOnlyTests.cs`, `DepositOrderCreateRequestedDomainEventHandlerTests.cs`, `Backend/tests/TarotNow.Api.IntegrationTests/DepositOrderIntegrationTests.cs`, `DepositWebhookIntegrationTests.cs`, `Backend/tests/TarotNow.Domain.UnitTests/Events/DepositWebhookReceivedDomainEventTests.cs`, `Backend/tests/TarotNow.Infrastructure.UnitTests/Migrations/AddDepositOrderCodeSequenceMigrationTests.cs`
+- Datastore: `ApplicationDbContext.cs` DbSet `DepositOrders`, `DepositPromotions`, `WalletTransactions`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/Deposit/Commands` và/hoặc `Features/Deposit/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: không mặc định; chỉ áp dụng nếu feature publish notification/realtime/event phụ.
-- Finance/AI/reward integration: có rủi ro cao, phải rà transaction, idempotency và settlement/refund/reward consistency.
+Deposit có API entry points tách theo order và webhook:
 
-## 3. Dependency map thực tế
+- `DepositController.Orders.cs`: user-facing deposit order operations.
+- `DepositController.Webhook.cs`: provider/webhook callback boundary.
+- `AdminDepositsController.cs`: admin review/operation path.
 
-### Upstream
+Application feature có `Commands` và `Queries`. Test `DepositCommandHandlersPublishOnlyTests.cs` là evidence quan trọng: command handlers trong Deposit được kỳ vọng chỉ publish/dispatch theo event-driven model, không orchestration trực tiếp trong entry handler.
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `Deposit`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `Deposit` nhận hoặc phát domain events.
+`DepositOrderCreateRequestedDomainEventHandlerTests.cs` là evidence cho orchestration thực tế khi tạo deposit order nằm ở requested domain event handler.
 
-### Downstream
+## Dependency và dữ liệu
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+PostgreSQL state chính:
 
-## 4. Dữ liệu & trạng thái
+- `DepositOrders`: order nạp tiền.
+- `DepositPromotions`: promotion áp dụng cho deposit.
+- `WalletTransactions`: ledger khi deposit thành công/settle.
 
-Evidence dữ liệu cụ thể: PostgreSQL deposit_orders/deposit_promotions/wallet_transactions; payment provider/idempotency/money event critical.
+`ApplicationDbContext` có sequence `deposit_order_code_seq` được cấu hình trong `ConfigureDatabaseSequences`; migration test `AddDepositOrderCodeSequenceMigrationTests.cs` cho thấy order code sequence là phần cần giữ ổn định khi sửa deposit schema.
 
+Webhook event được test bởi `DepositWebhookReceivedDomainEventTests.cs`; khi review webhook phải kiểm idempotency/replay protection và mapping provider status -> wallet mutation.
 
-- PostgreSQL: bắt buộc rà các bảng finance/transactional liên quan.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: rà nếu feature dùng cache/rate-limit/pubsub.
-- Transaction/idempotency/outbox: bắt buộc review vì module thuộc vùng finance/AI/reward/realtime.
+## Boundary / guard
 
-## 5. Boundary và guard
+- Deposit write command handlers phải qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
+- Wallet mutation từ deposit phải publish `MoneyChangedDomainEvent` trong command module liên quan.
+- Webhook controller là external boundary: phải review signature/authentication/idempotency, không được cộng tiền trực tiếp ngoài Application/domain event flow.
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+## Test coverage hiện có
 
-## 6. Test coverage hiện tại
+- Unit: `DepositCommandHandlersPublishOnlyTests.cs`, `DepositOrderCreateRequestedDomainEventHandlerTests.cs`.
+- API integration: `DepositOrderIntegrationTests.cs`, `DepositWebhookIntegrationTests.cs`.
+- Domain event: `DepositWebhookReceivedDomainEventTests.cs`.
+- Migration: `AddDepositOrderCodeSequenceMigrationTests.cs`.
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'Deposit|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+## Rủi ro
 
-## 7. Rủi ro kiến trúc
+- P0: webhook replay cộng tiền nhiều lần; deposit order settlement thiếu idempotency; wallet ledger không phát money event; controller xử lý provider side effect trực tiếp.
+- P1: promotion calculation không được test cùng order creation; admin deposit action thiếu audit/rate-limit evidence.
+- P2: docs không nhắc `deposit_order_code_seq` khi thay đổi schema/order code.
 
-- P0: boundary/event-driven violation; thiếu transaction/idempotency/money event hoặc double-spend.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+## Kết luận
 
-## 8. Kết luận review
-
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/Deposit`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/Deposit`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+Deposit có evidence test tốt hơn nhiều module khác, đặc biệt quanh publish-only command handlers, requested event handler, webhook integration và migration sequence. Đây vẫn là finance-critical module, mọi thay đổi phải đi kèm idempotency + wallet ledger + webhook tests.

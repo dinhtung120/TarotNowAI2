@@ -1,62 +1,55 @@
 # FE Profile
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Frontend/src/features/profile`.
-- Public export: `Frontend/src/features/profile/public.ts` nếu tồn tại.
-- App routes cần đối chiếu: `Frontend/src/app/[locale]` grep `profile` hoặc route nghiệp vụ tương ứng.
-- API route proxy/action source: `Frontend/src/app/api` và feature server actions nếu có.
-- Guards: `Frontend/scripts/check-clean-architecture.mjs`, `check-component-size.mjs`, `check-hook-action-size.mjs`, `check-auth-fail-closed.mjs`.
+- Feature: `Frontend/src/features/profile`
+- Public export: `Frontend/src/features/profile/public.ts`
+- Route: `Frontend/src/app/[locale]/(user)/profile/page.tsx`; related mapped routes include profile MFA and reader settings pages
+- API routes: `Frontend/src/app/api/profile/**/route.ts`
+- Prefetch: `Frontend/src/shared/server/prefetch/runners/user/profile.ts` với `prefetchProfilePage`, `prefetchProfileMfaPage`
+- Messages: `Frontend/messages/{vi,en,zh}/profile/profile.json`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Route/page/layout: xác định bằng `find Frontend/src/app -type f | grep -E 'profile|profile'`.
-- Feature public surface: `Frontend/src/features/profile/public.ts` là boundary ưu tiên cho app imports.
-- Components/hooks/actions: nằm trong `Frontend/src/features/profile` theo cấu trúc hiện tại.
-- Backend/API contract: đi qua app API route, server action hoặc shared API client; không bypass auth/security flow.
+`profile/page.tsx` đã đọc là thin route:
 
-## 3. Dependency map thực tế
+- calls `dehydrateAppQueries(prefetchProfilePage)`.
+- wraps `<ProfilePage />` trong `AppQueryHydrationBoundary`.
+- imports `ProfilePage` từ `@/features/profile/public`.
 
-### Upstream
+`features/profile/public.ts` export:
 
-- App Router page/layout/API route import feature `profile`.
-- Shared prefetch runner có thể gọi query/action của feature nếu SSR hydration cần server state.
+- `getProfileAction`
+- `ProfilePage`
+- `ProfileMfaPage`
+- `ProfileReaderSettingsPage`
 
-### Downstream
+Profile feature bao gồm hồ sơ user, MFA settings surface và reader settings surface.
 
-- Shared utilities: query client, auth/session, i18n, UI primitives, prefetch/hydration.
-- Backend contracts: API endpoints/commands tương ứng ở backend feature liên quan.
-- State: TanStack Query cho server state; Zustand chỉ cho local UI state khi có evidence.
+## Dependency và dữ liệu
 
-## 4. Dữ liệu & trạng thái
+Profile frontend phụ thuộc:
 
-- Server state: rà query keys/hooks/actions trong feature.
-- Local UI state: rà component/hook trong `Frontend/src/features/profile`.
-- i18n: đối chiếu `Frontend/messages/vi`, `Frontend/messages/en`, `Frontend/messages/zh`.
-- Realtime/payment/idempotency: chỉ áp dụng nếu route/action gọi command nhạy cảm.
+- Backend profile API/actions cho get/update profile.
+- Avatar upload flow qua profile API routes/actions.
+- MFA page/action nếu route profile MFA được sử dụng.
+- Reader settings page cho reader profile/payout-facing fields.
 
-## 5. Boundary và guard
+Profile route có SSR query prefetch, nên query key trong prefetch runner phải khớp hooks trong `ProfilePage`.
 
-- Thin route: `page.tsx`/`layout.tsx` chỉ composition, orchestration nằm trong feature/hook/action.
-- Public API: app route nên import qua `@/features/*/public` khi có.
-- Guard scripts: clean architecture, component size, hook/action size, auth fail-closed, image policy, risk coverage.
-- Accessibility/i18n: touched interactive UI cần accessible name/focus/error association; copy mới cần localization.
+## Boundary / guard
 
-## 6. Test coverage hiện tại
+- Profile route là protected user route; không được render private profile data ở anonymous route.
+- App route đang import qua public API đúng boundary.
+- Profile/payout/avatar fields có sensitive data; form/action không được log account number/upload token.
+- Copy mới phải vào `profile/profile.json` cả `vi/en/zh`.
 
-- Guard coverage: `Frontend/scripts/*.mjs`.
-- Feature tests: tìm trong `Frontend/tests` hoặc colocated tests với grep `profile`.
-- Không tìm thấy evidence trực tiếp: ghi rõ route/component/action chưa có test khi audit chi tiết.
+## Rủi ro
 
-## 7. Rủi ro kiến trúc
+- P0: profile update/avatar confirm gửi user id từ client thay vì token-bound API; upload token/object key leak; payout bank fields log/expose plaintext.
+- P1: prefetch profile key mismatch; profile route deep import internals; MFA/reader settings đặt sai protected route boundary.
+- P2: docs bỏ qua `ProfileMfaPage` và `ProfileReaderSettingsPage` dù public export có.
 
-- P0: auth fail-open, token/secret exposure, payment/reward command duplicate, route bypass backend security.
-- P1: route quá dày, import sâu vào feature internals, prefetch/hydration mismatch, thiếu i18n.
-- P2: component/hook gần vượt budget, evidence test chưa đủ.
+## Kết luận
 
-## 8. Kết luận review
-
-- Mức độ phù hợp kiến trúc: file đã neo đúng source feature `profile` và guard frontend; cần audit từng route/action để kết luận pass cuối cùng.
-- Evidence quan trọng: `Frontend/src/features/profile`, `Frontend/src/app/[locale]`, `Frontend/src/shared/server/prefetch`, `Frontend/messages`, `Frontend/scripts`.
-- Việc cần làm ưu tiên cao: điền route/action/test cụ thể trong review PR module.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+FE Profile là protected user area có SSR prefetch và nhạy cảm vì avatar/payout/MFA surfaces. Review đúng phải đọc page route, public exports, prefetch runner và feature actions/forms.

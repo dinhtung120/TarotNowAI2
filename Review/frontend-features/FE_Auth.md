@@ -1,62 +1,51 @@
 # FE Auth
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Frontend/src/features/auth`.
-- Public export: `Frontend/src/features/auth/public.ts` nếu tồn tại.
-- App routes cần đối chiếu: `Frontend/src/app/[locale]` grep `auth` hoặc route nghiệp vụ tương ứng.
-- API route proxy/action source: `Frontend/src/app/api` và feature server actions nếu có.
-- Guards: `Frontend/scripts/check-clean-architecture.mjs`, `check-component-size.mjs`, `check-hook-action-size.mjs`, `check-auth-fail-closed.mjs`.
+- Feature: `Frontend/src/features/auth`
+- Public export: `Frontend/src/features/auth/public.ts`
+- Routes: `Frontend/src/app/[locale]/(auth)/login/page.tsx`, `register/page.tsx`, `forgot-password/page.tsx`, `reset-password/page.tsx`, `verify-email/page.tsx`
+- API routes: `Frontend/src/app/api/auth/login/route.ts`, `logout/route.ts`, `refresh/route.ts`, `session/route.ts`, `session/handshake/route.ts`
+- Messages: `Frontend/messages/{vi,en,zh}/auth/auth.json`
+- Guard liên quan: `Frontend/scripts/check-auth-fail-closed.mjs`, `check-clean-architecture.mjs`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Route/page/layout: xác định bằng `find Frontend/src/app -type f | grep -E 'auth|auth'`.
-- Feature public surface: `Frontend/src/features/auth/public.ts` là boundary ưu tiên cho app imports.
-- Components/hooks/actions: nằm trong `Frontend/src/features/auth` theo cấu trúc hiện tại.
-- Backend/API contract: đi qua app API route, server action hoặc shared API client; không bypass auth/security flow.
+Auth pages import qua feature public API:
 
-## 3. Dependency map thực tế
+- `LoginPage`
+- `RegisterPage`
+- `ForgotPasswordPage`
+- `ResetPasswordPage`
+- `VerifyEmailPage`
 
-### Upstream
+`login/page.tsx` đã đọc là thin route: resolve `locale`, gọi `redirectAuthenticatedAuthEntry({ locale })`, rồi render `<LoginPage />` từ `@/features/auth/public`.
 
-- App Router page/layout/API route import feature `auth`.
-- Shared prefetch runner có thể gọi query/action của feature nếu SSR hydration cần server state.
+`public.ts` cũng export `AppNavbar` và `AppAuthSessionManager`, cho thấy auth feature còn tham gia session/navbar shell ngoài nhóm `(auth)` pages.
 
-### Downstream
+## Dependency và dữ liệu
 
-- Shared utilities: query client, auth/session, i18n, UI primitives, prefetch/hydration.
-- Backend contracts: API endpoints/commands tương ứng ở backend feature liên quan.
-- State: TanStack Query cho server state; Zustand chỉ cho local UI state khi có evidence.
+Auth frontend phụ thuộc:
 
-## 4. Dữ liệu & trạng thái
+- App API routes under `app/api/auth/*` cho cookie/session boundary.
+- Shared server auth redirect `redirectAuthenticatedAuthEntry` để ngăn user đã đăng nhập vào auth entry page.
+- i18n namespace `auth/auth.json` ở cả `vi/en/zh`.
 
-- Server state: rà query keys/hooks/actions trong feature.
-- Local UI state: rà component/hook trong `Frontend/src/features/auth`.
-- i18n: đối chiếu `Frontend/messages/vi`, `Frontend/messages/en`, `Frontend/messages/zh`.
-- Realtime/payment/idempotency: chỉ áp dụng nếu route/action gọi command nhạy cảm.
+Không thấy prefetch runner auth riêng trong evidence map; auth pages chủ yếu là form/session flow chứ không có SSR query prefetch riêng rõ ràng.
 
-## 5. Boundary và guard
+## Boundary / guard
 
-- Thin route: `page.tsx`/`layout.tsx` chỉ composition, orchestration nằm trong feature/hook/action.
-- Public API: app route nên import qua `@/features/*/public` khi có.
-- Guard scripts: clean architecture, component size, hook/action size, auth fail-closed, image policy, risk coverage.
-- Accessibility/i18n: touched interactive UI cần accessible name/focus/error association; copy mới cần localization.
+- Auth pages phải fail-closed: protected/session logic không được bỏ qua `app/api/auth/session` và guards.
+- App routes phải import `@/features/auth/public`, không deep import presentation internals.
+- API routes auth là cookie/token boundary; không expose access/refresh token ra client logs/local storage.
+- User-facing copy mới phải vào `messages/{vi,en,zh}/auth/auth.json`.
 
-## 6. Test coverage hiện tại
+## Rủi ro
 
-- Guard coverage: `Frontend/scripts/*.mjs`.
-- Feature tests: tìm trong `Frontend/tests` hoặc colocated tests với grep `auth`.
-- Không tìm thấy evidence trực tiếp: ghi rõ route/component/action chưa có test khi audit chi tiết.
+- P0: auth fail-open; token/cookie leak; refresh/session API proxy trả token nhạy cảm ra client; redirect authenticated bị bypass.
+- P1: auth route deep-import internals; missing i18n key cho validation/error copy; session handshake mismatch frontend/backend.
+- P2: docs claim SSR prefetch auth runner trong khi không thấy evidence trực tiếp.
 
-## 7. Rủi ro kiến trúc
+## Kết luận
 
-- P0: auth fail-open, token/secret exposure, payment/reward command duplicate, route bypass backend security.
-- P1: route quá dày, import sâu vào feature internals, prefetch/hydration mismatch, thiếu i18n.
-- P2: component/hook gần vượt budget, evidence test chưa đủ.
-
-## 8. Kết luận review
-
-- Mức độ phù hợp kiến trúc: file đã neo đúng source feature `auth` và guard frontend; cần audit từng route/action để kết luận pass cuối cùng.
-- Evidence quan trọng: `Frontend/src/features/auth`, `Frontend/src/app/[locale]`, `Frontend/src/shared/server/prefetch`, `Frontend/messages`, `Frontend/scripts`.
-- Việc cần làm ưu tiên cao: điền route/action/test cụ thể trong review PR module.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+FE Auth có route boundary mỏng và public export rõ. Review đúng phải đọc page, feature form/action, app API auth proxy và fail-closed guard trước khi kết luận thay đổi an toàn.

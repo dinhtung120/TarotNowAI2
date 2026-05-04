@@ -1,62 +1,51 @@
 # BE CheckIn
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/CheckIn`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `CheckIn`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `CheckIn`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `CheckIn`.
+- Feature: `Backend/src/TarotNow.Application/Features/CheckIn`
+- Controller: `Backend/src/TarotNow.Api/Controllers/CheckInController.cs`
+- Runtime/data: `MongoDbContext.cs` collection `daily_checkins`; domain event `DailyCheckInCompletedDomainEvent.cs`
+- Related integration evidence: `UserContextHomeIntegrationTests.cs` có metadata `streak` trong user context snapshot
+- Guards: API auth/rate-limit và event-driven architecture tests
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/CheckIn/Commands` và/hoặc `Features/CheckIn/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: không mặc định; chỉ áp dụng nếu feature publish notification/realtime/event phụ.
-- Finance/AI/reward integration: không mặc định; rà khi command có state mutation hoặc side effect.
+`CheckInController.cs` là authenticated API với `[Authorize]` và `[EnableRateLimiting("auth-session")]`.
 
-## 3. Dependency map thực tế
+Endpoints chính:
 
-### Upstream
+- `POST /check-in`: `DailyCheckInCommand { UserId }`.
+- `GET /check-in/streak`: `GetStreakStatusQuery { UserId }`.
+- `POST /check-in/freeze`: `PurchaseStreakFreezeCommand`, controller override `UserId` từ token.
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `CheckIn`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `CheckIn` nhận hoặc phát domain events.
+Controller lấy user id bằng `User.TryGetUserId`; client không được quyết định chủ streak/freeze trong payload.
 
-### Downstream
+## Dependency và dữ liệu
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+Feature source có:
 
-## 4. Dữ liệu & trạng thái
+- `Commands/DailyCheckIn`
+- `Commands/PurchaseFreeze`
+- `Queries/GetStreakStatus`
 
-- PostgreSQL: rà nếu feature có transactional state.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: rà nếu feature dùng cache/rate-limit/pubsub.
-- Transaction/idempotency/outbox: áp dụng nếu command mutate state hoặc publish side effect.
+State chính là MongoDB `daily_checkins`. `PurchaseFreeze` là điểm cần đọc sâu vì có thể chạm wallet/reward state; không khẳng định transaction/money event nếu chưa đọc handler cụ thể.
 
-## 5. Boundary và guard
+## Boundary / guard
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+- Check-in/freeze/status đều phải fail-closed khi thiếu user id.
+- Daily check-in có thể publish `DailyCheckInCompletedDomainEvent`; side effects như reward/gamification phải ở event handlers/outbox, không ở controller.
+- Freeze purchase là flow có khả năng finance, phải review idempotency/transaction/wallet mutation nếu sửa.
 
-## 6. Test coverage hiện tại
+## Test coverage hiện có
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'CheckIn|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+Không thấy file test có `CheckIn` trong tên theo search hiện tại. `UserContextHomeIntegrationTests.cs` chỉ chứng minh snapshot user context có field `streak`, không chứng minh daily check-in/freeze API.
 
-## 7. Rủi ro kiến trúc
+## Rủi ro
 
-- P0: boundary/event-driven violation; state mutation/side effect sai layer.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+- P0: user giả mạo `UserId` khi mua freeze/check-in; reward streak bị nhận nhiều lần trong cùng ngày; freeze purchase trừ tiền nhiều lần khi retry.
+- P1: thiếu test direct cho `DailyCheckIn`, `PurchaseFreeze`, `GetStreakStatus`.
+- P2: docs mô tả CheckIn như route frontend độc lập trong khi frontend có thể chỉ tích hợp qua shell/navbar.
 
-## 8. Kết luận review
+## Kết luận
 
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/CheckIn`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/CheckIn`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+CheckIn là authenticated streak module, state chính ở `daily_checkins`. Review đúng phải đọc command handlers trước khi kết luận reward/freeze/idempotency an toàn.

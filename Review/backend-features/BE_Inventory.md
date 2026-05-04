@@ -1,65 +1,60 @@
 # BE Inventory
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/Inventory`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `Inventory`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `Inventory`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `Inventory`.
+- Feature: `Backend/src/TarotNow.Application/Features/Inventory`
+- Controller: `Backend/src/TarotNow.Api/Controllers/InventoryController.cs`
+- Tests: `UseInventoryItemCommandHandlerTests.cs`, `ItemUsedDomainEventHandlerTests.cs`, `InventoryRewardEventHandlersTests.cs`, `InventoryRealtimeDomainEventHandlersTests.cs`
+- Datastore: `ApplicationDbContext.cs` DbSet `ItemDefinitions`, `UserItems`, `InventoryItemUseOperations`, `FreeDrawCredits`, `InventoryLuckEffects`
+- Related Mongo: `cards_catalog`, `user_collections` nếu item tác động collection/card
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/Inventory/Commands` và/hoặc `Features/Inventory/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: không mặc định; chỉ áp dụng nếu feature publish notification/realtime/event phụ.
-- Finance/AI/reward integration: có rủi ro cao, phải rà transaction, idempotency và settlement/refund/reward consistency.
+`InventoryController.cs` là authenticated API với `[Authorize]` và `[EnableRateLimiting("auth-session")]`.
 
-## 3. Dependency map thực tế
+Endpoints chính:
 
-### Upstream
+- `GET my inventory`: `GetUserInventoryQuery(userId)`.
+- `POST use item`: `UseInventoryItemCommand`.
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `Inventory`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `Inventory` nhận hoặc phát domain events.
+`UseItem` lấy `UserId` từ token, resolve idempotency key từ header/body, reject request thiếu key bằng `400 Missing idempotency key`, clamp `Quantity` vào `1..10` trước khi dispatch command.
 
-### Downstream
+## Dependency và dữ liệu
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+State PostgreSQL chính:
 
-## 4. Dữ liệu & trạng thái
+- `ItemDefinitions`: catalog item.
+- `UserItems`: số lượng item user sở hữu.
+- `InventoryItemUseOperations`: operation/idempotency record cho use item.
+- `FreeDrawCredits`: reward/free pull integration.
+- `InventoryLuckEffects`: effect tác động gacha/luck.
 
-Evidence dữ liệu cụ thể: PostgreSQL item_definitions/user_items/inventory/free_draw_credits; reward anti-duplication critical.
+Inventory nhận side effects từ Gacha/reward flows và phát domain events/realtime inventory updates.
 
+`UseInventoryItemCommandHandlerTests.cs` chứng minh command publish `ItemUsedDomainEvent`, normalize `ItemCode`/`IdempotencyKey`, và phản ánh idempotent replay trong response.
 
-- PostgreSQL: bắt buộc rà các bảng finance/transactional liên quan.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: rà nếu feature dùng cache/rate-limit/pubsub.
-- Transaction/idempotency/outbox: bắt buộc review vì module thuộc vùng finance/AI/reward/realtime.
+## Boundary / guard
 
-## 5. Boundary và guard
+- Use item là mutation cần idempotency end-to-end.
+- Reward grant/use operation phải chống duplicate grant/consume.
+- Controller không trực tiếp trừ item hoặc apply effect; xử lý nằm trong command/event handlers.
+- Realtime inventory update phải qua event/outbox/bridge; không broadcast trực tiếp từ controller.
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+## Test coverage hiện có
 
-## 6. Test coverage hiện tại
+- `UseInventoryItemCommandHandlerTests.cs`: publish event và replay response.
+- `ItemUsedDomainEventHandlerTests.cs`: xử lý domain event item used.
+- `InventoryRewardEventHandlersTests.cs`: reward grant handlers.
+- `InventoryRealtimeDomainEventHandlersTests.cs`: realtime/outbox side effect handlers.
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'Inventory|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+Không thấy API integration test riêng cho `InventoryController` trong evidence đã đọc; nếu audit sâu không tìm thêm, đây là gap P1 cho auth/idempotency contract.
 
-## 7. Rủi ro kiến trúc
+## Rủi ro
 
-- P0: boundary/event-driven violation; thiếu transaction/idempotency/money event hoặc double-spend.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+- P0: duplicate use/grant do idempotency fail; quantity clamp bị bypass ở handler khác; item effect apply không atomic với inventory decrement.
+- P1: reward source từ gacha/gamification không ghi operation/audit đủ; realtime update chạy trước commit.
+- P2: docs gọi inventory là Mongo module dù state chính đã thấy ở PostgreSQL.
 
-## 8. Kết luận review
+## Kết luận
 
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/Inventory`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/Inventory`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+Inventory là reward/entitlement module có state PostgreSQL và side effects realtime/gacha/collection. Review đúng phải đọc command handler, domain event handlers và idempotency operation records.

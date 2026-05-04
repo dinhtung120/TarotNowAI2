@@ -1,65 +1,74 @@
 # BE Wallet
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/Wallet`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `Wallet`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `Wallet`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `Wallet`.
+- Feature: `Backend/src/TarotNow.Application/Features/Wallet`
+- Controller: `Backend/src/TarotNow.Api/Controllers/WalletController.cs`
+- Tests: `Backend/tests/TarotNow.Application.UnitTests/Wallet/GetWalletBalanceQueryHandlerTests.cs`, `GetLedgerListQueryHandlerTests.cs`, `Backend/tests/TarotNow.Domain.UnitTests/Entities/UserWalletTests.cs`
+- Datastore: `ApplicationDbContext.cs` DbSet `WalletTransactions`; user wallet balances nằm trên `User`/`UserWallet` domain model và được đọc qua `IUserRepository`
+- Guard: `EventDrivenArchitectureRulesTests.WalletMutationCommands_ShouldPublishMoneyChangedDomainEvent`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/Wallet/Commands` và/hoặc `Features/Wallet/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: không mặc định; chỉ áp dụng nếu feature publish notification/realtime/event phụ.
-- Finance/AI/reward integration: có rủi ro cao, phải rà transaction, idempotency và settlement/refund/reward consistency.
+`WalletController.cs` là API boundary user-facing, có `[Authorize]`, `[ApiVersion(ApiVersions.V1)]` và `[EnableRateLimiting("auth-session")]`.
 
-## 3. Dependency map thực tế
+Controller hiện expose hai query endpoint:
 
-### Upstream
+- `GET balance` → `GetWalletBalanceQuery(userId)`.
+- `GET ledger` → `GetLedgerListQuery(userId, page, limit)`.
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `Wallet`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `Wallet` nhận hoặc phát domain events.
+Controller lấy `userId` từ authenticated principal bằng `User.TryGetUserId`; payload/query không được quyết định chủ ví. Đây là evidence ownership quan trọng cho review API ví.
 
-### Downstream
+Feature `Wallet` hiện chỉ có `Queries`, không thấy command folder trong listing đã đọc. Vì vậy module `BE_Wallet.md` phải phân biệt rõ:
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+- Wallet API trực tiếp hiện là read path.
+- Wallet mutation nằm rải rác ở các finance/AI/escrow/deposit/withdrawal flows khác qua Application interfaces/domain model, không nằm trong `Features/Wallet/Commands` tại thời điểm đọc.
 
-## 4. Dữ liệu & trạng thái
+## Dependency và dữ liệu
 
-Evidence dữ liệu cụ thể: PostgreSQL wallet_transactions; canonical MoneyChangedDomainEvent required by architecture rules.
+Read path:
 
+- `GetWalletBalanceQueryHandler.cs` inject `IUserRepository`, load user theo `UserId`, trả `GoldBalance`, `DiamondBalance`, `FrozenDiamondBalance`.
+- `GetLedgerListQueryHandler.cs` inject `ILedgerRepository`, đọc `GetTotalCountAsync` và `GetTransactionsAsync`, map `WalletTransaction` sang `WalletTransactionDto`.
 
-- PostgreSQL: bắt buộc rà các bảng finance/transactional liên quan.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: rà nếu feature dùng cache/rate-limit/pubsub.
-- Transaction/idempotency/outbox: bắt buộc review vì module thuộc vùng finance/AI/reward/realtime.
+PostgreSQL state liên quan:
 
-## 5. Boundary và guard
+- `WalletTransactions`: ledger giao dịch ví.
+- `Users`: chứa aggregate/user wallet balances được repository trả về cho balance query.
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+Domain invariant evidence từ `UserWalletTests.cs`:
 
-## 6. Test coverage hiện tại
+- `Credit_DiamondDeposit_ShouldIncreaseBalanceAndPurchasedTotal`.
+- `Debit_WhenInsufficientBalance_ShouldThrow`.
+- `FreezeAndRefund_ShouldRestoreDiamondBalance`.
+- `FreezeAndRelease_ShouldConsumeFrozenBalance`.
+- `ConsumeFrozenDiamond_ShouldDecreaseFrozenOnly`.
+- `Credit_WithInvalidCurrency_ShouldThrowArgumentException`.
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'Wallet|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+Các test này cho thấy wallet domain model có rule chống số dư âm, freeze/refund/release diamond và whitelist currency.
 
-## 7. Rủi ro kiến trúc
+## Boundary / guard
 
-- P0: boundary/event-driven violation; thiếu transaction/idempotency/money event hoặc double-spend.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+- `WalletController.cs` chỉ dispatch MediatR query, không inject repository/db context trực tiếp.
+- Query handlers được phép đọc repository interfaces trong Application layer.
+- Mutation wallet ở các module khác phải được review theo finance rule: transaction/idempotency và event/outbox.
+- `EventDrivenArchitectureRulesTests.WalletMutationCommands_ShouldPublishMoneyChangedDomainEvent` là guard quan trọng: command module có wallet mutation phải publish canonical `MoneyChangedDomainEvent`.
 
-## 8. Kết luận review
+## Test coverage hiện có
 
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/Wallet`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/Wallet`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+- `GetWalletBalanceQueryHandlerTests.cs`: kiểm mapping `GoldBalance`, `DiamondBalance`, `FrozenDiamondBalance` sau credit/freeze.
+- `GetLedgerListQueryHandlerTests.cs`: kiểm pagination metadata và mapping ledger transaction DTO.
+- `UserWalletTests.cs`: kiểm domain invariant cho credit/debit/freeze/refund/release/consume.
+
+Không thấy API integration test riêng cho `WalletController` trong evidence đã đọc; nếu audit sâu không tìm thêm test, đây là gap P1 cho ownership/rate-limit/response contract của balance và ledger endpoints.
+
+## Rủi ro
+
+- P0: finance flow khác mutate wallet nhưng không publish `MoneyChangedDomainEvent`, thiếu idempotency hoặc làm double-spend/double-refund.
+- P1: WalletController thiếu integration test chứng minh user chỉ đọc được ví của chính mình và ledger pagination contract ổn định.
+- P1: ledger/balance divergence nếu mutation update balance nhưng không ghi `WalletTransactions` cùng transaction.
+- P2: docs gọi Wallet là command module độc lập trong khi source hiện chỉ có query feature.
+
+## Kết luận
+
+Wallet backend hiện là read API trực tiếp cộng với domain/persistence state được nhiều finance flows dùng để mutate. Review đúng phải đọc `WalletController`, query handlers, `UserWallet` domain tests và mọi module đang gọi wallet mutation, đặc biệt Deposit, Withdrawal, Escrow, Chat finance và Reading AI billing.

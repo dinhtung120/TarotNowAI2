@@ -1,65 +1,58 @@
 # BE Gacha
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/Gacha`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `Gacha`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `Gacha`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `Gacha`.
+- Feature: `Backend/src/TarotNow.Application/Features/Gacha`
+- Controller: `Backend/src/TarotNow.Api/Controllers/GachaController.cs`
+- Tests: `Backend/tests/TarotNow.Application.UnitTests/Features/Gacha/Commands/PullGachaCommandHandlerTests.cs`
+- Datastore: `ApplicationDbContext.cs` DbSet `GachaPools`, `GachaPoolRewardRates`, `GachaPullOperations`, `GachaPullRewardLogs`, `UserGachaPities`, `GachaHistoryEntries`, `FreeDrawCredits`, `InventoryLuckEffects`
+- Domain events/constants: `Backend/src/TarotNow.Domain/Events/Gacha`, `GachaRoutes.cs`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/Gacha/Commands` và/hoặc `Features/Gacha/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: không mặc định; chỉ áp dụng nếu feature publish notification/realtime/event phụ.
-- Finance/AI/reward integration: có rủi ro cao, phải rà transaction, idempotency và settlement/refund/reward consistency.
+`GachaController.cs` là authenticated API với `[Authorize]`, `[ApiVersion(ApiVersions.V1)]`, `[EnableRateLimiting("auth-session")]`.
 
-## 3. Dependency map thực tế
+Endpoints chính:
 
-### Upstream
+- `GET pools`: list active pools, query nhận optional current `UserId`.
+- `GET pool odds`: odds theo `poolCode`.
+- `GET history`: lịch sử pull của user hiện tại.
+- `POST pull`: thực hiện pull gacha bằng `PullGachaCommand`.
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `Gacha`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `Gacha` nhận hoặc phát domain events.
+`POST pull` lấy `UserId` từ token và yêu cầu idempotency key từ body hoặc header. Nếu thiếu key, controller trả `400 Missing idempotency key`.
 
-### Downstream
+## Dependency và dữ liệu
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+Gacha là reward/finance-adjacent module vì pull có thể tiêu currency/free draw và grant inventory.
 
-## 4. Dữ liệu & trạng thái
+State PostgreSQL chính:
 
-Evidence dữ liệu cụ thể: PostgreSQL gacha/item/inventory tables; MongoDB gamification docs may receive side effects.
+- Pool/rate: `GachaPools`, `GachaPoolRewardRates`.
+- Operation/log: `GachaPullOperations`, `GachaPullRewardLogs`, `GachaHistoryEntries`.
+- Pity/free/luck: `UserGachaPities`, `FreeDrawCredits`, `InventoryLuckEffects`.
+- Inventory integration: item rewards có thể chạm `ItemDefinitions`, `UserItems` qua event handlers/repositories.
 
+`PullGachaCommandHandlerTests.cs` chứng minh command entry handler publish `GachaPulledDomainEvent`, normalize `PoolCode`/`IdempotencyKey`, map reward snapshot, và reject missing idempotency key bằng `GachaErrorCodes.InvalidIdempotencyKey`.
 
-- PostgreSQL: bắt buộc rà các bảng finance/transactional liên quan.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: rà nếu feature dùng cache/rate-limit/pubsub.
-- Transaction/idempotency/outbox: bắt buộc review vì module thuộc vùng finance/AI/reward/realtime.
+## Boundary / guard
 
-## 5. Boundary và guard
+- Pull command phải giữ idempotency từ API tới domain event/operation record.
+- Random/reward/pity operation phải transactionally consistent với history/reward grants.
+- Controller không tự random/grant reward, chỉ dispatch command/query.
+- Realtime result event `gacha.result` thuộc migrated event list trong architecture guard; không broadcast trực tiếp từ hub/controller.
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+## Test coverage hiện có
 
-## 6. Test coverage hiện tại
+- `PullGachaCommandHandlerTests.cs`: publish-only command behavior, normalization, missing idempotency key.
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'Gacha|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+Không thấy API integration test riêng cho `GachaController` trong evidence đã đọc; nếu audit sâu không tìm thêm, đây là gap P1 cho auth/idempotency/header/body contract và history/pool endpoints.
 
-## 7. Rủi ro kiến trúc
+## Rủi ro
 
-- P0: boundary/event-driven violation; thiếu transaction/idempotency/money event hoặc double-spend.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+- P0: duplicate pull/reward do idempotency fail; pity counter update không atomic; inventory reward grant trùng; direct realtime broadcast bypass outbox.
+- P1: odds/pool response không khớp actual reward rates; missing integration test cho pull endpoint.
+- P2: docs nói gacha state ở MongoDB trong khi runtime DbSets đã thấy nằm ở PostgreSQL.
 
-## 8. Kết luận review
+## Kết luận
 
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/Gacha`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/Gacha`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+Gacha là module reward-critical với PostgreSQL operation log/pity/history và event-driven reward grant. Review đúng phải đọc controller, pull command/event handler, transaction/idempotency path và inventory side effects.

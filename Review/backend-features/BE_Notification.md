@@ -1,65 +1,54 @@
 # BE Notification
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/Notification`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `Notification`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `Notification`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `Notification`.
+- Feature: `Backend/src/TarotNow.Application/Features/Notification`
+- Controllers: `NotificationController.cs`, `NotificationController.Queries.cs`, `NotificationController.Commands.cs`
+- Datastore: `MongoDbContext.cs` collection `notifications`
+- Runtime/realtime: notification side effects liên quan outbox/SignalR/Redis bridge; migrated realtime event `notification.new` bị guard cấm direct hub broadcast
+- Tests: không thấy file test có `Notification` trong tên theo search hiện tại
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/Notification/Commands` và/hoặc `Features/Notification/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: có rủi ro cao, phải rà Redis/SignalR/outbox path.
-- Finance/AI/reward integration: không mặc định; rà khi command có state mutation hoặc side effect.
+`NotificationController` là authenticated API với `[Authorize]` và rate limit `auth-session`.
 
-## 3. Dependency map thực tế
+Query endpoints:
 
-### Upstream
+- `GET notifications`: `GetNotificationsQuery { UserId, Page, PageSize, IsRead }`.
+- `GET notifications/unread-count`: `CountUnreadQuery(userId)`.
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `Notification`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `Notification` nhận hoặc phát domain events.
+Command endpoints:
 
-### Downstream
+- `PATCH {id}/read`: `MarkNotificationReadCommand { NotificationId, UserId }`, trả 404 khi không thành công.
+- `PATCH read-all`: `MarkAllNotificationsReadCommand { UserId }`, trả 204 nếu không có thay đổi.
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+Controller lấy user id từ token cho mọi endpoint.
 
-## 4. Dữ liệu & trạng thái
+## Dependency và dữ liệu
 
-Evidence dữ liệu cụ thể: MongoDB notifications; side effects phải qua domain events/outbox handlers.
+State chính:
 
+- MongoDB `notifications`: list/unread/read state của user.
 
-- PostgreSQL: rà nếu feature có transactional state.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: bắt buộc rà Pub/Sub/realtime/cache coordination.
-- Transaction/idempotency/outbox: bắt buộc review vì module thuộc vùng finance/AI/reward/realtime.
+Notification creation thường là side effect từ domain events khác; API này chủ yếu là read/mark-read. Khi review notification creation, phải đọc domain event handlers/outbox bridge tương ứng, không chỉ `Features/Notification`.
 
-## 5. Boundary và guard
+## Boundary / guard
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+- User chỉ được query/mark read notification của chính mình.
+- `MarkAsRead` trả 404 cho not found hoặc không thuộc user, tránh phân biệt ownership.
+- Realtime `notification.new` không được broadcast trực tiếp từ controller/hub theo `EventDrivenArchitectureRulesTests` migrated events list.
+- Mark-all nên idempotent; controller trả 204 khi no-op.
 
-## 6. Test coverage hiện tại
+## Test coverage hiện có
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'Notification|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+Không thấy direct unit/integration test tên `Notification` trong evidence đã đọc. Nếu audit sâu không tìm thêm, đây là gap P1 cho ownership/read state/realtime event path.
 
-## 7. Rủi ro kiến trúc
+## Rủi ro
 
-- P0: boundary/event-driven violation; state mutation/side effect sai layer.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+- P0: user mark/read notification của user khác; notification realtime bypass outbox/bridge; notification payload chứa dữ liệu nhạy cảm sai audience.
+- P1: missing direct tests cho pagination/unread count/mark all no-op.
+- P2: docs mô tả notification state ở PostgreSQL trong khi runtime collection đã thấy là MongoDB `notifications`.
 
-## 8. Kết luận review
+## Kết luận
 
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/Notification`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/Notification`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+Notification backend là MongoDB read/read-state module cộng với realtime side-effect pipeline. Review đúng phải đọc cả API mark-read/list và domain event handlers tạo notification.

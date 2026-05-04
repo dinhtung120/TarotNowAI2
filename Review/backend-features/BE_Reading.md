@@ -1,65 +1,102 @@
 # BE Reading
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/Reading`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `Reading`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `Reading`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `Reading`.
+- Feature: `Backend/src/TarotNow.Application/Features/Reading`
+- Controllers: `Backend/src/TarotNow.Api/Controllers/TarotController.cs`, `Backend/src/TarotNow.Api/Controllers/AiController.cs`
+- Tests: `Backend/tests/TarotNow.Application.UnitTests/Reading/InitReadingSessionCommandHandlerTests.cs`, `RevealReadingSessionCommandHandlerTests.cs`, `AiStreamFinalStatusesTests.cs`
+- Datastore: `ApplicationDbContext.cs` DbSet `AiRequests`, `ReadingRevealSagaStates`; `MongoDbContext.cs` collections `reading_sessions`, `cards_catalog`, `user_collections`, `ai_provider_logs`
+- Guards: `EventDrivenArchitectureRulesTests.cs`, `ArchitectureBoundariesTests.cs`, `ApiAndConfigurationStandardsTests.cs`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/Reading/Commands` và/hoặc `Features/Reading/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: không mặc định; chỉ áp dụng nếu feature publish notification/realtime/event phụ.
-- Finance/AI/reward integration: có rủi ro cao, phải rà transaction, idempotency và settlement/refund/reward consistency.
+Reading có hai HTTP boundary chính:
 
-## 3. Dependency map thực tế
+- `TarotController.cs`: reading/session/catalog/collection REST endpoints.
+- `AiController.cs`: AI stream SSE và stream-ticket endpoints.
 
-### Upstream
+`TarotController.cs` expose các path quan trọng:
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `Reading`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `Reading` nhận hoặc phát domain events.
+- `POST init` → `InitReadingSessionCommand`.
+- `POST reveal` → `RevealReadingSessionCommand`.
+- `GET cards-catalog`, `GET cards-catalog/manifest`, `GET cards-catalog/chunks/{chunkId:int}`, `GET cards-catalog/details/{cardId:int}`.
+- `GET collection` → `GetUserCollectionQuery`.
 
-### Downstream
+`TarotController` override `UserId` từ token cho init/reveal/collection, nên review không được coi `UserId` từ payload là trusted input.
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+`AiController.cs` expose:
 
-## 4. Dữ liệu & trạng thái
+- `GET {sessionId}/stream`: chuẩn bị request qua `IAiStreamEndpointService`, sau đó chạy SSE qua `IAiStreamSseOrchestrator`.
+- `POST {sessionId}/stream-ticket`: tạo opaque stream token cho follow-up để không đưa prompt nhạy cảm trực tiếp lên EventSource URL.
 
-Evidence dữ liệu cụ thể: PostgreSQL ai_requests/reading_rng_audits/reading_reveal_saga_states; MongoDB reading_sessions/cards_catalog; AI provider boundary.
+## Application flow
 
+Commands trong `Features/Reading/Commands`:
 
-- PostgreSQL: bắt buộc rà các bảng finance/transactional liên quan.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: rà nếu feature dùng cache/rate-limit/pubsub.
-- Transaction/idempotency/outbox: bắt buộc review vì module thuộc vùng finance/AI/reward/realtime.
+- `InitSession`: `InitReadingSessionCommandHandler` là thin handler, publish `ReadingSessionInitRequestedDomainEvent` qua `IInlineDomainEventDispatcher` và trả `SessionId`, `CostGold`, `CostDiamond` từ event.
+- `RevealSession`: `RevealReadingSessionCommandHandler` publish `ReadingSessionRevealRequestedDomainEvent`, normalize language về `vi/en/zh`, trả `RevealedCards` từ event.
+- `StreamReading`: `StreamReadingCommandHandler.EventOnly.cs` là thin handler; orchestration nằm trong `StreamReadingCommandHandlerRequestedDomainEventHandler`.
+- `CompleteAiStream`: `CompleteAiStreamCommandHandler.EventOnly.cs` là thin handler; orchestration nằm trong `CompleteAiStreamCommandHandlerRequestedDomainEventHandler`.
 
-## 5. Boundary và guard
+AI stream orchestration trong `StreamReadingCommandHandler.cs` đã đọc gồm:
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+- validate session;
+- enforce reading rate limit;
+- tính cost bằng pricing service;
+- resolve idempotency key;
+- reserve/create AI request;
+- freeze wallet escrow nếu có phí;
+- build prompt bằng `IReadingPromptService`;
+- gọi `IAiProvider.StreamChatAsync`;
+- publish `MoneyChangedDomainEvent` khi freeze diamond.
 
-## 6. Test coverage hiện tại
+Completion orchestration trong `CompleteAiStreamCommandHandler.cs` và `CompleteAiStreamCommandHandler.WalletAndTelemetry.cs` đã đọc gồm:
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'Reading|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+- chỉ chấp nhận final status từ `AiStreamFinalStatuses`;
+- chạy billing/session update trong `ITransactionCoordinator.ExecuteAsync`;
+- consume escrow với idempotency key `consume_{record.Id}`;
+- refund escrow với idempotency key `refund_{record.Id}`;
+- publish `MoneyChangedDomainEvent` với `EscrowRefund` hoặc `EscrowRelease`;
+- publish `ReadingBillingCompletedDomainEvent` và telemetry event best-effort.
 
-## 7. Rủi ro kiến trúc
+## Dependency và dữ liệu
 
-- P0: boundary/event-driven violation; thiếu transaction/idempotency/money event hoặc double-spend.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+Runtime state chính:
 
-## 8. Kết luận review
+- PostgreSQL `AiRequests`: record AI request, charge, final status, settlement/refund reference.
+- PostgreSQL `ReadingRevealSagaStates`: saga/reveal state theo DbSet đã thấy trong `ApplicationDbContext`.
+- MongoDB `reading_sessions`: reading session document.
+- MongoDB `cards_catalog`: tarot card catalog.
+- MongoDB `user_collections`: collection của user.
+- MongoDB `ai_provider_logs`: provider log/observability cho AI.
+- Wallet state/ledger: qua `IWalletRepository` và `MoneyChangedDomainEvent` khi stream/finalize có charge.
 
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/Reading`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/Reading`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+Application handler phụ thuộc vào Application-owned abstractions như `IReadingSessionRepository`, `IAiRequestRepository`, `IWalletRepository`, `IAiProvider`, `ICacheService`, `ITransactionCoordinator`, `IReadingPromptService`, `ISystemConfigSettings`, `IDomainEventPublisher`. Không ghi docs rằng handler phụ thuộc concrete Infrastructure nếu chưa thấy evidence.
+
+## Boundary / guard
+
+- Reading write command entry handlers phải mỏng và chỉ dùng `IInlineDomainEventDispatcher`, khớp Rule 0 và `EventDrivenArchitectureRulesTests.cs`.
+- AI provider call nằm trong requested-domain-event handler, không nằm trực tiếp trong controller.
+- SSE endpoint phải tránh sensitive payload trên URL; `AiController.CreateStreamTicket` là evidence hiện có cho follow-up tokenization.
+- Finance/AI billing phải review theo idempotency + transaction + wallet money event.
+- Catalog endpoints `cards-catalog/*` là `[AllowAnonymous]`, còn init/reveal/collection/AI stream nằm sau `[Authorize]` ở controller level.
+
+## Test coverage hiện có
+
+- `InitReadingSessionCommandHandlerTests.cs`: xác nhận init command publish `ReadingSessionInitRequestedDomainEvent` và trả kết quả từ event handler.
+- `RevealReadingSessionCommandHandlerTests.cs`: xác nhận reveal command publish `ReadingSessionRevealRequestedDomainEvent`, normalize language và map cards từ event.
+- `AiStreamFinalStatusesTests.cs`: bảo vệ whitelist final statuses `completed`, `failed_before_first_token`, `failed_after_first_token`.
+
+Evidence đã đọc chưa chứng minh đầy đủ integration test cho toàn bộ REST/SSE Reading API trong file này. Khi review sâu cần đối chiếu thêm `Backend/tests/TarotNow.Api.IntegrationTests/*Ai*/*Reading*` nếu có, đặc biệt cho stream-ticket, EventSource URL, settlement/refund và retry/idempotency.
+
+## Rủi ro
+
+- P0: gọi AI trước khi reserve/freeze quota/wallet; completion double consume/refund; final status không quyết định đúng settlement/refund; stream URL chứa prompt/follow-up nhạy cảm.
+- P0: command entry handler Reading bị đổi sang inject repository/provider trực tiếp, vi phạm event-driven architecture.
+- P1: thiếu integration coverage cho SSE stream-ticket và API ownership; catalog chunk/version/cache contract thay đổi nhưng không có test tương ứng.
+- P1: telemetry/gamification/reward side effects chạy trong transaction chính hoặc làm fail nghiệp vụ billing.
+- P2: docs nhầm `cards_catalog`/`reading_sessions` với bảng PostgreSQL thay vì Mongo collections.
+
+## Kết luận
+
+Reading là module rủi ro cao vì kết hợp MongoDB session/catalog, PostgreSQL AI billing/saga state, wallet escrow và external AI provider streaming. Review đúng phải đọc cả `TarotController`, `AiController`, command entry handlers, requested-domain-event handlers và tests final-status/idempotency/billing trước khi kết luận thay đổi an toàn.

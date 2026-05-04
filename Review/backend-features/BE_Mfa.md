@@ -1,65 +1,63 @@
-# BE Mfa
+# BE MFA
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/Mfa`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `Mfa`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `Mfa`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `Mfa`.
+- Feature: `Backend/src/TarotNow.Application/Features/Mfa`
+- Controller: `Backend/src/TarotNow.Api/Controllers/MfaController.cs`
+- Tests: `Backend/tests/TarotNow.Application.UnitTests/Features/Mfa/MfaSetupCommandHandlerTests.cs`, `MfaVerifyCommandHandlerTests.cs`, `MfaChallengeCommandHandlerTests.cs`
+- Datastore: không thấy DbSet/collection riêng tên MFA trong `ApplicationDbContext.cs`/`MongoDbContext.cs` theo evidence đã đọc; state có khả năng gắn với user/auth aggregate, cần đọc repository/entity khi audit sâu
+- Guards: `ApiAndConfigurationStandardsTests.cs`, `EventDrivenArchitectureRulesTests.cs`, `ArchitectureBoundariesTests.cs`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/Mfa/Commands` và/hoặc `Features/Mfa/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: không mặc định; chỉ áp dụng nếu feature publish notification/realtime/event phụ.
-- Finance/AI/reward integration: không mặc định; rà khi command có state mutation hoặc side effect.
+`MfaController.cs` là authenticated API boundary với `[Authorize]`, `[ApiVersion(ApiVersions.V1)]`.
 
-## 3. Dependency map thực tế
+Endpoints chính:
 
-### Upstream
+- `POST setup` → `MfaSetupCommand { UserId }`.
+- `POST verify` → `MfaVerifyCommand { UserId, Code }`.
+- `POST challenge` → `MfaChallengeCommand { UserId, Code }`.
+- `GET status` → `GetMfaStatusQuery { UserId }`.
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `Mfa`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `Mfa` nhận hoặc phát domain events.
+Controller lấy user id từ authenticated principal bằng `User.GetUserIdOrNull()`. User id không lấy từ body, nên review ownership phải giữ invariant này.
 
-### Downstream
+Rate limit evidence:
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+- setup/status dùng `auth-session`.
+- verify/challenge dùng `auth-mfa-challenge`.
 
-## 4. Dữ liệu & trạng thái
+## Dependency và dữ liệu
 
-Evidence dữ liệu cụ thể: PostgreSQL/Mongo auth state cần đối chiếu cùng Auth; sensitive endpoints cần rate-limit.
+Feature source có commands và query:
 
+- `Commands/MfaSetup`
+- `Commands/MfaVerify`
+- `Commands/MfaChallenge`
+- `Queries/GetMfaStatus`
 
-- PostgreSQL: rà nếu feature có transactional state.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: rà nếu feature dùng cache/rate-limit/pubsub.
-- Transaction/idempotency/outbox: áp dụng nếu command mutate state hoặc publish side effect.
+Không có evidence DbSet/collection riêng `Mfa*` từ datastore files đã đọc. Vì vậy docs không nên khẳng định table riêng cho MFA. Khi review implementation sâu, phải đọc command handlers/repository để xác định secret, enabled flag và challenge state nằm ở đâu.
 
-## 5. Boundary và guard
+## Boundary / guard
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+- MFA endpoints đều là sensitive authenticated endpoints và phải giữ rate-limit metadata.
+- Controller chỉ dispatch command/query qua MediatR, không inject db/repository trực tiếp.
+- Command entry handlers trong `Features/Mfa/Commands` nếu là `IRequestHandler<,>` phải tuân thủ `IInlineDomainEventDispatcher` rule theo architecture tests.
+- MFA code/secret là sensitive data: không log plaintext secret/code, không expose secret sau setup ngoài contract cần thiết.
 
-## 6. Test coverage hiện tại
+## Test coverage hiện có
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'Mfa|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+- `MfaSetupCommandHandlerTests.cs`: coverage setup flow.
+- `MfaVerifyCommandHandlerTests.cs`: coverage verify/bật MFA.
+- `MfaChallengeCommandHandlerTests.cs`: coverage challenge cho thao tác nhạy cảm.
 
-## 7. Rủi ro kiến trúc
+Không thấy API integration test riêng cho `MfaController` trong evidence đã đọc; nếu audit sâu không tìm thêm, đây là gap P1 cho rate-limit/auth/response contract.
 
-- P0: boundary/event-driven violation; state mutation/side effect sai layer.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+## Rủi ro
 
-## 8. Kết luận review
+- P0: challenge/verify fail-open; MFA code/secret bị log hoặc trả về quá rộng; endpoint thiếu auth/rate-limit.
+- P1: thiếu integration test controller; trạng thái MFA nằm chung trong user/auth aggregate nên dễ bỏ sót migration/encryption/audit khi sửa.
+- P2: docs nói có MFA table riêng khi source không chứng minh.
 
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/Mfa`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/Mfa`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+## Kết luận
+
+MFA là security-sensitive submodule của Auth, hiện có controller và unit tests command-level nhưng chưa có evidence datastore riêng. Review đúng phải đọc command handlers và user/auth persistence trước khi khẳng định nơi lưu secret/enabled state.

@@ -1,65 +1,58 @@
 # BE Gamification
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/Gamification`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `Gamification`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `Gamification`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `Gamification`.
+- Feature: `Backend/src/TarotNow.Application/Features/Gamification`
+- Controllers: `Backend/src/TarotNow.Api/Controllers/GamificationController.cs`, `AdminGamificationController.cs`
+- Tests: không thấy file test có `Gamification` trong tên theo search hiện tại; có coverage side effects liên quan trong `InventoryRewardEventHandlersTests.cs` và các inventory/gacha domain event tests
+- Datastore: `MongoDbContext.cs` collections `quests`, `quest_progress`, `achievements`, `user_achievements`, `titles`, `user_titles`, `leaderboard_entries`, `leaderboard_snapshots`
+- Runtime config: `ISystemConfigSettings.GamificationDefaultQuestType`, `GamificationDefaultLeaderboardTrack`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/Gamification/Commands` và/hoặc `Features/Gamification/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: không mặc định; chỉ áp dụng nếu feature publish notification/realtime/event phụ.
-- Finance/AI/reward integration: không mặc định; rà khi command có state mutation hoặc side effect.
+`GamificationController.cs` là authenticated API với `[Authorize]` và rate limit `auth-session`.
 
-## 3. Dependency map thực tế
+Endpoints chính:
 
-### Upstream
+- `GET quests`: `GetActiveQuestsQuery(userId, type)`; default type từ system config.
+- `POST quests/{questCode}/claim`: `ClaimQuestRewardCommand`.
+- `GET achievements`: `GetUserAchievementsQuery`.
+- `GET titles`: `GetUserTitlesQuery`.
+- `POST titles/active`: `SetActiveTitleCommand`.
+- `GET leaderboard`: `GetLeaderboardQuery`; default track từ system config.
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `Gamification`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `Gamification` nhận hoặc phát domain events.
+Controller lấy user id từ `ClaimTypes.NameIdentifier` và throw unauthorized nếu claim invalid.
 
-### Downstream
+## Dependency và dữ liệu
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+Gamification state chính ở MongoDB:
 
-## 4. Dữ liệu & trạng thái
+- Quest/progress: `quests`, `quest_progress`.
+- Achievements: `achievements`, `user_achievements`.
+- Titles: `titles`, `user_titles`.
+- Leaderboard: `leaderboard_entries`, `leaderboard_snapshots`.
 
-Evidence dữ liệu cụ thể: MongoDB quests/quest_progress/achievements/user_achievements/titles/user_titles/leaderboard collections.
+Feature có `Commands`, `Queries`, `EventHandlers`, `Validators`; event handlers có thể nhận events từ reading/check-in/gacha/inventory/chat để update progress/rewards.
 
+## Boundary / guard
 
-- PostgreSQL: rà nếu feature có transactional state.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: rà nếu feature dùng cache/rate-limit/pubsub.
-- Transaction/idempotency/outbox: áp dụng nếu command mutate state hoặc publish side effect.
+- Claim quest reward phải idempotent/anti-double-claim theo `questCode` + `periodKey` + user.
+- Set active title phải verify ownership; controller trả `TITLE_NOT_OWNED` khi command false.
+- Leaderboard/quest defaults đến từ system config, không hardcode ở controller.
+- Side effects như reward grant/realtime phải qua event handlers/outbox, không controller.
 
-## 5. Boundary và guard
+## Test coverage hiện có
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+Không thấy test file tên `Gamification` trong evidence search hiện tại. Coverage gián tiếp có thể nằm ở Inventory/Gacha event handler tests, nhưng chưa đủ để chứng minh quest/achievement/title/leaderboard API.
 
-## 6. Test coverage hiện tại
+Nếu audit sâu không tìm thêm, đây là gap P1 cho claim reward anti-duplication, title ownership và leaderboard query contract.
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'Gamification|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+## Rủi ro
 
-## 7. Rủi ro kiến trúc
+- P0: quest reward claim double grant; active title set khi chưa sở hữu; event handler reward chạy nhiều lần khi retry outbox.
+- P1: leaderboard/quest defaults thay đổi nhưng FE/API tests không bắt; thiếu direct test cho GamificationController/handlers.
+- P2: docs nói gamification state ở PostgreSQL trong khi evidence runtime collection nằm ở MongoDB.
 
-- P0: boundary/event-driven violation; state mutation/side effect sai layer.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+## Kết luận
 
-## 8. Kết luận review
-
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/Gamification`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/Gamification`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+Gamification là MongoDB engagement module nhận nhiều domain events từ hệ thống. Review đúng phải đọc event handlers và reward idempotency, không chỉ user-facing controller.

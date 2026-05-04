@@ -1,65 +1,61 @@
 # BE Legal
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/Legal`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `Legal`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `Legal`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `Legal`.
+- Feature: `Backend/src/TarotNow.Application/Features/Legal`
+- Controller: `Backend/src/TarotNow.Api/Controllers/LegalController.cs`
+- Test: `Backend/tests/TarotNow.Api.IntegrationTests/LegalIntegrationTests.cs`
+- Datastore: `ApplicationDbContext.cs` DbSet `UserConsents`; không thấy Mongo collection riêng cho legal trong `MongoDbContext.cs`
+- Runtime config: `ISystemConfigSettings.LegalMinimumAge` được expose qua public runtime policies
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/Legal/Commands` và/hoặc `Features/Legal/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: không mặc định; chỉ áp dụng nếu feature publish notification/realtime/event phụ.
-- Finance/AI/reward integration: không mặc định; rà khi command có state mutation hoặc side effect.
+`LegalController.cs` có ba endpoint chính:
 
-## 3. Dependency map thực tế
+- `GET runtime-policies` với `[AllowAnonymous]`: trả policy public cho frontend unauthenticated, hiện có `auth.minimumAge` từ `LegalMinimumAge`.
+- `GET consent-status` với `[Authorize]` và `[EnableRateLimiting("auth-session")]`: dispatch `CheckConsentQuery` theo user hiện tại, document type/version optional.
+- `POST consent` với `[Authorize]` và `[EnableRateLimiting("auth-session")]`: dispatch `RecordConsentCommand`.
 
-### Upstream
+`RecordConsent` lấy `UserId` từ authenticated principal và ghi thêm metadata audit gồm IP address và `User-Agent` vào command.
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `Legal`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `Legal` nhận hoặc phát domain events.
+## Dependency và dữ liệu
 
-### Downstream
+Application feature gồm:
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+- `Commands/RecordConsent`
+- `Queries/CheckConsent`
 
-## 4. Dữ liệu & trạng thái
+PostgreSQL state chính:
 
-Evidence dữ liệu cụ thể: PostgreSQL user_consents/data_rights_requests/admin_actions; compliance docs trong Doccument/tai-lieu-thiet-ke/04-ops-security-compliance.md.
+- `UserConsents`: consent records theo user/document/version và metadata.
 
+Không có evidence runtime Mongo collection riêng cho legal. Không nên claim `data_rights_requests` hoặc `admin_actions` là runtime Legal state nếu chưa đọc DbSet/entity/config tương ứng.
 
-- PostgreSQL: rà nếu feature có transactional state.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: rà nếu feature dùng cache/rate-limit/pubsub.
-- Transaction/idempotency/outbox: áp dụng nếu command mutate state hoặc publish side effect.
+## Boundary / guard
 
-## 5. Boundary và guard
+- `runtime-policies` intentionally public; chỉ nên trả policy an toàn public, không trả secret/config nội bộ.
+- `consent-status` và `consent` phải fail-closed khi thiếu user id.
+- `RecordConsent` là compliance/audit path: IP/User-Agent/document/version phải được review khi đổi contract.
+- Controller hiện inject `ISystemConfigSettings` để trả public policy; các mutation/query vẫn qua MediatR.
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+## Test coverage hiện có
 
-## 6. Test coverage hiện tại
+`LegalIntegrationTests.cs` kiểm luồng:
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'Legal|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+- seed authenticated test user;
+- `POST /api/v1/legal/consent` cho `TOS`, `PrivacyPolicy`, `AiDisclaimer` version `1.0`;
+- `GET /api/v1/legal/consent-status` trả `isFullyConsented: true`;
+- query version mới `TOS v2.0` trả trạng thái chưa consent.
 
-## 7. Rủi ro kiến trúc
+Không thấy unit test riêng cho `RecordConsentCommandHandler`/`CheckConsentQueryHandler` trong evidence đã đọc; integration test đang là evidence chính.
 
-- P0: boundary/event-driven violation; state mutation/side effect sai layer.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+## Rủi ro
 
-## 8. Kết luận review
+- P0: consent được ghi cho user id từ payload thay vì token; public runtime policies leak config nhạy cảm; legal consent status fail-open.
+- P1: đổi document type/version policy mà không update integration tests và frontend legal flow.
+- P1: metadata audit IP/User-Agent bị bỏ hoặc ghi sai khi qua proxy nếu không có trusted forwarding policy.
+- P2: docs claim legal Mongo/table phụ không có evidence trong current DbContext.
 
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/Legal`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/Legal`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+## Kết luận
+
+Legal backend là compliance module nhỏ nhưng quan trọng, tập trung vào runtime policy public và user consent audit. Evidence tốt nhất hiện tại là `LegalController.cs`, `UserConsents` trong `ApplicationDbContext`, và `LegalIntegrationTests.cs`.

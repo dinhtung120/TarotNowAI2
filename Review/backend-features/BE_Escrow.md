@@ -1,65 +1,63 @@
 # BE Escrow
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/Escrow`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `Escrow`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `Escrow`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `Escrow`.
+- Feature: `Backend/src/TarotNow.Application/Features/Escrow`
+- Chat finance controllers: `Backend/src/TarotNow.Api/Controllers/ConversationController.Finance.cs`, `ConversationController.Completion.cs`, `ConversationController.Acceptance.cs`
+- Related Chat commands: `Backend/src/TarotNow.Application/Features/Chat/Commands/*Conversation*Money*`, `*Complete*`, `SendMessage/*FirstMessageFreeze*`
+- Tests: `Backend/tests/TarotNow.Application.UnitTests/Features/Escrow/*`, `Backend/tests/TarotNow.Application.UnitTests/Services/EscrowSettlementServiceSessionTests.cs`, `Backend/tests/TarotNow.Application.UnitTests/DomainEvents/EscrowSessionReleasedDomainEventHandlersTests.cs`, `Backend/tests/TarotNow.Infrastructure.UnitTests/BackgroundJobs/EscrowTimerServiceTests.cs`
+- Datastore: `ApplicationDbContext.cs` DbSet `ChatFinanceSessions`, `ChatQuestionItems`, `WalletTransactions`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/Escrow/Commands` và/hoặc `Features/Escrow/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: có rủi ro cao, phải rà Redis/SignalR/outbox path.
-- Finance/AI/reward integration: có rủi ro cao, phải rà transaction, idempotency và settlement/refund/reward consistency.
+Feature Escrow hiện có commands riêng đã thấy từ test/source listing:
 
-## 3. Dependency map thực tế
+- `AddQuestion` — được test bởi `AddQuestionCommandHandlerTests.cs`.
+- `OpenDispute` — được test bởi `OpenDisputeCommandHandlerTests.cs`.
 
-### Upstream
+Tuy nhiên phần lớn escrow lifecycle gắn chặt với Chat commands:
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `Escrow`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `Escrow` nhận hoặc phát domain events.
+- first message freeze trong `Features/Chat/Commands/SendMessage/SendMessageCommandHandler.FirstMessageFreeze*.cs`;
+- add money request/response trong `RequestConversationAddMoney` và `RespondConversationAddMoney`;
+- settlement khi complete trong `RequestConversationComplete` và `RespondConversationComplete`;
+- dispute/completion/acceptance qua `ConversationController` partials.
 
-### Downstream
+Vì vậy `BE_Escrow.md` không nên được review như module tách rời hoàn toàn; nó là finance subdomain của conversation flow.
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+## Dependency và dữ liệu
 
-## 4. Dữ liệu & trạng thái
+PostgreSQL state chính:
 
-Evidence dữ liệu cụ thể: PostgreSQL chat_finance_sessions/chat_question_items và wallet_transactions; must review settlement/refund/idempotency.
+- `ChatFinanceSessions`: session escrow/tài chính theo conversation.
+- `ChatQuestionItems`: question items trong flow chat/escrow.
+- `WalletTransactions`: ledger tiền liên quan freeze/settlement/refund.
 
+Outbox/domain event liên quan:
 
-- PostgreSQL: bắt buộc rà các bảng finance/transactional liên quan.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: bắt buộc rà Pub/Sub/realtime/cache coordination.
-- Transaction/idempotency/outbox: bắt buộc review vì module thuộc vùng finance/AI/reward/realtime.
+- `EscrowSessionReleasedDomainEventHandlersTests.cs` cho thấy có handler xử lý khi escrow session released.
+- `EscrowTimerServiceTests.cs` cho thấy infrastructure background job/timer là một phần của lifecycle cần review khi thay đổi timeout/auto-release.
 
-## 5. Boundary và guard
+## Boundary / guard
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+- Escrow commands nếu là write commands phải tuân thủ thin handler rule trong `EventDrivenArchitectureRulesTests.cs`.
+- Wallet mutation liên quan escrow phải publish canonical `MoneyChangedDomainEvent` theo architecture rule.
+- Controller không được settlement/refund trực tiếp; route chỉ dispatch command/query qua Application.
 
-## 6. Test coverage hiện tại
+## Test coverage hiện có
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'Escrow|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+- `Backend/tests/TarotNow.Application.UnitTests/Features/Escrow/AddQuestionCommandHandlerTests.cs`
+- `Backend/tests/TarotNow.Application.UnitTests/Features/Escrow/OpenDisputeCommandHandlerTests.cs`
+- `Backend/tests/TarotNow.Application.UnitTests/Services/EscrowSettlementServiceSessionTests.cs`
+- `Backend/tests/TarotNow.Application.UnitTests/DomainEvents/EscrowSessionReleasedDomainEventHandlersTests.cs`
+- `Backend/tests/TarotNow.Infrastructure.UnitTests/BackgroundJobs/EscrowTimerServiceTests.cs`
+- Chat settlement tests liên quan: `ConversationCompleteSessionSettlementTests.cs`
 
-## 7. Rủi ro kiến trúc
+## Rủi ro
 
-- P0: boundary/event-driven violation; thiếu transaction/idempotency/money event hoặc double-spend.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+- P0: double settlement/refund, missing idempotency key, wallet ledger không khớp escrow session, timer release chạy cạnh tranh với manual settlement.
+- P1: logic escrow phân tán giữa `Escrow` và `Chat` khiến review bỏ sót first-freeze/add-money/complete path.
+- P2: docs ghi Escrow như feature độc lập mà không link Chat finance controllers/commands.
 
-## 8. Kết luận review
+## Kết luận
 
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/Escrow`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/Escrow`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+Escrow là vùng finance-critical nằm giữa `Features/Escrow` và `Features/Chat`. Review đúng phải đọc cả Escrow commands/tests lẫn Chat finance/settlement paths, cộng thêm DbSet PostgreSQL và background timer tests.

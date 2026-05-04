@@ -1,62 +1,49 @@
 # FE Reader
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Frontend/src/features/reader`.
-- Public export: `Frontend/src/features/reader/public.ts` nếu tồn tại.
-- App routes cần đối chiếu: `Frontend/src/app/[locale]` grep `reader` hoặc route nghiệp vụ tương ứng.
-- API route proxy/action source: `Frontend/src/app/api` và feature server actions nếu có.
-- Guards: `Frontend/scripts/check-clean-architecture.mjs`, `check-component-size.mjs`, `check-hook-action-size.mjs`, `check-auth-fail-closed.mjs`.
+- Feature: `Frontend/src/features/reader`
+- Public export: `Frontend/src/features/reader/public.ts`
+- Routes: `Frontend/src/app/[locale]/(user)/readers/page.tsx`, reader apply/profile/settings routes mapped under user app tree, admin `admin/reader-requests/page.tsx`
+- API routes: reader-related routes under `Frontend/src/app/api/readers/**/route.ts`
+- Prefetch: `Frontend/src/shared/server/prefetch/runners/user/readers.ts`, plus admin runner `prefetchAdminReaderRequestsPage`
+- Messages: `messages/{vi,en,zh}/readers/readers.json`, `readers/reader-apply.json`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Route/page/layout: xác định bằng `find Frontend/src/app -type f | grep -E 'reader|reader'`.
-- Feature public surface: `Frontend/src/features/reader/public.ts` là boundary ưu tiên cho app imports.
-- Components/hooks/actions: nằm trong `Frontend/src/features/reader` theo cấu trúc hiện tại.
-- Backend/API contract: đi qua app API route, server action hoặc shared API client; không bypass auth/security flow.
+`readers/page.tsx` đã đọc là thin route:
 
-## 3. Dependency map thực tế
+- imports `ReadersDirectoryPage` from `@/features/reader/public`.
+- hydrates `prefetchReadersDirectoryPage`.
+- wraps with `AppQueryHydrationBoundary`.
 
-### Upstream
+`features/reader/public.ts` exports actions and pages:
 
-- App Router page/layout/API route import feature `reader`.
-- Shared prefetch runner có thể gọi query/action của feature nếu SSR hydration cần server state.
+- actions: `getMyReaderRequest`, `updateReaderProfile`, `updateReaderStatus`, `listFeaturedReaders`, `getReaderProfile`.
+- pages: `ReaderApplyPage`, `ReaderPublicProfilePage`, `ReadersDirectoryPage`.
 
-### Downstream
+## Dependency và dữ liệu
 
-- Shared utilities: query client, auth/session, i18n, UI primitives, prefetch/hydration.
-- Backend contracts: API endpoints/commands tương ứng ở backend feature liên quan.
-- State: TanStack Query cho server state; Zustand chỉ cho local UI state khi có evidence.
+Reader prefetch runner has concrete flows:
 
-## 4. Dữ liệu & trạng thái
+- `prefetchReadersDirectoryPage`: `listReaders(1, READERS_DIRECTORY_PAGE_SIZE, '', '', '')`.
+- `prefetchReaderApplyPage`: `getMyReaderRequest()`.
+- `prefetchReaderPublicProfilePage(qc, readerId)`: `getReaderProfile(readerId)`.
+- `prefetchProfileReaderSettingsPage`: calls `getProfileAction()` first and only prefetches reader profile settings if role is `tarot_reader`.
 
-- Server state: rà query keys/hooks/actions trong feature.
-- Local UI state: rà component/hook trong `Frontend/src/features/reader`.
-- i18n: đối chiếu `Frontend/messages/vi`, `Frontend/messages/en`, `Frontend/messages/zh`.
-- Realtime/payment/idempotency: chỉ áp dụng nếu route/action gọi command nhạy cảm.
+## Boundary / guard
 
-## 5. Boundary và guard
+- Directory/public profile may be user-facing but apply/settings are protected; route/API proxy must preserve auth.
+- Reader settings prefetch role gate (`role !== 'tarot_reader'`) is important evidence; do not remove without replacing fail-closed behavior.
+- App pages should import through `@/features/reader/public`.
+- Reader apply/profile copy must use readers message namespaces.
 
-- Thin route: `page.tsx`/`layout.tsx` chỉ composition, orchestration nằm trong feature/hook/action.
-- Public API: app route nên import qua `@/features/*/public` khi có.
-- Guard scripts: clean architecture, component size, hook/action size, auth fail-closed, image policy, risk coverage.
-- Accessibility/i18n: touched interactive UI cần accessible name/focus/error association; copy mới cần localization.
+## Rủi ro
 
-## 6. Test coverage hiện tại
+- P0: reader settings route/action accessible to non-reader; public profile exposes private application/proof fields; update status/profile without ownership.
+- P1: prefetch key mismatch for directory/profile; missing admin reader request route coverage; presence/status display mismatch with backend.
+- P2: docs call reader only admin feature and omit public directory/apply pages.
 
-- Guard coverage: `Frontend/scripts/*.mjs`.
-- Feature tests: tìm trong `Frontend/tests` hoặc colocated tests với grep `reader`.
-- Không tìm thấy evidence trực tiếp: ghi rõ route/component/action chưa có test khi audit chi tiết.
+## Kết luận
 
-## 7. Rủi ro kiến trúc
-
-- P0: auth fail-open, token/secret exposure, payment/reward command duplicate, route bypass backend security.
-- P1: route quá dày, import sâu vào feature internals, prefetch/hydration mismatch, thiếu i18n.
-- P2: component/hook gần vượt budget, evidence test chưa đủ.
-
-## 8. Kết luận review
-
-- Mức độ phù hợp kiến trúc: file đã neo đúng source feature `reader` và guard frontend; cần audit từng route/action để kết luận pass cuối cùng.
-- Evidence quan trọng: `Frontend/src/features/reader`, `Frontend/src/app/[locale]`, `Frontend/src/shared/server/prefetch`, `Frontend/messages`, `Frontend/scripts`.
-- Việc cần làm ưu tiên cao: điền route/action/test cụ thể trong review PR module.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+FE Reader spans public directory/profile, protected apply/settings, and admin review. Review đúng phải read route-specific prefetch and role-gated profile settings flow.

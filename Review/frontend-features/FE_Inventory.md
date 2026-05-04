@@ -1,62 +1,56 @@
 # FE Inventory
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Frontend/src/features/inventory`.
-- Public export: `Frontend/src/features/inventory/public.ts` nếu tồn tại.
-- App routes cần đối chiếu: `Frontend/src/app/[locale]` grep `inventory` hoặc route nghiệp vụ tương ứng.
-- API route proxy/action source: `Frontend/src/app/api` và feature server actions nếu có.
-- Guards: `Frontend/scripts/check-clean-architecture.mjs`, `check-component-size.mjs`, `check-hook-action-size.mjs`, `check-auth-fail-closed.mjs`.
+- Feature: `Frontend/src/features/inventory`
+- Public export: `Frontend/src/features/inventory/public.ts`
+- Route: `Frontend/src/app/[locale]/(user)/inventory/page.tsx`
+- API proxy đã đọc: `Frontend/src/app/api/inventory/route.ts`
+- Prefetch: `prefetchInventoryPage` trong `Frontend/src/shared/server/prefetch/runners/user/collection.ts`
+- Shared infra: `Frontend/src/shared/infrastructure/inventory/*`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Route/page/layout: xác định bằng `find Frontend/src/app -type f | grep -E 'inventory|inventory'`.
-- Feature public surface: `Frontend/src/features/inventory/public.ts` là boundary ưu tiên cho app imports.
-- Components/hooks/actions: nằm trong `Frontend/src/features/inventory` theo cấu trúc hiện tại.
-- Backend/API contract: đi qua app API route, server action hoặc shared API client; không bypass auth/security flow.
+`inventory/page.tsx` là route mỏng:
 
-## 3. Dependency map thực tế
+- gọi `dehydrateAppQueries(prefetchInventoryPage)`.
+- render `InventoryPage` từ `@/features/inventory/public` trong `AppQueryHydrationBoundary`.
+- export shared SEO metadata.
 
-### Upstream
+`features/inventory/public.ts` export `InventoryPage` từ presentation layer.
 
-- App Router page/layout/API route import feature `inventory`.
-- Shared prefetch runner có thể gọi query/action của feature nếu SSR hydration cần server state.
+## Dependency và dữ liệu
 
-### Downstream
+`prefetchInventoryPage` nằm chung file với collection/reading setup runner:
 
-- Shared utilities: query client, auth/session, i18n, UI primitives, prefetch/hydration.
-- Backend contracts: API endpoints/commands tương ứng ở backend feature liên quan.
-- State: TanStack Query cho server state; Zustand chỉ cho local UI state khi có evidence.
+- dùng `swallowPrefetch`.
+- prefetch query key `inventoryQueryKeys.mine()`.
+- queryFn là `fetchInventoryServer`.
 
-## 4. Dữ liệu & trạng thái
+`Frontend/src/app/api/inventory/route.ts` là protected proxy:
 
-- Server state: rà query keys/hooks/actions trong feature.
-- Local UI state: rà component/hook trong `Frontend/src/features/inventory`.
-- i18n: đối chiếu `Frontend/messages/vi`, `Frontend/messages/en`, `Frontend/messages/zh`.
-- Realtime/payment/idempotency: bắt buộc rà vì feature có finance/reward/realtime-facing flow.
+- GET lấy token bằng `getServerAccessToken`; thiếu token trả `401`.
+- GET gọi backend `/inventory`.
+- POST parse `UseInventoryItemPayload`; invalid JSON trả `400`.
+- POST yêu cầu `itemCode` không rỗng.
+- POST normalize `quantity` về `1..10`.
+- POST yêu cầu idempotency key từ `INVENTORY_IDEMPOTENCY_HEADER` hoặc payload; thiếu key trả `400`.
+- POST gọi backend `/inventory/use` và forward idempotency header.
 
-## 5. Boundary và guard
+## Boundary / guard
 
-- Thin route: `page.tsx`/`layout.tsx` chỉ composition, orchestration nằm trong feature/hook/action.
-- Public API: app route nên import qua `@/features/*/public` khi có.
-- Guard scripts: clean architecture, component size, hook/action size, auth fail-closed, image policy, risk coverage.
-- Accessibility/i18n: touched interactive UI cần accessible name/focus/error association; copy mới cần localization.
+- Inventory là protected user route; app API proxy không được fail-open khi thiếu token.
+- Use item là reward/entitlement-facing mutation; idempotency key và quantity clamp là boundary quan trọng.
+- Query key `inventoryQueryKeys.mine()` phải khớp hook trong `InventoryPage`.
+- Vì runner nằm trong `user/collection.ts`, khi sửa không được làm hỏng collection hoặc reading setup prefetch cùng file.
+- Copy mới cần đồng bộ namespace inventory trong `vi/en/zh`.
 
-## 6. Test coverage hiện tại
+## Rủi ro
 
-- Guard coverage: `Frontend/scripts/*.mjs`.
-- Feature tests: tìm trong `Frontend/tests` hoặc colocated tests với grep `inventory`.
-- Không tìm thấy evidence trực tiếp: ghi rõ route/component/action chưa có test khi audit chi tiết.
+- P0: duplicate item use do mất idempotency key; dùng item của user khác nếu backend/proxy ownership sai; quantity clamp bị bypass.
+- P1: inventory query key mismatch làm SSR hydration không được dùng; invalidation thiếu sau POST; route deep import internals.
+- P2: docs bỏ qua việc prefetch inventory nằm trong `collection.ts`, dễ tìm nhầm runner.
 
-## 7. Rủi ro kiến trúc
+## Kết luận
 
-- P0: auth fail-open, token/secret exposure, payment/reward command duplicate, route bypass backend security.
-- P1: route quá dày, import sâu vào feature internals, prefetch/hydration mismatch, thiếu i18n.
-- P2: component/hook gần vượt budget, evidence test chưa đủ.
-
-## 8. Kết luận review
-
-- Mức độ phù hợp kiến trúc: file đã neo đúng source feature `inventory` và guard frontend; cần audit từng route/action để kết luận pass cuối cùng.
-- Evidence quan trọng: `Frontend/src/features/inventory`, `Frontend/src/app/[locale]`, `Frontend/src/shared/server/prefetch`, `Frontend/messages`, `Frontend/scripts`.
-- Việc cần làm ưu tiên cao: điền route/action/test cụ thể trong review PR module.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+FE Inventory là protected entitlement/reward surface với SSR prefetch và app API proxy dùng idempotency. Review đúng phải kiểm tra `inventoryQueryKeys.mine()`, `fetchInventoryServer`, POST `/inventory/use` và invalidation sau khi dùng item.

@@ -1,62 +1,58 @@
 # FE Gacha
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Frontend/src/features/gacha`.
-- Public export: `Frontend/src/features/gacha/public.ts` nếu tồn tại.
-- App routes cần đối chiếu: `Frontend/src/app/[locale]` grep `gacha` hoặc route nghiệp vụ tương ứng.
-- API route proxy/action source: `Frontend/src/app/api` và feature server actions nếu có.
-- Guards: `Frontend/scripts/check-clean-architecture.mjs`, `check-component-size.mjs`, `check-hook-action-size.mjs`, `check-auth-fail-closed.mjs`.
+- Feature: `Frontend/src/features/gacha`
+- Public export: `Frontend/src/features/gacha/public.ts`
+- Routes: `Frontend/src/app/[locale]/(user)/gacha/page.tsx`, `Frontend/src/app/[locale]/(user)/gacha/history/page.tsx`
+- API proxy đã đọc: `Frontend/src/app/api/gacha/pools/route.ts`, `Frontend/src/app/api/gacha/pull/route.ts`, `Frontend/src/app/api/gacha/history/route.ts`
+- Prefetch: `Frontend/src/shared/server/prefetch/runners/user/gacha.ts`
+- Shared infra: `Frontend/src/shared/infrastructure/gacha/*`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Route/page/layout: xác định bằng `find Frontend/src/app -type f | grep -E 'gacha|gacha'`.
-- Feature public surface: `Frontend/src/features/gacha/public.ts` là boundary ưu tiên cho app imports.
-- Components/hooks/actions: nằm trong `Frontend/src/features/gacha` theo cấu trúc hiện tại.
-- Backend/API contract: đi qua app API route, server action hoặc shared API client; không bypass auth/security flow.
+`gacha/page.tsx` là route mỏng:
 
-## 3. Dependency map thực tế
+- gọi `dehydrateAppQueries(prefetchGachaPage)`.
+- render `GachaPage` từ `@/features/gacha/public` trong `AppQueryHydrationBoundary`.
+- export shared SEO metadata.
 
-### Upstream
+`gacha/history/page.tsx` tương tự:
 
-- App Router page/layout/API route import feature `gacha`.
-- Shared prefetch runner có thể gọi query/action của feature nếu SSR hydration cần server state.
+- gọi `prefetchGachaHistoryPage`.
+- render `GachaHistoryPage` từ `@/features/gacha/public`.
 
-### Downstream
+`features/gacha/public.ts` export `GachaPage` và `GachaHistoryPage`.
 
-- Shared utilities: query client, auth/session, i18n, UI primitives, prefetch/hydration.
-- Backend contracts: API endpoints/commands tương ứng ở backend feature liên quan.
-- State: TanStack Query cho server state; Zustand chỉ cho local UI state khi có evidence.
+## Dependency và dữ liệu
 
-## 4. Dữ liệu & trạng thái
+`prefetchGachaPage`:
 
-- Server state: rà query keys/hooks/actions trong feature.
-- Local UI state: rà component/hook trong `Frontend/src/features/gacha`.
-- i18n: đối chiếu `Frontend/messages/vi`, `Frontend/messages/en`, `Frontend/messages/zh`.
-- Realtime/payment/idempotency: bắt buộc rà vì feature có finance/reward/realtime-facing flow.
+- prefetch `gachaQueryKeys.pools()` bằng `fetchGachaPoolsServer()`.
+- nếu có pool đầu tiên, prefetch odds `gachaQueryKeys.poolOdds(firstCode)` và history preview `gachaQueryKeys.history(1, 6)`.
 
-## 5. Boundary và guard
+`prefetchGachaHistoryPage` hydrate `gachaQueryKeys.history(1, 20)`.
 
-- Thin route: `page.tsx`/`layout.tsx` chỉ composition, orchestration nằm trong feature/hook/action.
-- Public API: app route nên import qua `@/features/*/public` khi có.
-- Guard scripts: clean architecture, component size, hook/action size, auth fail-closed, image policy, risk coverage.
-- Accessibility/i18n: touched interactive UI cần accessible name/focus/error association; copy mới cần localization.
+App API proxy:
 
-## 6. Test coverage hiện tại
+- `pools/route.ts` yêu cầu server access token và gọi backend `/gacha/pools`.
+- `history/route.ts` yêu cầu token, normalize `page >= 1`, clamp `pageSize <= 100`, gọi `/gacha/history`.
+- `pull/route.ts` yêu cầu token, parse payload, lấy idempotency key từ `GACHA_IDEMPOTENCY_HEADER` hoặc payload, trả `400` nếu thiếu, clamp count về `1..10`, forward `/gacha/pull` kèm idempotency header.
 
-- Guard coverage: `Frontend/scripts/*.mjs`.
-- Feature tests: tìm trong `Frontend/tests` hoặc colocated tests với grep `gacha`.
-- Không tìm thấy evidence trực tiếp: ghi rõ route/component/action chưa có test khi audit chi tiết.
+## Boundary / guard
 
-## 7. Rủi ro kiến trúc
+- Gacha là protected user route; app API proxy phải fail-closed khi thiếu token.
+- Pull gacha là reward/finance-facing mutation; idempotency key là bắt buộc và phải được giữ từ client tới backend.
+- Query key pools/odds/history trong prefetch phải khớp hooks trong `GachaPage` và `GachaHistoryPage`.
+- Không bỏ clamp count/pageSize ở proxy nếu sửa API route.
+- Copy mới phải đồng bộ namespace gacha trong `vi/en/zh`.
 
-- P0: auth fail-open, token/secret exposure, payment/reward command duplicate, route bypass backend security.
-- P1: route quá dày, import sâu vào feature internals, prefetch/hydration mismatch, thiếu i18n.
-- P2: component/hook gần vượt budget, evidence test chưa đủ.
+## Rủi ro
 
-## 8. Kết luận review
+- P0: duplicate pull do mất idempotency key; token fail-open ở app proxy; count clamp bị bypass gây reward/finance sai.
+- P1: SSR pools/odds/history key mismatch; history preview/page full invalidation sai sau pull; client gửi idempotency khác với header.
+- P2: docs chỉ nói page gacha mà bỏ qua history route và API proxy pull.
 
-- Mức độ phù hợp kiến trúc: file đã neo đúng source feature `gacha` và guard frontend; cần audit từng route/action để kết luận pass cuối cùng.
-- Evidence quan trọng: `Frontend/src/features/gacha`, `Frontend/src/app/[locale]`, `Frontend/src/shared/server/prefetch`, `Frontend/messages`, `Frontend/scripts`.
-- Việc cần làm ưu tiên cao: điền route/action/test cụ thể trong review PR module.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+## Kết luận
+
+FE Gacha là protected reward module có SSR prefetch và app API proxy rõ ràng. Review đúng phải kiểm tra idempotency key, count/pageSize normalization, query key hydration và invalidation sau pull.

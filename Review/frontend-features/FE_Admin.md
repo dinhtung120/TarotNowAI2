@@ -1,62 +1,62 @@
 # FE Admin
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Frontend/src/features/admin`.
-- Public export: `Frontend/src/features/admin/public.ts` nếu tồn tại.
-- App routes cần đối chiếu: `Frontend/src/app/[locale]` grep `admin` hoặc route nghiệp vụ tương ứng.
-- API route proxy/action source: `Frontend/src/app/api` và feature server actions nếu có.
-- Guards: `Frontend/scripts/check-clean-architecture.mjs`, `check-component-size.mjs`, `check-hook-action-size.mjs`, `check-auth-fail-closed.mjs`.
+- Feature: `Frontend/src/features/admin`
+- Public export: `Frontend/src/features/admin/public.ts`
+- Routes: `Frontend/src/app/[locale]/admin/page.tsx` và các nhánh `admin/users`, `admin/deposits`, `admin/withdrawals`, `admin/reader-requests`, `admin/disputes`, `admin/readings`, `admin/gamification`
+- API routes: `Frontend/src/app/api/admin/gamification/**/route.ts`
+- Prefetch: `Frontend/src/shared/server/prefetch/runners/admin.ts`
+- Messages: `Frontend/messages/{vi,en,zh}/admin/admin.json`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Route/page/layout: xác định bằng `find Frontend/src/app -type f | grep -E 'admin|admin'`.
-- Feature public surface: `Frontend/src/features/admin/public.ts` là boundary ưu tiên cho app imports.
-- Components/hooks/actions: nằm trong `Frontend/src/features/admin` theo cấu trúc hiện tại.
-- Backend/API contract: đi qua app API route, server action hoặc shared API client; không bypass auth/security flow.
+`admin/page.tsx` đã đọc là thin route:
 
-## 3. Dependency map thực tế
+- dynamic import `AdminDashboardPage` từ `@/features/admin/public`.
+- hydrate TanStack Query bằng `dehydrateAppQueries(prefetchAdminDashboardPage)`.
+- render trong `AppQueryHydrationBoundary`.
 
-### Upstream
+`features/admin/public.ts` export admin page shells:
 
-- App Router page/layout/API route import feature `admin`.
-- Shared prefetch runner có thể gọi query/action của feature nếu SSR hydration cần server state.
+- `AdminDashboardPage`, `AdminUsersPage`, `AdminDepositsPage`, `AdminWithdrawalsPage`, `AdminReaderRequestsPage`, `AdminDisputesPage`, `AdminReadingsPage`, `AdminPromotionsPage`, `AdminSystemConfigsPage`.
 
-### Downstream
+Admin prefetch runner đã đọc có các runner cụ thể:
 
-- Shared utilities: query client, auth/session, i18n, UI primitives, prefetch/hydration.
-- Backend contracts: API endpoints/commands tương ứng ở backend feature liên quan.
-- State: TanStack Query cho server state; Zustand chỉ cho local UI state khi có evidence.
+- `prefetchAdminDashboardPage`
+- `prefetchAdminUsersPage`
+- `prefetchAdminDepositsPage`
+- `prefetchAdminReaderRequestsPage`
+- `prefetchAdminReadingsPage`
+- `prefetchAdminWithdrawalsQueuePage`
+- `prefetchAdminDisputesPage`
+- `prefetchAdminGamificationPage`
 
-## 4. Dữ liệu & trạng thái
+## Dependency và dữ liệu
 
-- Server state: rà query keys/hooks/actions trong feature.
-- Local UI state: rà component/hook trong `Frontend/src/features/admin`.
-- i18n: đối chiếu `Frontend/messages/vi`, `Frontend/messages/en`, `Frontend/messages/zh`.
-- Realtime/payment/idempotency: chỉ áp dụng nếu route/action gọi command nhạy cảm.
+Admin frontend aggregate nhiều backend domains:
 
-## 5. Boundary và guard
+- Users/deposits/reader requests từ `features/admin/application/actions`.
+- Disputes từ `features/chat/application/actions`.
+- Admin gamification từ `features/gamification/admin/infrastructure`.
+- Admin readings từ `features/reading/public`.
+- Withdrawal queue từ `features/wallet/public`.
 
-- Thin route: `page.tsx`/`layout.tsx` chỉ composition, orchestration nằm trong feature/hook/action.
-- Public API: app route nên import qua `@/features/*/public` khi có.
-- Guard scripts: clean architecture, component size, hook/action size, auth fail-closed, image policy, risk coverage.
-- Accessibility/i18n: touched interactive UI cần accessible name/focus/error association; copy mới cần localization.
+Prefetch dùng `queryFnOrThrow` và `swallowPrefetch` cho một số pages, nên review hydration phải đọc query key/action tương ứng.
 
-## 6. Test coverage hiện tại
+## Boundary / guard
 
-- Guard coverage: `Frontend/scripts/*.mjs`.
-- Feature tests: tìm trong `Frontend/tests` hoặc colocated tests với grep `admin`.
-- Không tìm thấy evidence trực tiếp: ghi rõ route/component/action chưa có test khi audit chi tiết.
+- Admin routes phải được protected/fail-closed bởi auth/admin layout/middleware; route page mỏng chưa đủ chứng minh RBAC.
+- App routes phải import qua public API; `admin/page.tsx` đang dùng `@/features/admin/public`.
+- Admin finance actions như withdrawals/deposits/users add balance phải giữ idempotency và không duplicate mutation từ UI retry.
+- Messages mới thuộc namespace `admin/admin.json` ở `vi/en/zh`.
 
-## 7. Rủi ro kiến trúc
+## Rủi ro
 
-- P0: auth fail-open, token/secret exposure, payment/reward command duplicate, route bypass backend security.
-- P1: route quá dày, import sâu vào feature internals, prefetch/hydration mismatch, thiếu i18n.
-- P2: component/hook gần vượt budget, evidence test chưa đủ.
+- P0: admin route hoặc API proxy fail-open cho non-admin; finance/admin mutation retry gây duplicate; frontend exposes sensitive admin data in public shell.
+- P1: prefetch query key/action mismatch làm stale/hydration bug; admin page deep import internals; missing i18n for admin copy.
+- P2: docs review Admin như một page duy nhất trong khi source có nhiều subpages/prefetch runners.
 
-## 8. Kết luận review
+## Kết luận
 
-- Mức độ phù hợp kiến trúc: file đã neo đúng source feature `admin` và guard frontend; cần audit từng route/action để kết luận pass cuối cùng.
-- Evidence quan trọng: `Frontend/src/features/admin`, `Frontend/src/app/[locale]`, `Frontend/src/shared/server/prefetch`, `Frontend/messages`, `Frontend/scripts`.
-- Việc cần làm ưu tiên cao: điền route/action/test cụ thể trong review PR module.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+FE Admin là route group lớn có SSR prefetch rõ ràng và aggregate nhiều backend modules. Review đúng phải đọc route subpage, public export, prefetch runner và backend action tương ứng cho từng admin screen.

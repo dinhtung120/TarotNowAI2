@@ -1,65 +1,59 @@
 # BE Profile
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/Profile`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `Profile`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `Profile`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `Profile`.
+- Feature: `Backend/src/TarotNow.Application/Features/Profile`
+- Controller: `Backend/src/TarotNow.Api/Controllers/ProfileController.cs`
+- Tests: `Backend/tests/TarotNow.Api.IntegrationTests/ProfileIntegrationTests.cs`, `UpdateProfileCommandHandlerTests.cs`, `PresignAvatarUploadCommandHandlerTests.cs`, `UserProfileProjectionSyncRequestedDomainEventHandlerTests.cs`
+- Datastore/runtime: `ApplicationDbContext.cs` DbSet `Users`; `MongoDbContext.cs` collections `upload_sessions`, `reader_profiles`
+- Related constants: `VietnamBankCatalog`, upload contracts `AvatarPresignRequest`, `AvatarConfirmRequest`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/Profile/Commands` và/hoặc `Features/Profile/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: không mặc định; chỉ áp dụng nếu feature publish notification/realtime/event phụ.
-- Finance/AI/reward integration: không mặc định; rà khi command có state mutation hoặc side effect.
+`ProfileController.cs` dùng `[EnableRateLimiting("auth-session")]`; từng endpoint yêu cầu `[Authorize]`.
 
-## 3. Dependency map thực tế
+Endpoints chính:
 
-### Upstream
+- `GET profile`: `GetProfileQuery { UserId }`.
+- `GET payout-banks`: trả bank catalog public cho user đã auth.
+- `PATCH profile`: `UpdateProfileCommand` gồm display/date-of-birth và payout bank fields.
+- `POST avatar/presign`: `PresignAvatarUploadCommand`.
+- `POST avatar/confirm`: `ConfirmAvatarUploadCommand`.
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `Profile`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `Profile` nhận hoặc phát domain events.
+Controller luôn lấy `UserId` từ token, không nhận user id từ body.
 
-### Downstream
+## Dependency và dữ liệu
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+Profile state chính nằm trên `Users` và projection/read model liên quan:
 
-## 4. Dữ liệu & trạng thái
+- User profile fields: display name/date of birth/avatar/payout fields.
+- Upload flow dùng `upload_sessions` để presign/confirm avatar.
+- Reader profile projection có thể sync khi user profile đổi, evidence từ `UserProfileProjectionSyncRequestedDomainEventHandlerTests.cs`.
 
-Evidence dữ liệu cụ thể: MongoDB/user profile documents and PostgreSQL users identity link need ownership checks.
+Payout bank account fields là sensitive personal/financial data; review cần đọc entity/config encryption trước khi khẳng định có mã hóa. Evidence trong Withdrawal đã thấy encryption cho withdrawal bank fields, nhưng không tự suy ra Profile payout fields cũng được mã hóa nếu chưa đọc mapping.
 
+## Boundary / guard
 
-- PostgreSQL: rà nếu feature có transactional state.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: rà nếu feature dùng cache/rate-limit/pubsub.
-- Transaction/idempotency/outbox: áp dụng nếu command mutate state hoặc publish side effect.
+- Profile update phải enforce ownership bằng token user id.
+- Avatar presign/confirm phải validate ownership token/object key/session expiry ở handler, không chỉ controller.
+- Payout fields không được log/expose quá rộng.
+- Controller chỉ dispatch MediatR, không trực tiếp gọi storage provider.
 
-## 5. Boundary và guard
+## Test coverage hiện có
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+- `ProfileIntegrationTests.cs`: API integration coverage cho profile flow.
+- `UpdateProfileCommandHandlerTests.cs`: command update coverage.
+- `PresignAvatarUploadCommandHandlerTests.cs`: avatar presign coverage.
+- `UserProfileProjectionSyncRequestedDomainEventHandlerTests.cs`: sync projection khi profile đổi.
 
-## 6. Test coverage hiện tại
+Cần đọc thêm `ConfirmAvatarUploadCommandHandler` tests nếu audit avatar confirm sâu; evidence list hiện không thấy tên test riêng cho confirm avatar.
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'Profile|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+## Rủi ro
 
-## 7. Rủi ro kiến trúc
+- P0: user cập nhật profile/payout/avatar của người khác; upload confirm chấp nhận object key/token không thuộc user; payout bank fields bị log/expose plaintext.
+- P1: profile update không sync reader profile projection; avatar upload session không expiry/ownership check.
+- P2: docs claim payout profile table riêng khi source chưa chứng minh.
 
-- P0: boundary/event-driven violation; state mutation/side effect sai layer.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+## Kết luận
 
-## 8. Kết luận review
-
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/Profile`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/Profile`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+Profile là user-owned data module có avatar upload và payout bank fields nhạy cảm. Review đúng phải đọc controller, update/presign/confirm handlers, upload session repository và projection sync tests.

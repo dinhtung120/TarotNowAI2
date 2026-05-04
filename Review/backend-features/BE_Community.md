@@ -1,65 +1,61 @@
 # BE Community
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/Community`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `Community`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `Community`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `Community`.
+- Feature: `Backend/src/TarotNow.Application/Features/Community`
+- Controllers: `CommunityController.cs`, `CommunityController.Posts.cs`, `CommunityController.Comments.cs`, `CommunityController.ReactionsReports.cs`, `CommunityController.MediaUpload.cs`, `AdminCommunityController.cs`
+- Tests: `CreatePostCommandHandlerTests.cs`, `ToggleReactionCommandHandlerTests.cs`, `PresignCommunityImageCommandHandlerTests.cs`, `ConfirmCommunityImageCommandHandlerTests.cs`, `ResolvePostReportCommandHandlerTests.cs`
+- Datastore: `MongoDbContext.cs` collections `community_posts`, `community_reactions`, `community_comments`, `community_media_assets`, `upload_sessions`, `reports`
+- Domain event: `CommunityMediaAttachRequestedDomainEvent.cs`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/Community/Commands` và/hoặc `Features/Community/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: không mặc định; chỉ áp dụng nếu feature publish notification/realtime/event phụ.
-- Finance/AI/reward integration: không mặc định; rà khi command có state mutation hoặc side effect.
+`CommunityController.cs` là authenticated community API với policy `AuthenticatedUser` và rate limit `auth-session`.
 
-## 3. Dependency map thực tế
+Post flow đã đọc:
 
-### Upstream
+- `POST posts`: `CreatePostCommand`, rate limit `community-write`, author id lấy từ token.
+- `GET posts`: `GetFeedQuery` với `ViewerId` từ token để handler áp dụng visibility.
+- `GET posts/{id}`: `GetPostDetailQuery` với viewer id.
+- `PUT posts/{id}`: `UpdatePostCommand`, author id từ token.
+- `DELETE posts/{id}`: `DeletePostCommand`, requester id + role từ claims.
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `Community`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `Community` nhận hoặc phát domain events.
+Các partial khác xử lý comments, reactions/reports và media upload presign/confirm.
 
-### Downstream
+## Dependency và dữ liệu
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+Community là MongoDB document module:
 
-## 4. Dữ liệu & trạng thái
+- `community_posts`: post content/visibility/author.
+- `community_comments`: comments.
+- `community_reactions`: reactions.
+- `community_media_assets` + `upload_sessions`: media upload lifecycle.
+- `reports`: report/moderation data.
 
-Evidence dữ liệu cụ thể: MongoDB community_posts/community_reactions/community_comments/community_media_assets/reports.
+Visibility/authorization phụ thuộc viewer id và requester role được truyền xuống handler; controller không tự quyết định business rule ngoài lấy context.
 
+## Boundary / guard
 
-- PostgreSQL: rà nếu feature có transactional state.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: rà nếu feature dùng cache/rate-limit/pubsub.
-- Transaction/idempotency/outbox: áp dụng nếu command mutate state hoặc publish side effect.
+- Tất cả write actions phải lấy author/requester từ token, không từ payload.
+- Feed/detail phải giữ viewer context để không leak private/hidden posts.
+- Media presign/confirm phải validate upload ownership/expiry/content type trong handlers.
+- Report/admin resolution phải tránh bypass moderation workflow.
 
-## 5. Boundary và guard
+## Test coverage hiện có
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+- `CreatePostCommandHandlerTests.cs`: create post command.
+- `ToggleReactionCommandHandlerTests.cs`: reaction toggle.
+- `PresignCommunityImageCommandHandlerTests.cs` và `ConfirmCommunityImageCommandHandlerTests.cs`: media upload flow.
+- `ResolvePostReportCommandHandlerTests.cs`: admin/moderation report resolution.
 
-## 6. Test coverage hiện tại
+Không thấy API integration test riêng cho CommunityController trong evidence đã đọc; nếu audit sâu không tìm thêm, đây là gap P1 cho auth/visibility/media route contract.
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'Community|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+## Rủi ro
 
-## 7. Rủi ro kiến trúc
+- P0: private/hidden post leak qua feed/detail; user sửa/xóa post của người khác; upload confirm attach asset không thuộc user/post.
+- P1: report/moderation path thiếu audit; media upload session không expiry/ownership check.
+- P2: docs nhầm community reports với generic global reports mà không chỉ rõ collection `reports` dùng chung.
 
-- P0: boundary/event-driven violation; state mutation/side effect sai layer.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+## Kết luận
 
-## 8. Kết luận review
-
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/Community`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/Community`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+Community là authenticated Mongo document module với visibility, ownership và media upload là vùng rủi ro chính. Review đúng phải đọc partial controller cụ thể, command/query handler và media/report tests tương ứng.

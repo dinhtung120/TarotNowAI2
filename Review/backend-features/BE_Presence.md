@@ -1,62 +1,55 @@
 # BE Presence
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/Presence`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `Presence`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `Presence`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `Presence`.
+- Feature: `Backend/src/TarotNow.Application/Features/Presence`
+- Hub/runtime: `Backend/src/TarotNow.Api/Hubs/PresenceHub.cs`, `Backend/src/TarotNow.Api/Realtime/PresenceGroupNames.cs`, `InMemoryUserPresenceTracker.cs`, `RedisUserPresenceTracker*.cs`
+- Tests: `PresenceHubTests.cs`, `RedisUserPresenceTrackerTests.cs`, `InMemoryUserPresenceTrackerTests.cs`, `RedisRealtimeBridgeSourceQueuePolicyTests.cs`
+- Datastore/runtime: Redis or in-memory presence tracker; không thấy DbSet/collection riêng cho Presence trong `ApplicationDbContext.cs`/`MongoDbContext.cs`
+- Related controller usage: `ReaderController` uses `IUserPresenceTracker` to overlay reader online status
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/Presence/Commands` và/hoặc `Features/Presence/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: có rủi ro cao, phải rà Redis/SignalR/outbox path.
-- Finance/AI/reward integration: không mặc định; rà khi command có state mutation hoặc side effect.
+Presence không có controller riêng trong evidence đã đọc. Runtime boundary chính là SignalR `PresenceHub` với `[Authorize]`.
 
-## 3. Dependency map thực tế
+Hub flows:
 
-### Upstream
+- `OnConnectedAsync`: mark connected, join `PresenceGroupNames.User(userId)`, publish `PublishUserStatusChangedCommand` status `online`.
+- `OnDisconnectedAsync`: mark disconnected, leave group, publish `offline` khi không còn active connection.
+- `Heartbeat`: record heartbeat.
+- `SubscribeUserStatusObservers` / `UnsubscribeUserStatusObservers`: join/leave observer groups cho danh sách user ids.
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `Presence`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `Presence` nhận hoặc phát domain events.
+Observer subscription bị giới hạn `MaxObserverSubscriptionsPerRequest = 200`, normalize trim/distinct và truncate.
 
-### Downstream
+## Dependency và dữ liệu
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+State runtime nằm ở `IUserPresenceTracker` implementations:
 
-## 4. Dữ liệu & trạng thái
+- In-memory tracker cho local/dev/test.
+- Redis tracker cho distributed production/realtime consistency.
 
-- PostgreSQL: rà nếu feature có transactional state.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: bắt buộc rà Pub/Sub/realtime/cache coordination.
-- Transaction/idempotency/outbox: bắt buộc review vì module thuộc vùng finance/AI/reward/realtime.
+Presence publish status change qua MediatR command `PublishUserStatusChangedCommand`, không gửi trực tiếp event migrated từ controller. Reader directory/profile dùng tracker để hiển thị online status.
 
-## 5. Boundary và guard
+## Boundary / guard
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+- Hub phải `[Authorize]`; user id lấy từ claims của connection.
+- Không dùng `Context.ConnectionAborted` khi publish status change vì code hiện cố gắng không mất event khi socket đóng nhanh.
+- Direct SignalR broadcast migrated events bị architecture tests kiểm soát; PresenceHub cần tránh phát các event bị cấm như `conversation.updated`, `notification.new`.
+- Redis required in Production theo `DependencyInjection.Cache.cs`, nên presence distributed behavior không được coi optional ở production.
 
-## 6. Test coverage hiện tại
+## Test coverage hiện có
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'Presence|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+- `PresenceHubTests.cs`: hub behavior.
+- `RedisUserPresenceTrackerTests.cs`: Redis tracker behavior.
+- `InMemoryUserPresenceTrackerTests.cs`: in-memory tracker behavior.
+- `RedisRealtimeBridgeSourceQueuePolicyTests.cs`: Redis realtime bridge queue/source policy liên quan.
 
-## 7. Rủi ro kiến trúc
+## Rủi ro
 
-- P0: boundary/event-driven violation; state mutation/side effect sai layer.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+- P0: unauthenticated presence spoof; stale online/offline state do disconnect/heartbeat bug; direct forbidden realtime broadcast.
+- P1: observer subscription không giới hạn gây fanout lớn; Redis/in-memory behavior lệch giữa local và production.
+- P2: docs claim database persistence for presence trong khi evidence runtime là tracker/Redis.
 
-## 8. Kết luận review
+## Kết luận
 
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/Presence`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/Presence`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+Presence là realtime runtime module, không phải DB feature. Review đúng phải đọc `PresenceHub`, tracker implementation và Redis production behavior, đồng thời kiểm tác động lên Reader online status.

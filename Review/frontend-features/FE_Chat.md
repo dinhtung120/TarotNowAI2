@@ -1,62 +1,57 @@
 # FE Chat
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Frontend/src/features/chat`.
-- Public export: `Frontend/src/features/chat/public.ts` nếu tồn tại.
-- App routes cần đối chiếu: `Frontend/src/app/[locale]` grep `chat` hoặc route nghiệp vụ tương ứng.
-- API route proxy/action source: `Frontend/src/app/api` và feature server actions nếu có.
-- Guards: `Frontend/scripts/check-clean-architecture.mjs`, `check-component-size.mjs`, `check-hook-action-size.mjs`, `check-auth-fail-closed.mjs`.
+- Feature: `Frontend/src/features/chat`
+- Public export: `Frontend/src/features/chat/public.ts`
+- Routes: `Frontend/src/app/[locale]/(user)/chat/page.tsx`, `Frontend/src/app/[locale]/(user)/chat/[id]/page.tsx`
+- API proxy đã đọc: `Frontend/src/app/api/chat/inbox-preview/route.ts`, `Frontend/src/app/api/chat/unread-count/route.ts`
+- Prefetch: `Frontend/src/shared/server/prefetch/runners/user/chat.ts`
+- Messages: `Frontend/messages/{vi,en,zh}/chat/chat.json`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Route/page/layout: xác định bằng `find Frontend/src/app -type f | grep -E 'chat|chat'`.
-- Feature public surface: `Frontend/src/features/chat/public.ts` là boundary ưu tiên cho app imports.
-- Components/hooks/actions: nằm trong `Frontend/src/features/chat` theo cấu trúc hiện tại.
-- Backend/API contract: đi qua app API route, server action hoặc shared API client; không bypass auth/security flow.
+`chat/page.tsx` là route mỏng:
 
-## 3. Dependency map thực tế
+- re-export `ChatInboxPage` từ `@/features/chat/public`.
+- re-export `generateLocaleMetadata` từ shared SEO metadata.
 
-### Upstream
+`chat/[id]/page.tsx` dynamic import `ChatRoomPage` từ `@/features/chat/public` và bọc bằng `Suspense` với `LoadingSpinner`. Route này không tự parse room id trong file đã đọc; room-level data/subscription nằm trong feature component.
 
-- App Router page/layout/API route import feature `chat`.
-- Shared prefetch runner có thể gọi query/action của feature nếu SSR hydration cần server state.
+`features/chat/public.ts` export:
 
-### Downstream
+- `createConversation`
+- `ChatInboxPage`
+- `ChatRoomPage`
+- `ChatSegmentShell`
 
-- Shared utilities: query client, auth/session, i18n, UI primitives, prefetch/hydration.
-- Backend contracts: API endpoints/commands tương ứng ở backend feature liên quan.
-- State: TanStack Query cho server state; Zustand chỉ cho local UI state khi có evidence.
+## Dependency và dữ liệu
 
-## 4. Dữ liệu & trạng thái
+Chat frontend phụ thuộc:
 
-- Server state: rà query keys/hooks/actions trong feature.
-- Local UI state: rà component/hook trong `Frontend/src/features/chat`.
-- i18n: đối chiếu `Frontend/messages/vi`, `Frontend/messages/en`, `Frontend/messages/zh`.
-- Realtime/payment/idempotency: bắt buộc rà vì feature có finance/reward/realtime-facing flow.
+- Conversation actions trong `features/chat/application/actions`.
+- App API proxy cho inbox preview và unread count.
+- Backend `/conversations` contract qua `serverHttpRequest` trong app API routes.
+- Shell/query prefetch `prefetchChatInboxShell`, hydrate `userStateQueryKeys.chat.inboxActive()` bằng `listConversations('active', 1, 100)`.
 
-## 5. Boundary và guard
+`inbox-preview/route.ts` lấy access token server-side bằng `getServerAccessToken`; nếu không có token trả `401` qua `buildProblemResponse`. Proxy gọi `/conversations?tab=active&page=1&pageSize=8`.
 
-- Thin route: `page.tsx`/`layout.tsx` chỉ composition, orchestration nằm trong feature/hook/action.
-- Public API: app route nên import qua `@/features/*/public` khi có.
-- Guard scripts: clean architecture, component size, hook/action size, auth fail-closed, image policy, risk coverage.
-- Accessibility/i18n: touched interactive UI cần accessible name/focus/error association; copy mới cần localization.
+`unread-count/route.ts` cũng fail-closed khi thiếu token và gọi `/conversations/unread-total`.
 
-## 6. Test coverage hiện tại
+## Boundary / guard
 
-- Guard coverage: `Frontend/scripts/*.mjs`.
-- Feature tests: tìm trong `Frontend/tests` hoặc colocated tests với grep `chat`.
-- Không tìm thấy evidence trực tiếp: ghi rõ route/component/action chưa có test khi audit chi tiết.
+- Chat là protected user route; app API proxy không được trả dữ liệu khi thiếu server access token.
+- App route import qua `@/features/chat/public`, đúng public API boundary.
+- Realtime/message UI nên nằm trong feature component/hook, không đưa orchestration vào `page.tsx`.
+- Query key prefetch `userStateQueryKeys.chat.inboxActive()` phải khớp hook đọc inbox active.
+- Copy mới thuộc `chat/chat.json` ở cả `vi/en/zh`.
 
-## 7. Rủi ro kiến trúc
+## Rủi ro
 
-- P0: auth fail-open, token/secret exposure, payment/reward command duplicate, route bypass backend security.
-- P1: route quá dày, import sâu vào feature internals, prefetch/hydration mismatch, thiếu i18n.
-- P2: component/hook gần vượt budget, evidence test chưa đủ.
+- P0: chat room leak conversation của user khác; app API proxy fail-open; gửi token/message content vào URL/log; duplicate finance/escrow mutation nếu chat action liên quan booking/payment.
+- P1: route deep import internals thay vì public export; prefetch inbox key mismatch; unread-count cache stale làm navbar/shell hiển thị sai.
+- P2: docs bỏ qua `ChatSegmentShell` hoặc shell prefetch làm review thiếu luồng sidebar/inbox.
 
-## 8. Kết luận review
+## Kết luận
 
-- Mức độ phù hợp kiến trúc: file đã neo đúng source feature `chat` và guard frontend; cần audit từng route/action để kết luận pass cuối cùng.
-- Evidence quan trọng: `Frontend/src/features/chat`, `Frontend/src/app/[locale]`, `Frontend/src/shared/server/prefetch`, `Frontend/messages`, `Frontend/scripts`.
-- Việc cần làm ưu tiên cao: điền route/action/test cụ thể trong review PR module.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+FE Chat là protected realtime/message surface với route mỏng, public exports rõ và shell prefetch cho inbox active. Review đúng phải đọc feature room/inbox component khi sửa chat UI, đồng thời kiểm tra app API proxy fail-closed và query key hydration.

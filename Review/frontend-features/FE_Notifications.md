@@ -1,62 +1,56 @@
 # FE Notifications
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Frontend/src/features/notifications`.
-- Public export: `Frontend/src/features/notifications/public.ts` nếu tồn tại.
-- App routes cần đối chiếu: `Frontend/src/app/[locale]` grep `notifications` hoặc route nghiệp vụ tương ứng.
-- API route proxy/action source: `Frontend/src/app/api` và feature server actions nếu có.
-- Guards: `Frontend/scripts/check-clean-architecture.mjs`, `check-component-size.mjs`, `check-hook-action-size.mjs`, `check-auth-fail-closed.mjs`.
+- Feature: `Frontend/src/features/notifications`
+- Public export: `Frontend/src/features/notifications/public.ts`
+- Route: `Frontend/src/app/[locale]/(user)/notifications/page.tsx`
+- API proxy đã đọc: `Frontend/src/app/api/notifications/route.ts`
+- Prefetch: `Frontend/src/shared/server/prefetch/runners/user/notifications.ts`
+- Messages: `Frontend/messages/{vi,en,zh}/notifications/notifications.json`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Route/page/layout: xác định bằng `find Frontend/src/app -type f | grep -E 'notifications|notifications'`.
-- Feature public surface: `Frontend/src/features/notifications/public.ts` là boundary ưu tiên cho app imports.
-- Components/hooks/actions: nằm trong `Frontend/src/features/notifications` theo cấu trúc hiện tại.
-- Backend/API contract: đi qua app API route, server action hoặc shared API client; không bypass auth/security flow.
+`notifications/page.tsx` là route mỏng:
 
-## 3. Dependency map thực tế
+- gọi `dehydrateAppQueries(prefetchNotificationsPage)`.
+- bọc `<NotificationsPage />` trong `AppQueryHydrationBoundary`.
+- import `NotificationsPage` từ `@/features/notifications/public`.
 
-### Upstream
+`features/notifications/public.ts` export default `NotificationsPage` từ presentation layer.
 
-- App Router page/layout/API route import feature `notifications`.
-- Shared prefetch runner có thể gọi query/action của feature nếu SSR hydration cần server state.
+## Dependency và dữ liệu
 
-### Downstream
+`prefetchNotificationsPage` hydrate query:
 
-- Shared utilities: query client, auth/session, i18n, UI primitives, prefetch/hydration.
-- Backend contracts: API endpoints/commands tương ứng ở backend feature liên quan.
-- State: TanStack Query cho server state; Zustand chỉ cho local UI state khi có evidence.
+- query key `userStateQueryKeys.notifications.list(1, false)`.
+- queryFn gọi `getNotifications(1, 20, undefined)`.
+- nếu action fail thì trả `null` thay vì throw.
 
-## 4. Dữ liệu & trạng thái
+`Frontend/src/app/api/notifications/route.ts` là proxy protected:
 
-- Server state: rà query keys/hooks/actions trong feature.
-- Local UI state: rà component/hook trong `Frontend/src/features/notifications`.
-- i18n: đối chiếu `Frontend/messages/vi`, `Frontend/messages/en`, `Frontend/messages/zh`.
-- Realtime/payment/idempotency: bắt buộc rà vì feature có finance/reward/realtime-facing flow.
+- đọc token bằng `getServerAccessToken`.
+- thiếu token trả `401` với `AUTH_ERROR.UNAUTHORIZED`.
+- parse `page`, `pageSize` và optional `isRead` từ query string.
+- clamp `page >= 1`, `pageSize` trong khoảng `1..100`.
+- gọi backend `/Notification?...` qua `serverHttpRequest`.
 
-## 5. Boundary và guard
+Không thấy file `Frontend/src/app/api/notifications/mark-all-read/route.ts` ở path đã thử đọc; không ghi nhận API đó nếu chưa có evidence khác.
 
-- Thin route: `page.tsx`/`layout.tsx` chỉ composition, orchestration nằm trong feature/hook/action.
-- Public API: app route nên import qua `@/features/*/public` khi có.
-- Guard scripts: clean architecture, component size, hook/action size, auth fail-closed, image policy, risk coverage.
-- Accessibility/i18n: touched interactive UI cần accessible name/focus/error association; copy mới cần localization.
+## Boundary / guard
 
-## 6. Test coverage hiện tại
+- Notifications là protected user route; proxy phải fail-closed khi thiếu token.
+- App route import qua `@/features/notifications/public`, đúng public API boundary.
+- Query key list page đầu phải khớp hook trong `NotificationsPage`; đặc biệt prefetch key dùng tham số `(1, false)` nhưng action gọi `isRead` là `undefined`, cần kiểm tra khi sửa filter unread/all.
+- Mark-read/delete actions nếu sửa phải kiểm tra ownership và invalidation unread count/shell.
+- Copy mới thuộc `notifications/notifications.json` ở cả `vi/en/zh`.
 
-- Guard coverage: `Frontend/scripts/*.mjs`.
-- Feature tests: tìm trong `Frontend/tests` hoặc colocated tests với grep `notifications`.
-- Không tìm thấy evidence trực tiếp: ghi rõ route/component/action chưa có test khi audit chi tiết.
+## Rủi ro
 
-## 7. Rủi ro kiến trúc
+- P0: notification list/mark-read leak dữ liệu user khác hoặc proxy fail-open khi thiếu token.
+- P1: query key/filter mismatch làm hydration không được dùng hoặc hiển thị sai read/unread; unread badge stale sau mutation; hardcoded copy ngoài messages.
+- P2: docs claim mark-all-read app route tồn tại khi chưa thấy evidence ở path đã đọc.
 
-- P0: auth fail-open, token/secret exposure, payment/reward command duplicate, route bypass backend security.
-- P1: route quá dày, import sâu vào feature internals, prefetch/hydration mismatch, thiếu i18n.
-- P2: component/hook gần vượt budget, evidence test chưa đủ.
+## Kết luận
 
-## 8. Kết luận review
-
-- Mức độ phù hợp kiến trúc: file đã neo đúng source feature `notifications` và guard frontend; cần audit từng route/action để kết luận pass cuối cùng.
-- Evidence quan trọng: `Frontend/src/features/notifications`, `Frontend/src/app/[locale]`, `Frontend/src/shared/server/prefetch`, `Frontend/messages`, `Frontend/scripts`.
-- Việc cần làm ưu tiên cao: điền route/action/test cụ thể trong review PR module.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+FE Notifications là protected list route có SSR prefetch và app API proxy fail-closed. Review đúng phải đọc `NotificationsPage` và feature actions khi sửa filter/read state, vì rủi ro chính nằm ở query key, ownership và invalidation unread count.

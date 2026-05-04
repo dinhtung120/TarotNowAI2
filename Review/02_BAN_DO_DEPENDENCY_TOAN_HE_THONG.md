@@ -9,46 +9,78 @@ TarotNow.Domain <- TarotNow.Application <- TarotNow.Infrastructure
                      TarotNow.Api ---------------+
 ```
 
-Evidence cần đối chiếu:
+Evidence:
+
 - `Backend/src/TarotNow.Domain/TarotNow.Domain.csproj`
 - `Backend/src/TarotNow.Application/TarotNow.Application.csproj`
 - `Backend/src/TarotNow.Infrastructure/TarotNow.Infrastructure.csproj`
 - `Backend/src/TarotNow.Api/TarotNow.Api.csproj`
 - `Backend/tests/TarotNow.ArchitectureTests/ArchitectureBoundariesTests.cs`
 
-## Backend write flow chuẩn
+## Backend write dependency graph
 
 ```text
-API Controller -> MediatR Command -> thin CommandHandler -> IInlineDomainEventDispatcher -> *RequestedDomainEventHandler -> Application interfaces -> Infrastructure implementations -> DomainEvent/Outbox/Redis bridge
+API Controller
+  -> MediatR Command
+  -> thin CommandHandler
+  -> IInlineDomainEventDispatcher
+  -> *RequestedDomainEventHandler
+  -> Application-owned interfaces/repositories/services
+  -> Infrastructure implementations
+  -> PostgreSQL/MongoDB/Redis/provider adapters
+  -> Domain events/outbox/realtime bridge
 ```
 
 Evidence:
-- Interface inline dispatcher: `Backend/src/TarotNow.Application/Interfaces/IInlineDomainEventDispatcher.cs`.
-- Architecture guard: `Backend/tests/TarotNow.ArchitectureTests/EventDrivenArchitectureRulesTests.cs`.
-- Outbox/background infrastructure: `Backend/src/TarotNow.Infrastructure/BackgroundJobs/Outbox`.
-- Redis publisher contract: `Backend/src/TarotNow.Application/Interfaces/IRedisPublisher.cs`.
 
-## Frontend graph
+- `Backend/src/TarotNow.Application/Interfaces/IInlineDomainEventDispatcher.cs`
+- `Backend/tests/TarotNow.ArchitectureTests/EventDrivenArchitectureRulesTests.cs`
+- `Backend/src/TarotNow.Infrastructure/BackgroundJobs/Outbox`
+- `Backend/src/TarotNow.Application/Interfaces/IRedisPublisher.cs`
+- `Backend/src/TarotNow.Infrastructure/DomainEvents/Handlers`
+
+## Backend read/query dependency graph
 
 ```text
-Frontend/src/app/[locale] -> Frontend/src/features/*/public.ts -> feature application/domain/presentation -> Frontend/src/shared
+API Controller -> MediatR Query/Application service -> repository/query abstraction -> EF Core/Mongo/Redis implementation -> DTO/result
+```
+
+Examples reviewed:
+
+- `WalletController.cs` -> `GetWalletBalanceQueryHandler.cs`, `GetLedgerListQueryHandler.cs`.
+- `HomeController.cs` -> public home snapshot query path.
+- `HistoryController.cs` -> reading history query path with ownership/admin access.
+- `NotificationController*.cs` -> Mongo notification list/read state.
+
+## Frontend route dependency graph
+
+```text
+Frontend/src/app/[locale]/page.tsx
+  -> @/features/<feature>/public
+  -> feature presentation component
+  -> feature application action/hook
+  -> app API proxy or shared server action
+  -> Backend API
 ```
 
 Evidence:
-- Feature public exports: `Frontend/src/features/*/public.ts`.
+
+- Public exports: `Frontend/src/features/*/public.ts`.
 - App routes: `Frontend/src/app/[locale]`.
-- SSR prefetch: `Frontend/src/shared/server/prefetch`.
+- App API proxy: `Frontend/src/app/api`.
+- SSR hydration: `Frontend/src/shared/server/prefetch`.
+- Query key sources: `Frontend/src/shared/infrastructure/query`, feature query-key files.
 - Guard: `Frontend/scripts/check-clean-architecture.mjs`.
 
-## Data graph
+## Data dependency graph
 
-- PostgreSQL: ACID write model cho identity, finance, entitlement, admin/legal, AI request/audit, gacha/inventory transactional state. Evidence: `ApplicationDbContext.cs`, `database/postgresql/schema.sql`.
-- MongoDB: document/read-model/high-volume cho reading sessions, chat, reader profiles/requests, notifications, community, gamification documents, upload sessions. Evidence: `MongoDbContext.cs`, `database/mongodb/schema.md`.
-- Redis: cache, rate-limit/coordination, realtime Pub/Sub, production-required cache. Evidence: `DependencyInjection.Cache.cs`, `IRedisPublisher.cs`.
+- PostgreSQL is the ACID/write-model store for identity, finance, entitlement/reward, legal/admin, AI request/audit and selected operational state. Evidence: `Backend/src/TarotNow.Infrastructure/Persistence/ApplicationDbContext.cs`, `database/postgresql/schema.sql`.
+- MongoDB is the document/read-model/high-volume store for reading sessions, chat messages/conversations, reader profiles/requests, notifications, community, gamification, uploads and `conversation_reviews`. Evidence: `Backend/src/TarotNow.Infrastructure/Persistence/MongoDbContext.cs`, `database/mongodb/schema.md`.
+- Redis supports cache, rate limiting/coordination and realtime Pub/Sub bridge. Evidence: backend cache DI and `IRedisPublisher`/realtime bridge contracts.
 
-## Ops graph
+## Ops dependency graph
 
-- Local/dev services: `docker-compose.yml`.
-- Production service graph and healthchecks: `docker-compose.prod.yml`.
-- Bootstrap/smoke/rollback/backup/restore: `deploy/scripts/*`.
-- CI/CD: `.github/workflows/cd-main-3ec2.yml`, `cd-fast-deploy.yml`, `cd-fe-only-deploy.yml`.
+- Local/dev service graph: `docker-compose.yml`.
+- Production service graph/healthchecks: `docker-compose.prod.yml`.
+- Deployment/smoke/rollback/backup/restore: `deploy/scripts/*`.
+- CI/CD workflows: `.github/workflows/cd-main-3ec2.yml`, `cd-fast-deploy.yml`, `cd-fe-only-deploy.yml`.

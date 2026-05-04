@@ -1,62 +1,47 @@
 # FE CheckIn
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Frontend/src/features/checkin`.
-- Public export: `Frontend/src/features/checkin/public.ts` nếu tồn tại.
-- App routes cần đối chiếu: `Frontend/src/app/[locale]` grep `checkin` hoặc route nghiệp vụ tương ứng.
-- API route proxy/action source: `Frontend/src/app/api` và feature server actions nếu có.
-- Guards: `Frontend/scripts/check-clean-architecture.mjs`, `check-component-size.mjs`, `check-hook-action-size.mjs`, `check-auth-fail-closed.mjs`.
+- Feature: `Frontend/src/features/checkin`
+- Public export: không thấy `Frontend/src/features/checkin/public.ts` ở path đã đọc.
+- Dedicated route: không thấy route check-in riêng trong evidence hiện tại; check-in được hydrate qua user shell metadata.
+- Prefetch/integration: `Frontend/src/shared/server/prefetch/runners/user/shell.ts`
+- Messages: cần đối chiếu namespace check-in trong `Frontend/messages/{vi,en,zh}` khi sửa copy; evidence hiện tại không chứng minh route riêng.
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Route/page/layout: xác định bằng `find Frontend/src/app -type f | grep -E 'checkin|checkin'`.
-- Feature public surface: `Frontend/src/features/checkin/public.ts` là boundary ưu tiên cho app imports.
-- Components/hooks/actions: nằm trong `Frontend/src/features/checkin` theo cấu trúc hiện tại.
-- Backend/API contract: đi qua app API route, server action hoặc shared API client; không bypass auth/security flow.
+CheckIn không xuất hiện như một page route độc lập trong evidence đã đọc. Luồng entry đáng tin cậy hiện là user shell prefetch:
 
-## 3. Dependency map thực tế
+- `prefetchUserSegmentShell` gọi `getInitialMetadata()`.
+- Nếu có data, runner set `checkinQueryKeys.streakStatus` bằng `data.streak`.
+- Cùng một metadata response cũng hydrate wallet balance, unread notification count, recent notifications, unread chat count và active conversations.
 
-### Upstream
+Vì không có `features/checkin/public.ts`, review không được yêu cầu app route import qua public export cho CheckIn; thay vào đó cần đọc component/navbar/shell đang consume `checkinQueryKeys.streakStatus` khi sửa UI check-in.
 
-- App Router page/layout/API route import feature `checkin`.
-- Shared prefetch runner có thể gọi query/action của feature nếu SSR hydration cần server state.
+## Dependency và dữ liệu
 
-### Downstream
+CheckIn frontend phụ thuộc:
 
-- Shared utilities: query client, auth/session, i18n, UI primitives, prefetch/hydration.
-- Backend contracts: API endpoints/commands tương ứng ở backend feature liên quan.
-- State: TanStack Query cho server state; Zustand chỉ cho local UI state khi có evidence.
+- `checkinQueryKeys.streakStatus` trong `features/checkin/domain/checkinQueryKeys`.
+- `getInitialMetadata` từ `shared/application/actions/metadata`.
+- Backend user-context metadata trả `streak`.
+- Shell/navbar client state nơi người dùng thấy streak/check-in status.
 
-## 4. Dữ liệu & trạng thái
+Không thấy dedicated app API proxy check-in hoặc dedicated SSR page runner trong evidence đã đọc; mutation check-in nếu có phải nằm trong feature action/component và cần đọc riêng khi sửa.
 
-- Server state: rà query keys/hooks/actions trong feature.
-- Local UI state: rà component/hook trong `Frontend/src/features/checkin`.
-- i18n: đối chiếu `Frontend/messages/vi`, `Frontend/messages/en`, `Frontend/messages/zh`.
-- Realtime/payment/idempotency: bắt buộc rà vì feature có finance/reward/realtime-facing flow.
+## Boundary / guard
 
-## 5. Boundary và guard
+- Shell prefetch là protected user context; không được hydrate streak cho anonymous route.
+- Query key `checkinQueryKeys.streakStatus` phải khớp hook/component check-in.
+- Vì shell metadata hydrate nhiều domain cùng lúc, sửa CheckIn không được làm hỏng wallet/notification/chat keys trong `prefetchUserSegmentShell`.
+- Copy mới về streak/check-in phải đồng bộ `vi/en/zh` theo namespace thực tế.
 
-- Thin route: `page.tsx`/`layout.tsx` chỉ composition, orchestration nằm trong feature/hook/action.
-- Public API: app route nên import qua `@/features/*/public` khi có.
-- Guard scripts: clean architecture, component size, hook/action size, auth fail-closed, image policy, risk coverage.
-- Accessibility/i18n: touched interactive UI cần accessible name/focus/error association; copy mới cần localization.
+## Rủi ro
 
-## 6. Test coverage hiện tại
+- P0: check-in mutation duplicate reward/streak nếu UI retry không có idempotency/backend guard; shell metadata leak user state ở anonymous route.
+- P1: query key mismatch làm streak stale; sửa shell prefetch làm mất wallet/chat/notification hydration; docs claim có dedicated route/public export khi không thấy evidence.
+- P2: thiếu mapping message namespace cụ thể nếu chỉ review feature folder mà bỏ qua navbar/shell consumer.
 
-- Guard coverage: `Frontend/scripts/*.mjs`.
-- Feature tests: tìm trong `Frontend/tests` hoặc colocated tests với grep `checkin`.
-- Không tìm thấy evidence trực tiếp: ghi rõ route/component/action chưa có test khi audit chi tiết.
+## Kết luận
 
-## 7. Rủi ro kiến trúc
-
-- P0: auth fail-open, token/secret exposure, payment/reward command duplicate, route bypass backend security.
-- P1: route quá dày, import sâu vào feature internals, prefetch/hydration mismatch, thiếu i18n.
-- P2: component/hook gần vượt budget, evidence test chưa đủ.
-
-## 8. Kết luận review
-
-- Mức độ phù hợp kiến trúc: file đã neo đúng source feature `checkin` và guard frontend; cần audit từng route/action để kết luận pass cuối cùng.
-- Evidence quan trọng: `Frontend/src/features/checkin`, `Frontend/src/app/[locale]`, `Frontend/src/shared/server/prefetch`, `Frontend/messages`, `Frontend/scripts`.
-- Việc cần làm ưu tiên cao: điền route/action/test cụ thể trong review PR module.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+FE CheckIn không phải page route riêng trong evidence hiện tại; nó là user-shell state được hydrate từ metadata qua `checkinQueryKeys.streakStatus`. Review đúng phải bắt đầu từ shell/navbar consumer và feature action mutation, không giả định tồn tại `public.ts` hoặc prefetch runner riêng.

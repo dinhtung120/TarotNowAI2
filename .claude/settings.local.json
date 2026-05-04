@@ -10,6 +10,7 @@
       "Bash(rg *)",
       "Bash(git *)",
       "Bash(curl *)",
+      "Bash(*)",
       "Bash(/usr/bin/find *)"
     ]
   }

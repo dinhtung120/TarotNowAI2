@@ -1,62 +1,70 @@
 # FE Gamification
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Frontend/src/features/gamification`.
-- Public export: `Frontend/src/features/gamification/public.ts` nếu tồn tại.
-- App routes cần đối chiếu: `Frontend/src/app/[locale]` grep `gamification` hoặc route nghiệp vụ tương ứng.
-- API route proxy/action source: `Frontend/src/app/api` và feature server actions nếu có.
-- Guards: `Frontend/scripts/check-clean-architecture.mjs`, `check-component-size.mjs`, `check-hook-action-size.mjs`, `check-auth-fail-closed.mjs`.
+- Feature: `Frontend/src/features/gamification`
+- Public export: `Frontend/src/features/gamification/public.ts`
+- User routes: `Frontend/src/app/[locale]/(user)/gamification/page.tsx`, `Frontend/src/app/[locale]/(user)/leaderboard/page.tsx`
+- Admin route: `Frontend/src/app/[locale]/admin/gamification/page.tsx`
+- Admin API proxy đã đọc: `Frontend/src/app/api/admin/gamification/quests/route.ts`, `Frontend/src/app/api/admin/gamification/achievements/route.ts`
+- Prefetch: `Frontend/src/shared/server/prefetch/runners/user/gamification.ts`, admin runner `prefetchAdminGamificationPage` từ shared runners index
+- Messages: `Frontend/messages/{vi,en,zh}` namespace `Gamification`/admin gamification copy cần đối chiếu khi sửa UI.
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Route/page/layout: xác định bằng `find Frontend/src/app -type f | grep -E 'gamification|gamification'`.
-- Feature public surface: `Frontend/src/features/gamification/public.ts` là boundary ưu tiên cho app imports.
-- Components/hooks/actions: nằm trong `Frontend/src/features/gamification` theo cấu trúc hiện tại.
-- Backend/API contract: đi qua app API route, server action hoặc shared API client; không bypass auth/security flow.
+`gamification/page.tsx`:
 
-## 3. Dependency map thực tế
+- gọi `getTranslations('Gamification')`.
+- hydrate `prefetchGamificationHubPage`.
+- render `GamificationStatsBar`, `QuestsPanel`, `TitleSelector`, `AchievementsGrid` từ local route sections.
+- dùng metadata generator `generateGamificationMetadata`.
 
-### Upstream
+`leaderboard/page.tsx`:
 
-- App Router page/layout/API route import feature `gamification`.
-- Shared prefetch runner có thể gọi query/action của feature nếu SSR hydration cần server state.
+- hydrate `prefetchLeaderboardPage`.
+- render `LeaderboardTable` từ `@/features/gamification/public`.
+- dùng metadata generator `generateLeaderboardMetadata`.
 
-### Downstream
+`admin/gamification/page.tsx`:
 
-- Shared utilities: query client, auth/session, i18n, UI primitives, prefetch/hydration.
-- Backend contracts: API endpoints/commands tương ứng ở backend feature liên quan.
-- State: TanStack Query cho server state; Zustand chỉ cho local UI state khi có evidence.
+- dynamic import `AdminGamificationClient` từ `@/features/gamification/public`.
+- hydrate `prefetchAdminGamificationPage`.
 
-## 4. Dữ liệu & trạng thái
+`features/gamification/public.ts` export `AdminGamificationClient` và `LeaderboardTable`.
 
-- Server state: rà query keys/hooks/actions trong feature.
-- Local UI state: rà component/hook trong `Frontend/src/features/gamification`.
-- i18n: đối chiếu `Frontend/messages/vi`, `Frontend/messages/en`, `Frontend/messages/zh`.
-- Realtime/payment/idempotency: bắt buộc rà vì feature có finance/reward/realtime-facing flow.
+## Dependency và dữ liệu
 
-## 5. Boundary và guard
+`prefetchGamificationHubPage`:
 
-- Thin route: `page.tsx`/`layout.tsx` chỉ composition, orchestration nằm trong feature/hook/action.
-- Public API: app route nên import qua `@/features/*/public` khi có.
-- Guard scripts: clean architecture, component size, hook/action size, auth fail-closed, image policy, risk coverage.
-- Accessibility/i18n: touched interactive UI cần accessible name/focus/error association; copy mới cần localization.
+- gọi `getRuntimePoliciesAction()` để lấy `gamification.defaultQuestType`.
+- nếu có default quest type, prefetch `gamificationKeys.quests(defaultQuestType)`.
+- prefetch achievements và titles qua `fetchGamificationAchievements`, `fetchGamificationTitles`.
 
-## 6. Test coverage hiện tại
+`prefetchLeaderboardPage`:
 
-- Guard coverage: `Frontend/scripts/*.mjs`.
-- Feature tests: tìm trong `Frontend/tests` hoặc colocated tests với grep `gamification`.
-- Không tìm thấy evidence trực tiếp: ghi rõ route/component/action chưa có test khi audit chi tiết.
+- lấy `gamification.defaultLeaderboardTrack` từ runtime policies.
+- prefetch `gamificationKeys.leaderboard(defaultTrack)` bằng `fetchGamificationLeaderboard`.
 
-## 7. Rủi ro kiến trúc
+Admin API proxy:
 
-- P0: auth fail-open, token/secret exposure, payment/reward command duplicate, route bypass backend security.
-- P1: route quá dày, import sâu vào feature internals, prefetch/hydration mismatch, thiếu i18n.
-- P2: component/hook gần vượt budget, evidence test chưa đủ.
+- `quests/route.ts` và `achievements/route.ts` đều gọi `requireAdminSession()`.
+- GET gọi backend `/admin/gamification/quests` hoặc `/admin/gamification/achievements`.
+- POST parse JSON payload và forward lên backend; invalid JSON trả `400`.
 
-## 8. Kết luận review
+## Boundary / guard
 
-- Mức độ phù hợp kiến trúc: file đã neo đúng source feature `gamification` và guard frontend; cần audit từng route/action để kết luận pass cuối cùng.
-- Evidence quan trọng: `Frontend/src/features/gamification`, `Frontend/src/app/[locale]`, `Frontend/src/shared/server/prefetch`, `Frontend/messages`, `Frontend/scripts`.
-- Việc cần làm ưu tiên cao: điền route/action/test cụ thể trong review PR module.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+- User gamification route là protected user route; leaderboard/hub query phải dùng runtime policy default track/type.
+- Admin gamification route/proxy phải fail-closed qua `requireAdminSession`, không dùng user token thường.
+- Public export chỉ có `AdminGamificationClient` và `LeaderboardTable`; hub page sections đang nằm cùng route folder, nên khi refactor cần kiểm tra boundary guard thực tế trước khi di chuyển.
+- Query keys `gamificationKeys.*` phải khớp hooks trong components.
+- Copy route dùng namespace `Gamification`; admin copy cần đồng bộ `vi/en/zh` nếu thêm text user-facing.
+
+## Rủi ro
+
+- P0: admin API proxy fail-open cho non-admin; quest/achievement POST ghi sai payload không được backend validate; reward/task state stale gây claim trùng nếu UI mutation sai.
+- P1: runtime policy defaultQuestType/defaultLeaderboardTrack mismatch làm SSR prefetch không khớp client; admin route deep import internals; missing i18n.
+- P2: docs bỏ qua `leaderboard` hoặc admin gamification route khi chỉ review user hub.
+
+## Kết luận
+
+FE Gamification gồm user hub, leaderboard và admin management surface. Review đúng phải đọc cả runtime policy-based prefetch, public exports và admin API proxy vì cùng feature nhưng boundary/risk khác nhau rõ rệt.

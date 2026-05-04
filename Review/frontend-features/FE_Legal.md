@@ -1,62 +1,45 @@
 # FE Legal
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Frontend/src/features/legal`.
-- Public export: `Frontend/src/features/legal/public.ts` nếu tồn tại.
-- App routes cần đối chiếu: `Frontend/src/app/[locale]` grep `legal` hoặc route nghiệp vụ tương ứng.
-- API route proxy/action source: `Frontend/src/app/api` và feature server actions nếu có.
-- Guards: `Frontend/scripts/check-clean-architecture.mjs`, `check-component-size.mjs`, `check-hook-action-size.mjs`, `check-auth-fail-closed.mjs`.
+- Feature: `Frontend/src/features/legal`
+- Public export: `Frontend/src/features/legal/public.ts`
+- Routes: `Frontend/src/app/[locale]/(site)/legal/privacy/page.tsx`, `legal/tos/page.tsx`, `legal/ai-disclaimer/page.tsx`
+- Messages: `Frontend/messages/{vi,en,zh}/legal/legal.json`
+- API routes: không thấy legal API proxy rõ ràng trong map hiện tại
+- Prefetch: không thấy runner legal riêng rõ ràng
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Route/page/layout: xác định bằng `find Frontend/src/app -type f | grep -E 'legal|legal'`.
-- Feature public surface: `Frontend/src/features/legal/public.ts` là boundary ưu tiên cho app imports.
-- Components/hooks/actions: nằm trong `Frontend/src/features/legal` theo cấu trúc hiện tại.
-- Backend/API contract: đi qua app API route, server action hoặc shared API client; không bypass auth/security flow.
+Legal routes là site/static content routes. `privacy/page.tsx` đã đọc re-export trực tiếp từ `@/features/legal/public`:
 
-## 3. Dependency map thực tế
+- `PrivacyPolicyPage` + metadata.
+- `TermsOfServicePage` + metadata.
+- `AiDisclaimerPage` + metadata.
 
-### Upstream
+`features/legal/public.ts` export page component và metadata generator cho từng document.
 
-- App Router page/layout/API route import feature `legal`.
-- Shared prefetch runner có thể gọi query/action của feature nếu SSR hydration cần server state.
+## Dependency và dữ liệu
 
-### Downstream
+Legal frontend phụ thuộc chủ yếu vào:
 
-- Shared utilities: query client, auth/session, i18n, UI primitives, prefetch/hydration.
-- Backend contracts: API endpoints/commands tương ứng ở backend feature liên quan.
-- State: TanStack Query cho server state; Zustand chỉ cho local UI state khi có evidence.
+- localized content/message namespace `legal/legal.json`.
+- SEO metadata generators trong feature legal presentation.
 
-## 4. Dữ liệu & trạng thái
+Không thấy SSR prefetch runner riêng hoặc app API proxy legal trong evidence hiện tại. Runtime legal policy/consent API nếu dùng ở auth/register flow thuộc Auth/Legal backend, không chứng minh route static legal đang gọi API.
 
-- Server state: rà query keys/hooks/actions trong feature.
-- Local UI state: rà component/hook trong `Frontend/src/features/legal`.
-- i18n: đối chiếu `Frontend/messages/vi`, `Frontend/messages/en`, `Frontend/messages/zh`.
-- Realtime/payment/idempotency: chỉ áp dụng nếu route/action gọi command nhạy cảm.
+## Boundary / guard
 
-## 5. Boundary và guard
+- Routes import qua `@/features/legal/public`, đúng public API boundary.
+- Legal copy phải đồng bộ `vi/en/zh` và không hardcode ngoài namespace nếu thay đổi nội dung user-facing.
+- Metadata phải đi cùng page export để SEO/static routes ổn định.
+- Không biến static legal route thành client-heavy route nếu không có lý do.
 
-- Thin route: `page.tsx`/`layout.tsx` chỉ composition, orchestration nằm trong feature/hook/action.
-- Public API: app route nên import qua `@/features/*/public` khi có.
-- Guard scripts: clean architecture, component size, hook/action size, auth fail-closed, image policy, risk coverage.
-- Accessibility/i18n: touched interactive UI cần accessible name/focus/error association; copy mới cần localization.
+## Rủi ro
 
-## 6. Test coverage hiện tại
+- P1: nội dung legal ở các locale lệch version/meaning; metadata route sai document; hardcoded copy ngoài messages.
+- P2: docs claim legal API proxy/prefetch tồn tại khi không thấy evidence.
 
-- Guard coverage: `Frontend/scripts/*.mjs`.
-- Feature tests: tìm trong `Frontend/tests` hoặc colocated tests với grep `legal`.
-- Không tìm thấy evidence trực tiếp: ghi rõ route/component/action chưa có test khi audit chi tiết.
+## Kết luận
 
-## 7. Rủi ro kiến trúc
-
-- P0: auth fail-open, token/secret exposure, payment/reward command duplicate, route bypass backend security.
-- P1: route quá dày, import sâu vào feature internals, prefetch/hydration mismatch, thiếu i18n.
-- P2: component/hook gần vượt budget, evidence test chưa đủ.
-
-## 8. Kết luận review
-
-- Mức độ phù hợp kiến trúc: file đã neo đúng source feature `legal` và guard frontend; cần audit từng route/action để kết luận pass cuối cùng.
-- Evidence quan trọng: `Frontend/src/features/legal`, `Frontend/src/app/[locale]`, `Frontend/src/shared/server/prefetch`, `Frontend/messages`, `Frontend/scripts`.
-- Việc cần làm ưu tiên cao: điền route/action/test cụ thể trong review PR module.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+FE Legal là static/site content feature với public exports rõ ràng và không thấy prefetch/API proxy riêng. Review đúng tập trung vào route re-export, metadata và i18n consistency ba ngôn ngữ.

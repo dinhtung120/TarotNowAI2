@@ -1,65 +1,70 @@
 # BE Reader
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/Reader`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `Reader`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `Reader`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `Reader`.
+- Feature: `Backend/src/TarotNow.Application/Features/Reader`
+- Controllers: `Backend/src/TarotNow.Api/Controllers/ReaderController.cs`, `ReaderController.Directory.cs`, `ReaderController.ReaderFlow.cs`, `AdminReaderRequestsController.cs`
+- Tests: `SubmitReaderRequestCommandHandlerTests.cs`, `UpdateReaderStatusCommandHandlerTests.cs`, `UpdateReaderProfileCommandHandlerTests.cs`, `UserStatusChangedReaderProjectionDomainEventHandlerTests.cs`
+- Runtime/data: `MongoDbContext.cs` collections `reader_requests`, `reader_profiles`, `conversation_reviews`; presence overlay qua `IUserPresenceTracker`
+- Constants: `Backend/src/TarotNow.Api/Constants/ApiReaderStatusConstants.cs`, `ApiRoleConstants.TarotReader`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/Reader/Commands` và/hoặc `Features/Reader/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: không mặc định; chỉ áp dụng nếu feature publish notification/realtime/event phụ.
-- Finance/AI/reward integration: không mặc định; rà khi command có state mutation hoặc side effect.
+Reader API tách thành public directory/profile và authenticated reader flow:
 
-## 3. Dependency map thực tế
+- `GET profile/{userId}`: lấy `GetReaderProfileQuery`, trả 404 nếu không có profile, apply presence status trước response.
+- `GET readers` qua `ApiRoutes.ReadersAbsolute`: list readers bằng `ListReadersQuery`, apply presence cho từng reader.
+- `POST apply`: authenticated user gửi `SubmitReaderRequestCommand`.
+- `GET my-request`: authenticated user đọc trạng thái đơn của chính mình.
+- `PATCH profile`: role `TarotReader` cập nhật hồ sơ bằng `UpdateReaderProfileCommand`.
+- `PATCH status`: role `TarotReader` cập nhật status bằng `UpdateReaderStatusCommand`.
 
-### Upstream
+`ReaderController` inject `IUserPresenceTracker`; đây là realtime/status overlay tại API boundary, không phải persistence write.
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `Reader`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `Reader` nhận hoặc phát domain events.
+## Dependency và dữ liệu
 
-### Downstream
+Source/test evidence cho thấy Reader dùng:
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+- MongoDB `reader_requests`: đơn đăng ký reader.
+- MongoDB `reader_profiles`: hồ sơ reader hiển thị directory/profile.
+- MongoDB `conversation_reviews`: rating/review liên quan profile reader.
+- Auth/user role state trong `Users` khi admin approve hoặc user status projection sync.
+- Presence tracker Redis/in-memory để nâng trạng thái offline → online khi runtime thấy user đang online.
 
-## 4. Dữ liệu & trạng thái
+Commands đã thấy từ tests/listing:
 
-Evidence dữ liệu cụ thể: MongoDB reader_requests/reader_profiles; finance payout profile có PostgreSQL reader_payout_profiles nếu liên quan.
+- `SubmitReaderRequest`
+- `UpdateReaderProfile`
+- `UpdateReaderStatus`
 
+Admin path:
 
-- PostgreSQL: rà nếu feature có transactional state.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: rà nếu feature dùng cache/rate-limit/pubsub.
-- Transaction/idempotency/outbox: áp dụng nếu command mutate state hoặc publish side effect.
+- `AdminReaderRequestsController.cs` và `ApproveReaderCommandHandlerTests.cs` liên quan duyệt reader request.
 
-## 5. Boundary và guard
+## Boundary / guard
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+- Public directory/profile endpoint không nên expose sensitive application documents/proof documents.
+- `apply` và `my-request` lấy user id từ token; không nhận chủ đơn từ payload.
+- `profile/status` update yêu cầu role `TarotReader`.
+- Reader command entry handler phải mỏng theo event-driven architecture nếu là write command handler.
+- Không khẳng định có PostgreSQL `reader_payout_profiles` runtime nếu chưa đọc entity/config; evidence hiện tại từ DbContext đã đọc không thấy DbSet tên này.
 
-## 6. Test coverage hiện tại
+## Test coverage hiện có
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'Reader|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+- `SubmitReaderRequestCommandHandlerTests.cs`: command publish `ReaderRequestSubmitRequestedDomainEvent` và map fields như bio/specialties/experience/social URLs/diamond price/proof docs.
+- `UpdateReaderProfileCommandHandlerTests.cs`: coverage cập nhật hồ sơ reader.
+- `UpdateReaderStatusCommandHandlerTests.cs`: coverage status update.
+- `UserStatusChangedReaderProjectionDomainEventHandlerTests.cs`: coverage sync projection khi user status đổi.
 
-## 7. Rủi ro kiến trúc
+Không thấy API integration test riêng cho ReaderController trong evidence đã đọc; nếu audit sâu không tìm thêm, đây là gap P1 cho role/ownership/public profile contract.
 
-- P0: boundary/event-driven violation; state mutation/side effect sai layer.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+## Rủi ro
 
-## 8. Kết luận review
+- P0: reader update/profile endpoint cho phép user sửa profile của người khác; proof documents hoặc thông tin nhạy cảm trong request bị expose public; admin approve bypass role/audit.
+- P1: presence overlay làm trạng thái hiển thị khác persistence, cần test rõ khi sửa status logic.
+- P1: nhầm `conversation_reviews` thành collection generic `reviews` trong docs hoặc query.
+- P2: docs claim payout profile table không có evidence runtime.
 
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/Reader`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/Reader`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+## Kết luận
+
+Reader backend là module profile/directory + application workflow, phụ thuộc Mongo read models và presence runtime. Review đúng phải đọc cả public directory, authenticated reader flow, admin approval và projection/domain event tests.

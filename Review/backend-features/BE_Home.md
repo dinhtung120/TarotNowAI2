@@ -1,62 +1,51 @@
 # BE Home
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/Home`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `Home`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `Home`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `Home`.
+- Feature: `Backend/src/TarotNow.Application/Features/Home`
+- Controller: `Backend/src/TarotNow.Api/Controllers/HomeController.cs`
+- Test evidence: `Backend/tests/TarotNow.Api.IntegrationTests/UserContextHomeIntegrationTests.cs`
+- Runtime/data: home snapshot đọc featured readers; map evidence cho thấy liên quan `MongoDbContext.cs` collection `reader_profiles` và presence/runtime status nếu handler áp dụng tương tự reader directory
+- Guards: API version/XML summary và clean architecture boundaries
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/Home/Commands` và/hoặc `Features/Home/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: không mặc định; chỉ áp dụng nếu feature publish notification/realtime/event phụ.
-- Finance/AI/reward integration: không mặc định; rà khi command có state mutation hoặc side effect.
+`HomeController.cs` là public API với `[AllowAnonymous]`.
 
-## 3. Dependency map thực tế
+Endpoint chính:
 
-### Upstream
+- `GET /snapshot` → `GetHomeSnapshotQuery` → trả `HomeSnapshotDto`.
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `Home`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `Home` nhận hoặc phát domain events.
+Controller chỉ inject `IMediator`, không có repository/db context trực tiếp.
 
-### Downstream
+## Dependency và dữ liệu
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+Home là read/aggregation module cho landing page. Evidence integration test `HomeSnapshot_ShouldReturnFeaturedReadersPayload` kiểm response có:
 
-## 4. Dữ liệu & trạng thái
+- `featuredReaders` array.
+- `totalCount` number.
 
-- PostgreSQL: rà nếu feature có transactional state.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: rà nếu feature dùng cache/rate-limit/pubsub.
-- Transaction/idempotency/outbox: áp dụng nếu command mutate state hoặc publish side effect.
+Datastore/runtime thực tế cần đối chiếu ở query handler/repository khi audit sâu, nhưng map hiện tại cho thấy featured readers chủ yếu đến từ reader/profile read model, không phải command state riêng của Home.
 
-## 5. Boundary và guard
+## Boundary / guard
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+- Vì `[AllowAnonymous]`, endpoint không được trả dữ liệu user-private hoặc admin-only.
+- Home should remain read-only; không thêm side effect/cache mutation business vào controller.
+- Nếu snapshot dùng presence/status, phải đảm bảo public response chỉ chứa trạng thái hiển thị an toàn.
+- Frontend route/home prefetch phụ thuộc response shape; thay đổi `featuredReaders`/`totalCount` cần đối chiếu FE Home.
 
-## 6. Test coverage hiện tại
+## Test coverage hiện có
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'Home|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+- `UserContextHomeIntegrationTests.cs` có `HomeSnapshot_ShouldReturnFeaturedReadersPayload`, gọi `/api/v1/home/snapshot` và assert `featuredReaders` + `totalCount`.
 
-## 7. Rủi ro kiến trúc
+Không thấy unit test riêng cho `GetHomeSnapshotQueryHandler` trong evidence đã đọc; nếu audit sâu không tìm thêm, đây là gap P2/P1 tùy thay đổi payload.
 
-- P0: boundary/event-driven violation; state mutation/side effect sai layer.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+## Rủi ro
 
-## 8. Kết luận review
+- P1: anonymous snapshot leak field nhạy cảm từ reader profile/request.
+- P1: response shape thay đổi làm FE landing/home prefetch hydration mismatch.
+- P2: docs mô tả Home có command/mutation trong khi source hiện chỉ thấy query snapshot.
 
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/Home`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/Home`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+## Kết luận
+
+Home backend là public read snapshot cho landing page, hiện evidence chính là `HomeController.cs` và integration test shape trong `UserContextHomeIntegrationTests.cs`. Review đúng phải đọc query handler và FE consume khi thay đổi payload.

@@ -1,62 +1,61 @@
 # BE History
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/History`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `History`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `History`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `History`.
+- Feature: `Backend/src/TarotNow.Application/Features/History`
+- Controller: `Backend/src/TarotNow.Api/Controllers/HistoryController.cs`
+- Tests: `Backend/tests/TarotNow.Application.UnitTests/Features/History/Queries/GetReadingHistoryQueryHandlerTests.cs`, `GetReadingDetailQueryHandlerTests.cs`
+- Runtime/data: `MongoDbContext.cs` collection `reading_sessions`, `cards_catalog`, `user_collections`; `ApplicationDbContext.cs` có `ReadingRevealSagaStates` cho reading lifecycle liên quan
+- Related feature: `Backend/src/TarotNow.Application/Features/Reading`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/History/Commands` và/hoặc `Features/History/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: không mặc định; chỉ áp dụng nếu feature publish notification/realtime/event phụ.
-- Finance/AI/reward integration: không mặc định; rà khi command có state mutation hoặc side effect.
+`HistoryController.cs` là authenticated API với `[Authorize]` và `[EnableRateLimiting("auth-session")]`.
 
-## 3. Dependency map thực tế
+Endpoints chính:
 
-### Upstream
+- `GET sessions`: lấy lịch sử reading của user hiện tại, có pagination/filter `spreadType`, `date`.
+- `GET sessions/{id}`: lấy chi tiết reading session của user hiện tại, trả 404 nếu không tìm thấy.
+- `GET admin/all-sessions`: endpoint admin role để xem toàn bộ reading sessions với filters username/spread/date range.
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `History`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `History` nhận hoặc phát domain events.
+Controller lấy user id từ `ClaimTypes.NameIdentifier`, parse `Guid`; không nhận user id từ query/body cho user-facing history.
 
-### Downstream
+Pagination được clamp ở controller:
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+- `page <= 0` → `1`.
+- `pageSize` chỉ nhận `1..50`, ngoài range → `10`.
 
-## 4. Dữ liệu & trạng thái
+## Dependency và dữ liệu
 
-- PostgreSQL: rà nếu feature có transactional state.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: rà nếu feature dùng cache/rate-limit/pubsub.
-- Transaction/idempotency/outbox: áp dụng nếu command mutate state hoặc publish side effect.
+History là read/query module trên reading sessions:
 
-## 5. Boundary và guard
+- `GetReadingHistoryQueryHandler` đọc `IReadingSessionRepository.GetSessionsByUserIdAsync`.
+- `GetReadingDetailQueryHandler` đọc chi tiết session/card data theo user/session.
+- `GetAllReadingsQuery` phục vụ admin dashboard.
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+Runtime state chính là MongoDB `reading_sessions`, kèm card metadata từ `cards_catalog` và user collection nếu detail enrich cards.
 
-## 6. Test coverage hiện tại
+## Boundary / guard
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'History|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+- User-facing detail/list phải enforce ownership bằng user id từ token.
+- Admin all-sessions phải giữ `[Authorize(Roles = "admin")]`.
+- History query không được mutate reading session hoặc wallet/AI state.
+- Khi đổi page/pageSize/filter semantics cần update FE history consume và tests.
 
-## 7. Rủi ro kiến trúc
+## Test coverage hiện có
 
-- P0: boundary/event-driven violation; state mutation/side effect sai layer.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+- `GetReadingHistoryQueryHandlerTests.cs`: kiểm pagination metadata, completed flag mapping và empty list contract.
+- `GetReadingDetailQueryHandlerTests.cs`: coverage detail query.
 
-## 8. Kết luận review
+Không thấy API integration test riêng cho `HistoryController` trong evidence đã đọc; nếu audit sâu không tìm thêm, đây là gap P1 cho ownership/admin RBAC/pagination clamp.
 
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/History`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/History`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+## Rủi ro
+
+- P0: user đọc được reading session của user khác; admin endpoint thiếu role; detail query leak prompt/AI result nhạy cảm sai audience.
+- P1: pagination clamp ở controller khác với FE expectation hoặc query handler expectation.
+- P1: history/detail mapping lệch với `reading_sessions` schema khi Reading module thay đổi.
+- P2: docs nói History có command/mutation trong khi source hiện là query-only module.
+
+## Kết luận
+
+History backend là read model của Reading, chủ yếu trên `reading_sessions`. Review đúng phải đọc controller ownership/admin route, query handlers và tests detail/history; không review History như module write độc lập.

@@ -1,65 +1,86 @@
 # BE Chat
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/Chat`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `Chat`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `Chat`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `Chat`.
+- Feature: `Backend/src/TarotNow.Application/Features/Chat`
+- Controllers: `Backend/src/TarotNow.Api/Controllers/ConversationController*.cs`
+- Tests: `Backend/tests/TarotNow.Application.UnitTests/Features/Chat/*`, `Backend/tests/TarotNow.Infrastructure.IntegrationTests/Outbox/ChatModerationOutboxIntegrationTests.cs`
+- Datastore/runtime: `Backend/src/TarotNow.Infrastructure/Persistence/MongoDbContext.cs`, `Backend/src/TarotNow.Infrastructure/Persistence/ApplicationDbContext.cs`, `Backend/src/TarotNow.Infrastructure/DependencyInjection.Cache.cs`
+- Guards: `Backend/tests/TarotNow.ArchitectureTests/EventDrivenArchitectureRulesTests.cs`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/Chat/Commands` và/hoặc `Features/Chat/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: có rủi ro cao, phải rà Redis/SignalR/outbox path.
-- Finance/AI/reward integration: có rủi ro cao, phải rà transaction, idempotency và settlement/refund/reward consistency.
+Chat là bounded context lớn, entry qua `ConversationController.cs` và các partial controller:
 
-## 3. Dependency map thực tế
+- `ConversationController.Messages.cs`: message flow.
+- `ConversationController.Finance.cs`: add money / finance operations.
+- `ConversationController.Acceptance.cs`: accept/reject conversation.
+- `ConversationController.Completion.cs`: complete conversation.
+- `ConversationController.Inbox.cs`: inbox/unread/listing.
+- `ConversationController.Review.cs`: conversation review.
+- `ConversationController.MediaUpload.cs`: presign/upload media.
 
-### Upstream
+Application commands đã thấy trong `Features/Chat/Commands`:
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `Chat`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `Chat` nhận hoặc phát domain events.
+- Conversation lifecycle: `CreateConversation`, `AcceptConversation`, `RejectConversation`, `CancelPendingConversation`.
+- Messaging: `SendMessage`, `MarkMessagesRead`, `PublishTypingState`, `PresignConversationMedia`.
+- Finance in chat: `RequestConversationAddMoney`, `RespondConversationAddMoney`, `RequestConversationComplete`, `RespondConversationComplete`.
+- Moderation/report/review: `CreateReport`, `OpenConversationDispute`, `SubmitConversationReview`.
 
-### Downstream
+Queries đã thấy:
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+- `ListConversations`, `ListMessages`, `GetUnreadTotal`, `GetParticipantConversationIds`, `GetConversationParticipants`.
 
-## 4. Dữ liệu & trạng thái
+Nhiều command folder có `*CommandHandler.EventOnly.cs`, phù hợp với architecture rule command entry handler mỏng. Một số folder vẫn có các partial workflow/helper như `SendMessageCommandHandler.FirstMessageFreeze.*`, `RequestConversationCompleteCommandHandler.Settlement.cs`, `RespondConversationCompleteCommandHandler.Settlement.cs`; đây là nơi phải audit orchestration thực tế trong requested-event handler/partial flow.
 
-Evidence dữ liệu cụ thể: MongoDB conversations/chat_messages/conversation_reviews/reports; PostgreSQL chat_finance_sessions/chat_question_items; Redis realtime bridge.
+## Dependency và dữ liệu
 
+MongoDB runtime collections trong `MongoDbContext.cs` liên quan trực tiếp:
 
-- PostgreSQL: bắt buộc rà các bảng finance/transactional liên quan.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: bắt buộc rà Pub/Sub/realtime/cache coordination.
-- Transaction/idempotency/outbox: bắt buộc review vì module thuộc vùng finance/AI/reward/realtime.
+- `conversations`
+- `chat_messages`
+- `conversation_reviews`
+- `reports`
+- `upload_sessions` nếu media upload dùng one-time upload session.
 
-## 5. Boundary và guard
+PostgreSQL runtime DbSet liên quan finance chat trong `ApplicationDbContext.cs`:
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+- `ChatFinanceSessions`
+- `ChatQuestionItems`
+- `WalletTransactions`
+- Outbox tables: `OutboxMessages`, `OutboxHandlerStates`, `OutboxInlineHandlerStates`.
 
-## 6. Test coverage hiện tại
+Redis/realtime liên quan qua `IRedisPublisher` và `IChatRealtimeFastLanePublisher` đăng ký trong `DependencyInjection.Cache.cs`. Production yêu cầu Redis; không thể coi realtime Redis là optional trong môi trường production.
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'Chat|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+## Boundary / guard
 
-## 7. Rủi ro kiến trúc
+- `EventDrivenArchitectureRulesTests.CommandHandlers_ShouldOnlyDependOnInlineDomainEventDispatcher` áp dụng cho toàn bộ command handlers trong `Features/Chat/Commands`.
+- `Controllers_ShouldNotBroadcastRealtimeDirectly` cấm `ConversationController*.cs` dùng `IHubContext` hoặc `.Clients.`.
+- `Hubs_ShouldNotBroadcastMigratedRealtimeEventsDirectly` cấm hub gửi trực tiếp `message.created`, `conversation.updated`, `chat.unread_changed`.
+- Finance paths trong Chat phải được review cùng wallet mutation/money event/idempotency vì có add money, freeze/settlement và completion.
 
-- P0: boundary/event-driven violation; thiếu transaction/idempotency/money event hoặc double-spend.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+## Test coverage hiện có
 
-## 8. Kết luận review
+Tests đã thấy rõ:
 
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/Chat`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/Chat`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+- `CreateConversationCommandHandlerTests.cs`
+- `SendMessageCommandHandlerTests.cs`
+- `MarkMessagesReadCommandHandlerTests.cs`
+- `RespondConversationAddMoneyCommandHandlerTests.cs`
+- `ConversationAddMoneyAcceptedSyncRequestedDomainEventHandlerTests.cs`
+- `ConversationCompleteSessionSettlementTests.cs`
+- `OpenConversationDisputeCommandHandlerTests.cs`
+- `CreateReportCommandHandlerTests.cs`
+- `PresignConversationMediaCommandHandlerTests.cs`
+- `ChatModerationRequestedDomainEventHandlerTests.cs`
+- `ChatModerationOutboxIntegrationTests.cs`
+
+## Rủi ro
+
+- P0: realtime broadcast trực tiếp từ controller/hub; settlement/add-money thiếu transaction/idempotency; message first-freeze hoặc completion settlement double-spend; command handler không còn mỏng.
+- P1: unread/inbox/list enrichment coupling quá mạnh; media upload session thiếu ownership/expiry evidence; moderation outbox thiếu retry/idempotency evidence.
+- P2: docs hoặc tests không phân biệt `conversation_reviews` với collection generic `reviews`.
+
+## Kết luận
+
+Chat có evidence code/test khá dày và là module rủi ro cao vì kết hợp MongoDB document state, PostgreSQL finance state, Redis realtime và outbox. Review PR liên quan Chat phải đọc controller partial + command folder cụ thể + tests tương ứng, không chỉ dựa vào feature-level summary.

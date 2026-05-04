@@ -1,62 +1,60 @@
 # FE Wallet
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Frontend/src/features/wallet`.
-- Public export: `Frontend/src/features/wallet/public.ts` nếu tồn tại.
-- App routes cần đối chiếu: `Frontend/src/app/[locale]` grep `wallet` hoặc route nghiệp vụ tương ứng.
-- API route proxy/action source: `Frontend/src/app/api` và feature server actions nếu có.
-- Guards: `Frontend/scripts/check-clean-architecture.mjs`, `check-component-size.mjs`, `check-hook-action-size.mjs`, `check-auth-fail-closed.mjs`.
+- Feature: `Frontend/src/features/wallet`
+- Public export: `Frontend/src/features/wallet/public.ts`
+- Routes: `Frontend/src/app/[locale]/(user)/wallet/page.tsx`, `wallet/deposit/page.tsx`, `wallet/deposit/history/page.tsx`, `wallet/withdraw/page.tsx`
+- API proxy đã đọc: `Frontend/src/app/api/wallet/balance/route.ts`, `Frontend/src/app/api/wallet/ledger/route.ts`
+- Prefetch: `Frontend/src/shared/server/prefetch/runners/user/wallet.ts`
+- Messages: `Frontend/messages/{vi,en,zh}` wallet/deposit/withdraw namespaces cần đối chiếu khi sửa copy.
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Route/page/layout: xác định bằng `find Frontend/src/app -type f | grep -E 'wallet|wallet'`.
-- Feature public surface: `Frontend/src/features/wallet/public.ts` là boundary ưu tiên cho app imports.
-- Components/hooks/actions: nằm trong `Frontend/src/features/wallet` theo cấu trúc hiện tại.
-- Backend/API contract: đi qua app API route, server action hoặc shared API client; không bypass auth/security flow.
+Các route wallet đều là composition wrappers:
 
-## 3. Dependency map thực tế
+- `wallet/page.tsx` hydrate `prefetchWalletOverviewPage` và render `WalletOverviewPage`.
+- `wallet/deposit/page.tsx` hydrate `prefetchDepositPage` và render `WalletDepositPage`.
+- `wallet/deposit/history/page.tsx` hydrate `prefetchDepositHistoryPage` và render `WalletDepositHistoryPage`.
+- `wallet/withdraw/page.tsx` gọi `requireSessionWithHandshake`, redirect non-`tarot_reader` về `/{locale}/wallet`, hydrate `prefetchWithdrawPage`, rồi render `WalletWithdrawPage`.
 
-### Upstream
+`features/wallet/public.ts` export:
 
-- App Router page/layout/API route import feature `wallet`.
-- Shared prefetch runner có thể gọi query/action của feature nếu SSR hydration cần server state.
+- admin withdrawal actions: `listWithdrawalQueue`, `getWithdrawalDetail`, `processWithdrawal`.
+- `WalletStoreBridge`.
+- `WalletOverviewPage`, `WalletDepositPage`, `WalletDepositHistoryPage`, `WalletWithdrawPage`.
+- withdrawal result types.
 
-### Downstream
+## Dependency và dữ liệu
 
-- Shared utilities: query client, auth/session, i18n, UI primitives, prefetch/hydration.
-- Backend contracts: API endpoints/commands tương ứng ở backend feature liên quan.
-- State: TanStack Query cho server state; Zustand chỉ cho local UI state khi có evidence.
+Prefetch runners:
 
-## 4. Dữ liệu & trạng thái
+- `prefetchWalletOverviewPage`: query key `userStateQueryKeys.wallet.ledger(1)`, action `getLedger(1, 10)`.
+- `prefetchDepositPage`: query key `userStateQueryKeys.wallet.depositPackages()`, action `listDepositPackages()`.
+- `prefetchDepositHistoryPage`: query key `userStateQueryKeys.wallet.depositOrderHistory(1, 10, 'all')`, action `listMyDepositOrders(1, 10, null)` với empty-page fallback.
+- `prefetchWithdrawPage`: query key `userStateQueryKeys.wallet.withdrawalsMine()`, action `listMyWithdrawals()`.
 
-- Server state: rà query keys/hooks/actions trong feature.
-- Local UI state: rà component/hook trong `Frontend/src/features/wallet`.
-- i18n: đối chiếu `Frontend/messages/vi`, `Frontend/messages/en`, `Frontend/messages/zh`.
-- Realtime/payment/idempotency: bắt buộc rà vì feature có finance/reward/realtime-facing flow.
+App API proxy đã đọc:
 
-## 5. Boundary và guard
+- `balance/route.ts`: fail-closed nếu thiếu token, gọi backend `/Wallet/balance`.
+- `ledger/route.ts`: fail-closed nếu thiếu token, normalize `page >= 1`, clamp `limit <= 50`, gọi `/Wallet/ledger`.
 
-- Thin route: `page.tsx`/`layout.tsx` chỉ composition, orchestration nằm trong feature/hook/action.
-- Public API: app route nên import qua `@/features/*/public` khi có.
-- Guard scripts: clean architecture, component size, hook/action size, auth fail-closed, image policy, risk coverage.
-- Accessibility/i18n: touched interactive UI cần accessible name/focus/error association; copy mới cần localization.
+Wallet route còn phụ thuộc deposit/withdrawal actions trong feature; finance mutation chi tiết cần đọc action/API proxy tương ứng khi sửa deposit hoặc withdraw flow.
 
-## 6. Test coverage hiện tại
+## Boundary / guard
 
-- Guard coverage: `Frontend/scripts/*.mjs`.
-- Feature tests: tìm trong `Frontend/tests` hoặc colocated tests với grep `wallet`.
-- Không tìm thấy evidence trực tiếp: ghi rõ route/component/action chưa có test khi audit chi tiết.
+- Wallet là protected user finance route; API proxy phải fail-closed khi thiếu token.
+- Withdraw route có role gate frontend `tarot_reader`; backend vẫn phải là source-of-truth cho authorization.
+- Deposit/withdraw/ledger query keys phải khớp hooks để tránh hydration/stale-money bug.
+- Finance mutations phải giữ idempotency, không retry duplicate và không log bank/payout/payment data.
+- App route import qua `@/features/wallet/public`, đúng public API boundary.
 
-## 7. Rủi ro kiến trúc
+## Rủi ro
 
-- P0: auth fail-open, token/secret exposure, payment/reward command duplicate, route bypass backend security.
-- P1: route quá dày, import sâu vào feature internals, prefetch/hydration mismatch, thiếu i18n.
-- P2: component/hook gần vượt budget, evidence test chưa đủ.
+- P0: wallet/deposit/withdraw mutation duplicate hoặc thiếu idempotency; withdraw route bypass role gate; ledger/balance leak qua proxy fail-open; bank/payout/payment data bị log/expose.
+- P1: prefetch query key mismatch làm hiển thị số dư/ledger stale; deposit history key dùng `'all'` nhưng action gửi `null` filter cần kiểm tra khi sửa filter; admin withdrawal actions export từ wallet public surface bị dùng sai boundary.
+- P2: docs chỉ review balance/ledger mà bỏ qua deposit, deposit history và withdraw route.
 
-## 8. Kết luận review
+## Kết luận
 
-- Mức độ phù hợp kiến trúc: file đã neo đúng source feature `wallet` và guard frontend; cần audit từng route/action để kết luận pass cuối cùng.
-- Evidence quan trọng: `Frontend/src/features/wallet`, `Frontend/src/app/[locale]`, `Frontend/src/shared/server/prefetch`, `Frontend/messages`, `Frontend/scripts`.
-- Việc cần làm ưu tiên cao: điền route/action/test cụ thể trong review PR module.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+FE Wallet là protected finance module gồm overview, deposit, deposit history và role-gated withdraw route. Review đúng phải đọc route, public export, prefetch runner và action/proxy của từng flow trước khi thay đổi UI hoặc mutation tiền.

@@ -1,65 +1,66 @@
 # BE Auth
 
-## 1. Phạm vi source đã rà
+## Source đã đọc thủ công
 
-- Feature source: `Backend/src/TarotNow.Application/Features/Auth`.
-- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `Auth`.
-- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `Auth`.
-- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `Auth`.
+- Feature: `Backend/src/TarotNow.Application/Features/Auth`
+- Controllers: `Backend/src/TarotNow.Api/Controllers/AuthRegistrationController.cs`, `AuthSessionController.cs`, `AuthPasswordController.cs`, `MeController.cs`
+- Constants/services liên quan: `Backend/src/TarotNow.Api/Constants/AuthHeaders.cs`, `AuthCookieNames.cs`, `Backend/src/TarotNow.Api/Services/IAuthService`, `IAuthCookieService`
+- Tests: `Backend/tests/TarotNow.Api.IntegrationTests/AuthRegistrationIntegrationTests.cs`, `Backend/tests/TarotNow.Application.UnitTests/Features/Auth/Commands/*CommandHandlerTests.cs`, `Backend/tests/TarotNow.Infrastructure.UnitTests/Auth/JwtTokenValidationTests.cs`
+- Datastore: `ApplicationDbContext.cs` DbSet `Users`, `RefreshTokens`, `AuthSessions`, `EmailOtps`; `MongoDbContext.cs` collection `refresh_tokens`
 
-## 2. Entry points & luồng chính
+## Entry points & luồng chính
 
-- Commands/Queries: source nằm dưới `Features/Auth/Commands` và/hoặc `Features/Auth/Queries` nếu thư mục tồn tại.
-- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
-- Realtime/external integration: không mặc định; chỉ áp dụng nếu feature publish notification/realtime/event phụ.
-- Finance/AI/reward integration: không mặc định; rà khi command có state mutation hoặc side effect.
+Auth API đang tách thành controller theo sub-flow:
 
-## 3. Dependency map thực tế
+- `AuthRegistrationController.cs`: `POST register`, `POST send-verification-email`, `POST verify-email`.
+- `AuthSessionController.cs`: `POST login`, `POST refresh`, `POST logout`.
+- `AuthPasswordController.cs`: `POST forgot-password`, `POST reset-password`.
+- `MeController.cs`: authenticated snapshots/policies cho user hiện tại, như `navbar-snapshot`, `reading-setup-snapshot`, `runtime-policies`.
 
-### Upstream
+`AuthSessionController` không dispatch MediatR trực tiếp cho login/refresh/logout mà gọi `IAuthService`, rồi set/clear cookies qua `IAuthCookieService`. Đây là API-layer service boundary cần review cùng cookie security.
 
-- API controllers hoặc background/event handlers gọi command/query thuộc `Auth`.
-- Frontend feature tương ứng nếu có route/API contract liên quan.
-- Cross-feature events nếu `Auth` nhận hoặc phát domain events.
+Refresh flow đọc refresh token từ `AuthCookieNames.RefreshToken`, dùng idempotency header từ `AuthHeaders.IdempotencyKey` hoặc legacy header, và clear auth cookies khi token thiếu/refresh fail.
 
-### Downstream
+Registration flow tạo user bằng `RegisterCommand`, sau đó best-effort gửi `SendEmailVerificationOtpCommand`; SMTP/provider lỗi không làm fail `register`, được test trong `AuthRegistrationIntegrationTests.cs`.
 
-- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
-- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
-- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
+## Dependency và dữ liệu
 
-## 4. Dữ liệu & trạng thái
+Application commands đã thấy từ feature listing:
 
-Evidence dữ liệu cụ thể: PostgreSQL users/auth_sessions/email_otps/password_reset_tokens; MongoDB refresh_tokens; frontend auth fail-closed guard liên quan.
+- Register/login/session: `Register`, `Login`, `RefreshToken`, `Logout`, `RevokeRefreshToken`, `RevokeToken`.
+- Email/password: `SendEmailVerificationOtp`, `VerifyEmail`, `ForgotPassword`, `ResetPassword`.
 
+PostgreSQL state chính:
 
-- PostgreSQL: rà nếu feature có transactional state.
-- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
-- Redis/cache/pubsub: rà nếu feature dùng cache/rate-limit/pubsub.
-- Transaction/idempotency/outbox: áp dụng nếu command mutate state hoặc publish side effect.
+- `Users`: tài khoản, trạng thái, password hash, auth flags.
+- `RefreshTokens`: refresh token rotation/revocation state.
+- `AuthSessions`: phiên đăng nhập.
+- `EmailOtps`: OTP verify email/reset password.
 
-## 5. Boundary và guard
+MongoDB có collection `refresh_tokens`; khi review auth persistence phải đối chiếu repository thực tế để biết flow nào dùng PostgreSQL hay Mongo, không suy đoán chỉ từ tên collection.
 
-- Clean Architecture: `ArchitectureBoundariesTests.cs`.
-- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
-- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
-- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
+## Boundary / guard
 
-## 6. Test coverage hiện tại
+- Sensitive endpoints có rate limit riêng: `auth-register`, `auth-login`, `auth-refresh-token-family`, `auth-logout`, `auth-password`.
+- `ApiPipeline_ShouldAuthenticateBeforeRateLimiting` trong `ApiAndConfigurationStandardsTests.cs` bảo vệ thứ tự middleware auth/rate-limit.
+- Auth command handlers vẫn thuộc event-driven architecture rule nếu là `IRequestHandler<,>` command entry handler trong Application.
+- Password reset/forgot-password trả message trung tính để giảm account enumeration, evidence ở `AuthPasswordController.cs`.
+- Cookie/token behavior nằm ở `IAuthCookieService`/auth infrastructure; review security phải đọc service implementation trước khi kết luận HttpOnly/Secure/SameSite.
 
-- Architecture tests: dùng toàn cục cho mọi backend feature.
-- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'Auth|Architecture|EventDriven'`.
-- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
+## Test coverage hiện có
 
-## 7. Rủi ro kiến trúc
+- `AuthRegistrationIntegrationTests.cs`: register tạo user `Pending`, persist `EmailOtp` type `VerifyEmail`, và vẫn trả `Created` khi email sender fail.
+- Unit tests trong `Features/Auth/Commands`: register/login/refresh/revoke/forgot/reset/send OTP/verify email handlers.
+- `JwtTokenValidationTests.cs`: infrastructure token validation evidence.
+- `RefreshTokenRepositoryIntegrationTests.cs` và `Argon2idPasswordHasherTests.cs` được map trong test tree, cần đọc khi audit refresh persistence/password hashing chi tiết.
 
-- P0: boundary/event-driven violation; state mutation/side effect sai layer.
-- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
-- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
+## Rủi ro
 
-## 8. Kết luận review
+- P0: refresh token rotation fail-open; cookies không HttpOnly/Secure/SameSite đúng policy; reset/forgot-password leak email existence; login throttle bị bypass.
+- P1: AuthSessionController dùng API service boundary nên review phải đọc cả service implementation, không chỉ controller/command handler.
+- P1: PostgreSQL/Mongo refresh token dual evidence có thể gây nhầm persistence source nếu docs/PR không đối chiếu repository hiện hành.
+- P2: hardcoded user-facing auth message trong controller cần được cân nhắc nếu API contract/i18n policy thay đổi, nhưng không tự sửa ngoài scope.
 
-- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/Auth`; khung review này đã neo đúng source và guard.
-- Evidence quan trọng: `Features/Auth`, architecture tests, Infrastructure persistence/repositories, API controllers.
-- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
-- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.
+## Kết luận
+
+Auth là module security-critical gồm registration, email OTP, session cookie/token, refresh rotation và password reset. Review đúng phải đọc controller sub-flow, Application command tests, auth service/cookie service implementation và persistence repository trước khi kết luận thay đổi an toàn.
