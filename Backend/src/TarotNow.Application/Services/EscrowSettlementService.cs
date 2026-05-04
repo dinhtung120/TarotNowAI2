@@ -96,22 +96,20 @@ public sealed partial class EscrowSettlementService : IEscrowSettlementService
         }
 
         var feeRate = _systemConfigSettings.WithdrawalFeeRate;
-        var (totalGross, totalFee, releasedAmount) = CalculateSessionAmounts(acceptedItems, feeRate);
-        var (releaseDescription, feeDescription) = BuildSessionDescriptions(isAutoRelease, releasedAmount, totalFee, feeRate);
+        var amounts = CalculateSessionAmounts(acceptedItems, feeRate);
+        var descriptions = BuildSessionDescriptions(isAutoRelease, amounts.ReleasedAmount, amounts.TotalFee, feeRate);
 
         await ApplySessionWalletSettlementAsync(
             session,
-            releasedAmount,
-            totalFee,
-            releaseDescription,
-            feeDescription,
+            amounts,
+            descriptions,
             cancellationToken);
 
         var now = DateTime.UtcNow;
         await UpdateAcceptedItemsAsReleasedAsync(acceptedItems, isAutoRelease, now, cancellationToken);
-        await UpdateSessionAfterReleaseAsync(session, totalGross, now, cancellationToken);
+        await UpdateSessionAfterReleaseAsync(session, amounts.TotalGross, now, cancellationToken);
 
-        var summary = CreateSessionReleaseSummary(session, totalGross, totalFee, releasedAmount, acceptedItems.Count, isAutoRelease);
+        var summary = CreateSessionReleaseSummary(session, amounts, acceptedItems.Count, isAutoRelease);
         await PublishSessionReleasedEventAsync(summary, cancellationToken);
         return summary;
     }
@@ -128,33 +126,31 @@ public sealed partial class EscrowSettlementService : IEscrowSettlementService
 
     private async Task ApplySessionWalletSettlementAsync(
         ChatFinanceSession session,
-        long releasedAmount,
-        long totalFee,
-        string releaseDescription,
-        string feeDescription,
+        (long TotalGross, long TotalFee, long ReleasedAmount) amounts,
+        (string ReleaseDescription, string FeeDescription) descriptions,
         CancellationToken cancellationToken)
     {
         await _walletRepository.ReleaseAsync(
             session.UserId,
             session.ReaderId,
-            releasedAmount,
+            amounts.ReleasedAmount,
             referenceSource: "chat_finance_session",
             referenceId: session.Id.ToString(),
-            description: releaseDescription,
+            description: descriptions.ReleaseDescription,
             idempotencyKey: $"settle_session_release_{session.Id}",
             cancellationToken: cancellationToken);
 
-        if (totalFee <= 0)
+        if (amounts.TotalFee <= 0)
         {
             return;
         }
 
         await _walletRepository.ConsumeAsync(
             session.UserId,
-            totalFee,
+            amounts.TotalFee,
             referenceSource: "platform_fee",
             referenceId: session.Id.ToString(),
-            description: feeDescription,
+            description: descriptions.FeeDescription,
             idempotencyKey: $"settle_session_fee_{session.Id}",
             cancellationToken: cancellationToken);
     }
@@ -190,9 +186,7 @@ public sealed partial class EscrowSettlementService : IEscrowSettlementService
 
     private static EscrowSessionReleaseSummary CreateSessionReleaseSummary(
         ChatFinanceSession session,
-        long totalGross,
-        long totalFee,
-        long releasedAmount,
+        (long TotalGross, long TotalFee, long ReleasedAmount) amounts,
         int releasedItemCount,
         bool isAutoRelease)
     {
@@ -201,9 +195,9 @@ public sealed partial class EscrowSettlementService : IEscrowSettlementService
             FinanceSessionId = session.Id,
             PayerId = session.UserId,
             ReceiverId = session.ReaderId,
-            GrossAmountDiamond = totalGross,
-            FeeAmountDiamond = totalFee,
-            ReleasedAmountDiamond = releasedAmount,
+            GrossAmountDiamond = amounts.TotalGross,
+            FeeAmountDiamond = amounts.TotalFee,
+            ReleasedAmountDiamond = amounts.ReleasedAmount,
             ReleasedItemCount = releasedItemCount,
             IsAutoRelease = isAutoRelease
         };
