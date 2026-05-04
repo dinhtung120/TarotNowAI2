@@ -81,13 +81,7 @@ public partial class MongoDbContext
 
     private void EnsureClientMessageIdUniquenessIndex()
     {
-        var clientMessageIdFilter = new BsonDocument(
-            "client_message_id",
-            new BsonDocument
-            {
-                { "$type", "string" },
-                { "$gt", string.Empty }
-            });
+        var clientMessageIdFilter = CreateNonEmptyStringFilter("client_message_id");
         var model = new CreateIndexModel<ChatMessageDocument>(
             Builders<ChatMessageDocument>.IndexKeys
                 .Ascending(m => m.ConversationId)
@@ -103,13 +97,7 @@ public partial class MongoDbContext
 
     private void EnsureSystemEventUniquenessIndex()
     {
-        var systemEventFilter = new BsonDocument(
-            "system_event_key",
-            new BsonDocument
-            {
-                { "$type", "string" },
-                { "$gt", string.Empty }
-            });
+        var systemEventFilter = CreateNonEmptyStringFilter("system_event_key");
         var model = new CreateIndexModel<ChatMessageDocument>(
             Builders<ChatMessageDocument>.IndexKeys
                 .Ascending(m => m.ConversationId)
@@ -138,6 +126,9 @@ public partial class MongoDbContext
         }
         // Chặn tạo trùng system message khi outbox retry trên cùng business event.
     }
+
+    private static BsonDocument CreateNonEmptyStringFilter(string fieldName)
+        => new BsonDocument(fieldName, new BsonDocument { { "$type", "string" }, { "$gt", string.Empty } });
 
     private long NormalizeDuplicateSystemEventKeys()
     {
@@ -189,19 +180,13 @@ public partial class MongoDbContext
         }
 
         var duplicatedIds = new BsonArray(ids.Skip(1));
-        if (duplicatedIds.Count == 0)
-        {
-            return 0;
-        }
-
-        var result = ChatMessages.UpdateMany(
+        return ChatMessages.UpdateMany(
             new BsonDocument("_id", new BsonDocument("$in", duplicatedIds)),
             new BsonDocument("$set", new BsonDocument
             {
                 { "system_event_key", BsonNull.Value },
                 { "updated_at", now }
-            }));
-        return result.ModifiedCount;
+            })).ModifiedCount;
     }
 
     /// <summary>
