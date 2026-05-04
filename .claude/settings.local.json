@@ -9,7 +9,8 @@
       "Bash(npm *)",
       "Bash(rg *)",
       "Bash(git *)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(/usr/bin/find *)"
     ]
   }
 }
