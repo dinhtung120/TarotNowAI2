@@ -8,7 +8,8 @@
       "Bash(dotnet *)",
       "Bash(npm *)",
       "Bash(rg *)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(curl *)"
     ]
   }
 }
