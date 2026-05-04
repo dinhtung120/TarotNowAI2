@@ -1,36 +1,36 @@
 # Checklist verify và đầu ra
 
-## Verify cấu trúc file
+## Verify cấu trúc
 
-- [ ] Có 7 file tổng quan tại `Review/`.
-- [ ] Có 6 file cross-cutting tại `Review/cross-cutting/`.
-- [ ] Có 23 file backend feature tại `Review/backend-features/`.
-- [ ] Có 16 file frontend feature tại `Review/frontend-features/`.
-- [ ] Tổng cộng 52 file `.md` trong `Review/`.
+- [ ] `find Review -type f -name '*.md' | wc -l` trả về 52.
+- [ ] 7 file tổng quan ở `Review/`.
+- [ ] 6 file cross-cutting ở `Review/cross-cutting/`.
+- [ ] 23 file backend feature khớp `Backend/src/TarotNow.Application/Features`.
+- [ ] 16 file frontend feature khớp `Frontend/src/features`.
 
-## Verify nội dung từng file feature
+## Verify source-backed
 
-- [ ] Có section phạm vi.
-- [ ] Có entry points và luồng chính.
-- [ ] Có dependency map upstream/downstream.
-- [ ] Có ràng buộc kiến trúc.
-- [ ] Có dữ liệu/trạng thái hoặc ghi rõ không áp dụng.
-- [ ] Có test coverage hiện tại hoặc gap.
-- [ ] Có rủi ro P0/P1/P2.
-- [ ] Có output review chuẩn.
+- [ ] Mỗi file có evidence path cụ thể.
+- [ ] Không mô tả nhầm `database/*` và `deploy/*` như một thư mục lồng nhau; hai nhánh này phải được ghi riêng.
+- [ ] Backend docs trỏ tới architecture tests khi nói về boundary/event-driven/code quality/API config.
+- [ ] Frontend docs trỏ tới guard scripts khi nói về route boundary/component size/auth/i18n.
+- [ ] Data docs trỏ tới `ApplicationDbContext.cs`, `MongoDbContext.cs`, schema SQL/Mongo, Redis DI.
+- [ ] Ops docs trỏ tới compose, deploy scripts, workflows.
 
-## Verify bám repo thực tế
-
-- [ ] Backend đối chiếu `Backend/tests/TarotNow.ArchitectureTests`.
-- [ ] Backend đối chiếu `Backend/src/TarotNow.Application/Features`.
-- [ ] Frontend đối chiếu `Frontend/src/features/*/public.ts`.
-- [ ] Frontend đối chiếu `Frontend/src/app/[locale]`.
-- [ ] Data/Ops đối chiếu `database`, `deploy`, workflows.
-
-## Lệnh kiểm tra tài liệu
+## Verify bằng lệnh
 
 ```bash
 find Review -type f -name '*.md' | sort
-find Review -type f -name '*.md' | wc -l
+find Backend/src/TarotNow.Application/Features -maxdepth 1 -mindepth 1 -type d | wc -l
+find Frontend/src/features -maxdepth 1 -mindepth 1 -type d | wc -l
+grep -R "database.*/deploy\|database deploy" -n Review || true
 git status --short
 ```
+
+## Đầu ra review chuẩn
+
+- Kết luận tổng quan.
+- Bảng findings P0/P1/P2.
+- Danh sách evidence path.
+- Gaps chưa có evidence.
+- Follow-up theo module.

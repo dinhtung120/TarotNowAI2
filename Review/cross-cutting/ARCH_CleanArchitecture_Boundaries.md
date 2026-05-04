@@ -1,34 +1,34 @@
 # Clean Architecture Boundaries
 
-## 1. Phạm vi
+## Evidence đã rà
 
-- Review concern cross-cutting: Domain <- Application <- Infrastructure <- API.
-- Áp dụng cho mọi module có dependency tới concern này.
-- Không thay thế review chi tiết từng feature file.
+- `Backend/src/TarotNow.Domain/TarotNow.Domain.csproj`
+- `Backend/src/TarotNow.Application/TarotNow.Application.csproj`
+- `Backend/src/TarotNow.Infrastructure/TarotNow.Infrastructure.csproj`
+- `Backend/src/TarotNow.Api/TarotNow.Api.csproj`
+- `Backend/tests/TarotNow.ArchitectureTests/ArchitectureBoundariesTests.cs`
+- `Backend/tests/TarotNow.ArchitectureTests/ApiAndConfigurationStandardsTests.cs`
+- `Backend/tests/TarotNow.ArchitectureTests/CodeQualityRulesTests.cs`
 
-## 2. Dependency map
+## Kết luận source-backed
 
-- Upstream: feature modules, API routes/controllers, frontend app routes hoặc deploy workflows có sử dụng concern này.
-- Downstream: source code, data store, infrastructure service, guard script hoặc test gate liên quan.
-- Evidence gốc cần đối chiếu: `ArchitectureBoundariesTests.cs`.
+Backend dùng mô hình Clean Architecture với project ownership rõ: Domain chứa model/event core; Application chứa CQRS, interfaces, validators/behaviors; Infrastructure implement persistence/cache/provider/outbox; API composition/controllers/middleware. Source-of-truth của rule là architecture tests, không phải tài liệu này.
 
-## 3. Focus area review
+## Boundary cần giữ
 
-- Kiểm tra dependency có đi đúng boundary không.
-- Kiểm tra side effect có nằm đúng layer hoặc đúng event/outbox path không.
-- Kiểm tra test/guard hiện có có bao phủ rule quan trọng không.
-- Kiểm tra rủi ro P0/P1/P2 theo `Review/05_QUY_TAC_DANH_GIA_VA_DIEM_RUI_RO.md`.
+- Domain không reference Application/Infrastructure/API hoặc framework persistence/web.
+- Application chỉ phụ thuộc Domain và Application-owned contracts.
+- Infrastructure phụ thuộc Application/Domain để implement contracts.
+- API phụ thuộc Application và Infrastructure composition, nhưng controller không nên gọi repository/db context/provider concrete trực tiếp.
 
-## 4. Output format chuẩn
+## Guard hiện có
 
-- Kết luận: Pass / Pass có điều kiện / Cần remediation.
-- Evidence: đường dẫn file, test, guard hoặc script liên quan.
-- Findings: nhóm theo P0/P1/P2.
-- Follow-up: module chịu trách nhiệm và batch nên xử lý.
+- `ArchitectureBoundariesTests.cs`: kiểm compile-time dependency, forbidden namespace/framework, API direct dependency risk.
+- `ApiAndConfigurationStandardsTests.cs`: API version metadata, route standards, rate-limit/auth ordering, options pattern.
+- `CodeQualityRulesTests.cs`: file/method/parameter/cyclomatic/cognitive budgets.
 
-## 5. Checklist
+## Rủi ro
 
-- [ ] Có evidence path cụ thể.
-- [ ] Có dependency upstream/downstream.
-- [ ] Có đánh giá rủi ro.
-- [ ] Có đề xuất verify bằng guard hoặc script hiện có.
+- P0: Application import Infrastructure concrete hoặc framework packages; Domain dính persistence/web framework; API bypass Application cho data mutation.
+- P1: allowlist trong architecture tests tăng mà không có rationale.
+- P2: docs hoặc file naming không phản ánh bounded context hiện tại.

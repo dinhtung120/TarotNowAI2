@@ -1,45 +1,44 @@
 # Batch execution plan review kiến trúc
 
-## Batch 0: Chuẩn hóa format
+## Batch 0: Evidence baseline
 
-- Input: CLAUDE.md, architecture tests, Frontend scripts, cấu trúc module hiện tại.
-- Focus area: mục lục, template, risk scoring, output format.
-- Output: 7 file tổng quan tại `Review/`.
+- Đếm feature backend bằng `find Backend/src/TarotNow.Application/Features -maxdepth 1 -mindepth 1 -type d`.
+- Đếm feature frontend bằng `find Frontend/src/features -maxdepth 1 -mindepth 1 -type d`.
+- Đọc guard backend/frontend trước khi review module.
+- Output: xác nhận 23 BE feature, 16 FE feature, 52 file Review.
 
-## Batch 1: Cross-cutting backend architecture
+## Batch 1: Cross-cutting architecture
 
-- Input: `ArchitectureBoundariesTests.cs`, `EventDrivenArchitectureRulesTests.cs`, `CodeQualityRulesTests.cs`.
-- Focus area: clean architecture, thin command handler, requested domain event, outbox, realtime bridge, money/idempotency guard.
-- Output: cross-cutting files cho boundary và event-driven architecture.
+- Review `ARCH_CleanArchitecture_Boundaries.md` và `ARCH_EventDriven_Outbox_RealtimeBridge.md` trước.
+- Evidence bắt buộc: architecture tests, `.csproj`, dispatcher/outbox/realtime paths.
+- Output: rủi ro P0/P1/P2 cho boundary, side effect, idempotency, realtime.
 
-## Batch 2: Backend feature modules
+## Batch 2: Data/Ops/Security/Frontend boundary
 
-- Input: `Backend/src/TarotNow.Application/Features`, `Backend/src/TarotNow.Domain/Events`, API controllers, tests.
-- Focus area: entry point, dependency map, transaction boundary, idempotency, event/outbox path, test gap.
-- Output: 23 file `Review/backend-features/BE_*.md`.
+- Review datastore mapping từ `ApplicationDbContext.cs`, `MongoDbContext.cs`, schemas.
+- Review deploy/workflow từ `docker-compose*.yml`, `deploy/scripts/*`, `.github/workflows/*`.
+- Review frontend guard/prefetch/i18n từ `Frontend/scripts`, `Frontend/src/shared/server/prefetch`, `Frontend/src/i18n`, `Frontend/messages`.
 
-## Batch 3: Frontend feature modules
+## Batch 3: Backend feature review
 
-- Input: `Frontend/src/app/[locale]`, `Frontend/src/features`, `Frontend/src/shared`, `Frontend/src/i18n`, `Frontend/messages`, `Frontend/scripts`.
-- Focus area: thin route, public export boundary, prefetch/hydration consistency, i18n VI/EN/ZH, component/hook size guard.
-- Output: 16 file `Review/frontend-features/FE_*.md` và frontend cross-cutting file.
+- Identity/Admin/Legal: `Admin`, `Auth`, `Mfa`, `UserContext`, `Legal`.
+- Reading/Reader: `Reader`, `Reading`, `Home`, `History`.
+- Chat/Realtime: `Chat`, `Escrow`, `Presence`, `Notification`.
+- Finance: `Deposit`, `Withdrawal`, `Wallet`, `Promotions`.
+- Engagement/Social: `CheckIn`, `Community`, `Gacha`, `Gamification`, `Inventory`, `Profile`.
 
-## Batch 4: Data/Ops/Security/Test gates
+## Batch 4: Frontend feature review
 
-- Input: `database`, `deploy`, `.github/workflows`, auth/security architecture tests, frontend guards.
-- Focus area: PostgreSQL/MongoDB/Redis ownership, migration/rollback, smoke test, backup/restore, auth fail-closed, rate limit.
-- Output: cross-cutting files data, security, observability/test gates.
+- Shell/Auth/Admin/Legal/Profile.
+- Reading/Reader/Home/Collection.
+- Chat/Community/Notifications.
+- Finance/Engagement: CheckIn/Gacha/Gamification/Inventory/Wallet.
 
-## Batch 5: Fit-gap tổng hợp
+## Output chuẩn mỗi batch
 
-- Input: toàn bộ file review đã tạo.
-- Focus area: gap P0/P1/P2, dependency chéo, module rủi ro cao, thứ tự remediation.
-- Output: cập nhật dependency map, batch plan và checklist đầu ra.
-
-## Output format cho mỗi batch
-
-- Danh sách module đã review.
-- Evidence path.
-- Findings theo P0/P1/P2.
-- Quyết định: pass, pass có điều kiện, hoặc cần remediation trước khi merge.
-- Follow-up owner/module nếu có.
+- Files reviewed.
+- Evidence paths.
+- Dependency map.
+- Findings P0/P1/P2.
+- Kết luận: `Pass`, `Pass có điều kiện`, hoặc `Cần remediation`.
+- Gaps cần follow-up, ghi rõ “không tìm thấy evidence trực tiếp” nếu chưa chứng minh được.

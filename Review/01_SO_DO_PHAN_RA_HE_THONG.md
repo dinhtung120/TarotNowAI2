@@ -1,20 +1,19 @@
 # Sơ đồ phân rã hệ thống
 
-## Nhóm capability chính
+## Capability map source-backed
 
-| Capability | Backend module | Frontend module | Data/ops liên quan |
+| Capability | Backend evidence | Frontend evidence | Data/Ops evidence |
 |---|---|---|---|
-| Identity & Access | Auth, Mfa, UserContext, Admin | Auth, Admin | JWT, refresh token, rate limit, audit |
-| Reader & Reading | Reader, Reading, Home, History | Reader, Reading, Home | PostgreSQL transactional state, MongoDB reading documents, AI provider |
-| Conversation & Realtime | Chat, Presence, Notification | Chat, Notifications | Redis Pub/Sub, SignalR bridge, MongoDB messages |
-| Finance & Escrow | Wallet, Deposit, Withdrawal, Escrow | Wallet, Chat | PostgreSQL ACID, idempotency, MoneyChangedDomainEvent |
-| Engagement | Gamification, Gacha, Inventory, CheckIn, Promotions | Gamification, Gacha, Inventory, CheckIn | reward state, anti-duplication, event fan-out |
-| Community & Profile | Community, Profile, Legal | Community, Profile, Legal | consent, moderation, user documents |
-| Data & Ops | Infrastructure, database, deploy | Frontend build/deploy | Docker, workflows, smoke, rollback, backup |
+| Identity & Access | `Features/Auth`, `Features/Mfa`, `Features/UserContext`, `Features/Admin`, `Features/Legal` | `features/auth`, `features/admin`, `features/legal`, `features/profile` | `users`, `auth_sessions`, `email_otps`, `password_reset_tokens`, `user_consents`, `data_rights_requests` trong `database/postgresql/schema.sql`; `refresh_tokens` trong `MongoDbContext.cs` |
+| Reading/AI/Reader | `Features/Reading`, `Features/Reader`, `Features/Home`, `Features/History` | `features/reading`, `features/reader`, `features/home`, `features/collection` | `ai_requests`, `reading_rng_audits`, `reading_reveal_saga_states` trong PostgreSQL; `reading_sessions`, `cards_catalog`, `reader_profiles`, `reader_requests`, `user_collections` trong MongoDB |
+| Conversation/Realtime | `Features/Chat`, `Features/Escrow`, `Features/Presence`, `Features/Notification` | `features/chat`, `features/notifications`, `features/community` | MongoDB `conversations`, `chat_messages`, `notifications`; Redis Pub/Sub qua `IRedisPublisher`; SignalR bridge trong API/Infrastructure realtime paths |
+| Finance | `Features/Deposit`, `Features/Withdrawal`, `Features/Wallet`, `Features/Promotions`, finance phần `Escrow` | `features/wallet`, finance-facing flows trong `features/chat` | PostgreSQL `wallet_transactions`, `deposit_orders`, `chat_finance_sessions`, `chat_question_items`, `withdrawal_requests`, promotions tables |
+| Engagement/Social | `Features/CheckIn`, `Features/Gacha`, `Features/Gamification`, `Features/Inventory`, `Features/Community`, `Features/Profile` | `features/checkin`, `features/gacha`, `features/gamification`, `features/inventory`, `features/community`, `features/profile` | PostgreSQL gacha/inventory item tables; MongoDB quests, achievements, leaderboard, community documents |
+| Ops/Delivery | Infrastructure + API composition | Next.js app router + scripts guards | `docker-compose*.yml`, `deploy/scripts/*`, `.github/workflows/cd-*.yml` |
 
-## Nguyên tắc review
+## Review boundary quan trọng
 
-- Review theo capability trước, sau đó đi sâu từng feature file.
-- Mọi flow ghi backend phải đối chiếu với command/event-driven architecture.
-- Mọi UI route phải đối chiếu với thin app route, public feature export, i18n và guard scripts.
-- Các flow finance, quota, AI, realtime phải được đánh dấu rủi ro cao hơn do yêu cầu transaction, idempotency và outbox.
+- Backend write command entry handlers phải mỏng và dispatch requested domain event qua `IInlineDomainEventDispatcher`; rule được enforce bởi `EventDrivenArchitectureRulesTests.cs`.
+- Backend layer dependency được review qua `ArchitectureBoundariesTests.cs`: Domain không phụ thuộc outer layer; Application không dùng Infrastructure concrete/framework; API không bypass Application cho repository/db context ngoài allowlist.
+- Frontend `page.tsx`/`layout.tsx` phải là composition wrapper; import từ app sang feature nên qua `features/*/public.ts`, kiểm tra bằng `check-clean-architecture.mjs`.
+- Tài chính/AI/realtime là vùng rủi ro cao: phải review transaction, idempotency, event/outbox và không side-effect trực tiếp từ controller/handler mỏng.

@@ -1,34 +1,27 @@
 # Frontend Boundary, Prefetch, i18n
 
-## 1. Phạm vi
+## Evidence đã rà
 
-- Review concern cross-cutting: App route thin wrapper -> features public API -> shared primitives, kèm prefetch/hydration/i18n.
-- Áp dụng cho mọi module có dependency tới concern này.
-- Không thay thế review chi tiết từng feature file.
+- Feature public exports: `Frontend/src/features/*/public.ts`.
+- App Router: `Frontend/src/app/[locale]`.
+- Shared prefetch/hydration: `Frontend/src/shared/server/prefetch`.
+- i18n runtime: `Frontend/src/i18n/messages.ts`, `Frontend/src/i18n/request.ts`, `Frontend/src/i18n/clientMessages.ts`, `Frontend/messages/{vi,en,zh}`.
+- Guards: `Frontend/scripts/check-clean-architecture.mjs`, `check-component-size.mjs`, `check-hook-action-size.mjs`, `check-auth-fail-closed.mjs`, `check-next-image-policy.mjs`, `check-risk-coverage.mjs`.
 
-## 2. Dependency map
+## Boundary thực tế
 
-- Upstream: feature modules, API routes/controllers, frontend app routes hoặc deploy workflows có sử dụng concern này.
-- Downstream: source code, data store, infrastructure service, guard script hoặc test gate liên quan.
-- Evidence gốc cần đối chiếu: `Frontend/scripts/check-clean-architecture.mjs`.
+`page.tsx` và `layout.tsx` nên là composition wrapper. Feature UI/data orchestration nằm trong `Frontend/src/features/*`, public surface qua `public.ts`. Shared layer chứa primitives, query client, auth/prefetch utilities; cần tránh nhúng business logic feature-specific quá sâu trong shared.
 
-## 3. Focus area review
+## Prefetch/hydration
 
-- Kiểm tra dependency có đi đúng boundary không.
-- Kiểm tra side effect có nằm đúng layer hoặc đúng event/outbox path không.
-- Kiểm tra test/guard hiện có có bao phủ rule quan trọng không.
-- Kiểm tra rủi ro P0/P1/P2 theo `Review/05_QUY_TAC_DANH_GIA_VA_DIEM_RUI_RO.md`.
+SSR prefetch đi qua shared server prefetch runner và TanStack Query dehydration/hydration. Review từng route phải đối chiếu: route -> prefetch runner -> query key -> component consume.
 
-## 4. Output format chuẩn
+## i18n
 
-- Kết luận: Pass / Pass có điều kiện / Cần remediation.
-- Evidence: đường dẫn file, test, guard hoặc script liên quan.
-- Findings: nhóm theo P0/P1/P2.
-- Follow-up: module chịu trách nhiệm và batch nên xử lý.
+New user-facing copy phải đi qua existing localization approach và có VI/EN/ZH với fallback locale -> vi. Hardcoded copy hiện hữu không nên migrate ngoài scope, nhưng review docs phải ghi gap nếu touched flow có copy mới không có messages.
 
-## 5. Checklist
+## Rủi ro
 
-- [ ] Có evidence path cụ thể.
-- [ ] Có dependency upstream/downstream.
-- [ ] Có đánh giá rủi ro.
-- [ ] Có đề xuất verify bằng guard hoặc script hiện có.
+- P0: auth fail-open, route bypass backend command/security boundary, secret/token exposure.
+- P1: route quá dày, import sâu vào internals thay vì public export, hydration mismatch, thiếu i18n.
+- P2: component/hook gần vượt size guard.

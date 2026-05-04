@@ -1,34 +1,32 @@
-# Event Driven, Outbox, Realtime Bridge
+# Event-driven, Outbox, Realtime Bridge
 
-## 1. Phạm vi
+## Evidence đã rà
 
-- Review concern cross-cutting: Controller -> Command -> thin handler -> requested domain event -> outbox/handler/bridge.
-- Áp dụng cho mọi module có dependency tới concern này.
-- Không thay thế review chi tiết từng feature file.
+- `Backend/src/TarotNow.Application/Interfaces/IInlineDomainEventDispatcher.cs`
+- `Backend/src/TarotNow.Application/Interfaces/IDomainEventPublisher.cs`
+- `Backend/src/TarotNow.Application/Interfaces/IRedisPublisher.cs`
+- `Backend/src/TarotNow.Infrastructure/Services/InlineMediatRDomainEventDispatcher.cs`
+- `Backend/src/TarotNow.Infrastructure/Services/MediatRDomainEventPublisher.cs`
+- `Backend/src/TarotNow.Infrastructure/BackgroundJobs/Outbox`
+- `Backend/src/TarotNow.Infrastructure/DomainEvents/Handlers`
+- `Backend/tests/TarotNow.ArchitectureTests/EventDrivenArchitectureRulesTests.cs`
 
-## 2. Dependency map
+## Mô hình thực tế
 
-- Upstream: feature modules, API routes/controllers, frontend app routes hoặc deploy workflows có sử dụng concern này.
-- Downstream: source code, data store, infrastructure service, guard script hoặc test gate liên quan.
-- Evidence gốc cần đối chiếu: `EventDrivenArchitectureRulesTests.cs`.
+Write command entry handler trong Application phải là thin handler: nhận command, dispatch requested domain event qua `IInlineDomainEventDispatcher`, trả result. Orchestration nghiệp vụ nằm trong `*RequestedDomainEventHandler`, nơi được phép dùng Application interfaces như repositories, provider abstractions, cache, transaction coordinator và domain event publisher.
 
-## 3. Focus area review
+## Side effect path
 
-- Kiểm tra dependency có đi đúng boundary không.
-- Kiểm tra side effect có nằm đúng layer hoặc đúng event/outbox path không.
-- Kiểm tra test/guard hiện có có bao phủ rule quan trọng không.
-- Kiểm tra rủi ro P0/P1/P2 theo `Review/05_QUY_TAC_DANH_GIA_VA_DIEM_RUI_RO.md`.
+- Side effects phụ như notification, realtime, gamification, task, email phải đi qua domain event/outbox/handler hoặc Infrastructure worker.
+- Realtime path dùng Redis publisher/bridge và SignalR ở edge, không broadcast trực tiếp từ controller nếu không có allowlist.
+- Money state mutation phải review cùng canonical money event và idempotency contract.
 
-## 4. Output format chuẩn
+## Guard hiện có
 
-- Kết luận: Pass / Pass có điều kiện / Cần remediation.
-- Evidence: đường dẫn file, test, guard hoặc script liên quan.
-- Findings: nhóm theo P0/P1/P2.
-- Follow-up: module chịu trách nhiệm và batch nên xử lý.
+- `EventDrivenArchitectureRulesTests.cs` enforce command handler dependency, controller realtime restrictions, hub event restrictions, money/idempotency-related contracts.
 
-## 5. Checklist
+## Rủi ro
 
-- [ ] Có evidence path cụ thể.
-- [ ] Có dependency upstream/downstream.
-- [ ] Có đánh giá rủi ro.
-- [ ] Có đề xuất verify bằng guard hoặc script hiện có.
+- P0: command handler inject repository/provider/side-effect service trực tiếp; realtime direct broadcast; finance mutation thiếu money event/idempotency.
+- P1: event handler làm quá nhiều orchestration phụ thay vì publish event tiếp theo.
+- P2: thiếu evidence test cho một requested event handler cụ thể.

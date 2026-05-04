@@ -1,31 +1,34 @@
 # Quy tắc đánh giá và điểm rủi ro
 
-## P0 - Chặn merge hoặc cần xử lý ngay
+## P0 — chặn merge/remediation ngay
 
-- Vi phạm clean architecture boundary đã có guard.
-- Command handler backend inject repository, provider, notification, wallet, realtime hoặc service side-effect trực tiếp.
-- Controller/API broadcast realtime trực tiếp ngoài allowlist.
-- Flow finance/quota/AI thiếu transaction, idempotency hoặc settlement/refund path.
-- Wallet mutation không phát canonical money event theo quy tắc hiện hành.
-- Auth/security fail-open, thiếu ownership check, rate limit hoặc token/cookie không an toàn.
+- Vi phạm guard trong `ArchitectureBoundariesTests.cs` hoặc `EventDrivenArchitectureRulesTests.cs`.
+- Backend command handler ghi dữ liệu nhưng inject repository/provider/realtime/notification/wallet service trực tiếp thay vì `IInlineDomainEventDispatcher`.
+- Controller/API hoặc hub broadcast realtime trực tiếp ngoài allowlist kiến trúc.
+- Flow finance/quota/AI thiếu transaction boundary, idempotency key, settlement/refund path hoặc canonical money event.
+- Frontend auth/session fail-open, route/API route bypass ownership/auth guard, hoặc lộ token/secret.
 
-## P1 - Cần remediation có kế hoạch
+## P1 — cần kế hoạch sửa
 
-- Coupling chéo module tăng rủi ro nhưng chưa phá guard.
-- Prefetch/hydration frontend không nhất quán hoặc duplicate fetch đáng kể.
-- i18n thiếu VI/EN/ZH ở user-facing copy mới.
-- Test coverage thiếu cho use case quan trọng.
-- Deploy/smoke/rollback path chưa rõ với thay đổi vận hành.
+- Dependency chéo module không phá guard nhưng làm tăng coupling.
+- Shared frontend chứa logic feature-specific quá nhiều hoặc route app quá dày.
+- Prefetch/hydration/query key không nhất quán.
+- i18n thiếu VI/EN/ZH cho copy mới.
+- Test coverage không có cho flow nghiệp vụ chính hoặc flow tiền/realtime.
+- Deploy rollback/smoke/backup path không được cập nhật khi thay đổi ops.
 
-## P2 - Theo dõi hoặc cải thiện sau
+## P2 — theo dõi
 
-- Tài liệu thiếu evidence chi tiết.
-- Naming hoặc cấu trúc file chưa đồng nhất nhưng không ảnh hưởng guard.
-- Component/hook gần vượt budget nhưng chưa fail.
-- Minor duplication chưa gây rủi ro kiến trúc.
+- Evidence chưa đủ chi tiết nhưng không phát hiện vi phạm.
+- File gần vượt line budget hoặc component/hook gần vượt guard.
+- Naming/docs chưa đồng nhất.
 
-## Kết luận chuẩn
+## Cách ghi finding
 
-- `Pass`: không có P0/P1 đáng kể, evidence rõ.
-- `Pass có điều kiện`: không có P0, có P1 đã có owner hoặc follow-up.
-- `Cần remediation`: có P0 hoặc P1 chưa có phương án xử lý.
+Mỗi finding phải có: severity, evidence path, tác động, đề xuất verify. Nếu chưa đọc đủ source, ghi `Không tìm thấy evidence trực tiếp trong phạm vi đã rà soát`.
+
+## Guard source tham chiếu
+
+- Backend: `Backend/tests/TarotNow.ArchitectureTests/ArchitectureBoundariesTests.cs`, `EventDrivenArchitectureRulesTests.cs`, `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
+- Frontend: `Frontend/scripts/check-clean-architecture.mjs`, `check-component-size.mjs`, `check-hook-action-size.mjs`, `check-auth-fail-closed.mjs`, `check-risk-coverage.mjs`.
+- Data/Ops: `database/postgresql/schema.sql`, `database/mongodb/schema.md`, `deploy/scripts`, `.github/workflows`.

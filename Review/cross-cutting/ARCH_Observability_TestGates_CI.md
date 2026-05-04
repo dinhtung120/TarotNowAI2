@@ -1,34 +1,29 @@
 # Observability, Test Gates, CI
 
-## 1. Phạm vi
+## Evidence đã rà
 
-- Review concern cross-cutting: Architecture tests, unit/integration tests, frontend guards, smoke/rollback workflows.
-- Áp dụng cho mọi module có dependency tới concern này.
-- Không thay thế review chi tiết từng feature file.
+- Backend architecture tests: `Backend/tests/TarotNow.ArchitectureTests/*.cs`.
+- Frontend guards: `Frontend/scripts/check-*.mjs`, `Frontend/scripts/lib/cleanArchitectureGuard.test.ts`.
+- Compose healthchecks: `docker-compose.prod.yml`.
+- Smoke: `deploy/scripts/smoke.sh`.
+- Failure/scale/rollback drills: `deploy/scripts/failure-drills.sh`, `deploy/scripts/scale-drill.sh`, `deploy/scripts/rollback-drill.sh`.
+- Backup/restore: `deploy/scripts/backup-db.sh`, `deploy/scripts/restore-db.sh`.
+- CI/CD: `.github/workflows/cd-main-3ec2.yml`, `cd-fast-deploy.yml`, `cd-fe-only-deploy.yml`.
 
-## 2. Dependency map
+## CI/CD map
 
-- Upstream: feature modules, API routes/controllers, frontend app routes hoặc deploy workflows có sử dụng concern này.
-- Downstream: source code, data store, infrastructure service, guard script hoặc test gate liên quan.
-- Evidence gốc cần đối chiếu: `Backend/tests/TarotNow.ArchitectureTests`.
+- `cd-main-3ec2.yml`: full gate gồm build/test, analysis/security scan, publish, approval, deploy DB/BE/FE, smoke, rollback, Slack/artifact reporting.
+- `cd-fast-deploy.yml`: fast deploy, có trade-off vì bỏ bớt analysis/security gate.
+- `cd-fe-only-deploy.yml`: deploy frontend riêng, smoke và rollback frontend.
 
-## 3. Focus area review
+## Ops boundary
 
-- Kiểm tra dependency có đi đúng boundary không.
-- Kiểm tra side effect có nằm đúng layer hoặc đúng event/outbox path không.
-- Kiểm tra test/guard hiện có có bao phủ rule quan trọng không.
-- Kiểm tra rủi ro P0/P1/P2 theo `Review/05_QUY_TAC_DANH_GIA_VA_DIEM_RUI_RO.md`.
+- `deploy/scripts/bootstrap-db.sh`: start DB + migration/bootstrap seed.
+- `deploy/scripts/remote/rollback_be_fe.sh`: rollback service image BE/FE; không rollback DB migration tự động.
+- `deploy/scripts/smoke.sh`: kiểm health/live/ready/root route.
 
-## 4. Output format chuẩn
+## Rủi ro
 
-- Kết luận: Pass / Pass có điều kiện / Cần remediation.
-- Evidence: đường dẫn file, test, guard hoặc script liên quan.
-- Findings: nhóm theo P0/P1/P2.
-- Follow-up: module chịu trách nhiệm và batch nên xử lý.
-
-## 5. Checklist
-
-- [ ] Có evidence path cụ thể.
-- [ ] Có dependency upstream/downstream.
-- [ ] Có đánh giá rủi ro.
-- [ ] Có đề xuất verify bằng guard hoặc script hiện có.
+- P0: thay đổi DB/schema không có migration/backup/restore/rollback plan.
+- P1: thay đổi API/FE không cập nhật smoke hoặc health gate liên quan.
+- P2: findings artifact chưa đủ context để triage.

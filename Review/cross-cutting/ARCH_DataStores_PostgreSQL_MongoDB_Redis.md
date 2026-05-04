@@ -1,34 +1,48 @@
 # Data Stores PostgreSQL, MongoDB, Redis
 
-## 1. Phạm vi
+## PostgreSQL
 
-- Review concern cross-cutting: PostgreSQL cho ACID, MongoDB cho document/read-model, Redis cho cache/pubsub/coordination.
-- Áp dụng cho mọi module có dependency tới concern này.
-- Không thay thế review chi tiết từng feature file.
+Evidence:
+- `Backend/src/TarotNow.Infrastructure/Persistence/ApplicationDbContext.cs`
+- `database/postgresql/schema.sql`
+- `database/DATABASE_OVERVIEW.md`
 
-## 2. Dependency map
+Vai trò: ACID write model cho identity, finance, subscription/entitlement, legal/admin, AI transactional trace, gacha/inventory transactional state.
 
-- Upstream: feature modules, API routes/controllers, frontend app routes hoặc deploy workflows có sử dụng concern này.
-- Downstream: source code, data store, infrastructure service, guard script hoặc test gate liên quan.
-- Evidence gốc cần đối chiếu: `database/DATABASE_OVERVIEW.md`.
+Bảng/module tiêu biểu:
+- Identity/legal: `users`, `auth_sessions`, `email_otps`, `password_reset_tokens`, `user_consents`, `data_rights_requests`, `admin_actions`.
+- Finance: `wallet_transactions`, `deposit_orders`, `deposit_promotions`, `chat_finance_sessions`, `chat_question_items`, `withdrawal_requests`, `reader_payout_profiles`.
+- Reading/AI: `ai_requests`, `reading_rng_audits`, `reading_reveal_saga_states`.
+- Engagement: `gacha_*`, `item_definitions`, `user_items`, `inventory_*`, `free_draw_credits`.
 
-## 3. Focus area review
+## MongoDB
 
-- Kiểm tra dependency có đi đúng boundary không.
-- Kiểm tra side effect có nằm đúng layer hoặc đúng event/outbox path không.
-- Kiểm tra test/guard hiện có có bao phủ rule quan trọng không.
-- Kiểm tra rủi ro P0/P1/P2 theo `Review/05_QUY_TAC_DANH_GIA_VA_DIEM_RUI_RO.md`.
+Evidence:
+- `Backend/src/TarotNow.Infrastructure/Persistence/MongoDbContext.cs`
+- `database/mongodb/schema.md`
+- `database/mongodb/init.js`
 
-## 4. Output format chuẩn
+Vai trò: document/read-model/high-volume store.
 
-- Kết luận: Pass / Pass có điều kiện / Cần remediation.
-- Evidence: đường dẫn file, test, guard hoặc script liên quan.
-- Findings: nhóm theo P0/P1/P2.
-- Follow-up: module chịu trách nhiệm và batch nên xử lý.
+Collections/module tiêu biểu:
+- Reading/card/collection: `cards_catalog`, `reading_sessions`, `user_collections`.
+- Chat/community: `conversations`, `chat_messages`, `conversation_reviews`, `reports`, `community_posts`, `community_reactions`, `community_comments`, `community_media_assets`.
+- Reader/profile: `reader_requests`, `reader_profiles`.
+- Notification/auth/log/upload: `notifications`, `refresh_tokens`, `ai_provider_logs`, `upload_sessions`.
+- Gamification: `quests`, `quest_progress`, `achievements`, `user_achievements`, `titles`, `user_titles`, `leaderboard_entries`, `leaderboard_snapshots`.
 
-## 5. Checklist
+## Redis
 
-- [ ] Có evidence path cụ thể.
-- [ ] Có dependency upstream/downstream.
-- [ ] Có đánh giá rủi ro.
-- [ ] Có đề xuất verify bằng guard hoặc script hiện có.
+Evidence:
+- `Backend/src/TarotNow.Infrastructure/DependencyInjection.Cache.cs`
+- `Backend/src/TarotNow.Infrastructure/DependencyInjection.Cache.Bootstrap.cs`
+- `Backend/src/TarotNow.Application/Interfaces/ICacheService.cs`
+- `Backend/src/TarotNow.Application/Interfaces/IRedisPublisher.cs`
+
+Vai trò: cache, pub/sub realtime, coordination/rate-limit support. Production yêu cầu Redis theo cấu hình DI; thiếu Redis ở production là lỗi fail-fast.
+
+## Rủi ro
+
+- P0: finance mutation ngoài PostgreSQL transaction; double spend; thiếu idempotency; direct Mongo write cho state cần ACID.
+- P1: cross-store consistency không có saga/outbox/reconcile path rõ.
+- P2: docs/schema không đồng bộ với `ApplicationDbContext` hoặc `MongoDbContext`.

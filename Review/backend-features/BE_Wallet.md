@@ -1,69 +1,65 @@
 # BE Wallet
 
-## 1. Phạm vi
+## 1. Phạm vi source đã rà
 
-- Mục tiêu nghiệp vụ: review backend feature `Wallet` thuộc nhóm `Finance`.
-- Module liên quan: `Backend/src/TarotNow.Application/Features/Wallet` và các Domain/Infrastructure/API tương ứng.
-- In scope: command, query, requested domain event, repository/interface dependency, transaction, outbox, tests.
-- Out of scope: refactor code hoặc sửa logic ngoài phạm vi review.
+- Feature source: `Backend/src/TarotNow.Application/Features/Wallet`.
+- API/controller source cần đối chiếu: `Backend/src/TarotNow.Api` với grep `Wallet`.
+- Infrastructure source cần đối chiếu: `Backend/src/TarotNow.Infrastructure` với repositories/services liên quan `Wallet`.
+- Test/guard source: `Backend/tests/TarotNow.ArchitectureTests/*.cs` và `Backend/tests` grep `Wallet`.
 
 ## 2. Entry points & luồng chính
 
-- API/Command/Query/Route chính: rà soát controller/API và handlers trỏ tới feature `Wallet`.
-- Requested Domain Event: xác định các `*RequestedDomainEvent` và `*RequestedDomainEventHandler` nếu có.
-- Realtime event: chỉ áp dụng nếu feature phát realtime/notification.
-- External integration: rà soát provider/payment/AI/email/storage nếu feature gọi qua Application interface.
+- Commands/Queries: source nằm dưới `Features/Wallet/Commands` và/hoặc `Features/Wallet/Queries` nếu thư mục tồn tại.
+- Requested events/handlers: cần xác minh các file `*RequestedDomainEvent*` trong feature; write command phải đi qua `IInlineDomainEventDispatcher` theo `EventDrivenArchitectureRulesTests.cs`.
+- Realtime/external integration: không mặc định; chỉ áp dụng nếu feature publish notification/realtime/event phụ.
+- Finance/AI/reward integration: có rủi ro cao, phải rà transaction, idempotency và settlement/refund/reward consistency.
 
-## 3. Dependency map
+## 3. Dependency map thực tế
 
-### 3.1 Upstream phụ thuộc vào module này
+### Upstream
 
-- API controllers hoặc application services gọi command/query của `Wallet`.
-- Frontend feature tương ứng nếu có.
-- Domain event handlers hoặc workflows cross-feature nếu có.
+- API controllers hoặc background/event handlers gọi command/query thuộc `Wallet`.
+- Frontend feature tương ứng nếu có route/API contract liên quan.
+- Cross-feature events nếu `Wallet` nhận hoặc phát domain events.
 
-### 3.2 Module này phụ thuộc downstream
+### Downstream
 
-- Application interfaces: repository, provider, cache, transaction coordinator, event publisher.
-- Infrastructure repositories/services: chỉ được truy cập qua Application-owned interface.
-- Shared utilities: validation, mapping, pipeline behaviors, result/error model.
-- Data stores: PostgreSQL transactional state; MongoDB document/read-model nếu module có document; Redis nếu có cache/rate-limit/pubsub.
-
-### 3.3 Ràng buộc kiến trúc
-
-- Clean Architecture boundary: Application không reference concrete Infrastructure hoặc web framework.
-- Event-driven rules: command entry handler phải thin và chỉ dispatch requested domain event khi là write command.
-- Thin handler / thin route rules: controller không chứa orchestration nghiệp vụ hoặc side effect phụ.
+- Application interfaces: repository/provider/cache/transaction/event publisher abstractions được inject trong handlers.
+- Infrastructure: implementation trong `Backend/src/TarotNow.Infrastructure` phải chỉ được gọi qua Application-owned interfaces.
+- Data stores: xác minh bằng `ApplicationDbContext.cs`, `MongoDbContext.cs`, `database/postgresql/schema.sql`, `database/mongodb/schema.md`.
 
 ## 4. Dữ liệu & trạng thái
 
-- Entity/Document chính: xác định từ Domain entities, EF configs, Mongo documents liên quan `Wallet`.
-- Transaction boundary: review `CommandTransactionBehavior` và transaction coordinator nếu state mutation quan trọng.
-- Idempotency key path: Bắt buộc rà soát idempotency key path vì module có finance/quota/AI/reward concern.
-- Outbox/realtime bridge path: Bắt buộc rà outbox/realtime bridge path.
+Evidence dữ liệu cụ thể: PostgreSQL wallet_transactions; canonical MoneyChangedDomainEvent required by architecture rules.
 
-## 5. Frontend contract (nếu áp dụng)
 
-- public.ts exports: đối chiếu `Frontend/src/features` nếu có feature tương ứng.
-- App route wrapper: route chỉ nên composition, không chứa business orchestration.
-- i18n keys: user-facing text phải có VI/EN/ZH khi liên quan UI.
-- Prefetch/hydration/guard liên quan: rà query key và SSR prefetch nếu flow hiển thị server state.
+- PostgreSQL: bắt buộc rà các bảng finance/transactional liên quan.
+- MongoDB: rà collection document/read-model nếu feature lưu hồ sơ, messages, reading sessions, community hoặc gamification documents.
+- Redis/cache/pubsub: rà nếu feature dùng cache/rate-limit/pubsub.
+- Transaction/idempotency/outbox: bắt buộc review vì module thuộc vùng finance/AI/reward/realtime.
+
+## 5. Boundary và guard
+
+- Clean Architecture: `ArchitectureBoundariesTests.cs`.
+- Event-driven command model: `EventDrivenArchitectureRulesTests.cs`.
+- API/config/code quality: `ApiAndConfigurationStandardsTests.cs`, `CodeQualityRulesTests.cs`.
+- Rule review: controller không orchestration nghiệp vụ; command handler mỏng; side effects qua event/outbox/handler.
 
 ## 6. Test coverage hiện tại
 
-- Architecture tests liên quan: `ArchitectureBoundariesTests.cs`, `EventDrivenArchitectureRulesTests.cs`, `CodeQualityRulesTests.cs`.
-- Unit/Integration tests liên quan: tìm trong `Backend/tests/TarotNow.Application.UnitTests`, `TarotNow.Infrastructure.*Tests`, `TarotNow.Api.IntegrationTests`.
-- Gaps: ghi rõ command/query/event nào chưa có test hoặc chưa có architecture evidence.
+- Architecture tests: dùng toàn cục cho mọi backend feature.
+- Feature tests: tìm bằng `find Backend/tests -type f | grep -E 'Wallet|Architecture|EventDriven'`.
+- Không tìm thấy evidence trực tiếp: ghi rõ từng command/query/event chưa có test khi audit chi tiết.
 
 ## 7. Rủi ro kiến trúc
 
-- P0: vi phạm boundary, thiếu idempotency/transaction khi có finance/quota/AI, side effect trực tiếp sai layer.
-- P1: coupling chéo module, test coverage thiếu cho flow chính, event/outbox path chưa rõ.
-- P2: tài liệu/evidence thiếu, naming hoặc cấu trúc chưa đồng nhất.
+- P0: boundary/event-driven violation; thiếu transaction/idempotency/money event hoặc double-spend.
+- P1: coupling chéo module, thiếu integration test cho luồng chính, outbox/realtime path chưa rõ.
+- P2: evidence docs thiếu hoặc naming/path không đồng bộ.
 
-## 8. Output review chuẩn
+## 8. Kết luận review
 
-- Kết luận: Pass / Pass có điều kiện / Cần remediation.
-- Evidence: liệt kê file code/test/guard đã đọc.
-- Việc cần làm ưu tiên cao: chỉ ghi item có impact kiến trúc.
-- Việc theo dõi sau: gap P1/P2 hoặc câu hỏi cần owner xác nhận.
+- Mức độ phù hợp kiến trúc: cần audit chi tiết theo source files trong `Features/Wallet`; khung review này đã neo đúng source và guard.
+- Evidence quan trọng: `Features/Wallet`, architecture tests, Infrastructure persistence/repositories, API controllers.
+- Việc cần làm ưu tiên cao: điền command/query/event/test cụ thể khi review PR hoặc module deep dive.
+- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.

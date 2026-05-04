@@ -1,68 +1,62 @@
 # FE Wallet
 
-## 1. Phạm vi
+## 1. Phạm vi source đã rà
 
-- Mục tiêu nghiệp vụ: review frontend feature `Wallet`.
-- Module liên quan: `Frontend/src/features/wallet` nếu tồn tại, route trong `Frontend/src/app/[locale]`, shared/i18n liên quan.
-- In scope: route composition, public API boundary, server state, i18n, accessibility cơ bản, guard scripts.
-- Out of scope: refactor UI ngoài phạm vi review.
+- Feature source: `Frontend/src/features/wallet`.
+- Public export: `Frontend/src/features/wallet/public.ts` nếu tồn tại.
+- App routes cần đối chiếu: `Frontend/src/app/[locale]` grep `wallet` hoặc route nghiệp vụ tương ứng.
+- API route proxy/action source: `Frontend/src/app/api` và feature server actions nếu có.
+- Guards: `Frontend/scripts/check-clean-architecture.mjs`, `check-component-size.mjs`, `check-hook-action-size.mjs`, `check-auth-fail-closed.mjs`.
 
 ## 2. Entry points & luồng chính
 
-- API/Command/Query/Route chính: xác định page/layout/API route gọi feature `Wallet`.
-- Requested Domain Event (nếu có): áp dụng gián tiếp qua backend command/API contract.
-- Realtime event (nếu có): rà subscription, SignalR/client bridge hoặc notification channel.
-- External integration (nếu có): rà browser API, payment redirect, upload, analytics hoặc provider SDK nếu feature dùng.
+- Route/page/layout: xác định bằng `find Frontend/src/app -type f | grep -E 'wallet|wallet'`.
+- Feature public surface: `Frontend/src/features/wallet/public.ts` là boundary ưu tiên cho app imports.
+- Components/hooks/actions: nằm trong `Frontend/src/features/wallet` theo cấu trúc hiện tại.
+- Backend/API contract: đi qua app API route, server action hoặc shared API client; không bypass auth/security flow.
 
-## 3. Dependency map
+## 3. Dependency map thực tế
 
-### 3.1 Upstream phụ thuộc vào module này
+### Upstream
 
-- App Router page/layout hoặc shared prefetch runner import feature `Wallet`.
-- Feature khác import qua `public.ts` nếu có cross-feature flow.
+- App Router page/layout/API route import feature `wallet`.
+- Shared prefetch runner có thể gọi query/action của feature nếu SSR hydration cần server state.
 
-### 3.2 Module này phụ thuộc downstream
+### Downstream
 
-- Application interfaces: frontend actions, query hooks, route handlers hoặc gateways.
-- Infrastructure repositories/services: không dùng concrete backend; chỉ qua API/action/gateway pattern hiện có.
-- Shared utilities: UI primitives, query client, auth/session, i18n, navigation, prefetch.
-- Data stores: TanStack Query cho server state, Zustand chỉ cho local UI state nếu cần.
-
-### 3.3 Ràng buộc kiến trúc
-
-- Clean Architecture boundary: app route import qua `@/features/*/public` khi có public export.
-- Event-driven rules: UI không bypass backend command/event contract cho side effect nghiệp vụ.
-- Thin handler / thin route rules: `page.tsx` và `layout.tsx` chỉ composition, orchestration nằm trong feature/hook.
+- Shared utilities: query client, auth/session, i18n, UI primitives, prefetch/hydration.
+- Backend contracts: API endpoints/commands tương ứng ở backend feature liên quan.
+- State: TanStack Query cho server state; Zustand chỉ cho local UI state khi có evidence.
 
 ## 4. Dữ liệu & trạng thái
 
-- Entity/Document chính: backend DTO/domain contract mà UI consume.
-- Transaction boundary: thuộc backend; UI cần không duplicate settlement hoặc optimistic mutation nguy hiểm.
-- Idempotency key path (nếu có): rà nếu UI khởi tạo command finance/AI/payment.
-- Outbox/realtime bridge path (nếu có): rà nếu UI hiển thị realtime state hoặc notification.
+- Server state: rà query keys/hooks/actions trong feature.
+- Local UI state: rà component/hook trong `Frontend/src/features/wallet`.
+- i18n: đối chiếu `Frontend/messages/vi`, `Frontend/messages/en`, `Frontend/messages/zh`.
+- Realtime/payment/idempotency: bắt buộc rà vì feature có finance/reward/realtime-facing flow.
 
-## 5. Frontend contract
+## 5. Boundary và guard
 
-- public.ts exports: xác định `Frontend/src/features/*/public.ts` liên quan `Wallet`.
-- App route wrapper: route phải mỏng và có boundary import rõ.
-- i18n keys: đối chiếu `Frontend/messages/vi`, `Frontend/messages/en`, `Frontend/messages/zh`.
-- Prefetch/hydration/guard liên quan: đối chiếu `Frontend/src/shared/server/prefetch` và query key tiêu thụ trong component.
+- Thin route: `page.tsx`/`layout.tsx` chỉ composition, orchestration nằm trong feature/hook/action.
+- Public API: app route nên import qua `@/features/*/public` khi có.
+- Guard scripts: clean architecture, component size, hook/action size, auth fail-closed, image policy, risk coverage.
+- Accessibility/i18n: touched interactive UI cần accessible name/focus/error association; copy mới cần localization.
 
 ## 6. Test coverage hiện tại
 
-- Architecture tests liên quan: frontend guard scripts trong `Frontend/scripts`.
-- Unit/Integration tests liên quan: tìm trong `Frontend/tests`, colocated tests hoặc Playwright nếu có.
-- Gaps: route thiếu test, hydration mismatch risk, hardcoded copy, accessibility hoặc size guard gần vượt budget.
+- Guard coverage: `Frontend/scripts/*.mjs`.
+- Feature tests: tìm trong `Frontend/tests` hoặc colocated tests với grep `wallet`.
+- Không tìm thấy evidence trực tiếp: ghi rõ route/component/action chưa có test khi audit chi tiết.
 
 ## 7. Rủi ro kiến trúc
 
-- P0: auth fail-open, route bypass boundary gây side effect nhạy cảm, hardcoded secret/token, unsafe browser handling.
-- P1: app route quá dày, import sâu vào feature internals, i18n thiếu, duplicate fetch/hydration mismatch.
-- P2: component/hook gần vượt budget, evidence review chưa đủ.
+- P0: auth fail-open, token/secret exposure, payment/reward command duplicate, route bypass backend security.
+- P1: route quá dày, import sâu vào feature internals, prefetch/hydration mismatch, thiếu i18n.
+- P2: component/hook gần vượt budget, evidence test chưa đủ.
 
-## 8. Output review chuẩn
+## 8. Kết luận review
 
-- Kết luận: Pass / Pass có điều kiện / Cần remediation.
-- Evidence: liệt kê route, public export, hook/component, i18n và guard đã đọc.
-- Việc cần làm ưu tiên cao: item P0/P1 có owner rõ.
-- Việc theo dõi sau: cleanup hoặc tài liệu hóa gap P2.
+- Mức độ phù hợp kiến trúc: file đã neo đúng source feature `wallet` và guard frontend; cần audit từng route/action để kết luận pass cuối cùng.
+- Evidence quan trọng: `Frontend/src/features/wallet`, `Frontend/src/app/[locale]`, `Frontend/src/shared/server/prefetch`, `Frontend/messages`, `Frontend/scripts`.
+- Việc cần làm ưu tiên cao: điền route/action/test cụ thể trong review PR module.
+- Follow-up: không suy đoán nếu chưa thấy evidence trực tiếp.

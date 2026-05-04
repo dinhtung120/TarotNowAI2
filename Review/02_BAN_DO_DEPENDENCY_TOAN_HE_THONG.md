@@ -1,38 +1,54 @@
 # Bản đồ dependency toàn hệ thống
 
-## Backend layer dependency
+## Backend compile-time graph
 
 ```text
-Domain <- Application <- Infrastructure <- API
+TarotNow.Domain <- TarotNow.Application <- TarotNow.Infrastructure
+                         ^                       ^
+                         |                       |
+                     TarotNow.Api ---------------+
 ```
 
-- `Backend/src/TarotNow.Domain`: entity, value object, domain event contract, invariant.
-- `Backend/src/TarotNow.Application`: CQRS entry point, requested domain event handler, Application-owned interface.
-- `Backend/src/TarotNow.Infrastructure`: implementation cho persistence, cache, provider, outbox, Redis Pub/Sub, background worker.
-- `Backend/src/TarotNow.Api`: controller, composition, middleware, SignalR bridge wiring.
+Evidence cần đối chiếu:
+- `Backend/src/TarotNow.Domain/TarotNow.Domain.csproj`
+- `Backend/src/TarotNow.Application/TarotNow.Application.csproj`
+- `Backend/src/TarotNow.Infrastructure/TarotNow.Infrastructure.csproj`
+- `Backend/src/TarotNow.Api/TarotNow.Api.csproj`
+- `Backend/tests/TarotNow.ArchitectureTests/ArchitectureBoundariesTests.cs`
 
-## Backend command/event flow chuẩn
+## Backend write flow chuẩn
 
 ```text
-Controller -> MediatR Command -> thin CommandHandler -> IInlineDomainEventDispatcher -> RequestedDomainEventHandler -> repository/provider/transaction -> DomainEvent/Outbox -> async handler/worker/bridge
+API Controller -> MediatR Command -> thin CommandHandler -> IInlineDomainEventDispatcher -> *RequestedDomainEventHandler -> Application interfaces -> Infrastructure implementations -> DomainEvent/Outbox/Redis bridge
 ```
 
-## Frontend dependency
+Evidence:
+- Interface inline dispatcher: `Backend/src/TarotNow.Application/Interfaces/IInlineDomainEventDispatcher.cs`.
+- Architecture guard: `Backend/tests/TarotNow.ArchitectureTests/EventDrivenArchitectureRulesTests.cs`.
+- Outbox/background infrastructure: `Backend/src/TarotNow.Infrastructure/BackgroundJobs/Outbox`.
+- Redis publisher contract: `Backend/src/TarotNow.Application/Interfaces/IRedisPublisher.cs`.
+
+## Frontend graph
 
 ```text
-app/[locale] route -> features/*/public.ts -> feature presentation/application/domain -> shared primitives/lib
+Frontend/src/app/[locale] -> Frontend/src/features/*/public.ts -> feature application/domain/presentation -> Frontend/src/shared
 ```
 
-Điểm cần review kỹ: `shared/server/prefetch` có thể điều phối nhiều feature để SSR prefetch; cần xác nhận coupling này là chủ đích và không biến shared thành nơi chứa business logic feature-specific.
+Evidence:
+- Feature public exports: `Frontend/src/features/*/public.ts`.
+- App routes: `Frontend/src/app/[locale]`.
+- SSR prefetch: `Frontend/src/shared/server/prefetch`.
+- Guard: `Frontend/scripts/check-clean-architecture.mjs`.
 
-## Data dependency
+## Data graph
 
-- PostgreSQL: transactional source-of-truth cho finance, escrow, subscription, entitlement và state cần ACID.
-- MongoDB: document/read-model cho reading sessions, chat messages, card catalog, notification/profile tùy module.
-- Redis: cache, rate limit, pub/sub, presence, coordination.
+- PostgreSQL: ACID write model cho identity, finance, entitlement, admin/legal, AI request/audit, gacha/inventory transactional state. Evidence: `ApplicationDbContext.cs`, `database/postgresql/schema.sql`.
+- MongoDB: document/read-model/high-volume cho reading sessions, chat, reader profiles/requests, notifications, community, gamification documents, upload sessions. Evidence: `MongoDbContext.cs`, `database/mongodb/schema.md`.
+- Redis: cache, rate-limit/coordination, realtime Pub/Sub, production-required cache. Evidence: `DependencyInjection.Cache.cs`, `IRedisPublisher.cs`.
 
-## Ops dependency
+## Ops graph
 
-- Docker compose điều phối frontend, backend, postgres, mongodb, redis, reverse proxy.
-- Deploy scripts chịu trách nhiệm bootstrap, smoke, rollback, backup, restore.
-- GitHub workflows cần được review cùng với smoke path và rollback path.
+- Local/dev services: `docker-compose.yml`.
+- Production service graph and healthchecks: `docker-compose.prod.yml`.
+- Bootstrap/smoke/rollback/backup/restore: `deploy/scripts/*`.
+- CI/CD: `.github/workflows/cd-main-3ec2.yml`, `cd-fast-deploy.yml`, `cd-fe-only-deploy.yml`.
