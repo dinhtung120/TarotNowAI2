@@ -23,7 +23,11 @@ export default function ChatMessagesPanel({
 }: ChatMessagesPanelProps) {
   return (
     <div ref={scrollRef} className={cn('flex-1 space-y-4 overflow-y-auto bg-black/5 px-3 py-3')}>
-      {loading ? <div className={cn('flex h-full items-center justify-center')}><Loader2 className={cn('h-5 w-5 animate-spin tn-text-secondary')} /></div> : null}
+      {loading && messages.length === 0 ? (
+        <div className={cn('flex h-full items-center justify-center')}>
+          <Loader2 className={cn('h-5 w-5 animate-spin tn-text-secondary')} />
+        </div>
+      ) : null}
 
       {!loading && hasMore ? (
         <div className={cn('flex justify-center py-2')}>

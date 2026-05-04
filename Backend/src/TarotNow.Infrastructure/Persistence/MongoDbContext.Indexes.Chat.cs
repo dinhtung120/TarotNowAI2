@@ -62,6 +62,14 @@ public partial class MongoDbContext
 
         SafeCreateIndex(ChatMessages, new CreateIndexModel<ChatMessageDocument>(
             Builders<ChatMessageDocument>.IndexKeys
+                .Ascending(m => m.ConversationId)
+                .Ascending(m => m.IsDeleted)
+                .Descending(m => m.Id),
+            new CreateIndexOptions { Name = "idx_conversationid_isdeleted_id_desc" }));
+        // Hỗ trợ cursor pagination theo _id desc, khớp với truy vấn lịch sử tin nhắn.
+
+        SafeCreateIndex(ChatMessages, new CreateIndexModel<ChatMessageDocument>(
+            Builders<ChatMessageDocument>.IndexKeys
                 .Ascending(m => m.SenderId)
                 .Descending(m => m.CreatedAt),
             new CreateIndexOptions { Name = "idx_senderid_createdat_desc" }));

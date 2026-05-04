@@ -52,10 +52,10 @@ public partial class ListMessagesQueryHandler : IRequestHandler<ListMessagesQuer
             cancellationToken);
 
         // Enrich conversation để client không cần gọi thêm API phụ trợ.
-        await EnrichParticipantProfilesAsync(conversation, cancellationToken);
-        await EnrichReaderStatusAndEscrowAsync(conversation, cancellationToken);
-        await EnrichConversationReviewStateAsync(conversation, request.RequesterId.ToString(), cancellationToken);
-
+        await Task.WhenAll(
+            EnrichParticipantProfilesAsync(conversation, cancellationToken),
+            EnrichReaderStatusAndEscrowAsync(conversation, cancellationToken),
+            EnrichConversationReviewStateAsync(conversation, request.RequesterId.ToString(), cancellationToken));
         return new ListMessagesResult
         {
             Messages = items,

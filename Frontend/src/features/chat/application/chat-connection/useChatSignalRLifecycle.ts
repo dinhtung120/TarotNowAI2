@@ -144,9 +144,11 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
   let conversationInvalidateTimeout: ReturnType<typeof setTimeout> | null = null;
   initializingRef.current = true;
 
-  if (initialConnectAttemptRef.current === 0) {
+  const isFirstAttempt = initialConnectAttemptRef.current === 0;
+  if (isFirstAttempt) {
    resetForConversation(getCachedConversation(queryClient, conversationId));
    setTypingUserId(null);
+   void loadInitialRef.current(false);
   }
 
   // Lấy cấu hình ổn định từ ref.
@@ -298,15 +300,19 @@ export function useChatSignalRLifecycle(options: UseChatSignalRLifecycleOptions)
     initialConnectAttemptRef.current = 0;
     cancelWakeup();
     
-    // Join group và đồng bộ dữ liệu ban đầu
+    // Join group và đồng bộ dữ liệu realtime
     await hubConnection.invoke('JoinConversation', conversationId);
-    await loadInitialRef.current(false);
+    if (!isFirstAttempt) {
+     await loadInitialRef.current(false);
+    }
     await markReadRef.current();
    } catch (error) {
     if (!cancelled) {
      logger.warn('[Chat] Connection failed', error, { conversationId });
      // Fallback tải dữ liệu qua REST nếu SignalR thất bại
-     await loadInitialRef.current(false);
+     if (!isFirstAttempt) {
+      await loadInitialRef.current(false);
+     }
      const retryIndex = Math.min(
       initialConnectAttemptRef.current + 1,
       Math.max(0, schedule.length - 1),

@@ -207,6 +207,7 @@ describe('useChatSignalRLifecycle', () => {
   });
 
   expect(loadInitial).toHaveBeenCalledWith(false);
+  expect(loadInitial).toHaveBeenCalledTimes(1);
   expect(scheduleWakeup).toHaveBeenCalled();
   expect(resetForConversation).toHaveBeenCalledWith(null);
  });
