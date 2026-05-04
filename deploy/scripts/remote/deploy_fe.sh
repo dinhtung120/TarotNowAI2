@@ -290,9 +290,5 @@ fi
 echo "$FRONTEND_IMAGE_REF" > "$CURRENT_FILE"
 
 # ── Cleanup ──
-echo "[deploy-fe] cleaning up old images"
-# Chỉ dọn image/build cache cũ, không xóa volumes toàn cục.
-docker image prune -f --filter "until=168h"
-docker builder prune -f --filter "until=168h"
 
 echo "[deploy-fe] done"

@@ -114,9 +114,5 @@ if [[ -f "$CURRENT_FILE" ]]; then
 fi
 echo "$BACKEND_IMAGE_REF" > "$CURRENT_FILE"
 
-echo "[deploy-be] cleaning up old images"
-# Chỉ dọn image/build cache cũ, không đụng volumes dùng chung của host.
-docker image prune -f --filter "until=168h"
-docker builder prune -f --filter "until=168h"
 
 echo "[deploy-be] done"
