@@ -2,12 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(gh *)",
-      "Bash(gh run *)",
       "Read(//tmp/**)",
-      "Bash(rg --files \"/Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Application/Services\")",
-      "Bash(rg --files \"/Users/lucifer/Desktop/TarotNowAI2/Backend/src/TarotNow.Infrastructure/BackgroundJobs\")",
-      "Bash(dotnet test *)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(grep *)",
+      "Bash(dotnet *)",
+      "Bash(npm *)",
+      "Bash(rg *)",
+      "Bash(git *)"
     ]
   }
 }
