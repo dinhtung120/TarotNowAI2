@@ -131,12 +131,27 @@ jobs:
 
       - name: Build và Push image Backend
         run: |
-          docker build -f Backend/Dockerfile \
+          retry() {
+            local max_attempts="$1"
+            shift
+            local attempt=1
+            until "$@"; do
+              if [[ $attempt -ge $max_attempts ]]; then
+                return 1
+              fi
+              sleep $((attempt * 5))
+              attempt=$((attempt + 1))
+            done
+          }
+
+          retry 4 docker pull "mcr.microsoft.com/dotnet/sdk:10.0"
+          retry 4 docker pull "mcr.microsoft.com/dotnet/aspnet:10.0"
+          retry 4 docker build -f Backend/Dockerfile \
             -t "${{ steps.refs.outputs.backend_image_ref }}" \
             -t "${{ steps.refs.outputs.backend_latest_ref }}" \
             .
-          docker push "${{ steps.refs.outputs.backend_image_ref }}"
-          docker push "${{ steps.refs.outputs.backend_latest_ref }}"
+          retry 4 docker push "${{ steps.refs.outputs.backend_image_ref }}"
+          retry 4 docker push "${{ steps.refs.outputs.backend_latest_ref }}"
 
       - name: Build và Push image Frontend
         run: |
