@@ -122,3 +122,4 @@ build_errors*.txt
 # ---------- Claude Agent Worktrees ----------
 .claude/worktrees/
 .claude/*.local.json
+docs/superpowers
