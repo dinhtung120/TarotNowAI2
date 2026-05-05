@@ -9,17 +9,16 @@ Use this as the short operating guide for Claude Code in this repository. The cu
 3. Event-driven architecture intent in this file.
 4. Other compact rules in this file.
 5. Existing nearby code patterns.
+6. You may reason in English, but you must always communicate with me in Vietnamese
 
 If this file conflicts with an enforced guard, follow the guard and report that the rule needs updating. If there is no guard and nearby code conflicts with this file, ask before introducing a new pattern.
 
 ## 2. Backend architecture core
 
-- Keep Application command entry handlers thin: `IRequestHandler<Command, TResult>` handlers dispatch the requested domain event through `IInlineDomainEventDispatcher` and return its result.
 - Put use-case orchestration in `*RequestedDomainEventHandler` classes using Application-owned abstractions only.
 - Do not inject repositories, infrastructure services, notification services, wallet services, realtime broadcasters, gamification/task services, or other side-effect components into command entry handlers.
 - Secondary side effects such as notifications, emails, realtime broadcasts, leaderboard/gacha/achievement/task updates, telemetry fan-out, and similar work must flow through domain events, outbox messages, event handlers, or Infrastructure workers.
 - Direct controller/API/hub realtime bypasses are critical issues unless an architecture test or explicit allowlist permits them.
-- Chat transport exceptions stay bounded to the current tested/allowlisted patterns; finance, wallet, escrow, quota, and entitlement logic inside chat is not exempt.
 
 ## 3. Clean Architecture boundaries
 
@@ -49,7 +48,6 @@ If this file conflicts with an enforced guard, follow the guard and report that 
 
 ## 6. Frontend architecture and UI rules
 
-- `Frontend/src/app/**/page.tsx` and `layout.tsx` stay thin composition wrappers.
 - App routes should import feature entry points through established public exports such as `@/features/*/public` when available.
 - Keep business/data orchestration outside routes and presentational components; use feature components/hooks for complex UI behavior.
 - Respect the frontend clean-architecture guard, including layer direction, domain purity, client/runtime boundaries, and sensitive EventSource/API path rules.
