@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { applyNotificationReadPatch } from '@/features/notifications/shared/notificationCache';
-import { parseApiError } from '@/shared/gateways/parseApiError';
+import { parseApiError } from '@/features/notifications/shared/gateways/parseApiError';
 import { fetchJsonOrThrow, fetchWithTimeout } from '@/shared/gateways/clientFetch';
 import type { NotificationListResponse } from '@/features/notifications/shared/actions';
 import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';

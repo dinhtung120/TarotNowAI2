@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { useAdminSystemConfigs } from '@/features/admin/system-configs/hooks/useAdminSystemConfigs';
 import type { AdminSystemConfigItem } from '@/features/admin/system-configs/system-config.types';
 import { Button, SectionHeader } from '@/shared/ui';
-import ActionConfirmModal from '@/shared/ui/ActionConfirmModal';
+import ActionConfirmModal from '@/features/admin/shared/ui/ActionConfirmModal';
 import SystemConfigsEditorPanel from '@/features/admin/system-configs/SystemConfigsEditorPanel';
 import SystemConfigsListPanel from '@/features/admin/system-configs/SystemConfigsListPanel';
 

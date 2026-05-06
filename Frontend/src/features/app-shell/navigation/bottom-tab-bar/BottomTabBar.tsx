@@ -3,10 +3,10 @@
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { useChatUnreadNotifications } from "@/features/chat/inbox/hooks/useChatUnreadNotifications";
-import BottomTabBarMainTabs from "@/shared/app-shell/navigation/bottom-tab-bar/BottomTabBarMainTabs";
-import BottomTabBarMenuPanel from "@/shared/app-shell/navigation/bottom-tab-bar/BottomTabBarMenuPanel";
-import { matchesPath } from "@/shared/app-shell/navigation/bottom-tab-bar/config";
-import { useBottomTabBarState } from "@/shared/app-shell/navigation/bottom-tab-bar/useBottomTabBarState";
+import BottomTabBarMainTabs from "@/features/app-shell/shared/app-shell/navigation/bottom-tab-bar/BottomTabBarMainTabs";
+import BottomTabBarMenuPanel from "@/features/app-shell/shared/app-shell/navigation/bottom-tab-bar/BottomTabBarMenuPanel";
+import { matchesPath } from "@/features/app-shell/shared/app-shell/navigation/bottom-tab-bar/config";
+import { useBottomTabBarState } from "@/features/app-shell/shared/app-shell/navigation/bottom-tab-bar/useBottomTabBarState";
 
 export default function BottomTabBar() {
  const tNav = useTranslations("Navigation");

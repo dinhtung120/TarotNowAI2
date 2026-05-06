@@ -2,7 +2,7 @@
 
 import { getServerAccessToken } from '@/shared/gateways/serverAuth';
 import { serverHttpRequest } from '@/shared/gateways/serverHttpClient';
-import { createIdempotentDomainCommandInvoker } from '@/shared/gateways/idempotentDomainCommandInvoker';
+import { createIdempotentDomainCommandInvoker } from '@/features/admin/shared/gateways/idempotentDomainCommandInvoker';
 import { logger } from '@/shared/gateways/logger';
 import { actionFail, actionOk, type ActionResult } from '@/shared/models/actionResult';
 import { AUTH_ERROR } from '@/shared/models/authErrors';

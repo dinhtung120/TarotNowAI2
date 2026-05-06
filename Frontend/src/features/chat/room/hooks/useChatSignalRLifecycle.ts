@@ -10,9 +10,9 @@ import type { QueryClient } from '@tanstack/react-query';
 import type { ChatMessageDto, ConversationDto } from '@/features/chat/shared/actions';
 import { isSameParticipantId } from '@/features/chat/shared/participantId';
 import { listMessages } from '@/features/chat/shared/actions';
-import { ensureRealtimeSession } from '@/shared/gateways/realtimeSessionGuard';
+import { ensureRealtimeSession } from '@/features/chat/shared/gateways/realtimeSessionGuard';
 import { logger } from '@/shared/gateways/logger';
-import { useReconnectWakeup } from '@/shared/hooks/useReconnectWakeup';
+import { useReconnectWakeup } from '@/features/chat/shared/hooks/useReconnectWakeup';
 import { useRuntimePolicies } from '@/shared/hooks/useRuntimePolicies';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 import { createSignalRLogger, getCachedConversation } from './utils';
@@ -65,7 +65,7 @@ function isCriticalConversationEventType(eventType: string) {
 
 async function createHubConnection(reconnectSchedule: number[]) {
  const signalR = await import('@microsoft/signalr');
- const { getSignalRHubUrl } = await import('@/shared/gateways/signalRUrl');
+ const { getSignalRHubUrl } = await import('@/features/chat/shared/gateways/signalRUrl');
  const customLogger = createSignalRLogger({
   error: signalR.LogLevel.Error as LogLevel,
   critical: signalR.LogLevel.Critical as LogLevel,

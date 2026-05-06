@@ -1,4 +1,4 @@
-import LoadingSpinner from '@/shared/ui/LoadingSpinner';
+import LoadingSpinner from '@/app/_shared/ui/LoadingSpinner';
 import { cn } from '@/lib/utils';
 
 export default function AdminRouteLoading() {

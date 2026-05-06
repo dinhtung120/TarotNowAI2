@@ -1,3 +1,3 @@
 export { ResetPasswordPage as default } from '@/features/auth/public';
 
-export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';
+export { generateLocaleMetadata as generateMetadata } from '@/app/_shared/seo/defaultMetadata';

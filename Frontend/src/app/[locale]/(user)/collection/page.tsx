@@ -1,6 +1,6 @@
 import { CollectionPage } from '@/features/collection/public';
-import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
-import { prefetchCollectionPage } from '@/shared/server/prefetch/runners';
+import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/app/_shared/server/prefetch/appQueryDehydrate';
+import { prefetchCollectionPage } from '@/app/_shared/server/prefetch/runners';
 
 export default async function CollectionRoutePage() {
  const state = await dehydrateAppQueries(prefetchCollectionPage);
@@ -12,4 +12,4 @@ export default async function CollectionRoutePage() {
  );
 }
 
-export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';
+export { generateLocaleMetadata as generateMetadata } from '@/app/_shared/seo/defaultMetadata';

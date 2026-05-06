@@ -6,7 +6,7 @@ import ForgotPasswordBackLink from "@/features/auth/recovery/ForgotPasswordBackL
 import { AuthErrorBanner } from "@/features/auth/shared/AuthErrorBanner";
 import { AuthSuccessCard } from "@/features/auth/shared/AuthSuccessCard";
 import { cn } from "@/lib/utils";
-import AuthLayout from "@/shared/app-shell/layout/AuthLayout";
+import AuthLayout from "@/features/auth/shared/app-shell/layout/AuthLayout";
 import { Button, Input } from "@/shared/ui";
 
 export default function ForgotPasswordPage() {

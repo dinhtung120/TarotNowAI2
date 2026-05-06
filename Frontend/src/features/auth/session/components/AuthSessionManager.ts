@@ -8,8 +8,8 @@ import { useAuthStore } from '@/features/auth/session/authStore';
 import type { ActionResult } from '@/shared/models/actionResult';
 import { isTerminalAuthError } from '@/shared/models/authErrors';
 import type { UserProfile } from '@/features/auth/session/types';
-import { getClientSessionSnapshot, invalidateClientSessionSnapshot } from '@/shared/auth/clientSessionSnapshot';
-import { performClientLogoutCleanup } from '@/shared/auth/clientLogoutCleanup';
+import { getClientSessionSnapshot, invalidateClientSessionSnapshot } from '@/features/auth/shared/auth/clientSessionSnapshot';
+import { performClientLogoutCleanup } from '@/features/auth/shared/auth/clientLogoutCleanup';
 import { useOptimizedNavigation } from '@/shared/navigation/useOptimizedNavigation';
 import {
  isAuthlessPath,

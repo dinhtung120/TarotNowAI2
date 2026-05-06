@@ -5,7 +5,7 @@ import { useVerifyEmailPage } from "@/features/auth/verify-email/useVerifyEmailP
 import { AuthErrorBanner } from "@/features/auth/shared/AuthErrorBanner";
 import { VerifyEmailResendButton } from "@/features/auth/verify-email/VerifyEmailResendButton";
 import { cn } from "@/lib/utils";
-import AuthLayout from "@/shared/app-shell/layout/AuthLayout";
+import AuthLayout from "@/features/auth/shared/app-shell/layout/AuthLayout";
 import { Button, Input } from "@/shared/ui";
 
 export default function VerifyEmailPage() {

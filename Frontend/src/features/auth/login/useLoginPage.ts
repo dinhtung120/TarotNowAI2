@@ -7,7 +7,7 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { resolveLoginIdentityPrefill } from '@/features/auth/verify-email/authFlowEmail';
 import { useOptimizedNavigation } from '@/shared/gateways/useOptimizedNavigation';
-import { useAuth } from '@/shared/hooks/useAuth';
+import { useAuth } from '@/features/auth/shared/hooks/useAuth';
 import {
  getLocalStorageItem,
  removeLocalStorageItem,

@@ -9,5 +9,4 @@ export { default as SectionHeader } from "./SectionHeader";
 export { default as Pagination } from "./Pagination";
 export { default as TableStates } from "./TableStates";
 export { default as FilterTabs } from "./FilterTabs";
-export { default as ActionConfirmModal } from "./ActionConfirmModal";
 export { default as StepPagination } from "./StepPagination";

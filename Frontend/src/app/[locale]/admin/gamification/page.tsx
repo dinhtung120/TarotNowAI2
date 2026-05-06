@@ -1,6 +1,6 @@
 import dynamic from 'next/dynamic';
-import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
-import { prefetchAdminGamificationPage } from '@/shared/server/prefetch/runners';
+import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/app/_shared/server/prefetch/appQueryDehydrate';
+import { prefetchAdminGamificationPage } from '@/app/_shared/server/prefetch/runners';
 
 const AdminGamificationClient = dynamic(() =>
  import('@/features/gamification/public').then((m) => m.AdminGamificationClient)

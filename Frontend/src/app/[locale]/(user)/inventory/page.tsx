@@ -1,6 +1,6 @@
 import { InventoryPage } from '@/features/inventory/public';
-import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
-import { prefetchInventoryPage } from '@/shared/server/prefetch/runners';
+import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/app/_shared/server/prefetch/appQueryDehydrate';
+import { prefetchInventoryPage } from '@/app/_shared/server/prefetch/runners';
 
 export default async function InventoryRoutePage() {
  const state = await dehydrateAppQueries(prefetchInventoryPage);
@@ -12,4 +12,4 @@ export default async function InventoryRoutePage() {
  );
 }
 
-export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';
+export { generateLocaleMetadata as generateMetadata } from '@/app/_shared/seo/defaultMetadata';

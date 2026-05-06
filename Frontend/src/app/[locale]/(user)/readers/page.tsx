@@ -1,6 +1,6 @@
 import { ReadersDirectoryPage } from '@/features/reader/public';
-import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
-import { prefetchReadersDirectoryPage } from '@/shared/server/prefetch/runners';
+import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/app/_shared/server/prefetch/appQueryDehydrate';
+import { prefetchReadersDirectoryPage } from '@/app/_shared/server/prefetch/runners';
 
 export default async function ReadersDirectoryRoutePage() {
  const state = await dehydrateAppQueries(prefetchReadersDirectoryPage);
@@ -12,4 +12,4 @@ export default async function ReadersDirectoryRoutePage() {
  );
 }
 
-export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';
+export { generateLocaleMetadata as generateMetadata } from '@/app/_shared/seo/defaultMetadata';

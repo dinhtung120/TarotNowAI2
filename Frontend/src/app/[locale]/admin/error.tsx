@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { useErrorBoundaryLogger } from '@/shared/hooks/useErrorBoundaryLogger';
+import { useErrorBoundaryLogger } from '@/app/_shared/hooks/useErrorBoundaryLogger';
 
 interface AdminErrorProps {
  error: Error & { digest?: string };

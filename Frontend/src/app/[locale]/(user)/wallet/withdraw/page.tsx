@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation';
 import { WalletWithdrawPage } from '@/features/wallet/public';
-import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
-import { prefetchWithdrawPage } from '@/shared/server/prefetch/runners';
-import { requireSessionWithHandshake } from '@/shared/server/auth/sessionHandshake';
+import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/app/_shared/server/prefetch/appQueryDehydrate';
+import { prefetchWithdrawPage } from '@/app/_shared/server/prefetch/runners';
+import { requireSessionWithHandshake } from '@/app/_shared/server/auth/sessionHandshake';
 
 export default async function WithdrawRoutePage({
  params,
@@ -28,4 +28,4 @@ export default async function WithdrawRoutePage({
  );
 }
 
-export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';
+export { generateLocaleMetadata as generateMetadata } from '@/app/_shared/seo/defaultMetadata';

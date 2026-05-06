@@ -1,4 +1,4 @@
-import type { IndexPaginatedList } from '@/shared/models/pagination';
+import type { IndexPaginatedList } from '@/features/wallet/shared/models/pagination';
 
 export interface WalletBalance {
  goldBalance: number;

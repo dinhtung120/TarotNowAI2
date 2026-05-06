@@ -2,8 +2,8 @@ import { getTranslations } from "next-intl/server";
 import { LeaderboardTable } from '@/features/gamification/public';
 import { BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AppQueryHydrationBoundary, dehydrateAppQueries } from "@/shared/server/prefetch/appQueryDehydrate";
-import { prefetchLeaderboardPage } from "@/shared/server/prefetch/runners";
+import { AppQueryHydrationBoundary, dehydrateAppQueries } from "@/app/_shared/server/prefetch/appQueryDehydrate";
+import { prefetchLeaderboardPage } from "@/app/_shared/server/prefetch/runners";
 import { generateLeaderboardMetadata } from "./metadata";
 import { leaderboardPageClasses } from "./pageStyles";
 

@@ -2,7 +2,7 @@
 
 import { OptimizedLink as Link } from '@/shared/navigation/useOptimizedLink';
 import { cn } from '@/lib/utils';
-import { useErrorBoundaryLogger } from '@/shared/hooks/useErrorBoundaryLogger';
+import { useErrorBoundaryLogger } from '@/app/_shared/hooks/useErrorBoundaryLogger';
 
 interface LocaleErrorProps {
  error: Error & { digest?: string };

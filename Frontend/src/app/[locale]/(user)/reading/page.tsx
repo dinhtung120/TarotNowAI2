@@ -1,6 +1,6 @@
 import { ReadingSetupPage } from '@/features/reading/public';
-import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
-import { prefetchReadingSetupPage } from '@/shared/server/prefetch/runners';
+import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/app/_shared/server/prefetch/appQueryDehydrate';
+import { prefetchReadingSetupPage } from '@/app/_shared/server/prefetch/runners';
 
 export default async function ReadingSetupRoutePage() {
  const state = await dehydrateAppQueries(prefetchReadingSetupPage);
@@ -12,4 +12,4 @@ export default async function ReadingSetupRoutePage() {
  );
 }
 
-export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';
+export { generateLocaleMetadata as generateMetadata } from '@/app/_shared/seo/defaultMetadata';

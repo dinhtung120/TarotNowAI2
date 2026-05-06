@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation';
 import { ProfileReaderSettingsPage } from '@/features/profile/public';
-import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
-import { prefetchProfileReaderSettingsPage } from '@/shared/server/prefetch/runners';
-import { requireSessionWithHandshake } from '@/shared/server/auth/sessionHandshake';
+import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/app/_shared/server/prefetch/appQueryDehydrate';
+import { prefetchProfileReaderSettingsPage } from '@/app/_shared/server/prefetch/runners';
+import { requireSessionWithHandshake } from '@/app/_shared/server/auth/sessionHandshake';
 
 export default async function ProfileReaderRoutePage({
  params,
@@ -28,4 +28,4 @@ export default async function ProfileReaderRoutePage({
  );
 }
 
-export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';
+export { generateLocaleMetadata as generateMetadata } from '@/app/_shared/seo/defaultMetadata';

@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
-import LoadingSpinner from "@/shared/ui/LoadingSpinner";
+import LoadingSpinner from "@/app/_shared/ui/LoadingSpinner";
 
 const ReadingSessionPage = dynamic(
  () => import('@/features/reading/public').then((m) => m.ReadingSessionPage),
@@ -15,4 +15,4 @@ export default function ReadingSessionRoutePage() {
  );
 }
 
-export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';
+export { generateLocaleMetadata as generateMetadata } from '@/app/_shared/seo/defaultMetadata';

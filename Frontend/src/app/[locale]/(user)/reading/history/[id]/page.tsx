@@ -1,6 +1,6 @@
 import { ReadingHistoryDetailPage } from '@/features/reading/public';
-import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
-import { prefetchReadingHistoryDetailPage } from '@/shared/server/prefetch/runners';
+import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/app/_shared/server/prefetch/appQueryDehydrate';
+import { prefetchReadingHistoryDetailPage } from '@/app/_shared/server/prefetch/runners';
 
 export default async function ReadingHistoryDetailRoutePage({
  params,
@@ -17,4 +17,4 @@ export default async function ReadingHistoryDetailRoutePage({
  );
 }
 
-export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';
+export { generateLocaleMetadata as generateMetadata } from '@/app/_shared/seo/defaultMetadata';

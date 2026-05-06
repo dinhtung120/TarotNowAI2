@@ -8,7 +8,7 @@ import { AuthErrorBanner } from '@/features/auth/shared/AuthErrorBanner';
 import RegisterConsentField from '@/features/auth/register/RegisterConsentField';
 import RegisterIdentityFields from '@/features/auth/register/RegisterIdentityFields';
 import RegisterPasswordFields from '@/features/auth/register/RegisterPasswordFields';
-import AuthLayout from '@/shared/app-shell/layout/AuthLayout';
+import AuthLayout from '@/features/auth/shared/app-shell/layout/AuthLayout';
 import { Button } from '@/shared/ui';
 import { cn } from '@/lib/utils';
 

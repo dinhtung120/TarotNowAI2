@@ -2,7 +2,7 @@
 
 import { AlertTriangle } from "lucide-react";
 import type { DepositPromotion } from "@/features/admin/promotions/actions";
-import { ActionConfirmModal } from "@/shared/ui";
+import ActionConfirmModal from "@/features/admin/shared/ui/ActionConfirmModal";
 import { useAdminPromotions } from "@/features/admin/promotions/hooks/useAdminPromotions";
 import { AdminPromotionCreateForm, AdminPromotionsHeader, AdminPromotionsList } from "./components";
 import { cn } from "@/lib/utils";

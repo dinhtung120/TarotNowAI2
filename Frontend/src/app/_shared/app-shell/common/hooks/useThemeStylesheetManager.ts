@@ -1,0 +1,17 @@
+'use client';
+
+import { useEffect } from 'react';
+import { DEFAULT_THEME, resolveTheme, type ThemeId } from '@/app/_shared/models/theme';
+import { applyTheme, resolveClientTheme } from '@/app/_shared/theme/clientTheme';
+
+interface UseThemeStylesheetManagerArgs {
+  initialTheme: ThemeId;
+}
+
+export function useThemeStylesheetManager({ initialTheme }: UseThemeStylesheetManagerArgs) {
+  useEffect(() => {
+    const fallbackTheme = resolveTheme(initialTheme, DEFAULT_THEME);
+    const resolvedTheme = resolveClientTheme(fallbackTheme);
+    applyTheme(resolvedTheme);
+  }, [initialTheme]);
+}

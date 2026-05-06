@@ -8,7 +8,7 @@ import {
 } from '@/features/admin/public';
 import { AuthBootstrap } from '@/features/auth/public';
 import { ADMIN_CLIENT_NAMESPACES, pickClientMessages } from '@/i18n/clientMessages';
-import { requireSessionWithHandshake } from '@/shared/server/auth/sessionHandshake';
+import { requireSessionWithHandshake } from '@/app/_shared/server/auth/sessionHandshake';
 
 interface AdminLayoutProps {
  children: ReactNode;
@@ -57,4 +57,4 @@ export default async function AdminLayout({ children, params }: AdminLayoutProps
  );
 }
 
-export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';
+export { generateLocaleMetadata as generateMetadata } from '@/app/_shared/seo/defaultMetadata';

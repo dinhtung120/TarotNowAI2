@@ -14,4 +14,4 @@ export default async function AuthLayout({ children }: AuthLayoutProps) {
  return <NextIntlClientProvider messages={authMessages}>{children}</NextIntlClientProvider>;
 }
 
-export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';
+export { generateLocaleMetadata as generateMetadata } from '@/app/_shared/seo/defaultMetadata';

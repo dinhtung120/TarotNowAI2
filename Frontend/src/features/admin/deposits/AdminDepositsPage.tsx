@@ -1,7 +1,7 @@
 "use client";
 
 import { ThumbsDown, ThumbsUp } from "lucide-react";
-import { ActionConfirmModal } from "@/shared/ui";
+import ActionConfirmModal from "@/features/admin/shared/ui/ActionConfirmModal";
 import { useAdminDeposits } from "@/features/admin/deposits/hooks/useAdminDeposits";
 import { AdminDepositsHeader, AdminDepositsSummary, AdminDepositsTable } from "./components";
 import { getAdminDepositsPageLabels } from "./useAdminDepositsPageLabels";

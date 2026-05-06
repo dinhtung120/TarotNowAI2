@@ -1,6 +1,6 @@
 import { GachaHistoryPage } from '@/features/gacha/public';
-import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
-import { prefetchGachaHistoryPage } from '@/shared/server/prefetch/runners';
+import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/app/_shared/server/prefetch/appQueryDehydrate';
+import { prefetchGachaHistoryPage } from '@/app/_shared/server/prefetch/runners';
 
 export default async function GachaHistoryRoutePage() {
   const state = await dehydrateAppQueries(prefetchGachaHistoryPage);
@@ -12,4 +12,4 @@ export default async function GachaHistoryRoutePage() {
  );
 }
 
-export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';
+export { generateLocaleMetadata as generateMetadata } from '@/app/_shared/seo/defaultMetadata';

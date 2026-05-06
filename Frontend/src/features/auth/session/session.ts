@@ -4,7 +4,7 @@ import type { UserProfile } from '@/features/auth/session/types';
 import { actionFail, actionOk, type ActionResult } from '@/shared/models/actionResult';
 import { AUTH_ERROR } from '@/shared/models/authErrors';
 import { AUTH_HEADER } from '@/shared/gateways/authConstants';
-import { getOrCreateDeviceId } from '@/shared/gateways/deviceId';
+import { getOrCreateDeviceId } from '@/features/auth/shared/gateways/deviceId';
 
 interface LoginActionPayload {
  user: UserProfile;

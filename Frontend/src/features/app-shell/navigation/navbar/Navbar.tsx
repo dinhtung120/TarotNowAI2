@@ -5,14 +5,14 @@ import { useShallow } from 'zustand/react/shallow';
 import { useTranslations } from 'next-intl';
 import { usePathname } from '@/i18n/routing';
 import { useAuthStore } from '@/features/auth/session/authStore';
-import { useNavbarMenuState } from '@/shared/hooks/useNavbarMenuState';
+import { useNavbarMenuState } from '@/features/app-shell/shared/hooks/useNavbarMenuState';
 import { useChatRealtimeSync } from '@/features/chat/realtime/useChatRealtimeSync';
 import { useChatUnreadNotifications } from '@/features/chat/inbox/hooks/useChatUnreadNotifications';
-import NavbarBrandSection from '@/shared/app-shell/navigation/navbar/NavbarBrandSection';
+import NavbarBrandSection from '@/features/app-shell/shared/app-shell/navigation/navbar/NavbarBrandSection';
 import { NavbarMobileMenu } from '@/features/app-shell/navigation/navbar/NavbarMobileMenu';
 import NavbarRightSection from '@/features/app-shell/navigation/navbar/NavbarRightSection';
 import { getAvatarMenuItems, NAV_LINKS, shouldHideNavbar } from '@/shared/app-shell/navigation/navbar/config';
-import { useNavbarLogout } from '@/shared/app-shell/navigation/navbar/useNavbarLogout';
+import { useNavbarLogout } from '@/features/app-shell/shared/app-shell/navigation/navbar/useNavbarLogout';
 import { useOptimizedNavigation } from '@/shared/navigation/useOptimizedNavigation';
 import {
  normalizePathname,

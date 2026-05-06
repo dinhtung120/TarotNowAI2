@@ -4,11 +4,11 @@ import { getMessages } from 'next-intl/server';
 import { AppNavbar, AuthBootstrap } from '@/features/auth/public';
 import { UserLayout } from '@/features/app-shell/public';
 import { WalletStoreBridge } from '@/features/wallet/public';
-import { UserSegmentMainSkeleton } from '@/shared/app-shell/loading/segment-skeletons';
-import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
-import { prefetchUserSegmentShell } from '@/shared/server/prefetch/runners';
+import { UserSegmentMainSkeleton } from '@/app/_shared/app-shell/loading/segment-skeletons';
+import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/app/_shared/server/prefetch/appQueryDehydrate';
+import { prefetchUserSegmentShell } from '@/app/_shared/server/prefetch/runners';
 import { pickClientMessages, USER_CLIENT_NAMESPACES } from '@/i18n/clientMessages';
-import { requireSessionWithHandshake } from '@/shared/server/auth/sessionHandshake';
+import { requireSessionWithHandshake } from '@/app/_shared/server/auth/sessionHandshake';
 
 interface UserSegmentLayoutProps {
  children: ReactNode;
@@ -42,4 +42,4 @@ export default async function UserSegmentLayout({ children, params }: UserSegmen
  );
 }
 
-export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';
+export { generateLocaleMetadata as generateMetadata } from '@/app/_shared/seo/defaultMetadata';

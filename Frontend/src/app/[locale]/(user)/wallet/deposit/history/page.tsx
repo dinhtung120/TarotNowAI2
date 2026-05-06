@@ -1,6 +1,6 @@
 import { WalletDepositHistoryPage } from '@/features/wallet/public';
-import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
-import { prefetchDepositHistoryPage } from '@/shared/server/prefetch/runners';
+import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/app/_shared/server/prefetch/appQueryDehydrate';
+import { prefetchDepositHistoryPage } from '@/app/_shared/server/prefetch/runners';
 
 export default async function DepositHistoryRoutePage() {
  const state = await dehydrateAppQueries(prefetchDepositHistoryPage);
@@ -12,4 +12,4 @@ export default async function DepositHistoryRoutePage() {
  );
 }
 
-export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';
+export { generateLocaleMetadata as generateMetadata } from '@/app/_shared/seo/defaultMetadata';

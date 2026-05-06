@@ -1,5 +1,5 @@
 import { LoginPage } from '@/features/auth/public';
-import { redirectAuthenticatedAuthEntry } from '@/shared/server/auth/redirectAuthenticatedAuthEntry';
+import { redirectAuthenticatedAuthEntry } from '@/app/_shared/server/auth/redirectAuthenticatedAuthEntry';
 
 export default async function LoginRoutePage({
  params,
@@ -12,4 +12,4 @@ export default async function LoginRoutePage({
  return <LoginPage />;
 }
 
-export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';
+export { generateLocaleMetadata as generateMetadata } from '@/app/_shared/seo/defaultMetadata';

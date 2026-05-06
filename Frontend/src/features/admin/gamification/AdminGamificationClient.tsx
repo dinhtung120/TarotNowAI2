@@ -8,7 +8,7 @@ import { AdminGamificationTabs } from '@/features/admin/gamification/components/
 import { AdminQuestTable } from '@/features/admin/gamification/components/AdminQuestTable';
 import { AdminTitleTable } from '@/features/admin/gamification/components/AdminTitleTable';
 import { cn } from "@/lib/utils";
-import ActionConfirmModal from "@/shared/ui/ActionConfirmModal";
+import ActionConfirmModal from "@/features/admin/shared/ui/ActionConfirmModal";
 
 export default function AdminGamificationClient() {
  const state = useAdminGamificationClientState();

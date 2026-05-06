@@ -1,5 +1,5 @@
 import dynamic from 'next/dynamic';
-import AdminRouteLoadingFallback from '@/shared/app-shell/loading/AdminRouteLoadingFallback';
+import AdminRouteLoadingFallback from '@/app/_shared/app-shell/loading/AdminRouteLoadingFallback';
 
 const AdminPromotionsPage = dynamic(
  () => import('@/features/admin/public').then((m) => m.AdminPromotionsPage),
@@ -12,4 +12,4 @@ export default function AdminPromotionsRoutePage() {
  return <AdminPromotionsPage />;
 }
 
-export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';
+export { generateLocaleMetadata as generateMetadata } from '@/app/_shared/seo/defaultMetadata';

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getInitialMetadata } from '@/shared/actions/metadata';
+import { getInitialMetadata } from '@/app/_shared/actions/metadata';
 import { AUTH_ERROR } from '@/shared/models/authErrors';
 
 export async function GET() {

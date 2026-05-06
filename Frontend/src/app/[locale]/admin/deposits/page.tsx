@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic';
-import AdminRouteLoadingFallback from '@/shared/app-shell/loading/AdminRouteLoadingFallback';
-import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
-import { prefetchAdminDepositsPage } from '@/shared/server/prefetch/runners';
+import AdminRouteLoadingFallback from '@/app/_shared/app-shell/loading/AdminRouteLoadingFallback';
+import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/app/_shared/server/prefetch/appQueryDehydrate';
+import { prefetchAdminDepositsPage } from '@/app/_shared/server/prefetch/runners';
 
 const AdminDepositsPage = dynamic(
  () => import('@/features/admin/public').then((m) => m.AdminDepositsPage),
@@ -20,4 +20,4 @@ export default async function AdminDepositsRoutePage() {
  );
 }
 
-export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';
+export { generateLocaleMetadata as generateMetadata } from '@/app/_shared/seo/defaultMetadata';

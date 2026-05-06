@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { registerAction } from '@/features/auth/shared';
 import { useOptimizedNavigation } from '@/shared/gateways/useOptimizedNavigation';
-import { usePublicRuntimePolicies } from '@/shared/hooks/usePublicRuntimePolicies';
+import { usePublicRuntimePolicies } from '@/features/auth/shared/hooks/usePublicRuntimePolicies';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 import {
   createRegisterSchema,

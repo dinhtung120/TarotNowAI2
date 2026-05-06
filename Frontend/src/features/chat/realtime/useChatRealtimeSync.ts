@@ -10,17 +10,17 @@ import type {
 } from '@/features/chat/shared/actions';
 import { logger } from '@/shared/gateways/logger';
 import { userStateQueryKeys } from '@/shared/gateways/userStateQueryKeys';
-import { getSignalRHubUrl } from '@/shared/gateways/signalRUrl';
-import { ensureRealtimeSession } from '@/shared/gateways/realtimeSessionGuard';
+import { getSignalRHubUrl } from '@/features/chat/shared/gateways/signalRUrl';
+import { ensureRealtimeSession } from '@/features/chat/shared/gateways/realtimeSessionGuard';
 import { useRuntimePolicies } from '@/shared/hooks/useRuntimePolicies';
-import { useReconnectWakeup } from '@/shared/hooks/useReconnectWakeup';
+import { useReconnectWakeup } from '@/features/chat/shared/hooks/useReconnectWakeup';
 import {
   hasSameNumberArray,
   isUnauthorizedNegotiationError,
   shouldStopConnection,
   startConnectionWithTimeout,
   stopConnectionSafely,
-} from '@/shared/hooks/signalRConnectionUtils';
+} from '@/features/chat/shared/hooks/signalRConnectionUtils';
 import { RUNTIME_POLICY_FALLBACKS } from '@/shared/config/runtimePolicyFallbacks';
 
 interface UseChatRealtimeSyncOptions {

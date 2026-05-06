@@ -1,8 +1,8 @@
 import { getTranslations } from 'next-intl/server';
 import { Gamepad2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/shared/server/prefetch/appQueryDehydrate';
-import { prefetchGamificationHubPage } from '@/shared/server/prefetch/runners';
+import { AppQueryHydrationBoundary, dehydrateAppQueries } from '@/app/_shared/server/prefetch/appQueryDehydrate';
+import { prefetchGamificationHubPage } from '@/app/_shared/server/prefetch/runners';
 import { generateGamificationMetadata } from './metadata';
 import { AchievementsGrid, GamificationStatsBar, QuestsPanel, TitleSelector } from './GamificationSections';
 import { gamificationPageClasses } from './page.styles';

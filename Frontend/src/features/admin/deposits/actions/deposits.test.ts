@@ -3,7 +3,7 @@ import { listDeposits, processDeposit } from '@/features/admin/deposits/actions/
 import { AUTH_ERROR } from '@/shared/models/authErrors';
 import { getServerAccessToken } from '@/shared/gateways/serverAuth';
 import { serverHttpRequest } from '@/shared/gateways/serverHttpClient';
-import { createIdempotentDomainCommandInvoker } from '@/shared/gateways/idempotentDomainCommandInvoker';
+import { createIdempotentDomainCommandInvoker } from '@/features/admin/shared/gateways/idempotentDomainCommandInvoker';
 
 vi.mock('@/shared/gateways/serverAuth', () => ({
  getServerAccessToken: vi.fn(),
@@ -13,7 +13,7 @@ vi.mock('@/shared/gateways/serverHttpClient', () => ({
  serverHttpRequest: vi.fn(),
 }));
 
-vi.mock('@/shared/gateways/idempotentDomainCommandInvoker', () => ({
+vi.mock('@/features/admin/shared/gateways/idempotentDomainCommandInvoker', () => ({
  createIdempotentDomainCommandInvoker: vi.fn(),
 }));
 

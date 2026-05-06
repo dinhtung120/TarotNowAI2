@@ -8,7 +8,7 @@ import UserSidebar from "@/shared/app-shell/navigation/user-sidebar/UserSidebar"
 import { BottomTabBar } from "@/features/app-shell/public";
 import { AUTH_COOKIE } from "@/shared/auth/authConstants";
 import { pickClientMessages, SITE_CLIENT_NAMESPACES } from '@/i18n/clientMessages';
-import { getCachedServerSessionSnapshot } from '@/shared/server/auth/cachedSessionSnapshot';
+import { getCachedServerSessionSnapshot } from '@/app/_shared/server/auth/cachedSessionSnapshot';
 
 interface SiteLayoutProps {
  children: ReactNode;
@@ -37,4 +37,4 @@ export default async function SiteLayout({ children }: SiteLayoutProps) {
 }
 
 
-export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';
+export { generateLocaleMetadata as generateMetadata } from '@/app/_shared/seo/defaultMetadata';

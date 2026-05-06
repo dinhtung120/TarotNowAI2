@@ -1,6 +1,6 @@
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
-import LoadingSpinner from '@/shared/ui/LoadingSpinner';
+import LoadingSpinner from '@/app/_shared/ui/LoadingSpinner';
 
 const ChatRoomPage = dynamic(
  () => import('@/features/chat/public').then((m) => m.ChatRoomPage),
@@ -14,4 +14,4 @@ export default function ChatRoomRoutePage() {
  );
 }
 
-export { generateLocaleMetadata as generateMetadata } from '@/shared/seo/defaultMetadata';
+export { generateLocaleMetadata as generateMetadata } from '@/app/_shared/seo/defaultMetadata';

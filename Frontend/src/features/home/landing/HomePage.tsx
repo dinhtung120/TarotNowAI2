@@ -4,7 +4,7 @@ import { FinalCtaSection } from "@/features/home/landing/components/FinalCtaSect
 import { HeroSection } from "@/features/home/landing/components/HeroSection";
 import { StatsSection } from "@/features/home/landing/components/StatsSection";
 import AstralBackground from "@/shared/app-shell/layout/AstralBackground";
-import Footer from "@/shared/app-shell/layout/Footer";
+import Footer from "@/features/home/shared/app-shell/layout/Footer";
 import { cn } from "@/lib/utils";
 
 export default async function Home() {
